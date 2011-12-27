@@ -22,9 +22,9 @@
 #  include "config.h"
 #endif
 
-#include <Main/fg_commands.hxx>
-#include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
+#include "atcdialog.hxx"
+
+#include <boost/foreach.hpp>
 
 #include <simgear/constants.h>
 #include <simgear/structure/commands.hxx>
@@ -36,15 +36,157 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
-#include "atcdialog.hxx"
+#include <Main/fg_commands.hxx>
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
+#include <GUI/gui.h>		// mkDialog
+#include <GUI/new_gui.hxx>
+#include <Airports/simple.hxx>
+#include <ATC/CommStation.hxx>
+
 
 FGATCDialogNew *currentATCDialog;
 
-/*static bool doATCDialog(const SGPropertyNode* arg) {
-        //cerr << "Running doATCDialog" << endl;
-	currentATCDialog->PopupDialog();
-	return(true);
-}*/
+static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name)
+{
+  SGPropertyNode* p;
+  
+  for (int i = 0; i < prop->nChildren(); i++)
+    if ((p = getNamedNode(prop->getChild(i), name)))
+      return p;
+  
+  if (!strcmp(prop->getStringValue("name"), name))
+    return prop;
+  return 0;
+}
+
+static void atcUppercase(string &s) {
+	for(unsigned int i=0; i<s.size(); ++i) {
+		s[i] = toupper(s[i]);
+	}
+}
+
+class AirportsWithATC : public FGAirport::AirportFilter
+{
+public:
+  virtual FGPositioned::Type maxType() const {
+    return FGPositioned::SEAPORT;
+  }
+  
+  virtual bool passAirport(FGAirport* aApt) const
+  {
+    return (!aApt->commStations().empty());
+  }
+};
+
+void FGATCDialogNew::frequencySearch()
+{
+	const char *dialog_name = "atc-freq-search";
+	SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
+	if (!dlg)
+		return;
+  
+	_gui->closeDialog(dialog_name);
+  
+	SGPropertyNode_ptr button_group = getNamedNode(dlg, "quick-buttons");
+	// remove all dynamic airport/ATC buttons
+	button_group->removeChildren("button", false);
+  
+  AirportsWithATC filt;
+  FGPositioned::List results = FGPositioned::findWithinRange(globals->get_aircraft_position(), 50.0, &filt);
+  FGPositioned::sortByRange(results, globals->get_aircraft_position());
+  for (unsigned int r=0; (r<results.size()) && (r < 6); ++r) {
+    
+    SGPropertyNode *entry = button_group->getNode("button", r, true);
+		copyProperties(button_group->getNode("button-template", true), entry);
+		entry->removeChildren("enabled", true);
+		entry->setStringValue("legend", results[r]->ident());
+		entry->setStringValue("binding[0]/icao", results[r]->ident());
+  }
+  
+	// (un)hide message saying no things in range
+	SGPropertyNode_ptr range_error = getNamedNode(dlg, "no-atc-in-range");
+	range_error->setBoolValue("visible", !results.empty());
+  
+	_gui->showDialog(dialog_name);
+}
+
+void FGATCDialogNew::frequencyDisplay(const std::string& ident)
+{
+	const char *dialog_name = "atc-freq-display";
+	SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
+	if (!dlg)
+		return;
+  
+	_gui->closeDialog(dialog_name);
+  
+	SGPropertyNode_ptr freq_group = getNamedNode(dlg, "frequency-list");
+	// remove all frequency entries
+	freq_group->removeChildren("group", false);
+  
+  std::string uident(ident);
+	atcUppercase(uident);
+	string label;
+  
+	const FGAirport *a = fgFindAirportID(uident);
+	if (!a) {
+		label = "Airport " + ident + " not found in database.";
+		mkDialog(label.c_str());
+		return;
+	}
+  
+	// set title
+	label = uident + " Frequencies";
+	dlg->setStringValue("text/label", label.c_str());
+  
+  const flightgear::CommStationList& comms(a->commStations());
+  if (comms.empty()) {
+    label = "No frequencies found for airport " + uident;
+		mkDialog(label.c_str());
+		return;
+  }
+  
+  int n = 0;
+  for (unsigned int c=0; c < comms.size(); ++c) {
+    flightgear::CommStation* comm = comms[c];
+    
+    // add frequency line (modified copy of <group-template>)
+		SGPropertyNode *entry = freq_group->getNode("group", n, true);
+		copyProperties(freq_group->getNode("group-template", true), entry);
+		entry->removeChildren("enabled", true);
+    
+    entry->setStringValue("text[0]/label", comm->ident());
+    
+		char buf[8];
+		snprintf(buf, 8, "%.2f", comm->freqMHz());
+		if(buf[5] == '3') buf[5] = '2';
+		if(buf[5] == '8') buf[5] = '7';
+		buf[7] = '\0';
+    
+		entry->setStringValue("text[1]/label", buf);
+    ++n;
+  }
+  
+	_gui->showDialog(dialog_name);
+}
+
+static bool doFrequencySearch( const SGPropertyNode* )
+{
+  FGATCDialogNew::instance()->frequencySearch();
+  return true;
+}
+
+static bool doFrequencyDisplay( const SGPropertyNode* args )
+{
+  std::string icao = args->getStringValue("icao");
+  if (icao.empty()) {
+    icao = fgGetString("/sim/atc/freq-airport");
+  }
+  
+  FGATCDialogNew::instance()->frequencyDisplay(icao);
+  return true;
+}
+
 FGATCDialogNew * FGATCDialogNew::_instance = NULL;
 
 FGATCDialogNew::FGATCDialogNew()
@@ -62,8 +204,9 @@ void FGATCDialogNew::init() {
 	// Add ATC-dialog to the command list
     globals->get_commands()->addCommand("ATC-dialog", FGATCDialogNew::popup );
 	// Add ATC-freq-search to the command list
-	//globals->get_commands()->addCommand("ATC-freq-search", do_ATC_freq_search);
-
+	globals->get_commands()->addCommand("ATC-freq-search", doFrequencySearch);
+  globals->get_commands()->addCommand("ATC-freq-display", doFrequencyDisplay);
+  
 	// initialize properties polled in Update()
 	//globals->get_props()->setStringValue("/sim/atc/freq-airport", "");
 	globals->get_props()->setIntValue("/sim/atc/transmission-num", -1);
@@ -80,19 +223,8 @@ void FGATCDialogNew::init() {
 // Okay, let's see, according to my interpretation of David Luff's original code,
 // his ATC subsystem wrote properties to a named node, called "transmission-choice"
 
-static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name) {
-    SGPropertyNode* p;
 
-    for (int i = 0; i < prop->nChildren(); i++)
-        if ((p = getNamedNode(prop->getChild(i), name)))
-            return p;
-
-        if (!strcmp(prop->getStringValue("name"), name))
-            return prop;
-      return 0;
-}
-
-void FGATCDialogNew::addEntry(int nr, string txt) {
+void FGATCDialogNew::addEntry(int nr, const std::string& txt) {
     commands.clear();
     commands.push_back(txt);
     commands.push_back(string("Toggle ground network visibility"));
@@ -129,7 +261,7 @@ void FGATCDialogNew::update(double dt) {
     char buf[bufsize];
     int commandNr = 0;
     // loop over all entries that should fill up the dialog; use 10 items for now...
-    for (StringVecIterator i = commands.begin(); i != commands.end(); i++) {
+    BOOST_FOREACH(const std::string& i, commands) {
         snprintf(buf, bufsize, "/sim/atc/opt[%d]", commandNr);
             fgSetBool(buf, false);
         SGPropertyNode *entry = button_group->getNode("button", commandNr, true);
@@ -141,7 +273,7 @@ void FGATCDialogNew::update(double dt) {
 	    entry->setBoolValue("default", true);
 
 	snprintf(buf, bufsize, "%d", 1 + commandNr);
-	string legend = string(buf) + (*i); //"; // + current->menuentry;
+	string legend = string(buf) + i; //"; // + current->menuentry;
 	entry->setStringValue("legend", legend.c_str());
 	entry->setIntValue("binding/value", commandNr);
         commandNr++;

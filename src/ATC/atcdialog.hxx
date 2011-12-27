@@ -28,27 +28,19 @@
 #endif
 
 #include <simgear/constants.h>
-#include <simgear/structure/commands.hxx>
 #include <simgear/compiler.h>
-#include <simgear/props/props.hxx>
-#include <simgear/misc/sgstream.hxx>
-#include <simgear/math/sg_geodesy.hxx>
-#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
+class NewGUI;
+class SGPropertyNode;
 
-#include <GUI/gui.h>		// mkDialog
-#include <GUI/new_gui.hxx>
-
-typedef std::vector<std::string> StringVec;
-typedef StringVec::iterator StringVecIterator;
-
-
-class FGATCDialogNew {
+class FGATCDialogNew
+{
 private:
      NewGUI *_gui;
      bool dialogVisible;
-     StringVec commands;
+     string_list commands;
 
      static FGATCDialogNew *_instance;
 public:
@@ -56,18 +48,21 @@ public:
     FGATCDialogNew();
     ~FGATCDialogNew();
 
+    void frequencySearch();
+    void frequencyDisplay(const std::string& ident);
+  
     void init();
 
     void update(double dt);
     void PopupDialog();
-    void addEntry(int, string);
+    void addEntry(int, const std::string&);
     void removeEntry(int);
 
     static bool popup( const SGPropertyNode * ) {
         instance()->PopupDialog();
         return true;
     }
-
+  
     inline static FGATCDialogNew * instance() {
         if( _instance != NULL ) return _instance;
         _instance = new FGATCDialogNew();
