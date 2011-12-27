@@ -45,8 +45,6 @@ FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const string &refname ) :
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_smgr->add(this, refname);
     SGSampleGroup::_refname = refname;
-    _enabled->setBoolValue(true);
-    _volume->setFloatValue(1.0);
 }
 
 
