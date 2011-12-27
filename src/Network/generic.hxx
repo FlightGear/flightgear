@@ -67,6 +67,9 @@ protected:
         e_type type;
         double offset;
         double factor;
+        double min, max;
+        bool wrap;
+        bool rel;
         SGPropertyNode_ptr prop;
     } _serial_prot;
 
@@ -99,6 +102,40 @@ private:
     bool parse_message_binary(int length);
     void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
     bool exitOnError;
+    
+    template<class T>
+    static void updateValue(_serial_prot& prot, const T& val)
+    {
+      T new_val = (prot.rel ? getValue<T>(prot.prop) : 0)
+                + prot.offset
+                + prot.factor * val;
+                
+      if( prot.max > prot.min )
+      {
+        if( prot.wrap )
+        {
+          T range = prot.max - prot.min + 1;
+          if( range > 0 )
+          {
+            while( new_val < prot.min )
+              new_val += range;
+            while( new_val > prot.max )
+              new_val -= range;
+          }
+        }
+        else
+          new_val = std::min<T>(prot.max, std::max<T>(prot.min, new_val));
+      }
+
+      setValue(prot.prop, new_val);
+    }
+
+    
+    template<class T>
+    static const T getValue(SGPropertyNode_ptr& prop);
+
+    template<class T>
+    static void setValue(SGPropertyNode_ptr& prop, const T& val);
 };
 
 

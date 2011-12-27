@@ -41,8 +41,6 @@
 #include <Main/util.hxx>
 #include "generic.hxx"
 
-
-
 FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
 {
     size_t configToken;
@@ -288,10 +286,7 @@ bool FGGeneric::parse_message_binary(int length) {
             } else {
                 tmp32 = *(int32_t *)p1;
             }
-
-            val = _in_message[i].offset + (double)tmp32 * _in_message[i].factor;
-
-            _in_message[i].prop->setIntValue((int)val);
+            updateValue(_in_message[i], (int)tmp32);
             p1 += sizeof(int32_t);
             break;
 
@@ -306,11 +301,7 @@ bool FGGeneric::parse_message_binary(int length) {
             } else {
                 tmp32 = *(int32_t *)p1;
             }
-
-            val = _in_message[i].offset +
-                  ((double)tmp32 / 65536.0f) * _in_message[i].factor;
-
-            _in_message[i].prop->setFloatValue(val);
+            updateValue(_in_message[i], (float)tmp32 / 65536.0f);
             p1 += sizeof(int32_t);
             break;
 
@@ -321,11 +312,7 @@ bool FGGeneric::parse_message_binary(int length) {
             } else {
                 tmpun32.floatVal = *(float *)p1;
             }
-
-            val = _in_message[i].offset +
-                  tmpun32.floatVal * _in_message[i].factor;
-
-            _in_message[i].prop->setFloatValue(val);
+            updateValue(_in_message[i], tmpun32.floatVal);
             p1 += sizeof(int32_t);
             break;
 
@@ -336,11 +323,7 @@ bool FGGeneric::parse_message_binary(int length) {
             } else {
                 tmpun64.doubleVal = *(double *)p1;
             }
-
-            val = _in_message[i].offset +
-                   tmpun64.doubleVal * _in_message[i].factor;
-
-            _in_message[i].prop->setDoubleValue(val);
+            updateValue(_in_message[i], tmpun64.doubleVal);
             p1 += sizeof(int64_t);
             break;
 
@@ -378,8 +361,7 @@ bool FGGeneric::parse_message_ascii(int length) {
 
         switch (_in_message[i].type) {
         case FG_INT:
-            val = _in_message[i].offset + atoi(p1) * _in_message[i].factor;
-            _in_message[i].prop->setIntValue((int)val);
+            updateValue(_in_message[i], atoi(p1));
             break;
 
         case FG_BOOL:
@@ -388,13 +370,11 @@ bool FGGeneric::parse_message_ascii(int length) {
 
         case FG_FIXED:
         case FG_FLOAT:
-            val = _in_message[i].offset + strtod(p1, 0) * _in_message[i].factor;
-            _in_message[i].prop->setFloatValue((float)val);
+            updateValue(_in_message[i], (float)strtod(p1, 0));
             break;
 
         case FG_DOUBLE:
-            val = _in_message[i].offset + strtod(p1, 0) * _in_message[i].factor;
-            _in_message[i].prop->setDoubleValue(val);
+            updateValue(_in_message[i], (double)strtod(p1, 0));
             break;
 
         default: // SG_STRING
@@ -686,6 +666,10 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         chunk.format = fgUnescape(chunks[i]->getStringValue("format", "%d"));
         chunk.offset = chunks[i]->getDoubleValue("offset");
         chunk.factor = chunks[i]->getDoubleValue("factor", 1.0);
+        chunk.min = chunks[i]->getDoubleValue("min");
+        chunk.max = chunks[i]->getDoubleValue("max");
+        chunk.wrap = chunks[i]->getBoolValue("wrap");
+        chunk.rel = chunks[i]->getBoolValue("relative");
 
         string node = chunks[i]->getStringValue("node", "/null");
         chunk.prop = fgGetNode(node.c_str(), true);
@@ -727,3 +711,24 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         }
     }
 }
+
+/*
+  set/getValue: Implementations for supported datatypes
+*/
+#define DEF_DATA_ACCESS(type, method)\
+template<>\
+const type FGGeneric::getValue(SGPropertyNode_ptr& prop)\
+{\
+  return prop->get##method##Value();\
+}\
+\
+template<>\
+void FGGeneric::setValue(SGPropertyNode_ptr& prop, const type& val)\
+{\
+  prop->set##method##Value(val);\
+}
+
+DEF_DATA_ACCESS(int, Int)
+DEF_DATA_ACCESS(float, Float)
+DEF_DATA_ACCESS(double, Double)
+
