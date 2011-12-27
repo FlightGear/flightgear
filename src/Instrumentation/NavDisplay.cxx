@@ -1161,7 +1161,10 @@ void NavDisplay::computeAIStates(const SGPropertyNode* ai, string_set& states)
     int threatLevel = ai->getIntValue("tcas/threat-level",-1);
     if (threatLevel >= 0) {
         states.insert("tcas");
-    //    states.insert("tcas-threat-level-" + itoa(threatLevel));
+      
+        std::ostringstream os;
+        os << "tcas-threat-level-" << threatLevel;
+        states.insert(os.str());
     }
     
     double vspeed = ai->getDoubleValue("velocities/vertical-speed-fps");
