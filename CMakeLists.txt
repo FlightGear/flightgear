@@ -63,7 +63,7 @@ if(NOT CMAKE_BUILD_TYPE)
       FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
-if($ENV{BUILD_ID})
+if(NOT "$ENV{BUILD_ID}" STREQUAL "")
 	set(HUDSON_BUILD_ID $ENV{BUILD_ID})
 	set(HUDSON_BUILD_NUMBER $ENV{BUILD_NUMBER})
 	message(STATUS "running under Hudson, build-number is ${HUDSON_BUILD_NUMBER}")
