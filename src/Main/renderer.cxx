@@ -454,6 +454,24 @@ FGRenderer::init( void )
 
     SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
                                   distance_attenuation );
+
+    if (const char* tc = fgGetString("/sim/rendering/texture-compression")) {
+      if (strcmp(tc, "false") == 0 || strcmp(tc, "off") == 0 ||
+          strcmp(tc, "0") == 0 || strcmp(tc, "no") == 0 ||
+          strcmp(tc, "none") == 0) {
+        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::DoNotUseCompression);
+      } else if (strcmp(tc, "arb") == 0) {
+        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseARBCompression);
+      } else if (strcmp(tc, "dxt1") == 0) {
+        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseDXT1Compression);
+      } else if (strcmp(tc, "dxt3") == 0) {
+        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseDXT3Compression);
+      } else if (strcmp(tc, "dxt5") == 0) {
+        SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::UseDXT5Compression);
+      } else {
+        SG_LOG(SG_VIEW, SG_WARN, "Unknown texture compression setting!");
+      }
+    }
     
 // create sky, but can't build until setupView, since we depend
 // on other subsystems to be inited, eg Ephemeris    
@@ -653,18 +671,6 @@ FGRenderer::update( ) {
         FGScenerySwitchCallback::scenery_enabled = (sAlpha<1.0);
         _splash_alpha->setDoubleValue(sAlpha);
     }
-
-#if 0 // OSGFIXME
-    // OSGFIXME: features no longer available or no longer run-time configurable
-    {
-        bool use_point_sprites = _point_sprites->getBoolValue();
-        bool enhanced_lighting = _enhanced_lighting->getBoolValue();
-        bool distance_attenuation = _distance_attenuation->getBoolValue();
-    
-        SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
-                                      distance_attenuation );
-    }
-#endif
 
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
 
