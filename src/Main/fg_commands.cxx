@@ -189,22 +189,7 @@ do_exit (const SGPropertyNode * arg)
 {
     SG_LOG(SG_INPUT, SG_INFO, "Program exit requested.");
     fgSetBool("/sim/signals/exit", true);
-
-    if (fgGetBool("/sim/startup/save-on-exit")) {
-      SGPath autosaveFile(fgGetString("/sim/fg-home"));
-      autosaveFile.append( "autosave.xml" );
-      autosaveFile.create_dir( 0700 );
-      SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile.str());
-      try {
-        writeProperties(autosaveFile.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
-      } catch (const sg_exception &e) {
-        guiErrorMessage("Error writing autosave.xml: ", e);
-      }
-      
-      SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
-
-    }
-    
+    globals->saveUserSettings();
     fgOSExit(arg->getIntValue("status", 0));
     return true;
 }

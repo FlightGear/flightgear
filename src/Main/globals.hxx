@@ -164,6 +164,9 @@ private:
 
     /// roots of Aircraft trees
     string_list fg_aircraft_dirs;
+
+    bool haveUserSettings;
+
 public:
 
     FGGlobals();
@@ -324,6 +327,15 @@ public:
      */
     void restoreInitialState ();
 
+    /**
+     * Load user settings from autosave.xml
+     */
+    void loadUserSettings();
+
+    /**
+     * Save user settings in autosave.xml
+     */
+    void saveUserSettings();
 };
 
 

@@ -48,6 +48,7 @@
 #include <Autopilot/route_mgr.hxx>
 #include <Cockpit/panel.hxx>
 #include <GUI/FGFontCache.hxx>
+#include <GUI/gui.h>
 #include <Model/acmodel.hxx>
 #include <Model/modelmgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
@@ -150,17 +151,20 @@ FGGlobals::FGGlobals() :
     dmelist( NULL ),
     tacanlist( NULL ),
     carrierlist( NULL ),
-    channellist( NULL )
+    channellist( NULL ),
+    haveUserSettings(false)
 {
   simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
   simgear::PropertyObjectBase::setDefaultRoot(props);
 }
 
-
 // Destructor
 FGGlobals::~FGGlobals() 
-{    
-// The AIModels manager performs a number of actions upon
+{
+    // save user settings (unless already saved)
+    saveUserSettings();
+
+    // The AIModels manager performs a number of actions upon
     // Shutdown that implicitly assume that other subsystems
     // are still operational (Due to the dynamic allocation and
     // deallocation of AIModel objects. To ensure we can safely
@@ -434,6 +438,41 @@ FGGlobals::restoreInitialState ()
                 "Some errors restoring initial state (read-only props?)" );
     }
 
+}
+
+// Load user settings from autosave.xml
+void
+FGGlobals::loadUserSettings()
+{
+    // dummy method for now.
+    //TODO Move code loading autosave.xml in here after the 2.6.0 release.
+    haveUserSettings = true;
+}
+
+// Save user settings in autosave.xml
+void
+FGGlobals::saveUserSettings()
+{
+    // only save settings when we have (tried) to load the previous
+    // settings (otherwise user data was lost)
+    if (!haveUserSettings)
+        return;
+
+    if (fgGetBool("/sim/startup/save-on-exit")) {
+      // don't save settings more than once on shutdown
+      haveUserSettings = false;
+
+      SGPath autosaveFile(fgGetString("/sim/fg-home"));
+      autosaveFile.append( "autosave.xml" );
+      autosaveFile.create_dir( 0700 );
+      SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile.str());
+      try {
+        writeProperties(autosaveFile.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+      } catch (const sg_exception &e) {
+        guiErrorMessage("Error writing autosave.xml: ", e);
+      }
+      SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
+    }
 }
 
 FGViewer *

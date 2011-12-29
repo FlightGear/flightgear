@@ -561,16 +561,20 @@ bool fgInitConfig ( int argc, char **argv )
             << "(from " << e.getOrigin() << ")");
       }
     }
-  
-  // Scan user config files and command line for a specified aircraft.
+
+    // Scan user config files and command line for a specified aircraft.
     flightgear::Options::sharedInstance()->initAircraft();
-      
+
     FindAndCacheAircraft f(&autosave);
     if (!f.loadAircraft()) {
       return false;
     }
 
     copyProperties(&autosave, globals->get_props());
+
+    // TODO Move some of the code above into loadUserSettings after the 2.6 release
+    // call dummy function, for now just to indicate that data was loaded
+    globals->loadUserSettings();
 
     // parse options after loading aircraft to ensure any user
     // overrides of defaults are honored.
