@@ -444,11 +444,23 @@ FGGlobals::restoreInitialState ()
 
 // Load user settings from autosave.xml
 void
-FGGlobals::loadUserSettings()
+FGGlobals::loadUserSettings(const SGPath& dataPath)
 {
-    // dummy method for now.
-    //TODO Move code loading autosave.xml in here after the 2.6.0 release.
+    // remember that we have (tried) to load any existing autsave.xml
     haveUserSettings = true;
+
+    SGPath autosaveFile = simgear::Dir(dataPath).file("autosave.xml");
+    SGPropertyNode autosave;
+    if (autosaveFile.exists()) {
+      SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << autosaveFile.str());
+      try {
+          readProperties(autosaveFile.str(), &autosave, SGPropertyNode::USERARCHIVE);
+      } catch (sg_exception& e) {
+          SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
+            << "(from " << e.getOrigin() << ")");
+      }
+    }
+    copyProperties(&autosave, globals->get_props());
 }
 
 // Save user settings in autosave.xml

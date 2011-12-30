@@ -330,7 +330,7 @@ public:
     /**
      * Load user settings from autosave.xml
      */
-    void loadUserSettings();
+    void loadUserSettings(const SGPath& datapath);
 
     /**
      * Save user settings in autosave.xml

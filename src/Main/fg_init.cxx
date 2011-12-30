@@ -548,33 +548,15 @@ bool fgInitConfig ( int argc, char **argv )
         return false;
     }
 
-    SGPropertyNode autosave;
-
-
-    SGPath autosaveFile = simgear::Dir(dataPath).file("autosave.xml");
-    if (autosaveFile.exists()) {
-      SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << autosaveFile.str());
-      try {
-          readProperties(autosaveFile.str(), &autosave, SGPropertyNode::USERARCHIVE);
-      } catch (sg_exception& e) {
-          SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
-            << "(from " << e.getOrigin() << ")");
-      }
-    }
+    globals->loadUserSettings(dataPath);
 
     // Scan user config files and command line for a specified aircraft.
     flightgear::Options::sharedInstance()->initAircraft();
 
-    FindAndCacheAircraft f(&autosave);
+    FindAndCacheAircraft f(globals->get_props());
     if (!f.loadAircraft()) {
       return false;
     }
-
-    copyProperties(&autosave, globals->get_props());
-
-    // TODO Move some of the code above into loadUserSettings after the 2.6 release
-    // call dummy function, for now just to indicate that data was loaded
-    globals->loadUserSettings();
 
     // parse options after loading aircraft to ensure any user
     // overrides of defaults are honored.
