@@ -48,6 +48,7 @@
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
 #include <Radio/radio.hxx>
+#include <signal.h>
 
 using std::sort;
 
@@ -186,16 +187,11 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
     if (intentions.size()) {
         intVecIterator i = intentions.begin();
         if ((*i) != pos) {
-            SG_LOG(SG_ATC, SG_ALERT,
-                   "Error in FGTrafficRecord::setPositionAndIntentions at " << SG_ORIGIN);
-            cerr << "Pos : " << pos << " Curr " << *(intentions.begin())  << endl;
-            for (intVecIterator i = intentions.begin();
-                    i != intentions.end(); i++) {
-                cerr << (*i) << " ";
-            }
-            cerr << endl;
+            SG_LOG(SG_ATC, SG_INFO,
+                   "Skipping repeated intention in FGTrafficRecord::setPositionAndIntentions at " << SG_ORIGIN);
+        } else {
+            intentions.erase(i);
         }
-        intentions.erase(i);
     } else {
         //FGAIFlightPlan::waypoint* const wpt= route->getCurrentWaypoint();
         int size = route->getNrOfWayPoints();
@@ -204,18 +200,12 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
         for (int i = 0; i < size; i++) {
             int val = route->getRouteIndex(i);
             //cerr << val<< " ";
-            if ((val) && (val != pos)) {
+            if ((val) && (val != pos)) {        // NOTE THAAT THERES A PROBLEM WITH REPEATED INTENSIONS HERE.
                 intentions.push_back(val);
                 //cerr << "[set] ";
             }
         }
-        //cerr << endl;
-        //while (route->next(&legNr, &routeNr)) {
-        //intentions.push_back(routeNr);
-        //}
-        //route->rewind(currentPos);
     }
-    //exit(1);
 }
 /**
  * Check if another aircraft is ahead of the current one, and on the same
