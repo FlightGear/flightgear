@@ -188,20 +188,21 @@ void FGATCManager::update ( double time ) {
     FGAIFlightPlan *fp = ai_ac.GetFlightPlan();
         
     /* test code : find out how the routing develops */
-    if (fp) {
+    /*if (fp) {
         int size = fp->getNrOfWayPoints();
-    //    //cerr << "Setting pos" << pos << " ";
-    //    //cerr << "setting intentions " ;
+        //cerr << "Setting pos" << pos << " ";
+        //cerr << "setting intentions " ;
+        cerr << "Size of waypoint cue " << size << " ";
         for (int i = 0; i < size; i++) {
-    //        int val = fp->getRouteIndex(i);
-            //cerr << fp->getWayPoint(i)->getName() << " ";
+            int val = fp->getRouteIndex(i);
+            cerr << fp->getWayPoint(i)->getName() << " ";
             //if ((val) && (val != pos)) {
                 //intentions.push_back(val);
                 //cerr << "[done ] " << endl;
             //}
         }
-    }
-    //cerr << "[done ] " << endl;
+        cerr << "[done ] " << endl;
+    }*/
     if (fp) {
         //cerr << "Currently at leg : " << fp->getLeg() << endl;
     }
@@ -210,6 +211,19 @@ void FGATCManager::update ( double time ) {
     double heading   = fgGetDouble("/orientation/heading-deg");
     double speed     = fgGetDouble("/velocities/groundspeed-kt");
     double altitude  = fgGetDouble("/position/altitude-ft");
+    
+    SGGeod me(SGGeod::fromDegM(longitude,
+                               latitude,
+                               altitude));
+    SGGeod wpt(SGGeod::fromDegM(fp->getWayPoint(1)->getLongitude(), 
+                                fp->getWayPoint(1)->getLatitude(),
+                                fp->getWayPoint(1)->getAltitude()));
+    
+    double course, az2, dist;
+    SGGeodesy::inverse(me, wpt, course, az2, dist);
+    
+    cerr << "Bearing to nearest waypoint : " << course << endl;
+    
     ai_ac.setLatitude(latitude);
     ai_ac.setLongitude(longitude);
     ai_ac.setAltitude(altitude);
