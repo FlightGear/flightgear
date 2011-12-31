@@ -367,7 +367,7 @@ void NoaaMetarRealWxController::requestMetar( MetarDataHandler * metarDataHandle
           virtual void responseComplete()
           {
               if (responseCode() == 200) {
-                  _metarDataHandler->handleMetarData( _metar);
+                  _metarDataHandler->handleMetarData( simgear::strutils::simplify(_metar) );
               } else {
                   SG_LOG(SG_ENVIRONMENT, SG_WARN, "metar download failed:" << url() << ": reason:" << responseReason());
               }
