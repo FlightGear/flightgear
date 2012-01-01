@@ -219,18 +219,23 @@ void FGATCManager::update ( double time ) {
     double speed     = fgGetDouble("/velocities/groundspeed-kt");
     double altitude  = fgGetDouble("/position/altitude-ft");
     
+    /*
     SGGeod me(SGGeod::fromDegM(longitude,
                                latitude,
                                altitude));
-    SGGeod wpt(SGGeod::fromDegM(fp->getWayPoint(1)->getLongitude(), 
+    SGGeod wpt1(SGGeod::fromDegM(fp->getWayPoint(1)->getLongitude(), 
                                 fp->getWayPoint(1)->getLatitude(),
                                 fp->getWayPoint(1)->getAltitude()));
+    SGGeod wpt2(SGGeod::fromDegM(fp->getWayPoint(1)->getLongitude(), 
+                                fp->getWayPoint(1)->getLatitude(),
+                                fp->getWayPoint(1)->getAltitude()));
+        
+    double course1, az1, dist1;
+    double course2, az2, dist2;
+    SGGeodesy::inverse(me, wpt1, course1, az1, dist1);
     
-    double course, az2, dist;
-    SGGeodesy::inverse(me, wpt, course, az2, dist);
-    
-    cerr << "Bearing to nearest waypoint : " << course << endl;
-    
+    cerr << "Bearing to nearest waypoint : " << course1 << " " << dist1 << ". (course " << course2 << ")." <<  endl;
+    */
     ai_ac.setLatitude(latitude);
     ai_ac.setLongitude(longitude);
     ai_ac.setAltitude(altitude);
