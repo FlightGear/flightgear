@@ -188,21 +188,28 @@ void FGATCManager::update ( double time ) {
     FGAIFlightPlan *fp = ai_ac.GetFlightPlan();
         
     /* test code : find out how the routing develops */
-    /*if (fp) {
+    if (fp) {
         int size = fp->getNrOfWayPoints();
         //cerr << "Setting pos" << pos << " ";
         //cerr << "setting intentions " ;
-        cerr << "Size of waypoint cue " << size << " ";
-        for (int i = 0; i < size; i++) {
-            int val = fp->getRouteIndex(i);
-            cerr << fp->getWayPoint(i)->getName() << " ";
+        // This indicates that we have run out of waypoints: Im future versions, the
+        // user should be able to select a new route, but for now just shut down the
+        // system. 
+        if (size < 3) {
+            //cerr << "Shutting down the atc_mgr" << endl;
+            return;
+        }
+        //cerr << "Size of waypoint cue " << size << " ";
+        //for (int i = 0; i < size; i++) {
+        //    int val = fp->getRouteIndex(i);
+            //cerr << fp->getWayPoint(i)->getName() << " ";
             //if ((val) && (val != pos)) {
                 //intentions.push_back(val);
                 //cerr << "[done ] " << endl;
             //}
-        }
-        cerr << "[done ] " << endl;
-    }*/
+        //}
+        //cerr << "[done ] " << endl;
+    }
     if (fp) {
         //cerr << "Currently at leg : " << fp->getLeg() << endl;
     }
