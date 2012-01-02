@@ -456,9 +456,9 @@ static osg::Geometry* createParoramicSphericalDisplayDistortionMesh(
     bool flip = false;
     bool texcoord_flip = false;
 
+#if 0
     osg::Vec3d projector = eye - osg::Vec3d(0.0,0.0, distance);
 
-#if 0
     OSG_INFO<<"createParoramicSphericalDisplayDistortionMesh : Projector position = "<<projector<<std::endl;
     OSG_INFO<<"createParoramicSphericalDisplayDistortionMesh : distance = "<<distance<<std::endl;
 #endif
@@ -482,10 +482,11 @@ static osg::Geometry* createParoramicSphericalDisplayDistortionMesh(
     osg::Vec2Array* texcoords1 = intensityMap==0 ? new osg::Vec2Array : 0;
     osg::Vec4Array* colors = new osg::Vec4Array;
 
+#if 0
     osg::Vec3 bottom = origin;
     osg::Vec3 dx = xAxis*(width/((float)(noSteps-2)));
     osg::Vec3 dy = yAxis*(height/((float)(noSteps-1)));
-
+#endif
     osg::Vec3 top = origin + yAxis*height;
 
     osg::Vec3 screenCenter = origin + widthVector*0.5f + heightVector*0.5f;
@@ -495,7 +496,7 @@ static osg::Geometry* createParoramicSphericalDisplayDistortionMesh(
 
     for(int i=0;i<noSteps;++i)
     {
-        osg::Vec3 cursor = bottom+dy*(float)i;
+        //osg::Vec3 cursor = bottom+dy*(float)i;
         for(int j=0;j<noSteps;++j)
         {
             osg::Vec2 texcoord(double(i)/double(noSteps-1), double(j)/double(noSteps-1));

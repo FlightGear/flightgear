@@ -251,6 +251,7 @@ void FGAIShip::unbind() {
     props->untie("velocities/speed-kts");
 
 }
+
 void FGAIShip::update(double dt) {
     //SG_LOG(SG_AI, SG_ALERT, "updating Ship: " << _name <<hdg<<pitch<<roll);
     // For computation of rotation speeds we just use finite differences here.
@@ -265,7 +266,7 @@ void FGAIShip::update(double dt) {
     // local frame
     SGQuatd ec2body = ec2hl*hl2body;
     // The cartesian position of the ship in the wgs84 world
-    SGVec3d cartPos = SGVec3d::fromGeod(pos);
+    //SGVec3d cartPos = SGVec3d::fromGeod(pos);
 
     // The simulation time this transform is meant for
     aip.setReferenceTime(globals->get_sim_time_sec());

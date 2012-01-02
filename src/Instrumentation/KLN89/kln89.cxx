@@ -727,9 +727,11 @@ static double gps_min(const double &a, const double &b) {
 	return(a <= b ? a : b);
 }
 
+#if 0
 static double gps_max(const double &a, const double &b) {
 	return(a >= b ? a : b);
 }
+#endif
 
 void KLN89::UpdateMapHeading() {
 	switch(_mapOrientation) {
@@ -762,8 +764,8 @@ void KLN89::DrawMap(bool draw_avs) {
 	// TODO - use an aligned projection when either DTK or TK up!
 	FGATCAlignedProjection mapProj(SGGeod::fromRad(_gpsLon, _gpsLat), _mapHeading);
 	double meter_per_pix = (_mapOrientation == 0 ? mapScaleMeters / 20.0f : mapScaleMeters / 29.0f);
-	SGGeod bottomLeft = mapProj.ConvertFromLocal(SGVec3d(gps_max(-57.0 * meter_per_pix, -50000), gps_max((_mapOrientation == 0 ? -20.0 * meter_per_pix : -11.0 * meter_per_pix), -25000), 0.0));
-	SGGeod topRight = mapProj.ConvertFromLocal(SGVec3d(gps_min(54.0 * meter_per_pix, 50000), gps_min((_mapOrientation == 0 ? 20.0 * meter_per_pix : 29.0 * meter_per_pix), 25000), 0.0));
+//	SGGeod bottomLeft = mapProj.ConvertFromLocal(SGVec3d(gps_max(-57.0 * meter_per_pix, -50000), gps_max((_mapOrientation == 0 ? -20.0 * meter_per_pix : -11.0 * meter_per_pix), -25000), 0.0));
+//	SGGeod topRight = mapProj.ConvertFromLocal(SGVec3d(gps_min(54.0 * meter_per_pix, 50000), gps_min((_mapOrientation == 0 ? 20.0 * meter_per_pix : 29.0 * meter_per_pix), 25000), 0.0));
 
 
 

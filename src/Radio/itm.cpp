@@ -1552,7 +1552,6 @@ void point_to_point(double elev[],
 	double zc, zr;
 	double q = eno;
 	long ja, jb, i, np;
-	double dkm, xkm;
 	double fs;
 
 	prop.h_g[0] = tht_m;          // Tx height above ground level
@@ -1564,8 +1563,10 @@ void point_to_point(double elev[],
 	zc = qerfi(conf);
 	zr = qerfi(rel);
 	np = (long)elev[0];
-	dkm = (elev[1] * elev[0]) / 1000.0;
-	xkm = elev[1] / 1000.0;
+#if 0
+	double dkm = (elev[1] * elev[0]) / 1000.0;
+	double xkm = elev[1] / 1000.0;
+#endif
 
 	ja = (long)(3.0 + 0.1 * elev[0]);
 	jb = np - ja + 6;

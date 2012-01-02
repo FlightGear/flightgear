@@ -330,10 +330,10 @@ void FGLight::update_sky_color () {
 // calculate fog color adjusted for sunrise/sunset effects
 void FGLight::update_adj_fog_color () {
 
-    double pitch = globals->get_current_view()->getPitch_deg()
-                     * SGD_DEGREES_TO_RADIANS;
-    double pitch_offset = globals->get_current_view()-> getPitchOffset_deg()
-                     * SGD_DEGREES_TO_RADIANS;
+//    double pitch = globals->get_current_view()->getPitch_deg()
+//                     * SGD_DEGREES_TO_RADIANS;
+//    double pitch_offset = globals->get_current_view()-> getPitchOffset_deg()
+//                     * SGD_DEGREES_TO_RADIANS;
     double heading = globals->get_current_view()->getHeading_deg()
                      * SGD_DEGREES_TO_RADIANS;
     double heading_offset = globals->get_current_view()->getHeadingOffset_deg()
@@ -360,13 +360,12 @@ void FGLight::update_adj_fog_color () {
 	return;
     }
 
-    double hor_rotation, vert_rotation;
     static float gamma = system_gamma;
 
     // first determine the difference between our view angle and local
     // direction to the sun
-    vert_rotation = pitch + pitch_offset;
-    hor_rotation = -(_sun_rotation + SGD_PI) - heading + heading_offset;
+    //double vert_rotation = pitch + pitch_offset;
+    double hor_rotation = -(_sun_rotation + SGD_PI) - heading + heading_offset;
     if (hor_rotation < 0 )
        hor_rotation = fmod(hor_rotation, SGD_2PI) + SGD_2PI;
     else

@@ -1543,6 +1543,8 @@ void Rotorgear::calcForces(float* torqueOut)
         }
         total_torque*=-1;
         _ddt_omegarel=0;
+
+#if 0
         float rel_torque_engine=1;
         if (total_torque<=0)
             rel_torque_engine=0;
@@ -1551,6 +1553,7 @@ void Rotorgear::calcForces(float* torqueOut)
                 rel_torque_engine=1/max_torque_of_engine*total_torque;
             else
                 rel_torque_engine=0;
+#endif
 
         //add the rotor brake and the gear fritcion
         float dt=0.1f;
