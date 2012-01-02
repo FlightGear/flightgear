@@ -1522,7 +1522,7 @@ void FGGroundNetwork::update(double dt)
         i->setPriority(priority++);
         // in meters per second;
         double vTaxi = (i->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
-        if (i->isActive(60)) {
+        if (i->isActive(0)) {
 
             // Check for all active aircraft whether it's current pos segment is
             // an opposite of one of the departing aircraft's intentions

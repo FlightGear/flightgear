@@ -187,23 +187,18 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
     if (intentions.size()) {
         intVecIterator i = intentions.begin();
         if ((*i) != pos) {
-            SG_LOG(SG_ATC, SG_INFO,
-                   "Skipping repeated intention in FGTrafficRecord::setPositionAndIntentions at " << SG_ORIGIN);
-        } else {
-            intentions.erase(i);
+            SG_LOG(SG_ATC, SG_ALERT,
+                   "Error in FGTrafficRecord::setPositionAndIntentions at " << SG_ORIGIN);
         }
+        intentions.erase(i);
     } else {
         //FGAIFlightPlan::waypoint* const wpt= route->getCurrentWaypoint();
         int size = route->getNrOfWayPoints();
         //cerr << "Setting pos" << pos << " ";
         //cerr << "setting intentions ";
-        for (int i = 0; i < size; i++) {
+        for (int i = 2; i < size; i++) {
             int val = route->getRouteIndex(i);
-            //cerr << val<< " ";
-            if ((val) && (val != pos)) {        // NOTE THAAT THERES A PROBLEM WITH REPEATED INTENSIONS HERE.
-                intentions.push_back(val);
-                //cerr << "[set] ";
-            }
+            intentions.push_back(val);
         }
     }
 }

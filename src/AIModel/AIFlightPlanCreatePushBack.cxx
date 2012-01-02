@@ -118,8 +118,8 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             pushBackRoute = parking->getPushBackRoute();
             int size = pushBackRoute->size();
             if (size < 2) {
-                SG_LOG(SG_AI, SG_WARN, "Push back route from gate " << gateId << " has only " << size << " nodes.");
-                SG_LOG(SG_AI, SG_WARN, "Using  " << pushBackNode);
+                SG_LOG(SG_AI, SG_ALERT, "Push back route from gate " << gateId << " has only " << size << " nodes.");
+                SG_LOG(SG_AI, SG_ALERT, "Using  " << pushBackNode);
             }
             pushBackRoute->first();
             while (pushBackRoute->next(&node, &rte))

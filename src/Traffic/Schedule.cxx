@@ -334,7 +334,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   aircraft->setLatitude(position.getLatitudeDeg());
   aircraft->setLongitude(position.getLongitudeDeg());
   aircraft->setAltitude(flight->getCruiseAlt()*100); // convert from FL to feet
-  aircraft->setSpeed(speedKnots);
+  aircraft->setSpeed(0);
   aircraft->setBank(0);
       
   courseToDest = SGGeodesy::courseDeg(position, arr->geod());
@@ -389,15 +389,10 @@ void FGAISchedule::scheduleFlights(time_t now)
     if (!flight) {
       break;
     }
-    //if (startingPort.empty()) {
-    //    startingPort = flight->getDepartureAirport()->getId();
-    //}
     currentDestination = flight->getArrivalAirport()->getId();
     //cerr << "Current destination " <<  currentDestination << endl;
     if (!initialized) {
         string departurePort = flight->getDepartureAirport()->getId();
-       //cerr << "Scheduled " << registration <<  " " << score << " for Flight " 
-       //     << flight-> getCallSign() << " from " << departurePort << " to " << currentDestination << endl;
         if (userPort == departurePort) {
             lastRun = 1;
             hits++;
