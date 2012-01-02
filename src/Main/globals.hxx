@@ -243,7 +243,7 @@ public:
     inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }
 
     inline FGPanel *get_current_panel() const { return current_panel; }
-    inline void set_current_panel( FGPanel *cp ) { current_panel = cp; }
+    void set_current_panel( FGPanel *cp );
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }

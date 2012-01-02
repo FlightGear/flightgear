@@ -259,19 +259,6 @@ struct GeneralInitOperation : public GraphicsContextOperation
     }
 };
 
-
-osg::Node* load_panel(SGPropertyNode *n)
-{
-    osg::Geode* geode = new osg::Geode;
-    geode->addDrawable(new FGPanelNode(n));
-    return geode;
-}
-
-SGPath resolve_path(const std::string& s)
-{
-  return globals->resolve_maybe_aircraft_path(s);
-}
-
 }
 
 // This is the top level master main function that is registered as
@@ -349,7 +336,7 @@ static void fgIdleFunction ( void ) {
         ////////////////////////////////////////////////////////////////////
         globals->set_matlib( new SGMaterialLib );
         simgear::SGModelLib::init(globals->get_fg_root(), globals->get_props());
-        simgear::SGModelLib::setPanelFunc(load_panel);
+        simgear::SGModelLib::setPanelFunc(FGPanelNode::load);
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.

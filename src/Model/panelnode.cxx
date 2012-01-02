@@ -2,44 +2,68 @@
 #  include <config.h>
 #endif
 
-#include <simgear/compiler.h>
-#include <simgear/structure/exception.hxx>
+#include "panelnode.hxx"
 
 #include <vector>
 #include <algorithm>
 
+#include <osg/Geode>
+
+#include <simgear/compiler.h>
+#include <simgear/structure/exception.hxx>
+#include <simgear/debug/logstream.hxx>
+
+#include <simgear/scene/util/OSGMath.hxx>
+#include <simgear/scene/util/SGPickCallback.hxx>
+#include <simgear/scene/util/SGSceneUserData.hxx>
+#include <simgear/scene/util/SGNodeMasks.hxx>
+
+#include <Main/fg_os.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#include "panelnode.hxx"
+
 
 using std::vector;
 
+class FGPanelPickCallback : public SGPickCallback {
+public:
+  FGPanelPickCallback(FGPanelNode* p) :
+    panel(p)
+  {}
+  
+  virtual bool buttonPressed(int b, const Info& info)
+  {    
+    button = b;
+  // convert to panel coordinates
+    osg::Matrixd m = osg::Matrixd::inverse(panel->transformMatrix());
+    picked = toOsg(info.local) * m;
+    SG_LOG( SG_INSTR, SG_DEBUG, "panel pick: " << toSG(picked) );
+  
+  // send to the panel
+    return panel->getPanel()->doLocalMouseAction(button, MOUSE_BUTTON_DOWN, 
+                                          picked.x(), picked.y());
+  }
+  
+  virtual void update(double /* dt */)
+  {
+    panel->getPanel()->updateMouseDelay();
+  }
+  
+  virtual void buttonReleased(void)
+  {
+    panel->getPanel()->doLocalMouseAction(button, MOUSE_BUTTON_UP, 
+                                          picked.x(), picked.y());
+  }
+  
+private:
+  FGPanelNode* panel;
+  int button;
+  osg::Vec3 picked;
+};
 
-// Static (!) handling for all 3D panels in the program.
-// OSGFIXME: Put the panel as different elements in the scenegraph.
-// Then just pick in that scenegraph.
-vector<FGPanelNode*> all_3d_panels;
-bool fgHandle3DPanelMouseEvent( int button, int updown, int x, int y )
-{
-    for ( unsigned int i = 0; i < all_3d_panels.size(); i++ ) {
-        if ( all_3d_panels[i]->doMouseAction(button, updown, x, y) ) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void fgUpdate3DPanels()
-{
-    for ( unsigned int i = 0; i < all_3d_panels.size(); i++ ) {
-        all_3d_panels[i]->getPanel()->updateMouseDelay();
-    }
-}
-
-FGPanelNode::FGPanelNode(SGPropertyNode* props)
-{
-    int i;
-
+FGPanelNode::FGPanelNode(SGPropertyNode* props) :
+  _resizeToViewport(false)
+{  
     // Make an FGPanel object.  But *don't* call init() or bind() on
     // it -- those methods touch static state.
     const char *path = props->getStringValue("path");
@@ -47,33 +71,48 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
     if (!_panel)
         throw sg_io_exception(string("Failed to load panel ") + path);
 
+    // And the corner points
+    SGPropertyNode* pt = props->getChild("bottom-left");
+    _bottomLeft[0] = pt->getFloatValue("x-m");
+    _bottomLeft[1] = pt->getFloatValue("y-m");
+    _bottomLeft[2] = pt->getFloatValue("z-m");
+    
+    pt = props->getChild("top-left");
+    _topLeft[0] = pt->getFloatValue("x-m");
+    _topLeft[1] = pt->getFloatValue("y-m");
+    _topLeft[2] = pt->getFloatValue("z-m");
+    
+    pt = props->getChild("bottom-right");
+    _bottomRight[0] = pt->getFloatValue("x-m");
+    _bottomRight[1] = pt->getFloatValue("y-m");
+    _bottomRight[2] = pt->getFloatValue("z-m");
+  
+    _panel->setDepthTest( props->getBoolValue("depth-test") );
+  
+    initWithPanel();
+}
+
+FGPanelNode::FGPanelNode(FGPanel* p) :
+  _panel(p),
+  _resizeToViewport(true)
+{
+    initWithPanel();
+}
+
+void FGPanelNode::initWithPanel()
+{
+    int i;
+
     // Never mind.  We *have* to call init to make sure the static
     // state is initialized (it's not, if there aren't any 2D
     // panels).  This is a memory leak and should be fixed!`
     // FIXME
     _panel->init();
 
-    _panel->setDepthTest( props->getBoolValue("depth-test") );
-
     // Read out the pixel-space info
     _xmax = _panel->getWidth();
     _ymax = _panel->getHeight();
 
-    // And the corner points
-    SGPropertyNode* pt = props->getChild("bottom-left");
-    _bottomLeft[0] = pt->getFloatValue("x-m");
-    _bottomLeft[1] = pt->getFloatValue("y-m");
-    _bottomLeft[2] = pt->getFloatValue("z-m");
-
-    pt = props->getChild("top-left");
-    _topLeft[0] = pt->getFloatValue("x-m");
-    _topLeft[1] = pt->getFloatValue("y-m");
-    _topLeft[2] = pt->getFloatValue("z-m");
-
-    pt = props->getChild("bottom-right");
-    _bottomRight[0] = pt->getFloatValue("x-m");
-    _bottomRight[1] = pt->getFloatValue("y-m");
-    _bottomRight[2] = pt->getFloatValue("z-m");
 
     // Now generate our transformation matrix.  For shorthand, use
     // "a", "b", and "c" as our corners and "m" as the matrix. The
@@ -103,50 +142,38 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
         m(1,i) *= 1.0/_ymax;
     }
 
-    _lastViewport[0] = 0;
-    _lastViewport[1] = 0;
-    _lastViewport[2] = 0;
-    _lastViewport[3] = 0;
-
     dirtyBound();
-
-    // All done.  Add us to the list
-    all_3d_panels.push_back(this);
-
     setUseDisplayList(false);
+    setDataVariance(Object::DYNAMIC);
+
     getOrCreateStateSet()->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
     getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
 }
 
 FGPanelNode::~FGPanelNode()
 {
-    vector<FGPanelNode*>::iterator i =
-      find(all_3d_panels.begin(), all_3d_panels.end(), this);
-    if (i != all_3d_panels.end()) {
-        all_3d_panels.erase(i);
-    }
     delete _panel;
+}
+
+osg::Matrix FGPanelNode::transformMatrix() const
+{
+  if (!_resizeToViewport) {
+    return _xform;
+  }
+  
+  double s = _panel->getAspectScale();
+  osg::Matrix m = osg::Matrix::scale(s, s, 1.0);
+  m *= osg::Matrix::translate(_panel->getXOffset(), _panel->getYOffset(), 0.0);
+
+  return m;
 }
 
 void
 FGPanelNode::drawImplementation(osg::State& state) const
-{
+{  
   osg::ref_ptr<osg::RefMatrix> mv = new osg::RefMatrix;
-  mv->set(_xform*state.getModelViewMatrix());
+  mv->set(transformMatrix() * state.getModelViewMatrix());
   state.applyModelViewMatrix(mv.get());
-  
-  // Grab the matrix state, so that we can get back from screen
-  // coordinates to panel coordinates when the user clicks the
-  // mouse.
-  // OSGFIXME: we don't need that when we can really pick
-  _lastModelview = state.getModelViewMatrix();
-  _lastProjection = state.getProjectionMatrix();
-
-  const osg::Viewport* vp = state.getCurrentViewport();
-  _lastViewport[0] = vp->x();
-  _lastViewport[1] = vp->y();
-  _lastViewport[2] = vp->width();
-  _lastViewport[3] = vp->height();
   
   _panel->draw(state);
 }
@@ -154,51 +181,54 @@ FGPanelNode::drawImplementation(osg::State& state) const
 osg::BoundingBox
 FGPanelNode::computeBound() const
 {
+    osg::Vec3 coords[4];
+    osg::Matrix m(transformMatrix());
+    coords[0] = m.preMult(osg::Vec3(0,0,0));
+    coords[1] = m.preMult(osg::Vec3(_xmax,0,0));
+    coords[2] = m.preMult(osg::Vec3(0,_ymax,0));
+  
     osg::BoundingBox bb;
-    bb.expandBy(_bottomLeft);
-    bb.expandBy(_bottomRight);
-    bb.expandBy(_topLeft);
+    bb.expandBy(coords[0]);
+    bb.expandBy(coords[1]);
+    bb.expandBy(coords[2]);
     return bb;
 }
 
-bool FGPanelNode::doMouseAction(int button, int updown, int x, int y)
+void FGPanelNode::accept(osg::PrimitiveFunctor& functor) const
 {
-    if (_lastViewport[2] == 0 || _lastViewport[3] == 0) {
-        // we haven't been drawn yet, presumably
-        return false;
-    }
+  osg::Vec3 coords[4];
+  osg::Matrix m(transformMatrix());
 
-    // Covert the screen coordinates to viewport coordinates in the
-    // range [0:1], then transform to OpenGL "post projection" coords
-    // in [-1:1].  Remember the difference in Y direction!
-    float vx = (x + 0.5 - _lastViewport[0]) / _lastViewport[2];
-    float vy = (y + 0.5 - _lastViewport[1]) / _lastViewport[3];
-    vx = 2*vx - 1;
-    vy = 1 - 2*vy;
+  coords[0] = m.preMult(osg::Vec3(0,0,0));
+  coords[1] = m.preMult(osg::Vec3(_xmax,0,0));
+  coords[2] = m.preMult(osg::Vec3(_xmax, _ymax, 0));
+  coords[3] = m.preMult(osg::Vec3(0,_ymax,0));
 
-    // Make two vectors in post-projection coordinates at the given
-    // screen, one in the near field and one in the far field.
-    osg::Vec3 a, b;
-    a[0] = b[0] = vx;
-    a[1] = b[1] = vy;
-    a[2] =  0.75; // "Near" Z value
-    b[2] = -0.75; // "Far" Z value
-
-    // Run both vectors "backwards" through the OpenGL matrix
-    // transformation.  Remember to w-normalize the vectors!
-    osg::Matrix m = _lastModelview*_lastProjection;
-    m = osg::Matrix::inverse(m);
-
-    a = m.preMult(a);
-    b = m.preMult(b);
-
-    // And find their intersection on the z=0 plane.  The resulting X
-    // and Y coordinates are the hit location in panel coordinates.
-    float dxdz = (b[0] - a[0]) / (b[2] - a[2]);
-    float dydz = (b[1] - a[1]) / (b[2] - a[2]);
-    int panelX = (int)(a[0] - a[2]*dxdz + 0.5);
-    int panelY = (int)(a[1] - a[2]*dydz + 0.5);
-
-    return _panel->doLocalMouseAction(button, updown, panelX, panelY);
+  functor.setVertexArray(4, coords);
+  functor.drawArrays( GL_QUADS, 0, 4);
 }
 
+static osg::Node* createGeode(FGPanelNode* panel)
+{
+    osg::Geode* geode = new osg::Geode;
+    geode->addDrawable(panel);
+    
+    geode->setNodeMask(SG_NODEMASK_PICK_BIT | SG_NODEMASK_2DPANEL_BIT);
+    
+    SGSceneUserData* userData;
+    userData = SGSceneUserData::getOrCreateSceneUserData(geode);
+    userData->setPickCallback(new FGPanelPickCallback(panel));
+    return geode;
+}
+
+osg::Node* FGPanelNode::createNode(FGPanel* p)
+{
+    FGPanelNode* drawable = new FGPanelNode(p);
+    return createGeode(drawable);
+}
+
+osg::Node* FGPanelNode::load(SGPropertyNode *n)
+{
+  FGPanelNode* drawable = new FGPanelNode(n);
+  return createGeode(drawable);
+}

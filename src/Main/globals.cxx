@@ -514,5 +514,12 @@ void FGGlobals::set_warp_delta( long int d )
 {
   fgSetInt("/sim/time/warp-delta", d);
 }
+
+void FGGlobals::set_current_panel( FGPanel *cp )
+{
+  current_panel = cp;
+// poke the renderer to rebuild the scene node as necessary
+  get_renderer()->panelChanged();
+}
     
 // end of globals.cxx

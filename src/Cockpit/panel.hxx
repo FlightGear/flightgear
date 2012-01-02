@@ -27,6 +27,8 @@
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
+#include <simgear/props/PropertyObject.hxx>
+
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/SGBinding.hxx>
 #include <simgear/math/interpolater.hxx>
@@ -128,8 +130,9 @@ public:
   virtual void unbind ();
   virtual void draw (osg::State& state);
   virtual void update (double);
-  void update (osg::State& state);
-  virtual void update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
+ 
+  //void update (osg::State& state);
+  //virtual void update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
 
   virtual void updateMouseDelay();
 
@@ -174,6 +177,8 @@ public:
 
   bool getAutohide(void) const { return _autohide; };
   void setAutohide(bool enable) { _autohide = enable; };
+  
+  double getAspectScale() const;
 
 private:
   void setupVirtualCockpit();
@@ -203,6 +208,8 @@ private:
   instrument_list_type _instruments;
   bool _enable_depth_test;
   bool _autohide;
+  
+  SGPropObjBool _drawPanelHotspots;
 };
 
 

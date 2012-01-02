@@ -85,6 +85,7 @@
 #include <Time/light.hxx>
 #include <Time/light.hxx>
 #include <Cockpit/panel.hxx>
+
 #include <Model/panelnode.hxx>
 #include <Model/modelmgr.hxx>
 #include <Model/acmodel.hxx>
@@ -179,9 +180,9 @@ public:
 private:
 };
 
-class SGHUDAndPanelDrawable : public osg::Drawable {
+class SGHUDDrawable : public osg::Drawable {
 public:
-  SGHUDAndPanelDrawable()
+  SGHUDDrawable()
   {
     // Dynamic stuff, do not store geometry
     setUseDisplayList(false);
@@ -209,24 +210,16 @@ public:
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushClientAttrib(~0u);
-
+      
     HUD *hud = static_cast<HUD*>(globals->get_subsystem("hud"));
     hud->draw(state);
 
-    // update the panel subsystem
-    if ( globals->get_current_panel() != NULL )
-        globals->get_current_panel()->update(state);
-    // We don't need a state here - can be safely removed when we can pick
-    // correctly
-    fgUpdate3DPanels();
-
     glPopClientAttrib();
     glPopAttrib();
-
   }
 
-  virtual osg::Object* cloneType() const { return new SGHUDAndPanelDrawable; }
-  virtual osg::Object* clone(const osg::CopyOp&) const { return new SGHUDAndPanelDrawable; }
+  virtual osg::Object* cloneType() const { return new SGHUDDrawable; }
+  virtual osg::Object* clone(const osg::CopyOp&) const { return new SGHUDDrawable; }
   
 private:
 };
@@ -381,6 +374,25 @@ static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
 static osg::ref_ptr<osg::Group> mRealRoot = new osg::Group;
 
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
+
+static osg::ref_ptr<osg::Switch> panelSwitch;
+                                    
+                                    
+// update callback for the switch node controlling the 2D panel
+class FGPanelSwitchCallback : public osg::NodeCallback {
+public:
+    virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
+    {
+        assert(dynamic_cast<osg::Switch*>(node));
+        osg::Switch* sw = static_cast<osg::Switch*>(node);
+        
+        bool enabled = fgPanelVisible();
+        sw->setValue(0, enabled);
+        if (!enabled)
+            return;
+        traverse(node, nv);
+    }
+};
 
 #ifdef FG_JPEG_SERVER
 static void updateRenderer()
@@ -627,11 +639,30 @@ FGRenderer::setupView( void )
     // plug in the GUI
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (guiCamera) {
+        
         osg::Geode* geode = new osg::Geode;
         geode->addDrawable(new SGPuDrawable);
-        geode->addDrawable(new SGHUDAndPanelDrawable);
+        geode->addDrawable(new SGHUDDrawable);
         guiCamera->addChild(geode);
+      
+        panelSwitch = new osg::Switch;
+        osg::StateSet* stateSet = panelSwitch->getOrCreateStateSet();
+        stateSet->setRenderBinDetails(1000, "RenderBin");
+        
+        // speed optimization?
+        stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
+        stateSet->setAttribute(new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
+        stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+        stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
+        stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+        
+        
+        panelSwitch->setUpdateCallback(new FGPanelSwitchCallback);
+        panelChanged();
+        
+        guiCamera->addChild(panelSwitch.get());
     }
+    
     osg::Switch* sw = new osg::Switch;
     sw->setUpdateCallback(new FGScenerySwitchCallback);
     sw->addChild(mRoot.get());
@@ -647,6 +678,20 @@ FGRenderer::setupView( void )
     stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
 }
 
+void FGRenderer::panelChanged()
+{
+    if (!panelSwitch) {
+        return;
+    }
+    
+    osg::Node* n = FGPanelNode::createNode(globals->get_current_panel());
+    if (panelSwitch->getNumChildren()) {
+        panelSwitch->setChild(0, n);
+    } else {
+        panelSwitch->addChild(n);
+    }
+}
+                                    
 // Update all Visuals (redraws anything graphics related)
 void
 FGRenderer::update( ) {

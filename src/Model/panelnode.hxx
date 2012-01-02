@@ -8,20 +8,13 @@
 class FGPanel;
 class SGPropertyNode;
 
-// PanelNode defines an SSG leaf object that draws a FGPanel object
-// into the scene graph.  Note that this is an incomplete SSG object,
-// many methods, mostly involved with modelling and runtime
-// inspection, are unimplemented.
+// PanelNode defines an OSG drawable wrapping the 2D panel drawing code
 
-// Static mouse handler for all FGPanelNodes.  Very clumsy; this
-// should really be done through our container (an aircraft model,
-// typically).
-bool fgHandle3DPanelMouseEvent(int button, int updown, int x, int y);
-void fgUpdate3DPanels();
-
-class FGPanelNode : public osg::Drawable // OSGFIXME 
+class FGPanelNode : public osg::Drawable
 {
 public:
+    FGPanelNode(FGPanel* panel);
+  
     FGPanelNode(SGPropertyNode* props);
     virtual ~FGPanelNode();
 
@@ -29,17 +22,30 @@ public:
     virtual osg::Object* cloneType() const { return 0; }
     virtual osg::Object* clone(const osg::CopyOp& copyop) const { return 0; }        
 
-    bool doMouseAction(int button, int updown, int x, int y);
-
     FGPanel* getPanel() { return _panel; }
 
     virtual void drawImplementation(osg::RenderInfo& renderInfo) const
     { drawImplementation(*renderInfo.getState()); }
+  
     void drawImplementation(osg::State& state) const;
     virtual osg::BoundingBox computeBound() const;
 
+    /** Return true, FGPanelNode does support accept(PrimitiveFunctor&). */
+    virtual bool supports(const osg::PrimitiveFunctor&) const { return true; }
+  
+    virtual void accept(osg::PrimitiveFunctor& functor) const;
+  
+    static osg::Node* load(SGPropertyNode *n);
+    static osg::Node* createNode(FGPanel* panel);
+  
+    osg::Matrix transformMatrix() const;
+  
 private:
+    void initWithPanel();
+    
     FGPanel* _panel;
+  
+    bool _resizeToViewport;
 
     // Panel corner coordinates
     osg::Vec3 _bottomLeft, _topLeft, _bottomRight;
@@ -51,13 +57,6 @@ private:
     // The matrix that results, which transforms 2D x/y panel
     // coordinates into 3D coordinates of the panel quadrilateral.
     osg::Matrix _xform;
-
-    // The matrix transformation state that was active the last time
-    // we were rendered.  Used by the mouse code to compute
-    // intersections.
-    mutable osg::Matrix _lastModelview;
-    mutable osg::Matrix _lastProjection;
-    mutable double _lastViewport[4];
 };
 
 

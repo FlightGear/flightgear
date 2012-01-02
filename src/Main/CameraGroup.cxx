@@ -281,13 +281,19 @@ void CameraGroup::update(const osg::Vec3d& position,
 #endif
         Camera* camera = info->camera.get();
         Matrix viewMatrix;
-        if ((info->flags & VIEW_ABSOLUTE) != 0)
+      
+        if (info->flags & GUI) {
+          viewMatrix = osg::Matrix(); // identifty transform on the GUI camera
+        } else if ((info->flags & VIEW_ABSOLUTE) != 0)
             viewMatrix = slave._viewOffset;
         else
             viewMatrix = masterView * slave._viewOffset;
         camera->setViewMatrix(viewMatrix);
         Matrix projectionMatrix;
-        if ((info->flags & PROJECTION_ABSOLUTE) != 0) {
+        
+        if (info->flags & GUI) {
+          projectionMatrix = osg::Matrix::ortho2D(0, info->width, 0, info->height);
+        } else if ((info->flags & PROJECTION_ABSOLUTE) != 0) {
             if (info->flags & ENABLE_MASTER_ZOOM) {
                 if (info->relativeCameraParent < _cameras.size()) {
                     // template projection matrix and view matrix of the current camera
@@ -920,7 +926,7 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     camera->setCullingMode(osg::CullSettings::NO_CULLING);
     camera->setProjectionResizePolicy(Camera::FIXED);
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
-    const int cameraFlags = GUI;
+    const int cameraFlags = GUI | DO_INTERSECTION_TEST;
     CameraInfo* result = addCamera(cameraFlags, camera, Matrixd::identity(),
                                    Matrixd::identity(), false);
     SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
@@ -987,72 +993,103 @@ void CameraGroup::resized()
     }
 }
 
+const CameraInfo* CameraGroup::getGUICamera() const
+{
+    ConstCameraIterator result
+        = std::find_if(camerasBegin(), camerasEnd(),
+                   FlagTester<CameraInfo>(GUI));
+    if (result == camerasEnd()) {
+        return NULL;
+    }
+
+    return *result;
+}
+  
 Camera* getGUICamera(CameraGroup* cgroup)
 {
-    CameraGroup::CameraIterator end = cgroup->camerasEnd();
-    CameraGroup::CameraIterator result
-        = std::find_if(cgroup->camerasBegin(), end,
-                       FlagTester<CameraInfo>(CameraGroup::GUI));
-    if (result != end)
-        return (*result)->camera.get();
-    else
-        return 0;
+    const CameraInfo* info = cgroup->getGUICamera();
+    if (!info) {
+        return NULL;
+    }
+    
+    return info->camera.get();
 }
 
+static bool computeCameraIntersection(const CameraInfo* cinfo,
+                                      const osgGA::GUIEventAdapter* ea,
+                                      osgUtil::LineSegmentIntersector::Intersections& intersections)
+{
+  using osgUtil::Intersector;
+  using osgUtil::LineSegmentIntersector;
+  double x, y;
+  eventToWindowCoords(ea, x, y);
+  
+  if (!(cinfo->flags & CameraGroup::DO_INTERSECTION_TEST))
+    return false;
+  
+  const Camera* camera = cinfo->camera.get();
+  if (camera->getGraphicsContext() != ea->getGraphicsContext())
+    return false;
+  
+  const Viewport* viewport = camera->getViewport();
+  double epsilon = 0.5;
+  if (!(x >= viewport->x() - epsilon
+        && x < viewport->x() + viewport->width() -1.0 + epsilon
+        && y >= viewport->y() - epsilon
+        && y < viewport->y() + viewport->height() -1.0 + epsilon))
+    return false;
+  
+  Vec4d start(x, y, 0.0, 1.0);
+  Vec4d end(x, y, 1.0, 1.0);
+  Matrix windowMat = viewport->computeWindowMatrix();
+  Matrix startPtMat = Matrix::inverse(camera->getProjectionMatrix()
+                                      * windowMat);
+  Matrix endPtMat;
+  if (!cinfo->farCamera.valid() || cinfo->farCamera->getNodeMask() == 0)
+    endPtMat = startPtMat;
+  else
+    endPtMat = Matrix::inverse(cinfo->farCamera->getProjectionMatrix()
+                               * windowMat);
+  start = start * startPtMat;
+  start /= start.w();
+  end = end * endPtMat;
+  end /= end.w();
+  ref_ptr<LineSegmentIntersector> picker
+  = new LineSegmentIntersector(Intersector::VIEW,
+                               Vec3d(start.x(), start.y(), start.z()),
+                               Vec3d(end.x(), end.y(), end.z()));
+  osgUtil::IntersectionVisitor iv(picker.get());
+  const_cast<Camera*>(camera)->accept(iv);
+  if (picker->containsIntersections()) {
+    intersections = picker->getIntersections();
+    return true;
+  }
+  
+  return false;
+}
+  
 bool computeIntersections(const CameraGroup* cgroup,
                           const osgGA::GUIEventAdapter* ea,
                           osgUtil::LineSegmentIntersector::Intersections& intersections)
 {
-    using osgUtil::Intersector;
-    using osgUtil::LineSegmentIntersector;
-    double x, y;
-    eventToWindowCoords(ea, x, y);
+    // test the GUI first
+    const CameraInfo* guiCamera = cgroup->getGUICamera();
+    if (guiCamera && computeCameraIntersection(guiCamera, ea, intersections))
+        return true;
+    
     // Find camera that contains event
     for (CameraGroup::ConstCameraIterator iter = cgroup->camerasBegin(),
              e = cgroup->camerasEnd();
          iter != e;
          ++iter) {
         const CameraInfo* cinfo = iter->get();
-        if ((cinfo->flags & CameraGroup::DO_INTERSECTION_TEST) == 0)
+        if (cinfo == guiCamera)
             continue;
-        const Camera* camera = cinfo->camera.get();
-        if (camera->getGraphicsContext() != ea->getGraphicsContext())
-            continue;
-        const Viewport* viewport = camera->getViewport();
-        double epsilon = 0.5;
-        if (!(x >= viewport->x() - epsilon
-              && x < viewport->x() + viewport->width() -1.0 + epsilon
-              && y >= viewport->y() - epsilon
-              && y < viewport->y() + viewport->height() -1.0 + epsilon))
-            continue;
-        Vec4d start(x, y, 0.0, 1.0);
-        Vec4d end(x, y, 1.0, 1.0);
-        Matrix windowMat = viewport->computeWindowMatrix();
-        Matrix startPtMat = Matrix::inverse(camera->getProjectionMatrix()
-                                            * windowMat);
-        Matrix endPtMat;
-        if (!cinfo->farCamera.valid() || cinfo->farCamera->getNodeMask() == 0)
-            endPtMat = startPtMat;
-        else
-            endPtMat = Matrix::inverse(cinfo->farCamera->getProjectionMatrix()
-                                       * windowMat);
-        start = start * startPtMat;
-        start /= start.w();
-        end = end * endPtMat;
-        end /= end.w();
-        ref_ptr<LineSegmentIntersector> picker
-            = new LineSegmentIntersector(Intersector::VIEW,
-                                         Vec3d(start.x(), start.y(), start.z()),
-                                         Vec3d(end.x(), end.y(), end.z()));
-        osgUtil::IntersectionVisitor iv(picker.get());
-        const_cast<Camera*>(camera)->accept(iv);
-        if (picker->containsIntersections()) {
-            intersections = picker->getIntersections();
+        
+        if (computeCameraIntersection(cinfo, ea, intersections))
             return true;
-        } else {
-            break;
-        }
     }
+  
     intersections.clear();
     return false;
 }

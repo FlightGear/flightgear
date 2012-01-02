@@ -214,6 +214,11 @@ public:
      * get aspect ratio of master camera's viewport
      */
     double getMasterAspectRatio() const;
+  
+    /**
+     * find the GUI camera if one is defined 
+     */
+    const CameraInfo* getGUICamera() const;
 protected:
     CameraList _cameras;
     osg::ref_ptr<osgViewer::Viewer> _viewer;

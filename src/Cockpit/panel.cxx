@@ -204,7 +204,8 @@ FGPanel::FGPanel ()
     _flipx(fgGetNode("/sim/panel/flip-x", true)),
     _xsize_node(fgGetNode("/sim/startup/xsize", true)),
     _ysize_node(fgGetNode("/sim/startup/ysize", true)),
-    _enable_depth_test(false)
+    _enable_depth_test(false),
+    _drawPanelHotspots("/sim/panel-hotspots")
 {
 }
 
@@ -265,68 +266,24 @@ FGPanel::unbind ()
 
 
 void
-FGPanel::update (double dt)
+FGPanel::update (double /* dt */)
 {
-  std::cout << "OSGFIXME" << std::endl;
+  updateMouseDelay();
 }
 
-void
-FGPanel::update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
+double
+FGPanel::getAspectScale() const
 {
-  using namespace osg;
-                               // Calculate accelerations
-                               // and jiggle the panel accordingly
-                               // The factors and bounds are just
-                               // initial guesses; using sqrt smooths
-                               // out the spikes.
-  double x_offset = _x_offset->getIntValue();
-  double y_offset = _y_offset->getIntValue();
-
-
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  Matrixf proj;
-  if ( _flipx->getBoolValue() ) {
-      proj = Matrixf::ortho2D(winx + winw, winx, winy + winh, winy); /* up side down */
-  } else {
-      proj = Matrixf::ortho2D(winx, winx + winw, winy, winy + winh); /* right side up */
-  }
-  glLoadMatrix(proj.ptr());
+  // set corner-coordinates correctly
   
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
+  int xsize = _xsize_node->getIntValue();
+  int ysize = _ysize_node->getIntValue();
+  float aspect_adjust = get_aspect_adjust(xsize, ysize);
   
-  glTranslated(x_offset, y_offset, 0);
-  
-  draw(state);
-
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-}
-
-/**
- * Update the panel.
- */
-void
-FGPanel::update (osg::State& state)
-{
-				// Do nothing if the panel isn't visible.
-    if ( !fgPanelVisible() ) {
-        return;
-    }
-
-    updateMouseDelay();
-
-				// Now, draw the panel
-    float aspect_adjust = get_aspect_adjust(_xsize_node->getIntValue(),
-                                            _ysize_node->getIntValue());
-    if (aspect_adjust <1.0)
-        update(state, WIN_X, int(WIN_W * aspect_adjust), WIN_Y, WIN_H);
-    else
-        update(state, WIN_X, WIN_W, WIN_Y, int(WIN_H / aspect_adjust));
+  if (aspect_adjust < 1.0)
+    return ysize / (double) WIN_H;
+  else
+    return xsize /(double) WIN_W;  
 }
 
 /**
@@ -345,10 +302,10 @@ void FGPanel::updateMouseDelay()
     }
 }
 
-
 void
 FGPanel::draw(osg::State& state)
 {
+    
   // In 3D mode, it's possible that we are being drawn exactly on top
   // of an existing polygon.  Use an offset to prevent z-fighting.  In
   // 2D mode, this is a no-op.
@@ -363,6 +320,7 @@ FGPanel::draw(osg::State& state)
     panelStateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     panelStateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     panelStateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
+  
     osg::Material* material = new osg::Material;
     material->setColorMode(osg::Material::AMBIENT_AND_DIFFUSE);
     material->setDiffuse(osg::Material::FRONT_AND_BACK, osg::Vec4(1, 1, 1, 1));
@@ -370,6 +328,7 @@ FGPanel::draw(osg::State& state)
     material->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
     material->setEmission(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
     panelStateSet->setAttribute(material);
+    
     panelStateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
     panelStateSet->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK));
     panelStateSet->setAttributeAndModes(new osg::Depth(osg::Depth::LEQUAL));
@@ -495,7 +454,7 @@ FGPanel::draw(osg::State& state)
 
   // Draw yellow "hotspots" if directed to.  This is a panel authoring
   // feature; not intended to be high performance or to look good.
-  if ( fgGetBool("/sim/panel-hotspots") ) {
+  if ( _drawPanelHotspots ) {
     static osg::ref_ptr<osg::StateSet> hotspotStateSet;
     if (!hotspotStateSet.valid()) {
       hotspotStateSet = new osg::StateSet;

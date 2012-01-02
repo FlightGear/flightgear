@@ -74,6 +74,10 @@ public:
 
     SGSky* getSky() const { return _sky; }
     
+    /**
+     * inform the renderer when the global (2D) panel is changed
+     */
+    void panelChanged();
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
