@@ -367,7 +367,8 @@ getHeadingMag ()
 {
   double magheading;
   magheading = fgGetDouble("/orientation/heading-deg") - getMagVar();
-  if (magheading < 0) magheading += 360;
+  if (magheading <= 0) magheading += 360;
+  else if (magheading > 360) magheading -= 360;
   return magheading;
 }
 
@@ -379,7 +380,8 @@ getTrackMag ()
 {
   double magtrack;
   magtrack = fgGetDouble("/orientation/track-deg") - getMagVar();
-  if (magtrack < 0) magtrack += 360;
+  if (magtrack <= 0) magtrack += 360;
+  else if (magtrack > 360) magtrack -= 360;
   return magtrack;
 }
 
