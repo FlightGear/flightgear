@@ -194,13 +194,23 @@ find_package(ALUT REQUIRED)
 find_package(OpenSceneGraph 3.0.0 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
 
 if(ENABLE_FGADMIN)
-  find_package(FLTK)
+	find_package(FLTK)
 
 	if ( FLTK_FOUND )
+		if ( X11_Xinerama_FOUND )
+			message(STATUS "Found X11_Xinerama...")
+			list(APPEND FLTK_LIBRARIES ${COCOA_LIBRARY} ${X11_Xinerama_LIB})
+		endif()
+
+		if ( X11_Xft_FOUND )
+			message(STATUS "Found X11_Xft...")
+			list(APPEND FLTK_LIBRARIES ${COCOA_LIBRARY} ${X11_Xft_LIB})
+		endif()
 
 		set( CMAKE_REQUIRED_INCLUDES ${FLTK_INCLUDE_DIR} )
-		set( CMAKE_REQUIRED_LIBRARIES ${FLTK_LIBRARIES} ${X11_Xinerama_LIB} ${X11_Xft_LIB} )
+		set( CMAKE_REQUIRED_LIBRARIES ${FLTK_LIBRARIES} )
 
+		message(STATUS "Using FLTK_LIBRARIES for fgadmin: ${FLTK_LIBRARIES}")
 	endif ( FLTK_FOUND )
 endif(ENABLE_FGADMIN)
 
