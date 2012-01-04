@@ -443,7 +443,8 @@ NavDisplay::init ()
     
     osg::StateSet *stateSet = _geom->getOrCreateStateSet();
     stateSet->setTextureAttributeAndModes(0, _symbolTexture.get());
-    
+    stateSet->setDataVariance(osg::Object::STATIC);
+  
     // Initially allocate space for 128 quads
     _vertices = new osg::Vec2Array;
     _vertices->setDataVariance(osg::Object::DYNAMIC);
