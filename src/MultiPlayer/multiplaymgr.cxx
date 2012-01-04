@@ -432,12 +432,16 @@ FGMultiplayMgr::init (void)
         << txAddress << "'. Multiplayer mode disabled.");
       return;
     } else {
-        SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - have server");
+      SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - have server");
       mHaveServer = true;
     }
     if (rxPort <= 0)
       rxPort = txPort;
+  } else {
+    SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - no transmission address. Multiplayer mode disabled");
+    return;
   }
+
   if (rxPort <= 0) {
     SG_LOG(SG_NETWORK, SG_INFO,
       "FGMultiplayMgr - No receiver port. Multiplayer mode disabled.");
