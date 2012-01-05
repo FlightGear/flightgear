@@ -448,7 +448,7 @@ void YASim::copyFromYASim()
     _set_Accels_CG_Body(M2FT*v[0], -M2FT*v[1], -M2FT*v[2]);
 
     _fdm->getAirplane()->getPilotAccel(v);
-    _set_Accels_Pilot_Body(-M2FT*v[0], M2FT*v[1], M2FT*v[2]);
+    _set_Accels_Pilot_Body(M2FT*v[0], M2FT*v[1], M2FT*v[2]);
 
     // There is no property for pilot G's, but I need it for a panel
     // instrument.  Hack this in here, and REMOVE IT WHEN IT FINDS A

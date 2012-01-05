@@ -126,14 +126,17 @@ void Airplane::getPilotAccel(float* out)
     // Gravity
     Glue::geodUp(s->pos, out);
     Math::mul3(-9.8f, out, out);
+    Math::vmul33(s->orient, out, out);
+    out[0] = -out[0];
 
     // The regular acceleration
     float tmp[3];
-    Math::mul3(-1, s->acc, tmp);
-    Math::add3(tmp, out, out);
-
     // Convert to aircraft coordinates
-    Math::vmul33(s->orient, out, out);
+    Math::vmul33(s->orient, s->acc, tmp);
+    tmp[1] = -tmp[1];
+    tmp[2] = -tmp[2];
+
+    Math::add3(tmp, out, out);
 
     // FIXME: rotational & centripetal acceleration needed
 }
