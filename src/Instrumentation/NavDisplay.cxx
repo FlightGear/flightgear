@@ -1123,6 +1123,16 @@ void NavDisplay::computePositionedState(FGPositioned* pos, string_set& states)
     } // FGPositioned::Type switch
 }
 
+static string mapAINodeToType(SGPropertyNode* model)
+{
+  // assume all multiplayer items are aircraft for the moment. Not ideal.
+  if (!strcmp(model->getName(), "multiplayer")) {
+    return "ai-aircraft";
+  }
+  
+  return string("ai-") + model->getName();
+}
+
 void NavDisplay::processAI()
 {
     SGPropertyNode *ai = fgGetNode("/ai/models", true);
@@ -1137,7 +1147,7 @@ void NavDisplay::processAI()
         string_set ss;
         computeAIStates(model, ss);        
         SymbolDefVector rules;
-        findRules(string("ai-") + model->getName(), ss, rules);
+        findRules(mapAINodeToType(model), ss, rules);
         if (rules.empty()) {
             return; // no rules matched, we can skip this item
         }
@@ -1160,14 +1170,15 @@ void NavDisplay::processAI()
 void NavDisplay::computeAIStates(const SGPropertyNode* ai, string_set& states)
 {
     int threatLevel = ai->getIntValue("tcas/threat-level",-1);
-    if (threatLevel >= 0) {
-        states.insert("tcas");
-      
-        std::ostringstream os;
-        os << "tcas-threat-level-" << threatLevel;
-        states.insert(os.str());
-    }
-    
+    if (threatLevel < 1)
+      threatLevel = 0;
+  
+    states.insert("tcas");
+  
+    std::ostringstream os;
+    os << "tcas-threat-level-" << threatLevel;
+    states.insert(os.str());
+
     double vspeed = ai->getDoubleValue("velocities/vertical-speed-fps");
     if (vspeed < -3.0) {
         states.insert("descending");
