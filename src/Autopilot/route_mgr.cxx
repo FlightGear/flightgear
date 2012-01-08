@@ -539,9 +539,22 @@ flightgear::WayptRef FGRouteMgr::removeWayptAtIndex(int aIndex)
   return w;
 }
   
+struct NotGeneratedWayptPredicate : public std::unary_function<const Waypt*, bool>
+{
+  bool operator() (const Waypt* w) const
+  {
+    return (w->flag(WPT_GENERATED) == false);
+  }
+};
+
+
 void FGRouteMgr::clearRoute()
 {
-  _route.clear();
+// erase all non-generated waypoints
+  WayptVec::iterator r =  
+    std::remove_if(_route.begin(), _route.end(), NotGeneratedWayptPredicate());
+  _route.erase(r, _route.end());
+  
   _currentIndex = -1;
   
   update_mirror();
@@ -1135,15 +1148,7 @@ void FGRouteMgr::initAtPosition()
 
 bool FGRouteMgr::haveUserWaypoints() const
 {
-  for (int i = 0; i < numWaypts(); i++) {
-    if (!_route[i]->flag(WPT_GENERATED)) {
-      // have a non-generated waypoint, we're done
-      return true;
-    }
-  }
-  
-  // all waypoints are generated
-  return false;
+  return std::find_if(_route.begin(), _route.end(), NotGeneratedWayptPredicate()) != _route.end();
 }
 
 bool FGRouteMgr::activate()
