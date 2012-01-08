@@ -247,9 +247,20 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
                 SGModelLib::loadModel(fullPath.str(), globals->get_props(),
                                       new FGNasalModelData);
         else
+        {
+            /* TODO FGNasalModelData's callback "modelLoaded" isn't thread-safe.
+             * But deferred (or paged) OSG loading runs in a separate thread, which would
+             * trigger the FGNasalModelData::modelLoaded callback. We're easily doomed
+             * when this happens and the model actually contains a Nasal "load" hook - which
+             * would run the Nasal parser and Nasal script execution in a separate thread...
+             * => Disabling the callback for now, to test if all Nasal related segfaults are
+             * gone. Proper resolution is TBD. We'll need to somehow decouple the OSG callback,
+             * so we can run the Nasal stuff in the main thread.
+             */
             result=
-                SGModelLib::loadDeferredModel(fullPath.str(), globals->get_props(),
-                                             new FGNasalModelData);
+                SGModelLib::loadDeferredModel(fullPath.str(), globals->get_props()/*,
+                                             new FGNasalModelData*/);
+        }
     } catch (const sg_io_exception& exc) {
         string m(exc.getMessage());
         m += " ";
