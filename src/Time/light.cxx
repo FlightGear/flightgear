@@ -401,8 +401,6 @@ void FGLight::update_adj_fog_color () {
 void FGLight::updateSunPos()
 {
     SGTime *t = globals->get_time_params();
-    FGViewer *v = globals->get_current_view();
-
     SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
     SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t->getGst() );
 
@@ -421,10 +419,11 @@ void FGLight::updateSunPos()
             << " Geodcentric lat = " << _sun_lat );
 
     // update the sun light vector
-    sun_vec() = SGVec4f(toVec3f(normalize(sunpos)), 0);
-    sun_vec_inv() = - sun_vec();
+    _sun_vec = SGVec4f(toVec3f(normalize(sunpos)), 0);
+    _sun_vec_inv = - _sun_vec;
 
     // calculate the sun's relative angle to local up
+    FGViewer *v = globals->get_current_view();
     SGVec3d viewPos = v->get_view_pos();
     SGQuatd hlOr = SGQuatd::fromLonLat(SGGeod::fromCart(viewPos));
     SGVec3d world_up = hlOr.backTransform(-SGVec3d::e3());
