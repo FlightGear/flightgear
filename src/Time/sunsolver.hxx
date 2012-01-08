@@ -57,4 +57,5 @@ time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
  */
 void fgSunPositionGST(double gst, double *lon, double *lat);
 
+
 #endif /* _SUNSOLVER_HXX */

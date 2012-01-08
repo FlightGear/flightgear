@@ -348,11 +348,8 @@ void FGLight::update_adj_fog_color () {
     // first determine the difference between our view angle and local
     // direction to the sun
     //double vert_rotation = pitch + pitch_offset;
-    double hor_rotation = -(_sun_rotation + SGD_PI) - heading + heading_offset;
-    if (hor_rotation < 0 )
-       hor_rotation = fmod(hor_rotation, SGD_2PI) + SGD_2PI;
-    else
-       hor_rotation = fmod(hor_rotation, SGD_2PI);
+
+    double hor_rotation = -_sun_rotation + SGD_PI - heading + heading_offset;
 
     // revert to unmodified values before using them.
     //
@@ -382,7 +379,7 @@ void FGLight::update_adj_fog_color () {
     if (sif < 1e-4)
        sif = 1e-4;
 
-    float rf1 = fabs((hor_rotation - SGD_PI) / SGD_PI);		// 0.0 .. 1.0
+    float rf1 = fabs(fmod(hor_rotation, SGD_2PI) - SGD_PI) / SGD_PI;
     float rf2 = avf * pow(rf1*rf1, 1/sif) * 1.0639 * _saturation * _scattering;
     float rf3 = 1.0 - rf2;
 
@@ -405,13 +402,14 @@ void FGLight::updateSunPos()
     SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t->getGst() );
 
     fgSunPositionGST(t->getGst(), &_sun_lon, &_sun_lat);
+
     // It might seem that sun_gc_lat needs to be converted to geodetic
     // latitude here, but it doesn't. The sun latitude is the latitude
     // of the point on the earth where the up vector has the same
     // angle from geocentric Z as the sun direction. But geodetic
     // latitude is defined as 90 - angle of up vector from Z!
-    SGVec3d sunpos(SGVec3d::fromGeoc(SGGeoc::fromRadM(_sun_lon, _sun_lat,
-                                                      SGGeodesy::EQURAD)));
+    SGVec3d sunpos = SGVec3d::fromGeoc(SGGeoc::fromRadM(_sun_lon, _sun_lat,
+                                                          SGGeodesy::EQURAD));
 
     SG_LOG( SG_EVENT, SG_DEBUG, "    t->cur_time = " << t->get_cur_time() );
     SG_LOG( SG_EVENT, SG_DEBUG,
@@ -424,24 +422,28 @@ void FGLight::updateSunPos()
 
     // calculate the sun's relative angle to local up
     FGViewer *v = globals->get_current_view();
-    SGVec3d viewPos = v->get_view_pos();
-    SGQuatd hlOr = SGQuatd::fromLonLat(SGGeod::fromCart(viewPos));
-    SGVec3d world_up = hlOr.backTransform(-SGVec3d::e3());
-    SGVec3d nsun = normalize(sunpos);
+    SGQuatd hlOr =  SGQuatd::fromLonLat( v->getPosition() );
+    SGVec3d world_up = hlOr.backTransform( -SGVec3d::e3() );
     // cout << "nup = " << nup[0] << "," << nup[1] << ","
     //      << nup[2] << endl;
     // cout << "nsun = " << nsun[0] << "," << nsun[1] << ","
     //      << nsun[2] << endl;
 
-    _sun_angle = acos( dot ( world_up, nsun ) );
+    SGVec3d nsun = normalize(sunpos);
+    SGVec3d nup = normalize(world_up);
+    _sun_angle = acos( dot( nup, nsun ) );
+
+    double signnedPI = (_sun_angle < 0.0) ? -SGD_PI : SGD_PI;
+    _sun_angle = fmod(_sun_angle+signnedPI, SGD_2PI) - signnedPI;
+
     SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
             << get_sun_angle() );
 
     // Get direction to the sun in the local frame.
     SGVec3d local_sun_vec = hlOr.transform(nsun);
 
-    // Angle from south. XXX Is this correct in the southern hemisphere?
-    _sun_rotation = atan2(local_sun_vec.x(), -local_sun_vec.y());
+    // Angle from south. 
+    _sun_rotation = 2.0 * atan2(local_sun_vec.x(), -local_sun_vec.y());
 
     // cout << "  Sky needs to rotate = " << _sun_rotation << " rads = "
     //      << _sun_rotation * SGD_RADIANS_TO_DEGREES << " degrees." << endl;

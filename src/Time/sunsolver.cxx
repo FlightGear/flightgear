@@ -102,7 +102,7 @@ static double sun_angle( const SGTime &t, const SGVec3d& world_up,
 
     double sun_angle_deg = sun_angle * SG_RADIANS_TO_DEGREES;
     SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
-	    << sun_anglei_deg );
+	    << sun_angle_deg );
 
     return sun_angle_deg;
 }
