@@ -455,7 +455,7 @@ FGRenderer::init( void )
     SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
                                   distance_attenuation );
 
-    if (const char* tc = fgGetString("/sim/rendering/texture-compression")) {
+    if (const char* tc = fgGetString("/sim/rendering/texture-compression", NULL)) {
       if (strcmp(tc, "false") == 0 || strcmp(tc, "off") == 0 ||
           strcmp(tc, "0") == 0 || strcmp(tc, "no") == 0 ||
           strcmp(tc, "none") == 0) {
