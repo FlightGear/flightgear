@@ -233,8 +233,8 @@ public:
         if (stretchSymbol) {
             stretchY2 = node->getFloatValue("y2");
             stretchY3 = node->getFloatValue("y3");
-            stretchV2 = node->getFloatValue("v2");
-            stretchV3 = node->getFloatValue("v3");
+            stretchV2 = node->getFloatValue("v2") / texSize;
+            stretchV3 = node->getFloatValue("v3") / texSize;
         }
       
         return true;
@@ -658,7 +658,7 @@ void NavDisplay::addSymbolToScene(SymbolInstance* sym)
     verts[3] = osg::Vec2(def->xy0.x(), def->xy1.y());
     
     if (def->rotateToHeading) {
-        osg::Matrixf m(degRotation(sym->headingDeg));
+        osg::Matrixf m(degRotation(sym->headingDeg - _view_heading));
         for (int i=0; i<4; ++i) {
             verts[i] = mult(verts[i], m);
         }
@@ -686,7 +686,7 @@ void NavDisplay::addSymbolToScene(SymbolInstance* sym)
         stretchVerts[2] = osg::Vec2(def->xy1.x(), def->stretchY3);
         stretchVerts[3] = osg::Vec2(def->xy0.x(), def->stretchY3);
         
-        osg::Matrixf m(degRotation(sym->headingDeg));
+        osg::Matrixf m(degRotation(sym->headingDeg - _view_heading));
         for (int i=0; i<4; ++i) {
             stretchVerts[i] = mult(stretchVerts[i], m);
         }
@@ -1013,8 +1013,17 @@ void NavDisplay::foundPositionedItem(FGPositioned* pos)
     computePositionedPropsAndHeading(pos, vars, heading);
     
     osg::Vec2 projected = projectGeod(pos->geod());
+    if (pos->type() == FGPositioned::RUNWAY) {
+        FGRunway* rwy = (FGRunway*) pos;
+        projected = projectGeod(rwy->threshold());
+    }
+    
     BOOST_FOREACH(SymbolDef* r, rules) {
-        addSymbolInstance(projected, heading, r, vars);
+        SymbolInstance* ins = addSymbolInstance(projected, heading, r, vars);
+        if (pos->type() == FGPositioned::RUNWAY) {
+            FGRunway* rwy = (FGRunway*) pos;
+            ins->endPos = projectGeod(rwy->end());
+        }
     }
 }
 
@@ -1024,6 +1033,7 @@ void NavDisplay::computePositionedPropsAndHeading(FGPositioned* pos, SGPropertyN
     nd->setStringValue("name", pos->name());
     nd->setDoubleValue("elevation-ft", pos->elevation());
     nd->setIntValue("heading-deg", 0);
+    heading = 0.0;
     
     switch (pos->type()) {
     case FGPositioned::VOR:
@@ -1033,11 +1043,12 @@ void NavDisplay::computePositionedPropsAndHeading(FGPositioned* pos, SGPropertyN
         nd->setDoubleValue("frequency-mhz", nav->get_freq());
         
         if (pos == _nav1Station) {
-            nd->setIntValue("heading-deg", _navRadio1Node->getDoubleValue("radials/target-radial-deg"));
+            heading = _navRadio1Node->getDoubleValue("radials/target-radial-deg");
         } else if (pos == _nav2Station) {
-            nd->setIntValue("heading-deg", _navRadio2Node->getDoubleValue("radials/target-radial-deg"));
+            heading = _navRadio2Node->getDoubleValue("radials/target-radial-deg");
         }
         
+        nd->setIntValue("heading-deg", heading);
         break;
     }
 
@@ -1049,7 +1060,8 @@ void NavDisplay::computePositionedPropsAndHeading(FGPositioned* pos, SGPropertyN
         
     case FGPositioned::RUNWAY: {
         FGRunway* rwy = static_cast<FGRunway*>(pos);
-        nd->setDoubleValue("heading-deg", rwy->headingDeg());
+        heading = rwy->headingDeg();
+        nd->setDoubleValue("heading-deg", heading);
         nd->setIntValue("length-ft", rwy->lengthFt());
         nd->setStringValue("airport", rwy->airport()->ident());
         break;
@@ -1187,15 +1199,15 @@ void NavDisplay::computeAIStates(const SGPropertyNode* ai, string_set& states)
     }
 }
 
-bool NavDisplay::addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars)
+SymbolInstance* NavDisplay::addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars)
 {
     if (isProjectedClipped(proj)) {
-        return false;
+        return NULL;
     }
     
     SymbolInstance* sym = new SymbolInstance(proj, heading, def, vars);
     _symbols.push_back(sym);
-    return true;
+    return sym;
 }
 
 bool NavDisplay::isProjectedClipped(const osg::Vec2& projected) const

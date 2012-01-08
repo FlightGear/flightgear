@@ -106,7 +106,7 @@ private:
     bool anyRuleMatches(const std::string& type, const string_set& states) const;
     void findRules(const std::string& type, const string_set& states, SymbolDefVector& rules);
     
-    bool addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars);
+    SymbolInstance* addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars);
     void addLine(osg::Vec2 a, osg::Vec2 b, const osg::Vec4& color);
     osg::Vec2 projectBearingRange(double bearingDeg, double rangeNm) const;
     osg::Vec2 projectGeod(const SGGeod& geod) const;
