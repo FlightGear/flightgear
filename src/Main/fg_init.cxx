@@ -502,7 +502,7 @@ static SGPath platformDefaultDataPath()
   
   SGPath appData;
   appData.set((const char*) path);
-  appData.append("flightgear.org");
+  appData.append("FlightGear");
   return appData;
 }
 #else

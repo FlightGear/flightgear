@@ -75,8 +75,7 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _refID( _newAIModelID() ),
     _otype(ot),
     _initialized(false),
-    _aimodel(0),
-    _fxpath(""),
+    _modeldata(0),
     _fx(0)
 
 {
@@ -232,21 +231,28 @@ void FGAIBase::update(double dt) {
                             pitch*speed );
         _fx->set_velocity( velocity );
     }
-    else if ((_aimodel)&&(fgGetBool("/sim/sound/aimodels/enabled",false)))
+    else if ((_modeldata)&&(_modeldata->needInitilization()))
     {
-        string fxpath = _aimodel->get_sound_path();
-        if (fxpath != "")
-        {
-            _fxpath = fxpath;
-            props->setStringValue("sim/sound/path", _fxpath.c_str());
+        // process deferred nasal initialization,
+        // which must be done in main thread
+        _modeldata->init();
 
-            // initialize the sound configuration
-            SGSoundMgr *smgr = globals->get_soundmgr();
-            stringstream name;
-            name <<  "aifx:";
-            name << _refID;
-            _fx = new FGFX(smgr, name.str(), props);
-            _fx->init();
+        // sound initialization
+        if (fgGetBool("/sim/sound/aimodels/enabled",false))
+        {
+            string fxpath = _modeldata->get_sound_path();
+            if (fxpath != "")
+            {
+                props->setStringValue("sim/sound/path", fxpath.c_str());
+
+                // initialize the sound configuration
+                SGSoundMgr *smgr = globals->get_soundmgr();
+                stringstream name;
+                name <<  "aifx:";
+                name << _refID;
+                _fx = new FGFX(smgr, name.str(), props);
+                _fx->init();
+            }
         }
     }
 }
@@ -324,8 +330,8 @@ bool FGAIBase::init(bool search_in_AI_path)
     else
         _installed = true;
 
-    _aimodel = new FGAIModelData(props);
-    osg::Node * mdl = SGModelLib::loadDeferredModel(f, props, _aimodel);
+    _modeldata = new FGAIModelData(props);
+    osg::Node * mdl = SGModelLib::loadDeferredModel(f, props, _modeldata);
 
     _model = new osg::LOD;
     _model->setName("AI-model range animation node");
@@ -912,7 +918,8 @@ int FGAIBase::_newAIModelID() {
 
 FGAIModelData::FGAIModelData(SGPropertyNode *root)
   : _nasal( new FGNasalModelData(root) ),
-    _path("")
+    _ready(false),
+    _initialized(false)
 {
 }
 
@@ -923,9 +930,21 @@ FGAIModelData::~FGAIModelData()
 
 void FGAIModelData::modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n)
 {
-    const char* fxpath = prop->getStringValue("sound/path");
-    if (fxpath) {
-        _path = string(fxpath);
-    }
-    _nasal->modelLoaded(path, prop, n);
+    // WARNING: All this is called in a separate OSG thread! Only use thread-safe stuff
+    // here that is fine to be run concurrently with stuff in the main loop!
+    if (_ready)
+        return;
+    _fxpath = _prop->getStringValue("sound/path");
+    _prop = prop;
+    _path = path;
+    _ready = true;
+}
+
+// do Nasal initialization (must be called in the main loop)
+void FGAIModelData::init()
+{
+    // call FGNasalSys to create context and run hooks (not-thread safe!)
+    _nasal->modelLoaded(_path, _prop, 0);
+    _prop = 0;
+    _initialized = true;
 }

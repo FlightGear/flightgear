@@ -8,6 +8,7 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/SGBinding.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -16,6 +17,7 @@
 using std::string;
 using std::map;
 using std::cout;
+using namespace simgear;
 
 typedef std::map<NSMenuItem*, SGBindingList> MenuItemBindings;
 
@@ -27,7 +29,6 @@ public:
   CocoaMenuBarPrivate();
   ~CocoaMenuBarPrivate();
   
-  bool labelIsSeparator(const std::string& s) const;  
   void menuFromProps(NSMenu* menu, SGPropertyNode* menuNode);
   
   void fireBindingsForItem(NSMenuItem* item);
@@ -63,6 +64,51 @@ static NSString* stdStringToCocoa(const string& s)
   return [NSString stringWithUTF8String:s.c_str()];
 }
 
+static void setFunctionKeyShortcut(NSMenuItem* item, unichar shortcut)
+{
+  unichar ch[1];
+  ch[0] = shortcut;
+  [item setKeyEquivalentModifierMask:NSFunctionKeyMask];
+  [item setKeyEquivalent:[NSString stringWithCharacters:ch length:1]];
+  
+}
+
+static void setItemShortcutFromString(NSMenuItem* item, const string& s)
+{
+  const char* shortcut = "";
+  
+  bool hasCtrl = strutils::starts_with(s, "Ctrl-"); 
+  bool hasShift = strutils::starts_with(s, "Shift-");
+  bool hasAlt = strutils::starts_with(s, "Alt-");
+  
+  int offset = 0; // character offset from start of string
+  if (hasShift) offset += 6;
+  if (hasCtrl) offset += 5;
+  if (hasAlt) offset += 4;
+  
+  shortcut = s.c_str() + offset;
+  if (!strcmp(shortcut, "Esc"))
+    shortcut = "\e";    
+  
+  if (!strcmp(shortcut, "F11")) {
+    setFunctionKeyShortcut(item, NSF11FunctionKey);
+    return;
+  }
+  
+  if (!strcmp(shortcut, "F12")) {
+    setFunctionKeyShortcut(item, NSF12FunctionKey);
+    return;
+  }
+  
+  [item setKeyEquivalent:[NSString stringWithCString:shortcut encoding:NSUTF8StringEncoding]];
+  NSUInteger modifiers = 0;
+  if (hasCtrl) modifiers |= NSControlKeyMask;
+  if (hasShift) modifiers |= NSShiftKeyMask;
+  if (hasAlt) modifiers |= NSAlternateKeyMask;
+  
+  [item setKeyEquivalentModifierMask:modifiers];
+}
+
 class EnabledListener : public SGPropertyChangeListener
 {
 public:
@@ -94,15 +140,9 @@ FGCocoaMenuBar::CocoaMenuBarPrivate::~CocoaMenuBarPrivate()
   [delegate release];
 }
   
-bool FGCocoaMenuBar::CocoaMenuBarPrivate::labelIsSeparator(const std::string& s) const
+static bool labelIsSeparator(NSString* s)
 {
-  for (unsigned int i=0; i<s.size(); ++i) {
-    if (s[i] != '-') {
-      return false;
-    }
-  }
-  
-  return true;
+  return [s hasPrefix:@"---"];
 }
   
 void FGCocoaMenuBar::CocoaMenuBarPrivate::menuFromProps(NSMenu* menu, SGPropertyNode* menuNode)
@@ -113,21 +153,28 @@ void FGCocoaMenuBar::CocoaMenuBarPrivate::menuFromProps(NSMenu* menu, SGProperty
       n->setBoolValue("enabled", true);
     }
     
+    string shortcut;
     string l = n->getStringValue("label");
     string::size_type pos = l.find("(");
     if (pos != string::npos) {
-      l = l.substr(0, pos);
+      string full(l);
+      l = full.substr(0, pos);
+      shortcut = full.substr(pos + 1, full.size() - (pos + 2));
     }
     
-    NSString* label = stdStringToCocoa(l);
-    NSString* shortcut = @"";
+    NSString* label = stdStringToCocoa(strutils::simplify(l));
+    
     NSMenuItem* item;
     if (index >= [menu numberOfItems]) {
-      if (labelIsSeparator(l)) {
+      if (labelIsSeparator(label)) {
         item = [NSMenuItem separatorItem];
         [menu addItem:item];
       } else {        
-        item = [menu addItemWithTitle:label action:nil keyEquivalent:shortcut];
+        item = [menu addItemWithTitle:label action:nil keyEquivalent:@""];
+        if (!shortcut.empty()) {
+          setItemShortcutFromString(item, shortcut);
+        }
+        
         n->getNode("enabled")->addChangeListener(new EnabledListener(item));
         [item setTarget:delegate];
         [item setAction:@selector(itemAction:)];

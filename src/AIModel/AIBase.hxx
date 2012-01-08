@@ -21,7 +21,6 @@
 #define _FG_AIBASE_HXX
 
 #include <string>
-#include <list>
 
 #include <simgear/constants.h>
 #include <simgear/math/SGMath.hxx>
@@ -38,7 +37,6 @@
 
 
 using std::string;
-using std::list;
 
 class SGMaterial;
 class FGAIManager;
@@ -230,9 +228,8 @@ private:
     bool _initialized;
     osg::ref_ptr<osg::LOD> _model; //The 3D model LOD object
 
-    osg::ref_ptr<FGAIModelData> _aimodel;
+    osg::ref_ptr<FGAIModelData> _modeldata;
 
-    string _fxpath;
     SGSharedPtr<FGFX>  _fx;
 
 public:
@@ -453,12 +450,24 @@ class FGAIModelData : public simgear::SGModelData {
 public:
     FGAIModelData(SGPropertyNode *root = 0);
     ~FGAIModelData();
+
+    /** osg callback, thread-safe */
     void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n);
-    inline string& get_sound_path() { return _path; };
+
+    /** init hook to be called after model is loaded.
+     * Not thread-safe. Call from main thread only. */
+    void init(void);
+
+    bool needInitilization(void) { return _ready && !_initialized;}
+    bool isInitialized(void) { return _initialized;}
+    inline std::string& get_sound_path() { return _fxpath;}
 
 private:
     FGNasalModelData *_nasal;
-    string _path;
+    SGPropertyNode_ptr _prop;
+    std::string _path, _fxpath;
+    bool _ready;
+    bool _initialized;
 };
 
 #endif	// _FG_AIBASE_HXX

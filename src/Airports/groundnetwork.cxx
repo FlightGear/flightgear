@@ -580,9 +580,23 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end,
     }
 
     FGTaxiNode *firstNode = findNode(start);
+    if (!firstNode)
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+               "Error in ground network. Failed to find first waypoint: " << start
+               << " at " << ((parent) ? parent->getId() : "<unknown>"));
+        return FGTaxiRoute();
+    }
     firstNode->setPathScore(0);
 
     FGTaxiNode *lastNode = findNode(end);
+    if (!lastNode)
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+               "Error in ground network. Failed to find last waypoint: " << end
+               << " at " << ((parent) ? parent->getId() : "<unknown>"));
+        return FGTaxiRoute();
+    }
 
     FGTaxiNodeVector unvisited(*currNodesSet);  // working copy
 
@@ -606,6 +620,13 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end,
                     seg != best->getEndRoute(); seg++) {
                 if (fullSearch || (*seg)->isPushBack()) {
                     FGTaxiNode *tgt = (*seg)->getEnd();
+                    if (!tgt)
+                    {
+                        SG_LOG(SG_GENERAL, SG_ALERT,
+                               "Error in ground network. Found empty segment "
+                               << " at " << ((parent) ? parent->getId() : "<unknown>"));
+                        return FGTaxiRoute();
+                    }
                     double alt =
                         best->getPathScore() + (*seg)->getLength() +
                         (*seg)->getPenalty(nParkings);
