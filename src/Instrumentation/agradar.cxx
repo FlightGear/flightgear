@@ -259,8 +259,7 @@ agRadar::update_terrain()
     double tilt = -2.5;
     bool roll_stab   = _rollStabNode->getBoolValue();
     bool pitch_stab  = _pitchStabNode->getBoolValue();
-    //string status = "";
-    const char* status;
+    const char* status = "";
     bool hdg_mkr = true;
 
     if (mode == 5){
