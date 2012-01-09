@@ -66,8 +66,8 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
 
     tmp = ra - (SGD_2PI/24)*gst;
     
-    double signnedPI = (tmp < 0.0) ? -SGD_PI : SGD_PI;
-    tmp = fmod(tmp+signnedPI, SGD_2PI) - signnedPI;
+    double signedPI = (tmp < 0.0) ? -SGD_PI : SGD_PI;
+    tmp = fmod(tmp+signedPI, SGD_2PI) - signedPI;
 
     *lon = tmp;
     *lat = dec;
@@ -97,8 +97,8 @@ static double sun_angle( const SGTime &t, const SGVec3d& world_up,
 
     double sun_angle = acos( dot( nup, nsun ) );
 
-    double signnedPI = (sun_angle < 0.0) ? -SGD_PI : SGD_PI;
-    sun_angle = fmod(sun_angle+signnedPI, SGD_2PI) - signnedPI;
+    double signedPI = (sun_angle < 0.0) ? -SGD_PI : SGD_PI;
+    sun_angle = fmod(sun_angle+signedPI, SGD_2PI) - signedPI;
 
     double sun_angle_deg = sun_angle * SG_RADIANS_TO_DEGREES;
     SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "

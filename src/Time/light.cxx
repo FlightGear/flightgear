@@ -433,8 +433,8 @@ void FGLight::updateSunPos()
     SGVec3d nup = normalize(world_up);
     _sun_angle = acos( dot( nup, nsun ) );
 
-    double signnedPI = (_sun_angle < 0.0) ? -SGD_PI : SGD_PI;
-    _sun_angle = fmod(_sun_angle+signnedPI, SGD_2PI) - signnedPI;
+    double signedPI = (_sun_angle < 0.0) ? -SGD_PI : SGD_PI;
+    _sun_angle = fmod(_sun_angle+signedPI, SGD_2PI) - signedPI;
 
     SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
             << get_sun_angle() );
