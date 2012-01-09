@@ -157,7 +157,7 @@ naRef makeVectorFromVec(naContext c, const T& vec)
     const int num_components
         = sizeof(vec.data()) / sizeof(typename T::value_type);
     naRef vector = naNewVector(c);
-    naVec_setsize(vector, num_components);
+    naVec_setsize(c, vector, num_components);
     for (int i = 0; i < num_components; ++i)
         naVec_set(vector, i, naNum(vec[i]));
     return vector;
