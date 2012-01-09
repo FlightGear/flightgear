@@ -38,6 +38,7 @@ class PropertySetter {
 public:
   PropertySetter( SGPropertyNode_ptr node ) : _node(node) {}
   virtual void setValue( const char * value ) = 0;
+  virtual ~PropertySetter() {};
 protected:
   SGPropertyNode_ptr _node;
 };
