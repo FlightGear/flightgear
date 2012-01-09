@@ -211,7 +211,8 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
 
 	
-	
+	if((freq < 40.0) || (freq > 20000.0))	// frequency out of recommended range 
+		return -1;
 	/** ITM default parameters 
 		TODO: take them from tile materials (especially for sea)?
 	**/
