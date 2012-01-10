@@ -80,7 +80,7 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
 void HUD::Label::draw(void)
 {
-    if (!(_mode == NONE || (_input.isValid() && blink())))
+    if (!((_mode == NONE || _input.isValid()) && blink()))
         return;
 
     if (_box) {
