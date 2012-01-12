@@ -162,6 +162,22 @@ private:
     NavDisplay* _nd;
 };
 
+class NavDisplay::ForceUpdateListener : public SGPropertyChangeListener
+{
+public:
+  ForceUpdateListener(NavDisplay *nd) : 
+    _nd(nd)
+  {}
+  
+  virtual void valueChanged (SGPropertyNode * prop)
+  {
+    SG_LOG(SG_INSTR, SG_INFO, "forcing NavDisplay update");
+    _nd->forceUpdate();
+  }
+private:
+  NavDisplay* _nd;
+};
+
 ///////////////////////////////////////////////////////////////////
 
 class SymbolDef
@@ -171,7 +187,7 @@ public:
       enable(NULL)
     {}
   
-    bool initFromNode(SGPropertyNode* node)
+    bool initFromNode(SGPropertyNode* node, NavDisplay* owner)
     {
         type = node->getStringValue("type");
         SGPropertyNode* enableNode = node->getChild("enable");
@@ -203,7 +219,7 @@ public:
         xy1.y()  = node->getFloatValue("y1", 5);
       }
       
-        double texSize = node->getFloatValue("texture-size", 1.0);
+        double texSize = node->getFloatValue("texture-size", owner->textureSize());
         
         uv0.x()  = node->getFloatValue("u0", 0) / texSize;
         uv0.y()  = node->getFloatValue("v0", 0) / texSize;
@@ -354,6 +370,7 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
     _num(node->getIntValue("number", 0)),
     _time(0.0),
     _updateInterval(node->getDoubleValue("update-interval-sec", 0.1)),
+    _forceUpdate(true),
     _odg(0),
     _scale(0),
     _view_heading(0),
@@ -375,12 +392,13 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
     INITFONT("color/alpha", 1, Float);
 #undef INITFONT
 
+    _textureSize = _Instrument->getNode("symbol-teture-size", true)->getIntValue();
     SGPropertyNode* symbolsNode = node->getNode("symbols");
     SGPropertyNode* symbol;
-  
+
     for (int i = 0; (symbol = symbolsNode->getChild("symbol", i)) != NULL; ++i) {
         SymbolDef* def = new SymbolDef;
-        if (!def->initFromNode(symbol)) {
+        if (!def->initFromNode(symbol, this)) {
           delete def;
           continue;
         }
@@ -400,12 +418,21 @@ NavDisplay::init ()
 {
     _cachedItemsValid = false;
     _cacheListener.reset(new CacheListener(this));
-    
+    _forceUpdateListener.reset(new ForceUpdateListener(this));
+  
     _serviceable_node = _Instrument->getNode("serviceable", true);
     _rangeNode = _Instrument->getNode("range", true);
     _rangeNode->setDoubleValue(40.0);
     _rangeNode->addChangeListener(_cacheListener.get());
-    
+    _rangeNode->addChangeListener(_forceUpdateListener.get());
+  
+    _xCenterNode = _Instrument->getNode("x-center");
+    _xCenterNode->setDoubleValue(0.5);
+    _xCenterNode->addChangeListener(_forceUpdateListener.get());
+    _yCenterNode = _Instrument->getNode("y-center");
+    _yCenterNode->setDoubleValue(0.5);
+    _yCenterNode->addChangeListener(_forceUpdateListener.get());
+  
     // texture name to use in 2D and 3D instruments
     _texture_path = _Instrument->getStringValue("radar-texture-path",
         "Aircraft/Instruments/Textures/od_wxradar.rgb");
@@ -523,11 +550,16 @@ NavDisplay::update (double delta_time_sec)
     return;
   }
   
-  _time += delta_time_sec;
-  if (_time < _updateInterval){
-    return;
+  if (_forceUpdate) {
+    _forceUpdate = false;
+    _time = 0.0;
+  } else {
+    _time += delta_time_sec;
+    if (_time < _updateInterval){
+      return;
+    }
+    _time -= _updateInterval;
   }
-  _time -= _updateInterval;
 
   _rangeNm = _rangeNode->getFloatValue();
   if (_testModeNode->getBoolValue()) {
@@ -538,8 +570,8 @@ NavDisplay::update (double delta_time_sec)
     _view_heading = _Instrument->getFloatValue("heading-up-deg", 0.0);
   }
   
-  double xCenterFrac = _Instrument->getDoubleValue("x-center", 0.5);
-  double yCenterFrac = _Instrument->getDoubleValue("y-center", 0.5);
+  double xCenterFrac = _xCenterNode->getDoubleValue();
+  double yCenterFrac = _yCenterNode->getDoubleValue();
   int pixelSize = _odg->size();
   
   int rangePixels = _Instrument->getIntValue("range-pixels", -1);

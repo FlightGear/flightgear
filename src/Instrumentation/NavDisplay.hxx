@@ -67,12 +67,20 @@ public:
     {
         _cachedItemsValid = false;
     }
+    
+    double textureSize() const
+    { return _textureSize; }
+    
+    void forceUpdate()
+    { _forceUpdate = true; }
+    
 protected:
     std::string _name;
     int _num;
     double _time;
     double _updateInterval;
-
+    bool _forceUpdate;
+    
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
     SGPropertyNode_ptr _radar_mode_control_node;
@@ -117,7 +125,7 @@ private:
     void addTestSymbols();
   
     std::string _texture_path;
-
+    unsigned int _textureSize;
 
     float _scale;   // factor to convert nm to display units
     float _view_heading;
@@ -130,6 +138,7 @@ private:
     SGPropertyNode_ptr _ai_enabled_node;
     SGPropertyNode_ptr _navRadio1Node;
     SGPropertyNode_ptr _navRadio2Node;
+    SGPropertyNode_ptr _xCenterNode, _yCenterNode;
     
     osg::ref_ptr<osg::Texture2D> _resultTexture;
     osg::ref_ptr<osg::Texture2D> _symbolTexture;
@@ -175,6 +184,9 @@ private:
     
     class CacheListener;
     std::auto_ptr<CacheListener> _cacheListener;
+    
+    class ForceUpdateListener;
+    std::auto_ptr<ForceUpdateListener> _forceUpdateListener;
 };
 
 #endif // _INST_ND_HXX
