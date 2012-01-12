@@ -414,7 +414,11 @@ static void fgIdleFunction ( void ) {
             string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
 # endif
 
-            system ( command.c_str() );
+            if (0 != system ( command.c_str() ))
+            {
+                SG_LOG( SG_SOUND, SG_WARN,
+                    "Failed to play mp3 file " << mp3file.str() << ". Maybe mp3 player is not installed." );
+            }
         }
 #endif
         // This is the top level init routine which calls all the
