@@ -216,10 +216,10 @@ FGGlobals::~FGGlobals()
 
 // set the fg_root path
 void FGGlobals::set_fg_root (const string &root) {
-    fg_root = root;
+    SGPath tmp(root);
+    fg_root = tmp.realpath();
 
     // append /data to root if it exists
-    SGPath tmp( fg_root );
     tmp.append( "data" );
     tmp.append( "version" );
     if ( tmp.exists() ) {
@@ -253,19 +253,20 @@ void FGGlobals::append_fg_scenery (const string &paths)
     }
   
     BOOST_FOREACH(const SGPath& path, sgPathSplit( paths )) {
-        if (!path.exists()) {
-          SG_LOG(SG_GENERAL, SG_WARN, "scenery path not found:" << path.str());
+        SGPath abspath(path.realpath());
+        if (!abspath.exists()) {
+          SG_LOG(SG_GENERAL, SG_WARN, "scenery path not found:" << abspath.str());
           continue;
         }
 
       // check for duplicates
-      string_list::const_iterator ex = std::find(fg_scenery.begin(), fg_scenery.end(), path.str());
+      string_list::const_iterator ex = std::find(fg_scenery.begin(), fg_scenery.end(), abspath.str());
       if (ex != fg_scenery.end()) {
-        SG_LOG(SG_GENERAL, SG_INFO, "skipping duplicate add of scenery path:" << path.str());
+        SG_LOG(SG_GENERAL, SG_INFO, "skipping duplicate add of scenery path:" << abspath.str());
         continue;
       }
       
-        simgear::Dir dir(path);
+        simgear::Dir dir(abspath);
         SGPath terrainDir(dir.file("Terrain"));
         SGPath objectsDir(dir.file("Objects"));
         
@@ -273,7 +274,7 @@ void FGGlobals::append_fg_scenery (const string &paths)
       // Terrain and Objects subdirs, but the conditional logic was commented
       // out, such that all three dirs are added. Unfortunately there's
       // no information as to why the change was made.
-        fg_scenery.push_back(path.str());
+        fg_scenery.push_back(abspath.str());
         
         if (terrainDir.exists()) {
           fg_scenery.push_back(terrainDir.str());
@@ -290,7 +291,7 @@ void FGGlobals::append_fg_scenery (const string &paths)
         
       // make scenery dirs available to Nasal
         SGPropertyNode* n = sim->getChild("fg-scenery", propIndex++, true);
-        n->setStringValue(path.str());
+        n->setStringValue(abspath.str());
         n->setAttribute(SGPropertyNode::WRITE, false);
     } // of path list iteration
 }
@@ -302,15 +303,16 @@ void FGGlobals::append_aircraft_path(const std::string& path)
     SG_LOG(SG_GENERAL, SG_WARN, "aircraft path not found:" << path);
     return;
   }
+  std::string abspath = dirPath.realpath();
   
   unsigned int index = fg_aircraft_dirs.size();  
-  fg_aircraft_dirs.push_back(path);
+  fg_aircraft_dirs.push_back(abspath);
   
 // make aircraft dirs available to Nasal
   SGPropertyNode* sim = fgGetNode("/sim", true);
   sim->removeChild("fg-aircraft", index, false);
   SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
-  n->setStringValue(path);
+  n->setStringValue(abspath);
   n->setAttribute(SGPropertyNode::WRITE, false);
 }
 
