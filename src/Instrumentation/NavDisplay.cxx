@@ -57,6 +57,8 @@ using std::setw;
 using std::setfill;
 using std::cout;
 using std::endl;
+using std::map;
+using std::string;
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -180,21 +182,26 @@ private:
 
 ///////////////////////////////////////////////////////////////////
 
-class SymbolDef
+class SymbolRule
 {
 public:
-  SymbolDef() :
-      enable(NULL)
-    {}
-  
+    SymbolRule()
+    {
+        
+    }
+    
     bool initFromNode(SGPropertyNode* node, NavDisplay* owner)
     {
+        if (!node->getChild("type")) {
+            return false;
+        }
+        
         type = node->getStringValue("type");
         SGPropertyNode* enableNode = node->getChild("enable");
         if (enableNode) { 
-            enable = sgReadCondition(fgGetNode("/"), enableNode);
+            enable.reset(sgReadCondition(fgGetNode("/"), enableNode));
         }
-      
+        
         int n=0;
         while (node->hasChild("state", n)) {
             string m = node->getChild("state", n++)->getStringValue();
@@ -205,19 +212,79 @@ public:
             }
         } // of matches parsing
         
-      if (node->hasChild("width")) {
-        float w = node->getFloatValue("width");
-        float h = node->getFloatValue("height", w);
-        xy0.x() = -w * 0.5;
-        xy0.y() = -h * 0.5;
-        xy1.x() = w * 0.5;
-        xy1.y() = h * 0.5;
-      } else {
-        xy0.x()  = node->getFloatValue("x0", 0.0);
-        xy0.y()  = node->getFloatValue("y0", 0.0);
-        xy1.x()  = node->getFloatValue("x1", 5);
-        xy1.y()  = node->getFloatValue("y1", 5);
-      }
+        return true;
+    }
+    
+    void setDefinition(SymbolDef* d)
+    {
+        definition = d;
+    }
+    
+    SymbolDef* getDefinition() const
+    { return definition; }
+    
+    bool matches(const string_set& states) const
+    {
+        BOOST_FOREACH(const string& s, required_states) {
+            if (states.count(s) == 0) {
+                return false;
+            }
+        }
+        
+        BOOST_FOREACH(const string& s, excluded_states) {
+            if (states.count(s) != 0) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    void checkEnabled()
+    {
+        if (enable.get()) {
+            enabled = enable->test();
+        } else {
+            enabled = true;
+        }
+    }
+    
+    bool enabled; // cached enabled state
+    std::string type;
+private:
+    SymbolDef* definition;
+    
+    std::auto_ptr<SGCondition> enable;
+    string_set required_states;
+    string_set excluded_states;
+    
+};
+
+class SymbolDef
+{
+public:
+    bool initFromNode(SGPropertyNode* node, NavDisplay* owner)
+    {
+        if (node->getChild("type")) {
+            SymbolRule* builtinRule = new SymbolRule;
+            builtinRule->initFromNode(node, owner);
+            builtinRule->setDefinition(this);
+            owner->addRule(builtinRule);
+        }
+        
+        if (node->hasChild("width")) {
+            float w = node->getFloatValue("width");
+            float h = node->getFloatValue("height", w);
+            xy0.x() = -w * 0.5;
+            xy0.y() = -h * 0.5;
+            xy1.x() = w * 0.5;
+            xy1.y() = h * 0.5;
+        } else {
+            xy0.x()  = node->getFloatValue("x0", 0.0);
+            xy0.y()  = node->getFloatValue("y0", 0.0);
+            xy1.x()  = node->getFloatValue("x1", 5);
+            xy1.y()  = node->getFloatValue("y1", 5);
+        }
       
         double texSize = node->getFloatValue("texture-size", owner->textureSize());
         
@@ -256,13 +323,6 @@ public:
         return true;
     }
     
-    SGCondition* enable;
-    bool enabled; // cached enabled state
-    
-    std::string type;
-    string_set required_states;
-    string_set excluded_states;
-    
     osg::Vec2 xy0, xy1;
     osg::Vec2 uv0, uv1;
     osg::Vec4 color;
@@ -290,22 +350,6 @@ public:
     
     bool drawRouteLeg;
     
-    bool matches(const string_set& states) const
-    {
-        BOOST_FOREACH(const string& s, required_states) {
-            if (states.count(s) == 0) {
-                return false;
-            }
-        }
-        
-        BOOST_FOREACH(const string& s, excluded_states) {
-            if (states.count(s) != 0) {
-                return false;
-            }
-        }
-        
-        return true;
-    }
 };
 
 class SymbolInstance
@@ -396,6 +440,7 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
     SGPropertyNode* symbolsNode = node->getNode("symbols");
     SGPropertyNode* symbol;
 
+    map<string, SymbolDef*> definitionDict;
     for (int i = 0; (symbol = symbolsNode->getChild("symbol", i)) != NULL; ++i) {
         SymbolDef* def = new SymbolDef;
         if (!def->initFromNode(symbol, this)) {
@@ -403,8 +448,38 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
           continue;
         }
         
-        _rules.push_back(def);
+        const char* id = symbol->getStringValue("id");
+        if (id && strlen(id)) {
+            definitionDict[id] = def;
+        }
+        
+        _definitions.push_back(def);
     } // of symbol definition parsing
+    
+    SGPropertyNode* rulesNode = node->getNode("rules");
+    if (rulesNode) {
+        SGPropertyNode* rule;
+        
+        for (int i = 0; (rule = rulesNode->getChild("rule", i)) != NULL; ++i) {
+            SymbolRule* r = new SymbolRule;
+            if (!r->initFromNode(rule, this)) {
+                delete r;
+                continue;
+            }
+            
+            const char* id = symbol->getStringValue("symbol");
+            if (id && strlen(id) && (definitionDict.find(id) != definitionDict.end())) {
+                r->setDefinition(definitionDict[id]);
+            } else {
+                SG_LOG(SG_INSTR, SG_WARN, "symbol rule has missing/unknown definition id:" << id);
+                delete r;
+                continue;
+            }
+            
+            addRule(r);
+        } // of symbol rule parsing
+    }
+    
 }
 
 
@@ -618,12 +693,8 @@ NavDisplay::update (double delta_time_sec)
   }
   _symbols.clear();
     
-  BOOST_FOREACH(SymbolDef* def, _rules) {
-    if (def->enable) {
-      def->enabled = def->enable->test();
-    } else {
-      def->enabled = true;
-    }
+  BOOST_FOREACH(SymbolRule* r, _rules) {
+      r->checkEnabled();
   }
   
   if (_testModeNode->getBoolValue()) {
@@ -915,7 +986,7 @@ void NavDisplay::processRoute()
             state.insert("next-wp");
         }
         
-        SymbolDefVector rules;
+        SymbolRuleVector rules;
         findRules("waypoint" , state, rules);
         if (rules.empty()) {
             return; // no rules matched, we can skip this item
@@ -927,16 +998,16 @@ void NavDisplay::processRoute()
         computeWayptPropsAndHeading(wpt, g, vars, heading);
 
         osg::Vec2 projected = projectGeod(g);
-        BOOST_FOREACH(SymbolDef* r, rules) {
-            addSymbolInstance(projected, heading, r, vars);
+        BOOST_FOREACH(SymbolRule* r, rules) {
+            addSymbolInstance(projected, heading, r->getDefinition(), vars);
             
-            if (r->drawRouteLeg) {
+            if (r->getDefinition()->drawRouteLeg) {
                 SGGeodVec gv(path.pathForIndex(w));
                 if (!gv.empty()) {
                     osg::Vec2 pr = projectGeod(gv[0]);
                     for (unsigned int i=1; i<gv.size(); ++i) {
                         osg::Vec2 p = projectGeod(gv[i]);
-                        addLine(pr, p, r->lineColor);
+                        addLine(pr, p, r->getDefinition()->lineColor);
                         pr = p;
                     }
                 }
@@ -979,7 +1050,7 @@ FGNavRecord* NavDisplay::processNavRadio(const SGPropertyNode_ptr& radio)
 
 bool NavDisplay::anyRuleForType(const string& type) const
 {
-    BOOST_FOREACH(SymbolDef* r, _rules) {
+    BOOST_FOREACH(SymbolRule* r, _rules) {
         if (!r->enabled) {
             continue;
         }
@@ -994,7 +1065,7 @@ bool NavDisplay::anyRuleForType(const string& type) const
 
 bool NavDisplay::anyRuleMatches(const string& type, const string_set& states) const
 {
-    BOOST_FOREACH(SymbolDef* r, _rules) {
+    BOOST_FOREACH(SymbolRule* r, _rules) {
         if (!r->enabled || (r->type != type)) {
             continue;
         }
@@ -1007,9 +1078,9 @@ bool NavDisplay::anyRuleMatches(const string& type, const string_set& states) co
     return false;
 }
 
-void NavDisplay::findRules(const string& type, const string_set& states, SymbolDefVector& rules)
+void NavDisplay::findRules(const string& type, const string_set& states, SymbolRuleVector& rules)
 {
-    BOOST_FOREACH(SymbolDef* candidate, _rules) {
+    BOOST_FOREACH(SymbolRule* candidate, _rules) {
         if (!candidate->enabled || (candidate->type != type)) {
             continue;
         }
@@ -1034,7 +1105,7 @@ void NavDisplay::foundPositionedItem(FGPositioned* pos)
     string_set states;
     computePositionedState(pos, states);
     
-    SymbolDefVector rules;
+    SymbolRuleVector rules;
     findRules(type, states, rules);
     if (rules.empty()) {
         return; // no rules matched, we can skip this item
@@ -1050,8 +1121,8 @@ void NavDisplay::foundPositionedItem(FGPositioned* pos)
         projected = projectGeod(rwy->threshold());
     }
     
-    BOOST_FOREACH(SymbolDef* r, rules) {
-        SymbolInstance* ins = addSymbolInstance(projected, heading, r, vars);
+    BOOST_FOREACH(SymbolRule* r, rules) {
+        SymbolInstance* ins = addSymbolInstance(projected, heading, r->getDefinition(), vars);
         if (pos->type() == FGPositioned::RUNWAY) {
             FGRunway* rwy = (FGRunway*) pos;
             ins->endPos = projectGeod(rwy->end());
@@ -1190,7 +1261,7 @@ void NavDisplay::processAI()
     // with fg-positioned.
         string_set ss;
         computeAIStates(model, ss);        
-        SymbolDefVector rules;
+        SymbolRuleVector rules;
         findRules(mapAINodeToType(model), ss, rules);
         if (rules.empty()) {
             return; // no rules matched, we can skip this item
@@ -1205,8 +1276,8 @@ void NavDisplay::processAI()
         model->setIntValue("flight-level", fl * 10);
                                             
         osg::Vec2 projected = projectGeod(aiModelPos);
-        BOOST_FOREACH(SymbolDef* r, rules) {
-            addSymbolInstance(projected, heading, r, (SGPropertyNode*) model);
+        BOOST_FOREACH(SymbolRule* r, rules) {
+            addSymbolInstance(projected, heading, r->getDefinition(), (SGPropertyNode*) model);
         }
     } // of ai models iteration
 }
@@ -1258,15 +1329,15 @@ void NavDisplay::addTestSymbol(const std::string& type, const std::string& state
     stateSet.insert(s);
   }
   
-  SymbolDefVector rules;
+  SymbolRuleVector rules;
   findRules(type, stateSet, rules);
   if (rules.empty()) {
     return; // no rules matched, we can skip this item
   }
     
   osg::Vec2 projected = projectGeod(pos);
-  BOOST_FOREACH(SymbolDef* r, rules) {
-    addSymbolInstance(projected, heading, r, vars);
+  BOOST_FOREACH(SymbolRule* r, rules) {
+    addSymbolInstance(projected, heading, r->getDefinition(), vars);
   }
 }
 
@@ -1302,4 +1373,8 @@ void NavDisplay::addTestSymbols()
   addTestSymbol("fix", "", a1, 0.0, NULL);
 }
 
+void NavDisplay::addRule(SymbolRule* r)
+{
+    _rules.push_back(r);
+}
 

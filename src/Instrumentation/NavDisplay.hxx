@@ -44,6 +44,7 @@ class FGNavRecord;
 
 class SymbolInstance;
 class SymbolDef;
+class SymbolRule;
 
 namespace flightgear
 {
@@ -51,6 +52,7 @@ namespace flightgear
 }
 
 typedef std::set<std::string> string_set;
+typedef std::vector<SymbolRule*> SymbolRuleVector;
 typedef std::vector<SymbolDef*> SymbolDefVector;
 
 class NavDisplay : public SGSubsystem
@@ -95,6 +97,11 @@ protected:
     SGPropertyNode *getInstrumentNode(const char *name, DefaultType value);
 
 private:
+    friend class SymbolRule;
+    friend class SymbolDef;
+  
+    void addRule(SymbolRule*);
+  
     void addSymbolsToScene();
     void addSymbolToScene(SymbolInstance* sym);
     void limitDisplayedSymbols();
@@ -112,7 +119,7 @@ private:
     
     bool anyRuleForType(const std::string& type) const;
     bool anyRuleMatches(const std::string& type, const string_set& states) const;
-    void findRules(const std::string& type, const string_set& states, SymbolDefVector& rules);
+    void findRules(const std::string& type, const string_set& states, SymbolRuleVector& rules);
     
     SymbolInstance* addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars);
     void addLine(osg::Vec2 a, osg::Vec2 b, const osg::Vec4& color);
@@ -171,7 +178,8 @@ private:
     double _rangeNm;
     SGPropertyNode_ptr _rangeNode;
     
-    SymbolDefVector _rules;
+    SymbolDefVector _definitions;
+    SymbolRuleVector _rules;
     FGNavRecord* _nav1Station;
     FGNavRecord* _nav2Station;
     std::vector<SymbolInstance*> _symbols;
