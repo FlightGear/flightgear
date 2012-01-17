@@ -2246,7 +2246,7 @@ void Options::setupRoot()
   globals->set_fg_root(root);
   
 // validate it
-  static char required_version[] = "2.6.0";
+  static char required_version[] = "2.7.0";
   string base_version = fgBasePackageVersion();
   if ( !(base_version == required_version) ) {
     // tell the operator how to use this application
