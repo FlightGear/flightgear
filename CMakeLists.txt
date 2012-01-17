@@ -225,7 +225,7 @@ if(ENABLE_LIBSVN)
 endif(ENABLE_LIBSVN)
 
 find_package(PLIB REQUIRED puaux pu js fnt)
-find_package(SimGear 2.5.0 REQUIRED)
+find_package(SimGear 2.6.0 REQUIRED)
 
 if (JPEG_FACTORY)
     # check simgear was built with JPEG-factory support
