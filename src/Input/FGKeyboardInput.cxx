@@ -208,7 +208,8 @@ void FGKeyboardInput::doKey (int k, int modifiers, int x, int y)
 {
   // Sanity check.
   if (k < 0 || k >= MAX_KEYS) {
-    SG_LOG(SG_INPUT, SG_WARN, "Key value " << k << " out of range");
+    // normal for unsupported keys (i.e. left/right shift key press events)
+    SG_LOG(SG_INPUT, SG_DEBUG, "Key value " << k << " out of range");
     return;
   }
 
