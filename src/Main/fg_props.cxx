@@ -366,7 +366,7 @@ static double
 getHeadingMag ()
 {
   double magheading = fgGetDouble("/orientation/heading-deg") - getMagVar();
-  return SGMiscd::normalizePeriodic(0.5, 360.5, magheading );
+  return SGMiscd::normalizePeriodic(0, 360, magheading );
 }
 
 /**
@@ -376,7 +376,7 @@ static double
 getTrackMag ()
 {
   double magtrack = fgGetDouble("/orientation/track-deg") - getMagVar();
-  return SGMiscd::normalizePeriodic(0.5, 360.5, magtrack );
+  return SGMiscd::normalizePeriodic(0, 360, magtrack );
 }
 
 static bool
