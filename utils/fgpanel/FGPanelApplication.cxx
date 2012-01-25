@@ -25,6 +25,10 @@
 #include <direct.h>
 #endif
 
+#ifdef __APPLE__
+#  include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #include "FGGLApplication.hxx"
 #include "FGPanelApplication.hxx"
 #if defined (SG_MAC)
@@ -64,6 +68,48 @@ inline static string ParseArgs( int argc, char ** argv, const char * token )
   return ParseArgs( argc, argv, s );
 }
 
+
+// define default location of fgdata (use the same as for fgfs)
+#if defined(__CYGWIN__)
+inline static string platformDefaultRoot()
+{
+  return "../data";
+}
+
+#elif defined(_WIN32)
+inline static string platformDefaultRoot()
+{
+  return "..\\data";
+}
+#elif defined(__APPLE__)
+inline static string platformDefaultRoot()
+{
+  /*
+   The following code looks for the base package inside the application
+   bundle, in the standard Contents/Resources location.
+   */
+  CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+
+  // look for a 'data' subdir
+  CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
+
+  // now convert down to a path, and the a c-string
+  CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
+  string root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
+
+  CFRelease(resourcesUrl);
+  CFRelease(dataDir);
+  CFRelease(path);
+
+  return root;
+}
+#else
+inline static string platformDefaultRoot()
+{
+  return PKGLIBDIR;
+}
+#endif
+
 #include "FGPNGTextureLoader.hxx"
 #include "FGRGBTextureLoader.hxx"
 static FGPNGTextureLoader pngTextureLoader;
@@ -75,6 +121,8 @@ FGPanelApplication::FGPanelApplication( int argc, char ** argv ) :
   sglog().setLogLevels( SG_ALL, SG_WARN );
   FGCroppedTexture::registerTextureLoader( "png", &pngTextureLoader );
   FGCroppedTexture::registerTextureLoader( "rgb", &rgbTextureLoader );
+
+  ApplicationProperties::root = platformDefaultRoot();
 
   string panelFilename;
   string fgRoot;
