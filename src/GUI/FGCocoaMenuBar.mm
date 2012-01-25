@@ -127,8 +127,6 @@ private:
   NSMenuItem* item;
 };
 
-
-
 FGCocoaMenuBar::CocoaMenuBarPrivate::CocoaMenuBarPrivate()
 {
   delegate = [[CocoaMenuDelegate alloc] init];
@@ -259,6 +257,13 @@ void FGCocoaMenuBar::init()
     p->menuFromProps(menu, n);
     ++index;
     previousMenu = item;
+    
+  // track menu enable/disable state
+    if (!n->hasValue("enabled")) {
+      n->setBoolValue("enabled", true);
+    }
+    
+    n->getNode("enabled")->addChangeListener(new EnabledListener(item));
   }
 }
 
