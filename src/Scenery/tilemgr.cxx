@@ -257,8 +257,8 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
              * so we can run the Nasal stuff in the main thread.
              */
             result=
-                SGModelLib::loadDeferredModel(fullPath.str(), globals->get_props()/*,
-                                             new FGNasalModelData*/);
+                SGModelLib::loadDeferredModel(fullPath.str(), globals->get_props(),
+                                              _disableNasalHooks->getBoolValue() ? NULL : new FGNasalModelData);
         }
     } catch (const sg_io_exception& exc) {
         string m(exc.getMessage());
