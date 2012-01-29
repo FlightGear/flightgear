@@ -60,8 +60,8 @@ FGTileMgr::FGTileMgr():
     last_state( Running ),
     vis( 16000 ),
     _terra_sync(NULL),
-    _visibilityMeters = fgGetNode("/environment/visibility-m", true),
-    _maxTileRangeM = fgGetNode("/sim/rendering/static-lod/bare", true)
+    _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
+    _maxTileRangeM(fgGetNode("/sim/rendering/static-lod/bare", true))
 {
 }
 
