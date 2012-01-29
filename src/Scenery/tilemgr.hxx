@@ -87,7 +87,7 @@ private:
 
     static void refresh_tile(void* tileMgr, long tileIndex);
 
-    SGPropertyNode* _visibilityMeters;
+    SGPropertyNode_ptr _visibilityMeters;
     SGPropertyNode_ptr _maxTileRangeM;
     
 public:

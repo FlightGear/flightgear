@@ -1408,6 +1408,7 @@ bool fgInitSubsystems() {
     // End of subsystem initialization.
     ////////////////////////////////////////////////////////////////////
 
+    fgSetBool("/sim/crashed", false);
     fgSetBool("/sim/initialized", true);
 
     SG_LOG( SG_GENERAL, SG_INFO, endl);
