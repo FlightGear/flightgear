@@ -173,19 +173,26 @@ printTimeStr(char* pStrBuffer,double _Time, bool ShowDecimal=true)
 {
     if (_Time<0)
         _Time = 0;
-    unsigned int Time = (unsigned int) (_Time*10);
-    int h = Time/36000;
-    int m = (Time % 36000)/600;
-    int s = (Time % 600)/10;
-    int d = Time % 10;
+    unsigned int Time = _Time*10;
+    unsigned int h = Time/36000;
+    unsigned int m = (Time % 36000)/600;
+    unsigned int s = (Time % 600)/10;
+    unsigned int d = Time % 10;
+
+    int len;
     if (h>0)
-        sprintf(pStrBuffer,"%u:%02u",h,m);
+        len = sprintf(pStrBuffer,"%u:%02u:%02u",h,m,s);
     else
-        sprintf(pStrBuffer,"%u",m);
+        len = sprintf(pStrBuffer,"%u:%02u",m,s);
+
+    if (len < 0)
+    {
+        *pStrBuffer = 0;
+        return;
+    }
+
     if (ShowDecimal)
-        sprintf(pStrBuffer,"%s:%02u.%u",pStrBuffer,s,d);
-    else
-        sprintf(pStrBuffer,"%s:%02u",pStrBuffer,s);
+        sprintf(&pStrBuffer[len],".%u",d);
 }
 
 /** Start replay session
