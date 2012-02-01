@@ -18,6 +18,8 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>			    
 
+#include <simgear/magvar/magvar.hxx>
+
 using std::string;
 
 HeadingIndicatorFG::HeadingIndicatorFG ( SGPropertyNode *node )
@@ -60,7 +62,10 @@ HeadingIndicatorFG::init ()
 	_heading_in_node = fgGetNode("/orientation/heading-deg", true);
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
-    _offset_node = node->getChild("offset-deg", 0, true);
+    if( NULL == (_offset_node = node->getChild("offset-deg", 0, false)) ) {
+      _offset_node = node->getChild("offset-deg", 0, true);
+      _offset_node->setDoubleValue( -globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES );
+    }
     _serviceable_node = node->getChild("serviceable", 0, true);
 	_error_node = node->getChild("heading-bug-error-deg", 0, true);
 	_nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);

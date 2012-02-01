@@ -387,9 +387,6 @@ static void fgIdleFunction ( void ) {
                                    fgGetDouble("/position/altitude-ft")
                                    * SG_FEET_TO_METER,
                                    globals->get_time_params()->getJD() );
-        double var = globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
-        fgSetDouble("/instrumentation/heading-indicator/offset-deg", -var);
-        fgSetDouble("/instrumentation/heading-indicator-fg/offset-deg", -var);
 
         fgSplashProgress("initializing subsystems");
 
