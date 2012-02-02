@@ -23,6 +23,7 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/misc/interpolator.hxx>
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
@@ -51,6 +52,8 @@
 #include "main.hxx"
 #include <Main/viewer.hxx>
 #include <Environment/presets.hxx>
+
+#include <boost/scoped_array.hpp>
 
 using std::string;
 using std::ifstream;
@@ -930,6 +933,62 @@ do_property_randomize (const SGPropertyNode * arg)
     return true;
 }
 
+/**
+ * Built-in command: interpolate a property value over time
+ *
+ * property: the name of the property value to interpolate.
+ * value[0..n] any number of constant values to interpolate
+ * time[0..n]  time between each value, number of time elements must
+ *          match those of value elements
+ * -or-
+ * property[1..n] any number of target values taken from named properties
+ * time[0..n]     time between each value, number of time elements must
+ *                match those of property elements minus one
+ */
+static bool
+do_property_interpolate (const SGPropertyNode * arg)
+{
+    SGPropertyNode * prop = get_prop(arg);
+
+    simgear::PropertyList valueNodes = arg->getChildren( "value" );
+    simgear::PropertyList timeNodes = arg->getChildren( "time" );
+
+    boost::scoped_array<double> value;
+    boost::scoped_array<double> time;
+
+    if( valueNodes.size() > 0 ) {
+        // must match
+        if( timeNodes.size() != valueNodes.size() )
+            return false;
+
+        value.reset( new double[valueNodes.size()] );
+        for( simgear::PropertyList::size_type n = 0; n < valueNodes.size(); n++ ) {
+            value[n] = valueNodes[n]->getDoubleValue();
+        }
+    } else {
+        valueNodes = arg->getChildren("property");
+        // must have one more property node
+        if( valueNodes.size() - 1 != timeNodes.size() )
+          return false;
+
+        value.reset( new double[valueNodes.size()-1] );
+        for( simgear::PropertyList::size_type n = 0; n < valueNodes.size()-1; n++ ) {
+            value[n] = fgGetNode(valueNodes[n+1]->getStringValue(), "/null")->getDoubleValue();
+        }
+
+    }
+
+    time.reset( new double[timeNodes.size()] );
+    for( simgear::PropertyList::size_type n = 0; n < timeNodes.size(); n++ ) {
+        time[n] = timeNodes[n]->getDoubleValue();
+    }
+
+    ((SGInterpolator*)globals->get_subsystem_mgr()
+      ->get_group(SGSubsystemMgr::INIT)->get_subsystem("interpolator"))
+      ->interpolate(prop, timeNodes.size(), value.get(), time.get() );
+
+    return true;
+}
 
 /**
  * Built-in command: reinit the data logging system based on the
@@ -1452,6 +1511,7 @@ static struct {
     { "property-scale", do_property_scale },
     { "property-cycle", do_property_cycle },
     { "property-randomize", do_property_randomize },
+    { "property-interpolate", do_property_interpolate },
     { "data-logging-commit", do_data_logging_commit },
     { "dialog-new", do_dialog_new },
     { "dialog-show", do_dialog_show },
