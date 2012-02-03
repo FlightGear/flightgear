@@ -29,6 +29,7 @@ The API doc in HTML format is generated in the current working directory"""
 
 ########### Local $FGROOT/Nasal/ path ##########
 NASAL_PATH="../fgfs/fgdata/Nasal/"
+	
 
 def get_files(nasal_dir):
 	if nasal_dir[-1]!='/':
@@ -38,7 +39,9 @@ def get_files(nasal_dir):
 	except:
 		print "The path does not exist"
 		sys.exit()
-	
+	fgroot_dir = nasal_dir.rstrip('/').replace('Nasal','')
+	f_version = open(fgroot_dir+'version','rb')
+	version = f_version.read(256).rstrip('\n')
 	top_level = []
 	modules = []
 	top_namespaces = []
@@ -66,17 +69,31 @@ def get_files(nasal_dir):
 			functions=parse_file(f)
 			top_namespaces.append([m,functions])
 			
-	output_text(top_namespaces,modules)
+	output_text(top_namespaces,modules,version)
 	
 				
-def output_text(top_namespaces,modules):
+def output_text(top_namespaces,modules,version):
 	fw=open('./nasal_api.html','wb')
 	buf='<html><head>\
 	<title>Nasal API</title>\
-	<script type="text/javascript">\
-	</script></head><body style="width:1024px;">'
+	<style>\n\
+	a.main_module_link {margin-left:30px;display:block;float:left;}\
+	div.container {background-color:#eee;clear:left;margin-top:20px;}\
+	h2.namespace_title {padding-left:20px;color:#fff;background-color:#8888AC}\
+	h4.class_function {padding-left:20px;background-color:#eee;color:#000033}\
+	h4.class_definition {padding-left:20px;background-color:#eee;color:#000033}\
+	h4.function {padding-left:20px;background-color:#eee;color:#000033}\
+	hr {margin-left:30px;margin-right:30px;}\
+	div.comments {padding-left:40px;display:inline;font-size:12px;}\
+	</style>\n\
+	</head><body style="width:1024px;">'
 	
-	buf+='<h1 style="padding-left:20px;display:block;color:#fff;background-color:#555588;">Nasal $FGROOT Library</h1>\n<div style="float:right;">&nbsp;'
+	buf+='<h1 style="padding-left:20px;display:block;color:#fff;background-color:#555588;">\
+	Nasal $FGROOT Library<br/><span style="font-size:12px;">Flightgear version: '+version+'\
+	<br/>This file is generated automatically by scripts/python/nasal_api.py\
+	</span></h1>\
+	<br/><a href="http://plausible.org/nasal">Nasal documentation</a>&nbsp;&nbsp;\
+	<a href="http://wiki.flightgear.org/Nasal_scripting_language">Flightgear Nasal documentation</a>\n<div style="float:right;">&nbsp;'
 	buf+='<h2 style="font-size:14px;height:450px;width:250px;overflow:scroll;display:block;position:fixed;top:20px;right:20px;background-color:#8888AC;border:1px solid black;">\n'
 	done=[]
 	for namespace in top_namespaces:
@@ -84,14 +101,14 @@ def output_text(top_namespaces,modules):
 		if namespace[0] in modules:
 			color='cc0000'
 		if namespace[0] not in done:
-			buf+='<a style="margin-left:30px;display:block;float:left;color:'+color+'" href="#'+namespace[0]+'">'+namespace[0]+'</a>&nbsp;<br/>\n'
+			buf+='<a class="main_module_link" style="color:'+color+'" href="#'+namespace[0]+'">'+namespace[0]+'</a>&nbsp;<br/>\n'
 			done.append(namespace[0])
 	buf+='</h2></div>\n'
 	done2=[]
 	for namespace in top_namespaces:
 		if namespace[0] not in done2:
-			buf+='<div style="background-color:#eee;clear:left;margin-top:20px;">\n'
-			buf += '<h2 style="padding-left:20px;color:#fff;background-color:#8888AC"><a name="'+namespace[0]+'">'+namespace[0]+'</a></h2>\n'
+			buf+='<div class="container" style="">\n'
+			buf += '<h2 class="namespace_title"><a name="'+namespace[0]+'">'+namespace[0]+'</a></h2>\n'
 			done2.append(namespace[0])
 		for functions in namespace[1]:
 			class_func=functions[0].split('.')
@@ -102,23 +119,23 @@ def output_text(top_namespaces,modules):
 				else:
 					f_name=class_func[1]
 				if class_func[1]!='':
-					buf+= '<div><h4 style="padding-left:20px;background-color:#eee;color:#000033"><a onclick="c();"><b>'\
+					buf+= '<div><h4 class="class_function"><b>'\
 						+namespace[0]+'</b>'+ "." + '<b><i>'+class_func[0]+'</i></b>'+'<b>.'+f_name+'</b>'+' ( <font color="#cc0000">'+ functions[1]+ '</font> )' +'</h4>\n'
 				else:
-					buf+= '<div><h4 style="padding-left:20px;background-color:#eee;color:#000033"><a onclick="c();"><b>'\
+					buf+= '<div><h4 class="class_definition"><b>'\
 						+namespace[0]+'</b>'+ "." + '<b><i><u><font color="#000000">'+class_func[0]+'</font></u></i></b>' +'</h4>\n'
 			else:
 				if functions[0].find('_')==0:
 					f_name='<font color="#0000cc">'+functions[0]+'</font>'
 				else:
 					f_name=functions[0]
-				buf+= '<div><h4 style="padding-left:20px;background-color:#eee;color:#000033"><a onclick="c();"><b>'\
+				buf+= '<div><h4 class="function"><b>'\
 					+namespace[0]+'</b>'+ "." + '<b>'+f_name+'</b>'+ ' ( <font color="#cc0000">'+ functions[1]+ '</font> )' +'</h4>\n'
 			for comment in functions[2]:
 				if comment.find('=====')!=-1:
-					buf+='<hr style="margin-left:30px;margin-right:30px;"/>'
+					buf+='<hr/>'
 				else:
-					buf+= '<div id="comments" style="padding-left:40px;display:inline;font-size:12px;">'+comment.replace('#','').replace('<','&lt;').replace('>','&gt;')+'</div><br/>\n'
+					buf+= '<div class="comments">'+comment.replace('#','').replace('<','&lt;').replace('>','&gt;')+'</div><br/>\n'
 			buf+='</div>\n'
 		if namespace[0] not in done2:
 			buf+='</div>\n'	
