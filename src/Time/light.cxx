@@ -381,10 +381,17 @@ void FGLight::update_adj_fog_color () {
 
     float rf1 = fabs(fmod(hor_rotation, SGD_2PI) - SGD_PI) / SGD_PI;
     float rf2 = avf * pow(rf1*rf1, 1/sif) * 1.0639 * _saturation * _scattering;
+
+    // HACK: clamp rf2 to 1.0.
+    // Somehow, rf2 is huge at certain sun angles (around midnight), which results in
+    // rf3 being negative and hence negative fog colors and weird display issues...
+    // Something more fundamental may be wrong with the formulas here...
+    if (rf2>1.0) rf2 = 1.0;
+
     float rf3 = 1.0 - rf2;
 
     gamma = system_gamma * (0.9 - sif*avf);
-    _adj_fog_color = rf3 * _fog_color + rf2 * _sun_color;;
+    _adj_fog_color = rf3 * _fog_color + rf2 * _sun_color;
     gamma_correct_rgb( _adj_fog_color.data(), gamma);
 
     // make sure the colors have their original value before they are being
