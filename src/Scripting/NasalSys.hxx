@@ -7,6 +7,7 @@
 #include <simgear/nasal/nasal.h>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/xml/easyxml.hxx>
+#include <simgear/threads/SGQueue.hxx>
 
 #include <map>
 using std::map;
@@ -14,6 +15,56 @@ using std::map;
 
 class FGNasalScript;
 class FGNasalListener;
+
+
+/** Nasal model data container.
+ * load and unload methods must be run in main thread (not thread-safe). */
+class FGNasalModelData : public SGReferenced
+{
+public:
+    /** Constructor to be run in an arbitrary thread. */
+    FGNasalModelData(SGPropertyNode *root, const string& path, SGPropertyNode *prop,
+                     SGPropertyNode* load, SGPropertyNode* unload) :
+        _path(path),
+        _root(root), _prop(prop),
+        _load(load), _unload(unload)
+     {
+     }
+
+    /** Load hook. Always call from inside the main loop. */
+    void load();
+
+    /** Unload hook. Always call from inside the main loop. */
+    void unload();
+
+private:
+    static unsigned int _module_id;
+
+    string _module, _path;
+    SGPropertyNode_ptr _root, _prop;
+    SGConstPropertyNode_ptr _load, _unload;
+};
+
+/** Thread-safe proxy for FGNasalModelData.
+ * modelLoaded/destroy methods only register the requested
+ * operation. Actual (un)loading of Nasal module is deferred
+ * and done in the main loop. */
+class FGNasalModelDataProxy : public simgear::SGModelData
+{
+public:
+    FGNasalModelDataProxy(SGPropertyNode *root = 0) :
+        _root(root), _data(0)
+    {
+    }
+
+    ~FGNasalModelDataProxy();
+
+    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
+
+protected:
+    SGPropertyNode_ptr _root;
+    SGSharedPtr<FGNasalModelData> _data;
+};
 
 class FGNasalSys : public SGSubsystem
 {
@@ -63,10 +114,16 @@ public:
     naRef call(naRef code, int argc, naRef* args, naRef locals);
     naRef propNodeGhost(SGPropertyNode* handle);
 
+    void registerToLoad(FGNasalModelData* data)   { _loadList.push(data);}
+    void registerToUnload(FGNasalModelData* data) { _unloadList.push(data);}
+
 private:
     friend class FGNasalScript;
     friend class FGNasalListener;
     friend class FGNasalModuleListener;
+
+    SGLockedQueue<SGSharedPtr<FGNasalModelData> > _loadList;
+    SGLockedQueue<SGSharedPtr<FGNasalModelData> > _unloadList;
 
     //
     // FGTimer subclass for handling Nasal timer callbacks.
@@ -162,20 +219,6 @@ private:
     long _last_int;
     double _last_float;
     string _last_string;
-};
-
-
-class FGNasalModelData : public simgear::SGModelData {
-public:
-    FGNasalModelData(SGPropertyNode *root = 0) : _root(root), _unload(0) {}
-    ~FGNasalModelData();
-    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
-
-private:
-    static unsigned int _module_id;
-    string _module;
-    SGPropertyNode_ptr _root;
-    SGConstPropertyNode_ptr _unload;
 };
 
 
