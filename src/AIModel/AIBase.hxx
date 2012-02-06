@@ -42,7 +42,7 @@ class SGMaterial;
 class FGAIManager;
 class FGAIFlightPlan;
 class FGFX;
-class FGNasalModelData;
+class FGNasalModelDataProxy;
 class FGAIModelData;	// defined below
 
 
@@ -456,16 +456,15 @@ public:
 
     /** init hook to be called after model is loaded.
      * Not thread-safe. Call from main thread only. */
-    void init(void);
+    void init(void) { _initialized = true; }
 
     bool needInitilization(void) { return _ready && !_initialized;}
     bool isInitialized(void) { return _initialized;}
     inline std::string& get_sound_path() { return _fxpath;}
 
 private:
-    FGNasalModelData *_nasal;
-    SGPropertyNode_ptr _prop;
-    std::string _path, _fxpath;
+    FGNasalModelDataProxy *_nasal;
+    std::string _fxpath;
     bool _ready;
     bool _initialized;
 };

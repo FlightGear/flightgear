@@ -917,7 +917,7 @@ int FGAIBase::_newAIModelID() {
 
 
 FGAIModelData::FGAIModelData(SGPropertyNode *root)
-  : _nasal( new FGNasalModelData(root) ),
+  : _nasal( new FGNasalModelDataProxy(root) ),
     _ready(false),
     _initialized(false)
 {
@@ -926,25 +926,17 @@ FGAIModelData::FGAIModelData(SGPropertyNode *root)
 FGAIModelData::~FGAIModelData()
 {
     delete _nasal;
+    _nasal = NULL;
 }
 
 void FGAIModelData::modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n)
 {
-    // WARNING: All this is called in a separate OSG thread! Only use thread-safe stuff
-    // here that is fine to be run concurrently with stuff in the main loop!
+    // WARNING: Called in a separate OSG thread! Only use thread-safe stuff here...
     if (_ready)
         return;
-    _fxpath = _prop->getStringValue("sound/path");
-    _prop = prop;
-    _path = path;
-    _ready = true;
-}
 
-// do Nasal initialization (must be called in the main loop)
-void FGAIModelData::init()
-{
-    // call FGNasalSys to create context and run hooks (not-thread safe!)
-    _nasal->modelLoaded(_path, _prop, 0);
-    _prop = 0;
-    _initialized = true;
+    _fxpath = prop->getStringValue("sound/path");
+    _nasal->modelLoaded(path, prop, n);
+
+    _ready = true;
 }

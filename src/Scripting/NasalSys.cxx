@@ -878,6 +878,19 @@ void FGNasalSys::update(double)
         _dead_listener.clear();
     }
 
+    if (!_loadList.empty())
+    {
+        // process Nasal load hook (only one per update loop to avoid excessive lags)
+        _loadList.pop()->load();
+    }
+    else
+    if (!_unloadList.empty())
+    {
+        // process pending Nasal unload hooks after _all_ load hooks were processed
+        // (only unload one per update loop to avoid excessive lags)
+        _unloadList.pop()->unload();
+    }
+
     // The global context is a legacy thing.  We use dynamically
     // created contexts for naCall() now, so that we can call them
     // recursively.  But there are still spots that want to use it for
@@ -1358,36 +1371,26 @@ bool FGNasalListener::changed(SGPropertyNode* node)
 
 unsigned int FGNasalModelData::_module_id = 0;
 
-void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
-                                   osg::Node *)
+void FGNasalModelData::load()
 {
-    if(!prop)
-        return;
-    SGPropertyNode *nasal = prop->getNode("nasal");
-    if(!nasal)
-        return;
-
-    SGPropertyNode *load = nasal->getNode("load");
-    _unload = nasal->getNode("unload");
-    if(!load && !_unload)
-        return;
-
     std::stringstream m;
     m << "__model" << _module_id++;
     _module = m.str();
 
-    const char *s = load ? load->getStringValue() : "";
+    SG_LOG(SG_NASAL, SG_DEBUG, "Loading nasal module " << _module.c_str());
+
+    const char *s = _load ? _load->getStringValue() : "";
 
     naRef arg[2];
     arg[0] = nasalSys->propNodeGhost(_root);
-    arg[1] = nasalSys->propNodeGhost(prop);
-    nasalSys->createModule(_module.c_str(), path.c_str(), s, strlen(s),
+    arg[1] = nasalSys->propNodeGhost(_prop);
+    nasalSys->createModule(_module.c_str(), _path.c_str(), s, strlen(s),
                            _root, 2, arg);
 }
 
-FGNasalModelData::~FGNasalModelData()
+void FGNasalModelData::unload()
 {
-    if(_module.empty())
+    if (_module.empty())
         return;
 
     if(!nasalSys) {
@@ -1396,14 +1399,52 @@ FGNasalModelData::~FGNasalModelData()
         return;
     }
 
-    if(_unload) {
+    SG_LOG(SG_NASAL, SG_DEBUG, "Unloading nasal module " << _module.c_str());
+
+    if (_unload)
+    {
         const char *s = _unload->getStringValue();
         nasalSys->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _root);
     }
+
     nasalSys->deleteModule(_module.c_str());
 }
 
+void FGNasalModelDataProxy::modelLoaded(const string& path, SGPropertyNode *prop,
+                                   osg::Node *)
+{
+    if(!nasalSys) {
+        SG_LOG(SG_NASAL, SG_WARN, "Trying to run a <load> script "
+                "without Nasal subsystem present.");
+        return;
+    }
 
+    if(!prop)
+        return;
+
+    SGPropertyNode *nasal = prop->getNode("nasal");
+    if(!nasal)
+        return;
+
+    SGPropertyNode* load   = nasal->getNode("load");
+    SGPropertyNode* unload = nasal->getNode("unload");
+
+    if ((!load) && (!unload))
+        return;
+
+    _data = new FGNasalModelData(_root, path, prop, load, unload);
+
+    // register Nasal module to be created and loaded in the main thread.
+    nasalSys->registerToLoad(_data);
+}
+
+FGNasalModelDataProxy::~FGNasalModelDataProxy()
+{
+    // when necessary, register Nasal module to be destroyed/unloaded
+    // in the main thread.
+    if ((_data.valid())&&(nasalSys))
+        nasalSys->registerToUnload(_data);
+}
 
 // NasalXMLVisitor class: handles EasyXML visitor callback for parsexml()
 //
