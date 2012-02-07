@@ -61,7 +61,8 @@ FGTileMgr::FGTileMgr():
     vis( 16000 ),
     _terra_sync(NULL),
     _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
-    _maxTileRangeM(fgGetNode("/sim/rendering/static-lod/bare", true))
+    _maxTileRangeM(fgGetNode("/sim/rendering/static-lod/bare", true)),
+    _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true))
 {
 }
 
