@@ -725,8 +725,9 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         // the relevant frequency.
         // Note that distance attenuation is currently not yet implemented
                 
-        if ((onBoardRadioFreqI0 == stationFreq)
-                || (onBoardRadioFreqI1 == stationFreq)) {
+        if ((stationFreq > 0)&&
+            ((onBoardRadioFreqI0 == stationFreq)||
+             (onBoardRadioFreqI1 == stationFreq))) {
             if (rec->allowTransmissions()) {
             	
             	if( fgGetBool( "/sim/radio/use-itm-attenuation", false ) ) {
