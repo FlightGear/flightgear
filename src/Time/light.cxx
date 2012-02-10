@@ -244,12 +244,14 @@ void FGLight::update_sky_color () {
     /** fog color */
     float sqr_sky_brightness = sky_brightness * sky_brightness * _scattering;
     _fog_color = base_fog_color * sqr_sky_brightness;
+    _fog_color[3] = base_fog_color[3];
     gamma_correct_rgb( _fog_color.data() );
 
     /** sky color */
     static const SGVec4f one_vec( 1.0f, 1.0f, 1.0f, 1.0f);
     SGVec4f overcast_color = (one_vec - base_sky_color) * _overcast;
     _sky_color = (base_sky_color + overcast_color) * sky_brightness;
+    _sky_color[3] = base_sky_color[3];
     gamma_correct_rgb( _sky_color.data() );
 
     /** cloud color */
@@ -260,16 +262,19 @@ void FGLight::update_sky_color () {
        float sun2 = 1.0 / sqrt(_sun_angle);
        _cloud_color *= sun2;
     }
+    _cloud_color[3] = base_fog_color[3];
     gamma_correct_rgb( _cloud_color.data() );
 
     /** ambient light */
     _scene_ambient = _fog_color  * ambient;
+    _scene_ambient[3] = _fog_color[3];
     gamma_correct_rgb( _scene_ambient.data() );
 
     /** diffuse light */
     SGSky* thesky = globals->get_renderer()->getSky();
     SGVec4f color = thesky->get_scene_color();
     _scene_diffuse = color * diffuse;
+    _scene_diffuse[3] = color[3];
     gamma_correct_rgb( _scene_diffuse.data() );
 
     SGVec4f chrome = _scene_ambient * .4f + _scene_diffuse;
@@ -283,6 +288,7 @@ void FGLight::update_sky_color () {
     /** specular light */
     _sun_color = thesky->get_sun_color();
     _scene_specular = _sun_color * specular;
+    _scene_specular[3] = _sun_color[3];
     gamma_correct_rgb( _scene_specular.data() );
 }
 
@@ -367,6 +373,7 @@ void FGLight::update_adj_fog_color () {
 
     gamma = system_gamma * (0.9 - sif*avf);
     _adj_fog_color = rf3 * _fog_color + rf2 * _sun_color;
+    _adj_fog_color[3] = 0;
     gamma_correct_rgb( _adj_fog_color.data(), gamma);
 
     // make sure the colors have their original value before they are being
