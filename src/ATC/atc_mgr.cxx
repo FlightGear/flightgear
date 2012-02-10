@@ -111,8 +111,11 @@ void FGATCManager::init() {
             if (!runway.empty()) {
                 controller = apt->getDynamics()->getTowerController();
                 int stationFreq = apt->getDynamics()->getTowerFrequency(2);
-                //cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
-                fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+                if (stationFreq > 0)
+                {
+                    //cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
+                    fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+                }
                 leg = 3;
                 string fltType = "ga";
                 fp->setRunway(runway);
@@ -124,8 +127,11 @@ void FGATCManager::init() {
         } else {
             controller = apt->getDynamics()->getStartupController();
             int stationFreq = apt->getDynamics()->getGroundFrequency(1);
-            //cerr << "Setting radio frequency to : " << stationFreq << endl;
-            fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+            if (stationFreq > 0)
+            {
+                //cerr << "Setting radio frequency to : " << stationFreq << endl;
+                fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+            }
             leg = 1;
             //double, lat, lon, head; // Unused variables;
             //int getId = apt->getDynamics()->getParking(gateId, &lat, &lon, &head);
