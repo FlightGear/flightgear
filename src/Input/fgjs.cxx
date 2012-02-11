@@ -58,6 +58,10 @@ using std::string;
 
 #include "jsinput.h"
 
+#ifdef __APPLE__
+#  include <CoreFoundation/CoreFoundation.h>
+#endif
+
 using simgear::PropertyList;
 
 bool confirmAnswer() {
@@ -342,25 +346,23 @@ string getFGRoot ( int argc, char **argv ) {
         root = "../data";
 #elif defined( _WIN32 )
         root = "..\\data";
-#elif defined(OSX_BUNDLE)
-        /* the following code looks for the base package directly inside
-            the application bundle. This can be changed fairly easily by
-            fiddling with the code below. And yes, I know it's ugly and verbose.
+#elif defined(__APPLE__) 
+        /*
+        The following code looks for the base package inside the application 
+        bundle, in the standard Contents/Resources location. 
         */
-        CFBundleRef appBundle = CFBundleGetMainBundle();
-        CFURLRef appUrl = CFBundleCopyBundleURL(appBundle);
-        CFRelease(appBundle);
 
-        // look for a 'data' subdir directly inside the bundle : is there
-        // a better place? maybe in Resources? I don't know ...
-        CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, appUrl, CFSTR("data"), true);
+        CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+
+        // look for a 'data' subdir
+        CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
 
         // now convert down to a path, and the a c-string
         CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
         root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
 
         // tidy up.
-        CFRelease(appBundle);
+        CFRelease(resourcesUrl);
         CFRelease(dataDir);
         CFRelease(path);
 #else
