@@ -228,7 +228,15 @@ double FGPropeller::Calculate(double EnginePower)
   // Induced velocity in the propeller disk area. This formula is obtained
   // from momentum theory - see B. W. McCormick, "Aerodynamics, Aeronautics,
   // and Flight Mechanics" 1st edition, eqn. 6.15 (propeller analysis chapter).
-  Vinduced = 0.5 * (-Vel + sqrt(Vel*Vel + 2.0*Thrust/(rho*Area)));
+  // Vinduced = 0.5 * (-Vel + sqrt(Vel*Vel + 2.0*Thrust/(rho*Area)))
+  // Since Thrust and Vel can both be negative we need to adjust this formula
+  // To handle sign (direction) separately from magnitude.
+  double Vel2sum = Vel*abs(Vel) + 2.0*Thrust/(rho*Area);
+
+  if( Vel2sum > 0.0)
+    Vinduced = 0.5 * (-Vel + sqrt(Vel2sum));
+  else
+    Vinduced = 0.5 * (-Vel - sqrt(-Vel2sum));
 
   // P-factor is simulated by a shift of the acting location of the thrust.
   // The shift is a multiple of the angle between the propeller shaft axis
