@@ -48,7 +48,9 @@ extern string def_scenery_dest;
 static const float min_progress = 0.0;
 static const float max_progress = 5000.0;
 
-#if (FL_MAJOR_VERSION > 1)||((FL_MAJOR_VERSION == 1)&&(FL_MINOR_VERSION >= 3))
+// FIXME: Ugly hack to detect the situation below 
+#ifdef FL_Volume_Down
+//#if (FL_MAJOR_VERSION > 1)||((FL_MAJOR_VERSION == 1)&&(FL_MINOR_VERSION >= 3))
     // Fltk 1.3 or newer, need to use "fl_filename_free_list"
     #define FL_FREE_DIR_ENTRY(e) // do nothing, since "fl_filename_free_list" frees entire list
     #define FL_FREE_DIR_LIST(list,count) fl_filename_free_list(&list, count)
