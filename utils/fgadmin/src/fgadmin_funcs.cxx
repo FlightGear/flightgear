@@ -48,6 +48,18 @@ extern string def_scenery_dest;
 static const float min_progress = 0.0;
 static const float max_progress = 5000.0;
 
+/** Strip a single trailing '/' or '\\' */
+static char* stripSlash(char* str)
+{
+    int l = strlen(str);
+    if ((l>0)&&
+        ((str[l-1]=='/')||(str[l-1]=='\\')))
+    {
+        str[l-1] = 0;
+    }
+    return str;
+}
+
 // destructor
 FGAdminUI::~FGAdminUI() {
     delete prefs;
@@ -147,6 +159,7 @@ void FGAdminUI::update_install_box() {
             // find base name of archive file
             char base[FL_PATH_MAX];
             dirent *ent = list[i];
+            stripSlash(ent->d_name);
             strncpy( base, ent->d_name, FL_PATH_MAX );
             const char *p = fl_filename_ext( base );
             int offset;
@@ -187,9 +200,8 @@ void FGAdminUI::update_install_box() {
                     // cout << install.str() << " exists." << endl;
                 }
             }
-            free( ent );
         }
-        free( list );
+        fl_filename_free_list(&list, nb);
 
         for ( set<string>::iterator it = file_list.begin(); it != file_list.end(); ++it ) {
             install_box->add( it->c_str() );
@@ -223,14 +235,14 @@ void FGAdminUI::update_remove_box() {
                 int nb = fl_filename_list( path[i].c_str(), &list );
                 for ( int i = 0; i < nb; ++i ) {
                     dirent *ent = list[i];
+                    stripSlash(ent->d_name);
                     if ( strlen(ent->d_name) == 7 &&
                             ( ent->d_name[0] == 'e' || ent->d_name[0] == 'w' ) &&
                             ( ent->d_name[4] == 'n' || ent->d_name[4] == 's' ) ) {
                         dir_list.insert( ent->d_name );
                     }
-                    free( ent );
                 }
-                free( list );
+                fl_filename_free_list(&list, nb);
             }
         }
 
@@ -292,6 +304,7 @@ static unsigned long count_dir( const char *dir_name, bool top = true ) {
     if ( nb != 0 ) {
         for ( int i = 0; i < nb; ++i ) {
             dirent *ent = list[i];
+            stripSlash(ent->d_name);
             if ( strcmp( ent->d_name, "." ) == 0 ) {
                 // ignore "."
             } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
@@ -303,9 +316,8 @@ static unsigned long count_dir( const char *dir_name, bool top = true ) {
             } else {
                 cnt += 1;
             }
-            free( ent );
         }
-        free( list );
+        fl_filename_free_list(&list, nb);
     } else if ( top ) {
         string base = dir_name;
         size_t pos = base.rfind('/');
@@ -322,26 +334,24 @@ static unsigned long count_dir( const char *dir_name, bool top = true ) {
 static void remove_dir( const char *dir_name, void (*step)(void*,int), void *data, bool top = true ) {
     dirent **list;
     int nb = fl_filename_list( dir_name, &list );
-    if ( nb != 0 ) {
+    if ( nb > 0 ) {
         for ( int i = 0; i < nb; ++i ) {
             dirent *ent = list[i];
+            SGPath child( dir_name );
+            child.append( ent->d_name );
+            stripSlash(ent->d_name);
             if ( strcmp( ent->d_name, "." ) == 0 ) {
                 // ignore "."
             } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
                 // ignore ".."
-            } else if ( fl_filename_isdir( ent->d_name ) ) {
-                SGPath child( dir_name );
-                child.append( ent->d_name );
+            } else if ( child.isDir() ) {
                 remove_dir( child.c_str(), step, data, false );
             } else {
-                SGPath child( dir_name );
-                child.append( ent->d_name );
                 unlink( child.c_str() );
                 if (step) step( data, 1 );
             }
-            free( ent );
         }
-        free( list );
+        fl_filename_free_list(&list, nb);
         rmdir( dir_name );
     } else if ( top ) {
         string base = dir_name;
