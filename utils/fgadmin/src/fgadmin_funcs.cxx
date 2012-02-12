@@ -48,6 +48,18 @@ extern string def_scenery_dest;
 static const float min_progress = 0.0;
 static const float max_progress = 5000.0;
 
+#if (FL_MAJOR_VERSION > 1)||((FL_MAJOR_VERSION == 1)&&(FL_MINOR_VERSION >= 3))
+    // Fltk 1.3 or newer, need to use "fl_filename_free_list"
+    #define FL_FREE_DIR_ENTRY(e) // do nothing, since "fl_filename_free_list" frees entire list
+    #define FL_FREE_DIR_LIST(list,count) fl_filename_free_list(&list, count)
+    #define FL_STAT(file,info) fl_stat( file.str().c_str(), info )
+#else
+    // Fltk < 1.3, "fl_filename_free_list", "fl_stat" not available
+    #define FL_FREE_DIR_ENTRY(e) free(e)
+    #define FL_FREE_DIR_LIST(list,count) free(list)
+    #define FL_STAT() stat( file.str().c_str(), info );
+#endif
+
 /** Strip a single trailing '/' or '\\' */
 static char* stripSlash(char* str)
 {
@@ -200,8 +212,9 @@ void FGAdminUI::update_install_box() {
                     // cout << install.str() << " exists." << endl;
                 }
             }
+            FL_FREE_DIR_ENTRY(ent);
         }
-        fl_filename_free_list(&list, nb);
+        FL_FREE_DIR_LIST(list, nb);
 
         for ( set<string>::iterator it = file_list.begin(); it != file_list.end(); ++it ) {
             install_box->add( it->c_str() );
@@ -241,8 +254,9 @@ void FGAdminUI::update_remove_box() {
                             ( ent->d_name[4] == 'n' || ent->d_name[4] == 's' ) ) {
                         dir_list.insert( ent->d_name );
                     }
+                    FL_FREE_DIR_ENTRY(ent);
                 }
-                fl_filename_free_list(&list, nb);
+                FL_FREE_DIR_LIST(list, nb);
             }
         }
 
@@ -270,11 +284,7 @@ void FGAdminUI::install_selected() {
             SGPath file( source );
             file.append( f );
             struct ::stat info;
-#if (FL_MAJOR_VERSION > 1 || ( FL_MAJOR_VERSION == 1 && FL_MINOR_VERSION >= 3 ))
-            fl_stat( file.str().c_str(), &info );
-#else
-            stat( file.str().c_str(), &info );
-#endif
+            FL_STAT( file, &info );
             float old_max = progress->maximum();
             progress->maximum( info.st_size );
             progress_label = "Installing ";
@@ -316,8 +326,9 @@ static unsigned long count_dir( const char *dir_name, bool top = true ) {
             } else {
                 cnt += 1;
             }
+            FL_FREE_DIR_ENTRY(ent);
         }
-        fl_filename_free_list(&list, nb);
+        FL_FREE_DIR_LIST(list, nb);
     } else if ( top ) {
         string base = dir_name;
         size_t pos = base.rfind('/');
@@ -350,8 +361,9 @@ static void remove_dir( const char *dir_name, void (*step)(void*,int), void *dat
                 unlink( child.c_str() );
                 if (step) step( data, 1 );
             }
+            FL_FREE_DIR_ENTRY(ent);
         }
-        fl_filename_free_list(&list, nb);
+        FL_FREE_DIR_LIST(list, nb);
         rmdir( dir_name );
     } else if ( top ) {
         string base = dir_name;
