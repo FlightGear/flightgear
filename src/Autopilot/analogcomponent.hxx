@@ -133,6 +133,9 @@ protected:
              it != _output_list.end(); ++it)
           (*it)->setDoubleValue( value );
     }
+
+public:
+    const PeriodicalValue * getPeriodicalValue() const { return _periodical; }
 };
 
 inline void AnalogComponent::disabled( double dt )

@@ -32,6 +32,25 @@ using std::cout;
 
 namespace FGXMLAutopilot {
 
+/**
+ *
+ *
+ */
+class DigitalFilterImplementation : public SGReferenced {
+protected:
+  virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode) = 0;
+public:
+  DigitalFilterImplementation();
+  virtual void   initialize( double output ) {}
+  virtual double compute( double dt, double input ) = 0;
+  bool configure( SGPropertyNode_ptr configNode );
+
+  void setDigitalFilter( DigitalFilter * digitalFilter ) { _digitalFilter = digitalFilter; }
+
+protected:
+  DigitalFilter * _digitalFilter;
+};
+
 /* --------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------- */
 class GainFilterImplementation : public DigitalFilterImplementation {
@@ -101,6 +120,10 @@ using namespace FGXMLAutopilot;
 
 /* --------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------- */
+DigitalFilterImplementation::DigitalFilterImplementation() :
+  _digitalFilter(NULL)
+{
+}
 
 bool DigitalFilterImplementation::configure( SGPropertyNode_ptr configNode )
 {
@@ -227,19 +250,17 @@ void NoiseSpikeFilterImplementation::initialize( double output )
 
 double NoiseSpikeFilterImplementation::compute(  double dt, double input )
 {
+  double delta = input - _output_1;
+  if( delta == 0.0 ) return input; // trivial
+
   double maxChange = _rateOfChangeInput.get_value() * dt;
+  const PeriodicalValue * periodical = _digitalFilter->getPeriodicalValue();
+  if( periodical ) delta = periodical->normalizeSymmetric( delta );
 
-  double output_0 = _output_1;
-
-  if (_output_1 - input > maxChange) {
-    output_0 = _output_1 - maxChange;
-  } else if( _output_1 - input < -maxChange ) {
-    output_0 = _output_1 + maxChange;
-  } else if (fabs(input - _output_1) <= maxChange) {
-    output_0 = input;
-  }
-  _output_1 = output_0;
-  return output_0;
+  if( fabs(delta) <= maxChange )
+    return (_output_1 = input);
+  else
+    return (_output_1 = _output_1 + copysign( maxChange, delta ));
 }
 
 bool NoiseSpikeFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
@@ -318,6 +339,11 @@ DigitalFilter::DigitalFilter() :
 {
 }
 
+DigitalFilter::~DigitalFilter()
+{
+}
+
+
 static map<string,FunctorBase<DigitalFilterImplementation> *> componentForge;
 
 bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configNode)
@@ -343,6 +369,7 @@ bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configN
       return true;
     }
     _implementation = (*componentForge[type])( configNode->getParent() );
+    _implementation->setDigitalFilter( this );
     return true;
   }
 

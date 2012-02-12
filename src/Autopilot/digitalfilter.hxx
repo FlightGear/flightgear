@@ -32,26 +32,13 @@
 namespace FGXMLAutopilot {
 
 /**
- *
- *
- */
-class DigitalFilterImplementation : public SGReferenced {
-protected:
-  virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode) = 0;
-public:
-  virtual void   initialize( double output ) {}
-  virtual double compute( double dt, double input ) = 0;
-  bool configure( SGPropertyNode_ptr configNode );
-};
-
-/**
  * brief@ DigitalFilter - a selection of digital filters
  *
  */
 class DigitalFilter : public AnalogComponent
 {
 private:
-    SGSharedPtr<DigitalFilterImplementation> _implementation;
+    SGSharedPtr<class DigitalFilterImplementation> _implementation;
 
     enum InitializeTo {
       INITIALIZE_OUTPUT,
@@ -71,7 +58,7 @@ protected:
 
 public:
     DigitalFilter();
-    ~DigitalFilter() {}
+    ~DigitalFilter();
 
 };
 

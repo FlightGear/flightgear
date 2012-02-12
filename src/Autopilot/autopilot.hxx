@@ -54,7 +54,7 @@ public:
     std::string get_name() const { return _name; }
     void set_name( const std::string & name ) { _name = name; }
 
-    void add_component( Component * component );
+    void add_component( Component * component, double updateInterval );
 
 protected:
 

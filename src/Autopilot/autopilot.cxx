@@ -85,8 +85,10 @@ Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode
       component->set_name( buf.str() );
     }
 
-    SG_LOG( SG_AUTOPILOT, SG_INFO, "adding  autopilot component \"" << childName << "\" as \"" << component->get_name() << "\"" );
-    add_component(component);
+    double updateInterval = node->getDoubleValue( "update-interval-secs", 0.0 );
+
+    SG_LOG( SG_AUTOPILOT, SG_INFO, "adding  autopilot component \"" << childName << "\" as \"" << component->get_name() << "\" with interval=" << updateInterval );
+    add_component(component,updateInterval);
   }
 }
 
@@ -105,7 +107,7 @@ void Autopilot::unbind()
   _rootNode->untie( "serviceable" );
 }
 
-void Autopilot::add_component( Component * component )
+void Autopilot::add_component( Component * component, double updateInterval )
 {
   if( component == NULL ) return;
 
@@ -119,7 +121,7 @@ void Autopilot::add_component( Component * component )
   if( name != component->get_name() )
     SG_LOG( SG_ALL, SG_WARN, "Duplicate autopilot component " << component->get_name() << ", renamed to " << name );
 
-  set_subsystem( name.c_str(), component );
+  set_subsystem( name.c_str(), component, updateInterval );
 }
 
 void Autopilot::update( double dt ) 
