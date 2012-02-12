@@ -59,7 +59,7 @@ static const float max_progress = 5000.0;
     // Fltk < 1.3, "fl_filename_free_list", "fl_stat" not available
     #define FL_FREE_DIR_ENTRY(e) free(e)
     #define FL_FREE_DIR_LIST(list,count) free(list)
-    #define FL_STAT() stat( file.str().c_str(), info );
+    #define FL_STAT(file,info) stat( file.str().c_str(), info );
 #endif
 
 /** Strip a single trailing '/' or '\\' */
