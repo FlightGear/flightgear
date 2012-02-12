@@ -129,13 +129,9 @@ private:
 
       setValue(prot.prop, new_val);
     }
-
     
-    template<class T>
-    static const T getValue(SGPropertyNode_ptr& prop);
-
-    template<class T>
-    static void setValue(SGPropertyNode_ptr& prop, const T& val);
+    // Special handling for bool (relative change = toggle, no min/max, no wrap)
+    static void updateValue(_serial_prot& prot, bool val);
 };
 
 

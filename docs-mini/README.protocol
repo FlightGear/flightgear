@@ -148,6 +148,9 @@ For input chunks there exist some more options:
                 (Usefull for eg. heading selector to start again with 1 for
                 values higher than 360)
 
+<rel>, <min>, <max> and <wrap> are only used for numeric data types. <rel> can
+additionally be used with type 'bool', where it toggles the value, if the received
+value evaluates to 'true', otherwise the value is left unchanged.
 
 Chunks can also consist of a single constant <format>, like in:
   <format>Data Section</format>

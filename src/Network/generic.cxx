@@ -273,7 +273,6 @@ bool FGGeneric::gen_message() {
 bool FGGeneric::parse_message_binary(int length) {
     char *p2, *p1 = buf;
     int32_t tmp32;
-    double val;
     int i = -1;
 
     p2 = p1 + length;
@@ -291,7 +290,7 @@ bool FGGeneric::parse_message_binary(int length) {
             break;
 
         case FG_BOOL:
-            _in_message[i].prop->setBoolValue( p1[0] != 0 );
+            updateValue(_in_message[i], p1[0] != 0);
             p1 += 1;
             break;
 
@@ -338,7 +337,6 @@ bool FGGeneric::parse_message_binary(int length) {
 
 bool FGGeneric::parse_message_ascii(int length) {
     char *p2, *p1 = buf;
-    double val;
     int i = -1;
     int chunks = _in_message.size();
     int line_separator_size = line_separator.size();
@@ -365,7 +363,7 @@ bool FGGeneric::parse_message_ascii(int length) {
             break;
 
         case FG_BOOL:
-            _in_message[i].prop->setBoolValue( atof(p1) != 0.0 );
+            updateValue(_in_message[i], atof(p1) != 0.0);
             break;
 
         case FG_FIXED:
@@ -712,23 +710,16 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
     }
 }
 
-/*
-  set/getValue: Implementations for supported datatypes
-*/
-#define DEF_DATA_ACCESS(type, method)\
-template<>\
-const type FGGeneric::getValue(SGPropertyNode_ptr& prop)\
-{\
-  return prop->get##method##Value();\
-}\
-\
-template<>\
-void FGGeneric::setValue(SGPropertyNode_ptr& prop, const type& val)\
-{\
-  prop->set##method##Value(val);\
+void FGGeneric::updateValue(FGGeneric::_serial_prot& prot, bool val)
+{
+  if( prot.rel )
+  {
+    // value inverted if received true, otherwise leave unchanged
+    if( val )
+      setValue(prot.prop, !getValue<bool>(prot.prop));
+  }
+  else
+  {
+    setValue(prot.prop, val);
+  }
 }
-
-DEF_DATA_ACCESS(int, Int)
-DEF_DATA_ACCESS(float, Float)
-DEF_DATA_ACCESS(double, Double)
-
