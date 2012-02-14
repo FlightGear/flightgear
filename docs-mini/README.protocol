@@ -144,7 +144,7 @@ For input chunks there exist some more options:
   <max>         an optional upper limit for the input value to be clamped to. If
                 <min> equals <max> no limit is applied. (default: 0)
   <wrap>        instead of clamping to minimum and maximum limits, wrap values
-                around. (default: false)
+                around. Values will be in [min, max[ (default: false)
                 (Usefull for eg. heading selector to start again with 1 for
                 values higher than 360)
 

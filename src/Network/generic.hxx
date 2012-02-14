@@ -113,18 +113,9 @@ private:
       if( prot.max > prot.min )
       {
         if( prot.wrap )
-        {
-          T range = prot.max - prot.min + 1;
-          if( range > 0 )
-          {
-            while( new_val < prot.min )
-              new_val += range;
-            while( new_val > prot.max )
-              new_val -= range;
-          }
-        }
+          new_val = SGMisc<double>::normalizePeriodic(prot.min, prot.max, new_val);
         else
-          new_val = std::min<T>(prot.max, std::max<T>(prot.min, new_val));
+          new_val = SGMisc<T>::clip(new_val, prot.min, prot.max);
       }
 
       setValue(prot.prop, new_val);
