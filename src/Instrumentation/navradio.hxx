@@ -53,6 +53,7 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr power_btn_node;
     SGPropertyNode_ptr freq_node;       // primary freq
     SGPropertyNode_ptr alt_freq_node;   // standby freq
+    SGPropertyNode_ptr is_loc_freq_node;// is the primary freq a loc/gs (paired) freq?
     SGPropertyNode_ptr sel_radial_node; // selected radial
     SGPropertyNode_ptr vol_btn_node;
     SGPropertyNode_ptr ident_btn_node;

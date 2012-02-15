@@ -201,6 +201,7 @@ FGNavRadio::init ()
     alt_freq_node = subnode->getChild("standby-mhz", 0, true);
     fmt_freq_node = subnode->getChild("selected-mhz-fmt", 0, true);
     fmt_alt_freq_node = subnode->getChild("standby-mhz-fmt", 0, true);
+    is_loc_freq_node = subnode->getChild("is-localizer-frequency", 0, true );
 
     // radials
     subnode = node->getChild("radials", 0, true);
@@ -346,6 +347,16 @@ double FGNavRadio::adjustILSRange( double stationElev, double aircraftElev,
     return FG_LOC_DEFAULT_RANGE;
 }
 
+// Frequencies with odd 100kHz numbers in the range from 108.00 - 111.95
+// are LOC/GS (ILS) frequency pairs
+// (108.00, 108.05, 108.20, 108.25.. =VOR)
+// (108.10, 108.15, 108.30, 108.35.. =ILS)
+static inline bool IsLocalizerFrequency( double f )
+{
+  if( f < 108.0 || f >= 112.00 ) return false;
+  return (((SGMiscd::roundToInt(f * 100.0) % 100)/10) % 2) != 0;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Update the various nav values based on position and valid tuned in navs
@@ -364,6 +375,7 @@ FGNavRadio::update(double dt)
   fmt_freq_node->setStringValue(tmp);
   sprintf( tmp, "%.2f", alt_freq_node->getDoubleValue() );
   fmt_alt_freq_node->setStringValue(tmp);
+  is_loc_freq_node->setBoolValue( IsLocalizerFrequency( freq_node->getDoubleValue() ));
 
   if (power_btn_node->getBoolValue() 
       && (bus_power_node->getDoubleValue() > 1.0)
