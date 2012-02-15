@@ -251,7 +251,7 @@ void NoiseSpikeFilterImplementation::initialize( double output )
 double NoiseSpikeFilterImplementation::compute(  double dt, double input )
 {
   double delta = input - _output_1;
-  if( delta == 0.0 ) return input; // trivial
+  if( fabs(delta) <= SGLimitsd::min() ) return input; // trivial
 
   double maxChange = _rateOfChangeInput.get_value() * dt;
   const PeriodicalValue * periodical = _digitalFilter->getPeriodicalValue();

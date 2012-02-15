@@ -65,7 +65,9 @@ void FGXMLAutopilotGroupImplementation::addAutopilot( const std::string & name, 
     }
     FGXMLAutopilot::Autopilot * ap = new FGXMLAutopilot::Autopilot( apNode, config );
     ap->set_name( name );
-    set_subsystem( name, ap );
+
+    double updateInterval = config->getDoubleValue( "update-interval-secs", 0.0 );
+    set_subsystem( name, ap, updateInterval );
     _autopilotNames.push_back( name );
 }
 

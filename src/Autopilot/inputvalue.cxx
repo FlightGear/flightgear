@@ -41,8 +41,11 @@ double PeriodicalValue::normalize( double value ) const
 
 double PeriodicalValue::normalizeSymmetric( double value ) const
 {
-  value = SGMiscd::normalizePeriodic( minPeriod->get_value(), maxPeriod->get_value(), value );
-  double width_2 = (maxPeriod->get_value() - minPeriod->get_value())/2;
+  double minValue = minPeriod->get_value();
+  double maxValue = maxPeriod->get_value();
+  
+  value = SGMiscd::normalizePeriodic( minValue, maxValue, value );
+  double width_2 = (maxValue - minValue)/2;
   return value > width_2 ? width_2 - value : value;
 }
 
