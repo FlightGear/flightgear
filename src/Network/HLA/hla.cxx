@@ -45,7 +45,7 @@
 #include <simgear/hla/HLAObjectClass.hxx>
 #include <simgear/hla/HLAObjectInstance.hxx>
 #include <simgear/hla/HLAPropertyDataElement.hxx>
-#include <simgear/hla/HLAVariantDataElement.hxx>
+#include <simgear/hla/HLAVariantRecordDataElement.hxx>
 
 #include <AIModel/AIMultiplayer.hxx>
 #include <AIModel/AIManager.hxx>
@@ -559,15 +559,15 @@ private:
 };
 
 // Factory class that is used to create an apternative data element for the multiplayer property attribute
-class MPPropertyVariantDataElementFactory : public sg::HLAVariantArrayDataElement::AlternativeDataElementFactory {
+class MPPropertyVariantRecordDataElementFactory : public sg::HLAVariantArrayDataElement::AlternativeDataElementFactory {
 public:
-    MPPropertyVariantDataElementFactory(PropertyReferenceSet* propertyReferenceSet) :
+    MPPropertyVariantRecordDataElementFactory(PropertyReferenceSet* propertyReferenceSet) :
         _propertyReferenceSet(propertyReferenceSet)
     { }
 
-    virtual sg::HLADataElement* createElement(const sg::HLAVariantDataElement& variantDataElement, unsigned index)
+    virtual sg::HLADataElement* createElement(const sg::HLAVariantRecordDataElement& variantRecordDataElement, unsigned index)
     {
-        const sg::HLAVariantDataType* dataType = variantDataElement.getDataType();
+        const sg::HLAVariantRecordDataType* dataType = variantRecordDataElement.getDataType();
         if (!dataType)
             return 0;
         const sg::HLAEnumeratedDataType* enumDataType = dataType->getEnumeratedDataType();
@@ -594,7 +594,7 @@ public:
         _propertyReferenceSet(new PropertyReferenceSet),
         _mpProperties(new sg::HLAVariantArrayDataElement)
     {
-        _mpProperties->setAlternativeDataElementFactory(new MPPropertyVariantDataElementFactory(_propertyReferenceSet.get()));
+        _mpProperties->setAlternativeDataElementFactory(new MPPropertyVariantRecordDataElementFactory(_propertyReferenceSet.get()));
     }
     virtual ~MPAttributeCallback()
     { }
@@ -660,9 +660,9 @@ public:
         if (_mpProperties.valid() && _mpProperties->getNumElements() == 0) {
             if (_propertyReferenceSet.valid() && _propertyReferenceSet->getRootNode()) {
                 const sg::HLADataType* elementDataType = _mpProperties->getElementDataType();
-                const sg::HLAVariantDataType* variantDataType = elementDataType->toVariantDataType();
-                for (unsigned i = 0, count = 0; i < variantDataType->getNumAlternatives(); ++i) {
-                    std::string name = variantDataType->getAlternativeSemantics(i);
+                const sg::HLAVariantRecordDataType* variantRecordDataType = elementDataType->toVariantRecordDataType();
+                for (unsigned i = 0, count = 0; i < variantRecordDataType->getNumAlternatives(); ++i) {
+                    std::string name = variantRecordDataType->getAlternativeSemantics(i);
                     SGPropertyNode* node = _propertyReferenceSet->getRootNode()->getNode(name);
                     if (!node)
                         continue;
