@@ -45,6 +45,7 @@ public:
 private:
     /// All the utility classes we need currently
     class XMLConfigReader;
+    class Federate;
 
     /// The configuration parameters extracted from the tokens in the constructor
     std::string _objectModelConfig;
@@ -52,7 +53,7 @@ private:
     std::string _federate;
 
     /// The toplevel rti class
-    SGSharedPtr<simgear::HLAFederate> _hlaFederate;
+    SGSharedPtr<Federate> _hlaFederate;
     /// This class that is used to send register the local instance
     SGSharedPtr<simgear::HLAObjectClass> _localAircraftClass;
     /// The local aircraft instance

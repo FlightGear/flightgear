@@ -843,8 +843,16 @@ private:
     sg::HLADataElement::IndexPathPair _mpPropertiesIndexPathPair;
 };
 
+class FGHLA::Federate : public sg::HLAFederate {
+public:
+    virtual ~Federate()
+    { }
+    virtual bool readObjectModel()
+    { return readRTI1516ObjectModelTemplate(getFederationObjectModel()); }
+};
+
 FGHLA::FGHLA(const std::vector<std::string>& tokens) :
-    _hlaFederate(new simgear::HLAFederate)
+    _hlaFederate(new Federate)
 {
     if (1 < tokens.size() && !tokens[1].empty())
         set_direction(tokens[1]);
@@ -959,26 +967,14 @@ FGHLA::open()
     _hlaFederate->setFederationObjectModel(objectModel);
     _hlaFederate->setFederateType(_federate);
 
-    // Now that it is paramtrized, connect
-    if (!_hlaFederate->connect()) {
-        SG_LOG(SG_IO, SG_ALERT, "Could not connect to rti.");
-        return false;
-    }
-
-    // Try to create and join the new federation execution
-    if (!_hlaFederate->createJoinFederationExecution()) {
-        SG_LOG(SG_IO, SG_ALERT, "Could not join federation");
+    // Now that it is paramtrized, connect/join
+    if (!_hlaFederate->init()) {
+        SG_LOG(SG_IO, SG_ALERT, "Could not init the hla/rti connect.");
         return false;
     }
 
     // bool publish = get_direction() & SG_IO_OUT;
     // bool subscribe = get_direction() & SG_IO_IN;
-
-    sg::HLAFederate::ObjectModelFactory objectModelFactory;
-    if (!_hlaFederate->readObjectModelTemplate(objectModel, objectModelFactory)) {
-        SG_LOG(SG_IO, SG_ALERT, "Could not read omt file \"" << objectModel << "\"!");
-        return false;
-    }
 
     // This should be configured form a file
     XMLConfigReader::ObjectClassConfigList::const_iterator i;
@@ -1284,11 +1280,7 @@ FGHLA::close()
     }
 
     // Leave the federation and try to destroy the federation execution.
-    // Only works if no federate is joined
-    _hlaFederate->resignDestroyFederationExecution();
-
-    // throw away the HLAFederate
-    _hlaFederate->disconnect();
+    _hlaFederate->shutdown();
 
     set_enabled(false);
 
