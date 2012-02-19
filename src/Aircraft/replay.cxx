@@ -302,7 +302,8 @@ FGReplay::update( double dt )
         {
             // replay active
             double current_time = replay_time->getDoubleValue();
-            if (current_time<=0.0)
+            bool ResetTime = (current_time<=0.0);
+            if (ResetTime)
             {
                 // initialize start time
                 double startTime = get_start_time();
@@ -325,6 +326,11 @@ FGReplay::update( double dt )
             char StrBuffer[30];
             printTimeStr(StrBuffer,current_time);
             replay_time_str->setStringValue((const char*)StrBuffer);
+
+            // when time skipped (looped replay), trigger listeners to reset views etc
+            if (ResetTime)
+                replay_master->setIntValue(replay_state);
+
             return; // don't record the replay session 
         }
         case 2: // normal replay operation
