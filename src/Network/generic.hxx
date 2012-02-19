@@ -113,7 +113,7 @@ private:
       if( prot.max > prot.min )
       {
         if( prot.wrap )
-          new_val = SGMisc<double>::normalizePeriodic(prot.min, prot.max, new_val);
+          new_val = SGMisc<T>::normalizePeriodic(prot.min, prot.max, new_val);
         else
           new_val = SGMisc<T>::clip(new_val, prot.min, prot.max);
       }

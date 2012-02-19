@@ -1,4 +1,4 @@
-// generic.cxx -- generic protocal class
+// generic.cxx -- generic protocol class
 //
 // Written by Curtis Olson, started November 1999.
 //
@@ -175,6 +175,7 @@ bool FGGeneric::gen_message_binary() {
             /* FIXME padding for alignment? Something like: 
              * length += (strlength % 4 > 0 ? sizeof(int32_t) - strlength % 4 : 0;
              */
+            break;
         }
     }
 
@@ -329,6 +330,7 @@ bool FGGeneric::parse_message_binary(int length) {
         default: // SG_STRING
             SG_LOG( SG_IO, SG_ALERT, "Generic protocol: "
                     "Ignoring unsupported binary input chunk type.");
+            break;
         }
     }
     
@@ -377,6 +379,7 @@ bool FGGeneric::parse_message_ascii(int length) {
 
         default: // SG_STRING
             _in_message[i].prop->setStringValue(p1);
+            break;
         }
 
         p1 = p2;
