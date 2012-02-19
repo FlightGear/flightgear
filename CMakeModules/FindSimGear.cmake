@@ -121,14 +121,15 @@ else(SIMGEAR_SHARED)
     set(comps
         environment
         nasal
+        tsync
         bucket
         route
-        timing
         io
         serial
         math
         props
         structure
+        timing
         xml
         misc
         threads
@@ -137,7 +138,6 @@ else(SIMGEAR_SHARED)
     )
 
     set(scene_comps
-        tsync
         ephem
         sky
         material
