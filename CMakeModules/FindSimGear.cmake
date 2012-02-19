@@ -29,7 +29,10 @@ include(SelectLibraryConfigurations)
 
 macro(find_sg_library libName varName libs)
     set(libVarName "${varName}_LIBRARY")
-    
+    # do not cache the library check
+    unset(${libVarName}_DEBUG CACHE)
+    unset(${libVarName}_RELEASE CACHE)
+
     FIND_LIBRARY(${libVarName}_DEBUG
       NAMES ${libName}${CMAKE_DEBUG_POSTFIX}
       HINTS $ENV{SIMGEAR_DIR}
@@ -90,7 +93,33 @@ FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
   /opt
 )
 
-# message(STATUS ${SIMGEAR_INCLUDE_DIR})
+# make sure the simgear include directory exists
+if (NOT SIMGEAR_INCLUDE_DIR)
+    message(FATAL_ERROR "Cannot find SimGear includes! (Forgot 'make install' for SimGear?) "
+            "Compile & INSTALL SimGear before configuring FlightGear. "
+            "When using non-standard locations, use 'SIMGEAR_DIR' to configure the SimGear location.")
+endif()
+
+message(STATUS "SimGear include directory: ${SIMGEAR_INCLUDE_DIR}")
+
+# make sure the simgear/version.h header exists
+if (NOT EXISTS ${SIMGEAR_INCLUDE_DIR}/simgear/version.h)
+    message(FATAL_ERROR "Found SimGear, but it does not contain a simgear/version.h include! "
+            "SimGear installation is incomplete.")
+endif()
+
+# read the simgear version header file, get the version
+file(READ ${SIMGEAR_INCLUDE_DIR}/simgear/version.h sgVersionFile)
+string(STRIP ${sgVersionFile} SIMGEAR_DEFINE)
+string(REPLACE "#define SIMGEAR_VERSION " "" SIMGEAR_VERSION ${SIMGEAR_DEFINE})
+message(STATUS "found SimGear version: ${SIMGEAR_VERSION} (needed ${SimGear_FIND_VERSION})")
+
+if(NOT ${SIMGEAR_VERSION} EQUAL ${SimGear_FIND_VERSION})
+    message(FATAL_ERROR "You have installed a mismatching SimGear version ${SIMGEAR_VERSION} "
+            "instead of ${SimGear_FIND_VERSION} as required by FlightGear. "
+            "When using multiple SimGear installations, please use 'SIMGEAR_DIR' "
+            "to select the SimGear library location to be used.")
+endif()
 
 # dependent packages
 find_package(ZLIB REQUIRED)
@@ -113,7 +142,7 @@ else(SIMGEAR_SHARED)
 
     set(SIMGEAR_LIBRARIES "") # clear value
     set(SIMGEAR_CORE_LIBRARIES "") # clear value
-    message(STATUS "looking for static Simgear libraries")
+    message(STATUS "looking for static SimGear libraries")
     
   # note the order here affects the order Simgear libraries are
   # linked in, and hence ability to link when using a traditional
@@ -156,7 +185,6 @@ else(SIMGEAR_SHARED)
         find_sg_component(${component} SIMGEAR_LIBRARIES)
     endforeach()
 
-    
     # again link order matters - scene libraries depend on core ones
     list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
 
@@ -187,17 +215,26 @@ else(SIMGEAR_SHARED)
     endif(NOT MSVC)
 endif(SIMGEAR_SHARED)
 
-# now we've found SimGear, check its version
+if((NOT SIMGEAR_CORE_LIBRARIES)OR(NOT SIMGEAR_LIBRARIES))
+    message(FATAL_ERROR "Cannot find SimGear libraries! (Forgot 'make install' for SimGear?) "
+            "Compile & INSTALL SimGear before configuring FlightGear. "
+            "When using non-standard locations, use 'SIMGEAR_DIR' to configure the SimGear location.")
+else()
+    message(STATUS "found SimGear libraries")
+endif()
 
+# now we've found SimGear, try test-compiling using its includes
 include(CheckCXXSourceRuns)
 
-message(STATUS "looking for version: ${SimGear_FIND_VERSION}")
-
 SET(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIR})
+
+# clear cache, run a fresh compile test every time
+unset(SIMGEAR_COMPILE_TEST CACHE)
 
 check_cxx_source_runs(
     "#include <cstdio>
     #include \"simgear/version.h\"
+    #include \"simgear/math/SGMath.hxx\"
 
     #define xstr(s) str(s)
     #define str(s) #s
@@ -214,18 +251,23 @@ check_cxx_source_runs(
 
         sscanf( xstr(SIMGEAR_VERSION), \"%d.%d.%d\", &major, &minor, &micro );
 
-        if ( (major < MIN_MAJOR) ||
-             (major == MIN_MAJOR && minor < MIN_MINOR) ||
-             (major == MIN_MAJOR && minor == MIN_MINOR && micro < MIN_MICRO) ) {
+        if ( (major != MIN_MAJOR) ||
+             (minor != MIN_MINOR) ||
+             (micro != MIN_MICRO) ) {
          return -1;
         }
 
         return 0;
     }
     "
-    SIMGEAR_VERSION_OK)
+    SIMGEAR_COMPILE_TEST)
+
+if(NOT SIMGEAR_COMPILE_TEST)
+    message(FATAL_ERROR "Oops, you have installed SimGear includes, however test compiling failed. "
+            "Try removing 'CMakeCache.txt' and reconfigure with 'cmake'.")
+endif()
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG
-     SIMGEAR_LIBRARIES SIMGEAR_INCLUDE_DIR SIMGEAR_VERSION_OK)
+     SIMGEAR_LIBRARIES SIMGEAR_CORE_LIBRARIES SIMGEAR_INCLUDE_DIR SIMGEAR_COMPILE_TEST)
 
