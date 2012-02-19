@@ -231,6 +231,8 @@ SET(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIR})
 # clear cache, run a fresh compile test every time
 unset(SIMGEAR_COMPILE_TEST CACHE)
 
+# disable OSG dependencies for test-compiling
+set(CMAKE_REQUIRED_DEFINITIONS "-DNO_OPENSCENEGRAPH_INTERFACE")
 check_cxx_source_runs(
     "#include <cstdio>
     #include \"simgear/version.h\"
@@ -266,6 +268,7 @@ if(NOT SIMGEAR_COMPILE_TEST)
     message(FATAL_ERROR "Oops, you have installed SimGear includes, however test compiling failed. "
             "Try removing 'CMakeCache.txt' and reconfigure with 'cmake'.")
 endif()
+unset(CMAKE_REQUIRED_DEFINITIONS)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG
