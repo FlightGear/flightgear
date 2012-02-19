@@ -86,9 +86,12 @@ usage( const string& prog ) {
             " -e              transport using external svn client\n"
             " -p <port>       listen on UDP port [default: 5501]\n"
             " -s <source>     source base [default: '']\n"
+#ifndef _MSC_VER
             " -pid <pidfile>  write PID to file\n"
+#endif
             " -v              be more verbose\n";
 
+#ifndef _MSC_VER
     cout << "\n"
             "Example:\n"
             "  pid=$(cat $pidfile 2>/dev/null)\n"
@@ -98,6 +101,7 @@ usage( const string& prog ) {
             "      nice /games/sport/fgs/utils/TerraSync/terrasync         \\\n"
             "        -v -pid $pidfile -S -p 5500 -d /games/orig/terrasync &\n"
             "  fi\n";
+#endif
 }
 
 /** Signal handler for termination requests (Ctrl-C) */
@@ -338,6 +342,7 @@ int main( int argc, char **argv )
     if (verbose)
         sglog().setLogLevels( SG_ALL, SG_INFO);
 
+#ifndef _MSC_VER
     // create PID file
     if (*pidfn)
     {
@@ -352,6 +357,7 @@ int main( int argc, char **argv )
         pidstream << getpid() << endl;
         pidstream.close();
     }
+#endif
 
     // install signal handlers
     for (int* sigp=termination_triggering_signals; *sigp; sigp++)
