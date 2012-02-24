@@ -205,13 +205,10 @@ else(SIMGEAR_SHARED)
 
     if(NOT MSVC)
         # basic timing routines on non windows systems, may be also cygwin?!
-        check_function_exists(clock_gettime clock_gettime_in_libc)
-        if(NOT clock_gettime_in_libc)
-            check_library_exists(rt clock_gettime "" have_rt)
-            if(have_rt)
-                list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES rt)
-            endif(have_rt)
-        endif(NOT clock_gettime_in_libc)
+        check_library_exists(rt clock_gettime "" have_rt)
+        if(have_rt)
+            list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES rt)
+        endif(have_rt)
     endif(NOT MSVC)
 endif(SIMGEAR_SHARED)
 
