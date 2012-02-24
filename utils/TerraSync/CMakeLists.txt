@@ -9,7 +9,7 @@ target_link_libraries(terrasync
 
 if(LIBSVN_FOUND)
 	target_link_libraries(terrasync ${LIBSVN_LIBRARIES})
-	set_property(TARGET terrasync APPEND PROPERTY COMPILE_FLAGS "${APR_CFLAGS} -DNO_OPENSCENEGRAPH_INTERFACE")
+	set_property(TARGET terrasync APPEND PROPERTY COMPILE_FLAGS "${APR_CFLAGS}")
 endif()
 
 
