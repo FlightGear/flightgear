@@ -1,7 +1,7 @@
 include(FlightGearComponent)
 
 set(SOURCES
-    Airplane.cpp
+	Airplane.cpp
 	Atmosphere.cpp
 	ControlMap.cpp
 	FGFDM.cpp
@@ -29,17 +29,15 @@ set(SOURCES
 	Turbulence.cpp
 	Wing.cpp
 	YASim.cxx
-    )
+)
 
 flightgear_component(YASim "${SOURCES}")
-    
+
 add_executable(yasim yasim-test.cpp)
 
 target_link_libraries(yasim 
 	fgYASim
 	${SIMGEAR_CORE_LIBRARIES}
-        ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
+	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
 
 install(TARGETS yasim RUNTIME DESTINATION bin)
-	
-

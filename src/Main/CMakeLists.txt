@@ -85,11 +85,8 @@ target_link_libraries(fgfs
 
 install(TARGETS fgfs RUNTIME DESTINATION bin)
 
-check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME)
 add_executable(metar metar_main.cxx)
-if(HAVE_CLOCK_GETTIME)
-        target_link_libraries(metar rt)
-endif(HAVE_CLOCK_GETTIME)
+
 target_link_libraries(metar
 	${SIMGEAR_LIBRARIES}
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
@@ -98,4 +95,3 @@ target_link_libraries(metar
 )
 
 install(TARGETS metar RUNTIME DESTINATION bin)
-
