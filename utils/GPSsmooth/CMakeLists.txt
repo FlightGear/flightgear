@@ -19,17 +19,23 @@ add_executable(UGsmooth
 target_link_libraries(GPSsmooth
     ${SIMGEAR_CORE_LIBRARIES}
     ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+    ${PLIB_SG_LIBRARY}
+    ${PLIB_UL_LIBRARY}
 )
 
 target_link_libraries(MIDGsmooth
     ${SIMGEAR_CORE_LIBRARIES}
     ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+    ${PLIB_SG_LIBRARY}
+    ${PLIB_UL_LIBRARY}
 )
 
 target_link_libraries(UGsmooth
     ${SIMGEAR_CORE_LIBRARIES}
-    ${ZLIB_LIBRARY}
     ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+    ${PLIB_SG_LIBRARY}
+    ${PLIB_UL_LIBRARY}
+    ${ZLIB_LIBRARY}
 )
 
 install(TARGETS GPSsmooth MIDGsmooth UGsmooth RUNTIME DESTINATION bin)
