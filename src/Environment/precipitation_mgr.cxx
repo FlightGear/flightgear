@@ -33,9 +33,9 @@
 #include <osg/MatrixTransform>
 
 #include <simgear/constants.h>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/sky/cloud.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -81,7 +81,7 @@ void FGPrecipitationMgr::init()
     SGGeod geod = SGGeod::fromDegM(fgGetDouble("/position/longitude-deg", 0.0),
                                    fgGetDouble("/position/latitude-deg", 0.0),
                                    0.0);
-    osg::Matrix position(geod.makeZUpFrame());
+    osg::Matrix position(makeZUpFrame(geod));
     // Move the precipitation object to player position
     transform->setMatrix(position);
     // Add to scene graph

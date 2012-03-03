@@ -41,6 +41,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/tgdb/TileEntry.hxx>

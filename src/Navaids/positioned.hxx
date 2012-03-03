@@ -21,6 +21,7 @@
 #ifndef FG_POSITIONED_HXX
 #define FG_POSITIONED_HXX
 
+#include <string>
 #include <vector>
 
 #include <simgear/structure/SGSharedPtr.hxx>

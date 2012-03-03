@@ -29,6 +29,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 
 using std::auto_ptr;
 using std::string;
