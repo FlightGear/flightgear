@@ -80,7 +80,7 @@ WindowBuilder::makeDefaultTraits(bool stencil)
     traits->mipMapGeneration = true;
     traits->windowName = "FlightGear";
     // XXX should check per window too.
-    traits->sampleBuffers = fgGetBool("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
+    traits->sampleBuffers = fgGetInt("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
     traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
     traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
     traits->windowDecoration = !fgGetBool("/sim/startup/fullscreen");
