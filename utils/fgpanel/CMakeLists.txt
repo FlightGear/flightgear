@@ -1,4 +1,3 @@
-#FIXME: does this work in windows?
 find_package(PNG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
