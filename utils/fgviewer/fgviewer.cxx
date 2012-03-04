@@ -189,9 +189,15 @@ main(int argc, char** argv)
     arguments.reportRemainingOptionsAsUnrecognized();
     arguments.writeErrorMessages(std::cerr);
 
-    // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;
-    loadedModel = osgDB::readNodeFiles(arguments, options.get());
+    if (arguments.argc() != 1) {
+        // read the scene from the list of file specified command line args.
+        loadedModel = osgDB::readNodeFiles(arguments, options.get());
+    } else {
+        // if no arguments given resort to the whole world scenery
+        options->setPluginStringData("SimGear::FG_EARTH", "ON");
+        loadedModel = osgDB::readNodeFile("w180s90-360x180.spt", options.get());
+    }
 
     // if no model has been successfully loaded report failure.
     if (!loadedModel.valid()) {
