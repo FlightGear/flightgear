@@ -64,46 +64,49 @@ Hitch::Hitch(const char *name)
     _mp_is_slave=false;
     _mp_open_last_state=false;
     _timeLagCorrectedDist=0;
+
     if (_node)
     {
-        _node->tie("tow/length",SGRawValuePointer<float>(&_towLength));
-        _node->tie("tow/elastic-constant",SGRawValuePointer<float>(&_towElasticConstant));
-        _node->tie("tow/weight-per-m-kg-m",SGRawValuePointer<float>(&_towWeightPerM));
-        _node->tie("tow/brake-force",SGRawValuePointer<float>(&_towBrakeForce));
-        _node->tie("winch/max-speed-m-s",SGRawValuePointer<float>(&_winchMaxSpeed));
-        _node->tie("winch/rel-speed",SGRawValuePointer<float>(&_winchRelSpeed));
-        _node->tie("winch/initial-tow-length-m",SGRawValuePointer<float>(&_winchInitialTowLength));
-        _node->tie("winch/min-tow-length-m",SGRawValuePointer<float>(&_winchMinTowLength));
-        _node->tie("winch/max-tow-length-m",SGRawValuePointer<float>(&_winchMaxTowLength));
-        _node->tie("winch/global-pos-x",SGRawValuePointer<double>(&_winchPos[0]));
-        _node->tie("winch/global-pos-y",SGRawValuePointer<double>(&_winchPos[1]));
-        _node->tie("winch/global-pos-z",SGRawValuePointer<double>(&_winchPos[2]));
-        _node->tie("winch/max-power",SGRawValuePointer<float>(&_winchPower));
-        _node->tie("winch/max-force",SGRawValuePointer<float>(&_winchMaxForce));
-        _node->tie("winch/actual-force",SGRawValuePointer<float>(&_winchActualForce));
-        _node->tie("tow/end-force-x",SGRawValuePointer<float>(&_reportTowEndForce[0]));
-        _node->tie("tow/end-force-y",SGRawValuePointer<float>(&_reportTowEndForce[1]));
-        _node->tie("tow/end-force-z",SGRawValuePointer<float>(&_reportTowEndForce[2]));
-        _node->tie("force",SGRawValuePointer<float>(&_forceMagnitude));
-        _node->tie("open",SGRawValuePointer<bool>(&_open));
-        _node->tie("force-is-calculated-by-other",SGRawValuePointer<bool>(&_forceIsCalculatedByMaster));
-        _node->tie("local-pos-x",SGRawValuePointer<float>(&_pos[0]));
-        _node->tie("local-pos-y",SGRawValuePointer<float>(&_pos[1]));
-        _node->tie("local-pos-z",SGRawValuePointer<float>(&_pos[2]));
-        _node->tie("tow/dist",SGRawValuePointer<float>(&_dist));
-        _node->tie("tow/dist-time-lag-corrected",SGRawValuePointer<float>(&_timeLagCorrectedDist));
-        _node->tie("tow/connected-to-property-node",SGRawValuePointer<bool>(&_towEndIsConnectedToProperty));
-        _node->tie("tow/connected-to-mp-node",SGRawValuePointer<bool>(&_nodeIsMultiplayer));
-        _node->tie("tow/connected-to-ai-node",SGRawValuePointer<bool>(&_nodeIsAiAircraft));
-        _node->tie("tow/connected-to-ai-or-mp-id",SGRawValuePointer<int>(&_nodeID));
-        _node->tie("debug/hitch-height-above-ground",SGRawValuePointer<float>(&_height_above_ground));
-        _node->tie("debug/tow-end-height-above-ground",SGRawValuePointer<float>(&_winch_height_above_ground));
-        _node->tie("debug/tow-rel-lo-pos",SGRawValuePointer<float>(&_loPosFrac));
-        _node->tie("debug/tow-lowest-pos-height",SGRawValuePointer<float>(&_lowest_tow_height));
-        _node->tie("is-slave",SGRawValuePointer<bool>(&_isSlave));
-        _node->tie("speed-in-tow-direction",SGRawValuePointer<float>(&_speed_in_tow_direction));
-        _node->tie("mp-auto-connect-period",SGRawValuePointer<float>(&_mpAutoConnectPeriod));
-        _node->tie("mp-time-lag",SGRawValuePointer<float>(&_mp_time_lag));
+#define TIE(x,v) _tiedProperties.Tie(_node->getNode(x, true),v)
+        TIE("tow/length", SGRawValuePointer<float>(&_towLength));
+        TIE("tow/elastic-constant",SGRawValuePointer<float>(&_towElasticConstant));
+        TIE("tow/weight-per-m-kg-m",SGRawValuePointer<float>(&_towWeightPerM));
+        TIE("tow/brake-force",SGRawValuePointer<float>(&_towBrakeForce));
+        TIE("winch/max-speed-m-s",SGRawValuePointer<float>(&_winchMaxSpeed));
+        TIE("winch/rel-speed",SGRawValuePointer<float>(&_winchRelSpeed));
+        TIE("winch/initial-tow-length-m",SGRawValuePointer<float>(&_winchInitialTowLength));
+        TIE("winch/min-tow-length-m",SGRawValuePointer<float>(&_winchMinTowLength));
+        TIE("winch/max-tow-length-m",SGRawValuePointer<float>(&_winchMaxTowLength));
+        TIE("winch/global-pos-x",SGRawValuePointer<double>(&_winchPos[0]));
+        TIE("winch/global-pos-y",SGRawValuePointer<double>(&_winchPos[1]));
+        TIE("winch/global-pos-z",SGRawValuePointer<double>(&_winchPos[2]));
+        TIE("winch/max-power",SGRawValuePointer<float>(&_winchPower));
+        TIE("winch/max-force",SGRawValuePointer<float>(&_winchMaxForce));
+        TIE("winch/actual-force",SGRawValuePointer<float>(&_winchActualForce));
+        TIE("tow/end-force-x",SGRawValuePointer<float>(&_reportTowEndForce[0]));
+        TIE("tow/end-force-y",SGRawValuePointer<float>(&_reportTowEndForce[1]));
+        TIE("tow/end-force-z",SGRawValuePointer<float>(&_reportTowEndForce[2]));
+        TIE("force",SGRawValuePointer<float>(&_forceMagnitude));
+        TIE("open",SGRawValuePointer<bool>(&_open));
+        TIE("force-is-calculated-by-other",SGRawValuePointer<bool>(&_forceIsCalculatedByMaster));
+        TIE("local-pos-x",SGRawValuePointer<float>(&_pos[0]));
+        TIE("local-pos-y",SGRawValuePointer<float>(&_pos[1]));
+        TIE("local-pos-z",SGRawValuePointer<float>(&_pos[2]));
+        TIE("tow/dist",SGRawValuePointer<float>(&_dist));
+        TIE("tow/dist-time-lag-corrected",SGRawValuePointer<float>(&_timeLagCorrectedDist));
+        TIE("tow/connected-to-property-node",SGRawValuePointer<bool>(&_towEndIsConnectedToProperty));
+        TIE("tow/connected-to-mp-node",SGRawValuePointer<bool>(&_nodeIsMultiplayer));
+        TIE("tow/connected-to-ai-node",SGRawValuePointer<bool>(&_nodeIsAiAircraft));
+        TIE("tow/connected-to-ai-or-mp-id",SGRawValuePointer<int>(&_nodeID));
+        TIE("debug/hitch-height-above-ground",SGRawValuePointer<float>(&_height_above_ground));
+        TIE("debug/tow-end-height-above-ground",SGRawValuePointer<float>(&_winch_height_above_ground));
+        TIE("debug/tow-rel-lo-pos",SGRawValuePointer<float>(&_loPosFrac));
+        TIE("debug/tow-lowest-pos-height",SGRawValuePointer<float>(&_lowest_tow_height));
+        TIE("is-slave",SGRawValuePointer<bool>(&_isSlave));
+        TIE("speed-in-tow-direction",SGRawValuePointer<float>(&_speed_in_tow_direction));
+        TIE("mp-auto-connect-period",SGRawValuePointer<float>(&_mpAutoConnectPeriod));
+        TIE("mp-time-lag",SGRawValuePointer<float>(&_mp_time_lag));
+#undef TIE
         _node->setStringValue("tow/node","");
         _node->setStringValue("tow/connected-to-ai-or-mp-callsign");
         _node->setBoolValue("broken",false);
@@ -112,47 +115,7 @@ Hitch::Hitch(const char *name)
 
 Hitch::~Hitch()
 {
-    if (_node)
-    {
-        _node->untie("tow/length");
-        _node->untie("tow/elastic-constant");
-        _node->untie("tow/weight-per-m-kg-m");
-        _node->untie("tow/brake-force");
-        _node->untie("winch/max-speed-m-s");
-        _node->untie("winch/rel-speed");
-        _node->untie("winch/initial-tow-length-m");
-        _node->untie("winch/min-tow-length-m");
-        _node->untie("winch/max-tow-length-m");
-        _node->untie("winch/global-pos-x");
-        _node->untie("winch/global-pos-y");
-        _node->untie("winch/global-pos-z");
-        _node->untie("winch/max-power");
-        _node->untie("winch/max-force");
-        _node->untie("winch/actual-force");
-        _node->untie("tow/end-force-x");
-        _node->untie("tow/end-force-y");
-        _node->untie("tow/end-force-z");
-        _node->untie("force");
-        _node->untie("open");
-        _node->untie("force-is-calculated-by-other");
-        _node->untie("local-pos-x");
-        _node->untie("local-pos-y");
-        _node->untie("local-pos-z");
-        _node->untie("tow/dist");
-        _node->untie("tow/dist-time-lag-corrected");
-        _node->untie("tow/connected-to-property-node");
-        _node->untie("tow/connected-to-mp-node");
-        _node->untie("tow/connected-to-ai-node");
-        _node->untie("tow/connected-to-ai-or-mp-id");
-        _node->untie("debug/hitch-height-above-ground");
-        _node->untie("debug/tow-end-height-above-ground");
-        _node->untie("debug/tow-rel-lo-pos");
-        _node->untie("debug/tow-lowest-pos-height");
-        _node->untie("is-slave");
-        _node->untie("speed-in-tow-direction");
-        _node->untie("mp-auto-connect-period");
-        _node->untie("mp-time-lag");
-    }
+    _tiedProperties.Untie();
     delete _state;
 }
 

@@ -4,6 +4,7 @@
 #include <string>
 
 #include <Main/fg_props.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 
 namespace yasim {
 
@@ -111,6 +112,7 @@ private:
     bool _last_wish;
 
     SGPropertyNode_ptr _node;
+    simgear::TiedPropertyList _tiedProperties;
 };
 
 }; // namespace yasim
