@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012 Adrian Musceac 
-# 
+# Copyright (C) 2012 Adrian Musceac
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
@@ -23,13 +23,13 @@ import re, string
 
 """Script which generates an API documentation file for Nasal libraries
 located inside $FGROOT/Nasal/
-Usage: nasal_api.py parse [path to $FGROOT/Nasal/]
+Usage: nasal_api_doc.py parse [path to $FGROOT/Nasal/]
 Or configure the local path below, and ommit the path in the console.
 The API doc in HTML format is generated in the current working directory"""
 
 ########### Local $FGROOT/Nasal/ path ##########
 NASAL_PATH="../fgfs/fgdata/Nasal/"
-	
+
 
 def get_files(nasal_dir):
 	if nasal_dir[-1]!='/':
@@ -68,12 +68,12 @@ def get_files(nasal_dir):
 		for f in files:
 			functions=parse_file(f)
 			top_namespaces.append([m,functions])
-			
+
 	output_text(top_namespaces,modules,version)
-	
-				
+
+
 def output_text(top_namespaces,modules,version):
-	fw=open('./nasal_api.html','wb')
+	fw=open('./nasal_api_doc.html','wb')
 	buf='<html><head>\
 	<title>Nasal API</title>\
 	<style>\n\
@@ -87,10 +87,10 @@ def output_text(top_namespaces,modules,version):
 	div.comments {padding-left:40px;display:inline;font-size:12px;}\
 	</style>\n\
 	</head><body style="width:1024px;">'
-	
+
 	buf+='<h1 style="padding-left:20px;display:block;color:#fff;background-color:#555588;">\
 	Nasal $FGROOT Library<br/><span style="font-size:12px;">Flightgear version: '+version+'\
-	<br/>This file is generated automatically by scripts/python/nasal_api.py\
+	<br/>This file is generated automatically by scripts/python/nasal_api_doc.py\
 	</span></h1>\
 	<br/><a href="http://plausible.org/nasal">Nasal documentation</a>&nbsp;&nbsp;\
 	<a href="http://wiki.flightgear.org/Nasal_scripting_language">Flightgear Nasal documentation</a>\n<div style="float:right;">&nbsp;'
@@ -138,11 +138,11 @@ def output_text(top_namespaces,modules,version):
 					buf+= '<div class="comments">'+comment.replace('#','').replace('<','&lt;').replace('>','&gt;')+'</div><br/>\n'
 			buf+='</div>\n'
 		if namespace[0] not in done2:
-			buf+='</div>\n'	
+			buf+='</div>\n'
 	buf+='</body></html>'
 	fw.write(buf)
-	fw.close()	
-		
+	fw.close()
+
 def parse_file(filename):
 	fr=open(filename,'rb')
 	content=fr.readlines()
@@ -176,17 +176,17 @@ def parse_file(filename):
 				else:
 					break
 			if(len(comments)>1):
-				comments.reverse()		
+				comments.reverse()
 			retval.append((func_name, param,comments))
 			i+=1
 			continue
-			
+
 		match3=re.search('^var\s*([A-Za-z0-9_-]+)\s*=\s*{\s*(\n|})',line)
 		if match3!=None:
 			classname=match3.group(1)
-			
+
 			comments=[]
-			
+
 			j=i-1
 			count=0
 			while ( j>i-35 and j>-1):
@@ -202,11 +202,11 @@ def parse_file(filename):
 				else:
 					break
 			if(len(comments)>1):
-				comments.reverse()		
+				comments.reverse()
 			retval.append((classname+'.', '',comments))
 			i+=1
 			continue
-			
+
 		match2=re.search('^\s*([A-Za-z0-9_-]+)\s*:\s*func\s*\(?([A-Za-z0-9_\s,=.\n-]*)\)?',line)
 		if match2!=None:
 			func_name=match2.group(1)
@@ -216,7 +216,7 @@ def parse_file(filename):
 				k=i+1
 				while(content[k].find(')')==-1):
 					param+=content[k].rstrip('\n')
-					k+=1	
+					k+=1
 				param+=content[k].split(')')[0]
 			j=i-1
 			count=0
@@ -233,13 +233,13 @@ def parse_file(filename):
 				else:
 					break
 			if(len(comments)>1):
-				comments.reverse()	
+				comments.reverse()
 			if classname =='':
 				continue
 			retval.append((classname+'.'+func_name, param,comments))
 			i+=1
 			continue
-		
+
 		match4=re.search('^([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\s*=\s*func\s*\(?([A-Za-z0-9_\s,=\n.-]*)\)?',line)
 		if match4!=None:
 			classname=match4.group(1)
@@ -267,19 +267,19 @@ def parse_file(filename):
 				else:
 					break
 			if(len(comments)>1):
-				comments.reverse()		
+				comments.reverse()
 			retval.append((classname+'.'+func_name, param,comments))
 			i+=1
 			continue
-		
+
 		i+=1
 	return retval
-			
-			
+
+
 
 if __name__ == "__main__":
 	if len(sys.argv) <2:
-		print 'Usage: nasal_api.py parse [path to $FGROOT/Nasal/]'
+		print 'Usage: nasal_api_doc.py parse [path to $FGROOT/Nasal/]'
 		sys.exit()
 	else:
 		if sys.argv[1]=='parse':
@@ -289,5 +289,5 @@ if __name__ == "__main__":
 				nasal_path=sys.argv[2]
 			get_files(nasal_path)
 		else:
-			print 'Usage: nasal_api.py parse [path to $FGROOT/Nasal/]'
+			print 'Usage: nasal_api_doc.py parse [path to $FGROOT/Nasal/]'
 			sys.exit()
