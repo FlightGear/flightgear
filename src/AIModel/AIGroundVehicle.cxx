@@ -84,59 +84,38 @@ void FGAIGroundVehicle::readFromScenario(SGPropertyNode* scFileNode) {
 void FGAIGroundVehicle::bind() {
     FGAIShip::bind();
 
-    props->tie("controls/constants/elevation-coeff",
+    tie("controls/constants/elevation-coeff",
         SGRawValuePointer<double>(&_elevation_coeff));
-    props->tie("controls/constants/pitch-coeff",
+    tie("controls/constants/pitch-coeff",
         SGRawValuePointer<double>(&_pitch_coeff));
-    props->tie("position/ht-AGL-ft",
+    tie("position/ht-AGL-ft",
         SGRawValuePointer<double>(&_ht_agl_ft));
-    props->tie("hitch/rel-bearing-deg",
+    tie("hitch/rel-bearing-deg",
          SGRawValuePointer<double>(&_relbrg));
-    props->tie("hitch/tow-angle-deg",
+    tie("hitch/tow-angle-deg",
          SGRawValuePointer<double>(&_tow_angle));
-    props->tie("hitch/range-ft",
+    tie("hitch/range-ft",
         SGRawValuePointer<double>(&_range_ft));
-    props->tie("hitch/x-offset-ft",
+    tie("hitch/x-offset-ft",
         SGRawValuePointer<double>(&_x_offset));
-    props->tie("hitch/y-offset-ft",
+    tie("hitch/y-offset-ft",
         SGRawValuePointer<double>(&_y_offset));
-    props->tie("hitch/z-offset-ft",
+    tie("hitch/z-offset-ft",
         SGRawValuePointer<double>(&_z_offset));
-    props->tie("hitch/parent-x-offset-ft",
+    tie("hitch/parent-x-offset-ft",
         SGRawValuePointer<double>(&_parent_x_offset));
-    props->tie("hitch/parent-y-offset-ft",
+    tie("hitch/parent-y-offset-ft",
         SGRawValuePointer<double>(&_parent_y_offset));
-    props->tie("hitch/parent-z-offset-ft",
+    tie("hitch/parent-z-offset-ft",
         SGRawValuePointer<double>(&_parent_z_offset));
-    props->tie("controls/constants/tow-angle/gain",
+    tie("controls/constants/tow-angle/gain",
         SGRawValuePointer<double>(&_tow_angle_gain));
-    props->tie("controls/constants/tow-angle/limit-deg",
+    tie("controls/constants/tow-angle/limit-deg",
         SGRawValuePointer<double>(&_tow_angle_limit));
-    props->tie("controls/contact-x1-offset-ft",
+    tie("controls/contact-x1-offset-ft",
         SGRawValuePointer<double>(&_contact_x1_offset));
-    props->tie("controls/contact-x2-offset-ft",
+    tie("controls/contact-x2-offset-ft",
         SGRawValuePointer<double>(&_contact_x2_offset));
-}
-
-void FGAIGroundVehicle::unbind() {
-    FGAIShip::unbind();
-
-    props->untie("controls/constants/elevation-coeff");
-    props->untie("controls/constants/pitch-coeff");
-    props->untie("position/ht-AGL-ft");
-    props->untie("hitch/rel-bearing-deg");
-    props->untie("hitch/tow-angle-deg");
-    props->untie("hitch/range-ft");
-    props->untie("hitch/x-offset-ft");
-    props->untie("hitch/y-offset-ft");
-    props->untie("hitch/z-offset-ft");
-    props->untie("hitch/parent-x-offset-ft");
-    props->untie("hitch/parent-y-offset-ft");
-    props->untie("hitch/parent-y-offset-ft");
-    props->untie("controls/constants/tow-angle/gain");
-    props->untie("controls/constants/tow-angle/limit-deg");
-    props->untie("controls/contact-x1-offset-ft");
-    props->untie("controls/contact-x2-offset-ft");
 }
 
 bool FGAIGroundVehicle::init(bool search_in_AI_path) {

@@ -239,22 +239,18 @@ void DCLGPS::init() {
 }
 
 void DCLGPS::bind() {
-	fgTie("/instrumentation/gps/waypoint-alert", this, &DCLGPS::GetWaypointAlert);
-	fgTie("/instrumentation/gps/leg-mode", this, &DCLGPS::GetLegMode);
-	fgTie("/instrumentation/gps/obs-mode", this, &DCLGPS::GetOBSMode);
-	fgTie("/instrumentation/gps/approach-arm", this, &DCLGPS::GetApproachArm);
-	fgTie("/instrumentation/gps/approach-active", this, &DCLGPS::GetApproachActive);
-	fgTie("/instrumentation/gps/cdi-deflection", this, &DCLGPS::GetCDIDeflection);
-	fgTie("/instrumentation/gps/to-flag", this, &DCLGPS::GetToFlag);
+	_tiedProperties.setRoot(fgGetNode("/instrumentation/gps", true));
+	_tiedProperties.Tie("waypoint-alert",  this, &DCLGPS::GetWaypointAlert);
+	_tiedProperties.Tie("leg-mode",        this, &DCLGPS::GetLegMode);
+	_tiedProperties.Tie("obs-mode",        this, &DCLGPS::GetOBSMode);
+	_tiedProperties.Tie("approach-arm",    this, &DCLGPS::GetApproachArm);
+	_tiedProperties.Tie("approach-active", this, &DCLGPS::GetApproachActive);
+	_tiedProperties.Tie("cdi-deflection",  this, &DCLGPS::GetCDIDeflection);
+	_tiedProperties.Tie("to-flag",         this, &DCLGPS::GetToFlag);
 }
 
 void DCLGPS::unbind() {
-	fgUntie("/instrumentation/gps/waypoint-alert");
-	fgUntie("/instrumentation/gps/leg-mode");
-	fgUntie("/instrumentation/gps/obs-mode");
-	fgUntie("/instrumentation/gps/approach-arm");
-	fgUntie("/instrumentation/gps/approach-active");
-	fgUntie("/instrumentation/gps/cdi-deflection");
+	_tiedProperties.Untie();
 }
 
 void DCLGPS::update(double dt) {

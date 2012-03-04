@@ -247,63 +247,62 @@ void FGAICarrier::bind() {
 
     props->untie("velocities/true-airspeed-kt");
 
-    props->tie("controls/flols/source-lights",
-                SGRawValuePointer<int>(&source));
-    props->tie("controls/flols/distance-m",
-                SGRawValuePointer<double>(&dist));
-    props->tie("controls/flols/angle-degs",
-                SGRawValuePointer<double>(&angle));
-    props->tie("controls/turn-to-launch-hdg",
-                SGRawValuePointer<bool>(&turn_to_launch_hdg));
-    props->tie("controls/in-to-wind",
-                SGRawValuePointer<bool>(&turn_to_launch_hdg));
-    props->tie("controls/base-course-deg",
-                SGRawValuePointer<double>(&base_course));
-    props->tie("controls/base-speed-kts",
-                SGRawValuePointer<double>(&base_speed));
-    props->tie("controls/start-pos-lat-deg",
-               SGRawValueMethods<SGGeod,double>(pos, &SGGeod::getLatitudeDeg));
-    props->tie("controls/start-pos-long-deg",
-               SGRawValueMethods<SGGeod,double>(pos, &SGGeod::getLongitudeDeg));
-    props->tie("controls/mp-control",
-                SGRawValuePointer<bool>(&MPControl));
-    props->tie("controls/ai-control",
-                SGRawValuePointer<bool>(&AIControl));
-    props->tie("environment/surface-wind-speed-true-kts",
-                SGRawValuePointer<double>(&wind_speed_kts));
-    props->tie("environment/surface-wind-from-true-degs",
-                SGRawValuePointer<double>(&wind_from_deg));
-    props->tie("environment/rel-wind-from-degs",
-                SGRawValuePointer<double>(&rel_wind_from_deg));
-    props->tie("environment/rel-wind-from-carrier-hdg-degs",
-                SGRawValuePointer<double>(&rel_wind));
-    props->tie("environment/rel-wind-speed-kts",
-                SGRawValuePointer<double>(&rel_wind_speed_kts));
-    props->tie("environment/in-to-wind",
+    tie("controls/flols/source-lights",
+        SGRawValuePointer<int>(&source));
+    tie("controls/flols/distance-m",
+        SGRawValuePointer<double>(&dist));
+    tie("controls/flols/angle-degs",
+        SGRawValuePointer<double>(&angle));
+    tie("controls/turn-to-launch-hdg",
+        SGRawValuePointer<bool>(&turn_to_launch_hdg));
+    tie("controls/in-to-wind",
+        SGRawValuePointer<bool>(&turn_to_launch_hdg));
+    tie("controls/base-course-deg",
+        SGRawValuePointer<double>(&base_course));
+    tie("controls/base-speed-kts",
+        SGRawValuePointer<double>(&base_speed));
+    tie("controls/start-pos-lat-deg",
+        SGRawValueMethods<SGGeod,double>(pos, &SGGeod::getLatitudeDeg));
+    tie("controls/start-pos-long-deg",
+        SGRawValueMethods<SGGeod,double>(pos, &SGGeod::getLongitudeDeg));
+    tie("controls/mp-control",
+        SGRawValuePointer<bool>(&MPControl));
+    tie("controls/ai-control",
+        SGRawValuePointer<bool>(&AIControl));
+    tie("environment/surface-wind-speed-true-kts",
+        SGRawValuePointer<double>(&wind_speed_kts));
+    tie("environment/surface-wind-from-true-degs",
+        SGRawValuePointer<double>(&wind_from_deg));
+    tie("environment/rel-wind-from-degs",
+        SGRawValuePointer<double>(&rel_wind_from_deg));
+    tie("environment/rel-wind-from-carrier-hdg-degs",
+        SGRawValuePointer<double>(&rel_wind));
+    tie("environment/rel-wind-speed-kts",
+        SGRawValuePointer<double>(&rel_wind_speed_kts));
+    tie("environment/in-to-wind",
         SGRawValuePointer<bool>(&in_to_wind));
-    //props->tie("controls/flols/wave-off-lights",
-    //            SGRawValuePointer<bool>(&wave_off_lights));
-    props->tie("controls/elevators",
-                SGRawValuePointer<bool>(&elevators));
-    props->tie("surface-positions/elevators-pos-norm",
-                SGRawValuePointer<double>(&pos_norm));
-    props->tie("controls/constants/elevators/trans-time-s",
-                SGRawValuePointer<double>(&transition_time));
-    props->tie("controls/constants/elevators/time-constant",
-                SGRawValuePointer<double>(&time_constant));
-    props->tie("controls/jbd",
+    //tie("controls/flols/wave-off-lights",
+    //    SGRawValuePointer<bool>(&wave_off_lights));
+    tie("controls/elevators",
+        SGRawValuePointer<bool>(&elevators));
+    tie("surface-positions/elevators-pos-norm",
+        SGRawValuePointer<double>(&pos_norm));
+    tie("controls/constants/elevators/trans-time-s",
+        SGRawValuePointer<double>(&transition_time));
+    tie("controls/constants/elevators/time-constant",
+        SGRawValuePointer<double>(&time_constant));
+    tie("controls/jbd",
         SGRawValuePointer<bool>(&jbd));
-    props->tie("surface-positions/jbd-pos-norm",
+    tie("surface-positions/jbd-pos-norm",
         SGRawValuePointer<double>(&jbd_pos_norm));
-    props->tie("controls/constants/jbd/trans-time-s",
+    tie("controls/constants/jbd/trans-time-s",
         SGRawValuePointer<double>(&jbd_transition_time));
-    props->tie("controls/constants/jbd/time-constant",
+    tie("controls/constants/jbd/time-constant",
         SGRawValuePointer<double>(&jbd_time_constant));
-    props->tie("controls/turn-to-recovery-hdg",
+    tie("controls/turn-to-recovery-hdg",
         SGRawValuePointer<bool>(&turn_to_recovery_hdg));
-    props->tie("controls/turn-to-base-course",
+    tie("controls/turn-to-base-course",
         SGRawValuePointer<bool>(&turn_to_base_course));
-
 
     props->setBoolValue("controls/flols/cut-lights", false);
     props->setBoolValue("controls/flols/wave-off-lights", false);
@@ -314,36 +313,6 @@ void FGAICarrier::bind() {
     props->setBoolValue("controls/lighting/deck-lights", false);
     props->setDoubleValue("controls/lighting/flood-lights-red-norm", 0);
 }
-
-
-void FGAICarrier::unbind() {
-    FGAIShip::unbind();
-
-    props->untie("velocities/true-airspeed-kt");
-    props->untie("controls/flols/source-lights");
-    props->untie("controls/flols/distance-m");
-    props->untie("controls/flols/angle-degs");
-    props->untie("controls/turn-to-launch-hdg");
-    props->untie("environment/wind-speed-true-kts");
-    props->untie("environment/wind-from-true-degs");
-    props->untie("environment/rel-wind-from-degs");
-    props->untie("environment/rel-wind-speed-kts");
-    props->untie("environment/in-to-wind");
-    //props->untie("controls/flols/wave-off-lights");
-    props->untie("controls/elevators");
-    props->untie("surface-positions/elevators-pos-norm");
-    props->untie("controls/constants/elevators/trans-time-secs");
-    props->untie("controls/constants/elevators/time-constant");
-    props->untie("controls/jbd");
-    props->untie("surface-positions/jbd/pos-norm");
-    props->untie("controls/constants/jbd/trans-time-s");
-    props->untie("controls/jbd-time-constant");
-    props->untie("controls/mp-control");
-    props->untie("controls/ai-control");
-    props->untie("controls/turn-to-recovery-hdg");
-    props->untie("controls/turn-to-base-course");
-}
-
 
 bool FGAICarrier::getParkPosition(const string& id, SGGeod& geodPos,
                                   double& hdng, SGVec3d& uvw)

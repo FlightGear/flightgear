@@ -81,123 +81,81 @@ void FGAIWingman::bind() {
 
     props->untie("controls/slave-to-ac");
 
-    props->tie("id", SGRawValueMethods<FGAIBase,int>(*this,
+    tie("id", SGRawValueMethods<FGAIBase,int>(*this,
         &FGAIBase::getID));
-    props->tie("subID", SGRawValueMethods<FGAIBase,int>(*this,
+    tie("subID", SGRawValueMethods<FGAIBase,int>(*this,
         &FGAIBase::_getSubID));
-    props->tie("position/altitude-ft",
+    tie("position/altitude-ft",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getElevationFt,
         &FGAIBase::_setAltitude));
-    props->tie("position/latitude-deg",
+    tie("position/latitude-deg",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getLatitude,
         &FGAIBase::_setLatitude));
-    props->tie("position/longitude-deg",
+    tie("position/longitude-deg",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getLongitude,
         &FGAIBase::_setLongitude));
 
-    props->tie("controls/break", SGRawValuePointer<bool>(&_break));
-    props->tie("controls/join", SGRawValuePointer<bool>(&_join));
+    tie("controls/break", SGRawValuePointer<bool>(&_break));
+    tie("controls/join", SGRawValuePointer<bool>(&_join));
 
-    props->tie("controls/formate-to-ac",
+    tie("controls/formate-to-ac",
         SGRawValueMethods<FGAIWingman,bool>
         (*this, &FGAIWingman::getFormate, &FGAIWingman::setFormate));
-    props->tie("controls/tgt-heading-deg",
+    tie("controls/tgt-heading-deg",
         SGRawValueMethods<FGAIWingman,double>
         (*this, &FGAIWingman::getTgtHdg, &FGAIWingman::setTgtHdg));
-    props->tie("controls/tgt-speed-kt",
+    tie("controls/tgt-speed-kt",
         SGRawValueMethods<FGAIWingman,double>
         (*this, &FGAIWingman::getTgtSpd, &FGAIWingman::setTgtSpd));
-    props->tie("controls/break-deg-rel",
+    tie("controls/break-deg-rel",
         SGRawValueMethods<FGAIWingman,double>
         (*this, &FGAIWingman::getBrkAng, &FGAIWingman::setBrkAng));
-    props->tie("controls/coefficients/heading",
+    tie("controls/coefficients/heading",
         SGRawValuePointer<double>(&_coeff_hdg));
-    props->tie("controls/coefficients/pitch",
+    tie("controls/coefficients/pitch",
         SGRawValuePointer<double>(&_coeff_pch));
-    props->tie("controls/coefficients/bank",
+    tie("controls/coefficients/bank",
         SGRawValuePointer<double>(&_coeff_bnk));
-    props->tie("controls/coefficients/speed",
+    tie("controls/coefficients/speed",
         SGRawValuePointer<double>(&_coeff_spd));
 
-    props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
-    props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
-    props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
+    tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
+    tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
+    tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
 
-    props->tie("submodels/serviceable", SGRawValuePointer<bool>(&serviceable));
+    tie("submodels/serviceable", SGRawValuePointer<bool>(&serviceable));
 
-    props->tie("load/rel-brg-to-user-deg",
+    tie("load/rel-brg-to-user-deg",
         SGRawValueMethods<FGAIBallistic,double>
         (*this, &FGAIBallistic::getRelBrgHitchToUser));
-    props->tie("load/elev-to-user-deg",
+    tie("load/elev-to-user-deg",
         SGRawValueMethods<FGAIBallistic,double>
         (*this, &FGAIBallistic::getElevHitchToUser));
 
-    props->tie("velocities/vertical-speed-fps",
+    tie("velocities/vertical-speed-fps",
         SGRawValuePointer<double>(&vs));
-    props->tie("velocities/true-airspeed-kt",
+    tie("velocities/true-airspeed-kt",
         SGRawValuePointer<double>(&speed));
-    props->tie("velocities/speed-east-fps",
+    tie("velocities/speed-east-fps",
         SGRawValuePointer<double>(&_speed_east_fps));
-    props->tie("velocities/speed-north-fps",
+    tie("velocities/speed-north-fps",
         SGRawValuePointer<double>(&_speed_north_fps));
 
-    props->tie("position/x-offset", 
+    tie("position/x-offset",
         SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getXOffset, &FGAIBase::setXoffset));
-    props->tie("position/y-offset", 
+    tie("position/y-offset",
         SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getYOffset, &FGAIBase::setYoffset));
-    props->tie("position/z-offset", 
+    tie("position/z-offset",
         SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getZOffset, &FGAIBase::setZoffset));
-    props->tie("position/tgt-x-offset", 
+    tie("position/tgt-x-offset",
         SGRawValueMethods<FGAIBallistic,double>(*this, &FGAIBallistic::getTgtXOffset, &FGAIBallistic::setTgtXOffset));
-    props->tie("position/tgt-y-offset", 
+    tie("position/tgt-y-offset",
         SGRawValueMethods<FGAIBallistic,double>(*this, &FGAIBallistic::getTgtYOffset, &FGAIBallistic::setTgtYOffset));
-    props->tie("position/tgt-z-offset", 
+    tie("position/tgt-z-offset",
         SGRawValueMethods<FGAIBallistic,double>(*this, &FGAIBallistic::getTgtZOffset, &FGAIBallistic::setTgtZOffset));
-}
-
-void FGAIWingman::unbind() {
-    FGAIBallistic::unbind();
-
-    props->untie("id");
-    props->untie("SubID");
-
-    props->untie("orientation/pitch-deg");
-    props->untie("orientation/roll-deg");
-    props->untie("orientation/true-heading-deg");
-
-    props->untie("controls/formate-to-ac");
-    props->untie("controls/break");
-    props->untie("controls/join");
-    props->untie("controls/tgt-heading-deg");
-    props->untie("controls/tgt-speed-kt");
-    props->untie("controls/break-deg-rel");
-    props->untie("controls/coefficients/heading");
-    props->untie("controls/coefficients/pitch");
-    props->untie("controls/coefficients/bank");
-    props->untie("controls/coefficients/speed");
-
-    props->untie("submodels/serviceable");
-
-    props->untie("velocities/true-airspeed-kt");
-    props->untie("velocities/vertical-speed-fps");
-    props->untie("velocities/speed_east_fps");
-    props->untie("velocities/speed_north_fps");
-
-    props->untie("load/rel-brg-to-user-deg");
-    props->untie("load/elev-to-user-deg");
-
-    props->untie("position/altitude-ft");
-    props->untie("position/latitude-deg");
-    props->untie("position/longitude-deg");
-    props->untie("position/x-offset");
-    props->untie("position/y-offset");
-    props->untie("position/z-offset");
-    props->untie("position/tgt-x-offset");
-    props->untie("position/tgt-y-offset");
-    props->untie("position/tgt-z-offset");
 }
 
 bool FGAIWingman::init(bool search_in_AI_path) {

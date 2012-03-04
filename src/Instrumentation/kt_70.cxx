@@ -91,91 +91,67 @@ void FGKT_70::init ()
     alt_node = fgGetNode("/position/altitude-ft", true);
     bus_power = fgGetNode("/systems/electrical/outputs/transponder", true);
     serviceable_node = (node->getChild("inputs", 0, true))
-	->getChild("serviceable", 0, true);
+                        ->getChild("serviceable", 0, true);
     serviceable_node->setBoolValue(true);
 }
 
 
-void FGKT_70::bind () {
+void FGKT_70::bind ()
+{
     std::ostringstream temp;
     string branch;
     temp << num;
     branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+    _tiedProperties.setRoot(fgGetNode(branch, true));
+
     // internal values
 
     // modes
-
     // input and buttons
-    fgTie((branch + "/inputs/ident-btn").c_str(), this,
-	  &FGKT_70::get_ident_btn, &FGKT_70::set_ident_btn);
+    _tiedProperties.Tie("inputs/ident-btn", this,
+                        &FGKT_70::get_ident_btn, &FGKT_70::set_ident_btn);
     fgSetArchivable((branch + "/inputs/rotation-deg").c_str());
-    fgTie((branch + "/inputs/digit1").c_str(), this,
-	  &FGKT_70::get_digit1, &FGKT_70::set_digit1);
+    _tiedProperties.Tie("inputs/digit1", this,
+                        &FGKT_70::get_digit1, &FGKT_70::set_digit1);
     fgSetArchivable((branch + "/inputs/digit1").c_str());
-    fgTie((branch + "/inputs/digit2").c_str(), this,
-	  &FGKT_70::get_digit2, &FGKT_70::set_digit2);
+    _tiedProperties.Tie("inputs/digit2", this,
+                        &FGKT_70::get_digit2, &FGKT_70::set_digit2);
     fgSetArchivable((branch + "/inputs/digit2").c_str());
-    fgTie((branch + "/inputs/digit3").c_str(), this,
-	  &FGKT_70::get_digit3, &FGKT_70::set_digit3);
+    _tiedProperties.Tie("inputs/digit3", this,
+                        &FGKT_70::get_digit3, &FGKT_70::set_digit3);
     fgSetArchivable((branch + "/inputs/digit3").c_str());
-    fgTie((branch + "/inputs/digit4").c_str(), this,
-	  &FGKT_70::get_digit4, &FGKT_70::set_digit4);
+    _tiedProperties.Tie("inputs/digit4", this,
+                        &FGKT_70::get_digit4, &FGKT_70::set_digit4);
     fgSetArchivable((branch + "/inputs/digit4").c_str());
-    fgTie((branch + "/inputs/func-knob").c_str(), this,
-	  &FGKT_70::get_func_knob, &FGKT_70::set_func_knob);
+    _tiedProperties.Tie("inputs/func-knob", this,
+                        &FGKT_70::get_func_knob, &FGKT_70::set_func_knob);
     fgSetArchivable((branch + "/inputs/func-knob").c_str());
 
     // outputs
-    fgTie((branch + "/outputs/id-code").c_str(), this,
-	  &FGKT_70::get_id_code, &FGKT_70::set_id_code);
+    _tiedProperties.Tie("outputs/id-code", this,
+                        &FGKT_70::get_id_code, &FGKT_70::set_id_code);
     fgSetArchivable((branch + "/outputs/id-code").c_str());
-    fgTie((branch + "/outputs/flight-level").c_str(), this,
-          &FGKT_70::get_flight_level);
+    _tiedProperties.Tie("outputs/flight-level", this,
+                        &FGKT_70::get_flight_level);
 
     // annunciators
-    fgTie((branch + "/annunciators/fl").c_str(), this, 
-	  &FGKT_70::get_fl_ann );
-    fgTie((branch + "/annunciators/alt").c_str(), this, 
-	  &FGKT_70::get_alt_ann );
-    fgTie((branch + "/annunciators/gnd").c_str(), this, 
-	   &FGKT_70::get_gnd_ann );
-    fgTie((branch + "/annunciators/on").c_str(), this, 
-	  &FGKT_70::get_on_ann );
-    fgTie((branch + "/annunciators/sby").c_str(), this, 
-	  &FGKT_70::get_sby_ann );
-    fgTie((branch + "/annunciators/reply").c_str(), this, 
-	  &FGKT_70::get_reply_ann );
+    _tiedProperties.Tie("annunciators/fl", this,
+                        &FGKT_70::get_fl_ann );
+    _tiedProperties.Tie("annunciators/alt", this,
+                        &FGKT_70::get_alt_ann );
+    _tiedProperties.Tie("annunciators/gnd", this,
+                         &FGKT_70::get_gnd_ann );
+    _tiedProperties.Tie("annunciators/on", this,
+                        &FGKT_70::get_on_ann );
+    _tiedProperties.Tie("annunciators/sby", this,
+                        &FGKT_70::get_sby_ann );
+    _tiedProperties.Tie("annunciators/reply", this,
+                        &FGKT_70::get_reply_ann );
 }
 
 
 void FGKT_70::unbind () {
-    std::ostringstream temp;
-    string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
-    // internal values
-
-    // modes
-
-    // input and buttons
-    fgUntie((branch + "/inputs/ident-btn").c_str());
-    fgUntie((branch + "/inputs/digit1").c_str());
-    fgUntie((branch + "/inputs/digit2").c_str());
-    fgUntie((branch + "/inputs/digit3").c_str());
-    fgUntie((branch + "/inputs/digit4").c_str());
-    fgUntie((branch + "/inputs/func-knob").c_str());
-
-    // outputs
-    fgUntie((branch + "/outputs/id-code").c_str());
-    fgUntie((branch + "/outputs/flight-level").c_str());
-
-    // annunciators
-    fgUntie((branch + "/annunciators/fl").c_str());
-    fgUntie((branch + "/annunciators/alt").c_str());
-    fgUntie((branch + "/annunciators/gnd").c_str());
-    fgUntie((branch + "/annunciators/on").c_str());
-    fgUntie((branch + "/annunciators/sby").c_str());
-    fgUntie((branch + "/annunciators/reply").c_str());
+    _tiedProperties.Untie();
 }
 
 

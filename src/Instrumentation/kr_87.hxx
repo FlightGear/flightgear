@@ -29,6 +29,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Navaids/navlist.hxx>
@@ -37,6 +38,7 @@ class SGSampleGroup;
 
 class FGKR_87 : public SGSubsystem
 {
+private:
     SGPropertyNode_ptr bus_power;
     SGPropertyNode_ptr serviceable;
 
@@ -100,9 +102,9 @@ class FGKR_87 : public SGSubsystem
     double _time_before_search_sec;
 
     SGSharedPtr<SGSampleGroup> _sgr;
+    simgear::TiedPropertyList _tiedProperties;
 
 public:
-
     FGKR_87( SGPropertyNode *node );
     ~FGKR_87();
 

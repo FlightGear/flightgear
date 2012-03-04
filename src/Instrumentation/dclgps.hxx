@@ -34,6 +34,7 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <Navaids/positioned.hxx>
 
 class SGTime;
@@ -433,12 +434,12 @@ protected:
 	
 	// Configuration that affects flightplan operation
 	bool _turnAnticipationEnabled;
-        
+
 	// Magvar stuff.  Might get some of this stuff (such as time) from FG in future.
 	SGTime* _time;
-	
-  std::list<std::string> _messageStack;
-	
+
+	std::list<std::string> _messageStack;
+
 	virtual void CreateFlightPlan(GPSFlightPlan* fp, std::vector<std::string> ids, std::vector<GPSWpType> wps);
 	
 	// Orientate the GPS unit to a flightplan - ie. figure out from current position
@@ -464,6 +465,8 @@ protected:
 	// More hackery since we aren't actually storing an approach class... Doh!
 	std::string _approachAbbrev;
 	std::string _approachRwyStr;
+private:
+	simgear::TiedPropertyList _tiedProperties;
 };
 
 #endif  // _DCLGPS_HXX

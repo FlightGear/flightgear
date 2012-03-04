@@ -25,11 +25,11 @@
 #define _VIEWMGR_HXX
 
 #include <vector>
-#include <list>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/math/SGMath.hxx>
 
 // forward decls
@@ -75,8 +75,8 @@ public:
     
 private:
     void do_bind();
-    
-    std::list<const char*> tied_props;
+
+    simgear::TiedPropertyList _tiedProperties;
 
     double axis_long;
     double axis_lat;

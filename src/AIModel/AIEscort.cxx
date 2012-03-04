@@ -91,44 +91,30 @@ void FGAIEscort::readFromScenario(SGPropertyNode* scFileNode) {
 void FGAIEscort::bind() {
     FGAIShip::bind();
 
-    props->tie("station/rel-bearing-deg",
+    tie("station/rel-bearing-deg",
         SGRawValuePointer<double>(&_stn_relbrg));
-    props->tie("station/true-bearing-deg",
+    tie("station/true-bearing-deg",
         SGRawValuePointer<double>(&_stn_truebrg));
-    props->tie("station/range-nm",
+    tie("station/range-nm",
         SGRawValuePointer<double>(&_stn_range));
-    props->tie("station/range-limit-nm",
+    tie("station/range-limit-nm",
         SGRawValuePointer<double>(&_stn_limit));
-    props->tie("station/angle-limit-deg",
+    tie("station/angle-limit-deg",
         SGRawValuePointer<double>(&_stn_angle_limit));
-    props->tie("station/speed-kts",
+    tie("station/speed-kts",
         SGRawValuePointer<double>(&_stn_speed));
-    props->tie("station/height-ft",
+    tie("station/height-ft",
         SGRawValuePointer<double>(&_stn_height));
-    props->tie("controls/update-interval-sec",
+    tie("controls/update-interval-sec",
         SGRawValuePointer<double>(&_interval));
-    props->tie("controls/parent-mp-control",
+    tie("controls/parent-mp-control",
         SGRawValuePointer<bool>(&_MPControl));
-    props->tie("station/target-range-nm",
+    tie("station/target-range-nm",
         SGRawValuePointer<double>(&_tgtrange));
-    props->tie("station/target-brg-deg-t",
+    tie("station/target-brg-deg-t",
         SGRawValuePointer<double>(&_tgtbrg));
-    props->tie("station/patrol",
+    tie("station/patrol",
         SGRawValuePointer<bool>(&_patrol));
-}
-
-void FGAIEscort::unbind() {
-    FGAIShip::unbind();
-
-    props->untie("station/rel-bearing-deg");
-    props->untie("station/true-bearing-deg");
-    props->untie("station/range-nm");
-    props->untie("station/range-limit-nm");
-    props->untie("station/angle-limit-deg");
-    props->untie("station/speed-kts");
-    props->untie("station/height-ft");
-    props->untie("controls/update-interval-sec");
-
 }
 
 bool FGAIEscort::init(bool search_in_AI_path) {

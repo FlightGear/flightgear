@@ -146,110 +146,72 @@ void FGAIShip::reinit()
 void FGAIShip::bind() {
     FGAIBase::bind();
 
-    props->tie("surface-positions/rudder-pos-deg",
+    tie("surface-positions/rudder-pos-deg",
         SGRawValuePointer<float>(&_rudder));
-    props->tie("controls/heading-lock",
+    tie("controls/heading-lock",
         SGRawValuePointer<bool>(&_hdg_lock));
-    props->tie("controls/tgt-speed-kts",
+    tie("controls/tgt-speed-kts",
         SGRawValuePointer<double>(&tgt_speed));
-    props->tie("controls/tgt-heading-degs",
+    tie("controls/tgt-heading-degs",
         SGRawValuePointer<double>(&tgt_heading));
-    props->tie("controls/constants/rudder",
+    tie("controls/constants/rudder",
         SGRawValuePointer<double>(&_rudder_constant));
-    props->tie("controls/constants/roll-factor",
+    tie("controls/constants/roll-factor",
         SGRawValuePointer<double>(&_roll_factor));
-    props->tie("controls/constants/roll",
+    tie("controls/constants/roll",
         SGRawValuePointer<double>(&_roll_constant));
-    props->tie("controls/constants/rudder",
+    tie("controls/constants/rudder",
         SGRawValuePointer<double>(&_rudder_constant));
-    props->tie("controls/constants/speed",
+    tie("controls/constants/speed",
         SGRawValuePointer<double>(&_speed_constant));
-    props->tie("waypoint/range-nm",
+    tie("waypoint/range-nm",
         SGRawValuePointer<double>(&_wp_range));
-    props->tie("waypoint/brg-deg",
+    tie("waypoint/brg-deg",
         SGRawValuePointer<double>(&_course));
-    props->tie("waypoint/rangerate-nm-sec",
+    tie("waypoint/rangerate-nm-sec",
         SGRawValuePointer<double>(&_range_rate));
-    props->tie("waypoint/new",
+    tie("waypoint/new",
         SGRawValuePointer<bool>(&_new_waypoint));
-    props->tie("waypoint/missed",
+    tie("waypoint/missed",
         SGRawValuePointer<bool>(&_missed));
-    props->tie("waypoint/missed-count-sec",
+    tie("waypoint/missed-count-sec",
         SGRawValuePointer<double>(&_missed_count));
-    props->tie("waypoint/missed-range-nm",
+    tie("waypoint/missed-range-nm",
         SGRawValuePointer<double>(&_missed_range));
-    props->tie("waypoint/missed-time-sec",
+    tie("waypoint/missed-time-sec",
         SGRawValuePointer<double>(&_missed_time_sec));
-    props->tie("waypoint/wait-count-sec",
+    tie("waypoint/wait-count-sec",
         SGRawValuePointer<double>(&_wait_count));
-    props->tie("waypoint/xtrack-error-ft",
+    tie("waypoint/xtrack-error-ft",
         SGRawValuePointer<double>(&_xtrack_error));
-    props->tie("waypoint/waiting",
+    tie("waypoint/waiting",
         SGRawValuePointer<bool>(&_waiting));
-    props->tie("waypoint/lead-angle-deg",
+    tie("waypoint/lead-angle-deg",
         SGRawValuePointer<double>(&_lead_angle));
-    props->tie("waypoint/tunnel",
+    tie("waypoint/tunnel",
         SGRawValuePointer<bool>(&_tunnel));
-    props->tie("waypoint/alt-curr-m",
+    tie("waypoint/alt-curr-m",
         SGRawValuePointer<double>(&_curr_alt));
-    props->tie("waypoint/alt-prev-m",
+    tie("waypoint/alt-prev-m",
         SGRawValuePointer<double>(&_prev_alt));
-    props->tie("submodels/serviceable",
+    tie("submodels/serviceable",
         SGRawValuePointer<bool>(&_serviceable));
-    props->tie("controls/turn-radius-ft",
+    tie("controls/turn-radius-ft",
         SGRawValuePointer<double>(&turn_radius_ft));
-    props->tie("controls/turn-radius-corrected-ft",
+    tie("controls/turn-radius-corrected-ft",
         SGRawValuePointer<double>(&_rd_turn_radius_ft));
-    props->tie("controls/constants/lead-angle/gain",
+    tie("controls/constants/lead-angle/gain",
         SGRawValuePointer<double>(&_lead_angle_gain));
-    props->tie("controls/constants/lead-angle/limit-deg",
+    tie("controls/constants/lead-angle/limit-deg",
         SGRawValuePointer<double>(&_lead_angle_limit));
-    props->tie("controls/constants/lead-angle/proportion",
+    tie("controls/constants/lead-angle/proportion",
         SGRawValuePointer<double>(&_proportion));
-    props->tie("controls/fixed-turn-radius-ft",
+    tie("controls/fixed-turn-radius-ft",
         SGRawValuePointer<double>(&_fixed_turn_radius));
-    props->tie("controls/restart",
+    tie("controls/restart",
         SGRawValuePointer<bool>(&_restart));
-    props->tie("velocities/speed-kts",
-                SGRawValuePointer<double>(&speed));
-}
-
-void FGAIShip::unbind() {
-    FGAIBase::unbind();
-    props->untie("surface-positions/rudder-pos-deg");
-    props->untie("controls/heading-lock");
-    props->untie("controls/tgt-speed-kts");
-    props->untie("controls/tgt-heading-degs");
-    props->untie("controls/constants/roll");
-    props->untie("controls/constants/rudder");
-    props->untie("controls/constants/roll-factor");
-    props->untie("controls/constants/speed");
-    props->untie("waypoint/range-nm");
-    props->untie("waypoint/range-brg-deg");
-    props->untie("waypoint/rangerate-nm-sec");
-    props->untie("waypoint/new");
-    props->untie("waypoint/missed");
-    props->untie("waypoint/missed-count-sec");
-    props->untie("waypoint/missed-time-sec");
-    props->untie("waypoint/missed-range");
-    props->untie("waypoint/wait-count-sec");
-    props->untie("waypoint/lead-angle-deg");
-    props->untie("waypoint/xtrack-error-ft");
-    props->untie("waypoint/waiting");
-    props->untie("waypoint/tunnel");
-    props->untie("waypoint/alt-curr-m");
-    props->untie("waypoint/alt-prev-m");
-    props->untie("submodels/serviceable");
-    props->untie("controls/turn-radius-ft");
-    props->untie("controls/turn-radius-corrected-ft");
-    props->untie("controls/constants/lead-angle/gain");
-    props->untie("controls/constants/lead-angle/limit-deg");
-    props->untie("controls/constants/lead-angle/proportion");
-    props->untie("controls/fixed-turn-radius-ft");
-    props->untie("controls/constants/speed");
-    props->untie("controls/restart");
-    props->untie("velocities/speed-kts");
-
+    tie("velocities/speed-kts",
+        SGRawValuePointer<double>(&speed));
 }
 
 void FGAIShip::update(double dt) {

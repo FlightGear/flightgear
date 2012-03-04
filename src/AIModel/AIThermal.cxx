@@ -77,37 +77,24 @@ bool FGAIThermal::init(bool search_in_AI_path) {
 }
 
 void FGAIThermal::bind() {
-	props->tie("position/altitude-agl-ft", // for debug and tweak
-                SGRawValuePointer<double>(&altitude_agl_ft));
-	props->tie("alt-rel", // for debug and tweak
-                SGRawValuePointer<double>(&alt_rel));
-	props->tie("time", // for debug and tweak
-                SGRawValuePointer<double>(&time));
-	props->tie("xx", // for debug and tweak
-                SGRawValuePointer<double>(&xx));
-	props->tie("is-forming", // for debug abd tweak
-                SGRawValuePointer<bool>(&is_forming));
-	props->tie("is-formed", // for debug abd tweak
-                SGRawValuePointer<bool>(&is_formed));
-	props->tie("is-dying", // for debug abd tweak
-                SGRawValuePointer<bool>(&is_dying));
-	props->tie("is-dead", // for debug abd tweak
-                SGRawValuePointer<bool>(&is_dead));
     FGAIBase::bind();
+    tie("position/altitude-agl-ft", // for debug and tweak
+                SGRawValuePointer<double>(&altitude_agl_ft));
+    tie("alt-rel", // for debug and tweak
+                SGRawValuePointer<double>(&alt_rel));
+    tie("time", // for debug and tweak
+                SGRawValuePointer<double>(&time));
+    tie("xx", // for debug and tweak
+                SGRawValuePointer<double>(&xx));
+    tie("is-forming", // for debug abd tweak
+                SGRawValuePointer<bool>(&is_forming));
+    tie("is-formed", // for debug abd tweak
+                SGRawValuePointer<bool>(&is_formed));
+    tie("is-dying", // for debug abd tweak
+                SGRawValuePointer<bool>(&is_dying));
+    tie("is-dead", // for debug abd tweak
+                SGRawValuePointer<bool>(&is_dead));
 }
-
-void FGAIThermal::unbind() {
-	props->untie("position/altitude-agl-ft");
-	props->untie("alt-rel");
-	props->untie("time");	
-	props->untie("is-forming");
-	props->untie("is-formed");
-	props->untie("is-dying");
-	props->untie("is-dead");
-	props->untie("xx");
-    FGAIBase::unbind();
-}
-
 
 void FGAIThermal::update(double dt) {
    FGAIBase::update(dt);

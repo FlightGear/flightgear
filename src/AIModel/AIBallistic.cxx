@@ -189,102 +189,70 @@ void FGAIBallistic::reinit() {
 void FGAIBallistic::bind() {
     //    FGAIBase::bind();
 
-    props->tie("sim/time/elapsed-sec",
+    _tiedProperties.setRoot(props);
+    tie("sim/time/elapsed-sec",
         SGRawValueMethods<FGAIBallistic,double>(*this,
         &FGAIBallistic::_getTime, &FGAIBallistic::setTime));
-    //props->tie("mass-slug",
+    //tie("mass-slug",
     //    SGRawValueMethods<FGAIBallistic,double>(*this,
     //    &FGAIBallistic::getMass));
 
-    props->tie("material/solid",
+    tie("material/solid",
         SGRawValuePointer<bool>(&_solid));
-    props->tie("altitude-agl-ft",
+    tie("altitude-agl-ft",
         SGRawValuePointer<double>(&_ht_agl_ft));
-    props->tie("controls/slave-to-ac",
+    tie("controls/slave-to-ac",
         SGRawValueMethods<FGAIBallistic,bool>
         (*this, &FGAIBallistic::getSlaved, &FGAIBallistic::setSlaved));
-    props->tie("controls/invisible",
+    tie("controls/invisible",
         SGRawValuePointer<bool>(&invisible));
 
     if(_external_force || _slave_to_ac){
-        props->tie("controls/force_stabilized",
+        tie("controls/force_stabilized",
             SGRawValuePointer<bool>(&_force_stabilised));
-        props->tie("position/global-x", 
+        tie("position/global-x",
             SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getCartPosX, 0));
-        props->tie("position/global-y",
+        tie("position/global-y",
             SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getCartPosY, 0));
-        props->tie("position/global-z",
+        tie("position/global-z",
             SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getCartPosZ, 0));
-        props->tie("velocities/vertical-speed-fps",
+        tie("velocities/vertical-speed-fps",
             SGRawValuePointer<double>(&vs));
-        props->tie("velocities/true-airspeed-kt",
+        tie("velocities/true-airspeed-kt",
             SGRawValuePointer<double>(&speed));
-        props->tie("velocities/horizontal-speed-fps",
+        tie("velocities/horizontal-speed-fps",
             SGRawValuePointer<double>(&hs));
-        props->tie("position/altitude-ft",
+        tie("position/altitude-ft",
             SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getElevationFt, &FGAIBase::_setAltitude));
-        props->tie("position/latitude-deg", 
+        tie("position/latitude-deg",
             SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getLatitude, &FGAIBase::_setLatitude));
-        props->tie("position/longitude-deg",
+        tie("position/longitude-deg",
             SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getLongitude, &FGAIBase::_setLongitude));
-        props->tie("orientation/hdg-deg",
+        tie("orientation/hdg-deg",
             SGRawValuePointer<double>(&hdg));
-        props->tie("orientation/pitch-deg",
+        tie("orientation/pitch-deg",
             SGRawValuePointer<double>(&pitch));
-        props->tie("orientation/roll-deg",
+        tie("orientation/roll-deg",
             SGRawValuePointer<double>(&roll));
-        props->tie("controls/slave-load-to-ac",
+        tie("controls/slave-load-to-ac",
             SGRawValueMethods<FGAIBallistic,bool>
             (*this, &FGAIBallistic::getSlavedLoad, &FGAIBallistic::setSlavedLoad));
-        props->tie("position/load-offset",
+        tie("position/load-offset",
             SGRawValueMethods<FGAIBallistic,double>
             (*this, &FGAIBallistic::getLoadOffset, &FGAIBallistic::setLoadOffset));
-        props->tie("load/distance-to-hitch-ft",
+        tie("load/distance-to-hitch-ft",
             SGRawValueMethods<FGAIBallistic,double>
             (*this, &FGAIBallistic::getDistanceToHitch));
-        props->tie("load/elevation-to-hitch-deg",
+        tie("load/elevation-to-hitch-deg",
             SGRawValueMethods<FGAIBallistic,double>
             (*this, &FGAIBallistic::getElevToHitch));
-        props->tie("load/bearing-to-hitch-deg",
+        tie("load/bearing-to-hitch-deg",
             SGRawValueMethods<FGAIBallistic,double>
             (*this, &FGAIBallistic::getBearingToHitch));
-        props->tie("material/load-resistance",
+        tie("material/load-resistance",
         SGRawValuePointer<double>(&_load_resistance));
     }
 
-}
-
-void FGAIBallistic::unbind() {
-//    FGAIBase::unbind();
-
-    props->untie("sim/time/elapsed-sec");
-    props->untie("mass-slug");
-    props->untie("material/solid");
-    props->untie("altitude-agl-ft");
-    props->untie("controls/slave-to-ac");
-    props->untie("controls/invisible");
-
-    if(_external_force || _slave_to_ac){
-        props->untie("position/global-y");
-        props->untie("position/global-x");
-        props->untie("position/global-z");
-        props->untie("velocities/vertical-speed-fps");
-        props->untie("velocities/true-airspeed-kt");
-        props->untie("velocities/horizontal-speed-fps");
-        props->untie("position/altitude-ft");
-        props->untie("position/latitude-deg");
-        props->untie("position/longitude-deg");
-        props->untie("position/ht-agl-ft");
-        props->untie("orientation/hdg-deg");
-        props->untie("orientation/pitch-deg");
-        props->untie("orientation/roll-deg");
-        props->untie("controls/force_stabilized");
-        props->untie("position/load-offset");
-        props->untie("load/distance-to-hitch-ft");
-        props->untie("load/elevation-to-hitch-deg");
-        props->untie("load/bearing-to-hitch-deg");
-        props->untie("material/load-resistance");
-    }
 }
 
 void FGAIBallistic::update(double dt) {

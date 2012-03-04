@@ -29,6 +29,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -39,6 +40,7 @@
 
 class FGKT_70 : public SGSubsystem
 {
+private:
     SGPropertyNode_ptr lon_node;
     SGPropertyNode_ptr lat_node;
     SGPropertyNode_ptr alt_node;
@@ -72,6 +74,7 @@ class FGKT_70 : public SGSubsystem
 
     string name;
     int num;
+    simgear::TiedPropertyList _tiedProperties;
 
 public:
 

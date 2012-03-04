@@ -119,22 +119,13 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 void FGAIAircraft::bind() {
     FGAIBase::bind();
 
-    props->tie("controls/gear/gear-down",
-               SGRawValueMethods<FGAIAircraft,bool>(*this,
-                                                    &FGAIAircraft::_getGearDown));
-    props->tie("transponder-id",
-               SGRawValueMethods<FGAIAircraft,const char*>(*this,
-                                                    &FGAIAircraft::_getTransponderCode));
+    tie("controls/gear/gear-down",
+        SGRawValueMethods<FGAIAircraft,bool>(*this,
+                &FGAIAircraft::_getGearDown));
+    tie("transponder-id",
+        SGRawValueMethods<FGAIAircraft,const char*>(*this,
+                &FGAIAircraft::_getTransponderCode));
 }
-
-
-void FGAIAircraft::unbind() {
-    FGAIBase::unbind();
-
-    props->untie("controls/gear/gear-down");
-    props->untie("transponder-id");
-}
-
 
 void FGAIAircraft::update(double dt) {
     FGAIBase::update(dt);

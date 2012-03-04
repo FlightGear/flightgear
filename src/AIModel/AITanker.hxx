@@ -41,7 +41,6 @@ public:
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
     virtual void bind();
-    virtual void unbind();
 
     virtual const char* getTypeString(void) const { return "tanker"; }
 

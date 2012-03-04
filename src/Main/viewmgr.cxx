@@ -182,123 +182,98 @@ void
 FGViewMgr::do_bind()
 {
   // these are bound to the current view properties
-  fgTie("/sim/current-view/heading-offset-deg", this,
-	&FGViewMgr::getViewHeadingOffset_deg,
-        &FGViewMgr::setViewHeadingOffset_deg);
+  _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
+  _tiedProperties.Tie("heading-offset-deg", this,
+                      &FGViewMgr::getViewHeadingOffset_deg,
+                      &FGViewMgr::setViewHeadingOffset_deg);
   fgSetArchivable("/sim/current-view/heading-offset-deg");
-  fgTie("/sim/current-view/goal-heading-offset-deg", this,
-	&FGViewMgr::getViewGoalHeadingOffset_deg,
-        &FGViewMgr::setViewGoalHeadingOffset_deg);
+  _tiedProperties.Tie("goal-heading-offset-deg", this,
+                      &FGViewMgr::getViewGoalHeadingOffset_deg,
+                      &FGViewMgr::setViewGoalHeadingOffset_deg);
   fgSetArchivable("/sim/current-view/goal-heading-offset-deg");
-  fgTie("/sim/current-view/pitch-offset-deg", this,
-	&FGViewMgr::getViewPitchOffset_deg,
-        &FGViewMgr::setViewPitchOffset_deg);
+  _tiedProperties.Tie("pitch-offset-deg", this,
+                      &FGViewMgr::getViewPitchOffset_deg,
+                      &FGViewMgr::setViewPitchOffset_deg);
   fgSetArchivable("/sim/current-view/pitch-offset-deg");
-  fgTie("/sim/current-view/goal-pitch-offset-deg", this,
-	&FGViewMgr::getGoalViewPitchOffset_deg,
-        &FGViewMgr::setGoalViewPitchOffset_deg);
+  _tiedProperties.Tie("goal-pitch-offset-deg", this,
+                      &FGViewMgr::getGoalViewPitchOffset_deg,
+                      &FGViewMgr::setGoalViewPitchOffset_deg);
   fgSetArchivable("/sim/current-view/goal-pitch-offset-deg");
-  fgTie("/sim/current-view/roll-offset-deg", this,
-	&FGViewMgr::getViewRollOffset_deg,
-        &FGViewMgr::setViewRollOffset_deg);
+  _tiedProperties.Tie("roll-offset-deg", this,
+                      &FGViewMgr::getViewRollOffset_deg,
+                      &FGViewMgr::setViewRollOffset_deg);
   fgSetArchivable("/sim/current-view/roll-offset-deg");
-  fgTie("/sim/current-view/goal-roll-offset-deg", this,
-	&FGViewMgr::getGoalViewRollOffset_deg,
-        &FGViewMgr::setGoalViewRollOffset_deg);
+  _tiedProperties.Tie("goal-roll-offset-deg", this,
+                      &FGViewMgr::getGoalViewRollOffset_deg,
+                      &FGViewMgr::setGoalViewRollOffset_deg);
   fgSetArchivable("/sim/current-view/goal-roll-offset-deg");
 
-  fgTie("/sim/current-view/view-number", this,
+  _tiedProperties.Tie("view-number", this,
                       &FGViewMgr::getView, &FGViewMgr::setView);
   fgSetArchivable("/sim/current-view/view-number", false);
 
-  fgTie("/sim/current-view/axes/long", this,
-	(double_getter)0, &FGViewMgr::setViewAxisLong);
+  _tiedProperties.Tie("axes/long", this,
+                      (double_getter)0, &FGViewMgr::setViewAxisLong);
   fgSetArchivable("/sim/current-view/axes/long");
 
-  fgTie("/sim/current-view/axes/lat", this,
-	(double_getter)0, &FGViewMgr::setViewAxisLat);
+  _tiedProperties.Tie("axes/lat", this,
+                      (double_getter)0, &FGViewMgr::setViewAxisLat);
   fgSetArchivable("/sim/current-view/axes/lat");
 
-  fgTie("/sim/current-view/field-of-view", this,
-	&FGViewMgr::getFOV_deg, &FGViewMgr::setFOV_deg);
+  _tiedProperties.Tie("field-of-view", this,
+                      &FGViewMgr::getFOV_deg, &FGViewMgr::setFOV_deg);
   fgSetArchivable("/sim/current-view/field-of-view");
 
-  fgTie("/sim/current-view/aspect-ratio-multiplier", this,
-	&FGViewMgr::getARM_deg, &FGViewMgr::setARM_deg);
+  _tiedProperties.Tie("aspect-ratio-multiplier", this,
+                      &FGViewMgr::getARM_deg, &FGViewMgr::setARM_deg);
   fgSetArchivable("/sim/current-view/field-of-view");
 
-  fgTie("/sim/current-view/ground-level-nearplane-m", this,
-	&FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
+  _tiedProperties.Tie("ground-level-nearplane-m", this,
+                      &FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
   fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
 
   SGPropertyNode *n = fgGetNode("/sim/current-view", true);
-  n->tie("viewer-x-m", SGRawValuePointer<double>(&abs_viewer_position[0]));
-  n->tie("viewer-y-m", SGRawValuePointer<double>(&abs_viewer_position[1]));
-  n->tie("viewer-z-m", SGRawValuePointer<double>(&abs_viewer_position[2]));
+  _tiedProperties.Tie(n->getNode("viewer-x-m", true),SGRawValuePointer<double>(&abs_viewer_position[0]));
+  _tiedProperties.Tie(n->getNode("viewer-y-m", true),SGRawValuePointer<double>(&abs_viewer_position[1]));
+  _tiedProperties.Tie(n->getNode("viewer-z-m", true),SGRawValuePointer<double>(&abs_viewer_position[2]));
 
-// for automatic untying:
-#define x(str) ((void)tied_props.push_back(str), str)
+  _tiedProperties.Tie("debug/orientation-w", this,
+                      &FGViewMgr::getCurrentViewOrientation_w);
+  _tiedProperties.Tie("debug/orientation-x", this,
+                      &FGViewMgr::getCurrentViewOrientation_x);
+  _tiedProperties.Tie("debug/orientation-y", this,
+                      &FGViewMgr::getCurrentViewOrientation_y);
+  _tiedProperties.Tie("debug/orientation-z", this,
+                      &FGViewMgr::getCurrentViewOrientation_z);
 
-  fgTie(x("/sim/current-view/debug/orientation-w"), this,
-	&FGViewMgr::getCurrentViewOrientation_w);
-  fgTie(x("/sim/current-view/debug/orientation-x"), this,
-        &FGViewMgr::getCurrentViewOrientation_x);
-  fgTie(x("/sim/current-view/debug/orientation-y"), this,
-        &FGViewMgr::getCurrentViewOrientation_y);
-  fgTie(x("/sim/current-view/debug/orientation-z"), this,
-        &FGViewMgr::getCurrentViewOrientation_z);
+  _tiedProperties.Tie("debug/orientation_offset-w", this,
+                      &FGViewMgr::getCurrentViewOrOffset_w);
+  _tiedProperties.Tie("debug/orientation_offset-x", this,
+                      &FGViewMgr::getCurrentViewOrOffset_x);
+  _tiedProperties.Tie("debug/orientation_offset-y", this,
+                      &FGViewMgr::getCurrentViewOrOffset_y);
+  _tiedProperties.Tie("debug/orientation_offset-z", this,
+                      &FGViewMgr::getCurrentViewOrOffset_z);
 
-  fgTie(x("/sim/current-view/debug/orientation_offset-w"), this,
-	&FGViewMgr::getCurrentViewOrOffset_w);
-  fgTie(x("/sim/current-view/debug/orientation_offset-x"), this,
-        &FGViewMgr::getCurrentViewOrOffset_x);
-  fgTie(x("/sim/current-view/debug/orientation_offset-y"), this,
-        &FGViewMgr::getCurrentViewOrOffset_y);
-  fgTie(x("/sim/current-view/debug/orientation_offset-z"), this,
-        &FGViewMgr::getCurrentViewOrOffset_z);
-
-  fgTie(x("/sim/current-view/debug/frame-w"), this,
-	&FGViewMgr::getCurrentViewFrame_w);
-  fgTie(x("/sim/current-view/debug/frame-x"), this,
-        &FGViewMgr::getCurrentViewFrame_x);
-  fgTie(x("/sim/current-view/debug/frame-y"), this,
-        &FGViewMgr::getCurrentViewFrame_y);
-  fgTie(x("/sim/current-view/debug/frame-z"), this,
-        &FGViewMgr::getCurrentViewFrame_z);
-
-#undef x
+  _tiedProperties.Tie("debug/frame-w", this,
+                      &FGViewMgr::getCurrentViewFrame_w);
+  _tiedProperties.Tie("debug/frame-x", this,
+                      &FGViewMgr::getCurrentViewFrame_x);
+  _tiedProperties.Tie("debug/frame-y", this,
+                      &FGViewMgr::getCurrentViewFrame_y);
+  _tiedProperties.Tie("debug/frame-z", this,
+                      &FGViewMgr::getCurrentViewFrame_z);
 }
 
 void
 FGViewMgr::unbind ()
 {
-  // FIXME:
-  // need to redo these bindings to the new locations (move to viewer?)
-  fgUntie("/sim/current-view/heading-offset-deg");
-  fgUntie("/sim/current-view/goal-heading-offset-deg");
-  fgUntie("/sim/current-view/pitch-offset-deg");
-  fgUntie("/sim/current-view/goal-pitch-offset-deg");
-  fgUntie("/sim/current-view/field-of-view");
-  fgUntie("/sim/current-view/aspect-ratio-multiplier");
-  fgUntie("/sim/current-view/view-number");
-  fgUntie("/sim/current-view/axes/long");
-  fgUntie("/sim/current-view/axes/lat");
-  fgUntie("/sim/current-view/ground-level-nearplane-m");
-  fgUntie("/sim/current-view/viewer-x-m");
-  fgUntie("/sim/current-view/viewer-y-m");
-  fgUntie("/sim/current-view/viewer-z-m");
-
-  std::list<const char*>::const_iterator it;
-  for (it = tied_props.begin(); it != tied_props.end(); it++){
-    fgUntie(*it);
-  }
-
+  _tiedProperties.Untie();
 }
 
 void
 FGViewMgr::update (double dt)
 {
-
   FGViewer *loop_view = (FGViewer *)get_current_view();
   if (loop_view == 0) return;
 

@@ -9,6 +9,7 @@
 #include <iosfwd>
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/math/SGMath.hxx>
 
 #include <Main/globals.hxx>
@@ -27,6 +28,9 @@ public:
     void bind ();
     void unbind ();
     void update (double dt);
+
+private:
+    simgear::TiedPropertyList _tiedProperties;
 };
 
 

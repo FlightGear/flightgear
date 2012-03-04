@@ -394,61 +394,62 @@ bool FGAIBase::isa( object_type otype ) {
 
 
 void FGAIBase::bind() {
-    props->tie("id", SGRawValueMethods<FGAIBase,int>(*this,
+    _tiedProperties.setRoot(props);
+    tie("id", SGRawValueMethods<FGAIBase,int>(*this,
         &FGAIBase::getID));
-    props->tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
-    props->tie("velocities/vertical-speed-fps",
+    tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
+    tie("velocities/vertical-speed-fps",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getVS_fps,
         &FGAIBase::_setVS_fps));
 
-    props->tie("position/altitude-ft",
+    tie("position/altitude-ft",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getAltitude,
         &FGAIBase::_setAltitude));
-    props->tie("position/latitude-deg",
+    tie("position/latitude-deg",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getLatitude,
         &FGAIBase::_setLatitude));
-    props->tie("position/longitude-deg",
+    tie("position/longitude-deg",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getLongitude,
         &FGAIBase::_setLongitude));
 
-    props->tie("position/global-x",
+    tie("position/global-x",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosX,
         0));
-    props->tie("position/global-y",
+    tie("position/global-y",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosY,
         0));
-    props->tie("position/global-z",
+    tie("position/global-z",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosZ,
         0));
-    props->tie("callsign",
+    tie("callsign",
         SGRawValueMethods<FGAIBase,const char*>(*this,
         &FGAIBase::_getCallsign,
         0));
 
-    props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
-    props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
-    props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
+    tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
+    tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
+    tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
 
-    props->tie("radar/in-range", SGRawValuePointer<bool>(&in_range));
-    props->tie("radar/bearing-deg",   SGRawValuePointer<double>(&bearing));
-    props->tie("radar/elevation-deg", SGRawValuePointer<double>(&elevation));
-    props->tie("radar/range-nm", SGRawValuePointer<double>(&range));
-    props->tie("radar/h-offset", SGRawValuePointer<double>(&horiz_offset));
-    props->tie("radar/v-offset", SGRawValuePointer<double>(&vert_offset));
-    props->tie("radar/x-shift", SGRawValuePointer<double>(&x_shift));
-    props->tie("radar/y-shift", SGRawValuePointer<double>(&y_shift));
-    props->tie("radar/rotation", SGRawValuePointer<double>(&rotation));
-    props->tie("radar/ht-diff-ft", SGRawValuePointer<double>(&ht_diff));
-    props->tie("subID", SGRawValuePointer<int>(&_subID));
-    props->tie("controls/lighting/nav-lights",
-        SGRawValueFunctions<bool>(_isNight));
+    tie("radar/in-range", SGRawValuePointer<bool>(&in_range));
+    tie("radar/bearing-deg",   SGRawValuePointer<double>(&bearing));
+    tie("radar/elevation-deg", SGRawValuePointer<double>(&elevation));
+    tie("radar/range-nm", SGRawValuePointer<double>(&range));
+    tie("radar/h-offset", SGRawValuePointer<double>(&horiz_offset));
+    tie("radar/v-offset", SGRawValuePointer<double>(&vert_offset));
+    tie("radar/x-shift", SGRawValuePointer<double>(&x_shift));
+    tie("radar/y-shift", SGRawValuePointer<double>(&y_shift));
+    tie("radar/rotation", SGRawValuePointer<double>(&rotation));
+    tie("radar/ht-diff-ft", SGRawValuePointer<double>(&ht_diff));
+    tie("subID", SGRawValuePointer<int>(&_subID));
+    tie("controls/lighting/nav-lights", SGRawValueFunctions<bool>(_isNight));
+
     props->setBoolValue("controls/lighting/beacon", true);
     props->setBoolValue("controls/lighting/strobe", true);
     props->setBoolValue("controls/glide-path", true);
@@ -467,40 +468,12 @@ void FGAIBase::bind() {
     props->setDoubleValue("sim/sound/avionics/volume", 0.0);
     props->setBoolValue("sim/sound/avionics/external-view", false);
     props->setBoolValue("sim/current-view/internal", false);
-
 }
 
 void FGAIBase::unbind() {
-    props->untie("id");
-    props->untie("velocities/true-airspeed-kt");
-    props->untie("velocities/vertical-speed-fps");
+    _tiedProperties.Untie();
 
-    props->untie("position/altitude-ft");
-    props->untie("position/latitude-deg");
-    props->untie("position/longitude-deg");
-    props->untie("position/global-x");
-    props->untie("position/global-y");
-    props->untie("position/global-z");
-    props->untie("callsign");
-
-    props->untie("orientation/pitch-deg");
-    props->untie("orientation/roll-deg");
-    props->untie("orientation/true-heading-deg");
-
-    props->untie("radar/in-range");
-    props->untie("radar/bearing-deg");
-    props->untie("radar/elevation-deg");
-    props->untie("radar/range-nm");
-    props->untie("radar/h-offset");
-    props->untie("radar/v-offset");
-    props->untie("radar/x-shift");
-    props->untie("radar/y-shift");
-    props->untie("radar/rotation");
-    props->untie("radar/ht-diff-ft");
-
-    props->untie("controls/lighting/nav-lights");
-
-    props->setBoolValue("/sim/controls/radar/", true);
+    props->setBoolValue("/sim/controls/radar", true);
 
     // drop reference to sound effects now
     _fx = 0;

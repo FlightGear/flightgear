@@ -333,10 +333,11 @@ void
 GPS::bind()
 {
   _config.bind(this, _gpsNode->getChild("config", 0, true));
+
 // basic GPS outputs
   tie(_gpsNode, "selected-course-deg", SGRawValueMethods<GPS, double>
     (*this, &GPS::getSelectedCourse, &GPS::setSelectedCourse));
-  
+
   tie(_gpsNode, "desired-course-deg", SGRawValueMethods<GPS, double>
     (*this, &GPS::getDesiredCourse, NULL));
   _desiredCourseNode = _gpsNode->getChild("desired-course-deg", 0, true);
@@ -353,7 +354,7 @@ GPS::bind()
   tie(_gpsNode, "indicated-ground-speed-kt", SGRawValueMethods<GPS, double>
     (*this, &GPS::getGroundspeedKts, NULL));
   
-// command system    
+// command system
   tie(_gpsNode, "mode", SGRawValueMethods<GPS, const char*>(*this, &GPS::getMode, NULL));
   tie(_gpsNode, "command", SGRawValueMethods<GPS, const char*>(*this, &GPS::getCommand, &GPS::setCommand));
     
@@ -406,10 +407,7 @@ GPS::bind()
 void
 GPS::unbind()
 {
-  for (unsigned int t=0; t<_tiedNodes.size(); ++t) {
-    _tiedNodes[t]->untie();
-  }
-  _tiedNodes.clear();
+  _tiedProperties.Untie();
 }
 
 void

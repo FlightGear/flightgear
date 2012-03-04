@@ -82,6 +82,7 @@
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <FDM/groundcache.hxx>
 
 using std::list;
@@ -127,7 +128,7 @@ private:
     bool inited;
 
     // Have we bound to the property system
-    bool bound; 
+    bool bound;
 
     // periodic update management variable.  This is a scheme to run
     // the fdm with a fixed delta-t.  We control how many iteration of
@@ -186,6 +187,8 @@ private:
     double climb_rate;                // in feet per second
     double altitude_agl;
     double track;
+
+    simgear::TiedPropertyList _tiedProperties;
 
     // the ground cache object itself.
     FGGroundCache ground_cache;

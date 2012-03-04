@@ -74,10 +74,10 @@ bool FGAIMultiplayer::init(bool search_in_AI_path) {
 void FGAIMultiplayer::bind() {
     FGAIBase::bind();
 
-    props->tie("refuel/contact", SGRawValuePointer<bool>(&contact));
-    props->tie("tanker", SGRawValuePointer<bool>(&isTanker));
+    tie("refuel/contact", SGRawValuePointer<bool>(&contact));
+    tie("tanker", SGRawValuePointer<bool>(&isTanker));
 
-    props->tie("controls/invisible",
+    tie("controls/invisible",
         SGRawValuePointer<bool>(&invisible));
 
 #define AIMPROProp(type, name) \
@@ -87,28 +87,16 @@ SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
 SGRawValueMethods<FGAIMultiplayer, type>(*this, \
       &FGAIMultiplayer::get##name, &FGAIMultiplayer::set##name)
 
-    //props->tie("callsign", AIMPROProp(const char *, CallSign));
+    //tie("callsign", AIMPROProp(const char *, CallSign));
 
-    props->tie("controls/allow-extrapolation",
-               AIMPRWProp(bool, AllowExtrapolation));
-    props->tie("controls/lag-adjust-system-speed",
-               AIMPRWProp(double, LagAdjustSystemSpeed));
+    tie("controls/allow-extrapolation",
+        AIMPRWProp(bool, AllowExtrapolation));
+    tie("controls/lag-adjust-system-speed",
+        AIMPRWProp(double, LagAdjustSystemSpeed));
 
 
 #undef AIMPROProp
 #undef AIMPRWProp
-}
-
-void FGAIMultiplayer::unbind() {
-    FGAIBase::unbind();
-
-    //props->untie("callsign");
-    props->untie("controls/allow-extrapolation");
-    props->untie("controls/lag-adjust-system-speed");
-    props->untie("controls/invisible");
-    props->untie("refuel/contact");
-    props->untie("tanker");
-
 }
 
 void FGAIMultiplayer::update(double dt)

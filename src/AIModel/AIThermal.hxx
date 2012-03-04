@@ -33,49 +33,45 @@ using std::string;
 class FGAIThermal : public FGAIBase {
 
 public:
-
 	FGAIThermal();
 	~FGAIThermal();
-	
-        void readFromScenario(SGPropertyNode* scFileNode);
+
+	void readFromScenario(SGPropertyNode* scFileNode);
 
 	virtual bool init(bool search_in_AI_path=false);
-        virtual void bind();
-        virtual void unbind();
+	virtual void bind();
 	virtual void update(double dt);
 
 	inline void setMaxStrength( double s ) { max_strength = s; };
-        inline void setDiameter( double d ) { diameter = d; };
-        inline void setHeight( double h ) { height = h; };
-        inline void setMaxUpdraft( double lift ) { v_up_max = lift; };
+	inline void setDiameter( double d ) { diameter = d; };
+	inline void setHeight( double h ) { height = h; };
+	inline void setMaxUpdraft( double lift ) { v_up_max = lift; };
 	inline void setMinUpdraft( double sink ) { v_up_min = sink; };
 	inline void setR_up_frac( double r ) { r_up_frac = r; };
-	
+
 	inline double getStrength() const { return strength; };
-        inline double getDiameter() const { return diameter; };
-        inline double getHeight() const { return height; };
-        inline double getV_up_max() const { return v_up_max; };
+	inline double getDiameter() const { return diameter; };
+	inline double getHeight() const { return height; };
+	inline double getV_up_max() const { return v_up_max; };
 	inline double getV_up_min() const { return v_up_min; };
 	inline double getR_up_frac() const { return r_up_frac; };
 
-        virtual const char* getTypeString(void) const { return "thermal"; }
+	virtual const char* getTypeString(void) const { return "thermal"; }
 	void getGroundElev(double dt);
-	
 
 private:
-
 	void Run(double dt);
 	double get_strength_fac(double alt_frac);
 	double max_strength;
-        double strength;
-        double diameter;
-        double height;
-        double factor;
+	double strength;
+	double diameter;
+	double height;
+	double factor;
 	double alt_rel;
 	double alt;
 	double v_up_max;
 	double v_up_min;
-        double r_up_frac;
+	double r_up_frac;
 	double cycle_timer;
 	double dt_count;
 	double time;
@@ -93,7 +89,5 @@ private:
 	SGPropertyNode_ptr _aloft_wind_speed_node;
 
 };
-
-
 
 #endif  // _FG_AIThermal_HXX

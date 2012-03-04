@@ -29,6 +29,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/structure/SGReferenced.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/sg_inlines.h>
 
 #include <simgear/math/sg_geodesy.hxx>
@@ -43,7 +44,7 @@ class FGAIManager;
 class FGAIFlightPlan;
 class FGFX;
 class FGNasalModelDataProxy;
-class FGAIModelData;	// defined below
+class FGAIModelData;    // defined below
 
 
 class FGAIBase : public SGReferenced {
@@ -52,7 +53,7 @@ public:
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
         otRocket, otStorm, otThermal, otStatic, otWingman, otGroundVehicle,
         otEscort, otMultiplayer,
-        MAX_OBJECTS };	// Needs to be last!!!
+        MAX_OBJECTS };  // Needs to be last!!!
 
     FGAIBase(object_type ot, bool enableHot);
     virtual ~FGAIBase();
@@ -143,7 +144,16 @@ public:
 
 
 protected:
+    /**
+     * Tied-properties helper, record nodes which are tied for easy un-tie-ing
+     */
+    template <typename T>
+    void tie(const char* aRelPath, const SGRawValue<T>& aRawValue)
+    {
+        _tiedProperties.Tie(props->getNode(aRelPath, true), aRawValue);
+    }
 
+    simgear::TiedPropertyList _tiedProperties;
     SGPropertyNode_ptr _selected_ac;
     SGPropertyNode_ptr props;
     SGPropertyNode_ptr trigger_node;
@@ -151,10 +161,10 @@ protected:
     FGAIManager* manager;
 
     // these describe the model's actual state
-    SGGeod pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
-    double hdg;		// True heading in degrees
-    double roll;	// degrees, left is negative
-    double pitch;	// degrees, nose-down is negative
+    SGGeod pos;         // WGS84 lat & lon in degrees, elev above sea-level in meters
+    double hdg;         // True heading in degrees
+    double roll;        // degrees, left is negative
+    double pitch;       // degrees, nose-down is negative
     double speed;       // knots true airspeed
     double altitude_ft; // feet above sea level
     double vs;          // vertical speed, feet per minute
@@ -186,9 +196,9 @@ protected:
     double x_shift;      // value used by radar display instrument
     double y_shift;      // value used by radar display instrument
     double rotation;     // value used by radar display instrument
-    double ht_diff;		 // value used by radar display instrument
+    double ht_diff;      // value used by radar display instrument
 
-    string model_path;	   //Path to the 3D model
+    string model_path;   //Path to the 3D model
     SGModelPlacement aip;
 
     bool delete_me;
@@ -469,4 +479,4 @@ private:
     bool _initialized;
 };
 
-#endif	// _FG_AIBASE_HXX
+#endif // _FG_AIBASE_HXX

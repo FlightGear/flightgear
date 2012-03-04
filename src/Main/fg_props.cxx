@@ -482,58 +482,37 @@ FGProperties::init ()
 void
 FGProperties::bind ()
 {
-				// Simulation
-  fgTie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
-  fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
-  fgTie("/sim/freeze/master", getFreeze, setFreeze);
+  _tiedProperties.setRoot(globals->get_props());
 
-  fgTie("/sim/time/elapsed-sec", getElapsedTime_sec);
-  fgTie("/sim/time/gmt", getDateString, setDateString);
+  // Simulation
+  _tiedProperties.Tie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
+  _tiedProperties.Tie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
+  _tiedProperties.Tie("/sim/freeze/master", getFreeze, setFreeze);
+
+  _tiedProperties.Tie("/sim/time/elapsed-sec", getElapsedTime_sec);
+  _tiedProperties.Tie("/sim/time/gmt", getDateString, setDateString);
   fgSetArchivable("/sim/time/gmt");
-  fgTie("/sim/time/gmt-string", getGMTString);
+  _tiedProperties.Tie("/sim/time/gmt-string", getGMTString);
 
-				// Position
-  fgTie("/position/latitude-string", getLatitudeString);
-  fgTie("/position/longitude-string", getLongitudeString);
+  // Position
+  _tiedProperties.Tie("/position/latitude-string", getLatitudeString);
+  _tiedProperties.Tie("/position/longitude-string", getLongitudeString);
 
-				// Orientation
-  fgTie("/orientation/heading-magnetic-deg", getHeadingMag);
-  fgTie("/orientation/track-magnetic-deg", getTrackMag);
+  // Orientation
+  _tiedProperties.Tie("/orientation/heading-magnetic-deg", getHeadingMag);
+  _tiedProperties.Tie("/orientation/track-magnetic-deg", getTrackMag);
 
-  fgTie("/environment/magnetic-variation-deg", getMagVar);
-  fgTie("/environment/magnetic-dip-deg", getMagDip);
+  _tiedProperties.Tie("/environment/magnetic-variation-deg", getMagVar);
+  _tiedProperties.Tie("/environment/magnetic-dip-deg", getMagDip);
 
-				// Misc. Temporary junk.
-  fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
+  // Misc. Temporary junk.
+  _tiedProperties.Tie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
 }
 
 void
 FGProperties::unbind ()
 {
-				// Simulation
-  fgUntie("/sim/logging/priority");
-  fgUntie("/sim/logging/classes");
-  fgUntie("/sim/freeze/master");
-
-  fgUntie("/sim/time/elapsed-sec");
-  fgUntie("/sim/time/gmt");
-  fgUntie("/sim/time/gmt-string");
-				// Position
-  fgUntie("/position/latitude-string");
-  fgUntie("/position/longitude-string");
-
-				// Orientation
-  fgUntie("/orientation/heading-magnetic-deg");
-  fgUntie("/orientation/track-magnetic-deg");
-
-				// Environment
-  fgUntie("/environment/magnetic-variation-deg");
-  fgUntie("/environment/magnetic-dip-deg");
-
-				// Misc. Temporary junk.
-  fgUntie("/sim/temp/winding-ccw");
-//  fgUntie("/sim/temp/full-screen");
-//  fgUntie("/sim/temp/fdm-data-logging");
+    _tiedProperties.Untie();
 }
 
 void
@@ -541,7 +520,6 @@ FGProperties::update (double dt)
 {
     static SGPropertyNode_ptr offset = fgGetNode("/sim/time/local-offset", true);
     offset->setIntValue(globals->get_time_params()->get_local_offset());
-
 
     // utc date/time
     static SGPropertyNode_ptr uyear = fgGetNode("/sim/time/utc/year", true);
