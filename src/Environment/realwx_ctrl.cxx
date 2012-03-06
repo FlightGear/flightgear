@@ -373,8 +373,8 @@ void NoaaMetarRealWxController::requestMetar( MetarDataHandler * metarDataHandle
               }
           }
 
-          bool fromMetarProxy() const
-          { return _fromProxy; }
+//          bool fromMetarProxy() const
+//          { return _fromProxy; }
     private:  
         string _metar;
         bool _fromProxy;

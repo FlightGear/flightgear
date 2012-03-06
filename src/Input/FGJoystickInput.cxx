@@ -32,6 +32,7 @@
 #include "FGDeviceConfigurationMap.hxx"
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalSys.hxx>
+#include <boost/foreach.hpp>
 
 using simgear::PropertyList;
 
@@ -265,30 +266,27 @@ void FGJoystickInput::postinit()
     // Initialize the buttons.
     //
     PropertyList buttons = js_node->getChildren("button");
-    char buf[32];
-    for (j = 0; j < buttons.size() && j < nbuttons; j++) {
-      const SGPropertyNode * button_node = buttons[j];
-      const SGPropertyNode * num_node = button_node->getChild("number");
+    BOOST_FOREACH( SGPropertyNode * button_node, buttons ) {
       size_t n_but = button_node->getIndex();
-      if (num_node != 0) {
+
+      const SGPropertyNode * num_node = button_node->getChild("number");
+      if (NULL != num_node)
           n_but = num_node->getIntValue(TGT_PLATFORM,n_but);
-      }
 
       if (n_but >= nbuttons) {
           SG_LOG(SG_INPUT, SG_DEBUG, "Dropping bindings for button " << n_but);
           continue;
       }
 
-      sprintf(buf, "%u", (unsigned)n_but);
-      SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << n_but);
-      bindings[i].buttons[n_but].init(button_node, buf, module );
+      std::ostringstream buf;
+      buf << (unsigned)n_but;
 
-      // get interval-sec property
+      SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << buf.str());
       FGButton &b = bindings[i].buttons[n_but];
-      if (button_node != 0) {
-        b.interval_sec = button_node->getDoubleValue("interval-sec",0.0);
-        b.last_dt = 0.0;
-      }
+      b.init(button_node, buf.str(), module );
+      // get interval-sec property
+      b.interval_sec = button_node->getDoubleValue("interval-sec",0.0);
+      b.last_dt = 0.0;
     }
 
     js->setMinRange(minRange);

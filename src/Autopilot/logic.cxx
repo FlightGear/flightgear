@@ -45,7 +45,7 @@ void Logic::set_output( bool value )
   if( _inverted ) value = !value;
 
   // set all outputs to the given value
-  for( OutputMap::iterator it = _output.begin(); it != _output.end(); it++ )
+  for( OutputMap::iterator it = _output.begin(); it != _output.end(); ++it )
     (*it).second->setValue( value );
 }
 

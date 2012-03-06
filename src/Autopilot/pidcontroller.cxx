@@ -96,7 +96,6 @@ PIDController::PIDController():
 void PIDController::update( bool firstTime, double dt ) 
 {
     double edf_n = 0.0;
-    double delta_u_n = 0.0; // incremental output
     double u_n = 0.0;       // absolute output
 
     double u_min = _minInput.get_value();
@@ -159,6 +158,7 @@ void PIDController::update( bool firstTime, double dt )
 
         // Calculates the incremental output:
         double ti = Ti.get_value();
+        double delta_u_n = 0.0; // incremental output
         if ( ti > 0.0 ) {
             delta_u_n = Kp.get_value() * ( (ep_n - ep_n_1)
                                + ((Ts/ti) * e_n)

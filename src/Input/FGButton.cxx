@@ -45,7 +45,7 @@ FGButton::~FGButton ()
 }
 
 
-void FGButton::init( const SGPropertyNode * node, const std::string name, std::string & module )
+void FGButton::init( const SGPropertyNode * node, const std::string & name, std::string & module )
 {
   if (node == 0) {
     SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for button " << name);

@@ -258,7 +258,9 @@ static bool commandDeleteWaypt(const SGPropertyNode* arg)
 FGRouteMgr::FGRouteMgr() :
   _currentIndex(0),
   input(fgGetNode( RM "input", true )),
-  mirror(fgGetNode( RM "route", true ))
+  mirror(fgGetNode( RM "route", true )),
+  _departureWatcher(NULL),
+  _arrivalWatcher(NULL)
 {
   listener = new InputListener(this);
   input->setStringValue("");
@@ -278,6 +280,8 @@ FGRouteMgr::~FGRouteMgr()
 {
   input->removeChangeListener(listener);
   delete listener;
+  delete _departureWatcher;
+  delete _arrivalWatcher;
 }
 
 
@@ -296,6 +300,7 @@ void FGRouteMgr::init() {
     &FGRouteMgr::getDepartureName, NULL));
   departure->setStringValue("runway", "");
   
+  delete _departureWatcher;
   _departureWatcher = createWatcher(this, &FGRouteMgr::departureChanged);
   _departureWatcher->watch(departure->getChild("runway"));
   
@@ -311,6 +316,7 @@ void FGRouteMgr::init() {
   destination->tie("name", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
     &FGRouteMgr::getDestinationName, NULL));
   
+  delete _arrivalWatcher;
   _arrivalWatcher = createWatcher(this, &FGRouteMgr::arrivalChanged);
   _arrivalWatcher->watch(destination->getChild("runway", 0, true));
   

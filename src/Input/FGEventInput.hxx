@@ -187,7 +187,7 @@ typedef class SGSharedPtr<FGInputEvent> FGInputEvent_ptr;
 class FGInputDevice : public SGReferenced {
 public:
   FGInputDevice() : debugEvents(false), grab(false) {}
-  FGInputDevice( std::string aName ) : name(aName) {}
+  FGInputDevice( std::string aName ) : name(aName), debugEvents(false), grab(false)  {}
     
   virtual ~FGInputDevice();
 

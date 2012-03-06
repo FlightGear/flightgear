@@ -50,7 +50,7 @@ public:
   virtual void Send( const char * eventName, double value );
   virtual const char * TranslateEventName( FGEventData & eventData );
 
-  void SetDevname( const std::string name );
+  void SetDevname( const std::string & name );
   std::string GetDevname() const { return devname; }
 
   int GetFd() { return fd; }

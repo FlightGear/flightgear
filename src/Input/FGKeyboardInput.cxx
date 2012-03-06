@@ -71,7 +71,16 @@ static bool getModHyper ()
 FGKeyboardInput * FGKeyboardInput::keyboardInput = NULL;
 
 FGKeyboardInput::FGKeyboardInput() :
-    _key_event(fgGetNode("/devices/status/keyboard/event", true))
+    _key_event(fgGetNode("/devices/status/keyboard/event", true)),
+    _key_code(0),
+    _key_modifiers(0),
+    _key_pressed(0),
+    _key_shift(0),
+    _key_ctrl(0),
+    _key_alt(0),
+    _key_meta(0),
+    _key_super(0),
+    _key_hyper(0)
 {
   if( keyboardInput == NULL )
     keyboardInput = this;

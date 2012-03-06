@@ -130,7 +130,6 @@ float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
 {
     int i;
     int max;
-	double elev;
     float result;
     SGPropertyNode *boundaryNode, *boundaryEntry;
 
@@ -180,7 +179,7 @@ float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
 
         // For each boundary layers
         while ( ( boundaryEntry = boundaryNode->getNode( "entry", i ) ) != NULL ) {
-            elev = boundaryEntry->getDoubleValue( "elevation-ft" );
+            double elev = boundaryEntry->getDoubleValue( "elevation-ft" );
 
             if (elev > result)
                 result = elev;

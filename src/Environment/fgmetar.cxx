@@ -59,7 +59,7 @@ FGMetar::FGMetar(const string& icao) :
 			_min_visibility.set(12000.0);
 
 		vector<SGMetarCloud> cv = _clouds;;
-		if (!cv.size()) {
+		if (cv.empty()) {
 			SGMetarCloud cl;
 			cl.set(5500 * SG_FEET_TO_METER, SGMetarCloud::COVERAGE_SCATTERED);
 			_clouds.push_back(cl);

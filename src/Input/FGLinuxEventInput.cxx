@@ -42,7 +42,7 @@ struct TypeCode {
     return (unsigned long)type << 16 | (unsigned long)code;
   }
 
-  bool operator < ( const TypeCode other) const {
+  bool operator < ( const TypeCode & other) const {
     return hashCode() < other.hashCode();
   }
 };
@@ -436,7 +436,7 @@ const char * FGLinuxInputDevice::TranslateEventName( FGEventData & eventData )
   return EVENT_NAME_BY_TYPE[typeCode];
 }
 
-void FGLinuxInputDevice::SetDevname( std::string name )
+void FGLinuxInputDevice::SetDevname( const std::string & name )
 {
   this->devname = name; 
 }

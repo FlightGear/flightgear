@@ -53,7 +53,8 @@ const double FGRidgeLift::dist_probe_m[] = { // in meters
 };
 
 //constructor
-FGRidgeLift::FGRidgeLift ()
+FGRidgeLift::FGRidgeLift () :
+  lift_factor(0.0)
 {	
 	strength = 0.0;
 	timer = 0.0;

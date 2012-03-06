@@ -180,6 +180,13 @@ FGEnvironment::copy (const FGEnvironment &env)
     wind_from_down_fps = env.wind_from_down_fps;
     turbulence_magnitude_norm = env.turbulence_magnitude_norm;
     turbulence_rate_hz = env.turbulence_rate_hz;
+    pressure_inhg = env.pressure_inhg;
+    density_slugft3 = env.density_slugft3;
+    density_tropo_avg_kgm3 = env.density_tropo_avg_kgm3;
+    relative_humidity = env.relative_humidity;
+    altitude_half_to_sun_m = env.altitude_half_to_sun_m;
+    altitude_tropo_top_m = env.altitude_tropo_top_m;
+    live_update = env.live_update;
 }
 
 static inline bool

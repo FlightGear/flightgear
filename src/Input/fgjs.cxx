@@ -137,12 +137,12 @@ int main( int argc, char *argv[] ) {
     SGPropertyNode *templatetree = new SGPropertyNode();
     try {
         readProperties(templatefile.str().c_str(), templatetree);
-    } catch (sg_io_exception e) {
+    } catch (sg_io_exception & e) {
         cout << e.getFormattedMessage ();
     }
 
     PropertyList axes = templatetree->getChildren("axis");
-    for(PropertyList::iterator iter = axes.begin(); iter != axes.end(); iter++) {
+    for(PropertyList::iterator iter = axes.begin(); iter != axes.end(); ++iter) {
         cout << "Move the control you wish to use for " << (*iter)->getStringValue("desc")
              << " " << (*iter)->getStringValue("direction") << endl;
         cout << "Pressing a button skips this axis" << endl;
@@ -159,18 +159,18 @@ int main( int argc, char *argv[] ) {
                         ->getDeadBand(jsi->getInputAxis()));
                 axis->setDoubleValue("binding/factor", jsi->getInputAxisPositive() ? 1.0 : -1.0);
             } else {
-                iter--;
+                --iter;
             }
         } else {
             cout << "Skipping control" << endl;
             if ( ! confirmAnswer() )
-                iter--;
+                --iter;
         }
         cout << endl;
     }
 
     PropertyList buttons = templatetree->getChildren("button");
-    for(PropertyList::iterator iter = buttons.begin(); iter != buttons.end(); iter++) {
+    for(PropertyList::iterator iter = buttons.begin(); iter != buttons.end(); ++iter) {
         cout << "Press the button you wish to use for " << (*iter)->getStringValue("desc") << endl;
         cout << "Moving a joystick axis skips this button" << endl;
         fflush( stdout );
@@ -183,12 +183,12 @@ int main( int argc, char *argv[] ) {
                 SGPropertyNode *button = jstree[ jsi->getInputJoystick() ]->getChild("button", jsi->getInputButton(), true);
                 copyProperties(*iter, button);
             } else {
-                iter--;
+                --iter;
             }
         } else {
             cout << "Skipping control" << endl;
             if (! confirmAnswer())
-                iter--;
+                --iter;
         }
         cout << endl;
     }
@@ -204,7 +204,7 @@ int main( int argc, char *argv[] ) {
 
             jstree[i]->setStringValue("name", jss->getJoystick(i)->getName());
             writeProperties(xfs[i], jstree[i], true);
-        } catch (sg_io_exception e) {
+        } catch (sg_io_exception & e) {
             cout << e.getFormattedMessage ();
         }
         xfs[i].close();

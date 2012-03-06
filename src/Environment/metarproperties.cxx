@@ -137,7 +137,7 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _magneticVariation(new MagneticVariation())
 {
   // Hack to avoid static initialization order problems on OSX
-  if( coverage_string.size() == 0 ) {
+  if( coverage_string.empty() ) {
     coverage_string.push_back(SGCloudLayer::SG_CLOUD_CLEAR_STRING);
     coverage_string.push_back(SGCloudLayer::SG_CLOUD_FEW_STRING);
     coverage_string.push_back(SGCloudLayer::SG_CLOUD_SCATTERED_STRING);
@@ -201,7 +201,7 @@ void MetarProperties::set_metar( const char * metar )
 
     _decoded.clear();
     const vector<string> weather = m->getWeather();
-    for( vector<string>::const_iterator it = weather.begin(); it != weather.end(); it++ ) {
+    for( vector<string>::const_iterator it = weather.begin(); it != weather.end(); ++it ) {
         if( false == _decoded.empty() ) _decoded.append(", ");
         _decoded.append(*it);
     }
