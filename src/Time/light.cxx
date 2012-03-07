@@ -97,7 +97,7 @@ FGLight::~FGLight ()
 // initialize lighting tables
 void FGLight::init () {
     SG_LOG( SG_EVENT, SG_INFO, 
-	    "Initializing Lighting interpolation tables." );
+            "Initializing Lighting interpolation tables." );
 
     // build the path names of the lookup tables
     SGPath path( globals->get_fg_root() );
@@ -145,35 +145,36 @@ void FGLight::bind () {
     SGPropertyNode *prop = globals->get_props();
 
     // Write Only
-    prop->tie("/rendering/scene/saturation",SGRawValuePointer<float>(&_saturation));
-    prop->tie("/rendering/scene/scattering",SGRawValuePointer<float>(&_scattering));
-    prop->tie("/rendering/scene/overcast",SGRawValuePointer<float>(&_overcast));
+    tie(prop,"/rendering/scene/saturation",     SGRawValuePointer<float>(&_saturation));
+    tie(prop,"/rendering/scene/scattering",     SGRawValuePointer<float>(&_scattering));
+    tie(prop,"/rendering/scene/overcast",       SGRawValuePointer<float>(&_overcast));
 
     _sunAngleRad = prop->getNode("/sim/time/sun-angle-rad", true);
     _sunAngleRad->setDoubleValue(_sun_angle);
-    
+
     // Read Only
-    prop->tie("/rendering/scene/ambient/red",SGRawValuePointer<float>(&_scene_ambient[0]));
-    prop->tie("/rendering/scene/ambient/green",SGRawValuePointer<float>(&_scene_ambient[1]));
-    prop->tie("/rendering/scene/ambient/blue",SGRawValuePointer<float>(&_scene_ambient[2]));
-    prop->tie("/rendering/scene/diffuse/red",SGRawValuePointer<float>(&_scene_diffuse[0]));
-    prop->tie("/rendering/scene/diffuse/green",SGRawValuePointer<float>(&_scene_diffuse[1]));
-    prop->tie("/rendering/scene/diffuse/blue",SGRawValuePointer<float>(&_scene_diffuse[2]));
-    prop->tie("/rendering/scene/specular/red",SGRawValuePointer<float>(&_scene_specular[0]));
-    prop->tie("/rendering/scene/specular/green",SGRawValuePointer<float>(&_scene_specular[1]));
-    prop->tie("/rendering/scene/specular/blue",SGRawValuePointer<float>(&_scene_specular[2]));
-    prop->tie("/rendering/dome/sun/red",SGRawValuePointer<float>(&_sun_color[0]));
-    prop->tie("/rendering/dome/sun/green",SGRawValuePointer<float>(&_sun_color[1]));
-    prop->tie("/rendering/dome/sun/blue",SGRawValuePointer<float>(&_sun_color[2]));
-    prop->tie("/rendering/dome/sky/red",SGRawValuePointer<float>(&_sky_color[0]));
-    prop->tie("/rendering/dome/sky/green",SGRawValuePointer<float>(&_sky_color[1]));
-    prop->tie("/rendering/dome/sky/blue",SGRawValuePointer<float>(&_sky_color[2]));
-    prop->tie("/rendering/dome/cloud/red",SGRawValuePointer<float>(&_cloud_color[0]));
-    prop->tie("/rendering/dome/cloud/green",SGRawValuePointer<float>(&_cloud_color[1]));
-    prop->tie("/rendering/dome/cloud/blue",SGRawValuePointer<float>(&_cloud_color[2]));
-    prop->tie("/rendering/dome/fog/red",SGRawValuePointer<float>(&_fog_color[0]));
-    prop->tie("/rendering/dome/fog/green",SGRawValuePointer<float>(&_fog_color[1]));
-    prop->tie("/rendering/dome/fog/blue",SGRawValuePointer<float>(&_fog_color[2]));
+    tie(prop,"/rendering/scene/ambient/red",    SGRawValuePointer<float>(&_scene_ambient[0]));
+    tie(prop,"/rendering/scene/ambient/green",  SGRawValuePointer<float>(&_scene_ambient[1]));
+    tie(prop,"/rendering/scene/ambient/blue",   SGRawValuePointer<float>(&_scene_ambient[2]));
+    tie(prop,"/rendering/scene/diffuse/red",    SGRawValuePointer<float>(&_scene_diffuse[0]));
+    tie(prop,"/rendering/scene/diffuse/green",  SGRawValuePointer<float>(&_scene_diffuse[1]));
+    tie(prop,"/rendering/scene/diffuse/blue",   SGRawValuePointer<float>(&_scene_diffuse[2]));
+    tie(prop,"/rendering/scene/specular/red",   SGRawValuePointer<float>(&_scene_specular[0]));
+    tie(prop,"/rendering/scene/specular/green", SGRawValuePointer<float>(&_scene_specular[1]));
+    tie(prop,"/rendering/scene/specular/blue",  SGRawValuePointer<float>(&_scene_specular[2]));
+    tie(prop,"/rendering/dome/sun/red",         SGRawValuePointer<float>(&_sun_color[0]));
+    tie(prop,"/rendering/dome/sun/green",       SGRawValuePointer<float>(&_sun_color[1]));
+    tie(prop,"/rendering/dome/sun/blue",        SGRawValuePointer<float>(&_sun_color[2]));
+    tie(prop,"/rendering/dome/sky/red",         SGRawValuePointer<float>(&_sky_color[0]));
+    tie(prop,"/rendering/dome/sky/green",       SGRawValuePointer<float>(&_sky_color[1]));
+    tie(prop,"/rendering/dome/sky/blue",        SGRawValuePointer<float>(&_sky_color[2]));
+    tie(prop,"/rendering/dome/cloud/red",       SGRawValuePointer<float>(&_cloud_color[0]));
+    tie(prop,"/rendering/dome/cloud/green",     SGRawValuePointer<float>(&_cloud_color[1]));
+    tie(prop,"/rendering/dome/cloud/blue",      SGRawValuePointer<float>(&_cloud_color[2]));
+    tie(prop,"/rendering/dome/fog/red",         SGRawValuePointer<float>(&_fog_color[0]));
+    tie(prop,"/rendering/dome/fog/green",       SGRawValuePointer<float>(&_fog_color[1]));
+    tie(prop,"/rendering/dome/fog/blue",        SGRawValuePointer<float>(&_fog_color[2]));
+
     // Properties used directly by effects
     _chromeProps[0] = prop->getNode("/rendering/scene/chrome-light/red", true);
     _chromeProps[1] = prop->getNode("/rendering/scene/chrome-light/green",
@@ -186,31 +187,7 @@ void FGLight::bind () {
 }
 
 void FGLight::unbind () {
-    SGPropertyNode *prop = globals->get_props();
-    prop->untie("/rendering/scene/saturation");
-    prop->untie("/rendering/scene/scattering");
-    prop->untie("/rendering/scene/overcast");
-    prop->untie("/rendering/scene/ambient/red");
-    prop->untie("/rendering/scene/ambient/green");
-    prop->untie("/rendering/scene/ambient/blue");
-    prop->untie("/rendering/scene/diffuse/red");
-    prop->untie("/rendering/scene/diffuse/green");
-    prop->untie("/rendering/scene/diffuse/blue");
-    prop->untie("/rendering/scene/specular/red");
-    prop->untie("/rendering/scene/specular/green");
-    prop->untie("/rendering/scene/specular/blue");
-    prop->untie("/rendering/dome/sun/red");
-    prop->untie("/rendering/dome/sun/green");
-    prop->untie("/rendering/dome/sun/blue");
-    prop->untie("/rendering/dome/sky/red");
-    prop->untie("/rendering/dome/sky/green");
-    prop->untie("/rendering/dome/sky/blue");
-    prop->untie("/rendering/dome/cloud/red");
-    prop->untie("/rendering/dome/cloud/green");
-    prop->untie("/rendering/dome/cloud/blue");
-    prop->untie("/rendering/dome/fog/red");
-    prop->untie("/rendering/dome/fog/green");
-    prop->untie("/rendering/dome/fog/blue");
+    _tiedProperties.Untie();
 }
 
 
@@ -259,8 +236,8 @@ void FGLight::update_sky_color () {
     sky_brightness *= _saturation;
 
     SG_LOG( SG_EVENT, SG_DEBUG,
-	    "  ambient = " << ambient << "  diffuse = " << diffuse 
-	    << "  specular = " << specular << "  sky = " << sky_brightness );
+            "  ambient = " << ambient << "  diffuse = " << diffuse
+            << "  specular = " << specular << "  sky = " << sky_brightness );
 
     // sky_brightness = 0.15;  // used to force a dark sky (when testing)
 
@@ -329,18 +306,18 @@ void FGLight::update_adj_fog_color () {
 
     // Do some sanity checking ...
     if ( _sun_rotation < -2.0 * SGD_2PI || _sun_rotation > 2.0 * SGD_2PI ) {
-	SG_LOG( SG_EVENT, SG_ALERT, "Sun rotation bad = " << _sun_rotation );
-	return;
+        SG_LOG( SG_EVENT, SG_ALERT, "Sun rotation bad = " << _sun_rotation );
+        return;
     }
 
     if ( heading < -2.0 * SGD_2PI || heading > 2.0 * SGD_2PI ) {
-	SG_LOG( SG_EVENT, SG_ALERT, "Heading rotation bad = " << heading );
-	return;
+        SG_LOG( SG_EVENT, SG_ALERT, "Heading rotation bad = " << heading );
+        return;
     }
 
     if ( heading_offset < -2.0 * SGD_2PI || heading_offset > 2.0 * SGD_2PI ) {
-	SG_LOG( SG_EVENT, SG_ALERT, "Heading offset bad = " << heading_offset );
-	return;
+        SG_LOG( SG_EVENT, SG_ALERT, "Heading offset bad = " << heading_offset );
+        return;
     }
 
     static float gamma = system_gamma;
