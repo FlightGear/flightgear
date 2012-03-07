@@ -404,8 +404,8 @@ void FGRouteMgr::postinit()
     }
     
     SG_LOG(SG_AUTOPILOT, SG_INFO, "loaded initial waypoints:" << _route.size());
+    update_mirror();
   }
-  update_mirror();
 
   weightOnWheels = fgGetNode("/gear/gear[0]/wow", true);
   // check airbone flag agrees with presets
@@ -1345,28 +1345,37 @@ bool FGRouteMgr::loadRoute(const SGPath& path)
   
   SG_LOG(SG_IO, SG_INFO, "going to read flight-plan from:" << path.str());
     
+  bool Status = false;
   try {
     readProperties(path.str(), routeData);
   } catch (sg_exception& ) {
     // if XML parsing fails, the file might be simple textual list of waypoints
-    return loadPlainTextRoute(path);
+    Status = loadPlainTextRoute(path);
+    routeData = 0;
   }
-  
-  try {
-    int version = routeData->getIntValue("version", 1);
-    if (version == 1) {
-      loadVersion1XMLRoute(routeData);
-    } else if (version == 2) {
-      loadVersion2XMLRoute(routeData);
-    } else {
-      throw sg_io_exception("unsupported XML route version");
-    }
-    return true;
-  } catch (sg_exception& e) {
-    SG_LOG(SG_IO, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
-      << "'. " << e.getMessage());
-    return false;
+
+  if (routeData.valid())
+  {
+      try {
+        int version = routeData->getIntValue("version", 1);
+        if (version == 1) {
+          loadVersion1XMLRoute(routeData);
+        } else if (version == 2) {
+          loadVersion2XMLRoute(routeData);
+        } else {
+          throw sg_io_exception("unsupported XML route version");
+        }
+        Status = true;
+      } catch (sg_exception& e) {
+        SG_LOG(SG_IO, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
+          << "'. " << e.getMessage());
+        Status = false;
+      }
   }
+
+  update_mirror();
+
+  return Status;
 }
 
 void FGRouteMgr::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
