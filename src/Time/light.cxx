@@ -349,8 +349,6 @@ void FGLight::update_adj_fog_color () {
     // direction to the sun
     //double vert_rotation = pitch + pitch_offset;
 
-    double hor_rotation = -_sun_rotation + SGD_PI - heading + heading_offset;
-
     // revert to unmodified values before using them.
     //
     SGSky* thesky = globals->get_renderer()->getSky();
@@ -379,15 +377,15 @@ void FGLight::update_adj_fog_color () {
     if (sif < 1e-4)
        sif = 1e-4;
 
-    float rf1 = fabs(fmod(hor_rotation, SGD_2PI) - SGD_PI) / SGD_PI;
+    // determine horizontal angle between current view direction and sun
+    double hor_rotation = -_sun_rotation - SGD_PI_2 - heading + heading_offset;
+    if (hor_rotation < 0 )
+        hor_rotation = fmod(hor_rotation, SGD_2PI) + SGD_2PI;
+    else
+        hor_rotation = fmod(hor_rotation, SGD_2PI);
+
+    float rf1 = fabs((hor_rotation - SGD_PI) / SGD_PI); // 0.0 .. 1.0
     float rf2 = avf * pow(rf1*rf1, 1/sif) * 1.0639 * _saturation * _scattering;
-
-    // HACK: clamp rf2 to 1.0.
-    // Somehow, rf2 is huge at certain sun angles (around midnight), which results in
-    // rf3 being negative and hence negative fog colors and weird display issues...
-    // Something more fundamental may be wrong with the formulas here...
-    if (rf2>1.0) rf2 = 1.0;
-
     float rf3 = 1.0 - rf2;
 
     gamma = system_gamma * (0.9 - sif*avf);
