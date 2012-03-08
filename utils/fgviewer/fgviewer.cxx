@@ -48,19 +48,6 @@
 #include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/scene/model/modellib.hxx>
 
-class DummyLoadHelper : public simgear::ModelLoadHelper {
-public:
-    virtual osg::Node *loadTileModel(const string& modelPath, bool)
-    {
-        try {
-            return simgear::SGModelLib::loadModel(modelPath, simgear::getPropertyRoot());
-        } catch (...) {
-            std::cerr << "Error loading \"" << modelPath << "\"" << std::endl;
-            return 0;
-        }
-    }
-};
-
 int
 main(int argc, char** argv)
 {
@@ -68,8 +55,7 @@ main(int argc, char** argv)
     // pulled in by the linker ...
     // FIXME: make that more explicit clear and call an initialization function
     simgear::ModelRegistry::instance();
-    DummyLoadHelper dummyLoadHelper;
-    simgear::TileEntry::setModelLoadHelper(&dummyLoadHelper);
+    simgear::TileEntry::setModelLoadHelper(NULL);
 
     // use an ArgumentParser object to manage the program arguments.
     osg::ArgumentParser arguments(&argc, argv);
@@ -136,17 +122,6 @@ main(int argc, char** argv)
         path.append("Scenery");
         fg_scenery = path.str();
     }
-    string_list path_list = sgPathSplit(fg_scenery);
-    osgDB::FilePathList filePathList;
-    filePathList.push_back(fg_root);
-    for (unsigned i = 0; i < path_list.size(); ++i) {
-        SGPath pt(path_list[i]), po(path_list[i]);
-        pt.append("Terrain");
-        po.append("Objects");
-        filePathList.push_back(path_list[i]);
-        filePathList.push_back(pt.str());
-        filePathList.push_back(po.str());
-    }
 
     SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
     sgUserDataInit(props.get());
@@ -178,11 +153,11 @@ main(int argc, char** argv)
         options = new simgear::SGReaderWriterOptions(*ropt);
     else
         options = new simgear::SGReaderWriterOptions;
-    options->getDatabasePathList() = filePathList;
+    osgDB::convertStringPathIntoFilePathList(fg_scenery,
+                                             options->getDatabasePathList());
     options->setMaterialLib(ml);
     options->setPropertyNode(props);
     options->setPluginStringData("SimGear::FG_ROOT", fg_root);
-    options->setPluginStringData("SimGear::FG_SCENERY", fg_scenery);
     osgDB::Registry::instance()->setOptions(options.get());
 
     // Here, all arguments are processed
