@@ -133,7 +133,7 @@ void FGKeyboardInput::postinit()
 
 void FGKeyboardInput::bind()
 {
-  _tiedProperties.setRoot(fgGetNode("/device/status", true));
+  _tiedProperties.setRoot(fgGetNode("/devices/status", true));
   _tiedProperties.Tie("keyboard",       getModifiers);
   _tiedProperties.Tie("keyboard/shift", getModShift);
   _tiedProperties.Tie("keyboard/ctrl",  getModCtrl);
