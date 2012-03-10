@@ -205,14 +205,12 @@ void installCullVisitor(Camera* camera)
 
 namespace flightgear
 {
-void updateCameras(const CameraInfo* info)
+void CameraInfo::updateCameras()
 {
-    if (info->camera.valid())
-        info->camera->getViewport()->setViewport(info->x, info->y,
-                                                 info->width, info->height);
-    if (info->farCamera.valid())
-        info->farCamera->getViewport()->setViewport(info->x, info->y,
-                                                    info->width, info->height);
+    if (camera.valid())
+        camera->getViewport()->setViewport(x, y, width, height);
+    if (farCamera.valid())
+        farCamera->getViewport()->setViewport(x, y, width, height);
 }
 
 CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
@@ -277,7 +275,7 @@ void CameraGroup::update(const osg::Vec3d& position,
         const View::Slave& slave = _viewer->getSlave(info->slaveIndex);
 #if SG_OSG_VERSION_LESS_THAN(3,0,0)
         // refreshes camera viewports (for now)
-        updateCameras(info);
+        info->updateCameras();
 #endif
         Camera* camera = info->camera.get();
         Matrix viewMatrix;
@@ -881,7 +879,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     // out of the SceneView objects in the viewer, and the coordinates
     // of mouse events are somewhat bizzare.
     buildViewport(info, viewportNode, window->gc->getTraits());
-    updateCameras(info);
+    info->updateCameras();
     // Distortion camera needs the viewport which is created by addCamera().
     if (psNode) {
         info->flags = info->flags | VIEW_ABSOLUTE;
@@ -934,7 +932,7 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
 
     // Disable statistics for the GUI camera.
     result->camera->setStats(0);
-    updateCameras(result);
+    result->updateCameras();
     return result;
 }
 

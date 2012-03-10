@@ -58,6 +58,9 @@ struct CameraInfo : public osg::Referenced
           relativeCameraParent(~0u)
     {
     }
+	/** Update and resize cameras
+	 */
+	void updateCameras();
     /** The name as given in the config file.
      */
     std::string name;
