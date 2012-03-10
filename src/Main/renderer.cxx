@@ -62,9 +62,11 @@
 
 #include <osg/io_utils>
 #include <osgDB/WriteFile>
+#include <osgViewer/Renderer>
 
 #include <simgear/math/SGMath.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/sky/sky.hxx>
@@ -498,6 +500,80 @@ FGRenderer::init( void )
     }
     
     _sky->texture_path( texture_path.str() );
+}
+
+void installCullVisitor(Camera* camera)
+{
+    osgViewer::Renderer* renderer
+        = static_cast<osgViewer::Renderer*>(camera->getRenderer());
+    for (int i = 0; i < 2; ++i) {
+        osgUtil::SceneView* sceneView = renderer->getSceneView(i);
+#if SG_OSG_VERSION_LESS_THAN(3,0,0)
+        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
+#else
+        osg::ref_ptr<osgUtil::CullVisitor::Identifier> identifier;
+        identifier = sceneView->getCullVisitor()->getIdentifier();
+        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
+        sceneView->getCullVisitor()->setIdentifier(identifier.get());
+
+        identifier = sceneView->getCullVisitorLeft()->getIdentifier();
+        sceneView->setCullVisitorLeft(sceneView->getCullVisitor()->clone());
+        sceneView->getCullVisitorLeft()->setIdentifier(identifier.get());
+
+        identifier = sceneView->getCullVisitorRight()->getIdentifier();
+        sceneView->setCullVisitorRight(sceneView->getCullVisitor()->clone());
+        sceneView->getCullVisitorRight()->setIdentifier(identifier.get());
+#endif
+    }
+}
+
+flightgear::CameraInfo* FGRenderer::buildRenderingPipeline(flightgear::CameraGroup* cgroup, unsigned flags, Camera* camera,
+                                   const Matrix& view,
+                                   const Matrix& projection,
+                                   bool useMasterSceneData)
+{
+    CameraInfo* info = new CameraInfo(flags);
+    // The camera group will always update the camera
+    camera->setReferenceFrame(Transform::ABSOLUTE_RF);
+
+    Camera* farCamera = 0;
+    if ((flags & (CameraGroup::GUI | CameraGroup::ORTHO)) == 0) {
+        farCamera = new Camera;
+        farCamera->setAllowEventFocus(camera->getAllowEventFocus());
+        farCamera->setGraphicsContext(camera->getGraphicsContext());
+        farCamera->setCullingMode(camera->getCullingMode());
+        farCamera->setInheritanceMask(camera->getInheritanceMask());
+        farCamera->setReferenceFrame(Transform::ABSOLUTE_RF);
+        // Each camera's viewport is written when the window is
+        // resized; if the the viewport isn't copied here, it gets updated
+        // twice and ends up with the wrong value.
+        farCamera->setViewport(simgear::clone(camera->getViewport()));
+        farCamera->setDrawBuffer(camera->getDrawBuffer());
+        farCamera->setReadBuffer(camera->getReadBuffer());
+        farCamera->setRenderTargetImplementation(
+            camera->getRenderTargetImplementation());
+        const Camera::BufferAttachmentMap& bufferMap
+            = camera->getBufferAttachmentMap();
+        if (bufferMap.count(Camera::COLOR_BUFFER) != 0) {
+            farCamera->attach(
+                Camera::COLOR_BUFFER,
+                bufferMap.find(Camera::COLOR_BUFFER)->second._texture.get());
+        }
+        cgroup->getViewer()->addSlave(farCamera, projection, view, useMasterSceneData);
+        installCullVisitor(farCamera);
+        info->farCamera = farCamera;
+        info->farSlaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
+        farCamera->setRenderOrder(Camera::POST_RENDER, info->farSlaveIndex);
+        camera->setCullMask(camera->getCullMask() & ~simgear::BACKGROUND_BIT);
+        camera->setClearMask(GL_DEPTH_BUFFER_BIT);
+    }
+    cgroup->getViewer()->addSlave(camera, projection, view, useMasterSceneData);
+    installCullVisitor(camera);
+    info->camera = camera;
+    info->slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
+    camera->setRenderOrder(Camera::POST_RENDER, info->slaveIndex);
+    cgroup->addCamera(info);
+    return info;
 }
 
 void

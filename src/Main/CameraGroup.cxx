@@ -176,31 +176,6 @@ void makeNewProjMat(Matrixd& oldProj, double znear,
                                          0.0, 0.0, center*ratio, 1.0));
     }
 }
-
-void installCullVisitor(Camera* camera)
-{
-    osgViewer::Renderer* renderer
-        = static_cast<osgViewer::Renderer*>(camera->getRenderer());
-    for (int i = 0; i < 2; ++i) {
-        osgUtil::SceneView* sceneView = renderer->getSceneView(i);
-#if SG_OSG_VERSION_LESS_THAN(3,0,0)
-        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
-#else
-        osg::ref_ptr<osgUtil::CullVisitor::Identifier> identifier;
-        identifier = sceneView->getCullVisitor()->getIdentifier();
-        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
-        sceneView->getCullVisitor()->setIdentifier(identifier.get());
-
-        identifier = sceneView->getCullVisitorLeft()->getIdentifier();
-        sceneView->setCullVisitorLeft(sceneView->getCullVisitor()->clone());
-        sceneView->getCullVisitorLeft()->setIdentifier(identifier.get());
-
-        identifier = sceneView->getCullVisitorRight()->getIdentifier();
-        sceneView->setCullVisitorRight(sceneView->getCullVisitor()->clone());
-        sceneView->getCullVisitorRight()->setIdentifier(identifier.get());
-#endif
-    }
-}
 }
 
 namespace flightgear
@@ -211,55 +186,6 @@ void CameraInfo::updateCameras()
         camera->getViewport()->setViewport(x, y, width, height);
     if (farCamera.valid())
         farCamera->getViewport()->setViewport(x, y, width, height);
-}
-
-CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
-                                   const Matrix& view,
-                                   const Matrix& projection,
-                                   bool useMasterSceneData)
-{
-    CameraInfo* info = new CameraInfo(flags);
-    // The camera group will always update the camera
-    camera->setReferenceFrame(Transform::ABSOLUTE_RF);
-
-    Camera* farCamera = 0;
-    if ((flags & (GUI | ORTHO)) == 0) {
-        farCamera = new Camera;
-        farCamera->setAllowEventFocus(camera->getAllowEventFocus());
-        farCamera->setGraphicsContext(camera->getGraphicsContext());
-        farCamera->setCullingMode(camera->getCullingMode());
-        farCamera->setInheritanceMask(camera->getInheritanceMask());
-        farCamera->setReferenceFrame(Transform::ABSOLUTE_RF);
-        // Each camera's viewport is written when the window is
-        // resized; if the the viewport isn't copied here, it gets updated
-        // twice and ends up with the wrong value.
-        farCamera->setViewport(simgear::clone(camera->getViewport()));
-        farCamera->setDrawBuffer(camera->getDrawBuffer());
-        farCamera->setReadBuffer(camera->getReadBuffer());
-        farCamera->setRenderTargetImplementation(
-            camera->getRenderTargetImplementation());
-        const Camera::BufferAttachmentMap& bufferMap
-            = camera->getBufferAttachmentMap();
-        if (bufferMap.count(Camera::COLOR_BUFFER) != 0) {
-            farCamera->attach(
-                Camera::COLOR_BUFFER,
-                bufferMap.find(Camera::COLOR_BUFFER)->second._texture.get());
-        }
-        _viewer->addSlave(farCamera, projection, view, useMasterSceneData);
-        installCullVisitor(farCamera);
-        info->farCamera = farCamera;
-        info->farSlaveIndex = _viewer->getNumSlaves() - 1;
-        farCamera->setRenderOrder(Camera::POST_RENDER, info->farSlaveIndex);
-        camera->setCullMask(camera->getCullMask() & ~simgear::BACKGROUND_BIT);
-        camera->setClearMask(GL_DEPTH_BUFFER_BIT);
-    }
-    _viewer->addSlave(camera, projection, view, useMasterSceneData);
-    installCullVisitor(camera);
-    info->camera = camera;
-    info->slaveIndex = _viewer->getNumSlaves() - 1;
-    camera->setRenderOrder(Camera::POST_RENDER, info->slaveIndex);
-    _cameras.push_back(info);
-    return info;
 }
 
 void CameraGroup::update(const osg::Vec3d& position,
@@ -861,7 +787,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     }
     const SGPropertyNode* psNode = cameraNode->getNode("panoramic-spherical");
     bool useMasterSceneGraph = !psNode;
-    CameraInfo* info = addCamera(cameraFlags, camera, vOff, pOff,
+	CameraInfo* info = globals->get_renderer()->buildRenderingPipeline(this, cameraFlags, camera, vOff, pOff,
                                  useMasterSceneGraph);
     info->name = cameraNode->getStringValue("name");
     info->physicalWidth = physicalWidth;
@@ -925,7 +851,7 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     camera->setProjectionResizePolicy(Camera::FIXED);
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
     const int cameraFlags = GUI | DO_INTERSECTION_TEST;
-    CameraInfo* result = addCamera(cameraFlags, camera, Matrixd::identity(),
+    CameraInfo* result = globals->get_renderer()->buildRenderingPipeline(this, cameraFlags, camera, Matrixd::identity(),
                                    Matrixd::identity(), false);
     SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
     buildViewport(result, viewportNode, window->gc->getTraits());

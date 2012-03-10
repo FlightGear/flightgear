@@ -134,19 +134,6 @@ public:
      * @return the viewer
      */
     osgViewer::Viewer* getViewer() { return _viewer.get(); }
-    /** Add a camera to the group. The camera is added to the viewer
-     * as a slave. See osgViewer::Viewer::addSlave.
-     * @param flags properties of the camera; see CameraGroup::Flags
-     * @param projection slave projection matrix
-     * @param view slave view matrix
-     * @param useMasterSceneData whether the camera displays the
-     * viewer's scene data.
-     * @return a CameraInfo object for the camera.
-     */
-    CameraInfo* addCamera(unsigned flags, osg::Camera* camera,
-                          const osg::Matrix& projection,
-                          const osg::Matrix& view,
-                          bool useMasterSceneData = true);
     /** Create an osg::Camera from a property node and add it to the
      * camera group.
      * @param cameraNode the property node.
@@ -197,6 +184,7 @@ public:
     CameraIterator camerasEnd() { return _cameras.end(); }
     ConstCameraIterator camerasBegin() const { return _cameras.begin(); }
     ConstCameraIterator camerasEnd() const { return _cameras.end(); }
+    void addCamera(CameraInfo* info) { _cameras.push_back(info); }
     /** Build a complete CameraGroup from a property node.
      * @param viewer the viewer associated with this camera group.
      * @param the camera group property node.

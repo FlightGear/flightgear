@@ -7,6 +7,7 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <osg/ref_ptr>
+#include <osg/Matrix>
 
 namespace osg
 {
@@ -32,6 +33,8 @@ class Viewer;
 namespace flightgear
 {
 class FGEventHandler;
+struct CameraInfo;
+class CameraGroup;
 }
 
 class SGSky;
@@ -69,8 +72,22 @@ public:
     void setEventHandler(flightgear::FGEventHandler* manipulator);
 
     /** Add a top level camera.
-    */
+     */
     void addCamera(osg::Camera* camera, bool useSceneData);
+
+    /** Add a camera to the group. The camera is added to the viewer
+     * as a slave. See osgViewer::Viewer::addSlave.
+     * @param flags properties of the camera; see CameraGroup::Flags
+     * @param projection slave projection matrix
+     * @param view slave view matrix
+     * @param useMasterSceneData whether the camera displays the
+     * viewer's scene data.
+     * @return a CameraInfo object for the camera.
+     */
+	flightgear::CameraInfo* buildRenderingPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                   const osg::Matrix& view,
+                                   const osg::Matrix& projection,
+                                   bool useMasterSceneData);
 
     SGSky* getSky() const { return _sky; }
     
