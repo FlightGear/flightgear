@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\3rdParty\include"
+				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_44_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;NOMINMAX;HAVE_SVN_CLIENT_H;HAVE_LIBSVN_CLIENT_1;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -66,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ul_d.lib sg_d.lib net_d.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib"
+				AdditionalDependencies="winmm.lib ul_d.lib sg_d.lib net_d.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"

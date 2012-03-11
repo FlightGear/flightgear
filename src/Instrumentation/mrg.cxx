@@ -6,6 +6,10 @@
 // TODO:
 // - better spin-up
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
 

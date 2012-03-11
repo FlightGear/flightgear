@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "Jet.hpp"
 #include "Thruster.hpp"
 #include "PropEngine.hpp"
