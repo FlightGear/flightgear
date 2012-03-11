@@ -89,6 +89,19 @@ public:
                                    const osg::Matrix& projection,
                                    bool useMasterSceneData);
 
+	/**
+	 */
+	flightgear::CameraInfo* buildClassicalPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                   const osg::Matrix& view,
+                                   const osg::Matrix& projection,
+                                   bool useMasterSceneData);
+
+	/**
+	 */
+	flightgear::CameraInfo* buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                   const osg::Matrix& view,
+                                   const osg::Matrix& projection);
+
     SGSky* getSky() const { return _sky; }
     
     /**
@@ -108,6 +121,7 @@ protected:
     SGPropertyNode_ptr _virtual_cockpit;
     SGTimeStamp _splash_time;
     SGSky* _sky;
+	bool _classicalRenderer;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

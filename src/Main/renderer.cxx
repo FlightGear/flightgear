@@ -439,6 +439,7 @@ FGRenderer::splashinit( void ) {
 void
 FGRenderer::init( void )
 {
+	_classicalRenderer = !fgGetBool("/sim/rendering/rembrandt", false);
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _scenery_override = fgGetNode("/sim/sceneryloaded-override", true);
     _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
@@ -527,10 +528,23 @@ void installCullVisitor(Camera* camera)
     }
 }
 
-flightgear::CameraInfo* FGRenderer::buildRenderingPipeline(flightgear::CameraGroup* cgroup, unsigned flags, Camera* camera,
+flightgear::CameraInfo*
+FGRenderer::buildRenderingPipeline(flightgear::CameraGroup* cgroup, unsigned flags, Camera* camera,
                                    const Matrix& view,
                                    const Matrix& projection,
                                    bool useMasterSceneData)
+{
+	if (_classicalRenderer || (flags & (CameraGroup::GUI | CameraGroup::ORTHO)))
+		return buildClassicalPipeline( cgroup, flags, camera, view, projection, useMasterSceneData );
+	else
+		return buildDeferredPipeline( cgroup, flags, camera, view, projection );
+}
+
+flightgear::CameraInfo*
+FGRenderer::buildClassicalPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                const osg::Matrix& view,
+                                const osg::Matrix& projection,
+                                bool useMasterSceneData)
 {
     CameraInfo* info = new CameraInfo(flags);
     // The camera group will always update the camera
@@ -575,6 +589,26 @@ flightgear::CameraInfo* FGRenderer::buildRenderingPipeline(flightgear::CameraGro
     cgroup->addCamera(info);
     return info;
 }
+
+flightgear::CameraInfo*
+FGRenderer::buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                const osg::Matrix& view,
+                                const osg::Matrix& projection)
+{
+    CameraInfo* info = new CameraInfo(flags);
+    // The camera group will always update the camera
+    camera->setReferenceFrame(Transform::ABSOLUTE_RF);
+
+    Camera* farCamera = 0;
+    cgroup->getViewer()->addSlave(camera, projection, view, false);
+    installCullVisitor(camera);
+    info->camera = camera;
+    info->slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
+    camera->setRenderOrder(Camera::POST_RENDER, info->slaveIndex);
+    cgroup->addCamera(info);
+    return info;
+}
+
 
 void
 FGRenderer::setupView( void )
