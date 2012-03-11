@@ -575,17 +575,17 @@ FGRenderer::buildClassicalPipeline(flightgear::CameraGroup* cgroup, unsigned fla
         }
         cgroup->getViewer()->addSlave(farCamera, projection, view, useMasterSceneData);
         installCullVisitor(farCamera);
-        info->farCamera = farCamera;
-        info->farSlaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-        farCamera->setRenderOrder(Camera::POST_RENDER, info->farSlaveIndex);
+		int farSlaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
+		info->addCamera( CameraInfo::FAR_CAMERA, farCamera, farSlaveIndex );
+        farCamera->setRenderOrder(Camera::POST_RENDER, farSlaveIndex);
         camera->setCullMask(camera->getCullMask() & ~simgear::BACKGROUND_BIT);
         camera->setClearMask(GL_DEPTH_BUFFER_BIT);
     }
     cgroup->getViewer()->addSlave(camera, projection, view, useMasterSceneData);
     installCullVisitor(camera);
-    info->camera = camera;
-    info->slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-    camera->setRenderOrder(Camera::POST_RENDER, info->slaveIndex);
+    int slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
+	info->addCamera( CameraInfo::MAIN_CAMERA, camera, slaveIndex );
+    camera->setRenderOrder(Camera::POST_RENDER, slaveIndex);
     cgroup->addCamera(info);
     return info;
 }
@@ -602,9 +602,9 @@ FGRenderer::buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flag
     Camera* farCamera = 0;
     cgroup->getViewer()->addSlave(camera, projection, view, false);
     installCullVisitor(camera);
-    info->camera = camera;
-    info->slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-    camera->setRenderOrder(Camera::POST_RENDER, info->slaveIndex);
+    int slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
+	info->addCamera( CameraInfo::MAIN_CAMERA, camera, slaveIndex );
+    camera->setRenderOrder(Camera::POST_RENDER, slaveIndex);
     cgroup->addCamera(info);
     return info;
 }

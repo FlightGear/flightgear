@@ -46,18 +46,37 @@ namespace flightgear
 
 class GraphicsWindow;
 
+struct RenderStageInfo {
+	RenderStageInfo(osg::Camera* camera_ = 0, int si = -1)
+		: camera(camera_), slaveIndex(si), scaleFactor(1.0f)
+	{
+	}
+
+	osg::ref_ptr<osg::Camera> camera;
+	int slaveIndex;
+	float scaleFactor;
+};
+
 /** A wrapper around osg::Camera that contains some extra information.
  */
 struct CameraInfo : public osg::Referenced
 {
     CameraInfo(unsigned flags_, osg::Camera* camera_ = 0)
-        : flags(flags_), camera(camera_), slaveIndex(-1), farSlaveIndex(-1),
+        : flags(flags_),
           x(0.0), y(0.0), width(0.0), height(0.0),
           physicalWidth(0), physicalHeight(0), bezelHeightTop(0),
           bezelHeightBottom(0), bezelWidthLeft(0), bezelWidthRight(0),
           relativeCameraParent(~0u)
     {
+		cameras.insert( std::make_pair( MAIN_CAMERA, camera_ ) );
     }
+
+	enum CameraKind {
+		MAIN_CAMERA,
+		FAR_CAMERA
+	};
+	typedef std::map<CameraKind,RenderStageInfo> CameraMap;
+
 	/** Update and resize cameras
 	 */
 	void updateCameras();
@@ -67,18 +86,13 @@ struct CameraInfo : public osg::Referenced
     /** Properties of the camera. @see CameraGroup::Flags.
      */
     unsigned flags;
-    /** the camera object
+    /** the camera objects
      */
-    osg::ref_ptr<osg::Camera> camera;
-    /** camera for rendering far field, if needed
-     */
-    osg::ref_ptr<osg::Camera> farCamera;
-    /** Index of this camera in the osgViewer::Viewer slave list.
-     */
-    int slaveIndex;
-    /** index of far camera in slave list
-     */
-    int farSlaveIndex;
+	CameraMap cameras;
+	void addCamera( CameraKind k, osg::Camera* c, int si = -1 ) { cameras[k] = RenderStageInfo(c,si); }
+	osg::Camera* getCamera(CameraKind k) const;
+	osg::Camera* getMainCamera() const;
+	int getMainSlaveIndex() const;
     /** Viewport parameters.
      */
     double x;

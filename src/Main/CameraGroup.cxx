@@ -182,10 +182,28 @@ namespace flightgear
 {
 void CameraInfo::updateCameras()
 {
-    if (camera.valid())
-        camera->getViewport()->setViewport(x, y, width, height);
-    if (farCamera.valid())
-        farCamera->getViewport()->setViewport(x, y, width, height);
+	for (CameraMap::iterator ii = cameras.begin(); ii != cameras.end(); ++ii ) {
+		float f = ii->second.scaleFactor;
+		ii->second.camera->getViewport()->setViewport(x*f, y*f, width*f, height*f);
+	}
+}
+
+osg::Camera* CameraInfo::getCamera(CameraKind k) const
+{
+	CameraMap::const_iterator ii = cameras.find( k );
+	if (ii == cameras.end())
+		return 0;
+	return ii->second.camera.get();
+}
+
+osg::Camera* CameraInfo::getMainCamera() const
+{
+	return cameras.find( MAIN_CAMERA )->second.camera.get();
+}
+
+int CameraInfo::getMainSlaveIndex() const
+{
+	return cameras.find( MAIN_CAMERA )->second.slaveIndex;
 }
 
 void CameraGroup::update(const osg::Vec3d& position,
@@ -198,12 +216,12 @@ void CameraGroup::update(const osg::Vec3d& position,
     double masterZoomFactor = zoomFactor();
     for (CameraList::iterator i = _cameras.begin(); i != _cameras.end(); ++i) {
         const CameraInfo* info = i->get();
-        const View::Slave& slave = _viewer->getSlave(info->slaveIndex);
+		const View::Slave& slave = _viewer->getSlave(info->getMainSlaveIndex());
 #if SG_OSG_VERSION_LESS_THAN(3,0,0)
         // refreshes camera viewports (for now)
         info->updateCameras();
 #endif
-        Camera* camera = info->camera.get();
+		Camera* camera = info->getMainCamera();
         Matrix viewMatrix;
       
         if (info->flags & GUI) {
@@ -226,8 +244,9 @@ void CameraGroup::update(const osg::Vec3d& position,
 
                     // The already known projection and view matrix of the parent camera
                     const CameraInfo* parentInfo = _cameras[info->relativeCameraParent].get();
-                    osg::Matrix pP = parentInfo->camera->getProjectionMatrix();
-                    osg::Matrix pR = parentInfo->camera->getViewMatrix();
+					RenderStageInfo prsi = parentInfo->cameras.find(CameraInfo::MAIN_CAMERA)->second;
+                    osg::Matrix pP = prsi.camera->getProjectionMatrix();
+                    osg::Matrix pR = prsi.camera->getViewMatrix();
                     
                     // And the projection matrix derived from P0 so that the reference points match
                     projectionMatrix = relativeProjection(P0, R, info->thisReference,
@@ -245,10 +264,11 @@ void CameraGroup::update(const osg::Vec3d& position,
             projectionMatrix = masterProj * slave._projectionOffset;
         }
 
-        if (!info->farCamera.valid()) {
+		CameraInfo::CameraMap::const_iterator ii = info->cameras.find(CameraInfo::FAR_CAMERA);
+		if (ii == info->cameras.end() || !ii->second.camera.valid()) {
             camera->setProjectionMatrix(projectionMatrix);
         } else {
-            Camera* farCamera = info->farCamera.get();
+            Camera* farCamera = ii->second.camera;
             farCamera->setViewMatrix(viewMatrix);
             double left, right, bottom, top, parentNear, parentFar;
             projectionMatrix.getFrustum(left, right, bottom, top,
@@ -296,7 +316,8 @@ double CameraGroup::getMasterAspectRatio() const
     
     const CameraInfo* info = _cameras.front();
     
-    const osg::Viewport* viewport = info->camera->getViewport();
+	osg::Camera* camera = info->cameras.find(CameraInfo::MAIN_CAMERA)->second.camera.get();
+    const osg::Viewport* viewport = camera->getViewport();
     if (!viewport) {
         return 0.0;
     }
@@ -857,7 +878,7 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     buildViewport(result, viewportNode, window->gc->getTraits());
 
     // Disable statistics for the GUI camera.
-    result->camera->setStats(0);
+    result->getMainCamera()->setStats(0);
     result->updateCameras();
     return result;
 }
@@ -890,17 +911,19 @@ void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
         CameraInfo* info = i->get();
         if (info->flags & GUI)
             continue;
-        if (info->farCamera.valid() && info->farCamera->getNodeMask() != 0) {
-            info->camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
-            info->camera->setCullMaskLeft(nm & ~simgear::BACKGROUND_BIT);
-            info->camera->setCullMaskRight(nm & ~simgear::BACKGROUND_BIT);
-            info->farCamera->setCullMask(nm);
-            info->farCamera->setCullMaskLeft(nm);
-            info->farCamera->setCullMaskRight(nm);
+		osg::ref_ptr<osg::Camera> farCamera = info->getCamera(CameraInfo::FAR_CAMERA);
+		osg::Camera* camera = info->getMainCamera();
+        if (farCamera.valid() && farCamera->getNodeMask() != 0) {
+            camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
+            camera->setCullMaskLeft(nm & ~simgear::BACKGROUND_BIT);
+            camera->setCullMaskRight(nm & ~simgear::BACKGROUND_BIT);
+            farCamera->setCullMask(nm);
+            farCamera->setCullMaskLeft(nm);
+            farCamera->setCullMaskRight(nm);
         } else {
-            info->camera->setCullMask(nm);
-            info->camera->setCullMaskLeft(nm);
-            info->camera->setCullMaskRight(nm);
+            camera->setCullMask(nm);
+            camera->setCullMaskLeft(nm);
+            camera->setCullMaskRight(nm);
         }
     }
 }
@@ -909,7 +932,7 @@ void CameraGroup::resized()
 {
     for (CameraIterator i = camerasBegin(), e = camerasEnd(); i != e; ++i) {
         CameraInfo *info = i->get();
-        const Viewport* viewport = info->camera->getViewport();
+		const Viewport* viewport = info->getMainCamera()->getViewport();
         info->x = viewport->x();
         info->y = viewport->y();
         info->width = viewport->width();
@@ -936,7 +959,7 @@ Camera* getGUICamera(CameraGroup* cgroup)
         return NULL;
     }
     
-    return info->camera.get();
+    return info->getMainCamera();
 }
 
 static bool computeCameraIntersection(const CameraInfo* cinfo,
@@ -951,7 +974,7 @@ static bool computeCameraIntersection(const CameraInfo* cinfo,
   if (!(cinfo->flags & CameraGroup::DO_INTERSECTION_TEST))
     return false;
   
-  const Camera* camera = cinfo->camera.get();
+  const Camera* camera = cinfo->getMainCamera();
   if (camera->getGraphicsContext() != ea->getGraphicsContext())
     return false;
   
@@ -969,10 +992,11 @@ static bool computeCameraIntersection(const CameraInfo* cinfo,
   Matrix startPtMat = Matrix::inverse(camera->getProjectionMatrix()
                                       * windowMat);
   Matrix endPtMat;
-  if (!cinfo->farCamera.valid() || cinfo->farCamera->getNodeMask() == 0)
+  const Camera* farCamera = cinfo->getCamera( CameraInfo::FAR_CAMERA );
+  if (!farCamera || farCamera->getNodeMask() == 0)
     endPtMat = startPtMat;
   else
-    endPtMat = Matrix::inverse(cinfo->farCamera->getProjectionMatrix()
+    endPtMat = Matrix::inverse(farCamera->getProjectionMatrix()
                                * windowMat);
   start = start * startPtMat;
   start /= start.w();
