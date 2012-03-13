@@ -176,7 +176,7 @@ fgSetDefaults ()
     // specified so we can do the right thing for voodoo-1/2 cards.
     // fgSetString("/sim/startup/mouse-pointer", "disabled");
     fgSetString("/sim/control-mode", "joystick");
-    fgSetBool("/sim/auto-coordination", false);
+    fgSetBool("/controls/flight/auto-coordination", false);
 #if defined(WIN32)
     fgSetString("/sim/startup/browser-app", "webrun.bat");
 #elif defined(__APPLE__)
@@ -1359,8 +1359,8 @@ struct OptionDesc {
     {"disable-anti-alias-hud",       false, OPTION_BOOL,   "/sim/hud/color/antialiased", false, "", 0 },
     {"enable-anti-alias-hud",        false, OPTION_BOOL,   "/sim/hud/color/antialiased", true, "", 0 },
     {"control",                      true,  OPTION_STRING, "/sim/control-mode", false, "", 0 },
-    {"disable-auto-coordination",    false, OPTION_BOOL,   "/sim/auto-coordination", false, "", 0 },
-    {"enable-auto-coordination",     false, OPTION_BOOL,   "/sim/auto-coordination", true, "", 0 },
+    {"disable-auto-coordination",    false, OPTION_BOOL,   "/controls/flight/auto-coordination", false, "", 0 },
+    {"enable-auto-coordination",     false, OPTION_BOOL,   "/controls/flight/auto-coordination", true, "", 0 },
     {"browser-app",                  true,  OPTION_STRING, "/sim/startup/browser-app", false, "", 0 },
     {"disable-hud",                  false, OPTION_BOOL,   "/sim/hud/visibility[1]", false, "", 0 },
     {"enable-hud",                   false, OPTION_BOOL,   "/sim/hud/visibility[1]", true, "", 0 },

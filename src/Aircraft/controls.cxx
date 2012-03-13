@@ -215,7 +215,12 @@ FGControls::init ()
         alternate_extension[wheel] = false;
     }
 
-    auto_coordination = fgGetNode("/sim/auto-coordination", true);
+    auto_coordination = fgGetNode("/controls/flight/auto-coordination", true);
+    auto_coordination_factor = fgGetNode("/controls/flight/auto-coordination-factor", false );
+    if( NULL == auto_coordination_factor ) {
+      auto_coordination_factor = fgGetNode("/controls/flight/auto-coordination-factor", true );
+      auto_coordination_factor->setDoubleValue( 0.5 );
+    }
 }
 
 static inline void _SetRoot( simgear::TiedPropertyList & tiedProperties, const char * root, int index = 0 )
@@ -656,11 +661,7 @@ FGControls::set_aileron (double pos)
 {
     aileron = pos;
     SG_CLAMP_RANGE<double>( aileron, -1.0, 1.0 );
-
-    // check for autocoordination
-    if ( auto_coordination->getBoolValue() ) {
-        set_rudder( aileron / 2.0 );
-    }
+    do_autocoordination();
 }
 
 void
@@ -668,11 +669,7 @@ FGControls::move_aileron (double amt)
 {
     aileron += amt;
     SG_CLAMP_RANGE<double>( aileron, -1.0, 1.0 );
-
-    // check for autocoordination
-    if ( auto_coordination->getBoolValue() ) {
-        set_rudder( aileron / 2.0 );
-    }
+    do_autocoordination();
 }
 
 void
