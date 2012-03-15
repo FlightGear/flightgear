@@ -41,8 +41,9 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/material/matlib.hxx>
-#include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
+#include <simgear/scene/util/SGSceneFeatures.hxx>
+#include <simgear/scene/util/SGUpdateVisitor.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/scene/model/modellib.hxx>
@@ -50,13 +51,59 @@
 int
 main(int argc, char** argv)
 {
+    // use an ArgumentParser object to manage the program arguments.
+    osg::ArgumentParser arguments(&argc, argv);
+
+    std::string fg_root;
+    if (arguments.read("--fg-root", fg_root)) {
+    } else if (const char *fg_root_env = std::getenv("FG_ROOT")) {
+        fg_root = fg_root_env;
+    } else {
+        fg_root = PKGLIBDIR;
+    }
+
+    std::string fg_scenery;
+    if (arguments.read("--fg-scenery", fg_scenery)) {
+    } else if (const char *fg_scenery_env = std::getenv("FG_SCENERY")) {
+        fg_scenery = fg_scenery_env;
+    } else {
+        SGPath path(fg_root);
+        path.append("Scenery");
+        fg_scenery = path.str();
+    }
+
+    SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
+    try {
+        SGPath preferencesFile = fg_root;
+        preferencesFile.append("preferences.xml");
+        readProperties(preferencesFile.str(), props);
+    } catch (...) {
+        // In case of an error, at least make summer :)
+        props->getNode("sim/startup/season", true)->setStringValue("summer");
+
+        std::cerr << "Problems loading FlightGear preferences.\n"
+                  << "Probably FG_ROOT is not properly set." << std::endl;
+    }
+
+    std::string config;
+    while (arguments.read("--config", config)) {
+        try {
+            readProperties(config, props);
+        } catch (...) {
+            std::cerr << "Problems loading config file \"" << config
+                      << "\" given on the command line." << std::endl;
+        }
+    }
+
+    std::string prop, value;
+    while (arguments.read("--prop", prop, value)) {
+        props->setStringValue(prop, value);
+    }
+
     // Just reference simgears reader writer stuff so that the globals get
     // pulled in by the linker ...
     // FIXME: make that more explicit clear and call an initialization function
     simgear::ModelRegistry::instance();
-
-    // use an ArgumentParser object to manage the program arguments.
-    osg::ArgumentParser arguments(&argc, argv);
 
     // construct the viewer.
     osgViewer::Viewer viewer(arguments);
@@ -99,41 +146,8 @@ main(int argc, char** argv)
     fog->setDensity(1e-6);
     camera->getOrCreateStateSet()->setAttribute(fog);
 
-    std::string fg_root;
-    if (arguments.read("--fg-root", fg_root)) {
-    } else if (const char *fg_root_env = std::getenv("FG_ROOT")) {
-        fg_root = fg_root_env;
-    } else {
-#if defined(PKGLIBDIR)
-        fg_root = PKGLIBDIR;
-#else
-        fg_root = ".";
-#endif
-    }
-
-    std::string fg_scenery;
-    if (arguments.read("--fg-scenery", fg_scenery)) {
-    } else if (const char *fg_scenery_env = std::getenv("FG_SCENERY")) {
-        fg_scenery = fg_scenery_env;
-    } else {
-        SGPath path(fg_root);
-        path.append("Scenery");
-        fg_scenery = path.str();
-    }
-
-    SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
     sgUserDataInit(props.get());
-    try {
-        SGPath preferencesFile = fg_root;
-        preferencesFile.append("preferences.xml");
-        readProperties(preferencesFile.str(), props);
-    } catch (...) {
-        // In case of an error, at least make summer :)
-        props->getNode("sim/startup/season", true)->setStringValue("summer");
-
-        std::cerr << "Problems loading FlightGear preferences.\n"
-                  << "Probably FG_ROOT is not properly set." << std::endl;
-    }
+    SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::DoNotUseCompression);
     SGMaterialLib* ml = new SGMaterialLib;
     SGPath mpath(fg_root);
     mpath.append("materials.xml");
@@ -156,7 +170,10 @@ main(int argc, char** argv)
     options->setMaterialLib(ml);
     options->setPropertyNode(props);
     options->setPluginStringData("SimGear::FG_ROOT", fg_root);
-    osgDB::Registry::instance()->setOptions(options.get());
+    // We have some problems here, rethink them at some time
+    options->setPluginStringData("SimGear::PARTICLESYSTEM", "OFF");
+    // Omit building bounding volume trees, as the viewer will not run a simulation
+    options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
 
     // Here, all arguments are processed
     arguments.reportRemainingOptionsAsUnrecognized();
