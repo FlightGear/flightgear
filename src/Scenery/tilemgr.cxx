@@ -48,9 +48,7 @@
 #include "SceneryPager.hxx"
 #include "tilemgr.hxx"
 
-using std::for_each;
 using flightgear::SceneryPager;
-using simgear::SGModelLib;
 using simgear::TileEntry;
 using simgear::TileCache;
 
@@ -89,8 +87,9 @@ void FGTileMgr::init() {
     const string_list &sc = globals->get_fg_scenery();
     fp.clear();
     std::copy(sc.begin(), sc.end(), back_inserter(fp));
-
-    TileEntry::setModelLoadHelper(this);
+    _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root());
+    if (!_disableNasalHooks->getBoolValue())
+        _options->setModelData(new FGNasalModelDataProxy);
 
     reinit();
 }
@@ -218,48 +217,6 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
             sched_tile( b, priority, true, 0.0 );
         }
     }
-}
-
-osg::Node*
-FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
-{
-    SGPath fullPath = modelPath;
-    if (fullPath.isRelative()) {
-        string_list sc = globals->get_fg_scenery();
-
-        for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
-            // fg_senery contains empty strings as "markers" (see FGGlobals::set_fg_scenery)
-            if (!it->empty()) {
-                SGPath tmpPath(*it);
-                tmpPath.append(modelPath);
-                if (tmpPath.exists()) {
-                    fullPath = tmpPath;
-                    break;
-                }
-            }
-        }
-    }
-    osg::Node* result = 0;
-    try {
-        if(cacheModel)
-            result =
-                SGModelLib::loadModel(fullPath.str(), globals->get_props(),
-                                      _disableNasalHooks->getBoolValue() ? NULL : new FGNasalModelDataProxy);
-        else
-        {
-            result=
-                SGModelLib::loadDeferredModel(fullPath.str(), globals->get_props(),
-                                              _disableNasalHooks->getBoolValue() ? NULL : new FGNasalModelDataProxy);
-        }
-    } catch (const sg_io_exception& exc) {
-        string m(exc.getMessage());
-        m += " ";
-        m += exc.getLocation().asString();
-        SG_LOG( SG_TERRAIN, SG_ALERT, m );
-    } catch (const sg_exception& exc) { // XXX may be redundant
-        SG_LOG( SG_TERRAIN, SG_ALERT, exc.getMessage());
-    }
-    return result;
 }
 
 /**

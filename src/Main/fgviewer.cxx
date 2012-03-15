@@ -38,21 +38,6 @@
 #include "globals.hxx"
 #include "options.hxx"
 
-class DummyLoadHelper : public simgear::ModelLoadHelper {
-public:
-    virtual osg::Node *loadTileModel(const string& modelPath, bool)
-    {
-        try {
-            SGSharedPtr<SGPropertyNode> prop = new SGPropertyNode;
-            return simgear::SGModelLib::loadModel(modelPath,
-                                                  globals->get_props());
-        } catch (...) {
-            std::cerr << "Error loading \"" << modelPath << "\"" << std::endl;
-            return 0;
-        }
-    }
-};
-
 class GraphDumpHandler : public  osgGA::GUIEventHandler
 {
 public:
@@ -120,8 +105,6 @@ fgviewerMain(int argc, char** argv)
 {
 
     sgUserDataInit(0);
-    DummyLoadHelper dummyLoadHelper;
-    simgear::TileEntry::setModelLoadHelper(&dummyLoadHelper);
 
     // use an ArgumentParser object to manage the program arguments.
     osg::ArgumentParser arguments(&argc, argv);

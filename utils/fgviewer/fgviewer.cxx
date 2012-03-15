@@ -55,7 +55,6 @@ main(int argc, char** argv)
     // pulled in by the linker ...
     // FIXME: make that more explicit clear and call an initialization function
     simgear::ModelRegistry::instance();
-    simgear::TileEntry::setModelLoadHelper(NULL);
 
     // use an ArgumentParser object to manage the program arguments.
     osg::ArgumentParser arguments(&argc, argv);

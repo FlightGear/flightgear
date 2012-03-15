@@ -42,7 +42,7 @@ class SGTerraSync;
 class SGReaderWriterOptions;
 }
 
-class FGTileMgr : public SGSubsystem, public simgear::ModelLoadHelper {
+class FGTileMgr : public SGSubsystem {
 
 private:
 
@@ -110,9 +110,6 @@ public:
     /// within a range of range_m.
     /// lat and lon are expected to be in degrees.
     bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
-
-    // Load a model for a tile
-    osg::Node* loadTileModel(const std::string& modelPath, bool cacheModel);
 
     // Returns true if tiles around current view position have been loaded
     bool isSceneryLoaded();
