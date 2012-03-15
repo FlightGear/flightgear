@@ -28,8 +28,8 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/bucket/newbucket.hxx>
-#include <simgear/scene/tgdb/TileEntry.hxx>
-#include <simgear/scene/tgdb/TileCache.hxx>
+#include "tileentry.hxx"
+#include "tilecache.hxx"
 
 namespace osg
 {
@@ -78,7 +78,7 @@ private:
     /**
      * tile cache
      */
-    simgear::TileCache tile_cache;
+    TileCache tile_cache;
     simgear::SGTerraSync* _terra_sync;
 
     // Update the various queues maintained by the tilemagr (private

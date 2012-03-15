@@ -49,8 +49,6 @@
 #include "tilemgr.hxx"
 
 using flightgear::SceneryPager;
-using simgear::TileEntry;
-using simgear::TileCache;
 
 
 FGTileMgr::FGTileMgr():

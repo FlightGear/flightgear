@@ -27,7 +27,6 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
-#include <simgear/scene/tgdb/TileEntry.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/scene/model/modellib.hxx>
 
