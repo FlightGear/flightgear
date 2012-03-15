@@ -38,44 +38,14 @@ XMLLoader::~XMLLoader() {}
 
 void XMLLoader::load(FGAirportDynamics* d) {
   FGAirportDynamicsXMLLoader visitor(d);
-  if (fgGetBool("/sim/paths/use-custom-scenery-data") == false) {
-   SGPath parkpath( globals->get_fg_root() );
-   parkpath.append( "/AI/Airports/" );
-   parkpath.append( d->getId() );
-   parkpath.append( "parking.xml" );
-   SG_LOG(SG_GENERAL, SG_DEBUG, "running old loader:" << parkpath.c_str());
-   if (parkpath.exists()) {
-       try {
-           readXML(parkpath.str(), visitor);
-           d->init();
-       } 
-       catch (const sg_exception &) {
-       }
-   }
-  } else {
-    if(loadAirportXMLDataIntoVisitor(d->getId(), "groundnet", visitor)) {
-        d->init();
-    }
+  if(loadAirportXMLDataIntoVisitor(d->getId(), "groundnet", visitor)) {
+    d->init();
   }
 }
 
 void XMLLoader::load(FGRunwayPreference* p) {
   FGRunwayPreferenceXMLLoader visitor(p);
-  if (fgGetBool("/sim/paths/use-custom-scenery-data") == false) {
-    SGPath rwyPrefPath( globals->get_fg_root() );
-    rwyPrefPath.append( "AI/Airports/" );
-    rwyPrefPath.append( p->getId() );
-    rwyPrefPath.append( "rwyuse.xml" );
-    if (rwyPrefPath.exists()) {
-        try {
-            readXML(rwyPrefPath.str(), visitor);
-        } 
-        catch (const sg_exception &) {
-        }
-     }
-  } else {
-    loadAirportXMLDataIntoVisitor(p->getId(), "rwyuse", visitor);
-  }
+  loadAirportXMLDataIntoVisitor(p->getId(), "rwyuse", visitor);
 }
 
 void XMLLoader::load(FGSidStar* p) {

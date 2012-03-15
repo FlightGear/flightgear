@@ -403,12 +403,6 @@ void FGAirport::loadProcedures() const
 
 void FGAirport::loadSceneryDefinitions() const
 {  
-  // allow users to disable the scenery data in the short-term
-  // longer term, this option can probably disappear
-  if (!fgGetBool("/sim/paths/use-custom-scenery-data")) {
-    return; 
-  }
-  
   SGPath path;
   SGPropertyNode_ptr rootNode = new SGPropertyNode;
   if (XMLLoader::findAirportData(ident(), "threshold", path)) {

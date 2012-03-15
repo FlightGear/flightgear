@@ -224,8 +224,7 @@ osg::Node*
 FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
 {
     SGPath fullPath = modelPath;
-    if ((fullPath.isRelative())&&
-        (fgGetBool("/sim/paths/use-custom-scenery-data") == true)) {
+    if (fullPath.isRelative()) {
         string_list sc = globals->get_fg_scenery();
 
         for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {

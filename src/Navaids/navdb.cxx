@@ -241,10 +241,6 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
 
 SGPropertyNode* ilsDataForRunwayAndNavaid(FGRunway* aRunway, const std::string& aNavIdent)
 {
-  if (!fgGetBool("/sim/paths/use-custom-scenery-data")) {
-    return NULL; 
-  }
-  
   if (!aRunway) {
     return NULL;
   }
