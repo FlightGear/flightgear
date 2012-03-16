@@ -40,7 +40,7 @@ tar \
 		data/Aircraft/Instruments \
 		data/Aircraft/Instruments-3d \
 		data/Aircraft/UIUC \
-		data/Aircraft/777-200 \
+		data/Aircraft/777 \
 		data/Aircraft/A6M2 \
 		data/Aircraft/ASK13 \
 		data/Aircraft/b1900d \
