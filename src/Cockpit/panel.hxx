@@ -27,7 +27,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
-#include <simgear/props/PropertyObject.hxx>
+#include <simgear/props/propertyObject.hxx>
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/SGBinding.hxx>

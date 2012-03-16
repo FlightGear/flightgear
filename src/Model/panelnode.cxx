@@ -13,7 +13,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 
-#include <simgear/scene/util/OSGMath.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/util/SGPickCallback.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
