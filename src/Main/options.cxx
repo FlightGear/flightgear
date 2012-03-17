@@ -1998,9 +1998,16 @@ void Options::processOptions()
     OptionValueVec::const_iterator it;
     for (it = groupBegin; it != groupEnd; ++it) {      
       int result = p->processOption(it->desc, it->value);
-      if (result == FG_OPTIONS_ERROR) {
-        showUsage();
-        exit(-1);
+      switch(result)
+      {
+          case FG_OPTIONS_ERROR:
+              showUsage();
+              exit(-1); // exit and return an error
+          case FG_OPTIONS_EXIT:
+              exit(0);  // clean exit
+              break;
+          default:
+              break;
       }
     }
     
