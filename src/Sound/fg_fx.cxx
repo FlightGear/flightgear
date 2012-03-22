@@ -64,11 +64,8 @@ FGFX::FGFX ( SGSoundMgr *smgr, const string &refname, SGPropertyNode *props ) :
     SGSampleGroup::_refname = refname;
     SGSampleGroup::_smgr->add(this, refname);
 
-    if (_avionics_enabled->getBoolValue())
-    {
-        _avionics = _smgr->find("avionics", true);
-        _avionics->tie_to_listener();
-    }
+    _avionics = _smgr->find("avionics", true);
+    _avionics->tie_to_listener();
 }
 
 
@@ -143,23 +140,18 @@ FGFX::reinit()
 void
 FGFX::update (double dt)
 {
-    bool active = _avionics_ext->getBoolValue() ||
-                  _internal->getBoolValue();
-
-    if (_avionics_enabled->getBoolValue()) {
-        if (!_avionics) {
-            _avionics = _smgr->find("avionics", true);
-            _avionics->tie_to_listener();
-        }
-
-        if ( active )
+    if ( _enabled->getBoolValue() ) {
+        if ( _avionics_enabled->getBoolValue() &&
+             (_avionics_ext->getBoolValue() ||
+              _internal->getBoolValue()))
+        {
+            // avionics sound is enabled
             _avionics->resume(); // no-op if already in resumed state
+            _avionics->set_volume( _avionics_volume->getFloatValue() );
+        }
         else
             _avionics->suspend();
-        _avionics->set_volume( _avionics_volume->getFloatValue() );
-    }
 
-    if ( _enabled->getBoolValue() ) {
         set_volume( _volume->getDoubleValue() );
         resume();
 
