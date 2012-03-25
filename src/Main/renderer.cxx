@@ -903,6 +903,7 @@ const char *fog_frag_src = ""
 
 osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc )
 {
+    SG_LOG( SG_INPUT, SG_ALERT, "Harmless warning messages on effects not found beyond this point" );
     osg::Camera* camera = new osg::Camera;
 	info->addCamera(flightgear::LIGHTING_CAMERA, camera );
 
@@ -1087,6 +1088,8 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     lightingGroup->addChild( quadCam2 );
 
     camera->addChild( lightingGroup );
+
+    SG_LOG( SG_INPUT, SG_ALERT, "End of harmless warning messages on effects not found" );
 
 	return camera;
 }
