@@ -13,6 +13,7 @@ namespace osg
 {
 class Camera;
 class Group;
+class GraphicsContext;
 }
 
 namespace osgGA
@@ -87,6 +88,7 @@ public:
 	flightgear::CameraInfo* buildRenderingPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
                                    const osg::Matrix& view,
                                    const osg::Matrix& projection,
+								   osg::GraphicsContext* gc,
                                    bool useMasterSceneData);
 
 	/**
@@ -99,10 +101,11 @@ public:
 	/**
 	 */
 	flightgear::CameraInfo* buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
-                                   const osg::Matrix& view,
-                                   const osg::Matrix& projection);
+                                   const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
 
     SGSky* getSky() const { return _sky; }
+
+	void setPlanes( double zNear, double zFar );
     
     /**
      * inform the renderer when the global (2D) panel is changed
@@ -122,6 +125,17 @@ protected:
     SGTimeStamp _splash_time;
     SGSky* _sky;
 	bool _classicalRenderer;
+
+	osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
+	osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
+	osg::ref_ptr<osg::Uniform> _ambientFactor;
+    osg::ref_ptr<osg::Uniform> _sunDiffuse;
+    osg::ref_ptr<osg::Uniform> _sunSpecular;
+    osg::ref_ptr<osg::Uniform> _sunDirection;
+    osg::ref_ptr<osg::Uniform> _planes;
+    osg::ref_ptr<osg::Uniform> _fogColor;
+    osg::ref_ptr<osg::Uniform> _fogDensity;
+
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

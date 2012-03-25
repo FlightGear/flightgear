@@ -32,6 +32,7 @@
 #include <simgear/structure/OSGVersion.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
+#include <simgear/scene/tgdb/userdata.hxx>
 
 #include <algorithm>
 #include <cstring>
@@ -186,6 +187,50 @@ void CameraInfo::updateCameras()
 		float f = ii->second.scaleFactor;
 		ii->second.camera->getViewport()->setViewport(x*f, y*f, width*f, height*f);
 	}
+
+	for (RenderBufferMap::iterator ii = buffers.begin(); ii != buffers.end(); ++ii ) {
+		float f = ii->second.scaleFactor;
+		osg::Texture2D* texture = ii->second.texture.get();
+		if ( texture->getTextureHeight() != height*f || texture->getTextureWidth() != width*f ) {
+			texture->setTextureSize( width*f, height*f );
+			texture->dirtyTextureObject();
+		}
+	}
+}
+
+void CameraInfo::resized(double w, double h)
+{
+	for (RenderBufferMap::iterator ii = buffers.begin(); ii != buffers.end(); ++ii) {
+		float s = ii->second.scaleFactor;
+		ii->second.texture->setTextureSize( w * s, h * s );
+		ii->second.texture->dirtyTextureObject();
+	}
+
+	for (CameraMap::iterator ii = cameras.begin(); ii != cameras.end(); ++ii) {
+		RenderStageInfo& rsi = ii->second;
+		if (!rsi.resizable || rsi.camera->getRenderTargetImplementation() != osg::Camera::FRAME_BUFFER_OBJECT)
+			continue;
+
+        Viewport* vp = rsi.camera->getViewport();
+		vp->width() = w * rsi.scaleFactor;
+		vp->height() = h * rsi.scaleFactor;
+
+        osgViewer::Renderer* renderer
+            = static_cast<osgViewer::Renderer*>(rsi.camera->getRenderer());
+        for (int i = 0; i < 2; ++i) {
+            osgUtil::SceneView* sceneView = renderer->getSceneView(i);
+            sceneView->getRenderStage()->setFrameBufferObject(0);
+            sceneView->getRenderStage()->setCameraRequiresSetUp(true);
+            if (sceneView->getRenderStageLeft()) {
+                sceneView->getRenderStageLeft()->setFrameBufferObject(0);
+                sceneView->getRenderStageLeft()->setCameraRequiresSetUp(true);
+            }
+            if (sceneView->getRenderStageRight()) {
+                sceneView->getRenderStageRight()->setFrameBufferObject(0);
+                sceneView->getRenderStageRight()->setCameraRequiresSetUp(true);
+            }
+        }
+	}
 }
 
 osg::Camera* CameraInfo::getCamera(CameraKind k) const
@@ -196,14 +241,16 @@ osg::Camera* CameraInfo::getCamera(CameraKind k) const
 	return ii->second.camera.get();
 }
 
-osg::Camera* CameraInfo::getMainCamera() const
-{
-	return cameras.find( MAIN_CAMERA )->second.camera.get();
-}
-
 int CameraInfo::getMainSlaveIndex() const
 {
 	return cameras.find( MAIN_CAMERA )->second.slaveIndex;
+}
+
+void CameraInfo::setMatrices(osg::Camera* c)
+{
+    view->set( c->getViewMatrix() );
+    viewInverse->set( osg::Matrix::inverse( c->getViewMatrix() ) );
+    projInverse->set( osg::Matrix::inverse( c->getProjectionMatrix() ) );
 }
 
 void CameraGroup::update(const osg::Vec3d& position,
@@ -216,88 +263,148 @@ void CameraGroup::update(const osg::Vec3d& position,
     double masterZoomFactor = zoomFactor();
     for (CameraList::iterator i = _cameras.begin(); i != _cameras.end(); ++i) {
         const CameraInfo* info = i->get();
-		const View::Slave& slave = _viewer->getSlave(info->getMainSlaveIndex());
+
+		Camera* camera = info->getCamera(MAIN_CAMERA);
+		if ( camera ) {
+			const View::Slave& slave = _viewer->getSlave(info->getMainSlaveIndex());
 #if SG_OSG_VERSION_LESS_THAN(3,0,0)
-        // refreshes camera viewports (for now)
-        info->updateCameras();
+			// refreshes camera viewports (for now)
+			info->updateCameras();
 #endif
-		Camera* camera = info->getMainCamera();
-        Matrix viewMatrix;
-      
-        if (info->flags & GUI) {
-          viewMatrix = osg::Matrix(); // identifty transform on the GUI camera
-        } else if ((info->flags & VIEW_ABSOLUTE) != 0)
-            viewMatrix = slave._viewOffset;
-        else
-            viewMatrix = masterView * slave._viewOffset;
-        camera->setViewMatrix(viewMatrix);
-        Matrix projectionMatrix;
-        
-        if (info->flags & GUI) {
-          projectionMatrix = osg::Matrix::ortho2D(0, info->width, 0, info->height);
-        } else if ((info->flags & PROJECTION_ABSOLUTE) != 0) {
-            if (info->flags & ENABLE_MASTER_ZOOM) {
-                if (info->relativeCameraParent < _cameras.size()) {
-                    // template projection matrix and view matrix of the current camera
-                    osg::Matrix P0 = slave._projectionOffset;
-                    osg::Matrix R = viewMatrix;
+			Matrix viewMatrix;
+			if (info->flags & GUI) {
+				viewMatrix = osg::Matrix(); // identifty transform on the GUI camera
+			} else if ((info->flags & VIEW_ABSOLUTE) != 0)
+				viewMatrix = slave._viewOffset;
+			else
+				viewMatrix = masterView * slave._viewOffset;
+			camera->setViewMatrix(viewMatrix);
+			Matrix projectionMatrix;
+			if (info->flags & GUI) {
+				projectionMatrix = osg::Matrix::ortho2D(0, info->width, 0, info->height);
+			} else if ((info->flags & PROJECTION_ABSOLUTE) != 0) {
+				if (info->flags & ENABLE_MASTER_ZOOM) {
+					if (info->relativeCameraParent < _cameras.size()) {
+						// template projection matrix and view matrix of the current camera
+						osg::Matrix P0 = slave._projectionOffset;
+						osg::Matrix R = viewMatrix;
 
-                    // The already known projection and view matrix of the parent camera
-                    const CameraInfo* parentInfo = _cameras[info->relativeCameraParent].get();
-					RenderStageInfo prsi = parentInfo->cameras.find(CameraInfo::MAIN_CAMERA)->second;
-                    osg::Matrix pP = prsi.camera->getProjectionMatrix();
-                    osg::Matrix pR = prsi.camera->getViewMatrix();
+						// The already known projection and view matrix of the parent camera
+						const CameraInfo* parentInfo = _cameras[info->relativeCameraParent].get();
+						RenderStageInfo prsi = parentInfo->cameras.find(MAIN_CAMERA)->second;
+						osg::Matrix pP = prsi.camera->getProjectionMatrix();
+						osg::Matrix pR = prsi.camera->getViewMatrix();
                     
-                    // And the projection matrix derived from P0 so that the reference points match
-                    projectionMatrix = relativeProjection(P0, R, info->thisReference,
-                                                          pP, pR, info->parentReference);
+						// And the projection matrix derived from P0 so that the reference points match
+						projectionMatrix = relativeProjection(P0, R, info->thisReference,
+															  pP, pR, info->parentReference);
                     
-                } else {
-                    // We want to zoom, so take the original matrix and apply the zoom to it.
-                    projectionMatrix = slave._projectionOffset;
-                    projectionMatrix.postMultScale(osg::Vec3d(masterZoomFactor, masterZoomFactor, 1));
-                }
-            } else {
-                projectionMatrix = slave._projectionOffset;
-            }
-        } else {
-            projectionMatrix = masterProj * slave._projectionOffset;
-        }
+					} else {
+						// We want to zoom, so take the original matrix and apply the zoom to it.
+						projectionMatrix = slave._projectionOffset;
+						projectionMatrix.postMultScale(osg::Vec3d(masterZoomFactor, masterZoomFactor, 1));
+					}
+				} else {
+					projectionMatrix = slave._projectionOffset;
+				}
+			} else {
+				projectionMatrix = masterProj * slave._projectionOffset;
+			}
 
-		CameraInfo::CameraMap::const_iterator ii = info->cameras.find(CameraInfo::FAR_CAMERA);
-		if (ii == info->cameras.end() || !ii->second.camera.valid()) {
-            camera->setProjectionMatrix(projectionMatrix);
-        } else {
-            Camera* farCamera = ii->second.camera;
-            farCamera->setViewMatrix(viewMatrix);
-            double left, right, bottom, top, parentNear, parentFar;
-            projectionMatrix.getFrustum(left, right, bottom, top,
-                                        parentNear, parentFar);
-            if ((info->flags & FIXED_NEAR_FAR) == 0) {
-                parentNear = _zNear;
-                parentFar = _zFar;
-            }
-            if (parentFar < _nearField || _nearField == 0.0f) {
-                camera->setProjectionMatrix(projectionMatrix);
-                camera->setCullMask(camera->getCullMask()
-                                    | simgear::BACKGROUND_BIT);
-                camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-                farCamera->setNodeMask(0);
-            } else {
-                Matrix nearProj, farProj;
-                makeNewProjMat(projectionMatrix, parentNear, _nearField,
-                               nearProj);
-                makeNewProjMat(projectionMatrix, _nearField, parentFar,
-                               farProj);
-                camera->setProjectionMatrix(nearProj);
-                camera->setCullMask(camera->getCullMask()
-                                    & ~simgear::BACKGROUND_BIT);
-                camera->setClearMask(GL_DEPTH_BUFFER_BIT);
-                farCamera->setProjectionMatrix(farProj);
-                farCamera->setNodeMask(camera->getNodeMask());
-            }
-        }
+			CameraMap::const_iterator ii = info->cameras.find(FAR_CAMERA);
+			if (ii == info->cameras.end() || !ii->second.camera.valid()) {
+				camera->setProjectionMatrix(projectionMatrix);
+			} else {
+				Camera* farCamera = ii->second.camera;
+				farCamera->setViewMatrix(viewMatrix);
+				double left, right, bottom, top, parentNear, parentFar;
+				projectionMatrix.getFrustum(left, right, bottom, top,
+											parentNear, parentFar);
+				if ((info->flags & FIXED_NEAR_FAR) == 0) {
+					parentNear = _zNear;
+					parentFar = _zFar;
+				}
+				if (parentFar < _nearField || _nearField == 0.0f) {
+					camera->setProjectionMatrix(projectionMatrix);
+					camera->setCullMask(camera->getCullMask()
+										| simgear::BACKGROUND_BIT);
+					camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+					farCamera->setNodeMask(0);
+				} else {
+					Matrix nearProj, farProj;
+					makeNewProjMat(projectionMatrix, parentNear, _nearField,
+								   nearProj);
+					makeNewProjMat(projectionMatrix, _nearField, parentFar,
+								   farProj);
+					camera->setProjectionMatrix(nearProj);
+					camera->setCullMask(camera->getCullMask()
+										& ~simgear::BACKGROUND_BIT);
+					camera->setClearMask(GL_DEPTH_BUFFER_BIT);
+					farCamera->setProjectionMatrix(farProj);
+					farCamera->setNodeMask(camera->getNodeMask());
+				}
+			}
+		} else {
+			bool viewDone = false;
+			Matrix viewMatrix;
+			bool projectionDone = false;
+			Matrix projectionMatrix;
+			for ( CameraMap::const_iterator ii = info->cameras.begin(); ii != info->cameras.end(); ++ii ) {
+				if ( ii->second.fullscreen )
+					continue;
+
+				Camera* camera = ii->second.camera.get();
+				int slaveIndex = ii->second.slaveIndex;
+				const View::Slave& slave = _viewer->getSlave(slaveIndex);
+
+				if ( !viewDone ) {
+					if ((info->flags & VIEW_ABSOLUTE) != 0)
+						viewMatrix = slave._viewOffset;
+					else
+						viewMatrix = masterView * slave._viewOffset;
+					viewDone = true;
+				}
+
+				camera->setViewMatrix( viewMatrix );
+
+				if ( !projectionDone ) {
+					if ((info->flags & PROJECTION_ABSOLUTE) != 0) {
+						if (info->flags & ENABLE_MASTER_ZOOM) {
+							if (info->relativeCameraParent < _cameras.size()) {
+								// template projection matrix and view matrix of the current camera
+								osg::Matrix P0 = slave._projectionOffset;
+								osg::Matrix R = viewMatrix;
+
+								// The already known projection and view matrix of the parent camera
+								const CameraInfo* parentInfo = _cameras[info->relativeCameraParent].get();
+								RenderStageInfo prsi = parentInfo->cameras.find(MAIN_CAMERA)->second;
+								osg::Matrix pP = prsi.camera->getProjectionMatrix();
+								osg::Matrix pR = prsi.camera->getViewMatrix();
+                    
+								// And the projection matrix derived from P0 so that the reference points match
+								projectionMatrix = relativeProjection(P0, R, info->thisReference,
+																	  pP, pR, info->parentReference);
+                    
+							} else {
+								// We want to zoom, so take the original matrix and apply the zoom to it.
+								projectionMatrix = slave._projectionOffset;
+								projectionMatrix.postMultScale(osg::Vec3d(masterZoomFactor, masterZoomFactor, 1));
+							}
+						} else {
+							projectionMatrix = slave._projectionOffset;
+						}
+					} else {
+						projectionMatrix = masterProj * slave._projectionOffset;
+					}
+					projectionDone = true;
+				}
+
+				camera->setProjectionMatrix(projectionMatrix);
+			}
+		}
     }
+
+	globals->get_renderer()->setPlanes( _zNear, _zFar );
 }
 
 void CameraGroup::setCameraParameters(float vfov, float aspectRatio)
@@ -316,7 +423,9 @@ double CameraGroup::getMasterAspectRatio() const
     
     const CameraInfo* info = _cameras.front();
     
-	osg::Camera* camera = info->cameras.find(CameraInfo::MAIN_CAMERA)->second.camera.get();
+	osg::Camera* camera = info->getCamera(MAIN_CAMERA);
+	if ( !camera )
+		camera = info->getCamera( GEOMETRY_CAMERA );
     const osg::Viewport* viewport = camera->getViewport();
     if (!viewport) {
         return 0.0;
@@ -395,7 +504,7 @@ namespace flightgear
 
 // Mostly copied from osg's osgViewer/View.cpp
 
-static osg::Geometry* createParoramicSphericalDisplayDistortionMesh(
+static osg::Geometry* createPanoramicSphericalDisplayDistortionMesh(
     const Vec3& origin, const Vec3& widthVector, const Vec3& heightVector,
     double sphere_radius, double collar_radius,
     Image* intensityMap = 0, const Matrix& projectorMatrix = Matrix())
@@ -410,8 +519,8 @@ static osg::Geometry* createParoramicSphericalDisplayDistortionMesh(
 #if 0
     osg::Vec3d projector = eye - osg::Vec3d(0.0,0.0, distance);
 
-    OSG_INFO<<"createParoramicSphericalDisplayDistortionMesh : Projector position = "<<projector<<std::endl;
-    OSG_INFO<<"createParoramicSphericalDisplayDistortionMesh : distance = "<<distance<<std::endl;
+    OSG_INFO<<"createPanoramicSphericalDisplayDistortionMesh : Projector position = "<<projector<<std::endl;
+    OSG_INFO<<"createPanoramicSphericalDisplayDistortionMesh : distance = "<<distance<<std::endl;
 #endif
     // create the quad to visualize.
     osg::Geometry* geometry = new osg::Geometry();
@@ -559,7 +668,7 @@ void CameraGroup::buildDistortionCamera(const SGPropertyNode* psNode,
     double radius = psNode->getDoubleValue("radius", 1.0);
     double collar = psNode->getDoubleValue("collar", 0.45);
     Geode* geode = new Geode();
-    geode->addDrawable(createParoramicSphericalDisplayDistortionMesh(
+    geode->addDrawable(createPanoramicSphericalDisplayDistortionMesh(
                            Vec3(0.0f,0.0f,0.0f), Vec3(width,0.0f,0.0f),
                            Vec3(0.0f,height,0.0f), radius, collar));
 
@@ -809,7 +918,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     const SGPropertyNode* psNode = cameraNode->getNode("panoramic-spherical");
     bool useMasterSceneGraph = !psNode;
 	CameraInfo* info = globals->get_renderer()->buildRenderingPipeline(this, cameraFlags, camera, vOff, pOff,
-                                 useMasterSceneGraph);
+																		window->gc.get(), useMasterSceneGraph);
     info->name = cameraNode->getStringValue("name");
     info->physicalWidth = physicalWidth;
     info->physicalHeight = physicalHeight;
@@ -853,13 +962,11 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     }
 
     Camera* camera = new Camera;
+	camera->setName( "GUICamera" );
     camera->setAllowEventFocus(false);
     camera->setGraphicsContext(window->gc.get());
     camera->setViewport(new Viewport);
-    // XXX Camera needs to be drawn last; eventually the render order
-    // should be assigned by a camera manager.
-    camera->setRenderOrder(osg::Camera::POST_RENDER, 100);
-        camera->setClearMask(0);
+    camera->setClearMask(0);
     camera->setInheritanceMask(CullSettings::ALL_VARIABLES
                                & ~(CullSettings::COMPUTE_NEAR_FAR_MODE
                                    | CullSettings::CULLING_MODE
@@ -872,13 +979,26 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     camera->setProjectionResizePolicy(Camera::FIXED);
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
     const int cameraFlags = GUI | DO_INTERSECTION_TEST;
-    CameraInfo* result = globals->get_renderer()->buildRenderingPipeline(this, cameraFlags, camera, Matrixd::identity(),
-                                   Matrixd::identity(), false);
+
+    CameraInfo* result = new CameraInfo(cameraFlags);
+    // The camera group will always update the camera
+    camera->setReferenceFrame(Transform::ABSOLUTE_RF);
+
+    getViewer()->addSlave(camera, Matrixd::identity(), Matrixd::identity(), false);
+    //installCullVisitor(camera);
+    int slaveIndex = getViewer()->getNumSlaves() - 1;
+	result->addCamera( MAIN_CAMERA, camera, slaveIndex );
+    camera->setRenderOrder(Camera::POST_RENDER, slaveIndex);
+    addCamera(result);
+
+    // XXX Camera needs to be drawn last; eventually the render order
+    // should be assigned by a camera manager.
+    camera->setRenderOrder(osg::Camera::POST_RENDER, 10000);
     SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
     buildViewport(result, viewportNode, window->gc->getTraits());
 
     // Disable statistics for the GUI camera.
-    result->getMainCamera()->setStats(0);
+    camera->setStats(0);
     result->updateCameras();
     return result;
 }
@@ -886,6 +1006,8 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
 CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
                                            SGPropertyNode* gnode)
 {
+    sgUserDataInit( globals->get_props() );
+
     CameraGroup* cgroup = new CameraGroup(viewer);
     for (int i = 0; i < gnode->nChildren(); ++i) {
         SGPropertyNode* pNode = gnode->getChild(i);
@@ -911,8 +1033,10 @@ void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
         CameraInfo* info = i->get();
         if (info->flags & GUI)
             continue;
-		osg::ref_ptr<osg::Camera> farCamera = info->getCamera(CameraInfo::FAR_CAMERA);
-		osg::Camera* camera = info->getMainCamera();
+		osg::ref_ptr<osg::Camera> farCamera = info->getCamera(FAR_CAMERA);
+		osg::Camera* camera = info->getCamera( MAIN_CAMERA );
+		if ( camera == 0 )
+			camera = info->getCamera( GEOMETRY_CAMERA );
         if (farCamera.valid() && farCamera->getNodeMask() != 0) {
             camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
             camera->setCullMaskLeft(nm & ~simgear::BACKGROUND_BIT);
@@ -932,11 +1056,16 @@ void CameraGroup::resized()
 {
     for (CameraIterator i = camerasBegin(), e = camerasEnd(); i != e; ++i) {
         CameraInfo *info = i->get();
-		const Viewport* viewport = info->getMainCamera()->getViewport();
+		Camera* camera = info->getCamera( MAIN_CAMERA );
+		if ( camera == 0 )
+			camera = info->getCamera( DISPLAY_CAMERA );
+		const Viewport* viewport = camera->getViewport();
         info->x = viewport->x();
         info->y = viewport->y();
         info->width = viewport->width();
         info->height = viewport->height();
+
+		info->resized( info->width, info->height );
     }
 }
 
@@ -959,7 +1088,7 @@ Camera* getGUICamera(CameraGroup* cgroup)
         return NULL;
     }
     
-    return info->getMainCamera();
+    return info->getCamera(MAIN_CAMERA);
 }
 
 static bool computeCameraIntersection(const CameraInfo* cinfo,
@@ -974,7 +1103,9 @@ static bool computeCameraIntersection(const CameraInfo* cinfo,
   if (!(cinfo->flags & CameraGroup::DO_INTERSECTION_TEST))
     return false;
   
-  const Camera* camera = cinfo->getMainCamera();
+  const Camera* camera = cinfo->getCamera(MAIN_CAMERA);
+  if ( !camera )
+    camera = cinfo->getCamera( GEOMETRY_CAMERA );
   if (camera->getGraphicsContext() != ea->getGraphicsContext())
     return false;
   
@@ -992,7 +1123,7 @@ static bool computeCameraIntersection(const CameraInfo* cinfo,
   Matrix startPtMat = Matrix::inverse(camera->getProjectionMatrix()
                                       * windowMat);
   Matrix endPtMat;
-  const Camera* farCamera = cinfo->getCamera( CameraInfo::FAR_CAMERA );
+  const Camera* farCamera = cinfo->getCamera( FAR_CAMERA );
   if (!farCamera || farCamera->getNodeMask() == 0)
     endPtMat = startPtMat;
   else

@@ -67,6 +67,8 @@
 #include <simgear/math/SGMath.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
+#include <simgear/scene/material/Effect.hxx>
+#include <simgear/scene/material/EffectGeode.hxx>
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/sky/sky.hxx>
@@ -374,6 +376,7 @@ static osg::ref_ptr<osg::FrameStamp> mFrameStamp = new osg::FrameStamp;
 static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
 
 static osg::ref_ptr<osg::Group> mRealRoot = new osg::Group;
+static osg::ref_ptr<osg::Group> mDeferredRealRoot = new osg::Group;
 
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
@@ -404,7 +407,14 @@ static void updateRenderer()
 #endif
 
 FGRenderer::FGRenderer() :
-    _sky(NULL)
+    _sky(NULL),
+    _ambientFactor( new osg::Uniform( "fg_SunAmbientColor", osg::Vec4f() ) ),
+    _sunDiffuse( new osg::Uniform( "fg_SunDiffuseColor", osg::Vec4f() ) ),
+    _sunSpecular( new osg::Uniform( "fg_SunSpecularColor", osg::Vec4f() ) ),
+    _sunDirection( new osg::Uniform( "fg_SunDirection", osg::Vec3f() ) ),
+    _planes( new osg::Uniform( "fg_Planes", osg::Vec3f() ) ),
+    _fogColor( new osg::Uniform( "fg_FogColor", osg::Vec4f(1.0, 1.0, 1.0, 1.0) ) ),
+    _fogDensity( new osg::Uniform( "fg_FogDensity", 0.0001f ) )
 {
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = updateRenderer;
@@ -532,12 +542,20 @@ flightgear::CameraInfo*
 FGRenderer::buildRenderingPipeline(flightgear::CameraGroup* cgroup, unsigned flags, Camera* camera,
                                    const Matrix& view,
                                    const Matrix& projection,
+								   osg::GraphicsContext* gc,
                                    bool useMasterSceneData)
 {
-	if (_classicalRenderer || (flags & (CameraGroup::GUI | CameraGroup::ORTHO)))
+	flightgear::CameraInfo* info = 0;
+	if (!_classicalRenderer && (flags & (CameraGroup::GUI | CameraGroup::ORTHO)) == 0)
+		info = buildDeferredPipeline( cgroup, flags, camera, view, projection, gc );
+
+	if (info) {
+		return info;
+	} else {
+		if ((flags & (CameraGroup::GUI | CameraGroup::ORTHO)) == 0)
+			_classicalRenderer = true;
 		return buildClassicalPipeline( cgroup, flags, camera, view, projection, useMasterSceneData );
-	else
-		return buildDeferredPipeline( cgroup, flags, camera, view, projection );
+	}
 }
 
 flightgear::CameraInfo*
@@ -576,7 +594,7 @@ FGRenderer::buildClassicalPipeline(flightgear::CameraGroup* cgroup, unsigned fla
         cgroup->getViewer()->addSlave(farCamera, projection, view, useMasterSceneData);
         installCullVisitor(farCamera);
 		int farSlaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-		info->addCamera( CameraInfo::FAR_CAMERA, farCamera, farSlaveIndex );
+		info->addCamera( FAR_CAMERA, farCamera, farSlaveIndex );
         farCamera->setRenderOrder(Camera::POST_RENDER, farSlaveIndex);
         camera->setCullMask(camera->getCullMask() & ~simgear::BACKGROUND_BIT);
         camera->setClearMask(GL_DEPTH_BUFFER_BIT);
@@ -584,27 +602,541 @@ FGRenderer::buildClassicalPipeline(flightgear::CameraGroup* cgroup, unsigned fla
     cgroup->getViewer()->addSlave(camera, projection, view, useMasterSceneData);
     installCullVisitor(camera);
     int slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-	info->addCamera( CameraInfo::MAIN_CAMERA, camera, slaveIndex );
+	info->addCamera( MAIN_CAMERA, camera, slaveIndex );
     camera->setRenderOrder(Camera::POST_RENDER, slaveIndex);
     cgroup->addCamera(info);
     return info;
 }
 
+class FGDeferredRenderingCameraCullCallback : public osg::NodeCallback {
+public:
+	FGDeferredRenderingCameraCullCallback( flightgear::CameraKind k, CameraInfo* i ) : kind( k ), info( i ) {}
+	virtual void operator()( osg::Node *n, osg::NodeVisitor *nv) {
+        simgear::EffectCullVisitor* cv = dynamic_cast<simgear::EffectCullVisitor*>(nv);
+        osg::Camera* camera = static_cast<osg::Camera*>(n);
+
+        cv->clearBufferList();
+		cv->addBuffer(simgear::Effect::DEPTH_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
+        cv->addBuffer(simgear::Effect::NORMAL_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
+		cv->addBuffer(simgear::Effect::DIFFUSE_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
+        cv->addBuffer(simgear::Effect::SPEC_EMIS_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
+		cv->addBuffer(simgear::Effect::LIGHTING_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::LIGHTING_BUFFER ) );
+        // cv->addBuffer(simgear::Effect::AO_BUFFER, info->gBuffer->aoBuffer[2]);
+
+		if ( !info->getRenderStageInfo(kind).fullscreen )
+			info->setMatrices( camera );
+
+        cv->traverse( *camera );
+
+		if ( kind == flightgear::GEOMETRY_CAMERA ) {
+			// Save transparent bins to render later
+			osgUtil::RenderStage* renderStage = cv->getRenderStage();
+			osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
+			for (osgUtil::RenderBin::RenderBinList::iterator rbi = rbl.begin(); rbi != rbl.end(); ) {
+				if (rbi->second->getSortMode() == osgUtil::RenderBin::SORT_BACK_TO_FRONT) {
+					info->savedTransparentBins.insert( std::make_pair( rbi->first, rbi->second ) );
+					rbl.erase( rbi++ );
+				} else {
+					++rbi;
+				}
+			}
+		} else if ( kind == flightgear::LIGHTING_CAMERA ) {
+			//if (info->mainShadowCamera.valid()) {
+			//	osg::Group* grp = info->mainShadowCamera->getChild(0)->asGroup();
+			//	for (int i = 0; i < 4; ++i ) {
+			//		osg::TexGen* shadowTexGen = info->shadowTexGen[i];
+			//		shadowTexGen->setMode(osg::TexGen::EYE_LINEAR);
+
+			//		osg::Camera* cascadeCam = static_cast<osg::Camera*>( grp->getChild(i) );
+			//		// compute the matrix which takes a vertex from view coords into tex coords
+			//		shadowTexGen->setPlanesFromMatrix(  cascadeCam->getProjectionMatrix() *
+			//											osg::Matrix::translate(1.0,1.0,1.0) *
+			//											osg::Matrix::scale(0.5f,0.5f,0.5f) );
+
+			//		osg::RefMatrix * refMatrix = new osg::RefMatrix( cascadeCam->getInverseViewMatrix() * *cv->getModelViewMatrix() );
+
+			//		cv->getRenderStage()->getPositionalStateContainer()->addPositionedTextureAttribute( i+1, refMatrix, shadowTexGen );
+			//	}
+			//}
+			// Render saved transparent render bins
+			osgUtil::RenderStage* renderStage = cv->getRenderStage();
+			osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
+			for (osgUtil::RenderBin::RenderBinList::iterator rbi = info->savedTransparentBins.begin(); rbi != info->savedTransparentBins.end(); ++rbi ){
+				rbl.insert( std::make_pair( rbi->first + 10000, rbi->second ) );
+			}
+			info->savedTransparentBins.clear();
+		}
+	}
+
+private:
+	flightgear::CameraKind kind;
+    CameraInfo* info;
+};
+
+osg::Texture2D* buildDeferredBuffer(GLint internalFormat, GLenum sourceFormat, GLenum sourceType, osg::Texture::WrapMode wrapMode)
+{
+    osg::Texture2D* tex = new osg::Texture2D;
+    tex->setResizeNonPowerOfTwoHint( false );
+    tex->setInternalFormat( internalFormat );
+    tex->setSourceFormat( sourceFormat );
+    tex->setSourceType( sourceType );
+    tex->setFilter( osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR );
+    tex->setFilter( osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR );
+    tex->setWrap( osg::Texture::WRAP_S, wrapMode );
+    tex->setWrap( osg::Texture::WRAP_T, wrapMode );
+	return tex;
+}
+
+void buildDeferredBuffers( flightgear::CameraInfo* info )
+{
+	info->addBuffer(flightgear::RenderBufferInfo::DEPTH_BUFFER, buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
+	info->addBuffer(flightgear::RenderBufferInfo::NORMAL_BUFFER, buildDeferredBuffer( 0x822C /*GL_RG16*/, 0x8227 /*GL_RG*/, GL_UNSIGNED_SHORT, osg::Texture::CLAMP_TO_BORDER) );
+	info->addBuffer(flightgear::RenderBufferInfo::DIFFUSE_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
+	info->addBuffer(flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
+	info->addBuffer(flightgear::RenderBufferInfo::LIGHTING_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
+}
+
+void attachBufferToCamera( flightgear::CameraInfo* info, osg::Camera* camera, osg::Camera::BufferComponent c, flightgear::CameraKind ck, flightgear::RenderBufferInfo::Kind bk )
+{
+	camera->attach( c, info->getBuffer(bk) );
+	info->getRenderStageInfo(ck).buffers.insert( std::make_pair( c, bk ) );
+}
+
+osg::Camera* FGRenderer::buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc )
+{
+	osg::Camera* camera = new osg::Camera;
+	info->addCamera(flightgear::GEOMETRY_CAMERA, camera );
+
+	camera->setCullMask( ~simgear::MODELLIGHT_BIT );
+	camera->setName( "GeometryCamera" );
+	camera->setGraphicsContext( gc );
+    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( flightgear::GEOMETRY_CAMERA, info ) );
+    camera->setClearMask( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    camera->setClearColor( osg::Vec4( 0., 0., 0., 0. ) );
+    camera->setClearDepth( 1.0 );
+    camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
+	camera->setViewport( new osg::Viewport );
+	attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
+    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER0, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::NORMAL_BUFFER );
+    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER1, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DIFFUSE_BUFFER );
+    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER2, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER );
+    camera->setDrawBuffer(GL_FRONT);
+    camera->setReadBuffer(GL_FRONT);
+
+	camera->addChild( mDeferredRealRoot.get() );
+
+	return camera;
+}
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+const char *ambient_vert_src = ""
+    "#line " TOSTRING(__LINE__) " 1\n"
+    "void main() {\n"
+    "    gl_Position = gl_Vertex;\n"
+    "    gl_TexCoord[0] = gl_MultiTexCoord0;\n"
+    "}\n";
+
+const char *ambient_frag_src = ""
+    "#line " TOSTRING(__LINE__) " 1\n"
+    "uniform sampler2D color_tex;\n"
+    "uniform sampler2D ao_tex;\n"
+    "uniform sampler2D normal_tex;\n"
+    "uniform sampler2D spec_emis_tex;\n"
+    "uniform vec4 fg_SunAmbientColor;\n"
+    "void main() {\n"
+    "    vec2 coords = gl_TexCoord[0].xy;\n"
+	"    float initialized = texture2D( spec_emis_tex, coords ).a;\n"
+	"    if ( initialized < 0.1 )\n"
+	"        discard;\n"
+    "    vec3 tcolor = texture2D( color_tex, coords ).rgb;\n"
+    "    float ao = texture2D( ao_tex, coords ).r;\n"
+    "    gl_FragColor = vec4(tcolor*fg_SunAmbientColor.rgb*ao, 1.0);\n"
+    "}\n";
+
+const char *sunlight_vert_src = ""
+    "#line " TOSTRING(__LINE__) " 1\n"
+//  "uniform mat4 fg_ViewMatrixInverse;\n"
+    "uniform mat4 fg_ProjectionMatrixInverse;\n"
+    "varying vec3 ray;\n"
+    "void main() {\n"
+    "    gl_Position = gl_Vertex;\n"
+    "    gl_TexCoord[0] = gl_MultiTexCoord0;\n"
+//  "    ray = (fg_ViewMatrixInverse * vec4((fg_ProjectionMatrixInverse * gl_Vertex).xyz, 0.0)).xyz;\n"
+    "    ray = (fg_ProjectionMatrixInverse * gl_Vertex).xyz;\n"
+    "}\n";
+
+const char *sunlight_frag_src = ""
+    "#version 130\n"
+    "#line " TOSTRING(__LINE__) " 1\n"
+    "uniform mat4 fg_ViewMatrix;\n"
+    "uniform sampler2D depth_tex;\n"
+    "uniform sampler2D normal_tex;\n"
+    "uniform sampler2D color_tex;\n"
+    "uniform sampler2D spec_emis_tex;\n"
+    "uniform sampler2DShadow shadow_tex;\n"
+    "uniform vec4 fg_SunDiffuseColor;\n"
+    "uniform vec4 fg_SunSpecularColor;\n"
+    "uniform vec3 fg_SunDirection;\n"
+    "uniform vec3 fg_Planes;\n"
+    "varying vec3 ray;\n"
+    "vec4 DynamicShadow( in vec4 ecPosition, out vec4 tint )\n"
+    "{\n"
+    "    vec4 coords;\n"
+    "    vec2 shift = vec2( 0.0 );\n"
+    "    int index = 4;\n"
+    "    if (ecPosition.z > -5.0) {\n"
+    "        index = 1;\n"
+    "        tint = vec4(0.0,1.0,0.0,1.0);\n"
+    "    } else if (ecPosition.z > -50.0) {\n"
+    "        index = 2;\n"
+    "        shift = vec2( 0.0, 0.5 );\n"
+    "        tint = vec4(0.0,0.0,1.0,1.0);\n"
+    "    } else if (ecPosition.z > -512.0) {\n"
+    "        index = 3;\n"
+    "        shift = vec2( 0.5, 0.0 );\n"
+    "        tint = vec4(1.0,1.0,0.0,1.0);\n"
+    "    } else if (ecPosition.z > -10000.0) {\n"
+    "        shift = vec2( 0.5, 0.5 );\n"
+    "        tint = vec4(1.0,0.0,0.0,1.0);\n"
+    "    } else {\n"
+    "        return vec4(1.1,1.1,0.0,1.0);\n" // outside, clamp to border
+    "    }\n"
+    "    coords.s = dot( ecPosition, gl_EyePlaneS[index] );\n"
+    "    coords.t = dot( ecPosition, gl_EyePlaneT[index] );\n"
+    "    coords.p = dot( ecPosition, gl_EyePlaneR[index] );\n"
+    "    coords.q = dot( ecPosition, gl_EyePlaneQ[index] );\n"
+    "    coords.st *= .5;\n"
+    "    coords.st += shift;\n"
+    "    return coords;\n"
+    "}\n"
+    "void main() {\n"
+    "    vec2 coords = gl_TexCoord[0].xy;\n"
+    "    vec4 spec_emis = texture2D( spec_emis_tex, coords );\n"
+	"    if ( spec_emis.a < 0.1 )\n"
+	"        discard;\n"
+    "    vec3 normal;\n"
+	"    normal.xy = texture2D( normal_tex, coords ).rg;\n"
+	"    normal.z = sqrt( 1.0 - dot( normal.xy, normal.xy ) );\n"
+    "    float len = length(normal);\n"
+    "    normal /= len;\n"
+    "    vec3 viewDir = normalize(ray);\n"
+    "    float depth = texture2D( depth_tex, coords ).r;\n"
+    "    vec3 pos;\n"
+    "    pos.z = - fg_Planes.y / (fg_Planes.x + depth * fg_Planes.z);\n"
+    "    pos.xy = viewDir.xy / viewDir.z * pos.z;\n"
+
+    "    vec4 tint;\n"
+#if 0
+    "    float shadow = shadow2DProj( shadow_tex, DynamicShadow( vec4( pos, 1.0 ), tint ) ).r;\n"
+#elif 1
+	"    float shadow = 1.0;\n"
+#else
+    "    float kernel[9] = float[]( 36/256.0, 24/256.0, 6/256.0,\n"
+    "                           24/256.0, 16/256.0, 4/256.0,\n"
+    "                           6/256.0,  4/256.0, 1/256.0 );\n"
+    "    float shadow = 0;\n"
+    "    for( int x = -2; x <= 2; ++x )\n"
+    "      for( int y = -2; y <= 2; ++y )\n"
+    "        shadow += kernel[abs(x)*3 + abs(y)] * shadow2DProj( shadow_tex, DynamicShadow( vec4(pos + vec3(0.05 * x, 0.05 * y, 0), 1.0), tint ) ).r;\n"
+#endif
+    "    vec3 lightDir = (fg_ViewMatrix * vec4( fg_SunDirection, 0.0 )).xyz;\n"
+    "    lightDir = normalize( lightDir );\n"
+	"    vec3 color = texture2D( color_tex, coords ).rgb;\n"
+    "    vec3 Idiff = clamp( dot( lightDir, normal ), 0.0, 1.0 ) * color * fg_SunDiffuseColor.rgb;\n"
+    "    vec3 halfDir = lightDir - viewDir;\n"
+    "    len = length( halfDir );\n"
+    "    vec3 Ispec = vec3(0.0);\n"
+	"    vec3 Iemis = spec_emis.z * color;\n"
+    "    if (len > 0.0001) {\n"
+    "        halfDir /= len;\n"
+    "        Ispec = pow( clamp( dot( halfDir, normal ), 0.0, 1.0 ), spec_emis.y * 255.0 ) * spec_emis.x * color * fg_SunSpecularColor.rgb;\n"
+    "    }\n"
+    "    gl_FragColor = vec4(mix(vec3(0.0), Idiff + Ispec, shadow) + Iemis, 1.0);\n"
+//    "    gl_FragColor = mix(tint, vec4(mix(vec3(0.0), Idiff + Ispec, shadow) + Iemis, 1.0), 0.92);\n"
+    "}\n";
+
+const char *fog_vert_src = ""
+    "#line " TOSTRING(__LINE__) " 1\n"
+    "uniform mat4 fg_ProjectionMatrixInverse;\n"
+    "varying vec3 ray;\n"
+    "void main() {\n"
+    "    gl_Position = gl_Vertex;\n"
+    "    gl_TexCoord[0] = gl_MultiTexCoord0;\n"
+    "    ray = (fg_ProjectionMatrixInverse * gl_Vertex).xyz;\n"
+    "}\n";
+
+const char *fog_frag_src = ""
+    "#line " TOSTRING(__LINE__) " 1\n"
+    "uniform sampler2D depth_tex;\n"
+    "uniform sampler2D normal_tex;\n"
+    "uniform sampler2D color_tex;\n"
+    "uniform sampler2D spec_emis_tex;\n"
+    "uniform vec4 fg_FogColor;\n"
+    "uniform float fg_FogDensity;\n"
+    "uniform vec3 fg_Planes;\n"
+    "varying vec3 ray;\n"
+    "void main() {\n"
+    "    vec2 coords = gl_TexCoord[0].xy;\n"
+	"    float initialized = texture2D( spec_emis_tex, coords ).a;\n"
+	"    if ( initialized < 0.1 )\n"
+	"        discard;\n"
+    "    vec3 normal;\n"
+	"    normal.xy = texture2D( normal_tex, coords ).rg;\n"
+	"    normal.z = sqrt( 1.0 - dot( normal.xy, normal.xy ) );\n"
+    "    float len = length(normal);\n"
+    "    normal /= len;\n"
+    "    vec3 viewDir = normalize(ray);\n"
+    "    float depth = texture2D( depth_tex, coords ).r;\n"
+    "    vec3 pos;\n"
+    "    pos.z = - fg_Planes.y / (fg_Planes.x + depth * fg_Planes.z);\n"
+    "    pos.xy = viewDir.xy / viewDir.z * pos.z;\n"
+
+    "    float fogFactor = 0.0;\n"
+    "    const float LOG2 = 1.442695;\n"
+    "    fogFactor = exp2(-fg_FogDensity * fg_FogDensity * pos.z * pos.z * LOG2);\n"
+    "    fogFactor = clamp(fogFactor, 0.0, 1.0);\n"
+
+    "    gl_FragColor = vec4(fg_FogColor.rgb, 1.0 - fogFactor);\n"
+    "}\n";
+
+osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc )
+{
+    osg::Camera* camera = new osg::Camera;
+	info->addCamera(flightgear::LIGHTING_CAMERA, camera );
+
+    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( flightgear::LIGHTING_CAMERA, info ) );
+    camera->setAllowEventFocus(false);
+    camera->setGraphicsContext(gc);
+    camera->setViewport(new Viewport);
+    camera->setName("LightingCamera");
+    camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    camera->setRenderOrder(osg::Camera::POST_RENDER, 50);
+    camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
+	camera->setViewport( new osg::Viewport );
+	attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::LIGHTING_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
+	attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER, flightgear::LIGHTING_CAMERA, flightgear::RenderBufferInfo::LIGHTING_BUFFER );
+    camera->setDrawBuffer(GL_FRONT);
+    camera->setReadBuffer(GL_FRONT);
+    camera->setClearColor( osg::Vec4( 0., 0., 0., 1. ) );
+    camera->setClearMask( GL_COLOR_BUFFER_BIT );
+    osg::StateSet* ss = camera->getOrCreateStateSet();
+    ss->setAttribute( new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false) );
+
+    osg::Group* lightingGroup = new osg::Group;
+
+    osg::Camera* quadCam1 = new osg::Camera;
+    quadCam1->setName( "QuadCamera1" );
+    quadCam1->setClearMask(0);
+    quadCam1->setAllowEventFocus(false);
+    quadCam1->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    quadCam1->setRenderOrder(osg::Camera::NESTED_RENDER);
+    quadCam1->setViewMatrix(osg::Matrix::identity());
+    quadCam1->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
+    quadCam1->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    ss = quadCam1->getOrCreateStateSet();
+    ss->addUniform( _ambientFactor );
+    ss->addUniform( info->projInverse );
+    ss->addUniform( info->viewInverse );
+    ss->addUniform( info->view );
+    ss->addUniform( _sunDiffuse );
+    ss->addUniform( _sunSpecular );
+    ss->addUniform( _sunDirection );
+    ss->addUniform( _planes );
+
+    osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
+    g->setUseDisplayList(false);
+    simgear::EffectGeode* eg = new simgear::EffectGeode;
+    simgear::Effect* effect = simgear::makeEffect("Effects/ambient", true);
+    if (effect) {
+        eg->setEffect( effect );
+    } else {
+        ss = eg->getOrCreateStateSet();
+        ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
+        ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
+		ss->setTextureAttributeAndModes( 0, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
+        ss->setTextureAttributeAndModes( 1, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
+        ss->setTextureAttributeAndModes( 2, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
+        ss->setTextureAttributeAndModes( 3, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
+        //ss->setTextureAttributeAndModes( 5, info->gBuffer->aoBuffer[2] );
+        ss->addUniform( new osg::Uniform( "depth_tex", 0 ) );
+        ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
+        ss->addUniform( new osg::Uniform( "color_tex", 2 ) );
+        ss->addUniform( new osg::Uniform( "spec_emis_tex", 3 ) );
+        //ss->addUniform( new osg::Uniform( "ao_tex", 5 ) );
+        ss->setRenderBinDetails( 0, "RenderBin" );
+        osg::Program* program = new osg::Program;
+        program->addShader( new osg::Shader( osg::Shader::VERTEX, ambient_vert_src ) );
+        program->addShader( new osg::Shader( osg::Shader::FRAGMENT, ambient_frag_src ) );
+        ss->setAttributeAndModes( program );
+    }
+
+    g->setName( "AmbientQuad" );
+    eg->setName("AmbientQuad");
+    eg->setCullingActive(false);
+    eg->addDrawable(g);
+    quadCam1->addChild( eg );
+
+    g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
+    g->setUseDisplayList(false);
+    g->setName( "SunlightQuad" );
+    eg = new simgear::EffectGeode;
+    effect = simgear::makeEffect("Effects/sunlight", true);
+    if (effect) {
+        eg->setEffect( effect );
+    } else {
+        ss = eg->getOrCreateStateSet();
+        ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
+        ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
+        ss->setAttributeAndModes( new osg::BlendFunc( osg::BlendFunc::ONE, osg::BlendFunc::ONE ) );
+		ss->setTextureAttributeAndModes( 0, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
+        ss->setTextureAttributeAndModes( 1, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
+        ss->setTextureAttributeAndModes( 2, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
+        ss->setTextureAttributeAndModes( 3, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
+        //ss->setTextureAttribute( 4, info->mainShadowMap );
+        ss->addUniform( new osg::Uniform( "depth_tex", 0 ) );
+        ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
+        ss->addUniform( new osg::Uniform( "color_tex", 2 ) );
+        ss->addUniform( new osg::Uniform( "spec_emis_tex", 3 ) );
+        //ss->addUniform( new osg::Uniform( "shadow_tex", 4 ) );
+        ss->setRenderBinDetails( 1, "RenderBin" );
+        osg::Program* program = new osg::Program;
+        program->addShader( new osg::Shader( osg::Shader::VERTEX, sunlight_vert_src ) );
+        program->addShader( new osg::Shader( osg::Shader::FRAGMENT, sunlight_frag_src ) );
+        ss->setAttributeAndModes( program );
+    }
+    eg->setName("SunlightQuad");
+    eg->setCullingActive(false);
+    eg->addDrawable(g);
+    quadCam1->addChild( eg );
+
+    osg::Camera* lightCam = new osg::Camera;
+    ss = lightCam->getOrCreateStateSet();
+    ss->addUniform( _planes );
+    ss->addUniform( info->bufferSize );
+    lightCam->setName( "LightCamera" );
+    lightCam->setClearMask(0);
+    lightCam->setAllowEventFocus(false);
+    lightCam->setReferenceFrame(osg::Transform::RELATIVE_RF);
+    lightCam->setRenderOrder(osg::Camera::NESTED_RENDER,1);
+    lightCam->setViewMatrix(osg::Matrix::identity());
+    lightCam->setProjectionMatrix(osg::Matrix::identity());
+    lightCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    lightCam->setCullMask( simgear::MODELLIGHT_BIT );
+    lightCam->setInheritanceMask( osg::CullSettings::ALL_VARIABLES & ~osg::CullSettings::CULL_MASK );
+    lightCam->addChild( mDeferredRealRoot.get() );
+
+
+    osg::Camera* quadCam2 = new osg::Camera;
+    quadCam2->setName( "QuadCamera1" );
+    quadCam2->setClearMask(0);
+    quadCam2->setAllowEventFocus(false);
+    quadCam2->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    quadCam2->setRenderOrder(osg::Camera::NESTED_RENDER,2);
+    quadCam2->setViewMatrix(osg::Matrix::identity());
+    quadCam2->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
+    quadCam2->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    ss = quadCam2->getOrCreateStateSet();
+    ss->addUniform( _ambientFactor );
+    ss->addUniform( info->projInverse );
+    ss->addUniform( info->viewInverse );
+    ss->addUniform( info->view );
+    ss->addUniform( _sunDiffuse );
+    ss->addUniform( _sunSpecular );
+    ss->addUniform( _sunDirection );
+    ss->addUniform( _fogColor );
+    ss->addUniform( _fogDensity );
+    ss->addUniform( _planes );
+
+    g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
+    g->setUseDisplayList(false);
+    g->setName( "FogQuad" );
+    eg = new simgear::EffectGeode;
+    effect = simgear::makeEffect("Effects/fog", true);
+    if (effect) {
+        eg->setEffect( effect );
+    } else {
+        ss = eg->getOrCreateStateSet();
+        ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
+        ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
+        ss->setAttributeAndModes( new osg::BlendFunc( osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA ) );
+		ss->setTextureAttributeAndModes( 0, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
+        ss->setTextureAttributeAndModes( 1, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
+        ss->setTextureAttributeAndModes( 2, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
+        ss->setTextureAttributeAndModes( 3, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
+        ss->addUniform( new osg::Uniform( "depth_tex", 0 ) );
+        ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
+        ss->addUniform( new osg::Uniform( "color_tex", 2 ) );
+        ss->addUniform( new osg::Uniform( "spec_emis_tex", 3 ) );
+        ss->setRenderBinDetails( 99999, "RenderBin" );
+        osg::Program* program = new osg::Program;
+        program->addShader( new osg::Shader( osg::Shader::VERTEX, fog_vert_src ) );
+        program->addShader( new osg::Shader( osg::Shader::FRAGMENT, fog_frag_src ) );
+        ss->setAttributeAndModes( program );
+    }
+    eg->setName("FogQuad");
+    eg->setCullingActive(false);
+    eg->addDrawable(g);
+    quadCam2->addChild( eg );
+
+    lightingGroup->addChild( _sky->getPreRoot() );
+    lightingGroup->addChild( _sky->getCloudRoot() );
+    lightingGroup->addChild( quadCam1 );
+    lightingGroup->addChild( lightCam );
+    lightingGroup->addChild( quadCam2 );
+
+    camera->addChild( lightingGroup );
+
+	return camera;
+}
+
 flightgear::CameraInfo*
 FGRenderer::buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
-                                const osg::Matrix& view,
-                                const osg::Matrix& projection)
+									const osg::Matrix& view,
+									const osg::Matrix& projection,
+									osg::GraphicsContext* gc)
 {
     CameraInfo* info = new CameraInfo(flags);
-    // The camera group will always update the camera
-    camera->setReferenceFrame(Transform::ABSOLUTE_RF);
+	buildDeferredBuffers( info );
 
-    Camera* farCamera = 0;
-    cgroup->getViewer()->addSlave(camera, projection, view, false);
-    installCullVisitor(camera);
+	osg::Camera* geometryCamera = buildDeferredGeometryCamera( info, gc );
+    cgroup->getViewer()->addSlave(geometryCamera, false);
+    installCullVisitor(geometryCamera);
     int slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-	info->addCamera( CameraInfo::MAIN_CAMERA, camera, slaveIndex );
-    camera->setRenderOrder(Camera::POST_RENDER, slaveIndex);
+	info->getRenderStageInfo(GEOMETRY_CAMERA).slaveIndex = slaveIndex;
+
+	osg::Camera* lightingCamera = buildDeferredLightingCamera( info, gc );
+    cgroup->getViewer()->addSlave(lightingCamera, false);
+    installCullVisitor(lightingCamera);
+    slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
+	info->getRenderStageInfo(LIGHTING_CAMERA).slaveIndex = slaveIndex;
+
+	camera->setName( "DisplayCamera" );
+	camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( flightgear::DISPLAY_CAMERA, info ) );
+    camera->setReferenceFrame(Transform::ABSOLUTE_RF);
+	camera->setAllowEventFocus(false);
+	osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
+	g->setUseDisplayList(false); //DEBUG
+	simgear::EffectGeode* eg = new simgear::EffectGeode;
+	simgear::Effect* effect = simgear::makeEffect("Effects/display", true);
+	if (!effect)
+	{
+		SG_LOG(SG_VIEW, SG_ALERT, "Effects/display not found");
+		return 0;
+	}
+	eg->setEffect(effect);
+	eg->setCullingActive(false);
+	eg->addDrawable(g);
+	camera->setViewMatrix(osg::Matrix::identity());
+	camera->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
+	camera->addChild(eg);
+
+    cgroup->getViewer()->addSlave(camera, false);
+    installCullVisitor(camera);
+    slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
+	info->addCamera( DISPLAY_CAMERA, camera, slaveIndex, true );
+    camera->setRenderOrder(Camera::POST_RENDER, 99+slaveIndex); //FIXME
     cgroup->addCamera(info);
     return info;
 }
@@ -704,7 +1236,8 @@ FGRenderer::setupView( void )
     lightSource->setReferenceFrame(osg::LightSource::RELATIVE_RF);
     lightSource->setLocalStateSetModes(osg::StateAttribute::ON);
     lightSource->setUpdateCallback(new FGLightSourceUpdateCallback);
-    mRealRoot->addChild(lightSource);
+	if ( _classicalRenderer )
+		mRealRoot->addChild(lightSource);
     // we need a white diffuse light for the phase of the moon
     osg::LightSource* sunLight = new osg::LightSource;
     sunLight->getLight()->setDataVariance(Object::DYNAMIC);
@@ -721,7 +1254,8 @@ FGRenderer::setupView( void )
     skyGroup->addChild(_sky->getPreRoot());
     sunLight->addChild(skyGroup);
     mRoot->addChild(sceneGroup);
-    mRoot->addChild(sunLight);
+    if ( _classicalRenderer )
+		mRoot->addChild(sunLight);
     
     // Clouds are added to the scene graph later
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
@@ -780,12 +1314,16 @@ FGRenderer::setupView( void )
     // The clouds are attached directly to the scene graph root
     // because, in theory, they don't want the same default state set
     // as the rest of the scene. This may not be true in practice.
-    mRealRoot->addChild(_sky->getCloudRoot());
-    mRealRoot->addChild(FGCreateRedoutNode());
+	if ( _classicalRenderer ) {
+		mRealRoot->addChild(_sky->getCloudRoot());
+		mRealRoot->addChild(FGCreateRedoutNode());
+	}
     // Attach empty program to the scene root so that shader programs
     // don't leak into state sets (effects) that shouldn't have one.
     stateSet = mRealRoot->getOrCreateStateSet();
     stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
+
+	mDeferredRealRoot->addChild( mRealRoot.get() );
 }
 
 void FGRenderer::panelChanged()
@@ -828,6 +1366,12 @@ FGRenderer::update( ) {
     }
 
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+	if (!_classicalRenderer ) {
+		_ambientFactor->set( toOsg(l->scene_ambient()) );
+		_sunDiffuse->set( toOsg(l->scene_diffuse()) );
+		_sunSpecular->set( toOsg(l->scene_specular()) );
+		_sunDirection->set( osg::Vec3f(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]) );
+	}
 
     // update fog params
     double actual_visibility;
@@ -959,6 +1503,10 @@ FGRenderer::update( ) {
     if (_panel_hotspots->getBoolValue())
         cullMask |= simgear::PICK_BIT;
     CameraGroup::getDefault()->setCameraCullMasks(cullMask);
+	if ( !_classicalRenderer ) {
+		_fogColor->set( toOsg( l->adj_fog_color() ) );
+		_fogDensity->set( float( mUpdateVisitor->getFogExp2Density() ) );
+	}
 }
 
 void
@@ -1026,6 +1574,12 @@ void
 FGRenderer::addCamera(osg::Camera* camera, bool useSceneData)
 {
     mRealRoot->addChild(camera);
+}
+
+void
+FGRenderer::setPlanes( double zNear, double zFar )
+{
+	_planes->set( osg::Vec3f( - zFar, - zFar * zNear, zFar - zNear ) );
 }
 
 bool
@@ -1248,6 +1802,7 @@ bool printVisibleSceneInfo(FGRenderer* renderer)
     vsv.doTraversal(viewer->getCamera(), viewer->getSceneData(), vp);
     return true;
 }
+
 }
 // end of renderer.cxx
     

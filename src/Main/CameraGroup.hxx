@@ -26,6 +26,8 @@
 #include <osg/Referenced>
 #include <osg/Node>
 #include <osg/TextureRectangle>
+#include <osg/Texture2D>
+#include <osgUtil/RenderBin>
 
 // For osgUtil::LineSegmentIntersector::Intersections, which is a typedef.
 #include <osgUtil/LineSegmentIntersector>
@@ -46,40 +48,75 @@ namespace flightgear
 
 class GraphicsWindow;
 
+struct RenderBufferInfo {
+	enum Kind {
+		DEPTH_BUFFER,
+		NORMAL_BUFFER,
+		DIFFUSE_BUFFER,
+		SPEC_EMIS_BUFFER,
+		LIGHTING_BUFFER
+	};
+
+	RenderBufferInfo(osg::Texture2D* t = 0, float s = 1.0 ) : texture(t), scaleFactor(s) {}
+	osg::ref_ptr<osg::Texture2D> texture;
+	float scaleFactor;
+};
+typedef std::map<RenderBufferInfo::Kind,RenderBufferInfo> RenderBufferMap;
+typedef std::map<osg::Camera::BufferComponent,size_t> AttachmentMap;
+
 struct RenderStageInfo {
-	RenderStageInfo(osg::Camera* camera_ = 0, int si = -1)
-		: camera(camera_), slaveIndex(si), scaleFactor(1.0f)
+	RenderStageInfo(osg::Camera* camera_ = 0, int si = -1, bool fs = false)
+		: camera(camera_), slaveIndex(si), scaleFactor(1.0f), fullscreen(fs)
+		, resizable(true)
 	{
 	}
 
 	osg::ref_ptr<osg::Camera> camera;
+	AttachmentMap buffers;
 	int slaveIndex;
 	float scaleFactor;
+	bool fullscreen;
+	bool resizable;
 };
+
+enum CameraKind {
+	MAIN_CAMERA,
+	FAR_CAMERA,
+	GEOMETRY_CAMERA,
+	SHADOW_CAMERA,
+	BLOOM_CAMERA_1,
+	BLOOM_CAMERA_2,
+	AO_CAMERA_1,
+	AO_CAMERA_2,
+	AO_CAMERA_3,
+	LIGHTING_CAMERA,
+	DISPLAY_CAMERA
+};
+typedef std::map<CameraKind,RenderStageInfo> CameraMap;
 
 /** A wrapper around osg::Camera that contains some extra information.
  */
 struct CameraInfo : public osg::Referenced
 {
-    CameraInfo(unsigned flags_, osg::Camera* camera_ = 0)
+    CameraInfo(unsigned flags_)
         : flags(flags_),
           x(0.0), y(0.0), width(0.0), height(0.0),
           physicalWidth(0), physicalHeight(0), bezelHeightTop(0),
           bezelHeightBottom(0), bezelWidthLeft(0), bezelWidthRight(0),
-          relativeCameraParent(~0u)
+          relativeCameraParent(~0u),
+          bufferSize( new osg::Uniform("fg_BufferSize", osg::Vec2f() ) ),
+          projInverse( new osg::Uniform( "fg_ProjectionMatrixInverse", osg::Matrixf() ) ),
+          viewInverse( new osg::Uniform( "fg_ViewMatrixInverse",osg::Matrixf() ) ),
+          view( new osg::Uniform( "fg_ViewMatrix",osg::Matrixf() ) ),
+          du( new osg::Uniform( "fg_du",osg::Vec4() ) ),
+          dv( new osg::Uniform( "fg_dv",osg::Vec4() ) )
     {
-		cameras.insert( std::make_pair( MAIN_CAMERA, camera_ ) );
     }
-
-	enum CameraKind {
-		MAIN_CAMERA,
-		FAR_CAMERA
-	};
-	typedef std::map<CameraKind,RenderStageInfo> CameraMap;
 
 	/** Update and resize cameras
 	 */
 	void updateCameras();
+	void resized(double w, double h);
     /** The name as given in the config file.
      */
     std::string name;
@@ -89,10 +126,30 @@ struct CameraInfo : public osg::Referenced
     /** the camera objects
      */
 	CameraMap cameras;
-	void addCamera( CameraKind k, osg::Camera* c, int si = -1 ) { cameras[k] = RenderStageInfo(c,si); }
+	void addCamera( CameraKind k, osg::Camera* c, int si = -1, bool fs = false ) { cameras[k].camera = c; cameras[k].slaveIndex = si; cameras[k].fullscreen = fs; }
+	void addCamera( CameraKind k, osg::Camera* c, bool fs ) { cameras[k].camera = c; cameras[k].fullscreen = fs; }
 	osg::Camera* getCamera(CameraKind k) const;
-	osg::Camera* getMainCamera() const;
 	int getMainSlaveIndex() const;
+	RenderStageInfo& getRenderStageInfo( CameraKind k ) { return cameras[k]; }
+
+	/** the buffer objects
+	 */
+	RenderBufferMap buffers;
+	void addBuffer(RenderBufferInfo::Kind k, osg::Texture2D* tex, float scale = 1.0 ) { buffers[k] = RenderBufferInfo(tex,scale); }
+	osg::Texture2D* getBuffer(RenderBufferInfo::Kind k) { return buffers[k].texture.get(); }
+
+    osg::ref_ptr<osg::Uniform> bufferSize;
+    //osg::ref_ptr<osg::Uniform> bloomOffset[2];
+    osg::ref_ptr<osg::Uniform> projInverse;
+    osg::ref_ptr<osg::Uniform> viewInverse;
+    osg::ref_ptr<osg::Uniform> du;
+    osg::ref_ptr<osg::Uniform> dv;
+    osg::ref_ptr<osg::Uniform> view;
+
+	void setMatrices( osg::Camera* c );
+
+	osgUtil::RenderBin::RenderBinList savedTransparentBins;
+
     /** Viewport parameters.
      */
     double x;
