@@ -54,7 +54,9 @@ using flightgear::SceneryPager;
 FGTileMgr::FGTileMgr():
     state( Start ),
     last_state( Running ),
-    vis( 16000 ),
+    longitude(-1000.0),
+    latitude(-1000.0),
+    scheduled_visibility(100.0),
     _terra_sync(NULL),
     _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
     _maxTileRangeM(fgGetNode("/sim/rendering/static-lod/bare", true)),
@@ -115,6 +117,7 @@ void FGTileMgr::reinit()
     previous_bucket.make_bad();
     current_bucket.make_bad();
     longitude = latitude = -1000.0;
+    scheduled_visibility = 100.0;
 
     _terra_sync = (simgear::SGTerraSync*) globals->get_subsystem("terrasync");
     if (_terra_sync)
@@ -180,8 +183,8 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     //      << tile_height << endl;
 
     double tileRangeM = std::min(vis,_maxTileRangeM->getDoubleValue());
-    xrange = (int)(tileRangeM / tile_width) + 1;
-    yrange = (int)(tileRangeM / tile_height) + 1;
+    int xrange = (int)(tileRangeM / tile_width) + 1;
+    int yrange = (int)(tileRangeM / tile_height) + 1;
     if ( xrange < 1 ) { xrange = 1; }
     if ( yrange < 1 ) { yrange = 1; }
 
@@ -319,7 +322,7 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
 
     // schedule more tiles when visibility increased considerably
     // TODO Calculate tile size - instead of using fixed value (5000m)
-    if (range_m-scheduled_visibility > 5000.0)
+    if (range_m - scheduled_visibility > 5000.0)
         previous_bucket.make_bad();
 
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating tile list for "

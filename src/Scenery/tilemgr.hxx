@@ -48,9 +48,9 @@ private:
 
     // Tile loading state
     enum load_state {
-	Start = 0,
-	Inited = 1,
-	Running = 2
+        Start = 0,
+        Inited = 1,
+        Running = 2
     };
 
     load_state state, last_state;
@@ -65,10 +65,6 @@ private:
     SGBucket current_bucket;
     SGBucket pending;
     osg::ref_ptr<simgear::SGReaderWriterOptions> _options;
-
-    // x and y distance of tiles to load/draw
-    float vis;
-    int xrange, yrange;
 
     // current longitude latitude
     double longitude;
