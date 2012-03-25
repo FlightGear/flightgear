@@ -71,32 +71,36 @@ bool FGAIWaypoint::contains(string target) {
 
 FGAIFlightPlan::FGAIFlightPlan() 
 {
-    sid = 0;
-    repeat = false;
-    distance_to_go = 0;
-    lead_distance = 0;
-    start_time = 0;
-    arrivalTime = 0;
-    leg = 10;
-    gateId = 0;
+    sid             = 0;
+    repeat          = false;
+    distance_to_go  = 0;
+    lead_distance   = 0;
+    start_time      = 0;
+    arrivalTime     = 0;
+    leg             = 10;
+    gateId          = 0;
     lastNodeVisited = 0;
-    taxiRoute = 0;
-    wpt_iterator = waypoints.begin();
-    isValid = true;
+    taxiRoute       = 0;
+    wpt_iterator    = waypoints.begin();
+    isValid         = true;
 }
 
 FGAIFlightPlan::FGAIFlightPlan(const string& filename)
 {
-  int i;
-  sid = 0;
-  start_time = 0;
-  leg = 10;
-  gateId = 0;
-  taxiRoute = 0;
+  sid               = 0;
+  repeat            = false;
+  distance_to_go    = 0;
+  lead_distance     = 0;
+  start_time        = 0;
+  arrivalTime       = 0;
+  leg               = 10;
+  gateId            = 0;
+  lastNodeVisited   = 0;
+  taxiRoute         = 0;
+
   SGPath path( globals->get_fg_root() );
   path.append( ("/AI/FlightPlans/" + filename).c_str() );
   SGPropertyNode root;
-  repeat = false;
 
   try {
       readProperties(path.str(), &root);
@@ -108,7 +112,7 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
   }
 
   SGPropertyNode * node = root.getNode("flightplan");
-  for (i = 0; i < node->nChildren(); i++) { 
+  for (int i = 0; i < node->nChildren(); i++) {
      //cout << "Reading waypoint " << i << endl;        
      FGAIWaypoint* wpt = new FGAIWaypoint;
      SGPropertyNode * wpt_node = node->getChild(i);
@@ -144,45 +148,51 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
 // traffic manager. 
 FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
                                const std::string& p,
-			       double course,
-			       time_t start,
-			       FGAirport *dep,
-			       FGAirport *arr,
-			       bool firstLeg,
-			       double radius,
+                               double course,
+                               time_t start,
+                               FGAirport *dep,
+                               FGAirport *arr,
+                               bool firstLeg,
+                               double radius,
                                double alt,
                                double lat,
                                double lon,
                                double speed,
-			       const string& fltType,
-			       const string& acType,
-			       const string& airline)
+                               const string& fltType,
+                               const string& acType,
+                               const string& airline)
 {
-  sid = 0;
-  repeat = false;
-  leg = 10;
-  gateId=0;
-  taxiRoute = 0;
-  start_time = start;
-  bool useInitialWayPoint = true;
-  bool useCurrentWayPoint = false;
+  sid               = 0;
+  repeat            = false;
+  distance_to_go    = 0;
+  lead_distance     = 0;
+  start_time        = start;
+  arrivalTime       = 0;
+  leg               = 10;
+  gateId            = 0;
+  lastNodeVisited   = 0;
+  taxiRoute         = 0;
+
   SGPath path( globals->get_fg_root() );
   path.append( "/AI/FlightPlans" );
   path.append( p );
   
   SGPropertyNode root;
   isValid = true;
+
   // This is a bit of a hack:
   // Normally the value of course will be used to evaluate whether
   // or not a waypoint will be used for midair initialization of 
   // an AI aircraft. However, if a course value of 999 will be passed
   // when an update request is received, which will by definition always be
   // on the ground and should include all waypoints.
-  if (course == 999) 
-    {
-      useInitialWayPoint = false;
-      useCurrentWayPoint = true;
-    }
+//  bool useInitialWayPoint = true;
+//  bool useCurrentWayPoint = false;
+//  if (course == 999)
+//    {
+//      useInitialWayPoint = false;
+//      useCurrentWayPoint = true;
+//    }
 
   if (path.exists()) 
     {
