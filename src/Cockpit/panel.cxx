@@ -36,6 +36,7 @@
 #include <stdio.h>	// sprintf
 #include <string.h>
 #include <iostream>
+#include <cassert>
 
 #include <osg/CullFace>
 #include <osg/Depth>
@@ -48,6 +49,7 @@
 
 #include <plib/fnt.h>
 
+#include <boost/foreach.hpp>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/model.hxx>
@@ -196,7 +198,7 @@ FGPanel::FGPanel ()
   : _mouseDown(false),
     _mouseInstrument(0),
     _width(WIN_W), _height(int(WIN_H * 0.5768 + 1)),
-    _view_height(int(WIN_H * 0.4232)),
+ //   _view_height(int(WIN_H * 0.4232)),
     _visibility(fgGetNode("/sim/panel/visibility", true)),
     _x_offset(fgGetNode("/sim/panel/x-offset", true)),
     _y_offset(fgGetNode("/sim/panel/y-offset", true)),
@@ -475,6 +477,19 @@ FGPanel::draw(osg::State& state)
     for ( unsigned int i = 0; i < _instruments.size(); i++ )
       _instruments[i]->drawHotspots(state);
 
+    glColor3f(0, 1, 1);
+
+    int x0, y0, x1, y1;
+    getLogicalExtent(x0, y0, x1, y1);
+    
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(x0, y0);
+    glVertex2f(x1, y0);
+    glVertex2f(x1, y1);
+    glVertex2f(x0, y1);
+    glEnd();
+
+    
     glPopAttrib();
 
     state.popStateSet();
@@ -626,7 +641,55 @@ void FGPanel::setDepthTest (bool enable) {
     _enable_depth_test = enable;
 }
 
+class IntRect
+{
+  
+public:
+  IntRect() : 
+    x0(std::numeric_limits<int>::max()), 
+    y0(std::numeric_limits<int>::max()), 
+    x1(std::numeric_limits<int>::min()), 
+    y1(std::numeric_limits<int>::min()) 
+  { }
+  
+  IntRect(int x, int y, int w, int h) :
+    x0(x), y0(y), x1(x + w), y1( y + h)
+  { 
+    if (x1 < x0) {
+      std::swap(x0, x1);
+    }
+    
+    if (y1 < y0) {
+      std::swap(y0, y1);
+    }
+    
+    assert(x0 <= x1);
+    assert(y0 <= y1);
+  }
+  
+  void extend(const IntRect& r)
+  {
+    x0 = std::min(x0, r.x0);
+    y0 = std::min(y0, r.y0);
+    x1 = std::max(x1, r.x1);
+    y1 = std::max(y1, r.y1);
+  }
+  
+  int x0, y0, x1, y1;
+};
 
+void FGPanel::getLogicalExtent(int &x0, int& y0, int& x1, int &y1)
+{  
+  IntRect result;
+  BOOST_FOREACH(FGPanelInstrument *inst, _instruments) {
+    inst->extendRect(result);
+  }
+  
+  x0 = result.x0;
+  y0 = result.y0;
+  x1 = result.x1;
+  y1 = result.y1;
+}
 
 ////////////////////////////////////////////////////////////////////////.
 // Implementation of FGPanelAction.
@@ -772,6 +835,21 @@ int
 FGPanelInstrument::getHeight () const
 {
   return _h;
+}
+
+void
+FGPanelInstrument::extendRect(IntRect& r) const
+{
+  IntRect instRect(_x, _y, _w, _h);
+  r.extend(instRect);
+  
+  BOOST_FOREACH(FGPanelAction* act, _actions) {
+    r.extend(IntRect(getXPos() + act->getX(), 
+                     getYPos() + act->getY(),
+                     act->getWidth(),
+                     act->getHeight()
+                     ));
+  }
 }
 
 void

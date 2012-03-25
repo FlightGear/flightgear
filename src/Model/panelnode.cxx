@@ -110,10 +110,11 @@ void FGPanelNode::initWithPanel()
     _panel->init();
 
     // Read out the pixel-space info
-    _xmax = _panel->getWidth();
-    _ymax = _panel->getHeight();
+    float panelWidth = _panel->getWidth();
+    float panelHeight = _panel->getHeight();
 
-
+    _panel->getLogicalExtent(_xmin, _ymin, _xmax, _ymax);
+  
     // Now generate our transformation matrix.  For shorthand, use
     // "a", "b", and "c" as our corners and "m" as the matrix. The
     // vector u goes from a to b, v from a to c, and w is a
@@ -138,8 +139,8 @@ void FGPanelNode::initWithPanel()
     // rectangle.  Postmultiply scaling factors that match the
     // pixel-space size of the panel.
     for(i=0; i<4; ++i) {
-        m(0,i) *= 1.0/_xmax;
-        m(1,i) *= 1.0/_ymax;
+        m(0,i) *= 1.0/panelWidth;
+        m(1,i) *= 1.0/panelHeight;
     }
 
     dirtyBound();
@@ -181,28 +182,29 @@ FGPanelNode::drawImplementation(osg::State& state) const
 osg::BoundingBox
 FGPanelNode::computeBound() const
 {
-    osg::Vec3 coords[4];
-    osg::Matrix m(transformMatrix());
-    coords[0] = m.preMult(osg::Vec3(0,0,0));
-    coords[1] = m.preMult(osg::Vec3(_xmax,0,0));
-    coords[2] = m.preMult(osg::Vec3(0,_ymax,0));
-  
-    osg::BoundingBox bb;
-    bb.expandBy(coords[0]);
-    bb.expandBy(coords[1]);
-    bb.expandBy(coords[2]);
-    return bb;
+
+  osg::Vec3 coords[3];
+  osg::Matrix m(transformMatrix());
+  coords[0] = m.preMult(osg::Vec3(_xmin,_ymin,0));
+  coords[1] = m.preMult(osg::Vec3(_xmax,_ymin,0));
+  coords[2] = m.preMult(osg::Vec3(_xmin,_ymax,0));
+
+  osg::BoundingBox bb;
+  bb.expandBy(coords[0]);
+  bb.expandBy(coords[1]);
+  bb.expandBy(coords[2]);
+  return bb;
 }
 
 void FGPanelNode::accept(osg::PrimitiveFunctor& functor) const
 {
   osg::Vec3 coords[4];
   osg::Matrix m(transformMatrix());
-
-  coords[0] = m.preMult(osg::Vec3(0,0,0));
-  coords[1] = m.preMult(osg::Vec3(_xmax,0,0));
+  
+  coords[0] = m.preMult(osg::Vec3(_xmin,_ymin,0));
+  coords[1] = m.preMult(osg::Vec3(_xmax,_ymin,0));
   coords[2] = m.preMult(osg::Vec3(_xmax, _ymax, 0));
-  coords[3] = m.preMult(osg::Vec3(0,_ymax,0));
+  coords[3] = m.preMult(osg::Vec3(_xmin,_ymax,0));
 
   functor.setVertexArray(4, coords);
   functor.drawArrays( GL_QUADS, 0, 4);

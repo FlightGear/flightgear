@@ -662,8 +662,8 @@ readPanel (const SGPropertyNode * root)
   //
   // Grab the visible external viewing area, default to 
   //
-  panel->setViewHeight(root->getIntValue("view-height",
-					 768 - panel->getHeight() + 2));
+//  panel->setViewHeight(root->getIntValue("view-height",
+//					 768 - panel->getHeight() + 2));
 
   //
   // Grab the panel's initial offsets, default to 0, 0.

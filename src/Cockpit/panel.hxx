@@ -43,6 +43,7 @@
 class FGPanelInstrument;
 class fntFont;
 class DCLGPS;
+class IntRect;
 
 ////////////////////////////////////////////////////////////////////////
 // Texture management.
@@ -166,9 +167,15 @@ public:
   virtual int getYOffset () const { return _y_offset->getIntValue(); }
 
 				// View height.
-  virtual void setViewHeight (int height) { _view_height = height; }
-  virtual int getViewHeight () const { return _view_height; }
+ // virtual void setViewHeight (int height) { _view_height = height; }
+ // virtual int getViewHeight () const { return _view_height; }
 
+  /**
+   * find the actual logical extend of the panel, including all instruments
+   * and actions.
+   */
+  void getLogicalExtent(int &x0, int& y0, int& x1, int &y1);
+  
 				// Handle a mouse click.
   virtual bool doMouseAction (int button, int updown, int x, int y);
   virtual bool doLocalMouseAction(int button, int updown, int x, int y);
@@ -191,7 +198,7 @@ private:
   typedef std::vector<FGPanelInstrument *> instrument_list_type;
   int _width;
   int _height;
-  int _view_height;
+ // int _view_height;
 
   SGPropertyNode_ptr _visibility;
   SGPropertyNode_ptr _x_offset;
@@ -392,6 +399,7 @@ public:
 				// Coordinates relative to centre.
   virtual bool doMouseAction (int button, int updown, int x, int y);
 
+  void extendRect(IntRect& r) const;
 protected:
   int _x, _y, _w, _h;
   typedef std::vector<FGPanelAction *> action_list_type;

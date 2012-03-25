@@ -50,13 +50,11 @@ private:
     // Panel corner coordinates
     osg::Vec3 _bottomLeft, _topLeft, _bottomRight;
 
-    // The input range expected in the panel definition.  These x/y
-    // coordinates will map to the right/top sides.
-    float _xmax, _ymax;
-    
+    int _xmin, _ymin, _xmax, _ymax;
+  
     // The matrix that results, which transforms 2D x/y panel
     // coordinates into 3D coordinates of the panel quadrilateral.
-    osg::Matrix _xform;
+    osg::Matrix _xform;  
 };
 
 
