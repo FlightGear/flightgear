@@ -135,7 +135,9 @@ def output_text(top_namespaces,modules,version):
 				if comment.find('=====')!=-1:
 					buf+='<hr/>'
 				else:
-					buf+= '<div class="comments">'+comment.replace('#','').replace('<','&lt;').replace('>','&gt;')+'</div><br/>\n'
+					tempComment = comment.replace('#','').replace('<','&lt;').replace('>','&gt;')
+					if string.strip(tempComment)!="":
+						buf+= '<div class="comments">'+tempComment+'</div><br/>\n'
 			buf+='</div>\n'
 		if namespace[0] not in done2:
 			buf+='</div>\n'
