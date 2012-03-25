@@ -968,9 +968,8 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
             }
             if (tn)
                 tn = gn->findNode(nodeId);
-            else {
+            if (!tn)
                 break;
-            }
             
             double dist = SGGeodesy::distanceM(coord, tn->getGeod());
             if (dist < (min + 0.75)) {
