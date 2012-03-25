@@ -275,6 +275,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS -Wall)
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") 
+   set (WARNING_FLAGS "-Wall -Wno-overloaded-virtual")
+endif() 
+
 if(WIN32)
 
     if(MSVC)
