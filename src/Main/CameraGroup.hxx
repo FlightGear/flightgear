@@ -123,6 +123,25 @@ struct CameraInfo : public osg::Referenced
     /** Properties of the camera. @see CameraGroup::Flags.
      */
     unsigned flags;
+
+    /** Viewport parameters.
+     */
+    double x;
+    double y;
+    double width;
+    double height;
+    /** Physical size parameters.
+     */
+    double physicalWidth;
+    double physicalHeight;
+    double bezelHeightTop;
+    double bezelHeightBottom;
+    double bezelWidthLeft;
+    double bezelWidthRight;
+    /** The parent camera for relative camera configurations.
+     */
+    unsigned relativeCameraParent;
+
     /** the camera objects
      */
 	CameraMap cameras;
@@ -142,31 +161,13 @@ struct CameraInfo : public osg::Referenced
     //osg::ref_ptr<osg::Uniform> bloomOffset[2];
     osg::ref_ptr<osg::Uniform> projInverse;
     osg::ref_ptr<osg::Uniform> viewInverse;
+    osg::ref_ptr<osg::Uniform> view;
     osg::ref_ptr<osg::Uniform> du;
     osg::ref_ptr<osg::Uniform> dv;
-    osg::ref_ptr<osg::Uniform> view;
 
 	void setMatrices( osg::Camera* c );
 
 	osgUtil::RenderBin::RenderBinList savedTransparentBins;
-
-    /** Viewport parameters.
-     */
-    double x;
-    double y;
-    double width;
-    double height;
-    /** Physical size parameters.
-     */
-    double physicalWidth;
-    double physicalHeight;
-    double bezelHeightTop;
-    double bezelHeightBottom;
-    double bezelWidthLeft;
-    double bezelWidthRight;
-    /** The parent camera for relative camera configurations.
-     */
-    unsigned relativeCameraParent;
     /** The reference points in the parents projection space.
      */
     osg::Vec2d parentReference[2];
