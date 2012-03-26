@@ -51,6 +51,11 @@ FGMarkerBeaconRecord::create(int aTy, const string& aName, const SGGeod& aPos)
 {
   Type fgpTy = mapType(aTy);
   FGRunway* runway = getRunwayFromName(aName);
+  if (!runway)
+  {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Failed to create beacon for unknown runway '" << aName << "'.");
+      return NULL;
+  }
   SGGeod pos(aPos);
   // fudge elevation to the runway elevation if it's not specified
   if (fabs(pos.getElevationFt()) < 0.01) {
