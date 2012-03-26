@@ -1365,7 +1365,7 @@ FGRenderer::update( ) {
         double sAlpha = _splash_alpha->getDoubleValue();
         sAlpha -= SGMiscd::max(0.0,delay_time/fade_time);
         FGScenerySwitchCallback::scenery_enabled = (sAlpha<1.0);
-        _splash_alpha->setDoubleValue(sAlpha);
+        _splash_alpha->setDoubleValue((sAlpha < 0) ? 0.0 : sAlpha);
     }
 
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
