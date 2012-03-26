@@ -109,23 +109,25 @@ static void setItemShortcutFromString(NSMenuItem* item, const string& s)
   [item setKeyEquivalentModifierMask:modifiers];
 }
 
-class EnabledListener : public SGPropertyChangeListener
-{
-public:
-  EnabledListener(NSMenuItem* i) :
-    item(i)
-  {}
-  
-  
-  virtual void valueChanged(SGPropertyNode *node) 
+namespace {
+  class CocoaEnabledListener : public SGPropertyChangeListener
   {
-    BOOL b = node->getBoolValue();
-    [item setEnabled:b];
-  }
-  
-private:
-  NSMenuItem* item;
-};
+  public:
+    CocoaEnabledListener(NSMenuItem* i) :
+      item(i)
+    {}
+    
+    
+    virtual void valueChanged(SGPropertyNode *node) 
+    {
+      BOOL b = node->getBoolValue();
+      [item setEnabled:b];
+    }
+    
+  private:
+    NSMenuItem* item;
+  };
+} // of anonymous namespace
 
 FGCocoaMenuBar::CocoaMenuBarPrivate::CocoaMenuBarPrivate()
 {
@@ -173,7 +175,7 @@ void FGCocoaMenuBar::CocoaMenuBarPrivate::menuFromProps(NSMenu* menu, SGProperty
           setItemShortcutFromString(item, shortcut);
         }
         
-        n->getNode("enabled")->addChangeListener(new EnabledListener(item));
+        n->getNode("enabled")->addChangeListener(new CocoaEnabledListener(item));
         [item setTarget:delegate];
         [item setAction:@selector(itemAction:)];
       }
@@ -263,7 +265,7 @@ void FGCocoaMenuBar::init()
       n->setBoolValue("enabled", true);
     }
     
-    n->getNode("enabled")->addChangeListener(new EnabledListener(item));
+    n->getNode("enabled")->addChangeListener(new CocoaEnabledListener(item));
   }
 }
 

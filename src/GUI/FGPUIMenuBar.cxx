@@ -314,7 +314,9 @@ FGPUIMenuBar::make_object_map(SGPropertyNode * node)
     }
 }
 
-struct EnabledListener : SGPropertyChangeListener {
+namespace { 
+  
+  struct EnabledListener : SGPropertyChangeListener {
     void valueChanged(SGPropertyNode *node) {
         NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
         if (!gui)
@@ -324,6 +326,8 @@ struct EnabledListener : SGPropertyChangeListener {
             menubar->enable_item(node->getParent(), node->getBoolValue());
     }
 };
+
+} // of anonymous namespace
 
 void
 FGPUIMenuBar::add_enabled_listener(SGPropertyNode * node)
