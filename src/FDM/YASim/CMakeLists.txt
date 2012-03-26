@@ -1,11 +1,10 @@
 include(FlightGearComponent)
 
-set(SOURCES
+set(COMMON
 	Airplane.cpp
 	Atmosphere.cpp
 	ControlMap.cpp
 	FGFDM.cpp
-	FGGround.cpp
 	Gear.cpp
 	Glue.cpp
 	Ground.cpp
@@ -28,12 +27,17 @@ set(SOURCES
 	TurbineEngine.cpp
 	Turbulence.cpp
 	Wing.cpp
-	YASim.cxx
 )
 
-flightgear_component(YASim "${SOURCES}")
+set(SOURCES
+	${COMMON}
+	YASim.cxx
+	FGGround.cpp
+)
+
+flightgear_component(YASim  "${SOURCES}")
     
-add_executable(yasim yasim-test.cpp ${SOURCES})
+add_executable(yasim yasim-test.cpp ${COMMON})
 
 target_link_libraries(yasim 
 	${SIMGEAR_CORE_LIBRARIES}
