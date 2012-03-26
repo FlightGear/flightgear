@@ -159,4 +159,4 @@ set(SOURCES
     
 include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
 
-flightgear_component(JSBSim "${SOURCES}" "${HEADERS}")
+add_library(JSBSim STATIC ${SOURCES} ${HEADERS})

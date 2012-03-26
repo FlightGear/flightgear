@@ -28,30 +28,10 @@
 #ifndef _FG_JPEG_HTTPD_HXX
 #define _FG_JPEG_HTTPD_HXX
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/io/sg_netChat.hxx>
-
-#ifdef FG_JPEG_SERVER
-#  include <simgear/screen/jpgfactory.hxx>
-#else
-// dummy it in to keep the compiler happy
-class trJpgFactory {
-public:
-    trJpgFactory();
-    void init(int, int);
-    void destroy();
-    int render();
-    void setFrustum(double,double,double,double,double,double);
-  void *data();
-};
-#endif
+#include <simgear/screen/jpgfactory.hxx>
 
 #include "protocol.hxx"
-
-class trJpgFactory;
 
 
 /* simple httpd server that makes an hasty stab at following the http

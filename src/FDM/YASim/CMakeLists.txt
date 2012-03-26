@@ -32,12 +32,11 @@ set(SOURCES
 )
 
 flightgear_component(YASim "${SOURCES}")
-
-add_executable(yasim yasim-test.cpp)
+    
+add_executable(yasim yasim-test.cpp ${SOURCES})
 
 target_link_libraries(yasim 
-	fgYASim
 	${SIMGEAR_CORE_LIBRARIES}
-	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
+    ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
 
 install(TARGETS yasim RUNTIME DESTINATION bin)

@@ -53,7 +53,10 @@ set(HEADERS
 	viewmgr.hxx
 	)
 
-add_executable(fgfs ${SOURCES} ${HEADERS})
+get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
+get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
+
+add_executable(fgfs ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
 
 get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
 #message(STATUS "fg libs ${FG_LIBS}")
@@ -69,8 +72,14 @@ else()
 	set(HLA_LIBRARIES "")
 endif()
 
+if(ENABLE_JSBSIM)
+    # FIXME - remove once JSBSim doesn't expose private headers
+    include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
+    
+    target_link_libraries(fgfs JSBSim)
+endif()
+
 target_link_libraries(fgfs
-	${FG_LIBS}
 	${SIMGEAR_LIBRARIES}
 	${OPENSCENEGRAPH_LIBRARIES}
 	${OPENGL_LIBRARIES}

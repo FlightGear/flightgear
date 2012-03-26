@@ -12,7 +12,6 @@ set(SOURCES
 	generic.cxx
 	httpd.cxx
 	joyclient.cxx
-	jpg-httpd.cxx
 	jsclient.cxx
 	lfsglass.cxx
 	native.cxx
@@ -40,7 +39,6 @@ set(HEADERS
 	generic.hxx
 	httpd.hxx
 	joyclient.hxx
-	jpg-httpd.hxx
 	jsclient.hxx
 	lfsglass.hxx
 	native.hxx
@@ -55,7 +53,12 @@ set(HEADERS
 	ray.hxx
 	rul.hxx
 	)
-    	
+	
+if(FG_JPEG_SERVER)
+    list(APPEND SOURCES jpg-httpd.cxx)
+    list(APPEND HEADERS jpg-httpd.hxx)
+endif()
+   	
 flightgear_component(Network "${SOURCES}" "${HEADERS}")
 
 if(RTI_FOUND)
