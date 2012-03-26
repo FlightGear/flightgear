@@ -85,6 +85,7 @@ FGLocation::FGLocation(void)
 
 FGLocation::FGLocation(double lon, double lat, double radius)
 {
+  mCacheValid = false;
 
   a = b = a2 = b2 = 0.0;
   e = e2 = f = 1.0;
