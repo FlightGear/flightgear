@@ -480,8 +480,6 @@ GPS::update (double delta_time_sec)
   }
   
   if (_dataValid && (_mode == "init")) {
-    // allow a realistic delay in the future, here
-    SG_LOG(SG_INSTR, SG_INFO, "GPS initialisation complete");
         
     if (_route_active_node->getBoolValue()) {
       // GPS init with active route
@@ -497,6 +495,12 @@ GPS::update (double delta_time_sec)
         setScratchFromPositioned(apt, 0);
         selectOBSMode();
       }
+    }
+
+    if (_mode != "init")
+    {
+      // allow a realistic delay in the future, here
+      SG_LOG(SG_INSTR, SG_INFO, "GPS initialisation complete");
     }
   } // of init mode check
   
