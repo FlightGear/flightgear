@@ -114,7 +114,6 @@ set(LARCSIM_SOURCES
     ls_matrix.c
     ls_model.c
     ls_step.c
-    ls_trim.c
     navion_aero.c
     navion_engine.c
     navion_gear.c
