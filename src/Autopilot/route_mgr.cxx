@@ -992,6 +992,8 @@ void FGRouteMgr::update_mirror()
   mirror->removeChildren("wp");
   
   int num = numWaypts();
+  double totalDistanceEnroute = 0.0;
+    
   for (int i = 0; i < num; i++) {
     Waypt* wp = _route[i];
     SGPropertyNode *prop = mirror->getChild("wp", i, 1);
@@ -1008,6 +1010,8 @@ void FGRouteMgr::update_mirror()
         next->courseAndDistanceFrom(pos);
       prop->setDoubleValue("leg-bearing-true-deg", crsDist.first);
       prop->setDoubleValue("leg-distance-nm", crsDist.second * SG_METER_TO_NM);
+      prop->setDoubleValue("distance-along-route-nm", totalDistanceEnroute);
+      totalDistanceEnroute += crsDist.second * SG_METER_TO_NM;
     }
     
     if (wp->altitudeRestriction() != RESTRICT_NONE) {
@@ -1049,6 +1053,16 @@ void FGRouteMgr::update_mirror()
   if (rmDlg) {
     rmDlg->updateValues();
   }
+    
+  if (_departure) {
+    departure->setDoubleValue("field-elevation-ft", _departure->getElevation());
+  }
+  
+  if (_destination) {
+    destination->setDoubleValue("field-elevation-ft", _destination->getElevation());
+  }
+  
+  totalDistance->setDoubleValue(totalDistanceEnroute);
 }
 
 // command interface /autopilot/route-manager/input:
