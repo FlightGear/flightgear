@@ -125,7 +125,7 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
     set(PLIB_LIBRARIES "") # clear value
     
 # based on the contents of deps, add other required PLIB
-# static library dependencies. Eg PUI requires SSG and FNT
+# static library dependencies. Eg PUI requires FNT
     set(outDeps ${PLIB_FIND_COMPONENTS})
     
     foreach(c ${PLIB_FIND_COMPONENTS})
@@ -133,9 +133,9 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
             # handle MSVC confusion over pu/pui naming, by removing
             # 'pu' and then adding it back
             list(REMOVE_ITEM outDeps "pu")
-            list(APPEND outDeps ${PUNAME} "fnt" "ssg" "sg")
+            list(APPEND outDeps ${PUNAME} "fnt" "sg")
         elseif (${c} STREQUAL "puaux")
-            list(APPEND outDeps ${PUNAME} "fnt" "ssg" "sg")
+            list(APPEND outDeps ${PUNAME} "fnt" "sg")
         elseif (${c} STREQUAL "ssg")
             list(APPEND outDeps "sg")
         endif()
