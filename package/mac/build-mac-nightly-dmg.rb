@@ -3,7 +3,7 @@
 require 'ERB'
 
 $osgLibs = ['osgFX', 'osgParticle', 'osg', 'osgGA', 'osgText', 'osgUtil', 'osgSim', 'osgViewer', 'osgDB']
-$osgPlugins = ['ac', 'osg', 'freetype', 'qt', 'imageio', 'rgb', 'txf', 'mdl', '3ds']
+$osgPlugins = ['ac', 'osg', 'freetype', 'qt', 'imageio', 'rgb', 'txf', 'mdl', '3ds', 'dds']
 
 def runOsgVersion(option)
   env = "export DYLD_LIBRARY_PATH=#{Dir.pwd}/dist/lib"
