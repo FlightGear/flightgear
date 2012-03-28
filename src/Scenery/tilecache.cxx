@@ -100,6 +100,7 @@ long TileCache::get_drop_tile() {
                  * Allow a 1 second timeout since an empty tiles may just be loaded...
                  */
                 SG_LOG( SG_TERRAIN, SG_DEBUG, "    dropping an unused and empty tile");
+                min_index = index;
                 break;
             }
             if (( e->get_time_expired() < min_time )||
