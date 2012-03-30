@@ -105,6 +105,7 @@ public:
                                    const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
 
     void updateShadowCamera(const flightgear::CameraInfo* info, const osg::Vec3d& position);
+    void updateShadowMapSize(int mapSize);
 
     SGSky* getSky() const { return _sky; }
 

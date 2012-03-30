@@ -158,7 +158,7 @@ struct CameraInfo : public osg::Referenced
 	 */
 	RenderBufferMap buffers;
 	void addBuffer(RenderBufferInfo::Kind k, osg::Texture2D* tex, float scale = 1.0 ) { buffers[k] = RenderBufferInfo(tex,scale); }
-	osg::Texture2D* getBuffer(RenderBufferInfo::Kind k) { return buffers[k].texture.get(); }
+	osg::Texture2D* getBuffer(RenderBufferInfo::Kind k) const;
 
     osg::ref_ptr<osg::TexGen> shadowTexGen[4];
 

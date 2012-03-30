@@ -246,6 +246,14 @@ osg::Camera* CameraInfo::getCamera(CameraKind k) const
     return ii->second.camera.get();
 }
 
+osg::Texture2D* CameraInfo::getBuffer(RenderBufferInfo::Kind k) const
+{
+    RenderBufferMap::const_iterator ii = buffers.find(k);
+    if (ii == buffers.end())
+        return 0;
+    return ii->second.texture.get();
+}
+
 int CameraInfo::getMainSlaveIndex() const
 {
     return cameras.find( MAIN_CAMERA )->second.slaveIndex;

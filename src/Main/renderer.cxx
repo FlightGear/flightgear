@@ -446,11 +446,19 @@ FGRenderer::splashinit( void ) {
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
 }
 
+class ShadowMapSizeListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        globals->get_renderer()->updateShadowMapSize(node->getIntValue());
+    }
+};
+
 void
 FGRenderer::init( void )
 {
 	_classicalRenderer = !fgGetBool("/sim/rendering/rembrandt", false);
     _shadowMapSize    = fgGetInt( "/sim/rendering/shadows/map-size", 4096 );
+    fgAddChangeListener( new ShadowMapSizeListener, "/sim/rendering/shadows/map-size" );
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _scenery_override = fgGetNode("/sim/sceneryloaded-override", true);
     _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
@@ -856,7 +864,7 @@ void FGRenderer::updateShadowCamera(const flightgear::CameraInfo* info, const os
             updateShadowCascade(info, camera, grp, 0, left, right, bottom, top, zNear, 1.0, 5.0/zNear);
             updateShadowCascade(info, camera, grp, 1, left, right, bottom, top, zNear, 5.0/zNear,50.0/zNear);
             updateShadowCascade(info, camera, grp, 2, left, right, bottom, top, zNear, 50.0/zNear,512.0/zNear);
-            updateShadowCascade(info, camera, grp, 3, left, right, bottom, top, zNear, 512.0/zNear,10000.0/zNear);
+            updateShadowCascade(info, camera, grp, 3, left, right, bottom, top, zNear, 512.0/zNear,5000.0/zNear);
             {
             osg::Camera* cascade = static_cast<osg::Camera*>( mainShadowCamera );
             osg::Matrixd &viewMatrix = cascade->getViewMatrix();
@@ -869,6 +877,57 @@ void FGRenderer::updateShadowCamera(const flightgear::CameraInfo* info, const os
             viewMatrix.makeLookAt( position + (getSunDirection() * 10000.0), position, position );
             }
         }
+    }
+}
+
+void FGRenderer::updateShadowMapSize(int mapSize)
+{
+    if ( ((~( mapSize-1 )) & mapSize) != mapSize ) {
+        SG_LOG( SG_VIEW, SG_ALERT, "Map size is not a power of two" );
+        return;
+    }
+    for (   CameraGroup::CameraIterator ii = CameraGroup::getDefault()->camerasBegin();
+            ii != CameraGroup::getDefault()->camerasEnd();
+            ++ii )
+    {
+        CameraInfo* info = ii->get();
+        Camera* camera = info->getCamera(SHADOW_CAMERA);
+        if (camera == 0) continue;
+
+        Texture2D* tex = info->getBuffer(RenderBufferInfo::SHADOW_BUFFER);
+        if (tex == 0) continue;
+
+        tex->setTextureSize( mapSize, mapSize );
+        tex->dirtyTextureObject();
+
+        Viewport* vp = camera->getViewport();
+        vp->width() = mapSize;
+        vp->height() = mapSize;
+
+        osgViewer::Renderer* renderer
+            = static_cast<osgViewer::Renderer*>(camera->getRenderer());
+        for (int i = 0; i < 2; ++i) {
+            osgUtil::SceneView* sceneView = renderer->getSceneView(i);
+            sceneView->getRenderStage()->setFrameBufferObject(0);
+            sceneView->getRenderStage()->setCameraRequiresSetUp(true);
+            if (sceneView->getRenderStageLeft()) {
+                sceneView->getRenderStageLeft()->setFrameBufferObject(0);
+                sceneView->getRenderStageLeft()->setCameraRequiresSetUp(true);
+            }
+            if (sceneView->getRenderStageRight()) {
+                sceneView->getRenderStageRight()->setFrameBufferObject(0);
+                sceneView->getRenderStageRight()->setCameraRequiresSetUp(true);
+            }
+        }
+
+        int cascadeSize = mapSize / 2;
+		Group* grp = camera->getChild(0)->asGroup();
+		for (int i = 0; i < 4; ++i ) {
+            Camera* cascadeCam = static_cast<Camera*>( grp->getChild(i) );
+            cascadeCam->setViewport( int( i / 2 ) * cascadeSize, (i & 1) * cascadeSize, cascadeSize, cascadeSize );
+        }
+
+        _shadowMapSize = mapSize;
     }
 }
 
@@ -1050,7 +1109,7 @@ const char *fog_frag_src = ""
 
 osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc )
 {
-    SG_LOG( SG_INPUT, SG_ALERT, "Harmless warning messages on effects not found beyond this point" );
+    SG_LOG( SG_VIEW, SG_ALERT, "Harmless warning messages on effects not found beyond this point" );
     osg::Camera* camera = new osg::Camera;
 	info->addCamera(flightgear::LIGHTING_CAMERA, camera );
 
@@ -1236,7 +1295,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
 
     camera->addChild( lightingGroup );
 
-    SG_LOG( SG_INPUT, SG_ALERT, "End of harmless warning messages on effects not found" );
+    SG_LOG( SG_VIEW, SG_ALERT, "End of harmless warning messages on effects not found" );
 
 	return camera;
 }
