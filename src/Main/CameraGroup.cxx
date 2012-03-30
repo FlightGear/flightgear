@@ -185,11 +185,13 @@ void CameraInfo::updateCameras()
 {
     for (CameraMap::iterator ii = cameras.begin(); ii != cameras.end(); ++ii ) {
         float f = ii->second.scaleFactor;
+        if ( f == 0.0f ) continue;
         ii->second.camera->getViewport()->setViewport(x*f, y*f, width*f, height*f);
     }
 
     for (RenderBufferMap::iterator ii = buffers.begin(); ii != buffers.end(); ++ii ) {
         float f = ii->second.scaleFactor;
+        if ( f == 0.0f ) continue;
         osg::Texture2D* texture = ii->second.texture.get();
         if ( texture->getTextureHeight() != height*f || texture->getTextureWidth() != width*f ) {
             texture->setTextureSize( width*f, height*f );
@@ -202,13 +204,16 @@ void CameraInfo::resized(double w, double h)
 {
     for (RenderBufferMap::iterator ii = buffers.begin(); ii != buffers.end(); ++ii) {
         float s = ii->second.scaleFactor;
+        if ( s == 0.0f ) continue;
         ii->second.texture->setTextureSize( w * s, h * s );
         ii->second.texture->dirtyTextureObject();
     }
 
     for (CameraMap::iterator ii = cameras.begin(); ii != cameras.end(); ++ii) {
         RenderStageInfo& rsi = ii->second;
-        if (!rsi.resizable || rsi.camera->getRenderTargetImplementation() != osg::Camera::FRAME_BUFFER_OBJECT)
+        if (!rsi.resizable ||
+                rsi.camera->getRenderTargetImplementation() != osg::Camera::FRAME_BUFFER_OBJECT ||
+                rsi.scaleFactor == 0.0f )
             continue;
 
         Viewport* vp = rsi.camera->getViewport();
@@ -350,6 +355,10 @@ void CameraGroup::update(const osg::Vec3d& position,
             bool projectionDone = false;
             Matrix projectionMatrix;
             for ( CameraMap::const_iterator ii = info->cameras.begin(); ii != info->cameras.end(); ++ii ) {
+                if ( ii->first == SHADOW_CAMERA ) {
+                    globals->get_renderer()->updateShadowCamera(info, position);
+                    continue;
+                }
                 if ( ii->second.fullscreen )
                     continue;
 

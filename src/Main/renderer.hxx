@@ -8,6 +8,7 @@
 
 #include <osg/ref_ptr>
 #include <osg/Matrix>
+#include <osg/Vec3>
 
 namespace osg
 {
@@ -103,6 +104,8 @@ public:
 	flightgear::CameraInfo* buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
                                    const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
 
+    void updateShadowCamera(const flightgear::CameraInfo* info, const osg::Vec3d& position);
+
     SGSky* getSky() const { return _sky; }
 
 	void setPlanes( double zNear, double zFar );
@@ -125,9 +128,13 @@ protected:
     SGTimeStamp _splash_time;
     SGSky* _sky;
 	bool _classicalRenderer;
+    int _shadowMapSize;
 
 	osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
+	osg::Camera* buildDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
 	osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
+    void updateShadowCascade(const flightgear::CameraInfo* info, osg::Camera* camera, osg::Group* grp, int idx, double left, double right, double bottom, double top, double zNear, double f1, double f2);
+    osg::Vec3 getSunDirection() const;
 	osg::ref_ptr<osg::Uniform> _ambientFactor;
     osg::ref_ptr<osg::Uniform> _sunDiffuse;
     osg::ref_ptr<osg::Uniform> _sunSpecular;

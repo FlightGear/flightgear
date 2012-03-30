@@ -27,6 +27,7 @@
 #include <osg/Node>
 #include <osg/TextureRectangle>
 #include <osg/Texture2D>
+#include <osg/TexGen>
 #include <osgUtil/RenderBin>
 
 // For osgUtil::LineSegmentIntersector::Intersections, which is a typedef.
@@ -54,7 +55,8 @@ struct RenderBufferInfo {
 		NORMAL_BUFFER,
 		DIFFUSE_BUFFER,
 		SPEC_EMIS_BUFFER,
-		LIGHTING_BUFFER
+		LIGHTING_BUFFER,
+        SHADOW_BUFFER
 	};
 
 	RenderBufferInfo(osg::Texture2D* t = 0, float s = 1.0 ) : texture(t), scaleFactor(s) {}
@@ -147,6 +149,7 @@ struct CameraInfo : public osg::Referenced
 	CameraMap cameras;
 	void addCamera( CameraKind k, osg::Camera* c, int si = -1, bool fs = false ) { cameras[k].camera = c; cameras[k].slaveIndex = si; cameras[k].fullscreen = fs; }
 	void addCamera( CameraKind k, osg::Camera* c, bool fs ) { cameras[k].camera = c; cameras[k].fullscreen = fs; }
+	void addCamera( CameraKind k, osg::Camera* c, float s ) { cameras[k].camera = c; cameras[k].scaleFactor = s; }
 	osg::Camera* getCamera(CameraKind k) const;
 	int getMainSlaveIndex() const;
 	RenderStageInfo& getRenderStageInfo( CameraKind k ) { return cameras[k]; }
@@ -156,6 +159,8 @@ struct CameraInfo : public osg::Referenced
 	RenderBufferMap buffers;
 	void addBuffer(RenderBufferInfo::Kind k, osg::Texture2D* tex, float scale = 1.0 ) { buffers[k] = RenderBufferInfo(tex,scale); }
 	osg::Texture2D* getBuffer(RenderBufferInfo::Kind k) { return buffers[k].texture.get(); }
+
+    osg::ref_ptr<osg::TexGen> shadowTexGen[4];
 
     osg::ref_ptr<osg::Uniform> bufferSize;
     //osg::ref_ptr<osg::Uniform> bloomOffset[2];
