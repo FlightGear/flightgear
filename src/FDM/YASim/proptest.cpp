@@ -26,8 +26,8 @@ bool fgSetString(char const * name, char const * str) { return false; }
 SGPropertyNode* fgGetNode (const char * path, bool create) { return 0; }
 SGPropertyNode* fgGetNode (const char * path, int i, bool create) { return 0; }
 float fgGetFloat (const char * name, float defaultValue) { return 0; }
-float fgGetDouble (const char * name, double defaultValue) { return 0; }
-float fgSetDouble (const char * name, double defaultValue) { return 0; }
+double fgGetDouble (const char * name, double defaultValue) { return 0; }
+bool fgSetDouble (const char * name, double defaultValue) { return false; }
 
 static const float KTS2MPS = 0.514444444444;
 static const float RPM2RAD = 0.10471975512;
