@@ -10,7 +10,6 @@
 #include <simgear/threads/SGQueue.hxx>
 
 #include <map>
-using std::map;
 
 
 class FGNasalScript;
@@ -139,7 +138,7 @@ private:
     };
 
     // Listener
-    map<int, FGNasalListener *> _listener;
+    std::map<int, FGNasalListener *> _listener;
     vector<FGNasalListener *> _dead_listener;
     static int _listenerId;
 

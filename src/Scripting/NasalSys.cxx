@@ -34,8 +34,9 @@
 #include <Navaids/navlist.hxx>
 #include <Navaids/procedure.hxx>
 
-
 #include "NasalSys.hxx"
+
+using std::map;
 
 static FGNasalSys* nasalSys = 0;
 

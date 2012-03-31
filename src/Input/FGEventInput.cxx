@@ -34,6 +34,7 @@
 using simgear::PropertyList;
 using std::cout;
 using std::endl;
+using std::map;
 
 FGEventSetting::FGEventSetting( SGPropertyNode_ptr base ) :
   value(0.0)
