@@ -13,7 +13,6 @@ set(COMMON
 	Integrator.cpp
 	Jet.cpp
 	Launchbar.cpp
-	Math.cpp
 	Model.cpp
 	PistonEngine.cpp
 	PropEngine.cpp
