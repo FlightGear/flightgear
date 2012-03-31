@@ -1714,7 +1714,7 @@ FGRenderer::update( ) {
                              l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
     mUpdateVisitor->setVisibility(actual_visibility);
     simgear::GroundLightManager::instance()->update(mUpdateVisitor.get());
-    osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT & ~simgear::MODELLIGHT_BIT;
+    osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
     cullMask |= simgear::GroundLightManager::instance()
         ->getLightNodeMask(mUpdateVisitor.get());
     if (_panel_hotspots->getBoolValue())

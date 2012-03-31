@@ -1056,18 +1056,23 @@ void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
             continue;
         osg::ref_ptr<osg::Camera> farCamera = info->getCamera(FAR_CAMERA);
         osg::Camera* camera = info->getCamera( MAIN_CAMERA );
-        if (camera == 0) continue;
-        if (farCamera.valid() && farCamera->getNodeMask() != 0) {
-            camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
-            camera->setCullMaskLeft(nm & ~simgear::BACKGROUND_BIT);
-            camera->setCullMaskRight(nm & ~simgear::BACKGROUND_BIT);
-            farCamera->setCullMask(nm);
-            farCamera->setCullMaskLeft(nm);
-            farCamera->setCullMaskRight(nm);
+        if (camera) {
+            if (farCamera.valid() && farCamera->getNodeMask() != 0) {
+                camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
+                camera->setCullMaskLeft(nm & ~simgear::BACKGROUND_BIT);
+                camera->setCullMaskRight(nm & ~simgear::BACKGROUND_BIT);
+                farCamera->setCullMask(nm);
+                farCamera->setCullMaskLeft(nm);
+                farCamera->setCullMaskRight(nm);
+            } else {
+                camera->setCullMask(nm);
+                camera->setCullMaskLeft(nm);
+                camera->setCullMaskRight(nm);
+            }
         } else {
-            camera->setCullMask(nm);
-            camera->setCullMaskLeft(nm);
-            camera->setCullMaskRight(nm);
+            camera = info->getCamera( GEOMETRY_CAMERA );
+            if (camera == 0) continue;
+            camera->setCullMask( nm & ~simgear::MODELLIGHT_BIT );
         }
     }
 }
