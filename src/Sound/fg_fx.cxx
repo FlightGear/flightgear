@@ -144,16 +144,16 @@ void
 FGFX::update (double dt)
 {
     if ( _enabled->getBoolValue() ) {
-        if ( _avionics_enabled->getBoolValue() &&
-             (_avionics_ext->getBoolValue() ||
-              _internal->getBoolValue()))
+        if ( _avionics_enabled->getBoolValue())
         {
-            // avionics sound is enabled
-            _avionics->resume(); // no-op if already in resumed state
-            _avionics->set_volume( _avionics_volume->getFloatValue() );
+            if (_avionics_ext->getBoolValue() || _internal->getBoolValue()) {
+                // avionics sound is enabled
+                _avionics->resume(); // no-op if already in resumed state
+                _avionics->set_volume( _avionics_volume->getFloatValue() );
+            }
+            else
+                _avionics->suspend();
         }
-        else
-            _avionics->suspend();
 
         set_volume( _volume->getDoubleValue() );
         resume();
