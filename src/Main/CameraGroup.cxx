@@ -183,6 +183,8 @@ namespace flightgear
 {
 void CameraInfo::updateCameras()
 {
+    bufferSize->set( osg::Vec2f( width, height ) );
+
     for (CameraMap::iterator ii = cameras.begin(); ii != cameras.end(); ++ii ) {
         float f = ii->second.scaleFactor;
         if ( f == 0.0f ) continue;
@@ -202,6 +204,8 @@ void CameraInfo::updateCameras()
 
 void CameraInfo::resized(double w, double h)
 {
+    bufferSize->set( osg::Vec2f( w, h ) );
+
     for (RenderBufferMap::iterator ii = buffers.begin(); ii != buffers.end(); ++ii) {
         float s = ii->second.scaleFactor;
         if ( s == 0.0f ) continue;
@@ -1052,8 +1056,7 @@ void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
             continue;
         osg::ref_ptr<osg::Camera> farCamera = info->getCamera(FAR_CAMERA);
         osg::Camera* camera = info->getCamera( MAIN_CAMERA );
-        if ( camera == 0 )
-            camera = info->getCamera( GEOMETRY_CAMERA );
+        if (camera == 0) continue;
         if (farCamera.valid() && farCamera->getNodeMask() != 0) {
             camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
             camera->setCullMaskLeft(nm & ~simgear::BACKGROUND_BIT);
