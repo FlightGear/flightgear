@@ -1405,6 +1405,7 @@ struct OptionDesc {
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },
     {"aircraft-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
     {"model-hz",                     true,  OPTION_INT,    "/sim/model-hz", false, "", 0 },
+    {"max-fps",                      true,  OPTION_DOUBLE, "/sim/frame-rate-throttle-hz", false, "", 0 },
     {"speed",                        true,  OPTION_INT,    "/sim/speed-up", false, "", 0 },
     {"trim",                         false, OPTION_BOOL,   "/sim/presets/trim", true, "", 0 },
     {"notrim",                       false, OPTION_BOOL,   "/sim/presets/trim", false, "", 0 },
@@ -1993,7 +1994,7 @@ void Options::processOptions()
   // in practice this means system.fgfsrc must be *processed* before
   // .fgfsrc, which must be processed before the command line args, and so on.
   OptionValueVec::const_iterator groupEnd = p->values.end();
-    
+
   while (groupEnd != p->values.begin()) {
     OptionValueVec::const_iterator groupBegin = p->rfindGroup(groupEnd);
   // run over the group in FIFO order
@@ -2007,7 +2008,6 @@ void Options::processOptions()
               exit(-1); // exit and return an error
           case FG_OPTIONS_EXIT:
               exit(0);  // clean exit
-              break;
           default:
               break;
       }
@@ -2015,7 +2015,7 @@ void Options::processOptions()
     
     groupEnd = groupBegin;
   }
-  
+
   BOOST_FOREACH(const SGPath& file, p->propertyFiles) {
     if (!file.exists()) {
       SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << file.str());
