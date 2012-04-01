@@ -1457,8 +1457,7 @@ FGRenderer::setupView( void )
     lightSource->setReferenceFrame(osg::LightSource::RELATIVE_RF);
     lightSource->setLocalStateSetModes(osg::StateAttribute::ON);
     lightSource->setUpdateCallback(new FGLightSourceUpdateCallback);
-	if ( _classicalRenderer )
-		mRealRoot->addChild(lightSource);
+    mRealRoot->addChild(lightSource);
     // we need a white diffuse light for the phase of the moon
     osg::LightSource* sunLight = new osg::LightSource;
     sunLight->getLight()->setDataVariance(Object::DYNAMIC);
@@ -1475,8 +1474,7 @@ FGRenderer::setupView( void )
     skyGroup->addChild(_sky->getPreRoot());
     sunLight->addChild(skyGroup);
     mRoot->addChild(sceneGroup);
-    if ( _classicalRenderer )
-		mRoot->addChild(sunLight);
+    mRoot->addChild(sunLight);
     
     // Clouds are added to the scene graph later
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
