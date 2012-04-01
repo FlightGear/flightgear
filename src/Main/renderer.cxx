@@ -522,7 +522,7 @@ FGRenderer::init( void )
     _sky->texture_path( texture_path.str() );
 }
 
-void installCullVisitor(Camera* camera)
+void installCullVisitor(Camera* camera, bool ignoreLOD = false)
 {
     osgViewer::Renderer* renderer
         = static_cast<osgViewer::Renderer*>(camera->getRenderer());
@@ -533,7 +533,7 @@ void installCullVisitor(Camera* camera)
 #else
         osg::ref_ptr<osgUtil::CullVisitor::Identifier> identifier;
         identifier = sceneView->getCullVisitor()->getIdentifier();
-        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
+        sceneView->setCullVisitor(new simgear::EffectCullVisitor(ignoreLOD));
         sceneView->getCullVisitor()->setIdentifier(identifier.get());
 
         identifier = sceneView->getCullVisitorLeft()->getIdentifier();
@@ -779,7 +779,7 @@ static osg::Camera* createShadowCascadeCamera( int no, int cascadeSize ) {
     cascadeCam->setName( oss.str() );
     cascadeCam->setClearMask(0);
     cascadeCam->setCullMask(~( simgear::MODELLIGHT_BIT /* | simgear::NO_SHADOW_BIT */ ) );
-    cascadeCam->setCullingMode( cascadeCam->getCullingMode() & ~osg::CullSettings::SMALL_FEATURE_CULLING );
+    cascadeCam->setCullingMode( osg::CullSettings::VIEW_FRUSTUM_CULLING );
     cascadeCam->setAllowEventFocus(false);
     cascadeCam->setReferenceFrame(osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT);
     cascadeCam->setRenderOrder(osg::Camera::NESTED_RENDER);
@@ -857,18 +857,21 @@ void FGRenderer::updateShadowCamera(const flightgear::CameraInfo* info, const os
         dir.normalize();
         // cos(100 deg) == -0.17
         if (up * dir < -0.17 ) {
+            if (shadowSwitch->getValue(0))
+                SG_LOG(SG_VIEW, SG_ALERT, "Switching shadows OFF" );
             shadowSwitch->setAllChildrenOff();
         } else {
+            if (!shadowSwitch->getValue(0))
+                SG_LOG(SG_VIEW, SG_ALERT, "Switching shadows ON" );
             double left,right,bottom,top,zNear,zFar;
             ref_ptr<Camera> camera = info->getCamera(GEOMETRY_CAMERA);
-            camera->getProjectionMatrix().getFrustum(left,right,bottom,top,zNear,zFar);
+            camera->getProjectionMatrix().getFrustum(left, right, bottom, top, zNear, zFar);
 
             shadowSwitch->setAllChildrenOn();
-            osg::Group* grp = mainShadowCamera->getChild(0)->asGroup();
-            updateShadowCascade(info, camera, grp, 0, left, right, bottom, top, zNear, 1.0, 5.0/zNear);
-            updateShadowCascade(info, camera, grp, 1, left, right, bottom, top, zNear, 5.0/zNear,50.0/zNear);
-            updateShadowCascade(info, camera, grp, 2, left, right, bottom, top, zNear, 50.0/zNear,512.0/zNear);
-            updateShadowCascade(info, camera, grp, 3, left, right, bottom, top, zNear, 512.0/zNear,5000.0/zNear);
+            updateShadowCascade(info, camera, shadowSwitch, 0, left, right, bottom, top, zNear, 1.0, 5.0/zNear);
+            updateShadowCascade(info, camera, shadowSwitch, 1, left, right, bottom, top, zNear, 5.0/zNear, 50.0/zNear);
+            updateShadowCascade(info, camera, shadowSwitch, 2, left, right, bottom, top, zNear, 50.0/zNear, 512.0/zNear);
+            updateShadowCascade(info, camera, shadowSwitch, 3, left, right, bottom, top, zNear, 512.0/zNear, 5000.0/zNear);
             {
             osg::Camera* cascade = static_cast<osg::Camera*>( mainShadowCamera );
             osg::Matrixd &viewMatrix = cascade->getViewMatrix();
@@ -1113,7 +1116,6 @@ const char *fog_frag_src = ""
 
 osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc )
 {
-    SG_LOG( SG_VIEW, SG_ALERT, "Harmless warning messages on effects not found beyond this point" );
     osg::Camera* camera = new osg::Camera;
     info->addCamera(flightgear::LIGHTING_CAMERA, camera );
 
@@ -1163,6 +1165,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     if (effect) {
         eg->setEffect( effect );
     } else {
+        SG_LOG( SG_VIEW, SG_ALERT, "=> Using default, builtin, Effects/ambient" );
         ss = eg->getOrCreateStateSet();
         ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
         ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
@@ -1197,6 +1200,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     if (effect) {
         eg->setEffect( effect );
     } else {
+        SG_LOG( SG_VIEW, SG_ALERT, "=> Using default, builtin, Effects/sunlight" );
         ss = eg->getOrCreateStateSet();
         ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
         ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
@@ -1268,6 +1272,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     if (effect) {
         eg->setEffect( effect );
     } else {
+        SG_LOG( SG_VIEW, SG_ALERT, "=> Using default, builtin, Effects/fog" );
         ss = eg->getOrCreateStateSet();
         ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
         ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
@@ -1280,7 +1285,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
         ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
         ss->addUniform( new osg::Uniform( "color_tex", 2 ) );
         ss->addUniform( new osg::Uniform( "spec_emis_tex", 3 ) );
-        ss->setRenderBinDetails( 99999, "RenderBin" );
+        ss->setRenderBinDetails( 10000, "RenderBin" );
         osg::Program* program = new osg::Program;
         program->addShader( new osg::Shader( osg::Shader::VERTEX, fog_vert_src ) );
         program->addShader( new osg::Shader( osg::Shader::FRAGMENT, fog_frag_src ) );
@@ -1298,8 +1303,6 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     lightingGroup->addChild( quadCam2 );
 
     camera->addChild( lightingGroup );
-
-    SG_LOG( SG_VIEW, SG_ALERT, "End of harmless warning messages on effects not found" );
 
     return camera;
 }
@@ -1321,7 +1324,7 @@ FGRenderer::buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flag
     
     Camera* shadowCamera = buildDeferredShadowCamera( info, gc );
     cgroup->getViewer()->addSlave(shadowCamera, false);
-    installCullVisitor(shadowCamera);
+    installCullVisitor(shadowCamera,true);
     slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
     info->getRenderStageInfo(SHADOW_CAMERA).slaveIndex = slaveIndex;
 
