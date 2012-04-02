@@ -801,7 +801,7 @@ osg::Camera* FGRenderer::buildDeferredShadowCamera( flightgear::CameraInfo* info
     mainShadowCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     attachBufferToCamera( info, mainShadowCamera, osg::Camera::DEPTH_BUFFER, flightgear::SHADOW_CAMERA, flightgear::RenderBufferInfo::SHADOW_BUFFER );
     mainShadowCamera->setComputeNearFarMode(osg::Camera::DO_NOT_COMPUTE_NEAR_FAR);
-    mainShadowCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    mainShadowCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT);
     mainShadowCamera->setViewport( 0, 0, _shadowMapSize, _shadowMapSize );
     mainShadowCamera->setDrawBuffer(GL_FRONT);
     mainShadowCamera->setReadBuffer(GL_FRONT);
@@ -1113,7 +1113,6 @@ const char *fog_frag_src = ""
 
 osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc )
 {
-    SG_LOG( SG_VIEW, SG_ALERT, "Harmless warning messages on effects not found beyond this point" );
     osg::Camera* camera = new osg::Camera;
     info->addCamera(flightgear::LIGHTING_CAMERA, camera );
 
@@ -1163,6 +1162,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     if (effect) {
         eg->setEffect( effect );
     } else {
+        SG_LOG( SG_VIEW, SG_ALERT, "=> Using default, builtin, Effects/ambient" );
         ss = eg->getOrCreateStateSet();
         ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
         ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
@@ -1197,6 +1197,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     if (effect) {
         eg->setEffect( effect );
     } else {
+        SG_LOG( SG_VIEW, SG_ALERT, "=> Using default, builtin, Effects/sunlight" );
         ss = eg->getOrCreateStateSet();
         ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
         ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
@@ -1268,6 +1269,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     if (effect) {
         eg->setEffect( effect );
     } else {
+        SG_LOG( SG_VIEW, SG_ALERT, "=> Using default, builtin, Effects/fog" );
         ss = eg->getOrCreateStateSet();
         ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
         ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
@@ -1280,7 +1282,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
         ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
         ss->addUniform( new osg::Uniform( "color_tex", 2 ) );
         ss->addUniform( new osg::Uniform( "spec_emis_tex", 3 ) );
-        ss->setRenderBinDetails( 99999, "RenderBin" );
+        ss->setRenderBinDetails( 10000, "RenderBin" );
         osg::Program* program = new osg::Program;
         program->addShader( new osg::Shader( osg::Shader::VERTEX, fog_vert_src ) );
         program->addShader( new osg::Shader( osg::Shader::FRAGMENT, fog_frag_src ) );
@@ -1298,8 +1300,6 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     lightingGroup->addChild( quadCam2 );
 
     camera->addChild( lightingGroup );
-
-    SG_LOG( SG_VIEW, SG_ALERT, "End of harmless warning messages on effects not found" );
 
     return camera;
 }
