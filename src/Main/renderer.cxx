@@ -801,7 +801,9 @@ osg::Camera* FGRenderer::buildDeferredShadowCamera( flightgear::CameraInfo* info
     mainShadowCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     attachBufferToCamera( info, mainShadowCamera, osg::Camera::DEPTH_BUFFER, flightgear::SHADOW_CAMERA, flightgear::RenderBufferInfo::SHADOW_BUFFER );
     mainShadowCamera->setComputeNearFarMode(osg::Camera::DO_NOT_COMPUTE_NEAR_FAR);
-    mainShadowCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT);
+    mainShadowCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    mainShadowCamera->setProjectionMatrix(osg::Matrix::identity());
+    mainShadowCamera->setCullingMode( osg::CullSettings::NO_CULLING );
     mainShadowCamera->setViewport( 0, 0, _shadowMapSize, _shadowMapSize );
     mainShadowCamera->setDrawBuffer(GL_FRONT);
     mainShadowCamera->setReadBuffer(GL_FRONT);
@@ -870,15 +872,12 @@ void FGRenderer::updateShadowCamera(const flightgear::CameraInfo* info, const os
             updateShadowCascade(info, camera, grp, 2, left, right, bottom, top, zNear, 50.0/zNear,512.0/zNear);
             updateShadowCascade(info, camera, grp, 3, left, right, bottom, top, zNear, 512.0/zNear,5000.0/zNear);
             {
-            osg::Camera* cascade = static_cast<osg::Camera*>( mainShadowCamera );
-            osg::Matrixd &viewMatrix = cascade->getViewMatrix();
-            osg::Matrixd &projectionMatrix = cascade->getProjectionMatrix();
+            osg::Matrixd &viewMatrix = mainShadowCamera->getViewMatrix();
 
-            osg::Vec4 aim = osg::Vec4( 0.0, 0.0, -7500., 1.0 ) * camera->getInverseViewMatrix();
+            osg::Vec4 aim = osg::Vec4( 0.0, 0.0, 0.0, 1.0 ) * camera->getInverseViewMatrix();
 
-            projectionMatrix.makeOrtho( -7500., 7500., -7500., 7500., 1., 15000.0 );
             osg::Vec3 position( aim.x(), aim.y(), aim.z() );
-            viewMatrix.makeLookAt( position + (getSunDirection() * 10000.0), position, position );
+            viewMatrix.makeLookAt( position, position + (getSunDirection() * 10000.0), position );
             }
         }
     }
