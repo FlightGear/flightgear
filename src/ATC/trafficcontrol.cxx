@@ -1328,7 +1328,7 @@ void FGStartupController::render(bool visible)
         group = new osg::Group;
         FGScenery * local_scenery = globals->get_scenery();
         //double elevation_meters = 0.0;
-        double elevation_feet = 0.0;
+        //double elevation_feet = 0.0;
 
 
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
@@ -1370,7 +1370,7 @@ void FGStartupController::render(bool visible)
                         SGGeod center2 = end;
                         center2.setElevationM(SG_MAX_ELEVATION_M);
                         if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
-                            elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
+                            //elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
                             //elevation_meters += 0.5;
                         }
                         else {
@@ -1433,7 +1433,7 @@ void FGStartupController::render(bool visible)
                             SGGeod center2 = segment->getStart()->getGeod();
                             center2.setElevationM(SG_MAX_ELEVATION_M);
                             if (local_scenery->get_elevation_m( center2, elevationStart, NULL )) {
-                                elevation_feet = elevationStart * SG_METER_TO_FEET + 0.5;
+                                //elevation_feet = elevationStart * SG_METER_TO_FEET + 0.5;
                                 //elevation_meters += 0.5;
                             }
                             else {
@@ -1445,7 +1445,7 @@ void FGStartupController::render(bool visible)
                             SGGeod center2 = segment->getEnd()->getGeod();
                             center2.setElevationM(SG_MAX_ELEVATION_M);
                             if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
-                                elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
+                                //elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
                                 //elevation_meters += 0.5;
                             }
                             else {

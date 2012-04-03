@@ -3,7 +3,6 @@ include(FlightGearComponent)
 set(SOURCES
 	antenna.cxx
 	radio.cxx
-	itm.cpp
 	)
 
 set(HEADERS
