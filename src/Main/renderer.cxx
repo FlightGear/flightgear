@@ -1470,7 +1470,8 @@ FGRenderer::setupView( void )
     skyGroup->addChild(_sky->getPreRoot());
     sunLight->addChild(skyGroup);
     mRoot->addChild(sceneGroup);
-    mRoot->addChild(sunLight);
+    if ( _classicalRenderer )
+        mRoot->addChild(sunLight);
     
     // Clouds are added to the scene graph later
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
