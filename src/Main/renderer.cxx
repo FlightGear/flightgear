@@ -866,11 +866,10 @@ void FGRenderer::updateShadowCamera(const flightgear::CameraInfo* info, const os
             camera->getProjectionMatrix().getFrustum(left,right,bottom,top,zNear,zFar);
 
             shadowSwitch->setAllChildrenOn();
-            osg::Group* grp = mainShadowCamera->getChild(0)->asGroup();
-            updateShadowCascade(info, camera, grp, 0, left, right, bottom, top, zNear, 1.0, 5.0/zNear);
-            updateShadowCascade(info, camera, grp, 1, left, right, bottom, top, zNear, 5.0/zNear,50.0/zNear);
-            updateShadowCascade(info, camera, grp, 2, left, right, bottom, top, zNear, 50.0/zNear,512.0/zNear);
-            updateShadowCascade(info, camera, grp, 3, left, right, bottom, top, zNear, 512.0/zNear,5000.0/zNear);
+            updateShadowCascade(info, camera, shadowSwitch, 0, left, right, bottom, top, zNear, 1.0, 5.0/zNear);
+            updateShadowCascade(info, camera, shadowSwitch, 1, left, right, bottom, top, zNear, 5.0/zNear, 50.0/zNear);
+            updateShadowCascade(info, camera, shadowSwitch, 2, left, right, bottom, top, zNear, 50.0/zNear, 512.0/zNear);
+            updateShadowCascade(info, camera, shadowSwitch, 3, left, right, bottom, top, zNear, 512.0/zNear, 5000.0/zNear);
             {
             osg::Matrixd &viewMatrix = mainShadowCamera->getViewMatrix();
 
