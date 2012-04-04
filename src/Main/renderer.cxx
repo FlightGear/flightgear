@@ -453,12 +453,20 @@ public:
     }
 };
 
+class ShadowEnabledListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        globals->get_renderer()->enableShadows(node->getBoolValue());
+    }
+};
+
 void
 FGRenderer::init( void )
 {
 	_classicalRenderer = !fgGetBool("/sim/rendering/rembrandt", false);
     _shadowMapSize    = fgGetInt( "/sim/rendering/shadows/map-size", 4096 );
     fgAddChangeListener( new ShadowMapSizeListener, "/sim/rendering/shadows/map-size" );
+    fgAddChangeListener( new ShadowEnabledListener, "/sim/rendering/shadows/enabled" );
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _scenery_override = fgGetNode("/sim/sceneryloaded-override", true);
     _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
@@ -817,7 +825,10 @@ osg::Camera* FGRenderer::buildDeferredShadowCamera( flightgear::CameraInfo* info
         shadowSwitch->addChild( cascadeCam );
         info->shadowTexGen[i] = new osg::TexGen;
     }
-    shadowSwitch->setAllChildrenOn();
+    if (fgGetBool("/sim/rendering/shadows/enabled", true))
+        shadowSwitch->setAllChildrenOn();
+    else
+        shadowSwitch->setAllChildrenOff();
 
     return mainShadowCamera;
 }
@@ -858,7 +869,7 @@ void FGRenderer::updateShadowCamera(const flightgear::CameraInfo* info, const os
         up.normalize();
         dir.normalize();
         // cos(100 deg) == -0.17
-        if (up * dir < -0.17 ) {
+        if (up * dir < -0.17 || !fgGetBool("/sim/rendering/shadows/enabled", true)) {
             shadowSwitch->setAllChildrenOff();
         } else {
             double left,right,bottom,top,zNear,zFar;
@@ -930,6 +941,24 @@ void FGRenderer::updateShadowMapSize(int mapSize)
         }
 
         _shadowMapSize = mapSize;
+    }
+}
+
+void FGRenderer::enableShadows(bool enabled)
+{
+    for (   CameraGroup::CameraIterator ii = CameraGroup::getDefault()->camerasBegin();
+            ii != CameraGroup::getDefault()->camerasEnd();
+            ++ii )
+    {
+        CameraInfo* info = ii->get();
+        Camera* camera = info->getCamera(SHADOW_CAMERA);
+        if (camera == 0) continue;
+
+        osg::Switch* shadowSwitch = camera->getChild(0)->asSwitch();
+        if (enabled)
+            shadowSwitch->setAllChildrenOn();
+        else
+            shadowSwitch->setAllChildrenOff();
     }
 }
 

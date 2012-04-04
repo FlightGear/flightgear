@@ -106,6 +106,7 @@ public:
 
     void updateShadowCamera(const flightgear::CameraInfo* info, const osg::Vec3d& position);
     void updateShadowMapSize(int mapSize);
+    void enableShadows(bool enabled);
 
     SGSky* getSky() const { return _sky; }
 
