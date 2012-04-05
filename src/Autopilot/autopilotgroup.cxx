@@ -44,6 +44,8 @@ using simgear::PropertyList;
 class FGXMLAutopilotGroupImplementation : public FGXMLAutopilotGroup
 {
 public:
+    FGXMLAutopilotGroupImplementation(const std::string& nodeName) :
+        FGXMLAutopilotGroup(), _nodeName(nodeName) {}
     virtual void addAutopilot( const std::string & name, SGPropertyNode_ptr apNode, SGPropertyNode_ptr config );
     virtual void removeAutopilot( const std::string & name );
     void init();
@@ -52,6 +54,7 @@ public:
 private:
     void initFrom( SGPropertyNode_ptr rootNode, const char * childName );
     vector<string> _autopilotNames;
+    std::string _nodeName;
 
 };
 
@@ -100,12 +103,7 @@ void FGXMLAutopilotGroupImplementation::reinit()
 
 void FGXMLAutopilotGroupImplementation::init()
 {
-    static const char * nodeNames[] = {
-        "autopilot",
-        "property-rule"
-    };
-    for( unsigned i = 0; i < sizeof(nodeNames)/sizeof(nodeNames[0]); i++ )
-        initFrom( fgGetNode( "/sim/systems" ), nodeNames[i] );
+    initFrom( fgGetNode( "/sim/systems" ), _nodeName.c_str() );
 
     SGSubsystemGroup::bind();
     SGSubsystemGroup::init();
@@ -173,7 +171,7 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string & name, SGProp
     }
 }
 
-FGXMLAutopilotGroup * FGXMLAutopilotGroup::createInstance()
+FGXMLAutopilotGroup * FGXMLAutopilotGroup::createInstance(const std::string& nodeName)
 {
-    return new FGXMLAutopilotGroupImplementation();
+    return new FGXMLAutopilotGroupImplementation(nodeName);
 }
