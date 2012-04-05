@@ -437,7 +437,21 @@ void
 FGRenderer::splashinit( void ) {
     osgViewer::Viewer* viewer = getViewer();
     mRealRoot = dynamic_cast<osg::Group*>(viewer->getSceneData());
-    mRealRoot->addChild(fgCreateSplashNode());
+    ref_ptr<Node> splashNode = fgCreateSplashNode();
+    if (_classicalRenderer) {
+        mRealRoot->addChild(splashNode.get());
+    } else {
+        for (   CameraGroup::CameraIterator ii = CameraGroup::getDefault()->camerasBegin();
+                ii != CameraGroup::getDefault()->camerasEnd();
+                ++ii )
+        {
+            CameraInfo* info = ii->get();
+            Camera* camera = info->getCamera(DISPLAY_CAMERA);
+            if (camera == 0) continue;
+
+            camera->addChild(splashNode.get());
+        }
+    }
     mFrameStamp = viewer->getFrameStamp();
     // Scene doesn't seem to pass the frame stamp to the update
     // visitor automatically.
