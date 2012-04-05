@@ -58,6 +58,8 @@ YASim::YASim(double dt) :
 YASim::~YASim()
 {
     delete _fdm;
+
+    _gearProps.clear();
 }
 
 void YASim::report()
@@ -75,7 +77,6 @@ void YASim::report()
     SG_LOG(SG_FLIGHT,SG_INFO,"       Cruise AoA: "<< aoa);
     SG_LOG(SG_FLIGHT,SG_INFO,"   Tail Incidence: "<< tail);
     SG_LOG(SG_FLIGHT,SG_INFO,"Approach Elevator: "<<a->getApproachElevator());
-    
 
     float cg[3];
     char buf[256];
@@ -102,30 +103,52 @@ void YASim::bind()
 
     char buf[256];
     for(int i=0; i<_fdm->getAirplane()->getModel()->numThrusters(); i++) {
-	sprintf(buf, "/engines/engine[%d]/fuel-flow-gph", i);        fgUntie(buf);
-	sprintf(buf, "/engines/engine[%d]/rpm", i);                  fgUntie(buf);
-	sprintf(buf, "/engines/engine[%d]/mp-osi", i);               fgUntie(buf);
-	sprintf(buf, "/engines/engine[%d]/egt-degf", i);             fgUntie(buf);
-	sprintf(buf, "/engines/engine[%d]/oil-temperature-degf", i); fgUntie(buf);
+        sprintf(buf, "/engines/engine[%d]/fuel-flow-gph", i);        fgUntie(buf);
+        sprintf(buf, "/engines/engine[%d]/rpm", i);                  fgUntie(buf);
+        sprintf(buf, "/engines/engine[%d]/mp-osi", i);               fgUntie(buf);
+        sprintf(buf, "/engines/engine[%d]/egt-degf", i);             fgUntie(buf);
+        sprintf(buf, "/engines/engine[%d]/oil-temperature-degf", i); fgUntie(buf);
     }
+}
+
+YASim::GearProps::GearProps(SGPropertyNode_ptr gear_root) :
+    has_brake(gear_root->getNode("has-brake", true)),
+    wow(gear_root->getNode("wow", true)),
+    compression_norm(gear_root->getNode("compression-norm", true)),
+    compression_m(gear_root->getNode("compression-m", true)),
+    caster_angle_deg(gear_root->getNode("caster-angle-deg", true)),
+    rollspeed_ms(gear_root->getNode("rollspeed-ms", true)),
+    ground_is_solid(gear_root->getNode("ground-is-solid", true)),
+    ground_friction_factor(gear_root->getNode("ground-friction-factor", true))
+{
 }
 
 void YASim::init()
 {
-    Airplane* a = _fdm->getAirplane();
-    Model* m = a->getModel();
+    Airplane* airplane = _fdm->getAirplane();
+    Model* model = airplane->getModel();
+
+    _crashed         = fgGetNode("/sim/crashed", true);
+    _pressure_inhg   = fgGetNode("/environment/pressure-inhg", true);
+    _temp_degc       = fgGetNode("/environment/temperature-degc", true);
+    _density_slugft3 = fgGetNode("/environment/density-slugft3", true);
+    _gear_agl_m      = fgGetNode("/position/gear-agl-m", true);
+    _gear_agl_ft     = fgGetNode("/position/gear-agl-ft", true);
+    _pilot_g         = fgGetNode("/accelerations/pilot-g", true);
+    _speed_setprop   = fgGetNode("/sim/presets/speed-set", true);
 
     // Superclass hook
     common_init();
 
-    m->setCrashed(false);
+    model->setCrashed(false);
+    _crashed->setBoolValue(false);
 
     // Figure out the initial speed type
-    string speed_set = fgGetString("/sim/presets/speed-set", "UVW");
-    if (speed_set == "NED")
-        _speed_set = NED;
-    else if (speed_set == "UVW")
+    string speed_set = _speed_setprop->getStringValue();
+    if ((speed_set == "") || (speed_set == "UVW"))
         _speed_set = UVW;
+    else if (speed_set == "NED")
+        _speed_set = NED;
     else if (speed_set == "knots")
         _speed_set = KNOTS;
     else if (speed_set == "mach")
@@ -149,21 +172,35 @@ void YASim::init()
     }
 
     // Compile it into a real airplane, and tell the user what they got
-    a->compile();
+    airplane->compile();
     report();
 
     _fdm->init();
 
+    if (model->getLaunchbar())
+    {
+        _catapult_launch_cmd         = fgGetNode("/controls/gear/catapult-launch-cmd", true);
+        _launchbar_position_norm     = fgGetNode("/gear/launchbar/position-norm", true);
+        _launchbar_holdback_pos_norm = fgGetNode("/gear/launchbar/holdback-position-norm", true);
+        _launchbar_state             = fgGetNode("/gear/launchbar/state", true);
+        _launchbar_strop             = fgGetNode("/gear/launchbar/strop", true);
+    }
+    if (airplane->getHook())
+    {
+        _tailhook_position_norm = fgGetNode("/gear/tailhook/position-norm", 0, true);
+    }
+
     // Create some FG{Eng|Gear}Interface objects
-    int i;
-    for(i=0; i<a->numGear(); i++) {
-        Gear* g = a->getGear(i);
-	SGPropertyNode * node = fgGetNode("gear/gear", i, true);
+    for(int i=0; i<airplane->numGear(); i++) {
+        Gear* g = airplane->getGear(i);
+        SGPropertyNode * node = fgGetNode("gear/gear", i, true);
         float pos[3];
         g->getPosition(pos);
-	node->setDoubleValue("xoffset-in", pos[0] * M2FT * 12);
-	node->setDoubleValue("yoffset-in", pos[1] * M2FT * 12);
-	node->setDoubleValue("zoffset-in", pos[2] * M2FT * 12);
+        node->setDoubleValue("xoffset-in", pos[0] * M2FT * 12);
+        node->setDoubleValue("yoffset-in", pos[1] * M2FT * 12);
+        node->setDoubleValue("zoffset-in", pos[2] * M2FT * 12);
+
+        _gearProps.push_back(GearProps(node));
     }
 
     // Are we at ground level?  If so, lift the plane up so the gear
@@ -171,21 +208,21 @@ void YASim::init()
     double runway_altitude = get_Runway_altitude();
     if(get_Altitude() - runway_altitude < 50) {
         fgSetBool("/controls/gear/gear-down", false);
-	float minGearZ = 1e18;
-	for(i=0; i<a->numGear(); i++) {
-	    Gear* g = a->getGear(i);
-	    float pos[3];
-	    g->getPosition(pos);
-	    if(pos[2] < minGearZ)
-		minGearZ = pos[2];
-	}
-	_set_Altitude(runway_altitude - minGearZ*M2FT);
-	fgSetBool("/controls/gear/gear-down", true);
+        float minGearZ = 1e18;
+        for(int i=0; i<airplane->numGear(); i++) {
+            Gear* g = airplane->getGear(i);
+            float pos[3];
+            g->getPosition(pos);
+            if(pos[2] < minGearZ)
+                minGearZ = pos[2];
+        }
+        _set_Altitude(runway_altitude - minGearZ*M2FT);
+        fgSetBool("/controls/gear/gear-down", true);
     }
 
     // Blank the state, and copy in ours
     State s;
-    m->setState(&s);
+    model->setState(&s);
     copyToYASim(true);
 
     _fdm->getExternalInput();
@@ -202,9 +239,9 @@ void YASim::update(double dt)
     int iterations = _calc_multiloop(dt);
 
     // If we're crashed, then we don't care
-    if(fgGetBool("/sim/crashed") || _fdm->getAirplane()->getModel()->isCrashed()) {
-        if(!fgGetBool("/sim/crashed"))
-            fgSetBool("/sim/crashed", true);
+    if(_crashed->getBoolValue() || _fdm->getAirplane()->getModel()->isCrashed()) {
+        if(!_crashed->getBoolValue())
+            _crashed->setBoolValue(true);
         _fdm->getAirplane()->getModel()->setCrashed(false);
         return;
     }
@@ -254,10 +291,10 @@ void YASim::copyToYASim(bool copyState)
     wind[1] = get_V_east_airmass() * FT2M * -1.0;
     wind[2] = get_V_down_airmass() * FT2M * -1.0;
 
-    float pressure = fgGetFloat("/environment/pressure-inhg") * INHG2PA;
-    float temp = fgGetFloat("/environment/temperature-degc") + 273.15;
-    float dens = fgGetFloat("/environment/density-slugft3") 
-        * SLUG2KG * M2FT*M2FT*M2FT;
+    float pressure = _pressure_inhg->getFloatValue() * INHG2PA;
+    float temp     = _temp_degc->getFloatValue() + 273.15;
+    float dens     = _density_slugft3->getFloatValue() *
+                            SLUG2KG * M2FT*M2FT*M2FT;
 
     // Convert and set:
     Model* model = _fdm->getAirplane()->getModel();
@@ -278,7 +315,6 @@ void YASim::copyToYASim(bool copyState)
     Math::mmul33(s.orient, xyz2ned, s.orient);
 
     // Velocity
-    string speed_set = fgGetString("/sim/presets/speed-set", "UVW");
     float v[3];
     bool needCopy = false;
     switch (_speed_set) {
@@ -334,7 +370,7 @@ void YASim::copyToYASim(bool copyState)
 
     Launchbar* l = model->getLaunchbar();
     if (l)
-        l->setLaunchCmd(0.0<fgGetFloat("/controls/gear/catapult-launch-cmd"));
+        l->setLaunchCmd(0.0 < _catapult_launch_cmd->getFloatValue());
 }
 
 // All the settables:
@@ -397,8 +433,8 @@ void YASim::copyFromYASim()
     _set_Altitude_AGL((alt-groundlevel_m)*SG_METER_TO_FEET);
 
     // the smallest agl of all gears
-    fgSetFloat("/position/gear-agl-m", model->getAGL());
-    fgSetFloat("/position/gear-agl-ft", model->getAGL()*M2FT);
+    _gear_agl_m->setFloatValue(model->getAGL());
+    _gear_agl_ft->setFloatValue(model->getAGL()*M2FT);
 
     // UNUSED
     //_set_Geocentric_Position(Glue::geod2geocLat(lat), lon, alt*M2FT);
@@ -412,7 +448,7 @@ void YASim::copyFromYASim()
     Math::vmul33(xyz2ned, s->v, v);
     _set_Velocities_Local(M2FT*v[0], M2FT*v[1], M2FT*v[2]);
     _set_V_ground_speed(Math::sqrt(M2FT*v[0]*M2FT*v[0] +
-				   M2FT*v[1]*M2FT*v[1]));
+                                   M2FT*v[1]*M2FT*v[1]));
     _set_Climb_Rate(-M2FT*v[2]);
 
     // The HUD uses this, but inverts down (?!)
@@ -431,9 +467,9 @@ void YASim::copyFromYASim()
     _set_Velocities_Wind_Body(v[0]*M2FT, -v[1]*M2FT, -v[2]*M2FT);
     _set_V_rel_wind(Math::mag3(v)*M2FT); // units?
 
-    float P = fgGetDouble("/environment/pressure-inhg") * INHG2PA;
-    float T = fgGetDouble("/environment/temperature-degc") + 273.15;
-    float D = fgGetFloat("/environment/density-slugft3")
+    float P = _pressure_inhg->getFloatValue() * INHG2PA;
+    float T = _temp_degc->getFloatValue() + 273.15;
+    float D = _density_slugft3->getFloatValue()
         *SLUG2KG * M2FT*M2FT*M2FT;
     _set_V_equiv_kts(Atmosphere::calcVEAS(v[0], P, T, D)*MPS2KTS);
     _set_V_calibrated_kts(Atmosphere::calcVCAS(v[0], P, T)*MPS2KTS);
@@ -453,7 +489,7 @@ void YASim::copyFromYASim()
     // There is no property for pilot G's, but I need it for a panel
     // instrument.  Hack this in here, and REMOVE IT WHEN IT FINDS A
     // REAL HOME!
-    fgSetFloat("/accelerations/pilot-g", -v[2]/9.8);
+    _pilot_g->setFloatValue(-v[2]/9.8);
 
     // The one appears (!) to want inverted pilot acceleration
     // numbers, in G's...
@@ -483,40 +519,44 @@ void YASim::copyFromYASim()
     _set_Euler_Rates(roll, pitch, hdg);
 
     // Fill out our engine and gear objects
-    int i;
-    for(i=0; i<airplane->numGear(); i++) {
+    for(int i=0; i<airplane->numGear(); i++) {
         Gear* g = airplane->getGear(i);
-	SGPropertyNode * node = fgGetNode("gear/gear", i, true);
-	node->setBoolValue("has-brake", g->getBrake() != 0);
-	node->setBoolValue("wow", g->getCompressFraction() != 0);
-	node->setFloatValue("compression-norm", g->getCompressFraction());
-	node->setFloatValue("compression-m", g->getCompressDist());
-        node->setFloatValue("caster-angle-deg", g->getCasterAngle() * RAD2DEG);
-        node->setFloatValue("rollspeed-ms", g->getRollSpeed());
-        node->setBoolValue("ground-is-solid", g->getGroundIsSolid()!=0);
-        node->setFloatValue("ground-friction-factor", g->getGroundFrictionFactor());
+        GearProps& gearProps = _gearProps[i];
+        gearProps.has_brake->setBoolValue(
+                g->getBrake() != 0);
+        gearProps.wow->setBoolValue(
+                g->getCompressFraction() != 0);
+        gearProps.compression_norm->setFloatValue(
+                g->getCompressFraction());
+        gearProps.compression_m->setFloatValue(
+                g->getCompressDist());
+        gearProps.caster_angle_deg->setFloatValue(
+                g->getCasterAngle() * RAD2DEG);
+        gearProps.rollspeed_ms->setFloatValue(
+                g->getRollSpeed());
+        gearProps.ground_is_solid->setBoolValue(
+                g->getGroundIsSolid()!=0);
+        gearProps.ground_friction_factor->setFloatValue(
+                g->getGroundFrictionFactor());
     }
 
     Hook* h = airplane->getHook();
     if(h) {
-	SGPropertyNode * node = fgGetNode("gear/tailhook", 0, true);
-	node->setFloatValue("position-norm", h->getCompressFraction());
+        _tailhook_position_norm->setFloatValue(h->getCompressFraction());
     }
 
     Launchbar* l = airplane->getLaunchbar();
     if(l) {
-	SGPropertyNode * node = fgGetNode("gear/launchbar", 0, true);
-	node->setFloatValue("position-norm", l->getCompressFraction());
-        node->setFloatValue("holdback-position-norm", l->getHoldbackCompressFraction());
-        node->setStringValue("state", l->getState());
-        node->setBoolValue("strop", l->getStrop());
+        _launchbar_position_norm->setFloatValue(l->getCompressFraction());
+        _launchbar_holdback_pos_norm->setFloatValue(l->getHoldbackCompressFraction());
+        _launchbar_state->setStringValue(l->getState());
+        _launchbar_strop->setBoolValue(l->getStrop());
     }
-
 }
 
 /** Reinit the FDM.
  * This is only used after a replay session and when the user requested to resume at
- * a past point of time. In thise case the FDM must reload all values from the property
+ * a past point of time. In this case the FDM must reload all values from the property
  * tree (as given by the replay system). */
 void YASim::reinit()
 {
