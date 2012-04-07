@@ -196,7 +196,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   time_t 
     totalTimeEnroute, 
     elapsedTimeEnroute,
-    remainingTimeEnroute, 
+    //remainingTimeEnroute,
     deptime = 0;
   if (!valid) {
     return false;
@@ -259,7 +259,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     totalTimeEnroute = flight->getArrivalTime() - flight->getDepartureTime();
     if (flight->getDepartureTime() < now) {
       elapsedTimeEnroute   = now - flight->getDepartureTime();
-      remainingTimeEnroute = totalTimeEnroute - elapsedTimeEnroute;
+      //remainingTimeEnroute = totalTimeEnroute - elapsedTimeEnroute;
       double x = elapsedTimeEnroute / (double) totalTimeEnroute;
       
     // current pos is based on great-circle course between departure/arrival,
@@ -275,7 +275,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
       speed = ((distanceM - coveredDistance) * SG_METER_TO_NM) / 3600.0;
     } else {
     // not departed yet
-      remainingTimeEnroute = totalTimeEnroute;
+      //remainingTimeEnroute = totalTimeEnroute;
       elapsedTimeEnroute = 0;
       position = dep->geod();
       SG_LOG (SG_GENERAL, SG_BULK, "Traffic Manager:      Flight is pending, departure in "
@@ -283,7 +283,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     }
   } else {
     // departure / arrival coincident
-    remainingTimeEnroute = totalTimeEnroute = 0.0;
+    //remainingTimeEnroute = totalTimeEnroute = 0.0;
     elapsedTimeEnroute = 0;
     position = dep->geod();
   }
