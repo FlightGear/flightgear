@@ -101,8 +101,10 @@ void FGTileMgr::refresh_tile(void* tileMgr, long tileIndex)
 
 void FGTileMgr::reinit()
 {
-    // reset flag, stop FDM processing, otherwise aircraft fall through
-    // the ground while reloading scenery
+    // protect against multiple scenery reloads and properly reset flags,
+    // otherwise aircraft fall through the ground while reloading scenery
+    if (!fgGetBool("/sim/sceneryloaded",true))
+        return;
     fgSetBool("/sim/sceneryloaded",false);
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
 
