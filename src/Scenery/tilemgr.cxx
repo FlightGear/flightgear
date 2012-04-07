@@ -101,6 +101,11 @@ void FGTileMgr::refresh_tile(void* tileMgr, long tileIndex)
 
 void FGTileMgr::reinit()
 {
+    // reset flag, stop FDM processing, otherwise aircraft fall through
+    // the ground while reloading scenery
+    fgSetBool("/sim/sceneryloaded",false);
+    fgSetDouble("/sim/startup/splash-alpha", 1.0);
+
     // remove all old scenery nodes from scenegraph and clear cache
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());

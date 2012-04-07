@@ -102,13 +102,8 @@ agRadar::init ()
 void
 agRadar::update (double delta_time_sec)
 {
-    if ( ! _sim_init_done ) {
-
-        if ( ! fgGetBool("sim/sceneryloaded", false) )
-            return;
-
-        _sim_init_done = true;
-    }
+    if (!_sceneryLoaded->getBoolValue())
+        return;
 
     if ( !_odg || ! _serviceable_node->getBoolValue() ) {
         _Instrument->setStringValue("status","");
@@ -122,7 +117,6 @@ agRadar::update (double delta_time_sec)
 
     _time = 0.0;
 
-   
     update_terrain();
 //    wxRadarBg::update(delta_time_sec);
 }

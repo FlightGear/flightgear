@@ -77,7 +77,6 @@ wxRadarBg::wxRadarBg(SGPropertyNode *node) :
     _interval(node->getDoubleValue("update-interval-sec", 1.0)),
     _elapsed_time(0),
     _persistance(0),
-    _sim_init_done(false),
     _odg(0),
     _range_nm(0),
     _scale(0),
@@ -127,6 +126,7 @@ void
 wxRadarBg::init ()
 {
     _serviceable_node = _Instrument->getNode("serviceable", true);
+    _sceneryLoaded = fgGetNode("/sim/sceneryloaded", true);
 
     // texture name to use in 2D and 3D instruments
     _texture_path = _Instrument->getStringValue("radar-texture-path",
@@ -287,22 +287,17 @@ osg::Matrixf wxRotate(float angle)
 void
 wxRadarBg::update (double delta_time_sec)
 {
-    if (!_sim_init_done) {
-        if (!fgGetBool("sim/sceneryloaded", false))
-            return;
+    if (!_sceneryLoaded->getBoolValue())
+        return;
 
-        _sim_init_done = true;
-    }
     if (!_odg || !_serviceable_node->getBoolValue()) {
         _Instrument->setStringValue("status", "");
         return;
     }
+
     _time += delta_time_sec;
-    if (_time < _interval){
-//        cout << "WXradar update too soon " << _time << endl;
+    if (_time < _interval)
         return;
-    }
-//        cout << "WXradar updating" << _time<< endl;
 
     _time = 0.0;
 

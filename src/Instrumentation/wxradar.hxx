@@ -57,9 +57,9 @@ protected:
     double _interval;
     double _elapsed_time;
     double _persistance;
-    bool _sim_init_done;
 
     SGPropertyNode_ptr _serviceable_node;
+    SGPropertyNode_ptr _sceneryLoaded;
     SGPropertyNode_ptr _Instrument;
     SGPropertyNode_ptr _radar_mode_control_node;
 

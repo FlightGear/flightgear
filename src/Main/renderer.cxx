@@ -1612,8 +1612,8 @@ FGRenderer::update( ) {
     if (_splash_alpha->getDoubleValue()>0.0)
     {
         // Fade out the splash screen
-        const double fade_time = 0.8;
-        const double fade_steps_per_sec = 20;
+        const double fade_time = 0.5;
+        const double fade_steps_per_sec = 10;
         double delay_time = SGMiscd::min(fade_time/fade_steps_per_sec,
                                          (SGTimeStamp::now() - _splash_time).toSecs());
         _splash_time = SGTimeStamp::now();
