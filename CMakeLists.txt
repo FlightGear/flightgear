@@ -111,6 +111,7 @@ option(ENABLE_LIBSVN     "Set to ON to build FlightGear/terrasync with libsvncli
 option(ENABLE_RTI        "Set to ON to build SimGear with RTI support" OFF)
 option(WITH_FGPANEL      "Set to ON to build the fgpanel application" ON)
 option(JPEG_FACTORY      "Enable JPEG-factory support" OFF)
+option(ENABLE_TESTS      "Set to OFF to disable building test applications" ON)
 
 if (MSVC)
     GET_FILENAME_COMPONENT(PARENT_DIR ${PROJECT_SOURCE_DIR} PATH)
