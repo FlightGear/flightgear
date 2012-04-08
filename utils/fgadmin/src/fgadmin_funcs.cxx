@@ -28,6 +28,11 @@
 
 #ifdef _WIN32
 #  include <direct.h>
+#  include <io.h>
+#define unlink _unlink
+#define mkdir _mkdir
+#else // !_WIN32
+#include <unistd.h>
 #endif
 
 #include <FL/Fl_File_Chooser.H>
@@ -128,7 +133,7 @@ void FGAdminUI::select_install_source() {
                               source.c_str(),
                               0 );
     if ( p != 0 ) {
-	source = p;
+        source = p;
         source_text->value( p );
         prefs->set( "install-source", p );
         prefs->flush();
@@ -142,7 +147,7 @@ void FGAdminUI::select_install_dest() {
                               dest.c_str(),
                               0 );
     if ( p != 0 ) {
-	dest = p;
+        dest = p;
         dest_text->value( p );
         prefs->set( "scenery-dest", p );
         prefs->flush();

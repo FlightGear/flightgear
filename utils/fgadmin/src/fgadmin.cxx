@@ -80,9 +80,7 @@ void FGAdminUI::cb_dest_desel_all(Fl_Button* o, void* v) {
 }
 
 FGAdminUI::FGAdminUI() {
-  Fl_Double_Window* w;
   { Fl_Double_Window* o = main_window = new Fl_Double_Window(465, 435, "FlightGear Admin Wizard");
-    w = o;
     o->callback((Fl_Callback*)cb_main_window, (void*)(this));
     { Fl_Group* o = new Fl_Group(5, 405, 455, 25);
       { Fl_Button* o = quit_b = new Fl_Button(375, 405, 85, 25, "Quit");
