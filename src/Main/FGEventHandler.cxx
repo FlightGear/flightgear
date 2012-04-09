@@ -45,7 +45,8 @@ FGEventHandler::FGEventHandler() :
     currentModifiers(0),
     resizable(true),
     mouseWarped(false),
-    scrollButtonPressed(false)
+    scrollButtonPressed(false),
+    changeStatsCameraRenderOrder(false)
 {
     using namespace osgGA;
     statsHandler->setKeyEventTogglesOnScreenStats(displayStatsKey);
@@ -364,6 +365,10 @@ void FGEventHandler::handleStats(osgGA::GUIActionAdapter& us)
         do {
             statsType = (statsType + 1) % osgViewer::StatsHandler::LAST;
             statsHandler->handle(*statsEvent, us);
+            if (changeStatsCameraRenderOrder) {
+                statsHandler->getCamera()->setRenderOrder(osg::Camera::POST_RENDER, 99999);
+                changeStatsCameraRenderOrder = false;
+            }
         } while (statsType != type);
 
         display->setIntValue(statsType);

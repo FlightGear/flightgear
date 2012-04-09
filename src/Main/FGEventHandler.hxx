@@ -79,6 +79,11 @@ public:
 	    return mouseMotionHandler;
 	}
 
+    void setChangeStatsCameraRenderOrder(bool c)
+    {
+        changeStatsCameraRenderOrder = c;
+    }
+
     int getCurrentModifiers() const
 	{
 	    return currentModifiers;
@@ -114,6 +119,7 @@ protected:
     bool scrollButtonPressed;
     int release_keys[128];
     void handleStats(osgGA::GUIActionAdapter& us);
+    bool changeStatsCameraRenderOrder;
 };
 
 void eventToWindowCoords(const osgGA::GUIEventAdapter* ea, double& x, double& y);

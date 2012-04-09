@@ -542,6 +542,10 @@ FGRenderer::init( void )
     }
     
     _sky->texture_path( texture_path.str() );
+
+    if (!_classicalRenderer) {
+        eventHandler->setChangeStatsCameraRenderOrder( true );
+    }
 }
 
 void installCullVisitor(Camera* camera)
@@ -752,7 +756,7 @@ osg::Camera* FGRenderer::buildDeferredGeometryCamera( flightgear::CameraInfo* in
     info->addCamera(flightgear::GEOMETRY_CAMERA, camera );
 
     camera->setCullMask( ~simgear::MODELLIGHT_BIT );
-    camera->setName( "GeometryCamera" );
+    camera->setName( "GeometryC" );
     camera->setGraphicsContext( gc );
     camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( flightgear::GEOMETRY_CAMERA, info ) );
     camera->setClearMask( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -815,7 +819,7 @@ osg::Camera* FGRenderer::buildDeferredShadowCamera( flightgear::CameraInfo* info
     osg::Camera* mainShadowCamera = new osg::Camera;
     info->addCamera(flightgear::SHADOW_CAMERA, mainShadowCamera, 0.0f );
 
-    mainShadowCamera->setName( "ShadowCamera" );
+    mainShadowCamera->setName( "ShadowC" );
     mainShadowCamera->setClearMask( GL_DEPTH_BUFFER_BIT );
     mainShadowCamera->setClearDepth( 1.0 );
     mainShadowCamera->setAllowEventFocus(false);
@@ -1161,7 +1165,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     camera->setAllowEventFocus(false);
     camera->setGraphicsContext(gc);
     camera->setViewport(new Viewport);
-    camera->setName("LightingCamera");
+    camera->setName("LightingC");
     camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     camera->setRenderOrder(osg::Camera::POST_RENDER, 50);
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
@@ -1372,7 +1376,7 @@ FGRenderer::buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flag
     slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
     info->getRenderStageInfo(LIGHTING_CAMERA).slaveIndex = slaveIndex;
 
-    camera->setName( "DisplayCamera" );
+    camera->setName( "DisplayC" );
     camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( flightgear::DISPLAY_CAMERA, info ) );
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
     camera->setAllowEventFocus(false);
