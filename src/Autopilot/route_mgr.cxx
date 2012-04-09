@@ -341,6 +341,8 @@ void FGRouteMgr::init() {
   
   totalDistance = fgGetNode(RM "total-distance", true);
   totalDistance->setDoubleValue(0.0);
+  distanceToGo = fgGetNode(RM "distance-remaining-nm", true);
+  distanceToGo->setDoubleValue(0.0);
   
   ete = fgGetNode(RM "ete", true);
   ete->setDoubleValue(0.0);
@@ -456,34 +458,44 @@ void FGRouteMgr::update( double dt )
   double distanceM;
   boost::tie(courseDeg, distanceM) = curWpt->courseAndDistanceFrom(currentPos);
   
-// update wp0 / wp1 / wp-last for legacy users
+// update wp0 / wp1 / wp-last
   wp0->setDoubleValue("dist", distanceM * SG_METER_TO_NM);
+  wp0->setDoubleValue("true-bearing-deg", courseDeg);
   courseDeg -= magvar->getDoubleValue(); // expose magnetic bearing
   wp0->setDoubleValue("bearing-deg", courseDeg);
   setETAPropertyFromDistance(wp0->getChild("eta"), distanceM);
   
+  double totalPathDistance = totalDistance->getDoubleValue() * SG_NM_TO_METER;
   double totalDistanceRemaining = distanceM; // distance to current waypoint
+  double pathDistance = cachedWaypointPathTotalDistance(_currentIndex);
+  
+// total distance to go, is direct distance to wp0, plus the remaining
+// path distance from wp0
+  totalDistanceRemaining += (totalPathDistance - pathDistance);
+  
+  wp0->setDoubleValue("distance-along-route-nm", 
+                      pathDistance * SG_METER_TO_NM);
+  wp0->setDoubleValue("remaining-distance-nm", 
+                      (totalPathDistance - pathDistance) * SG_METER_TO_NM);
   
   Waypt* nextWpt = nextWaypt();
   if (nextWpt) {
     boost::tie(courseDeg, distanceM) = nextWpt->courseAndDistanceFrom(currentPos);
      
     wp1->setDoubleValue("dist", distanceM * SG_METER_TO_NM);
+    wp1->setDoubleValue("true-bearing-deg", courseDeg);
     courseDeg -= magvar->getDoubleValue(); // expose magnetic bearing
     wp1->setDoubleValue("bearing-deg", courseDeg);
     setETAPropertyFromDistance(wp1->getChild("eta"), distanceM);
+    
+    double pathDistance = cachedWaypointPathTotalDistance(_currentIndex + 1);    
+    wp1->setDoubleValue("distance-along-route-nm", 
+                        pathDistance * SG_METER_TO_NM);
+    wp1->setDoubleValue("remaining-distance-nm", 
+                        (totalPathDistance - pathDistance) * SG_METER_TO_NM);
   }
   
-  Waypt* prev = curWpt;
-  for (unsigned int i=_currentIndex + 1; i<_route.size(); ++i) {
-    Waypt* w = _route[i];
-    if (w->flag(WPT_DYNAMIC)) continue;
-    totalDistanceRemaining += SGGeodesy::distanceM(prev->position(), w->position());
-    prev = w;
-    
-    
-  }
-  
+  distanceToGo->setDoubleValue(totalDistanceRemaining * SG_METER_TO_NM);
   wpn->setDoubleValue("dist", totalDistanceRemaining * SG_METER_TO_NM);
   ete->setDoubleValue(totalDistanceRemaining * SG_METER_TO_NM / groundSpeed * 3600.0);
   setETAPropertyFromDistance(wpn->getChild("eta"), totalDistanceRemaining);
@@ -1063,6 +1075,18 @@ void FGRouteMgr::update_mirror()
   }
   
   totalDistance->setDoubleValue(totalDistanceEnroute);
+}
+
+double FGRouteMgr::cachedLegPathDistanceM(int index) const
+{
+  SGPropertyNode *prop = mirror->getChild("wp", index, 1);
+  return prop->getDoubleValue("leg-distance-nm") * SG_NM_TO_METER;
+}
+
+double FGRouteMgr::cachedWaypointPathTotalDistance(int index) const
+{
+  SGPropertyNode *prop = mirror->getChild("wp", index, 1);
+  return prop->getDoubleValue("distance-along-route-nm") * SG_NM_TO_METER;
 }
 
 // command interface /autopilot/route-manager/input:

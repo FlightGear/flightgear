@@ -166,6 +166,7 @@ private:
     SGPropertyNode_ptr cruise; ///< cruise information
     
     SGPropertyNode_ptr totalDistance;
+    SGPropertyNode_ptr distanceToGo;
     SGPropertyNode_ptr ete;
     SGPropertyNode_ptr elapsedFlightTime;
     
@@ -195,6 +196,12 @@ private:
     
     void setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance);
     
+    /**
+     * retrieve the cached path distance along a leg
+     */
+    double cachedLegPathDistanceM(int index) const;
+    double cachedWaypointPathTotalDistance(int index) const;
+  
     class InputListener : public SGPropertyChangeListener {
     public:
         InputListener(FGRouteMgr *m) : mgr(m) {}
