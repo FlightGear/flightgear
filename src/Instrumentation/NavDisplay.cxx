@@ -436,7 +436,7 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
     INITFONT("color/alpha", 1, Float);
 #undef INITFONT
 
-    _textureSize = _Instrument->getNode("symbol-teture-size", true)->getIntValue();
+    _textureSize = _Instrument->getNode("symbol-texture-size", true)->getIntValue();
     SGPropertyNode* symbolsNode = node->getNode("symbols");
     SGPropertyNode* symbol;
 
