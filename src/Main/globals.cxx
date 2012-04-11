@@ -188,7 +188,7 @@ FGGlobals::~FGGlobals()
     delete mag;
     delete matlib;
     delete route_mgr;
-    delete current_panel;
+    current_panel = NULL;
 
     delete ATC_mgr;
 

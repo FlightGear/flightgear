@@ -119,7 +119,7 @@ private:
     FGRouteMgr *route_mgr;
 
     // 2D panel
-    FGPanel *current_panel;
+    SGSharedPtr<FGPanel> current_panel;
 
     // ATC manager
     FGATCMgr *ATC_mgr;

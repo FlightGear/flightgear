@@ -414,7 +414,6 @@ do_panel_load (const SGPropertyNode * arg)
   }
   SG_LOG(SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path);
   globals->get_current_panel()->unbind();
-  delete globals->get_current_panel();
   globals->set_current_panel( new_panel );
   globals->get_current_panel()->bind();
   return true;

@@ -153,7 +153,6 @@ void FGPanelNode::initWithPanel()
 
 FGPanelNode::~FGPanelNode()
 {
-    delete _panel;
 }
 
 osg::Matrix FGPanelNode::transformMatrix() const

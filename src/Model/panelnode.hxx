@@ -4,6 +4,7 @@
 #include <osg/Vec3>
 #include <osg/Matrix>
 #include <osg/Drawable>
+#include <simgear/structure/SGSharedPtr.hxx>
 
 class FGPanel;
 class SGPropertyNode;
@@ -43,7 +44,7 @@ public:
 private:
     void initWithPanel();
     
-    FGPanel* _panel;
+    SGSharedPtr<FGPanel> _panel;
   
     bool _resizeToViewport;
 
