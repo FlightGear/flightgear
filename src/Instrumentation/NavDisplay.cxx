@@ -497,15 +497,21 @@ NavDisplay::init ()
   
     _serviceable_node = _Instrument->getNode("serviceable", true);
     _rangeNode = _Instrument->getNode("range", true);
-    _rangeNode->setDoubleValue(40.0);
+    if (!_rangeNode->hasValue()) {
+      _rangeNode->setDoubleValue(40.0);
+    }
     _rangeNode->addChangeListener(_cacheListener.get());
     _rangeNode->addChangeListener(_forceUpdateListener.get());
   
     _xCenterNode = _Instrument->getNode("x-center");
-    _xCenterNode->setDoubleValue(0.5);
+    if (!_xCenterNode->hasValue()) {
+      _xCenterNode->setDoubleValue(0.5);
+    }
     _xCenterNode->addChangeListener(_forceUpdateListener.get());
     _yCenterNode = _Instrument->getNode("y-center");
-    _yCenterNode->setDoubleValue(0.5);
+    if (!_yCenterNode->hasValue()) {
+      _yCenterNode->setDoubleValue(0.5);
+    }
     _yCenterNode->addChangeListener(_forceUpdateListener.get());
   
     // texture name to use in 2D and 3D instruments
