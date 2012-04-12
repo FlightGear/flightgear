@@ -732,7 +732,7 @@ osg::Texture2D* buildDeferredBuffer(GLint internalFormat, GLenum sourceFormat, G
 void buildDeferredBuffers( flightgear::CameraInfo* info, int shadowMapSize, bool normal16 )
 {
     info->addBuffer(flightgear::RenderBufferInfo::DEPTH_BUFFER, buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
-    if (normal16)
+    if (false)
         info->addBuffer(flightgear::RenderBufferInfo::NORMAL_BUFFER, buildDeferredBuffer( 0x822C /*GL_RG16*/, 0x8227 /*GL_RG*/, GL_UNSIGNED_SHORT, osg::Texture::CLAMP_TO_BORDER) );
     else
         info->addBuffer(flightgear::RenderBufferInfo::NORMAL_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_SHORT, osg::Texture::CLAMP_TO_BORDER) );
