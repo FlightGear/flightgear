@@ -275,6 +275,12 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
     }
+    if (!curr)
+    {
+        // Oops! FIXME
+        return;
+    }
+
     if (! leadPointReached(curr)) {
         controlHeading(curr);
         controlSpeed(curr, next);
@@ -929,9 +935,9 @@ void FGAIAircraft::controlHeading(FGAIWaypoint* curr) {
         cerr << "calc_bearing is not a finite number : "
         << "Speed " << speed
         << "pos : " << pos.getLatitudeDeg() << ", " << pos.getLongitudeDeg()
-        << "waypoint " << curr->getLatitude() << ", " << curr->getLongitude() << endl;
-        cerr << "waypoint name " << curr->getName();
-        exit(1);                 // FIXME
+        << ", waypoint: " << curr->getLatitude() << ", " << curr->getLongitude() << endl;
+        cerr << "waypoint name: '" << curr->getName() << "'" << endl;
+        //exit(1);                 // FIXME
     }
 }
 

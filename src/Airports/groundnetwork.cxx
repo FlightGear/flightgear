@@ -893,7 +893,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
     TrafficVectorIterator current, closest, closestOnNetwork;
     TrafficVectorIterator i = activeTraffic.begin();
     bool otherReasonToSlowDown = false;
-    bool previousInstruction;
+//    bool previousInstruction;
     if (activeTraffic.size()) {
         //while ((i->getId() != id) && (i != activeTraffic.end()))
         while (i != activeTraffic.end()) {
@@ -912,10 +912,10 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
     current = i;
     //closest = current;
 
-    previousInstruction = current->getSpeedAdjustment();
+//    previousInstruction = current->getSpeedAdjustment();
     double mindist = HUGE_VAL;
     if (activeTraffic.size()) {
-        double course, dist, bearing, minbearing, az2;
+        double course, dist, bearing, az2; // minbearing,
         SGGeod curr(SGGeod::fromDegM(lon, lat, alt));
         //TrafficVector iterator closest;
         closest = current;
@@ -937,7 +937,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                 mindist = dist;
                 closest = i;
                 closestOnNetwork = i;
-                minbearing = bearing;
+//                minbearing = bearing;
                 
             }
         }
@@ -961,7 +961,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                     //     << endl;
                     mindist = dist;
                     closest = i;
-                    minbearing = bearing;
+//                    minbearing = bearing;
                     otherReasonToSlowDown = true;
                 }
             }
@@ -1359,7 +1359,7 @@ void FGGroundNetwork::render(bool visible)
         group = new osg::Group;
         FGScenery * local_scenery = globals->get_scenery();
         // double elevation_meters = 0.0;
-        double elevation_feet = 0.0;
+//        double elevation_feet = 0.0;
         time_t now = time(NULL) + fgGetLong("/sim/time/warp");
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         //double dx = 0;
@@ -1399,7 +1399,7 @@ void FGGroundNetwork::render(bool visible)
                     SGGeod center2 = end;
                     center2.setElevationM(SG_MAX_ELEVATION_M);
                     if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
-                        elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
+//                        elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
                         //elevation_meters += 0.5;
                     }
                     else {
@@ -1459,7 +1459,7 @@ void FGGroundNetwork::render(bool visible)
                         SGGeod center2 = segments[k]->getStart()->getGeod();
                         center2.setElevationM(SG_MAX_ELEVATION_M);
                         if (local_scenery->get_elevation_m( center2, elevationStart, NULL )) {
-                            elevation_feet = elevationStart * SG_METER_TO_FEET + 0.5;
+//                            elevation_feet = elevationStart * SG_METER_TO_FEET + 0.5;
                             //elevation_meters += 0.5;
                         }
                         else {
@@ -1471,7 +1471,7 @@ void FGGroundNetwork::render(bool visible)
                         SGGeod center2 = segments[k]->getEnd()->getGeod();
                         center2.setElevationM(SG_MAX_ELEVATION_M);
                         if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
-                            elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
+//                            elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
                             //elevation_meters += 0.5;
                         }
                         else {

@@ -650,11 +650,11 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     //cerr << "Distance       : " << distance      << endl;
     //cerr << "Azimuth        : " << azimuth       << endl;
     //cerr << "Initial Lateral point: " << lateralOffset << endl;
-    double lat = refPoint.getLatitudeDeg();
-    double lon = refPoint.getLongitudeDeg();
+//    double lat = refPoint.getLatitudeDeg();
+//    double lon = refPoint.getLongitudeDeg();
     //cerr << "Reference point (" << lat << ", " << lon << ")." << endl;
-    lat = initialTarget.getLatitudeDeg();
-    lon = initialTarget.getLongitudeDeg();
+//    lat = initialTarget.getLatitudeDeg();
+//    lon = initialTarget.getLongitudeDeg();
     //cerr << "Initial Target point (" << lat << ", " << lon << ")." << endl;
 
     double ratio = initialTurnRadius / distance;
@@ -723,8 +723,8 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     azimuth = SGGeodesy::courseDeg(origin, secondaryTarget);
 
 
-    lat = secondaryTarget.getLatitudeDeg();
-    lon = secondaryTarget.getLongitudeDeg();
+//    lat = secondaryTarget.getLatitudeDeg();
+//    lon = secondaryTarget.getLongitudeDeg();
     //cerr << "Secondary Target point (" << lat << ", " << lon << ")." << endl;
     //cerr << "Distance       : " << distance      << endl;
     //cerr << "Azimuth        : " << azimuth       << endl;
@@ -748,8 +748,8 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     SGGeodesy::direct(origin, azimuth,
                       newDistance, tertiaryTarget, dummyAz2);
 
-    lat = tertiaryTarget.getLatitudeDeg();
-    lon = tertiaryTarget.getLongitudeDeg();
+//    lat = tertiaryTarget.getLatitudeDeg();
+//    lon = tertiaryTarget.getLongitudeDeg();
     //cerr << "tertiary Target point (" << lat << ", " << lon << ")." << endl;
 
 

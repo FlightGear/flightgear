@@ -279,6 +279,8 @@ FGAIWaypoint* const FGAIFlightPlan::getPreviousWaypoint( void ) const
 
 FGAIWaypoint* const FGAIFlightPlan::getCurrentWaypoint( void ) const
 {
+  if (wpt_iterator == waypoints.end())
+      return 0;
   return *wpt_iterator;
 }
 
