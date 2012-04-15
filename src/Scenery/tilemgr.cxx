@@ -60,7 +60,8 @@ FGTileMgr::FGTileMgr():
     _terra_sync(NULL),
     _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
     _maxTileRangeM(fgGetNode("/sim/rendering/static-lod/bare", true)),
-    _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true))
+    _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true)),
+    _pager(FGScenery::getPagerSingleton())
 {
 }
 
@@ -233,7 +234,6 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
  */
 void FGTileMgr::update_queues()
 {
-    SceneryPager* pager = FGScenery::getPagerSingleton();
     osg::FrameStamp* framestamp
         = globals->get_renderer()->getViewer()->getFrameStamp();
     double current_time = framestamp->getReferenceTime();
@@ -261,12 +261,12 @@ void FGTileMgr::update_queues()
                   e->is_current_view() ))
             {
                 // schedule tile for loading with osg pager
-                pager->queueRequest(e->tileFileName,
-                                    e->getNode(),
-                                    e->get_priority(),
-                                    framestamp,
-                                    e->getDatabaseRequest(),
-                                    _options.get());
+                _pager->queueRequest(e->tileFileName,
+                                     e->getNode(),
+                                     e->get_priority(),
+                                     framestamp,
+                                     e->getDatabaseRequest(),
+                                     _options.get());
                 loading++;
             }
         } else
@@ -293,7 +293,7 @@ void FGTileMgr::update_queues()
             delete old;
             // zeros out subgraph ref_ptr, so subgraph is owned by
             // the pager and will be deleted in the pager thread.
-            pager->queueDeleteRequest(subgraph);
+            _pager->queueDeleteRequest(subgraph);
             
             if (--drop_count > 0)
                 drop_index = tile_cache.get_drop_tile();

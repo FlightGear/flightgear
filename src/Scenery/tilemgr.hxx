@@ -28,6 +28,7 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/bucket/newbucket.hxx>
+#include "SceneryPager.hxx"
 #include "tileentry.hxx"
 #include "tilecache.hxx"
 
@@ -85,7 +86,9 @@ private:
 
     SGPropertyNode_ptr _visibilityMeters;
     SGPropertyNode_ptr _maxTileRangeM, _disableNasalHooks;
-    
+
+    osg::ref_ptr<flightgear::SceneryPager> _pager;
+
 public:
     FGTileMgr();
 

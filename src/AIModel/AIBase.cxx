@@ -175,7 +175,7 @@ FGAIBase::removeModel()
         aip.init( 0 );
         _model = 0;
         // pass it on to the pager, to be be deleted in the pager thread
-        pSceneryManager->getPagerSingleton()->queueDeleteRequest(temp);
+        pSceneryManager->getPager()->queueDeleteRequest(temp);
     }
     else
     {

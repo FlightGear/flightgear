@@ -212,6 +212,8 @@ private:
 FGScenery::FGScenery()
 {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing scenery subsystem" );
+    // keep reference to pager singleton, so it cannot be destroyed while FGScenery lives
+    _pager = FGScenery::getPagerSingleton();
 }
 
 FGScenery::~FGScenery() {
@@ -327,7 +329,7 @@ bool FGScenery::scenery_available(const SGGeod& position, double range_m)
     SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
     osg::FrameStamp* framestamp
             = globals->get_renderer()->getViewer()->getFrameStamp();
-    simgear::CheckSceneryVisitor csnv(getPagerSingleton(), toOsg(p), range_m, framestamp);
+    simgear::CheckSceneryVisitor csnv(_pager, toOsg(p), range_m, framestamp);
     // currently the PagedLODs will not be loaded by the DatabasePager
     // while the splashscreen is there, so CheckSceneryVisitor force-loads
     // missing objects in the main thread
