@@ -44,9 +44,9 @@ public:
                                           picked.x(), picked.y());
   }
   
-  virtual void update(double /* dt */)
+  virtual void update(double dt)
   {
-    panel->getPanel()->updateMouseDelay();
+    panel->getPanel()->updateMouseDelay(dt);
   }
   
   virtual void buttonReleased(void)

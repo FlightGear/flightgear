@@ -135,7 +135,7 @@ public:
   //void update (osg::State& state);
   //virtual void update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
 
-  virtual void updateMouseDelay();
+  virtual void updateMouseDelay(double dt);
 
 				// transfer pointer ownership!!!
   virtual void addInstrument (FGPanelInstrument * instrument);
@@ -193,7 +193,8 @@ private:
 
   mutable bool _mouseDown;
   mutable int _mouseButton, _mouseX, _mouseY;
-  mutable int _mouseDelay;
+  double _mouseActionRepeat;
+    
   mutable FGPanelInstrument * _mouseInstrument;
   typedef std::vector<FGPanelInstrument *> instrument_list_type;
   int _width;

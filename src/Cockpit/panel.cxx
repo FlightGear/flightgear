@@ -73,6 +73,9 @@
 // my hardware/driver requires many more.
 #define POFF_UNITS 8
 
+const double MOUSE_ACTION_REPEAT_DELAY = 0.5; // 500msec initial delay
+const double MOUSE_ACTION_REPEAT_INTERVAL = 0.1; // 10Hz repeat rate
+
 using std::map;
 
 ////////////////////////////////////////////////////////////////////////
@@ -268,9 +271,9 @@ FGPanel::unbind ()
 
 
 void
-FGPanel::update (double /* dt */)
+FGPanel::update (double dt)
 {
-  updateMouseDelay();
+  updateMouseDelay(dt);
 }
 
 double
@@ -293,15 +296,18 @@ FGPanel::getAspectScale() const
  * fgUpdate3DPanels().  This functionality needs to move into the
  * input subsystem.  Counting a tick every two frames is clumsy...
  */
-void FGPanel::updateMouseDelay()
+void FGPanel::updateMouseDelay(double dt)
 {
-    if (_mouseDown) {
-        _mouseDelay--;
-        if (_mouseDelay < 0) {
-            _mouseInstrument->doMouseAction(_mouseButton, 0, _mouseX, _mouseY);
-            _mouseDelay = 2;
-        }
-    }
+  if (!_mouseDown) {
+    return;
+  }
+
+  _mouseActionRepeat -= dt;
+  while (_mouseActionRepeat < 0.0) {
+    _mouseActionRepeat += MOUSE_ACTION_REPEAT_INTERVAL;
+    _mouseInstrument->doMouseAction(_mouseButton, 0, _mouseX, _mouseY);
+    
+  }
 }
 
 void
@@ -595,7 +601,7 @@ FGPanel::doLocalMouseAction(int button, int updown, int x, int y)
     int ih = inst->getHeight() / 2;
     if (x >= ix - iw && x < ix + iw && y >= iy - ih && y < iy + ih) {
       _mouseDown = true;
-      _mouseDelay = 20;
+      _mouseActionRepeat = MOUSE_ACTION_REPEAT_DELAY;
       _mouseInstrument = inst;
       _mouseButton = button;
       _mouseX = x - ix;
