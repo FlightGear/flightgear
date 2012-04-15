@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <sstream>
+#include <algorithm> // for std::sort
 
 #include <simgear/nasal/nasal.h>
 #include <simgear/props/props.hxx>
