@@ -22,6 +22,8 @@
 #  include "config.h"
 #endif
 
+#include <string.h>
+
 #include "NasalPositioned.hxx"
 
 #include <simgear/scene/material/mat.hxx>
