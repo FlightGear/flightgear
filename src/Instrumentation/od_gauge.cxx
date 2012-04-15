@@ -26,6 +26,7 @@
 #  include "config.h"
 #endif
 
+#include <osg/Texture2D>
 #include <osg/AlphaFunc>
 #include <osg/BlendFunc>
 #include <osg/Camera>
@@ -46,12 +47,12 @@
 #include "od_gauge.hxx"
 
 FGODGauge::FGODGauge() :
-    rtAvailable( false )// ,
-//     rt( 0 )
+  rtAvailable( false )
 {
 }
 
-void FGODGauge::allocRT () {
+void FGODGauge::allocRT ()
+{
     camera = new osg::Camera;
     // Only the far camera should trigger this texture to be rendered.
     camera->setNodeMask(simgear::BACKGROUND_BIT);
@@ -87,65 +88,25 @@ void FGODGauge::allocRT () {
     camera->attach(osg::Camera::COLOR_BUFFER, texture.get());
     globals->get_renderer()->addCamera(camera.get(), false);
     rtAvailable = true;
-
-    // GLint colorBits = 0;
-//     glGetIntegerv( GL_BLUE_BITS, &colorBits );
-//     rt = new RenderTexture();
-//     if( colorBits < 8 )
-//         rt->Reset("rgba=5,5,5,1 ctt");
-//     else
-//         rt->Reset("rgba ctt");
-
-//     if( rt->Initialize(256, 256, true) ) {
-//         SG_LOG(SG_INSTR, SG_INFO, "FGODGauge:Initialize sucessfull");
-//         if (rt->BeginCapture())
-//         {
-//             SG_LOG(SG_INSTR, SG_INFO, "FGODGauge:BeginCapture sucessfull, RTT available");
-//             rtAvailable = true;
-//             glViewport(0, 0, textureWH, textureWH);
-//             glMatrixMode(GL_PROJECTION);
-//             glLoadIdentity();
-//             gluOrtho2D( -256.0, 256.0, -256.0, 256.0 );
-//             glMatrixMode(GL_MODELVIEW);
-//             glLoadIdentity();
-//             glDisable(GL_LIGHTING);
-//             glEnable(GL_COLOR_MATERIAL);
-//             glDisable(GL_CULL_FACE);
-//             glDisable(GL_FOG);
-//             glDisable(GL_DEPTH_TEST);
-//             glClearColor(0.0, 0.0, 0.0, 0.0);
-//             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-//             glBindTexture(GL_TEXTURE_2D, 0);
-//             glEnable(GL_TEXTURE_2D);
-//             glEnable(GL_ALPHA_TEST);
-//             glAlphaFunc(GL_GREATER, 0.0f);
-//             glDisable(GL_SMOOTH);
-//             glEnable(GL_BLEND);
-//             glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
-//             rt->EndCapture();
-//         } else
-//             SG_LOG(SG_INSTR, SG_WARN, "FGODGauge:BeginCapture failed, RTT not available, using backbuffer");
-//     } else
-//         SG_LOG(SG_INSTR, SG_WARN, "FGODGauge:Initialize failed, RTT not available, using backbuffer");
 }
 
-FGODGauge::~FGODGauge() {
-//     delete rt;
+FGODGauge::~FGODGauge()
+{
+    if (camera.valid()) {
+        globals->get_renderer()->removeCamera(camera.get());
+    }
 }
 
-void FGODGauge::init () {
-}
-
-void FGODGauge::update (double dt) {
-}
-
-
-void FGODGauge::setSize(int viewSize) {
+void FGODGauge::setSize(int viewSize)
+{
     textureWH = viewSize;
-//     glViewport(0, 0, textureWH, textureWH);
+    if (texture.valid()) {
+        texture->setTextureSize(textureWH, textureWH);
+    }
 }
 
-bool FGODGauge::serviceable(void) {
+bool FGODGauge::serviceable(void) 
+{
     return rtAvailable;
 }
 

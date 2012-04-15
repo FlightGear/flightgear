@@ -24,6 +24,7 @@
 #include <osg/Geometry>
 #include <simgear/props/props.hxx>
 #include "od_gauge.hxx"
+#include <simgear/structure/subsystem_mgr.hxx>
 
 // forward decls
 class FGRunwayBase;
@@ -32,7 +33,7 @@ class FGRunwayBase;
 // Built-in layer for the atc radar.
 ////////////////////////////////////////////////////////////////////////
 
-class GroundRadar : public SGPropertyChangeListener, public FGODGauge
+class GroundRadar : public SGSubsystem, public SGPropertyChangeListener, private FGODGauge
 {
 public:
     static const int TextureHalfSize = 256;
@@ -40,7 +41,7 @@ public:
     virtual ~GroundRadar();
     void updateTexture();
     virtual void valueChanged(SGPropertyNode*);
-
+    virtual void update (double dt);
 protected:
     void createTexture(const char* texture_name);
     

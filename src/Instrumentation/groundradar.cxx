@@ -77,6 +77,11 @@ GroundRadar::~GroundRadar()
     _range_node->removeChangeListener(this);
 }
 
+void GroundRadar::update (double /* dt */)
+{
+  
+}
+
 void GroundRadar::valueChanged(SGPropertyNode*)
 {
     updateTexture();

@@ -55,7 +55,7 @@ public:
 
     const SGMaterial* _material;
 
-    string _mat_name; // ground material
+    std::string _mat_name; // ground material
 
     SGVec3d getCartUserPos() const;
     SGVec3d getCartAntennaPos()const;

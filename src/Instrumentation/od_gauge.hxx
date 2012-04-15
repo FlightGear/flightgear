@@ -25,23 +25,24 @@
 #ifndef _OD_GAUGE_HXX
 #define _OD_GAUGE_HXX
 
-#include <osg/Camera>
-#include <osg/Texture2D>
 
-#include <simgear/structure/subsystem_mgr.hxx>
+#include <osg/ref_ptr>
+
+namespace osg {
+  class Camera;
+  class Texture2D;
+}
 
 /**
  * Owner Drawn Gauge helper class.
  */
-class FGODGauge : public SGSubsystem {
-
+class FGODGauge
+{
 public:
-    FGODGauge ( SGPropertyNode *node );
     FGODGauge();
     virtual ~FGODGauge();
-    virtual void init ();
-    virtual void update (double dt);
 
+  
     void setSize(int viewSize);
     int size() const
         { return textureWH; }

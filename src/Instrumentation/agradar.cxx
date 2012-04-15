@@ -213,7 +213,7 @@ agRadar::getMaterial(){
     if (globals->get_scenery()->get_elevation_m(hitpos, _elevation_m, &_material)){
         //_ht_agl_ft = pos.getElevationFt() - _elevation_m * SG_METER_TO_FEET;
         if (_material) {
-            const vector<string>& names = _material->get_names();
+            const std::vector<std::string>& names = _material->get_names();
 
             _solid = _material->get_solid();
             _load_resistance = _material->get_load_resistance();

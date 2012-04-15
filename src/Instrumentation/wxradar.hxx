@@ -34,9 +34,6 @@
 #include <vector>
 #include <string>
 
-using std::vector;
-using std::string;
-
 class FGODGauge;
 
 class wxRadarBg : public SGSubsystem, public SGPropertyChangeListener {
@@ -78,7 +75,7 @@ protected:
         double elapsed_time;
     }ground_echo;
 
-    typedef vector <ground_echo*> ground_echo_vector_type;
+    typedef std::vector <ground_echo*> ground_echo_vector_type;
     typedef ground_echo_vector_type::iterator ground_echo_vector_iterator;
 
     ground_echo_vector_type       ground_echoes;

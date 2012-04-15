@@ -43,7 +43,6 @@
 #include "turn_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
 #include "inst_vertical_speed_indicator.hxx"
-#include "od_gauge.hxx"
 #include "wxradar.hxx"
 #include "tacan.hxx"
 #include "mk_viii.hxx"
@@ -56,9 +55,7 @@
 
 FGInstrumentMgr::FGInstrumentMgr () :
   _explicitGps(false)
-{
-    set_subsystem("od_gauge", new FGODGauge);
-    
+{    
     globals->add_subsystem("hud", new HUD, SGSubsystemMgr::DISPLAY);
 }
 
@@ -138,7 +135,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             subsystemname << '['<< index << ']';
         string id = subsystemname.str();
         _instruments.push_back(id);
-
+      
         if ( name == "adf" ) {
             set_subsystem( id, new ADF( node ), 0.15 );
 

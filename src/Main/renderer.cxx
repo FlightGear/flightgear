@@ -1839,6 +1839,12 @@ FGRenderer::addCamera(osg::Camera* camera, bool useSceneData)
 }
 
 void
+FGRenderer::removeCamera(osg::Camera* camera)
+{
+    mRealRoot->removeChild(camera);
+}
+                                    
+void
 FGRenderer::setPlanes( double zNear, double zFar )
 {
 	_planes->set( osg::Vec3f( - zFar, - zFar * zNear, zFar - zNear ) );

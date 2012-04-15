@@ -418,7 +418,6 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
     _odg(0),
     _scale(0),
     _view_heading(0),
-    _resultTexture(0),
     _font_size(0),
     _font_spacing(0),
     _rangeNm(0)
@@ -485,8 +484,8 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
 
 NavDisplay::~NavDisplay()
 {
+  delete _odg;
 }
-
 
 void
 NavDisplay::init ()
@@ -517,7 +516,6 @@ NavDisplay::init ()
     // texture name to use in 2D and 3D instruments
     _texture_path = _Instrument->getStringValue("radar-texture-path",
         "Aircraft/Instruments/Textures/od_wxradar.rgb");
-    _resultTexture = FGTextureManager::createTexture(_texture_path.c_str(), false);
 
     string path = _Instrument->getStringValue("symbol-texture-path",
         "Aircraft/Instruments/Textures/nd-symbols.png");
@@ -529,8 +527,7 @@ NavDisplay::init ()
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
     _symbolTexture = SGLoadTexture2D(tpath, NULL, false, false);
 
-    FGInstrumentMgr *imgr = (FGInstrumentMgr *)globals->get_subsystem("instrumentation");
-    _odg = (FGODGauge *)imgr->get_subsystem("od_gauge");
+    _odg = new FGODGauge;
     _odg->setSize(_Instrument->getIntValue("texture-size", 512));
 
     _route = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));

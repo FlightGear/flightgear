@@ -119,6 +119,7 @@ wxRadarBg::wxRadarBg(SGPropertyNode *node) :
 wxRadarBg::~wxRadarBg ()
 {
     _font_node->removeChangeListener(this);
+    delete _odg;
 }
 
 
@@ -155,8 +156,7 @@ wxRadarBg::init ()
     // input range = n nm (20/40/80)
     // input display-mode = arc | rose | map | plan
 
-    FGInstrumentMgr *imgr = (FGInstrumentMgr *)globals->get_subsystem("instrumentation");
-    _odg = (FGODGauge *)imgr->get_subsystem("od_gauge");
+    _odg = new FGODGauge;
     _odg->setSize(512);
 
     _ai_enabled_node = fgGetNode("/sim/ai/enabled", true);

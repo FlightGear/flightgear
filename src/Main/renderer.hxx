@@ -77,6 +77,8 @@ public:
      */
     void addCamera(osg::Camera* camera, bool useSceneData);
 
+    void removeCamera(osg::Camera* camera);
+  
     /** Add a camera to the group. The camera is added to the viewer
      * as a slave. See osgViewer::Viewer::addSlave.
      * @param flags properties of the camera; see CameraGroup::Flags
