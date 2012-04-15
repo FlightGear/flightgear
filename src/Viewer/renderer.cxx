@@ -692,12 +692,12 @@ public:
         osg::Camera* camera = static_cast<osg::Camera*>(n);
 
         cv->clearBufferList();
-        cv->addBuffer(simgear::Effect::DEPTH_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
-        cv->addBuffer(simgear::Effect::NORMAL_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
-        cv->addBuffer(simgear::Effect::DIFFUSE_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
-        cv->addBuffer(simgear::Effect::SPEC_EMIS_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
-        cv->addBuffer(simgear::Effect::LIGHTING_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::LIGHTING_BUFFER ) );
-        cv->addBuffer(simgear::Effect::SHADOW_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SHADOW_BUFFER ) );
+        cv->addBuffer("depth", info->getBuffer( "depth" ) );
+        cv->addBuffer("normal", info->getBuffer( "normal" ) );
+        cv->addBuffer("diffuse", info->getBuffer( "diffuse" ) );
+        cv->addBuffer("spec-emis", info->getBuffer( "spec-emis" ) );
+        cv->addBuffer("lighting", info->getBuffer( "lighting" ) );
+        cv->addBuffer("shadow", info->getBuffer( "shadow" ) );
         // cv->addBuffer(simgear::Effect::AO_BUFFER, info->gBuffer->aoBuffer[2]);
 
         if ( !info->getRenderStageInfo(kind).fullscreen )
@@ -775,21 +775,21 @@ osg::Texture2D* buildDeferredBuffer(GLint internalFormat, GLenum sourceFormat, G
 void buildDeferredBuffers( flightgear::CameraInfo* info, int shadowMapSize, bool useColorForDepth )
 {
     if (useColorForDepth) {
-        info->addBuffer(flightgear::RenderBufferInfo::REAL_DEPTH_BUFFER, buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
-        info->addBuffer(flightgear::RenderBufferInfo::DEPTH_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
+        info->addBuffer("real-depth", buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
+        info->addBuffer("depth", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
     }
     else {
-        info->addBuffer(flightgear::RenderBufferInfo::DEPTH_BUFFER, buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
+        info->addBuffer("depth", buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
     }
-    info->addBuffer(flightgear::RenderBufferInfo::NORMAL_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-    info->addBuffer(flightgear::RenderBufferInfo::DIFFUSE_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-    info->addBuffer(flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-    info->addBuffer(flightgear::RenderBufferInfo::LIGHTING_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-    info->addBuffer(flightgear::RenderBufferInfo::SHADOW_BUFFER, buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER, true), 0.0f );
-    info->getBuffer(RenderBufferInfo::SHADOW_BUFFER)->setTextureSize(shadowMapSize,shadowMapSize);
+    info->addBuffer("normal", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
+    info->addBuffer("diffuse", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
+    info->addBuffer("spec-emis", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
+    info->addBuffer("lighting", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
+    info->addBuffer("shadow", buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER, true), 0.0f );
+    info->getBuffer("shadow")->setTextureSize(shadowMapSize,shadowMapSize);
 }
 
-void attachBufferToCamera( flightgear::CameraInfo* info, osg::Camera* camera, osg::Camera::BufferComponent c, flightgear::CameraKind ck, flightgear::RenderBufferInfo::Kind bk )
+void attachBufferToCamera( flightgear::CameraInfo* info, osg::Camera* camera, osg::Camera::BufferComponent c, flightgear::CameraKind ck, const std::string& bk )
 {
     camera->attach( c, info->getBuffer(bk) );
     info->getRenderStageInfo(ck).buffers.insert( std::make_pair( c, bk ) );
@@ -809,14 +809,14 @@ osg::Camera* FGRenderer::buildDeferredGeometryCamera( flightgear::CameraInfo* in
     camera->setClearDepth( 1.0 );
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     camera->setViewport( new osg::Viewport );
-    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER0, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::NORMAL_BUFFER );
-    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER1, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DIFFUSE_BUFFER );
-    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER2, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER );
+    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER0, flightgear::GEOMETRY_CAMERA, "normal" );
+    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER1, flightgear::GEOMETRY_CAMERA, "diffuse" );
+    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER2, flightgear::GEOMETRY_CAMERA, "spec-emis" );
     if (_useColorForDepth) {
-        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::REAL_DEPTH_BUFFER );
-        attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER3, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
+        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, "real-depth" );
+        attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER3, flightgear::GEOMETRY_CAMERA, "depth" );
     } else {
-        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
+        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, "depth" );
     }
     camera->setDrawBuffer(GL_FRONT);
     camera->setReadBuffer(GL_FRONT);
@@ -878,7 +878,7 @@ osg::Camera* FGRenderer::buildDeferredShadowCamera( flightgear::CameraInfo* info
     mainShadowCamera->setAllowEventFocus(false);
     mainShadowCamera->setGraphicsContext(gc);
     mainShadowCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
-    attachBufferToCamera( info, mainShadowCamera, osg::Camera::DEPTH_BUFFER, flightgear::SHADOW_CAMERA, flightgear::RenderBufferInfo::SHADOW_BUFFER );
+    attachBufferToCamera( info, mainShadowCamera, osg::Camera::DEPTH_BUFFER, flightgear::SHADOW_CAMERA, "shadow" );
     mainShadowCamera->setComputeNearFarMode(osg::Camera::DO_NOT_COMPUTE_NEAR_FAR);
     mainShadowCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     mainShadowCamera->setProjectionMatrix(osg::Matrix::identity());
@@ -1002,7 +1002,7 @@ void FGRenderer::updateShadowMapSize(int mapSize)
         Camera* camera = info->getCamera(SHADOW_CAMERA);
         if (camera == 0) continue;
 
-        Texture2D* tex = info->getBuffer(RenderBufferInfo::SHADOW_BUFFER);
+        Texture2D* tex = info->getBuffer("shadow");
         if (tex == 0) continue;
 
         tex->setTextureSize( mapSize, mapSize );
@@ -1264,11 +1264,11 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     camera->setRenderOrder(osg::Camera::POST_RENDER, 50);
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     camera->setViewport( new osg::Viewport );
-    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER, flightgear::LIGHTING_CAMERA, flightgear::RenderBufferInfo::LIGHTING_BUFFER );
+    attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER, flightgear::LIGHTING_CAMERA, "lighting" );
     if (_useColorForDepth) {
-        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::REAL_DEPTH_BUFFER );
+        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, "real-depth" );
     } else {
-        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
+        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, "depth" );
     }
     camera->setDrawBuffer(GL_FRONT);
     camera->setReadBuffer(GL_FRONT);
@@ -1312,10 +1312,10 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
         ss = eg->getOrCreateStateSet();
         ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
         ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
-        ss->setTextureAttributeAndModes( 0, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
-        ss->setTextureAttributeAndModes( 1, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
-        ss->setTextureAttributeAndModes( 2, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
-        ss->setTextureAttributeAndModes( 3, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
+        ss->setTextureAttributeAndModes( 0, info->getBuffer( "depth" ) );
+        ss->setTextureAttributeAndModes( 1, info->getBuffer( "normal" ) );
+        ss->setTextureAttributeAndModes( 2, info->getBuffer( "diffuse" ) );
+        ss->setTextureAttributeAndModes( 3, info->getBuffer( "spec-emis" ) );
         //ss->setTextureAttributeAndModes( 4, info->gBuffer->aoBuffer[2] );
         ss->addUniform( new osg::Uniform( "depth_tex", 0 ) );
         ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
@@ -1348,11 +1348,11 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
         ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
         ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
         ss->setAttributeAndModes( new osg::BlendFunc( osg::BlendFunc::ONE, osg::BlendFunc::ONE ) );
-        ss->setTextureAttribute( 0, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
-        ss->setTextureAttribute( 1, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
-        ss->setTextureAttribute( 2, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
-        ss->setTextureAttribute( 3, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
-        ss->setTextureAttribute( 4, info->getBuffer( flightgear::RenderBufferInfo::SHADOW_BUFFER ) );
+        ss->setTextureAttribute( 0, info->getBuffer( "depth" ) );
+        ss->setTextureAttribute( 1, info->getBuffer( "normal" ) );
+        ss->setTextureAttribute( 2, info->getBuffer( "diffuse" ) );
+        ss->setTextureAttribute( 3, info->getBuffer( "spec-emis" ) );
+        ss->setTextureAttribute( 4, info->getBuffer( "shadow" ) );
         ss->addUniform( new osg::Uniform( "depth_tex", 0 ) );
         ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
         ss->addUniform( new osg::Uniform( "color_tex", 2 ) );
@@ -1420,10 +1420,10 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
         ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
         ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
         ss->setAttributeAndModes( new osg::BlendFunc( osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA ) );
-        ss->setTextureAttributeAndModes( 0, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
-        ss->setTextureAttributeAndModes( 1, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
-        ss->setTextureAttributeAndModes( 2, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
-        ss->setTextureAttributeAndModes( 3, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
+        ss->setTextureAttributeAndModes( 0, info->getBuffer( "depth" ) );
+        ss->setTextureAttributeAndModes( 1, info->getBuffer( "normal" ) );
+        ss->setTextureAttributeAndModes( 2, info->getBuffer( "diffuse" ) );
+        ss->setTextureAttributeAndModes( 3, info->getBuffer( "spec-emis" ) );
         ss->addUniform( new osg::Uniform( "depth_tex", 0 ) );
         ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
         ss->addUniform( new osg::Uniform( "color_tex", 2 ) );

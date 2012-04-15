@@ -250,7 +250,7 @@ osg::Camera* CameraInfo::getCamera(CameraKind k) const
     return ii->second.camera.get();
 }
 
-osg::Texture2D* CameraInfo::getBuffer(RenderBufferInfo::Kind k) const
+osg::Texture2D* CameraInfo::getBuffer(const std::string& k) const
 {
     RenderBufferMap::const_iterator ii = buffers.find(k);
     if (ii == buffers.end())

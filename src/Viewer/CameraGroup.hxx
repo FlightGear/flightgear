@@ -50,22 +50,12 @@ namespace flightgear
 class GraphicsWindow;
 
 struct RenderBufferInfo {
-    enum Kind {
-        REAL_DEPTH_BUFFER, // Only used if depth buffer is a color texture
-        DEPTH_BUFFER,
-        NORMAL_BUFFER,
-        DIFFUSE_BUFFER,
-        SPEC_EMIS_BUFFER,
-        LIGHTING_BUFFER,
-        SHADOW_BUFFER
-    };
-
     RenderBufferInfo(osg::Texture2D* t = 0, float s = 1.0 ) : texture(t), scaleFactor(s) {}
     osg::ref_ptr<osg::Texture2D> texture;
     float scaleFactor;
 };
-typedef std::map<RenderBufferInfo::Kind,RenderBufferInfo> RenderBufferMap;
-typedef std::map<osg::Camera::BufferComponent,size_t> AttachmentMap;
+typedef std::map<std::string,RenderBufferInfo> RenderBufferMap;
+typedef std::map<osg::Camera::BufferComponent,std::string> AttachmentMap;
 
 struct RenderStageInfo {
     RenderStageInfo(osg::Camera* camera_ = 0, int si = -1, bool fs = false)
@@ -158,8 +148,8 @@ struct CameraInfo : public osg::Referenced
     /** the buffer objects
      */
     RenderBufferMap buffers;
-    void addBuffer(RenderBufferInfo::Kind k, osg::Texture2D* tex, float scale = 1.0 ) { buffers[k] = RenderBufferInfo(tex,scale); }
-    osg::Texture2D* getBuffer(RenderBufferInfo::Kind k) const;
+    void addBuffer(const std::string& k, osg::Texture2D* tex, float scale = 1.0 ) { buffers[k] = RenderBufferInfo(tex,scale); }
+    osg::Texture2D* getBuffer(const std::string& k) const;
 
     osg::ref_ptr<osg::TexGen> shadowTexGen[4];
 
