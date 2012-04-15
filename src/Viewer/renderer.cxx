@@ -1073,183 +1073,6 @@ void FGRenderer::updateCascadeNumber(size_t num)
     _shadowNumber->set( (int)_numCascades );
 }
 
-
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
-const char *ambient_vert_src = ""
-    "#line " TOSTRING(__LINE__) " 1\n"
-    "void main() {\n"
-    "    gl_Position = gl_Vertex;\n"
-    "    gl_TexCoord[0] = gl_MultiTexCoord0;\n"
-    "}\n";
-
-const char *ambient_frag_src = ""
-    "#line " TOSTRING(__LINE__) " 1\n"
-    "uniform sampler2D color_tex;\n"
-//    "uniform sampler2D ao_tex;\n"
-    "uniform sampler2D normal_tex;\n"
-    "uniform sampler2D spec_emis_tex;\n"
-    "uniform vec4 fg_SunAmbientColor;\n"
-    "void main() {\n"
-    "    vec2 coords = gl_TexCoord[0].xy;\n"
-    "    float initialized = texture2D( spec_emis_tex, coords ).a;\n"
-    "    if ( initialized < 0.1 )\n"
-    "        discard;\n"
-    "    vec3 tcolor = texture2D( color_tex, coords ).rgb;\n"
-//    "    float ao = texture2D( ao_tex, coords ).r;\n"
-//    "    gl_FragColor = vec4(tcolor*fg_SunAmbientColor.rgb*ao, 1.0);\n"
-    "    gl_FragColor = vec4(tcolor*fg_SunAmbientColor.rgb, 1.0);\n"
-    "}\n";
-
-const char *sunlight_vert_src = ""
-    "#line " TOSTRING(__LINE__) " 1\n"
-//  "uniform mat4 fg_ViewMatrixInverse;\n"
-    "uniform mat4 fg_ProjectionMatrixInverse;\n"
-    "varying vec3 ray;\n"
-    "void main() {\n"
-    "    gl_Position = gl_Vertex;\n"
-    "    gl_TexCoord[0] = gl_MultiTexCoord0;\n"
-//  "    ray = (fg_ViewMatrixInverse * vec4((fg_ProjectionMatrixInverse * gl_Vertex).xyz, 0.0)).xyz;\n"
-    "    ray = (fg_ProjectionMatrixInverse * gl_Vertex).xyz;\n"
-    "}\n";
-
-const char *sunlight_frag_src = ""
-#if 0
-    "#version 130\n"
-#endif
-    "#line " TOSTRING(__LINE__) " 1\n"
-    "uniform mat4 fg_ViewMatrix;\n"
-    "uniform sampler2D depth_tex;\n"
-    "uniform sampler2D normal_tex;\n"
-    "uniform sampler2D color_tex;\n"
-    "uniform sampler2D spec_emis_tex;\n"
-    "uniform sampler2DShadow shadow_tex;\n"
-    "uniform vec4 fg_SunDiffuseColor;\n"
-    "uniform vec4 fg_SunSpecularColor;\n"
-    "uniform vec3 fg_SunDirection;\n"
-    "uniform vec3 fg_Planes;\n"
-    "varying vec3 ray;\n"
-    "vec4 DynamicShadow( in vec4 ecPosition, out vec4 tint )\n"
-    "{\n"
-    "    vec4 coords;\n"
-    "    vec2 shift = vec2( 0.0 );\n"
-    "    int index = 4;\n"
-    "    if (ecPosition.z > -5.0) {\n"
-    "        index = 1;\n"
-    "        tint = vec4(0.0,1.0,0.0,1.0);\n"
-    "    } else if (ecPosition.z > -50.0) {\n"
-    "        index = 2;\n"
-    "        shift = vec2( 0.0, 0.5 );\n"
-    "        tint = vec4(0.0,0.0,1.0,1.0);\n"
-    "    } else if (ecPosition.z > -512.0) {\n"
-    "        index = 3;\n"
-    "        shift = vec2( 0.5, 0.0 );\n"
-    "        tint = vec4(1.0,1.0,0.0,1.0);\n"
-    "    } else if (ecPosition.z > -10000.0) {\n"
-    "        shift = vec2( 0.5, 0.5 );\n"
-    "        tint = vec4(1.0,0.0,0.0,1.0);\n"
-    "    } else {\n"
-    "        return vec4(1.1,1.1,0.0,1.0);\n" // outside, clamp to border
-    "    }\n"
-    "    coords.s = dot( ecPosition, gl_EyePlaneS[index] );\n"
-    "    coords.t = dot( ecPosition, gl_EyePlaneT[index] );\n"
-    "    coords.p = dot( ecPosition, gl_EyePlaneR[index] );\n"
-    "    coords.q = dot( ecPosition, gl_EyePlaneQ[index] );\n"
-    "    coords.st *= .5;\n"
-    "    coords.st += shift;\n"
-    "    return coords;\n"
-    "}\n"
-    "void main() {\n"
-    "    vec2 coords = gl_TexCoord[0].xy;\n"
-    "    vec4 spec_emis = texture2D( spec_emis_tex, coords );\n"
-    "    if ( spec_emis.a < 0.1 )\n"
-    "        discard;\n"
-    "    vec3 normal;\n"
-    "    normal.xy = texture2D( normal_tex, coords ).rg * 2.0 - vec2(1.0,1.0);\n"
-    "    normal.z = sqrt( 1.0 - dot( normal.xy, normal.xy ) );\n"
-    "    float len = length(normal);\n"
-    "    normal /= len;\n"
-    "    vec3 viewDir = normalize(ray);\n"
-    "    float depth = texture2D( depth_tex, coords ).r;\n"
-    "    vec3 pos;\n"
-    "    pos.z = - fg_Planes.y / (fg_Planes.x + depth * fg_Planes.z);\n"
-    "    pos.xy = viewDir.xy / viewDir.z * pos.z;\n"
-
-    "    vec4 tint;\n"
-#if 0
-    "    float shadow = 1.0;\n"
-#elif 1
-    "    float shadow = shadow2DProj( shadow_tex, DynamicShadow( vec4( pos, 1.0 ), tint ) ).r;\n"
-#else
-    "    float kernel[9] = float[]( 36/256.0, 24/256.0, 6/256.0,\n"
-    "                           24/256.0, 16/256.0, 4/256.0,\n"
-    "                           6/256.0,  4/256.0, 1/256.0 );\n"
-    "    float shadow = 0;\n"
-    "    for( int x = -2; x <= 2; ++x )\n"
-    "      for( int y = -2; y <= 2; ++y )\n"
-    "        shadow += kernel[abs(x)*3 + abs(y)] * shadow2DProj( shadow_tex, DynamicShadow( vec4(pos + vec3(0.05 * x, 0.05 * y, 0), 1.0), tint ) ).r;\n"
-#endif
-    "    vec3 lightDir = (fg_ViewMatrix * vec4( fg_SunDirection, 0.0 )).xyz;\n"
-    "    lightDir = normalize( lightDir );\n"
-    "    vec3 color = texture2D( color_tex, coords ).rgb;\n"
-    "    vec3 Idiff = clamp( dot( lightDir, normal ), 0.0, 1.0 ) * color * fg_SunDiffuseColor.rgb;\n"
-    "    vec3 halfDir = lightDir - viewDir;\n"
-    "    len = length( halfDir );\n"
-    "    vec3 Ispec = vec3(0.0);\n"
-    "    vec3 Iemis = spec_emis.z * color;\n"
-    "    if (len > 0.0001) {\n"
-    "        halfDir /= len;\n"
-    "        Ispec = pow( clamp( dot( halfDir, normal ), 0.0, 1.0 ), spec_emis.y * 255.0 ) * spec_emis.x * fg_SunSpecularColor.rgb;\n"
-    "    }\n"
-    "    gl_FragColor = vec4(mix(vec3(0.0), Idiff + Ispec, shadow) + Iemis, 1.0);\n"
-//    "    gl_FragColor = mix(tint, vec4(mix(vec3(0.0), Idiff + Ispec, shadow) + Iemis, 1.0), 0.92);\n"
-    "}\n";
-
-const char *fog_vert_src = ""
-    "#line " TOSTRING(__LINE__) " 1\n"
-    "uniform mat4 fg_ProjectionMatrixInverse;\n"
-    "varying vec3 ray;\n"
-    "void main() {\n"
-    "    gl_Position = gl_Vertex;\n"
-    "    gl_TexCoord[0] = gl_MultiTexCoord0;\n"
-    "    ray = (fg_ProjectionMatrixInverse * gl_Vertex).xyz;\n"
-    "}\n";
-
-const char *fog_frag_src = ""
-    "#line " TOSTRING(__LINE__) " 1\n"
-    "uniform sampler2D depth_tex;\n"
-    "uniform sampler2D normal_tex;\n"
-    "uniform sampler2D color_tex;\n"
-    "uniform sampler2D spec_emis_tex;\n"
-    "uniform vec4 fg_FogColor;\n"
-    "uniform float fg_FogDensity;\n"
-    "uniform vec3 fg_Planes;\n"
-    "varying vec3 ray;\n"
-    "void main() {\n"
-    "    vec2 coords = gl_TexCoord[0].xy;\n"
-    "    float initialized = texture2D( spec_emis_tex, coords ).a;\n"
-    "    if ( initialized < 0.1 )\n"
-    "        discard;\n"
-    "    vec3 normal;\n"
-    "    normal.xy = texture2D( normal_tex, coords ).rg * 2.0 - vec2(1.0,1.0);\n"
-    "    normal.z = sqrt( 1.0 - dot( normal.xy, normal.xy ) );\n"
-    "    float len = length(normal);\n"
-    "    normal /= len;\n"
-    "    vec3 viewDir = normalize(ray);\n"
-    "    float depth = texture2D( depth_tex, coords ).r;\n"
-    "    vec3 pos;\n"
-    "    pos.z = - fg_Planes.y / (fg_Planes.x + depth * fg_Planes.z);\n"
-    "    pos.xy = viewDir.xy / viewDir.z * pos.z;\n"
-
-    "    float fogFactor = 0.0;\n"
-    "    const float LOG2 = 1.442695;\n"
-    "    fogFactor = exp2(-fg_FogDensity * fg_FogDensity * pos.z * pos.z * LOG2);\n"
-    "    fogFactor = clamp(fogFactor, 0.0, 1.0);\n"
-
-    "    gl_FragColor = vec4(fg_FogColor.rgb, 1.0 - fogFactor);\n"
-    "}\n";
-
 osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc )
 {
     osg::Camera* camera = new osg::Camera;
@@ -1305,30 +1128,11 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     g->setUseDisplayList(false);
     simgear::EffectGeode* eg = new simgear::EffectGeode;
     simgear::Effect* effect = simgear::makeEffect("Effects/ambient", true);
-    if (effect) {
-        eg->setEffect( effect );
-    } else {
-        SG_LOG( SG_VIEW, SG_ALERT, "=> Using default, builtin, Effects/ambient" );
-        ss = eg->getOrCreateStateSet();
-        ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
-        ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
-        ss->setTextureAttributeAndModes( 0, info->getBuffer( "depth" ) );
-        ss->setTextureAttributeAndModes( 1, info->getBuffer( "normal" ) );
-        ss->setTextureAttributeAndModes( 2, info->getBuffer( "diffuse" ) );
-        ss->setTextureAttributeAndModes( 3, info->getBuffer( "spec-emis" ) );
-        //ss->setTextureAttributeAndModes( 4, info->gBuffer->aoBuffer[2] );
-        ss->addUniform( new osg::Uniform( "depth_tex", 0 ) );
-        ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
-        ss->addUniform( new osg::Uniform( "color_tex", 2 ) );
-        ss->addUniform( new osg::Uniform( "spec_emis_tex", 3 ) );
-        //ss->addUniform( new osg::Uniform( "ao_tex", 4 ) );
-        ss->setRenderBinDetails( 0, "RenderBin" );
-        osg::Program* program = new osg::Program;
-        program->addShader( new osg::Shader( osg::Shader::VERTEX, ambient_vert_src ) );
-        program->addShader( new osg::Shader( osg::Shader::FRAGMENT, ambient_frag_src ) );
-        ss->setAttributeAndModes( program );
+    if (!effect) {
+        SG_LOG(SG_VIEW, SG_ALERT, "Effects/ambient not found");
+        return 0;
     }
-
+    eg->setEffect( effect );
     g->setName( "AmbientQuad" );
     eg->setName("AmbientQuad");
     eg->setCullingActive(false);
@@ -1340,30 +1144,11 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     g->setName( "SunlightQuad" );
     eg = new simgear::EffectGeode;
     effect = simgear::makeEffect("Effects/sunlight", true);
-    if (effect) {
-        eg->setEffect( effect );
-    } else {
-        SG_LOG( SG_VIEW, SG_ALERT, "=> Using default, builtin, Effects/sunlight" );
-        ss = eg->getOrCreateStateSet();
-        ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
-        ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
-        ss->setAttributeAndModes( new osg::BlendFunc( osg::BlendFunc::ONE, osg::BlendFunc::ONE ) );
-        ss->setTextureAttribute( 0, info->getBuffer( "depth" ) );
-        ss->setTextureAttribute( 1, info->getBuffer( "normal" ) );
-        ss->setTextureAttribute( 2, info->getBuffer( "diffuse" ) );
-        ss->setTextureAttribute( 3, info->getBuffer( "spec-emis" ) );
-        ss->setTextureAttribute( 4, info->getBuffer( "shadow" ) );
-        ss->addUniform( new osg::Uniform( "depth_tex", 0 ) );
-        ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
-        ss->addUniform( new osg::Uniform( "color_tex", 2 ) );
-        ss->addUniform( new osg::Uniform( "spec_emis_tex", 3 ) );
-        ss->addUniform( new osg::Uniform( "shadow_tex", 4 ) );
-        ss->setRenderBinDetails( 1, "RenderBin" );
-        osg::Program* program = new osg::Program;
-        program->addShader( new osg::Shader( osg::Shader::VERTEX, sunlight_vert_src ) );
-        program->addShader( new osg::Shader( osg::Shader::FRAGMENT, sunlight_frag_src ) );
-        ss->setAttributeAndModes( program );
+    if (!effect) {
+        SG_LOG(SG_VIEW, SG_ALERT, "Effects/sunlight not found");
+        return 0;
     }
+    eg->setEffect( effect );
     eg->setName("SunlightQuad");
     eg->setCullingActive(false);
     eg->addDrawable(g);
@@ -1412,28 +1197,11 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     g->setName( "FogQuad" );
     eg = new simgear::EffectGeode;
     effect = simgear::makeEffect("Effects/fog", true);
-    if (effect) {
-        eg->setEffect( effect );
-    } else {
-        SG_LOG( SG_VIEW, SG_ALERT, "=> Using default, builtin, Effects/fog" );
-        ss = eg->getOrCreateStateSet();
-        ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
-        ss->setMode( GL_DEPTH_TEST, osg::StateAttribute::OFF );
-        ss->setAttributeAndModes( new osg::BlendFunc( osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA ) );
-        ss->setTextureAttributeAndModes( 0, info->getBuffer( "depth" ) );
-        ss->setTextureAttributeAndModes( 1, info->getBuffer( "normal" ) );
-        ss->setTextureAttributeAndModes( 2, info->getBuffer( "diffuse" ) );
-        ss->setTextureAttributeAndModes( 3, info->getBuffer( "spec-emis" ) );
-        ss->addUniform( new osg::Uniform( "depth_tex", 0 ) );
-        ss->addUniform( new osg::Uniform( "normal_tex", 1 ) );
-        ss->addUniform( new osg::Uniform( "color_tex", 2 ) );
-        ss->addUniform( new osg::Uniform( "spec_emis_tex", 3 ) );
-        ss->setRenderBinDetails( 10000, "RenderBin" );
-        osg::Program* program = new osg::Program;
-        program->addShader( new osg::Shader( osg::Shader::VERTEX, fog_vert_src ) );
-        program->addShader( new osg::Shader( osg::Shader::FRAGMENT, fog_frag_src ) );
-        ss->setAttributeAndModes( program );
+    if (!effect) {
+        SG_LOG(SG_VIEW, SG_ALERT, "Effects/fog not found");
+        return 0;
     }
+    eg->setEffect( effect );
     eg->setName("FogQuad");
     eg->setCullingActive(false);
     eg->addDrawable(g);
