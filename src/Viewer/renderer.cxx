@@ -688,37 +688,37 @@ class FGDeferredRenderingCameraCullCallback : public osg::NodeCallback {
 public:
     FGDeferredRenderingCameraCullCallback( flightgear::CameraKind k, CameraInfo* i ) : kind( k ), info( i ) {}
     virtual void operator()( osg::Node *n, osg::NodeVisitor *nv) {
-    simgear::EffectCullVisitor* cv = dynamic_cast<simgear::EffectCullVisitor*>(nv);
-    osg::Camera* camera = static_cast<osg::Camera*>(n);
+        simgear::EffectCullVisitor* cv = dynamic_cast<simgear::EffectCullVisitor*>(nv);
+        osg::Camera* camera = static_cast<osg::Camera*>(n);
 
-    cv->clearBufferList();
-    cv->addBuffer(simgear::Effect::DEPTH_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
-    cv->addBuffer(simgear::Effect::NORMAL_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
-    cv->addBuffer(simgear::Effect::DIFFUSE_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
-    cv->addBuffer(simgear::Effect::SPEC_EMIS_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
-    cv->addBuffer(simgear::Effect::LIGHTING_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::LIGHTING_BUFFER ) );
-    cv->addBuffer(simgear::Effect::SHADOW_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SHADOW_BUFFER ) );
-    // cv->addBuffer(simgear::Effect::AO_BUFFER, info->gBuffer->aoBuffer[2]);
+        cv->clearBufferList();
+        cv->addBuffer(simgear::Effect::DEPTH_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
+        cv->addBuffer(simgear::Effect::NORMAL_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
+        cv->addBuffer(simgear::Effect::DIFFUSE_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
+        cv->addBuffer(simgear::Effect::SPEC_EMIS_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
+        cv->addBuffer(simgear::Effect::LIGHTING_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::LIGHTING_BUFFER ) );
+        cv->addBuffer(simgear::Effect::SHADOW_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SHADOW_BUFFER ) );
+        // cv->addBuffer(simgear::Effect::AO_BUFFER, info->gBuffer->aoBuffer[2]);
 
-    if ( !info->getRenderStageInfo(kind).fullscreen )
-        info->setMatrices( camera );
+        if ( !info->getRenderStageInfo(kind).fullscreen )
+            info->setMatrices( camera );
 
-    cv->traverse( *camera );
+        cv->traverse( *camera );
 
-    if ( kind == flightgear::GEOMETRY_CAMERA ) {
-        // Save transparent bins to render later
-        osgUtil::RenderStage* renderStage = cv->getRenderStage();
-        osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
-        for (osgUtil::RenderBin::RenderBinList::iterator rbi = rbl.begin(); rbi != rbl.end(); ) {
-            if (rbi->second->getSortMode() == osgUtil::RenderBin::SORT_BACK_TO_FRONT) {
-                info->savedTransparentBins.insert( std::make_pair( rbi->first, rbi->second ) );
-                rbl.erase( rbi++ );
-            } else {
-                ++rbi;
+        if ( kind == flightgear::GEOMETRY_CAMERA ) {
+            // Save transparent bins to render later
+            osgUtil::RenderStage* renderStage = cv->getRenderStage();
+            osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
+            for (osgUtil::RenderBin::RenderBinList::iterator rbi = rbl.begin(); rbi != rbl.end(); ) {
+                if (rbi->second->getSortMode() == osgUtil::RenderBin::SORT_BACK_TO_FRONT) {
+                    info->savedTransparentBins.insert( std::make_pair( rbi->first, rbi->second ) );
+                    rbl.erase( rbi++ );
+                } else {
+                    ++rbi;
+                }
             }
-        }
-    } else if ( kind == flightgear::LIGHTING_CAMERA ) {
-        osg::ref_ptr<osg::Camera> mainShadowCamera = info->getCamera( SHADOW_CAMERA );
+        } else if ( kind == flightgear::LIGHTING_CAMERA ) {
+            osg::ref_ptr<osg::Camera> mainShadowCamera = info->getCamera( SHADOW_CAMERA );
             if (mainShadowCamera.valid()) {
                 osg::Switch* grp = mainShadowCamera->getChild(0)->asSwitch();
                 for (int i = 0; i < 4; ++i ) {
