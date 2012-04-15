@@ -56,6 +56,15 @@
 #include <osgViewer/GraphicsWindow>
 #include <osgViewer/Renderer>
 
+namespace flightgear {
+const char* MAIN_CAMERA = "MAIN_CAMERA";
+const char* FAR_CAMERA = "FAR_CAMERA";
+const char* GEOMETRY_CAMERA = "GEOMETRY_CAMERA";
+const char* SHADOW_CAMERA = "SHADOW_CAMERA";
+const char* LIGHTING_CAMERA = "LIGHTING_CAMERA";
+const char* DISPLAY_CAMERA = "DISPLAY_CAMERA";
+}
+
 static osg::Matrix
 invert(const osg::Matrix& matrix)
 {
@@ -242,7 +251,7 @@ void CameraInfo::resized(double w, double h)
     }
 }
 
-osg::Camera* CameraInfo::getCamera(CameraKind k) const
+osg::Camera* CameraInfo::getCamera(const std::string& k) const
 {
     CameraMap::const_iterator ii = cameras.find( k );
     if (ii == cameras.end())

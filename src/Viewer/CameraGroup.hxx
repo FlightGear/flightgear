@@ -72,20 +72,14 @@ struct RenderStageInfo {
     bool resizable;
 };
 
-enum CameraKind {
-    MAIN_CAMERA,
-    FAR_CAMERA,
-    GEOMETRY_CAMERA,
-    SHADOW_CAMERA,
-    BLOOM_CAMERA_1,
-    BLOOM_CAMERA_2,
-    AO_CAMERA_1,
-    AO_CAMERA_2,
-    AO_CAMERA_3,
-    LIGHTING_CAMERA,
-    DISPLAY_CAMERA
-};
-typedef std::map<CameraKind,RenderStageInfo> CameraMap;
+extern const char* MAIN_CAMERA;
+extern const char* FAR_CAMERA;
+extern const char* GEOMETRY_CAMERA;
+extern const char* SHADOW_CAMERA;
+extern const char* LIGHTING_CAMERA;
+extern const char* DISPLAY_CAMERA;
+
+typedef std::map<std::string,RenderStageInfo> CameraMap;
 
 /** A wrapper around osg::Camera that contains some extra information.
  */
@@ -138,12 +132,12 @@ struct CameraInfo : public osg::Referenced
     /** the camera objects
      */
     CameraMap cameras;
-    void addCamera( CameraKind k, osg::Camera* c, int si = -1, bool fs = false ) { cameras[k].camera = c; cameras[k].slaveIndex = si; cameras[k].fullscreen = fs; }
-    void addCamera( CameraKind k, osg::Camera* c, bool fs ) { cameras[k].camera = c; cameras[k].fullscreen = fs; }
-    void addCamera( CameraKind k, osg::Camera* c, float s ) { cameras[k].camera = c; cameras[k].scaleFactor = s; }
-    osg::Camera* getCamera(CameraKind k) const;
+    void addCamera( const std::string& k, osg::Camera* c, int si = -1, bool fs = false ) { cameras[k].camera = c; cameras[k].slaveIndex = si; cameras[k].fullscreen = fs; }
+    void addCamera( const std::string& k, osg::Camera* c, bool fs ) { cameras[k].camera = c; cameras[k].fullscreen = fs; }
+    void addCamera( const std::string& k, osg::Camera* c, float s ) { cameras[k].camera = c; cameras[k].scaleFactor = s; }
+    osg::Camera* getCamera(const std::string& k) const;
     int getMainSlaveIndex() const;
-    RenderStageInfo& getRenderStageInfo( CameraKind k ) { return cameras[k]; }
+    RenderStageInfo& getRenderStageInfo( const std::string& k ) { return cameras[k]; }
 
     /** the buffer objects
      */

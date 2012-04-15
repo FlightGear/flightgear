@@ -686,7 +686,7 @@ FGRenderer::buildClassicalPipeline(flightgear::CameraGroup* cgroup, unsigned fla
 
 class FGDeferredRenderingCameraCullCallback : public osg::NodeCallback {
 public:
-    FGDeferredRenderingCameraCullCallback( flightgear::CameraKind k, CameraInfo* i ) : kind( k ), info( i ) {}
+    FGDeferredRenderingCameraCullCallback( const std::string& k, CameraInfo* i ) : kind( k ), info( i ) {}
     virtual void operator()( osg::Node *n, osg::NodeVisitor *nv) {
         simgear::EffectCullVisitor* cv = dynamic_cast<simgear::EffectCullVisitor*>(nv);
         osg::Camera* camera = static_cast<osg::Camera*>(n);
@@ -749,7 +749,7 @@ public:
     }
 
 private:
-    flightgear::CameraKind kind;
+    std::string kind;
     CameraInfo* info;
 };
 
@@ -789,7 +789,7 @@ void buildDeferredBuffers( flightgear::CameraInfo* info, int shadowMapSize, bool
     info->getBuffer("shadow")->setTextureSize(shadowMapSize,shadowMapSize);
 }
 
-void attachBufferToCamera( flightgear::CameraInfo* info, osg::Camera* camera, osg::Camera::BufferComponent c, flightgear::CameraKind ck, const std::string& bk )
+void attachBufferToCamera( flightgear::CameraInfo* info, osg::Camera* camera, osg::Camera::BufferComponent c, const std::string& ck, const std::string& bk )
 {
     camera->attach( c, info->getBuffer(bk) );
     info->getRenderStageInfo(ck).buffers.insert( std::make_pair( c, bk ) );
