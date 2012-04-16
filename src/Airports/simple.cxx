@@ -96,6 +96,15 @@ bool FGAirport::isHeliport() const
   return type() == HELIPORT;
 }
 
+bool FGAirport::isAirportType(FGPositioned* pos)
+{
+    if (!pos) {
+        return false;
+    }
+    
+    return (pos->type() >= AIRPORT) && (pos->type() <= SEAPORT);
+}
+
 FGAirportDynamics * FGAirport::getDynamics()
 {
     if (_dynamics) {

@@ -82,6 +82,8 @@ public:
     bool   isSeaport()    const;
     bool   isHeliport()   const;
 
+    static bool isAirportType(FGPositioned* pos);
+    
     virtual const std::string& name() const
     { return _name; }
 

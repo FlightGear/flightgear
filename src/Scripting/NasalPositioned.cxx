@@ -26,9 +26,12 @@
 
 #include "NasalPositioned.hxx"
 
+#include <boost/foreach.hpp>
+
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/bucket/newbucket.hxx>
 
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
@@ -120,26 +123,24 @@ naRef hashForRunway(naContext c, FGRunway* rwy)
         
     if (rwy->ILS()) {
       HASHSET("ils_frequency_mhz", 17, naNum(rwy->ILS()->get_freq() / 100.0));
+      HASHSET("ils", 3, hashForNavRecord(c, rwy->ILS(), SGGeod()));
     }
         
-    std::vector<flightgear::SID*> sids(rwy->getSIDs());
     naRef sidVec = naNewVector(c);
         
-    for (unsigned int s=0; s < sids.size(); ++s) {
+    BOOST_FOREACH(flightgear::SID* sid, rwy->getSIDs()) {
       naRef procId = naStr_fromdata(naNewString(c),
-                const_cast<char *>(sids[s]->ident().c_str()),
-                sids[s]->ident().length());
+                const_cast<char *>(sid->ident().c_str()),
+                sid->ident().length());
       naVec_append(sidVec, procId);
     }
     HASHSET("sids", 4, sidVec); 
         
-    std::vector<flightgear::STAR*> stars(rwy->getSTARs());
-    naRef starVec = naNewVector(c);
-      
-    for (unsigned int s=0; s < stars.size(); ++s) {
+    naRef starVec = naNewVector(c);      
+    BOOST_FOREACH(flightgear::STAR* star, rwy->getSTARs()) {
       naRef procId = naStr_fromdata(naNewString(c),
-                const_cast<char *>(stars[s]->ident().c_str()),
-                stars[s]->ident().length());
+                const_cast<char *>(star->ident().c_str()),
+                star->ident().length());
       naVec_append(starVec, procId);
     }
     HASHSET("stars", 5, starVec); 
@@ -196,8 +197,10 @@ bool geodFromHash(naRef ref, SGGeod& result)
     return true;
   }
   
+// check for geo.Coord type
+    
 // check for any synonyms?
-// latitude + longitude?
+    // latitude + longitude?
   
   return false;
 }
@@ -301,8 +304,6 @@ public:
 // airportinfo(<lat>, <lon> [, <type>]);
 static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 {
-  static SGConstPropertyNode_ptr latn = fgGetNode("/position/latitude-deg", true);
-  static SGConstPropertyNode_ptr lonn = fgGetNode("/position/longitude-deg", true);
   SGGeod pos;
   FGAirport* apt = NULL;
   
@@ -311,7 +312,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     args += 2;
     argc -= 2;
   } else {
-    pos = SGGeod::fromDeg(lonn->getDoubleValue(), latn->getDoubleValue());
+    pos = globals->get_aircraft_position();
   }
   
   double maxRange = 10000.0; // expose this? or pick a smaller value?
@@ -345,75 +346,57 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     if(!apt) return naNil();
   }
   
-  std::string id = apt->ident();
-  std::string name = apt->name();
-  
-  // set runway hash
-  naRef rwys = naNewHash(c);
-  for(unsigned int r=0; r<apt->numRunways(); ++r) {
-    FGRunway* rwy(apt->getRunwayByIndex(r));
-    
-    naRef rwyid = naStr_fromdata(naNewString(c),
-                                 const_cast<char *>(rwy->ident().c_str()),
-                                 rwy->ident().length());
-    
-    naRef rwydata = naNewHash(c);
-#define HASHSET(s,l,n) naHash_set(rwydata, naStr_fromdata(naNewString(c),s,l),n)
-    HASHSET("id", 2, rwyid);
-    HASHSET("lat", 3, naNum(rwy->latitude()));
-    HASHSET("lon", 3, naNum(rwy->longitude()));
-    HASHSET("heading", 7, naNum(rwy->headingDeg()));
-    HASHSET("length", 6, naNum(rwy->lengthM()));
-    HASHSET("width", 5, naNum(rwy->widthM()));
-    HASHSET("threshold", 9, naNum(rwy->displacedThresholdM()));
-    HASHSET("stopway", 7, naNum(rwy->stopwayM()));
-    
-    if (rwy->ILS()) {
-      HASHSET("ils_frequency_mhz", 17, naNum(rwy->ILS()->get_freq() / 100.0));
-    }
-    
-    std::vector<flightgear::SID*> sids(rwy->getSIDs());
-    naRef sidVec = naNewVector(c);
-    
-    for (unsigned int s=0; s < sids.size(); ++s) {
-      naRef procId = naStr_fromdata(naNewString(c),
-                                    const_cast<char *>(sids[s]->ident().c_str()),
-                                    sids[s]->ident().length());
-      naVec_append(sidVec, procId);
-    }
-    HASHSET("sids", 4, sidVec); 
-    
-    std::vector<flightgear::STAR*> stars(rwy->getSTARs());
-    naRef starVec = naNewVector(c);
-    
-    for (unsigned int s=0; s < stars.size(); ++s) {
-      naRef procId = naStr_fromdata(naNewString(c),
-                                    const_cast<char *>(stars[s]->ident().c_str()),
-                                    stars[s]->ident().length());
-      naVec_append(starVec, procId);
-    }
-    HASHSET("stars", 5, starVec); 
-    
-#undef HASHSET
-    naHash_set(rwys, rwyid, rwydata);
-  }
-  
-  // set airport hash
-  naRef aptdata = naNewHash(c);
-#define HASHSET(s,l,n) naHash_set(aptdata, naStr_fromdata(naNewString(c),s,l),n)
-  HASHSET("id", 2, naStr_fromdata(naNewString(c),
-                                  const_cast<char *>(id.c_str()), id.length()));
-  HASHSET("name", 4, naStr_fromdata(naNewString(c),
-                                    const_cast<char *>(name.c_str()), name.length()));
-  HASHSET("lat", 3, naNum(apt->getLatitude()));
-  HASHSET("lon", 3, naNum(apt->getLongitude()));
-  HASHSET("elevation", 9, naNum(apt->getElevation() * SG_FEET_TO_METER));
-  HASHSET("has_metar", 9, naNum(apt->getMetar()));
-  HASHSET("runways", 7, rwys);
-#undef HASHSET
-  return aptdata;
+  return hashForAirport(c, apt);
 }
 
+static FGAirport* airportFromRef(naRef ref)
+{
+    if (naIsString(ref)) {
+        return FGAirport::findByIdent(naStr_data(ref));
+    }
+ 
+    FGPositioned* pos = positionedGhost(ref);
+    if (pos && FGAirport::isAirportType(pos)) {
+        return (FGAirport*) pos;
+    }
+
+    return NULL;
+}
+
+static naRef f_airporttower(naContext c, naRef me, int argc, naRef* args)
+{
+    if (argc != 1) {
+        naRuntimeError(c, "airporttower needs an airport object or ID argument");
+    }
+    
+    FGAirport* apt = airportFromRef(args[0]);
+    // build a hash for the tower position
+    // include the frequencies ?
+    
+    SGGeod towerLoc = apt->getTowerLocation();
+    naRef tower = naNewHash(c);
+#define HASHSET(s,l,n) naHash_set(tower, naStr_fromdata(naNewString(c),s,l),n)
+    HASHSET("lat", 3, naNum(towerLoc.getLatitudeDeg()));
+    HASHSET("lon", 3, naNum(towerLoc.getLongitudeDeg()));
+    HASHSET("elevation", 9, naNum(towerLoc.getElevationM()));
+#undef HASHSET
+    return tower;
+}
+
+static naRef f_airportcomms(naContext c, naRef me, int argc, naRef* args)
+{
+    if (argc == 0) {
+        naRuntimeError(c, "airportcomms needs an airport object or ID argument");
+    }
+    
+    FGAirport* apt = airportFromRef(args[0]);
+    naRef comms = naNewHash(c);
+#define HASHSET(s,l,n) naHash_set(comms, naStr_fromdata(naNewString(c),s,l),n)
+    
+#undef HASHSET
+    return comms;
+
+}
 
 // Returns vector of data hash for navaid of a <type>, nil on error
 // navaids sorted by ascending distance 
@@ -429,8 +412,6 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 //                           sorted by distance relative to lat=34, lon=48
 static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
 {
-  static SGConstPropertyNode_ptr latn = fgGetNode("/position/latitude-deg", true);
-  static SGConstPropertyNode_ptr lonn = fgGetNode("/position/longitude-deg", true);
   SGGeod pos;
   
   if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
@@ -438,7 +419,7 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
     args += 2;
     argc -= 2;
   } else {
-    pos = SGGeod::fromDeg(lonn->getDoubleValue(), latn->getDoubleValue());
+    pos = globals->get_aircraft_position();
   }
   
   FGPositioned::Type type = FGPositioned::INVALID;
@@ -478,25 +459,7 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
   
   naRef reply = naNewVector(c);
   for( nav_list_type::const_iterator it = navlist.begin(); it != navlist.end(); ++it ) {
-    const FGNavRecord * nav = *it;
-    
-    // set navdata hash
-    naRef navdata = naNewHash(c);
-#define HASHSET(s,l,n) naHash_set(navdata, naStr_fromdata(naNewString(c),s,l),n)
-    HASHSET("id", 2, naStr_fromdata(naNewString(c),
-                                    const_cast<char *>(nav->ident().c_str()), nav->ident().length()));
-    HASHSET("name", 4, naStr_fromdata(naNewString(c),
-                                      const_cast<char *>(nav->name().c_str()), nav->name().length()));
-    HASHSET("frequency", 9, naNum(nav->get_freq()));
-    HASHSET("lat", 3, naNum(nav->get_lat()));
-    HASHSET("lon", 3, naNum(nav->get_lon()));
-    HASHSET("elevation", 9, naNum(nav->get_elev_ft() * SG_FEET_TO_METER));
-    HASHSET("type", 4, naStr_fromdata(naNewString(c),
-                                      const_cast<char *>(nav->nameForType(nav->type())), strlen(nav->nameForType(nav->type()))));
-    HASHSET("distance", 8, naNum(SGGeodesy::distanceNm( pos, nav->geod() ) * SG_NM_TO_METER ) );
-    HASHSET("bearing", 7, naNum(SGGeodesy::courseDeg( pos, nav->geod() ) ) );
-#undef HASHSET
-    naVec_append( reply, navdata );
+    naVec_append( reply, hashForNavRecord(c, *it, pos) );
   }
   return reply;
 }
@@ -504,20 +467,84 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
 // Convert a cartesian point to a geodetic lat/lon/altitude.
 static naRef f_magvar(naContext c, naRef me, int argc, naRef* args)
 {
-  SGGeod pos;
-  if ((argc == 1) && geodFromHash(args[0], pos)) {
+  SGGeod pos = globals->get_aircraft_position();
+  if (argc == 0) {
+    // fine, use aircraft position
+  } else if ((argc == 1) && geodFromHash(args[0], pos)) {
     // okay
-  } else if (argc == 2) {
+  } else if ((argc == 2) && naIsNum(args[0]) && naIsNum(args[1])) {
     double lat = naNumValue(args[0]).num,
       lon = naNumValue(args[1]).num;
     pos = SGGeod::fromDeg(lon, lat);
   } else {
-    naRuntimeError(c, "magvar() expects 1 object arugment, or a lat/lon");
+    naRuntimeError(c, "magvar() expects no arguments, a positioned hash or lat,lon pair");
   }
   
   double jd = globals->get_time_params()->getJD();
   double magvarDeg = sgGetMagVar(pos, jd);
   return naNum(magvarDeg);
+}
+
+static naRef f_courseAndDistance(naContext c, naRef me, int argc, naRef* args)
+{
+    SGGeod from = globals->get_aircraft_position(), to;
+    if ((argc == 1) && geodFromHash(args[0], to)) {
+        // done
+    } else if ((argc == 2) && naIsNum(args[0]) && naIsNum(args[1])) {
+        // two number arguments, from = current pos, to = lat+lon
+        double lat = naNumValue(args[0]).num,
+            lon = naNumValue(args[1]).num;
+        to = SGGeod::fromDeg(lon, lat);
+    } else if ((argc == 2) && geodFromHash(args[0], from) && geodFromHash(args[1], to)) {
+        // done
+    } else if ((argc == 3) && geodFromHash(args[0], from) && naIsNum(args[1]) && naIsNum(args[2])) {
+        double lat = naNumValue(args[1]).num,
+            lon = naNumValue(args[2]).num;
+        to = SGGeod::fromDeg(lon, lat);
+    } else if ((argc == 3) && naIsNum(args[0]) && naIsNum(args[1]) && geodFromHash(args[2], to)) {
+        double lat = naNumValue(args[0]).num,
+            lon = naNumValue(args[1]).num;
+        from = SGGeod::fromDeg(lon, lat);
+    } else if (argc == 4) {
+        if (!naIsNum(args[0]) || !naIsNum(args[1]) || !naIsNum(args[2]) || !naIsNum(args[3])) {
+            naRuntimeError(c, "invalid arguments to courseAndDistance - expected four numbers");
+        }
+        
+        from = SGGeod::fromDeg(naNumValue(args[1]).num, naNumValue(args[0]).num);
+        to = SGGeod::fromDeg(naNumValue(args[3]).num, naNumValue(args[2]).num);
+    } else {
+        naRuntimeError(c, "invalid arguments to courseAndDistance");
+    }
+    
+    double course, course2, d;
+    SGGeodesy::inverse(from, to, course, course2, d);
+    
+    naRef result = naNewVector(c);
+    naVec_append(result, naNum(course));
+    naVec_append(result, naNum(d));
+    return result;
+}
+
+static naRef f_tilePath(naContext c, naRef me, int argc, naRef* args)
+{
+    SGGeod pos = globals->get_aircraft_position();
+    if (argc == 0) {
+        // fine, use aircraft position
+    } else if ((argc == 1) && geodFromHash(args[0], pos)) {
+        // okay
+    } else if ((argc == 2) && naIsNum(args[0]) && naIsNum(args[1])) {
+        double lat = naNumValue(args[0]).num,
+        lon = naNumValue(args[1]).num;
+        pos = SGGeod::fromDeg(lon, lat);
+    } else {
+        naRuntimeError(c, "bucketPath() expects no arguments, a positioned hash or lat,lon pair");
+    }
+    
+    SGBucket b(pos);
+    const char* path = b.gen_base_path().c_str();
+    naRef s = naNewString(c);
+    naStr_fromdata(s, (char*)path, strlen(path));
+    return s;
 }
 
 // Table of extension functions.  Terminate with zeros.
@@ -526,7 +553,12 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "geodtocart", f_geodtocart },
   { "geodinfo", f_geodinfo },
   { "airportinfo", f_airportinfo },
+  { "airporttower", f_airporttower },  
+  { "airportcomms", f_airportcomms },
+  { "navinfo", f_navinfo },
   { "magvar", f_magvar },
+  { "courseAndDistance", f_courseAndDistance },
+  { "bucketPath", f_tilePath },
   { 0, 0 }
 };
 
