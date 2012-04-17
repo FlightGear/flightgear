@@ -414,12 +414,20 @@ FGRenderer::FGRenderer() :
     _sunDirection( new osg::Uniform( "fg_SunDirection", osg::Vec3f() ) ),
     _planes( new osg::Uniform( "fg_Planes", osg::Vec3f() ) ),
     _fogColor( new osg::Uniform( "fg_FogColor", osg::Vec4f(1.0, 1.0, 1.0, 1.0) ) ),
-    _fogDensity( new osg::Uniform( "fg_FogDensity", 0.0001f ) )
+    _fogDensity( new osg::Uniform( "fg_FogDensity", 0.0001f ) ),
+    _shadowNumber( new osg::Uniform( "fg_ShadowNumber", (int)4 ) ),
+    _shadowDistances( new osg::Uniform( "fg_ShadowDistances", osg::Vec4f(5.0, 50.0, 500.0, 5000.0 ) ) )
 {
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = updateRenderer;
 #endif
    eventHandler = new FGEventHandler;
+
+   _numCascades = 4;
+   _cascadeFar[0] = 5.f;
+   _cascadeFar[1] = 50.f;
+   _cascadeFar[2] = 500.f;
+   _cascadeFar[3] = 5000.f;
 }
 
 FGRenderer::~FGRenderer()
@@ -474,13 +482,38 @@ public:
     }
 };
 
+class ShadowNumListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        globals->get_renderer()->updateCascadeNumber(node->getIntValue());
+    }
+};
+
+class ShadowRangeListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        globals->get_renderer()->updateCascadeFar(node->getIndex(), node->getFloatValue());
+    }
+};
+
 void
 FGRenderer::init( void )
 {
-	_classicalRenderer = !fgGetBool("/sim/rendering/rembrandt", false);
+    _classicalRenderer = !fgGetBool("/sim/rendering/rembrandt", false);
     _shadowMapSize    = fgGetInt( "/sim/rendering/shadows/map-size", 4096 );
     fgAddChangeListener( new ShadowMapSizeListener, "/sim/rendering/shadows/map-size" );
     fgAddChangeListener( new ShadowEnabledListener, "/sim/rendering/shadows/enabled" );
+    ShadowRangeListener* srl = new ShadowRangeListener;
+    fgAddChangeListener(srl, "/sim/rendering/shadows/cascade-far-m[0]");
+    fgAddChangeListener(srl, "/sim/rendering/shadows/cascade-far-m[1]");
+    fgAddChangeListener(srl, "/sim/rendering/shadows/cascade-far-m[2]");
+    fgAddChangeListener(srl, "/sim/rendering/shadows/cascade-far-m[3]");
+    fgAddChangeListener(new ShadowNumListener, "/sim/rendering/shadows/num-cascades");
+    _numCascades = fgGetInt("/sim/rendering/shadows/num-cascades", 4);
+    _cascadeFar[0] = fgGetFloat("/sim/rendering/shadows/cascade-far-m[0]", 5.0f);
+    _cascadeFar[1] = fgGetFloat("/sim/rendering/shadows/cascade-far-m[1]", 50.0f);
+    _cascadeFar[2] = fgGetFloat("/sim/rendering/shadows/cascade-far-m[2]", 500.0f);
+    _cascadeFar[3] = fgGetFloat("/sim/rendering/shadows/cascade-far-m[3]", 5000.0f);
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _scenery_override = fgGetNode("/sim/sceneryloaded-override", true);
     _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
@@ -895,10 +928,34 @@ void FGRenderer::updateShadowCamera(const flightgear::CameraInfo* info, const os
             camera->getProjectionMatrix().getFrustum(left,right,bottom,top,zNear,zFar);
 
             shadowSwitch->setAllChildrenOn();
-            updateShadowCascade(info, camera, shadowSwitch, 0, left, right, bottom, top, zNear, 1.0, 5.0/zNear);
-            updateShadowCascade(info, camera, shadowSwitch, 1, left, right, bottom, top, zNear, 5.0/zNear, 50.0/zNear);
-            updateShadowCascade(info, camera, shadowSwitch, 2, left, right, bottom, top, zNear, 50.0/zNear, 512.0/zNear);
-            updateShadowCascade(info, camera, shadowSwitch, 3, left, right, bottom, top, zNear, 512.0/zNear, 5000.0/zNear);
+            if (_numCascades == 1) {
+                osg::Camera* cascadeCam = static_cast<osg::Camera*>( shadowSwitch->getChild(0) );
+                cascadeCam->setViewport( 0, 0, _shadowMapSize, _shadowMapSize );
+            } else {
+                for (int no = 0; no < 4; ++no) {
+                    osg::Camera* cascadeCam = static_cast<osg::Camera*>( shadowSwitch->getChild(no) );
+                    cascadeCam->setViewport( int( no / 2 ) * (_shadowMapSize/2), (no & 1) * (_shadowMapSize/2), (_shadowMapSize/2), (_shadowMapSize/2) );
+                }
+            }
+            updateShadowCascade(info, camera, shadowSwitch, 0, left, right, bottom, top, zNear, 1.0, _cascadeFar[0]/zNear);
+            if (_numCascades > 1) {
+                shadowSwitch->setValue(1, true);
+                updateShadowCascade(info, camera, shadowSwitch, 1, left, right, bottom, top, zNear, _cascadeFar[0]/zNear, _cascadeFar[1]/zNear);
+            } else {
+                shadowSwitch->setValue(1, false);
+            }
+            if (_numCascades > 2) {
+                shadowSwitch->setValue(2, true);
+                updateShadowCascade(info, camera, shadowSwitch, 2, left, right, bottom, top, zNear, _cascadeFar[1]/zNear, _cascadeFar[2]/zNear);
+            } else {
+                shadowSwitch->setValue(2, false);
+            }
+            if (_numCascades > 3) {
+                shadowSwitch->setValue(3, true);
+                updateShadowCascade(info, camera, shadowSwitch, 3, left, right, bottom, top, zNear, _cascadeFar[2]/zNear, _cascadeFar[3]/zNear);
+            } else {
+                shadowSwitch->setValue(3, false);
+            }
             {
             osg::Matrixd &viewMatrix = mainShadowCamera->getViewMatrix();
 
@@ -979,6 +1036,23 @@ void FGRenderer::enableShadows(bool enabled)
             shadowSwitch->setAllChildrenOff();
     }
 }
+
+void FGRenderer::updateCascadeFar(int index, float far_m)
+{
+    if (index < 0 || index > 3)
+        return;
+    _cascadeFar[index] = far_m;
+    _shadowDistances->set( osg::Vec4f(_cascadeFar[0], _cascadeFar[1], _cascadeFar[2], _cascadeFar[3]) );
+}
+
+void FGRenderer::updateCascadeNumber(size_t num)
+{
+    if (num < 1 || num > 4)
+        return;
+    _numCascades = num;
+    _shadowNumber->set( (int)_numCascades );
+}
+
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -1199,6 +1273,8 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     ss->addUniform( _sunSpecular );
     ss->addUniform( _sunDirection );
     ss->addUniform( _planes );
+    ss->addUniform( _shadowNumber );
+    ss->addUniform( _shadowDistances );
 
     osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
     g->setUseDisplayList(false);

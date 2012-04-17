@@ -109,6 +109,8 @@ public:
     void updateShadowCamera(const flightgear::CameraInfo* info, const osg::Vec3d& position);
     void updateShadowMapSize(int mapSize);
     void enableShadows(bool enabled);
+    void updateCascadeFar(int index, float far_m);
+    void updateCascadeNumber(size_t num);
 
     SGSky* getSky() const { return _sky; }
 
@@ -131,22 +133,25 @@ protected:
     SGPropertyNode_ptr _virtual_cockpit;
     SGTimeStamp _splash_time;
     SGSky* _sky;
-	bool _classicalRenderer;
+    bool _classicalRenderer;
     int _shadowMapSize;
+    size_t _numCascades;
+    float _cascadeFar[4];
 
-	osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
-	osg::Camera* buildDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
-	osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
+    osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
+    osg::Camera* buildDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
+    osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
     void updateShadowCascade(const flightgear::CameraInfo* info, osg::Camera* camera, osg::Group* grp, int idx, double left, double right, double bottom, double top, double zNear, double f1, double f2);
     osg::Vec3 getSunDirection() const;
-	osg::ref_ptr<osg::Uniform> _ambientFactor;
+    osg::ref_ptr<osg::Uniform> _ambientFactor;
     osg::ref_ptr<osg::Uniform> _sunDiffuse;
     osg::ref_ptr<osg::Uniform> _sunSpecular;
     osg::ref_ptr<osg::Uniform> _sunDirection;
     osg::ref_ptr<osg::Uniform> _planes;
     osg::ref_ptr<osg::Uniform> _fogColor;
     osg::ref_ptr<osg::Uniform> _fogDensity;
-
+    osg::ref_ptr<osg::Uniform> _shadowNumber;
+    osg::ref_ptr<osg::Uniform> _shadowDistances;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);
