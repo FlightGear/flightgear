@@ -149,6 +149,24 @@ string fgBasePackageVersion() {
     return version;
 }
 
+//
+// Select the proper language based on the given locale/language name.
+//
+static SGPropertyNode* findLocale(SGPropertyNode *intl, const char* language)
+{
+    vector<SGPropertyNode_ptr> localeList = intl->getChildren("locale");
+    for (unsigned int i = 0; i < localeList.size(); i++) {
+
+       vector<SGPropertyNode_ptr> lang = localeList[i]->getChildren("lang");
+       for (unsigned int j = 0; j < lang.size(); j++) {
+
+          if (!strcmp(lang[j]->getStringValue(), language)) {
+             return localeList[i];
+          }
+       }
+    }
+    return NULL;
+}
 
 // Initialize the localization
 SGPropertyNode *fgInitLocale(const char *language) {
@@ -161,20 +179,20 @@ SGPropertyNode *fgInitLocale(const char *language) {
    if (!intl)
       return NULL;
 
-   //
-   // Select the proper language from the list
-   //
-   vector<SGPropertyNode_ptr> locale = intl->getChildren("locale");
-   for (unsigned int i = 0; i < locale.size(); i++) {
+   c_node = findLocale(intl, language);
+   if (!c_node)
+   {
+       /* be tolerant about locale names, i.e. instead of "de_DE.utf8" also
+        * consider "de_DE" ... */
+       string l = language;
+       size_t pos = l.find(".");
+       if ((pos != string::npos)&&(pos>0))
+           c_node = findLocale(intl, l.substr(0, pos).c_str());
 
-      vector<SGPropertyNode_ptr> lang = locale[i]->getChildren("lang");
-      for (unsigned int j = 0; j < lang.size(); j++) {
-
-         if (!strcmp(lang[j]->getStringValue(), language)) {
-            c_node = locale[i];
-            break;
-         }
-      }
+       /* finally consider country alone, i.e. "de" */
+       pos = l.find("_");
+       if ((!c_node)&&(pos != string::npos)&&(pos>0))
+           c_node = findLocale(intl, l.substr(0, pos).c_str());
    }
 
 
