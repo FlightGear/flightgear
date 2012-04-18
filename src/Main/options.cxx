@@ -562,13 +562,6 @@ add_channel( const string& type, const string& channel_str ) {
     return true;
 }
 
-static int
-fgOptLanguage( const char *arg )
-{
-    globals->set_locale( fgInitLocale( arg ) );
-    return FG_OPTIONS_OK;
-}
-
 static void
 clearLocation ()
 {
@@ -1330,7 +1323,7 @@ struct OptionDesc {
     int (*func)( const char * );
     } fgOptionArray[] = {
 
-    {"language",                     true,  OPTION_FUNC,   "", false, "", fgOptLanguage },
+    {"language",                     true,  OPTION_IGNORE, "", false, "", 0 },
     {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt", false, "", 0 },
     {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt", true, "", 0 },
     {"disable-game-mode",            false, OPTION_BOOL,   "/sim/startup/game-mode", false, "", 0 },
@@ -1680,7 +1673,7 @@ public:
   bool showHelp,
     verbose,
     showAircraft;
-
+    
   OptionDescDict options;
   OptionValueVec values;
   simgear::PathList propertyFiles;
@@ -1981,6 +1974,11 @@ string_list Options::valuesForOption(const std::string& key) const
   
 void Options::processOptions()
 {
+  // establish locale before showing help
+  if (isOptionSet("language")) {
+      globals->set_locale( fgInitLocale( valueForOption("language").c_str() ) );
+  }
+    
   // now FG_ROOT is setup, process various command line options that bail us
   // out quickly, but rely on aircraft / root settings
   if (p->showHelp) {
