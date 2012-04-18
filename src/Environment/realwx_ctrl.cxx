@@ -25,42 +25,25 @@
 #endif
 
 #include "realwx_ctrl.hxx"
-#include "metarproperties.hxx"
-#include "metarairportfilter.hxx"
-#include "fgmetar.hxx"
 
-#include <Main/fg_props.hxx>
-
+#include <algorithm>
 #include <boost/foreach.hpp>
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
-#include <simgear/io/HTTPClient.hxx>
 #include <simgear/io/HTTPRequest.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/structure/event_mgr.hxx>
 
-#include <algorithm>
+#include "metarproperties.hxx"
+#include "metarairportfilter.hxx"
+#include "fgmetar.hxx"
+#include <Network/HTTPClient.hxx>
+#include <Main/fg_props.hxx>
 
 namespace Environment {
-/* -------------------------------------------------------------------------------- */
 
-class FGHTTPClient : public simgear::HTTP::Client {
-public:
-    FGHTTPClient();
-};
-
-FGHTTPClient::FGHTTPClient()
-{
-    string proxyHost(fgGetString("/sim/presets/proxy/host"));
-    int proxyPort(fgGetInt("/sim/presets/proxy/port"));
-    string proxyAuth(fgGetString("/sim/presets/proxy/auth"));
-    
-    if (!proxyHost.empty()) {
-        setProxy(proxyHost, proxyPort, proxyAuth);
-    }
-}
 
 /* -------------------------------------------------------------------------------- */
 
@@ -295,29 +278,17 @@ void BasicRealWxController::checkNearbyMetar()
 class NoaaMetarRealWxController : public BasicRealWxController, MetarRequester {
 public:
     NoaaMetarRealWxController( SGPropertyNode_ptr rootNode );
-    virtual ~NoaaMetarRealWxController();
-    virtual void update( double dt );
 
     // implementation of MetarRequester
     virtual void requestMetar( MetarDataHandler * metarDataHandler, const std::string & id );
 
 private:
-    FGHTTPClient _http;
+    
 };
 
 NoaaMetarRealWxController::NoaaMetarRealWxController( SGPropertyNode_ptr rootNode ) :
   BasicRealWxController(rootNode, this )
 {
-}
-
-NoaaMetarRealWxController::~NoaaMetarRealWxController()
-{
-}
-
-void NoaaMetarRealWxController::update( double dt )
-{
-    _http.update();
-    BasicRealWxController::update( dt );
 }
 
 void NoaaMetarRealWxController::requestMetar( MetarDataHandler * metarDataHandler, const std::string & id )
@@ -384,7 +355,7 @@ void NoaaMetarRealWxController::requestMetar( MetarDataHandler * metarDataHandle
 
     SG_LOG(SG_ENVIRONMENT, SG_INFO, 
         "NoaaMetarRealWxController::update(): spawning load request for station-id '" << id << "'" );
-    _http.makeRequest(new NoaaMetarGetRequest(metarDataHandler, id));
+    FGHTTPClient::instance()->makeRequest(new NoaaMetarGetRequest(metarDataHandler, id));
 }
 
 /* -------------------------------------------------------------------------------- */

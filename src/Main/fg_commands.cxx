@@ -24,6 +24,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/interpolator.hxx>
+#include <simgear/io/HTTPRequest.hxx>
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
@@ -39,6 +40,7 @@
 #include <ATC/CommStation.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navlist.hxx>
+#include <Network/HTTPClient.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -1316,6 +1318,93 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
     return true;
 }
 
+class RemoteXMLRequest : public simgear::HTTP::Request
+{
+public:
+    SGPropertyNode_ptr _complete;
+    SGPropertyNode_ptr _status;
+    SGPropertyNode_ptr _failed;
+    SGPropertyNode_ptr _target;
+    string propsData;
+    
+    RemoteXMLRequest(const std::string& url, SGPropertyNode* targetNode) : 
+        simgear::HTTP::Request(url),
+        _target(targetNode)
+    {
+    }
+    
+    void setCompletionProp(SGPropertyNode_ptr p)
+    {
+        _complete = p;
+    }
+    
+    void setStatusProp(SGPropertyNode_ptr p)
+    {
+        _status = p;
+    }
+    
+    void setFailedProp(SGPropertyNode_ptr p)
+    {
+        _failed = p;
+    }
+protected:
+    virtual void gotBodyData(const char* s, int n)
+    {
+        propsData += string(s, n);
+    }
+    
+    virtual void responseComplete()
+    {
+        int response = responseCode();
+        bool failed = false;
+        if (response == 200) {
+            try {
+                const char* buffer = propsData.c_str();
+                readProperties(buffer, propsData.size(), _target, true);
+            } catch (const sg_exception &e) {
+                SG_LOG(SG_IO, SG_WARN, "parsing XML from remote, failed: " << e.getFormattedMessage());
+                failed = true;
+                response = 406; // 'not acceptable', anything better?
+            }
+        } else {
+            failed = true;
+        }
+    // now the response data is output, signal Nasal / listeners
+        if (_complete) _complete->setBoolValue(true);
+        if (_status) _status->setIntValue(response);
+        if (_failed) _failed->setBoolValue(failed);
+    }
+};
+
+
+static bool
+do_load_xml_from_url(const SGPropertyNode * arg)
+{
+    std::string url(arg->getStringValue("url"));
+    if (url.empty())
+        return false;
+        
+    SGPropertyNode *targetnode;
+    if (arg->hasValue("targetnode"))
+        targetnode = fgGetNode(arg->getStringValue("targetnode"), true);
+    else
+        targetnode = const_cast<SGPropertyNode *>(arg)->getNode("data", true);
+    
+    RemoteXMLRequest* req = new RemoteXMLRequest(url, targetnode);
+    
+// connect up optional reporting properties
+    if (arg->hasValue("complete")) 
+        req->setCompletionProp(fgGetNode(arg->getStringValue("complete"), true));
+    if (arg->hasValue("failure")) 
+        req->setFailedProp(fgGetNode(arg->getStringValue("failure"), true));
+    if (arg->hasValue("status")) 
+        req->setStatusProp(fgGetNode(arg->getStringValue("status"), true));
+        
+    FGHTTPClient::instance()->makeRequest(req);
+    
+    return true;
+}
+
 
 /**
  * An fgcommand to allow saving of xml files via nasal,
@@ -1531,6 +1620,7 @@ static struct {
     */
     { "loadxml", do_load_xml_to_proptree},
     { "savexml", do_save_xml_from_proptree },
+    { "xmlhttprequest", do_load_xml_from_url },
     { "press-cockpit-button", do_press_cockpit_button },
     { "release-cockpit-button", do_release_cockpit_button },
     { "dump-scenegraph", do_dump_scene_graph },

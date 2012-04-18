@@ -11,6 +11,7 @@ set(SOURCES
 	garmin.cxx
 	generic.cxx
 	httpd.cxx
+	HTTPClient.cxx
 	joyclient.cxx
 	jsclient.cxx
 	lfsglass.cxx
@@ -38,6 +39,7 @@ set(HEADERS
 	garmin.hxx
 	generic.hxx
 	httpd.hxx
+	HTTPClient.hxx
 	joyclient.hxx
 	jsclient.hxx
 	lfsglass.hxx
