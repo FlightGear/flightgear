@@ -2093,7 +2093,7 @@ void Options::showUsage() const
   
   SGPropertyNode *usage = locale->getNode(options->getStringValue("usage"));
   if (usage) {
-    cout << "Usage: " << usage->getStringValue() << endl;
+    cout << usage->getStringValue() << endl;
   }
   
   vector<SGPropertyNode_ptr>section = options->getChildren("section");
