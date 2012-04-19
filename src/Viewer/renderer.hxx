@@ -40,6 +40,7 @@ class CameraGroup;
 }
 
 class SGSky;
+class FGRenderingPipeline;
 
 class FGRenderer {
 
@@ -106,6 +107,11 @@ public:
 	flightgear::CameraInfo* buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
                                    const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
 
+	/**
+	 */
+	flightgear::CameraInfo* buildDefaultDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                   const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
+
     void updateShadowCamera(const flightgear::CameraInfo* info, const osg::Vec3d& position);
     void updateShadowMapSize(int mapSize);
     void enableShadows(bool enabled);
@@ -134,6 +140,7 @@ protected:
     SGTimeStamp _splash_time;
     SGSky* _sky;
     bool _classicalRenderer;
+    std::string _renderer;
     int _shadowMapSize;
     size_t _numCascades;
     float _cascadeFar[4];
@@ -154,6 +161,8 @@ protected:
     osg::ref_ptr<osg::Uniform> _shadowNumber;
     osg::ref_ptr<osg::Uniform> _shadowDistances;
     osg::ref_ptr<osg::Uniform> _depthInColor;
+
+    osg::ref_ptr<FGRenderingPipeline> _pipeline;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

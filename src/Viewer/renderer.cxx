@@ -103,6 +103,7 @@
 #include "viewer.hxx"
 #include "viewmgr.hxx"
 #include "splash.hxx"
+#include "renderingpipeline.hxx"
 #include "renderer.hxx"
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
@@ -522,6 +523,9 @@ FGRenderer::init( void )
     _useColorForDepth = fgGetBool( "/sim/rendering/use-color-for-depth", false );
     _depthInColor->set( _useColorForDepth );
 
+    _renderer         = fgGetString("/sim/rendering/renderer", "");
+    if (!_classicalRenderer && !_renderer.empty())
+        _pipeline = makeRenderingPipeline(_renderer, 0);
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _scenery_override = fgGetNode("/sim/sceneryloaded-override", true);
     _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
@@ -1220,6 +1224,17 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
 
 flightgear::CameraInfo*
 FGRenderer::buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                    const osg::Matrix& view,
+                                    const osg::Matrix& projection,
+                                    osg::GraphicsContext* gc)
+{
+    if (_renderer.empty() || !_pipeline.valid())
+        return buildDefaultDeferredPipeline(cgroup, flags, camera, view, projection, gc);
+    return _pipeline->buildCamera(cgroup, flags, camera, view, projection, gc);
+}
+
+flightgear::CameraInfo*
+FGRenderer::buildDefaultDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
                                     const osg::Matrix& view,
                                     const osg::Matrix& projection,
                                     osg::GraphicsContext* gc)
