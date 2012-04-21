@@ -499,7 +499,7 @@ int fgMainInit( int argc, char **argv ) {
 #endif
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
             << version );
-  SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR << std::endl );
+    SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR << std::endl );
 
     // Allocate global data structures.  This needs to happen before
     // we parse command line options

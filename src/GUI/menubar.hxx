@@ -3,6 +3,7 @@
 #ifndef __MENUBAR_HXX
 #define __MENUBAR_HXX 1
 
+class SGPropertyNode;
 
 /**
  * XML-configured menu bar interface
@@ -15,7 +16,7 @@
 class FGMenuBar
 {
 public:
-
+    FGMenuBar();
 
     /**
      * Destructor.
@@ -44,6 +45,13 @@ public:
      * Test whether the menu bar is visible.
      */
     virtual bool isVisible () const = 0;
+
+    /**
+     * Read a menu label from the menu's property tree.
+     * Take care of mapping it to the appropriate translation, if available.
+     * Returns an UTF-8 encoded string.
+     */
+    const char* getLocalizedLabel(SGPropertyNode* node);
 
 };
 

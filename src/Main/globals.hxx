@@ -61,6 +61,7 @@ class FGControls;
 class FGFlightPlanDispatcher;
 class FGNavList;
 class FGTACANList;
+class FGLocale;
 class FGModelMgr;
 class FGRouteMgr;
 class FGScenery;
@@ -86,7 +87,7 @@ private:
     SGPropertyNode_ptr initial_state;
 
     // localization
-    SGPropertyNode_ptr locale;
+    FGLocale* locale;
 
     FGRenderer *renderer;
     SGSubsystemMgr *subsystem_mgr;
@@ -255,8 +256,7 @@ public:
     inline SGPropertyNode *get_props () { return props; }
     inline void set_props( SGPropertyNode *n ) { props = n; }
 
-    inline SGPropertyNode *get_locale () { return locale; }
-    inline void set_locale( SGPropertyNode *n ) { locale = n; }
+    inline FGLocale* get_locale () { return locale; }
 
     inline SGCommandMgr *get_commands () { return commands; }
 

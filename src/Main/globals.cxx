@@ -59,6 +59,7 @@
 #include "globals.hxx"
 #include "renderer.hxx"
 #include "viewmgr.hxx"
+#include "locale.hxx"
 
 #include "fg_props.hxx"
 #include "fg_io.hxx"
@@ -122,7 +123,7 @@ FGGlobals *globals;
 FGGlobals::FGGlobals() :
     props( new SGPropertyNode ),
     initial_state( NULL ),
-    locale( NULL ),
+    locale( new FGLocale(props) ),
     renderer( new FGRenderer ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
@@ -211,6 +212,9 @@ FGGlobals::~FGGlobals()
     delete carrierlist;
     delete channellist;
     delete sound;
+
+    delete locale;
+    locale = NULL;
 }
 
 

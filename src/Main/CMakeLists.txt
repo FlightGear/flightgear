@@ -21,6 +21,7 @@ set(SOURCES
 	fg_props.cxx
 	fgviewer.cxx
 	globals.cxx
+	locale.cxx
 	logger.cxx
 	main.cxx
 	options.cxx
@@ -43,6 +44,7 @@ set(HEADERS
 	fg_props.hxx
 	fgviewer.hxx
 	globals.hxx
+	locale.hxx
 	logger.hxx
 	main.hxx
 	options.hxx

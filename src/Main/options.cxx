@@ -60,6 +60,7 @@
 #include "viewmgr.hxx"
 #include "main.hxx"
 #include <Main/viewer.hxx>
+#include <Main/locale.hxx>
 #include <Environment/presets.hxx>
 
 #include <osg/Version>
@@ -1971,11 +1972,10 @@ string_list Options::valuesForOption(const std::string& key) const
 
 void Options::processOptions()
 {
-  // establish locale before showing help
-  if (isOptionSet("language")) {
-      globals->set_locale( fgInitLocale( valueForOption("language").c_str() ) );
-  }
-    
+  // establish locale before showing help (this selects the default locale,
+  // when no explicit option was set)
+  globals->get_locale()->selectLanguage(valueForOption("language").c_str());
+
   // now FG_ROOT is setup, process various command line options that bail us
   // out quickly, but rely on aircraft / root settings
   if (p->showHelp) {
@@ -2064,12 +2064,12 @@ void Options::showUsage() const
 {
   fgOptLogLevel( "alert" );
   
-  SGPropertyNode *locale = globals->get_locale();
+  FGLocale *locale = globals->get_locale();
   SGPropertyNode options_root;
   
   SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on Windows
   cout << endl;
-  
+
   try {
     fgLoadProps("options.xml", &options_root);
   } catch (const sg_exception &) {
@@ -2080,17 +2080,23 @@ void Options::showUsage() const
     
     exit(-1);
   }
-  
+
   SGPropertyNode *options = options_root.getNode("options");
   if (!options) {
     SG_LOG( SG_GENERAL, SG_ALERT,
            "Error reading options.xml: <options> directive not found." );
     exit(-1);
   }
-  
-  SGPropertyNode *usage = locale->getNode(options->getStringValue("usage"));
+
+  if (!locale->loadResource("options"))
+  {
+      cout << "Unable to read the language resource." << endl;
+      exit(-1);
+  }
+
+  const char* usage = locale->getLocalizedString(options->getStringValue("usage"), "options");
   if (usage) {
-    cout << usage->getStringValue() << endl;
+    cout << usage << endl;
   }
   
   vector<SGPropertyNode_ptr>section = options->getChildren("section");
@@ -2131,21 +2137,17 @@ void Options::showUsage() const
           msg += tmp + '\n';
           msg.append(32, ' ');
         }
-        // There may be more than one <description> tag assosiated
+        // There may be more than one <description> tag associated
         // with one option
         
         vector<SGPropertyNode_ptr> desc;
         desc = option[k]->getChildren("description");
         if (desc.size() > 0) {
           for ( unsigned int l = 0; l < desc.size(); l++) {
-            
-            // There may be more than one translation line.
-            
             string t = desc[l]->getStringValue();
-            SGPropertyNode *n = locale->getNode("strings");
-            vector<SGPropertyNode_ptr>trans_desc =
-            n->getChildren(t.substr(8).c_str());
-            
+
+            // There may be more than one translation line.
+            vector<SGPropertyNode_ptr>trans_desc = locale->getLocalizedStrings(t.c_str(),"options");
             for ( unsigned int m = 0; m < trans_desc.size(); m++ ) {
               string t_str = trans_desc[m]->getStringValue();
               
@@ -2171,19 +2173,18 @@ void Options::showUsage() const
       }
     }
     
-    SGPropertyNode *name;
-    name = locale->getNode(section[j]->getStringValue("name"));
-    
+    const char* name = locale->getLocalizedString(section[j]->getStringValue("name"),"options");
     if (!msg.empty() && name) {
-      cout << endl << name->getStringValue() << ":" << endl;
+      cout << endl << name << ":" << endl;
       cout << msg;
       msg.erase();
     }
   }
   
   if ( !p->verbose ) {
-    cout << endl;
-    cout << "For a complete list of options use --help --verbose" << endl;
+    const char* verbose_help = locale->getLocalizedString(options->getStringValue("verbose-help"),"options");
+    if (verbose_help)
+        cout << endl << verbose_help << endl;
   }
 #ifdef _MSC_VER
   std::cout << "Hit a key to continue..." << std::endl;

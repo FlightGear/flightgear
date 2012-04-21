@@ -41,6 +41,7 @@
 
 #include <Main/main.hxx>
 #include <Main/globals.hxx>
+#include <Main/locale.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/WindowSystemAdapter.hxx>
 #include <GUI/new_gui.hxx>
@@ -78,8 +79,7 @@ public:
         FGFontCache *fc = globals->get_fontcache();
         fc->initializeFonts();
         puFont *GuiFont
-            = fc->get(globals->get_locale()->getStringValue("font",
-                                                            "typewriter.txf"),
+            = fc->get(globals->get_locale()->getDefaultFont("typewriter.txf"),
                       15);
         puSetDefaultFonts(*GuiFont, *GuiFont);
         guiFnt = puGetDefaultLabelFont();
