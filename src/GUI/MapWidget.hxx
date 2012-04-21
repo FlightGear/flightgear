@@ -94,6 +94,7 @@ private:
   bool _hasPanned;
   
   SGGeod _projectionCenter;
+  bool _orthoAzimuthProject;
   SGGeod _aircraft;
   SGGeod _clickGeod;
   SGVec2d _hitLocation;

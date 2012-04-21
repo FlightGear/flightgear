@@ -387,7 +387,8 @@ MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
   _width = maxX - x;
   _height = maxY - y;
   _hasPanned = false;
-
+  _orthoAzimuthProject = false;
+  
   MapData::setFont(legendFont);
   MapData::setPalette(colour);
 
@@ -1446,13 +1447,30 @@ void MapWidget::drawAIShip(const SGPropertyNode* model, const SGGeod& pos, doubl
 
 SGVec2d MapWidget::project(const SGGeod& geod) const
 {
-  // Sanson-Flamsteed projection, relative to the projection center
+  SGVec2d p;
   double r = earth_radius_lat(geod.getLatitudeRad());
-  double lonDiff = geod.getLongitudeRad() - _projectionCenter.getLongitudeRad(),
-    latDiff = geod.getLatitudeRad() - _projectionCenter.getLatitudeRad();
+  
+  if (_orthoAzimuthProject) {
+    // http://mathworld.wolfram.com/OrthographicProjection.html
+    double cosTheta = cos(geod.getLatitudeRad());
+    double sinDLambda = sin(geod.getLongitudeRad() - _projectionCenter.getLongitudeRad());
+    double cosDLambda = cos(geod.getLongitudeRad() - _projectionCenter.getLongitudeRad());
+    double sinTheta1 = sin(_projectionCenter.getLatitudeRad());
+    double sinTheta = sin(geod.getLatitudeRad());
+    double cosTheta1 = cos(_projectionCenter.getLatitudeRad());
+    
+    p = SGVec2d(cosTheta * sinDLambda,
+                (cosTheta1 * sinTheta) - (sinTheta1 * cosTheta * cosDLambda)) * r * currentScale();
+    
+  } else {
+    // Sanson-Flamsteed projection, relative to the projection center
+    double lonDiff = geod.getLongitudeRad() - _projectionCenter.getLongitudeRad(),
+      latDiff = geod.getLatitudeRad() - _projectionCenter.getLatitudeRad();
 
-  SGVec2d p = SGVec2d(cos(geod.getLatitudeRad()) * lonDiff, latDiff) * r * currentScale();
-
+    p = SGVec2d(cos(geod.getLatitudeRad()) * lonDiff, latDiff) * r * currentScale();
+      
+  }
+  
 // rotate as necessary
   double cost = cos(_upHeading * SG_DEGREES_TO_RADIANS),
     sint = sin(_upHeading * SG_DEGREES_TO_RADIANS);
@@ -1472,10 +1490,21 @@ SGGeod MapWidget::unproject(const SGVec2d& p) const
   double r = earth_radius_lat(_projectionCenter.getLatitudeRad());
   SGVec2d unscaled = ur * (1.0 / (currentScale() * r));
 
-  double lat = unscaled.y() + _projectionCenter.getLatitudeRad();
-  double lon = (unscaled.x() / cos(lat)) + _projectionCenter.getLongitudeRad();
-
-  return SGGeod::fromRad(lon, lat);
+  if (_orthoAzimuthProject) {
+      double phi = length(p);
+      double c = asin(phi);
+      double sinTheta1 = sin(_projectionCenter.getLatitudeRad());
+      double cosTheta1 = cos(_projectionCenter.getLatitudeRad());
+      
+      double lat = asin(cos(c) * sinTheta1 + ((unscaled.y() * sin(c) * cosTheta1) / phi));
+      double lon = _projectionCenter.getLongitudeRad() + 
+        atan((unscaled.x()* sin(c)) / (phi  * cosTheta1 * cos(c) - unscaled.y() * sinTheta1 * sin(c)));
+      return SGGeod::fromRad(lon, lat);
+  } else {
+      double lat = unscaled.y() + _projectionCenter.getLatitudeRad();
+      double lon = (unscaled.x() / cos(lat)) + _projectionCenter.getLongitudeRad();
+      return SGGeod::fromRad(lon, lat);
+  }
 }
 
 double MapWidget::currentScale() const
