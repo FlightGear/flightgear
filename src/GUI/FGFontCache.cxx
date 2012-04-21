@@ -36,6 +36,7 @@
 
 extern puFont FONT_HELVETICA_14;
 extern puFont FONT_SANS_12B;
+extern puFont FONT_HELVETICA_12;
 
 namespace
 {
@@ -62,7 +63,7 @@ const GuiFont guifonts[] = {
     { "TIMES_10",     &PUFONT_TIMES_ROMAN_10 },
     { "TIMES_24",     &PUFONT_TIMES_ROMAN_24 },
     { "HELVETICA_10", &PUFONT_HELVETICA_10 },
-    { "HELVETICA_12", &PUFONT_HELVETICA_12 },
+    { "HELVETICA_12", &FONT_HELVETICA_12 },
     { "HELVETICA_14", &FONT_HELVETICA_14 },
     { "HELVETICA_18", &PUFONT_HELVETICA_18 },
     { "SANS_12B",     &FONT_SANS_12B }
