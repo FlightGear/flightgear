@@ -40,10 +40,17 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
-
+#include <ATC/CommStation.hxx>
 
 static void ghostDestroy(void* g);
 naGhostType PositionedGhostType = { ghostDestroy, "positioned" };
+
+static naRef stringToNasal(naContext c, const std::string& s)
+{
+    return naStr_fromdata(naNewString(c),
+                   const_cast<char *>(s.c_str()), 
+                   s.length());
+}
 
 static FGPositioned* positionedGhost(naRef r)
 {
@@ -58,6 +65,8 @@ static void ghostDestroy(void* g)
     FGPositioned* pos = (FGPositioned*)g;
     SGReferenced::put(pos); // unref
 }
+
+static naRef airportPrototype;
 
 naRef ghostForPositioned(naContext c, const FGPositioned* pos)
 {
@@ -78,20 +87,15 @@ naRef hashForAirport(naContext c, const FGAirport* apt)
     naRef rwys = naNewHash(c);
     for(unsigned int r=0; r<apt->numRunways(); ++r) {
       FGRunway* rwy(apt->getRunwayByIndex(r));
-    
-      naRef rwyid = naStr_fromdata(naNewString(c),
-                                 const_cast<char *>(rwy->ident().c_str()),
-                                 rwy->ident().length());
+      naRef rwyid = stringToNasal(c, rwy->ident());
       naRef rwydata = hashForRunway(c, rwy);
       naHash_set(rwys, rwyid, rwydata);
     }
   
     naRef aptdata = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(aptdata, naStr_fromdata(naNewString(c),s,l),n)
-    HASHSET("id", 2, naStr_fromdata(naNewString(c),
-            const_cast<char *>(id.c_str()), id.length()));
-    HASHSET("name", 4, naStr_fromdata(naNewString(c),
-            const_cast<char *>(name.c_str()), name.length()));
+    HASHSET("id", 2, stringToNasal(c, id));
+    HASHSET("name", 4, stringToNasal(c, name));
     HASHSET("lat", 3, naNum(apt->getLatitude()));
     HASHSET("lon", 3, naNum(apt->getLongitude()));
     HASHSET("elevation", 9, naNum(apt->getElevation() * SG_FEET_TO_METER));
@@ -99,6 +103,10 @@ naRef hashForAirport(naContext c, const FGAirport* apt)
     HASHSET("runways", 7, rwys);
     
     HASHSET("_positioned", 11, ghostForPositioned(c, apt));
+    
+    naRef parents = naNewVector(c);
+    naVec_append(parents, airportPrototype);
+    HASHSET("parents", 7, parents);
 #undef HASHSET
     
     return aptdata;
@@ -106,10 +114,7 @@ naRef hashForAirport(naContext c, const FGAirport* apt)
 
 naRef hashForRunway(naContext c, FGRunway* rwy)
 {
-    naRef rwyid = naStr_fromdata(naNewString(c),
-                  const_cast<char *>(rwy->ident().c_str()),
-                  rwy->ident().length());
-
+    naRef rwyid = stringToNasal(c, rwy->ident());
     naRef rwydata = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(rwydata, naStr_fromdata(naNewString(c),s,l),n)
     HASHSET("id", 2, rwyid);
@@ -129,18 +134,14 @@ naRef hashForRunway(naContext c, FGRunway* rwy)
     naRef sidVec = naNewVector(c);
         
     BOOST_FOREACH(flightgear::SID* sid, rwy->getSIDs()) {
-      naRef procId = naStr_fromdata(naNewString(c),
-                const_cast<char *>(sid->ident().c_str()),
-                sid->ident().length());
+      naRef procId = stringToNasal(c, sid->ident());
       naVec_append(sidVec, procId);
     }
     HASHSET("sids", 4, sidVec); 
         
     naRef starVec = naNewVector(c);      
     BOOST_FOREACH(flightgear::STAR* star, rwy->getSTARs()) {
-      naRef procId = naStr_fromdata(naNewString(c),
-                const_cast<char *>(star->ident().c_str()),
-                star->ident().length());
+      naRef procId = stringToNasal(c, star->ident());
       naVec_append(starVec, procId);
     }
     HASHSET("stars", 5, starVec); 
@@ -154,16 +155,15 @@ naRef hashForNavRecord(naContext c, const FGNavRecord* nav, const SGGeod& rel)
 {
     naRef navdata = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(navdata, naStr_fromdata(naNewString(c),s,l),n)
-    HASHSET("id", 2, naStr_fromdata(naNewString(c),
-        const_cast<char *>(nav->ident().c_str()), nav->ident().length()));
-    HASHSET("name", 4, naStr_fromdata(naNewString(c),
-        const_cast<char *>(nav->name().c_str()), nav->name().length()));
+    HASHSET("id", 2, stringToNasal(c, nav->ident()));
+    HASHSET("name", 4, stringToNasal(c, nav->name()));
     HASHSET("frequency", 9, naNum(nav->get_freq()));
     HASHSET("lat", 3, naNum(nav->get_lat()));
     HASHSET("lon", 3, naNum(nav->get_lon()));
     HASHSET("elevation", 9, naNum(nav->get_elev_ft() * SG_FEET_TO_METER));
-    HASHSET("type", 4, naStr_fromdata(naNewString(c),
-        const_cast<char *>(nav->nameForType(nav->type())), strlen(nav->nameForType(nav->type()))));
+    HASHSET("type", 4, stringToNasal(c, nav->nameForType(nav->type())));
+    
+// FIXME - get rid of these, people should use courseAndDistance instead
     HASHSET("distance", 8, naNum(SGGeodesy::distanceNm( rel, nav->geod() ) * SG_NM_TO_METER ) );
     HASHSET("bearing", 7, naNum(SGGeodesy::courseDeg( rel, nav->geod() ) ) );
     
@@ -260,10 +260,9 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
   if(mat) {
     matdata = naNewHash(c);
     naRef names = naNewVector(c);
-    const std::vector<std::string> n = mat->get_names();
-    for(unsigned int i=0; i<n.size(); i++)
-      naVec_append(names, naStr_fromdata(naNewString(c),
-                                         const_cast<char*>(n[i].c_str()), n[i].size()));
+    BOOST_FOREACH(const std::string& n, mat->get_names())
+      naVec_append(names, stringToNasal(c, n));
+      
     HASHSET("names", 5, names);
     HASHSET("solid", 5, naNum(mat->get_solid()));
     HASHSET("friction_factor", 15, naNum(mat->get_friction_factor()));
@@ -363,16 +362,16 @@ static FGAirport* airportFromRef(naRef ref)
     return NULL;
 }
 
-static naRef f_airporttower(naContext c, naRef me, int argc, naRef* args)
+static naRef f_airport_tower(naContext c, naRef me, int argc, naRef* args)
 {
-    if (argc != 1) {
-        naRuntimeError(c, "airporttower needs an airport object or ID argument");
+    FGPositioned* pos = positionedGhost(me);
+    if (!pos ||! FGAirport::isAirportType(pos)) {
+        naRuntimeError(c, "airport_tower called on non-airport object");
     }
     
-    FGAirport* apt = airportFromRef(args[0]);
-    // build a hash for the tower position
-    // include the frequencies ?
+    FGAirport* apt = (FGAirport*) pos;
     
+    // build a hash for the tower position    
     SGGeod towerLoc = apt->getTowerLocation();
     naRef tower = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(tower, naStr_fromdata(naNewString(c),s,l),n)
@@ -383,17 +382,38 @@ static naRef f_airporttower(naContext c, naRef me, int argc, naRef* args)
     return tower;
 }
 
-static naRef f_airportcomms(naContext c, naRef me, int argc, naRef* args)
+static naRef f_airport_comms(naContext c, naRef me, int argc, naRef* args)
 {
-    if (argc == 0) {
-        naRuntimeError(c, "airportcomms needs an airport object or ID argument");
+    FGPositioned* pos = positionedGhost(me);
+    if (!pos ||! FGAirport::isAirportType(pos)) {
+        naRuntimeError(c, "airport_comms called on non-airport object");
     }
     
-    FGAirport* apt = airportFromRef(args[0]);
-    naRef comms = naNewHash(c);
-#define HASHSET(s,l,n) naHash_set(comms, naStr_fromdata(naNewString(c),s,l),n)
+    FGAirport* apt = (FGAirport*) pos;
+    naRef comms;
     
+// if we have an explicit type, return a simple vector of frequencies
+    if (argc > 0 && naIsScalar(args[0])) {
+        std::string commName = naStr_data(args[0]);
+        FGPositioned::Type commType = FGPositioned::typeFromName(commName);
+        
+        naRef comms = naNewVector(c);
+        BOOST_FOREACH(flightgear::CommStation* comm, apt->commStationsOfType(commType)) {
+            naVec_append(comms, naNum(comm->freqMHz()));
+        }
+    } else {
+// otherwise return a vector of hashes, one for each comm station.
+        BOOST_FOREACH(flightgear::CommStation* comm, apt->commStations()) {
+            naRef commHash = naNewHash(c);
+#define HASHSET(s,n) naHash_set(commHash, naStr_fromdata(naNewString(c),s,strlen(s)),n)
+            HASHSET("frequency", naNum(comm->freqMHz()));
+            HASHSET("ident", stringToNasal(c, comm->ident()));
+            
 #undef HASHSET
+            naVec_append(comms, commHash);
+        }
+    }
+    
     return comms;
 
 }
@@ -541,10 +561,7 @@ static naRef f_tilePath(naContext c, naRef me, int argc, naRef* args)
     }
     
     SGBucket b(pos);
-    const char* path = b.gen_base_path().c_str();
-    naRef s = naNewString(c);
-    naStr_fromdata(s, (char*)path, strlen(path));
-    return s;
+    return stringToNasal(c, b.gen_base_path());
 }
 
 // Table of extension functions.  Terminate with zeros.
@@ -553,8 +570,6 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "geodtocart", f_geodtocart },
   { "geodinfo", f_geodinfo },
   { "airportinfo", f_airportinfo },
-  { "airporttower", f_airporttower },  
-  { "airportcomms", f_airportcomms },
   { "navinfo", f_navinfo },
   { "magvar", f_magvar },
   { "courseAndDistance", f_courseAndDistance },
@@ -571,6 +586,10 @@ static void hashset(naContext c, naRef hash, const char* key, naRef val)
 
 naRef initNasalPositioned(naRef globals, naContext c)
 {
+    airportPrototype = naNewHash(c);
+    hashset(c, airportPrototype, "tower", naNewFunc(c, naNewCCode(c, f_airport_tower)));
+    hashset(c, airportPrototype, "comms", naNewFunc(c, naNewCCode(c, f_airport_comms)));
+    
   for(int i=0; funcs[i].name; i++) {
     hashset(c, globals, funcs[i].name,
             naNewFunc(c, naNewCCode(c, funcs[i].func)));
