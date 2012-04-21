@@ -215,6 +215,15 @@ public:
      */
     SGPath resolve_maybe_aircraft_path(const std::string& branch) const;
     
+    /**
+     * Search in the following directories:
+     *
+     *  1. Root directory of current aircraft (defined by /sim/aircraft-dir)
+     *  2. All aircraft directories if branch starts with Aircraft/
+     *  3. fg_data directory
+     */
+    SGPath resolve_ressource_path(const std::string& branch) const;
+
     inline const std::string &get_browser () const { return browser; }
     void set_browser (const std::string &b) { browser = b; }
 

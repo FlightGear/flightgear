@@ -86,6 +86,7 @@
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 
+#include <Canvas/canvas_mgr.hxx>
 #include <GUI/new_gui.hxx>
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
@@ -1157,6 +1158,11 @@ bool fgInitSubsystems() {
     // Initialize the 2D cloud subsystem.
     ////////////////////////////////////////////////////////////////////
     fgGetBool("/sim/rendering/bump-mapping", false);
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the canvas 2d drawing subsystem.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("Canvas2D", new CanvasMgr, SGSubsystemMgr::DISPLAY);
 
     ////////////////////////////////////////////////////////////////////
     // Initialise the ATIS Manager
