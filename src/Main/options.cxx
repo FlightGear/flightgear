@@ -58,6 +58,7 @@
 #include "options.hxx"
 #include "util.hxx"
 #include "viewmgr.hxx"
+#include "main.hxx"
 #include <Main/viewer.hxx>
 #include <Environment/presets.hxx>
 
@@ -83,10 +84,6 @@ using std::vector;
 using std::cin;
 
 #define NEW_DEFAULT_MODEL_HZ 120
-
-// defined in bootstrap.cxx
-extern char *homedir;
-extern char *hostname;
 
 enum
 {
@@ -1738,7 +1735,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 // then config files
   SGPath config;
   
-  if( homedir && hostname && strlen(hostname) > 0 ) {
+  if( homedir.size() && hostname.size() ) {
     // Check for ~/.fgfsrc.hostname
     config.set(homedir);
     config.append(".fgfsrc");
@@ -1748,7 +1745,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
   
 // Check for ~/.fgfsrc
-  if( homedir ) {
+  if( homedir.size() ) {
     config.set(homedir);
     config.append(".fgfsrc");
     readConfig(config);
@@ -1765,7 +1762,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   setupRoot();
   
 // system.fgfsrc handling
-  if( hostname && strlen(hostname) > 0 ) {
+  if( hostname.size() > 0 ) {
     config.set(globals->get_fg_root());
     config.append( "system.fgfsrc" );
     config.concat( "." );
@@ -1971,7 +1968,7 @@ string_list Options::valuesForOption(const std::string& key) const
   
   return result;
 }
-  
+
 void Options::processOptions()
 {
   // establish locale before showing help

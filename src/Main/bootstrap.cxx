@@ -65,11 +65,10 @@ using std::endl;
 
 #include "fg_os.hxx"
 
-char *homedir = NULL;
-char *hostname = NULL;
-bool free_hostname = false;
+string homedir;
+string hostname;
 
-// foreward declaration.
+// forward declaration.
 void fgExitCleanup();
 
 static bool fpeAbort = false;
@@ -175,21 +174,15 @@ int main ( int argc, char **argv ) {
   SetErrorMode(SEM_NOOPENFILEERRORBOX);
 
   // Windows has no $HOME aka %HOME%, so we have to construct the full path.
-  // make sure it fits into the buffer. Max. path length is 255, but who knows
-  // what's in these environment variables?
-  char homepath[256] = "";
-  homepath[sizeof(homepath)-1] = 0;
-  strncpy( homepath, ::getenv("APPDATA"), sizeof(homepath)-1 );
-  strncat( homepath, "\\flightgear.org", sizeof(homepath)-strlen(homepath)-1 );
-  
-  homedir = strdup(homepath);
+  homedir = ::getenv("APPDATA");
+  homedir.append("\\flightgear.org");
+
   hostname = ::getenv( "COMPUTERNAME" );
 #else
   // Unix(alike) systems
   char _hostname[256];
   gethostname(_hostname, 256);
-  hostname = strdup(_hostname);
-  free_hostname = true;
+  hostname = _hostname;
   
   homedir = ::getenv( "HOME" );
   
@@ -290,8 +283,5 @@ void fgExitCleanup() {
         fgSetMouseCursor(MOUSE_CURSOR_POINTER);
 
     delete globals;
-
-    if (free_hostname && hostname != NULL)
-        free(hostname);
 }
 

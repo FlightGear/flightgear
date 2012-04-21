@@ -9,8 +9,7 @@ int fgMainInit( int argc, char **argv );
 
 extern int idle_state;
 
-extern char *homedir;
-extern char *hostname;
-extern bool free_hostname;
+extern string homedir;
+extern string hostname;
 
 #endif
