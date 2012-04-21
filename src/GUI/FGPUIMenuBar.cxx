@@ -10,6 +10,7 @@
 #include <simgear/props/props_io.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/locale.hxx>
 #include <Main/fg_props.hxx>
 
 #include "new_gui.hxx"
@@ -139,7 +140,15 @@ FGPUIMenuBar::fireItem (puObject * item)
 void
 FGPUIMenuBar::make_menu (SGPropertyNode * node)
 {
-    const char * name = strdup(node->getStringValue("label"));
+    string s = getLocalizedLabel(node);
+
+    // hack: map at least some UTF-8 characters to Latin1, since FG fonts are
+    // Latin1 (or plain ASCII, which is a subset). This hack can be removed once
+    // the PLIB/OSG port is complete (OSG has full UTF-8 support! :) ).
+    FGLocale::utf8toLatin1(s);
+
+    const char* name = strdup(s.c_str());
+
     vector<SGPropertyNode_ptr> item_nodes = node->getChildren("item");
 
     int array_size = item_nodes.size();
@@ -152,7 +161,18 @@ FGPUIMenuBar::make_menu (SGPropertyNode * node)
          i++, j--) {
 
                                 // Set up the PUI entries for this item
-        items[j] = strdup((char *)item_nodes[i]->getStringValue("label"));
+        string label = getLocalizedLabel(item_nodes[i]);
+        FGLocale::utf8toLatin1(label);
+
+        // append the keyboard hint to the menu entry
+        const char* key = item_nodes[i]->getStringValue("key", 0);
+        if (key)
+        {
+            label.append("           <");
+            label.append(key);
+            label.append(">");
+        }
+        items[j] = strdup(label.c_str());
         callbacks[j] = menu_callback;
 
                                 // Load all the bindings for this item
