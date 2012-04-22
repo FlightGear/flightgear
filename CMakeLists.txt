@@ -338,15 +338,6 @@ add_subdirectory(src)
 add_subdirectory(utils)
 add_subdirectory(man)
 
-set (INSTALL_DOCS 
-    README
-    README.OpenAL
-    README.plib
-    README.OSG
-    README.SimGear)
-
-INSTALL(FILES ${INSTALL_DOCS} DESTINATION ${CMAKE_INSTALL_DOCDIR} OPTIONAL)
-
 #-----------------------------------------------------------------------------
 ### uninstall target
 #-----------------------------------------------------------------------------
