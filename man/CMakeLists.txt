@@ -1,3 +1,7 @@
+if (MSVC)
+    # don't install man pages on Windows
+else(MSVC)
+
 if(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
     # use official include provided by latest CMake
     include(GNUInstallDirs)
@@ -27,3 +31,5 @@ foreach(man ${MANPAGES})
     install(FILES ${PROJECT_BINARY_DIR}/man/${man}
           DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 endforeach()
+
+endif(MSVC)
