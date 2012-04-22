@@ -6,6 +6,7 @@
 #include "menubar.hxx"
 #include <Main/locale.hxx>
 #include <Main/globals.hxx>
+#include <simgear/math/SGMath.hxx>
 
 FGMenuBar::FGMenuBar()
 {
