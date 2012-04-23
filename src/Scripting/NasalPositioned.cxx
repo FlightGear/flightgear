@@ -41,9 +41,13 @@
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 #include <ATC/CommStation.hxx>
+#include <Navaids/route.hxx>
+#include <Autopilot/route_mgr.hxx>
+#include <Navaids/procedure.hxx>
 
-static void ghostDestroy(void* g);
-naGhostType PositionedGhostType = { ghostDestroy, "positioned" };
+static void sgrefGhostDestroy(void* g);
+naGhostType PositionedGhostType = { sgrefGhostDestroy, "positioned" };
+naGhostType WayptGhostType = { sgrefGhostDestroy, "waypoint" };
 
 static void hashset(naContext c, naRef hash, const char* key, naRef val)
 {
@@ -66,14 +70,22 @@ static FGPositioned* positionedGhost(naRef r)
     return 0;
 }
 
-
-static void ghostDestroy(void* g)
+static flightgear::Waypt* wayptGhost(naRef r)
 {
-    FGPositioned* pos = (FGPositioned*)g;
-    SGReferenced::put(pos); // unref
+  if (naGhost_type(r) == &WayptGhostType)
+    return (flightgear::Waypt*) naGhost_ptr(r);
+  return 0;
+}
+
+static void sgrefGhostDestroy(void* g)
+{
+    SGReferenced* ref = (SGReferenced*)g;
+    SGReferenced::put(ref); // unref
 }
 
 static naRef airportPrototype;
+static naRef routePrototype;
+static naRef waypointPrototype;
 
 naRef ghostForPositioned(naContext c, const FGPositioned* pos)
 {
@@ -83,6 +95,16 @@ naRef ghostForPositioned(naContext c, const FGPositioned* pos)
     
     SGReferenced::get(pos); // take a ref
     return naNewGhost(c, &PositionedGhostType, (void*) pos);
+}
+
+naRef ghostForWaypt(naContext c, const flightgear::Waypt* wpt)
+{
+  if (!wpt) {
+    return naNil();
+  }
+  
+  SGReferenced::get(wpt); // take a ref
+  return naNewGhost(c, &WayptGhostType, (void*) wpt);
 }
 
 naRef hashForAirport(naContext c, const FGAirport* apt)
@@ -113,6 +135,57 @@ naRef hashForAirport(naContext c, const FGAirport* apt)
     hashset(c, aptdata, "parents", parents);
     
     return aptdata;
+}
+
+naRef hashForWaypoint(naContext c, flightgear::Waypt* wpt, flightgear::Waypt* next)
+{
+  SGGeod pos = wpt->position();
+  naRef h = naNewHash(c);
+  
+  flightgear::Procedure* proc = dynamic_cast<flightgear::Procedure*>(wpt->owner());
+  if (proc) {
+    hashset(c, h, "wp_parent_name", stringToNasal(c, proc->ident()));
+  }
+
+  if (wpt->type() == "hold") {
+    hashset(c, h, "fly_type", stringToNasal(c, "Hold"));
+  } else if (wpt->flag(flightgear::WPT_OVERFLIGHT)) {
+    hashset(c, h, "fly_type", stringToNasal(c, "flyOver"));
+  } else {
+    hashset(c, h, "fly_type", stringToNasal(c, "flyBy"));
+  }
+  
+  hashset(c, h, "wp_type", stringToNasal(c, wpt->type()));
+  hashset(c, h, "wp_name", stringToNasal(c, wpt->ident()));
+  hashset(c, h, "wp_lat", naNum(pos.getLatitudeDeg()));
+  hashset(c, h, "wp_lon", naNum(pos.getLongitudeDeg()));
+  hashset(c, h, "alt_cstr", naNum(wpt->altitudeFt()));
+  
+  if (wpt->speedRestriction() == flightgear::SPEED_RESTRICT_MACH) {
+    hashset(c, h, "spd_cstr", naNum(wpt->speedMach()));
+  } else {
+    hashset(c, h, "spd_cstr", naNum(wpt->speedKts()));
+  }
+  
+  if (next) {
+    std::pair<double, double> crsDist =
+      next->courseAndDistanceFrom(pos);
+    hashset(c, h, "leg_distance", naNum(crsDist.second * SG_METER_TO_NM));
+    hashset(c, h, "leg_bearing", naNum(crsDist.first));
+    hashset(c, h, "hdg_radial", naNum(crsDist.first));
+  }
+  
+// leg bearing, distance, etc
+  
+  
+// parents and ghost of the C++ object
+  hashset(c, h, "_waypt", ghostForWaypt(c, wpt));
+  naRef parents = naNewVector(c);
+  naVec_append(parents, waypointPrototype);
+  hashset(c, h, "parents", parents);
+  
+  return h;
+
 }
 
 naRef hashForRunway(naContext c, FGRunway* rwy)
@@ -174,6 +247,13 @@ bool geodFromHash(naRef ref, SGGeod& result)
   if (!naIsNil(posGhost)) {
     FGPositioned* pos = positionedGhost(posGhost);
     result = pos->geod();
+    return true;
+  }
+  
+  naRef ghost = naHash_cget(ref, (char*) "_waypt");
+  if (!naIsNil(ghost)) {
+    flightgear::Waypt* w = wayptGhost(ghost);
+    result = w->position();
     return true;
   }
   
@@ -604,6 +684,64 @@ static naRef f_tilePath(naContext c, naRef me, int argc, naRef* args)
     return stringToNasal(c, b.gen_base_path());
 }
 
+static naRef f_route(naContext c, naRef me, int argc, naRef* args)
+{
+  naRef route = naNewHash(c);
+  
+  // return active route hash by default,
+  // other routes in the future
+  
+  naRef parents = naNewVector(c);
+  naVec_append(parents, routePrototype);
+  hashset(c, route, "parents", parents);
+  
+  return route;
+}
+
+static naRef f_route_getWP(naContext c, naRef me, int argc, naRef* args)
+{
+  FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+  
+  int index;
+  if (argc == 0) {
+    index = rm->currentIndex();
+  } else {
+    index = (int) naNumValue(args[0]).num;
+  }
+  
+  if ((index < 0) || (index >= rm->numWaypts())) {
+    return naNil();
+  }
+  
+  flightgear::Waypt* next = NULL;
+  if (index < (rm->numWaypts() - 1)) {
+    next = rm->wayptAtIndex(index + 1);
+  }
+  return hashForWaypoint(c, rm->wayptAtIndex(index), next);
+}
+
+static naRef f_route_currentWP(naContext c, naRef me, int argc, naRef* args)
+{
+  FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+  flightgear::Waypt* next = NULL;
+  if (rm->currentIndex() < (rm->numWaypts() - 1)) {
+    next = rm->wayptAtIndex(rm->currentIndex() + 1);
+  }
+  return hashForWaypoint(c, rm->currentWaypt(), next);
+}
+
+static naRef f_route_currentIndex(naContext c, naRef me, int argc, naRef* args)
+{
+  FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+  return naNum(rm->currentIndex());
+}
+
+static naRef f_route_numWaypoints(naContext c, naRef me, int argc, naRef* args)
+{
+  FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+  return naNum(rm->numWaypts());
+}
+
 // Table of extension functions.  Terminate with zeros.
 static struct { const char* name; naCFunction func; } funcs[] = {
   { "carttogeod", f_carttogeod },
@@ -611,6 +749,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "geodinfo", f_geodinfo },
   { "airportinfo", f_airportinfo },
   { "navinfo", f_navinfo },
+  { "route", f_route },
   { "magvar", f_magvar },
   { "courseAndDistance", f_courseAndDistance },
   { "bucketPath", f_tilePath },
@@ -628,6 +767,14 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, airportPrototype, "sids", naNewFunc(c, naNewCCode(c, f_airport_sids)));
     hashset(c, airportPrototype, "stars", naNewFunc(c, naNewCCode(c, f_airport_stars)));
   
+    routePrototype = naNewHash(c);
+    hashset(c, gcSave, "routeProto", routePrototype);
+    
+    hashset(c, routePrototype, "getWP", naNewFunc(c, naNewCCode(c, f_route_getWP)));
+    hashset(c, routePrototype, "currentWP", naNewFunc(c, naNewCCode(c, f_route_currentWP)));
+    hashset(c, routePrototype, "currentIndex", naNewFunc(c, naNewCCode(c, f_route_currentIndex)));
+    hashset(c, routePrototype, "getPlanSize", naNewFunc(c, naNewCCode(c, f_route_numWaypoints)));
+    
     for(int i=0; funcs[i].name; i++) {
       hashset(c, globals, funcs[i].name,
             naNewFunc(c, naNewCCode(c, funcs[i].func)));
