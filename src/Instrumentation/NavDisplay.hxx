@@ -146,7 +146,8 @@ private:
     SGPropertyNode_ptr _navRadio1Node;
     SGPropertyNode_ptr _navRadio2Node;
     SGPropertyNode_ptr _xCenterNode, _yCenterNode;
-    
+    SGPropertyNode_ptr _viewHeadingNode;
+  
     osg::ref_ptr<osg::Texture2D> _symbolTexture;
     osg::ref_ptr<osg::Geode> _radarGeode;
     osg::ref_ptr<osg::Geode> _textGeode;

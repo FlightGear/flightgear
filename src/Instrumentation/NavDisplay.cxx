@@ -540,6 +540,7 @@ NavDisplay::init ()
     _testModeNode = _Instrument->getChild("test-mode", 0, true);
     _testModeNode->setBoolValue(false);
   
+    _viewHeadingNode = _Instrument->getChild("view-heading-deg", 0, true);
 // OSG geometry setup
     _radarGeode = new osg::Geode;
 
@@ -647,6 +648,7 @@ NavDisplay::update (double delta_time_sec)
   } else {
     _view_heading = _Instrument->getFloatValue("heading-up-deg", 0.0);
   }
+  _viewHeadingNode->setDoubleValue(_view_heading);
   
   double xCenterFrac = _xCenterNode->getDoubleValue();
   double yCenterFrac = _yCenterNode->getDoubleValue();
