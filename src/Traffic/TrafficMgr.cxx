@@ -50,6 +50,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <boost/foreach.hpp>
 
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
@@ -77,6 +78,7 @@ using std::strcmp;
  *****************************************************************************/
 FGTrafficManager::FGTrafficManager() :
   inited(false),
+  doingInit(false),
   enabled("/sim/traffic-manager/enabled"),
   aiEnabled("/sim/ai/enabled"),
   realWxEnabled("/environment/realwx/enabled"),
@@ -135,23 +137,17 @@ void FGTrafficManager::init()
     if (!enabled || !aiEnabled) {
       return;
     }
-  
-    heuristicsVector heuristics;
-    HeuristicMap heurMap;
 
+    assert(!doingInit);
+    doingInit = true;
     if (string(fgGetString("/sim/traffic-manager/datafile")) == string("")) {
         simgear::Dir trafficDir(SGPath(globals->get_fg_root(), "AI/Traffic"));
         simgear::PathList d = trafficDir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
         
-        for (unsigned int i=0; i<d.size(); ++i) {
-          simgear::Dir d2(d[i]);
+        BOOST_FOREACH(SGPath p, d) {
+          simgear::Dir d2(p);
           simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
-          for (unsigned int j=0; j<trafficFiles.size(); ++j) {
-            SGPath curFile = trafficFiles[j];
-            SG_LOG(SG_GENERAL, SG_DEBUG,
-                  "Scanning " << curFile.str() << " for traffic");
-            readXML(curFile.str(), *this);
-          }
+          schedulesToRead.insert(schedulesToRead.end(), trafficFiles.begin(), trafficFiles.end());
         }
     } else {
         fgSetBool("/sim/traffic-manager/heuristics", false);
@@ -166,80 +162,101 @@ void FGTrafficManager::init()
                 readTimeTableFromFile(path);
             }
         } else {
-             SG_LOG(SG_GENERAL, SG_ALERT,
+             SG_LOG(SG_AI, SG_ALERT,
                                "Unknown data format " << path.str()
                                 << " for traffic");
         }
         //exit(1);
     }
-    if (fgGetBool("/sim/traffic-manager/heuristics")) {
-        //cerr << "Processing Heuristics" << endl;
-        // Load the heuristics data
-        SGPath cacheData(fgGetString("/sim/fg-home"));
-        cacheData.append("ai");
-        string airport = fgGetString("/sim/presets/airport-id");
-        if ((airport) != "") {
-            char buffer[128];
-            ::snprintf(buffer, 128, "%c/%c/%c/",
-                       airport[0], airport[1], airport[2]);
-            cacheData.append(buffer);
-            cacheData.append(airport + "-cache.txt");
-            string revisionStr;
-            if (cacheData.exists()) {
-                ifstream data(cacheData.c_str());
-                data >> revisionStr;
-                if (revisionStr != "[TrafficManagerCachedata:ref:2011:09:04]") {
-                    SG_LOG(SG_GENERAL, SG_ALERT,"Traffic Manager Warning: discarding outdated cachefile " << 
-                            cacheData.c_str() << " for Airport " << airport);
-                } else {
-                    while (1) {
-                        Heuristic h; // = new Heuristic;
-                        data >> h.registration >> h.runCount >> h.hits >> h.lastRun;
-                        if (data.eof())
-                            break;
-                        HeuristicMapIterator itr = heurMap.find(h.registration);
-                        if (itr != heurMap.end()) {
-                             SG_LOG(SG_GENERAL, SG_WARN,"Traffic Manager Warning: found duplicate tailnumber " << 
-                            h.registration << " for AI aircraft");
-                        } else {
-                            heurMap[h.registration] = h;
-                            heuristics.push_back(h);
-                        }
-                    }
-                }
-            }
-        } 
-        for (currAircraft = scheduledAircraft.begin();
-             currAircraft != scheduledAircraft.end(); currAircraft++) {
-            string registration = (*currAircraft)->getRegistration();
-            HeuristicMapIterator itr = heurMap.find(registration);
-            //cerr << "Processing heuristics for" << (*currAircraft)->getRegistration() << endl;
-            if (itr == heurMap.end()) {
-                //cerr << "No heuristics found for " << registration << endl;
-            } else {
-                (*currAircraft)->setrunCount(itr->second.runCount);
-                (*currAircraft)->setHits(itr->second.hits);
-                (*currAircraft)->setLastUsed(itr->second.lastRun);
-                //cerr <<"Runcount " << itr->second.runCount << ". Hits " << itr->second.hits << ". Last run " << itr->second.lastRun<< endl;
-            }
-        }
-        //cerr << "Done" << endl;
-        //for (heuristicsVectorIterator hvi = heuristics.begin();
-        //     hvi != heuristics.end(); hvi++) {
-        //    delete(*hvi);
-        //} 
+}
+
+void FGTrafficManager::initStep()
+{
+    assert(doingInit);
+    if (schedulesToRead.empty()) {
+        finishInit();
+        return;
     }
+    
+    SGPath path = schedulesToRead.front();
+    schedulesToRead.erase(schedulesToRead.begin());
+    SG_LOG(SG_AI, SG_DEBUG, path << " for traffic");
+    readXML(path.str(), *this);
+}
+
+void FGTrafficManager::finishInit()
+{
+    assert(doingInit);
+    SG_LOG(SG_AI, SG_INFO, "finishing AI-Traffic init");
+    loadHeuristics();
+    
     // Do sorting and scoring separately, to take advantage of the "homeport| variable
     for (currAircraft = scheduledAircraft.begin();
          currAircraft != scheduledAircraft.end(); currAircraft++) {
         (*currAircraft)->setScore();
     }
-
+    
     sort(scheduledAircraft.begin(), scheduledAircraft.end(),
          compareSchedules);
     currAircraft = scheduledAircraft.begin();
     currAircraftClosest = scheduledAircraft.begin();
+    
+    doingInit = false;
     inited = true;
+}
+
+void FGTrafficManager::loadHeuristics()
+{
+    if (!fgGetBool("/sim/traffic-manager/heuristics")) {
+        return;
+    }
+  
+    HeuristicMap heurMap;
+    //cerr << "Processing Heuristics" << endl;
+    // Load the heuristics data
+    SGPath cacheData(fgGetString("/sim/fg-home"));
+    cacheData.append("ai");
+    string airport = fgGetString("/sim/presets/airport-id");
+    if ((airport) != "") {
+      char buffer[128];
+      ::snprintf(buffer, 128, "%c/%c/%c/",
+                 airport[0], airport[1], airport[2]);
+      cacheData.append(buffer);
+      cacheData.append(airport + "-cache.txt");
+      string revisionStr;
+      if (cacheData.exists()) {
+        ifstream data(cacheData.c_str());
+        data >> revisionStr;
+        if (revisionStr != "[TrafficManagerCachedata:ref:2011:09:04]") {
+          SG_LOG(SG_GENERAL, SG_ALERT,"Traffic Manager Warning: discarding outdated cachefile " << 
+                 cacheData.c_str() << " for Airport " << airport);
+        } else {
+          while (1) {
+            Heuristic h; // = new Heuristic;
+            data >> h.registration >> h.runCount >> h.hits >> h.lastRun;
+            if (data.eof())
+              break;
+            HeuristicMapIterator itr = heurMap.find(h.registration);
+            if (itr != heurMap.end()) {
+              SG_LOG(SG_GENERAL, SG_WARN,"Traffic Manager Warning: found duplicate tailnumber " << 
+                     h.registration << " for AI aircraft");
+            } else {
+              heurMap[h.registration] = h;
+            }
+          }
+        }
+      }
+    } 
+    
+  for(currAircraft = scheduledAircraft.begin(); currAircraft != scheduledAircraft.end(); ++currAircraft) {
+        string registration = (*currAircraft)->getRegistration();
+        HeuristicMapIterator itr = heurMap.find(registration);
+        if (itr != heurMap.end()) {
+            (*currAircraft)->setrunCount(itr->second.runCount);
+            (*currAircraft)->setHits(itr->second.hits);
+            (*currAircraft)->setLastUsed(itr->second.lastRun);
+        }
+    }
 }
 
 void FGTrafficManager::update(double /*dt */ )
@@ -249,9 +266,14 @@ void FGTrafficManager::update(double /*dt */ )
     }
         
     if (!inited) {
-    // lazy-initialization, we've been enabled at run-time
-      SG_LOG(SG_GENERAL, SG_INFO, "doing lazy-init of TrafficManager");
-      init();
+        if (!doingInit) {
+            init();
+        }
+        
+        initStep();
+        if (!inited) {
+            return; // still more to do on next update() call
+        }
     }
         
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
@@ -259,10 +281,7 @@ void FGTrafficManager::update(double /*dt */ )
         return;
     }
 
-    SGVec3d userCart =
-        SGVec3d::fromGeod(SGGeod::
-                          fromDeg(fgGetDouble("/position/longitude-deg"),
-                                  fgGetDouble("/position/latitude-deg")));
+    SGVec3d userCart = globals->get_aircraft_positon_cart();
 
     if (currAircraft == scheduledAircraft.end()) {
         currAircraft = scheduledAircraft.begin();

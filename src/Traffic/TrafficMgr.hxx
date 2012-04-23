@@ -50,6 +50,7 @@
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sg_dir.hxx>
 
 #include "SchedFlight.hxx"
 #include "Schedule.hxx"
@@ -80,6 +81,7 @@ class FGTrafficManager : public SGSubsystem, public XMLVisitor
 {
 private:
   bool inited;
+  bool doingInit;
   
   ScheduleVector scheduledAircraft;
   ScheduleVectorIterator currAircraft, currAircraftClosest;
@@ -101,6 +103,14 @@ private:
   void Tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ");
 
   simgear::PropertyObject<bool> enabled, aiEnabled, realWxEnabled, metarValid;
+  
+  void loadHeuristics();
+  
+  void initStep();
+  void finishInit();
+  
+  // during incremental init, contains the XML files still be read in
+  simgear::PathList schedulesToRead;
 public:
   FGTrafficManager();
   ~FGTrafficManager();
