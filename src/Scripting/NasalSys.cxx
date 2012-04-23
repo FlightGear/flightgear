@@ -530,7 +530,7 @@ void FGNasalSys::init()
         hashset(_globals, funcs[i].name,
                 naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
 
-    initNasalPositioned(_globals, _context);
+
   
     // And our SGPropertyNode wrapper
     hashset(_globals, "props", genPropsModule());
@@ -541,6 +541,8 @@ void FGNasalSys::init()
     _gcHash = naNewHash(_context);
     hashset(_globals, "__gcsave", _gcHash);
 
+    initNasalPositioned(_globals, _context, _gcHash);
+  
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
     loadScriptDirectory(nasalDir);

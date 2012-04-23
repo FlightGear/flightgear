@@ -145,7 +145,7 @@ double Waypt::magvarDeg() const
     assert(!(position() == SGGeod()));
     
     double jd = globals->get_time_params()->getJD();
-    _magVarDeg = sgGetMagVar(position(), jd);
+    _magVarDeg = sgGetMagVar(position(), jd) * SG_RADIANS_TO_DEGREES;
   }
   
   return _magVarDeg;

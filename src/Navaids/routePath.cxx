@@ -346,6 +346,6 @@ double RoutePath::distanceForClimb(double climbFt) const
 double RoutePath::magVarFor(const SGGeod& geod) const
 {
   double jd = globals->get_time_params()->getJD();
-  return sgGetMagVar(geod, jd);
+  return sgGetMagVar(geod, jd) * SG_RADIANS_TO_DEGREES;
 }
 

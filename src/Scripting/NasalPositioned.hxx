@@ -35,6 +35,6 @@ naRef hashForNavRecord(naContext c, const FGNavRecord* nav, const SGGeod& rel);
 
 bool geodFromHash(naRef ref, SGGeod& result); 
 
-naRef initNasalPositioned(naRef globals, naContext c);
+naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave);
 
 #endif // of SCRIPTING_NASAL_POSITIONED_HXX
