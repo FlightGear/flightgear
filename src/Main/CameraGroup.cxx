@@ -1163,6 +1163,7 @@ static bool computeCameraIntersection(const CameraInfo* cinfo,
                                Vec3d(start.x(), start.y(), start.z()),
                                Vec3d(end.x(), end.y(), end.z()));
   osgUtil::IntersectionVisitor iv(picker.get());
+  iv.setTraversalMask( ~simgear::MODELLIGHT_BIT );
   const_cast<Camera*>(camera)->accept(iv);
   if (picker->containsIntersections()) {
     intersections = picker->getIntersections();
