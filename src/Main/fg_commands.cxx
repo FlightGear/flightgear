@@ -37,9 +37,6 @@
 #include <Scripting/NasalSys.hxx>
 #include <Sound/sample_queue.hxx>
 #include <Airports/xmlloader.hxx>
-#include <ATC/CommStation.hxx>
-#include <Navaids/navrecord.hxx>
-#include <Navaids/navlist.hxx>
 #include <Network/HTTPClient.hxx>
 
 #include "fg_init.hxx"
@@ -1495,63 +1492,6 @@ do_release_cockpit_button (const SGPropertyNode *arg)
 
   return true;
 }
-
-static SGGeod commandSearchPos(const SGPropertyNode* arg)
-{
-  if (arg->hasChild("longitude-deg") && arg->hasChild("latitude-deg")) {
-    return SGGeod::fromDeg(arg->getDoubleValue("longitude-deg"),
-                           arg->getDoubleValue("latitude-deg"));
-  }
-  
-  // use current viewer/aircraft position
-  return SGGeod::fromDeg(fgGetDouble("/position/longitude-deg"), 
-                         fgGetDouble("/position/latitude-deg"));
-}
-  
-static bool
-do_comm_search(const SGPropertyNode* arg)
-{
-  SGGeod pos = commandSearchPos(arg);
-  int khz = static_cast<int>(arg->getDoubleValue("frequency-mhz") * 100.0 + 0.25);
-  
-  flightgear::CommStation* sta = flightgear::CommStation::findByFreq(khz, pos, NULL);
-  if (!sta) {
-    return true;
-  }
-  
-  SGPropertyNode* result = fgGetNode(arg->getStringValue("result"));
-  sta->createBinding(result);
-  return true;
-}
-
-static bool
-do_nav_search(const SGPropertyNode* arg)
-{
-  SGGeod pos = commandSearchPos(arg);
-  double mhz = arg->getDoubleValue("frequency-mhz");
-
-  FGNavList* navList = globals->get_navlist();
-  string type(arg->getStringValue("type", "vor"));
-  if (type == "dme") {
-    navList = globals->get_dmelist();
-  } else if (type == "tacan") {
-    navList = globals->get_tacanlist();
-  }
-  
-  FGNavRecord* nav = navList->findByFreq(mhz, pos);
-  if (!nav && (type == "vor")) {
-    // if we're searching VORs, look for localizers too
-    nav = globals->get_loclist()->findByFreq(mhz, pos);
-  }
-  
-  if (!nav) {
-    return true;
-  }
-  
-  SGPropertyNode* result = fgGetNode(arg->getStringValue("result"));
-  nav->createBinding(result);
-  return true;
-}
   
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
@@ -1627,10 +1567,7 @@ static struct {
     { "dump-terrainbranch", do_dump_terrain_branch },
     { "print-visible-scene", do_print_visible_scene_info },
     { "reload-shaders", do_reload_shaders },
-  
-    { "find-navaid", do_nav_search },
-    { "find-comm", do_comm_search },
-  
+
     { 0, 0 }			// zero-terminated
 };
 

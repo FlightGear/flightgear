@@ -824,7 +824,6 @@ fgInitNav ()
 
     fgAirportDBLoad( aptdb.str(), p_metar.str() );
     FGAirport::installPropertyListener();
-    FGPositioned::installCommands();
     
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;

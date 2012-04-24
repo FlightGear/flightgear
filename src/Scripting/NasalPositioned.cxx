@@ -35,6 +35,8 @@
 
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
+#include <Airports/dynamics.hxx>
+#include <Airports/parking.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/procedure.hxx>
 #include <Main/globals.hxx>
@@ -275,6 +277,26 @@ bool geodFromHash(naRef ref, SGGeod& result)
   return false;
 }
 
+static int geodFromArgs(naRef* args, int offset, int argc, SGGeod& result)
+{
+  if (offset >= argc) {
+    return 0;
+  }
+  
+  if (geodFromHash(args[offset], result)) {
+    return 1;
+  }
+  
+  if (((argc - offset) >= 2) && naIsNum(args[offset]) && naIsNum(args[offset + 1])) {
+    double lat = naNumValue(args[0]).num,
+    lon = naNumValue(args[1]).num;
+    result = SGGeod::fromDeg(lon, lat);
+    return 2;
+  }
+  
+  return 0;
+}
+
 // Convert a cartesian point to a geodetic lat/lon/altitude.
 static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
 {
@@ -353,6 +375,18 @@ public:
   AirportInfoFilter() : type(FGPositioned::AIRPORT) {
   }
   
+  bool fromArg(naRef arg)
+  {
+    const char *s = naStr_data(arg);
+    if(!strcmp(s, "airport")) type = FGPositioned::AIRPORT;
+    else if(!strcmp(s, "seaport")) type = FGPositioned::SEAPORT;
+    else if(!strcmp(s, "heliport")) type = FGPositioned::HELIPORT;
+    else
+      return false;
+    
+    return true;
+  }
+  
   virtual FGPositioned::Type minType() const {
     return type;
   }
@@ -373,15 +407,13 @@ public:
 // airportinfo(<lat>, <lon> [, <type>]);
 static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 {
-  SGGeod pos;
+  SGGeod pos = globals->get_aircraft_position();
   FGAirport* apt = NULL;
   
   if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
     pos = SGGeod::fromDeg(args[1].num, args[0].num);
     args += 2;
     argc -= 2;
-  } else {
-    pos = globals->get_aircraft_position();
   }
   
   double maxRange = 10000.0; // expose this? or pick a smaller value?
@@ -391,13 +423,11 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
   if(argc == 0) {
     // fall through and use AIRPORT
   } else if(argc == 1 && naIsString(args[0])) {
-    const char *s = naStr_data(args[0]);
-    if(!strcmp(s, "airport")) filter.type = FGPositioned::AIRPORT;
-    else if(!strcmp(s, "seaport")) filter.type = FGPositioned::SEAPORT;
-    else if(!strcmp(s, "heliport")) filter.type = FGPositioned::HELIPORT;
-    else {
+    if (filter.fromArg(args[0])) {
+      // done!
+    } else {
       // user provided an <id>, hopefully
-      apt = FGAirport::findByIdent(s);
+      apt = FGAirport::findByIdent(naStr_data(args[0]));
       if (!apt) {
         // return nil here, but don't raise a runtime error; this is a
         // legitamate way to validate an ICAO code, for example in a
@@ -416,6 +446,60 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
   }
   
   return hashForAirport(c, apt);
+}
+
+static naRef f_findAirportsWithinRange(naContext c, naRef me, int argc, naRef* args)
+{
+  int argOffset = 0;
+  SGGeod pos = globals->get_aircraft_position();
+  argOffset += geodFromArgs(args, 0, argc, pos);
+  
+  if (!naIsNum(args[argOffset])) {
+    naRuntimeError(c, "findAirportsWithinRange expected range (in nm) as arg %d", argOffset);
+  }
+  
+  AirportInfoFilter filter; // defaults to airports only
+  double rangeNm = args[argOffset++].num;
+  if (argOffset < argc) {
+    filter.fromArg(args[argOffset++]);
+  }
+  
+  naRef r = naNewVector(c);
+  
+  FGPositioned::List apts = FGPositioned::findWithinRange(pos, rangeNm, &filter);
+  FGPositioned::sortByRange(apts, pos);
+  
+  BOOST_FOREACH(FGPositionedRef a, apts) {
+    FGAirport* apt = (FGAirport*) a.get();
+    naVec_append(r, hashForAirport(c, apt));
+  }
+  
+  return r;
+}
+
+static naRef f_findAirportsByICAO(naContext c, naRef me, int argc, naRef* args)
+{
+  if (!naIsString(args[0])) {
+    naRuntimeError(c, "findAirportsByICAO expects string as arg 0");
+  }
+  
+  int argOffset = 0;
+  string prefix(naStr_data(args[argOffset++]));
+  AirportInfoFilter filter; // defaults to airports only
+  if (argOffset < argc) {
+    filter.fromArg(args[argOffset++]);
+  }
+  
+  naRef r = naNewVector(c);
+  
+  FGPositioned::List apts = FGPositioned::findAllWithIdent(prefix, &filter, false);
+  
+  BOOST_FOREACH(FGPositionedRef a, apts) {
+    FGAirport* apt = (FGAirport*) a.get();
+    naVec_append(r, hashForAirport(c, apt));
+  }
+  
+  return r;
 }
 
 static FGAirport* airportFromMe(naRef me)
@@ -540,6 +624,44 @@ static naRef f_airport_stars(naContext c, naRef me, int argc, naRef* args)
   return stars;
 }
 
+static naRef f_airport_parking(naContext c, naRef me, int argc, naRef* args)
+{
+  FGAirport* apt = airportFromMe(me);
+  if (!apt) {
+    naRuntimeError(c, "airport.parking called on non-airport object");
+  }
+  
+  naRef r = naNewVector(c);
+  std::string type;
+  bool onlyAvailable = false;
+  
+  if (argc > 0 && naIsString(args[0])) {
+    type = naStr_data(args[0]);
+  }
+  
+  if ((argc > 1) && naIsNum(args[1])) {
+    onlyAvailable = (args[1].num != 0.0);
+  }
+  
+  FGAirportDynamics* dynamics = apt->getDynamics();
+  for (int i=0; i<dynamics->getNrOfParkings(); ++i) {
+    FGParking* park = dynamics->getParking(i);
+  // filter out based on availability and type
+    if (onlyAvailable && !park->isAvailable()) {
+      continue;
+    }
+    
+    if (!type.empty() && (park->getType() != type)) {
+      continue;
+    }
+    
+    naRef nm = stringToNasal(c, park->getName());
+    naVec_append(r, nm);
+  }
+  
+  return r;
+}
+
 // Returns vector of data hash for navaid of a <type>, nil on error
 // navaids sorted by ascending distance 
 // navinfo([<lat>,<lon>],[<type>],[<id>])
@@ -606,18 +728,120 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
   return reply;
 }
 
+static naRef f_findNavaidsWithinRange(naContext c, naRef me, int argc, naRef* args)
+{
+  int argOffset = 0;
+  SGGeod pos = globals->get_aircraft_position();
+  argOffset += geodFromArgs(args, 0, argc, pos);
+  
+  if (!naIsNum(args[argOffset])) {
+    naRuntimeError(c, "findNavaidsWithinRange expected range (in nm) as arg %d", argOffset);
+  }
+  
+  FGPositioned::Type type = FGPositioned::INVALID;
+  double rangeNm = args[argOffset++].num;
+  if (argOffset < argc) {
+    type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
+  }
+  
+  naRef r = naNewVector(c);
+  FGNavList::TypeFilter filter(type);
+  FGPositioned::List navs = FGPositioned::findWithinRange(pos, rangeNm, &filter);
+  FGPositioned::sortByRange(navs, pos);
+  
+  BOOST_FOREACH(FGPositionedRef a, navs) {
+    FGNavRecord* nav = (FGNavRecord*) a.get();
+    naVec_append(r, hashForNavRecord(c, nav, pos));
+  }
+  
+  return r;
+}
+
+static naRef f_findNavaidByFrequency(naContext c, naRef me, int argc, naRef* args)
+{
+  int argOffset = 0;
+  SGGeod pos = globals->get_aircraft_position();
+  argOffset += geodFromArgs(args, 0, argc, pos);
+  
+  if (!naIsNum(args[argOffset])) {
+    naRuntimeError(c, "findNavaidByFrequency expectes frequency (in Mhz) as arg %d", argOffset);
+  }
+  
+  FGPositioned::Type type = FGPositioned::INVALID;
+  double freqMhz = args[argOffset++].num;
+  if (argOffset < argc) {
+    type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
+  }
+  
+  nav_list_type navs = globals->get_navlist()->findAllByFreq(freqMhz, pos, type);
+  if (navs.empty()) {
+    return naNil();
+  }
+  
+  return hashForNavRecord(c, navs.front().ptr(), pos);
+}
+
+static naRef f_findNavaidsByFrequency(naContext c, naRef me, int argc, naRef* args)
+{
+  int argOffset = 0;
+  SGGeod pos = globals->get_aircraft_position();
+  argOffset += geodFromArgs(args, 0, argc, pos);
+  
+  if (!naIsNum(args[argOffset])) {
+    naRuntimeError(c, "findNavaidsByFrequency expectes frequency (in Mhz) as arg %d", argOffset);
+  }
+  
+  FGPositioned::Type type = FGPositioned::INVALID;
+  double freqMhz = args[argOffset++].num;
+  if (argOffset < argc) {
+    type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
+  }
+  
+  naRef r = naNewVector(c);
+  nav_list_type navs = globals->get_navlist()->findAllByFreq(freqMhz, pos, type);
+  
+  BOOST_FOREACH(nav_rec_ptr a, navs) {
+    naVec_append(r, hashForNavRecord(c, a.ptr(), pos));
+  }
+  
+  return r;
+}
+
+static naRef f_findNavaidsByIdent(naContext c, naRef me, int argc, naRef* args)
+{
+  int argOffset = 0;
+  SGGeod pos = globals->get_aircraft_position();
+  argOffset += geodFromArgs(args, 0, argc, pos);
+  
+  if (!naIsString(args[argOffset])) {
+    naRuntimeError(c, "findNavaidsByIdent expectes ident string as arg %d", argOffset);
+  }
+  
+  FGPositioned::Type type = FGPositioned::INVALID;
+  string ident = naStr_data(args[argOffset++]);
+  if (argOffset < argc) {
+    type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
+  }
+  
+  naRef r = naNewVector(c);
+  nav_list_type navs = globals->get_navlist()->findByIdentAndFreq(pos, ident, 0.0, type);
+  
+  BOOST_FOREACH(nav_rec_ptr a, navs) {
+    naVec_append(r, hashForNavRecord(c, a.ptr(), pos));
+  }
+  
+  return r;
+}
+
+
 // Convert a cartesian point to a geodetic lat/lon/altitude.
 static naRef f_magvar(naContext c, naRef me, int argc, naRef* args)
 {
   SGGeod pos = globals->get_aircraft_position();
   if (argc == 0) {
     // fine, use aircraft position
-  } else if ((argc == 1) && geodFromHash(args[0], pos)) {
+  } else if (geodFromArgs(args, 0, argc, pos)) {
     // okay
-  } else if ((argc == 2) && naIsNum(args[0]) && naIsNum(args[1])) {
-    double lat = naNumValue(args[0]).num,
-      lon = naNumValue(args[1]).num;
-    pos = SGGeod::fromDeg(lon, lat);
   } else {
     naRuntimeError(c, "magvar() expects no arguments, a positioned hash or lat,lon pair");
   }
@@ -629,32 +853,15 @@ static naRef f_magvar(naContext c, naRef me, int argc, naRef* args)
 
 static naRef f_courseAndDistance(naContext c, naRef me, int argc, naRef* args)
 {
-    SGGeod from = globals->get_aircraft_position(), to;
-    if ((argc == 1) && geodFromHash(args[0], to)) {
-        // done
-    } else if ((argc == 2) && naIsNum(args[0]) && naIsNum(args[1])) {
-        // two number arguments, from = current pos, to = lat+lon
-        double lat = naNumValue(args[0]).num,
-            lon = naNumValue(args[1]).num;
-        to = SGGeod::fromDeg(lon, lat);
-    } else if ((argc == 2) && geodFromHash(args[0], from) && geodFromHash(args[1], to)) {
-        // done
-    } else if ((argc == 3) && geodFromHash(args[0], from) && naIsNum(args[1]) && naIsNum(args[2])) {
-        double lat = naNumValue(args[1]).num,
-            lon = naNumValue(args[2]).num;
-        to = SGGeod::fromDeg(lon, lat);
-    } else if ((argc == 3) && naIsNum(args[0]) && naIsNum(args[1]) && geodFromHash(args[2], to)) {
-        double lat = naNumValue(args[0]).num,
-            lon = naNumValue(args[1]).num;
-        from = SGGeod::fromDeg(lon, lat);
-    } else if (argc == 4) {
-        if (!naIsNum(args[0]) || !naIsNum(args[1]) || !naIsNum(args[2]) || !naIsNum(args[3])) {
-            naRuntimeError(c, "invalid arguments to courseAndDistance - expected four numbers");
-        }
-        
-        from = SGGeod::fromDeg(naNumValue(args[1]).num, naNumValue(args[0]).num);
-        to = SGGeod::fromDeg(naNumValue(args[3]).num, naNumValue(args[2]).num);
+    SGGeod from = globals->get_aircraft_position(), to, p;
+    int argOffset = geodFromArgs(args, 0, argc, p);
+    if (geodFromArgs(args, argOffset, argc, to)) {
+      from = p; // we parsed both FROM and TO args, so first was from
     } else {
+      to = p; // only parsed one arg, so FROM is current
+    }
+  
+    if (argOffset == 0) {
         naRuntimeError(c, "invalid arguments to courseAndDistance");
     }
     
@@ -670,18 +877,7 @@ static naRef f_courseAndDistance(naContext c, naRef me, int argc, naRef* args)
 static naRef f_tilePath(naContext c, naRef me, int argc, naRef* args)
 {
     SGGeod pos = globals->get_aircraft_position();
-    if (argc == 0) {
-        // fine, use aircraft position
-    } else if ((argc == 1) && geodFromHash(args[0], pos)) {
-        // okay
-    } else if ((argc == 2) && naIsNum(args[0]) && naIsNum(args[1])) {
-        double lat = naNumValue(args[0]).num,
-        lon = naNumValue(args[1]).num;
-        pos = SGGeod::fromDeg(lon, lat);
-    } else {
-        naRuntimeError(c, "bucketPath() expects no arguments, a positioned hash or lat,lon pair");
-    }
-    
+    geodFromArgs(args, 0, argc, pos);
     SGBucket b(pos);
     return stringToNasal(c, b.gen_base_path());
 }
@@ -819,7 +1015,13 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "geodtocart", f_geodtocart },
   { "geodinfo", f_geodinfo },
   { "airportinfo", f_airportinfo },
+  { "findAirportsWithinRange", f_findAirportsWithinRange },
+  { "findAirportsByICAO", f_findAirportsByICAO },
   { "navinfo", f_navinfo },
+  { "findNavaidsWithinRange", f_findNavaidsWithinRange },
+  { "findNavaidByFrequency", f_findNavaidByFrequency },
+  { "findNavaidsByFrequency", f_findNavaidsByFrequency },
+  { "findNavaidsByID", f_findNavaidsByIdent },
   { "route", f_route },
   { "magvar", f_magvar },
   { "courseAndDistance", f_courseAndDistance },
@@ -837,6 +1039,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, airportPrototype, "comms", naNewFunc(c, naNewCCode(c, f_airport_comms)));
     hashset(c, airportPrototype, "sids", naNewFunc(c, naNewCCode(c, f_airport_sids)));
     hashset(c, airportPrototype, "stars", naNewFunc(c, naNewCCode(c, f_airport_stars)));
+    hashset(c, airportPrototype, "parking", naNewFunc(c, naNewCCode(c, f_airport_parking)));
   
     routePrototype = naNewHash(c);
     hashset(c, gcSave, "routeProto", routePrototype);

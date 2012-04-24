@@ -76,6 +76,9 @@ public:
       */
     FGNavRecord *findByFreq( double freq, const SGGeod& position);
 
+    nav_list_type findAllByFreq( double freq, const SGGeod& position, 
+                                const FGPositioned::Type type = FGPositioned::INVALID);
+  
     // Given an Ident and optional freqency and type , 
     // return a list of matching stations.
     const nav_list_type findByIdentAndFreq( const std::string& ident,
@@ -89,6 +92,23 @@ public:
 
     // given a frequency returns the first matching entry
     FGNavRecord *findStationByFreq( double frequency );
+  
+  class TypeFilter : public FGPositioned::Filter
+  {
+  public:
+    TypeFilter(const FGPositioned::Type type);
+    
+    virtual FGPositioned::Type minType() const {
+      return _mintype;
+    }
+    
+    virtual FGPositioned::Type maxType()  const {
+      return _maxtype;
+    }
+  private:
+    FGPositioned::Type _mintype;
+    FGPositioned::Type _maxtype;
+  };
 };
 
 

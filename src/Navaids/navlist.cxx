@@ -25,6 +25,9 @@
 #  include <config.h>
 #endif
 
+#include <boost/foreach.hpp>
+#include <algorithm>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/sg_inlines.h>
@@ -33,11 +36,41 @@
 
 #include <Airports/runways.hxx>
 
-#include <algorithm>
-
 using std::string;
 
+namespace { // anonymous
+
+class NavRecordDistanceSortPredicate
+{
+public:
+  NavRecordDistanceSortPredicate( const SGGeod & position ) :
+  _position(SGVec3d::fromGeod(position)) {}
+  
+  bool operator()( const nav_rec_ptr & n1, const nav_rec_ptr & n2 )
+  {
+    if( n1 == NULL || n2 == NULL ) return false;
+    return distSqr(n1->cart(), _position) < distSqr(n2->cart(), _position);
+  }
+private:
+  SGVec3d _position;
+  
+};
+
+} // of anonymous namespace
+
 // FGNavList ------------------------------------------------------------------
+
+
+FGNavList::TypeFilter::TypeFilter(const FGPositioned::Type type)
+{
+  if (type == FGPositioned::INVALID) {
+    _mintype = FGPositioned::VOR;
+    _maxtype = FGPositioned::GS;
+  } else {
+    _mintype = _maxtype = type;
+  }
+}
+
 
 FGNavList::FGNavList( void )
 {
@@ -75,31 +108,29 @@ FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position)
     return findNavFromList( position, stations );
 }
 
-class TypeFilter : public FGPositioned::Filter
+nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position, const FGPositioned::Type type)
 {
-public:
-    TypeFilter( const FGPositioned::Type mintype, const FGPositioned::Type maxtype ) : _mintype(mintype), _maxtype(maxtype) {}
-
-  virtual FGPositioned::Type minType() const {
-    return _mintype;
+  nav_list_type stations;
+  TypeFilter filter(type);
+  
+  BOOST_FOREACH(nav_rec_ptr nav, navaids[(int)(freq*100.0 + 0.5)]) {
+    if (filter.pass(nav.ptr())) {
+      stations.push_back(nav);
+    }
   }
+  
+  NavRecordDistanceSortPredicate sortPredicate( position );
+  std::sort( stations.begin(), stations.end(), sortPredicate );
+  return stations;
+}
 
-  virtual FGPositioned::Type maxType()  const {
-    return _maxtype;
-  }
-private:
-    FGPositioned::Type _mintype;
-    FGPositioned::Type _maxtype;
-};
 
 // Given an Ident and optional freqency, return the first matching
 // station.
 const nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const double freq, const FGPositioned::Type type )
 {
   FGPositionedRef cur;
-  TypeFilter filter( 
-      type == FGPositioned::INVALID ? FGPositioned::VOR : type,
-      type == FGPositioned::INVALID ? FGPositioned::NDB : type );
+  TypeFilter filter(type);
   nav_list_type reply;
 
   cur = FGPositioned::findNextWithPartialId(cur, ident, &filter);
@@ -116,22 +147,6 @@ const nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const dou
 
   return reply;
 }
-
-class NavRecordDistanceSortPredicate
-{
-public:
-    NavRecordDistanceSortPredicate( const SGGeod & position ) :
-    _position(SGVec3d::fromGeod(position)) {}
-
-    bool operator()( const nav_rec_ptr & n1, const nav_rec_ptr & n2 )
-    {
-        if( n1 == NULL || n2 == NULL ) return false;
-        return distSqr(n1->cart(), _position) < distSqr(n2->cart(), _position);
-    }
-private:
-    SGVec3d _position;
-
-};
 
 // Given an Ident and optional freqency and type , 
 // return a list of matching stations sorted by distance to the given position

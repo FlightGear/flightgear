@@ -156,9 +156,7 @@ public:
   private:
       std::vector<Type> types;
   };
-  
-  static void installCommands();
-  
+    
   static List findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter = NULL);
         
   static FGPositionedRef findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter = NULL);
