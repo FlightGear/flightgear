@@ -36,6 +36,7 @@ class SGPropertyNode;
 namespace flightgear {
   class SID;
   class STAR;
+  class Approach;
 }
 
 class FGRunway : public FGRunwayBase
@@ -124,12 +125,15 @@ public:
   /**
    * Get SIDs (DPs) associated with this runway
    */
-  std::vector<flightgear::SID*> getSIDs();
+  std::vector<flightgear::SID*> getSIDs() const;
   
   /**
    * Get STARs associared with this runway
    */ 
-  std::vector<flightgear::STAR*> getSTARs();
+  std::vector<flightgear::STAR*> getSTARs() const;
+  
+  
+  std::vector<flightgear::Approach*> getApproaches() const;
   
 };
 

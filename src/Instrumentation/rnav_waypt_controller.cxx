@@ -317,7 +317,9 @@ public:
     double curAlt = _rnav->position().getElevationFt();
     
     switch (_waypt->altitudeRestriction()) {
-    case RESTRICT_AT: {
+    case RESTRICT_AT: 
+    case RESTRICT_COMPUTED:  
+    {
       double d = curAlt - _waypt->altitudeFt();
       if (fabs(d) < 50.0) {
         SG_LOG(SG_INSTR, SG_INFO, "ConstHdgToAltCtl, reached target altitude " << _waypt->altitudeFt());
@@ -339,11 +341,7 @@ public:
       }
       break;
     
-    case RESTRICT_NONE:
-      assert(false);
-      break;
-    case SPEED_RESTRICT_MACH:
-      assert(false);
+    default:
       break;
     }
   }

@@ -724,7 +724,7 @@ void GPS::routeManagerSequenced()
   SG_LOG(SG_INSTR, SG_INFO, "GPS waypoint index is now " << index);
   
   if (index > 0) {
-    _prevWaypt = _routeMgr->previousWaypt();
+    _prevWaypt = _routeMgr->wayptAtIndex(index - 1);
     if (_prevWaypt->flag(WPT_DYNAMIC)) {
       _wp0_position = _indicated_pos;
     } else {
@@ -829,7 +829,7 @@ void GPS::updateOverflight()
     
     // check for wp1 being on active route - resume leg mode
     if (_routeMgr->isRouteActive()) {
-      int index = _routeMgr->findWayptIndex(_currentWaypt->position());
+      int index = _routeMgr->flightPlan()->findWayptIndex(_currentWaypt->position());
       if (index >= 0) {
         SG_LOG(SG_INSTR, SG_INFO, "GPS DTO, resuming LEG mode at wp:" << index);
         _mode = "leg";
@@ -881,7 +881,7 @@ void GPS::computeTurnData()
     return;
   }
   
-  WayptRef next = _routeMgr->nextWaypt();
+  WayptRef next = _routeMgr->wayptAtIndex(_routeMgr->currentIndex() + 1);
   if (!next || next->flag(WPT_DYNAMIC)) {
     _anticipateTurn = false;
     return;
@@ -1684,7 +1684,7 @@ void GPS::insertWaypointAtIndex(int aIndex)
   string ident = _scratchNode->getStringValue("ident");
 
   WayptRef wpt = new BasicWaypt(_scratchPos, ident, NULL);
-  _routeMgr->insertWayptAtIndex(wpt, aIndex);
+  _routeMgr->flightPlan()->insertWayptAtIndex(wpt, aIndex);
 }
 
 void GPS::removeWaypointAtIndex(int aIndex)
@@ -1693,7 +1693,7 @@ void GPS::removeWaypointAtIndex(int aIndex)
     throw sg_range_exception("GPS::removeWaypointAtIndex: index out of bounds");
   }
   
-  _routeMgr->removeWayptAtIndex(aIndex);
+  _routeMgr->removeLegAtIndex(aIndex);
 }
 
 void GPS::tieSGGeod(SGPropertyNode* aNode, SGGeod& aRef, 

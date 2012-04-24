@@ -63,53 +63,6 @@
 
 using namespace flightgear;
 
-class PropertyWatcher : public SGPropertyChangeListener
-{
-public:
-  void watch(SGPropertyNode* p)
-  {
-    p->addChangeListener(this, false);
-  }
-
-  virtual void valueChanged(SGPropertyNode*)
-  {
-    fire();
-  }
-protected:
-  virtual void fire() = 0;
-};
-
-/**
- * Template adapter, created by convenience helper below
- */
-template <class T>
-class MethodPropertyWatcher : public PropertyWatcher
-{
-public:
-  typedef void (T::*fire_method)();
-
-  MethodPropertyWatcher(T* obj, fire_method m) :
-    _object(obj),
-    _method(m)
-  { ; }
-  
-protected:
-  virtual void fire()
-  { // dispatch to the object method we're helping
-    (_object->*_method)();
-  }
-  
-private:
-  T* _object;
-  fire_method _method;
-};
-
-template <class T>
-PropertyWatcher* createWatcher(T* obj, void (T::*m)())
-{
-  return new MethodPropertyWatcher<T>(obj, m);
-}
-
 static bool commandLoadFlightPlan(const SGPropertyNode* arg)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
@@ -148,7 +101,7 @@ static bool commandSetActiveWaypt(const SGPropertyNode* arg)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   int index = arg->getIntValue("index");
-  if ((index < 0) || (index >= self->numWaypts())) {
+  if ((index < 0) || (index >= self->numLegs())) {
     return false;
   }
   
@@ -232,16 +185,16 @@ static bool commandInsertWaypt(const SGPropertyNode* arg)
   } else {
     return false; // failed to build waypoint
   }
-  
+
+  FlightPlan::Leg* leg = self->flightPlan()->insertWayptAtIndex(wp, index);
   if (alt >= 0) {
-    wp->setAltitude(alt, flightgear::RESTRICT_AT);
+    leg->setAltitude(RESTRICT_AT, alt);
   }
   
   if (ias > 0) {
-    wp->setSpeed(ias, flightgear::RESTRICT_AT);
+    leg->setSpeed(RESTRICT_AT, ias);
   }
-
-  self->insertWayptAtIndex(wp, index);
+  
   return true;
 }
 
@@ -249,18 +202,16 @@ static bool commandDeleteWaypt(const SGPropertyNode* arg)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   int index = arg->getIntValue("index");
-  self->removeWayptAtIndex(index);
+  self->removeLegAtIndex(index);
   return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 
 FGRouteMgr::FGRouteMgr() :
-  _currentIndex(0),
+  _plan(NULL),
   input(fgGetNode( RM "input", true )),
-  mirror(fgGetNode( RM "route", true )),
-  _departureWatcher(NULL),
-  _arrivalWatcher(NULL)
+  mirror(fgGetNode( RM "route", true ))
 {
   listener = new InputListener(this);
   input->setStringValue("");
@@ -280,32 +231,29 @@ FGRouteMgr::~FGRouteMgr()
 {
   input->removeChangeListener(listener);
   delete listener;
-  delete _departureWatcher;
-  delete _arrivalWatcher;
 }
 
 
 void FGRouteMgr::init() {
   SGPropertyNode_ptr rm(fgGetNode(RM));
   
-  lon = fgGetNode( "/position/longitude-deg", true );
-  lat = fgGetNode( "/position/latitude-deg", true );
-  alt = fgGetNode( "/position/altitude-ft", true );
   magvar = fgGetNode("/environment/magnetic-variation-deg", true);
      
   departure = fgGetNode(RM "departure", true);
   departure->tie("airport", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
     &FGRouteMgr::getDepartureICAO, &FGRouteMgr::setDepartureICAO));
+  departure->tie("runway", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+                                                                       &FGRouteMgr::getDepartureRunway, 
+                                                                      &FGRouteMgr::setDepartureRunway));
+  departure->tie("sid", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+                                                                      &FGRouteMgr::getSID, 
+                                                                      &FGRouteMgr::setSID));
+  
   departure->tie("name", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
     &FGRouteMgr::getDepartureName, NULL));
-  departure->setStringValue("runway", "");
-  
-  delete _departureWatcher;
-  _departureWatcher = createWatcher(this, &FGRouteMgr::departureChanged);
-  _departureWatcher->watch(departure->getChild("runway"));
-  
+  departure->tie("field-elevation-ft", SGRawValueMethods<FGRouteMgr, double>(*this, 
+                                                                               &FGRouteMgr::getDestinationFieldElevation, NULL));
   departure->getChild("etd", 0, true);
-  _departureWatcher->watch(departure->getChild("sid", 0, true));
   departure->getChild("takeoff-time", 0, true);
 
   destination = fgGetNode(RM "destination", true);
@@ -313,16 +261,22 @@ void FGRouteMgr::init() {
   
   destination->tie("airport", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
     &FGRouteMgr::getDestinationICAO, &FGRouteMgr::setDestinationICAO));
+  destination->tie("runway", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+                             &FGRouteMgr::getDestinationRunway, 
+                            &FGRouteMgr::setDestinationRunway));
+  destination->tie("star", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+                                                                        &FGRouteMgr::getSTAR, 
+                                                                        &FGRouteMgr::setSTAR));
+  destination->tie("approach", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+                                                                        &FGRouteMgr::getApproach, 
+                                                                        &FGRouteMgr::setApproach));
+  
   destination->tie("name", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
     &FGRouteMgr::getDestinationName, NULL));
-  
-  delete _arrivalWatcher;
-  _arrivalWatcher = createWatcher(this, &FGRouteMgr::arrivalChanged);
-  _arrivalWatcher->watch(destination->getChild("runway", 0, true));
+  destination->tie("field-elevation-ft", SGRawValueMethods<FGRouteMgr, double>(*this, 
+                                                                      &FGRouteMgr::getDestinationFieldElevation, NULL));
   
   destination->getChild("eta", 0, true);
-  _arrivalWatcher->watch(destination->getChild("star", 0, true));
-  _arrivalWatcher->watch(destination->getChild("transition", 0, true));
   destination->getChild("touchdown-time", 0, true);
 
   alternate = fgGetNode(RM "alternate", true);
@@ -379,8 +333,8 @@ void FGRouteMgr::init() {
   wpn->getChild("dist", 0, true);
   wpn->getChild("eta", 0, true);
   
-  update_mirror();
   _pathNode = fgGetNode(RM "file-path", 0, true);
+  setFlightPlan(new FlightPlan());
 }
 
 
@@ -401,11 +355,11 @@ void FGRouteMgr::postinit()
     for (it = waypoints->begin(); it != waypoints->end(); ++it) {
       WayptRef w = waypointFromString(*it);
       if (w) {
-        _route.push_back(w);
+        _plan->insertWayptAtIndex(w, -1);
       }
     }
     
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "loaded initial waypoints:" << _route.size());
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "loaded initial waypoints:" << numLegs());
     update_mirror();
   }
 
@@ -419,6 +373,53 @@ void FGRouteMgr::unbind() { }
 bool FGRouteMgr::isRouteActive() const
 {
   return active->getBoolValue();
+}
+
+bool FGRouteMgr::saveRoute(const SGPath& p)
+{
+  if (!_plan) {
+    return false;
+  }
+  
+  return _plan->save(p);
+}
+
+bool FGRouteMgr::loadRoute(const SGPath& p)
+{
+  FlightPlan* fp = new FlightPlan;
+  if (!fp->load(p)) {
+    delete fp;
+    return false;
+  }
+  
+  setFlightPlan(fp);
+  return true;
+}
+
+FlightPlan* FGRouteMgr::flightPlan() const
+{
+  return _plan;
+}
+
+void FGRouteMgr::setFlightPlan(FlightPlan* plan)
+{
+  if (plan == _plan) {
+    return;
+  }
+  
+  if (_plan) {
+    delete _plan;
+    active->setBoolValue(false);
+  }
+  
+  _plan = plan;
+  _plan->setDelegate(this);
+  
+// fire all the callbacks!
+  departureChanged();
+  arrivalChanged();
+  waypointsChanged();
+  currentWaypointChanged();
 }
 
 void FGRouteMgr::update( double dt )
@@ -446,17 +447,16 @@ void FGRouteMgr::update( double dt )
   }
 
 // basic course/distance information
-  SGGeod currentPos = SGGeod::fromDegFt(lon->getDoubleValue(), 
-    lat->getDoubleValue(),alt->getDoubleValue());
+  SGGeod currentPos = globals->get_aircraft_position();
 
-  Waypt* curWpt = currentWaypt();
-  if (!curWpt) {
+  FlightPlan::Leg* leg = _plan ? _plan->currentLeg() : NULL;
+  if (!leg) {
     return;
   }
   
   double courseDeg;
   double distanceM;
-  boost::tie(courseDeg, distanceM) = curWpt->courseAndDistanceFrom(currentPos);
+  boost::tie(courseDeg, distanceM) = leg->waypoint()->courseAndDistanceFrom(currentPos);
   
 // update wp0 / wp1 / wp-last
   wp0->setDoubleValue("dist", distanceM * SG_METER_TO_NM);
@@ -465,40 +465,83 @@ void FGRouteMgr::update( double dt )
   wp0->setDoubleValue("bearing-deg", courseDeg);
   setETAPropertyFromDistance(wp0->getChild("eta"), distanceM);
   
-  double totalPathDistance = totalDistance->getDoubleValue() * SG_NM_TO_METER;
-  double totalDistanceRemaining = distanceM; // distance to current waypoint
-  double pathDistance = cachedWaypointPathTotalDistance(_currentIndex);
+  double totalPathDistanceNm = _plan->totalDistanceNm();
+  double totalDistanceRemaining = distanceM * SG_METER_TO_NM; // distance to current waypoint
   
 // total distance to go, is direct distance to wp0, plus the remaining
 // path distance from wp0
-  totalDistanceRemaining += (totalPathDistance - pathDistance);
+  totalDistanceRemaining += (totalPathDistanceNm - leg->distanceAlongRoute());
   
   wp0->setDoubleValue("distance-along-route-nm", 
-                      pathDistance * SG_METER_TO_NM);
+                      leg->distanceAlongRoute());
   wp0->setDoubleValue("remaining-distance-nm", 
-                      (totalPathDistance - pathDistance) * SG_METER_TO_NM);
+                      totalPathDistanceNm - leg->distanceAlongRoute());
   
-  Waypt* nextWpt = nextWaypt();
-  if (nextWpt) {
-    boost::tie(courseDeg, distanceM) = nextWpt->courseAndDistanceFrom(currentPos);
+  FlightPlan::Leg* nextLeg = _plan->nextLeg();
+  if (nextLeg) {
+    boost::tie(courseDeg, distanceM) = nextLeg->waypoint()->courseAndDistanceFrom(currentPos);
      
     wp1->setDoubleValue("dist", distanceM * SG_METER_TO_NM);
     wp1->setDoubleValue("true-bearing-deg", courseDeg);
     courseDeg -= magvar->getDoubleValue(); // expose magnetic bearing
     wp1->setDoubleValue("bearing-deg", courseDeg);
-    setETAPropertyFromDistance(wp1->getChild("eta"), distanceM);
-    
-    double pathDistance = cachedWaypointPathTotalDistance(_currentIndex + 1);    
+    setETAPropertyFromDistance(wp1->getChild("eta"), distanceM);    
     wp1->setDoubleValue("distance-along-route-nm", 
-                        pathDistance * SG_METER_TO_NM);
+                        nextLeg->distanceAlongRoute());
     wp1->setDoubleValue("remaining-distance-nm", 
-                        (totalPathDistance - pathDistance) * SG_METER_TO_NM);
+                        totalPathDistanceNm - nextLeg->distanceAlongRoute());
   }
   
-  distanceToGo->setDoubleValue(totalDistanceRemaining * SG_METER_TO_NM);
-  wpn->setDoubleValue("dist", totalDistanceRemaining * SG_METER_TO_NM);
-  ete->setDoubleValue(totalDistanceRemaining * SG_METER_TO_NM / groundSpeed * 3600.0);
+  distanceToGo->setDoubleValue(totalDistanceRemaining);
+  wpn->setDoubleValue("dist", totalDistanceRemaining);
+  ete->setDoubleValue(totalDistanceRemaining / groundSpeed * 3600.0);
   setETAPropertyFromDistance(wpn->getChild("eta"), totalDistanceRemaining);
+}
+
+void FGRouteMgr::clearRoute()
+{
+  if (_plan) {
+    _plan->clear();
+  }
+}
+
+Waypt* FGRouteMgr::currentWaypt() const
+{
+  if (_plan && _plan->currentLeg()) {
+    return _plan->currentLeg()->waypoint();
+  }
+  
+  return NULL;
+}
+
+int FGRouteMgr::currentIndex() const
+{
+  if (!_plan) {
+    return 0;
+  }
+  
+  return _plan->currentIndex();
+}
+
+Waypt* FGRouteMgr::wayptAtIndex(int index) const
+{
+  if (_plan) {
+    FlightPlan::Leg* leg = _plan->legAtIndex(index);
+    if (leg) {
+      return leg->waypoint();
+    }
+  }
+  
+  return NULL;
+}
+
+int FGRouteMgr::numLegs() const
+{
+  if (_plan) {
+    return _plan->numLegs();
+  }
+  
+  return 0;
 }
 
 void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance)
@@ -525,62 +568,15 @@ void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDi
   aProp->setStringValue( eta_str );
 }
 
-flightgear::WayptRef FGRouteMgr::removeWayptAtIndex(int aIndex)
+void FGRouteMgr::removeLegAtIndex(int aIndex)
 {
-  int index = aIndex;
-  if (aIndex < 0) { // negative indices count the the end
-    index = _route.size() + index;
+  if (!_plan) {
+    return;
   }
   
-  if ((index < 0) || (index >= numWaypts())) {
-    SG_LOG(SG_AUTOPILOT, SG_WARN, "removeWayptAtIndex with invalid index:" << aIndex);
-    return NULL;
-  }
-  WayptVec::iterator it = _route.begin();
-  it += index;
-  
-  WayptRef w = *it; // hold a ref now, in case _route is the only other owner
-  _route.erase(it);
-  
-  update_mirror();
-  
-  if (_currentIndex == index) {
-    currentWaypointChanged(); // current waypoint was removed
-  }
-  else
-  if (_currentIndex > index) {
-    --_currentIndex; // shift current index down if necessary
-  }
-
-  _edited->fireValueChanged();
-  checkFinished();
-  
-  return w;
+  _plan->deleteIndex(aIndex);
 }
   
-struct NotGeneratedWayptPredicate : public std::unary_function<const Waypt*, bool>
-{
-  bool operator() (const Waypt* w) const
-  {
-    return (w->flag(WPT_GENERATED) == false);
-  }
-};
-
-
-void FGRouteMgr::clearRoute()
-{
-// erase all non-generated waypoints
-  WayptVec::iterator r =  
-    std::remove_if(_route.begin(), _route.end(), NotGeneratedWayptPredicate());
-  _route.erase(r, _route.end());
-  
-  _currentIndex = -1;
-  
-  update_mirror();
-  active->setBoolValue(false);
-  _edited->fireValueChanged();
-}
-
 /**
  * route between index-1 and index, using airways.
  */
@@ -590,27 +586,27 @@ bool FGRouteMgr::routeToIndex(int index, RouteType aRouteType)
   WayptRef wp2;
   
   if (index == -1) {
-    index = _route.size(); // can still be zero, of course
+    index = numLegs();
   }
   
   if (index == 0) {
-    if (!_departure) {
+    if (!_plan->departureAirport()) {
       SG_LOG(SG_AUTOPILOT, SG_WARN, "routeToIndex: no departure set");
       return false;
     }
     
-    wp1 = new NavaidWaypoint(_departure.get(), NULL);
+    wp1 = new NavaidWaypoint(_plan->departureAirport().get(), NULL);
   } else {
     wp1 = wayptAtIndex(index - 1);
   }
   
-  if (index >= numWaypts()) {
-    if (!_destination) {
+  if (index >= numLegs()) {
+    if (!_plan->destinationAirport()) {
       SG_LOG(SG_AUTOPILOT, SG_WARN, "routeToIndex: no destination set");
       return false;
     }
     
-    wp2 = new NavaidWaypoint(_destination.get(), NULL);
+    wp2 = new NavaidWaypoint(_plan->destinationAirport().get(), NULL);
   } else {
     wp2 = wayptAtIndex(index);
   }
@@ -640,374 +636,108 @@ bool FGRouteMgr::routeToIndex(int index, RouteType aRouteType)
     return false;
   }
 
-  WayptVec::iterator it = _route.begin();
-  it += index;
-  _route.insert(it, r.begin(), r.end());
-
-  update_mirror();
-  _edited->fireValueChanged();
+  _plan->insertWayptsAtIndex(r, index);
   return true;
-}
-
-void FGRouteMgr::autoRoute()
-{
-  if (!_departure || !_destination) {
-    return;
-  }
-  
-  string runwayId(departure->getStringValue("runway"));
-  FGRunway* runway = NULL;
-  if (_departure->hasRunwayWithIdent(runwayId)) {
-    runway = _departure->getRunwayByIdent(runwayId);
-  }
-  
-  FGRunway* dstRunway = NULL;
-  runwayId = destination->getStringValue("runway");
-  if (_destination->hasRunwayWithIdent(runwayId)) {
-    dstRunway = _destination->getRunwayByIdent(runwayId);
-  }
-    
-  _route.clear(); // clear out the existing, first
-// SID
-  flightgear::SID* sid;
-  WayptRef sidTrans;
-  
-  boost::tie(sid, sidTrans) = _departure->selectSID(_destination->geod(), runway);
-  if (sid) { 
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "selected SID " << sid->ident());
-    if (sidTrans) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "\tvia " << sidTrans->ident() << " transition");
-    }
-    
-    sid->route(runway, sidTrans, _route);
-    departure->setStringValue("sid", sid->ident());
-  } else {
-    // use airport location for airway search
-    sidTrans = new NavaidWaypoint(_departure.get(), NULL);
-    departure->setStringValue("sid", "");
-  }
-  
-// STAR
-  destination->setStringValue("transition", "");
-  destination->setStringValue("star", "");
-  
-  STAR* star;
-  WayptRef starTrans;
-  boost::tie(star, starTrans) = _destination->selectSTAR(_departure->geod(), dstRunway);
-  if (star) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "selected STAR " << star->ident());
-    if (starTrans) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "\tvia " << starTrans->ident() << " transition");
-      destination->setStringValue("transition", starTrans->ident());
-    }    
-    destination->setStringValue("star", star->ident());
-  } else {
-    // use airport location for search
-    starTrans = new NavaidWaypoint(_destination.get(), NULL);
-  }
-  
-// route between them
-  WayptVec airwayRoute;
-  if (Airway::highLevel()->route(sidTrans, starTrans, airwayRoute)) {
-    _route.insert(_route.end(), airwayRoute.begin(), airwayRoute.end());
-  }
-  
-// add the STAR if we have one
-  if (star) {
-    _destination->buildApproach(starTrans, star, dstRunway, _route);
-  }
-
-  update_mirror();
-  _edited->fireValueChanged();
 }
 
 void FGRouteMgr::departureChanged()
 {
-// remove existing departure waypoints
-  WayptVec::iterator it = _route.begin();
-  for (; it != _route.end(); ++it) {
-    if (!(*it)->flag(WPT_DEPARTURE)) {
-      break;
-    }
-  }
-  
-  // erase() invalidates iterators, so grab now
+  _plan->clearWayptsWithFlag(WPT_DEPARTURE);
   WayptRef enroute;
-  if (it == _route.end()) {
-    if (_destination) {
-      enroute = new NavaidWaypoint(_destination.get(), NULL);
-    }
-  } else {
-    enroute = *it;
-  }
-
-  _route.erase(_route.begin(), it);
-  if (!_departure) {
-    waypointsChanged();
-    return;
-  }
-  
   WayptVec wps;
   buildDeparture(enroute, wps);
-  for (it = wps.begin(); it != wps.end(); ++it) {
-    (*it)->setFlag(WPT_DEPARTURE);
-    (*it)->setFlag(WPT_GENERATED);
-  }
-  _route.insert(_route.begin(), wps.begin(), wps.end());
-  
-  update_mirror();
-  waypointsChanged();
+  _plan->insertWayptsAtIndex(wps, 0);
 }
 
 void FGRouteMgr::buildDeparture(WayptRef enroute, WayptVec& wps)
 {
-  string runwayId(departure->getStringValue("runway"));
-  if (!_departure->hasRunwayWithIdent(runwayId)) {
-// valid airport, but no runway selected, so just the airport noide itself
-    wps.push_back(new NavaidWaypoint(_departure.get(), NULL));
+  if (!_plan->departureAirport()) {
     return;
   }
   
-  FGRunway* r = _departure->getRunwayByIdent(runwayId);
-  string sidId = departure->getStringValue("sid");
-  flightgear::SID* sid = _departure->findSIDWithIdent(sidId);
-  if (!sid) {
-// valid runway, but no SID selected/found, so just the runway node for now
-    if (!sidId.empty() && (sidId != "(none)")) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "SID not found:" << sidId);
-    }
-    
-    wps.push_back(new RunwayWaypt(r, NULL));
+  if (!_plan->departureRunway()) {
+// valid airport, but no runway selected, so just the airport _plan itself
+    WayptRef w = new NavaidWaypoint(_plan->departureAirport(), _plan);
+    w->setFlag(WPT_DEPARTURE);
+    wps.push_back(w);
     return;
   }
   
-// we have a valid SID, awesome
-  string trans(departure->getStringValue("transition"));
-  WayptRef t = sid->findTransitionByName(trans);
-  if (!t && enroute) {
-    t = sid->findBestTransition(enroute->position());
+  WayptRef rwyWaypt = new RunwayWaypt(_plan->departureRunway(), _plan);
+  rwyWaypt->setFlag(WPT_DEPARTURE);
+  wps.push_back(rwyWaypt);
+  
+  if (!_plan->sid()) {
+    return;
   }
-
-  sid->route(r, t, wps);
-  if (!wps.empty() && wps.front()->flag(WPT_DYNAMIC)) {
-    // ensure first waypoint is static, to simplify other computations
-    wps.insert(wps.begin(), new RunwayWaypt(r, NULL));
-  }
+  
+  _plan->sid()->route(_plan->departureRunway(), _plan->sidTransition(), wps);
 }
 
 void FGRouteMgr::arrivalChanged()
 {  
-  // remove existing arrival waypoints
-  WayptVec::reverse_iterator rit = _route.rbegin();
-  for (; rit != _route.rend(); ++rit) {
-    if (!(*rit)->flag(WPT_ARRIVAL)) {
-      break;
-    }
-  }
-  
-  // erase() invalidates iterators, so grab now
-  WayptRef enroute;
-  WayptVec::iterator it;
-  
-  if (rit != _route.rend()) {
-    enroute = *rit;
-    it = rit.base(); // convert to fwd iterator
-  } else {
-    it = _route.begin();
-  }
-
-  _route.erase(it, _route.end());
-  
+  _plan->clearWayptsWithFlag(WPT_ARRIVAL);
+  _plan->clearWayptsWithFlag(WPT_APPROACH);
   WayptVec wps;
+  WayptRef enroute;
   buildArrival(enroute, wps);
-  for (it = wps.begin(); it != wps.end(); ++it) {
-    (*it)->setFlag(WPT_ARRIVAL);
-    (*it)->setFlag(WPT_GENERATED);
-  }
-  _route.insert(_route.end(), wps.begin(), wps.end());
-  
-  update_mirror();
-  waypointsChanged();
+  _plan->insertWayptsAtIndex(wps, -1);
 }
 
 void FGRouteMgr::buildArrival(WayptRef enroute, WayptVec& wps)
 {
-  if (!_destination) {
+  FGAirportRef apt = _plan->departureAirport();
+  if (!apt.valid()) {
     return;
   }
   
-  string runwayId(destination->getStringValue("runway"));
-  if (!_destination->hasRunwayWithIdent(runwayId)) {
-// valid airport, but no runway selected, so just the airport node itself
-    wps.push_back(new NavaidWaypoint(_destination.get(), NULL));
+  if (!_plan->destinationRunway()) {
+    WayptRef w = new NavaidWaypoint(apt.ptr(), _plan);
+    w->setFlag(WPT_ARRIVAL);
+    wps.push_back(w);
     return;
   }
   
-  FGRunway* r = _destination->getRunwayByIdent(runwayId);
-  string starId = destination->getStringValue("star");
-  STAR* star = _destination->findSTARWithIdent(starId);
-  if (!star) {
-// valid runway, but no STAR selected/found, so just the runway node for now
-    wps.push_back(new RunwayWaypt(r, NULL));
-    return;
+  if (_plan->star()) {
+    _plan->star()->route(_plan->destinationRunway(), _plan->starTransition(), wps);
   }
   
-// we have a valid STAR
-  string trans(destination->getStringValue("transition"));
-  WayptRef t = star->findTransitionByName(trans);
-  if (!t && enroute) {
-    t = star->findBestTransition(enroute->position());
+  if (_plan->approach()) {
+    _plan->approach()->route(wps.back(), wps);
+  } else {
+    WayptRef w = new RunwayWaypt(_plan->destinationRunway(), _plan);
+    w->setFlag(WPT_APPROACH);
+    wps.push_back(w);
   }
-  
-  _destination->buildApproach(t, star, r, wps);
 }
 
 void FGRouteMgr::waypointsChanged()
 {
-
-}
-
-void FGRouteMgr::insertWayptAtIndex(Waypt* aWpt, int aIndex)
-{
-  if (!aWpt) {
-    return;
-  }
-  
-  int index = aIndex;
-  if ((aIndex == -1) || (aIndex > (int) _route.size())) {
-    index = _route.size();
-  }
-  
-  WayptVec::iterator it = _route.begin();
-  it += index;
-      
-  if (_currentIndex >= index) {
-    ++_currentIndex;
-  }
-  
-  _route.insert(it, aWpt);
-  
   update_mirror();
-  _edited->fireValueChanged();
-}
-
-WayptRef FGRouteMgr::waypointFromString(const string& tgt )
-{
-  string target(boost::to_upper_copy(tgt));
-  WayptRef wpt;
-  
-// extract altitude
-  double altFt = cruise->getDoubleValue("altitude-ft");
-  RouteRestriction altSetting = RESTRICT_NONE;
-    
-  size_t pos = target.find( '@' );
-  if ( pos != string::npos ) {
-    altFt = atof( target.c_str() + pos + 1 );
-    target = target.substr( 0, pos );
-    if ( !strcmp(fgGetString("/sim/startup/units"), "meter") )
-      altFt *= SG_METER_TO_FEET;
-    altSetting = RESTRICT_AT;
-  }
-
-// check for lon,lat
-  pos = target.find( ',' );
-  if ( pos != string::npos ) {
-    double lon = atof( target.substr(0, pos).c_str());
-    double lat = atof( target.c_str() + pos + 1);
-    char buf[32];
-    char ew = (lon < 0.0) ? 'W' : 'E';
-    char ns = (lat < 0.0) ? 'S' : 'N';
-    snprintf(buf, 32, "%c%03d%c%03d", ew, (int) fabs(lon), ns, (int)fabs(lat));
-    
-    wpt = new BasicWaypt(SGGeod::fromDeg(lon, lat), buf, NULL);
-    if (altSetting != RESTRICT_NONE) {
-      wpt->setAltitude(altFt, altSetting);
-    }
-    return wpt;
-  }
-
-  SGGeod basePosition;
-  if (_route.empty()) {
-    // route is empty, use current position
-    basePosition = SGGeod::fromDeg(lon->getDoubleValue(), lat->getDoubleValue());
-  } else {
-    basePosition = _route.back()->position();
-  }
-    
-  string_list pieces(simgear::strutils::split(target, "/"));
-  FGPositionedRef p = FGPositioned::findClosestWithIdent(pieces.front(), basePosition);
-  if (!p) {
-    SG_LOG( SG_AUTOPILOT, SG_INFO, "Unable to find FGPositioned with ident:" << pieces.front());
-    return NULL;
-  }
-
-  if (pieces.size() == 1) {
-    wpt = new NavaidWaypoint(p, NULL);
-  } else if (pieces.size() == 3) {
-    // navaid/radial/distance-nm notation
-    double radial = atof(pieces[1].c_str()),
-      distanceNm = atof(pieces[2].c_str());
-    radial += magvar->getDoubleValue(); // convert to true bearing
-    wpt = new OffsetNavaidWaypoint(p, NULL, radial, distanceNm);
-  } else if (pieces.size() == 2) {
-    FGAirport* apt = dynamic_cast<FGAirport*>(p.ptr());
-    if (!apt) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "Waypoint is not an airport:" << pieces.front());
-      return NULL;
-    }
-    
-    if (!apt->hasRunwayWithIdent(pieces[1])) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "No runway: " << pieces[1] << " at " << pieces[0]);
-      return NULL;
-    }
-      
-    FGRunway* runway = apt->getRunwayByIdent(pieces[1]);
-    wpt = new NavaidWaypoint(runway, NULL);
-  } else if (pieces.size() == 4) {
-    // navid/radial/navid/radial notation     
-    FGPositionedRef p2 = FGPositioned::findClosestWithIdent(pieces[2], basePosition);
-    if (!p2) {
-      SG_LOG( SG_AUTOPILOT, SG_INFO, "Unable to find FGPositioned with ident:" << pieces[2]);
-      return NULL;
-    }
-
-    double r1 = atof(pieces[1].c_str()),
-      r2 = atof(pieces[3].c_str());
-    r1 += magvar->getDoubleValue();
-    r2 += magvar->getDoubleValue();
-    
-    SGGeod intersection;
-    bool ok = SGGeodesy::radialIntersection(p->geod(), r1, p2->geod(), r2, intersection);
-    if (!ok) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "no valid intersection for:" << target);
-      return NULL;
-    }
-    
-    std::string name = p->ident() + "-" + p2->ident();
-    wpt = new BasicWaypt(intersection, name, NULL);
-  }
-  
-  if (!wpt) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "Unable to parse waypoint:" << target);
-    return NULL;
-  }
-  
-  if (altSetting != RESTRICT_NONE) {
-    wpt->setAltitude(altFt, altSetting);
-  }
-  return wpt;
+   _edited->fireValueChanged();
+  checkFinished();
 }
 
 // mirror internal route to the property system for inspection by other subsystems
 void FGRouteMgr::update_mirror()
 {
   mirror->removeChildren("wp");
+  NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+  FGDialog* rmDlg = gui ? gui->getDialog("route-manager") : NULL;
+
+  if (!_plan) {
+    mirror->setIntValue("num", 0);
+    if (rmDlg) {
+      rmDlg->updateValues();
+    }
+    return;
+  }
   
-  int num = numWaypts();
-  double totalDistanceEnroute = 0.0;
+  int num = _plan->numLegs();
     
   for (int i = 0; i < num; i++) {
-    Waypt* wp = _route[i];
+    FlightPlan::Leg* leg = _plan->legAtIndex(i);
+    WayptRef wp = leg->waypoint();
     SGPropertyNode *prop = mirror->getChild("wp", i, 1);
 
     const SGGeod& pos(wp->position());
@@ -1016,18 +746,13 @@ void FGRouteMgr::update_mirror()
     prop->setDoubleValue("latitude-deg",pos.getLatitudeDeg());
    
     // leg course+distance
-    if (i < (num - 1)) {
-      Waypt* next = _route[i+1];
-      std::pair<double, double> crsDist =
-        next->courseAndDistanceFrom(pos);
-      prop->setDoubleValue("leg-bearing-true-deg", crsDist.first);
-      prop->setDoubleValue("leg-distance-nm", crsDist.second * SG_METER_TO_NM);
-      prop->setDoubleValue("distance-along-route-nm", totalDistanceEnroute);
-      totalDistanceEnroute += crsDist.second * SG_METER_TO_NM;
-    }
+
+    prop->setDoubleValue("leg-bearing-true-deg", leg->courseDeg());
+    prop->setDoubleValue("leg-distance-nm", leg->distanceNm());
+    prop->setDoubleValue("distance-along-route-nm", leg->distanceAlongRoute());
     
-    if (wp->altitudeRestriction() != RESTRICT_NONE) {
-      double ft = wp->altitudeFt();
+    if (leg->altitudeRestriction() != RESTRICT_NONE) {
+      double ft = leg->altitudeFt();
       prop->setDoubleValue("altitude-m", ft * SG_FEET_TO_METER);
       prop->setDoubleValue("altitude-ft", ft);
       prop->setIntValue("flight-level", static_cast<int>(ft / 1000) * 10);
@@ -1036,10 +761,10 @@ void FGRouteMgr::update_mirror()
       prop->setDoubleValue("altitude-ft", -9999.9);
     }
     
-    if (wp->speedRestriction() == SPEED_RESTRICT_MACH) {
-      prop->setDoubleValue("speed-mach", wp->speedMach());
-    } else if (wp->speedRestriction() != RESTRICT_NONE) {
-      prop->setDoubleValue("speed-kts", wp->speedKts());
+    if (leg->speedRestriction() == SPEED_RESTRICT_MACH) {
+      prop->setDoubleValue("speed-mach", leg->speedMach());
+    } else if (leg->speedRestriction() != RESTRICT_NONE) {
+      prop->setDoubleValue("speed-kts", leg->speedKts());
     }
     
     if (wp->flag(WPT_ARRIVAL)) {
@@ -1058,35 +783,13 @@ void FGRouteMgr::update_mirror()
   } // of waypoint iteration
   
   // set number as listener attachment point
-  mirror->setIntValue("num", _route.size());
+  mirror->setIntValue("num", _plan->numLegs());
     
-  NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-  FGDialog* rmDlg = gui->getDialog("route-manager");
   if (rmDlg) {
     rmDlg->updateValues();
   }
-    
-  if (_departure) {
-    departure->setDoubleValue("field-elevation-ft", _departure->getElevation());
-  }
   
-  if (_destination) {
-    destination->setDoubleValue("field-elevation-ft", _destination->getElevation());
-  }
-  
-  totalDistance->setDoubleValue(totalDistanceEnroute);
-}
-
-double FGRouteMgr::cachedLegPathDistanceM(int index) const
-{
-  SGPropertyNode *prop = mirror->getChild("wp", index, 1);
-  return prop->getDoubleValue("leg-distance-nm") * SG_NM_TO_METER;
-}
-
-double FGRouteMgr::cachedWaypointPathTotalDistance(int index) const
-{
-  SGPropertyNode *prop = mirror->getChild("wp", index, 1);
-  return prop->getDoubleValue("distance-along-route-nm") * SG_NM_TO_METER;
+  totalDistance->setDoubleValue(_plan->totalDistanceNm());
 }
 
 // command interface /autopilot/route-manager/input:
@@ -1115,13 +818,13 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
       SGPath path(mgr->_pathNode->getStringValue());
       mgr->saveRoute(path);
     } else if (!strcmp(s, "@NEXT")) {
-      mgr->jumpToIndex(mgr->_currentIndex + 1);
+      mgr->jumpToIndex(mgr->currentIndex() + 1);
     } else if (!strcmp(s, "@PREVIOUS")) {
-      mgr->jumpToIndex(mgr->_currentIndex - 1);
+      mgr->jumpToIndex(mgr->currentIndex() - 1);
     } else if (!strncmp(s, "@JUMP", 5)) {
       mgr->jumpToIndex(atoi(s + 5));
     } else if (!strncmp(s, "@DELETE", 7))
-        mgr->removeWayptAtIndex(atoi(s + 7));
+        mgr->removeLegAtIndex(atoi(s + 7));
     else if (!strncmp(s, "@INSERT", 7)) {
         char *r;
         int pos = strtol(s + 7, &r, 10);
@@ -1130,18 +833,16 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
         while (isspace(*r))
             r++;
         if (*r)
-            mgr->insertWayptAtIndex(mgr->waypointFromString(r), pos);
+            mgr->flightPlan()->insertWayptAtIndex(mgr->waypointFromString(r), pos);
     } else if (!strncmp(s, "@ROUTE", 6)) {
       char* r;
       int endIndex = strtol(s + 6, &r, 10);
       RouteType rt = (RouteType) mgr->_routingType->getIntValue();
       mgr->routeToIndex(endIndex, rt);
-    } else if (!strcmp(s, "@AUTOROUTE")) {
-      mgr->autoRoute();
     } else if (!strcmp(s, "@POSINIT")) {
       mgr->initAtPosition();
     } else
-      mgr->insertWayptAtIndex(mgr->waypointFromString(s), -1);
+      mgr->flightPlan()->insertWayptAtIndex(mgr->waypointFromString(s), -1);
 }
 
 void FGRouteMgr::initAtPosition()
@@ -1158,63 +859,56 @@ void FGRouteMgr::initAtPosition()
   
   if (airborne->getBoolValue()) {
     SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: airborne, clearing departure info");
-    _departure = NULL;
-    departure->setStringValue("runway", "");
+    _plan->setDeparture((FGAirport*) NULL);
     return;
   }
   
 // on the ground
-  SGGeod pos = SGGeod::fromDegFt(lon->getDoubleValue(), 
-    lat->getDoubleValue(), alt->getDoubleValue());
-  if (!_departure) {
-    _departure = FGAirport::findClosest(pos, 20.0);
-    if (!_departure) {
+  SGGeod pos = globals->get_aircraft_position();
+  if (!_plan->departureAirport()) {
+    _plan->setDeparture(FGAirport::findClosest(pos, 20.0));
+    if (!_plan->departureAirport()) {
       SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: couldn't find an airport within 20nm");
-      departure->setStringValue("runway", "");
       return;
     }
   }
   
   std::string rwy = departure->getStringValue("runway");
+  FGRunway* r = NULL;
   if (!rwy.empty()) {
-    // runway already set, fine
-    return;
+    r = _plan->departureAirport()->getRunwayByIdent(rwy);
+  } else {
+    r = _plan->departureAirport()->findBestRunwayForPos(pos);
   }
   
-  FGRunway* r = _departure->findBestRunwayForPos(pos);
   if (!r) {
     return;
   }
   
-  departure->setStringValue("runway", r->ident().c_str());
+  _plan->setDeparture(r);
   SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: starting at " 
-    << _departure->ident() << " on runway " << r->ident());
+    << _plan->departureAirport()->ident() << " on runway " << r->ident());
 }
 
 bool FGRouteMgr::haveUserWaypoints() const
 {
-  return std::find_if(_route.begin(), _route.end(), NotGeneratedWayptPredicate()) != _route.end();
+  // FIXME
+  return false;
 }
 
 bool FGRouteMgr::activate()
 {
+  if (!_plan) {
+    SG_LOG(SG_AUTOPILOT, SG_WARN, "::activate, no flight plan defined");
+    return false;
+  }
+  
   if (isRouteActive()) {
     SG_LOG(SG_AUTOPILOT, SG_WARN, "duplicate route-activation, no-op");
     return false;
   }
  
-  _currentIndex = 0;
-  currentWaypointChanged();
-  
- /* double routeDistanceNm = _route->total_distance() * SG_METER_TO_NM;
-  totalDistance->setDoubleValue(routeDistanceNm);
-  double cruiseSpeedKts = cruise->getDoubleValue("speed", 0.0);
-  if (cruiseSpeedKts > 1.0) {
-    // very very crude approximation, doesn't allow for climb / descent
-    // performance or anything else at all
-    ete->setDoubleValue(routeDistanceNm / cruiseSpeedKts * (60.0 * 60.0));
-  }
-  */
+  _plan->setCurrentIndex(0);
   active->setBoolValue(true);
   SG_LOG(SG_AUTOPILOT, SG_INFO, "route-manager, activate route ok");
   return true;
@@ -1223,7 +917,7 @@ bool FGRouteMgr::activate()
 
 void FGRouteMgr::sequence()
 {
-  if (!active->getBoolValue()) {
+  if (!_plan || !active->getBoolValue()) {
     SG_LOG(SG_AUTOPILOT, SG_ALERT, "trying to sequence waypoints with no active route");
     return;
   }
@@ -1232,13 +926,16 @@ void FGRouteMgr::sequence()
     return;
   }
   
-  _currentIndex++;
-  currentWaypointChanged();
+  _plan->setCurrentIndex(_plan->currentIndex() + 1);
 }
 
 bool FGRouteMgr::checkFinished()
 {
-  if (_currentIndex < (int) _route.size()) {
+  if (!_plan) {
+    return true;
+  }
+  
+  if (_plan->currentIndex() < _plan->numLegs()) {
     return false;
   }
   
@@ -1250,416 +947,226 @@ bool FGRouteMgr::checkFinished()
 
 void FGRouteMgr::jumpToIndex(int index)
 {
-  if ((index < 0) || (index >= (int) _route.size())) {
-    SG_LOG(SG_AUTOPILOT, SG_ALERT, "passed invalid index (" << 
-      index << ") to FGRouteMgr::jumpToIndex");
+  if (!_plan) {
     return;
   }
-
-  if (_currentIndex == index) {
-    return; // no-op
-  }
   
-// all the checks out the way, go ahead and update state
-  _currentIndex = index;
-  currentWaypointChanged();
-  _currentWpt->fireValueChanged();
+  _plan->setCurrentIndex(index);
 }
 
 void FGRouteMgr::currentWaypointChanged()
 {
   Waypt* cur = currentWaypt();
-  Waypt* next = nextWaypt();
+  FlightPlan::Leg* next = _plan ? _plan->nextLeg() : NULL;
 
   wp0->getChild("id")->setStringValue(cur ? cur->ident() : "");
-  wp1->getChild("id")->setStringValue(next ? next->ident() : "");
+  wp1->getChild("id")->setStringValue(next ? next->waypoint()->ident() : "");
   
   _currentWpt->fireValueChanged();
-  SG_LOG(SG_AUTOPILOT, SG_INFO, "route manager, current-wp is now " << _currentIndex);
-}
-
-int FGRouteMgr::findWayptIndex(const SGGeod& aPos) const
-{  
-  for (int i=0; i<numWaypts(); ++i) {
-    if (_route[i]->matches(aPos)) {
-      return i;
-    }
-  }
-  
-  return -1;
-}
-
-Waypt* FGRouteMgr::currentWaypt() const
-{
-  if ((_currentIndex < 0) || (_currentIndex >= numWaypts()))
-      return NULL;
-  return wayptAtIndex(_currentIndex);
-}
-
-Waypt* FGRouteMgr::previousWaypt() const
-{
-  if (_currentIndex == 0) {
-    return NULL;
-  }
-  
-  return wayptAtIndex(_currentIndex - 1);
-}
-
-Waypt* FGRouteMgr::nextWaypt() const
-{
-  if ((_currentIndex < 0) || ((_currentIndex + 1) >= numWaypts())) {
-    return NULL;
-  }
-  
-  return wayptAtIndex(_currentIndex + 1);
-}
-
-Waypt* FGRouteMgr::wayptAtIndex(int index) const
-{
-  if ((index < 0) || (index >= numWaypts())) {
-    throw sg_range_exception("waypt index out of range", "FGRouteMgr::wayptAtIndex");
-  }
-  
-  return _route[index];
-}
-
-SGPropertyNode_ptr FGRouteMgr::wayptNodeAtIndex(int index) const
-{
-    if ((index < 0) || (index >= numWaypts())) {
-        throw sg_range_exception("waypt index out of range", "FGRouteMgr::wayptAtIndex");
-    }
-    
-    return mirror->getChild("wp", index);
-}
-
-bool FGRouteMgr::saveRoute(const SGPath& path)
-{
-  SG_LOG(SG_IO, SG_INFO, "Saving route to " << path.str());
-  try {
-    SGPropertyNode_ptr d(new SGPropertyNode);
-    SGPath path(_pathNode->getStringValue());
-    d->setIntValue("version", 2);
-    
-    if (_departure) {
-      d->setStringValue("departure/airport", _departure->ident());
-      d->setStringValue("departure/sid", departure->getStringValue("sid"));
-      d->setStringValue("departure/runway", departure->getStringValue("runway"));
-    }
-    
-    if (_destination) {
-      d->setStringValue("destination/airport", _destination->ident());
-      d->setStringValue("destination/star", destination->getStringValue("star"));
-      d->setStringValue("destination/transition", destination->getStringValue("transition"));
-      d->setStringValue("destination/runway", destination->getStringValue("runway"));
-    }
-    
-  // route nodes
-    SGPropertyNode* routeNode = d->getChild("route", 0, true);
-    for (unsigned int i=0; i<_route.size(); ++i) {
-      Waypt* wpt = _route[i];
-      wpt->saveAsNode(routeNode->getChild("wp", i, true));
-    } // of waypoint iteration
-    writeProperties(path.str(), d, true /* write-all */);
-    return true;
-  } catch (sg_exception& e) {
-    SG_LOG(SG_IO, SG_ALERT, "Failed to save flight-plan '" << path.str() << "'. " << e.getMessage());
-    return false;
-  }
-}
-
-bool FGRouteMgr::loadRoute(const SGPath& path)
-{
-  if (!path.exists())
-  {
-      SG_LOG(SG_IO, SG_ALERT, "Failed to load flight-plan '" << path.str()
-              << "'. The file does not exist.");
-      return false;
-  }
-    
-  // deactivate route first
-  active->setBoolValue(false);
-  
-  SGPropertyNode_ptr routeData(new SGPropertyNode);
-  
-  SG_LOG(SG_IO, SG_INFO, "going to read flight-plan from:" << path.str());
-    
-  bool Status = false;
-  try {
-    readProperties(path.str(), routeData);
-  } catch (sg_exception& ) {
-    // if XML parsing fails, the file might be simple textual list of waypoints
-    Status = loadPlainTextRoute(path);
-    routeData = 0;
-  }
-
-  if (routeData.valid())
-  {
-      try {
-        int version = routeData->getIntValue("version", 1);
-        if (version == 1) {
-          loadVersion1XMLRoute(routeData);
-        } else if (version == 2) {
-          loadVersion2XMLRoute(routeData);
-        } else {
-          throw sg_io_exception("unsupported XML route version");
-        }
-        Status = true;
-      } catch (sg_exception& e) {
-        SG_LOG(SG_IO, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
-          << "'. " << e.getMessage());
-        Status = false;
-      }
-  }
-
-  update_mirror();
-
-  return Status;
-}
-
-void FGRouteMgr::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
-{
-  // departure nodes
-  SGPropertyNode* dep = routeData->getChild("departure");
-  if (dep) {
-    string depIdent = dep->getStringValue("airport");
-    _departure = (FGAirport*) fgFindAirportID(depIdent);
-    departure->setStringValue("runway", dep->getStringValue("runway"));
-    departure->setStringValue("sid", dep->getStringValue("sid"));
-    departure->setStringValue("transition", dep->getStringValue("transition"));
-  }
-  
-// destination
-  SGPropertyNode* dst = routeData->getChild("destination");
-  if (dst) {
-    _destination = (FGAirport*) fgFindAirportID(dst->getStringValue("airport"));
-    destination->setStringValue("runway", dst->getStringValue("runway"));
-    destination->setStringValue("star", dst->getStringValue("star"));
-    destination->setStringValue("transition", dst->getStringValue("transition"));
-  }
-
-// alternate
-  SGPropertyNode* alt = routeData->getChild("alternate");
-  if (alt) {
-    alternate->setStringValue(alt->getStringValue("airport"));
-  } // of cruise data loading
-  
-// cruise
-  SGPropertyNode* crs = routeData->getChild("cruise");
-  if (crs) {
-    cruise->setDoubleValue("speed-kts", crs->getDoubleValue("speed-kts"));
-    cruise->setDoubleValue("mach", crs->getDoubleValue("mach"));
-    cruise->setDoubleValue("altitude-ft", crs->getDoubleValue("altitude-ft"));
-  } // of cruise data loading
-
-}
-
-void FGRouteMgr::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
-{
-  loadXMLRouteHeader(routeData);
-  
-// route nodes
-  WayptVec wpts;
-  SGPropertyNode_ptr routeNode = routeData->getChild("route", 0);    
-  for (int i=0; i<routeNode->nChildren(); ++i) {
-    SGPropertyNode_ptr wpNode = routeNode->getChild("wp", i);
-    WayptRef wpt = Waypt::createFromProperties(NULL, wpNode);
-    wpts.push_back(wpt);
-  } // of route iteration
-  
-  _route = wpts;
-}
-
-void FGRouteMgr::loadVersion1XMLRoute(SGPropertyNode_ptr routeData)
-{
-  loadXMLRouteHeader(routeData);
-
-// route nodes
-  WayptVec wpts;
-  SGPropertyNode_ptr routeNode = routeData->getChild("route", 0);    
-  for (int i=0; i<routeNode->nChildren(); ++i) {
-    SGPropertyNode_ptr wpNode = routeNode->getChild("wp", i);
-    WayptRef wpt = parseVersion1XMLWaypt(wpNode);
-    wpts.push_back(wpt);
-  } // of route iteration
-  
-  _route = wpts;
-}
-
-WayptRef FGRouteMgr::parseVersion1XMLWaypt(SGPropertyNode* aWP)
-{
-  SGGeod lastPos;
-  if (!_route.empty()) {
-    lastPos = _route.back()->position();
-  } else if (_departure) {
-    lastPos = _departure->geod();
-  }
-
-  WayptRef w;
-  string ident(aWP->getStringValue("ident"));
-  if (aWP->hasChild("longitude-deg")) {
-    // explicit longitude/latitude
-    w = new BasicWaypt(SGGeod::fromDeg(aWP->getDoubleValue("longitude-deg"), 
-      aWP->getDoubleValue("latitude-deg")), ident, NULL);
-    
-  } else {
-    string nid = aWP->getStringValue("navid", ident.c_str());
-    FGPositionedRef p = FGPositioned::findClosestWithIdent(nid, lastPos);
-    if (!p) {
-      throw sg_io_exception("bad route file, unknown navid:" + nid);
-    }
-      
-    SGGeod pos(p->geod());
-    if (aWP->hasChild("offset-nm") && aWP->hasChild("offset-radial")) {
-      double radialDeg = aWP->getDoubleValue("offset-radial");
-      // convert magnetic radial to a true radial!
-      radialDeg += magvar->getDoubleValue();
-      double offsetNm = aWP->getDoubleValue("offset-nm");
-      double az2;
-      SGGeodesy::direct(p->geod(), radialDeg, offsetNm * SG_NM_TO_METER, pos, az2);
-    }
-
-    w = new BasicWaypt(pos, ident, NULL);
-  }
-  
-  double altFt = aWP->getDoubleValue("altitude-ft", -9999.9);
-  if (altFt > -9990.0) {
-    w->setAltitude(altFt, RESTRICT_AT);
-  }
-
-  return w;
-}
-
-bool FGRouteMgr::loadPlainTextRoute(const SGPath& path)
-{
-  try {
-    sg_gzifstream in(path.str().c_str());
-    if (!in.is_open()) {
-        throw sg_io_exception("Cannot open file for reading.");
-    }
-  
-    WayptVec wpts;
-    while (!in.eof()) {
-      string line;
-      getline(in, line, '\n');
-    // trim CR from end of line, if found
-      if (line[line.size() - 1] == '\r') {
-        line.erase(line.size() - 1, 1);
-      }
-      
-      line = simgear::strutils::strip(line);
-      if (line.empty() || (line[0] == '#')) {
-        continue; // ignore empty/comment lines
-      }
-      
-      WayptRef w = waypointFromString(line);
-      if (!w) {
-        throw sg_io_exception("Failed to create waypoint from line '" + line + "'.");
-      }
-      
-      wpts.push_back(w);
-    } // of line iteration
-  
-    _route = wpts;
-    return true;
-  } catch (sg_exception& e) {
-    SG_LOG(SG_IO, SG_ALERT, "Failed to load route from: '" << path.str() << "'. " << e.getMessage());
-    return false;
-  }
+  SG_LOG(SG_AUTOPILOT, SG_INFO, "route manager, current-wp is now " << currentIndex());
 }
 
 const char* FGRouteMgr::getDepartureICAO() const
 {
-  if (!_departure) {
+  if (!_plan || !_plan->departureAirport()) {
     return "";
   }
   
-  return _departure->ident().c_str();
+  return _plan->departureAirport()->ident().c_str();
 }
 
 const char* FGRouteMgr::getDepartureName() const
 {
-  if (!_departure) {
+  if (!_plan || !_plan->departureAirport()) {
     return "";
   }
   
-  return _departure->name().c_str();
+  return _plan->departureAirport()->name().c_str();
+}
+
+const char* FGRouteMgr::getDepartureRunway() const
+{
+  if (_plan && _plan->departureRunway()) {
+    return _plan->departureRunway()->ident().c_str();
+  }
+  
+  return "";
+}
+
+void FGRouteMgr::setDepartureRunway(const char* aIdent)
+{
+  FGAirport* apt = _plan->departureAirport();
+  if (!apt || (aIdent == NULL)) {
+    _plan->setDeparture(apt);
+  } else if (apt->hasRunwayWithIdent(aIdent)) {
+    _plan->setDeparture(apt->getRunwayByIdent(aIdent));
+  }
 }
 
 void FGRouteMgr::setDepartureICAO(const char* aIdent)
 {
   if ((aIdent == NULL) || (strlen(aIdent) < 4)) {
-    _departure = NULL;
+    _plan->setDeparture((FGAirport*) NULL);
   } else {
-    _departure = FGAirport::findByIdent(aIdent);
+    _plan->setDeparture(FGAirport::findByIdent(aIdent));
+  }
+}
+
+const char* FGRouteMgr::getSID() const
+{
+  if (_plan && _plan->sid()) {
+    return _plan->sid()->ident().c_str();
   }
   
-  departureChanged();
+  return "";
+}
+
+void FGRouteMgr::setSID(const char* aIdent)
+{
+  FGAirport* apt = _plan->departureAirport();
+  if (!apt || (aIdent == NULL)) {
+    _plan->setSID((SID*) NULL);
+    return;
+  } 
+  
+  string ident(aIdent);
+  size_t hyphenPos = ident.find('-');
+  if (hyphenPos != string::npos) {
+    string sidIdent = ident.substr(0, hyphenPos);
+    string transIdent = ident.substr(hyphenPos + 1);
+    
+    SID* sid = apt->findSIDWithIdent(sidIdent);
+    Transition* trans = sid ? sid->findTransitionByName(transIdent) : NULL;
+    _plan->setSID(trans);
+  } else {
+    _plan->setSID(apt->findSIDWithIdent(aIdent));
+  }
 }
 
 const char* FGRouteMgr::getDestinationICAO() const
 {
-  if (!_destination) {
+  if (!_plan || !_plan->destinationAirport()) {
     return "";
   }
   
-  return _destination->ident().c_str();
+  return _plan->destinationAirport()->ident().c_str();
 }
 
 const char* FGRouteMgr::getDestinationName() const
 {
-  if (!_destination) {
+  if (!_plan || !_plan->destinationAirport()) {
     return "";
   }
   
-  return _destination->name().c_str();
+  return _plan->destinationAirport()->name().c_str();
 }
 
 void FGRouteMgr::setDestinationICAO(const char* aIdent)
 {
   if ((aIdent == NULL) || (strlen(aIdent) < 4)) {
-    _destination = NULL;
+    _plan->setDestination((FGAirport*) NULL);
   } else {
-    _destination = FGAirport::findByIdent(aIdent);
+    _plan->setDestination(FGAirport::findByIdent(aIdent));
+  }
+}
+
+const char* FGRouteMgr::getDestinationRunway() const
+{
+  if (_plan && _plan->destinationRunway()) {
+    return _plan->destinationRunway()->ident().c_str();
   }
   
-  arrivalChanged();
+  return "";
 }
 
-FGAirportRef FGRouteMgr::departureAirport() const
+void FGRouteMgr::setDestinationRunway(const char* aIdent)
 {
-    return _departure;
+  FGAirport* apt = _plan->destinationAirport();
+  if (!apt || (aIdent == NULL)) {
+    _plan->setDestination(apt);
+  } else if (apt->hasRunwayWithIdent(aIdent)) {
+    _plan->setDestination(apt->getRunwayByIdent(aIdent));
+  }
 }
 
-FGAirportRef FGRouteMgr::destinationAirport() const
+const char* FGRouteMgr::getApproach() const
 {
-    return _destination;
+  if (_plan && _plan->approach()) {
+    return _plan->approach()->ident().c_str();
+  }
+  
+  return "";
 }
 
-FGRunway* FGRouteMgr::departureRunway() const
+void FGRouteMgr::setApproach(const char* aIdent)
 {
-    if (!_departure) {
-        return NULL;
-    }
-    
-    string runwayId(departure->getStringValue("runway"));
-    if (!_departure->hasRunwayWithIdent(runwayId)) {
-        return NULL;
-    }
-    
-    return _departure->getRunwayByIdent(runwayId);
+  FGAirport* apt = _plan->destinationAirport();
+  if (!apt || (aIdent == NULL)) {
+    _plan->setApproach(NULL);
+  } else {
+    _plan->setApproach(apt->findApproachWithIdent(aIdent));
+  }
 }
 
-FGRunway* FGRouteMgr::destinationRunway() const
+const char* FGRouteMgr::getSTAR() const
 {
-    if (!_destination) {
-        return NULL;
-    }
-    
-    string runwayId(destination->getStringValue("runway"));
-    if (!_destination->hasRunwayWithIdent(runwayId)) {
-        return NULL;
-    }
-    
-    return _destination->getRunwayByIdent(runwayId);
+  if (_plan && _plan->star()) {
+    return _plan->star()->ident().c_str();
+  }
+  
+  return "";
 }
 
+void FGRouteMgr::setSTAR(const char* aIdent)
+{
+  FGAirport* apt = _plan->destinationAirport();
+  if (!apt || (aIdent == NULL)) {
+    _plan->setSTAR((STAR*) NULL);
+    return;
+  } 
+  
+  string ident(aIdent);
+  size_t hyphenPos = ident.find('-');
+  if (hyphenPos != string::npos) {
+    string starIdent = ident.substr(0, hyphenPos);
+    string transIdent = ident.substr(hyphenPos + 1);
+    
+    STAR* star = apt->findSTARWithIdent(starIdent);
+    Transition* trans = star ? star->findTransitionByName(transIdent) : NULL;
+    _plan->setSTAR(trans);
+  } else {
+    _plan->setSTAR(apt->findSTARWithIdent(aIdent));
+  }
+}
+
+WayptRef FGRouteMgr::waypointFromString(const std::string& target)
+{
+  return _plan->waypointFromString(target);
+}
+
+double FGRouteMgr::getDepartureFieldElevation() const
+{
+  if (!_plan || !_plan->departureAirport()) {
+    return 0.0;
+  }
+  
+  return _plan->departureAirport()->elevation();
+}
+
+double FGRouteMgr::getDestinationFieldElevation() const
+{
+  if (!_plan || !_plan->destinationAirport()) {
+    return 0.0;
+  }
+  
+  return _plan->destinationAirport()->elevation();
+}
+
+SGPropertyNode_ptr FGRouteMgr::wayptNodeAtIndex(int index) const
+{
+  if ((index < 0) || (index >= numWaypts())) {
+    throw sg_range_exception("waypt index out of range", "FGRouteMgr::wayptAtIndex");
+  }
+  
+  return mirror->getChild("wp", index);
+}

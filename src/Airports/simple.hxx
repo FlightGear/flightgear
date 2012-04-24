@@ -188,7 +188,8 @@ public:
       
       unsigned int numApproaches() const;
       flightgear::Approach* getApproachByIndex(unsigned int aIndex) const;
-      
+      flightgear::Approach* findApproachWithIdent(const std::string& aIdent) const;
+  
      /**
       * Syntactic wrapper around FGPositioned::findClosest - find the closest
       * match for filter, and return it cast to FGAirport. The default filter
@@ -216,22 +217,6 @@ public:
       */
      static char** searchNamesAndIdents(const std::string& aFilter);
      
-     bool buildApproach(flightgear::Waypt* aEnroute, flightgear::STAR* aSTAR, 
-      FGRunway* aRwy, flightgear::WayptVec& aRoute);
-    
-    /**
-     * Given a destiation point, select the best SID and transition waypt from 
-     * this airport. Returns (NULL,NULL) is no SIDs are defined, otherwise the
-     * best SID/transition is that which is closest to the destination point.
-     */
-    std::pair<flightgear::SID*, flightgear::WayptRef> selectSID(const SGGeod& aDest, FGRunway* aRwy);
-    
-    /**
-     * Select a STAR and enroute transition waypt, given an origin (departure) position.
-     * returns (NULL, NULL) is no suitable STAR is exists
-     */
-    std::pair<flightgear::STAR*, flightgear::WayptRef> selectSTAR(const SGGeod& aOrigin, FGRunway* aRwy);
-        
     void setCommStations(flightgear::CommStationList& comms);
     
     flightgear::CommStationList commStationsOfType(FGPositioned::Type aTy) const;

@@ -682,7 +682,7 @@ void MapWidget::paintRoute()
     return;
   }
 
-  RoutePath path(_route->waypts());
+  RoutePath path(_route->flightPlan());
 
 // first pass, draw the actual lines
   glLineWidth(2.0);

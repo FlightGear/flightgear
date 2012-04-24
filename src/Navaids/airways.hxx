@@ -35,7 +35,7 @@ struct SearchContext;
 class AdjacentWaypoint;
 class InAirwayFilter;
 
-class Airway : public Route
+class Airway : public RouteBase
 {
 public:
   virtual std::string ident() const

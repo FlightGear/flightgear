@@ -159,7 +159,6 @@ public:
     virtual void valueChanged (SGPropertyNode * prop)
     {
         _nd->invalidatePositionedCache();
-        SG_LOG(SG_INSTR, SG_INFO, "invalidating NavDisplay cache");
     }
 private:
     NavDisplay* _nd;
@@ -174,7 +173,6 @@ public:
   
   virtual void valueChanged (SGPropertyNode * prop)
   {
-    SG_LOG(SG_INSTR, SG_INFO, "forcing NavDisplay update");
     _nd->forceUpdate();
   }
 private:
@@ -683,9 +681,6 @@ NavDisplay::update (double delta_time_sec)
         SGVec3d cartNow(SGVec3d::fromGeod(_pos));
         double movedNm = dist(_cachedPos, cartNow) * SG_METER_TO_NM;
         _cachedItemsValid = (movedNm < 1.0);
-        if (!_cachedItemsValid) {
-            SG_LOG(SG_INSTR, SG_INFO, "invalidating NavDisplay cache due to moving: " << movedNm);
-        }
     }
     
   _vertices->clear();
@@ -951,7 +946,6 @@ public:
 void NavDisplay::findItems()
 {
     if (!_cachedItemsValid) {
-        SG_LOG(SG_INSTR, SG_INFO, "re-validating NavDisplay cache");
         Filter filt;
         filt.minRunwayLengthFt = 2000;
         _itemsInRange = FGPositioned::findWithinRange(_pos, _rangeNm, &filt);
@@ -967,29 +961,31 @@ void NavDisplay::findItems()
 void NavDisplay::processRoute()
 {
     _routeSources.clear();
-    RoutePath path(_route->waypts());
+    flightgear::FlightPlan* fp = _route->flightPlan();
+    RoutePath path(fp);
     int current = _route->currentIndex();
     
-    for (int w=0; w<_route->numWaypts(); ++w) {
-        flightgear::WayptRef wpt(_route->wayptAtIndex(w));
+    for (int l=0; l<fp->numLegs(); ++l) {
+        flightgear::FlightPlan::Leg* leg = fp->legAtIndex(l);
+        flightgear::WayptRef wpt(leg->waypoint());
         _routeSources.insert(wpt->source());
         
         string_set state;
         state.insert("on-active-route");
         
-        if (w < current) {
+        if (l < current) {
             state.insert("passed");
         }
         
-        if (w == current) {
+        if (l == current) {
             state.insert("current-wp");
         }
         
-        if (w > current) {
+        if (l > current) {
             state.insert("future");
         }
         
-        if (w == (current + 1)) {
+        if (l == (current + 1)) {
             state.insert("next-wp");
         }
         
@@ -999,8 +995,12 @@ void NavDisplay::processRoute()
             return; // no rules matched, we can skip this item
         }
 
-        SGGeod g = path.positionForIndex(w);
-        SGPropertyNode* vars = _route->wayptNodeAtIndex(w);
+        SGGeod g = path.positionForIndex(l);
+        SGPropertyNode* vars = _route->wayptNodeAtIndex(l);
+        if (!vars) {
+          continue; // shouldn't happen, but let's guard against it
+        }
+      
         double heading;
         computeWayptPropsAndHeading(wpt, g, vars, heading);
 
@@ -1009,7 +1009,7 @@ void NavDisplay::processRoute()
             addSymbolInstance(projected, heading, r->getDefinition(), vars);
             
             if (r->getDefinition()->drawRouteLeg) {
-                SGGeodVec gv(path.pathForIndex(w));
+                SGGeodVec gv(path.pathForIndex(l));
                 if (!gv.empty()) {
                     osg::Vec2 pr = projectGeod(gv[0]);
                     for (unsigned int i=1; i<gv.size(); ++i) {
@@ -1189,6 +1189,7 @@ void NavDisplay::computePositionedState(FGPositioned* pos, string_set& states)
         states.insert("on-active-route");
     }
     
+    flightgear::FlightPlan* fp = _route->flightPlan();
     switch (pos->type()) {
     case FGPositioned::VOR:
     case FGPositioned::LOC:
@@ -1209,21 +1210,21 @@ void NavDisplay::computePositionedState(FGPositioned* pos, string_set& states)
         // mark alternates!
         // once the FMS system has some way to tell us about them, of course
         
-        if (pos == _route->departureAirport()) {
+        if (pos == fp->departureAirport()) {
             states.insert("departure");
         }
         
-        if (pos == _route->destinationAirport()) {
+        if (pos == fp->destinationAirport()) {
             states.insert("destination");
         }
         break;
     
     case FGPositioned::RUNWAY:
-        if (pos == _route->departureRunway()) {
+        if (pos == fp->departureRunway()) {
             states.insert("departure");
         }
         
-        if (pos == _route->destinationRunway()) {
+        if (pos == fp->destinationRunway()) {
             states.insert("destination");
         }
         break;

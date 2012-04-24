@@ -44,7 +44,8 @@ typedef SGSharedPtr<FGAirport> FGAirportRef;
  * 
  */
 
-class FGRouteMgr : public SGSubsystem
+class FGRouteMgr : public SGSubsystem, 
+                   public flightgear::FlightPlan::Delegate
 {
 public:
   FGRouteMgr();
@@ -55,11 +56,6 @@ public:
   void bind ();
   void unbind ();
   void update (double dt);
-
-  void insertWayptAtIndex(flightgear::Waypt* aWpt, int aIndex);
-  flightgear::WayptRef removeWayptAtIndex(int index);
-  
-  void clearRoute();
   
   typedef enum {
     ROUTE_HIGH_AIRWAYS, ///< high-level airways routing
@@ -74,34 +70,31 @@ public:
    * used as the final waypoint.
    */
   bool routeToIndex(int index, RouteType aRouteType);
-
-  void autoRoute();
         
   bool isRouteActive() const;
          
-  int currentIndex() const
-    { return _currentIndex; }
-    
+  int currentIndex() const;
+  
+  void setFlightPlan(flightgear::FlightPlan* plan);
+  flightgear::FlightPlan* flightPlan() const;
+  
+  void clearRoute();
+  
   flightgear::Waypt* currentWaypt() const;
-  flightgear::Waypt* nextWaypt() const;
-  flightgear::Waypt* previousWaypt() const;
   
-  const flightgear::WayptVec& waypts() const
-    { return _route; }
+  int numLegs() const;
   
+// deprecated
   int numWaypts() const
-    { return _route.size(); }
-    
+  { return numLegs(); }
+  
+// deprecated
   flightgear::Waypt* wayptAtIndex(int index) const;
-             
+  
   SGPropertyNode_ptr wayptNodeAtIndex(int index) const;
-             
-  /**
-   * Find a waypoint in the route, by position, and return its index, or
-   * -1 if no matching waypoint was found in the route.
-   */
-  int findWayptIndex(const SGGeod& aPos) const;
-        
+  
+  void removeLegAtIndex(int aIndex);
+  
   /**
    * Activate a built route. This checks for various mandatory pieces of
    * data, such as departure and destination airports, and creates waypoints
@@ -125,38 +118,20 @@ public:
   bool saveRoute(const SGPath& p);
   bool loadRoute(const SGPath& p);
   
+  flightgear::WayptRef waypointFromString(const std::string& target);
+  
   /**
    * Helper command to setup current airport/runway if necessary
    */
   void initAtPosition();
-  
-    /**
-     * Create a WayPoint from a string in the following format:
-     *  - simple identifier
-     *  - decimal-lon,decimal-lat
-     *  - airport-id/runway-id
-     *  - navaid/radial-deg/offset-nm
-     */
-    flightgear::WayptRef waypointFromString(const std::string& target);
-    
-    FGAirportRef departureAirport() const;
-    FGAirportRef destinationAirport() const;
-    
-    FGRunway* departureRunway() const;
-    FGRunway* destinationRunway() const;
+
 private:
-  flightgear::WayptVec _route;
-  int _currentIndex;
+    flightgear::FlightPlan* _plan;
   
     time_t _takeoffTime;
     time_t _touchdownTime;
-    FGAirportRef _departure;
-    FGAirportRef _destination;
-    
+
     // automatic inputs
-    SGPropertyNode_ptr lon;
-    SGPropertyNode_ptr lat;
-    SGPropertyNode_ptr alt;
     SGPropertyNode_ptr magvar;
     
     // automatic outputs    
@@ -215,11 +190,11 @@ private:
     
     InputListener *listener;
     SGPropertyNode_ptr mirror;    
-    
-    void departureChanged();
+  
+    virtual void departureChanged();
     void buildDeparture(flightgear::WayptRef enroute, flightgear::WayptVec& wps);
     
-    void arrivalChanged();
+    virtual void arrivalChanged();
     void buildArrival(flightgear::WayptRef enroute, flightgear::WayptVec& wps);
     
     /**
@@ -227,30 +202,17 @@ private:
      * modified (waypoints added, inserted, removed). Notably, this fires the
      * 'edited' signal.
      */
-    void waypointsChanged();
+    virtual void waypointsChanged();
     
     void update_mirror();
     
-    void currentWaypointChanged();
-    
-    /**
-     * Parse a route/wp node (from a saved, property-lsit formatted route)
-     */
-    void parseRouteWaypoint(SGPropertyNode* aWP);
+    virtual void currentWaypointChanged();
     
     /**
      * Check if we've reached the final waypoint. 
      * Returns true if we have.
      */
     bool checkFinished();
-    
-    
-    bool loadPlainTextRoute(const SGPath& path);
-    
-    void loadVersion1XMLRoute(SGPropertyNode_ptr routeData);
-    void loadVersion2XMLRoute(SGPropertyNode_ptr routeData);
-    void loadXMLRouteHeader(SGPropertyNode_ptr routeData);
-    flightgear::WayptRef parseVersion1XMLWaypt(SGPropertyNode* aWP);
     
     /**
      * Predicate for helping the UI - test if at least one waypoint was
@@ -263,12 +225,27 @@ private:
     const char* getDepartureName() const;
     void setDepartureICAO(const char* aIdent);
     
+    const char* getDepartureRunway() const;
+    void setDepartureRunway(const char* aIdent);
+  
+    const char* getSID() const;
+    void setSID(const char* aIdent);
+  
     const char* getDestinationICAO() const;
     const char* getDestinationName() const;
     void setDestinationICAO(const char* aIdent);
 
-    PropertyWatcher* _departureWatcher;
-    PropertyWatcher* _arrivalWatcher;
+    const char* getDestinationRunway() const;
+    void setDestinationRunway(const char* aIdent);
+  
+    const char* getApproach() const;
+    void setApproach(const char* aIdent);
+  
+    const char* getSTAR() const;
+    void setSTAR(const char* aIdent);
+  
+    double getDepartureFieldElevation() const;  
+    double getDestinationFieldElevation() const;  
 };
 
 

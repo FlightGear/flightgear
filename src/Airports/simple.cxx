@@ -406,7 +406,7 @@ void FGAirport::loadProcedures() const
   }
   
   SG_LOG(SG_GENERAL, SG_INFO, ident() << ": loading procedures from " << path.str());
-  Route::loadAirportProcedures(path, const_cast<FGAirport*>(this));
+  RouteBase::loadAirportProcedures(path, const_cast<FGAirport*>(this));
 }
 
 void FGAirport::loadSceneryDefinitions() const
@@ -468,128 +468,6 @@ void FGAirport::readTowerData(SGPropertyNode* aRoot)
   
   _tower_location = SGGeod::fromDegM(lon, lat, fieldElevationM + elevM);
 }
-
-bool FGAirport::buildApproach(Waypt* aEnroute, STAR* aSTAR, FGRunway* aRwy, WayptVec& aRoute)
-{
-  loadProcedures();
-
-  if ((aRwy && (aRwy->airport() != this))) {
-    throw sg_exception("invalid parameters", "FGAirport::buildApproach");
-  }
-  
-  if (aSTAR) {
-    bool ok = aSTAR->route(aRwy, aEnroute, aRoute);
-    if (!ok) {
-      SG_LOG(SG_GENERAL, SG_WARN, ident() << ": build approach, STAR " << aSTAR->ident() 
-         << " failed to route from transition " << aEnroute->ident());
-      return false;
-    }
-  } else if (aEnroute) {
-    // no a STAR specified, just use enroute point directly
-    aRoute.push_back(aEnroute);
-  }
-  
-  if (!aRwy) {
-    // no runway selected yet, but we loaded the STAR, so that's fine, we're done
-    return true;
-  }
-  
-// build the approach (possibly including transition), and including the missed segment
-  vector<Approach*> aps;
-  for (unsigned int j=0; j<mApproaches.size();++j) {
-    if (mApproaches[j]->runway() == aRwy) {
-      aps.push_back(mApproaches[j]);
-    }
-  } // of approach filter by runway
-  
-  if (aps.empty()) {
-    SG_LOG(SG_GENERAL, SG_INFO, ident() << "; no approaches defined for runway " << aRwy->ident());
-    // could build a fallback approach here
-    return false;
-  }
-  
-  for (unsigned int k=0; k<aps.size(); ++k) {
-    if (aps[k]->route(aRoute.back(), aRoute)) {
-      return true;
-    }
-  } // of initial approach iteration
-  
-  SG_LOG(SG_GENERAL, SG_INFO, ident() << ": unable to find transition to runway "
-    << aRwy->ident() << ", assume vectors");
-  
-  WayptRef v(new ATCVectors(NULL, this));
-  aRoute.push_back(v);
-  return aps.front()->routeFromVectors(aRoute);
-}
-
-pair<flightgear::SID*, WayptRef>
-FGAirport::selectSID(const SGGeod& aDest, FGRunway* aRwy)
-{
-  loadProcedures();
-  
-  WayptRef enroute;
-  flightgear::SID* sid = NULL;
-  double d = 1e9;
-  
-  for (unsigned int i=0; i<mSIDs.size(); ++i) {
-    if (aRwy && !mSIDs[i]->isForRunway(aRwy)) {
-      continue;
-    }
-  
-    WayptRef e = mSIDs[i]->findBestTransition(aDest);
-    if (!e) {
-      continue; // strange, but let's not worry about it
-    }
-    
-    // assert(e->isFixedPosition());
-    double ed = SGGeodesy::distanceM(aDest, e->position());
-    if (ed < d) { // new best match
-      enroute = e;
-      d = ed;
-      sid = mSIDs[i];
-    }
-  } // of SID iteration
-  
-  if (!mSIDs.empty() && !sid) {
-    SG_LOG(SG_GENERAL, SG_INFO, ident() << "selectSID, no SID found (runway=" 
-      << (aRwy ? aRwy->ident() : "no runway preference"));
-  }
-  
-  return std::make_pair(sid, enroute);
-}
-    
-pair<STAR*, WayptRef>
-FGAirport::selectSTAR(const SGGeod& aOrigin, FGRunway* aRwy)
-{
-  loadProcedures();
-  
-  WayptRef enroute;
-  STAR* star = NULL;
-  double d = 1e9;
-  
-  for (unsigned int i=0; i<mSTARs.size(); ++i) {
-    if (!mSTARs[i]->isForRunway(aRwy)) {
-      continue;
-    }
-    
-    SG_LOG(SG_GENERAL, SG_INFO, "STAR " << mSTARs[i]->ident() << " is valid for runway");
-    WayptRef e = mSTARs[i]->findBestTransition(aOrigin);
-    if (!e) {
-      continue; // strange, but let's not worry about it
-    }
-    
-    // assert(e->isFixedPosition());
-    double ed = SGGeodesy::distanceM(aOrigin, e->position());
-    if (ed < d) { // new best match
-      enroute = e;
-      d = ed;
-      star = mSTARs[i];
-    }
-  } // of STAR iteration
-  
-  return std::make_pair(star, enroute);
-}
-
 
 void FGAirport::addSID(flightgear::SID* aSid)
 {
@@ -664,6 +542,18 @@ Approach* FGAirport::getApproachByIndex(unsigned int aIndex) const
 {
   loadProcedures();
   return mApproaches[aIndex];
+}
+
+Approach* FGAirport::findApproachWithIdent(const std::string& aIdent) const
+{
+  loadProcedures();
+  for (unsigned int i=0; i<mApproaches.size(); ++i) {
+    if (mApproaches[i]->ident() == aIdent) {
+      return mApproaches[i];
+    }
+  }
+  
+  return NULL;
 }
 
 void FGAirport::setCommStations(CommStationList& comms)
