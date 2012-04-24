@@ -47,9 +47,10 @@
 #include <Autopilot/route_mgr.hxx>
 #include <Navaids/procedure.hxx>
 
-static void sgrefGhostDestroy(void* g);
-naGhostType PositionedGhostType = { sgrefGhostDestroy, "positioned" };
-naGhostType WayptGhostType = { sgrefGhostDestroy, "waypoint" };
+static void positionedGhostDestroy(void* g);
+static void wayptGhostDestroy(void* g);
+naGhostType PositionedGhostType = { positionedGhostDestroy, "positioned" };
+naGhostType WayptGhostType = { wayptGhostDestroy, "waypoint" };
 
 static void hashset(naContext c, naRef hash, const char* key, naRef val)
 {
@@ -72,6 +73,13 @@ static FGPositioned* positionedGhost(naRef r)
     return 0;
 }
 
+static void positionedGhostDestroy(void* g)
+{
+    FGPositioned* pos = (FGPositioned*)g;
+    if (!FGPositioned::put(pos)) // unref
+        delete pos;
+}
+
 static flightgear::Waypt* wayptGhost(naRef r)
 {
   if (naGhost_type(r) == &WayptGhostType)
@@ -79,10 +87,11 @@ static flightgear::Waypt* wayptGhost(naRef r)
   return 0;
 }
 
-static void sgrefGhostDestroy(void* g)
+static void wayptGhostDestroy(void* g)
 {
-    SGReferenced* ref = (SGReferenced*)g;
-    SGReferenced::put(ref); // unref
+  flightgear::Waypt* wpt = (flightgear::Waypt*)g;
+  if (!flightgear::Waypt::put(wpt)) // unref
+    delete wpt;
 }
 
 static naRef airportPrototype;
@@ -95,7 +104,7 @@ naRef ghostForPositioned(naContext c, const FGPositioned* pos)
         return naNil();
     }
     
-    SGReferenced::get(pos); // take a ref
+    FGPositioned::get(pos); // take a ref
     return naNewGhost(c, &PositionedGhostType, (void*) pos);
 }
 
@@ -105,7 +114,7 @@ naRef ghostForWaypt(naContext c, const flightgear::Waypt* wpt)
     return naNil();
   }
   
-  SGReferenced::get(wpt); // take a ref
+  flightgear::Waypt::get(wpt); // take a ref
   return naNewGhost(c, &WayptGhostType, (void*) wpt);
 }
 
