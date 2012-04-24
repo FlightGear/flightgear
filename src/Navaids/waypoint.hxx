@@ -133,6 +133,7 @@ public:
   FGRunway* runway() const
     { return _runway; }
 
+  virtual double headingRadialDeg() const;
 protected:	
   virtual std::string type() const
     { return "runway"; }
@@ -170,6 +171,8 @@ public:
   double timeOrDistance() const
   { return _holdTD;}
   
+  virtual double headingRadialDeg() const
+  { return inboundRadial(); }
 protected:
   virtual void initFromProperties(SGPropertyNode_ptr aProp);
   virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
@@ -209,6 +212,8 @@ public:
   virtual double magvarDeg() const
     { return 0.0; }
   
+  virtual double headingRadialDeg() const
+  { return headingDegMagnetic(); }
 private:
   std::string _ident;
   double _magHeading;
@@ -239,7 +244,9 @@ public:
     
   double dmeDistanceNm() const
     { return _dmeDistanceNm; }
-    
+  
+  virtual double headingRadialDeg() const
+  { return courseDegMagnetic(); }
 private:
   std::string _ident;
   SGGeod _pos;

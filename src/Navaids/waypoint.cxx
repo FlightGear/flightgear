@@ -211,6 +211,11 @@ FGPositioned* RunwayWaypt::source() const
 {
   return _runway;
 }
+  
+double RunwayWaypt::headingRadialDeg() const
+{
+  return _runway->headingDeg();
+}
 
 void RunwayWaypt::initFromProperties(SGPropertyNode_ptr aProp)
 {

@@ -145,6 +145,8 @@ naRef hashForWaypoint(naContext c, flightgear::Waypt* wpt, flightgear::Waypt* ne
   flightgear::Procedure* proc = dynamic_cast<flightgear::Procedure*>(wpt->owner());
   if (proc) {
     hashset(c, h, "wp_parent_name", stringToNasal(c, proc->ident()));
+    // set 'wp_parent' route object to query the SID / STAR / airway?
+    // TODO - needs some extensions to flightgear::Route
   }
 
   if (wpt->type() == "hold") {
@@ -172,7 +174,7 @@ naRef hashForWaypoint(naContext c, flightgear::Waypt* wpt, flightgear::Waypt* ne
       next->courseAndDistanceFrom(pos);
     hashset(c, h, "leg_distance", naNum(crsDist.second * SG_METER_TO_NM));
     hashset(c, h, "leg_bearing", naNum(crsDist.first));
-    hashset(c, h, "hdg_radial", naNum(crsDist.first));
+    hashset(c, h, "hdg_radial", naNum(wpt->headingRadialDeg()));
   }
   
 // leg bearing, distance, etc
@@ -742,6 +744,75 @@ static naRef f_route_numWaypoints(naContext c, naRef me, int argc, naRef* args)
   return naNum(rm->numWaypts());
 }
 
+static flightgear::Waypt* wayptFromMe(naRef me)
+{  
+  naRef ghost = naHash_cget(me, (char*) "_waypt");
+  if (naIsNil(ghost)) {
+    return NULL;
+  }
+  
+  return wayptGhost(ghost);
+}
+
+static naRef f_waypoint_navaid(naContext c, naRef me, int argc, naRef* args)
+{
+  flightgear::Waypt* w = wayptFromMe(me);
+  if (!w) {
+    naRuntimeError(c, "waypoint.navaid called on non-waypoint object");
+  }
+  
+  FGPositioned* pos = w->source();
+  if (!pos) {
+    return naNil();
+  }
+  
+  switch (pos->type()) {
+  case FGPositioned::VOR:
+  case FGPositioned::NDB:
+  case FGPositioned::ILS:
+  case FGPositioned::LOC:
+  case FGPositioned::GS:
+  case FGPositioned::DME:
+  case FGPositioned::TACAN: {
+    FGNavRecord* nav = (FGNavRecord*) pos;
+    return hashForNavRecord(c, nav, globals->get_aircraft_position());
+  }
+      
+  default:
+    return naNil();
+  }
+}
+
+static naRef f_waypoint_airport(naContext c, naRef me, int argc, naRef* args)
+{
+  flightgear::Waypt* w = wayptFromMe(me);
+  if (!w) {
+    naRuntimeError(c, "waypoint.navaid called on non-waypoint object");
+  }
+  
+  FGPositioned* pos = w->source();
+  if (!pos || FGAirport::isAirportType(pos)) {
+    return naNil();
+  }
+  
+  return hashForAirport(c, (FGAirport*) pos);
+}
+
+static naRef f_waypoint_runway(naContext c, naRef me, int argc, naRef* args)
+{
+  flightgear::Waypt* w = wayptFromMe(me);
+  if (!w) {
+    naRuntimeError(c, "waypoint.navaid called on non-waypoint object");
+  }
+  
+  FGPositioned* pos = w->source();
+  if (!pos || (pos->type() != FGPositioned::RUNWAY)) {
+    return naNil();
+  }
+  
+  return hashForRunway(c, (FGRunway*) pos);
+}
+
 // Table of extension functions.  Terminate with zeros.
 static struct { const char* name; naCFunction func; } funcs[] = {
   { "carttogeod", f_carttogeod },
@@ -769,12 +840,19 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
   
     routePrototype = naNewHash(c);
     hashset(c, gcSave, "routeProto", routePrototype);
-    
+      
     hashset(c, routePrototype, "getWP", naNewFunc(c, naNewCCode(c, f_route_getWP)));
     hashset(c, routePrototype, "currentWP", naNewFunc(c, naNewCCode(c, f_route_currentWP)));
     hashset(c, routePrototype, "currentIndex", naNewFunc(c, naNewCCode(c, f_route_currentIndex)));
     hashset(c, routePrototype, "getPlanSize", naNewFunc(c, naNewCCode(c, f_route_numWaypoints)));
     
+    waypointPrototype = naNewHash(c);
+    hashset(c, gcSave, "wayptProto", waypointPrototype);
+    
+    hashset(c, waypointPrototype, "navaid", naNewFunc(c, naNewCCode(c, f_waypoint_navaid)));
+    hashset(c, waypointPrototype, "runway", naNewFunc(c, naNewCCode(c, f_waypoint_runway)));
+    hashset(c, waypointPrototype, "airport", naNewFunc(c, naNewCCode(c, f_waypoint_airport)));
+  
     for(int i=0; funcs[i].name; i++) {
       hashset(c, globals, funcs[i].name,
             naNewFunc(c, naNewCCode(c, funcs[i].func)));

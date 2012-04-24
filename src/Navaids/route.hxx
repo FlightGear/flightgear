@@ -164,6 +164,13 @@ public:
    * For some waypoint types this will always return 0.
    */
   virtual double magvarDeg() const;
+  
+  /**
+   * return the assoicated heading  or radial for this waypoint.
+   * The exact meaning varies by type - for a hold it's the inbound radial,
+   * for a DME intercept it's the heading to hold, and so on. 
+   */
+  virtual double headingRadialDeg() const;
 protected:
   friend class NavdataVisitor;
   

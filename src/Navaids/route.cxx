@@ -151,6 +151,11 @@ double Waypt::magvarDeg() const
   return _magVarDeg;
 }
   
+double Waypt::headingRadialDeg() const
+{
+  return 0.0;
+}
+  
 ///////////////////////////////////////////////////////////////////////////
 // persistence
 
