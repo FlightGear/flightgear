@@ -938,6 +938,14 @@ static naRef f_tilePath(naContext c, naRef me, int argc, naRef* args)
     return stringToNasal(c, b.gen_base_path());
 }
 
+static naRef f_tileIndex(naContext c, naRef me, int argc, naRef* args)
+{
+  SGGeod pos = globals->get_aircraft_position();
+  geodFromArgs(args, 0, argc, pos);
+  SGBucket b(pos);
+  return naNum(b.gen_index());
+}
+
 static naRef f_route(naContext c, naRef me, int argc, naRef* args)
 {
   naRef route = naNewHash(c);
@@ -1082,7 +1090,8 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "magvar", f_magvar },
   { "courseAndDistance", f_courseAndDistance },
   { "greatCircleMove", f_greatCircleMove },
-  { "bucketPath", f_tilePath },
+  { "tileIndex", f_tileIndex },
+  { "tilePath", f_tilePath },
   { 0, 0 }
 };
 
