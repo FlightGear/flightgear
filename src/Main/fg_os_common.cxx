@@ -24,10 +24,10 @@
 #include <plib/pu.h>
 #include <osg/GraphicsContext>
 
+#include <Viewer/renderer.hxx>
+#include <Viewer/FGEventHandler.hxx>
 #include "fg_os.hxx"
 #include "globals.hxx"
-#include "renderer.hxx"
-#include "FGEventHandler.hxx"
 
 // fg_os callback registration APIs
 //

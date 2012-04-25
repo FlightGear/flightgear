@@ -42,7 +42,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Main/renderer.hxx>
+#include <Viewer/renderer.hxx>
 
 #include "jpg-httpd.hxx"
 

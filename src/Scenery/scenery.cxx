@@ -45,7 +45,7 @@
 #include <simgear/scene/bvh/BVHNode.hxx>
 #include <simgear/scene/bvh/BVHLineSegmentVisitor.hxx>
 
-#include <Main/renderer.hxx>
+#include <Viewer/renderer.hxx>
 #include <Main/fg_props.hxx>
 
 #include "tilemgr.hxx"

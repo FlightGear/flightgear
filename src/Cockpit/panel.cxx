@@ -57,10 +57,10 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/viewmgr.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
 #include <Time/light.hxx>
 #include <GUI/FGFontCache.hxx>	
-#include <Main/viewer.hxx>
 #include <Instrumentation/dclgps.hxx>
 
 #define WIN_X 0

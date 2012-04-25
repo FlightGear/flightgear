@@ -51,11 +51,11 @@
 #include "GUI/FGFontCache.hxx"
 #include "GUI/FGColor.hxx"
 
-#include "globals.hxx"
-#include "fg_props.hxx"
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/fg_os.hxx>
 #include "splash.hxx"
 #include "renderer.hxx"
-#include "fg_os.hxx"
 
 class FGSplashUpdateCallback : public osg::Drawable::UpdateCallback {
 public:

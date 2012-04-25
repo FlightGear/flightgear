@@ -21,7 +21,7 @@
 #include "WindowBuilder.hxx"
 
 #include "WindowSystemAdapter.hxx"
-#include "fg_props.hxx"
+#include <Main/fg_props.hxx>
 
 #include <sstream>
 

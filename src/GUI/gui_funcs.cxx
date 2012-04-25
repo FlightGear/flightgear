@@ -49,10 +49,10 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/fg_os.hxx>
-#include <Main/renderer.hxx>
-#include <Main/viewmgr.hxx>
-#include <Main/WindowSystemAdapter.hxx>
-#include <Main/CameraGroup.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/WindowSystemAdapter.hxx>
+#include <Viewer/CameraGroup.hxx>
 #include <GUI/new_gui.hxx>
 
 

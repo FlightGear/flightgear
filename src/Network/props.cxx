@@ -39,7 +39,7 @@
 #include <errno.h>
 
 #include <Main/globals.hxx>
-#include <Main/viewmgr.hxx>
+#include <Viewer/viewmgr.hxx>
 
 #include <simgear/io/sg_netChat.hxx>
 

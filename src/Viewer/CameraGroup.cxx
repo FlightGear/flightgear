@@ -21,8 +21,8 @@
 
 #include "CameraGroup.hxx"
 
-#include "fg_props.hxx"
-#include "globals.hxx"
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 #include "renderer.hxx"
 #include "FGEventHandler.hxx"
 #include "WindowBuilder.hxx"

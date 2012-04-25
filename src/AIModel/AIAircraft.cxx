@@ -25,7 +25,7 @@
 #include <simgear/route/waypoint.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Airports/dynamics.hxx>

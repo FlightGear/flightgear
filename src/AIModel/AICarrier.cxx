@@ -31,7 +31,7 @@
 
 #include <math.h>
 #include <Main/util.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/viewer.hxx>
 
 #include "AICarrier.hxx"
 

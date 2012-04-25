@@ -33,8 +33,8 @@
 #include <FDM/flight.hxx>
 #include <Environment/environment.hxx>
 #include <Environment/environment_mgr.hxx>
-#include <Main/viewer.hxx>
-#include <Main/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
+#include <Viewer/viewmgr.hxx>
 #include <ATCDCL/ATCutils.hxx>
 
 #include "HUD.hxx"

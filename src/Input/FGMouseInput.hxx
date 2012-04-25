@@ -37,7 +37,8 @@
 #include <list>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/scene/util/SGPickCallback.hxx>
-#include <Main/renderer.hxx>
+#include <Viewer/renderer.hxx>
+
 /**
   * List of currently pressed mouse button events
   */

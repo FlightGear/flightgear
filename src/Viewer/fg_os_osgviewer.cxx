@@ -48,10 +48,10 @@
 #include <osgViewer/GraphicsWindow>
 
 #include <Scenery/scenery.hxx>
-#include "fg_os.hxx"
-#include "fg_props.hxx"
-#include "util.hxx"
-#include "globals.hxx"
+#include <Main/fg_os.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/util.hxx>
+#include <Main/globals.hxx>
 #include "renderer.hxx"
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"

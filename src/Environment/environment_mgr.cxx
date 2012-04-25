@@ -31,8 +31,8 @@
 #include <simgear/structure/event_mgr.hxx>
 
 #include <Main/main.hxx>
-#include <Main/renderer.hxx>
 #include <Main/fg_props.hxx>
+#include <Viewer/renderer.hxx>
 #include <FDM/flight.hxx>
 
 #include "environment.hxx"

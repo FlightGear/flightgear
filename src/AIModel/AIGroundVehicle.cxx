@@ -24,7 +24,7 @@
 
 #include <simgear/sg_inlines.h>
 
-#include <Main/viewer.hxx>
+#include <Viewer/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Airports/dynamics.hxx>
 

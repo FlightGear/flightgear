@@ -100,13 +100,13 @@
 #include <Environment/precipitation_mgr.hxx>
 #include <Environment/environment_mgr.hxx>
 
+//#include <Main/main.hxx>
+#include "viewer.hxx"
+#include "viewmgr.hxx"
 #include "splash.hxx"
 #include "renderer.hxx"
-#include "main.hxx"
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
-#include <Main/viewer.hxx>
-#include <Main/viewmgr.hxx>
 
 using namespace osg;
 using namespace simgear;

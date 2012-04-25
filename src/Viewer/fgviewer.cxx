@@ -32,10 +32,10 @@
 
 #include <Scenery/scenery.hxx>
 
-#include "fg_init.hxx"
-#include "fg_props.hxx"
-#include "globals.hxx"
-#include "options.hxx"
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include <Main/options.hxx>
+#include <Main/fg_init.hxx>
 
 class GraphDumpHandler : public  osgGA::GUIEventHandler
 {

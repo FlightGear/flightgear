@@ -109,6 +109,8 @@
 #include <FDM/fdm_shell.hxx>
 #include <Environment/ephemeris.hxx>
 #include <Environment/environment_mgr.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/viewmgr.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -117,8 +119,6 @@
 #include "options.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
-#include "renderer.hxx"
-#include "viewmgr.hxx"
 #include "main.hxx"
 
 

@@ -42,7 +42,7 @@
 #include <simgear/debug/logstream.hxx>
 
 #include <Main/globals.hxx>
-#include <Main/renderer.hxx>
+#include <Viewer/renderer.hxx>
 #include <Scenery/scenery.hxx>
 #include "od_gauge.hxx"
 

@@ -25,7 +25,7 @@
 
 #include <sstream>
 #include <simgear/math/SGGeometry.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/viewer.hxx>
 #include "HUD.hxx"
 
 // FIXME

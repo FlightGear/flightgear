@@ -7,7 +7,7 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <simgear/structure/OSGVersion.hxx>
 
-#include "fg_os.hxx"
+#include <Main/fg_os.hxx>
 
 namespace flightgear
 {

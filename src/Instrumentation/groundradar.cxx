@@ -36,7 +36,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Main/renderer.hxx>
+#include <Viewer/renderer.hxx>
 #include <Cockpit/panel.hxx>
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>

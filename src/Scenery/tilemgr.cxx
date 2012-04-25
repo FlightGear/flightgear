@@ -40,8 +40,8 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/renderer.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/viewer.hxx>
 #include <Scripting/NasalSys.hxx>
 
 #include "scenery.hxx"

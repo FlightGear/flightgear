@@ -38,9 +38,9 @@
 #include <simgear/props/props_io.hxx>
 
 #include <Main/globals.hxx>
-#include <Main/renderer.hxx>
-#include <Airports/simple.hxx>
 #include <Main/util.hxx>
+#include <Viewer/renderer.hxx>
+#include <Airports/simple.hxx>
 
 #include "fgclouds.hxx"
 

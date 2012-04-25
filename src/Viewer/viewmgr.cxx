@@ -32,8 +32,8 @@
 #include <simgear/compiler.h>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <Model/acmodel.hxx>
-#include <Main/viewer.hxx>
 #include <Main/fg_props.hxx>
+#include "viewer.hxx"
 
 // Constructor
 FGViewMgr::FGViewMgr( void ) :

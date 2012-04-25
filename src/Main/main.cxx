@@ -70,19 +70,19 @@
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
+#include <Viewer/CameraGroup.hxx>
+#include <Viewer/viewer.hxx>
+#include <Viewer/WindowSystemAdapter.hxx>
+#include <Viewer/splash.hxx>
+#include <Viewer/renderer.hxx>
 
-#include "CameraGroup.hxx"
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
-#include "renderer.hxx"
-#include "splash.hxx"
 #include "main.hxx"
 #include "util.hxx"
 #include "fg_init.hxx"
 #include "fg_os.hxx"
-#include "WindowSystemAdapter.hxx"
-#include <Main/viewer.hxx>
-#include <Main/fg_props.hxx>
+#include "fg_props.hxx"
 
 using namespace flightgear;
 

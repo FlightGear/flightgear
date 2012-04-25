@@ -27,9 +27,11 @@ foreach( mylibfolder
 		Time
 		Traffic
 		FDM
+		Viewer
 		Main
-    )
+	)
 
-    add_subdirectory(${mylibfolder})
+	add_subdirectory(${mylibfolder})
+
 endforeach( mylibfolder )
 

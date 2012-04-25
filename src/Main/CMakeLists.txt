@@ -8,51 +8,32 @@ if (MSVC)
 endif (MSVC)
 
 set(SOURCES
-	CameraGroup.cxx
-	FGEventHandler.cxx
-	WindowBuilder.cxx
-	WindowSystemAdapter.cxx
 	bootstrap.cxx
 	fg_commands.cxx
 	fg_init.cxx
 	fg_io.cxx
 	fg_os_common.cxx
-	fg_os_osgviewer.cxx
 	fg_props.cxx
-	fgviewer.cxx
 	globals.cxx
 	locale.cxx
 	logger.cxx
 	main.cxx
 	options.cxx
-	renderer.cxx
-	splash.cxx
 	util.cxx
-	viewer.cxx
-	viewmgr.cxx
 	${RESOURCE_FILE}
 	)
 
 set(HEADERS
-	CameraGroup.hxx
-	FGEventHandler.hxx
-	WindowBuilder.hxx
-	WindowSystemAdapter.hxx
 	fg_commands.hxx
 	fg_init.hxx
 	fg_io.hxx
 	fg_props.hxx
-	fgviewer.hxx
 	globals.hxx
 	locale.hxx
 	logger.hxx
 	main.hxx
 	options.hxx
-	renderer.hxx
-	splash.hxx
 	util.hxx
-	viewer.hxx
-	viewmgr.hxx
 	)
 
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)

@@ -43,7 +43,7 @@
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/WindowSystemAdapter.hxx>
+#include <Viewer/WindowSystemAdapter.hxx>
 #include <GUI/new_gui.hxx>
 #include <GUI/FGFontCache.hxx>
 

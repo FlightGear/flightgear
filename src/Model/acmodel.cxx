@@ -18,9 +18,9 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/renderer.hxx>
-#include <Main/viewmgr.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Sound/fg_fx.hxx>
 

@@ -38,6 +38,9 @@
 #include <Sound/sample_queue.hxx>
 #include <Airports/xmlloader.hxx>
 #include <Network/HTTPClient.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
+#include <Environment/presets.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -47,10 +50,7 @@
 #include "globals.hxx"
 #include "logger.hxx"
 #include "util.hxx"
-#include "viewmgr.hxx"
 #include "main.hxx"
-#include <Main/viewer.hxx>
-#include <Environment/presets.hxx>
 
 #include <boost/scoped_array.hpp>
 

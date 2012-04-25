@@ -57,10 +57,10 @@
 using std::cerr;
 using std::endl;
 
+#include <Viewer/fgviewer.hxx>
 #include "main.hxx"
 #include "globals.hxx"
 #include "fg_props.hxx"
-#include "fgviewer.hxx"
 
 
 #include "fg_os.hxx"

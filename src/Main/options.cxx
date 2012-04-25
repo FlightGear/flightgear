@@ -57,10 +57,10 @@
 #include "fg_props.hxx"
 #include "options.hxx"
 #include "util.hxx"
-#include "viewmgr.hxx"
 #include "main.hxx"
-#include <Main/viewer.hxx>
-#include <Main/locale.hxx>
+#include "locale.hxx"
+#include <Viewer/viewer.hxx>
+#include <Viewer/viewmgr.hxx>
 #include <Environment/presets.hxx>
 
 #include <osg/Version>

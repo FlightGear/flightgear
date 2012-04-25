@@ -30,13 +30,12 @@
 #include <simgear/compiler.h>
 #include <cassert>
 
-#include "fg_props.hxx"
-
 #include <simgear/debug/logstream.hxx>
 #include <simgear/constants.h>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Model/acmodel.hxx>

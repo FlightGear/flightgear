@@ -55,10 +55,10 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Navaids/navlist.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/viewmgr.hxx>
 
 #include "globals.hxx"
-#include "renderer.hxx"
-#include "viewmgr.hxx"
 #include "locale.hxx"
 
 #include "fg_props.hxx"

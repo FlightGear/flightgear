@@ -37,8 +37,8 @@
 #include <plib/fnt.h>
 
 #include <Main/globals.hxx>
-#include <Main/viewmgr.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
 #include <GUI/FGFontCache.hxx>
 
 #include "HUD.hxx"
