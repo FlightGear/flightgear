@@ -564,6 +564,9 @@ void FGNasalSys::init()
 
     // Pull scripts out of the property tree, too
     loadPropertyScripts();
+  
+    // now Nasal modules are loaded, we can do some delayed work
+    postinitNasalPositioned(_globals, _context);
 }
 
 void FGNasalSys::update(double)

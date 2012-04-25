@@ -97,6 +97,7 @@ static void wayptGhostDestroy(void* g)
 static naRef airportPrototype;
 static naRef routePrototype;
 static naRef waypointPrototype;
+static naRef geoCoordClass;
 
 naRef ghostForPositioned(naContext c, const FGPositioned* pos)
 {
@@ -248,6 +249,16 @@ naRef hashForNavRecord(naContext c, const FGNavRecord* nav, const SGGeod& rel)
     return navdata;
 }
 
+static bool hashIsCoord(naRef h)
+{
+  naRef parents = naHash_cget(h, (char*) "parents");
+  if (!naIsVector(parents)) {
+    return false;
+  }
+  
+  return naEqual(naVec_get(parents, 0), geoCoordClass);
+}
+
 bool geodFromHash(naRef ref, SGGeod& result)
 {
   if (!naIsHash(ref)) {
@@ -274,11 +285,18 @@ bool geodFromHash(naRef ref, SGGeod& result)
   naRef lat = naHash_cget(ref, (char*) "lat");
   naRef lon = naHash_cget(ref, (char*) "lon");
   if (naIsNum(lat) && naIsNum(lon)) {
-    result = SGGeod::fromDeg(naNumValue(lat).num, naNumValue(lon).num);
+    result = SGGeod::fromDeg(naNumValue(lon).num, naNumValue(lat).num);
     return true;
   }
   
-// check for geo.Coord type
+  if (hashIsCoord(ref)) {
+    naRef lat = naHash_cget(ref, (char*) "_lat");
+    naRef lon = naHash_cget(ref, (char*) "_lon");
+    if (naIsNum(lat) && naIsNum(lon)) {
+      result = SGGeod::fromRad(naNumValue(lon).num, naNumValue(lat).num);
+      return true;
+    }
+  }
     
 // check for any synonyms?
     // latitude + longitude?
@@ -580,7 +598,6 @@ static naRef f_airport_sids(naContext c, naRef me, int argc, naRef* args)
   
   naRef sids = naNewVector(c);
   
-  // if we have an explicit type, return a simple vector of frequencies
   if (argc > 0 && naIsString(args[0])) {
     if (!apt->hasRunwayWithIdent(naStr_data(args[0]))) {
       return naNil();
@@ -611,7 +628,6 @@ static naRef f_airport_stars(naContext c, naRef me, int argc, naRef* args)
   
   naRef stars = naNewVector(c);
   
-  // if we have an explicit type, return a simple vector of frequencies
   if (argc > 0 && naIsString(args[0])) {
     if (!apt->hasRunwayWithIdent(naStr_data(args[0]))) {
       return naNil();
@@ -883,6 +899,37 @@ static naRef f_courseAndDistance(naContext c, naRef me, int argc, naRef* args)
     return result;
 }
 
+static naRef f_greatCircleMove(naContext c, naRef me, int argc, naRef* args)
+{
+  SGGeod from = globals->get_aircraft_position(), to;
+  int argOffset = 0;
+  
+  // complication - don't inerpret two doubles (as the only args)
+  // as a lat,lon pair - only do so if we have at least three args.
+  if (argc > 2) {
+    argOffset = geodFromArgs(args, 0, argc, from);
+  }
+  
+  if ((argOffset + 1) >= argc) {
+    naRuntimeError(c, "isufficent arguments to greatCircleMove");
+  }
+  
+  if (!naIsNum(args[argOffset]) || !naIsNum(args[argOffset+1])) {
+    naRuntimeError(c, "invalid arguments %d and %d to greatCircleMove",
+                   argOffset, argOffset + 1);
+  }
+  
+  double course = args[argOffset].num, course2;
+  double distanceNm = args[argOffset + 1].num;
+  SGGeodesy::direct(from, course, distanceNm * SG_NM_TO_METER, to, course2);
+  
+  // return geo.Coord
+  naRef coord = naNewHash(c);
+  hashset(c, coord, "lat", naNum(to.getLatitudeDeg()));
+  hashset(c, coord, "lon", naNum(to.getLongitudeDeg()));
+  return coord;
+}
+
 static naRef f_tilePath(naContext c, naRef me, int argc, naRef* args)
 {
     SGGeod pos = globals->get_aircraft_position();
@@ -1034,6 +1081,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "route", f_route },
   { "magvar", f_magvar },
   { "courseAndDistance", f_courseAndDistance },
+  { "greatCircleMove", f_greatCircleMove },
   { "bucketPath", f_tilePath },
   { 0, 0 }
 };
@@ -1072,4 +1120,16 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
   
   return naNil();
 }
+
+void postinitNasalPositioned(naRef globals, naContext c)
+{
+  naRef geoModule = naHash_cget(globals, (char*) "geo");
+  if (naIsNil(geoModule)) {
+    SG_LOG(SG_GENERAL, SG_WARN, "postinitNasalPositioned: geo.nas not loaded");
+    return;
+  }
+  
+  geoCoordClass = naHash_cget(geoModule, (char*) "Coord");
+}
+
 
