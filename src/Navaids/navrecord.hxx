@@ -88,8 +88,6 @@ public:
    */
   FGRunway* runway() const { return mRunway; }
   
-  virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
-
   /**
    * return the localizer width, in degrees
    * computation is based up ICAO stdandard width at the runway threshold

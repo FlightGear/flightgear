@@ -15,8 +15,6 @@ public:
 
     void setAirport(FGAirport* apt);
     FGAirport* airport() const { return mAirport; }
-
-    virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;  
     
     int rangeNm() const
         { return mRangeNM; }

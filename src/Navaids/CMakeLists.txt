@@ -12,8 +12,7 @@ set(SOURCES
 	route.cxx
 	routePath.cxx
 	waypoint.cxx
-	PositionedBinding.cxx
-	)
+)
 
 set(HEADERS
     airways.hxx
@@ -27,7 +26,6 @@ set(HEADERS
 	route.hxx
 	routePath.hxx
 	waypoint.hxx
-	PositionedBinding.hxx
-    )
+)
 
 flightgear_component(Navaids "${SOURCES}" "${HEADERS}")

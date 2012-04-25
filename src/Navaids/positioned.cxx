@@ -43,7 +43,6 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/structure/commands.hxx>
 
-#include "PositionedBinding.hxx"
 #include "Airports/simple.hxx"
 #include "Main/fg_props.hxx"
 
@@ -699,12 +698,6 @@ const char* FGPositioned::nameForType(Type aTy)
  default:
   return "unknown";
  }
-}
-
-flightgear::PositionedBinding*
-FGPositioned::createBinding(SGPropertyNode* node) const
-{
-    return new flightgear::PositionedBinding(this, node);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

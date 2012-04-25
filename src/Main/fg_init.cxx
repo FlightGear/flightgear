@@ -823,7 +823,6 @@ fgInitNav ()
     p_metar.append( "Airports/metar.dat" );
 
     fgAirportDBLoad( aptdb.str(), p_metar.str() );
-    FGAirport::installPropertyListener();
     
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;

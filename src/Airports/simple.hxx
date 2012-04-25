@@ -188,8 +188,6 @@ public:
       
       unsigned int numApproaches() const;
       flightgear::Approach* getApproachByIndex(unsigned int aIndex) const;
-
-      static void installPropertyListener();
       
      /**
       * Syntactic wrapper around FGPositioned::findClosest - find the closest
@@ -233,9 +231,7 @@ public:
      * returns (NULL, NULL) is no suitable STAR is exists
      */
     std::pair<flightgear::STAR*, flightgear::WayptRef> selectSTAR(const SGGeod& aOrigin, FGRunway* aRwy);
-    
-    virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
-    
+        
     void setCommStations(flightgear::CommStationList& comms);
     
     flightgear::CommStationList commStationsOfType(FGPositioned::Type aTy) const;

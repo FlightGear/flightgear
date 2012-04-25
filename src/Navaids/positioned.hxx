@@ -32,11 +32,6 @@ class SGPropertyNode;
 
 typedef SGSharedPtr<FGPositioned> FGPositionedRef;
 
-namespace flightgear
-{
-    class PositionedBinding;
-}
-
 class FGPositioned : public SGReferenced
 {
 public:
@@ -109,9 +104,6 @@ public:
   double elevation() const
   { return mPosition.getElevationFt(); }
   
-
-  virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
-
   /**
    * Predicate class to support custom filtering of FGPositioned queries
    * Default implementation of this passes any FGPositioned instance.

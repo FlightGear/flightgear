@@ -2,8 +2,6 @@
 
 #include <map>
 
-#include <Navaids/PositionedBinding.hxx>
-
 namespace {
 
 typedef std::multimap<int, flightgear::CommStation*> FrequencyMap;
@@ -34,12 +32,6 @@ void CommStation::setAirport(FGAirport* apt)
 double CommStation::freqMHz() const
 {
     return mFreqKhz / 100.0;
-}
-
-PositionedBinding*
-CommStation::createBinding(SGPropertyNode* nd) const
-{
-    return new CommStationBinding(this, nd);
 }
 
 CommStation*

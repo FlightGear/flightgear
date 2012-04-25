@@ -115,9 +115,7 @@ public:
   FGRunway* reciprocalRunway() const
   { return _reciprocal; }
   void setReciprocalRunway(FGRunway* other);
-  
-  virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
-  
+    
   /**
    * Helper to process property data loaded from an ICAO.threshold.xml file
    */

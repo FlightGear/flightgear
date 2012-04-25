@@ -47,7 +47,6 @@
 #include <Airports/xmlloader.hxx>
 #include <Navaids/procedure.hxx>
 #include <Navaids/waypoint.hxx>
-#include <Navaids/PositionedBinding.hxx>
 #include <ATC/CommStation.hxx>
 
 using std::vector;
@@ -665,41 +664,6 @@ Approach* FGAirport::getApproachByIndex(unsigned int aIndex) const
 {
   loadProcedures();
   return mApproaches[aIndex];
-}
-
-class AirportNodeListener : public SGPropertyChangeListener
-{
-public:
-    AirportNodeListener()
-    {
-        SGPropertyNode* airports = fgGetNode("/sim/airport");
-        airports->addChangeListener(this, false);
-    }
-
-    virtual void valueChanged(SGPropertyNode*)
-    {
-    }
-
-    virtual void childAdded(SGPropertyNode* pr, SGPropertyNode* child)
-    {
-       FGAirport* apt = FGAirport::findByIdent(child->getName());
-       if (!apt) {
-           return;
-       }
-       
-       flightgear::PositionedBinding::bind(apt, child);
-    }
-};
-    
-void FGAirport::installPropertyListener()
-{
-    new AirportNodeListener;  
-}
-
-flightgear::PositionedBinding*
-FGAirport::createBinding(SGPropertyNode* nd) const
-{
-    return new flightgear::AirportBinding(this, nd);
 }
 
 void FGAirport::setCommStations(CommStationList& comms)
