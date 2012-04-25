@@ -40,6 +40,7 @@ class DigitalFilterImplementation : public SGReferenced {
 protected:
   virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode) = 0;
 public:
+  virtual ~DigitalFilterImplementation() {}
   DigitalFilterImplementation();
   virtual void   initialize( double output ) {}
   virtual double compute( double dt, double input ) = 0;
