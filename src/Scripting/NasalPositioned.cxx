@@ -589,6 +589,25 @@ static naRef f_airport_comms(naContext c, naRef me, int argc, naRef* args)
     return comms;
 }
 
+static naRef f_airport_runway(naContext c, naRef me, int argc, naRef* args)
+{
+  FGAirport* apt = airportFromMe(me);
+  if (!apt) {
+    naRuntimeError(c, "airport.runway called on non-airport object");
+  }
+  
+  if ((argc < 1) || !naIsString(args[0])) {
+    naRuntimeError(c, "airport.runway expects a runway ident argument");
+  }
+  
+  std::string ident(naStr_data(args[0]));
+  if (!apt->hasRunwayWithIdent(ident)) {
+    return naNil();
+  }
+  
+  return hashForRunway(c, apt->getRunwayByIdent(ident));
+}
+
 static naRef f_airport_sids(naContext c, naRef me, int argc, naRef* args)
 {
   FGAirport* apt = airportFromMe(me);
@@ -1101,6 +1120,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     airportPrototype = naNewHash(c);
     hashset(c, gcSave, "airportProto", airportPrototype);
   
+    hashset(c, airportPrototype, "runway", naNewFunc(c, naNewCCode(c, f_airport_runway)));
     hashset(c, airportPrototype, "tower", naNewFunc(c, naNewCCode(c, f_airport_tower)));
     hashset(c, airportPrototype, "comms", naNewFunc(c, naNewCCode(c, f_airport_comms)));
     hashset(c, airportPrototype, "sids", naNewFunc(c, naNewCCode(c, f_airport_sids)));
@@ -1124,7 +1144,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
   
     for(int i=0; funcs[i].name; i++) {
       hashset(c, globals, funcs[i].name,
-            naNewFunc(c, naNewCCode(c, funcs[i].func)));
+      naNewFunc(c, naNewCCode(c, funcs[i].func)));
     }
   
   return naNil();
