@@ -25,13 +25,6 @@
 
 // forward decls
 class SGGeod;
-class FGAirport;
-class FGRunway;
-class FGNavRecord;
-
-naRef hashForAirport(naContext c, const FGAirport* apt);
-naRef hashForRunway(naContext c, FGRunway* rwy);
-naRef hashForNavRecord(naContext c, const FGNavRecord* nav, const SGGeod& rel);
 
 bool geodFromHash(naRef ref, SGGeod& result); 
 
