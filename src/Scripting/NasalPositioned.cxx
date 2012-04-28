@@ -50,7 +50,13 @@
 static void positionedGhostDestroy(void* g);
 static void wayptGhostDestroy(void* g);
 naGhostType PositionedGhostType = { positionedGhostDestroy, "positioned" };
-naGhostType WayptGhostType = { wayptGhostDestroy, "waypoint" };
+
+static const char* wayptGhostGetMember(naContext c, void* g, naRef field, naRef* out);
+
+naGhostType WayptGhostType = { wayptGhostDestroy, 
+  "waypoint",
+  wayptGhostGetMember,
+  0};
 
 static void hashset(naContext c, naRef hash, const char* key, naRef val)
 {
@@ -116,7 +122,7 @@ naRef ghostForWaypt(naContext c, const flightgear::Waypt* wpt)
   }
   
   flightgear::Waypt::get(wpt); // take a ref
-  return naNewGhost(c, &WayptGhostType, (void*) wpt);
+  return naNewGhost2(c, &WayptGhostType, (void*) wpt);
 }
 
 naRef hashForAirport(naContext c, const FGAirport* apt)
@@ -149,57 +155,41 @@ naRef hashForAirport(naContext c, const FGAirport* apt)
     return aptdata;
 }
 
-naRef hashForWaypoint(naContext c, flightgear::Waypt* wpt, flightgear::Waypt* next)
+static const char* wayptGhostGetMember(naContext c, void* g, naRef field, naRef* out)
 {
-  SGGeod pos = wpt->position();
-  naRef h = naNewHash(c);
-  
-  flightgear::Procedure* proc = dynamic_cast<flightgear::Procedure*>(wpt->owner());
-  if (proc) {
-    hashset(c, h, "wp_parent_name", stringToNasal(c, proc->ident()));
-    // set 'wp_parent' route object to query the SID / STAR / airway?
-    // TODO - needs some extensions to flightgear::Route
-  }
+  const char* fieldName = naStr_data(field);
+  flightgear::Waypt* wpt = (flightgear::Waypt*) g;
 
-  if (wpt->type() == "hold") {
-    hashset(c, h, "fly_type", stringToNasal(c, "Hold"));
-  } else if (wpt->flag(flightgear::WPT_OVERFLIGHT)) {
-    hashset(c, h, "fly_type", stringToNasal(c, "flyOver"));
+  if (!strcmp(fieldName, "parents")) {
+    *out = naNewVector(c);
+    naVec_append(*out, waypointPrototype);
+  } else if (!strcmp(fieldName, "wp_name")) *out =stringToNasal(c, wpt->ident());
+  else if (!strcmp(fieldName, "wp_type")) *out = stringToNasal(c, wpt->type());
+  else if (!strcmp(fieldName, "wp_lat")) *out = naNum(wpt->position().getLatitudeDeg());
+  else if (!strcmp(fieldName, "wp_lon")) *out = naNum(wpt->position().getLongitudeDeg());
+  else if (!strcmp(fieldName, "wp_parent_name")) {
+    flightgear::Procedure* proc = dynamic_cast<flightgear::Procedure*>(wpt->owner());
+    *out = proc ? stringToNasal(c, proc->ident()) : naNil();
+  } else if (!strcmp(fieldName, "fly_type")) {
+    if (wpt->type() == "hold") {
+      *out = stringToNasal(c, "Hold");
+    } else {
+      *out = stringToNasal(c, wpt->flag(flightgear::WPT_OVERFLIGHT) ? "flyOver" : "flyBy");
+    }
+  } else if (!strcmp(fieldName, "alt_cstr")) *out = naNum(wpt->altitudeFt());
+  else if (!strcmp(fieldName, "speed_cstr")) {
+    double s = (wpt->speedRestriction() == flightgear::SPEED_RESTRICT_MACH) 
+      ? wpt->speedMach() : wpt->speedKts();
+    *out = naNum(s);
+  } else if (!strcmp(fieldName, "leg_distance")) {
+    return "please implement me";
+  } else if (!strcmp(fieldName, "leg_bearing")) {
+    return "please implement me";
   } else {
-    hashset(c, h, "fly_type", stringToNasal(c, "flyBy"));
+    return NULL; // member not found
   }
   
-  hashset(c, h, "wp_type", stringToNasal(c, wpt->type()));
-  hashset(c, h, "wp_name", stringToNasal(c, wpt->ident()));
-  hashset(c, h, "wp_lat", naNum(pos.getLatitudeDeg()));
-  hashset(c, h, "wp_lon", naNum(pos.getLongitudeDeg()));
-  hashset(c, h, "alt_cstr", naNum(wpt->altitudeFt()));
-  
-  if (wpt->speedRestriction() == flightgear::SPEED_RESTRICT_MACH) {
-    hashset(c, h, "spd_cstr", naNum(wpt->speedMach()));
-  } else {
-    hashset(c, h, "spd_cstr", naNum(wpt->speedKts()));
-  }
-  
-  if (next) {
-    std::pair<double, double> crsDist =
-      next->courseAndDistanceFrom(pos);
-    hashset(c, h, "leg_distance", naNum(crsDist.second * SG_METER_TO_NM));
-    hashset(c, h, "leg_bearing", naNum(crsDist.first));
-    hashset(c, h, "hdg_radial", naNum(wpt->headingRadialDeg()));
-  }
-  
-// leg bearing, distance, etc
-  
-  
-// parents and ghost of the C++ object
-  hashset(c, h, "_waypt", ghostForWaypt(c, wpt));
-  naRef parents = naNewVector(c);
-  naVec_append(parents, waypointPrototype);
-  hashset(c, h, "parents", parents);
-  
-  return h;
-
+  return ""; // success
 }
 
 naRef hashForRunway(naContext c, FGRunway* rwy)
@@ -994,21 +984,23 @@ static naRef f_route_getWP(naContext c, naRef me, int argc, naRef* args)
     return naNil();
   }
   
-  flightgear::Waypt* next = NULL;
-  if (index < (rm->numWaypts() - 1)) {
-    next = rm->wayptAtIndex(index + 1);
-  }
-  return hashForWaypoint(c, rm->wayptAtIndex(index), next);
+  return ghostForWaypt(c, rm->wayptAtIndex(index));
 }
 
 static naRef f_route_currentWP(naContext c, naRef me, int argc, naRef* args)
 {
   FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
-  flightgear::Waypt* next = NULL;
-  if (rm->currentIndex() < (rm->numWaypts() - 1)) {
-    next = rm->wayptAtIndex(rm->currentIndex() + 1);
+  return ghostForWaypt(c, rm->currentWaypt());
+}
+
+static naRef f_route_nextWP(naContext c, naRef me, int argc, naRef* args)
+{
+  FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+  flightgear::WayptRef wp = rm->nextWaypt();
+  if (!wp) {
+    return naNil();
   }
-  return hashForWaypoint(c, rm->currentWaypt(), next);
+  return ghostForWaypt(c, wp);
 }
 
 static naRef f_route_currentIndex(naContext c, naRef me, int argc, naRef* args)
@@ -1023,19 +1015,9 @@ static naRef f_route_numWaypoints(naContext c, naRef me, int argc, naRef* args)
   return naNum(rm->numWaypts());
 }
 
-static flightgear::Waypt* wayptFromMe(naRef me)
-{  
-  naRef ghost = naHash_cget(me, (char*) "_waypt");
-  if (naIsNil(ghost)) {
-    return NULL;
-  }
-  
-  return wayptGhost(ghost);
-}
-
 static naRef f_waypoint_navaid(naContext c, naRef me, int argc, naRef* args)
 {
-  flightgear::Waypt* w = wayptFromMe(me);
+  flightgear::Waypt* w = wayptGhost(me);
   if (!w) {
     naRuntimeError(c, "waypoint.navaid called on non-waypoint object");
   }
@@ -1064,7 +1046,7 @@ static naRef f_waypoint_navaid(naContext c, naRef me, int argc, naRef* args)
 
 static naRef f_waypoint_airport(naContext c, naRef me, int argc, naRef* args)
 {
-  flightgear::Waypt* w = wayptFromMe(me);
+  flightgear::Waypt* w = wayptGhost(me);
   if (!w) {
     naRuntimeError(c, "waypoint.navaid called on non-waypoint object");
   }
@@ -1079,7 +1061,7 @@ static naRef f_waypoint_airport(naContext c, naRef me, int argc, naRef* args)
 
 static naRef f_waypoint_runway(naContext c, naRef me, int argc, naRef* args)
 {
-  flightgear::Waypt* w = wayptFromMe(me);
+  flightgear::Waypt* w = wayptGhost(me);
   if (!w) {
     naRuntimeError(c, "waypoint.navaid called on non-waypoint object");
   }
@@ -1131,7 +1113,8 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, gcSave, "routeProto", routePrototype);
       
     hashset(c, routePrototype, "getWP", naNewFunc(c, naNewCCode(c, f_route_getWP)));
-    hashset(c, routePrototype, "currentWP", naNewFunc(c, naNewCCode(c, f_route_currentWP)));
+    hashset(c, routePrototype, "currentWP", naNewFunc(c, naNewCCode(c, f_route_currentWP))); 
+    hashset(c, routePrototype, "nextWP", naNewFunc(c, naNewCCode(c, f_route_nextWP))); 
     hashset(c, routePrototype, "currentIndex", naNewFunc(c, naNewCCode(c, f_route_currentIndex)));
     hashset(c, routePrototype, "getPlanSize", naNewFunc(c, naNewCCode(c, f_route_numWaypoints)));
     
