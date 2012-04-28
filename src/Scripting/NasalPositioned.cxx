@@ -294,6 +294,8 @@ static const char* navaidGhostGetMember(naContext c, void* g, naRef field, naRef
     *out = stringToNasal(c, nav->nameForType(nav->type()));
   } else if (!strcmp(fieldName, "frequency")) {
     *out = naNum(nav->get_freq()); 
+  } else if (!strcmp(fieldName, "range_nm")) {
+    *out = naNum(nav->get_range()); 
   } else if (!strcmp(fieldName, "course")) {
     if ((nav->type() == FGPositioned::ILS) || (nav->type() == FGPositioned::LOC)) {
       double radial = nav->get_multiuse();
