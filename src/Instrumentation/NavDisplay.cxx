@@ -27,6 +27,7 @@
 
 #include <cassert>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <algorithm>
 
 #include <osg/Array>
@@ -197,6 +198,7 @@ public:
         }
         
         type = node->getStringValue("type");
+        boost::to_lower(type);
         SGPropertyNode* enableNode = node->getChild("enable");
         if (enableNode) { 
             enable.reset(sgReadCondition(fgGetNode("/"), enableNode));
@@ -1103,6 +1105,7 @@ void NavDisplay::foundPositionedItem(FGPositioned* pos)
     }
     
     string type = FGPositioned::nameForType(pos->type());
+    //boost::to_lower(type);
     if (!anyRuleForType(type)) {
         return; // not diplayed at all, we're done
     }
