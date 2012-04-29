@@ -514,6 +514,12 @@ FGRenderer::init( void )
     _cascadeFar[1] = fgGetFloat("/sim/rendering/shadows/cascade-far-m[1]", 50.0f);
     _cascadeFar[2] = fgGetFloat("/sim/rendering/shadows/cascade-far-m[2]", 500.0f);
     _cascadeFar[3] = fgGetFloat("/sim/rendering/shadows/cascade-far-m[3]", 5000.0f);
+    updateCascadeNumber(_numCascades);
+    updateCascadeFar(0, _cascadeFar[0]);
+    updateCascadeFar(1, _cascadeFar[1]);
+    updateCascadeFar(2, _cascadeFar[2]);
+    updateCascadeFar(3, _cascadeFar[3]);
+
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _scenery_override = fgGetNode("/sim/sceneryloaded-override", true);
     _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
@@ -678,68 +684,70 @@ FGRenderer::buildClassicalPipeline(flightgear::CameraGroup* cgroup, unsigned fla
 
 class FGDeferredRenderingCameraCullCallback : public osg::NodeCallback {
 public:
-	FGDeferredRenderingCameraCullCallback( flightgear::CameraKind k, CameraInfo* i ) : kind( k ), info( i ) {}
-	virtual void operator()( osg::Node *n, osg::NodeVisitor *nv) {
-        simgear::EffectCullVisitor* cv = dynamic_cast<simgear::EffectCullVisitor*>(nv);
-        osg::Camera* camera = static_cast<osg::Camera*>(n);
+    FGDeferredRenderingCameraCullCallback( flightgear::CameraKind k, CameraInfo* i ) : kind( k ), info( i ) {}
+    virtual void operator()( osg::Node *n, osg::NodeVisitor *nv) {
+    simgear::EffectCullVisitor* cv = dynamic_cast<simgear::EffectCullVisitor*>(nv);
+    osg::Camera* camera = static_cast<osg::Camera*>(n);
 
-        cv->clearBufferList();
-		cv->addBuffer(simgear::Effect::DEPTH_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
-        cv->addBuffer(simgear::Effect::NORMAL_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
-		cv->addBuffer(simgear::Effect::DIFFUSE_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
-        cv->addBuffer(simgear::Effect::SPEC_EMIS_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
-		cv->addBuffer(simgear::Effect::LIGHTING_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::LIGHTING_BUFFER ) );
-        cv->addBuffer(simgear::Effect::SHADOW_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SHADOW_BUFFER ) );
-        // cv->addBuffer(simgear::Effect::AO_BUFFER, info->gBuffer->aoBuffer[2]);
+    cv->clearBufferList();
+    cv->addBuffer(simgear::Effect::DEPTH_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DEPTH_BUFFER ) );
+    cv->addBuffer(simgear::Effect::NORMAL_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::NORMAL_BUFFER ) );
+    cv->addBuffer(simgear::Effect::DIFFUSE_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::DIFFUSE_BUFFER ) );
+    cv->addBuffer(simgear::Effect::SPEC_EMIS_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER ) );
+    cv->addBuffer(simgear::Effect::LIGHTING_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::LIGHTING_BUFFER ) );
+    cv->addBuffer(simgear::Effect::SHADOW_BUFFER, info->getBuffer( flightgear::RenderBufferInfo::SHADOW_BUFFER ) );
+    // cv->addBuffer(simgear::Effect::AO_BUFFER, info->gBuffer->aoBuffer[2]);
 
-		if ( !info->getRenderStageInfo(kind).fullscreen )
-			info->setMatrices( camera );
+    if ( !info->getRenderStageInfo(kind).fullscreen )
+        info->setMatrices( camera );
 
-        cv->traverse( *camera );
+    cv->traverse( *camera );
 
-		if ( kind == flightgear::GEOMETRY_CAMERA ) {
-			// Save transparent bins to render later
-			osgUtil::RenderStage* renderStage = cv->getRenderStage();
-			osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
-			for (osgUtil::RenderBin::RenderBinList::iterator rbi = rbl.begin(); rbi != rbl.end(); ) {
-				if (rbi->second->getSortMode() == osgUtil::RenderBin::SORT_BACK_TO_FRONT) {
-					info->savedTransparentBins.insert( std::make_pair( rbi->first, rbi->second ) );
-					rbl.erase( rbi++ );
-				} else {
-					++rbi;
-				}
-			}
-		} else if ( kind == flightgear::LIGHTING_CAMERA ) {
-            osg::ref_ptr<osg::Camera> mainShadowCamera = info->getCamera( SHADOW_CAMERA );
-			if (mainShadowCamera.valid()) {
-				osg::Group* grp = mainShadowCamera->getChild(0)->asGroup();
-				for (int i = 0; i < 4; ++i ) {
-					osg::TexGen* shadowTexGen = info->shadowTexGen[i];
-					shadowTexGen->setMode(osg::TexGen::EYE_LINEAR);
+    if ( kind == flightgear::GEOMETRY_CAMERA ) {
+        // Save transparent bins to render later
+        osgUtil::RenderStage* renderStage = cv->getRenderStage();
+        osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
+        for (osgUtil::RenderBin::RenderBinList::iterator rbi = rbl.begin(); rbi != rbl.end(); ) {
+            if (rbi->second->getSortMode() == osgUtil::RenderBin::SORT_BACK_TO_FRONT) {
+                info->savedTransparentBins.insert( std::make_pair( rbi->first, rbi->second ) );
+                rbl.erase( rbi++ );
+            } else {
+                ++rbi;
+            }
+        }
+    } else if ( kind == flightgear::LIGHTING_CAMERA ) {
+        osg::ref_ptr<osg::Camera> mainShadowCamera = info->getCamera( SHADOW_CAMERA );
+            if (mainShadowCamera.valid()) {
+                osg::Switch* grp = mainShadowCamera->getChild(0)->asSwitch();
+                for (int i = 0; i < 4; ++i ) {
+                    if (!grp->getValue(i))
+                        continue;
+                    osg::TexGen* shadowTexGen = info->shadowTexGen[i];
+                    shadowTexGen->setMode(osg::TexGen::EYE_LINEAR);
 
-					osg::Camera* cascadeCam = static_cast<osg::Camera*>( grp->getChild(i) );
-					// compute the matrix which takes a vertex from view coords into tex coords
-					shadowTexGen->setPlanesFromMatrix(  cascadeCam->getProjectionMatrix() *
-														osg::Matrix::translate(1.0,1.0,1.0) *
-														osg::Matrix::scale(0.5f,0.5f,0.5f) );
+                    osg::Camera* cascadeCam = static_cast<osg::Camera*>( grp->getChild(i) );
+                    // compute the matrix which takes a vertex from view coords into tex coords
+                    shadowTexGen->setPlanesFromMatrix(  cascadeCam->getProjectionMatrix() *
+                                                        osg::Matrix::translate(1.0,1.0,1.0) *
+                                                        osg::Matrix::scale(0.5f,0.5f,0.5f) );
 
-					osg::RefMatrix * refMatrix = new osg::RefMatrix( cascadeCam->getInverseViewMatrix() * *cv->getModelViewMatrix() );
+                    osg::RefMatrix * refMatrix = new osg::RefMatrix( cascadeCam->getInverseViewMatrix() * *cv->getModelViewMatrix() );
 
-					cv->getRenderStage()->getPositionalStateContainer()->addPositionedTextureAttribute( i+1, refMatrix, shadowTexGen );
-				}
-			}
-			// Render saved transparent render bins
-			osgUtil::RenderStage* renderStage = cv->getRenderStage();
-			osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
-			for (osgUtil::RenderBin::RenderBinList::iterator rbi = info->savedTransparentBins.begin(); rbi != info->savedTransparentBins.end(); ++rbi ){
-				rbl.insert( std::make_pair( rbi->first + 10000, rbi->second ) );
-			}
-			info->savedTransparentBins.clear();
-		}
-	}
+                    cv->getRenderStage()->getPositionalStateContainer()->addPositionedTextureAttribute( i+1, refMatrix, shadowTexGen );
+                }
+            }
+            // Render saved transparent render bins
+            osgUtil::RenderStage* renderStage = cv->getRenderStage();
+            osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
+            for (osgUtil::RenderBin::RenderBinList::iterator rbi = info->savedTransparentBins.begin(); rbi != info->savedTransparentBins.end(); ++rbi ){
+                rbl.insert( std::make_pair( rbi->first + 10000, rbi->second ) );
+            }
+            info->savedTransparentBins.clear();
+        }
+    }
 
 private:
-	flightgear::CameraKind kind;
+    flightgear::CameraKind kind;
     CameraInfo* info;
 };
 
