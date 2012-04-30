@@ -1156,7 +1156,7 @@ fgOptScenario( const char *arg )
     }
     SGPropertyNode_ptr scenario = ai_node->getNode( "scenario", index + 1, true );
     scenario->setStringValue( arg );
-    ai_node->setBoolValue( "enabled", true );
+    ai_node->setBoolValue( "scenarios-enabled", true );
     return FG_OPTIONS_OK;
 }
 
@@ -1165,7 +1165,7 @@ fgOptNoScenarios( const char *arg )
 {
     SGPropertyNode_ptr ai_node = fgGetNode( "/sim/ai", true );
     ai_node->removeChildren("scenario",false);
-    ai_node->setBoolValue( "enabled", false );
+    ai_node->setBoolValue( "scenarios-enabled", false );
     return FG_OPTIONS_OK;
 }
 

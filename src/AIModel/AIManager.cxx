@@ -89,6 +89,15 @@ FGAIManager::init() {
 void
 FGAIManager::postinit() {
     // postinit, so that it can access the Nasal subsystem
+
+    if (!root->getBoolValue("scenarios-enabled", true))
+        return;
+
+    // scenarios enabled, AI subsystem required
+    if (!enabled->getBoolValue())
+        enabled->setBoolValue(true);
+
+    // process all scenarios
     map<string, bool> scenarios;
     for (int i = 0 ; i < root->nChildren() ; i++) {
         SGPropertyNode *n = root->getChild(i);
