@@ -531,7 +531,7 @@ FGTaxiNode *FGGroundNetwork::findNode(unsigned idx)
                                    return itr->getAddress();
                                    } */
 
-    if ((idx >= 0) && (idx < nodes.size()))
+    if (idx < nodes.size())
         return nodes[idx]->getAddress();
     else
         return 0;
