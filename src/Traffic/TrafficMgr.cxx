@@ -134,8 +134,14 @@ FGTrafficManager::~FGTrafficManager()
 
 void FGTrafficManager::init()
 {
-    if (!enabled || !aiEnabled) {
+    if (!enabled) {
       return;
+    }
+
+    if (!aiEnabled)
+    {
+        // traffic depends on AI module
+        aiEnabled = true;
     }
 
     assert(!doingInit);

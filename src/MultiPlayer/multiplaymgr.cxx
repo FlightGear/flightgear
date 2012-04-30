@@ -408,9 +408,8 @@ FGMultiplayMgr::init (void)
 
   if (!fgGetBool("/sim/ai/enabled"))
   {
-      SG_LOG(SG_NETWORK, SG_ALERT,
-        "Cannot enable multiplayer mode: AI subsystem is disabled (to enable start with '--enable-ai-models').");
-      return;
+      // multiplayer depends on AI module
+      fgSetBool("/sim/ai/enabled", true);
   }
 
   //////////////////////////////////////////////////

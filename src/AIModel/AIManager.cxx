@@ -69,10 +69,7 @@ void
 FGAIManager::init() {
     root = fgGetNode("sim/ai", true);
 
-    enabled = root->getNode("enabled", true)->getBoolValue();
-
-    if (!enabled)
-        return;
+    enabled = root->getNode("enabled", true);
 
     thermal_lift_node = fgGetNode("/environment/thermal-lift-fps", true);
     wind_from_east_node  = fgGetNode("/environment/wind-from-east-fps",true);
@@ -143,7 +140,7 @@ FGAIManager::update(double dt) {
     range_nearest = 10000.0;
     strength = 0.0;
 
-    if (!enabled)
+    if (!enabled->getBoolValue())
         return;
 
     FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("traffic-manager");
