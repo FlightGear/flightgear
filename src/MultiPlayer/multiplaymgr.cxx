@@ -406,12 +406,6 @@ FGMultiplayMgr::init (void)
 
   fgSetBool("/sim/multiplay/online", false);
 
-  if (!fgGetBool("/sim/ai/enabled"))
-  {
-      // multiplayer depends on AI module
-      fgSetBool("/sim/ai/enabled", true);
-  }
-
   //////////////////////////////////////////////////
   //  Set members from property values
   //////////////////////////////////////////////////
@@ -444,7 +438,7 @@ FGMultiplayMgr::init (void)
     if (rxPort <= 0)
       rxPort = txPort;
   } else {
-    SG_LOG(SG_NETWORK, SG_ALERT, "Cannot enable multiplayer mode: missing a valid server address.");
+    SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - multiplayer mode disabled (no MP server specificed).");
     return;
   }
 
@@ -483,6 +477,12 @@ FGMultiplayMgr::init (void)
   mInitialised = true;
 
   SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer mode active!");
+
+  if (!fgGetBool("/sim/ai/enabled"))
+  {
+      // multiplayer depends on AI module
+      fgSetBool("/sim/ai/enabled", true);
+  }
 } // FGMultiplayMgr::init()
 //////////////////////////////////////////////////////////////////////
 
