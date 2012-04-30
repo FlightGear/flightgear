@@ -138,12 +138,6 @@ void FGTrafficManager::init()
       return;
     }
 
-    if (!aiEnabled)
-    {
-        // traffic depends on AI module
-        aiEnabled = true;
-    }
-
     assert(!doingInit);
     doingInit = true;
     if (string(fgGetString("/sim/traffic-manager/datafile")) == string("")) {
@@ -267,10 +261,16 @@ void FGTrafficManager::loadHeuristics()
 
 void FGTrafficManager::update(double /*dt */ )
 {
-    if (!enabled || !aiEnabled || (realWxEnabled && !metarValid)) {
+    if (!enabled || (realWxEnabled && !metarValid)) {
         return;
     }
-        
+
+    if (!aiEnabled)
+    {
+        // traffic depends on AI module
+        aiEnabled = true;
+    }
+
     if (!inited) {
         if (!doingInit) {
             init();
