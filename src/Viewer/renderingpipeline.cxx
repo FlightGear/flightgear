@@ -173,6 +173,18 @@ FGRenderingPipeline::Buffer::Buffer(SGPropertyNode* prop)
     shadowComparison = prop->getBoolValue("shadow-comparison", false);
 }
 
+simgear::effect::EffectNameValue<osg::Camera::BufferComponent> componentsInit[] =
+{
+    {"depth",   osg::Camera::DEPTH_BUFFER},
+    {"stencil", osg::Camera::STENCIL_BUFFER},
+    {"packed-depth-stencil",   osg::Camera::PACKED_DEPTH_STENCIL_BUFFER},
+    {"color0",  osg::Camera::COLOR_BUFFER0},
+    {"color1",  osg::Camera::COLOR_BUFFER1},
+    {"color2",  osg::Camera::COLOR_BUFFER2},
+    {"color3",  osg::Camera::COLOR_BUFFER3}
+};
+simgear::effect::EffectPropertyMap<osg::Camera::BufferComponent> components(componentsInit);
+
 FGRenderingPipeline::Stage::Stage(SGPropertyNode* prop)
 {
     SGPropertyNode_ptr nameProp = prop->getChild("name");
@@ -185,55 +197,25 @@ FGRenderingPipeline::Stage::Stage(SGPropertyNode* prop)
         throw sg_exception("Stage type is mandatory");
     }
     type = typeProp->getStringValue();
+
+    std::vector<SGPropertyNode_ptr> attachments = prop->getChildren("attachment");
+    for (int i = 0; i < (int)attachments.size(); ++i) {
+        this->attachments.push_back(new FGRenderingPipeline::Attachment(attachments[i]));
+    }
+}
+
+FGRenderingPipeline::Attachment::Attachment(SGPropertyNode* prop)
+{
+    simgear::findAttr(components, prop->getChild("component"), component);
+    SGPropertyNode_ptr bufferProp = prop->getChild("buffer");
+    if (!bufferProp.valid()) {
+        throw sg_exception("Attachment buffer is mandatory");
+    }
+    buffer = bufferProp->getStringValue();
 }
 
 FGRenderingPipeline::FGRenderingPipeline()
 {
-}
-
-flightgear::CameraInfo* FGRenderingPipeline::buildCamera(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
-                                    const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc)
-{
-    flightgear::CameraInfo* info = new flightgear::CameraInfo(flags);
-    buildBuffers( info );
-    
-    for (size_t i = 0; i < stages.size(); ++i) {
-        osg::ref_ptr<Stage> stage = stages[i];
-        buildStage(info, stage, cgroup, camera, view, projection, gc);
-    }
-
-    return 0;
-}
-
-osg::Texture2D* buildDeferredBuffer(GLint internalFormat, GLenum sourceFormat, GLenum sourceType, GLenum wrapMode, bool shadowComparison)
-{
-    osg::Texture2D* tex = new osg::Texture2D;
-    tex->setResizeNonPowerOfTwoHint( false );
-    tex->setInternalFormat( internalFormat );
-    tex->setShadowComparison(shadowComparison);
-    if (shadowComparison) {
-        tex->setShadowTextureMode(osg::Texture2D::LUMINANCE);
-        tex->setBorderColor(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
-    }
-    tex->setSourceFormat(sourceFormat);
-    tex->setSourceType(sourceType);
-    tex->setFilter( osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR );
-    tex->setFilter( osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR );
-    tex->setWrap( osg::Texture::WRAP_S, (osg::Texture::WrapMode)wrapMode );
-    tex->setWrap( osg::Texture::WRAP_T, (osg::Texture::WrapMode)wrapMode );
-	return tex;
-}
-
-void FGRenderingPipeline::buildBuffers( flightgear::CameraInfo* info )
-{
-    for (size_t i = 0; i < buffers.size(); ++i) {
-        osg::ref_ptr<Buffer> buffer = buffers[i];
-        info->addBuffer(buffer->name, buildDeferredBuffer( buffer->internalFormat,
-                                                            buffer->sourceFormat,
-                                                            buffer->sourceType,
-                                                            buffer->wrapMode,
-                                                            buffer->shadowComparison) );
-    }
 }
 
 class FGStageCameraCullCallback : public osg::NodeCallback {
@@ -258,34 +240,3 @@ private:
     osg::ref_ptr<FGRenderingPipeline::Stage> stage;
     flightgear::CameraInfo* info;
 };
-
-void FGRenderingPipeline::buildStage(flightgear::CameraInfo* info,
-                                        Stage* stage,
-                                        flightgear::CameraGroup* cgroup,
-                                        osg::Camera* camera,
-                                        const osg::Matrix& view,
-                                        const osg::Matrix& projection,
-                                        osg::GraphicsContext* gc)
-{
-    osg::ref_ptr<osg::Camera> stageCamera;
-    if (stage->type == "main-camera")
-        stageCamera = camera;
-    else
-        stageCamera = new osg::Camera;
-
-    stageCamera->setName(stage->name);
-    stageCamera->setGraphicsContext(gc);
-    stageCamera->setCullCallback(new FGStageCameraCullCallback(stage, info));
-    if (stage->type != "main-camera")
-        stageCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
-}
-
-void FGRenderingPipeline::buildMainCamera(flightgear::CameraInfo* info,
-                                        Stage* stage,
-                                        flightgear::CameraGroup* cgroup,
-                                        osg::Camera* camera,
-                                        const osg::Matrix& view,
-                                        const osg::Matrix& projection,
-                                        osg::GraphicsContext* gc)
-{
-}

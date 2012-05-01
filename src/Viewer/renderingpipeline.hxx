@@ -3,6 +3,7 @@
 #define __FG_RENDERINGPIPELINE_HXX 1
 
 #include <osg/ref_ptr>
+#include <osg/Camera>
 #include <string>
 
 namespace simgear
@@ -46,6 +47,14 @@ public:
         std::string type;
     };
 
+    struct Attachment : public osg::Referenced {
+        Attachment(SGPropertyNode* prop);
+        Attachment(osg::Camera::BufferComponent c, const std::string& b ) : component(c), buffer(b) {}
+
+        osg::Camera::BufferComponent component;
+        std::string buffer;
+    };
+
     struct Stage : public osg::Referenced {
         Stage(SGPropertyNode* prop);
 
@@ -53,35 +62,12 @@ public:
         std::string type;
 
         std::vector<osg::ref_ptr<Pass> > passes;
+        std::vector<osg::ref_ptr<Attachment> > attachments;
     };
     FGRenderingPipeline();
 
-    flightgear::CameraInfo* buildCamera(flightgear::CameraGroup* cgroup,
-                                        unsigned flags,
-                                        osg::Camera* camera,
-                                        const osg::Matrix& view,
-                                        const osg::Matrix& projection,
-                                        osg::GraphicsContext* gc);
-
-private:
     std::vector<osg::ref_ptr<Buffer> > buffers;
     std::vector<osg::ref_ptr<Stage> > stages;
-
-    void buildBuffers(flightgear::CameraInfo* info);
-    void buildStage(flightgear::CameraInfo* info,
-                    Stage* stage,
-                    flightgear::CameraGroup* cgroup,
-                    osg::Camera* camera,
-                    const osg::Matrix& view,
-                    const osg::Matrix& projection,
-                    osg::GraphicsContext* gc);
-    void buildMainCamera(flightgear::CameraInfo* info,
-                    Stage* stage,
-                    flightgear::CameraGroup* cgroup,
-                    osg::Camera* camera,
-                    const osg::Matrix& view,
-                    const osg::Matrix& projection,
-                    osg::GraphicsContext* gc);
 
     friend FGRenderingPipeline* flightgear::makeRenderingPipeline(const std::string& name,
                    const simgear::SGReaderWriterOptions* options);
