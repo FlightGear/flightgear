@@ -91,6 +91,11 @@ FGTrafficManager::FGTrafficManager() :
 
 FGTrafficManager::~FGTrafficManager()
 {
+    shutdown();
+}
+
+void FGTrafficManager::shutdown()
+{
     // Save the heuristics data
     bool saveData = false;
     ofstream cachefile;
@@ -129,6 +134,11 @@ FGTrafficManager::~FGTrafficManager()
     }
     scheduledAircraft.clear();
     flights.clear();
+    releaseList.clear();
+
+    currAircraft = scheduledAircraft.begin();
+    doingInit = false;
+    inited = false;
 }
 
 
@@ -261,7 +271,14 @@ void FGTrafficManager::loadHeuristics()
 
 void FGTrafficManager::update(double /*dt */ )
 {
-    if (!enabled || (realWxEnabled && !metarValid)) {
+    if (!enabled)
+    {
+        if (inited || doingInit)
+            shutdown();
+        return;
+    }
+
+    if ((realWxEnabled && !metarValid)) {
         return;
     }
 

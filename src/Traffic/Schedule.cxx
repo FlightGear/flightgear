@@ -158,6 +158,15 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
 
 FGAISchedule::~FGAISchedule()
 {
+    // remove related object from AI manager
+    if (AIManagerRef)
+    {
+        FGAIManager* aimgr = (FGAIManager *) globals-> get_subsystem("ai-model");
+        if (aimgr)
+            aimgr->destroyObject(AIManagerRef);
+        AIManagerRef = 0;
+    }
+
 /*  for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
     {
       delete (*flt);

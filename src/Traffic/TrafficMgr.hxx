@@ -108,6 +108,7 @@ private:
   
   void initStep();
   void finishInit();
+  void shutdown();
   
   // during incremental init, contains the XML files still be read in
   simgear::PathList schedulesToRead;
