@@ -416,7 +416,8 @@ FGRenderer::FGRenderer() :
     _fogColor( new osg::Uniform( "fg_FogColor", osg::Vec4f(1.0, 1.0, 1.0, 1.0) ) ),
     _fogDensity( new osg::Uniform( "fg_FogDensity", 0.0001f ) ),
     _shadowNumber( new osg::Uniform( "fg_ShadowNumber", (int)4 ) ),
-    _shadowDistances( new osg::Uniform( "fg_ShadowDistances", osg::Vec4f(5.0, 50.0, 500.0, 5000.0 ) ) )
+    _shadowDistances( new osg::Uniform( "fg_ShadowDistances", osg::Vec4f(5.0, 50.0, 500.0, 5000.0 ) ) ),
+    _depthInColor( new osg::Uniform( "fg_DepthInColor", false ) )
 {
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = updateRenderer;
@@ -519,6 +520,8 @@ FGRenderer::init( void )
     updateCascadeFar(1, _cascadeFar[1]);
     updateCascadeFar(2, _cascadeFar[2]);
     updateCascadeFar(3, _cascadeFar[3]);
+    _useColorForDepth = fgGetBool( "/sim/rendering/use-color-for-depth", false );
+    _depthInColor->set( _useColorForDepth );
 
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _scenery_override = fgGetNode("/sim/sceneryloaded-override", true);
@@ -770,14 +773,16 @@ osg::Texture2D* buildDeferredBuffer(GLint internalFormat, GLenum sourceFormat, G
 	return tex;
 }
 
-void buildDeferredBuffers( flightgear::CameraInfo* info, int shadowMapSize, bool normal16 )
+void buildDeferredBuffers( flightgear::CameraInfo* info, int shadowMapSize, bool useColorForDepth )
 {
-    info->addBuffer(flightgear::RenderBufferInfo::DEPTH_BUFFER, buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
-    if (false)
-        info->addBuffer(flightgear::RenderBufferInfo::NORMAL_BUFFER, buildDeferredBuffer( 0x822C /*GL_RG16*/, 0x8227 /*GL_RG*/, GL_UNSIGNED_SHORT, osg::Texture::CLAMP_TO_BORDER) );
-    else
-        info->addBuffer(flightgear::RenderBufferInfo::NORMAL_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-
+    if (useColorForDepth) {
+        info->addBuffer(flightgear::RenderBufferInfo::REAL_DEPTH_BUFFER, buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
+        info->addBuffer(flightgear::RenderBufferInfo::DEPTH_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
+    }
+    else {
+        info->addBuffer(flightgear::RenderBufferInfo::DEPTH_BUFFER, buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
+    }
+    info->addBuffer(flightgear::RenderBufferInfo::NORMAL_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
     info->addBuffer(flightgear::RenderBufferInfo::DIFFUSE_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
     info->addBuffer(flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
     info->addBuffer(flightgear::RenderBufferInfo::LIGHTING_BUFFER, buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
@@ -805,12 +810,20 @@ osg::Camera* FGRenderer::buildDeferredGeometryCamera( flightgear::CameraInfo* in
     camera->setClearDepth( 1.0 );
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     camera->setViewport( new osg::Viewport );
-    attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
     attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER0, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::NORMAL_BUFFER );
     attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER1, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DIFFUSE_BUFFER );
     attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER2, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::SPEC_EMIS_BUFFER );
+    if (_useColorForDepth) {
+        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::REAL_DEPTH_BUFFER );
+        attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER3, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
+    } else {
+        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
+    }
     camera->setDrawBuffer(GL_FRONT);
     camera->setReadBuffer(GL_FRONT);
+
+    osg::StateSet* ss = camera->getOrCreateStateSet();
+    ss->addUniform( _depthInColor );
 
     camera->addChild( mDeferredRealRoot.get() );
 
@@ -1252,14 +1265,19 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* in
     camera->setRenderOrder(osg::Camera::POST_RENDER, 50);
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     camera->setViewport( new osg::Viewport );
-    attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::LIGHTING_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
     attachBufferToCamera( info, camera, osg::Camera::COLOR_BUFFER, flightgear::LIGHTING_CAMERA, flightgear::RenderBufferInfo::LIGHTING_BUFFER );
+    if (_useColorForDepth) {
+        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::REAL_DEPTH_BUFFER );
+    } else {
+        attachBufferToCamera( info, camera, osg::Camera::DEPTH_BUFFER, flightgear::GEOMETRY_CAMERA, flightgear::RenderBufferInfo::DEPTH_BUFFER );
+    }
     camera->setDrawBuffer(GL_FRONT);
     camera->setReadBuffer(GL_FRONT);
     camera->setClearColor( osg::Vec4( 0., 0., 0., 1. ) );
     camera->setClearMask( GL_COLOR_BUFFER_BIT );
     osg::StateSet* ss = camera->getOrCreateStateSet();
     ss->setAttribute( new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false) );
+    ss->addUniform( _depthInColor );
 
     osg::Group* lightingGroup = new osg::Group;
 
@@ -1440,7 +1458,7 @@ FGRenderer::buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flag
                                     osg::GraphicsContext* gc)
 {
     CameraInfo* info = new CameraInfo(flags);
-	buildDeferredBuffers( info, _shadowMapSize, !fgGetBool("/sim/rendering/no-16bit-buffer", false ) );
+    buildDeferredBuffers(info, _shadowMapSize, _useColorForDepth);
 
     osg::Camera* geometryCamera = buildDeferredGeometryCamera( info, gc );
     cgroup->getViewer()->addSlave(geometryCamera, false);
@@ -1478,6 +1496,9 @@ FGRenderer::buildDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flag
     camera->setViewMatrix(osg::Matrix::identity());
     camera->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
     camera->addChild(eg);
+
+    osg::StateSet* ss = camera->getOrCreateStateSet();
+    ss->addUniform( _depthInColor );
 
     cgroup->getViewer()->addSlave(camera, false);
     installCullVisitor(camera);

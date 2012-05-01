@@ -137,6 +137,7 @@ protected:
     int _shadowMapSize;
     size_t _numCascades;
     float _cascadeFar[4];
+    bool _useColorForDepth;
 
     osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
     osg::Camera* buildDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
@@ -152,6 +153,7 @@ protected:
     osg::ref_ptr<osg::Uniform> _fogDensity;
     osg::ref_ptr<osg::Uniform> _shadowNumber;
     osg::ref_ptr<osg::Uniform> _shadowDistances;
+    osg::ref_ptr<osg::Uniform> _depthInColor;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);
