@@ -299,15 +299,17 @@ bool STAR::route(FGRunwayRef aWay, Waypt* aEnroute, WayptVec& aPath)
 
 /////////////////////////////////////////////////////////////////////////////
 
-Transition::Transition(const std::string& aIdent, Procedure* aPr, 
-    const WayptVec& aWps) :
+Transition::Transition(const std::string& aIdent, Procedure* aPr) :
   _ident(aIdent),
-  _parent(aPr),
-  _primary(aWps)
+  _parent(aPr)
 {
   assert(aPr);
-  assert(!_primary.empty());
+}
   
+void Transition::setPrimary(const WayptVec& aWps)
+{
+  _primary = aWps;
+  assert(!_primary.empty());
   _primary[0]->setFlag(WPT_TRANSITION, true);
 }
 

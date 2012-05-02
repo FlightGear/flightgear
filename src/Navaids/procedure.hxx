@@ -70,8 +70,10 @@ public:
 private:
   friend class NavdataVisitor;
 
-  Transition(const std::string& aIdent, Procedure* aPr, const WayptVec& aWps);
+  Transition(const std::string& aIdent, Procedure* aPr);
 
+  void setPrimary(const WayptVec& aWps);
+  
   std::string _ident;
   Procedure* _parent;
   WayptVec _primary;

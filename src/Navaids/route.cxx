@@ -368,7 +368,7 @@ protected:
   virtual void error (const char * message, int line, int column);
 
 private:
-  Waypt* buildWaypoint();
+  Waypt* buildWaypoint(Route* owner);
   void processRunways(ArrivalDeparture* aProc, const XMLAttributes &atts);
  
   void finishApproach();
@@ -382,7 +382,9 @@ private:
   SID* _sid;
   STAR* _star;
   Approach* _approach;
-
+  Transition* _transition;
+  Procedure* _procedure;
+  
   WayptVec _waypoints; ///< waypoint list for current approach/sid/star
   WayptVec _transWaypts; ///< waypoint list for current transition
   
@@ -408,10 +410,10 @@ void Route::loadAirportProcedures(const SGPath& aPath, FGAirport* aApt)
     NavdataVisitor visitor(aApt, aPath);
     readXML(aPath.str(), visitor);
   } catch (sg_io_exception& ex) {
-    SG_LOG(SG_GENERAL, SG_WARN, "failured parsing procedures: " << aPath.str() <<
+    SG_LOG(SG_GENERAL, SG_WARN, "failure parsing procedures: " << aPath.str() <<
       "\n\t" << ex.getMessage() << "\n\tat:" << ex.getLocation().asString());
   } catch (sg_exception& ex) {
-    SG_LOG(SG_GENERAL, SG_WARN, "failured parsing procedures: " << aPath.str() <<
+    SG_LOG(SG_GENERAL, SG_WARN, "failure parsing procedures: " << aPath.str() <<
       "\n\t" << ex.getMessage());
   }
 }
@@ -421,7 +423,9 @@ NavdataVisitor::NavdataVisitor(FGAirport* aApt, const SGPath& aPath):
   _path(aPath),
   _sid(NULL),
   _star(NULL),
-  _approach(NULL)
+  _approach(NULL),
+  _transition(NULL),
+  _procedure(NULL)
 {
 }
 
@@ -445,11 +449,13 @@ void NavdataVisitor::startElement(const char* name, const XMLAttributes &atts)
   } else if (tag == "Sid") {
     string ident(atts.getValue("Name"));
     _sid = new SID(ident);
+    _procedure = _sid;
     _waypoints.clear();
     processRunways(_sid, atts);
   } else if (tag == "Star") {
     string ident(atts.getValue("Name"));
     _star = new STAR(ident);
+    _procedure = _star;
     _waypoints.clear();
     processRunways(_star, atts);
   } else if ((tag == "Sid_Waypoint") ||
@@ -467,13 +473,16 @@ void NavdataVisitor::startElement(const char* name, const XMLAttributes &atts)
     _ident = atts.getValue("Name");
     _waypoints.clear();
     _approach = new Approach(_ident);
+    _procedure = _approach;
   } else if ((tag == "Sid_Transition") || 
              (tag == "App_Transition") ||
              (tag == "Star_Transition")) {
     _transIdent = atts.getValue("Name");
+    _transition = new Transition(_transIdent, _procedure);
     _transWaypts.clear();
   } else if (tag == "RunwayTransition") {
     _transIdent = atts.getValue("Runway");
+    _transition = new Transition(_transIdent, _procedure);
     _transWaypts.clear();
   } else {
     
@@ -509,27 +518,27 @@ void NavdataVisitor::endElement(const char* name)
       (tag == "App_Waypoint") ||
       (tag == "Star_Waypoint"))
   {
-    _waypoints.push_back(buildWaypoint());
+    _waypoints.push_back(buildWaypoint(_procedure));
   } else if ((tag == "AppTr_Waypoint") || 
              (tag == "SidTr_Waypoint") ||
              (tag == "RwyTr_Waypoint") ||
              (tag == "StarTr_Waypoint")) 
   {
-    _transWaypts.push_back(buildWaypoint());
+    _transWaypts.push_back(buildWaypoint(_transition));
   } else if (tag == "Sid_Transition") {
     assert(_sid);
     // SID waypoints are stored backwards, to share code with STARs
     std::reverse(_transWaypts.begin(), _transWaypts.end());
-    Transition* t = new Transition(_transIdent, _sid, _transWaypts);
-    _sid->addTransition(t);
+    _transition->setPrimary(_transWaypts);
+    _sid->addTransition(_transition);
   } else if (tag == "Star_Transition") {
     assert(_star);
-    Transition* t = new Transition(_transIdent, _star, _transWaypts);
-    _star->addTransition(t);
+    _transition->setPrimary(_transWaypts);
+    _star->addTransition(_transition);
   } else if (tag == "App_Transition") {
     assert(_approach);
-    Transition* t = new Transition(_transIdent, _approach, _transWaypts);
-    _approach->addTransition(t);
+    _transition->setPrimary(_transWaypts);
+    _approach->addTransition(_transition);
   } else if (tag == "RunwayTransition") {
     ArrivalDeparture* ad;
     if (_sid) {
@@ -540,9 +549,9 @@ void NavdataVisitor::endElement(const char* name)
       ad = _star;
     }
     
-    Transition* t = new Transition(_transIdent, ad, _transWaypts);
+    _transition->setPrimary(_transWaypts);
     FGRunwayRef rwy = _airport->getRunwayByIdent(_transIdent);
-    ad->addRunwayTransition(rwy, t);
+    ad->addRunwayTransition(rwy, _transition);
   } else if (tag == "Approach") {
     finishApproach();
   } else if (tag == "Sid") {
@@ -594,20 +603,20 @@ void NavdataVisitor::endElement(const char* name)
   }
 }
 
-Waypt* NavdataVisitor::buildWaypoint()
+Waypt* NavdataVisitor::buildWaypoint(Route* owner)
 {
   Waypt* wp = NULL;
   if (_wayptType == "Normal") {
     // new LatLonWaypoint
     SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
-    wp = new BasicWaypt(pos, _wayptName, NULL);
+    wp = new BasicWaypt(pos, _wayptName, owner);
   } else if (_wayptType == "Runway") {
     string ident = _wayptName.substr(2);
     FGRunwayRef rwy = _airport->getRunwayByIdent(ident);
-    wp = new RunwayWaypt(rwy, NULL);
+    wp = new RunwayWaypt(rwy, owner);
   } else if (_wayptType == "Hold") {
     SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
-    Hold* h = new Hold(pos, _wayptName, NULL);
+    Hold* h = new Hold(pos, _wayptName, owner);
     wp = h;
     if (_holdRighthanded) {
       h->setRightHanded();
@@ -625,15 +634,20 @@ Waypt* NavdataVisitor::buildWaypoint()
       h->setHoldRadial(_holdRadial);
     }
   } else if (_wayptType == "Vectors") {
-    wp = new ATCVectors(NULL, _airport);
+    wp = new ATCVectors(owner, _airport);
   } else if ((_wayptType == "Intc") || (_wayptType == "VorRadialIntc")) {
     SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
-    wp = new RadialIntercept(NULL, _wayptName, pos, _course, _radial);
+    wp = new RadialIntercept(owner, _wayptName, pos, _course, _radial);
   } else if (_wayptType == "DmeIntc") {
     SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
-    wp = new DMEIntercept(NULL, _wayptName, pos, _course, _dmeDistance);
+    wp = new DMEIntercept(owner, _wayptName, pos, _course, _dmeDistance);
   } else if (_wayptType == "ConstHdgtoAlt") {
-    wp = new HeadingToAltitude(NULL, _wayptName, _course);
+    wp = new HeadingToAltitude(owner, _wayptName, _course);
+  } else if (_wayptType == "PBD") {
+    SGGeod pos(SGGeod::fromDeg(_longitude, _latitude)), pos2;
+    double az2;
+    SGGeodesy::direct(pos, _course, _dmeDistance, pos2, az2);
+    wp = new BasicWaypt(pos2, _wayptName, owner);
   } else {
     SG_LOG(SG_GENERAL, SG_ALERT, "implement waypoint type:" << _wayptType);
     throw sg_format_exception("Unrecognized waypt type", _wayptType);
