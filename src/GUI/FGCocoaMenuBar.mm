@@ -110,6 +110,23 @@ static void setItemShortcutFromString(NSMenuItem* item, const string& s)
 }
 
 namespace {
+  class CocoaAutoreleasePool
+  {
+  public:
+    CocoaAutoreleasePool()
+    {
+      pool = [[NSAutoreleasePool alloc] init];
+    }
+    
+    ~CocoaAutoreleasePool()
+    {
+      [pool release];
+    }
+    
+  private:
+    NSAutoreleasePool* pool;
+  };
+  
   class CocoaEnabledListener : public SGPropertyChangeListener
   {
   public:
@@ -120,6 +137,7 @@ namespace {
     
     virtual void valueChanged(SGPropertyNode *node) 
     {
+      CocoaAutoreleasePool pool;
       BOOL b = node->getBoolValue();
       [item setEnabled:b];
     }
@@ -137,6 +155,7 @@ FGCocoaMenuBar::CocoaMenuBarPrivate::CocoaMenuBarPrivate()
   
 FGCocoaMenuBar::CocoaMenuBarPrivate::~CocoaMenuBarPrivate()
 {
+  CocoaAutoreleasePool pool;
   [delegate release];
 }
   
@@ -227,6 +246,8 @@ FGCocoaMenuBar::~FGCocoaMenuBar()
 
 void FGCocoaMenuBar::init()
 {
+  CocoaAutoreleasePool pool;
+  
   NSMenu* mainBar = [[NSApplication sharedApplication] mainMenu];
   SGPropertyNode_ptr props = fgGetNode("/sim/menubar/default",true);
   
