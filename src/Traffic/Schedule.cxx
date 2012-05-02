@@ -57,7 +57,7 @@
 
 /******************************************************************************
  * the FGAISchedule class contains data members and code to maintain a
- * schedule of Flights for an articically controlled aircraft. 
+ * schedule of Flights for an artificially controlled aircraft.
  *****************************************************************************/
 FGAISchedule::FGAISchedule()
 {
@@ -229,7 +229,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
      firstRun = false;
   }
   
-    FGScheduledFlight* flight = flights.front();
+  FGScheduledFlight* flight = flights.front();
   if (!deptime) {
     deptime = flight->getDepartureTime();
     //cerr << "Settiing departure time " << deptime << endl;
@@ -252,10 +252,10 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     // Don't just update: check whether we need to load a new leg. etc.
     // This update occurs for distant aircraft, so we can update the current leg
     // and detach it from the current list of aircraft. 
-	  flight->update();
+    flight->update();
     flights.erase(flights.begin()); // pop_front(), effectively
-	  return true;
-	}
+    return true;
+  }
   
   FGAirport* dep = flight->getDepartureAirport();
   FGAirport* arr = flight->getArrivalAirport();
@@ -330,7 +330,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   mp_ai.append(modelPath);
 
   if (!mp.exists() && !mp_ai.exists()) {
-    SG_LOG(SG_GENERAL, SG_WARN, "TrafficManager: Could not load model " << mp.str());
+    SG_LOG(SG_GENERAL, SG_WARN, "TrafficManager: Could not load model " << mp_ai.str());
     return true;
   }
 
@@ -347,7 +347,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   aircraft->setBank(0);
       
   courseToDest = SGGeodesy::courseDeg(position, arr->geod());
-    FGAIFlightPlan *fp = new FGAIFlightPlan(aircraft, flightPlanName, courseToDest, deptime, 
+  FGAIFlightPlan *fp = new FGAIFlightPlan(aircraft, flightPlanName, courseToDest, deptime,
                                             dep, arr, true, radius, 
                                             flight->getCruiseAlt()*100, 
                                             position.getLatitudeDeg(), 
