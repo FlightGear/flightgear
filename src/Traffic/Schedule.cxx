@@ -314,6 +314,18 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   return createAIAircraft(flight, speed, deptime);
 }
 
+bool FGAISchedule::validModelPath(const std::string& modelPath)
+{
+    SGPath mp(globals->get_fg_root());
+    SGPath mp_ai = mp;
+
+    mp.append(modelPath);
+    mp_ai.append("AI");
+    mp_ai.append(modelPath);
+
+    return mp.exists() || mp_ai.exists();
+}
+
 bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime)
 {
   FGAirport* dep = flight->getDepartureAirport();

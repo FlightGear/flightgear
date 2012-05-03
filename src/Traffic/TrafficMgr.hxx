@@ -46,6 +46,7 @@
 #ifndef _TRAFFICMGR_HXX_
 #define _TRAFFICMGR_HXX_
 
+#include <set>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/xml/easyxml.hxx>
@@ -87,6 +88,10 @@ private:
   ScheduleVectorIterator currAircraft, currAircraftClosest;
   vector<string> elementValueStack;
 
+  // record model paths which are missing, to avoid duplicate
+  // warnings when parsing traffic schedules.
+  std::set<std::string> missingModels;
+    
   std::string mdl, livery, registration, callsign, fltrules, 
     port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
     repeat, acType, airline, m_class, flighttype, requiredAircraft, homePort;
@@ -123,6 +128,8 @@ public:
   FGScheduledFlightVecIterator getFirstFlight(const string &ref) { return flights[ref].begin(); }
   FGScheduledFlightVecIterator getLastFlight(const string &ref) { return flights[ref].end(); }
 
+  void endAircraft();
+  
   // Some overloaded virtual XMLVisitor members
   virtual void startXML (); 
   virtual void endXML   ();

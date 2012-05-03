@@ -91,6 +91,8 @@ class FGAISchedule
 
   ~FGAISchedule(); //destructor
 
+    static bool validModelPath(const std::string& model);
+    
   bool update(time_t now, const SGVec3d& userCart);
   bool init();
 
