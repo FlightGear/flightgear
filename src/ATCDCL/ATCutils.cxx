@@ -23,6 +23,7 @@
 #endif
 
 #include <sstream>
+#include <cstdlib>
 
 #include <simgear/math/SGMath.hxx>
 #include <simgear/constants.h>

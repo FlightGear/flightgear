@@ -22,6 +22,7 @@
 #  include <config.h>
 #endif
 
+#include <cstdlib>
 
 #include "AIFlightPlan.hxx"
 #include <simgear/math/sg_geodesy.hxx>

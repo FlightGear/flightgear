@@ -25,6 +25,8 @@
 #  include "config.h"
 #endif
 
+#include <cstdlib>
+
 #include <Main/fg_props.hxx>
 #include "kln89_page_cal.hxx"
 

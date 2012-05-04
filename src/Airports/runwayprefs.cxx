@@ -26,6 +26,7 @@
 #endif
 
 #include <math.h>
+#include <cstdlib>
 #include <cstring>
 
 #include <simgear/compiler.h>
