@@ -33,6 +33,7 @@
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <Main/fg_props.hxx>
 #include "flightrecorder.hxx"
 

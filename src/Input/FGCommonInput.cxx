@@ -30,8 +30,6 @@
 #include <Main/globals.hxx>
 #include <Main/fg_os.hxx>
 
-#include <simgear/math/SGMath.hxx>
-
 using simgear::PropertyList;
 using std::string;
 

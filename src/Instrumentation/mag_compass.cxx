@@ -11,10 +11,12 @@
 #endif
 
 #include <simgear/sg_inlines.h>
+#include <simgear/math/SGMath.hxx>
 
-#include "mag_compass.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
+
+#include "mag_compass.hxx"
 
 
 MagCompass::MagCompass ( SGPropertyNode *node )

@@ -14,11 +14,13 @@
 #include <string>
 #include <sstream>
 
-#include "heading_indicator_fg.hxx"
-#include <Main/fg_props.hxx>
-#include <Main/util.hxx>			    
-
 #include <simgear/magvar/magvar.hxx>
+#include <simgear/math/SGMath.hxx>
+
+#include <Main/fg_props.hxx>
+#include <Main/util.hxx>
+
+#include "heading_indicator_fg.hxx"
 
 using std::string;
 

@@ -24,7 +24,6 @@
 #ifndef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-#include <simgear/math/SGMath.hxx>
 #endif
 
 #include "logic.hxx"

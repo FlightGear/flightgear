@@ -23,8 +23,6 @@
 #  include <config.h>
 #endif
 
-#include "navradio.hxx"
-
 #include <sstream>
 #include <cstring>
 
@@ -35,6 +33,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/math/interpolater.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/strutils.hxx>
 
 #include <Navaids/navrecord.hxx>
@@ -42,6 +41,8 @@
 #include <Airports/runways.hxx>
 #include <Navaids/navlist.hxx>
 #include <Main/util.hxx>
+
+#include "navradio.hxx"
 
 using std::string;
 

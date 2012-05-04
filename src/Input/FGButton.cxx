@@ -28,7 +28,6 @@
 
 #include "FGButton.hxx"
 
-#include <simgear/math/SGMath.hxx>
 
 FGButton::FGButton ()
   : is_repeatable(false),

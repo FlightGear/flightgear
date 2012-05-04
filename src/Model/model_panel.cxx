@@ -14,7 +14,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
-#include <simgear/math/SGMath.hxx>
 
 #include "panelnode.hxx"
 #include "model_panel.hxx"

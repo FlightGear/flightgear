@@ -17,7 +17,6 @@
 //
 #ifndef __FGPANELPROTOCOL_HXX
 #define __FGPANELPROTOCOL_HXX
-#include <simgear/math/SGMath.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/io/iochannel.hxx>

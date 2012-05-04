@@ -26,6 +26,7 @@
 
 #include <algorithm>
 
+#include <simgear/math/SGMath.hxx>
 #include <Main/fg_props.hxx>
 #include "environment_ctrl.hxx"
 #include "environment.hxx"

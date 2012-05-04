@@ -46,7 +46,6 @@
 #include <fstream>
 #include <string>
 
-#include <simgear/math/SGMath.hxx>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 

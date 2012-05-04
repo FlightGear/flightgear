@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include <simgear/props/props.hxx>
-#include <simgear/math/SGMath.hxx>
 
 ////////////////////////////////////////////////////////////////////////
 // FGColor class.
