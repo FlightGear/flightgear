@@ -172,16 +172,9 @@ void FGCocoaMenuBar::CocoaMenuBarPrivate::menuFromProps(NSMenu* menu, SGProperty
       n->setBoolValue("enabled", true);
     }
     
-    string shortcut;
-    string l = n->getStringValue("label");
-    string::size_type pos = l.find("(");
-    if (pos != string::npos) {
-      string full(l);
-      l = full.substr(0, pos);
-      shortcut = full.substr(pos + 1, full.size() - (pos + 2));
-    }
-    
+    string l = getLocalizedLabel(n);
     NSString* label = stdStringToCocoa(strutils::simplify(l));
+    string shortcut = n->getStringValue("key");
     
     NSMenuItem* item;
     if (index >= [menu numberOfItems]) {
@@ -258,7 +251,7 @@ void FGCocoaMenuBar::init()
   }
   
   BOOST_FOREACH(SGPropertyNode_ptr n, props->getChildren("menu")) {
-    NSString* label = stdStringToCocoa(n->getStringValue("label"));
+    NSString* label = stdStringToCocoa(getLocalizedLabel(n));
     NSMenuItem* item = [mainBar itemWithTitle:label];
     NSMenu* menu;
     
