@@ -26,7 +26,6 @@
 
 #include <iostream>
 
-#include <simgear/math/SGMath.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
 #include <Scenery/scenery.hxx>

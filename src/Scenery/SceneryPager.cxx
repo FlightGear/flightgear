@@ -20,7 +20,6 @@
 #  include <config.h>
 #endif
 
-#include <simgear/math/SGMath.hxx>
 #include "SceneryPager.hxx"
 #include <algorithm>
 #include <functional>

@@ -64,7 +64,6 @@
 #include <osgDB/WriteFile>
 #include <osgViewer/Renderer>
 
-#include <simgear/math/SGMath.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/material/Effect.hxx>

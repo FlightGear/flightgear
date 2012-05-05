@@ -47,7 +47,6 @@
 #include <ATCDCL/ATCProjection.hxx>
 
 #include <Main/fg_props.hxx>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/structure/commands.hxx>
 #include <Airports/simple.hxx>
 

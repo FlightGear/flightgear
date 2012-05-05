@@ -25,7 +25,6 @@
 #include <sstream>
 #include <cstdlib>
 
-#include <simgear/math/SGMath.hxx>
 #include <simgear/constants.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>

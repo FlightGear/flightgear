@@ -26,7 +26,6 @@
 #include "AIBase.hxx"
 
 #include <simgear/sg_inlines.h>
-#include <simgear/math/SGMath.hxx>
 
 
 class FGAIWingman : public FGAIBallistic {

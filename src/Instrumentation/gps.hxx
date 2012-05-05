@@ -13,7 +13,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
-#include <simgear/math/SGMath.hxx>
 
 #include <Navaids/positioned.hxx>
 #include <Instrumentation/rnav_waypt_controller.hxx>

@@ -22,7 +22,6 @@
 #endif
 
 #include <simgear/sg_inlines.h>
-#include <simgear/math/SGMath.hxx>
 
 
 #include "AIWingman.hxx"

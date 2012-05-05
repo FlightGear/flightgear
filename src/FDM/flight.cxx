@@ -28,7 +28,6 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Scenery/scenery.hxx>

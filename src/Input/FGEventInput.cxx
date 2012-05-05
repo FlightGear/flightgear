@@ -29,7 +29,6 @@
 #include <Main/fg_props.hxx>
 #include <simgear/io/sg_file.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/math/SGMath.hxx>
 #include <Scripting/NasalSys.hxx>
 
 using simgear::PropertyList;

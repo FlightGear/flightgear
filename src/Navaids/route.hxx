@@ -32,7 +32,6 @@
 #include <iosfwd>
 
 // Simgear
-#include <simgear/math/SGMath.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/props/props.hxx>

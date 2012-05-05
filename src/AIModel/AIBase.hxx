@@ -23,7 +23,6 @@
 #include <string>
 
 #include <simgear/constants.h>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/misc/sg_path.hxx>
