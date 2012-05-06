@@ -72,6 +72,11 @@ public:
      */
     static void utf8toLatin1        (std::string& s);
 
+    /**
+     * Obtain user's default language setting.
+     */
+    const char* getUserLanguage();
+
 protected:
     /**
      * Find property node matching given language.
