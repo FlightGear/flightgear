@@ -1025,7 +1025,7 @@ void FGRouteMgr::setSID(const char* aIdent)
 {
   FGAirport* apt = _plan->departureAirport();
   if (!apt || (aIdent == NULL)) {
-    _plan->setSID((SID*) NULL);
+    _plan->setSID((flightgear::SID*) NULL);
     return;
   } 
   
@@ -1035,7 +1035,7 @@ void FGRouteMgr::setSID(const char* aIdent)
     string sidIdent = ident.substr(0, hyphenPos);
     string transIdent = ident.substr(hyphenPos + 1);
     
-    SID* sid = apt->findSIDWithIdent(sidIdent);
+    flightgear::SID* sid = apt->findSIDWithIdent(sidIdent);
     Transition* trans = sid ? sid->findTransitionByName(transIdent) : NULL;
     _plan->setSID(trans);
   } else {
