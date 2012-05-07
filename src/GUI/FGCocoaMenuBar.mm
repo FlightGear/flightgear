@@ -297,3 +297,10 @@ void FGCocoaMenuBar::hide()
 {
   // no-op
 }
+
+void cocoaOpenUrl(const std::string& url)
+{
+  CocoaAutoreleasePool pool;
+  NSURL* nsu = [NSURL URLWithString:stdStringToCocoa(url)];
+  [[NSWorkspace sharedWorkspace] openURL:nsu];
+}
