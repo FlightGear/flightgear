@@ -577,7 +577,7 @@ int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
   
 void FlightPlan::setCurrentIndex(int index)
 {
-  if ((index < 0) || (index >= numLegs())) {
+  if ((index < -1) || (index >= numLegs())) {
     throw sg_range_exception("invalid leg index", "FlightPlan::setCurrentIndex");
   }
   
