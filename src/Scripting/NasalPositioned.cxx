@@ -483,7 +483,7 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
   } else if (!strcmp(fieldName, "sid")) {
     Procedure* proc = procedureGhost(value);
     if (proc && (proc->type() == PROCEDURE_SID)) {
-      fp->setSID((SID*) proc);
+      fp->setSID((flightgear::SID*) proc);
       return;
     }
     // allow a SID transition to be set, implicitly include the SID itself
