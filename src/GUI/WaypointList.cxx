@@ -46,13 +46,17 @@ public:
     _fp(fp)
   {    
     SGPropertyNode* routeEdited = fgGetNode("/autopilot/route-manager/signals/edited", true);
+    SGPropertyNode* flightplanChanged = fgGetNode("/autopilot/route-manager/signals/flightplan-changed", true);
     routeEdited->addChangeListener(this);
+    flightplanChanged->addChangeListener(this);
   }
   
   ~FlightPlanWaypointModel()
   {
     SGPropertyNode* routeEdited = fgGetNode("/autopilot/route-manager/signals/edited", true);
+    SGPropertyNode* flightplanChanged = fgGetNode("/autopilot/route-manager/signals/flightplan-changed", true);
     routeEdited->removeChangeListener(this);
+    flightplanChanged->removeChangeListener(this);
   }
   
 // implement WaypointList::Model
@@ -108,8 +112,15 @@ public:
 // implement SGPropertyChangeListener
   void valueChanged(SGPropertyNode *prop)
   {
-    if (_cb) {
-      (*_cb)();
+    if (prop->getNameString() == "edited") {
+      if (_cb) {
+        (*_cb)();
+      }
+    }
+    
+    if (prop->getNameString() == "flightplan-changed") {
+      _fp = 
+        static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"))->flightPlan();
     }
   }
 private:
@@ -402,12 +413,12 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y)
   if (wp->flag(WPT_MISS)) {
     drawBox = true;
     puSetColor(col, 1.0, 0.0, 0.0, 0.3);  // red
-  } else if (wp->flag(WPT_ARRIVAL)) {
+  } else if (wp->flag(WPT_ARRIVAL) || wp->flag(WPT_DEPARTURE)) {
     drawBox = true;
     puSetColor(col, 0.0, 0.0, 0.0, 0.3);
-  } else if (wp->flag(WPT_DEPARTURE)) {
+  } else if (wp->flag(WPT_APPROACH)) {
     drawBox = true;
-    puSetColor(col, 0.0, 0.0, 0.0, 0.3);
+    puSetColor(col, 0.0, 0.0, 0.1, 0.3);
   }
   
   if (isDragSource) {

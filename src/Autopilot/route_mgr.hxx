@@ -169,6 +169,8 @@ private:
      */
     SGPropertyNode_ptr _finished;
     
+    SGPropertyNode_ptr _flightplanChanged;
+  
     void setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance);
     
     /**
@@ -187,7 +189,8 @@ private:
 
     SGPropertyNode_ptr input;
     SGPropertyNode_ptr weightOnWheels;
-    
+    SGPropertyNode_ptr groundSpeed;
+  
     InputListener *listener;
     SGPropertyNode_ptr mirror;    
   

@@ -312,6 +312,7 @@ void FGRouteMgr::init() {
     
   _edited = fgGetNode(RM "signals/edited", true);
   _finished = fgGetNode(RM "signals/finished", true);
+  _flightplanChanged = fgGetNode(RM "signals/flightplan-changed", true);
   
   _currentWpt = fgGetNode(RM "current-wp", true);
   _currentWpt->tie(SGRawValueMethods<FGRouteMgr, int>
@@ -364,6 +365,8 @@ void FGRouteMgr::postinit()
   }
 
   weightOnWheels = fgGetNode("/gear/gear[0]/wow", true);
+  groundSpeed = fgGetNode("/velocities/groundspeed-kt", true);
+  
   // check airbone flag agrees with presets
 }
 
@@ -415,6 +418,8 @@ void FGRouteMgr::setFlightPlan(FlightPlan* plan)
   _plan = plan;
   _plan->setDelegate(this);
   
+  _flightplanChanged->fireValueChanged();
+  
 // fire all the callbacks!
   departureChanged();
   arrivalChanged();
@@ -428,12 +433,18 @@ void FGRouteMgr::update( double dt )
     return; // paused, nothing to do here
   }
   
-  double groundSpeed = fgGetDouble("/velocities/groundspeed-kt", 0.0);
+  double gs = groundSpeed->getDoubleValue();
   if (airborne->getBoolValue()) {
     time_t now = time(NULL);
     elapsedFlightTime->setDoubleValue(difftime(now, _takeoffTime));
+    
+    if (weightOnWheels->getBoolValue()) {
+      // touch down
+      destination->setIntValue("touchdown-time", time(NULL));
+      airborne->setBoolValue(false);
+    }
   } else { // not airborne
-    if (weightOnWheels->getBoolValue() || (groundSpeed < 40)) {
+    if (weightOnWheels->getBoolValue() || (gs < 40)) {
       return;
     }
     
@@ -446,6 +457,10 @@ void FGRouteMgr::update( double dt )
     return;
   }
 
+  if (checkFinished()) {
+    // maybe we're done
+  }
+  
 // basic course/distance information
   SGGeod currentPos = globals->get_aircraft_position();
 
@@ -494,7 +509,7 @@ void FGRouteMgr::update( double dt )
   
   distanceToGo->setDoubleValue(totalDistanceRemaining);
   wpn->setDoubleValue("dist", totalDistanceRemaining);
-  ete->setDoubleValue(totalDistanceRemaining / groundSpeed * 3600.0);
+  ete->setDoubleValue(totalDistanceRemaining / gs * 3600.0);
   setETAPropertyFromDistance(wpn->getChild("eta"), totalDistanceRemaining);
 }
 
@@ -686,7 +701,7 @@ void FGRouteMgr::arrivalChanged()
 
 void FGRouteMgr::buildArrival(WayptRef enroute, WayptVec& wps)
 {
-  FGAirportRef apt = _plan->departureAirport();
+  FGAirportRef apt = _plan->destinationAirport();
   if (!apt.valid()) {
     return;
   }
@@ -935,14 +950,27 @@ bool FGRouteMgr::checkFinished()
     return true;
   }
   
-  if (_plan->currentIndex() < _plan->numLegs()) {
-    return false;
+  bool done = false;
+// done if we're stopped on the destination runway 
+  if (_plan->currentLeg() && 
+      (_plan->currentLeg()->waypoint()->source() == _plan->destinationRunway())) 
+  {
+    double gs = groundSpeed->getDoubleValue();
+    done = weightOnWheels->getBoolValue() && (gs < 25);
   }
   
-  SG_LOG(SG_AUTOPILOT, SG_INFO, "reached end of active route");
-  _finished->fireValueChanged();
-  active->setBoolValue(false);
-  return true;
+// also done if we hit the final waypoint
+  if (_plan->currentIndex() >= _plan->numLegs()) {
+    done = true;
+  }
+  
+  if (done) {
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "reached end of active route");
+    _finished->fireValueChanged();
+    active->setBoolValue(false);
+  }
+  
+  return done;
 }
 
 void FGRouteMgr::jumpToIndex(int index)
