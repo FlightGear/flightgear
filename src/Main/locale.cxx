@@ -41,7 +41,7 @@ FGLocale::~FGLocale()
 {
 }
 
-#ifdef HAVE_WINDOWS_H
+#ifdef _WIN32
 /**
  * Determine locale/language settings on Windows.
  *
@@ -62,14 +62,20 @@ FGLocale::getUserLanguage()
                       LOCALE_SISO639LANGNAME,
                       locale, sizeof(locale)))
     {
+        SG_LOG(SG_GENERAL, SG_INFO, "Detected locale's language setting: " << locale);
         size_t i = strlen(locale);
         locale[i++] = '_';
         if (GetLocaleInfo(LOCALE_USER_DEFAULT,
                           LOCALE_SISO3166CTRYNAME,
                           locale+i, (int)(sizeof(locale)-i)))
             return locale;
+
+        locale[--i] = 0;
+        SG_LOG(SG_GENERAL, SG_INFO, "Failed to detected locale's country setting.");
+        return locale;
     }
 
+    SG_LOG(SG_GENERAL, SG_INFO, "Failed to obtain Windows locale information.");
     return NULL;
 }
 #else
@@ -87,8 +93,6 @@ FGLocale::getUserLanguage()
 SGPropertyNode*
 FGLocale::findLocaleNode(const string& language)
 {
-    SG_LOG(SG_GENERAL, SG_INFO, "Searching language resource for locale: " << language);
-
     SGPropertyNode* node = NULL;
 
     // remove character encoding from the locale spec, i.e. "de_DE.utf8" => "de_DE"
@@ -100,15 +104,7 @@ FGLocale::findLocaleNode(const string& language)
             return node;
     }
 
-    // try country's default resource, i.e. "de_DE" => "de"
-    pos = language.find("_");
-    if ((pos != string::npos)&&(pos>0))
-    {
-        node = findLocaleNode(language.substr(0, pos));
-        if (node)
-            return node;
-    }
-
+    SG_LOG(SG_GENERAL, SG_INFO, "Searching language resource for locale: " << language);
     // search locale using full string
     vector<SGPropertyNode_ptr> localeList = _intl->getChildren("locale");
 
@@ -118,9 +114,21 @@ FGLocale::findLocaleNode(const string& language)
 
        for (size_t j = 0; j < langList.size(); j++)
        {
-          if (!language.compare(langList[j]->getStringValue()))
-             return localeList[i];
+           if (!language.compare(langList[j]->getStringValue()))
+           {
+               SG_LOG(SG_GENERAL, SG_INFO, "Found language resource for: " << language);
+               return localeList[i];
+           }
        }
+    }
+
+    // try country's default resource, i.e. "de_DE" => "de"
+    pos = language.find("_");
+    if ((pos != string::npos)&&(pos>0))
+    {
+        node = findLocaleNode(language.substr(0, pos));
+        if (node)
+            return node;
     }
 
     return NULL;
@@ -133,12 +141,15 @@ FGLocale::selectLanguage(const char *language)
 {
     // Use system setting when no language is given.
     if ((language == NULL)||(language[0]==0))
+    {
         language = getUserLanguage();
+        SG_LOG(SG_GENERAL, SG_INFO, "System language: " << ((language) ? language : "<unavailable>"));
+    }
 
     // Use plain C locale if nothing is available.
     if ((language == NULL)||(language[0]==0))
     {
-        SG_LOG(SG_GENERAL, SG_INFO, "Unable to detect the language" );
+        SG_LOG(SG_GENERAL, SG_INFO, "Unable to detect system language" );
         language = "C";
     }
 
