@@ -54,15 +54,18 @@ public:
         osg::Camera::BufferComponent component;
         std::string buffer;
     };
+    typedef std::vector<osg::ref_ptr<Attachment> > AttachmentList;
 
     struct Stage : public osg::Referenced {
         Stage(SGPropertyNode* prop);
 
         std::string name;
         std::string type;
+        int orderNum;
+        std::string effect;
 
         std::vector<osg::ref_ptr<Pass> > passes;
-        std::vector<osg::ref_ptr<Attachment> > attachments;
+        AttachmentList attachments;
     };
     FGRenderingPipeline();
 

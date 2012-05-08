@@ -57,12 +57,12 @@
 #include <osgViewer/Renderer>
 
 namespace flightgear {
-const char* MAIN_CAMERA = "MAIN_CAMERA";
-const char* FAR_CAMERA = "FAR_CAMERA";
-const char* GEOMETRY_CAMERA = "GEOMETRY_CAMERA";
-const char* SHADOW_CAMERA = "SHADOW_CAMERA";
-const char* LIGHTING_CAMERA = "LIGHTING_CAMERA";
-const char* DISPLAY_CAMERA = "DISPLAY_CAMERA";
+const char* MAIN_CAMERA = "main";
+const char* FAR_CAMERA = "far";
+const char* GEOMETRY_CAMERA = "geometry";
+const char* SHADOW_CAMERA = "shadow";
+const char* LIGHTING_CAMERA = "lighting";
+const char* DISPLAY_CAMERA = "display";
 }
 
 static osg::Matrix

@@ -113,6 +113,12 @@ public:
 	flightgear::CameraInfo* buildDefaultDeferredPipeline(flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
                                    const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
 
+    osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const FGRenderingPipeline::AttachmentList& attachments );
+    osg::Camera* buildDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const FGRenderingPipeline::AttachmentList& attachments );
+    osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const FGRenderingPipeline::AttachmentList& attachments );
+    osg::Camera* buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage );
+    void buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraInfo* info, const std::string& name, osg::GraphicsContext* gc );
+
     void updateShadowCamera(const flightgear::CameraInfo* info, const osg::Vec3d& position);
     void updateShadowMapSize(int mapSize);
     void enableShadows(bool enabled);
@@ -147,12 +153,16 @@ protected:
     float _cascadeFar[4];
     bool _useColorForDepth;
 
-    osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::vector<osg::ref_ptr<FGRenderingPipeline::Attachment> > &attachments );
     osg::Camera* buildDefaultDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
-    osg::Camera* buildDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::vector<osg::ref_ptr<FGRenderingPipeline::Attachment> > &attachments );
     osg::Camera* buildDefaultDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
-    osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::vector<osg::ref_ptr<FGRenderingPipeline::Attachment> > &attachments );
     osg::Camera* buildDefaultDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
+
+    flightgear::CameraInfo* FGRenderer::buildCameraFromRenderingPipeline(FGRenderingPipeline* rpipe, flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                        const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
+
+    void buildBuffers(FGRenderingPipeline* rpipe, flightgear::CameraInfo* info);
+    void buildStage(FGRenderingPipeline* rpipe, flightgear::CameraInfo* info, FGRenderingPipeline::Stage* stage, flightgear::CameraGroup* cgroup, osg::Camera* mainCamera, const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
+
     void updateShadowCascade(const flightgear::CameraInfo* info, osg::Camera* camera, osg::Group* grp, int idx, double left, double right, double bottom, double top, double zNear, double f1, double f2);
     osg::Vec3 getSunDirection() const;
     osg::ref_ptr<osg::Uniform> _ambientFactor;

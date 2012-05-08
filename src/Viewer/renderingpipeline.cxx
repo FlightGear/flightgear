@@ -51,7 +51,7 @@ namespace flightgear {
 FGRenderingPipeline* makeRenderingPipeline(const std::string& name,
                    const simgear::SGReaderWriterOptions* options)
 {
-    std::string fileName(name);
+    std::string fileName = "Effects/" + name;
     fileName += ".xml";
     std::string absFileName
         = simgear::SGModelLib::findDataFile(fileName, options);
@@ -101,6 +101,29 @@ void findAttrOrHex(const simgear::effect::EffectPropertyMap<T>& pMap,
                                    + string(val));
         }
     }
+}
+
+const SGPropertyNode* getPropertyNode(const SGPropertyNode* prop)
+{
+    if (!prop)
+        return 0;
+    if (prop->nChildren() > 0) {
+        const SGPropertyNode* propertyProp = prop->getChild("property");
+        if (!propertyProp)
+            return prop;
+        return globals->get_props()->getNode(propertyProp->getStringValue());
+    }
+    return prop;
+}
+
+const SGPropertyNode* getPropertyChild(const SGPropertyNode* prop,
+                                             const char* name)
+{
+    const SGPropertyNode* child = prop->getChild(name);
+    if (!child)
+        return 0;
+    else
+        return getPropertyNode(child);
 }
 
 simgear::effect::EffectNameValue<GLint> internalFormatInit[] =
@@ -153,15 +176,16 @@ FGRenderingPipeline::Buffer::Buffer(SGPropertyNode* prop)
     findAttrOrHex(internalFormats, prop->getChild("internal-format"), internalFormat);
     findAttrOrHex(sourceFormats, prop->getChild("source-format"), sourceFormat);
     findAttrOrHex(sourceTypes, prop->getChild("source-type"), sourceType);
-    findAttrOrHex(sourceTypes, prop->getChild("wrap-mode"), wrapMode);
-    SGPropertyNode_ptr widthProp = prop->getChild("width");
+    findAttrOrHex(wrapModes, prop->getChild("wrap-mode"), wrapMode);
+    SGConstPropertyNode_ptr widthProp = getPropertyChild(prop, "width");
     if (!widthProp.valid())
         width = -1;
     else if (widthProp->getStringValue() == std::string("screen"))
         width = -1;
-    else
+    else {
         width = widthProp->getIntValue();
-    SGPropertyNode_ptr heightProp = prop->getChild("height");
+    }
+    SGConstPropertyNode_ptr heightProp = getPropertyChild(prop, "height");
     if (!heightProp.valid())
         height = -1;
     else if (heightProp->getStringValue() == std::string("screen"))
@@ -194,9 +218,14 @@ FGRenderingPipeline::Stage::Stage(SGPropertyNode* prop)
     name = nameProp->getStringValue();
     SGPropertyNode_ptr typeProp = prop->getChild("type");
     if (!typeProp.valid()) {
-        throw sg_exception("Stage type is mandatory");
+        type = nameProp->getStringValue();
+    } else {
+        type = typeProp->getStringValue();
     }
-    type = typeProp->getStringValue();
+
+    orderNum = prop->getIntValue("order-num", -1);
+
+    effect = prop->getStringValue("effect", "");
 
     std::vector<SGPropertyNode_ptr> attachments = prop->getChildren("attachment");
     for (int i = 0; i < (int)attachments.size(); ++i) {
