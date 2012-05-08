@@ -46,8 +46,10 @@
 #include <Scenery/scenery.hxx>
 #include <ATC/CommStation.hxx>
 #include <Navaids/route.hxx>
+#include <Navaids/waypoint.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Navaids/procedure.hxx>
+#include <Navaids/airways.hxx>
 
 using namespace flightgear;
 
@@ -110,8 +112,13 @@ static naRef stringToNasal(naContext c, const std::string& s)
 
 static FGPositioned* positionedGhost(naRef r)
 {
-    if (naGhost_type(r) == &PositionedGhostType)
+    if ((naGhost_type(r) == &AirportGhostType) ||
+        (naGhost_type(r) == &NavaidGhostType) ||
+        (naGhost_type(r) == &RunwayGhostType))
+    {
         return (FGPositioned*) naGhost_ptr(r);
+    }
+  
     return 0;
 }
 
@@ -147,6 +154,12 @@ static Waypt* wayptGhost(naRef r)
 {
   if (naGhost_type(r) == &WayptGhostType)
     return (Waypt*) naGhost_ptr(r);
+  
+  if (naGhost_type(r) == &FPLegGhostType) {
+    FlightPlan::Leg* leg = (FlightPlan::Leg*) naGhost_ptr(r);
+    return leg->waypoint();
+  }
+  
   return 0;
 }
 
@@ -195,16 +208,6 @@ static naRef waypointPrototype;
 static naRef geoCoordClass;
 static naRef fpLegPrototype;
 static naRef procedurePrototype;
-
-naRef ghostForPositioned(naContext c, const FGPositioned* pos)
-{
-    if (!pos) {
-        return naNil();
-    }
-    
-    FGPositioned::get(pos); // take a ref
-    return naNewGhost(c, &PositionedGhostType, (void*) pos);
-}
 
 naRef ghostForAirport(naContext c, const FGAirport* apt)
 {
@@ -669,17 +672,9 @@ bool geodFromHash(naRef ref, SGGeod& result)
   if (!naIsHash(ref)) {
     return false;
   }
+
   
-// first, see if the hash contains a FGPositioned ghost - in which case
-// we can read off its position directly
-  naRef posGhost = naHash_cget(ref, (char*) "_positioned");
-  if (!naIsNil(posGhost)) {
-    FGPositioned* pos = positionedGhost(posGhost);
-    result = pos->geod();
-    return true;
-  }
-  
-// then check for manual latitude / longitude names
+// check for manual latitude / longitude names
   naRef lat = naHash_cget(ref, (char*) "lat");
   naRef lon = naHash_cget(ref, (char*) "lon");
   if (naIsNum(lat) && naIsNum(lon)) {
@@ -1511,6 +1506,73 @@ static naRef f_route(naContext c, naRef me, int argc, naRef* args)
   return naNil();
 }
 
+static naRef f_airwaySearch(naContext c, naRef me, int argc, naRef* args)
+{
+  if (argc < 2) {
+    naRuntimeError(c, "airwaysSearch needs at least two arguments");
+  }
+  
+  WayptRef start = wayptGhost(args[0]), 
+    end = wayptGhost(args[1]);
+  
+  if (!start && positionedGhost(args[0])) {
+    start = new NavaidWaypoint(positionedGhost(args[0]), NULL);
+  }
+  
+  if (!end && positionedGhost(args[1])) {
+    end = new NavaidWaypoint(positionedGhost(args[1]), NULL);
+  }
+  
+  if (!start || !end) {
+    SG_LOG(SG_NASAL, SG_WARN, "airwaysSearch: start or end points are invalid");
+    return naNil();
+  }
+  
+  bool highLevel = true;
+  if ((argc > 2) && naIsString(args[2])) {
+    if (!strcmp(naStr_data(args[2]), "lowlevel")) {
+      highLevel = false;
+    }
+  }
+  
+  WayptVec route;
+  if (highLevel) {
+    Airway::highLevel()->route(start, end, route);
+  } else {
+    Airway::lowLevel()->route(start, end, route);
+  }
+  
+  naRef result = naNewVector(c);
+  BOOST_FOREACH(WayptRef wpt, route) {
+    naVec_append(result, ghostForWaypt(c, wpt.get()));
+  }
+  return result;
+}
+
+static naRef f_createWP(naContext c, naRef me, int argc, naRef* args)
+{
+  SGGeod pos;
+  int argOffset = geodFromArgs(args, 0, argc, pos);
+  string ident;
+  
+// if we were created from an FGPositioned, we can use its ident
+  FGPositioned* positioned = positionedGhost(args[0]);
+  if (positioned) {
+    ident = positioned->ident();
+  }
+  
+  if (ident.empty()) {
+    if (((argc - argOffset) < 1) || !naIsString(args[argOffset])) {
+      naRuntimeError(c, "createWP: no identifier supplied");
+    }
+    
+    ident = naStr_data(args[argOffset++]);
+  }
+  
+  WayptRef wpt = new BasicWaypt(pos, ident, NULL);
+  return ghostForWaypt(c, wpt);
+}
+
 static naRef f_flightplan_getWP(naContext c, naRef me, int argc, naRef* args)
 {
   FlightPlan* fp = flightplanGhost(me);
@@ -1632,6 +1694,22 @@ static naRef f_flightplan_insertWaypoints(naContext c, naRef me, int argc, naRef
   }
 
   fp->insertWayptsAtIndex(wps, index);
+  return naNil();
+}
+
+static naRef f_flightplan_deleteWP(naContext c, naRef me, int argc, naRef* args)
+{
+  FlightPlan* fp = flightplanGhost(me);
+  if (!fp) {
+    naRuntimeError(c, "flightplan.deleteWP called on non-flightplan object");
+  }
+  
+  if ((argc < 1) || !naIsNum(args[0])) {
+    naRuntimeError(c, "bad argument to flightplan.deleteWP");
+  }
+  
+  int index = (int) args[0].num;
+  fp->deleteIndex(index);
   return naNil();
 }
 
@@ -1805,6 +1883,8 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "findNavaidsByFrequency", f_findNavaidsByFrequency },
   { "findNavaidsByID", f_findNavaidsByIdent },
   { "flightplan", f_route },
+  { "createWP", f_createWP },
+  { "airwaysRoute", f_airwaySearch },
   { "magvar", f_magvar },
   { "courseAndDistance", f_courseAndDistance },
   { "greatCircleMove", f_greatCircleMove },
@@ -1839,6 +1919,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, flightplanPrototype, "getPlanSize", naNewFunc(c, naNewCCode(c, f_flightplan_numWaypoints)));
     hashset(c, flightplanPrototype, "appendWP", naNewFunc(c, naNewCCode(c, f_flightplan_appendWP))); 
     hashset(c, flightplanPrototype, "insertWP", naNewFunc(c, naNewCCode(c, f_flightplan_insertWP))); 
+    hashset(c, flightplanPrototype, "deleteWP", naNewFunc(c, naNewCCode(c, f_flightplan_deleteWP))); 
     hashset(c, flightplanPrototype, "insertWPAfter", naNewFunc(c, naNewCCode(c, f_flightplan_insertWPAfter))); 
     hashset(c, flightplanPrototype, "insertWaypoints", naNewFunc(c, naNewCCode(c, f_flightplan_insertWaypoints))); 
     hashset(c, flightplanPrototype, "cleanPlan", naNewFunc(c, naNewCCode(c, f_flightplan_clearPlan))); 

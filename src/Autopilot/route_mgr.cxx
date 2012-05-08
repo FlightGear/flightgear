@@ -445,12 +445,12 @@ void FGRouteMgr::update( double dt )
     }
   } else { // not airborne
     if (weightOnWheels->getBoolValue() || (gs < 40)) {
-      return;
+      // either taking-off or rolling-out after touchdown
+    } else {
+      airborne->setBoolValue(true);
+      _takeoffTime = time(NULL); // start the clock
+      departure->setIntValue("takeoff-time", _takeoffTime);
     }
-    
-    airborne->setBoolValue(true);
-    _takeoffTime = time(NULL); // start the clock
-    departure->setIntValue("takeoff-time", _takeoffTime);
   }
   
   if (!active->getBoolValue()) {
