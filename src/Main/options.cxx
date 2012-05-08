@@ -1322,9 +1322,9 @@ struct OptionDesc {
     } fgOptionArray[] = {
 
     {"language",                     true,  OPTION_IGNORE, "", false, "", 0 },
-    {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt", false, "", 0 },
-    {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt", true, "", 0 },
-    {"renderer",                     true,  OPTION_STRING, "/sim/rendering/renderer", false, "", 0 },
+    {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", false, "", 0 },
+    {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", true, "", 0 },
+    {"renderer",                     true,  OPTION_STRING, "/sim/rendering/rembrandt/renderer", false, "", 0 },
     {"disable-game-mode",            false, OPTION_BOOL,   "/sim/startup/game-mode", false, "", 0 },
     {"enable-game-mode",             false, OPTION_BOOL,   "/sim/startup/game-mode", true, "", 0 },
     {"disable-splash-screen",        false, OPTION_BOOL,   "/sim/startup/splash-screen", false, "", 0 },

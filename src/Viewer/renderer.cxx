@@ -502,7 +502,7 @@ public:
 void
 FGRenderer::init( void )
 {
-    _classicalRenderer = !fgGetBool("/sim/rendering/rembrandt", false);
+    _classicalRenderer = !fgGetBool("/sim/rendering/rembrandt/enabled", false);
     _shadowMapSize    = fgGetInt( "/sim/rendering/shadows/map-size", 4096 );
     fgAddChangeListener( new ShadowMapSizeListener, "/sim/rendering/shadows/map-size" );
     fgAddChangeListener( new ShadowEnabledListener, "/sim/rendering/shadows/enabled" );
@@ -522,10 +522,10 @@ FGRenderer::init( void )
     updateCascadeFar(1, _cascadeFar[1]);
     updateCascadeFar(2, _cascadeFar[2]);
     updateCascadeFar(3, _cascadeFar[3]);
-    _useColorForDepth = fgGetBool( "/sim/rendering/use-color-for-depth", false );
+    _useColorForDepth = fgGetBool( "/sim/rendering/rembrandt/use-color-for-depth", false );
     _depthInColor->set( _useColorForDepth );
 
-    _renderer         = fgGetString("/sim/rendering/renderer", "");
+    _renderer         = fgGetString("/sim/rendering/rembrandt/renderer", "");
     if (!_classicalRenderer && !_renderer.empty())
         _pipeline = makeRenderingPipeline(_renderer, 0);
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
@@ -774,7 +774,7 @@ osg::Texture2D* buildDeferredBuffer(GLint internalFormat, GLenum sourceFormat, G
 	return tex;
 }
 
-void buildDeferredBuffers( CameraInfo* info, int shadowMapSize, bool useColorForDepth )
+void buildDefaultDeferredBuffers( CameraInfo* info, int shadowMapSize, bool useColorForDepth )
 {
     if (useColorForDepth) {
         info->addBuffer("real-depth", buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
@@ -1336,7 +1336,7 @@ FGRenderer::buildDefaultDeferredPipeline(CameraGroup* cgroup, unsigned flags, os
                                     osg::GraphicsContext* gc)
 {
     CameraInfo* info = new CameraInfo(flags);
-    buildDeferredBuffers(info, _shadowMapSize, _useColorForDepth);
+    buildDefaultDeferredBuffers(info, _shadowMapSize, _useColorForDepth);
 
     osg::Camera* geometryCamera = buildDefaultDeferredGeometryCamera( info, gc );
     cgroup->getViewer()->addSlave(geometryCamera, false);
