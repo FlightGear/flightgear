@@ -1735,7 +1735,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   
   // establish log-level before anything else - otherwise it is not possible
   // to show extra (debug/info/warning) messages for the start-up phase.
-  fgOptLogLevel(valueForOption("log-level").c_str());
+  fgOptLogLevel(valueForOption("log-level", "alert").c_str());
 
 // then config files
   SGPath config;

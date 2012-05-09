@@ -62,7 +62,7 @@ FGLocale::getUserLanguage()
                       LOCALE_SISO639LANGNAME,
                       locale, sizeof(locale)))
     {
-        SG_LOG(SG_GENERAL, SG_INFO, "Detected locale's language setting: " << locale);
+        SG_LOG(SG_GENERAL, SG_DEBUG, "Detected locale's language setting: " << locale);
         size_t i = strlen(locale);
         locale[i++] = '_';
         if (GetLocaleInfo(LOCALE_USER_DEFAULT,
@@ -71,11 +71,10 @@ FGLocale::getUserLanguage()
             return locale;
 
         locale[--i] = 0;
-        SG_LOG(SG_GENERAL, SG_INFO, "Failed to detected locale's country setting.");
+        SG_LOG(SG_GENERAL, SG_WARN, "Failed to detected locale's country setting.");
         return locale;
     }
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Failed to obtain Windows locale information.");
     return NULL;
 }
 #else
@@ -104,7 +103,7 @@ FGLocale::findLocaleNode(const string& language)
             return node;
     }
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Searching language resource for locale: " << language);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Searching language resource for locale: " << language);
     // search locale using full string
     vector<SGPropertyNode_ptr> localeList = _intl->getChildren("locale");
 
@@ -149,7 +148,7 @@ FGLocale::selectLanguage(const char *language)
     // Use plain C locale if nothing is available.
     if ((language == NULL)||(language[0]==0))
     {
-        SG_LOG(SG_GENERAL, SG_INFO, "Unable to detect system language" );
+        SG_LOG(SG_GENERAL, SG_WARN, "Unable to detect system language" );
         language = "C";
     }
 
