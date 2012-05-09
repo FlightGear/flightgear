@@ -224,8 +224,9 @@ FGRenderingPipeline::Stage::Stage(SGPropertyNode* prop)
     }
 
     orderNum = prop->getIntValue("order-num", -1);
-
     effect = prop->getStringValue("effect", "");
+    needsDuDv = prop->getBoolValue("needs-du-dv", false);
+    scaleFactor = prop->getFloatValue("scale-factor", 1.f);
 
     std::vector<SGPropertyNode_ptr> attachments = prop->getChildren("attachment");
     for (int i = 0; i < (int)attachments.size(); ++i) {

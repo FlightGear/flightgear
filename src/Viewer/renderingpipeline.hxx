@@ -63,6 +63,8 @@ public:
         std::string type;
         int orderNum;
         std::string effect;
+        bool needsDuDv;
+        float scaleFactor;
 
         std::vector<osg::ref_ptr<Pass> > passes;
         AttachmentList attachments;

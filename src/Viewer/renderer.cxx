@@ -692,7 +692,7 @@ FGRenderer::buildClassicalPipeline(CameraGroup* cgroup, unsigned flags, osg::Cam
 
 class FGDeferredRenderingCameraCullCallback : public osg::NodeCallback {
 public:
-    FGDeferredRenderingCameraCullCallback( const std::string& k, CameraInfo* i ) : kind( k ), info( i ) {}
+    FGDeferredRenderingCameraCullCallback( const std::string& k, CameraInfo* i, bool nd = false ) : kind( k ), info( i ), needsDuDv(nd) {}
     virtual void operator()( osg::Node *n, osg::NodeVisitor *nv) {
         simgear::EffectCullVisitor* cv = dynamic_cast<simgear::EffectCullVisitor*>(nv);
         osg::Camera* camera = static_cast<osg::Camera*>(n);
@@ -704,6 +704,15 @@ public:
 
         if ( !info->getRenderStageInfo(kind).fullscreen )
             info->setMatrices( camera );
+
+        if (needsDuDv) {
+            osg::Matrix projInverse;
+            info->projInverse->get( projInverse );
+
+            osg::Vec4 p0 = osg::Vec4( -1.0, -1.0, 0.0, 1.0 ) * projInverse;
+            info->du->set( osg::Vec4(  1.0, -1.0, 0.0, 1.0 ) * projInverse - p0 );
+            info->dv->set( osg::Vec4( -1.0,  1.0, 0.0, 1.0 ) * projInverse - p0 );
+        }
 
         cv->traverse( *camera );
 
@@ -753,6 +762,7 @@ public:
 private:
     std::string kind;
     CameraInfo* info;
+    bool needsDuDv;
 };
 
 osg::Texture2D* buildDeferredBuffer(GLint internalFormat, GLenum sourceFormat, GLenum sourceType, GLenum wrapMode, bool shadowComparison = false)
@@ -825,6 +835,7 @@ osg::Camera* FGRenderer::buildDeferredGeometryCamera( CameraInfo* info, osg::Gra
     camera->setClearColor( osg::Vec4( 0., 0., 0., 0. ) );
     camera->setClearDepth( 1.0 );
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
+    camera->setRenderOrder(osg::Camera::NESTED_RENDER, 0);
     camera->setViewport( new osg::Viewport );
     BOOST_FOREACH(ref_ptr<FGRenderingPipeline::Attachment> attachment, attachments) {
         attachBufferToCamera( info, camera, attachment->component, name, attachment->buffer );
@@ -906,6 +917,7 @@ osg::Camera* FGRenderer::buildDeferredShadowCamera( CameraInfo* info, osg::Graph
     mainShadowCamera->setViewport( 0, 0, _shadowMapSize, _shadowMapSize );
     mainShadowCamera->setDrawBuffer(GL_FRONT);
     mainShadowCamera->setReadBuffer(GL_FRONT);
+    mainShadowCamera->setRenderOrder(Camera::NESTED_RENDER, 1);
 
     osg::Switch* shadowSwitch = new osg::Switch;
     mainShadowCamera->addChild( shadowSwitch );
@@ -1116,7 +1128,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( CameraInfo* info, osg::Gra
     camera->setViewport(new Viewport);
     camera->setName("LightingC");
     camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-    camera->setRenderOrder(osg::Camera::POST_RENDER, 50);
+    camera->setRenderOrder(osg::Camera::NESTED_RENDER, 50);
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     camera->setViewport( new osg::Viewport );
     BOOST_FOREACH(ref_ptr<FGRenderingPipeline::Attachment> attachment, attachments) {
@@ -1267,13 +1279,15 @@ osg::Camera*
 FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage )
 {
     osg::Camera* camera = new osg::Camera;
-    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback(stage->name, info) );
+    info->addCamera(stage->name, camera, stage->scaleFactor, true);
+
+    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback(stage->name, info, stage->needsDuDv) );
     camera->setAllowEventFocus(false);
     camera->setGraphicsContext(gc);
     camera->setViewport(new Viewport);
     camera->setName(stage->name+"C");
     camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-    camera->setRenderOrder(osg::Camera::POST_RENDER, stage->orderNum);
+    camera->setRenderOrder(osg::Camera::NESTED_RENDER, stage->orderNum);
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     BOOST_FOREACH(ref_ptr<FGRenderingPipeline::Attachment> attachment, stage->attachments) {
         attachBufferToCamera( info, camera, attachment->component, stage->name, attachment->buffer );
@@ -1287,6 +1301,21 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::Gr
 
     osg::StateSet* ss = camera->getOrCreateStateSet();
     ss->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+    ss->addUniform( info->projInverse );
+    ss->addUniform( info->viewInverse );
+    ss->addUniform( info->view );
+    ss->addUniform( info->bufferSize );
+    if (stage->needsDuDv) {
+        ss->addUniform( info->du );
+        ss->addUniform( info->dv );
+    }
+    ss->addUniform( _ambientFactor );
+    ss->addUniform( _sunDiffuse );
+    ss->addUniform( _sunSpecular );
+    ss->addUniform( _sunDirection );
+    ss->addUniform( _planes );
+    ss->addUniform( _shadowNumber );
+    ss->addUniform( _shadowDistances );
 
     osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
     g->setUseDisplayList(false);
@@ -1299,6 +1328,7 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::Gr
     eg->setName(stage->name+"Quad");
     eg->setCullingActive(false);
     eg->addDrawable(g);
+    camera->addChild(eg);
 
     return camera;
 }
@@ -1362,7 +1392,7 @@ FGRenderer::buildDefaultDeferredPipeline(CameraGroup* cgroup, unsigned flags, os
     installCullVisitor(camera);
     slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
     info->addCamera( DISPLAY_CAMERA, camera, slaveIndex, true );
-    camera->setRenderOrder(Camera::POST_RENDER, 99+slaveIndex); //FIXME
+    camera->setRenderOrder(Camera::POST_RENDER, 99); //FIXME
     cgroup->addCamera(info);
     return info;
 }
@@ -1426,8 +1456,6 @@ CameraInfo* FGRenderer::buildCameraFromRenderingPipeline(FGRenderingPipeline* rp
         buildStage(rpipe, info, stage, cgroup, camera, view, projection, gc);
     }
 
-    int slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-    camera->setRenderOrder(Camera::POST_RENDER, 99+slaveIndex); //FIXME
     cgroup->addCamera(info);
 
     return info;

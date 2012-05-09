@@ -134,7 +134,7 @@ struct CameraInfo : public osg::Referenced
     CameraMap cameras;
     void addCamera( const std::string& k, osg::Camera* c, int si = -1, bool fs = false ) { cameras[k].camera = c; cameras[k].slaveIndex = si; cameras[k].fullscreen = fs; }
     void addCamera( const std::string& k, osg::Camera* c, bool fs ) { cameras[k].camera = c; cameras[k].fullscreen = fs; }
-    void addCamera( const std::string& k, osg::Camera* c, float s ) { cameras[k].camera = c; cameras[k].scaleFactor = s; }
+    void addCamera( const std::string& k, osg::Camera* c, float s, bool fs = false ) { cameras[k].camera = c; cameras[k].scaleFactor = s; cameras[k].fullscreen = fs; }
     osg::Camera* getCamera(const std::string& k) const;
     int getMainSlaveIndex() const;
     RenderStageInfo& getRenderStageInfo( const std::string& k ) { return cameras[k]; }
