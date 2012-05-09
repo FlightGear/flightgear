@@ -57,20 +57,6 @@ public:
   void unbind ();
   void update (double dt);
   
-  typedef enum {
-    ROUTE_HIGH_AIRWAYS, ///< high-level airways routing
-    ROUTE_LOW_AIRWAYS, ///< low-level airways routing
-    ROUTE_VOR ///< VOR-VOR routing
-  } RouteType;
-  
-  /**
-   * Insert waypoints from index-1 to index. In practice this means you can
-   * 'fill in the gaps' between defined waypoints. If index=0, the departure
-   * airport is used as index-1; if index is -1, the destination airport is
-   * used as the final waypoint.
-   */
-  bool routeToIndex(int index, RouteType aRouteType);
-        
   bool isRouteActive() const;
          
   int currentIndex() const;
@@ -156,8 +142,6 @@ private:
     SGPropertyNode_ptr _pathNode;
     SGPropertyNode_ptr _currentWpt;
     
-    /// integer property corresponding to the RouteType enum
-    SGPropertyNode_ptr _routingType;
     
     /** 
      * Signal property to notify people that the route was edited

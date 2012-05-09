@@ -51,7 +51,6 @@
 #include "Main/fg_props.hxx"
 #include "Navaids/positioned.hxx"
 #include <Navaids/waypoint.hxx>
-#include <Navaids/airways.hxx>
 #include <Navaids/procedure.hxx>
 #include "Airports/simple.hxx"
 #include "Airports/runways.hxx"
@@ -289,9 +288,6 @@ void FGRouteMgr::init() {
   cruise->getChild("flight-level", 0, true);
   cruise->getChild("speed-kts", 0, true);
   cruise->setDoubleValue("speed-kts", 160.0);
-  
-  _routingType = cruise->getChild("routing", 0, true);
-  _routingType->setIntValue(ROUTE_HIGH_AIRWAYS);
   
   totalDistance = fgGetNode(RM "total-distance", true);
   totalDistance->setDoubleValue(0.0);
@@ -592,69 +588,6 @@ void FGRouteMgr::removeLegAtIndex(int aIndex)
   _plan->deleteIndex(aIndex);
 }
   
-/**
- * route between index-1 and index, using airways.
- */
-bool FGRouteMgr::routeToIndex(int index, RouteType aRouteType)
-{
-  WayptRef wp1;
-  WayptRef wp2;
-  
-  if (index == -1) {
-    index = numLegs();
-  }
-  
-  if (index == 0) {
-    if (!_plan->departureAirport()) {
-      SG_LOG(SG_AUTOPILOT, SG_WARN, "routeToIndex: no departure set");
-      return false;
-    }
-    
-    wp1 = new NavaidWaypoint(_plan->departureAirport().get(), NULL);
-  } else {
-    wp1 = wayptAtIndex(index - 1);
-  }
-  
-  if (index >= numLegs()) {
-    if (!_plan->destinationAirport()) {
-      SG_LOG(SG_AUTOPILOT, SG_WARN, "routeToIndex: no destination set");
-      return false;
-    }
-    
-    wp2 = new NavaidWaypoint(_plan->destinationAirport().get(), NULL);
-  } else {
-    wp2 = wayptAtIndex(index);
-  }
-  
-  double distNm = SGGeodesy::distanceNm(wp1->position(), wp2->position());
-  if (distNm < 100.0) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "routeToIndex: existing waypoints are nearby, direct route");
-    return true;
-  }
-  
-  WayptVec r;
-  switch (aRouteType) {
-  case ROUTE_HIGH_AIRWAYS:
-    Airway::highLevel()->route(wp1, wp2, r);
-    break;
-    
-  case ROUTE_LOW_AIRWAYS:
-    Airway::lowLevel()->route(wp1, wp2, r);
-    break;
-    
-  case ROUTE_VOR:
-    throw sg_exception("VOR routing not supported yet");
-  }
-  
-  if (r.empty()) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "routeToIndex: no route found");
-    return false;
-  }
-
-  _plan->insertWayptsAtIndex(r, index);
-  return true;
-}
-
 void FGRouteMgr::departureChanged()
 {
   _plan->clearWayptsWithFlag(WPT_DEPARTURE);
@@ -849,11 +782,6 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
             r++;
         if (*r)
             mgr->flightPlan()->insertWayptAtIndex(mgr->waypointFromString(r), pos);
-    } else if (!strncmp(s, "@ROUTE", 6)) {
-      char* r;
-      int endIndex = strtol(s + 6, &r, 10);
-      RouteType rt = (RouteType) mgr->_routingType->getIntValue();
-      mgr->routeToIndex(endIndex, rt);
     } else if (!strcmp(s, "@POSINIT")) {
       mgr->initAtPosition();
     } else
