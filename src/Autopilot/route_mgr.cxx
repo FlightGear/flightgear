@@ -41,11 +41,7 @@
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/commands.hxx>
-#include <simgear/misc/sgstream.hxx>
-
-#include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/route/route.hxx>
 #include <simgear/sg_inlines.h>
 
 #include "Main/fg_props.hxx"
@@ -54,11 +50,10 @@
 #include <Navaids/procedure.hxx>
 #include "Airports/simple.hxx"
 #include "Airports/runways.hxx"
-
-#define RM "/autopilot/route-manager/"
-
 #include <GUI/new_gui.hxx>
 #include <GUI/dialog.hxx>
+
+#define RM "/autopilot/route-manager/"
 
 using namespace flightgear;
 
@@ -557,7 +552,7 @@ int FGRouteMgr::numLegs() const
 
 void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance)
 {
-  double speed = fgGetDouble("/velocities/groundspeed-kt", 0.0);
+  double speed = groundSpeed->getDoubleValue();
   if (speed < 1.0) {
     aProp->setStringValue("--:--");
     return;
