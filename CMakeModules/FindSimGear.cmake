@@ -152,7 +152,6 @@ else(SIMGEAR_SHARED)
         nasal
         tsync
         bucket
-        route
         io
         serial
         math
