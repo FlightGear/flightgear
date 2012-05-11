@@ -85,6 +85,40 @@ FGRenderingPipeline* makeRenderingPipeline(const std::string& name,
 
 }
 
+void
+FGRenderingPipeline::Conditionable::parseCondition(SGPropertyNode* prop)
+{
+    const SGPropertyNode* predProp = prop->getChild("condition");
+    if (!predProp) {
+        setAlwaysValid(true);
+    } else {
+        try {
+            flightgear::PipelinePredParser parser;
+            SGExpressionb* validExp = dynamic_cast<SGExpressionb*>(parser.read(predProp->getChild(0)));
+            if (validExp)
+                setValidExpression(validExp);
+            else
+                throw simgear::expression::ParseError("pipeline condition is not a boolean expression");
+        }
+        catch (simgear::expression::ParseError& except)
+        {
+            SG_LOG(SG_INPUT, SG_ALERT,
+                   "parsing pipeline condition " << except.getMessage());
+            setAlwaysValid(false);
+        }
+    }
+}
+
+void FGRenderingPipeline::Conditionable::setValidExpression(SGExpressionb* exp)
+{
+    _validExpression = exp;
+}
+
+bool FGRenderingPipeline::Conditionable::valid()
+{
+    return _alwaysValid || _validExpression->getValue();
+}
+
 template<typename T>
 void findAttrOrHex(const simgear::effect::EffectPropertyMap<T>& pMap,
               const SGPropertyNode* prop,
@@ -172,11 +206,23 @@ FGRenderingPipeline::Buffer::Buffer(SGPropertyNode* prop)
     if (!nameProp.valid()) {
         throw sg_exception("Buffer name is mandatory");
     }
+    internalFormat = GL_RGBA8;
+    sourceFormat = GL_RGBA;
+    sourceType = GL_UNSIGNED_BYTE;
+    wrapMode = GL_CLAMP_TO_BORDER_ARB;
     name = nameProp->getStringValue();
-    findAttrOrHex(internalFormats, prop->getChild("internal-format"), internalFormat);
-    findAttrOrHex(sourceFormats, prop->getChild("source-format"), sourceFormat);
-    findAttrOrHex(sourceTypes, prop->getChild("source-type"), sourceType);
-    findAttrOrHex(wrapModes, prop->getChild("wrap-mode"), wrapMode);
+    SGPropertyNode* internalFormatProp = prop->getChild("internal-format");
+    if (internalFormatProp)
+        findAttrOrHex(internalFormats, internalFormatProp, internalFormat);
+    SGPropertyNode* sourceFormatProp = prop->getChild("source-format");
+    if (sourceFormatProp)
+        findAttrOrHex(sourceFormats, sourceFormatProp, sourceFormat);
+    SGPropertyNode* sourceTypeProp = prop->getChild("source-type");
+    if (sourceTypeProp)
+        findAttrOrHex(sourceTypes, sourceTypeProp, sourceType);
+    SGPropertyNode* wrapModeProp = prop->getChild("wrap-mode");
+    if (wrapModeProp)
+        findAttrOrHex(wrapModes, wrapModeProp, wrapMode);
     SGConstPropertyNode_ptr widthProp = getPropertyChild(prop, "width");
     if (!widthProp.valid())
         width = -1;
@@ -195,6 +241,8 @@ FGRenderingPipeline::Buffer::Buffer(SGPropertyNode* prop)
 
     scaleFactor = prop->getFloatValue("scale-factor", 1.f);
     shadowComparison = prop->getBoolValue("shadow-comparison", false);
+
+    parseCondition(prop);
 }
 
 simgear::effect::EffectNameValue<osg::Camera::BufferComponent> componentsInit[] =
@@ -232,6 +280,8 @@ FGRenderingPipeline::Stage::Stage(SGPropertyNode* prop)
     for (int i = 0; i < (int)attachments.size(); ++i) {
         this->attachments.push_back(new FGRenderingPipeline::Attachment(attachments[i]));
     }
+
+    parseCondition(prop);
 }
 
 FGRenderingPipeline::Attachment::Attachment(SGPropertyNode* prop)
@@ -242,6 +292,8 @@ FGRenderingPipeline::Attachment::Attachment(SGPropertyNode* prop)
         throw sg_exception("Attachment buffer is mandatory");
     }
     buffer = bufferProp->getStringValue();
+
+    parseCondition(prop);
 }
 
 FGRenderingPipeline::FGRenderingPipeline()

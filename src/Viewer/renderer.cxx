@@ -79,6 +79,7 @@
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/tgdb/GroundLightManager.hxx>
 #include <simgear/scene/tgdb/pt_lights.hxx>
+#include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/structure/OSGUtils.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
@@ -502,6 +503,8 @@ public:
 void
 FGRenderer::init( void )
 {
+    sgUserDataInit( globals->get_props() );
+
     _classicalRenderer = !fgGetBool("/sim/rendering/rembrandt/enabled", false);
     _shadowMapSize    = fgGetInt( "/sim/rendering/shadows/map-size", 4096 );
     fgAddChangeListener( new ShadowMapSizeListener, "/sim/rendering/shadows/map-size" );
@@ -822,6 +825,13 @@ osg::Camera* FGRenderer::buildDefaultDeferredGeometryCamera( CameraInfo* info, o
     return buildDeferredGeometryCamera(info, gc, GEOMETRY_CAMERA, attachments);
 }
 
+void buildAttachments(CameraInfo* info, osg::Camera* camera, const std::string& name, const std::vector<ref_ptr<FGRenderingPipeline::Attachment> > &attachments) {
+    BOOST_FOREACH(ref_ptr<FGRenderingPipeline::Attachment> attachment, attachments) {
+        if (attachment->valid())
+            attachBufferToCamera( info, camera, attachment->component, name, attachment->buffer );
+    }
+}
+
 osg::Camera* FGRenderer::buildDeferredGeometryCamera( CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const std::vector<ref_ptr<FGRenderingPipeline::Attachment> > &attachments )
 {
     osg::Camera* camera = new osg::Camera;
@@ -837,9 +847,7 @@ osg::Camera* FGRenderer::buildDeferredGeometryCamera( CameraInfo* info, osg::Gra
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     camera->setRenderOrder(osg::Camera::NESTED_RENDER, 0);
     camera->setViewport( new osg::Viewport );
-    BOOST_FOREACH(ref_ptr<FGRenderingPipeline::Attachment> attachment, attachments) {
-        attachBufferToCamera( info, camera, attachment->component, name, attachment->buffer );
-    }
+    buildAttachments(info, camera, name, attachments);
     camera->setDrawBuffer(GL_FRONT);
     camera->setReadBuffer(GL_FRONT);
 
@@ -907,9 +915,7 @@ osg::Camera* FGRenderer::buildDeferredShadowCamera( CameraInfo* info, osg::Graph
     mainShadowCamera->setAllowEventFocus(false);
     mainShadowCamera->setGraphicsContext(gc);
     mainShadowCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
-    BOOST_FOREACH(ref_ptr<FGRenderingPipeline::Attachment> attachment, attachments) {
-        attachBufferToCamera( info, mainShadowCamera, attachment->component, name, attachment->buffer );
-    }
+    buildAttachments(info, mainShadowCamera, name, attachments);
     mainShadowCamera->setComputeNearFarMode(osg::Camera::DO_NOT_COMPUTE_NEAR_FAR);
     mainShadowCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     mainShadowCamera->setProjectionMatrix(osg::Matrix::identity());
@@ -1131,9 +1137,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( CameraInfo* info, osg::Gra
     camera->setRenderOrder(osg::Camera::NESTED_RENDER, 50);
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     camera->setViewport( new osg::Viewport );
-    BOOST_FOREACH(ref_ptr<FGRenderingPipeline::Attachment> attachment, attachments) {
-        attachBufferToCamera( info, camera, attachment->component, name, attachment->buffer );
-    }
+    buildAttachments(info, camera, name, attachments);
     camera->setDrawBuffer(GL_FRONT);
     camera->setReadBuffer(GL_FRONT);
     camera->setClearColor( osg::Vec4( 0., 0., 0., 1. ) );
@@ -1289,9 +1293,7 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::Gr
     camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     camera->setRenderOrder(osg::Camera::NESTED_RENDER, stage->orderNum);
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
-    BOOST_FOREACH(ref_ptr<FGRenderingPipeline::Attachment> attachment, stage->attachments) {
-        attachBufferToCamera( info, camera, attachment->component, stage->name, attachment->buffer );
-    }
+    buildAttachments(info, camera, stage->name, stage->attachments);
     camera->setDrawBuffer(GL_FRONT);
     camera->setReadBuffer(GL_FRONT);
     camera->setClearColor( osg::Vec4( 1., 1., 1., 1. ) );
@@ -1405,6 +1407,9 @@ void FGRenderer::buildStage(FGRenderingPipeline* rpipe, CameraInfo* info,
                                         const osg::Matrix& projection,
                                         osg::GraphicsContext* gc)
 {
+    if (!stage->valid())
+        return;
+
     ref_ptr<Camera> camera;
     if (stage->type == "geometry")
         camera = buildDeferredGeometryCamera(info, gc, stage->name, stage->attachments);
@@ -1432,15 +1437,17 @@ void FGRenderer::buildBuffers(FGRenderingPipeline* rpipe, CameraInfo* info)
 {
     for (size_t i = 0; i < rpipe->buffers.size(); ++i) {
         osg::ref_ptr<FGRenderingPipeline::Buffer> buffer = rpipe->buffers[i];
-        bool fullscreen = buffer->width == -1 && buffer->height == -1;
-        info->addBuffer(buffer->name, buildDeferredBuffer( buffer->internalFormat,
-                                                            buffer->sourceFormat,
-                                                            buffer->sourceType,
-                                                            buffer->wrapMode,
-                                                            buffer->shadowComparison),
-                        fullscreen ? buffer->scaleFactor : 0.0f);
-        if (!fullscreen) {
-            info->getBuffer(buffer->name)->setTextureSize(buffer->width, buffer->height);
+        if (buffer->valid()) {
+            bool fullscreen = buffer->width == -1 && buffer->height == -1;
+            info->addBuffer(buffer->name, buildDeferredBuffer( buffer->internalFormat,
+                                                                buffer->sourceFormat,
+                                                                buffer->sourceType,
+                                                                buffer->wrapMode,
+                                                                buffer->shadowComparison),
+                            fullscreen ? buffer->scaleFactor : 0.0f);
+            if (!fullscreen) {
+                info->getBuffer(buffer->name)->setTextureSize(buffer->width, buffer->height);
+            }
         }
     }
 }

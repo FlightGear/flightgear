@@ -32,7 +32,6 @@
 #include <simgear/structure/OSGVersion.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
-#include <simgear/scene/tgdb/userdata.hxx>
 
 #include <algorithm>
 #include <cstring>
@@ -1036,8 +1035,6 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
 CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
                                            SGPropertyNode* gnode)
 {
-    sgUserDataInit( globals->get_props() );
-
     CameraGroup* cgroup = new CameraGroup(viewer);
     for (int i = 0; i < gnode->nChildren(); ++i) {
         SGPropertyNode* pNode = gnode->getChild(i);

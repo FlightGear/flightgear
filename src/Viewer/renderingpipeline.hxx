@@ -6,6 +6,8 @@
 #include <osg/Camera>
 #include <string>
 
+#include <simgear/structure/SGExpression.hxx>
+
 namespace simgear
 {
 class SGReaderWriterOptions;
@@ -24,7 +26,19 @@ namespace flightgear {
 
 class FGRenderingPipeline : public osg::Referenced {
 public:
-    struct Buffer : public osg::Referenced {
+    class Conditionable : public osg::Referenced {
+    public:
+        Conditionable() : _alwaysValid(false) {}
+        void parseCondition(SGPropertyNode* prop);
+        bool getAlwaysValid() const { return _alwaysValid; }
+        void setAlwaysValid(bool val) { _alwaysValid = val; }
+        void setValidExpression(SGExpressionb* exp);
+        bool valid();
+    protected:
+        bool _alwaysValid;
+        SGSharedPtr<SGExpressionb> _validExpression;
+    };
+    struct Buffer : public Conditionable {
         Buffer(SGPropertyNode* prop);
 
         std::string name;
@@ -40,14 +54,14 @@ public:
 		//osg::Vec4 borderColor;
     };
 
-    struct Pass : public osg::Referenced {
+    struct Pass : public Conditionable {
         Pass(SGPropertyNode* prop);
 
         std::string name;
         std::string type;
     };
 
-    struct Attachment : public osg::Referenced {
+    struct Attachment : public Conditionable {
         Attachment(SGPropertyNode* prop);
         Attachment(osg::Camera::BufferComponent c, const std::string& b ) : component(c), buffer(b) {}
 
@@ -56,7 +70,7 @@ public:
     };
     typedef std::vector<osg::ref_ptr<Attachment> > AttachmentList;
 
-    struct Stage : public osg::Referenced {
+    struct Stage : public Conditionable {
         Stage(SGPropertyNode* prop);
 
         std::string name;
@@ -77,5 +91,14 @@ public:
     friend FGRenderingPipeline* flightgear::makeRenderingPipeline(const std::string& name,
                    const simgear::SGReaderWriterOptions* options);
 };
+
+namespace flightgear {
+
+class PipelinePredParser : public simgear::expression::ExpressionParser
+{
+public:
+protected:
+};
+}
 
 #endif
