@@ -93,21 +93,23 @@ void Approach::addTransition(Transition* aTrans)
 
 bool Approach::route(WayptRef aIAF, WayptVec& aWps)
 {
-  WptTransitionMap::iterator it;
-  bool haveTrans = false;
-  for (it = _transitions.begin(); it != _transitions.end(); ++it) {
-    Transition* t= it->second;
-    if (t->enroute()->matches(aIAF)) {
-      t->route(aWps);
-      haveTrans = true;
-      break;
+  if (aIAF.valid()) {
+    WptTransitionMap::iterator it;
+    bool haveTrans = false;
+    for (it = _transitions.begin(); it != _transitions.end(); ++it) {
+      Transition* t= it->second;
+      if (t->enroute()->matches(aIAF)) {
+        t->route(aWps);
+        haveTrans = true;
+        break;
+      }
+    } // of transitions iteration
+    
+    if (!haveTrans) {
+      SG_LOG(SG_GENERAL, SG_INFO, "approach " << ident() << " has no transition " <<
+        "for IAF: " << aIAF->ident());
+      return false;
     }
-  } // of transitions iteration
-  
-  if (!haveTrans) {
-    SG_LOG(SG_GENERAL, SG_INFO, "approach " << ident() << " has no transition " <<
-      "for IAF: " << aIAF->ident());
-    return false;
   }
   
   return routeFromVectors(aWps);

@@ -151,6 +151,9 @@ public:
 	 */
 	virtual bool flag(WayptFlag aFlag) const;
 	
+  virtual unsigned int flags() const
+  { return _flags; }
+  
   void setFlag(WayptFlag aFlag, bool aV = true);
   
   /**
