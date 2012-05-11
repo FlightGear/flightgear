@@ -25,7 +25,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <simgear/route/waypoint.hxx>
 
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>

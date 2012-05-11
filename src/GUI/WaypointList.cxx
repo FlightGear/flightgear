@@ -11,7 +11,6 @@
 
 #include <plib/puAux.h>
 
-#include <simgear/route/waypoint.hxx>
 #include <simgear/structure/callback.hxx>
 #include <simgear/sg_inlines.h>
 

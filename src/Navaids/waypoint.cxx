@@ -24,7 +24,6 @@
 #include "waypoint.hxx"
 
 #include <simgear/structure/exception.hxx>
-#include <simgear/route/waypoint.hxx>
 
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
@@ -42,13 +41,6 @@ BasicWaypt::BasicWaypt(const SGGeod& aPos, const string& aIdent, RouteBase* aOwn
   if (aPos.getElevationFt() > -999.0) {
     setAltitude(aPos.getElevationFt(), RESTRICT_AT);
   }
-}
-
-BasicWaypt::BasicWaypt(const SGWayPoint& aWP, RouteBase* aOwner) :
-  Waypt(aOwner),
-  _pos(aWP.get_target()),
-  _ident(aWP.get_id())
-{
 }
 
 BasicWaypt::BasicWaypt(RouteBase* aOwner) :

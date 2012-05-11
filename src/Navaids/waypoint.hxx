@@ -25,21 +25,17 @@
 
 class FGAirport;
 typedef SGSharedPtr<FGAirport> FGAirportRef;
-class SGWayPoint;
 class FGRunway;
 
 namespace flightgear
 {
-
 
 class BasicWaypt : public Waypt
 {
 public:
   
   BasicWaypt(const SGGeod& aPos, const std::string& aIdent, RouteBase* aOwner);
-  
-  BasicWaypt(const SGWayPoint& aWP, RouteBase* aOwner);
-  
+    
   BasicWaypt(RouteBase* aOwner);
   
   virtual SGGeod position() const

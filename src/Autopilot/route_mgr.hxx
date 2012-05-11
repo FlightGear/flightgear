@@ -25,7 +25,6 @@
 #define _ROUTE_MGR_HXX 1
 
 #include <simgear/props/props.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
 #include <Navaids/route.hxx>

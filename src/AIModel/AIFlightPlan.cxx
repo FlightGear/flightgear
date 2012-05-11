@@ -24,7 +24,6 @@
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/constants.h>

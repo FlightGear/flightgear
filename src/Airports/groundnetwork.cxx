@@ -35,7 +35,6 @@
 #include <osg/Shape>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <simgear/scene/material/EffectGeode.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/material/mat.hxx>
