@@ -203,7 +203,11 @@ void FGATC::SetStation(flightgear::CommStation* sta) {
 // The repeating flag indicates whether the message should be repeated continuously or played once.
 void FGATC::Render(string& msg, const float volume, 
 				   const string& refname, const bool repeating) {
-	if (volume < 0.05) return;
+	if (volume < 0.05)
+	{
+		NoRender(refname);
+		return;
+	}
 
 	if (repeating)
 		fgSetString("/sim/messages/atis", msg.c_str());
@@ -215,8 +219,8 @@ void FGATC::Render(string& msg, const float volume,
 	if(_voice) {
 		size_t len;
 		void* buf = _vPtr->WriteMessage((char*)msg.c_str(), &len);
+		NoRender(refname);
 		if(buf) {
-			NoRender(refname);
 			try {
 // >>> Beware: must pass a (new) object to the (add) method,
 // >>> because the (remove) method is going to do a (delete)
