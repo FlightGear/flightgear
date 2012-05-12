@@ -39,13 +39,14 @@
 #include <Airports/simple.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/parking.hxx>
+#include <Scripting/NasalSys.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/procedure.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 #include <ATC/CommStation.hxx>
-#include <Navaids/route.hxx>
+#include <Navaids/FlightPlan.hxx>
 #include <Navaids/waypoint.hxx>
 #include <Navaids/fix.hxx>
 #include <Autopilot/route_mgr.hxx>

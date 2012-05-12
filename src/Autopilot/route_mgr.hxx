@@ -27,16 +27,11 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-#include <Navaids/route.hxx>
+#include <Navaids/FlightPlan.hxx>
 
 // forward decls
 class SGPath;
 class PropertyWatcher;
-
-class FGAirport;
-class FGRunway;
-
-typedef SGSharedPtr<FGAirport> FGAirportRef;
 
 /**
  * Top level route manager class

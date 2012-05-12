@@ -29,6 +29,7 @@
 namespace flightgear
 {
   class Hold;
+  class FlightPlan;
 }
 
 typedef std::vector<SGGeod> SGGeodVec;

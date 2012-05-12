@@ -12,6 +12,7 @@
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
 #include <Navaids/waypoint.hxx>
+#include <Navaids/FlightPlan.hxx>
 #include <Navaids/positioned.hxx>
 
 namespace flightgear {
