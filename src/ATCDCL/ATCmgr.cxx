@@ -31,7 +31,6 @@
 #include <Main/fg_props.hxx>
 
 #include "ATCmgr.hxx"
-#include "ATCDialogOld.hxx"
 #include "ATCutils.hxx"
 #include "atis.hxx"
 
@@ -77,11 +76,6 @@ void FGATCMgr::init() {
     // For some reason the above doesn't compile - including Time/event.hxx stops compilation.
         // Is this still true after the reorganization of the event managar??
         // -EMH-
-    
-    // Initialise the ATC Dialogs
-    SG_LOG(SG_ATC, SG_INFO, "  ATC Dialog System");
-    current_atcdialog = new FGATCDialog;
-    current_atcdialog->Init();
 
     initDone = true;
     //cout << "ATCmgr::init done!" << endl;
@@ -92,8 +86,6 @@ void FGATCMgr::update(double dt) {
         init();
         SG_LOG(SG_ATC, SG_WARN, "Warning - ATCMgr::update(...) called before ATCMgr::init()");
     }
-    
-    current_atcdialog->Update(dt);
     
     //cout << "Entering update..." << endl;
     //Traverse the list of active stations.
