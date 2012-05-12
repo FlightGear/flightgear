@@ -100,7 +100,7 @@ public:
   {
   public:
     virtual ~Delegate();
-    
+        
     virtual void departureChanged() { }
     virtual void arrivalChanged() { }
     virtual void waypointsChanged() { }
@@ -120,6 +120,7 @@ public:
     
     friend class FlightPlan;
     
+    bool _deleteWithPlan;
     Delegate* _inner;
   };
   
@@ -207,7 +208,20 @@ public:
    */
   WayptRef waypointFromString(const std::string& target);
   
-  void setDelegate(Delegate* d);
+  /**
+   * abstract interface for creating delegates automatically when a
+   * flight-plan is created or loaded
+   */
+  class DelegateFactory
+  {
+  public:
+    virtual Delegate* createFlightPlanDelegate(FlightPlan* fp) = 0;
+  };
+  
+  static void registerDelegateFactory(DelegateFactory* df);
+  static void unregisterDelegateFactory(DelegateFactory* df);
+  
+  void addDelegate(Delegate* d);
   void removeDelegate(Delegate* d);
 private:
   

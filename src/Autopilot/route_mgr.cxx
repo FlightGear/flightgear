@@ -326,12 +326,13 @@ void FGRouteMgr::init() {
   wpn->getChild("eta", 0, true);
   
   _pathNode = fgGetNode(RM "file-path", 0, true);
-  setFlightPlan(new FlightPlan());
 }
 
 
 void FGRouteMgr::postinit()
 {
+  setFlightPlan(new FlightPlan());
+  
   SGPath path(_pathNode->getStringValue());
   if (!path.isNull()) {
     SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from: " << path.str());
@@ -402,12 +403,13 @@ void FGRouteMgr::setFlightPlan(FlightPlan* plan)
   }
   
   if (_plan) {
+    _plan->removeDelegate(this);
     delete _plan;
     active->setBoolValue(false);
   }
   
   _plan = plan;
-  _plan->setDelegate(this);
+  _plan->addDelegate(this);
   
   _flightplanChanged->fireValueChanged();
   

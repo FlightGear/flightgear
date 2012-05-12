@@ -55,6 +55,9 @@ using std::fstream;
 
 namespace flightgear {
 
+typedef std::vector<FlightPlan::DelegateFactory*> FPDelegateFactoryVec;
+static FPDelegateFactoryVec static_delegateFactories;
+  
 FlightPlan::FlightPlan() :
   _currentIndex(-1),
   _departureRunway(NULL),
@@ -64,12 +67,26 @@ FlightPlan::FlightPlan() :
   _approach(NULL),
   _delegate(NULL)
 {
-  
+  BOOST_FOREACH(DelegateFactory* factory, static_delegateFactories) {
+    Delegate* d = factory->createFlightPlanDelegate(this);
+    if (d) { // factory might not always create a delegate
+      d->_deleteWithPlan = true;
+      addDelegate(d);
+    }
+  }
 }
   
 FlightPlan::~FlightPlan()
 {
-  
+// delete all delegates which we own.
+  Delegate* d = _delegate;
+  while (d) {
+    Delegate* cur = d;
+    d = d->_inner;
+    if (cur->_deleteWithPlan) {
+      delete cur;
+    }
+  }
 }
   
 FlightPlan* FlightPlan::clone(const string& newIdent) const
@@ -986,7 +1003,29 @@ void FlightPlan::rebuildLegData()
   } // of legs iteration
 }
   
-void FlightPlan::setDelegate(Delegate* d)
+void FlightPlan::registerDelegateFactory(DelegateFactory* df)
+{
+  FPDelegateFactoryVec::iterator it = std::find(static_delegateFactories.begin(),
+                                                static_delegateFactories.end(), df);
+  if (it != static_delegateFactories.end()) {
+    throw  sg_exception("duplicate delegate factory registration");
+  }
+  
+  static_delegateFactories.push_back(df);
+}
+  
+void FlightPlan::unregisterDelegateFactory(DelegateFactory* df)
+{
+  FPDelegateFactoryVec::iterator it = std::find(static_delegateFactories.begin(),
+                                                static_delegateFactories.end(), df);
+  if (it == static_delegateFactories.end()) {
+    return;
+  }
+  
+  static_delegateFactories.erase(it);
+}
+  
+void FlightPlan::addDelegate(Delegate* d)
 {
   // wrap any existing delegate(s) in the new one
   d->_inner = _delegate;
@@ -1003,6 +1042,7 @@ void FlightPlan::removeDelegate(Delegate* d)
 }
   
 FlightPlan::Delegate::Delegate() :
+  _deleteWithPlan(false),
   _inner(NULL)
 {
   

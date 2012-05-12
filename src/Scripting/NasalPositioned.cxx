@@ -1308,6 +1308,16 @@ static naRef f_airport_getApproach(naContext c, naRef me, int argc, naRef* args)
   return ghostForProcedure(c, apt->findApproachWithIdent(ident));
 }
 
+static naRef f_airport_toString(naContext c, naRef me, int argc, naRef* args)
+{
+  FGAirport* apt = airportGhost(me);
+  if (!apt) {
+    naRuntimeError(c, "airport.tostring called on non-airport object");
+  }
+  
+  return stringToNasal(c, "an airport " + apt->ident());
+}
+
 // Returns vector of data hash for navaid of a <type>, nil on error
 // navaids sorted by ascending distance 
 // navinfo([<lat>,<lon>],[<type>],[<id>])
@@ -1614,6 +1624,108 @@ static naRef f_route(naContext c, naRef me, int argc, naRef* args)
   }
   
   naRuntimeError(c, "bad arguments to flightplan()");
+  return naNil();
+}
+
+class NasalFPDelegate : public FlightPlan::Delegate
+{
+public:
+  NasalFPDelegate(FlightPlan* fp, FGNasalSys* sys, naRef ins) :
+    _nasal(sys),
+    _plan(fp),
+    _instance(ins)
+  {
+    SG_LOG(SG_NASAL, SG_INFO, "created Nasal delegate for " << fp);
+    _gcSaveKey = _nasal->gcSave(ins);
+  }
+  
+  virtual ~NasalFPDelegate()
+  {
+    SG_LOG(SG_NASAL, SG_INFO, "destroying Nasal delegate for " << _plan);
+    _nasal->gcRelease(_gcSaveKey);
+  }
+  
+  virtual void departureChanged()
+  {
+    callDelegateMethod("departureChanged");
+  }
+  
+  virtual void arrivalChanged()
+  {
+    callDelegateMethod("arrivalChanged");
+  }
+  
+  virtual void waypointsChanged()
+  {
+    callDelegateMethod("waypointsChanged");
+  }
+  
+  virtual void currentWaypointChanged()
+  {
+    callDelegateMethod("currentWaypointChanged");
+  }
+private:
+  
+  void callDelegateMethod(const char* method)
+  {
+    naRef f;
+    naMember_cget(_nasal->context(), _instance, method, &f);
+    if (naIsNil(f)) {
+      return; // no method on the delegate
+    }
+    
+    naRef arg[1];
+    arg[0] = ghostForFlightPlan(_nasal->context(), _plan);
+    _nasal->callMethod(f, _instance, 1, arg, naNil());
+  }
+  
+  FGNasalSys* _nasal;
+  FlightPlan* _plan;
+  naRef _instance;
+  int _gcSaveKey;
+};
+
+class NasalFPDelegateFactory : public FlightPlan::DelegateFactory
+{
+public:
+  NasalFPDelegateFactory(naRef code)
+  {
+    _nasal = (FGNasalSys*) globals->get_subsystem("nasal");
+    _func = code;
+    _gcSaveKey = _nasal->gcSave(_func);
+  }
+  
+  ~NasalFPDelegateFactory()
+  {
+    _nasal->gcRelease(_gcSaveKey);
+  }
+  
+  virtual FlightPlan::Delegate* createFlightPlanDelegate(FlightPlan* fp)
+  {
+    naRef args[1];
+    args[0] = ghostForFlightPlan(_nasal->context(), fp);
+    naRef instance = _nasal->call(_func, 1, args, naNil());
+    if (naIsNil(instance)) {
+      return NULL;
+    }
+    
+    return new NasalFPDelegate(fp, _nasal, instance);
+  }
+private:
+  FGNasalSys* _nasal;
+  naRef _func;
+  int _gcSaveKey;
+};
+
+static naRef f_registerFPDelegate(naContext c, naRef me, int argc, naRef* args)
+{
+  if ((argc < 1) || !naIsFunc(args[0])) {
+    naRuntimeError(c, "non-function argument to registerFlightPlanDelegate");
+  }
+  
+  NasalFPDelegateFactory* factory = new NasalFPDelegateFactory(args[0]);
+  FlightPlan::registerDelegateFactory(factory);
+  
   return naNil();
 }
 
@@ -2077,6 +2189,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "findNavaidsByID", f_findNavaidsByIdent },
   { "findFixesByID", f_findFixesByIdent },
   { "flightplan", f_route },
+  { "registerFlightPlanDelegate", f_registerFPDelegate },
   { "createWP", f_createWP },
   { "createWPFrom", f_createWPFrom },
   { "airwaysRoute", f_airwaySearch },
@@ -2104,6 +2217,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, airportPrototype, "getSid", naNewFunc(c, naNewCCode(c, f_airport_getSid)));
     hashset(c, airportPrototype, "getStar", naNewFunc(c, naNewCCode(c, f_airport_getStar)));
     hashset(c, airportPrototype, "getIAP", naNewFunc(c, naNewCCode(c, f_airport_getApproach)));
+    hashset(c, airportPrototype, "tostring", naNewFunc(c, naNewCCode(c, f_airport_toString)));
   
     flightplanPrototype = naNewHash(c);
     hashset(c, gcSave, "flightplanProto", flightplanPrototype);
