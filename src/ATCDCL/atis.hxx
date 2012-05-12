@@ -60,6 +60,8 @@ class FGATIS : public FGATC {
 	bool _prev_display;		// Previous value of _display flag
 	MSS _remap;                     // abbreviations to be expanded
 
+	std::string _commbase;
+
 	// Aircraft position
 	// ATIS is actually a special case in that unlike other ATC eg.tower it doesn't actually know about
 	// or the whereabouts of the aircraft it is transmitting to.  However, to ensure consistancy of
@@ -69,9 +71,9 @@ class FGATIS : public FGATC {
 	//SGPropertyNode_ptr airplane_lat_node;
 	//SGPropertyNode_ptr airplane_elev_node; 
 	
-	public:
+public:
 	
-	FGATIS(void);
+	FGATIS(const std::string& commbase);
 	~FGATIS(void);
 	virtual void Init();
 	void attend (int);
@@ -81,12 +83,12 @@ class FGATIS : public FGATC {
 	
 	//inline void set_type(const atc_type tp) {type = tp;}
 	inline const std::string& get_trans_ident() { return trans_ident; }
-	inline void set_refname(const std::string& r) { refname = r; } 
 	
-	private:
-	
-	std::string refname;		// Holds the refname of a transmission in progress
-	
+protected:
+    virtual FGATCVoice* GetVoicePointer();
+
+private:
+
 	// Generate the ATIS transmission text:
 	int GenTransmission(const int regen, const int special);
 	

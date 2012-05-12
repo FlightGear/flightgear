@@ -35,9 +35,13 @@
 #include <Airports/simple.hxx>
 
 FGATC::FGATC() :
+    freq(0),
+    _currentStation(NULL),
+    range(0),
+    _voice(true),
 	_playing(false),
-	_voiceOK(false),
 	_sgr(NULL),
+#ifdef OLD_ATC_MGR
 	freqClear(true),
 	receiving(false),
 	respond(false),
@@ -45,22 +49,25 @@ FGATC::FGATC() :
 	runResponseCounter(false),
 	_runReleaseCounter(false),
 	responseReqd(false),
-	_type(INVALID),
-	_display(false),
 	// Transmission timing stuff
 	pending_transmission(""),
-	_timeout(0),
+#endif
+	_type(INVALID),
+	_display(false)
+#ifdef OLD_ATC_MGR
+	,_timeout(0),
 	_pending(false),
 	_transmit(false),
 	_transmitting(false),
 	_counter(0.0),
 	_max_count(5.0)
+#endif
 {
 	SGSoundMgr *smgr = globals->get_soundmgr();
 	_sgr = smgr->find("atc", true);
-        _sgr->tie_to_listener();
+	_sgr->tie_to_listener();
 
-	_volume = fgGetNode("/sim/sound/atc/volume", true);
+	_masterVolume = fgGetNode("/sim/sound/atc/volume", true);
 	_enabled = fgGetNode("/sim/sound/atc/enabled", true);
 	_atc_external = fgGetNode("/sim/sound/atc/external-view", true);
 	_internal = fgGetNode("/sim/current-view/internal", true);
@@ -72,6 +79,20 @@ FGATC::~FGATC() {
 // Derived classes wishing to use the response counter should 
 // call this from their own Update(...).
 void FGATC::Update(double dt) {
+
+#ifdef ENABLE_AUDIO_SUPPORT
+    bool active = _atc_external->getBoolValue() ||
+              _internal->getBoolValue();
+
+    if ( active && _enabled->getBoolValue() ) {
+        _sgr->set_volume( _masterVolume->getFloatValue() );
+        _sgr->resume(); // no-op if already in resumed state
+    } else {
+        _sgr->suspend();
+    }
+#endif
+
+#ifdef OLD_ATC_MGR
 	if(runResponseCounter) {
 		//cout << responseCounter << '\t' << responseTime << '\n';
 		if(responseCounter >= responseTime) {
@@ -112,18 +133,6 @@ void FGATC::Update(double dt) {
 		}
 	}
 
-#ifdef ENABLE_AUDIO_SUPPORT
-	bool active = _atc_external->getBoolValue() ||
-		      _internal->getBoolValue();
-
-	if ( active && _enabled->getBoolValue() ) {
-		_sgr->set_volume( _volume->getFloatValue() );
-		_sgr->resume(); // no-op if already in resumed state
-	} else {
-		_sgr->suspend();
-	}
-#endif
-
 	if(_transmit) {
 		_counter = 0.0;
 		_max_count = 5.0;		// FIXME - hardwired length of message - need to calculate it!
@@ -149,8 +158,10 @@ void FGATC::Update(double dt) {
 		}
 		_counter += dt;
 	}
+#endif
 }
 
+#ifdef OLD_ATC_MGR
 void FGATC::ReceiveUserCallback(int code) {
 	SG_LOG(SG_ATC, SG_WARN, "WARNING - whichever ATC class was intended to receive callback code " << code << " didn't get it!!!");
 }
@@ -180,21 +191,45 @@ void FGATC::NotifyTransmissionFinished(const string& rid) {
 		freqClear = true;
 	}
 }
+#endif
 
 void FGATC::SetStation(flightgear::CommStation* sta) {
-    switch (sta->type()) {
-        case FGPositioned::FREQ_ATIS:   _type = ATIS; break;
-        case FGPositioned::FREQ_AWOS:   _type = AWOS; break;
-        default:
-        throw sg_exception("unsupported comm station type");
+    if (_currentStation == sta)
+        return;
+    _currentStation = sta;
+
+    if (sta)
+    {
+        switch (sta->type()) {
+            case FGPositioned::FREQ_ATIS:   _type = ATIS; break;
+            case FGPositioned::FREQ_AWOS:   _type = AWOS; break;
+            default:
+                sta = NULL;
+                break;
+        }
     }
-    
-    _geod = sta->geod();
-    _cart = sta->cart();
-    range = sta->rangeNm();
-    ident = sta->airport()->ident();
-    name = sta->airport()->name();
-    freq = sta->freqKHz();
+
+    if (sta == NULL)
+    {
+        range = 0;
+        ident = "";
+        name = "";
+        freq = 0;
+
+        SetNoDisplay();
+        Update(0);     // one last update
+    }
+    else
+    {
+        _geod = sta->geod();
+        _cart = sta->cart();
+
+        range = sta->rangeNm();
+        ident = sta->airport()->ident();
+        name = sta->airport()->name();
+        freq = sta->freqKHz();
+        SetDisplay();
+    }
 }
 
 // Render a transmission
@@ -203,7 +238,7 @@ void FGATC::SetStation(flightgear::CommStation* sta) {
 // The repeating flag indicates whether the message should be repeated continuously or played once.
 void FGATC::Render(string& msg, const float volume, 
 				   const string& refname, const bool repeating) {
-	if (volume < 0.05)
+	if ((!_display) ||(volume < 0.05))
 	{
 		NoRender(refname);
 		return;
@@ -215,35 +250,55 @@ void FGATC::Render(string& msg, const float volume,
 		fgSetString("/sim/messages/atc", msg.c_str());
 
 #ifdef ENABLE_AUDIO_SUPPORT
-	_voice = (_voiceOK && fgGetBool("/sim/sound/voice"));
-	if(_voice) {
-		size_t len;
-		void* buf = _vPtr->WriteMessage((char*)msg.c_str(), &len);
-		NoRender(refname);
-		if(buf) {
-			try {
+	bool useVoice = _voice && fgGetBool("/sim/sound/voice") && fgGetBool("/sim/sound/atc/enabled");
+    SGSoundSample *simple = _sgr->find(refname);
+	if(useVoice) {
+		if (simple && (_currentMsg == msg))
+		{
+		    simple->set_volume(volume);
+		}
+		else
+		{
+		    _currentMsg = msg;
+		    size_t len;
+		    void* buf = NULL;
+		    if (!_vPtr)
+		        _vPtr = GetVoicePointer();
+		    if (_vPtr)
+		        buf = _vPtr->WriteMessage((char*)msg.c_str(), &len);
+		    NoRender(refname);
+		    if(buf) {
+		        try {
 // >>> Beware: must pass a (new) object to the (add) method,
 // >>> because the (remove) method is going to do a (delete)
 // >>> whether that's what you want or not.
-				SGSoundSample *simple = new SGSoundSample(&buf, len, 8000);
-				simple->set_volume(volume);
-				_sgr->add(simple, refname);
-				_sgr->play(refname, repeating);
-			} catch ( sg_io_exception &e ) {
-				SG_LOG(SG_ATC, SG_ALERT, e.getFormattedMessage());
-			}
+		            simple = new SGSoundSample(&buf, len, 8000);
+		            simple->set_volume(volume);
+		            _sgr->add(simple, refname);
+		            _sgr->play(refname, repeating);
+		        } catch ( sg_io_exception &e ) {
+		            SG_LOG(SG_ATC, SG_ALERT, e.getFormattedMessage());
+		        }
+		    }
 		}
 	}
+	else
+	if (simple)
+	{
+	    NoRender(refname);
+	}
 #endif	// ENABLE_AUDIO_SUPPORT
-	if(!_voice) {
-		// first rip the underscores and the pause hints out of the string - these are for the convienience of the voice parser
+
+	if (!useVoice)
+	{
+		// first rip the underscores and the pause hints out of the string - these are for the convenience of the voice parser
 		for(unsigned int i = 0; i < msg.length(); ++i) {
 			if((msg.substr(i,1) == "_") || (msg.substr(i,1) == "/")) {
 				msg[i] = ' ';
 			}
 		}
 	}
-	_playing = true;	
+	_playing = true;
 }
 
 
@@ -251,7 +306,7 @@ void FGATC::Render(string& msg, const float volume,
 void FGATC::NoRender(const string& refname) {
 	if(_playing) {
 		if(_voice) {
-#ifdef ENABLE_AUDIO_SUPPORT		
+#ifdef ENABLE_AUDIO_SUPPORT
 			_sgr->stop(refname);
 			_sgr->remove(refname);
 #endif
@@ -260,6 +315,7 @@ void FGATC::NoRender(const string& refname) {
 	}
 }
 
+#ifdef OLD_ATC_MGR
 // Generate the text of a message from its parameters and the current context.
 string FGATC::GenText(const string& m, int c) {
 	return("");
@@ -336,4 +392,4 @@ std::istream& operator >> ( std::istream& fin, ATCData& a )
 	a.cart = SGVec3d::fromGeod(a.geod);	
 	return fin >> skipeol;
 }
-
+#endif

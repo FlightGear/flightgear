@@ -4,7 +4,7 @@ set(SOURCES
 	ATC.cxx
 	atis.cxx
 	ATCVoice.cxx
-	ATCmgr.cxx
+	ATISmgr.cxx
 	ATCutils.cxx
 	ATCProjection.cxx
 	)
@@ -13,7 +13,7 @@ set(HEADERS
 	ATC.hxx
 	atis.hxx
 	ATCVoice.hxx
-	ATCmgr.hxx
+	ATISmgr.hxx
 	ATCutils.hxx
 	ATCProjection.hxx
 	atis_lexicon.hxx

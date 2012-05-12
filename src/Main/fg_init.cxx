@@ -77,7 +77,7 @@
 
 #include <AIModel/AIManager.hxx>
 
-#include <ATCDCL/ATCmgr.hxx>
+#include <ATCDCL/ATISmgr.hxx>
 #include <ATC/atc_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
@@ -1158,27 +1158,20 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     fgGetBool("/sim/rendering/bump-mapping", false);
 
-
-
     ////////////////////////////////////////////////////////////////////
-    // Initialise the ATC Manager
-    // Note that this is old stuff, but might be necessesary for the 
+    // Initialise the ATIS Manager
+    // Note that this is old stuff, but is necessary for the
     // current ATIS implementation. Therefore, leave it in here
     // until the ATIS system is ported over to make use of the ATIS 
     // sub system infrastructure.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("ATC-old", new FGATCMgr, SGSubsystemMgr::INIT);
+    globals->add_subsystem("ATIS", new FGATISMgr, SGSubsystemMgr::INIT, 0.4);
 
     ////////////////////////////////////////////////////////////////////
    // Initialize the ATC subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("ATC", new FGATCManager, SGSubsystemMgr::POST_FDM);
-    ////////////////////////////////////////////////////////////////////
-    // Initialise the ATIS Subsystem
-    ////////////////////////////////////////////////////////////////////
-    //globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
-
 
     ////////////////////////////////////////////////////////////////////
     // Initialize multiplayer subsystem

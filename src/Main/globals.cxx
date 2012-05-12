@@ -44,7 +44,7 @@
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
-#include <ATCDCL/ATCmgr.hxx>
+#include <ATCDCL/ATISmgr.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Cockpit/panel.hxx>
 #include <GUI/FGFontCache.hxx>
@@ -135,7 +135,7 @@ FGGlobals::FGGlobals() :
     matlib( NULL ),
     route_mgr( NULL ),
     current_panel( NULL ),
-    ATC_mgr( NULL ),
+    ATIS_mgr( NULL ),
     controls( NULL ),
     viewmgr( NULL ),
     commands( SGCommandMgr::instance() ),
@@ -191,7 +191,7 @@ FGGlobals::~FGGlobals()
     delete route_mgr;
     current_panel = NULL;
 
-    delete ATC_mgr;
+    delete ATIS_mgr;
 
     if (controls)
     {

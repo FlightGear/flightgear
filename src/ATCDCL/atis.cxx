@@ -57,7 +57,7 @@
 
 
 #include "ATCutils.hxx"
-#include "ATCmgr.hxx"
+#include "ATISmgr.hxx"
 
 using std::string;
 using std::map;
@@ -66,7 +66,7 @@ using std::cout;
 using boost::ref;
 using boost::tie;
 
-FGATIS::FGATIS() :
+FGATIS::FGATIS(const string& commbase) :
   transmission(""),
   trans_ident(""),
   old_volume(0),
@@ -74,20 +74,8 @@ FGATIS::FGATIS() :
   msg_OK(0),
   attention(0),
   _prev_display(0),
-  refname("atis")
+  _commbase(commbase)
 {
-  FGATCMgr* pAtcMgr = globals->get_ATC_mgr();
-  if (!pAtcMgr)
-  {
-      SG_LOG(SG_ATC, SG_ALERT, "ERROR! No ATC manager! Oops...");
-      _vPtr = NULL;
-  }
-  else
-      _vPtr = pAtcMgr->GetVoicePointer(ATIS);
-  _voiceOK = (_vPtr == NULL ? false : true);
-  if (!(_type != ATIS || _type == AWOS)) {
-       SG_LOG(SG_ATC, SG_ALERT, "ERROR - _type not ATIS or AWOS in atis.cxx");
-  }
   fgTie("/environment/attention", this, (int_getter)0, &FGATIS::attend);
 
 ///////////////
@@ -115,6 +103,18 @@ FGATIS::~FGATIS() {
   fgUntie("/environment/attention");
 }
 
+FGATCVoice* FGATIS::GetVoicePointer()
+{
+    FGATISMgr* pAtisMgr = globals->get_ATIS_mgr();
+    if (!pAtisMgr)
+    {
+        SG_LOG(SG_ATC, SG_ALERT, "ERROR! No ATIS manager! Oops...");
+        return NULL;
+    }
+
+    return pAtisMgr->GetVoicePointer(ATIS);
+}
+
 void FGATIS::Init() {
 // Nothing to see here.  Move along.
 }
@@ -137,6 +137,7 @@ FGATIS::attend (int attn)
 void FGATIS::Update(double dt) {
   cur_time = globals->get_time_params()->get_cur_time();
   msg_OK = (msg_time < cur_time);
+
 #ifdef ATIS_TEST
   if (msg_OK || _display != _prev_display) {
     cout << "ATIS Update: " << _display << "  " << _prev_display
@@ -146,29 +147,27 @@ void FGATIS::Update(double dt) {
     msg_time = cur_time;
   }
 #endif
-  if(_display) {
-    double volume(0);
-    for (map<string,int>::iterator act = active_on.begin();
-    act != active_on.end(); act++) {
-      string prop = "/instrumentation/" + act->first + "/volume";
-      volume += globals->get_props()->getDoubleValue(prop.c_str());
-    }
+
+  if(_display)
+  {
+    string prop = _commbase + "/volume";
+    double volume = globals->get_props()->getDoubleValue(prop.c_str());
 
 // Check if we need to update the message
 // - basically every hour and if the weather changes significantly at the station
 // If !_prev_display, the radio had been detuned for a while and our
 // "transmission" variable was lost when we were de-instantiated.
-    int rslt = GenTransmission(!_prev_display, attention);
+    int changed = GenTransmission(!_prev_display, attention);
     TreeOut(msg_OK);
-    if (rslt || volume != old_volume) {
+    if (changed || volume != old_volume) {
       //cout << "ATIS calling ATC::render  volume: " << volume << endl;
-      Render(transmission, volume, refname, true);
+      Render(transmission, volume, _commbase, true);
       old_volume = volume;
     }
   } else {
 // We shouldn't be displaying
     //cout << "ATIS.CXX - calling NoRender()..." << endl;
-    NoRender(refname);
+    NoRender(_commbase);
   }
   _prev_display = _display;
   attention = 0;
@@ -517,26 +516,16 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   return 1;
 }
 
-// Put the transmission into the property tree,
-// possibly in multiple places if multiple radios
-// are tuned to the same ATIS.
+// Put the transmission into the property tree.
 // You can see it by pointing a web browser
 // at the property tree.  The second comm radio is:
 // http://localhost:5400/instrumentation/comm[1]
 //
 // (Also, if in debug mode, dump it to the console.)
 void FGATIS::TreeOut(int msg_OK){
-  for (map<string,int>::iterator act = active_on.begin();
-                act != active_on.end();
-                act++){
-    string prop = "/instrumentation/" + act->first + "/atis";
+    string prop = _commbase + "/atis";
     globals->get_props()->setStringValue(prop.c_str(),
       ("<pre>\n" + transmission_readable + "</pre>\n").c_str());
-#ifdef ATIS_TEST
-    if (msg_OK) cout << "**** ATIS active on: " << prop << endl;
-#endif
-  }
-#ifdef ATIS_TEST
-  if (msg_OK) cout << transmission_readable << endl;
-#endif
+    SG_LOG(SG_ATC, SG_DEBUG, "**** ATIS active on: " << prop <<
+           "transmission: " << transmission_readable);
 }

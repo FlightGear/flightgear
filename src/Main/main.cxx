@@ -41,37 +41,24 @@
 // Class references
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/material/matlib.hxx>
-#include <simgear/scene/model/animation.hxx>
-#include <simgear/scene/sky/sky.hxx>
-#include <simgear/structure/event_mgr.hxx>
 #include <simgear/props/AtomicChangeListener.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/timing/timestamp.hxx>
 #include <simgear/magvar/magvar.hxx>
-#include <simgear/math/sg_random.h>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/math/SGMath.hxx>
+#include <simgear/math/sg_random.h>
 
-#include <Time/light.hxx>
-#include <Aircraft/replay.hxx>
 #include <Aircraft/controls.hxx>
 #include <Model/panelnode.hxx>
-#include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Sound/fg_fx.hxx>
-#include <Sound/beacon.hxx>
-#include <Sound/morse.hxx>
-#include <Sound/fg_fx.hxx>
-#include <ATCDCL/ATCmgr.hxx>
 #include <Time/TimeManager.hxx>
-#include <Environment/environment_mgr.hxx>
 #include <GUI/gui.h>
-#include <GUI/new_gui.hxx>
-#include <MultiPlayer/multiplaymgr.hxx>
 #include <Viewer/CameraGroup.hxx>
-#include <Viewer/viewer.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
 #include <Viewer/splash.hxx>
 #include <Viewer/renderer.hxx>
@@ -87,6 +74,7 @@
 using namespace flightgear;
 
 using std::cerr;
+using std::vector;
 
 // Specify our current idle function state.  This is used to run all
 // our initializations out of the idle callback so that we can get a
