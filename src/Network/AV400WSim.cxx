@@ -658,13 +658,15 @@ string FGAV400WSimB::asciitize_message( string message ) {
     string asciimsg;
 
     for ( string::const_iterator cli = message.begin();
-          cli != message.end(); cli++ ) {
-        if ( *cli >= 32 && *cli <= 127 ) {
+          cli != message.end(); cli++ ) 
+    {
+        unsigned char uc = static_cast<unsigned char>(*cli);
+        if ( uc >= 32 && uc <= 127 ) {
             asciimsg += *cli;
         }
         else {
             char tempbuf[20];
-            sprintf( tempbuf, "\\x%02X", (unsigned char)(*cli) );
+            sprintf( tempbuf, "\\x%02X", uc );
             asciimsg += tempbuf;
         }
     }
