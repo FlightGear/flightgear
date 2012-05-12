@@ -1263,11 +1263,6 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( CameraInfo* info, osg::Gra
     return camera;
 }
 
-namespace flightgear {
-CameraInfo* buildCameraFromRenderingPipeline(FGRenderingPipeline* rpipe, CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
-                                    const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
-}
-
 CameraInfo*
 FGRenderer::buildDeferredPipeline(CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
                                     const osg::Matrix& view,

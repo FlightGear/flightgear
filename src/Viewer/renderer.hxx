@@ -157,7 +157,7 @@ protected:
     osg::Camera* buildDefaultDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
     osg::Camera* buildDefaultDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
 
-    flightgear::CameraInfo* FGRenderer::buildCameraFromRenderingPipeline(FGRenderingPipeline* rpipe, flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+    flightgear::CameraInfo* buildCameraFromRenderingPipeline(FGRenderingPipeline* rpipe, flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
                                         const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
 
     void buildBuffers(FGRenderingPipeline* rpipe, flightgear::CameraInfo* info);
