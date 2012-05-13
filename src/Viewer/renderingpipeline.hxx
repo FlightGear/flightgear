@@ -28,7 +28,7 @@ class FGRenderingPipeline : public osg::Referenced {
 public:
     class Conditionable : public osg::Referenced {
     public:
-        Conditionable() : _alwaysValid(false) {}
+        Conditionable() : _alwaysValid(true) {}
         void parseCondition(SGPropertyNode* prop);
         bool getAlwaysValid() const { return _alwaysValid; }
         void setAlwaysValid(bool val) { _alwaysValid = val; }
@@ -59,6 +59,8 @@ public:
 
         std::string name;
         std::string type;
+        int orderNum;
+        std::string effect;
     };
 
     struct Attachment : public Conditionable {
@@ -70,13 +72,9 @@ public:
     };
     typedef std::vector<osg::ref_ptr<Attachment> > AttachmentList;
 
-    struct Stage : public Conditionable {
+    struct Stage : public Pass {
         Stage(SGPropertyNode* prop);
 
-        std::string name;
-        std::string type;
-        int orderNum;
-        std::string effect;
         bool needsDuDv;
         float scaleFactor;
 

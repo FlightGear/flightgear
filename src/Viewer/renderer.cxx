@@ -528,8 +528,8 @@ FGRenderer::init( void )
     _useColorForDepth = fgGetBool( "/sim/rendering/rembrandt/use-color-for-depth", false );
     _depthInColor->set( _useColorForDepth );
 
-    _renderer         = fgGetString("/sim/rendering/rembrandt/renderer", "");
-    if (!_classicalRenderer && !_renderer.empty())
+    _renderer         = fgGetString("/sim/rendering/rembrandt/renderer", "default-pipeline");
+    if (!_classicalRenderer)
         _pipeline = makeRenderingPipeline(_renderer, 0);
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _scenery_override = fgGetNode("/sim/sceneryloaded-override", true);
@@ -787,42 +787,10 @@ osg::Texture2D* buildDeferredBuffer(GLint internalFormat, GLenum sourceFormat, G
 	return tex;
 }
 
-void buildDefaultDeferredBuffers( CameraInfo* info, int shadowMapSize, bool useColorForDepth )
-{
-    if (useColorForDepth) {
-        info->addBuffer("real-depth", buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
-        info->addBuffer("depth", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-    }
-    else {
-        info->addBuffer("depth", buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER) );
-    }
-    info->addBuffer("normal", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-    info->addBuffer("diffuse", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-    info->addBuffer("spec-emis", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-    info->addBuffer("lighting", buildDeferredBuffer( GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, osg::Texture::CLAMP_TO_BORDER) );
-    info->addBuffer("shadow", buildDeferredBuffer( GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, osg::Texture::CLAMP_TO_BORDER, true), 0.0f );
-    info->getBuffer("shadow")->setTextureSize(shadowMapSize,shadowMapSize);
-}
-
 void attachBufferToCamera( CameraInfo* info, osg::Camera* camera, osg::Camera::BufferComponent c, const std::string& ck, const std::string& bk )
 {
     camera->attach( c, info->getBuffer(bk) );
     info->getRenderStageInfo(ck).buffers.insert( std::make_pair( c, bk ) );
-}
-
-osg::Camera* FGRenderer::buildDefaultDeferredGeometryCamera( CameraInfo* info, osg::GraphicsContext* gc )
-{
-    std::vector<ref_ptr<FGRenderingPipeline::Attachment> > attachments;
-    if (_useColorForDepth) {
-        attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::DEPTH_BUFFER, "real-depth") );
-        attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::COLOR_BUFFER3, "depth") );
-    } else {
-        attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::DEPTH_BUFFER, "depth") );
-    }
-    attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::COLOR_BUFFER0, "normal") );
-    attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::COLOR_BUFFER1, "diffuse") );
-    attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::COLOR_BUFFER2, "spec-emis") );
-    return buildDeferredGeometryCamera(info, gc, GEOMETRY_CAMERA, attachments);
 }
 
 void buildAttachments(CameraInfo* info, osg::Camera* camera, const std::string& name, const std::vector<ref_ptr<FGRenderingPipeline::Attachment> > &attachments) {
@@ -895,13 +863,6 @@ static osg::Camera* createShadowCascadeCamera( int no, int cascadeSize ) {
     cascadeCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     cascadeCam->setViewport( int( no / 2 ) * cascadeSize, (no & 1) * cascadeSize, cascadeSize, cascadeSize );
     return cascadeCam;
-}
-
-osg::Camera* FGRenderer::buildDefaultDeferredShadowCamera( CameraInfo* info, osg::GraphicsContext* gc )
-{
-    std::vector<ref_ptr<FGRenderingPipeline::Attachment> > attachments;
-    attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::DEPTH_BUFFER, "shadow") );
-    return buildDeferredShadowCamera(info, gc, SHADOW_CAMERA, attachments);
 }
 
 osg::Camera* FGRenderer::buildDeferredShadowCamera( CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const std::vector<ref_ptr<FGRenderingPipeline::Attachment> > &attachments )
@@ -1111,18 +1072,6 @@ void FGRenderer::updateCascadeNumber(size_t num)
     _shadowNumber->set( (int)_numCascades );
 }
 
-osg::Camera* FGRenderer::buildDefaultDeferredLightingCamera( CameraInfo* info, osg::GraphicsContext* gc )
-{
-    std::vector<ref_ptr<FGRenderingPipeline::Attachment> > attachments;
-    if (_useColorForDepth) {
-        attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::DEPTH_BUFFER, "real-depth") );
-    } else {
-        attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::DEPTH_BUFFER, "depth") );
-    }
-    attachments.push_back(new FGRenderingPipeline::Attachment(osg::Camera::COLOR_BUFFER0, "lighting") );
-    return buildDeferredLightingCamera( info, gc, LIGHTING_CAMERA, attachments );
-}
-
 osg::Camera* FGRenderer::buildDeferredLightingCamera( CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const std::vector<ref_ptr<FGRenderingPipeline::Attachment> > &attachments )
 {
     osg::Camera* camera = new osg::Camera;
@@ -1263,30 +1212,108 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( CameraInfo* info, osg::Gra
     return camera;
 }
 
-CameraInfo*
-FGRenderer::buildDeferredPipeline(CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
-                                    const osg::Matrix& view,
-                                    const osg::Matrix& projection,
-                                    osg::GraphicsContext* gc)
-{
-    if (_renderer.empty() || !_pipeline.valid())
-        return buildDefaultDeferredPipeline(cgroup, flags, camera, view, projection, gc);
-    return buildCameraFromRenderingPipeline(_pipeline, cgroup, flags, camera, view, projection, gc);
-}
-
-osg::Camera* 
-FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage )
+osg::Camera*
+FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage )
 {
     osg::Camera* camera = new osg::Camera;
-    info->addCamera(stage->name, camera, stage->scaleFactor, true);
+    info->addCamera(stage->name, camera );
 
-    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback(stage->name, info, stage->needsDuDv) );
+    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( stage->name, info ) );
     camera->setAllowEventFocus(false);
     camera->setGraphicsContext(gc);
     camera->setViewport(new Viewport);
     camera->setName(stage->name+"C");
     camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     camera->setRenderOrder(osg::Camera::NESTED_RENDER, stage->orderNum);
+    camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
+    camera->setViewport( new osg::Viewport );
+    buildAttachments(info, camera, stage->name, stage->attachments);
+    camera->setDrawBuffer(GL_FRONT);
+    camera->setReadBuffer(GL_FRONT);
+    camera->setClearColor( osg::Vec4( 0., 0., 0., 1. ) );
+    camera->setClearMask( GL_COLOR_BUFFER_BIT );
+    osg::StateSet* ss = camera->getOrCreateStateSet();
+    ss->setAttribute( new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false) );
+    ss->addUniform( _depthInColor );
+
+    osg::Group* lightingGroup = new osg::Group;
+
+    BOOST_FOREACH( osg::ref_ptr<FGRenderingPipeline::Pass> pass, stage->passes ) {
+        ref_ptr<Node> node = buildPass(info, pass);
+        if (node.valid())
+            lightingGroup->addChild(node);
+    }
+
+    camera->addChild( lightingGroup );
+
+    return camera;
+}
+
+CameraInfo*
+FGRenderer::buildDeferredPipeline(CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                    const osg::Matrix& view,
+                                    const osg::Matrix& projection,
+                                    osg::GraphicsContext* gc)
+{
+    return buildCameraFromRenderingPipeline(_pipeline, cgroup, flags, camera, view, projection, gc);
+}
+
+osg::Camera* 
+FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const FGRenderingPipeline::Pass* pass )
+{
+    osg::Camera* camera = new osg::Camera;
+
+    camera->setClearMask( 0 );
+    camera->setAllowEventFocus(false);
+    camera->setName(pass->name+"C");
+    camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    camera->setRenderOrder(osg::Camera::NESTED_RENDER, pass->orderNum);
+    camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    camera->setViewMatrix(osg::Matrix::identity());
+    camera->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
+
+    osg::StateSet* ss = camera->getOrCreateStateSet();
+    ss->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+    ss->addUniform( info->projInverse );
+    ss->addUniform( info->viewInverse );
+    ss->addUniform( info->view );
+    ss->addUniform( info->bufferSize );
+    ss->addUniform( _ambientFactor );
+    ss->addUniform( _sunDiffuse );
+    ss->addUniform( _sunSpecular );
+    ss->addUniform( _sunDirection );
+    ss->addUniform( _planes );
+    ss->addUniform( _shadowNumber );
+    ss->addUniform( _shadowDistances );
+    ss->addUniform( _fogColor );
+    ss->addUniform( _fogDensity );
+    ss->addUniform( _planes );
+
+    osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
+    g->setUseDisplayList(false);
+    simgear::EffectGeode* eg = new simgear::EffectGeode;
+    simgear::Effect* effect = simgear::makeEffect(pass->effect, true);
+    if (effect) {
+        eg->setEffect( effect );
+    }
+
+    eg->setName(pass->name+"Quad");
+    eg->setCullingActive(false);
+    eg->addDrawable(g);
+    camera->addChild(eg);
+
+    return camera;
+}
+
+osg::Camera* 
+FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage )
+{
+    osg::Camera* camera = buildDeferredFullscreenCamera(info, static_cast<const FGRenderingPipeline::Pass*>(stage));
+    info->addCamera(stage->name, camera, stage->scaleFactor, true);
+
+    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback(stage->name, info, stage->needsDuDv) );
+    camera->setGraphicsContext(gc);
+    camera->setViewport(new Viewport);
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     buildAttachments(info, camera, stage->name, stage->attachments);
     camera->setDrawBuffer(GL_FRONT);
@@ -1297,35 +1324,10 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::Gr
     camera->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
 
     osg::StateSet* ss = camera->getOrCreateStateSet();
-    ss->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-    ss->addUniform( info->projInverse );
-    ss->addUniform( info->viewInverse );
-    ss->addUniform( info->view );
-    ss->addUniform( info->bufferSize );
     if (stage->needsDuDv) {
         ss->addUniform( info->du );
         ss->addUniform( info->dv );
     }
-    ss->addUniform( _ambientFactor );
-    ss->addUniform( _sunDiffuse );
-    ss->addUniform( _sunSpecular );
-    ss->addUniform( _sunDirection );
-    ss->addUniform( _planes );
-    ss->addUniform( _shadowNumber );
-    ss->addUniform( _shadowDistances );
-
-    osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
-    g->setUseDisplayList(false);
-    simgear::EffectGeode* eg = new simgear::EffectGeode;
-    simgear::Effect* effect = simgear::makeEffect(stage->effect, true);
-    if (effect) {
-        eg->setEffect( effect );
-    }
-
-    eg->setName(stage->name+"Quad");
-    eg->setCullingActive(false);
-    eg->addDrawable(g);
-    camera->addChild(eg);
 
     return camera;
 }
@@ -1356,51 +1358,12 @@ FGRenderer::buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraI
     ss->addUniform( _depthInColor );
 }
 
-CameraInfo*
-FGRenderer::buildDefaultDeferredPipeline(CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
-                                    const osg::Matrix& view,
-                                    const osg::Matrix& projection,
-                                    osg::GraphicsContext* gc)
-{
-    CameraInfo* info = new CameraInfo(flags);
-    buildDefaultDeferredBuffers(info, _shadowMapSize, _useColorForDepth);
-
-    osg::Camera* geometryCamera = buildDefaultDeferredGeometryCamera( info, gc );
-    cgroup->getViewer()->addSlave(geometryCamera, false);
-    installCullVisitor(geometryCamera);
-    int slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-    info->getRenderStageInfo(GEOMETRY_CAMERA).slaveIndex = slaveIndex;
-    
-    Camera* shadowCamera = buildDefaultDeferredShadowCamera( info, gc );
-    cgroup->getViewer()->addSlave(shadowCamera, false);
-    installCullVisitor(shadowCamera);
-    slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-    info->getRenderStageInfo(SHADOW_CAMERA).slaveIndex = slaveIndex;
-
-    osg::Camera* lightingCamera = buildDefaultDeferredLightingCamera( info, gc );
-    cgroup->getViewer()->addSlave(lightingCamera, false);
-    installCullVisitor(lightingCamera);
-    slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-    info->getRenderStageInfo(LIGHTING_CAMERA).slaveIndex = slaveIndex;
-
-    buildDeferredDisplayCamera( camera, info, DISPLAY_CAMERA, gc );
-
-    cgroup->getViewer()->addSlave(camera, false);
-    installCullVisitor(camera);
-    slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-    info->addCamera( DISPLAY_CAMERA, camera, slaveIndex, true );
-    camera->setRenderOrder(Camera::POST_RENDER, 99); //FIXME
-    cgroup->addCamera(info);
-    return info;
-}
-
-void FGRenderer::buildStage(FGRenderingPipeline* rpipe, CameraInfo* info,
-                                        FGRenderingPipeline::Stage* stage,
-                                        CameraGroup* cgroup,
-                                        osg::Camera* mainCamera,
-                                        const osg::Matrix& view,
-                                        const osg::Matrix& projection,
-                                        osg::GraphicsContext* gc)
+void
+FGRenderer::buildStage(CameraInfo* info,
+                        FGRenderingPipeline::Stage* stage,
+                        CameraGroup* cgroup,
+                        osg::Camera* mainCamera,
+                        osg::GraphicsContext* gc)
 {
     if (!stage->valid())
         return;
@@ -1408,8 +1371,10 @@ void FGRenderer::buildStage(FGRenderingPipeline* rpipe, CameraInfo* info,
     ref_ptr<Camera> camera;
     if (stage->type == "geometry")
         camera = buildDeferredGeometryCamera(info, gc, stage->name, stage->attachments);
-    else if (stage->type == "lighting")
+    else if (stage->type == "lighting-builtin")
         camera = buildDeferredLightingCamera(info, gc, stage->name, stage->attachments);
+    else if (stage->type == "lighting")
+        camera = buildDeferredLightingCamera(info, gc, stage);
     else if (stage->type == "shadow")
         camera = buildDeferredShadowCamera(info, gc, stage->name, stage->attachments);
     else if (stage->type == "fullscreen")
@@ -1428,7 +1393,58 @@ void FGRenderer::buildStage(FGRenderingPipeline* rpipe, CameraInfo* info,
     info->getRenderStageInfo(stage->name).slaveIndex = slaveIndex;
 }
 
-void FGRenderer::buildBuffers(FGRenderingPipeline* rpipe, CameraInfo* info)
+osg::Node*
+FGRenderer::buildLightingSkyCloudsPass(FGRenderingPipeline::Pass* pass)
+{
+    Group* group = new Group;
+    group->addChild( _sky->getPreRoot() );
+    group->addChild( _sky->getCloudRoot() );
+    return group;
+}
+
+osg::Node*
+FGRenderer::buildLightingLightsPass(CameraInfo* info, FGRenderingPipeline::Pass* pass)
+{
+    osg::Camera* lightCam = new osg::Camera;
+    StateSet* ss = lightCam->getOrCreateStateSet();
+    ss->addUniform( _planes );
+    ss->addUniform( info->bufferSize );
+    lightCam->setName( "LightCamera" );
+    lightCam->setClearMask(0);
+    lightCam->setAllowEventFocus(false);
+    lightCam->setReferenceFrame(osg::Transform::RELATIVE_RF);
+    lightCam->setRenderOrder(osg::Camera::NESTED_RENDER,pass->orderNum);
+    lightCam->setViewMatrix(osg::Matrix::identity());
+    lightCam->setProjectionMatrix(osg::Matrix::identity());
+    lightCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    lightCam->setCullMask( simgear::MODELLIGHT_BIT );
+    lightCam->setInheritanceMask( osg::CullSettings::ALL_VARIABLES & ~osg::CullSettings::CULL_MASK );
+    lightCam->addChild( mDeferredRealRoot.get() );
+
+    return lightCam;
+}
+
+osg::Node*
+FGRenderer::buildPass(CameraInfo* info, FGRenderingPipeline::Pass* pass)
+{
+    if (!pass->valid())
+        return 0;
+
+    ref_ptr<Node> node;
+    if (pass->type == "sky-clouds")
+        node = buildLightingSkyCloudsPass(pass);
+    else if (pass->type == "fullscreen")
+        node = buildDeferredFullscreenCamera(info, pass);
+    else if (pass->type == "lights")
+        node = buildLightingLightsPass(info, pass);
+    else
+        throw sg_exception("Pass type is not supported");
+
+    return node.release();
+}
+
+void
+FGRenderer::buildBuffers(FGRenderingPipeline* rpipe, CameraInfo* info)
 {
     for (size_t i = 0; i < rpipe->buffers.size(); ++i) {
         osg::ref_ptr<FGRenderingPipeline::Buffer> buffer = rpipe->buffers[i];
@@ -1455,7 +1471,7 @@ CameraInfo* FGRenderer::buildCameraFromRenderingPipeline(FGRenderingPipeline* rp
     
     for (size_t i = 0; i < rpipe->stages.size(); ++i) {
         osg::ref_ptr<FGRenderingPipeline::Stage> stage = rpipe->stages[i];
-        buildStage(rpipe, info, stage, cgroup, camera, view, projection, gc);
+        buildStage(info, stage, cgroup, camera, gc);
     }
 
     cgroup->addCamera(info);

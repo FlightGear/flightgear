@@ -92,6 +92,7 @@ FGRenderingPipeline::Conditionable::parseCondition(SGPropertyNode* prop)
     if (!predProp) {
         setAlwaysValid(true);
     } else {
+        setAlwaysValid(false);
         try {
             flightgear::PipelinePredParser parser;
             SGExpressionb* validExp = dynamic_cast<SGExpressionb*>(parser.read(predProp->getChild(0)));
@@ -257,11 +258,11 @@ simgear::effect::EffectNameValue<osg::Camera::BufferComponent> componentsInit[] 
 };
 simgear::effect::EffectPropertyMap<osg::Camera::BufferComponent> components(componentsInit);
 
-FGRenderingPipeline::Stage::Stage(SGPropertyNode* prop)
+FGRenderingPipeline::Pass::Pass(SGPropertyNode* prop)
 {
     SGPropertyNode_ptr nameProp = prop->getChild("name");
     if (!nameProp.valid()) {
-        throw sg_exception("Stage name is mandatory");
+        throw sg_exception("Pass name is mandatory");
     }
     name = nameProp->getStringValue();
     SGPropertyNode_ptr typeProp = prop->getChild("type");
@@ -273,6 +274,12 @@ FGRenderingPipeline::Stage::Stage(SGPropertyNode* prop)
 
     orderNum = prop->getIntValue("order-num", -1);
     effect = prop->getStringValue("effect", "");
+
+    parseCondition(prop);
+}
+
+FGRenderingPipeline::Stage::Stage(SGPropertyNode* prop) : Pass(prop)
+{
     needsDuDv = prop->getBoolValue("needs-du-dv", false);
     scaleFactor = prop->getFloatValue("scale-factor", 1.f);
 
@@ -281,7 +288,10 @@ FGRenderingPipeline::Stage::Stage(SGPropertyNode* prop)
         this->attachments.push_back(new FGRenderingPipeline::Attachment(attachments[i]));
     }
 
-    parseCondition(prop);
+    std::vector<SGPropertyNode_ptr> passes = prop->getChildren("pass");
+    for (int i = 0; i < (int)passes.size(); ++i) {
+        this->passes.push_back(new FGRenderingPipeline::Pass(passes[i]));
+    }
 }
 
 FGRenderingPipeline::Attachment::Attachment(SGPropertyNode* prop)
