@@ -254,19 +254,6 @@ check_include_file(unistd.h   HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)
 check_include_file(windows.h  HAVE_WINDOWS_H)
 
-# definition depends on OSG version
-set(CMAKE_REQUIRED_INCLUDES ${OPENSCENEGRAPH_INCLUDE_DIRS})
-
-check_cxx_source_compiles(
-    "#include <osg/CullSettings>
-    int main()
-    {
-        osg::CullSettings::VariablesMask mask = osg::CullSettings::CLEAR_MASK;
-        return 0;
-    }
-    "
-    HAVE_CULLSETTINGS_CLEAR_MASK)
-
 if(ENABLE_RTI)
     find_package(RTI)
     if(RTI_FOUND)

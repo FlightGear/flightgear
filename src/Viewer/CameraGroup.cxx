@@ -750,9 +750,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     camera->setInheritanceMask(CullSettings::ALL_VARIABLES
                                & ~(CullSettings::CULL_MASK
                                    | CullSettings::CULLING_MODE
-#if defined(HAVE_CULLSETTINGS_CLEAR_MASK)
                                    | CullSettings::CLEAR_MASK
-#endif
                                    ));
 
     osg::Matrix vOff;
@@ -999,9 +997,7 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     camera->setInheritanceMask(CullSettings::ALL_VARIABLES
                                & ~(CullSettings::COMPUTE_NEAR_FAR_MODE
                                    | CullSettings::CULLING_MODE
-#if defined(HAVE_CULLSETTINGS_CLEAR_MASK)
                                    | CullSettings::CLEAR_MASK
-#endif
                                    ));
     camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     camera->setCullingMode(osg::CullSettings::NO_CULLING);
