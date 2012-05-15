@@ -68,6 +68,8 @@ NewGUI::init ()
     setStyle();
     SGPath p(globals->get_fg_root(), "gui/dialogs");
     readDir(p);
+    const std::string aircraft_dir(fgGetString("/sim/aircraft-dir"));
+    readDir( SGPath(aircraft_dir, "gui/dialogs") );
     _menubar->init();
 }
 
