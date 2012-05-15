@@ -118,7 +118,9 @@ bool Approach::route(WayptRef aIAF, WayptVec& aWps)
 bool Approach::routeFromVectors(WayptVec& aWps)
 {
   aWps.insert(aWps.end(), _primary.begin(), _primary.end());
-  aWps.push_back(new RunwayWaypt(_runway, NULL));
+  RunwayWaypt* rwy = new RunwayWaypt(_runway, NULL);
+  rwy->setFlag(WPT_APPROACH);
+  aWps.push_back(rwy);
   aWps.insert(aWps.end(), _missed.begin(), _missed.end());
   return true;
 }

@@ -172,12 +172,6 @@ private:
     InputListener *listener;
     SGPropertyNode_ptr mirror;    
   
-    virtual void departureChanged();
-    void buildDeparture(flightgear::WayptRef enroute, flightgear::WayptVec& wps);
-    
-    virtual void arrivalChanged();
-    void buildArrival(flightgear::WayptRef enroute, flightgear::WayptVec& wps);
-    
     /**
      * Helper to keep various pieces of state in sync when the route is
      * modified (waypoints added, inserted, removed). Notably, this fires the

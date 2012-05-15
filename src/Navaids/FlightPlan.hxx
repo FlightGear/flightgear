@@ -224,6 +224,14 @@ public:
   void addDelegate(Delegate* d);
   void removeDelegate(Delegate* d);
 private:
+  void lockDelegate();
+  void unlockDelegate();
+  
+  int _delegateLock;
+  bool _arrivalChanged, 
+    _departureChanged, 
+    _waypointsChanged, 
+    _currentWaypointChanged;
   
   bool loadPlainTextRoute(const SGPath& path);
   

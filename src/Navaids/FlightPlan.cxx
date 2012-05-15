@@ -27,6 +27,7 @@
 // std
 #include <map>
 #include <fstream>
+#include <cassert>
 
 // Boost
 #include <boost/algorithm/string/case_conv.hpp>
@@ -59,6 +60,7 @@ typedef std::vector<FlightPlan::DelegateFactory*> FPDelegateFactoryVec;
 static FPDelegateFactoryVec static_delegateFactories;
   
 FlightPlan::FlightPlan() :
+  _delegateLock(0),
   _currentIndex(-1),
   _departureRunway(NULL),
   _destinationRunway(NULL),
@@ -67,6 +69,8 @@ FlightPlan::FlightPlan() :
   _approach(NULL),
   _delegate(NULL)
 {
+  _departureChanged = _arrivalChanged = _waypointsChanged = _currentWaypointChanged = false;
+  
   BOOST_FOREACH(DelegateFactory* factory, static_delegateFactories) {
     Delegate* d = factory->createFlightPlanDelegate(this);
     if (d) { // factory might not always create a delegate
@@ -93,6 +97,7 @@ FlightPlan* FlightPlan::clone(const string& newIdent) const
 {
   FlightPlan* c = new FlightPlan();
   c->_ident = newIdent.empty() ? _ident : newIdent;
+  c->lockDelegate();
   
 // copy destination / departure data.
   c->setDeparture(_departure);
@@ -110,10 +115,11 @@ FlightPlan* FlightPlan::clone(const string& newIdent) const
   c->setSID(_sid);
   
 // copy legs
+  c->_waypointsChanged = true;
   for (int l=0; l < numLegs(); ++l) {
     c->_legs.push_back(_legs[l]->cloneFor(c));
   }
-  
+  c->unlockDelegate();
   return c;
 }
 
@@ -169,12 +175,10 @@ void FlightPlan::insertWayptsAtIndex(const WayptVec& wps, int aIndex)
     newLegs.push_back(new Leg(this, wp));
   }
   
+  lockDelegate();
+  _waypointsChanged = true;
   _legs.insert(it, newLegs.begin(), newLegs.end());
-  rebuildLegData();
-  
-  if (_delegate) {
-    _delegate->runWaypointsChanged();
-  }
+  unlockDelegate();
 }
 
 void FlightPlan::deleteIndex(int aIndex)
@@ -188,77 +192,95 @@ void FlightPlan::deleteIndex(int aIndex)
     SG_LOG(SG_AUTOPILOT, SG_WARN, "removeAtIndex with invalid index:" << aIndex);
     return;
   }
+  
+  lockDelegate();
+  _waypointsChanged = true;
+  
   LegVec::iterator it = _legs.begin();
   it += index;
   Leg* l = *it;
   _legs.erase(it);
   delete l;
   
-  bool curChanged = false;
   if (_currentIndex == index) {
     // current waypoint was removed
-    curChanged = true;
+    _currentWaypointChanged = true;
   } else if (_currentIndex > index) {
     --_currentIndex; // shift current index down if necessary
   }
-
-  rebuildLegData();
-  if (_delegate) {
-    _delegate->runWaypointsChanged();
-    if (curChanged) {
-      _delegate->runCurrentWaypointChanged();
-    }
-  }
+  
+  unlockDelegate();
 }
   
 void FlightPlan::clear()
 {
+  lockDelegate();
+  _waypointsChanged = true;
+  _currentWaypointChanged = true;
+  _arrivalChanged = true;
+  _departureChanged = true;
+  
   _currentIndex = -1;
   BOOST_FOREACH(Leg* l, _legs) {
     delete l;
   }
   _legs.clear();  
-  rebuildLegData();
-  if (_delegate) {
-    _delegate->runDepartureChanged();
-    _delegate->runArrivalChanged();
-    _delegate->runWaypointsChanged();
-    _delegate->runCurrentWaypointChanged();
-  }
+  
+  unlockDelegate();
 }
+  
+class RemoveWithFlag
+{
+public:
+  RemoveWithFlag(WayptFlag f) : flag(f), delCount(0) { }
+  
+  int numDeleted() const { return delCount; }
+  
+  bool operator()(FlightPlan::Leg* leg) const
+  {
+    if (leg->waypoint()->flag(flag)) {
+      std::cout << "deleting" << leg << std::endl;
+      delete leg;
+      ++delCount;
+      return true;
+    }
+    
+    return false;
+  }
+private:
+  WayptFlag flag;
+  mutable int delCount;
+};
   
 int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
 {
   int count = 0;
-  for (unsigned int i=0; i<_legs.size(); ++i) {
+// first pass, fix up currentIndex
+  for (int i=0; i<_currentIndex; ++i) {
     Leg* l = _legs[i];
-    if (!l->waypoint()->flag(flag)) {
-      continue;
+    if (l->waypoint()->flag(flag)) {
+      ++count;
     }
-    
-  // okay, we're going to clear this leg
-    ++count;
-    if (_currentIndex > (int) i) {
-      --_currentIndex;
-    }
-    
-    delete l;
-    LegVec::iterator it = _legs.begin();
-    it += i;
-    _legs.erase(it);
   }
-
-  if (count == 0) {
+  
+  _currentIndex -= count;
+  
+// now delete and remove
+  RemoveWithFlag rf(flag);
+  LegVec::iterator it = std::remove_if(_legs.begin(), _legs.end(), rf);
+  if (it == _legs.end()) {
     return 0; // nothing was cleared, don't fire the delegate
   }
   
-  rebuildLegData();
-  if (_delegate) {
-    _delegate->runWaypointsChanged();
-    _delegate->runCurrentWaypointChanged();
+  lockDelegate();
+  _waypointsChanged = true;
+  if (count > 0) {
+    _currentWaypointChanged = true;
   }
   
-  return count;
+  _legs.erase(it, _legs.end());
+  unlockDelegate();
+  return rf.numDeleted();
 }
   
 void FlightPlan::setCurrentIndex(int index)
@@ -271,10 +293,10 @@ void FlightPlan::setCurrentIndex(int index)
     return;
   }
   
+  lockDelegate();
   _currentIndex = index;
-  if (_delegate) {
-    _delegate->runCurrentWaypointChanged();
-  }
+  _currentWaypointChanged = true;
+  unlockDelegate();
 }
   
 int FlightPlan::findWayptIndex(const SGGeod& aPos) const
@@ -339,13 +361,12 @@ void FlightPlan::setDeparture(FGAirport* apt)
     return;
   }
   
+  lockDelegate();
+  _departureChanged = true;
   _departure = apt;
   _departureRunway = NULL;
   setSID((SID*)NULL);
-  
-  if (_delegate) {
-    _delegate->runDepartureChanged();
-  }
+  unlockDelegate();
 }
   
 void FlightPlan::setDeparture(FGRunway* rwy)
@@ -354,15 +375,15 @@ void FlightPlan::setDeparture(FGRunway* rwy)
     return;
   }
   
+  lockDelegate();
+  _departureChanged = true;
+
   _departureRunway = rwy;
   if (rwy->airport() != _departure) {
     _departure = rwy->airport();
     setSID((SID*)NULL);
   }
-  
-  if (_delegate) {
-    _delegate->runDepartureChanged();
-  }
+  unlockDelegate();
 }
   
 void FlightPlan::setSID(SID* sid, const std::string& transition)
@@ -371,12 +392,11 @@ void FlightPlan::setSID(SID* sid, const std::string& transition)
     return;
   }
   
+  lockDelegate();
+  _departureChanged = true;
   _sid = sid;
   _sidTransition = transition;
-  
-  if (_delegate) {
-    _delegate->runDepartureChanged();
-  }
+  unlockDelegate();
 }
   
 void FlightPlan::setSID(Transition* trans)
@@ -407,13 +427,13 @@ void FlightPlan::setDestination(FGAirport* apt)
     return;
   }
   
+  lockDelegate();
+  _arrivalChanged = true;
   _destination = apt;
   _destinationRunway = NULL;
   setSTAR((STAR*)NULL);
-
-  if (_delegate) {
-    _delegate->runArrivalChanged();
-  }
+  setApproach(NULL);
+  unlockDelegate();
 }
     
 void FlightPlan::setDestination(FGRunway* rwy)
@@ -422,15 +442,15 @@ void FlightPlan::setDestination(FGRunway* rwy)
     return;
   }
   
+  lockDelegate();
+  _arrivalChanged = true;
   _destinationRunway = rwy;
   if (_destination != rwy->airport()) {
     _destination = rwy->airport();
     setSTAR((STAR*)NULL);
   }
   
-  if (_delegate) {
-    _delegate->runArrivalChanged();
-  }
+  unlockDelegate();
 }
   
 void FlightPlan::setSTAR(STAR* star, const std::string& transition)
@@ -439,12 +459,11 @@ void FlightPlan::setSTAR(STAR* star, const std::string& transition)
     return;
   }
   
+  lockDelegate();
+  _arrivalChanged = true;
   _star = star;
   _starTransition = transition;
-  
-  if (_delegate) {
-    _delegate->runArrivalChanged();
-  }
+  unlockDelegate();
 }
   
 void FlightPlan::setSTAR(Transition* trans)
@@ -475,6 +494,8 @@ void FlightPlan::setApproach(flightgear::Approach *app)
     return;
   }
   
+  lockDelegate();
+  _arrivalChanged = true;
   _approach = app;
   if (app) {
     // keep runway + airport in sync
@@ -486,10 +507,7 @@ void FlightPlan::setApproach(flightgear::Approach *app)
       _destination = _destinationRunway->airport();
     }
   }
-
-  if (_delegate) {
-    _delegate->runArrivalChanged();
-  }
+  unlockDelegate();
 }
   
 bool FlightPlan::save(const SGPath& path)
@@ -554,12 +572,14 @@ bool FlightPlan::load(const SGPath& path)
   SG_LOG(SG_IO, SG_INFO, "going to read flight-plan from:" << path.str());
   
   bool Status = false;
+  lockDelegate();
   try {
     readProperties(path.str(), routeData);
   } catch (sg_exception& ) {
     // if XML parsing fails, the file might be simple textual list of waypoints
     Status = loadPlainTextRoute(path);
     routeData = 0;
+    _waypointsChanged = true;
   }
   
   if (routeData.valid())
@@ -581,11 +601,7 @@ bool FlightPlan::load(const SGPath& path)
     }
   }
   
-  rebuildLegData();
-  if (_delegate) {
-    _delegate->runWaypointsChanged();
-  }
-  
+  unlockDelegate();  
   return Status;
 }
 
@@ -657,6 +673,7 @@ void FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
     Leg* l = new Leg(this, Waypt::createFromProperties(NULL, wpNode));
     _legs.push_back(l);
   } // of route iteration
+  _waypointsChanged = true;
 }
 
 void FlightPlan::loadVersion1XMLRoute(SGPropertyNode_ptr routeData)
@@ -671,7 +688,7 @@ void FlightPlan::loadVersion1XMLRoute(SGPropertyNode_ptr routeData)
     Leg* l = new Leg(this, parseVersion1XMLWaypt(wpNode));
     _legs.push_back(l);
   } // of route iteration
-
+  _waypointsChanged = true;
 }
 
 WayptRef FlightPlan::parseVersion1XMLWaypt(SGPropertyNode* aWP)
@@ -1001,6 +1018,56 @@ void FlightPlan::rebuildLegData()
     _legs[l]->_distanceAlongPath = _totalDistance;
     _totalDistance += crsDist.second * SG_METER_TO_NM;
   } // of legs iteration
+}
+  
+void FlightPlan::lockDelegate()
+{
+  if (_delegateLock == 0) {
+    assert(!_departureChanged && !_arrivalChanged && 
+           !_waypointsChanged && !_currentWaypointChanged);
+  }
+  
+  ++_delegateLock;
+}
+
+void FlightPlan::unlockDelegate()
+{
+  assert(_delegateLock > 0);
+  if (_delegateLock > 1) {
+    --_delegateLock;
+    return;
+  }
+  
+  if (_departureChanged) {
+    _departureChanged = false;
+    if (_delegate) {
+      _delegate->runDepartureChanged();
+    }
+  }
+  
+  if (_arrivalChanged) {
+    _arrivalChanged = false;
+    if (_delegate) {
+      _delegate->runArrivalChanged();
+    }
+  }
+  
+  if (_waypointsChanged) {
+    _waypointsChanged = false;
+    rebuildLegData();
+    if (_delegate) {
+      _delegate->runWaypointsChanged();
+    }
+  }
+  
+  if (_currentWaypointChanged) {
+    _currentWaypointChanged = false;
+    if (_delegate) {
+      _delegate->runCurrentWaypointChanged();
+    }
+  }
+
+  --_delegateLock;
 }
   
 void FlightPlan::registerDelegateFactory(DelegateFactory* df)

@@ -75,10 +75,12 @@ static const char* fixGhostGetMember(naContext c, void* g, naRef field, naRef* o
 naGhostType FixGhostType = { positionedGhostDestroy, "fix", fixGhostGetMember, 0 };
 
 static const char* wayptGhostGetMember(naContext c, void* g, naRef field, naRef* out);
+static void waypointGhostSetMember(naContext c, void* g, naRef field, naRef value);
+
 naGhostType WayptGhostType = { wayptGhostDestroy, 
   "waypoint",
   wayptGhostGetMember,
-  0};
+  waypointGhostSetMember};
 
 static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 static void legGhostSetMember(naContext c, void* g, naRef field, naRef value);
@@ -382,6 +384,20 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
   return "";
 }
 
+static void waypointCommonSetMember(naContext c, Waypt* wpt, const char* fieldName, naRef value)
+{
+  if (!strcmp(fieldName, "wp_role")) {
+    if (!naIsString(value)) naRuntimeError(c, "wp_role must be a string");
+    if (wpt->owner() != NULL) naRuntimeError(c, "cannot override wp_role on waypoint with parent");
+    WayptFlag f = wayptFlagFromString(naStr_data(value));
+    if (f == 0) {
+      naRuntimeError(c, "unrecognized wp_role value %s", naStr_data(value));
+    }
+    
+    wpt->setFlag(f, true);
+  }
+}
+
 static const char* wayptGhostGetMember(naContext c, void* g, naRef field, naRef* out)
 {
   const char* fieldName = naStr_data(field);
@@ -450,21 +466,19 @@ static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* o
   return ""; // success
 }
 
+static void waypointGhostSetMember(naContext c, void* g, naRef field, naRef value)
+{
+  const char* fieldName = naStr_data(field);
+  Waypt* wpt = (Waypt*) g;
+  waypointCommonSetMember(c, wpt, fieldName, value);
+}
+
 static void legGhostSetMember(naContext c, void* g, naRef field, naRef value)
 {
   const char* fieldName = naStr_data(field);
   FlightPlan::Leg* leg = (FlightPlan::Leg*) g;
-  
-  if (!strcmp(fieldName, "wp_role")) {
-    if (!naIsString(value)) naRuntimeError(c, "wp_role must be a string");
-    if (leg->waypoint()->owner() != NULL) naRuntimeError(c, "cannot override wp_role on waypoint with parent");
-    WayptFlag f = wayptFlagFromString(naStr_data(value));
-    if (f == 0) {
-      naRuntimeError(c, "unrecognized wp_role value %s", naStr_data(value));
-    }
     
-    leg->waypoint()->setFlag(f, true);
-  }
+  waypointCommonSetMember(c, leg->waypoint(), fieldName, value);
 }
 
 static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, naRef* out)
