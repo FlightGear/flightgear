@@ -66,6 +66,7 @@ HUD::HUD() :
     _alpha_clamp(fgGetNode("/sim/hud/color/alpha-clamp", true)),
     _brightness(fgGetNode("/sim/hud/color/brightness", true)),
     _visible(false),
+    _loaded(false),
     _antialiased(false),
     _transparent(false),
     _a(0.67),									// FIXME better names
@@ -115,7 +116,8 @@ void HUD::init()
     _font_renderer->setFont(_font);
     _font_renderer->setPointSize(_font_size);
     _text_list.setFont(_font_renderer);
-
+    _loaded = false;
+  
     currentColorChanged();
     _currentPath->fireValueChanged();
 }
@@ -134,6 +136,8 @@ void HUD::deinit()
   
   delete _clip_box;
   _clip_box = NULL;
+  
+  _loaded = false;
 }
 
 void HUD::reinit()
@@ -427,16 +431,28 @@ void HUD::valueChanged(SGPropertyNode *node)
     if (_listener_active)
         return;
     _listener_active = true;
-    if (!strcmp(node->getName(), "current-path")) {
-        int pathIndex = _currentPath->getIntValue();
-        SGPropertyNode* pathNode = fgGetNode("/sim/hud/path", pathIndex);
-        std::string path("Huds/default.xml");
-        if (pathNode && pathNode->hasValue()) {
-            path = pathNode->getStringValue();
-            SG_LOG(SG_INSTR, SG_INFO, "will load Hud from " << path);
-        }
+  
+    bool loadNow = false;
+    _visible = _visibility->getBoolValue();
+    if (_visible && !_loaded) {
+      loadNow = true;
+    }
+  
+    if (!strcmp(node->getName(), "current-path") && _visible) {
+      loadNow = true;
+    }
+  
+    if (loadNow) {
+      int pathIndex = _currentPath->getIntValue();
+      SGPropertyNode* pathNode = fgGetNode("/sim/hud/path", pathIndex);
+      std::string path("Huds/default.xml");
+      if (pathNode && pathNode->hasValue()) {
+        path = pathNode->getStringValue();
+        SG_LOG(SG_INSTR, SG_INFO, "will load Hud from " << path);
+      }
       
-        load(path.c_str());
+      _loaded = true;
+      load(path.c_str());
     }
   
     if (!strcmp(node->getName(), "current-color")) {
@@ -446,7 +462,7 @@ void HUD::valueChanged(SGPropertyNode *node)
     _scr_width = _scr_widthN->getIntValue();
     _scr_height = _scr_heightN->getIntValue();
 
-    _visible = _visibility->getBoolValue();
+    
     _3Denabled = _3DenabledN->getBoolValue();
     _transparent = _transparency->getBoolValue();
     _antialiased = _antialiasing->getBoolValue();

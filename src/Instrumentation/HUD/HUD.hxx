@@ -228,6 +228,7 @@ private:
     SGPropertyNode_ptr _alpha_clamp;
     SGPropertyNode_ptr _brightness;
     bool _visible;
+    bool _loaded;
     bool _3Denabled;
     bool _antialiased;
     bool _transparent;
