@@ -383,25 +383,6 @@ static osg::ref_ptr<osg::Group> mDeferredRealRoot = new osg::Group;
 
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
-static osg::ref_ptr<osg::Switch> panelSwitch;
-                                    
-                                    
-// update callback for the switch node controlling the 2D panel
-class FGPanelSwitchCallback : public osg::NodeCallback {
-public:
-    virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
-    {
-        assert(dynamic_cast<osg::Switch*>(node));
-        osg::Switch* sw = static_cast<osg::Switch*>(node);
-        
-        bool enabled = fgPanelVisible();
-        sw->setValue(0, enabled);
-        if (!enabled)
-            return;
-        traverse(node, nv);
-    }
-};
-
 #ifdef FG_JPEG_SERVER
 static void updateRenderer()
 {
@@ -1625,22 +1606,8 @@ FGRenderer::setupView( void )
         geode->addDrawable(new SGHUDDrawable);
         guiCamera->addChild(geode);
       
-        panelSwitch = new osg::Switch;
-        osg::StateSet* stateSet = panelSwitch->getOrCreateStateSet();
-        stateSet->setRenderBinDetails(1000, "RenderBin");
         
-        // speed optimization?
-        stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-        stateSet->setAttribute(new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
-        stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
-        stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
-        stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-        
-        
-        panelSwitch->setUpdateCallback(new FGPanelSwitchCallback);
-        panelChanged();
-        
-        guiCamera->addChild(panelSwitch.get());
+      guiCamera->addChild(FGPanelNode::create2DPanelNode());
     }
     
     osg::Switch* sw = new osg::Switch;
@@ -1660,20 +1627,6 @@ FGRenderer::setupView( void )
     stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
 
 	mDeferredRealRoot->addChild( mRealRoot.get() );
-}
-
-void FGRenderer::panelChanged()
-{
-    if (!panelSwitch) {
-        return;
-    }
-    
-    osg::Node* n = FGPanelNode::createNode(globals->get_current_panel());
-    if (panelSwitch->getNumChildren()) {
-        panelSwitch->setChild(0, n);
-    } else {
-        panelSwitch->addChild(n);
-    }
 }
                                     
 // Update all Visuals (redraws anything graphics related)

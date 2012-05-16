@@ -93,28 +93,6 @@ get_aspect_adjust (int xsize, int ysize)
   float real_aspect = float(xsize) / float(ysize);
   return (real_aspect / ideal_aspect);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Global functions.
-////////////////////////////////////////////////////////////////////////
-
-bool
-fgPanelVisible ()
-{
-     const FGPanel* current = globals->get_current_panel();
-     if (current == 0)
-	return false;
-     if (current->getVisibility() == 0)
-	return false;
-     if (globals->get_viewmgr()->get_current() != 0)
-	return false;
-     if (current->getAutohide() && globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS != 0)
-	return false;
-     return true;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGTextureManager.
@@ -201,8 +179,6 @@ FGPanel::FGPanel ()
   : _mouseDown(false),
     _mouseInstrument(0),
     _width(WIN_W), _height(int(WIN_H * 0.5768 + 1)),
- //   _view_height(int(WIN_H * 0.4232)),
-    _visibility(fgGetNode("/sim/panel/visibility", true)),
     _x_offset(fgGetNode("/sim/panel/x-offset", true)),
     _y_offset(fgGetNode("/sim/panel/y-offset", true)),
     _jitter(fgGetNode("/sim/panel/jitter", true)),
@@ -210,6 +186,7 @@ FGPanel::FGPanel ()
     _xsize_node(fgGetNode("/sim/startup/xsize", true)),
     _ysize_node(fgGetNode("/sim/startup/ysize", true)),
     _enable_depth_test(false),
+    _autohide(true),
     _drawPanelHotspots("/sim/panel-hotspots")
 {
 }
@@ -236,44 +213,6 @@ void
 FGPanel::addInstrument (FGPanelInstrument * instrument)
 {
   _instruments.push_back(instrument);
-}
-
-
-/**
- * Initialize the panel.
- */
-void
-FGPanel::init ()
-{
-}
-
-
-/**
- * Bind panel properties.
- */
-void
-FGPanel::bind ()
-{
-  fgSetArchivable("/sim/panel/visibility");
-  fgSetArchivable("/sim/panel/x-offset");
-  fgSetArchivable("/sim/panel/y-offset");
-  fgSetArchivable("/sim/panel/jitter");
-}
-
-
-/**
- * Unbind panel properties.
- */
-void
-FGPanel::unbind ()
-{
-}
-
-
-void
-FGPanel::update (double dt)
-{
-  updateMouseDelay(dt);
 }
 
 double
@@ -505,26 +444,6 @@ FGPanel::draw(osg::State& state)
 
   }
 }
-
-/**
- * Set the panel's visibility.
- */
-void
-FGPanel::setVisibility (bool visibility)
-{
-  _visibility->setBoolValue( visibility );
-}
-
-
-/**
- * Return true if the panel is visible.
- */
-bool
-FGPanel::getVisibility () const
-{
-  return _visibility->getBoolValue();
-}
-
 
 /**
  * Set the panel's background texture.

@@ -65,7 +65,6 @@ class FGLocale;
 class FGModelMgr;
 class FGRouteMgr;
 class FGScenery;
-class FGPanel;
 class FGTileMgr;
 class FGViewMgr;
 class FGViewer;
@@ -118,9 +117,6 @@ private:
 
     // Global autopilot "route"
     FGRouteMgr *route_mgr;
-
-    // 2D panel
-    SGSharedPtr<FGPanel> current_panel;
 
     // ATC manager
     FGATISMgr *ATIS_mgr;
@@ -242,9 +238,6 @@ public:
 
     inline FGATISMgr *get_ATIS_mgr() const { return ATIS_mgr; }
     inline void set_ATIS_mgr( FGATISMgr *a ) {ATIS_mgr = a; }
-
-    inline FGPanel *get_current_panel() const { return current_panel; }
-    void set_current_panel( FGPanel *cp );
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }

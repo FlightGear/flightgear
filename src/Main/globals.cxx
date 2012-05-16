@@ -46,7 +46,6 @@
 #include <Airports/runways.hxx>
 #include <ATCDCL/ATISmgr.hxx>
 #include <Autopilot/route_mgr.hxx>
-#include <Cockpit/panel.hxx>
 #include <GUI/FGFontCache.hxx>
 #include <GUI/gui.h>
 #include <Model/acmodel.hxx>
@@ -134,7 +133,6 @@ FGGlobals::FGGlobals() :
     mag( NULL ),
     matlib( NULL ),
     route_mgr( NULL ),
-    current_panel( NULL ),
     ATIS_mgr( NULL ),
     controls( NULL ),
     viewmgr( NULL ),
@@ -189,7 +187,6 @@ FGGlobals::~FGGlobals()
     delete mag;
     delete matlib;
     delete route_mgr;
-    current_panel = NULL;
 
     delete ATIS_mgr;
 
@@ -519,11 +516,4 @@ void FGGlobals::set_warp_delta( long int d )
   fgSetInt("/sim/time/warp-delta", d);
 }
 
-void FGGlobals::set_current_panel( FGPanel *cp )
-{
-  current_panel = cp;
-// poke the renderer to rebuild the scene node as necessary
-  get_renderer()->panelChanged();
-}
-    
 // end of globals.cxx

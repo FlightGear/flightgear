@@ -1196,20 +1196,11 @@ bool fgInitSubsystems() {
     // Add a new 2D panel.
     ////////////////////////////////////////////////////////////////////
 
-    string panel_path(fgGetString("/sim/panel/path"));
-    if (!panel_path.empty()) {
-      FGPanel* p = fgReadPanel(panel_path);
-      if (p) {
-        globals->set_current_panel(p);
-        p->init();
-        p->bind();
-        SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
-      } else {
-        SG_LOG( SG_INPUT, SG_ALERT,
-                "Error reading new panel from " << panel_path );
-      }
-    }
-
+    fgSetArchivable("/sim/panel/visibility");
+    fgSetArchivable("/sim/panel/x-offset");
+    fgSetArchivable("/sim/panel/y-offset");
+    fgSetArchivable("/sim/panel/jitter");
+  
     ////////////////////////////////////////////////////////////////////
     // Initialize the controls subsystem.
     ////////////////////////////////////////////////////////////////////

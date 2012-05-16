@@ -26,8 +26,6 @@
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/io/HTTPRequest.hxx>
 
-#include <Cockpit/panel.hxx>
-#include <Cockpit/panel_io.hxx>
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
@@ -399,47 +397,14 @@ do_save (const SGPropertyNode * arg)
 static bool
 do_panel_load (const SGPropertyNode * arg)
 {
-  string panel_path =
-    arg->getStringValue("path", fgGetString("/sim/panel/path"));
-  if (panel_path.empty()) {
-    return false;
+  string panel_path = arg->getStringValue("path");
+  if (!panel_path.empty()) {
+    // write to the standard property, which will force a load
+    fgSetString("/sim/panel/path", panel_path.c_str());
   }
   
-  FGPanel * new_panel = fgReadPanel(panel_path);
-  if (new_panel == 0) {
-    SG_LOG(SG_INPUT, SG_ALERT,
-	   "Error reading new panel from " << panel_path);
-    return false;
-  }
-  SG_LOG(SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path);
-  globals->get_current_panel()->unbind();
-  globals->set_current_panel( new_panel );
-  globals->get_current_panel()->bind();
   return true;
 }
-
-
-/**
- * Built-in command: pass a mouse click to the panel.
- *
- * button: the mouse button number, zero-based.
- * is-down: true if the button is down, false if it is up.
- * x-pos: the x position of the mouse click.
- * y-pos: the y position of the mouse click.
- */
-static bool
-do_panel_mouse_click (const SGPropertyNode * arg)
-{
-  if (globals->get_current_panel() != 0)
-    return globals->get_current_panel()
-      ->doMouseAction(arg->getIntValue("button"),
-		      arg->getBoolValue("is-down") ? PU_DOWN : PU_UP,
-		      arg->getIntValue("x-pos"),
-		      arg->getIntValue("y-pos"));
-  else
-    return false;
-}
-
 
 /**
  * Built-in command: (re)load preferences.
@@ -1519,7 +1484,6 @@ static struct {
     { "load", do_load },
     { "save", do_save },
     { "panel-load", do_panel_load },
-    { "panel-mouse-click", do_panel_mouse_click },
     { "preferences-load", do_preferences_load },
     { "view-cycle", do_view_cycle },
     { "screen-capture", do_screen_capture },
