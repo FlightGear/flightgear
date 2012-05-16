@@ -134,8 +134,6 @@ private:
 
       bool requireHardSurface() const      { return _requireHardSurface; }
 
-      double minRunwayLengthFt() const     { return _minRunwayLengthFt; }
-
       bool cdiDeflectionIsAngular() const  { return (_cdiMaxDeflectionNm <= 0.0); }
 
       double cdiDeflectionLinearPeg() const

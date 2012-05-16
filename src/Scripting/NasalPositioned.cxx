@@ -344,8 +344,15 @@ static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRe
     *out = naNum(apt->getMetar());
   } else if (!strcmp(fieldName, "runways")) {
     *out = naNewHash(c);
+    double minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft");
     for(unsigned int r=0; r<apt->numRunways(); ++r) {
       FGRunway* rwy(apt->getRunwayByIndex(r));
+      
+    // ignore unusably short runways
+      if (rwy->lengthFt() < minLengthFt) {
+        continue;
+      }
+      
       naRef rwyid = stringToNasal(c, rwy->ident());
       naRef rwydata = ghostForRunway(c, rwy);
       naHash_set(*out, rwyid, rwydata);
@@ -918,6 +925,7 @@ class AirportInfoFilter : public FGAirport::AirportFilter
 {
 public:
   AirportInfoFilter() : type(FGPositioned::AIRPORT) {
+    minRunwayLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 0.0);
   }
   
   bool fromArg(naRef arg)
@@ -939,8 +947,21 @@ public:
   virtual FGPositioned::Type maxType() const {
     return type;
   }
+    
+  virtual bool pass(FGPositioned* aPos) const
+  {
+    FGAirport* apt = (FGAirport*) aPos;
+    if ((apt->type() == FGPositioned::AIRPORT) && 
+        !apt->hasHardRunwayOfLengthFt(minRunwayLengthFt)) 
+    {
+      return false;
+    }
+
+    return true;
+  }
   
   FGPositioned::Type type;
+  double minRunwayLengthFt;
 };
 
 // Returns data hash for particular or nearest airport of a <type>, or nil

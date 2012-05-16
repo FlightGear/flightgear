@@ -947,7 +947,7 @@ void NavDisplay::findItems()
 {
     if (!_cachedItemsValid) {
         Filter filt;
-        filt.minRunwayLengthFt = 2000;
+        filt.minRunwayLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
         _itemsInRange = FGPositioned::findWithinRange(_pos, _rangeNm, &filt);
         _cachedItemsValid = true;
         _cachedPos = SGVec3d::fromGeod(_pos);

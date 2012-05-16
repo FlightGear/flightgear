@@ -201,7 +201,6 @@ GPS::Config::Config() :
   _turnRate(3.0), // degrees-per-second, so 180 degree turn takes 60 seconds
   _overflightArmDistance(1.0),
   _waypointAlertTime(30.0),
-  _minRunwayLengthFt(0.0),
   _requireHardSurface(true),
   _cdiMaxDeflectionNm(3.0), // linear mode, 3nm at the peg
   _driveAutopilot(true),
@@ -215,7 +214,6 @@ void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
   aOwner->tie(aCfg, "turn-rate-deg-sec", SGRawValuePointer<double>(&_turnRate));
   aOwner->tie(aCfg, "turn-anticipation", SGRawValuePointer<bool>(&_enableTurnAnticipation));
   aOwner->tie(aCfg, "wpt-alert-time", SGRawValuePointer<double>(&_waypointAlertTime));
-  aOwner->tie(aCfg, "min-runway-length-ft", SGRawValuePointer<double>(&_minRunwayLengthFt));
   aOwner->tie(aCfg, "hard-surface-runways-only", SGRawValuePointer<bool>(&_requireHardSurface));
   aOwner->tie(aCfg, "cdi-max-deflection-nm", SGRawValuePointer<double>(&_cdiMaxDeflectionNm));
   aOwner->tie(aCfg, "drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
@@ -1439,7 +1437,7 @@ FGPositioned::Type GPS::SearchFilter::maxType() const
 FGPositioned::Filter* GPS::createFilter(FGPositioned::Type aTy)
 {
   if (aTy == FGPositioned::AIRPORT) {
-    return new FGAirport::HardSurfaceFilter(_config.minRunwayLengthFt());
+    return new FGAirport::HardSurfaceFilter();
   }
   
   // if we were passed INVALID, assume it means 'all types interesting to a GPS'

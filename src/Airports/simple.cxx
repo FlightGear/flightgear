@@ -329,6 +329,9 @@ FGAirport* FGAirport::findClosest(const SGGeod& aPos, double aCuttofNm, Filter* 
 FGAirport::HardSurfaceFilter::HardSurfaceFilter(double minLengthFt) :
   mMinLengthFt(minLengthFt)
 {
+  if (minLengthFt < 0.0) {
+    mMinLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 0.0);
+  }
 }
       
 bool FGAirport::HardSurfaceFilter::passAirport(FGAirport* aApt) const

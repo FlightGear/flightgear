@@ -161,7 +161,7 @@ public:
      class HardSurfaceFilter : public AirportFilter
      {
      public:
-       HardSurfaceFilter(double minLengthFt);
+       HardSurfaceFilter(double minLengthFt = -1);
        
        virtual bool passAirport(FGAirport* aApt) const;
        

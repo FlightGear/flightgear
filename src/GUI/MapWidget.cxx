@@ -887,7 +887,7 @@ public:
   {
     _heliports = nd->getBoolValue("show-heliports", false);
     _hardRunwaysOnly = nd->getBoolValue("hard-surfaced-airports", true);
-    _minLengthFt = nd->getDoubleValue("min-runway-length-ft", 2000.0);
+    _minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
   }
 
   virtual FGPositioned::Type maxType() const {
