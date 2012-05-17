@@ -184,7 +184,7 @@ private:
 class SymbolRule
 {
 public:
-    SymbolRule()
+  SymbolRule()
     {
         
     }
@@ -212,6 +212,7 @@ public:
             }
         } // of matches parsing
         
+          
         return true;
     }
     
@@ -240,29 +241,37 @@ public:
         return true;
     }
     
-    void checkEnabled()
+  // return if the enabled state changed (needs a cache update)
+    bool checkEnabled()
     {
         if (enable.get()) {
+            bool wasEnabled = enabled;
             enabled = enable->test();
+            return (enabled != wasEnabled);
         } else {
             enabled = true;
+            return false;
         }
     }
     
     bool enabled; // cached enabled state
     std::string type;
+    
+  // record instances for limiting by count
+    int instanceCount;
 private:
     SymbolDef* definition;
     
     std::auto_ptr<SGCondition> enable;
     string_set required_states;
     string_set excluded_states;
-    
 };
 
 class SymbolDef
 {
 public:
+    SymbolDef() : limitCount(0) { }
+  
     bool initFromNode(SGPropertyNode* node, NavDisplay* owner)
     {
         if (node->getChild("type")) {
@@ -306,6 +315,11 @@ public:
             textOffset.x() = node->getFloatValue("text-offset-x", 0);
             textOffset.y() = node->getFloatValue("text-offset-y", 0);
             textColor = readColor(node->getChild("text-color"), color);
+          
+            SGPropertyNode* enableNode = node->getChild("text-enable");
+            if (enableNode) { 
+              textEnable.reset(sgReadCondition(fgGetNode("/"), enableNode));
+            }
         }
         
         drawLine = node->getBoolValue("draw-line", false);
@@ -320,6 +334,11 @@ public:
             stretchV3 = node->getFloatValue("v3") / texSize;
         }
       
+        SGPropertyNode* limitNode = node->getChild("limit");
+        if (limitNode) {
+          limitCount = limitNode->getIntValue();
+        }
+
         return true;
     }
     
@@ -332,6 +351,8 @@ public:
     bool rotateToHeading;
     bool roundPos; ///< should position be rounded to integer values
     bool hasText;
+    std::auto_ptr<SGCondition> textEnable;
+    bool textEnabled; ///< cache condition result
     osg::Vec4 textColor;
     osg::Vec2 textOffset;
     osgText::Text::AlignmentType alignment;
@@ -350,6 +371,7 @@ public:
     
     bool drawRouteLeg;
     
+    int limitCount, instanceCount;
 };
 
 class SymbolInstance
@@ -420,7 +442,8 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
     _view_heading(0),
     _font_size(0),
     _font_spacing(0),
-    _rangeNm(0)
+    _rangeNm(0),
+    _maxSymbols(100)
 {
     _Instrument = fgGetNode(string("/instrumentation/" + _name).c_str(), _num, true);
     _font_node = _Instrument->getNode("font", true);
@@ -694,9 +717,20 @@ NavDisplay::update (double delta_time_sec)
       delete si;
   }
   _symbols.clear();
-    
+  
+  BOOST_FOREACH(SymbolDef* d, _definitions) {
+    d->instanceCount = 0;
+    d->textEnabled = d->textEnable.get() ? d->textEnable->test() : true;
+  }
+  
+  bool enableChanged = false;
   BOOST_FOREACH(SymbolRule* r, _rules) {
-      r->checkEnabled();
+      enableChanged |= r->checkEnabled();
+  }
+  
+  if (enableChanged) {
+    SG_LOG(SG_INSTR, SG_INFO, "NS rule enables changed, rebuilding cache");
+    _cachedItemsValid = false;
   }
   
   if (_testModeNode->getBoolValue()) {
@@ -858,14 +892,15 @@ public:
 
 void NavDisplay::limitDisplayedSymbols()
 {
-    unsigned int maxSymbols = _Instrument->getIntValue("max-symbols", 100);
-    if (_symbols.size() <= maxSymbols) {
+// gloabl symbol limit
+    _maxSymbols= _Instrument->getIntValue("max-symbols", _maxSymbols);
+    if ((int) _symbols.size() <= _maxSymbols) {
         _excessDataNode->setBoolValue(false);
         return;
     }
     
     std::sort(_symbols.begin(), _symbols.end(), OrderByPriority());
-    _symbols.resize(maxSymbols);
+    _symbols.resize(_maxSymbols);
     _excessDataNode->setBoolValue(true);
 }
 
@@ -912,6 +947,8 @@ osg::Vec2 NavDisplay::projectGeod(const SGGeod& geod) const
 class Filter : public FGPositioned::Filter
 {
 public:
+    Filter(NavDisplay* nd) : _owner(nd) { }
+  
     double minRunwayLengthFt;
   
     virtual bool pass(FGPositioned* aPos) const
@@ -931,7 +968,8 @@ public:
           }
         }
       
-        return true;
+      // check against current rule states
+        return _owner->isPositionedShown(aPos);
     }
 
     virtual FGPositioned::Type minType() const {
@@ -941,18 +979,24 @@ public:
     virtual FGPositioned::Type maxType() const {
         return FGPositioned::OBSTACLE;
     }
+  
+private:
+    NavDisplay* _owner;
 };
 
 void NavDisplay::findItems()
 {
     if (!_cachedItemsValid) {
-        Filter filt;
+        Filter filt(this);
         filt.minRunwayLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
-        _itemsInRange = FGPositioned::findWithinRange(_pos, _rangeNm, &filt);
+        _itemsInRange = FGPositioned::findClosestN(_pos, _maxSymbols, _rangeNm, &filt);
         _cachedItemsValid = true;
         _cachedPos = SGVec3d::fromGeod(_pos);
     }
     
+  // sort by distance from pos, so symbol limits are accurate
+    FGPositioned::sortByRange(_itemsInRange, _pos);
+  
     BOOST_FOREACH(FGPositioned* pos, _itemsInRange) {
         foundPositionedItem(pos);
     }
@@ -1098,27 +1142,38 @@ void NavDisplay::findRules(const string& type, const string_set& states, SymbolR
     }
 }
 
+bool NavDisplay::isPositionedShown(FGPositioned* pos)
+{
+  SymbolRuleVector rules;
+  isPositionedShownInner(pos, rules);
+  return !rules.empty();
+}
+
+void NavDisplay::isPositionedShownInner(FGPositioned* pos, SymbolRuleVector& rules)
+{
+  string type = FGPositioned::nameForType(pos->type());
+  if (!anyRuleForType(type)) {
+    return; // not diplayed at all, we're done
+  }
+  
+  string_set states;
+  computePositionedState(pos, states);
+  
+  findRules(type, states, rules);
+}
+
 void NavDisplay::foundPositionedItem(FGPositioned* pos)
 {
     if (!pos) {
         return;
     }
     
-    string type = FGPositioned::nameForType(pos->type());
-    //boost::to_lower(type);
-    if (!anyRuleForType(type)) {
-        return; // not diplayed at all, we're done
-    }
-    
-    string_set states;
-    computePositionedState(pos, states);
-    
     SymbolRuleVector rules;
-    findRules(type, states, rules);
+    isPositionedShownInner(pos, rules);
     if (rules.empty()) {
-        return; // no rules matched, we can skip this item
+      return;
     }
-    
+  
     SGPropertyNode_ptr vars(new SGPropertyNode);
     double heading;
     computePositionedPropsAndHeading(pos, vars, heading);
@@ -1317,6 +1372,11 @@ SymbolInstance* NavDisplay::addSymbolInstance(const osg::Vec2& proj, double head
         return NULL;
     }
     
+    if ((def->limitCount > 0) && (def->instanceCount >= def->limitCount)) {
+      return NULL;
+    }
+  
+    ++def->instanceCount;
     SymbolInstance* sym = new SymbolInstance(proj, heading, def, vars);
     _symbols.push_back(sym);
     return sym;

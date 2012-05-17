@@ -76,6 +76,8 @@ public:
     void forceUpdate()
     { _forceUpdate = true; }
     
+    bool anyRuleForType(const std::string& type) const;
+    bool isPositionedShown(FGPositioned* pos);
 protected:
     std::string _name;
     int _num;
@@ -107,6 +109,7 @@ private:
     void limitDisplayedSymbols();
     
     void findItems();
+    void isPositionedShownInner(FGPositioned* pos, SymbolRuleVector& rules);
     void foundPositionedItem(FGPositioned* pos);
     void computePositionedPropsAndHeading(FGPositioned* pos, SGPropertyNode* nd, double& heading);
     void computePositionedState(FGPositioned* pos, string_set& states);
@@ -117,7 +120,7 @@ private:
     void processAI();
     void computeAIStates(const SGPropertyNode* ai, string_set& states);
     
-    bool anyRuleForType(const std::string& type) const;
+    
     bool anyRuleMatches(const std::string& type, const string_set& states) const;
     void findRules(const std::string& type, const string_set& states, SymbolRuleVector& rules);
     
@@ -189,7 +192,8 @@ private:
     SGVec3d _cachedPos;
     FGPositioned::List _itemsInRange;
     SGPropertyNode_ptr _excessDataNode;
-    
+    int _maxSymbols;
+  
     class CacheListener;
     std::auto_ptr<CacheListener> _cacheListener;
     
