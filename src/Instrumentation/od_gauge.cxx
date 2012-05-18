@@ -40,6 +40,8 @@
 #include <osg/PolygonMode>
 #include <osg/ShadeModel>
 #include <osg/StateSet>
+#include <osg/FrameBufferObject> // for GL_DEPTH_STENCIL_EXT on Windows
+
 #include <osgDB/FileNameUtils>
 
 #include <simgear/scene/material/EffectGeode.hxx>
