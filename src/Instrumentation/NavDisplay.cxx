@@ -861,7 +861,7 @@ void NavDisplay::addSymbolToScene(SymbolInstance* sym)
         addLine(sym->pos, sym->endPos, def->lineColor);
     }
     
-    if (!def->hasText) {
+    if (!def->hasText || !def->textEnabled) {
         return;
     }
     
