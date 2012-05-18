@@ -21,6 +21,7 @@
 
 #include <simgear/props/props.hxx>
 #include <osg/MatrixTransform>
+#include <simgear/misc/stdint.hxx> // for uint32_t
 
 namespace osg
 {
