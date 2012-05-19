@@ -149,7 +149,6 @@ protected:
 
     osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const FGRenderingPipeline::AttachmentList& attachments );
     osg::Camera* buildDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const FGRenderingPipeline::AttachmentList& attachments );
-    osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const FGRenderingPipeline::AttachmentList& attachments );
     osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage );
     osg::Camera* buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage );
     osg::Camera* buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const FGRenderingPipeline::Pass* pass );

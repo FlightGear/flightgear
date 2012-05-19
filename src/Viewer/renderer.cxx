@@ -839,7 +839,7 @@ static osg::Camera* createShadowCascadeCamera( int no, int cascadeSize ) {
     cascadeCam->setName( oss.str() );
     cascadeCam->setClearMask(0);
     cascadeCam->setCullMask(~( simgear::MODELLIGHT_BIT /* | simgear::NO_SHADOW_BIT */ ) );
-    cascadeCam->setCullingMode( cascadeCam->getCullingMode() & ~osg::CullSettings::SMALL_FEATURE_CULLING );
+    cascadeCam->setCullingMode( cascadeCam->getCullingMode() | osg::CullSettings::SMALL_FEATURE_CULLING );
     cascadeCam->setAllowEventFocus(false);
     cascadeCam->setReferenceFrame(osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT);
     cascadeCam->setRenderOrder(osg::Camera::NESTED_RENDER);
@@ -1055,153 +1055,6 @@ void FGRenderer::updateCascadeNumber(size_t num)
     _shadowNumber->set( (int)_numCascades );
 }
 
-osg::Camera* FGRenderer::buildDeferredLightingCamera( CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const std::vector<ref_ptr<FGRenderingPipeline::Attachment> > &attachments )
-{
-    osg::Camera* camera = new osg::Camera;
-    info->addCamera(name, camera );
-
-    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( name, info ) );
-    camera->setAllowEventFocus(false);
-    camera->setGraphicsContext(gc);
-    camera->setViewport(new Viewport);
-    camera->setName("LightingC");
-    camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-    camera->setRenderOrder(osg::Camera::NESTED_RENDER, 50);
-    camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
-    camera->setViewport( new osg::Viewport );
-    buildAttachments(info, camera, name, attachments);
-    camera->setDrawBuffer(GL_FRONT);
-    camera->setReadBuffer(GL_FRONT);
-    camera->setClearColor( osg::Vec4( 0., 0., 0., 1. ) );
-    camera->setClearMask( GL_COLOR_BUFFER_BIT );
-    camera->setColorMask(true, true, true, true);
-    osg::StateSet* ss = camera->getOrCreateStateSet();
-    ss->setAttribute( new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false) );
-    ss->addUniform( _depthInColor );
-
-    osg::Group* lightingGroup = new osg::Group;
-
-    osg::Camera* quadCam1 = new osg::Camera;
-    quadCam1->setName( "QuadCamera1" );
-    quadCam1->setClearMask(0);
-    quadCam1->setAllowEventFocus(false);
-    quadCam1->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-    quadCam1->setRenderOrder(osg::Camera::NESTED_RENDER);
-    quadCam1->setViewMatrix(osg::Matrix::identity());
-    quadCam1->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
-    quadCam1->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    ss = quadCam1->getOrCreateStateSet();
-    ss->addUniform( info->projInverse );
-    ss->addUniform( info->viewInverse );
-    ss->addUniform( info->view );
-    ss->addUniform( info->bufferSize );
-    ss->addUniform( info->worldPosCart );
-    ss->addUniform( info->worldPosGeod );
-    ss->addUniform( _ambientFactor );
-    ss->addUniform( _sunDiffuse );
-    ss->addUniform( _sunSpecular );
-    ss->addUniform( _sunDirection );
-    ss->addUniform( _planes );
-    ss->addUniform( _shadowNumber );
-    ss->addUniform( _shadowDistances );
-
-    osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
-    g->setUseDisplayList(false);
-    simgear::EffectGeode* eg = new simgear::EffectGeode;
-    simgear::Effect* effect = simgear::makeEffect("Effects/ambient", true);
-    if (!effect) {
-        SG_LOG(SG_VIEW, SG_ALERT, "Effects/ambient not found");
-        return 0;
-    }
-    eg->setEffect( effect );
-    g->setName( "AmbientQuad" );
-    eg->setName("AmbientQuad");
-    eg->setCullingActive(false);
-    eg->addDrawable(g);
-    quadCam1->addChild( eg );
-
-    g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
-    g->setUseDisplayList(false);
-    g->setName( "SunlightQuad" );
-    eg = new simgear::EffectGeode;
-    effect = simgear::makeEffect("Effects/sunlight", true);
-    if (!effect) {
-        SG_LOG(SG_VIEW, SG_ALERT, "Effects/sunlight not found");
-        return 0;
-    }
-    eg->setEffect( effect );
-    eg->setName("SunlightQuad");
-    eg->setCullingActive(false);
-    eg->addDrawable(g);
-    quadCam1->addChild( eg );
-
-    osg::Camera* lightCam = new osg::Camera;
-    ss = lightCam->getOrCreateStateSet();
-    ss->addUniform( _planes );
-    ss->addUniform( info->bufferSize );
-    lightCam->setName( "LightCamera" );
-    lightCam->setClearMask(0);
-    lightCam->setAllowEventFocus(false);
-    lightCam->setReferenceFrame(osg::Transform::RELATIVE_RF);
-    lightCam->setRenderOrder(osg::Camera::NESTED_RENDER,1);
-    lightCam->setViewMatrix(osg::Matrix::identity());
-    lightCam->setProjectionMatrix(osg::Matrix::identity());
-    lightCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    lightCam->setCullMask( simgear::MODELLIGHT_BIT );
-    lightCam->setInheritanceMask( osg::CullSettings::ALL_VARIABLES & ~osg::CullSettings::CULL_MASK );
-    lightCam->addChild( mDeferredRealRoot.get() );
-
-
-    osg::Camera* quadCam2 = new osg::Camera;
-    quadCam2->setName( "QuadCamera1" );
-    quadCam2->setClearMask(0);
-    quadCam2->setAllowEventFocus(false);
-    quadCam2->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-    quadCam2->setRenderOrder(osg::Camera::NESTED_RENDER,2);
-    quadCam2->setViewMatrix(osg::Matrix::identity());
-    quadCam2->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
-    quadCam2->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    ss = quadCam2->getOrCreateStateSet();
-    ss->addUniform( info->projInverse );
-    ss->addUniform( info->viewInverse );
-    ss->addUniform( info->view );
-    ss->addUniform( info->bufferSize );
-    ss->addUniform( info->worldPosCart );
-    ss->addUniform( info->worldPosGeod );
-    ss->addUniform( _ambientFactor );
-    ss->addUniform( _sunDiffuse );
-    ss->addUniform( _sunSpecular );
-    ss->addUniform( _sunDirection );
-    ss->addUniform( _fogColor );
-    ss->addUniform( _fogDensity );
-    ss->addUniform( _planes );
-
-    g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
-    g->setUseDisplayList(false);
-    g->setName( "FogQuad" );
-    eg = new simgear::EffectGeode;
-    effect = simgear::makeEffect("Effects/fog", true);
-    if (!effect) {
-        SG_LOG(SG_VIEW, SG_ALERT, "Effects/fog not found");
-        return 0;
-    }
-    eg->setEffect( effect );
-    eg->setName("FogQuad");
-    eg->setCullingActive(false);
-    eg->addDrawable(g);
-    quadCam2->addChild( eg );
-
-    lightingGroup->addChild( _sky->getPreRoot() );
-    lightingGroup->addChild( _sky->getCloudRoot() );
-    lightingGroup->addChild( quadCam1 );
-    lightingGroup->addChild( lightCam );
-    lightingGroup->addChild( quadCam2 );
-
-    camera->addChild( lightingGroup );
-
-    return camera;
-}
-
 osg::Camera*
 FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage )
 {
@@ -1364,9 +1217,6 @@ FGRenderer::buildStage(CameraInfo* info,
     bool needOffsets = false;
     if (stage->type == "geometry") {
         camera = buildDeferredGeometryCamera(info, gc, stage->name, stage->attachments);
-        needOffsets = true;
-    } else if (stage->type == "lighting-builtin") {
-        camera = buildDeferredLightingCamera(info, gc, stage->name, stage->attachments);
         needOffsets = true;
     } else if (stage->type == "lighting") {
         camera = buildDeferredLightingCamera(info, gc, stage);
