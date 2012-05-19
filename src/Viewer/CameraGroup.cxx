@@ -274,8 +274,13 @@ int CameraInfo::getMainSlaveIndex() const
 void CameraInfo::setMatrices(osg::Camera* c)
 {
     view->set( c->getViewMatrix() );
-    viewInverse->set( osg::Matrix::inverse( c->getViewMatrix() ) );
+    osg::Matrixd vi = c->getInverseViewMatrix();
+    viewInverse->set( vi );
     projInverse->set( osg::Matrix::inverse( c->getProjectionMatrix() ) );
+    osg::Vec4d pos = osg::Vec4d(0., 0., 0., 1.) * vi;
+    worldPosCart->set( osg::Vec3f( pos.x(), pos.y(), pos.z() ) );
+    SGGeod pos2 = SGGeod::fromCart( SGVec3d( pos.x(), pos.y(), pos.z() ) );
+    worldPosGeod->set( osg::Vec3f( pos2.getLongitudeRad(), pos2.getLatitudeRad(), pos2.getElevationM() ) );
 }
 
 void CameraGroup::update(const osg::Vec3d& position,

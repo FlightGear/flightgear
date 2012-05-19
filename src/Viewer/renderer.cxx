@@ -1091,10 +1091,13 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( CameraInfo* info, osg::Gra
     quadCam1->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
     quadCam1->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     ss = quadCam1->getOrCreateStateSet();
-    ss->addUniform( _ambientFactor );
     ss->addUniform( info->projInverse );
     ss->addUniform( info->viewInverse );
     ss->addUniform( info->view );
+    ss->addUniform( info->bufferSize );
+    ss->addUniform( info->worldPosCart );
+    ss->addUniform( info->worldPosGeod );
+    ss->addUniform( _ambientFactor );
     ss->addUniform( _sunDiffuse );
     ss->addUniform( _sunSpecular );
     ss->addUniform( _sunDirection );
@@ -1159,10 +1162,13 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( CameraInfo* info, osg::Gra
     quadCam2->setProjectionMatrixAsOrtho2D(-1,1,-1,1);
     quadCam2->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     ss = quadCam2->getOrCreateStateSet();
-    ss->addUniform( _ambientFactor );
     ss->addUniform( info->projInverse );
     ss->addUniform( info->viewInverse );
     ss->addUniform( info->view );
+    ss->addUniform( info->bufferSize );
+    ss->addUniform( info->worldPosCart );
+    ss->addUniform( info->worldPosGeod );
+    ss->addUniform( _ambientFactor );
     ss->addUniform( _sunDiffuse );
     ss->addUniform( _sunSpecular );
     ss->addUniform( _sunDirection );
@@ -1262,6 +1268,8 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const F
     ss->addUniform( info->viewInverse );
     ss->addUniform( info->view );
     ss->addUniform( info->bufferSize );
+    ss->addUniform( info->worldPosCart );
+    ss->addUniform( info->worldPosGeod );
     ss->addUniform( _ambientFactor );
     ss->addUniform( _sunDiffuse );
     ss->addUniform( _sunSpecular );
