@@ -668,7 +668,7 @@ FGRenderer::buildClassicalPipeline(CameraGroup* cgroup, unsigned flags, osg::Cam
     cgroup->getViewer()->addSlave(camera, projection, view, useMasterSceneData);
     installCullVisitor(camera);
     int slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
-	info->addCamera( MAIN_CAMERA, camera, slaveIndex );
+    info->addCamera( MAIN_CAMERA, camera, slaveIndex );
     camera->setRenderOrder(Camera::POST_RENDER, slaveIndex);
     cgroup->addCamera(info);
     return info;
@@ -788,11 +788,13 @@ osg::Camera* FGRenderer::buildDeferredGeometryCamera( CameraInfo* info, osg::Gra
 
     camera->setCullMask( ~simgear::MODELLIGHT_BIT );
     camera->setName( "GeometryC" );
+    camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     camera->setGraphicsContext( gc );
     camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( name, info ) );
     camera->setClearMask( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     camera->setClearColor( osg::Vec4( 0., 0., 0., 0. ) );
     camera->setClearDepth( 1.0 );
+    camera->setColorMask(true, true, true, true);
     camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
     camera->setRenderOrder(osg::Camera::NESTED_RENDER, 0);
     camera->setViewport( new osg::Viewport );
@@ -1072,6 +1074,7 @@ osg::Camera* FGRenderer::buildDeferredLightingCamera( CameraInfo* info, osg::Gra
     camera->setReadBuffer(GL_FRONT);
     camera->setClearColor( osg::Vec4( 0., 0., 0., 1. ) );
     camera->setClearMask( GL_COLOR_BUFFER_BIT );
+    camera->setColorMask(true, true, true, true);
     osg::StateSet* ss = camera->getOrCreateStateSet();
     ss->setAttribute( new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false) );
     ss->addUniform( _depthInColor );
@@ -1344,19 +1347,23 @@ FGRenderer::buildStage(CameraInfo* info,
                         FGRenderingPipeline::Stage* stage,
                         CameraGroup* cgroup,
                         osg::Camera* mainCamera,
-                        osg::GraphicsContext* gc)
+                        const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc)
 {
     if (!stage->valid())
         return;
 
     ref_ptr<Camera> camera;
-    if (stage->type == "geometry")
+    bool needOffsets = false;
+    if (stage->type == "geometry") {
         camera = buildDeferredGeometryCamera(info, gc, stage->name, stage->attachments);
-    else if (stage->type == "lighting-builtin")
+        needOffsets = true;
+    } else if (stage->type == "lighting-builtin") {
         camera = buildDeferredLightingCamera(info, gc, stage->name, stage->attachments);
-    else if (stage->type == "lighting")
+        needOffsets = true;
+    } else if (stage->type == "lighting") {
         camera = buildDeferredLightingCamera(info, gc, stage);
-    else if (stage->type == "shadow")
+        needOffsets = true;
+    } else if (stage->type == "shadow")
         camera = buildDeferredShadowCamera(info, gc, stage->name, stage->attachments);
     else if (stage->type == "fullscreen")
         camera = buildDeferredFullscreenCamera(info, gc, stage);
@@ -1366,7 +1373,10 @@ FGRenderer::buildStage(CameraInfo* info,
     } else
         throw sg_exception("Stage type is not supported");
 
-    cgroup->getViewer()->addSlave(camera, false);
+    if (needOffsets)
+        cgroup->getViewer()->addSlave(camera, projection, view, false);
+    else
+        cgroup->getViewer()->addSlave(camera, false);
     installCullVisitor(camera);
     int slaveIndex = cgroup->getViewer()->getNumSlaves() - 1;
     if (stage->type == "display")
@@ -1452,7 +1462,7 @@ CameraInfo* FGRenderer::buildCameraFromRenderingPipeline(FGRenderingPipeline* rp
     
     for (size_t i = 0; i < rpipe->stages.size(); ++i) {
         osg::ref_ptr<FGRenderingPipeline::Stage> stage = rpipe->stages[i];
-        buildStage(info, stage, cgroup, camera, gc);
+        buildStage(info, stage, cgroup, camera, view, projection, gc);
     }
 
     cgroup->addCamera(info);

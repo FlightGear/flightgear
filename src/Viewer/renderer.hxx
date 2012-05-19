@@ -142,7 +142,7 @@ protected:
                                         const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
 
     void buildBuffers(FGRenderingPipeline* rpipe, flightgear::CameraInfo* info);
-    void buildStage(flightgear::CameraInfo* info, FGRenderingPipeline::Stage* stage, flightgear::CameraGroup* cgroup, osg::Camera* mainCamera, osg::GraphicsContext* gc);
+    void buildStage(flightgear::CameraInfo* info, FGRenderingPipeline::Stage* stage, flightgear::CameraGroup* cgroup, osg::Camera* mainCamera, const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
     osg::Node* buildPass(flightgear::CameraInfo* info, FGRenderingPipeline::Pass* pass);
     osg::Node* buildLightingSkyCloudsPass(FGRenderingPipeline::Pass* pass);
     osg::Node* buildLightingLightsPass(flightgear::CameraInfo* info, FGRenderingPipeline::Pass* pass);
