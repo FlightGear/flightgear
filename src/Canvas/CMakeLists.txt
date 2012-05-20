@@ -6,6 +6,7 @@ set(SOURCES
   elements/element.cxx
   elements/group.cxx
   elements/text.cxx
+  property_helper.cxx
 )
 
 set(HEADERS
@@ -14,6 +15,7 @@ set(HEADERS
   elements/element.hxx
   elements/group.hxx
   elements/text.hxx
+  property_helper.hxx
 )
     
 flightgear_component(Canvas "${SOURCES}" "${HEADERS}")

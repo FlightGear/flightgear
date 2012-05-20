@@ -2,7 +2,7 @@ Canvas - A 2D Drawing API
 =========================
 
 Author: Thomas Geymayer <admin@tomprogs.at>
-Revision: 2012/05/04
+Revision: 2012/05/18
 
 Introduction
 ------------
@@ -22,11 +22,11 @@ Creating a canvas
 A new canvas can be instantiated by creating a node /canvas/texture[<INDEX>]
 with at least the following children:
 
- <size-x type="int">       The width of the underlying texture
- <size-y type="int">       The height of the underlying texture
+ <size n="0" type="int">       The width of the underlying texture
+ <size n="1" type="int">       The height of the underlying texture
 
- <view-width type="int">   The width of the canvas
- <view-height type="int">  The height of the canvas
+ <view n="0" type="int">    The width of the canvas
+ <view n="1" type="int">    The height of the canvas
 
 The dimensions of the canvas are needed to be able to use textures with
 different resolutions but use the same units for rendering to the canvas.
@@ -60,6 +60,7 @@ only drawing Text is possible:
     <red type="float">
     <green type="float">
     <blue type="float">
+    <alpha type="float">
   </NAME>
 
 * Text:
@@ -71,7 +72,9 @@ only drawing Text is possible:
                               2. aircraft-dir
                               3. $FG_DATA/Fonts
                               4. Default osg font paths
- <size type="float">         The font size (default: 32)
+ <character-size type="float">          The font size (default: 32)
+ <character-aspect-ratio type="float">  Ratio between character height and width
+                                        (default: 1)
  <tf>               A 3x3 transformation matrix specified by 6 values
                     (child elements <a>, ..., <f>) See
                     http://www.w3.org/TR/SVG/coords.html#TransformMatrixDefined
@@ -129,17 +132,24 @@ Example
 
 <canvas>
   <texture>
-    <size-x type="int">384</size-x>
-    <size-y type="int">512</size-y>
-    <view-width type="int">768</view-width>
-    <view-height type="int">1024</view-height>
+    <size n="0" type="int">384</size-x>
+    <size n="1" type="int">512</size-y>
+    <view n="0" type="int">768</view-width>
+    <view n="1" type="int">1024</view-height>
     <mipmapping type="bool">false</mipmapping>
     <coverage-samples type="int">0</coverage-samples>
     <color-samples type="int">0</color-samples>
+    <color-background>
+      <red type="float">0</red>
+      <green type="float">0.02</green>
+      <blue type="float">0</blue>
+      <alpha type="float">1</alpha>
+    </color-background>
     <group>
       <text>
         <text type="string">TEST MESSAGE</text>
         <font type="string">helvetica_bold.txf</font>
+        <character-size type="float">40</character-size>
         <tf>
           <!-- Translate (18|50) -->
           <tx>18</tx>

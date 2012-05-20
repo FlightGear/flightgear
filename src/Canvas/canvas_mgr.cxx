@@ -73,7 +73,8 @@ void CanvasMgr::unbind()
 void CanvasMgr::update(double delta_time_sec)
 {
  for( size_t i = 0; i < _canvases.size(); ++i )
-   _canvases[i].update(delta_time_sec);
+   if( _canvases[i] )
+     _canvases[i]->update(delta_time_sec);
 }
 
 //------------------------------------------------------------------------------
@@ -85,8 +86,6 @@ void CanvasMgr::childAdded( SGPropertyNode * parent,
 
   if( child->getNameString() == "texture" )
     textureAdded(child);
-  else
-    std::cout << "CanvasMgr::childAdded: " << child->getPath() << std::endl;
 }
 
 //------------------------------------------------------------------------------
@@ -96,7 +95,16 @@ void CanvasMgr::childRemoved( SGPropertyNode * parent,
   if( parent != _props )
     return;
 
-  std::cout << "CanvasMgr::childRemoved: " << child->getPath() << std::endl;
+  if( child->getNameString() == "texture" )
+  {
+    size_t index = child->getIndex();
+
+    if( index >= _canvases.size() )
+      SG_LOG(SG_GL, SG_WARN, "can't removed unknown texture[" << index << "]!");
+    else
+      // remove the canvas...
+      _canvases[index].reset();
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -108,17 +116,16 @@ void CanvasMgr::textureAdded(SGPropertyNode* node)
   {
     if( index > _canvases.size() )
       SG_LOG(SG_GL, SG_WARN, "Skipping unused texture slot(s)!");
-    SG_LOG(SG_GL, SG_INFO, "Add new texture[" << index << "]");
 
     _canvases.resize(index + 1);
-    _canvases[index];
   }
   else
   {
     SG_LOG(SG_GL, SG_WARN, "texture[" << index << "] already exists!");
   }
 
-  _canvases[index].reset(node);
+  _canvases[index].reset( new Canvas() );
+  _canvases[index]->reset(node);
 }
 
 //------------------------------------------------------------------------------
@@ -131,14 +138,4 @@ void CanvasMgr::triggerChangeRecursive(SGPropertyNode* node)
 
   for( int i = 0; i < node->nChildren(); ++i )
     triggerChangeRecursive( node->getChild(i) );
-}
-
-//------------------------------------------------------------------------------
-template<class T>
-T CanvasMgr::getParam(const SGPropertyNode* node, const char* prop)
-{
-  const SGPropertyNode* child = node->getChild(prop);
-  if( !child )
-    throw std::runtime_error(std::string("Missing property ") + prop);
-  return getValue<T>(child);
 }

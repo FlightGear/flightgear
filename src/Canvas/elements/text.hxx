@@ -32,8 +32,10 @@ namespace canvas
     public Element
   {
     public:
-      Text(SGPropertyNode* node);
+      Text(SGPropertyNode_ptr node);
       virtual ~Text();
+
+      virtual void update(double dt);
 
       void setFont(const char* name);
 
@@ -41,7 +43,16 @@ namespace canvas
       const char* getAlignment() const;
 
     protected:
+
+      enum TextAttributes
+      {
+        FONT_SIZE       = LAST_ATTRIBUTE << 1, // Font size and aspect ration
+      };
+
       osg::ref_ptr<osgText::Text>   _text;
+
+      SGPropertyNode_ptr  _font_size,
+                          _font_aspect;
 
       virtual void childChanged(SGPropertyNode * child);
       virtual void colorChanged(const osg::Vec4& color);

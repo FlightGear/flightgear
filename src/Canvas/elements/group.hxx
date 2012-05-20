@@ -26,17 +26,19 @@
 namespace canvas
 {
 
+  typedef boost::shared_ptr<Element> ElementPtr;
+
   class Group:
     public Element
   {
     public:
-      Group(SGPropertyNode* node);
+      Group(SGPropertyNode_ptr node);
       virtual ~Group();
 
       virtual void update(double dt);
 
     protected:
-      std::vector<boost::shared_ptr<Element> >  _children;
+      std::vector<ElementPtr> _children;
 
       virtual void childAdded(SGPropertyNode * child);
       virtual void childRemoved(SGPropertyNode * child);

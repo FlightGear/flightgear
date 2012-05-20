@@ -36,7 +36,6 @@ namespace canvas
   {
     public:
       virtual ~Element() = 0;
-      SGPropertyNode* getPropertyNode();
 
       /**
        * Called every frame to update internal state
@@ -53,7 +52,8 @@ namespace canvas
       {
         COLOR           = 0x0001,
         COLOR_FILL      = 0x0002,
-        BOUNDING_BOX    = 0x0004
+        BOUNDING_BOX    = 0x0004,
+        LAST_ATTRIBUTE  = BOUNDING_BOX
       };
 
       enum TransformType
@@ -65,9 +65,6 @@ namespace canvas
         TT_SCALE
       };
 
-      SGPropertyNode *_node;
-      osg::Drawable  *_drawable;
-
       uint32_t _attributes_used;
       uint32_t _attributes_dirty;
 
@@ -75,11 +72,12 @@ namespace canvas
       osg::ref_ptr<osg::MatrixTransform>    _transform;
       std::vector<TransformType>            _transform_types;
 
-      SGPropertyNode    *_bounding_box[4]; ///<! x-min, y-min, x-max, y-max
-      SGPropertyNode    *_color[3];
-      SGPropertyNode    *_color_fill[3];
+      SGPropertyNode_ptr                _node;
+      std::vector<SGPropertyNode_ptr>   _color,
+                                        _color_fill;
+      std::vector<SGPropertyNode_ptr>   _bounding_box;
 
-      Element(SGPropertyNode* node, uint32_t attributes_used = 0);
+      Element(SGPropertyNode_ptr node, uint32_t attributes_used = 0);
 
       virtual void childAdded(SGPropertyNode * child)  {}
       virtual void childRemoved(SGPropertyNode * child){}
@@ -88,11 +86,12 @@ namespace canvas
       virtual void colorChanged(const osg::Vec4& color)  {}
       virtual void colorFillChanged(const osg::Vec4& color){}
 
-      void linkColorNodes( const char* name,
-                           SGPropertyNode** nodes,
-                           const osg::Vec4& def = osg::Vec4(1,1,0,1) );
+      void setDrawable( osg::Drawable* drawable );
 
     private:
+
+      osg::Drawable  *_drawable;
+
       Element(const Element&);// = delete
 
       virtual void childAdded( SGPropertyNode * parent,
