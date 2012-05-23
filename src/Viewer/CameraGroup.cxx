@@ -196,7 +196,11 @@ void CameraInfo::updateCameras()
     for (CameraMap::iterator ii = cameras.begin(); ii != cameras.end(); ++ii ) {
         float f = ii->second.scaleFactor;
         if ( f == 0.0f ) continue;
-        ii->second.camera->getViewport()->setViewport(x*f, y*f, width*f, height*f);
+
+        if (ii->second.camera->getRenderTargetImplementation() == osg::Camera::FRAME_BUFFER_OBJECT)
+            ii->second.camera->getViewport()->setViewport(0, 0, width*f, height*f);
+        else
+            ii->second.camera->getViewport()->setViewport(x*f, y*f, width*f, height*f);
     }
 
     for (RenderBufferMap::iterator ii = buffers.begin(); ii != buffers.end(); ++ii ) {
