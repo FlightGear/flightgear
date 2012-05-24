@@ -25,22 +25,18 @@
 
 class FGAirport;
 typedef SGSharedPtr<FGAirport> FGAirportRef;
-class SGWayPoint;
 class FGRunway;
 
 namespace flightgear
 {
 
-
 class BasicWaypt : public Waypt
 {
 public:
   
-  BasicWaypt(const SGGeod& aPos, const std::string& aIdent, Route* aOwner);
-  
-  BasicWaypt(const SGWayPoint& aWP, Route* aOwner);
-  
-  BasicWaypt(Route* aOwner);
+  BasicWaypt(const SGGeod& aPos, const std::string& aIdent, RouteBase* aOwner);
+    
+  BasicWaypt(RouteBase* aOwner);
   
   virtual SGGeod position() const
     { return _pos; }
@@ -67,9 +63,9 @@ protected:
 class NavaidWaypoint : public Waypt
 {
 public:
-  NavaidWaypoint(FGPositioned* aPos, Route* aOwner);
+  NavaidWaypoint(FGPositioned* aPos, RouteBase* aOwner);
   
-  NavaidWaypoint(Route* aOwner);
+  NavaidWaypoint(RouteBase* aOwner);
   
   virtual SGGeod position() const;
   
@@ -90,9 +86,9 @@ protected:
 class OffsetNavaidWaypoint : public NavaidWaypoint
 {
 public:	
-  OffsetNavaidWaypoint(FGPositioned* aPos, Route* aOwner, double aRadial, double aDistNm);
+  OffsetNavaidWaypoint(FGPositioned* aPos, RouteBase* aOwner, double aRadial, double aDistNm);
 
-  OffsetNavaidWaypoint(Route* aOwner);
+  OffsetNavaidWaypoint(RouteBase* aOwner);
   
   virtual SGGeod position() const
     { return _geod; }
@@ -120,9 +116,9 @@ private:
 class RunwayWaypt : public Waypt
 {
 public:
-  RunwayWaypt(FGRunway* aPos, Route* aOwner);
+  RunwayWaypt(FGRunway* aPos, RouteBase* aOwner);
   
-  RunwayWaypt(Route* aOwner);
+  RunwayWaypt(RouteBase* aOwner);
   
   virtual SGGeod position() const;
   
@@ -148,9 +144,9 @@ private:
 class Hold : public BasicWaypt
 {
 public:
-  Hold(const SGGeod& aPos, const std::string& aIdent, Route* aOwner);
+  Hold(const SGGeod& aPos, const std::string& aIdent, RouteBase* aOwner);
   
-  Hold(Route* aOwner);
+  Hold(RouteBase* aOwner);
   
   void setHoldRadial(double aInboundRadial);
   void setHoldDistance(double aDistanceNm);
@@ -190,9 +186,9 @@ private:
 class HeadingToAltitude : public Waypt
 {
 public:
-  HeadingToAltitude(Route* aOwner, const std::string& aIdent, double aMagHdg);
+  HeadingToAltitude(RouteBase* aOwner, const std::string& aIdent, double aMagHdg);
   
-  HeadingToAltitude(Route* aOwner);
+  HeadingToAltitude(RouteBase* aOwner);
   
   virtual void initFromProperties(SGPropertyNode_ptr aProp);
   virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
@@ -222,10 +218,10 @@ private:
 class DMEIntercept : public Waypt
 {
 public:
-  DMEIntercept(Route* aOwner, const std::string& aIdent, const SGGeod& aPos,
+  DMEIntercept(RouteBase* aOwner, const std::string& aIdent, const SGGeod& aPos,
     double aCourseDeg, double aDistanceNm);
   
-  DMEIntercept(Route* aOwner);
+  DMEIntercept(RouteBase* aOwner);
   
   virtual void initFromProperties(SGPropertyNode_ptr aProp);
   virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
@@ -257,10 +253,10 @@ private:
 class RadialIntercept : public Waypt
 {
 public:
-  RadialIntercept(Route* aOwner, const std::string& aIdent, const SGGeod& aPos,
+  RadialIntercept(RouteBase* aOwner, const std::string& aIdent, const SGGeod& aPos,
     double aCourseDeg, double aRadialDeg);
   
-  RadialIntercept(Route* aOwner);
+  RadialIntercept(RouteBase* aOwner);
   
   virtual void initFromProperties(SGPropertyNode_ptr aProp);
   virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
@@ -295,10 +291,10 @@ private:
 class ATCVectors : public Waypt
 {
 public:
-  ATCVectors(Route* aOwner, FGAirport* aFacility);
+  ATCVectors(RouteBase* aOwner, FGAirport* aFacility);
   virtual ~ATCVectors();
   
-  ATCVectors(Route* aOwner);
+  ATCVectors(RouteBase* aOwner);
   
   virtual void initFromProperties(SGPropertyNode_ptr aProp);
   virtual void writeToProperties(SGPropertyNode_ptr aProp) const;

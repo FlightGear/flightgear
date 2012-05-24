@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <simgear/math/SGMath.hxx>
-
 #include "Math.hpp"
 #include "FGFDM.hpp"
 #include "PropEngine.hpp"

@@ -12,6 +12,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
+#include <simgear/math/SGMath.hxx>
 #include <iostream>
 #include <string>
 #include <sstream>

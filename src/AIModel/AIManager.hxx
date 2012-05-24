@@ -96,13 +96,13 @@ public:
 
 private:
 
-    bool enabled;
     int mNumAiTypeModels[FGAIBase::MAX_OBJECTS];
     int mNumAiModels;
 
     double calcRange(double lat, double lon, double lat2, double lon2)const;
 
     SGPropertyNode_ptr root;
+    SGPropertyNode_ptr enabled;
     SGPropertyNode_ptr thermal_lift_node;
     SGPropertyNode_ptr user_latitude_node;
     SGPropertyNode_ptr user_longitude_node;

@@ -13,7 +13,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
-#include <simgear/math/SGMath.hxx>
 
 #include <Navaids/positioned.hxx>
 #include <Instrumentation/rnav_waypt_controller.hxx>
@@ -134,8 +133,6 @@ private:
       double waypointAlertTime() const     { return _waypointAlertTime; }
 
       bool requireHardSurface() const      { return _requireHardSurface; }
-
-      double minRunwayLengthFt() const     { return _minRunwayLengthFt; }
 
       bool cdiDeflectionIsAngular() const  { return (_cdiMaxDeflectionNm <= 0.0); }
 

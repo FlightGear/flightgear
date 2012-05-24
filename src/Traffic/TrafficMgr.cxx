@@ -56,7 +56,6 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/props/props.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/xml/easyxml.hxx>
 
@@ -90,6 +89,11 @@ FGTrafficManager::FGTrafficManager() :
 }
 
 FGTrafficManager::~FGTrafficManager()
+{
+    shutdown();
+}
+
+void FGTrafficManager::shutdown()
 {
     // Save the heuristics data
     bool saveData = false;
@@ -129,12 +133,17 @@ FGTrafficManager::~FGTrafficManager()
     }
     scheduledAircraft.clear();
     flights.clear();
+    releaseList.clear();
+
+    currAircraft = scheduledAircraft.begin();
+    doingInit = false;
+    inited = false;
 }
 
 
 void FGTrafficManager::init()
 {
-    if (!enabled || !aiEnabled) {
+    if (!enabled) {
       return;
     }
 
@@ -261,10 +270,23 @@ void FGTrafficManager::loadHeuristics()
 
 void FGTrafficManager::update(double /*dt */ )
 {
-    if (!enabled || !aiEnabled || (realWxEnabled && !metarValid)) {
+    if (!enabled)
+    {
+        if (inited || doingInit)
+            shutdown();
         return;
     }
-        
+
+    if ((realWxEnabled && !metarValid)) {
+        return;
+    }
+
+    if (!aiEnabled)
+    {
+        // traffic depends on AI module
+        aiEnabled = true;
+    }
+
     if (!inited) {
         if (!doingInit) {
             init();
@@ -367,7 +389,13 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
                  FlightType     = tokens[9];
                  radius         = atof(tokens[8].c_str());
                  offset         = atof(tokens[7].c_str());;
-                 SG_LOG(SG_GENERAL, SG_ALERT, "Adding Aircraft" << model << " " << livery << " " << homePort << " " 
+                 
+                 if (!FGAISchedule::validModelPath(model)) {
+                     SG_LOG(SG_GENERAL, SG_WARN, "TrafficMgr: Missing model path:" << 
+                            model << " from " << infileName.str());
+                 } else {
+                 
+                 SG_LOG(SG_GENERAL, SG_INFO, "Adding Aircraft" << model << " " << livery << " " << homePort << " " 
                                                                 << registration << " " << flightReq << " " << isHeavy 
                                                                 << " " << acType << " " << airline << " " << m_class 
                                                                 << " " << FlightType << " " << radius << " " << offset);
@@ -383,6 +411,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
                                                               FlightType,
                                                               radius,
                                                               offset));
+                 } // of valid model path
              }
              if (tokens[0] == string("FLIGHT")) {
                  //cerr << "Found flight " << buffString << " size is : " << tokens.size() << endl;
@@ -619,78 +648,72 @@ void FGTrafficManager::endElement(const char *name)
                                                                   requiredAircraft));
         requiredAircraft = "";
     } else if (!strcmp(name, "aircraft")) {
-        string isHeavy;
-        if (heavy) {
-            isHeavy = "true";
-        } else {
-            isHeavy = "false"; 
-        }
-        /*
-        cerr << "Traffic Dump AC," << homePort << "," << registration << "," << requiredAircraft 
-             << "," << acType << "," << livery << "," 
-             << airline << "," << offset << "," << radius << "," << flighttype << "," << isHeavy << "," << mdl << endl;*/
-        int proportion =
-            (int) (fgGetDouble("/sim/traffic-manager/proportion") * 100);
-        int randval = rand() & 100;
-        if (randval <= proportion) {
-            if (fgGetBool("/sim/traffic-manager/dumpdata") == true) {
-                SG_LOG(SG_GENERAL, SG_ALERT, "Traffic Dump AC," << homePort << "," << registration << "," << requiredAircraft 
-                 << "," << acType << "," << livery << "," 
-                 << airline << ","  << m_class << "," << offset << "," << radius << "," << flighttype << "," << isHeavy << "," << mdl);
-            }
-            //scheduledAircraft.push_back(new FGAISchedule(mdl, 
-            //                                     livery, 
-            //                                     registration, 
-            //                                     heavy,
-            //                                     acType, 
-            //                                     airline, 
-            //                                     m_class, 
-            //                                     flighttype,
-            //                                     radius,
-            //                                     offset,
-            //                                     score,
-            //                                     flights));
-            if (requiredAircraft == "") {
-                char buffer[16];
-                snprintf(buffer, 16, "%d", acCounter);
-                requiredAircraft = buffer;
-            }
-            if (homePort == "") {
-                homePort = departurePort;
-            }
-            scheduledAircraft.push_back(new FGAISchedule(mdl,
-                                                         livery,
-                                                         homePort,
-                                                         registration,
-                                                         requiredAircraft,
-                                                         heavy,
-                                                         acType,
-                                                         airline,
-                                                         m_class,
-                                                         flighttype,
-                                                         radius, offset));
-
-            //  while(flights.begin() != flights.end()) {
-//      flights.pop_back();
-//       }
-        } else {
-            cerr << "Skipping : " << randval;
-        }
-        acCounter++;
-        requiredAircraft = "";
-        homePort = "";
-        //for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
-        //  {
-        //    delete (*flt);
-        //  }
-        //flights.clear();
-        SG_LOG(SG_GENERAL, SG_BULK, "Reading aircraft : "
-               << registration << " with prioritization score " << score);
-        score = 0;
+        endAircraft();
     }
+    
     elementValueStack.pop_back();
 }
 
+void FGTrafficManager::endAircraft()
+{
+    string isHeavy = heavy ? "true" : "false";
+
+    if (missingModels.find(mdl) != missingModels.end()) {
+    // don't stat() or warn again
+        requiredAircraft = homePort = "";
+        return;
+    }
+    
+    if (!FGAISchedule::validModelPath(mdl)) {
+        missingModels.insert(mdl);
+        SG_LOG(SG_GENERAL, SG_WARN, "TrafficMgr: Missing model path:" << mdl);
+        requiredAircraft = homePort = "";
+        return;
+    }
+        
+    int proportion =
+        (int) (fgGetDouble("/sim/traffic-manager/proportion") * 100);
+    int randval = rand() & 100;
+    if (randval > proportion) {
+        requiredAircraft = homePort = "";
+        return;
+    }
+    
+    if (fgGetBool("/sim/traffic-manager/dumpdata") == true) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Traffic Dump AC," << homePort << "," << registration << "," << requiredAircraft 
+               << "," << acType << "," << livery << "," 
+               << airline << ","  << m_class << "," << offset << "," << radius << "," << flighttype << "," << isHeavy << "," << mdl);
+    }
+
+    if (requiredAircraft == "") {
+        char buffer[16];
+        snprintf(buffer, 16, "%d", acCounter);
+        requiredAircraft = buffer;
+    }
+    if (homePort == "") {
+        homePort = departurePort;
+    }
+    
+    scheduledAircraft.push_back(new FGAISchedule(mdl,
+                                                 livery,
+                                                 homePort,
+                                                 registration,
+                                                 requiredAircraft,
+                                                 heavy,
+                                                 acType,
+                                                 airline,
+                                                 m_class,
+                                                 flighttype,
+                                                 radius, offset));
+            
+    acCounter++;
+    requiredAircraft = "";
+    homePort = "";
+    SG_LOG(SG_GENERAL, SG_BULK, "Reading aircraft : "
+           << registration << " with prioritization score " << score);
+    score = 0;
+}
+    
 void FGTrafficManager::data(const char *s, int len)
 {
     string token = string(s, len);

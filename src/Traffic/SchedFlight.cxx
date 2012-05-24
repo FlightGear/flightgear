@@ -51,7 +51,6 @@
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/xml/easyxml.hxx>

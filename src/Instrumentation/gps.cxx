@@ -201,7 +201,6 @@ GPS::Config::Config() :
   _turnRate(3.0), // degrees-per-second, so 180 degree turn takes 60 seconds
   _overflightArmDistance(1.0),
   _waypointAlertTime(30.0),
-  _minRunwayLengthFt(0.0),
   _requireHardSurface(true),
   _cdiMaxDeflectionNm(3.0), // linear mode, 3nm at the peg
   _driveAutopilot(true),
@@ -215,7 +214,6 @@ void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
   aOwner->tie(aCfg, "turn-rate-deg-sec", SGRawValuePointer<double>(&_turnRate));
   aOwner->tie(aCfg, "turn-anticipation", SGRawValuePointer<bool>(&_enableTurnAnticipation));
   aOwner->tie(aCfg, "wpt-alert-time", SGRawValuePointer<double>(&_waypointAlertTime));
-  aOwner->tie(aCfg, "min-runway-length-ft", SGRawValuePointer<double>(&_minRunwayLengthFt));
   aOwner->tie(aCfg, "hard-surface-runways-only", SGRawValuePointer<bool>(&_requireHardSurface));
   aOwner->tie(aCfg, "cdi-max-deflection-nm", SGRawValuePointer<double>(&_cdiMaxDeflectionNm));
   aOwner->tie(aCfg, "drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
@@ -724,7 +722,7 @@ void GPS::routeManagerSequenced()
   SG_LOG(SG_INSTR, SG_INFO, "GPS waypoint index is now " << index);
   
   if (index > 0) {
-    _prevWaypt = _routeMgr->previousWaypt();
+    _prevWaypt = _routeMgr->wayptAtIndex(index - 1);
     if (_prevWaypt->flag(WPT_DYNAMIC)) {
       _wp0_position = _indicated_pos;
     } else {
@@ -829,7 +827,7 @@ void GPS::updateOverflight()
     
     // check for wp1 being on active route - resume leg mode
     if (_routeMgr->isRouteActive()) {
-      int index = _routeMgr->findWayptIndex(_currentWaypt->position());
+      int index = _routeMgr->flightPlan()->findWayptIndex(_currentWaypt->position());
       if (index >= 0) {
         SG_LOG(SG_INSTR, SG_INFO, "GPS DTO, resuming LEG mode at wp:" << index);
         _mode = "leg";
@@ -881,7 +879,7 @@ void GPS::computeTurnData()
     return;
   }
   
-  WayptRef next = _routeMgr->nextWaypt();
+  WayptRef next = _routeMgr->wayptAtIndex(_routeMgr->currentIndex() + 1);
   if (!next || next->flag(WPT_DYNAMIC)) {
     _anticipateTurn = false;
     return;
@@ -1439,7 +1437,7 @@ FGPositioned::Type GPS::SearchFilter::maxType() const
 FGPositioned::Filter* GPS::createFilter(FGPositioned::Type aTy)
 {
   if (aTy == FGPositioned::AIRPORT) {
-    return new FGAirport::HardSurfaceFilter(_config.minRunwayLengthFt());
+    return new FGAirport::HardSurfaceFilter();
   }
   
   // if we were passed INVALID, assume it means 'all types interesting to a GPS'
@@ -1684,7 +1682,7 @@ void GPS::insertWaypointAtIndex(int aIndex)
   string ident = _scratchNode->getStringValue("ident");
 
   WayptRef wpt = new BasicWaypt(_scratchPos, ident, NULL);
-  _routeMgr->insertWayptAtIndex(wpt, aIndex);
+  _routeMgr->flightPlan()->insertWayptAtIndex(wpt, aIndex);
 }
 
 void GPS::removeWaypointAtIndex(int aIndex)
@@ -1693,7 +1691,7 @@ void GPS::removeWaypointAtIndex(int aIndex)
     throw sg_range_exception("GPS::removeWaypointAtIndex: index out of bounds");
   }
   
-  _routeMgr->removeWayptAtIndex(aIndex);
+  _routeMgr->removeLegAtIndex(aIndex);
 }
 
 void GPS::tieSGGeod(SGPropertyNode* aNode, SGGeod& aRef, 

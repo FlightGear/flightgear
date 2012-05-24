@@ -1156,7 +1156,7 @@ fgOptScenario( const char *arg )
     }
     SGPropertyNode_ptr scenario = ai_node->getNode( "scenario", index + 1, true );
     scenario->setStringValue( arg );
-    ai_node->setBoolValue( "enabled", true );
+    ai_node->setBoolValue( "scenarios-enabled", true );
     return FG_OPTIONS_OK;
 }
 
@@ -1165,7 +1165,7 @@ fgOptNoScenarios( const char *arg )
 {
     SGPropertyNode_ptr ai_node = fgGetNode( "/sim/ai", true );
     ai_node->removeChildren("scenario",false);
-    ai_node->setBoolValue( "enabled", false );
+    ai_node->setBoolValue( "scenarios-enabled", false );
     return FG_OPTIONS_OK;
 }
 
@@ -1322,8 +1322,9 @@ struct OptionDesc {
     } fgOptionArray[] = {
 
     {"language",                     true,  OPTION_IGNORE, "", false, "", 0 },
-    {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt", false, "", 0 },
-    {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt", true, "", 0 },
+    {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", false, "", 0 },
+    {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", true, "", 0 },
+    {"renderer",                     true,  OPTION_STRING, "/sim/rendering/rembrandt/renderer", false, "", 0 },
     {"disable-game-mode",            false, OPTION_BOOL,   "/sim/startup/game-mode", false, "", 0 },
     {"enable-game-mode",             false, OPTION_BOOL,   "/sim/startup/game-mode", true, "", 0 },
     {"disable-splash-screen",        false, OPTION_BOOL,   "/sim/startup/splash-screen", false, "", 0 },
@@ -1733,6 +1734,10 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   } // of arguments iteration
   p->insertGroupMarker(); // command line is one group
   
+  // establish log-level before anything else - otherwise it is not possible
+  // to show extra (debug/info/warning) messages for the start-up phase.
+  fgOptLogLevel(valueForOption("log-level", "alert").c_str());
+
 // then config files
   SGPath config;
   

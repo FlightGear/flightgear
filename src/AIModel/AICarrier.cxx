@@ -26,7 +26,6 @@
 #include <vector>
 
 #include <simgear/sg_inlines.h>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
 #include <math.h>

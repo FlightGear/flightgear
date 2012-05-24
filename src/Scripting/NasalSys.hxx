@@ -111,11 +111,29 @@ public:
     void deleteModule(const char* moduleName);
 
     naRef call(naRef code, int argc, naRef* args, naRef locals);
+  
+    naRef callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals);
+  
     naRef propNodeGhost(SGPropertyNode* handle);
 
     void registerToLoad(FGNasalModelData* data)   { _loadList.push(data);}
     void registerToUnload(FGNasalModelData* data) { _unloadList.push(data);}
 
+    // can't call this 'globals' due to naming clash
+    naRef nasalGlobals() const
+    { return _globals; }
+  
+    naContext context() const
+    { return _context; }
+  
+    // This mechanism is here to allow naRefs to be passed to
+    // locations "outside" the interpreter.  Normally, such a
+    // reference would be garbage collected unexpectedly.  By passing
+    // it to gcSave and getting a key/handle, it can be cached in a
+    // globals.__gcsave hash.  Be sure to release it with gcRelease
+    // when done.
+    int gcSave(naRef r);
+    void gcRelease(int key);
 private:
     friend class FGNasalScript;
     friend class FGNasalListener;
@@ -150,15 +168,6 @@ private:
     void logError(naContext);
     naRef parse(const char* filename, const char* buf, int len);
     naRef genPropsModule();
-
-    // This mechanism is here to allow naRefs to be passed to
-    // locations "outside" the interpreter.  Normally, such a
-    // reference would be garbage collected unexpectedly.  By passing
-    // it to gcSave and getting a key/handle, it can be cached in a
-    // globals.__gcsave hash.  Be sure to release it with gcRelease
-    // when done.
-    int gcSave(naRef r);
-    void gcRelease(int key);
 
     naContext _context;
     naRef _globals;

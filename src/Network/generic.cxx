@@ -34,6 +34,7 @@
 #include <simgear/misc/stdint.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>

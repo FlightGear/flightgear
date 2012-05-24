@@ -55,7 +55,7 @@ class SGSubsystemMgr;
 class SGSubsystem;
 class SGSoundMgr;
 
-class FGATCMgr;
+class FGATISMgr;
 class FGAircraftModel;
 class FGControls;
 class FGFlightPlanDispatcher;
@@ -65,7 +65,6 @@ class FGLocale;
 class FGModelMgr;
 class FGRouteMgr;
 class FGScenery;
-class FGPanel;
 class FGTileMgr;
 class FGViewMgr;
 class FGViewer;
@@ -119,11 +118,8 @@ private:
     // Global autopilot "route"
     FGRouteMgr *route_mgr;
 
-    // 2D panel
-    SGSharedPtr<FGPanel> current_panel;
-
     // ATC manager
-    FGATCMgr *ATC_mgr;
+    FGATISMgr *ATIS_mgr;
 
     // control input state
     FGControls *controls;
@@ -219,6 +215,15 @@ public:
      */
     SGPath resolve_maybe_aircraft_path(const std::string& branch) const;
     
+    /**
+     * Search in the following directories:
+     *
+     *  1. Root directory of current aircraft (defined by /sim/aircraft-dir)
+     *  2. All aircraft directories if branch starts with Aircraft/
+     *  3. fg_data directory
+     */
+    SGPath resolve_ressource_path(const std::string& branch) const;
+
     inline const std::string &get_browser () const { return browser; }
     void set_browser (const std::string &b) { browser = b; }
 
@@ -240,11 +245,8 @@ public:
     inline SGMaterialLib *get_matlib() const { return matlib; }
     inline void set_matlib( SGMaterialLib *m ) { matlib = m; }
 
-    inline FGATCMgr *get_ATC_mgr() const { return ATC_mgr; }
-    inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }
-
-    inline FGPanel *get_current_panel() const { return current_panel; }
-    void set_current_panel( FGPanel *cp );
+    inline FGATISMgr *get_ATIS_mgr() const { return ATIS_mgr; }
+    inline void set_ATIS_mgr( FGATISMgr *a ) {ATIS_mgr = a; }
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }

@@ -39,6 +39,8 @@ set(HEADERS
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
 get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
 
+link_directories ( ${Boost_LIBRARY_DIRS} )
+
 add_executable(fgfs ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
 
 get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)

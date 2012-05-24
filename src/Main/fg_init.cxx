@@ -77,7 +77,7 @@
 
 #include <AIModel/AIManager.hxx>
 
-#include <ATCDCL/ATCmgr.hxx>
+#include <ATCDCL/ATISmgr.hxx>
 #include <ATC/atc_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
@@ -86,6 +86,7 @@
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 
+#include <Canvas/canvas_mgr.hxx>
 #include <GUI/new_gui.hxx>
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
@@ -1158,27 +1159,25 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     fgGetBool("/sim/rendering/bump-mapping", false);
 
-
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the canvas 2d drawing subsystem.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("Canvas2D", new CanvasMgr, SGSubsystemMgr::DISPLAY);
 
     ////////////////////////////////////////////////////////////////////
-    // Initialise the ATC Manager
-    // Note that this is old stuff, but might be necessesary for the 
+    // Initialise the ATIS Manager
+    // Note that this is old stuff, but is necessary for the
     // current ATIS implementation. Therefore, leave it in here
     // until the ATIS system is ported over to make use of the ATIS 
     // sub system infrastructure.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("ATC-old", new FGATCMgr, SGSubsystemMgr::INIT);
+    globals->add_subsystem("ATIS", new FGATISMgr, SGSubsystemMgr::INIT, 0.4);
 
     ////////////////////////////////////////////////////////////////////
    // Initialize the ATC subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("ATC", new FGATCManager, SGSubsystemMgr::POST_FDM);
-    ////////////////////////////////////////////////////////////////////
-    // Initialise the ATIS Subsystem
-    ////////////////////////////////////////////////////////////////////
-    //globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
-
 
     ////////////////////////////////////////////////////////////////////
     // Initialize multiplayer subsystem
@@ -1203,20 +1202,11 @@ bool fgInitSubsystems() {
     // Add a new 2D panel.
     ////////////////////////////////////////////////////////////////////
 
-    string panel_path(fgGetString("/sim/panel/path"));
-    if (!panel_path.empty()) {
-      FGPanel* p = fgReadPanel(panel_path);
-      if (p) {
-        globals->set_current_panel(p);
-        p->init();
-        p->bind();
-        SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
-      } else {
-        SG_LOG( SG_INPUT, SG_ALERT,
-                "Error reading new panel from " << panel_path );
-      }
-    }
-
+    fgSetArchivable("/sim/panel/visibility");
+    fgSetArchivable("/sim/panel/x-offset");
+    fgSetArchivable("/sim/panel/y-offset");
+    fgSetArchivable("/sim/panel/jitter");
+  
     ////////////////////////////////////////////////////////////////////
     // Initialize the controls subsystem.
     ////////////////////////////////////////////////////////////////////

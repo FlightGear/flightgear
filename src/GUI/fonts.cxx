@@ -837,4 +837,4 @@ static fntBitmapFont fntHelvetica12(FontHelvetica12.Characters, 1,
 
 puFont FONT_HELVETICA_14(&fntHelvetica14, 14, 0);
 puFont FONT_SANS_12B(&fntSans12B, 12, 0);
-puFont FONT_HELVETICA_12(&fntHelvetica12, 12, 0);
+puFont FONT_HELVETICA_12(&fntHelvetica12, 13 /*[sic!]*/, 0); /* Original plib Helvetica 12 font also reported size 13, instead of 12 */

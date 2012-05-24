@@ -69,10 +69,7 @@ void
 FGAIManager::init() {
     root = fgGetNode("sim/ai", true);
 
-    enabled = root->getNode("enabled", true)->getBoolValue();
-
-    if (!enabled)
-        return;
+    enabled = root->getNode("enabled", true);
 
     thermal_lift_node = fgGetNode("/environment/thermal-lift-fps", true);
     wind_from_east_node  = fgGetNode("/environment/wind-from-east-fps",true);
@@ -92,6 +89,15 @@ FGAIManager::init() {
 void
 FGAIManager::postinit() {
     // postinit, so that it can access the Nasal subsystem
+
+    if (!root->getBoolValue("scenarios-enabled", true))
+        return;
+
+    // scenarios enabled, AI subsystem required
+    if (!enabled->getBoolValue())
+        enabled->setBoolValue(true);
+
+    // process all scenarios
     map<string, bool> scenarios;
     for (int i = 0 ; i < root->nChildren() ; i++) {
         SGPropertyNode *n = root->getChild(i);
@@ -143,7 +149,7 @@ FGAIManager::update(double dt) {
     range_nearest = 10000.0;
     strength = 0.0;
 
-    if (!enabled)
+    if (!enabled->getBoolValue())
         return;
 
     FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("traffic-manager");

@@ -27,6 +27,7 @@
 
 #include <cassert>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <algorithm>
 
 #include <osg/Array>
@@ -158,7 +159,6 @@ public:
     virtual void valueChanged (SGPropertyNode * prop)
     {
         _nd->invalidatePositionedCache();
-        SG_LOG(SG_INSTR, SG_INFO, "invalidating NavDisplay cache");
     }
 private:
     NavDisplay* _nd;
@@ -173,7 +173,6 @@ public:
   
   virtual void valueChanged (SGPropertyNode * prop)
   {
-    SG_LOG(SG_INSTR, SG_INFO, "forcing NavDisplay update");
     _nd->forceUpdate();
   }
 private:
@@ -185,7 +184,7 @@ private:
 class SymbolRule
 {
 public:
-    SymbolRule()
+  SymbolRule()
     {
         
     }
@@ -197,6 +196,7 @@ public:
         }
         
         type = node->getStringValue("type");
+        boost::to_lower(type);
         SGPropertyNode* enableNode = node->getChild("enable");
         if (enableNode) { 
             enable.reset(sgReadCondition(fgGetNode("/"), enableNode));
@@ -212,6 +212,7 @@ public:
             }
         } // of matches parsing
         
+          
         return true;
     }
     
@@ -240,29 +241,37 @@ public:
         return true;
     }
     
-    void checkEnabled()
+  // return if the enabled state changed (needs a cache update)
+    bool checkEnabled()
     {
         if (enable.get()) {
+            bool wasEnabled = enabled;
             enabled = enable->test();
+            return (enabled != wasEnabled);
         } else {
             enabled = true;
+            return false;
         }
     }
     
     bool enabled; // cached enabled state
     std::string type;
+    
+  // record instances for limiting by count
+    int instanceCount;
 private:
     SymbolDef* definition;
     
     std::auto_ptr<SGCondition> enable;
     string_set required_states;
     string_set excluded_states;
-    
 };
 
 class SymbolDef
 {
 public:
+    SymbolDef() : limitCount(0) { }
+  
     bool initFromNode(SGPropertyNode* node, NavDisplay* owner)
     {
         if (node->getChild("type")) {
@@ -306,6 +315,11 @@ public:
             textOffset.x() = node->getFloatValue("text-offset-x", 0);
             textOffset.y() = node->getFloatValue("text-offset-y", 0);
             textColor = readColor(node->getChild("text-color"), color);
+          
+            SGPropertyNode* enableNode = node->getChild("text-enable");
+            if (enableNode) { 
+              textEnable.reset(sgReadCondition(fgGetNode("/"), enableNode));
+            }
         }
         
         drawLine = node->getBoolValue("draw-line", false);
@@ -320,6 +334,11 @@ public:
             stretchV3 = node->getFloatValue("v3") / texSize;
         }
       
+        SGPropertyNode* limitNode = node->getChild("limit");
+        if (limitNode) {
+          limitCount = limitNode->getIntValue();
+        }
+
         return true;
     }
     
@@ -332,6 +351,8 @@ public:
     bool rotateToHeading;
     bool roundPos; ///< should position be rounded to integer values
     bool hasText;
+    std::auto_ptr<SGCondition> textEnable;
+    bool textEnabled; ///< cache condition result
     osg::Vec4 textColor;
     osg::Vec2 textOffset;
     osgText::Text::AlignmentType alignment;
@@ -350,6 +371,7 @@ public:
     
     bool drawRouteLeg;
     
+    int limitCount, instanceCount;
 };
 
 class SymbolInstance
@@ -420,7 +442,8 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
     _view_heading(0),
     _font_size(0),
     _font_spacing(0),
-    _rangeNm(0)
+    _rangeNm(0),
+    _maxSymbols(100)
 {
     _Instrument = fgGetNode(string("/instrumentation/" + _name).c_str(), _num, true);
     _font_node = _Instrument->getNode("font", true);
@@ -681,9 +704,6 @@ NavDisplay::update (double delta_time_sec)
         SGVec3d cartNow(SGVec3d::fromGeod(_pos));
         double movedNm = dist(_cachedPos, cartNow) * SG_METER_TO_NM;
         _cachedItemsValid = (movedNm < 1.0);
-        if (!_cachedItemsValid) {
-            SG_LOG(SG_INSTR, SG_INFO, "invalidating NavDisplay cache due to moving: " << movedNm);
-        }
     }
     
   _vertices->clear();
@@ -697,9 +717,20 @@ NavDisplay::update (double delta_time_sec)
       delete si;
   }
   _symbols.clear();
-    
+  
+  BOOST_FOREACH(SymbolDef* d, _definitions) {
+    d->instanceCount = 0;
+    d->textEnabled = d->textEnable.get() ? d->textEnable->test() : true;
+  }
+  
+  bool enableChanged = false;
   BOOST_FOREACH(SymbolRule* r, _rules) {
-      r->checkEnabled();
+      enableChanged |= r->checkEnabled();
+  }
+  
+  if (enableChanged) {
+    SG_LOG(SG_INSTR, SG_INFO, "NS rule enables changed, rebuilding cache");
+    _cachedItemsValid = false;
   }
   
   if (_testModeNode->getBoolValue()) {
@@ -830,7 +861,7 @@ void NavDisplay::addSymbolToScene(SymbolInstance* sym)
         addLine(sym->pos, sym->endPos, def->lineColor);
     }
     
-    if (!def->hasText) {
+    if (!def->hasText || !def->textEnabled) {
         return;
     }
     
@@ -861,14 +892,15 @@ public:
 
 void NavDisplay::limitDisplayedSymbols()
 {
-    unsigned int maxSymbols = _Instrument->getIntValue("max-symbols", 100);
-    if (_symbols.size() <= maxSymbols) {
+// gloabl symbol limit
+    _maxSymbols= _Instrument->getIntValue("max-symbols", _maxSymbols);
+    if ((int) _symbols.size() <= _maxSymbols) {
         _excessDataNode->setBoolValue(false);
         return;
     }
     
     std::sort(_symbols.begin(), _symbols.end(), OrderByPriority());
-    _symbols.resize(maxSymbols);
+    _symbols.resize(_maxSymbols);
     _excessDataNode->setBoolValue(true);
 }
 
@@ -915,6 +947,8 @@ osg::Vec2 NavDisplay::projectGeod(const SGGeod& geod) const
 class Filter : public FGPositioned::Filter
 {
 public:
+    Filter(NavDisplay* nd) : _owner(nd) { }
+  
     double minRunwayLengthFt;
   
     virtual bool pass(FGPositioned* aPos) const
@@ -934,7 +968,8 @@ public:
           }
         }
       
-        return true;
+      // check against current rule states
+        return _owner->isPositionedShown(aPos);
     }
 
     virtual FGPositioned::Type minType() const {
@@ -944,19 +979,24 @@ public:
     virtual FGPositioned::Type maxType() const {
         return FGPositioned::OBSTACLE;
     }
+  
+private:
+    NavDisplay* _owner;
 };
 
 void NavDisplay::findItems()
 {
     if (!_cachedItemsValid) {
-        SG_LOG(SG_INSTR, SG_INFO, "re-validating NavDisplay cache");
-        Filter filt;
-        filt.minRunwayLengthFt = 2000;
-        _itemsInRange = FGPositioned::findWithinRange(_pos, _rangeNm, &filt);
+        Filter filt(this);
+        filt.minRunwayLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
+        _itemsInRange = FGPositioned::findClosestN(_pos, _maxSymbols, _rangeNm, &filt);
         _cachedItemsValid = true;
         _cachedPos = SGVec3d::fromGeod(_pos);
     }
     
+  // sort by distance from pos, so symbol limits are accurate
+    FGPositioned::sortByRange(_itemsInRange, _pos);
+  
     BOOST_FOREACH(FGPositioned* pos, _itemsInRange) {
         foundPositionedItem(pos);
     }
@@ -965,29 +1005,31 @@ void NavDisplay::findItems()
 void NavDisplay::processRoute()
 {
     _routeSources.clear();
-    RoutePath path(_route->waypts());
+    flightgear::FlightPlan* fp = _route->flightPlan();
+    RoutePath path(fp);
     int current = _route->currentIndex();
     
-    for (int w=0; w<_route->numWaypts(); ++w) {
-        flightgear::WayptRef wpt(_route->wayptAtIndex(w));
+    for (int l=0; l<fp->numLegs(); ++l) {
+        flightgear::FlightPlan::Leg* leg = fp->legAtIndex(l);
+        flightgear::WayptRef wpt(leg->waypoint());
         _routeSources.insert(wpt->source());
         
         string_set state;
         state.insert("on-active-route");
         
-        if (w < current) {
+        if (l < current) {
             state.insert("passed");
         }
         
-        if (w == current) {
+        if (l == current) {
             state.insert("current-wp");
         }
         
-        if (w > current) {
+        if (l > current) {
             state.insert("future");
         }
         
-        if (w == (current + 1)) {
+        if (l == (current + 1)) {
             state.insert("next-wp");
         }
         
@@ -997,8 +1039,12 @@ void NavDisplay::processRoute()
             return; // no rules matched, we can skip this item
         }
 
-        SGGeod g = path.positionForIndex(w);
-        SGPropertyNode* vars = _route->wayptNodeAtIndex(w);
+        SGGeod g = path.positionForIndex(l);
+        SGPropertyNode* vars = _route->wayptNodeAtIndex(l);
+        if (!vars) {
+          continue; // shouldn't happen, but let's guard against it
+        }
+      
         double heading;
         computeWayptPropsAndHeading(wpt, g, vars, heading);
 
@@ -1007,7 +1053,7 @@ void NavDisplay::processRoute()
             addSymbolInstance(projected, heading, r->getDefinition(), vars);
             
             if (r->getDefinition()->drawRouteLeg) {
-                SGGeodVec gv(path.pathForIndex(w));
+                SGGeodVec gv(path.pathForIndex(l));
                 if (!gv.empty()) {
                     osg::Vec2 pr = projectGeod(gv[0]);
                     for (unsigned int i=1; i<gv.size(); ++i) {
@@ -1096,26 +1142,38 @@ void NavDisplay::findRules(const string& type, const string_set& states, SymbolR
     }
 }
 
+bool NavDisplay::isPositionedShown(FGPositioned* pos)
+{
+  SymbolRuleVector rules;
+  isPositionedShownInner(pos, rules);
+  return !rules.empty();
+}
+
+void NavDisplay::isPositionedShownInner(FGPositioned* pos, SymbolRuleVector& rules)
+{
+  string type = FGPositioned::nameForType(pos->type());
+  if (!anyRuleForType(type)) {
+    return; // not diplayed at all, we're done
+  }
+  
+  string_set states;
+  computePositionedState(pos, states);
+  
+  findRules(type, states, rules);
+}
+
 void NavDisplay::foundPositionedItem(FGPositioned* pos)
 {
     if (!pos) {
         return;
     }
     
-    string type = FGPositioned::nameForType(pos->type());
-    if (!anyRuleForType(type)) {
-        return; // not diplayed at all, we're done
-    }
-    
-    string_set states;
-    computePositionedState(pos, states);
-    
     SymbolRuleVector rules;
-    findRules(type, states, rules);
+    isPositionedShownInner(pos, rules);
     if (rules.empty()) {
-        return; // no rules matched, we can skip this item
+      return;
     }
-    
+  
     SGPropertyNode_ptr vars(new SGPropertyNode);
     double heading;
     computePositionedPropsAndHeading(pos, vars, heading);
@@ -1186,6 +1244,7 @@ void NavDisplay::computePositionedState(FGPositioned* pos, string_set& states)
         states.insert("on-active-route");
     }
     
+    flightgear::FlightPlan* fp = _route->flightPlan();
     switch (pos->type()) {
     case FGPositioned::VOR:
     case FGPositioned::LOC:
@@ -1206,21 +1265,21 @@ void NavDisplay::computePositionedState(FGPositioned* pos, string_set& states)
         // mark alternates!
         // once the FMS system has some way to tell us about them, of course
         
-        if (pos == _route->departureAirport()) {
+        if (pos == fp->departureAirport()) {
             states.insert("departure");
         }
         
-        if (pos == _route->destinationAirport()) {
+        if (pos == fp->destinationAirport()) {
             states.insert("destination");
         }
         break;
     
     case FGPositioned::RUNWAY:
-        if (pos == _route->departureRunway()) {
+        if (pos == fp->departureRunway()) {
             states.insert("departure");
         }
         
-        if (pos == _route->destinationRunway()) {
+        if (pos == fp->destinationRunway()) {
             states.insert("destination");
         }
         break;
@@ -1313,6 +1372,11 @@ SymbolInstance* NavDisplay::addSymbolInstance(const osg::Vec2& proj, double head
         return NULL;
     }
     
+    if ((def->limitCount > 0) && (def->instanceCount >= def->limitCount)) {
+      return NULL;
+    }
+  
+    ++def->instanceCount;
     SymbolInstance* sym = new SymbolInstance(proj, heading, def, vars);
     _symbols.push_back(sym);
     return sym;

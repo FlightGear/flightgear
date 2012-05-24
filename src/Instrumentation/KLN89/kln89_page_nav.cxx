@@ -25,6 +25,8 @@
 #  include "config.h"
 #endif
 
+#include <cstdlib>
+
 #include "kln89_page_nav.hxx"
 #include <Main/fg_props.hxx>
 

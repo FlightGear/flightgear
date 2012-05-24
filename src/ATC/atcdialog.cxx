@@ -45,8 +45,6 @@
 #include <ATC/CommStation.hxx>
 
 
-FGATCDialogNew *currentATCDialog;
-
 static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name)
 {
   SGPropertyNode* p;

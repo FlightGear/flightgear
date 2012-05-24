@@ -26,8 +26,6 @@
 #  include <config.h>
 #endif
 
-#include <simgear/math/SGMath.hxx>
-
 #include "FGDeviceConfigurationMap.hxx"
 
 #include <simgear/misc/sg_dir.hxx>

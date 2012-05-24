@@ -11,7 +11,6 @@
 
 #include <plib/puAux.h>
 
-#include <simgear/route/waypoint.hxx>
 #include <simgear/structure/callback.hxx>
 #include <simgear/sg_inlines.h>
 
@@ -37,34 +36,37 @@ enum {
 static const double BLINK_TIME = 0.3;
 static const int DRAG_START_DISTANCE_PX = 5;
   
-class RouteManagerWaypointModel : 
+class FlightPlanWaypointModel : 
   public WaypointList::Model, 
   public SGPropertyChangeListener
 {
 public:
-  RouteManagerWaypointModel()
-  {
-    _rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
-    
+  FlightPlanWaypointModel(flightgear::FlightPlan* fp) :
+    _fp(fp)
+  {    
     SGPropertyNode* routeEdited = fgGetNode("/autopilot/route-manager/signals/edited", true);
+    SGPropertyNode* flightplanChanged = fgGetNode("/autopilot/route-manager/signals/flightplan-changed", true);
     routeEdited->addChangeListener(this);
+    flightplanChanged->addChangeListener(this);
   }
   
-  virtual ~RouteManagerWaypointModel()
+  ~FlightPlanWaypointModel()
   {
     SGPropertyNode* routeEdited = fgGetNode("/autopilot/route-manager/signals/edited", true);
+    SGPropertyNode* flightplanChanged = fgGetNode("/autopilot/route-manager/signals/flightplan-changed", true);
     routeEdited->removeChangeListener(this);
+    flightplanChanged->removeChangeListener(this);
   }
   
 // implement WaypointList::Model
   virtual unsigned int numWaypoints() const
   {
-    return _rm->numWaypts();
+    return _fp->numLegs();
   }
   
   virtual int currentWaypoint() const
   {
-    return _rm->currentIndex();
+    return _fp->currentIndex();
   }
   
   virtual flightgear::Waypt* waypointAt(unsigned int index) const
@@ -73,12 +75,12 @@ public:
       return NULL;
     }
     
-    return _rm->wayptAtIndex(index);
+    return _fp->legAtIndex(index)->waypoint();
   }
 
   virtual void deleteAt(unsigned int index)
   {
-    _rm->removeWayptAtIndex(index);
+    _fp->deleteIndex(index);
   }
   
   virtual void moveWaypointToIndex(unsigned int srcIndex, unsigned int destIndex)
@@ -89,13 +91,15 @@ public:
     }
     
     unsigned int currentWpIndex = currentWaypoint();
-    WayptRef w(_rm->removeWayptAtIndex(srcIndex));
+    WayptRef w(waypointAt(currentWpIndex));
+    _fp->deleteIndex(currentWpIndex);
+    
     SG_LOG(SG_GENERAL, SG_INFO, "wpt:" << w->ident());
-    _rm->insertWayptAtIndex(w, destIndex);
+    _fp->insertWayptAtIndex(w, destIndex);
 
     if (srcIndex == currentWpIndex) {
         // current waypoint was moved
-        _rm->jumpToIndex(destIndex);
+        _fp->setCurrentIndex(destIndex);
     }
   }
   
@@ -107,12 +111,19 @@ public:
 // implement SGPropertyChangeListener
   void valueChanged(SGPropertyNode *prop)
   {
-    if (_cb) {
-      (*_cb)();
+    if (prop->getNameString() == "edited") {
+      if (_cb) {
+        (*_cb)();
+      }
+    }
+    
+    if (prop->getNameString() == "flightplan-changed") {
+      _fp = 
+        static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"))->flightPlan();
     }
   }
 private:
-  FGRouteMgr* _rm;
+  flightgear::FlightPlan* _fp;
   SGCallback* _cb;
 };
 
@@ -152,7 +163,9 @@ WaypointList::WaypointList(int x, int y, int width, int height) :
 {
   // pretend to be a list, so fgPopup doesn't mess with our mouse events
   type |= PUCLASS_LIST;  
-  setModel(new RouteManagerWaypointModel());
+  flightgear::FlightPlan* fp = 
+    static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"))->flightPlan();
+  setModel(new FlightPlanWaypointModel(fp));
   setSize(width, height);
   setValue(-1);
   
@@ -399,12 +412,12 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y)
   if (wp->flag(WPT_MISS)) {
     drawBox = true;
     puSetColor(col, 1.0, 0.0, 0.0, 0.3);  // red
-  } else if (wp->flag(WPT_ARRIVAL)) {
+  } else if (wp->flag(WPT_ARRIVAL) || wp->flag(WPT_DEPARTURE)) {
     drawBox = true;
     puSetColor(col, 0.0, 0.0, 0.0, 0.3);
-  } else if (wp->flag(WPT_DEPARTURE)) {
+  } else if (wp->flag(WPT_APPROACH)) {
     drawBox = true;
-    puSetColor(col, 0.0, 0.0, 0.0, 0.3);
+    puSetColor(col, 0.0, 0.0, 0.1, 0.3);
   }
   
   if (isDragSource) {

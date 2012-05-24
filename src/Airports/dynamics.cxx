@@ -32,7 +32,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>

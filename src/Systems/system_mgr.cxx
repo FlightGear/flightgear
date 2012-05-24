@@ -16,6 +16,7 @@
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <sstream>

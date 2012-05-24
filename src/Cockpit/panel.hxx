@@ -29,7 +29,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/propertyObject.hxx>
 
-#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/SGBinding.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -118,23 +117,15 @@ private:
  * redraw themselves when necessary, and will pass mouse clicks on to
  * the appropriate instruments for processing.
  */
-class FGPanel : public SGSubsystem
+class FGPanel : public SGReferenced
 {
 public:
 
   FGPanel ();
   virtual ~FGPanel ();
 
-				// Update the panel (every frame).
-  virtual void init ();
-  virtual void bind ();
-  virtual void unbind ();
   virtual void draw (osg::State& state);
-  virtual void update (double);
  
-  //void update (osg::State& state);
-  //virtual void update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
-
   virtual void updateMouseDelay(double dt);
 
 				// transfer pointer ownership!!!
@@ -146,11 +137,6 @@ public:
 				// Background multiple textures.
   virtual void setMultiBackground (osg::Texture2D* texture, int idx);
 
-				// Make the panel visible or invisible.
-  virtual bool getVisibility () const;
-  virtual void setVisibility (bool visibility);
-
-				// Full width of panel.
   virtual void setWidth (int width) { _width = width; }
   virtual int getWidth () const { return _width; }
 
@@ -201,7 +187,6 @@ private:
   int _height;
  // int _view_height;
 
-  SGPropertyNode_ptr _visibility;
   SGPropertyNode_ptr _x_offset;
   SGPropertyNode_ptr _y_offset;
   SGPropertyNode_ptr _jitter;
@@ -584,22 +569,7 @@ public:
   FGSwitchLayer ();
   virtual void draw (osg::State& state);
 
-};
-
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Functions.
-////////////////////////////////////////////////////////////////////////
-
-/**
- * Test whether the panel should be visible.
- */
-bool fgPanelVisible ();
-
-
-
+};
 #endif // __PANEL_HXX
 
 // end of panel.hxx

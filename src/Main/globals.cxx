@@ -44,9 +44,8 @@
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
-#include <ATCDCL/ATCmgr.hxx>
+#include <ATCDCL/ATISmgr.hxx>
 #include <Autopilot/route_mgr.hxx>
-#include <Cockpit/panel.hxx>
 #include <GUI/FGFontCache.hxx>
 #include <GUI/gui.h>
 #include <Model/acmodel.hxx>
@@ -134,8 +133,7 @@ FGGlobals::FGGlobals() :
     mag( NULL ),
     matlib( NULL ),
     route_mgr( NULL ),
-    current_panel( NULL ),
-    ATC_mgr( NULL ),
+    ATIS_mgr( NULL ),
     controls( NULL ),
     viewmgr( NULL ),
     commands( SGCommandMgr::instance() ),
@@ -189,9 +187,8 @@ FGGlobals::~FGGlobals()
     delete mag;
     delete matlib;
     delete route_mgr;
-    current_panel = NULL;
 
-    delete ATC_mgr;
+    delete ATIS_mgr;
 
     if (controls)
     {
@@ -336,6 +333,12 @@ SGPath FGGlobals::resolve_aircraft_path(const std::string& branch) const
 SGPath FGGlobals::resolve_maybe_aircraft_path(const std::string& branch) const
 {
   return simgear::ResourceManager::instance()->findPath(branch);
+}
+
+SGPath FGGlobals::resolve_ressource_path(const std::string& branch) const
+{
+  return simgear::ResourceManager::instance()
+    ->findPath(branch, SGPath(fgGetString("/sim/aircraft-dir")));
 }
 
 FGRenderer *
@@ -519,11 +522,4 @@ void FGGlobals::set_warp_delta( long int d )
   fgSetInt("/sim/time/warp-delta", d);
 }
 
-void FGGlobals::set_current_panel( FGPanel *cp )
-{
-  current_panel = cp;
-// poke the renderer to rebuild the scene node as necessary
-  get_renderer()->panelChanged();
-}
-    
 // end of globals.cxx

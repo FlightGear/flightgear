@@ -15,7 +15,6 @@
 #ifndef __FGFONTCACHE_HXX
 #define __FGFONTCACHE_HXX
 
-#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 

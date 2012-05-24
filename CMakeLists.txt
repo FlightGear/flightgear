@@ -151,11 +151,13 @@ if (MSVC AND MSVC_3RDPARTY_ROOT)
     if (CMAKE_CL_64)
         set( OSG_MSVC ${OSG_MSVC}-64 )
         set( MSVC_3RDPARTY_DIR 3rdParty.x64 )
+		set( BOOST_LIB lib64 )
     else (CMAKE_CL_64)
         set( MSVC_3RDPARTY_DIR 3rdParty )
+		set( BOOST_LIB lib )
     endif (CMAKE_CL_64)
 
-    set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/lib )
+    set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/lib $(BOOST_ROOT)/$(BOOST_LIB) )
     set (CMAKE_INCLUDE_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/include)
     set (BOOST_ROOT         ${MSVC_3RDPARTY_ROOT}/boost_1_44_0)
     set (OPENAL_INCLUDE_DIR ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include)
@@ -252,19 +254,6 @@ check_include_file(unistd.h   HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)
 check_include_file(windows.h  HAVE_WINDOWS_H)
 
-# definition depends on OSG version
-set(CMAKE_REQUIRED_INCLUDES ${OPENSCENEGRAPH_INCLUDE_DIRS})
-
-check_cxx_source_compiles(
-    "#include <osg/CullSettings>
-    int main()
-    {
-        osg::CullSettings::VariablesMask mask = osg::CullSettings::CLEAR_MASK;
-        return 0;
-    }
-    "
-    HAVE_CULLSETTINGS_CLEAR_MASK)
-
 if(ENABLE_RTI)
     find_package(RTI)
     if(RTI_FOUND)
@@ -273,11 +262,13 @@ if(ENABLE_RTI)
 endif(ENABLE_RTI)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-    set(WARNING_FLAGS -Wall)
+    set(WARNING_FLAGS_CXX "-Wall")
+    set(WARNING_FLAGS_C   "-Wall")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") 
-   set (WARNING_FLAGS "-Wall -Wno-overloaded-virtual")
+   set (WARNING_FLAGS_CXX "-Wall -Wno-overloaded-virtual")
+   set (WARNING_FLAGS_C   "-Wall")
 endif() 
 
 if(WIN32)
@@ -297,8 +288,10 @@ if(WIN32)
     set(NOMINMAX 1)
 endif(WIN32)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT")
+set (BOOST_CXX_FLAGS "-DBOOST_MULTI_INDEX_DISABLE_SERIALIZATION -DBOOST_BIMAP_DISABLE_SERIALIZATION")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS_C} ${MSVC_FLAGS} -D_REENTRANT")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS_CXX} ${MSVC_FLAGS} -D_REENTRANT ${BOOST_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MSVC_LD_FLAGS}")
 
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}

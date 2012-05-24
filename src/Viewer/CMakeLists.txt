@@ -8,6 +8,7 @@ set(SOURCES
 	fg_os_osgviewer.cxx
 	fgviewer.cxx
 	renderer.cxx
+	renderingpipeline.cxx
 	splash.cxx
 	viewer.cxx
 	viewmgr.cxx
@@ -20,6 +21,7 @@ set(HEADERS
 	WindowSystemAdapter.hxx
 	fgviewer.hxx
 	renderer.hxx
+	renderingpipeline.hxx
 	splash.hxx
 	viewer.hxx
 	viewmgr.hxx

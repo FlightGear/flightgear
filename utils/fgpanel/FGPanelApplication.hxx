@@ -21,7 +21,6 @@
 #include "FGGLApplication.hxx"
 #include "FGPanelProtocol.hxx"
 
-#include <simgear/math/SGMath.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
 

@@ -60,6 +60,10 @@
 #  include <shellapi.h>
 #endif
 
+#ifdef SG_MAC
+# include "FGCocoaMenuBar.hxx" // for cocoaOpenUrl
+#endif
+
 #include "gui.h"
 
 using std::string;
@@ -182,6 +186,15 @@ bool openBrowser(string address)
         }
     }
 
+#ifdef SG_MAC
+  if (address.find("://")==string::npos) {
+    address = "file://" + address;
+  }
+  
+  cocoaOpenUrl(address);
+  return ok;
+#endif
+  
 #ifndef _WIN32
 
     string command = globals->get_browser();

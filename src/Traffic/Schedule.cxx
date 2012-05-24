@@ -41,7 +41,6 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/xml/easyxml.hxx>
 
@@ -57,7 +56,7 @@
 
 /******************************************************************************
  * the FGAISchedule class contains data members and code to maintain a
- * schedule of Flights for an articically controlled aircraft. 
+ * schedule of Flights for an artificially controlled aircraft.
  *****************************************************************************/
 FGAISchedule::FGAISchedule()
 {
@@ -158,6 +157,15 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
 
 FGAISchedule::~FGAISchedule()
 {
+    // remove related object from AI manager
+    if (AIManagerRef)
+    {
+        FGAIManager* aimgr = (FGAIManager *) globals-> get_subsystem("ai-model");
+        if (aimgr)
+            aimgr->destroyObject(AIManagerRef);
+        AIManagerRef = 0;
+    }
+
 /*  for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
     {
       delete (*flt);
@@ -220,7 +228,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
      firstRun = false;
   }
   
-    FGScheduledFlight* flight = flights.front();
+  FGScheduledFlight* flight = flights.front();
   if (!deptime) {
     deptime = flight->getDepartureTime();
     //cerr << "Settiing departure time " << deptime << endl;
@@ -243,10 +251,10 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     // Don't just update: check whether we need to load a new leg. etc.
     // This update occurs for distant aircraft, so we can update the current leg
     // and detach it from the current list of aircraft. 
-	  flight->update();
+    flight->update();
     flights.erase(flights.begin()); // pop_front(), effectively
-	  return true;
-	}
+    return true;
+  }
   
   FGAirport* dep = flight->getDepartureAirport();
   FGAirport* arr = flight->getArrivalAirport();
@@ -305,6 +313,18 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   return createAIAircraft(flight, speed, deptime);
 }
 
+bool FGAISchedule::validModelPath(const std::string& modelPath)
+{
+    SGPath mp(globals->get_fg_root());
+    SGPath mp_ai = mp;
+
+    mp.append(modelPath);
+    mp_ai.append("AI");
+    mp_ai.append(modelPath);
+
+    return mp.exists() || mp_ai.exists();
+}
+
 bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime)
 {
   FGAirport* dep = flight->getDepartureAirport();
@@ -321,7 +341,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   mp_ai.append(modelPath);
 
   if (!mp.exists() && !mp_ai.exists()) {
-    SG_LOG(SG_GENERAL, SG_WARN, "TrafficManager: Could not load model " << mp.str());
+    SG_LOG(SG_GENERAL, SG_WARN, "TrafficManager: Could not load model " << mp_ai.str());
     return true;
   }
 
@@ -338,7 +358,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   aircraft->setBank(0);
       
   courseToDest = SGGeodesy::courseDeg(position, arr->geod());
-    FGAIFlightPlan *fp = new FGAIFlightPlan(aircraft, flightPlanName, courseToDest, deptime, 
+  FGAIFlightPlan *fp = new FGAIFlightPlan(aircraft, flightPlanName, courseToDest, deptime,
                                             dep, arr, true, radius, 
                                             flight->getCruiseAlt()*100, 
                                             position.getLatitudeDeg(), 

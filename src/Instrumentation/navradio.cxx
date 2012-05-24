@@ -23,8 +23,6 @@
 #  include <config.h>
 #endif
 
-#include "navradio.hxx"
-
 #include <sstream>
 #include <cstring>
 
@@ -42,6 +40,8 @@
 #include <Airports/runways.hxx>
 #include <Navaids/navlist.hxx>
 #include <Main/util.hxx>
+
+#include "navradio.hxx"
 
 using std::string;
 

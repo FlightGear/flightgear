@@ -16,7 +16,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
 
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
@@ -37,12 +41,57 @@ FGLocale::~FGLocale()
 {
 }
 
+#ifdef _WIN32
+/**
+ * Determine locale/language settings on Windows.
+ *
+ * Copyright (C) 1997, 2002, 2003 Martin von Loewis
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies.
+ *
+ * This software comes with no warranty. Use at your own risk.
+ */
+const char*
+FGLocale::getUserLanguage()
+{
+    static char locale[100] = {0};
+
+    if (GetLocaleInfo(LOCALE_USER_DEFAULT,
+                      LOCALE_SISO639LANGNAME,
+                      locale, sizeof(locale)))
+    {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "Detected locale's language setting: " << locale);
+        size_t i = strlen(locale);
+        locale[i++] = '_';
+        if (GetLocaleInfo(LOCALE_USER_DEFAULT,
+                          LOCALE_SISO3166CTRYNAME,
+                          locale+i, (int)(sizeof(locale)-i)))
+            return locale;
+
+        locale[--i] = 0;
+        SG_LOG(SG_GENERAL, SG_WARN, "Failed to detected locale's country setting.");
+        return locale;
+    }
+
+    return NULL;
+}
+#else
+/**
+ * Determine locale/language settings on Linux (and Mac?).
+ */
+const char*
+FGLocale::getUserLanguage()
+{
+    return ::getenv("LANG");
+}
+#endif
+
 // Search property tree for matching locale description
 SGPropertyNode*
 FGLocale::findLocaleNode(const string& language)
 {
-    SG_LOG(SG_GENERAL, SG_INFO, "Searching language resource for locale: " << language);
-
     SGPropertyNode* node = NULL;
 
     // remove character encoding from the locale spec, i.e. "de_DE.utf8" => "de_DE"
@@ -54,15 +103,7 @@ FGLocale::findLocaleNode(const string& language)
             return node;
     }
 
-    // try country's default resource, i.e. "de_DE" => "de"
-    pos = language.find("_");
-    if ((pos != string::npos)&&(pos>0))
-    {
-        node = findLocaleNode(language.substr(0, pos));
-        if (node)
-            return node;
-    }
-
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Searching language resource for locale: " << language);
     // search locale using full string
     vector<SGPropertyNode_ptr> localeList = _intl->getChildren("locale");
 
@@ -72,9 +113,21 @@ FGLocale::findLocaleNode(const string& language)
 
        for (size_t j = 0; j < langList.size(); j++)
        {
-          if (!language.compare(langList[j]->getStringValue()))
-             return localeList[i];
+           if (!language.compare(langList[j]->getStringValue()))
+           {
+               SG_LOG(SG_GENERAL, SG_INFO, "Found language resource for: " << language);
+               return localeList[i];
+           }
        }
+    }
+
+    // try country's default resource, i.e. "de_DE" => "de"
+    pos = language.find("_");
+    if ((pos != string::npos)&&(pos>0))
+    {
+        node = findLocaleNode(language.substr(0, pos));
+        if (node)
+            return node;
     }
 
     return NULL;
@@ -85,14 +138,17 @@ FGLocale::findLocaleNode(const string& language)
 bool
 FGLocale::selectLanguage(const char *language)
 {
-    // Use environment setting when no language is given.
+    // Use system setting when no language is given.
     if ((language == NULL)||(language[0]==0))
-        language = ::getenv("LANG");
+    {
+        language = getUserLanguage();
+        SG_LOG(SG_GENERAL, SG_INFO, "System language: " << ((language) ? language : "<unavailable>"));
+    }
 
     // Use plain C locale if nothing is available.
-    if (language == NULL)
+    if ((language == NULL)||(language[0]==0))
     {
-        SG_LOG(SG_GENERAL, SG_INFO, "Unable to detect the language" );
+        SG_LOG(SG_GENERAL, SG_WARN, "Unable to detect system language" );
         language = "C";
     }
 
@@ -120,7 +176,7 @@ FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
     const char *path_str = stringNode->getStringValue(resource, NULL);
     if (!path_str)
     {
-        SG_LOG(SG_GENERAL, SG_ALERT, "No path in " << stringNode->getPath() << "/" << resource << ".");
+        SG_LOG(SG_GENERAL, SG_WARN, "No path in " << stringNode->getPath() << "/" << resource << ".");
         return NULL;
     }
 

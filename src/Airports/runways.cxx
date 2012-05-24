@@ -172,7 +172,7 @@ void FGRunway::setReciprocalRunway(FGRunway* other)
   _reciprocal = other;
 }
 
-std::vector<flightgear::SID*> FGRunway::getSIDs()
+std::vector<flightgear::SID*> FGRunway::getSIDs() const
 {
   std::vector<flightgear::SID*> result;
   for (unsigned int i=0; i<_airport->numSIDs(); ++i) {
@@ -185,7 +185,7 @@ std::vector<flightgear::SID*> FGRunway::getSIDs()
   return result;
 }
 
-std::vector<flightgear::STAR*> FGRunway::getSTARs()
+std::vector<flightgear::STAR*> FGRunway::getSTARs() const
 {
   std::vector<flightgear::STAR*> result;
   for (unsigned int i=0; i<_airport->numSTARs(); ++i) {
@@ -194,6 +194,19 @@ std::vector<flightgear::STAR*> FGRunway::getSTARs()
       result.push_back(s);
     }
   } // of STARs at the airport iteration
+  
+  return result;
+}
+
+std::vector<flightgear::Approach*> FGRunway::getApproaches() const
+{
+  std::vector<flightgear::Approach*> result;
+  for (unsigned int i=0; i<_airport->numApproaches(); ++i) {
+    flightgear::Approach* s = _airport->getApproachByIndex(i);
+    if (s->runway() == this) {
+      result.push_back(s);
+    }
+  } // of approaches at the airport iteration
   
   return result;
 }

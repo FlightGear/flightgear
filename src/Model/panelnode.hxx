@@ -14,7 +14,7 @@ class SGPropertyNode;
 class FGPanelNode : public osg::Drawable
 {
 public:
-    FGPanelNode(FGPanel* panel);
+    FGPanelNode();
   
     FGPanelNode(SGPropertyNode* props);
     virtual ~FGPanelNode();
@@ -37,17 +37,27 @@ public:
     virtual void accept(osg::PrimitiveFunctor& functor) const;
   
     static osg::Node* load(SGPropertyNode *n);
-    static osg::Node* createNode(FGPanel* panel);
+    static osg::Node* create2DPanelNode();
   
     osg::Matrix transformMatrix() const;
   
+    void setPanelPath(const std::string& panel);
+    void lazyLoad();
+  
+    /**
+      * is visible in 2D mode or not?
+      */
+    bool isVisible2d() const;
 private:
+    void commonInit();
     void initWithPanel();
     
     SGSharedPtr<FGPanel> _panel;
+    std::string _panelPath;
   
     bool _resizeToViewport;
-
+    bool _depthTest;
+  
     // Panel corner coordinates
     osg::Vec3 _bottomLeft, _topLeft, _bottomRight;
 

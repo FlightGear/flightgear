@@ -31,7 +31,6 @@
 
 
 #include <simgear/compiler.h>
-#include <simgear/route/waypoint.hxx>
 
 #include <string>
 #include <vector>

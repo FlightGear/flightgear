@@ -29,6 +29,7 @@
 namespace flightgear
 {
   class Hold;
+  class FlightPlan;
 }
 
 typedef std::vector<SGGeod> SGGeodVec;
@@ -37,12 +38,15 @@ class RoutePath
 {
 public:
   RoutePath(const flightgear::WayptVec& wpts);
-
+  RoutePath(const flightgear::FlightPlan* fp);
+  
   SGGeodVec pathForIndex(int index) const;
   
   SGGeod positionForIndex(int index) const;
   
 private:
+  void commonInit();
+  
   class PathCtx;
   
   SGGeodVec pathForHold(flightgear::Hold* hold) const;

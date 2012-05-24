@@ -28,6 +28,7 @@
 #include <boost/tuple/tuple.hpp>
 
 #include <simgear/props/props.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <Main/fg_props.hxx>
 

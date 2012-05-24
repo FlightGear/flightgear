@@ -371,6 +371,10 @@ void fgSplashInit () {
 }
 
 void fgSplashProgress ( const char *text ) {
+  if (!strcmp(fgGetString("/sim/startup/splash-progress-text"), text)) {
+    return;
+  }
+  
   SG_LOG( SG_VIEW, SG_INFO, "Splash screen progress " << text );
   fgSetString("/sim/startup/splash-progress-text", text);
 }

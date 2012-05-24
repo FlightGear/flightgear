@@ -12,6 +12,7 @@
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
 #include <Navaids/waypoint.hxx>
+#include <Navaids/FlightPlan.hxx>
 #include <Navaids/positioned.hxx>
 
 namespace flightgear {
@@ -54,10 +55,23 @@ double pointsKnownDistanceFromGC(const SGGeoc& a, const SGGeoc&b, const SGGeoc& 
 RoutePath::RoutePath(const flightgear::WayptVec& wpts) :
   _waypts(wpts)
 {
+  commonInit();
+}
+
+RoutePath::RoutePath(const flightgear::FlightPlan* fp)
+{
+  for (int l=0; l<fp->numLegs(); ++l) {
+    _waypts.push_back(fp->legAtIndex(l)->waypoint());
+  }
+  commonInit();
+}
+
+void RoutePath::commonInit()
+{
   _pathClimbFPM = 1200;
   _pathDescentFPM = 800;
   _pathIAS = 190; 
-  _pathTurnRate = 3.0; // 3 deg/sec = 180def/min = standard rate turn
+  _pathTurnRate = 3.0; // 3 deg/sec = 180def/min = standard rate turn  
 }
 
 SGGeodVec RoutePath::pathForIndex(int index) const

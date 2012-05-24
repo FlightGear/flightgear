@@ -32,7 +32,6 @@
 #include <simgear/structure/OSGVersion.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
-#include <simgear/scene/tgdb/userdata.hxx>
 
 #include <algorithm>
 #include <cstring>
@@ -55,6 +54,15 @@
 
 #include <osgViewer/GraphicsWindow>
 #include <osgViewer/Renderer>
+
+namespace flightgear {
+const char* MAIN_CAMERA = "main";
+const char* FAR_CAMERA = "far";
+const char* GEOMETRY_CAMERA = "geometry";
+const char* SHADOW_CAMERA = "shadow";
+const char* LIGHTING_CAMERA = "lighting";
+const char* DISPLAY_CAMERA = "display";
+}
 
 static osg::Matrix
 invert(const osg::Matrix& matrix)
@@ -188,7 +196,11 @@ void CameraInfo::updateCameras()
     for (CameraMap::iterator ii = cameras.begin(); ii != cameras.end(); ++ii ) {
         float f = ii->second.scaleFactor;
         if ( f == 0.0f ) continue;
-        ii->second.camera->getViewport()->setViewport(x*f, y*f, width*f, height*f);
+
+        if (ii->second.camera->getRenderTargetImplementation() == osg::Camera::FRAME_BUFFER_OBJECT)
+            ii->second.camera->getViewport()->setViewport(0, 0, width*f, height*f);
+        else
+            ii->second.camera->getViewport()->setViewport(x*f, y*f, width*f, height*f);
     }
 
     for (RenderBufferMap::iterator ii = buffers.begin(); ii != buffers.end(); ++ii ) {
@@ -242,7 +254,7 @@ void CameraInfo::resized(double w, double h)
     }
 }
 
-osg::Camera* CameraInfo::getCamera(CameraKind k) const
+osg::Camera* CameraInfo::getCamera(const std::string& k) const
 {
     CameraMap::const_iterator ii = cameras.find( k );
     if (ii == cameras.end())
@@ -250,7 +262,7 @@ osg::Camera* CameraInfo::getCamera(CameraKind k) const
     return ii->second.camera.get();
 }
 
-osg::Texture2D* CameraInfo::getBuffer(RenderBufferInfo::Kind k) const
+osg::Texture2D* CameraInfo::getBuffer(const std::string& k) const
 {
     RenderBufferMap::const_iterator ii = buffers.find(k);
     if (ii == buffers.end())
@@ -266,8 +278,13 @@ int CameraInfo::getMainSlaveIndex() const
 void CameraInfo::setMatrices(osg::Camera* c)
 {
     view->set( c->getViewMatrix() );
-    viewInverse->set( osg::Matrix::inverse( c->getViewMatrix() ) );
+    osg::Matrixd vi = c->getInverseViewMatrix();
+    viewInverse->set( vi );
     projInverse->set( osg::Matrix::inverse( c->getProjectionMatrix() ) );
+    osg::Vec4d pos = osg::Vec4d(0., 0., 0., 1.) * vi;
+    worldPosCart->set( osg::Vec3f( pos.x(), pos.y(), pos.z() ) );
+    SGGeod pos2 = SGGeod::fromCart( SGVec3d( pos.x(), pos.y(), pos.z() ) );
+    worldPosGeod->set( osg::Vec3f( pos2.getLongitudeRad(), pos2.getLatitudeRad(), pos2.getElevationM() ) );
 }
 
 void CameraGroup::update(const osg::Vec3d& position,
@@ -742,9 +759,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     camera->setInheritanceMask(CullSettings::ALL_VARIABLES
                                & ~(CullSettings::CULL_MASK
                                    | CullSettings::CULLING_MODE
-#if defined(HAVE_CULLSETTINGS_CLEAR_MASK)
                                    | CullSettings::CLEAR_MASK
-#endif
                                    ));
 
     osg::Matrix vOff;
@@ -991,9 +1006,7 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     camera->setInheritanceMask(CullSettings::ALL_VARIABLES
                                & ~(CullSettings::COMPUTE_NEAR_FAR_MODE
                                    | CullSettings::CULLING_MODE
-#if defined(HAVE_CULLSETTINGS_CLEAR_MASK)
                                    | CullSettings::CLEAR_MASK
-#endif
                                    ));
     camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     camera->setCullingMode(osg::CullSettings::NO_CULLING);
@@ -1027,8 +1040,6 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
 CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
                                            SGPropertyNode* gnode)
 {
-    sgUserDataInit( globals->get_props() );
-
     CameraGroup* cgroup = new CameraGroup(viewer);
     for (int i = 0; i < gnode->nChildren(); ++i) {
         SGPropertyNode* pNode = gnode->getChild(i);

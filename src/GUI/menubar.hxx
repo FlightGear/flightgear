@@ -51,7 +51,7 @@ public:
      * Take care of mapping it to the appropriate translation, if available.
      * Returns an UTF-8 encoded string.
      */
-    const char* getLocalizedLabel(SGPropertyNode* node);
+    static const char* getLocalizedLabel(SGPropertyNode* node);
 
 };
 

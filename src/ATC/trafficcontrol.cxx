@@ -273,8 +273,8 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
     if (intentions.size()) {
         for (i = intentions.begin(); i != intentions.end(); i++) {
             if ((*i) > 0) {
-                if ((currentTargetNode ==
-                        net->findSegment(*i)->getEnd()->getIndex())) {
+                if (currentTargetNode ==
+                        net->findSegment(*i)->getEnd()->getIndex()) {
                     //cerr << "Current crosses at " << currentTargetNode <<endl;
                     return currentTargetNode;
                 }

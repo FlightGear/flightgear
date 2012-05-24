@@ -110,6 +110,23 @@ static void setItemShortcutFromString(NSMenuItem* item, const string& s)
 }
 
 namespace {
+  class CocoaAutoreleasePool
+  {
+  public:
+    CocoaAutoreleasePool()
+    {
+      pool = [[NSAutoreleasePool alloc] init];
+    }
+    
+    ~CocoaAutoreleasePool()
+    {
+      [pool release];
+    }
+    
+  private:
+    NSAutoreleasePool* pool;
+  };
+  
   class CocoaEnabledListener : public SGPropertyChangeListener
   {
   public:
@@ -120,6 +137,7 @@ namespace {
     
     virtual void valueChanged(SGPropertyNode *node) 
     {
+      CocoaAutoreleasePool pool;
       BOOL b = node->getBoolValue();
       [item setEnabled:b];
     }
@@ -137,6 +155,7 @@ FGCocoaMenuBar::CocoaMenuBarPrivate::CocoaMenuBarPrivate()
   
 FGCocoaMenuBar::CocoaMenuBarPrivate::~CocoaMenuBarPrivate()
 {
+  CocoaAutoreleasePool pool;
   [delegate release];
 }
   
@@ -153,16 +172,9 @@ void FGCocoaMenuBar::CocoaMenuBarPrivate::menuFromProps(NSMenu* menu, SGProperty
       n->setBoolValue("enabled", true);
     }
     
-    string shortcut;
-    string l = n->getStringValue("label");
-    string::size_type pos = l.find("(");
-    if (pos != string::npos) {
-      string full(l);
-      l = full.substr(0, pos);
-      shortcut = full.substr(pos + 1, full.size() - (pos + 2));
-    }
-    
+    string l = getLocalizedLabel(n);
     NSString* label = stdStringToCocoa(strutils::simplify(l));
+    string shortcut = n->getStringValue("key");
     
     NSMenuItem* item;
     if (index >= [menu numberOfItems]) {
@@ -227,6 +239,8 @@ FGCocoaMenuBar::~FGCocoaMenuBar()
 
 void FGCocoaMenuBar::init()
 {
+  CocoaAutoreleasePool pool;
+  
   NSMenu* mainBar = [[NSApplication sharedApplication] mainMenu];
   SGPropertyNode_ptr props = fgGetNode("/sim/menubar/default",true);
   
@@ -237,7 +251,7 @@ void FGCocoaMenuBar::init()
   }
   
   BOOST_FOREACH(SGPropertyNode_ptr n, props->getChildren("menu")) {
-    NSString* label = stdStringToCocoa(n->getStringValue("label"));
+    NSString* label = stdStringToCocoa(getLocalizedLabel(n));
     NSMenuItem* item = [mainBar itemWithTitle:label];
     NSMenu* menu;
     
@@ -282,4 +296,11 @@ void FGCocoaMenuBar::show()
 void FGCocoaMenuBar::hide()
 {
   // no-op
+}
+
+void cocoaOpenUrl(const std::string& url)
+{
+  CocoaAutoreleasePool pool;
+  NSURL* nsu = [NSURL URLWithString:stdStringToCocoa(url)];
+  [[NSWorkspace sharedWorkspace] openURL:nsu];
 }

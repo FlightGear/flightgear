@@ -11,7 +11,7 @@ fi
 if [ "x$2" != "x" ]; then
     VERSION="$2"
 else
-    VERSION="2.5"
+    VERSION="2.7"
 fi
 
 echo base dir = $BASE, version = $VERSION
@@ -41,6 +41,7 @@ tar \
 		data/Aircraft/Instruments-3d \
 		data/Aircraft/UIUC \
 		data/Aircraft/777 \
+		data/Aircraft/777-200 \
 		data/Aircraft/A6M2 \
 		data/Aircraft/ASK13 \
 		data/Aircraft/b1900d \

@@ -403,9 +403,9 @@ FGMultiplayMgr::init (void)
     SG_LOG(SG_NETWORK, SG_WARN, "FGMultiplayMgr::init - already initialised");
     return;
   }
-  
+
   fgSetBool("/sim/multiplay/online", false);
-  
+
   //////////////////////////////////////////////////
   //  Set members from property values
   //////////////////////////////////////////////////
@@ -428,8 +428,8 @@ FGMultiplayMgr::init (void)
     if (strncmp (mServer.getHost(), "0.0.0.0", 8) == 0) {
       mHaveServer = false;
       SG_LOG(SG_NETWORK, SG_ALERT,
-        "FGMultiplayMgr - Could not resolve '"
-        << txAddress << "'. Multiplayer mode disabled.");
+        "Cannot enable multiplayer mode: resolving MP server address '"
+        << txAddress << "' failed.");
       return;
     } else {
       SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - have server");
@@ -438,13 +438,13 @@ FGMultiplayMgr::init (void)
     if (rxPort <= 0)
       rxPort = txPort;
   } else {
-    SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - no transmission address. Multiplayer mode disabled");
+    SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - multiplayer mode disabled (no MP server specificed).");
     return;
   }
 
   if (rxPort <= 0) {
-    SG_LOG(SG_NETWORK, SG_INFO,
-      "FGMultiplayMgr - No receiver port. Multiplayer mode disabled.");
+    SG_LOG(SG_NETWORK, SG_ALERT,
+      "Cannot enable multiplayer mode: No receiver port specified.");
     return;
   }
   if (mCallsign.empty())
@@ -457,14 +457,14 @@ FGMultiplayMgr::init (void)
   
   mSocket.reset(new simgear::Socket());
   if (!mSocket->open(false)) {
-    SG_LOG( SG_NETWORK, SG_WARN,
-            "FGMultiplayMgr - Failed to create data socket. Multiplayer mode disabled." );
+    SG_LOG( SG_NETWORK, SG_ALERT,
+            "Cannot enable multiplayer mode: creating data socket failed." );
     return;
   }
   mSocket->setBlocking(false);
   if (mSocket->bind(rxAddress.c_str(), rxPort) != 0) {
     SG_LOG( SG_NETWORK, SG_ALERT,
-            "FGMultiplayMgr - Failed to bind receive socket. Multiplayer mode disabled. "
+            "Cannot enable multiplayer mode: binding receive socket failed. "
             << strerror(errno) << "(errno " << errno << ")");
     return;
   }
@@ -477,6 +477,12 @@ FGMultiplayMgr::init (void)
   mInitialised = true;
 
   SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer mode active!");
+
+  if (!fgGetBool("/sim/ai/enabled"))
+  {
+      // multiplayer depends on AI module
+      fgSetBool("/sim/ai/enabled", true);
+  }
 } // FGMultiplayMgr::init()
 //////////////////////////////////////////////////////////////////////
 

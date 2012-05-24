@@ -34,7 +34,6 @@
 #include <osg/Node>
 #include <osgDB/FileUtils>
 
-#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>

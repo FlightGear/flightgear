@@ -10,7 +10,6 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
-#include <simgear/math/SGMath.hxx>
 
 #include <Main/globals.hxx>
 

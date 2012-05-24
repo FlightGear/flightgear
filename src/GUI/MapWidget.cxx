@@ -9,8 +9,6 @@
 #include <plib/puAux.h>
 
 #include <simgear/sg_inlines.h>
-#include <simgear/route/waypoint.hxx>
-#include <simgear/sg_inlines.h>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx> // for magVar julianDate
@@ -682,7 +680,7 @@ void MapWidget::paintRoute()
     return;
   }
 
-  RoutePath path(_route->waypts());
+  RoutePath path(_route->flightPlan());
 
 // first pass, draw the actual lines
   glLineWidth(2.0);
@@ -889,7 +887,7 @@ public:
   {
     _heliports = nd->getBoolValue("show-heliports", false);
     _hardRunwaysOnly = nd->getBoolValue("hard-surfaced-airports", true);
-    _minLengthFt = nd->getDoubleValue("min-runway-length-ft", 2000.0);
+    _minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
   }
 
   virtual FGPositioned::Type maxType() const {

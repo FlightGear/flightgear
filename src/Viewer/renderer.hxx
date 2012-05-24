@@ -10,6 +10,8 @@
 #include <osg/Matrix>
 #include <osg/Vec3>
 
+#include "renderingpipeline.hxx"
+
 namespace osg
 {
 class Camera;
@@ -115,11 +117,7 @@ public:
     SGSky* getSky() const { return _sky; }
 
 	void setPlanes( double zNear, double zFar );
-    
-    /**
-     * inform the renderer when the global (2D) panel is changed
-     */
-    void panelChanged();
+
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
@@ -134,13 +132,28 @@ protected:
     SGTimeStamp _splash_time;
     SGSky* _sky;
     bool _classicalRenderer;
+    std::string _renderer;
     int _shadowMapSize;
     size_t _numCascades;
     float _cascadeFar[4];
+    bool _useColorForDepth;
 
-    osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
-    osg::Camera* buildDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
-    osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc );
+    flightgear::CameraInfo* buildCameraFromRenderingPipeline(FGRenderingPipeline* rpipe, flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
+                                        const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
+
+    void buildBuffers(FGRenderingPipeline* rpipe, flightgear::CameraInfo* info);
+    void buildStage(flightgear::CameraInfo* info, FGRenderingPipeline::Stage* stage, flightgear::CameraGroup* cgroup, osg::Camera* mainCamera, const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
+    osg::Node* buildPass(flightgear::CameraInfo* info, FGRenderingPipeline::Pass* pass);
+    osg::Node* buildLightingSkyCloudsPass(FGRenderingPipeline::Pass* pass);
+    osg::Node* buildLightingLightsPass(flightgear::CameraInfo* info, FGRenderingPipeline::Pass* pass);
+
+    osg::Camera* buildDeferredGeometryCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const FGRenderingPipeline::AttachmentList& attachments );
+    osg::Camera* buildDeferredShadowCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const std::string& name, const FGRenderingPipeline::AttachmentList& attachments );
+    osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage );
+    osg::Camera* buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage );
+    osg::Camera* buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const FGRenderingPipeline::Pass* pass );
+    void buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraInfo* info, const std::string& name, osg::GraphicsContext* gc );
+
     void updateShadowCascade(const flightgear::CameraInfo* info, osg::Camera* camera, osg::Group* grp, int idx, double left, double right, double bottom, double top, double zNear, double f1, double f2);
     osg::Vec3 getSunDirection() const;
     osg::ref_ptr<osg::Uniform> _ambientFactor;
@@ -152,6 +165,9 @@ protected:
     osg::ref_ptr<osg::Uniform> _fogDensity;
     osg::ref_ptr<osg::Uniform> _shadowNumber;
     osg::ref_ptr<osg::Uniform> _shadowDistances;
+    osg::ref_ptr<osg::Uniform> _depthInColor;
+
+    osg::ref_ptr<FGRenderingPipeline> _pipeline;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

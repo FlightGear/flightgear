@@ -12,7 +12,9 @@ set(SOURCES
 	route.cxx
 	routePath.cxx
 	waypoint.cxx
-)
+    LevelDXML.cxx
+    FlightPlan.cxx
+	)
 
 set(HEADERS
     airways.hxx
@@ -26,6 +28,8 @@ set(HEADERS
 	route.hxx
 	routePath.hxx
 	waypoint.hxx
-)
+    LevelDXML.hxx
+    FlightPlan.hxx
+    )
 
 flightgear_component(Navaids "${SOURCES}" "${HEADERS}")

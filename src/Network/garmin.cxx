@@ -25,6 +25,7 @@
 #endif
 
 #include <iostream>
+#include <cstdlib>
 #include <cstring>
 
 #include <simgear/debug/logstream.hxx>

@@ -5,9 +5,9 @@
 
 #include <cstring>
 
-#include <simgear/math/SGMath.hxx>
 #include <simgear/nasal/nasal.h>
 #include <simgear/props/props.hxx>
+#include <simgear/props/vectorPropTemplates.hxx>
 
 #include <Main/globals.hxx>
 

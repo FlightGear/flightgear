@@ -50,51 +50,36 @@ namespace flightgear
 class GraphicsWindow;
 
 struct RenderBufferInfo {
-	enum Kind {
-		DEPTH_BUFFER,
-		NORMAL_BUFFER,
-		DIFFUSE_BUFFER,
-		SPEC_EMIS_BUFFER,
-		LIGHTING_BUFFER,
-        SHADOW_BUFFER
-	};
-
-	RenderBufferInfo(osg::Texture2D* t = 0, float s = 1.0 ) : texture(t), scaleFactor(s) {}
-	osg::ref_ptr<osg::Texture2D> texture;
-	float scaleFactor;
+    RenderBufferInfo(osg::Texture2D* t = 0, float s = 1.0 ) : texture(t), scaleFactor(s) {}
+    osg::ref_ptr<osg::Texture2D> texture;
+    float scaleFactor;
 };
-typedef std::map<RenderBufferInfo::Kind,RenderBufferInfo> RenderBufferMap;
-typedef std::map<osg::Camera::BufferComponent,size_t> AttachmentMap;
+typedef std::map<std::string,RenderBufferInfo> RenderBufferMap;
+typedef std::map<osg::Camera::BufferComponent,std::string> AttachmentMap;
 
 struct RenderStageInfo {
-	RenderStageInfo(osg::Camera* camera_ = 0, int si = -1, bool fs = false)
-		: camera(camera_), slaveIndex(si), scaleFactor(1.0f), fullscreen(fs)
-		, resizable(true)
-	{
-	}
+    RenderStageInfo(osg::Camera* camera_ = 0, int si = -1, bool fs = false)
+        : camera(camera_), slaveIndex(si), scaleFactor(1.0f), fullscreen(fs)
+        , resizable(true)
+    {
+    }
 
-	osg::ref_ptr<osg::Camera> camera;
-	AttachmentMap buffers;
-	int slaveIndex;
-	float scaleFactor;
-	bool fullscreen;
-	bool resizable;
+    osg::ref_ptr<osg::Camera> camera;
+    AttachmentMap buffers;
+    int slaveIndex;
+    float scaleFactor;
+    bool fullscreen;
+    bool resizable;
 };
 
-enum CameraKind {
-	MAIN_CAMERA,
-	FAR_CAMERA,
-	GEOMETRY_CAMERA,
-	SHADOW_CAMERA,
-	BLOOM_CAMERA_1,
-	BLOOM_CAMERA_2,
-	AO_CAMERA_1,
-	AO_CAMERA_2,
-	AO_CAMERA_3,
-	LIGHTING_CAMERA,
-	DISPLAY_CAMERA
-};
-typedef std::map<CameraKind,RenderStageInfo> CameraMap;
+extern const char* MAIN_CAMERA;
+extern const char* FAR_CAMERA;
+extern const char* GEOMETRY_CAMERA;
+extern const char* SHADOW_CAMERA;
+extern const char* LIGHTING_CAMERA;
+extern const char* DISPLAY_CAMERA;
+
+typedef std::map<std::string,RenderStageInfo> CameraMap;
 
 /** A wrapper around osg::Camera that contains some extra information.
  */
@@ -109,16 +94,18 @@ struct CameraInfo : public osg::Referenced
           bufferSize( new osg::Uniform("fg_BufferSize", osg::Vec2f() ) ),
           projInverse( new osg::Uniform( "fg_ProjectionMatrixInverse", osg::Matrixf() ) ),
           viewInverse( new osg::Uniform( "fg_ViewMatrixInverse",osg::Matrixf() ) ),
+          worldPosCart( new osg::Uniform( "fg_CameraPositionCart", osg::Vec3f() ) ),
+          worldPosGeod( new osg::Uniform( "fg_CameraPositionGeod", osg::Vec3f() ) ),
           view( new osg::Uniform( "fg_ViewMatrix",osg::Matrixf() ) ),
           du( new osg::Uniform( "fg_du",osg::Vec4() ) ),
           dv( new osg::Uniform( "fg_dv",osg::Vec4() ) )
     {
     }
 
-	/** Update and resize cameras
-	 */
-	void updateCameras();
-	void resized(double w, double h);
+    /** Update and resize cameras
+     */
+    void updateCameras();
+    void resized(double w, double h);
     /** The name as given in the config file.
      */
     std::string name;
@@ -146,19 +133,19 @@ struct CameraInfo : public osg::Referenced
 
     /** the camera objects
      */
-	CameraMap cameras;
-	void addCamera( CameraKind k, osg::Camera* c, int si = -1, bool fs = false ) { cameras[k].camera = c; cameras[k].slaveIndex = si; cameras[k].fullscreen = fs; }
-	void addCamera( CameraKind k, osg::Camera* c, bool fs ) { cameras[k].camera = c; cameras[k].fullscreen = fs; }
-	void addCamera( CameraKind k, osg::Camera* c, float s ) { cameras[k].camera = c; cameras[k].scaleFactor = s; }
-	osg::Camera* getCamera(CameraKind k) const;
-	int getMainSlaveIndex() const;
-	RenderStageInfo& getRenderStageInfo( CameraKind k ) { return cameras[k]; }
+    CameraMap cameras;
+    void addCamera( const std::string& k, osg::Camera* c, int si = -1, bool fs = false ) { cameras[k].camera = c; cameras[k].slaveIndex = si; cameras[k].fullscreen = fs; }
+    void addCamera( const std::string& k, osg::Camera* c, bool fs ) { cameras[k].camera = c; cameras[k].fullscreen = fs; }
+    void addCamera( const std::string& k, osg::Camera* c, float s, bool fs = false ) { cameras[k].camera = c; cameras[k].scaleFactor = s; cameras[k].fullscreen = fs; }
+    osg::Camera* getCamera(const std::string& k) const;
+    int getMainSlaveIndex() const;
+    RenderStageInfo& getRenderStageInfo( const std::string& k ) { return cameras[k]; }
 
-	/** the buffer objects
-	 */
-	RenderBufferMap buffers;
-	void addBuffer(RenderBufferInfo::Kind k, osg::Texture2D* tex, float scale = 1.0 ) { buffers[k] = RenderBufferInfo(tex,scale); }
-	osg::Texture2D* getBuffer(RenderBufferInfo::Kind k) const;
+    /** the buffer objects
+     */
+    RenderBufferMap buffers;
+    void addBuffer(const std::string& k, osg::Texture2D* tex, float scale = 1.0 ) { buffers[k] = RenderBufferInfo(tex,scale); }
+    osg::Texture2D* getBuffer(const std::string& k) const;
 
     osg::ref_ptr<osg::TexGen> shadowTexGen[4];
 
@@ -167,12 +154,14 @@ struct CameraInfo : public osg::Referenced
     osg::ref_ptr<osg::Uniform> projInverse;
     osg::ref_ptr<osg::Uniform> viewInverse;
     osg::ref_ptr<osg::Uniform> view;
+    osg::ref_ptr<osg::Uniform> worldPosCart;
+    osg::ref_ptr<osg::Uniform> worldPosGeod;
     osg::ref_ptr<osg::Uniform> du;
     osg::ref_ptr<osg::Uniform> dv;
 
-	void setMatrices( osg::Camera* c );
+    void setMatrices( osg::Camera* c );
 
-	osgUtil::RenderBin::RenderBinList savedTransparentBins;
+    osgUtil::RenderBin::RenderBinList savedTransparentBins;
     /** The reference points in the parents projection space.
      */
     osg::Vec2d parentReference[2];

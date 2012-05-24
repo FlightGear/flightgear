@@ -3,9 +3,8 @@ include(FlightGearComponent)
 set(SOURCES
 	ATC.cxx
 	atis.cxx
-	ATCDialogOld.cxx
 	ATCVoice.cxx
-	ATCmgr.cxx
+	ATISmgr.cxx
 	ATCutils.cxx
 	ATCProjection.cxx
 	)
@@ -13,9 +12,8 @@ set(SOURCES
 set(HEADERS
 	ATC.hxx
 	atis.hxx
-	ATCDialogOld.hxx
 	ATCVoice.hxx
-	ATCmgr.hxx
+	ATISmgr.hxx
 	ATCutils.hxx
 	ATCProjection.hxx
 	atis_lexicon.hxx

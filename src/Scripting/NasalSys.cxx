@@ -99,18 +99,24 @@ FGNasalSys::FGNasalSys()
     _callCount = 0;
 }
 
+naRef FGNasalSys::call(naRef code, int argc, naRef* args, naRef locals)
+{
+  return callMethod(code, naNil(), argc, args, locals);
+}
+
 // Does a naCall() in a new context.  Wrapped here to make lock
 // tracking easier.  Extension functions are called with the lock, but
 // we have to release it before making a new naCall().  So rather than
 // drop the lock in every extension function that might call back into
 // Nasal, we keep a stack depth counter here and only unlock/lock
 // around the naCall if it isn't the first one.
-naRef FGNasalSys::call(naRef code, int argc, naRef* args, naRef locals)
+
+naRef FGNasalSys::callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals)
 {
     naContext ctx = naNewContext();
     if(_callCount) naModUnlock();
     _callCount++;
-    naRef result = naCall(ctx, code, argc, args, naNil(), locals);
+    naRef result = naCall(ctx, code, argc, args, self, locals);
     if(naGetError(ctx))
         logError(ctx);
     _callCount--;
