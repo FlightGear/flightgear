@@ -77,6 +77,7 @@ set(HEADERS
     models/propulsion/FGRotor.h
     models/propulsion/FGTank.h
     models/propulsion/FGThruster.h
+    models/propulsion/FGTransmission.h
     models/propulsion/FGTurbine.h
     models/propulsion/FGTurboProp.h
     )
@@ -153,6 +154,7 @@ set(SOURCES
     models/propulsion/FGRotor.cpp
     models/propulsion/FGTank.cpp
     models/propulsion/FGThruster.cpp
+    models/propulsion/FGTransmission.cpp
     models/propulsion/FGTurbine.cpp
     models/propulsion/FGTurboProp.cpp
     )

@@ -378,7 +378,7 @@ void FGJSBsim::init()
 
     if (fgGetBool("/environment/params/control-fdm-atmosphere")) {
       Atmosphere->SetTemperature(temperature->getDoubleValue(), get_Altitude(), FGAtmosphere::eCelsius);
-      Atmosphere->SetPressureSL(pressureSL->getDoubleValue(), FGAtmosphere::eInchesHg);
+      Atmosphere->SetPressureSL(FGAtmosphere::eInchesHg, pressureSL->getDoubleValue());
       // initialize to no turbulence, these values get set in the update loop
       Winds->SetTurbType(FGWinds::ttNone);
       Winds->SetTurbGain(0.0);
@@ -666,7 +666,7 @@ bool FGJSBsim::copy_to_JSBsim()
     }
 
     Atmosphere->SetTemperature(temperature->getDoubleValue(), get_Altitude(), FGAtmosphere::eCelsius);
-    Atmosphere->SetPressureSL(pressureSL->getDoubleValue(), FGAtmosphere::eInchesHg);
+    Atmosphere->SetPressureSL(FGAtmosphere::eInchesHg, pressureSL->getDoubleValue());
 
     Winds->SetTurbType((FGWinds::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
     switch( Winds->GetTurbType() ) {
@@ -1222,7 +1222,7 @@ void FGJSBsim::init_gear(void )
       node->setDoubleValue("rollspeed-ms", gear->GetWheelRollVel()*0.3043);
       node->setBoolValue("has-brake", gear->GetBrakeGroup() > 0);
       node->setDoubleValue("position-norm", gear->GetGearUnitPos());
-      node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
+//    node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
       node->setDoubleValue("compression-norm", gear->GetCompLen());
       node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )
@@ -1240,7 +1240,7 @@ void FGJSBsim::update_gear(void)
       node->getChild("wow", 0, true)->setBoolValue( gear->GetWOW());
       node->getChild("rollspeed-ms", 0, true)->setDoubleValue(gear->GetWheelRollVel()*0.3043);
       node->getChild("position-norm", 0, true)->setDoubleValue(gear->GetGearUnitPos());
-      gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
+//    gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
       node->setDoubleValue("compression-norm", gear->GetCompLen());
       node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )

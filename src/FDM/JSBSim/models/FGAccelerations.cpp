@@ -29,7 +29,7 @@
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 This class encapsulates the calculation of the derivatives of the state vectors
-UVW and PQR - the translational and rotational rates relative to the planet 
+UVW and PQR - the translational and rotational rates relative to the planet
 fixed frame. The derivatives relative to the inertial frame are also calculated
 as a side effect. Also, the derivative of the attitude quaterion is also calculated.
 
@@ -45,6 +45,8 @@ COMMENTS, REFERENCES,  and NOTES
 [2] Richard E. McFarland, "A Standard Kinematic Model for Flight Simulation at
     NASA-Ames", NASA CR-2497, January 1975
 [3] Erin Catto, "Iterative Dynamics with Temporal Coherence", February 22, 2005
+[4] Mark Harris and Robert Lyle, "Spacecraft Gravitational Torques",
+    NASA SP-8024, May 1969
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
@@ -58,7 +60,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAccelerations.cpp,v 1.8 2011/08/30 20:49:04 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGAccelerations.cpp,v 1.13 2012/02/18 19:11:37 bcoconni Exp $";
 static const char *IdHdr = ID_ACCELERATIONS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,7 +73,8 @@ FGAccelerations::FGAccelerations(FGFDMExec* fdmex)
   Debug(0);
   Name = "FGAccelerations";
   gravType = gtWGS84;
- 
+  gravTorque = false;
+
   vPQRidot.InitMatrix();
   vUVWidot.InitMatrix();
   vGravAccel.InitMatrix();
@@ -112,15 +115,11 @@ bool FGAccelerations::Run(bool Holding)
   if (FGModel::Run(Holding)) return true;  // Fast return if we have nothing to do ...
   if (Holding) return false;
 
-  RunPreFunctions();
-
   CalculatePQRdot();   // Angular rate derivative
   CalculateUVWdot();   // Translational rate derivative
   CalculateQuatdot();  // Angular orientation derivative
 
   ResolveFrictionForces(in.DeltaT * rate);  // Update rate derivatives with friction forces
-
-  RunPostFunctions();
 
   Debug(2);
   return false;
@@ -129,19 +128,29 @@ bool FGAccelerations::Run(bool Holding)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // Compute body frame rotational accelerations based on the current body moments
 //
-// vPQRdot is the derivative of the absolute angular velocity of the vehicle 
-// (body rate with respect to the inertial frame), expressed in the body frame,
+// vPQRdot is the derivative of the absolute angular velocity of the vehicle
+// (body rate with respect to the ECEF frame), expressed in the body frame,
 // where the derivative is taken in the body frame.
 // J is the inertia matrix
 // Jinv is the inverse inertia matrix
 // vMoments is the moment vector in the body frame
 // in.vPQRi is the total inertial angular velocity of the vehicle
 // expressed in the body frame.
-// Reference: See Stevens and Lewis, "Aircraft Control and Simulation", 
+// Reference: See Stevens and Lewis, "Aircraft Control and Simulation",
 //            Second edition (2004), eqn 1.5-16e (page 50)
 
 void FGAccelerations::CalculatePQRdot(void)
 {
+  if (gravTorque) {
+    // Compute the gravitational torque
+    // Reference: See Harris and Lyle "Spacecraft Gravitational Torques",
+    //            NASA SP-8024 (1969) eqn (2) (page 7)
+    FGColumnVector3 R = in.Ti2b * in.vInertialPosition;
+    double invRadius = 1.0 / R.Magnitude();
+    R *= invRadius;
+    in.Moment += (3.0 * in.GAccel * invRadius) * (R * (in.J * R));
+  }
+
   // Compute body frame rotational accelerations based on the current body
   // moments and the total inertial angular velocity expressed in the body
   // frame.
@@ -154,7 +163,7 @@ void FGAccelerations::CalculatePQRdot(void)
 // Compute the quaternion orientation derivative
 //
 // vQtrndot is the quaternion derivative.
-// Reference: See Stevens and Lewis, "Aircraft Control and Simulation", 
+// Reference: See Stevens and Lewis, "Aircraft Control and Simulation",
 //            Second edition (2004), eqn 1.5-16b (page 50)
 
 void FGAccelerations::CalculateQuatdot(void)
@@ -167,7 +176,7 @@ void FGAccelerations::CalculateQuatdot(void)
 // This set of calculations results in the body and inertial frame accelerations
 // being computed.
 // Compute body and inertial frames accelerations based on the current body
-// forces including centripetal and coriolis accelerations for the former.
+// forces including centripetal and Coriolis accelerations for the former.
 // in.vOmegaPlanet is the Earth angular rate - expressed in the inertial frame -
 //   so it has to be transformed to the body frame. More completely,
 //   in.vOmegaPlanet is the rate of the ECEF frame relative to the Inertial
@@ -177,7 +186,7 @@ void FGAccelerations::CalculateQuatdot(void)
 //   in the body frame.
 // in.vUVW is the vehicle velocity relative to the ECEF frame, expressed
 //   in the body frame.
-// Reference: See Stevens and Lewis, "Aircraft Control and Simulation", 
+// Reference: See Stevens and Lewis, "Aircraft Control and Simulation",
 //            Second edition (2004), eqns 1.5-13 (pg 48) and 1.5-16d (page 50)
 
 void FGAccelerations::CalculateUVWdot(void)
@@ -192,27 +201,30 @@ void FGAccelerations::CalculateUVWdot(void)
   // Include Gravitation accel
   switch (gravType) {
     case gtStandard:
-      vGravAccel = in.Tl2b * FGColumnVector3( 0.0, 0.0, in.GAccel );
+      {
+        double radius = in.vInertialPosition.Magnitude();
+        vGravAccel = -(in.GAccel / radius) * in.vInertialPosition;
+      }
       break;
     case gtWGS84:
-      vGravAccel = in.Tec2b * in.J2Grav;
+      vGravAccel = in.Tec2i * in.J2Grav;
       break;
   }
 
-  vUVWdot += vGravAccel;
-  vUVWidot = in.Tb2i * (vBodyAccel + vGravAccel);
+  vUVWdot += in.Ti2b * vGravAccel;
+  vUVWidot = in.Tb2i * vBodyAccel + vGravAccel;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // Resolves the contact forces just before integrating the EOM.
 // This routine is using Lagrange multipliers and the projected Gauss-Seidel
 // (PGS) method.
-// Reference: See Erin Catto, "Iterative Dynamics with Temporal Coherence", 
+// Reference: See Erin Catto, "Iterative Dynamics with Temporal Coherence",
 //            February 22, 2005
 // In JSBSim there is only one rigid body (the aircraft) and there can be
 // multiple points of contact between the aircraft and the ground. As a
-// consequence our matrix J*M^-1*J^T is not sparse and the algorithm described
-// in Catto's paper has been adapted accordingly.
+// consequence our matrix Jac*M^-1*Jac^T is not sparse and the algorithm
+// described in Catto's paper has been adapted accordingly.
 // The friction forces are resolved in the body frame relative to the origin
 // (Earth center).
 
@@ -230,7 +242,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   // If no gears are in contact with the ground then return
   if (!n) return;
 
-  vector<double> a(n*n); // Will contain J*M^-1*J^T
+  vector<double> a(n*n); // Will contain Jac*M^-1*Jac^T
   vector<double> rhs(n);
 
   // Assemble the linear system of equations
@@ -239,7 +251,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
     FGColumnVector3 v2 = Jinv * multipliers[i]->MomentJacobian; // Should be J^-T but J is symmetric and so is J^-1
 
     for (int j=0; j < i; j++)
-      a[i*n+j] = a[j*n+i]; // Takes advantage of the symmetry of J^T*M^-1*J
+      a[i*n+j] = a[j*n+i]; // Takes advantage of the symmetry of Jac^T*M^-1*Jac
     for (int j=i; j < n; j++)
       a[i*n+j] = DotProduct(v1, multipliers[j]->ForceJacobian)
                + DotProduct(v2, multipliers[j]->MomentJacobian);
@@ -249,12 +261,12 @@ void FGAccelerations::ResolveFrictionForces(double dt)
 
   // Translation
   vdot = vUVWdot;
-  if (dt > 0.) // Zeroes out the relative movement between aircraft and ground
+  if (dt > 0.) // Zeroes out the relative movement between the aircraft and the ground
     vdot += (in.vUVW - in.Tec2b * in.TerrainVelocity) / dt;
 
   // Rotation
   wdot = vPQRdot;
-  if (dt > 0.) // Zeroes out the relative movement between aircraft and ground
+  if (dt > 0.) // Zeroes out the relative movement between the aircraft and the ground
     wdot += (in.vPQR - in.Tec2b * in.TerrainAngularVel) / dt;
 
   // Prepare the linear system for the Gauss-Seidel algorithm :
@@ -277,7 +289,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
     for (int i=0; i < n; i++) {
       double lambda0 = multipliers[i]->value;
       double dlambda = rhs[i];
-      
+
       for (int j=0; j < n; j++)
         dlambda -= a[i*n+j]*multipliers[j]->value;
 
@@ -307,6 +319,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   vPQRdot += omegadot;
   vPQRidot += omegadot;
 }
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGAccelerations::InitializeDerivatives(void)
@@ -333,6 +346,7 @@ void FGAccelerations::bind(void)
   PropertyManager->Tie("accelerations/wdot-ft_sec2", this, eW, (PMF)&FGAccelerations::GetUVWdot);
 
   PropertyManager->Tie("simulation/gravity-model", &gravType);
+  PropertyManager->Tie("simulation/gravitational-torque", &gravTorque);
 
   PropertyManager->Tie("forces/fbx-total-lbs", this, eX, (PMF)&FGAccelerations::GetForces);
   PropertyManager->Tie("forces/fby-total-lbs", this, eY, (PMF)&FGAccelerations::GetForces);

@@ -50,7 +50,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPiston.cpp,v 1.68 2011/10/11 15:13:34 jentron Exp $";
+static const char *IdSrc = "$Id: FGPiston.cpp,v 1.71 2012/04/07 01:50:54 jentron Exp $";
 static const char *IdHdr = ID_PISTON;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -85,6 +85,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
   MaxHP = 200;
   MinManifoldPressure_inHg = 6.5;
   MaxManifoldPressure_inHg = 28.5;
+  ManifoldPressureLag=1.0;
   ISFC = -1;
   volumetric_efficiency = 0.85;
   Bore = 5.125;
@@ -99,6 +100,9 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
   FMEPStatic = 46500;
   Cooling_Factor = 0.5144444;
   StaticFriction_HP = 1.5;
+  StarterGain = 1.;
+  StarterTorque = -1.;
+  StarterRPM = -1.;
 
   // These are internal program variables
 
@@ -120,6 +124,8 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
   bBoostOverride = false;
   bTakeoffBoost = false;
   TakeoffBoost = 0.0;   // Default to no extra takeoff-boost
+  BoostLossFactor = 0.0;   // Default to free boost
+  
   int i;
   for (i=0; i<FG_MAX_BOOST_SPEEDS; i++) {
     RatedBoost[i] = 0.0;
@@ -137,10 +143,12 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
 
   // Read inputs from engine data file where present.
 
-  if (el->FindElement("minmp")) // Should have ELSE statement telling default value used?
+  if (el->FindElement("minmp")) 
     MinManifoldPressure_inHg = el->FindElementValueAsNumberConvertTo("minmp","INHG");
   if (el->FindElement("maxmp"))
     MaxManifoldPressure_inHg = el->FindElementValueAsNumberConvertTo("maxmp","INHG");
+  if (el->FindElement("man-press-lag"))
+    ManifoldPressureLag = el->FindElementValueAsNumber("man-press-lag");
   if (el->FindElement("displacement"))
     Displacement = el->FindElementValueAsNumberConvertTo("displacement","IN3");
   if (el->FindElement("maxhp"))
@@ -179,6 +187,10 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
     Ram_Air_Factor  = el->FindElementValueAsNumber("ram-air-factor");
   if (el->FindElement("cooling-factor"))
     Cooling_Factor  = el->FindElementValueAsNumber("cooling-factor");
+  if (el->FindElement("starter-rpm"))
+    StarterRPM  = el->FindElementValueAsNumber("starter-rpm");
+  if (el->FindElement("starter-torque"))
+    StarterTorque  = el->FindElementValueAsNumber("starter-torque");
   if (el->FindElement("dynamic-fmep"))
     FMEPDynamic= el->FindElementValueAsNumberConvertTo("dynamic-fmep","PA");
   if (el->FindElement("static-fmep"))
@@ -193,6 +205,8 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
       BoostManual = (int)el->FindElementValueAsNumber("boostmanual");
     if (el->FindElement("takeoffboost"))
       TakeoffBoost = el->FindElementValueAsNumberConvertTo("takeoffboost", "PSI");
+    if (el->FindElement("boost-loss-factor"))
+      BoostLossFactor = el->FindElementValueAsNumber("boost-loss-factor");
     if (el->FindElement("ratedboost1"))
       RatedBoost[0] = el->FindElementValueAsNumberConvertTo("ratedboost1", "PSI");
     if (el->FindElement("ratedboost2"))
@@ -234,7 +248,13 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
     }
   }
 
-  StarterHP = sqrt(MaxHP) * 0.4;
+
+  volumetric_efficiency_reduced = volumetric_efficiency;
+
+  if(StarterRPM < 0.) StarterRPM = 2*IdleRPM;
+  if(StarterTorque < 0)
+    StarterTorque = (MaxHP)*0.4; //just a wag.
+
   displacement_SI = Displacement * in3tom3;
   RatedMeanPistonSpeed_fps =  ( MaxRPM * Stroke) / (360); // AKA 2 * (RPM/60) * ( Stroke / 12) or 2NS
 
@@ -318,8 +338,12 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
   base_property_name = CreateIndexedPropertyName("propulsion/engine", EngineNumber);
   property_name = base_property_name + "/power-hp";
   PropertyManager->Tie(property_name, &HP);
+  property_name = base_property_name + "/friction-hp";
+  PropertyManager->Tie(property_name, &StaticFriction_HP);
   property_name = base_property_name + "/bsfc-lbs_hphr";
   PropertyManager->Tie(property_name, &ISFC);
+  property_name = base_property_name + "/starter-norm";
+  PropertyManager->Tie(property_name, &StarterGain);
   property_name = base_property_name + "/volumetric-efficiency";
   PropertyManager->Tie(property_name, &volumetric_efficiency);
   property_name = base_property_name + "/map-pa";
@@ -342,6 +366,12 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
   PropertyManager->Tie(property_name, this, &FGPiston::getOilPressure_psi);
   property_name = base_property_name + "/egt-degF";
   PropertyManager->Tie(property_name, this, &FGPiston::getExhaustGasTemp_degF);
+  if(BoostLossFactor > 0.0) {
+    property_name = base_property_name + "/boostloss-factor";
+    PropertyManager->Tie(property_name, &BoostLossFactor);
+    property_name = base_property_name + "/boostloss-hp";
+    PropertyManager->Tie(property_name, &BoostLossHP);
+  }
 
   // Set up and sanity-check the turbo/supercharging configuration based on the input values.
   if (TakeoffBoost > RatedBoost[0]) bTakeoffBoost = true;
@@ -419,6 +449,7 @@ void FGPiston::ResetToIC(void)
   Thruster->SetRPM(0.0);
   RPM = 0.0;
   OilPressure_psi = 0.0;
+  BoostLossHP = 0.;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -490,8 +521,8 @@ double FGPiston::CalcFuelNeed(void)
 int FGPiston::InitRunning(void)
 {
   Magnetos=3;
-  in.MixtureCmd[EngineNumber] = in.PressureRatio/1.3;
-  in.MixturePos[EngineNumber] = in.PressureRatio/1.3;
+  in.MixtureCmd[EngineNumber] = in.PressureRatio*1.3;
+  in.MixturePos[EngineNumber] = in.PressureRatio*1.3;
   Thruster->SetRPM( 2.0*IdleRPM/Thruster->GetGearRatio() );
   Running = true;
   return 1;
@@ -525,42 +556,30 @@ void FGPiston::doEngineStartup(void)
   if ((Magnetos == 1) || (Magnetos > 2)) Magneto_Left = true;
   if (Magnetos > 1)  Magneto_Right = true;
 
-  // Assume we have fuel for now
-  fuel = !Starved;
+// We will 'run' with any fuel flow. If there is not enough fuel to make power it will show in doEnginePower
+  fuel = FuelFlowRate > 0.0 ? 1 : 0;
 
   // Check if we are turning the starter motor
   if (Cranking != Starter) {
     // This check saves .../cranking from getting updated every loop - they
     // only update when changed.
     Cranking = Starter;
-    crank_counter = 0;
   }
 
-  if (Cranking) crank_counter++;  //Check mode of engine operation
 
-  if (!Running && spark && fuel) {  // start the engine if revs high enough
-    if (Cranking) {
-      if ((RPM > IdleRPM*0.8) && (crank_counter > 175)) // Add a little delay to startup
-        Running = true;                         // on the starter
-    } else {
-      if (RPM > IdleRPM*0.8)                            // This allows us to in-air start
-        Running = true;                         // when windmilling
+  // Cut the engine *power* - Note: the engine will continue to
+  // spin depending on prop Ixx and freestream velocity
+
+  if ( Running ) {
+    if (!spark || !fuel)    Running = false;
+    if (RPM < IdleRPM*0.8 ) Running = false;
+  } else { // !Running  
+    if ( spark && fuel) {     // start the engine if revs high enough
+      if (RPM > IdleRPM*0.8)  // This allows us to in-air start
+        Running = true;       // when windmilling
     }
   }
 
-  // Cut the engine *power* - Note: the engine may continue to
-  // spin if the prop is in a moving airstream
-
-  if ( Running && (!spark || !fuel) ) Running = false;
-
-  // Check for stalling (RPM = 0).
-  if (Running) {
-    if (RPM == 0) {
-      Running = false;
-    } else if ((RPM <= IdleRPM *0.8 ) && (Cranking)) {
-      Running = false;
-    }
-  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -578,7 +597,7 @@ void FGPiston::doEngineStartup(void)
 
 void FGPiston::doBoostControl(void)
 {
-  if(BoostManual) {
+  if(bBoostManual) {
     if(BoostSpeed > BoostSpeeds-1) BoostSpeed = BoostSpeeds-1;
     if(BoostSpeed < 0) BoostSpeed = 0;
   } else {
@@ -608,7 +627,7 @@ void FGPiston::doBoostControl(void)
  * Inputs: p_amb, Throttle,
  *         MeanPistonSpeed_fps, dt
  *
- * Outputs: MAP, ManifoldPressure_inHg, TMAP
+ * Outputs: MAP, ManifoldPressure_inHg, TMAP, BoostLossHP
  */
 
 void FGPiston::doMAP(void)
@@ -618,9 +637,9 @@ void FGPiston::doMAP(void)
 
   double map_coefficient = Ze/(Ze+Z_airbox+Zt);
 
-  // Add a one second lag to manifold pressure changes
-  double dMAP=0;
-  dMAP = (TMAP - p_ram * map_coefficient) * TotalDeltaT;
+  // Add a variable lag to manifold pressure changes
+  double dMAP=(TMAP - p_ram * map_coefficient);
+  if (ManifoldPressureLag > TotalDeltaT) dMAP *= TotalDeltaT/ManifoldPressureLag;
 
   TMAP -=dMAP;
 
@@ -646,15 +665,26 @@ void FGPiston::doMAP(void)
     double boost_factor = (( BoostMul[BoostSpeed] - 1 ) / RatedRPM[BoostSpeed] ) * RPM + 1;
     MAP = TMAP * boost_factor;
     // Now clip the manifold pressure to BCV or Wastegate setting.
-    if (bTakeoffPos) {
-      if (MAP > TakeoffMAP[BoostSpeed]) MAP = TakeoffMAP[BoostSpeed];
-    } else {
-      if (MAP > RatedMAP[BoostSpeed]) MAP = RatedMAP[BoostSpeed];
+    if(!bBoostOverride) {
+      if (bTakeoffPos) {
+        if (MAP > TakeoffMAP[BoostSpeed]) MAP = TakeoffMAP[BoostSpeed];
+      } else {
+        if (MAP > RatedMAP[BoostSpeed]) MAP = RatedMAP[BoostSpeed];
+      }
     }
   } else {
       MAP = TMAP;
   }
 
+  if( BoostLossFactor > 0.0 )
+  {
+      double gamma = 1.414; // specific heat constants
+      double Nstage = 1; // Nstage is the number of boost stages.
+      BoostLossHP = ((Nstage * TMAP * v_dot_air * gamma) / (gamma - 1)) * (pow((MAP/TMAP),((gamma-1)/(Nstage * gamma))) - 1) * BoostLossFactor / 745.7 ; // 745.7 convert watt to hp
+  } else {
+      BoostLossHP = 0;
+  }
+  
   // And set the value in American units as well
   ManifoldPressure_inHg = MAP / inhgtopa;
 }
@@ -670,7 +700,7 @@ void FGPiston::doMAP(void)
  *
  * TODO: Model inlet manifold air temperature.
  *
- * Outputs: rho_air, m_dot_air
+ * Outputs: rho_air, m_dot_air, volumetric_efficiency_reduced
  */
 
 void FGPiston::doAirFlow(void)
@@ -678,11 +708,14 @@ void FGPiston::doAirFlow(void)
   double gamma = 1.3; // specific heat constants
 // loss of volumentric efficiency due to difference between MAP and exhaust pressure
 // Eq 6-10 from The Internal Combustion Engine - Charles Taylor Vol 1
-  double ve =((gamma-1)/gamma) +( CompressionRatio -(p_amb/MAP))/(gamma*( CompressionRatio - 1));
+  double mratio = MAP < 1. ? CompressionRatio : p_amb/MAP;
+  if (mratio > CompressionRatio) mratio = CompressionRatio;
+  double ve =((gamma-1)/gamma) +( CompressionRatio -(mratio))/(gamma*( CompressionRatio - 1));
 
   rho_air = p_amb / (R_air * T_amb);
   double swept_volume = (displacement_SI * (RPM/60)) / 2;
-  double v_dot_air = swept_volume * volumetric_efficiency *ve;
+  volumetric_efficiency_reduced = volumetric_efficiency *ve;
+  v_dot_air = swept_volume * volumetric_efficiency_reduced;
 
   double rho_air_manifold = MAP / (R_air * T_amb);
   m_dot_air = v_dot_air * rho_air_manifold;
@@ -729,14 +762,12 @@ void FGPiston::doFuelFlow(void)
 
 void FGPiston::doEnginePower(void)
 {
-  IndicatedHorsePower = 0;
+  IndicatedHorsePower = -StaticFriction_HP;
   FMEP = 0;
   if (Running) {
-    // FIXME: this needs to be generalized
-    double ME, percent_RPM, power;  // Convienience term for use in the calculations
+    double ME, power;  // Convienience term for use in the calculations
     ME = Mixture_Efficiency_Correlation->GetValue(m_dot_fuel/m_dot_air);
 
-    percent_RPM = RPM/MaxRPM;
 // Guestimate engine friction losses from Figure 4.4 of "Engines: An Introduction", John Lumley
     FMEP = (-FMEPDynamic * MeanPistonSpeed_fps * fttom - FMEPStatic);
 
@@ -745,27 +776,26 @@ void FGPiston::doEnginePower(void)
     if ( Magnetos != 3 ) power *= SparkFailDrop;
 
 
-    IndicatedHorsePower = (FuelFlow_pph / ISFC )* ME * power;
+    IndicatedHorsePower = (FuelFlow_pph / ISFC )* ME * power - StaticFriction_HP; //FIXME static friction should depend on oil temp and configuration;
 
   } else {
     // Power output when the engine is not running
+    double torque, k_torque, rpm;  // Convienience term for use in the calculations
+    
+    rpm = RPM < 1.0 ? 1.0 : RPM;
     if (Cranking) {
-      if (RPM < 10) {
-        IndicatedHorsePower = StarterHP;
-      } else if (RPM < IdleRPM*0.8) {
-        IndicatedHorsePower = StarterHP + ((IdleRPM*0.8 - RPM) / 8.0);
-        // This is a guess - would be nice to find a proper starter moter torque curve
-      } else {
-        IndicatedHorsePower = StarterHP;
-      }
-    }
+      if(RPM<StarterRPM) k_torque = 1.0-RPM/(StarterRPM);
+      else k_torque = 0;
+      torque = StarterTorque*k_torque*StarterGain;
+      IndicatedHorsePower = torque * rpm / 5252;
+     } 
   }
 
   // Constant is (1/2) * 60 * 745.7
   // (1/2) convert cycles, 60 minutes to seconds, 745.7 watts to hp.
   double pumping_hp = ((PMEP + FMEP) * displacement_SI * RPM)/(Cycles*22371);
 
-  HP = IndicatedHorsePower + pumping_hp - StaticFriction_HP; //FIXME static friction should depend on oil temp and configuration
+HP = IndicatedHorsePower + pumping_hp - BoostLossHP;
 //  cout << "pumping_hp " <<pumping_hp << FMEP << PMEP <<endl;
   PctPower = HP / MaxHP ;
 //  cout << "Power = " << HP << "  RPM = " << RPM << "  Running = " << Running << "  Cranking = " << Cranking << endl;
@@ -989,7 +1019,7 @@ void FGPiston::Debug(int from)
       cout << "      Bore: "                << Bore                     << endl;
       cout << "      Stroke: "              << Stroke                   << endl;
       cout << "      Cylinders: "           << Cylinders                << endl;
-      cout << "      Cylinders Head Mass: " <<CylinderHeadMass          << endl;
+      cout << "      Cylinders Head Mass: " << CylinderHeadMass         << endl;
       cout << "      Compression Ratio: "   << CompressionRatio         << endl;
       cout << "      MaxHP: "               << MaxHP                    << endl;
       cout << "      Cycles: "              << Cycles                   << endl;
@@ -1002,6 +1032,9 @@ void FGPiston::Debug(int from)
       cout << "      Intake Impedance Factor: " << Z_airbox << endl;
       cout << "      Dynamic FMEP Factor: " << FMEPDynamic << endl;
       cout << "      Static FMEP Factor: " << FMEPStatic << endl;
+
+      cout << "      Starter Motor Torque: " << StarterTorque << endl;
+      cout << "      Starter Motor RPM:    " << StarterRPM << endl;
 
       cout << endl;
       cout << "      Combustion Efficiency table:" << endl;

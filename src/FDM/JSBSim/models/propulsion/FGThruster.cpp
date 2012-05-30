@@ -45,7 +45,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGThruster.cpp,v 1.14 2011/03/10 01:35:25 dpculp Exp $";
+static const char *IdSrc = "$Id: FGThruster.cpp,v 1.16 2012/03/18 15:48:36 jentron Exp $";
 static const char *IdHdr = ID_THRUSTER;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,7 +66,6 @@ FGThruster::FGThruster(FGFDMExec *FDMExec, Element *el, int num ): FGForce(FDMEx
 
   GearRatio = 1.0;
   ReverserAngle = 0.0;
-  ClutchCtrlNorm = 1.0;
   EngineNum = num;
   PropertyManager = FDMExec->GetPropertyManager();
 
@@ -99,13 +98,6 @@ FGThruster::FGThruster(FGFDMExec *FDMExec, Element *el, int num ): FGForce(FDMEx
                                                           &FGThruster::SetReverserAngle);
   }
 
-  if (el->GetName() == "rotor") // At this time only a rotor can have a clutch.
-  {
-    property_name = base_property_name + "/clutch-ctrl-norm";
-    PropertyManager->Tie( property_name.c_str(), (FGThruster *)this, &FGThruster::GetClutchCtrl,
-                                                          &FGThruster::SetClutchCtrl);
-  }
-
   Debug(0);
 }
 
@@ -118,7 +110,7 @@ FGThruster::~FGThruster()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGThruster::GetThrusterLabels(int id, string delimeter)
+string FGThruster::GetThrusterLabels(int id, const string& delimeter)
 {
   std::ostringstream buf;
 
@@ -129,7 +121,7 @@ string FGThruster::GetThrusterLabels(int id, string delimeter)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGThruster::GetThrusterValues(int id, string delimeter)
+string FGThruster::GetThrusterValues(int id, const string& delimeter)
 {
   std::ostringstream buf;
 

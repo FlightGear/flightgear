@@ -50,7 +50,7 @@ INCLUDES
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAtmosphere.cpp,v 1.49 2011/09/11 11:36:04 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGAtmosphere.cpp,v 1.51 2012/04/13 13:18:28 jberndt Exp $";
 static const char *IdHdr = ID_ATMOSPHERE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,11 +101,7 @@ bool FGAtmosphere::Run(bool Holding)
   if (FGModel::Run(Holding)) return true;
   if (Holding) return false;
 
-  RunPreFunctions();
-
   Calculate(in.altitudeASL);
-
-  RunPostFunctions();
 
   Debug(2);
   return false;
@@ -128,7 +124,7 @@ void FGAtmosphere::Calculate(double altitude)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAtmosphere::SetPressureSL(double pressure, ePressure unit)
+void FGAtmosphere::SetPressureSL(ePressure unit, double pressure)
 {
   double press = ConvertToPSF(pressure, unit);
 
@@ -217,7 +213,9 @@ void FGAtmosphere::bind(void)
   PropertyManager->Tie("atmosphere/a-fps", this, &FGAtmosphere::GetSoundSpeed);
   PropertyManager->Tie("atmosphere/T-sl-R", this, &FGAtmosphere::GetTemperatureSL);
   PropertyManager->Tie("atmosphere/rho-sl-slugs_ft3", this, &FGAtmosphere::GetDensitySL);
-  PropertyManager->Tie("atmosphere/P-sl-psf", this, &FGAtmosphere::GetPressureSL);
+//  PropertyManager->Tie("atmosphere/P-sl-psf", this, ePSF,
+//                                   (PMFi)&FGAtmosphere::GetPressureSL,
+//                                   (PMF)&FGAtmosphere::SetPressureSL);
   PropertyManager->Tie("atmosphere/a-sl-fps", this, &FGAtmosphere::GetSoundSpeedSL);
   PropertyManager->Tie("atmosphere/theta", this, &FGAtmosphere::GetTemperatureRatio);
   PropertyManager->Tie("atmosphere/sigma", this, &FGAtmosphere::GetDensityRatio);
@@ -264,7 +262,7 @@ void FGAtmosphere::Debug(int from)
   }
   if (debug_lvl & 16) { // Sanity checking
   }
-  if (debug_lvl & 128) { // 
+  if (debug_lvl & 128) { //
   }
   if (debug_lvl & 64) {
     if (from == 0) { // Constructor

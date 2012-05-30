@@ -66,7 +66,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPropulsion.cpp,v 1.52 2011/10/31 14:54:41 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGPropulsion.cpp,v 1.61 2012/04/14 18:10:44 bcoconni Exp $";
 static const char *IdHdr = ID_PROPULSION;
 
 extern short debug_lvl;
@@ -204,7 +204,7 @@ void FGPropulsion::ConsumeFuel(FGEngine* engine)
   unsigned int TanksWithOxidizer=0, CurrentOxidizerTankPriority=1;
   vector <int> FeedListFuel, FeedListOxi;
   bool Starved = true; // Initially set Starved to true. Set to false in code below.
-//  bool hasOxTanks = false;
+  bool hasOxTanks = false;
 
   // For this engine,
   // 1) Count how many fuel tanks with the current priority level have fuel
@@ -237,6 +237,9 @@ void FGPropulsion::ConsumeFuel(FGEngine* engine)
     if (TanksWithFuel == 0) CurrentFuelTankPriority++; // No tanks at this priority, try next priority
   }
 
+  bool FuelStarved = Starved;
+  Starved = true;
+
   // Process Oxidizer tanks, if any
   if (engine->GetType() == FGEngine::etRocket) {
     while ((TanksWithOxidizer == 0) && (CurrentOxidizerTankPriority <= numTanks)) {
@@ -250,7 +253,7 @@ void FGPropulsion::ConsumeFuel(FGEngine* engine)
             // Skip this here (done above)
             break;
           case FGTank::ttOXIDIZER:
-//            hasOxTanks = true;
+            hasOxTanks = true;
             if (Tank->GetContents() > 0.0 && Tank->GetSelected() && TankPriority == CurrentOxidizerTankPriority) {
               TanksWithOxidizer++;
               if (TanksWithFuel > 0) Starved = false;
@@ -264,10 +267,13 @@ void FGPropulsion::ConsumeFuel(FGEngine* engine)
     }
   }
 
-  engine->SetStarved(Starved); // Tanks can be refilled, so be sure to reset engine Starved flag here.
+  bool OxiStarved = Starved;
+
+  engine->SetStarved(FuelStarved || (hasOxTanks && OxiStarved)); // Tanks can be refilled, so be sure to reset engine Starved flag here.
 
   // No fuel or fuel/oxidizer found at any priority!
-  if (Starved) return;
+//  if (Starved) return;
+  if (FuelStarved || (hasOxTanks && OxiStarved)) return;
 
   double FuelToBurn = engine->CalcFuelNeed();            // How much fuel does this engine need?
   double FuelNeededPerTank = FuelToBurn / TanksWithFuel; // Determine fuel needed per tank.  
@@ -467,18 +473,18 @@ string FGPropulsion::FindEngineFullPathname(const string& engine_filename)
   fullpath = enginePath + separator;
   localpath = aircraftPath + separator + "Engines" + separator;
 
-  engine_file.open(string(fullpath + engine_filename + ".xml").c_str());
+  engine_file.open(string(localpath + engine_filename + ".xml").c_str());
   if ( !engine_file.is_open()) {
-    engine_file.open(string(localpath + engine_filename + ".xml").c_str());
+    engine_file.open(string(fullpath + engine_filename + ".xml").c_str());
       if ( !engine_file.is_open()) {
         cerr << " Could not open engine file: " << engine_filename << " in path "
              << fullpath << " or " << localpath << endl;
         return string("");
       } else {
-        return string(localpath + engine_filename + ".xml");
+        return string(fullpath + engine_filename + ".xml");
       }
   }
-  return string(fullpath + engine_filename + ".xml");
+  return string(localpath + engine_filename + ".xml");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -495,12 +501,12 @@ ifstream* FGPropulsion::FindEngineFile(const string& engine_filename)
   fullpath = enginePath + separator;
   localpath = aircraftPath + separator + "Engines" + separator;
 
-  engine_file->open(string(fullpath + engine_filename + ".xml").c_str());
+  engine_file->open(string(localpath + engine_filename + ".xml").c_str());
   if ( !engine_file->is_open()) {
-    engine_file->open(string(localpath + engine_filename + ".xml").c_str());
+    engine_file->open(string(fullpath + engine_filename + ".xml").c_str());
       if ( !engine_file->is_open()) {
         cerr << " Could not open engine file: " << engine_filename << " in path "
-             << fullpath << " or " << localpath << endl;
+             << localpath << " or " << fullpath << endl;
       }
   }
   return engine_file;
@@ -527,6 +533,9 @@ string FGPropulsion::GetPropulsionStrings(const string& delimiter) const
     else if (Tanks[i]->GetType() == FGTank::ttOXIDIZER) buf << delimiter << "Oxidizer Tank " << i;
   }
 
+  PropulsionStrings += buf.str();
+  buf.str("");
+
   return PropulsionStrings;
 }
 
@@ -550,6 +559,9 @@ string FGPropulsion::GetPropulsionValues(const string& delimiter) const
     buf << delimiter;
     buf << Tanks[i]->GetContents();
   }
+
+  PropulsionValues += buf.str();
+  buf.str("");
 
   return PropulsionValues;
 }
@@ -588,9 +600,7 @@ const FGColumnVector3& FGPropulsion::GetTanksMoment(void)
 {
   vXYZtank_arm.InitMatrix();
   for (unsigned int i=0; i<Tanks.size(); i++) {
-    vXYZtank_arm(eX) += Tanks[i]->GetXYZ(eX) * Tanks[i]->GetContents();
-    vXYZtank_arm(eY) += Tanks[i]->GetXYZ(eY) * Tanks[i]->GetContents();
-    vXYZtank_arm(eZ) += Tanks[i]->GetXYZ(eZ) * Tanks[i]->GetContents();
+    vXYZtank_arm += Tanks[i]->GetXYZ() * Tanks[i]->GetContents();
   }
   return vXYZtank_arm;
 }
@@ -610,6 +620,7 @@ double FGPropulsion::GetTanksWeight(void) const
 
 const FGMatrix33& FGPropulsion::CalculateTankInertias(void)
 {
+  const FGMatrix33 Ts2b(-inchtoft, 0., 0., 0., inchtoft, 0., 0., 0., -inchtoft);
   unsigned int size;
 
   size = Tanks.size();
@@ -618,8 +629,10 @@ const FGMatrix33& FGPropulsion::CalculateTankInertias(void)
   tankJ = FGMatrix33();
 
   for (unsigned int i=0; i<size; i++) {
+    FGColumnVector3 vTankBodyVec = Ts2b * (in.vXYZcg - Tanks[i]->GetXYZ());
+
     tankJ += FDMExec->GetMassBalance()->GetPointmassInertia( lbtoslug * Tanks[i]->GetContents(),
-                                               Tanks[i]->GetXYZ() );
+                                                             vTankBodyVec);
     tankJ(1,1) += Tanks[i]->GetIxx();
     tankJ(2,2) += Tanks[i]->GetIyy();
     tankJ(3,3) += Tanks[i]->GetIzz();
