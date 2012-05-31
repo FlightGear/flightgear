@@ -29,15 +29,9 @@
 #include <stdlib.h>
 #include <string.h>             // strcmp()
 
-#if defined( unix ) || defined( __CYGWIN__ )
-#  include <unistd.h>           // for gethostname()
-#endif
 #ifdef _WIN32
-#  include <direct.h>           // for getcwd()
-#  define getcwd _getcwd
 #  include <io.h>               // isatty()
 #  define isatty _isatty
-#  include "winsock2.h"		// for gethostname()
 #endif
 
 // work around a stdc++ lib bug in some versions of linux, but doesn't
@@ -1027,12 +1021,11 @@ bool fgInitGeneral() {
 
     globals->set_browser(fgGetString("/sim/startup/browser-app", "firefox %u"));
 
-    char buf[512], *cwd = getcwd(buf, 511);
-    buf[511] = '\0';
+    simgear::Dir cwd(simgear::Dir::current());
     SGPropertyNode *curr = fgGetNode("/sim", true);
     curr->removeChild("fg-current", 0, false);
     curr = curr->getChild("fg-current", 0, true);
-    curr->setStringValue(cwd ? cwd : "");
+    curr->setStringValue(cwd.path().str());
     curr->setAttribute(SGPropertyNode::WRITE, false);
 
     fgSetBool("/sim/startup/stdout-to-terminal", isatty(1) != 0 );
