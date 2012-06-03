@@ -23,7 +23,7 @@ namespace canvas
 {
 
   //----------------------------------------------------------------------------
-  Group::Group(SGPropertyNode* node):
+  Group::Group(SGPropertyNode_ptr node):
     Element(node)
   {
 
@@ -39,7 +39,10 @@ namespace canvas
   void Group::update(double dt)
   {
     for( size_t i = 0; i < _children.size(); ++i )
-      _children[i]->update(dt);
+    {
+      if( _children[i] )
+        _children[i]->update(dt);
+    }
 
     Element::update(dt);
   }
@@ -47,19 +50,58 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Group::childAdded(SGPropertyNode* child)
   {
+    boost::shared_ptr<Element> element;
+
     if( child->getNameString() == "text" )
-    {
-      _children.push_back( boost::shared_ptr<Element>(new Text(child)) );
-      _transform->addChild( _children.back()->getMatrixTransform() );
-    }
+      element.reset( new Text(child) );
+    else if( child->getNameString() == "group" )
+      element.reset( new Group(child) );
     else
-      std::cout << "New unknown child: " << child->getDisplayName() << std::endl;
+      SG_LOG
+      (
+        SG_GL,
+        SG_WARN,
+        "canvas::Group unknown child: " << child->getDisplayName()
+      );
+
+    if( !element )
+      return;
+
+    // Add to osg scene graph...
+    _transform->addChild( element->getMatrixTransform() );
+
+    // ...and build up canvas hierarchy
+    size_t index = child->getIndex();
+
+    if( index >= _children.size() )
+      _children.resize(index + 1);
+
+    _children[index] = element;
   }
 
   //----------------------------------------------------------------------------
   void Group::childRemoved(SGPropertyNode* child)
   {
+    if(    child->getNameString() == "text"
+        || child->getNameString() == "group" )
+    {
+      size_t index = child->getIndex();
 
+      if( index >= _children.size() )
+        SG_LOG
+        (
+          SG_GL,
+          SG_WARN,
+          "can't removed unknown child " << child->getDisplayName()
+        );
+      else
+      {
+        boost::shared_ptr<Element>& element = _children[index];
+        if( element )
+          _transform->removeChild(element->getMatrixTransform());
+        element.reset();
+      }
+    }
   }
 
 } // namespace canvas

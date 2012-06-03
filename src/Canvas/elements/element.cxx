@@ -17,9 +17,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "element.hxx"
-#include <cassert>
+#include <Canvas/property_helper.hxx>
 
 #include <osg/Drawable>
+
+#include <cassert>
+#include <cstring>
 
 namespace canvas
 {
@@ -31,12 +34,6 @@ namespace canvas
   Element::~Element()
   {
 
-  }
-
-  //----------------------------------------------------------------------------
-  SGPropertyNode* Element::getPropertyNode()
-  {
-    return _node;
   }
 
   //----------------------------------------------------------------------------
@@ -97,7 +94,7 @@ namespace canvas
       colorChanged( osg::Vec4( _color[0]->getFloatValue(),
                                _color[1]->getFloatValue(),
                                _color[2]->getFloatValue(),
-                               1 ) );
+                               _color[3]->getFloatValue() ) );
       _attributes_dirty &= ~COLOR;
     }
 
@@ -106,18 +103,19 @@ namespace canvas
       colorFillChanged( osg::Vec4( _color_fill[0]->getFloatValue(),
                                    _color_fill[1]->getFloatValue(),
                                    _color_fill[2]->getFloatValue(),
-                                   1 ) );
+                                   _color_fill[3]->getFloatValue() ) );
       _attributes_dirty &= ~COLOR_FILL;
     }
 
-    if( _drawable && (_attributes_dirty & BOUNDING_BOX) )
+    if( !_bounding_box.empty() )
     {
-      _bounding_box[0]->setFloatValue(_drawable->getBound()._min.x());
-      _bounding_box[1]->setFloatValue(_drawable->getBound()._min.y());
-      _bounding_box[2]->setFloatValue(_drawable->getBound()._max.x());
-      _bounding_box[3]->setFloatValue(_drawable->getBound()._max.y());
+      assert( _drawable );
 
-      _attributes_dirty &= ~BOUNDING_BOX;
+      const osg::BoundingBox& bb = _drawable->getBound();
+      _bounding_box[0]->setFloatValue(bb._min.x());
+      _bounding_box[1]->setFloatValue(bb._min.y());
+      _bounding_box[2]->setFloatValue(bb._max.x());
+      _bounding_box[3]->setFloatValue(bb._max.y());
     }
   }
 
@@ -128,29 +126,22 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  Element::Element(SGPropertyNode* node, uint32_t attributes_used):
-    _node( node ),
-    _drawable( 0 ),
+  Element::Element(SGPropertyNode_ptr node, uint32_t attributes_used):
     _attributes_used( attributes_used ),
-    _attributes_dirty( 0 ),
+    _attributes_dirty( attributes_used ),
     _transform_dirty( false ),
-    _transform( new osg::MatrixTransform )
+    _transform( new osg::MatrixTransform ),
+    _node( node ),
+    _drawable( 0 )
   {
     assert( _node );
     _node->addChangeListener(this);
 
     if( _attributes_used & COLOR )
-      linkColorNodes("color", _color, osg::Vec4f(0,1,0,1));
+      linkColorNodes("color", _node, _color, osg::Vec4f(0,1,0,1));
+
     if( _attributes_used & COLOR_FILL )
-      linkColorNodes("color-fill", _color_fill);
-    if( _attributes_used & BOUNDING_BOX )
-    {
-      SGPropertyNode* bb = _node->getChild("bounding-box", 0, true);
-      _bounding_box[0] = bb->getChild("x-min", 0, true);
-      _bounding_box[1] = bb->getChild("y-min", 0, true);
-      _bounding_box[2] = bb->getChild("x-max", 0, true);
-      _bounding_box[3] = bb->getChild("y-max", 0, true);
-    }
+      linkColorNodes("color-fill", _node, _color_fill);
 
     SG_LOG
     (
@@ -161,22 +152,19 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  void Element::linkColorNodes( const char* name,
-                                SGPropertyNode** nodes,
-                                const osg::Vec4& def )
+  void Element::setDrawable( osg::Drawable* drawable )
   {
-    // Don't tie to allow the usage of aliases
-    SGPropertyNode* color = _node->getChild(name, 0, true);
+    _drawable = drawable;
+    assert( _drawable );
 
-    static const char* color_names[] = {"red", "green", "blue"};
-    for( size_t i = 0; i < sizeof(color_names)/sizeof(color_names[0]); ++i )
+    if( _attributes_used & BOUNDING_BOX )
     {
-      color->setFloatValue
-      (
-        color_names[i],
-        color->getFloatValue(color_names[i], def[i])
-      );
-      nodes[i] = color->getChild(color_names[i]);
+      SGPropertyNode* bb_node = _node->getChild("bounding-box", 0, true);
+      _bounding_box.resize(4);
+      _bounding_box[0] = bb_node->getChild("min-x", 0, true);
+      _bounding_box[1] = bb_node->getChild("min-y", 0, true);
+      _bounding_box[2] = bb_node->getChild("max-x", 0, true);
+      _bounding_box[3] = bb_node->getChild("max-y", 0, true);
     }
   }
 
@@ -254,13 +242,18 @@ namespace canvas
     {
       if( parent->getNameString() == NAME_TRANSFORM )
         _transform_dirty = true;
-      else if( parent->getNameString() == NAME_COLOR )
+      else if( !_color.empty() && _color[0]->getParent() == parent )
         _attributes_dirty |= COLOR;
-      else if( parent->getNameString() == NAME_COLOR_FILL )
+      else if( !_color_fill.empty() && _color_fill[0]->getParent() == parent )
         _attributes_dirty |= COLOR_FILL;
     }
-    else
-      childChanged(child);
+    else if( parent == _node )
+    {
+      if( child->getNameString() == "update" )
+        update(0);
+      else
+        childChanged(child);
+    }
   }
 
 } // namespace canvas

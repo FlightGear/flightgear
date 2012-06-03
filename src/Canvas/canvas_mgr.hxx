@@ -26,6 +26,7 @@
 #include <vector>
 
 class Canvas;
+typedef boost::shared_ptr<Canvas> CanvasPtr;
 
 class CanvasMgr:
   public SGSubsystem,
@@ -55,7 +56,7 @@ class CanvasMgr:
     SGPropertyNode_ptr _props;
 
     /** The actual canvases */
-    std::vector<Canvas> _canvases;
+    std::vector<CanvasPtr> _canvases;
 
     void textureAdded(SGPropertyNode* node);
 
@@ -64,12 +65,6 @@ class CanvasMgr:
      * (Unlimited depth) and node itself.
      */
     void triggerChangeRecursive(SGPropertyNode* node);
-
-    /**
-     * Get the value of a property or throw an exception if it doesn't exist.
-     */
-    template<class T>
-    T getParam(const SGPropertyNode* node, const char* prop);
 
 };
 

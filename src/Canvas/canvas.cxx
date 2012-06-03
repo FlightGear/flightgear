@@ -18,15 +18,13 @@
 
 #include "canvas.hxx"
 #include "elements/group.hxx"
+#include <Canvas/property_helper.hxx>
 
 #include <osg/Camera>
 #include <osg/Geode>
 #include <osgText/Text>
 
 #include <iostream>
-
-//#include <Main/globals.hxx>
-//#include <Viewer/renderer.hxx>
 
 //------------------------------------------------------------------------------
 /**
@@ -97,8 +95,9 @@ Canvas::Canvas():
   _view_width(-1),
   _view_height(-1),
   _status(0),
-  _node(0),
-  _sampling_dirty(false)
+  _sampling_dirty(false),
+  _color_dirty(true),
+  _node(0)
 {
   setStatusFlags(MISSING_SIZE_X | MISSING_SIZE_Y);
 
@@ -110,7 +109,10 @@ Canvas::Canvas():
 //------------------------------------------------------------------------------
 Canvas::~Canvas()
 {
+  clearPlacements();
 
+  unbind();
+  _node = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -122,23 +124,21 @@ int Canvas::getStatus() const
 //------------------------------------------------------------------------------
 void Canvas::reset(SGPropertyNode* node)
 {
-  if( _node )
-  {
-    _node->untie("size[0]");
-    _node->untie("size[1]");
-    _node->untie("view[0]");
-    _node->untie("view[1]");
-    _node->untie("status");
-    _node->untie("status-msg");
-    _node->removeChangeListener(this);
-    _node = 0;
-  }
+  if( node )
+    SG_LOG
+    (
+      SG_GL,
+      SG_INFO,
+      "Canvas::reset() texture[" << node->getIndex() << "]"
+    );
 
+  unbind();
+
+  _node = node;
   setStatusFlags(MISSING_SIZE_X | MISSING_SIZE_Y);
 
-  if( node )
+  if( _node )
   {
-    _node = node;
     _node->tie
     (
       "size[0]",
@@ -174,6 +174,14 @@ void Canvas::reset(SGPropertyNode* node)
       SGRawValueMethods<Canvas, const char*>(*this, &Canvas::getStatusMsg)
     );
     _node->addChangeListener(this);
+
+    canvas::linkColorNodes
+    (
+      "color-background",
+      _node,
+      _color_background,
+      osg::Vec4f(0,0,0,1)
+    );
   }
 }
 
@@ -216,6 +224,17 @@ void Canvas::update(double delta_time_sec)
       _node->getIntValue("color-samples")
     );
     _sampling_dirty = false;
+  }
+  if( _color_dirty )
+  {
+    _texture.getCamera()->setClearColor
+    (
+      osg::Vec4( _color_background[0]->getFloatValue(),
+                 _color_background[1]->getFloatValue(),
+                 _color_background[2]->getFloatValue(),
+                 _color_background[3]->getFloatValue() )
+    );
+    _color_dirty = false;
   }
 
   while( !_dirty_placements.empty() )
@@ -345,8 +364,6 @@ void Canvas::childAdded( SGPropertyNode * parent,
   {
     _dirty_placements.push_back(child);
   }
-//  else
-//    std::cout << "Canvas::childAdded: " << child->getPath() << std::endl;
 }
 
 //------------------------------------------------------------------------------
@@ -358,24 +375,29 @@ void Canvas::childRemoved( SGPropertyNode * parent,
 
   if( child->getNameString() == "placement" )
     clearPlacements(child->getIndex());
-  else
-    std::cout << "Canvas::childRemoved: " << child->getPath() << std::endl;
 }
 
 //----------------------------------------------------------------------------
 void Canvas::valueChanged(SGPropertyNode * node)
 {
-  if( node->getParent()->getParent() == _node
-      && node->getParent()->getNameString() == "placement" )
+  if( node->getParent()->getParent() == _node )
   {
-    // prevent double updates...
-    for( size_t i = 0; i < _dirty_placements.size(); ++i )
+    if(    !_color_background.empty()
+        && _color_background[0]->getParent() == node->getParent() )
     {
-      if( node->getParent() == _dirty_placements[i] )
-        return;
+      _color_dirty = true;
     }
+    else if( node->getParent()->getNameString() == "placement" )
+    {
+      // prevent double updates...
+      for( size_t i = 0; i < _dirty_placements.size(); ++i )
+      {
+        if( node->getParent() == _dirty_placements[i] )
+          return;
+      }
 
-    _dirty_placements.push_back(node->getParent());
+      _dirty_placements.push_back(node->getParent());
+    }
   }
   else if( node->getParent() == _node )
   {
@@ -427,4 +449,27 @@ void Canvas::clearPlacements(int index)
     group->removeChild(child);
     parent->removeChild(group);
   }
+}
+
+//------------------------------------------------------------------------------
+void Canvas::clearPlacements()
+{
+  for(size_t i = 0; i < _placements.size(); ++i)
+    clearPlacements(i);
+  _placements.clear();
+}
+
+//------------------------------------------------------------------------------
+void Canvas::unbind()
+{
+  if( !_node )
+    return;
+
+  _node->untie("size[0]");
+  _node->untie("size[1]");
+  _node->untie("view[0]");
+  _node->untie("view[1]");
+  _node->untie("status");
+  _node->untie("status-msg");
+  _node->removeChangeListener(this);
 }

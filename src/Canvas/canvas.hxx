@@ -73,6 +73,9 @@ class Canvas:
 
   private:
 
+    Canvas(const Canvas&); // = delete;
+    Canvas& operator=(const Canvas&); // = delete;
+
     int _size_x,
         _size_y,
         _view_width,
@@ -81,10 +84,13 @@ class Canvas:
     int         _status;
     std::string _status_msg;
 
-    FGODGauge       _texture;
-    SGPropertyNode *_node;
+    bool _sampling_dirty,
+         _color_dirty;
 
-    bool _sampling_dirty;
+    FGODGauge _texture;
+
+    SGPropertyNode_ptr              _node;
+    std::vector<SGPropertyNode_ptr> _color_background;
 
     osg::ref_ptr<osg::NodeCallback> _camera_callback;
     osg::ref_ptr<osg::NodeCallback> _cull_callback;
@@ -96,6 +102,9 @@ class Canvas:
 
     void setStatusFlags(unsigned int flags, bool set = true);
     void clearPlacements(int index);
+    void clearPlacements();
+
+    void unbind();
 };
 
 #endif /* CANVAS_HXX_ */

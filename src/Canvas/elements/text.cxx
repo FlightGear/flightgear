@@ -17,26 +17,30 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "text.hxx"
-#include <osgText/Text>
+#include <Canvas/property_helper.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+
+#include <osgText/Text>
 
 namespace canvas
 {
 
   //----------------------------------------------------------------------------
-  Text::Text(SGPropertyNode* node):
+  Text::Text(SGPropertyNode_ptr node):
     Element(node, COLOR | COLOR_FILL | BOUNDING_BOX),
-    _text( new osgText::Text )
+    _text( new osgText::Text ),
+    _font_size( 0 ),
+    _font_aspect( 0 )
   {
-    _drawable = _text;
-    _text->setCharacterSizeMode(osgText::Text::SCREEN_COORDS);
+    setDrawable(_text);
+    _text->setCharacterSizeMode(osgText::Text::OBJECT_COORDS);
+    _text->setAxisAlignment(osgText::Text::USER_DEFINED_ROTATION);
+    _text->setRotation(osg::Quat(osg::PI, osg::X_AXIS));
 
-    // font size and property node
-    float character_size = _node->getFloatValue("size", 32);
-    _text->setCharacterSize( character_size );
-    _node->setFloatValue("size", character_size);
+    _font_size = getChildDefault<float>(_node, "character-size", 32);
+    _font_aspect = getChildDefault<float>(_node, "character-aspect-ratio", 1);
 
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
     geode->addDrawable(_text);
@@ -82,7 +86,30 @@ namespace canvas
   //----------------------------------------------------------------------------
   Text::~Text()
   {
+    if( _node )
+    {
+      _node->untie("alignment");
+      _node->untie("padding");
+      _node->untie("draw-mode");
+    }
+    _node = 0;
+  }
 
+  //----------------------------------------------------------------------------
+  void Text::update(double dt)
+  {
+    Element::update(dt);
+
+    if( _attributes_dirty & FONT_SIZE )
+    {
+      _text->setCharacterSize
+      (
+        _font_size->getFloatValue(),
+        _font_aspect->getFloatValue()
+      );
+
+      _attributes_dirty &= ~FONT_SIZE;
+    }
   }
 
   //----------------------------------------------------------------------------
@@ -123,16 +150,12 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Text::childChanged(SGPropertyNode* child)
   {
-    if( child->getNameString() == "text" )
-      _text->setText(child->getStringValue());
-    else if( child->getNameString() == "size" )
-      _text->setCharacterSize( child->getFloatValue() );
+    if( _font_size == child || _font_aspect == child )
+      _attributes_dirty |= FONT_SIZE;
+    else if( child->getNameString() == "text" )
+      _text->setText( child->getStringValue() );
     else if( child->getNameString() == "font" )
       setFont( child->getStringValue() );
-    else
-      return;
-
-    _attributes_dirty |= BOUNDING_BOX;
   }
 
   //----------------------------------------------------------------------------
