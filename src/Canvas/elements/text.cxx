@@ -42,10 +42,6 @@ namespace canvas
     _font_size = getChildDefault<float>(_node, "character-size", 32);
     _font_aspect = getChildDefault<float>(_node, "character-aspect-ratio", 1);
 
-    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-    geode->addDrawable(_text);
-    _transform->addChild(geode);
-
     _node->tie
     (
       "alignment",

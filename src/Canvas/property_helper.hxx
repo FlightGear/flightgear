@@ -45,6 +45,22 @@ namespace canvas
   }
 
   /**
+   * Get vector of properties
+   */
+  template<typename T, typename T_get /* = T */> // TODO use C++11 or traits
+  std::vector<T> getVectorFromChildren( const SGPropertyNode* parent,
+                                        const char* child_name )
+  {
+    const simgear::PropertyList& props = parent->getChildren(child_name);
+    std::vector<T> values( props.size() );
+
+    for( size_t i = 0; i < props.size(); ++i )
+      values[i] = getValue<T_get>(props[i]);
+
+    return values;
+  }
+
+  /**
    * @param name    Name of color node
    * @param parent  Parent for color channel nodes
    * @param nodes   Vector to push color nodes into

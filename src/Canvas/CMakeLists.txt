@@ -5,6 +5,7 @@ set(SOURCES
   canvas_mgr.cxx
   elements/element.cxx
   elements/group.cxx
+  elements/path.cxx
   elements/text.cxx
   property_helper.cxx
 )
@@ -14,6 +15,7 @@ set(HEADERS
   canvas_mgr.hxx
   elements/element.hxx
   elements/group.hxx
+  elements/path.hxx
   elements/text.hxx
   property_helper.hxx
 )

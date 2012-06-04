@@ -20,6 +20,7 @@
 #include <Canvas/property_helper.hxx>
 
 #include <osg/Drawable>
+#include <osg/Geode>
 
 #include <cassert>
 #include <cstring>
@@ -156,6 +157,10 @@ namespace canvas
   {
     _drawable = drawable;
     assert( _drawable );
+
+    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+    geode->addDrawable(_drawable);
+    _transform->addChild(geode);
 
     if( _attributes_used & BOUNDING_BOX )
     {

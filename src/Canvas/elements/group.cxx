@@ -17,6 +17,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "group.hxx"
+#include "path.hxx"
 #include "text.hxx"
 
 namespace canvas
@@ -38,11 +39,10 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Group::update(double dt)
   {
-    for( size_t i = 0; i < _children.size(); ++i )
-    {
-      if( _children[i] )
-        _children[i]->update(dt);
-    }
+    for( ChildMap::iterator child = _children.begin();
+         child != _children.end();
+         ++child )
+      child->second->update(dt);
 
     Element::update(dt);
   }
@@ -56,6 +56,8 @@ namespace canvas
       element.reset( new Text(child) );
     else if( child->getNameString() == "group" )
       element.reset( new Group(child) );
+    else if( child->getNameString() == "path" )
+      element.reset( new Path(child) );
     else
       SG_LOG
       (
@@ -69,37 +71,29 @@ namespace canvas
 
     // Add to osg scene graph...
     _transform->addChild( element->getMatrixTransform() );
-
-    // ...and build up canvas hierarchy
-    size_t index = child->getIndex();
-
-    if( index >= _children.size() )
-      _children.resize(index + 1);
-
-    _children[index] = element;
+    _children[ child ] = element;
   }
 
   //----------------------------------------------------------------------------
-  void Group::childRemoved(SGPropertyNode* child)
+  void Group::childRemoved(SGPropertyNode* node)
   {
-    if(    child->getNameString() == "text"
-        || child->getNameString() == "group" )
+    if(    node->getNameString() == "text"
+        || node->getNameString() == "group"
+        || node->getNameString() == "path")
     {
-      size_t index = child->getIndex();
+      ChildMap::iterator child = _children.find(node);
 
-      if( index >= _children.size() )
+      if( child == _children.end() )
         SG_LOG
         (
           SG_GL,
           SG_WARN,
-          "can't removed unknown child " << child->getDisplayName()
+          "can't removed unknown child " << node->getDisplayName()
         );
       else
       {
-        boost::shared_ptr<Element>& element = _children[index];
-        if( element )
-          _transform->removeChild(element->getMatrixTransform());
-        element.reset();
+        _transform->removeChild( child->second->getMatrixTransform() );
+        _children.erase(child);
       }
     }
   }

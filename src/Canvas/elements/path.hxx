@@ -1,4 +1,4 @@
-// A group of 2D canvas elements
+// An OpenVG path on the canvas
 //
 // Copyright (C) 2012  Thomas Geymayer <tomgey@gmail.com>
 //
@@ -16,35 +16,39 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef CANVAS_GROUP_HXX_
-#define CANVAS_GROUP_HXX_
+#ifndef CANVAS_PATH_HXX_
+#define CANVAS_PATH_HXX_
 
 #include "element.hxx"
-#include <boost/shared_ptr.hpp>
-#include <map>
 
 namespace canvas
 {
-
-  typedef boost::shared_ptr<Element> ElementPtr;
-
-  class Group:
+  class PathDrawable;
+  class Path:
     public Element
   {
     public:
-      Group(SGPropertyNode_ptr node);
-      virtual ~Group();
+      Path(SGPropertyNode_ptr node);
+      virtual ~Path();
 
       virtual void update(double dt);
 
     protected:
-      typedef std::map<const SGPropertyNode*, ElementPtr> ChildMap;
-      ChildMap _children;
 
-      virtual void childAdded(SGPropertyNode * child);
-      virtual void childRemoved(SGPropertyNode * child);
+      enum PathAttributes
+      {
+        CMDS       = LAST_ATTRIBUTE << 1,
+        COORDS     = CMDS << 1,
+        STROKE     = COORDS << 1
+      };
+
+      osg::ref_ptr<PathDrawable> _path;
+
+      virtual void childChanged(SGPropertyNode * child);
+      virtual void colorChanged(const osg::Vec4& color);
+      virtual void colorFillChanged(const osg::Vec4& color);
   };
 
 }  // namespace canvas
 
-#endif /* CANVAS_GROUP_HXX_ */
+#endif /* CANVAS_PATH_HXX_ */
