@@ -127,53 +127,6 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  Element::Element(SGPropertyNode_ptr node, uint32_t attributes_used):
-    _attributes_used( attributes_used ),
-    _attributes_dirty( attributes_used ),
-    _transform_dirty( false ),
-    _transform( new osg::MatrixTransform ),
-    _node( node ),
-    _drawable( 0 )
-  {
-    assert( _node );
-    _node->addChangeListener(this);
-
-    if( _attributes_used & COLOR )
-      linkColorNodes("color", _node, _color, osg::Vec4f(0,1,0,1));
-
-    if( _attributes_used & COLOR_FILL )
-      linkColorNodes("color-fill", _node, _color_fill);
-
-    SG_LOG
-    (
-      SG_GL,
-      SG_DEBUG,
-      "New canvas element " << node->getPath()
-    );
-  }
-
-  //----------------------------------------------------------------------------
-  void Element::setDrawable( osg::Drawable* drawable )
-  {
-    _drawable = drawable;
-    assert( _drawable );
-
-    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-    geode->addDrawable(_drawable);
-    _transform->addChild(geode);
-
-    if( _attributes_used & BOUNDING_BOX )
-    {
-      SGPropertyNode* bb_node = _node->getChild("bounding-box", 0, true);
-      _bounding_box.resize(4);
-      _bounding_box[0] = bb_node->getChild("min-x", 0, true);
-      _bounding_box[1] = bb_node->getChild("min-y", 0, true);
-      _bounding_box[2] = bb_node->getChild("max-x", 0, true);
-      _bounding_box[3] = bb_node->getChild("max-y", 0, true);
-    }
-  }
-
-  //----------------------------------------------------------------------------
   void Element::childAdded(SGPropertyNode* parent, SGPropertyNode* child)
   {
     if( parent == _node )
@@ -258,6 +211,53 @@ namespace canvas
         update(0);
       else
         childChanged(child);
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  Element::Element(SGPropertyNode_ptr node, uint32_t attributes_used):
+    _attributes_used( attributes_used ),
+    _attributes_dirty( attributes_used ),
+    _transform_dirty( false ),
+    _transform( new osg::MatrixTransform ),
+    _node( node ),
+    _drawable( 0 )
+  {
+    assert( _node );
+    _node->addChangeListener(this);
+
+    if( _attributes_used & COLOR )
+      linkColorNodes("color", _node, _color, osg::Vec4f(0,1,0,1));
+
+    if( _attributes_used & COLOR_FILL )
+      linkColorNodes("color-fill", _node, _color_fill, osg::Vec4f(1,0,1,1));
+
+    SG_LOG
+    (
+      SG_GL,
+      SG_DEBUG,
+      "New canvas element " << node->getPath()
+    );
+  }
+
+  //----------------------------------------------------------------------------
+  void Element::setDrawable( osg::Drawable* drawable )
+  {
+    _drawable = drawable;
+    assert( _drawable );
+
+    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+    geode->addDrawable(_drawable);
+    _transform->addChild(geode);
+
+    if( _attributes_used & BOUNDING_BOX )
+    {
+      SGPropertyNode* bb_node = _node->getChild("bounding-box", 0, true);
+      _bounding_box.resize(4);
+      _bounding_box[0] = bb_node->getChild("min-x", 0, true);
+      _bounding_box[1] = bb_node->getChild("min-y", 0, true);
+      _bounding_box[2] = bb_node->getChild("max-x", 0, true);
+      _bounding_box[3] = bb_node->getChild("max-y", 0, true);
     }
   }
 

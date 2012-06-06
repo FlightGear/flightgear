@@ -139,6 +139,7 @@ void Canvas::reset(SGPropertyNode* node)
 
   if( _node )
   {
+    _root_group.reset( new canvas::Group(_node) );
     _node->tie
     (
       "size[0]",
@@ -198,9 +199,7 @@ void Canvas::update(double delta_time_sec)
     _texture.useStencil(true);
     _texture.allocRT(_camera_callback);
     _texture.getCamera()->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f , 1.0f));
-
-    for( size_t i = 0; i < _groups.size(); ++i )
-      _texture.getCamera()->addChild( _groups[i]->getMatrixTransform() );
+    _texture.getCamera()->addChild(_root_group->getMatrixTransform());
 
     if( _texture.serviceable() )
     {
@@ -213,8 +212,7 @@ void Canvas::update(double delta_time_sec)
     }
   }
 
-  for( size_t i = 0; i < _groups.size(); ++i )
-    _groups[i]->update(delta_time_sec);
+  _root_group->update(delta_time_sec);
 
   if( _sampling_dirty )
   {
@@ -351,19 +349,11 @@ void Canvas::childAdded( SGPropertyNode * parent,
   if( parent != _node )
     return;
 
-  if( child->getNameString() == "group" )
-  {
-    _groups.push_back
-    (
-      boost::shared_ptr<canvas::Group>(new canvas::Group(child))
-    );
-    if( _texture.serviceable() )
-      _texture.getCamera()->addChild( _groups.back()->getMatrixTransform() );
-  }
-  else if( child->getNameString() == "placement" )
-  {
+  if( child->getNameString() == "placement" )
     _dirty_placements.push_back(child);
-  }
+  else
+    static_cast<canvas::Element*>(_root_group.get())
+      ->childAdded(parent, child);
 }
 
 //------------------------------------------------------------------------------
@@ -375,10 +365,13 @@ void Canvas::childRemoved( SGPropertyNode * parent,
 
   if( child->getNameString() == "placement" )
     clearPlacements(child->getIndex());
+  else
+    static_cast<canvas::Element*>(_root_group.get())
+      ->childRemoved(parent, child);
 }
 
 //----------------------------------------------------------------------------
-void Canvas::valueChanged(SGPropertyNode * node)
+void Canvas::valueChanged(SGPropertyNode* node)
 {
   if( node->getParent()->getParent() == _node )
   {
@@ -406,6 +399,8 @@ void Canvas::valueChanged(SGPropertyNode * node)
         || node->getNameString() == "color-samples" )
       _sampling_dirty = true;
   }
+
+  _root_group->valueChanged(node);
 }
 
 //------------------------------------------------------------------------------

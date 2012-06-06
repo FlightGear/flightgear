@@ -317,21 +317,23 @@ VGU_API_CALL VGUErrorCode vguComputeWarpQuadToSquare(VGfloat sx0, VGfloat sy0,
                                                      VGfloat *matrix)
 {
   /* Basic idea taken from the reference implementation */
+  VGfloat mat[3][3];
+  VGfloat det, det00, det01, det02;
+
   if( !matrix )
     return VGU_ILLEGAL_ARGUMENT_ERROR;
 
-  VGfloat mat[3][3];
   if(    vguComputeWarpSquareToQuad( sx0, sy0, sx1, sy1, sx2, sy2, sx3, sy3,
                                      (VGfloat*)mat )
       == VGU_BAD_WARP_ERROR )
     return VGU_BAD_WARP_ERROR;
 
   // Invert the matrix...
-  VGfloat det00 = mat[1][1]*mat[2][2] - mat[2][1]*mat[1][2];
-  VGfloat det01 = mat[2][0]*mat[1][2] - mat[1][0]*mat[2][2];
-  VGfloat det02 = mat[1][0]*mat[2][1] - mat[2][0]*mat[1][1];
+  det00 = mat[1][1]*mat[2][2] - mat[2][1]*mat[1][2];
+  det01 = mat[2][0]*mat[1][2] - mat[1][0]*mat[2][2];
+  det02 = mat[1][0]*mat[2][1] - mat[2][0]*mat[1][1];
 
-  VGfloat det = mat[0][0]*det00 + mat[0][1]*det01 + mat[0][2]*det02;
+  det = mat[0][0]*det00 + mat[0][1]*det01 + mat[0][2]*det02;
   if( det == 0.0f )
     return VGU_BAD_WARP_ERROR;
 

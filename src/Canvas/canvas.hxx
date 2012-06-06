@@ -23,7 +23,7 @@
 #include <simgear/props/props.hxx>
 #include <osg/NodeCallback>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 
 namespace canvas
@@ -88,6 +88,7 @@ class Canvas:
          _color_dirty;
 
     FGODGauge _texture;
+    std::auto_ptr<canvas::Group> _root_group;
 
     SGPropertyNode_ptr              _node;
     std::vector<SGPropertyNode_ptr> _color_background;
@@ -96,9 +97,6 @@ class Canvas:
     osg::ref_ptr<osg::NodeCallback> _cull_callback;
     std::vector<SGPropertyNode*> _dirty_placements;
     std::vector<Placements> _placements;
-
-    // TODO replace auto_ptr with unique_ptr as soon as C++11 is used!
-    std::vector<boost::shared_ptr<canvas::Group> > _groups;
 
     void setStatusFlags(unsigned int flags, bool set = true);
     void clearPlacements(int index);

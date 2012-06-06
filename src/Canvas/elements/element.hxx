@@ -32,7 +32,7 @@ namespace canvas
 {
 
   class Element:
-    private SGPropertyChangeListener
+    public SGPropertyChangeListener
   {
     public:
       virtual ~Element() = 0;
@@ -45,6 +45,12 @@ namespace canvas
       virtual void update(double dt);
 
       osg::ref_ptr<osg::MatrixTransform> getMatrixTransform();
+
+      virtual void childAdded( SGPropertyNode * parent,
+                               SGPropertyNode * child );
+      virtual void childRemoved( SGPropertyNode * parent,
+                                 SGPropertyNode * child );
+      virtual void valueChanged(SGPropertyNode * child);
 
     protected:
 
@@ -93,12 +99,6 @@ namespace canvas
       osg::Drawable  *_drawable;
 
       Element(const Element&);// = delete
-
-      virtual void childAdded( SGPropertyNode * parent,
-                               SGPropertyNode * child );
-      virtual void childRemoved( SGPropertyNode * parent,
-                                 SGPropertyNode * child );
-      virtual void valueChanged(SGPropertyNode * child);
   };
 
 }  // namespace canvas

@@ -76,7 +76,7 @@ namespace canvas
   void linkColorNodes( const char* name,
                        SGPropertyNode* parent,
                        std::vector<SGPropertyNode_ptr>& nodes,
-                       const osg::Vec4& def = osg::Vec4(0,0,0,0) );
+                       const osg::Vec4& def = osg::Vec4(0,0,0,1) );
 
 } // namespace canvas
 

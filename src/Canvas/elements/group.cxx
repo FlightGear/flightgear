@@ -58,13 +58,6 @@ namespace canvas
       element.reset( new Group(child) );
     else if( child->getNameString() == "path" )
       element.reset( new Path(child) );
-    else
-      SG_LOG
-      (
-        SG_GL,
-        SG_WARN,
-        "canvas::Group unknown child: " << child->getDisplayName()
-      );
 
     if( !element )
       return;

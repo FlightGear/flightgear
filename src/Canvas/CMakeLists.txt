@@ -19,7 +19,7 @@ set(HEADERS
   elements/text.hxx
   property_helper.hxx
 )
-    
+
 flightgear_component(Canvas "${SOURCES}" "${HEADERS}")
 
 add_subdirectory(ShivaVG/src)

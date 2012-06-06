@@ -1,12 +1,14 @@
-#SET(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib")
+include(CheckIncludeFile)
+check_include_file("inttypes.h" HAVE_INTTYPES_H)
 
-ADD_DEFINITIONS(
-    -DVG_API_EXPORT
-    -DHAVE_INTTYPES_H
-)
+if(HAVE_INTTYPES_H)
+  add_definitions(-DHAVE_INTTYPES_H)
+endif()
+add_definitions(-DVG_API_EXPORT)
 
 INCLUDE_DIRECTORIES(
-    ${OPENGL_INCLUDE_DIR}
+  ${OPENGL_INCLUDE_DIR}
+  ../include
 )
 
 SET(INCROOT ../include/VG)
@@ -44,10 +46,3 @@ TARGET_LINK_LIBRARIES(
     ${OPENGL_gl_LIBRARY}
     ${OPENGL_glu_LIBRARY}
 )
-
-#INSTALL(
-#    TARGETS OpenVG
-#    RUNTIME DESTINATION bin COMPONENT bin
-#    LIBRARY DESTINATION lib${LIB_SUFFIX} COMPONENT bin
-#    ARCHIVE DESTINATION lin${LIB_SUFFIX} COMPONENT devel
-#)
