@@ -1,0 +1,80 @@
+shIsValid* functions do a search through array!!!
+That is required because user handles are actually pointers and need to be found in the valid path array. Solution would be to use indices into an array of pointers for internal handle-to-pointer conversion. When a path is deleted, an empty space would be left in the array and used when the next path is created.
+
+How to speed up image upload / manipulation
+=============================================
+
+1) shCopyPixels uses memcpy
+
+First, manipulation can be speeded up by modifying shCopyPixels
+to copy lines using memcpy directly when source and target
+formats are equal. If stride is same too, than we can memcpy
+the whole block of memory.
+
+2) What about mapping image manipulation directly to OpenGL
+texture manipulation calls? Which formats could support this?
+
+PROBLEM: if NOPS textures are not supported, then writing
+and reading the image data back results in a precision loss!
+Even if PBO available we'd need to gluScaleImage into it.
+
+--> means: no NOPS, need intermediate buffer anyway
+
+=== Solution1: PBO are available ====
+
+Extension required: EXT_pixel_buffer_object (ARB_pixel_buffer_object ?)
+
+Complexity of implementation: really easy - PBO simply
+replaces the buffer that would be used if NOPS were not there
+
+Cannot just glBindBuffer(GL_PIXEL_UNPACK_BUFFER) and then
+glReadPixels into client memory, because glPixelStore
+doesn't allow for random row byte size ("stride" must be
+a multiple of pixel byte size).
+
+We can safely glMapBuffer and copy from it whatever we want
+however we want, and do any kind of conversion inbetween.
+Is glMapBuffer + memcpy into user memory faster than just
+glGetTexImage? Probably yes, since glGetTexImage probably
+first downloads the data from GPU anyway.
+
+glMapBuffer better anyway, because we can directly do the format
+conversions unsupported by OpenGL (premultiplied to unpremultiplied,
+grayscale conversion with different per component coefficients
+instead of simple averaging etc.). We use all the exact same code
+as when NOPS not supported.
+
+
+=== Solution2: no PBOs ===
+
+- vgImageSubData     => glTexSubImage2D
+- vgGetImageSubData  => glGetTexImage
+- vgCopyImage        => glGetTexImage, glTexSubImage2D
+- vgSetPixels        => glGetTexImage, glDrawPixels
+
+  (PROBLEM: for glGetTexImage, row length in glPixelStore must
+   be a multiple of pixel byte size!)
+
+- when copying pixels to/from the texture, we still need to
+  manually clip the working pixel region to the intersection
+  of the source and destination rectangles, since opengl spec
+  says INVALID_VALUE error is generated for invalid regions
+  (e.g. dstX + copyW > dstW)
+
+
+How to solve great slow-down when scaled up?
+=============================================
+
+Reasons:
+- cpu is subdividing a loooong path
+- fill-rate is a bad thing
+
+1. By writing gradient shaders, there would be no need to
+draw into stencil first and then fill the whole area where stencil
+odd - at least not when drawing stroke (optimizes half of the pipeline)
+
+2. Real tesselation would reduce fill rate for filled paths, but does
+the CPU bottleneck outweight the gain?
+
+3. Early path discarding (transformed bounds outside surface? maybe
+early convex-hull rule removal?)

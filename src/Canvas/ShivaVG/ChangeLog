@@ -1,0 +1,67 @@
+04 Feb 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * shImage.c: shCopyPixels uses memcpy when formats are
+    equal.
+
+04 Feb 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * openvg.h: changed typedef of VGHandle to void*. Code
+    compiles with no warnings on 64-bit systems now and
+    it's much safer anyway.
+
+03 Feb 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * shContest.c: fixed a bug in SHContext destructor where
+    resource deletion loop was iterating image array while
+    freeing paint objects
+
+03 Feb 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * a patch by Vincenzo Pupillo fixes array constructor behavior
+    when it runs out of memory plus makes its destructor a bit
+    more robust
+
+03 Feb 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * autogen.sh: added --force to autoreconf call
+
+03 Feb 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * Removed automake/autoconf generated files. Added autogen.sh
+    to generate them.
+
+03 Feb 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * configure.in: changed order of checks for glut library and
+    glXGetProcAddress in -lGL so that latter doesn't fail when
+    glut is not installed.
+
+30 Jan 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * shGeometry.c: shStrokePath() fixed to handle zero-length line
+    segments gracefully
+
+  * fixed the image color component ordering to be valid against the
+    spec
+
+  * shImage.c, shImage.h: completely overhauled to support multiple
+    image formats. Everything but _PRE and _BW_1 now supported.
+
+24 Jan 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * Moved release-related info from ChangeLog to NEWS. ChangeLog will
+    now include info regarding each commit to repository
+
+  * Rearranged the path tesselletaion and user-to-surface transformation
+    steps in the pipeline to produce higher curve resolution when path is
+    scaled up
+
+  * Using new pipeline design, transformed bound-box query can now return
+    really tight bounds
+
+  * Inserted empty/nop definitions for all non-implemented function so
+    that linking against the library doesn't fail.
+
+22 Jan 2008 Ivan Leben <ivan.leben@gmail.com>
+
+  * Fixed a bug where vgGetError would always return VG_NO_ERROR

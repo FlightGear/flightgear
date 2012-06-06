@@ -1,0 +1,38 @@
+version 0.2.0 to 0.2.1 (20 Mar 2009):
+  * Implemented scissoring for 1 scissor rectangle
+
+version 0.2.0 (20 Jan 2008):
+  * Fixed a bug where rotation in the paint-to-user matrix broke radial
+    gradient fill.
+
+  * vgCreateContextSH interface changed to allow for specification of
+    surface width and height
+
+  * new extension: vgResizeSurfaceSH to be called whenever the surface
+    needs to be resized to match the new window size
+
+  * #define GL_GLEXT_LEGACY in shExtensions.h prior to including gl.h
+    so it doesn't include glext.h automatically, which enables us to
+    check for OpenGL version and define OpenGL extension functions
+    manually.
+
+  * Optimized image uploading by replacing the call to gluBuild2DMipmaps
+    with glTexImage2D and changing the filter used to GL_LINEAR
+
+  * Added detection of ARB_texture_non_power_of_two extension to upload
+    rectangular images directly instead of scaling them and loosing
+    precision
+
+  * Pattern paint implemented
+
+  * Include folder changed to "vg" (lowercase)
+
+  * Added a message to test_blend program to notify the user that it
+    has not been implemented yet (black screen is therefore fine)
+
+  * All the calls to glLoadMatrix replaced with glPushMatrix,
+    glMultMatrix, glPopMatrix.
+
+  * Replaced images used in example programs for royalty-free
+
+  * README file written

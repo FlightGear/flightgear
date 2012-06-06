@@ -1,0 +1,42 @@
+----------
+Known bugs
+----------
+
+- outofmemory in arrays silently ignored
+- blending doesn't use premultiplied colors (not porter-duff model)
+- gradient color ramp is not interpolated in linear space
+- linear and non-linear image formats behave both linearly
+- radial gradient circle has got a fixed step instead of
+  proportional to its radius
+
+-------------------------
+Incomplete functionality:
+-------------------------
+
+- non-zero fill mode
+- proper porter-duff blending
+- masking
+- scissoring
+- child images
+- VG_DRAW_IMAGE_STENCIL
+- _PRE and BW_1 image formats
+- VGU warp matrices
+- EGL (image drawing targets)
+- boundbox / point-on-path / tangent-on-path queries
+- RENDERING_QUALITY_FASTER == RENDERING_QUALITY_BETTER
+
+---------------------------
+Possible portability issues
+---------------------------
+
+- GL_UNSIGNED_INT_8_8_8_8 and other for images
+- GL_MIRRORED_REPEAT for gradients
+- GL_CLAMP_TO_EDGE for gradients and pattern paints
+- GL_CLAMP_TO_BORDER for pattern paints
+- multitexturing for VG_DRAW_IMAGE_MULTIPLY, VG_DRAW_IMAGE_STENCIL
+
+------
+Bonus:
+------
+
+- gradient shaders? antialiasing shader?

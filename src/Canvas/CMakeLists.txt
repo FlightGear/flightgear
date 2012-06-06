@@ -21,3 +21,5 @@ set(HEADERS
 )
     
 flightgear_component(Canvas "${SOURCES}" "${HEADERS}")
+
+add_subdirectory(ShivaVG/src)
