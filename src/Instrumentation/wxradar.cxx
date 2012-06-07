@@ -247,6 +247,7 @@ wxRadarBg::init ()
     camera->addChild(_textGeode.get());
 
     updateFont();
+    _time = 0.0;
 }
 
 
@@ -299,7 +300,7 @@ wxRadarBg::update (double delta_time_sec)
     if (_time < _interval)
         return;
 
-    _time = 0.0;
+    _time -= _interval;
 
     string mode = _Instrument->getStringValue("display-mode", "arc");
     if (mode == "map") {

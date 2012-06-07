@@ -200,7 +200,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new VerticalSpeedIndicator( node ) );
 
         } else if ( name == "radar" ) {
-            set_subsystem( id, new wxRadarBg ( node ), 1);
+            set_subsystem( id, new wxRadarBg ( node ) );
 
         } else if ( name == "inst-vertical-speed-indicator" ) {
             set_subsystem( id, new InstVerticalSpeedIndicator( node ) );
@@ -215,13 +215,13 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new MasterReferenceGyro( node ) );
 
         } else if ( name == "groundradar" ) {
-            set_subsystem( id, new GroundRadar( node ), 1 );
+            set_subsystem( id, new GroundRadar( node ) );
 
         } else if ( name == "air-ground-radar" ) {
-            set_subsystem( id, new agRadar( node ),1);
+            set_subsystem( id, new agRadar( node ) );
 
         } else if ( name == "radar-altimeter" ) {
-            set_subsystem( id, new radAlt( node ),1);
+            set_subsystem( id, new radAlt( node ) );
 
         } else if ( name == "tcas" ) {
             set_subsystem( id, new TCAS( node ), 0.2);
