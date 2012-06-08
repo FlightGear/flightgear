@@ -239,7 +239,7 @@ FGPanelNode::~FGPanelNode()
 osg::Matrix FGPanelNode::transformMatrix() const
 {
   if (!_panel) {
-    osg::Matrix();
+    return osg::Matrix();
   }
 
   if (!_resizeToViewport) {
