@@ -94,9 +94,9 @@ struct CameraInfo : public osg::Referenced
           bufferSize( new osg::Uniform("fg_BufferSize", osg::Vec2f() ) ),
           projInverse( new osg::Uniform( "fg_ProjectionMatrixInverse", osg::Matrixf() ) ),
           viewInverse( new osg::Uniform( "fg_ViewMatrixInverse",osg::Matrixf() ) ),
+          view( new osg::Uniform( "fg_ViewMatrix",osg::Matrixf() ) ),
           worldPosCart( new osg::Uniform( "fg_CameraPositionCart", osg::Vec3f() ) ),
           worldPosGeod( new osg::Uniform( "fg_CameraPositionGeod", osg::Vec3f() ) ),
-          view( new osg::Uniform( "fg_ViewMatrix",osg::Matrixf() ) ),
           du( new osg::Uniform( "fg_du",osg::Vec4() ) ),
           dv( new osg::Uniform( "fg_dv",osg::Vec4() ) )
     {
