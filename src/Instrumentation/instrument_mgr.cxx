@@ -155,7 +155,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new DME( node ), 1.0 );
 
         } else if ( name == "encoder" ) {
-            set_subsystem( id, new Altimeter( node ) );
+            set_subsystem( id, new Altimeter( node ), 0.15 );
 
         } else if ( name == "gps" ) {
             set_subsystem( id, new GPS( node ) );
@@ -182,16 +182,16 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new MagCompass( node ) );
 
         } else if ( name == "marker-beacon" ) {
-            set_subsystem( id, new FGMarkerBeacon( node ) );
+            set_subsystem( id, new FGMarkerBeacon( node ), 0.2 );
 
         } else if ( name == "nav-radio" ) {
             set_subsystem( id, Instrumentation::NavRadio::createInstance( node ) );
 
         } else if ( name == "slip-skid-ball" ) {
-            set_subsystem( id, new SlipSkidBall( node ) );
+            set_subsystem( id, new SlipSkidBall( node ), 0.03 );
 
         } else if ( name == "transponder" ) {
-            set_subsystem( id, new Transponder( node ) );
+            set_subsystem( id, new Transponder( node ), 0.2 );
 
         } else if ( name == "turn-indicator" ) {
             set_subsystem( id, new TurnIndicator( node ) );
@@ -206,10 +206,10 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new InstVerticalSpeedIndicator( node ) );
 
         } else if ( name == "tacan" ) {
-            set_subsystem( id, new TACAN( node ) );
+            set_subsystem( id, new TACAN( node ), 0.2 );
 
         } else if ( name == "mk-viii" ) {
-            set_subsystem( id, new MK_VIII( node ) );
+            set_subsystem( id, new MK_VIII( node ), 0.2);
 
         } else if ( name == "master-reference-gyro" ) {
             set_subsystem( id, new MasterReferenceGyro( node ) );
@@ -224,7 +224,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new radAlt( node ),1);
 
         } else if ( name == "tcas" ) {
-            set_subsystem( id, new TCAS( node ) );
+            set_subsystem( id, new TCAS( node ), 0.2);
         
         } else if ( name == "navigation-display" ) {
             set_subsystem( id, new NavDisplay( node ) );
