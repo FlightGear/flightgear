@@ -453,6 +453,8 @@ void FGNavRadio::updateReceiver(double dt)
     heading_node->setDoubleValue(0.0);
     inrange_node->setBoolValue(false);
     signal_quality_norm_node->setDoubleValue(0.0);
+    gs_dist_node->setDoubleValue( 0.0 );
+    gs_inrange_node->setBoolValue(false);
     return;
   }
 
@@ -578,7 +580,7 @@ void FGNavRadio::updateReceiver(double dt)
   SG_CLAMP_RANGE(_cdiDeflection, -10.0, 10.0 );
   _cdiDeflection *= signal_quality_norm;
   
-  // cross-track error (in metres)
+  // cross-track error (in meters)
   _cdiCrossTrackErrorM = loc_dist * sin(r * SGD_DEGREES_TO_RADIANS);
   
   updateGlideSlope(dt, aircraft, signal_quality_norm);
@@ -586,21 +588,24 @@ void FGNavRadio::updateReceiver(double dt)
 
 void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double signal_quality_norm)
 {
-  _gsNeedleDeflection = 0.0;
-  if (!_gs || !inrange_node->getBoolValue()) {
-    gs_dist_node->setDoubleValue( 0.0 );
-    gs_inrange_node->setBoolValue(false);
+  bool gsInRange = (_gs && inrange_node->getBoolValue());
+  double gsDist = 0;
+
+  if (gsInRange)
+  {
+    gsDist = dist(aircraft, _gsCart);
+    gsInRange = (gsDist < (_gs->get_range() * SG_NM_TO_METER));
+  }
+
+  gs_inrange_node->setBoolValue(gsInRange);
+  gs_dist_node->setDoubleValue( gsDist );
+
+  if (!gsInRange)
+  {
     _gsNeedleDeflection = 0.0;
     _gsNeedleDeflectionNorm = 0.0;
     return;
   }
-  
-  double gsDist = dist(aircraft, _gsCart);
-  gs_dist_node->setDoubleValue(gsDist);
-  bool gsInRange = (gsDist < (_gs->get_range() * SG_NM_TO_METER));
-  gs_inrange_node->setBoolValue(gsInRange);
-        
-  if (!gsInRange) return;
   
   SGVec3d pos = aircraft - _gsCart; // relative vector from gs antenna to aircraft
   // The positive GS axis points along the runway in the landing direction,
