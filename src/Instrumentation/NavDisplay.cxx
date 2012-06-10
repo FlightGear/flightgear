@@ -1114,21 +1114,6 @@ bool NavDisplay::anyRuleForType(const string& type) const
     return false;
 }
 
-bool NavDisplay::anyRuleMatches(const string& type, const string_set& states) const
-{
-    BOOST_FOREACH(SymbolRule* r, _rules) {
-        if (!r->enabled || (r->type != type)) {
-            continue;
-        }
-
-        if (r->matches(states)) {
-            return true;
-        }
-    } // of rules iteration
-    
-    return false;
-}
-
 void NavDisplay::findRules(const string& type, const string_set& states, SymbolRuleVector& rules)
 {
     BOOST_FOREACH(SymbolRule* candidate, _rules) {
@@ -1152,6 +1137,7 @@ bool NavDisplay::isPositionedShown(FGPositioned* pos)
 void NavDisplay::isPositionedShownInner(FGPositioned* pos, SymbolRuleVector& rules)
 {
   string type = FGPositioned::nameForType(pos->type());
+  boost::to_lower(type);
   if (!anyRuleForType(type)) {
     return; // not diplayed at all, we're done
   }

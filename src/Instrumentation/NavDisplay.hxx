@@ -120,8 +120,6 @@ private:
     void processAI();
     void computeAIStates(const SGPropertyNode* ai, string_set& states);
     
-    
-    bool anyRuleMatches(const std::string& type, const string_set& states) const;
     void findRules(const std::string& type, const string_set& states, SymbolRuleVector& rules);
     
     SymbolInstance* addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars);
