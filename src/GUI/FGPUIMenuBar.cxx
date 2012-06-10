@@ -262,9 +262,12 @@ FGPUIMenuBar::destroy_menubar ()
                                 // plib.
     SG_LOG(SG_GENERAL, SG_BULK, "Deleting char arrays");
     for (i = 0; i < _char_arrays.size(); i++) {
-        for (int j = 0; _char_arrays[i][j] != 0; j++)
+        for (int j = 0; _char_arrays[i][j] != 0; j++) {
             free(_char_arrays[i][j]); // added with strdup
+            _char_arrays[i][j] = 0;
+        }
         delete[] _char_arrays[i];
+        _char_arrays[i] = 0;
     }
 
                                 // Delete all the callback arrays
