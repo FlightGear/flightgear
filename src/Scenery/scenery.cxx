@@ -229,7 +229,6 @@ void FGScenery::init() {
     // Terrain branch
     terrain_branch = new osg::Group;
     terrain_branch->setName( "Terrain" );
-    terrain_branch->setNodeMask( ~simgear::MODELLIGHT_BIT );
     scene_graph->addChild( terrain_branch.get() );
     SGSceneUserData* userData;
     userData = SGSceneUserData::getOrCreateSceneUserData(terrain_branch.get());
