@@ -216,6 +216,9 @@ void CameraInfo::updateCameras()
 
 void CameraInfo::resized(double w, double h)
 {
+	if (w == 1.0 && h == 1.0)
+		return;
+
     bufferSize->set( osg::Vec2f( w, h ) );
 
     for (RenderBufferMap::iterator ii = buffers.begin(); ii != buffers.end(); ++ii) {
