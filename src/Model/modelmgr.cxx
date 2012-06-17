@@ -81,7 +81,7 @@ FGModelMgr::add_model (SGPropertyNode * node)
         << t.getFormattedMessage() << t.getOrigin());
     return;
   }
-  
+
   Instance * instance = new Instance;
   SGModelPlacement *model = new SGModelPlacement;
   instance->model = model;
@@ -161,6 +161,7 @@ struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
     {
         SGModelPlacement* model = instance->model;
         double lon, lat, elev, roll, pitch, heading;
+        lon = lat = elev = roll = pitch = heading = 0.0;
 
         try {
             // Optionally set position from properties

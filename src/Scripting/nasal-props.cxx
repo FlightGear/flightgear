@@ -54,17 +54,20 @@ naRef FGNasalSys::propNodeGhost(SGPropertyNode* handle)
 // array.  This allows the Nasal handlers to do things like:
 //   Node.getChild = func { _getChild(me.ghost, arg) }
 //
-#define NODEARG()                                                       \
+#define NODENOARG()                                                       \
     if(argc < 2 || !naIsGhost(args[0]) ||                               \
        naGhost_type(args[0]) != &PropNodeGhostType)                       \
         naRuntimeError(c, "bad argument to props function");            \
-    SGPropertyNode_ptr* node = (SGPropertyNode_ptr*)naGhost_ptr(args[0]); \
+    SGPropertyNode_ptr* node = (SGPropertyNode_ptr*)naGhost_ptr(args[0]);
+
+#define NODEARG()                                                       \
+    NODENOARG(); 							\
     naRef argv = args[1]
 
 static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
 {
     using namespace simgear;
-    NODEARG();
+    NODENOARG();
     const char* t = "unknown";
     switch((*node)->getType()) {
     case props::NONE:   t = "NONE";   break;
@@ -141,13 +144,13 @@ static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
 
 static naRef f_getName(naContext c, naRef me, int argc, naRef* args)
 {
-    NODEARG();
+    NODENOARG();
     return NASTR((*node)->getName());
 }
 
 static naRef f_getIndex(naContext c, naRef me, int argc, naRef* args)
 {
-    NODEARG();
+    NODENOARG();
     return naNum((*node)->getIndex());
 }
 
@@ -166,7 +169,7 @@ naRef makeVectorFromVec(naContext c, const T& vec)
 static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
 {
     using namespace simgear;
-    NODEARG();
+    NODENOARG();
     switch((*node)->getType()) {
     case props::BOOL:   case props::INT:
     case props::LONG:   case props::FLOAT:
@@ -177,10 +180,10 @@ static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
           SG_LOG(SG_NASAL, SG_ALERT, "Nasal getValue: property " << (*node)->getPath() << " is NaN");
           return naNil();
         }
-        
+
         return naNum(dv);
     }
-    
+
     case props::STRING:
     case props::UNSPECIFIED:
         return NASTR((*node)->getStringValue());
@@ -228,12 +231,12 @@ static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
         naRef n = naNumValue(val);
         if(naIsNil(n))
             naRuntimeError(c, "props.setValue() with non-number");
-            
+
         double d = naNumValue(val).num;
         if (osg::isNaN(d)) {
           naRuntimeError(c, "props.setValue() passed a NaN");
         }
-        
+
         result = (*node)->setDoubleValue(d);
     }
     return naNum(result);
@@ -269,17 +272,17 @@ static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
     naRef r = naNumValue(naVec_get(argv, 0));
     if (naIsNil(r))
         naRuntimeError(c, "props.setDoubleValue() with non-number");
-        
+
     if (osg::isNaN(r.num)) {
       naRuntimeError(c, "props.setDoubleValue() passed a NaN");
     }
-        
+
     return naNum((*node)->setDoubleValue(r.num));
 }
 
 static naRef f_getParent(naContext c, naRef me, int argc, naRef* args)
 {
-    NODEARG();
+    NODENOARG();
     SGPropertyNode* n = (*node)->getParent();
     if(!n) return naNil();
     return propNodeGhostCreate(c, n);
@@ -390,13 +393,13 @@ static naRef f_alias(naContext c, naRef me, int argc, naRef* args)
 
 static naRef f_unalias(naContext c, naRef me, int argc, naRef* args)
 {
-    NODEARG();
+    NODENOARG();
     return naNum((*node)->unalias());
 }
 
 static naRef f_getAliasTarget(naContext c, naRef me, int argc, naRef* args)
 {
-    NODEARG();
+    NODENOARG();
     return propNodeGhostCreate(c, (*node)->getAliasTarget());
 }
 
