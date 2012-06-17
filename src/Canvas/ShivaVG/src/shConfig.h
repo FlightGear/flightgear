@@ -2,7 +2,6 @@
 #ifndef __SHCONFIG_H
 #define __SHCONFIG_H
 
-
 ////////////////////////////////////////////////////////////
 // Identify the operating system
 ////////////////////////////////////////////////////////////
@@ -25,7 +24,7 @@
 #elif defined(__APPLE__) || defined(MACOSX) || defined(macintosh) || defined(Macintosh)
 
     // MacOS
-    #define VG_API_MACOS
+    #define VG_API_MACOSX
 
 #elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 
