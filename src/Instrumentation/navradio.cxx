@@ -887,6 +887,7 @@ void FGNavRadio::search()
   // do we need to search a new NAV station in this iteration?
   if (_nav_search)
   {
+      _last_freq = freq;
       FGNavRecord* nav = findPrimaryNavaid(globals->get_aircraft_position(), freq);
       if (nav == _navaid) {
         if (nav && (nav->type() != FGPositioned::VOR))
