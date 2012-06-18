@@ -79,12 +79,12 @@ public:
     nav_list_type findAllByFreq( double freq, const SGGeod& position, 
                                 const FGPositioned::Type type = FGPositioned::INVALID);
   
-    // Given an Ident and optional freqency and type , 
+    // Given an Ident and optional frequency and type ,
     // return a list of matching stations.
     const nav_list_type findByIdentAndFreq( const std::string& ident,
         const double freq = 0.0, const FGPositioned::Type = FGPositioned::INVALID );
 
-    // Given an Ident and optional freqency and type , 
+    // Given an Ident and optional frequency and type ,
     // return a list of matching stations sorted by distance to the given position
     const nav_list_type findByIdentAndFreq( const SGGeod & position,
         const std::string& ident, const double freq = 0.0, 

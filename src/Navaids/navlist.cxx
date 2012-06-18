@@ -125,7 +125,7 @@ nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position, con
 }
 
 
-// Given an Ident and optional freqency, return the first matching
+// Given an Ident and optional frequency, return the first matching
 // station.
 const nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const double freq, const FGPositioned::Type type )
 {
@@ -148,7 +148,7 @@ const nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const dou
   return reply;
 }
 
-// Given an Ident and optional freqency and type , 
+// Given an Ident and optional frequency and type ,
 // return a list of matching stations sorted by distance to the given position
 const nav_list_type FGNavList::findByIdentAndFreq( const SGGeod & position,
         const std::string& ident, const double freq, const FGPositioned::Type type )

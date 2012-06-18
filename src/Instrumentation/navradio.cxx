@@ -103,7 +103,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     high_tbl(NULL),
     _operable(false),
     play_count(0),
-    last_time(0),
+    _last_freq(0.0),
     target_radial(0.0),
     effective_range(0.0),
     target_gs(0.0),
@@ -797,7 +797,7 @@ void FGNavRadio::updateCDI(double dt)
   SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
 
   // determine the target heading to fly to intercept the
-  // tgt_radial = target radial (true) + cdi offset adjustmest -
+  // tgt_radial = target radial (true) + cdi offset adjustment -
   // xtrack heading error adjustment
   double nta_hdg;
   double trtrue = target_radial_true_node->getDoubleValue();
@@ -873,18 +873,54 @@ FGNavRecord* FGNavRadio::findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz)
   return globals->get_loclist()->findByFreq(aFreqMHz, aPos);
 }
 
-// Update current nav/adf radio stations based on current postition
+// Update current nav/adf radio stations based on current position
 void FGNavRadio::search() 
 {
+  // set delay for next search
   _time_before_search_sec = 1.0;
+
   double freq = freq_node->getDoubleValue();
-  
-  FGNavRecord* nav = findPrimaryNavaid(globals->get_aircraft_position(), freq);
-  if (nav == _navaid) {
-    return; // found the same as last search, we're done
+
+  // immediate NAV search when frequency has changed (toggle between nav and g/s search otherwise)
+  _nav_search |= (_last_freq != freq);
+
+  // do we need to search a new NAV station in this iteration?
+  if (_nav_search)
+  {
+      FGNavRecord* nav = findPrimaryNavaid(globals->get_aircraft_position(), freq);
+      if (nav == _navaid) {
+        if (nav && (nav->type() != FGPositioned::VOR))
+            _nav_search = false;  // search glideslope on next iteration
+        return; // nav hasn't changed, we're done
+      }
+      // remember new navaid station
+      _navaid = nav;
   }
-  
-  _navaid = nav;
+
+  // search glideslope station
+  if ((_navaid.valid()) && (_navaid->type() != FGPositioned::VOR))
+  {
+      FGNavRecord* gs = globals->get_gslist()->findByFreq(freq, globals->get_aircraft_position());
+      if ((!_nav_search) && (gs == _gs))
+      {
+          _nav_search = true; // search NAV on next iteration
+          return; // g/s hasn't changed, neither has nav - we're done
+      }
+      // remember new glideslope station
+      _gs = gs;
+  }
+
+  _nav_search = true; // search NAV on next iteration
+
+  // nav or gs station has changed
+  updateNav();
+}
+
+// Update current nav/adf/glideslope outputs when station has changed
+void FGNavRadio::updateNav()
+{
+  // update necessary, nav and/or gs has changed
+  FGNavRecord* nav = _navaid;
   string identBuffer(4, ' ');
   if (nav) {
     nav_id_node->setStringValue(nav->get_ident());
@@ -897,17 +933,14 @@ void FGNavRadio::search()
     if (nav->type() == FGPositioned::VOR) {
       target_radial = sel_radial_node->getDoubleValue();
       _gs = NULL;
-      has_gs_node->setBoolValue(false);
     } else { // ILS or LOC
-      _gs = globals->get_gslist()->findByFreq(freq, globals->get_aircraft_position());
-      has_gs_node->setBoolValue(_gs != NULL);
       _localizerWidth = nav->localizerWidth();
       twist = 0.0;
-	    effective_range = nav->get_range();
+      effective_range = nav->get_range();
       
       target_radial = nav->get_multiuse();
       SG_NORMALIZE_RANGE(target_radial, 0.0, 360.0);
-      
+
       if (_gs) {
         int tmp = (int)(_gs->get_multiuse() / 1000.0);
         target_gs = (double)tmp / 100.0;
@@ -921,7 +954,7 @@ void FGNavRadio::search()
         _gsAxis = tangentVector(_gs->geod(), gs_radial);
 
         // GS baseline unit tangent vector
-        // (transverse to the runay along the ground)
+        // (transverse to the runway along the ground)
         _gsBaseline = tangentVector(_gs->geod(), gs_radial + 90.0);
         _gsVertical = cross(_gsBaseline, _gsAxis);
       } // of have glideslope
@@ -931,10 +964,10 @@ void FGNavRadio::search()
     _gs = NULL;
     nav_id_node->setStringValue("");
     loc_node->setBoolValue(false);
-    has_gs_node->setBoolValue(false);
     _audioIdent->setIdent("", 0.0 );
   }
 
+  has_gs_node->setBoolValue(_gs != NULL);
   is_valid_node->setBoolValue(nav != NULL);
   id_c1_node->setIntValue( (int)identBuffer[0] );
   id_c2_node->setIntValue( (int)identBuffer[1] );

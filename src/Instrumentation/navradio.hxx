@@ -124,7 +124,8 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
 
     bool _operable; ///< is the unit serviceable, on, powered, etc
     int play_count;
-    time_t last_time;
+    bool _nav_search;
+    double _last_freq;
     FGNavRecordPtr _navaid;
     FGNavRecordPtr _gs;
     
@@ -195,6 +196,7 @@ public:
 
     // Update nav/adf radios based on current postition
     void search ();
+    void updateNav();
 };
 
 
