@@ -34,18 +34,6 @@
 # OPENAL_LIBRARY to override this selection or set the CMake environment
 # CMAKE_INCLUDE_PATH to modify the search paths.
 
-FIND_PATH(ALUT_INCLUDE_DIR alut.h
-  HINTS
-  $ENV{ALUTDIR}
-  PATH_SUFFIXES include/AL include/ALUT include
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
-)
-
 FIND_LIBRARY(ALUT_LIBRARY 
   NAMES ALUT alut
   HINTS
@@ -59,9 +47,21 @@ FIND_LIBRARY(ALUT_LIBRARY
   /opt
 )
 
+FIND_PATH(ALUT_INCLUDE_DIR 
+  NAMES ALUT/alut.h alut.h
+  HINTS
+  $ENV{ALUTDIR}
+  PATH_SUFFIXES include/AL include
+  PATHS
+  ~/Library/Frameworks
+  /Library/Frameworks
+  /usr/local
+  /usr
+  /opt
+)
 
-SET(ALUT_FOUND "NO")
-IF(ALUT_LIBRARY AND ALUT_INCLUDE_DIR)
-  SET(ALUT_FOUND "YES")
-ENDIF(ALUT_LIBRARY AND ALUT_INCLUDE_DIR)
+INCLUDE(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(ALUT  DEFAULT_MSG  ALUT_LIBRARY ALUT_INCLUDE_DIR)
+
+MARK_AS_ADVANCED(ALUT_LIBRARY ALUT_INCLUDE_DIR)
 
