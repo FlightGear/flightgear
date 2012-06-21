@@ -3,7 +3,6 @@ include(FlightGearComponent)
 set(SOURCES
 	AirportList.cxx
 	MapWidget.cxx
-	SafeTexFont.cxx
 	WaypointList.cxx
 	dialog.cxx
 	FGPUIDialog.cxx
@@ -23,7 +22,6 @@ set(SOURCES
 set(HEADERS
 	AirportList.hxx
 	MapWidget.hxx
-	SafeTexFont.hxx
 	WaypointList.hxx
 	dialog.hxx
 	FGPUIDialog.hxx
