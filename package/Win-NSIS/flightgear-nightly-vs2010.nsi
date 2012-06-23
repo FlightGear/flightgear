@@ -32,8 +32,8 @@ AutoCloseWindow true
 
 !define ThirdPartyBinDir "3rdParty\bin"
 
-!define MUI_ICON "flightgear\projects\VC90\flightgear.ico"
-!define MUI_UNICON "flightgear\projects\VC90\flightgear.ico"
+!define MUI_ICON "flightgear\package\flightgear.ico"
+!define MUI_UNICON "flightgear\package\flightgear.ico"
 
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
