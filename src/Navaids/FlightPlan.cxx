@@ -148,7 +148,7 @@ FlightPlan::Leg* FlightPlan::insertWayptAtIndex(Waypt* aWpt, int aIndex)
   }
   
   insertWayptsAtIndex(wps, index);
-  return legAtIndex(aIndex);
+  return legAtIndex(index);
 }
   
 void FlightPlan::insertWayptsAtIndex(const WayptVec& wps, int aIndex)
