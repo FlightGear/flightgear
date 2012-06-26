@@ -1,6 +1,6 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=Flight Gear
+Name=FlightGear
 Exec=artsdsp /usr/games/fgfs --geometry=1024x768 --enable-game-mode
 Terminal=false
 Type=Application
