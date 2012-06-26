@@ -4,7 +4,9 @@
 #include <osg/Vec3>
 #include <osg/Matrix>
 #include <osg/Drawable>
+
 #include <simgear/structure/SGSharedPtr.hxx>
+#include <simgear/props/props.hxx>
 
 class FGPanel;
 class SGPropertyNode;
@@ -66,6 +68,12 @@ private:
     // The matrix that results, which transforms 2D x/y panel
     // coordinates into 3D coordinates of the panel quadrilateral.
     osg::Matrix _xform;  
+  
+    /// should the 2D panel auto-hide when the view orientation changes
+    mutable SGPropertyNode_ptr _autoHide2d;
+    
+    /// should the 2D panel be hidden in views other than the default (view 0)
+    mutable SGPropertyNode_ptr _hideNonDefaultViews;
 };
 
 

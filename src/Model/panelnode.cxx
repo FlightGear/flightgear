@@ -26,6 +26,7 @@
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 #include "Viewer/viewer.hxx"
+#include "Viewer/viewmgr.hxx"
 
 using std::vector;
 
@@ -304,7 +305,21 @@ bool FGPanelNode::isVisible2d() const
     return false;
   }
   
-  if (_panel->getAutohide()) {
+  if (!_hideNonDefaultViews) {
+    _hideNonDefaultViews = fgGetNode("/sim/panel/hide-nonzero-view", true);
+  }
+  
+  if (_hideNonDefaultViews->getBoolValue()) {
+    if (globals->get_viewmgr()->get_current() != 0) {
+      return false;
+    }
+  }
+  
+  if (!_autoHide2d) {
+    _autoHide2d = fgGetNode("/sim/panel/hide-nonzero-heading-offset", true);
+  }
+  
+  if (_panel->getAutohide() && _autoHide2d->getBoolValue()) {
     if (!globals->get_current_view()) {
       return false;
     }
