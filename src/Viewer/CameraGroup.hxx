@@ -100,6 +100,10 @@ struct CameraInfo : public osg::Referenced
           du( new osg::Uniform( "fg_du",osg::Vec4() ) ),
           dv( new osg::Uniform( "fg_dv",osg::Vec4() ) )
     {
+        shadowMatrix[0] = new osg::Uniform("fg_ShadowMatrix_0", osg::Matrixf());
+        shadowMatrix[1] = new osg::Uniform("fg_ShadowMatrix_1", osg::Matrixf());
+        shadowMatrix[2] = new osg::Uniform("fg_ShadowMatrix_2", osg::Matrixf());
+        shadowMatrix[3] = new osg::Uniform("fg_ShadowMatrix_3", osg::Matrixf());
     }
 
     /** Update and resize cameras
@@ -147,10 +151,7 @@ struct CameraInfo : public osg::Referenced
     void addBuffer(const std::string& k, osg::Texture2D* tex, float scale = 1.0 ) { buffers[k] = RenderBufferInfo(tex,scale); }
     osg::Texture2D* getBuffer(const std::string& k) const;
 
-    osg::ref_ptr<osg::TexGen> shadowTexGen[4];
-
     osg::ref_ptr<osg::Uniform> bufferSize;
-    //osg::ref_ptr<osg::Uniform> bloomOffset[2];
     osg::ref_ptr<osg::Uniform> projInverse;
     osg::ref_ptr<osg::Uniform> viewInverse;
     osg::ref_ptr<osg::Uniform> view;
@@ -158,6 +159,7 @@ struct CameraInfo : public osg::Referenced
     osg::ref_ptr<osg::Uniform> worldPosGeod;
     osg::ref_ptr<osg::Uniform> du;
     osg::ref_ptr<osg::Uniform> dv;
+    osg::ref_ptr<osg::Uniform> shadowMatrix[4];
 
     void setMatrices( osg::Camera* c );
 

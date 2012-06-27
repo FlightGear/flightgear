@@ -719,18 +719,15 @@ public:
                 for (int i = 0; i < 4; ++i ) {
                     if (!grp->getValue(i))
                         continue;
-                    osg::TexGen* shadowTexGen = info->shadowTexGen[i];
-                    shadowTexGen->setMode(osg::TexGen::EYE_LINEAR);
 
                     osg::Camera* cascadeCam = static_cast<osg::Camera*>( grp->getChild(i) );
-                    // compute the matrix which takes a vertex from view coords into tex coords
-                    shadowTexGen->setPlanesFromMatrix(  cascadeCam->getProjectionMatrix() *
-                                                        osg::Matrix::translate(1.0,1.0,1.0) *
-                                                        osg::Matrix::scale(0.5f,0.5f,0.5f) );
+                    osg::Matrixf shadowMatrix = camera->getInverseViewMatrix() *
+                                                cascadeCam->getViewMatrix() *
+                                                cascadeCam->getProjectionMatrix() *
+                                                osg::Matrix::translate(1.0, 1.0, 1.0) *
+                                                osg::Matrix::scale(0.5f, 0.5f, 0.5f);
 
-                    osg::RefMatrix * refMatrix = new osg::RefMatrix( cascadeCam->getInverseViewMatrix() * *cv->getModelViewMatrix() );
-
-                    cv->getRenderStage()->getPositionalStateContainer()->addPositionedTextureAttribute( i+1, refMatrix, shadowTexGen );
+                    info->shadowMatrix[i]->set( shadowMatrix );
                 }
             }
             // Render saved transparent render bins
@@ -876,7 +873,6 @@ osg::Camera* FGRenderer::buildDeferredShadowCamera( CameraInfo* info, osg::Graph
         osg::Camera* cascadeCam = createShadowCascadeCamera( i, _shadowMapSize/2 );
         cascadeCam->addChild( mDeferredRealRoot.get() );
         shadowSwitch->addChild( cascadeCam );
-        info->shadowTexGen[i] = new osg::TexGen;
     }
     if (fgGetBool("/sim/rendering/shadows/enabled", true))
         shadowSwitch->setAllChildrenOn();
@@ -1123,6 +1119,10 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const F
     ss->addUniform( info->bufferSize );
     ss->addUniform( info->worldPosCart );
     ss->addUniform( info->worldPosGeod );
+    ss->addUniform( info->shadowMatrix[0] );
+    ss->addUniform( info->shadowMatrix[1] );
+    ss->addUniform( info->shadowMatrix[2] );
+    ss->addUniform( info->shadowMatrix[3] );
     ss->addUniform( _ambientFactor );
     ss->addUniform( _sunDiffuse );
     ss->addUniform( _sunSpecular );
