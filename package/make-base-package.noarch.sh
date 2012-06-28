@@ -76,6 +76,8 @@ tar \
 		data/materials.dtd \
 		data/materials.xml \
 		data/mice.xml \
+		data/Materials \
+		data/Models \
 		data/Models \
 		data/MP \
 		data/N* \
@@ -88,5 +90,6 @@ tar \
 		data/Scenery/Terrain \
 		data/Shaders \
 		data/Sounds \
+		data/Startup \
 		data/T* \
 		data/version
