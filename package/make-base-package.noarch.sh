@@ -78,7 +78,6 @@ tar \
 		data/mice.xml \
 		data/Materials \
 		data/Models \
-		data/Models \
 		data/MP \
 		data/N* \
 		data/options.xml \
