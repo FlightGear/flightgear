@@ -1,8 +1,7 @@
-Building Flight Gear RPM package for Red Hat
+Building FlightGear RPM package for Red Hat
 
-G.Richard Keech <rkeech@redhat.com>
-
-2003-10-29
+Initial version: G.Richard Keech <rkeech@redhat.com>, 2003-10-29
+Last updated: The FlightGear Project, 2012-06-30
 
 This directory contains the files which, along with
 the source code tar files, can be used to build
@@ -16,20 +15,18 @@ To build flighgear from source do the following:
 
 1.	copy flightgear.spec to /usr/src/redhat/SPECS/
 
-2.	copy flightgear.48.png to /usr/src/redhat/SOURCES
+2.	copy flightgear.desktop to /usr/src/redhat/SOURCES
 
-3.	copy flightgear.desktop to /usr/src/redhat/SOURCES
-
-4.	obtain fgfs-base-0.9.3.tar.gz and FlightGear-0.9.3.tar.gz
+3.	obtain FlightGear-data-2.8.0.tar.bz2 and flightgear-2.8.0.tar.bz2
 	and copy them into /usr/src/redhat/SOURCES.
 
-5.	obtain and install SimGear (>= 0.3.4).
+4.	obtain and install SimGear (= 2.8.0).
 
-6.	look in the BuildRequires section of flightgear.spec
+5.	look in the BuildRequires section of flightgear.spec
 	and check that all the packages referred to are
 	installed.
 
-7.	cd /usr/src/redhat/SPECS
+6.	cd /usr/src/redhat/SPECS
 	rpmbuild -ba flightgear.spec
 
 that's it.
