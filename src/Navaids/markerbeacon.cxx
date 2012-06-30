@@ -53,7 +53,7 @@ FGMarkerBeaconRecord::create(int aTy, const string& aName, const SGGeod& aPos)
   FGRunway* runway = getRunwayFromName(aName);
   if (!runway)
   {
-      SG_LOG(SG_GENERAL, SG_ALERT, "Failed to create beacon for unknown runway '" << aName << "'.");
+      SG_LOG(SG_GENERAL, SG_WARN, "Failed to create beacon for unknown runway '" << aName << "'.");
       return NULL;
   }
   SGGeod pos(aPos);
