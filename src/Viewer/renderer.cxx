@@ -835,7 +835,7 @@ static osg::Camera* createShadowCascadeCamera( int no, int cascadeSize ) {
     oss << "CascadeCamera" << (no + 1);
     cascadeCam->setName( oss.str() );
     cascadeCam->setClearMask(0);
-    cascadeCam->setCullMask(~( simgear::MODELLIGHT_BIT /* | simgear::NO_SHADOW_BIT */ ) );
+    cascadeCam->setCullMask( simgear::CASTSHADOW_BIT );
     cascadeCam->setCullingMode( cascadeCam->getCullingMode() | osg::CullSettings::SMALL_FEATURE_CULLING );
     cascadeCam->setAllowEventFocus(false);
     cascadeCam->setReferenceFrame(osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT);
