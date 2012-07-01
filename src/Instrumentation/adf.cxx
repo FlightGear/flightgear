@@ -104,6 +104,7 @@ ADF::init ()
     _ident_node = node->getChild("ident", 0, true);
     _ident_audible_node = node->getChild("ident-audible", 0, true);
     _power_btn_node = node->getChild("power-btn", 0, true);
+    _operable_node      = node->getChild("operable", 0, true);
 
     if (_power_btn_node->getType() == simgear::props::NONE) 
       _power_btn_node->setBoolValue(true); // front end didn't implement a power button
@@ -125,10 +126,12 @@ ADF::update (double delta_time_sec)
             || !_serviceable_node->getBoolValue()
             || !_power_btn_node->getBoolValue()     ) {
         _in_range_node->setBoolValue(false);
+        _operable_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
 
+    _operable_node->setBoolValue(true);
     string mode = _mode_node->getStringValue();
     if (mode == "ant" || mode == "test") set_bearing(delta_time_sec, 90);
     if (mode != "bfo" && mode != "adf") {
