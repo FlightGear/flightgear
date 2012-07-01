@@ -168,7 +168,7 @@ FGNavRadio::init ()
 {
     SGPropertyNode* node = _radio_node.get();
     bus_power_node = 
-	fgGetNode(("/systems/electrical/outputs/" + _name).c_str(), true);
+        fgGetNode(("/systems/electrical/outputs/" + _name).c_str(), true);
 
     // inputs
     is_valid_node = node->getChild("data-is-valid", 0, true);

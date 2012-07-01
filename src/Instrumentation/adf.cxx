@@ -85,30 +85,36 @@ ADF::init ()
 {
     string branch;
     branch = "/instrumentation/" + _name;
-
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
-    _longitude_node = fgGetNode("/position/longitude-deg", true);
-    _latitude_node = fgGetNode("/position/latitude-deg", true);
-    _altitude_node = fgGetNode("/position/altitude-ft", true);
-    _heading_node = fgGetNode("/orientation/heading-deg", true);
-    _serviceable_node = node->getChild("serviceable", 0, true);
-    _error_node = node->getChild("error-deg", 0, true);
-    _electrical_node = fgGetNode("/systems/electrical/outputs/adf", true);
-    branch = branch + "/frequencies";
-    SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
-    _frequency_node = fnode->getChild("selected-khz", 0, true);
-    _mode_node = node->getChild("mode", 0, true);
-    _volume_node = node->getChild("volume-norm", 0, true);
-    _in_range_node = node->getChild("in-range", 0, true);
-    _bearing_node = node->getChild("indicated-bearing-deg", 0, true);
-    _ident_node = node->getChild("ident", 0, true);
+
+    // instrument properties
+    _error_node         = node->getChild("error-deg", 0, true);
+    _mode_node          = node->getChild("mode", 0, true);
+    _volume_node        = node->getChild("volume-norm", 0, true);
+    _in_range_node      = node->getChild("in-range", 0, true);
+    _bearing_node       = node->getChild("indicated-bearing-deg", 0, true);
+    _ident_node         = node->getChild("ident", 0, true);
     _ident_audible_node = node->getChild("ident-audible", 0, true);
-    _power_btn_node = node->getChild("power-btn", 0, true);
+    _serviceable_node   = node->getChild("serviceable", 0, true);
+    _power_btn_node     = node->getChild("power-btn", 0, true);
     _operable_node      = node->getChild("operable", 0, true);
 
+    // frequency properties
+    SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
+    _frequency_node       = fnode->getChild("selected-khz", 0, true);
+
+    // foreign simulator properties
+    _electrical_node    = fgGetNode("/systems/electrical/outputs/adf", true);
+    _longitude_node     = fgGetNode("/position/longitude-deg", true);
+    _latitude_node      = fgGetNode("/position/latitude-deg", true);
+    _altitude_node      = fgGetNode("/position/altitude-ft", true);
+    _heading_node       = fgGetNode("/orientation/heading-deg", true);
+
+    // backward compatibility check
     if (_power_btn_node->getType() == simgear::props::NONE) 
       _power_btn_node->setBoolValue(true); // front end didn't implement a power button
 
+    // sound support (audible ident code)
     SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
@@ -132,6 +138,7 @@ ADF::update (double delta_time_sec)
     }
 
     _operable_node->setBoolValue(true);
+
     string mode = _mode_node->getStringValue();
     if (mode == "ant" || mode == "test") set_bearing(delta_time_sec, 90);
     if (mode != "bfo" && mode != "adf") {
