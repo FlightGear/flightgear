@@ -1,0 +1,28 @@
+Building a FlightGear RPM package for openSUSE
+
+(Last tested with openSUSE 11.4+12.1)
+
+This directory contains the files which, along with
+the source code tar files, can be used to build
+an RPM package targeted at an openSUSE Linux system.
+
+To build FlightGear from source do the following:
+
+1. obtain flightgear-2.8.0.tar.bz2 (adapt version if
+   necessary) and copy it into ~/rpmbuild/SOURCES
+
+2. copy FlightGear.desktop to ~/rpmbuild/SOURCES
+
+3. obtain (or build) and install SimGear (exact
+   match with FlightGear's version required).
+
+4. look in the BuildRequires section of FlightGear.spec
+   and check that all the packages referred to are
+   installed (note, some of these packages may be part
+   of openSUSE's "games" repository).
+
+5. run 'rpmbuild -ba FlightGear.spec' and find the RPM
+   build result in ~/rpmbuild/RPMS
+
+That's all!
+
