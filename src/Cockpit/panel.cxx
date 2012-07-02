@@ -422,6 +422,9 @@ FGPanel::draw(osg::State& state)
     for ( unsigned int i = 0; i < _instruments.size(); i++ )
       _instruments[i]->drawHotspots(state);
 
+  // disable drawing of panel extents for the 2.8 release, since it
+  // confused use of hot-spot drawing in tutorials.
+#ifdef DRAW_PANEL_EXTENTS
     glColor3f(0, 1, 1);
 
     int x0, y0, x1, y1;
@@ -433,7 +436,7 @@ FGPanel::draw(osg::State& state)
     glVertex2f(x1, y1);
     glVertex2f(x0, y1);
     glEnd();
-
+#endif
     
     glPopAttrib();
 
