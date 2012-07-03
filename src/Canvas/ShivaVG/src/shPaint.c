@@ -405,7 +405,7 @@ int shDrawLinearGradientMesh(SHPaint *p, SHVector2 *min, SHVector2 *max,
   SHVector2 c, ux, uy;
   SHVector2 cc, uux, uuy;
   
-  SHMatrix3x3 *m;
+  SHMatrix3x3 *m = 0;
   SHMatrix3x3 mi;
   SHint invertible;
   SHVector2 corners[4];
@@ -521,7 +521,7 @@ int shDrawRadialGradientMesh(SHPaint *p, SHVector2 *min, SHVector2 *max,
   SHVector2 c, f;
   SHVector2 cf;
 
-  SHMatrix3x3 *m;
+  SHMatrix3x3 *m = 0;
   SHMatrix3x3 mi;
   SHint invertible;
   SHVector2 corners[4];
@@ -722,7 +722,7 @@ int shDrawRadialGradientMesh(SHPaint *p, SHVector2 *min, SHVector2 *max,
 int shDrawPatternMesh(SHPaint *p, SHVector2 *min, SHVector2 *max,
                       VGPaintMode mode, GLenum texUnit)
 {
-  SHMatrix3x3 *m;
+  SHMatrix3x3 *m = 0;
   SHMatrix3x3 mi;
   SHfloat migl[16];
   SHint invertible;

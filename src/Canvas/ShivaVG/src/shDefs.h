@@ -159,6 +159,7 @@ SHfloat getMaxFloat();
 #if defined(VG_API_LINUX)
     #include <GL/gl.h>
     #include <GL/glu.h>
+    #include <GL/glx.h>
 #elif defined(VG_API_MACOSX)
     #include <OpenGL/gl.h>
     #include <OpenGL/glu.h>
