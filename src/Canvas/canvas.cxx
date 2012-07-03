@@ -434,15 +434,17 @@ void Canvas::clearPlacements(int index)
     osg::ref_ptr<osg::Group> group = placements.back();
     placements.pop_back();
 
-    assert( group->getNumParents() == 1 );
     assert( group->getNumChildren() == 1 );
-
-    osg::Group *parent = group->getParent(0);
     osg::Node *child = group->getChild(0);
 
-    parent->addChild(child);
+    if( group->getNumParents() )
+    {
+      osg::Group *parent = group->getParent(0);
+      parent->addChild(child);
+      parent->removeChild(group);
+    }
+
     group->removeChild(child);
-    parent->removeChild(group);
   }
 }
 
