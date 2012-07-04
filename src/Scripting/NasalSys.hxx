@@ -102,6 +102,10 @@ public:
     naRef cmdArgGhost();
 
     // Callbacks for command and timer bindings
+    virtual bool handleCommand( const char* moduleName,
+                                const char* fileName,
+                                const char* src,
+                                const SGPropertyNode* arg = 0 );
     virtual bool handleCommand(const SGPropertyNode* arg);
 
     bool createModule(const char* moduleName, const char* fileName,

@@ -132,9 +132,9 @@ public:
     /**
      * Get the OSG camera for drawing this gauge.
      */
-    osg::Camera* getCamera() { return camera.get(); }
+    osg::Camera* getCamera() const { return camera.get(); }
 
-    osg::Texture2D* getTexture() { return texture.get(); }
+    osg::Texture2D* getTexture() const { return texture.get(); }
     //void setTexture(osg::Texture2D* t) { texture = t; }
 
     // Real initialization function. Bad name.

@@ -18,6 +18,7 @@
 #include "property_list.hxx"
 #include "layout.hxx"
 #include "WaypointList.hxx"
+#include "CanvasWidget.hxx"
 #include "MapWidget.hxx"
 #include "FGFontCache.hxx"
 #include "FGColor.hxx"
@@ -827,6 +828,13 @@ FGPUIDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeigh
         MapWidget* mapWidget = new MapWidget(x, y, x + width, y + height);
         setupObject(mapWidget, props);
         return mapWidget;
+    } else if (type == "canvas") {
+        CanvasWidget* canvasWidget = new CanvasWidget( x, y,
+                                                       x + width, y + height,
+                                                       props,
+                                                       _module );
+        setupObject(canvasWidget, props);
+        return canvasWidget;
     } else if (type == "combo") {
         fgComboBox *obj = new fgComboBox(x, y, x + width, y + height, props,
                 props->getBoolValue("editable", false));

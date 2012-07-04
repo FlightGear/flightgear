@@ -1163,7 +1163,7 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     // Initialize the canvas 2d drawing subsystem.
     ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("Canvas2D", new CanvasMgr, SGSubsystemMgr::DISPLAY);
+    globals->add_subsystem("Canvas", new CanvasMgr, SGSubsystemMgr::DISPLAY);
 
     ////////////////////////////////////////////////////////////////////
     // Initialise the ATIS Manager

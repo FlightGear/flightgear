@@ -816,11 +816,12 @@ naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
     return naBindFunction(_context, code, _globals);
 }
 
-bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
+bool FGNasalSys::handleCommand( const char* moduleName,
+                                const char* fileName,
+                                const char* src,
+                                const SGPropertyNode* arg )
 {
-    const char* nasal = arg->getStringValue("script");
-    const char* moduleName = arg->getStringValue("module");
-    naRef code = parse(arg->getPath(true).c_str(), nasal, strlen(nasal));
+    naRef code = parse(fileName, src, strlen(src));
     if(naIsNil(code)) return false;
 
     // Commands can be run "in" a module.  Make sure that module
@@ -843,6 +844,17 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
 
     call(code, 0, 0, locals);
     return true;
+}
+
+bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
+{
+  const char* src = arg->getStringValue("script");
+  const char* moduleName = arg->getStringValue("module");
+
+  return handleCommand( moduleName,
+                        arg ? arg->getPath(true).c_str() : moduleName,
+                        src,
+                        arg );
 }
 
 // settimer(func, dt, simtime) extension function.  The first argument

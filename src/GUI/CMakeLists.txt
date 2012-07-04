@@ -2,6 +2,7 @@ include(FlightGearComponent)
 
 set(SOURCES
 	AirportList.cxx
+	CanvasWidget.cxx
 	MapWidget.cxx
 	WaypointList.cxx
 	dialog.cxx
@@ -21,6 +22,7 @@ set(SOURCES
 
 set(HEADERS
 	AirportList.hxx
+	CanvasWidget.hxx
 	MapWidget.hxx
 	WaypointList.hxx
 	dialog.hxx

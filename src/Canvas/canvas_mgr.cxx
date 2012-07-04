@@ -108,6 +108,16 @@ void CanvasMgr::childRemoved( SGPropertyNode * parent,
 }
 
 //------------------------------------------------------------------------------
+unsigned int CanvasMgr::getCanvasTexId(size_t index) const
+{
+  if(    index >= _canvases.size()
+      || !_canvases[index] )
+    return 0;
+
+  return _canvases[index]->getTexId();
+}
+
+//------------------------------------------------------------------------------
 void CanvasMgr::textureAdded(SGPropertyNode* node)
 {
   size_t index = node->getIndex();
@@ -119,10 +129,8 @@ void CanvasMgr::textureAdded(SGPropertyNode* node)
 
     _canvases.resize(index + 1);
   }
-  else
-  {
+  else if( _canvases[index] )
     SG_LOG(SG_GL, SG_WARN, "texture[" << index << "] already exists!");
-  }
 
   _canvases[index].reset( new Canvas() );
   _canvases[index]->reset(node);

@@ -18,11 +18,15 @@
 
 #include "canvas.hxx"
 #include "elements/group.hxx"
+
 #include <Canvas/property_helper.hxx>
+#include <Main/globals.hxx>
+#include <Viewer/renderer.hxx>
 
 #include <osg/Camera>
 #include <osg/Geode>
 #include <osgText/Text>
+#include <osgViewer/Viewer>
 
 #include <iostream>
 
@@ -97,13 +101,13 @@ Canvas::Canvas():
   _status(0),
   _sampling_dirty(false),
   _color_dirty(true),
-  _node(0)
+  _node(0),
+  _render_always(false)
 {
   setStatusFlags(MISSING_SIZE_X | MISSING_SIZE_Y);
 
-  CameraCullCallback *camera_callback = new CameraCullCallback;
-  _camera_callback = camera_callback;
-  _cull_callback = new PlacementCullCallback(this, camera_callback);
+  _camera_callback = new CameraCullCallback;
+  _cull_callback = new PlacementCullCallback(this, _camera_callback);
 }
 
 //------------------------------------------------------------------------------
@@ -254,6 +258,9 @@ void Canvas::update(double delta_time_sec)
       _cull_callback
     );
   }
+
+  if( _render_always )
+    _camera_callback->enableRendering();
 }
 
 //------------------------------------------------------------------------------
@@ -398,9 +405,36 @@ void Canvas::valueChanged(SGPropertyNode* node)
         || node->getNameString() == "coverage-samples"
         || node->getNameString() == "color-samples" )
       _sampling_dirty = true;
+    else if( node->getNameString() == "render-always" )
+      _render_always = node->getBoolValue();
   }
 
   _root_group->valueChanged(node);
+}
+
+//------------------------------------------------------------------------------
+GLuint Canvas::getTexId() const
+{
+  osg::Texture2D* tex = _texture.getTexture();
+  if( !tex )
+    return 0;
+
+  osgViewer::Viewer::Contexts contexts;
+  globals->get_renderer()->getViewer()->getContexts(contexts);
+
+  if( contexts.empty() )
+    return 0;
+
+  osg::State* state = contexts[0]->getState();
+  if( !state )
+    return 0;
+
+  osg::Texture::TextureObject* tobj =
+    tex->getTextureObject( state->getContextID() );
+  if( !tobj )
+    return 0;
+
+  return tobj->_id;
 }
 
 //------------------------------------------------------------------------------

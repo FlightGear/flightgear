@@ -50,6 +50,14 @@ class CanvasMgr:
     virtual void childRemoved( SGPropertyNode * parent,
                                SGPropertyNode * child );
 
+    /**
+     * Get OpenGL texture name for given canvas
+     *
+     * @param Index of canvas
+     * @return OpenGL texture name
+     */
+    unsigned int getCanvasTexId(size_t index) const;
+
   private:
 
     /** Root node for everything concerning the canvas system */

@@ -31,6 +31,7 @@ namespace canvas
   class Group;
 }
 
+class CameraCullCallback;
 class Canvas:
   public SGPropertyChangeListener
 {
@@ -71,6 +72,8 @@ class Canvas:
                                SGPropertyNode * child );
     virtual void valueChanged (SGPropertyNode * node);
 
+    GLuint getTexId() const;
+
   private:
 
     Canvas(const Canvas&); // = delete;
@@ -93,8 +96,11 @@ class Canvas:
     SGPropertyNode_ptr              _node;
     std::vector<SGPropertyNode_ptr> _color_background;
 
-    osg::ref_ptr<osg::NodeCallback> _camera_callback;
+    osg::ref_ptr<CameraCullCallback> _camera_callback;
     osg::ref_ptr<osg::NodeCallback> _cull_callback;
+
+    bool _render_always; //<! Used to disable automatic lazy rendering (culling)
+
     std::vector<SGPropertyNode*> _dirty_placements;
     std::vector<Placements> _placements;
 
