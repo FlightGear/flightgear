@@ -73,8 +73,6 @@ tar \
 		data/joysticks.xml \
 		data/keyboard.xml \
 		data/Lighting \
-		data/materials.dtd \
-		data/materials.xml \
 		data/mice.xml \
 		data/Materials \
 		data/Models \
