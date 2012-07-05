@@ -148,7 +148,7 @@ static void shDrawBoundBox(VGContext *c, SHPath *p, VGPaintMode mode)
 static void shDrawPaintMesh(VGContext *c, SHVector2 *min, SHVector2 *max,
                             VGPaintMode mode, GLenum texUnit)
 {
-  SHPaint *p;
+  SHPaint *p = 0;
   SHVector2 pmin, pmax;
   SHfloat K = 1.0f;
   
@@ -199,7 +199,7 @@ VGboolean shIsTessCacheValid (VGContext *c, SHPath *p)
 {
   SHfloat nX, nY;
   SHVector2 X, Y;
-  SHMatrix3x3 mi, mchange;
+  SHMatrix3x3 mi;//, mchange;
   VGboolean valid = VG_TRUE;
 
   if (p->cacheDataValid == VG_FALSE) {
@@ -214,7 +214,7 @@ VGboolean shIsTessCacheValid (VGContext *c, SHPath *p)
   else
   {
     /* TODO: Compare change matrix for any scale or shear  */
-    MULMATMAT( c->pathTransform, mi, mchange );
+//    MULMATMAT( c->pathTransform, mi, mchange );
     SET2( X, mi.m[0][0], mi.m[1][0] );
     SET2( Y, mi.m[0][1], mi.m[1][1] );
     nX = NORM2( X ); nY = NORM2( Y );

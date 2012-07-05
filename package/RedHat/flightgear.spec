@@ -6,17 +6,17 @@ Summary: The FlightGear Flight Simulator
 Name: %{name}
 Version: %{version}
 Release: %{release}
-License: GPL
+License: GPL-2.0
 URL: http://www.flightgear.org
 Group: Games/Other
 BuildRoot: %{_tmppath}/%{name}-buildroot
 Source: http://mirrors.ibiblio.org/pub/mirrors/flightgear/ftp/Source/flightgear-%{version}.tar.bz2
 Source1: http://mirrors.ibiblio.org/pub/mirrors/flightgear/ftp/Shared/FlightGear-data-%{version}.tar.bz2
 Source3: flightgear.desktop
+BuildRequires: gcc, gcc-c++, cmake
 BuildRequires: plib >= 1.8.0, SimGear = %{version}
-BuildRequires: XFree86-devel, XFree86-Mesa-libGL, XFree86-Mesa-libGLU, gcc, zlib-devel
+BuildRequires: XFree86-devel, XFree86-Mesa-libGL, XFree86-Mesa-libGLU, zlib-devel
 BuildRequires: OpenSceneGraph >= 3.0.0
-Requires: XFree86-devel, XFree86-Mesa-libGL, XFree86-Mesa-libGLU, gcc, zlib-devel
 Obsoletes: FlightGear
 Provides: FlightGear = %{version}-%{release}
 
