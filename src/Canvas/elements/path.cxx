@@ -79,8 +79,6 @@ namespace canvas
       {
         _stroke_width = width;
         _stroke_dash = dash;
-
-        _attributes_dirty |= STROKE;
       }
 
       /**
@@ -161,23 +159,14 @@ namespace canvas
         }
 
         // Initialize/Update the paint
-        if( _attributes_dirty & (STROKE_COLOR | STROKE) )
+        if( _attributes_dirty & STROKE_COLOR )
         {
           if( _paint == VG_INVALID_HANDLE )
             _paint = vgCreatePaint();
 
-          if( _attributes_dirty & STROKE_COLOR )
-            vgSetParameterfv(_paint, VG_PAINT_COLOR, 4, _stroke_color);
-          if( _attributes_dirty & STROKE )
-          {
-            vgSetf(VG_STROKE_LINE_WIDTH, _stroke_width);
+          vgSetParameterfv(_paint, VG_PAINT_COLOR, 4, _stroke_color);
 
-            vgSetfv( VG_STROKE_DASH_PATTERN,
-                     _stroke_dash.size(),
-                     _stroke_dash.empty() ? 0 : &_stroke_dash[0] );
-          }
-
-          _attributes_dirty &= ~(STROKE_COLOR | STROKE);
+          _attributes_dirty &= ~STROKE_COLOR;
         }
 
         // Initialize/update fill paint
@@ -198,6 +187,11 @@ namespace canvas
         {
           mode |= VG_STROKE_PATH;
           vgSetPaint(_paint, VG_STROKE_PATH);
+
+          vgSetf(VG_STROKE_LINE_WIDTH, _stroke_width);
+          vgSetfv( VG_STROKE_DASH_PATTERN,
+                   _stroke_dash.size(),
+                   _stroke_dash.empty() ? 0 : &_stroke_dash[0] );
         }
         if( _fill )
         {
@@ -225,8 +219,7 @@ namespace canvas
       {
         PATH            = 0x0001,
         STROKE_COLOR    = PATH << 1,
-        STROKE          = STROKE_COLOR << 1,
-        FILL_COLOR      = STROKE << 1,
+        FILL_COLOR      = STROKE_COLOR << 1,
         FILL            = FILL_COLOR << 1
       };
 
