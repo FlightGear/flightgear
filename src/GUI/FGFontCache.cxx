@@ -66,10 +66,11 @@ const GuiFont guifonts[] = {
     { "HELVETICA_12", &FONT_HELVETICA_12 },
     { "HELVETICA_14", &FONT_HELVETICA_14 },
     { "HELVETICA_18", &PUFONT_HELVETICA_18 },
-    { "SANS_12B",     &FONT_SANS_12B }
+    { "SANS_12B",     &FONT_SANS_12B },
+    { 0 }
 };
 
-const GuiFont* guifontsEnd = &guifonts[sizeof(guifonts)/ sizeof(guifonts[0])];
+const GuiFont* guifontsEnd = &guifonts[sizeof(guifonts)/ sizeof(guifonts[0])-1];
 }
 
 FGFontCache::FGFontCache() :
