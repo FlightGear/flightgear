@@ -733,7 +733,7 @@ fgOptMach( const char *arg )
 static int
 fgOptRoc( const char *arg )
 {
-    fgSetDouble("/velocities/vertical-speed-fps", atof(arg)/60);
+    fgSetDouble("/sim/presets/vertical-speed-fps", atof(arg)/60);
     return FG_OPTIONS_OK;
 }
 

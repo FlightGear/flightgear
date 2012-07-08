@@ -63,7 +63,7 @@ int
 FGInterface::_calc_multiloop (double dt)
 {
   // Since some time the simulation time increments we get here are
-  // already a multiple of the basic update freqency.
+  // already a multiple of the basic update frequency.
   // So, there is no need to do our own multiloop rounding with all bad
   // roundoff problems when we already have nearly accurate values.
   // Only the speedup thing must be still handled here
@@ -158,6 +158,8 @@ FGInterface::common_init ()
     double ground_elev_m = get_groundlevel_m(lat, lon, alt_m);
     double ground_elev_ft = ground_elev_m * SG_METER_TO_FEET;
     _set_Runway_altitude ( ground_elev_ft );
+
+    // Set aircraft altitude
     if ( fgGetBool("/sim/presets/onground") || alt_ft < ground_elev_ft ) {
         fgSetDouble("/position/altitude-ft", ground_elev_ft + 0.1);
         set_Altitude( ground_elev_ft + 0.1);
@@ -218,8 +220,11 @@ FGInterface::common_init ()
     if ( fgHasNode("/sim/presets/glideslope-deg") )
         set_Gamma_vert_rad( fgGetDouble("/sim/presets/glideslope-deg")
                               * SGD_DEGREES_TO_RADIANS );
-    else if ( fgHasNode( "/velocities/vertical-speed-fps") )
-        set_Climb_Rate( fgGetDouble("/velocities/vertical-speed-fps") );
+    else if ( fgHasNode("/sim/presets/speed-set") &&
+              fgHasNode( "/sim/presets/vertical-speed-fps") )
+    {
+        set_Climb_Rate( fgGetDouble("/sim/presets/vertical-speed-fps") );
+    }
 
     SG_LOG( SG_FLIGHT, SG_INFO, "End common FDM init" );
 }
