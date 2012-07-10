@@ -39,6 +39,11 @@ public:
   MenuItemBindings itemBindings;
 };
 
+// prior to the 10.6 SDK, NSMenuDelegate was an informal protocol
+#if __MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+@protocol NSMenuDelegate <NSObject>
+@end
+#endif
 
 @interface CocoaMenuDelegate : NSObject <NSMenuDelegate> {
 @private
