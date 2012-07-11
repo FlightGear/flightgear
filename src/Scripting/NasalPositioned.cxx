@@ -1291,8 +1291,13 @@ static naRef f_airport_parking(naContext c, naRef me, int argc, naRef* args)
       continue;
     }
     
-    naRef nm = stringToNasal(c, park->getName());
-    naVec_append(r, nm);
+    const SGGeod& parkLoc = park->getGeod();
+    naRef ph = naNewHash(c);
+    hashset(c, ph, "name", stringToNasal(c, park->getName()));
+    hashset(c, ph, "lat", naNum(parkLoc.getLatitudeDeg()));
+    hashset(c, ph, "lon", naNum(parkLoc.getLongitudeDeg()));
+    hashset(c, ph, "elevation", naNum(parkLoc.getElevationM()));
+    naVec_append(r, ph);
   }
   
   return r;
