@@ -56,19 +56,19 @@ namespace canvas
         switch( _transform_types[i] )
         {
           case TT_MATRIX:
-            tf = osg::Matrix( tf_node->getDoubleValue("a", 1),
-                              tf_node->getDoubleValue("b", 0), 0, 0,
+            tf = osg::Matrix( tf_node->getDoubleValue("m[0]", 1),
+                              tf_node->getDoubleValue("m[1]", 0), 0, 0,
 
-                              tf_node->getDoubleValue("c", 0),
-                              tf_node->getDoubleValue("d", 1), 0, 0,
+                              tf_node->getDoubleValue("m[2]", 0),
+                              tf_node->getDoubleValue("m[3]", 1), 0, 0,
 
                               0,    0,    1, 0,
-                              tf_node->getDoubleValue("e", 0),
-                              tf_node->getDoubleValue("f", 0), 0, 1 );
+                              tf_node->getDoubleValue("m[4]", 0),
+                              tf_node->getDoubleValue("m[5]", 0), 0, 1 );
             break;
           case TT_TRANSLATE:
-            tf.makeTranslate( osg::Vec3f( tf_node->getDoubleValue("tx", 0),
-                                          tf_node->getDoubleValue("ty", 0),
+            tf.makeTranslate( osg::Vec3f( tf_node->getDoubleValue("t[0]", 0),
+                                          tf_node->getDoubleValue("t[1]", 0),
                                           0 ) );
             break;
           case TT_ROTATE:
@@ -76,9 +76,9 @@ namespace canvas
             break;
           case TT_SCALE:
           {
-            float sx = tf_node->getDoubleValue("sx", 1);
+            float sx = tf_node->getDoubleValue("s[0]", 1);
             // sy defaults to sx...
-            tf.makeScale( sx, tf_node->getDoubleValue("sy", sx), 1 );
+            tf.makeScale( sx, tf_node->getDoubleValue("s[1]", sx), 1 );
             break;
           }
           default:
@@ -151,14 +151,13 @@ namespace canvas
 
       TransformType& type = _transform_types[parent->getIndex()];
 
-      if(    name == "a" || name == "b" || name == "c"
-          || name == "d" || name == "e" || name == "f" )
+      if(      name == "m" )
         type = TT_MATRIX;
-      else if( name == "tx" || name == "ty" )
+      else if( name == "t" )
         type = TT_TRANSLATE;
       else if( name == "rot" )
         type = TT_ROTATE;
-      else if( name == "sx" || name == "sy" )
+      else if( name == "s" )
         type = TT_SCALE;
       else
         SG_LOG

@@ -76,14 +76,16 @@ only drawing Text is possible:
  <character-aspect-ratio type="float">  Ratio between character height and width
                                         (default: 1)
  <tf>               A 3x3 transformation matrix specified by 6 values
-                    (child elements <a>, ..., <f>) See
+                    (child elements <m n="0">, ..., <m n="5"> which equal to a,
+                     ...,f used in the SVG standard) See
                     http://www.w3.org/TR/SVG/coords.html#TransformMatrixDefined
                     for details.
                     You can also use shortcuts and use an alternative to
                     specifying six values:
-                     - Translation: <tx>, <ty> (ty, ty default to 0)
-                     - Totation: <rot>
-                     - Scale: <sx>, <sy> (sx is required, sy defaults to sx)
+                     - Translation: <t n="0">, <t n="1"> (both default to 0)
+                     - Rotation: <rot>
+                     - Scale: <s n="0">, <s n="1"> (s[0] is required, s[1]
+                                                    defaults to s[0])
  <alginment type="string">   Text alignment (default: "left-baseline") One of:
 
                               "left-top"
