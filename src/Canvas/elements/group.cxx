@@ -17,6 +17,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "group.hxx"
+#include "map.hxx"
 #include "path.hxx"
 #include "text.hxx"
 
@@ -56,6 +57,8 @@ namespace canvas
       element.reset( new Text(child) );
     else if( child->getNameString() == "group" )
       element.reset( new Group(child) );
+    else if( child->getNameString() == "map" )
+      element.reset( new Map(child) );
     else if( child->getNameString() == "path" )
       element.reset( new Path(child) );
 
@@ -72,7 +75,8 @@ namespace canvas
   {
     if(    node->getNameString() == "text"
         || node->getNameString() == "group"
-        || node->getNameString() == "path")
+        || node->getNameString() == "map"
+        || node->getNameString() == "path" )
     {
       ChildMap::iterator child = _children.find(node);
 

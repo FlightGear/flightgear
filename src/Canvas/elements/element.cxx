@@ -159,13 +159,6 @@ namespace canvas
         type = TT_ROTATE;
       else if( name == "s" )
         type = TT_SCALE;
-      else
-        SG_LOG
-        (
-          SG_GL,
-          SG_WARN,
-          "Unknown transform element " << child->getPath()
-        );
 
       _transform_dirty = true;
     }
