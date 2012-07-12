@@ -87,6 +87,5 @@ tar \
 		data/Scenery/Terrain \
 		data/Shaders \
 		data/Sounds \
-		data/Startup \
 		data/T* \
 		data/version
