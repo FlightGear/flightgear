@@ -196,24 +196,16 @@ FGIO::parse_port_config( const string& config )
 	} else if ( protocol == "rul" ) {
 	    FGRUL *rul = new FGRUL;
 	    io = rul;
-        } else if ( protocol == "generic" ) {
-            size_t configToken;
-            if (tokens[1] == "socket") {
-                configToken = 7;
-            } else if (tokens[1] == "file") {
-                configToken = 5;
-            } else {
-                configToken = 6;
-            }
-
-            if (configToken >= tokens.size()) {
-                SG_LOG( SG_IO, SG_ALERT, "Not enough tokens passed for the generic protocol.");
-                return NULL;
-            }
-
-            FGGeneric *generic = new FGGeneric( tokens );
-            io = generic;
-	} else if ( protocol == "multiplay" ) {
+    } else if ( protocol == "generic" ) {
+        FGGeneric *generic = new FGGeneric( tokens );
+        if (!generic->getInitOk())
+        {
+            // failed to initialize (i.e. invalid configuration)
+            delete generic;
+            return NULL;
+        }
+        io = generic;
+    } else if ( protocol == "multiplay" ) {
 	    if ( tokens.size() != 5 ) {
 		SG_LOG( SG_IO, SG_ALERT, "Ignoring invalid --multiplay option "
 			"(4 arguments expected: --multiplay=dir,hz,hostname,port)" );

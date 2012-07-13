@@ -57,6 +57,7 @@ public:
 
     void setExitOnError(bool val) { exitOnError = val; }
     bool getExitOnError() { return exitOnError; }
+    bool getInitOk(void) { return initOk; }
 protected:
 
     enum e_type { FG_BOOL=0, FG_INT, FG_FLOAT, FG_DOUBLE, FG_STRING, FG_FIXED };
@@ -102,6 +103,7 @@ private:
     bool parse_message_binary(int length);
     void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
     bool exitOnError;
+    bool initOk;
     
     template<class T>
     static void updateValue(_serial_prot& prot, const T& val)

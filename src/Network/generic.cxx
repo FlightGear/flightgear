@@ -42,7 +42,7 @@
 #include <Main/util.hxx>
 #include "generic.hxx"
 
-FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
+FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false), initOk(false)
 {
     size_t configToken;
     if (tokens[1] == "socket") {
@@ -53,9 +53,9 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
         configToken = 6; 
     }
 
-    if (configToken >= tokens.size()) {
+    if ((configToken >= tokens.size())||(tokens[ configToken ] == "")) {
        SG_LOG(SG_NETWORK, SG_ALERT,
-              "Not enough tokens passed for generic protocol");
+              "Not enough tokens passed for generic '" << tokens[1] << "' protocol. ");
        return;
     }
 
@@ -66,6 +66,7 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
     if (direction != "in" && direction != "out" && direction != "bi") {
         SG_LOG(SG_NETWORK, SG_ALERT, "Unsuported protocol direction: "
                << direction);
+        return;
     }
 
     reinit();
@@ -557,6 +558,8 @@ FGGeneric::reinit()
             }
         }
     }
+
+    initOk = true;
 }
 
 
