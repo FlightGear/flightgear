@@ -701,12 +701,11 @@ public:
         cv->traverse( *camera );
 
         if ( kind == GEOMETRY_CAMERA ) {
-            // Save transparent bins to render later
+            // Remove transparent bins. They will be renderer in the additional light stage (side effect)
             osgUtil::RenderStage* renderStage = cv->getRenderStage();
             osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
             for (osgUtil::RenderBin::RenderBinList::iterator rbi = rbl.begin(); rbi != rbl.end(); ) {
                 if (rbi->second->getSortMode() == osgUtil::RenderBin::SORT_BACK_TO_FRONT) {
-                    info->savedTransparentBins.insert( std::make_pair( rbi->first, rbi->second ) );
                     rbl.erase( rbi++ );
                 } else {
                     ++rbi;
@@ -730,13 +729,6 @@ public:
                     info->shadowMatrix[i]->set( shadowMatrix );
                 }
             }
-            // Render saved transparent render bins
-            osgUtil::RenderStage* renderStage = cv->getRenderStage();
-            osgUtil::RenderBin::RenderBinList& rbl = renderStage->getRenderBinList();
-            for (osgUtil::RenderBin::RenderBinList::iterator rbi = info->savedTransparentBins.begin(); rbi != info->savedTransparentBins.end(); ++rbi ){
-                rbl.insert( std::make_pair( rbi->first + 10000, rbi->second ) );
-            }
-            info->savedTransparentBins.clear();
         }
     }
 
@@ -1051,6 +1043,18 @@ void FGRenderer::updateCascadeNumber(size_t num)
     _shadowNumber->set( (int)_numCascades );
 }
 
+class DebugPassListener : public SGPropertyChangeListener {
+public:
+    DebugPassListener(osg::Switch* sw, int i) : _switch(sw), _index(i) {}
+    virtual void valueChanged(SGPropertyNode* node) {
+        _switch->setValue(_index, node->getBoolValue());
+    }
+
+private:
+    osg::ref_ptr<osg::Switch> _switch;
+    int _index;
+};
+
 osg::Camera*
 FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage )
 {
@@ -1069,18 +1073,23 @@ FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::Grap
     buildAttachments(info, camera, stage->name, stage->attachments);
     camera->setDrawBuffer(GL_FRONT);
     camera->setReadBuffer(GL_FRONT);
-    camera->setClearColor( osg::Vec4( 0., 0., 0., 1. ) );
+    camera->setClearColor( osg::Vec4( 0.5, 0.5, 0.5, 1. ) );
     camera->setClearMask( GL_COLOR_BUFFER_BIT );
     osg::StateSet* ss = camera->getOrCreateStateSet();
     ss->setAttribute( new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false) );
     ss->addUniform( _depthInColor );
 
-    osg::Group* lightingGroup = new osg::Group;
+    osg::Switch* lightingGroup = new osg::Switch;
 
     BOOST_FOREACH( osg::ref_ptr<FGRenderingPipeline::Pass> pass, stage->passes ) {
         ref_ptr<Node> node = buildPass(info, pass);
-        if (node.valid())
+        if (node.valid()) {
             lightingGroup->addChild(node);
+            if (!pass->debugProperty.empty()) {
+                lightingGroup->setValue(lightingGroup->getNumChildren()-1, fgGetBool(pass->debugProperty));
+                fgAddChangeListener(new DebugPassListener(lightingGroup, lightingGroup->getNumChildren()-1), pass->debugProperty);
+            }
+        }
     }
 
     camera->addChild( lightingGroup );

@@ -61,6 +61,7 @@ public:
         std::string type;
         int orderNum;
         std::string effect;
+        std::string debugProperty;
     };
 
     struct Attachment : public Conditionable {

@@ -274,6 +274,7 @@ FGRenderingPipeline::Pass::Pass(SGPropertyNode* prop)
 
     orderNum = prop->getIntValue("order-num", -1);
     effect = prop->getStringValue("effect", "");
+    debugProperty = prop->getStringValue("debug-property", "");
 
     parseCondition(prop);
 }
