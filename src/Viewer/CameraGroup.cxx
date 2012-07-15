@@ -1092,7 +1092,7 @@ void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
             if (camera == 0) continue;
             osg::Switch* sw = camera->getChild(0)->asSwitch();
             for (unsigned int i = 0; i < sw->getNumChildren(); ++i) {
-                osg::Camera* lc = sw->getChild(i)->asCamera();
+                osg::Camera* lc = dynamic_cast<osg::Camera*>(sw->getChild(i));
                 if (lc == 0) continue;
                 string name = lc->getName();
                 if (name == "LightCamera") {
