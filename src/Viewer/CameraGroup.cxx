@@ -1087,6 +1087,18 @@ void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
             camera = info->getCamera( GEOMETRY_CAMERA );
             if (camera == 0) continue;
             camera->setCullMask( nm & ~simgear::MODELLIGHT_BIT );
+
+            camera = info->getCamera( LIGHTING_CAMERA );
+            if (camera == 0) continue;
+            osg::Switch* sw = camera->getChild(0)->asSwitch();
+            for (unsigned int i = 0; i < sw->getNumChildren(); ++i) {
+                osg::Camera* lc = sw->getChild(i)->asCamera();
+                if (lc == 0) continue;
+                string name = lc->getName();
+                if (name == "LightCamera") {
+                    lc->setCullMask( (nm & simgear::LIGHTS_BITS) | (lc->getCullMask() & ~simgear::LIGHTS_BITS) );
+                }
+            }
         }
     }
 }
