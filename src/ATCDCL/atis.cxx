@@ -55,6 +55,7 @@
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
 
+#include <ATC/CommStation.hxx>
 
 #include "ATCutils.hxx"
 #include "ATISmgr.hxx"
@@ -65,8 +66,11 @@ using std::cout;
 using std::cout;
 using boost::ref;
 using boost::tie;
+using flightgear::CommStation;
 
-FGATIS::FGATIS(const string& commbase) :
+FGATIS::FGATIS(const std::string& name, int num) :
+  _name(name),
+  _num(num),
   transmission(""),
   trans_ident(""),
   old_volume(0),
@@ -74,9 +78,36 @@ FGATIS::FGATIS(const string& commbase) :
   msg_OK(0),
   attention(0),
   _prev_display(0),
-  _commbase(commbase)
+  _time_before_search_sec(0),
+  _last_frequency(0)
 {
   fgTie("/environment/attention", this, (int_getter)0, &FGATIS::attend);
+
+  _root         = fgGetNode("/instrumentation", true)->getNode(_name, num, true);
+  _volume       = _root->getNode("volume",true);
+  _serviceable  = _root->getNode("serviceable",true);
+
+  if (name != "nav")
+  {
+      // only drive "operable" for non-nav instruments (nav radio drives this separately)
+      _operable = _root->getNode("operable",true);
+      _operable->setBoolValue(false);
+  }
+
+  _electrical   = fgGetNode("/systems/electrical/outputs",true)->getNode(_name,num, true);
+  _atis         = _root->getNode("atis",true);
+  _freq         = _root->getNode("frequencies/selected-mhz",true);
+
+  // current position
+  _lon_node  = fgGetNode("/position/longitude-deg", true);
+  _lat_node  = fgGetNode("/position/latitude-deg",  true);
+  _elev_node = fgGetNode("/position/altitude-ft",   true);
+
+  // backward compatibility: some properties may not exist (but default to "ON")
+  if (!_serviceable->hasValue())
+      _serviceable->setBoolValue(true);
+  if (!_electrical->hasValue())
+      _electrical->setDoubleValue(24.0);
 
 ///////////////
 // FIXME:  This would be more flexible and more extensible
@@ -115,7 +146,7 @@ FGATCVoice* FGATIS::GetVoicePointer()
     return pAtisMgr->GetVoicePointer(ATIS);
 }
 
-void FGATIS::Init() {
+void FGATIS::init() {
 // Nothing to see here.  Move along.
 }
 
@@ -134,7 +165,7 @@ FGATIS::attend (int attn)
 
 
 // Main update function - checks whether we are displaying or not the correct message.
-void FGATIS::Update(double dt) {
+void FGATIS::update(double dt) {
   cur_time = globals->get_time_params()->get_cur_time();
   msg_OK = (msg_time < cur_time);
 
@@ -148,28 +179,52 @@ void FGATIS::Update(double dt) {
   }
 #endif
 
-  if(_display)
+  double volume = 0;
+  if ((_electrical->getDoubleValue()>8) && _serviceable->getBoolValue())
   {
-    string prop = _commbase + "/volume";
-    double volume = globals->get_props()->getDoubleValue(prop.c_str());
+      _time_before_search_sec -= dt;
+      // radio is switched on and OK
+      if (_operable.valid())
+          _operable->setBoolValue(true);
 
-// Check if we need to update the message
-// - basically every hour and if the weather changes significantly at the station
-// If !_prev_display, the radio had been detuned for a while and our
-// "transmission" variable was lost when we were de-instantiated.
+      // Search the tuned frequencies
+      search();
+
+      if (_display)
+      {
+          volume = _volume->getDoubleValue();
+      }
+  }
+  else
+  {
+      // radio is OFF
+      if (_operable.valid())
+          _operable->setBoolValue(false);
+      _time_before_search_sec = 0;
+  }
+
+  if (volume > 0.05)
+  {
+    // Check if we need to update the message
+    // - basically every hour and if the weather changes significantly at the station
+    // If !_prev_display, the radio had been detuned for a while and our
+    // "transmission" variable was lost when we were de-instantiated.
     int changed = GenTransmission(!_prev_display, attention);
+
+    // update output property
     TreeOut(msg_OK);
+
     if (changed || volume != old_volume) {
-      //cout << "ATIS calling ATC::render  volume: " << volume << endl;
-      Render(transmission, volume, _commbase, true);
+      // audio output enabled
+      Render(transmission, volume, _name, true);
       old_volume = volume;
     }
+    _prev_display = _display;
   } else {
-// We shouldn't be displaying
-    //cout << "ATIS.CXX - calling NoRender()..." << endl;
-    NoRender(_commbase);
+    // silence
+    NoRender(_name);
+    _prev_display = false;
   }
-  _prev_display = _display;
   attention = 0;
 }
 
@@ -522,10 +577,74 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 // http://localhost:5400/instrumentation/comm[1]
 //
 // (Also, if in debug mode, dump it to the console.)
-void FGATIS::TreeOut(int msg_OK){
-    string prop = _commbase + "/atis";
-    globals->get_props()->setStringValue(prop.c_str(),
-      ("<pre>\n" + transmission_readable + "</pre>\n").c_str());
-    SG_LOG(SG_ATC, SG_DEBUG, "**** ATIS active on: " << prop <<
+void FGATIS::TreeOut(int msg_OK)
+{
+    _atis->setStringValue("<pre>\n" + transmission_readable + "</pre>\n");
+    SG_LOG(SG_ATC, SG_DEBUG, "**** ATIS active on: " << _name <<
            "transmission: " << transmission_readable);
+}
+
+
+
+class RangeFilter : public CommStation::Filter
+{
+public:
+    RangeFilter( const SGGeod & pos ) :
+      CommStation::Filter(),
+      _cart(SGVec3d::fromGeod(pos)),
+      _pos(pos)
+    {
+    }
+
+    virtual bool pass(FGPositioned* aPos) const
+    {
+        flightgear::CommStation * stn = dynamic_cast<flightgear::CommStation*>(aPos);
+        if( NULL == stn )
+            return false;
+
+        // do the range check in cartesian space, since the distances are potentially
+        // large enough that the geodetic functions become unstable
+        // (eg, station on opposite side of the planet)
+        double rangeM = SGMiscd::max( stn->rangeNm(), 10.0 ) * SG_NM_TO_METER;
+        double d2 = distSqr( aPos->cart(), _cart);
+
+        return d2 <= (rangeM * rangeM);
+    }
+private:
+    SGVec3d _cart;
+    SGGeod _pos;
+};
+
+// Search for ATC stations by frequency
+void FGATIS::search(void)
+{
+    double frequency = _freq->getDoubleValue();
+
+    // Note:  122.375 must be rounded DOWN to 12237
+    // in order to be consistent with apt.dat et cetera.
+    int freqKhz = static_cast<int>(frequency * 100.0 + 0.25);
+
+    // throttle frequency searches
+    if ((freqKhz == _last_frequency)&&(_time_before_search_sec > 0))
+        return;
+
+    _last_frequency = freqKhz;
+    _time_before_search_sec = 4.0;
+
+    // Position of the Users Aircraft
+    SGGeod aircraftPos = SGGeod::fromDegFt(_lon_node->getDoubleValue(),
+                                           _lat_node->getDoubleValue(),
+                                           _elev_node->getDoubleValue());
+
+    RangeFilter rangeFilter(aircraftPos );
+    CommStation* sta = CommStation::findByFreq(freqKhz, aircraftPos, &rangeFilter );
+    SetStation(sta);
+    if (sta && sta->airport())
+    {
+        SG_LOG(SG_ATC, SG_DEBUG, "FGATIS " << _name << ": " << sta->airport()->name());
+    }
+    else
+    {
+        SG_LOG(SG_ATC, SG_DEBUG, "FGATIS " << _name << ": no station.");
+    }
 }

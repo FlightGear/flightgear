@@ -90,17 +90,17 @@ std::ostream& operator << (std::ostream& os, atc_type atc);
 class FGATC {
 	friend class FGATISMgr;
 public:
-	
+
 	FGATC();
 	virtual ~FGATC();
-	
-	virtual void Init()=0;
-  
+
+	virtual void init()=0;
+
 	// Run the internal calculations
 	// Derived classes should call this method from their own Update methods if they 
 	// wish to use the response timer functionality.
-	virtual void Update(double dt);
-	
+	virtual void update(double dt);
+
 	// Indicate that this instance should output to the display if appropriate 
 	inline void SetDisplay() { _display = true; }
 	
@@ -141,7 +141,7 @@ public:
 	inline atc_type GetType() { return _type; }
 
 	// Set the core ATC data
-    void SetStation(flightgear::CommStation* sta);
+	void SetStation(flightgear::CommStation* sta);
 
 	inline const std::string& get_ident() { return ident; }
 	inline void set_ident(const std::string& id) { ident = id; }

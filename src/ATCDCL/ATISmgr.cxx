@@ -27,24 +27,17 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 
-#include <Airports/simple.hxx>
-#include <ATC/CommStation.hxx>
 #include <Main/fg_props.hxx>
 
 #include "ATISmgr.hxx"
-#include "ATCutils.hxx"
 #include "atis.hxx"
-
-using flightgear::CommStation;
 
 FGATISMgr::FGATISMgr() :
     _currentUnit(0),
-    _maxCommRadios(4),
+    _maxCommRadios(4)
 #ifdef ENABLE_AUDIO_SUPPORT
-    voice(true),
-    voice1(0)
-#else
-    voice(false)
+    ,useVoice(true),
+    voice(0)
 #endif
 {
     globals->set_ATIS_mgr(this);
@@ -56,45 +49,26 @@ FGATISMgr::~FGATISMgr()
 
     for (unsigned int unit = 0;unit < _maxCommRadios; ++unit)
     {
-        delete radios[unit].station;
-        radios[unit].station = NULL;
+        delete radios[unit];
+        radios[unit] = NULL;
     }
 
 #ifdef ENABLE_AUDIO_SUPPORT
-    delete voice1;
+    delete voice;
 #endif
-}
-
-void FGATISMgr::bind()
-{
-}
-
-void FGATISMgr::unbind()
-{
 }
 
 void FGATISMgr::init()
 {
-    lon_node  = fgGetNode("/position/longitude-deg", true);
-    lat_node  = fgGetNode("/position/latitude-deg",  true);
-    elev_node = fgGetNode("/position/altitude-ft",   true);
-
     for (unsigned int unit = 0;unit < _maxCommRadios; ++unit)
     {
-        CommRadioData data;
-        string ncunit;
         if (unit < _maxCommRadios/2)
-            ncunit = "comm[" + decimalNumeral(unit) + "]";
+            radios.push_back(new FGATIS("comm", unit));
         else
-            ncunit = "nav[" + decimalNumeral(unit - _maxCommRadios/2) + "]";
-        string commbase = "/instrumentation/" + ncunit;
-        string commfreq = commbase + "/frequencies/selected-mhz";
-
-        data.freq = fgGetNode(commfreq.c_str(), true);
-        data.station = new FGATIS(commbase);
-        radios.push_back(data);
+            radios.push_back(new FGATIS("nav", unit - _maxCommRadios/2));
     }
 }
+
 
 void FGATISMgr::update(double dt)
 {
@@ -102,12 +76,9 @@ void FGATISMgr::update(double dt)
     if (++_currentUnit >= _maxCommRadios)
         _currentUnit = 0;
 
-    FGATC* pStation = radios[_currentUnit].station;
-    if (pStation)
-        pStation->Update(dt * _maxCommRadios);
-
-    // Search the tuned frequencies
-    FreqSearch(_currentUnit);
+    FGATC* commRadio = radios[_currentUnit];
+    if (commRadio)
+        commRadio->update(dt * _maxCommRadios);
 }
 
 // Return a pointer to an appropriate voice for a given type of ATC
@@ -119,13 +90,13 @@ void FGATISMgr::update(double dt)
 // at different airports in quick succession if a large enough selection are available.
 FGATCVoice* FGATISMgr::GetVoicePointer(const atc_type& type)
 {
+#ifdef ENABLE_AUDIO_SUPPORT
     // TODO - implement me better - maintain a list of loaded voices and other voices!!
-    if(voice)
+    if(useVoice)
     {
         switch(type)
         {
         case ATIS: case AWOS:
-#ifdef ENABLE_AUDIO_SUPPORT
             // Delayed loading for all available voices, needed because the
             // sound manager might not be initialized (at all) at this point.
             // For now we'll do one hard-wired one
@@ -135,22 +106,19 @@ FGATCVoice* FGATISMgr::GetVoicePointer(const atc_type& type)
              *  subsequently switches /sim/sound/audible to true.
              *  (which is the right thing to do -- CLO) :-)
              */
-            if (!voice1 && fgGetBool("/sim/sound/working")) {
-                voice1 = new FGATCVoice;
+            if (!voice && fgGetBool("/sim/sound/working")) {
+                voice = new FGATCVoice;
                 try {
-                    voice = voice1->LoadVoice("default");
+                    useVoice = voice->LoadVoice("default");
                 } catch ( sg_io_exception & e) {
                     SG_LOG(SG_ATC, SG_ALERT, "Unable to load default voice : "
                                             << e.getFormattedMessage().c_str());
-                    voice = false;
-                    delete voice1;
-                    voice1 = 0;
+                    useVoice = false;
+                    delete voice;
+                    voice = 0;
                 }
             }
-            if (voice)
-                return voice1;
-#endif
-            return NULL;
+            return voice;
         case TOWER:
             return NULL;
         case APPROACH:
@@ -161,52 +129,7 @@ FGATCVoice* FGATISMgr::GetVoicePointer(const atc_type& type)
             return NULL;
         }
     }
+#endif
 
     return NULL;
-}
-
-class RangeFilter : public CommStation::Filter
-{
-public:
-    RangeFilter( const SGGeod & pos ) :
-      CommStation::Filter(),
-      _cart(SGVec3d::fromGeod(pos)),
-      _pos(pos)
-    {
-    }
-
-    virtual bool pass(FGPositioned* aPos) const
-    {
-        flightgear::CommStation * stn = dynamic_cast<flightgear::CommStation*>(aPos);
-        if( NULL == stn )
-            return false;
-
-        // do the range check in cartesian space, since the distances are potentially
-        // large enough that the geodetic functions become unstable
-        // (eg, station on opposite side of the planet)
-        double rangeM = SGMiscd::max( stn->rangeNm(), 10.0 ) * SG_NM_TO_METER;
-        double d2 = distSqr( aPos->cart(), _cart);
-
-        return d2 <= (rangeM * rangeM);
-    }
-private:
-    SGVec3d _cart;
-    SGGeod _pos;
-};
-
-// Search for ATC stations by frequency
-void FGATISMgr::FreqSearch(const unsigned int unit)
-{
-    double frequency = radios[unit].freq->getDoubleValue();
-
-    // Note:  122.375 must be rounded DOWN to 12237 
-    // in order to be consistent with apt.dat et cetera.
-    int freqKhz = static_cast<int>(frequency * 100.0 + 0.25);
-
-    _aircraftPos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
-        lat_node->getDoubleValue(), elev_node->getDoubleValue());
-
-    RangeFilter rangeFilter(_aircraftPos );
-    CommStation* sta = CommStation::findByFreq(freqKhz, _aircraftPos, &rangeFilter );
-    radios[unit].station->SetStation(sta);
 }

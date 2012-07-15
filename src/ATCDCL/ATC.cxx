@@ -77,7 +77,7 @@ FGATC::~FGATC() {
 #ifndef OLD_ATC_MGR
 // Derived classes wishing to use the response counter should 
 // call this from their own Update(...).
-void FGATC::Update(double dt) {
+void FGATC::update(double dt) {
 
 #ifdef ENABLE_AUDIO_SUPPORT
     bool active = _atc_external->getBoolValue() ||
@@ -117,7 +117,7 @@ void FGATC::SetStation(flightgear::CommStation* sta) {
         freq = 0;
 
         SetNoDisplay();
-        Update(0);     // one last update
+        update(0);     // one last update
     }
     else
     {

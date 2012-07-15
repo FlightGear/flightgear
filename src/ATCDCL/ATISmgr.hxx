@@ -19,55 +19,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_ATCMGR_HXX
-#define _FG_ATCMGR_HXX
+#ifndef _FG_ATISMGR_HXX
+#define _FG_ATISMGR_HXX
+
+#include <vector>
 
 #include <simgear/structure/subsystem_mgr.hxx>
 
-#include <string>
-#include <list>
-#include <map>
-
 #include "ATC.hxx"
-
-namespace flightgear
-{
-    class CommStation;
-}
-
-typedef struct
-{
-    SGPropertyNode_ptr freq;
-    FGATC* station;
-} CommRadioData;
 
 class FGATISMgr : public SGSubsystem
 {
-
 private:
     // A vector containing all comm radios
-    typedef std::vector<CommRadioData> radio_list_type;
-    radio_list_type radios;
-
-    // Any member function of FGATISMgr is permitted to leave this iterator pointing
-    // at any point in or at the end of the list.
-    // Hence any new access must explicitly first check for atc_list.end() before dereferencing.
-
-    // Position of the Users Aircraft
-    SGGeod _aircraftPos;
-
-    // Pointers to current users position
-    SGPropertyNode_ptr lon_node;
-    SGPropertyNode_ptr lat_node;
-    SGPropertyNode_ptr elev_node;
+    std::vector<FGATC*> radios;
 
     unsigned int _currentUnit;
     unsigned int _maxCommRadios;
-	
-    // Voice related stuff
-    bool voice;			// Flag - true if we are using voice
+
 #ifdef ENABLE_AUDIO_SUPPORT
-    FGATCVoice* voice1;
+    bool useVoice;  // Flag - true if we are using voice
+    FGATCVoice* voice;
 #endif
 
 public:
@@ -75,11 +47,6 @@ public:
     ~FGATISMgr();
 
     void init();
-
-    void bind();
-
-    void unbind();
-
     void update(double dt);
 
     // Return a pointer to an appropriate voice for a given type of ATC
@@ -92,8 +59,6 @@ public:
     FGATCVoice* GetVoicePointer(const atc_type& type);
 
 private:
-    // Search the specified radio for stations on the same frequency and in range.
-    void FreqSearch(const unsigned int unit);
 };
 
-#endif  // _FG_ATCMGR_HXX
+#endif  // _FG_ATISMGR_HXX
