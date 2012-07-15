@@ -39,7 +39,7 @@ using flightgear::CommStation;
 
 FGATISMgr::FGATISMgr() :
     _currentUnit(0),
-    _maxCommRadios(2),
+    _maxCommRadios(4),
 #ifdef ENABLE_AUDIO_SUPPORT
     voice(true),
     voice1(0)
@@ -82,7 +82,11 @@ void FGATISMgr::init()
     for (unsigned int unit = 0;unit < _maxCommRadios; ++unit)
     {
         CommRadioData data;
-        string ncunit = "comm[" + decimalNumeral(unit) + "]";
+        string ncunit;
+        if (unit < _maxCommRadios/2)
+            ncunit = "comm[" + decimalNumeral(unit) + "]";
+        else
+            ncunit = "nav[" + decimalNumeral(unit - _maxCommRadios/2) + "]";
         string commbase = "/instrumentation/" + ncunit;
         string commfreq = commbase + "/frequencies/selected-mhz";
 
