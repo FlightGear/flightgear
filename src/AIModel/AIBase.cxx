@@ -350,10 +350,9 @@ bool FGAIBase::init(bool search_in_AI_path)
         aip.setVisible(true);
         invisible = false;
         globals->get_scenery()->get_scene_graph()->addChild(aip.getSceneGraph());
-
-        // Get the sound-path tag from the configuration file and store it
-        // in the property tree.
         _initialized = true;
+
+        SG_LOG(SG_AI, SG_DEBUG, "AIBase: Loaded model " << model_path);
 
     } else if (!model_path.empty()) {
         SG_LOG(SG_AI, SG_WARN, "AIBase: Could not load model " << model_path);
