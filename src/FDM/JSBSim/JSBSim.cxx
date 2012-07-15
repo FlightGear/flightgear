@@ -1171,7 +1171,7 @@ void FGJSBsim::set_Climb_Rate( double roc)
   //since both climb rate and flight path angle are set in the FG
   //startup sequence, something is needed to keep one from cancelling
   //out the other.
-  if( !(fabs(roc) > 1 && fabs(fgic->GetFlightPathAngleRadIC()) < 0.01) ) {
+  if( fabs(roc) > 1 && fabs(fgic->GetFlightPathAngleRadIC()) < 0.01 ) {
     if (needTrim)
       fgic->SetClimbRateFpsIC(roc);
     else {
