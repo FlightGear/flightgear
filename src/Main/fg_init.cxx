@@ -426,7 +426,15 @@ bool fgInitConfig ( int argc, char **argv )
     fgLoadProps("preferences.xml", globals->get_props());
     SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
 
-    globals->loadUserSettings(dataPath);
+    // do not load user settings when reset to default is requested
+    if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults"))
+    {
+        SG_LOG(SG_ALL, SG_ALERT, "Ignoring user settings. Restoring defaults.");
+    }
+    else
+    {
+        globals->loadUserSettings(dataPath);
+    }
 
     // Scan user config files and command line for a specified aircraft.
     flightgear::Options::sharedInstance()->initAircraft();
