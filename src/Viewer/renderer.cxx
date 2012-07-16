@@ -1275,7 +1275,7 @@ FGRenderer::buildLightingLightsPass(CameraInfo* info, FGRenderingPipeline::Pass*
     lightCam->setViewMatrix(osg::Matrix::identity());
     lightCam->setProjectionMatrix(osg::Matrix::identity());
     lightCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    lightCam->setCullMask( simgear::MODELLIGHT_BIT | simgear::PANEL2D_BIT );
+    lightCam->setCullMask( simgear::MODELLIGHT_BIT | simgear::PANEL2D_BIT | simgear::PERMANENTLIGHT_BIT);
     lightCam->setInheritanceMask( osg::CullSettings::ALL_VARIABLES & ~osg::CullSettings::CULL_MASK );
     lightCam->addChild( mDeferredRealRoot.get() );
 
