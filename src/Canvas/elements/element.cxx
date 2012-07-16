@@ -40,6 +40,10 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Element::update(double dt)
   {
+    if( !_transform->getNodeMask() )
+      // Don't do anything if element is hidden
+      return;
+
     if( _transform_dirty )
     {
       osg::Matrix m;
@@ -201,6 +205,9 @@ namespace canvas
     {
       if( child->getNameString() == "update" )
         update(0);
+      else if( child->getNameString() == "visible" )
+        // TODO check if we need another nodemask
+        _transform->setNodeMask( child->getBoolValue() ? 0xffffffff : 0 );
       else
         childChanged(child);
     }

@@ -41,6 +41,7 @@ namespace canvas
         _paint_fill(VG_INVALID_HANDLE),
         _attributes_dirty(~0),
         _stroke_width(1),
+        _stroke_linecap(VG_CAP_BUTT),
         _fill(false)
       {
         setSupportsDisplayList(false);
@@ -115,6 +116,21 @@ namespace canvas
       }
 
       /**
+       * Set stroke-linecap
+       *
+       * @see http://www.w3.org/TR/SVG/painting.html#StrokeLinecapProperty
+       */
+      void setStrokeLinecap(const std::string& linecap)
+      {
+        if( linecap == "round" )
+          _stroke_linecap = VG_CAP_ROUND;
+        else if( linecap == "square" )
+          _stroke_linecap = VG_CAP_SQUARE;
+        else
+          _stroke_linecap = VG_CAP_BUTT;
+      }
+
+      /**
        * Draw callback
        */
       virtual void drawImplementation(osg::RenderInfo& renderInfo) const
@@ -175,6 +191,7 @@ namespace canvas
           vgSetPaint(_paint, VG_STROKE_PATH);
 
           vgSetf(VG_STROKE_LINE_WIDTH, _stroke_width);
+          vgSeti(VG_STROKE_CAP_STYLE, _stroke_linecap);
           vgSetfv( VG_STROKE_DASH_PATTERN,
                    _stroke_dash.size(),
                    _stroke_dash.empty() ? 0 : &_stroke_dash[0] );
@@ -244,6 +261,7 @@ namespace canvas
       VGfloat               _stroke_color[4];
       VGfloat               _stroke_width;
       std::vector<VGfloat>  _stroke_dash;
+      VGCapStyle            _stroke_linecap;
 
       bool      _fill;
       VGfloat   _fill_color[4];
@@ -371,6 +389,8 @@ namespace canvas
     else if(    child->getNameString() == "stroke-width"
              || child->getNameString() == "stroke-dasharray" )
       _attributes_dirty |= STROKE;
+    else if( child->getNameString() == "stroke-linecap" )
+      _path->setStrokeLinecap( child->getStringValue() );
     else if( child->getNameString() == "fill" )
       _path->enableFill( child->getBoolValue() );
   }

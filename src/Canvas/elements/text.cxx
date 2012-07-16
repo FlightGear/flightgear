@@ -149,7 +149,13 @@ namespace canvas
     if( _font_size == child || _font_aspect == child )
       _attributes_dirty |= FONT_SIZE;
     else if( child->getNameString() == "text" )
-      _text->setText( child->getStringValue() );
+      _text->setText
+      (
+        osgText::String( child->getStringValue(),
+                         osgText::String::ENCODING_UTF8 )
+      );
+    else if( child->getNameString() == "max-width" )
+      _text->setMaximumWidth( child->getFloatValue() );
     else if( child->getNameString() == "font" )
       setFont( child->getStringValue() );
   }

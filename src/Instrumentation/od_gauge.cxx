@@ -255,7 +255,7 @@ void FGODGauge::updateSampling()
 
   texture->setFilter(
     osg::Texture2D::MIN_FILTER,
-    _use_mipmapping ? osg::Texture2D::LINEAR_MIPMAP_NEAREST
+    _use_mipmapping ? osg::Texture2D::LINEAR_MIPMAP_LINEAR
                     : osg::Texture2D::LINEAR
   );
   camera->attach(

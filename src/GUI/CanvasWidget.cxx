@@ -95,7 +95,7 @@ void CanvasWidget::doHit(int button, int updown, int x, int y)
     return;
 
   _mouse_x->setIntValue(x - abox.min[0]);
-  _mouse_y->setIntValue(y - abox.min[1]);
+  _mouse_y->setIntValue(abox.max[1] - y);
 
   if( updown == PU_DRAG )
     _mouse_drag->setIntValue(button);
