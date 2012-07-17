@@ -18,6 +18,14 @@ else(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
     include(OldGNUInstallDirs)
 endif(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
 
+# Warning when build is not an out-of-source build.
+string(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" InSourceBuild)
+if(InSourceBuild)
+    message(WARNING  "Avoid building inside the source tree!")
+    message(WARNING  "Create a separate build directory instead (i.e. 'fgbuild') and call CMake from there: ")
+    message(WARNING  "  mkdir ../fgbuild && cd ../fgbuild && cmake ${CMAKE_SOURCE_DIR}")
+endif(InSourceBuild)
+
 set(CMAKE_DEBUG_POSTFIX          "d" CACHE STRING "add a postfix, usually d on windows")
 set(CMAKE_RELEASE_POSTFIX        ""  CACHE STRING "add a postfix, usually empty on windows")
 set(CMAKE_RELWITHDEBINFO_POSTFIX ""  CACHE STRING "add a postfix, usually empty on windows")
