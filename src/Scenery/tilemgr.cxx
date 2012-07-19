@@ -108,6 +108,9 @@ void FGTileMgr::reinit()
         return;
     fgSetBool("/sim/sceneryloaded",false);
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
+    
+    // Reload the materials definitions
+    _options->setMaterialLib(globals->get_matlib());
 
     // remove all old scenery nodes from scenegraph and clear cache
     osg::Group* group = globals->get_scenery()->get_terrain_branch();

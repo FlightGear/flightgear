@@ -531,6 +531,30 @@ do_tile_cache_reload (const SGPropertyNode * arg)
     return true;
 }
 
+/**
+ * Reload the materials definition
+ */
+ static bool
+ do_materials_reload (const SGPropertyNode * arg)
+ {
+   SG_LOG(SG_INPUT, SG_INFO, "Reloading Materials");
+   SGMaterialLib* new_matlib =  new SGMaterialLib;
+   SGPath mpath( globals->get_fg_root() );
+   mpath.append( fgGetString("/sim/rendering/materials-file") );
+   bool loaded = new_matlib->load(globals->get_fg_root(), 
+                                  mpath.str(), 
+                                  globals->get_props());
+   
+   if ( ! loaded ) {
+       SG_LOG( SG_GENERAL, SG_ALERT,
+               "Error loading materials file " << mpath.str() );
+       return false;
+   }  
+   
+   globals->set_matlib(new_matlib);    
+   return true;   
+ }
+
 
 #if 0
 These do_set_(some-environment-parameters) are deprecated and no longer 
@@ -1531,6 +1555,7 @@ static struct {
     { "dump-terrainbranch", do_dump_terrain_branch },
     { "print-visible-scene", do_print_visible_scene_info },
     { "reload-shaders", do_reload_shaders },
+    { "reload-materials", do_materials_reload },
 
     { 0, 0 }			// zero-terminated
 };
