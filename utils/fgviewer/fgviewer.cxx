@@ -1,6 +1,6 @@
 // fgviewer.cxx -- alternative flightgear viewer application
 //
-// Copyright (C) 2009 - 2011  Mathias Froehlich
+// Copyright (C) 2009 - 2012  Mathias Froehlich
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -38,20 +38,21 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/util/SGSceneFeatures.hxx>
-#include <simgear/scene/util/SGUpdateVisitor.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
-#include <simgear/scene/model/modellib.hxx>
+#include <simgear/misc/ResourceManager.hxx>
 
 int
 main(int argc, char** argv)
 {
+    /// Read arguments and environment variables.
+
     // use an ArgumentParser object to manage the program arguments.
+    // FIXME implement a flightgear similar argument parser into simgear and use this one
     osg::ArgumentParser arguments(&argc, argv);
 
     std::string fg_root;
@@ -81,8 +82,8 @@ main(int argc, char** argv)
         // In case of an error, at least make summer :)
         props->getNode("sim/startup/season", true)->setStringValue("summer");
 
-        std::cerr << "Problems loading FlightGear preferences.\n"
-                  << "Probably FG_ROOT is not properly set." << std::endl;
+        SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading FlightGear preferences.\n"
+               << "Probably FG_ROOT is not properly set.");
     }
 
     std::string config;
@@ -90,8 +91,8 @@ main(int argc, char** argv)
         try {
             readProperties(config, props);
         } catch (...) {
-            std::cerr << "Problems loading config file \"" << config
-                      << "\" given on the command line." << std::endl;
+            SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading config file \"" << config
+                   << "\" given on the command line.");
         }
     }
 
@@ -100,10 +101,7 @@ main(int argc, char** argv)
         props->setStringValue(prop, value);
     }
 
-    // Just reference simgears reader writer stuff so that the globals get
-    // pulled in by the linker ...
-    // FIXME: make that more explicit clear and call an initialization function
-    simgear::ModelRegistry::instance();
+    /// Start setting up the viewer windows and start feeding them.
 
     // construct the viewer.
     osgViewer::Viewer viewer(arguments);
@@ -139,23 +137,30 @@ main(int argc, char** argv)
         osgUtil::SceneView* sceneView = renderer->getSceneView(j);
         sceneView->setCullVisitor(new simgear::EffectCullVisitor);
     }
-    // Shaders expect valid fog
-    osg::Fog* fog = new osg::Fog;
-    fog->setMode(osg::Fog::EXP2);
-    fog->setColor(osg::Vec4(1, 1, 1, 1));
-    fog->setDensity(1e-6);
-    camera->getOrCreateStateSet()->setAttribute(fog);
 
+    // We want on demand database paging
+    viewer.setDatabasePager(new osgDB::DatabasePager);
+    viewer.getDatabasePager()->setUpThreads(1, 1);
+
+    /// now set up the simgears required model stuff
+
+    simgear::ResourceManager::instance()->addBasePath(fg_root, simgear::ResourceManager::PRIORITY_DEFAULT);
+    // Just reference simgears reader writer stuff so that the globals get
+    // pulled in by the linker ...
+    // FIXME: make that more explicit clear and call an initialization function
+    simgear::ModelRegistry::instance();
+
+    // FIXME Ok, replace this by querying the root of the property tree
     sgUserDataInit(props.get());
     SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::DoNotUseCompression);
     SGMaterialLib* ml = new SGMaterialLib;
     SGPath mpath(fg_root);
-    mpath.append("materials.xml");
+    mpath.append("Materials/default/materials.xml");
     try {
         ml->load(fg_root, mpath.str(), props);
     } catch (...) {
-        std::cerr << "Problems loading FlightGear materials.\n"
-                  << "Probably FG_ROOT is not properly set." << std::endl;
+        SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading FlightGear materials.\n"
+               << "Probably FG_ROOT is not properly set.");
     }
     simgear::SGModelLib::init(fg_root, props);
 
@@ -170,8 +175,6 @@ main(int argc, char** argv)
     options->setMaterialLib(ml);
     options->setPropertyNode(props);
     options->setPluginStringData("SimGear::FG_ROOT", fg_root);
-    // We have some problems here, rethink them at some time
-    options->setPluginStringData("SimGear::PARTICLESYSTEM", "OFF");
     // Omit building bounding volume trees, as the viewer will not run a simulation
     options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
 
@@ -179,8 +182,11 @@ main(int argc, char** argv)
     arguments.reportRemainingOptionsAsUnrecognized();
     arguments.writeErrorMessages(std::cerr);
 
+
+    /// Read the model files that are configured.
+
     osg::ref_ptr<osg::Node> loadedModel;
-    if (arguments.argc() != 1) {
+    if (1 < arguments.argc()) {
         // read the scene from the list of file specified command line args.
         loadedModel = osgDB::readNodeFiles(arguments, options.get());
     } else {
@@ -191,17 +197,13 @@ main(int argc, char** argv)
 
     // if no model has been successfully loaded report failure.
     if (!loadedModel.valid()) {
-        std::cerr << arguments.getApplicationName()
-                  << ": No data loaded" << std::endl;
+        SG_LOG(SG_GENERAL, SG_ALERT, arguments.getApplicationName()
+               << ": No data loaded");
         return EXIT_FAILURE;
     }
 
     // pass the loaded scene graph to the viewer.
     viewer.setSceneData(loadedModel.get());
-
-    // We want on demand database paging
-    viewer.setDatabasePager(new osgDB::DatabasePager);
-    viewer.getDatabasePager()->setUpThreads(1, 1);
 
     return viewer.run();
 }
