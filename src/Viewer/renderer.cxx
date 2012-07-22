@@ -1141,7 +1141,6 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const F
     ss->addUniform( _shadowDistances );
     ss->addUniform( _fogColor );
     ss->addUniform( _fogDensity );
-    ss->addUniform( _planes );
 
     osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
     g->setUseDisplayList(false);
