@@ -49,7 +49,8 @@ namespace canvas
         FONT_SIZE       = LAST_ATTRIBUTE << 1, // Font size and aspect ration
       };
 
-      osg::ref_ptr<osgText::Text>   _text;
+      class TextOSG;
+      osg::ref_ptr<TextOSG> _text;
 
       SGPropertyNode_ptr  _font_size,
                           _font_aspect;
@@ -57,6 +58,8 @@ namespace canvas
       virtual void childChanged(SGPropertyNode * child);
       virtual void colorChanged(const osg::Vec4& color);
       virtual void colorFillChanged(const osg::Vec4& color);
+
+      void handleHit(float x, float y);
 
       typedef osg::ref_ptr<osgText::Font> font_ptr;
       static font_ptr getFont(const std::string& name);

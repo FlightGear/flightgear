@@ -21,7 +21,10 @@
 
 #include <Canvas/property_helper.hxx>
 #include <Main/globals.hxx>
+#include <Viewer/CameraGroup.hxx>
 #include <Viewer/renderer.hxx>
+
+#include <simgear/scene/util/RenderConstants.hxx>
 
 #include <osg/Camera>
 #include <osg/Geode>
@@ -41,7 +44,8 @@ class CameraCullCallback:
   public:
 
     CameraCullCallback():
-      _render( true )
+      _render( true ),
+      _render_frame( 0 )
     {}
 
     /**
@@ -55,14 +59,17 @@ class CameraCullCallback:
   private:
 
     bool _render;
+    unsigned int _render_frame;
 
     virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
     {
-      if( _render )
-      {
-        traverse(node, nv);
-        _render = false;
-      }
+      if( !_render && nv->getTraversalNumber() != _render_frame )
+        return;
+
+      traverse(node, nv);
+
+      _render = false;
+      _render_frame = nv->getTraversalNumber();
     }
 };
 
@@ -87,7 +94,9 @@ class PlacementCullCallback:
 
     virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
     {
-      _camera_cull->enableRendering();
+      if( nv->getTraversalMask() & simgear::MODEL_BIT )
+        _camera_cull->enableRendering();
+
       traverse(node, nv);
     }
 };
@@ -419,13 +428,16 @@ GLuint Canvas::getTexId() const
   if( !tex )
     return 0;
 
-  osgViewer::Viewer::Contexts contexts;
-  globals->get_renderer()->getViewer()->getContexts(contexts);
+//  osgViewer::Viewer::Contexts contexts;
+//  globals->get_renderer()->getViewer()->getContexts(contexts);
+//
+//  if( contexts.empty() )
+//    return 0;
 
-  if( contexts.empty() )
-    return 0;
+  osg::Camera* guiCamera =
+    flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
 
-  osg::State* state = contexts[0]->getState();
+  osg::State* state = guiCamera->getGraphicsContext()->getState(); //contexts[0]->getState();
   if( !state )
     return 0;
 
