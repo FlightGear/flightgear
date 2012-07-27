@@ -33,14 +33,12 @@ namespace canvas
   {
     public:
       Text(SGPropertyNode_ptr node);
-      virtual ~Text();
+      ~Text();
 
       virtual void update(double dt);
 
       void setFont(const char* name);
-
       void setAlignment(const char* align);
-      const char* getAlignment() const;
 
     protected:
 

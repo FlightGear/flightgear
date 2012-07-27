@@ -1,4 +1,4 @@
-// Canvas with 2D rendering api
+// Base class for elements of property controlled subsystems
 //
 // Copyright (C) 2012  Thomas Geymayer <tomgey@gmail.com>
 //
@@ -16,24 +16,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef CANVAS_MGR_H_
-#define CANVAS_MGR_H_
+#include "property_based_element.hxx"
 
-#include "property_based_mgr.hxx"
-
-class CanvasMgr:
-  public PropertyBasedMgr
+//------------------------------------------------------------------------------
+PropertyBasedElement::PropertyBasedElement(SGPropertyNode* node):
+  _node(node)
 {
-  public:
-    CanvasMgr();
+  _node->addChangeListener(this);
+}
 
-    /**
-     * Get OpenGL texture name for given canvas
-     *
-     * @param Index of canvas
-     * @return OpenGL texture name
-     */
-    unsigned int getCanvasTexId(size_t index) const;
-};
-
-#endif /* CANVAS_MGR_H_ */
+//------------------------------------------------------------------------------
+PropertyBasedElement::~PropertyBasedElement()
+{
+  _node->removeChangeListener(this);
+}

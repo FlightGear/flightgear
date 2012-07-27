@@ -126,54 +126,12 @@ namespace canvas
 
     _font_size = getChildDefault<float>(_node, "character-size", 32);
     _font_aspect = getChildDefault<float>(_node, "character-aspect-ratio", 1);
-
-    _node->tie
-    (
-      "alignment",
-      SGRawValueMethods<Text, const char*>
-      (
-        *this,
-        &Text::getAlignment,
-        &Text::setAlignment
-      )
-    );
-    _node->tie
-    (
-      "padding",
-      SGRawValueMethods<osgText::Text, float>
-      (
-        *_text.get(),
-        &osgText::Text::getBoundingBoxMargin,
-        &osgText::Text::setBoundingBoxMargin
-      )
-    );
-    typedef SGRawValueMethods<osgText::Text, int> TextIntMethods;
-    _node->tie
-    (
-      "draw-mode",
-      //  TEXT              = 1 default
-      //  BOUNDINGBOX       = 2
-      //  FILLEDBOUNDINGBOX = 4
-      //  ALIGNMENT         = 8
-      TextIntMethods
-      (
-        *_text.get(),
-        (TextIntMethods::getter_t)&osgText::Text::getDrawMode,
-        (TextIntMethods::setter_t)&osgText::Text::setDrawMode
-      )
-    );
   }
 
   //----------------------------------------------------------------------------
   Text::~Text()
   {
-    if( _node )
-    {
-      _node->untie("alignment");
-      _node->untie("padding");
-      _node->untie("draw-mode");
-    }
-    _node = 0;
+
   }
 
   //----------------------------------------------------------------------------
@@ -210,10 +168,20 @@ namespace canvas
 #include "text-alignment.hxx"
 #undef ENUM_MAPPING
     else
+    {
+      if( !align_string.empty() )
+        SG_LOG
+        (
+          SG_GENERAL,
+          SG_WARN,
+          "canvas::Text: unknown alignment '" << align_string << "'"
+        );
       _text->setAlignment(osgText::Text::LEFT_BASE_LINE);
+    }
   }
 
   //----------------------------------------------------------------------------
+#if 0
   const char* Text::getAlignment() const
   {
     switch( _text->getAlignment() )
@@ -227,7 +195,7 @@ namespace canvas
         return "unknown";
     }
   }
-
+#endif
   //----------------------------------------------------------------------------
   void Text::childChanged(SGPropertyNode* child)
   {
@@ -247,10 +215,20 @@ namespace canvas
         osgText::String( child->getStringValue(),
                          osgText::String::ENCODING_UTF8 )
       );
+    else if( name == "padding" )
+      _text->setBoundingBoxMargin( child->getFloatValue() );
+    else if( name == "draw-mode" )
+      //  TEXT              = 1 default
+      //  BOUNDINGBOX       = 2
+      //  FILLEDBOUNDINGBOX = 4
+      //  ALIGNMENT         = 8
+      _text->setDrawMode( child->getIntValue() );
     else if( name == "max-width" )
       _text->setMaximumWidth( child->getFloatValue() );
     else if( name == "font" )
       setFont( child->getStringValue() );
+    else if( name == "alignment" )
+      setAlignment( child->getStringValue() );
   }
 
   //----------------------------------------------------------------------------

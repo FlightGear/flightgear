@@ -78,6 +78,12 @@ namespace canvas
                        std::vector<SGPropertyNode_ptr>& nodes,
                        const osg::Vec4& def = osg::Vec4(0,0,0,1) );
 
+  /**
+   * Trigger a childAdded and valueChanged event for every child of node
+   * (Unlimited depth) and node itself.
+   */
+  void triggerChangeRecursive(SGPropertyNode* node);
+
 } // namespace canvas
 
 #endif /* PROPERTY_HELPER_HXX_ */

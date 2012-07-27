@@ -1,4 +1,4 @@
-// Canvas with 2D rendering api
+// Base class for elements of property controlled subsystems
 //
 // Copyright (C) 2012  Thomas Geymayer <tomgey@gmail.com>
 //
@@ -16,24 +16,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef CANVAS_MGR_H_
-#define CANVAS_MGR_H_
+#ifndef PROPERTY_BASED_ELEMENT_HXX_
+#define PROPERTY_BASED_ELEMENT_HXX_
 
-#include "property_based_mgr.hxx"
+#include <Canvas/canvas_fwd.hpp>
+#include <simgear/props/props.hxx>
 
-class CanvasMgr:
-  public PropertyBasedMgr
+/**
+ * Base class for a property controlled element
+ */
+class PropertyBasedElement:
+  public SGPropertyChangeListener
 {
   public:
-    CanvasMgr();
+    PropertyBasedElement(SGPropertyNode* node);
+    virtual ~PropertyBasedElement();
 
-    /**
-     * Get OpenGL texture name for given canvas
-     *
-     * @param Index of canvas
-     * @return OpenGL texture name
-     */
-    unsigned int getCanvasTexId(size_t index) const;
+    virtual void update(double delta_time_sec) = 0;
+
+  protected:
+
+    friend class PropertyBasedMgr;
+
+    SGPropertyNode_ptr _node;
+    PropertyBasedElementWeakPtr _self;
 };
 
-#endif /* CANVAS_MGR_H_ */
+
+#endif /* PROPERTY_BASED_ELEMENT_HXX_ */

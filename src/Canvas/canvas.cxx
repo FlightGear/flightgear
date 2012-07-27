@@ -18,6 +18,7 @@
 
 #include "canvas.hxx"
 #include "elements/group.hxx"
+#include "mouse_event.hxx"
 
 #include <Canvas/property_helper.hxx>
 #include <Main/globals.hxx>
@@ -31,172 +32,95 @@
 #include <osgText/Text>
 #include <osgViewer/Viewer>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
 
-//------------------------------------------------------------------------------
-/**
- * Callback used to disable/enable rendering to the texture if it is not
- * visible
- */
-class CameraCullCallback:
-  public osg::NodeCallback
+//----------------------------------------------------------------------------
+Canvas::CameraCullCallback::CameraCullCallback():
+  _render( true ),
+  _render_frame( 0 )
 {
-  public:
 
-    CameraCullCallback():
-      _render( true ),
-      _render_frame( 0 )
-    {}
+}
 
-    /**
-     * Enable rendering for the next frame
-     */
-    void enableRendering()
-    {
-      _render = true;
-    }
-
-  private:
-
-    bool _render;
-    unsigned int _render_frame;
-
-    virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
-    {
-      if( !_render && nv->getTraversalNumber() != _render_frame )
-        return;
-
-      traverse(node, nv);
-
-      _render = false;
-      _render_frame = nv->getTraversalNumber();
-    }
-};
-
-/**
- * This callback is installed on every placement of the canvas in the scene to
- * only render the canvas if at least one placement is visible
- */
-class PlacementCullCallback:
-  public osg::NodeCallback
+//----------------------------------------------------------------------------
+void Canvas::CameraCullCallback::enableRendering()
 {
-  public:
+  _render = true;
+}
 
-    PlacementCullCallback(Canvas* canvas, CameraCullCallback* camera_cull):
-      _canvas( canvas ),
-      _camera_cull( camera_cull )
-    {}
+//----------------------------------------------------------------------------
+void Canvas::CameraCullCallback::operator()( osg::Node* node,
+                                             osg::NodeVisitor* nv )
+{
+  if( !_render && nv->getTraversalNumber() != _render_frame )
+    return;
 
-  private:
+  traverse(node, nv);
 
-    Canvas *_canvas;
-    CameraCullCallback *_camera_cull;
+  _render = false;
+  _render_frame = nv->getTraversalNumber();
+}
 
-    virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
-    {
-      if( nv->getTraversalMask() & simgear::MODEL_BIT )
-        _camera_cull->enableRendering();
+//----------------------------------------------------------------------------
+Canvas::CullCallback::CullCallback(CameraCullCallback* camera_cull):
+  _camera_cull( camera_cull )
+{
 
-      traverse(node, nv);
-    }
-};
+}
+
+//----------------------------------------------------------------------------
+void Canvas::CullCallback::operator()( osg::Node* node,
+                                       osg::NodeVisitor* nv )
+{
+  if( nv->getTraversalMask() & simgear::MODEL_BIT )
+    _camera_cull->enableRendering();
+
+  traverse(node, nv);
+}
 
 //------------------------------------------------------------------------------
-Canvas::Canvas():
+Canvas::Canvas(SGPropertyNode* node):
+  PropertyBasedElement(node),
   _size_x(-1),
   _size_y(-1),
   _view_width(-1),
   _view_height(-1),
-  _status(0),
+  _status(node, "status"),
+  _status_msg(node, "status-msg"),
+  _mouse_x(node, "mouse/x"),
+  _mouse_y(node, "mouse/y"),
+  _mouse_dx(node, "mouse/dx"),
+  _mouse_dy(node, "mouse/dy"),
+  _mouse_button(node, "mouse/button"),
+  _mouse_state(node, "mouse/state"),
+  _mouse_mod(node, "mouse/mod"),
+  _mouse_scroll(node, "mouse/scroll"),
+  _mouse_event(node, "mouse/event"),
   _sampling_dirty(false),
   _color_dirty(true),
-  _node(0),
+  _root_group( new canvas::Group(node) ),
   _render_always(false)
 {
+  _status = 0;
   setStatusFlags(MISSING_SIZE_X | MISSING_SIZE_Y);
 
   _camera_callback = new CameraCullCallback;
-  _cull_callback = new PlacementCullCallback(this, _camera_callback);
+  _cull_callback = new CullCallback(_camera_callback);
+
+  canvas::linkColorNodes
+  (
+    "color-background",
+    _node,
+    _color_background,
+    osg::Vec4f(0,0,0,1)
+  );
 }
 
 //------------------------------------------------------------------------------
 Canvas::~Canvas()
 {
-  clearPlacements();
 
-  unbind();
-  _node = 0;
-}
-
-//------------------------------------------------------------------------------
-int Canvas::getStatus() const
-{
-  return _status;
-}
-
-//------------------------------------------------------------------------------
-void Canvas::reset(SGPropertyNode* node)
-{
-  if( node )
-    SG_LOG
-    (
-      SG_GL,
-      SG_INFO,
-      "Canvas::reset() texture[" << node->getIndex() << "]"
-    );
-
-  unbind();
-
-  _node = node;
-  setStatusFlags(MISSING_SIZE_X | MISSING_SIZE_Y);
-
-  if( _node )
-  {
-    _root_group.reset( new canvas::Group(_node) );
-    _node->tie
-    (
-      "size[0]",
-      SGRawValueMethods<Canvas, int>( *this, &Canvas::getSizeX,
-                                             &Canvas::setSizeX )
-    );
-    _node->tie
-    (
-      "size[1]",
-      SGRawValueMethods<Canvas, int>( *this, &Canvas::getSizeY,
-                                             &Canvas::setSizeY )
-    );
-    _node->tie
-    (
-      "view[0]",
-      SGRawValueMethods<Canvas, int>( *this, &Canvas::getViewWidth,
-                                             &Canvas::setViewWidth )
-    );
-    _node->tie
-    (
-      "view[1]",
-      SGRawValueMethods<Canvas, int>( *this, &Canvas::getViewHeight,
-                                             &Canvas::setViewHeight )
-    );
-    _node->tie
-    (
-      "status",
-      SGRawValueMethods<Canvas, int>(*this, &Canvas::getStatus)
-    );
-    _node->tie
-    (
-      "status-msg",
-      SGRawValueMethods<Canvas, const char*>(*this, &Canvas::getStatusMsg)
-    );
-    _node->addChangeListener(this);
-
-    canvas::linkColorNodes
-    (
-      "color-background",
-      _node,
-      _color_background,
-      osg::Vec4f(0,0,0,1)
-    );
-  }
 }
 
 //------------------------------------------------------------------------------
@@ -257,15 +181,29 @@ void Canvas::update(double delta_time_sec)
       // New placement
       _placements.resize(node->getIndex() + 1);
     else
-      // Remove maybe already existing placements
-      clearPlacements(node->getIndex());
+      // Remove possibly existing placements
+      _placements[ node->getIndex() ].clear();
 
-    // add new placements
-    _placements[node->getIndex()] = _texture.set_texture(
-      node,
-      _texture.getTexture(),
-      _cull_callback
-    );
+    // Get new placements
+    PlacementFactoryMap::const_iterator placement_factory =
+      _placement_factories.find( node->getStringValue("type", "object") );
+    if( placement_factory != _placement_factories.end() )
+    {
+      canvas::Placements& placements =
+        _placements[ node->getIndex() ] =
+          placement_factory->second
+          (
+            node,
+            boost::shared_static_cast<Canvas>(_self.lock())
+          );
+      node->setStringValue
+      (
+        "status-msg",
+        placements.empty() ? "No match" : "Ok"
+      );
+    }
+    else
+      node->setStringValue("status-msg", "Unknown placement type");
   }
 
   if( _render_always )
@@ -291,12 +229,6 @@ void Canvas::setSizeX(int sx)
 }
 
 //------------------------------------------------------------------------------
-int Canvas::getSizeX() const
-{
-  return _size_x;
-}
-
-//------------------------------------------------------------------------------
 void Canvas::setSizeY(int sy)
 {
   if( _size_y == sy )
@@ -315,12 +247,6 @@ void Canvas::setSizeY(int sy)
 }
 
 //------------------------------------------------------------------------------
-int Canvas::getSizeY() const
-{
-  return _size_y;
-}
-
-//------------------------------------------------------------------------------
 void Canvas::setViewWidth(int w)
 {
   if( _view_width == w )
@@ -328,12 +254,6 @@ void Canvas::setViewWidth(int w)
   _view_width = w;
 
   _texture.setViewSize(_view_width, _view_height);
-}
-
-//------------------------------------------------------------------------------
-int Canvas::getViewWidth() const
-{
-  return _view_width;
 }
 
 //------------------------------------------------------------------------------
@@ -347,15 +267,19 @@ void Canvas::setViewHeight(int h)
 }
 
 //------------------------------------------------------------------------------
-int Canvas::getViewHeight() const
+bool Canvas::handleMouseEvent(const canvas::MouseEvent& event)
 {
-  return _view_height;
-}
-
-//------------------------------------------------------------------------------
-const char* Canvas::getStatusMsg() const
-{
-  return _status_msg.c_str();
+  _mouse_x = event.x;
+  _mouse_y = event.y;
+  _mouse_dx = event.dx;
+  _mouse_dy = event.dy;
+  _mouse_button = event.button;
+  _mouse_state = event.state;
+  _mouse_mod = event.mod;
+  _mouse_scroll = event.scroll;
+  // Always set event type last because all listeners are attached to it
+  _mouse_event = event.type;
+  return true;
 }
 
 //------------------------------------------------------------------------------
@@ -380,7 +304,7 @@ void Canvas::childRemoved( SGPropertyNode * parent,
     return;
 
   if( child->getNameString() == "placement" )
-    clearPlacements(child->getIndex());
+    _placements[ child->getIndex() ].clear();
   else
     static_cast<canvas::Element*>(_root_group.get())
       ->childRemoved(parent, child);
@@ -389,6 +313,9 @@ void Canvas::childRemoved( SGPropertyNode * parent,
 //----------------------------------------------------------------------------
 void Canvas::valueChanged(SGPropertyNode* node)
 {
+  if( boost::starts_with(node->getNameString(), "status") )
+    return;
+
   if( node->getParent()->getParent() == _node )
   {
     if(    !_color_background.empty()
@@ -416,9 +343,29 @@ void Canvas::valueChanged(SGPropertyNode* node)
       _sampling_dirty = true;
     else if( node->getNameString() == "render-always" )
       _render_always = node->getBoolValue();
+    else if( node->getNameString() == "size" )
+    {
+      if( node->getIndex() == 0 )
+        setSizeX( node->getIntValue() );
+      else if( node->getIndex() == 1 )
+        setSizeY( node->getIntValue() );
+    }
+    else if( node->getNameString() == "view" )
+    {
+      if( node->getIndex() == 0 )
+        setViewWidth( node->getIntValue() );
+      else if( node->getIndex() == 1 )
+        setViewHeight( node->getIntValue() );
+    }
   }
 
   _root_group->valueChanged(node);
+}
+
+//------------------------------------------------------------------------------
+osg::Texture2D* Canvas::getTexture() const
+{
+  return _texture.getTexture();
 }
 
 //------------------------------------------------------------------------------
@@ -450,12 +397,40 @@ GLuint Canvas::getTexId() const
 }
 
 //------------------------------------------------------------------------------
+Canvas::CameraCullCallbackPtr Canvas::getCameraCullCallback() const
+{
+  return _camera_callback;
+}
+
+//----------------------------------------------------------------------------
+Canvas::CullCallbackPtr Canvas::getCullCallback() const
+{
+  return _cull_callback;
+}
+
+//------------------------------------------------------------------------------
+void Canvas::addPlacementFactory( const std::string& type,
+                                  canvas::PlacementFactory factory )
+{
+  if( _placement_factories.find(type) != _placement_factories.end() )
+    SG_LOG
+    (
+      SG_GENERAL,
+      SG_WARN,
+      "Canvas::addPlacementFactory: replace existing factor for type " << type
+    );
+
+  _placement_factories[type] = factory;
+}
+
+//------------------------------------------------------------------------------
 void Canvas::setStatusFlags(unsigned int flags, bool set)
 {
   if( set )
-    _status |= flags;
+    _status = _status | flags;
   else
-    _status &= ~flags;
+    _status = _status & ~flags;
+  // TODO maybe extend simgear::PropertyObject to allow |=, &= etc.
 
   if( (_status & MISSING_SIZE_X) && (_status & MISSING_SIZE_Y) )
     _status_msg = "Missing size";
@@ -472,47 +447,4 @@ void Canvas::setStatusFlags(unsigned int flags, bool set)
 }
 
 //------------------------------------------------------------------------------
-void Canvas::clearPlacements(int index)
-{
-  Placements& placements = _placements.at(index);
-  while( !placements.empty() )
-  {
-    osg::ref_ptr<osg::Group> group = placements.back();
-    placements.pop_back();
-
-    assert( group->getNumChildren() == 1 );
-    osg::Node *child = group->getChild(0);
-
-    if( group->getNumParents() )
-    {
-      osg::Group *parent = group->getParent(0);
-      parent->addChild(child);
-      parent->removeChild(group);
-    }
-
-    group->removeChild(child);
-  }
-}
-
-//------------------------------------------------------------------------------
-void Canvas::clearPlacements()
-{
-  for(size_t i = 0; i < _placements.size(); ++i)
-    clearPlacements(i);
-  _placements.clear();
-}
-
-//------------------------------------------------------------------------------
-void Canvas::unbind()
-{
-  if( !_node )
-    return;
-
-  _node->untie("size[0]");
-  _node->untie("size[1]");
-  _node->untie("view[0]");
-  _node->untie("view[1]");
-  _node->untie("status");
-  _node->untie("status-msg");
-  _node->removeChangeListener(this);
-}
+Canvas::PlacementFactoryMap Canvas::_placement_factories;

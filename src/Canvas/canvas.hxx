@@ -19,21 +19,20 @@
 #ifndef CANVAS_HXX_
 #define CANVAS_HXX_
 
+#include "placement.hxx"
+#include "property_based_element.hxx"
+
+#include <Canvas/canvas_fwd.hpp>
 #include <Instrumentation/od_gauge.hxx>
-#include <simgear/props/props.hxx>
+
+#include <simgear/props/propertyObject.hxx>
 #include <osg/NodeCallback>
 
 #include <memory>
 #include <string>
 
-namespace canvas
-{
-  class Group;
-}
-
-class CameraCullCallback;
 class Canvas:
-  public SGPropertyChangeListener
+  public PropertyBasedElement
 {
   public:
 
@@ -45,26 +44,58 @@ class Canvas:
       CREATE_FAILED  = 0x0004
     };
 
-    Canvas();
+    /**
+     * Callback used to disable/enable rendering to the texture if it is not
+     * visible
+     */
+    class CameraCullCallback:
+      public osg::NodeCallback
+    {
+      public:
+        CameraCullCallback();
+
+        /**
+         * Enable rendering for the next frame
+         */
+        void enableRendering();
+
+      private:
+        bool _render;
+        unsigned int _render_frame;
+
+        virtual void operator()(osg::Node* node, osg::NodeVisitor* nv);
+    };
+    typedef osg::ref_ptr<CameraCullCallback> CameraCullCallbackPtr;
+
+    /**
+     * This callback is installed on every placement of the canvas in the
+     * scene to only render the canvas if at least one placement is visible
+     */
+    class CullCallback:
+      public osg::NodeCallback
+    {
+      public:
+        CullCallback(CameraCullCallback* camera_cull);
+
+      private:
+        CameraCullCallback *_camera_cull;
+
+        virtual void operator()(osg::Node* node, osg::NodeVisitor* nv);
+    };
+    typedef osg::ref_ptr<CullCallback> CullCallbackPtr;
+
+    Canvas(SGPropertyNode* node);
     virtual ~Canvas();
 
-    void reset(SGPropertyNode* node);
     void update(double delta_time_sec);
 
     void setSizeX(int sx);
-    int getSizeX() const;
-
     void setSizeY(int sy);
-    int getSizeY() const;
 
     void setViewWidth(int w);
-    int getViewWidth() const;
-
     void setViewHeight(int h);
-    int getViewHeight() const;
 
-    int getStatus() const;
-    const char* getStatusMsg() const;
+    bool handleMouseEvent(const canvas::MouseEvent& event);
 
     virtual void childAdded( SGPropertyNode * parent,
                              SGPropertyNode * child );
@@ -72,7 +103,14 @@ class Canvas:
                                SGPropertyNode * child );
     virtual void valueChanged (SGPropertyNode * node);
 
+    osg::Texture2D* getTexture() const;
     GLuint getTexId() const;
+
+    CameraCullCallbackPtr getCameraCullCallback() const;
+    CullCallbackPtr getCullCallback() const;
+
+    static void addPlacementFactory( const std::string& type,
+                                     canvas::PlacementFactory factory );
 
   private:
 
@@ -84,8 +122,16 @@ class Canvas:
         _view_width,
         _view_height;
 
-    int         _status;
-    std::string _status_msg;
+    simgear::PropertyObject<int>            _status;
+    simgear::PropertyObject<std::string>    _status_msg;
+
+    simgear::PropertyObject<int>    _mouse_x, _mouse_y,
+                                    _mouse_dx, _mouse_dy,
+                                    _mouse_button,
+                                    _mouse_state,
+                                    _mouse_mod,
+                                    _mouse_scroll,
+                                    _mouse_event;
 
     bool _sampling_dirty,
          _color_dirty;
@@ -93,22 +139,19 @@ class Canvas:
     FGODGauge _texture;
     std::auto_ptr<canvas::Group> _root_group;
 
-    SGPropertyNode_ptr              _node;
     std::vector<SGPropertyNode_ptr> _color_background;
 
-    osg::ref_ptr<CameraCullCallback> _camera_callback;
-    osg::ref_ptr<osg::NodeCallback> _cull_callback;
-
+    CameraCullCallbackPtr _camera_callback;
+    CullCallbackPtr _cull_callback;
     bool _render_always; //<! Used to disable automatic lazy rendering (culling)
 
     std::vector<SGPropertyNode*> _dirty_placements;
-    std::vector<Placements> _placements;
+    std::vector<canvas::Placements> _placements;
+
+    typedef std::map<std::string, canvas::PlacementFactory> PlacementFactoryMap;
+    static PlacementFactoryMap _placement_factories;
 
     void setStatusFlags(unsigned int flags, bool set = true);
-    void clearPlacements(int index);
-    void clearPlacements();
-
-    void unbind();
 };
 
 #endif /* CANVAS_HXX_ */

@@ -311,7 +311,7 @@ class ReplaceStaticTextureVisitor:
      * Get a list of groups which have been inserted into the scene graph to
      * replace the given texture
      */
-    Placements& getPlacements()
+    canvas::Placements& getPlacements()
     {
       return _placements;
     }
@@ -386,7 +386,9 @@ class ReplaceStaticTextureVisitor:
         if( _cull_callback )
           group->setCullCallback(_cull_callback);
 
-        _placements.push_back(group);
+        _placements.push_back(
+          canvas::PlacementPtr(new ObjectPlacement(group))
+        );
 
         osg::StateSet* stateSet = group->getOrCreateStateSet();
         stateSet->setTextureAttribute( unit, _new_texture,
@@ -407,9 +409,37 @@ class ReplaceStaticTextureVisitor:
       }
     }
 
-
-
   protected:
+
+    class ObjectPlacement:
+      public canvas::Placement
+    {
+      public:
+        ObjectPlacement(osg::ref_ptr<osg::Group> group):
+          _group(group)
+        {}
+
+        /**
+         * Remove placement from the scene
+         */
+        virtual ~ObjectPlacement()
+        {
+          assert( _group->getNumChildren() == 1 );
+          osg::Node *child = _group->getChild(0);
+
+          if( _group->getNumParents() )
+          {
+            osg::Group *parent = _group->getParent(0);
+            parent->addChild(child);
+            parent->removeChild(_group);
+          }
+
+          _group->removeChild(child);
+        }
+
+      private:
+        osg::ref_ptr<osg::Group> _group;
+    };
 
     std::string _tex_name,      ///<! Name of texture to be replaced
                 _node_name,     ///<! Only replace if node name matches
@@ -418,11 +448,12 @@ class ReplaceStaticTextureVisitor:
     osg::Texture2D     *_new_texture;
     osg::NodeCallback  *_cull_callback;
 
-    Placements _placements;
+    canvas::Placements _placements;
 };
 
 //------------------------------------------------------------------------------
-  Placements FGODGauge::set_texture(const char* name, osg::Texture2D* new_texture)
+canvas::Placements FGODGauge::set_texture( const char* name,
+                                           osg::Texture2D* new_texture )
 {
   osg::Group* root = globals->get_scenery()->get_aircraft_branch();
   ReplaceStaticTextureVisitor visitor(name, new_texture);
@@ -431,9 +462,9 @@ class ReplaceStaticTextureVisitor:
 }
 
 //------------------------------------------------------------------------------
-Placements FGODGauge::set_texture( const SGPropertyNode* placement,
-                             osg::Texture2D* new_texture,
-                             osg::NodeCallback* cull_callback )
+canvas::Placements FGODGauge::set_texture( const SGPropertyNode* placement,
+                                           osg::Texture2D* new_texture,
+                                           osg::NodeCallback* cull_callback )
 {
   osg::Group* root = globals->get_scenery()->get_aircraft_branch();
   ReplaceStaticTextureVisitor visitor(placement, new_texture, cull_callback);

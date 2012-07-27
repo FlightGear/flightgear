@@ -81,6 +81,7 @@
 #include <Cockpit/panel_io.hxx>
 
 #include <Canvas/canvas_mgr.hxx>
+#include <Canvas/gui_mgr.hxx>
 #include <GUI/new_gui.hxx>
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
@@ -1164,6 +1165,7 @@ bool fgInitSubsystems() {
     // Initialize the canvas 2d drawing subsystem.
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("Canvas", new CanvasMgr, SGSubsystemMgr::DISPLAY);
+    globals->add_subsystem("CanvasGUI", new GUIMgr, SGSubsystemMgr::DISPLAY);
 
     ////////////////////////////////////////////////////////////////////
     // Initialise the ATIS Manager

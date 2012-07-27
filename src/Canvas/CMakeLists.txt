@@ -8,7 +8,12 @@ set(SOURCES
   elements/map.cxx
   elements/path.cxx
   elements/text.cxx
+  gui_mgr.cxx
+  placement.cxx
+  property_based_element.cxx
+  property_based_mgr.cxx
   property_helper.cxx
+  window.cxx
 )
 
 set(HEADERS
@@ -19,7 +24,12 @@ set(HEADERS
   elements/map.hxx
   elements/path.hxx
   elements/text.hxx
+  gui_mgr.hxx
+  placement.hxx
+  property_based_element.hxx
+  property_based_mgr.hxx
   property_helper.hxx
+  window.hxx
 )
 
 flightgear_component(Canvas "${SOURCES}" "${HEADERS}")

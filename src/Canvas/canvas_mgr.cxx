@@ -19,131 +19,38 @@
 #include "canvas_mgr.hxx"
 #include "canvas.hxx"
 
-#include <Main/fg_props.hxx>
+#include <boost/bind.hpp>
 
-#include <osg/Camera>
-#include <osg/Texture2D>
+typedef boost::shared_ptr<Canvas> CanvasPtr;
+CanvasPtr canvasFactory(SGPropertyNode* node)
+{
+  return CanvasPtr(new Canvas(node));
+}
 
-#include <stdexcept>
-#include <string>
 
 //------------------------------------------------------------------------------
 CanvasMgr::CanvasMgr():
-  _props( fgGetNode("/canvas", true) )
+  PropertyBasedMgr("/canvas", "texture", &canvasFactory)
 {
-
-}
-
-//------------------------------------------------------------------------------
-CanvasMgr::~CanvasMgr()
-{
-
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::init()
-{
-  _props->addChangeListener(this);
-  triggerChangeRecursive(_props);
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::reinit()
-{
-
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::shutdown()
-{
-  _props->removeChangeListener(this);
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::bind()
-{
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::unbind()
-{
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::update(double delta_time_sec)
-{
- for( size_t i = 0; i < _canvases.size(); ++i )
-   if( _canvases[i] )
-     _canvases[i]->update(delta_time_sec);
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::childAdded( SGPropertyNode * parent,
-                            SGPropertyNode * child )
-{
-  if( parent != _props )
-    return;
-
-  if( child->getNameString() == "texture" )
-    textureAdded(child);
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::childRemoved( SGPropertyNode * parent,
-                              SGPropertyNode * child )
-{
-  if( parent != _props )
-    return;
-
-  if( child->getNameString() == "texture" )
-  {
-    size_t index = child->getIndex();
-
-    if( index >= _canvases.size() )
-      SG_LOG(SG_GL, SG_WARN, "can't removed unknown texture[" << index << "]!");
-    else
-      // remove the canvas...
-      _canvases[index].reset();
-  }
+  Canvas::addPlacementFactory
+  (
+    "object",
+    boost::bind
+    (
+      &FGODGauge::set_texture,
+      _1,
+      boost::bind(&Canvas::getTexture, _2),
+      boost::bind(&Canvas::getCullCallback, _2)
+    )
+  );
 }
 
 //------------------------------------------------------------------------------
 unsigned int CanvasMgr::getCanvasTexId(size_t index) const
 {
-  if(    index >= _canvases.size()
-      || !_canvases[index] )
+  if(    index >= _elements.size()
+      || !_elements[index] )
     return 0;
 
-  return _canvases[index]->getTexId();
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::textureAdded(SGPropertyNode* node)
-{
-  size_t index = node->getIndex();
-
-  if( index >= _canvases.size() )
-  {
-    if( index > _canvases.size() )
-      SG_LOG(SG_GL, SG_WARN, "Skipping unused texture slot(s)!");
-
-    _canvases.resize(index + 1);
-  }
-  else if( _canvases[index] )
-    SG_LOG(SG_GL, SG_WARN, "texture[" << index << "] already exists!");
-
-  _canvases[index].reset( new Canvas() );
-  _canvases[index]->reset(node);
-}
-
-//------------------------------------------------------------------------------
-void CanvasMgr::triggerChangeRecursive(SGPropertyNode* node)
-{
-  node->getParent()->fireChildAdded(node);
-
-  if( node->nChildren() == 0 && node->getType() != simgear::props::NONE )
-    return node->fireValueChanged();
-
-  for( int i = 0; i < node->nChildren(); ++i )
-    triggerChangeRecursive( node->getChild(i) );
+  return static_cast<Canvas*>(_elements[index].get())->getTexId();
 }

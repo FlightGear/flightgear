@@ -1,4 +1,4 @@
-// Canvas with 2D rendering api
+// Base class for canvas placements
 //
 // Copyright (C) 2012  Thomas Geymayer <tomgey@gmail.com>
 //
@@ -16,24 +16,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef CANVAS_MGR_H_
-#define CANVAS_MGR_H_
+#ifndef CANVAS_PLACEMENT_HXX_
+#define CANVAS_PLACEMENT_HXX_
 
-#include "property_based_mgr.hxx"
-
-class CanvasMgr:
-  public PropertyBasedMgr
+namespace canvas
 {
-  public:
-    CanvasMgr();
 
-    /**
-     * Get OpenGL texture name for given canvas
-     *
-     * @param Index of canvas
-     * @return OpenGL texture name
-     */
-    unsigned int getCanvasTexId(size_t index) const;
-};
+  class Placement
+  {
+    public:
+      Placement();
+      virtual ~Placement() = 0;
 
-#endif /* CANVAS_MGR_H_ */
+    private:
+      Placement(const Placement&) /* = delete */;
+      Placement& operator=(const Placement&) /* = delete */;
+  };
+
+} // namespace canvas
+
+#endif /* CANVAS_PLACEMENT_HXX_ */

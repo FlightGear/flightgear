@@ -29,6 +29,9 @@
 #ifndef _OD_GAUGE_HXX
 #define _OD_GAUGE_HXX
 
+#include <Canvas/canvas_fwd.hpp>
+#include <Canvas/placement.hxx>
+
 #include <osg/NodeCallback>
 #include <osg/Group>
 
@@ -38,14 +41,13 @@ namespace osg {
 }
 
 class SGPropertyNode;
-typedef std::vector<osg::ref_ptr<osg::Group> > Placements;
 
 /**
  * Owner Drawn Gauge helper class.
  */
 class FGODGauge
 {
-public:
+  public:
     FGODGauge();
     virtual ~FGODGauge();
 
@@ -109,7 +111,9 @@ public:
      * @param new_texture dynamic texture to replace the old one
      * @return A list of groups which override the given texture
      */
-    Placements set_texture(const char * name, osg::Texture2D* new_texture);
+    static
+    canvas::Placements set_texture( const char * name,
+                                    osg::Texture2D* new_texture );
 
     /**
      * Replace an opengl texture name inside the aircraft scene graph.
@@ -125,9 +129,10 @@ public:
      *        object
      * @return A list of groups which override the given texture
      */
-    Placements set_texture( const SGPropertyNode* placement,
-                            osg::Texture2D* new_texture,
-                            osg::NodeCallback* cull_callback = 0 );
+    static
+    canvas::Placements set_texture( const SGPropertyNode* placement,
+                                    osg::Texture2D* new_texture,
+                                    osg::NodeCallback* cull_callback = 0 );
 
     /**
      * Get the OSG camera for drawing this gauge.

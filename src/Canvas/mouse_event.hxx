@@ -1,4 +1,4 @@
-// Canvas with 2D rendering api
+// Mouse event
 //
 // Copyright (C) 2012  Thomas Geymayer <tomgey@gmail.com>
 //
@@ -16,24 +16,37 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef CANVAS_MGR_H_
-#define CANVAS_MGR_H_
+#ifndef CANVAS_MOUSE_EVENT_HXX_
+#define CANVAS_MOUSE_EVENT_HXX_
 
-#include "property_based_mgr.hxx"
+#include <osgGA/GUIEventAdapter>
 
-class CanvasMgr:
-  public PropertyBasedMgr
+namespace canvas
 {
-  public:
-    CanvasMgr();
 
-    /**
-     * Get OpenGL texture name for given canvas
-     *
-     * @param Index of canvas
-     * @return OpenGL texture name
-     */
-    unsigned int getCanvasTexId(size_t index) const;
-};
+  struct MouseEvent
+  {
+    typedef osgGA::GUIEventAdapter::EventType EventType;
+    typedef osgGA::GUIEventAdapter::ScrollingMotion Scroll;
 
-#endif /* CANVAS_MGR_H_ */
+    MouseEvent(EventType type):
+      type(type),
+      x(-1), y(-1),
+      dx(0), dy(0),
+      button(-1),
+      state(-1),
+      mod(-1)
+    {}
+
+    EventType   type;
+    int         x, y,
+                dx, dy,
+                button, //<! Button for this event
+                state,  //<! Current button state
+                mod;    //<! Keyboard modifier state
+    Scroll      scroll;
+  };
+
+} // namespace canvas
+
+#endif /* CANVAS_MOUSE_EVENT_HXX_ */
