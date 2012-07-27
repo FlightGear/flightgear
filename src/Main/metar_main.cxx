@@ -33,6 +33,7 @@
 
 #include <simgear/io/HTTPClient.hxx>
 #include <simgear/io/HTTPRequest.hxx>
+#include <simgear/io/raw_socket.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 using namespace std;
@@ -547,6 +548,8 @@ int main(int argc, char *argv[])
 	string proxy_host, proxy_port;
 	getproxy(proxy_host, proxy_port);
 
+  Socket::initSockets();
+  
     HTTP::Client http;
     http.setProxy(proxy_host, atoi(proxy_port.c_str()));
     
