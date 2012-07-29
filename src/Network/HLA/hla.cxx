@@ -588,16 +588,14 @@ private:
     SGSharedPtr<PropertyReferenceSet> _propertyReferenceSet;
 };
 
-class MPAttributeCallback : public sg::HLAObjectInstance::AttributeCallback {
+class MPAttributeData {
 public:
-    MPAttributeCallback() :
+    MPAttributeData() :
         _propertyReferenceSet(new PropertyReferenceSet),
         _mpProperties(new sg::HLAVariantArrayDataElement)
     {
         _mpProperties->setAlternativeDataElementFactory(new MPPropertyVariantRecordDataElementFactory(_propertyReferenceSet.get()));
     }
-    virtual ~MPAttributeCallback()
-    { }
 
     void setLocation(sg::HLAAbstractLocation* location)
     { _location = location; }
@@ -624,80 +622,104 @@ public:
     { return _mpProperties.get(); }
 
     SGSharedPtr<PropertyReferenceSet> _propertyReferenceSet;
-
-protected:
     SGSharedPtr<sg::HLAAbstractLocation> _location;
     SGSharedPtr<AbstractSimTime> _simTime;
     SGSharedPtr<AbstractModel> _model;
     SGSharedPtr<sg::HLAVariantArrayDataElement> _mpProperties;
 };
 
-class MPOutAttributeCallback : public MPAttributeCallback {
+class MPUpdateCallback : public sg::HLAObjectInstance::UpdateCallback {
 public:
-    virtual void updateAttributeValues(sg::HLAObjectInstance&, const sg::RTIData&)
+    virtual void updateAttributeValues(sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
     {
-        _simTime->setTimeStamp(globals->get_sim_time_sec());
+        updateAttributeValues();
+        objectInstance.encodeAttributeValues();
+        objectInstance.sendAttributeValues(tag);
+    }
 
-        SGGeod position = ifce.getPosition();
+    virtual void updateAttributeValues(sg::HLAObjectInstance& objectInstance, const SGTimeStamp& timeStamp, const sg::RTIData& tag)
+    {
+        updateAttributeValues();
+        objectInstance.encodeAttributeValues();
+        objectInstance.sendAttributeValues(timeStamp, tag);
+    }
+
+    void updateAttributeValues()
+    {
+        _attributeData._simTime->setTimeStamp(globals->get_sim_time_sec());
+
+        SGGeod position = _ifce.getPosition();
         // The quaternion rotating from the earth centered frame to the
         // horizontal local frame
         SGQuatd qEc2Hl = SGQuatd::fromLonLat(position);
-        SGQuatd hlOr = SGQuatd::fromYawPitchRoll(ifce.get_Psi(), ifce.get_Theta(), ifce.get_Phi());
-        _location->setCartPosition(SGVec3d::fromGeod(position));
-        _location->setCartOrientation(qEc2Hl*hlOr);
+        SGQuatd hlOr = SGQuatd::fromYawPitchRoll(_ifce.get_Psi(), _ifce.get_Theta(), _ifce.get_Phi());
+        _attributeData._location->setCartPosition(SGVec3d::fromGeod(position));
+        _attributeData._location->setCartOrientation(qEc2Hl*hlOr);
         // The angular velocitied in the body frame
-        double p = ifce.get_P_body();
-        double q = ifce.get_Q_body();
-        double r = ifce.get_R_body();
-        _location->setAngularBodyVelocity(SGVec3d(p, q, r));
+        double p = _ifce.get_P_body();
+        double q = _ifce.get_Q_body();
+        double r = _ifce.get_R_body();
+        _attributeData._location->setAngularBodyVelocity(SGVec3d(p, q, r));
         // The body uvw velocities in the interface are wrt the wind instead
         // of wrt the ec frame
-        double n = ifce.get_V_north();
-        double e = ifce.get_V_east();
-        double d = ifce.get_V_down();
-        _location->setLinearBodyVelocity(hlOr.transform(SGVec3d(n, e, d)));
+        double n = _ifce.get_V_north();
+        double e = _ifce.get_V_east();
+        double d = _ifce.get_V_down();
+        _attributeData._location->setLinearBodyVelocity(hlOr.transform(SGVec3d(n, e, d)));
 
-        if (_mpProperties.valid() && _mpProperties->getNumElements() == 0) {
-            if (_propertyReferenceSet.valid() && _propertyReferenceSet->getRootNode()) {
-                const sg::HLADataType* elementDataType = _mpProperties->getElementDataType();
+        if (_attributeData._mpProperties.valid() && _attributeData._mpProperties->getNumElements() == 0) {
+            if (_attributeData._propertyReferenceSet.valid() && _attributeData._propertyReferenceSet->getRootNode()) {
+                const sg::HLADataType* elementDataType = _attributeData._mpProperties->getElementDataType();
                 const sg::HLAVariantRecordDataType* variantRecordDataType = elementDataType->toVariantRecordDataType();
                 for (unsigned i = 0, count = 0; i < variantRecordDataType->getNumAlternatives(); ++i) {
                     std::string name = variantRecordDataType->getAlternativeSemantics(i);
-                    SGPropertyNode* node = _propertyReferenceSet->getRootNode()->getNode(name);
+                    SGPropertyNode* node = _attributeData._propertyReferenceSet->getRootNode()->getNode(name);
                     if (!node)
                         continue;
-                    _mpProperties->getOrCreateElement(count++)->setAlternativeIndex(i);
+                    _attributeData._mpProperties->getOrCreateElement(count++)->setAlternativeIndex(i);
                 }
             }
         }
     }
 
-private:
-    FlightProperties ifce;
+    MPAttributeData _attributeData;
+    FlightProperties _ifce;
 };
 
-class MPInAttributeCallback : public MPAttributeCallback {
+class MPReflectCallback : public sg::HLAObjectInstance::ReflectCallback {
 public:
     virtual void reflectAttributeValues(sg::HLAObjectInstance& objectInstance,
-                                        const sg::RTIIndexDataPairList&, const sg::RTIData&)
+                                        const sg::HLAIndexList& indexList, const sg::RTIData& tag)
+    {
+        objectInstance.reflectAttributeValues(indexList, tag);
+        reflectAttributeValues();
+    }
+    virtual void reflectAttributeValues(sg::HLAObjectInstance& objectInstance, const sg::HLAIndexList& indexList,
+                                        const SGTimeStamp& timeStamp, const sg::RTIData& tag)
+    {
+        objectInstance.reflectAttributeValues(indexList, timeStamp, tag);
+        reflectAttributeValues();
+    }
+
+    void reflectAttributeValues()
     {
         // Puh, damn ordering problems with properties startup and so on
         if (_aiMultiplayer.valid()) {
             FGExternalMotionData motionInfo;
-            motionInfo.time = _simTime->getTimeStamp();
+            motionInfo.time = _attributeData._simTime->getTimeStamp();
             motionInfo.lag = 0;
 
-            motionInfo.position = _location->getCartPosition();
-            motionInfo.orientation = toQuatf(_location->getCartOrientation());
-            motionInfo.linearVel = toVec3f(_location->getLinearBodyVelocity());
-            motionInfo.angularVel = toVec3f(_location->getAngularBodyVelocity());
+            motionInfo.position = _attributeData._location->getCartPosition();
+            motionInfo.orientation = toQuatf(_attributeData._location->getCartOrientation());
+            motionInfo.linearVel = toVec3f(_attributeData._location->getLinearBodyVelocity());
+            motionInfo.angularVel = toVec3f(_attributeData._location->getAngularBodyVelocity());
             motionInfo.linearAccel = SGVec3f::zeros();
             motionInfo.angularAccel = SGVec3f::zeros();
 
             _aiMultiplayer->addMotionInfo(motionInfo, SGTimeStamp::now().getSeconds());
 
         } else {
-            std::string modelPath = _model->getModelPath();
+            std::string modelPath = _attributeData._model->getModelPath();
             if (modelPath.empty())
                 return;
             FGAIManager *aiMgr;
@@ -709,7 +731,7 @@ public:
             _aiMultiplayer->setPath(modelPath.c_str());
             aiMgr->attach(_aiMultiplayer.get());
 
-            _propertyReferenceSet->setRootNode(_aiMultiplayer->getPropertyRoot());
+            _attributeData._propertyReferenceSet->setRootNode(_aiMultiplayer->getPropertyRoot());
         }
     }
 
@@ -721,7 +743,7 @@ public:
         _aiMultiplayer = 0;
     }
 
-private:
+    MPAttributeData _attributeData;
     SGSharedPtr<FGAIMultiplayer> _aiMultiplayer;
 };
 
@@ -735,28 +757,28 @@ public:
 
     virtual void discoverInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
     {
-        MPInAttributeCallback* attributeCallback = new MPInAttributeCallback;
-        objectInstance.setAttributeCallback(attributeCallback);
-        attachDataElements(objectInstance, *attributeCallback, false);
+        MPReflectCallback* reflectCallback = new MPReflectCallback;
+        objectInstance.setReflectCallback(reflectCallback);
+        attachDataElements(objectInstance, reflectCallback->_attributeData, false);
     }
 
     virtual void removeInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
     {
-        MPInAttributeCallback* attributeCallback;
-        attributeCallback = dynamic_cast<MPInAttributeCallback*>(objectInstance.getAttributeCallback().get());
-        if (!attributeCallback) {
+        MPReflectCallback* reflectCallback;
+        reflectCallback = dynamic_cast<MPReflectCallback*>(objectInstance.getReflectCallback().get());
+        if (!reflectCallback) {
             SG_LOG(SG_IO, SG_WARN, "HLA: expected to have a different attribute callback in remove instance.");
             return;
         }
-        attributeCallback->setDie();
+        reflectCallback->setDie();
     }
 
     virtual void registerInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance)
     {
-        MPOutAttributeCallback* attributeCallback = new MPOutAttributeCallback;
-        objectInstance.setAttributeCallback(attributeCallback);
-        attachDataElements(objectInstance, *attributeCallback, true);
-        attributeCallback->_propertyReferenceSet->setRootNode(fgGetNode("/", true));
+        MPUpdateCallback* updateCallback = new MPUpdateCallback;
+        objectInstance.setUpdateCallback(updateCallback);
+        attachDataElements(objectInstance, updateCallback->_attributeData, true);
+        updateCallback->_attributeData._propertyReferenceSet->setRootNode(fgGetNode("/", true));
     }
 
     virtual void deleteInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance)
@@ -796,24 +818,24 @@ public:
     }
 
 private:
-    void attachDataElements(sg::HLAObjectInstance& objectInstance, MPAttributeCallback& attributeCallback, bool outgoing)
+    void attachDataElements(sg::HLAObjectInstance& objectInstance, MPAttributeData& attributeData, bool outgoing)
     {
         sg::HLAAttributePathElementMap attributePathElementMap;
 
         if (_locationFactory.valid())
-            attributeCallback.setLocation(_locationFactory->createLocation(attributePathElementMap));
+            attributeData.setLocation(_locationFactory->createLocation(attributePathElementMap));
         if (_modelFactory.valid())
-            attributeCallback.setModel(_modelFactory->createModel(attributePathElementMap, outgoing));
+            attributeData.setModel(_modelFactory->createModel(attributePathElementMap, outgoing));
         if (_simTimeFactory.valid())
-            attributeCallback.setSimTime(_simTimeFactory->createSimTime(attributePathElementMap));
+            attributeData.setSimTime(_simTimeFactory->createSimTime(attributePathElementMap));
 
-        attributePathElementMap[_mpPropertiesIndexPathPair.first][_mpPropertiesIndexPathPair.second] = attributeCallback.getMPProperties();
+        attributePathElementMap[_mpPropertiesIndexPathPair.first][_mpPropertiesIndexPathPair.second] = attributeData.getMPProperties();
 
         if (outgoing)
-            attachPropertyDataElements(*attributeCallback._propertyReferenceSet,
+            attachPropertyDataElements(*attributeData._propertyReferenceSet,
                                        attributePathElementMap, _outputProperties);
         else
-            attachPropertyDataElements(*attributeCallback._propertyReferenceSet,
+            attachPropertyDataElements(*attributeData._propertyReferenceSet,
                                        attributePathElementMap, _inputProperties);
 
         objectInstance.setAttributes(attributePathElementMap);
