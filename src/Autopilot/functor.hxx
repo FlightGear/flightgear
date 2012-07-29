@@ -31,6 +31,7 @@ namespace FGXMLAutopilot {
 
 template <class TBase> class FunctorBase {
 public:
+  virtual ~FunctorBase() {}
   virtual TBase * operator()( SGPropertyNode_ptr configNode ) = 0;
 };
 
