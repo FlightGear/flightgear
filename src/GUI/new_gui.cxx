@@ -49,10 +49,12 @@ NewGUI::NewGUI () :
   _active_dialog(0)
 {
 #if defined(SG_MAC)
-  _menubar.reset(new FGCocoaMenuBar);
-#else
-  _menubar.reset(new FGPUIMenuBar);
+    if (fgGetBool("/sim/menubar/native", true)) {
+        _menubar.reset(new FGCocoaMenuBar);
+        return;
+    }
 #endif
+  _menubar.reset(new FGPUIMenuBar);
 }
 
 NewGUI::~NewGUI ()
