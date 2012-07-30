@@ -286,6 +286,12 @@ int fgOSMainLoop()
         viewer->frame();
     }
     
+#if defined(SG_MAC)
+    // For avoiding crash on Command-Q.
+    // Somehow, Sometimes database pager cannot be cancelled before
+    // exit() calls FGExitCleanup()
+    viewer->getDatabasePager()->cancel();
+#endif
     return status;
 }
 
