@@ -24,27 +24,28 @@
 namespace canvas
 {
 
-  struct MouseEvent
+  class MouseEvent
   {
-    typedef osgGA::GUIEventAdapter::EventType EventType;
-    typedef osgGA::GUIEventAdapter::ScrollingMotion Scroll;
+    public:
+      typedef osgGA::GUIEventAdapter::EventType EventType;
+      typedef osgGA::GUIEventAdapter::ScrollingMotion Scroll;
 
-    MouseEvent(EventType type):
-      type(type),
-      x(-1), y(-1),
-      dx(0), dy(0),
-      button(-1),
-      state(-1),
-      mod(-1)
-    {}
+      MouseEvent(EventType type):
+        type(type),
+        x(-1), y(-1),
+        dx(0), dy(0),
+        button(-1),
+        state(-1),
+        mod(-1)
+      {}
 
-    EventType   type;
-    int         x, y,
-                dx, dy,
-                button, //<! Button for this event
-                state,  //<! Current button state
-                mod;    //<! Keyboard modifier state
-    Scroll      scroll;
+      EventType   type;
+      int         x, y,
+                  dx, dy,
+                  button, //<! Button for this event
+                  state,  //<! Current button state
+                  mod;    //<! Keyboard modifier state
+      Scroll      scroll;
   };
 
 } // namespace canvas

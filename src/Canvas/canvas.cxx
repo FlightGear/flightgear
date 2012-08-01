@@ -18,8 +18,8 @@
 
 #include "canvas.hxx"
 #include "elements/group.hxx"
-#include "mouse_event.hxx"
 
+#include <Canvas/MouseEvent.hxx>
 #include <Canvas/property_helper.hxx>
 #include <Main/globals.hxx>
 #include <Viewer/CameraGroup.hxx>

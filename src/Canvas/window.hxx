@@ -19,9 +19,9 @@
 #ifndef CANVAS_WINDOW_HXX_
 #define CANVAS_WINDOW_HXX_
 
-#include "mouse_event.hxx"
 #include "property_based_element.hxx"
 #include "rect.hxx"
+#include <Canvas/MouseEvent.hxx>
 
 #include <simgear/props/propertyObject.hxx>
 
