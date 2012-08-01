@@ -1210,6 +1210,7 @@ FGRenderer::buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraI
 
     osg::StateSet* ss = camera->getOrCreateStateSet();
     ss->addUniform( _depthInColor );
+    ss->addUniform( info->bufferSize );
 }
 
 void
@@ -1267,6 +1268,8 @@ FGRenderer::buildLightingLightsPass(CameraInfo* info, FGRenderingPipeline::Pass*
     StateSet* ss = lightCam->getOrCreateStateSet();
     ss->addUniform( _planes );
     ss->addUniform( info->bufferSize );
+    ss->addUniform( _fogColor );
+    ss->addUniform( _fogDensity );
     lightCam->setName( "LightCamera" );
     lightCam->setClearMask(0);
     lightCam->setAllowEventFocus(false);
