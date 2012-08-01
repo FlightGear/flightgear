@@ -5,6 +5,10 @@
  *      Author: tom
  */
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "CanvasWidget.hxx"
 
 #include <Canvas/canvas_mgr.hxx>
