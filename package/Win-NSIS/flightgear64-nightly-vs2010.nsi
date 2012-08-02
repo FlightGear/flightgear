@@ -69,7 +69,6 @@ Section "" ;No components page, name is not important
   
   File ${FGBinDir}\fgfs.exe
   File ${FGBinDir}\fgjs.exe
-  File ${FGBinDir}\terrasync.exe
   File ${FGRunDir}\bin\fgrun.exe
   
   File ${OSGInstallDir}\bin\osg${OSGSoNumber}-osg.dll
@@ -117,7 +116,7 @@ Section "" ;No components page, name is not important
   File ${OSGPluginsDir}\osgdb_deprecated_osgparticle.dll
   
   
-  Exec '"$INSTDIR\fgrun.exe"  --silent --fg-exe="$INSTDIR\fgfs.exe" --ts-exe="$INSTDIR\terrasync.exe" '
+  Exec '"$INSTDIR\fgrun.exe"  --silent --fg-exe="$INSTDIR\fgfs.exe" '
   
   CreateDirectory "$SMPROGRAMS\FlightGear"
   CreateShortCut "$SMPROGRAMS\FlightGear\FlightGear64-nightly-2010.lnk" "$INSTDIR\fgrun.exe" 
