@@ -1187,18 +1187,18 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::Gr
 }
 
 void
-FGRenderer::buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraInfo* info, const std::string& name, osg::GraphicsContext* gc )
+FGRenderer::buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraInfo* info, const FGRenderingPipeline::Stage* stage, osg::GraphicsContext* gc )
 {
     camera->setName( "DisplayC" );
-    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( name, info ) );
+    camera->setCullCallback( new FGDeferredRenderingCameraCullCallback( stage->name, info ) );
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
     camera->setAllowEventFocus(false);
     osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
     g->setUseDisplayList(false); //DEBUG
     simgear::EffectGeode* eg = new simgear::EffectGeode;
-    simgear::Effect* effect = simgear::makeEffect("Effects/display", true);
+    simgear::Effect* effect = simgear::makeEffect(stage->effect, true);
     if (!effect) {
-        SG_LOG(SG_VIEW, SG_ALERT, "Effects/display not found");
+        SG_LOG(SG_VIEW, SG_ALERT, stage->effect + " not found");
         return;
     }
     eg->setEffect(effect);
@@ -1237,7 +1237,7 @@ FGRenderer::buildStage(CameraInfo* info,
         camera = buildDeferredFullscreenCamera(info, gc, stage);
     else if (stage->type == "display") {
         camera = mainCamera;
-        buildDeferredDisplayCamera(camera, info, stage->name, gc);
+        buildDeferredDisplayCamera(camera, info, stage, gc);
     } else
         throw sg_exception("Stage type is not supported");
 
