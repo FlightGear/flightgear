@@ -152,7 +152,7 @@ protected:
     osg::Camera* buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage );
     osg::Camera* buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage );
     osg::Camera* buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const FGRenderingPipeline::Pass* pass );
-    void buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraInfo* info, const std::string& name, osg::GraphicsContext* gc );
+    void buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraInfo* info, const FGRenderingPipeline::Stage* stage, osg::GraphicsContext* gc );
 
     void updateShadowCascade(const flightgear::CameraInfo* info, osg::Camera* camera, osg::Group* grp, int idx, double left, double right, double bottom, double top, double zNear, double f1, double f2);
     osg::Vec3 getSunDirection() const;
