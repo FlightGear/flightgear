@@ -27,6 +27,8 @@
 
 #include "NasalSys.hxx"
 #include "NasalPositioned.hxx"
+#include "NasalCanvas.hxx"
+
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 #include <Main/fg_props.hxx>
@@ -548,6 +550,7 @@ void FGNasalSys::init()
     hashset(_globals, "__gcsave", _gcHash);
 
     initNasalPositioned(_globals, _context, _gcHash);
+    initNasalCanvas(_globals, _context, _gcHash);
   
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));

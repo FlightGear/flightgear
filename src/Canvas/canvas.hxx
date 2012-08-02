@@ -89,6 +89,12 @@ class Canvas:
 
     void update(double delta_time_sec);
 
+    int getSizeX() const
+    { return _size_x; }
+  
+    int getSizeY() const
+    { return _size_y; }
+  
     void setSizeX(int sx);
     void setSizeY(int sy);
 
