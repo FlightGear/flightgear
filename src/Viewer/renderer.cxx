@@ -74,6 +74,7 @@
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/sky/sky.hxx>
+#include <simgear/scene/util/DeletionManager.hxx>
 #include <simgear/scene/util/SGUpdateVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
@@ -1503,7 +1504,9 @@ FGRenderer::setupView( void )
     stateSet = mRealRoot->getOrCreateStateSet();
     stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
 
-	mDeferredRealRoot->addChild( mRealRoot.get() );
+    mDeferredRealRoot->addChild( mRealRoot.get() );
+
+    DeletionManager::install(mRealRoot.get());
 }
                                     
 // Update all Visuals (redraws anything graphics related)
