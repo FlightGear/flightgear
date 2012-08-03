@@ -114,6 +114,16 @@ public:
 
     void deleteModule(const char* moduleName);
 
+    /**
+     * Set member of specified hash to given value
+     */
+    void hashset(naRef hash, const char* key, naRef val);
+
+    /**
+     * Set member of globals hash to given value
+     */
+    void globalsSet(const char* key, naRef val);
+
     naRef call(naRef code, int argc, naRef* args, naRef locals);
   
     naRef callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals);
@@ -168,7 +178,6 @@ private:
     void loadPropertyScripts(SGPropertyNode* n);
     void loadScriptDirectory(simgear::Dir nasalDir);
     void addModule(string moduleName, simgear::PathList scripts);
-    void hashset(naRef hash, const char* key, naRef val);
     void logError(naContext);
     naRef parse(const char* filename, const char* buf, int len);
     naRef genPropsModule();

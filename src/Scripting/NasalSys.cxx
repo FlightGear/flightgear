@@ -28,10 +28,12 @@
 #include "NasalSys.hxx"
 #include "NasalPositioned.hxx"
 #include "NasalCanvas.hxx"
+#include "NasalClipboard.hxx"
 
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 #include <Main/fg_props.hxx>
+
 
 using std::map;
 
@@ -101,6 +103,20 @@ FGNasalSys::FGNasalSys()
     _callCount = 0;
 }
 
+// Utility.  Sets a named key in a hash by C string, rather than nasal
+// string object.
+void FGNasalSys::hashset(naRef hash, const char* key, naRef val)
+{
+    naRef s = naNewString(_context);
+    naStr_fromdata(s, (char*)key, strlen(key));
+    naHash_set(hash, s, val);
+}
+
+void FGNasalSys::globalsSet(const char* key, naRef val)
+{
+  hashset(_globals, key, val);
+}
+
 naRef FGNasalSys::call(naRef code, int argc, naRef* args, naRef locals)
 {
   return callMethod(code, naNil(), argc, args, locals);
@@ -168,15 +184,6 @@ FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
 
     script->_gcKey = gcSave(script->_code);
     return script;
-}
-
-// Utility.  Sets a named key in a hash by C string, rather than nasal
-// string object.
-void FGNasalSys::hashset(naRef hash, const char* key, naRef val)
-{
-    naRef s = naNewString(_context);
-    naStr_fromdata(s, (char*)key, strlen(key));
-    naHash_set(hash, s, val);
 }
 
 // The get/setprop functions accept a *list* of strings and walk
@@ -551,7 +558,8 @@ void FGNasalSys::init()
 
     initNasalPositioned(_globals, _context, _gcHash);
     initNasalCanvas(_globals, _context, _gcHash);
-  
+    NasalClipboard::init(this);
+
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
     loadScriptDirectory(nasalDir);
