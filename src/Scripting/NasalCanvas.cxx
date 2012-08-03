@@ -232,7 +232,7 @@ static naRef f_canvas(naContext c, naRef me, int argc, naRef* args)
 
 // Table of extension functions.  Terminate with zeros.
 static struct { const char* name; naCFunction func; } funcs[] = {
-  { "canvas", f_canvas },
+  { "getCanvas", f_canvas },
   { 0, 0 }
 };
 
