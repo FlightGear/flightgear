@@ -8,6 +8,7 @@ set(SOURCES
   elements/map.cxx
   elements/path.cxx
   elements/text.cxx
+  elements/CanvasImage.cxx
   gui_mgr.cxx
   placement.cxx
   property_based_element.cxx
@@ -24,6 +25,7 @@ set(HEADERS
   elements/map.hxx
   elements/path.hxx
   elements/text.hxx
+  elements/CanvasImage.hxx
   gui_mgr.hxx
   placement.hxx
   property_based_element.hxx

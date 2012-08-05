@@ -20,6 +20,7 @@
 #include "map.hxx"
 #include "path.hxx"
 #include "text.hxx"
+#include "CanvasImage.hxx"
 
 namespace canvas
 {
@@ -61,7 +62,9 @@ namespace canvas
       element.reset( new Map(child) );
     else if( child->getNameString() == "path" )
       element.reset( new Path(child) );
-
+    else if( child->getNameString() == "image" )
+      element.reset( new Image(child) );
+    
     if( !element )
       return;
 
