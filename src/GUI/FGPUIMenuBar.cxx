@@ -76,8 +76,6 @@ menu_callback (puObject * object)
     mb->fireItem(object);
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGPUIMenuBar.
 ////////////////////////////////////////////////////////////////////////
@@ -98,6 +96,8 @@ void
 FGPUIMenuBar::init ()
 {
     delete _menuBar;            // FIXME: check if PUI owns the pointer
+    _menuBar = NULL;
+  
     make_menubar();
                                 // FIXME: temporary commands to get at
                                 // old, hard-coded dialogs.
