@@ -34,18 +34,20 @@ static NasalClipboard::Type parseType(naContext c, int argc, naRef* args, int i)
 {
   if( argc > i )
   {
-    if( !naIsString(args[i]) )
-      naRuntimeError(c, "clipboard: invalid arg (not a string)");
+    if( naIsNum(args[i]) )
+    {
+      if( static_cast<int>(args[i].num) == NasalClipboard::CLIPBOARD )
+        return NasalClipboard::CLIPBOARD;
+      if( static_cast<int>(args[i].num) == NasalClipboard::PRIMARY )
+        return NasalClipboard::PRIMARY;
+    }
 
-    std::string type_str( naStr_data(args[i]) );
-    boost::to_upper(type_str);
-
-    if( type_str == "CLIPBOARD" )
-      return NasalClipboard::CLIPBOARD;
-    else if( type_str == "PRIMARY" || type_str == "SELECTION" )
-      return NasalClipboard::PRIMARY;
-    else
-      naRuntimeError(c, "clipboard: unknown clipboard type");
+    naRuntimeError
+    (
+      c,
+      "clipboard: invalid arg "
+      "(expected clipboard.CLIPBOARD or clipboard.SELECTION)"
+    );
   }
 
   return NasalClipboard::CLIPBOARD;
@@ -56,7 +58,7 @@ static naRef f_setClipboardText(naContext c, naRef me, int argc, naRef* args)
 {
   if( argc < 1 || argc > 2 )
     naRuntimeError( c, "clipboard.setText() expects 1 or 2 arguments: "
-                       "text, [, type = \"CLIPBOARD\"]" );
+                       "text, [, type = clipboard.CLIPBOARD]" );
 
   if( !naIsString(args[0]) )
     naRuntimeError(c, "clipboard.setText() invalid arg (arg 0 not a string)");
@@ -74,7 +76,7 @@ static naRef f_getClipboardText(naContext c, naRef me, int argc, naRef* args)
 {
   if( argc > 1 )
     naRuntimeError(c, "clipboard.getText() accepts max 1 arg: "
-                      "[type = \"CLIPBOARD\"]" );
+                      "[type = clipboard.CLIPBOARD]" );
 
   const std::string& text =
     NasalClipboard::getInstance()->getText(parseType(c, argc, args, 0));
@@ -86,11 +88,16 @@ static naRef f_getClipboardText(naContext c, naRef me, int argc, naRef* args)
 }
 
 //------------------------------------------------------------------------------
-// Table of extension functions, terminate with 0,0
+// Table of extension functions
 static struct {const char* name; naCFunction func; } funcs[] = {
   { "setText", f_setClipboardText },
-  { "getText", f_getClipboardText },
-  { 0,0 } // TERMINATION
+  { "getText", f_getClipboardText }
+};
+
+// Table of extension symbols
+static struct {const char* name; naRef val; } symbols[] = {
+  { "CLIPBOARD", naNum(NasalClipboard::CLIPBOARD) },
+  { "SELECTION", naNum(NasalClipboard::PRIMARY) }
 };
 
 //------------------------------------------------------------------------------
@@ -111,7 +118,7 @@ void NasalClipboard::init(FGNasalSys *nasal)
 
   nasal->globalsSet("clipboard", _clipboard_hash);
 
-  for(size_t i=0;funcs[i].name;i++)
+  for( size_t i = 0; i < sizeof(funcs)/sizeof(funcs[0]); ++i )
   {
     nasal->hashset
     (
@@ -120,7 +127,14 @@ void NasalClipboard::init(FGNasalSys *nasal)
       naNewFunc(nasal->context(), naNewCCode(nasal->context(), funcs[i].func))
     );
 
-    SG_LOG(SG_NASAL, SG_DEBUG, "Adding clipboard function: " << funcs[i].name );
+    SG_LOG(SG_NASAL, SG_DEBUG, "Adding clipboard function: " << funcs[i].name);
+  }
+
+  for( size_t i = 0; i < sizeof(symbols)/sizeof(symbols[0]); ++i )
+  {
+    nasal->hashset(_clipboard_hash, symbols[i].name, symbols[i].val);
+
+    SG_LOG(SG_NASAL, SG_DEBUG, "Adding clipboard symbol: " << symbols[i].name);
   }
 }
 

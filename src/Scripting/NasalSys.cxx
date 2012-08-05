@@ -588,6 +588,9 @@ void FGNasalSys::init()
 
 void FGNasalSys::update(double)
 {
+    if( NasalClipboard::getInstance() )
+        NasalClipboard::getInstance()->update();
+
     if(!_dead_listener.empty()) {
         vector<FGNasalListener *>::iterator it, end = _dead_listener.end();
         for(it = _dead_listener.begin(); it != end; ++it) delete *it;

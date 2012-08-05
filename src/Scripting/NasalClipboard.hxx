@@ -41,6 +41,7 @@ class NasalClipboard
 
     typedef boost::shared_ptr<NasalClipboard> Ptr;
 
+    virtual void update() {}
     virtual std::string getText(Type type = CLIPBOARD) = 0;
     virtual bool setText( const std::string& text,
                           Type type = CLIPBOARD ) = 0;
