@@ -24,6 +24,8 @@
 #include <osg/Texture2D>
 #include <osgGA/GUIEventHandler>
 
+#include <boost/foreach.hpp>
+
 /**
  * Callback to enable/disable rendering of canvas displayed inside windows
  */
@@ -108,7 +110,12 @@ namespace canvas
   //----------------------------------------------------------------------------
   Window::~Window()
   {
-
+    BOOST_FOREACH(osg::Node* parent, _geometry->getParents())
+    {
+      osg::Geode* geode = dynamic_cast<osg::Geode*>(parent);
+      if( geode )
+        geode->removeDrawable(_geometry);
+    }
   }
 
   //----------------------------------------------------------------------------

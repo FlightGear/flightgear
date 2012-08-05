@@ -25,6 +25,7 @@
 
 #include <simgear/props/propertyObject.hxx>
 
+#include <osg/Geode>
 #include <osg/Geometry>
 
 namespace canvas
