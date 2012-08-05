@@ -17,6 +17,8 @@ set(HEADERS
 
 if(WIN32)
   list(APPEND SOURCES ClipboardWindows.cxx)
+elseif(APPLE)
+    list(APPEND SOURCES ClipboardCocoa.mm)
 else()
   find_package(X11)
   if(X11_FOUND)
