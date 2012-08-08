@@ -151,6 +151,11 @@ if File.exist?("FlightGearOSX")
   end
 end
 
+if File.exist?("#{$prefixDir}/bin/fgcom-data")
+  puts "Copying FGCom data files"
+  `ditto #{$prefixDir}/bin/fgcom-data #{resourcesDir}/fgcom-data`
+end
+
 puts "Creating DMG"
 
 createArgs = "-format UDBZ -imagekey bzip2-level=9 -quiet -volname #{volName}"
