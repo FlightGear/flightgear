@@ -72,6 +72,9 @@ namespace canvas
 
       void handleHit(float x, float y);
 
+      void setupDefaultDimensions();
+      Rect<int> getTextureDimensions() const;
+
       osg::ref_ptr<osg::Texture2D> _texture;
       // TODO optionally forward events to canvas
       CanvasWeakPtr _canvas;

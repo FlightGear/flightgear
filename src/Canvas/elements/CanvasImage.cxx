@@ -74,9 +74,7 @@ namespace canvas
   Image::Image(SGPropertyNode_ptr node):
     Element(node, COLOR_FILL | BOUNDING_BOX),
     _texture(new osg::Texture2D),
-    _node_src_rect( node->getNode("source", 0, true) ),
-    _src_rect(0,0,0,0),
-    _region(0,0,0,0)
+    _node_src_rect( node->getNode("source", 0, true) )
   {
     _geom = new osg::Geometry;
     _geom->setUseDisplayList(false);
@@ -139,17 +137,12 @@ namespace canvas
 
       if( !_node_src_rect->getBoolValue("normalized", true) )
       {
-        osg::Texture2D *texture = !_canvas.expired()
-                                ? _canvas.lock()->getTexture()
-                                : _texture.get();
+        const Rect<int>& tex_dim = getTextureDimensions();
 
-        int texWidth = texture->getTextureWidth();
-        int texHeight = texture->getTextureHeight();
-
-        u0 /= texWidth;
-        u1 /= texWidth;
-        v0 /= texHeight;
-        v1 /= texHeight;
+        u0 /= tex_dim.width();
+        u1 /= tex_dim.width();
+        v0 /= tex_dim.height();
+        v1 /= tex_dim.height();
       }
 
       (*_texCoords)[0].set(u0, v0);
@@ -171,6 +164,9 @@ namespace canvas
     _geom->setCullCallback(
       canvas ? new CullCallback(canvas->getCameraCullCallback()) : 0
     );
+
+    if( !_canvas.expired() )
+      setupDefaultDimensions();
   }
 
   //----------------------------------------------------------------------------
@@ -188,6 +184,9 @@ namespace canvas
     _texture->setImage(img);
     _geom->getOrCreateStateSet()
          ->setTextureAttributeAndModes(0, _texture);
+
+    if( img )
+      setupDefaultDimensions();
   }
 
   //----------------------------------------------------------------------------
@@ -296,6 +295,40 @@ namespace canvas
     for( int i = 0; i < 4; ++i )
       (*_colors)[i] = color;
     _colors->dirty();
+  }
+
+  //----------------------------------------------------------------------------
+  void Image::setupDefaultDimensions()
+  {
+    if( !_src_rect.width() || !_src_rect.height() )
+    {
+      const Rect<int>& tex_dim = getTextureDimensions();
+
+      _node_src_rect->setBoolValue("normalized", false);
+      _node_src_rect->setFloatValue("right", tex_dim.width());
+      _node_src_rect->setFloatValue("bottom", tex_dim.height());
+    }
+
+    if( !_region.width() || !_region.height() )
+    {
+      _node->setFloatValue("size[0]", _src_rect.width());
+      _node->setFloatValue("size[1]", _src_rect.height());
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  Rect<int> Image::getTextureDimensions() const
+  {
+    osg::Texture2D *texture = !_canvas.expired()
+                              ? _canvas.lock()->getTexture()
+                              : _texture.get();
+
+    return Rect<int>
+    (
+      0,0,
+      texture->getTextureWidth(),
+      texture->getTextureHeight()
+    );
   }
 
 } // namespace canvas
