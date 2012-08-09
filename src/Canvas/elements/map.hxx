@@ -68,8 +68,6 @@ namespace canvas
       };
 
       GeoCoord parseGeoCoord(const std::string& val) const;
-
-      bool hasSuffix(const std::string& str, const std::string& suffix) const;
   };
 
 } // namespace canvas

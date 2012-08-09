@@ -194,7 +194,7 @@ void Canvas::update(double delta_time_sec)
           placement_factory->second
           (
             node,
-            boost::shared_static_cast<Canvas>(_self.lock())
+            boost::static_pointer_cast<Canvas>(_self.lock())
           );
       node->setStringValue
       (

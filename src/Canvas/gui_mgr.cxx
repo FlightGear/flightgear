@@ -177,7 +177,7 @@ bool GUIMgr::handleEvent(const osgGA::GUIEventAdapter& ea)
 //------------------------------------------------------------------------------
 canvas::WindowPtr GUIMgr::getWindow(size_t i)
 {
-  return boost::shared_static_cast<canvas::Window>(_elements[i]);
+  return boost::static_pointer_cast<canvas::Window>(_elements[i]);
 }
 
 //------------------------------------------------------------------------------

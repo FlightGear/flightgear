@@ -24,6 +24,8 @@
 #include <Main/fg_props.hxx>
 #include <cmath>
 
+#include <boost/algorithm/string/predicate.hpp>
+
 #define LOG_GEO_RET(msg) \
   {\
     SG_LOG\
@@ -93,7 +95,7 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Map::childAdded(SGPropertyNode* parent, SGPropertyNode* child)
   {
-    if( !hasSuffix(child->getNameString(), GEO) )
+    if( !boost::ends_with(child->getNameString(), GEO) )
       return Element::childAdded(parent, child);
 
     _geo_nodes[child].reset(new GeoNodePair());
@@ -102,7 +104,7 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Map::childRemoved(SGPropertyNode* parent, SGPropertyNode* child)
   {
-    if( !hasSuffix(child->getNameString(), GEO) )
+    if( !boost::ends_with(child->getNameString(), GEO) )
       return Element::childRemoved(parent, child);
 
     // TODO remove from other node
@@ -114,7 +116,7 @@ namespace canvas
   {
     const std::string& name = child->getNameString();
 
-    if( !hasSuffix(name, GEO) )
+    if( !boost::ends_with(name, GEO) )
       return Group::valueChanged(child);
 
     GeoNodes::iterator it_geo_node = _geo_nodes.find(child);
@@ -216,17 +218,6 @@ namespace canvas
       coord.value *= -1;
 
     return coord;
-  }
-
-  //----------------------------------------------------------------------------
-  bool Map::hasSuffix(const std::string& str, const std::string& suffix) const
-  {
-    if( suffix.length() > str.length() )
-      return false;
-
-    return ( str.compare( str.length() - suffix.length(),
-                          suffix.length(),
-                          suffix ) == 0 );
   }
 
 } // namespace canvas
