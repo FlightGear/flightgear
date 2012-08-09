@@ -30,7 +30,7 @@ CanvasPtr canvasFactory(SGPropertyNode* node)
 
 //------------------------------------------------------------------------------
 CanvasMgr::CanvasMgr():
-  PropertyBasedMgr("/canvas", "texture", &canvasFactory)
+  PropertyBasedMgr("/canvas/by-index", "texture", &canvasFactory)
 {
   Canvas::addPlacementFactory
   (
@@ -46,11 +46,21 @@ CanvasMgr::CanvasMgr():
 }
 
 //------------------------------------------------------------------------------
-unsigned int CanvasMgr::getCanvasTexId(size_t index) const
+CanvasPtr CanvasMgr::getCanvas(size_t index) const
 {
   if(    index >= _elements.size()
       || !_elements[index] )
-    return 0;
+    return CanvasPtr();
 
-  return static_cast<Canvas*>(_elements[index].get())->getTexId();
+  return boost::static_pointer_cast<Canvas>(_elements[index]);
+}
+
+//------------------------------------------------------------------------------
+unsigned int CanvasMgr::getCanvasTexId(size_t index) const
+{
+  CanvasPtr canvas = getCanvas(index);
+  if( canvas )
+    return canvas->getTexId();
+  else
+    return 0;
 }

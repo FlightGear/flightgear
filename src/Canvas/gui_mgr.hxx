@@ -51,7 +51,6 @@ class GUIMgr:
   protected:
     osg::ref_ptr<GUIEventHandler>       _event_handler;
     osg::ref_ptr<osg::MatrixTransform>  _transform;
-    osg::ref_ptr<osg::Geode>            _geode_windows;
 
     simgear::PropertyObject<int>        _width,
                                         _height;

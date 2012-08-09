@@ -49,10 +49,20 @@ namespace canvas
       T width() const { return _x2 - _x1; }
       T height() const { return _y2 - _y1; }
 
+      void setX(T x) { T w = width(); _x1 = x; _x2 = x + w; }
+      void setY(T y) { T h = height(); _y1 = y; _y2 = y + h; }
+      void setWidth(T w) { _x2 = _x1 + w; }
+      void setHeight(T h) { _y2 = _y1 + h; }
+
       T l() const { return _x1; }
       T r() const { return _x2; }
       T t() const { return _y1; }
       T b() const { return _y2; }
+
+      void setLeft(T l) { _x1 = l; }
+      void setRight(T r) { _x2 = r; }
+      void setTop(T t) { _y1 = t; }
+      void setBottom(T b) { _y2 = b; }
 
       bool contains(T x, T y) const
       {

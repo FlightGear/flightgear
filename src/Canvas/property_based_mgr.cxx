@@ -101,6 +101,12 @@ void PropertyBasedMgr::childRemoved( SGPropertyNode * parent,
 }
 
 //------------------------------------------------------------------------------
+const SGPropertyNode* PropertyBasedMgr::getPropertyRoot() const
+{
+  return _props;
+}
+
+//------------------------------------------------------------------------------
 PropertyBasedMgr::PropertyBasedMgr( const std::string& path_root,
                                     const std::string& name_elements,
                                     ElementFactory element_factory ):

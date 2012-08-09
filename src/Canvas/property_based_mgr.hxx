@@ -43,6 +43,8 @@ class PropertyBasedMgr:
 
     virtual void elementCreated(PropertyBasedElementPtr element) {}
 
+    virtual const SGPropertyNode* getPropertyRoot() const;
+
   protected:
 
     typedef boost::function<PropertyBasedElementPtr(SGPropertyNode*)>

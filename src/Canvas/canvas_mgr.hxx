@@ -19,6 +19,7 @@
 #ifndef CANVAS_MGR_H_
 #define CANVAS_MGR_H_
 
+#include "canvas_fwd.hpp"
 #include "property_based_mgr.hxx"
 
 class CanvasMgr:
@@ -28,7 +29,18 @@ class CanvasMgr:
     CanvasMgr();
 
     /**
+     * Get ::Canvas by index
+     *
+     * @param index Index of texture node in /canvas/by-index/
+     */
+    CanvasPtr getCanvas(size_t index) const;
+
+    /**
      * Get OpenGL texture name for given canvas
+     *
+     * @deprecated This was only meant to be used by the PUI CanvasWidget
+     *             implementation as PUI can't handle osg::Texture objects.
+     *             Use getCanvas(index)->getTexture() instead.
      *
      * @param Index of canvas
      * @return OpenGL texture name

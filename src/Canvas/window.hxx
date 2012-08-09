@@ -20,7 +20,7 @@
 #define CANVAS_WINDOW_HXX_
 
 #include "property_based_element.hxx"
-#include "rect.hxx"
+#include <Canvas/elements/CanvasImage.hxx>
 #include <Canvas/MouseEvent.hxx>
 
 #include <simgear/props/propertyObject.hxx>
@@ -40,8 +40,8 @@ namespace canvas
       virtual void update(double delta_time_sec);
       virtual void valueChanged (SGPropertyNode * node);
 
-      osg::Drawable* getDrawable() { return _geometry; }
-      const Rect<int>& getRegion() const { return _region; }
+      osg::Group* getGroup();
+      const Rect<float>& getRegion() const;
 
       void setCanvas(CanvasPtr canvas);
       CanvasWeakPtr getCanvas() const;
@@ -50,17 +50,7 @@ namespace canvas
 
     protected:
 
-      bool _dirty;
-
-      osg::ref_ptr<osg::Geometry>   _geometry;
-      osg::ref_ptr<osg::Vec3Array>  _vertices;
-      osg::ref_ptr<osg::Vec2Array>  _tex_coords;
-
-      simgear::PropertyObject<int>  _x, _y,
-                                    _width, _height;
-      Rect<int>                     _region;
-
-      CanvasWeakPtr _canvas;
+      Image _image;
   };
 } // namespace canvas
 

@@ -37,6 +37,7 @@ typedef boost::weak_ptr<PropertyBasedElement> PropertyBasedElementWeakPtr;
 namespace canvas
 {
   class Group;
+  class Image;
   class MouseEvent;
 
   class Placement;

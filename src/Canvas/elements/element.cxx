@@ -226,10 +226,10 @@ namespace canvas
     _node->addChangeListener(this);
 
     if( _attributes_used & COLOR )
-      linkColorNodes("color", _node, _color, osg::Vec4f(0,1,0,1));
+      linkColorNodes("color", _node, _color, osg::Vec4f(0,0,0,1));
 
     if( _attributes_used & COLOR_FILL )
-      linkColorNodes("color-fill", _node, _color_fill, osg::Vec4f(1,0,1,1));
+      linkColorNodes("color-fill", _node, _color_fill, osg::Vec4f(1,1,1,1));
 
     SG_LOG
     (

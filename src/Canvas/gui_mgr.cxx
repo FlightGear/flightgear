@@ -24,6 +24,7 @@
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/renderer.hxx>
 
+#include <osg/BlendFunc>
 #include <osgViewer/Viewer>
 #include <osgGA/GUIEventHandler>
 
@@ -94,7 +95,6 @@ GUIMgr::GUIMgr():
   PropertyBasedMgr("/sim/gui/canvas", "window", &windowFactory),
   _event_handler( new GUIEventHandler(this) ),
   _transform( new osg::MatrixTransform ),
-  _geode_windows( new osg::Geode ),
   _width(_props, "size[0]"),
   _height(_props, "size[1]"),
   _last_push(-1)
@@ -104,18 +104,31 @@ GUIMgr::GUIMgr():
   osg::Camera* camera =
     flightgear::getGUICamera( flightgear::CameraGroup::getDefault() );
   assert(camera);
+  camera->addChild(_transform);
 
   osg::Viewport* vp = camera->getViewport();
   handleResize(vp->x(), vp->y(), vp->width(), vp->height());
-
-  _transform->addChild(_geode_windows);
-  camera->addChild(_transform);
 
   Canvas::addPlacementFactory
   (
     "window",
     boost::bind(&GUIMgr::addPlacement, this, _1, _2)
   );
+
+  osg::StateSet* stateSet = _transform->getOrCreateStateSet();
+  stateSet->setDataVariance(osg::Object::STATIC);
+  stateSet->setRenderBinDetails(1000, "RenderBin");
+
+  // speed optimization?
+  stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
+  stateSet->setAttribute(new osg::BlendFunc(
+    osg::BlendFunc::SRC_ALPHA,
+    osg::BlendFunc::ONE_MINUS_SRC_ALPHA)
+  );
+  stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+  stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+  stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
+  stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 }
 
 //------------------------------------------------------------------------------
@@ -141,9 +154,9 @@ void GUIMgr::shutdown()
 //------------------------------------------------------------------------------
 void GUIMgr::elementCreated(PropertyBasedElementPtr element)
 {
-  _geode_windows->addDrawable
+  _transform->addChild
   (
-    static_cast<canvas::Window*>(element.get())->getDrawable()
+    static_cast<canvas::Window*>(element.get())->getGroup()
   );
 }
 

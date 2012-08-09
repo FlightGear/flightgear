@@ -20,11 +20,8 @@
 #define CANVAS_IMAGE_HXX_
 
 #include "element.hxx"
-
-#include <boost/shared_ptr.hpp>
-
-#include <map>
-#include <vector>
+#include <Canvas/canvas_fwd.hpp>
+#include <Canvas/rect.hxx>
 
 #include <osg/Texture2D>
 
@@ -35,33 +32,58 @@ namespace canvas
     public Element
   {
     public:
+      /**
+       * @param node    Property node containing settings for this image:
+       *                  rect/[left/right/top/bottom]  Dimensions of source
+       *                                                rect
+       *                  size[0-1]                     Dimensions of rectangle
+       *                  [x,y]                         Position of rectangle
+       */
       Image(SGPropertyNode_ptr node);
       ~Image();
 
       virtual void update(double dt);
 
+      void setCanvas(CanvasPtr canvas);
+      CanvasWeakPtr getCanvas() const;
+
+      void setImage(osg::Image *img);
+
+      const Rect<float>& getRegion() const;
+
+      /**
+       * Callback for every changed child node
+       */
+      virtual void valueChanged(SGPropertyNode *node);
+
     protected:
 
-      enum TextAttributes
+      enum ImageAttributes
       {
         SRC_RECT       = LAST_ATTRIBUTE << 1, // Source image rectangle
+        DEST_SIZE      = SRC_RECT << 1        // Element size
       };
 
-      SGPropertyNode_ptr  _source_rect, 
-          _dest_rect;
-
+      /**
+       * Callback for changed direct child nodes
+       */
       virtual void childChanged(SGPropertyNode * child);
-      virtual void colorChanged(const osg::Vec4& color);
       virtual void colorFillChanged(const osg::Vec4& color);
 
       void handleHit(float x, float y);
 
       osg::ref_ptr<osg::Texture2D> _texture;
-      
+      // TODO optionally forward events to canvas
+      CanvasWeakPtr _canvas;
+
       osg::Geometry *_geom;
-      osg::Vec2Array *_vertices;
+      osg::Vec3Array *_vertices;
       osg::Vec2Array *_texCoords;
-      osg::Vec4Array* _colors;      
+      osg::Vec4Array* _colors;
+
+      SGPropertyNode *_node_src_rect;
+      Rect<float>     _src_rect,
+                      _region;
   };
 
 }  // namespace canvas

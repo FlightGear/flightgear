@@ -32,7 +32,7 @@ CanvasWidget::CanvasWidget( int x, int y,
   }
 
   // Get the first unused canvas slot
-  SGPropertyNode* canvas_root = fgGetNode("/canvas", true);
+  SGPropertyNode* canvas_root = fgGetNode("/canvas/by-index", true);
   for(int index = 0;; ++index)
   {
     if( !canvas_root->getChild("texture", index) )
