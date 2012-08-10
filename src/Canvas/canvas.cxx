@@ -279,7 +279,8 @@ bool Canvas::handleMouseEvent(const canvas::MouseEvent& event)
   _mouse_scroll = event.scroll;
   // Always set event type last because all listeners are attached to it
   _mouse_event = event.type;
-  return true;
+
+  return _root_group->handleMouseEvent(event);
 }
 
 //------------------------------------------------------------------------------

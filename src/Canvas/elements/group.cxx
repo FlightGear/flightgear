@@ -22,6 +22,8 @@
 #include "text.hxx"
 #include "CanvasImage.hxx"
 
+#include <boost/foreach.hpp>
+
 namespace canvas
 {
 
@@ -41,12 +43,22 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Group::update(double dt)
   {
-    for( ChildMap::iterator child = _children.begin();
-         child != _children.end();
-         ++child )
-      child->second->update(dt);
+    BOOST_FOREACH( ChildList::value_type child, _children )
+      child.second->update(dt);
 
     Element::update(dt);
+  }
+
+  //----------------------------------------------------------------------------
+  bool Group::handleLocalMouseEvent(const canvas::MouseEvent& event)
+  {
+    // Iterate in reverse order as last child is displayed on top
+    BOOST_REVERSE_FOREACH( ChildList::value_type child, _children )
+    {
+      if( child.second->handleMouseEvent(event) )
+        return true;
+    }
+    return false;
   }
 
   //----------------------------------------------------------------------------
@@ -54,6 +66,8 @@ namespace canvas
   {
     boost::shared_ptr<Element> element;
 
+    // TODO create map of child factories and use also to check for element
+    //      on deletion in ::childRemoved
     if( child->getNameString() == "text" )
       element.reset( new Text(child) );
     else if( child->getNameString() == "group" )
@@ -64,14 +78,31 @@ namespace canvas
       element.reset( new Path(child) );
     else if( child->getNameString() == "image" )
       element.reset( new Image(child) );
-    
+
     if( !element )
       return;
 
     // Add to osg scene graph...
     _transform->addChild( element->getMatrixTransform() );
-    _children[ child ] = element;
+    _children.push_back( ChildList::value_type(child, element) );
   }
+
+  //----------------------------------------------------------------------------
+  struct ChildFinder
+  {
+    public:
+      ChildFinder(SGPropertyNode *node):
+        _node(node)
+      {}
+
+      bool operator()(const Group::ChildList::value_type& el) const
+      {
+        return el.first == _node;
+      }
+
+    private:
+      SGPropertyNode *_node;
+  };
 
   //----------------------------------------------------------------------------
   void Group::childRemoved(SGPropertyNode* node)
@@ -79,9 +110,12 @@ namespace canvas
     if(    node->getNameString() == "text"
         || node->getNameString() == "group"
         || node->getNameString() == "map"
-        || node->getNameString() == "path" )
+        || node->getNameString() == "path"
+        || node->getNameString() == "image" )
     {
-      ChildMap::iterator child = _children.find(node);
+      ChildFinder pred(node);
+      ChildList::iterator child =
+        std::find_if(_children.begin(), _children.end(), pred);
 
       if( child == _children.end() )
         SG_LOG

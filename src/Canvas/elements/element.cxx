@@ -17,6 +17,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "element.hxx"
+#include <Canvas/MouseEvent.hxx>
 #include <Canvas/property_helper.hxx>
 
 #include <osg/Drawable>
@@ -122,6 +123,31 @@ namespace canvas
       _bounding_box[2]->setFloatValue(bb._max.x());
       _bounding_box[3]->setFloatValue(bb._max.y());
     }
+  }
+
+  //----------------------------------------------------------------------------
+  bool Element::handleMouseEvent(const canvas::MouseEvent& event)
+  {
+    // Transform event to local coordinates
+    const osg::Matrixd& m = _transform->getInverseMatrix();
+    canvas::MouseEvent local_event = event;
+    local_event.x = m(0, 0) * event.x + m(1, 0) * event.y + m(3, 0);
+    local_event.y = m(0, 1) * event.x + m(1, 1) * event.y + m(3, 1);
+
+    // Drawables have a bounding box...
+    if( _drawable )
+    {
+      if( !_drawable->getBound().contains(local_event.getPos3()) )
+        return false;
+    }
+    // ... for other elements, i.e. groups only a bounding sphere is available
+    else if( !_transform->getBound().contains(local_event.getPos3()) )
+      return false;
+
+    local_event.dx = m(0, 0) * event.dx + m(1, 0) * event.dy;
+    local_event.dy = m(0, 1) * event.dx + m(1, 1) * event.dy;
+
+    return handleLocalMouseEvent(local_event);
   }
 
   //----------------------------------------------------------------------------
@@ -237,6 +263,16 @@ namespace canvas
       SG_DEBUG,
       "New canvas element " << node->getPath()
     );
+  }
+
+  //----------------------------------------------------------------------------
+  bool Element::handleLocalMouseEvent(const canvas::MouseEvent& event)
+  {
+    std::cout << _node->getPath()
+              << " local: pos=(" << event.x << "|" << event.y << ") "
+              <<         "d=(" << event.dx << "|" << event.dx << ")"
+              << std::endl;
+    return true;
   }
 
   //----------------------------------------------------------------------------

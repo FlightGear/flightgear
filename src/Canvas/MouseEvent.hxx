@@ -36,13 +36,17 @@ namespace canvas
         dx(0), dy(0),
         button(-1),
         state(-1),
-        mod(-1)
+        mod(-1),
+        scroll(osgGA::GUIEventAdapter::SCROLL_NONE)
       {}
 
+      osg::Vec2f getPos() const { return osg::Vec2f(x, y); }
+      osg::Vec3f getPos3() const { return osg::Vec3f(x, y, 0); }
+
       EventType   type;
-      int         x, y,
-                  dx, dy,
-                  button, //<! Button for this event
+      float       x, y,
+                  dx, dy;
+      int         button, //<! Button for this event
                   state,  //<! Current button state
                   mod;    //<! Keyboard modifier state
       Scroll      scroll;

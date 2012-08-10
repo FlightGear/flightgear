@@ -31,6 +31,8 @@ namespace canvas
   {
     public:
       osg::Vec2 handleHit(float x, float y);
+
+      virtual osg::BoundingBox computeBound() const;
   };
 
   //----------------------------------------------------------------------------
@@ -110,6 +112,21 @@ namespace canvas
       coords.back().x(),
       (_lineCount - 0.5) * line_height
     );
+  }
+
+  //----------------------------------------------------------------------------
+  osg::BoundingBox Text::TextOSG::computeBound() const
+  {
+    osg::BoundingBox bb = osgText::Text::computeBound();
+    if( !bb.valid() )
+      return bb;
+
+    // TODO bounding box still doesn't seem always right (eg. with center
+    //      horizontal alignment not completely accurate)
+    bb._min.y() += _offset.y();
+    bb._max.y() += _offset.y();
+
+    return bb;
   }
 
   //----------------------------------------------------------------------------

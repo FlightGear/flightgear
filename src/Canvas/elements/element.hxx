@@ -31,6 +31,7 @@ namespace osg
 namespace canvas
 {
 
+  class MouseEvent;
   class Element:
     public SGPropertyChangeListener
   {
@@ -43,6 +44,8 @@ namespace canvas
        * @param dt  Frame time in seconds
        */
       virtual void update(double dt);
+
+      virtual bool handleMouseEvent(const canvas::MouseEvent& event);
 
       osg::ref_ptr<osg::MatrixTransform> getMatrixTransform();
 
@@ -84,6 +87,8 @@ namespace canvas
       std::vector<SGPropertyNode_ptr>   _bounding_box;
 
       Element(SGPropertyNode_ptr node, uint32_t attributes_used = 0);
+
+      virtual bool handleLocalMouseEvent(const canvas::MouseEvent& event);
 
       virtual void childAdded(SGPropertyNode * child)  {}
       virtual void childRemoved(SGPropertyNode * child){}

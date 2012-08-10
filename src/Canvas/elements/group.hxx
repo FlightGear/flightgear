@@ -21,7 +21,7 @@
 
 #include "element.hxx"
 #include <boost/shared_ptr.hpp>
-#include <map>
+#include <list>
 
 namespace canvas
 {
@@ -32,14 +32,21 @@ namespace canvas
     public Element
   {
     public:
+      typedef std::list< std::pair< const SGPropertyNode*,
+                                    ElementPtr
+                                  >
+                       > ChildList;
+
       Group(SGPropertyNode_ptr node);
       virtual ~Group();
 
       virtual void update(double dt);
 
     protected:
-      typedef std::map<const SGPropertyNode*, ElementPtr> ChildMap;
-      ChildMap _children;
+
+      ChildList _children;
+
+      virtual bool handleLocalMouseEvent(const canvas::MouseEvent& event);
 
       virtual void childAdded(SGPropertyNode * child);
       virtual void childRemoved(SGPropertyNode * child);
