@@ -51,6 +51,8 @@ namespace canvas
     protected:
 
       Image _image;
+
+      void doRaise(SGPropertyNode* node_raise);
   };
 } // namespace canvas
 

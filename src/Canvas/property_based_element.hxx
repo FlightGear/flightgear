@@ -34,6 +34,9 @@ class PropertyBasedElement:
 
     virtual void update(double delta_time_sec) = 0;
 
+    SGConstPropertyNode_ptr getProps() const;
+    SGPropertyNode_ptr getProps();
+
   protected:
 
     friend class PropertyBasedMgr;

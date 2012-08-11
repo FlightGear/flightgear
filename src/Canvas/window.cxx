@@ -59,7 +59,10 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Window::valueChanged(SGPropertyNode * node)
   {
-    _image.valueChanged(node);
+    if( node->getParent() == _node && node->getNameString() == "raise-top" )
+      doRaise(node);
+    else
+      _image.valueChanged(node);
   }
 
   //----------------------------------------------------------------------------
@@ -93,6 +96,24 @@ namespace canvas
       return getCanvas().lock()->handleMouseEvent(event);
     else
       return false;
+  }
+
+  //----------------------------------------------------------------------------
+  void Window::doRaise(SGPropertyNode* node_raise)
+  {
+    if( !node_raise->getBoolValue() )
+      return;
+
+    BOOST_FOREACH(osg::Group* parent, getGroup()->getParents())
+    {
+      // Remove window...
+      parent->removeChild(getGroup());
+
+      // ...and add again as topmost window
+      parent->addChild(getGroup());
+    }
+
+    node_raise->setBoolValue(false);
   }
 
 } // namespace canvas

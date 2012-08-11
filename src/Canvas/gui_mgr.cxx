@@ -83,6 +83,19 @@ class WindowPlacement:
     CanvasWeakPtr _canvas;
 };
 
+/**
+ * Store pointer to window as user data
+ */
+class WindowUserData:
+  public osg::Referenced
+{
+  public:
+    canvas::WindowPtr window;
+    WindowUserData(canvas::WindowPtr window):
+      window(window)
+    {}
+};
+
 //------------------------------------------------------------------------------
 typedef boost::shared_ptr<canvas::Window> WindowPtr;
 WindowPtr windowFactory(SGPropertyNode* node)
@@ -96,8 +109,7 @@ GUIMgr::GUIMgr():
   _event_handler( new GUIEventHandler(this) ),
   _transform( new osg::MatrixTransform ),
   _width(_props, "size[0]"),
-  _height(_props, "size[1]"),
-  _last_push(-1)
+  _height(_props, "size[1]")
 {
   _width = _height = -1;
 
@@ -154,10 +166,27 @@ void GUIMgr::shutdown()
 //------------------------------------------------------------------------------
 void GUIMgr::elementCreated(PropertyBasedElementPtr element)
 {
-  _transform->addChild
-  (
-    static_cast<canvas::Window*>(element.get())->getGroup()
-  );
+  canvas::WindowPtr window =
+    boost::static_pointer_cast<canvas::Window>(element);
+
+  size_t layer_index = std::max(0, window->getProps()->getIntValue("layer", 1));
+  osg::Group *layer = 0;
+
+  if( layer_index < _transform->getNumChildren() )
+  {
+    layer = _transform->getChild(layer_index)->asGroup();
+    assert(layer);
+  }
+  else
+  {
+    while( _transform->getNumChildren() <= layer_index )
+    {
+      layer = new osg::Group;
+      _transform->addChild(layer);
+    }
+  }
+  window->getGroup()->setUserData(new WindowUserData(window));
+  layer->addChild(window->getGroup());
 }
 
 //------------------------------------------------------------------------------
@@ -220,6 +249,9 @@ canvas::Placements GUIMgr::addPlacement( const SGPropertyNode* node,
 //------------------------------------------------------------------------------
 bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
 {
+  if( !_transform->getNumChildren() )
+    return false;
+
   canvas::MouseEvent event( ea.getEventType() );
 
   event.x = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
@@ -233,18 +265,31 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   event.mod = ea.getModKeyMask();
   event.scroll = ea.getScrollingMotion();
 
-  int window_at_cursor = -1;
-  for( size_t i = 0; i < _elements.size(); ++i )
+  canvas::WindowPtr window_at_cursor;
+  for( int i = _transform->getNumChildren() - 1; i >= 0; --i )
   {
-    if(    _elements[i]
-        && getWindow(i)->getRegion().contains(event.x, event.y) )
+    osg::Group *layer = _transform->getChild(i)->asGroup();
+    assert(layer);
+    if( !layer->getNumChildren() )
+      continue;
+
+    for( int j = layer->getNumChildren() - 1; j >= 0; --j )
     {
-      window_at_cursor = i;
-      break;
+      assert(layer->getChild(j)->getUserData());
+      canvas::WindowPtr window =
+        static_cast<WindowUserData*>(layer->getChild(j)->getUserData())->window;
+      if( window->getRegion().contains(event.x, event.y) )
+      {
+        window_at_cursor = window;
+        break;
+      }
     }
+
+    if( window_at_cursor )
+      break;
   }
 
-  int target_window = window_at_cursor;
+  canvas::WindowPtr target_window = window_at_cursor;
   switch( ea.getEventType() )
   {
     case osgGA::GUIEventAdapter::PUSH:
@@ -255,25 +300,23 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       break;
 
     case osgGA::GUIEventAdapter::RELEASE:
-      if( _last_push < 0 )
+      if( !_last_push.expired() )
         return false;
 
-      target_window = _last_push;
-      _last_push = -1;
+      target_window = _last_push.lock();
+      _last_push.reset();
       break;
 
     case osgGA::GUIEventAdapter::DRAG:
-      target_window = _last_push;
+      target_window = _last_push.lock();
       break;
 
     default:
       return false;
   }
 
-  if( target_window >= 0 )
+  if( target_window )
   {
-    canvas::WindowPtr window = getWindow(target_window);
-
     event.dx = event.x - _last_x;
     event.dy = event.y - _last_y;
 
@@ -281,10 +324,10 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
     _last_y = event.y;
 
     // Let the event position be always relative to the top left window corner
-    event.x -= window->getRegion().x();
-    event.y -= window->getRegion().y();
+    event.x -= target_window->getRegion().x();
+    event.y -= target_window->getRegion().y();
 
-    return window->handleMouseEvent(event);
+    return target_window->handleMouseEvent(event);
   }
   else
     return false;

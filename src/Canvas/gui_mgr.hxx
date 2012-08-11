@@ -55,9 +55,9 @@ class GUIMgr:
     simgear::PropertyObject<int>        _width,
                                         _height;
 
-    int _last_push,
-        _last_x,
-        _last_y;
+    canvas::WindowWeakPtr _last_push;
+    float _last_x,
+          _last_y;
 
     canvas::WindowPtr getWindow(size_t i);
     canvas::Placements addPlacement( const SGPropertyNode*,

@@ -30,3 +30,15 @@ PropertyBasedElement::~PropertyBasedElement()
 {
   _node->removeChangeListener(this);
 }
+
+//------------------------------------------------------------------------------
+SGConstPropertyNode_ptr PropertyBasedElement::getProps() const
+{
+  return _node;
+}
+
+//------------------------------------------------------------------------------
+SGPropertyNode_ptr PropertyBasedElement::getProps()
+{
+  return _node;
+}
