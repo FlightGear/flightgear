@@ -1210,7 +1210,25 @@ FGRenderer::buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraI
 
     osg::StateSet* ss = camera->getOrCreateStateSet();
     ss->addUniform( _depthInColor );
+    ss->addUniform( info->projInverse );
+    ss->addUniform( info->viewInverse );
+    ss->addUniform( info->view );
     ss->addUniform( info->bufferSize );
+    ss->addUniform( info->worldPosCart );
+    ss->addUniform( info->worldPosGeod );
+    ss->addUniform( info->shadowMatrix[0] );
+    ss->addUniform( info->shadowMatrix[1] );
+    ss->addUniform( info->shadowMatrix[2] );
+    ss->addUniform( info->shadowMatrix[3] );
+    ss->addUniform( _ambientFactor );
+    ss->addUniform( _sunDiffuse );
+    ss->addUniform( _sunSpecular );
+    ss->addUniform( _sunDirection );
+    ss->addUniform( _planes );
+    ss->addUniform( _shadowNumber );
+    ss->addUniform( _shadowDistances );
+    ss->addUniform( _fogColor );
+    ss->addUniform( _fogDensity );
 }
 
 void
