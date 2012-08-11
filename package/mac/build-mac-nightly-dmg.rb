@@ -122,8 +122,7 @@ $osgPlugins.each do |p|
   fix_install_names("#{osgPluginsDir}/#{pluginFile}")
 end
 
-# svn lib copying disabled for the moment
-# copy_svn_libs()
+copy_svn_libs()
 
 # custom ALUT
 # must copy frameworks using ditto
