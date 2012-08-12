@@ -87,6 +87,8 @@ $osgPlugins.each do |p|
   fix_install_names("#{osgPluginsDir}/#{pluginFile}")
 end
 
+copy_svn_libs()
+
 # custom ALUT
 # must copy frameworks using ditto
 `ditto #{$alutSourcePath} #{frameworksDir}/ALUT.framework`
