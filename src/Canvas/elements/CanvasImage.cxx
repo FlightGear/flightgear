@@ -323,6 +323,9 @@ namespace canvas
                               ? _canvas.lock()->getTexture()
                               : _texture.get();
 
+    if( !texture )
+      return Rect<int>();
+
     return Rect<int>
     (
       0,0,
