@@ -231,7 +231,7 @@ canvas::Placements GUIMgr::addPlacement( const SGPropertyNode* node,
   canvas::Placements placements;
   for( size_t i = 0; i < _elements.size(); ++i )
   {
-    if( placement_index > 0 && static_cast<int>(i) != placement_index )
+    if( placement_index >= 0 && static_cast<int>(i) != placement_index )
       continue;
 
     canvas::WindowPtr window = getWindow(i);
