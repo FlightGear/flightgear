@@ -15,6 +15,9 @@ osgVersion = runOsgVersion('version-number')
 $osgSoVersion=runOsgVersion('so-number')
 $openThreadsSoVersion=runOsgVersion('openthreads-soversion-number')
 
+codeSignIdentity = ENV['FG_CODESIGN_IDENTITY']
+puts "Code signing identity is #{codeSignIdentity}"
+
 puts "osgVersion=#{osgVersion}, so-number=#{$osgSoVersion}"
 
 $alutSourcePath='/Library/Frameworks/ALUT.framework'
@@ -78,7 +81,7 @@ end
 
 def code_sign(path)
   puts "Signing #{path}"
-  `codesign -s "FlightGear" #{path}`
+  `codesign -s "#{codeSignIdentity}" #{path}`
 end
 
 fgVersion = File.read("#{srcDir}/version").strip
