@@ -22,7 +22,7 @@ macro(find_static_component comp libs)
     FIND_LIBRARY(${compLibName}
       NO_DEFAULT_PATH
       NAMES ${compLib}
-      HINTS $ENV{LIBSVN_DIR} ${CMAKE_INSTALL_PREFIX} 
+      HINTS $ENV{LIBSVN_DIR} ${CMAKE_INSTALL_PREFIX} ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
       PATHS
       /opt/local
@@ -55,7 +55,7 @@ if(HAVE_APR_CONFIG OR MSVC)
 	find_path(LIBSVN_INCLUDE_DIR svn_client.h
       NO_DEFAULT_PATH
 	  HINTS
-	  $ENV{LIBSVN_DIR} ${CMAKE_INSTALL_PREFIX}
+	  $ENV{LIBSVN_DIR} ${CMAKE_INSTALL_PREFIX} ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib
 	  PATH_SUFFIXES include/subversion-1
 	  PATHS
       /opt/local
