@@ -90,7 +90,7 @@ class WindowUserData:
   public osg::Referenced
 {
   public:
-    canvas::WindowPtr window;
+    canvas::WindowWeakPtr window;
     WindowUserData(canvas::WindowPtr window):
       window(window)
     {}
@@ -277,7 +277,8 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
     {
       assert(layer->getChild(j)->getUserData());
       canvas::WindowPtr window =
-        static_cast<WindowUserData*>(layer->getChild(j)->getUserData())->window;
+        static_cast<WindowUserData*>(layer->getChild(j)->getUserData())
+          ->window.lock();
       if( window->getRegion().contains(event.x, event.y) )
       {
         window_at_cursor = window;
@@ -300,9 +301,6 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       break;
 
     case osgGA::GUIEventAdapter::RELEASE:
-      if( !_last_push.expired() )
-        return false;
-
       target_window = _last_push.lock();
       _last_push.reset();
       break;
