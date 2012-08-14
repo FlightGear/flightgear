@@ -24,7 +24,7 @@ $alutSourcePath='/Library/Frameworks/ALUT.framework'
 
 $svnLibs = ['svn_client', 'svn_wc', 'svn_delta', 'svn_diff', 'svn_ra', 
   'svn_ra_local', 'svn_repos', 'svn_fs', 'svn_fs_fs', 'svn_fs_util',
-  'svn_ra_svn', 'svn_subr']
+  'svn_ra_svn', 'svn_subr', 'svn_ra_neon']
 
 def fix_install_names(object)
   #puts "fixing install names for #{object}"
