@@ -105,7 +105,6 @@ bins.each do |b|
   `cp #{$prefixDir}/bin/#{b} #{outPath}`
   fix_install_names(outPath)
   fix_svn_install_names(outPath)
-  code_sign(outPath)
 end
 
 puts "copying libraries"
@@ -149,13 +148,21 @@ if File.exist?("FlightGearOSX")
   Dir.chdir "FlightGearOSX" do
     `cp FlightGear #{macosDir}`
     `rsync -a *.rb *.lproj *.sh *.tiff #{resourcesDir}`
-    code_sign("#{macosDir}/FlightGear")
   end
 end
 
 if File.exist?("#{$prefixDir}/bin/fgcom-data")
   puts "Copying FGCom data files"
   `ditto #{$prefixDir}/bin/fgcom-data #{resourcesDir}/fgcom-data`
+end
+
+# code sign all executables in MacOS dir. Do this last since reource
+# changes will invalidate the signature!
+Dir.foreach(macosDir) do |b|
+    if b == '.' or b == '..' then
+        next
+    end
+  code_sign("#{macosDir}/#{b}")
 end
 
 puts "Creating DMG"
