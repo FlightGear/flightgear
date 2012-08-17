@@ -26,8 +26,8 @@ is a joystick utility for the FlightGear Flight Simulator.  It allows
 you to generate an appropriate configuration file for your joystick.
 For more information visit <http://wiki.flightgear.org/Joystick>.
 .SH BUGS
-Send bug reports to <flightgear-devel@lists.sourceforge.net> or visit
-<http://code.google.com/p/flightgear-bugs>.
+Send bug reports to <flightgear\-devel@lists.sourceforge.net> or visit
+<http://code.google.com/p/flightgear\-bugs>.
 .SH SEE ALSO
 fgfs(1), fgpanel(1), js_demo(1), terrasync(1)
 .SH AUTHORS

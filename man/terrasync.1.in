@@ -37,8 +37,8 @@ Specify the UDP port where terrasync listens for a FlightGear Flight Simulator c
 .BI "-v"
 Enable verbose output.
 .SH BUGS
-Send bug reports to <flightgear-devel@lists.sourceforge.net> or visit
-<http://code.google.com/p/flightgear-bugs>.
+Send bug reports to <flightgear\-devel@lists.sourceforge.net> or visit
+<http://code.google.com/p/flightgear\-bugs>.
 .SH SEE ALSO
 fgfs(1), fgjs(1), js_demo(1), terrasync(1)
 .SH AUTHORS

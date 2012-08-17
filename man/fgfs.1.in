@@ -47,7 +47,7 @@ executable.  This is used for UIUC aircraft only.
 Specify starting postion by airport ID.
 .TP
 .BI "--altitude=" "value"
-Specify starting altitude (in feet unless \-\-units-meters specified).
+Specify starting altitude (in feet unless \-\-units\-meters specified).
 .TP
 .BI "--atc610x"
 Enable atc610x interface.
@@ -429,7 +429,7 @@ Specify turbulence from 0.0 (calm) to 1.0 (severe).
 .TP
 .BI "--uBody=" "value"
 Specify velocity along the body X axis (feet per second unless
-\-\-units-meters specified).
+\-\-units\-meters specified).
 .TP
 .B "--units-feet"
 Use feet instead of meters.  Affects other options as well as the
@@ -441,7 +441,7 @@ values displayed by the HUD.
 .TP
 .BI "--vBody=" "value"
 Specify velocity along the body Y axis (feet per second unless
-\-\-units-meters specified).
+\-\-units\-meters specified).
 .TP
 .BI "--vc=" "knots"
 Specify initial airspeed (knots).
@@ -509,8 +509,8 @@ $FG_ROOT/mice.xml
 Mouse bindings.
 .RE
 .SH BUGS
-Send bug reports to <flightgear-devel@lists.sourceforge.net> or visit
-<http://code.google.com/p/flightgear-bugs>.
+Send bug reports to <flightgear\-devel@lists.sourceforge.net> or visit
+<http://code.google.com/p/flightgear\-bugs>.
 .SH SEE ALSO
 fgjs(1), fgpanel(1), js_demo(1), terrasync(1)
 .SH AUTHORS

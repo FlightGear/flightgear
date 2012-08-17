@@ -38,8 +38,8 @@ Specify the panel description file to be displayed.
 .BI "--prop:" "name=value"
 set property <name> to <value>.
 .SH BUGS
-Send bug reports to <flightgear-devel@lists.sourceforge.net> or visit
-<http://code.google.com/p/flightgear-bugs>.
+Send bug reports to <flightgear\-devel@lists.sourceforge.net> or visit
+<http://code.google.com/p/flightgear\-bugs>.
 .SH SEE ALSO
 fgfs(1), fgjs(1), js_demo(1), terrasync(1)
 .SH AUTHORS
