@@ -638,7 +638,7 @@ float FGElectricalSystem::propagate( FGElectricalComponent *node, double dt,
         }
         // cout << s << "  input_volts = " << volts << endl;
     } else {
-        SG_LOG( SG_SYSTEMS, SG_ALERT, "unkown node type" );
+        SG_LOG( SG_SYSTEMS, SG_ALERT, "unknown node type" );
     }
 
     int i;

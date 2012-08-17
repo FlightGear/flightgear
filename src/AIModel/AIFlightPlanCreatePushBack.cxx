@@ -83,7 +83,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                 pushBackWaypoint(wpt);
             }
             //cerr << "Success : GateId = " << gateId << endl;
-            SG_LOG(SG_AI, SG_WARN, "Warning: Succesfully found a parking for a " <<
+            SG_LOG(SG_AI, SG_WARN, "Warning: Successfully found a parking for a " <<
                    aircraftType <<
                    " of flight type " << fltType <<
                    " of airline     " << airline <<

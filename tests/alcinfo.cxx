@@ -145,7 +145,7 @@ int main(int argc, char **argv)
    if ((error = alGetError()) != AL_NO_ERROR)
       printf("Error #%x: %s\n", error, alGetString(error));
    else if (!s)
-      printf("Quering AL_VERSION returned NULL pointer!\n");
+      printf("Querying AL_VERSION returned NULL pointer!\n");
    else
       printf("OpenAL version string: %s\n", s);
 

@@ -673,7 +673,7 @@ void GPS::referenceNavaidSet(const std::string& aNavaid)
 
   if (_ref_navaid) {
     _ref_navaid_set = true;
-    SG_LOG(SG_INSTR, SG_INFO, "GPS code set explict ref-navaid:" << _ref_navaid->ident());
+    SG_LOG(SG_INSTR, SG_INFO, "GPS code set explicit ref-navaid:" << _ref_navaid->ident());
     _ref_navaid_id_node->setStringValue(_ref_navaid->ident().c_str());
     _ref_navaid_name_node->setStringValue(_ref_navaid->name().c_str());
     FGNavRecord* vor = (FGNavRecord*) _ref_navaid.ptr();
@@ -855,7 +855,7 @@ void GPS::beginTurn()
 {
   _inTurn = true;
   _turnSequenced = false;
-  SG_LOG(SG_INSTR, SG_INFO, "begining turn");
+  SG_LOG(SG_INSTR, SG_INFO, "beginning turn");
 }
 
 void GPS::endTurn()

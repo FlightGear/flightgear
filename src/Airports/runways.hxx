@@ -78,7 +78,7 @@ public:
   { return _isReciprocal; }
 
   /**
-   * Get the runway begining point - this is syntatic sugar, equivalent to
+   * Get the runway beginning point - this is syntatic sugar, equivalent to
    * calling pointOnCenterline(0.0);
    */
   SGGeod begin() const;
