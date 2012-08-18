@@ -35,35 +35,15 @@ set(CMAKE_MINSIZEREL_POSTFIX     ""  CACHE STRING "add a postfix, usually empty 
 file(READ version versionFile)
 string(STRIP ${versionFile} FLIGHTGEAR_VERSION)
 
-#packaging
-if(EXISTS ${PROJECT_SOURCE_DIR}/.gitignore)
-    file(READ .gitignore CPACK_SOURCE_IGNORE_FILES)
-else()
-    # clean tar-balls do not contain SCM (.git/.gitignore/...) files.
-    set(CPACK_SOURCE_IGNORE_FILES
-        "Makefile.am;~$;${CPACK_SOURCE_IGNORE_FILES}")
-endif()
+# FlightGear packaging (to build a source tarball)
+include( ConfigureCPack )
 
-list (APPEND CPACK_SOURCE_IGNORE_FILES "${PROJECT_SOURCE_DIR}/.git;\\\\.gitignore")
-
-# split version string into components, note CMAKE_MATCH_0 is the entire regexp match
-string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" CPACK_PACKAGE_VERSION ${FLIGHTGEAR_VERSION} )
-set(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1}) 
-set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
-set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
-set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
-set(CPACK_RESOURCE_FILE_README  "${PROJECT_SOURCE_DIR}/README")
-
-set(CPACK_SOURCE_GENERATOR TBZ2)
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "flightgear-${FLIGHTGEAR_VERSION}" CACHE INTERNAL "tarball basename")
-
-include (CPack)
-
+# FlightGear base package path
 if (FG_DATA_DIR)
-    message(STATUS "Using explicit data-dir: ${FG_DATA_DIR}")
+    message(STATUS "Using explicit data directory for base package: ${FG_DATA_DIR}")
 else()
     set(FG_DATA_DIR "${CMAKE_INSTALL_PREFIX}/lib/FlightGear" CACHE PATH "Default location where data files are located")
-    message(STATUS "Using default data-dir:  ${FG_DATA_DIR}")
+    message(STATUS "Using default data directory for base package:  ${FG_DATA_DIR}")
 endif()
 
 # Change the default build type to something fast
@@ -121,23 +101,6 @@ option(WITH_FGPANEL      "Set to ON to build the fgpanel application" ON)
 option(JPEG_FACTORY      "Enable JPEG-factory support" OFF)
 option(ENABLE_TESTS      "Set to OFF to disable building test applications" ON)
 
-if (MSVC)
-    GET_FILENAME_COMPONENT(PARENT_DIR ${PROJECT_SOURCE_DIR} PATH)
-    if (CMAKE_CL_64)
-        SET(TEST_3RDPARTY_DIR "${PARENT_DIR}/3rdparty.x64")
-    else (CMAKE_CL_64)
-        SET(TEST_3RDPARTY_DIR "${PARENT_DIR}/3rdparty")
-    endif (CMAKE_CL_64)
-    if (EXISTS ${TEST_3RDPARTY_DIR})
-        set(MSVC_3RDPARTY_ROOT ${PARENT_DIR} CACHE PATH "Location where the third-party dependencies are extracted")
-    else (EXISTS ${TEST_3RDPARTY_DIR})
-        set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
-    endif (EXISTS ${TEST_3RDPARTY_DIR})
-        list(APPEND PLATFORM_LIBS "winmm.lib")
-else (MSVC)
-    set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
-endif (MSVC)
-
 if(LOGGING)
     # nothing
 else()
@@ -148,46 +111,21 @@ if(SP_FDMS)
     set(ENABLE_SP_FDM 1)
 endif()
 
-if (MSVC AND MSVC_3RDPARTY_ROOT)
-    message(STATUS "3rdparty files located in ${MSVC_3RDPARTY_ROOT}")
-    set( OSG_MSVC "msvc" )
-    if (${MSVC_VERSION} EQUAL 1600)
-        set( OSG_MSVC ${OSG_MSVC}100 )
-    else (${MSVC_VERSION} EQUAL 1600)
-        set( OSG_MSVC ${OSG_MSVC}90 )
-    endif (${MSVC_VERSION} EQUAL 1600)
-    if (CMAKE_CL_64)
-        set( OSG_MSVC ${OSG_MSVC}-64 )
-        set( MSVC_3RDPARTY_DIR 3rdParty.x64 )
-		set( BOOST_LIB lib64 )
-    else (CMAKE_CL_64)
-        set( MSVC_3RDPARTY_DIR 3rdParty )
-		set( BOOST_LIB lib )
-    endif (CMAKE_CL_64)
-
-    set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/lib $(BOOST_ROOT)/$(BOOST_LIB) )
-    set (CMAKE_INCLUDE_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/include)
-    set (BOOST_ROOT         ${MSVC_3RDPARTY_ROOT}/boost_1_44_0)
-    set (OPENAL_INCLUDE_DIR ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include)
-    set (ALUT_INCLUDE_DIR   ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include)
-    set (OPENAL_LIBRARY_DIR ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib)
-endif (MSVC AND MSVC_3RDPARTY_ROOT)
+# Setup MSVC 3rd party directories
+include( ConfigureMsvc3rdParty )
 
 if(EVENT_INPUT)
-    message(STATUS "checking event-based Input")
-
-    IF(APPLE)
-
+    if(APPLE)
     elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
         if(NOT UDEV_FOUND)
             message(WARNING "UDev not found, event input is disabled!")
             set(EVENT_INPUT 0)
         else()
             set(EVENT_INPUT_LIBRARIES ${UDEV_LIBRARIES})
+            message(STATUS "event-based input enabled. Using ${UDEV_LIBRARIES}")
         endif()
-
     else()
-        message(WARNING "event input is not supported on this platform yet")
+        message(WARNING "event-based input is not supported on this platform yet")
     endif()
 
     # Keep PLIB INPUT enabled as long as EventInput does not replace current joystick configurations.
@@ -230,6 +168,8 @@ if(ENABLE_LIBSVN)
         message(STATUS "libsvn found, enabling in terrasync")
         set(HAVE_SVN_CLIENT_H 1)
         set(HAVE_LIBSVN_CLIENT_1 1)
+    else()
+        message(STATUS "libsvn missing. Disabling...")
     endif(LIBSVN_FOUND)
 endif(ENABLE_LIBSVN)
 
