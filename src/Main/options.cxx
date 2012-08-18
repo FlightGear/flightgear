@@ -175,17 +175,6 @@ fgSetDefaults ()
     // fgSetString("/sim/startup/mouse-pointer", "disabled");
     fgSetString("/sim/control-mode", "joystick");
     fgSetBool("/controls/flight/auto-coordination", false);
-#if defined(WIN32)
-    fgSetString("/sim/startup/browser-app", "webrun.bat");
-#elif defined(__APPLE__)
-    fgSetString("/sim/startup/browser-app", "open");
-#elif defined(sgi)
-    fgSetString("/sim/startup/browser-app", "launchWebJumper");
-#else
-    const char* browserEnv = ::getenv( "WEBBROWSER" );
-    if (!browserEnv) browserEnv = "netscape";
-    fgSetString("/sim/startup/browser-app", browserEnv);
-#endif
     fgSetString("/sim/logging/priority", "alert");
 
 				// Features

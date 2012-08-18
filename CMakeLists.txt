@@ -28,6 +28,7 @@ endif(InSourceBuild)
 
 # System detection/default settings
 include( DetectDistro )
+include( DetectBrowser )
 
 set(CMAKE_DEBUG_POSTFIX          "d" CACHE STRING "add a postfix, usually d on windows")
 set(CMAKE_RELEASE_POSTFIX        ""  CACHE STRING "add a postfix, usually empty on windows")

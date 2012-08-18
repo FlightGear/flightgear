@@ -33,6 +33,7 @@
 #cmakedefine HAVE_LIBSVN_CLIENT_1
 
 #define PKGLIBDIR "@FG_DATA_DIR@"
+#define WEB_BROWSER "@WEB_BROWSER@"
 
 #cmakedefine FG_HAVE_HLA
 #cmakedefine FG_JPEG_SERVER

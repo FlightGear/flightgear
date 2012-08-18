@@ -1028,7 +1028,9 @@ bool fgInitGeneral() {
     }
     SG_LOG( SG_GENERAL, SG_INFO, "FG_ROOT = " << '"' << root << '"' << endl );
 
-    globals->set_browser(fgGetString("/sim/startup/browser-app", "firefox %u"));
+    // Note: browser command is hard-coded for Mac/Windows, so this only affects other platforms
+    globals->set_browser(fgGetString("/sim/startup/browser-app", WEB_BROWSER));
+    fgSetString("/sim/startup/browser-app", globals->get_browser());
 
     simgear::Dir cwd(simgear::Dir::current());
     SGPropertyNode *curr = fgGetNode("/sim", true);

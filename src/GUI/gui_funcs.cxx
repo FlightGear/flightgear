@@ -192,22 +192,7 @@ bool openBrowser(string address)
   }
   
   cocoaOpenUrl(address);
-  return ok;
-#endif
-  
-#ifndef _WIN32
-
-    string command = globals->get_browser();
-    string::size_type pos;
-    if ((pos = command.find("%u", 0)) != string::npos)
-        command.replace(pos, 2, address);
-    else
-        command += " " + address;
-
-    command += " &";
-    ok = (system( command.c_str() ) == 0);
-
-#else // _WIN32
+#elif defined _WIN32
 
     // Look for favorite browser
     char win32_name[1024];
@@ -218,7 +203,17 @@ bool openBrowser(string address)
 # endif
     ShellExecute ( NULL, "open", win32_name, NULL, NULL,
                    SW_SHOWNORMAL ) ;
+#else
+    // Linux, BSD, SGI etc
+    string command = globals->get_browser();
+    string::size_type pos;
+    if ((pos = command.find("%u", 0)) != string::npos)
+        command.replace(pos, 2, address);
+    else
+        command += " \"" + address +"\"";
 
+    command += " &";
+    ok = (system( command.c_str() ) == 0);
 #endif
 
     mkDialog("The file is shown in your web browser window.");
