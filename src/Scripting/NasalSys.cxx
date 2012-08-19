@@ -29,6 +29,7 @@
 #include "NasalPositioned.hxx"
 #include "NasalCanvas.hxx"
 #include "NasalClipboard.hxx"
+#include "NasalCondition.hxx"
 
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
@@ -559,7 +560,8 @@ void FGNasalSys::init()
     initNasalPositioned(_globals, _context, _gcHash);
     initNasalCanvas(_globals, _context, _gcHash);
     NasalClipboard::init(this);
-
+    initNasalCondition(_globals, _context, _gcHash);
+  
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
     loadScriptDirectory(nasalDir);

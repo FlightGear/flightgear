@@ -6,6 +6,7 @@ set(SOURCES
     NasalPositioned.cxx
     NasalCanvas.cxx
     NasalClipboard.cxx
+    NasalCondition.cxx
 	)
 
 set(HEADERS
@@ -13,6 +14,7 @@ set(HEADERS
     NasalPositioned.hxx
     NasalCanvas.hxx
     NasalClipboard.hxx
+    NasalCondition.hxx
 	)
 
 if(WIN32)

@@ -45,6 +45,15 @@ naRef FGNasalSys::propNodeGhost(SGPropertyNode* handle)
     return propNodeGhostCreate(_context, handle);
 }
 
+SGPropertyNode* ghostToPropNode(naRef ref)
+{
+  if (!naIsGhost(ref) || (naGhost_type(ref) != &PropNodeGhostType))
+    return NULL;
+  
+  SGPropertyNode_ptr* pp = (SGPropertyNode_ptr*) naGhost_ptr(ref);
+  return pp->ptr();
+}
+
 #define NASTR(s) s ? naStr_fromdata(naNewString(c),(char*)(s),strlen(s)) : naNil()
 
 //

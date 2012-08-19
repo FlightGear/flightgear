@@ -14,7 +14,7 @@
 
 class FGNasalScript;
 class FGNasalListener;
-
+class SGCondition;
 
 /** Nasal model data container.
  * load and unload methods must be run in main thread (not thread-safe). */
@@ -64,6 +64,9 @@ protected:
     SGPropertyNode_ptr _root;
     SGSharedPtr<FGNasalModelData> _data;
 };
+
+SGPropertyNode* ghostToPropNode(naRef ref);
+SGCondition* conditionGhost(naRef r);
 
 class FGNasalSys : public SGSubsystem
 {
@@ -129,7 +132,7 @@ public:
     naRef callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals);
   
     naRef propNodeGhost(SGPropertyNode* handle);
-
+  
     void registerToLoad(FGNasalModelData* data)   { _loadList.push(data);}
     void registerToUnload(FGNasalModelData* data) { _unloadList.push(data);}
 
