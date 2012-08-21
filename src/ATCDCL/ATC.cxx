@@ -40,6 +40,7 @@ FGATC::FGATC() :
     range(0),
     _voice(true),
     _playing(false),
+    _vPtr(NULL),
     _sgr(NULL),
     _type(INVALID),
     _display(false)
