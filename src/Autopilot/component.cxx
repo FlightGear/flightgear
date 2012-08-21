@@ -46,7 +46,7 @@ bool Component::configure( SGPropertyNode_ptr configNode )
     SGPropertyNode_ptr prop;
 
     SGPropertyNode_ptr child = configNode->getChild(i);
-    string cname(child->getName());
+    std::string cname(child->getName());
 
     if( configure( cname, child ) )
       continue;
@@ -87,7 +87,7 @@ bool Component::configure( const std::string & nodeName, SGPropertyNode_ptr conf
 
     if ( (prop = configNode->getChild( "value" )) != NULL ) {
       delete _enable_value;
-      _enable_value = new string(prop->getStringValue());
+      _enable_value = new std::string(prop->getStringValue());
     }
 
     if ( (prop = configNode->getChild( "honor-passive" )) != NULL ) {

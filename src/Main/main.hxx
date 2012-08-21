@@ -9,7 +9,7 @@ int fgMainInit( int argc, char **argv );
 
 extern int idle_state;
 
-extern string homedir;
-extern string hostname;
+extern std::string homedir;
+extern std::string hostname;
 
 #endif

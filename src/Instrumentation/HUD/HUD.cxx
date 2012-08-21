@@ -45,6 +45,7 @@
 
 using std::endl;
 using std::ifstream;
+using std::string;
 
 static float clamp(float f)
 {

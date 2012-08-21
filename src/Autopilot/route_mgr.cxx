@@ -56,6 +56,7 @@
 #define RM "/autopilot/route-manager/"
 
 using namespace flightgear;
+using std::string;
 
 static bool commandLoadFlightPlan(const SGPropertyNode* arg)
 {

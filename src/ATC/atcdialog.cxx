@@ -44,6 +44,7 @@
 #include <Airports/simple.hxx>
 #include <ATC/CommStation.hxx>
 
+using std::string;
 
 static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name)
 {

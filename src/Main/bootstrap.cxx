@@ -64,8 +64,8 @@ using std::endl;
 
 #include "fg_os.hxx"
 
-string homedir;
-string hostname;
+std::string homedir;
+std::string hostname;
 
 // forward declaration.
 void fgExitCleanup();
@@ -259,7 +259,7 @@ int main ( int argc, char **argv ) {
         if (std::strlen(t.getOrigin()) != 0)
             cerr << " (received from " << t.getOrigin() << ')' << endl;
 
-    } catch (const string &s) {
+    } catch (const std::string &s) {
         cerr << "Fatal error: " << s << endl;
 
     } catch (const char *s) {
@@ -274,8 +274,8 @@ int main ( int argc, char **argv ) {
     return 0;
 }
 
-// do some clean up on exit.  Specifically we want to call alutExit()
-// which happens in the sound manager destructor.
+// do some clean up on exit.  Specifically we want to delete the sound-manager,
+// so OpenAL device and context are released cleanly
 void fgExitCleanup() {
 
     if (_bootstrap_OSInit != 0)

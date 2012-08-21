@@ -38,6 +38,7 @@
 #include "flightrecorder.hxx"
 
 using namespace FlightRecorder;
+using std::string;
 
 FGFlightRecorder::FGFlightRecorder(const char* pConfigName) :
     m_RecorderNode(fgGetNode("/sim/flight-recorder", true)),

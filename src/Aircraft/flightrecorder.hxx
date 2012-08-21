@@ -68,7 +68,7 @@ private:
                         SGPropertyNode_ptr BaseNode);
     void processSignalList(const char* pSignalType, FlightRecorder::TSignalList& SignalList,
                            SGPropertyNode_ptr SignalListNode,
-                           string PropPrefix="", int Count = 1);
+                           std::string PropPrefix="", int Count = 1);
     bool haveProperty(FlightRecorder::TSignalList& Capture,SGPropertyNode* pProperty);
     bool haveProperty(SGPropertyNode* pProperty);
 
@@ -83,7 +83,7 @@ private:
     FlightRecorder::TSignalList m_CaptureBool;
 
     int m_TotalRecordSize;
-    string m_ConfigName;
+    std::string m_ConfigName;
 };
 
 #endif /* FLIGHTRECORDER_HXX_ */

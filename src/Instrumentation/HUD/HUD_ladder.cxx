@@ -28,6 +28,8 @@
 #include <Viewer/viewer.hxx>
 #include "HUD.hxx"
 
+using std::string;
+
 // FIXME
 static float get__heading() { return fgGetFloat("/orientation/heading-deg") * M_PI / 180.0; }
 static float get__throttleval() { return fgGetFloat("/controls/engines/engine/throttle"); }

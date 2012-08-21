@@ -165,10 +165,11 @@ void helpCb()
     openBrowser( "Docs/index.html" );
 }
 
-bool openBrowser(string address)
+bool openBrowser(const std::string& aAddress)
 {
     bool ok = true;
-
+    string address(aAddress);
+    
     // do not resolve addresses with given protocol, i.e. "http://...", "ftp://..."
     if (address.find("://")==string::npos)
     {
