@@ -144,7 +144,6 @@ find_package(ZLIB    REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenGL  REQUIRED)
 find_package(OpenAL  REQUIRED)
-find_package(ALUT    REQUIRED)
 find_package(OpenSceneGraph 3.0.0 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
 
 if(ENABLE_FGADMIN)
@@ -249,7 +248,6 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MSVC_LD_FLAGS}")
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIR}
-    ${ALUT_INCLUDE_DIR}
     ${OPENGL_INCLUDE_DIR}
     ${OPENAL_INCLUDE_DIR}
     ${SIMGEAR_INCLUDE_DIR}

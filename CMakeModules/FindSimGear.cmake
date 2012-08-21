@@ -196,7 +196,6 @@ else(SIMGEAR_SHARED)
         ${WINMM_LIBRARY})
 
     set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES 
-        ${ALUT_LIBRARY} 
         ${OPENAL_LIBRARY})
 
     if(WIN32)

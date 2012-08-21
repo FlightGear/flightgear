@@ -18,12 +18,3 @@ ccmake .
   then press 'g' to generate and exit ]
 
 
-The alut library is also required, but comes separately in the package
-freelut-1.1.0.tar.gz. This package can be downloaded from the same page
-(http://connect.creativelabs.com/openal/default.aspx). Download and run:
-tar xzvf freelut-1.1.0.tar.gz
-cd freealut-1.1.0
-./configure
-make
-sudo make install
-

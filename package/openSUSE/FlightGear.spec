@@ -14,7 +14,6 @@ BuildRequires: update-desktop-files
 BuildRequires: SimGear = %{version}, SimGear-devel = %{version}
 BuildRequires: libOpenSceneGraph-devel >= 3.0
 BuildRequires: subversion-devel, libapr1-devel
-BuildRequires: freealut, freealut-devel
 BuildRequires: libopenal1-soft, openal-soft
 BuildRequires: zlib, zlib-devel
 BuildRequires: libfreetype6
