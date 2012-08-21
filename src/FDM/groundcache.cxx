@@ -43,7 +43,7 @@
 #include <simgear/math/SGMisc.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
-#include <simgear/scene/util/OSGMath.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 
 #include <simgear/scene/bvh/BVHNode.hxx>
 #include <simgear/scene/bvh/BVHGroup.hxx>
