@@ -34,6 +34,7 @@
 #include <simgear/scene/material/EffectGeode.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/material/mat.hxx>
+#include <simgear/scene/util/OSGMath.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "trafficcontrol.hxx"

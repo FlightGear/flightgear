@@ -40,6 +40,7 @@
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
+#include <simgear/scene/util/OSGMath.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/model/CheckSceneryVisitor.hxx>
 #include <simgear/scene/bvh/BVHNode.hxx>
