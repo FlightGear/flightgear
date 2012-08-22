@@ -42,15 +42,6 @@ $prefixDir=Dir.pwd + "/dist"
 dmgDir=Dir.pwd + "/image"
 srcDir=Dir.pwd + "/flightgear"
 
-def fix_svn_install_names(object)
-  $svnLibs.each do |l|
-    fileName = "lib#{l}-1.0.dylib"
-    oldName = "#{$prefixDir}/lib/#{fileName}"
-    newName = "@executable_path/../Frameworks/#{fileName}"
-    `install_name_tool -change #{oldName} #{newName} #{object}`
-  end
-end
-
 puts "Erasing previous image dir"
 `rm -rf #{dmgDir}`
 
@@ -62,6 +53,14 @@ resourcesDir=contents+"/Resources"
 osgPluginsDir=contents+"/PlugIns/osgPlugins-#{osgVersion}"
 volName="\"FlightGear Nightly Build\""
 
+def fix_svn_install_names(object)
+  $svnLibs.each do |l|
+    fileName = "lib#{l}-1.0.dylib"
+    newName = "@executable_path/../Frameworks/#{fileName}"
+    `install_name_tool -change #{fileName} #{newName} #{object}`
+  end
+end
+
 def copy_svn_libs()
   puts "Copying Subversion client libraries"
   $svnLibs.each do |l|
@@ -69,7 +68,7 @@ def copy_svn_libs()
     path = "#{$frameworksDir}/#{libFile}"
     `cp #{$prefixDir}/lib/#{libFile} #{$frameworksDir}`
     fix_svn_install_names(path)
-    `install_name_tool -id #{libFile}  #{path}`    
+   # `install_name_tool -id #{libFile}  #{path}`    
   end
 end
 
