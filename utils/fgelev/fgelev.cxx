@@ -43,6 +43,7 @@
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/scene/bvh/BVHNode.hxx>
 #include <simgear/scene/bvh/BVHLineSegmentVisitor.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 
 class FGSceneryIntersect : public osg::NodeVisitor {
 public:
