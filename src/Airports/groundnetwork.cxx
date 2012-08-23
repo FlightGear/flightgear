@@ -272,7 +272,7 @@ FGGroundNetwork::~FGGroundNetwork()
     bool saveData = false;
     ofstream cachefile;
     if (fgGetBool("/sim/ai/groundnet-cache")) {
-        SGPath cacheData(fgGetString("/sim/fg-home"));
+        SGPath cacheData(globals->get_fg_home());
         cacheData.append("ai");
         string airport = parent->getId();
 
@@ -316,7 +316,7 @@ void FGGroundNetwork::saveElevationCache() {
     bool saveData = false;
     ofstream cachefile;
     if (fgGetBool("/sim/ai/groundnet-cache")) {
-        SGPath cacheData(fgGetString("/sim/fg-home"));
+        SGPath cacheData(globals->get_fg_home());
         cacheData.append("ai");
         string airport = parent->getId();
 
@@ -432,7 +432,7 @@ void FGGroundNetwork::init()
     //cerr << "Done initializing ground network" << endl;
     //exit(1);
     if (fgGetBool("/sim/ai/groundnet-cache")) {
-        SGPath cacheData(fgGetString("/sim/fg-home"));
+        SGPath cacheData(globals->get_fg_home());
         cacheData.append("ai");
         string airport = parent->getId();
 

@@ -99,7 +99,7 @@ void FGTrafficManager::shutdown()
     bool saveData = false;
     ofstream cachefile;
     if (fgGetBool("/sim/traffic-manager/heuristics")) {
-        SGPath cacheData(fgGetString("/sim/fg-home"));
+        SGPath cacheData(globals->get_fg_home());
         cacheData.append("ai");
         string airport = fgGetString("/sim/presets/airport-id");
 
@@ -223,7 +223,7 @@ void FGTrafficManager::loadHeuristics()
     HeuristicMap heurMap;
     //cerr << "Processing Heuristics" << endl;
     // Load the heuristics data
-    SGPath cacheData(fgGetString("/sim/fg-home"));
+    SGPath cacheData(globals->get_fg_home());
     cacheData.append("ai");
     string airport = fgGetString("/sim/presets/airport-id");
     if ((airport) != "") {

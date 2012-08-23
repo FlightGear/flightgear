@@ -39,6 +39,7 @@ FGDeviceConfigurationMap::FGDeviceConfigurationMap( const char * relative_path, 
   childname(aChildname)
 {
   int index = 1000;
+  scan_dir( SGPath(globals->get_fg_home(), relative_path), &index);
   scan_dir( SGPath(globals->get_fg_root(), relative_path), &index);
 
   PropertyList childNodes = base->getChildren(childname);

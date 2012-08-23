@@ -1182,7 +1182,7 @@ fgOptVersion( const char *arg )
     cerr << "Revision: " << REVISION << endl;
     cerr << "Build-Id: " << HUDSON_BUILD_ID << endl;
     cerr << "FG_ROOT=" << globals->get_fg_root() << endl;
-    cerr << "FG_HOME=" << fgGetString("/sim/fg-home") << endl;
+    cerr << "FG_HOME=" << globals->get_fg_home() << endl;
     cerr << "FG_SCENERY=";
 
     int didsome = 0;
@@ -2031,7 +2031,7 @@ void Options::processOptions()
   if (fgGetBool("/sim/terrasync/enabled")) {
     string terrasyncDir = fgGetString("/sim/terrasync/scenery-dir");
     if (terrasyncDir.empty()) {
-      SGPath p(fgGetString("/sim/fg-home"));
+      SGPath p(globals->get_fg_home());
       p.append("TerraSync");
       if (!p.exists()) {
         simgear::Dir dd(p);

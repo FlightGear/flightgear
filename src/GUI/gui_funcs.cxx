@@ -483,7 +483,7 @@ namespace
             if (_path.create_dir( 0755 )) {
                 SG_LOG(SG_GENERAL, SG_ALERT, "Cannot create screenshot directory '"
                         << dir << "'. Trying home directory.");
-                dir = fgGetString("/sim/fg-home");
+                dir = globals->get_fg_home();
             }
 
             char filename[24];
@@ -588,7 +588,7 @@ bool fgDumpSnapShot ()
     if (path.create_dir( 0755 )) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Cannot create screenshot directory '"
                 << dir << "'. Trying home directory.");
-        dir = fgGetString("/sim/fg-home");
+        dir = globals->get_fg_home();
     }
 
     char filename[24];

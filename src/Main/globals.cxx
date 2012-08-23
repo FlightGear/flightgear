@@ -128,6 +128,7 @@ FGGlobals::FGGlobals() :
     event_mgr( new SGEventMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),
+    fg_home( "" ),
     time_params( NULL ),
     ephem( NULL ),
     mag( NULL ),
@@ -214,7 +215,6 @@ FGGlobals::~FGGlobals()
     locale = NULL;
 }
 
-
 // set the fg_root path
 void FGGlobals::set_fg_root (const string &root) {
     SGPath tmp(root);
@@ -240,6 +240,12 @@ void FGGlobals::set_fg_root (const string &root) {
     
     simgear::ResourceManager::instance()->addBasePath(fg_root, 
       simgear::ResourceManager::PRIORITY_DEFAULT);
+}
+
+// set the fg_home path
+void FGGlobals::set_fg_home (const string &home) {
+    SGPath tmp(home);
+    fg_home = tmp.realpath();
 }
 
 void FGGlobals::append_fg_scenery (const string &paths)
@@ -483,7 +489,7 @@ FGGlobals::saveUserSettings()
       // don't save settings more than once on shutdown
       haveUserSettings = false;
 
-      SGPath autosaveFile(fgGetString("/sim/fg-home"));
+      SGPath autosaveFile(globals->get_fg_home());
       autosaveFile.append( "autosave.xml" );
       autosaveFile.create_dir( 0700 );
       SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile.str());

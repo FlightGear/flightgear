@@ -98,6 +98,9 @@ private:
     // Root of FlightGear data tree
     std::string fg_root;
 
+    // Users home directory for data
+    std::string fg_home;
+
     // Roots of FlightGear scenery tree
     string_list fg_scenery;
 
@@ -191,6 +194,9 @@ public:
 
     inline const std::string &get_fg_root () const { return fg_root; }
     void set_fg_root (const std::string &root);
+
+    inline const std::string &get_fg_home () const { return fg_home; }
+    void set_fg_home (const std::string &home);
 
     inline const string_list &get_fg_scenery () const { return fg_scenery; }
     void append_fg_scenery (const std::string &scenery);

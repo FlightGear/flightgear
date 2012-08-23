@@ -104,6 +104,7 @@ void FGJoystickInput::init()
   jsInit();
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick bindings");
   SGPropertyNode_ptr js_nodes = fgGetNode("/input/joysticks", true);
+  status_node = fgGetNode("/devices/status/joysticks", true);
 
   FGDeviceConfigurationMap configMap("Input/Joysticks", js_nodes, "js-named");
 
@@ -310,6 +311,16 @@ void FGJoystickInput::update( double dt )
     js->read(&buttons, axis_values);
     if (js->notWorking()) // If js is disconnected
       continue;
+            
+    // Update device status    
+    SGPropertyNode_ptr status = status_node->getChild("joystick", i, true);
+    for (int j = 0; j < MAX_JOYSTICK_AXES; j++) {
+      status->getChild("axis", j, true)->setFloatValue(axis_values[j]);
+    }
+    
+    for (int j = 0; j < MAX_JOYSTICK_BUTTONS; j++) {
+      status->getChild("button", j, true)->setBoolValue((buttons & (1u << j)) > 0 );
+    }
 
                                 // Fire bindings for the axes.
     for (int j = 0; j < bindings[i].naxes; j++) {

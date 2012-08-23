@@ -53,6 +53,7 @@ public:
 
 private:
    void _remove(bool all);
+   SGPropertyNode_ptr status_node;
 
   /**
    * Settings for a single joystick axis.
@@ -83,7 +84,7 @@ private:
     int nbuttons;
     axis * axes;
     FGButton * buttons;
-    bool predefined;
+    bool predefined;    
   };
   joystick bindings[MAX_JOYSTICKS];
 

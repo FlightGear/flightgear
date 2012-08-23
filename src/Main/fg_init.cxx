@@ -406,6 +406,8 @@ bool fgInitConfig ( int argc, char **argv )
     const char *fg_home = getenv("FG_HOME");
     if (fg_home)
       dataPath = fg_home;
+      
+    globals->set_fg_home(dataPath.c_str());
     
     simgear::Dir exportDir(simgear::Dir(dataPath).file("Export"));
     if (!exportDir.exists()) {
@@ -588,8 +590,8 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
         string fltType;
         string acOperator;
         SGPath acData;
-        try {
-            acData = fgGetString("/sim/fg-home");
+        try {          
+            acData = globals->get_fg_home();
             acData.append("aircraft-data");
             string acfile = fgGetString("/sim/aircraft") + string(".xml");
             acData.append(acfile);

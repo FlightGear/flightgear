@@ -73,7 +73,7 @@ double FGRadioAntenna::calculate_gain(double bearing, double angle) {
 
 void FGRadioAntenna::load_NEC_antenna_pattern(string type) {
 	
-	//SGPath pattern_file(fgGetString("/sim/fg-home"));
+	//SGPath pattern_file(globals->get_fg_home());
 	SGPath pattern_file(globals->get_fg_root());
 	pattern_file.append("Navaids/Antennas");
 	pattern_file.append(type + ".txt");
