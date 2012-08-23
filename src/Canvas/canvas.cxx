@@ -102,6 +102,10 @@ Canvas::Canvas(SGPropertyNode* node):
   _root_group( new canvas::Group(node) ),
   _render_always(false)
 {
+  // Remove automatically created property listener as we forward them on our
+  // own
+  _root_group->removeListener();
+
   _status = 0;
   setStatusFlags(MISSING_SIZE_X | MISSING_SIZE_Y);
 
@@ -317,6 +321,7 @@ void Canvas::valueChanged(SGPropertyNode* node)
   if( boost::starts_with(node->getNameString(), "status") )
     return;
 
+  bool handled = true;
   if( node->getParent()->getParent() == _node )
   {
     if(    !_color_background.empty()
@@ -335,6 +340,8 @@ void Canvas::valueChanged(SGPropertyNode* node)
 
       _dirty_placements.push_back(node->getParent());
     }
+    else
+      handled = false;
   }
   else if( node->getParent() == _node )
   {
@@ -358,9 +365,14 @@ void Canvas::valueChanged(SGPropertyNode* node)
       else if( node->getIndex() == 1 )
         setViewHeight( node->getIntValue() );
     }
+    else
+      handled = false;
   }
+  else
+    handled = false;
 
-  _root_group->valueChanged(node);
+  if( !handled )
+    _root_group->valueChanged(node);
 }
 
 //------------------------------------------------------------------------------

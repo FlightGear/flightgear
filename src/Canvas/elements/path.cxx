@@ -40,9 +40,9 @@ namespace canvas
         _paint(VG_INVALID_HANDLE),
         _paint_fill(VG_INVALID_HANDLE),
         _attributes_dirty(~0),
+        _mode(0),
         _stroke_width(1),
-        _stroke_linecap(VG_CAP_BUTT),
-        _fill(false)
+        _stroke_linecap(VG_CAP_BUTT)
       {
         setSupportsDisplayList(false);
         setDataVariance(Object::DYNAMIC);
@@ -76,43 +76,54 @@ namespace canvas
       }
 
       /**
-       * Set stroke width and dash (line stipple)
+       * Set path fill paint ("none" if not filled)
        */
-      void setStroke( float width,
-                      const std::vector<float> dash = std::vector<float>() )
+      void setFill(const std::string& fill)
+      {
+        if( fill == "none" )
+        {
+          _mode &= ~VG_FILL_PATH;
+        }
+        else
+        {
+          _fill_color = parseColor(fill);
+          _mode |= VG_FILL_PATH;
+          _attributes_dirty |= FILL_COLOR;
+        }
+      }
+
+      /**
+       * Set path stroke paint ("none" if no stroke)
+       */
+      void setStroke(const std::string& stroke)
+      {
+        if( stroke == "none" )
+        {
+          _mode &= ~VG_STROKE_PATH;
+        }
+        else
+        {
+          _stroke_color = parseColor(stroke);
+          _mode |= VG_STROKE_PATH;
+          _attributes_dirty |= STROKE_COLOR;
+        }
+      }
+
+      /**
+       * Set stroke width
+       */
+      void setStrokeWidth(float width)
       {
         _stroke_width = width;
-        _stroke_dash = dash;
-
         _attributes_dirty |= BOUNDING_BOX;
       }
 
       /**
-       * Set the line color
+       * Set stroke dash (line stipple)
        */
-      void setColor(const osg::Vec4& color)
+      void setStrokeDashArray(const std::string& dash)
       {
-        for( size_t i = 0; i < 4; ++i )
-          _stroke_color[i] = color[i];
-        _attributes_dirty |= STROKE_COLOR;
-      }
-
-      /**
-       * Enable/Disable filling of the path
-       */
-      void enableFill(bool enable)
-      {
-        _fill = enable;
-      }
-
-      /**
-       * Set the line color
-       */
-      void setColorFill(const osg::Vec4& color)
-      {
-        for( size_t i = 0; i < 4; ++i )
-          _fill_color[i] = color[i];
-        _attributes_dirty |= FILL_COLOR;
+        _stroke_dash = splitAndConvert(",\t\n ", dash);
       }
 
       /**
@@ -166,28 +177,25 @@ namespace canvas
           if( _paint == VG_INVALID_HANDLE )
             _paint = vgCreatePaint();
 
-          vgSetParameterfv(_paint, VG_PAINT_COLOR, 4, _stroke_color);
+          vgSetParameterfv(_paint, VG_PAINT_COLOR, 4, _stroke_color._v);
 
           _attributes_dirty &= ~STROKE_COLOR;
         }
 
         // Initialize/update fill paint
-        if( _attributes_dirty & (FILL_COLOR | FILL) )
+        if( _attributes_dirty & FILL_COLOR )
         {
           if( _paint_fill == VG_INVALID_HANDLE )
             _paint_fill = vgCreatePaint();
 
-          if( _attributes_dirty & FILL_COLOR )
-            vgSetParameterfv(_paint_fill, VG_PAINT_COLOR, 4, _fill_color);
+          vgSetParameterfv(_paint_fill, VG_PAINT_COLOR, 4, _fill_color._v);
 
-          _attributes_dirty &= ~(FILL_COLOR | FILL);
+          _attributes_dirty &= ~FILL_COLOR;
         }
 
-        // Detect draw mode
-        VGbitfield mode = 0;
-        if( _stroke_width > 0 )
+        // Setup paint
+        if( _mode & VG_STROKE_PATH )
         {
-          mode |= VG_STROKE_PATH;
           vgSetPaint(_paint, VG_STROKE_PATH);
 
           vgSetf(VG_STROKE_LINE_WIDTH, _stroke_width);
@@ -196,15 +204,14 @@ namespace canvas
                    _stroke_dash.size(),
                    _stroke_dash.empty() ? 0 : &_stroke_dash[0] );
         }
-        if( _fill )
+        if( _mode & VG_FILL_PATH )
         {
-          mode |= VG_FILL_PATH;
           vgSetPaint(_paint_fill, VG_FILL_PATH);
         }
 
         // And finally draw the path
-        if( mode )
-          vgDrawPath(_path, mode);
+        if( _mode )
+          vgDrawPath(_path, _mode);
 
         VGErrorCode err = vgGetError();
         if( err != VG_NO_ERROR )
@@ -246,8 +253,7 @@ namespace canvas
         PATH            = 0x0001,
         STROKE_COLOR    = PATH << 1,
         FILL_COLOR      = STROKE_COLOR << 1,
-        FILL            = FILL_COLOR << 1,
-        BOUNDING_BOX    = FILL << 1
+        BOUNDING_BOX    = FILL_COLOR << 1
       };
 
       mutable VGPath    _path;
@@ -258,13 +264,12 @@ namespace canvas
       CmdList   _cmds;
       CoordList _coords;
 
-      VGfloat               _stroke_color[4];
+      VGbitfield            _mode;
+      osg::Vec4f            _fill_color;
+      osg::Vec4f            _stroke_color;
       VGfloat               _stroke_width;
       std::vector<VGfloat>  _stroke_dash;
       VGCapStyle            _stroke_linecap;
-
-      bool      _fill;
-      VGfloat   _fill_color[4];
 
       /**
        * Initialize/Update the OpenVG path
@@ -339,11 +344,20 @@ namespace canvas
   bool PathDrawable::_vg_initialized = false;
 
   //----------------------------------------------------------------------------
-  Path::Path(SGPropertyNode_ptr node):
-    Element(node, COLOR | COLOR_FILL | BOUNDING_BOX),
+  Path::Path(SGPropertyNode_ptr node, const Style& parent_style):
+    Element(node, parent_style, BOUNDING_BOX),
     _path( new PathDrawable() )
   {
     setDrawable(_path);
+    PathDrawable *path = _path.get();
+
+    addStyle("fill", &PathDrawable::setFill, path);
+    addStyle("stroke", &PathDrawable::setStroke, path);
+    addStyle("stroke-width", &PathDrawable::setStrokeWidth, path);
+    addStyle("stroke-dasharray", &PathDrawable::setStrokeDashArray, path);
+    addStyle("stroke-linecap", &PathDrawable::setStrokeLinecap, path);
+
+    setupStyle();
   }
 
   //----------------------------------------------------------------------------
@@ -365,16 +379,6 @@ namespace canvas
 
       _attributes_dirty &= ~(CMDS | COORDS);
     }
-    if( _attributes_dirty & STROKE )
-    {
-      _path->setStroke
-      (
-        _node->getFloatValue("stroke-width", 1),
-        getVectorFromChildren<VGfloat, float>(_node, "stroke-dasharray")
-      );
-
-      _attributes_dirty &= ~STROKE;
-    }
 
     Element::update(dt);
   }
@@ -382,29 +386,13 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Path::childChanged(SGPropertyNode* child)
   {
+    if( child->getParent() != _node )
+      return;
+
     if( child->getNameString() == "cmd" )
       _attributes_dirty |= CMDS;
     else if( child->getNameString() == "coord" )
       _attributes_dirty |= COORDS;
-    else if(    child->getNameString() == "stroke-width"
-             || child->getNameString() == "stroke-dasharray" )
-      _attributes_dirty |= STROKE;
-    else if( child->getNameString() == "stroke-linecap" )
-      _path->setStrokeLinecap( child->getStringValue() );
-    else if( child->getNameString() == "fill" )
-      _path->enableFill( child->getBoolValue() );
-  }
-
-  //----------------------------------------------------------------------------
-  void Path::colorChanged(const osg::Vec4& color)
-  {
-    _path->setColor(color);
-  }
-
-  //----------------------------------------------------------------------------
-  void Path::colorFillChanged(const osg::Vec4& color)
-  {
-    _path->setColorFill(color);
   }
 
 } // namespace canvas

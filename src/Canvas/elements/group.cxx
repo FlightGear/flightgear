@@ -28,8 +28,8 @@ namespace canvas
 {
 
   //----------------------------------------------------------------------------
-  Group::Group(SGPropertyNode_ptr node):
-    Element(node)
+  Group::Group(SGPropertyNode_ptr node, const Style& parent_style):
+    Element(node, parent_style)
   {
 
   }
@@ -64,27 +64,33 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Group::childAdded(SGPropertyNode* child)
   {
+    if( child->getParent() != _node )
+      return;
+
     boost::shared_ptr<Element> element;
 
     // TODO create map of child factories and use also to check for element
     //      on deletion in ::childRemoved
     if( child->getNameString() == "text" )
-      element.reset( new Text(child) );
+      element.reset( new Text(child, _style) );
     else if( child->getNameString() == "group" )
-      element.reset( new Group(child) );
+      element.reset( new Group(child, _style) );
     else if( child->getNameString() == "map" )
-      element.reset( new Map(child) );
+      element.reset( new Map(child, _style) );
     else if( child->getNameString() == "path" )
-      element.reset( new Path(child) );
+      element.reset( new Path(child, _style) );
     else if( child->getNameString() == "image" )
-      element.reset( new Image(child) );
+      element.reset( new Image(child, _style) );
 
-    if( !element )
+    if( element )
+    {
+      // Add to osg scene graph...
+      _transform->addChild( element->getMatrixTransform() );
+      _children.push_back( ChildList::value_type(child, element) );
       return;
+    }
 
-    // Add to osg scene graph...
-    _transform->addChild( element->getMatrixTransform() );
-    _children.push_back( ChildList::value_type(child, element) );
+    _style[ child->getNameString() ] = child;
   }
 
   //----------------------------------------------------------------------------
@@ -107,6 +113,9 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Group::childRemoved(SGPropertyNode* node)
   {
+    if( node->getParent() != _node )
+      return;
+
     if(    node->getNameString() == "text"
         || node->getNameString() == "group"
         || node->getNameString() == "map"
@@ -129,6 +138,12 @@ namespace canvas
         _transform->removeChild( child->second->getMatrixTransform() );
         _children.erase(child);
       }
+    }
+    else
+    {
+      Style::iterator style = _style.find(node->getNameString());
+      if( style != _style.end() )
+        _style.erase(style);
     }
   }
 

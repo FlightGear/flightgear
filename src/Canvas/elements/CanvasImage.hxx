@@ -39,8 +39,8 @@ namespace canvas
        *                  size[0-1]                     Dimensions of rectangle
        *                  [x,y]                         Position of rectangle
        */
-      Image(SGPropertyNode_ptr node);
-      ~Image();
+      Image(SGPropertyNode_ptr node, const Style& parent_style);
+      virtual ~Image();
 
       virtual void update(double dt);
 
@@ -48,13 +48,9 @@ namespace canvas
       CanvasWeakPtr getCanvas() const;
 
       void setImage(osg::Image *img);
+      void setFill(const std::string& fill);
 
       const Rect<float>& getRegion() const;
-
-      /**
-       * Callback for every changed child node
-       */
-      virtual void valueChanged(SGPropertyNode *node);
 
     protected:
 
@@ -64,13 +60,7 @@ namespace canvas
         DEST_SIZE      = SRC_RECT << 1        // Element size
       };
 
-      /**
-       * Callback for changed direct child nodes
-       */
       virtual void childChanged(SGPropertyNode * child);
-      virtual void colorFillChanged(const osg::Vec4& color);
-
-      void handleHit(float x, float y);
 
       void setupDefaultDimensions();
       Rect<int> getTextureDimensions() const;
@@ -79,10 +69,10 @@ namespace canvas
       // TODO optionally forward events to canvas
       CanvasWeakPtr _canvas;
 
-      osg::Geometry *_geom;
-      osg::Vec3Array *_vertices;
-      osg::Vec2Array *_texCoords;
-      osg::Vec4Array* _colors;
+      osg::ref_ptr<osg::Geometry>  _geom;
+      osg::ref_ptr<osg::Vec3Array> _vertices;
+      osg::ref_ptr<osg::Vec2Array> _texCoords;
+      osg::ref_ptr<osg::Vec4Array> _colors;
 
       SGPropertyNode *_node_src_rect;
       Rect<float>     _src_rect,

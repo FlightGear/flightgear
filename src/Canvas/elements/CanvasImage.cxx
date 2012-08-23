@@ -71,8 +71,8 @@ bool CullCallback::cull( osg::NodeVisitor* nv,
 namespace canvas
 {
   //----------------------------------------------------------------------------
-  Image::Image(SGPropertyNode_ptr node):
-    Element(node, COLOR_FILL | BOUNDING_BOX),
+  Image::Image(SGPropertyNode_ptr node, const Style& parent_style):
+    Element(node, parent_style, BOUNDING_BOX),
     _texture(new osg::Texture2D),
     _node_src_rect( node->getNode("source", 0, true) )
   {
@@ -103,6 +103,11 @@ namespace canvas
     _geom->addPrimitiveSet(prim);
 
     setDrawable(_geom);
+
+    addStyle("fill", &Image::setFill, this);
+    setFill("#ffffff"); // TODO how should we handle default values?
+
+    setupStyle();
   }
 
   //----------------------------------------------------------------------------
@@ -190,35 +195,42 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
+  void Image::setFill(const std::string& fill)
+  {
+    osg::Vec4 color = parseColor(fill);
+    for( int i = 0; i < 4; ++i )
+      (*_colors)[i] = color;
+    _colors->dirty();
+  }
+
+  //----------------------------------------------------------------------------
   const Rect<float>& Image::getRegion() const
   {
     return _region;
   }
 
   //----------------------------------------------------------------------------
-  void Image::valueChanged(SGPropertyNode *node)
-  {
-    if( node->getParent() == _node_src_rect )
-    {
-      _attributes_dirty |= SRC_RECT;
-
-      if( node->getNameString() == "left" )
-        _src_rect.setLeft( node->getFloatValue() );
-      else if( node->getNameString() == "right" )
-        _src_rect.setRight( node->getFloatValue() );
-      else if( node->getNameString() == "top" )
-        _src_rect.setTop( node->getFloatValue() );
-      else if( node->getNameString() == "bottom" )
-        _src_rect.setBottom( node->getFloatValue() );
-    }
-    else
-      Element::valueChanged(node);
-  }
-
-  //----------------------------------------------------------------------------
   void Image::childChanged(SGPropertyNode* child)
   {
     const std::string& name = child->getNameString();
+
+    if( child->getParent() == _node_src_rect )
+    {
+      _attributes_dirty |= SRC_RECT;
+
+      if(      name == "left" )
+        _src_rect.setLeft( child->getFloatValue() );
+      else if( name == "right" )
+        _src_rect.setRight( child->getFloatValue() );
+      else if( name == "top" )
+        _src_rect.setTop( child->getFloatValue() );
+      else if( name == "bottom" )
+        _src_rect.setBottom( child->getFloatValue() );
+
+      return;
+    }
+    else if( child->getParent() != _node )
+      return;
 
     if( name == "x" )
     {
@@ -287,14 +299,6 @@ namespace canvas
         setImage( osgDB::readImageFile(tpath.c_str()) );
       }
     }
-  }
-
-  //----------------------------------------------------------------------------
-  void Image::colorFillChanged(const osg::Vec4& color)
-  {
-    for( int i = 0; i < 4; ++i )
-      (*_colors)[i] = color;
-    _colors->dirty();
   }
 
   //----------------------------------------------------------------------------

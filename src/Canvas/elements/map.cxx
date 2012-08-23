@@ -46,8 +46,8 @@ namespace canvas
   const std::string GEO = "-geo";
 
   //----------------------------------------------------------------------------
-  Map::Map(SGPropertyNode_ptr node):
-    Group(node),
+  Map::Map(SGPropertyNode_ptr node, const Style& parent_style):
+    Group(node, parent_style),
     _projection_dirty(true)
   {
 
@@ -177,6 +177,9 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Map::childChanged(SGPropertyNode * child)
   {
+    if( child->getParent() != _node )
+      return;
+
     if(    child->getNameString() == "ref-lat"
         || child->getNameString() == "ref-lon" )
       projection.setWorldPosition( _node->getDoubleValue("ref-lat"),

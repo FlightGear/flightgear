@@ -32,30 +32,19 @@ namespace canvas
     public Element
   {
     public:
-      Text(SGPropertyNode_ptr node);
+      Text(SGPropertyNode_ptr node, const Style& parent_style);
       ~Text();
 
-      virtual void update(double dt);
-
+      void setText(const char* text);
       void setFont(const char* name);
       void setAlignment(const char* align);
 
     protected:
 
-      enum TextAttributes
-      {
-        FONT_SIZE       = LAST_ATTRIBUTE << 1, // Font size and aspect ration
-      };
-
       class TextOSG;
       osg::ref_ptr<TextOSG> _text;
 
-      SGPropertyNode_ptr  _font_size,
-                          _font_aspect;
-
       virtual void childChanged(SGPropertyNode * child);
-      virtual void colorChanged(const osg::Vec4& color);
-      virtual void colorFillChanged(const osg::Vec4& color);
 
       void handleHit(float x, float y);
 

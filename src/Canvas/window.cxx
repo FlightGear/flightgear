@@ -28,8 +28,10 @@ namespace canvas
   //----------------------------------------------------------------------------
   Window::Window(SGPropertyNode* node):
     PropertyBasedElement(node),
-    _image(node)
+    _image(node, Element::Style())
   {
+    _image.removeListener();
+
     // TODO probably better remove default position and size
     node->setFloatValue("x", 50);
     node->setFloatValue("y", 100);
@@ -44,10 +46,7 @@ namespace canvas
   //----------------------------------------------------------------------------
   Window::~Window()
   {
-    BOOST_FOREACH(osg::Group* parent, getGroup()->getParents())
-    {
-      parent->removeChild(getGroup());
-    }
+
   }
 
   //----------------------------------------------------------------------------

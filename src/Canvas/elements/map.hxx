@@ -32,7 +32,7 @@ namespace canvas
     public Group
   {
     public:
-      Map(SGPropertyNode_ptr node);
+      Map(SGPropertyNode_ptr node, const Style& parent_style);
       virtual ~Map();
 
       virtual void update(double dt);

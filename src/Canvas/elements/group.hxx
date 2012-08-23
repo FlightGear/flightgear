@@ -22,6 +22,7 @@
 #include "element.hxx"
 #include <boost/shared_ptr.hpp>
 #include <list>
+#include <map>
 
 namespace canvas
 {
@@ -37,7 +38,7 @@ namespace canvas
                                   >
                        > ChildList;
 
-      Group(SGPropertyNode_ptr node);
+      Group(SGPropertyNode_ptr node, const Style& parent_style = Style());
       virtual ~Group();
 
       virtual void update(double dt);

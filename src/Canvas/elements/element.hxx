@@ -20,8 +20,11 @@
 #define CANVAS_ELEMENT_HXX_
 
 #include <simgear/props/props.hxx>
-#include <osg/MatrixTransform>
 #include <simgear/misc/stdint.hxx> // for uint32_t
+#include <osg/MatrixTransform>
+
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
 
 namespace osg
 {
@@ -36,6 +39,11 @@ namespace canvas
     public SGPropertyChangeListener
   {
     public:
+      typedef std::map<std::string, const SGPropertyNode*> Style;
+      typedef boost::function<void(const SGPropertyNode*)> StyleSetter;
+      typedef std::map<std::string, StyleSetter> StyleSetters;
+
+      void removeListener();
       virtual ~Element() = 0;
 
       /**
@@ -59,9 +67,7 @@ namespace canvas
 
       enum Attributes
       {
-        COLOR           = 0x0001,
-        COLOR_FILL      = 0x0002,
-        BOUNDING_BOX    = 0x0004,
+        BOUNDING_BOX    = 0x0001,
         LAST_ATTRIBUTE  = BOUNDING_BOX
       };
 
@@ -82,11 +88,48 @@ namespace canvas
       std::vector<TransformType>            _transform_types;
 
       SGPropertyNode_ptr                _node;
-      std::vector<SGPropertyNode_ptr>   _color,
-                                        _color_fill;
+      Style                             _style;
+      StyleSetters                      _style_setters;
       std::vector<SGPropertyNode_ptr>   _bounding_box;
 
-      Element(SGPropertyNode_ptr node, uint32_t attributes_used = 0);
+      Element( SGPropertyNode_ptr node,
+               const Style& parent_style,
+               uint32_t attributes_used = 0 );
+
+      template<typename T, class C1, class C2>
+      Element::StyleSetter
+      addStyle(const std::string& name, void (C1::*setter)(T), C2 instance)
+      {
+        return _style_setters[ name ] =
+                 bindStyleSetter<T>(name, setter, instance);
+      }
+
+      template<typename T1, typename T2, class C1, class C2>
+      Element::StyleSetter
+      addStyle(const std::string& name, void (C1::*setter)(T2), C2 instance)
+      {
+        return _style_setters[ name ] =
+                 bindStyleSetter<T1>(name, setter, instance);
+      }
+
+      template<class C1, class C2>
+      Element::StyleSetter
+      addStyle( const std::string& name,
+                void (C1::*setter)(const std::string&),
+                C2 instance )
+      {
+        return _style_setters[ name ] =
+                 bindStyleSetter<const char*>(name, setter, instance);
+      }
+
+      template<typename T1, typename T2, class C1, class C2>
+      Element::StyleSetter
+      bindStyleSetter( const std::string& name,
+                       void (C1::*setter)(T2),
+                       C2 instance )
+      {
+        return boost::bind(setter, instance, boost::bind(&getValue<T1>, _1));
+      }
 
       virtual bool handleLocalMouseEvent(const canvas::MouseEvent& event);
 
@@ -94,14 +137,14 @@ namespace canvas
       virtual void childRemoved(SGPropertyNode * child){}
       virtual void childChanged(SGPropertyNode * child){}
 
-      virtual void colorChanged(const osg::Vec4& color)  {}
-      virtual void colorFillChanged(const osg::Vec4& color){}
-
       void setDrawable( osg::Drawable* drawable );
+      void setupStyle();
+
+      bool setStyle(const SGPropertyNode* child);
 
     private:
 
-      osg::Drawable  *_drawable;
+      osg::ref_ptr<osg::Drawable> _drawable;
 
       Element(const Element&);// = delete
   };

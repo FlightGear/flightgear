@@ -61,10 +61,24 @@ namespace canvas
   }
 
   /**
+   * Split a string by a delimter and convert the values to float
+   *
+   * TODO do we need other types than float?
+   */
+  std::vector<float> splitAndConvert(const char del[], const std::string& str);
+
+  /**
+   * Parse a (CSS) color
+   */
+  osg::Vec4 parseColor(std::string str);
+
+  /**
    * @param name    Name of color node
    * @param parent  Parent for color channel nodes
    * @param nodes   Vector to push color nodes into
    * @param def     Default color
+   *
+   * @deprecated Use only a single property instead and parse with #parseColor
    *
    * <name>
    *   <red type="float">def[0] or existing value</red>

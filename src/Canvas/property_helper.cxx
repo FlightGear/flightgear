@@ -17,10 +17,98 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "property_helper.hxx"
+
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
+
 #include <cassert>
 
 namespace canvas
 {
+  //----------------------------------------------------------------------------
+  std::vector<float> splitAndConvert(const char del[], const std::string& str)
+  {
+    std::vector<float> values;
+    size_t pos = 0;
+    for(;;)
+    {
+      pos = str.find_first_not_of(del, pos);
+      if( pos == std::string::npos )
+        break;
+
+      char *end = 0;
+      float val = strtod(&str[pos], &end);
+      if( end == &str[pos] || !end )
+        break;
+
+      values.push_back(val);
+      pos = end - &str[0];
+    }
+    return values;
+  }
+
+  //----------------------------------------------------------------------------
+  osg::Vec4 parseColor(std::string str)
+  {
+    boost::trim(str);
+    osg::Vec4 color(0,0,0,1);
+
+    if( str.empty() )
+      return color;
+
+    // #rrggbb
+    if( str[0] == '#' )
+    {
+      const int offsets[] = {2,2,2};
+      const boost::offset_separator hex_separator( boost::begin(offsets),
+                                                   boost::end(offsets) );
+      typedef boost::tokenizer<boost::offset_separator> offset_tokenizer;
+      offset_tokenizer tokens(str.begin() + 1, str.end(), hex_separator);
+
+      int comp = 0;
+      for( offset_tokenizer::const_iterator tok = tokens.begin();
+           tok != tokens.end() && comp < 4;
+           ++tok, ++comp )
+      {
+        color._v[comp] = strtol(std::string(*tok).c_str(), 0, 16) / 255.f;
+      }
+    }
+    // rgb(r,g,b)
+    // rgba(r,g,b,a)
+    else if( boost::ends_with(str, ")") )
+    {
+      const std::string RGB = "rgb(",
+                        RGBA = "rgba(";
+      size_t pos;
+      if( boost::starts_with(str, RGB) )
+        pos = RGB.length();
+      else if( boost::starts_with(str, RGBA) )
+        pos = RGBA.length();
+      else
+        return color;
+
+      typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+      const boost::char_separator<char> del(", \t\n");
+
+      tokenizer tokens(str.begin() + pos, str.end() - 1, del);
+      int comp = 0;
+      for( tokenizer::const_iterator tok = tokens.begin();
+           tok != tokens.end() && comp < 4;
+           ++tok, ++comp )
+      {
+        color._v[comp] = boost::lexical_cast<float>(*tok)
+                       // rgb = [0,255], a = [0,1]
+                       / (comp < 3 ? 255 : 1);
+      }
+    }
+    else
+      SG_LOG(SG_GENERAL, SG_WARN, "Unknown color: " << str);
+
+    return color;
+  }
+
   //----------------------------------------------------------------------------
   void linkColorNodes( const char* name,
                        SGPropertyNode* parent,

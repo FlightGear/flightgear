@@ -28,7 +28,7 @@ namespace canvas
     public Element
   {
     public:
-      Path(SGPropertyNode_ptr node);
+      Path(SGPropertyNode_ptr node, const Style& parent_style);
       virtual ~Path();
 
       virtual void update(double dt);
@@ -38,15 +38,12 @@ namespace canvas
       enum PathAttributes
       {
         CMDS       = LAST_ATTRIBUTE << 1,
-        COORDS     = CMDS << 1,
-        STROKE     = COORDS << 1
+        COORDS     = CMDS << 1
       };
 
       osg::ref_ptr<PathDrawable> _path;
 
       virtual void childChanged(SGPropertyNode * child);
-      virtual void colorChanged(const osg::Vec4& color);
-      virtual void colorFillChanged(const osg::Vec4& color);
   };
 
 }  // namespace canvas

@@ -30,10 +30,36 @@ namespace canvas
     public osgText::Text
   {
     public:
+
+      void setCharacterAspect(float aspect);
+      void setFill(const std::string& fill);
+      void setBackgroundColor(const std::string& fill);
+
       osg::Vec2 handleHit(float x, float y);
 
       virtual osg::BoundingBox computeBound() const;
   };
+
+  //----------------------------------------------------------------------------
+  void Text::TextOSG::setCharacterAspect(float aspect)
+  {
+    setCharacterSize(getCharacterHeight(), aspect);
+  }
+
+  //----------------------------------------------------------------------------
+  void Text::TextOSG::setFill(const std::string& fill)
+  {
+//    if( fill == "none" )
+//      TODO No text
+//    else
+      setColor( parseColor(fill) );
+  }
+
+  //----------------------------------------------------------------------------
+  void Text::TextOSG::setBackgroundColor(const std::string& fill)
+  {
+    setBoundingBoxColor( parseColor(fill) );
+  }
 
   //----------------------------------------------------------------------------
   osg::Vec2 Text::TextOSG::handleHit(float x, float y)
@@ -130,19 +156,33 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  Text::Text(SGPropertyNode_ptr node):
-    Element(node, COLOR | COLOR_FILL | BOUNDING_BOX),
-    _text( new Text::TextOSG() ),
-    _font_size( 0 ),
-    _font_aspect( 0 )
+  Text::Text(SGPropertyNode_ptr node, const Style& parent_style):
+    Element(node, parent_style, BOUNDING_BOX),
+    _text( new Text::TextOSG() )
   {
     setDrawable(_text);
     _text->setCharacterSizeMode(osgText::Text::OBJECT_COORDS);
     _text->setAxisAlignment(osgText::Text::USER_DEFINED_ROTATION);
     _text->setRotation(osg::Quat(osg::PI, osg::X_AXIS));
 
-    _font_size = getChildDefault<float>(_node, "character-size", 32);
-    _font_aspect = getChildDefault<float>(_node, "character-aspect-ratio", 1);
+    addStyle("fill", &TextOSG::setFill, _text);
+    addStyle("background", &TextOSG::setBackgroundColor, _text);
+    addStyle("character-size",
+             static_cast<void (TextOSG::*)(float)>(&TextOSG::setCharacterSize),
+             _text);
+    addStyle("character-aspect-ratio", &TextOSG::setCharacterAspect, _text);
+    addStyle("padding", &TextOSG::setBoundingBoxMargin, _text);
+    //  TEXT              = 1 default
+    //  BOUNDINGBOX       = 2
+    //  FILLEDBOUNDINGBOX = 4
+    //  ALIGNMENT         = 8
+    addStyle<int>("draw-mode", &TextOSG::setDrawMode, _text);
+    addStyle("max-width", &TextOSG::setMaximumWidth, _text);
+    addStyle("font", &Text::setFont, this);
+    addStyle("alignment", &Text::setAlignment, this);
+    addStyle("text", &Text::setText, this);
+
+    setupStyle();
   }
 
   //----------------------------------------------------------------------------
@@ -152,20 +192,9 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  void Text::update(double dt)
+  void Text::setText(const char* text)
   {
-    Element::update(dt);
-
-    if( _attributes_dirty & FONT_SIZE )
-    {
-      _text->setCharacterSize
-      (
-        _font_size->getFloatValue(),
-        _font_aspect->getFloatValue()
-      );
-
-      _attributes_dirty &= ~FONT_SIZE;
-    }
+    _text->setText(text, osgText::String::ENCODING_UTF8);
   }
 
   //----------------------------------------------------------------------------
@@ -213,51 +242,20 @@ namespace canvas
     }
   }
 #endif
+
   //----------------------------------------------------------------------------
   void Text::childChanged(SGPropertyNode* child)
   {
-    const std::string& name = child->getNameString();
+    if( child->getParent() != _node )
+      return;
 
+    const std::string& name = child->getNameString();
     if( name == "hit-y" )
       handleHit
       (
         _node->getFloatValue("hit-x"),
         _node->getFloatValue("hit-y")
       );
-    else if( _font_size == child || _font_aspect == child )
-      _attributes_dirty |= FONT_SIZE;
-    else if( name == "text" )
-      _text->setText
-      (
-        osgText::String( child->getStringValue(),
-                         osgText::String::ENCODING_UTF8 )
-      );
-    else if( name == "padding" )
-      _text->setBoundingBoxMargin( child->getFloatValue() );
-    else if( name == "draw-mode" )
-      //  TEXT              = 1 default
-      //  BOUNDINGBOX       = 2
-      //  FILLEDBOUNDINGBOX = 4
-      //  ALIGNMENT         = 8
-      _text->setDrawMode( child->getIntValue() );
-    else if( name == "max-width" )
-      _text->setMaximumWidth( child->getFloatValue() );
-    else if( name == "font" )
-      setFont( child->getStringValue() );
-    else if( name == "alignment" )
-      setAlignment( child->getStringValue() );
-  }
-
-  //----------------------------------------------------------------------------
-  void Text::colorChanged(const osg::Vec4& color)
-  {
-    _text->setColor(color);
-  }
-
-  //----------------------------------------------------------------------------
-  void Text::colorFillChanged(const osg::Vec4& color)
-  {
-    _text->setBoundingBoxColor(color);
   }
 
   //----------------------------------------------------------------------------

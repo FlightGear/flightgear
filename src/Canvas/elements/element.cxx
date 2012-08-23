@@ -23,19 +23,30 @@
 #include <osg/Drawable>
 #include <osg/Geode>
 
+#include <boost/foreach.hpp>
+
 #include <cassert>
 #include <cstring>
 
 namespace canvas
 {
   const std::string NAME_TRANSFORM = "tf";
-  const std::string NAME_COLOR = "color";
-  const std::string NAME_COLOR_FILL = "color-fill";
+
+  //----------------------------------------------------------------------------
+  void Element::removeListener()
+  {
+    _node->removeChangeListener(this);
+  }
 
   //----------------------------------------------------------------------------
   Element::~Element()
   {
+    removeListener();
 
+    BOOST_FOREACH(osg::Group* parent, _transform->getParents())
+    {
+      parent->removeChild(_transform);
+    }
   }
 
   //----------------------------------------------------------------------------
@@ -95,24 +106,6 @@ namespace canvas
       _transform_dirty = false;
     }
 
-    if( _attributes_dirty & COLOR )
-    {
-      colorChanged( osg::Vec4( _color[0]->getFloatValue(),
-                               _color[1]->getFloatValue(),
-                               _color[2]->getFloatValue(),
-                               _color[3]->getFloatValue() ) );
-      _attributes_dirty &= ~COLOR;
-    }
-
-    if( _attributes_dirty & COLOR_FILL )
-    {
-      colorFillChanged( osg::Vec4( _color_fill[0]->getFloatValue(),
-                                   _color_fill[1]->getFloatValue(),
-                                   _color_fill[2]->getFloatValue(),
-                                   _color_fill[3]->getFloatValue() ) );
-      _attributes_dirty &= ~COLOR_FILL;
-    }
-
     if( !_bounding_box.empty() )
     {
       assert( _drawable );
@@ -159,18 +152,15 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Element::childAdded(SGPropertyNode* parent, SGPropertyNode* child)
   {
-    if( parent == _node )
+    if(    parent == _node
+        && child->getNameString() == NAME_TRANSFORM )
     {
-      if( child->getNameString() == NAME_TRANSFORM )
-      {
-        if( child->getIndex() >= static_cast<int>(_transform_types.size()) )
-          _transform_types.resize( child->getIndex() + 1 );
+      if( child->getIndex() >= static_cast<int>(_transform_types.size()) )
+        _transform_types.resize( child->getIndex() + 1 );
 
-        _transform_types[ child->getIndex() ] = TT_NONE;
-        _transform_dirty = true;
-      }
-      else
-        childAdded(child);
+      _transform_types[ child->getIndex() ] = TT_NONE;
+      _transform_dirty = true;
+      return;
     }
     else if(    parent->getParent() == _node
              && parent->getNameString() == NAME_TRANSFORM )
@@ -191,16 +181,16 @@ namespace canvas
         type = TT_SCALE;
 
       _transform_dirty = true;
+      return;
     }
+
+    childAdded(child);
   }
 
   //----------------------------------------------------------------------------
   void Element::childRemoved(SGPropertyNode* parent, SGPropertyNode* child)
   {
-    if( parent != _node )
-      return;
-
-    if( child->getNameString() == NAME_TRANSFORM )
+    if( parent == _node && child->getNameString() == NAME_TRANSFORM )
     {
       assert(child->getIndex() < static_cast<int>(_transform_types.size()));
       _transform_types[ child->getIndex() ] = TT_NONE;
@@ -209,53 +199,50 @@ namespace canvas
         _transform_types.pop_back();
 
       _transform_dirty = true;
+      return;
     }
-    else
-      childRemoved(child);
+
+    childRemoved(child);
   }
 
   //----------------------------------------------------------------------------
   void Element::valueChanged(SGPropertyNode* child)
   {
     SGPropertyNode *parent = child->getParent();
-    if( parent->getParent() == _node )
+    if( parent == _node )
     {
-      if( parent->getNameString() == NAME_TRANSFORM )
-        _transform_dirty = true;
-      else if( !_color.empty() && _color[0]->getParent() == parent )
-        _attributes_dirty |= COLOR;
-      else if( !_color_fill.empty() && _color_fill[0]->getParent() == parent )
-        _attributes_dirty |= COLOR_FILL;
-    }
-    else if( parent == _node )
-    {
-      if( child->getNameString() == "update" )
-        update(0);
+      if( setStyle(child) )
+        return;
+      else if( child->getNameString() == "update" )
+        return update(0);
       else if( child->getNameString() == "visible" )
         // TODO check if we need another nodemask
-        _transform->setNodeMask( child->getBoolValue() ? 0xffffffff : 0 );
-      else
-        childChanged(child);
+        return _transform->setNodeMask( child->getBoolValue() ? 0xffffffff : 0 );
     }
+    else if(   parent->getParent() == _node
+            && parent->getNameString() == NAME_TRANSFORM )
+    {
+      _transform_dirty = true;
+      return;
+    }
+
+    childChanged(child);
   }
 
   //----------------------------------------------------------------------------
-  Element::Element(SGPropertyNode_ptr node, uint32_t attributes_used):
+  Element::Element( SGPropertyNode_ptr node,
+                    const Style& parent_style,
+                    uint32_t attributes_used ):
     _attributes_used( attributes_used ),
     _attributes_dirty( attributes_used ),
     _transform_dirty( false ),
     _transform( new osg::MatrixTransform ),
     _node( node ),
+    _style( parent_style ),
     _drawable( 0 )
   {
     assert( _node );
     _node->addChangeListener(this);
-
-    if( _attributes_used & COLOR )
-      linkColorNodes("color", _node, _color, osg::Vec4f(0,0,0,1));
-
-    if( _attributes_used & COLOR_FILL )
-      linkColorNodes("color-fill", _node, _color_fill, osg::Vec4f(1,1,1,1));
 
     SG_LOG
     (
@@ -294,6 +281,25 @@ namespace canvas
       _bounding_box[2] = bb_node->getChild("max-x", 0, true);
       _bounding_box[3] = bb_node->getChild("max-y", 0, true);
     }
+  }
+
+  //----------------------------------------------------------------------------
+  void Element::setupStyle()
+  {
+    BOOST_FOREACH( Style::value_type style, _style )
+      setStyle(style.second);
+  }
+
+  //----------------------------------------------------------------------------
+  bool Element::setStyle(const SGPropertyNode* child)
+  {
+    StyleSetters::const_iterator setter =
+      _style_setters.find(child->getNameString());
+    if( setter == _style_setters.end() )
+      return false;
+
+    setter->second(child);
+    return true;
   }
 
 } // namespace canvas
