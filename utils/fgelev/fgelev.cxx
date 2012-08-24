@@ -303,18 +303,14 @@ main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    // now handle all the position pairs
-    for(int i = 1; i < arguments.argc(); ++i) {
-        if (arguments.isOption(i))
-            continue;
-
-        std::istringstream ss(arguments[i]);
+    while (std::cin.good()) {
+        std::string id;
+        std::cin >> id;
         double lon, lat;
-        char sep;
-        ss >> lon >> sep >> lat;
-        if (ss.fail()) {
+        std::cin >> lon >> lat;
+        if (std::cin.fail())
             return EXIT_FAILURE;
-        }
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         SGVec3d start = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, 10000));
         SGVec3d end = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, -1000));
@@ -322,7 +318,7 @@ main(int argc, char** argv)
         intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
         loadedModel->accept(intersectVisitor);
 
-        std::cout << arguments[i] << ": ";
+        std::cout << id << ": ";
         if (!intersectVisitor.getHaveHit()) {
             std::cout << "-1000" << std::endl;
         } else {
