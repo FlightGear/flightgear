@@ -25,181 +25,53 @@
 #include <iomanip>
 
 #include <osg/ArgumentParser>
-#include <osg/Camera>
-#include <osg/PagedLOD>
-#include <osg/ProxyNode>
-#include <osg/Transform>
-#include <osgDB/ReadFile>
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/scene/material/matlib.hxx>
-#include <simgear/scene/util/OsgMath.hxx>
-#include <simgear/scene/util/SGNodeMasks.hxx>
-#include <simgear/scene/util/SGReaderWriterOptions.hxx>
-#include <simgear/scene/util/SGSceneFeatures.hxx>
-#include <simgear/scene/util/SGSceneUserData.hxx>
-#include <simgear/scene/tgdb/userdata.hxx>
-#include <simgear/scene/model/ModelRegistry.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/bvh/BVHNode.hxx>
 #include <simgear/bvh/BVHLineSegmentVisitor.hxx>
+#include <simgear/bvh/BVHPager.hxx>
+#include <simgear/bvh/BVHPageNode.hxx>
+#include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/model/BVHPageNodeOSG.hxx>
+#include <simgear/scene/model/ModelRegistry.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
+#include <simgear/scene/tgdb/userdata.hxx>
 
-class FGSceneryIntersect : public osg::NodeVisitor {
+namespace sg = simgear;
+
+class Visitor : public sg::BVHLineSegmentVisitor {
 public:
-    FGSceneryIntersect(const SGLineSegmentd& lineSegment) :
-        osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN),
-        _lineSegment(lineSegment),
-        _haveHit(false)
+    Visitor(const SGLineSegmentd& lineSegment, sg::BVHPager& pager) :
+        BVHLineSegmentVisitor(lineSegment, 0),
+        _pager(pager)
     { }
-
-    bool getHaveHit() const
-    { return _haveHit; }
-    const SGLineSegmentd& getLineSegment() const
-    { return _lineSegment; }
-
-    virtual void apply(osg::Node& node)
+    virtual ~Visitor()
+    { }
+    virtual void apply(sg::BVHPageNode& node)
     {
-        if (!testBoundingSphere(node.getBound()))
-            return;
-
-        addBoundingVolume(node);
+        // we have a non threaded pager so load just right here.
+        _pager.use(node);
+        BVHLineSegmentVisitor::apply(node);
     }
-
-    virtual void apply(osg::Group& group)
-    {
-        if (!testBoundingSphere(group.getBound()))
-            return;
-
-        traverse(group);
-        addBoundingVolume(group);
-    }
-
-    virtual void apply(osg::Transform& transform)
-    { handleTransform(transform); }
-    virtual void apply(osg::Camera& camera)
-    {
-        if (camera.getRenderOrder() != osg::Camera::NESTED_RENDER)
-            return;
-        handleTransform(camera);
-    }
-
-    virtual void apply(osg::ProxyNode& proxyNode)
-    {
-        unsigned numFileNames = proxyNode.getNumFileNames();
-        for (unsigned i = 0; i < numFileNames; ++i) {
-            if (i < proxyNode.getNumChildren() && proxyNode.getChild(i))
-                continue;
-            // FIXME evaluate pagedLOD.getDatabasePath()
-            osg::ref_ptr<osg::Node> node;
-            node = osgDB::readNodeFile(proxyNode.getFileName(i),
-              static_cast<const osgDB::Options*>(proxyNode.getDatabaseOptions()));
-            if (!node.valid())
-                node = new osg::Group;
-            if (i < proxyNode.getNumChildren())
-                proxyNode.setChild(i, node);
-            else
-                proxyNode.addChild(node);
-        }
-
-        apply(static_cast<osg::Group&>(proxyNode));
-    }
-    virtual void apply(osg::PagedLOD& pagedLOD)
-    {
-        float range = std::numeric_limits<float>::max();
-        unsigned numFileNames = pagedLOD.getNumFileNames();
-        for (unsigned i = 0; i < numFileNames; ++i) {
-            if (range < pagedLOD.getMaxRange(i))
-                continue;
-            range = pagedLOD.getMaxRange(i);
-        }
-
-        for (unsigned i = pagedLOD.getNumChildren(); i < numFileNames; ++i) {
-            if (i < pagedLOD.getNumChildren() && pagedLOD.getChild(i))
-                continue;
-            osg::ref_ptr<osg::Node> node;
-            if (pagedLOD.getMaxRange(i) <= range) {
-                // FIXME evaluate pagedLOD.getDatabasePath()
-                node = osgDB::readNodeFile(pagedLOD.getFileName(i),
-                  static_cast<const osgDB::Options*>(pagedLOD.getDatabaseOptions()));
-            }
-            if (!node.valid())
-                node = new osg::Group;
-            pagedLOD.addChild(node.get());
-        }
-
-        apply(static_cast<osg::LOD&>(pagedLOD));
-    }
-
 private:
-    void handleTransform(osg::Transform& transform)
-    {
-        // Hmm, may be this needs to be refined somehow ...
-        if (transform.getReferenceFrame() != osg::Transform::RELATIVE_RF)
-            return;
-
-        if (!testBoundingSphere(transform.getBound()))
-            return;
-
-        osg::Matrix inverseMatrix;
-        if (!transform.computeWorldToLocalMatrix(inverseMatrix, this))
-            return;
-        osg::Matrix matrix;
-        if (!transform.computeLocalToWorldMatrix(matrix, this))
-            return;
-
-        SGLineSegmentd lineSegment = _lineSegment;
-        bool haveHit = _haveHit;
-
-        _haveHit = false;
-        _lineSegment = lineSegment.transform(SGMatrixd(inverseMatrix.ptr()));
-
-        addBoundingVolume(transform);
-        traverse(transform);
-
-        if (_haveHit) {
-            _lineSegment = _lineSegment.transform(SGMatrixd(matrix.ptr()));
-        } else {
-            _lineSegment = lineSegment;
-            _haveHit = haveHit;
-        }
-    }
-
-    simgear::BVHNode* getNodeBoundingVolume(osg::Node& node)
-    {
-        SGSceneUserData* userData = SGSceneUserData::getSceneUserData(&node);
-        if (!userData)
-            return 0;
-        return userData->getBVHNode();
-    }
-    void addBoundingVolume(osg::Node& node)
-    {
-        simgear::BVHNode* bvNode = getNodeBoundingVolume(node);
-        if (!bvNode)
-            return;
-
-        // Find ground intersection on the bvh nodes
-        simgear::BVHLineSegmentVisitor lineSegmentVisitor(_lineSegment,
-                                                          0/*startTime*/);
-        bvNode->accept(lineSegmentVisitor);
-        if (!lineSegmentVisitor.empty()) {
-            _lineSegment = lineSegmentVisitor.getLineSegment();
-            _haveHit = true;
-        }
-    }
-
-    bool testBoundingSphere(const osg::BoundingSphere& bound) const
-    {
-        if (!bound.valid())
-            return false;
-
-        SGSphered sphere(toVec3d(toSG(bound._center)), bound._radius);
-        return intersects(_lineSegment, sphere);
-    }
-
-    SGLineSegmentd _lineSegment;
-    bool _haveHit;
+    sg::BVHPager& _pager;
 };
+
+static bool
+intersect(sg::BVHNode& node, sg::BVHPager& pager,
+          const SGVec3d& start, SGVec3d& end, double offset)
+{
+    SGVec3d perp = offset*perpendicular(start - end);
+    Visitor visitor(SGLineSegmentd(start + perp, end + perp), pager);
+    node.accept(visitor);
+    if (visitor.empty())
+        return false;
+    end = visitor.getLineSegment().getEnd();
+    return true;
+}
 
 int
 main(int argc, char** argv)
@@ -240,20 +112,9 @@ main(int argc, char** argv)
                << "Probably FG_ROOT is not properly set.");
     }
 
-    std::string config;
-    while (arguments.read("--config", config)) {
-        try {
-            readProperties(config, props);
-        } catch (...) {
-            SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading config file \"" << config
-                   << "\" given on the command line.");
-        }
-    }
-
-    std::string prop, value;
-    while (arguments.read("--prop", prop, value)) {
-        props->setStringValue(prop, value);
-    }
+    /// dont need that here
+    props->getNode("sim/rendering/random-objects", true)->setBoolValue(false);
+    props->getNode("sim/rendering/random-vegetation", true)->setBoolValue(false);
 
     /// now set up the simgears required model stuff
 
@@ -263,7 +124,6 @@ main(int argc, char** argv)
     simgear::ModelRegistry::instance();
 
     sgUserDataInit(props.get());
-    SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::DoNotUseCompression);
     SGMaterialLib* ml = new SGMaterialLib;
     SGPath mpath(fg_root);
     mpath.append("Materials/default/materials.xml");
@@ -286,24 +146,33 @@ main(int argc, char** argv)
     options->setMaterialLib(ml);
     options->setPropertyNode(props);
     options->setPluginStringData("SimGear::FG_ROOT", fg_root);
-    options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "ON");
+    // we do not need the builtin boundingvolumes
+    options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
 
     // Here, all arguments are processed
     arguments.reportRemainingOptionsAsUnrecognized();
     arguments.writeErrorMessages(std::cerr);
 
-    /// Read the whole world paged model.
-    osg::ref_ptr<osg::Node> loadedModel;
-    loadedModel = osgDB::readNodeFile("w180s90-360x180.spt", options.get());
+    // Get the whole world bvh tree
+    SGSharedPtr<sg::BVHNode> node;
+    node = sg::BVHPageNodeOSG::load("w180s90-360x180.spt", options);
 
     // if no model has been successfully loaded report failure.
-    if (!loadedModel.valid()) {
+    if (!node.valid()) {
         SG_LOG(SG_GENERAL, SG_ALERT, arguments.getApplicationName()
                << ": No data loaded");
         return EXIT_FAILURE;
     }
 
+    // We assume that the above is a paged database.
+    sg::BVHPager pager;
+
     while (std::cin.good()) {
+        // Increment the paging relevant number
+        pager.setUseStamp(1 + pager.getUseStamp());
+        // and expire everything not accessed for the past 30 requests
+        pager.update(10);
+
         std::string id;
         std::cin >> id;
         double lon, lat;
@@ -314,15 +183,24 @@ main(int argc, char** argv)
 
         SGVec3d start = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, 10000));
         SGVec3d end = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, -1000));
-        FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end));
-        intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-        loadedModel->accept(intersectVisitor);
+
+        // Try to find an intersection
+        bool found = intersect(*node, pager, start, end, 0);
+        double scale = 1e-5;
+        while (!found && scale <= 1) {
+            found = intersect(*node, pager, start, end, scale);
+            scale *= 2;
+        }
+        if (1e-5 < scale)
+            std::cerr << "Found hole of minimum diameter "
+                      << scale << "m at lon = " << lon
+                      << "deg lat = " << lat << "deg" << std::endl;
 
         std::cout << id << ": ";
-        if (!intersectVisitor.getHaveHit()) {
+        if (!found) {
             std::cout << "-1000" << std::endl;
         } else {
-            SGGeod geod = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
+            SGGeod geod = SGGeod::fromCart(end);
             std::cout << std::fixed << std::setprecision(3) << geod.getElevationM() << std::endl;
         }
     }
