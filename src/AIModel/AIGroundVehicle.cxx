@@ -237,13 +237,13 @@ bool FGAIGroundVehicle::getPitch() {
         //double max_alt = 10000;
 
         if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodFront, 3000),
-            elev_front, &_material, 0)){
+            elev_front, NULL, 0)){
                 front_elev_m = elev_front + _z_offset_m;
         } else
             return false;
 
         if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodRear, 3000),
-            elev_rear, &_material, 0)){
+            elev_rear, NULL, 0)){
                 rear_elev_m = elev_rear;
         } else
             return false;

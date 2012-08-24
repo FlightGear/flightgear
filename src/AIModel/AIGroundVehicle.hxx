@@ -93,8 +93,6 @@ private:
     double _hitch_x_offset_m, _hitch_y_offset_m, _hitch_z_offset_m;
     double _dt_count, _next_run, _break_count;
 
-    const SGMaterial* _material;
-
 };
 
 #endif  // FG_AIGROUNDVEHICLE_HXX

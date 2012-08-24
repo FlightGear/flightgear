@@ -1050,7 +1050,7 @@ void FGAIShip::setWPPos() {
     if (curr->getOn_ground()){
 
         if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(wppos, 3000),
-            elevation_m, &_material, 0)){
+            elevation_m, NULL, 0)){
                 wppos.setElevationM(elevation_m);
         }
 

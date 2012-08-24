@@ -34,6 +34,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/util/SGSceneFeatures.hxx>
@@ -41,9 +42,8 @@
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/misc/ResourceManager.hxx>
-#include <simgear/scene/bvh/BVHNode.hxx>
-#include <simgear/scene/bvh/BVHLineSegmentVisitor.hxx>
-#include <simgear/scene/util/OsgMath.hxx>
+#include <simgear/bvh/BVHNode.hxx>
+#include <simgear/bvh/BVHLineSegmentVisitor.hxx>
 
 class FGSceneryIntersect : public osg::NodeVisitor {
 public:

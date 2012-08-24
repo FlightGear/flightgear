@@ -190,13 +190,14 @@ bool FGAIEscort::getGroundElev(SGGeod inpos) {
 
     double height_m ;
 
-    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &_material,0)){
+    const SGMaterial* material = 0;
+    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &material,0)){
         _ht_agl_ft = inpos.getElevationFt() - height_m * SG_METER_TO_FEET;
 
-        if (_material) {
-            const vector<string>& names = _material->get_names();
+        if (material) {
+            const vector<string>& names = material->get_names();
 
-            _solid = _material->get_solid();
+            _solid = material->get_solid();
 
             if (!names.empty())
                 props->setStringValue("material/name", names[0].c_str());

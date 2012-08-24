@@ -89,6 +89,8 @@ using std::list;
 using std::vector;
 using std::string;
 
+class SGMaterial;
+
 /**
  * A little helper class to update the track if
  * the position has changed. In the constructor, 

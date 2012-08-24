@@ -43,8 +43,8 @@
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/model/CheckSceneryVisitor.hxx>
-#include <simgear/scene/bvh/BVHNode.hxx>
-#include <simgear/scene/bvh/BVHLineSegmentVisitor.hxx>
+#include <simgear/bvh/BVHNode.hxx>
+#include <simgear/bvh/BVHLineSegmentVisitor.hxx>
 
 #include <Viewer/renderer.hxx>
 #include <Main/fg_props.hxx>
@@ -92,7 +92,7 @@ public:
     { return _haveHit; }
     const SGLineSegmentd& getLineSegment() const
     { return _lineSegment; }
-    const SGMaterial* getMaterial() const
+    const simgear::BVHMaterial* getMaterial() const
     { return _material; }
 
     virtual void apply(osg::Node& node)
@@ -152,7 +152,7 @@ private:
 
         SGLineSegmentd lineSegment = _lineSegment;
         bool haveHit = _haveHit;
-        const SGMaterial* material = _material;
+        const simgear::BVHMaterial* material = _material;
 
         _haveHit = false;
         _lineSegment = lineSegment.transform(SGMatrixd(inverseMatrix.ptr()));
@@ -205,7 +205,7 @@ private:
     SGLineSegmentd _lineSegment;
     const osg::Node* _skipNode;
 
-    const SGMaterial* _material;
+    const simgear::BVHMaterial* _material;
     bool _haveHit;
 };
 
@@ -290,7 +290,7 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
   geodEnd = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
   alt = geodEnd.getElevationM();
   if (material)
-      *material = intersectVisitor.getMaterial();
+      *material = dynamic_cast<const SGMaterial*>(intersectVisitor.getMaterial());
 
   return true;
 }

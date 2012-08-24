@@ -53,8 +53,6 @@ public:
     double _elevation_m;        // ground elevation in meters
     bool   _solid;              // if true ground is solid for FDMs
 
-    const SGMaterial* _material;
-
     std::string _mat_name; // ground material
 
     SGVec3d getCartUserPos() const;

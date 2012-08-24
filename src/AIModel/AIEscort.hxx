@@ -89,8 +89,6 @@ private:
 
     double _max_speed;
 
-    const SGMaterial* _material;
-
     bool _MPControl, _patrol, _stn_deg_true;
 
 //    std::string _parent;

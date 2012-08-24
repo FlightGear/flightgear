@@ -151,6 +151,7 @@ else(SIMGEAR_SHARED)
         environment
         nasal
         tsync
+        bvh
         bucket
         io
         serial
@@ -172,7 +173,6 @@ else(SIMGEAR_SHARED)
         tgdb
         model
         screen
-        bvh
         util
         sound)
             

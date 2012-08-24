@@ -729,7 +729,7 @@ double FGAIBase::_getAltitude() const {
 
 double FGAIBase::_getAltitudeAGL(SGGeod inpos, double start){
     getGroundElevationM(SGGeod::fromGeodM(inpos, start),
-        _elevation_m, &_material);
+        _elevation_m, NULL);
     return inpos.getElevationFt() - _elevation_m * SG_METER_TO_FEET;
 }
 

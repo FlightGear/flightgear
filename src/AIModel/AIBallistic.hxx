@@ -219,8 +219,6 @@ private:
     string _force_path;
     string _contents_path;
 
-    const SGMaterial* _material;
-
     void handle_collision();
     void handle_expiry();
     void handle_impact();

@@ -107,8 +107,6 @@ private:
 
     SGGeod wppos;
 
-    const SGMaterial* _material;
-
     double getRange(double lat, double lon, double lat2, double lon2) const;
     double getCourse(double lat, double lon, double lat2, double lon2) const;
     double getDaySeconds();

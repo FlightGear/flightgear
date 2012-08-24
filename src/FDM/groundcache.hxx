@@ -27,7 +27,7 @@
 #include <simgear/constants.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/SGGeometry.hxx>
-#include <simgear/scene/bvh/BVHNode.hxx>
+#include <simgear/bvh/BVHNode.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
 // #define GROUNDCACHE_DEBUG
@@ -37,9 +37,9 @@
 #include <simgear/timing/timestamp.hxx>
 #endif
 
-class SGMaterial;
 namespace simgear {
 class BVHLineGeometry;
+class BVHMaterial;
 }
 
 class FGGroundCache {
@@ -89,11 +89,13 @@ public:
     // 0 and 1 which can be used to model lower friction with wet runways.
     bool get_agl(double t, const SGVec3d& pt, SGVec3d& contact,
                  SGVec3d& normal, SGVec3d& linearVel, SGVec3d& angularVel,
-                 simgear::BVHNode::Id& id, const SGMaterial*& material);
+                 simgear::BVHNode::Id& id,
+                 const simgear::BVHMaterial*& material);
 
     bool get_nearest(double t, const SGVec3d& pt, double maxDist,
                      SGVec3d& contact, SGVec3d& linearVel, SGVec3d& angularVel,
-                     simgear::BVHNode::Id& id, const SGMaterial*& material);
+                     simgear::BVHNode::Id& id,
+                     const simgear::BVHMaterial*& material);
 
     // Return 1 if the hook intersects with a wire.
     // That test is done by checking if the quad spanned by the points pt*
@@ -120,7 +122,7 @@ private:
     // In case the aircraft is too high above ground.
     double _altitude;
     // the simgear material reference, contains friction coeficients ...
-    const SGMaterial* _material;
+    const simgear::BVHMaterial* _material;
     // The time reference for later call to intersection test routines.
     // Is required since we will have moving triangles in carriers.
     double cache_ref_time;

@@ -210,18 +210,19 @@ agRadar::setUserVec(double az, double el)
 bool
 agRadar::getMaterial(){
 
-    if (globals->get_scenery()->get_elevation_m(hitpos, _elevation_m, &_material)){
+    const SGMaterial* material = 0;
+    if (globals->get_scenery()->get_elevation_m(hitpos, _elevation_m, &material)){
         //_ht_agl_ft = pos.getElevationFt() - _elevation_m * SG_METER_TO_FEET;
-        if (_material) {
-            const std::vector<std::string>& names = _material->get_names();
+        if (material) {
+            const std::vector<std::string>& names = material->get_names();
 
-            _solid = _material->get_solid();
-            _load_resistance = _material->get_load_resistance();
-            _frictionFactor =_material->get_friction_factor();
-            _bumpinessFactor = _material->get_bumpiness();
+            _solid = material->get_solid();
+            _load_resistance = material->get_load_resistance();
+            _frictionFactor = material->get_friction_factor();
+            _bumpinessFactor = material->get_bumpiness();
 
             if (!names.empty()) 
-                _mat_name = names[0].c_str();
+                _mat_name = names[0];
             else
                 _mat_name = "";
 

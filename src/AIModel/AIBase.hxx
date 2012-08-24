@@ -117,7 +117,6 @@ public:
         const SGMaterial** material) const;
 
     double _elevation_m;
-    const SGMaterial* _material;
 
     double _getCartPosX() const;
     double _getCartPosY() const;
