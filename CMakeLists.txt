@@ -228,7 +228,7 @@ endif(ENABLE_LIBSVN)
 find_package(PLIB REQUIRED puaux pu js fnt)
 
 # FlightGear and SimGear versions need to match
-find_package(SimGear ${FLIGHTGEAR_VERSION} REQUIRED)
+find_package(SimGear 2.8.0 REQUIRED)
 
 if (JPEG_FACTORY)
     # check simgear was built with JPEG-factory support
