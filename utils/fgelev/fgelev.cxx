@@ -25,6 +25,7 @@
 #include <iomanip>
 
 #include <osg/ArgumentParser>
+#include <osg/Image>
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
@@ -38,6 +39,7 @@
 #include <simgear/scene/model/BVHPageNodeOSG.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
+#include <simgear/scene/util/OptionsReadFileCallback.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 
 namespace sg = simgear;
@@ -58,6 +60,16 @@ public:
     }
 private:
     sg::BVHPager& _pager;
+};
+
+// Short circuit reading image files.
+class ReadFileCallback : public sg::OptionsReadFileCallback {
+public:
+    virtual ~ReadFileCallback()
+    { }
+
+    virtual osgDB::ReaderWriter::ReadResult readImage(const std::string& name, const osgDB::Options*)
+    { return new osg::Image; }
 };
 
 static bool
@@ -141,6 +153,7 @@ main(int argc, char** argv)
                                              options->getDatabasePathList());
     options->setMaterialLib(ml);
     options->setPropertyNode(props);
+    options->setReadFileCallback(new ReadFileCallback);
     options->setPluginStringData("SimGear::FG_ROOT", fg_root);
     // we do not need the builtin boundingvolumes
     options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
