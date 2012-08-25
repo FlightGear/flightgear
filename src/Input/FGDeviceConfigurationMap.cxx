@@ -54,7 +54,10 @@ FGDeviceConfigurationMap::FGDeviceConfigurationMap( const char * relative_path, 
 
 FGDeviceConfigurationMap::~FGDeviceConfigurationMap()
 {
-  base->removeChildren( childname );
+  // Ensure that the children don't hang around when deleted, as if 
+  // re-created, we need to ensure that the set of names doesn't contain
+  // any unexpected history.
+  base->removeChildren( childname, false );
 }
 
 void FGDeviceConfigurationMap::scan_dir(const SGPath & path, int *index)
