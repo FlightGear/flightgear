@@ -112,10 +112,6 @@ main(int argc, char** argv)
                << "Probably FG_ROOT is not properly set.");
     }
 
-    /// dont need that here
-    props->getNode("sim/rendering/random-objects", true)->setBoolValue(false);
-    props->getNode("sim/rendering/random-vegetation", true)->setBoolValue(false);
-
     /// now set up the simgears required model stuff
 
     simgear::ResourceManager::instance()->addBasePath(fg_root, simgear::ResourceManager::PRIORITY_DEFAULT);
@@ -148,6 +144,10 @@ main(int argc, char** argv)
     options->setPluginStringData("SimGear::FG_ROOT", fg_root);
     // we do not need the builtin boundingvolumes
     options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
+    // And we only want terrain, no objects on top.
+    options->setPluginStringData("SimGear::FG_ONLY_TERRAIN", "ON");
+    props->getNode("sim/rendering/random-objects", true)->setBoolValue(false);
+    props->getNode("sim/rendering/random-vegetation", true)->setBoolValue(false);
 
     // Here, all arguments are processed
     arguments.reportRemainingOptionsAsUnrecognized();
