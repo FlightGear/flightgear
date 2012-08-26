@@ -102,19 +102,28 @@ endif()
 
 message(STATUS "SimGear include directory: ${SIMGEAR_INCLUDE_DIR}")
 
+# read the simgear version header file, get the version
+file(READ ${SIMGEAR_INCLUDE_DIR}/simgear/version.h SG_VERSION_FILE)
+
 # make sure the simgear/version.h header exists
-if (NOT EXISTS ${SIMGEAR_INCLUDE_DIR}/simgear/version.h)
+if (NOT SG_VERSION_FILE)
     message(FATAL_ERROR "Found SimGear, but it does not contain a simgear/version.h include! "
-            "SimGear installation is incomplete.")
+            "SimGear installation is incomplete or mismatching.")
 endif()
 
-# read the simgear version header file, get the version
-file(READ ${SIMGEAR_INCLUDE_DIR}/simgear/version.h sgVersionFile)
-string(STRIP ${sgVersionFile} SIMGEAR_DEFINE)
-string(REPLACE "#define SIMGEAR_VERSION " "" SIMGEAR_VERSION ${SIMGEAR_DEFINE})
+string(STRIP "${SG_VERSION_FILE}" SIMGEAR_DEFINE)
+string(REPLACE "#define SIMGEAR_VERSION " "" SIMGEAR_VERSION "${SIMGEAR_DEFINE}")
+
+if(NOT SIMGEAR_VERSION)
+    message(FATAL_ERROR "Unable to find SimGear or simgear/version.h does not exist/is invalid. "
+            "Make sure you have installed the SimGear ${SimGear_FIND_VERSION} includes. "
+            "When using non-standard locations, please use 'SIMGEAR_DIR' "
+            "to select the SimGear library location to be used.")
+endif()
+
 message(STATUS "found SimGear version: ${SIMGEAR_VERSION} (needed ${SimGear_FIND_VERSION})")
 
-if(NOT ${SIMGEAR_VERSION} EQUAL ${SimGear_FIND_VERSION})
+if(NOT "${SIMGEAR_VERSION}" EQUAL "${SimGear_FIND_VERSION}")
     message(FATAL_ERROR "You have installed a mismatching SimGear version ${SIMGEAR_VERSION} "
             "instead of ${SimGear_FIND_VERSION} as required by FlightGear. "
             "When using multiple SimGear installations, please use 'SIMGEAR_DIR' "
