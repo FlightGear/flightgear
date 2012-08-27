@@ -326,7 +326,7 @@ void Model::updateGround(State* s)
         // Ask for the ground plane in the global coordinate system
         double global_ground[4];
         float global_vel[3];
-        const SGMaterial* material;
+        const simgear::BVHMaterial* material;
         _ground_cb->getGroundPlane(pt, global_ground, global_vel, &material);
         g->setGlobalGround(global_ground, global_vel, pt[0], pt[1], material);
     }

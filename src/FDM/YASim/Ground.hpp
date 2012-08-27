@@ -1,7 +1,9 @@
 #ifndef _GROUND_HPP
 #define _GROUND_HPP
 
-class SGMaterial;
+namespace simgear {
+class BVHMaterial;
+}
 namespace yasim {
 
 class Ground {
@@ -14,7 +16,7 @@ public:
 
     virtual void getGroundPlane(const double pos[3],
                                 double plane[4], float vel[3],
-                                const SGMaterial **material);
+                                const simgear::BVHMaterial **material);
 
     virtual bool caughtWire(const double pos[4][3]);
 

@@ -4,7 +4,7 @@
 
 #include "Glue.hpp"
 
-#include <simgear/scene/material/mat.hxx>
+#include <simgear/bvh/BVHMaterial.hxx>
 #include "Ground.hpp"
 namespace yasim {
 
@@ -35,7 +35,7 @@ void Ground::getGroundPlane(const double pos[3],
 
 void Ground::getGroundPlane(const double pos[3],
                             double plane[4], float vel[3],
-                            const SGMaterial **material)
+                            const simgear::BVHMaterial **material)
 {
     getGroundPlane(pos,plane,vel);
 }

@@ -210,9 +210,10 @@ agRadar::setUserVec(double az, double el)
 bool
 agRadar::getMaterial(){
 
-    const SGMaterial* material = 0;
-    if (globals->get_scenery()->get_elevation_m(hitpos, _elevation_m, &material)){
+    const simgear::BVHMaterial* mat = 0;
+    if (globals->get_scenery()->get_elevation_m(hitpos, _elevation_m, &mat)){
         //_ht_agl_ft = pos.getElevationFt() - _elevation_m * SG_METER_TO_FEET;
+        const SGMaterial* material = dynamic_cast<const SGMaterial*>(mat);
         if (material) {
             const std::vector<std::string>& names = material->get_names();
 

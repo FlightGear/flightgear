@@ -26,7 +26,7 @@ void FGGround::getGroundPlane(const double pos[3],
 {
     // Return values for the callback.
     double cp[3], dvel[3], dangvel[3];
-    const SGMaterial* material;
+    const simgear::BVHMaterial* material;
     simgear::BVHNode::Id id;
     _iface->get_agl_m(_toff, pos, 2, cp, plane, dvel, dangvel, material, id);
 
@@ -38,7 +38,7 @@ void FGGround::getGroundPlane(const double pos[3],
 
 void FGGround::getGroundPlane(const double pos[3],
                               double plane[4], float vel[3],
-                              const SGMaterial **material)
+                              const simgear::BVHMaterial **material)
 {
     // Return values for the callback.
     double cp[3], dvel[3], dangvel[3];

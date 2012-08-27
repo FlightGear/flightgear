@@ -323,10 +323,12 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	while (elevations.size() <= e_size) {
 		probe_distance += point_distance;
 		SGGeod probe = SGGeod::fromGeoc(center.advanceRadM( course, probe_distance ));
-		const SGMaterial *mat = 0;
+		const simgear::BVHMaterial *material = 0;
 		double elevation_m = 0.0;
 	
-		if (scenery->get_elevation_m( probe, elevation_m, &mat )) {
+		if (scenery->get_elevation_m( probe, elevation_m, &material )) {
+                        const SGMaterial *mat;
+                        mat = dynamic_cast<const SGMaterial*>(material);
 			if((transmission_type == 3) || (transmission_type == 4)) {
 				elevations.push_back(elevation_m);
 				if(mat) {

@@ -607,7 +607,7 @@ SGVec3d FGAIBase::getCartPos() const {
 }
 
 bool FGAIBase::getGroundElevationM(const SGGeod& pos, double& elev,
-                                   const SGMaterial** material) const {
+                                   const simgear::BVHMaterial** material) const {
     return globals->get_scenery()->get_elevation_m(pos, elev, material,
                                                    _model.get());
 }

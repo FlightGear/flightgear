@@ -498,9 +498,10 @@ void FGAIBallistic::setForcePath(const string& p) {
 }
 
 bool FGAIBallistic::getHtAGL(double start){
-    const SGMaterial* material = 0;
+    const simgear::BVHMaterial* mat = 0;
     if (getGroundElevationM(SGGeod::fromGeodM(pos, start),
-        _elevation_m, &material)) {
+        _elevation_m, &mat)) {
+            const SGMaterial* material = dynamic_cast<const SGMaterial*>(mat);
             _ht_agl_ft = pos.getElevationFt() - _elevation_m * SG_METER_TO_FEET;
 
             if (material) {

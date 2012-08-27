@@ -7,7 +7,8 @@
 #include "BodyEnvironment.hpp"
 #include "RigidBody.hpp"
 
-#include <simgear/scene/material/mat.hxx>
+#include <cfloat>
+#include <simgear/bvh/BVHMaterial.hxx>
 #include <FDM/flight.hxx>
 #include "Gear.hpp"
 namespace yasim {
@@ -146,7 +147,7 @@ void Gear::setInitialLoad(float l)
 
 void Gear::setGlobalGround(double *global_ground, float* global_vel,
                            double globalX, double globalY,
-                           const SGMaterial *material)
+                           const simgear::BVHMaterial *material)
 {
     int i;
     double frictionFactor,rollingFriction,loadCapacity,loadResistance,bumpiness;

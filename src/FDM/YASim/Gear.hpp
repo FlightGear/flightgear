@@ -1,7 +1,9 @@
 #ifndef _GEAR_HPP
 #define _GEAR_HPP
 
-class SGMaterial;
+namespace simgear {
+class BVHMaterial;
+}
 
 namespace yasim {
 
@@ -50,7 +52,7 @@ public:
     void setIgnoreWhileSolving(bool c);
     void setGlobalGround(double* global_ground, float* global_vel,
         double globalX, double globalY,
-        const SGMaterial *material);
+                         const simgear::BVHMaterial *material);
     void getPosition(float* out);
     void getCompression(float* out);
     void getGlobalGround(double* global_ground);

@@ -1330,7 +1330,7 @@ FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
                      double contact[3], double normal[3], double vel[3],
                      double angularVel[3], double *agl)
 {
-   const SGMaterial* material;
+   const simgear::BVHMaterial* material;
    simgear::BVHNode::Id id;
    if (!FGInterface::get_agl_ft(t, pt, alt_off, contact, normal, vel,
                                 angularVel, material, id))

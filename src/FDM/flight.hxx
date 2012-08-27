@@ -89,7 +89,9 @@ using std::list;
 using std::vector;
 using std::string;
 
-class SGMaterial;
+namespace simgear {
+class BVHMaterial;
+}
 
 /**
  * A little helper class to update the track if
@@ -693,11 +695,11 @@ public:
     // contact point.
     bool get_agl_m(double t, const double pt[3], double max_altoff,
                    double contact[3], double normal[3], double linearVel[3],
-                   double angularVel[3], SGMaterial const*& material,
+                   double angularVel[3], simgear::BVHMaterial const*& material,
                    simgear::BVHNode::Id& id);
     bool get_agl_ft(double t, const double pt[3], double max_altoff,
                     double contact[3], double normal[3], double linearVel[3],
-                    double angularVel[3], SGMaterial const*& material,
+                    double angularVel[3], simgear::BVHMaterial const*& material,
                     simgear::BVHNode::Id& id);
     double get_groundlevel_m(double lat, double lon, double alt);
     double get_groundlevel_m(const SGGeod& geod);
@@ -708,11 +710,11 @@ public:
     // position pt.
     bool get_nearest_m(double t, const double pt[3], double maxDist,
                        double contact[3], double normal[3], double linearVel[3],
-                       double angularVel[3], SGMaterial const*& material,
+                       double angularVel[3], simgear::BVHMaterial const*& material,
                        simgear::BVHNode::Id& id);
     bool get_nearest_ft(double t, const double pt[3], double maxDist,
                         double contact[3], double normal[3],double linearVel[3],
-                        double angularVel[3], SGMaterial const*& material,
+                        double angularVel[3], simgear::BVHMaterial const*& material,
                         simgear::BVHNode::Id& id);
 
 

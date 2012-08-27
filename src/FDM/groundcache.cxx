@@ -382,10 +382,9 @@ FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
     if (!found_ground) {
         // Ok, still nothing here?? Last resort ...
         double alt = 0;
-        const SGMaterial* m = NULL;
+        _material = 0;
         found_ground = globals->get_scenery()->
-            get_elevation_m(SGGeod::fromGeodM(geodPt, 10000), alt, &m);
-        _material = m;
+            get_elevation_m(SGGeod::fromGeodM(geodPt, 10000), alt, &_material);
         if (found_ground)
             _altitude = alt;
     }

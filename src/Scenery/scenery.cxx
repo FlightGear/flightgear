@@ -262,7 +262,8 @@ void FGScenery::unbind() {
 
 bool
 FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
-                                double& alt, const SGMaterial** material,
+                                double& alt,
+                                const simgear::BVHMaterial** material,
                                 const osg::Node* butNotFrom)
 {
   SGGeod geod = SGGeod::fromCart(pos);
@@ -272,7 +273,7 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
 
 bool
 FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
-                           const SGMaterial** material,
+                           const simgear::BVHMaterial** material,
                            const osg::Node* butNotFrom)
 {
   SGVec3d start = SGVec3d::fromGeod(geod);
@@ -291,7 +292,7 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
   geodEnd = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
   alt = geodEnd.getElevationM();
   if (material)
-      *material = dynamic_cast<const SGMaterial*>(intersectVisitor.getMaterial());
+      *material = intersectVisitor.getMaterial();
 
   return true;
 }

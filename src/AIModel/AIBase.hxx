@@ -38,7 +38,9 @@
 
 using std::string;
 
-class SGMaterial;
+namespace simgear {
+class BVHMaterial;
+}
 class FGAIManager;
 class FGAIFlightPlan;
 class FGFX;
@@ -114,7 +116,7 @@ public:
     SGVec3d getCartPos() const;
 
     bool getGroundElevationM(const SGGeod& pos, double& elev,
-        const SGMaterial** material) const;
+                             const simgear::BVHMaterial** material) const;
 
     double _elevation_m;
 

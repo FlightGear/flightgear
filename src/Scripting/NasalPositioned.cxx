@@ -894,10 +894,11 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
   double lat = naNumValue(args[0]).num;
   double lon = naNumValue(args[1]).num;
   double elev = argc == 3 ? naNumValue(args[2]).num : 10000;
-  const SGMaterial *mat;
+  const simgear::BVHMaterial *material;
   SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
-  if(!globals->get_scenery()->get_elevation_m(geod, elev, &mat))
+  if(!globals->get_scenery()->get_elevation_m(geod, elev, &material))
     return naNil();
+  const SGMaterial *mat = dynamic_cast<const SGMaterial *>(material);
   naRef vec = naNewVector(c);
   naVec_append(vec, naNum(elev));
   naRef matdata = naNil();

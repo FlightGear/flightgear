@@ -38,7 +38,9 @@
 
 #include "SceneryPager.hxx"
 
-class SGMaterial;
+namespace simgear {
+class BVHMaterial;
+}
 
 // Define a structure containing global scenery parameters
 class FGScenery : public SGSubsystem {
@@ -72,7 +74,7 @@ public:
     /// value is undefined. 
     /// All values are meant to be in meters or degrees.
     bool get_elevation_m(const SGGeod& geod, double& alt,
-                         const SGMaterial** material,
+                         const simgear::BVHMaterial** material,
                          const osg::Node* butNotFrom = 0);
 
     /// Compute the elevation of the scenery below the cartesian point pos.
@@ -87,7 +89,8 @@ public:
     /// value is undefined.
     /// All values are meant to be in meters.
     bool get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
-                              double& elevation, const SGMaterial** material,
+                              double& elevation,
+                              const simgear::BVHMaterial** material,
                               const osg::Node* butNotFrom = 0);
 
     /// Compute the nearest intersection point of the line starting from 

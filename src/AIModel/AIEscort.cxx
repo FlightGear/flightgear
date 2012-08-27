@@ -190,8 +190,9 @@ bool FGAIEscort::getGroundElev(SGGeod inpos) {
 
     double height_m ;
 
-    const SGMaterial* material = 0;
-    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &material,0)){
+    const simgear::BVHMaterial* mat = 0;
+    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &mat, 0)){
+        const SGMaterial* material = dynamic_cast<const SGMaterial*>(mat);
         _ht_agl_ft = inpos.getElevationFt() - height_m * SG_METER_TO_FEET;
 
         if (material) {

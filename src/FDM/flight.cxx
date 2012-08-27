@@ -693,13 +693,13 @@ bool
 FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
                        double contact[3], double normal[3],
                        double linearVel[3], double angularVel[3],
-                       SGMaterial const*& material, simgear::BVHNode::Id& id)
+                       simgear::BVHMaterial const*& material, simgear::BVHNode::Id& id)
 {
   SGVec3d pt_m = SGVec3d(pt) - max_altoff*ground_cache.get_down();
   SGVec3d _contact, _normal, _linearVel, _angularVel;
-  const simgear::BVHMaterial* m = 0;
+  material = 0;
   bool ret = ground_cache.get_agl(t, pt_m, _contact, _normal, _linearVel,
-                                  _angularVel, id, m);
+                                  _angularVel, id, material);
   // correct the linear velocity, since the line intersector delivers
   // values for the start point and the get_agl function should
   // traditionally deliver for the contact point
@@ -709,7 +709,6 @@ FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
   assign(normal, _normal);
   assign(linearVel, _linearVel);
   assign(angularVel, _angularVel);
-  material = dynamic_cast<const SGMaterial*>(m);
   return ret;
 }
 
@@ -717,15 +716,15 @@ bool
 FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
                         double contact[3], double normal[3],
                         double linearVel[3], double angularVel[3],
-                        SGMaterial const*& material, simgear::BVHNode::Id& id)
+                        simgear::BVHMaterial const*& material, simgear::BVHNode::Id& id)
 {
   // Convert units and do the real work.
   SGVec3d pt_m = SGVec3d(pt) - max_altoff*ground_cache.get_down();
   pt_m *= SG_FEET_TO_METER;
   SGVec3d _contact, _normal, _linearVel, _angularVel;
-  const simgear::BVHMaterial* m = 0;
+  material = 0;
   bool ret = ground_cache.get_agl(t, pt_m, _contact, _normal, _linearVel,
-                                  _angularVel, id, m);
+                                  _angularVel, id, material);
   // correct the linear velocity, since the line intersector delivers
   // values for the start point and the get_agl function should
   // traditionally deliver for the contact point
@@ -736,7 +735,6 @@ FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
   assign( normal, _normal );
   assign( linearVel, SG_METER_TO_FEET*_linearVel );
   assign( angularVel, _angularVel );
-  material = dynamic_cast<const SGMaterial*>(m);
   return ret;
 }
 
@@ -744,19 +742,18 @@ bool
 FGInterface::get_nearest_m(double t, const double pt[3], double maxDist,
                            double contact[3], double normal[3],
                            double linearVel[3], double angularVel[3],
-                           SGMaterial const*& material,
+                           simgear::BVHMaterial const*& material,
                            simgear::BVHNode::Id& id)
 {
   SGVec3d _contact, _linearVel, _angularVel;
-  const simgear::BVHMaterial* m = 0;
+  material = 0;
   if (!ground_cache.get_nearest(t, SGVec3d(pt), maxDist, _contact, _linearVel,
-                                _angularVel, id, m))
+                                _angularVel, id, material))
       return false;
 
   assign(contact, _contact);
   assign(linearVel, _linearVel);
   assign(angularVel, _angularVel);
-  material = dynamic_cast<const SGMaterial*>(m);
   return true;
 }
 
@@ -764,20 +761,19 @@ bool
 FGInterface::get_nearest_ft(double t, const double pt[3], double maxDist,
                             double contact[3], double normal[3],
                             double linearVel[3], double angularVel[3],
-                            SGMaterial const*& material,
+                            simgear::BVHMaterial const*& material,
                             simgear::BVHNode::Id& id)
 {
   SGVec3d _contact, _linearVel, _angularVel;
-  const simgear::BVHMaterial* m = 0;
+  material = 0;
   if (!ground_cache.get_nearest(t, SG_FEET_TO_METER*SGVec3d(pt),
                                 SG_FEET_TO_METER*maxDist, _contact, _linearVel,
-                                _angularVel, id, m))
+                                _angularVel, id, material))
       return false;
 
   assign(contact, SG_METER_TO_FEET*_contact);
   assign(linearVel, SG_METER_TO_FEET*_linearVel);
   assign(angularVel, _angularVel);
-  material = dynamic_cast<const SGMaterial*>(m);
   return true;
 }
 
@@ -831,7 +827,7 @@ FGInterface::get_groundlevel_m(const SGGeod& geod)
   }
   
   double contact[3], normal[3], vel[3], angvel[3];
-  const SGMaterial* material;
+  const simgear::BVHMaterial* material;
   simgear::BVHNode::Id id;
   // Ignore the return value here, since it just tells us if
   // the returns stem from the groundcache or from the coarse
