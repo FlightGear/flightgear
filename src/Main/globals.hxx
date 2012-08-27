@@ -302,6 +302,7 @@ public:
 
     inline FGFontCache *get_fontcache() const { return fontcache; }
 
+#if 0
     inline FGNavList *get_navlist() const { return navlist; }
     inline void set_navlist( FGNavList *n ) { navlist = n; }
     inline FGNavList *get_loclist() const { return loclist; }
@@ -314,9 +315,11 @@ public:
     inline void set_tacanlist( FGNavList *n ) { tacanlist = n; }
     inline FGNavList *get_carrierlist() const { return carrierlist; }
     inline void set_carrierlist( FGNavList *n ) { carrierlist = n; }
+#endif
+  
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
-
+  
    /**
      * Save the current state as the initial state.
      */

@@ -307,10 +307,10 @@ static void fgSetDistOrAltFromGlideSlope() {
 
 
 // Set current_options lon/lat given an airport id and heading (degrees)
-static bool fgSetPosFromNAV( const string& id, const double& freq, FGPositioned::Type type ) {
-  
-  const nav_list_type navlist
-  = globals->get_navlist()->findByIdentAndFreq( id.c_str(), freq, type );
+static bool fgSetPosFromNAV( const string& id, const double& freq, FGPositioned::Type type )
+{
+  FGNavList::TypeFilter filter(type);
+  const nav_list_type navlist = FGNavList::findByIdentAndFreq( id.c_str(), freq, &filter );
   
   if (navlist.size() == 0 ) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
@@ -387,7 +387,7 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
 static bool fgSetPosFromFix( const string& id )
 {
   FGPositioned::TypeFilter fixFilter(FGPositioned::FIX);
-  FGPositioned* fix = FGPositioned::findNextWithPartialId(NULL, id, &fixFilter);
+  FGPositioned* fix = FGPositioned::findFirstWithIdent(id, &fixFilter);
   if (!fix) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate fix = " << id );
     return false;

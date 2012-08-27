@@ -42,10 +42,11 @@ void
 AirportList::destroy_list()
 {
     for (char **c = _content; *c; c++) {
-        delete *c;
+        free(*c);
         *c = 0;
     }
-    delete [] _content;
+  
+    free(_content);
 }
 
 

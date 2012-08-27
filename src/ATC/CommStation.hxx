@@ -11,10 +11,10 @@ namespace flightgear
 class CommStation : public FGPositioned
 {
 public:
-    CommStation(const std::string& name, FGPositioned::Type t, const SGGeod& pos, int range, int freq);
+    CommStation(PositionedID aGuid, const std::string& name, FGPositioned::Type t, const SGGeod& pos, int range, int freq);
 
-    void setAirport(FGAirport* apt);
-    FGAirport* airport() const { return mAirport; }
+    void setAirport(PositionedID apt);
+    FGAirport* airport() const;
     
     int rangeNm() const
         { return mRangeNM; }
@@ -28,7 +28,7 @@ public:
 private:
     int mRangeNM;
     int mFreqKhz;
-    FGAirport* mAirport;
+    PositionedID mAirport;
 }; 
     
 } // of namespace flightgear

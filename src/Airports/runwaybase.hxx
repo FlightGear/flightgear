@@ -39,12 +39,11 @@
 class FGRunwayBase : public FGPositioned
 {    
 public:
-  FGRunwayBase(Type aTy, const std::string& aIdent,
+  FGRunwayBase(PositionedID aGuid, Type aTy, const std::string& aIdent,
             const SGGeod& aGeod,
             const double heading, const double length,
             const double width,
-            const int surface_code,
-            bool index);
+            const int surface_code);
             
   /**
    * Retrieve a position on the extended centerline. Positive values
@@ -100,7 +99,8 @@ protected:
 class FGTaxiway : public FGRunwayBase
 {
 public:
-  FGTaxiway(const std::string& aIdent,
+  FGTaxiway(PositionedID aGuid,
+            const std::string& aIdent,
             const SGGeod& aGeod,
             const double heading, const double length,
             const double width,

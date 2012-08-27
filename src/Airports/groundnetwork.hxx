@@ -37,9 +37,6 @@
 #include <list>
 
 class Block;
-using std::string;
-using std::vector;
-using std::list;
 
 #include "gnnode.hxx"
 #include "parking.hxx"

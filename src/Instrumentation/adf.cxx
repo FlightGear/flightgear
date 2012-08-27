@@ -105,9 +105,6 @@ ADF::init ()
 
     // foreign simulator properties
     _electrical_node    = fgGetNode("/systems/electrical/outputs/adf", true);
-    _longitude_node     = fgGetNode("/position/longitude-deg", true);
-    _latitude_node      = fgGetNode("/position/latitude-deg", true);
-    _altitude_node      = fgGetNode("/position/altitude-ft", true);
     _heading_node       = fgGetNode("/orientation/heading-deg", true);
 
     // backward compatibility check
@@ -153,18 +150,12 @@ ADF::update (double delta_time_sec)
         _last_frequency_khz = frequency_khz;
     }
 
-                                // Get the aircraft position
-    double longitude_deg = _longitude_node->getDoubleValue();
-    double latitude_deg = _latitude_node->getDoubleValue();
-    double altitude_m = _altitude_node->getDoubleValue();
-
-    double longitude_rad = longitude_deg * SGD_DEGREES_TO_RADIANS;
-    double latitude_rad = latitude_deg * SGD_DEGREES_TO_RADIANS;
-
+    SGGeod acPos(globals->get_aircraft_position());
+  
                                 // On timeout, scan again
     _time_before_search_sec -= delta_time_sec;
     if (_time_before_search_sec < 0)
-        search(frequency_khz, longitude_rad, latitude_rad, altitude_m);
+        search(frequency_khz, acPos);
 
     if (!_transmitter_valid) {
         _in_range_node->setBoolValue(false);
@@ -173,12 +164,11 @@ ADF::update (double delta_time_sec)
     }
 
                                 // Calculate the bearing to the transmitter
-    SGGeod geod = SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m);
-    SGVec3d location = SGVec3d::fromGeod(geod);
+  SGVec3d location = globals->get_aircraft_positon_cart();
     
     double distance_nm = dist(_transmitter_cart, location) * SG_METER_TO_NM;
     double range_nm = adjust_range(_transmitter_pos.getElevationFt(),
-                                   altitude_m * SG_METER_TO_FEET,
+                                   acPos.getElevationFt(),
                                    _transmitter_range_nm);
 
     if (distance_nm <= range_nm) {
@@ -186,7 +176,7 @@ ADF::update (double delta_time_sec)
         double bearing, az2, s;
         double heading = _heading_node->getDoubleValue();
 
-        geo_inverse_wgs_84(geod, _transmitter_pos,
+        geo_inverse_wgs_84(acPos, _transmitter_pos,
                            &bearing, &az2, &s);
         _in_range_node->setBoolValue(true);
 
@@ -233,16 +223,14 @@ ADF::update (double delta_time_sec)
 }
 
 void
-ADF::search (double frequency_khz, double longitude_rad,
-             double latitude_rad, double altitude_m)
+ADF::search (double frequency_khz, const SGGeod& pos)
 {
     string ident = "";
                                 // reset search time
     _time_before_search_sec = 1.0;
 
-                                // try the ILS list first
-    FGNavRecord *nav = globals->get_navlist()->findByFreq(frequency_khz,
-      SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m));
+  FGNavList::TypeFilter filter(FGPositioned::NDB);
+  FGNavRecord *nav = FGNavList::findByFreq(frequency_khz, pos, &filter);
 
     _transmitter_valid = (nav != NULL);
     if ( _transmitter_valid ) {

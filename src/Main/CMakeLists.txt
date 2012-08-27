@@ -65,6 +65,11 @@ source_group("Main\\Headers" FILES ${HEADERS})
 source_group("Main\\Sources" FILES ${SOURCES})
 add_executable(fgfs ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
 
+# disable sqlite3 dynamic lib support
+# this should really be a SOURCE property, but the way we handle
+# Fcomponent sources is making that tricky
+add_definitions(-DSQLITE_OMIT_LOAD_EXTENSION)
+
 get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
 #message(STATUS "fg libs ${FG_LIBS}")
 #message(STATUS "OSG libs ${OPENSCENEGRAPH_LIBRARIES}")

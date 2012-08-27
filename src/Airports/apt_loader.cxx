@@ -39,19 +39,21 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
-#include <simgear/bucket/newbucket.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <string>
 
 #include "simple.hxx"
 #include "runways.hxx"
 #include "pavement.hxx"
-
+#include <Navaids/NavDataCache.hxx>
 #include <ATC/CommStation.hxx>
 
 #include <iostream>
 
 using namespace std;
+
+typedef SGSharedPtr<FGPavement> FGPavementPtr;
 
 static FGPositioned::Type fptypeFromRobinType(int aType)
 {
@@ -65,23 +67,26 @@ static FGPositioned::Type fptypeFromRobinType(int aType)
   }
 }
 
+
+namespace flightgear
+{
+  
 class APTLoader
 {
 public:
 
   APTLoader()
   :  last_apt_id(""),
-     last_apt_name(""),
      last_apt_elev(0.0),
-     last_apt_info(""),
-     last_apt_type("")
-  {}
-
-
-
-  void parseAPT(const string &aptdb_file)
+     last_apt_info("")
   {
-    sg_gzifstream in( aptdb_file );
+    currentAirportID = 0;
+    cache = NavDataCache::instance();
+  }
+
+  void parseAPT(const SGPath &aptdb_file)
+  {
+    sg_gzifstream in( aptdb_file.str() );
 
     if ( !in.is_open() ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << aptdb_file );
@@ -148,6 +153,8 @@ public:
         double elev = atof( token[3].c_str() );
         tower = SGGeod::fromDegFt(lon, lat, elev + last_apt_elev);
         got_tower = true;
+        
+        cache->insertTower(currentAirportID, tower);
       } else if ( line_id == 19 ) {
           // windsock entry (ignore)
       } else if ( line_id == 20 ) {
@@ -181,7 +188,7 @@ public:
       }
     }
 
-    addAirport();
+    finishAirport();
   }
   
 private:
@@ -192,48 +199,50 @@ private:
   int rwy_count;
   bool got_tower;
   string last_apt_id;
-  string last_apt_name;
   double last_apt_elev;
   SGGeod tower;
   string last_apt_info;
-  string last_apt_type;
   string pavement_ident;
   bool pavement;
   
-  vector<FGRunwayPtr> runways;
-  vector<FGTaxiwayPtr> taxiways;
+  //vector<FGRunwayPtr> runways;
+  //vector<FGTaxiwayPtr> taxiways;
   vector<FGPavementPtr> pavements;
-  vector<flightgear::CommStation*> commStations;
   
-  void addAirport()
-  {  
-    if (last_apt_id.empty()) {
+  NavDataCache* cache;
+  PositionedID currentAirportID;
+  
+  void finishAirport()
+  {
+    if (currentAirportID == 0) {
       return;
     }
-
+    
     if (!rwy_count) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "ERROR: No runways for " << last_apt_id
-                << ", skipping." );
-        return;
+      currentAirportID = 0;
+      SG_LOG(SG_GENERAL, SG_ALERT, "ERROR: No runways for " << last_apt_id
+              << ", skipping." );
+      return;
     }
 
     double lat = rwy_lat_accum / (double)rwy_count;
     double lon = rwy_lon_accum / (double)rwy_count;
 
     if (!got_tower) {
-        // tower height hard coded for now...
-        const float tower_height = 50.0f;
-        // make a little off the heading for 1 runway airports...
-        float fudge_lon = fabs(sin(last_rwy_heading * SGD_DEGREES_TO_RADIANS)) * .003f;
-        float fudge_lat = .003f - fudge_lon;
-        tower = SGGeod::fromDegFt(lon + fudge_lon, lat + fudge_lat, last_apt_elev + tower_height);
+      // tower height hard coded for now...
+      const float tower_height = 50.0f;
+      // make a little off the heading for 1 runway airports...
+      float fudge_lon = fabs(sin(last_rwy_heading * SGD_DEGREES_TO_RADIANS)) * .003f;
+      float fudge_lat = .003f - fudge_lon;
+      tower = SGGeod::fromDegFt(lon + fudge_lon, lat + fudge_lat, last_apt_elev + tower_height);
+      
+      cache->insertTower(currentAirportID, tower);
     }
 
     SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
-    FGAirport* apt = new FGAirport(last_apt_id, pos, tower, last_apt_name, false,
-        fptypeFromRobinType(atoi(last_apt_type.c_str())));
-    apt->setRunwaysAndTaxiways(runways, taxiways, pavements);
-    apt->setCommStations(commStations);
+    cache->updatePosition(currentAirportID, pos);
+    
+    currentAirportID = 0;
   }
   
   void parseAirportLine(const vector<string>& token)
@@ -241,25 +250,26 @@ private:
     const string& id(token[4]);
     double elev = atof( token[1].c_str() );
 
-    addAirport();
+  // finish the previous airport
+    finishAirport();
             
-    last_apt_id = id;
     last_apt_elev = elev;
-    last_apt_name = "";
     got_tower = false;
 
+    string name;
     // build the name
     for ( unsigned int i = 5; i < token.size() - 1; ++i ) {
-        last_apt_name += token[i];
-        last_apt_name += " ";
+        name += token[i] + " ";
     }
-    last_apt_name += token[token.size() - 1];
-    last_apt_type = token[0];
+    name += token[token.size() - 1];
 
     // clear runway list for start of next airport
     rwy_lon_accum = 0.0;
     rwy_lat_accum = 0.0;
     rwy_count = 0;
+    
+    int robinType = atoi(token[0].c_str());
+    currentAirportID = cache->insertAirport(fptypeFromRobinType(robinType), id, name);
   }
   
   void parseRunwayLine810(const vector<string>& token)
@@ -282,9 +292,8 @@ private:
     SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
     
     if (rwy_no[0] == 'x') {
-      // taxiway
-      FGTaxiway* t = new FGTaxiway(rwy_no, pos, heading, length, width, surface_code);
-      taxiways.push_back(t);
+      cache->insertRunway(FGPositioned::TAXIWAY,rwy_no, pos, currentAirportID,
+                          heading, length, width, 0, 0, surface_code);
     } else {
       // (pair of) runways
       string rwy_displ_threshold = token[6];
@@ -299,18 +308,18 @@ private:
       double stopway1 = atof( stop[0].c_str() );
       double stopway2 = atof( stop[1].c_str() );
 
-      FGRunway* rwy = new FGRunway(NULL, rwy_no, pos, heading, length,
-                            width, displ_thresh1, stopway1, surface_code, false);
-      runways.push_back(rwy);
-
-      FGRunway* reciprocal = new FGRunway(NULL, FGRunway::reverseIdent(rwy_no), 
-                pos, heading + 180.0, length, width, 
-                displ_thresh2, stopway2, surface_code, true);
-
-      runways.push_back(reciprocal);
+      PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no, pos,
+                                             currentAirportID, heading, length,
+                                             width, displ_thresh1, stopway1,
+                                             surface_code);
       
-      rwy->setReciprocalRunway(reciprocal);
-      reciprocal->setReciprocalRunway(rwy);
+      PositionedID reciprocal = cache->insertRunway(FGPositioned::RUNWAY,
+                                              FGRunway::reverseIdent(rwy_no), pos,
+                                             currentAirportID, heading + 180.0, length,
+                                             width, displ_thresh2, stopway2,
+                                             surface_code);
+
+      cache->setRunwayReciprocal(rwy, reciprocal);
     }
   }
 
@@ -352,17 +361,18 @@ private:
     double stopway1 = atof( token[12].c_str() );
     double stopway2 = atof( token[21].c_str() );
 
-    FGRunway* rwy = new FGRunway(NULL, rwy_no_1, pos, heading_1, length,
-                          width, displ_thresh1, stopway1, surface_code, false);
-    runways.push_back(rwy);
-
-    FGRunway* reciprocal = new FGRunway(NULL, rwy_no_2, 
-              pos, heading_2, length, width, 
-              displ_thresh2, stopway2, surface_code, true);
-    runways.push_back(reciprocal);
+    PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos,
+                                           currentAirportID, heading_1, length,
+                                           width, displ_thresh1, stopway1,
+                                           surface_code);
     
-    rwy->setReciprocalRunway(reciprocal);
-    reciprocal->setReciprocalRunway(rwy);
+    PositionedID reciprocal = cache->insertRunway(FGPositioned::RUNWAY,
+                                                  rwy_no_2, pos,
+                                                  currentAirportID, heading_2, length,
+                                                  width, displ_thresh2, stopway2,
+                                                  surface_code);
+    
+    cache->setRunwayReciprocal(rwy, reciprocal);
   }
 
   void parseWaterRunwayLine850(const vector<string>& token)
@@ -393,17 +403,16 @@ private:
     const string& rwy_no_1(token[3]);
     const string& rwy_no_2(token[6]);
 
-    FGRunway* rwy = new FGRunway(NULL, rwy_no_1, pos, heading_1, length,
-                          width, 0.0, 0.0, 13, false);
-    runways.push_back(rwy);
-
-    FGRunway* reciprocal = new FGRunway(NULL, rwy_no_2, 
-              pos, heading_2, length, width, 
-              0.0, 0.0, 13, true);
-    runways.push_back(reciprocal);
+    PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos,
+                                           currentAirportID, heading_1, length,
+                                           width, 0.0, 0.0, 13);
     
-    rwy->setReciprocalRunway(reciprocal);
-    reciprocal->setReciprocalRunway(rwy);
+    PositionedID reciprocal = cache->insertRunway(FGPositioned::RUNWAY,
+                                                  rwy_no_2, pos,
+                                                  currentAirportID, heading_2, length,
+                                                  width, 0.0, 0.0, 13);
+    
+    cache->setRunwayReciprocal(rwy, reciprocal);
   }
 
   void parseHelipadLine850(const vector<string>& token)
@@ -425,9 +434,9 @@ private:
     const string& rwy_no(token[1]);
     int surface_code = atoi( token[7].c_str() );
 
-    FGRunway* rwy = new FGRunway(NULL, rwy_no, pos, heading, length,
-                          width, 0.0, 0.0, surface_code, false);
-    runways.push_back(rwy);
+    cache->insertRunway(FGPositioned::RUNWAY, rwy_no, pos,
+                        currentAirportID, heading, length,
+                        width, 0.0, 0.0, surface_code);
   }
 
   void parsePavementLine850(const vector<string>& token)
@@ -449,7 +458,7 @@ private:
 
     FGPavement* pvt = 0;
     if ( !pavement_ident.empty() ) {
-      pvt = new FGPavement( pavement_ident, pos );
+      pvt = new FGPavement( 0, pavement_ident, pos );
       pavements.push_back( pvt );
       pavement_ident = "";
     } else {
@@ -475,7 +484,7 @@ private:
         rwy_lat_accum / (double)rwy_count, last_apt_elev);
     
     // short int representing tens of kHz:
-    int freqKhz = atoi(token[1].c_str());
+    int freqKhz = atoi(token[1].c_str()) * 10;
     int rangeNm = 50;
     FGPositioned::Type ty;
     // Make sure we only pass on stations with at least a name
@@ -499,47 +508,43 @@ private:
                 throw sg_range_exception("unupported apt.dat comm station type");
         }
 
-        commStations.push_back(new flightgear::CommStation(token[2], ty, pos, rangeNm, freqKhz));
+      cache->insertCommStation(ty, token[2], pos, freqKhz, rangeNm, currentAirportID);
     }
     else SG_LOG( SG_GENERAL, SG_DEBUG, "Found unnamed comm. Skipping: " << lineId);
   }
 
 };
-
-
+  
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
 // or not.
-bool fgAirportDBLoad( const string &aptdb_file, const std::string &metar_file )
+bool airportDBLoad( const SGPath &aptdb_file )
 {
-
-   APTLoader ld;
-   ld.parseAPT(aptdb_file);
-    //
-    // Load the metar.dat file and update apt db with stations that
-    // have metar data.
-    //
-
-    sg_gzifstream metar_in( metar_file );
-    if ( !metar_in.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << metar_file );
+  APTLoader ld;
+  ld.parseAPT(aptdb_file);
+  return true;
+}
+  
+bool metarDataLoad(const SGPath& metar_file)
+{
+  sg_gzifstream metar_in( metar_file.str() );
+  if ( !metar_in.is_open() ) {
+    SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << metar_file );
+    return false;
+  }
+  
+  NavDataCache* cache = NavDataCache::instance();
+  string ident;
+  while ( metar_in ) {
+    metar_in >> ident;
+    if ( ident == "#" || ident == "//" ) {
+      metar_in >> skipeol;
+    } else {
+      cache->setAirportMetar(ident, true);
     }
-
-    string ident;
-    while ( metar_in ) {
-        metar_in >> ident;
-        if ( ident == "#" || ident == "//" ) {
-            metar_in >> skipeol;
-        } else {
-            FGAirport* apt = FGAirport::findByIdent(ident);
-            if (apt) {
-                apt->setMetar(true);
-            }
-        }
-    }
-
-    SG_LOG(SG_GENERAL, SG_INFO, "[FINISHED LOADING]");
-
-    return true;
+  }
+  
+  return true;
 }
 
+} // of namespace flightgear

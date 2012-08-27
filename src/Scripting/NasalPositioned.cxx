@@ -669,7 +669,7 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
   else if (!strcmp(fieldName, "radio")) *out = procedureRadioType(c, proc->type());
   else if (!strcmp(fieldName, "runways")) {
     *out = naNewVector(c);
-    BOOST_FOREACH(FGRunwayPtr rwy, proc->runways()) {
+    BOOST_FOREACH(FGRunwayRef rwy, proc->runways()) {
       naVec_append(*out, stringToNasal(c, rwy->ident()));
     }
   } else if (!strcmp(fieldName, "transitions")) {
@@ -1416,7 +1416,8 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
     return naNil();
   }
   
-  navlist = globals->get_navlist()->findByIdentAndFreq( pos, id, 0.0, type );
+  FGNavList::TypeFilter filter(type);
+  navlist = FGNavList::findByIdentAndFreq( pos, id, 0.0, &filter );
   
   naRef reply = naNewVector(c);
   for( nav_list_type::const_iterator it = navlist.begin(); it != navlist.end(); ++it ) {
@@ -1470,7 +1471,8 @@ static naRef f_findNavaidByFrequency(naContext c, naRef me, int argc, naRef* arg
     type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
   }
   
-  nav_list_type navs = globals->get_navlist()->findAllByFreq(freqMhz, pos, type);
+  FGNavList::TypeFilter filter(type);
+  nav_list_type navs = FGNavList::findAllByFreq(freqMhz, pos, &filter);
   if (navs.empty()) {
     return naNil();
   }
@@ -1495,7 +1497,9 @@ static naRef f_findNavaidsByFrequency(naContext c, naRef me, int argc, naRef* ar
   }
   
   naRef r = naNewVector(c);
-  nav_list_type navs = globals->get_navlist()->findAllByFreq(freqMhz, pos, type);
+  
+  FGNavList::TypeFilter filter(type);
+  nav_list_type navs = FGNavList::findAllByFreq(freqMhz, pos, &filter);
   
   BOOST_FOREACH(nav_rec_ptr a, navs) {
     naVec_append(r, ghostForNavaid(c, a.ptr()));
@@ -1520,8 +1524,9 @@ static naRef f_findNavaidsByIdent(naContext c, naRef me, int argc, naRef* args)
     type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
   }
   
+  FGNavList::TypeFilter filter(type);
   naRef r = naNewVector(c);
-  nav_list_type navs = globals->get_navlist()->findByIdentAndFreq(pos, ident, 0.0, type);
+  nav_list_type navs = FGNavList::findByIdentAndFreq(pos, ident, 0.0, &filter);
   
   BOOST_FOREACH(nav_rec_ptr a, navs) {
     naVec_append(r, ghostForNavaid(c, a.ptr()));

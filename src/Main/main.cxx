@@ -60,6 +60,7 @@
 #include <Viewer/WindowSystemAdapter.hxx>
 #include <Viewer/splash.hxx>
 #include <Viewer/renderer.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
@@ -438,5 +439,9 @@ int fgMainInit( int argc, char **argv ) {
     delete globals;
     globals = NULL;
     
+    // delete the NavCache here. This will cause the destruction of many cached
+    // objects (eg, airports, navaids, runways).
+    delete flightgear::NavDataCache::instance();
+  
     return result;
 }

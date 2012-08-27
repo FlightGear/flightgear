@@ -1088,8 +1088,8 @@ void NavDisplay::processNavRadios()
 
 FGNavRecord* NavDisplay::processNavRadio(const SGPropertyNode_ptr& radio)
 {
-    double mhz = radio->getDoubleValue("frequencies/selected-mhz", 0.0);
-    FGNavRecord* nav = globals->get_navlist()->findByFreq(mhz, _pos);
+  double mhz = radio->getDoubleValue("frequencies/selected-mhz", 0.0);
+  FGNavRecord* nav = FGNavList::findByFreq(mhz, _pos, FGNavList::navFilter());
     if (!nav || (nav->ident() != radio->getStringValue("nav-id"))) {
         // station was not found
         return NULL;

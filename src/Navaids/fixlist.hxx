@@ -27,18 +27,13 @@
 
 #include <simgear/compiler.h>
 
-class FGFix;
 class SGPath;
 
-class FGFixList {
-public:
-
-    FGFixList();
-    ~FGFixList();
-
-    // load the navaids and build the map
-    bool init(const SGPath& path);
-};
-
+namespace flightgear
+{
+  
+  void loadFixes(const SGPath& path);
+  
+}
 
 #endif // _FG_FIXLIST_HXX

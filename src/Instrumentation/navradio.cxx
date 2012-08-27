@@ -871,12 +871,7 @@ void FGNavRadio::updateAudio( double dt )
 
 FGNavRecord* FGNavRadio::findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz)
 {
-  FGNavRecord* nav = globals->get_navlist()->findByFreq(aFreqMHz, aPos);
-  if (nav) {
-    return nav;
-  }
-  
-  return globals->get_loclist()->findByFreq(aFreqMHz, aPos);
+  return FGNavList::findByFreq(aFreqMHz, aPos, FGNavList::navFilter());
 }
 
 // Update current nav/adf radio stations based on current position
@@ -907,7 +902,9 @@ void FGNavRadio::search()
   // search glideslope station
   if ((_navaid.valid()) && (_navaid->type() != FGPositioned::VOR))
   {
-      FGNavRecord* gs = globals->get_gslist()->findByFreq(freq, globals->get_aircraft_position());
+    FGNavList::TypeFilter gsFilter(FGPositioned::GS);
+    FGNavRecord* gs = FGNavList::findByFreq(freq, globals->get_aircraft_position(),
+                                           &gsFilter);
       if ((!_nav_search) && (gs == _gs))
       {
           _nav_search = true; // search NAV on next iteration
