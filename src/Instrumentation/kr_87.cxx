@@ -469,7 +469,8 @@ void FGKR_87::search() {
     ////////////////////////////////////////////////////////////////////////
 
   
-    FGNavRecord *adf = globals->get_navlist()->findByFreq( freq, pos);
+  FGNavList::TypeFilter filter(FGPositioned::NDB);
+  FGNavRecord *adf = FGNavList::findByFreq( freq, pos, &filter);
     if ( adf != NULL ) {
 	char sfreq[128];
 	snprintf( sfreq, 10, "%d", freq );

@@ -14,6 +14,9 @@ set(SOURCES
 	waypoint.cxx
     LevelDXML.cxx
     FlightPlan.cxx
+    NavDataCache.cxx
+    sqlite3.c
+    PositionedOctree.cxx
 	)
 
 set(HEADERS
@@ -30,6 +33,9 @@ set(HEADERS
 	waypoint.hxx
     LevelDXML.hxx
     FlightPlan.hxx
+    NavDataCache.hxx
+    sqlite3.h
+    PositionedOctree.hxx
     )
 
 flightgear_component(Navaids "${SOURCES}" "${HEADERS}")

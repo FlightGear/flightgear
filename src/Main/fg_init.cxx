@@ -64,7 +64,6 @@
 
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
-#include <Airports/apt_loader.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <Airports/dynamics.hxx>
@@ -91,9 +90,6 @@
 #include <AIModel/AIManager.hxx>
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
-#include <Navaids/fix.hxx>
-#include <Navaids/fixlist.hxx>
-#include <Navaids/airways.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -107,6 +103,7 @@
 #include <Environment/environment_mgr.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/viewmgr.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -723,10 +720,11 @@ static void fgSetDistOrAltFromGlideSlope() {
 
 
 // Set current_options lon/lat given an airport id and heading (degrees)
-static bool fgSetPosFromNAV( const string& id, const double& freq, FGPositioned::Type type ) {
-
+static bool fgSetPosFromNAV( const string& id, const double& freq, FGPositioned::Type type )
+{
+  FGNavList::TypeFilter filter(type);
     const nav_list_type navlist
-        = globals->get_navlist()->findByIdentAndFreq( id.c_str(), freq, type );
+      = FGNavList::findByIdentAndFreq( id.c_str(), freq, &filter );
 
     if (navlist.size() == 0 ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
@@ -803,7 +801,7 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
 static bool fgSetPosFromFix( const string& id )
 {
   FGPositioned::TypeFilter fixFilter(FGPositioned::FIX);
-  FGPositioned* fix = FGPositioned::findNextWithPartialId(NULL, id, &fixFilter);
+  FGPositioned* fix = FGPositioned::findFirstWithIdent(id, &fixFilter);
   if (!fix) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate fix = " << id );
     return false;
@@ -822,45 +820,23 @@ fgInitNav ()
 {
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Airport Database ...");
 
-    SGPath aptdb( globals->get_fg_root() );
-    aptdb.append( "Airports/apt.dat" );
-
-    SGPath p_metar( globals->get_fg_root() );
-    p_metar.append( "Airports/metar.dat" );
-
-    fgAirportDBLoad( aptdb.str(), p_metar.str() );
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  if (cache->isRebuildRequired()) {
+    SGTimeStamp st;
+    st.stamp();
+    cache->rebuild();
     
-    FGNavList *navlist = new FGNavList;
-    FGNavList *loclist = new FGNavList;
-    FGNavList *gslist = new FGNavList;
-    FGNavList *dmelist = new FGNavList;
-    FGNavList *tacanlist = new FGNavList;
-    FGNavList *carrierlist = new FGNavList;
-    FGTACANList *channellist = new FGTACANList;
-
-    globals->set_navlist( navlist );
-    globals->set_loclist( loclist );
-    globals->set_gslist( gslist );
-    globals->set_dmelist( dmelist );
-    globals->set_tacanlist( tacanlist );
-    globals->set_carrierlist( carrierlist );
-    globals->set_channellist( channellist );
-
-    if ( !fgNavDBInit(navlist, loclist, gslist, dmelist, tacanlist, carrierlist, channellist) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Problems loading one or more navigational database" );
-    }
-    
-    SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
-    SGPath p_fix( globals->get_fg_root() );
-    p_fix.append( "Navaids/fix.dat" );
-    FGFixList fixlist;
-    fixlist.init( p_fix );  // adds fixes to the DB in positioned.cxx
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  Airways");
-    flightgear::Airway::load();
-    
-    return true;
+    SG_LOG(SG_GENERAL, SG_INFO, "rebuilding NavDataCache took:" << st.elapsedMSec());
+  }
+  
+  FGTACANList *channellist = new FGTACANList;
+  globals->set_channellist( channellist );
+  
+  SGPath path(globals->get_fg_root());
+  path.append( "Navaids/TACAN_freq.dat" );
+  flightgear::loadTacan(path, channellist);
+  
+  return true;
 }
 
 

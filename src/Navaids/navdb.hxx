@@ -26,16 +26,23 @@
 
 
 #include <simgear/compiler.h>
+#include <string>
 
-class FGNavList;
+// forward decls
 class FGTACANList;
+class SGPath;
+class SGPropertyNode;
+class FGRunway;
 
+namespace flightgear
+{
+  
 // load and initialize the navigational databases
-bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
-                  FGNavList *dmelist,
-                  FGNavList *tacanlist, FGNavList *carrierlist,
-                  FGTACANList *channellist );
-
+bool navDBInit(const SGPath& path);
+  
+bool loadCarrierNav(const SGPath& path);
+  
+bool loadTacan(const SGPath& path, FGTACANList *channellist);
 
 /**
  * Return the property node corresponding to the runway ILS installation,
@@ -44,10 +51,6 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
  */
 SGPropertyNode* ilsDataForRunwayAndNavaid(FGRunway* aRunway, const std::string& aNavIdent);
 
-/**
- * Helper to map a nav.data name (eg 'KBWI 33R GS') into a FGRunway reference.
- * returns NULL, and complains loudly, if the airport/runway is not found.
- */
-FGRunway* getRunwayFromName(const std::string& aName);
-
+} // of namespace flightgear
+  
 #endif // _FG_NAVDB_HXX

@@ -1353,7 +1353,8 @@ void DCLGPS::CreateFlightPlan(GPSFlightPlan* fp, vector<string> ids, vector<GPSW
 class DCLGPSFilter : public FGPositioned::Filter
 {
 public:
-  virtual bool pass(const FGPositioned* aPos) const {
+  virtual bool pass(FGPositioned* aPos) const
+  {
     switch (aPos->type()) {
     case FGPositioned::AIRPORT:
     // how about heliports and seaports?
@@ -1370,9 +1371,14 @@ public:
 
 GPSWaypoint* DCLGPS::FindFirstById(const string& id) const
 {
-  DCLGPSFilter filter;
-  FGPositionedRef result = FGPositioned::findNextWithPartialId(NULL, id, &filter);
-  return GPSWaypoint::createFromPositioned(result);
+  DCLGPSFilter filter;  
+  FGPositioned::List matches = FGPositioned::findAllWithIdent(id, &filter, false);
+  if (matches.empty()) {
+    return NULL;
+  }
+  
+  FGPositioned::sortByRange(matches, SGGeod::fromRad(_lon, _lat));
+  return GPSWaypoint::createFromPositioned(matches.front());
 }
 
 GPSWaypoint* DCLGPS::FindFirstByExactId(const string& id) const
@@ -1388,15 +1394,14 @@ FGPositioned* DCLGPS::FindTypedFirstById(const string& id, FGPositioned::Type ty
   multi = false;
   FGPositioned::TypeFilter filter(ty);
   
-  if (exact) {
-    FGPositioned::List matches = 
-      FGPositioned::findAllWithIdent(id, &filter);
-    FGPositioned::sortByRange(matches, SGGeod::fromRad(_lon, _lat));
-    multi = (matches.size() > 1);
-    return matches.empty() ? NULL : matches.front().ptr();
+  FGPositioned::List matches =
+    FGPositioned::findAllWithIdent(id, &filter, exact);
+  if (matches.empty()) {
+    return NULL;
   }
   
-  return FGPositioned::findNextWithPartialId(NULL, id, &filter);
+  FGPositioned::sortByRange(matches, SGGeod::fromRad(_lon, _lat));
+  return matches.front();
 }
 
 FGNavRecord* DCLGPS::FindFirstVorById(const string& id, bool &multi, bool exact)

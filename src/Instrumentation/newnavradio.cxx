@@ -148,7 +148,7 @@ public:
 
 protected:
   virtual double computeSignalQuality_norm( const SGGeod & aircraftPosition );
-  virtual FGNavList * getNavaidList() = 0;
+  virtual FGNavList::TypeFilter* getNavaidFilter() = 0;
 
   // General-purpose sawtooth function.  Graph looks like this:
   //         /\                                    .
@@ -258,7 +258,8 @@ double NavRadioComponent::getRange_nm( const SGGeod & aircraftPosition )
 
 void NavRadioComponent::search( double frequency, const SGGeod & aircraftPosition )
 {
-  if( NULL == (_navRecord = getNavaidList()->findByFreq(frequency, aircraftPosition )) ) {
+  _navRecord = FGNavList::findByFreq(frequency, aircraftPosition, getNavaidFilter() );
+  if( NULL == _navRecord ) {
     SG_LOG(SG_INSTR,SG_ALERT, "No " << _name << " available at " << frequency );
     _ident = "";
     return;
@@ -322,7 +323,7 @@ public:
   virtual double getRange_nm(const SGGeod & aircraftPosition);
 protected:
   virtual double computeSignalQuality_norm( const SGGeod & aircraftPosition );
-  virtual FGNavList * getNavaidList();
+  virtual FGNavList::TypeFilter* getNavaidFilter();
 
 private:
   double _totalTime;
@@ -392,9 +393,10 @@ double VOR::getRange_nm( const SGGeod & aircraftPosition )
   return _serviceVolume.adjustRange( _heightAboveStation_ft, _navRecord->get_range() );
 }
 
-FGNavList * VOR::getNavaidList()
+FGNavList::TypeFilter* VOR::getNavaidFilter()
 {
-  return globals->get_navlist();
+  static FGNavList::TypeFilter filter(FGPositioned::VOR);
+  return &filter;
 }
 
 double VOR::computeSignalQuality_norm( const SGGeod & aircraftPosition )
@@ -467,7 +469,7 @@ public:
 
 protected:
   virtual double computeSignalQuality_norm( const SGGeod & aircraftPosition );
-  virtual FGNavList * getNavaidList();
+  virtual FGNavList::TypeFilter* getNavaidFilter();
 
 private:
   class ServiceVolume {
@@ -531,9 +533,9 @@ LOC::~LOC()
 {
 }
 
-FGNavList * LOC::getNavaidList()
+FGNavList::TypeFilter* LOC::getNavaidFilter()
 {
-  return globals->get_loclist();
+  return FGNavList::locFilter();
 }
 
 void LOC::search( double frequency, const SGGeod & aircraftPosition )
@@ -617,8 +619,7 @@ public:
 
   virtual double getRange_nm(const SGGeod & aircraftPosition);
 protected:
-  virtual FGNavList * getNavaidList();
-
+  virtual FGNavList::TypeFilter* getNavaidFilter();
 private:
   class ServiceVolume {
   public:
@@ -686,9 +687,10 @@ GS::~GS()
 {
 }
 
-FGNavList * GS::getNavaidList()
+FGNavList::TypeFilter* GS::getNavaidFilter()
 {
-  return globals->get_gslist();
+  static FGNavList::TypeFilter filter(FGPositioned::GS);
+  return &filter;
 }
 
 double GS::getRange_nm(const SGGeod & aircraftPosition)

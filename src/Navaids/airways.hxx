@@ -24,8 +24,9 @@
 #include <vector>
 
 #include <Navaids/route.hxx>
+#include <Navaids/positioned.hxx>
 
-class FGPositioned;
+class SGPath;
 typedef SGSharedPtr<FGPositioned> FGPositionedRef; 
 
 namespace flightgear {
@@ -41,7 +42,7 @@ public:
   virtual std::string ident() const
   { return _ident; }
   
-  static void load();
+  static void load(const SGPath& path);
   
   /**
    * Track a network of airways
@@ -52,7 +53,6 @@ public:
   public:
     friend class Airway;
     friend class InAirwayFilter;
-    
     
   
     /**
@@ -65,26 +65,18 @@ public:
      */
     bool route(WayptRef aFrom, WayptRef aTo, WayptVec& aPath);
   private:    
-    void addEdge(Airway* aWay, const SGGeod& aStartPos, 
+    void addEdge(int aWay, const SGGeod& aStartPos,
                 const std::string& aStartIdent, 
                 const SGGeod& aEndPos, const std::string& aEndIdent);
   
-    Airway* findAirway(const std::string& aName, double aTop, double aBase);
-    
-    typedef std::multimap<FGPositioned*, AdjacentWaypoint*> AdjacencyMap;
-    AdjacencyMap _graph;
-    
-    typedef std::vector<AdjacentWaypoint*> AdjacentWaypointVec;
-
-    typedef std::map<std::string, Airway*> AirwayDict;
-    AirwayDict _airways;
+    int findAirway(const std::string& aName, double aTop, double aBase);
 
     bool search2(FGPositionedRef aStart, FGPositionedRef aDest, WayptVec& aRoute);
   
     /**
      * Test if a positioned item is part of this airway network or not.
      */
-    bool inNetwork(const FGPositioned* aRef) const;
+    bool inNetwork(PositionedID pos) const;
     
     /**
      * Find the closest node on the network, to the specified waypoint
@@ -103,7 +95,10 @@ public:
     /**
      * Overloaded version working with a raw SGGeod
      */
+  
     std::pair<FGPositionedRef, bool> findClosestNode(const SGGeod& aGeod);
+    
+    int _networkID;
   };
 
 
@@ -115,15 +110,9 @@ private:
 
   friend class Network;
   
-  static Network* static_highLevel;
-  static Network* static_lowLevel;
-  
   std::string _ident;
   double _topAltitudeFt;
   double _bottomAltitudeFt;
-
-  // high-level vs low-level flag
-  // ... ?
   
   WayptVec _elements;
 };

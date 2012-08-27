@@ -40,6 +40,36 @@ adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
     return range_nm + (range_nm * rand * rand);
 }
 
+namespace {
+  
+  class DMEFilter : public FGNavList::TypeFilter
+  {
+  public:
+    DMEFilter() :
+      TypeFilter(FGPositioned::DME),
+      _locEnabled(fgGetBool("/sim/realism/dme-fallback-to-loc", true))
+    {
+      if (_locEnabled) {
+        _mintype = FGPositioned::ILS;
+      }
+    }
+    
+    virtual bool pass(FGPositioned* pos) const
+    {
+      switch (pos->type()) {
+      case FGPositioned::DME: return true;
+      case FGPositioned::ILS:
+      case FGPositioned::LOC: return _locEnabled;
+      default: return false;
+      }
+    }
+    
+  private:
+    const bool _locEnabled;
+  };
+  
+} // of anonymous namespace
+
 
 DME::DME ( SGPropertyNode *node )
     : _last_distance_nm(0),
@@ -119,17 +149,9 @@ DME::update (double delta_time_sec)
     if (_time_before_search_sec < 0) {
         _time_before_search_sec = 1.0;
 
-        if( fgGetBool( "/sim/realism/dme-fallback-to-loc", true ) ) {
-            if( NULL == (_navrecord = globals->get_loclist()->findByFreq( frequency_mhz,
-                globals->get_aircraft_position())) ) {
-
-                _navrecord = globals->get_dmelist()->findByFreq( frequency_mhz,
-                    globals->get_aircraft_position());
-            }
-        } else {
-            _navrecord = globals->get_dmelist()->findByFreq( frequency_mhz,
-                globals->get_aircraft_position());
-        }
+      SGGeod pos(globals->get_aircraft_position());
+      DMEFilter filter;
+      _navrecord = FGNavList::findByFreq(frequency_mhz, pos, &filter);
     }
 
     // If it's off, don't bother.

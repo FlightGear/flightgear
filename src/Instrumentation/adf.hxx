@@ -60,15 +60,11 @@ private:
 
     void set_bearing (double delta_time_sec, double bearing);
 
-    void search (double frequency, double longitude_rad,
-                 double latitude_rad, double altitude_m);
+    void search (double frequency, const SGGeod& pos);
 
     std::string _name;
     unsigned int _num;
 
-    SGPropertyNode_ptr _longitude_node;
-    SGPropertyNode_ptr _latitude_node;
-    SGPropertyNode_ptr _altitude_node;
     SGPropertyNode_ptr _heading_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _error_node;

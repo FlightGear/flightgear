@@ -41,15 +41,16 @@ namespace flightgear {
 
 class FGRunway : public FGRunwayBase
 {
-  FGAirport* _airport;
+  PositionedID _airport;
   bool _isReciprocal;
-  FGRunway* _reciprocal;
+  PositionedID _reciprocal;
   double _displ_thresh;
   double _stopway;
-  FGNavRecord* _ils;
+  PositionedID _ils;
 public:
   
-  FGRunway(FGAirport* aAirport, const std::string& rwy_no,
+  FGRunway(PositionedID aGuid,
+           PositionedID aAirport, const std::string& rwy_no,
             const SGGeod& aGeod,
             const double heading, const double length,
             const double width,
@@ -103,24 +104,15 @@ public:
   /**
    * Airport this runway is located at
    */
-  FGAirport* airport() const
-  { return _airport; }
+  FGAirport* airport() const;
   
-  // FIXME - should die once airport / runway creation is cleaned up
-  void setAirport(FGAirport* aAirport)
-  { _airport = aAirport; }
+  FGNavRecord* ILS() const;
   
-  FGNavRecord* ILS() const { return _ils; }
-  void setILS(FGNavRecord* nav) { _ils = nav; }
+  void setILS(PositionedID nav) { _ils = nav; }
   
-  FGRunway* reciprocalRunway() const
-  { return _reciprocal; }
-  void setReciprocalRunway(FGRunway* other);
-    
-  /**
-   * Helper to process property data loaded from an ICAO.threshold.xml file
-   */
-  void processThreshold(SGPropertyNode* aThreshold);
+  FGRunway* reciprocalRunway() const;
+  
+  void setReciprocalRunway(PositionedID other);
   
   /**
    * Get SIDs (DPs) associated with this runway

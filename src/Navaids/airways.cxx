@@ -31,11 +31,13 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 
 #include <Main/globals.hxx>
 #include <Navaids/positioned.hxx>
 #include <Navaids/waypoint.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 using std::make_pair;
 using std::string;
@@ -47,39 +49,13 @@ using std::vector;
 namespace flightgear
 {
 
-Airway::Network* Airway::static_lowLevel = NULL;
-Airway::Network* Airway::static_highLevel = NULL;
-
 //////////////////////////////////////////////////////////////////////////////
-
-/**
- * information about an edge in the network.
- * Some of this information is computed lazily
- */
-class AdjacentWaypoint 
-{
-public:
-  AdjacentWaypoint(const FGPositionedRef& aOrigin,
-    const FGPositionedRef& aDest, Airway* aWay); 
-
-  double distanceM() const;
-  
-  const FGPositionedRef& other(const FGPositionedRef& aEnd) const;
-  
-  const FGPositionedRef origin;
-  const FGPositionedRef destination;
-  const Airway* airway;
-  
-private:
-  void validate() const;
-  mutable double _distanceM;
-};
 
 class AStarOpenNode : public SGReferenced
 {
 public:
   AStarOpenNode(FGPositionedRef aNode, double aLegDist, 
-    Airway* aAirway,
+    int aAirway,
     FGPositionedRef aDest, AStarOpenNode* aPrev) :
     node(aNode),
     airway(aAirway),
@@ -98,7 +74,7 @@ public:
   }
   
   FGPositionedRef node;
-  Airway* airway;
+  int airway;
   SGSharedPtr<AStarOpenNode> previous;
   double distanceFromStart; // aka 'g(x)'
   double directDistanceToDestination; // aka 'h(x)'
@@ -117,11 +93,24 @@ typedef SGSharedPtr<AStarOpenNode> AStarOpenNodeRef;
 
 Airway::Network* Airway::lowLevel()
 {
+  static Network* static_lowLevel = NULL;
+  
+  if (!static_lowLevel) {
+    static_lowLevel = new Network;
+    static_lowLevel->_networkID = 1;
+  }
+  
   return static_lowLevel;
 }
 
 Airway::Network* Airway::highLevel()
 {
+  static Network* static_highLevel = NULL;
+  if (!static_highLevel) {
+    static_highLevel = new Network;
+    static_highLevel->_networkID = 2;
+  }
+  
   return static_highLevel;
 }
 
@@ -132,14 +121,8 @@ Airway::Airway(const std::string& aIdent, double aTop, double aBottom) :
 {
 }
 
-void Airway::load()
+void Airway::load(const SGPath& path)
 {
-  static_lowLevel = new Network;
-  static_highLevel = new Network;
-
-  SGPath path( globals->get_fg_root() );
-  path.append( "Navaids/awy.dat" );
-    
   std::string identStart, identEnd, name;
   double latStart, lonStart, latEnd, lonEnd;
   int type, base, top;
@@ -168,28 +151,22 @@ void Airway::load()
 
     // type = 1; low-altitude
     // type = 2; high-altitude
-    Network* net = (type == 1) ? static_lowLevel : static_highLevel;
+    Network* net = (type == 1) ? lowLevel() : highLevel();
   
     SGGeod startPos(SGGeod::fromDeg(lonStart, latStart)),
       endPos(SGGeod::fromDeg(lonEnd, latEnd));
     
-    Airway* awy = net->findAirway(name, top, base);
+    int awy = net->findAirway(name, top, base);
     net->addEdge(awy, startPos, identStart, endPos, identEnd);
   } // of file line iteration
 }
 
-Airway* Airway::Network::findAirway(const std::string& aName, double aTop, double aBase)
+int Airway::Network::findAirway(const std::string& aName, double aTop, double aBase)
 {
-  AirwayDict::iterator it = _airways.find(aName);
-  if (it == _airways.end()) {
-    Airway* awy = new Airway(aName, aTop, aBase);
-    it = _airways.insert(it, make_pair(aName, awy));
-  }
-  
-  return it->second;
+  return NavDataCache::instance()->findAirway(_networkID, aName);
 }
 
-void Airway::Network::addEdge(Airway* aWay, const SGGeod& aStartPos, 
+void Airway::Network::addEdge(int aWay, const SGGeod& aStartPos,
   const std::string& aStartIdent, 
   const SGGeod& aEndPos, const std::string& aEndIdent)
 {
@@ -208,17 +185,14 @@ void Airway::Network::addEdge(Airway* aWay, const SGGeod& aStartPos,
     return;
   }
   
-  AdjacentWaypoint* edge = new AdjacentWaypoint(start, end, aWay);
-  _graph.insert(make_pair(start, edge));
-  _graph.insert(make_pair(end, edge));
+  NavDataCache::instance()->insertEdge(_networkID, aWay, start->guid(), end->guid());
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-bool Airway::Network::inNetwork(const FGPositioned* aPos) const
+bool Airway::Network::inNetwork(PositionedID posID) const
 {
-  FGPositioned* pos = const_cast<FGPositioned*>(aPos);
-  return (_graph.find(pos) != _graph.end());
+  return NavDataCache::instance()->isInAirwayNetwork(_networkID, posID);
 }
 
 bool Airway::Network::route(WayptRef aFrom, WayptRef aTo, 
@@ -278,7 +252,7 @@ public:
   
   virtual bool pass(FGPositioned* aPos) const
   {
-    return _net->inNetwork(aPos);
+    return _net->inNetwork(aPos->guid());
   }
   
   virtual FGPositioned::Type minType() const
@@ -319,7 +293,7 @@ static void buildWaypoints(AStarOpenNodeRef aNode, WayptVec& aRoute)
   
 // run over the route, creating waypoints
   for (n = aNode; n; n=n->previous) {
-    aRoute[--count] = new NavaidWaypoint(n->node, n->airway);
+    aRoute[--count] = new NavaidWaypoint(n->node, NULL);
   }
 }
 
@@ -349,10 +323,8 @@ public:
 
 bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
   WayptVec& aRoute)
-{
-  
+{  
   typedef set<FGPositioned*> ClosedNodeSet;
-  typedef std::pair<AdjacencyMap::iterator,AdjacencyMap::iterator> AdjacencyMapRange;
   
   OpenNodeHeap openNodes;
   ClosedNodeSet closedNodes;
@@ -378,17 +350,19 @@ bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
     }
     
   // adjacent (neighbour) iteration
-    AdjacencyMapRange r(_graph.equal_range(xp));
-    for (; r.first != r.second; ++r.first) {
-      AdjacentWaypoint* adj(r.first->second);
-      FGPositioned* yp = adj->other(xp);
+//    AdjacencyMapRange r(_graph.equal_range(xp));
+  //  for (; r.first != r.second; ++r.first) {
+    NavDataCache* cache = NavDataCache::instance();
+    BOOST_FOREACH(AirwayEdge other, cache->airwayEdgesFrom(_networkID, xp->guid())) {
+      FGPositioned* yp = cache->loadById(other.second);
       if (closedNodes.count(yp)) {
         continue; // closed, ignore
       }
 
+      double edgeDistanceM = SGGeodesy::distanceM(xp->geod(), yp->geod());
       AStarOpenNodeRef y = findInOpen(openNodes, yp);
       if (y) { // already open
-        double g = x->distanceFromStart + adj->distanceM();
+        double g = x->distanceFromStart + edgeDistanceM;
         if (g > y->distanceFromStart) {
           // worse path, ignore
           //SG_LOG(SG_GENERAL, SG_INFO, "\tabandoning " << yp->ident() <<
@@ -401,11 +375,10 @@ bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
         //SG_LOG(SG_GENERAL, SG_INFO, "\tfixing up previous for new path to " << yp->ident() << ", d =" << g);
         y->previous = x;
         y->distanceFromStart = g;
-        y->airway = (Airway*) adj->airway;
+        y->airway = other.first;
         std::make_heap(openNodes.begin(), openNodes.end(), ordering);
       } else { // not open, insert a new node for y into the heap
-        y = new AStarOpenNode(yp, adj->distanceM(), 
-          (Airway*) adj->airway, aDest, x);
+        y = new AStarOpenNode(yp, edgeDistanceM, other.first, aDest, x);
         //SG_LOG(SG_GENERAL, SG_INFO, "\ty=" << yp->ident() << ", f(y)=" << y->totalCost());
         openNodes.push_back(y);
         std::push_heap(openNodes.begin(), openNodes.end(), ordering);
@@ -415,40 +388,6 @@ bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
   
   SG_LOG(SG_GENERAL, SG_INFO, "A* failed to find route");
   return false;
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// AdjacentWaypoint definitions 
-
-AdjacentWaypoint::AdjacentWaypoint(
-  const FGPositionedRef& aOrigin, const FGPositionedRef& aDest, Airway* aWay) :
-  origin(aOrigin),
-  destination(aDest), 
-  airway(aWay),
-  _distanceM(-1.0)
-{
-
-}
-
-const FGPositionedRef&
-AdjacentWaypoint::other(const FGPositionedRef& aEnd) const
-{
-  return (aEnd == origin) ? destination : origin;
-}
-
-double AdjacentWaypoint::distanceM() const
-{
-  validate();
-  return _distanceM;
-}
-      
-void AdjacentWaypoint::validate() const
-{
-  if (_distanceM > 0.0) {
-    return; // already validated
-  }
-  
-  _distanceM = SGGeodesy::distanceM(origin->geod(), destination->geod());
 }
 
 } // of namespace flightgear

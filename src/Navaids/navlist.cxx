@@ -25,6 +25,7 @@
 #  include <config.h>
 #endif
 
+#include <cassert>
 #include <boost/foreach.hpp>
 #include <algorithm>
 
@@ -35,6 +36,7 @@
 #include "navlist.hxx"
 
 #include <Airports/runways.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 using std::string;
 
@@ -56,6 +58,34 @@ private:
   
 };
 
+// discount navids if they conflict with another on the same frequency
+// this only applies to navids associated with opposite ends of a runway,
+// with matching frequencies.
+bool navidUsable(FGNavRecord* aNav, const SGGeod &aircraft)
+{
+  FGRunway* r(aNav->runway());
+  if (!r || !r->reciprocalRunway()) {
+    return true;
+  }
+  
+  // check if the runway frequency is paired
+  FGNavRecord* locA = r->ILS();
+  FGNavRecord* locB = r->reciprocalRunway()->ILS();
+  
+  if (!locA || !locB || (locA->get_freq() != locB->get_freq())) {
+    return true; // not paired, ok
+  }
+  
+  // okay, both ends have an ILS, and they're paired. We need to select based on
+  // aircraft position. What we're going to use is *runway* (not navid) position,
+  // ie whichever runway end we are closer too. This makes back-course / missed
+  // approach behaviour incorrect, but that's the price we accept.
+  double crs = SGGeodesy::courseDeg(aircraft, r->geod());
+  double hdgDiff = crs - r->headingDeg();
+  SG_NORMALIZE_RANGE(hdgDiff, -180.0, 180.0);
+  return (fabs(hdgDiff) < 90.0);
+}
+  
 } // of anonymous namespace
 
 // FGNavList ------------------------------------------------------------------
@@ -64,7 +94,7 @@ private:
 FGNavList::TypeFilter::TypeFilter(const FGPositioned::Type type)
 {
   if (type == FGPositioned::INVALID) {
-    _mintype = FGPositioned::VOR;
+    _mintype = FGPositioned::NDB;
     _maxtype = FGPositioned::GS;
   } else {
     _mintype = _maxtype = type;
@@ -72,77 +102,142 @@ FGNavList::TypeFilter::TypeFilter(const FGPositioned::Type type)
 }
 
 
-FGNavList::FGNavList( void )
+FGNavList::TypeFilter::TypeFilter(const FGPositioned::Type minType,
+                                  const FGPositioned::Type maxType) :
+  _mintype(minType),
+  _maxtype(maxType)
 {
 }
 
-
-FGNavList::~FGNavList( void )
+/**
+ * Filter returning Tacan stations. Checks for both pure TACAN stations
+ * but also co-located VORTACs. This is done by searching for DMEs whose
+ * name indicates they are a TACAN or VORTAC; not a great solution.
+ */
+class TacanFilter : public FGNavList::TypeFilter
 {
-    nav_list_type navlist = navaids.begin()->second;
-    navaids.erase( navaids.begin(), navaids.end() );
-}
-
-
-// load the navaids and build the map
-bool FGNavList::init()
-{
-    // No need to delete the original navaid structures
-    // since we're using an SGSharedPointer
-    nav_list_type navlist = navaids.begin()->second;
-    navaids.erase( navaids.begin(), navaids.end() );
-    return true;
-}
-
-// add an entry to the lists
-bool FGNavList::add( FGNavRecord *n )
-{
-    navaids[n->get_freq()].push_back(n);
-    return true;
-}
-
-FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position)
-{
-    const nav_list_type& stations = navaids[(int)(freq*100.0 + 0.5)];
-    SG_LOG( SG_INSTR, SG_DEBUG, "findbyFreq " << freq << " size " << stations.size()  );
-    return findNavFromList( position, stations );
-}
-
-nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position, const FGPositioned::Type type)
-{
-  nav_list_type stations;
-  TypeFilter filter(type);
-  
-  BOOST_FOREACH(nav_rec_ptr nav, navaids[(int)(freq*100.0 + 0.5)]) {
-    if (filter.pass(nav.ptr())) {
-      stations.push_back(nav);
-    }
+public:
+  TacanFilter() :
+    TypeFilter(FGPositioned::DME, FGPositioned::TACAN)
+  {
   }
   
-  NavRecordDistanceSortPredicate sortPredicate( position );
-  std::sort( stations.begin(), stations.end(), sortPredicate );
+  virtual bool pass(FGPositioned* pos) const
+  {
+    if (pos->type() == FGPositioned::TACAN) {
+      return true;
+    }
+    
+    assert(pos->type() == FGPositioned::DME);
+    string::size_type loc1 = pos->name().find( "TACAN" );
+    string::size_type loc2 = pos->name().find( "VORTAC" );
+    return (loc1 != string::npos) || (loc2 != string::npos);
+  }
+};
+
+FGNavList::TypeFilter* FGNavList::locFilter()
+{
+  static TypeFilter tf(FGPositioned::ILS, FGPositioned::LOC);
+  return &tf;
+}
+
+FGNavList::TypeFilter* FGNavList::ndbFilter()
+{
+  static TypeFilter tf(FGPositioned::NDB);
+  return &tf;
+}
+
+FGNavList::TypeFilter* FGNavList::navFilter()
+{
+  static TypeFilter tf(FGPositioned::VOR, FGPositioned::LOC);
+  return &tf;
+}
+
+FGNavList::TypeFilter* FGNavList::tacanFilter()
+{
+  static TacanFilter tf;
+  return &tf;
+}
+
+FGNavList::TypeFilter* FGNavList::carrierFilter()
+{
+  static TypeFilter tf(FGPositioned::MOBILE_TACAN);
+  return &tf;
+}
+
+FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position,
+                                   TypeFilter* filter)
+{
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  int freqKhz = static_cast<int>(freq * 100);
+  PositionedIDVec stations(cache->findNavaidsByFreq(freqKhz, position, filter));
+  if (stations.empty()) {
+    return NULL;
+  }
+  
+// now walk the (sorted) results list to find a usable, in-range navaid
+  SGVec3d acCart(SGVec3d::fromGeod(position));
+  double min_dist
+    = FG_NAV_MAX_RANGE*SG_NM_TO_METER*FG_NAV_MAX_RANGE*SG_NM_TO_METER;
+    
+  BOOST_FOREACH(PositionedID id, stations) {
+    FGNavRecord* station = (FGNavRecord*) cache->loadById(id);
+    double d2 = distSqr(station->cart(), acCart);
+    if (d2 > min_dist) {
+    // since results are sorted by proximity, as soon as we pass the
+    // distance cutoff we're done - fall out and return NULL
+      break;
+    }
+    
+    if (navidUsable(station, position)) {
+      return station;
+    }
+  }
+    
+// fell out of the loop, no usable match
+  return NULL;
+}
+
+FGNavRecord *FGNavList::findByFreq( double freq, TypeFilter* filter)
+{
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  int freqKhz = static_cast<int>(freq * 1000);
+  PositionedIDVec stations(cache->findNavaidsByFreq(freqKhz, filter));
+  if (stations.empty()) {
+    return NULL;
+  }
+
+  return (FGNavRecord*) cache->loadById(stations.front());
+}
+
+nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position,
+                                       TypeFilter* filter)
+{
+  nav_list_type stations;
+  
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  int freqKhz = static_cast<int>(freq * 1000);
+  PositionedIDVec ids(cache->findNavaidsByFreq(freqKhz, position, filter));
+  
+  BOOST_FOREACH(PositionedID id, ids) {
+    stations.push_back((FGNavRecord*) cache->loadById(id));
+  }
+  
   return stations;
 }
 
-
-// Given an Ident and optional frequency, return the first matching
-// station.
-const nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const double freq, const FGPositioned::Type type )
+nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const double freq,
+                                            TypeFilter* filter)
 {
-  FGPositionedRef cur;
-  TypeFilter filter(type);
   nav_list_type reply;
-
-  cur = FGPositioned::findNextWithPartialId(cur, ident, &filter);
-  
   int f = (int)(freq*100.0 + 0.5);
-  while (cur) {
-    FGNavRecord* nav = static_cast<FGNavRecord*>(cur.ptr());
+  
+  FGPositioned::List stations = FGPositioned::findAllWithIdent(ident, filter);
+  BOOST_FOREACH(FGPositionedRef ref, stations) {
+    FGNavRecord* nav = static_cast<FGNavRecord*>(ref.ptr());
     if ( f <= 0.0 || nav->get_freq() == f) {
-        reply.push_back( nav );
+      reply.push_back( nav );
     }
-    
-    cur = FGPositioned::findNextWithPartialId(cur, ident, &filter);
   }
 
   return reply;
@@ -150,86 +245,16 @@ const nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const dou
 
 // Given an Ident and optional frequency and type ,
 // return a list of matching stations sorted by distance to the given position
-const nav_list_type FGNavList::findByIdentAndFreq( const SGGeod & position,
-        const std::string& ident, const double freq, const FGPositioned::Type type )
+nav_list_type FGNavList::findByIdentAndFreq( const SGGeod & position,
+        const std::string& ident, const double freq,
+                                            TypeFilter* filter)
 {
-    nav_list_type reply = findByIdentAndFreq( ident, freq, type );
+    nav_list_type reply = findByIdentAndFreq( ident, freq, filter );
     NavRecordDistanceSortPredicate sortPredicate( position );
     std::sort( reply.begin(), reply.end(), sortPredicate );
 
     return reply;
 }
-
-// discount navids if they conflict with another on the same frequency
-// this only applies to navids associated with opposite ends of a runway,
-// with matching frequencies.
-static bool navidUsable(FGNavRecord* aNav, const SGGeod &aircraft)
-{
-  FGRunway* r(aNav->runway());
-  if (!r || !r->reciprocalRunway()) {
-    return true;
-  }
-  
-// check if the runway frequency is paired
-  FGNavRecord* locA = r->ILS();
-  FGNavRecord* locB = r->reciprocalRunway()->ILS();
-  
-  if (!locA || !locB || (locA->get_freq() != locB->get_freq())) {
-    return true; // not paired, ok
-  }
-  
-// okay, both ends have an ILS, and they're paired. We need to select based on
-// aircraft position. What we're going to use is *runway* (not navid) position,
-// ie whichever runway end we are closer too. This makes back-course / missed
-// approach behaviour incorrect, but that's the price we accept.
-  double crs = SGGeodesy::courseDeg(aircraft, r->geod());
-  double hdgDiff = crs - r->headingDeg();
-  SG_NORMALIZE_RANGE(hdgDiff, -180.0, 180.0);  
-  return (fabs(hdgDiff) < 90.0);
-}
-
-// Given a point and a list of stations, return the closest one to
-// the specified point.
-FGNavRecord* FGNavList::findNavFromList( const SGGeod &aircraft,
-                                  const nav_list_type &stations )
-{
-    FGNavRecord *nav = NULL;
-    double d2;                  // in meters squared
-    double min_dist
-        = FG_NAV_MAX_RANGE*SG_NM_TO_METER*FG_NAV_MAX_RANGE*SG_NM_TO_METER;
-    SGVec3d aircraftCart = SGVec3d::fromGeod(aircraft);
-    
-    nav_list_const_iterator it;
-    nav_list_const_iterator end = stations.end();
-    // find the closest station within a sensible range (FG_NAV_MAX_RANGE)
-    for ( it = stations.begin(); it != end; ++it ) {
-        FGNavRecord *station = *it;
-        d2 = distSqr(station->cart(), aircraftCart);
-        if ( d2 > min_dist || !navidUsable(station, aircraft)) {
-          continue;
-        }
-        
-        min_dist = d2;
-        nav = station;
-    }
-
-    return nav;
-}
-
-// Given a frequency, return the first matching station.
-FGNavRecord *FGNavList::findStationByFreq( double freq )
-{
-    const nav_list_type& stations = navaids[(int)(freq*100.0 + 0.5)];
-
-    SG_LOG( SG_INSTR, SG_DEBUG, "findStationByFreq " << freq << " size " << stations.size()  );
-
-    if (!stations.empty()) {
-        return stations[0];
-    }
-    return NULL;
-}
-
-
 
 // FGTACANList ----------------------------------------------------------------
 
