@@ -28,23 +28,15 @@
 
 #include "positioned.hxx"
 
-// forward decls
-class FGRunway;
 
 class FGMarkerBeaconRecord : public FGPositioned
 {
 public:
-  static FGMarkerBeaconRecord* create(int aTy, const std::string& aName, const SGGeod& aPos);
 
+  FGMarkerBeaconRecord(PositionedID aGuid, Type aTy, PositionedID aRunway, const SGGeod& aPos);
 private:
-  FGMarkerBeaconRecord(Type aTy, FGRunway* aRunway, const SGGeod& aPos);
   
-  FGRunway* _runway; // should this be ref-ptr?
-  
-  /**
-   * Helper to map a 'Robin' integer type to an FGPositioned::Type
-   */
-  static Type mapType(int aTy);
+  PositionedID _runway;
 };
 
 #endif // _FG_MARKERBEACON_HXX

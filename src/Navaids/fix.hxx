@@ -33,7 +33,7 @@
 class FGFix : public FGPositioned
 {
 public:
-  FGFix(const std::string& aIdent, const SGGeod& aPos);
+  FGFix(PositionedID aGuid, const std::string& aIdent, const SGGeod& aPos);
   inline ~FGFix(void) {}
 
   inline const std::string& get_ident() const { return ident(); }

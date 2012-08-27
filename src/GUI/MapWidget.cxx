@@ -937,11 +937,11 @@ public:
   }
 
   virtual FGPositioned::Type minType() const {
-    return _fixes ? FGPositioned::FIX : FGPositioned::VOR;
+    return _fixes ? FGPositioned::FIX : FGPositioned::NDB;
   }
 
   virtual FGPositioned::Type maxType() const {
-    return _navaids ? FGPositioned::NDB : FGPositioned::FIX;
+    return _navaids ? FGPositioned::VOR : FGPositioned::FIX;
   }
 
 private:
@@ -1069,7 +1069,9 @@ void MapWidget::drawNavRadio(SGPropertyNode_ptr radio)
   // identify the tuned station - unfortunately we don't get lat/lon directly,
   // need to do the frequency search again
   double mhz = radio->getDoubleValue("frequencies/selected-mhz", 0.0);
-  FGNavRecord* nav = globals->get_navlist()->findByFreq(mhz, _aircraft);
+
+  FGNavRecord* nav = FGNavList::findByFreq(mhz, _aircraft,
+                                           FGNavList::navFilter());
   if (!nav || (nav->ident() != radio->getStringValue("nav-id"))) {
     // mismatch between navradio selection logic and ours!
     return;
@@ -1111,7 +1113,7 @@ void MapWidget::drawNavRadio(SGPropertyNode_ptr radio)
 void MapWidget::drawTunedLocalizer(SGPropertyNode_ptr radio)
 {
   double mhz = radio->getDoubleValue("frequencies/selected-mhz", 0.0);
-  FGNavRecord* loc = globals->get_loclist()->findByFreq(mhz, _aircraft);
+  FGNavRecord* loc = FGNavList::findByFreq(mhz, _aircraft, FGNavList::locFilter());
   if (!loc || (loc->ident() != radio->getStringValue("nav-id"))) {
     // mismatch between navradio selection logic and ours!
     return;

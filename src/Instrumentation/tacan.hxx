@@ -44,17 +44,13 @@ public:
 
 private:
 
-    void search (double frequency, double longitude_rad,
-                 double latitude_rad, double altitude_m);
+    void search (double frequency, const SGGeod& pos);
   double searchChannel (const std::string& channel);
     void valueChanged (SGPropertyNode *);
 
     std::string _name;
     unsigned int _num;
 
-    SGPropertyNode_ptr _longitude_node;
-    SGPropertyNode_ptr _latitude_node;
-    SGPropertyNode_ptr _altitude_node;
     SGPropertyNode_ptr _heading_node;
     SGPropertyNode_ptr _yaw_node;
     SGPropertyNode_ptr _serviceable_node;
@@ -101,8 +97,7 @@ private:
     std::string _transmitter_name;
     std::string _transmitter_ident;
 
-    double _mobile_lat, _mobile_lon;
-    double _mobile_elevation_ft;
+    SGGeod _mobilePos;
     double _mobile_range_nm;
     double _mobile_bearing_deg;
     double _mobile_bias;

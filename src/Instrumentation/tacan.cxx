@@ -58,8 +58,6 @@ TACAN::TACAN ( SGPropertyNode *node ) :
     _transmitter_pos(SGGeod::fromDeg(0, 0)),
     _transmitter_range_nm(0),
     _transmitter_bias(0.0),
-    _mobile_lat(0.0),
-    _mobile_lon(0.0),
     _listener_active(0)
 {
 }
@@ -116,9 +114,6 @@ TACAN::init ()
     SGPropertyNode *mnode = fgGetNode("/ai/models/multiplayer", _num, false);
     _mp_callsign_node = mnode ? mnode->getChild("callsign", 0, false) : 0;
 
-    _longitude_node = fgGetNode("/position/longitude-deg", true);
-    _latitude_node = fgGetNode("/position/latitude-deg", true);
-    _altitude_node = fgGetNode("/position/altitude-ft", true);
     _heading_node = fgGetNode("/orientation/heading-deg", true);
     _yaw_node = fgGetNode("/orientation/side-slip-deg", true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/tacan", true);
@@ -140,17 +135,11 @@ TACAN::update (double delta_time_sec)
         return;
     }
 
-                                // Get the aircraft position
-    double longitude_deg = _longitude_node->getDoubleValue();
-    double latitude_deg  = _latitude_node->getDoubleValue();
-    double altitude_m    = _altitude_node->getDoubleValue() * SG_FEET_TO_METER;
-    double longitude_rad = longitude_deg * SGD_DEGREES_TO_RADIANS;
-    double latitude_rad  = latitude_deg * SGD_DEGREES_TO_RADIANS;
-
+  SGGeod pos(globals->get_aircraft_position());
                                 // On timeout, scan again
     _time_before_search_sec -= delta_time_sec;
     if ((_time_before_search_sec < 0 || _new_frequency) && _frequency_mhz >= 0)
-        search(_frequency_mhz, longitude_rad, latitude_rad, altitude_m);
+        search(_frequency_mhz, pos);
 
                                  // Calculate the distance to the transmitter
 
@@ -159,15 +148,9 @@ TACAN::update (double delta_time_sec)
     double mobile_bearing = 0;
     double mobile_distance = 0;
 
-    SG_LOG( SG_INSTR, SG_DEBUG, "mobile_lat " << _mobile_lat);
-    SG_LOG( SG_INSTR, SG_DEBUG, "mobile_lon " << _mobile_lon);
     SG_LOG( SG_INSTR, SG_DEBUG, "mobile_name " << _mobile_name);
     SG_LOG( SG_INSTR, SG_DEBUG, "mobile_valid " << _mobile_valid);
-    geo_inverse_wgs_84(altitude_m,
-                       latitude_deg,
-                       longitude_deg,
-                       _mobile_lat,
-                       _mobile_lon,
+    geo_inverse_wgs_84(pos, _mobilePos,
                        &mobile_bearing, &mobile_az2, &mobile_distance);
 
 
@@ -176,7 +159,6 @@ TACAN::update (double delta_time_sec)
     double bearing = 0;
     double distance = 0;
 
-    SGGeod pos = SGGeod::fromDegM(longitude_deg, latitude_deg, altitude_m);
     geo_inverse_wgs_84(pos, _transmitter_pos,
                        &bearing, &az2, &distance);
 
@@ -187,7 +169,7 @@ TACAN::update (double delta_time_sec)
         SG_LOG( SG_INSTR, SG_DEBUG, "distance_m " << distance);
         bearing = mobile_bearing;
         distance = mobile_distance;
-        _transmitter_pos.setElevationFt(_mobile_elevation_ft);
+        _transmitter_pos.setElevationFt(_mobilePos.getElevationFt());
         _transmitter_range_nm = _mobile_range_nm;
         _transmitter_bias = _mobile_bias;
         _transmitter_name = _mobile_name;
@@ -225,7 +207,7 @@ TACAN::update (double delta_time_sec)
     double rotation = 0;
 
     double range_nm = adjust_range(_transmitter_pos.getElevationFt(),
-                                   altitude_m * SG_METER_TO_FEET,
+                                  pos.getElevationFt(),
                                    _transmitter_range_nm);
 
     if (distance_nm <= range_nm) {
@@ -277,8 +259,7 @@ TACAN::update (double delta_time_sec)
 } // end function update
 
 void
-TACAN::search (double frequency_mhz, double longitude_rad,
-               double latitude_rad, double altitude_m)
+TACAN::search (double frequency_mhz,const SGGeod& pos)
 {
     int number, i;
     _mobile_valid = false;
@@ -289,8 +270,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
     _time_before_search_sec = 1.0;
 
     //try any carriers first
-    FGNavRecord *mobile_tacan
-          = globals->get_carrierlist()->findStationByFreq( frequency_mhz );
+    FGNavRecord *mobile_tacan = FGNavList::findByFreq( frequency_mhz, FGNavList::carrierFilter() );
     bool freq_valid = (mobile_tacan != NULL);
     SG_LOG( SG_INSTR, SG_DEBUG, "mobile freqency valid " << freq_valid );
 
@@ -312,9 +292,10 @@ TACAN::search (double frequency_mhz, double longitude_rad,
             string::size_type loc1= str1.find( str2, 0 );
             if ( loc1 != string::npos && str2 != "" ) {
                 SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
-                _mobile_lat = carrier[i]->getDoubleValue("position/latitude-deg");
-                _mobile_lon = carrier[i]->getDoubleValue("position/longitude-deg");
-                _mobile_elevation_ft = mobile_tacan->get_elev_ft();
+                _mobilePos = SGGeod::fromDegFt(
+                             carrier[i]->getDoubleValue("position/longitude-deg"),
+                             carrier[i]->getDoubleValue("position/latitude-deg"),
+                             mobile_tacan->get_elev_ft());
                 _mobile_range_nm = mobile_tacan->get_range();
                 _mobile_bias = mobile_tacan->get_multiuse();
                 _mobile_name = mobile_tacan->name();
@@ -348,9 +329,12 @@ TACAN::search (double frequency_mhz, double longitude_rad,
             string::size_type loc1= str1.find( str4, 0 );
             if ( loc1 != string::npos && str4 != "" ) {
                 SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
-                _mobile_lat = tanker[i]->getDoubleValue("position/latitude-deg");
-                _mobile_lon = tanker[i]->getDoubleValue("position/longitude-deg");
-                _mobile_elevation_ft = tanker[i]->getDoubleValue("position/altitude-ft");
+                _mobilePos = SGGeod::fromDegFt(
+                                             tanker[i]->getDoubleValue("position/longitude-deg"),
+                                             tanker[i]->getDoubleValue("position/latitude-deg"),
+                                             tanker[i]->getDoubleValue("position/altitude-ft"));
+
+              
                 _mobile_range_nm = mobile_tacan->get_range();
                 _mobile_bias = mobile_tacan->get_multiuse();
                 _mobile_name = mobile_tacan->name();
@@ -386,9 +370,12 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 string::size_type loc1= str1.find( str6, 0 );
                 if ( loc1 != string::npos && str6 != "" ) {
                     SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
-                    _mobile_lat = mp_tanker[i]->getDoubleValue("position/latitude-deg");
-                    _mobile_lon = mp_tanker[i]->getDoubleValue("position/longitude-deg");
-                    _mobile_elevation_ft = mp_tanker[i]->getDoubleValue("position/altitude-ft");
+                  _mobilePos = SGGeod::fromDegFt(
+                                                 mp_tanker[i]->getDoubleValue("position/longitude-deg"),
+                                                 mp_tanker[i]->getDoubleValue("position/latitude-deg"),
+                                                 mp_tanker[i]->getDoubleValue("position/altitude-ft"));
+
+                  
                     _mobile_range_nm = mobile_tacan->get_range();
                     _mobile_bias = mobile_tacan->get_multiuse();
                     _mobile_name = mobile_tacan->name();
@@ -397,8 +384,6 @@ TACAN::search (double frequency_mhz, double longitude_rad,
 
                     SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter valid " << _mobile_valid );
                     SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker name " << _mobile_name);
-                    SG_LOG( SG_INSTR, SG_DEBUG, " mp lat " << _mobile_lat << "lon " << _mobile_lon);
-                    SG_LOG( SG_INSTR, SG_DEBUG, " mp elev " << _mobile_elevation_ft);
                     SG_LOG( SG_INSTR, SG_DEBUG, " mp range " << _mobile_range_nm);
                     break;
                 } else {
@@ -414,8 +399,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
     }
 
     // try the TACAN/VORTAC list next
-    FGNavRecord *tacan = globals->get_tacanlist()->findByFreq( frequency_mhz,
-      SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m));
+    FGNavRecord *tacan = FGNavList::findByFreq( frequency_mhz, pos, FGNavList::tacanFilter() );
 
     _transmitter_valid = (tacan != NULL);
 

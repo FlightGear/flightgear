@@ -59,7 +59,7 @@ public:
   typedef std::vector<SGSharedPtr<NodeBase> > NodeList;
 
 
-  FGPavement(const std::string& aIdent, const SGGeod& aPos);
+  FGPavement(PositionedID aGuid, const std::string& aIdent, const SGGeod& aPos);
 
   void addNode(const SGGeod &aPos, bool aClose = false);
   void addBezierNode(const SGGeod &aPos, const SGGeod &aCtrlPt, bool aClose = false);
