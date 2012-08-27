@@ -41,6 +41,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGMisc.hxx>
+#include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/util/OsgMath.hxx>

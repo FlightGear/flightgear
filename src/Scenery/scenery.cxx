@@ -39,6 +39,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
