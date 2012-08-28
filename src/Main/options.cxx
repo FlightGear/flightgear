@@ -2263,7 +2263,7 @@ void Options::setupRoot()
 // validate it
   static char required_version[] = FLIGHTGEAR_VERSION;
   string base_version = fgBasePackageVersion();
-  if ( !(base_version == required_version) ) {
+  if ( !simgear::strutils::starts_with(base_version, "2.8.") ) {
     // tell the operator how to use this application
     
     SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on windows
