@@ -43,7 +43,7 @@ class CullCallback:
     CullCallback(Canvas::CameraCullCallback* camera_cull);
 
   private:
-    Canvas::CameraCullCallback *_camera_cull;
+    Canvas::CameraCullCallbackWeakPtr _camera_cull;
 
     virtual bool cull( osg::NodeVisitor* nv,
                        osg::Drawable* drawable,
@@ -62,7 +62,8 @@ bool CullCallback::cull( osg::NodeVisitor* nv,
                          osg::Drawable* drawable,
                          osg::RenderInfo* renderInfo ) const
 {
-  _camera_cull->enableRendering();
+  if( _camera_cull.valid() )
+    _camera_cull->enableRendering();
 
   // TODO check if window/image should be culled
   return false;

@@ -73,7 +73,7 @@ Canvas::CullCallback::CullCallback(CameraCullCallback* camera_cull):
 void Canvas::CullCallback::operator()( osg::Node* node,
                                        osg::NodeVisitor* nv )
 {
-  if( nv->getTraversalMask() & simgear::MODEL_BIT )
+  if( (nv->getTraversalMask() & simgear::MODEL_BIT) && _camera_cull.valid() )
     _camera_cull->enableRendering();
 
   traverse(node, nv);

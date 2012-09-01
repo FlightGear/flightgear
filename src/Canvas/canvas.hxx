@@ -27,6 +27,7 @@
 
 #include <simgear/props/propertyObject.hxx>
 #include <osg/NodeCallback>
+#include <osg/observer_ptr>
 
 #include <memory>
 #include <string>
@@ -66,6 +67,7 @@ class Canvas:
         virtual void operator()(osg::Node* node, osg::NodeVisitor* nv);
     };
     typedef osg::ref_ptr<CameraCullCallback> CameraCullCallbackPtr;
+    typedef osg::observer_ptr<CameraCullCallback> CameraCullCallbackWeakPtr;
 
     /**
      * This callback is installed on every placement of the canvas in the
@@ -78,7 +80,7 @@ class Canvas:
         CullCallback(CameraCullCallback* camera_cull);
 
       private:
-        CameraCullCallback *_camera_cull;
+        CameraCullCallbackWeakPtr _camera_cull;
 
         virtual void operator()(osg::Node* node, osg::NodeVisitor* nv);
     };
@@ -91,10 +93,10 @@ class Canvas:
 
     int getSizeX() const
     { return _size_x; }
-  
+
     int getSizeY() const
     { return _size_y; }
-  
+
     void setSizeX(int sx);
     void setSizeY(int sy);
 
