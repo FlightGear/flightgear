@@ -19,8 +19,13 @@ macro(find_static_component comp libs)
     # NO_DEFAULT_PATH is important on Mac - we need to ensure subversion
     # libraires in dist/ or Macports are picked over the Apple version 
     # in /usr, since that's what we will ship.
+    # On other platforms we do need default paths though, i.e. since Linux
+    # distros may use architecture-specific directories (like
+    # /usr/lib/x86_64-linux-gnu) which we cannot hardcode/guess here.
     FIND_LIBRARY(${compLibName}
+if(APPLE)
       NO_DEFAULT_PATH
+endif(APPLE)
       NAMES ${compLib}
       HINTS $ENV{LIBSVN_DIR} ${CMAKE_INSTALL_PREFIX} 
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
