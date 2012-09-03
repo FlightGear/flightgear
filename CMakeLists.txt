@@ -237,9 +237,9 @@ if(WIN32)
         # endforeach(warning)
 
         set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS")
-        if (${MSVC_VERSION} EQUAL 1600)
+        if (${MSVC_VERSION} GREATER 1599)
             set( MSVC_LD_FLAGS "/FORCE:MULTIPLE" )
-        endif (${MSVC_VERSION} EQUAL 1600)
+        endif (${MSVC_VERSION} GREATER 1599)
     endif(MSVC)
 
     set(NOMINMAX 1)
