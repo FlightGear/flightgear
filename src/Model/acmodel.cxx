@@ -80,12 +80,12 @@ FGAircraftModel::init ()
       } catch (const sg_exception &ex) {
         SG_LOG(SG_AIRCRAFT, SG_ALERT, "Failed to load aircraft from " << path << ':');
         SG_LOG(SG_AIRCRAFT, SG_ALERT, "  " << ex.getFormattedMessage());
-        SG_LOG(SG_AIRCRAFT, SG_ALERT, "(Falling back to glider.ac.)");
       }
   }
 
   if (!model)
   {
+      SG_LOG(SG_AIRCRAFT, SG_ALERT, "(Falling back to glider.ac.)");
       model = fgLoad3DModelPanel( "Models/Geometry/glider.ac",
                                   globals->get_props());
   }
