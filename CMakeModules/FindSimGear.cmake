@@ -147,7 +147,7 @@ else(SIMGEAR_SHARED)
     message(STATUS "looking for static SimGear libraries")
     
     find_sg_library(SimGearCore SIMGEAR_CORE SIMGEAR_CORE_LIBRARIES)
-    find_sg_library(SimgearScene SIMGEAR_SCENE SIMGEAR_LIBRARIES)
+    find_sg_library(SimGearScene SIMGEAR_SCENE SIMGEAR_LIBRARIES)
 
     # again link order matters - scene libraries depend on core ones
     list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
