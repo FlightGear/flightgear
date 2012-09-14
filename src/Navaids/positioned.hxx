@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include <stdint.h>
 
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/math/SGMath.hxx>
