@@ -41,6 +41,26 @@ get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
 
 link_directories ( ${Boost_LIBRARY_DIRS} )
 
+get_property(FG_GROUPS_C GLOBAL PROPERTY FG_GROUPS_C)
+string(REPLACE "@" ";" groups ${FG_GROUPS_C} )
+foreach(g ${groups})
+	string(REPLACE "#" ";" g2 ${g})
+	list(GET g2 0 name)
+	list(REMOVE_AT g2 0)
+	source_group("${name}\\Sources" FILES ${g2})
+endforeach()
+
+get_property(FG_GROUPS_H GLOBAL PROPERTY FG_GROUPS_H)
+string(REPLACE "@" ";" groups ${FG_GROUPS_H} )
+foreach(g ${groups})
+	string(REPLACE "#" ";" g2 ${g})
+	list(GET g2 0 name)
+	list(REMOVE_AT g2 0)
+	source_group("${name}\\Headers" FILES ${g2})
+endforeach()
+
+source_group("Main\\Headers" FILES ${HEADERS})
+source_group("Main\\Sources" FILES ${SOURCES})
 add_executable(fgfs ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
 
 get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
