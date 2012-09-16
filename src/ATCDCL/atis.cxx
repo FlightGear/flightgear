@@ -527,9 +527,12 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   if((!US_CA) && fgGetBool("/sim/atc/use-millibars")) {
     transmission += QNH + ": ";
     myQNH /= mbar;
-    if  (myQNH > 1000) myQNH -= 1000;       // drop high digit
     snprintf(buf, bs, "%03.0f", myQNH);
-    transmission += ConvertNumToSpokenDigits(buf) + " " + millibars + BRK;
+    transmission += ConvertNumToSpokenDigits(buf);
+    // TODO Extend voice samples so we can replace "millibars" with "hectopascal" (new ATIS standard since 2011)
+    if  (myQNH < 1000)
+        transmission += " " + millibars; // "hectopascal" (millibars) spoken for values below 1000 only (to avoid confusion with inHg)
+    transmission += BRK;
   } else {
     transmission += Altimeter + ": ";
     double asetting = myQNH / inHg;         // use inches of mercury
@@ -556,12 +559,14 @@ int FGATIS::GenTransmission(const int regen, const int special) {
     }
     transmission += On_initial_contact_advise_you_have_information + " ";
     transmission += phonetic_seq_string;
-    transmission += "... " + BRK + PAUSE + PAUSE;
+    transmission += "... " + BRK;
+    // Pause in between two ATIS messages must be 3-5 seconds
+    transmission += PAUSE + PAUSE + PAUSE + PAUSE;
   }
   transmission_readable = transmission;
 // Take the previous readable string and munge it to
 // be relatively-more acceptable to the primitive tts system.
-// Note that : ; and . are among the token-delimeters recognized
+// Note that : ; and . are among the token-delimiters recognized
 // by the tts system.
   for (size_t where;;) {
     where = transmission.find_first_of(":.");
