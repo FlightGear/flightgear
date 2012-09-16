@@ -109,6 +109,7 @@ public:
     ~FGKR_87();
 
     void init ();
+    void reinit ();
     void bind ();
     void unbind ();
     void update (double dt_sec);

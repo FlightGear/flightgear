@@ -80,6 +80,12 @@ AirspeedIndicator::init ()
     _environmentManager = (FGEnvironmentMgr*) globals->get_subsystem("environment");
 }
 
+void
+AirspeedIndicator::reinit ()
+{
+    _speed_node->setDoubleValue(0.0);
+}
+
 #ifndef FPSTOKTS
 # define FPSTOKTS 0.592484
 #endif

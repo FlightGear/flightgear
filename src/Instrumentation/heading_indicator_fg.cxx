@@ -61,7 +61,7 @@ HeadingIndicatorFG::init ()
     string branch;
     branch = "/instrumentation/" + name;
     
-	_heading_in_node = fgGetNode("/orientation/heading-deg", true);
+    _heading_in_node = fgGetNode("/orientation/heading-deg", true);
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     if( NULL == (_offset_node = node->getChild("offset-deg", 0, false)) ) {
@@ -69,14 +69,22 @@ HeadingIndicatorFG::init ()
       _offset_node->setDoubleValue( -globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES );
     }
     _serviceable_node = node->getChild("serviceable", 0, true);
-	_error_node = node->getChild("heading-bug-error-deg", 0, true);
-	_nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);
+    _error_node = node->getChild("heading-bug-error-deg", 0, true);
+    _nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _off_node         = node->getChild("off-flag", 0, true);
 
+    _electrical_node = fgGetNode("/systems/electrical/outputs/DG", true);
+
+    reinit();
+}
+
+void
+HeadingIndicatorFG::reinit ()
+{
     _last_heading_deg = (_heading_in_node->getDoubleValue() +
                          _offset_node->getDoubleValue());
-	_electrical_node = fgGetNode("/systems/electrical/outputs/DG", true);
+    _gyro.reinit();
 }
 
 void
@@ -91,7 +99,6 @@ HeadingIndicatorFG::bind ()
           &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
     fgTie((branch + "/spin").c_str(),
           &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
-	
 }
 
 void

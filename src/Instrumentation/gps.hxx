@@ -84,6 +84,7 @@ public:
 
   // SGSubsystem interface
     virtual void init ();
+    virtual void reinit ();
     virtual void update (double delta_time_sec);
 
     virtual void bind();

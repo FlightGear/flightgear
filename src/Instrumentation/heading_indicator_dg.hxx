@@ -40,6 +40,7 @@ public:
     virtual ~HeadingIndicatorDG ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);
@@ -51,7 +52,6 @@ private:
 
     std::string name;
     int num;
-    //string vacuum_system;
 
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;

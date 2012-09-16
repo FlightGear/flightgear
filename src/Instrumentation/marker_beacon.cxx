@@ -43,7 +43,6 @@ using std::string;
 // Constructor
 FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
     audio_vol(NULL),
-    need_update(true),
     outer_blink(false),
     middle_blink(false),
     inner_blink(false),
@@ -121,11 +120,16 @@ FGMarkerBeacon::init ()
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
 
-    blink.stamp();
-
-    outer_marker = middle_marker = inner_marker = false;
+    reinit();
 }
 
+void
+FGMarkerBeacon::reinit ()
+{
+    blink.stamp();
+    outer_marker = middle_marker = inner_marker = false;
+    _time_before_search_sec = 0.0;
+}
 
 void
 FGMarkerBeacon::bind ()
@@ -160,8 +164,6 @@ FGMarkerBeacon::unbind ()
 void
 FGMarkerBeacon::update(double dt)
 {
-    need_update = false;
-
     // On timeout, scan again, this needs to run every iteration no
     // matter what the power or serviceable state.  If power is turned
     // off or the unit becomes unserviceable while a beacon sound is

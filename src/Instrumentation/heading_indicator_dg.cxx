@@ -61,25 +61,20 @@ HeadingIndicatorDG::init ()
 
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
     _yaw_rate_node   = fgGetNode("/orientation/yaw-rate-degps", true);
-     _g_node         =   fgGetNode("/accelerations/pilot-g", true);
+     _g_node         = fgGetNode("/accelerations/pilot-g", true);
 
-
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
-    _offset_node = node->getChild("offset-deg", 0, true);
-    _serviceable_node = node->getChild("serviceable", 0, true);
+    SGPropertyNode *node    = fgGetNode(branch.c_str(), num, true );
+    _offset_node            = node->getChild("offset-deg", 0, true);
+    _serviceable_node       = node->getChild("serviceable", 0, true);
     _heading_bug_error_node = node->getChild("heading-bug-error-deg", 0, true);
-    _error_node = node->getChild("error-deg", 0, true);
-    _nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);
-    _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
-    _align_node = node->getChild("align-deg", 0, true);
+    _error_node             = node->getChild("error-deg", 0, true);
+    _nav1_error_node        = node->getChild("nav1-course-error-deg", 0, true);
+    _heading_out_node       = node->getChild("indicated-heading-deg", 0, true);
+    _align_node             = node->getChild("align-deg", 0, true);
 
     _electrical_node = fgGetNode("/systems/electrical/outputs/DG", true);
 
-    _align_node->setDoubleValue(0);
-    _error_node->setDoubleValue(0);
-
-    _last_heading_deg = (_heading_in_node->getDoubleValue() +
-        _offset_node->getDoubleValue() + _align_node->getDoubleValue());
+    reinit();
 }
 
 void
@@ -106,6 +101,20 @@ HeadingIndicatorDG::unbind ()
 
     fgUntie((branch + "/serviceable").c_str());
     fgUntie((branch + "/spin").c_str());
+}
+
+void
+HeadingIndicatorDG::reinit (void)
+{
+    // reset errors/drift values
+    _align_node->setDoubleValue(0.0);
+    _error_node->setDoubleValue(0.0);
+    _offset_node->setDoubleValue(0.0);
+
+    _last_heading_deg = (_heading_in_node->getDoubleValue() +
+        _offset_node->getDoubleValue() + _align_node->getDoubleValue());
+
+    _gyro.reinit();
 }
 
 void
@@ -162,7 +171,7 @@ HeadingIndicatorDG::update (double dt)
 
     _heading_out_node->setDoubleValue(heading);
 
-                                 // calculate the difference between the indicacted heading
+                                 // calculate the difference between the indicated heading
                                  // and the selected heading for use with an autopilot
     static SGPropertyNode *bnode
         = fgGetNode( "/autopilot/settings/heading-bug-deg", false );

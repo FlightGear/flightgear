@@ -46,6 +46,15 @@ TurnIndicator::init ()
     _electric_current_node = 
         fgGetNode("/systems/electrical/outputs/turn-coordinator", true);
     _rate_out_node = node->getChild("indicated-turn-rate", 0, true);
+
+    reinit();
+}
+
+void
+TurnIndicator::reinit ()
+{
+    _last_rate = 0;
+    _gyro.reinit();
 }
 
 void

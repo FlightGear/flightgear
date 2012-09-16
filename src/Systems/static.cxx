@@ -37,6 +37,15 @@ StaticSystem::init ()
     _serviceable_node = node->getChild("serviceable", 0, true);
     _pressure_in_node = fgGetNode("/environment/pressure-inhg", true);
     _pressure_out_node = node->getChild("pressure-inhg", 0, true);
+
+    reinit();
+}
+
+void
+StaticSystem::reinit ()
+{
+    // start with settled static pressure
+    _pressure_out_node->setDoubleValue(_pressure_in_node->getDoubleValue());
 }
 
 void
@@ -56,7 +65,6 @@ StaticSystem::update (double dt)
         double trat = _tau ? dt/_tau : 100;
         double target = _pressure_in_node->getDoubleValue();
         double current = _pressure_out_node->getDoubleValue();
-        // double delta = target - current;
         _pressure_out_node->setDoubleValue(fgGetLowPass(current, target, trat));
     }
 }

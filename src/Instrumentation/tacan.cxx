@@ -125,6 +125,12 @@ TACAN::init ()
 }
 
 void
+TACAN::reinit ()
+{
+    _time_before_search_sec = 0;
+}
+
+void
 TACAN::update (double delta_time_sec)
 {
     // don't do anything when paused

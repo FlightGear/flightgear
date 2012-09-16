@@ -328,7 +328,11 @@ GPS::init ()
   
   // last thing, add the deprecated prop watcher
   new DeprecatedPropListener(_gpsNode);
-  
+}
+
+void
+GPS::reinit ()
+{
   clearOutput();
 }
 

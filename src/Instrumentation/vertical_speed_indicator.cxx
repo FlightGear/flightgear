@@ -39,7 +39,13 @@ VerticalSpeedIndicator::init ()
     _speed_node = node->getChild("indicated-speed-fpm", 0, true);
     _speed_up_node = fgGetNode("/sim/speed-up", true);
 
-                                // Initialize at ambient pressure
+    reinit();
+}
+
+void
+VerticalSpeedIndicator::reinit ()
+{
+    // Initialize at ambient pressure
     _internal_pressure_inhg = _pressure_node->getDoubleValue();
 }
 

@@ -268,6 +268,12 @@ FGNavRadio::init ()
 }
 
 void
+FGNavRadio::reinit ()
+{
+    _time_before_search_sec = -1.0;
+}
+
+void
 FGNavRadio::bind ()
 {
     _radio_node->tie( "operable", SGRawValueMethods<FGNavRadio,bool>( *this, &FGNavRadio::isOperable ) );

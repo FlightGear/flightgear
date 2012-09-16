@@ -37,6 +37,7 @@ public:
     virtual ~SlipSkidBall ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void update (double dt);
 
 private:

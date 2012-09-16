@@ -190,6 +190,7 @@ public:
     ~FGNavRadio();
 
     void init ();
+    void reinit ();
     void bind ();
     void unbind ();
     void update (double dt);

@@ -40,6 +40,7 @@ public:
     virtual ~StaticSystem ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);

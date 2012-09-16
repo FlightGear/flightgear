@@ -88,6 +88,14 @@ DME::init ()
     if( NULL == _audioIdent ) 
         _audioIdent = new DMEAudioIdent( temp.str() );
     _audioIdent->init();
+
+    reinit();
+}
+
+void
+DME::reinit ()
+{
+    _time_before_search_sec = 0;
 }
 
 void

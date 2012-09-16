@@ -36,6 +36,7 @@ public:
     virtual ~Altimeter ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void update (double dt);
     virtual void bind();
     virtual void unbind();
@@ -51,7 +52,7 @@ private:
     double _tau;
     double _quantum;
     double _kollsman;
-    double raw_PA;
+    double _raw_PA;
     double _settingInHg;
 
     SGPropertyNode_ptr _serviceable_node;

@@ -118,6 +118,9 @@ void FGKR_87::init () {
     _sgr->tie_to_listener();
 }
 
+void FGKR_87::reinit () {
+    _time_before_search_sec = 0;
+}
 
 void FGKR_87::bind () {
     _tiedProperties.setRoot(fgGetNode("/instrumentation/kr-87", true));

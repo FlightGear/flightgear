@@ -75,13 +75,20 @@ Altimeter::setSettingHPa( double value )
 void
 Altimeter::init ()
 {
-    raw_PA = 0.0;
-    _kollsman = 0.0;
     _pressure_node     = fgGetNode(_static_pressure.c_str(), true);
     _serviceable_node  = _rootNode->getChild("serviceable", 0, true);
     _press_alt_node    = _rootNode->getChild("pressure-alt-ft", 0, true);
     _mode_c_node       = _rootNode->getChild("mode-c-alt-ft", 0, true);
     _altitude_node     = _rootNode->getChild("indicated-altitude-ft", 0, true);
+
+    reinit();
+}
+
+void
+Altimeter::reinit ()
+{
+    _raw_PA = 0.0;
+    _kollsman = 0.0;
 }
 
 void
@@ -105,13 +112,13 @@ Altimeter::update (double dt)
         double pressure = _pressure_node->getDoubleValue();
         double press_alt = _press_alt_node->getDoubleValue();
         // The mechanism settles slowly toward new pressure altitude:
-        raw_PA = fgGetLowPass(raw_PA, _altimeter.press_alt_ft(pressure), trat);
-        _mode_c_node->setDoubleValue(100 * SGMiscd::round(raw_PA/100));
+        _raw_PA = fgGetLowPass(_raw_PA, _altimeter.press_alt_ft(pressure), trat);
+        _mode_c_node->setDoubleValue(100 * SGMiscd::round(_raw_PA/100));
         _kollsman = fgGetLowPass(_kollsman, _altimeter.kollsman_ft(_settingInHg), trat);
         if (_quantum)
-            press_alt = _quantum * SGMiscd::round(raw_PA/_quantum);
+            press_alt = _quantum * SGMiscd::round(_raw_PA/_quantum);
         else
-            press_alt = raw_PA;
+            press_alt = _raw_PA;
         _press_alt_node->setDoubleValue(press_alt);
         _altitude_node->setDoubleValue(press_alt - _kollsman);
     }

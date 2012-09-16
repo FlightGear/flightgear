@@ -48,8 +48,16 @@ HeadingIndicator::init ()
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _heading_bug_error_node = node->getChild("heading-bug-error-deg", 0, true);
     _heading_bug_node = node->getChild("heading-bug-deg", 0, true);
+
+    reinit();
+}
+
+void
+HeadingIndicator::reinit ()
+{
     _last_heading_deg = (_heading_in_node->getDoubleValue() +
                          _offset_node->getDoubleValue());
+    _gyro.reinit();
 }
 
 void

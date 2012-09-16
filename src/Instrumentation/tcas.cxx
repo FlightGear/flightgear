@@ -378,6 +378,12 @@ TCAS::AdvisoryCoordinator::AdvisoryCoordinator(TCAS* _tcas) :
 void
 TCAS::AdvisoryCoordinator::init(void)
 {
+    reinit();
+}
+
+void
+TCAS::AdvisoryCoordinator::reinit(void)
+{
     clear();
     previous = current;
 }
@@ -1179,6 +1185,13 @@ TCAS::init(void)
     annunciator.init();
     advisoryCoordinator.init();
     threatDetector.init();
+}
+
+void
+TCAS::reinit(void)
+{
+    nextUpdateTime = 0;
+    advisoryCoordinator.reinit();
 }
 
 void

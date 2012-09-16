@@ -238,6 +238,7 @@ class TCAS : public SGSubsystem
 
         void bind            (SGPropertyNode* node);
         void init            (void);
+        void reinit          (void);
         void update          (int mode);
 
         void clear           (void);
@@ -385,6 +386,7 @@ public:
     virtual void bind   (void);
     virtual void unbind (void);
     virtual void init   (void);
+    virtual void reinit (void);
     virtual void update (double dt);
 };
 

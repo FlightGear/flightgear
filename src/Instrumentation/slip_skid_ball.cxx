@@ -36,6 +36,14 @@ SlipSkidBall::init ()
     _z_accel_node = fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
     _out_node = node->getChild("indicated-slip-skid", 0, true);
     _override_node = node->getChild("override", 0, true);
+
+    reinit();
+}
+
+void
+SlipSkidBall::reinit ()
+{
+    _out_node->setDoubleValue(0.0);
 }
 
 void

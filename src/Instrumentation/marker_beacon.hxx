@@ -51,8 +51,6 @@ class FGMarkerBeacon : public SGSubsystem
     SGPropertyNode_ptr serviceable;
     SGPropertyNode_ptr sound_working;
 
-    bool need_update;
-
     bool outer_marker;
     bool middle_marker;
     bool inner_marker;
@@ -83,6 +81,7 @@ public:
     ~FGMarkerBeacon();
 
     void init ();
+    void reinit ();
     void bind ();
     void unbind ();
     void update (double dt);

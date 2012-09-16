@@ -48,8 +48,16 @@ MagCompass::init ()
     _y_accel_node = fgGetNode("/accelerations/pilot/y-accel-fps_sec", true);
     _z_accel_node = fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
     _out_node = node->getChild("indicated-heading-deg", 0, true);
+
+    reinit();
 }
 
+void
+MagCompass::reinit ()
+{
+    _error_deg = 0.0;
+    _rate_degps = 0.0;
+}
 
 void
 MagCompass::update (double delta_time_sec)

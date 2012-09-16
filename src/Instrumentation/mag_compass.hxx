@@ -44,6 +44,7 @@ public:
     virtual ~MagCompass ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void update (double dt);
 
 private:

@@ -41,19 +41,6 @@ MasterReferenceGyro::~MasterReferenceGyro ()
 void
 MasterReferenceGyro::init ()
 {
-    _last_hdg = 0;
-    _last_roll = 0;
-    _last_pitch = 0;
-    _indicated_hdg = 0;
-    _indicated_roll = 0;
-    _indicated_pitch = 0;
-    _indicated_hdg_rate = 0;
-    _indicated_roll_rate = 0;
-    _indicated_pitch_rate = 0;
-    _erect_time = 180;
-    _last_g = 1;
-    _g_error = 10;
-
     string branch;
     branch = "/instrumentation/" + _name;
 
@@ -83,12 +70,32 @@ MasterReferenceGyro::init ()
     _hdg_input_source_node = node->getChild("heading-source", 0, true);
     _fast_erect_node = node->getChild("fast-erect", 0, true);
 
+    reinit();
+}
+
+void
+MasterReferenceGyro::reinit ()
+{
+    _last_hdg = 0;
+    _last_roll = 0;
+    _last_pitch = 0;
+    _indicated_hdg = 0;
+    _indicated_roll = 0;
+    _indicated_pitch = 0;
+    _indicated_hdg_rate = 0;
+    _indicated_roll_rate = 0;
+    _indicated_pitch_rate = 0;
+    _erect_time = 180;
+    _last_g = 1;
+    _g_error = 10;
+
     _electrical_node->setDoubleValue(0);
     _responsiveness_node->setDoubleValue(0.75);
     _off_node->setBoolValue(false);
     _hdg_input_source_node->setBoolValue(false);
     _fast_erect_node->setBoolValue(false);
     _g_in_node->setDoubleValue(1);
+    _gyro.reinit();
 }
 
 void
