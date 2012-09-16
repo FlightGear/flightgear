@@ -75,13 +75,6 @@ macro(find_sg_library libName varName libs)
     endif()
 endmacro()
 
-macro(find_sg_component comp libs)
-    set(compLib "sg${comp}")
-    string(TOUPPER "SIMGEAR_${comp}" libVar)
-    
-    find_sg_library(${compLib} ${libVar} ${libs})
-endmacro()
-
 FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
   HINTS $ENV{SIMGEAR_DIR}
   PATH_SUFFIXES include
@@ -153,50 +146,11 @@ else(SIMGEAR_SHARED)
     set(SIMGEAR_CORE_LIBRARIES "") # clear value
     message(STATUS "looking for static SimGear libraries")
     
-  # note the order here affects the order Simgear libraries are
-  # linked in, and hence ability to link when using a traditional
-  # linker such as GNU ld on Linux
-    set(comps
-        environment
-        nasal
-        tsync
-        bvh
-        bucket
-        io
-        serial
-        math
-        props
-        structure
-        timing
-        xml
-        misc
-        threads
-        debug
-        magvar
-    )
-
-    set(scene_comps
-        ephem
-        sky
-        material
-        tgdb
-        model
-        screen
-        util
-        sound)
-            
-    foreach(component ${comps})
-        find_sg_component(${component} SIMGEAR_CORE_LIBRARIES)
-    endforeach()
-
-    foreach(component ${scene_comps})
-        find_sg_component(${component} SIMGEAR_LIBRARIES)
-    endforeach()
+    find_sg_library(SimGearCore SIMGEAR_CORE SIMGEAR_CORE_LIBRARIES)
+    find_sg_library(SimgearScene SIMGEAR_SCENE SIMGEAR_LIBRARIES)
 
     # again link order matters - scene libraries depend on core ones
     list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
-
-    #message(STATUS "all libs ${SIMGEAR_LIBRARIES}")
     
     set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES
         ${CMAKE_THREAD_LIBS_INIT}
