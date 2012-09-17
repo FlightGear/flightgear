@@ -41,13 +41,13 @@
 namespace canvas
 {
 
-  // TODO make projection configurable
-  SansonFlamsteedProjection projection;
   const std::string GEO = "-geo";
 
   //----------------------------------------------------------------------------
   Map::Map(SGPropertyNode_ptr node, const Style& parent_style):
     Group(node, parent_style),
+    // TODO make projection configurable
+    _projection(new SansonFlamsteedProjection),
     _projection_dirty(true)
   {
 
@@ -80,7 +80,7 @@ namespace canvas
         continue;
 
       Projection::ScreenPosition pos =
-        projection.worldToScreen(lat.value, lon.value);
+        _projection->worldToScreen(lat.value, lon.value);
 
       geo_node->setScreenPos(pos.x, pos.y);
 
@@ -182,12 +182,12 @@ namespace canvas
 
     if(    child->getNameString() == "ref-lat"
         || child->getNameString() == "ref-lon" )
-      projection.setWorldPosition( _node->getDoubleValue("ref-lat"),
-                                   _node->getDoubleValue("ref-lon") );
+      _projection->setWorldPosition( _node->getDoubleValue("ref-lat"),
+                                     _node->getDoubleValue("ref-lon") );
     else if( child->getNameString() == "hdg" )
-      projection.setOrientation(child->getFloatValue());
+      _projection->setOrientation(child->getFloatValue());
     else if( child->getNameString() == "range" )
-      projection.setRange(child->getDoubleValue());
+      _projection->setRange(child->getDoubleValue());
     else
       return;
 

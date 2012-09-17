@@ -28,6 +28,7 @@
 namespace canvas
 {
   class GeoNodePair;
+  class HorizontalProjection;
   class Map:
     public Group
   {
@@ -51,6 +52,7 @@ namespace canvas
                                     boost::shared_ptr<GeoNodePair>
                                   > GeoNodes;
       GeoNodes _geo_nodes;
+      boost::shared_ptr<HorizontalProjection> _projection;
       bool _projection_dirty;
 
       struct GeoCoord
