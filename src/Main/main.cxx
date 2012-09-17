@@ -75,11 +75,6 @@ using namespace flightgear;
 using std::cerr;
 using std::vector;
 
-// Specify our current idle function state.  This is used to run all
-// our initializations out of the idle callback so that we can get a
-// splash screen up and running right away.
-int idle_state = 0;
-
 // The atexit() function handler should know when the graphical subsystem
 // is initialized.
 extern int _bootstrap_OSInit;
@@ -124,7 +119,7 @@ static void fgMainLoop( void )
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
     double sim_dt, real_dt;
-    TimeManager* timeMgr = (TimeManager*) globals->get_subsystem("time");
+    static TimeManager* timeMgr = (TimeManager*) globals->get_subsystem("time");
     timeMgr->computeTimeDeltas(sim_dt, real_dt);
 
     // update magvar model
@@ -184,6 +179,11 @@ struct GeneralInitOperation : public GraphicsContextOperation
 // then on.
 
 static void fgIdleFunction ( void ) {
+    // Specify our current idle function state.  This is used to run all
+    // our initializations out of the idle callback so that we can get a
+    // splash screen up and running right away.
+    static int idle_state = 0;
+
     static osg::ref_ptr<GeneralInitOperation> genOp;
     if ( idle_state == 0 ) {
         idle_state++;
@@ -224,7 +224,7 @@ static void fgIdleFunction ( void ) {
         fgSplashProgress("initializing scenery system");
 
     } else if ( idle_state == 4 ) {
-        idle_state++;
+        idle_state+=2;
         // based on the requested presets, calculate the true starting
         // lon, lat
         fgInitPosition();
@@ -265,11 +265,6 @@ static void fgIdleFunction ( void ) {
 
         fgSplashProgress("loading aircraft");
 
-    } else if ( idle_state == 5 ) {
-        idle_state++;
-
-        fgSplashProgress("initializing sky elements");
-
     } else if ( idle_state == 6 ) {
         idle_state++;
         
@@ -277,10 +272,8 @@ static void fgIdleFunction ( void ) {
         SGMagVar *magvar = new SGMagVar();
         globals->set_mag( magvar );
         
-        
         // kludge to initialize mag compass
-        // (should only be done for in-flight
-        // startup)
+        // (should only be done for in-flight startup)
         // update magvar model
         globals->get_mag()->update( fgGetDouble("/position/longitude-deg")
                                    * SGD_DEGREES_TO_RADIANS,
