@@ -337,7 +337,7 @@ bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
   ClosedNodeSet closedNodes;
   HeapOrder ordering;
   
-  openNodes.push_back(new AStarOpenNode(aStart, 0.0, NULL, aDest, NULL));
+  openNodes.push_back(new AStarOpenNode(aStart, 0.0, 0, aDest, NULL));
   
 // A* open node iteration
   while (!openNodes.empty()) {
