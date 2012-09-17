@@ -14,7 +14,6 @@
 #include <string>
 #include <sstream>
 
-#include <simgear/magvar/magvar.hxx>
 #include <simgear/math/SGMath.hxx>
 
 #include <Main/fg_props.hxx>
@@ -66,7 +65,7 @@ HeadingIndicatorFG::init ()
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     if( NULL == (_offset_node = node->getChild("offset-deg", 0, false)) ) {
       _offset_node = node->getChild("offset-deg", 0, true);
-      _offset_node->setDoubleValue( -globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES );
+      _offset_node->setDoubleValue( -fgGetDouble("/environment/magnetic-variation-deg") );
     }
     _serviceable_node = node->getChild("serviceable", 0, true);
     _error_node = node->getChild("heading-bug-error-deg", 0, true);

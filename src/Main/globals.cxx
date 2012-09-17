@@ -32,7 +32,6 @@
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/magvar/magvar.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/event_mgr.hxx>
@@ -131,7 +130,6 @@ FGGlobals::FGGlobals() :
     fg_home( "" ),
     time_params( NULL ),
     ephem( NULL ),
-    mag( NULL ),
     matlib( NULL ),
     route_mgr( NULL ),
     ATIS_mgr( NULL ),
@@ -185,7 +183,6 @@ FGGlobals::~FGGlobals()
     renderer = NULL;
     
     delete time_params;
-    delete mag;
     delete matlib;
     delete route_mgr;
 
@@ -389,15 +386,21 @@ FGGlobals::get_event_mgr () const
     return event_mgr;
 }
 
-const SGGeod &
+SGGeod
 FGGlobals::get_aircraft_position() const
 {
-    if( acmodel != NULL ) {
-        SGModelPlacement * mp = acmodel->get3DModel();
-        if( mp != NULL )
-            return mp->getPosition();
-    }
-    throw sg_exception("Can't get aircraft position", "FGGlobals::get_aircraft_position()" );
+  if( acmodel != NULL ) {
+      SGModelPlacement * mp = acmodel->get3DModel();
+      if( mp != NULL )
+          return mp->getPosition();
+  }
+
+  // fall back to reading the property tree. this can occur during
+  // startup before the acmodel is initialised
+  
+  return SGGeod::fromDegFt(fgGetDouble("/position/longitude-deg"),
+                           fgGetDouble("/position/latitude-deg"),
+                           fgGetDouble("/position/altitude-ft"));
 }
 
 SGVec3d

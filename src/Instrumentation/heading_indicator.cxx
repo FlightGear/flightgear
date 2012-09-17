@@ -18,8 +18,6 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
-#include <simgear/magvar/magvar.hxx>
-
 HeadingIndicator::HeadingIndicator ( SGPropertyNode *node )
     :
     _name(node->getStringValue("name", "heading-indicator")),
@@ -41,14 +39,14 @@ HeadingIndicator::init ()
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     if( NULL == (_offset_node = node->getChild("offset-deg", 0, false)) ) {
       _offset_node = node->getChild("offset-deg", 0, true);
-      _offset_node->setDoubleValue( -globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES );
+      _offset_node->setDoubleValue( -fgGetDouble("/environment/magnetic-variation-deg") );
     }
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
     _suction_node = fgGetNode(_suction.c_str(), true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _heading_bug_error_node = node->getChild("heading-bug-error-deg", 0, true);
     _heading_bug_node = node->getChild("heading-bug-deg", 0, true);
-
+  
     reinit();
 }
 

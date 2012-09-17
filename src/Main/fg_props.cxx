@@ -28,7 +28,6 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/particles.hxx>
@@ -340,32 +339,13 @@ getGMTString ()
 }
 
 /**
- * Return the magnetic variation
- */
-static double
-getMagVar ()
-{
-  return globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
-}
-
-
-/**
- * Return the magnetic dip
- */
-static double
-getMagDip ()
-{
-  return globals->get_mag()->get_magdip() * SGD_RADIANS_TO_DEGREES;
-}
-
-
-/**
  * Return the current heading in degrees.
  */
 static double
 getHeadingMag ()
 {
-  double magheading = fgGetDouble("/orientation/heading-deg") - getMagVar();
+  double magheading = fgGetDouble("/orientation/heading-deg") -
+    fgGetDouble("/environment/magnetic-variation-deg");
   return SGMiscd::normalizePeriodic(0, 360, magheading );
 }
 
@@ -375,7 +355,8 @@ getHeadingMag ()
 static double
 getTrackMag ()
 {
-  double magtrack = fgGetDouble("/orientation/track-deg") - getMagVar();
+  double magtrack = fgGetDouble("/orientation/track-deg") -
+    fgGetDouble("/environment/magnetic-variation-deg");
   return SGMiscd::normalizePeriodic(0, 360, magtrack );
 }
 
@@ -501,9 +482,6 @@ FGProperties::bind ()
   // Orientation
   _tiedProperties.Tie("/orientation/heading-magnetic-deg", getHeadingMag);
   _tiedProperties.Tie("/orientation/track-magnetic-deg", getTrackMag);
-
-  _tiedProperties.Tie("/environment/magnetic-variation-deg", getMagVar);
-  _tiedProperties.Tie("/environment/magnetic-dip-deg", getMagDip);
 
   // Misc. Temporary junk.
   _tiedProperties.Tie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);

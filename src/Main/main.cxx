@@ -44,7 +44,6 @@
 #include <simgear/props/AtomicChangeListener.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/magvar/magvar.hxx>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 #include <simgear/math/SGMath.hxx>
@@ -121,10 +120,6 @@ static void fgMainLoop( void )
     double sim_dt, real_dt;
     static TimeManager* timeMgr = (TimeManager*) globals->get_subsystem("time");
     timeMgr->computeTimeDeltas(sim_dt, real_dt);
-
-    // update magvar model
-    globals->get_mag()->update( globals->get_aircraft_position(),
-                                globals->get_time_params()->getJD() );
 
     // update all subsystems
     globals->get_subsystem_mgr()->update(sim_dt);
@@ -267,22 +262,6 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 6 ) {
         idle_state++;
-        
-        // Initialize MagVar model
-        SGMagVar *magvar = new SGMagVar();
-        globals->set_mag( magvar );
-        
-        // kludge to initialize mag compass
-        // (should only be done for in-flight startup)
-        // update magvar model
-        globals->get_mag()->update( fgGetDouble("/position/longitude-deg")
-                                   * SGD_DEGREES_TO_RADIANS,
-                                   fgGetDouble("/position/latitude-deg")
-                                   * SGD_DEGREES_TO_RADIANS,
-                                   fgGetDouble("/position/altitude-ft")
-                                   * SG_FEET_TO_METER,
-                                   globals->get_time_params()->getJD() );
-
         fgSplashProgress("initializing subsystems");
 
     } else if ( idle_state == 7 ) {

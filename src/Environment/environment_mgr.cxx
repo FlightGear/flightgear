@@ -45,6 +45,7 @@
 #include "terrainsampler.hxx"
 #include "Airports/simple.hxx"
 #include "gravity.hxx"
+#include "magvarmanager.hxx"
 
 class FG3DCloudsListener : public SGPropertyChangeListener {
 public:
@@ -93,6 +94,8 @@ FGEnvironmentMgr::FGEnvironmentMgr () :
   set_subsystem("precipitation", new FGPrecipitationMgr);
   set_subsystem("terrainsampler", Environment::TerrainSampler::createInstance( fgGetNode("/environment/terrain", true ) ));
   set_subsystem("ridgelift", new FGRidgeLift);
+  
+  set_subsystem("magvar", new FGMagVarManager);
 }
 
 FGEnvironmentMgr::~FGEnvironmentMgr ()
@@ -119,6 +122,10 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
   remove_subsystem("controller");
   delete subsys;
 
+  subsys = get_subsystem("magvar");
+  remove_subsystem("magvar");
+  delete subsys;
+  
   delete fgClouds;
   delete _environment;
 
