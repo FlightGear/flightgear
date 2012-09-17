@@ -188,6 +188,8 @@ void FGATC::Render(string& msg, const float volume,
     {
         NoRender(refname);
     }
+#else
+    bool useVoice = false;
 #endif    // ENABLE_AUDIO_SUPPORT
 
     if (!useVoice)

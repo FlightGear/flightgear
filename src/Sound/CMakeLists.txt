@@ -9,6 +9,7 @@ set(SOURCES
 	sample_queue.cxx
 	voice.cxx
 	voiceplayer.cxx
+	soundmanager.cxx
 	)
 
 set(HEADERS
@@ -20,6 +21,7 @@ set(HEADERS
 	sample_queue.hxx
 	voice.hxx
 	voiceplayer.hxx
+	soundmanager.hxx
 	)
-    		
+
 flightgear_component(Sound "${SOURCES}" "${HEADERS}")

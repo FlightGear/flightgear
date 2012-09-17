@@ -60,7 +60,6 @@
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
@@ -98,6 +97,7 @@
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/voice.hxx>
+#include <Sound/soundmanager.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
 #include <Traffic/TrafficMgr.hxx>
@@ -1062,7 +1062,7 @@ bool fgInitSubsystems() {
     // to be updated in every loop.
     // Sound manager is updated last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
-    globals->add_subsystem("sound", new SGSoundMgr, SGSubsystemMgr::SOUND);
+    globals->add_subsystem("sound", new FGSoundManager, SGSubsystemMgr::SOUND);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the event manager subsystem.

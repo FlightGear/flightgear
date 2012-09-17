@@ -47,7 +47,6 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_random.h>
 
@@ -55,7 +54,7 @@
 #include <Model/panelnode.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <Sound/fg_fx.hxx>
+#include <Sound/soundmanager.hxx>
 #include <Time/TimeManager.hxx>
 #include <GUI/gui.h>
 #include <Viewer/CameraGroup.hxx>
@@ -86,72 +85,6 @@ int idle_state = 0;
 extern int _bootstrap_OSInit;
 
 
-void fgInitSoundManager()
-{
-    SGSoundMgr *smgr = globals->get_soundmgr();
-
-    smgr->bind();
-    smgr->init(fgGetString("/sim/sound/device-name", NULL));
-
-    vector <const char*>devices = smgr->get_available_devices();
-    for (unsigned int i=0; i<devices.size(); i++) {
-        SGPropertyNode *p = fgGetNode("/sim/sound/devices/device", i, true);
-        p->setStringValue(devices[i]);
-    }
-    devices.clear();
-}
-
-void fgSetNewSoundDevice(const char *device)
-{
-    SGSoundMgr *smgr = globals->get_soundmgr();
-    smgr->suspend();
-    smgr->stop();
-    smgr->init(device);
-    smgr->resume();
-}
-
-// Update sound manager state (init/suspend/resume) and propagate property values,
-// since the sound manager doesn't read any properties itself.
-// Actual sound update is triggered by the subsystem manager.
-static void fgUpdateSound(double dt)
-{
-#ifdef ENABLE_AUDIO_SUPPORT
-    static bool smgr_init = true;
-    static SGPropertyNode *sound_working = fgGetNode("/sim/sound/working");
-    if (smgr_init == true) {
-        if (sound_working->getBoolValue() == true) {
-            fgInitSoundManager();
-            smgr_init = false;
-        }
-    } else {
-        static SGPropertyNode *sound_enabled = fgGetNode("/sim/sound/enabled");
-        static SGSoundMgr *smgr = globals->get_soundmgr();
-        static bool smgr_enabled = true;
-
-        if (sound_working->getBoolValue() == false) {   // request to reinit
-           smgr->reinit();
-           smgr->resume();
-           sound_working->setBoolValue(true);
-        }
-
-        if (smgr_enabled != sound_enabled->getBoolValue()) {
-            if (smgr_enabled == true) { // request to suspend
-                smgr->suspend();
-                smgr_enabled = false;
-            } else {
-                smgr->resume();
-                smgr_enabled = true;
-            }
-        }
-
-        if (smgr_enabled == true) {
-            static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
-            smgr->set_volume(volume->getFloatValue());
-        }
-    }
-#endif
-}
-
 static void fgLoadInitialScenery()
 {
     static SGPropertyNode_ptr scenery_loaded
@@ -163,11 +96,6 @@ static void fgLoadInitialScenery()
              && fgGetBool("sim/fdm-initialized")) {
             fgSetBool("sim/sceneryloaded",true);
             fgSplashProgress("");
-            if (fgGetBool("/sim/sound/working")) {
-                globals->get_soundmgr()->activate();
-            }
-            globals->get_props()->tie("/sim/sound/devices/name",
-                  SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
         }
         else
         {
@@ -199,10 +127,6 @@ static void fgMainLoop( void )
     // update magvar model
     globals->get_mag()->update( globals->get_aircraft_position(),
                                 globals->get_time_params()->getJD() );
-
-    // Propagate sound manager properties (note: actual update is triggered
-    // by the subsystem manager).
-    fgUpdateSound(sim_dt);
 
     // update all subsystems
     globals->get_subsystem_mgr()->update(sim_dt);
