@@ -55,7 +55,6 @@ TimeManager::TimeManager() :
   _inited(false),
   _impl(NULL),
   _sceneryLoaded("sim/sceneryloaded"),
-  _sceneryLoadOverride("sim/sceneryloaded-override"),
   _modelHz("sim/model-hz"),
   _timeDelta("sim/time/delta-realtime-sec"),
   _simTimeDelta("sim/time/delta-sec")
@@ -163,7 +162,7 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
     _lastClockFreeze = _clockFreeze->getBoolValue();
   }
 
-  bool wait_for_scenery = !(_sceneryLoaded || _sceneryLoadOverride);
+  bool wait_for_scenery = !_sceneryLoaded;
   if (!wait_for_scenery) {
     throttleUpdateRate();
   }

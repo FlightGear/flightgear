@@ -89,8 +89,7 @@ private:
   double _frameLatencyMax;
   int _frameCount;
   
-  SGPropObjBool _sceneryLoaded, 
-    _sceneryLoadOverride;
+  SGPropObjBool _sceneryLoaded;
   SGPropObjInt _modelHz;
   SGPropObjDouble _timeDelta, _simTimeDelta;
 };

@@ -89,11 +89,14 @@ static void fgLoadInitialScenery()
 {
     static SGPropertyNode_ptr scenery_loaded
         = fgGetNode("sim/sceneryloaded", true);
+    static SGPropertyNode_ptr scenery_override
+        = fgGetNode("/sim/sceneryloaded-override", true);
 
     if (!scenery_loaded->getBoolValue())
     {
-        if (globals->get_tile_mgr()->isSceneryLoaded()
-             && fgGetBool("sim/fdm-initialized")) {
+        if (scenery_override->getBoolValue() ||
+            (globals->get_tile_mgr()->isSceneryLoaded()
+             && fgGetBool("sim/fdm-initialized"))) {
             fgSetBool("sim/sceneryloaded",true);
             fgSplashProgress("");
         }
