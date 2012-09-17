@@ -1050,7 +1050,7 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
   d->reset(d->statCacheCheck);
   sqlite_bind_stdstring(d->statCacheCheck, 1, path.str());
   if (d->execSelect(d->statCacheCheck)) {
-    int modtime = sqlite3_column_int(d->statCacheCheck, 0);
+    time_t modtime = sqlite3_column_int64(d->statCacheCheck, 0);
     return (modtime != path.modTime());
   } else {
     return true;
@@ -1061,7 +1061,7 @@ void NavDataCache::stampCacheFile(const SGPath& path)
 {
   d->reset(d->stampFileCache);
   sqlite_bind_stdstring(d->stampFileCache, 1, path.str());
-  sqlite3_bind_int(d->stampFileCache, 2, path.modTime());
+  sqlite3_bind_int64(d->stampFileCache, 2, path.modTime());
   d->execInsert(d->stampFileCache);
 }
 
