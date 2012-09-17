@@ -390,7 +390,7 @@ bool FGGeneric::parse_message_ascii(int length) {
     return true;
 }
 
-bool FGGeneric::parse_message(int length) {
+bool FGGeneric::parse_message_len(int length) {
     if (binary_mode) {
         return parse_message_binary(length);
     } else {
@@ -448,7 +448,7 @@ bool FGGeneric::process() {
             if (!binary_mode) {
                 length = io->readline( buf, FG_MAX_MSG_SIZE );
                 if ( length > 0 ) {
-                    parse_message( length );
+                    parse_message_len( length );
                 } else {
                     SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
                     return false;
@@ -456,7 +456,7 @@ bool FGGeneric::process() {
             } else {
                 length = io->read( buf, binary_record_length );
                 if ( length == binary_record_length ) {
-                    parse_message( length );
+                    parse_message_len( length );
                 } else {
                     SG_LOG( SG_IO, SG_ALERT,
                             "Generic protocol: Received binary "
@@ -468,12 +468,12 @@ bool FGGeneric::process() {
         } else {
             if (!binary_mode) {
                 while ((length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-                    parse_message( length );
+                    parse_message_len( length );
                 }
             } else {
                 while ((length = io->read( buf, binary_record_length )) 
                           == binary_record_length ) {
-                    parse_message( length );
+                    parse_message_len( length );
                 }
 
                 if ( length > 0 ) {

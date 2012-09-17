@@ -42,7 +42,7 @@ public:
     ~FGGeneric();
 
     bool gen_message();
-    bool parse_message(int length);
+    bool parse_message_len(int length);
 
     // open hailing frequencies
     bool open();
