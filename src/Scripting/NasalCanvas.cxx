@@ -82,7 +82,7 @@ static naRef eventTypeToNasal(naContext c, osgGA::GUIEventAdapter::EventType ty)
   case osgGA::GUIEventAdapter::KEYDOWN: return stringToNasal(c, "key-down");
 
   default:
-      ; // fall through
+      break;
   }
   
   return naNil();
@@ -157,6 +157,7 @@ static const char* elementGhostGetMember(naContext c, void* g, naRef field, naRe
 {
   const char* fieldName = naStr_data(field);
   canvas::Element* e = (canvas::Element*) g;
+  SG_UNUSED(e);
   
   if (!strcmp(fieldName, "parents")) {
     *out = naNewVector(c);
@@ -172,6 +173,8 @@ static void elementGhostSetMember(naContext c, void* g, naRef field, naRef value
 {
   const char* fieldName = naStr_data(field);
   canvas::Element* e = (canvas::Element*) g;
+  SG_UNUSED(fieldName);
+  SG_UNUSED(e);
 }
 
 
