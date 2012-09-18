@@ -98,6 +98,12 @@ namespace canvas
    */
   void triggerChangeRecursive(SGPropertyNode* node);
 
+  /**
+   * Trigger a childRemoved event for every child of node (Unlimited depth) and
+   * node itself.
+   */
+  void triggerRemoveRecursive(SGPropertyNode* node);
+
 } // namespace canvas
 
 #endif /* PROPERTY_HELPER_HXX_ */

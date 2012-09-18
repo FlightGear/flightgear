@@ -83,7 +83,9 @@ void PropertyBasedMgr::childAdded( SGPropertyNode * parent,
 void PropertyBasedMgr::childRemoved( SGPropertyNode * parent,
                                      SGPropertyNode * child )
 {
-  if( parent != _props || child->getNameString() != _name_elements )
+  if( parent != _props )
+    return canvas::triggerRemoveRecursive(child);
+  else if( child->getNameString() != _name_elements )
     return;
 
   size_t index = child->getIndex();

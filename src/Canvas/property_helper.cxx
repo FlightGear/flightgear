@@ -144,4 +144,15 @@ namespace canvas
     for( int i = 0; i < node->nChildren(); ++i )
       triggerChangeRecursive( node->getChild(i) );
   }
+
+  //----------------------------------------------------------------------------
+  void triggerRemoveRecursive(SGPropertyNode* node)
+  {
+    for( int i = 0; i < node->nChildren(); ++i )
+    {
+      SGPropertyNode* child = node->getChild(i);
+      node->fireChildRemoved( child );
+      triggerRemoveRecursive( child );
+    }
+  }
 }
