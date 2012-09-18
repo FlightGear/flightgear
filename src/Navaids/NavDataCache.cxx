@@ -900,7 +900,10 @@ NavDataCache::NavDataCache()
     
 NavDataCache::~NavDataCache()
 {
-        
+  assert(static_instance == this);
+  static_instance = NULL;
+  SG_LOG(SG_NAVCACHE, SG_INFO, "closing the navcache");
+  d.reset();
 }
     
 NavDataCache* NavDataCache::instance()

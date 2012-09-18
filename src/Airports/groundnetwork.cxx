@@ -251,7 +251,8 @@ bool compare_trafficrecords(FGTrafficRecord a, FGTrafficRecord b)
     return (a.getIntentions().size() < b.getIntentions().size());
 }
 
-FGGroundNetwork::FGGroundNetwork()
+FGGroundNetwork::FGGroundNetwork() :
+  parent(NULL)
 {
     hasNetwork = false;
     foundRoute = false;
@@ -268,6 +269,13 @@ FGGroundNetwork::FGGroundNetwork()
 
 FGGroundNetwork::~FGGroundNetwork()
 {
+// JMT 2012-09-8 - disabling the groundnet-caching as part of enabling the
+// navcache. The problem isn't the NavCache - it's that for the past few years,
+// we have not being running destructors on FGPositioned classes, and hence,
+// not running this code.
+// When I fix FGPositioned lifetimes (unloading-at-runtime support), this
+// will need to be re-visited so it can run safely during shutdown.
+#if 0
     //cerr << "Running Groundnetwork Destructor " << endl;
     bool saveData = false;
     ofstream cachefile;
@@ -309,6 +317,7 @@ FGGroundNetwork::~FGGroundNetwork()
     if (saveData) {
         cachefile.close();
     }
+#endif
 }
 
 void FGGroundNetwork::saveElevationCache() {
