@@ -68,9 +68,20 @@ namespace {
 
 const int SCHEMA_VERSION = 3;
 
+// bind a std::string to a sqlite statement. The std::string must live the
+// entire duration of the statement execution - do not pass a temporary
+// std::string, or the compiler may delete it, freeing the C-string storage,
+// and causing subtle memory corruption bugs!
 void sqlite_bind_stdstring(sqlite3_stmt* stmt, int value, const std::string& s)
 {
   sqlite3_bind_text(stmt, value, s.c_str(), s.length(), SQLITE_STATIC);
+}
+
+// variant of the above, which does not care about the lifetime of the
+// passed std::string
+void sqlite_bind_temp_stdstring(sqlite3_stmt* stmt, int value, const std::string& s)
+{
+  sqlite3_bind_text(stmt, value, s.c_str(), s.length(), SQLITE_TRANSIENT);
 }
   
 typedef sqlite3_stmt* sqlite3_stmt_ptr;
@@ -1051,7 +1062,7 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
   }
   
   d->reset(d->statCacheCheck);
-  sqlite_bind_stdstring(d->statCacheCheck, 1, path.str());
+  sqlite_bind_temp_stdstring(d->statCacheCheck, 1, path.str());
   if (d->execSelect(d->statCacheCheck)) {
     time_t modtime = sqlite3_column_int64(d->statCacheCheck, 0);
     return (modtime != path.modTime());
@@ -1063,7 +1074,7 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
 void NavDataCache::stampCacheFile(const SGPath& path)
 {
   d->reset(d->stampFileCache);
-  sqlite_bind_stdstring(d->stampFileCache, 1, path.str());
+  sqlite_bind_temp_stdstring(d->stampFileCache, 1, path.str());
   sqlite3_bind_int64(d->stampFileCache, 2, path.modTime());
   d->execInsert(d->stampFileCache);
 }
