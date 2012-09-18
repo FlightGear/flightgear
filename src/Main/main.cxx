@@ -155,6 +155,9 @@ struct GeneralInitOperation : public GraphicsContextOperation
         simRendering->setStringValue("gl-version", (char*) glGetString(GL_VERSION));
         SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VERSION));
 
+        simRendering->setStringValue("gl-shading-language-version", (char*) glGetString(GL_SHADING_LANGUAGE_VERSION));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_SHADING_LANGUAGE_VERSION));
+
         GLint tmp;
         glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
         simRendering->setIntValue("max-texture-size", tmp);
