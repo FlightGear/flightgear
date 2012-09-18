@@ -49,6 +49,7 @@
 #include "logger.hxx"
 #include "util.hxx"
 #include "main.hxx"
+#include "positioninit.hxx"
 
 #include <boost/scoped_array.hpp>
 
@@ -1228,7 +1229,7 @@ do_presets_commit (const SGPropertyNode * arg)
       // Nasal can trigger this during initial init, which confuses
       // the logic in ReInitSubsystems, since initial state has not been
       // saved at that time. Short-circuit everything here.
-      fgInitPosition();
+      flightgear::initPosition();
     }
     
     return true;

@@ -68,6 +68,7 @@
 #include "fg_init.hxx"
 #include "fg_os.hxx"
 #include "fg_props.hxx"
+#include "positioninit.hxx"
 
 using namespace flightgear;
 
@@ -226,8 +227,8 @@ static void fgIdleFunction ( void ) {
         idle_state+=2;
         // based on the requested presets, calculate the true starting
         // lon, lat
-        fgInitPosition();
-        fgInitTowerLocationListener();
+        flightgear::initPosition();
+        flightgear::initTowerLocationListener();
 
         TimeManager* t = new TimeManager;
         globals->add_subsystem("time", t, SGSubsystemMgr::INIT);
@@ -320,7 +321,7 @@ static void fgIdleFunction ( void ) {
             // the other logic is taken from former startup.nas
             if( hdg < 360.0 && apt.length() > 0 && strthdg > 360.0 && rwy.length() == 0 && onground && parkpos.length() == 0 ) {
                 extern bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
-                fgSetPosFromAirportIDandHdg( apt, hdg );
+                flightgear::setPosFromAirportIDandHdg( apt, hdg );
             }
         } else {
             SG_LOG(SG_ENVIRONMENT, SG_INFO,

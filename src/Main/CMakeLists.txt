@@ -20,6 +20,7 @@ set(SOURCES
 	main.cxx
 	options.cxx
 	util.cxx
+    positioninit.cxx
 	${RESOURCE_FILE}
 	)
 
@@ -34,6 +35,7 @@ set(HEADERS
 	main.hxx
 	options.hxx
 	util.hxx
+    positioninit.hxx
 	)
 
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)

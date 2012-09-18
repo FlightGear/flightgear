@@ -61,13 +61,6 @@ void fgPostInitSubsystems();
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems();
 
-// Set the initial position based on presets (or defaults)
-bool fgInitPosition();
-
-
-// Listen to /sim/tower/airport-id and set tower view position accordingly
-void fgInitTowerLocationListener();
-
 /*
  * Search in the current directory, and in on directory deeper
  * for <aircraft>-set.xml configuration files and show the aircaft name
