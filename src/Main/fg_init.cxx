@@ -1050,9 +1050,9 @@ bool fgInitGeneral() {
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
-bool fgInitSubsystems() {
+void fgCreateSubsystems() {
 
-    SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
+    SG_LOG( SG_GENERAL, SG_INFO, "Creating Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
     ////////////////////////////////////////////////////////////////////
@@ -1264,14 +1264,13 @@ bool fgInitSubsystems() {
 
     globals->add_subsystem("tile-manager", globals->get_tile_mgr(), 
       SGSubsystemMgr::DISPLAY);
-      
-    ////////////////////////////////////////////////////////////////////
-    // Bind and initialize subsystems.
-    ////////////////////////////////////////////////////////////////////
+}
 
-    globals->get_subsystem_mgr()->bind();
-    globals->get_subsystem_mgr()->init();
-
+void fgPostInitSubsystems()
+{
+    SGTimeStamp st;
+    st.stamp();
+  
     ////////////////////////////////////////////////////////////////////////
     // Initialize the Nasal interpreter.
     // Do this last, so that the loaded scripts see initialized state
@@ -1279,10 +1278,13 @@ bool fgInitSubsystems() {
     FGNasalSys* nasal = new FGNasalSys();
     globals->add_subsystem("nasal", nasal, SGSubsystemMgr::INIT);
     nasal->init();
-
+    SG_LOG(SG_GENERAL, SG_INFO, "Nasal init took:" << st.elapsedMSec());
+  
     // initialize methods that depend on other subsystems.
+    st.stamp();
     globals->get_subsystem_mgr()->postinit();
-
+    SG_LOG(SG_GENERAL, SG_INFO, "Subsystems postinit took:" << st.elapsedMSec());
+  
     ////////////////////////////////////////////////////////////////////
     // TODO FIXME! UGLY KLUDGE!
     ////////////////////////////////////////////////////////////////////
@@ -1318,8 +1320,6 @@ bool fgInitSubsystems() {
                                 // Save the initial state for future
                                 // reference.
     globals->saveInitialState();
-    
-    return true;
 }
 
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to

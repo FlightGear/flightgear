@@ -29,7 +29,6 @@
 
 // forward decls
 class SGPropertyNode;
-class SGTime;
 class SGPath;
 
 // Return the current base package version
@@ -52,11 +51,12 @@ bool fgInitNav ();
 bool fgInitGeneral ();
 
 
-// This is the top level init routine which calls all the other
-// initialization routines.  If you are adding a subsystem to flight
-// gear, its initialization call should located in this routine.
-bool fgInitSubsystems();
+// Create all the subsystems needed by the sim
+void fgCreateSubsystems();
 
+// called after the subsystems have been bound and initialised,
+// to peform final init
+void fgPostInitSubsystems();
  
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems();

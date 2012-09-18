@@ -181,7 +181,8 @@ static void fgIdleFunction ( void ) {
     // our initializations out of the idle callback so that we can get a
     // splash screen up and running right away.
     static int idle_state = 0;
-
+    static int spin_count = 0;
+  
     static osg::ref_ptr<GeneralInitOperation> genOp;
     if ( idle_state == 0 ) {
         idle_state++;
@@ -265,47 +266,40 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 6 ) {
         idle_state++;
-        fgSplashProgress("initializing subsystems");
+        fgSplashProgress("creating subsystems");
 
     } else if ( idle_state == 7 ) {
         idle_state++;
-        // Initialize audio support
-#ifdef ENABLE_AUDIO_SUPPORT
+        SGTimeStamp st;
+        st.stamp();
+        fgCreateSubsystems();
+        SG_LOG(SG_GENERAL, SG_INFO, "Creating subsystems took:" << st.elapsedMSec());
+        fgSplashProgress("binding subsystems");
+      
+    } else if ( idle_state == 8 ) {
+        idle_state++;
+        SGTimeStamp st;
+        st.stamp();
+        globals->get_subsystem_mgr()->bind();
+        SG_LOG(SG_GENERAL, SG_INFO, "Binding subsystems took:" << st.elapsedMSec());
 
-        // Start the intro music
-        if ( fgGetBool("/sim/startup/intro-music") ) {
-            SGPath mp3file( globals->get_fg_root() );
-            mp3file.append( "Sounds/intro.mp3" );
-
-            SG_LOG( SG_GENERAL, SG_INFO,
-                "Starting intro music: " << mp3file.str() );
-
-# if defined( __CYGWIN__ )
-            string command = "start /m `cygpath -w " + mp3file.str() + "`";
-# elif defined( _WIN32 )
-            string command = "start /m " + mp3file.str();
-# else
-            string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
-# endif
-
-            if (0 != system ( command.c_str() ))
-            {
-                SG_LOG( SG_SOUND, SG_WARN,
-                    "Failed to play mp3 file " << mp3file.str() << ". Maybe mp3 player is not installed." );
-            }
+        fgSplashProgress("initing subsystems");
+    } else if ( idle_state == 9 ) {
+        SGSubsystem::InitStatus status = globals->get_subsystem_mgr()->incrementalInit();
+        if ( status == SGSubsystem::INIT_DONE) {
+          ++idle_state;
+          fgSplashProgress("finishing subsystem init");
+        } else {
+          const char* spinChars = "-\\|/";
+          string msg = string("initing subsystems ") + spinChars[spin_count++ % 4];
+          fgSplashProgress(msg.c_str());
         }
-#endif
-        // This is the top level init routine which calls all the
-        // other subsystem initialization routines.  If you are adding
-        // a subsystem to flightgear, its initialization call should be
-        // located in this routine.
-        if( !fgInitSubsystems()) {
-            SG_LOG( SG_GENERAL, SG_ALERT,
-                "Subsystem initialization failed ..." );
-            exit(-1);
-        }
-
-        // Torsten Dreyer:
+      
+    } else if ( idle_state == 10 ) {
+        idle_state = 900;
+        fgPostInitSubsystems();
+      
+              // Torsten Dreyer:
         // ugly hack for automatic runway selection on startup based on
         // metar data. Makes startup.nas obsolete and guarantees the same
         // runway selection as for AI traffic. However, this code belongs to
@@ -335,7 +329,7 @@ static void fgIdleFunction ( void ) {
 
         fgSplashProgress("initializing graphics engine");
 
-    } else if ( idle_state == 8 ) {
+    } else if ( idle_state == 900 ) {
         idle_state = 1000;
         
         // setup OpenGL view parameters
