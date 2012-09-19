@@ -25,6 +25,8 @@
 #define FG_NAVDATACACHE_HXX
 
 #include <memory>
+
+#include <simgear/misc/strutils.hxx> // for string_list
 #include <Navaids/positioned.hxx>
     
 class SGPath;
@@ -77,6 +79,9 @@ public:
   void writeIntProperty(const std::string& key, int value);
   void writeStringProperty(const std::string& key, const std::string& value);
   void writeDoubleProperty(const std::string& key, const double& value);
+  
+  string_list readStringListProperty(const std::string& key);
+  void writeStringListProperty(const std::string& key, const string_list& values);
   
   FGPositioned* loadById(PositionedID guid);
   
