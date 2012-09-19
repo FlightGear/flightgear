@@ -123,6 +123,9 @@ public:
     unsigned int numTaxiways() const;
     FGTaxiway* getTaxiwayByIndex(unsigned int aIndex) const;
 
+    bool hasTaxiwayWithIdent(const std::string& aIdent) const;
+    FGTaxiway* getTaxiwayByIdent(const std::string& aIdent) const;
+
     unsigned int numPavements() const;
     FGPavement* getPavementByIndex(unsigned int aIndex) const;
     
@@ -235,7 +238,7 @@ private:
     void readThresholdData(SGPropertyNode* aRoot);
     void processThreshold(SGPropertyNode* aThreshold);
       
-  void readILSData(SGPropertyNode* aRoot);
+    void readILSData(SGPropertyNode* aRoot);
   
     void validateTowerData() const;
     
@@ -256,7 +259,7 @@ private:
     mutable bool mRunwaysLoaded;
     mutable bool mTaxiwaysLoaded;
     mutable bool mProceduresLoaded;
-  bool mILSDataLoaded;
+    bool mILSDataLoaded;
   
     mutable PositionedIDVec mRunways;
     mutable PositionedIDVec mTaxiways;

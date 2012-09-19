@@ -72,6 +72,9 @@ naGhostType NavaidGhostType = { positionedGhostDestroy, "navaid", navaidGhostGet
 static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 naGhostType RunwayGhostType = { positionedGhostDestroy, "runway", runwayGhostGetMember, 0 };
 
+static const char* taxiwayGhostGetMember(naContext c, void* g, naRef field, naRef* out);
+naGhostType TaxiwayGhostType = { positionedGhostDestroy, "taxiway", taxiwayGhostGetMember, 0 };
+
 static const char* fixGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 naGhostType FixGhostType = { positionedGhostDestroy, "fix", fixGhostGetMember, 0 };
 
@@ -172,6 +175,13 @@ static FGRunway* runwayGhost(naRef r)
 {
   if (naGhost_type(r) == &RunwayGhostType)
     return (FGRunway*) naGhost_ptr(r);
+  return 0;
+}
+
+static FGTaxiway* taxiwayGhost(naRef r)
+{
+  if (naGhost_type(r) == &TaxiwayGhostType)
+    return (FGTaxiway*) naGhost_ptr(r);
   return 0;
 }
 
@@ -279,6 +289,16 @@ naRef ghostForRunway(naContext c, const FGRunway* r)
   return naNewGhost2(c, &RunwayGhostType, (void*) r);
 }
 
+naRef ghostForTaxiway(naContext c, const FGTaxiway* r)
+{
+  if (!r) {
+    return naNil();
+  }
+  
+  FGPositioned::get(r); // take a ref
+  return naNewGhost2(c, &TaxiwayGhostType, (void*) r);
+}
+
 naRef ghostForFix(naContext c, const FGFix* r)
 {
   if (!r) {
@@ -357,6 +377,14 @@ static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRe
       naRef rwyid = stringToNasal(c, rwy->ident());
       naRef rwydata = ghostForRunway(c, rwy);
       naHash_set(*out, rwyid, rwydata);
+    }
+
+  } else if (!strcmp(fieldName, "taxiways")) {
+    *out = naNewVector(c);
+    for(unsigned int r=0; r<apt->numTaxiways(); ++r) {
+      FGTaxiway* taxi(apt->getTaxiwayByIndex(r));
+      naRef taxidata = ghostForTaxiway(c, taxi);
+      naVec_append(*out, taxidata);
     }
 
   } else {
@@ -704,6 +732,7 @@ static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef
   else if (!strcmp(fieldName, "width")) *out = naNum(rwy->widthM());
   else if (!strcmp(fieldName, "threshold")) *out = naNum(rwy->displacedThresholdM());
   else if (!strcmp(fieldName, "stopway")) *out = naNum(rwy->stopwayM());
+  else if (!strcmp(fieldName, "surface")) *out = naNum(rwy->surface());
   else if (!strcmp(fieldName, "ils_frequency_mhz")) {
     *out = rwy->ILS() ? naNum(rwy->ILS()->get_freq() / 100.0) : naNil();
   } else if (!strcmp(fieldName, "ils")) {
@@ -712,6 +741,23 @@ static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef
     return 0;
   }
   
+  return "";
+}
+
+static const char* taxiwayGhostGetMember(naContext c, void* g, naRef field, naRef* out)
+{
+  const char* fieldName = naStr_data(field);
+  FGTaxiway* taxi = (FGTaxiway*) g;
+  
+  if (!strcmp(fieldName, "id")) *out = stringToNasal(c, taxi->ident());
+  else if (!strcmp(fieldName, "lat")) *out = naNum(taxi->latitude());
+  else if (!strcmp(fieldName, "lon")) *out = naNum(taxi->longitude());
+  else if (!strcmp(fieldName, "heading")) *out = naNum(taxi->headingDeg());
+  else if (!strcmp(fieldName, "length")) *out = naNum(taxi->lengthM());
+  else if (!strcmp(fieldName, "width")) *out = naNum(taxi->widthM());
+  else if (!strcmp(fieldName, "surface")) *out = naNum(taxi->surface());
+  else return 0;
+
   return "";
 }
 
@@ -822,6 +868,11 @@ static int geodFromArgs(naRef* args, int offset, int argc, SGGeod& result)
     
     if (gt == &RunwayGhostType) {
       result = runwayGhost(args[offset])->geod();
+      return 1;
+    }
+    
+    if (gt == &TaxiwayGhostType) {
+      result = taxiwayGhost(args[offset])->geod();
       return 1;
     }
     
@@ -1133,6 +1184,26 @@ static naRef f_airport_runway(naContext c, naRef me, int argc, naRef* args)
   }
   
   return ghostForRunway(c, apt->getRunwayByIdent(ident));
+}
+
+static naRef f_airport_taxiway(naContext c, naRef me, int argc, naRef* args)
+{
+  FGAirport* apt = airportGhost(me);
+  if (!apt) {
+    naRuntimeError(c, "airport.taxiway called on non-airport object");
+  }
+  
+  if ((argc < 1) || !naIsString(args[0])) {
+    naRuntimeError(c, "airport.taxiway expects a taxiway ident argument");
+  }
+  
+  std::string ident(naStr_data(args[0]));
+  boost::to_upper(ident);
+  if (!apt->hasTaxiwayWithIdent(ident)) {
+    return naNil();
+  }
+  
+  return ghostForTaxiway(c, apt->getTaxiwayByIdent(ident));
 }
 
 static naRef f_airport_sids(naContext c, naRef me, int argc, naRef* args)
@@ -2277,6 +2348,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, gcSave, "airportProto", airportPrototype);
   
     hashset(c, airportPrototype, "runway", naNewFunc(c, naNewCCode(c, f_airport_runway)));
+    hashset(c, airportPrototype, "taxiway", naNewFunc(c, naNewCCode(c, f_airport_taxiway)));
     hashset(c, airportPrototype, "tower", naNewFunc(c, naNewCCode(c, f_airport_tower)));
     hashset(c, airportPrototype, "comms", naNewFunc(c, naNewCCode(c, f_airport_comms)));
     hashset(c, airportPrototype, "sids", naNewFunc(c, naNewCCode(c, f_airport_sids)));
