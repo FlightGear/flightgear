@@ -132,10 +132,10 @@ int shIsEnumValid(SHint type, VGint val)
             val == VG_COLOR_RAMP_SPREAD_REFLECT);
     
   case VG_PAINT_PATTERN_TILING_MODE:
-    return (VG_TILE_FILL ||
-            VG_TILE_PAD ||
-            VG_TILE_REPEAT ||
-            VG_TILE_REFLECT);
+    return (val == VG_TILE_FILL ||
+            val == VG_TILE_PAD ||
+            val == VG_TILE_REPEAT ||
+            val == VG_TILE_REFLECT);
     
   case VG_IMAGE_FORMAT:
     return (val >= VG_sRGBX_8888 &&
