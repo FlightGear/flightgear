@@ -824,6 +824,10 @@ void fgReInitSubsystems()
     // need to bind FDMshell again, since we manually unbound it above...
     globals->get_subsystem("flight")->bind();
 
+    // need to reset aircraft (systems/instruments) so they can adapt to current environment
+    globals->get_subsystem("systems")->reinit();
+    globals->get_subsystem("instrumentation")->reinit();
+
 // setup state to end re-init
     fgSetBool("/sim/signals/reinit", false);
     if ( !freeze ) {

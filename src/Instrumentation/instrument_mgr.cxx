@@ -113,20 +113,6 @@ void FGInstrumentMgr::init()
   SGSubsystemGroup::init();
 }
 
-void FGInstrumentMgr::reinit()
-{  
-// delete all our instrument
-  for (unsigned int i=0; i<_instruments.size(); ++i) {
-    const std::string& nm(_instruments[i]);
-    SGSubsystem* instr = get_subsystem(nm);
-    instr->unbind();
-    remove_subsystem(nm);
-    delete instr;
-  }
-  
-  init();
-}
-
 bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 {
     for ( int i = 0; i < config_props->nChildren(); ++i ) {

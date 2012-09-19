@@ -34,7 +34,7 @@ public:
     
     virtual void init();
     virtual InitStatus incrementalInit();
-    virtual void reinit();
+
 private:
     bool build (SGPropertyNode* config_props);
     

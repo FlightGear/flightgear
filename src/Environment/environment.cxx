@@ -268,95 +268,84 @@ void FGEnvironment::Tie( SGPropertyNode_ptr base, bool archivable )
 
   _tiedProperties.Tie( "visibility-m", this, 
       &FGEnvironment::get_visibility_m, 
-      &FGEnvironment::set_visibility_m)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_visibility_m);
 
   _tiedProperties.Tie("temperature-sea-level-degc", this, 
       &FGEnvironment::get_temperature_sea_level_degc, 
-      &FGEnvironment::set_temperature_sea_level_degc)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_temperature_sea_level_degc);
 
   _tiedProperties.Tie("temperature-degc", this, 
       &FGEnvironment::get_temperature_degc,
-      &FGEnvironment::set_temperature_degc)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
-
-  _tiedProperties.Tie("temperature-degf", this, 
-      &FGEnvironment::get_temperature_degf);
+      &FGEnvironment::set_temperature_degc);
 
   _tiedProperties.Tie("dewpoint-sea-level-degc", this, 
       &FGEnvironment::get_dewpoint_sea_level_degc, 
-      &FGEnvironment::set_dewpoint_sea_level_degc)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_dewpoint_sea_level_degc);
 
   _tiedProperties.Tie("dewpoint-degc", this, 
       &FGEnvironment::get_dewpoint_degc,
-      &FGEnvironment::set_dewpoint_degc)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_dewpoint_degc);
 
   _tiedProperties.Tie("pressure-sea-level-inhg", this, 
       &FGEnvironment::get_pressure_sea_level_inhg, 
-      &FGEnvironment::set_pressure_sea_level_inhg)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_pressure_sea_level_inhg);
 
   _tiedProperties.Tie("pressure-inhg", this, 
       &FGEnvironment::get_pressure_inhg,
-      &FGEnvironment::set_pressure_inhg)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
-
-  _tiedProperties.Tie("density-slugft3", this, 
-      &FGEnvironment::get_density_slugft3); // read-only
-
-  _tiedProperties.Tie("relative-humidity", this, 
-      &FGEnvironment::get_relative_humidity); //ro
-
-  _tiedProperties.Tie("atmosphere/density-tropo-avg", this, 
-      &FGEnvironment::get_density_tropo_avg_kgm3); //ro
+      &FGEnvironment::set_pressure_inhg);
 
   _tiedProperties.Tie("atmosphere/altitude-half-to-sun", this, 
       &FGEnvironment::get_altitude_half_to_sun_m, 
-      &FGEnvironment::set_altitude_half_to_sun_m)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_altitude_half_to_sun_m);
 
   _tiedProperties.Tie("atmosphere/altitude-troposphere-top", this, 
       &FGEnvironment::get_altitude_tropo_top_m, 
-      &FGEnvironment::set_altitude_tropo_top_m)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_altitude_tropo_top_m);
 
   _tiedProperties.Tie("wind-from-heading-deg", this, 
       &FGEnvironment::get_wind_from_heading_deg, 
-      &FGEnvironment::set_wind_from_heading_deg)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_wind_from_heading_deg);
 
   _tiedProperties.Tie("wind-speed-kt", this, 
       &FGEnvironment::get_wind_speed_kt, 
-      &FGEnvironment::set_wind_speed_kt)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_wind_speed_kt);
 
   _tiedProperties.Tie("wind-from-north-fps", this, 
       &FGEnvironment::get_wind_from_north_fps, 
-      &FGEnvironment::set_wind_from_north_fps)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_wind_from_north_fps);
 
   _tiedProperties.Tie("wind-from-east-fps", this, 
       &FGEnvironment::get_wind_from_east_fps, 
-      &FGEnvironment::set_wind_from_east_fps)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_wind_from_east_fps);
 
   _tiedProperties.Tie("wind-from-down-fps", this, 
       &FGEnvironment::get_wind_from_down_fps, 
-      &FGEnvironment::set_wind_from_down_fps)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_wind_from_down_fps);
 
   _tiedProperties.Tie("turbulence/magnitude-norm", this, 
       &FGEnvironment::get_turbulence_magnitude_norm, 
-      &FGEnvironment::set_turbulence_magnitude_norm)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_turbulence_magnitude_norm);
 
   _tiedProperties.Tie("turbulence/rate-hz", this, 
       &FGEnvironment::get_turbulence_rate_hz, 
-      &FGEnvironment::set_turbulence_rate_hz)
-      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+      &FGEnvironment::set_turbulence_rate_hz);
+
+  _tiedProperties.setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("temperature-degf", this,
+      &FGEnvironment::get_temperature_degf);
+
+  _tiedProperties.Tie("density-slugft3", this,
+      &FGEnvironment::get_density_slugft3); // read-only
+
+  _tiedProperties.Tie("relative-humidity", this,
+      &FGEnvironment::get_relative_humidity); //ro
+
+  _tiedProperties.Tie("atmosphere/density-tropo-avg", this,
+      &FGEnvironment::get_density_tropo_avg_kgm3); //ro
+
+  // do not auto reset/restore attributes on reset
+  _tiedProperties.setAttribute( SGPropertyNode::PRESERVE, true );
 }
 
 void FGEnvironment::Untie()
