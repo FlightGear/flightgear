@@ -592,8 +592,8 @@ void fgCreateSubsystems() {
     // autopilot.)
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("instrumentation", new FGInstrumentMgr, SGSubsystemMgr::FDM);
     globals->add_subsystem("systems", new FGSystemMgr, SGSubsystemMgr::FDM);
+    globals->add_subsystem("instrumentation", new FGInstrumentMgr, SGSubsystemMgr::FDM);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the XML Autopilot subsystem.
