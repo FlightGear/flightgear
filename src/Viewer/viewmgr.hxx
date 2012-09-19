@@ -149,7 +149,8 @@ private:
     SGQuatd current_view_orientation, current_view_or_offset;
 
     SGSoundMgr *smgr;
-
+  
+    SGPropertyNode_ptr velocityNorthFPS, velocityEastFPS, velocityDownFPS;
 };
 
 // This takes the conventional aviation XYZ body system 

@@ -370,12 +370,8 @@ FGViewer::recalcLookFrom ()
 {
   // Update location data ...
   if ( _from_model ) {
-    SGModelPlacement* placement = globals->get_aircraft_model()->get3DModel();
-    _position = placement->getPosition();
-  
-    _heading_deg = placement->getHeadingDeg();
-    _pitch_deg = placement->getPitchDeg();
-    _roll_deg = placement->getRollDeg();
+    _position = globals->get_aircraft_position();
+    globals->get_aircraft_orientation(_heading_deg, _pitch_deg, _roll_deg);
   }
 
   double head = _heading_deg;
@@ -419,11 +415,10 @@ FGViewer::recalcLookAt ()
 {
   // The geodetic position of our target to look at
   if ( _at_model ) {
-    SGModelPlacement* placement = globals->get_aircraft_model()->get3DModel();
-    _target = placement->getPosition();
-    _target_heading_deg = placement->getHeadingDeg();
-    _target_pitch_deg = placement->getPitchDeg();
-    _target_roll_deg = placement->getRollDeg();
+    _target = globals->get_aircraft_position();
+    globals->get_aircraft_orientation(_target_heading_deg,
+                                      _target_pitch_deg,
+                                      _target_roll_deg);
   } else {
     // if not model then calculate our own target position...
     setDampTarget(_target_roll_deg, _target_pitch_deg, _target_heading_deg);
@@ -437,11 +432,8 @@ FGViewer::recalcLookAt ()
 
 
   if ( _from_model ) {
-    SGModelPlacement* placement = globals->get_aircraft_model()->get3DModel();
-    _position = placement->getPosition();
-    _heading_deg = placement->getHeadingDeg();
-    _pitch_deg = placement->getPitchDeg();
-    _roll_deg = placement->getRollDeg();
+    _position = globals->get_aircraft_position();
+    globals->get_aircraft_orientation(_heading_deg, _pitch_deg, _roll_deg);
   } else {
     // update from our own data, just the rotation here...
     setDampTarget(_roll_deg, _pitch_deg, _heading_deg);

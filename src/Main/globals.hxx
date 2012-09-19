@@ -55,13 +55,9 @@ class SGSubsystem;
 class SGSoundMgr;
 
 class FGATISMgr;
-class FGAircraftModel;
 class FGControls;
-class FGFlightPlanDispatcher;
-class FGNavList;
 class FGTACANList;
 class FGLocale;
-class FGModelMgr;
 class FGRouteMgr;
 class FGScenery;
 class FGTileMgr;
@@ -128,12 +124,6 @@ private:
 
     SGCommandMgr *commands;
 
-  //FGFlightPlanDispatcher *fpDispatcher;
-
-    FGAircraftModel *acmodel;
-
-    FGModelMgr * model_mgr;
-
     // list of serial port-like configurations
     string_list *channel_options_list;
 
@@ -150,12 +140,6 @@ private:
     FGFontCache *fontcache;
 
     // Navigational Aids
-    FGNavList *navlist;
-    FGNavList *loclist;
-    FGNavList *gslist;
-    FGNavList *dmelist;
-    FGNavList *tacanlist;
-    FGNavList *carrierlist;
     FGTACANList *channellist;
 
     /// roots of Aircraft trees
@@ -163,6 +147,8 @@ private:
 
     bool haveUserSettings;
 
+    SGPropertyNode_ptr positionLon, positionLat, positionAlt;
+    SGPropertyNode_ptr orientHeading, orientPitch, orientRoll;
 public:
 
     FGGlobals();
@@ -261,24 +247,12 @@ public:
 
     inline SGCommandMgr *get_commands () { return commands; }
 
-    inline FGAircraftModel *get_aircraft_model () { return acmodel; }
-
-    inline void set_aircraft_model (FGAircraftModel * model)
-    {
-        acmodel = model;
-    }
-
     SGGeod get_aircraft_position() const;
 
     SGVec3d get_aircraft_positon_cart() const;
-    
-    inline FGModelMgr *get_model_mgr () { return model_mgr; }
 
-    inline void set_model_mgr (FGModelMgr * mgr)
-    {
-      model_mgr = mgr;
-    }
-
+    void get_aircraft_orientation(double& heading, double& pitch, double& roll);
+  
     inline string_list *get_channel_options_list () {
 	return channel_options_list;
     }
@@ -301,21 +275,6 @@ public:
     inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
     inline FGFontCache *get_fontcache() const { return fontcache; }
-
-#if 0
-    inline FGNavList *get_navlist() const { return navlist; }
-    inline void set_navlist( FGNavList *n ) { navlist = n; }
-    inline FGNavList *get_loclist() const { return loclist; }
-    inline void set_loclist( FGNavList *n ) { loclist = n; }
-    inline FGNavList *get_gslist() const { return gslist; }
-    inline void set_gslist( FGNavList *n ) { gslist = n; }
-    inline FGNavList *get_dmelist() const { return dmelist; }
-    inline void set_dmelist( FGNavList *n ) { dmelist = n; }
-    inline FGNavList *get_tacanlist() const { return tacanlist; }
-    inline void set_tacanlist( FGNavList *n ) { tacanlist = n; }
-    inline FGNavList *get_carrierlist() const { return carrierlist; }
-    inline void set_carrierlist( FGNavList *n ) { carrierlist = n; }
-#endif
   
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }

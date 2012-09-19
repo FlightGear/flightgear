@@ -31,7 +31,6 @@
 
 #include <simgear/compiler.h>
 #include <simgear/sound/soundmgr_openal.hxx>
-#include <Model/acmodel.hxx>
 #include <Main/fg_props.hxx>
 #include "viewer.hxx"
 
@@ -181,6 +180,10 @@ FGViewMgr::bind()
 void
 FGViewMgr::do_bind()
 {
+  velocityNorthFPS = fgGetNode("velocities/speed-north-fps", true);
+  velocityEastFPS = fgGetNode("velocities/speed-east-fps", true);
+  velocityDownFPS = fgGetNode("velocities/speed-down-fps", true);
+  
   // these are bound to the current view properties
   _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
   _tiedProperties.Tie("heading-offset-deg", this,
@@ -338,7 +341,9 @@ FGViewMgr::update (double dt)
   // get the model velocity
   SGVec3d velocity = SGVec3d::zeros();
   if ( !stationary() ) {
-    velocity = globals->get_aircraft_model()->getVelocity();
+    velocity = SGVec3d( velocityNorthFPS->getDoubleValue(),
+                        velocityEastFPS->getDoubleValue(),
+                        velocityDownFPS->getDoubleValue() );
   }
   smgr->set_velocity( velocity );
 }

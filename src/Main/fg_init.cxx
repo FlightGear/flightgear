@@ -709,14 +709,9 @@ void fgCreateSubsystems() {
     
     // ordering here is important : Nasal (via events), then models, then views
     globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
-    
-    FGAircraftModel* acm = new FGAircraftModel;
-    globals->set_aircraft_model(acm);
-    globals->add_subsystem("aircraft-model", acm, SGSubsystemMgr::DISPLAY);
 
-    FGModelMgr* mm = new FGModelMgr;
-    globals->set_model_mgr(mm);
-    globals->add_subsystem("model-manager", mm, SGSubsystemMgr::DISPLAY);
+    globals->add_subsystem("aircraft-model", new FGAircraftModel, SGSubsystemMgr::DISPLAY);
+    globals->add_subsystem("model-manager", new FGModelMgr, SGSubsystemMgr::DISPLAY);
 
     FGViewMgr *viewmgr = new FGViewMgr;
     globals->set_viewmgr( viewmgr );

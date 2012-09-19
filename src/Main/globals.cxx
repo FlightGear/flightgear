@@ -39,7 +39,6 @@
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/scene/model/placement.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
@@ -47,8 +46,6 @@
 #include <Autopilot/route_mgr.hxx>
 #include <GUI/FGFontCache.hxx>
 #include <GUI/gui.h>
-#include <Model/acmodel.hxx>
-#include <Model/modelmgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -136,24 +133,24 @@ FGGlobals::FGGlobals() :
     controls( NULL ),
     viewmgr( NULL ),
     commands( SGCommandMgr::instance() ),
-    acmodel( NULL ),
-    model_mgr( NULL ),
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
     scenery( NULL ),
     tile_mgr( NULL ),
     fontcache ( new FGFontCache ),
-    navlist( NULL ),
-    loclist( NULL ),
-    gslist( NULL ),
-    dmelist( NULL ),
-    tacanlist( NULL ),
-    carrierlist( NULL ),
     channellist( NULL ),
     haveUserSettings(false)
 {
   simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
   simgear::PropertyObjectBase::setDefaultRoot(props);
+  
+  positionLon = props->getNode("position/longitude-deg", true);
+  positionLat = props->getNode("position/latitude-deg", true);
+  positionAlt = props->getNode("position/altitude-ft", true);
+  
+  orientPitch = props->getNode("orientation/pitch-deg", true);
+  orientHeading = props->getNode("orientation/heading-deg", true);
+  orientRoll = props->getNode("orientation/roll-deg", true);
 }
 
 // Destructor
@@ -199,12 +196,6 @@ FGGlobals::~FGGlobals()
     delete scenery;
     delete fontcache;
 
-    delete navlist;
-    delete loclist;
-    delete gslist;
-    delete dmelist;
-    delete tacanlist;
-    delete carrierlist;
     delete channellist;
     delete sound;
 
@@ -389,24 +380,22 @@ FGGlobals::get_event_mgr () const
 SGGeod
 FGGlobals::get_aircraft_position() const
 {
-  if( acmodel != NULL ) {
-      SGModelPlacement * mp = acmodel->get3DModel();
-      if( mp != NULL )
-          return mp->getPosition();
-  }
-
-  // fall back to reading the property tree. this can occur during
-  // startup before the acmodel is initialised
-  
-  return SGGeod::fromDegFt(fgGetDouble("/position/longitude-deg"),
-                           fgGetDouble("/position/latitude-deg"),
-                           fgGetDouble("/position/altitude-ft"));
+  return SGGeod::fromDegFt(positionLon->getDoubleValue(),
+                           positionLat->getDoubleValue(),
+                           positionAlt->getDoubleValue());
 }
 
 SGVec3d
 FGGlobals::get_aircraft_positon_cart() const
 {
     return SGVec3d::fromGeod(get_aircraft_position());
+}
+
+void FGGlobals::get_aircraft_orientation(double& heading, double& pitch, double& roll)
+{
+  heading = orientHeading->getDoubleValue();
+  pitch = orientPitch->getDoubleValue();
+  roll = orientRoll->getDoubleValue();
 }
 
 
