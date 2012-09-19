@@ -50,6 +50,7 @@
 #include <Navaids/waypoint.hxx>
 #include <Navaids/fix.hxx>
 #include <Autopilot/route_mgr.hxx>
+#include <Navaids/routePath.hxx>
 #include <Navaids/procedure.hxx>
 #include <Navaids/airways.hxx>
 
@@ -2095,6 +2096,28 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
   return naNil();
 }
 
+static naRef f_leg_path(naContext c, naRef me, int argc, naRef* args)
+{
+  FlightPlan::Leg* leg = fpLegGhost(me);
+  if (!leg) {
+    naRuntimeError(c, "leg.setAltitude called on non-flightplan-leg object");
+  }
+  
+  RoutePath path(leg->owner());
+  SGGeodVec gv(path.pathForIndex(leg->index()));
+
+  naRef result = naNewVector(c);
+  BOOST_FOREACH(SGGeod p, gv) {
+    // construct a geo.Coord!
+    naRef coord = naNewHash(c);
+    hashset(c, coord, "lat", naNum(p.getLatitudeDeg()));
+    hashset(c, coord, "lon", naNum(p.getLongitudeDeg()));
+    naVec_append(result, coord);
+  }
+
+  return result;
+}
+
 static naRef f_waypoint_navaid(naContext c, naRef me, int argc, naRef* args)
 {
   flightgear::Waypt* w = wayptGhost(me);
@@ -2297,6 +2320,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, gcSave, "fpLegProto", fpLegPrototype);
     hashset(c, fpLegPrototype, "setSpeed", naNewFunc(c, naNewCCode(c, f_leg_setSpeed)));
     hashset(c, fpLegPrototype, "setAltitude", naNewFunc(c, naNewCCode(c, f_leg_setAltitude)));
+    hashset(c, fpLegPrototype, "path", naNewFunc(c, naNewCCode(c, f_leg_path)));
   
     for(int i=0; funcs[i].name; i++) {
       hashset(c, globals, funcs[i].name,
