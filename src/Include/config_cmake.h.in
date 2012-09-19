@@ -37,3 +37,5 @@
 
 #cmakedefine FG_HAVE_HLA
 #cmakedefine FG_JPEG_SERVER
+
+#cmakedefine SYSTEM_SQLITE

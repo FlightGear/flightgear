@@ -105,6 +105,7 @@ option(EVENT_INPUT       "Set to ON to build FlightGear with event-based Input s
 option(ENABLE_LIBSVN     "Set to ON to build FlightGear/terrasync with libsvnclient support (default)" ON)
 option(ENABLE_RTI        "Set to ON to build FlightGear with RTI support" OFF)
 option(JPEG_FACTORY      "Set to ON to build FlightGear with JPEG-factory support" OFF)
+option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
 
 # additional utilities
 option(ENABLE_FGADMIN    "Set to ON to build the FGADMIN application (default)" ON)
@@ -181,6 +182,12 @@ if(ENABLE_LIBSVN)
         message(STATUS "libsvn missing. Disabling...")
     endif(LIBSVN_FOUND)
 endif(ENABLE_LIBSVN)
+
+if (SYSTEM_SQLITE)
+    find_package(SQLite3 REQUIRED)
+    set(CMAKE_REQUIRED_INCLUDES ${SQLITE3_INCLUDED_DIR})
+    message(STATUS "Using system SQLite3 library")
+endif (SYSTEM_SQLITE)
 
 find_package(PLIB REQUIRED puaux pu js fnt)
 
