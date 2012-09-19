@@ -400,7 +400,7 @@ static bool fgSetPosFromFix( const string& id )
 // Set the initial position based on presets (or defaults)
 bool initPosition()
 {
-  // cout << "fgInitPosition()" << endl;
+  // cout << "initPosition()" << endl;
   double gs = fgGetDouble("/sim/presets/glideslope-deg")
   * SG_DEGREES_TO_RADIANS ;
   double od = fgGetDouble("/sim/presets/offset-distance-nm");

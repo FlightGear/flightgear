@@ -747,7 +747,7 @@ void fgPostInitSubsystems()
         /* Scenarios require Nasal, so FGAIManager loads the scenarios,
          * including its models such as a/c carriers, in its 'postinit',
          * which is the very last thing we do.
-         * fgInitPosition is called very early in main.cxx/fgIdleFunction,
+         * flightgear::initPosition is called very early in main.cxx/fgIdleFunction,
          * one of the first things we do, long before scenarios/carriers are
          * loaded. => When requested "initial preset position" relates to a
          * carrier, recalculate the 'initial' position here (how have things
