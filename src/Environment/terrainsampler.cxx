@@ -321,6 +321,7 @@ public:
     virtual ~TerrainSamplerImplementation ();
     
     virtual void init ();
+    virtual InitStatus incrementalInit ();
     virtual void postinit();
     virtual void reinit ();
     virtual void bind();
@@ -346,6 +347,12 @@ TerrainSamplerImplementation::TerrainSamplerImplementation( SGPropertyNode_ptr r
 
 TerrainSamplerImplementation::~TerrainSamplerImplementation()
 {
+}
+  
+SGSubsystem::InitStatus TerrainSamplerImplementation::incrementalInit()
+{
+  init();
+  return INIT_DONE;
 }
 
 void TerrainSamplerImplementation::init()

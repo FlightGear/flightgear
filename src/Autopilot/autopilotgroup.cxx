@@ -49,6 +49,7 @@ public:
     virtual void addAutopilot( const std::string & name, SGPropertyNode_ptr apNode, SGPropertyNode_ptr config );
     virtual void removeAutopilot( const std::string & name );
     void init();
+    InitStatus incrementalInit();
     void reinit();
     void update( double dt );
 private:
@@ -99,6 +100,12 @@ void FGXMLAutopilotGroupImplementation::reinit()
     }
     _autopilotNames.clear();
     init();
+}
+
+SGSubsystem::InitStatus FGXMLAutopilotGroupImplementation::incrementalInit()
+{
+  init();
+  return INIT_DONE;
 }
 
 void FGXMLAutopilotGroupImplementation::init()

@@ -54,7 +54,7 @@ public:
   FGEnvironmentMgr ();
   virtual ~FGEnvironmentMgr ();
 
-  virtual void init ();
+  virtual InitStatus incrementalInit ();
   virtual void reinit ();
   virtual void shutdown ();
   virtual void bind ();
@@ -103,7 +103,6 @@ private:
   simgear::TiedPropertyList _tiedProperties;
   SGPropertyChangeListener * _3dCloudsEnableListener;
   SGSky* _sky;
-    
 };
 
 #endif // _ENVIRONMENT_MGR_HXX

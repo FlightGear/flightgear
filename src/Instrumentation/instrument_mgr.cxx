@@ -63,6 +63,12 @@ FGInstrumentMgr::~FGInstrumentMgr ()
 {
 }
 
+SGSubsystem::InitStatus FGInstrumentMgr::incrementalInit()
+{
+  init();
+  return INIT_DONE;
+}
+
 void FGInstrumentMgr::init()
 {
   SGPropertyNode_ptr config_props = new SGPropertyNode;

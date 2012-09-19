@@ -132,23 +132,26 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
   delete _3dCloudsEnableListener;
 }
 
-void
-FGEnvironmentMgr::init ()
+SGSubsystem::InitStatus FGEnvironmentMgr::incrementalInit()
 {
-  SG_LOG( SG_ENVIRONMENT, SG_INFO, "Initializing environment subsystem");
-  SGSubsystemGroup::init();
-  fgClouds->Init();
-
-  // FIXME: is this really part of the environment_mgr?
-  // Initialize the longitude, latitude and altitude to the initial position
-  // of the aircraft so that the atmospheric properties (pressure, temperature
-  // and density) can be initialized accordingly.
-  _altitude_n->setDoubleValue(fgGetDouble("/sim/presets/altitude-ft"));
-  _longitude_n->setDoubleValue(fgGetDouble("/sim/presets/longitude-deg"));
-  _latitude_n->setDoubleValue(fgGetDouble("/sim/presets/latitude-deg"));
   
-  globals->get_event_mgr()->addTask("updateClosestAirport", this,
-                                    &FGEnvironmentMgr::updateClosestAirport, 30 );
+  InitStatus r = SGSubsystemGroup::incrementalInit();
+  if (r == INIT_DONE) {
+    fgClouds->Init();
+    
+    // FIXME: is this really part of the environment_mgr?
+    // Initialize the longitude, latitude and altitude to the initial position
+    // of the aircraft so that the atmospheric properties (pressure, temperature
+    // and density) can be initialized accordingly.
+    _altitude_n->setDoubleValue(fgGetDouble("/sim/presets/altitude-ft"));
+    _longitude_n->setDoubleValue(fgGetDouble("/sim/presets/longitude-deg"));
+    _latitude_n->setDoubleValue(fgGetDouble("/sim/presets/latitude-deg"));
+    
+    globals->get_event_mgr()->addTask("updateClosestAirport", this,
+                                      &FGEnvironmentMgr::updateClosestAirport, 30 );
+  }
+  
+  return r;
 }
 
 void
