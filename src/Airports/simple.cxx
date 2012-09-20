@@ -239,22 +239,6 @@ FGTaxiway* FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
   return (FGTaxiway*) flightgear::NavDataCache::instance()->loadById(mTaxiways[aIndex]);
 }
 
-bool FGAirport::hasTaxiwayWithIdent(const string& aIdent) const
-{
-  return flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent) != 0;
-}
-
-FGTaxiway* FGAirport::getTaxiwayByIdent(const string& aIdent) const
-{
-  PositionedID id = flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent);  
-  if (id == 0) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << ident());
-    throw sg_range_exception("unknown runway " + aIdent + " at airport:" + ident(), "FGAirport::getTaxiwayByIdent");
-  }
-  
-  return (FGTaxiway*) flightgear::NavDataCache::instance()->loadById(id);
-}
-
 unsigned int FGAirport::numPavements() const
 {
   loadTaxiways();

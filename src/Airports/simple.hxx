@@ -123,9 +123,6 @@ public:
     unsigned int numTaxiways() const;
     FGTaxiway* getTaxiwayByIndex(unsigned int aIndex) const;
 
-    bool hasTaxiwayWithIdent(const std::string& aIdent) const;
-    FGTaxiway* getTaxiwayByIdent(const std::string& aIdent) const;
-
     unsigned int numPavements() const;
     FGPavement* getPavementByIndex(unsigned int aIndex) const;
     
