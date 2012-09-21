@@ -96,7 +96,7 @@ public:
     _fp->deleteIndex(srcIndex);
     _fp->insertWayptAtIndex(w, destIndex);
 
-    if (srcIndex == currentWpIndex) {
+    if ((signed int) srcIndex == currentWpIndex) {
         // current waypoint was moved
         _fp->setCurrentIndex(destIndex);
     }

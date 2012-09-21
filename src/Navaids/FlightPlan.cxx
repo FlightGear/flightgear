@@ -319,7 +319,7 @@ FlightPlan::Leg* FlightPlan::currentLeg() const
 
 FlightPlan::Leg* FlightPlan::previousLeg() const
 {
-  if (_currentIndex == 0) {
+  if (_currentIndex <= 0) {
     return NULL;
   }
   
