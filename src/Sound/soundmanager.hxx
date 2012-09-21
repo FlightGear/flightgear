@@ -39,26 +39,25 @@ public:
     ~FGSoundManager();
 
     void init(void);
-    void bind(void);
     void update(double dt);
+    void reinit(void);
 
-    void runtime_init(void);
     void activate(bool State);
-
-    static void setNewSoundDevice(const char *device);
+    void update_device_list();
 
 private:
     bool _is_initialized;
-    SGPropertyNode_ptr _sound_working, _sound_enabled, _volume;
+    SGPropertyNode_ptr _sound_working, _sound_enabled, _volume, _device_name;
     Listener* _listener;
 };
 #else
+#include "Main/fg_props.hxx"
 
 // provide a dummy sound class
 class FGSoundManager : public SGSubsystem
 {
 public:
-    FGSoundManager() {}
+    FGSoundManager() { fgSetBool("/sim/sound/working", false);}
     ~FGSoundManager() {}
 
     void update(double dt) {}

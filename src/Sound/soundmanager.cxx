@@ -37,7 +37,7 @@ public:
     virtual void valueChanged (SGPropertyNode * node);
 
 private:
-    FGSoundManager * _wrapper;
+    FGSoundManager* _wrapper;
 };
 
 void Listener::valueChanged(SGPropertyNode * node)
@@ -57,46 +57,54 @@ FGSoundManager::~FGSoundManager()
 {
 }
 
-
-void FGSoundManager::setNewSoundDevice(const char *device)
-{
-    SGSoundMgr *smgr = globals->get_soundmgr();
-    smgr->suspend();
-    smgr->stop();
-    smgr->init(device);
-    smgr->resume();
-}
-
 void FGSoundManager::init()
-{
-    globals->get_props()->tie("/sim/sound/devices/name",
-          SGRawValueFunctions<const char *>(0, FGSoundManager::setNewSoundDevice), false);
-}
-
-void FGSoundManager::bind()
 {
     _sound_working = fgGetNode("/sim/sound/working");
     _sound_enabled = fgGetNode("/sim/sound/enabled");
     _volume        = fgGetNode("/sim/sound/volume");
+    _device_name   = fgGetNode("/sim/sound/device-name");
 
-    // we intentionally do _not_ call SGSoundMgr::bind here, we'll do this later
+    reinit();
+}
+
+void FGSoundManager::reinit()
+{
+    _is_initialized = false;
+
+    if (_is_initialized && !_sound_working->getBoolValue())
+    {
+        // shutdown sound support
+        stop();
+        return;
+    }
+
+    if (!_sound_working->getBoolValue())
+    {
+        return;
+    }
+
+    update_device_list();
+
+    select_device(_device_name->getStringValue());
+    SGSoundMgr::reinit();
+    _is_initialized = true;
+
+    activate(fgGetBool("sim/sceneryloaded", true));
 }
 
 void FGSoundManager::activate(bool State)
 {
-    if (_is_initialized &&
-        fgGetBool("/sim/sound/working"))
+    if (_is_initialized)
     {
         if (State)
+        {
             SGSoundMgr::activate();
+        }
     }
 }
 
-void FGSoundManager::runtime_init()
+void FGSoundManager::update_device_list()
 {
-    SGSoundMgr::bind();
-    SGSoundMgr::init(fgGetString("/sim/sound/device-name", NULL));
-
     std::vector <const char*>devices = get_available_devices();
     for (unsigned int i=0; i<devices.size(); i++) {
         SGPropertyNode *p = fgGetNode("/sim/sound/devices/device", i, true);
@@ -110,21 +118,10 @@ void FGSoundManager::runtime_init()
 // Actual sound update is triggered by the subsystem manager.
 void FGSoundManager::update(double dt)
 {
-    if (!_is_initialized) {
-        if (_sound_working->getBoolValue()) {
-            runtime_init();
-            _is_initialized = true;
-        }
-    } else {
-        if (!_sound_working->getBoolValue()) {   // request to reinit
-            SGSoundMgr::reinit();
-           _sound_working->setBoolValue(true);
-        }
-
-        if (_sound_enabled->getBoolValue()) {
-            set_volume(_volume->getFloatValue());
-            SGSoundMgr::update(dt);
-        }
+    if (_is_initialized && _sound_working->getBoolValue() && _sound_enabled->getBoolValue())
+    {
+        set_volume(_volume->getFloatValue());
+        SGSoundMgr::update(dt);
     }
 }
 
