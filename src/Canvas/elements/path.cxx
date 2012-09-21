@@ -31,11 +31,13 @@ namespace canvas
   typedef std::vector<VGubyte>  CmdList;
   typedef std::vector<VGfloat>  CoordList;
 
+  class Path;
   class PathDrawable:
     public osg::Drawable
   {
     public:
-      PathDrawable():
+      PathDrawable(Path* path):
+        _path_element(path),
         _path(VG_INVALID_HANDLE),
         _paint(VG_INVALID_HANDLE),
         _paint_fill(VG_INVALID_HANDLE),
@@ -58,8 +60,8 @@ namespace canvas
       }
 
       virtual const char* className() const { return "PathDrawable"; }
-      virtual osg::Object* cloneType() const { return new PathDrawable; }
-      virtual osg::Object* clone(const osg::CopyOp&) const { return new PathDrawable; }
+      virtual osg::Object* cloneType() const { return new PathDrawable(_path_element); }
+      virtual osg::Object* clone(const osg::CopyOp&) const { return new PathDrawable(_path_element); }
 
       /**
        * Replace the current path segments with the new ones
@@ -239,11 +241,14 @@ namespace canvas
         // vgPathBounds doesn't take stroke width into account
         float ext = 0.5 * _stroke_width;
 
-        return osg::BoundingBox
+        osg::BoundingBox bb
         (
           min[0] - ext,           min[1] - ext,           -0.1,
           min[0] + size[0] + ext, min[1] + size[1] + ext,  0.1
         );
+        _path_element->setBoundingBox(bb);
+
+        return bb;
       }
 
     private:
@@ -257,6 +262,8 @@ namespace canvas
         FILL_COLOR      = STROKE_COLOR << 1,
         BOUNDING_BOX    = FILL_COLOR << 1
       };
+
+      Path *_path_element;
 
       mutable VGPath    _path;
       mutable VGPaint   _paint;
@@ -347,8 +354,8 @@ namespace canvas
 
   //----------------------------------------------------------------------------
   Path::Path(SGPropertyNode_ptr node, const Style& parent_style):
-    Element(node, parent_style, BOUNDING_BOX),
-    _path( new PathDrawable() )
+    Element(node, parent_style),
+    _path( new PathDrawable(this) )
   {
     setDrawable(_path);
     PathDrawable *path = _path.get();

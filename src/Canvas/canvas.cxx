@@ -99,6 +99,7 @@ Canvas::Canvas(SGPropertyNode* node):
   _mouse_event(node, "mouse/event"),
   _sampling_dirty(false),
   _color_dirty(true),
+  _render_dirty(true),
   _root_group( new canvas::Group(node) ),
   _render_always(false)
 {
@@ -154,6 +155,11 @@ void Canvas::update(double delta_time_sec)
   }
 
   _root_group->update(delta_time_sec);
+
+  _texture.setRender(_render_dirty);
+
+  // Always render if sampling or color has changed
+  _render_dirty = _sampling_dirty || _color_dirty;
 
   if( _sampling_dirty )
   {
@@ -318,8 +324,11 @@ void Canvas::childRemoved( SGPropertyNode * parent,
 //----------------------------------------------------------------------------
 void Canvas::valueChanged(SGPropertyNode* node)
 {
-  if( boost::starts_with(node->getNameString(), "status") )
+  if(    boost::starts_with(node->getNameString(), "status")
+      || node->getParent()->getNameString() == "bounding-box" )
     return;
+
+  _render_dirty = true;
 
   bool handled = true;
   if( node->getParent()->getParent() == _node )
@@ -365,6 +374,8 @@ void Canvas::valueChanged(SGPropertyNode* node)
       else if( node->getIndex() == 1 )
         setViewHeight( node->getIntValue() );
     }
+    else if( node->getNameString() == "freeze" )
+      _texture.setRender( node->getBoolValue() );
     else
       handled = false;
   }

@@ -105,17 +105,6 @@ namespace canvas
       _transform->setMatrix(m);
       _transform_dirty = false;
     }
-
-    if( !_bounding_box.empty() )
-    {
-      assert( _drawable );
-
-      const osg::BoundingBox& bb = _drawable->getBound();
-      _bounding_box[0]->setFloatValue(bb._min.x());
-      _bounding_box[1]->setFloatValue(bb._min.y());
-      _bounding_box[2]->setFloatValue(bb._max.x());
-      _bounding_box[3]->setFloatValue(bb._max.y());
-    }
   }
 
   //----------------------------------------------------------------------------
@@ -230,11 +219,27 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
+  void Element::setBoundingBox(const osg::BoundingBox& bb)
+  {
+    if( _bounding_box.empty() )
+    {
+      SGPropertyNode* bb_node = _node->getChild("bounding-box", 0, true);
+      _bounding_box.resize(4);
+      _bounding_box[0] = bb_node->getChild("min-x", 0, true);
+      _bounding_box[1] = bb_node->getChild("min-y", 0, true);
+      _bounding_box[2] = bb_node->getChild("max-x", 0, true);
+      _bounding_box[3] = bb_node->getChild("max-y", 0, true);
+    }
+
+    _bounding_box[0]->setFloatValue(bb._min.x());
+    _bounding_box[1]->setFloatValue(bb._min.y());
+    _bounding_box[2]->setFloatValue(bb._max.x());
+    _bounding_box[3]->setFloatValue(bb._max.y());
+  }
+
+  //----------------------------------------------------------------------------
   Element::Element( SGPropertyNode_ptr node,
-                    const Style& parent_style,
-                    uint32_t attributes_used ):
-    _attributes_used( attributes_used ),
-    _attributes_dirty( attributes_used ),
+                    const Style& parent_style ):
     _transform_dirty( false ),
     _transform( new osg::MatrixTransform ),
     _node( node ),
@@ -271,16 +276,6 @@ namespace canvas
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
     geode->addDrawable(_drawable);
     _transform->addChild(geode);
-
-    if( _attributes_used & BOUNDING_BOX )
-    {
-      SGPropertyNode* bb_node = _node->getChild("bounding-box", 0, true);
-      _bounding_box.resize(4);
-      _bounding_box[0] = bb_node->getChild("min-x", 0, true);
-      _bounding_box[1] = bb_node->getChild("min-y", 0, true);
-      _bounding_box[2] = bb_node->getChild("max-x", 0, true);
-      _bounding_box[3] = bb_node->getChild("max-y", 0, true);
-    }
   }
 
   //----------------------------------------------------------------------------

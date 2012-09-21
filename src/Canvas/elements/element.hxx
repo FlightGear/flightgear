@@ -21,6 +21,7 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/misc/stdint.hxx> // for uint32_t
+#include <osg/BoundingBox>
 #include <osg/MatrixTransform>
 
 #include <boost/bind.hpp>
@@ -63,12 +64,16 @@ namespace canvas
                                  SGPropertyNode * child );
       virtual void valueChanged(SGPropertyNode * child);
 
+      /**
+       * Write the given bounding box to the property tree
+       */
+      void setBoundingBox(const osg::BoundingBox& bb);
+
     protected:
 
       enum Attributes
       {
-        BOUNDING_BOX    = 0x0001,
-        LAST_ATTRIBUTE  = BOUNDING_BOX
+        LAST_ATTRIBUTE  = 0x0001
       };
 
       enum TransformType
@@ -80,7 +85,6 @@ namespace canvas
         TT_SCALE
       };
 
-      uint32_t _attributes_used;
       uint32_t _attributes_dirty;
 
       bool _transform_dirty;
@@ -93,8 +97,7 @@ namespace canvas
       std::vector<SGPropertyNode_ptr>   _bounding_box;
 
       Element( SGPropertyNode_ptr node,
-               const Style& parent_style,
-               uint32_t attributes_used = 0 );
+               const Style& parent_style );
 
       template<typename T, class C1, class C2>
       Element::StyleSetter
@@ -137,9 +140,9 @@ namespace canvas
       virtual void childRemoved(SGPropertyNode * child){}
       virtual void childChanged(SGPropertyNode * child){}
 
-      void setDrawable( osg::Drawable* drawable );
-      void setupStyle();
+      void setDrawable(osg::Drawable* drawable);
 
+      void setupStyle();
       bool setStyle(const SGPropertyNode* child);
 
     private:

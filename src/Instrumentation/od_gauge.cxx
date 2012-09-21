@@ -150,6 +150,13 @@ void FGODGauge::setSampling( bool mipmapping,
 }
 
 //------------------------------------------------------------------------------
+void FGODGauge::setRender(bool render)
+{
+  // Only the far camera should trigger this texture to be rendered.
+  camera->setNodeMask(render ? simgear::BACKGROUND_BIT : 0);
+}
+
+//------------------------------------------------------------------------------
 bool FGODGauge::serviceable(void) 
 {
   return rtAvailable;
@@ -160,8 +167,6 @@ void FGODGauge::allocRT(osg::NodeCallback* camera_cull_callback)
 {
   camera = new osg::Camera;
   camera->setDataVariance(osg::Object::DYNAMIC);
-  // Only the far camera should trigger this texture to be rendered.
-  camera->setNodeMask(simgear::BACKGROUND_BIT);
   camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
   camera->setRenderOrder(osg::Camera::PRE_RENDER);
   camera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f , 0.0f));
@@ -172,6 +177,7 @@ void FGODGauge::allocRT(osg::NodeCallback* camera_cull_callback)
   if( camera_cull_callback )
     camera->setCullCallback(camera_cull_callback);
 
+  setRender(true);
   updateCoordinateFrame();
   updateStencil();
 

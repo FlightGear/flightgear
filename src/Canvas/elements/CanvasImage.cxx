@@ -73,7 +73,7 @@ namespace canvas
 {
   //----------------------------------------------------------------------------
   Image::Image(SGPropertyNode_ptr node, const Style& parent_style):
-    Element(node, parent_style, BOUNDING_BOX),
+    Element(node, parent_style),
     _texture(new osg::Texture2D),
     _node_src_rect( node->getNode("source", 0, true) )
   {
@@ -132,6 +132,7 @@ namespace canvas
 
       _attributes_dirty &= ~DEST_SIZE;
       _geom->dirtyBound();
+      setBoundingBox(_geom->getBound());
     }
 
     if( _attributes_dirty & SRC_RECT )

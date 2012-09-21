@@ -31,6 +31,8 @@ namespace canvas
   {
     public:
 
+      TextOSG(canvas::Text* text);
+
       void setCharacterAspect(float aspect);
       void setFill(const std::string& fill);
       void setBackgroundColor(const std::string& fill);
@@ -38,7 +40,18 @@ namespace canvas
       osg::Vec2 handleHit(float x, float y);
 
       virtual osg::BoundingBox computeBound() const;
+
+    protected:
+
+      canvas::Text *_text_element;
   };
+
+  //----------------------------------------------------------------------------
+  Text::TextOSG::TextOSG(canvas::Text* text):
+    _text_element(text)
+  {
+
+  }
 
   //----------------------------------------------------------------------------
   void Text::TextOSG::setCharacterAspect(float aspect)
@@ -152,13 +165,15 @@ namespace canvas
     bb._min.y() += _offset.y();
     bb._max.y() += _offset.y();
 
+    _text_element->setBoundingBox(bb);
+
     return bb;
   }
 
   //----------------------------------------------------------------------------
   Text::Text(SGPropertyNode_ptr node, const Style& parent_style):
-    Element(node, parent_style, BOUNDING_BOX),
-    _text( new Text::TextOSG() )
+    Element(node, parent_style),
+    _text( new Text::TextOSG(this) )
   {
     setDrawable(_text);
     _text->setCharacterSizeMode(osgText::Text::OBJECT_COORDS);

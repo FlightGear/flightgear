@@ -99,6 +99,12 @@ class FGODGauge
                       int color_samples = 0 );
 
     /**
+     * Enable/Disable updating the texture (If disabled the contents of the
+     * texture remains with the outcome of the last rendering pass)
+     */
+    void setRender(bool render);
+
+    /**
      * Say if we can render to a texture.
      * @return true if rtt is available
      */
@@ -145,7 +151,7 @@ class FGODGauge
     // Real initialization function. Bad name.
     void allocRT(osg::NodeCallback* camera_cull_callback = 0);
 
-private:
+  private:
     int _size_x,
         _size_y,
         _view_width,

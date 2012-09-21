@@ -142,7 +142,8 @@ class Canvas:
                                     _mouse_event;
 
     bool _sampling_dirty,
-         _color_dirty;
+         _color_dirty,
+         _render_dirty;
 
     FGODGauge _texture;
     std::auto_ptr<canvas::Group> _root_group;
