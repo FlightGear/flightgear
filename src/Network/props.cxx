@@ -552,7 +552,6 @@ FGProps::FGProps( const vector<string>& tokens )
     } else {
         throw FGProtocolConfigError( "FGProps: incorrect number of configuration arguments" );
     }
-    printf( "Property server started on port %d\n", port );
 }
 
 /**
@@ -575,9 +574,26 @@ FGProps::open()
         return false;
     }
 
-    simgear::NetChannel::open();
-    simgear::NetChannel::bind( "", port );
-    simgear::NetChannel::listen( 5 );
+    if (!simgear::NetChannel::open())
+    {
+        SG_LOG( SG_IO, SG_ALERT, "FGProps: Failed to open network socket.");
+        return false;
+    }
+
+    int err = simgear::NetChannel::bind( "", port );
+    if (err)
+    {
+        SG_LOG( SG_IO, SG_ALERT, "FGProps: Failed to open port #" << port << " - the port is already used (error " << err << ").");
+        return false;
+    }
+
+    err = simgear::NetChannel::listen( 5 );
+    if (err)
+    {
+        SG_LOG( SG_IO, SG_ALERT, "FGProps: Failed to listen on port #" << port << "(error " << err << ").");
+        return false;
+    }
+
     SG_LOG( SG_IO, SG_INFO, "Props server started on port " << port );
 
     set_enabled( true );
