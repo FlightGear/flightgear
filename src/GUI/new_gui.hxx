@@ -10,6 +10,7 @@
 #include <vector>
 #include <map>
 #include <memory> // for auto_ptr on some systems
+#include <cstring> // for strcmp in lstr() (in this header, alas)
 
 class FGMenuBar;
 class FGDialog;
