@@ -210,7 +210,7 @@ namespace canvas
         {
           vgSetPaint(_paint_fill, VG_FILL_PATH);
 
-          vgSetf(VG_FILL_RULE, VG_NON_ZERO); // TODO make user configurable
+          vgSeti(VG_FILL_RULE, VG_NON_ZERO); // TODO make user configurable
         }
 
         // And finally draw the path

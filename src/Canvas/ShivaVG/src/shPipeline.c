@@ -332,8 +332,20 @@ VG_API_CALL void vgDrawPath(VGPath path, VGbitfield paintModes)
     
     /* Tesselate into stencil */
     glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_ALWAYS, 0, 0);
-    glStencilOp(GL_INVERT, GL_INVERT, GL_INVERT);
+
+    if( context->fillRule == VG_EVEN_ODD )
+    {
+      glStencilFunc(GL_ALWAYS, 0, 0);
+      glStencilOp(GL_INVERT, GL_INVERT, GL_INVERT);
+    }
+    else
+    {
+      // pseudo non-zero fill rule. Fill everything at least covered once, don't
+      // care for possible decrements.
+      // TODO implement real non-zero fill-rule
+      glStencilFunc(GL_ALWAYS, 1, 1);
+      glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+    }
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     shDrawVertices(p, GL_TRIANGLE_FAN);
     
