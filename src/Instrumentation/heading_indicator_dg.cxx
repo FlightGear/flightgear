@@ -148,12 +148,17 @@ HeadingIndicatorDG::update (double dt)
         error += 0.033 * g * dt;
     }
 
-    _error_node->setDoubleValue(error);
-
                                 // Next, calculate the indicated heading,
                                 // introducing errors.
-    double factor = 100 * (spin * spin * spin * spin * spin * spin);
+    double factor = spin * spin * spin * spin * spin * spin;
     double heading = _heading_in_node->getDoubleValue();
+    if (spin < 0.9)
+    {
+        // when gyro spin is low, then any heading change results in
+        // increasing the error (spin=0 => indicator is stuck)
+        error += (_last_heading_deg - heading)*(1-factor);
+    }
+    _error_node->setDoubleValue(error);
 
                                 // Now, we have to get the current
                                 // heading and the last heading into
@@ -162,8 +167,7 @@ HeadingIndicatorDG::update (double dt)
         _last_heading_deg += 360;
     while ((heading - _last_heading_deg) < -180)
         _last_heading_deg -= 360;
-
-    heading = fgGetLowPass(_last_heading_deg, heading, dt * factor);
+    heading = fgGetLowPass(_last_heading_deg, heading, dt * factor * 100);
     _last_heading_deg = heading;
 
     heading += offset + align + error;
