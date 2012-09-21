@@ -294,7 +294,7 @@ void FGInputDevice::SetName( string name )
 const char * FGEventInput::PROPERTY_ROOT = "/input/event";
 
 FGEventInput::FGEventInput() : 
-  configMap( "Input/Event", fgGetNode( PROPERTY_ROOT, true ), "device-named" )
+  configMap( "Input/Event")
 {
 }
 
@@ -329,7 +329,7 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
   SGPropertyNode_ptr deviceNode = NULL;
 
   // look for configuration in the device map
-  if( configMap.count( inputDevice->GetName() ) > 0 ) {
+  if ( configMap.hasConfiguration( inputDevice->GetName() ) ) {
     // found - copy to /input/event/device[n]
 
     // find a free index
@@ -347,7 +347,7 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
     deviceNode = baseNode->getNode( "device", index, true );
 
     // and copy the properties from the configuration tree
-    copyProperties( configMap[ inputDevice->GetName() ], deviceNode );
+    copyProperties( configMap.configurationForDeviceName(inputDevice->GetName()), deviceNode );
 
   }
 

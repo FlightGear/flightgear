@@ -423,7 +423,7 @@ public:
   void prepareQueries()
   {
     clearProperty = prepare("DELETE FROM properties WHERE key=?1");
-    writePropertyMulti = prepare("INSERT INTO properties (key, value) VALUES(?,?)");
+    writePropertyMulti = prepare("INSERT INTO properties (key, value) VALUES(?1,?2)");
     
 #define POSITIONED_COLS "rowid, type, ident, name, airport, lon, lat, elev_m, octree_node"
 #define AND_TYPED "AND type>=?2 AND type <=?3"
@@ -1064,7 +1064,7 @@ string_list NavDataCache::readStringListProperty(const string& key)
   sqlite_bind_stdstring(d->readPropertyQuery, 1, key);
   string_list result;
   while (d->stepSelect(d->readPropertyQuery)) {
-    result.push_back((char*) sqlite3_column_text(d->readPropertyQuery, 1));
+    result.push_back((char*) sqlite3_column_text(d->readPropertyQuery, 0));
   }
   
   return result;
@@ -1076,9 +1076,9 @@ void NavDataCache::writeStringListProperty(const string& key, const string_list&
   sqlite_bind_stdstring(d->clearProperty, 1, key);
   d->execUpdate(d->clearProperty);
   
-  sqlite_bind_stdstring(d->writePropertyMulti, 1, key);
   BOOST_FOREACH(string value, values) {
     d->reset(d->writePropertyMulti);
+    sqlite_bind_stdstring(d->writePropertyMulti, 1, key);
     sqlite_bind_stdstring(d->writePropertyMulti, 2, value);
     d->execInsert(d->writePropertyMulti);
   }

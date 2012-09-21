@@ -91,7 +91,7 @@ void FGJoystickInput::_remove(bool all)
     for (int i = 0; i < MAX_JOYSTICKS; i++)
     {
         // do not remove predefined joysticks info on reinit
-        if ((all)||(!bindings[i].predefined))
+        if (all || (!bindings[i].predefined))
             js_nodes->removeChild("js", i, false);
         if (bindings[i].js)
             delete bindings[i].js;
@@ -106,7 +106,7 @@ void FGJoystickInput::init()
   SGPropertyNode_ptr js_nodes = fgGetNode("/input/joysticks", true);
   status_node = fgGetNode("/devices/status/joysticks", true);
 
-  FGDeviceConfigurationMap configMap("Input/Joysticks", js_nodes, "js-named");
+  FGDeviceConfigurationMap configMap("Input/Joysticks");
 
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
     jsJoystick * js = new jsJoystick(i);
@@ -128,11 +128,12 @@ void FGJoystickInput::init()
       SG_LOG(SG_INPUT, SG_INFO, "Looking for bindings for joystick \"" << name << '"');
       SGPropertyNode_ptr named;
 
-      if ((named = configMap[name])) {
+      if (configMap.hasConfiguration(name)) {
+        named = configMap.configurationForDeviceName(name);
         string source = named->getStringValue("source", "user defined");
         SG_LOG(SG_INPUT, SG_INFO, "... found joystick: " << source);
 
-      } else if ((named = configMap["default"])) {
+      } else if ((named = configMap.configurationForDeviceName("default"))) {
         string source = named->getStringValue("source", "user defined");
         SG_LOG(SG_INPUT, SG_INFO, "No config found for joystick \"" << name
             << "\"\nUsing default: \"" << source << '"');

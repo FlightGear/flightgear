@@ -30,19 +30,28 @@
 #endif
 
 #include <simgear/props/props.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <map>
 
-class SGPath;
-
-class FGDeviceConfigurationMap : public std::map<std::string,SGPropertyNode_ptr> {
+class FGDeviceConfigurationMap
+{
 public:
-  FGDeviceConfigurationMap ( const char * relative_path, SGPropertyNode_ptr base, const char * childname );
+  FGDeviceConfigurationMap ( const std::string& relative_path);
   virtual ~FGDeviceConfigurationMap();
+
+  SGPropertyNode_ptr configurationForDeviceName(const std::string& name);
+  
+  bool hasConfiguration(const std::string& name) const;
 private:
-  void scan_dir(const SGPath & path, int *index);
-  SGPropertyNode_ptr base;
-  const char * childname;
+  void scan_dir(const SGPath & path);
+  
+  void readCachedData(const SGPath& path);
+  void refreshCacheForFile(const SGPath& path);
+  
+  typedef std::map<std::string, SGPath> NamePathMap;
+// mapping from joystick name to XML configuration file path
+  NamePathMap namePathMap;
 };
 
 #endif
