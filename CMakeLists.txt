@@ -189,6 +189,9 @@ if (SYSTEM_SQLITE)
     message(STATUS "Using system SQLite3 library")
 endif (SYSTEM_SQLITE)
 
+# Sqlite always depends on the threading lib
+list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
+
 find_package(PLIB REQUIRED puaux pu js fnt)
 
 # FlightGear and SimGear versions need to match
