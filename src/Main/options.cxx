@@ -1836,6 +1836,7 @@ void Options::processArgResult(int result)
       cout << i << ".  \"" << devices[i] << "\"" << endl;
     }
     devices.clear();
+    smgr.stop();
     exit(0);
   } else if (result == FG_OPTIONS_EXIT) {
     exit(0);
