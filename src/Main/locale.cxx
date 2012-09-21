@@ -161,6 +161,10 @@ FGLocale::selectLanguage(const char *language)
     }
 
     _currentLocale = locale;
+
+    // load resource for system messages (translations for fgfs internal messages)
+    loadResource("sys");
+
     return true;
 }
 

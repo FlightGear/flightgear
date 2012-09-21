@@ -98,9 +98,9 @@ static void fgLoadInitialScenery()
         }
         else
         {
-            fgSplashProgress("loading scenery");
-            // be nice to loader threads while waiting for initial scenery, reduce to 2fps
-            SGTimeStamp::sleepForMSec(500);
+            fgSplashProgress("loading-scenery");
+            // be nice to loader threads while waiting for initial scenery, reduce to 20fps
+            SGTimeStamp::sleepForMSec(50);
         }
     }
 }
@@ -183,7 +183,6 @@ static void fgIdleFunction ( void ) {
     // our initializations out of the idle callback so that we can get a
     // splash screen up and running right away.
     static int idle_state = 0;
-    static int spin_count = 0;
   
     static osg::ref_ptr<GeneralInitOperation> genOp;
     if ( idle_state == 0 ) {
@@ -212,17 +211,17 @@ static void fgIdleFunction ( void ) {
         if (!guiFinishInit())
             return;
         idle_state++;
-        fgSplashProgress("loading aircraft list");
+        fgSplashProgress("loading-aircraft-list");
 
     } else if ( idle_state == 2 ) {
         idle_state++;
-        fgSplashProgress("loading navigation data");
+        fgSplashProgress("loading-nav-data");
 
     } else if ( idle_state == 3 ) {
         idle_state++;
         fgInitNav();
 
-        fgSplashProgress("initializing scenery system");
+        fgSplashProgress("init-scenery");
 
     } else if ( idle_state == 4 ) {
         idle_state+=2;
@@ -264,11 +263,11 @@ static void fgIdleFunction ( void ) {
         globals->get_scenery()->bind();
         globals->set_tile_mgr( new FGTileMgr );
 
-        fgSplashProgress("loading aircraft");
+        fgSplashProgress("loading-aircraft");
 
     } else if ( idle_state == 6 ) {
         idle_state++;
-        fgSplashProgress("creating subsystems");
+        fgSplashProgress("creating-subsystems");
 
     } else if ( idle_state == 7 ) {
         idle_state++;
@@ -276,7 +275,7 @@ static void fgIdleFunction ( void ) {
         st.stamp();
         fgCreateSubsystems();
         SG_LOG(SG_GENERAL, SG_INFO, "Creating subsystems took:" << st.elapsedMSec());
-        fgSplashProgress("binding subsystems");
+        fgSplashProgress("binding-subsystems");
       
     } else if ( idle_state == 8 ) {
         idle_state++;
@@ -285,16 +284,14 @@ static void fgIdleFunction ( void ) {
         globals->get_subsystem_mgr()->bind();
         SG_LOG(SG_GENERAL, SG_INFO, "Binding subsystems took:" << st.elapsedMSec());
 
-        fgSplashProgress("initing subsystems");
+        fgSplashProgress("init-subsystems");
     } else if ( idle_state == 9 ) {
         SGSubsystem::InitStatus status = globals->get_subsystem_mgr()->incrementalInit();
         if ( status == SGSubsystem::INIT_DONE) {
           ++idle_state;
-          fgSplashProgress("finishing subsystem init");
+          fgSplashProgress("finishing-subsystems");
         } else {
-          const char* spinChars = "-\\|/";
-          string msg = string("initing subsystems ") + spinChars[spin_count++ % 4];
-          fgSplashProgress(msg.c_str());
+          fgSplashProgress("init-subsystems");
         }
       
     } else if ( idle_state == 10 ) {
@@ -329,7 +326,7 @@ static void fgIdleFunction ( void ) {
                 "No METAR available to pick active runway" );
         }
 
-        fgSplashProgress("initializing graphics engine");
+        fgSplashProgress("init-graphics");
 
     } else if ( idle_state == 900 ) {
         idle_state = 1000;

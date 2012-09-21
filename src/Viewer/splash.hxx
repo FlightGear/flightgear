@@ -31,13 +31,14 @@
 # error This library requires C++
 #endif
 
-// Initialize the splash screen
+/** Initialize the splash screen */
 void fgSplashInit ();
 
-// Set progress information
-void fgSplashProgress ( const char *text );
+/** Set progress information.
+ * "identifier" references an element of the language resource. */
+void fgSplashProgress ( const char *identifier );
 
-// Retrieve the splash screen node ...
+/** Retrieve the splash screen node */
 osg::Node* fgCreateSplashNode();
 
 #endif // _SPLASH_HXX

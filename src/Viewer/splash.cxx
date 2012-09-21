@@ -54,6 +54,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/fg_os.hxx>
+#include <Main/locale.hxx>
 #include "splash.hxx"
 #include "renderer.hxx"
 
@@ -307,9 +308,20 @@ static osg::Node* fgCreateSplashCamera()
   text->setPosition(osg::Vec3(0, -0.92, 0));
   text->setAlignment(osgText::Text::CENTER_CENTER);
   SGPropertyNode* prop = fgGetNode("/sim/startup/splash-progress-text", true);
-  prop->setStringValue("initializing");
+  prop->setStringValue("");
   text->setUpdateCallback(new FGSplashTextUpdateCallback(prop));
   geode->addDrawable(text);
+
+  osgText::Text* spinnertext = new osgText::Text;
+  spinnertext->setFont(globals->get_fontcache()->getfntpath(fn.c_str()).str());
+  spinnertext->setCharacterSize(0.06);
+  spinnertext->setColor(osg::Vec4(1, 1, 1, 1));
+  spinnertext->setPosition(osg::Vec3(0, -0.97, 0));
+  spinnertext->setAlignment(osgText::Text::CENTER_CENTER);
+  prop = fgGetNode("/sim/startup/splash-progress-spinner", true);
+  prop->setStringValue("");
+  spinnertext->setUpdateCallback(new FGSplashTextUpdateCallback(prop));
+  geode->addDrawable(spinnertext);
 
   text = new osgText::Text;
   text->setFont(globals->get_fontcache()->getfntpath(fn.c_str()).str());
@@ -331,6 +343,8 @@ static osg::Node* fgCreateSplashCamera()
   prop = fgGetNode("/sim/startup/splash-title", true);
   text->setUpdateCallback(new FGSplashTextUpdateCallback(prop));
   geode->addDrawable(text);
+
+  fgSplashProgress("init");
 
   return camera;
 }
@@ -370,11 +384,28 @@ void fgSplashInit () {
   globals->get_renderer()->splashinit();
 }
 
-void fgSplashProgress ( const char *text ) {
+void fgSplashProgress( const char *identifier ) {
+  const char* spinChars = "-\\|/";
+  static int spin_count = 0;
+  string spin_status = string("");
+
+  if (identifier[0] != 0)
+      spin_status += spinChars[spin_count++ % 4];
+
+  fgSetString("/sim/startup/splash-progress-spinner", spin_status);
+
+  const char* text = "";
+  if (identifier[0] != 0)
+  {
+      string id = string("splash/") + identifier;
+      text = globals->get_locale()->getLocalizedString(id.c_str(),
+                                                       "sys", "<incomplete language resource>");
+  }
+
   if (!strcmp(fgGetString("/sim/startup/splash-progress-text"), text)) {
     return;
   }
   
-  SG_LOG( SG_VIEW, SG_INFO, "Splash screen progress " << text );
+  SG_LOG( SG_VIEW, SG_INFO, "Splash screen progress " << identifier );
   fgSetString("/sim/startup/splash-progress-text", text);
 }
