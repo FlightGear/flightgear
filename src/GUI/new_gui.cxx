@@ -19,6 +19,7 @@
 #include <simgear/misc/sg_dir.hxx>
 
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/foreach.hpp>
 
 #include <Main/fg_props.hxx>
 
@@ -35,6 +36,9 @@
 #include "FGPUIDialog.hxx"
 #include "FGFontCache.hxx"
 #include "FGColor.hxx"
+
+// ignore the word Navaid here, it's a DataCache
+#include <Navaids/NavDataCache.hxx>
 
 using std::map;
 using std::string;
@@ -92,14 +96,13 @@ void
 NewGUI::reset (bool reload)
 {
     map<string,FGDialog *>::iterator iter;
-    std::vector<string> dlg;
+    string_list openDialogs;
     // close all open dialogs and remember them ...
     for (iter = _active_dialogs.begin(); iter != _active_dialogs.end(); ++iter)
-        dlg.push_back(iter->first);
+        openDialogs.push_back(iter->first);
 
-    unsigned int i;
-    for (i = 0; i < dlg.size(); i++)
-        closeDialog(dlg[i]);
+    BOOST_FOREACH(string d, openDialogs)
+        closeDialog(d);
 
     setStyle();
 
@@ -110,6 +113,7 @@ NewGUI::reset (bool reload)
 
     if (reload) {
         _dialog_props.clear();
+        _dialog_names.clear();
         init();
     } else {
         _menubar->init();
@@ -118,8 +122,8 @@ NewGUI::reset (bool reload)
     bind();
 
     // open dialogs again
-    for (i = 0; i < dlg.size(); i++)
-        showDialog(dlg[i]);
+    BOOST_FOREACH(string d, openDialogs)
+        showDialog(d);
 }
 
 void
@@ -146,14 +150,18 @@ NewGUI::update (double delta_time_sec)
 bool
 NewGUI::showDialog (const string &name)
 {
-    if (_dialog_props.find(name) == _dialog_props.end()) {
+    // first, check if it's already shown
+    if (_active_dialogs.find(name) != _active_dialogs.end())
+      return true;
+  
+    // check we know about the dialog by name
+    if (_dialog_names.find(name) == _dialog_names.end()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name << " not defined");
         return false;
-    } else {
-        if(!_active_dialogs[name])
-            _active_dialogs[name] = new FGPUIDialog(_dialog_props[name]);
-        return true;
     }
+    
+    _active_dialogs[name] = new FGPUIDialog(getDialogProperties(name));
+    return true;
 }
 
 bool
@@ -195,11 +203,27 @@ NewGUI::closeDialog (const string& name)
 SGPropertyNode_ptr
 NewGUI::getDialogProperties (const string &name)
 {
-    if(_dialog_props.find(name) != _dialog_props.end())
-        return _dialog_props[name];
+    if (_dialog_names.find(name) == _dialog_names.end()) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name << " not defined");
+      return NULL;
+    }
+  
+    NameDialogDict::iterator it = _dialog_props.find(name);
+    if (it == _dialog_props.end()) {
+      // load the XML
+      SGPath path = _dialog_names[name];
+      SGPropertyNode_ptr props = new SGPropertyNode;
+      try {
+        readProperties(path.str(), props);
+      } catch (const sg_exception &) {
+        SG_LOG(SG_INPUT, SG_ALERT, "Error parsing dialog " << path);
+        return NULL;
+      }
+      
+      it = _dialog_props.insert(it, std::make_pair(name, props));
+    }
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "dialog '" << name << "' missing");
-    return 0;
+    return it->second;
 }
 
 FGDialog *
@@ -254,8 +278,12 @@ NewGUI::newDialog (SGPropertyNode* props)
         return;
     }
     string name = cname;
-    if(_active_dialogs.find(name) == _active_dialogs.end())
+  
+    if(_active_dialogs.find(name) == _active_dialogs.end()) {
         _dialog_props[name] = props;
+    // add a dummy path entry, so we believe the dialog exists
+        _dialog_names[name] = SGPath();
+    }
 }
 
 void
@@ -264,30 +292,37 @@ NewGUI::readDir (const SGPath& path)
     simgear::Dir dir(path);
     simgear::PathList xmls = dir.children(simgear::Dir::TYPE_FILE, ".xml");
     
-    for (unsigned int i=0; i<xmls.size(); ++i) {
-      SGPropertyNode * props = new SGPropertyNode;
-      try {
-          readProperties(xmls[i].str(), props);
-      } catch (const sg_exception &) {
-          SG_LOG(SG_INPUT, SG_ALERT, "Error parsing dialog "
-                 << xmls[i].str());
-          delete props;
-          continue;
+    flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+    BOOST_FOREACH(SGPath xmlPath, xmls) {
+      if (!cache->isCachedFileModified(xmlPath)) {
+        // cached, easy
+        string name = cache->readStringProperty(xmlPath.str());
+        _dialog_names[name] = xmlPath;
+        continue;
       }
+      
+    // we need to parse the actual XML
+      SGPropertyNode_ptr props = new SGPropertyNode;
+      try {
+        readProperties(xmlPath.str(), props);
+      } catch (const sg_exception &) {
+        SG_LOG(SG_INPUT, SG_ALERT, "Error parsing dialog " << xmlPath);
+        continue;
+      }
+      
       SGPropertyNode *nameprop = props->getNode("name");
       if (!nameprop) {
-          SG_LOG(SG_INPUT, SG_WARN, "dialog " << xmls[i].str()
-             << " has no name; skipping.");
-          delete props;
-          continue;
+        SG_LOG(SG_INPUT, SG_WARN, "dialog " << xmlPath << " has no name; skipping.");
+        continue;
       }
+      
       string name = nameprop->getStringValue();
-      _dialog_props[name] = props;
-    }
-}
-
-
-
+      _dialog_names[name] = xmlPath;
+    // update cached values
+      cache->stampCacheFile(xmlPath);
+      cache->writeStringProperty(xmlPath.str(), name);
+    } // of directory children iteration
+}
 ////////////////////////////////////////////////////////////////////////
 // Style handling.
 ////////////////////////////////////////////////////////////////////////

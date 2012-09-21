@@ -7,13 +7,9 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#include <string.h>
-#include <functional>
 #include <vector>
 #include <map>
 #include <memory> // for auto_ptr on some systems
-
-class SGBinding;
 
 class FGMenuBar;
 class FGDialog;
@@ -223,7 +219,15 @@ private:
     std::auto_ptr<FGMenuBar> _menubar;
     FGDialog * _active_dialog;
     std::map<std::string,FGDialog *> _active_dialogs;
-    std::map<std::string,SGPropertyNode_ptr> _dialog_props;
+  
+    typedef std::map<std::string, SGPath> NamePathDict;
+    // mapping from dialog names to the corresponding XML property list
+    // which defines them
+    NamePathDict _dialog_names;
+  
+    // cache of loaded dialog proeprties
+    typedef std::map<std::string,SGPropertyNode_ptr> NameDialogDict;
+    NameDialogDict _dialog_props;
 
 };
 
