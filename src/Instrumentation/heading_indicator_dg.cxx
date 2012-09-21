@@ -22,6 +22,8 @@
 
 #include "heading_indicator_dg.hxx"
 
+/** Macro calculating x^6 (faster than super-slow math/pow). */
+#define POW6(x) (x*x*x*x*x*x)
 
 HeadingIndicatorDG::HeadingIndicatorDG ( SGPropertyNode *node ) :
     name("heading-indicator-dg"),
@@ -150,7 +152,7 @@ HeadingIndicatorDG::update (double dt)
 
                                 // Next, calculate the indicated heading,
                                 // introducing errors.
-    double factor = spin * spin * spin * spin * spin * spin;
+    double factor = POW6(spin);
     double heading = _heading_in_node->getDoubleValue();
     if (spin < 0.9)
     {
