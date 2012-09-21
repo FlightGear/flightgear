@@ -90,11 +90,10 @@ public:
       --destIndex;
     }
     
-    unsigned int currentWpIndex = currentWaypoint();
-    WayptRef w(waypointAt(currentWpIndex));
-    _fp->deleteIndex(currentWpIndex);
+     int currentWpIndex = currentWaypoint();
     
-    SG_LOG(SG_GENERAL, SG_INFO, "wpt:" << w->ident());
+    WayptRef w = _fp->legAtIndex(srcIndex)->waypoint();
+    _fp->deleteIndex(srcIndex);
     _fp->insertWayptAtIndex(w, destIndex);
 
     if (srcIndex == currentWpIndex) {
