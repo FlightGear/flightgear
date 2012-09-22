@@ -1172,7 +1172,7 @@ void NavDisplay::foundPositionedItem(FGPositioned* pos)
     
     BOOST_FOREACH(SymbolRule* r, rules) {
         SymbolInstance* ins = addSymbolInstance(projected, heading, r->getDefinition(), vars);
-        if (pos->type() == FGPositioned::RUNWAY) {
+        if ((ins)&&(pos->type() == FGPositioned::RUNWAY)) {
             FGRunway* rwy = (FGRunway*) pos;
             ins->endPos = projectGeod(rwy->end());
         }
