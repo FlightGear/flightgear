@@ -19,7 +19,7 @@ set(SOURCES
 	FGJoystickInput.cxx
 	FGKeyboardInput.cxx
 	FGMouseInput.cxx
-	input.cxx	
+	input.cxx
 	)
 
 set(HEADERS
@@ -37,7 +37,6 @@ if(EVENT_INPUT)
 	list(APPEND SOURCES ${EVENT_INPUT_SOURCES})
 	list(APPEND SOURCES ${EVENT_INPUT_HEADERS})
 	include_directories(${UDEV_INCLUDE_DIR})
-	add_definitions(-DWITH_EVENTINPUT)
 endif()
 
 set(FGJS_SOURCES
