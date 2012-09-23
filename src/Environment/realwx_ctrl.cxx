@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -35,6 +36,7 @@
 #include <simgear/io/HTTPRequest.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/structure/commands.hxx>
 
 #include "metarproperties.hxx"
 #include "metarairportfilter.hxx"
@@ -129,6 +131,15 @@ public:
     virtual void reinit ();
     virtual void shutdown ();
     
+    /**
+     * Create a metar-property binding at the specified property path,
+     * and initiate a request for the specified station-ID (which may be
+     * empty). If the property path is already mapped, the station ID
+     * will be updated.
+     */
+    void addMetarAtPath(const string& propPath, const string& icao);
+  
+    void removeMetarAtPath(const string& propPath);
 protected:
     void bind();
     void unbind();
@@ -143,13 +154,50 @@ protected:
     SGPropertyNode_ptr _max_age_n;
 
     bool _enabled;
-    bool __enabled;
+    bool _wasEnabled;
     simgear::TiedPropertyList _tiedProperties;
     typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
     MetarPropertiesList _metarProperties;
+    MetarRequester* _requester;
 
 };
 
+static bool commandRequestMetar(const SGPropertyNode* arg)
+{
+  SGSubsystemGroup* envMgr = (SGSubsystemGroup*) globals->get_subsystem("environment");
+  if (!envMgr) {
+    return false;
+  }
+  
+  BasicRealWxController* self = (BasicRealWxController*) envMgr->get_subsystem("realwx");
+  if (!self) {
+    return false;
+  }
+  
+  string icao(arg->getStringValue("station"));
+  boost::to_upper(icao);
+  string path = arg->getStringValue("path");
+  self->addMetarAtPath(path, icao);
+  return true;
+}
+  
+static bool commandClearMetar(const SGPropertyNode* arg)
+{
+  SGSubsystemGroup* envMgr = (SGSubsystemGroup*) globals->get_subsystem("environment");
+  if (!envMgr) {
+    return false;
+  }
+  
+  BasicRealWxController* self = (BasicRealWxController*) envMgr->get_subsystem("realwx");
+  if (!self) {
+    return false;
+  }
+  
+  string path = arg->getStringValue("path");
+  self->removeMetarAtPath(path);
+  return true;
+}
+  
 /* -------------------------------------------------------------------------------- */
 /*
 Properties
@@ -162,39 +210,30 @@ BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode, Metar
   _ground_elevation_n( fgGetNode( "/position/ground-elev-m", true )),
   _max_age_n( fgGetNode( "/environment/params/metar-max-age-min", false ) ),
   _enabled(true),
-  __enabled(false)
+  _wasEnabled(false),
+  _requester(metarRequester)
 {
     // at least instantiate MetarProperties for /environment/metar
     _metarProperties.push_back( new LiveMetarProperties( 
             fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ), metarRequester ));
 
     BOOST_FOREACH( SGPropertyNode_ptr n, rootNode->getChildren("metar") ) {
-       SGPropertyNode_ptr metarNode = fgGetNode( n->getStringValue(), true );
-
-       // check for duplicate entries
-       bool existingElement = false;
-       BOOST_FOREACH( LiveMetarProperties_ptr p, _metarProperties ) {
-         if( p->get_root_node()->getPath() == metarNode->getPath() ) {
-           existingElement = true;
-           break;
-         }
-       }
-
-       if( existingElement )
-         continue;
-
-       SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << metarNode->getPath() );
-        _metarProperties.push_back( new LiveMetarProperties( metarNode, metarRequester ));
+        SGPropertyNode_ptr metarNode = fgGetNode( n->getStringValue(), true );
+        addMetarAtPath(metarNode->getPath(), "");
     }
+  
+    SGCommandMgr::instance()->addCommand("request-metar", commandRequestMetar);
+    SGCommandMgr::instance()->addCommand("clear-metar", commandClearMetar);
 }
 
 BasicRealWxController::~BasicRealWxController()
 {
+  //SGCommandMgr::instance()->removeCommand("request-metar");
 }
 
 void BasicRealWxController::init()
 {
-    __enabled = false;
+    _wasEnabled = false;
     update(0); // fetch data ASAP
     
     globals->get_event_mgr()->addTask("checkNearbyMetar", this,
@@ -203,7 +242,7 @@ void BasicRealWxController::init()
 
 void BasicRealWxController::reinit()
 {
-    __enabled = false;
+    _wasEnabled = false;
 }
     
 void BasicRealWxController::shutdown()
@@ -225,7 +264,7 @@ void BasicRealWxController::unbind()
 void BasicRealWxController::update( double dt )
 {
   if( _enabled ) {
-    bool firstIteration = !__enabled; // first iteration after being enabled?
+    bool firstIteration = !_wasEnabled;
 
     // clock tick for every METAR in stock
     BOOST_FOREACH(LiveMetarProperties* p, _metarProperties) {
@@ -234,12 +273,49 @@ void BasicRealWxController::update( double dt )
       p->update(dt);
     }
 
-    __enabled = true;
+    _wasEnabled = true;
   } else {
-    __enabled = false;
+    _wasEnabled = false;
   }
 }
 
+void BasicRealWxController::addMetarAtPath(const string& propPath, const string& icao)
+{
+  // check for duplicate entries
+  BOOST_FOREACH( LiveMetarProperties_ptr p, _metarProperties ) {
+    if( p->get_root_node()->getPath() == propPath ) {
+      // already exists
+      if (p->getStationId() != icao) {
+        p->setStationId(icao);
+        p->setTimeToLive(0.0);
+      }
+      
+      return;
+    }
+  } // of exitsing metar properties iteration
+
+  SGPropertyNode_ptr metarNode = fgGetNode(propPath, true);
+  SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << propPath );
+  LiveMetarProperties_ptr p(new LiveMetarProperties( metarNode, _requester ));
+  _metarProperties.push_back(p);
+  p->setStationId(icao);
+}
+
+void BasicRealWxController::removeMetarAtPath(const string &propPath)
+{
+  MetarPropertiesList::iterator it = _metarProperties.begin();
+  for (; it != _metarProperties.end(); ++it) {
+    LiveMetarProperties_ptr p(*it);
+    if( p->get_root_node()->getPath() == propPath ) {
+      _metarProperties.erase(it);
+      // final ref will drop, and delete the MetarProperties, when we return
+      return;
+    }
+  }
+  
+  SG_LOG(SG_ENVIRONMENT, SG_WARN, "no metar properties at " << propPath);
+}
+  
 void BasicRealWxController::checkNearbyMetar()
 {
     try {
@@ -352,22 +428,18 @@ void NoaaMetarRealWxController::requestMetar( MetarDataHandler * metarDataHandle
         MetarDataHandler * _metarDataHandler;
     };
 
+    string upperId = boost::to_upper_copy(id);
 
-    SG_LOG(SG_ENVIRONMENT, SG_INFO, 
-        "NoaaMetarRealWxController::update(): spawning load request for station-id '" << id << "'" );
-    FGHTTPClient::instance()->makeRequest(new NoaaMetarGetRequest(metarDataHandler, id));
+    SG_LOG(SG_ENVIRONMENT, SG_INFO,
+        "NoaaMetarRealWxController::update(): spawning load request for station-id '" << upperId << "'" );
+    FGHTTPClient::instance()->makeRequest(new NoaaMetarGetRequest(metarDataHandler, upperId));
 }
 
 /* -------------------------------------------------------------------------------- */
 
 RealWxController * RealWxController::createInstance( SGPropertyNode_ptr rootNode )
 {
-//    string dataSource = rootNode->getStringValue("data-source", "noaa" );
-//    if( dataSource == "nwx" ) {
-//      return new NwxMetarRealWxController( rootNode );
-//    } else {
-      return new NoaaMetarRealWxController( rootNode );
-//    }
+  return new NoaaMetarRealWxController( rootNode );
 }
 
 /* -------------------------------------------------------------------------------- */

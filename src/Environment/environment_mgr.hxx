@@ -33,8 +33,6 @@
 #endif
 
 class FGEnvironment;
-class FGMetarCtrl;
-class FGMetarFetcher;
 class FGClouds;
 class FGPrecipitationMgr;
 class SGSky;
