@@ -26,6 +26,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>

@@ -78,9 +78,6 @@ private:
   bool _lastClockFreeze;
   bool _adjustWarpOnUnfreeze;
   
-  SGPropertyNode_ptr _longitudeDeg;
-  SGPropertyNode_ptr _latitudeDeg;
-  
   // frame-rate / worst-case latency / update-rate counters
   SGPropertyNode_ptr _frameRate;
   SGPropertyNode_ptr _frameRateWorst;

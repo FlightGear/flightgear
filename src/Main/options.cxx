@@ -410,8 +410,8 @@ parse_date( const string& date, const char* timeType)
     int year,month,day,hour,minute,second;
     char *argument, *date_str;
 
-    SGTime CurrentTime = SGTime();
-    CurrentTime.update(0,0,0,0);
+    SGTime CurrentTime;
+    CurrentTime.update(SGGeod(),0,0);
 
     // FIXME This should obtain system/aircraft/GMT time depending on timeType
     pCurrentTime = CurrentTime.getGmt();

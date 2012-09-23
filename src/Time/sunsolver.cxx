@@ -73,8 +73,7 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
     *lat = dec;
 }
 
-static double sun_angle( const SGTime &t, const SGVec3d& world_up,
-                         double lon_rad, double lat_rad ) {
+static double sun_angle( const SGTime &t, const SGVec3d& world_up) {
     SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
     SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t.getGst() );
 
@@ -117,15 +116,12 @@ static double sun_angle( const SGTime &t, const SGVec3d& world_up,
  * when the sun angle is 90 and ascending.
  */
 time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
-                                   double lon_rad,
-                                   double lat_rad,
+                                   const SGGeod& loc,
                                    double target_angle_deg,
                                    bool ascending )
 {
-    // cout << "location = " << lon_rad * SG_RADIANS_TO_DEGREES << ", "
-    //      << lat_rad * SG_RADIANS_TO_DEGREES << endl;
-    SGVec3d world_up = SGVec3d::fromGeod(SGGeod::fromRad(lon_rad, lat_rad));
-    SGTime t = SGTime( lon_rad, lat_rad, "", 0 );
+    SGVec3d world_up = SGVec3d::fromGeod(loc);
+    SGTime t = SGTime( loc, SGPath(), 0 );
 
     double best_diff = 180.0;
     double last_angle = -99999.0;
@@ -135,8 +131,8 @@ time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
           secs < cur_time + half_day_secs;
           secs += step_secs )
     {
-        t.update( lon_rad, lat_rad, secs, 0 );
-        double angle_deg = sun_angle( t, world_up, lon_rad, lat_rad );
+        t.update( loc, secs, 0 );
+        double angle_deg = sun_angle( t, world_up );
         double diff = fabs( angle_deg - target_angle_deg );
         if ( diff < best_diff ) {
             if ( last_angle <= 180.0 && ascending

@@ -206,9 +206,7 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	// Configuration Initialisation
 	// Should this be in kln89.cxx ?
 	_turnAnticipationEnabled = false;
-        
-	_time = new SGTime;
-	
+        	
 	_messageStack.clear();
 	
 	_dto = false;
@@ -221,7 +219,6 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 }
 
 DCLGPS::~DCLGPS() {
-	delete _time;
   delete _approachFP;		// Don't need to delete the waypoints inside since they point to
 							// the waypoints in the approach database.
 	// TODO - may need to delete the approach database!!
@@ -305,7 +302,6 @@ void DCLGPS::update(double dt) {
 		_elapsedTime += dt;
 	}
 
-	_time->update(_gpsLon * SG_DEGREES_TO_RADIANS, _gpsLat * SG_DEGREES_TO_RADIANS, 0, 0);
 	// FIXME - currently all the below assumes leg mode and no DTO or OBS cancelled.
 	if(_activeFP->IsEmpty()) {
 		// Not sure if we need to reset these each update or only when fp altered
@@ -1443,7 +1439,8 @@ double DCLGPS::GetMagHeadingFromTo(double latA, double lonA, double latB, double
 	h *= SG_RADIANS_TO_DEGREES;
 	// TODO - use the real altitude below instead of 0.0!
 	//cout << "MagVar = " << sgGetMagVar(_gpsLon, _gpsLat, 0.0, _time->getJD()) * SG_RADIANS_TO_DEGREES << '\n';
-	h -= sgGetMagVar(_gpsLon, _gpsLat, 0.0, _time->getJD()) * SG_RADIANS_TO_DEGREES;
+  double jd = globals->get_time_params()->getJD();
+	h -= sgGetMagVar(_gpsLon, _gpsLat, 0.0, jd) * SG_RADIANS_TO_DEGREES;
 	while(h >= 360.0) h -= 360.0;
 	while(h < 0.0) h += 360.0;
 	return(h);
@@ -1525,7 +1522,8 @@ double DCLGPS::GetGreatCircleCourse (double lat1, double lon1, double lat2, doub
 // Return a position on a radial from wp1 given distance d (nm) and magnetic heading h (degrees)
 // Note that d should be less that 1/4 Earth diameter!
 GPSWaypoint DCLGPS::GetPositionOnMagRadial(const GPSWaypoint& wp1, double d, double h) {
-	h += sgGetMagVar(wp1.lon, wp1.lat, 0.0, _time->getJD()) * SG_RADIANS_TO_DEGREES;
+  double jd = globals->get_time_params()->getJD();
+	h += sgGetMagVar(wp1.lon, wp1.lat, 0.0, jd) * SG_RADIANS_TO_DEGREES;
 	return(GetPositionOnRadial(wp1, d, h));
 }
 

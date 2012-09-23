@@ -36,6 +36,8 @@
 
 #include <ctime>
 
+class SGGeod;
+
 /**
  * Given the current unix time in seconds, calculate seconds to the
  * specified sun angle (relative to straight up.)  Also specify if we
@@ -45,8 +47,7 @@
  * when the sun angle is 90 and ascending.
  */
 time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
-                                   double lon_rad,
-                                   double lat_rad,
+                                   const SGGeod& loc,
                                    double target_angle_deg,
                                    bool ascending );
 

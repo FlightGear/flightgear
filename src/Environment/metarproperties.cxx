@@ -88,10 +88,8 @@ inline void MagneticVariation::recalc( double lon, double lat, double alt )
     _lat = lat;
     _alt = alt;
 
-    lon *= SGD_DEGREES_TO_RADIANS;
-    lat *= SGD_DEGREES_TO_RADIANS;
-    alt *= SG_FEET_TO_METER;
-   _time.update( lon, lat, 0, 0 );
+    SGGeod location(SGGeod::fromDegFt(lon, lat, alt));
+   _time.update( location, 0, 0 );
     update( lon, lat, alt, _time.getJD() );
   }
 }

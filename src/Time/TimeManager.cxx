@@ -29,6 +29,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/timing/lowleveltime.h>
 #include <simgear/structure/commands.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -83,15 +84,10 @@ void TimeManager::init()
   
   _warpDelta = fgGetNode("/sim/time/warp-delta", true);
   
-  _longitudeDeg = fgGetNode("/position/longitude-deg", true);
-  _latitudeDeg = fgGetNode("/position/latitude-deg", true);
-  
   SGPath zone(globals->get_fg_root());
   zone.append("Timezone");
-  double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
   
-  _impl = new SGTime(lon, lat, zone.str(), _timeOverride->getLongValue());
+  _impl = new SGTime(globals->get_aircraft_position(), zone, _timeOverride->getLongValue());
   
   _warpDelta->setIntValue(0);
   
@@ -99,7 +95,7 @@ void TimeManager::init()
                             &TimeManager::updateLocalTime, 30*60 );
   updateLocalTime();
   
-  _impl->update(lon, lat, _timeOverride->getLongValue(),
+  _impl->update(globals->get_aircraft_position(), _timeOverride->getLongValue(),
                _warp->getIntValue());
   globals->set_time_params(_impl);
     
@@ -145,9 +141,7 @@ void TimeManager::valueChanged(SGPropertyNode* aProp)
       _adjustWarpOnUnfreeze = false;
     }
     
-    double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-    double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-    _impl->update(lon, lat,
+    _impl->update(globals->get_aircraft_position(),
                    _timeOverride->getLongValue(),
                    _warp->getIntValue());
   }
@@ -253,9 +247,7 @@ void TimeManager::update(double dt)
   }
 
   _lastClockFreeze = freeze;
-  double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  _impl->update(lon, lat,
+  _impl->update(globals->get_aircraft_position(),
                _timeOverride->getLongValue(),
                _warp->getIntValue());
 
@@ -294,12 +286,7 @@ void TimeManager::updateLocalTime()
 {
   SGPath zone(globals->get_fg_root());
   zone.append("Timezone");
-  
-  double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  
-  SG_LOG(SG_GENERAL, SG_INFO, "updateLocal(" << lon << ", " << lat << ", " << zone.str() << ")");
-  _impl->updateLocal(lon, lat, zone.str());
+  _impl->updateLocal(globals->get_aircraft_position(), zone.str());
 }
 
 void TimeManager::initTimeOffset()
@@ -321,26 +308,25 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
       sgTimeGetGMT( fgLocaltime(&cur_time, _impl->get_zonename() ) );
     
   // Okay, we now have several possible scenarios
-  double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
+  SGGeod loc = globals->get_aircraft_position();
   int warp = 0;
   
   if ( offset_type == "real" ) {
       warp = 0;
   } else if ( offset_type == "dawn" ) {
-      warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 90.0, true ); 
+      warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 90.0, true );
   } else if ( offset_type == "morning" ) {
-     warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 75.0, true ); 
+     warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 75.0, true ); 
   } else if ( offset_type == "noon" ) {
-     warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 0.0, true ); 
+     warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 0.0, true ); 
   } else if ( offset_type == "afternoon" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 75.0, false );  
+    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 75.0, false );  
   } else if ( offset_type == "dusk" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 90.0, false );
+    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 90.0, false );
   } else if ( offset_type == "evening" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 100.0, false );
+    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 100.0, false );
   } else if ( offset_type == "midnight" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 180.0, false );
+    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 180.0, false );
   } else if ( offset_type == "system-offset" ) {
     warp = offset;
     orig_warp = 0;

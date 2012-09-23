@@ -435,9 +435,6 @@ protected:
 	// Configuration that affects flightplan operation
 	bool _turnAnticipationEnabled;
 
-	// Magvar stuff.  Might get some of this stuff (such as time) from FG in future.
-	SGTime* _time;
-
 	std::list<std::string> _messageStack;
 
 	virtual void CreateFlightPlan(GPSFlightPlan* fp, std::vector<std::string> ids, std::vector<GPSWpType> wps);
