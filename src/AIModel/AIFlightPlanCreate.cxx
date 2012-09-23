@@ -355,9 +355,11 @@ void FGAIFlightPlan::createDefaultLandingTaxi(FGAIAircraft * ac,
     pushBackWaypoint(wpt);
 
     FGParking* parkPos = aAirport->getDynamics()->getParking(gateId);
-    wpt = createOnGround(ac, "ENDtaxi", parkPos->getGeod(), airportElev,
+    if (parkPos) {
+        wpt = createOnGround(ac, "ENDtaxi", parkPos->getGeod(), airportElev,
                          ac->getPerformance()->vTaxi());
-    pushBackWaypoint(wpt);
+        pushBackWaypoint(wpt);
+    }
 }
 
 bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
