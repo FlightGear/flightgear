@@ -1012,6 +1012,14 @@ bool FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
     double vTaxi = ac->getPerformance()->vTaxi();
     double vTaxiReduced = vTaxi * (2.0 / 3.0);
     FGParking* parking = apt->getDynamics()->getParking(gateId);
+    if (!parking) {
+      wpt = createOnGround(ac, "END-Parking", apt->geod(), aptElev,
+                           vTaxiReduced);
+      pushBackWaypoint(wpt);
+
+      return true;
+    }
+  
     double heading = SGMiscd::normalizePeriodic(0, 360, parking->getHeading() + 180.0);
     double az; // unused
     SGGeod pos;
