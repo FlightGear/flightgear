@@ -589,8 +589,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                        heading);
         rec->getAircraft()->GetFlightPlan()->setRunway(activeRunway);
-        fp = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
-             getDynamics()->getSID(activeRunway, heading);
+        fp = NULL;
         rec->getAircraft()->GetFlightPlan()->setSID(fp);
         if (fp) {
             SID = fp->getName() + " departure";
@@ -737,11 +736,8 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             		SGGeod sender_pos;
             		double sender_alt_ft, sender_alt;
             		if(ground_to_air) {
-			              sender_alt_ft = parent->getElevation();
-			              sender_alt = sender_alt_ft * SG_FEET_TO_METER;
-			              sender_pos= SGGeod::fromDegM( parent->getLongitude(),
-		                      parent->getLatitude(), sender_alt );
-			        }
+                  sender_pos = parent->parent()->geod();
+			         }
 			        else {
 			              sender_alt_ft = rec->getAltitude();
 			              sender_alt = sender_alt_ft * SG_FEET_TO_METER;

@@ -31,7 +31,7 @@ bool sortByLength     (FGTaxiSegment *a, FGTaxiSegment *b);
 
 class FGTaxiNode 
 {
-private:
+protected:
   SGGeod geod;
   int index;
 
@@ -106,9 +106,9 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
 
   const SGGeod& getGeod() const { return geod; }
 
-  int getIndex() { return index; };
-  int getHoldPointType() { return holdType; };
-  bool getIsOnRunway() { return isOnRunway; };
+  int getIndex() const { return index; };
+  int getHoldPointType() const { return holdType; };
+  bool getIsOnRunway() const { return isOnRunway; };
 
   FGTaxiNode *getAddress() { return this;};
   FGTaxiSegmentVectorIterator getBeginRoute() { return next.begin(); };

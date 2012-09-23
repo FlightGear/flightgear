@@ -23,6 +23,10 @@
 #endif
 
 #include <algorithm>
+#include <string>
+#include <vector>
+
+#include <boost/foreach.hpp>
 
 #include <simgear/compiler.h>
 
@@ -37,20 +41,17 @@
 #include <Airports/runways.hxx>
 #include <ATCDCL/ATCutils.hxx>
 
-#include <string>
-#include <vector>
+#include "simple.hxx"
+#include "dynamics.hxx"
 
 using std::string;
 using std::vector;
 using std::sort;
 using std::random_shuffle;
 
-#include "simple.hxx"
-#include "dynamics.hxx"
-
 FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
-    _ap(ap), rwyPrefs(ap), SIDs(ap),
-        startupController    (this),
+    _ap(ap), rwyPrefs(ap),
+    startupController    (this),
     towerController      (this),
     approachController   (this),
     atisSequenceIndex(-1),
@@ -85,159 +86,67 @@ void FGAirportDynamics::init()
     
 }
 
-bool FGAirportDynamics::getAvailableParking(double *lat, double *lon,
-                                            double *heading, int *gateId,
-                                            double rad,
-                                            const string & flType,
+int FGAirportDynamics::innerGetAvailableParking(double radius, const string & flType,
+                                           const string & acType,
+                                           const string & airline,
+                                           bool skipEmptyAirlineCode)
+{
+  FGParkingVecIterator i;
+  for (i = parkings.begin(); i != parkings.end(); i++) {
+    // Taken by another aircraft, or no airline codes
+    if (!i->isAvailable()) {
+      continue;
+    }
+    
+    if (skipEmptyAirlineCode && i->getCodes().empty()) {
+      continue;
+    }
+    
+    // check airline codes match
+    if (!airline.empty() && !i->getCodes().empty()) {
+      if (i->getCodes().find(airline, 0) == string::npos) {
+        continue;
+      }
+    }
+    
+    // Type doesn't match
+    if (i->getType() != flType) {
+      continue;
+    }
+    // too small
+    if (i->getRadius() < radius) {
+      continue;
+    }
+    
+    i->setAvailable(false);
+    return i->getIndex();
+  }
+  
+  return -1;
+}
+
+int FGAirportDynamics::getAvailableParking(double radius, const string & flType,
                                             const string & acType,
                                             const string & airline)
 {
-    bool found = false;
-    bool available = false;
-
-
-    FGParkingVecIterator i;
-    if (parkings.begin() == parkings.end()) {
-        //cerr << "Could not find parking spot at " << _ap->getId() << endl;
-        *lat = _ap->getLatitude();
-        *lon = _ap->getLongitude();
-        * gateId = -1;
-        *heading = 0;
-        found = true;
-    } else {
-        // First try finding a parking with a designated airline code
-        for (i = parkings.begin(); !(i == parkings.end() || found); i++) {
-            available = true;
-            // Taken by another aircraft
-            if (!(i->isAvailable())) {
-                available = false;
-                continue;
-            }
-            // No airline codes, so skip
-            if (i->getCodes().empty()) {
-                available = false;
-                continue;
-            } else {             // Airline code doesn't match
-                //cerr << "Code = " << airline << ": Codes " << i->getCodes();
-                if (i->getCodes().find(airline, 0) == string::npos) {
-                    available = false;
-                    //cerr << "Unavailable" << endl;
-                    continue;
-                } else {
-                    //cerr << "Available" << endl;
-                }
-            }
-            // Type doesn't match
-            if (i->getType() != flType) {
-                available = false;
-                continue;
-            }
-            // too small
-            if (i->getRadius() < rad) {
-                available = false;
-                continue;
-            }
-
-            if (available) {
-                *lat = i->getLatitude();
-                *lon = i->getLongitude();
-                *heading = i->getHeading();
-                *gateId = i->getIndex();
-                i->setAvailable(false);
-                found = true;
-            }
-        }
-        // then try again for those without codes. 
-        for (i = parkings.begin(); !(i == parkings.end() || found); i++) {
-            available = true;
-            if (!(i->isAvailable())) {
-                available = false;
-                continue;
-            }
-            if (!(i->getCodes().empty())) {
-                if ((i->getCodes().find(airline, 0) == string::npos)) {
-                    available = false;
-                    continue;
-                }
-            }
-            if (i->getType() != flType) {
-                available = false;
-                continue;
-            }
-
-            if (i->getRadius() < rad) {
-                available = false;
-                continue;
-            }
-
-            if (available) {
-                *lat = i->getLatitude();
-                *lon = i->getLongitude();
-                *heading = i->getHeading();
-                *gateId = i->getIndex();
-                i->setAvailable(false);
-                found = true;
-            }
-        }
-        // And finally once more if that didn't work. Now ignore the airline codes, as a last resort
-        for (i = parkings.begin(); !(i == parkings.end() || found); i++) {
-            available = true;
-            if (!(i->isAvailable())) {
-                available = false;
-                continue;
-            }
-            if (i->getType() != flType) {
-                available = false;
-                continue;
-            }
-
-            if (i->getRadius() < rad) {
-                available = false;
-                continue;
-            }
-
-            if (available) {
-                *lat = i->getLatitude();
-                *lon = i->getLongitude();
-                *heading = i->getHeading();
-                *gateId = i->getIndex();
-                i->setAvailable(false);
-                found = true;
-            }
-        }
+    if (parkings.empty()) {
+      return -1;
     }
-    if (!found) {
-        //cerr << "Traffic overflow at" << _ap->getId() 
-        //           << ". flType = " << flType 
-        //           << ". airline = " << airline 
-        //           << " Radius = " <<rad
-        //           << endl;
-        *lat = _ap->getLatitude();
-        *lon = _ap->getLongitude();
-        *heading = 0;
-        *gateId = -1;
-        //exit(1);
-    }
-    return found;
-}
+  
+  // most exact seach - airline codes must be present and match
+  int result = innerGetAvailableParking(radius, flType, acType, airline, true);
+  if (result >= 0) {
+    return result;
+  }
+  
+  // more tolerant - gates with empty airline codes are permitted
+  result = innerGetAvailableParking(radius, flType, acType, airline, false);
+  if (result >= 0) {
+    return result;
+  }
 
-void FGAirportDynamics::getParking(int id, double *lat, double *lon,
-                                   double *heading)
-{
-    if (id < 0) {
-        *lat = _ap->getLatitude();
-        *lon = _ap->getLongitude();
-        *heading = 0;
-    } else {
-        FGParkingVecIterator i = parkings.begin();
-        for (i = parkings.begin(); i != parkings.end(); i++) {
-            if (id == i->getIndex()) {
-                *lat = i->getLatitude();
-                *lon = i->getLongitude();
-                *heading = i->getHeading();
-            }
-        }
-    }
+  // fallback - ignore the airline code entirely
+  return innerGetAvailableParking(radius, flType, acType, string(), false);
 }
 
 FGParking *FGAirportDynamics::getParking(int id)
@@ -263,6 +172,18 @@ string FGAirportDynamics::getParkingName(int id)
     return string("overflow");
 }
 
+int FGAirportDynamics::findParkingByName(const std::string& name) const
+{
+  FGParkingVec::const_iterator i = parkings.begin();
+  for (i = parkings.begin(); i != parkings.end(); i++) {
+    if (i->getName() == name) {
+      return i->getIndex();
+    }
+  }
+  
+  return -1;
+}
+
 void FGAirportDynamics::releaseParking(int id)
 {
     if (id >= 0) {
@@ -279,8 +200,6 @@ void FGAirportDynamics::releaseParking(int id)
 void FGAirportDynamics::setRwyUse(const FGRunwayPreference & ref)
 {
     rwyPrefs = ref;
-    //cerr << "Exiting due to not implemented yet" << endl;
-    //exit(1);
 }
 
 bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
@@ -466,22 +385,12 @@ void FGAirportDynamics::addParking(FGParking & park)
     parkings.push_back(park);
 }
 
-double FGAirportDynamics::getLatitude() const
-{
-    return _ap->getLatitude();
-}
-
-double FGAirportDynamics::getLongitude() const
-{
-    return _ap->getLongitude();
-}
-
 double FGAirportDynamics::getElevation() const
 {
     return _ap->getElevation();
 }
 
-const string & FGAirportDynamics::getId() const
+const string FGAirportDynamics::getId() const
 {
     return _ap->getId();
 }
@@ -541,13 +450,6 @@ int FGAirportDynamics::getTowerFrequency(unsigned nr)
         towerFreq = freqTower[nr - 2];
     }
     return towerFreq;
-}
-
-
-FGAIFlightPlan *FGAirportDynamics::getSID(string activeRunway,
-                                          double heading)
-{
-    return SIDs.getBest(activeRunway, heading);
 }
 
 const std::string FGAirportDynamics::getAtisSequence()

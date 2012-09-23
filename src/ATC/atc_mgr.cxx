@@ -143,8 +143,6 @@ void FGATCManager::init() {
             if (!(fp->createPushBack(&ai_ac,
                                false, 
                                apt, 
-                               latitude,
-                               longitude,
                                aircraftRadius,
                                fltType,
                                aircraftType,

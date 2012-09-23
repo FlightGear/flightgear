@@ -24,6 +24,7 @@
 
 // simgear
 #include <simgear/props/props_io.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include "globals.hxx"
 #include "fg_props.hxx"
@@ -150,7 +151,8 @@ bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 }
 
 // Set current_options lon/lat given an airport id and parkig position name
-static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& parkpos ) {
+static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& parkpos )
+{
   if ( id.empty() )
     return false;
   
@@ -167,11 +169,9 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
     return false;
   }
   
-  int park_index = dcs->getNrOfParkings() - 1;
-  bool succes;
+  int gateID;
   double radius = fgGetDouble("/sim/dimensions/radius-m");
   if ((parkpos == string("AVAILABLE")) && (radius > 0)) {
-    double lat, lon, heading;
     string fltType;
     string acOperator;
     SGPath acData;
@@ -203,30 +203,27 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
     }
     
     string acType; // Currently not used by findAvailable parking, so safe to leave empty.
-    succes = dcs->getAvailableParking(&lat, &lon, &heading, &park_index, radius, fltType, acType, acOperator);
-    if (succes) {
+    gateID = dcs->getAvailableParking(radius, fltType, acType, acOperator);
+    if (gateID >=0 ) {
       fgGetString("/sim/presets/parkpos");
-      fgSetString("/sim/presets/parkpos", dcs->getParking(park_index)->getName());
+      fgSetString("/sim/presets/parkpos", dcs->getParking(gateID)->getName());
     } else {
       SG_LOG( SG_GENERAL, SG_ALERT,
              "Failed to find a suitable parking at airport " << id );
       return false;
     }
   } else {
-    //cerr << "We shouldn't get here when AVAILABLE" << endl;
-    while (park_index >= 0 && dcs->getParkingName(park_index) != parkpos) park_index--;
-    if (park_index < 0) {
+    gateID = dcs->findParkingByName(parkpos);
+    if (gateID < 0) {
       SG_LOG( SG_GENERAL, SG_ALERT,
-             "Failed to find parking position " << parkpos <<
-             " at airport " << id );
+               "Failed to find a parking at airport " << id << ":" << parkpos);
       return false;
     }
   }
-  FGParking* parking = dcs->getParking(park_index);
+  
+  FGParking* parking = dcs->getParking(gateID);
   parking->setAvailable(false);
-  fgApplyStartOffset(
-                     SGGeod::fromDeg(parking->getLongitude(), parking->getLatitude()),
-                     parking->getHeading());
+  fgApplyStartOffset(parking->getGeod(), parking->getHeading());
   return true;
 }
 

@@ -38,6 +38,7 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sg_inlines.h>
+#include <simgear/structure/exception.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
@@ -115,7 +116,6 @@ FGAirportDynamics * FGAirport::getDynamics()
     FGRunwayPreference rwyPrefs(this);
     XMLLoader::load(&rwyPrefs);
     _dynamics->setRwyUse(rwyPrefs);
-    XMLLoader::load(_dynamics->getSIDs());
     
     return _dynamics;
 }

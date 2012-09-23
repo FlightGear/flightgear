@@ -129,7 +129,7 @@ public:
 
   bool    create(FGAIAircraft *, FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
 		 bool firstLeg, double radius, const std::string& fltType, const std::string& aircraftType, const std::string& airline, double distance);
-  bool createPushBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
+  bool createPushBack(FGAIAircraft *, bool, FGAirport*, double radius, const std::string&, const std::string&, const std::string&);
   bool createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const std::string&);
 
   void setLeg(int val) { leg = val;}
@@ -189,7 +189,7 @@ private:
   std::string name;
   bool isValid;
 
-  void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
+  void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double radius, const std::string&, const std::string&, const std::string&);
   bool createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const std::string&);
   bool createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const std::string&);
   bool createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const std::string&, double distance);

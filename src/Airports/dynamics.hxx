@@ -26,7 +26,6 @@
 #include "parking.hxx"
 #include "groundnetwork.hxx"
 #include "runwayprefs.hxx"
-#include "sidstar.hxx"
 
 // forward decls
 class FGAirport;
@@ -39,7 +38,6 @@ private:
 
     FGParkingVec         parkings;
     FGRunwayPreference   rwyPrefs;
-    FGSidStar            SIDs;
     FGStartupController  startupController;
     FGGroundNetwork      groundNetwork;
     FGTowerController    towerController;
@@ -65,8 +63,9 @@ private:
     bool innerGetActiveRunway(const std::string &trafficType, int action, std::string &runway, double heading);
     std::string chooseRwyByHeading(stringVec rwys, double heading);
 
-    double elevation;
-
+  int innerGetAvailableParking(double radius, const std::string & flType,
+                               const std::string & acType, const std::string & airline,
+                               bool skipEmptyAirlineCode);
 public:
     FGAirportDynamics(FGAirport* ap);
     ~FGAirportDynamics();
@@ -91,36 +90,36 @@ public:
     };
 
     void init();
-    double getLongitude() const;
-    // Returns degrees
-    double getLatitude()  const;
-    // Returns ft
+  
     double getElevation() const;
-    const string& getId() const;
-
+    const std::string getId() const;
+  
+    FGAirport* parent() const
+    { return _ap; }
+  
     void getActiveRunway(const string& trafficType, int action, string& runway, double heading);
 
     void addParking(FGParking& park);
-    bool getAvailableParking(double *lat, double *lon,
-                             double *heading, int *gate, double rad, const string& fltype,
-                             const string& acType, const string& airline);
-    void getParking         (int id, double *lat, double* lon, double *heading);
+    
+    /**
+     * retrieve an available parking by GateID, or -1 if no suitable
+     * parking location could be found.
+     */
+    int getAvailableParking(double radius, const std::string& fltype,
+                          const std::string& acType, const std::string& airline);
+
     FGParking *getParking(int i);
     void releaseParking(int id);
-    string getParkingName(int i);
+    std::string getParkingName(int i);
     int getNrOfParkings() {
         return parkings.size();
     };
-    //FGAirport *getAddress() { return this; };
-    //const string &getName() const { return _name;};
-    // Returns degrees
 
-    // Departure / Arrival procedures
-    FGSidStar * getSIDs() {
-        return &SIDs;
-    };
-    FGAIFlightPlan * getSID(string activeRunway, double heading);
-
+    /**
+     * Find a parking gate index by name. Note names are often not unique
+     * in our data, so will return the first match.
+     */
+    int findParkingByName(const std::string& name) const;
 
     // ATC related functions.
     FGStartupController    *getStartupController()    {

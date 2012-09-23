@@ -29,6 +29,7 @@
 #include "runwayprefloader.hxx"
 
 #include "dynamics.hxx"
+#include "simple.hxx"
 #include "runwayprefs.hxx"
 
 using std::string;
@@ -36,9 +37,10 @@ using std::string;
 XMLLoader::XMLLoader() {}
 XMLLoader::~XMLLoader() {}
 
-void XMLLoader::load(FGAirportDynamics* d) {
+void XMLLoader::load(FGAirportDynamics* d)
+{
   FGAirportDynamicsXMLLoader visitor(d);
-  if(loadAirportXMLDataIntoVisitor(d->getId(), "groundnet", visitor)) {
+  if(loadAirportXMLDataIntoVisitor(d->parent()->ident(), "groundnet", visitor)) {
     d->init();
   }
 }
@@ -46,13 +48,6 @@ void XMLLoader::load(FGAirportDynamics* d) {
 void XMLLoader::load(FGRunwayPreference* p) {
   FGRunwayPreferenceXMLLoader visitor(p);
   loadAirportXMLDataIntoVisitor(p->getId(), "rwyuse", visitor);
-}
-
-void XMLLoader::load(FGSidStar* p) {
-  SGPath path;
-  if (findAirportData(p->getId(), "SID", path)) {
-    p->load(path);
-  }
 }
 
 bool XMLLoader::findAirportData(const std::string& aICAO, 

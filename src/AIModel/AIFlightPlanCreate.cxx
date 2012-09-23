@@ -62,7 +62,7 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
     int currWpt = wpt_iterator - waypoints.begin();
     switch (legNr) {
     case 1:
-        retVal = createPushBack(ac, firstFlight, dep, latitude, longitude,
+        retVal = createPushBack(ac, firstFlight, dep,
                                 radius, fltType, aircraftType, airline);
         // Pregenerate the taxi leg.
         //if (retVal) {
@@ -206,22 +206,21 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
                                        const string & acType,
                                        const string & airline)
 {
-    double heading, lat, lon;
 
     // If this function is called during initialization,
     // make sure we obtain a valid gate ID first
     // and place the model at the location of the gate.
-    if (firstFlight) {
-        if (!(apt->getDynamics()->getAvailableParking(&lat, &lon,
-                                                      &heading, &gateId,
-                                                      radius, fltType,
-                                                      acType, airline))) {
-            SG_LOG(SG_AI, SG_WARN, "Could not find parking for a " <<
-                   acType <<
-                   " of flight type " << fltType <<
-                   " of airline     " << airline <<
-                   " at airport     " << apt->getId());
-        }
+    if (firstFlight)
+    {
+      gateId =  apt->getDynamics()->getAvailableParking(radius, fltType,
+                                                        acType, airline);
+      if (gateId < 0) {
+        SG_LOG(SG_AI, SG_WARN, "Could not find parking for a " <<
+               acType <<
+               " of flight type " << fltType <<
+               " of airline     " << airline <<
+               " at airport     " << apt->getId());
+      }
     }
 
     string rwyClass = getRunwayClassFromTrafficType(fltType);
@@ -355,11 +354,9 @@ void FGAIFlightPlan::createDefaultLandingTaxi(FGAIAircraft * ac,
                        ac->getPerformance()->vTaxi());
     pushBackWaypoint(wpt);
 
-    double heading, lat, lon;
-    aAirport->getDynamics()->getParking(gateId, &lat, &lon, &heading);
-    wpt =
-        createOnGround(ac, "ENDtaxi", SGGeod::fromDeg(lon, lat), airportElev,
-                       ac->getPerformance()->vTaxi());
+    FGParking* parkPos = aAirport->getDynamics()->getParking(gateId);
+    wpt = createOnGround(ac, "ENDtaxi", parkPos->getGeod(), airportElev,
+                         ac->getPerformance()->vTaxi());
     pushBackWaypoint(wpt);
 }
 
@@ -369,9 +366,7 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
                                        const string & acType,
                                        const string & airline)
 {
-    double heading, lat, lon;
-    apt->getDynamics()->getAvailableParking(&lat, &lon, &heading,
-                                            &gateId, radius, fltType,
+    gateId = apt->getDynamics()->getAvailableParking(radius, fltType,
                                             acType, airline);
 
     SGGeod lastWptPos =
@@ -1012,34 +1007,25 @@ bool FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
 {
     FGAIWaypoint *wpt;
     double aptElev = apt->getElevation();
-    double lat = 0.0, lat2 = 0.0;
-    double lon = 0.0, lon2 = 0.0;
-    double az2 = 0.0;
-    double heading = 0.0;
-
     double vTaxi = ac->getPerformance()->vTaxi();
     double vTaxiReduced = vTaxi * (2.0 / 3.0);
-    apt->getDynamics()->getParking(gateId, &lat, &lon, &heading);
-    heading += 180.0;
-    if (heading > 360)
-        heading -= 360;
-    geo_direct_wgs_84(0, lat, lon, heading,
-                      2.2 * radius, &lat2, &lon2, &az2);
-    wpt =
-        createOnGround(ac, "taxiStart", SGGeod::fromDeg(lon2, lat2),
-                       aptElev, vTaxiReduced);
+    FGParking* parking = apt->getDynamics()->getParking(gateId);
+    double heading = SGMiscd::normalizePeriodic(0, 360, parking->getHeading() + 180.0);
+    double az; // unused
+    SGGeod pos;
+  
+    SGGeodesy::direct(parking->getGeod(), heading, 2.2 * parking->getRadius(),
+                      pos, az);
+  
+    wpt = createOnGround(ac, "taxiStart", pos, aptElev, vTaxiReduced);
     pushBackWaypoint(wpt);
 
-    geo_direct_wgs_84(0, lat, lon, heading,
-                      0.1 * radius, &lat2, &lon2, &az2);
-
-    wpt =
-        createOnGround(ac, "taxiStart2", SGGeod::fromDeg(lon2, lat2),
-                       aptElev, vTaxiReduced);
+    SGGeodesy::direct(parking->getGeod(), heading, 0.1 * parking->getRadius(),
+                    pos, az);
+    wpt = createOnGround(ac, "taxiStart2", pos, aptElev, vTaxiReduced);
     pushBackWaypoint(wpt);
 
-    wpt =
-        createOnGround(ac, "END-Parking", SGGeod::fromDeg(lon, lat), aptElev,
+    wpt = createOnGround(ac, "END-Parking", parking->getGeod(), aptElev,
                        vTaxiReduced);
     pushBackWaypoint(wpt);
     return true;
