@@ -35,6 +35,26 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
 
+/**
+ * Callback for resetting the render_dirty flag after rendering a frame.
+ */
+class Canvas::DrawCallback:
+  public osg::Camera::DrawCallback
+{
+  public:
+    DrawCallback(Canvas* canvas):
+      _canvas(canvas)
+    {}
+
+    virtual void operator()(osg::RenderInfo& renderInfo) const
+    {
+      _canvas->_render_dirty = false;
+    }
+
+  protected:
+    Canvas *_canvas;
+};
+
 //----------------------------------------------------------------------------
 Canvas::CameraCullCallback::CameraCullCallback():
   _render( true ),
@@ -142,6 +162,7 @@ void Canvas::update(double delta_time_sec)
     _texture.allocRT(_camera_callback);
     _texture.getCamera()->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f , 1.0f));
     _texture.getCamera()->addChild(_root_group->getMatrixTransform());
+    _texture.getCamera()->setFinalDrawCallback(new DrawCallback(this));
 
     if( _texture.serviceable() )
     {
@@ -154,12 +175,8 @@ void Canvas::update(double delta_time_sec)
     }
   }
 
-  _root_group->update(delta_time_sec);
-
   _texture.setRender(_render_dirty);
-
-  // Always render if sampling or color has changed
-  _render_dirty = _sampling_dirty || _color_dirty;
+  _root_group->update(delta_time_sec);
 
   if( _sampling_dirty )
   {
@@ -169,6 +186,7 @@ void Canvas::update(double delta_time_sec)
       _node->getIntValue("color-samples")
     );
     _sampling_dirty = false;
+    _render_dirty = true;
   }
   if( _color_dirty )
   {
@@ -180,6 +198,7 @@ void Canvas::update(double delta_time_sec)
                  _color_background[3]->getFloatValue() )
     );
     _color_dirty = false;
+    _render_dirty = true;
   }
 
   while( !_dirty_placements.empty() )
@@ -311,6 +330,8 @@ void Canvas::childAdded( SGPropertyNode * parent,
 void Canvas::childRemoved( SGPropertyNode * parent,
                            SGPropertyNode * child )
 {
+  _render_dirty = true;
+
   if( parent != _node )
     return;
 
@@ -327,7 +348,6 @@ void Canvas::valueChanged(SGPropertyNode* node)
   if(    boost::starts_with(node->getNameString(), "status")
       || node->getParent()->getNameString() == "bounding-box" )
     return;
-
   _render_dirty = true;
 
   bool handled = true;

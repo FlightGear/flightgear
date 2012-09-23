@@ -86,6 +86,11 @@ class Canvas:
     };
     typedef osg::ref_ptr<CullCallback> CullCallbackPtr;
 
+    /**
+     * Callback for resetting the render_dirty flag after rendering a frame.
+     */
+    class DrawCallback;
+
     Canvas(SGPropertyNode* node);
     virtual ~Canvas();
 

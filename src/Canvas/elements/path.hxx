@@ -43,6 +43,7 @@ namespace canvas
 
       osg::ref_ptr<PathDrawable> _path;
 
+      virtual void childRemoved(SGPropertyNode * child);
       virtual void childChanged(SGPropertyNode * child);
   };
 

@@ -393,6 +393,12 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
+  void Path::childRemoved(SGPropertyNode* child)
+  {
+    childChanged(child);
+  }
+
+  //----------------------------------------------------------------------------
   void Path::childChanged(SGPropertyNode* child)
   {
     if( child->getParent() != _node )
