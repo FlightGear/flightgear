@@ -80,31 +80,6 @@ using std::vector;
 // is initialized.
 extern int _bootstrap_OSInit;
 
-
-static void fgLoadInitialScenery()
-{
-    static SGPropertyNode_ptr scenery_loaded
-        = fgGetNode("sim/sceneryloaded", true);
-    static SGPropertyNode_ptr scenery_override
-        = fgGetNode("/sim/sceneryloaded-override", true);
-
-    if (!scenery_loaded->getBoolValue())
-    {
-        if (scenery_override->getBoolValue() ||
-            (globals->get_tile_mgr()->isSceneryLoaded()
-             && fgGetBool("sim/fdm-initialized"))) {
-            fgSetBool("sim/sceneryloaded",true);
-            fgSplashProgress("");
-        }
-        else
-        {
-            fgSplashProgress("loading-scenery");
-            // be nice to loader threads while waiting for initial scenery, reduce to 20fps
-            SGTimeStamp::sleepForMSec(50);
-        }
-    }
-}
-
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void )
@@ -125,9 +100,6 @@ static void fgMainLoop( void )
 
     // update all subsystems
     globals->get_subsystem_mgr()->update(sim_dt);
-
-    // END Tile Manager updates
-    fgLoadInitialScenery();
 
     simgear::AtomicChangeListener::fireChangeListeners();
 

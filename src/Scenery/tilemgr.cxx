@@ -42,6 +42,7 @@
 #include <Main/fg_props.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/viewer.hxx>
+#include <Viewer/splash.hxx>
 #include <Scripting/NasalSys.hxx>
 
 #include "scenery.hxx"
@@ -61,6 +62,8 @@ FGTileMgr::FGTileMgr():
     _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
     _maxTileRangeM(fgGetNode("/sim/rendering/static-lod/bare", true)),
     _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true)),
+    _scenery_loaded(fgGetNode("/sim/sceneryloaded", true)),
+    _scenery_override(fgGetNode("/sim/sceneryloaded-override", true)),
     _pager(FGScenery::getPagerSingleton())
 {
 }
@@ -316,17 +319,33 @@ void FGTileMgr::update(double)
     schedule_tiles_at(SGGeod::fromCart(viewPos), vis);
 
     update_queues();
+
+    // scenery loading check, triggers after each sim (tile manager) reinit
+    if (!_scenery_loaded->getBoolValue())
+    {
+        if (_scenery_override->getBoolValue() || isSceneryLoaded())
+        {
+            _scenery_loaded->setBoolValue(true);
+            fgSplashProgress("");
+        }
+        else
+        {
+            fgSplashProgress("loading-scenery");
+            // be nice to loader threads while waiting for initial scenery, reduce to 20fps
+            SGTimeStamp::sleepForMSec(50);
+        }
+    }
 }
 
-// schedule tiles for the viewer bucket (FDM/AI/groundcache/... use
-// "schedule_scenery" instead
-int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
+// schedule tiles for the viewer bucket
+// (FDM/AI/groundcache/... should use "schedule_scenery" instead)
+void FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
 {
     longitude = location.getLongitudeDeg();
     latitude = location.getLatitudeDeg();
 
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
-    //         << longitude << " " << latatitude );
+    //         << longitude << " " << latitude );
 
     current_bucket.set_bucket( location );
 
@@ -364,8 +383,6 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
         previous_bucket.make_bad();
     }
     last_state = state;
-
-    return 1;
 }
 
 /** Schedules scenery for given position. Load request remains valid for given duration
