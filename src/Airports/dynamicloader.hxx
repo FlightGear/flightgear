@@ -35,6 +35,10 @@ protected:
     virtual void error (const char * message, int line, int column);
 
 private:
+    void startParking(const XMLAttributes &atts);    
+    void startNode(const XMLAttributes &atts);
+    void startArc(const XMLAttributes &atts);
+  
     FGAirportDynamics* _dynamics;
     string value;
 };

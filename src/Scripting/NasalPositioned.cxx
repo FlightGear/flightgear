@@ -1350,7 +1350,7 @@ static naRef f_airport_parking(naContext c, naRef me, int argc, naRef* args)
       continue;
     }
     
-    const SGGeod& parkLoc = park->getGeod();
+    const SGGeod& parkLoc = park->geod();
     naRef ph = naNewHash(c);
     hashset(c, ph, "name", stringToNasal(c, park->getName()));
     hashset(c, ph, "lat", naNum(parkLoc.getLatitudeDeg()));

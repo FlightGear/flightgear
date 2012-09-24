@@ -99,7 +99,7 @@ public:
   
     void getActiveRunway(const string& trafficType, int action, string& runway, double heading);
 
-    void addParking(FGParking& park);
+    void addParking(FGParking* park);
     
     /**
      * retrieve an available parking by GateID, or -1 if no suitable

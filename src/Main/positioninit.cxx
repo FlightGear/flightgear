@@ -223,7 +223,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
   
   FGParking* parking = dcs->getParking(gateID);
   parking->setAvailable(false);
-  fgApplyStartOffset(parking->getGeod(), parking->getHeading());
+  fgApplyStartOffset(parking->geod(), parking->getHeading());
   return true;
 }
 

@@ -1340,10 +1340,10 @@ void FGStartupController::render(bool visible)
                 if (pos > 0) {
                     FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(pos);
                     SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
-                    SGGeod end  (SGGeod::fromDeg(segment->getEnd()->getLongitude(), segment->getEnd()->getLatitude()));
+                    SGGeod end  (segment->getEnd()->geod());
 
                     double length = SGGeodesy::distanceM(start, end);
-                    //heading = SGGeodesy::headingDeg(start->getGeod(), end->getGeod());
+                    //heading = SGGeodesy::headingDeg(start->geod(), end->geod());
 
                     double az2, heading; //, distanceM;
                     SGGeodesy::inverse(start, end, heading, az2, length);
@@ -1428,7 +1428,7 @@ void FGStartupController::render(bool visible)
                         double elevationStart = segment->getStart()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
                         double elevationEnd   = segment->getEnd  ()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
                         if ((elevationStart == 0) || (elevationStart == parent->getElevation())) {
-                            SGGeod center2 = segment->getStart()->getGeod();
+                            SGGeod center2 = segment->getStart()->geod();
                             center2.setElevationM(SG_MAX_ELEVATION_M);
                             if (local_scenery->get_elevation_m( center2, elevationStart, NULL )) {
                                 //elevation_feet = elevationStart * SG_METER_TO_FEET + 0.5;
@@ -1440,7 +1440,7 @@ void FGStartupController::render(bool visible)
                             segment->getStart()->setElevation(elevationStart);
                         }
                         if ((elevationEnd == 0) || (elevationEnd == parent->getElevation())) {
-                            SGGeod center2 = segment->getEnd()->getGeod();
+                            SGGeod center2 = segment->getEnd()->geod();
                             center2.setElevationM(SG_MAX_ELEVATION_M);
                             if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
                                 //elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
@@ -1459,8 +1459,9 @@ void FGStartupController::render(bool visible)
 
                         //cerr << "2. Using mean elevation : " << elevationMean << " and " << slope << endl;
 
-
-                        WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), elevationMean + 0.5 + dx, -(segment->getHeading()), slope );
+                        SGGeod segCenter(segment->getCenter());
+                        WorldCoordinate( obj_pos, segCenter.getLatitudeDeg(),
+                                        segCenter.getLongitudeDeg(), elevationMean + 0.5 + dx, -(segment->getHeading()), slope );
 
                         //WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), parent->getElevation()+8+dx, -(segment->getHeading()) );
 

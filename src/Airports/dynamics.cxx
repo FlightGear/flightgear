@@ -91,8 +91,7 @@ int FGAirportDynamics::innerGetAvailableParking(double radius, const string & fl
                                            const string & airline,
                                            bool skipEmptyAirlineCode)
 {
-  FGParkingVecIterator i;
-  for (i = parkings.begin(); i != parkings.end(); i++) {
+  BOOST_FOREACH(FGParking* i, parkings) {
     // Taken by another aircraft, or no airline codes
     if (!i->isAvailable()) {
       continue;
@@ -151,49 +150,43 @@ int FGAirportDynamics::getAvailableParking(double radius, const string & flType,
 
 FGParking *FGAirportDynamics::getParking(int id)
 {
-    FGParkingVecIterator i = parkings.begin();
-    for (i = parkings.begin(); i != parkings.end(); i++) {
-        if (id == i->getIndex()) {
-            return &(*i);
-        }
+  BOOST_FOREACH(FGParking* i, parkings) {
+    if (id == i->getIndex()) {
+      return i;
     }
-    return 0;
+  }
+  
+  return NULL;
 }
 
 string FGAirportDynamics::getParkingName(int id)
 {
-    FGParkingVecIterator i = parkings.begin();
-    for (i = parkings.begin(); i != parkings.end(); i++) {
-        if (id == i->getIndex()) {
-            return i->getName();
-        }
-    }
-
-    return string("overflow");
+  FGParking* p = getParking(id);
+  if (p) {
+    return p->getName();
+  }
+  
+  return string();
 }
 
 int FGAirportDynamics::findParkingByName(const std::string& name) const
 {
-  FGParkingVec::const_iterator i = parkings.begin();
-  for (i = parkings.begin(); i != parkings.end(); i++) {
-    if (i->getName() == name) {
+  BOOST_FOREACH(FGParking* i, parkings) {
+    if (name == i->getName()) {
       return i->getIndex();
     }
   }
-  
+
   return -1;
 }
 
 void FGAirportDynamics::releaseParking(int id)
 {
     if (id >= 0) {
-
-        FGParkingVecIterator i = parkings.begin();
-        for (i = parkings.begin(); i != parkings.end(); i++) {
-            if (id == i->getIndex()) {
-                i->setAvailable(true);
-            }
-        }
+      FGParking* parking = getParking(id);
+      if (parking) {
+        parking->setAvailable(true);
+      }
     }
 }
 
@@ -380,7 +373,7 @@ string FGAirportDynamics::chooseRunwayFallback()
     return rwy->ident();
 }
 
-void FGAirportDynamics::addParking(FGParking & park)
+void FGAirportDynamics::addParking(FGParking* park)
 {
     parkings.push_back(park);
 }

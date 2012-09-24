@@ -93,8 +93,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         FGTaxiRoute route;
         //cerr << "Creating push-back for " << gateId << " (" << parking->getName() << ") using push-back point " << pushBackNode << endl;
         route = dep->getDynamics()->getGroundNetwork()->findShortestRoute(gateId, pushBackNode, false);
-        parking->setPushBackRoute(new FGTaxiRoute(route));
-
+        parking->setPushBackRoute(std::auto_ptr<FGTaxiRoute>(new FGTaxiRoute(route)));
 
         pushBackRoute = parking->getPushBackRoute();
         int size = pushBackRoute->size();
@@ -111,7 +110,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             FGTaxiNode *tn = dep->getDynamics()->getGroundNetwork()->findNode(node);
             //ids.pop_back();
             //wpt = new waypoint;
-            FGAIWaypoint *wpt = createOnGround(ac, string(buffer), tn->getGeod(), dep->getElevation(), vTaxiBackward);
+            FGAIWaypoint *wpt = createOnGround(ac, string(buffer), tn->geod(), dep->getElevation(), vTaxiBackward);
 
             wpt->setRouteIndex(rte);
             pushBackWaypoint(wpt);
@@ -126,34 +125,29 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 
         //cerr << "Creating final push forward point for gate " << gateId << endl;
         FGTaxiNode *tn = dep->getDynamics()->getGroundNetwork()->findNode(gateId);
-        FGTaxiSegmentVectorIterator ts = tn->getBeginRoute();
-        FGTaxiSegmentVectorIterator te = tn->getEndRoute();
-        // if the starting node equals the ending node, then there aren't any routes for this parking.
+        // there aren't any routes for this parking.
         // in cases like these we should flag the gate as being inoperative and return false
-        if (ts == te) {
+        if (tn->arcs().empty()) {
             SG_LOG(SG_AI, SG_ALERT, "Gate " << gateId << "doesn't seem to have routes associated with it.");
             parking->setAvailable(false);
             return false;
         }
-        tn = (*ts)->getEnd();
-        lastNodeVisited = tn->getIndex();
-        if (tn == NULL) {
-            SG_LOG(SG_AI, SG_ALERT, "No valid taxinode found");
-            exit(1);
-        }
-        double distance = (*ts)->getLength();
+      
+        FGTaxiSegment* pushForwardSegment = tn->arcs().front();
+        lastNodeVisited = pushForwardSegment->getEnd()->getIndex();
+        double distance = pushForwardSegment->getLength();
 
         double parkingHeading = parking->getHeading();
       
         for (int i = 1; i < 10; i++) {
             SGGeod pushForwardPt;
-            SGGeodesy::direct(parking->getGeod(), parkingHeading,
+            SGGeodesy::direct(parking->geod(), parkingHeading,
                               ((i / 10.0) * distance), pushForwardPt, az2);
             char buffer[16];
             snprintf(buffer, 16, "pushback-%02d", i);
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), pushForwardPt, dep->getElevation(), vTaxiReduced);
 
-            wpt->setRouteIndex((*ts)->getIndex());
+            wpt->setRouteIndex(pushForwardSegment->getIndex());
             pushBackWaypoint(wpt);
         }
         // cerr << "Done " << endl;

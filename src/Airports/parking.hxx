@@ -30,16 +30,19 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/sg_inlines.h>
 
 #include <string>
 #include <vector>
+#include <memory> // for std::auto_ptr
 
 #include "gnnode.hxx"
 
 class FGTaxiRoute;
 
 
-class FGParking : public FGTaxiNode {
+class FGParking : public FGTaxiNode
+{
 private:
   double heading;
   double radius;
@@ -49,46 +52,15 @@ private:
  
   bool available;
   int pushBackPoint;
-  FGTaxiRoute *pushBackRoute;
+  std::auto_ptr<FGTaxiRoute> pushBackRoute;
 
+  SG_DISABLE_COPY(FGParking);
 public:
-  FGParking() :
-      heading(0),
-      radius(0),
-      available(true),
-      pushBackPoint(0),
-      pushBackRoute(0)
-  {
-  };
-
-  FGParking(const FGParking &other) :
-      FGTaxiNode   (other),
-      heading      (other.heading),
-      radius       (other.radius),
-      parkingName  (other.parkingName),
-      type         (other.type),
-      airlineCodes (other.airlineCodes),
-      available    (other.available),
-      pushBackPoint(other.pushBackPoint),
-      pushBackRoute(other.pushBackRoute)
-  {
-  };
-
-
-  FGParking& operator =(const FGParking &other)
-  {
-      FGTaxiNode::operator=(other);
-      heading      = other.heading;
-      radius       = other.radius;
-      parkingName  = other.parkingName;
-      type         = other.type;
-      airlineCodes = other.airlineCodes;
-      available    = other.available;
-      pushBackPoint= other.pushBackPoint;
-      pushBackRoute= other.pushBackRoute;
-      return *this;
-  };
-  ~FGParking();
+  FGParking(PositionedID aGuid, int index, const SGGeod& pos,
+            double heading, double radius,
+            const std::string& name, const std::string& type,
+            const std::string& codes);
+  virtual ~FGParking();
 
   void setHeading  (double hdg)  { heading     = hdg;  };
   void setRadius   (double rad)  { radius      = rad;  };
@@ -97,7 +69,7 @@ public:
   void setType     (const std::string& tpe)  { type        = tpe;  };
   void setCodes    (const std::string& codes){ airlineCodes= codes;};
 
-  void setPushBackRoute(FGTaxiRoute *val) { pushBackRoute = val; };
+  void setPushBackRoute(std::auto_ptr<FGTaxiRoute> val) { pushBackRoute = val; };
   void setPushBackPoint(int val)          { pushBackPoint = val; };
 
   bool isAvailable ()   const { return available;};
@@ -110,7 +82,7 @@ public:
   std::string getCodes    () const { return airlineCodes;};
   std::string getName     () const { return parkingName; };
 
-  FGTaxiRoute * getPushBackRoute () { return pushBackRoute; };
+  FGTaxiRoute * getPushBackRoute () { return pushBackRoute.get(); };
 
   int getPushBackPoint () { return pushBackPoint; };
 
@@ -118,8 +90,8 @@ public:
     return radius < other.radius; };
 };
 
-typedef std::vector<FGParking> FGParkingVec;
-typedef std::vector<FGParking>::iterator FGParkingVecIterator;
-typedef std::vector<FGParking>::const_iterator FGParkingVecConstIterator;
+typedef std::vector<FGParking*> FGParkingVec;
+typedef FGParkingVec::iterator FGParkingVecIterator;
+typedef FGParkingVec::const_iterator FGParkingVecConstIterator;
 
 #endif

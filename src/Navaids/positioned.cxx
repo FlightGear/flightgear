@@ -143,7 +143,7 @@ const char* FGPositioned::nameForType(Type aTy)
  case RUNWAY: return "runway";
  case TAXIWAY: return "taxiway";
  case PAVEMENT: return "pavement";
- case PARK_STAND: return "parking stand";
+ case PARKING: return "parking stand";
  case FIX: return "fix";
  case VOR: return "VOR";
  case NDB: return "NDB";
@@ -166,6 +166,7 @@ const char* FGPositioned::nameForType(Type aTy)
  case FREQ_CLEARANCE: return "clearance";
  case FREQ_UNICOM: return "unicom";
  case FREQ_APP_DEP: return "approach-departure";
+ case TAXI_NODE: return "taxi-node";
  default:
   return "unknown";
  }

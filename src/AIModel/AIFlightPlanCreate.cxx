@@ -313,7 +313,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         FGTaxiNode *tn =
             apt->getDynamics()->getGroundNetwork()->findNode(node);
         FGAIWaypoint *wpt =
-            createOnGround(ac, buffer, tn->getGeod(), apt->getElevation(),
+            createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
         wpt->setRouteIndex(route);
         //cerr << "Nodes left " << taxiRoute->nodesLeft() << " ";
@@ -356,7 +356,7 @@ void FGAIFlightPlan::createDefaultLandingTaxi(FGAIAircraft * ac,
 
     FGParking* parkPos = aAirport->getDynamics()->getParking(gateId);
     if (parkPos) {
-        wpt = createOnGround(ac, "ENDtaxi", parkPos->getGeod(), airportElev,
+        wpt = createOnGround(ac, "ENDtaxi", parkPos->geod(), airportElev,
                          ac->getPerformance()->vTaxi());
         pushBackWaypoint(wpt);
     }
@@ -419,7 +419,7 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
         snprintf(buffer, 10, "%d", node);
         FGTaxiNode *tn = gn->findNode(node);
         FGAIWaypoint *wpt =
-            createOnGround(ac, buffer, tn->getGeod(), apt->getElevation(),
+            createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
         wpt->setRouteIndex(route);
         pushBackWaypoint(wpt);
@@ -969,14 +969,14 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
             if (!tn)
                 break;
             
-            double dist = SGGeodesy::distanceM(coord, tn->getGeod());
+            double dist = SGGeodesy::distanceM(coord, tn->geod());
             if (dist < (min + 0.75)) {
                 break;
             }
             min = dist;
         }
         if (tn) {
-            wpt = createOnGround(ac, buffer, tn->getGeod(), currElev, vTaxi);
+            wpt = createOnGround(ac, buffer, tn->geod(), currElev, vTaxi);
             pushBackWaypoint(wpt);
         }
     }
@@ -1024,18 +1024,18 @@ bool FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
     double az; // unused
     SGGeod pos;
   
-    SGGeodesy::direct(parking->getGeod(), heading, 2.2 * parking->getRadius(),
+    SGGeodesy::direct(parking->geod(), heading, 2.2 * parking->getRadius(),
                       pos, az);
   
     wpt = createOnGround(ac, "taxiStart", pos, aptElev, vTaxiReduced);
     pushBackWaypoint(wpt);
 
-    SGGeodesy::direct(parking->getGeod(), heading, 0.1 * parking->getRadius(),
+    SGGeodesy::direct(parking->geod(), heading, 0.1 * parking->getRadius(),
                     pos, az);
     wpt = createOnGround(ac, "taxiStart2", pos, aptElev, vTaxiReduced);
     pushBackWaypoint(wpt);
 
-    wpt = createOnGround(ac, "END-Parking", parking->getGeod(), aptElev,
+    wpt = createOnGround(ac, "END-Parking", parking->geod(), aptElev,
                        vTaxiReduced);
     pushBackWaypoint(wpt);
     return true;

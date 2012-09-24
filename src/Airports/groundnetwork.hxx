@@ -24,17 +24,12 @@
 #ifndef _GROUNDNETWORK_HXX_
 #define _GROUNDNETWORK_HXX_
 
-#include <osg/Geode>
-#include <osg/Geometry>
-#include <osg/MatrixTransform>
-#include <osg/Shape>
-
-
 #include <simgear/compiler.h>
 
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
 
 class Block;
 
@@ -48,10 +43,9 @@ class FGAIFlightPlan; // forward reference
 class FGAirport;      // forward reference
 
 typedef std::vector<FGTaxiSegment*>  FGTaxiSegmentVector;
-typedef std::vector<FGTaxiSegment*>::iterator FGTaxiSegmentVectorIterator;
+typedef FGTaxiSegmentVector::iterator FGTaxiSegmentVectorIterator;
 
-//typedef vector<FGTaxiSegment*> FGTaxiSegmentPointerVector;
-//typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentPointerVectorIterator;
+typedef std::map<int, FGTaxiNode_ptr> IndexTaxiNodeMap;
 
 class Block
 {
@@ -82,7 +76,6 @@ private:
     int endNode;
     double length;
     double heading;
-    SGGeod center;
     bool isActive;
     bool isPushBackRoute;
     BlockList blockTimes;
@@ -91,75 +84,19 @@ private:
     int index;
     FGTaxiSegment *oppositeDirection;
 
-
-
 public:
-    FGTaxiSegment() :
-            startNode(0),
-            endNode(0),
-            length(0),
-            heading(0),
-            isActive(0),
-            isPushBackRoute(0),
-            start(0),
-            end(0),
-            index(0),
-            oppositeDirection(0)
-    {
-    };
-
-    FGTaxiSegment         (const FGTaxiSegment &other) :
-            startNode         (other.startNode),
-            endNode           (other.endNode),
-            length            (other.length),
-            heading           (other.heading),
-            center            (other.center),
-            isActive          (other.isActive),
-            isPushBackRoute   (other.isPushBackRoute),
-            blockTimes        (other.blockTimes),
-            start             (other.start),
-            end               (other.end),
-            index             (other.index),
-            oppositeDirection (other.oppositeDirection)
-    {
-    };
-
-    FGTaxiSegment& operator=(const FGTaxiSegment &other)
-    {
-        startNode          = other.startNode;
-        endNode            = other.endNode;
-        length             = other.length;
-        heading            = other.heading;
-        center             = other.center;
-        isActive           = other.isActive;
-        isPushBackRoute    = other.isPushBackRoute;
-        blockTimes         = other.blockTimes;
-        start              = other.start;
-        end                = other.end;
-        index              = other.index;
-        oppositeDirection  = other.oppositeDirection;
-        return *this;
-    };
-
+  FGTaxiSegment(int start, int end, bool isPushBack);
+  
     void setIndex        (int val) {
         index     = val;
-    };
-    void setStartNodeRef (int val) {
-        startNode = val;
-    };
-    void setEndNodeRef   (int val) {
-        endNode   = val;
     };
 
     void setOpposite(FGTaxiSegment *opp) {
         oppositeDirection = opp;
     };
 
-    void setStart(FGTaxiNodeVector *nodes);
-    void setEnd  (FGTaxiNodeVector *nodes);
-    void setPushBackType(bool val) {
-        isPushBackRoute = val;
-    };
+    bool bindToNodes(const IndexTaxiNodeMap& nodes);
+  
     void setDimensions(double elevation);
     void block(int id, time_t blockTime, time_t now);
     void unblock(time_t now); 
@@ -177,12 +114,10 @@ public:
     int getIndex() {
         return index;
     };
-    double getLatitude()  {
-        return center.getLatitudeDeg();
-    };
-    double getLongitude() {
-        return center.getLongitudeDeg();
-    };
+  
+    // compute the center of the arc
+    SGGeod getCenter() const;
+  
     double getHeading()   {
         return heading;
     };
@@ -192,10 +127,6 @@ public:
 
     int getPenalty(int nGates);
 
-    FGTaxiSegment *getAddress() {
-        return this;
-    };
-
     bool operator<(const FGTaxiSegment &other) const {
         return index < other.index;
     };
@@ -203,11 +134,6 @@ public:
     FGTaxiSegment *opposite() {
         return oppositeDirection;
     };
-    void setCourseDiff(double crse);
-
-
-
-
 };
 
 
@@ -304,12 +230,12 @@ private:
     //int maxDepth;
     int count;
     int version;
-    FGTaxiNodeVector    nodes;
-    FGTaxiNodeVector    pushBackNodes;
+  
+    IndexTaxiNodeMap nodes;
+    FGTaxiNodeVector pushBackNodes;
+  
     FGTaxiSegmentVector segments;
-    //intVec route;
-    //intVec nodesStack;
-    //intVec routesStack;
+
     TaxiRouteVector routes;
     TrafficVector activeTraffic;
     TrafficVectorIterator currTraffic;
@@ -328,14 +254,14 @@ private:
                            double heading, double speed, double alt);
 
 
-
+    void parseCache();
 public:
     FGGroundNetwork();
     ~FGGroundNetwork();
 
-    void addNode   (const FGTaxiNode& node);
+    void addNode   (FGTaxiNode* node);
     void addNodes  (FGParkingVec *parkings);
-    void addSegment(const FGTaxiSegment& seg);
+    void addSegment(FGTaxiSegment* seg);
     void setVersion (int v) { version = v;};
     
     int getVersion() { return version; };
@@ -348,7 +274,6 @@ public:
         towerController = twrCtrlr;
     };
 
-    int findNearestNode(double lat, double lon);
     int findNearestNode(const SGGeod& aGeod);
     int findNearestNodeOnRunway(const SGGeod& aGeod);
 

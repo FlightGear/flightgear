@@ -25,6 +25,7 @@
 #include <vector>
 #include <stdint.h>
 
+#include <simgear/sg_inlines.h>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/math/SGMath.hxx>
 
@@ -48,7 +49,6 @@ public:
     RUNWAY,
     TAXIWAY,
     PAVEMENT,
-    PARK_STAND,
     WAYPOINT,
     FIX,
     NDB,
@@ -77,6 +77,9 @@ public:
     FREQ_ENROUTE,
     FREQ_CLEARANCE,
     FREQ_UNICOM,
+// groundnet items
+    PARKING,  ///< parking position - might be a gate, or stand
+    TAXI_NODE,
     LAST_TYPE
   } Type;
 
@@ -230,6 +233,9 @@ protected:
   const SGVec3d mCart;
   const Type mType;
   const std::string mIdent;
+  
+private:
+  SG_DISABLE_COPY(FGPositioned);
 };
 
 #endif // of FG_POSITIONED_HXX
