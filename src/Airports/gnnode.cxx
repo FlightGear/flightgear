@@ -9,6 +9,7 @@
 #include <Scenery/scenery.hxx>
 
 using std::sort;
+using std::string;
 
 /*****************************************************************************
  * Helper function for parsing position string

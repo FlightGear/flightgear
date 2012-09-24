@@ -47,8 +47,8 @@ class FGTaxiSegment; // forward reference
 class FGAIFlightPlan; // forward reference
 class FGAirport;      // forward reference
 
-typedef vector<FGTaxiSegment*>  FGTaxiSegmentVector;
-typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentVectorIterator;
+typedef std::vector<FGTaxiSegment*>  FGTaxiSegmentVector;
+typedef std::vector<FGTaxiSegment*>::iterator FGTaxiSegmentVectorIterator;
 
 //typedef vector<FGTaxiSegment*> FGTaxiSegmentPointerVector;
 //typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentPointerVectorIterator;
@@ -69,7 +69,7 @@ public:
     bool operator< (const Block &other) const { return blocktime < other.blocktime; };
 };
 
-typedef vector<Block> BlockList;
+typedef std::vector<Block> BlockList;
 typedef BlockList::iterator BlockListIterator;
 
 /***************************************************************************************
@@ -213,8 +213,8 @@ public:
 
 
 
-typedef vector<int> intVec;
-typedef vector<int>::iterator intVecIterator;
+typedef std::vector<int> intVec;
+typedef std::vector<int>::iterator intVecIterator;
 
 
 
@@ -289,8 +289,8 @@ public:
 //  int getDepth() { return depth; };
 };
 
-typedef vector<FGTaxiRoute> TaxiRouteVector;
-typedef vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
+typedef std::vector<FGTaxiRoute> TaxiRouteVector;
+typedef std::vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
 
 /**************************************************************************************
  * class FGGroundNetWork
@@ -377,7 +377,7 @@ public:
                                 AtcMsgDir msgDir);
     bool checkForCircularWaits(int id);
     virtual void render(bool);
-    virtual string getName();
+    virtual std::string getName();
     virtual void update(double dt);
 
     void saveElevationCache();

@@ -21,10 +21,9 @@
 #ifndef _TRAFFIC_CONTROL_HXX_
 #define _TRAFFIC_CONTROL_HXX_
 
-
-#ifndef __cplusplus
-# error This library requires C++
-#endif
+#include <string>
+#include <vector>
+#include <list>
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -38,18 +37,8 @@
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
-
-#include <string>
-#include <vector>
-#include <list>
-
-using std::string;
-using std::vector;
-using std::list;
-
-
-typedef vector<int> intVec;
-typedef vector<int>::iterator intVecIterator;
+typedef std::vector<int> intVec;
+typedef std::vector<int>::iterator intVecIterator;
 
 
 class FGAIFlightPlan;  // forward reference
@@ -162,7 +151,7 @@ private:
     intVec intentions;
     FGATCInstruction instruction;
     double latitude, longitude, heading, speed, altitude, radius;
-    string runway;
+    std::string runway;
     //FGAISchedule *trafficRef;
     FGAIAircraft *aircraft;
 
@@ -177,7 +166,7 @@ public:
         radius = rad;
     };
     void setPositionAndIntentions(int pos, FGAIFlightPlan *route);
-    void setRunway(string rwy) {
+    void setRunway(const std::string& rwy) {
         runway = rwy;
     };
     void setLeg(int lg) {
@@ -264,7 +253,7 @@ public:
         instruction.setResolveCircularWait(false);
     };
 
-    string getRunway() {
+    const std::string& getRunway() {
         return runway;
     };
     //void setCallSign(string clsgn) { callsign = clsgn; };
@@ -317,14 +306,14 @@ public:
     int getPriority()       { return priority; };
 };
 
-typedef list<FGTrafficRecord> TrafficVector;
-typedef list<FGTrafficRecord>::iterator TrafficVectorIterator;
+typedef std::list<FGTrafficRecord> TrafficVector;
+typedef std::list<FGTrafficRecord>::iterator TrafficVectorIterator;
 
-typedef vector<time_t> TimeVector;
-typedef vector<time_t>::iterator TimeVectorIterator;
+typedef std::vector<time_t> TimeVector;
+typedef std::vector<time_t>::iterator TimeVectorIterator;
 
-typedef vector<FGAIAircraft*> AircraftVec;
-typedef vector<FGAIAircraft*>::iterator AircraftVecIterator;
+typedef std::vector<FGAIAircraft*> AircraftVec;
+typedef std::vector<FGAIAircraft*>::iterator AircraftVecIterator;
 
 /***********************************************************************
  * Active runway, a utility class to keep track of which aircraft has
@@ -333,20 +322,20 @@ typedef vector<FGAIAircraft*>::iterator AircraftVecIterator;
 class ActiveRunway
 {
 private:
-    string rwy;
+    std::string rwy;
     int currentlyCleared;
     double distanceToFinal;
     TimeVector estimatedArrivalTimes;
     AircraftVec departureCue;
 
 public:
-    ActiveRunway(string r, int cc) {
+    ActiveRunway(const std::string& r, int cc) {
         rwy = r;
         currentlyCleared = cc;
         distanceToFinal = 6.0 * SG_NM_TO_METER;
     };
 
-    string getRunwayName() {
+    std::string getRunwayName() {
         return rwy;
     };
     int    getCleared   () {
@@ -379,8 +368,8 @@ public:
     void printDepartureCue();
 };
 
-typedef vector<ActiveRunway> ActiveRunwayVec;
-typedef vector<ActiveRunway>::iterator ActiveRunwayVecIterator;
+typedef std::vector<ActiveRunway> ActiveRunwayVec;
+typedef std::vector<ActiveRunway>::iterator ActiveRunwayVecIterator;
 
 /**
  * class FGATCController
@@ -399,8 +388,8 @@ protected:
     double dt_count;
     osg::Group* group;
 
-    string formatATCFrequency3_2(int );
-    string genTransponderCode(string fltRules);
+    std::string formatATCFrequency3_2(int );
+    std::string genTransponderCode(const std::string& fltRules);
     bool isUserAircraft(FGAIAircraft*);
 
 public:
@@ -454,9 +443,9 @@ public:
         dt_count = dt;
     };
     void transmit(FGTrafficRecord *rec, FGAirportDynamics *parent, AtcMsgId msgId, AtcMsgDir msgDir, bool audible);
-    string getGateName(FGAIAircraft *aircraft);
+    std::string getGateName(FGAIAircraft *aircraft);
     virtual void render(bool) = 0;
-    virtual string getName()  = 0;
+    virtual std::string getName()  = 0;
 
     virtual void update(double) = 0;
 
@@ -490,7 +479,7 @@ public:
     virtual FGATCInstruction getInstruction(int id);
 
     virtual void render(bool);
-    virtual string getName();
+    virtual std::string getName();
     virtual void update(double dt);
     bool hasActiveTraffic() {
         return activeTraffic.size() != 0;
@@ -526,7 +515,7 @@ public:
     virtual FGATCInstruction getInstruction(int id);
 
     virtual void render(bool);
-    virtual string getName();
+    virtual std::string getName();
     virtual void update(double dt);
 
     bool hasActiveTraffic() {
@@ -566,10 +555,10 @@ public:
     virtual FGATCInstruction getInstruction(int id);
 
     virtual void render(bool);
-    virtual string getName();
+    virtual std::string getName();
     virtual void update(double dt);
 
-    ActiveRunway* getRunway(string name);
+    ActiveRunway* getRunway(const std::string& name);
 
     bool hasActiveTraffic() {
         return activeTraffic.size() != 0;

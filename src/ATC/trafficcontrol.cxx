@@ -52,6 +52,7 @@
 #include <signal.h>
 
 using std::sort;
+using std::string;
 
 /***************************************************************************
  * ActiveRunway
@@ -768,7 +769,7 @@ string FGATCController::formatATCFrequency3_2(int freq)
 
 // TODO: Set transponder codes according to real-world routes.
 // The current version just returns a random string of four octal numbers.
-string FGATCController::genTransponderCode(string fltRules)
+string FGATCController::genTransponderCode(const string& fltRules)
 {
     if (fltRules == "VFR") {
         return string("1200");
@@ -1687,7 +1688,7 @@ FGATCInstruction FGApproachController::getInstruction(int id)
 }
 
 
-ActiveRunway *FGApproachController::getRunway(string name)
+ActiveRunway *FGApproachController::getRunway(const string& name)
 {
     ActiveRunwayVecIterator rwy = activeRunways.begin();
     if (activeRunways.size()) {

@@ -53,6 +53,7 @@
 
 #include "groundnetwork.hxx"
 
+using std::string;
 
 /***************************************************************************
  * FGTaxiSegment
