@@ -185,12 +185,6 @@ FGGlobals::~FGGlobals()
 
     delete ATIS_mgr;
 
-    if (controls)
-    {
-        controls->unbind();
-        delete controls;
-    }
-
     delete channel_options_list;
     delete initial_waypoints;
     delete scenery;

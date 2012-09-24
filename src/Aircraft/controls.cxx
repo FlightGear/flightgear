@@ -100,6 +100,7 @@ FGControls::FGControls() :
     vertical_mode( 0 ),
     lateral_mode( 0 )
 {
+    globals->set_controls( this );
 }
 
 
@@ -231,6 +232,7 @@ static inline void _SetRoot( simgear::TiedPropertyList & tiedProperties, const c
 void
 FGControls::bind ()
 {
+    init(); // unfortunately, tie-ing requires init() to have occurred
     int index, i;
 
     // flight controls
@@ -648,9 +650,8 @@ void FGControls::unbind ()
 void
 FGControls::update (double dt)
 {
+  SG_UNUSED(dt);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // Setters and adjusters.

@@ -49,7 +49,6 @@
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_random.h>
 
-#include <Aircraft/controls.hxx>
 #include <Model/panelnode.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -363,9 +362,6 @@ int fgMainInit( int argc, char **argv ) {
 
     // seed the random number generator
     sg_srandom_time();
-
-    FGControls *controls = new FGControls;
-    globals->set_controls( controls );
 
     string_list *col = new string_list;
     globals->set_channel_options_list( col );
