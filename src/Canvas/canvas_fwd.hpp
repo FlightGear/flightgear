@@ -36,6 +36,8 @@ typedef boost::weak_ptr<PropertyBasedElement> PropertyBasedElementWeakPtr;
 
 namespace canvas
 {
+  const std::string VG_INIT_SIGNAL = "/sim/signals/vg-initialized-frame";
+
   class Group;
   class Image;
   class MouseEvent;

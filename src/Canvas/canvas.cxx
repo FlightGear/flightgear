@@ -49,17 +49,13 @@ class Canvas::DrawCallback:
 
     virtual void operator()(osg::RenderInfo& renderInfo) const
     {
-      const std::string VG_SIGNAL = "/sim/signals/vg-initialized";
+      const long frame = renderInfo.getView()->getFrameStamp()
+                                             ->getFrameNumber();
 
-      if( fgGetBool(VG_SIGNAL) )
-      {
-        fgSetBool(VG_SIGNAL, false);
-        // If OpenVG has been initialized we need to redraw the frame, because
-        // initializing has happened instead of rendering
-        _canvas->_render_dirty = true;
-      }
-      else
-        _canvas->_render_dirty = false;
+      // If OpenVG has been initialized we need to redraw the frame, because
+      // initializing has happened instead of rendering.
+      // Otherwise we just reset the _render_dirty flag.
+      _canvas->_render_dirty = (frame == fgGetLong(canvas::VG_INIT_SIGNAL));
     }
 
   protected:

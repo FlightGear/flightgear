@@ -17,6 +17,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "path.hxx"
+#include <Canvas/canvas_fwd.hpp>
 #include <Canvas/property_helper.hxx>
 #include <Main/fg_props.hxx>
 
@@ -170,7 +171,10 @@ namespace canvas
 
           vgCreateContextSH(vp[2], vp[3]);
           _vg_initialized = true;
-          fgSetBool("/sim/signals/vg-initialized", true);
+
+          fgSetInt( canvas::VG_INIT_SIGNAL,
+                    renderInfo.getView()->getFrameStamp()->getFrameNumber() );
+
           return;
         }
 
