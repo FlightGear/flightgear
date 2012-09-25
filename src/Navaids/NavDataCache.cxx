@@ -66,7 +66,7 @@ using std::string;
 
 namespace {
 
-const int SCHEMA_VERSION = 3;
+const int SCHEMA_VERSION = 4;
 
 // bind a std::string to a sqlite statement. The std::string must live the
 // entire duration of the statement execution - do not pass a temporary
