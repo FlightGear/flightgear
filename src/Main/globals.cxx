@@ -327,7 +327,7 @@ SGPath FGGlobals::resolve_maybe_aircraft_path(const std::string& branch) const
   return simgear::ResourceManager::instance()->findPath(branch);
 }
 
-SGPath FGGlobals::resolve_ressource_path(const std::string& branch) const
+SGPath FGGlobals::resolve_resource_path(const std::string& branch) const
 {
   return simgear::ResourceManager::instance()
     ->findPath(branch, SGPath(fgGetString("/sim/aircraft-dir")));

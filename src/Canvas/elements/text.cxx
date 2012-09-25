@@ -284,7 +284,7 @@ namespace canvas
   //----------------------------------------------------------------------------
   Text::font_ptr Text::getFont(const std::string& name)
   {
-    SGPath path = globals->resolve_ressource_path("Fonts/" + name);
+    SGPath path = globals->resolve_resource_path("Fonts/" + name);
     if( path.isNull() )
     {
       SG_LOG

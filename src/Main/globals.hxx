@@ -211,7 +211,7 @@ public:
      *  2. All aircraft directories if branch starts with Aircraft/
      *  3. fg_data directory
      */
-    SGPath resolve_ressource_path(const std::string& branch) const;
+    SGPath resolve_resource_path(const std::string& branch) const;
 
     inline const std::string &get_browser () const { return browser; }
     void set_browser (const std::string &b) { browser = b; }

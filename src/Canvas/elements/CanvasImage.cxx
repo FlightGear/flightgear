@@ -291,7 +291,7 @@ namespace canvas
       }
       else
       {
-        SGPath tpath = globals->resolve_ressource_path(path);
+        SGPath tpath = globals->resolve_resource_path(path);
         if( tpath.isNull() || !tpath.exists() )
         {
           SG_LOG(SG_GL, SG_ALERT, "canvas::Image: No such image: " << path);
