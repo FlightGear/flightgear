@@ -106,7 +106,7 @@ void FGJoystickInput::init()
   SGPropertyNode_ptr js_nodes = fgGetNode("/input/joysticks", true);
   status_node = fgGetNode("/devices/status/joysticks", true);
 
-  FGDeviceConfigurationMap configMap("Input/Joysticks");
+  FGDeviceConfigurationMap configMap("Input/Joysticks",js_nodes, "js-named");
 
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
     jsJoystick * js = new jsJoystick(i);

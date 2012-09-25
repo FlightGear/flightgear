@@ -40,8 +40,17 @@
 using simgear::PropertyList;
 using std::string;
 
-FGDeviceConfigurationMap::FGDeviceConfigurationMap( const string& relative_path)
+FGDeviceConfigurationMap::FGDeviceConfigurationMap( const string& relative_path,
+                                                   SGPropertyNode* nodePath,
+                                                   const std::string& nodeName)
 {
+  // scan for over-ride configurations, loaded via joysticks.xml, etc
+  BOOST_FOREACH(SGPropertyNode_ptr preloaded, nodePath->getChildren(nodeName)) {
+    BOOST_FOREACH(SGPropertyNode* nameProp, preloaded->getChildren("name")) {
+      overrideDict[nameProp->getStringValue()] = preloaded;
+    } // of names iteration
+  } // of defined overrides iteration
+  
   scan_dir( SGPath(globals->get_fg_home(), relative_path));
   scan_dir( SGPath(globals->get_fg_root(), relative_path));
 }
@@ -53,6 +62,12 @@ FGDeviceConfigurationMap::~FGDeviceConfigurationMap()
 SGPropertyNode_ptr
 FGDeviceConfigurationMap::configurationForDeviceName(const std::string& name)
 {
+  NameNodeMap::iterator j = overrideDict.find(name);
+  if (j != overrideDict.end()) {
+    return j->second;
+  }
+  
+// no override, check out list of config files
   NamePathMap::iterator it = namePathMap.find(name);
   if (it == namePathMap.end()) {
     return SGPropertyNode_ptr();
@@ -71,6 +86,11 @@ FGDeviceConfigurationMap::configurationForDeviceName(const std::string& name)
 
 bool FGDeviceConfigurationMap::hasConfiguration(const std::string& name) const
 {
+  NameNodeMap::const_iterator j = overrideDict.find(name);
+  if (j != overrideDict.end()) {
+    return true;
+  }
+  
   return namePathMap.find(name) != namePathMap.end();
 }
 

@@ -37,7 +37,9 @@
 class FGDeviceConfigurationMap
 {
 public:
-  FGDeviceConfigurationMap ( const std::string& relative_path);
+  FGDeviceConfigurationMap ( const std::string& relative_path,
+                            SGPropertyNode* nodePath,
+                            const std::string& nodeName);
   virtual ~FGDeviceConfigurationMap();
 
   SGPropertyNode_ptr configurationForDeviceName(const std::string& name);
@@ -48,6 +50,11 @@ private:
   
   void readCachedData(const SGPath& path);
   void refreshCacheForFile(const SGPath& path);
+  
+  typedef std::map<std::string, SGPropertyNode_ptr> NameNodeMap;
+// dictionary of over-ridden configurations, where the config data
+// was explicitly loaded and shoudl be picked over a file search
+  NameNodeMap overrideDict;
   
   typedef std::map<std::string, SGPath> NamePathMap;
 // mapping from joystick name to XML configuration file path

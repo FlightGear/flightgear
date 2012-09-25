@@ -294,7 +294,7 @@ void FGInputDevice::SetName( string name )
 const char * FGEventInput::PROPERTY_ROOT = "/input/event";
 
 FGEventInput::FGEventInput() : 
-  configMap( "Input/Event")
+  configMap( "Input/Event", fgGetNode(PROPERTY_ROOT, true), "device-named")
 {
 }
 
