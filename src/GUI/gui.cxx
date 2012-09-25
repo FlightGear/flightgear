@@ -44,6 +44,7 @@
 #include <Main/locale.hxx>
 #include <Main/fg_props.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
+#include <Viewer/CameraGroup.hxx>
 #include <GUI/new_gui.hxx>
 #include <GUI/FGFontCache.hxx>
 
@@ -97,24 +98,81 @@ public:
     }
 };
 
+// Operation for querying OpenGL parameters. This must be done in a
+// valid OpenGL context, potentially in another thread.
+
+struct GeneralInitOperation : public GraphicsContextOperation
+{
+    GeneralInitOperation()
+        : GraphicsContextOperation(std::string("General init"))
+    {
+    }
+    void run(osg::GraphicsContext* gc)
+    {
+        SGPropertyNode* simRendering = fgGetNode("/sim/rendering");
+
+        simRendering->setStringValue("gl-vendor", (char*) glGetString(GL_VENDOR));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VENDOR));
+
+        simRendering->setStringValue("gl-renderer", (char*) glGetString(GL_RENDERER));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_RENDERER));
+
+        simRendering->setStringValue("gl-version", (char*) glGetString(GL_VERSION));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VERSION));
+
+        simRendering->setStringValue("gl-shading-language-version", (char*) glGetString(GL_SHADING_LANGUAGE_VERSION));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+        GLint tmp;
+        glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
+        simRendering->setIntValue("max-texture-size", tmp);
+
+        glGetIntegerv( GL_DEPTH_BITS, &tmp );
+        simRendering->setIntValue("depth-buffer-bits", tmp);
+    }
+};
+
 osg::ref_ptr<GUIInitOperation> initOp;
+
 }
 
-void guiStartInit(osg::GraphicsContext* gc)
+/** Initializes GUI.
+ * Returns true when done, false when still busy (call again). */
+bool guiInit()
 {
-    if (gc) {
-        initOp = new GUIInitOperation;
-        gc->add(initOp.get());
+    static osg::ref_ptr<GeneralInitOperation> genOp;
+
+    if (!genOp.valid())
+    {
+        // Pick some window on which to do queries.
+        // XXX Perhaps all this graphics initialization code should be
+        // moved to renderer.cxx?
+        genOp = new GeneralInitOperation;
+        osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
+        osg::GraphicsContext* gc = 0;
+        if (guiCamera)
+            gc = guiCamera->getGraphicsContext();
+        if (gc) {
+            gc->add(genOp.get());
+            initOp = new GUIInitOperation;
+            gc->add(initOp.get());
+        } else {
+            wsa->windows[0]->gc->add(genOp.get());
+        }
+        return false; // not ready yet
+    }
+    else
+    {
+        if (!genOp->isFinished())
+            return false;
+        if (!initOp.valid())
+            return true;
+        if (!initOp->isFinished())
+            return false;
+        genOp = 0;
+        initOp = 0;
+        // we're done
+        return true;
     }
 }
-
-bool guiFinishInit()
-{
-    if (!initOp.valid())
-        return true;
-    if (!initOp->isFinished())
-        return false;
-    initOp = 0;
-    return true;
-}
-

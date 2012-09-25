@@ -55,8 +55,6 @@
 #include <Sound/soundmanager.hxx>
 #include <Time/TimeManager.hxx>
 #include <GUI/gui.h>
-#include <Viewer/CameraGroup.hxx>
-#include <Viewer/WindowSystemAdapter.hxx>
 #include <Viewer/splash.hxx>
 #include <Viewer/renderer.hxx>
 #include <Navaids/NavDataCache.hxx>
@@ -105,42 +103,6 @@ static void fgMainLoop( void )
     SG_LOG( SG_GENERAL, SG_DEBUG, "" );
 }
 
-// Operation for querying OpenGL parameters. This must be done in a
-// valid OpenGL context, potentially in another thread.
-namespace
-{
-struct GeneralInitOperation : public GraphicsContextOperation
-{
-    GeneralInitOperation()
-        : GraphicsContextOperation(std::string("General init"))
-    {
-    }
-    void run(osg::GraphicsContext* gc)
-    {
-        SGPropertyNode* simRendering = fgGetNode("/sim/rendering");
-        
-        simRendering->setStringValue("gl-vendor", (char*) glGetString(GL_VENDOR));
-        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VENDOR));
-        
-        simRendering->setStringValue("gl-renderer", (char*) glGetString(GL_RENDERER));
-        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_RENDERER));
-        
-        simRendering->setStringValue("gl-version", (char*) glGetString(GL_VERSION));
-        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VERSION));
-
-        simRendering->setStringValue("gl-shading-language-version", (char*) glGetString(GL_SHADING_LANGUAGE_VERSION));
-        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_SHADING_LANGUAGE_VERSION));
-
-        GLint tmp;
-        glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
-        simRendering->setIntValue("max-texture-size", tmp);
-
-        glGetIntegerv( GL_DEPTH_BITS, &tmp );
-        simRendering->setIntValue("depth-buffer-bits", tmp);
-    }
-};
-
-}
 
 // This is the top level master main function that is registered as
 // our idle function
@@ -155,34 +117,12 @@ static void fgIdleFunction ( void ) {
     // splash screen up and running right away.
     static int idle_state = 0;
   
-    static osg::ref_ptr<GeneralInitOperation> genOp;
     if ( idle_state == 0 ) {
-        idle_state++;
-        // Pick some window on which to do queries.
-        // XXX Perhaps all this graphics initialization code should be
-        // moved to renderer.cxx?
-        genOp = new GeneralInitOperation;
-        osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
-        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
-        osg::GraphicsContext* gc = 0;
-        if (guiCamera)
-            gc = guiCamera->getGraphicsContext();
-        if (gc) {
-            gc->add(genOp.get());
-        } else {
-            wsa->windows[0]->gc->add(genOp.get());
+        if (guiInit())
+        {
+            idle_state+=2;
+            fgSplashProgress("loading-aircraft-list");
         }
-        guiStartInit(gc);
-    } else if ( idle_state == 1 ) {
-        if (genOp.valid()) {
-            if (!genOp->isFinished())
-                return;
-            genOp = 0;
-        }
-        if (!guiFinishInit())
-            return;
-        idle_state++;
-        fgSplashProgress("loading-aircraft-list");
 
     } else if ( idle_state == 2 ) {
         idle_state++;
