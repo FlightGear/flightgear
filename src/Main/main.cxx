@@ -189,11 +189,15 @@ static void fgIdleFunction ( void ) {
         fgSplashProgress("loading-nav-data");
 
     } else if ( idle_state == 3 ) {
-        idle_state++;
-        fgInitNav();
-
-        fgSplashProgress("init-scenery");
-
+        
+        bool done = fgInitNav();
+        if (done) {
+          ++idle_state;
+          fgSplashProgress("init-scenery");
+        } else {
+          fgSplashProgress("loading-nav-data");
+        }
+      
     } else if ( idle_state == 4 ) {
         idle_state+=2;
         // based on the requested presets, calculate the true starting

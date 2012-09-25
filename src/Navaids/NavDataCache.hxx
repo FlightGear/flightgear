@@ -65,9 +65,10 @@ public:
   bool isRebuildRequired();
   
   /**
-   * run the cache rebuild
+   * run the cache rebuild - returns true if rebuild is complete,
+   * otherwise keep going.
    */
-  void rebuild();
+  bool rebuild();
   
   bool isCachedFileModified(const SGPath& path) const;
   void stampCacheFile(const SGPath& path);
@@ -180,7 +181,10 @@ public:
   AirwayEdgeVec airwayEdgesFrom(int network, PositionedID pos);
 private:
   NavDataCache();
-    
+  
+  friend class RebuildThread;
+  void doRebuild();
+  
   class NavDataCachePrivate;
   std::auto_ptr<NavDataCachePrivate> d;      
 };

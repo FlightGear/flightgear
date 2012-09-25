@@ -450,17 +450,23 @@ bool fgInitConfig ( int argc, char **argv )
 /**
  * Initialize vor/ndb/ils/fix list management and query systems (as
  * well as simple airport db list)
+ * This is called multiple times in the case of a cache rebuild,
+ * to allow length caching to take place in the background, without
+ * blocking the main/UI thread.
  */
 bool
 fgInitNav ()
 {
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
-  if (cache->isRebuildRequired()) {
-    SGTimeStamp st;
-    st.stamp();
-    cache->rebuild();
-    
-    SG_LOG(SG_GENERAL, SG_INFO, "rebuilding NavDataCache took:" << st.elapsedMSec());
+  static bool doingRebuild = false;
+  if (doingRebuild || cache->isRebuildRequired()) {
+    doingRebuild = true;
+    bool finished = cache->rebuild();
+    if (!finished) {
+      // sleep to give the rebuild thread more time
+      SGTimeStamp::sleepForMSec(50);
+      return false;
+    }
   }
   
   FGTACANList *channellist = new FGTACANList;

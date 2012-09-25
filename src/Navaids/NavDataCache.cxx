@@ -45,6 +45,8 @@
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/threads/SGThread.hxx>
+#include <simgear/threads/SGGuard.hxx>
 
 #include <Main/globals.hxx>
 #include "markerbeacon.hxx"
@@ -131,6 +133,47 @@ static string cleanRunwayNo(const string& aRwyNo)
 namespace flightgear
 {
 
+/**
+ * Thread encapsulating a cache rebuild. This is not used to parallelise
+ * the rebuild - we must still wait until completion before doing other
+ * startup, since many things rely on a complete cache. The thread is used
+ * so we don't block the main event loop for an unacceptable duration,
+ * which causes 'not responding' / spinning beachballs on Windows & Mac
+ */
+class RebuildThread : public SGThread
+{
+public:
+  RebuildThread(NavDataCache* cache) :
+  _cache(cache),
+  _isFinished(false)
+  {
+    
+  }
+  
+  bool isFinished() const
+  {
+    SGGuard<SGMutex> g(_lock);
+    return _isFinished;
+  }
+  
+  virtual void run()
+  {
+    SGTimeStamp st;
+    st.stamp();
+    _cache->doRebuild();
+    SG_LOG(SG_GENERAL, SG_INFO, "cache rebuild took:" << st.elapsedMSec() << "msec");
+    
+    SGGuard<SGMutex> g(_lock);
+    _isFinished = true;
+  }
+private:
+  NavDataCache* _cache;
+  mutable SGMutex _lock;
+  bool _isFinished;
+};
+
+////////////////////////////////////////////////////////////////////////////
+  
 typedef std::map<PositionedID, FGPositionedRef> PositionedCache;
   
 class AirportTower : public FGPositioned
@@ -785,6 +828,10 @@ public:
   StmtVec prepared;
   
   std::set<Octree::Branch*> deferredOctreeUpdates;
+  
+  // if we're performing a rebuild, the thread that is doing the work.
+  // otherwise, NULL
+  std::auto_ptr<RebuildThread> rebuilder;
 };
 
   //////////////////////////////////////////////////////////////////////
@@ -946,7 +993,22 @@ bool NavDataCache::isRebuildRequired()
   return false;
 }
   
-void NavDataCache::rebuild()
+bool NavDataCache::rebuild()
+{
+  if (!d->rebuilder.get()) {
+    d->rebuilder.reset(new RebuildThread(this));
+    d->rebuilder->start();
+  }
+  
+// poll the rebuild thread
+  bool fin = d->rebuilder->isFinished();
+  if (fin) {
+    d->rebuilder.reset(); // all done!
+  }
+  return fin;
+}
+  
+void NavDataCache::doRebuild()
 {
   try {
     d->runSQL("BEGIN");
