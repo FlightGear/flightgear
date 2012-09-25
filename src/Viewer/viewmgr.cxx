@@ -30,7 +30,6 @@
 #include <string.h>		// strcmp
 
 #include <simgear/compiler.h>
-#include <simgear/sound/soundmgr_openal.hxx>
 #include <Main/fg_props.hxx>
 #include "viewer.hxx"
 
@@ -44,8 +43,7 @@ FGViewMgr::FGViewMgr( void ) :
   abs_viewer_position(SGVec3d::zeros()),
   current(0),
   current_view_orientation(SGQuatd::zeros()),
-  current_view_or_offset(SGQuatd::zeros()),
-  smgr(globals->get_soundmgr())
+  current_view_or_offset(SGQuatd::zeros())
 {
 }
 
@@ -179,11 +177,7 @@ FGViewMgr::bind()
 
 void
 FGViewMgr::do_bind()
-{
-  velocityNorthFPS = fgGetNode("velocities/speed-north-fps", true);
-  velocityEastFPS = fgGetNode("velocities/speed-east-fps", true);
-  velocityDownFPS = fgGetNode("velocities/speed-down-fps", true);
-  
+{  
   // these are bound to the current view properties
   _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
   _tiedProperties.Tie("heading-offset-deg", this,
@@ -240,6 +234,11 @@ FGViewMgr::do_bind()
   _tiedProperties.Tie(n->getNode("viewer-y-m", true),SGRawValuePointer<double>(&abs_viewer_position[1]));
   _tiedProperties.Tie(n->getNode("viewer-z-m", true),SGRawValuePointer<double>(&abs_viewer_position[2]));
 
+  _tiedProperties.Tie("viewer-lon-deg", this, &FGViewMgr::getViewLon_deg);
+  _tiedProperties.Tie("viewer-lat-deg", this, &FGViewMgr::getViewLat_deg);
+  _tiedProperties.Tie("viewer-elev-ft", this, &FGViewMgr::getViewElev_ft);
+  
+  
   _tiedProperties.Tie("debug/orientation-w", this,
                       &FGViewMgr::getCurrentViewOrientation_w);
   _tiedProperties.Tie("debug/orientation-x", this,
@@ -277,8 +276,8 @@ FGViewMgr::unbind ()
 void
 FGViewMgr::update (double dt)
 {
-  FGViewer *loop_view = (FGViewer *)get_current_view();
-  if (loop_view == 0) return;
+  FGViewer* currentView = (FGViewer *)get_current_view();
+  if (!currentView) return;
 
   SGPropertyNode *n = config_list[current];
   double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
@@ -293,15 +292,15 @@ FGViewMgr::update (double dt)
     pitch_deg = fgGetDouble(n->getStringValue("config/eye-pitch-deg-path"));
     heading_deg = fgGetDouble(n->getStringValue("config/eye-heading-deg-path"));
 
-    loop_view->setPosition(lon_deg, lat_deg, alt_ft);
-    loop_view->setOrientation(roll_deg, pitch_deg, heading_deg);
+    currentView->setPosition(lon_deg, lat_deg, alt_ft);
+    currentView->setOrientation(roll_deg, pitch_deg, heading_deg);
   } else {
     // force recalc in viewer
-    loop_view->set_dirty();
+    currentView->set_dirty();
   }
 
   // if lookat (type 1) then get target data...
-  if (loop_view->getType() == FG_LOOKAT) {
+  if (currentView->getType() == FG_LOOKAT) {
     if (!n->getBoolValue("config/from-model")) {
       lon_deg = fgGetDouble(n->getStringValue("config/target-lon-deg-path"));
       lat_deg = fgGetDouble(n->getStringValue("config/target-lat-deg-path"));
@@ -310,10 +309,10 @@ FGViewMgr::update (double dt)
       pitch_deg = fgGetDouble(n->getStringValue("config/target-pitch-deg-path"));
       heading_deg = fgGetDouble(n->getStringValue("config/target-heading-deg-path"));
 
-      loop_view->setTargetPosition(lon_deg, lat_deg, alt_ft);
-      loop_view->setTargetOrientation(roll_deg, pitch_deg, heading_deg);
+      currentView->setTargetPosition(lon_deg, lat_deg, alt_ft);
+      currentView->setTargetOrientation(roll_deg, pitch_deg, heading_deg);
     } else {
-      loop_view->set_dirty();
+      currentView->set_dirty();
     }
   }
 
@@ -325,27 +324,19 @@ FGViewMgr::update (double dt)
   setViewTargetYOffset_m(fgGetDouble("/sim/current-view/target-y-offset-m"));
   setViewTargetZOffset_m(fgGetDouble("/sim/current-view/target-z-offset-m"));
 
-  current_view_orientation = loop_view->getViewOrientation();
-  current_view_or_offset = loop_view->getViewOrientationOffset();
+  current_view_orientation = currentView->getViewOrientation();
+  current_view_or_offset = currentView->getViewOrientationOffset();
 
   // Update the current view
   do_axes();
-  loop_view->update(dt);
-  abs_viewer_position = loop_view->getViewPosition();
-
-  // update audio listener values
-  // set the viewer position in Cartesian coordinates in meters
-  smgr->set_position( abs_viewer_position, loop_view->getPosition() );
-  smgr->set_orientation( current_view_orientation );
-
-  // get the model velocity
-  SGVec3d velocity = SGVec3d::zeros();
-  if ( !stationary() ) {
-    velocity = SGVec3d( velocityNorthFPS->getDoubleValue(),
-                        velocityEastFPS->getDoubleValue(),
-                        velocityDownFPS->getDoubleValue() );
+  currentView->update(dt);
+  abs_viewer_position = currentView->getViewPosition();
+  
+  // expose the raw (OpenGL) orientation to the proeprty tree,
+  // for the sound-manager
+  for (int i=0; i<4; ++i) {
+    _tiedProperties.getRoot()->getChild("raw-orientation", i, true)->setDoubleValue(current_view_orientation[i]);
   }
-  smgr->set_velocity( velocity );
 }
 
 void
@@ -619,20 +610,6 @@ FGViewMgr::setViewZOffset_m (double z)
   }
 }
 
-bool
-FGViewMgr::stationary () const
-{
-  const FGViewer * view = get_current_view();
-  if (view != 0) {
-    if (((FGViewer *)view)->getXOffset_m() == 0.0 &&
-        ((FGViewer *)view)->getYOffset_m() == 0.0 &&
-        ((FGViewer *)view)->getZOffset_m() == 0.0)
-      return true;
-  }
-
-  return false;
-}
-
 double
 FGViewMgr::getViewTargetXOffset_m () const
 {
@@ -784,6 +761,28 @@ FGViewMgr::setViewAxisLat (double axis)
 {
   axis_lat = axis;
 }
+
+double
+FGViewMgr::getViewLon_deg() const
+{
+  const FGViewer* view = get_current_view();
+  return (view != NULL) ? view->getPosition().getLongitudeDeg() : 0.0;
+}
+
+double
+FGViewMgr::getViewLat_deg() const
+{
+  const FGViewer* view = get_current_view();
+  return (view != NULL) ? view->getPosition().getLatitudeDeg() : 0.0;
+}
+
+double
+FGViewMgr::getViewElev_ft() const
+{
+  const FGViewer* view = get_current_view();
+  return (view != NULL) ? view->getPosition().getElevationFt() : 0.0;
+}
+
 
 // reference frame orientation.
 // This is the view orientation you get when you have no

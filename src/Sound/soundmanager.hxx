@@ -46,8 +46,13 @@ public:
     void update_device_list();
 
 private:
+    bool stationary() const;
+  
     bool _is_initialized;
     SGPropertyNode_ptr _sound_working, _sound_enabled, _volume, _device_name;
+    SGPropertyNode_ptr _currentView;
+    SGPropertyNode_ptr _viewPosLon, _viewPosLat, _viewPosElev;
+    SGPropertyNode_ptr _velocityNorthFPS, _velocityEastFPS, _velocityDownFPS;
     Listener* _listener;
 };
 #else

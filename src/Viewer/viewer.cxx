@@ -27,6 +27,8 @@
 #  include "config.h"
 #endif
 
+#include "viewer.hxx"
+
 #include <simgear/compiler.h>
 #include <cassert>
 
@@ -37,11 +39,6 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Scenery/scenery.hxx>
-#include <Model/acmodel.hxx>
-
-#include "viewer.hxx"
-
 #include "CameraGroup.hxx"
 
 using namespace flightgear;

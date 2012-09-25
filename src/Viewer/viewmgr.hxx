@@ -34,7 +34,6 @@
 
 // forward decls
 class FGViewer;
-class SGSoundMgr;
 typedef SGSharedPtr<FGViewer> FGViewerPtr;
 
 // Define a structure containing view information
@@ -119,6 +118,10 @@ private:
     int getView () const;
     void setView (int newview);
 
+    double getViewLon_deg() const;
+    double getViewLat_deg() const;
+    double getViewElev_ft() const;
+  
 // quaternion accessors, for debugging:
     double getCurrentViewOrientation_w() const;
     double getCurrentViewOrientation_x() const;
@@ -133,8 +136,6 @@ private:
     double getCurrentViewFrame_y() const;
     double getCurrentViewFrame_z() const;
 
-    bool stationary () const;
-
     // copies current offset settings to current-view path...
     void copyToCurrent ();
     
@@ -147,10 +148,6 @@ private:
 
     int current;
     SGQuatd current_view_orientation, current_view_or_offset;
-
-    SGSoundMgr *smgr;
-  
-    SGPropertyNode_ptr velocityNorthFPS, velocityEastFPS, velocityDownFPS;
 };
 
 // This takes the conventional aviation XYZ body system 
