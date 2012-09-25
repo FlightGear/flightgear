@@ -299,7 +299,7 @@ inline int fgGetInt (const std::string & name, int defaultValue = 0)
  *        does not exist.
  * @return The property's value as a long, or the default value provided.
  */
-extern int fgGetLong (const char * name, long defaultValue = 0L);
+extern long fgGetLong (const char * name, long defaultValue = 0L);
 
 /**
  * Get a long value for a property.
@@ -315,7 +315,7 @@ extern int fgGetLong (const char * name, long defaultValue = 0L);
  *        does not exist.
  * @return The property's value as a long, or the default value provided.
  */
-inline int fgGetLong (const std::string & name, long defaultValue = 0L)
+inline long fgGetLong (const std::string & name, long defaultValue = 0L)
 {
     return fgGetLong( name.c_str(), defaultValue );
 }

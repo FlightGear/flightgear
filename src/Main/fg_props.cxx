@@ -668,7 +668,7 @@ fgGetInt (const char * name, int defaultValue)
   return globals->get_props()->getIntValue(name, defaultValue);
 }
 
-int
+long
 fgGetLong (const char * name, long defaultValue)
 {
   return globals->get_props()->getLongValue(name, defaultValue);
