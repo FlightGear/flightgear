@@ -74,6 +74,8 @@ FGControls::FGControls() :
     mode( 0 ),
     dump( false ),
     outflow_valve( 0.0 ),
+    landing_lights( false ),
+    turn_off_lights( false ),
     taxi_light( false ),
     logo_lights( false ),
     nav_lights( false ),
@@ -87,6 +89,7 @@ FGControls::FGControls() :
     release_ALL( false ),
     vertical_adjust( 0.0 ),
     fore_aft_adjust( 0.0 ),
+    cmd_selector_valve( 0 ),
     off_start_run( 0 ),
     APU_fire_switch( false ),
     autothrottle_arm( false ),
@@ -166,6 +169,8 @@ void FGControls::reset_all()
 
 // Destructor
 FGControls::~FGControls() {
+    if (globals)
+        globals->set_controls( NULL );
 }
 
 
@@ -651,6 +656,9 @@ void
 FGControls::update (double dt)
 {
   SG_UNUSED(dt);
+
+  // nothing here, don't call again
+  suspend();
 }
 
 ////////////////////////////////////////////////////////////////////////

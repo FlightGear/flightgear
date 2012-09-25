@@ -36,6 +36,7 @@
 #include <osgViewer/Viewer>
 
 #include <simgear/constants.h>
+#include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/material/matlib.hxx>
@@ -249,7 +250,11 @@ void FGScenery::init() {
 }
 
 
-void FGScenery::update(double dt) {
+void FGScenery::update(double dt)
+{
+    SG_UNUSED(dt);
+    // nothing here, don't call again
+    suspend();
 }
 
 

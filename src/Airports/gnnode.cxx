@@ -31,8 +31,8 @@ void FGTaxiNode::setElevation(double val)
 
 double FGTaxiNode::getElevationFt(double refelev)
 {
-    double elevF = elevation();
 #if 0
+    double elevF = elevation();
     double elevationEnd = 0;
     if ((elevF == 0) || (elevF == refelev)) {
         SGGeod center2 = mPosition;

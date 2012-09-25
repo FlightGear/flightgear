@@ -60,7 +60,7 @@ void  FGAirportDynamicsXMLLoader::endXML () {
 void FGAirportDynamicsXMLLoader::startParking(const XMLAttributes &atts)
 {
   string type;
-  int index;
+  int index = 0;
   string gateName, gateNumber;
   string lat, lon;
   double heading = 0.0;
@@ -108,10 +108,10 @@ void FGAirportDynamicsXMLLoader::startParking(const XMLAttributes &atts)
 
 void FGAirportDynamicsXMLLoader::startNode(const XMLAttributes &atts)
 {
-  int index;
+  int index = 0;
   string lat, lon;
-  bool onRunway;
-  int holdPointType;
+  bool onRunway = false;
+  int holdPointType = 0;
   
   for (int i = 0; i < atts.size() ; i++)
 	{
@@ -147,7 +147,7 @@ void FGAirportDynamicsXMLLoader::startNode(const XMLAttributes &atts)
 
 void FGAirportDynamicsXMLLoader::startArc(const XMLAttributes &atts)
 {  
-  int begin, end;
+  int begin = 0, end = 0;
   bool isPushBackRoute = false;
   
   for (int i = 0; i < atts.size() ; i++)
