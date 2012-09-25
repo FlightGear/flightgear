@@ -164,7 +164,7 @@ ADF::update (double delta_time_sec)
     }
 
                                 // Calculate the bearing to the transmitter
-  SGVec3d location = globals->get_aircraft_positon_cart();
+  SGVec3d location = globals->get_aircraft_position_cart();
     
     double distance_nm = dist(_transmitter_cart, location) * SG_METER_TO_NM;
     double range_nm = adjust_range(_transmitter_pos.getElevationFt(),

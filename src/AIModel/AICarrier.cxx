@@ -30,7 +30,6 @@
 
 #include <math.h>
 #include <Main/util.hxx>
-#include <Viewer/viewer.hxx>
 
 #include "AICarrier.hxx"
 
@@ -166,7 +165,7 @@ void FGAICarrier::update(double dt) {
     SGVec3d cartPos = SGVec3d::fromGeod(pos);
 
     // The position of the eyepoint - at least near that ...
-    SGVec3d eyePos(globals->get_current_view()->get_view_pos());
+    SGVec3d eyePos(globals->get_view_position_cart());
     // Add the position offset of the AIModel to gain the earth
     // centered position
     SGVec3d eyeWrtCarrier = eyePos - cartPos;

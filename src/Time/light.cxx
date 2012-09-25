@@ -410,8 +410,7 @@ void FGLight::updateSunPos()
     _sun_vec_inv = - _sun_vec;
 
     // calculate the sun's relative angle to local up
-    FGViewer *v = globals->get_current_view();
-    SGQuatd hlOr =  SGQuatd::fromLonLat( v->getPosition() );
+    SGQuatd hlOr =  SGQuatd::fromLonLat( globals->get_view_position() );
     SGVec3d world_up = hlOr.backTransform( -SGVec3d::e3() );
     // cout << "nup = " << nup[0] << "," << nup[1] << ","
     //      << nup[2] << endl;

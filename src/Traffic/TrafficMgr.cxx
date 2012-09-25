@@ -303,7 +303,7 @@ void FGTrafficManager::update(double /*dt */ )
         return;
     }
 
-    SGVec3d userCart = globals->get_aircraft_positon_cart();
+    SGVec3d userCart = globals->get_aircraft_position_cart();
 
     if (currAircraft == scheduledAircraft.end()) {
         currAircraft = scheduledAircraft.begin();

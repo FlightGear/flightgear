@@ -41,7 +41,6 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Viewer/renderer.hxx>
-#include <Viewer/viewer.hxx>
 #include <Viewer/splash.hxx>
 #include <Scripting/NasalSys.hxx>
 
@@ -314,9 +313,8 @@ void FGTileMgr::update_queues()
 // disk.
 void FGTileMgr::update(double)
 {
-    SGVec3d viewPos = globals->get_current_view()->get_view_pos();
     double vis = _visibilityMeters->getDoubleValue();
-    schedule_tiles_at(SGGeod::fromCart(viewPos), vis);
+    schedule_tiles_at(globals->get_view_position(), vis);
 
     update_queues();
 

@@ -24,7 +24,6 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Viewer/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Airports/dynamics.hxx>
@@ -172,8 +171,7 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
 void FGAIAircraft::checkVisibility() 
 {
   double visibility_meters = fgGetDouble("/environment/visibility-m");
-  FGViewer* vw = globals->get_current_view();
-  invisible = (SGGeodesy::distanceM(vw->getPosition(), pos) > visibility_meters);
+  invisible = (SGGeodesy::distanceM(globals->get_view_position(), pos) > visibility_meters);
 }
 
 
@@ -516,10 +514,8 @@ void FGAIAircraft::getGroundElev(double dt) {
 
     // Only do the proper hitlist stuff if we are within visible range of the viewer.
     if (!invisible) {
-        double visibility_meters = fgGetDouble("/environment/visibility-m");
-        FGViewer* vw = globals->get_current_view();
-        
-        if (SGGeodesy::distanceM(vw->getPosition(), pos) > visibility_meters) {
+        double visibility_meters = fgGetDouble("/environment/visibility-m");        
+        if (SGGeodesy::distanceM(globals->get_view_position(), pos) > visibility_meters) {
             return;
         }
 
@@ -839,7 +835,7 @@ bool FGAIAircraft::aiTrafficVisible()
     SGVec3d cartPos = SGVec3d::fromGeod(pos);
     const double d2 = (TRAFFICTOAIDISTTODIE * SG_NM_TO_METER) *
         (TRAFFICTOAIDISTTODIE * SG_NM_TO_METER);
-    return (distSqr(cartPos, globals->get_aircraft_positon_cart()) < d2);
+    return (distSqr(cartPos, globals->get_aircraft_position_cart()) < d2);
 }
 
 

@@ -148,6 +148,7 @@ private:
     bool haveUserSettings;
 
     SGPropertyNode_ptr positionLon, positionLat, positionAlt;
+    SGPropertyNode_ptr viewLon, viewLat, viewAlt;
     SGPropertyNode_ptr orientHeading, orientPitch, orientRoll;
 public:
 
@@ -249,9 +250,13 @@ public:
 
     SGGeod get_aircraft_position() const;
 
-    SGVec3d get_aircraft_positon_cart() const;
+    SGVec3d get_aircraft_position_cart() const;
 
     void get_aircraft_orientation(double& heading, double& pitch, double& roll);
+  
+    SGGeod get_view_position() const;
+  
+    SGVec3d get_view_position_cart() const;
   
     inline string_list *get_channel_options_list () {
 	return channel_options_list;

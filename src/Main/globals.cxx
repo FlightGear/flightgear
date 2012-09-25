@@ -148,6 +148,10 @@ FGGlobals::FGGlobals() :
   positionLat = props->getNode("position/latitude-deg", true);
   positionAlt = props->getNode("position/altitude-ft", true);
   
+  viewLon = props->getNode("sim/current-view/viewer-lon-deg", true);
+  viewLat = props->getNode("sim/current-view/viewer-lat-deg", true);
+  viewAlt = props->getNode("sim/current-view/viewer-elev-ft", true);
+  
   orientPitch = props->getNode("orientation/pitch-deg", true);
   orientHeading = props->getNode("orientation/heading-deg", true);
   orientRoll = props->getNode("orientation/roll-deg", true);
@@ -380,7 +384,7 @@ FGGlobals::get_aircraft_position() const
 }
 
 SGVec3d
-FGGlobals::get_aircraft_positon_cart() const
+FGGlobals::get_aircraft_position_cart() const
 {
     return SGVec3d::fromGeod(get_aircraft_position());
 }
@@ -392,6 +396,19 @@ void FGGlobals::get_aircraft_orientation(double& heading, double& pitch, double&
   roll = orientRoll->getDoubleValue();
 }
 
+SGGeod
+FGGlobals::get_view_position() const
+{
+  return SGGeod::fromDegFt(viewLon->getDoubleValue(),
+                           viewLat->getDoubleValue(),
+                           viewAlt->getDoubleValue());
+}
+
+SGVec3d
+FGGlobals::get_view_position_cart() const
+{
+  return SGVec3d::fromGeod(get_view_position());
+}
 
 // Save the current state as the initial state.
 void
