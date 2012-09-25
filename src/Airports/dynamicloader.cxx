@@ -18,6 +18,7 @@
 #endif
 
 #include <cstdlib>
+#include <cstring> // for strcmp
 
 #include "dynamicloader.hxx"
 
