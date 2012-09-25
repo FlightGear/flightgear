@@ -21,6 +21,7 @@
 
 #include <Canvas/MouseEvent.hxx>
 #include <Canvas/property_helper.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/renderer.hxx>
@@ -48,7 +49,17 @@ class Canvas::DrawCallback:
 
     virtual void operator()(osg::RenderInfo& renderInfo) const
     {
-      _canvas->_render_dirty = false;
+      const std::string VG_SIGNAL = "/sim/signals/vg-initialized";
+
+      if( fgGetBool(VG_SIGNAL) )
+      {
+        fgSetBool(VG_SIGNAL, false);
+        // If OpenVG has been initialized we need to redraw the frame, because
+        // initializing has happened instead of rendering
+        _canvas->_render_dirty = true;
+      }
+      else
+        _canvas->_render_dirty = false;
     }
 
   protected:

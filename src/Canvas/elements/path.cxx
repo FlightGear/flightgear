@@ -18,6 +18,7 @@
 
 #include "path.hxx"
 #include <Canvas/property_helper.hxx>
+#include <Main/fg_props.hxx>
 
 #include <vg/openvg.h>
 
@@ -31,8 +32,7 @@ namespace canvas
   typedef std::vector<VGubyte>  CmdList;
   typedef std::vector<VGfloat>  CoordList;
 
-  class Path;
-  class PathDrawable:
+  class Path::PathDrawable:
     public osg::Drawable
   {
     public:
@@ -170,6 +170,7 @@ namespace canvas
 
           vgCreateContextSH(vp[2], vp[3]);
           _vg_initialized = true;
+          fgSetBool("/sim/signals/vg-initialized", true);
           return;
         }
 
@@ -350,7 +351,7 @@ namespace canvas
       };
   };
 
-  bool PathDrawable::_vg_initialized = false;
+  bool Path::PathDrawable::_vg_initialized = false;
 
   //----------------------------------------------------------------------------
   Path::Path(SGPropertyNode_ptr node, const Style& parent_style):

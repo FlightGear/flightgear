@@ -23,7 +23,6 @@
 
 namespace canvas
 {
-  class PathDrawable;
   class Path:
     public Element
   {
@@ -41,6 +40,7 @@ namespace canvas
         COORDS     = CMDS << 1
       };
 
+      class PathDrawable;
       osg::ref_ptr<PathDrawable> _path;
 
       virtual void childRemoved(SGPropertyNode * child);
