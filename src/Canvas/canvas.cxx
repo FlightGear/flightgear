@@ -52,10 +52,13 @@ class Canvas::DrawCallback:
       const long frame = renderInfo.getView()->getFrameStamp()
                                              ->getFrameNumber();
 
+      static SGPropertyNode_ptr node_frame =
+        globals->get_props()->getNode(canvas::VG_INIT_SIGNAL, true);
+
       // If OpenVG has been initialized we need to redraw the frame, because
       // initializing has happened instead of rendering.
       // Otherwise we just reset the _render_dirty flag.
-      _canvas->_render_dirty = (frame == fgGetLong(canvas::VG_INIT_SIGNAL));
+      _canvas->_render_dirty = (frame == node_frame->getLongValue());
     }
 
   protected:
