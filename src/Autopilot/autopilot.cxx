@@ -87,7 +87,7 @@ Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode
 
     double updateInterval = node->getDoubleValue( "update-interval-secs", 0.0 );
 
-    SG_LOG( SG_AUTOPILOT, SG_INFO, "adding  autopilot component \"" << childName << "\" as \"" << component->get_name() << "\" with interval=" << updateInterval );
+    SG_LOG( SG_AUTOPILOT, SG_DEBUG, "adding  autopilot component \"" << childName << "\" as \"" << component->get_name() << "\" with interval=" << updateInterval );
     add_component(component,updateInterval);
   }
 }
