@@ -27,11 +27,6 @@
 
 #include <simgear/compiler.h>
 
-#if defined(__linux__) && defined(__i386__)
-#  include <fpu_control.h>
-#  include <signal.h>
-#endif
-
 #include <iostream>
 
 #include <osg/Camera>
