@@ -79,7 +79,7 @@ static bool commandActivateFlightPlan(const SGPropertyNode* arg)
   if (activate) {
     self->activate();
   } else {
-    
+    self->deactivate();
   }
   
   return true;
@@ -784,6 +784,15 @@ bool FGRouteMgr::activate()
   return true;
 }
 
+void FGRouteMgr::deactivate()
+{
+  if (!isRouteActive()) {
+    return;
+  }
+  
+  SG_LOG(SG_AUTOPILOT, SG_INFO, "deactivating flight plan");
+  active->setBoolValue(false);
+}
 
 void FGRouteMgr::sequence()
 {

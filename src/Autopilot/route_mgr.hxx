@@ -84,6 +84,11 @@ public:
    * route could not be activated for some reason
    */
   bool activate();
+  
+  /**
+   * deactivate the route if active
+   */
+  void deactivate();
 
   /**
    * Step to the next waypoint on the active route
