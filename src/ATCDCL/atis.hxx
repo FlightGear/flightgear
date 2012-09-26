@@ -52,6 +52,8 @@ class FGATIS : public FGATC {
     SGPropertyNode_ptr _lat_node;
     SGPropertyNode_ptr _elev_node;
 
+    SGPropertyChangeCallback<FGATIS> _cb_attention;
+
     // The actual ATIS transmission
     // This is generated from the prevailing conditions when required.
     // This is the version with markup, suitable for voice synthesis:
@@ -67,7 +69,7 @@ class FGATIS : public FGATC {
     time_t msg_time;         // for moderating error messages
     time_t cur_time;
     int msg_OK;
-    int attention;
+    bool _attention;
 
     bool _prev_display;      // Previous value of _display flag
     MSS _remap;              // abbreviations to be expanded
@@ -79,9 +81,9 @@ class FGATIS : public FGATC {
 public:
 
     FGATIS(const std::string& name, int num);
-    ~FGATIS(void);
+
     virtual void init();
-    void attend (int);
+    void attend(SGPropertyNode* node);
 
     //run the ATIS instance
     void update(double dt);
@@ -95,7 +97,7 @@ protected:
 private:
 
     // Generate the ATIS transmission text:
-    int GenTransmission(const int regen, const int special);
+    int GenTransmission(const int regen, const bool special);
 
     // Put the text into the property tree
     // (and in debug mode, print it on the console):

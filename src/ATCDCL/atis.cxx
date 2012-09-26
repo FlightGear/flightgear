@@ -71,18 +71,17 @@ using flightgear::CommStation;
 FGATIS::FGATIS(const std::string& name, int num) :
   _name(name),
   _num(num),
+  _cb_attention(this, &FGATIS::attend, fgGetNode("/environment/attention", true)),
   transmission(""),
   trans_ident(""),
   old_volume(0),
   atis_failed(false),
   msg_OK(0),
-  attention(0),
+  _attention(false),
   _prev_display(0),
   _time_before_search_sec(0),
   _last_frequency(0)
 {
-  fgTie("/environment/attention", this, (int_getter)0, &FGATIS::attend);
-
   _root         = fgGetNode("/instrumentation", true)->getNode(_name, num, true);
   _volume       = _root->getNode("volume",true);
   _serviceable  = _root->getNode("serviceable",true);
@@ -130,10 +129,6 @@ FGATIS::FGATIS(const std::string& name, int num) :
 // Hint:
 // http://localhost:5400/environment/attention?value=1&submit=update
 
-FGATIS::~FGATIS() {
-  fgUntie("/environment/attention");
-}
-
 FGATCVoice* FGATIS::GetVoicePointer()
 {
     FGATISMgr* pAtisMgr = globals->get_ATIS_mgr();
@@ -151,9 +146,9 @@ void FGATIS::init() {
 }
 
 void
-FGATIS::attend (int attn)
+FGATIS::attend(SGPropertyNode* node)
 {
-  attention = attn;
+  _attention = node->getBoolValue();
 #ifdef ATMO_TEST
   int flag = fgGetInt("/sim/logging/atmo");
   if (flag) {
@@ -209,7 +204,7 @@ void FGATIS::update(double dt) {
     // - basically every hour and if the weather changes significantly at the station
     // If !_prev_display, the radio had been detuned for a while and our
     // "transmission" variable was lost when we were de-instantiated.
-    int changed = GenTransmission(!_prev_display, attention);
+    int changed = GenTransmission(!_prev_display, _attention);
 
     // update output property
     TreeOut(msg_OK);
@@ -225,7 +220,7 @@ void FGATIS::update(double dt) {
     NoRender(_name);
     _prev_display = false;
   }
-  attention = 0;
+  _attention = false;
 }
 
 string uppercase(const string &s) {
@@ -296,7 +291,7 @@ int Apt_US_CA(const string id) {
 // Regen means regenerate the /current/ transmission.
 // Special means generate a new transmission, with a new sequence.
 // Returns 1 if we actually generated something.
-int FGATIS::GenTransmission(const int regen, const int special) {
+int FGATIS::GenTransmission(const int regen, const bool special) {
   using namespace atmodel;
   using namespace lex;
 
