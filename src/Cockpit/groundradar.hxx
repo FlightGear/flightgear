@@ -22,12 +22,15 @@
 
 #include <osg/ref_ptr>
 #include <osg/Geometry>
+
 #include <simgear/props/props.hxx>
-#include "od_gauge.hxx"
 #include <simgear/structure/subsystem_mgr.hxx>
+
+#include "od_gauge.hxx"
 
 // forward decls
 class FGRunwayBase;
+class FGPavement;
 
 ////////////////////////////////////////////////////////////////////////
 // Built-in layer for the atc radar.

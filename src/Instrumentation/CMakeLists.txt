@@ -2,7 +2,6 @@ include(FlightGearComponent)
 
 set(SOURCES
     adf.cxx
-    agradar.cxx
     airspeed_indicator.cxx
     altimeter.cxx
     attitude_indicator.cxx
@@ -10,7 +9,6 @@ set(SOURCES
     dclgps.cxx
     dme.cxx
     gps.cxx
-    groundradar.cxx
     gsdi.cxx
     gyro.cxx
     heading_indicator.cxx
@@ -26,9 +24,7 @@ set(SOURCES
     mrg.cxx
     navradio.cxx
     newnavradio.cxx
-    od_gauge.cxx
     rad_alt.cxx
-    render_area_2d.cxx
     rnav_waypt_controller.cxx
     slip_skid_ball.cxx
     tacan.cxx
@@ -36,8 +32,6 @@ set(SOURCES
     transponder.cxx
     turn_indicator.cxx
     vertical_speed_indicator.cxx
-    wxradar.cxx
-    NavDisplay.cxx
     HUD/HUD.cxx
     HUD/HUD_dial.cxx
     HUD/HUD_gauge.cxx
@@ -69,7 +63,6 @@ set(SOURCES
 
 set(HEADERS
     adf.hxx
-    agradar.hxx
     airspeed_indicator.hxx
     altimeter.hxx
     attitude_indicator.hxx
@@ -77,7 +70,6 @@ set(HEADERS
     dclgps.hxx
     dme.hxx
     gps.hxx
-    groundradar.hxx
     gsdi.hxx
     gyro.hxx
     heading_indicator.hxx
@@ -93,9 +85,7 @@ set(HEADERS
     mrg.hxx
     navradio.hxx
     newnavradio.hxx
-    od_gauge.hxx
     rad_alt.hxx
-    render_area_2d.hxx
     rnav_waypt_controller.hxx
     slip_skid_ball.hxx
     tacan.hxx
@@ -103,8 +93,6 @@ set(HEADERS
     transponder.hxx
     turn_indicator.hxx
     vertical_speed_indicator.hxx
-    wxradar.hxx
-    NavDisplay.hxx
     HUD/HUD.hxx
     HUD/HUD_private.hxx
     KLN89/kln89.hxx

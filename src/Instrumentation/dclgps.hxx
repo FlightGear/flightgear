@@ -26,7 +26,8 @@
 #ifndef _DCLGPS_HXX
 #define _DCLGPS_HXX
 
-#include "render_area_2d.hxx"
+#include <Cockpit/render_area_2d.hxx>
+
 #include <string>
 #include <list>
 #include <vector>

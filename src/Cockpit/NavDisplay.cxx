@@ -63,7 +63,7 @@ using std::string;
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Cockpit/panel.hxx>
+#include "panel.hxx"
 #include <Navaids/routePath.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Navaids/navrecord.hxx>
@@ -71,8 +71,6 @@ using std::string;
 #include <Navaids/fix.hxx>
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
-
-#include "instrument_mgr.hxx"
 #include "od_gauge.hxx"
 
 static const char *DEFAULT_FONT = "typewriter.txf";

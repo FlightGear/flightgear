@@ -23,7 +23,7 @@
 #include "property_based_element.hxx"
 
 #include <Canvas/canvas_fwd.hpp>
-#include <Instrumentation/od_gauge.hxx>
+#include <Cockpit/od_gauge.hxx>
 
 #include <simgear/props/propertyObject.hxx>
 #include <osg/NodeCallback>

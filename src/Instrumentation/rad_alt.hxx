@@ -28,7 +28,7 @@
 #include <Scenery/scenery.hxx>
 #include <simgear/scene/material/mat.hxx>
 
-#include "agradar.hxx"
+#include <Cockpit/agradar.hxx>
 
 class radAlt : public agRadar{
 public:

@@ -42,15 +42,11 @@
 #include "turn_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
 #include "inst_vertical_speed_indicator.hxx"
-#include "wxradar.hxx"
 #include "tacan.hxx"
 #include "mk_viii.hxx"
 #include "mrg.hxx"
-#include "groundradar.hxx"
-#include "agradar.hxx"
 #include "rad_alt.hxx"
 #include "tcas.hxx"
-#include "NavDisplay.hxx"
 
 FGInstrumentMgr::FGInstrumentMgr () :
   _explicitGps(false)
@@ -124,7 +120,6 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         if (index > 0)
             subsystemname << '['<< index << ']';
         string id = subsystemname.str();
-        _instruments.push_back(id);
       
         if ( name == "adf" ) {
             set_subsystem( id, new ADF( node ), 0.15 );
@@ -189,9 +184,6 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         } else if ( name == "vertical-speed-indicator" ) {
             set_subsystem( id, new VerticalSpeedIndicator( node ) );
 
-        } else if ( name == "radar" ) {
-            set_subsystem( id, new wxRadarBg ( node ) );
-
         } else if ( name == "inst-vertical-speed-indicator" ) {
             set_subsystem( id, new InstVerticalSpeedIndicator( node ) );
 
@@ -204,27 +196,30 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         } else if ( name == "master-reference-gyro" ) {
             set_subsystem( id, new MasterReferenceGyro( node ) );
 
-        } else if ( name == "groundradar" ) {
-            set_subsystem( id, new GroundRadar( node ) );
-
-        } else if ( name == "air-ground-radar" ) {
-            set_subsystem( id, new agRadar( node ) );
-
+        } else if (( name == "groundradar" ) ||
+                   ( name == "radar" ) ||
+                   ( name == "air-ground-radar" ) ||
+                   ( name == "navigation-display" ))
+        {
+        // these instruments are handled by the CockpitDisplayManager
+        // catch them here so we can still warn about bogus names in
+        // the instruments file
+          continue;
         } else if ( name == "radar-altimeter" ) {
             set_subsystem( id, new radAlt( node ) );
 
         } else if ( name == "tcas" ) {
             set_subsystem( id, new TCAS( node ), 0.2);
-        
-        } else if ( name == "navigation-display" ) {
-            set_subsystem( id, new NavDisplay( node ) );
             
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: "
                     << name );
             return false;
         }
-    }
+      
+      // only push to our array if we actually built an insturment
+        _instruments.push_back(id);
+    } // of instruments iteration
     return true;
 }
 

@@ -56,9 +56,8 @@ using std::string;
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Cockpit/panel.hxx>
 
-#include "instrument_mgr.hxx"
+#include "panel.hxx" // for FGTextureManager
 #include "od_gauge.hxx"
 #include "wxradar.hxx"
 
