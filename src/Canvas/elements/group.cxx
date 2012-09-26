@@ -173,7 +173,7 @@ namespace canvas
     ++next;
 
     while(    next != _children.end()
-           && next->first->getIntValue("z-index", 0) < z_index )
+           && next->first->getIntValue("z-index", 0) <= z_index )
     {
       ++index_new;
       ++next;
