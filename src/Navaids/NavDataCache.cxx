@@ -929,10 +929,10 @@ NavDataCache::NavDataCache()
     // reached this point with no exception, success
       break;
     } catch (sg_exception& e) {
-      SG_LOG(SG_NAVCACHE, SG_WARN, "NavCache: init failed:" << e.what()
+      SG_LOG(SG_NAVCACHE, t == 0 ? SG_WARN : SG_ALERT, "NavCache: init failed:" << e.what()
              << " (attempt " << t << ")");
-      homePath.remove();
       d.reset();
+      homePath.remove();
     }
   } // of retry loop
     
