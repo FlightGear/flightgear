@@ -96,11 +96,11 @@ SGPropertyNode_ptr createServiceableProp(SGPropertyNode* aParent,
   return n;  
 }
 
+static std::auto_ptr<SGInterpTable> static_terminalRangeInterp,
+  static_lowRangeInterp, static_highRangeInterp;
+
 // Constructor
 FGNavRadio::FGNavRadio(SGPropertyNode *node) :
-    term_tbl(NULL),
-    low_tbl(NULL),
-    high_tbl(NULL),
     _operable(false),
     play_count(0),
     _last_freq(0.0),
@@ -127,18 +127,21 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     _gsNeedleDeflectionNorm(0.0),
     _audioIdent(NULL)
 {
-    SGPath path( globals->get_fg_root() );
-    SGPath term = path;
-    term.append( "Navaids/range.term" );
-    SGPath low = path;
-    low.append( "Navaids/range.low" );
-    SGPath high = path;
-    high.append( "Navaids/range.high" );
-
-    term_tbl = new SGInterpTable( term.str() );
-    low_tbl = new SGInterpTable( low.str() );
-    high_tbl = new SGInterpTable( high.str() );
-
+    if (!static_terminalRangeInterp.get()) {
+    // one-time interpolator init
+      SGPath path( globals->get_fg_root() );
+      SGPath term = path;
+      term.append( "Navaids/range.term" );
+      SGPath low = path;
+      low.append( "Navaids/range.low" );
+      SGPath high = path;
+      high.append( "Navaids/range.high" );
+      
+      static_terminalRangeInterp.reset(new SGInterpTable(term.str()));
+      static_lowRangeInterp.reset(new SGInterpTable(low.str()));
+      static_highRangeInterp.reset(new SGInterpTable(high.str()));
+    }
+  
     string branch("/instrumentation/" + _name);
     _radio_node = fgGetNode(branch.c_str(), _num, true);
 }
@@ -155,10 +158,6 @@ FGNavRadio::~FGNavRadio()
       nav_slaved_to_gps_node->removeChangeListener(this);
     }
     
-    delete term_tbl;
-    delete low_tbl;
-    delete high_tbl;
-
     delete _audioIdent;
 }
 
@@ -309,17 +308,17 @@ double FGNavRadio::adjustNavRange( double stationElev, double aircraftElev,
     //      << " station elev = " << stationElev << endl;
 
     if ( nominalRange < 25.0 + SG_EPSILON ) {
-	// Standard Terminal Service Volume
-	return term_tbl->interpolate( alt ) * usability_factor;
+      // Standard Terminal Service Volume
+      return static_terminalRangeInterp->interpolate( alt ) * usability_factor;
     } else if ( nominalRange < 50.0 + SG_EPSILON ) {
 	// Standard Low Altitude Service Volume
 	// table is based on range of 40, scale to actual range
-	return low_tbl->interpolate( alt ) * nominalRange / 40.0
+      return static_lowRangeInterp->interpolate( alt ) * nominalRange / 40.0
 	    * usability_factor;
     } else {
 	// Standard High Altitude Service Volume
 	// table is based on range of 130, scale to actual range
-	return high_tbl->interpolate( alt ) * nominalRange / 130.0
+      return static_highRangeInterp->interpolate( alt ) * nominalRange / 130.0
 	    * usability_factor;
     }
 }

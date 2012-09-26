@@ -31,19 +31,12 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
 
-// forward decls
-class SGInterpTable;
-
 class SGSampleGroup;
 class FGNavRecord;
 typedef SGSharedPtr<FGNavRecord> FGNavRecordPtr;
 
 class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
 {
-    SGInterpTable *term_tbl;
-    SGInterpTable *low_tbl;
-    SGInterpTable *high_tbl;
-
     SGPropertyNode_ptr _radio_node;
     SGPropertyNode_ptr bus_power_node;
 

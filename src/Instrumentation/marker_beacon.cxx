@@ -39,7 +39,6 @@
 #include <string>
 using std::string;
 
-
 // Constructor
 FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
     audio_vol(NULL),
@@ -51,18 +50,6 @@ FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
     _time_before_search_sec(0.0),
     _sgr(NULL)
 {
-    SGPath path( globals->get_fg_root() );
-    SGPath term = path;
-    term.append( "Navaids/range.term" );
-    SGPath low = path;
-    low.append( "Navaids/range.low" );
-    SGPath high = path;
-    high.append( "Navaids/range.high" );
-
-    term_tbl = new SGInterpTable( term.str() );
-    low_tbl = new SGInterpTable( low.str() );
-    high_tbl = new SGInterpTable( high.str() );
-
     for ( int i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
@@ -85,9 +72,6 @@ FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
 // Destructor
 FGMarkerBeacon::~FGMarkerBeacon()
 {
-    delete term_tbl;
-    delete low_tbl;
-    delete high_tbl;
 }
 
 
