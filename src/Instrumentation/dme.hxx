@@ -10,6 +10,9 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
+// forward decls
+class FGNavRecord;
+
 /**
  * Model a DME radio.
  *

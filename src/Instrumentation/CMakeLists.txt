@@ -106,6 +106,7 @@ set(HEADERS
     wxradar.hxx
     NavDisplay.hxx
     HUD/HUD.hxx
+    HUD/HUD_private.hxx
     KLN89/kln89.hxx
     KLN89/kln89_page.hxx
     KLN89/kln89_page_act.hxx

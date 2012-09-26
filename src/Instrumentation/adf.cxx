@@ -24,6 +24,7 @@
 #include <string>
 #include <sstream>
 
+using std::string;
 
 // Use a bigger number to be more responsive, or a smaller number
 // to be more sluggish.

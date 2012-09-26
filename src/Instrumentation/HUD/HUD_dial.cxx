@@ -20,7 +20,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "HUD.hxx"
-
+#include "HUD_private.hxx"
 
 HUD::Dial::Dial(HUD *hud, const SGPropertyNode *n, float x, float y) :
     Scale(hud, n, x, y),

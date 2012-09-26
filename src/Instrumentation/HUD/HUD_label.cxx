@@ -24,7 +24,9 @@
 #endif
 
 #include "HUD.hxx"
+#include "HUD_private.hxx"
 
+#include <Main/globals.hxx>
 
 HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
     Item(hud, n, x, y),

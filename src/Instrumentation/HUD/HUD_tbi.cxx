@@ -20,7 +20,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "HUD.hxx"
-
+#include "HUD_private.hxx"
 
 HUD::TurnBankIndicator::TurnBankIndicator(HUD *hud, const SGPropertyNode *n, float x, float y) :
     Item(hud, n, x, y),

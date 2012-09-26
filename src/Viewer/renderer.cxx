@@ -112,6 +112,8 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 
+#include <plib/pu.h>
+
 using namespace osg;
 using namespace simgear;
 using namespace flightgear;

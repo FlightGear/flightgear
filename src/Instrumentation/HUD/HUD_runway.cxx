@@ -28,6 +28,7 @@
 #include <simgear/scene/util/project.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 #include <Aircraft/controls.hxx>
 #include <FDM/flight.hxx>
@@ -38,7 +39,7 @@
 #include <ATCDCL/ATCutils.hxx>
 
 #include "HUD.hxx"
-
+#include "HUD_private.hxx"
 
 HUD::Runway::Runway(HUD *hud, const SGPropertyNode *node, float x, float y) :
     Item(hud, node, x, y),

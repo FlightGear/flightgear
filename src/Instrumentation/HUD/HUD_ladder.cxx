@@ -26,7 +26,11 @@
 #include <sstream>
 #include <simgear/math/SGGeometry.hxx>
 #include <Viewer/viewer.hxx>
+
 #include "HUD.hxx"
+#include "HUD_private.hxx"
+
+#include <Main/fg_props.hxx>
 
 using std::string;
 

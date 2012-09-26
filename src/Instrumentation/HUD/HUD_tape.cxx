@@ -20,6 +20,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "HUD.hxx"
+#include "HUD_private.hxx"
 
 static const float TICK_OFFSET = 2.f;
 

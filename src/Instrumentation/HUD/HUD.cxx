@@ -37,21 +37,48 @@
 #include <plib/fnt.h>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Viewer/viewmgr.hxx>
 #include <Viewer/viewer.hxx>
 #include <GUI/FGFontCache.hxx>
+#include <GUI/gui.h> // for guiErrorMessage
 
 #include "HUD.hxx"
+#include "HUD_private.hxx"
 
 using std::endl;
 using std::ifstream;
 using std::string;
+using std::deque;
+using std::vector;
 
 static float clamp(float f)
 {
     return f < 0.0f ? 0.0f : f > 1.0f ? 1.0f : f;
 }
 
+HUD::Input::Input(const SGPropertyNode *n, float factor, float offset,
+      float min, float max) :
+  _valid(false),
+  _property(0),
+  _damped(SGLimitsf::max())
+{
+  if (!n)
+    return;
+  _factor = n->getFloatValue("factor", factor);
+  _offset = n->getFloatValue("offset", offset);
+  _min = n->getFloatValue("min", min);
+  _max = n->getFloatValue("max", max);
+  _coeff = 1.0 - 1.0 / powf(10, fabs(n->getFloatValue("damp", 0.0)));
+  SGPropertyNode *p = ((SGPropertyNode *)n)->getNode("property", false);
+  if (p) {
+    const char *path = p->getStringValue();
+    if (path && path[0]) {
+      _property = fgGetNode(path, true);
+      _valid = true;
+    }
+  }
+}
 
 HUD::HUD() :
     _currentPath(fgGetNode("/sim/hud/current-path", true)),

@@ -16,9 +16,7 @@
 #include <simgear/props/props.hxx>
 
 #include <simgear/structure/subsystem_mgr.hxx>
-
-using std::string;
-
+#include <simgear/math/SGMath.hxx>
 
 class SGSampleGroup;
 
@@ -84,7 +82,7 @@ private:
 
     int _last_frequency_khz;
     bool _transmitter_valid;
-    string _last_ident;
+    std::string _last_ident;
     SGGeod _transmitter_pos;
     SGVec3d _transmitter_cart;
     double _transmitter_range_nm;
@@ -92,7 +90,7 @@ private:
     int _ident_count;
     time_t _last_ident_time;
     float _last_volume;
-    string _adf_ident;
+    std::string _adf_ident;
 
     SGSharedPtr<SGSampleGroup> _sgr;
 };

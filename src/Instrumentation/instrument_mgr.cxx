@@ -19,7 +19,6 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
-#include <Instrumentation/HUD/HUD.hxx>
 
 #include "instrument_mgr.hxx"
 #include "adf.hxx"
@@ -56,7 +55,6 @@
 FGInstrumentMgr::FGInstrumentMgr () :
   _explicitGps(false)
 {    
-    globals->add_subsystem("hud", new HUD, SGSubsystemMgr::DISPLAY);
 }
 
 FGInstrumentMgr::~FGInstrumentMgr ()

@@ -48,10 +48,10 @@ private:
 
     std::string _name;
     unsigned int _num;
-    string _total_pressure;
-    string _static_pressure;
+    std::string _total_pressure;
+    std::string _static_pressure;
     bool _has_overspeed;
-    string _pressure_alt_source;
+    std::string _pressure_alt_source;
     double _ias_limit;
     double _mach_limit;
     double _alt_threshold;

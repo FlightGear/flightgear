@@ -24,8 +24,14 @@
 #endif
 
 #include <simgear/math/SGLimits.hxx>
-#include "HUD.hxx"
+#include <simgear/props/condition.hxx>
 
+#include "HUD.hxx"
+#include "HUD_private.hxx"
+
+#include <Main/globals.hxx>
+
+using std::vector;
 
 HUD::Item::Item(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _hud(hud),
