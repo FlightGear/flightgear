@@ -126,7 +126,7 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 2 ) {
         idle_state++;
-        fgSplashProgress("loading-nav-data");
+        fgSplashProgress("loading-nav-dat");
 
     } else if ( idle_state == 3 ) {
         
@@ -135,7 +135,7 @@ static void fgIdleFunction ( void ) {
           ++idle_state;
           fgSplashProgress("init-scenery");
         } else {
-          fgSplashProgress("loading-nav-data");
+          fgSplashProgress("loading-nav-dat");
         }
       
     } else if ( idle_state == 4 ) {
