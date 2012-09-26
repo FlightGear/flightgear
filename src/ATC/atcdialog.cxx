@@ -248,6 +248,10 @@ void FGATCDialogNew::update(double dt) {
 
     const char *dialog_name = "atc-dialog";
     _gui = (NewGUI *)globals->get_subsystem("gui");
+    if (!_gui) {
+      return;
+    }
+  
     SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
     if (!dlg)
         return;

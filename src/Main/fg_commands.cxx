@@ -1022,7 +1022,10 @@ static bool
 do_dialog_new (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-
+    if (!gui) {
+      return false;
+    }
+  
     // Note the casting away of const: this is *real*.  Doing a
     // "dialog-apply" command later on will mutate this property node.
     // I'm not convinced that this isn't the Right Thing though; it
