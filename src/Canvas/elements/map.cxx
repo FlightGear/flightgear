@@ -178,7 +178,7 @@ namespace canvas
   void Map::childChanged(SGPropertyNode * child)
   {
     if( child->getParent() != _node )
-      return;
+      return Group::childChanged(child);
 
     if(    child->getNameString() == "ref-lat"
         || child->getNameString() == "ref-lon" )
@@ -189,7 +189,7 @@ namespace canvas
     else if( child->getNameString() == "range" )
       _projection->setRange(child->getDoubleValue());
     else
-      return;
+      return Group::childChanged(child);
 
     _projection_dirty = true;
   }

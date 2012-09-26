@@ -170,9 +170,14 @@ void Canvas::update(double delta_time_sec)
     _texture.useImageCoords(true);
     _texture.useStencil(true);
     _texture.allocRT(_camera_callback);
-    _texture.getCamera()->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f , 1.0f));
-    _texture.getCamera()->addChild(_root_group->getMatrixTransform());
-    _texture.getCamera()->setFinalDrawCallback(new DrawCallback(this));
+
+    osg::Camera* camera = _texture.getCamera();
+    camera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f , 1.0f));
+    camera->addChild(_root_group->getMatrixTransform());
+    camera->setFinalDrawCallback(new DrawCallback(this));
+
+    // Ensure objects are drawn in order of traversal
+    camera->getOrCreateStateSet()->setBinName("TraversalOrderBin");
 
     if( _texture.serviceable() )
     {

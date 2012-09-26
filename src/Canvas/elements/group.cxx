@@ -147,4 +147,68 @@ namespace canvas
     }
   }
 
+  //----------------------------------------------------------------------------
+  void Group::childChanged(SGPropertyNode* node)
+  {
+    if(    node->getParent()->getParent() == _node
+        && node->getNameString() == "z-index" )
+      return handleZIndexChanged(node->getParent(), node->getIntValue());
+  }
+
+  //----------------------------------------------------------------------------
+  void Group::handleZIndexChanged(SGPropertyNode* node, int z_index)
+  {
+    ChildFinder pred(node);
+    ChildList::iterator child =
+      std::find_if(_children.begin(), _children.end(), pred);
+
+    if( child == _children.end() )
+      return;
+
+    osg::Node* tf = child->second->getMatrixTransform();
+    int index = _transform->getChildIndex(tf),
+        index_new = index;
+
+    ChildList::iterator next = child;
+    ++next;
+
+    while(    next != _children.end()
+           && next->first->getIntValue("z-index", 0) < z_index )
+    {
+      ++index_new;
+      ++next;
+    }
+
+    if( index_new != index )
+    {
+      _children.insert(next, *child);
+    }
+    else
+    {
+      ChildList::iterator prev = child;
+      while(    prev != _children.begin()
+             && (--prev)->first->getIntValue("z-index", 0) > z_index)
+      {
+        --index_new;
+      }
+
+      if( index == index_new )
+        return;
+
+      _children.insert(prev, *child);
+    }
+
+    _transform->removeChild(index);
+    _transform->insertChild(index_new, tf);
+
+    _children.erase(child);
+
+    SG_LOG
+    (
+      SG_GENERAL,
+      SG_INFO,
+      "canvas::Group: Moved element " << index << " to position " << index_new
+    );
+  }
+
 } // namespace canvas

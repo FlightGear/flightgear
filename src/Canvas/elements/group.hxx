@@ -51,6 +51,9 @@ namespace canvas
 
       virtual void childAdded(SGPropertyNode * child);
       virtual void childRemoved(SGPropertyNode * child);
+      virtual void childChanged(SGPropertyNode * child);
+
+      void handleZIndexChanged(SGPropertyNode* node, int z_index);
   };
 
 }  // namespace canvas
