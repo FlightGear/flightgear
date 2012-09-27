@@ -686,13 +686,13 @@ void fgCreateSubsystems() {
     // Initialize the controls subsystem.
     ////////////////////////////////////////////////////////////////////
     
-    globals->add_subsystem("controls", new FGControls);
+    globals->add_subsystem("controls", new FGControls, SGSubsystemMgr::GENERAL);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the input subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("input", new FGInput);
+    globals->add_subsystem("input", new FGInput, SGSubsystemMgr::GENERAL);
 
 
     ////////////////////////////////////////////////////////////////////
