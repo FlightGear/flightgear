@@ -321,7 +321,8 @@ void FGTileMgr::update(double)
     // scenery loading check, triggers after each sim (tile manager) reinit
     if (!_scenery_loaded->getBoolValue())
     {
-        if (_scenery_override->getBoolValue() || isSceneryLoaded())
+        bool fdmInited = fgGetBool("sim/fdm-initialized");
+        if (_scenery_override->getBoolValue() || (isSceneryLoaded() && fdmInited))
         {
             _scenery_loaded->setBoolValue(true);
             fgSplashProgress("");
