@@ -1018,6 +1018,15 @@ void FlightPlan::rebuildLegData()
     _legs[l]->_distanceAlongPath = _totalDistance;
     _totalDistance += crsDist.second * SG_METER_TO_NM;
   } // of legs iteration
+  
+// set some data on the final leg
+  if (lastLeg > 0) {
+    // keep the same course as the final leg, when passing the final
+    // waypoint
+    _legs[lastLeg]->_courseDeg = _legs[lastLeg - 1]->_courseDeg;
+    _legs[lastLeg]->_pathDistance = 0.0;
+    _legs[lastLeg]->_distanceAlongPath = _totalDistance;
+  }
 }
   
 void FlightPlan::lockDelegate()
