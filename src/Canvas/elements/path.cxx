@@ -56,8 +56,25 @@ namespace canvas
 
       virtual ~PathDrawable()
       {
-        vgDestroyPath(_path);
-        vgDestroyPaint(_paint);
+        if( !_vg_initialized )
+        {
+          if( _path != VG_INVALID_HANDLE )
+            SG_LOG
+            (
+              SG_GL,
+              SG_WARN,
+              "Can't destroy path without OpenVG context: "
+                << _path_element->_node->getPath()
+            );
+          return;
+        }
+
+        if( _path != VG_INVALID_HANDLE )
+          vgDestroyPath(_path);
+        if( _paint != VG_INVALID_HANDLE )
+          vgDestroyPaint(_paint);
+        if( _paint_fill != VG_INVALID_HANDLE )
+          vgDestroyPaint(_paint_fill);
       }
 
       virtual const char* className() const { return "PathDrawable"; }
