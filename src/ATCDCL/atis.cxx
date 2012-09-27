@@ -610,6 +610,17 @@ public:
 
         return d2 <= (rangeM * rangeM);
     }
+
+    virtual CommStation::Type minType() const
+    {
+      return CommStation::FREQ_ATIS;
+    }
+
+    virtual CommStation::Type maxType() const
+    {
+      return CommStation::FREQ_AWOS;
+    }
+
 private:
     SGVec3d _cart;
     SGGeod _pos;
@@ -620,9 +631,9 @@ void FGATIS::search(void)
 {
     double frequency = _freq->getDoubleValue();
 
-    // Note:  122.375 must be rounded DOWN to 12237
+    // Note:  122.375 must be rounded DOWN to 122370
     // in order to be consistent with apt.dat et cetera.
-    int freqKhz = static_cast<int>(frequency * 100.0 + 0.25);
+    int freqKhz = 10 * static_cast<int>(frequency * 100 + 0.25);
 
     // throttle frequency searches
     if ((freqKhz == _last_frequency)&&(_time_before_search_sec > 0))
