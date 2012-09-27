@@ -145,17 +145,16 @@ void FGATCDialogNew::frequencyDisplay(const std::string& ident)
 		return;
   }
   
-  int n = 0;
   for (unsigned int c=0; c < comms.size(); ++c) {
     flightgear::CommStation* comm = comms[c];
     
     // add frequency line (modified copy of <group-template>)
-		SGPropertyNode *entry = freq_group->getNode("group", n, true);
+		SGPropertyNode *entry = freq_group->getNode("group", c, true);
 		copyProperties(freq_group->getNode("group-template", true), entry);
 		entry->removeChildren("enabled", true);
     
     entry->setStringValue("text[0]/label", comm->ident());
-    
+
 		char buf[8];
 		snprintf(buf, 8, "%.2f", comm->freqMHz());
 		if(buf[5] == '3') buf[5] = '2';
@@ -163,7 +162,6 @@ void FGATCDialogNew::frequencyDisplay(const std::string& ident)
 		buf[7] = '\0';
     
 		entry->setStringValue("text[1]/label", buf);
-    ++n;
   }
   
 	_gui->showDialog(dialog_name);

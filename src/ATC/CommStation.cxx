@@ -24,7 +24,7 @@ FGAirport* CommStation::airport() const
 
 double CommStation::freqMHz() const
 {
-    return mFreqKhz / 100.0;
+    return mFreqKhz / 1000.0;
 }
 
 CommStation*

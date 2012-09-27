@@ -646,7 +646,7 @@ public:
     int range = sqlite3_column_int(loadCommStation, 0);
     int freqKhz = sqlite3_column_int(loadCommStation, 1);
     
-    CommStation* c = new CommStation(rowId, id, ty, pos, freqKhz, range);
+    CommStation* c = new CommStation(rowId, name, ty, pos, freqKhz, range);
     c->setAirport(airport);
     return c;
   }

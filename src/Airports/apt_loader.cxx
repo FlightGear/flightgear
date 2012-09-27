@@ -493,8 +493,13 @@ private:
         switch (lineId) {
             case 50:
                 ty = FGPositioned::FREQ_AWOS;
-                if (token[2] == "ATIS") {
+                for( size_t i = 2; i < token.size(); ++i )
+                {
+                  if( token[i] == "ATIS" )
+                  {
                     ty = FGPositioned::FREQ_ATIS;
+                    break;
+                  }
                 }
                 break;
 
@@ -505,10 +510,16 @@ private:
             case 55:
             case 56:    ty = FGPositioned::FREQ_APP_DEP; break;
             default:
-                throw sg_range_exception("unupported apt.dat comm station type");
+                throw sg_range_exception("unsupported apt.dat comm station type");
         }
 
-      cache->insertCommStation(ty, token[2], pos, freqKhz, rangeNm, currentAirportID);
+      // Name can contain white spaces. All tokens after the second token are
+      // part of the name.
+      std::string name = token[2];
+      for( size_t i = 3; i < token.size(); ++i )
+        name += ' ' + token[i];
+
+      cache->insertCommStation(ty, name, pos, freqKhz, rangeNm, currentAirportID);
     }
     else SG_LOG( SG_GENERAL, SG_DEBUG, "Found unnamed comm. Skipping: " << lineId);
   }
