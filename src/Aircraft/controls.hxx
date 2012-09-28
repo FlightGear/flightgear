@@ -265,7 +265,8 @@ public:
     void bind ();
     void unbind ();
     void update (double dt);
-
+    virtual void reinit();
+  
     // Reset function
     void reset_all(void);
         
