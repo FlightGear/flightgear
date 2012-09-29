@@ -414,25 +414,30 @@ bool fgInitConfig ( int argc, char **argv )
     home->setStringValue(dataPath.c_str());
     home->setAttribute(SGPropertyNode::WRITE, false);
   
-    flightgear::Options::sharedInstance()->init(argc, argv, dataPath);
+    flightgear::Options* options = flightgear::Options::sharedInstance();
+    options->init(argc, argv, dataPath);
+    bool loadDefaults = flightgear::Options::sharedInstance()->shouldLoadDefaultConfig();
+    if (loadDefaults) {
+      // Read global preferences from $FG_ROOT/preferences.xml
+      SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
+      fgLoadProps("preferences.xml", globals->get_props());
+      SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
+
+      // do not load user settings when reset to default is requested
+      if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults"))
+      {
+          SG_LOG(SG_ALL, SG_ALERT, "Ignoring user settings. Restoring defaults.");
+      }
+      else
+      {
+          globals->loadUserSettings(dataPath);
+      }
+    } else {
+      SG_LOG(SG_GENERAL, SG_INFO, "not reading default configuration files");
+    }// of no-default-config selected
   
-    // Read global preferences from $FG_ROOT/preferences.xml
-    SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
-    fgLoadProps("preferences.xml", globals->get_props());
-    SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
-
-    // do not load user settings when reset to default is requested
-    if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults"))
-    {
-        SG_LOG(SG_ALL, SG_ALERT, "Ignoring user settings. Restoring defaults.");
-    }
-    else
-    {
-        globals->loadUserSettings(dataPath);
-    }
-
     // Scan user config files and command line for a specified aircraft.
-    flightgear::Options::sharedInstance()->initAircraft();
+    options->initAircraft();
 
     FindAndCacheAircraft f(globals->get_props());
     if (!f.loadAircraft()) {
@@ -441,7 +446,7 @@ bool fgInitConfig ( int argc, char **argv )
 
     // parse options after loading aircraft to ensure any user
     // overrides of defaults are honored.
-    flightgear::Options::sharedInstance()->processOptions();
+    options->processOptions();
       
     return true;
 }

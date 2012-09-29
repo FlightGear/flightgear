@@ -94,7 +94,8 @@ enum
     FG_OPTIONS_EXIT = 3,
     FG_OPTIONS_VERBOSE_HELP = 4,
     FG_OPTIONS_SHOW_AIRCRAFT = 5,
-    FG_OPTIONS_SHOW_SOUND_DEVICES = 6
+    FG_OPTIONS_SHOW_SOUND_DEVICES = 6,
+    FG_OPTIONS_NO_DEFAULT_CONFIG = 7
 };
 
 static flightgear::Options* shared_instance = NULL;
@@ -1509,6 +1510,7 @@ struct OptionDesc {
     {"version",                      false, OPTION_FUNC,   "", false, "", fgOptVersion },
     {"enable-fpe",                   false, OPTION_IGNORE,   "", false, "", 0},
     {"fgviewer",                     false, OPTION_IGNORE,   "", false, "", 0},
+    {"no-default-config",            false, OPTION_IGNORE, "", false, "", 0},
     {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
     {0}
 };
@@ -1665,7 +1667,8 @@ public:
   
   bool showHelp,
     verbose,
-    showAircraft;
+    showAircraft,
+    shouldLoadDefaultConfig;
     
   OptionDescDict options;
   OptionValueVec values;
@@ -1687,6 +1690,7 @@ Options::Options() :
   p->showHelp = false;
   p->verbose = false;
   p->showAircraft = false;
+  p->shouldLoadDefaultConfig = true;
   
 // build option map
   OptionDesc *desc = &fgOptionArray[ 0 ];
@@ -1732,6 +1736,11 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   // to show extra (debug/info/warning) messages for the start-up phase.
   fgOptLogLevel(valueForOption("log-level", "alert").c_str());
 
+  if (!p->shouldLoadDefaultConfig) {
+    setupRoot();
+    return;
+  }
+  
 // then config files
   SGPath config;
   
@@ -1821,7 +1830,9 @@ void Options::processArgResult(int result)
   else if (result == FG_OPTIONS_VERBOSE_HELP)
     p->verbose = true;
   else if (result == FG_OPTIONS_SHOW_AIRCRAFT) {
-    p->showAircraft = true;    
+    p->showAircraft = true;
+  } else if (result == FG_OPTIONS_NO_DEFAULT_CONFIG) {
+    p->shouldLoadDefaultConfig = false;
   } else if (result == FG_OPTIONS_SHOW_SOUND_DEVICES) {
     SGSoundMgr smgr;
     
@@ -1890,6 +1901,8 @@ int Options::parseOption(const string& s)
     return(FG_OPTIONS_SHOW_AIRCRAFT);
   } else if ( s.find( "--show-sound-devices") == 0) {
     return(FG_OPTIONS_SHOW_SOUND_DEVICES);
+  } else if ( s.find( "--no-default-config") == 0) {
+    return FG_OPTIONS_NO_DEFAULT_CONFIG;
   } else if ( s.find( "--prop:") == 0) {
     // property setting has a slightly different syntax, so fudge things
     OptionDesc* desc = p->findOption("prop");
@@ -2269,6 +2282,11 @@ void Options::setupRoot()
 #endif
     exit(-1);
   }
+}
+  
+bool Options::shouldLoadDefaultConfig() const
+{
+  return p->shouldLoadDefaultConfig;
 }
   
 } // of namespace flightgear

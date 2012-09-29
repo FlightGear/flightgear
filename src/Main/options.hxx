@@ -88,6 +88,16 @@ public:
    * init the aircraft options
    */
   void initAircraft();
+  
+  /**
+   * should defualt configuration files be loaded and processed or not?
+   * There's many configuration files we have historically read by default
+   * on startup - preferences.xml, fgfs.rc in various places and so on.
+   * --no-default-config allows this behaviour to be changed, so only
+   * expicitly listed files are read - this is useful for testing. Expose
+   * the value of the option here.
+   */
+  bool shouldLoadDefaultConfig() const;
 private:
   void showUsage() const;
   
