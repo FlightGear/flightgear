@@ -44,6 +44,7 @@ namespace canvas
         _paint_fill(VG_INVALID_HANDLE),
         _attributes_dirty(~0),
         _mode(0),
+        _fill_rule(VG_EVEN_ODD),
         _stroke_width(1),
         _stroke_linecap(VG_CAP_BUTT)
       {
@@ -110,6 +111,21 @@ namespace canvas
           _mode |= VG_FILL_PATH;
           _attributes_dirty |= FILL_COLOR;
         }
+      }
+
+      /**
+       * Set path fill rule ("pseudo-nonzero" or "evenodd")
+       *
+       * @warning As the current nonzero implementation causes sever artifacts
+       *          for every concave path we call it pseudo-nonzero, so that
+       *          everyone is warned that it won't work as expected :)
+       */
+      void setFillRule(const std::string& fill_rule)
+      {
+        if( fill_rule == "pseudo-nonzero" )
+          _fill_rule = VG_NON_ZERO;
+        else // if( fill_rule == "evenodd" )
+          _fill_rule = VG_EVEN_ODD;
       }
 
       /**
@@ -232,7 +248,7 @@ namespace canvas
         {
           vgSetPaint(_paint_fill, VG_FILL_PATH);
 
-          vgSeti(VG_FILL_RULE, VG_NON_ZERO); // TODO make user configurable
+          vgSeti(VG_FILL_RULE, _fill_rule);
         }
 
         // And finally draw the path
@@ -297,6 +313,7 @@ namespace canvas
 
       VGbitfield            _mode;
       osg::Vec4f            _fill_color;
+      VGFillRule            _fill_rule;
       osg::Vec4f            _stroke_color;
       VGfloat               _stroke_width;
       std::vector<VGfloat>  _stroke_dash;
@@ -383,6 +400,7 @@ namespace canvas
     PathDrawable *path = _path.get();
 
     addStyle("fill", &PathDrawable::setFill, path);
+    addStyle("fill-rule", &PathDrawable::setFillRule, path);
     addStyle("stroke", &PathDrawable::setStroke, path);
     addStyle("stroke-width", &PathDrawable::setStrokeWidth, path);
     addStyle("stroke-dasharray", &PathDrawable::setStrokeDashArray, path);
