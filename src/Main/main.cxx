@@ -62,6 +62,7 @@
 #include "fg_os.hxx"
 #include "fg_props.hxx"
 #include "positioninit.hxx"
+#include "subsystemFactory.hxx"
 
 using namespace flightgear;
 
@@ -155,6 +156,8 @@ static void fgIdleFunction ( void ) {
         // Initialize the property-based built-in commands
         ////////////////////////////////////////////////////////////////////
         fgInitCommands();
+
+        flightgear::registerSubsystemCommands(globals->get_commands());
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the material manager

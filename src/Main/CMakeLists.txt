@@ -21,6 +21,7 @@ set(SOURCES
 	options.cxx
 	util.cxx
     positioninit.cxx
+    subsystemFactory.cxx
 	${RESOURCE_FILE}
 	)
 
@@ -36,6 +37,7 @@ set(HEADERS
 	options.hxx
 	util.hxx
     positioninit.hxx
+    subsystemFactory.hxx
 	)
 
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
