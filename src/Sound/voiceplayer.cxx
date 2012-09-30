@@ -28,6 +28,8 @@
 #  include <config.h>
 #endif
 
+#include "voiceplayer.hxx"
+
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -38,11 +40,12 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/sample_group.hxx>
 #include <simgear/structure/exception.hxx>
 
 using std::string;
-
-#include "voiceplayer.hxx"
+using std::map;
+using std::vector;
 
 ///////////////////////////////////////////////////////////////////////////////
 // constants //////////////////////////////////////////////////////////////////
@@ -147,6 +150,12 @@ FGVoicePlayer::Voice::update ()
         }
     }
 }
+
+FGVoicePlayer::FGVoicePlayer (PropertiesHandler* properties_handler, string _dev_name)
+: volume(1.0), voice(NULL), next_voice(NULL), paused(false),
+dev_name(_dev_name), dir_prefix(""),
+speaker(this,properties_handler)
+{}
 
 FGVoicePlayer::~FGVoicePlayer ()
 {

@@ -39,7 +39,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/sound/xmlsound.hxx>
 
-FGFX::FGFX ( SGSoundMgr *smgr, const string &refname, SGPropertyNode *props ) :
+FGFX::FGFX ( SGSoundMgr *smgr, const std::string &refname, SGPropertyNode *props ) :
     _props( props )
 {
     if (!props) {
@@ -86,7 +86,7 @@ FGFX::init()
 {
     SGPropertyNode *node = _props->getNode("sim/sound", true);
 
-    string path_str = node->getStringValue("path");
+    std::string path_str = node->getStringValue("path");
     if (path_str.empty()) {
         SG_LOG(SG_SOUND, SG_ALERT, "No path in sim/sound/path");
         return;

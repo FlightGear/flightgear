@@ -11,6 +11,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/sound/sample_group.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Navaids/navlist.hxx>
@@ -90,7 +91,7 @@ DME::~DME ()
 void
 DME::init ()
 {
-    string branch;
+    std::string branch;
     branch = "/instrumentation/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
@@ -137,7 +138,7 @@ DME::update (double delta_time_sec)
                                 // Figure out the source
     const char * source = _source_node->getStringValue();
     if (source[0] == '\0') {
-        string branch;
+        std::string branch;
         branch = "/instrumentation/" + _name + "/frequencies/selected-mhz";
         _source_node->setStringValue(branch.c_str());
         source = _source_node->getStringValue();

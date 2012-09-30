@@ -114,7 +114,7 @@ public:
     static FGMorse * instance();
 
     // make a SimpleSound morse code transmission for the specified string
-    SGSoundSample *make_ident( const string& id,
+    SGSoundSample *make_ident( const std::string& id,
                                const int freq = LO_FREQUENCY );
 };
 

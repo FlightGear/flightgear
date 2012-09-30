@@ -18,7 +18,7 @@
 
 #include "adf.hxx"
 #include <Sound/morse.hxx>
-
+#include <simgear/sound/sample_group.hxx>
 
 #include <iostream>
 #include <string>

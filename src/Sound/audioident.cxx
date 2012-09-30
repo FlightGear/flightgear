@@ -21,6 +21,7 @@
 
 #include "audioident.hxx"
 #include <simgear/sg_inlines.h>
+#include <simgear/sound/sample_group.hxx>
 
 #include <Main/globals.hxx>
 #include <Sound/morse.hxx>

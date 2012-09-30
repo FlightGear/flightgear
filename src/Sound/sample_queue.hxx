@@ -47,7 +47,7 @@ class FGSampleQueue : public SGSampleGroup
 
 public:
 
-    FGSampleQueue ( SGSoundMgr *smgr, const string &refname );
+    FGSampleQueue ( SGSoundMgr *smgr, const std::string &refname );
     virtual ~FGSampleQueue ();
 
     virtual void update (double dt);

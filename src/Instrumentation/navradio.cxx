@@ -34,6 +34,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/sound/sample_group.hxx>
 
 #include <Navaids/navrecord.hxx>
 #include <Sound/audioident.hxx>

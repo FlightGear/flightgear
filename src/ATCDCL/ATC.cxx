@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/sample_group.hxx>
 #include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
@@ -137,8 +138,8 @@ void FGATC::SetStation(flightgear::CommStation* sta) {
 // Outputs the transmission either on screen or as audio depending on user preference
 // The refname is a string to identify this sample to the sound manager
 // The repeating flag indicates whether the message should be repeated continuously or played once.
-void FGATC::Render(string& msg, const float volume, 
-                   const string& refname, const bool repeating) {
+void FGATC::Render(std::string& msg, const float volume,
+                   const std::string& refname, const bool repeating) {
     if ((!_display) ||(volume < 0.05))
     {
         NoRender(refname);
@@ -206,7 +207,7 @@ void FGATC::Render(string& msg, const float volume,
 
 
 // Cease rendering a transmission.
-void FGATC::NoRender(const string& refname) {
+void FGATC::NoRender(const std::string& refname) {
     if(_playing) {
         if(_voice) {
 #ifdef ENABLE_AUDIO_SUPPORT

@@ -24,6 +24,7 @@
 
 #include "morse.hxx"
 
+#include <simgear/sound/sample_openal.hxx>
 #include <cstring>
 
 static const char DI = '1';
@@ -134,7 +135,7 @@ bool FGMorse::cust_init(const int freq ) {
 
 
 // make a SGSoundSample morse code transmission for the specified string
-SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
+SGSoundSample *FGMorse::make_ident( const std::string& id, const int freq ) {
 
     char *idptr = (char *)id.c_str();
 

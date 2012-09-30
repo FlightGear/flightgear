@@ -30,6 +30,7 @@
 #include <simgear/compiler.h>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/sound/sample_group.hxx>
 
 #include <Navaids/navlist.hxx>
 

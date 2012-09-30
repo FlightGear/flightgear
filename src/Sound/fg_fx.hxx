@@ -49,7 +49,7 @@ class FGFX : public SGSampleGroup
 
 public:
 
-    FGFX ( SGSoundMgr *smgr, const string &refname, SGPropertyNode *props = 0 );
+    FGFX ( SGSoundMgr *smgr, const std::string &refname, SGPropertyNode *props = 0 );
     virtual ~FGFX ();
 
     virtual void init ();

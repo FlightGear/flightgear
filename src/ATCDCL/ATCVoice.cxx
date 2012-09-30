@@ -32,6 +32,8 @@
 #include <algorithm>
 
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/sample_openal.hxx>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>

@@ -24,7 +24,9 @@
 
 #include "beacon.hxx"
 
+#include <simgear/sound/sample_openal.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/debug/logstream.hxx>
 
 // constructor
 FGBeacon::FGBeacon()

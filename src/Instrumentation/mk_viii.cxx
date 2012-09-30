@@ -70,6 +70,7 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/sample_group.hxx>
 #include <simgear/structure/exception.hxx>
 
 using std::string;

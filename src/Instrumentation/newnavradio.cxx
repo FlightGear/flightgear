@@ -33,6 +33,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/sound/sample_group.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Navaids/navlist.hxx>
