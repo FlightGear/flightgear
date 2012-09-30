@@ -61,6 +61,30 @@ using std::vector;
 
 #define test_bits(_bits, _test) (((_bits) & (_test)) != 0)
 
+/////////////////////////////////////////////////////////////////////////
+// FGVoicePlayer::Voice::SampleElement ///////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+void FGVoicePlayer::Voice::SampleElement::play (float volume)
+{
+  if (_sample && (volume > 0.05)) { set_volume(volume); _sample->play_once(); }
+}
+
+void FGVoicePlayer::Voice::SampleElement::stop ()
+{
+  if (_sample) _sample->stop();
+}
+
+bool FGVoicePlayer::Voice::SampleElement::is_playing ()
+{
+  return _sample ? _sample->is_playing() : false;
+}
+
+void FGVoicePlayer::Voice::SampleElement::set_volume (float volume)
+{
+  if (_sample) _sample->set_volume(volume * _volume);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // FGVoicePlayer //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

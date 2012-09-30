@@ -30,9 +30,9 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
-#include <simgear/sound/sample_openal.hxx>
 
 class SGSampleGroup;
+class SGSoundSample;
 
 #include <Main/globals.hxx>
 
@@ -149,13 +149,13 @@ public:
         float               _volume;
 
     public:
-        inline SampleElement (SGSharedPtr<SGSoundSample> sample, float volume = 1.0)
+        SampleElement (SGSharedPtr<SGSoundSample> sample, float volume = 1.0)
           : _sample(sample), _volume(volume) { silence = false; }
 
-        virtual inline void play (float volume) { if (_sample && (volume > 0.05)) { set_volume(volume); _sample->play_once(); } }
-        virtual inline void stop () { if (_sample) _sample->stop(); }
-        virtual inline bool is_playing () { return _sample ? _sample->is_playing() : false; }
-        virtual inline void set_volume (float volume) { if (_sample) _sample->set_volume(volume * _volume); }
+        virtual void play (float volume);
+        virtual void stop ();
+        virtual bool is_playing ();
+        virtual void set_volume (float volume);
     };
 
     /////////////////////////////////////////////////////////////////////////
