@@ -182,6 +182,10 @@ FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position,
     
   BOOST_FOREACH(PositionedID id, stations) {
     FGNavRecord* station = (FGNavRecord*) cache->loadById(id);
+    if (!filter->pass(station)) {
+      continue;
+    }
+    
     double d2 = distSqr(station->cart(), acCart);
     if (d2 > min_dist) {
     // since results are sorted by proximity, as soon as we pass the
@@ -201,13 +205,20 @@ FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position,
 FGNavRecord *FGNavList::findByFreq( double freq, TypeFilter* filter)
 {
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
-  int freqKhz = static_cast<int>(freq * 1000);
+  int freqKhz = static_cast<int>(freq * 100);
   PositionedIDVec stations(cache->findNavaidsByFreq(freqKhz, filter));
   if (stations.empty()) {
     return NULL;
   }
 
-  return (FGNavRecord*) cache->loadById(stations.front());
+  BOOST_FOREACH(PositionedID id, stations) {
+    FGNavRecord* station = (FGNavRecord*) cache->loadById(id);
+    if (filter->pass(station)) {
+      return station;
+    }
+  }
+
+  return NULL;
 }
 
 nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position,
@@ -220,7 +231,12 @@ nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position,
   PositionedIDVec ids(cache->findNavaidsByFreq(freqKhz, position, filter));
   
   BOOST_FOREACH(PositionedID id, ids) {
-    stations.push_back((FGNavRecord*) cache->loadById(id));
+    FGNavRecord* station = (FGNavRecord*) cache->loadById(id);
+    if (!filter->pass(station)) {
+      continue;
+    }
+
+    stations.push_back(station);
   }
   
   return stations;

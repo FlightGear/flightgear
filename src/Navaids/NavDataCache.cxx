@@ -1530,11 +1530,16 @@ NavDataCache::findCommByFreq(int freqKhz, const SGGeod& aPos, FGPositioned::Filt
   sqlite3_bind_double(d->findCommByFreq, 5, cartPos.y());
   sqlite3_bind_double(d->findCommByFreq, 6, cartPos.z());
   
-  if (!d->execSelect(d->findCommByFreq)) {
-    return NULL;
+  while (d->execSelect(d->findCommByFreq)) {
+    FGPositioned* p = loadById(sqlite3_column_int64(d->findCommByFreq, 0));
+    if (aFilter && !aFilter->pass(p)) {
+      continue;
+    }
+    
+    return p;
   }
   
-  return loadById(sqlite3_column_int64(d->findCommByFreq, 0));
+  return NULL;
 }
   
 PositionedIDVec
