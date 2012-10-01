@@ -105,9 +105,8 @@ FGAIFlightPlan::FGAIFlightPlan()
     start_time      = 0;
     arrivalTime     = 0;
     leg             = 10;
-    gateId          = 0;
     lastNodeVisited = 0;
-    taxiRoute       = 0;
+  //  taxiRoute       = 0;
     wpt_iterator    = waypoints.begin();
     isValid         = true;
 }
@@ -121,9 +120,8 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
   start_time        = 0;
   arrivalTime       = 0;
   leg               = 10;
-  gateId            = 0;
   lastNodeVisited   = 0;
-  taxiRoute         = 0;
+//  taxiRoute         = 0;
 
 
   isValid = parseProperties(filename);
@@ -161,9 +159,8 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
   start_time        = start;
   arrivalTime       = 0;
   leg               = 10;
-  gateId            = 0;
   lastNodeVisited   = 0;
-  taxiRoute         = 0;
+ // taxiRoute         = 0;
 
   if (parseProperties(p)) {
     isValid = true;
@@ -176,16 +173,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 FGAIFlightPlan::~FGAIFlightPlan()
 {
   deleteWaypoints();
-  delete taxiRoute;
-
-// if we're parked at a gate, release it
-  if (gateId >= 0) {
-    FGAirport* apt = (leg >= 7) ? arrival : departure;
-    if (apt) {
-      SG_LOG(SG_AI, SG_INFO, "releasing parking gate " << gateId << " at " << apt->ident());
-      apt->getDynamics()->releaseParking(gateId);
-    }
-  }
+  //delete taxiRoute;
 }
 
 void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
@@ -227,7 +215,6 @@ void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
   isValid = create(ac, dep, arr, leg, alt, speed, lat, lon,
                    firstLeg, radius, fltType, acType, airline, dist);
   wpt_iterator = waypoints.begin();
- 
 }
 
 bool FGAIFlightPlan::parseProperties(const std::string& filename)
@@ -454,14 +441,6 @@ void FGAIFlightPlan::restart()
   wpt_iterator = waypoints.begin();
 }
 
-
-void FGAIFlightPlan::deleteTaxiRoute() 
-{
-  delete taxiRoute;
-  taxiRoute = 0;
-}
-
-
 int FGAIFlightPlan::getRouteIndex(int i) {
   if ((i > 0) && (i < (int)waypoints.size())) {
     return waypoints[i]->getRouteIndex();
@@ -469,7 +448,6 @@ int FGAIFlightPlan::getRouteIndex(int i) {
   else
     return 0;
 }
-
 
 double FGAIFlightPlan::checkTrackLength(string wptName) {
     // skip the first two waypoints: first one is behind, second one is partially done;
@@ -493,4 +471,14 @@ void FGAIFlightPlan::shortenToFirst(unsigned int number, string name)
         eraseLastWaypoint();
     }
     (waypoints.back())->setName((waypoints.back())->getName() + name);
+}
+
+void FGAIFlightPlan::setGate(ParkingAssignment pka)
+{
+  gate = pka;
+}
+
+FGParking* FGAIFlightPlan::getParkingGate()
+{
+  return gate.parking();
 }

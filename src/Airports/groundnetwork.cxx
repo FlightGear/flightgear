@@ -27,6 +27,7 @@
 #include <math.h>
 #include <algorithm>
 #include <fstream>
+#include <map>
 #include <boost/foreach.hpp>
 
 #include <osg/Geode>
@@ -40,6 +41,7 @@
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <Airports/simple.hxx>
 #include <Airports/dynamics.hxx>
@@ -48,6 +50,7 @@
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/performancedata.hxx>
 #include <AIModel/AIFlightPlan.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 #include <ATC/atc_mgr.hxx>
 
@@ -56,51 +59,49 @@
 #include "groundnetwork.hxx"
 
 using std::string;
+using flightgear::NavDataCache;
 
 /***************************************************************************
  * FGTaxiSegment
  **************************************************************************/
 
-FGTaxiSegment::FGTaxiSegment(int aStart, int aEnd, bool isPushBack) :
+FGTaxiSegment::FGTaxiSegment(PositionedID aStart, PositionedID aEnd) :
   startNode(aStart),
   endNode(aEnd),
-  length(0),
-  heading(0),
   isActive(0),
-  isPushBackRoute(isPushBack),
-  start(0),
-  end(0),
   index(0),
   oppositeDirection(0)
 {
 };
 
-bool FGTaxiSegment::bindToNodes(const IndexTaxiNodeMap& nodes)
-{
-  IndexTaxiNodeMap::const_iterator it = nodes.find(startNode);
-  if (it == nodes.end()) {
-    return false;
-  }
-  
-  start = it->second;
-  
-  it = nodes.find(endNode);
-  if (it == nodes.end()) {
-    return false;
-  }
-  
-  end = it->second;
-  
-  start->addSegment(this);
-  double az2;
-  SGGeodesy::inverse(start->geod(), end->geod(), heading, az2, length);
-  return true;
-}
-
 SGGeod FGTaxiSegment::getCenter() const
 {
+  FGTaxiNode* start(getStart()), *end(getEnd());
+  double heading, length, az2;
+  SGGeodesy::inverse(start->geod(), end->geod(), heading, az2, length);
   return SGGeodesy::direct(start->geod(), heading, length * 0.5);
 }
+
+FGTaxiNode* FGTaxiSegment::getEnd() const
+{
+  return static_cast<FGTaxiNode*>(NavDataCache::instance()->loadById(endNode));
+}
+
+FGTaxiNode* FGTaxiSegment::getStart() const
+{
+  return static_cast<FGTaxiNode*>(NavDataCache::instance()->loadById(startNode));
+}
+
+double FGTaxiSegment::getLength() const
+{
+  return dist(getStart()->cart(), getEnd()->cart());
+}
+
+double FGTaxiSegment::getHeading() const
+{
+  return SGGeodesy::courseDeg(getStart()->geod(), getEnd()->geod());
+}
+
 
 void FGTaxiSegment::block(int id, time_t blockTime, time_t now)
 {
@@ -144,80 +145,16 @@ void FGTaxiSegment::unblock(time_t now)
 /***************************************************************************
  * FGTaxiRoute
  **************************************************************************/
-bool FGTaxiRoute::next(int *nde)
+bool FGTaxiRoute::next(PositionedID *nde)
 {
-    //for (intVecIterator i = nodes.begin(); i != nodes.end(); i++)
-    //  cerr << "FGTaxiRoute contains : " << *(i) << endl;
-    //cerr << "Offset from end: " << nodes.end() - currNode << endl;
-    //if (currNode != nodes.end())
-    //  cerr << "true" << endl;
-    //else
-    //  cerr << "false" << endl;
-    //if (nodes.size() != (routes.size()) +1)
-    //  cerr << "ALERT: Misconfigured TaxiRoute : " << nodes.size() << " " << routes.size() << endl;
-
     if (currNode == nodes.end())
         return false;
+  
     *nde = *(currNode);
-    if (currNode != nodes.begin())      // make sure route corresponds to the end node
-        currRoute++;
+
     currNode++;
     return true;
 };
-
-bool FGTaxiRoute::next(int *nde, int *rte)
-{
-    //for (intVecIterator i = nodes.begin(); i != nodes.end(); i++)
-    //  cerr << "FGTaxiRoute contains : " << *(i) << endl;
-    //cerr << "Offset from end: " << nodes.end() - currNode << endl;
-    //if (currNode != nodes.end())
-    //  cerr << "true" << endl;
-    //else
-    //  cerr << "false" << endl;
-    if (nodes.size() != (routes.size()) + 1) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
-               "ALERT: Misconfigured TaxiRoute : " << nodes.
-               size() << " " << routes.size());
-      throw sg_range_exception("misconfigured taxi route");
-    }
-    if (currNode == nodes.end())
-        return false;
-    *nde = *(currNode);
-    //*rte = *(currRoute);
-    if (currNode != nodes.begin())      // Make sure route corresponds to the end node
-    {
-        *rte = *(currRoute);
-        currRoute++;
-    } else {
-        // If currNode points to the first node, this means the aircraft is not on the taxi node
-        // yet. Make sure to return a unique identifyer in this situation though, because otherwise
-        // the speed adjust AI code may be unable to resolve whether two aircraft are on the same
-        // taxi route or not. the negative of the preceding route seems a logical choice, as it is
-        // unique for any starting location.
-        // Note that this is probably just a temporary fix until I get Parking / tower control working.
-        *rte = -1 * *(currRoute);
-    }
-    currNode++;
-    return true;
-};
-
-
-void FGTaxiRoute::rewind(int route)
-{
-    int currPoint;
-    int currRoute;
-    first();
-    do {
-        if (!(next(&currPoint, &currRoute))) {
-            SG_LOG(SG_GENERAL, SG_ALERT,
-                   "Error in rewinding TaxiRoute: current" << currRoute <<
-                   " goal " << route);
-        }
-    } while (currRoute != route);
-}
-
-
-
 
 /***************************************************************************
  * FGGroundNetwork()
@@ -232,7 +169,6 @@ FGGroundNetwork::FGGroundNetwork() :
   parent(NULL)
 {
     hasNetwork = false;
-    foundRoute = false;
     totalDistance = 0;
     maxDistance = 0;
     //maxDepth    = 1000;
@@ -253,52 +189,16 @@ FGGroundNetwork::~FGGroundNetwork()
 // When I fix FGPositioned lifetimes (unloading-at-runtime support), this
 // will need to be re-visited so it can run safely during shutdown.
 #if 0
-    //cerr << "Running Groundnetwork Destructor " << endl;
-    bool saveData = false;
-    ofstream cachefile;
-    if (fgGetBool("/sim/ai/groundnet-cache")) {
-        SGPath cacheData(globals->get_fg_home());
-        cacheData.append("ai");
-        string airport = parent->getId();
-
-        if ((airport) != "") {
-            char buffer[128];
-            ::snprintf(buffer, 128, "%c/%c/%c/",
-                       airport[0], airport[1], airport[2]);
-            cacheData.append(buffer);
-            if (!cacheData.exists()) {
-                cacheData.create_dir(0777);
-            }
-            cacheData.append(airport + "-groundnet-cache.txt");
-            cachefile.open(cacheData.str().c_str());
-            saveData = true;
-        }
-    }
-    cachefile << "[GroundNetcachedata:ref:2011:09:04]" << endl;
-    for (FGTaxiNodeVectorIterator node = nodes.begin();
-            node != nodes.end(); node++) {
-        if (saveData) {
-            cachefile << (*node)->getIndex     () << " "
-            << (*node)->getElevationM (parent->getElevation()*SG_FEET_TO_METER)   << " "
-            << endl;
-        }
-        delete(*node);
-    }
-    nodes.clear();
-    pushBackNodes.clear();
-    for (FGTaxiSegmentVectorIterator seg = segments.begin();
-            seg != segments.end(); seg++) {
-        delete(*seg);
-    }
-    segments.clear();
-    if (saveData) {
-        cachefile.close();
-    }
+  saveElevationCache();
 #endif
+  BOOST_FOREACH(FGTaxiSegment* seg, segments) {
+    delete seg;
+  }
 }
 
-void FGGroundNetwork::saveElevationCache() {
-    //cerr << "Running Groundnetwork Destructor " << endl;
+void FGGroundNetwork::saveElevationCache()
+{
+#if 0
     bool saveData = false;
     ofstream cachefile;
     if (fgGetBool("/sim/ai/groundnet-cache")) {
@@ -331,59 +231,38 @@ void FGGroundNetwork::saveElevationCache() {
     if (saveData) {
         cachefile.close();
     }
+#endif
 }
 
-void FGGroundNetwork::addSegment(FGTaxiSegment* seg)
-{
-    segments.push_back(seg);
-}
-
-void FGGroundNetwork::addNode(FGTaxiNode* node)
-{
-  assert(node);
-  IndexTaxiNodeMap::iterator it = nodes.find(node->getIndex());
-  if (it != nodes.end()) {
-    throw sg_range_exception();
-  }
-  
-  nodes.insert(it, std::make_pair(node->getIndex(), node));
-}
-
-void FGGroundNetwork::addNodes(FGParkingVec * parkings)
-{
-  BOOST_FOREACH(FGParking* parking, *parkings) {
-    addNode(parking);
-  }
-}
-
-void FGGroundNetwork::init()
+void FGGroundNetwork::init(FGAirport* pr)
 {
     if (networkInitialized) {
         FGATCController::init();
         //cerr << "FGground network already initialized" << endl;
         return;
     }
+    
+    parent = pr;
+    assert(parent);
     hasNetwork = true;
     nextSave = 0;
     int index = 1;
   
-  // bind segments to nodes
+    loadSegments();
+  
+  // establish pairing of segments
     BOOST_FOREACH(FGTaxiSegment* segment, segments) {
-      if (!segment->bindToNodes(nodes)) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "unable to bind taxiway segment");
+      segment->setIndex(index++);
+      
+      if (segment->oppositeDirection) {
+        continue; // already establish
       }
       
-      segment->setIndex(index++);
-      if (segment->isPushBack()) {
-        pushBackNodes.push_back(segment->getEnd());
-      }
-    }
-
-    // establish pairing of segments
-    BOOST_FOREACH(FGTaxiSegment* segment, segments) {
-      FGTaxiSegment* opp = segment->getEnd()->getArcTo(segment->getStart());
+      FGTaxiSegment* opp = findSegment(segment->endNode, segment->startNode);
       if (opp) {
-        segment->setOpposite(opp);
+        assert(opp->oppositeDirection == NULL);
+        segment->oppositeDirection = opp;
+        opp->oppositeDirection = segment;
       }
     }
 
@@ -392,6 +271,18 @@ void FGGroundNetwork::init()
     }
   
     networkInitialized = true;
+}
+
+void FGGroundNetwork::loadSegments()
+{
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+// iterate over all ground-net nodes in this airport
+  BOOST_FOREACH(PositionedID node, cache->groundNetNodes(parent->guid(), false)) {
+    // find all segments leaving the node
+    BOOST_FOREACH(PositionedID end, cache->groundNetEdgesFrom(node, false)) {
+      segments.push_back(new FGTaxiSegment(node, end));
+    }
+  }
 }
 
 void FGGroundNetwork::parseCache()
@@ -403,7 +294,7 @@ void FGGroundNetwork::parseCache()
   if (airport.empty()) {
     return;
   }
-  
+#if 0
   char buffer[128];
   ::snprintf(buffer, 128, "%c/%c/%c/",
              airport[0], airport[1], airport[2]);
@@ -437,76 +328,29 @@ void FGGroundNetwork::parseCache()
       }
     }
   }
+#endif
 }
 
-int FGGroundNetwork::findNearestNode(const SGGeod & aGeod)
+int FGGroundNetwork::findNearestNode(const SGGeod & aGeod) const
 {
-    double minDist = HUGE_VAL;
-    int index = -1;
-
-    IndexTaxiNodeMap::iterator i;
-    for (i = nodes.begin(); i != nodes.end(); i++) {
-        double d = SGGeodesy::distanceM(aGeod, i->second->geod());
-        if (d < minDist) {
-            minDist = d;
-            index = i->first;
-        }
-    }
-
-    return index;
+  const bool onRunway = false;
+  return NavDataCache::instance()->findGroundNetNode(parent->guid(), aGeod, onRunway);
 }
 
-int FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGRunway* aRunway)
+int FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGRunway* aRunway) const
 {
-    double minDist = HUGE_VAL;
-    int index = -1;
-
-    IndexTaxiNodeMap::iterator i;
-    for (i = nodes.begin(); i != nodes.end(); i++) {
-        if (!i->second->getIsOnRunway()) {
-            continue;
-        }
-      // check point lies on the runway - i.e that course from aGeod to the
-      // runway end, matches the runway heading
-        if (aRunway) {
-          double course = SGGeodesy::courseDeg(i->second->geod(), aRunway->end());
-          double headingDiff = course - aRunway->headingDeg();
-          SG_NORMALIZE_RANGE(headingDiff, -180.0, 180.0);
-          if (fabs(headingDiff) > 3.0) { // 3 degrees tolerance
-            continue;
-          }
-        }
-      
-        double d = SGGeodesy::distanceM(aGeod, i->second->geod());
-        if (d < minDist) {
-            minDist = d;
-            index = i->first;
-        }
-    }
-
-    return index;
+  const bool onRunway = true;
+  return NavDataCache::instance()->findGroundNetNode(parent->guid(), aGeod, onRunway, aRunway);
 }
 
-FGTaxiNode* FGGroundNetwork::findNode(unsigned int idx)
-{                               
-  IndexTaxiNodeMap::iterator i = nodes.find(idx);
-  if (i == nodes.end()) {
-    return NULL;
-  }
-  
-  return i->second;
+FGTaxiNode* FGGroundNetwork::findNode(PositionedID idx) const
+{
+
+  return static_cast<FGTaxiNode*>(NavDataCache::instance()->loadById(idx));
 }
 
-FGTaxiSegment *FGGroundNetwork::findSegment(unsigned idx)
-{                               /*
-                                   for (FGTaxiSegmentVectorIterator
-                                   itr = segments.begin();
-                                   itr != segments.end(); itr++)
-                                   {
-                                   if (itr->getIndex() == idx)
-                                   return itr->getAddress();
-                                   }
-                                 */
+FGTaxiSegment *FGGroundNetwork::findSegment(unsigned idx) const
+{ 
     if ((idx > 0) && (idx <= segments.size()))
         return segments[idx - 1];
     else {
@@ -515,34 +359,57 @@ FGTaxiSegment *FGGroundNetwork::findSegment(unsigned idx)
     }
 }
 
+FGTaxiSegment* FGGroundNetwork::findSegment(PositionedID from, PositionedID to) const
+{
+  if (from == 0) {
+    return NULL;
+  }
+  
+  // completely boring linear search of segments. Can be improved if/when
+  // this ever becomes a hot-spot
+    BOOST_FOREACH(FGTaxiSegment* seg, segments) {
+      if (seg->startNode != from) {
+        continue;
+      }
+      
+      if ((to == 0) || (seg->endNode == to)) {
+        return seg;
+      }
+    }
+  
+    return NULL; // not found
+}
 
-FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end,
+static int edgePenalty(FGTaxiNode* tn)
+{
+  return (tn->type() == FGPositioned::PARKING ? 10000 : 0) +
+    (tn->getIsOnRunway() ? 1000 : 0);
+}
+
+class ShortestPathData
+{
+public:
+  ShortestPathData() :
+    score(HUGE_VAL)
+  {}
+  
+  double score;
+  FGTaxiNode_ptr previousNode;
+};
+
+FGTaxiRoute FGGroundNetwork::findShortestRoute(PositionedID start, PositionedID end,
         bool fullSearch)
 {
 //implements Dijkstra's algorithm to find shortest distance route from start to end
 //taken from http://en.wikipedia.org/wiki/Dijkstra's_algorithm
-
-    //double INFINITE = 100000000000.0;
-    // initialize scoring values
-    int nParkings = parent->getDynamics()->getNrOfParkings();
     FGTaxiNodeVector unvisited;
+    flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+    std::map<FGTaxiNode*, ShortestPathData> searchData;
   
-    if (fullSearch) {
-      // create vector from map values
-      IndexTaxiNodeMap::iterator i;
-      for (i = nodes.begin(); i != nodes.end(); i++) {
-        unvisited.push_back(i->second);
-      }
-    } else {
-        unvisited = pushBackNodes;
+    BOOST_FOREACH(PositionedID n, cache->groundNetNodes(parent->guid(), !fullSearch)) {
+      unvisited.push_back(findNode(n));
     }
   
-    BOOST_FOREACH(FGTaxiNode* node, unvisited) {
-        node->setPathScore(HUGE_VAL); //infinity by all practical means
-        node->setPreviousNode(0);     //
-        node->setPreviousSeg(0);      //
-    }
-
     FGTaxiNode *firstNode = findNode(start);
     if (!firstNode)
     {
@@ -551,7 +418,7 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end,
                << " at " << ((parent) ? parent->getId() : "<unknown>"));
         return FGTaxiRoute();
     }
-    firstNode->setPathScore(0);
+    searchData[firstNode].score = 0.0;
 
     FGTaxiNode *lastNode = findNode(end);
     if (!lastNode)
@@ -565,11 +432,11 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end,
     while (!unvisited.empty()) {
         FGTaxiNode *best = unvisited.front();
         BOOST_FOREACH(FGTaxiNode* i, unvisited) {
-            if (i->getPathScore() < best->getPathScore()) {
+            if (searchData[i].score < searchData[best].score) {
                 best = i;
             }
         }
-
+      
       // remove 'best' from the unvisited set
         FGTaxiNodeVectorIterator newend =
             remove(unvisited.begin(), unvisited.end(), best);
@@ -579,59 +446,38 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end,
             break;
         }
       
-        BOOST_FOREACH(FGTaxiSegment* seg, best->arcs()) {
-            if (!fullSearch && !seg->isPushBack()) {
-              continue; // inelligible!
-            }
-          
-            FGTaxiNode *tgt = seg->getEnd();
-            double alt = best->getPathScore() + seg->getLength() +
-                    seg->getPenalty(nParkings);
-            if (alt < tgt->getPathScore()) {    // Relax (u,v)
-                tgt->setPathScore(alt);
-                tgt->setPreviousNode(best);
-                tgt->setPreviousSeg(seg);
+        BOOST_FOREACH(PositionedID targetId, cache->groundNetEdgesFrom(best->guid(), !fullSearch)) {
+            FGTaxiNode* tgt = (FGTaxiNode*) cache->loadById(targetId);
+            double edgeLength = dist(best->cart(), tgt->cart());          
+            double alt = searchData[best].score + edgeLength + edgePenalty(tgt);
+            if (alt < searchData[tgt].score) {    // Relax (u,v)
+                searchData[tgt].score = alt;
+                searchData[tgt].previousNode = best;
             }
         } // of outgoing arcs/segments from current best node iteration
     } // of unvisited nodes remaining
 
-    if (lastNode->getPathScore() == HUGE_VAL) {
+    if (searchData[lastNode].score == HUGE_VAL) {
         // no valid route found
         if (fullSearch) {
             SG_LOG(SG_GENERAL, SG_ALERT,
                    "Failed to find route from waypoint " << start << " to "
                    << end << " at " << parent->getId());
         }
-        FGTaxiRoute empty;
-        return empty;
-        //exit(1); //TODO exit more gracefully, no need to stall the whole sim with broken GN's
-    } else {
-        // assemble route from backtrace information
-        intVec nodes, routes;
-        FGTaxiNode *bt = lastNode;
-        while (bt->getPreviousNode() != 0) {
-            nodes.push_back(bt->getIndex());
-            routes.push_back(bt->getPreviousSegment()->getIndex());
-            bt = bt->getPreviousNode();
-        }
-        nodes.push_back(start);
-        reverse(nodes.begin(), nodes.end());
-        reverse(routes.begin(), routes.end());
-
-        return FGTaxiRoute(nodes, routes, lastNode->getPathScore(), 0);
+      
+        return FGTaxiRoute();
     }
-}
-
-int FGTaxiSegment::getPenalty(int nGates)
-{
-    int penalty = 0;
-    if (end->getIndex() < nGates) {
-        penalty += 10000;
+  
+    // assemble route from backtrace information
+    PositionedIDVec nodes;
+    FGTaxiNode *bt = lastNode;
+    while (searchData[bt].previousNode != 0) {
+        nodes.push_back(bt->guid());
+        bt = searchData[bt].previousNode;
     }
-    if (end->getIsOnRunway()) { // For now. In future versions, need to find out whether runway is active.
-        penalty += 1000;
-    }
-    return penalty;
+    nodes.push_back(start);
+    reverse(nodes.begin(), nodes.end());
+    return FGTaxiRoute(nodes, searchData[lastNode].score, 0);
 }
 
 /* ATC Related Functions */
@@ -644,7 +490,8 @@ void FGGroundNetwork::announcePosition(int id,
                                        double radius, int leg,
                                        FGAIAircraft * aircraft)
 {
-    init();
+    assert(parent);
+  
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
@@ -1345,7 +1192,7 @@ void FGGroundNetwork::render(bool visible)
                 } else {
                     elevationStart = ((i)->getAircraft()->_getAltitude());
                 }
-                double elevationEnd   = segments[pos]->getEnd()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
+                double elevationEnd   = segments[pos]->getEnd()->getElevationM();
                 //cerr << "Using elevation " << elevationEnd << endl;
 
                 if ((elevationEnd == 0) || (elevationEnd = parent->getElevation())) {
@@ -1406,8 +1253,8 @@ void FGGroundNetwork::render(bool visible)
                     obj_trans->setDataVariance(osg::Object::STATIC);
 
                     // Experimental: Calculate slope here, based on length, and the individual elevations
-                    double elevationStart = segments[k]->getStart()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
-                    double elevationEnd   = segments[k]->getEnd  ()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
+                    double elevationStart = segments[k]->getStart()->getElevationM();
+                    double elevationEnd   = segments[k]->getEnd  ()->getElevationM();
                     if ((elevationStart == 0)  || (elevationStart == parent->getElevation())) {
                         SGGeod center2 = segments[k]->getStart()->geod();
                         center2.setElevationM(SG_MAX_ELEVATION_M);

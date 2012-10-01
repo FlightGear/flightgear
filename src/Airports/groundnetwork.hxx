@@ -72,57 +72,40 @@ typedef BlockList::iterator BlockListIterator;
 class FGTaxiSegment
 {
 private:
-    int startNode;
-    int endNode;
-    double length;
-    double heading;
+    const PositionedID startNode;
+    const PositionedID endNode;
+    
     bool isActive;
-    bool isPushBackRoute;
     BlockList blockTimes;
-    FGTaxiNode *start;
-    FGTaxiNode *end;
+
     int index;
     FGTaxiSegment *oppositeDirection;
 
+    friend class FGGroundNetwork;
 public:
-  FGTaxiSegment(int start, int end, bool isPushBack);
+    FGTaxiSegment(PositionedID start, PositionedID end);
   
     void setIndex        (int val) {
         index     = val;
     };
-
-    void setOpposite(FGTaxiSegment *opp) {
-        oppositeDirection = opp;
-    };
-
-    bool bindToNodes(const IndexTaxiNodeMap& nodes);
   
     void setDimensions(double elevation);
     void block(int id, time_t blockTime, time_t now);
     void unblock(time_t now); 
     bool hasBlock(time_t now);
 
-    FGTaxiNode * getEnd() {
-        return end;
-    };
-    FGTaxiNode * getStart() {
-        return start;
-    };
-    double getLength() {
-        return length;
-    };
-    int getIndex() {
-        return index;
-    };
+    FGTaxiNode * getEnd() const;
+    FGTaxiNode * getStart() const;
+  
+    double getLength() const;
   
     // compute the center of the arc
     SGGeod getCenter() const;
   
-    double getHeading()   {
-        return heading;
-    };
-    bool isPushBack() {
-        return isPushBackRoute;
+    double getHeading() const;
+    
+    int getIndex() {
+      return index;
     };
 
     int getPenalty(int nGates);
@@ -130,7 +113,7 @@ public:
     bool operator<(const FGTaxiSegment &other) const {
         return index < other.index;
     };
-    //bool hasSmallerHeadingDiff (const FGTaxiSegment &other) const { return headingDiff < other.headingDiff; };
+
     FGTaxiSegment *opposite() {
         return oppositeDirection;
     };
@@ -150,60 +133,45 @@ typedef std::vector<int>::iterator intVecIterator;
 class FGTaxiRoute
 {
 private:
-    intVec nodes;
-    intVec routes;
+    PositionedIDVec nodes;
     double distance;
-//  int depth;
-    intVecIterator currNode;
-    intVecIterator currRoute;
+    PositionedIDVec::iterator currNode;
 
 public:
     FGTaxiRoute() {
         distance = 0;
         currNode = nodes.begin();
-        currRoute = routes.begin();
     };
-    FGTaxiRoute(intVec nds, intVec rts, double dist, int dpth) {
+  
+    FGTaxiRoute(const PositionedIDVec& nds, double dist, int dpth) {
         nodes = nds;
-        routes = rts;
         distance = dist;
         currNode = nodes.begin();
-        currRoute = routes.begin();
-//    depth = dpth;
     };
 
     FGTaxiRoute& operator= (const FGTaxiRoute &other) {
         nodes = other.nodes;
-        routes = other.routes;
         distance = other.distance;
-//    depth = other.depth;
         currNode = nodes.begin();
-        currRoute = routes.begin();
         return *this;
     };
 
     FGTaxiRoute(const FGTaxiRoute& copy) :
             nodes(copy.nodes),
-            routes(copy.routes),
             distance(copy.distance),
-//    depth(copy.depth),
-            currNode(nodes.begin()),
-            currRoute(routes.begin())
+            currNode(nodes.begin())
     {};
 
     bool operator< (const FGTaxiRoute &other) const {
         return distance < other.distance;
     };
     bool empty () {
-        return nodes.begin() == nodes.end();
+        return nodes.empty();
     };
-    bool next(int *nde);
-    bool next(int *nde, int *rte);
-    void rewind(int legNr);
-
+    bool next(PositionedID *nde);
+  
     void first() {
         currNode = nodes.begin();
-        currRoute = routes.begin();
     };
     int size() {
         return nodes.size();
@@ -211,8 +179,6 @@ public:
     int nodesLeft() {
         return nodes.end() - currNode;
     };
-
-//  int getDepth() { return depth; };
 };
 
 typedef std::vector<FGTaxiRoute> TaxiRouteVector;
@@ -231,12 +197,8 @@ private:
     int count;
     int version;
   
-    IndexTaxiNodeMap nodes;
-    FGTaxiNodeVector pushBackNodes;
-  
     FGTaxiSegmentVector segments;
 
-    TaxiRouteVector routes;
     TrafficVector activeTraffic;
     TrafficVectorIterator currTraffic;
 
@@ -255,18 +217,16 @@ private:
 
 
     void parseCache();
+  
+    void loadSegments();
 public:
     FGGroundNetwork();
     ~FGGroundNetwork();
-
-    void addNode   (FGTaxiNode* node);
-    void addNodes  (FGParkingVec *parkings);
-    void addSegment(FGTaxiSegment* seg);
-    void setVersion (int v) { version = v;};
     
+    void setVersion (int v) { version = v;};
     int getVersion() { return version; };
 
-    void init();
+    void init(FGAirport* pr);
     bool exists() {
         return hasNetwork;
     };
@@ -274,21 +234,21 @@ public:
         towerController = twrCtrlr;
     };
 
-    int findNearestNode(const SGGeod& aGeod);
-    int findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL);
+    int findNearestNode(const SGGeod& aGeod) const;
+    int findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL) const;
 
-    FGTaxiNode *findNode(unsigned idx);
-    FGTaxiSegment *findSegment(unsigned idx);
-    FGTaxiRoute findShortestRoute(int start, int end, bool fullSearch=true);
-    //void trace(FGTaxiNode *, int, int, double dist);
-
-    int getNrOfNodes() {
-        return nodes.size();
-    };
-
-    void setParent(FGAirport *par) {
-        parent = par;
-    };
+    FGTaxiNode *findNode(PositionedID idx) const;
+    FGTaxiSegment *findSegment(unsigned idx) const;
+  
+    /**
+     * Find the taxiway segment joining two (ground-net) nodes. Returns
+     * NULL if no such segment exists.
+     * It is permitted to pass 0 for the 'to' ID, indicating that any
+     * segment originating at 'from' is acceptable.
+     */
+    FGTaxiSegment* findSegment(PositionedID from, PositionedID to) const;
+  
+    FGTaxiRoute findShortestRoute(PositionedID start, PositionedID end, bool fullSearch=true);
 
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon, double hdg, double spd, double alt,

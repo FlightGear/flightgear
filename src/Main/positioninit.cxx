@@ -169,7 +169,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
     return false;
   }
   
-  int gateID;
+  ParkingAssignment pka;
   double radius = fgGetDouble("/sim/dimensions/radius-m");
   if ((parkpos == string("AVAILABLE")) && (radius > 0)) {
     string fltType;
@@ -203,27 +203,25 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
     }
     
     string acType; // Currently not used by findAvailable parking, so safe to leave empty.
-    gateID = dcs->getAvailableParking(radius, fltType, acType, acOperator);
-    if (gateID >=0 ) {
+    pka = dcs->getAvailableParking(radius, fltType, acType, acOperator);
+    if (pka.isValid()) {
       fgGetString("/sim/presets/parkpos");
-      fgSetString("/sim/presets/parkpos", dcs->getParking(gateID)->getName());
+      fgSetString("/sim/presets/parkpos", pka.parking()->getName());
     } else {
       SG_LOG( SG_GENERAL, SG_ALERT,
              "Failed to find a suitable parking at airport " << id );
       return false;
     }
   } else {
-    gateID = dcs->findParkingByName(parkpos);
-    if (gateID < 0) {
+    pka = dcs->getParkingByName(parkpos);
+    if (!pka.isValid()) {
       SG_LOG( SG_GENERAL, SG_ALERT,
                "Failed to find a parking at airport " << id << ":" << parkpos);
       return false;
     }
   }
   
-  FGParking* parking = dcs->getParking(gateID);
-  parking->setAvailable(false);
-  fgApplyStartOffset(parking->geod(), parking->getHeading());
+  fgApplyStartOffset(pka.parking()->geod(), pka.parking()->getHeading());
   return true;
 }
 

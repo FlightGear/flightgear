@@ -107,6 +107,11 @@ double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double d
     return speed;
 }
 
+double PerformanceData::decelerationOnGround() const
+{
+  return _deceleration * BRAKE_SETTING;
+}
+
 double PerformanceData::actualBankAngle(FGAIAircraft* ac, double tgt_roll, double dt) {
     // check maximum bank angle
     if (fabs(tgt_roll) > _maxbank)

@@ -19,8 +19,13 @@
 
 #include <cstdlib>
 #include <cstring> // for strcmp
+#include <boost/foreach.hpp>
 
 #include "dynamicloader.hxx"
+
+#include <Navaids/NavDataCache.hxx>
+#include <Airports/dynamics.hxx>
+#include <Airports/simple.hxx>
 
 /*****************************************************************************
  * Helper function for parsing position string
@@ -53,8 +58,25 @@ void  FGAirportDynamicsXMLLoader::startXML () {
   //cout << "FGAirportDynamicsLoader::Start XML" << endl;
 }
 
-void  FGAirportDynamicsXMLLoader::endXML () {
-  //cout << "End XML" << endl;
+void  FGAirportDynamicsXMLLoader::endXML ()
+{
+  std::map<PositionedID, int>::iterator it;
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  
+  for (it = _parkingPushbacks.begin(); it != _parkingPushbacks.end(); ++it) {
+    std::map<int, PositionedID>::iterator j = _idMap.find(it->second);
+    if (j == _idMap.end()) {
+      SG_LOG(SG_GENERAL, SG_WARN, "bad groundnet, no node for index:" << it->first);
+      continue;
+    }
+    
+    cache->setParkingPushBackRoute(it->first, j->second);
+  }
+  
+  BOOST_FOREACH(PositionedID id, _unreferencedNodes) {
+    SG_LOG(SG_GENERAL, SG_WARN, "unreferenced groundnet node:" << id);
+  }
+  
 }
 
 void FGAirportDynamicsXMLLoader::startParking(const XMLAttributes &atts)
@@ -100,10 +122,14 @@ void FGAirportDynamicsXMLLoader::startParking(const XMLAttributes &atts)
  
   SGGeod pos(SGGeod::fromDeg(processPosition(lon), processPosition(lat)));
   
-  FGParking* pk = new FGParking(0, index, pos, heading, radius,
-                                gateName + gateNumber, type, airlineCodes);
-  pk->setPushBackPoint(pushBackRoute);
-  _dynamics->addParking(pk);
+  PositionedID guid = flightgear::NavDataCache::instance()->insertParking(gateName + gateNumber, pos,
+                                                      _dynamics->parent()->guid(),
+                                                      heading, radius, type, airlineCodes);
+  if (pushBackRoute > 0) {
+    _parkingPushbacks[guid] = pushBackRoute;
+  }
+  
+  _idMap[index] = guid;
 }
 
 void FGAirportDynamicsXMLLoader::startNode(const XMLAttributes &atts)
@@ -140,9 +166,15 @@ void FGAirportDynamicsXMLLoader::startNode(const XMLAttributes &atts)
     }
 	}
   
+  if (_idMap.find(index) != _idMap.end()) {
+    SG_LOG(SG_GENERAL, SG_WARN, "duplicate ground-net index:" << index);
+  }
+  
   SGGeod pos(SGGeod::fromDeg(processPosition(lon), processPosition(lat)));
-  FGTaxiNode* taxiNode = new FGTaxiNode(0, index, pos, onRunway, holdPointType);
-  _dynamics->getGroundNetwork()->addNode(taxiNode);
+  PositionedID guid = flightgear::NavDataCache::instance()->insertTaxiNode(pos,
+    _dynamics->parent()->guid(), holdPointType, onRunway);
+  _idMap[index] = guid;
+  _unreferencedNodes.insert(guid);
 }
 
 void FGAirportDynamicsXMLLoader::startArc(const XMLAttributes &atts)
@@ -161,7 +193,22 @@ void FGAirportDynamicsXMLLoader::startArc(const XMLAttributes &atts)
 	    isPushBackRoute = std::atoi(atts.getValue(i)) != 0;
 	}
   
-  _dynamics->getGroundNetwork()->addSegment(new FGTaxiSegment(begin, end, isPushBackRoute));
+  IntPair e(begin, end);
+  if (_arcSet.find(e) != _arcSet.end()) {
+    SG_LOG(SG_GENERAL, SG_WARN, _dynamics->parent()->ident() << " ground-net: skipping duplicate edge:" << begin << "->" << end);
+    return;
+  }
+  
+  _arcSet.insert(e);
+  flightgear::NavDataCache::instance()->insertGroundnetEdge(_dynamics->parent()->guid(),
+                                                            _idMap[begin], _idMap[end]);
+  
+  _unreferencedNodes.erase(_idMap[begin]);
+  _unreferencedNodes.erase(_idMap[end]);
+  
+  if (isPushBackRoute) {
+    flightgear::NavDataCache::instance()->markGroundnetAsPushback(_idMap[end]);
+  }
 }
 
 void FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttributes &atts)

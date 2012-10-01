@@ -53,6 +53,7 @@
 #include <Navaids/routePath.hxx>
 #include <Navaids/procedure.hxx>
 #include <Navaids/airways.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 using namespace flightgear;
 
@@ -1339,13 +1340,16 @@ static naRef f_airport_parking(naContext c, naRef me, int argc, naRef* args)
   }
   
   FGAirportDynamics* dynamics = apt->getDynamics();
-  for (int i=0; i<dynamics->getNrOfParkings(); ++i) {
-    FGParking* park = dynamics->getParking(i);
-  // filter out based on availability and type
-    if (onlyAvailable && !park->isAvailable()) {
+  PositionedIDVec parkings = flightgear::NavDataCache::instance()->airportItemsOfType(apt->guid(),
+                                                                                      FGPositioned::PARKING);
+  
+  BOOST_FOREACH(PositionedID parking, parkings) {
+    // filter out based on availability and type
+    if (onlyAvailable && !dynamics->isParkingAvailable(parking)) {
       continue;
     }
     
+    FGParking* park = dynamics->getParking(parking);
     if (!type.empty() && (park->getType() != type)) {
       continue;
     }

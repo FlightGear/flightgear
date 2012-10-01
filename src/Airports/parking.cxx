@@ -31,24 +31,23 @@
 #include <string>
 
 #include "parking.hxx"
-#include "groundnetwork.hxx"
 
 /*********************************************************************************
  * FGParking
  ********************************************************************************/
 
-FGParking::FGParking(PositionedID aGuid, int index, const SGGeod& pos,
+FGParking::FGParking(PositionedID aGuid, const SGGeod& pos,
                      double aHeading, double aRadius,
                      const std::string& name, const std::string& aType,
-                     const std::string& codes) :
-  FGTaxiNode(aGuid, index, pos, false, 0),
+                     const std::string& codes,
+                     PositionedID pushBackNode) :
+  FGTaxiNode(aGuid, pos, false, 0),
   heading(aHeading),
   radius(aRadius),
   parkingName(name),
   type(aType),
   airlineCodes(codes),
-  available(true),
-  pushBackPoint(0)
+  pushBackPoint(pushBackNode)
 {
 }
 

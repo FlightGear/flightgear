@@ -38,42 +38,33 @@
 
 #include "gnnode.hxx"
 
-class FGTaxiRoute;
-
 
 class FGParking : public FGTaxiNode
 {
 private:
-  double heading;
-  double radius;
-  std::string parkingName;
-  std::string type;
-  std::string airlineCodes;
- 
-  bool available;
-  int pushBackPoint;
-  std::auto_ptr<FGTaxiRoute> pushBackRoute;
+  const double heading;
+  const double radius;
+  const std::string parkingName;
+  const std::string type;
+  const std::string airlineCodes;
+  const PositionedID pushBackPoint;
 
   SG_DISABLE_COPY(FGParking);
 public:
-  FGParking(PositionedID aGuid, int index, const SGGeod& pos,
+  FGParking(PositionedID aGuid, const SGGeod& pos,
             double heading, double radius,
             const std::string& name, const std::string& type,
-            const std::string& codes);
+            const std::string& codes,
+            PositionedID pushBackNode);
   virtual ~FGParking();
-
+#if 0
   void setHeading  (double hdg)  { heading     = hdg;  };
   void setRadius   (double rad)  { radius      = rad;  };
 
   void setName     (const std::string& name) { parkingName = name; };
   void setType     (const std::string& tpe)  { type        = tpe;  };
   void setCodes    (const std::string& codes){ airlineCodes= codes;};
-
-  void setPushBackRoute(std::auto_ptr<FGTaxiRoute> val) { pushBackRoute = val; };
-  void setPushBackPoint(int val)          { pushBackPoint = val; };
-
-  bool isAvailable ()   const { return available;};
-  void setAvailable(bool val) { available = val; };
+#endif
   
   double getHeading  () const { return heading;     };
   double getRadius   () const { return radius;      };
@@ -81,8 +72,6 @@ public:
   std::string getType     () const { return type;        };
   std::string getCodes    () const { return airlineCodes;};
   std::string getName     () const { return parkingName; };
-
-  FGTaxiRoute * getPushBackRoute () { return pushBackRoute.get(); };
 
   int getPushBackPoint () { return pushBackPoint; };
 

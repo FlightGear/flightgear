@@ -1363,7 +1363,7 @@ void FGStartupController::render(bool visible)
                     } else {
                         elevationStart = ((i)->getAircraft()->_getAltitude() * SG_FEET_TO_METER);
                     }
-                    double elevationEnd   = segment->getEnd()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
+                    double elevationEnd   = segment->getEnd()->getElevationM();
                     if ((elevationEnd == 0) || (elevationEnd == parent->getElevation())) {
                         SGGeod center2 = end;
                         center2.setElevationM(SG_MAX_ELEVATION_M);
@@ -1425,8 +1425,8 @@ void FGStartupController::render(bool visible)
                         obj_trans->setDataVariance(osg::Object::STATIC);
                         FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(k);
 
-                        double elevationStart = segment->getStart()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
-                        double elevationEnd   = segment->getEnd  ()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
+                        double elevationStart = segment->getStart()->getElevationM();
+                        double elevationEnd   = segment->getEnd  ()->getElevationM();
                         if ((elevationStart == 0) || (elevationStart == parent->getElevation())) {
                             SGGeod center2 = segment->getStart()->geod();
                             center2.setElevationM(SG_MAX_ELEVATION_M);

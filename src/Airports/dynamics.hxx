@@ -22,6 +22,8 @@
 #ifndef _AIRPORT_DYNAMICS_HXX_
 #define _AIRPORT_DYNAMICS_HXX_
 
+#include <set>
+
 #include <ATC/trafficcontrol.hxx>
 #include "parking.hxx"
 #include "groundnetwork.hxx"
@@ -31,12 +33,38 @@
 class FGAirport;
 class FGEnvironment;
 
+class ParkingAssignment
+{
+public:
+  ParkingAssignment();
+  ~ParkingAssignment();
+  
+// create a parking assignment (and mark it as unavailable)
+  ParkingAssignment(FGParking* pk, FGAirport* apt);
+  
+  ParkingAssignment(const ParkingAssignment& aOther);
+  void operator=(const ParkingAssignment& aOther);
+  
+  bool isValid() const;
+  FGParking* parking() const;
+  
+  void release();
+private:
+  void clear();
+
+  class ParkingAssignmentPrivate;
+  ParkingAssignmentPrivate* _sharedData;
+};
+
 class FGAirportDynamics {
 
 private:
     FGAirport* _ap;
 
-    FGParkingVec         parkings;
+    typedef std::set<PositionedID> ParkingSet;
+    // if a parking item is in this set, it is occupied
+    ParkingSet occupiedParkings;
+
     FGRunwayPreference   rwyPrefs;
     FGStartupController  startupController;
     FGGroundNetwork      groundNetwork;
@@ -63,8 +91,8 @@ private:
     bool innerGetActiveRunway(const std::string &trafficType, int action, std::string &runway, double heading);
     std::string chooseRwyByHeading(stringVec rwys, double heading);
 
-  int innerGetAvailableParking(double radius, const std::string & flType,
-                               const std::string & acType, const std::string & airline,
+    FGParking* innerGetAvailableParking(double radius, const std::string & flType,
+                               const std::string & airline,
                                bool skipEmptyAirlineCode);
 public:
     FGAirportDynamics(FGAirport* ap);
@@ -98,28 +126,28 @@ public:
     { return _ap; }
   
     void getActiveRunway(const string& trafficType, int action, string& runway, double heading);
-
-    void addParking(FGParking* park);
     
     /**
      * retrieve an available parking by GateID, or -1 if no suitable
      * parking location could be found.
      */
-    int getAvailableParking(double radius, const std::string& fltype,
+    ParkingAssignment getAvailableParking(double radius, const std::string& fltype,
                           const std::string& acType, const std::string& airline);
 
-    FGParking *getParking(int i);
-    void releaseParking(int id);
-    std::string getParkingName(int i);
-    int getNrOfParkings() {
-        return parkings.size();
-    };
+    void setParkingAvailable(PositionedID guid, bool available);
+  
+    bool isParkingAvailable(PositionedID parking) const;
+  
+    FGParking *getParking(PositionedID i) const;
+    void releaseParking(PositionedID id);
+    std::string getParkingName(PositionedID i) const;
 
     /**
      * Find a parking gate index by name. Note names are often not unique
-     * in our data, so will return the first match.
+     * in our data, so will return the first match. If the parking is found,
+     * it will be marked as in-use (unavailable)
      */
-    int findParkingByName(const std::string& name) const;
+    ParkingAssignment getParkingByName(const std::string& name) const;
 
     // ATC related functions.
     FGStartupController    *getStartupController()    {

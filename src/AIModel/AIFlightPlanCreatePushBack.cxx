@@ -49,7 +49,6 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     double vTaxi = ac->getPerformance()->vTaxi();
     double vTaxiBackward = vTaxi * (-2.0/3.0);
     double vTaxiReduced  = vTaxi * (2.0/3.0);
-    FGTaxiRoute *pushBackRoute;
     // Active runway can be conditionally set by ATC, so at the start of a new flight, this
     // must be reset.
     activeRunway.clear();
@@ -63,9 +62,9 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
   
   // establish the parking position / gate if required
     if (firstFlight) {
-      gateId = dep->getDynamics()->getAvailableParking(radius, fltType,
+      gate = dep->getDynamics()->getAvailableParking(radius, fltType,
                                                        aircraftType, airline);
-      if (gateId < 0) {
+      if (!gate.isValid()) {
         SG_LOG(SG_AI, SG_WARN, "Warning: Could not find parking for a " <<
                aircraftType <<
                " of flight type " << fltType <<
@@ -73,47 +72,47 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                " at airport     " << dep->getId());
         return false;
       }
-    } else {
-      dep->getDynamics()->getParking(gateId);
     }
   
-    if (gateId < 0) {
+    if (!gate.isValid()) {
         createPushBackFallBack(ac, firstFlight, dep,
                                radius, fltType, aircraftType, airline);
         return true;
 
     }
-
-    FGParking *parking = dep->getDynamics()->getParking(gateId);
-    int pushBackNode = parking->getPushBackPoint();
-
-    pushBackRoute = parking->getPushBackRoute();
-    if ((pushBackNode > 0) && (pushBackRoute == 0)) {  // Load the already established route for this gate
-        int node, rte;
-        FGTaxiRoute route;
-        //cerr << "Creating push-back for " << gateId << " (" << parking->getName() << ") using push-back point " << pushBackNode << endl;
-        route = dep->getDynamics()->getGroundNetwork()->findShortestRoute(gateId, pushBackNode, false);
-        parking->setPushBackRoute(std::auto_ptr<FGTaxiRoute>(new FGTaxiRoute(route)));
-
-        pushBackRoute = parking->getPushBackRoute();
-        int size = pushBackRoute->size();
+  
+    FGGroundNetwork* groundNet = dep->getDynamics()->getGroundNetwork();
+    FGParking *parking = gate.parking();
+    if (parking && parking->getPushBackPoint() > 0) {
+        FGTaxiRoute route = groundNet->findShortestRoute(parking->guid(), parking->getPushBackPoint(), false);
+      
+        int size = route.size();
         if (size < 2) {
-            SG_LOG(SG_AI, SG_ALERT, "Push back route from gate " << gateId << " has only " << size << " nodes.");
-            SG_LOG(SG_AI, SG_ALERT, "Using  " << pushBackNode);
+            SG_LOG(SG_AI, SG_ALERT, "Push back route from gate " << parking->ident() << " has only " << size << " nodes.");
+            SG_LOG(SG_AI, SG_ALERT, "Using  " << parking->getPushBackPoint());
         }
-        pushBackRoute->first();
-        while (pushBackRoute->next(&node, &rte))
+        
+        route.first();
+        PositionedID node, previous= 0;
+      
+        while (route.next(&node))
         {
-            //FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findSegment(node)->getEnd();
             char buffer[10];
-            snprintf (buffer, 10, "%d", node);
-            FGTaxiNode *tn = dep->getDynamics()->getGroundNetwork()->findNode(node);
-            //ids.pop_back();
-            //wpt = new waypoint;
+            snprintf (buffer, 10, "%lld", node);
+            FGTaxiNode *tn = groundNet->findNode(node);
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), tn->geod(), dep->getElevation(), vTaxiBackward);
-
-            wpt->setRouteIndex(rte);
+          
+            if (previous) {
+              FGTaxiSegment* segment = groundNet->findSegment(previous, node);
+              wpt->setRouteIndex(segment->getIndex());
+            } else {
+              // not on the route yet, make up a unique segment ID
+              int x = (int) tn->guid();
+              wpt->setRouteIndex(x);
+            }
+          
             pushBackWaypoint(wpt);
+            previous = node;
         }
         // some special considerations for the last point:
         waypoints.back()->setName(string("PushBackPoint"));
@@ -123,36 +122,32 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         ac->setTaxiClearanceRequest(false);
         double az2 = 0.0;
 
-        //cerr << "Creating final push forward point for gate " << gateId << endl;
-        FGTaxiNode *tn = dep->getDynamics()->getGroundNetwork()->findNode(gateId);
-        // there aren't any routes for this parking.
-        // in cases like these we should flag the gate as being inoperative and return false
-        if (tn->arcs().empty()) {
-            SG_LOG(SG_AI, SG_ALERT, "Gate " << gateId << "doesn't seem to have routes associated with it.");
-            parking->setAvailable(false);
-            return false;
-        }
-      
-        FGTaxiSegment* pushForwardSegment = tn->arcs().front();
-        lastNodeVisited = pushForwardSegment->getEnd()->getIndex();
-        double distance = pushForwardSegment->getLength();
+      FGTaxiSegment* pushForwardSegment = dep->getDynamics()->getGroundNetwork()->findSegment(parking->guid(), 0);
+      // there aren't any routes for this parking.
+      if (!pushForwardSegment) {
+          SG_LOG(SG_AI, SG_ALERT, "Gate " << parking->ident() << "doesn't seem to have routes associated with it.");
+          return false;
+      }
 
-        double parkingHeading = parking->getHeading();
-      
-        for (int i = 1; i < 10; i++) {
-            SGGeod pushForwardPt;
-            SGGeodesy::direct(parking->geod(), parkingHeading,
-                              ((i / 10.0) * distance), pushForwardPt, az2);
-            char buffer[16];
-            snprintf(buffer, 16, "pushback-%02d", i);
-            FGAIWaypoint *wpt = createOnGround(ac, string(buffer), pushForwardPt, dep->getElevation(), vTaxiReduced);
+      lastNodeVisited = pushForwardSegment->getEnd()->getIndex();
+      double distance = pushForwardSegment->getLength();
 
-            wpt->setRouteIndex(pushForwardSegment->getIndex());
-            pushBackWaypoint(wpt);
-        }
-        // cerr << "Done " << endl;
-        waypoints.back()->setName(string("PushBackPoint"));
-        // cerr << "Done assinging new name" << endl;
+      double parkingHeading = parking->getHeading();
+    
+      for (int i = 1; i < 10; i++) {
+          SGGeod pushForwardPt;
+          SGGeodesy::direct(parking->geod(), parkingHeading,
+                            ((i / 10.0) * distance), pushForwardPt, az2);
+          char buffer[16];
+          snprintf(buffer, 16, "pushback-%02d", i);
+          FGAIWaypoint *wpt = createOnGround(ac, string(buffer), pushForwardPt, dep->getElevation(), vTaxiReduced);
+
+          wpt->setRouteIndex(pushForwardSegment->getIndex());
+          pushBackWaypoint(wpt);
+      }
+
+      waypoints.back()->setName(string("PushBackPoint"));
+      // cerr << "Done assinging new name" << endl;
     }
 
     return true;

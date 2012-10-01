@@ -46,6 +46,7 @@ public:
     inline double vTouchdown       () { return _vTouchdown; };
     inline double vCruise          () { return _vCruise; };
     
+    double decelerationOnGround() const;
 private:
     double _acceleration;
     double _deceleration;

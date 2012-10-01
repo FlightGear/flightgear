@@ -20,6 +20,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -32,6 +33,8 @@
 #include "simple.hxx"
 #include "runwayprefs.hxx"
 
+#include <Navaids/NavDataCache.hxx>
+
 using std::string;
 
 XMLLoader::XMLLoader() {}
@@ -39,10 +42,32 @@ XMLLoader::~XMLLoader() {}
 
 void XMLLoader::load(FGAirportDynamics* d)
 {
-  FGAirportDynamicsXMLLoader visitor(d);
-  if(loadAirportXMLDataIntoVisitor(d->parent()->ident(), "groundnet", visitor)) {
-    d->init();
+  SGPath path;
+  if (!findAirportData(d->parent()->ident(), "groundnet", path)) {
+    return;
   }
+
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  if (!cache->isCachedFileModified(path)) {
+    return;
+  }
+  
+  SG_LOG(SG_GENERAL, SG_INFO, "reading groundnet data from " << path);
+  SGTimeStamp t;
+  try {
+    cache->beginTransaction();
+    t.stamp();
+    {
+      FGAirportDynamicsXMLLoader visitor(d);
+      readXML(path.str(), visitor);
+    } // ensure visitor is destroyed so its destructor runs
+    cache->stampCacheFile(path);
+    cache->commitTransaction();
+  } catch (sg_exception& e) {
+    cache->abortTransaction();
+  }
+
+  SG_LOG(SG_GENERAL, SG_INFO, "parsing XML took " << t.elapsedMSec());
 }
 
 void XMLLoader::load(FGRunwayPreference* p) {

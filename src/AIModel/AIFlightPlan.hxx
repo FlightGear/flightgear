@@ -25,6 +25,8 @@
 #include <simgear/compiler.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
+#include <Navaids/positioned.hxx>
+#include <Airports/dynamics.hxx>
 
 // forward decls
 class FGTaxiRoute;
@@ -139,8 +141,7 @@ public:
 
   void setLeg(int val) { leg = val;}
   void setTime(time_t st) { start_time = st; }
-  int getGate() const { return gateId; }
-  void setGate(int id) { gateId = id; };
+
 
   double getLeadInAngle() const { return leadInAngle; }
   const std::string& getRunway() const;
@@ -149,9 +150,9 @@ public:
   bool getRepeat(void) const { return repeat; }
   void restart(void);
   int getNrOfWayPoints() { return waypoints.size(); }
-  int getRouteIndex(int i); // returns the AI related index of this current routes. 
-  FGTaxiRoute *getTaxiRoute() { return taxiRoute; }
-  void deleteTaxiRoute();
+
+  int getRouteIndex(int i); // returns the AI related index of this current routes.
+
   std::string getRunway() { return activeRunway; }
   bool isActive(time_t time) {return time >= this->getStartTime();}
 
@@ -172,6 +173,8 @@ public:
   
   void shortenToFirst(unsigned int number, std::string name);
 
+  void setGate(ParkingAssignment pka);
+  FGParking* getParkingGate();
 private:
   FGAIFlightPlan *sid;
   typedef std::vector <FGAIWaypoint*> wpt_vector_type;
@@ -188,9 +191,9 @@ private:
   time_t start_time;
   time_t arrivalTime;       // For AI/ATC purposes.
   int leg;
-  int gateId, lastNodeVisited;
+  ParkingAssignment gate;
+  PositionedID lastNodeVisited;
   std::string activeRunway;
-  FGTaxiRoute *taxiRoute;
   std::string name;
   bool isValid;
   FGAirportRef departure, arrival;

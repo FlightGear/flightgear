@@ -30,6 +30,7 @@
 #include <Navaids/positioned.hxx>
     
 class SGPath;
+class FGRunway;
 
 namespace flightgear
 {
@@ -84,6 +85,16 @@ public:
   string_list readStringListProperty(const std::string& key);
   void writeStringListProperty(const std::string& key, const string_list& values);
   
+// transaction API wrappers
+  void beginTransaction();
+  void commitTransaction();
+  void abortTransaction();
+  
+  /**
+   * retrieve an FGPositioned from the cache.
+   * This may be trivial if the object is previously loaded, or require actual
+   * disk IO.
+   */
   FGPositioned* loadById(PositionedID guid);
   
   PositionedID insertAirport(FGPositioned::Type ty, const std::string& ident,
@@ -112,8 +123,25 @@ public:
   
   PositionedID createUserWaypoint(const std::string& ident, const SGGeod& aPos);
   
+  PositionedID insertParking(const std::string& name, const SGGeod& aPos,
+                             PositionedID aAirport,
+                             double aHeading, int aRadius, const std::string& aAircraftType,
+                             const std::string& aAirlines);
+  
+  void setParkingPushBackRoute(PositionedID parking, PositionedID pushBackNode);
+  
+  PositionedID insertTaxiNode(const SGGeod& aPos, PositionedID aAirport, int aHoldType, bool aOnRunway);
+  
+  void insertGroundnetEdge(PositionedID aAirport, PositionedID from, PositionedID to);
+  
+  /// update the metar flag associated with an airport
   void setAirportMetar(const std::string& icao, bool hasMetar);
   
+  /**
+   * Modify the position of an existing item.
+   * Use with care, since loaded instances will not be updated (at present -
+   * this behaviour could in theorey be improved)
+   */
   void updatePosition(PositionedID item, const SGGeod &pos);
   
   FGPositioned::List findAllWithIdent(const std::string& ident,
@@ -125,15 +153,35 @@ public:
                                       const SGGeod& aPos, FGPositioned::Filter* aFilter);
   
 
+  /**
+   * Helper to implement the AirportSearch widget. Optimised text search of
+   * airport names and idents, returning a list suitable for passing directly
+   * to PLIB.
+   */
   char** searchAirportNamesAndIdents(const std::string& aFilter);
   
+  /**
+   * Find the closest matching comm-station on a frequency, to a position.
+   * The filter with be used for both type ranging and to validate the result
+   * candidates.
+   */
   FGPositionedRef findCommByFreq(int freqKhz, const SGGeod& pos, FGPositioned::Filter* filt);
   
+  /**
+   * find all items of a specified type (or range of types) at an airport
+   */
   PositionedIDVec airportItemsOfType(PositionedID apt, FGPositioned::Type ty,
                                      FGPositioned::Type maxTy = FGPositioned::INVALID);
     
+  /**
+   * find the first match item of the specified type and ident, at an airport
+   */
   PositionedID airportItemWithIdent(PositionedID apt, FGPositioned::Type ty, const std::string& ident);
-  
+    
+  /**
+   * Find all navaids matching a particular frequency, sorted by range from the
+   * supplied position. Type-range will be determined from the filter
+   */
   PositionedIDVec findNavaidsByFreq(int freqKhz, const SGGeod& pos, FGPositioned::Filter* filt);
   
   /// overload version of the above that does not consider positioned when
@@ -175,8 +223,15 @@ public:
 // airways
   int findAirway(int network, const std::string& aName);
   
+  /**
+   * insert an edge between two positioned nodes, into the network.
+   * The airway identifier will be set accordingly. No reverse edge is created
+   * by this method - edges are directional so a reverses must be explicitly
+   * created.
+   */
   void insertEdge(int network, int airwayID, PositionedID from, PositionedID to);
   
+  /// is the specified positioned a node on the network?
   bool isInAirwayNetwork(int network, PositionedID pos);
   
   /**
@@ -184,6 +239,17 @@ public:
    * in an airway
    */
   AirwayEdgeVec airwayEdgesFrom(int network, PositionedID pos);
+  
+// ground-network
+  PositionedIDVec groundNetNodes(PositionedID aAirport, bool onlyPushback);
+  void markGroundnetAsPushback(PositionedID nodeId);
+  
+  PositionedID findGroundNetNode(PositionedID airport, const SGGeod& aPos,
+                                 bool onRunway, FGRunway* aRunway = NULL);
+  PositionedIDVec groundNetEdgesFrom(PositionedID pos, bool onlyPushback);
+  
+  PositionedIDVec findAirportParking(PositionedID airport, const std::string& flightType,
+                                     int radius);
 private:
   NavDataCache();
   

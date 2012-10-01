@@ -862,7 +862,8 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
     //cerr << trafficRef->getCallSign() << " has passed waypoint " << prev->name << " at speed " << speed << endl;
     //cerr << "Passing waypoint : " << prev->getName() << endl;
     if (prev->contains("PushBackPoint")) {
-        dep->getDynamics()->releaseParking(fp->getGate());
+      // clearing the parking assignment will release the gate
+        fp->setGate(ParkingAssignment());
         AccelTo(0.0);
         //setTaxiClearanceRequest(true);
     }
@@ -1209,18 +1210,15 @@ void FGAIAircraft::updatePitchAngleTarget() {
     }
 }
 
-string FGAIAircraft::atGate() {
-     string tmp("");
-     if (fp->getLeg() < 3) {
-         if (trafficRef) {
-             if (fp->getGate() > 0) {
-                 FGParking *park =
-                     trafficRef->getDepartureAirport()->getDynamics()->getParking(fp->getGate());
-                 tmp = park->getName();
-             }
-         }
+string FGAIAircraft::atGate()
+{
+     if ((fp->getLeg() < 3) && trafficRef) {
+       if (fp->getParkingGate()) {
+         return fp->getParkingGate()->ident();
+       }
      }
-     return tmp;
+       
+     return string();
 }
 
 void FGAIAircraft::handleATCRequests() {

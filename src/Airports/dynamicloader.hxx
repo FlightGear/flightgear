@@ -19,6 +19,7 @@
 #include <simgear/xml/easyxml.hxx>
 
 #include "dynamics.hxx"
+#include <Navaids/positioned.hxx>
 
 class FGAirportDynamicsXMLLoader : public XMLVisitor {
 public:
@@ -41,6 +42,20 @@ private:
   
     FGAirportDynamics* _dynamics;
     string value;
+  
+    // map from local (groundnet.xml) to global (nav-cache) IDs for nodes
+    std::map<int, PositionedID> _idMap;
+  
+  // data integrity - watch for unreferenced nodes and duplicated edges
+    typedef std::pair<int, int> IntPair;
+    std::set<IntPair> _arcSet;
+  
+    std::set<PositionedID> _unreferencedNodes;
+  
+    // map from allocated parking position to its local push-back node
+    // used to defer binding the push-back node until we've processed
+    // all nodes
+    std::map<PositionedID, int> _parkingPushbacks;
 };
 
 #endif

@@ -112,7 +112,8 @@ FGAirportDynamics * FGAirport::getDynamics()
     
     _dynamics = new FGAirportDynamics(this);
     XMLLoader::load(_dynamics);
-
+    _dynamics->init();
+  
     FGRunwayPreference rwyPrefs(this);
     XMLLoader::load(&rwyPrefs);
     _dynamics->setRwyUse(rwyPrefs);

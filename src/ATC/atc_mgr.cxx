@@ -101,12 +101,11 @@ void FGATCManager::init() {
     FGAirport *apt = FGAirport::findByIdent(airport); 
     if (apt && onGround) {// && !runway.empty()) {
         FGAirportDynamics* dcs = apt->getDynamics();
-        int park_index = dcs->getNrOfParkings() - 1;
-        //cerr << "found information: " << runway << " " << airport << ": parking = " << parking << endl;
         fp = new FGAIFlightPlan;
-        while (park_index >= 0 && dcs->getParkingName(park_index) != parking) park_index--;
+        ParkingAssignment pk(dcs->getParkingByName(parking));
+      
         // No valid parking location, so either at the runway or at a random location.
-        if (parking.empty() || (park_index < 0)) {
+        if (!pk.isValid()) {
             if (!runway.empty()) {
                 controller = apt->getDynamics()->getTowerController();
                 int stationFreq = apt->getDynamics()->getTowerFrequency(2);
@@ -134,12 +133,11 @@ void FGATCManager::init() {
             leg = 1;
             //double, lat, lon, head; // Unused variables;
             //int getId = apt->getDynamics()->getParking(gateId, &lat, &lon, &head);
-            FGParking* parking = dcs->getParking(park_index);
-            aircraftRadius = parking->getRadius();
-            string fltType = parking->getType(); // gate / ramp, ga, etc etc. 
+            aircraftRadius = pk.parking()->getRadius();
+            string fltType = pk.parking()->getType(); // gate / ramp, ga, etc etc.
             string aircraftType; // Unused.
             string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
-            fp->setGate(park_index);
+            fp->setGate(pk);
             if (!(fp->createPushBack(&ai_ac,
                                false, 
                                apt, 

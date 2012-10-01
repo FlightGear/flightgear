@@ -229,7 +229,7 @@ protected:
   void modifyPosition(const SGGeod& newPos);
   
   const PositionedID mGuid;
-  const SGGeod mPosition;
+  SGGeod mPosition;
   const SGVec3d mCart;
   const Type mType;
   const std::string mIdent;
