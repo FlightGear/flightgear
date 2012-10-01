@@ -149,9 +149,8 @@ public:
         float               _volume;
 
     public:
-        SampleElement (SGSharedPtr<SGSoundSample> sample, float volume = 1.0)
-          : _sample(sample), _volume(volume) { silence = false; }
-
+        SampleElement (SGSharedPtr<SGSoundSample> sample, float volume = 1.0);
+      
         virtual void play (float volume);
         virtual void stop ();
         virtual bool is_playing ();
@@ -311,7 +310,7 @@ protected:
   SGSoundSample *get_sample (const char *name);
 
   inline void append (Voice *voice, Voice::Element *element) { voice->append(element); }
-  inline void append (Voice *voice, const char *sample_name) { voice->append(new Voice::SampleElement(get_sample(sample_name))); }
+  void append (Voice *voice, const char *sample_name);
   inline void append (Voice *voice, double silence) { voice->append(new Voice::SilenceElement(silence)); }
 
   inline void make_voice (Voice **voice) { *voice = new Voice(this); _voices.push_back(*voice); }

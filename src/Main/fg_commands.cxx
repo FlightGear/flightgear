@@ -1106,6 +1106,12 @@ do_set_cursor (const SGPropertyNode * arg)
 static bool
 do_play_audio_sample (const SGPropertyNode * arg)
 {
+    SGSoundMgr *smgr = globals->get_soundmgr();
+    if (!smgr) {
+        SG_LOG(SG_GENERAL, SG_WARN, "play-audio-sample: sound-manager not running");
+        return false;
+    }
+  
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
     float volume = arg->getFloatValue("volume");
@@ -1113,7 +1119,6 @@ do_play_audio_sample (const SGPropertyNode * arg)
     try {
         static FGSampleQueue *queue = 0;
         if ( !queue ) {
-           SGSoundMgr *smgr = globals->get_soundmgr();
            queue = new FGSampleQueue(smgr, "chatter");
            queue->tie_to_listener();
         }

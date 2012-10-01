@@ -32,6 +32,7 @@
 #include "fg_fx.hxx"
 
 #include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
@@ -39,7 +40,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/sound/xmlsound.hxx>
 
-FGFX::FGFX ( SGSoundMgr *smgr, const std::string &refname, SGPropertyNode *props ) :
+FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     _props( props )
 {
     if (!props) {
@@ -60,6 +61,11 @@ FGFX::FGFX ( SGSoundMgr *smgr, const std::string &refname, SGPropertyNode *props
     _avionics_ext = _props->getNode("sim/sound/avionics/external-view", true);
     _internal = _props->getNode("sim/current-view/internal", true);
 
+    SGSoundMgr *smgr = globals->get_soundmgr();
+    if (!smgr) {
+      return;
+    }
+  
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_refname = refname;
     SGSampleGroup::_smgr->add(this, refname);
@@ -84,6 +90,10 @@ FGFX::~FGFX ()
 void
 FGFX::init()
 {
+    if (!_smgr) {
+        return;
+    }
+  
     SGPropertyNode *node = _props->getNode("sim/sound", true);
 
     std::string path_str = node->getStringValue("path");
@@ -143,6 +153,10 @@ FGFX::reinit()
 void
 FGFX::update (double dt)
 {
+    if (!_smgr) {
+        return;
+    }
+      
     if ( _enabled->getBoolValue() ) {
         if ( _avionics_enabled->getBoolValue())
         {

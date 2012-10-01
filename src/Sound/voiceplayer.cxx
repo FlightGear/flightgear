@@ -65,6 +65,12 @@ using std::vector;
 // FGVoicePlayer::Voice::SampleElement ///////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
+FGVoicePlayer::Voice::SampleElement::SampleElement (SGSharedPtr<SGSoundSample> sample, float volume)
+: _sample(sample), _volume(volume)
+{
+  silence = false;
+}
+
 void FGVoicePlayer::Voice::SampleElement::play (float volume)
 {
   if (_sample && (volume > 0.05)) { set_volume(volume); _sample->play_once(); }
@@ -179,7 +185,9 @@ FGVoicePlayer::FGVoicePlayer (PropertiesHandler* properties_handler, string _dev
 : volume(1.0), voice(NULL), next_voice(NULL), paused(false),
 dev_name(_dev_name), dir_prefix(""),
 speaker(this,properties_handler)
-{}
+{
+  _sgr = NULL;
+}
 
 FGVoicePlayer::~FGVoicePlayer ()
 {
@@ -339,3 +347,10 @@ FGVoicePlayer::update ()
         }
     }
 }
+
+void
+FGVoicePlayer::append (Voice *voice, const char *sample_name)
+{
+  voice->append(new Voice::SampleElement(get_sample(sample_name)));
+}
+

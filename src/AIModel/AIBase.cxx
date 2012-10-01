@@ -143,12 +143,17 @@ FGAIBase::~FGAIBase() {
             model_removed->setStringValue(props->getPath());
     }
 
+  // refID=0 is supposedley impossible, refID=1 is the special ai_ac aircaft
+  // representing the current user, in the ATCManager. Maybe both these
+  // tests could die?
     if (_fx && _refID != 0 && _refID !=  1) {
         SGSoundMgr *smgr = globals->get_soundmgr();
-        stringstream name; 
-        name <<  "aifx:";
-        name << _refID;
-        smgr->remove(name.str());
+        if (smgr) {
+          stringstream name;
+          name <<  "aifx:";
+          name << _refID;
+          smgr->remove(name.str());
+        }
     }
 
     if (fp)
@@ -245,11 +250,10 @@ void FGAIBase::update(double dt) {
                 props->setStringValue("sim/sound/path", fxpath.c_str());
 
                 // initialize the sound configuration
-                SGSoundMgr *smgr = globals->get_soundmgr();
                 stringstream name;
                 name <<  "aifx:";
                 name << _refID;
-                _fx = new FGFX(smgr, name.str(), props);
+                _fx = new FGFX(name.str(), props);
                 _fx->init();
             }
         }
