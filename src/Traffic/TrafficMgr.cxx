@@ -58,6 +58,8 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/xml/easyxml.hxx>
+#include <simgear/threads/SGThread.hxx>
+#include <simgear/threads/SGGuard.hxx>
 
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
@@ -71,6 +73,77 @@
 
 using std::sort;
 using std::strcmp;
+
+/**
+ * Thread encapsulating parsing the traffic schedules. 
+ */
+class ScheduleParseThread : public SGThread
+{
+public:
+  ScheduleParseThread(FGTrafficManager* traffic) :
+    _trafficManager(traffic),
+    _isFinished(false),
+    _cancelThread(false)
+  {
+    
+  }
+  
+  // if we're destroyed while running, ensure the thread exits cleanly
+  ~ScheduleParseThread()
+  {
+    _lock.lock();
+    if (!_isFinished) {
+      _cancelThread = true; // request cancellation so we don't wait ages
+      _lock.unlock();
+      join();
+    } else {
+      _lock.unlock();
+    }
+  }
+  
+  void setTrafficDir(const SGPath& trafficDirPath)
+  {
+    _trafficDirPath = trafficDirPath;
+  }
+  
+  bool isFinished() const
+  {
+    SGGuard<SGMutex> g(_lock);
+    return _isFinished;
+  }
+  
+  virtual void run()
+  {
+    SGTimeStamp st;
+    st.stamp();
+    
+    simgear::Dir trafficDir(_trafficDirPath);
+    simgear::PathList d = trafficDir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
+    
+    BOOST_FOREACH(SGPath p, d) {
+      simgear::Dir d2(p);
+      simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
+      BOOST_FOREACH(SGPath xml, trafficFiles) {
+        _trafficManager->parseSchedule(xml);
+        if (_cancelThread) {
+          return;
+        }
+      }
+    } // of sub-directories in AI/Traffic iteration
+    
+  //  _trafficManager->parseSchedules(schedulesToRead);
+    SG_LOG(SG_AI, SG_INFO, "parsing traffic schedules took:" << st.elapsedMSec() << "msec");
+    
+    SGGuard<SGMutex> g(_lock);
+    _isFinished = true;
+  }
+private:
+  FGTrafficManager* _trafficManager;
+  mutable SGMutex _lock;
+  bool _isFinished;
+  bool _cancelThread;
+  SGPath _trafficDirPath;
+};
 
 /******************************************************************************
  * TrafficManager
@@ -95,6 +168,15 @@ FGTrafficManager::~FGTrafficManager()
 
 void FGTrafficManager::shutdown()
 {
+    if (!inited) {
+      if (doingInit) {
+        scheduleParser.reset();
+        doingInit = false;
+      }
+      
+      return;
+    }
+  
     // Save the heuristics data
     bool saveData = false;
     ofstream cachefile;
@@ -140,6 +222,13 @@ void FGTrafficManager::shutdown()
     inited = false;
 }
 
+/// caution - this is run on the helper thread to improve startup
+/// responsiveness - do not access properties or global state from
+/// here, since there's no locking protection at all
+void FGTrafficManager::parseSchedule(const SGPath& path)
+{
+  readXML(path.str(), *this);
+}
 
 void FGTrafficManager::init()
 {
@@ -150,14 +239,9 @@ void FGTrafficManager::init()
     assert(!doingInit);
     doingInit = true;
     if (string(fgGetString("/sim/traffic-manager/datafile")) == string("")) {
-        simgear::Dir trafficDir(SGPath(globals->get_fg_root(), "AI/Traffic"));
-        simgear::PathList d = trafficDir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
-        
-        BOOST_FOREACH(SGPath p, d) {
-          simgear::Dir d2(p);
-          simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
-          schedulesToRead.insert(schedulesToRead.end(), trafficFiles.begin(), trafficFiles.end());
-        }
+        scheduleParser.reset(new ScheduleParseThread(this));
+        scheduleParser->setTrafficDir(SGPath(globals->get_fg_root(), "AI/Traffic"));      
+        scheduleParser->start();
     } else {
         fgSetBool("/sim/traffic-manager/heuristics", false);
         SGPath path = string(fgGetString("/sim/traffic-manager/datafile"));
@@ -179,19 +263,7 @@ void FGTrafficManager::init()
     }
 }
 
-void FGTrafficManager::initStep()
-{
-    assert(doingInit);
-    if (schedulesToRead.empty()) {
-        finishInit();
-        return;
-    }
-    
-    SGPath path = schedulesToRead.front();
-    schedulesToRead.erase(schedulesToRead.begin());
-    SG_LOG(SG_AI, SG_DEBUG, path << " for traffic");
-    readXML(path.str(), *this);
-}
+
 
 void FGTrafficManager::finishInit()
 {
@@ -292,10 +364,11 @@ void FGTrafficManager::update(double /*dt */ )
             init();
         }
         
-        initStep();
-        if (!inited) {
-            return; // still more to do on next update() call
+        if (!scheduleParser->isFinished()) {
+          return;
         }
+      
+        finishInit();
     }
         
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");

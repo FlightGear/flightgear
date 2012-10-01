@@ -47,6 +47,8 @@
 #define _TRAFFICMGR_HXX_
 
 #include <set>
+#include <memory>
+
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/xml/easyxml.hxx>
@@ -77,6 +79,7 @@ typedef HeuristicMap::iterator             HeuristicMapIterator;
 
 
 
+class ScheduleParseThread;
 
 class FGTrafficManager : public SGSubsystem, public XMLVisitor
 {
@@ -111,12 +114,17 @@ private:
   
   void loadHeuristics();
   
-  void initStep();
   void finishInit();
   void shutdown();
   
-  // during incremental init, contains the XML files still be read in
-  simgear::PathList schedulesToRead;
+  friend class ScheduleParseThread;
+  std::auto_ptr<ScheduleParseThread> scheduleParser;
+  
+  // helper to read and parse the schedule data.
+  // this is run on a helper thread, so be careful about
+  // accesing properties during parsing
+  void parseSchedule(const SGPath& path);
+  
 public:
   FGTrafficManager();
   ~FGTrafficManager();
