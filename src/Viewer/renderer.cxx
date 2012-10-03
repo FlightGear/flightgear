@@ -1148,7 +1148,10 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const F
     osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
     g->setUseDisplayList(false);
     simgear::EffectGeode* eg = new simgear::EffectGeode;
-    simgear::Effect* effect = simgear::makeEffect(pass->effect, true);
+    osg::ref_ptr<SGReaderWriterOptions> opt;
+    opt = SGReaderWriterOptions::fromPath(globals->get_fg_root());
+    opt->setPropertyNode(globals->get_props());
+    simgear::Effect* effect = simgear::makeEffect(pass->effect, true, opt.get());
     if (effect) {
         eg->setEffect( effect );
     }
@@ -1198,7 +1201,10 @@ FGRenderer::buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraI
     osg::Geometry* g = osg::createTexturedQuadGeometry( osg::Vec3(-1.,-1.,0.), osg::Vec3(2.,0.,0.), osg::Vec3(0.,2.,0.) );
     g->setUseDisplayList(false); //DEBUG
     simgear::EffectGeode* eg = new simgear::EffectGeode;
-    simgear::Effect* effect = simgear::makeEffect(stage->effect, true);
+    osg::ref_ptr<SGReaderWriterOptions> opt;
+    opt = SGReaderWriterOptions::fromPath(globals->get_fg_root());
+    opt->setPropertyNode(globals->get_props());
+    simgear::Effect* effect = simgear::makeEffect(stage->effect, true, opt.get());
     if (!effect) {
         SG_LOG(SG_VIEW, SG_ALERT, stage->effect + " not found");
         return;
@@ -1384,10 +1390,14 @@ FGRenderer::setupView( void )
     // moon within the distance to the far clip plane.
     // Moon diameter:    3,476 kilometers
     // Sun diameter: 1,390,000 kilometers
+    osg::ref_ptr<SGReaderWriterOptions> opt;
+    opt = SGReaderWriterOptions::fromPath(globals->get_fg_root());
+    opt->setPropertyNode(globals->get_props());
     _sky->build( 80000.0, 80000.0,
                   463.3, 361.8,
                   *globals->get_ephem(),
-                  fgGetNode("/environment", true));
+                  fgGetNode("/environment", true),
+                  opt.get());
     
     viewer->getCamera()
         ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
