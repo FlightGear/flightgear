@@ -25,7 +25,9 @@
 #include "morse.hxx"
 
 #include <simgear/sound/sample_openal.hxx>
+
 #include <cstring>
+#include <stdlib.h>
 
 static const char DI = '1';
 static const char DIT = '1';
