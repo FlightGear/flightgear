@@ -48,7 +48,7 @@ public:
 private:
     bool stationary() const;
   
-    bool _is_initialized;
+    bool _is_initialized, _enabled;
     SGPropertyNode_ptr _sound_working, _sound_enabled, _volume, _device_name;
     SGPropertyNode_ptr _currentView;
     SGPropertyNode_ptr _viewPosLon, _viewPosLat, _viewPosElev;

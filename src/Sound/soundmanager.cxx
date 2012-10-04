@@ -47,6 +47,7 @@ void Listener::valueChanged(SGPropertyNode * node)
 
 FGSoundManager::FGSoundManager()
   : _is_initialized(false),
+    _enabled(false),
     _listener(new Listener(this))
 {
     SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
@@ -64,14 +65,14 @@ void FGSoundManager::init()
     _volume        = fgGetNode("/sim/sound/volume");
     _device_name   = fgGetNode("/sim/sound/device-name");
 
-    _currentView = fgGetNode("sim/current-view");
+    _currentView   = fgGetNode("sim/current-view");
     _viewPosLon    = fgGetNode("sim/current-view/viewer-lon-deg");
     _viewPosLat    = fgGetNode("sim/current-view/viewer-lat-deg");
     _viewPosElev   = fgGetNode("sim/current-view/viewer-elev-ft");
   
     _velocityNorthFPS = fgGetNode("velocities/speed-north-fps", true);
-    _velocityEastFPS = fgGetNode("velocities/speed-east-fps", true);
-    _velocityDownFPS = fgGetNode("velocities/speed-down-fps", true);
+    _velocityEastFPS  = fgGetNode("velocities/speed-east-fps", true);
+    _velocityDownFPS  = fgGetNode("velocities/speed-down-fps", true);
   
     reinit();
 }
@@ -136,33 +137,45 @@ bool FGSoundManager::stationary() const
 // Actual sound update is triggered by the subsystem manager.
 void FGSoundManager::update(double dt)
 {
-    if (_is_initialized && _sound_working->getBoolValue() && _sound_enabled->getBoolValue())
+    if (_is_initialized && _sound_working->getBoolValue())
     {
-        SGGeod viewPosGeod(SGGeod::fromDegFt(_viewPosLon->getDoubleValue(),
-                                             _viewPosLat->getDoubleValue(),
-                                             _viewPosElev->getDoubleValue()));
-        SGVec3d cartPos = SGVec3d::fromGeod(viewPosGeod);
-        
-        set_position(cartPos, viewPosGeod);
-        
-        SGQuatd viewOrientation;
-        for (int i=0; i<4; ++i) {
-          viewOrientation[i] = _currentView->getChild("raw-orientation", i, true)->getDoubleValue();
+        bool enabled = _sound_enabled->getBoolValue();
+        if (enabled != _enabled)
+        {
+            if (enabled)
+                resume();
+            else
+                suspend();
+            _enabled = enabled;
         }
-        
-        set_orientation( viewOrientation );
-        
-        SGVec3d velocity(SGVec3d::zeros());
-        if (!stationary()) {
-          velocity = SGVec3d(_velocityNorthFPS->getDoubleValue(),
-                             _velocityEastFPS->getDoubleValue(),
-                             _velocityDownFPS->getDoubleValue() );
+        if (enabled)
+        {
+            SGGeod viewPosGeod(SGGeod::fromDegFt(_viewPosLon->getDoubleValue(),
+                                                 _viewPosLat->getDoubleValue(),
+                                                 _viewPosElev->getDoubleValue()));
+            SGVec3d cartPos = SGVec3d::fromGeod(viewPosGeod);
+
+            set_position(cartPos, viewPosGeod);
+
+            SGQuatd viewOrientation;
+            for (int i=0; i<4; ++i) {
+              viewOrientation[i] = _currentView->getChild("raw-orientation", i, true)->getDoubleValue();
+            }
+
+            set_orientation( viewOrientation );
+
+            SGVec3d velocity(SGVec3d::zeros());
+            if (!stationary()) {
+              velocity = SGVec3d(_velocityNorthFPS->getDoubleValue(),
+                                 _velocityEastFPS->getDoubleValue(),
+                                 _velocityDownFPS->getDoubleValue() );
+            }
+
+            set_velocity( velocity );
+
+            set_volume(_volume->getFloatValue());
+            SGSoundMgr::update(dt);
         }
-        
-        set_velocity( velocity );
-      
-        set_volume(_volume->getFloatValue());
-        SGSoundMgr::update(dt);
     }
 }
 
