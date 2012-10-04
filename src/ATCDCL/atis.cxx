@@ -76,6 +76,8 @@ FGATIS::FGATIS(const std::string& name, int num) :
   trans_ident(""),
   old_volume(0),
   atis_failed(false),
+  msg_time(0),
+  cur_time(0),
   msg_OK(0),
   _attention(false),
   _prev_display(0),
@@ -221,6 +223,8 @@ void FGATIS::update(double dt) {
     _prev_display = false;
   }
   _attention = false;
+
+  FGATC::update(dt);
 }
 
 string uppercase(const string &s) {

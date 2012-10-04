@@ -81,6 +81,9 @@ FGATC::~FGATC() {
 // call this from their own Update(...).
 void FGATC::update(double dt) {
 
+    // TODO This doesn't really do anything specific to this instance.
+    // All FGATCs share the same "_sgr" sound group. So this really should
+    // only be done once for all FGATCs.
 #ifdef ENABLE_AUDIO_SUPPORT
     bool active = _atc_external->getBoolValue() ||
               _internal->getBoolValue();
