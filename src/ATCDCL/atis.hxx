@@ -96,8 +96,17 @@ protected:
 
 private:
 
-    // Generate the ATIS transmission text:
-    int GenTransmission(const int regen, const bool special);
+    /** generate the ATIS transmission text */
+    int  genTransmission    (const int regen, const bool special);
+
+    void genTimeInfo        (void);
+    void genFacilityInfo    (void);
+    void genVisibilityInfo  (void);
+    void genCloudInfo       (void);
+    void genWindInfo        (void);
+    void genTemperatureInfo (double& Tsl, bool US_CA);
+    void genPressureInfo    (bool US_CA, double Tsl);
+    void genRunwayInfo      (const std::string& phonetic_seq_string);
 
     // Put the text into the property tree
     // (and in debug mode, print it on the console):
