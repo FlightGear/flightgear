@@ -346,7 +346,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   }
 
   FGAIAircraft *aircraft = new FGAIAircraft(this);
-  aircraft->setPerformance(m_class); //"jet_transport";
+  aircraft->setPerformance(acType, m_class); //"jet_transport";
   aircraft->setCompany(airline); //i->getAirline();
   aircraft->setAcType(acType); //i->getAcType();
   aircraft->setPath(modelPath.c_str());

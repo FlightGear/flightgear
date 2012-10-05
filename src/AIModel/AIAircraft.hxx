@@ -44,8 +44,8 @@ public:
     virtual void bind();
     virtual void update(double dt);
 
-    void setPerformance(const std::string& perfString);
-    void setPerformance(PerformanceData *ps);
+    void setPerformance(const std::string& acType, const std::string& perfString);
+  //  void setPerformance(PerformanceData *ps);
 
     void setFlightPlan(const std::string& fp, bool repat = false);
     void SetFlightPlan(FGAIFlightPlan *f);
@@ -68,6 +68,8 @@ public:
     double getBearing(double crse);
 
     void setAcType(const std::string& ac) { acType = ac; };
+    std::string getAcType() const { return acType; }
+  
     void setCompany(const std::string& comp) { company = comp;};
 
     void announcePositionToController(); //TODO have to be public?

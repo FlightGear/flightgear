@@ -782,8 +782,6 @@ void FGTrafficManager::endAircraft()
     acCounter++;
     requiredAircraft = "";
     homePort = "";
-    SG_LOG(SG_GENERAL, SG_BULK, "Reading aircraft : "
-           << registration << " with prioritization score " << score);
     score = 0;
 }
     

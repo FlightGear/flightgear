@@ -145,6 +145,7 @@ FGAIWaypoint *    FGAIFlightPlan::createInAir(FGAIAircraft * ac,
     wpt->setGear_down  (false                   );
     wpt->setFlaps_down (false                   );
     wpt->setOn_ground  (false                   );
+    wpt->setCrossat    (aElev                   );
     return wpt;
 }
 
@@ -427,6 +428,22 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
     return true;
 }
 
+static double accelDistance(double v0, double v1, double accel)
+{
+  double t = fabs(v1 - v0) / accel; // time in seconds to change velocity
+  // area under the v/t graph: (t * v0) + (dV / 2t) where (dV = v1 - v0)
+  return t * 0.5 * (v1 + v0); 
+}
+
+// find the horizontal distance to gain the specific altiude, holding
+// a constant pitch angle. Used to compute distance based on standard FD/AP
+// PITCH mode prior to VS or CLIMB engaging. Visually, we want to avoid
+// a dip in the nose angle after rotation, during initial climb-out.
+static double pitchDistance(double pitchAngleDeg, double altGainM)
+{
+  return altGainM / tan(pitchAngleDeg * SG_DEGREES_TO_RADIANS);
+}
+
 /*******************************************************************
  * CreateTakeOff 
  * A note on units: 
@@ -442,27 +459,22 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
                                    FGAirport * apt, double speed,
                                    const string & fltType)
 {
+    const double ACCEL_POINT = 105.0;
+    const double KNOTS_HOUR_TO_MSEC = SG_NM_TO_METER / 3600.0;
+  // climb-out angle in degrees. could move this to the perf-db but this
+  // value is pretty sane
+    const double INITIAL_PITCH_ANGLE = 12.5;
+  
     double accel = ac->getPerformance()->acceleration();
     double vTaxi = ac->getPerformance()->vTaxi();
     double vRotate = ac->getPerformance()->vRotate();
     double vTakeoff = ac->getPerformance()->vTakeoff();
-    //double vClimb = ac->getPerformance()->vClimb();
 
-    double accelMetric = (accel * SG_NM_TO_METER) / 3600;
-    double vTaxiMetric = (vTaxi * SG_NM_TO_METER) / 3600;
-    double vRotateMetric = (vRotate * SG_NM_TO_METER) / 3600;
-    double vTakeoffMetric = (vTakeoff * SG_NM_TO_METER) / 3600;
-    //double vClimbMetric = (vClimb * SG_NM_TO_METER) / 3600;
-    // Acceleration = dV / dT
-    // Acceleration X dT = dV
-    // dT = dT / Acceleration
-    //d = (Vf^2 - Vo^2) / (2*a)
-    //double accelTime = (vRotate - vTaxi) / accel;
-    //cerr << "Using " << accelTime << " as total acceleration time" << endl;
-    double accelDistance =
-        (vRotateMetric * vRotateMetric -
-         vTaxiMetric * vTaxiMetric) / (2 * accelMetric);
-    //cerr << "Using " << accelDistance << " " << accelMetric << " " << vRotateMetric << endl;
+    double accelMetric = accel * KNOTS_HOUR_TO_MSEC;
+    double vTaxiMetric = vTaxi * KNOTS_HOUR_TO_MSEC;
+    double vRotateMetric = vRotate * KNOTS_HOUR_TO_MSEC;
+    double vTakeoffMetric = vTakeoff * KNOTS_HOUR_TO_MSEC;
+   
     FGAIWaypoint *wpt;
     // Get the current active runway, based on code from David Luff
     // This should actually be unified and extended to include 
@@ -475,41 +487,36 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
     }
+  
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
     assert( rwy != NULL );
-
     double airportElev = apt->getElevation();
     
-
-    accelDistance =
-        (vTakeoffMetric * vTakeoffMetric -
-         vTaxiMetric * vTaxiMetric) / (2 * accelMetric);
-    //cerr << "Using " << accelDistance << " " << accelMetric << " " << vTakeoffMetric << endl;
-    SGGeod accelPoint = rwy->pointOnCenterline(105.0 + accelDistance);
+    double d = accelDistance(vTaxiMetric, vRotateMetric, accelMetric) + ACCEL_POINT;
+  
+    SGGeod accelPoint = rwy->pointOnCenterline(d);
     wpt = createOnGround(ac, "rotate", accelPoint, airportElev, vTakeoff);
     pushBackWaypoint(wpt);
 
-    accelDistance =
-        ((vTakeoffMetric * 1.1) * (vTakeoffMetric * 1.1) -
-         vTaxiMetric * vTaxiMetric) / (2 * accelMetric);
-    //cerr << "Using " << accelDistance << " " << accelMetric << " " << vTakeoffMetric << endl;
-    accelPoint = rwy->pointOnCenterline(105.0 + accelDistance);
-    wpt =
-        createOnGround(ac, "rotate", accelPoint, airportElev + 1000,
-                       vTakeoff * 1.1);
+    double vRef = vTakeoffMetric + 20; // climb-out at v2 + 20kts
+    double gearUpDist = d + pitchDistance(INITIAL_PITCH_ANGLE, 400 * SG_FEET_TO_METER);
+    accelPoint = rwy->pointOnCenterline(gearUpDist);
+    
+    wpt = cloneWithPos(ac, wpt, "gear-up", accelPoint);
+    wpt->setSpeed(vRef);
+    wpt->setCrossat(airportElev + 400);
     wpt->setOn_ground(false);
+    wpt->setGear_down(false);
+    pushBackWaypoint(wpt);
+  
+    double climbOut = d + pitchDistance(INITIAL_PITCH_ANGLE, 2000 * SG_FEET_TO_METER);
+    accelPoint = rwy->pointOnCenterline(climbOut);
+    wpt = createInAir(ac, "2000'", accelPoint, airportElev + 2000, vRef);
     pushBackWaypoint(wpt);
 
-    wpt = cloneWithPos(ac, wpt, "3000 ft", rwy->end());
-    wpt->setAltitude(airportElev + 3000);
-    pushBackWaypoint(wpt);
-
-    // Finally, add two more waypoints, so that aircraft will remain under
-    // Tower control until they have reached the 3000 ft climb point
-    SGGeod pt = rwy->pointOnCenterline(5000 + rwy->lengthM() * 0.5);
-    wpt = cloneWithPos(ac, wpt, "5000 ft", pt);
-    wpt->setAltitude(airportElev + 5000);
-    pushBackWaypoint(wpt);
+  // as soon as we pass 2000', hand off to departure so the next acft can line up
+  // ideally the next aircraft would be able to line-up + hold but that's tricky
+  // with the current design.
     return true;
 }
 

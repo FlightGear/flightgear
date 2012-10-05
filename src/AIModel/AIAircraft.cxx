@@ -107,7 +107,7 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 
     FGAIBase::readFromScenario(scFileNode);
 
-    setPerformance(scFileNode->getStringValue("class", "jet_transport"));
+    setPerformance("", scFileNode->getStringValue("class", "jet_transport"));
     setFlightPlan(scFileNode->getStringValue("flightplan"),
                   scFileNode->getBoolValue("repeat", false));
     setCallSign(scFileNode->getStringValue("callsign"));
@@ -131,16 +131,17 @@ void FGAIAircraft::update(double dt) {
     Transform();
 }
 
-void FGAIAircraft::setPerformance(const std::string& acclass) {
-     static PerformanceDB perfdb; //TODO make it a global service
-     setPerformance(perfdb.getDataFor(acclass));
-  }
+void FGAIAircraft::setPerformance(const std::string& acType, const std::string& acclass)
+{
+  static PerformanceDB perfdb; //TODO make it a global service
+  _performance = perfdb.getDataFor(acType, acclass);
+}
 
-
+#if 0
  void FGAIAircraft::setPerformance(PerformanceData *ps) {
      _performance = ps;
   }
-
+#endif
 
  void FGAIAircraft::Run(double dt) {
       FGAIAircraft::dt = dt;

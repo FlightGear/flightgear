@@ -2,10 +2,11 @@
 #define PERFORMANCEDB_HXX
 
 #include <string>
-#include <vector>
 #include <map>
+#include <vector>
 
-#include "performancedata.hxx"
+class PerformanceData;
+class SGPath;
 
 /**
  * Registry for performance data.
@@ -25,11 +26,23 @@ public:
     void registerPerformanceData(const std::string& id, PerformanceData* data);
     void registerPerformanceData(const std::string& id, const std::string& filename);
 
-    PerformanceData* getDataFor(const std::string& id);
-    void load(SGPath path);
+    /**
+     * get performance data for an aircraft type / class. Type is specific, eg
+     * '738' or 'A319'. Class is more generic, such as 'jet_transport'.
+     */
+    PerformanceData* getDataFor(const std::string& acType, const std::string& acClass);
+    void load(const SGPath& path);
 
 private:
     std::map<std::string, PerformanceData*> _db;
+    
+    std::string findAlias(const std::string& acType) const;
+  
+    typedef std::pair<std::string, std::string> StringPair;
+  /// alias list, to allow type/class names to share data. This is used to merge
+  /// related types together. Note it's ordered, and not a map since we permit
+  /// partial matches when merging - the first matching alias is used.
+    std::vector<StringPair> _aliases;
 };
 
 #endif

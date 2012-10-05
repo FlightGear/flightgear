@@ -74,7 +74,7 @@ void FGATCManager::init() {
     ai_ac.setLongitude( longitude );
     ai_ac.setLatitude ( latitude  );
     ai_ac.setAltitude ( altitude  );
-    ai_ac.setPerformance("jet_transport");
+    ai_ac.setPerformance("", "jet_transport");
 
     // NEXT UP: Create a traffic Schedule and fill that with appropriate information. This we can use to flight planning.
     // Note that these are currently only defaults. 

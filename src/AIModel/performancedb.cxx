@@ -1,3 +1,11 @@
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif
+
+#include "performancedb.hxx"
+
+#include <boost/foreach.hpp>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
@@ -7,7 +15,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "performancedb.hxx"
+#include "performancedata.hxx"
 
 using std::string;
 using std::cerr;
@@ -36,14 +44,28 @@ void PerformanceDB::registerPerformanceData(const std::string& id, const std::st
     registerPerformanceData(id, new PerformanceData(filename));
 }
 
-PerformanceData* PerformanceDB::getDataFor(const std::string& id) {
-    if (_db.find(id) == _db.end()) // id not found -> return jet_transport data
+PerformanceData* PerformanceDB::getDataFor(const string& acType, const string& acClass)
+{
+  // first, try with the specific aircraft type, such as 738 or A322
+    if (_db.find(acType) != _db.end()) {
+        return _db[acType];
+    }
+    
+    string alias = findAlias(acType);
+    if (_db.find(alias) != _db.end()) {
+      return _db[alias];
+    }
+  
+    SG_LOG(SG_AI, SG_INFO, "no performance data for " << acType);
+  
+    if (_db.find(acClass) == _db.end()) {
         return _db["jet_transport"];
-
-    return _db[id];
+    }
+  
+    return _db[acClass];
 }
 
-void PerformanceDB::load(SGPath filename) {
+void PerformanceDB::load(const SGPath& filename) {
     string name;
     double acceleration;
     double deceleration;
@@ -67,8 +89,9 @@ void PerformanceDB::load(SGPath filename) {
     }
 
     SGPropertyNode * node = root.getNode("performancedb");
-    for (int i = 0; i < node->nChildren(); i++) { 
+    for (int i = 0; i < node->nChildren(); i++) {
         SGPropertyNode * db_node = node->getChild(i);
+        if (!strcmp(db_node->getName(), "aircraft")) {
             name         = db_node->getStringValue("type", "heavy_jet");
             acceleration = db_node->getDoubleValue("acceleration-kts-hour", 4.0);
             deceleration = db_node->getDoubleValue("deceleration-kts-hour", 2.0);
@@ -85,6 +108,32 @@ void PerformanceDB::load(SGPath filename) {
 
             registerPerformanceData(name, new PerformanceData(
                 acceleration, deceleration, climbRate, descentRate, vRotate, vTakeOff, vClimb, vCruise, vDescent, vApproach, vTouchdown, vTaxi));
-    }
+        } else if (!strcmp(db_node->getName(), "alias")) {
+            string alias(db_node->getStringValue("alias"));
+            if (alias.empty()) {
+                SG_LOG(SG_AI, SG_ALERT, "performance DB alias entry with no <alias> definition");
+                continue;
+            }
+          
+            BOOST_FOREACH(SGPropertyNode* matchNode, db_node->getChildren("match")) {
+                string match(matchNode->getStringValue());
+                _aliases.push_back(StringPair(match, alias));
+            }
+        } else {
+            SG_LOG(SG_AI, SG_ALERT, "unrecognized performance DB entry:" << db_node->getName());
+        }
+    } // of nodes iteration
 }
+
+string PerformanceDB::findAlias(const string& acType) const
+{
+    BOOST_FOREACH(const StringPair& alias, _aliases) {
+        if (acType.find(alias.first) == 0) { // matched!
+            return alias.second;
+        }
+    } // of alias iteration
+  
+    return string();
+}
+
 
