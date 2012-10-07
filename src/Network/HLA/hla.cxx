@@ -662,9 +662,9 @@ public:
         _attributeData._location->setAngularBodyVelocity(SGVec3d(p, q, r));
         // The body uvw velocities in the interface are wrt the wind instead
         // of wrt the ec frame
-        double n = _ifce.get_V_north();
-        double e = _ifce.get_V_east();
-        double d = _ifce.get_V_down();
+        double n = _ifce.get_V_north()*SG_FEET_TO_METER;
+        double e = _ifce.get_V_east()*SG_FEET_TO_METER;
+        double d = _ifce.get_V_down()*SG_FEET_TO_METER;
         _attributeData._location->setLinearBodyVelocity(hlOr.transform(SGVec3d(n, e, d)));
 
         if (_attributeData._mpProperties.valid() && _attributeData._mpProperties->getNumElements() == 0) {
