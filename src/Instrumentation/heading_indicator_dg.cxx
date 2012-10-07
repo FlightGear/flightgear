@@ -47,10 +47,6 @@ HeadingIndicatorDG::HeadingIndicatorDG ( SGPropertyNode *node ) :
     }
 }
 
-HeadingIndicatorDG::HeadingIndicatorDG ()
-{
-}
-
 HeadingIndicatorDG::~HeadingIndicatorDG ()
 {
 }
@@ -113,8 +109,8 @@ HeadingIndicatorDG::reinit (void)
     _error_node->setDoubleValue(0.0);
     _offset_node->setDoubleValue(0.0);
 
-    _last_heading_deg = (_heading_in_node->getDoubleValue() +
-        _offset_node->getDoubleValue() + _align_node->getDoubleValue());
+    _last_heading_deg = _heading_in_node->getDoubleValue();
+    _last_indicated_heading_dg = _last_heading_deg;
 
     _gyro.reinit();
 }
@@ -126,12 +122,33 @@ HeadingIndicatorDG::update (double dt)
     _gyro.set_power_norm(_electrical_node->getDoubleValue());
 
     _gyro.update(dt);
-    double spin = _gyro.get_spin_norm();
 
-                                // Next, calculate time-based precession
+    // read inputs
+    double spin = _gyro.get_spin_norm();
+    double heading = _heading_in_node->getDoubleValue();
     double offset = _offset_node->getDoubleValue();
-    offset -= dt * (0.25 / 60.0); // 360deg/day
-    offset = SGMiscd::normalizePeriodic(-360.0,360.0,offset);
+
+    // calculate scaling factor
+    double factor = POW6(spin);
+
+    // calculate time-based precession (scaled by spin factor, since
+    // there is no precession when the gyro is stuck).
+    offset -= dt * (0.25 / 60.0) * factor; // 360deg/day
+
+    // indication should get more and more stuck at low gyro spins
+    if (spin < 0.9)
+    {
+        // when gyro spin is low, then any heading change results in
+        // increasing the offset
+        double diff = SGMiscd::normalizePeriodic(-180.0, 180.0, _last_heading_deg - heading);
+        // scaled by 1-factor, so indication is fully stuck at spin==0 (offset compensates
+        // any heading change)
+        offset += diff * (1.0-factor);
+    }
+    _last_heading_deg = heading;
+
+    // normalize offset
+    offset = SGMiscd::normalizePeriodic(-180.0,180.0,offset);
     _offset_node->setDoubleValue(offset);
 
                                 // No magvar - set the alignment manually
@@ -141,36 +158,24 @@ HeadingIndicatorDG::update (double dt)
     double yaw_rate = _yaw_rate_node->getDoubleValue();
     double error = _error_node->getDoubleValue();
     double g = _g_node->getDoubleValue();
-
     if ( fabs ( yaw_rate ) > 5 ) {
-        error += 0.033 * -yaw_rate * dt ;
+        error += 0.033 * -yaw_rate * dt * factor;
     }
 
     if ( g > 1.5 || g < -0.5){
-        error += 0.033 * g * dt;
-    }
-
-                                // Next, calculate the indicated heading,
-                                // introducing errors.
-    double factor = POW6(spin);
-    double heading = _heading_in_node->getDoubleValue();
-    if (spin < 0.9)
-    {
-        // when gyro spin is low, then any heading change results in
-        // increasing the error (spin=0 => indicator is stuck)
-        error += (_last_heading_deg - heading)*(1-factor);
+        error += 0.033 * g * dt * factor;
     }
     _error_node->setDoubleValue(error);
 
                                 // Now, we have to get the current
                                 // heading and the last heading into
                                 // the same range.
-    while ((heading - _last_heading_deg) > 180)
-        _last_heading_deg += 360;
-    while ((heading - _last_heading_deg) < -180)
-        _last_heading_deg -= 360;
-    heading = fgGetLowPass(_last_heading_deg, heading, dt * factor * 100);
-    _last_heading_deg = heading;
+    while ((heading - _last_indicated_heading_dg) > 180)
+        _last_indicated_heading_dg += 360;
+    while ((heading - _last_indicated_heading_dg) < -180)
+        _last_indicated_heading_dg -= 360;
+    heading = fgGetLowPass(_last_indicated_heading_dg, heading, dt * 100);
+    _last_indicated_heading_dg = heading;
 
     heading += offset + align + error;
     heading = SGMiscd::normalizePeriodic(0.0,360.0,heading);

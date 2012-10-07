@@ -48,7 +48,7 @@ public:
 private:
 
     Gyro _gyro;
-    double _last_heading_deg;
+    double _last_heading_deg, _last_indicated_heading_dg;
 
     std::string name;
     int num;
