@@ -46,9 +46,6 @@
 using std::cerr;
 
 FGAIWaypoint::FGAIWaypoint() {
-  latitude    = 0;
-  longitude   = 0;
-  altitude    = 0;
   speed       = 0;
   crossat     = 0;
   finished    = 0;
@@ -68,7 +65,37 @@ bool FGAIWaypoint::contains(string target) {
         return true;
 }
 
-FGAIFlightPlan::FGAIFlightPlan() 
+double FGAIWaypoint::getLatitude()
+{
+  return pos.getLatitudeDeg();
+}
+
+double FGAIWaypoint::getLongitude()
+{
+  return pos.getLongitudeDeg();
+}
+
+double FGAIWaypoint::getAltitude()
+{
+  return pos.getElevationFt();
+}
+
+void FGAIWaypoint::setLatitude(double lat)
+{
+  pos.setLatitudeDeg(lat);
+}
+
+void FGAIWaypoint::setLongitude(double lon)
+{
+  pos.setLongitudeDeg(lon);
+}
+
+void FGAIWaypoint::setAltitude(double alt)
+{
+  pos.setElevationFt(alt);
+}
+
+FGAIFlightPlan::FGAIFlightPlan()
 {
     sid             = 0;
     repeat          = false;
@@ -345,8 +372,7 @@ void FGAIFlightPlan::eraseLastWaypoint()
 
 // gives distance in feet from a position to a waypoint
 double FGAIFlightPlan::getDistanceToGo(double lat, double lon, FGAIWaypoint* wp) const{
-  return SGGeodesy::distanceM(SGGeod::fromDeg(lon, lat), 
-      SGGeod::fromDeg(wp->getLongitude(), wp->getLatitude()));
+  return SGGeodesy::distanceM(SGGeod::fromDeg(lon, lat), wp->getPos());
 }
 
 // sets distance in feet from a lead point to the current waypoint
@@ -394,14 +420,15 @@ void FGAIFlightPlan::setLeadDistance(double distance_ft){
 }
 
 
-double FGAIFlightPlan::getBearing(FGAIWaypoint* first, FGAIWaypoint* second) const{
-  return getBearing(first->getLatitude(), first->getLongitude(), second);
+double FGAIFlightPlan::getBearing(FGAIWaypoint* first, FGAIWaypoint* second) const
+{
+  return SGGeodesy::courseDeg(first->getPos(), second->getPos());
 }
 
 
-double FGAIFlightPlan::getBearing(double lat, double lon, FGAIWaypoint* wp) const{
-  return SGGeodesy::courseDeg(SGGeod::fromDeg(lon, lat), 
-      SGGeod::fromDeg(wp->getLongitude(), wp->getLatitude()));
+double FGAIFlightPlan::getBearing(double lat, double lon, FGAIWaypoint* wp) const
+{
+  return SGGeodesy::courseDeg(SGGeod::fromDeg(lon, lat), wp->getPos());
 }
 
 void FGAIFlightPlan::deleteWaypoints()
@@ -423,10 +450,7 @@ void FGAIFlightPlan::resetWaypoints()
       wpt_vector_iterator i = waypoints.end();
       i--;
       wpt->setName        ( (*i)->getName()       );
-      wpt->setLatitude    ( (*i)->getLatitude()   );
-      wpt->setLongitude   ( (*i)->getLongitude()  );
-      wpt->setAltitude    ( (*i)->getAltitude()   );
-      wpt->setSpeed       ( (*i)->getSpeed()      );
+      wpt->setPos         ( (*i)->getPos()        );
       wpt->setCrossat     ( (*i)->getCrossat()    );
       wpt->setGear_down   ( (*i)->getGear_down()  );
       wpt->setFlaps_down  ( (*i)->getFlaps_down() );

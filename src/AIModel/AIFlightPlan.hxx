@@ -22,20 +22,17 @@
 #include <simgear/compiler.h>
 #include <vector>
 #include <string>
-
+#include <simgear/math/SGMath.hxx>
 
 class FGTaxiRoute;
 class FGRunway;
 class FGAIAircraft;
 class FGAirport;
-class SGGeod;
 
 class FGAIWaypoint {
 private:
    std::string name;
-   double latitude;
-   double longitude;
-   double altitude;
+   SGGeod pos;
    double speed;
    double crossat;
    bool finished;
@@ -51,9 +48,10 @@ public:
     FGAIWaypoint();
     ~FGAIWaypoint() {};
     void setName        (std::string nam) { name        = nam; };
-    void setLatitude    (double lat) { latitude    = lat; };
-    void setLongitude   (double lon) { longitude   = lon; };
-    void setAltitude    (double alt) { altitude    = alt; };
+    void setLatitude    (double lat);
+    void setLongitude   (double lon);
+    void setAltitude    (double alt);
+    void setPos         (const SGGeod& aPos) { pos = aPos; }
     void setSpeed       (double spd) { speed       = spd; };
     void setCrossat     (double val) { crossat     = val; };
     void setFinished    (bool   fin) { finished    = fin; };
@@ -68,9 +66,10 @@ public:
     bool contains(std::string name);
 
     std::string getName  () { return name;        };
-    double getLatitude   () { return latitude;    };
-    double getLongitude  () { return longitude;   };
-    double getAltitude   () { return altitude;    };
+    const SGGeod& getPos () { return pos;         };
+    double getLatitude   ();
+    double getLongitude  ();
+    double getAltitude   ();
     double getSpeed      () { return speed;       };
 
     double getCrossat    () { return crossat;     };
