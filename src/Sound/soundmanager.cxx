@@ -74,6 +74,10 @@ void FGSoundManager::init()
     _velocityEastFPS  = fgGetNode("velocities/speed-east-fps", true);
     _velocityDownFPS  = fgGetNode("velocities/speed-down-fps", true);
   
+    _viewXoffset      = _currentView->getNode("x-offset-m", true);
+    _viewYoffset      = _currentView->getNode("y-offset-m", true);
+    _viewZoffset      = _currentView->getNode("z-offset-m", true);
+
     reinit();
 }
 
@@ -123,13 +127,13 @@ void FGSoundManager::update_device_list()
     devices.clear();
 }
 
-bool FGSoundManager::stationary() const
+bool FGSoundManager::stationaryView() const
 {
   // this is an ugly hack to decide if the *viewer* is stationary,
   // since we don't model the viewer velocity directly.
-  return (_currentView->getDoubleValue("x-offset-m") == 0.0) &&
-         (_currentView->getDoubleValue("y-offset-m") == 0.0) &&
-         (_currentView->getDoubleValue("z-offset-m") == 0.0);
+  return (_viewXoffset->getDoubleValue() == 0.0) &&
+         (_viewYoffset->getDoubleValue() == 0.0) &&
+         (_viewZoffset->getDoubleValue() == 0.0);
 }
 
 // Update sound manager and propagate property values,
@@ -165,7 +169,7 @@ void FGSoundManager::update(double dt)
             set_orientation( viewOrientation );
 
             SGVec3d velocity(SGVec3d::zeros());
-            if (!stationary()) {
+            if (!stationaryView()) {
               velocity = SGVec3d(_velocityNorthFPS->getDoubleValue(),
                                  _velocityEastFPS->getDoubleValue(),
                                  _velocityDownFPS->getDoubleValue() );
