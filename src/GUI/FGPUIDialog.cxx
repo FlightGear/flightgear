@@ -491,9 +491,17 @@ copy_from_pui (puObject *object, SGPropertyNode *node)
         node->setIntValue(object->getIntegerValue());
         break;
     case props::FLOAT:
-    case props::DOUBLE:
         node->setFloatValue(object->getFloatValue());
         break;
+    case props::DOUBLE:
+    {
+        // puObject only provides float, not double, which causes precision/rounding issues
+        // with some numerical values (try "114.2").
+        // Work around: obtain string value, and manually convert with proper double precision.
+        const char *s = object->getStringValue();
+        node->setDoubleValue(atof(s));
+        break;
+    }
     default:
         const char *s = object->getStringValue();
         if (s)
