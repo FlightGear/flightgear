@@ -243,7 +243,7 @@ void FGAIWingman::formateToAC(double dt){
     double p_hdg, p_pch, p_rll, p_agl, p_ht, p_wow = 0;
 
     setTgtOffsets(dt, 25);
-   _setUserPos();
+    _setUserPos();
 
     if (_pnode != 0) {
         setParentPos();
@@ -341,7 +341,7 @@ void FGAIWingman::Join(double dt) {
     double p_hdg, p_pch, p_rll = 0;
 
     setTgtOffsets(dt, 25);
-     _setUserPos();
+    _setUserPos();
 
     if (_pnode != 0) {
         setParentPos();
