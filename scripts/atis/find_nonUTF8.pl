@@ -2,7 +2,7 @@
 
 my($content, $length);
 
-open(FILE, "< atis.list") || die "Unable to open file small. <$!>\n";
+open(FILE, "< airports.vlist") || die "Unable to open file small. <$!>\n";
 
 while( chomp($content = <FILE>) ) {
     $length = length($content);

@@ -9,14 +9,14 @@ Print airport names, one per line.
 Remapping is done by reference to the atis_remap.hxx file.
 
 Typical usage:
-  FG_ROOT=whatever ATIS_ONLY=yes ./list-airports.pl | words_per_line.sh > atis.list
+  FG_ROOT=whatever FG_SRC=whatever ATIS_ONLY=yes ./list-airports.pl | ./words_per_line.sh > airports.vlist
 EoF
 }
 
 use strict;
 use Symbol;
-my $noparen = 1;
 
+  my $noparen = 1;
   my $verbose = 0;
   my $apt_name = '';
   my $lat;
@@ -38,6 +38,7 @@ my $noparen = 1;
 
   my $fgroot = $ENV{'FG_ROOT'} || '.';
   my $atis_only = $ENV{'ATIS_ONLY'} || 0;
+  my $mapfn = "$ENV{'FG_SRC'}/src/ATCDCL/atis_remap.hxx";
 
 sub process_apt {
   if ($atis_only && ! $atis) {
@@ -60,7 +61,6 @@ sub get_remap {
 # Note: in this context, GKI probably stands for Gereja Kristen Indonesia
 # I guess the church builds lots of airports.
 
-  my $mapfn = "$fgroot/../fgs/src/ATCDCL/atis_remap.hxx";
   my $mapch = Symbol::gensym;
   if (!open($mapch, '<', $mapfn)) {
     print STDERR "Could not open abbreviation file '$mapfn'\n";
@@ -84,11 +84,16 @@ sub get_remap {
 }
 
 main: {
+  if (@ARGV) {
+    usage;
+    exit;
+  }
 
   get_remap;
 
   my $delim = '-';
-  my $incmd = 'zcat /games/sport/fgd/Airports/apt.dat.gz';
+  my $fgroot = $ENV{'FG_ROOT'} || 0;
+  my $incmd = "zcat $fgroot/Airports/apt.dat.gz";
   my $inch = Symbol::gensym;
   open ($inch, '-|', $incmd)
         || die "Couldn't open pipe from '$incmd'\n";

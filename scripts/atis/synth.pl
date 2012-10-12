@@ -88,6 +88,7 @@ my %fixup = (
 main: {
 
   my $skip = 0;
+  my $fmtcheck = 1;
   my $oneword = 0;
   my $gripe = 0;
   my $out_bits_sample = 8;              ## this is what FGFS expects
@@ -120,6 +121,10 @@ main: {
     }
     if ($arg eq '-one' || $arg eq '-1') {
       $oneword++;
+      next argx;
+    }
+    if ($arg eq '-nocheck') {
+      $fmtcheck=0;
       next argx;
     }
     if ($arg =~ '^-') {
@@ -184,23 +189,31 @@ main: {
       || die "Could not create directory 'snip' : $!\n";
   }
 
-##############  system "/bin/cp nothing.wav t1.wav";
-  my $where = 0;
+  my $wav = new Audio::Wav;
+  my $waver = $wav -> read("quiet0.500.wav");
   my $sample_rate = -1;
   my $channels = -1;
   my $bits_sample = -1;
+  $sample_rate = ${$waver->details()}{'sample_rate'};
+  $channels    = ${$waver->details()}{'channels'};
+  $bits_sample = ${$waver->details()}{'bits_sample'};
+
+##############  system "/bin/cp nothing.wav t1.wav";
+  my $where = 0;
   my $ii = 0;
+
   snipper: for my $thing (sort keys %list) {
     $ii++;
     my $iix = sprintf('%05d', $ii);
     my $xfn = "./snip/x$iix";
+    print( "$xfn\n");
 
     my $fraise = lc($thing);
     if (exists $fixup{$fraise}) {
       #xxxx print "fixing $fraise\n";
       $fraise = $fixup{$fraise};
     }
-    
+
 ## This turns dashes and other funny stuff into spaces
 ## in the phrase to be processed:
     $fraise =~ s%[^a-z']+% %gi;
@@ -223,18 +236,27 @@ main: {
         next snipper;
       }
     }
+  }
 
-    my $wav = new Audio::Wav;
-    my $waver = $wav -> read("$xfn.wav");
-    if ($sample_rate < 0) {
-      $sample_rate = ${$waver->details()}{'sample_rate'};
-      $channels    = ${$waver->details()}{'channels'};
-      $bits_sample = ${$waver->details()}{'bits_sample'};
-    } else {
-         $sample_rate == ${$waver->details()}{'sample_rate'}
-      && $channels    == ${$waver->details()}{'channels'}
-      && $bits_sample == ${$waver->details()}{'bits_sample'}
-      || die "audio format not the same: $xfn.wav";
+  $ii = 0;
+  snipper: for my $thing (sort keys %list) {
+    $ii++;
+    my $iix = sprintf('%05d', $ii);
+    my $xfn = "./snip/x$iix";
+
+    if ($fmtcheck == 1) {
+      my $wav = new Audio::Wav;
+      my $waver = $wav -> read("$xfn.wav");
+      if ($sample_rate < 0) {
+        $sample_rate = ${$waver->details()}{'sample_rate'};
+        $channels    = ${$waver->details()}{'channels'};
+        $bits_sample = ${$waver->details()}{'bits_sample'};
+      } else {
+           $sample_rate == ${$waver->details()}{'sample_rate'}
+        && $channels    == ${$waver->details()}{'channels'}
+        && $bits_sample == ${$waver->details()}{'bits_sample'}
+        || die "audio format not the same: $xfn.wav";
+      }
     }
 
     my $statcmd = "2>&1 sox $xfn.wav -n stat";
@@ -268,11 +290,15 @@ main: {
     if ($size == 0) {
       print STDERR "?Warning! Zero-size audio file for $iix '$thing'\n";
     }
+
+    if ($vol > 20) {
+      ## unreasonable volume, happens with 'silent' files
+      $vol = 0;
+    }
     printf("%s %6.3f %6d '%s'\n", $iix, $vol, $size, $thing);
     my $subsize = int($size/2);
     printf $index ("%-45s %10d %10d\n", $thing, $where, $subsize);
     $where += $subsize;
-
 
     my $volume_cmd = sprintf("sox -v %6.3f %s.wav %s.raw",
                 $vol*0.9, $xfn, $xfn);
@@ -300,6 +326,7 @@ main: {
     die "Cat command failed: $cat_cmd";
   }
 
+  ## Convert RAW to WAVE format
   my $wav_cmd = "sox --rate $sample_rate --bits $bits_sample"
    . " --encoding signed-integer"
    . " ./snip/everything.raw --rate 8000 --bits $out_bits_sample $out_wav";
@@ -311,4 +338,12 @@ main: {
   if ($?) {
     die ".wav command failed: $wav_cmd";
   }
+
+  ## Compress WAVE file
+  my $gz_cmd = "gzip -f $out_wav";
+  my $gz_handle = Symbol::gensym;
+  open ($gz_handle, '|-', $gz_cmd)
+        || die "Couldn't open pipe to command '$gz_cmd'\n";
+  close $gz_handle;
+  system("rm snip/*; rmdir snip");
 }
