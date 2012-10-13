@@ -69,6 +69,19 @@ void FGATISMgr::init()
     }
 }
 
+void FGATISMgr::reinit()
+{
+#ifdef ENABLE_AUDIO_SUPPORT
+    if ((voiceName != "")&&
+        (voiceName != fgGetString("/sim/atis/voice", "default")))
+    {
+        voiceName = fgGetString("/sim/atis/voice", "default");
+        delete voice;
+        voice = NULL;
+        useVoice = true;
+    }
+#endif
+}
 
 void FGATISMgr::update(double dt)
 {
@@ -108,10 +121,11 @@ FGATCVoice* FGATISMgr::GetVoicePointer(const atc_type& type)
              */
             if (!voice && fgGetBool("/sim/sound/working")) {
                 voice = new FGATCVoice;
+                voiceName = fgGetString("/sim/atis/voice", "default");
                 try {
-                    useVoice = voice->LoadVoice("default");
+                    useVoice = voice->LoadVoice(voiceName);
                 } catch ( sg_io_exception & e) {
-                    SG_LOG(SG_ATC, SG_ALERT, "Unable to load default voice : "
+                    SG_LOG(SG_ATC, SG_ALERT, "Unable to load voice '" << voiceName << "': "
                                             << e.getFormattedMessage().c_str());
                     useVoice = false;
                     delete voice;

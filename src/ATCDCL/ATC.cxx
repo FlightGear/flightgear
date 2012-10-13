@@ -41,7 +41,6 @@ FGATC::FGATC() :
     range(0),
     _voice(true),
     _playing(false),
-    _vPtr(NULL),
     _sgr(NULL),
     _type(INVALID),
     _display(false)
@@ -167,10 +166,9 @@ void FGATC::Render(std::string& msg, const float volume,
             _currentMsg = msg;
             size_t len;
             void* buf = NULL;
-            if (!_vPtr)
-                _vPtr = GetVoicePointer();
-            if (_vPtr)
-                buf = _vPtr->WriteMessage((char*)msg.c_str(), &len);
+            FGATCVoice* vPtr = GetVoicePointer();
+            if (vPtr)
+                buf = vPtr->WriteMessage((char*)msg.c_str(), &len);
             NoRender(refname);
             if(buf) {
                 try {

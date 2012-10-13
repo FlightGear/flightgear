@@ -28,6 +28,7 @@
 #include <string>
 
 class SGSoundSample;
+class SGPath;
 
 struct WordData {
 	unsigned int offset;	// Offset of beginning of word sample into raw sound sample
@@ -47,13 +48,15 @@ public:
 
 	// Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
 	// Return true if successful.	
-	bool LoadVoice(const std::string& voice);
+	bool LoadVoice(const std::string& voicename);
 	
 	// Given a desired message, return a pointer to the data buffer and write the buffer length into len.
 	// Sets len to something other than 0 if the returned buffer is valid.
 	void* WriteMessage(const std::string& message, size_t *len);
 
 private:
+	bool AppendVoiceFile(const SGPath& basepath, const std::string& file);
+	bool ParseVoiceIndex(const SGPath& basepath, const std::string& file, size_t globaloffset);
 
 	// the sound and word position data
 	char* rawSoundData;

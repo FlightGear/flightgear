@@ -1,4 +1,4 @@
-// ATCProjection.cxx - A convienience projection class for the ATC/AI system.
+// ATCProjection.cxx - A convenience projection class for the ATC/AI system.
 //
 // Written by David Luff, started 2002.
 //

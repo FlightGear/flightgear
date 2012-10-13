@@ -155,7 +155,7 @@ protected:
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
 	void Render(std::string& msg, const float volume = 1.0, 
-	const std::string& refname = "", bool repeating = false);
+	            const std::string& refname = "", bool repeating = false);
 	
 	// Cease rendering all transmission from this station.
 	// Requires the sound manager refname if audio, else "".
@@ -176,7 +176,6 @@ protected:
 	// Rendering related stuff
 	bool _voice;	// Flag - true if we are using voice
 	bool _playing;	// Indicates a message in progress
-	FGATCVoice* _vPtr;
 
 	SGSharedPtr<SGSampleGroup> _sgr; // default sample group;
 

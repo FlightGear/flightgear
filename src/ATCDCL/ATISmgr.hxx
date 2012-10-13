@@ -40,6 +40,7 @@ private:
 #ifdef ENABLE_AUDIO_SUPPORT
     bool useVoice;  // Flag - true if we are using voice
     FGATCVoice* voice;
+    std::string voiceName; // currently loaded voice name
 #endif
 
 public:
@@ -47,6 +48,7 @@ public:
     ~FGATISMgr();
 
     void init();
+    void reinit();
     void update(double dt);
 
     // Return a pointer to an appropriate voice for a given type of ATC

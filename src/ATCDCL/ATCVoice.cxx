@@ -26,6 +26,7 @@
 #include "ATCVoice.hxx"
 
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include <fstream>
 #include <vector>
@@ -33,6 +34,7 @@
 
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/sound/sample_openal.hxx>
+#include <simgear/misc/sg_dir.hxx>
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -43,49 +45,124 @@
 
 using namespace std;
 
-FGATCVoice::FGATCVoice() {
-  SoundData = 0;
-  rawSoundData = 0;
+FGATCVoice::FGATCVoice() :
+    rawSoundData(0),
+    rawDataSize(0),
+    SoundData(0)
+{
 }
 
 FGATCVoice::~FGATCVoice() {
     if (rawSoundData)
-	free( rawSoundData );
+        free( rawSoundData );
     delete SoundData;
 }
 
-// Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
+// Load all data for the requested voice.
 // Return true if successful.
-bool FGATCVoice::LoadVoice(const string& voice) {
-	std::ifstream fin;
+bool FGATCVoice::LoadVoice(const string& voicename)
+{
+    rawDataSize = 0;
+    if (rawSoundData)
+        free(rawSoundData);
+    rawSoundData = NULL;
 
-	SGPath path = globals->get_fg_root();
-	string file = voice + ".wav";
-	path.append( "ATC" );
-	path.append( file );
-	
-	string full_path = path.str();
-	int format, freq;
-	SGSoundMgr *smgr = globals->get_soundmgr();
-	void *data;
-	if (!smgr->load(full_path, &data, &format, &rawDataSize, &freq))
-	    return false;
-	rawSoundData = (char*)data;
+    // determine voice directory
+    SGPath voicepath = globals->get_fg_root();
+    voicepath.append( "ATC" );
+    voicepath.append( "voices" );
+    voicepath.append( voicename );
+
+    simgear::Dir d(voicepath);
+    if (!d.exists())
+    {
+        SG_LOG(SG_ATC, SG_ALERT, "Unable to load ATIS voice. No such directory: " << voicepath.str());
+        return false;
+    }
+
+    // load all files from the voice's directory
+    simgear::PathList paths = d.children(simgear::Dir::TYPE_FILE);
+    bool Ok = false;
+    for (unsigned int i=0; i<paths.size(); ++i)
+    {
+        if (paths[i].lower_extension() == "vce")
+            Ok |= AppendVoiceFile(voicepath, paths[i].file_base());
+    }
+
+    if (!Ok)
+    {
+        SG_LOG(SG_ATC, SG_ALERT, "Unable to load ATIS voice. Files are invalid or no files in directory: " << voicepath.str());
+    }
+
+    // ok when at least some files loaded fine
+    return Ok;
+}
+
+// load a voice file and append it to the current word database
+bool FGATCVoice::AppendVoiceFile(const SGPath& basepath, const string& file)
+{
+    size_t offset = 0;
+
+    SG_LOG(SG_ATC, SG_INFO, "Loading ATIS voice file: " << file);
+
+    // path to compressed voice file
+    SGPath path(basepath);
+    path.append(file + ".wav.gz");
+
+    // load wave data
+    SGSoundMgr *smgr = globals->get_soundmgr();
+    int format, freq;
+    void *data;
+    size_t size;
+    if (!smgr->load(path.str(), &data, &format, &size, &freq))
+        return false;
+
+    // append to existing data
+    if (!rawSoundData)
+        rawSoundData = (char*)data;
+    else
+    {
+        rawSoundData = (char*) realloc(rawSoundData, rawDataSize + size);
+        // new data starts behind existing sound data
+        offset = rawDataSize;
+        if (!rawSoundData)
+        {
+            SG_LOG(SG_ATC, SG_ALERT, "Out of memory. Cannot load file " << path.str());
+            rawDataSize = 0;
+            return false;
+        }
+        // append to existing sound data
+        memcpy(rawSoundData+offset, data, size);
+        free(data);
+        data = NULL;
+    }
+    rawDataSize += size;
+
 #ifdef VOICE_TEST
 	cout << "ATCVoice:  format: " << format
 			<< "  size: " << rawDataSize << endl;
-#endif	
-	path = globals->get_fg_root();
-	string wordPath = "ATC/" + voice + ".vce";
-	path.append(wordPath);
+#endif
+
+	// load and parse index file (.vce)
+	return ParseVoiceIndex(basepath, file, offset);
+}
+
+// Load and parse a voice index file (.vce)
+bool FGATCVoice::ParseVoiceIndex(const SGPath& basepath, const string& file, size_t globaloffset)
+{
+	// path to voice index file
+	SGPath path(basepath);
+	path.append(file + ".vce");
 	
 	// Now load the word data
+	std::ifstream fin;
 	fin.open(path.c_str(), ios::in);
 	if(!fin) {
 		SG_LOG(SG_ATC, SG_ALERT, "Unable to open input file " << path.c_str());
 		return(false);
 	}
-	SG_LOG(SG_ATC, SG_INFO, "Opened word data file " << wordPath << " OK...");
+	SG_LOG(SG_ATC, SG_INFO, "Opened word data file " << path.c_str() << " OK...");
+
 	char numwds[10];
 	char wrd[100];
 	string wrdstr;
@@ -94,30 +171,44 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 	unsigned int wrdOffset;		// Offset into the raw sound data that the word sample begins
 	unsigned int wrdLength;		// Length of the word sample in bytes
 	WordData wd;
+
+	// first entry: number of words in the index
 	fin >> numwds;
 	unsigned int numwords = atoi(numwds);
 	//cout << numwords << '\n';
+
+	// now load each word, its file offset and length
 	for(unsigned int i=0; i < numwords; ++i) {
+	    // read data
 		fin >> wrd;
-		wrdstr = wrd;
 		fin >> wrdOffsetStr;
 		fin >> wrdLengthStr;
+
+		wrdstr    = wrd;
 		wrdOffset = atoi(wrdOffsetStr);
 		wrdLength = atoi(wrdLengthStr);
-		wd.offset = wrdOffset;
+
+		// store word in map
+		wd.offset = wrdOffset + globaloffset;
 		wd.length = wrdLength;
 		wordMap[wrdstr] = wd;
-	        string ws2 = wrdstr;
-	        for(string::iterator p = ws2.begin(); p != ws2.end(); p++){
-	          *p = tolower(*p);
-	          if (*p == '-') *p = '_';
-	        }
-	        if (wrdstr != ws2)  wordMap[ws2] = wd;
+
+		// post-process words
+		string ws2 = wrdstr;
+		for(string::iterator p = ws2.begin(); p != ws2.end(); p++){
+		    *p = tolower(*p);
+		    if (*p == '-')
+		        *p = '_';
+		}
+
+		// store alternative version of word (lowercase/no hyphen)
+		if (wrdstr != ws2)
+		    wordMap[ws2] = wd;
 
 		//cout << wrd << "\t\t" << wrdOffset << "\t\t" << wrdLength << '\n';
 		//cout << i << '\n';
 	}
-	
+
 	fin.close();
 	return(true);
 }
