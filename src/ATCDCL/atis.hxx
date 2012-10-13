@@ -19,7 +19,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
 #ifndef _FG_ATIS_HXX
 #define _FG_ATIS_HXX
 
@@ -31,6 +30,8 @@
 #include <simgear/props/props.hxx>
 
 #include "ATC.hxx"
+
+class FGAirport;
 
 typedef std::map<std::string,std::string> MSS;
 
@@ -70,6 +71,7 @@ class FGATIS : public FGATC {
     time_t cur_time;
     int msg_OK;
     bool _attention;
+    bool _check_transmission;
 
     bool _prev_display;      // Previous value of _display flag
     MSS _remap;              // abbreviations to be expanded
@@ -78,11 +80,33 @@ class FGATIS : public FGATC {
     double _time_before_search_sec;
     int _last_frequency;
 
+    // temporary buffer for string conversions
+    char buf[100];
+
+    // data for the current ATIS report
+    struct
+    {
+        std::string phonetic_seq_string;
+        bool    US_CA;
+        bool    cavok;
+        bool    concise;
+        bool    ils;
+        int     temp;
+        int     dewpoint;
+        double  psl;
+        double  qnh;
+        double  rain_norm, snow_norm;
+        int     notam;
+        std::string hours,mins;
+    } _report;
+
 public:
 
     FGATIS(const std::string& name, int num);
 
-    virtual void init();
+    void init();
+    void reinit();
+
     void attend(SGPropertyNode* node);
 
     //run the ATIS instance
@@ -96,27 +120,32 @@ protected:
 
 private:
 
-    /** generate the ATIS transmission text */
-    int  genTransmission    (const int regen, const bool special);
+    void createReport       (const FGAirport* apt);
 
+    /** generate the ATIS transmission text */
+    bool genTransmission    (const int regen, bool forceUpdate);
     void genTimeInfo        (void);
     void genFacilityInfo    (void);
-    void genVisibilityInfo  (void);
-    void genCloudInfo       (void);
+    void genPrecipitationInfo(void);
+    bool genVisibilityInfo  (std::string& vis_info);
+    bool genCloudInfo       (std::string& cloud_info);
     void genWindInfo        (void);
-    void genTemperatureInfo (double& Tsl, bool US_CA);
-    void genPressureInfo    (bool US_CA, double Tsl);
-    void genRunwayInfo      (const std::string& phonetic_seq_string);
+    void genTemperatureInfo (void);
+    void genTransitionLevel (const FGAirport* apt);
+    void genPressureInfo    (void);
+    void genRunwayInfo      (const FGAirport* apt);
+    void genWarnings        (int position);
+
+    void addTemperature     (int Temp);
 
     // Put the text into the property tree
     // (and in debug mode, print it on the console):
-    void TreeOut(int msgOK);
+    void treeOut(int msgOK);
 
     // Search the specified radio for stations on the same frequency and in range.
-    void search(void);
+    bool search(double dt);
 
     friend std::istream& operator>> ( std::istream&, FGATIS& );
-
 };
 
 typedef int (FGATIS::*int_getter)() const;
