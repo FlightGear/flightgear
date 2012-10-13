@@ -290,7 +290,7 @@ public:
     
     try {
       execSelect(stmt);
-    } catch (sg_exception& e) {
+    } catch (sg_exception&) {
       sqlite3_finalize(stmt);
       throw; // re-throw
     }
@@ -596,7 +596,7 @@ public:
     reset(loadAirportStmt);
     sqlite3_bind_int64(loadAirportStmt, 1, rowId);
     execSelect1(loadAirportStmt);
-    bool hasMetar = sqlite3_column_int(loadAirportStmt, 0);
+    bool hasMetar = (sqlite3_column_int(loadAirportStmt, 0) > 0);
     return new FGAirport(rowId, id, pos, name, hasMetar, ty);
   }
   

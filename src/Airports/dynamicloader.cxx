@@ -123,7 +123,7 @@ void FGAirportDynamicsXMLLoader::startNode(const XMLAttributes &atts)
 	  else if (attname == "lon")
 	    lon = atts.getValue(i);
     else if (attname == "isOnRunway")
-      onRunway = (bool) std::atoi(atts.getValue(i));
+      onRunway = std::atoi(atts.getValue(i)) != 0;
 	  else if (attname == "holdPointType") {
       string attval = atts.getValue(i);
       if (attval=="none") {
@@ -158,7 +158,7 @@ void FGAirportDynamicsXMLLoader::startArc(const XMLAttributes &atts)
 	  else if (attname == "end")
 	    end = std::atoi(atts.getValue(i));
     else if (attname == "isPushBackRoute")
-	    isPushBackRoute = (bool) std::atoi(atts.getValue(i));
+	    isPushBackRoute = std::atoi(atts.getValue(i)) != 0;
 	}
   
   _dynamics->getGroundNetwork()->addSegment(new FGTaxiSegment(begin, end, isPushBackRoute));

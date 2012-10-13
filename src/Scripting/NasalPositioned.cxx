@@ -801,7 +801,7 @@ static bool hashIsCoord(naRef h)
     return false;
   }
   
-  return naEqual(naVec_get(parents, 0), geoCoordClass);
+  return naEqual(naVec_get(parents, 0), geoCoordClass) != 0;
 }
 
 bool geodFromHash(naRef ref, SGGeod& result)

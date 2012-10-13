@@ -303,7 +303,7 @@ static naRef f_getChild(naContext c, naRef me, int argc, naRef* args)
     naRef child = naVec_get(argv, 0);
     if(!naIsString(child)) return naNil();
     naRef idx = naNumValue(naVec_get(argv, 1));
-    bool create = naTrue(naVec_get(argv, 2));
+    bool create = naTrue(naVec_get(argv, 2)) != 0;
     SGPropertyNode* n;
     try {
         if(naIsNil(idx) || !naIsNum(idx)) {
@@ -360,7 +360,7 @@ static naRef f_addChild(naContext c, naRef me, int argc, naRef* args)
 
       bool append = true;
       if( !naIsNil(ref_append) )
-        append = naTrue(ref_append);
+        append = naTrue(ref_append) != 0;
 
       n = (*node)->addChild(naStr_data(child), min_index, append);
     }
@@ -445,7 +445,7 @@ static naRef f_getNode(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     naRef path = naVec_get(argv, 0);
-    bool create = naTrue(naVec_get(argv, 1));
+    bool create = naTrue(naVec_get(argv, 1)) != 0;
     if(!naIsString(path)) return naNil();
     SGPropertyNode* n;
     try {

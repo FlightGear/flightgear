@@ -921,7 +921,7 @@ bool FGGroundCache::caught_wire(double t, const SGVec3d pt[4])
         _localBvhTree->accept(wireIntersector);
     
     _wire = wireIntersector.getWire();
-    return _wire;
+    return (_wire != NULL);
 }
 
 class FGGroundCache::WireFinder : public BVHVisitor {

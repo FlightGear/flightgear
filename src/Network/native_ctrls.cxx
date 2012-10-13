@@ -372,8 +372,8 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     // or
     node->setDoubleValue( "spoilers", net->spoilers );  //JWW
 //    cout << "NET->Spoilers: " << net->spoilers << endl;
-    fgSetBool( "/systems/electrical/outputs/flaps", net->flaps_power );
-    node->setBoolValue( "flaps-serviceable", net->flap_motor_ok );
+    fgSetBool( "/systems/electrical/outputs/flaps", net->flaps_power > 0 );
+    node->setBoolValue( "flaps-serviceable", net->flap_motor_ok > 0 );
 
     for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
         // Controls
@@ -387,27 +387,27 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         node->getChild( "magnetos" )->setDoubleValue( net->magnetos[i] );
         node->getChild( "starter" )->setDoubleValue( net->starter_power[i] );
         node->getChild( "feed_tank" )->setIntValue( net->feed_tank_to[i] );
-        node->getChild( "reverser" )->setBoolValue( net->reverse[i] );
+        node->getChild( "reverser" )->setBoolValue( net->reverse[i] > 0 );
 	// Faults
 	SGPropertyNode *faults = node->getNode( "faults", true );
-	faults->setBoolValue( "serviceable", net->engine_ok[i] );
+	faults->setBoolValue( "serviceable", net->engine_ok[i] > 0 );
 	faults->setBoolValue( "left-magneto-serviceable",
-			      net->mag_left_ok[i] );
+			      net->mag_left_ok[i] > 0 );
 	faults->setBoolValue( "right-magneto-serviceable",
-			      net->mag_right_ok[i]);
+			      net->mag_right_ok[i] > 0);
 	faults->setBoolValue( "spark-plugs-serviceable",
-			      net->spark_plugs_ok[i] );
+			      net->spark_plugs_ok[i] > 0);
 	faults->setIntValue( "oil-pressure-status", net->oil_press_status[i] );
-	faults->setBoolValue( "fuel-pump-serviceable", net->fuel_pump_ok[i] );
+	faults->setBoolValue( "fuel-pump-serviceable", net->fuel_pump_ok[i] > 0);
     }
 
     fgSetBool( "/systems/electrical/outputs/fuel-pump",
-               net->fuel_pump_power[0] );
+               net->fuel_pump_power[0] > 0);
 
     for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
         node = fgGetNode( "/controls/fuel/tank", i );
         node->getChild( "fuel_selector" )
-            ->setBoolValue( net->fuel_selector[i] );
+            ->setBoolValue( net->fuel_selector[i] > 0 );
 //        node->getChild( "to_tank" )->xfer_tank( i, net->xfer_to[i] );
     }
     node = fgGetNode( "/controls/gear" );
@@ -422,15 +422,15 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     }
 
     node = fgGetNode( "/controls/gear", true );
-    node->setBoolValue( "gear-down", net->gear_handle );
+    node->setBoolValue( "gear-down", net->gear_handle > 0 );
 //    node->setDoubleValue( "brake-parking", net->brake_parking );
 //    node->setDoubleValue( net->brake_left );
 //    node->setDoubleValue( net->brake_right );
 
     node = fgGetNode( "/controls/switches", true );
-    node->setBoolValue( "master-bat", net->master_bat );
-    node->setBoolValue( "master-alt", net->master_alt );
-    node->setBoolValue( "master-avionics", net->master_avionics );
+    node->setBoolValue( "master-bat", net->master_bat > 0 );
+    node->setBoolValue( "master-alt", net->master_alt > 0);
+    node->setBoolValue( "master-avionics", net->master_avionics > 0);
     
     node = fgGetNode( "/environment", true );
     node->setDoubleValue( "wind-speed-kt", net->wind_speed_kt );
@@ -456,9 +456,9 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
 
     if ( honor_freezes ) {
         node = fgGetNode( "/sim/freeze", true );
-        node->setBoolValue( "master", net->freeze & 0x01 );
-        node->setBoolValue( "position", net->freeze & 0x02 );
-        node->setBoolValue( "fuel", net->freeze & 0x04 );
+        node->setBoolValue( "master", (net->freeze & 0x01) > 0 );
+        node->setBoolValue( "position", (net->freeze & 0x02) > 0 );
+        node->setBoolValue( "fuel", (net->freeze & 0x04) > 0 );
     }
 }
 

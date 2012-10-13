@@ -185,7 +185,7 @@ void PropsChannel::unsubscribe(const ParameterList &param) {
    SGPropertyNode *n = globals->get_props()->getNode( param[1].c_str() );
    if (n)
     n->removeChangeListener( this );
-  } catch (sg_exception &e) {
+  } catch (sg_exception&) {
 	  error("Error:Listener could not be removed");
   }
 }

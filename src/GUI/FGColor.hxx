@@ -37,13 +37,13 @@ public:
     inline float red() const { return clamp(_red); }
     inline float green() const { return clamp(_green); }
     inline float blue() const { return clamp(_blue); }
-    inline float alpha() const { return _alpha < 0.0 ? 1.0 : clamp(_alpha); }
+    inline float alpha() const { return _alpha < 0.0 ? 1.0f : clamp(_alpha); }
 
 protected:
     float _red, _green, _blue, _alpha;
 
 private:
-    float clamp(float f) const { return f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f; }
+    float clamp(float f) const { return f < 0.0 ? 0.0f : f > 1.0 ? 1.0f : f; }
 };
 
 #endif

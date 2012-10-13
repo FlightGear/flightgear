@@ -77,7 +77,7 @@ FGDeviceConfigurationMap::configurationForDeviceName(const std::string& name)
   try {
     readProperties(it->second.str(), result);
     result->setStringValue("source", it->second.c_str());
-  } catch (sg_exception& e) {
+  } catch (sg_exception&) {
     SG_LOG(SG_INPUT, SG_WARN, "parse failure reading:" << it->second);
     return NULL;
   }
@@ -138,7 +138,7 @@ void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
   SGPropertyNode_ptr n(new SGPropertyNode);
   try {
     readProperties(path.str(), n);
-  } catch (sg_exception& e) {
+  } catch (sg_exception&) {
     SG_LOG(SG_INPUT, SG_WARN, "parse failure reading:" << path);
     return;
   }

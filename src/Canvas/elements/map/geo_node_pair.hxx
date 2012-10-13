@@ -42,7 +42,7 @@ namespace canvas
 
       bool isDirty() const
       {
-        return _status & DIRTY;
+        return (_status & DIRTY)!=0;
       }
 
       bool isComplete() const

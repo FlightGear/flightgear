@@ -152,7 +152,7 @@ bool ArrivalDeparture::isForRunway(const FGRunway* aWay) const
   }
   
   FGRunwayRef r(const_cast<FGRunway*>(aWay));
-  return (_runways.count(r));
+  return (_runways.count(r) > 0);
 }
 
 RunwayVec ArrivalDeparture::runways() const
