@@ -344,6 +344,35 @@ static naRef f_getChildren(naContext c, naRef me, int argc, naRef* args)
     return result;
 }
 
+static naRef f_addChild(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    naRef child = naVec_get(argv, 0);
+    if(!naIsString(child)) return naNil();
+    naRef ref_min_index = naNumValue(naVec_get(argv, 1));
+    naRef ref_append = naVec_get(argv, 2);
+    SGPropertyNode* n;
+    try
+    {
+      int min_index = 0;
+      if( !naIsNil(ref_min_index) && naIsNum(ref_min_index) )
+        min_index = ref_min_index.num;
+
+      bool append = true;
+      if( !naIsNil(ref_append) )
+        append = naTrue(ref_append);
+
+      n = (*node)->addChild(naStr_data(child), min_index, append);
+    }
+    catch (const string& err)
+    {
+      naRuntimeError(c, (char *)err.c_str());
+      return naNil();
+    }
+
+    return propNodeGhostCreate(c, n);
+}
+
 static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
@@ -455,6 +484,7 @@ static struct {
     { f_getParent, "_getParent" },
     { f_getChild, "_getChild" },
     { f_getChildren, "_getChildren" },
+    { f_addChild, "_addChild" },
     { f_removeChild, "_removeChild" },
     { f_removeChildren, "_removeChildren" },
     { f_alias, "_alias" },
