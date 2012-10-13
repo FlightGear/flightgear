@@ -13,7 +13,6 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <sstream>
-#include <algorithm> // for std::sort
 
 #include <simgear/nasal/nasal.h>
 #include <simgear/props/props.hxx>
@@ -635,10 +634,8 @@ bool pathSortPredicate(const SGPath& p1, const SGPath& p2)
 void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir)
 {
     simgear::PathList scripts = nasalDir.children(simgear::Dir::TYPE_FILE, ".nas");
-    // sort scripts, avoid loading sequence effects due to file system's
-    // random directory order
-    std::sort(scripts.begin(), scripts.end(), pathSortPredicate);
-
+    // Note: simgear::Dir already reports file entries in a deterministic order,
+    // so a fixed loading sequence is guaranteed (same for every user)
     for (unsigned int i=0; i<scripts.size(); ++i) {
       SGPath fullpath(scripts[i]);
       SGPath file = fullpath.file();
