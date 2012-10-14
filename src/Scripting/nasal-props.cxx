@@ -373,6 +373,45 @@ static naRef f_addChild(naContext c, naRef me, int argc, naRef* args)
     return propNodeGhostCreate(c, n);
 }
 
+static naRef f_addChildren(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    naRef child = naVec_get(argv, 0);
+    if(!naIsString(child)) return naNil();
+    naRef ref_count = naNumValue(naVec_get(argv, 1));
+    naRef ref_min_index = naNumValue(naVec_get(argv, 2));
+    naRef ref_append = naVec_get(argv, 3);
+    try
+    {
+      size_t count = 0;
+      if( !naIsNum(ref_count) )
+        throw string("props.addChildren() missing number of children");
+      count = ref_count.num;
+
+      int min_index = 0;
+      if( !naIsNil(ref_min_index) && naIsNum(ref_min_index) )
+        min_index = ref_min_index.num;
+
+      bool append = true;
+      if( !naIsNil(ref_append) )
+        append = naTrue(ref_append) != 0;
+
+      const simgear::PropertyList& nodes =
+        (*node)->addChildren(naStr_data(child), count, min_index, append);
+
+      naRef result = naNewVector(c);
+      for( size_t i = 0; i < nodes.size(); ++i )
+        naVec_append(result, propNodeGhostCreate(c, nodes[i]));
+      return result;
+    }
+    catch (const string& err)
+    {
+      naRuntimeError(c, (char *)err.c_str());
+    }
+
+    return naNil();
+}
+
 static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
@@ -485,6 +524,7 @@ static struct {
     { f_getChild, "_getChild" },
     { f_getChildren, "_getChildren" },
     { f_addChild, "_addChild" },
+    { f_addChildren, "_addChildren" },
     { f_removeChild, "_removeChild" },
     { f_removeChildren, "_removeChildren" },
     { f_alias, "_alias" },
