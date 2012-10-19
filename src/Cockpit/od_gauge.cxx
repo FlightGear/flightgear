@@ -55,223 +55,28 @@
 #include <cassert>
 
 //------------------------------------------------------------------------------
-FGODGauge::FGODGauge():
-  _size_x( -1 ),
-  _size_y( -1 ),
-  _view_width( -1 ),
-  _view_height( -1 ),
-  _use_image_coords( false ),
-  _use_stencil( false ),
-  _use_mipmapping( false ),
-  _coverage_samples( 0 ),
-  _color_samples( 0 ),
-  rtAvailable( false )
+static void cbAddCamera(osg::Camera* cam)
 {
+  globals->get_renderer()->addCamera(cam, false);
+}
+
+//------------------------------------------------------------------------------
+static void cbRemoveCamera(osg::Camera* cam)
+{
+  globals->get_renderer()->removeCamera(cam);
+}
+
+//------------------------------------------------------------------------------
+FGODGauge::FGODGauge():
+  simgear::ODGauge(cbAddCamera, cbRemoveCamera)
+{
+
 }
 
 //------------------------------------------------------------------------------
 FGODGauge::~FGODGauge()
 {
-  if( camera.valid() )
-    globals->get_renderer()->removeCamera(camera.get());
-}
 
-//------------------------------------------------------------------------------
-void FGODGauge::setSize(int size_x, int size_y)
-{
-  _size_x = size_x;
-  _size_y = size_y < 0 ? size_x : size_y;
-
-  if( texture.valid() )
-    texture->setTextureSize(_size_x, _size_x);
-}
-
-//----------------------------------------------------------------------------
-void FGODGauge::setViewSize(int width, int height)
-{
-  _view_width = width;
-  _view_height = height < 0 ? width : height;
-
-  if( camera )
-    updateCoordinateFrame();
-}
-
-//------------------------------------------------------------------------------
-void FGODGauge::useImageCoords(bool use)
-{
-  if( use == _use_image_coords )
-    return;
-
-  _use_image_coords = use;
-
-  if( texture )
-    updateCoordinateFrame();
-}
-
-//------------------------------------------------------------------------------
-void FGODGauge::useStencil(bool use)
-{
-  if( use == _use_stencil )
-    return;
-
-  _use_stencil = use;
-
-  if( texture )
-    updateStencil();
-}
-
-//------------------------------------------------------------------------------
-void FGODGauge::setSampling( bool mipmapping,
-                             int coverage_samples,
-                             int color_samples )
-{
-  if(    _use_mipmapping == mipmapping
-      && _coverage_samples == coverage_samples
-      && _color_samples == color_samples )
-    return;
-
-  _use_mipmapping = mipmapping;
-
-  if( color_samples > coverage_samples )
-  {
-    SG_LOG
-    (
-      SG_GL,
-      SG_WARN,
-      "FGODGauge::setSampling: color_samples > coverage_samples not allowed!"
-    );
-    color_samples = coverage_samples;
-  }
-
-  _coverage_samples = coverage_samples;
-  _color_samples = color_samples;
-
-  updateSampling();
-}
-
-//------------------------------------------------------------------------------
-void FGODGauge::setRender(bool render)
-{
-  // Only the far camera should trigger this texture to be rendered.
-  camera->setNodeMask(render ? simgear::BACKGROUND_BIT : 0);
-}
-
-//------------------------------------------------------------------------------
-bool FGODGauge::serviceable(void) 
-{
-  return rtAvailable;
-}
-
-//------------------------------------------------------------------------------
-void FGODGauge::allocRT(osg::NodeCallback* camera_cull_callback)
-{
-  camera = new osg::Camera;
-  camera->setDataVariance(osg::Object::DYNAMIC);
-  camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-  camera->setRenderOrder(osg::Camera::PRE_RENDER);
-  camera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f , 0.0f));
-  camera->setClearStencil(0);
-  camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT,
-                                             osg::Camera::FRAME_BUFFER );
-
-  if( camera_cull_callback )
-    camera->setCullCallback(camera_cull_callback);
-
-  setRender(true);
-  updateCoordinateFrame();
-  updateStencil();
-
-  osg::StateSet* stateSet = camera->getOrCreateStateSet();
-  stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-  stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-  stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
-  stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-  stateSet->setAttributeAndModes(new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK,
-          osg::PolygonMode::FILL),
-          osg::StateAttribute::ON);
-  stateSet->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GREATER,
-          0.0f),
-          osg::StateAttribute::ON);
-  stateSet->setAttribute(new osg::ShadeModel(osg::ShadeModel::FLAT));
-  stateSet->setAttributeAndModes(new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA,
-          osg::BlendFunc::ONE_MINUS_SRC_ALPHA),
-          osg::StateAttribute::ON);
-  if( !texture )
-  {
-    texture = new osg::Texture2D;
-    texture->setTextureSize(_size_x, _size_y);
-    texture->setInternalFormat(GL_RGBA);
-  }
-
-  updateSampling();
-
-  globals->get_renderer()->addCamera(camera.get(), false);
-  rtAvailable = true;
-}
-
-//------------------------------------------------------------------------------
-void FGODGauge::updateCoordinateFrame()
-{
-  assert( camera );
-
-  if( _view_width < 0 )
-    _view_width = _size_x;
-  if( _view_height < 0 )
-    _view_height = _size_y;
-
-  camera->setViewport(0, 0, _size_x, _size_y);
-
-  if( _use_image_coords )
-    camera->setProjectionMatrix(
-      osg::Matrix::ortho2D(0, _view_width, _view_height, 0)
-    );
-  else
-    camera->setProjectionMatrix(
-      osg::Matrix::ortho2D( -_view_width/2.,  _view_width/2.,
-                            -_view_height/2., _view_height/2. )
-    );
-}
-
-//------------------------------------------------------------------------------
-void FGODGauge::updateStencil()
-{
-  assert( camera );
-
-  GLbitfield mask = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
-
-  if( _use_stencil)
-  {
-    camera->attach( osg::Camera::PACKED_DEPTH_STENCIL_BUFFER,
-                     GL_DEPTH_STENCIL_EXT );
-    mask |= GL_STENCIL_BUFFER_BIT;
-  }
-  else
-  {
-    camera->detach(osg::Camera::PACKED_DEPTH_STENCIL_BUFFER);
-  }
-
-  camera->setClearMask(mask);
-}
-
-//------------------------------------------------------------------------------
-void FGODGauge::updateSampling()
-{
-  assert( camera );
-  assert( texture );
-
-  texture->setFilter(
-    osg::Texture2D::MIN_FILTER,
-    _use_mipmapping ? osg::Texture2D::LINEAR_MIPMAP_LINEAR
-                    : osg::Texture2D::LINEAR
-  );
-  camera->attach(
-    osg::Camera::COLOR_BUFFER,
-    texture.get(),
-    0, 0,
-    _use_mipmapping,
-    _coverage_samples,
-    _color_samples
-  );
 }
 
 /**
