@@ -434,7 +434,7 @@ static naRef f_removeChildren(naContext c, naRef me, int argc, naRef* args)
     if(naIsNil(argv) || naVec_size(argv) == 0) {
         // Remove all children
         for(int i = (*node)->nChildren() - 1; i >=0; i--)
-            naVec_append(result, propNodeGhostCreate(c, (*node)->removeChild(i)));
+            naVec_append(result, propNodeGhostCreate(c, (*node)->removeChild(i, false)));
     } else {
         // Remove all children of a specified name
         naRef name = naVec_get(argv, 0);
