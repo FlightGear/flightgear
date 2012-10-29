@@ -19,10 +19,10 @@
 #ifndef CANVAS_WINDOW_HXX_
 #define CANVAS_WINDOW_HXX_
 
-#include "property_based_element.hxx"
 #include <Canvas/elements/CanvasImage.hxx>
 #include <Canvas/MouseEvent.hxx>
 
+#include <simgear/props/PropertyBasedElement.hxx>
 #include <simgear/props/propertyObject.hxx>
 
 #include <osg/Geode>
@@ -31,7 +31,7 @@
 namespace canvas
 {
   class Window:
-    public PropertyBasedElement
+    public simgear::PropertyBasedElement
   {
     public:
       Window(SGPropertyNode* node);

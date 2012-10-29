@@ -11,8 +11,6 @@ set(SOURCES
   elements/CanvasImage.cxx
   gui_mgr.cxx
   placement.cxx
-  property_based_element.cxx
-  property_based_mgr.cxx
   property_helper.cxx
   window.cxx
 )
@@ -28,8 +26,6 @@ set(HEADERS
   elements/CanvasImage.hxx
   gui_mgr.hxx
   placement.hxx
-  property_based_element.hxx
-  property_based_mgr.hxx
   property_helper.hxx
   window.hxx
 )

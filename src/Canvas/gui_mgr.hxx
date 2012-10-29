@@ -19,10 +19,10 @@
 #ifndef CANVAS_GUI_MGR_HXX_
 #define CANVAS_GUI_MGR_HXX_
 
-#include "property_based_mgr.hxx"
 #include <Canvas/canvas_fwd.hpp>
 #include <Canvas/placement.hxx>
 
+#include <simgear/props/PropertyBasedMgr.hxx>
 #include <simgear/props/propertyObject.hxx>
 
 #include <osg/ref_ptr>
@@ -36,7 +36,7 @@ namespace osgGA
 
 class GUIEventHandler;
 class GUIMgr:
-  public PropertyBasedMgr
+  public simgear::PropertyBasedMgr
 {
   public:
     GUIMgr();
@@ -44,7 +44,7 @@ class GUIMgr:
     virtual void init();
     virtual void shutdown();
 
-    virtual void elementCreated(PropertyBasedElementPtr element);
+    virtual void elementCreated(simgear::PropertyBasedElementPtr element);
 
     bool handleEvent(const osgGA::GUIEventAdapter& ea);
 

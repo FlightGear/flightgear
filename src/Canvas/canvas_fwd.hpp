@@ -30,10 +30,6 @@ class Canvas;
 typedef boost::shared_ptr<Canvas> CanvasPtr;
 typedef boost::weak_ptr<Canvas> CanvasWeakPtr;
 
-class PropertyBasedElement;
-typedef boost::shared_ptr<PropertyBasedElement> PropertyBasedElementPtr;
-typedef boost::weak_ptr<PropertyBasedElement> PropertyBasedElementWeakPtr;
-
 namespace canvas
 {
   const std::string VG_INIT_SIGNAL = "/sim/signals/vg-initialized-frame";

@@ -20,11 +20,11 @@
 #define CANVAS_HXX_
 
 #include "placement.hxx"
-#include "property_based_element.hxx"
 
 #include <Canvas/canvas_fwd.hpp>
 #include <Cockpit/od_gauge.hxx>
 
+#include <simgear/props/PropertyBasedElement.hxx>
 #include <simgear/props/propertyObject.hxx>
 #include <osg/NodeCallback>
 #include <osg/observer_ptr>
@@ -33,7 +33,7 @@
 #include <string>
 
 class Canvas:
-  public PropertyBasedElement
+  public simgear::PropertyBasedElement
 {
   public:
 

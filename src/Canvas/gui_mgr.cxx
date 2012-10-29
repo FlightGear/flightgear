@@ -20,6 +20,7 @@
 #include <Canvas/window.hxx>
 #include <Canvas/canvas.hxx>
 
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/renderer.hxx>
@@ -105,7 +106,9 @@ WindowPtr windowFactory(SGPropertyNode* node)
 
 //------------------------------------------------------------------------------
 GUIMgr::GUIMgr():
-  PropertyBasedMgr("/sim/gui/canvas", "window", &windowFactory),
+  PropertyBasedMgr( fgGetNode("/sim/gui/canvas", true),
+                    "window",
+                    &windowFactory ),
   _event_handler( new GUIEventHandler(this) ),
   _transform( new osg::MatrixTransform ),
   _width(_props, "size[0]"),
@@ -164,7 +167,7 @@ void GUIMgr::shutdown()
 }
 
 //------------------------------------------------------------------------------
-void GUIMgr::elementCreated(PropertyBasedElementPtr element)
+void GUIMgr::elementCreated(simgear::PropertyBasedElementPtr element)
 {
   canvas::WindowPtr window =
     boost::static_pointer_cast<canvas::Window>(element);

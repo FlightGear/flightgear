@@ -19,6 +19,8 @@
 #include "canvas_mgr.hxx"
 #include "canvas.hxx"
 
+#include <Main/fg_props.hxx>
+
 #include <boost/bind.hpp>
 
 typedef boost::shared_ptr<Canvas> CanvasPtr;
@@ -30,7 +32,9 @@ CanvasPtr canvasFactory(SGPropertyNode* node)
 
 //------------------------------------------------------------------------------
 CanvasMgr::CanvasMgr():
-  PropertyBasedMgr("/canvas/by-index", "texture", &canvasFactory)
+  PropertyBasedMgr( fgGetNode("/canvas/by-index", true),
+                    "texture",
+                    &canvasFactory )
 {
   Canvas::addPlacementFactory
   (

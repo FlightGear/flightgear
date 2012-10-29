@@ -132,27 +132,4 @@ namespace canvas
     for( size_t i = 0; i < num_channels; ++i )
       nodes.push_back( getChildDefault(color, channels[i], def[i]) );
   }
-
-  //----------------------------------------------------------------------------
-  void triggerChangeRecursive(SGPropertyNode* node)
-  {
-    node->getParent()->fireChildAdded(node);
-
-    if( node->nChildren() == 0 && node->getType() != simgear::props::NONE )
-      return node->fireValueChanged();
-
-    for( int i = 0; i < node->nChildren(); ++i )
-      triggerChangeRecursive( node->getChild(i) );
-  }
-
-  //----------------------------------------------------------------------------
-  void triggerRemoveRecursive(SGPropertyNode* node)
-  {
-    for( int i = 0; i < node->nChildren(); ++i )
-    {
-      SGPropertyNode* child = node->getChild(i);
-      node->fireChildRemoved( child );
-      triggerRemoveRecursive( child );
-    }
-  }
 }

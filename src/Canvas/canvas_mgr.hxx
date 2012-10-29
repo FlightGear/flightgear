@@ -20,10 +20,10 @@
 #define CANVAS_MGR_H_
 
 #include "canvas_fwd.hpp"
-#include "property_based_mgr.hxx"
+#include <simgear/props/PropertyBasedMgr.hxx>
 
 class CanvasMgr:
-  public PropertyBasedMgr
+  public simgear::PropertyBasedMgr
 {
   public:
     CanvasMgr();
