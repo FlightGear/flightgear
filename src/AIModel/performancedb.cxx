@@ -40,10 +40,6 @@ void PerformanceDB::registerPerformanceData(const std::string& id, PerformanceDa
     _db[id] = data;
 }
 
-void PerformanceDB::registerPerformanceData(const std::string& id, const std::string& filename) {
-    registerPerformanceData(id, new PerformanceData(filename));
-}
-
 PerformanceData* PerformanceDB::getDataFor(const string& acType, const string& acClass)
 {
   // first, try with the specific aircraft type, such as 738 or A322
@@ -65,20 +61,8 @@ PerformanceData* PerformanceDB::getDataFor(const string& acType, const string& a
     return _db[acClass];
 }
 
-void PerformanceDB::load(const SGPath& filename) {
-    string name;
-    double acceleration;
-    double deceleration;
-    double climbRate;
-    double descentRate;
-    double vRotate;
-    double vTakeOff;
-    double vClimb;
-    double vCruise;
-    double vDescent;
-    double vApproach;
-    double vTouchdown;
-    double vTaxi;
+void PerformanceDB::load(const SGPath& filename)
+{
     SGPropertyNode root;
     try {
         readProperties(filename.str(), &root);
@@ -92,22 +76,25 @@ void PerformanceDB::load(const SGPath& filename) {
     for (int i = 0; i < node->nChildren(); i++) {
         SGPropertyNode * db_node = node->getChild(i);
         if (!strcmp(db_node->getName(), "aircraft")) {
-            name         = db_node->getStringValue("type", "heavy_jet");
-            acceleration = db_node->getDoubleValue("acceleration-kts-hour", 4.0);
-            deceleration = db_node->getDoubleValue("deceleration-kts-hour", 2.0);
-            climbRate    = db_node->getDoubleValue("climbrate-fpm", 3000.0);
-            descentRate  = db_node->getDoubleValue("decentrate-fpm", 1500.0);
-            vRotate      = db_node->getDoubleValue("rotate-speed-kts", 150.0);
-            vTakeOff     = db_node->getDoubleValue("takeoff-speed-kts", 160.0);
-            vClimb       = db_node->getDoubleValue("climb-speed-kts", 300.0);
-            vCruise      = db_node->getDoubleValue("cruise-speed-kts", 430.0);
-            vDescent     = db_node->getDoubleValue("decent-speed-kts", 300.0);
-            vApproach    = db_node->getDoubleValue("approach-speed-kts", 170.0);
-            vTouchdown   = db_node->getDoubleValue("touchdown-speed-kts", 150.0);
-            vTaxi        = db_node->getDoubleValue("taxi-speed-kts", 15.0);
-
-            registerPerformanceData(name, new PerformanceData(
-                acceleration, deceleration, climbRate, descentRate, vRotate, vTakeOff, vClimb, vCruise, vDescent, vApproach, vTouchdown, vTaxi));
+            PerformanceData* data = NULL;
+            if (db_node->hasChild("base")) {
+              string baseName = db_node->getStringValue("base");
+              PerformanceData* baseData = _db[baseName];
+              if (!baseData) {
+                SG_LOG(SG_AI, SG_ALERT,
+                       "Error reading AI aircraft performance database: unknown base type " << baseName);
+                return;
+              }
+              
+              // clone base data to 'inherit' from it
+              data = new PerformanceData(baseData); 
+            } else {
+              data = new PerformanceData;
+            }
+          
+            data->initFromProps(db_node);
+            string name  = db_node->getStringValue("type", "heavy_jet");
+            registerPerformanceData(name, data);
         } else if (!strcmp(db_node->getName(), "alias")) {
             string alias(db_node->getStringValue("alias"));
             if (alias.empty()) {

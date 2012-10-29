@@ -4,8 +4,9 @@
 #endif
 
 #include "performancedata.hxx"
-#include "AIAircraft.hxx"
 
+#include <simgear/props/props.hxx>
+#include "AIAircraft.hxx"
 
 // For now, make this a define
 // Later on, additional class variables can simulate settings such as braking power
@@ -13,41 +14,62 @@
 // to the AIAircraft.
 #define BRAKE_SETTING 1.6
 
-PerformanceData::PerformanceData(double acceleration,
-                                double deceleration,
-                                double climbRate,
-                                double descentRate,
-                                double vRotate,
-                                double vTakeOff,
-                                double vClimb,
-                                double vCruise,
-                                double vDescent,
-                                double vApproach,
-                                double vTouchdown,
-                                double vTaxi) :
-    _acceleration(acceleration),
-    _deceleration(deceleration),
-    _climbRate(climbRate),
-    _descentRate(descentRate),
-    _vRotate(vRotate),
-    _vTakeOff(vTakeOff),
-    _vClimb(vClimb),
-    _vCruise(vCruise),
-    _vDescent(vDescent),
-    _vApproach(vApproach),
-    _vTouchdown(vTouchdown),
-    _vTaxi(vTaxi)
+PerformanceData::PerformanceData() :
+  _acceleration(4.0),
+  _deceleration(2.0),
+  _climbRate(3000.0),
+  _descentRate(1500.0),
+  _vRotate(150.0),
+  _vTakeOff(160.0),
+  _vClimb(300.0),
+  _vCruise(430.0),
+  _vDescent(300.0),
+  _vApproach(170.0),
+  _vTouchdown(150.0),
+  _vTaxi(15.0)
 {
-    _rollrate = 9.0; // degrees per second
-    _maxbank = 30.0; // passenger friendly bank angle
+  _rollrate = 9.0; // degrees per second
+  _maxbank = 30.0; // passenger friendly bank angle
+
 }
 
-// read perf data from file
-PerformanceData::PerformanceData( const std::string& filename)
-{}
+PerformanceData::PerformanceData(PerformanceData* clone) :
+  _acceleration(clone->_acceleration),
+  _deceleration(clone->_deceleration),
+  _climbRate(clone->_climbRate),
+  _descentRate(clone->_descentRate),
+  _vRotate(clone->_vRotate),
+  _vTakeOff(clone->_vTakeOff),
+  _vClimb(clone->_vClimb),
+  _vCruise(clone->_vCruise),
+  _vDescent(clone->_vDescent),
+  _vApproach(clone->_vApproach),
+  _vTouchdown(clone->_vTouchdown),
+  _vTaxi(clone->_vTaxi)
+{
+  _rollrate = clone->_rollrate;
+  _maxbank = clone->_maxbank;
+}
 
 PerformanceData::~PerformanceData()
 {}
+
+void PerformanceData::initFromProps(SGPropertyNode *db_node)
+{
+// read the values, using the existing values as defaults
+  _acceleration = db_node->getDoubleValue("acceleration-kts-hour", _acceleration);
+  _deceleration = db_node->getDoubleValue("deceleration-kts-hour", _deceleration);
+  _climbRate    = db_node->getDoubleValue("climbrate-fpm", _climbRate);
+  _descentRate  = db_node->getDoubleValue("decentrate-fpm", _descentRate);
+  _vRotate      = db_node->getDoubleValue("rotate-speed-kts", _vRotate);
+  _vTakeOff     = db_node->getDoubleValue("takeoff-speed-kts", _vTakeOff);
+  _vClimb       = db_node->getDoubleValue("climb-speed-kts", _vClimb);
+  _vCruise      = db_node->getDoubleValue("cruise-speed-kts", _vCruise);
+  _vDescent     = db_node->getDoubleValue("decent-speed-kts", _vDescent);
+  _vApproach    = db_node->getDoubleValue("approach-speed-kts", _vApproach);
+  _vTouchdown   = db_node->getDoubleValue("touchdown-speed-kts", _vTouchdown);
+  _vTaxi        = db_node->getDoubleValue("taxi-speed-kts", _vTaxi);
+}
 
 double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double dt, bool maxBrakes) {
     // if (tgt_speed > _vTaxi & ac->onGround()) // maximum taxi speed on ground

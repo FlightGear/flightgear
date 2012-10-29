@@ -5,6 +5,7 @@
 #include <map>
 
 class FGAIAircraft;
+class SGPropertyNode;
 
 /**
 Data storage for aircraft performance data. This is used to properly simulate the flight of AIAircrafts.
@@ -14,19 +15,12 @@ Data storage for aircraft performance data. This is used to properly simulate th
 class PerformanceData
 {
 public:
-    PerformanceData(double acceleration,
-                    double deceleration,
-                    double climbRate,
-                    double descentRate,
-                    double vRotate,
-                    double vTakeOff,
-                    double vClimb,
-                    double vCruise,
-                    double vDescent,
-                    double vApproach,
-                    double vTouchdown,
-                    double vTaxi);
-    PerformanceData(const std::string& filename);
+    PerformanceData();
+    
+    PerformanceData(PerformanceData* clone);
+  
+    void initFromProps(SGPropertyNode* props);
+  
     ~PerformanceData();
 
     double actualSpeed(FGAIAircraft* ac, double tgt_speed, double dt, bool needMaxBrake);
