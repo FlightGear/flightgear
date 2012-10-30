@@ -149,6 +149,17 @@ FGNavRecord* FGRunway::ILS() const
   return (FGNavRecord*) flightgear::NavDataCache::instance()->loadById(_ils);
 }
 
+FGNavRecord* FGRunway::glideslope() const
+{
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  PositionedID gsId = cache->findNavaidForRunway(guid(), FGPositioned::GS);
+  if (gsId == 0) {
+    return NULL;
+  }
+  
+  return (FGNavRecord*) cache->loadById(gsId);
+}
+
 std::vector<flightgear::SID*> FGRunway::getSIDs() const
 {
   FGAirport* apt = airport();

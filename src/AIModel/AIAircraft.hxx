@@ -148,7 +148,6 @@ private:
     void updatePrimaryTargetValues(bool& flightplanActive, bool& aiOutOfSight);
     
     void updateSecondaryTargetValues();
-    void updatePosition();
     void updateHeading();
     void updateBankAngleTarget();
     void updateVerticalSpeedTarget();

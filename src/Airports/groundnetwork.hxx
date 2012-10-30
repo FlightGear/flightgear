@@ -31,13 +31,13 @@
 #include <list>
 #include <map>
 
-class Block;
-
 #include "gnnode.hxx"
 #include "parking.hxx"
 #include <ATC/trafficcontrol.hxx>
 
 
+class Block;
+class FGRunway;
 class FGTaxiSegment; // forward reference
 class FGAIFlightPlan; // forward reference
 class FGAirport;      // forward reference
@@ -275,7 +275,7 @@ public:
     };
 
     int findNearestNode(const SGGeod& aGeod);
-    int findNearestNodeOnRunway(const SGGeod& aGeod);
+    int findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL);
 
     FGTaxiNode *findNode(unsigned idx);
     FGTaxiSegment *findSegment(unsigned idx);

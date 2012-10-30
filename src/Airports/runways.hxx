@@ -108,6 +108,11 @@ public:
   
   FGNavRecord* ILS() const;
   
+  /**
+   * retrieve the associated glideslope transmitter, if one is defined.
+   */
+  FGNavRecord* glideslope() const;
+  
   void setILS(PositionedID nav) { _ils = nav; }
   
   FGRunway* reciprocalRunway() const;

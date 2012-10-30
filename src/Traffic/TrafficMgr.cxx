@@ -200,15 +200,15 @@ void FGTrafficManager::shutdown()
             cachefile << "[TrafficManagerCachedata:ref:2011:09:04]" << endl;
         }
     }
-    for (ScheduleVectorIterator sched = scheduledAircraft.begin();
-         sched != scheduledAircraft.end(); sched++) {
+  
+    BOOST_FOREACH(FGAISchedule* acft, scheduledAircraft) {
         if (saveData) {
-            cachefile << (*sched)->getRegistration() << " "
-                << (*sched)->getRunCount() << " "
-                << (*sched)->getHits() << " "
-                << (*sched)->getLastUsed() << endl;
+            cachefile << acft->getRegistration() << " "
+                << acft->getRunCount() << " "
+                << acft->getHits() << " "
+                << acft->getLastUsed() << endl;
         }
-        delete(*sched);
+        delete acft;
     }
     if (saveData) {
         cachefile.close();
@@ -271,10 +271,9 @@ void FGTrafficManager::finishInit()
     SG_LOG(SG_AI, SG_INFO, "finishing AI-Traffic init");
     loadHeuristics();
     
-    // Do sorting and scoring separately, to take advantage of the "homeport| variable
-    for (currAircraft = scheduledAircraft.begin();
-         currAircraft != scheduledAircraft.end(); currAircraft++) {
-        (*currAircraft)->setScore();
+    // Do sorting and scoring separately, to take advantage of the "homeport" variable
+    BOOST_FOREACH(FGAISchedule* schedule, scheduledAircraft) {
+        schedule->setScore();
     }
     
     sort(scheduledAircraft.begin(), scheduledAircraft.end(),
@@ -372,7 +371,7 @@ void FGTrafficManager::update(double /*dt */ )
     }
         
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
-    if (scheduledAircraft.size() == 0) {
+    if (scheduledAircraft.empty()) {
         return;
     }
 

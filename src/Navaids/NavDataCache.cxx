@@ -528,6 +528,9 @@ public:
     findNavsByFreqNoPos = prepare("SELECT positioned.rowid FROM positioned, navaid WHERE "
                                   "positioned.rowid=navaid.rowid AND freq=?1 " AND_TYPED);
     
+    findNavaidForRunway = prepare("SELECT positioned.rowid FROM positioned, navaid WHERE "
+                                  "positioned.rowid=navaid.rowid AND runway=?1 AND type=?2");
+    
   // for an octree branch, return the child octree nodes which exist,
   // described as a bit-mask
     getOctreeChildren = prepare("SELECT children FROM octree WHERE rowid=?1");
@@ -808,7 +811,7 @@ public:
 
   sqlite3_stmt_ptr searchAirports;
   sqlite3_stmt_ptr findCommByFreq, findNavsByFreq,
-  findNavsByFreqNoPos;
+  findNavsByFreqNoPos, findNavaidForRunway;
   sqlite3_stmt_ptr getAirportItems, getAirportItemByIdent;
   sqlite3_stmt_ptr findAirportRunway,
     findILS;
@@ -1706,6 +1709,18 @@ AirwayEdgeVec NavDataCache::airwayEdgesFrom(int network, PositionedID pos)
                      ));
   }
   return result;
+}
+
+PositionedID NavDataCache::findNavaidForRunway(PositionedID runway, FGPositioned::Type ty)
+{
+  d->reset(d->findNavaidForRunway);
+  sqlite3_bind_int64(d->findNavaidForRunway, 1, runway);
+  sqlite3_bind_int(d->findNavaidForRunway, 2, ty);
+  if (!d->execSelect(d->findNavaidForRunway)) {
+    return 0;
+  }
+  
+  return sqlite3_column_int64(d->findNavaidForRunway, 0);
 }
   
 } // of namespace flightgear

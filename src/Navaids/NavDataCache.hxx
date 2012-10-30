@@ -141,6 +141,11 @@ public:
   PositionedIDVec findNavaidsByFreq(int freqKhz, FGPositioned::Filter* filt);
   
   /**
+   * Given a runway and type, find the corresponding navaid (ILS / GS / OM)
+   */
+  PositionedID findNavaidForRunway(PositionedID runway, FGPositioned::Type ty);
+  
+  /**
    * given a navaid name (or similar) from apt.dat / nav.dat, find the
    * corresponding airport and runway IDs.
    * Such names look like: 'LHBP 31L DME-ILS' or 'UEEE 23L MM'

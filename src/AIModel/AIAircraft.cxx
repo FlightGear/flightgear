@@ -709,9 +709,9 @@ void FGAIAircraft::handleFirstWaypoint() {
     setAltitude(prev->getAltitude());
 
     if (prev->getSpeed() > 0.0)
-        setHeading(fp->getBearing(prev->getLatitude(), prev->getLongitude(), curr));
+        setHeading(fp->getBearing(prev, curr));
     else
-        setHeading(fp->getBearing(curr->getLatitude(), curr->getLongitude(), prev));
+        setHeading(fp->getBearing(curr, prev));
 
     // If next doesn't exist, as in incrementally created flightplans for
     // AI/Trafficmanager created plans,
@@ -799,7 +799,7 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
     //          << " Ground target speed " << groundTargetSpeed << endl;
     double bearing = 0;
      // don't do bearing calculations for ground traffic
-       bearing = getBearing(fp->getBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr));
+       bearing = getBearing(fp->getBearing(pos, curr));
        if (bearing < minBearing) {
             minBearing = bearing;
             if (minBearing < 10) {
@@ -913,12 +913,11 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
  * @param curr
  */
 void FGAIAircraft::controlHeading(FGAIWaypoint* curr) {
-    double calc_bearing = fp->getBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
+    double calc_bearing = fp->getBearing(pos, curr);
     //cerr << "Bearing = " << calc_bearing << endl;
     if (speed < 0) {
         calc_bearing +=180;
-        if (calc_bearing > 360)
-            calc_bearing -= 360;
+        SG_NORMALIZE_RANGE(calc_bearing, 0.0, 360.0);
     }
 
     if (finite(calc_bearing)) {
@@ -1022,19 +1021,6 @@ void FGAIAircraft::updatePrimaryTargetValues(bool& flightplanActive, bool& aiOut
         AccelTo( props->getDoubleValue("controls/flight/target-spd" ) );
     }
 }
-
-void FGAIAircraft::updatePosition() {
-    // convert speed to degrees per second
-    double speed_north_deg_sec = cos( hdg * SGD_DEGREES_TO_RADIANS )
-                                 * speed * 1.686 / ft_per_deg_lat;
-    double speed_east_deg_sec  = sin( hdg * SGD_DEGREES_TO_RADIANS )
-                                 * speed * 1.686 / ft_per_deg_lon;
-
-    // set new position
-    pos.setLatitudeDeg( pos.getLatitudeDeg() + speed_north_deg_sec * dt);
-    pos.setLongitudeDeg( pos.getLongitudeDeg() + speed_east_deg_sec * dt);
-}
-
 
 void FGAIAircraft::updateHeading() {
     // adjust heading based on current bank angle
@@ -1181,13 +1167,9 @@ void FGAIAircraft::updateVerticalSpeedTarget() {
         // find target vertical speed
         if (use_perf_vs) {
             if (altitude_ft < tgt_altitude_ft) {
-                tgt_vs = tgt_altitude_ft - altitude_ft;
-                if (tgt_vs > _performance->climbRate())
-                    tgt_vs = _performance->climbRate();
+                tgt_vs = std::min(tgt_altitude_ft - altitude_ft, _performance->climbRate());
             } else {
-                tgt_vs = tgt_altitude_ft - altitude_ft;
-                if (tgt_vs  < (-_performance->descentRate()))
-                    tgt_vs = -_performance->descentRate();
+                tgt_vs = std::max(tgt_altitude_ft - altitude_ft, -_performance->descentRate());
             }
         } else {
             double vert_dist_ft = fp->getCurrentWaypoint()->getCrossat() - altitude_ft;
@@ -1265,7 +1247,9 @@ void FGAIAircraft::handleATCRequests() {
 void FGAIAircraft::updateActualState() {
     //update current state
     //TODO have a single tgt_speed and check speed limit on ground on setting tgt_speed
-    updatePosition();
+    double distance = speed * SG_KT_TO_MPS * dt;
+    pos = SGGeodesy::direct(pos, hdg, distance);
+
 
     if (onGround())
         speed = _performance->actualSpeed(this, groundTargetSpeed, dt, holdPos);

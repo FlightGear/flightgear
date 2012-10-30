@@ -43,6 +43,7 @@
 
 #include <Airports/simple.hxx>
 #include <Airports/dynamics.hxx>
+#include <Airports/runways.hxx>
 
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/performancedata.hxx>
@@ -455,7 +456,7 @@ int FGGroundNetwork::findNearestNode(const SGGeod & aGeod)
     return index;
 }
 
-int FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod)
+int FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGRunway* aRunway)
 {
     double minDist = HUGE_VAL;
     int index = -1;
@@ -464,6 +465,16 @@ int FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod)
     for (i = nodes.begin(); i != nodes.end(); i++) {
         if (!i->second->getIsOnRunway()) {
             continue;
+        }
+      // check point lies on the runway - i.e that course from aGeod to the
+      // runway end, matches the runway heading
+        if (aRunway) {
+          double course = SGGeodesy::courseDeg(i->second->geod(), aRunway->end());
+          double headingDiff = course - aRunway->headingDeg();
+          SG_NORMALIZE_RANGE(headingDiff, -180.0, 180.0);
+          if (fabs(headingDiff) > 3.0) { // 3 degrees tolerance
+            continue;
+          }
         }
       
         double d = SGGeodesy::distanceM(aGeod, i->second->geod());

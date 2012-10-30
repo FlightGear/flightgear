@@ -19,15 +19,20 @@
 #ifndef _FG_AIFLIGHTPLAN_HXX
 #define _FG_AIFLIGHTPLAN_HXX
 
-#include <simgear/compiler.h>
 #include <vector>
 #include <string>
-#include <simgear/math/SGMath.hxx>
 
+#include <simgear/compiler.h>
+#include <simgear/math/SGMath.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
+
+// forward decls
 class FGTaxiRoute;
 class FGRunway;
 class FGAIAircraft;
 class FGAirport;
+
+typedef SGSharedPtr<FGAirport> FGAirportRef;
 
 class FGAIWaypoint {
 private:
@@ -121,7 +126,8 @@ public:
    void setLeadDistance(double distance_ft);
    double getLeadDistance( void ) const {return lead_distance;}
    double getBearing(FGAIWaypoint* previous, FGAIWaypoint* next) const;
-   double getBearing(double lat, double lon, FGAIWaypoint* next) const;
+   double getBearing(const SGGeod& aPos, FGAIWaypoint* next) const;
+  
    double checkTrackLength(std::string wptName);
   time_t getStartTime() const { return start_time; }
    time_t getArrivalTime() const { return arrivalTime; }
@@ -187,9 +193,10 @@ private:
   FGTaxiRoute *taxiRoute;
   std::string name;
   bool isValid;
-
+  FGAirportRef departure, arrival;
+  
   void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double radius, const std::string&, const std::string&, const std::string&);
-  bool createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const std::string&);
+  bool createClimb(FGAIAircraft *, bool, FGAirport *, FGAirport* arrival, double, double, const std::string&);
   bool createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const std::string&);
   bool createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const std::string&, double distance);
   bool createLanding(FGAIAircraft *, FGAirport *, const std::string&);
@@ -214,6 +221,28 @@ private:
 
   //void createCruiseFallback(bool, FGAirport*, FGAirport*, double, double, double, double);
  void evaluateRoutePart(double deplat, double deplon, double arrlat, double arrlon);
+  
+  /**
+   * look for and parse an PropertyList flight-plan file - essentially
+   * a flat list waypoint objects, encoded to properties
+   */
+  bool parseProperties(const std::string& filename);
+  
+  void createWaypoints(FGAIAircraft *ac,
+                       double course,
+                       time_t start,
+                       FGAirport *dep,
+                       FGAirport *arr,
+                       bool firstLeg,
+                       double radius,
+                       double alt,
+                       double lat,
+                       double lon,
+                       double speed,
+                       const std::string& fltType,
+                       const std::string& acType,
+                       const std::string& airline);
+  
  public:
   wpt_vector_iterator getFirstWayPoint() { return waypoints.begin(); };
   wpt_vector_iterator getLastWayPoint()  { return waypoints.end(); };
