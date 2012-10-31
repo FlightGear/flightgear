@@ -52,24 +52,10 @@ namespace canvas
         setDataVariance(Object::DYNAMIC);
 
         setUpdateCallback(new PathUpdateCallback());
-        setCullCallback(new NoCullCallback());
       }
 
       virtual ~PathDrawable()
       {
-        if( !_vg_initialized )
-        {
-          if( _path != VG_INVALID_HANDLE )
-            SG_LOG
-            (
-              SG_GL,
-              SG_WARN,
-              "Can't destroy path without OpenVG context: "
-                << _path_element->_node->getPath()
-            );
-          return;
-        }
-
         if( _path != VG_INVALID_HANDLE )
           vgDestroyPath(_path);
         if( _paint != VG_INVALID_HANDLE )
@@ -93,7 +79,7 @@ namespace canvas
         _cmds = cmds;
         _coords = coords;
 
-        _attributes_dirty |= PATH;
+        _attributes_dirty |= (PATH | BOUNDING_BOX);
       }
 
       /**
@@ -182,7 +168,7 @@ namespace canvas
        */
       virtual void drawImplementation(osg::RenderInfo& renderInfo) const
       {
-        if( (_attributes_dirty & PATH) && _vg_initialized )
+        if( _attributes_dirty & PATH )
           return;
 
         osg::State* state = renderInfo.getState();
@@ -195,21 +181,6 @@ namespace canvas
         glPushAttrib(~0u); // Don't use GL_ALL_ATTRIB_BITS as on my machine it
                            // eg. doesn't include GL_MULTISAMPLE_BIT
         glPushClientAttrib(~0u);
-
-        // Initialize OpenVG itself
-        if( !_vg_initialized )
-        {
-          GLint vp[4];
-          glGetIntegerv(GL_VIEWPORT, vp);
-
-          vgCreateContextSH(vp[2], vp[3]);
-          _vg_initialized = true;
-
-          fgSetInt( canvas::VG_INIT_SIGNAL,
-                    renderInfo.getView()->getFrameStamp()->getFrameNumber() );
-
-          return;
-        }
 
         // Initialize/Update the paint
         if( _attributes_dirty & STROKE_COLOR )
@@ -268,7 +239,7 @@ namespace canvas
        */
       virtual osg::BoundingBox computeBound() const
       {
-        if( _path == VG_INVALID_HANDLE )
+        if( _path == VG_INVALID_HANDLE || (_attributes_dirty & PATH) )
           return osg::BoundingBox();
 
         VGfloat min[2], size[2];
@@ -290,8 +261,6 @@ namespace canvas
       }
 
     private:
-
-      static bool _vg_initialized;
 
       enum Attributes
       {
@@ -352,44 +321,15 @@ namespace canvas
           dirtyBound();
       }
 
-      /**
-       * Updating the path before drawing is needed to enable correct bounding
-       * box calculations and make culling work.
-       */
       struct PathUpdateCallback:
         public osg::Drawable::UpdateCallback
       {
         virtual void update(osg::NodeVisitor*, osg::Drawable* drawable)
         {
-          if( !_vg_initialized )
-            return;
           static_cast<PathDrawable*>(drawable)->update();
         }
       };
-
-      /**
-       * Callback used to prevent culling as long as OpenVG is not initialized.
-       * This is needed because OpenVG needs an active OpenGL context for
-       * initialization which is only available in #drawImplementation.
-       * As soon as OpenVG is correctly initialized the callback automatically
-       * removes itself from the node, so that the normal culling can get
-       * active.
-       */
-      struct NoCullCallback:
-        public osg::Drawable::CullCallback
-      {
-        virtual bool cull( osg::NodeVisitor*,
-                           osg::Drawable* drawable,
-                           osg::State* ) const
-        {
-          if( _vg_initialized )
-            drawable->setCullCallback(0);
-          return false;
-        }
-      };
   };
-
-  bool Path::PathDrawable::_vg_initialized = false;
 
   //----------------------------------------------------------------------------
   Path::Path(SGPropertyNode_ptr node, const Style& parent_style):

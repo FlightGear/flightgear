@@ -22,7 +22,6 @@
 #include <Canvas/MouseEvent.hxx>
 #include <Canvas/property_helper.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/globals.hxx>
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/renderer.hxx>
 
@@ -49,16 +48,7 @@ class Canvas::DrawCallback:
 
     virtual void operator()(osg::RenderInfo& renderInfo) const
     {
-      const long frame = renderInfo.getView()->getFrameStamp()
-                                             ->getFrameNumber();
-
-      static SGPropertyNode_ptr node_frame =
-        globals->get_props()->getNode(canvas::VG_INIT_SIGNAL, true);
-
-      // If OpenVG has been initialized we need to redraw the frame, because
-      // initializing has happened instead of rendering.
-      // Otherwise we just reset the _render_dirty flag.
-      _canvas->_render_dirty = (frame == node_frame->getLongValue());
+      _canvas->_render_dirty = false;
     }
 
   protected:

@@ -34,6 +34,7 @@
 #include <osgDB/Registry>
 
 // Class references
+#include <simgear/canvas/VGInitOperation.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/props/AtomicChangeListener.hxx>
@@ -52,6 +53,7 @@
 #include <GUI/gui.h>
 #include <Viewer/splash.hxx>
 #include <Viewer/renderer.hxx>
+#include <Viewer/WindowSystemAdapter.hxx>
 #include <Navaids/NavDataCache.hxx>
 
 #include "fg_commands.hxx"
@@ -249,6 +251,9 @@ static void fgIdleFunction ( void ) {
 
         globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
                                          fgGetInt("/sim/startup/ysize") );
+        WindowSystemAdapter::getWSA()->windows[0]->gc->add(
+          new simgear::canvas::VGInitOperation()
+        );
 
         int session = fgGetInt("/sim/session",0);
         session++;
