@@ -5,9 +5,6 @@
 //
 // Copyright (C) 2001  Curtis L. Olson - http://www.flightgear.org/~curt
 //
-// Jpeg Image Support added August 2001
-//  by Norman Vine - nhv@cape.com
-//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -37,6 +34,7 @@
 #include <string>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/io/sg_netChat.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/math/sg_types.hxx>
 #include <simgear/structure/commands.hxx>
@@ -49,11 +47,97 @@
 
 using std::string;
 
+/* simple httpd server that makes an hasty stab at following the http
+   1.1 rfc.  */
+
+//////////////////////////////////////////////////////////////
+// class HttpdChannel
+//////////////////////////////////////////////////////////////
+
+class HttpdChannel : public simgear::NetChat
+{
+    simgear::NetBuffer buffer;
+
+    string urlEncode(string);
+    string urlDecode(string);
+
+public:
+
+    HttpdChannel() : buffer(512) { setTerminator("\r\n"); }
+
+    virtual void collectIncomingData (const char* s, int n) {
+        buffer.append(s,n);
+    }
+
+    // Handle the actual http request
+    virtual void foundTerminator(void);
+};
+
+
+//////////////////////////////////////////////////////////////
+// class HttpdServer
+//////////////////////////////////////////////////////////////
+
+class HttpdServer : private simgear::NetChannel
+{
+    virtual bool writable (void) { return false; }
+
+    virtual void handleAccept (void) {
+        simgear::IPAddress addr;
+        int handle = accept ( &addr );
+        SG_LOG( SG_IO, SG_INFO, "Client " << addr.getHost() << ":" << addr.getPort() << " connected" );
+
+        HttpdChannel *hc = new HttpdChannel;
+        hc->setHandle ( handle );
+    }
+
+public:
+
+    HttpdServer ( int port );
+};
+
+HttpdServer::HttpdServer(int port)
+{
+    if (!open())
+    {
+        SG_LOG( SG_IO, SG_ALERT, "Failed to open HTTP port.");
+        return;
+    }
+
+    if (0 != bind( "", port ))
+    {
+        SG_LOG( SG_IO, SG_ALERT, "Failed to bind HTTP port.");
+        return;
+    }
+
+    if (0 != listen( 5 ))
+    {
+        SG_LOG( SG_IO, SG_ALERT, "Failed to listen on HTTP port.");
+        return;
+    }
+
+    SG_LOG(SG_IO, SG_ALERT, "Httpd server started on port " << port);
+}
+
+//////////////////////////////////////////////////////////////
+// class FGHttpd
+//////////////////////////////////////////////////////////////
+
+FGHttpd::FGHttpd(int p) :
+    port(p),
+    server(NULL)
+{
+}
+
+FGHttpd::~FGHttpd()
+{
+}
+
 bool FGHttpd::open() {
     if ( is_enabled() ) {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
-		<< "is already in use, ignoring" );
-	return false;
+        SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
+                << "is already in use, ignoring" );
+        return false;
     }
 
     server = new HttpdServer( port );
@@ -73,9 +157,13 @@ bool FGHttpd::process() {
 
 
 bool FGHttpd::close() {
+    if (!server)
+        return true;
+
     SG_LOG( SG_IO, SG_INFO, "closing FGHttpd" );   
 
     delete server;
+    server = NULL;
     set_enabled( false );
 
     return true;
