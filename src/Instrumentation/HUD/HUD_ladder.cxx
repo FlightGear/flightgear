@@ -274,9 +274,10 @@ void HUD::Ladder::draw(void)
             SGPropertyNode *chld = models->getChild(i);
             string name;
             name = chld->getName();
-            if (name == "aircraft" || name == "multiplayer") {
-                string callsign = chld->getStringValue("callsign");
-                if (callsign != "") {
+            if (name == "tanker" || name == "aircraft" || name == "multiplayer") {
+                bool valid = chld->getBoolValue("valid");
+                bool in_range = chld->getBoolValue("radar/in-range", true);
+                if (valid && in_range) {
                     float h_deg = chld->getFloatValue("radar/h-offset");
                     float v_deg = chld->getFloatValue("radar/v-offset");
                     float pos_x = (h_deg * cos(roll_value) -
