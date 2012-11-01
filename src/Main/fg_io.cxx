@@ -83,9 +83,6 @@ FGIO::FGIO()
 }
 
 
-
-
-
 FGIO::~FGIO()
 {
 
@@ -102,14 +99,14 @@ FGIO::parse_port_config( const string& config )
     if (tokens.empty())
     {
         SG_LOG( SG_IO, SG_ALERT,
-        "Port configuration error: empty config string" );
-        return 0;
+                "Port configuration error: empty config string" );
+        return NULL;
     }
 
     string protocol = tokens[0];
     SG_LOG( SG_IO, SG_INFO, "  protocol = " << protocol );
 
-    FGProtocol *io = 0;
+    FGProtocol *io = NULL;
 
     try
     {
@@ -134,8 +131,6 @@ FGIO::parse_port_config( const string& config )
             FGAtlas *atlas = new FGAtlas;
             io = atlas;
         } else if ( protocol == "opengc" ) {
-            // char wait;
-            // printf("Parsed opengc\n"); cin >> wait;
             FGOpenGC *opengc = new FGOpenGC;
             io = opengc;
         } else if ( protocol == "AV400" ) {
@@ -218,7 +213,7 @@ FGIO::parse_port_config( const string& config )
             short port = atoi(tokens[4].c_str());
 
             // multiplay used to be handled by an FGProtocol, but no longer. This code
-            // retains compatability with existing command-line syntax
+            // retains compatibility with existing command-line syntax
             fgSetInt("/sim/multiplay/tx-rate-hz", rate);
             if (dir == "in") {
                 fgSetInt("/sim/multiplay/rxport", port);
@@ -229,12 +224,12 @@ FGIO::parse_port_config( const string& config )
             }
 
             return NULL;
-#ifdef FG_HAVE_HLA
-        } else if ( protocol == "hla" ) {
-            return new FGHLA(tokens);
         }
+#ifdef FG_HAVE_HLA
+        else if ( protocol == "hla" ) {
+            return new FGHLA(tokens);
 #endif
-        } else {
+        else {
             return NULL;
         }
     }
@@ -242,11 +237,12 @@ FGIO::parse_port_config( const string& config )
     {
         SG_LOG( SG_IO, SG_ALERT, "Port configuration error: " << err.what() );
         delete io;
-        return 0;
+        return NULL;
     }
 
     if (tokens.size() < 3) {
         SG_LOG( SG_IO, SG_ALERT, "Incompatible number of network arguments.");
+        delete io;
         return NULL;
     }
     string medium = tokens[1];
@@ -264,6 +260,7 @@ FGIO::parse_port_config( const string& config )
     if ( medium == "serial" ) {
         if ( tokens.size() < 5) {
             SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for serial communications.");
+            delete io;
             return NULL;
         }
         // device name
@@ -281,6 +278,7 @@ FGIO::parse_port_config( const string& config )
         if ( protocol == "AV400WSimB" ) {
             if ( tokens.size() < 7 ) {
                 SG_LOG( SG_IO, SG_ALERT, "Missing second hz for AV400WSimB.");
+                delete io;
                 return NULL;
             }
             FGAV400WSimB *fgavb = static_cast<FGAV400WSimB*>(io);
@@ -292,6 +290,7 @@ FGIO::parse_port_config( const string& config )
         // file name
         if ( tokens.size() < 4) {
             SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for file I/O.");
+            delete io;
             return NULL;
         }
 
@@ -313,6 +312,7 @@ FGIO::parse_port_config( const string& config )
     } else if ( medium == "socket" ) {
         if ( tokens.size() < 6) {
             SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for socket communications.");
+            delete io;
             return NULL;
         }
         string hostname = tokens[4];
@@ -340,31 +340,36 @@ FGIO::init()
 
     _realDeltaTime = fgGetNode("/sim/time/delta-realtime-sec");
 
-    FGProtocol *p;
-
     // we could almost do this in a single step except pushing a valid
     // port onto the port list copies the structure and destroys the
     // original, which closes the port and frees up the fd ... doh!!!
 
-    // parse the configuration strings and store the results in the
-    // appropriate FGIOChannel structures
     string_list::iterator i = globals->get_channel_options_list()->begin();
     string_list::iterator end = globals->get_channel_options_list()->end();
     for (; i != end; ++i ) {
-        p = parse_port_config( *i );
-        if (!p) {
-            continue;
-        }
-
-        p->open();
-        if ( !p->is_enabled() ) {
-            SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
-            delete p;
-            continue;
-        }
-
-        io_channels.push_back( p );
+        add_channel( *i );
     } // of channel options iteration
+}
+
+// add another I/O channel
+void FGIO::add_channel(const string& config)
+{
+    // parse the configuration string and store the results in the
+    // appropriate FGIOChannel structure
+    FGProtocol *p = parse_port_config( config );
+    if (!p)
+    {
+        return;
+    }
+
+    p->open();
+    if ( !p->is_enabled() ) {
+        SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
+        delete p;
+        return;
+    }
+
+    io_channels.push_back( p );
 }
 
 void
@@ -408,13 +413,11 @@ FGIO::update( double /* delta_time_sec */ )
 void
 FGIO::shutdown()
 {
-    FGProtocol *p;
-
     ProtocolVec::iterator i = io_channels.begin();
     ProtocolVec::iterator end = io_channels.end();
     for (; i != end; ++i )
     {
-        p = *i;
+        FGProtocol *p = *i;
         if ( p->is_enabled() ) {
             p->close();
         }
@@ -434,4 +437,3 @@ void
 FGIO::unbind()
 {
 }
-
