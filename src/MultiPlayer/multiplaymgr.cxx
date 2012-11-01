@@ -404,7 +404,9 @@ FGMultiplayMgr::init (void)
     return;
   }
 
-  fgSetBool("/sim/multiplay/online", false);
+  SGPropertyNode* propOnline = fgGetNode("/sim/multiplay/online", true);
+  propOnline->setBoolValue(false);
+  propOnline->setAttribute(SGPropertyNode::PRESERVE, true);
 
   //////////////////////////////////////////////////
   //  Set members from property values
