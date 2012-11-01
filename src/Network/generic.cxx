@@ -340,7 +340,7 @@ bool FGGeneric::parse_message_binary(int length) {
 }
 
 bool FGGeneric::parse_message_ascii(int length) {
-    char *p2, *p1 = buf;
+    char *p1 = buf;
     int i = -1;
     int chunks = _in_message.size();
     int line_separator_size = line_separator.size();
@@ -354,11 +354,17 @@ bool FGGeneric::parse_message_ascii(int length) {
         buf[length - line_separator_size] = 0;
     }
 
+    size_t varsep_len = var_separator.length();
     while ((++i < chunks) && p1) {
-        p2 = strstr(p1, var_separator.c_str());
-        if (p2) {
-            *p2 = 0;
-            p2 += var_separator.length();
+        char* p2 = NULL;
+
+        if (varsep_len > 0)
+        {
+            p2 = strstr(p1, var_separator.c_str());
+            if (p2) {
+                *p2 = 0;
+                p2 += varsep_len;
+            }
         }
 
         switch (_in_message[i].type) {
@@ -542,13 +548,21 @@ FGGeneric::reinit()
         SGPropertyNode *output = root.getNode("generic/output");
         if (output) {
             _out_message.clear();
-            read_config(output, _out_message);
+            if (!read_config(output, _out_message))
+            {
+                // bad configuration
+                return;
+            }
         }
     } else if (direction == "in") {
         SGPropertyNode *input = root.getNode("generic/input");
         if (input) {
             _in_message.clear();
-            read_config(input, _in_message);
+            if (!read_config(input, _in_message))
+            {
+                // bad configuration
+                return;
+            }
             if (!binary_mode && (line_separator.size() == 0 ||
                 *line_separator.rbegin() != '\n')) {
 
@@ -563,7 +577,7 @@ FGGeneric::reinit()
 }
 
 
-void
+bool
 FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 {
     binary_mode = root->getBoolValue("binary_mode");
@@ -663,6 +677,7 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 
     int record_length = 0; // Only used for binary protocols.
     vector<SGPropertyNode_ptr> chunks = root->getChildren("chunk");
+
     for (unsigned int i = 0; i < chunks.size(); i++) {
 
         _serial_prot chunk;
@@ -705,7 +720,19 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 
     }
 
-    if( binary_mode ) {
+    if( !binary_mode )
+    {
+        if ((chunks.size() > 1)&&(var_sep_string.length() == 0))
+        {
+            // ASCII protocols really need a separator when there is more than one chunk per line
+            SG_LOG(SG_IO, SG_ALERT,
+                   "generic protocol: Invalid configuration. "
+                   "'var_separator' must not be empty for protocols which have more than one chunk per line.");
+            return false;
+        }
+    }
+    else
+    {
         if (binary_record_length == -1) {
             binary_record_length = record_length;
         } else if (binary_record_length < record_length) {
@@ -715,6 +742,8 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
             binary_record_length = record_length;
         }
     }
+
+    return true;
 }
 
 void FGGeneric::updateValue(FGGeneric::_serial_prot& prot, bool val)

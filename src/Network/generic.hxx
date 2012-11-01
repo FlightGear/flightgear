@@ -101,7 +101,7 @@ private:
     bool gen_message_binary();
     bool parse_message_ascii(int length);
     bool parse_message_binary(int length);
-    void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
+    bool read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
     bool exitOnError;
     bool initOk;
     
