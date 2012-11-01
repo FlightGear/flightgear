@@ -203,6 +203,8 @@ void FDMShell::createImplementation()
   double dt = 1.0 / fgGetInt("/sim/model-hz");
   string model = fgGetString("/sim/flight-model");
 
+  bool fdmUnavailable = false;
+
   if ( model == "ufo" ) {
     _impl = new FGUFO( dt );
   } else if ( model == "external" ) {
@@ -261,17 +263,21 @@ void FDMShell::createImplementation()
     _impl = new FGExternalPipe( dt, pipe_path, pipe_protocol );
   } else if ( model == "null" ) {
     _impl = new FGNullFDM( dt );
-  } 
-#ifdef ENABLE_LARCSIM
+  }
     else if ( model == "larcsim" ) {
+#ifdef ENABLE_LARCSIM
         _impl = new FGLaRCsim( dt );
-    } 
+#else
+        fdmUnavailable = true;
 #endif
-#ifdef ENABLE_JSBSIM
+    }
     else if ( model == "jsb" ) {
+#ifdef ENABLE_JSBSIM
         _impl = new FGJSBsim( dt );
-    } 
+#else
+        fdmUnavailable = true;
 #endif
+    }
 #ifdef ENABLE_SP_FDM
     else if ( model == "ada" ) {
         _impl = new FGADA( dt );
@@ -282,15 +288,28 @@ void FDMShell::createImplementation()
     } else if ( model == "magic" ) {
         _impl = new FGMagicCarpet( dt );
     }
+#else
+    else if (( model == "ada" )||(model == "acms")||( model == "balloon" )||( model == "magic" ))
+    {
+        fdmUnavailable = true;
+    }
 #endif
-#ifdef ENABLE_YASIM
     else if ( model == "yasim" ) {
+#ifdef ENABLE_YASIM
         _impl = new YASim( dt );
-    } 
+#else
+        fdmUnavailable = true;
 #endif
-    else {
+    } else {
         throw sg_exception(string("Unrecognized flight model '") + model
                + "', cannot init flight dynamics model.");
     }
 
+    if (fdmUnavailable)
+    {
+        // FDM type is known, but its support was disabled at compile-time.
+        throw sg_exception(string("Support for flight model '") + model
+                + ("' is not available with this binary (deprecated/disabled).\n"
+                   "If you still need it, please rebuild FlightGear and enable its support."));
+    }
 }
