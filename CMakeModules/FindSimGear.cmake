@@ -132,7 +132,6 @@ if(SIMGEAR_SHARED)
 
     find_sg_library(SimGearCore SIMGEAR_CORE SIMGEAR_CORE_LIBRARIES)
     find_sg_library(SimGearScene SIMGEAR_SCENE SIMGEAR_LIBRARIES)
-
  
     list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
     set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES "")
@@ -148,7 +147,6 @@ else(SIMGEAR_SHARED)
     
     find_sg_library(SimGearCore SIMGEAR_CORE SIMGEAR_CORE_LIBRARIES)
     find_sg_library(SimGearScene SIMGEAR_SCENE SIMGEAR_LIBRARIES)
-    find_sg_library(ShivaVG SIMGEAR_SCENE SIMGEAR_LIBRARIES)
 
     # again link order matters - scene libraries depend on core ones
     list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
