@@ -308,7 +308,8 @@ class ClipboardX11:
     struct Property
     {
       unsigned char *data;
-      int format, num_items;
+      int format;
+      unsigned long num_items;
       Atom type;
     };
 

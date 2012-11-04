@@ -34,7 +34,7 @@
 #include <simgear/sg_inlines.h>
 
 #include <simgear/canvas/Canvas.hxx>
-#include <simgear/canvas/elements/element.hxx>
+#include <simgear/canvas/elements/CanvasElement.hxx>
 
 static naRef canvasPrototype;
 static naRef elementPrototype;
