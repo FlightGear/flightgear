@@ -17,25 +17,23 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "canvas_mgr.hxx"
-#include "canvas.hxx"
 
+#include <Canvas/FGCanvasSystemAdapter.hxx>
+#include <Cockpit/od_gauge.hxx>
 #include <Main/fg_props.hxx>
+#include <Viewer/CameraGroup.hxx>
 
-#include <boost/bind.hpp>
-
-typedef boost::shared_ptr<Canvas> CanvasPtr;
-CanvasPtr canvasFactory(SGPropertyNode* node)
-{
-  return CanvasPtr(new Canvas(node));
-}
-
+#include <simgear/canvas/Canvas.hxx>
 
 //------------------------------------------------------------------------------
 CanvasMgr::CanvasMgr():
-  PropertyBasedMgr( fgGetNode("/canvas/by-index", true),
-                    "texture",
-                    &canvasFactory )
+  simgear::canvas::CanvasMgr
+  (
+   fgGetNode("/canvas/by-index", true),
+   simgear::canvas::SystemAdapterPtr( new canvas::FGCanvasSystemAdapter )
+  )
 {
+  using simgear::canvas::Canvas;
   Canvas::addPlacementFactory
   (
     "object",
@@ -50,21 +48,34 @@ CanvasMgr::CanvasMgr():
 }
 
 //------------------------------------------------------------------------------
-CanvasPtr CanvasMgr::getCanvas(size_t index) const
-{
-  if(    index >= _elements.size()
-      || !_elements[index] )
-    return CanvasPtr();
-
-  return boost::static_pointer_cast<Canvas>(_elements[index]);
-}
-
-//------------------------------------------------------------------------------
 unsigned int CanvasMgr::getCanvasTexId(size_t index) const
 {
-  CanvasPtr canvas = getCanvas(index);
-  if( canvas )
-    return canvas->getTexId();
-  else
+  simgear::canvas::CanvasPtr canvas = getCanvas(index);
+
+  if( !canvas )
     return 0;
+
+  osg::Texture2D* tex = canvas->getTexture();
+  if( !tex )
+    return 0;
+
+//  osgViewer::Viewer::Contexts contexts;
+//  globals->get_renderer()->getViewer()->getContexts(contexts);
+//
+//  if( contexts.empty() )
+//    return 0;
+
+  osg::Camera* guiCamera =
+    flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
+
+  osg::State* state = guiCamera->getGraphicsContext()->getState(); //contexts[0]->getState();
+  if( !state )
+    return 0;
+
+  osg::Texture::TextureObject* tobj =
+    tex->getTextureObject( state->getContextID() );
+  if( !tobj )
+    return 0;
+
+  return tobj->_id;
 }

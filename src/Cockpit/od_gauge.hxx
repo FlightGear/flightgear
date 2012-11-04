@@ -22,9 +22,9 @@
 #define _OD_GAUGE_HXX
 
 #include <Canvas/canvas_fwd.hpp>
-#include <Canvas/placement.hxx>
 
 #include <simgear/canvas/ODGauge.hxx>
+#include <simgear/canvas/CanvasPlacement.hxx>
 
 class SGPropertyNode;
 
@@ -32,7 +32,7 @@ class SGPropertyNode;
  * Owner Drawn Gauge helper class
  */
 class FGODGauge:
-  public simgear::ODGauge
+  public simgear::canvas::ODGauge
 {
   public:
     FGODGauge();
@@ -46,8 +46,8 @@ class FGODGauge:
      * @return A list of groups which override the given texture
      */
     static
-    canvas::Placements set_texture( const char * name,
-                                    osg::Texture2D* new_texture );
+    simgear::canvas::Placements set_texture( const char * name,
+                                             osg::Texture2D* new_texture );
 
     /**
      * Replace an opengl texture name inside the aircraft scene graph.
@@ -64,9 +64,10 @@ class FGODGauge:
      * @return A list of groups which override the given texture
      */
     static
-    canvas::Placements set_texture( const SGPropertyNode* placement,
-                                    osg::Texture2D* new_texture,
-                                    osg::NodeCallback* cull_callback = 0 );
+    simgear::canvas::Placements
+    set_texture( const SGPropertyNode* placement,
+                 osg::Texture2D* new_texture,
+                 osg::NodeCallback* cull_callback = 0 );
 
 };
 

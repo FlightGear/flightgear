@@ -17,7 +17,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "window.hxx"
-#include <Canvas/canvas.hxx>
+#include <simgear/canvas/Canvas.hxx>
 
 #include <osgGA/GUIEventHandler>
 
@@ -28,7 +28,9 @@ namespace canvas
   //----------------------------------------------------------------------------
   Window::Window(SGPropertyNode* node):
     PropertyBasedElement(node),
-    _image(node, Element::Style())
+    _image( simgear::canvas::CanvasPtr(),
+            node,
+            simgear::canvas::Element::Style() )
   {
     _image.removeListener();
 
@@ -71,25 +73,25 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  const Rect<float>& Window::getRegion() const
+  const simgear::Rect<float>& Window::getRegion() const
   {
     return _image.getRegion();
   }
 
   //----------------------------------------------------------------------------
-  void Window::setCanvas(CanvasPtr canvas)
+  void Window::setCanvas(simgear::canvas::CanvasPtr canvas)
   {
-    _image.setCanvas(canvas);
+    _image.setSrcCanvas(canvas);
   }
 
   //----------------------------------------------------------------------------
-  CanvasWeakPtr Window::getCanvas() const
+  simgear::canvas::CanvasWeakPtr Window::getCanvas() const
   {
-    return _image.getCanvas();
+    return _image.getSrcCanvas();
   }
 
   //----------------------------------------------------------------------------
-  bool Window::handleMouseEvent(const MouseEvent& event)
+  bool Window::handleMouseEvent(const simgear::canvas::MouseEvent& event)
   {
     if( !getCanvas().expired() )
       return getCanvas().lock()->handleMouseEvent(event);

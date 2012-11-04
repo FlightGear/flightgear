@@ -90,9 +90,6 @@ if(ENABLE_JSBSIM)
     target_link_libraries(fgfs JSBSim)
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/src/Canvas/ShivaVG/include)
-add_definitions(-DVG_API_EXPORT)
-
 target_link_libraries(fgfs
 	${SQLITE3_LIBRARY}
 	${SIMGEAR_LIBRARIES}
@@ -105,7 +102,6 @@ target_link_libraries(fgfs
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 	${SIMGEAR_SCENE_LIBRARY_DEPENDENCIES}
 	${PLATFORM_LIBS}
-	ShivaVG
 )
 
 install(TARGETS fgfs RUNTIME DESTINATION bin)

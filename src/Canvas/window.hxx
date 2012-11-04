@@ -19,9 +19,8 @@
 #ifndef CANVAS_WINDOW_HXX_
 #define CANVAS_WINDOW_HXX_
 
-#include <Canvas/elements/CanvasImage.hxx>
-#include <Canvas/MouseEvent.hxx>
-
+#include <simgear/canvas/elements/CanvasImage.hxx>
+#include <simgear/canvas/MouseEvent.hxx>
 #include <simgear/props/PropertyBasedElement.hxx>
 #include <simgear/props/propertyObject.hxx>
 
@@ -41,16 +40,16 @@ namespace canvas
       virtual void valueChanged (SGPropertyNode * node);
 
       osg::Group* getGroup();
-      const Rect<float>& getRegion() const;
+      const simgear::Rect<float>& getRegion() const;
 
-      void setCanvas(CanvasPtr canvas);
-      CanvasWeakPtr getCanvas() const;
+      void setCanvas(simgear::canvas::CanvasPtr canvas);
+      simgear::canvas::CanvasWeakPtr getCanvas() const;
 
-      bool handleMouseEvent(const MouseEvent& event);
+      bool handleMouseEvent(const simgear::canvas::MouseEvent& event);
 
     protected:
 
-      Image _image;
+      simgear::canvas::Image _image;
 
       void doRaise(SGPropertyNode* node_raise);
   };

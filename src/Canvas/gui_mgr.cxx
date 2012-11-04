@@ -18,12 +18,14 @@
 
 #include "gui_mgr.hxx"
 #include <Canvas/window.hxx>
-#include <Canvas/canvas.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/renderer.hxx>
+
+#include <simgear/canvas/Canvas.hxx>
+#include <simgear/canvas/CanvasPlacement.hxx>
 
 #include <osg/BlendFunc>
 #include <osgViewer/Viewer>
@@ -58,11 +60,11 @@ class GUIEventHandler:
  * Track a canvas placement on a window
  */
 class WindowPlacement:
-  public canvas::Placement
+  public simgear::canvas::Placement
 {
   public:
     WindowPlacement( canvas::WindowPtr window,
-                     CanvasPtr canvas ):
+                     simgear::canvas::CanvasPtr canvas ):
       _window(window),
       _canvas(canvas)
     {}
@@ -73,15 +75,15 @@ class WindowPlacement:
     virtual ~WindowPlacement()
     {
       canvas::WindowPtr window = _window.lock();
-      CanvasPtr canvas = _canvas.lock();
+      simgear::canvas::CanvasPtr canvas = _canvas.lock();
 
       if( window && canvas && canvas == window->getCanvas().lock() )
-        window->setCanvas( CanvasPtr() );
+        window->setCanvas( simgear::canvas::CanvasPtr() );
     }
 
   private:
     canvas::WindowWeakPtr _window;
-    CanvasWeakPtr _canvas;
+    simgear::canvas::CanvasWeakPtr _canvas;
 };
 
 /**
@@ -124,7 +126,7 @@ GUIMgr::GUIMgr():
   osg::Viewport* vp = camera->getViewport();
   handleResize(vp->x(), vp->y(), vp->width(), vp->height());
 
-  Canvas::addPlacementFactory
+  simgear::canvas::Canvas::addPlacementFactory
   (
     "window",
     boost::bind(&GUIMgr::addPlacement, this, _1, _2)
@@ -226,12 +228,13 @@ canvas::WindowPtr GUIMgr::getWindow(size_t i)
 }
 
 //------------------------------------------------------------------------------
-canvas::Placements GUIMgr::addPlacement( const SGPropertyNode* node,
-                                         CanvasPtr canvas )
+simgear::canvas::Placements
+GUIMgr::addPlacement( const SGPropertyNode* node,
+                      simgear::canvas::CanvasPtr canvas )
 {
   int placement_index = node->getIntValue("index", -1);
 
-  canvas::Placements placements;
+  simgear::canvas::Placements placements;
   for( size_t i = 0; i < _elements.size(); ++i )
   {
     if( placement_index >= 0 && static_cast<int>(i) != placement_index )
@@ -243,7 +246,7 @@ canvas::Placements GUIMgr::addPlacement( const SGPropertyNode* node,
 
     window->setCanvas(canvas);
     placements.push_back(
-      canvas::PlacementPtr(new WindowPlacement(window, canvas))
+      simgear::canvas::PlacementPtr(new WindowPlacement(window, canvas))
     );
   }
   return placements;
@@ -255,7 +258,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   if( !_transform->getNumChildren() )
     return false;
 
-  canvas::MouseEvent event( ea.getEventType() );
+  simgear::canvas::MouseEvent event( ea.getEventType() );
 
   event.x = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
   event.y = 0.5 * (ea.getYnormalized() + 1) * _height + 0.5;

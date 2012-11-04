@@ -33,8 +33,8 @@
 
 #include <simgear/sg_inlines.h>
 
-#include <Canvas/canvas.hxx>
-#include <Canvas/elements/element.hxx>
+#include <simgear/canvas/Canvas.hxx>
+#include <simgear/canvas/elements/element.hxx>
 
 static naRef canvasPrototype;
 static naRef elementPrototype;
@@ -88,17 +88,17 @@ static naRef eventTypeToNasal(naContext c, osgGA::GUIEventAdapter::EventType ty)
   return naNil();
 }
 
-static canvas::Element* elementGhost(naRef r)
+static simgear::canvas::Element* elementGhost(naRef r)
 {
   if (naGhost_type(r) == &ElementGhostType)
-    return (canvas::Element*) naGhost_ptr(r);
+    return (simgear::canvas::Element*) naGhost_ptr(r);
   return 0;
 }
 
-static Canvas* canvasGhost(naRef r)
+static simgear::canvas::Canvas* canvasGhost(naRef r)
 {
   if (naGhost_type(r) == &CanvasGhostType)
-    return (Canvas*) naGhost_ptr(r);
+    return (simgear::canvas::Canvas*) naGhost_ptr(r);
   return 0;
 }
 
@@ -139,7 +139,7 @@ static const char* eventGhostGetMember(naContext c, void* g, naRef field, naRef*
 static const char* canvasGhostGetMember(naContext c, void* g, naRef field, naRef* out)
 {
   const char* fieldName = naStr_data(field);
-  Canvas* cvs = (Canvas*) g;
+  simgear::canvas::Canvas* cvs = (simgear::canvas::Canvas*) g;
   
   if (!strcmp(fieldName, "parents")) {
     *out = naNewVector(c);
@@ -156,7 +156,7 @@ static const char* canvasGhostGetMember(naContext c, void* g, naRef field, naRef
 static const char* elementGhostGetMember(naContext c, void* g, naRef field, naRef* out)
 {
   const char* fieldName = naStr_data(field);
-  canvas::Element* e = (canvas::Element*) g;
+  simgear::canvas::Element* e = (simgear::canvas::Element*) g;
   SG_UNUSED(e);
   
   if (!strcmp(fieldName, "parents")) {
@@ -172,7 +172,7 @@ static const char* elementGhostGetMember(naContext c, void* g, naRef field, naRe
 static void elementGhostSetMember(naContext c, void* g, naRef field, naRef value)
 {
   const char* fieldName = naStr_data(field);
-  canvas::Element* e = (canvas::Element*) g;
+  simgear::canvas::Element* e = (simgear::canvas::Element*) g;
   SG_UNUSED(fieldName);
   SG_UNUSED(e);
 }
@@ -180,7 +180,7 @@ static void elementGhostSetMember(naContext c, void* g, naRef field, naRef value
 
 static naRef f_canvas_getElement(naContext c, naRef me, int argc, naRef* args)
 {
-  Canvas* cvs = canvasGhost(me);
+  simgear::canvas::Canvas* cvs = canvasGhost(me);
   if (!cvs) {
     naRuntimeError(c, "canvas.getElement called on non-canvas object");
   }
@@ -190,7 +190,7 @@ static naRef f_canvas_getElement(naContext c, naRef me, int argc, naRef* args)
 
 static naRef f_element_addButtonCallback(naContext c, naRef me, int argc, naRef* args)
 {
-  canvas::Element* e = elementGhost(me);
+  simgear::canvas::Element* e = elementGhost(me);
   if (!e) {
     naRuntimeError(c, "element.addButtonCallback called on non-canvas-element object");
   }
@@ -200,7 +200,7 @@ static naRef f_element_addButtonCallback(naContext c, naRef me, int argc, naRef*
 
 static naRef f_element_addDragCallback(naContext c, naRef me, int argc, naRef* args)
 {
-  canvas::Element* e = elementGhost(me);
+  simgear::canvas::Element* e = elementGhost(me);
   if (!e) {
     naRuntimeError(c, "element.addDragCallback called on non-canvas-element object");
   }
@@ -210,7 +210,7 @@ static naRef f_element_addDragCallback(naContext c, naRef me, int argc, naRef* a
 
 static naRef f_element_addMoveCallback(naContext c, naRef me, int argc, naRef* args)
 {
-  canvas::Element* e = elementGhost(me);
+  simgear::canvas::Element* e = elementGhost(me);
   if (!e) {
     naRuntimeError(c, "element.addMoveCallback called on non-canvas-element object");
   }
@@ -220,7 +220,7 @@ static naRef f_element_addMoveCallback(naContext c, naRef me, int argc, naRef* a
 
 static naRef f_element_addScrollCallback(naContext c, naRef me, int argc, naRef* args)
 {
-  canvas::Element* e = elementGhost(me);
+  simgear::canvas::Element* e = elementGhost(me);
   if (!e) {
     naRuntimeError(c, "element.addScrollCallback called on non-canvas-element object");
   }

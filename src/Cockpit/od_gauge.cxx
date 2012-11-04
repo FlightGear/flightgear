@@ -47,30 +47,21 @@
 #include <simgear/scene/material/EffectGeode.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 
+#include <Canvas/FGCanvasSystemAdapter.hxx>
 #include <Main/globals.hxx>
-#include <Viewer/renderer.hxx>
 #include <Scenery/scenery.hxx>
 #include "od_gauge.hxx"
 
 #include <cassert>
 
-//------------------------------------------------------------------------------
-static void cbAddCamera(osg::Camera* cam)
-{
-  globals->get_renderer()->addCamera(cam, false);
-}
+static simgear::canvas::SystemAdapterPtr system_adapter(
+  new canvas::FGCanvasSystemAdapter
+);
 
 //------------------------------------------------------------------------------
-static void cbRemoveCamera(osg::Camera* cam)
+FGODGauge::FGODGauge()
 {
-  globals->get_renderer()->removeCamera(cam);
-}
-
-//------------------------------------------------------------------------------
-FGODGauge::FGODGauge():
-  simgear::ODGauge(cbAddCamera, cbRemoveCamera)
-{
-
+  setSystemAdapter(system_adapter);
 }
 
 //------------------------------------------------------------------------------
@@ -122,7 +113,7 @@ class ReplaceStaticTextureVisitor:
      * Get a list of groups which have been inserted into the scene graph to
      * replace the given texture
      */
-    canvas::Placements& getPlacements()
+    simgear::canvas::Placements& getPlacements()
     {
       return _placements;
     }
@@ -198,7 +189,7 @@ class ReplaceStaticTextureVisitor:
           group->setCullCallback(_cull_callback);
 
         _placements.push_back(
-          canvas::PlacementPtr(new ObjectPlacement(group))
+            simgear::canvas::PlacementPtr(new ObjectPlacement(group))
         );
 
         osg::StateSet* stateSet = group->getOrCreateStateSet();
@@ -223,7 +214,7 @@ class ReplaceStaticTextureVisitor:
   protected:
 
     class ObjectPlacement:
-      public canvas::Placement
+      public simgear::canvas::Placement
     {
       public:
         ObjectPlacement(osg::ref_ptr<osg::Group> group):
@@ -259,12 +250,13 @@ class ReplaceStaticTextureVisitor:
     osg::Texture2D     *_new_texture;
     osg::NodeCallback  *_cull_callback;
 
-    canvas::Placements _placements;
+    simgear::canvas::Placements _placements;
 };
 
 //------------------------------------------------------------------------------
-canvas::Placements FGODGauge::set_texture( const char* name,
-                                           osg::Texture2D* new_texture )
+simgear::canvas::Placements
+FGODGauge::set_texture( const char* name,
+                        osg::Texture2D* new_texture )
 {
   osg::Group* root = globals->get_scenery()->get_aircraft_branch();
   ReplaceStaticTextureVisitor visitor(name, new_texture);
@@ -273,9 +265,10 @@ canvas::Placements FGODGauge::set_texture( const char* name,
 }
 
 //------------------------------------------------------------------------------
-canvas::Placements FGODGauge::set_texture( const SGPropertyNode* placement,
-                                           osg::Texture2D* new_texture,
-                                           osg::NodeCallback* cull_callback )
+simgear::canvas::Placements
+FGODGauge::set_texture( const SGPropertyNode* placement,
+                        osg::Texture2D* new_texture,
+                        osg::NodeCallback* cull_callback )
 {
   osg::Group* root = globals->get_scenery()->get_aircraft_branch();
   ReplaceStaticTextureVisitor visitor(placement, new_texture, cull_callback);

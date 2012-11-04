@@ -19,29 +19,11 @@
 #ifndef CANVAS_FWD_HPP_
 #define CANVAS_FWD_HPP_
 
-#include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
-#include <vector>
-
-class SGPropertyNode;
-
-class Canvas;
-typedef boost::shared_ptr<Canvas> CanvasPtr;
-typedef boost::weak_ptr<Canvas> CanvasWeakPtr;
 
 namespace canvas
 {
-  class Group;
-  class Image;
-  class MouseEvent;
-
-  class Placement;
-  typedef boost::shared_ptr<Placement> PlacementPtr;
-  typedef std::vector<PlacementPtr> Placements;
-  typedef boost::function<Placements( const SGPropertyNode*,
-                                      CanvasPtr )> PlacementFactory;
-
   class Window;
   typedef boost::shared_ptr<Window> WindowPtr;
   typedef boost::weak_ptr<Window> WindowWeakPtr;

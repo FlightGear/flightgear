@@ -19,9 +19,9 @@
 #ifndef CANVAS_GUI_MGR_HXX_
 #define CANVAS_GUI_MGR_HXX_
 
-#include <Canvas/canvas_fwd.hpp>
-#include <Canvas/placement.hxx>
+#include "canvas_fwd.hpp"
 
+#include <simgear/canvas/canvas_fwd.hxx>
 #include <simgear/props/PropertyBasedMgr.hxx>
 #include <simgear/props/propertyObject.hxx>
 
@@ -60,8 +60,9 @@ class GUIMgr:
           _last_y;
 
     canvas::WindowPtr getWindow(size_t i);
-    canvas::Placements addPlacement( const SGPropertyNode*,
-                                     CanvasPtr canvas );
+    simgear::canvas::Placements
+    addPlacement( const SGPropertyNode*,
+                  simgear::canvas::CanvasPtr canvas );
 
     bool handleMouse(const osgGA::GUIEventAdapter& ea);
     void handleResize(int x, int y, int width, int height);

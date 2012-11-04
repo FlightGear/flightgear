@@ -19,21 +19,14 @@
 #ifndef CANVAS_MGR_H_
 #define CANVAS_MGR_H_
 
-#include "canvas_fwd.hpp"
+#include <simgear/canvas/CanvasMgr.hxx>
 #include <simgear/props/PropertyBasedMgr.hxx>
 
 class CanvasMgr:
-  public simgear::PropertyBasedMgr
+  public simgear::canvas::CanvasMgr
 {
   public:
     CanvasMgr();
-
-    /**
-     * Get ::Canvas by index
-     *
-     * @param index Index of texture node in /canvas/by-index/
-     */
-    CanvasPtr getCanvas(size_t index) const;
 
     /**
      * Get OpenGL texture name for given canvas
