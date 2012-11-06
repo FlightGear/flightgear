@@ -228,6 +228,7 @@ FGIO::parse_port_config( const string& config )
 #ifdef FG_HAVE_HLA
         else if ( protocol == "hla" ) {
             return new FGHLA(tokens);
+        }
 #endif
         else {
             return NULL;

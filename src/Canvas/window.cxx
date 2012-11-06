@@ -30,7 +30,7 @@ namespace canvas
     PropertyBasedElement(node),
     _image( simgear::canvas::CanvasPtr(),
             node,
-            simgear::canvas::Element::Style() )
+            simgear::canvas::Style() )
   {
     _image.removeListener();
 
