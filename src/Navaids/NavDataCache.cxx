@@ -809,13 +809,13 @@ public:
                                      FGPositioned::Filter* filter, bool exact)
   {
     string query = s;
-    if (!exact) query += "*";
+    if (!exact) query += "%";
     
   // build up SQL query text
     string matchTerm = exact ? "=?1" : " LIKE ?1";
     string sql = "SELECT rowid FROM positioned WHERE " + column + matchTerm;
     if (filter) {
-      sql += AND_TYPED;
+      sql += " " AND_TYPED;
     }
 
   // find or prepare a suitable statement frrm the SQL

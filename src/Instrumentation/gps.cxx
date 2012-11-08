@@ -1435,7 +1435,7 @@ FGPositioned::Type GPS::SearchFilter::minType() const
 
 FGPositioned::Type GPS::SearchFilter::maxType() const
 {
-  return FGPositioned::WAYPOINT;
+  return FGPositioned::VOR;
 }
 
 FGPositioned::Filter* GPS::createFilter(FGPositioned::Type aTy)
