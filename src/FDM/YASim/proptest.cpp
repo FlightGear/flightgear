@@ -80,6 +80,8 @@ int main(int argc, char** argv)
 
     printf("Alt: %f\n", alt / FT2M);
     printf("Spd: %f\n", speed / KTS2MPS);
+    printf("-----------------\n");
+    printf("Throt   RPM   thrustlbs      HP   eff %%   torque\n");
     for(int i=0; i<COUNT; i++) {
         float throttle = i/(COUNT-1.0);
         pe->setThrottle(throttle);
@@ -95,13 +97,14 @@ int main(int argc, char** argv)
 
         float eff = thrust * speed / power;
 
-        printf("%6.3f: %6.1frpm %6.1flbs %6.1fhp %6.1f%% torque: %f\n",
+        printf("%5.3f %7.1f %8.1f %8.1f %7.1f %8.1f\n",
                throttle, rpm, thrust * N2LB, power * (1/HP2W), 100*eff, eng->getTorque());
     }
 
     printf("\n");
     printf("Propeller vs. RPM\n");
     printf("-----------------\n");
+    printf("RPM       thrustlbs         HP   eff %%      torque\n");
     for(int i=0; i<COUNT; i++) {
         float thrust, torque, rpm = 3000 * i/(COUNT-1.0);
         float omega = rpm * RPM2RAD;
@@ -109,7 +112,7 @@ int main(int argc, char** argv)
                    speed, omega, &thrust, &torque);
         float power = torque * omega;
         float eff = (thrust * speed) / power;
-        printf("%6.1frpm %6.1flbs %6.1fhp %.1f%% torque: %f\n",
+        printf("%7.1f %11.1f %10.1f %7.1f %11.1f\n",
                rpm, thrust * N2LB, power * (1/HP2W), 100*eff, torque);
     }
 }
