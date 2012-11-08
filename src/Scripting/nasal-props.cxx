@@ -33,7 +33,7 @@ static void propNodeGhostDestroy(void* ghost)
 
 naGhostType PropNodeGhostType = { propNodeGhostDestroy, "prop" };
 
-static naRef propNodeGhostCreate(naContext c, SGPropertyNode* n)
+naRef propNodeGhostCreate(naContext c, SGPropertyNode* n)
 {
     if(!n) return naNil();
     SGPropertyNode_ptr* ghost = new SGPropertyNode_ptr(n);

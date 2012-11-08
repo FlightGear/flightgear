@@ -23,12 +23,6 @@
 
 #include <simgear/nasal/nasal.h>
 
-// forward decls
-namespace canvas
-{
-    class Element;
-}
-
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave);
 
 #endif // of SCRIPTING_NASAL_CANVAS_HXX

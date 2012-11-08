@@ -557,13 +557,17 @@ void FGNasalSys::init()
     hashset(_globals, "__gcsave", _gcHash);
 
     initNasalPositioned(_globals, _context, _gcHash);
-    initNasalCanvas(_globals, _context, _gcHash);
     NasalClipboard::init(this);
     initNasalCondition(_globals, _context, _gcHash);
   
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
     loadScriptDirectory(nasalDir);
+
+    // NasalCanvas needs to be initialized after the props module from props.nas
+    // (located in $FG_ROOT/Nasal/)  has been loaded but before loading the
+    // canvas module or any script creating a canvas.
+    initNasalCanvas(_globals, _context, _gcHash);
 
     // Add modules in Nasal subdirectories to property tree
     simgear::PathList directories = nasalDir.children(simgear::Dir::TYPE_DIR+

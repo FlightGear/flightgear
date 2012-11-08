@@ -314,7 +314,7 @@ naRef ghostForWaypt(naContext c, const Waypt* wpt)
   if (!wpt) {
     return naNil();
   }
-  
+
   Waypt::get(wpt); // take a ref
   return naNewGhost2(c, &WayptGhostType, (void*) wpt);
 }
