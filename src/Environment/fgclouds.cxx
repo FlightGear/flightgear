@@ -34,7 +34,6 @@
 #include <simgear/scene/sky/cloudfield.hxx>
 #include <simgear/scene/sky/newcloud.hxx>
 #include <simgear/structure/commands.hxx>
-#include <simgear/math/sg_random.h>
 #include <simgear/props/props_io.hxx>
 
 #include <Main/globals.hxx>
@@ -56,6 +55,7 @@ FGClouds::FGClouds() :
     index(0)
 {
 	update_event = 0;
+	mt_init_time_10(&seed);
 }
 
 FGClouds::~FGClouds()
@@ -109,9 +109,9 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 			return 0.0;
 	}
 
-	double x = sg_random() * SGCloudField::fieldSize - (SGCloudField::fieldSize / 2.0);
-	double y = sg_random() * SGCloudField::fieldSize - (SGCloudField::fieldSize / 2.0);
-	double z = grid_z_rand * (sg_random() - 0.5);
+	double x = mt_rand(&seed) * SGCloudField::fieldSize - (SGCloudField::fieldSize / 2.0);
+	double y = mt_rand(&seed) * SGCloudField::fieldSize - (SGCloudField::fieldSize / 2.0);
+	double z = grid_z_rand * (mt_rand(&seed) - 0.5);
 
 	float lon = fgGetNode("/position/longitude-deg", false)->getFloatValue();
 	float lat = fgGetNode("/position/latitude-deg", false)->getFloatValue();
@@ -132,7 +132,7 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 			int vdist = abox->getIntValue("vdist", 1);
 
 			double c = abox->getDoubleValue("count", 5);
-			int count = (int) (c + (sg_random() - 0.5) * c);
+			int count = (int) (c + (mt_rand(&seed) - 0.5) * c);
 
 			extent = std::max(w*w, extent);
 
@@ -147,13 +147,13 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 
 				for (int k = 0; k < hdist; k++)
 				{
-					x += (sg_random() / hdist);
-					y += (sg_random() / hdist);
+					x += (mt_rand(&seed) / hdist);
+					y += (mt_rand(&seed) / hdist);
 				}
 
 				for (int k = 0; k < vdist; k++)
 				{
-					z += (sg_random() / vdist);
+					z += (mt_rand(&seed) / vdist);
 				}
 
 				x = w * (x - 0.5) + pos[0]; // N/S
@@ -241,7 +241,7 @@ void FGClouds::buildLayer(int iLayer, const string& name, double coverage) {
 	double cov = coverage * SGCloudField::fieldSize * SGCloudField::fieldSize;
 
 	while (cov > 0.0f) {
-		double choice = sg_random();
+		double choice = mt_rand(&seed);
 
 		for(int i = 0; i < CloudVarietyCount ; i ++) {
 			choice -= tCloudVariety[i].count * totalCount;

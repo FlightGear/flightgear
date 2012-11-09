@@ -27,6 +27,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/math/sg_random.h>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <Main/fg_props.hxx>
 
@@ -50,6 +51,10 @@ private:
 #endif
 	bool clouds_3d_enabled;
   int index;
+  
+  // RNG seed to ensure cloud synchronization across multi-process
+  // deployments
+  mt seed;
 
 public:
 	FGClouds();
