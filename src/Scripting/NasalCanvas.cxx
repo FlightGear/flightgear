@@ -42,24 +42,10 @@
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/elements/CanvasElement.hxx>
 
-static naRef elementPrototype;
-static naRef propsNodePrototype;
+#include <simgear/nasal/cppbind/to_nasal.hxx>
+#include <simgear/nasal/cppbind/NasalHash.hxx>
 
 extern naRef propNodeGhostCreate(naContext c, SGPropertyNode* n);
-
-static void hashset(naContext c, naRef hash, const char* key, naRef val)
-{
-  naRef s = naNewString(c);
-  naStr_fromdata(s, (char*)key, strlen(key));
-  naHash_set(hash, s, val);
-}
-
-template<class T>
-typename boost::enable_if<boost::is_arithmetic<T>, naRef>::type
-convertToNasal(T val)
-{
-  return naNum(val);
-}
 
 //void initCanvasPython()
 //{
@@ -69,17 +55,9 @@ convertToNasal(T val)
 
 namespace sc = simgear::canvas;
 
-naRef canvasGetTexture(naContext c, sc::Canvas* canvas)
+naRef canvasGetNode(naContext c, sc::Canvas* canvas)
 {
-  //{ parents : [Node], _g : node }
-  naRef parents = naNewVector(c);
-  naVec_append(parents, propsNodePrototype);
-
-  naRef node = naNewHash(c);
-  hashset(c, node, "parents", parents);
-  hashset(c, node, "_g", propNodeGhostCreate(c, canvas->getProps()));
-
-  return node;
+  return propNodeGhostCreate(c, canvas->getProps());
 }
 
 namespace nasal
@@ -180,10 +158,7 @@ namespace nasal
 
       naRef getParents(naContext c)
       {
-        naRef parents = naNewVector(c);
-        for(size_t i = 0; i < _parents.size(); ++i)
-          naVec_append(parents, _parents[i]);
-        return parents;
+        return nasal::to_nasal(c, _parents);
       }
   };
 
@@ -270,30 +245,21 @@ namespace nasal
       }
 
       template<class Var>
-      class_& def( const std::string& field,
-                   Var (raw_type::*getter)() const )
+      class_& member( const std::string& field,
+                      Var (raw_type::*getter)() const,
+                      void (raw_type::*setter)(const Var&) = 0 )
       {
-        _getter[field] = boost::bind( &convertToNasal<Var>,
+        naRef (*to_nasal)(naContext, Var) = &nasal::to_nasal;
+        _getter[field] = boost::bind( to_nasal,
+                                      _1,
                                       boost::bind(getter, _2) );
         return *this;
       }
 
-      class_& def_readonly( const std::string& field,
-                            getter_t getter )
+      class_& member( const std::string& field,
+                      const getter_t& getter )
       {
         _getter[field] = getter;
-        return *this;
-      }
-
-      /**
-       * Data member
-       */
-      template<class Var>
-      class_& def_readonly( const std::string& field,
-                            Var raw_type::*var )
-      {
-        _getter[field] = boost::bind( &convertToNasal<Var>,
-                                      boost::bind(var, _2) );
         return *this;
       }
 
@@ -344,6 +310,9 @@ namespace nasal
         const std::string key = naStr_data(field);
         if( key == "parents" )
         {
+          if( getSingletonPtr()->_parents.empty() )
+            return 0;
+
           *out = getSingletonPtr()->getParents(c);
           return "";
         }
@@ -381,84 +350,20 @@ void initCanvas()
 {
 
   NasalCanvas::init("Canvas")
-    .def_readonly("texture", &canvasGetTexture)
-    .def("size_x", &sc::Canvas::getSizeX)
-    .def("size_y", &sc::Canvas::getSizeY);
+    .member("_node_ghost", &canvasGetNode)
+    .member("size_x", &sc::Canvas::getSizeX)
+    .member("size_y", &sc::Canvas::getSizeY);
   nasal::class_<sc::ElementPtr>::init("canvas.Element");
   nasal::class_<sc::GroupPtr>::init("canvas.Group")
     .bases<sc::ElementPtr>();
 
   nasal::class_<Base>::init("BaseClass")
-    .def("int", &Base::getInt);
+    .member("int", &Base::getInt);
   nasal::class_<Test>::init("TestClass")
-    .bases<Base>()
-    .def_readonly("x", &Test::x);
+    .bases<Base>();
 }
 
-/**
- * A Nasal Hash
- */
-class Hash
-{
-  public:
-
-    /**
-     * Initialize from an existing Nasal Hash
-     *
-     * @param hash  Existing Nasal Hash
-     * @param c     Nasal context
-     */
-    Hash(const naRef& hash, naContext c):
-      _hash(hash),
-      _context(c)
-    {
-      assert( naIsHash(_hash) );
-    }
-
-    void set(const std::string& name, naRef val)
-    {
-      naHash_set(_hash, stringToNasal(name), val);
-    }
-
-    void set(const std::string& name, naCFunction func)
-    {
-      set(name, naNewFunc(_context, naNewCCode(_context, func)));
-    }
-
-    void set(const std::string& name, const std::string& str)
-    {
-      set(name, stringToNasal(str));
-    }
-
-    void set(const std::string& name, double num)
-    {
-      set(name, naNum(num));
-    }
-
-    /**
-     * Create a new child hash (module)
-     *
-     * @param name  Name of the new hash inside this hash
-     */
-    Hash createHash(const std::string& name)
-    {
-      naRef hash = naNewHash(_context);
-      set(name, hash);
-      return Hash(hash, _context);
-    }
-
-  protected:
-    naRef _hash;
-    naContext _context;
-
-    naRef stringToNasal(const std::string& str)
-    {
-      naRef s = naNewString(_context);
-      naStr_fromdata(s, str.c_str(), str.size());
-      return s;
-    }
-};
-
+#if 0
 /**
  * Class for exposing C++ objects to Nasal
  */
@@ -582,13 +487,6 @@ class NasalObject
 
 };
 
-static naRef stringToNasal(naContext c, const std::string& s)
-{
-    return naStr_fromdata(naNewString(c),
-                   const_cast<char *>(s.c_str()),
-                   s.length());
-}
-
 typedef osg::ref_ptr<osgGA::GUIEventAdapter> GUIEventPtr;
 
 class NasalCanvasEvent:
@@ -606,7 +504,7 @@ class NasalCanvasEvent:
     {
 #define RET_EVENT_STR(type, str)\
   case osgGA::GUIEventAdapter::type:\
-    return stringToNasal(c, str);
+    return nasal::to_nasal(c, str);
 
       switch( event->getEventType() )
       {
@@ -626,89 +524,8 @@ class NasalCanvasEvent:
       }
     }
 };
-
-//using simgear::canvas::CanvasPtr;
-//
-///**
-// * Expose Canvas to Nasal
-// */
-//class NasalCanvas:
-//  public NasalObject<CanvasPtr, NasalCanvas>
-//{
-//  public:
-//
-//    NasalCanvas():
-//      NasalObject("Canvas")
-//    {
-//      _getter["texture"] = &NasalCanvas::getTexture;
-//      _getter["size_x"] = &NasalCanvas::getSizeX;
-//      _getter["size_y"] = &NasalCanvas::getSizeY;
-//    }
-//
-//    static naRef f_create(naContext c, naRef me, int argc, naRef* args)
-//    {
-//      std::cout << "NasalCanvas::create" << std::endl;
-//
-//      CanvasMgr* canvas_mgr =
-//        static_cast<CanvasMgr*>(globals->get_subsystem("Canvas"));
-//      if( !canvas_mgr )
-//        return naNil();
-//
-//      return create(c, canvas_mgr->createCanvas());
-//    }
-//
-//    static naRef f_setPrototype(naContext c, naRef me, int argc, naRef* args)
-//    {
-//      if( argc != 1 || !naIsHash(args[0]) )
-//        naRuntimeError(c, "Invalid argument(s)");
-//
-//      getInstance().setParent(args[0]);
-//
-//      return naNil();
-//    }
-//
-//    naRef getTexture(naContext c, const CanvasPtr& canvas)
-//    {
-//      //{ parents : [Node], _g : node }
-//      naRef parents = naNewVector(c);
-//      naVec_append(parents, propsNodePrototype);
-//
-//      naRef node = naNewHash(c);
-//      hashset(c, node, "parents", parents);
-//      hashset(c, node, "_g", propNodeGhostCreate(c, canvas->getProps()));
-//
-//      return node;
-//    }
-//
-//    naRef getSizeX(naContext c, const CanvasPtr& canvas)
-//    {
-//      return naNum(canvas->getSizeX());
-//    }
-//
-//    naRef getSizeY(naContext c, const CanvasPtr& canvas)
-//    {
-//      return naNum(canvas->getSizeY());
-//    }
-//};
-
-static void elementGhostDestroy(void* g);
-
-static const char* elementGhostGetMember(naContext c, void* g, naRef field, naRef* out);
-static void elementGhostSetMember(naContext c, void* g, naRef field, naRef value);
-naGhostType ElementGhostType = { elementGhostDestroy, "canvas.element", 
-    elementGhostGetMember, elementGhostSetMember };
-
-static simgear::canvas::Element* elementGhost(naRef r)
-{
-  if (naGhost_type(r) == &ElementGhostType)
-    return (simgear::canvas::Element*) naGhost_ptr(r);
-  return 0;
-}
-
-static void elementGhostDestroy(void* g)
-{
-}
-
+#endif
+#if 0
 static const char* eventGhostGetMember(naContext c, void* g, naRef field, naRef* out)
 {
   const char* fieldName = naStr_data(field);
@@ -721,43 +538,8 @@ static const char* eventGhostGetMember(naContext c, void* g, naRef field, naRef*
   else {
     return 0;
   }
-  
+
   return "";
-}
-
-static const char* elementGhostGetMember(naContext c, void* g, naRef field, naRef* out)
-{
-  const char* fieldName = naStr_data(field);
-  simgear::canvas::Element* e = (simgear::canvas::Element*) g;
-  SG_UNUSED(e);
-  
-  if (!strcmp(fieldName, "parents")) {
-    *out = naNewVector(c);
-    naVec_append(*out, elementPrototype);
-  } else {
-    return 0;
-  }
-  
-  return "";
-}
-
-static void elementGhostSetMember(naContext c, void* g, naRef field, naRef value)
-{
-  const char* fieldName = naStr_data(field);
-  simgear::canvas::Element* e = (simgear::canvas::Element*) g;
-  SG_UNUSED(fieldName);
-  SG_UNUSED(e);
-}
-
-
-static naRef f_canvas_getElement(naContext c, naRef me, int argc, naRef* args)
-{
-//  simgear::canvas::Canvas* cvs = canvasGhost(me);
-//  if (!cvs) {
-//    naRuntimeError(c, "canvas.getElement called on non-canvas object");
-//  }
-  
-  return naNil();
 }
 
 static naRef f_element_addButtonCallback(naContext c, naRef me, int argc, naRef* args)
@@ -799,6 +581,7 @@ static naRef f_element_addScrollCallback(naContext c, naRef me, int argc, naRef*
   
   return naNil();
 }
+#endif
 
 static naRef f_createCanvas(naContext c, naRef me, int argc, naRef* args)
 {
@@ -812,32 +595,15 @@ static naRef f_createCanvas(naContext c, naRef me, int argc, naRef* args)
   return NasalCanvas::create(c, canvas_mgr->createCanvas());
 }
 
-static naRef f_setCanvasPrototype(naContext c, naRef me, int argc, naRef* args)
-{
-  if( argc != 1 || !naIsHash(args[0]) )
-    naRuntimeError(c, "Invalid argument(s)");
-
-  NasalCanvas::getSingletonPtr()->addNasalBase(args[0]);
-
-  return naNil();
-}
-
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
 {
-  naRef props_module = naHash_cget(globals, (char*)"props");
-  if( naIsNil(props_module) )
-    std::cerr << "No props module" << std::endl;
-
-  propsNodePrototype = naHash_cget(props_module, (char*)"Node");
-  if( naIsNil(propsNodePrototype) )
-    std::cerr << "Failed to get props.Node" << std::endl;
-
       /*naNewHash(c);
     hashset(c, gcSave, "canvasProto", canvasPrototype);
   
     hashset(c, canvasPrototype, "getElement", naNewFunc(c, naNewCCode(c, f_canvas_getElement)));*/
     // set any event methods
   
+#if 0
     elementPrototype = naNewHash(c);
     hashset(c, gcSave, "elementProto", elementPrototype);
     
@@ -845,12 +611,11 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     hashset(c, elementPrototype, "addDragCallback", naNewFunc(c, naNewCCode(c, f_element_addDragCallback)));
     hashset(c, elementPrototype, "addMoveCallback", naNewFunc(c, naNewCCode(c, f_element_addMoveCallback)));
     hashset(c, elementPrototype, "addScrollCallback", naNewFunc(c, naNewCCode(c, f_element_addScrollCallback)));
-
-  Hash globals_module(globals, c),
-       canvas_module = globals_module.createHash("canvas");
+#endif
+  nasal::Hash globals_module(globals, c),
+              canvas_module = globals_module.createHash("canvas");
 
   canvas_module.set("_new", f_createCanvas);
-  canvas_module.set("_setPrototype", f_setCanvasPrototype);
   canvas_module.set("testClass", nasal::class_<Test>::f_create);
 
   initCanvas();
