@@ -24,8 +24,8 @@
 
 #include <simgear/compiler.h>
 
-#include <string>
-
+#include <algorithm>
+#include <list>
 #include <map>
 #include <string>
 #include <stack>
@@ -865,12 +865,76 @@ private:
     sg::HLADataElement::IndexPathPair _mpPropertiesIndexPathPair;
 };
 
+class FGHLA::MultiplayerObjectInstance : public sg::HLAObjectInstance {
+public:
+    MultiplayerObjectInstance(sg::HLAObjectClass* objectClass) :
+        sg::HLAObjectInstance(objectClass)
+    { }
+    virtual ~MultiplayerObjectInstance()
+    { }
+};
+
+class FGHLA::MultiplayerObjectClass : public sg::HLAObjectClass {
+public:
+    MultiplayerObjectClass(const std::string& name, sg::HLAFederate* federate) :
+        HLAObjectClass(name, federate)
+    { }
+    virtual ~MultiplayerObjectClass()
+    { }
+
+    virtual MultiplayerObjectInstance* createObjectInstance(const std::string& name)
+    { return new MultiplayerObjectInstance(this); }
+};
+
 class FGHLA::Federate : public sg::HLAFederate {
 public:
     virtual ~Federate()
     { }
     virtual bool readObjectModel()
     { return readRTI1516ObjectModelTemplate(getFederationObjectModel()); }
+
+    virtual sg::HLAObjectClass* createObjectClass(const std::string& name)
+    {
+        if (std::find(_multiplayerObjectClassNames.begin(), _multiplayerObjectClassNames.end(), name)
+            != _multiplayerObjectClassNames.end()) {
+            if (_localAircraftClass.valid()) {
+                return new MultiplayerObjectClass(name, this);
+            } else {
+                _localAircraftClass = new MultiplayerObjectClass(name, this);
+                return _localAircraftClass.get();
+            }
+        } else {
+            return 0;
+        }
+    }
+
+    void updateLocalAircraftInstance()
+    {
+        // First push our own data so that others can recieve ...
+        if (!_localAircraftClass.valid())
+            return;
+        if (!_localAircraftInstance.valid()) {
+            _localAircraftInstance = new MultiplayerObjectInstance(_localAircraftClass.get());
+            _localAircraftInstance->registerInstance();
+        }
+        _localAircraftInstance->updateAttributeValues(sg::RTIData("MPAircraft"));
+    }
+
+    virtual bool shutdown()
+    {
+        if (_localAircraftInstance.valid()) {
+            // Remove the local object from the rti
+            _localAircraftInstance->deleteInstance(simgear::RTIData("gone"));
+            _localAircraftInstance = 0;
+        }
+        return HLAFederate::shutdown();
+    }
+
+    std::list<std::string> _multiplayerObjectClassNames;
+    /// This class is used to register the local instance and to subscribe for others
+    SGSharedPtr<MultiplayerObjectClass> _localAircraftClass;
+    /// The local aircraft instance
+    SGSharedPtr<MultiplayerObjectInstance> _localAircraftInstance;
 };
 
 FGHLA::FGHLA(const std::vector<std::string>& tokens) :
@@ -989,16 +1053,7 @@ FGHLA::open()
     _hlaFederate->setFederationObjectModel(objectModel);
     _hlaFederate->setFederateType(_federate);
 
-    // Now that it is paramtrized, connect/join
-    if (!_hlaFederate->init()) {
-        SG_LOG(SG_IO, SG_ALERT, "Could not init the hla/rti connect.");
-        return false;
-    }
-
-    // bool publish = get_direction() & SG_IO_OUT;
-    // bool subscribe = get_direction() & SG_IO_IN;
-
-    // This should be configured form a file
+    // Store the multiplayer class name in the federate
     XMLConfigReader::ObjectClassConfigList::const_iterator i;
     for (i = configReader.getObjectClassConfigList().begin();
          i != configReader.getObjectClassConfigList().end(); ++i) {
@@ -1008,12 +1063,34 @@ FGHLA::open()
             continue;
         }
 
+        // Register the object class that we need for this simple hla implementation
+        _hlaFederate->_multiplayerObjectClassNames.push_back(i->_name);
+    }
+
+
+    // Now that it is paramtrized, connect/join
+    if (!_hlaFederate->init()) {
+        SG_LOG(SG_IO, SG_ALERT, "Could not init the hla/rti connect.");
+        return false;
+    }
+
+    // bool publish = get_direction() & SG_IO_OUT;
+    // bool subscribe = get_direction() & SG_IO_IN;
+
+    // Interpret the configuration file
+    for (i = configReader.getObjectClassConfigList().begin();
+         i != configReader.getObjectClassConfigList().end(); ++i) {
+
+        /// already warned about this above
+        if (i->_type != "Multiplayer")
+            continue;
+
         /// The object class for HLA aircraft
-        SGSharedPtr<simgear::HLAObjectClass> objectClass;
+        SGSharedPtr<MultiplayerObjectClass> objectClass;
 
         // Register the object class that we need for this simple hla implementation
         std::string aircraftClassName = i->_name;
-        objectClass = _hlaFederate->getObjectClass(aircraftClassName);
+        objectClass = dynamic_cast<MultiplayerObjectClass*>(_hlaFederate->getObjectClass(aircraftClassName));
         if (!objectClass.valid()) {
             SG_LOG(SG_IO, SG_ALERT, "Could not find " << aircraftClassName << " object class!");
             continue;
@@ -1255,9 +1332,6 @@ FGHLA::open()
         }
 
         objectClass->setInstanceCallback(mpClassCallback);
-
-        if (i->_type == "Multiplayer")
-            _localAircraftClass = objectClass;
     }
 
     set_enabled(true);
@@ -1270,21 +1344,15 @@ FGHLA::process()
     if (!is_enabled())
         return false;
 
+    if (!_hlaFederate.valid())
+        return false;
+
     // First push our own data so that others can recieve ...
-    if (get_direction() & SG_IO_OUT) {
-        if (fgGetBool("/sim/fdm-initialized", false) && _localAircraftClass.valid()) {
-            if (!_localAircraftInstance.valid()) {
-                _localAircraftInstance = new sg::HLAObjectInstance(_localAircraftClass.get());
-                _localAircraftInstance->registerInstance();
-            }
-            _localAircraftInstance->updateAttributeValues(sg::RTIData("tag"));
-        }
-    }
+    if (get_direction() & SG_IO_OUT)
+        _hlaFederate->updateLocalAircraftInstance();
 
     // Then get news from others and process possible update requests
-    if (get_direction() & (SG_IO_IN|SG_IO_OUT)) {
-        _hlaFederate->processMessages();
-    }
+    _hlaFederate->update();
 
     return true;
 }
@@ -1295,14 +1363,12 @@ FGHLA::close()
     if (!is_enabled())
         return false;
 
-    if (get_direction() & SG_IO_OUT) {
-        // Remove the local object from the rti
-        _localAircraftInstance->deleteInstance(simgear::RTIData("gone"));
-        _localAircraftInstance = 0;
-    }
+    if (!_hlaFederate.valid())
+        return false;
 
     // Leave the federation and try to destroy the federation execution.
     _hlaFederate->shutdown();
+    _hlaFederate = 0;
 
     set_enabled(false);
 
