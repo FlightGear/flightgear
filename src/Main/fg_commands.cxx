@@ -298,6 +298,30 @@ do_save (const SGPropertyNode * arg)
     }
 }
 
+/**
+ * Built-in command: save flight recorder tape.
+ *
+ */
+static bool
+do_save_tape (const SGPropertyNode * arg)
+{
+    FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
+    replay->saveTape(arg);
+
+    return true;
+}
+/**
+ * Built-in command: load flight recorder tape.
+ *
+ */
+static bool
+do_load_tape (const SGPropertyNode * arg)
+{
+    FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
+    replay->loadTape(arg);
+
+    return true;
+}
 
 /**
  * Built-in command: (re)load the panel.
@@ -1445,6 +1469,8 @@ static struct {
     { "pause", do_pause },
     { "load", do_load },
     { "save", do_save },
+    { "save-tape", do_save_tape },
+    { "load-tape", do_load_tape },
     { "panel-load", do_panel_load },
     { "preferences-load", do_preferences_load },
     { "view-cycle", do_view_cycle },

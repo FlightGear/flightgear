@@ -30,13 +30,12 @@
 
 #include <simgear/compiler.h>
 
-#include <deque>
-
 #include <simgear/math/sg_types.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-using std::deque;
+#include <deque>
+#include <vector>
 
 class FGFlightRecorder;
 
@@ -46,9 +45,14 @@ typedef struct {
     /* more data here, hidden to the outside world */
 } FGReplayData;
 
-typedef deque < FGReplayData *> replay_list_type;
+typedef struct {
+    double sim_time;
+    std::string message;
+    std::string speaker;
+} FGReplayMessages;
 
-
+typedef std::deque < FGReplayData *> replay_list_type;
+typedef std::vector < FGReplayMessages > replay_messages_type;
 
 /**
  * A recording/replay module for FlightGear flights
@@ -57,9 +61,7 @@ typedef deque < FGReplayData *> replay_list_type;
 
 class FGReplay : public SGSubsystem
 {
-
 public:
-
     FGReplay ();
     virtual ~FGReplay();
 
@@ -68,27 +70,44 @@ public:
     virtual void bind();
     virtual void unbind();
     virtual void update( double dt );
-    bool start();
+    bool start(bool NewTape=false);
+
+    bool saveTape(const SGPropertyNode* ConfigData);
+    bool loadTape(const SGPropertyNode* ConfigData);
 
 private:
     void clear();
     FGReplayData* record(double time);
     void interpolate(double time, const replay_list_type &list);
     void replay(double time, FGReplayData* pCurrentFrame, FGReplayData* pOldFrame=NULL);
+    void guiMessage(const char* message);
+    void loadMessages();
+    void fillRecycler();
 
     bool replay( double time );
+    void replayMessage( double time );
+
     double get_start_time();
     double get_end_time();
+
+    bool listTapes(bool SameAircraftFilter, const SGPath& tapeDirectory);
+    bool saveTape(const char* Filename, SGPropertyNode* MetaData);
+    bool loadTape(const char* Filename, bool Preview, SGPropertyNode* UserData);
 
     double sim_time;
     double last_mt_time;
     double last_lt_time;
+    double last_msg_time;
+    replay_messages_type::iterator current_msg;
     int last_replay_state;
+    bool was_finished_already;
 
     replay_list_type short_term;
     replay_list_type medium_term;
     replay_list_type long_term;
     replay_list_type recycler;
+    replay_messages_type replay_messages;
+
     SGPropertyNode_ptr disable_replay;
     SGPropertyNode_ptr replay_master;
     SGPropertyNode_ptr replay_time;
@@ -105,6 +124,5 @@ private:
 
     FGFlightRecorder* m_pRecorder;
 };
-
 
 #endif // _FG_REPLAY_HXX

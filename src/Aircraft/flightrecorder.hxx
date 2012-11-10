@@ -54,6 +54,7 @@ public:
     virtual ~FGFlightRecorder();
 
     void            reinit              (void);
+    void            reinit              (SGPropertyNode_ptr ConfigNode);
     FGReplayData*   createEmptyRecord   (void);
     FGReplayData*   capture             (double SimTime, FGReplayData* pRecycledBuffer);
     void            replay              (double SimTime, const FGReplayData* pNextBuffer,
@@ -61,9 +62,10 @@ public:
     void            deleteRecord        (FGReplayData* pRecord);
 
     int             getRecordSize       (void) { return m_TotalRecordSize;}
+    void            getConfig           (SGPropertyNode* root);
 
 private:
-    void initDefault(void);
+    SGPropertyNode_ptr getDefault(void);
     void initSignalList(const char* pSignalType, FlightRecorder::TSignalList& SignalList,
                         SGPropertyNode_ptr BaseNode);
     void processSignalList(const char* pSignalType, FlightRecorder::TSignalList& SignalList,
@@ -71,6 +73,8 @@ private:
                            std::string PropPrefix="", int Count = 1);
     bool haveProperty(FlightRecorder::TSignalList& Capture,SGPropertyNode* pProperty);
     bool haveProperty(SGPropertyNode* pProperty);
+
+    int  getConfig(SGPropertyNode* root, const char* typeStr, const FlightRecorder::TSignalList& SignalList);
 
     SGPropertyNode_ptr m_RecorderNode;
     SGPropertyNode_ptr m_ConfigNode;

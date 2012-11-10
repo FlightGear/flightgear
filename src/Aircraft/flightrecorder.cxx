@@ -56,6 +56,21 @@ FGFlightRecorder::reinit(void)
 {
     m_ConfigNode = 0;
 
+    SGPropertyNode_ptr ConfigNode;
+    int Selected = m_RecorderNode->getIntValue(m_ConfigName, 0);
+    SG_LOG(SG_SYSTEMS, SG_INFO, "FlightRecorder: Recorder configuration #" << Selected);
+    if (Selected >= 0)
+        ConfigNode = m_RecorderNode->getChild("config", Selected);
+
+    if (!ConfigNode.valid())
+        ConfigNode = getDefault();
+
+    reinit(ConfigNode);
+}
+
+void
+FGFlightRecorder::reinit(SGPropertyNode_ptr ConfigNode)
+{
     m_TotalRecordSize = 0;
 
     m_CaptureDouble.clear();
@@ -65,13 +80,7 @@ FGFlightRecorder::reinit(void)
     m_CaptureInt8.clear();
     m_CaptureBool.clear();
 
-    int Selected = m_RecorderNode->getIntValue(m_ConfigName, 0);
-    SG_LOG(SG_SYSTEMS, SG_INFO, "FlightRecorder: Recorder configuration #" << Selected);
-    if (Selected >= 0)
-        m_ConfigNode = m_RecorderNode->getChild("config", Selected);
-
-    if (!m_ConfigNode.valid())
-        initDefault();
+    m_ConfigNode = ConfigNode;
 
     if (!m_ConfigNode.valid())
     {
@@ -145,9 +154,11 @@ FGFlightRecorder::haveProperty(SGPropertyNode* pProperty)
 
 /** Read default flight-recorder configuration.
  * Default should match properties as hard coded for versions up to FG2.4.0. */
-void
-FGFlightRecorder::initDefault(void)
+SGPropertyNode_ptr
+FGFlightRecorder::getDefault(void)
 {
+    SGPropertyNode_ptr ConfigNode;
+
     // set name of active flight recorder type
     SG_LOG(SG_SYSTEMS, SG_INFO, "FlightRecorder: No custom configuration. Loading generic default recorder.");
 
@@ -168,7 +179,7 @@ FGFlightRecorder::initDefault(void)
             try
             {
                 readProperties(path.str(), m_RecorderNode->getChild("config", 0 ,true), 0);
-                m_ConfigNode = m_RecorderNode->getChild("config", 0 ,false);
+                ConfigNode = m_RecorderNode->getChild("config", 0 ,false);
             } catch (sg_io_exception &e)
             {
                 SG_LOG(SG_SYSTEMS, SG_ALERT, "FlightRecorder: Error reading file '" <<
@@ -176,6 +187,8 @@ FGFlightRecorder::initDefault(void)
             }
         }
     }
+
+    return ConfigNode;
 }
 
 /** Read signal list below given base node.
@@ -547,4 +560,38 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer, const
             m_CaptureBool[i].Signal->setBoolValue(0 != (pFlags[i>>3] & (1 << (i&7))));
         }
     }
+}
+
+int
+FGFlightRecorder::getConfig(SGPropertyNode* root, const char* typeStr, const FlightRecorder::TSignalList& SignalList)
+{
+    static const char* InterpolationTypes[] = {"discrete", "linear", "angular-rad", "angular-deg"};
+    size_t SignalCount = SignalList.size();
+    SGPropertyNode* Signals = root->getNode("signals", true);
+    for (size_t i=0; i<SignalCount; i++)
+    {
+        SGPropertyNode* SignalProp = Signals->addChild("signal");
+        SignalProp->setStringValue("type", typeStr);
+        SignalProp->setStringValue("interpolation", InterpolationTypes[SignalList[i].Interpolation]);
+        SignalProp->setStringValue("property", SignalList[i].Signal->getPath());
+    }
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "FlightRecorder: Have " << SignalCount << " signals of type " << typeStr);
+    root->setIntValue(typeStr, SignalCount);
+    return SignalCount;
+}
+
+void
+FGFlightRecorder::getConfig(SGPropertyNode* root)
+{
+    root->setStringValue("name", m_RecorderNode->getStringValue("active-config-name", ""));
+    int SignalCount = 0;
+    SignalCount += getConfig(root, "double",  m_CaptureDouble);
+    SignalCount += getConfig(root, "float",   m_CaptureFloat);
+    SignalCount += getConfig(root, "int", m_CaptureInteger);
+    SignalCount += getConfig(root, "int16",   m_CaptureInt16);
+    SignalCount += getConfig(root, "int8",    m_CaptureInt8);
+    SignalCount += getConfig(root, "bool",    m_CaptureBool);
+
+    root->setIntValue("recorder/record-size", getRecordSize());
+    root->setIntValue("recorder/signal-count", SignalCount);
 }
