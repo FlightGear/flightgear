@@ -36,6 +36,7 @@
 #include <boost/foreach.hpp>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/exception.hxx>
 
 namespace flightgear
 {
@@ -66,7 +67,22 @@ void Leaf::visit(const SGVec3d& aPos, double aCutoff,
   
   for (; it != end; ++it) {
     FGPositioned* p = cache->loadById(it->second);
-    assert(intersects(_box, p->cart()));
+    if (!intersects(_box, p->cart())) {
+        // see http://code.google.com/p/flightgear-bugs/issues/detail?id=905
+      
+      SG_LOG(SG_GENERAL, SG_WARN, "XXXXXXXXX bad spatial index for " << it->second
+             << "; " << p->ident() << " of type " <<
+             FGPositioned::nameForType(p->type()));
+      SG_LOG(SG_GENERAL, SG_WARN, "\tgeodetic location:" << p->geod());
+      SG_LOG(SG_GENERAL, SG_WARN, "\tcartesian location:" << p->cart());
+      
+      SG_LOG(SG_GENERAL, SG_WARN, "leaf box:" <<
+             _box.getMin() << " x " << _box.getMax());
+      
+      throw sg_exception("Bad spatial index data");
+    }
+    
+    
     double d = dist(aPos, p->cart());
     if (d > aCutoff) {
       continue;

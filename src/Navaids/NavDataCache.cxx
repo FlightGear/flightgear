@@ -1337,6 +1337,11 @@ PositionedID NavDataCache::insertAirport(FGPositioned::Type ty, const string& id
   
 void NavDataCache::updatePosition(PositionedID item, const SGGeod &pos)
 {
+  if (d->cache.find(item) != d->cache.end()) {
+    SG_LOG(SG_GENERAL, SG_DEBUG, "updating position of an item in the cache");
+    d->cache[item]->modifyPosition(pos);
+  }
+  
   SGVec3d cartPos(SGVec3d::fromGeod(pos));
   
   d->reset(d->setAirportPos);

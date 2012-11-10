@@ -40,8 +40,10 @@ double FGTaxiNode::getElevationFt()
     double elevationEnd = -100;
     if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
       
-      mPosition.setElevationM(elevationEnd);
-      NavDataCache::instance()->updatePosition(guid(), mPosition);
+      SGGeod newPos = mPosition;
+      newPos.setElevationM(elevationEnd);
+    // this will call modifyPosition to update mPosition
+      NavDataCache::instance()->updatePosition(guid(), newPos);
     }
   }
   
