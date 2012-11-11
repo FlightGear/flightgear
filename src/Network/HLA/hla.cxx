@@ -747,23 +747,36 @@ public:
     SGSharedPtr<FGAIMultiplayer> _aiMultiplayer;
 };
 
-
-class MpClassCallback : public sg::HLAObjectClass::InstanceCallback {
+class FGHLA::MultiplayerObjectInstance : public sg::HLAObjectInstance {
 public:
-    MpClassCallback()
+    MultiplayerObjectInstance(sg::HLAObjectClass* objectClass) :
+        sg::HLAObjectInstance(objectClass)
     { }
-    virtual ~MpClassCallback()
+    virtual ~MultiplayerObjectInstance()
+    { }
+};
+
+class FGHLA::MultiplayerObjectClass : public sg::HLAObjectClass {
+public:
+    MultiplayerObjectClass(const std::string& name, sg::HLAFederate* federate) :
+        HLAObjectClass(name, federate)
+    { }
+    virtual ~MultiplayerObjectClass()
     { }
 
-    virtual void discoverInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
+    virtual MultiplayerObjectInstance* createObjectInstance(const std::string& name)
+    { return new MultiplayerObjectInstance(this); }
+
+    virtual void discoverInstance(sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
     {
+        HLAObjectClass::discoverInstance(objectInstance, tag);
         MPReflectCallback* reflectCallback = new MPReflectCallback;
         objectInstance.setReflectCallback(reflectCallback);
         attachDataElements(objectInstance, reflectCallback->_attributeData, false);
     }
-
-    virtual void removeInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
+    virtual void removeInstance(sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
     {
+        HLAObjectClass::removeInstance(objectInstance, tag);
         MPReflectCallback* reflectCallback;
         reflectCallback = dynamic_cast<MPReflectCallback*>(objectInstance.getReflectCallback().get());
         if (!reflectCallback) {
@@ -772,17 +785,22 @@ public:
         }
         reflectCallback->setDie();
     }
-
-    virtual void registerInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance)
+    virtual void registerInstance(sg::HLAObjectInstance& objectInstance)
     {
+        HLAObjectClass::registerInstance(objectInstance);
         MPUpdateCallback* updateCallback = new MPUpdateCallback;
         objectInstance.setUpdateCallback(updateCallback);
         attachDataElements(objectInstance, updateCallback->_attributeData, true);
         updateCallback->_attributeData._propertyReferenceSet->setRootNode(fgGetNode("/", true));
     }
-
-    virtual void deleteInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance)
+    virtual void deleteInstance(sg::HLAObjectInstance& objectInstance)
     {
+        HLAObjectClass::deleteInstance(objectInstance);
+    }
+
+    virtual void createAttributeDataElements(sg::HLAObjectInstance& objectInstance)
+    {
+        sg::HLAObjectClass::createAttributeDataElements(objectInstance);
     }
 
     void setLocationFactory(sg::HLALocationFactory* locationFactory)
@@ -863,27 +881,6 @@ private:
     SGSharedPtr<ModelFactory> _modelFactory;
 
     sg::HLADataElement::IndexPathPair _mpPropertiesIndexPathPair;
-};
-
-class FGHLA::MultiplayerObjectInstance : public sg::HLAObjectInstance {
-public:
-    MultiplayerObjectInstance(sg::HLAObjectClass* objectClass) :
-        sg::HLAObjectInstance(objectClass)
-    { }
-    virtual ~MultiplayerObjectInstance()
-    { }
-};
-
-class FGHLA::MultiplayerObjectClass : public sg::HLAObjectClass {
-public:
-    MultiplayerObjectClass(const std::string& name, sg::HLAFederate* federate) :
-        HLAObjectClass(name, federate)
-    { }
-    virtual ~MultiplayerObjectClass()
-    { }
-
-    virtual MultiplayerObjectInstance* createObjectInstance(const std::string& name)
-    { return new MultiplayerObjectInstance(this); }
 };
 
 class FGHLA::Federate : public sg::HLAFederate {
@@ -1096,7 +1093,7 @@ FGHLA::open()
             continue;
         }
 
-        SGSharedPtr<MpClassCallback> mpClassCallback = new MpClassCallback;
+        SGSharedPtr<MultiplayerObjectClass> mpClassCallback = objectClass;
 
         if (i->_positionConfig._type == "cartesian") {
             SGSharedPtr<sg::HLACartesianLocationFactory> locationFactory;
@@ -1330,8 +1327,6 @@ FGHLA::open()
                        << j->_type << "\" for object class \"" << aircraftClassName << "\". Ignoring!");
             }
         }
-
-        objectClass->setInstanceCallback(mpClassCallback);
     }
 
     set_enabled(true);
