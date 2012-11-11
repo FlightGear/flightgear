@@ -472,11 +472,19 @@ FGReplay::update( double dt )
 
     // flight recording
 
-    sim_time += dt * speed_up->getDoubleValue();
-
     // sanity check, don't collect data if FDM data isn't good
-    if (!fgGetBool("/sim/fdm-initialized", false)) {
+    if ((!fgGetBool("/sim/fdm-initialized", false))||(dt==0.0))
         return;
+
+    {
+        double new_sim_time = sim_time + dt * speed_up->getDoubleValue();
+        // don't record multiple records with the same timestamp (or go backwards in time)
+        if (new_sim_time <= sim_time)
+        {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "ReplaySystem: Time warp detected!");
+            return;
+        }
+        sim_time = new_sim_time;
     }
 
     FGReplayData* r = record(sim_time);
@@ -870,7 +878,7 @@ FGReplay::saveTape(const SGPropertyNode* ConfigData)
     meta->setStringValue("closest-airport-id",      fgGetString("/sim/airport/closest-airport-id", ""));
     const char* aircraft_version = fgGetString("/sim/aircraft-version", "");
     if (aircraft_version[0]==0)
-        aircraft_version = "(unknown aircraft version)";
+        aircraft_version = "(undefined)";
     meta->setStringValue("aircraft-version", aircraft_version);
 
     // add information on the tape's recording duration

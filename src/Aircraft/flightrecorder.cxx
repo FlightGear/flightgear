@@ -462,16 +462,20 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer, const
         return;
 
     int Offset = 0;
-    double ratio;
+    double ratio = 1.0;
     if (pLastBuffer)
     {
         double NextSimTime = _pNextBuffer->sim_time;
         double LastSimTime = _pLastBuffer->sim_time;
-        ratio = (SimTime - LastSimTime) / (NextSimTime - LastSimTime);
-    }
-    else
-    {
-        ratio = 1.0;
+        double Numerator = SimTime - LastSimTime;
+        double dt = NextSimTime - LastSimTime;
+        // avoid divide by zero and other quirks
+        if ((Numerator > 0.0)&&(dt != 0.0))
+        {
+            ratio = Numerator / dt;
+            if (ratio > 1.0)
+                ratio = 1.0;
+        }
     }
 
     Offset += sizeof(double);
