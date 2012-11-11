@@ -33,8 +33,6 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <osg/Math> // for osg::isNaN
-
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
@@ -48,8 +46,8 @@ using namespace flightgear;
 
 static void validateSGGeod(const SGGeod& geod)
 {
-  if (osg::isNaN(geod.getLatitudeDeg()) ||
-      osg::isNaN(geod.getLongitudeDeg()))
+  if (SGMisc<double>::isNaN(geod.getLatitudeDeg()) ||
+      SGMisc<double>::isNaN(geod.getLongitudeDeg()))
   {
     throw sg_range_exception("position is invalid, NaNs");
   }

@@ -18,8 +18,6 @@
 #include <vector>
 #include <cstring>
 
-#include <osg/Math>
-
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/structure/exception.hxx>
@@ -150,7 +148,7 @@ namespace
 {
 double testNan(double val) throw (sg_range_exception)
 {
-    if (osg::isNaN(val))
+    if (SGMisc<double>::isNaN(val))
         throw sg_range_exception("value is nan");
     return val;
 }

@@ -225,7 +225,7 @@ static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
     case props::DOUBLE:
         {
         double dv = p->getDoubleValue();
-        if (osg::isNaN(dv)) {
+        if (SGMisc<double>::isNaN(dv)) {
           SG_LOG(SG_NASAL, SG_ALERT, "Nasal getprop: property " << p->getPath() << " is NaN");
           return naNil();
         }
@@ -280,7 +280,7 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
             if(naIsNil(n))
                 naRuntimeError(c, "setprop() value is not string or number");
                 
-            if (osg::isNaN(n.num)) {
+            if (SGMisc<double>::isNaN(n.num)) {
                 naRuntimeError(c, "setprop() passed a NaN");
             }
             

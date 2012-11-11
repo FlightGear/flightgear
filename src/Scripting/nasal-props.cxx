@@ -185,7 +185,7 @@ static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
     case props::DOUBLE:
     {
         double dv = (*node)->getDoubleValue();
-        if (osg::isNaN(dv)) {
+        if (SGMisc<double>::isNaN(dv)) {
           SG_LOG(SG_NASAL, SG_ALERT, "Nasal getValue: property " << (*node)->getPath() << " is NaN");
           return naNil();
         }
@@ -242,7 +242,7 @@ static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
             naRuntimeError(c, "props.setValue() with non-number");
 
         double d = naNumValue(val).num;
-        if (osg::isNaN(d)) {
+        if (SGMisc<double>::isNaN(d)) {
           naRuntimeError(c, "props.setValue() passed a NaN");
         }
 
@@ -282,7 +282,7 @@ static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
     if (naIsNil(r))
         naRuntimeError(c, "props.setDoubleValue() with non-number");
 
-    if (osg::isNaN(r.num)) {
+    if (SGMisc<double>::isNaN(r.num)) {
       naRuntimeError(c, "props.setDoubleValue() passed a NaN");
     }
 

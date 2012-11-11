@@ -29,7 +29,6 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
-#include <simgear/scene/util/OsgMath.hxx>
 
 using std::auto_ptr;
 using std::string;
@@ -74,7 +73,7 @@ SGGeod SGGeodProperty::get() const
     double lon = _lon->getDoubleValue(),
         lat = _lat->getDoubleValue();
         
-    if (osg::isNaN(lon) || osg::isNaN(lat)) {
+    if (SGMisc<double>::isNaN(lon) || SGMisc<double>::isNaN(lat)) {
       SG_LOG(SG_INSTR, SG_WARN, "read NaN for lon/lat:" << _lon->getPath() 
         << ", " << _lat->getPath());
       return SGGeod();

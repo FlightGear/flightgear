@@ -35,7 +35,6 @@
 #include <algorithm>
 #include <cstring>
 #include <errno.h>
-#include <osg/Math>             // isNaN
 
 #include <simgear/misc/stdint.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -302,7 +301,7 @@ namespace
         case props::DOUBLE:
           {
             float val = XDR_decode_float(*xdr);
-            if (osg::isNaN(val))
+            if (SGMisc<float>::isNaN(val))
               return false;
             xdr++;
             break;
@@ -611,8 +610,8 @@ FGMultiplayMgr::isSane(const FGExternalMotionData& motionInfo)
 {
     // check for corrupted data (NaNs)
     bool isCorrupted = false;
-    isCorrupted |= ((osg::isNaN(motionInfo.time           )) ||
-                    (osg::isNaN(motionInfo.lag            )) ||
+    isCorrupted |= ((SGMisc<double>::isNaN(motionInfo.time           )) ||
+                    (SGMisc<double>::isNaN(motionInfo.lag            )) ||
                     (osg::isNaN(motionInfo.orientation(3) )));
     for (unsigned i = 0; (i < 3)&&(!isCorrupted); ++i)
     {
