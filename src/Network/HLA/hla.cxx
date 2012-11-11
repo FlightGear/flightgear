@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2009 - 2010  Mathias Fröhlich <Mathias.Froehlich@web.de>
+// Copyright (C) 2009 - 2012  Mathias Fröhlich <Mathias.Froehlich@web.de>
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -368,7 +368,8 @@ public:
 };
 
 // Factory class that is used to create an apternative data element for the multiplayer property attribute
-class MPPropertyVariantRecordDataElementFactory : public sg::HLAVariantArrayDataElement::AlternativeDataElementFactory {
+class MPPropertyVariantRecordDataElementFactory :
+    public sg::HLAVariantArrayDataElement::AlternativeDataElementFactory {
 public:
     MPPropertyVariantRecordDataElementFactory(PropertyReferenceSet* propertyReferenceSet) :
         _propertyReferenceSet(propertyReferenceSet)
@@ -397,38 +398,17 @@ private:
     SGSharedPtr<PropertyReferenceSet> _propertyReferenceSet;
 };
 
-class MPAttributeData {
+class FGHLA::MultiplayerObjectInstance : public sg::HLAObjectInstance {
 public:
-    MPAttributeData() :
+    MultiplayerObjectInstance(sg::HLAObjectClass* objectClass) :
+        sg::HLAObjectInstance(objectClass),
         _propertyReferenceSet(new PropertyReferenceSet),
         _mpProperties(new sg::HLAVariantArrayDataElement)
     {
         _mpProperties->setAlternativeDataElementFactory(new MPPropertyVariantRecordDataElementFactory(_propertyReferenceSet.get()));
     }
-
-    void setLocation(sg::HLAAbstractLocation* location)
-    { _location = location; }
-    sg::HLAAbstractLocation* getLocation()
-    { return _location.get(); }
-    const sg::HLAAbstractLocation* getLocation() const
-    { return _location.get(); }
-
-    void setModel(AbstractModel* model)
-    { _model = model; }
-    AbstractModel* getModel()
-    { return _model.get(); }
-    const AbstractModel* getModel() const
-    { return _model.get(); }
-
-    void setSimTime(AbstractSimTime* simTime)
-    { _simTime = simTime; }
-    AbstractSimTime* getSimTime()
-    { return _simTime.get(); }
-    const AbstractSimTime* getSimTime() const
-    { return _simTime.get(); }
-
-    sg::HLAVariantArrayDataElement* getMPProperties() const
-    { return _mpProperties.get(); }
+    virtual ~MultiplayerObjectInstance()
+    { }
 
     SGSharedPtr<PropertyReferenceSet> _propertyReferenceSet;
     SGSharedPtr<sg::HLAAbstractLocation> _location;
@@ -437,98 +417,97 @@ public:
     SGSharedPtr<sg::HLAVariantArrayDataElement> _mpProperties;
 };
 
-class MPUpdateCallback : public sg::HLAObjectInstance::UpdateCallback {
+class FGHLA::MPUpdateCallback : public sg::HLAObjectInstance::UpdateCallback {
 public:
     virtual void updateAttributeValues(sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
     {
-        updateAttributeValues();
+        updateAttributeValues(static_cast<MultiplayerObjectInstance&>(objectInstance));
         objectInstance.encodeAttributeValues();
         objectInstance.sendAttributeValues(tag);
     }
 
     virtual void updateAttributeValues(sg::HLAObjectInstance& objectInstance, const SGTimeStamp& timeStamp, const sg::RTIData& tag)
     {
-        updateAttributeValues();
+        updateAttributeValues(static_cast<MultiplayerObjectInstance&>(objectInstance));
         objectInstance.encodeAttributeValues();
         objectInstance.sendAttributeValues(timeStamp, tag);
     }
 
-    void updateAttributeValues()
+    void updateAttributeValues(MultiplayerObjectInstance& objectInstance)
     {
-        _attributeData._simTime->setTimeStamp(globals->get_sim_time_sec());
+        objectInstance._simTime->setTimeStamp(globals->get_sim_time_sec());
 
         SGGeod position = _ifce.getPosition();
         // The quaternion rotating from the earth centered frame to the
         // horizontal local frame
         SGQuatd qEc2Hl = SGQuatd::fromLonLat(position);
         SGQuatd hlOr = SGQuatd::fromYawPitchRoll(_ifce.get_Psi(), _ifce.get_Theta(), _ifce.get_Phi());
-        _attributeData._location->setCartPosition(SGVec3d::fromGeod(position));
-        _attributeData._location->setCartOrientation(qEc2Hl*hlOr);
+        objectInstance._location->setCartPosition(SGVec3d::fromGeod(position));
+        objectInstance._location->setCartOrientation(qEc2Hl*hlOr);
         // The angular velocitied in the body frame
         double p = _ifce.get_P_body();
         double q = _ifce.get_Q_body();
         double r = _ifce.get_R_body();
-        _attributeData._location->setAngularBodyVelocity(SGVec3d(p, q, r));
+        objectInstance._location->setAngularBodyVelocity(SGVec3d(p, q, r));
         // The body uvw velocities in the interface are wrt the wind instead
         // of wrt the ec frame
         double n = _ifce.get_V_north()*SG_FEET_TO_METER;
         double e = _ifce.get_V_east()*SG_FEET_TO_METER;
         double d = _ifce.get_V_down()*SG_FEET_TO_METER;
-        _attributeData._location->setLinearBodyVelocity(hlOr.transform(SGVec3d(n, e, d)));
+        objectInstance._location->setLinearBodyVelocity(hlOr.transform(SGVec3d(n, e, d)));
 
-        if (_attributeData._mpProperties.valid() && _attributeData._mpProperties->getNumElements() == 0) {
-            if (_attributeData._propertyReferenceSet.valid() && _attributeData._propertyReferenceSet->getRootNode()) {
-                const sg::HLADataType* elementDataType = _attributeData._mpProperties->getElementDataType();
+        if (objectInstance._mpProperties.valid() && objectInstance._mpProperties->getNumElements() == 0) {
+            if (objectInstance._propertyReferenceSet.valid() && objectInstance._propertyReferenceSet->getRootNode()) {
+                const sg::HLADataType* elementDataType = objectInstance._mpProperties->getElementDataType();
                 const sg::HLAVariantRecordDataType* variantRecordDataType = elementDataType->toVariantRecordDataType();
                 for (unsigned i = 0, count = 0; i < variantRecordDataType->getNumAlternatives(); ++i) {
                     std::string name = variantRecordDataType->getAlternativeSemantics(i);
-                    SGPropertyNode* node = _attributeData._propertyReferenceSet->getRootNode()->getNode(name);
+                    SGPropertyNode* node = objectInstance._propertyReferenceSet->getRootNode()->getNode(name);
                     if (!node)
                         continue;
-                    _attributeData._mpProperties->getOrCreateElement(count++)->setAlternativeIndex(i);
+                    objectInstance._mpProperties->getOrCreateElement(count++)->setAlternativeIndex(i);
                 }
             }
         }
     }
 
-    MPAttributeData _attributeData;
     FlightProperties _ifce;
 };
 
-class MPReflectCallback : public sg::HLAObjectInstance::ReflectCallback {
+class FGHLA::MPReflectCallback : public sg::HLAObjectInstance::ReflectCallback {
 public:
     virtual void reflectAttributeValues(sg::HLAObjectInstance& objectInstance,
                                         const sg::HLAIndexList& indexList, const sg::RTIData& tag)
     {
         objectInstance.reflectAttributeValues(indexList, tag);
-        reflectAttributeValues();
+        reflectAttributeValues(static_cast<MultiplayerObjectInstance&>(objectInstance));
     }
     virtual void reflectAttributeValues(sg::HLAObjectInstance& objectInstance, const sg::HLAIndexList& indexList,
                                         const SGTimeStamp& timeStamp, const sg::RTIData& tag)
     {
         objectInstance.reflectAttributeValues(indexList, timeStamp, tag);
-        reflectAttributeValues();
+        reflectAttributeValues(static_cast<MultiplayerObjectInstance&>(objectInstance));
     }
 
-    void reflectAttributeValues()
+    void reflectAttributeValues(MultiplayerObjectInstance& objectInstance)
     {
         // Puh, damn ordering problems with properties startup and so on
         if (_aiMultiplayer.valid()) {
             FGExternalMotionData motionInfo;
-            motionInfo.time = _attributeData._simTime->getTimeStamp();
+            motionInfo.time = objectInstance._simTime->getTimeStamp();
             motionInfo.lag = 0;
 
-            motionInfo.position = _attributeData._location->getCartPosition();
-            motionInfo.orientation = toQuatf(_attributeData._location->getCartOrientation());
-            motionInfo.linearVel = toVec3f(_attributeData._location->getLinearBodyVelocity());
-            motionInfo.angularVel = toVec3f(_attributeData._location->getAngularBodyVelocity());
+            motionInfo.position = objectInstance._location->getCartPosition();
+            motionInfo.orientation = toQuatf(objectInstance._location->getCartOrientation());
+            motionInfo.linearVel = toVec3f(objectInstance._location->getLinearBodyVelocity());
+            motionInfo.angularVel = toVec3f(objectInstance._location->getAngularBodyVelocity());
             motionInfo.linearAccel = SGVec3f::zeros();
             motionInfo.angularAccel = SGVec3f::zeros();
 
             _aiMultiplayer->addMotionInfo(motionInfo, SGTimeStamp::now().getSeconds());
 
         } else {
-            std::string modelPath = _attributeData._model->getModelPath();
+            std::string modelPath = objectInstance._model->getModelPath();
             if (modelPath.empty())
                 return;
             FGAIManager *aiMgr;
@@ -540,7 +519,7 @@ public:
             _aiMultiplayer->setPath(modelPath.c_str());
             aiMgr->attach(_aiMultiplayer.get());
 
-            _attributeData._propertyReferenceSet->setRootNode(_aiMultiplayer->getPropertyRoot());
+            objectInstance._propertyReferenceSet->setRootNode(_aiMultiplayer->getPropertyRoot());
         }
     }
 
@@ -552,59 +531,7 @@ public:
         _aiMultiplayer = 0;
     }
 
-    MPAttributeData _attributeData;
     SGSharedPtr<FGAIMultiplayer> _aiMultiplayer;
-};
-
-class FGHLA::MultiplayerObjectInstance : public sg::HLAObjectInstance {
-public:
-    MultiplayerObjectInstance(sg::HLAObjectClass* objectClass) :
-        sg::HLAObjectInstance(objectClass)
-    { }
-    virtual ~MultiplayerObjectInstance()
-    { }
-};
-
-// A SimTime implementation that works with the simulation
-// time in an attribute. Used when we cannot do real time management.
-class AttributeSimTime : public AbstractSimTime {
-public:
-
-    virtual double getTimeStamp() const
-    { return _simTime; }
-    virtual void setTimeStamp(double simTime)
-    { _simTime = simTime; }
-
-    sg::HLADataElement* getDataElement()
-    { return _simTime.getDataElement(); }
-
-private:
-    sg::HLADoubleData _simTime;
-};
-
-// A SimTime implementation that works with the simulation
-// time in two attributes like the avation sim net fom works
-class MSecAttributeSimTime : public AbstractSimTime {
-public:
-    virtual double getTimeStamp() const
-    {
-        return _secSimTime + 1e-3*_msecSimTime;
-    }
-    virtual void setTimeStamp(double simTime)
-    {
-        double sec = floor(simTime);
-        _secSimTime = sec;
-        _msecSimTime = 1e3*(simTime - sec);
-    }
-
-    sg::HLADataElement* getSecDataElement()
-    { return _secSimTime.getDataElement(); }
-    sg::HLADataElement* getMSecDataElement()
-    { return _msecSimTime.getDataElement(); }
-
-private:
-    sg::HLADoubleData _secSimTime;
-    sg::HLADoubleData _msecSimTime;
 };
 
 class SimTimeFactory : public SGReferenced {
@@ -613,13 +540,29 @@ public:
     virtual AbstractSimTime* createSimTime(sg::HLAObjectInstance&) const = 0;
 };
 
+// A SimTime implementation that works with the simulation
+// time in an attribute. Used when we cannot do real time management.
 class AttributeSimTimeFactory : public SimTimeFactory {
 public:
+    class SimTime : public AbstractSimTime {
+    public:
+        virtual double getTimeStamp() const
+        { return _simTime; }
+        virtual void setTimeStamp(double simTime)
+        { _simTime = simTime; }
+        
+        sg::HLADataElement* getDataElement()
+        { return _simTime.getDataElement(); }
+        
+    private:
+        sg::HLADoubleData _simTime;
+    };
+
     virtual AbstractSimTime* createSimTime(sg::HLAObjectInstance& objectInstance) const
     {
-        AttributeSimTime* attributeSimTime = new AttributeSimTime;
-        objectInstance.setAttributeDataElement(_simTimeIndex, attributeSimTime->getDataElement());
-        return attributeSimTime;
+        SimTime* simTime = new SimTime;
+        objectInstance.setAttributeDataElement(_simTimeIndex, simTime->getDataElement());
+        return simTime;
     }
     void setSimTimeIndex(const sg::HLADataElementIndex& simTimeIndex)
     { _simTimeIndex = simTimeIndex; }
@@ -628,14 +571,39 @@ private:
     sg::HLADataElementIndex _simTimeIndex;
 };
 
+// A SimTime implementation that works with the simulation
+// time in two attributes like the avation sim net fom works
 class MSecAttributeSimTimeFactory : public SimTimeFactory {
 public:
+    class SimTime : public AbstractSimTime {
+    public:
+        virtual double getTimeStamp() const
+        {
+            return _secSimTime + 1e-3*_msecSimTime;
+        }
+        virtual void setTimeStamp(double simTime)
+        {
+            double sec = floor(simTime);
+            _secSimTime = sec;
+            _msecSimTime = 1e3*(simTime - sec);
+        }
+        
+        sg::HLADataElement* getSecDataElement()
+        { return _secSimTime.getDataElement(); }
+        sg::HLADataElement* getMSecDataElement()
+        { return _msecSimTime.getDataElement(); }
+        
+    private:
+        sg::HLADoubleData _secSimTime;
+        sg::HLADoubleData _msecSimTime;
+    };
+    
     virtual AbstractSimTime* createSimTime(sg::HLAObjectInstance& objectInstance) const
     {
-        MSecAttributeSimTime* attributeSimTime = new MSecAttributeSimTime;
-        objectInstance.setAttributeDataElement(_secIndex, attributeSimTime->getSecDataElement());
-        objectInstance.setAttributeDataElement(_msecIndex, attributeSimTime->getMSecDataElement());
-        return attributeSimTime;
+        SimTime* simTime = new SimTime;
+        objectInstance.setAttributeDataElement(_secIndex, simTime->getSecDataElement());
+        objectInstance.setAttributeDataElement(_msecIndex, simTime->getMSecDataElement());
+        return simTime;
     }
     void setSecIndex(const sg::HLADataElementIndex& secIndex)
     { _secIndex = secIndex; }
@@ -765,7 +733,7 @@ public:
         HLAObjectClass::discoverInstance(objectInstance, tag);
         MPReflectCallback* reflectCallback = new MPReflectCallback;
         objectInstance.setReflectCallback(reflectCallback);
-        attachDataElements(objectInstance, reflectCallback->_attributeData, false);
+        attachDataElements(static_cast<MultiplayerObjectInstance&>(objectInstance), false);
     }
     virtual void removeInstance(sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
     {
@@ -783,9 +751,10 @@ public:
         HLAObjectClass::registerInstance(objectInstance);
         MPUpdateCallback* updateCallback = new MPUpdateCallback;
         objectInstance.setUpdateCallback(updateCallback);
-        attachDataElements(objectInstance, updateCallback->_attributeData, true);
-        updateCallback->_attributeData._model->setModelPath(fgGetString("/sim/model/path", "default"));
-        updateCallback->_attributeData._propertyReferenceSet->setRootNode(fgGetNode("/", true));
+        MultiplayerObjectInstance& mpObjectInstance = static_cast<MultiplayerObjectInstance&>(objectInstance);
+        attachDataElements(mpObjectInstance, true);
+        mpObjectInstance._model->setModelPath(fgGetString("/sim/model/path", "default"));
+        mpObjectInstance._propertyReferenceSet->setRootNode(fgGetNode("/", true));
     }
     virtual void deleteInstance(sg::HLAObjectInstance& objectInstance)
     {
@@ -827,22 +796,22 @@ public:
     }
 
 private:
-    void attachDataElements(sg::HLAObjectInstance& objectInstance, MPAttributeData& attributeData, bool outgoing)
+    void attachDataElements(MultiplayerObjectInstance& objectInstance, bool outgoing)
     {
-        objectInstance.setAttributeDataElement(_mpPropertiesIndex, attributeData.getMPProperties());
+        objectInstance.setAttributeDataElement(_mpPropertiesIndex, objectInstance._mpProperties.get());
 
         if (_locationFactory.valid())
-            attributeData.setLocation(_locationFactory->createLocation(objectInstance));
+            objectInstance._location = _locationFactory->createLocation(objectInstance);
         if (_modelFactory.valid())
-            attributeData.setModel(_modelFactory->createModel(objectInstance));
+            objectInstance._model = _modelFactory->createModel(objectInstance);
         if (_simTimeFactory.valid())
-            attributeData.setSimTime(_simTimeFactory->createSimTime(objectInstance));
+            objectInstance._simTime = _simTimeFactory->createSimTime(objectInstance);
 
         if (outgoing)
-            attachPropertyDataElements(*attributeData._propertyReferenceSet,
+            attachPropertyDataElements(*objectInstance._propertyReferenceSet,
                                        objectInstance, _outputProperties);
         else
-            attachPropertyDataElements(*attributeData._propertyReferenceSet,
+            attachPropertyDataElements(*objectInstance._propertyReferenceSet,
                                        objectInstance, _inputProperties);
     }
     typedef std::map<sg::HLADataElementIndex, std::string> IndexPropertyMap;

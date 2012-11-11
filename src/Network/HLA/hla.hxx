@@ -38,6 +38,8 @@ public:
 private:
     /// All the utility classes we need currently
     class XMLConfigReader;
+    class MPUpdateCallback;
+    class MPReflectCallback;
     class MultiplayerObjectInstance;
     class MultiplayerObjectClass;
     class Federate;
