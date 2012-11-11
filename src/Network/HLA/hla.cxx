@@ -359,203 +359,12 @@ public:
     virtual void setTimeStamp(double) = 0;
 };
 
-class SimTimeFactory : public SGReferenced {
-public:
-    virtual ~SimTimeFactory() {}
-    virtual AbstractSimTime* createSimTime(sg::HLAAttributePathElementMap&) const = 0;
-};
-
-// A SimTime implementation that works with the simulation
-// time in an attribute. Used when we cannot do real time management.
-class AttributeSimTime : public AbstractSimTime {
-public:
-
-    virtual double getTimeStamp() const
-    { return _simTime; }
-    virtual void setTimeStamp(double simTime)
-    { _simTime = simTime; }
-
-    sg::HLADataElement* getDataElement()
-    { return _simTime.getDataElement(); }
-
-private:
-    simgear::HLADoubleData _simTime;
-};
-
-class AttributeSimTimeFactory : public SimTimeFactory {
-public:
-    virtual AttributeSimTime* createSimTime(sg::HLAAttributePathElementMap& attributePathElementMap) const
-    {
-        AttributeSimTime* attributeSimTime = new AttributeSimTime;
-        attributePathElementMap[_simTimeIndexPathPair.first][_simTimeIndexPathPair.second] = attributeSimTime->getDataElement();
-        return attributeSimTime;
-    }
-
-    void setSimTimeIndexPathPair(const sg::HLADataElement::IndexPathPair& indexPathPair)
-    { _simTimeIndexPathPair = indexPathPair; }
-
-private:
-    sg::HLADataElement::IndexPathPair _simTimeIndexPathPair;
-};
-
-// A SimTime implementation that works with the simulation
-// time in two attributes like the avation sim net fom works
-class MSecAttributeSimTime : public AbstractSimTime {
-public:
-    virtual double getTimeStamp() const
-    {
-        return _secSimTime + 1e-3*_msecSimTime;
-    }
-    virtual void setTimeStamp(double simTime)
-    {
-        double sec = floor(simTime);
-        _secSimTime = sec;
-        _msecSimTime = 1e3*(simTime - sec);
-    }
-
-    sg::HLADataElement* getSecDataElement()
-    { return _secSimTime.getDataElement(); }
-    sg::HLADataElement* getMSecDataElement()
-    { return _msecSimTime.getDataElement(); }
-
-private:
-    simgear::HLADoubleData _secSimTime;
-    simgear::HLADoubleData _msecSimTime;
-};
-
-class MSecAttributeSimTimeFactory : public SimTimeFactory {
-public:
-    virtual MSecAttributeSimTime* createSimTime(sg::HLAAttributePathElementMap& attributePathElementMap) const
-    {
-        MSecAttributeSimTime* attributeSimTime = new MSecAttributeSimTime;
-        attributePathElementMap[_secIndexPathPair.first][_secIndexPathPair.second] = attributeSimTime->getSecDataElement();
-        attributePathElementMap[_msecIndexPathPair.first][_msecIndexPathPair.second] = attributeSimTime->getMSecDataElement();
-        return attributeSimTime;
-    }
-
-    void setSecIndexPathPair(const sg::HLADataElement::IndexPathPair& indexPathPair)
-    { _secIndexPathPair = indexPathPair; }
-    void setMSecIndexPathPair(const sg::HLADataElement::IndexPathPair& indexPathPair)
-    { _msecIndexPathPair = indexPathPair; }
-
-private:
-    sg::HLADataElement::IndexPathPair _secIndexPathPair;
-    sg::HLADataElement::IndexPathPair _msecIndexPathPair;
-};
-
 class AbstractModel : public SGReferenced {
 public:
     virtual ~AbstractModel() {}
 
     virtual std::string getModelPath() const = 0;
     virtual void setModelPath(const std::string&) = 0;
-};
-
-class ModelFactory : public SGReferenced {
-public:
-    virtual ~ModelFactory() {}
-    virtual AbstractModel* createModel(sg::HLAAttributePathElementMap&, bool) const = 0;
-};
-
-class AttributeModel : public AbstractModel {
-public:
-    virtual std::string getModelPath() const
-    { return _modelPath; }
-    virtual void setModelPath(const std::string& modelPath)
-    { _modelPath = modelPath; }
-
-    sg::HLADataElement* getDataElement()
-    { return _modelPath.getDataElement(); }
-
-private:
-    simgear::HLAStringData _modelPath;
-};
-
-class AttributeModelFactory : public ModelFactory {
-public:
-    virtual AttributeModel* createModel(sg::HLAAttributePathElementMap& attributePathElementMap, bool outgoing) const
-    {
-        AttributeModel* attributeModel = new AttributeModel;
-        attributePathElementMap[_modelIndexPathPair.first][_modelIndexPathPair.second] = attributeModel->getDataElement();
-        if (outgoing)
-            attributeModel->setModelPath(fgGetString("/sim/model/path", "default"));
-        return attributeModel;
-    }
-
-    void setModelIndexPathPair(const sg::HLADataElement::IndexPathPair& indexPathPair)
-    { _modelIndexPathPair = indexPathPair; }
-
-private:
-    sg::HLADataElement::IndexPathPair _modelIndexPathPair;
-};
-
-class AttributeMapModelFactory : public ModelFactory {
-public:
-    class Model : public AbstractModel {
-    public:
-        Model(const AttributeMapModelFactory* mapModelFactory) :
-            _mapModelFactory(mapModelFactory)
-        { }
-
-        virtual std::string getModelPath() const
-        {
-            if (_modelPath.getValue().empty())
-                return _modelPath.getValue();
-            return _mapModelFactory->mapToFlightgear(_modelPath);
-        }
-        virtual void setModelPath(const std::string& modelPath)
-        { _modelPath = _mapModelFactory->mapToExternal(modelPath); }
-
-        sg::HLADataElement* getDataElement()
-        { return _modelPath.getDataElement(); }
-
-    private:
-        simgear::HLAStringData _modelPath;
-        SGSharedPtr<const AttributeMapModelFactory> _mapModelFactory;
-    };
-
-    virtual AbstractModel* createModel(sg::HLAAttributePathElementMap& attributePathElementMap, bool outgoing) const
-    {
-        Model* attributeModel = new Model(this);
-        attributePathElementMap[_modelIndexPathPair.first][_modelIndexPathPair.second] = attributeModel->getDataElement();
-        if (outgoing)
-            attributeModel->setModelPath(fgGetString("/sim/model/path", "default"));
-        return attributeModel;
-    }
-
-    void setModelIndexPathPair(const sg::HLADataElement::IndexPathPair& indexPathPair)
-    { _modelIndexPathPair = indexPathPair; }
-
-    std::string mapToFlightgear(const std::string& externalModel) const
-    {
-        std::map<std::string,std::string>::const_iterator i;
-        i = _externalToModelPathMap.find(externalModel);
-        if (i != _externalToModelPathMap.end())
-            return i->second;
-        return "default";
-    }
-    std::string mapToExternal(const std::string& modelPath) const
-    {
-        std::map<std::string,std::string>::const_iterator i;
-        i = _modelPathToExternalMap.find(modelPath);
-        if (i != _modelPathToExternalMap.end())
-            return i->second;
-        return _externalDefault;
-    }
-
-    void setExternalDefault(const std::string& externalDefault)
-    { _externalDefault = externalDefault; }
-    void addExternalModelPathPair(const std::string& external, const std::string& modelPath)
-    {
-        _externalToModelPathMap[external] = modelPath;
-        _modelPathToExternalMap[modelPath] = external;
-    }
-
-private:
-    sg::HLADataElement::IndexPathPair _modelIndexPathPair;
-    std::map<std::string,std::string> _externalToModelPathMap;
-    std::map<std::string,std::string> _modelPathToExternalMap;
-    std::string _externalDefault;
 };
 
 // Factory class that is used to create an apternative data element for the multiplayer property attribute
@@ -756,6 +565,190 @@ public:
     { }
 };
 
+// A SimTime implementation that works with the simulation
+// time in an attribute. Used when we cannot do real time management.
+class AttributeSimTime : public AbstractSimTime {
+public:
+
+    virtual double getTimeStamp() const
+    { return _simTime; }
+    virtual void setTimeStamp(double simTime)
+    { _simTime = simTime; }
+
+    sg::HLADataElement* getDataElement()
+    { return _simTime.getDataElement(); }
+
+private:
+    sg::HLADoubleData _simTime;
+};
+
+// A SimTime implementation that works with the simulation
+// time in two attributes like the avation sim net fom works
+class MSecAttributeSimTime : public AbstractSimTime {
+public:
+    virtual double getTimeStamp() const
+    {
+        return _secSimTime + 1e-3*_msecSimTime;
+    }
+    virtual void setTimeStamp(double simTime)
+    {
+        double sec = floor(simTime);
+        _secSimTime = sec;
+        _msecSimTime = 1e3*(simTime - sec);
+    }
+
+    sg::HLADataElement* getSecDataElement()
+    { return _secSimTime.getDataElement(); }
+    sg::HLADataElement* getMSecDataElement()
+    { return _msecSimTime.getDataElement(); }
+
+private:
+    sg::HLADoubleData _secSimTime;
+    sg::HLADoubleData _msecSimTime;
+};
+
+class SimTimeFactory : public SGReferenced {
+public:
+    virtual ~SimTimeFactory() {}
+    virtual AbstractSimTime* createSimTime(sg::HLAObjectInstance&) const = 0;
+};
+
+class AttributeSimTimeFactory : public SimTimeFactory {
+public:
+    virtual AbstractSimTime* createSimTime(sg::HLAObjectInstance& objectInstance) const
+    {
+        AttributeSimTime* attributeSimTime = new AttributeSimTime;
+        objectInstance.setAttributeDataElement(_simTimeIndex, attributeSimTime->getDataElement());
+        return attributeSimTime;
+    }
+    void setSimTimeIndex(const sg::HLADataElementIndex& simTimeIndex)
+    { _simTimeIndex = simTimeIndex; }
+
+private:
+    sg::HLADataElementIndex _simTimeIndex;
+};
+
+class MSecAttributeSimTimeFactory : public SimTimeFactory {
+public:
+    virtual AbstractSimTime* createSimTime(sg::HLAObjectInstance& objectInstance) const
+    {
+        MSecAttributeSimTime* attributeSimTime = new MSecAttributeSimTime;
+        objectInstance.setAttributeDataElement(_secIndex, attributeSimTime->getSecDataElement());
+        objectInstance.setAttributeDataElement(_msecIndex, attributeSimTime->getMSecDataElement());
+        return attributeSimTime;
+    }
+    void setSecIndex(const sg::HLADataElementIndex& secIndex)
+    { _secIndex = secIndex; }
+    void setMSecIndex(const sg::HLADataElementIndex& msecIndex)
+    { _msecIndex = msecIndex; }
+
+private:
+    sg::HLADataElementIndex _secIndex;
+    sg::HLADataElementIndex _msecIndex;
+};
+
+class ModelFactory : public SGReferenced {
+public:
+    virtual ~ModelFactory() {}
+    virtual AbstractModel* createModel(sg::HLAObjectInstance& objectInstance) const = 0;
+};
+
+class AttributeModelFactory : public ModelFactory {
+public:
+    class Model : public AbstractModel {
+    public:
+        virtual std::string getModelPath() const
+        { return _modelPath; }
+        virtual void setModelPath(const std::string& modelPath)
+        { _modelPath = modelPath; }
+        
+        sg::HLADataElement* getDataElement()
+        { return _modelPath.getDataElement(); }
+        
+    private:
+        sg::HLAStringData _modelPath;
+    };
+
+    virtual AbstractModel* createModel(sg::HLAObjectInstance& objectInstance) const
+    {
+        Model* model = new Model;
+        objectInstance.setAttributeDataElement(_modelIndex, model->getDataElement());
+        return model;
+    }
+    void setModelIndex(const sg::HLADataElementIndex& modelIndex)
+    { _modelIndex = modelIndex; }
+
+private:
+    sg::HLADataElementIndex _modelIndex;
+};
+
+class AttributeMapModelFactory : public ModelFactory {
+public:
+    class Model : public AbstractModel {
+    public:
+        Model(const AttributeMapModelFactory* mapModelFactory) :
+            _mapModelFactory(mapModelFactory)
+        { }
+
+        virtual std::string getModelPath() const
+        {
+            if (_modelPath.getValue().empty())
+                return _modelPath.getValue();
+            return _mapModelFactory->mapToFlightgear(_modelPath);
+        }
+        virtual void setModelPath(const std::string& modelPath)
+        { _modelPath = _mapModelFactory->mapToExternal(modelPath); }
+
+        sg::HLADataElement* getDataElement()
+        { return _modelPath.getDataElement(); }
+
+    private:
+        sg::HLAStringData _modelPath;
+        SGSharedPtr<const AttributeMapModelFactory> _mapModelFactory;
+    };
+
+    virtual AbstractModel* createModel(sg::HLAObjectInstance& objectInstance) const
+    {
+        Model* model = new Model(this);
+        objectInstance.setAttributeDataElement(_modelIndex, model->getDataElement());
+        return model;
+    }
+    void setModelIndex(const sg::HLADataElementIndex& modelIndex)
+    { _modelIndex = modelIndex; }
+
+    std::string mapToFlightgear(const std::string& externalModel) const
+    {
+        std::map<std::string,std::string>::const_iterator i;
+        i = _externalToModelPathMap.find(externalModel);
+        if (i != _externalToModelPathMap.end())
+            return i->second;
+        return "default";
+    }
+    std::string mapToExternal(const std::string& modelPath) const
+    {
+        std::map<std::string,std::string>::const_iterator i;
+        i = _modelPathToExternalMap.find(modelPath);
+        if (i != _modelPathToExternalMap.end())
+            return i->second;
+        return _externalDefault;
+    }
+
+    void setExternalDefault(const std::string& externalDefault)
+    { _externalDefault = externalDefault; }
+    void addExternalModelPathPair(const std::string& external, const std::string& modelPath)
+    {
+        _externalToModelPathMap[external] = modelPath;
+        _modelPathToExternalMap[modelPath] = external;
+    }
+
+private:
+    sg::HLADataElementIndex _modelIndex;
+
+    std::map<std::string,std::string> _externalToModelPathMap;
+    std::map<std::string,std::string> _modelPathToExternalMap;
+    std::string _externalDefault;
+};
+
 class FGHLA::MultiplayerObjectClass : public sg::HLAObjectClass {
 public:
     MultiplayerObjectClass(const std::string& name, sg::HLAFederate* federate) :
@@ -791,6 +784,7 @@ public:
         MPUpdateCallback* updateCallback = new MPUpdateCallback;
         objectInstance.setUpdateCallback(updateCallback);
         attachDataElements(objectInstance, updateCallback->_attributeData, true);
+        updateCallback->_attributeData._model->setModelPath(fgGetString("/sim/model/path", "default"));
         updateCallback->_attributeData._propertyReferenceSet->setRootNode(fgGetNode("/", true));
     }
     virtual void deleteInstance(sg::HLAObjectInstance& objectInstance)
@@ -818,69 +812,61 @@ public:
     ModelFactory* getModelFactory()
     { return _modelFactory.get(); }
 
-    void setMPPropertiesIndexPathPair(const sg::HLADataElement::IndexPathPair& indexPathPair)
-    { _mpPropertiesIndexPathPair = indexPathPair; }
-    const sg::HLADataElement::IndexPathPair& getMPPropertiesIndexPathPair() const
-    { return _mpPropertiesIndexPathPair; }
+    void setMPPropertiesIndex(const sg::HLADataElementIndex& index)
+    { _mpPropertiesIndex = index; }
+    const sg::HLADataElementIndex& getMPPropertiesIndex() const
+    { return _mpPropertiesIndex; }
 
-    typedef std::map<sg::HLADataElement::Path, std::string> PathPropertyMap;
-    typedef std::map<unsigned, PathPropertyMap> AttributePathPropertyMap;
-
-    void setInputProperty(const sg::HLADataElement::IndexPathPair& indexPathPair, const std::string& property)
+    void setInputProperty(const sg::HLADataElementIndex& index, const std::string& property)
     {
-        _inputProperties[indexPathPair.first][indexPathPair.second] = property;
+        _inputProperties[index] = property;
     }
-    void setOutputProperty(const sg::HLADataElement::IndexPathPair& indexPathPair, const std::string& property)
+    void setOutputProperty(const sg::HLADataElementIndex& index, const std::string& property)
     {
-        _outputProperties[indexPathPair.first][indexPathPair.second] = property;
+        _outputProperties[index] = property;
     }
 
 private:
     void attachDataElements(sg::HLAObjectInstance& objectInstance, MPAttributeData& attributeData, bool outgoing)
     {
-        sg::HLAAttributePathElementMap attributePathElementMap;
+        objectInstance.setAttributeDataElement(_mpPropertiesIndex, attributeData.getMPProperties());
 
         if (_locationFactory.valid())
-            attributeData.setLocation(_locationFactory->createLocation(attributePathElementMap));
+            attributeData.setLocation(_locationFactory->createLocation(objectInstance));
         if (_modelFactory.valid())
-            attributeData.setModel(_modelFactory->createModel(attributePathElementMap, outgoing));
+            attributeData.setModel(_modelFactory->createModel(objectInstance));
         if (_simTimeFactory.valid())
-            attributeData.setSimTime(_simTimeFactory->createSimTime(attributePathElementMap));
-
-        attributePathElementMap[_mpPropertiesIndexPathPair.first][_mpPropertiesIndexPathPair.second] = attributeData.getMPProperties();
+            attributeData.setSimTime(_simTimeFactory->createSimTime(objectInstance));
 
         if (outgoing)
             attachPropertyDataElements(*attributeData._propertyReferenceSet,
-                                       attributePathElementMap, _outputProperties);
+                                       objectInstance, _outputProperties);
         else
             attachPropertyDataElements(*attributeData._propertyReferenceSet,
-                                       attributePathElementMap, _inputProperties);
-
-        objectInstance.setAttributes(attributePathElementMap);
+                                       objectInstance, _inputProperties);
     }
+    typedef std::map<sg::HLADataElementIndex, std::string> IndexPropertyMap;
+
     void attachPropertyDataElements(PropertyReferenceSet& propertyReferenceSet,
-                                    sg::HLAAttributePathElementMap& attributePathElementMap,
-                                    const AttributePathPropertyMap& attributePathPropertyMap)
+                                    sg::HLAObjectInstance& objectInstance,
+                                    const IndexPropertyMap& attributePathPropertyMap)
     {
-        for (AttributePathPropertyMap::const_iterator i = attributePathPropertyMap.begin();
+        for (IndexPropertyMap::const_iterator i = attributePathPropertyMap.begin();
              i != attributePathPropertyMap.end(); ++i) {
-            for (PathPropertyMap::const_iterator j = i->second.begin();
-                 j != i->second.end(); ++j) {
-                sg::HLAPropertyDataElement* dataElement = new sg::HLAPropertyDataElement;
-                propertyReferenceSet.insert(j->second, dataElement);
-                attributePathElementMap[i->first][j->first] = dataElement;
-            }
+            sg::HLAPropertyDataElement* dataElement = new sg::HLAPropertyDataElement;
+            propertyReferenceSet.insert(i->second, dataElement);
+            objectInstance.setAttributeDataElement(i->first, dataElement);
         }
     }
 
-    AttributePathPropertyMap _inputProperties;
-    AttributePathPropertyMap _outputProperties;
+    IndexPropertyMap _inputProperties;
+    IndexPropertyMap _outputProperties;
 
     SGSharedPtr<sg::HLALocationFactory> _locationFactory;
     SGSharedPtr<SimTimeFactory> _simTimeFactory;
     SGSharedPtr<ModelFactory> _modelFactory;
 
-    sg::HLADataElement::IndexPathPair _mpPropertiesIndexPathPair;
+    sg::HLADataElementIndex _mpPropertiesIndex;
 };
 
 class FGHLA::Federate : public sg::HLAFederate {
@@ -1103,32 +1089,32 @@ FGHLA::open()
                  j != i->_positionConfig._dataElementList.end(); ++j) {
 
                 if (j->_type == "position-x")
-                    locationFactory->setPositionIndexPathPair(0, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setPositionIndex(0, objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "position-y")
-                    locationFactory->setPositionIndexPathPair(1, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setPositionIndex(1, objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "position-z")
-                    locationFactory->setPositionIndexPathPair(2, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setPositionIndex(2, objectClass->getDataElementIndex(j->_name));
 
                 else if (j->_type == "orientation-sin-angle-axis-x")
-                    locationFactory->setOrientationIndexPathPair(0, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setOrientationIndex(0, objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "orientation-sin-angle-axis-y")
-                    locationFactory->setOrientationIndexPathPair(1, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setOrientationIndex(1, objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "orientation-sin-angle-axis-z")
-                    locationFactory->setOrientationIndexPathPair(2, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setOrientationIndex(2, objectClass->getDataElementIndex(j->_name));
 
                 else if (j->_type == "angular-velocity-x")
-                    locationFactory->setAngularVelocityIndexPathPair(0, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setAngularVelocityIndex(0, objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "angular-velocity-y")
-                    locationFactory->setAngularVelocityIndexPathPair(1, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setAngularVelocityIndex(1, objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "angular-velocity-z")
-                    locationFactory->setAngularVelocityIndexPathPair(2, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setAngularVelocityIndex(2, objectClass->getDataElementIndex(j->_name));
 
                 else if (j->_type == "linear-velocity-x")
-                    locationFactory->setLinearVelocityIndexPathPair(0, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setLinearVelocityIndex(0, objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "linear-velocity-y")
-                    locationFactory->setLinearVelocityIndexPathPair(1, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setLinearVelocityIndex(1, objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "linear-velocity-z")
-                    locationFactory->setLinearVelocityIndexPathPair(2, objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setLinearVelocityIndex(2, objectClass->getDataElementIndex(j->_name));
 
                 else {
                     SG_LOG(SG_IO, SG_ALERT, "HLA: Unknown position configuration type \""
@@ -1146,65 +1132,65 @@ FGHLA::open()
                  j != i->_positionConfig._dataElementList.end(); ++j) {
 
                 if (j->_type == "latitude-deg")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::LatitudeDeg,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::LatitudeDeg,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "latitude-rad")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::LatitudeRad,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::LatitudeRad,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "longitude-deg")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::LongitudeDeg,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::LongitudeDeg,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "longitude-rad")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::LongitudeRad,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::LongitudeRad,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "elevation-m")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::ElevationM,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::ElevationM,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "elevation-m")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::ElevationFt,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::ElevationFt,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "heading-deg")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::HeadingDeg,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::HeadingDeg,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "heading-rad")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::HeadingRad,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::HeadingRad,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "pitch-deg")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::PitchDeg,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::PitchDeg,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "pitch-rad")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::PitchRad,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::PitchRad,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "roll-deg")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::RollDeg,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::RollDeg,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "roll-rad")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::RollRad,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::RollRad,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "ground-track-deg")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::GroundTrackDeg,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::GroundTrackDeg,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "ground-track-rad")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::GroundTrackRad,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::GroundTrackRad,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "ground-speed-kt")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::GroundSpeedKnots,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::GroundSpeedKnots,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "ground-speed-ft-per-sec")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::GroundSpeedFtPerSec,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::GroundSpeedFtPerSec,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "ground-speed-m-per-sec")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::GroundSpeedMPerSec,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::GroundSpeedMPerSec,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "vertical-speed-ft-per-sec")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::VerticalSpeedFtPerSec,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::VerticalSpeedFtPerSec,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "vertical-speed-ft-per-min")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::VerticalSpeedFtPerMin,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::VerticalSpeedFtPerMin,
+                                              objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "vertical-speed-m-per-sec")
-                    locationFactory->setIndexPathPair(sg::HLAGeodeticLocationFactory::VerticalSpeedMPerSec,
-                                                      objectClass->getIndexPathPair(j->_name));
+                    locationFactory->setIndex(sg::HLAGeodeticLocationFactory::VerticalSpeedMPerSec,
+                                              objectClass->getDataElementIndex(j->_name));
                 else {
                     SG_LOG(SG_IO, SG_ALERT, "HLA: Unknown position configuration type \""
                            << j->_type << "\" for object class \"" << aircraftClassName << "\". Ignoring!");
@@ -1223,7 +1209,7 @@ FGHLA::open()
                  j != i->_modelConfig._dataElementList.end(); ++j) {
 
                 if (j->_type == "model-path")
-                    attributeModelFactory->setModelIndexPathPair(objectClass->getIndexPathPair(j->_name));
+                    attributeModelFactory->setModelIndex(objectClass->getDataElementIndex(j->_name));
 
                 else {
                     SG_LOG(SG_IO, SG_ALERT, "HLA: Unknown model configuration type \""
@@ -1242,7 +1228,7 @@ FGHLA::open()
                  j != i->_modelConfig._dataElementList.end(); ++j) {
 
                 if (j->_type == "external")
-                    attributeModelFactory->setModelIndexPathPair(objectClass->getIndexPathPair(j->_name));
+                    attributeModelFactory->setModelIndex(objectClass->getDataElementIndex(j->_name));
 
                 else {
                     SG_LOG(SG_IO, SG_ALERT, "HLA: Unknown model configuration type \""
@@ -1276,7 +1262,7 @@ FGHLA::open()
                  j != i->_simTimeConfig._dataElementList.end(); ++j) {
 
                 if (j->_type == "local-simtime")
-                    attributeSimTimeFactory->setSimTimeIndexPathPair(objectClass->getIndexPathPair(j->_name));
+                    attributeSimTimeFactory->setSimTimeIndex(objectClass->getDataElementIndex(j->_name));
                 else {
                     SG_LOG(SG_IO, SG_ALERT, "HLA: Unknown simtime configuration type \""
                            << j->_type << "\" for object class \"" << aircraftClassName << "\". Ignoring!");
@@ -1293,9 +1279,9 @@ FGHLA::open()
                  j != i->_simTimeConfig._dataElementList.end(); ++j) {
 
                 if (j->_type == "local-simtime-sec")
-                    attributeSimTimeFactory->setSecIndexPathPair(objectClass->getIndexPathPair(j->_name));
+                    attributeSimTimeFactory->setSecIndex(objectClass->getDataElementIndex(j->_name));
                 else if (j->_type == "local-simtime-msec")
-                    attributeSimTimeFactory->setMSecIndexPathPair(objectClass->getIndexPathPair(j->_name));
+                    attributeSimTimeFactory->setMSecIndex(objectClass->getDataElementIndex(j->_name));
                 else {
                     SG_LOG(SG_IO, SG_ALERT, "HLA: Unknown simtime configuration type \""
                            << j->_type << "\" for object class \"" << aircraftClassName << "\". Ignoring!");
@@ -1309,7 +1295,7 @@ FGHLA::open()
         }
 
         if (!i->_mpPropertiesConfig._name.empty()) {
-            mpClassCallback->setMPPropertiesIndexPathPair(objectClass->getIndexPathPair(i->_mpPropertiesConfig._name));
+            mpClassCallback->setMPPropertiesIndex(objectClass->getDataElementIndex(i->_mpPropertiesConfig._name));
         }
 
         // The free configurabel property - dataElement mapping
@@ -1319,9 +1305,9 @@ FGHLA::open()
 
             if (j->_type == "property") {
                 if (!j->_inProperty.empty())
-                    mpClassCallback->setInputProperty(objectClass->getIndexPathPair(j->_name), j->_inProperty);
+                    mpClassCallback->setInputProperty(objectClass->getDataElementIndex(j->_name), j->_inProperty);
                 if (!j->_outProperty.empty())
-                    mpClassCallback->setOutputProperty(objectClass->getIndexPathPair(j->_name), j->_outProperty);
+                    mpClassCallback->setOutputProperty(objectClass->getDataElementIndex(j->_name), j->_outProperty);
             } else {
                 SG_LOG(SG_IO, SG_ALERT, "HLA: Unknown dataElement configuration type \""
                        << j->_type << "\" for object class \"" << aircraftClassName << "\". Ignoring!");
