@@ -49,6 +49,14 @@ Approach::Approach(const string& aIdent, ProcedureType ty) :
 {
 
 }
+    
+Approach* Approach::createTempApproach(const std::string& aIdent, FGRunway* aRunway, const WayptVec& aPath)
+{
+    Approach* app = new Approach(aIdent, PROCEDURE_APPROACH_RNAV);
+    app->setRunway(aRunway);
+    app->setPrimaryAndMissed(aPath, WayptVec());
+    return app;
+}
 
 void Approach::setRunway(FGRunwayRef aRwy)
 {
@@ -328,6 +336,19 @@ bool SID::route(FGRunwayRef aWay, Transition* trans, WayptVec& aPath)
   std::reverse_copy(path.begin(), path.end(), bi);
 
   return true;
+}
+    
+SID* SID::createTempSID(const std::string& aIdent, FGRunway* aRunway, const WayptVec& aPath)
+{
+// flip waypoints since SID stores them reversed
+    WayptVec path;
+    std::back_insert_iterator<WayptVec> bi(path);
+    std::reverse_copy(aPath.begin(), aPath.end(), bi);
+    
+    SID* sid = new SID(aIdent, aRunway->airport());
+    sid->setCommon(path);
+    sid->addRunway(aRunway);
+    return sid;
 }
 
 ////////////////////////////////////////////////////////////////////////////

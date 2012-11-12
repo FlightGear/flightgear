@@ -247,9 +247,9 @@ private:
   
   FGAirportRef _departure, _destination;
   FGRunway* _departureRunway, *_destinationRunway;
-  SID* _sid;
-  STAR* _star;
-  Approach* _approach;
+  SGSharedPtr<SID> _sid;
+  SGSharedPtr<STAR> _star;
+  SGSharedPtr<Approach> _approach;
   std::string _sidTransition, _starTransition;
   
   double _totalDistance;

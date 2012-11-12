@@ -219,7 +219,7 @@ private:
 
 typedef std::vector<WayptRef> WayptVec;
   
-class RouteBase
+class RouteBase : public SGReferenced
 {
 public:
   /**

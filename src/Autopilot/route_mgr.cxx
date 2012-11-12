@@ -37,6 +37,7 @@
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/foreach.hpp>
 
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
@@ -913,6 +914,41 @@ const char* FGRouteMgr::getSID() const
   return "";
 }
 
+flightgear::SID* createDefaultSID(FGRunway* aRunway)
+{
+  if (!aRunway) {
+    return NULL;
+  }
+  
+  double runwayElevFt = aRunway->end().getElevationFt();
+  WayptVec wpts;
+  std::ostringstream ss;
+  ss << aRunway->ident() << "-3";
+  
+  SGGeod p = aRunway->pointOnCenterline(aRunway->lengthM() + (3.0 * SG_NM_TO_METER));
+  p.setElevationFt(runwayElevFt + 2000.0);
+  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+  
+  ss.str("");
+  ss << aRunway->ident() << "-6";
+  p = aRunway->pointOnCenterline(aRunway->lengthM() + (6.0 * SG_NM_TO_METER));
+  p.setElevationFt(runwayElevFt + 4000.0);
+  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+
+    ss.str("");
+    ss << aRunway->ident() << "-9";
+    p = aRunway->pointOnCenterline(aRunway->lengthM() + (9.0 * SG_NM_TO_METER));
+    p.setElevationFt(runwayElevFt + 6000.0);
+    wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+    
+  BOOST_FOREACH(Waypt* w, wpts) {
+    w->setFlag(WPT_DEPARTURE);
+    w->setFlag(WPT_GENERATED);
+  }
+  
+  return SID::createTempSID("DEFAULT", aRunway, wpts);
+}
+
 void FGRouteMgr::setSID(const char* aIdent)
 {
   FGAirport* apt = _plan->departureAirport();
@@ -920,6 +956,11 @@ void FGRouteMgr::setSID(const char* aIdent)
     _plan->setSID((flightgear::SID*) NULL);
     return;
   } 
+  
+  if (!strcmp(aIdent, "DEFAULT")) {
+    _plan->setSID(createDefaultSID(_plan->departureRunway()));
+    return;
+  }
   
   string ident(aIdent);
   size_t hyphenPos = ident.find('-');
@@ -990,9 +1031,56 @@ const char* FGRouteMgr::getApproach() const
   return "";
 }
 
+flightgear::Approach* createDefaultApproach(FGRunway* aRunway)
+{
+  if (!aRunway) {
+    return NULL;
+  }
+
+  double thresholdElevFt = aRunway->threshold().getElevationFt();
+  const double approachHeightFt = 2000.0;
+  double glideslopeDistanceM = (approachHeightFt * SG_FEET_TO_METER) /
+    tan(3.0 * SG_DEGREES_TO_RADIANS);
+  
+  std::ostringstream ss;
+  ss << aRunway->ident() << "-12";
+  WayptVec wpts;
+  SGGeod p = aRunway->pointOnCenterline(-12.0 * SG_NM_TO_METER);
+  p.setElevationFt(thresholdElevFt + 4000);
+  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+
+    
+  p = aRunway->pointOnCenterline(-8.0 * SG_NM_TO_METER);
+  p.setElevationFt(thresholdElevFt + approachHeightFt);
+  ss.str("");
+  ss << aRunway->ident() << "-8";
+  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+  
+  p = aRunway->pointOnCenterline(-glideslopeDistanceM);
+  p.setElevationFt(thresholdElevFt + approachHeightFt);
+    
+  ss.str("");
+  ss << aRunway->ident() << "-GS";
+  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+  
+  wpts.push_back(new RunwayWaypt(aRunway, NULL));
+  
+  BOOST_FOREACH(Waypt* w, wpts) {
+    w->setFlag(WPT_APPROACH);
+    w->setFlag(WPT_GENERATED);
+  }
+  
+  return Approach::createTempApproach("DEFAULT", aRunway, wpts);
+}
+
 void FGRouteMgr::setApproach(const char* aIdent)
 {
   FGAirport* apt = _plan->destinationAirport();
+  if (!strcmp(aIdent, "DEFAULT")) {
+    _plan->setApproach(createDefaultApproach(_plan->destinationRunway()));
+    return;
+  }
+  
   if (!apt || (aIdent == NULL)) {
     _plan->setApproach(NULL);
   } else {

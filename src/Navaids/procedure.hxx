@@ -72,6 +72,8 @@ protected:
 class Transition : public Procedure
 {
 public:
+  virtual ~Transition() { ; }
+    
   bool route(WayptVec& aPath);
   
   Procedure* parent() const
@@ -106,6 +108,8 @@ private:
   WayptVec _primary;
 };
 
+typedef SGSharedPtr<Transition> TransitionRef;
+    
 /**
  * Describe an approach procedure, including the missed approach
  * segment
@@ -113,6 +117,8 @@ private:
 class Approach : public Procedure
 {
 public:
+  virtual ~Approach() { ; }
+    
   FGRunwayRef runway() 
   { return _runway; }
 
@@ -143,6 +149,8 @@ public:
 
   virtual ProcedureType type() const
   { return _type; }
+    
+  static Approach* createTempApproach(const std::string& aIdent, FGRunway* aRunway, const WayptVec& aPath);
 private:
   friend class NavdataVisitor;
   
@@ -155,7 +163,7 @@ private:
   FGRunwayRef _runway;
   ProcedureType _type;
   
-  typedef std::map<WayptRef, Transition*> WptTransitionMap;
+  typedef std::map<WayptRef, TransitionRef> WptTransitionMap;
   WptTransitionMap _transitions;
   
   WayptVec _primary; // unify these?
@@ -207,26 +215,26 @@ protected:
   
   ArrivalDeparture(const std::string& aIdent, FGAirport* apt);
   
-  
   void addRunway(FGRunwayRef aRwy);
 
-  typedef std::map<FGRunwayRef, Transition*> RunwayTransitionMap;
+  typedef std::map<FGRunwayRef, TransitionRef> RunwayTransitionMap;
   RunwayTransitionMap _runways;
   
   virtual WayptFlag flagType() const = 0;
+    
+    void setCommon(const WayptVec& aWps);
+
 private:
   friend class NavdataVisitor;
   
   void addTransition(Transition* aTrans);
   
-  void setCommon(const WayptVec& aWps);
-
   void addRunwayTransition(FGRunwayRef aRwy, Transition* aTrans);
   
   FGAirport* _airport;
   WayptVec _common;
   
-  typedef std::map<WayptRef, Transition*> WptTransitionMap;
+  typedef std::map<WayptRef, TransitionRef> WptTransitionMap;
   WptTransitionMap _enrouteTransitions;
   
   
@@ -234,12 +242,15 @@ private:
 
 class SID : public ArrivalDeparture
 {
-public:  
+public:
+    virtual ~SID() { ; }
+        
   virtual bool route(FGRunwayRef aWay, Transition* aTrans, WayptVec& aPath);
   
   virtual ProcedureType type() const
   { return PROCEDURE_SID; }
   
+  static SID* createTempSID(const std::string& aIdent, FGRunway* aRunway, const WayptVec& aPath);
 protected:
   virtual WayptFlag flagType() const
   { return WPT_DEPARTURE; }
@@ -252,7 +263,9 @@ private:
 
 class STAR : public ArrivalDeparture
 {
-public:  
+public:
+  virtual ~STAR() { ; }
+    
   virtual bool route(FGRunwayRef aWay, Transition* aTrans, WayptVec& aPath);
   
   virtual ProcedureType type() const

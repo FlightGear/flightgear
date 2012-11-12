@@ -262,9 +262,13 @@ private:
     mutable PositionedIDVec mTaxiways;
     PositionedIDVec mPavements;
     
-    std::vector<flightgear::SID*> mSIDs;
-    std::vector<flightgear::STAR*> mSTARs;
-    std::vector<flightgear::Approach*> mApproaches;
+    typedef SGSharedPtr<flightgear::SID> SIDRef;
+    typedef SGSharedPtr<flightgear::STAR> STARRef;
+    typedef SGSharedPtr<flightgear::Approach> ApproachRef;
+    
+    std::vector<SIDRef> mSIDs;
+    std::vector<STARRef> mSTARs;
+    std::vector<ApproachRef> mApproaches;
   };
 
 // find basic airport location info from airport database
