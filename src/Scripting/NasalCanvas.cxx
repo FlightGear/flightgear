@@ -60,171 +60,10 @@ naRef canvasGetNode(naContext c, sc::Canvas* canvas)
   return propNodeGhostCreate(c, canvas->getProps());
 }
 
-struct Base
-{
-  int getInt() const
-  {
-    return 8;
-  }
-};
-
-struct Test:
-  public Base
-{
-  Test(): x(1) {}
-  int x;
-  void setX(int x_) { x = x_; }
-  naRef test(int argc, naRef* args)
-  {
-    return naNil();
-  }
-};
-
 typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
-
-void initCanvas(naContext c)
-{
-
-  NasalCanvas::init("Canvas")
-    .member("_node_ghost", &canvasGetNode)
-    .member("size_x", &sc::Canvas::getSizeX)
-    .member("size_y", &sc::Canvas::getSizeY);
-  nasal::Ghost<sc::ElementPtr>::init("canvas.Element");
-  nasal::Ghost<sc::GroupPtr>::init("canvas.Group")
-    .bases<sc::ElementPtr>();
-
-  nasal::Ghost<Base>::init("BaseClass")
-    .member("int", &Base::getInt);
-  nasal::Ghost<Test>::init("TestClass")
-    .bases<Base>()
-    .member("x", &Test::setX)
-    .method<&Test::test>("test");
-}
+typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
 
 #if 0
-/**
- * Class for exposing C++ objects to Nasal
- */
-template<class T, class Derived>
-class NasalObject
-{
-  public:
-    // TODO use variadic template when supporting C++11
-    template<class A1>
-    static naRef create( naContext c, const A1& a1 )
-    {
-      return makeGhost(c, new T(a1));
-    }
-
-    template<class A1, class A2>
-    static naRef create( naContext c, const A1& a1,
-                                      const A2& a2 )
-    {
-      return makeGhost(c, new T(a1, a2));
-    }
-
-    template<class A1, class A2, class A3>
-    static naRef create( naContext c, const A1& a1,
-                                      const A2& a2,
-                                      const A3& a3 )
-    {
-      return makeGhost(c, new T(a1, a2, a3));
-    }
-
-    template<class A1, class A2, class A3, class A4>
-    static naRef create( naContext c, const A1& a1,
-                                      const A2& a2,
-                                      const A3& a3,
-                                      const A4& a4 )
-    {
-      return makeGhost(c, new T(a1, a2, a3, a4));
-    }
-
-    template<class A1, class A2, class A3, class A4, class A5>
-    static naRef create( naContext c, const A1& a1,
-                                      const A2& a2,
-                                      const A3& a3,
-                                      const A4& a4,
-                                      const A5& a5 )
-    {
-      return makeGhost(c, new T(a1, a2, a3, a4, a5));
-    }
-
-    // TODO If you need more arguments just do some copy&paste :)
-
-    static Derived& getInstance()
-    {
-      static Derived instance;
-      return instance;
-    }
-
-    void setParent(const naRef& parent)
-    {
-      // TODO check if we need to take care of reference counting/gc
-      _parents.resize(1);
-      _parents[0] = parent;
-    }
-
-  protected:
-
-    // TODO switch to boost::/std::function (with C++11 lambdas this can make
-    //      adding setters easier and shorter)
-    typedef naRef (Derived::*getter_t)(naContext, const T&);
-    typedef std::map<std::string, getter_t> MemberMap;
-
-    const std::string   _ghost_name;
-    std::vector<naRef>  _parents;
-    MemberMap           _members;
-
-    NasalObject(const std::string& ghost_name):
-      _ghost_name( ghost_name )
-    {
-      _ghost_type.destroy = &destroyGhost;
-      _ghost_type.name = _ghost_name.c_str();
-      _ghost_type.get_member = &Derived::getMember;
-      _ghost_type.set_member = 0;
-
-      _members["parents"] = &NasalObject::getParents;
-    }
-
-    naRef getParents(naContext c, const T&)
-    {
-      naRef parents = naNewVector(c);
-      for(size_t i = 0; i < _parents.size(); ++i)
-        naVec_append(parents, _parents[i]);
-      return parents;
-    }
-
-    static naRef makeGhost(naContext c, void *ptr)
-    {
-      std::cout << "create  " << ptr << std::endl;
-      return naNewGhost2(c, &(getInstance()._ghost_type), ptr);
-    }
-
-    static void destroyGhost(void *ptr)
-    {
-      std::cout << "destroy " << ptr << std::endl;
-      delete (T*)ptr;
-    }
-
-    static const char* getMember(naContext c, void* g, naRef field, naRef* out)
-    {
-      typename MemberMap::iterator getter =
-        getInstance()._members.find(naStr_data(field));
-
-      if( getter == getInstance()._members.end() )
-        return 0;
-
-      *out = (getInstance().*getter->second)(c, *static_cast<T*>(g));
-      return "";
-    }
-
-  private:
-
-    naGhostType _ghost_type;
-
-};
-
 typedef osg::ref_ptr<osgGA::GUIEventAdapter> GUIEventPtr;
 
 class NasalCanvasEvent:
@@ -323,8 +162,6 @@ static naRef f_element_addScrollCallback(naContext c, naRef me, int argc, naRef*
 
 static naRef f_createCanvas(naContext c, naRef me, int argc, naRef* args)
 {
-  std::cout << "f_createCanvas" << std::endl;
-
   CanvasMgr* canvas_mgr =
     static_cast<CanvasMgr*>(globals->get_subsystem("Canvas"));
   if( !canvas_mgr )
@@ -333,14 +170,20 @@ static naRef f_createCanvas(naContext c, naRef me, int argc, naRef* args)
   return NasalCanvas::create(c, canvas_mgr->createCanvas());
 }
 
+naRef f_canvasCreateGroup( sc::Canvas& canvas,
+                           naContext c,
+                           int argc,
+                           naRef* args )
+{
+  std::string name;
+  if( argc > 0 )
+    name = nasal::from_nasal<std::string>(c, args[0]);
+
+  return NasalGroup::create(c, canvas.createGroup(name));
+}
+
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
 {
-      /*naNewHash(c);
-    hashset(c, gcSave, "canvasProto", canvasPrototype);
-  
-    hashset(c, canvasPrototype, "getElement", naNewFunc(c, naNewCCode(c, f_canvas_getElement)));*/
-    // set any event methods
-  
 #if 0
     elementPrototype = naNewHash(c);
     hashset(c, gcSave, "elementProto", elementPrototype);
@@ -350,13 +193,19 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     hashset(c, elementPrototype, "addMoveCallback", naNewFunc(c, naNewCCode(c, f_element_addMoveCallback)));
     hashset(c, elementPrototype, "addScrollCallback", naNewFunc(c, naNewCCode(c, f_element_addScrollCallback)));
 #endif
+  NasalCanvas::init("Canvas")
+    .member("_node_ghost", &canvasGetNode)
+    .member("size_x", &sc::Canvas::getSizeX)
+    .member("size_y", &sc::Canvas::getSizeY)
+    .method<&f_canvasCreateGroup>("createGroup");
+  nasal::Ghost<sc::ElementPtr>::init("canvas.Element");
+  nasal::Ghost<sc::GroupPtr>::init("canvas.Group")
+    .bases<sc::ElementPtr>();
+
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
 
-  canvas_module.set("_new", f_createCanvas);
-  canvas_module.set("testClass", nasal::Ghost<Test>::f_create);
-
-  initCanvas(c);
+  canvas_module.set("_newCanvasGhost", f_createCanvas);
 
   return naNil();
 }
