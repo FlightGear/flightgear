@@ -197,7 +197,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .member("_node_ghost", &canvasGetNode)
     .member("size_x", &sc::Canvas::getSizeX)
     .member("size_y", &sc::Canvas::getSizeY)
-    .method<&f_canvasCreateGroup>("createGroup");
+    .method_func<&f_canvasCreateGroup>("createGroup");
   nasal::Ghost<sc::ElementPtr>::init("canvas.Element");
   nasal::Ghost<sc::GroupPtr>::init("canvas.Group")
     .bases<sc::ElementPtr>();
