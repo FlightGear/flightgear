@@ -86,6 +86,8 @@ class FGTrafficManager : public SGSubsystem, public XMLVisitor
 private:
   bool inited;
   bool doingInit;
+  double waitingMetarTime;
+  std::string waitingMetarStation;
   
   ScheduleVector scheduledAircraft;
   ScheduleVectorIterator currAircraft, currAircraftClosest;
@@ -122,9 +124,11 @@ private:
   
   // helper to read and parse the schedule data.
   // this is run on a helper thread, so be careful about
-  // accesing properties during parsing
+  // accessing properties during parsing
   void parseSchedule(const SGPath& path);
   
+  bool metarReady(double dt);
+
 public:
   FGTrafficManager();
   ~FGTrafficManager();

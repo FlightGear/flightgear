@@ -151,6 +151,7 @@ private:
 FGTrafficManager::FGTrafficManager() :
   inited(false),
   doingInit(false),
+  waitingMetarTime(0.0),
   enabled("/sim/traffic-manager/enabled"),
   aiEnabled("/sim/ai/enabled"),
   realWxEnabled("/environment/realwx/enabled"),
@@ -339,7 +340,36 @@ void FGTrafficManager::loadHeuristics()
     }
 }
 
-void FGTrafficManager::update(double /*dt */ )
+bool FGTrafficManager::metarReady(double dt)
+{
+    // wait for valid METAR (when realWX is enabled only), since we need
+    // to know the active runway
+    if (metarValid || !realWxEnabled)
+    {
+        waitingMetarTime = 0.0;
+        return true;
+    }
+
+    // METAR timeout: when running offline, remote server is down etc
+    if (waitingMetarStation != fgGetString("/environment/metar/station-id"))
+    {
+        // station has changed: wait for reply, restart timeout
+        waitingMetarTime = 0.0;
+        waitingMetarStation = fgGetString("/environment/metar/station-id");
+        return false;
+    }
+
+    // timeout elapsed (10 seconds)?
+    if (waitingMetarTime > 20.0)
+    {
+        return true;
+    }
+
+    waitingMetarTime += dt;
+    return false;
+}
+
+void FGTrafficManager::update(double dt)
 {
     if (!enabled)
     {
@@ -348,9 +378,8 @@ void FGTrafficManager::update(double /*dt */ )
         return;
     }
 
-    if ((realWxEnabled && !metarValid)) {
+    if (!metarReady(dt))
         return;
-    }
 
     if (!aiEnabled)
     {
