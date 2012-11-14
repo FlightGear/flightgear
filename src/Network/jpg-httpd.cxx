@@ -31,7 +31,7 @@
 
 #include <simgear/compiler.h>
 
-#include <cstdlib>		// atoi() atof()
+#include <cstdlib>        // atoi() atof()
 
 #include <cstring>
 
@@ -60,9 +60,9 @@ using std::string;
 
 bool FGJpegHttpd::open() {
     if ( is_enabled() ) {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
-		<< "is already in use, ignoring" );
-	return false;
+    SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
+        << "is already in use, ignoring" );
+    return false;
     }
 
     imageServer = new HttpdImageServer( port );
@@ -103,109 +103,118 @@ void HttpdImageChannel :: foundTerminator( void ) {
     int       nBlockSize;
 
 
-    if ( strstr( pRequest, __HTTP_GET_STRING ) != NULL ) {
+    if ( strstr( pRequest, __HTTP_GET_STRING ) != NULL )
+    {
         
         SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< HTTP Request : " << pRequest );
 
         double left, right, bottom, top, zNear, zFar;
-	osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+        osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
         viewer->getCamera()->getProjectionMatrixAsFrustum(left, right,
                                                           bottom, top,
                                                           zNear, zFar);
         JpgFactory->setFrustum( left, right, bottom, top, zNear, zFar );
 
         nImageLen  = JpgFactory -> render();
-	nBlockSize = ( nImageLen < __MAX_HTTP_BLOCK_SIZE ? nImageLen : __MAX_HTTP_BLOCK_SIZE );
+        nBlockSize = ( nImageLen < __MAX_HTTP_BLOCK_SIZE ? nImageLen : __MAX_HTTP_BLOCK_SIZE );
 
-        if( nImageLen ) {
-	    strcpy( szResponse, "HTTP/1.1 200 OK" );
-	    strcat( szResponse, getTerminator() );
-	    strcat( szResponse, "Content-Type: image/jpeg" );
+        if( nImageLen )
+        {
+            strcpy( szResponse, "HTTP/1.1 200 OK" );
+            strcat( szResponse, getTerminator() );
+            strcat( szResponse, "Content-Type: image/jpeg" );
             strcat( szResponse, getTerminator() );
 
             SG_LOG( SG_IO, SG_DEBUG, "info->numbytes = " << nImageLen );
             sprintf( szTemp, "Content-Length: %d", nImageLen );
-	    strcat( szResponse, szTemp );
+            strcat( szResponse, szTemp );
 
             strcat( szResponse, getTerminator() );
-	    strcat( szResponse, "Connection: close" );
-	    strcat( szResponse, getTerminator() );
-	    strcat( szResponse, getTerminator() );
+            strcat( szResponse, "Connection: close" );
+            strcat( szResponse, getTerminator() );
+            strcat( szResponse, getTerminator() );
 
-	    if( getHandle() == -1 )  {
-	        SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Invalid socket handle. Ignoring request.\n" );
-		buffer.remove();
-		SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< End of image Transmission.\n" );
-		return;
-	    }
+            if( getHandle() == -1 )
+            {
+                SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Invalid socket handle. Ignoring request.\n" );
+                buffer.remove();
+                SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< End of image Transmission.\n" );
+                return;
+            }
 
-	    if( send( ( char * ) szResponse, strlen( szResponse ) ) <= 0 )  {
-	        SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Error to send HTTP response. Ignoring request.\n" );
-		buffer.remove();
-		SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< End of image Transmission.\n" );
-		return;
-	    }
+            if( send( ( char * ) szResponse, strlen( szResponse ) ) <= 0 )
+            {
+                SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Error to send HTTP response. Ignoring request.\n" );
+                buffer.remove();
+                SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< End of image Transmission.\n" );
+                return;
+            }
 
-	    /*
-	     * Send block with size defined by __MAX_HTTP_BLOCK_SIZE
-	     */
-	    while( nStep <= nImageLen ) {
+            /*
+             * Send block with size defined by __MAX_HTTP_BLOCK_SIZE
+             */
+            while( nStep <= nImageLen )
+            {
                 nBufferCount++;
 
-		if( getHandle() == -1 )  {
-		    SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Invalid socket handle. Ignoring request.\n" );
-		    break;
-		}
+                if( getHandle() == -1 )
+                {
+                    SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Invalid socket handle. Ignoring request.\n" );
+                    break;
+                }
 
-		nBytesSent = send( ( char * ) JpgFactory -> data() + nStep, nBlockSize );
+                nBytesSent = send( ( char * ) JpgFactory -> data() + nStep, nBlockSize );
 
-		if( nBytesSent <= 0 )  {
-  		    if( nTimeoutCount == __TIMEOUT_COUNT )  {
-		        SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Timeout reached. Exiting before end of image transmission.\n" );
-			nTimeoutCount = 0;
-			break;
-		    }
+                if( nBytesSent <= 0 )
+                {
+                    if( nTimeoutCount == __TIMEOUT_COUNT )
+                    {
+                        SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Timeout reached. Exiting before end of image transmission.\n" );
+                        nTimeoutCount = 0;
+                        break;
+                    }
 
-		SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Zero bytes sent.\n" );
+                    SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< Zero bytes sent.\n" );
 
 #ifdef _WIN32
-                Sleep(1000);
+                    Sleep(1000);
 #else
-	        sleep(1);
+                    sleep(1);
 #endif
-		nTimeoutCount++;
-		continue;
-	    }
+                    nTimeoutCount++;
+                    continue;
+                }
 
-	    SG_LOG( SG_IO, SG_DEBUG, ">>>>>>>>> (" << nBufferCount << ") BLOCK STEP " << nStep << " - IMAGELEN " << nImageLen << " - BLOCKSIZE " << nBlockSize << " - SENT " << nBytesSent );
+                SG_LOG( SG_IO, SG_DEBUG, ">>>>>>>>> (" << nBufferCount << ") BLOCK STEP " << nStep << " - IMAGELEN " << nImageLen << " - BLOCKSIZE " << nBlockSize << " - SENT " << nBytesSent );
 
- 	    /*
-	     * Calculate remaining image.
-	     */
-	    if( ( nStep + nBlockSize ) >= nImageLen ) {
-	        nBlockSize = ( nImageLen - nStep );
-		nStep += nBlockSize;
-	    }
+                /*
+                 * Calculate remaining image.
+                 */
+                if( ( nStep + nBlockSize ) >= nImageLen )
+                {
+                    nBlockSize = ( nImageLen - nStep );
+                    nStep += nBlockSize;
+                }
 
-  	    nStep += nBytesSent;
-	    nTimeoutCount = 0;
+                nStep += nBytesSent;
+                nTimeoutCount = 0;
 #ifdef _WIN32
-            Sleep(1);
+                Sleep(1);
 #else
-	    usleep( 1000 );
+                usleep( 1000 );
 #endif
-	}
+            }
 
-	SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< End of image Transmission.\n" );
+            SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< End of image Transmission.\n" );
 
         } else {
             SG_LOG( SG_IO, SG_DEBUG, "!!! NO IMAGE !!!  info -> numbytes = " << nImageLen );
         }
 
-	/*
-	 * Release JPEG buffer.
-	 */
-	JpgFactory -> destroy();
+        /*
+         * Release JPEG buffer.
+         */
+        JpgFactory -> destroy();
     }
 
     buffer.remove();
