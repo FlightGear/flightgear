@@ -1,4 +1,4 @@
-// protocol.hxx -- High level protocal class
+// protocol.hxx -- High level protocol class
 //
 // Written by Curtis Olson, started November 1999.
 //

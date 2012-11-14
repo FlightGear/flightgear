@@ -1,4 +1,4 @@
-// protocol.cxx -- High level protocal class
+// protocol.cxx -- High level protocol class
 //
 // Written by Curtis Olson, started November 1999.
 //
@@ -31,12 +31,15 @@ FGProtocol::FGProtocol() :
     hz(0.0),
     count_down(0.0),
     count(0),
-    enabled(false)
+    dir(SG_IO_NONE),
+    enabled(false),
+    io(NULL)
 {
 }
 
 
 FGProtocol::~FGProtocol() {
+    delete io;
 }
 
 
