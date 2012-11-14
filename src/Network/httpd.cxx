@@ -131,6 +131,7 @@ FGHttpd::FGHttpd(int p) :
 
 FGHttpd::~FGHttpd()
 {
+    delete server;
 }
 
 bool FGHttpd::open() {

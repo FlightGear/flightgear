@@ -1,5 +1,4 @@
-// httpd.hxx -- FGFS http property manager interface / external script
-//              and control class
+// jpg-httpd.cxx -- FGFS jpg-http interface
 //
 // Written by Curtis Olson, started June 2001.
 //
@@ -39,6 +38,8 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/math/sg_types.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/io/sg_netChat.hxx>
+#include <simgear/screen/jpgfactory.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -57,6 +58,106 @@ extern osg::ref_ptr<osgUtil::SceneView> sceneView;
 
 using std::string;
 
+/* simple httpd server that makes an hasty stab at following the http
+   1.1 rfc.  */
+
+//////////////////////////////////////////////////////////////
+// class HttpdImageChannel
+//////////////////////////////////////////////////////////////
+
+class HttpdImageChannel : public simgear::NetChat
+{
+
+    simgear::NetBuffer buffer;
+    trJpgFactory *JpgFactory;
+
+public:
+
+    HttpdImageChannel() : buffer(512) {
+
+        int nWidth  = fgGetInt( "/sim/startup/xsize", 800 );
+        int nHeight = fgGetInt( "/sim/startup/ysize", 600 );
+
+        setTerminator("\r\n");
+        JpgFactory = new trJpgFactory();
+        int error = JpgFactory -> init( nWidth, nHeight );
+        if (0 != error)
+        {
+            SG_LOG( SG_IO, SG_ALERT, "Failed to initialize JPEG-factory, error: " << error);
+        }
+    }
+
+    ~HttpdImageChannel() {
+        JpgFactory -> destroy();
+        delete JpgFactory;
+    }
+
+    virtual void collectIncomingData (const char* s, int n) {
+        buffer.append(s,n);
+    }
+
+    // Handle the actual http request
+    virtual void foundTerminator (void);
+};
+
+//////////////////////////////////////////////////////////////
+// class HttpdImageServer
+//////////////////////////////////////////////////////////////
+
+class HttpdImageServer : private simgear::NetChannel
+{
+    virtual bool writable (void) { return false; }
+
+    virtual void handleAccept (void) {
+        simgear::IPAddress addr;
+        int handle = accept ( &addr );
+        SG_LOG( SG_IO, SG_INFO, "Client " << addr.getHost() << ":" << addr.getPort() << " connected" );
+
+        HttpdImageChannel *hc = new HttpdImageChannel;
+        hc->setHandle ( handle );
+    }
+
+public:
+
+    HttpdImageServer ( int port )
+    {
+        if (!open())
+        {
+            SG_LOG( SG_IO, SG_ALERT, "Failed to open HttpdImage port.");
+            return;
+        }
+
+        if (0 != bind( "", port ))
+        {
+            SG_LOG( SG_IO, SG_ALERT, "Failed to bind HttpdImage port.");
+            return;
+        }
+
+        if (0 != listen( 5 ))
+        {
+            SG_LOG( SG_IO, SG_ALERT, "Failed to listen on HttpdImage port.");
+            return;
+        }
+
+        SG_LOG(SG_IO, SG_ALERT, "HttpdImage server started on port " << port);
+    }
+
+};
+
+//////////////////////////////////////////////////////////////
+// class FGJpegHttpd
+//////////////////////////////////////////////////////////////
+
+FGJpegHttpd::FGJpegHttpd( int p ) :
+    port(p),
+    imageServer(NULL)
+{
+}
+
+FGJpegHttpd::~FGJpegHttpd()
+{
+    delete imageServer;
+}
 
 bool FGJpegHttpd::open() {
     if ( is_enabled() ) {
@@ -83,7 +184,7 @@ bool FGJpegHttpd::process() {
 
 bool FGJpegHttpd::close() {
     delete imageServer;
-
+    imageServer = NULL;
     return true;
 }
 
@@ -208,7 +309,7 @@ void HttpdImageChannel :: foundTerminator( void ) {
             SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< End of image Transmission.\n" );
 
         } else {
-            SG_LOG( SG_IO, SG_DEBUG, "!!! NO IMAGE !!!  info -> numbytes = " << nImageLen );
+            SG_LOG( SG_IO, SG_ALERT, "Failed to generate JPEG image data. Error: " << nImageLen);
         }
 
         /*
