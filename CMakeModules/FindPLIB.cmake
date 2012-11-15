@@ -132,7 +132,7 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
         if (${c} STREQUAL "pu")
             # handle MSVC confusion over pu/pui naming, by removing
             # 'pu' and then adding it back
-            list(REMOVE_ITEM outDeps "pu")
+            list(REMOVE_ITEM outDeps "pu" "fnt" "sg")
             list(APPEND outDeps ${PUNAME} "fnt" "sg")
         elseif (${c} STREQUAL "puaux")
             list(APPEND outDeps ${PUNAME} "fnt" "sg")
@@ -144,7 +144,6 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
     list(APPEND outDeps "ul") # everything needs ul
     list(REMOVE_DUPLICATES outDeps) # clean up
 
-    
 
     # look for traditional static libraries
     foreach(component ${outDeps})
