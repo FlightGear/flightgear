@@ -117,6 +117,7 @@ _setup_tables ()
 
 void FGEnvironment::_init()
 {
+    live_update = false;
     elevation_ft = 0;
     visibility_m = 32000;
     temperature_sea_level_degc = 15;
@@ -125,6 +126,7 @@ void FGEnvironment::_init()
     dewpoint_degc = 5;
     pressure_sea_level_inhg = 29.92;
     pressure_inhg = 29.92;
+    density_slugft3 = 0;
     turbulence_magnitude_norm = 0;
     turbulence_rate_hz = 1;
     wind_from_heading_deg = 0;
@@ -343,9 +345,6 @@ void FGEnvironment::Tie( SGPropertyNode_ptr base, bool archivable )
 
   _tiedProperties.Tie("atmosphere/density-tropo-avg", this,
       &FGEnvironment::get_density_tropo_avg_kgm3); //ro
-
-  // do not auto reset/restore attributes on reset
-  _tiedProperties.setAttribute( SGPropertyNode::PRESERVE, true );
 }
 
 void FGEnvironment::Untie()
