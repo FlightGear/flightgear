@@ -90,6 +90,10 @@ if(ENABLE_JSBSIM)
     target_link_libraries(fgfs JSBSim)
 endif()
 
+if(GOOGLE_PERFTOOLS_FOUND)
+    target_link_libraries(fgfs profiler)
+endif()
+
 target_link_libraries(fgfs
 	${SQLITE3_LIBRARY}
 	${SIMGEAR_LIBRARIES}

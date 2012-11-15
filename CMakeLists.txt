@@ -223,6 +223,9 @@ check_include_file(unistd.h   HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)
 check_include_file(windows.h  HAVE_WINDOWS_H)
 
+# check optionally supported dependencies
+find_package(GooglePerfTools)
+
 if(ENABLE_RTI)
     find_package(RTI)
     if(RTI_FOUND)

@@ -53,12 +53,15 @@
 
 #include <boost/scoped_array.hpp>
 
+#if GOOGLE_PERFTOOLS_FOUND == YES
+# include <google/profiler.h>
+#endif
+
 using std::string;
 using std::ifstream;
 using std::ofstream;
 
 
-
 ////////////////////////////////////////////////////////////////////////
 // Static helper functions.
 ////////////////////////////////////////////////////////////////////////
@@ -1446,7 +1449,48 @@ do_release_cockpit_button (const SGPropertyNode *arg)
 
   return true;
 }
-  
+
+// Optional profiling commands using gperftools:
+// http://code.google.com/p/gperftools/
+
+#if GOOGLE_PERFTOOLS_FOUND != YES
+static void
+no_profiling_support()
+{
+  SG_LOG
+  (
+    SG_GENERAL,
+    SG_WARN,
+    "No profiling support! Install gperftools and reconfigure/rebuild fgfs."
+  );
+}
+#endif
+
+static bool
+do_profiler_start(const SGPropertyNode *arg)
+{
+#if GOOGLE_PERFTOOLS_FOUND == YES
+  const char *filename = arg->getStringValue("filename", "fgfs.profile");
+  ProfilerStart(filename);
+  return true;
+#else
+  no_profiling_support();
+  return false;
+#endif
+}
+
+static bool
+do_profiler_stop(const SGPropertyNode *arg)
+{
+#if GOOGLE_PERFTOOLS_FOUND == YES
+  ProfilerStop();
+  return true;
+#else
+  no_profiling_support();
+  return false;
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
 ////////////////////////////////////////////////////////////////////////
@@ -1520,6 +1564,11 @@ static struct {
     { "print-visible-scene", do_print_visible_scene_info },
     { "reload-shaders", do_reload_shaders },
     { "reload-materials", do_materials_reload },
+
+#if GOOGLE_PERFTOOLS_FOUND == YES
+    { "profiler-start", do_profiler_start },
+    { "profiler-stop",  do_profiler_stop },
+#endif
 
     { 0, 0 }			// zero-terminated
 };
