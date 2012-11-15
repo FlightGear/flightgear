@@ -946,7 +946,7 @@ flightgear::SID* createDefaultSID(FGRunway* aRunway)
     w->setFlag(WPT_GENERATED);
   }
   
-  return SID::createTempSID("DEFAULT", aRunway, wpts);
+  return flightgear::SID::createTempSID("DEFAULT", aRunway, wpts);
 }
 
 void FGRouteMgr::setSID(const char* aIdent)
