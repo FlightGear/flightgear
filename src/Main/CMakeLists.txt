@@ -90,7 +90,7 @@ if(ENABLE_JSBSIM)
     target_link_libraries(fgfs JSBSim)
 endif()
 
-if(GOOGLE_PERFTOOLS_FOUND)
+if(FG_HAVE_GPERFTOOLS)
     target_link_libraries(fgfs profiler)
 endif()
 

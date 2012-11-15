@@ -53,7 +53,7 @@
 
 #include <boost/scoped_array.hpp>
 
-#if GOOGLE_PERFTOOLS_FOUND == YES
+#ifdef FG_HAVE_GPERFTOOLS
 # include <google/profiler.h>
 #endif
 
@@ -1453,7 +1453,7 @@ do_release_cockpit_button (const SGPropertyNode *arg)
 // Optional profiling commands using gperftools:
 // http://code.google.com/p/gperftools/
 
-#if GOOGLE_PERFTOOLS_FOUND != YES
+#ifndef FG_HAVE_GPERFTOOLS
 static void
 no_profiling_support()
 {
@@ -1469,7 +1469,7 @@ no_profiling_support()
 static bool
 do_profiler_start(const SGPropertyNode *arg)
 {
-#if GOOGLE_PERFTOOLS_FOUND == YES
+#ifdef FG_HAVE_GPERFTOOLS
   const char *filename = arg->getStringValue("filename", "fgfs.profile");
   ProfilerStart(filename);
   return true;
@@ -1482,7 +1482,7 @@ do_profiler_start(const SGPropertyNode *arg)
 static bool
 do_profiler_stop(const SGPropertyNode *arg)
 {
-#if GOOGLE_PERFTOOLS_FOUND == YES
+#ifdef FG_HAVE_GPERFTOOLS
   ProfilerStop();
   return true;
 #else
@@ -1565,10 +1565,8 @@ static struct {
     { "reload-shaders", do_reload_shaders },
     { "reload-materials", do_materials_reload },
 
-#if GOOGLE_PERFTOOLS_FOUND == YES
     { "profiler-start", do_profiler_start },
     { "profiler-stop",  do_profiler_stop },
-#endif
 
     { 0, 0 }			// zero-terminated
 };

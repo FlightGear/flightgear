@@ -105,6 +105,7 @@ option(ENABLE_JSBSIM     "Set to ON to build FlightGear with JSBSim FDM (default
 option(EVENT_INPUT       "Set to ON to build FlightGear with event-based Input support" ${EVENT_INPUT_DEFAULT})
 option(ENABLE_LIBSVN     "Set to ON to build FlightGear/terrasync with libsvnclient support (default)" ON)
 option(ENABLE_RTI        "Set to ON to build FlightGear with RTI support" OFF)
+option(ENABLE_PROFILE    "Set to ON to build FlightGear with gperftools profiling support" ON)
 option(JPEG_FACTORY      "Set to ON to build FlightGear with JPEG-factory support" OFF)
 option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
 
@@ -223,8 +224,12 @@ check_include_file(unistd.h   HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)
 check_include_file(windows.h  HAVE_WINDOWS_H)
 
-# check optionally supported dependencies
-find_package(GooglePerfTools)
+if(ENABLE_PROFILE)
+    find_package(GooglePerfTools)
+    if(GOOGLE_PERFTOOLS_FOUND)
+        set(FG_HAVE_GPERFTOOLS 1)
+    endif()
+endif()
 
 if(ENABLE_RTI)
     find_package(RTI)
