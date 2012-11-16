@@ -139,8 +139,6 @@ public:
   
   /**
    * Modify the position of an existing item.
-   * Use with care, since loaded instances will not be updated (at present -
-   * this behaviour could in theorey be improved)
    */
   void updatePosition(PositionedID item, const SGGeod &pos);
   

@@ -1350,6 +1350,14 @@ void NavDataCache::updatePosition(PositionedID item, const SGGeod &pos)
   sqlite3_bind_double(d->setAirportPos, 3, pos.getLatitudeDeg());
   sqlite3_bind_double(d->setAirportPos, 4, pos.getElevationM());
   
+// bug 905; the octree leaf may change here, but the leaf may already be
+// loaded, and caching its children. (Either the old or new leaf!). Worse,
+// we may be called here as a result of loading one of those leaf's children.
+// instead of dealing with all those possibilites, such as modifying
+// the in-memory leaf's STL child container, we simply leave the runtime
+// structures alone. This is fine providing items do no move very far, since
+// all the spatial searches ultimately use the items' real cartesian position,
+// which was updated above.
   Octree::Leaf* octreeLeaf = Octree::global_spatialOctree->findLeafForPos(cartPos);
   sqlite3_bind_int64(d->setAirportPos, 5, octreeLeaf->guid());
   
