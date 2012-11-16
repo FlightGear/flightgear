@@ -22,17 +22,10 @@
 #  include "config.h"
 #endif
 
-#include <memory>
-#include <string.h>
-
 #include "NasalCanvas.hxx"
 #include <Canvas/canvas_mgr.hxx>
 #include <Main/globals.hxx>
 
-//#include <boost/python.hpp>
-#include <boost/foreach.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/make_shared.hpp>
 #include <osgGA/GUIEventAdapter>
 
 #include <simgear/sg_inlines.h>
@@ -47,20 +40,16 @@
 
 extern naRef propNodeGhostCreate(naContext c, SGPropertyNode* n);
 
-//void initCanvasPython()
-//{
-//  using namespace boost::python;
-//  class_<simgear::canvas::Canvas>("Canvas");
-//}
-
 namespace sc = simgear::canvas;
 
-naRef canvasGetNode(naContext c, sc::Canvas* canvas)
+template<class Element>
+naRef elementGetNode(naContext c, Element& element)
 {
-  return propNodeGhostCreate(c, canvas->getProps());
+  return propNodeGhostCreate(c, element.getProps());
 }
 
 typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
+typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
 
 #if 0
@@ -70,12 +59,6 @@ class NasalCanvasEvent:
   public NasalObject<GUIEventPtr, NasalCanvasEvent>
 {
   public:
-
-    NasalCanvasEvent():
-      NasalObject("CanvasEvent")
-    {
-      _members["type"] = &NasalCanvasEvent::getEventType;
-    }
 
     naRef getEventType(naContext c, const GUIEventPtr& event)
     {
@@ -102,63 +85,6 @@ class NasalCanvasEvent:
     }
 };
 #endif
-#if 0
-static const char* eventGhostGetMember(naContext c, void* g, naRef field, naRef* out)
-{
-  const char* fieldName = naStr_data(field);
-  osgGA::GUIEventAdapter* gea = (osgGA::GUIEventAdapter*) g;
-
-  if (!strcmp(fieldName, "windowX")) *out = naNum(gea->getWindowX());
-  else if (!strcmp(fieldName, "windowY")) *out = naNum(gea->getWindowY());
-  else if (!strcmp(fieldName, "time")) *out = naNum(gea->getTime());
-  else if (!strcmp(fieldName, "button")) *out = naNum(gea->getButton());
-  else {
-    return 0;
-  }
-
-  return "";
-}
-
-static naRef f_element_addButtonCallback(naContext c, naRef me, int argc, naRef* args)
-{
-  simgear::canvas::Element* e = elementGhost(me);
-  if (!e) {
-    naRuntimeError(c, "element.addButtonCallback called on non-canvas-element object");
-  }
-  
-  return naNil();
-}
-
-static naRef f_element_addDragCallback(naContext c, naRef me, int argc, naRef* args)
-{
-  simgear::canvas::Element* e = elementGhost(me);
-  if (!e) {
-    naRuntimeError(c, "element.addDragCallback called on non-canvas-element object");
-  }
-  
-  return naNil();
-}
-
-static naRef f_element_addMoveCallback(naContext c, naRef me, int argc, naRef* args)
-{
-  simgear::canvas::Element* e = elementGhost(me);
-  if (!e) {
-    naRuntimeError(c, "element.addMoveCallback called on non-canvas-element object");
-  }
-  
-  return naNil();
-}
-
-static naRef f_element_addScrollCallback(naContext c, naRef me, int argc, naRef* args)
-{
-  simgear::canvas::Element* e = elementGhost(me);
-  if (!e) {
-    naRuntimeError(c, "element.addScrollCallback called on non-canvas-element object");
-  }
-  
-  return naNil();
-}
-#endif
 
 static naRef f_createCanvas(naContext c, naRef me, int argc, naRef* args)
 {
@@ -184,23 +110,15 @@ naRef f_canvasCreateGroup( sc::Canvas& canvas,
 
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
 {
-#if 0
-    elementPrototype = naNewHash(c);
-    hashset(c, gcSave, "elementProto", elementPrototype);
-    
-    hashset(c, elementPrototype, "addButtonCallback", naNewFunc(c, naNewCCode(c, f_element_addButtonCallback)));
-    hashset(c, elementPrototype, "addDragCallback", naNewFunc(c, naNewCCode(c, f_element_addDragCallback)));
-    hashset(c, elementPrototype, "addMoveCallback", naNewFunc(c, naNewCCode(c, f_element_addMoveCallback)));
-    hashset(c, elementPrototype, "addScrollCallback", naNewFunc(c, naNewCCode(c, f_element_addScrollCallback)));
-#endif
   NasalCanvas::init("Canvas")
-    .member("_node_ghost", &canvasGetNode)
+    .member("_node_ghost", &elementGetNode<sc::Canvas>)
     .member("size_x", &sc::Canvas::getSizeX)
     .member("size_y", &sc::Canvas::getSizeY)
     .method_func<&f_canvasCreateGroup>("createGroup");
-  nasal::Ghost<sc::ElementPtr>::init("canvas.Element");
-  nasal::Ghost<sc::GroupPtr>::init("canvas.Group")
-    .bases<sc::ElementPtr>();
+  NasalElement::init("canvas.Element")
+    .member("_node_ghost", &elementGetNode<sc::Element>);
+  NasalGroup::init("canvas.Group")
+    .bases<NasalElement>();
 
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
