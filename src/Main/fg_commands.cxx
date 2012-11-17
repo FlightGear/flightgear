@@ -1280,10 +1280,15 @@ public:
     SGPropertyNode_ptr _failed;
     SGPropertyNode_ptr _target;
     string propsData;
+    mutable string _requestBody;
+    int _requestBodyLength;
+    string _method;
     
-    RemoteXMLRequest(const std::string& url, SGPropertyNode* targetNode) : 
+    RemoteXMLRequest(const std::string& url, SGPropertyNode* targetNode) :
         simgear::HTTP::Request(url),
-        _target(targetNode)
+        _target(targetNode),
+        _requestBodyLength(-1),
+        _method("GET")
     {
     }
     
@@ -1301,7 +1306,39 @@ public:
     {
         _failed = p;
     }
+  
+    void setRequestData(const SGPropertyNode* body)
+    {
+        _method = "POST";
+        std::stringstream buf;
+        writeProperties(buf, body, true);
+        _requestBody = buf.str();
+        _requestBodyLength = _requestBody.size();
+    }
+    
+    virtual std::string method() const
+    {
+        return _method;
+    }
 protected:
+    virtual int requestBodyLength() const
+    {
+        return _requestBodyLength;
+    }
+    
+    virtual void getBodyData(char* s, int& count) const
+    {
+        int toRead = std::min(count, (int) _requestBody.size());
+        memcpy(s, _requestBody.c_str(), toRead);
+        count = toRead;
+        _requestBody = _requestBody.substr(count);
+    }
+    
+    virtual std::string requestBodyType() const
+    {
+        return "application/xml";
+    }
+    
     virtual void gotBodyData(const char* s, int n)
     {
         propsData += string(s, n);
@@ -1309,6 +1346,8 @@ protected:
     
     virtual void responseComplete()
     {
+        simgear::HTTP::Request::responseComplete();
+        
         int response = responseCode();
         bool failed = false;
         if (response == 200) {
@@ -1345,6 +1384,9 @@ do_load_xml_from_url(const SGPropertyNode * arg)
         targetnode = const_cast<SGPropertyNode *>(arg)->getNode("data", true);
     
     RemoteXMLRequest* req = new RemoteXMLRequest(url, targetnode);
+    
+    if (arg->hasChild("body"))
+        req->setRequestData(arg->getChild("body"));
     
 // connect up optional reporting properties
     if (arg->hasValue("complete")) 
