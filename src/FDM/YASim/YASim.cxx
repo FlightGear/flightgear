@@ -219,7 +219,13 @@ void YASim::init()
                 minGearZ = pos[2];
         }
         _set_Altitude(runway_altitude - minGearZ*M2FT);
+        // ground start-up: gear down
         fgSetBool("/controls/gear/gear-down", true);
+    }
+    else
+    {
+        // airborne start-up: gear up
+        fgSetBool("/controls/gear/gear-down", false);
     }
 
     // Blank the state, and copy in ours
