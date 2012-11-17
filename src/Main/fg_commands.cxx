@@ -380,6 +380,17 @@ do_view_prev( bool )
 }
 
 /**
+ * An fgcommand to toggle fullscreen mode.
+ * No parameters.
+ */
+static bool
+do_toggle_fullscreen(const SGPropertyNode *arg)
+{
+    fgOSFullScreen();
+    return true;
+}
+
+/**
  * Built-in command: cycle view.
  */
 static bool
@@ -1533,6 +1544,7 @@ do_profiler_stop(const SGPropertyNode *arg)
 #endif
 }
 
+
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
 ////////////////////////////////////////////////////////////////////////
@@ -1559,6 +1571,7 @@ static struct {
     { "load-tape", do_load_tape },
     { "panel-load", do_panel_load },
     { "preferences-load", do_preferences_load },
+    { "toggle-fullscreen", do_toggle_fullscreen },
     { "view-cycle", do_view_cycle },
     { "screen-capture", do_screen_capture },
     { "hires-screen-capture", do_hires_screen_capture },

@@ -61,6 +61,9 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _roll_deg(0),
     _pitch_deg(0),
     _heading_deg(0),
+    _target_roll_deg(0),
+    _target_pitch_deg(0),
+    _target_heading_deg(0),
     _scaling_type(FG_SCALING_MAX),
     _cameraGroup(CameraGroup::getDefault())
 {

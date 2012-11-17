@@ -1380,10 +1380,6 @@ FGRenderer::setupView( void )
     osg::PolygonOffset::setUnitsMultiplier(1);
     osg::PolygonOffset::setFactorMultiplier(1);
 
-    // Go full screen if requested ...
-    if ( fgGetBool("/sim/startup/fullscreen") )
-        fgOSFullScreen();
-
 // build the sky    
     // The sun and moon diameters are scaled down numbers of the
     // actual diameters. This was needed to fit both the sun and the

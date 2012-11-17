@@ -309,9 +309,72 @@ void fgOSInit(int* argc, char** argv)
     WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
 
-// Noop
 void fgOSFullScreen()
 {
+    std::vector<osgViewer::GraphicsWindow*> windows;
+    viewer->getWindows(windows);
+
+    if (windows.size() == 0)
+        return; // Huh?!?
+
+    /* Toggling window fullscreen is only supported for the main GUI window.
+     * The other windows should use fixed setup from the camera.xml file anyway. */
+    osgViewer::GraphicsWindow* window = windows[0];
+
+    {
+        osg::GraphicsContext::WindowingSystemInterface    *wsi = osg::GraphicsContext::getWindowingSystemInterface();
+
+        if (wsi == NULL)
+        {
+            SG_LOG(SG_VIEW, SG_ALERT, "ERROR: No WindowSystemInterface available. Cannot toggle window fullscreen.");
+            return;
+        }
+
+        static int previous_x = 0;
+        static int previous_y = 0;
+        static int previous_width = 800;
+        static int previous_height = 600;
+
+        unsigned int screenWidth;
+        unsigned int screenHeight;
+        wsi->getScreenResolution(*(window->getTraits()), screenWidth, screenHeight);
+
+        int x;
+        int y;
+        int width;
+        int height;
+        window->getWindowRectangle(x, y, width, height);
+
+        bool isFullScreen = x == 0 && y == 0 && width == (int)screenWidth && height == (int)screenHeight;
+
+        SG_LOG(SG_VIEW, SG_DEBUG, "Toggling fullscreen. Previous window rectangle ("
+               << x << ", " << y << ") x (" << width << ", " << height << "), fullscreen: " << isFullScreen);
+        if (isFullScreen)
+        {
+            // disable fullscreen mode, restore previous window size/coordinates
+            window->setWindowDecoration(true);
+            // limit x,y coordinates and window size to screen area
+            if (previous_x + previous_width > (int)screenWidth)
+                previous_x = 0;
+            if (previous_y + previous_height > (int)screenHeight)
+                previous_y = 0;
+            window->setWindowRectangle(previous_x, previous_y, previous_width, previous_height);
+        }
+        else
+        {
+            // remember previous setting
+            previous_x = x;
+            previous_y = y;
+            previous_width = width;
+            previous_height = height;
+
+            // enable fullscreen
+            window->setWindowDecoration(false);
+            window->setWindowRectangle(0, 0, screenWidth, screenHeight);
+        }
+
+        window->grabFocusIfPointerInWindow();
+    }
 }
 
 static void setMouseCursor(osgViewer::GraphicsWindow* gw, int cursor)
