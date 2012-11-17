@@ -351,14 +351,17 @@ void fgOSFullScreen()
                << x << ", " << y << ") x (" << width << ", " << height << "), fullscreen: " << isFullScreen);
         if (isFullScreen)
         {
-            // disable fullscreen mode, restore previous window size/coordinates
-            window->setWindowDecoration(true);
             // limit x,y coordinates and window size to screen area
             if (previous_x + previous_width > (int)screenWidth)
                 previous_x = 0;
             if (previous_y + previous_height > (int)screenHeight)
                 previous_y = 0;
-            window->setWindowRectangle(previous_x, previous_y, previous_width, previous_height);
+
+            // disable fullscreen mode, restore previous window size/coordinates
+            x = previous_x;
+            y = previous_y;
+            width = previous_width;
+            height = previous_height;
         }
         else
         {
@@ -368,11 +371,20 @@ void fgOSFullScreen()
             previous_width = width;
             previous_height = height;
 
-            // enable fullscreen
-            window->setWindowDecoration(false);
-            window->setWindowRectangle(0, 0, screenWidth, screenHeight);
+            // enable fullscreen mode, set new width/height
+            x = 0;
+            y = 0;
+            width = screenWidth;
+            height = screenHeight;
         }
 
+        // set xsize/ysize properties to adapt GUI planes
+        fgSetInt("/sim/startup/xsize", width);
+        fgSetInt("/sim/startup/ysize", height);
+
+        // reconfigure window
+        window->setWindowDecoration(isFullScreen);
+        window->setWindowRectangle(x, y, width, height);
         window->grabFocusIfPointerInWindow();
     }
 }
