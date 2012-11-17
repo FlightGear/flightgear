@@ -191,6 +191,7 @@ private:
     double climb_rate;                // in feet per second
     double altitude_agl;
     double track;
+    double delta_loops;
 
     simgear::TiedPropertyList _tiedProperties;
 

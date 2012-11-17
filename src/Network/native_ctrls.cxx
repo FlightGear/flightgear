@@ -452,7 +452,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     node->setDoubleValue( "nav/frequencies/selected-mhz[0]", net->nav_1 );
     node->setDoubleValue( "nav[1]/frequencies/selected-mhz[0]", net->nav_2 );
 
-    fgSetInt( "/sim/speed-up", net->speedup );
+    fgSetDouble( "/sim/speed-up", net->speedup );
 
     if ( honor_freezes ) {
         node = fgGetNode( "/sim/freeze", true );

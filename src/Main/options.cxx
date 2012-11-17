@@ -190,7 +190,7 @@ fgSetDefaults ()
     fgSetString("/sim/flight-model", "jsb");
     fgSetString("/sim/aero", "c172");
     fgSetInt("/sim/model-hz", NEW_DEFAULT_MODEL_HZ);
-    fgSetInt("/sim/speed-up", 1);
+    fgSetDouble("/sim/speed-up", 1.0);
 
 				// Rendering options
     fgSetString("/sim/rendering/fog", "nicest");
@@ -1392,7 +1392,7 @@ struct OptionDesc {
     {"aircraft-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
     {"model-hz",                     true,  OPTION_INT,    "/sim/model-hz", false, "", 0 },
     {"max-fps",                      true,  OPTION_DOUBLE, "/sim/frame-rate-throttle-hz", false, "", 0 },
-    {"speed",                        true,  OPTION_INT,    "/sim/speed-up", false, "", 0 },
+    {"speed",                        true,  OPTION_DOUBLE, "/sim/speed-up", false, "", 0 },
     {"trim",                         false, OPTION_BOOL,   "/sim/presets/trim", true, "", 0 },
     {"notrim",                       false, OPTION_BOOL,   "/sim/presets/trim", false, "", 0 },
     {"on-ground",                    false, OPTION_BOOL,   "/sim/presets/onground", true, "", 0 },

@@ -69,9 +69,11 @@ FGInterface::_calc_multiloop (double dt)
   // roundoff problems when we already have nearly accurate values.
   // Only the speedup thing must be still handled here
   int hz = fgGetInt("/sim/model-hz");
-  int multiloop = SGMiscd::roundToInt(dt*hz);
-  int speedup = fgGetInt("/sim/speed-up");
-  return multiloop * speedup;
+  double speedup = fgGetDouble("/sim/speed-up");
+  double loops = dt * hz * speedup + delta_loops;
+  int iloops = SGMiscd::roundToInt(loops);
+  delta_loops = loops-iloops; // delta_loops required for speed-ups < 1 (to do one iteration every n-th step)
+  return iloops;
 }
 
 
@@ -119,6 +121,7 @@ FGInterface::_setup ()
     climb_rate=0;
     altitude_agl=0;
     track=0;
+    delta_loops = 0.0;
 }
 
 void
