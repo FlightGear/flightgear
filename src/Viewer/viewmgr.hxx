@@ -148,6 +148,9 @@ private:
 
     int current;
     SGQuatd current_view_orientation, current_view_or_offset;
+
+    SGPropertyNode_ptr current_x_offs, current_y_offs, current_z_offs;
+    SGPropertyNode_ptr target_x_offs, target_y_offs, target_z_offs;
 };
 
 // This takes the conventional aviation XYZ body system 

@@ -61,11 +61,20 @@ FGViewMgr::init ()
   
   inited = true;
   
+  // stash properties
+  current_x_offs = fgGetNode("/sim/current-view/x-offset-m", true);
+  current_y_offs = fgGetNode("/sim/current-view/y-offset-m", true);
+  current_z_offs = fgGetNode("/sim/current-view/z-offset-m", true);
+  target_x_offs  = fgGetNode("/sim/current-view/target-x-offset-m", true);
+  target_y_offs  = fgGetNode("/sim/current-view/target-y-offset-m", true);
+  target_z_offs  = fgGetNode("/sim/current-view/target-z-offset-m", true);
+
   double aspect_ratio_multiplier
       = fgGetDouble("/sim/current-view/aspect-ratio-multiplier");
 
   for (unsigned int i = 0; i < config_list.size(); i++) {
     SGPropertyNode *n = config_list[i];
+    SGPropertyNode *config = n->getChild("config", 0, true);
 
     // find out if this is an internal view (e.g. in cockpit, low near plane)
     bool internal = n->getBoolValue("internal", false);
@@ -75,37 +84,37 @@ FGViewMgr::init ()
     // model-from-type as well.
 
     // find out if this is a model we are looking from...
-    bool from_model = n->getBoolValue("config/from-model");
-    int from_model_index = n->getIntValue("config/from-model-idx");
+    bool from_model = config->getBoolValue("from-model");
+    int from_model_index = config->getIntValue("from-model-idx");
 
-    double x_offset_m = n->getDoubleValue("config/x-offset-m");
-    double y_offset_m = n->getDoubleValue("config/y-offset-m");
-    double z_offset_m = n->getDoubleValue("config/z-offset-m");
+    double x_offset_m = config->getDoubleValue("x-offset-m");
+    double y_offset_m = config->getDoubleValue("y-offset-m");
+    double z_offset_m = config->getDoubleValue("z-offset-m");
 
-    double heading_offset_deg = n->getDoubleValue("config/heading-offset-deg");
-    n->setDoubleValue("config/heading-offset-deg", heading_offset_deg);
-    double pitch_offset_deg = n->getDoubleValue("config/pitch-offset-deg");
-    n->setDoubleValue("config/pitch-offset-deg", pitch_offset_deg);
-    double roll_offset_deg = n->getDoubleValue("config/roll-offset-deg");
-    n->setDoubleValue("config/roll-offset-deg", roll_offset_deg);
+    double heading_offset_deg = config->getDoubleValue("heading-offset-deg");
+    config->setDoubleValue("heading-offset-deg", heading_offset_deg);
+    double pitch_offset_deg = config->getDoubleValue("pitch-offset-deg");
+    config->setDoubleValue("pitch-offset-deg", pitch_offset_deg);
+    double roll_offset_deg = config->getDoubleValue("roll-offset-deg");
+    config->setDoubleValue("roll-offset-deg", roll_offset_deg);
 
-    double fov_deg = n->getDoubleValue("config/default-field-of-view-deg");
-    double near_m = n->getDoubleValue("config/ground-level-nearplane-m");
+    double fov_deg = config->getDoubleValue("default-field-of-view-deg");
+    double near_m = config->getDoubleValue("ground-level-nearplane-m");
 
     // supporting two types "lookat" = 1 and "lookfrom" = 0
     const char *type = n->getStringValue("type");
     if (!strcmp(type, "lookat")) {
 
-      bool at_model = n->getBoolValue("config/at-model");
-      int at_model_index = n->getIntValue("config/at-model-idx");
+      bool at_model = config->getBoolValue("at-model");
+      int at_model_index = config->getIntValue("at-model-idx");
 
-      double damp_roll = n->getDoubleValue("config/at-model-roll-damping");
-      double damp_pitch = n->getDoubleValue("config/at-model-pitch-damping");
-      double damp_heading = n->getDoubleValue("config/at-model-heading-damping");
+      double damp_roll = config->getDoubleValue("at-model-roll-damping");
+      double damp_pitch = config->getDoubleValue("at-model-pitch-damping");
+      double damp_heading = config->getDoubleValue("at-model-heading-damping");
 
-      double target_x_offset_m = n->getDoubleValue("config/target-x-offset-m");
-      double target_y_offset_m = n->getDoubleValue("config/target-y-offset-m");
-      double target_z_offset_m = n->getDoubleValue("config/target-z-offset-m");
+      double target_x_offset_m = config->getDoubleValue("target-x-offset-m");
+      double target_y_offset_m = config->getDoubleValue("target-y-offset-m");
+      double target_z_offset_m = config->getDoubleValue("target-z-offset-m");
 
       add_view(new FGViewer ( FG_LOOKAT, from_model, from_model_index,
                               at_model, at_model_index,
@@ -280,17 +289,18 @@ FGViewMgr::update (double dt)
   if (!currentView) return;
 
   SGPropertyNode *n = config_list[current];
+  SGPropertyNode *config = n->getChild("config", 0, true);
   double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
 
   // Set up view location and orientation
 
-  if (!n->getBoolValue("config/from-model")) {
-    lon_deg = fgGetDouble(n->getStringValue("config/eye-lon-deg-path"));
-    lat_deg = fgGetDouble(n->getStringValue("config/eye-lat-deg-path"));
-    alt_ft = fgGetDouble(n->getStringValue("config/eye-alt-ft-path"));
-    roll_deg = fgGetDouble(n->getStringValue("config/eye-roll-deg-path"));
-    pitch_deg = fgGetDouble(n->getStringValue("config/eye-pitch-deg-path"));
-    heading_deg = fgGetDouble(n->getStringValue("config/eye-heading-deg-path"));
+  if (!config->getBoolValue("from-model")) {
+    lon_deg = fgGetDouble(config->getStringValue("eye-lon-deg-path"));
+    lat_deg = fgGetDouble(config->getStringValue("eye-lat-deg-path"));
+    alt_ft = fgGetDouble(config->getStringValue("eye-alt-ft-path"));
+    roll_deg = fgGetDouble(config->getStringValue("eye-roll-deg-path"));
+    pitch_deg = fgGetDouble(config->getStringValue("eye-pitch-deg-path"));
+    heading_deg = fgGetDouble(config->getStringValue("eye-heading-deg-path"));
 
     currentView->setPosition(lon_deg, lat_deg, alt_ft);
     currentView->setOrientation(roll_deg, pitch_deg, heading_deg);
@@ -301,13 +311,13 @@ FGViewMgr::update (double dt)
 
   // if lookat (type 1) then get target data...
   if (currentView->getType() == FG_LOOKAT) {
-    if (!n->getBoolValue("config/from-model")) {
-      lon_deg = fgGetDouble(n->getStringValue("config/target-lon-deg-path"));
-      lat_deg = fgGetDouble(n->getStringValue("config/target-lat-deg-path"));
-      alt_ft = fgGetDouble(n->getStringValue("config/target-alt-ft-path"));
-      roll_deg = fgGetDouble(n->getStringValue("config/target-roll-deg-path"));
-      pitch_deg = fgGetDouble(n->getStringValue("config/target-pitch-deg-path"));
-      heading_deg = fgGetDouble(n->getStringValue("config/target-heading-deg-path"));
+    if (!config->getBoolValue("from-model")) {
+      lon_deg = fgGetDouble(config->getStringValue("target-lon-deg-path"));
+      lat_deg = fgGetDouble(config->getStringValue("target-lat-deg-path"));
+      alt_ft = fgGetDouble(config->getStringValue("target-alt-ft-path"));
+      roll_deg = fgGetDouble(config->getStringValue("target-roll-deg-path"));
+      pitch_deg = fgGetDouble(config->getStringValue("target-pitch-deg-path"));
+      heading_deg = fgGetDouble(config->getStringValue("target-heading-deg-path"));
 
       currentView->setTargetPosition(lon_deg, lat_deg, alt_ft);
       currentView->setTargetOrientation(roll_deg, pitch_deg, heading_deg);
@@ -316,13 +326,13 @@ FGViewMgr::update (double dt)
     }
   }
 
-  setViewXOffset_m(fgGetDouble("/sim/current-view/x-offset-m"));
-  setViewYOffset_m(fgGetDouble("/sim/current-view/y-offset-m"));
-  setViewZOffset_m(fgGetDouble("/sim/current-view/z-offset-m"));
+  setViewXOffset_m(current_x_offs->getDoubleValue());
+  setViewYOffset_m(current_y_offs->getDoubleValue());
+  setViewZOffset_m(current_z_offs->getDoubleValue());
 
-  setViewTargetXOffset_m(fgGetDouble("/sim/current-view/target-x-offset-m"));
-  setViewTargetYOffset_m(fgGetDouble("/sim/current-view/target-y-offset-m"));
-  setViewTargetZOffset_m(fgGetDouble("/sim/current-view/target-z-offset-m"));
+  setViewTargetXOffset_m(target_x_offs->getDoubleValue());
+  setViewTargetYOffset_m(target_y_offs->getDoubleValue());
+  setViewTargetZOffset_m(target_z_offs->getDoubleValue());
 
   current_view_orientation = currentView->getViewOrientation();
   current_view_or_offset = currentView->getViewOrientationOffset();
@@ -332,7 +342,7 @@ FGViewMgr::update (double dt)
   currentView->update(dt);
   abs_viewer_position = currentView->getViewPosition();
   
-  // expose the raw (OpenGL) orientation to the proeprty tree,
+  // expose the raw (OpenGL) orientation to the property tree,
   // for the sound-manager
   for (int i=0; i<4; ++i) {
     _tiedProperties.getRoot()->getChild("raw-orientation", i, true)->setDoubleValue(current_view_orientation[i]);
