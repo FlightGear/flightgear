@@ -70,7 +70,9 @@ FGAirport::FGAirport(PositionedID aGuid, const string &id, const SGGeod& locatio
     _dynamics(0),
     mTowerDataLoaded(false),
     mRunwaysLoaded(false),
-    mTaxiwaysLoaded(false)
+    mTaxiwaysLoaded(false),
+    mProceduresLoaded(false),
+    mILSDataLoaded(false)
 {
 }
 

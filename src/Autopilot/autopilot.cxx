@@ -59,13 +59,15 @@ Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode
   _serviceable(true),
   _rootNode(rootNode)
 {
-
-  componentForge["pid-controller"]       = new CreateAndConfigureFunctor<PIDController,Component>();
-  componentForge["pi-simple-controller"] = new CreateAndConfigureFunctor<PISimpleController,Component>();
-  componentForge["predict-simple"]       = new CreateAndConfigureFunctor<Predictor,Component>();
-  componentForge["filter"]               = new CreateAndConfigureFunctor<DigitalFilter,Component>();
-  componentForge["logic"]                = new CreateAndConfigureFunctor<Logic,Component>();
-  componentForge["flipflop"]             = new CreateAndConfigureFunctor<FlipFlop,Component>();
+  if (componentForge.empty())
+  {
+      componentForge["pid-controller"]       = new CreateAndConfigureFunctor<PIDController,Component>();
+      componentForge["pi-simple-controller"] = new CreateAndConfigureFunctor<PISimpleController,Component>();
+      componentForge["predict-simple"]       = new CreateAndConfigureFunctor<Predictor,Component>();
+      componentForge["filter"]               = new CreateAndConfigureFunctor<DigitalFilter,Component>();
+      componentForge["logic"]                = new CreateAndConfigureFunctor<Logic,Component>();
+      componentForge["flipflop"]             = new CreateAndConfigureFunctor<FlipFlop,Component>();
+  }
 
   if( configNode == NULL ) configNode = rootNode;
 

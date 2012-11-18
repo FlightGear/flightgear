@@ -187,8 +187,9 @@ static bool doFrequencyDisplay( const SGPropertyNode* args )
 FGATCDialogNew * FGATCDialogNew::_instance = NULL;
 
 FGATCDialogNew::FGATCDialogNew()
+: _gui(NULL),
+   dialogVisible(true)
 {
-  dialogVisible = true;
 }
 
 FGATCDialogNew::~FGATCDialogNew()
@@ -198,15 +199,15 @@ FGATCDialogNew::~FGATCDialogNew()
 
 
 void FGATCDialogNew::init() {
-	// Add ATC-dialog to the command list
+    // Add ATC-dialog to the command list
     globals->get_commands()->addCommand("ATC-dialog", FGATCDialogNew::popup );
-	// Add ATC-freq-search to the command list
-	globals->get_commands()->addCommand("ATC-freq-search", doFrequencySearch);
-  globals->get_commands()->addCommand("ATC-freq-display", doFrequencyDisplay);
+    // Add ATC-freq-search to the command list
+    globals->get_commands()->addCommand("ATC-freq-search", doFrequencySearch);
+    globals->get_commands()->addCommand("ATC-freq-display", doFrequencyDisplay);
   
-	// initialize properties polled in Update()
-	//globals->get_props()->setStringValue("/sim/atc/freq-airport", "");
-	globals->get_props()->setIntValue("/sim/atc/transmission-num", -1);
+    // initialize properties polled in Update()
+    //globals->get_props()->setStringValue("/sim/atc/freq-airport", "");
+    globals->get_props()->setIntValue("/sim/atc/transmission-num", -1);
 }
 
 
