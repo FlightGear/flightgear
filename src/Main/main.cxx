@@ -76,6 +76,7 @@ using std::vector;
 extern int _bootstrap_OSInit;
 
 static SGPropertyNode_ptr frame_signal;
+static TimeManager* timeMgr;
 
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
@@ -89,7 +90,6 @@ static void fgMainLoop( void )
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
     double sim_dt, real_dt;
-    static TimeManager* timeMgr = (TimeManager*) globals->get_subsystem("time");
     timeMgr->computeTimeDeltas(sim_dt, real_dt);
 
     // update all subsystems
@@ -100,6 +100,14 @@ static void fgMainLoop( void )
     SG_LOG( SG_GENERAL, SG_DEBUG, "" );
 }
 
+
+static void registerMainLoop()
+{
+    // stash current frame signal property
+    frame_signal = fgGetNode("/sim/signals/frame", true);
+    timeMgr = (TimeManager*) globals->get_subsystem("time");
+    fgRegisterIdleHandler( fgMainLoop );
+}
 
 // This is the top level master main function that is registered as
 // our idle function
@@ -263,9 +271,7 @@ static void fgIdleFunction ( void ) {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
         fgSetBool("sim/sceneryloaded", false);
-        // stash current frame signal property
-        frame_signal = fgGetNode("/sim/signals/frame", true);
-        fgRegisterIdleHandler( fgMainLoop );
+        registerMainLoop();
     }
 }
 

@@ -257,10 +257,7 @@ FGPavement* FGAirport::getPavementByIndex(unsigned int aIndex) const
 
 FGRunway* FGAirport::getActiveRunwayForUsage() const
 {
-  static FGEnvironmentMgr* envMgr = NULL;
-  if (!envMgr) {
-    envMgr = (FGEnvironmentMgr *) globals->get_subsystem("environment");
-  }
+  FGEnvironmentMgr* envMgr = (FGEnvironmentMgr *) globals->get_subsystem("environment");
   
   // This forces West-facing rwys to be used in no-wind situations
   // which is consistent with Flightgear's initial setup.
