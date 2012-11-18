@@ -27,7 +27,7 @@
 
 #include "viewmgr.hxx"
 
-#include <string.h>		// strcmp
+#include <string.h>        // strcmp
 
 #include <simgear/compiler.h>
 #include <Main/fg_props.hxx>
@@ -352,9 +352,9 @@ FGViewMgr::update (double dt)
 void
 FGViewMgr::copyToCurrent()
 {
-  if (!inited) {
-    return;
-  }
+    if (!inited) {
+        return;
+    }
   
     SGPropertyNode *n = config_list[current];
     fgSetString("/sim/current-view/name", n->getStringValue("name"));
@@ -401,60 +401,60 @@ FGViewMgr::copyToCurrent()
 
 void FGViewMgr::clear()
 {
-  views.clear();
+    views.clear();
 }
 
 FGViewer*
 FGViewMgr::get_current_view()
 {
-	if ( current < (int)views.size() ) {
-	    return views[current];
-	} else {
-	    return NULL;
-	}
+    if ( current < (int)views.size() ) {
+        return views[current];
+    } else {
+        return NULL;
+    }
 }
 
 const FGViewer*
 FGViewMgr::get_current_view() const
 {
-	if ( current < (int)views.size() ) {
-	    return views[current];
-	} else {
-	    return NULL;
-	}
+    if ( current < (int)views.size() ) {
+        return views[current];
+    } else {
+        return NULL;
+    }
 }
 
 
 FGViewer*
 FGViewMgr::get_view( int i )
 {
-	if ( i < 0 ) { i = 0; }
-	if ( i >= (int)views.size() ) { i = views.size() - 1; }
-	return views[i];
+    if ( i < 0 ) { i = 0; }
+    if ( i >= (int)views.size() ) { i = views.size() - 1; }
+    return views[i];
 }
 
 const FGViewer*
 FGViewMgr::get_view( int i ) const
 {
-	if ( i < 0 ) { i = 0; }
-	if ( i >= (int)views.size() ) { i = views.size() - 1; }
-	return views[i];
+    if ( i < 0 ) { i = 0; }
+    if ( i >= (int)views.size() ) { i = views.size() - 1; }
+    return views[i];
 }
 
 FGViewer*
 FGViewMgr::next_view()
 {
-	setView((current+1 < (int)views.size()) ? (current + 1) : 0);
-	view_number->fireValueChanged();
-	return views[current];
+    setView((current+1 < (int)views.size()) ? (current + 1) : 0);
+    view_number->fireValueChanged();
+    return views[current];
 }
 
 FGViewer*
 FGViewMgr::prev_view()
 {
-	setView((0 < current) ? (current - 1) : (views.size() - 1));
-	view_number->fireValueChanged();
-	return views[current];
+    setView((0 < current) ? (current - 1) : (views.size() - 1));
+    view_number->fireValueChanged();
+    return views[current];
 }
 
 void
@@ -892,7 +892,7 @@ double FGViewMgr::getCurrentViewOrientation_z() const{
 void
 FGViewMgr::do_axes ()
 {
-				// Take no action when hat is centered
+                // Take no action when hat is centered
   if ( ( axis_long <  0.01 ) &&
        ( axis_long > -0.01 ) &&
        ( axis_lat  <  0.01 ) &&
@@ -903,21 +903,21 @@ FGViewMgr::do_axes ()
   double viewDir = 999;
 
   /* Do all the quick and easy cases */
-  if (axis_long < 0) {		// Longitudinal axis forward
+  if (axis_long < 0) {        // Longitudinal axis forward
     if (axis_lat == axis_long)
       viewDir = fgGetDouble("/sim/view/config/front-left-direction-deg");
     else if (axis_lat == - axis_long)
       viewDir = fgGetDouble("/sim/view/config/front-right-direction-deg");
     else if (axis_lat == 0)
       viewDir = fgGetDouble("/sim/view/config/front-direction-deg");
-  } else if (axis_long > 0) {	// Longitudinal axis backward
+  } else if (axis_long > 0) {    // Longitudinal axis backward
     if (axis_lat == - axis_long)
       viewDir = fgGetDouble("/sim/view/config/back-left-direction-deg");
     else if (axis_lat == axis_long)
       viewDir = fgGetDouble("/sim/view/config/back-right-direction-deg");
     else if (axis_lat == 0)
       viewDir = fgGetDouble("/sim/view/config/back-direction-deg");
-  } else if (axis_long == 0) {	// Longitudinal axis neutral
+  } else if (axis_long == 0) {    // Longitudinal axis neutral
     if (axis_lat < 0)
       viewDir = fgGetDouble("/sim/view/config/left-direction-deg");
     else if (axis_lat > 0)
@@ -925,7 +925,7 @@ FGViewMgr::do_axes ()
     else return; /* And assertion failure maybe? */
   }
 
-				// Do all the difficult cases
+                // Do all the difficult cases
   if ( viewDir > 900 )
     viewDir = SGD_RADIANS_TO_DEGREES * atan2 ( -axis_lat, -axis_long );
   if ( viewDir < -1 ) viewDir += 360;
