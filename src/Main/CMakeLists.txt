@@ -91,7 +91,7 @@ if(ENABLE_JSBSIM)
 endif()
 
 if(FG_HAVE_GPERFTOOLS)
-    target_link_libraries(fgfs profiler)
+    target_link_libraries(fgfs profiler tcmalloc)
 endif()
 
 target_link_libraries(fgfs

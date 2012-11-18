@@ -15,6 +15,8 @@
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
 #include <Scripting/NasalSys.hxx>
 
+#include <simgear/canvas/Canvas.hxx>
+
 //------------------------------------------------------------------------------
 CanvasWidget::CanvasWidget( int x, int y,
                             int width, int height,
@@ -31,53 +33,49 @@ CanvasWidget::CanvasWidget( int x, int y,
     return;
   }
 
-  // Get the first unused canvas slot
-  SGPropertyNode* canvas_root = fgGetNode("/canvas/by-index", true);
-  for(int index = 0;; ++index)
+  _canvas = _canvas_mgr->createCanvas
+  (
+    props->getStringValue("name", "gui-anonymous")
+  );
+
+  int view[2] = {
+    // Get canvas viewport size. If not specified use the widget dimensions
+    props->getIntValue("view[0]", width),
+    props->getIntValue("view[1]", height)
+  };
+
+  SGPropertyNode* cprops = _canvas->getProps();
+  cprops->setIntValue("size[0]", view[0] * 2); // use higher resolution
+  cprops->setIntValue("size[1]", view[1] * 2); // for antialias
+  cprops->setIntValue("view[0]", view[0]);
+  cprops->setIntValue("view[1]", view[1]);
+  cprops->setBoolValue("render-always", true);
+  cprops->setStringValue( "name",
+                           props->getStringValue("name", "gui-anonymous") );
+  SGPropertyNode* input = cprops->getChild("input", 0, true);
+  _mouse_x = input->getChild("mouse-x", 0, true);
+  _mouse_y = input->getChild("mouse-y", 0, true);
+  _mouse_down = input->getChild("mouse-down", 0, true);
+  _mouse_drag = input->getChild("mouse-drag", 0, true);
+
+  SGPropertyNode *nasal = props->getNode("nasal");
+  if( !nasal )
+    return;
+
+  FGNasalSys *nas = dynamic_cast<FGNasalSys*>(globals->get_subsystem("nasal"));
+  if( !nas )
+    SG_LOG( SG_GENERAL,
+            SG_ALERT,
+            "CanvasWidget: Failed to get nasal subsystem!" );
+
+  const std::string file = std::string("__canvas:")
+                         + cprops->getStringValue("name");
+
+  SGPropertyNode *load = nasal->getNode("load");
+  if( load )
   {
-    if( !canvas_root->getChild("texture", index) )
-    {
-      int view[2] = {
-        // Get canvas viewport size. If not specified use the widget dimensions
-        props->getIntValue("view[0]", width),
-        props->getIntValue("view[1]", height)
-      };
-      _canvas = canvas_root->getChild("texture", index, true);
-      _canvas->setIntValue("size[0]", view[0] * 2); // use higher resolution
-      _canvas->setIntValue("size[1]", view[1] * 2); // for antialias
-      _canvas->setIntValue("view[0]", view[0]);
-      _canvas->setIntValue("view[1]", view[1]);
-      _canvas->setBoolValue("render-always", true);
-      _canvas->setStringValue( "name",
-                               props->getStringValue("name", "gui-anonymous") );
-      SGPropertyNode* input = _canvas->getChild("input", 0, true);
-      _mouse_x = input->getChild("mouse-x", 0, true);
-      _mouse_y = input->getChild("mouse-y", 0, true);
-      _mouse_down = input->getChild("mouse-down", 0, true);
-      _mouse_drag = input->getChild("mouse-drag", 0, true);
-
-      SGPropertyNode *nasal = props->getNode("nasal");
-      if( !nasal )
-        break;
-
-      FGNasalSys *nas =
-        dynamic_cast<FGNasalSys*>(globals->get_subsystem("nasal"));
-      if( !nas )
-        SG_LOG( SG_GENERAL,
-                SG_ALERT,
-                "CanvasWidget: Failed to get nasal subsystem!" );
-
-      const std::string file = std::string("__canvas:")
-                             + _canvas->getStringValue("name");
-
-      SGPropertyNode *load = nasal->getNode("load");
-      if( load )
-      {
-        const char *s = load->getStringValue();
-        nas->handleCommand(module.c_str(), file.c_str(), s, _canvas);
-      }
-      break;
-    }
+    const char *s = load->getStringValue();
+    nas->handleCommand(module.c_str(), file.c_str(), s, cprops);
   }
 }
 
@@ -85,8 +83,12 @@ CanvasWidget::CanvasWidget( int x, int y,
 CanvasWidget::~CanvasWidget()
 {
   if( _canvas )
-    _canvas->getParent()
-           ->removeChild(_canvas->getName(), _canvas->getIndex(), false);
+    // TODO check if really not in use anymore
+    _canvas->getProps()
+           ->getParent()
+           ->removeChild( _canvas->getProps()->getName(),
+                          _canvas->getProps()->getIndex(),
+                          false );
 }
 
 //------------------------------------------------------------------------------
@@ -126,8 +128,8 @@ void CanvasWidget::setSize(int w, int h)
 {
   puObject::setSize(w, h);
 
-  _canvas->setIntValue("view[0]", w);
-  _canvas->setIntValue("view[1]", h);
+  _canvas->getProps()->setIntValue("view[0]", w);
+  _canvas->getProps()->setIntValue("view[1]", h);
 }
 
 //------------------------------------------------------------------------------
@@ -135,7 +137,7 @@ void CanvasWidget::draw(int dx, int dy)
 {
   if( !_tex_id )
   {
-    _tex_id = _canvas_mgr->getCanvasTexId(_canvas->getIndex());
+    _tex_id = _canvas_mgr->getCanvasTexId( _canvas->getProps()->getIndex() );
 
     // Normally we should be able to get the texture after one frame. I don't
     // know if there are circumstances where it can take longer, so we don't

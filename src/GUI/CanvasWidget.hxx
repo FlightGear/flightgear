@@ -11,6 +11,8 @@
 #include <Main/fg_props.hxx>
 #include <plib/pu.h>
 
+#include <simgear/canvas/canvas_fwd.hxx>
+
 class CanvasMgr;
 
 class CanvasWidget:
@@ -37,7 +39,7 @@ class CanvasWidget:
     GLuint              _tex_id;    //<! OpenGL texture id if canvas
     size_t              _no_tex_cnt;//<! Count since how many frames we were not
                                     //   able to get the texture (for debugging)
-    SGPropertyNode_ptr  _canvas;    //<! Canvas root property node
+    simgear::canvas::CanvasPtr _canvas;
     SGPropertyNode     *_mouse_x,
                        *_mouse_y,
                        *_mouse_down,

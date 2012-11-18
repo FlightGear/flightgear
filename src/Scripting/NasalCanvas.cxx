@@ -25,6 +25,7 @@
 #include "NasalCanvas.hxx"
 #include <Canvas/canvas_mgr.hxx>
 #include <Main/globals.hxx>
+#include <Scripting/NasalSys.hxx>
 
 #include <osgGA/GUIEventAdapter>
 
@@ -86,14 +87,62 @@ class NasalCanvasEvent:
 };
 #endif
 
-static naRef f_createCanvas(naContext c, naRef me, int argc, naRef* args)
+SGPropertyNode& requireArg(naContext c, int argc, naRef* args, int index = 0)
+{
+  if( argc <= index )
+    naRuntimeError(c, "missing argument #%d", index);
+
+  SGPropertyNode* props = ghostToPropNode(args[index]);
+  if( !props )
+    naRuntimeError(c, "arg #%d: not a SGPropertyNode ghost");
+
+  return *props;
+}
+
+CanvasMgr& requireCanvasMgr(naContext c)
 {
   CanvasMgr* canvas_mgr =
     static_cast<CanvasMgr*>(globals->get_subsystem("Canvas"));
   if( !canvas_mgr )
-    return naNil();
+    naRuntimeError(c, "Failed to get Canvas subsystem");
 
-  return NasalCanvas::create(c, canvas_mgr->createCanvas());
+  return *canvas_mgr;
+}
+
+/**
+ * Create new Canvas and get ghost for it.
+ */
+static naRef f_createCanvas(naContext c, naRef me, int argc, naRef* args)
+{
+  return NasalCanvas::create(c, requireCanvasMgr(c).createCanvas());
+}
+
+/**
+ * Get ghost for existing Canvas.
+ */
+static naRef f_getCanvas(naContext c, naRef me, int argc, naRef* args)
+{
+  SGPropertyNode& props = requireArg(c, argc, args);
+  CanvasMgr& canvas_mgr = requireCanvasMgr(c);
+
+  sc::CanvasPtr canvas;
+  if( canvas_mgr.getPropertyRoot() == props.getParent() )
+  {
+    // get a canvas specified by its root node
+    canvas = canvas_mgr.getCanvas( props.getIndex() );
+    if( !canvas || canvas->getProps() != &props )
+      return naNil();
+  }
+  else
+  {
+    // get a canvas by name
+    if( props.hasValue("name") )
+      canvas = canvas_mgr.getCanvas( props.getStringValue("name") );
+    else if( props.hasValue("index") )
+      canvas = canvas_mgr.getCanvas( props.getIntValue("index") );
+  }
+
+  return NasalCanvas::create(c, canvas);
 }
 
 naRef f_canvasCreateGroup( sc::Canvas& canvas,
@@ -124,6 +173,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
               canvas_module = globals_module.createHash("canvas");
 
   canvas_module.set("_newCanvasGhost", f_createCanvas);
+  canvas_module.set("_getCanvasGhost", f_getCanvas);
 
   return naNil();
 }
