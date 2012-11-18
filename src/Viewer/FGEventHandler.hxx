@@ -120,6 +120,7 @@ protected:
     int release_keys[128];
     void handleStats(osgGA::GUIActionAdapter& us);
     bool changeStatsCameraRenderOrder;
+    SGPropertyNode_ptr _display, _print;
 };
 
 void eventToWindowCoords(const osgGA::GUIEventAdapter* ea, double& x, double& y);

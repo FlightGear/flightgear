@@ -567,7 +567,7 @@ bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, Traffic
     if ((state >= minState) && (state <= maxState) && available) {
         if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
             //cerr << "Checking state " << state << " for " << i->getAircraft()->getCallSign() << endl;
-            static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+            SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
             if (n == 0) {
                 trans_num->setIntValue(-1);

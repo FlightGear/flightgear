@@ -409,7 +409,6 @@ FGRenderer::FGRenderer() :
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = updateRenderer;
 #endif
-   eventHandler = new FGEventHandler;
 
    _numCascades = 4;
    _cascadeFar[0] = 5.f;
@@ -487,6 +486,8 @@ public:
 void
 FGRenderer::init( void )
 {
+    eventHandler = new FGEventHandler();
+
     sgUserDataInit( globals->get_props() );
 
     _classicalRenderer = !fgGetBool("/sim/rendering/rembrandt/enabled", false);

@@ -465,18 +465,17 @@ do_hires_screen_capture (const SGPropertyNode * arg)
 static bool
 do_tile_cache_reload (const SGPropertyNode * arg)
 {
-    static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
     bool freeze = master_freeze->getBoolValue();
     SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
     if ( !freeze ) {
-	fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     globals->get_subsystem("tile-manager")->reinit();
 
     if ( !freeze ) {
-	fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
     return true;
 }

@@ -230,12 +230,11 @@ void fgHiResDump()
     char *filename = new char [24];
     static int count = 1;
 
-    static const SGPropertyNode *master_freeze
-        = fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     fgSetBool("/sim/menubar/visibility", false);
@@ -416,7 +415,7 @@ void fgHiResDump()
     fgSetBool("/sim/menubar/visibility", menu_status);
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
 }
 #endif // #if defined( TR_HIRES_SNAP)
@@ -558,11 +557,11 @@ bool fgDumpSnapShot ()
     return GUISnapShotOperation::start();
 #else
     // obsolete code => remove when new code is stable
-    static SGConstPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master");
+    SGPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     int mouse = fgGetMouseCursor();
@@ -614,7 +613,7 @@ bool fgDumpSnapShot ()
     fgSetMouseCursor(mouse);
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
     return result;
 #endif
@@ -627,12 +626,11 @@ void fgDumpSceneGraph()
     string message;
     static int count = 1;
 
-    static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     while (count < 1000) {
@@ -658,7 +656,7 @@ void fgDumpSceneGraph()
     delete [] filename;
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
 }
 
@@ -670,12 +668,11 @@ void fgDumpTerrainBranch()
     string message;
     static int count = 1;
 
-    static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     while (count < 1000) {
@@ -701,26 +698,22 @@ void fgDumpTerrainBranch()
     delete [] filename;
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
 }
 
 void fgPrintVisibleSceneInfoCommand()
 {
-    static const SGPropertyNode *master_freeze
-        = fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     flightgear::printVisibleSceneInfo(globals->get_renderer());
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
 }
-
-    
-

@@ -117,6 +117,8 @@ private:
   
     SGPropertyNode_ptr _sunAngleRad;
 
+    SGPropertyNode_ptr _humidity;
+
     simgear::TiedPropertyList _tiedProperties;
 
     /**

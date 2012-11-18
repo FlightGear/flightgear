@@ -48,6 +48,8 @@ void FGATCManager::init() {
 
     int leg = 0;
 
+    trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+
     // find a reasonable controller for our user's aircraft..
     // Let's start by working out the following three scenarios: 
     // Starting on ground at a parking position
@@ -259,8 +261,7 @@ void FGATCManager::update ( double time ) {
         //string airport = fgGetString("/sim/presets/airport-id");
         //FGAirport *apt = FGAirport::findByIdent(airport); 
         // AT this stage we should update the flightplan, so that waypoint incrementing is conducted as well as leg loading. 
-       static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
-            int n = trans_num->getIntValue();
+        int n = trans_num->getIntValue();
         if (n == 1) {
             //cerr << "Toggling ground network visibility " << networkVisible << endl;
             networkVisible = !networkVisible;

@@ -75,13 +75,12 @@ using std::vector;
 // is initialized.
 extern int _bootstrap_OSInit;
 
+static SGPropertyNode_ptr frame_signal;
+
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void )
 {
-    static SGPropertyNode_ptr frame_signal
-        = fgGetNode("/sim/signals/frame", true);
-
     frame_signal->fireValueChanged();
 
     SG_LOG( SG_GENERAL, SG_DEBUG, "Running Main Loop");
@@ -264,6 +263,8 @@ static void fgIdleFunction ( void ) {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
         fgSetBool("sim/sceneryloaded", false);
+        // stash current frame signal property
+        frame_signal = fgGetNode("/sim/signals/frame", true);
         fgRegisterIdleHandler( fgMainLoop );
     }
 }

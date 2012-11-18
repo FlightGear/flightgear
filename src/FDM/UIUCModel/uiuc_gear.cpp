@@ -274,14 +274,7 @@ void uiuc_gear()
 	  
 	  clear3(f_wheel_local_v);
 	  reaction_normal_force=0;
-#if 0
-	  static const SGPropertyNode * gear_wow
-	    = fgGetNode("/gear/gear[0]/wow", false);
-	  static const SGPropertyNode * gear_wow1
-	    = fgGetNode("/gear/gear[1]/wow", false);
-	  static const SGPropertyNode * gear_wow2
-	    = fgGetNode("/gear/gear[2]/wow", false);
-#endif
+
 	  fgSetBool("/gear/gear[0]/wow", false);
 	  fgSetBool("/gear/gear[1]/wow", false);
 	  fgSetBool("/gear/gear[2]/wow", false);

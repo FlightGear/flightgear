@@ -52,6 +52,7 @@ private:
   FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft. 
   bool networkVisible;
   bool initSucceeded;
+  SGPropertyNode_ptr trans_num;
 
 public:
   FGATCManager();

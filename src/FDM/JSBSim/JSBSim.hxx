@@ -271,6 +271,7 @@ private:
     SGPropertyNode_ptr wing_fold_pos_pct;
     SGPropertyNode_ptr tailhook_pos_pct;
 
+    SGConstPropertyNode_ptr altitude;
     SGPropertyNode_ptr temperature;
     SGPropertyNode_ptr pressure;
     SGPropertyNode_ptr pressureSL;

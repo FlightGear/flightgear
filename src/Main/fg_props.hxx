@@ -30,6 +30,15 @@ public:
 
 private:
     simgear::TiedPropertyList _tiedProperties;
+
+    static const char* getLatitudeString ();
+    static const char* getLongitudeString ();
+
+    static SGConstPropertyNode_ptr _longDeg, _latDeg, _lonLatformat;
+
+    SGPropertyNode_ptr _offset;
+    SGPropertyNode_ptr _uyear, _umonth, _uday, _uhour, _umin, _usec, _uwday, _udsec;
+    SGPropertyNode_ptr _ryear, _rmonth, _rday, _rhour, _rmin, _rsec, _rwday, _rdsec;
 };
 
 

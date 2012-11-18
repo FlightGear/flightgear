@@ -83,6 +83,9 @@ FGEventHandler::FGEventHandler() :
 
     for (int i = 0; i < 128; i++)
         release_keys[i] = i;
+
+    _display = fgGetNode("/sim/rendering/on-screen-statistics", true);
+    _print = fgGetNode("/sim/rendering/print-statistics", true);
 }
 
 namespace
@@ -356,10 +359,7 @@ void FGEventHandler::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
 
 void FGEventHandler::handleStats(osgGA::GUIActionAdapter& us)
 {
-    static SGPropertyNode_ptr display = fgGetNode("/sim/rendering/on-screen-statistics", true);
-    static SGPropertyNode_ptr print = fgGetNode("/sim/rendering/print-statistics", true);
-
-    int type = display->getIntValue() % osgViewer::StatsHandler::LAST;
+    int type = _display->getIntValue() % osgViewer::StatsHandler::LAST;
     if (type != statsType) {
         statsEvent->setKey(displayStatsKey);
         do {
@@ -371,13 +371,13 @@ void FGEventHandler::handleStats(osgGA::GUIActionAdapter& us)
             }
         } while (statsType != type);
 
-        display->setIntValue(statsType);
+        _display->setIntValue(statsType);
     }
 
-    if (print->getBoolValue()) {
+    if (_print->getBoolValue()) {
         statsEvent->setKey(printStatsKey);
         statsHandler->handle(*statsEvent, us);
-        print->setBoolValue(false);
+        _print->setBoolValue(false);
     }
 }
 

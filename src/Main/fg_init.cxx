@@ -793,15 +793,14 @@ void fgPostInitSubsystems()
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems()
 {
-    static const SGPropertyNode *master_freeze
-        = fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     SG_LOG( SG_GENERAL, SG_INFO, "fgReInitSubsystems()");
 
 // setup state to begin re-init
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
     
     fgSetBool("/sim/signals/reinit", true);
@@ -846,7 +845,7 @@ void fgReInitSubsystems()
 // setup state to end re-init
     fgSetBool("/sim/signals/reinit", false);
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
     fgSetBool("/sim/sceneryloaded",false);
 }

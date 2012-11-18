@@ -151,6 +151,7 @@ void FGLight::bind () {
 
     _sunAngleRad = prop->getNode("/sim/time/sun-angle-rad", true);
     _sunAngleRad->setDoubleValue(_sun_angle);
+    _humidity = fgGetNode("/environment/relative-humidity", true);
 
     // Read Only
     tie(prop,"/rendering/scene/ambient/red",    SGRawValuePointer<float>(&_scene_ambient[0]));
@@ -210,8 +211,7 @@ void FGLight::update_sky_color () {
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
-    static SGConstPropertyNode_ptr humidity = fgGetNode("/environment/relative-humidity");
-    float av = humidity->getFloatValue() * 45;
+    float av = _humidity->getFloatValue() * 45;
     float visibility_log = log(av)/11.0;
     float visibility_inv = (45000.0 - av)/45000.0;
 

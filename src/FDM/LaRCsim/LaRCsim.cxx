@@ -166,7 +166,7 @@ void FGLaRCsim::update( double dt ) {
 	fgSetDouble("/engines/engine/running", eng.getRunningFlag());
 	fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
 
-	static const SGPropertyNode *fuel_freeze
+	const SGPropertyNode *fuel_freeze
 	    = fgGetNode("/sim/freeze/fuel");
 
 	if ( ! fuel_freeze->getBoolValue() ) {
@@ -237,7 +237,7 @@ void FGLaRCsim::update( double dt ) {
 	fgSetDouble("/engines/engine/running", eng.getRunningFlag());
 	fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
 
-	static const SGPropertyNode *fuel_freeze
+	const SGPropertyNode *fuel_freeze
 	    = fgGetNode("/sim/freeze/fuel");
 
 	if ( ! fuel_freeze->getBoolValue() ) {

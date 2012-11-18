@@ -328,6 +328,7 @@ FGJSBsim::FGJSBsim( double dt )
     ab_brake_left_pct = fgGetNode("/autopilot/autobrake/brake-left-output", true);
     ab_brake_right_pct = fgGetNode("/autopilot/autobrake/brake-right-output", true);
     
+    altitude = fgGetNode("/position/altitude-ft");
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
     pressureSL = fgGetNode("/environment/pressure-sea-level-inhg",true);
@@ -1006,7 +1007,6 @@ bool FGJSBsim::ToggleDataLogging(bool state)
 //Positions
 void FGJSBsim::set_Latitude(double lat)
 {
-  static SGConstPropertyNode_ptr altitude = fgGetNode("/position/altitude-ft");
   double alt = altitude->getDoubleValue();
   double sea_level_radius_meters, lat_geoc;
 

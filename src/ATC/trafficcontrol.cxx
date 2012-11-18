@@ -1190,7 +1190,7 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
         if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
 
             //cerr << "Checking state " << st << " for " << i->getAircraft()->getCallSign() << endl;
-            static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+            SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
             if (n == 0) {
                 trans_num->setIntValue(-1);

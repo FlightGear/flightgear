@@ -233,7 +233,7 @@ MasterReferenceGyro::update (double dt)
     indicated_hdg_rate = _last_yaw_rate;
     // calculate the difference between the indicated heading
     // and the selected heading for use with an autopilot
-    static SGPropertyNode *bnode
+    SGPropertyNode *bnode
         = fgGetNode( "/autopilot/settings/heading-bug-deg", false );
 
     if ( bnode ) {
