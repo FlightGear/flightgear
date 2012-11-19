@@ -1375,7 +1375,7 @@ protected:
     // now the response data is output, signal Nasal / listeners
         if (_complete) _complete->setBoolValue(true);
         if (_status) _status->setIntValue(response);
-        if (_failed) _failed->setBoolValue(failed);
+        if (_failed && failed) _failed->setBoolValue(true);
     }
 };
 
