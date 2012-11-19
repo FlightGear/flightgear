@@ -1383,6 +1383,12 @@ protected:
 static bool
 do_load_xml_from_url(const SGPropertyNode * arg)
 {
+    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    if (!http) {
+        SG_LOG(SG_IO, SG_ALERT, "xmlhttprequest: HTTP client not running");
+        return false;
+    }
+  
     std::string url(arg->getStringValue("url"));
     if (url.empty())
         return false;
@@ -1406,8 +1412,7 @@ do_load_xml_from_url(const SGPropertyNode * arg)
     if (arg->hasValue("status")) 
         req->setStatusProp(fgGetNode(arg->getStringValue("status"), true));
         
-    FGHTTPClient::instance()->makeRequest(req);
-    
+    http->makeRequest(req);
     return true;
 }
 

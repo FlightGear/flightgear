@@ -100,6 +100,7 @@
 #include <Navaids/NavDataCache.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Cockpit/cockpitDisplayManager.hxx>
+#include <Network/HTTPClient.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -622,7 +623,8 @@ void fgCreateSubsystems() {
     // Initialize the Input-Output subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem( "io", new FGIO );
-
+    globals->add_subsystem( "http", new FGHTTPClient );
+  
     ////////////////////////////////////////////////////////////////////
     // Create and register the logger.
     ////////////////////////////////////////////////////////////////////

@@ -21,30 +21,41 @@
 #include "HTTPClient.hxx"
 
 #include <Main/fg_props.hxx>
-
-static FGHTTPClient* static_instance = NULL;
-
-FGHTTPClient* FGHTTPClient::instance()
-{
-	if (!static_instance) {
-		static_instance = new FGHTTPClient;
-	}
-	
-	return static_instance;
-}
-
-bool FGHTTPClient::haveInstance()
-{
-    return (static_instance != NULL);
-}
+#include <simgear/sg_inlines.h>
 
 FGHTTPClient::FGHTTPClient()
 {
-    std::string proxyHost(fgGetString("/sim/presets/proxy/host"));
-    int proxyPort(fgGetInt("/sim/presets/proxy/port"));
-    std::string proxyAuth(fgGetString("/sim/presets/proxy/auth"));
-    
-    if (!proxyHost.empty()) {
-        setProxy(proxyHost, proxyPort, proxyAuth);
-    }
+}
+
+FGHTTPClient::~FGHTTPClient()
+{
+}
+
+void FGHTTPClient::init()
+{
+  _http.reset(new simgear::HTTP::Client);
+  
+  std::string proxyHost(fgGetString("/sim/presets/proxy/host"));
+  int proxyPort(fgGetInt("/sim/presets/proxy/port"));
+  std::string proxyAuth(fgGetString("/sim/presets/proxy/auth"));
+  
+  if (!proxyHost.empty()) {
+    _http->setProxy(proxyHost, proxyPort, proxyAuth);
+  }
+}
+
+void FGHTTPClient::shutdown()
+{
+  _http.reset();
+}
+
+void FGHTTPClient::update(double dt)
+{
+  SG_UNUSED(dt);
+  _http->update();
+}
+
+void FGHTTPClient::makeRequest(const simgear::HTTP::Request_ptr& req)
+{
+  _http->makeRequest(req);
 }

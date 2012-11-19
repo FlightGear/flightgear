@@ -21,15 +21,24 @@
 #ifndef FG_HTTP_CLIENT_HXX
 #define FG_HTTP_CLIENT_HXX
 
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/io/HTTPClient.hxx>
+#include <memory>
 
-class FGHTTPClient : public simgear::HTTP::Client {
+class FGHTTPClient : public SGSubsystem
+{
 public:
-	static FGHTTPClient* instance();
-
-    static bool haveInstance();
-private:
     FGHTTPClient();
+    virtual ~FGHTTPClient();
+    
+    void makeRequest(const simgear::HTTP::Request_ptr& req);
+    
+    virtual void init();
+    virtual void shutdown();
+    virtual void update(double dt);
+  
+private:
+    std::auto_ptr<simgear::HTTP::Client> _http;
 };
 
 #endif // FG_HTTP_CLIENT_HXX

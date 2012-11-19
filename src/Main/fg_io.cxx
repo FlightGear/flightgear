@@ -65,7 +65,6 @@
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
 #include <Network/generic.hxx>
-#include <Network/HTTPClient.hxx>
 
 #ifdef FG_HAVE_HLA
 #include <Network/HLA/hla.hxx>
@@ -382,10 +381,6 @@ FGIO::reinit()
 void
 FGIO::update( double /* delta_time_sec */ )
 {
-    if (FGHTTPClient::haveInstance()) {
-        FGHTTPClient::instance()->update();
-    }
-    
     // use wall-clock, not simulation, delta time, so that network
     // protocols update when the simulation is paused
     // see http://code.google.com/p/flightgear-bugs/issues/detail?id=125
