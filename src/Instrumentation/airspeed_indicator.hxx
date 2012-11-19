@@ -14,9 +14,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-// forward decls
-class FGEnvironmentMgr;
-
 /**
  * Model an airspeed indicator tied to the pitot and static ports.
  *
@@ -68,8 +65,8 @@ private:
     SGPropertyNode_ptr _pressure_alt;
     SGPropertyNode_ptr _mach_node;
     SGPropertyNode_ptr _tas_node;
-    
-    FGEnvironmentMgr* _environmentManager;
+    SGPropertyNode_ptr _sea_level_pressure_node;
+    SGPropertyNode_ptr _oat_celsius_node;
 };
 
 #endif // __INSTRUMENTS_AIRSPEED_INDICATOR_HXX
