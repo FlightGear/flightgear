@@ -124,12 +124,18 @@ do_add_subsystem (const SGPropertyNode * arg)
 {
     std::string subsystem(arg->getStringValue("subsystem"));
     std::string name = arg->getStringValue("name");
-    if (subsystem.empty() || name.empty()) {
+    if (subsystem.empty()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "do_add_subsystem:" 
             << "no subsystem/name supplied");
         return false;
     }
     
+  
+    if (name.empty()) {
+        // default name is simply the subsytem's name
+        name =  subsystem;
+    }
+  
     if (globals->get_subsystem_mgr()->get_subsystem(name)) {
         SG_LOG(SG_GENERAL, SG_ALERT, "do_add_subsystem:" 
             << "duplicate subsystem name:" << name);
