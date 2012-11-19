@@ -1,66 +1,48 @@
-# -*- cmake -*-
+# - Try to find GooglePerfTools headers and libraries
+#
+# Usage of this module as follows:
+#
+#   find_package(GooglePerfTools)
+#
+# Variables used by this module, they can change the default behaviour and need
+# to be set before calling find_package:
+#
+#  GooglePerfTools_ROOT_DIR  Set this variable to the root installation of
+#                            GooglePerfTools if the module has problems finding
+#                            the proper installation path.
+#
+# Variables defined by this module:
+#
+#  GooglePerfTools_FOUND              System has GooglePerfTools libs/headers
+#  GooglePerfTools_LIBRARIES          The GooglePerfTools libraries
+#  GooglePerfTools_INCLUDE_DIR        The location of GooglePerfTools headers
 
-# - Find Google perftools
-# Find the Google perftools includes and libraries
-# This module defines
-#  GOOGLE_PERFTOOLS_INCLUDE_DIR, where to find heap-profiler.h, etc.
-#  GOOGLE_PERFTOOLS_FOUND, If false, do not try to use Google perftools.
-# also defined for general use are
-#  TCMALLOC_LIBRARIES, where to find the tcmalloc library.
-#  STACKTRACE_LIBRARIES, where to find the stacktrace library.
-#  PROFILER_LIBRARIES, where to find the profiler library.
-
-FIND_PATH(GOOGLE_PERFTOOLS_INCLUDE_DIR google/heap-profiler.h
-/usr/local/include
-/usr/include
+find_path(GooglePerfTools_ROOT_DIR
+  NAMES include/google/profiler.h
 )
 
-SET(TCMALLOC_NAMES ${TCMALLOC_NAMES} tcmalloc_and_profiler)
-FIND_LIBRARY(TCMALLOC_LIBRARY
-  NAMES ${TCMALLOC_NAMES}
-  PATHS /usr/lib /usr/local/lib
+find_path(GooglePerfTools_INCLUDE_DIR
+  NAMES google/profiler.h
+  HINTS ${GooglePerfTools_ROOT_DIR}
 )
 
-IF (TCMALLOC_LIBRARY AND GOOGLE_PERFTOOLS_INCLUDE_DIR)
-    SET(TCMALLOC_LIBRARIES ${TCMALLOC_LIBRARY})
-    SET(GOOGLE_PERFTOOLS_FOUND "YES")
-ELSE (TCMALLOC_LIBRARY AND GOOGLE_PERFTOOLS_INCLUDE_DIR)
-  SET(GOOGLE_PERFTOOLS_FOUND "NO")
-ENDIF (TCMALLOC_LIBRARY AND GOOGLE_PERFTOOLS_INCLUDE_DIR)
-
-SET(STACKTRACE_NAMES ${STACKTRACE_NAMES} stacktrace)
-FIND_LIBRARY(STACKTRACE_LIBRARY
-  NAMES ${STACKTRACE_LIBRARY}
-  PATHS /usr/lib /usr/local/lib
+find_library(GooglePerfTools_PROFILER_LIBRARY
+  NAMES profiler
+  HINTS ${GooglePerfTools_ROOT_DIR}
 )
 
-IF (STACKTRACE_LIBRARY AND GOOGLE_PERFTOOLS_INCLUDE_DIR)
-    SET(STACKTRACE_LIBRARIES ${STACKTRACE_LIBRARY})
-ENDIF (STACKTRACE_LIBRARY AND GOOGLE_PERFTOOLS_INCLUDE_DIR)
+set(GooglePerfTools_LIBRARIES ${GooglePerfTools_PROFILER_LIBRARY})
 
-SET(PROFILER_NAMES ${PROFILER_NAMES} profiler)
-FIND_LIBRARY(PROFILER_LIBRARY
-  NAMES ${PROFILER_LIBRARY}
-  PATHS /usr/lib /usr/local/lib
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(GooglePerfTools
+  "Try setting GooglePerfTools_ROOT_DIR to root of your gperftools installation"
+  GooglePerfTools_LIBRARIES
+  GooglePerfTools_INCLUDE_DIR
 )
 
-IF (PROFILER_LIBRARY AND GOOGLE_PERFTOOLS_INCLUDE_DIR)
-    SET(PROFILER_LIBRARIES ${PROFILER_LIBRARY})
-ENDIF (PROFILER_LIBRARY AND GOOGLE_PERFTOOLS_INCLUDE_DIR)
-
-IF (GOOGLE_PERFTOOLS_FOUND)
-   IF (NOT GOOGLE_PERFTOOLS_FIND_QUIETLY)
-      MESSAGE(STATUS "Found Google perftools: ${GOOGLE_PERFTOOLS_LIBRARIES}")
-   ENDIF (NOT GOOGLE_PERFTOOLS_FIND_QUIETLY)
-ELSE (GOOGLE_PERFTOOLS_FOUND)
-   IF (GOOGLE_PERFTOOLS_FIND_REQUIRED)
-      MESSAGE(FATAL_ERROR "Could not find Google perftools library")
-   ENDIF (GOOGLE_PERFTOOLS_FIND_REQUIRED)
-ENDIF (GOOGLE_PERFTOOLS_FOUND)
-
-MARK_AS_ADVANCED(
-  TCMALLOC_LIBRARY
-  STACKTRACE_LIBRARY
-  PROFILER_LIBRARY
-  GOOGLE_PERFTOOLS_INCLUDE_DIR
+mark_as_advanced(
+  GooglePerfTools_ROOT_DIR
+  GooglePerfTools_LIBRARIES
+  GooglePerfTools_PROFILER_LIBRARY
+  GooglePerfTools_INCLUDE_DIR
 )

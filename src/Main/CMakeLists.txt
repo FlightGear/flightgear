@@ -91,7 +91,8 @@ if(ENABLE_JSBSIM)
 endif()
 
 if(FG_HAVE_GPERFTOOLS)
-    target_link_libraries(fgfs profiler tcmalloc)
+    include_directories(${GooglePerfTools_INCLUDE_DIR})
+    target_link_libraries(fgfs ${GooglePerfTools_LIBRARIES})
 endif()
 
 target_link_libraries(fgfs
