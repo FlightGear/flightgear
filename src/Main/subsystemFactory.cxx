@@ -45,6 +45,22 @@
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/autopilotgroup.hxx>
 #include <Traffic/TrafficMgr.hxx>
+#include <Network/HTTPClient.hxx>
+#include <Cockpit/cockpitDisplayManager.hxx>
+#include <GUI/new_gui.hxx>
+#include <Main/logger.hxx>
+#include <ATCDCL/ATISmgr.hxx>
+#include <ATC/atc_mgr.hxx>
+#include <AIModel/AIManager.hxx>
+#include <MultiPlayer/multiplaymgr.hxx>
+#include <AIModel/submodel.hxx>
+#include <Aircraft/controls.hxx>
+#include <Input/input.hxx>
+#include <Aircraft/replay.hxx>
+#include <Sound/voice.hxx>
+#include <Canvas/canvas_mgr.hxx>
+#include <Canvas/gui_mgr.hxx>
+#include <Time/light.hxx>
 
 using std::vector;
 
@@ -66,11 +82,25 @@ SGSubsystem* createSubsystemByName(const std::string& name)
     MAKE_SUB(FGSystemMgr, "aircraft-systems");
     MAKE_SUB(FGInstrumentMgr, "instruments");
     MAKE_SUB(HUD, "hud");
+    MAKE_SUB(flightgear::CockpitDisplayManager, "cockpit-displays");
     MAKE_SUB(FGIO, "io");
+    MAKE_SUB(FGHTTPClient, "http");
     MAKE_SUB(FGRouteMgr, "route-manager");
-  
+    MAKE_SUB(FGLogger, "logger");
+    MAKE_SUB(NewGUI, "gui");
+    MAKE_SUB(FGATISMgr, "atis");
+    MAKE_SUB(FGATCManager, "atc");
+    MAKE_SUB(FGMultiplayMgr, "mp");
     MAKE_SUB(FGTrafficManager, "traffic-manager");
-  
+    MAKE_SUB(FGAIManager, "ai-manager");
+    MAKE_SUB(FGSubmodelMgr, "submodel-manager");
+    MAKE_SUB(FGControls, "controls");
+    MAKE_SUB(FGInput, "input");
+    MAKE_SUB(FGReplay, "replay");
+    MAKE_SUB(FGVoiceMgr, "voice");
+    MAKE_SUB(FGLight, "lighting");
+    MAKE_SUB(CanvasMgr, "canvas");
+    MAKE_SUB(GUIMgr, "canvas-gui");
 #undef MAKE_SUB
     
     throw sg_range_exception("unknown subsystem:" + name);
