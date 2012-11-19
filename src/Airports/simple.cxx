@@ -391,11 +391,17 @@ void FGAirport::loadSceneryDefinitions() const
     return;
   }
   
-  SGPropertyNode_ptr rootNode = new SGPropertyNode;
-  readProperties(path.str(), rootNode);
-  const_cast<FGAirport*>(this)->readThresholdData(rootNode);
-  cache->stampCacheFile(path);
-
+  try {
+    cache->beginTransaction();
+    SGPropertyNode_ptr rootNode = new SGPropertyNode;
+    readProperties(path.str(), rootNode);
+    const_cast<FGAirport*>(this)->readThresholdData(rootNode);
+    cache->stampCacheFile(path);
+    cache->commitTransaction();
+  } catch (sg_exception& e) {
+    cache->abortTransaction();
+    throw e;
+  }
 }
 
 void FGAirport::readThresholdData(SGPropertyNode* aRoot)
