@@ -95,8 +95,7 @@ FGPUIMenuBar::~FGPUIMenuBar ()
 void
 FGPUIMenuBar::init ()
 {
-    delete _menuBar;            // FIXME: check if PUI owns the pointer
-    _menuBar = NULL;
+    destroy_menubar();
   
     make_menubar();
                                 // FIXME: temporary commands to get at
@@ -178,7 +177,7 @@ FGPUIMenuBar::make_menu (SGPropertyNode * node)
                                 // Load all the bindings for this item
         vector<SGPropertyNode_ptr> bindings = item_nodes[i]->getChildren("binding");
         SGPropertyNode * dest = fgGetNode("/sim/bindings/menu", true);
-
+      
         for (unsigned int k = 0; k < bindings.size(); k++) {
             unsigned int m = 0;
             SGPropertyNode_ptr binding;
@@ -269,7 +268,7 @@ FGPUIMenuBar::destroy_menubar ()
         delete[] _char_arrays[i];
         _char_arrays[i] = 0;
     }
-
+  
                                 // Delete all the callback arrays
                                 // we were forced to keep around for
                                 // plib.
@@ -286,6 +285,10 @@ FGPUIMenuBar::destroy_menubar ()
             delete it->second[i];
     }
 
+    _menuBar = NULL;
+    _bindings.clear();
+    _char_arrays.clear();
+    _callback_arrays.clear();
     SG_LOG(SG_GENERAL, SG_BULK, "Done.");
 }
 
