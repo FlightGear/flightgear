@@ -61,6 +61,8 @@
 #include <Canvas/canvas_mgr.hxx>
 #include <Canvas/gui_mgr.hxx>
 #include <Time/light.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Model/modelmgr.hxx>
 
 using std::vector;
 
@@ -101,6 +103,8 @@ SGSubsystem* createSubsystemByName(const std::string& name)
     MAKE_SUB(FGLight, "lighting");
     MAKE_SUB(CanvasMgr, "canvas");
     MAKE_SUB(GUIMgr, "canvas-gui");
+    MAKE_SUB(FGViewMgr, "view-manager");
+    MAKE_SUB(FGModelMgr, "model-manager");
 #undef MAKE_SUB
     
     throw sg_range_exception("unknown subsystem:" + name);

@@ -45,10 +45,13 @@ FGViewMgr::FGViewMgr( void ) :
   current_view_orientation(SGQuatd::zeros()),
   current_view_or_offset(SGQuatd::zeros())
 {
+  globals->set_viewmgr(this);
 }
 
 // Destructor
-FGViewMgr::~FGViewMgr( void ) {
+FGViewMgr::~FGViewMgr( void )
+{
+  globals->set_viewmgr(NULL);
 }
 
 void
