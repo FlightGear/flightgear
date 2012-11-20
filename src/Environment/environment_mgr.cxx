@@ -158,6 +158,7 @@ void
 FGEnvironmentMgr::shutdown()
 {
   globals->get_event_mgr()->removeTask("updateClosestAirport");
+  SGSubsystemGroup::shutdown();
 }
 
 void
