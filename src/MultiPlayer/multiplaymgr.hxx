@@ -60,7 +60,7 @@ public:
   
   // transmitter
   
-  void SendTextMessage(const string &sMsgText);
+  void SendTextMessage(const std::string &sMsgText);
   // receiver
   
 private:
