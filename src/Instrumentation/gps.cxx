@@ -709,7 +709,7 @@ void GPS::routeActivated()
 void GPS::routeManagerSequenced()
 {
   if (_mode != "leg") {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS ignoring route sequencing, not in LEG mode");
+    SG_LOG(SG_INSTR, SG_DEBUG, "GPS ignoring route sequencing, not in LEG mode");
     return;
   }
   

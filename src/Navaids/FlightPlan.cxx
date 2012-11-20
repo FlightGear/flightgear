@@ -239,7 +239,6 @@ public:
   bool operator()(FlightPlan::Leg* leg) const
   {
     if (leg->waypoint()->flag(flag)) {
-      std::cout << "deleting" << leg << std::endl;
       delete leg;
       ++delCount;
       return true;
