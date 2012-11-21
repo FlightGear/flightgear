@@ -1476,6 +1476,7 @@ struct OptionDesc {
     {"multiplay",                    true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
 #ifdef FG_HAVE_HLA
     {"hla",                          true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"hla-local",                    true,  OPTION_CHANNEL, "", false, "", 0 },
 #endif
     {"trace-read",                   true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptTraceRead },
     {"trace-write",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptTraceWrite },

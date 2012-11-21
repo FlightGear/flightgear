@@ -228,6 +228,19 @@ FGIO::parse_port_config( const string& config )
         else if ( protocol == "hla" ) {
             return new FGHLA(tokens);
         }
+        else if ( protocol == "hla-local" ) {
+            // This is just about to bring up some defaults
+            if (tokens.size() != 2) {
+                SG_LOG( SG_IO, SG_ALERT, "Ignoring invalid --hla-local option "
+                        "(one argument expected: --hla-local=<federationname>" );
+                return NULL;
+            }
+            tokens.insert(tokens.begin(), "");
+            tokens.insert(tokens.begin(), "60");
+            tokens.insert(tokens.begin(), "bi");
+            tokens.push_back("fg-local.xml");
+            return new FGHLA(tokens);
+        }
 #endif
         else {
             return NULL;
