@@ -61,8 +61,7 @@ class GUIMgr:
 
     canvas::WindowPtr getWindow(size_t i);
     simgear::canvas::Placements
-    addPlacement( const SGPropertyNode*,
-                  simgear::canvas::CanvasPtr canvas );
+    addPlacement(SGPropertyNode*, simgear::canvas::CanvasPtr canvas );
 
     bool handleMouse(const osgGA::GUIEventAdapter& ea);
     void handleResize(int x, int y, int width, int height);

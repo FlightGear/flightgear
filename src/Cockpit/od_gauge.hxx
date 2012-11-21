@@ -65,7 +65,7 @@ class FGODGauge:
      */
     static
     simgear::canvas::Placements
-    set_texture( const SGPropertyNode* placement,
+    set_texture( SGPropertyNode* placement,
                  osg::Texture2D* new_texture,
                  osg::NodeCallback* cull_callback = 0 );
 

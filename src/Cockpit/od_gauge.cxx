@@ -36,6 +36,7 @@
 #include <osg/Camera>
 #include <osg/Geode>
 #include <osg/NodeVisitor>
+#include <osg/Material>
 #include <osg/Matrix>
 #include <osg/PolygonMode>
 #include <osg/ShadeModel>
@@ -78,6 +79,9 @@ class ReplaceStaticTextureVisitor:
 {
   public:
 
+    typedef osg::ref_ptr<osg::Group> GroupPtr;
+    typedef osg::ref_ptr<osg::Material> MaterialPtr;
+
     ReplaceStaticTextureVisitor( const char* name,
                                  osg::Texture2D* new_texture ):
         osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
@@ -85,7 +89,7 @@ class ReplaceStaticTextureVisitor:
         _new_texture(new_texture)
     {}
 
-    ReplaceStaticTextureVisitor( const SGPropertyNode* placement,
+    ReplaceStaticTextureVisitor( SGPropertyNode* placement,
                                  osg::Texture2D* new_texture,
                                  osg::NodeCallback* cull_callback = 0 ):
         osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
@@ -94,6 +98,7 @@ class ReplaceStaticTextureVisitor:
         ),
         _node_name( placement->getStringValue("node") ),
         _parent_name( placement->getStringValue("parent") ),
+        _node(placement),
         _new_texture(new_texture),
         _cull_callback(cull_callback)
     {
@@ -179,7 +184,7 @@ class ReplaceStaticTextureVisitor:
 
         // insert a new group between the geode an it's parent which overrides
         // the texture
-        osg::ref_ptr<osg::Group> group = new osg::Group;
+        GroupPtr group = new osg::Group;
         group->setName("canvas texture group");
         group->addChild(eg);
         parent->removeChild(eg);
@@ -188,15 +193,15 @@ class ReplaceStaticTextureVisitor:
         if( _cull_callback )
           group->setCullCallback(_cull_callback);
 
-        _placements.push_back(
-            simgear::canvas::PlacementPtr(new ObjectPlacement(group))
-        );
-
         osg::StateSet* stateSet = group->getOrCreateStateSet();
         stateSet->setTextureAttribute( unit, _new_texture,
                                              osg::StateAttribute::OVERRIDE );
         stateSet->setTextureMode( unit, GL_TEXTURE_2D,
                                         osg::StateAttribute::ON );
+
+        _placements.push_back( simgear::canvas::PlacementPtr(
+          new ObjectPlacement(_node, group)
+        ));
 
         SG_LOG
         (
@@ -217,9 +222,49 @@ class ReplaceStaticTextureVisitor:
       public simgear::canvas::Placement
     {
       public:
-        ObjectPlacement(osg::ref_ptr<osg::Group> group):
+
+        ObjectPlacement( SGPropertyNode* node,
+                         GroupPtr group ):
+          Placement(node),
           _group(group)
-        {}
+        {
+          // TODO make more generic and extendable for more properties
+          if( node->hasValue("emission") )
+            setEmission( node->getFloatValue("emission") );
+        }
+
+        virtual bool childChanged(SGPropertyNode* node)
+        {
+          if( node->getParent() != _node )
+            return false;
+
+          if( node->getNameString() == "emission" )
+            setEmission( node->getFloatValue() );
+          else
+            return false;
+
+          return true;
+        }
+
+        void setEmission(float emit)
+        {
+          emit = SGMiscf::clip(emit, 0, 1);
+
+          if( !_material )
+          {
+            _material = new osg::Material;
+            _material->setColorMode(osg::Material::OFF);
+            _material->setDataVariance(osg::Object::DYNAMIC);
+            _group->getOrCreateStateSet()
+                  ->setAttribute(_material, ( osg::StateAttribute::ON
+                                            | osg::StateAttribute::OVERRIDE ) );
+          }
+
+          _material->setEmission(
+            osg::Material::FRONT_AND_BACK,
+            osg::Vec4(emit, emit, emit, emit)
+          );
+        }
 
         /**
          * Remove placement from the scene
@@ -240,13 +285,16 @@ class ReplaceStaticTextureVisitor:
         }
 
       private:
-        osg::ref_ptr<osg::Group> _group;
+        GroupPtr            _group;
+        MaterialPtr         _material;
     };
 
     std::string _tex_name,      ///<! Name of texture to be replaced
                 _node_name,     ///<! Only replace if node name matches
                 _parent_name;   ///<! Only replace if any parent node matches
                                 ///   given name (all the tree upwards)
+
+    SGPropertyNode_ptr  _node;
     osg::Texture2D     *_new_texture;
     osg::NodeCallback  *_cull_callback;
 
@@ -266,7 +314,7 @@ FGODGauge::set_texture( const char* name,
 
 //------------------------------------------------------------------------------
 simgear::canvas::Placements
-FGODGauge::set_texture( const SGPropertyNode* placement,
+FGODGauge::set_texture( SGPropertyNode* placement,
                         osg::Texture2D* new_texture,
                         osg::NodeCallback* cull_callback )
 {

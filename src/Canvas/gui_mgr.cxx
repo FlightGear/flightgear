@@ -63,8 +63,10 @@ class WindowPlacement:
   public simgear::canvas::Placement
 {
   public:
-    WindowPlacement( canvas::WindowPtr window,
+    WindowPlacement( SGPropertyNode* node,
+                     canvas::WindowPtr window,
                      simgear::canvas::CanvasPtr canvas ):
+      Placement(node),
       _window(window),
       _canvas(canvas)
     {}
@@ -229,7 +231,7 @@ canvas::WindowPtr GUIMgr::getWindow(size_t i)
 
 //------------------------------------------------------------------------------
 simgear::canvas::Placements
-GUIMgr::addPlacement( const SGPropertyNode* node,
+GUIMgr::addPlacement( SGPropertyNode* node,
                       simgear::canvas::CanvasPtr canvas )
 {
   int placement_index = node->getIntValue("index", -1);
@@ -246,7 +248,7 @@ GUIMgr::addPlacement( const SGPropertyNode* node,
 
     window->setCanvas(canvas);
     placements.push_back(
-      simgear::canvas::PlacementPtr(new WindowPlacement(window, canvas))
+      simgear::canvas::PlacementPtr(new WindowPlacement(node, window, canvas))
     );
   }
   return placements;
