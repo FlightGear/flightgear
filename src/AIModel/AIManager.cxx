@@ -20,9 +20,12 @@
 
 #include <cstring>
 
+#include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
+#include <boost/mem_fn.hpp>
+#include <boost/foreach.hpp>
 
 #include <Main/globals.hxx>
 
@@ -49,20 +52,12 @@ FGAIManager::FGAIManager() :
     cb_ai_detailed(SGPropertyChangeCallback<FGAIManager>(this,&FGAIManager::updateLOD,
                    fgGetNode("/sim/rendering/static-lod/ai-detailed", true)))
 {
-    _dt = 0.0;
-    mNumAiModels = 0;
 
-    for (unsigned i = 0; i < FGAIBase::MAX_OBJECTS; ++i)
-        mNumAiTypeModels[i] = 0;
 }
 
-FGAIManager::~FGAIManager() {
-    ai_list_iterator ai_list_itr = ai_list.begin();
-
-    while(ai_list_itr != ai_list.end()) {
-        (*ai_list_itr)->unbind();
-        ++ai_list_itr;
-    }
+FGAIManager::~FGAIManager()
+{
+    std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::unbind));
 }
 
 void
@@ -120,15 +115,10 @@ FGAIManager::postinit() {
 }
 
 void
-FGAIManager::reinit() {
+FGAIManager::reinit()
+{
     update(0.0);
-
-    ai_list_iterator ai_list_itr = ai_list.begin();
-
-    while(ai_list_itr != ai_list.end()) {
-        (*ai_list_itr)->reinit();
-        ++ai_list_itr;
-    }
+    std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::reinit));
 }
 
 void
@@ -143,6 +133,26 @@ FGAIManager::unbind() {
     root->untie("count");
 }
 
+void FGAIManager::removeDeadItem(FGAIBase* base)
+{
+    FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("traffic-manager");
+    if (tmgr) {
+        tmgr->release(base->getID());
+    }
+    
+    SGPropertyNode *props = base->_getProps();
+    
+    props->setBoolValue("valid", false);
+    base->unbind();
+    
+    // for backward compatibility reset properties, so that aircraft,
+    // which don't know the <valid> property, keep working
+    // TODO: remove after a while
+    props->setIntValue("id", -1);
+    props->setBoolValue("radar/in-range", false);
+    props->setIntValue("refuel/tanker", false);
+}
+
 void
 FGAIManager::update(double dt) {
     // initialize these for finding nearest thermals
@@ -152,42 +162,27 @@ FGAIManager::update(double dt) {
     if (!enabled->getBoolValue())
         return;
 
-    FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("traffic-manager");
-    _dt = dt;
+    fetchUserState();
 
-    ai_list_iterator ai_list_itr = ai_list.begin();
-
-    while(ai_list_itr != ai_list.end()) {
-
-        if ((*ai_list_itr)->getDie()) {
-            tmgr->release((*ai_list_itr)->getID());
-            --mNumAiModels;
-            --(mNumAiTypeModels[(*ai_list_itr)->getType()]);
-            FGAIBase *base = (*ai_list_itr).get();
-            SGPropertyNode *props = base->_getProps();
-
-            props->setBoolValue("valid", false);
-            base->unbind();
-
-            // for backward compatibility reset properties, so that aircraft,
-            // which don't know the <valid> property, keep working
-            // TODO: remove after a while
-            props->setIntValue("id", -1);
-            props->setBoolValue("radar/in-range", false);
-            props->setIntValue("refuel/tanker", false);
-
-            ai_list_itr = ai_list.erase(ai_list_itr);
-        } else {
-            fetchUserState();
-            if ((*ai_list_itr)->isa(FGAIBase::otThermal)) {
-                FGAIBase *base = (*ai_list_itr).get();
-                processThermal((FGAIThermal*)base);
-            } else {
-                (*ai_list_itr)->update(_dt);
-            }
-            ++ai_list_itr;
-        }
+    // partition the list into dead followed by alive
+    ai_list_iterator firstAlive =
+      std::stable_partition(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::getDie));
+    
+    // clean up each item and finally remove from the container
+    for (ai_list_iterator it=ai_list.begin(); it != firstAlive; ++it) {
+        removeDeadItem(*it);
     }
+  
+    ai_list.erase(ai_list.begin(), firstAlive);
+  
+    // every remaining item is alive
+    BOOST_FOREACH(FGAIBase* base, ai_list) {
+        if (base->isa(FGAIBase::otThermal)) {
+            processThermal(dt, (FGAIThermal*)base);
+        } else {
+            base->update(dt);
+        }
+    } // of live AI objects iteration
 
     thermal_lift_node->setDoubleValue( strength );  // for thermals
 }
@@ -196,18 +191,13 @@ FGAIManager::update(double dt) {
 void
 FGAIManager::updateLOD(SGPropertyNode* node)
 {
-    ai_list_iterator ai_list_itr = ai_list.begin();
-    while(ai_list_itr != ai_list.end())
-    {
-        (*ai_list_itr)->updateLOD();
-        ++ai_list_itr;
-    }
+    SG_UNUSED(node);
+    std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::updateLOD));
 }
 
 void
 FGAIManager::attach(FGAIBase *model)
 {
-    //unsigned idx = mNumAiTypeModels[model->getType()];
     const char* typeString = model->getTypeString();
     SGPropertyNode* root = globals->get_props()->getNode("ai/models", true);
     SGPropertyNode* p;
@@ -229,8 +219,7 @@ FGAIManager::attach(FGAIBase *model)
     p = root->getNode(typeString, i, true);
     model->setManager(this, p);
     ai_list.push_back(model);
-    ++mNumAiModels;
-    ++(mNumAiTypeModels[model->getType()]);
+
     model->init(model->getType()==FGAIBase::otAircraft
         || model->getType()==FGAIBase::otMultiplayer
         || model->getType()==FGAIBase::otStatic);
@@ -245,8 +234,6 @@ FGAIManager::destroyObject( int ID ) {
     while(ai_list_itr != ai_list.end()) {
 
         if ((*ai_list_itr)->getID() == ID) {
-            --mNumAiModels;
-            --(mNumAiTypeModels[(*ai_list_itr)->getType()]);
             (*ai_list_itr)->unbind();
             ai_list_itr = ai_list.erase(ai_list_itr);
         } else
@@ -258,7 +245,7 @@ FGAIManager::destroyObject( int ID ) {
 int
 FGAIManager::getNumAiObjects(void) const
 {
-    return mNumAiModels;
+    return ai_list.size();
 }
 
 void
@@ -280,8 +267,8 @@ FGAIManager::fetchUserState( void ) {
 
 // only keep the results from the nearest thermal
 void
-FGAIManager::processThermal( FGAIThermal* thermal ) {
-    thermal->update(_dt);
+FGAIManager::processThermal( double dt, FGAIThermal* thermal ) {
+    thermal->update(dt);
 
     if ( thermal->_getRange() < range_nearest ) {
         range_nearest = thermal->_getRange();
@@ -436,6 +423,9 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
     ai_list_iterator ai_list_itr = ai_list.begin();
     ai_list_iterator end = ai_list.end();
 
+    SGGeod pos(SGGeod::fromDegFt(lon, lat, alt));
+    SGVec3d cartPos(SGVec3d::fromGeod(pos));
+    
     while (ai_list_itr != end) {
         double tgt_alt = (*ai_list_itr)->_getAltitude();
         int type       = (*ai_list_itr)->getType();
@@ -452,11 +442,9 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
                 continue;
         }
 
-        double tgt_lat = (*ai_list_itr)->_getLatitude();
-        double tgt_lon = (*ai_list_itr)->_getLongitude();
         int id         = (*ai_list_itr)->getID();
 
-        double range = calcRange(lat, lon, tgt_lat, tgt_lon);
+        double range = calcRange(cartPos, (*ai_list_itr));
 
         //SG_LOG(SG_AI, SG_DEBUG, "AIManager:  AI list size "
         //    << ai_list.size()
@@ -484,14 +472,10 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 }
 
 double
-FGAIManager::calcRange(double lat, double lon, double lat2, double lon2) const
+FGAIManager::calcRange(const SGVec3d& aCartPos, FGAIBase* aObject) const
 {
-    double course, az2, distance;
-
-    //calculate the bearing and range of the second pos from the first
-    geo_inverse_wgs_84(lat, lon, lat2, lon2, &course, &az2, &distance);
-    distance *= SG_METER_TO_FEET;
-    return distance;
+    double distM = dist(aCartPos, aObject->getCartPos());
+    return distM * SG_METER_TO_FEET;
 }
 
 //end AIManager.cxx

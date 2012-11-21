@@ -59,7 +59,7 @@ public:
     }
 
     FGAIManager();
-    ~FGAIManager();
+    virtual ~FGAIManager();
 
     void init();
     void postinit();
@@ -95,11 +95,9 @@ public:
         SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
 private:
-
-    int mNumAiTypeModels[FGAIBase::MAX_OBJECTS];
-    int mNumAiModels;
-
-    double calcRange(double lat, double lon, double lat2, double lon2)const;
+    void removeDeadItem(FGAIBase* base);
+  
+    double calcRange(const SGVec3d& aCartPos, FGAIBase* aObject) const;
 
     SGPropertyNode_ptr root;
     SGPropertyNode_ptr enabled;
@@ -128,14 +126,13 @@ private:
     double user_agl;
     double wind_from_east;
     double wind_from_north;
-    double _dt;
 
     void fetchUserState( void );
 
     // used by thermals
     double range_nearest;
     double strength;
-    void processThermal( FGAIThermal* thermal ); 
+    void processThermal( double dt, FGAIThermal* thermal );
 
     SGPropertyChangeCallback<FGAIManager> cb_ai_bare;
     SGPropertyChangeCallback<FGAIManager> cb_ai_detailed;
