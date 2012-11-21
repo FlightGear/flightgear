@@ -70,7 +70,6 @@ public:
     void updateLOD(SGPropertyNode* node);
     void attach(FGAIBase *model);
 
-    void destroyObject( int ID );
     const FGAIBase *calcCollision(double alt, double lat, double lon, double fuse_range);
 
     inline double get_user_latitude() const { return user_latitude; }

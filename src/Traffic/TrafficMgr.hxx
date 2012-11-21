@@ -58,10 +58,6 @@
 #include "SchedFlight.hxx"
 #include "Schedule.hxx"
 
-
-typedef std::vector<int> IdList;
-typedef std::vector<int>::iterator IdListIterator;
-
 class Heuristic
 {
 public:
@@ -104,8 +100,6 @@ private:
   int score, runCount, acCounter;
   double radius, offset;
   bool heavy;
-
-  IdList releaseList;
     
   FGScheduledFlightMap flights;
 
@@ -134,8 +128,6 @@ public:
   ~FGTrafficManager();
   void init();
   void update(double time);
-  void release(int ref);
-  bool isReleased(int id);
 
   FGScheduledFlightVecIterator getFirstFlight(const string &ref) { return flights[ref].begin(); }
   FGScheduledFlightVecIterator getLastFlight(const string &ref) { return flights[ref].end(); }

@@ -216,7 +216,6 @@ void FGTrafficManager::shutdown()
     }
     scheduledAircraft.clear();
     flights.clear();
-    releaseList.clear();
 
     currAircraft = scheduledAircraft.begin();
     doingInit = false;
@@ -415,25 +414,6 @@ void FGTrafficManager::update(double dt)
     }
     currAircraft++;
 }
-
-void FGTrafficManager::release(int id)
-{
-    releaseList.push_back(id);
-}
-
-bool FGTrafficManager::isReleased(int id)
-{
-    IdListIterator i = releaseList.begin();
-    while (i != releaseList.end()) {
-        if ((*i) == id) {
-            releaseList.erase(i);
-            return true;
-        }
-        i++;
-    }
-    return false;
-}
-
 
 void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
 {

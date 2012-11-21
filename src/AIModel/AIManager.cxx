@@ -28,9 +28,7 @@
 #include <boost/foreach.hpp>
 
 #include <Main/globals.hxx>
-
 #include <Airports/simple.hxx>
-#include <Traffic/TrafficMgr.hxx>
 
 #include "AIManager.hxx"
 #include "AIAircraft.hxx"
@@ -135,11 +133,6 @@ FGAIManager::unbind() {
 
 void FGAIManager::removeDeadItem(FGAIBase* base)
 {
-    FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("traffic-manager");
-    if (tmgr) {
-        tmgr->release(base->getID());
-    }
-    
     SGPropertyNode *props = base->_getProps();
     
     props->setBoolValue("valid", false);
@@ -225,21 +218,6 @@ FGAIManager::attach(FGAIBase *model)
         || model->getType()==FGAIBase::otStatic);
     model->bind();
     p->setBoolValue("valid", true);
-}
-
-void
-FGAIManager::destroyObject( int ID ) {
-    ai_list_iterator ai_list_itr = ai_list.begin();
-
-    while(ai_list_itr != ai_list.end()) {
-
-        if ((*ai_list_itr)->getID() == ID) {
-            (*ai_list_itr)->unbind();
-            ai_list_itr = ai_list.erase(ai_list_itr);
-        } else
-            ++ai_list_itr;
-    }
-
 }
 
 int

@@ -32,6 +32,8 @@
 #define TRAFFICTOAIDISTTOSTART 150.0
 #define TRAFFICTOAIDISTTODIE   200.0
 
+// forward decls
+class FGAIAircraft;
 
 class FGAISchedule
 {
@@ -52,7 +54,6 @@ class FGAISchedule
   double radius;
   double groundOffset;
   double distanceToUser;
-  int AIManagerRef;
   double score;
   unsigned int runCount;
   unsigned int hits;
@@ -71,6 +72,8 @@ class FGAISchedule
    */
   bool createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime);
   
+  // the aiAircraft associated with us
+  SGSharedPtr<FGAIAircraft> aiAircraft;
  public:
   FGAISchedule();                                           // constructor
   FGAISchedule(string model, 

@@ -61,7 +61,6 @@
 FGAISchedule::FGAISchedule()
 {
   firstRun     = true;
-  AIManagerRef = 0;
 
   heavy = false;
   radius = 0;
@@ -115,7 +114,6 @@ FGAISchedule::FGAISchedule(string model,
        i != flt.end();
        i++)
     flights.push_back(new FGScheduledFlight((*(*i))));*/
-  AIManagerRef     = 0;
   score    =         0;
   firstRun         = true;
   runCount         = 0;
@@ -134,7 +132,7 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
   heavy              = other.heavy;
   flightIdentifier   = other.flightIdentifier;
   flights            = other.flights;
-  AIManagerRef       = other.AIManagerRef;
+  aiAircraft         = other.aiAircraft;
   acType             = other.acType;
   airline            = other.airline;
   m_class            = other.m_class;
@@ -158,12 +156,9 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
 FGAISchedule::~FGAISchedule()
 {
     // remove related object from AI manager
-    if (AIManagerRef)
+    if (aiAircraft)
     {
-        FGAIManager* aimgr = (FGAIManager *) globals-> get_subsystem("ai-model");
-        if (aimgr)
-            aimgr->destroyObject(AIManagerRef);
-        AIManagerRef = 0;
+      aiAircraft->setDie(true);
     }
 
 /*  for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
@@ -234,11 +229,9 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     //cerr << "Settiing departure time " << deptime << endl;
   }
     
-  if (AIManagerRef) {
-    // Check if this aircraft has been released. 
-    FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("traffic-manager");
-    if (tmgr->isReleased(AIManagerRef)) {
-      AIManagerRef = 0;
+  if (aiAircraft) {
+    if (aiAircraft->getDie()) {
+      aiAircraft = NULL;
     } else {
       return true; // in visual range, let the AIManager handle it
     }
@@ -345,20 +338,20 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
     return true;
   }
 
-  FGAIAircraft *aircraft = new FGAIAircraft(this);
-  aircraft->setPerformance(acType, m_class); //"jet_transport";
-  aircraft->setCompany(airline); //i->getAirline();
-  aircraft->setAcType(acType); //i->getAcType();
-  aircraft->setPath(modelPath.c_str());
+  aiAircraft = new FGAIAircraft(this);
+  aiAircraft->setPerformance(acType, m_class); //"jet_transport";
+  aiAircraft->setCompany(airline); //i->getAirline();
+  aiAircraft->setAcType(acType); //i->getAcType();
+  aiAircraft->setPath(modelPath.c_str());
   //aircraft->setFlightPlan(flightPlanName);
-  aircraft->setLatitude(position.getLatitudeDeg());
-  aircraft->setLongitude(position.getLongitudeDeg());
-  aircraft->setAltitude(flight->getCruiseAlt()*100); // convert from FL to feet
-  aircraft->setSpeed(0);
-  aircraft->setBank(0);
+  aiAircraft->setLatitude(position.getLatitudeDeg());
+  aiAircraft->setLongitude(position.getLongitudeDeg());
+  aiAircraft->setAltitude(flight->getCruiseAlt()*100); // convert from FL to feet
+  aiAircraft->setSpeed(0);
+  aiAircraft->setBank(0);
       
   courseToDest = SGGeodesy::courseDeg(position, arr->geod());
-  FGAIFlightPlan *fp = new FGAIFlightPlan(aircraft, flightPlanName, courseToDest, deptime,
+  FGAIFlightPlan *fp = new FGAIFlightPlan(aiAircraft, flightPlanName, courseToDest, deptime,
                                             dep, arr, true, radius, 
                                             flight->getCruiseAlt()*100, 
                                             position.getLatitudeDeg(), 
@@ -366,13 +359,12 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
                                             speedKnots, flightType, acType, 
                                             airline);
   if (fp->isValidPlan()) {
-        aircraft->SetFlightPlan(fp);
+        aiAircraft->SetFlightPlan(fp);
         FGAIManager* aimgr = (FGAIManager *) globals-> get_subsystem("ai-model");
-        aimgr->attach(aircraft);
-        AIManagerRef = aircraft->getID();
+        aimgr->attach(aiAircraft);
         return true;
   } else {
-        delete aircraft;
+        aiAircraft = NULL;
         delete fp;
         //hand back the flights that had already been scheduled
         while (!flights.empty()) {
