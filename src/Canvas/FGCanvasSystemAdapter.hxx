@@ -20,6 +20,9 @@ namespace canvas
       virtual void addCamera(osg::Camera* camera) const;
       virtual void removeCamera(osg::Camera* camera) const;
       virtual osg::Image* getImage(const std::string& path) const;
+
+      virtual int gcSave(naRef r);
+      virtual void gcRelease(int key);
   };
 }
 
