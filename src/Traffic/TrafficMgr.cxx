@@ -67,12 +67,11 @@
 #include <Airports/simple.hxx>
 #include <Main/fg_init.hxx>
 
-
-
 #include "TrafficMgr.hxx"
 
 using std::sort;
 using std::strcmp;
+using std::endl;
 
 /**
  * Thread encapsulating parsing the traffic schedules. 
@@ -180,7 +179,7 @@ void FGTrafficManager::shutdown()
   
     // Save the heuristics data
     bool saveData = false;
-    ofstream cachefile;
+    std::ofstream cachefile;
     if (fgGetBool("/sim/traffic-manager/heuristics")) {
         SGPath cacheData(globals->get_fg_home());
         cacheData.append("ai");
@@ -305,7 +304,7 @@ void FGTrafficManager::loadHeuristics()
       cacheData.append(airport + "-cache.txt");
       string revisionStr;
       if (cacheData.exists()) {
-        ifstream data(cacheData.c_str());
+        std::ifstream data(cacheData.c_str());
         data >> revisionStr;
         if (revisionStr != "[TrafficManagerCachedata:ref:2011:09:04]") {
           SG_LOG(SG_GENERAL, SG_ALERT,"Traffic Manager Warning: discarding outdated cachefile " << 
@@ -434,7 +433,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
     string buffString;
     vector <string> tokens, depTime,arrTime;
     vector <string>::iterator it;
-    ifstream infile(infileName.str().c_str());
+    std::ifstream infile(infileName.str().c_str());
     while (1) {
          infile.getline(buffer, 256);
          if (infile.eof()) {

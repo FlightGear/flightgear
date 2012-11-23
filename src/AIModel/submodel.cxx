@@ -23,6 +23,8 @@
 #include "AIManager.hxx"
 #include "AIBallistic.hxx"
 
+using std::cout;
+using std::endl;
 
 const double FGSubmodelMgr::lbs_to_slugs = 0.031080950172;
 
@@ -824,7 +826,7 @@ void FGSubmodelMgr::valueChanged(SGPropertyNode *prop)
 
     const char* _model_added = _model_added_node->getStringValue();
 
-    basic_string <char>::size_type indexCh2b;
+    std::basic_string <char>::size_type indexCh2b;
 
     string str2 = _model_added;
     const char *cstr2b = "multiplayer";

@@ -38,16 +38,16 @@ class FGAIAircraft;
 class FGAISchedule
 {
  private:
-  string modelPath;
-  string homePort;
-  string livery;
-  string registration;
-  string airline;
-  string acType;
-  string m_class;
-  string flightType;
-  string flightIdentifier;
-  string currentDestination;
+  std::string modelPath;
+  std::string homePort;
+  std::string livery;
+  std::string registration;
+  std::string airline;
+  std::string acType;
+  std::string m_class;
+  std::string flightType;
+  std::string flightIdentifier;
+  std::string currentDestination;
   bool heavy;
   FGScheduledFlightVec flights;
   SGGeod position;

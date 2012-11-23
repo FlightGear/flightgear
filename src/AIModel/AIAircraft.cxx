@@ -40,12 +40,15 @@
 #  include <ieeefp.h>
 #endif
 
-using std::string;
 
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"
 #include "performancedb.hxx"
 #include <signal.h>
+
+using std::string;
+using std::cerr;
+using std::endl;
 
 //#include <Airports/trafficcontroller.hxx>
 

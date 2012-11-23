@@ -91,7 +91,7 @@ FGAIManager::postinit() {
         enabled->setBoolValue(true);
 
     // process all scenarios
-    map<string, bool> scenarios;
+    std::map<string, bool> scenarios;
     for (int i = 0 ; i < root->nChildren() ; i++) {
         SGPropertyNode *n = root->getChild(i);
         if (strcmp(n->getName(), "scenario"))

@@ -149,7 +149,7 @@ FGAIBase::~FGAIBase() {
     if (_fx && _refID != 0 && _refID !=  1) {
         SGSoundMgr *smgr = globals->get_soundmgr();
         if (smgr) {
-          stringstream name;
+          std::stringstream name;
           name <<  "aifx:";
           name << _refID;
           smgr->remove(name.str());
@@ -250,7 +250,7 @@ void FGAIBase::update(double dt) {
                 props->setStringValue("sim/sound/path", fxpath.c_str());
 
                 // initialize the sound configuration
-                stringstream name;
+                std::stringstream name;
                 name <<  "aifx:";
                 name << _refID;
                 _fx = new FGFX(name.str(), props);

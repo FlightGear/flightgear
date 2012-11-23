@@ -40,22 +40,18 @@
 #ifndef _FGSCHEDFLIGHT_HXX_
 #define _FGSCHEDFLIGHT_HXX_
 
-
-using namespace std;
-
-using std::vector;
-
+class FGAirport;
 
 class FGScheduledFlight
 {
 private:
-  string callsign;
-  string fltRules;
+  std::string callsign;
+  std::string fltRules;
   FGAirport *departurePort;
   FGAirport *arrivalPort;
-  string depId;
-  string arrId;
-  string requiredAircraft;
+  std::string depId;
+  std::string arrId;
+  std::string requiredAircraft;
   time_t departureTime;
   time_t arrivalTime;
   time_t repeatPeriod;
@@ -116,8 +112,8 @@ public:
   void setFlightRules(string val) { fltRules = val; };
 };
 
-typedef vector<FGScheduledFlight*>           FGScheduledFlightVec;
-typedef vector<FGScheduledFlight*>::iterator FGScheduledFlightVecIterator;
+typedef std::vector<FGScheduledFlight*>           FGScheduledFlightVec;
+typedef std::vector<FGScheduledFlight*>::iterator FGScheduledFlightVecIterator;
 
 typedef std::map < std::string, FGScheduledFlightVec > FGScheduledFlightMap;
 
