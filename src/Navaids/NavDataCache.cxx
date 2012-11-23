@@ -1096,11 +1096,11 @@ bool NavDataCache::isRebuildRequired()
       isCachedFileModified(d->fixDatPath) ||
       isCachedFileModified(d->airwayDatPath))
   {
-    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: rebuild required");
+    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: main cache rebuild required");
     return true;
   }
 
-  SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: no rebuild required");
+  SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: no main cache rebuild required");
   return false;
 }
   
@@ -1267,8 +1267,18 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
   sqlite_bind_temp_stdstring(d->statCacheCheck, 1, path.str());
   if (d->execSelect(d->statCacheCheck)) {
     time_t modtime = sqlite3_column_int64(d->statCacheCheck, 0);
+    bool modified = (modtime != path.modTime());
+    if (modified)
+    {
+      SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: rebuild required for " << path << ". Timestamps: " << modtime << " != " << path.modTime());
+    }
+    else
+    {
+      SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: no rebuild required for " << path);
+    }
     return (modtime != path.modTime());
   } else {
+    SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: initial build required for " << path);
     return true;
   }
 }
