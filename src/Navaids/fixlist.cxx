@@ -49,7 +49,7 @@ void loadFixes(const SGPath& path)
 {
   sg_gzifstream in( path.str() );
   if ( !in.is_open() ) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
+    SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
     exit(-1);
   }
   

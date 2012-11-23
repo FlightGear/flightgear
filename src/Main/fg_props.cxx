@@ -79,6 +79,7 @@ LogClassMapping log_class_mappings [] = {
   LogClassMapping(SG_AI, "ai"),
   LogClassMapping(SG_ENVIRONMENT, "environment"),
   LogClassMapping(SG_SOUND, "sound"),
+  LogClassMapping(SG_NAVAID, "navaid"),
   LogClassMapping(SG_UNDEFD, "")
 };
 

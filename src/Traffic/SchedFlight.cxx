@@ -132,7 +132,7 @@ FGScheduledFlight::FGScheduledFlight(const string& cs,
   else
     {
       repeatPeriod = 365*24*60*60;
-      SG_LOG( SG_GENERAL, SG_ALERT, "Unknown repeat period in flight plan "
+      SG_LOG( SG_AI, SG_ALERT, "Unknown repeat period in flight plan "
                                     "of flight '" << cs << "': " << rep );
     }
 
@@ -272,13 +272,13 @@ bool FGScheduledFlight::initializeAirports()
   departurePort = FGAirport::findByIdent(depId);
   if(departurePort == NULL)
     {
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Traffic manager could not find departure airport : " << depId);
+      SG_LOG( SG_AI, SG_DEBUG, "Traffic manager could not find departure airport : " << depId);
       return false;
     }
   arrivalPort = FGAirport::findByIdent(arrId);
   if(arrivalPort == NULL)
     {
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Traffic manager could not find arrival airport   : " << arrId);
+      SG_LOG( SG_AI, SG_DEBUG, "Traffic manager could not find arrival airport   : " << arrId);
       return false;
     }
 

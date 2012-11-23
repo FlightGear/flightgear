@@ -78,7 +78,7 @@ NavaidWaypoint::NavaidWaypoint(FGPositioned* aPos, RouteBase* aOwner) :
   _navaid(aPos)
 {
   if (aPos->type() == FGPositioned::RUNWAY) {
-      SG_LOG(SG_GENERAL, SG_WARN, "sure you don't want to be building a runway waypt here?");
+      SG_LOG(SG_NAVAID, SG_WARN, "sure you don't want to be building a runway waypt here?");
   }
 }
 

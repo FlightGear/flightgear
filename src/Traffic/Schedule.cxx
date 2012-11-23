@@ -240,7 +240,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   // This flight entry is entirely in the past, do we need to 
   // push it forward in time to the next scheduled departure. 
   if (flight->getArrivalTime() < now) {
-    SG_LOG (SG_GENERAL, SG_BULK, "Traffic Manager:      Flight is in the Past");
+    SG_LOG (SG_AI, SG_BULK, "Traffic Manager:      Flight is in the Past");
     // Don't just update: check whether we need to load a new leg. etc.
     // This update occurs for distant aircraft, so we can update the current leg
     // and detach it from the current list of aircraft. 
@@ -272,14 +272,14 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
       
       SGGeodesy::direct(dep->geod(), course, coveredDistance, position, az2);
       
-      SG_LOG (SG_GENERAL, SG_BULK, "Traffic Manager:      Flight is in progress, %=" << x);
+      SG_LOG (SG_AI, SG_BULK, "Traffic Manager:      Flight is in progress, %=" << x);
       speed = ((distanceM - coveredDistance) * SG_METER_TO_NM) / 3600.0;
     } else {
     // not departed yet
       //remainingTimeEnroute = totalTimeEnroute;
       elapsedTimeEnroute = 0;
       position = dep->geod();
-      SG_LOG (SG_GENERAL, SG_BULK, "Traffic Manager:      Flight is pending, departure in "
+      SG_LOG (SG_AI, SG_BULK, "Traffic Manager:      Flight is pending, departure in "
         << flight->getDepartureTime() - now << " seconds ");
     }
   } else {
@@ -297,7 +297,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   // then 500nm, create this flight. At jet speeds 500 nm is roughly
   // one hour flight time, so that would be a good approximate point
   // to start a more detailed simulation of this aircraft.
-  SG_LOG (SG_GENERAL, SG_BULK, "Traffic manager: " << registration << " is scheduled for a flight from " 
+  SG_LOG (SG_AI, SG_BULK, "Traffic manager: " << registration << " is scheduled for a flight from "
 	     << dep->getId() << " to " << arr->getId() << ". Current distance to user: " 
              << distanceToUser);
   if (distanceToUser >= TRAFFICTOAIDISTTOSTART) {
@@ -323,7 +323,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   FGAirport* dep = flight->getDepartureAirport();
   FGAirport* arr = flight->getArrivalAirport();
   string flightPlanName = dep->getId() + "-" + arr->getId() + ".xml";
-  SG_LOG(SG_GENERAL, SG_INFO, "Traffic manager: Creating AIModel from:" << flightPlanName);
+  SG_LOG(SG_AI, SG_INFO, "Traffic manager: Creating AIModel from:" << flightPlanName);
 
   // Only allow traffic to be created when the model path (or the AI version of mp) exists
   SGPath mp(globals->get_fg_root());
@@ -334,7 +334,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   mp_ai.append(modelPath);
 
   if (!mp.exists() && !mp_ai.exists()) {
-    SG_LOG(SG_GENERAL, SG_WARN, "TrafficManager: Could not load model " << mp_ai.str());
+    SG_LOG(SG_AI, SG_WARN, "TrafficManager: Could not load model " << mp_ai.str());
     return true;
   }
 
@@ -388,7 +388,7 @@ void FGAISchedule::scheduleFlights(time_t now)
   }
   //string startingPort;
   string userPort = fgGetString("/sim/presets/airport-id");
-  SG_LOG(SG_GENERAL, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
+  SG_LOG(SG_AI, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
   FGScheduledFlight *flight = NULL;
   do {
     if (currentDestination.empty()) {
@@ -423,7 +423,7 @@ void FGAISchedule::scheduleFlights(time_t now)
 
     depT = depT.substr(0,24);
     arrT = arrT.substr(0,24);
-    SG_LOG(SG_GENERAL, SG_BULK, "  Flight " << flight->getCallSign() << ":" 
+    SG_LOG(SG_AI, SG_BULK, "  Flight " << flight->getCallSign() << ":" 
                              << "  "        << flight->getDepartureAirport()->getId() << ":"
                              << "  "        << depT << ":"
                              << " \""       << flight->getArrivalAirport()->getId() << "\"" << ":"
@@ -431,7 +431,7 @@ void FGAISchedule::scheduleFlights(time_t now)
   
     flights.push_back(flight);
   } while (currentDestination != homePort);
-  SG_LOG(SG_GENERAL, SG_BULK, " Done ");
+  SG_LOG(SG_AI, SG_BULK, " Done ");
 }
 
 bool FGAISchedule::next()

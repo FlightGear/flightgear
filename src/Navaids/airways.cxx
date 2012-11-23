@@ -131,7 +131,7 @@ void Airway::load(const SGPath& path)
 
   sg_gzifstream in( path.str() );
   if ( !in.is_open() ) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
+    SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
     throw sg_io_exception("Could not open airways data", sg_location(path.str()));
   }
 // toss the first two lines of the file
@@ -174,13 +174,13 @@ void Airway::Network::addEdge(int aWay, const SGGeod& aStartPos,
   FGPositionedRef end = FGPositioned::findClosestWithIdent(aEndIdent, aEndPos);
     
   if (!start) {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "unknown airways start pt: '" << aStartIdent << "'");
+    SG_LOG(SG_NAVAID, SG_DEBUG, "unknown airways start pt: '" << aStartIdent << "'");
     start = FGPositioned::createUserWaypoint(aStartIdent, aStartPos);
     return;
   }
   
   if (!end) {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "unknown airways end pt: '" << aEndIdent << "'");
+    SG_LOG(SG_NAVAID, SG_DEBUG, "unknown airways end pt: '" << aEndIdent << "'");
     end = FGPositioned::createUserWaypoint(aEndIdent, aEndPos);
     return;
   }
@@ -219,8 +219,8 @@ bool Airway::Network::route(WayptRef aFrom, WayptRef aTo,
   boost::tie(to, exactTo) = findClosestNode(aTo);
   
 #ifdef DEBUG_AWY_SEARCH
-  SG_LOG(SG_GENERAL, SG_INFO, "from:" << from->ident() << "/" << from->name());
-  SG_LOG(SG_GENERAL, SG_INFO, "to:" << to->ident() << "/" << to->name());
+  SG_LOG(SG_NAVAID, SG_INFO, "from:" << from->ident() << "/" << from->name());
+  SG_LOG(SG_NAVAID, SG_INFO, "to:" << to->ident() << "/" << to->name());
 #endif
 
   bool ok = search2(from, to, aPath);
@@ -348,7 +348,7 @@ bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
     closedNodes.insert(xp->guid());
   
 #ifdef DEBUG_AWY_SEARCH
-    SG_LOG(SG_GENERAL, SG_INFO, "x:" << xp->ident() << ", f(x)=" << x->totalCost());
+    SG_LOG(SG_NAVAID, SG_INFO, "x:" << xp->ident() << ", f(x)=" << x->totalCost());
 #endif
     
   // check if xp is the goal; if so we're done, since there cannot be an open
@@ -373,7 +373,7 @@ bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
         if (g > y->distanceFromStart) {
           // worse path, ignore
 #ifdef DEBUG_AWY_SEARCH
-          SG_LOG(SG_GENERAL, SG_INFO, "\tabandoning " << yp->ident() <<
+          SG_LOG(SG_NAVAID, SG_INFO, "\tabandoning " << yp->ident() <<
            " path is worse: g(y)" << y->distanceFromStart << ", g'=" << g);
 #endif
           continue;
@@ -382,7 +382,7 @@ bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
       // we need to update y. Unfortunately this means rebuilding the heap,
       // since y's score can change arbitrarily
 #ifdef DEBUG_AWY_SEARCH
-        SG_LOG(SG_GENERAL, SG_INFO, "\tfixing up previous for new path to " << yp->ident() << ", d =" << g);
+        SG_LOG(SG_NAVAID, SG_INFO, "\tfixing up previous for new path to " << yp->ident() << ", d =" << g);
 #endif
         y->previous = x;
         y->distanceFromStart = g;
@@ -391,7 +391,7 @@ bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
       } else { // not open, insert a new node for y into the heap
         y = new AStarOpenNode(yp, edgeDistanceM, other.first, aDest, x);
 #ifdef DEBUG_AWY_SEARCH
-        SG_LOG(SG_GENERAL, SG_INFO, "\ty=" << yp->ident() << ", f(y)=" << y->totalCost());
+        SG_LOG(SG_NAVAID, SG_INFO, "\ty=" << yp->ident() << ", f(y)=" << y->totalCost());
 #endif
         openNodes.push_back(y);
         std::push_heap(openNodes.begin(), openNodes.end(), ordering);
@@ -399,7 +399,7 @@ bool Airway::Network::search2(FGPositionedRef aStart, FGPositionedRef aDest,
     } // of neighbour iteration
   } // of open node iteration
   
-  SG_LOG(SG_GENERAL, SG_INFO, "A* failed to find route");
+  SG_LOG(SG_NAVAID, SG_INFO, "A* failed to find route");
   return false;
 }
 

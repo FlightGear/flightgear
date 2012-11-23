@@ -97,7 +97,7 @@ void alignLocaliserWithRunway(FGRunway* rwy, const string& ident, SGGeod& pos, d
     pos = SGGeod::fromGeodFt(newPos, pos.getElevationFt());
     heading = rwy->headingDeg();
   } else {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "localizer:" << ident << ", aligning with runway "
+    SG_LOG(SG_NAVAID, SG_DEBUG, "localizer:" << ident << ", aligning with runway "
            << rwy->ident() << " exceeded heading threshold");
   }
 }
@@ -107,7 +107,7 @@ static double defaultNavRange(const string& ident, FGPositioned::Type type)
   // Ranges are included with the latest data format, no need to
   // assign our own defaults, unless the range is not set for some
   // reason.
-  SG_LOG(SG_GENERAL, SG_DEBUG, "navaid " << ident << " has no range set, using defaults");
+  SG_LOG(SG_NAVAID, SG_DEBUG, "navaid " << ident << " has no range set, using defaults");
   switch (type) {
     case FGPositioned::NDB:
     case FGPositioned::VOR:
@@ -216,7 +216,7 @@ bool navDBInit(const SGPath& path)
 {
     sg_gzifstream in( path.str() );
     if ( !in.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
+        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
       return false;
     }
   
@@ -238,11 +238,11 @@ bool navDBInit(const SGPath& path)
   
 bool loadCarrierNav(const SGPath& path)
 {    
-    SG_LOG( SG_GENERAL, SG_INFO, "opening file: " << path.str() );    
+    SG_LOG( SG_NAVAID, SG_INFO, "opening file: " << path.str() );    
     sg_gzifstream incarrier( path.str() );
     
     if ( !incarrier.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
+        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
       return false;
     }
     
@@ -256,11 +256,11 @@ bool loadCarrierNav(const SGPath& path)
   
 bool loadTacan(const SGPath& path, FGTACANList *channellist)
 {
-    SG_LOG( SG_GENERAL, SG_INFO, "opening file: " << path.str() );
+    SG_LOG( SG_NAVAID, SG_INFO, "opening file: " << path.str() );
     sg_gzifstream inchannel( path.str() );
     
     if ( !inchannel.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
+        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
       return false;
     }
     

@@ -114,7 +114,7 @@ bool Approach::route(WayptRef aIAF, WayptVec& aWps)
     } // of transitions iteration
     
     if (!haveTrans) {
-      SG_LOG(SG_GENERAL, SG_INFO, "approach " << ident() << " has no transition " <<
+      SG_LOG(SG_NAVAID, SG_INFO, "approach " << ident() << " has no transition " <<
         "for IAF: " << aIAF->ident());
       return false;
     }
@@ -250,7 +250,7 @@ bool ArrivalDeparture::commonRoute(Transition* t, WayptVec& aPath, FGRunwayRef a
     return true;
   }
   
-  SG_LOG(SG_GENERAL, SG_INFO, ident() << " using runway transition for " << r->first->ident());
+  SG_LOG(SG_NAVAID, SG_INFO, ident() << " using runway transition for " << r->first->ident());
   r->second->route(aPath);
   return true;
 }
@@ -264,7 +264,7 @@ Transition* ArrivalDeparture::findTransitionByEnroute(Waypt* aEnroute) const
   WptTransitionMap::const_iterator eit;
   for (eit = _enrouteTransitions.begin(); eit != _enrouteTransitions.end(); ++eit) {
     if (eit->second->enroute()->matches(aEnroute)) {
-      SG_LOG(SG_GENERAL, SG_INFO, ident() << " using enroute transition " << eit->second->ident());
+      SG_LOG(SG_NAVAID, SG_INFO, ident() << " using enroute transition " << eit->second->ident());
       return eit->second;
     }
   } // of enroute transition iteration
@@ -276,7 +276,7 @@ WayptRef ArrivalDeparture::findBestTransition(const SGGeod& aPos) const
 {
   // no transitions, that's easy
   if (_enrouteTransitions.empty()) {
-    SG_LOG(SG_GENERAL, SG_INFO, "no enroute transitions for " << ident());
+    SG_LOG(SG_NAVAID, SG_INFO, "no enroute transitions for " << ident());
     return _common.front();
   }
   
@@ -285,7 +285,7 @@ WayptRef ArrivalDeparture::findBestTransition(const SGGeod& aPos) const
   WptTransitionMap::const_iterator eit;
   for (eit = _enrouteTransitions.begin(); eit != _enrouteTransitions.end(); ++eit) {
     WayptRef c = eit->second->enroute();
-    SG_LOG(SG_GENERAL, SG_INFO, "findBestTransition for " << ident() << ", looking at " << c->ident());
+    SG_LOG(SG_NAVAID, SG_INFO, "findBestTransition for " << ident() << ", looking at " << c->ident());
     // assert(c->hasFixedPosition());
     double cd = SGGeodesy::distanceM(aPos, c->position());
     
@@ -321,7 +321,7 @@ SID::SID(const string& aIdent, FGAirport* apt) :
 bool SID::route(FGRunwayRef aWay, Transition* trans, WayptVec& aPath)
 {
   if (!isForRunway(aWay)) {
-    SG_LOG(SG_GENERAL, SG_WARN, "SID " << ident() << " not for runway " << aWay->ident());
+    SG_LOG(SG_NAVAID, SG_WARN, "SID " << ident() << " not for runway " << aWay->ident());
     return false;
   }
   

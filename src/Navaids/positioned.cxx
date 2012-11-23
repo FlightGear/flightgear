@@ -131,7 +131,7 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     }
   }
   
-  SG_LOG(SG_GENERAL, SG_WARN, "FGPositioned::typeFromName: couldn't match:" << aName);
+  SG_LOG(SG_NAVAID, SG_WARN, "FGPositioned::typeFromName: couldn't match:" << aName);
   return INVALID;
 }
 

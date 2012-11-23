@@ -207,7 +207,7 @@ void FGAirwayNetwork::load(const SGPath& path)
 
   sg_gzifstream in( path.str() );
   if ( !in.is_open() ) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
+    SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
     exit(-1);
   }
   // toss the first two lines of the file
@@ -364,7 +364,7 @@ FGAirRoute FGAirwayNetwork::findShortestRoute(int start, int end)
 
   if (!foundRoute)
     {
-      SG_LOG( SG_GENERAL, SG_INFO, "Failed to find route from waypoint " << start << " to " << end );
+      SG_LOG( SG_NAVAID, SG_INFO, "Failed to find route from waypoint " << start << " to " << end );
       cerr << "Failed to find route from waypoint " << start << " to " << end << endl;
       //exit(1);
     }
@@ -458,7 +458,7 @@ void FGAirwayNetwork::trace(FGNode *currNode, int end, int depth, double distanc
     }
   else
     {
-      //SG_LOG( SG_GENERAL, SG_DEBUG, "4" );
+      //SG_LOG( SG_NAVAID, SG_DEBUG, "4" );
       //cerr << "4" << endl;
     }
   traceStack.pop_back();

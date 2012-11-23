@@ -307,7 +307,7 @@ void FGTrafficManager::loadHeuristics()
         std::ifstream data(cacheData.c_str());
         data >> revisionStr;
         if (revisionStr != "[TrafficManagerCachedata:ref:2011:09:04]") {
-          SG_LOG(SG_GENERAL, SG_ALERT,"Traffic Manager Warning: discarding outdated cachefile " << 
+          SG_LOG(SG_AI, SG_ALERT,"Traffic Manager Warning: discarding outdated cachefile " <<
                  cacheData.c_str() << " for Airport " << airport);
         } else {
           while (1) {
@@ -317,7 +317,7 @@ void FGTrafficManager::loadHeuristics()
               break;
             HeuristicMapIterator itr = heurMap.find(h.registration);
             if (itr != heurMap.end()) {
-              SG_LOG(SG_GENERAL, SG_WARN,"Traffic Manager Warning: found duplicate tailnumber " << 
+              SG_LOG(SG_AI, SG_WARN,"Traffic Manager Warning: found duplicate tailnumber " <<
                      h.registration << " for AI aircraft");
             } else {
               heurMap[h.registration] = h;
@@ -450,7 +450,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
          if (!tokens.empty()) {
              if (tokens[0] == string("AC")) {
                  if (tokens.size() != 13) {
-                     SG_LOG(SG_GENERAL, SG_ALERT, "Error parsing traffic file " << infileName.str() << " at " << buffString);
+                     SG_LOG(SG_AI, SG_ALERT, "Error parsing traffic file " << infileName.str() << " at " << buffString);
                      exit(1);
                  }
                  model          = tokens[12];
@@ -471,11 +471,11 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
                  offset         = atof(tokens[7].c_str());;
                  
                  if (!FGAISchedule::validModelPath(model)) {
-                     SG_LOG(SG_GENERAL, SG_WARN, "TrafficMgr: Missing model path:" << 
+                     SG_LOG(SG_AI, SG_WARN, "TrafficMgr: Missing model path:" <<
                             model << " from " << infileName.str());
                  } else {
                  
-                 SG_LOG(SG_GENERAL, SG_INFO, "Adding Aircraft" << model << " " << livery << " " << homePort << " " 
+                 SG_LOG(SG_AI, SG_INFO, "Adding Aircraft" << model << " " << livery << " " << homePort << " "
                                                                 << registration << " " << flightReq << " " << isHeavy 
                                                                 << " " << acType << " " << airline << " " << m_class 
                                                                 << " " << FlightType << " " << radius << " " << offset);
@@ -496,7 +496,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
              if (tokens[0] == string("FLIGHT")) {
                  //cerr << "Found flight " << buffString << " size is : " << tokens.size() << endl;
                  if (tokens.size() != 10) {
-                     SG_LOG(SG_GENERAL, SG_ALERT, "Error parsing traffic file " << infileName.str() << " at " << buffString);
+                     SG_LOG(SG_AI, SG_ALERT, "Error parsing traffic file " << infileName.str() << " at " << buffString);
                      exit(1);
                  }
                  string callsign = tokens[1];
@@ -511,7 +511,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
                  string requiredAircraft = tokens[9];
 
                  if (weekdays.size() != 7) {
-                     SG_LOG(SG_GENERAL, SG_ALERT, "Found misconfigured weekdays string" << weekdays);
+                     SG_LOG(SG_AI, SG_ALERT, "Found misconfigured weekdays string" << weekdays);
                      exit(1);
                  }
                  depTime.clear();
@@ -543,7 +543,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
                              snprintf(buffer, 4, "%d/", 0);
                              arrivalTime   = string(buffer) + arrTimeGen  + string(":00");
                          }
-                         SG_LOG(SG_GENERAL, SG_ALERT, "Adding flight " << callsign       << " "
+                         SG_LOG(SG_AI, SG_ALERT, "Adding flight " << callsign       << " "
                                                       << fltrules       << " "
                                                       <<  departurePort << " "
                                                       <<  arrivalPort   << " "
@@ -699,7 +699,7 @@ void FGTrafficManager::endElement(const char *name)
             snprintf(buffer, 16, "%d", acCounter);
             requiredAircraft = buffer;
         }
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Adding flight: " << callsign << " "
+        SG_LOG(SG_AI, SG_DEBUG, "Adding flight: " << callsign << " "
                << fltrules << " "
                << departurePort << " "
                << arrivalPort << " "
@@ -709,7 +709,7 @@ void FGTrafficManager::endElement(const char *name)
         // For database maintainance purposes, it may be convenient to
         // 
         if (fgGetBool("/sim/traffic-manager/dumpdata") == true) {
-             SG_LOG(SG_GENERAL, SG_ALERT, "Traffic Dump FLIGHT," << callsign << ","
+             SG_LOG(SG_AI, SG_ALERT, "Traffic Dump FLIGHT," << callsign << ","
                           << fltrules << ","
                           << departurePort << ","
                           << arrivalPort << ","
@@ -746,7 +746,7 @@ void FGTrafficManager::endAircraft()
     
     if (!FGAISchedule::validModelPath(mdl)) {
         missingModels.insert(mdl);
-        SG_LOG(SG_GENERAL, SG_WARN, "TrafficMgr: Missing model path:" << mdl);
+        SG_LOG(SG_AI, SG_WARN, "TrafficMgr: Missing model path:" << mdl);
         requiredAircraft = homePort = "";
         return;
     }
@@ -760,7 +760,7 @@ void FGTrafficManager::endAircraft()
     }
     
     if (fgGetBool("/sim/traffic-manager/dumpdata") == true) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Traffic Dump AC," << homePort << "," << registration << "," << requiredAircraft 
+        SG_LOG(SG_AI, SG_ALERT, "Traffic Dump AC," << homePort << "," << registration << "," << requiredAircraft
                << "," << acType << "," << livery << "," 
                << airline << ","  << m_class << "," << offset << "," << radius << "," << flighttype << "," << isHeavy << "," << mdl);
     }

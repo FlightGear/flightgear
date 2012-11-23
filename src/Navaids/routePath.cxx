@@ -39,7 +39,7 @@ double pointsKnownDistanceFromGC(const SGGeoc& a, const SGGeoc&b, const SGGeoc& 
   double p = atan2(sin(bDist)*cos(A), cos(bDist));
   
   if (sqr(cos(dist)) > sqr(r)) {
-    SG_LOG(SG_GENERAL, SG_INFO, "pointsKnownDistanceFromGC, no points exist");
+    SG_LOG(SG_NAVAID, SG_INFO, "pointsKnownDistanceFromGC, no points exist");
     return -1.0;
   }
   
@@ -256,7 +256,7 @@ bool RoutePath::computedPositionForIndex(int index, SGGeod& r) const
     return true;
   }
   
-  SG_LOG(SG_GENERAL, SG_INFO, "RoutePath::computedPositionForIndex: unhandled type:" << w->type());
+  SG_LOG(SG_NAVAID, SG_INFO, "RoutePath::computedPositionForIndex: unhandled type:" << w->type());
   return false;
 }
 
@@ -287,7 +287,7 @@ double RoutePath::computeAltitudeForIndex(int index) const
   if (!computedPositionForIndex(index, pos) ||
       !computedPositionForIndex(index - 1, prevPos))
   {
-    SG_LOG(SG_GENERAL, SG_WARN, "unable to compute position for waypoints");
+    SG_LOG(SG_NAVAID, SG_WARN, "unable to compute position for waypoints");
     throw sg_range_exception("unable to compute position for waypoints");
   }
   
@@ -325,7 +325,7 @@ double RoutePath::computeTrackForIndex(int index) const
     Hold* h = (Hold*) w.get();
     return h->inboundRadial();
   } else if (w->type() == "vectors") {
-    SG_LOG(SG_GENERAL, SG_WARN, "asked for track from VECTORS");
+    SG_LOG(SG_NAVAID, SG_WARN, "asked for track from VECTORS");
     throw sg_range_exception("asked for track from vectors waypt");
   } else if (w->type() == "runway") {
     FGRunway* rwy = static_cast<RunwayWaypt*>(w.get())->runway();
@@ -338,7 +338,7 @@ double RoutePath::computeTrackForIndex(int index) const
   if (!computedPositionForIndex(index, pos) ||
       !computedPositionForIndex(index - 1, prevPos))
   {
-    SG_LOG(SG_GENERAL, SG_WARN, "unable to compute position for waypoints");
+    SG_LOG(SG_NAVAID, SG_WARN, "unable to compute position for waypoints");
     throw sg_range_exception("unable to compute position for waypoints");
   }
 

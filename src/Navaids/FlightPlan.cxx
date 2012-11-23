@@ -189,7 +189,7 @@ void FlightPlan::deleteIndex(int aIndex)
   }
   
   if ((index < 0) || (index >= numLegs())) {
-    SG_LOG(SG_AUTOPILOT, SG_WARN, "removeAtIndex with invalid index:" << aIndex);
+    SG_LOG(SG_NAVAID, SG_WARN, "removeAtIndex with invalid index:" << aIndex);
     return;
   }
   
@@ -511,7 +511,7 @@ void FlightPlan::setApproach(flightgear::Approach *app)
   
 bool FlightPlan::save(const SGPath& path)
 {
-  SG_LOG(SG_IO, SG_INFO, "Saving route to " << path.str());
+  SG_LOG(SG_NAVAID, SG_INFO, "Saving route to " << path.str());
   try {
     SGPropertyNode_ptr d(new SGPropertyNode);
     d->setIntValue("version", 2);
@@ -553,7 +553,7 @@ bool FlightPlan::save(const SGPath& path)
     writeProperties(path.str(), d, true /* write-all */);
     return true;
   } catch (sg_exception& e) {
-    SG_LOG(SG_IO, SG_ALERT, "Failed to save flight-plan '" << path.str() << "'. " << e.getMessage());
+    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to save flight-plan '" << path.str() << "'. " << e.getMessage());
     return false;
   }
 }
@@ -562,13 +562,13 @@ bool FlightPlan::load(const SGPath& path)
 {
   if (!path.exists())
   {
-    SG_LOG(SG_IO, SG_ALERT, "Failed to load flight-plan '" << path.str()
+    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << path.str()
            << "'. The file does not exist.");
     return false;
   }
   
   SGPropertyNode_ptr routeData(new SGPropertyNode);
-  SG_LOG(SG_IO, SG_INFO, "going to read flight-plan from:" << path.str());
+  SG_LOG(SG_NAVAID, SG_INFO, "going to read flight-plan from:" << path.str());
   
   bool Status = false;
   lockDelegate();
@@ -594,7 +594,7 @@ bool FlightPlan::load(const SGPath& path)
       }
       Status = true;
     } catch (sg_exception& e) {
-      SG_LOG(SG_IO, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
+      SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
              << "'. " << e.getMessage());
       Status = false;
     }
@@ -764,7 +764,7 @@ bool FlightPlan::loadPlainTextRoute(const SGPath& path)
       _legs.push_back(new Leg(this, w));
     } // of line iteration
   } catch (sg_exception& e) {
-    SG_LOG(SG_IO, SG_ALERT, "Failed to load route from: '" << path.str() << "'. " << e.getMessage());
+    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load route from: '" << path.str() << "'. " << e.getMessage());
     _legs.clear();
     return false;
   }
@@ -824,7 +824,7 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
   string_list pieces(simgear::strutils::split(target, "/"));
   FGPositionedRef p = FGPositioned::findClosestWithIdent(pieces.front(), basePosition);
   if (!p) {
-    SG_LOG( SG_AUTOPILOT, SG_INFO, "Unable to find FGPositioned with ident:" << pieces.front());
+    SG_LOG( SG_NAVAID, SG_INFO, "Unable to find FGPositioned with ident:" << pieces.front());
     return NULL;
   }
   
@@ -841,12 +841,12 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
   } else if (pieces.size() == 2) {
     FGAirport* apt = dynamic_cast<FGAirport*>(p.ptr());
     if (!apt) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "Waypoint is not an airport:" << pieces.front());
+      SG_LOG(SG_NAVAID, SG_INFO, "Waypoint is not an airport:" << pieces.front());
       return NULL;
     }
     
     if (!apt->hasRunwayWithIdent(pieces[1])) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "No runway: " << pieces[1] << " at " << pieces[0]);
+      SG_LOG(SG_NAVAID, SG_INFO, "No runway: " << pieces[1] << " at " << pieces[0]);
       return NULL;
     }
     
@@ -856,7 +856,7 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
     // navid/radial/navid/radial notation     
     FGPositionedRef p2 = FGPositioned::findClosestWithIdent(pieces[2], basePosition);
     if (!p2) {
-      SG_LOG( SG_AUTOPILOT, SG_INFO, "Unable to find FGPositioned with ident:" << pieces[2]);
+      SG_LOG( SG_NAVAID, SG_INFO, "Unable to find FGPositioned with ident:" << pieces[2]);
       return NULL;
     }
     
@@ -868,7 +868,7 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
     SGGeod intersection;
     bool ok = SGGeodesy::radialIntersection(p->geod(), r1, p2->geod(), r2, intersection);
     if (!ok) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "no valid intersection for:" << target);
+      SG_LOG(SG_NAVAID, SG_INFO, "no valid intersection for:" << target);
       return NULL;
     }
     
@@ -877,7 +877,7 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
   }
   
   if (!wpt) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "Unable to parse waypoint:" << target);
+    SG_LOG(SG_NAVAID, SG_INFO, "Unable to parse waypoint:" << target);
     return NULL;
   }
   

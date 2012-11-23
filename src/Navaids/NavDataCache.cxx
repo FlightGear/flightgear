@@ -65,7 +65,7 @@
 
 using std::string;
 
-#define SG_NAVCACHE SG_GENERAL
+#define SG_NAVCACHE SG_NAVAID
 //#define LAZY_OCTREE_UPDATES 1
 
 namespace {
@@ -163,7 +163,7 @@ public:
     SGTimeStamp st;
     st.stamp();
     _cache->doRebuild();
-    SG_LOG(SG_GENERAL, SG_INFO, "cache rebuild took:" << st.elapsedMSec() << "msec");
+    SG_LOG(SG_NAVCACHE, SG_INFO, "cache rebuild took:" << st.elapsedMSec() << "msec");
     
     SGGuard<SGMutex> g(_lock);
     _isFinished = true;
@@ -1338,7 +1338,7 @@ PositionedID NavDataCache::insertAirport(FGPositioned::Type ty, const string& id
 void NavDataCache::updatePosition(PositionedID item, const SGGeod &pos)
 {
   if (d->cache.find(item) != d->cache.end()) {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "updating position of an item in the cache");
+    SG_LOG(SG_NAVCACHE, SG_DEBUG, "updating position of an item in the cache");
     d->cache[item]->modifyPosition(pos);
   }
   

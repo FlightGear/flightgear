@@ -250,7 +250,7 @@ Waypt* NavdataVisitor::buildWaypoint(RouteBase* owner)
     SGGeodesy::direct(pos, _course, _dmeDistance, pos2, az2);
     wp = new BasicWaypt(pos2, _wayptName, owner);
   } else {
-    SG_LOG(SG_GENERAL, SG_ALERT, "implement waypoint type:" << _wayptType);
+    SG_LOG(SG_NAVAID, SG_ALERT, "implement waypoint type:" << _wayptType);
     throw sg_format_exception("Unrecognized waypt type", _wayptType);
   }
   
@@ -327,11 +327,11 @@ void NavdataVisitor::pi (const char * target, const char * data) {
 }
 
 void NavdataVisitor::warning (const char * message, int line, int column) {
-  SG_LOG(SG_IO, SG_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
+  SG_LOG(SG_NAVAID, SG_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
 }
 
 void NavdataVisitor::error (const char * message, int line, int column) {
-  SG_LOG(SG_IO, SG_ALERT, "Error: " << message << " (" << line << ',' << column << ')');
+  SG_LOG(SG_NAVAID, SG_ALERT, "Error: " << message << " (" << line << ',' << column << ')');
 }
 
 }

@@ -302,7 +302,7 @@ bool FGTACANList::add( FGTACANRecord *c )
 FGTACANRecord *FGTACANList::findByChannel( const string& channel )
 {
     const tacan_list_type& stations = ident_channels[channel];
-    SG_LOG( SG_INSTR, SG_DEBUG, "findByChannel " << channel<< " size " << stations.size() );
+    SG_LOG( SG_NAVAID, SG_DEBUG, "findByChannel " << channel<< " size " << stations.size() );
 
     if (!stations.empty()) {
         return stations[0];
