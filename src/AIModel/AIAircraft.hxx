@@ -184,6 +184,13 @@ private:
     PerformanceData* _performance; // the performance data for this aircraft
     
    void assertSpeed(double speed);
+
+   struct
+   {
+       double remainingLength;
+       std::string startWptName;
+       std::string finalWptName;
+   } trackCache;
 };
 
 

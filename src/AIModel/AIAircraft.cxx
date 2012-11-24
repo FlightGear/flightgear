@@ -94,6 +94,8 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
     dt = 0;
     takeOffStatus = 0;
+
+    trackCache.remainingLength = 0;
 }
 
 
@@ -1347,7 +1349,16 @@ time_t FGAIAircraft::checkForArrivalTime(const string& wptName) {
      FGAIWaypoint* curr = 0;
      curr = fp->getCurrentWaypoint();
 
-     double tracklength = fp->checkTrackLength(wptName);
+     // don't recalculate tracklength unless the start/stop waypoint has changed
+     if (curr &&
+         ((curr->getName() != trackCache.startWptName)||
+          (wptName != trackCache.finalWptName)))
+     {
+         trackCache.remainingLength = fp->checkTrackLength(wptName);
+         trackCache.startWptName = curr->getName();
+         trackCache.finalWptName = wptName;
+     }
+     double tracklength = trackCache.remainingLength;
      if (tracklength > 0.1) {
           tracklength += fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
      } else {
