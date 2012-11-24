@@ -1062,9 +1062,7 @@ flightgear::Approach* createDefaultApproach(FGRunway* aRunway)
   ss.str("");
   ss << aRunway->ident() << "-GS";
   wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
-  
-  wpts.push_back(new RunwayWaypt(aRunway, NULL));
-  
+    
   BOOST_FOREACH(Waypt* w, wpts) {
     w->setFlag(WPT_APPROACH);
     w->setFlag(WPT_GENERATED);
