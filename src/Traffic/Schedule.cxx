@@ -59,16 +59,19 @@
  * schedule of Flights for an artificially controlled aircraft.
  *****************************************************************************/
 FGAISchedule::FGAISchedule()
+  : heavy(false),
+    radius(0),
+    groundOffset(0),
+    distanceToUser(0),
+    score(0),
+    runCount(0),
+    hits(0),
+    lastRun(0),
+    firstRun(false),
+    courseToDest(0),
+    initialized(false),
+    valid(false)
 {
-  firstRun     = true;
-
-  heavy = false;
-  radius = 0;
-  groundOffset = 0;
-  distanceToUser = 0;
-  valid = true;
-  lastRun = 0;
-  //score = 0;
 }
 
 
@@ -84,6 +87,18 @@ FGAISchedule::FGAISchedule(const string& model,
                            const string& fltpe,
                            double rad, 
                            double grnd)
+    : heavy(hvy),
+      radius(rad),
+      groundOffset(grnd),
+      distanceToUser(0),
+      score(0),
+      runCount(0),
+      hits(0),
+      lastRun(0),
+      firstRun(true),
+      courseToDest(0),
+      initialized(false),
+      valid(true)
 {
   modelPath        = model; 
   livery           = lvry; 
@@ -94,21 +109,10 @@ FGAISchedule::FGAISchedule(const string& model,
   airline          = arln;
   m_class          = mclass;
   flightType       = fltpe;
-  radius           = rad;
-  groundOffset     = grnd;
-  distanceToUser   = 0;
-  heavy            = hvy;
   /*for (FGScheduledFlightVecIterator i = flt.begin();
        i != flt.end();
        i++)
     flights.push_back(new FGScheduledFlight((*(*i))));*/
-  score    =         0;
-  firstRun         = true;
-  runCount         = 0;
-  hits             = 0;
-  lastRun          = 0;
-  initialized      = false;
-  valid            = true;
 }
 
 FGAISchedule::FGAISchedule(const FGAISchedule &other)

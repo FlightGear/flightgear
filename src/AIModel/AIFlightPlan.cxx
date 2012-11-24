@@ -96,35 +96,33 @@ void FGAIWaypoint::setAltitude(double alt)
   pos.setElevationFt(alt);
 }
 
-FGAIFlightPlan::FGAIFlightPlan()
+FGAIFlightPlan::FGAIFlightPlan() :
+    sid(NULL),
+    repeat(false),
+    distance_to_go(0),
+    lead_distance(0),
+    leadInAngle(0),
+    start_time(0),
+    arrivalTime(0),
+    leg(0),
+    lastNodeVisited(0),
+    isValid(true)
 {
-    sid             = 0;
-    repeat          = false;
-    distance_to_go  = 0;
-    lead_distance   = 0;
-    start_time      = 0;
-    arrivalTime     = 0;
-    leg             = 10;
-    lastNodeVisited = 0;
-  //  taxiRoute       = 0;
     wpt_iterator    = waypoints.begin();
-    isValid         = true;
 }
 
-FGAIFlightPlan::FGAIFlightPlan(const string& filename)
+FGAIFlightPlan::FGAIFlightPlan(const string& filename) :
+    sid(NULL),
+    repeat(false),
+    distance_to_go(0),
+    lead_distance(0),
+    leadInAngle(0),
+    start_time(0),
+    arrivalTime(0),
+    leg(10),
+    lastNodeVisited(0),
+    isValid(parseProperties(filename))
 {
-  sid               = 0;
-  repeat            = false;
-  distance_to_go    = 0;
-  lead_distance     = 0;
-  start_time        = 0;
-  arrivalTime       = 0;
-  leg               = 10;
-  lastNodeVisited   = 0;
-//  taxiRoute         = 0;
-
-
-  isValid = parseProperties(filename);
 }
 
 
@@ -149,19 +147,19 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
                                const string& fltType,
                                const string& acType,
                                const string& airline) :
-  departure(dep),
-  arrival(arr)
+    sid(NULL),
+    repeat(false),
+    distance_to_go(0),
+    lead_distance(0),
+    leadInAngle(0),
+    start_time(start),
+    arrivalTime(0),
+    leg(10),
+    lastNodeVisited(0),
+    isValid(false),
+    departure(dep),
+    arrival(arr)
 {
-  sid               = 0;
-  repeat            = false;
-  distance_to_go    = 0;
-  lead_distance     = 0;
-  start_time        = start;
-  arrivalTime       = 0;
-  leg               = 10;
-  lastNodeVisited   = 0;
- // taxiRoute         = 0;
-
   if (parseProperties(p)) {
     isValid = true;
   } else {

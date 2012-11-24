@@ -151,14 +151,18 @@ FGTrafficManager::FGTrafficManager() :
   inited(false),
   doingInit(false),
   waitingMetarTime(0.0),
+  cruiseAlt(0),
+  score(0),
+  runCount(0),
+  acCounter(0),
+  radius(0),
+  offset(0),
+  heavy(false),
   enabled("/sim/traffic-manager/enabled"),
   aiEnabled("/sim/ai/enabled"),
   realWxEnabled("/environment/realwx/enabled"),
   metarValid("/environment/metar/valid")
 {
-    //score = 0;
-    //runCount = 0;
-    acCounter = 0;
 }
 
 FGTrafficManager::~FGTrafficManager()
