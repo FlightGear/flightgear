@@ -965,7 +965,7 @@ void fgShowAircraft(const SGPath &path)
         
 #ifdef _MSC_VER
     cout << "Hit a key to continue..." << endl;
-    cin.get();
+    std::cin.get();
 #endif
 }
 

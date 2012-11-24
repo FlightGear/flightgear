@@ -19,6 +19,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <cstring>
+#include <algorithm>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
