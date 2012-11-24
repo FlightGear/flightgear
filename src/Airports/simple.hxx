@@ -31,6 +31,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <Navaids/positioned.hxx>
 
@@ -40,6 +41,7 @@ class FGRunway;
 class FGTaxiway;
 class FGPavement;
 class SGPropertyNode;
+class FGAirport;
 
 namespace flightgear {
   class SID;
@@ -52,6 +54,7 @@ namespace flightgear {
   typedef std::vector<WayptRef> WayptVec;
   
   typedef std::vector<CommStation*> CommStationList;
+  typedef std::map<std::string, FGAirport*> AirportCache;
 }
 
 
@@ -220,6 +223,8 @@ public:
     
     flightgear::CommStationList commStations() const;
 private:
+    static flightgear::AirportCache airportCache;
+
     // disable these
     FGAirport operator=(FGAirport &other);
     FGAirport(const FGAirport&);

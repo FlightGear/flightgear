@@ -62,6 +62,8 @@ using namespace flightgear;
  * FGAirport
  ***************************************************************************/
 
+AirportCache FGAirport::airportCache;
+
 FGAirport::FGAirport(PositionedID aGuid, const string &id, const SGGeod& location,
         const string &name, bool has_metar, Type aType) :
     FGPositioned(aGuid, aType, id, location),
@@ -305,23 +307,26 @@ bool FGAirport::HardSurfaceFilter::passAirport(FGAirport* aApt) const
 
 FGAirport* FGAirport::findByIdent(const std::string& aIdent)
 {
+  AirportCache::iterator it = airportCache.find(aIdent);
+  if (it != airportCache.end())
+   return it->second;
+
   PortsFilter filter;
-  FGPositionedRef r = FGPositioned::findFirstWithIdent(aIdent, &filter);
-  if (!r) {
-    return NULL; // we don't warn here, let the caller do that
-  }
-  return static_cast<FGAirport*>(r.ptr());
+  FGAirport* r = static_cast<FGAirport*> (FGPositioned::findFirstWithIdent(aIdent, &filter).get());
+
+  // add airport to the cache (even when it's NULL, so we don't need to search in vain again)
+  airportCache[aIdent] = r;
+
+  // we don't warn here when r==NULL, let the caller do that
+  return r;
 }
 
 FGAirport* FGAirport::getByIdent(const std::string& aIdent)
 {
-  FGPositionedRef r;
-  PortsFilter filter;
-  r = FGPositioned::findFirstWithIdent(aIdent, &filter);
-  if (!r) {
+  FGAirport* r = findByIdent(aIdent);
+  if (!r)
     throw sg_range_exception("No such airport with ident: " + aIdent);
-  }
-  return static_cast<FGAirport*>(r.ptr());
+  return r;
 }
 
 char** FGAirport::searchNamesAndIdents(const std::string& aFilter)
