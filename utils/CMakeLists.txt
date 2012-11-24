@@ -14,3 +14,8 @@ endif (FLTK_FOUND)
 if (WITH_FGPANEL)
     add_subdirectory(fgpanel)
 endif (WITH_FGPANEL)
+
+# win32 is just excluded because of not having argument parsing there ...
+if(RTI_FOUND AND NOT WIN32)
+    add_subdirectory(fgai)
+endif(RTI_FOUND AND NOT WIN32)
