@@ -1131,6 +1131,10 @@ void NavDataCache::doRebuild()
     d->runSQL("DELETE FROM octree");
     d->runSQL("DELETE FROM airway");
     d->runSQL("DELETE FROM airway_edge");
+    d->runSQL("DELETE FROM taxi_node");
+    d->runSQL("DELETE FROM parking");
+    d->runSQL("DELETE FROM groundnet_edge");
+    d->runSQL("DELETE FROM stat_cache");
     
   // initialise the root octree node
     d->runSQL("INSERT INTO octree (rowid, children) VALUES (1, 0)");
@@ -1991,5 +1995,28 @@ PositionedIDVec NavDataCache::findAirportParking(PositionedID airport, const std
   return d->selectIds(d->findAirportParking);
 }
 
+void NavDataCache::dropGroundnetFor(PositionedID aAirport)
+{
+  sqlite3_stmt_ptr q = d->prepare("DELETE FROM parking WHERE rowid IN (SELECT rowid FROM positioned WHERE type=?1 AND airport=?2)");
+  sqlite3_bind_int(q, 1, FGPositioned::PARKING);
+  sqlite3_bind_int64(q, 2, aAirport);
+  d->execUpdate(q);
+  
+  q = d->prepare("DELETE FROM taxi_node WHERE rowid IN (SELECT rowid FROM positioned WHERE type=?1 AND airport=?2)");
+  sqlite3_bind_int(q, 1, FGPositioned::TAXI_NODE);
+  sqlite3_bind_int64(q, 2, aAirport);
+  d->execUpdate(q);
+  
+  q = d->prepare("DELETE FROM positioned WHERE (type=?1 OR type=?2) AND airport=?3");
+  sqlite3_bind_int(q, 1, FGPositioned::TAXI_NODE);
+  sqlite3_bind_int(q, 2, FGPositioned::PARKING);
+  sqlite3_bind_int64(q, 3, aAirport);
+  d->execUpdate(q);
+  
+  q = d->prepare("DELETE FROM groundnet_edge WHERE airport=?1");
+  sqlite3_bind_int64(q, 1, aAirport);
+  d->execUpdate(q);
+}
+  
 } // of namespace flightgear
 

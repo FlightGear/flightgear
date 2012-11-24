@@ -66,7 +66,7 @@ void  FGAirportDynamicsXMLLoader::endXML ()
   for (it = _parkingPushbacks.begin(); it != _parkingPushbacks.end(); ++it) {
     std::map<int, PositionedID>::iterator j = _idMap.find(it->second);
     if (j == _idMap.end()) {
-      SG_LOG(SG_GENERAL, SG_WARN, "bad groundnet, no node for index:" << it->first);
+      SG_LOG(SG_NAVAID, SG_WARN, "bad groundnet, no node for index:" << it->first);
       continue;
     }
     
@@ -74,7 +74,7 @@ void  FGAirportDynamicsXMLLoader::endXML ()
   }
   
   BOOST_FOREACH(PositionedID id, _unreferencedNodes) {
-    SG_LOG(SG_GENERAL, SG_WARN, "unreferenced groundnet node:" << id);
+    SG_LOG(SG_NAVAID, SG_WARN, "unreferenced groundnet node:" << id);
   }
   
 }
@@ -167,7 +167,7 @@ void FGAirportDynamicsXMLLoader::startNode(const XMLAttributes &atts)
 	}
   
   if (_idMap.find(index) != _idMap.end()) {
-    SG_LOG(SG_GENERAL, SG_WARN, "duplicate ground-net index:" << index);
+    SG_LOG(SG_NAVAID, SG_WARN, "duplicate ground-net index:" << index);
   }
   
   SGGeod pos(SGGeod::fromDeg(processPosition(lon), processPosition(lat)));
@@ -195,7 +195,7 @@ void FGAirportDynamicsXMLLoader::startArc(const XMLAttributes &atts)
   
   IntPair e(begin, end);
   if (_arcSet.find(e) != _arcSet.end()) {
-    SG_LOG(SG_GENERAL, SG_WARN, _dynamics->parent()->ident() << " ground-net: skipping duplicate edge:" << begin << "->" << end);
+    SG_LOG(SG_NAVAID, SG_WARN, _dynamics->parent()->ident() << " ground-net: skipping duplicate edge:" << begin << "->" << end);
     return;
   }
   

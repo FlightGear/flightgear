@@ -52,12 +52,15 @@ void XMLLoader::load(FGAirportDynamics* d)
     return;
   }
   
-  SG_LOG(SG_GENERAL, SG_INFO, "reading groundnet data from " << path);
+  SG_LOG(SG_NAVAID, SG_INFO, "reading groundnet data from " << path);
   SGTimeStamp t;
   try {
     cache->beginTransaction();
     t.stamp();
     {
+      // drop all current data
+      cache->dropGroundnetFor(d->parent()->guid());
+      
       FGAirportDynamicsXMLLoader visitor(d);
       readXML(path.str(), visitor);
     } // ensure visitor is destroyed so its destructor runs
@@ -67,7 +70,7 @@ void XMLLoader::load(FGAirportDynamics* d)
     cache->abortTransaction();
   }
 
-  SG_LOG(SG_GENERAL, SG_INFO, "parsing XML took " << t.elapsedMSec());
+  SG_LOG(SG_NAVAID, SG_INFO, "parsing groundnet XML took " << t.elapsedMSec());
 }
 
 void XMLLoader::load(FGRunwayPreference* p) {
@@ -109,7 +112,7 @@ bool XMLLoader::loadAirportXMLDataIntoVisitor(const string& aICAO,
 {
   SGPath path;
   if (!findAirportData(aICAO, aFileName, path)) {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "loadAirportXMLDataIntoVisitor: failed to find data for " << aICAO << "/" << aFileName);
+    SG_LOG(SG_NAVAID, SG_DEBUG, "loadAirportXMLDataIntoVisitor: failed to find data for " << aICAO << "/" << aFileName);
     return false;
   }
 

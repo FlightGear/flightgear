@@ -123,6 +123,8 @@ public:
   
   PositionedID createUserWaypoint(const std::string& ident, const SGGeod& aPos);
   
+  void dropGroundnetFor(PositionedID aAirport);
+  
   PositionedID insertParking(const std::string& name, const SGGeod& aPos,
                              PositionedID aAirport,
                              double aHeading, int aRadius, const std::string& aAircraftType,
