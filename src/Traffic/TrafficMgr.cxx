@@ -183,7 +183,7 @@ void FGTrafficManager::shutdown()
     if (fgGetBool("/sim/traffic-manager/heuristics")) {
         SGPath cacheData(globals->get_fg_home());
         cacheData.append("ai");
-        string airport = fgGetString("/sim/presets/airport-id");
+        const string airport = fgGetString("/sim/presets/airport-id");
 
         if ((airport) != "") {
             char buffer[128];
@@ -237,7 +237,7 @@ void FGTrafficManager::init()
 
     assert(!doingInit);
     doingInit = true;
-    if (string(fgGetString("/sim/traffic-manager/datafile")) == string("")) {
+    if (string(fgGetString("/sim/traffic-manager/datafile")).empty()) {
         scheduleParser.reset(new ScheduleParseThread(this));
         scheduleParser->setTrafficDir(SGPath(globals->get_fg_root(), "AI/Traffic"));      
         scheduleParser->start();
@@ -328,7 +328,7 @@ void FGTrafficManager::loadHeuristics()
     } 
     
   for(currAircraft = scheduledAircraft.begin(); currAircraft != scheduledAircraft.end(); ++currAircraft) {
-        string registration = (*currAircraft)->getRegistration();
+        const string& registration = (*currAircraft)->getRegistration();
         HeuristicMapIterator itr = heurMap.find(registration);
         if (itr != heurMap.end()) {
             (*currAircraft)->setrunCount(itr->second.runCount);

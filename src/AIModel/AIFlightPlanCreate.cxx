@@ -103,6 +103,7 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
         SG_LOG(SG_AI, SG_ALERT,
                "AIFlightPlan::create() attempting to create unknown leg"
                " this is probably an internal program error");
+        break;
     }
     wpt_iterator = waypoints.begin() + currWpt;
     //don't  increment leg right away, but only once we pass the actual last waypoint that was created.
@@ -225,7 +226,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
       }
     }
 
-    string rwyClass = getRunwayClassFromTrafficType(fltType);
+    const string& rwyClass = getRunwayClassFromTrafficType(fltType);
 
     // Only set this if it hasn't been set by ATC already.
     if (activeRunway.empty()) {
@@ -478,7 +479,7 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
     // NOTE: DT (2009-01-18: IIRC, this is currently already the case, 
     // because the getActive runway function takes care of that.
     if (firstFlight) {
-        string rwyClass = getRunwayClassFromTrafficType(fltType);
+        const string& rwyClass = getRunwayClassFromTrafficType(fltType);
         double heading = ac->getTrafficRef()->getCourse();
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
@@ -539,7 +540,7 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
     double vClimb = ac->getPerformance()->vClimb();
   
     if (firstFlight) {
-        string rwyClass = getRunwayClassFromTrafficType(fltType);
+        const string& rwyClass = getRunwayClassFromTrafficType(fltType);
         double heading = ac->getTrafficRef()->getCourse();
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
@@ -592,7 +593,7 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     double vApproach = ac->getPerformance()->vApproach();
 
     //Beginning of Descent 
-    string rwyClass = getRunwayClassFromTrafficType(fltType);
+    const string& rwyClass = getRunwayClassFromTrafficType(fltType);
     double heading = ac->getTrafficRef()->getCourse();
     apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway,
                                         heading);
@@ -844,7 +845,7 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     if (reposition) {
         double tempDistance;
         //double minDistance = HUGE_VAL;
-        string wptName;
+        //string wptName;
         tempDistance = SGGeodesy::distanceM(current, initialTarget);
         time_t eta =
             tempDistance / ((vDescent * SG_NM_TO_METER) / 3600.0) + now;
@@ -1044,21 +1045,21 @@ bool FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
  * - ul (ultralight: I can imagine that these may share a runway with ga on some airports)
  * - mil (all military traffic)
  */
-string FGAIFlightPlan::getRunwayClassFromTrafficType(string fltType)
+const char* FGAIFlightPlan::getRunwayClassFromTrafficType(const string& fltType)
 {
     if ((fltType == "gate") || (fltType == "cargo")) {
-        return string("com");
+        return "com";
     }
     if (fltType == "ga") {
-        return string("gen");
+        return "gen";
     }
     if (fltType == "ul") {
-        return string("ul");
+        return "ul";
     }
     if ((fltType == "mil-fighter") || (fltType == "mil-transport")) {
-        return string("mil");
+        return "mil";
     }
-    return string("com");
+    return "com";
 }
 
 

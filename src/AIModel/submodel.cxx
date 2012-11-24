@@ -35,7 +35,7 @@ FGSubmodelMgr::FGSubmodelMgr()
     yaw_offset = 0.0;
 
     //out[0] = out[1] = out[2] = 0;
-    string contents_node;
+    //string contents_node;
     contrail_altitude = 30000;
     _count = 0;
     _found_sub = true;
@@ -210,7 +210,7 @@ void FGSubmodelMgr::update(double dt)
         if (trigger && (*submodel_iterator)->count != 0) {
 
             //int id = (*submodel_iterator)->id;
-            string name = (*submodel_iterator)->name;
+            //const string& name = (*submodel_iterator)->name;
             
             SG_LOG(SG_AI, SG_DEBUG,
             "Submodels release:  " << (*submodel_iterator)->id
@@ -319,7 +319,7 @@ void FGSubmodelMgr::load()
 
     if (path) {
         const int id = 0;
-        string Path = path->getStringValue();
+        const string& Path = path->getStringValue();
         bool Seviceable =_serviceable_node->getBoolValue();
         setData(id, Path, Seviceable);
     }
@@ -345,7 +345,7 @@ void FGSubmodelMgr::transform(submodel *sm)
 
     int id = sm->id;
     //int sub_id = sm->sub_id;
-    string name = sm->name;
+    //const string& name = sm->name;
 
 
     if (sm->speed_node != 0)
@@ -500,9 +500,9 @@ void FGSubmodelMgr::loadAI()
         }
 
         int id = (*sm_list_itr)->getID();
-        string type = (*sm_list_itr)->getTypeString();
         bool serviceable = (*sm_list_itr)->_getServiceable();
 
+        //string type = (*sm_list_itr)->getTypeString();
         //cout << "loadAI: type " << type << " path "<< path << " serviceable " << serviceable << endl;
 
         setData(id, path, serviceable);
@@ -512,7 +512,7 @@ void FGSubmodelMgr::loadAI()
 
 
 
-void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
+void FGSubmodelMgr::setData(int id, const string& path, bool serviceable)
 {
     SGPropertyNode root;
 
@@ -598,13 +598,13 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         sm->prop->tie("serviceable", SGRawValuePointer<bool>(&(sm->serviceable)));
         sm->prop->tie("random", SGRawValuePointer<bool>(&(sm->random)));
         sm->prop->tie("slaved", SGRawValuePointer<bool>(&(sm->slaved)));
-        string name = sm->name;
+        const string& name = sm->name;
         sm->prop->setStringValue("name", name.c_str());
 
-        string submodel = sm->submodel;
+        const string& submodel = sm->submodel;
         sm->prop->setStringValue("submodel", submodel.c_str());
 
-        string force_path = sm->force_path;
+        const string& force_path = sm->force_path;
         sm->prop->setStringValue("force_path", force_path.c_str());
         //cout << "set force_path Sub " << force_path << endl;
 
@@ -616,7 +616,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
     }
 }
 
-void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
+void FGSubmodelMgr::setSubData(int id, const string& path, bool serviceable)
 {
     SGPropertyNode root;
     SGPath config = globals->resolve_aircraft_path(path);
@@ -703,14 +703,14 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
         sm->prop->tie("random", SGRawValuePointer<bool>(&(sm->random)));
         sm->prop->tie("slaved", SGRawValuePointer<bool>(&(sm->slaved)));
 
-        string name = sm->name;
+        const string& name = sm->name;
         sm->prop->setStringValue("name", name.c_str());
 
-        string submodel = sm->submodel;
+        const string& submodel = sm->submodel;
         sm->prop->setStringValue("submodel-path", submodel.c_str());
         // cout << " set submodel path AI" << submodel<< endl;
 
-        string force_path = sm->force_path;
+        const string& force_path = sm->force_path;
         sm->prop->setStringValue("force_path", force_path.c_str());
         //cout << "set force_path  AI" << force_path << endl;
 
@@ -731,7 +731,7 @@ void FGSubmodelMgr::loadSubmodels()
     submodel_iterator = submodels.begin();
 
     while (submodel_iterator != submodels.end()) {
-        string submodel  = (*submodel_iterator)->submodel;
+        const string& submodel  = (*submodel_iterator)->submodel;
         if (!submodel.empty()) {
             //int id = (*submodel_iterator)->id;
             bool serviceable = true;
@@ -841,8 +841,7 @@ void FGSubmodelMgr::valueChanged(SGPropertyNode *prop)
         SGPropertyNode_ptr path_node = sub_node->getChild("path", 0, true);
         SGPropertyNode_ptr callsign_node = a_node->getChild("callsign", 0, true);
 
-        string callsign = callsign_node->getStringValue();
-
+        //const string& callsign = callsign_node->getStringValue();
         //cout << "Submodels: model added - " << callsign <<" read callsign "<< endl;
             return;
 
@@ -864,8 +863,8 @@ void FGSubmodelMgr::setParentNode(int id) {
             model = _selected_ac;
         } else {
             model = ai->getChild(i);
-            string path = ai->getPath();
-            const string name = model->getStringValue("name");
+            //const string& path = ai->getPath();
+            //const string& name = model->getStringValue("name");
             int parent_id = model->getIntValue("id");
             if (!model->nChildren()){
                 continue;

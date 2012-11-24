@@ -65,29 +65,29 @@ private:
 public:
   FGScheduledFlight();
   FGScheduledFlight(const FGScheduledFlight &other);
-  //  FGScheduledFlight(const string);
-  FGScheduledFlight(const string& cs,
-		     const string& fr,
-		     const string& depPrt,
-		     const string& arrPrt,
-		     int cruiseAlt,
-		     const string& deptime,
-		     const string& arrtime,
-		     const string& rep,
-                     const string& reqAC
-		     );
+  //  FGScheduledFlight(const std::string);
+  FGScheduledFlight(const std::string& cs,
+                    const std::string& fr,
+                    const std::string& depPrt,
+                    const std::string& arrPrt,
+                    int cruiseAlt,
+                    const std::string& deptime,
+                    const std::string& arrtime,
+                    const std::string& rep,
+                    const std::string& reqAC
+  );
   ~FGScheduledFlight();
 
   void update();
-   bool initializeAirports();
+  bool initializeAirports();
   
   void adjustTime(time_t now);
 
   time_t getDepartureTime() { return departureTime; };
   time_t getArrivalTime  () { return arrivalTime;   };
   
-  void setDepartureAirport(string port) { depId = port; };
-  void setArrivalAirport  (string port) { arrId = port; };
+  void setDepartureAirport(const std::string& port) { depId = port; };
+  void setArrivalAirport  (const std::string& port) { arrId = port; };
   FGAirport *getDepartureAirport();
   FGAirport *getArrivalAirport  ();
 
@@ -97,19 +97,19 @@ public:
   { 
     return (departureTime < other.departureTime); 
   };
-  string& getFlightRules() { return fltRules; };
+  const std::string& getFlightRules() { return fltRules; };
 
-  time_t processTimeString(const string& time);
-  const string& getCallSign() {return callsign; };
-  const string& getRequirement() { return requiredAircraft; }
+  time_t processTimeString(const std::string& time);
+  const std::string& getCallSign() {return callsign; };
+  const std::string& getRequirement() { return requiredAircraft; }
 
-  void lock() { available = false; };
-  void release() { available = true; };
+  void lock()    { available = false; };
+  void release() { available = true;  };
 
   bool isAvailable() { return available; };
 
-  void setCallSign(string val)    { callsign = val; };
-  void setFlightRules(string val) { fltRules = val; };
+  void setCallSign(const std::string& val)    { callsign = val; };
+  void setFlightRules(const std::string& val) { fltRules = val; };
 };
 
 typedef std::vector<FGScheduledFlight*>           FGScheduledFlightVec;

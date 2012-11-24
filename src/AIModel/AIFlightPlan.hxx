@@ -54,7 +54,7 @@ private:
 public:
     FGAIWaypoint();
     ~FGAIWaypoint() {};
-    void setName        (std::string nam) { name        = nam; };
+    void setName        (const std::string& nam) { name        = nam; };
     void setLatitude    (double lat);
     void setLongitude   (double lon);
     void setAltitude    (double alt);
@@ -68,11 +68,11 @@ public:
     void setRouteIndex  (int    rte) { routeIndex  = rte; };
     void setTime_sec    (double ts ) { time_sec    = ts;  };
     void setTrackLength (double tl ) { trackLength = tl;  };
-    void setTime        (std::string tme) { time        = tme; };
+    void setTime        (const std::string& tme) { time        = tme; };
 
-    bool contains(std::string name);
+    bool contains(const std::string& name);
 
-    std::string getName  () { return name;        };
+    const std::string& getName() { return name;        };
     const SGGeod& getPos () { return pos;         };
     double getLatitude   ();
     double getLongitude  ();
@@ -87,7 +87,7 @@ public:
     bool   isFinished    () { return finished;    };
     double getTime_sec   () { return time_sec;    };
     double getTrackLength() { return trackLength; };
-    std::string getTime  () { return time;        };
+    const std::string& getTime  () { return time;        };
 
   };
 
@@ -130,7 +130,7 @@ public:
    double getBearing(FGAIWaypoint* previous, FGAIWaypoint* next) const;
    double getBearing(const SGGeod& aPos, FGAIWaypoint* next) const;
   
-   double checkTrackLength(std::string wptName);
+   double checkTrackLength(const std::string& wptName);
   time_t getStartTime() const { return start_time; }
    time_t getArrivalTime() const { return arrivalTime; }
 
@@ -153,18 +153,18 @@ public:
 
   int getRouteIndex(int i); // returns the AI related index of this current routes.
 
-  std::string getRunway() { return activeRunway; }
+  const std::string& getRunway() { return activeRunway; }
   bool isActive(time_t time) {return time >= this->getStartTime();}
 
   void incrementLeg() { leg++;};
 
-  void setRunway(std::string rwy) { activeRunway = rwy; };
-  std::string getRunwayClassFromTrafficType(std::string fltType);
+  void setRunway(const std::string& rwy) { activeRunway = rwy; };
+  const char* getRunwayClassFromTrafficType(const std::string& fltType);
 
   void addWaypoint(FGAIWaypoint* wpt) { waypoints.push_back(wpt); };
 
-  void setName(std::string n) { name = n; };
-  std::string getName() { return name; };
+  void setName(const std::string& n) { name = n; };
+  const std::string& getName() { return name; };
 
   void setSID(FGAIFlightPlan* fp) { sid = fp;};
   FGAIFlightPlan* getSID() { return sid; };
@@ -175,6 +175,7 @@ public:
 
   void setGate(ParkingAssignment pka);
   FGParking* getParkingGate();
+
 private:
   FGAIFlightPlan *sid;
   typedef std::vector <FGAIWaypoint*> wpt_vector_type;

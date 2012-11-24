@@ -47,7 +47,7 @@ PerformanceData* PerformanceDB::getDataFor(const string& acType, const string& a
         return _db[acType];
     }
     
-    string alias = findAlias(acType);
+    const string& alias = findAlias(acType);
     if (_db.find(alias) != _db.end()) {
       return _db[alias];
     }
@@ -78,7 +78,7 @@ void PerformanceDB::load(const SGPath& filename)
         if (!strcmp(db_node->getName(), "aircraft")) {
             PerformanceData* data = NULL;
             if (db_node->hasChild("base")) {
-              string baseName = db_node->getStringValue("base");
+              const string& baseName = db_node->getStringValue("base");
               PerformanceData* baseData = _db[baseName];
               if (!baseData) {
                 SG_LOG(SG_AI, SG_ALERT,
@@ -93,17 +93,17 @@ void PerformanceDB::load(const SGPath& filename)
             }
           
             data->initFromProps(db_node);
-            string name  = db_node->getStringValue("type", "heavy_jet");
+            const string& name  = db_node->getStringValue("type", "heavy_jet");
             registerPerformanceData(name, data);
         } else if (!strcmp(db_node->getName(), "alias")) {
-            string alias(db_node->getStringValue("alias"));
+            const string& alias(db_node->getStringValue("alias"));
             if (alias.empty()) {
                 SG_LOG(SG_AI, SG_ALERT, "performance DB alias entry with no <alias> definition");
                 continue;
             }
           
             BOOST_FOREACH(SGPropertyNode* matchNode, db_node->getChildren("match")) {
-                string match(matchNode->getStringValue());
+                const string& match(matchNode->getStringValue());
                 _aliases.push_back(StringPair(match, alias));
             }
         } else {
@@ -112,7 +112,7 @@ void PerformanceDB::load(const SGPath& filename)
     } // of nodes iteration
 }
 
-string PerformanceDB::findAlias(const string& acType) const
+const string& PerformanceDB::findAlias(const string& acType) const
 {
     BOOST_FOREACH(const StringPair& alias, _aliases) {
         if (acType.find(alias.first) == 0) { // matched!
@@ -120,7 +120,8 @@ string PerformanceDB::findAlias(const string& acType) const
         }
     } // of alias iteration
   
-    return string();
+    static const string empty;
+    return empty;
 }
 
 

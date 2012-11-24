@@ -90,7 +90,7 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
     setRudder(scFileNode->getFloatValue("rudder", 0.0));
     setName(scFileNode->getStringValue("name", "Titanic"));
     setRadius(scFileNode->getDoubleValue("turn-radius-ft", 2000));
-    std::string flightplan = scFileNode->getStringValue("flightplan");
+    const std::string& flightplan = scFileNode->getStringValue("flightplan");
     setRepeat(scFileNode->getBoolValue("repeat", false));
     setRestart(scFileNode->getBoolValue("restart", false));
     setStartTime(scFileNode->getStringValue("time", ""));
@@ -265,7 +265,7 @@ void FGAIShip::Run(double dt) {
     if (_fp_init)
         ProcessFlightPlan(dt);
 
-    string type = getTypeString();
+    const string& type = getTypeString();
 
     double alpha;
     double rudder_limit;

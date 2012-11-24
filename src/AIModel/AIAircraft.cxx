@@ -1000,7 +1000,7 @@ void FGAIAircraft::updatePrimaryTargetValues(bool& flightplanActive, bool& aiOut
         // from control properties.  These default to the initial
         // settings in the config file, but can be changed "on the
         // fly".
-        string lat_mode = props->getStringValue("controls/flight/lateral-mode");
+        const string& lat_mode = props->getStringValue("controls/flight/lateral-mode");
         if ( lat_mode == "roll" ) {
             double angle
             = props->getDoubleValue("controls/flight/target-roll" );
@@ -1213,7 +1213,7 @@ void FGAIAircraft::updatePitchAngleTarget() {
     }
 }
 
-string FGAIAircraft::atGate()
+const string& FGAIAircraft::atGate()
 {
      if ((fp->getLeg() < 3) && trafficRef) {
        if (fp->getParkingGate()) {
@@ -1221,7 +1221,8 @@ string FGAIAircraft::atGate()
        }
      }
        
-     return string();
+     static const string empty;
+     return empty;
 }
 
 void FGAIAircraft::handleATCRequests() {
@@ -1342,7 +1343,7 @@ double FGAIAircraft::getBearing(double crse)
   return hdgDiff;
 }
 
-time_t FGAIAircraft::checkForArrivalTime(string wptName) {
+time_t FGAIAircraft::checkForArrivalTime(const string& wptName) {
      FGAIWaypoint* curr = 0;
      curr = fp->getCurrentWaypoint();
 

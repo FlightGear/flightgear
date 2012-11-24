@@ -73,7 +73,7 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
   std::vector<SGPropertyNode_ptr> props = scFileNode->getChildren("parking-pos");
   std::vector<SGPropertyNode_ptr>::const_iterator it;
   for (it = props.begin(); it != props.end(); ++it) {
-    string name = (*it)->getStringValue("name", "unnamed");
+    const string name = (*it)->getStringValue("name", "unnamed");
     // Transform to the right coordinate frame, configuration is done in
     // the usual x-back, y-right, z-up coordinates, computations
     // in the simulation usual body x-forward, y-right, z-down coordinates
@@ -549,7 +549,7 @@ void FGAICarrier::UpdateElevator(double dt, double transition_time) {
 
 void FGAICarrier::UpdateJBD(double dt, double jbd_transition_time) {
 
-    string launchbar_state = _launchbar_state_node->getStringValue();
+    const string launchbar_state = _launchbar_state_node->getStringValue();
     double step = 0;
 
     if (launchbar_state == "Engaged"){

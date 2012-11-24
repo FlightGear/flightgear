@@ -54,8 +54,8 @@ bool FGAIMultiplayer::init(bool search_in_AI_path) {
     isTanker = false; // do this until this property is
                       // passed over the net
 
-    string str1 = _getCallsign();
-    string str2 = "MOBIL";
+    const string& str1 = _getCallsign();
+    const string str2 = "MOBIL";
 
     string::size_type loc1= str1.find( str2, 0 );
     if ( (loc1 != string::npos && str2 != "") ){

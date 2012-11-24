@@ -52,7 +52,7 @@ public:
     void initializeFlightPlan();
     FGAIFlightPlan* GetFlightPlan() const { return fp; };
     void ProcessFlightPlan( double dt, time_t now );
-    time_t checkForArrivalTime(string wptName);
+    time_t checkForArrivalTime(const string& wptName);
     
     void AccelTo(double speed);
     void PitchTo(double angle);
@@ -68,7 +68,7 @@ public:
     double getBearing(double crse);
 
     void setAcType(const std::string& ac) { acType = ac; };
-    std::string getAcType() const { return acType; }
+    const std::string& getAcType() const { return acType; }
   
     void setCompany(const std::string& comp) { company = comp;};
 
@@ -86,7 +86,7 @@ public:
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
-    std::string GetTransponderCode() { return transponderCode; };
+    const std::string& GetTransponderCode() { return transponderCode; };
     void SetTransponderCode(const std::string& tc) { transponderCode = tc;};
 
     // included as performance data needs them, who else?
@@ -99,7 +99,7 @@ public:
     inline double getVerticalSpeed() const { return vs; };
     inline double altitudeAGL() const { return props->getFloatValue("position/altitude-agl-ft");};
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
-    std::string atGate();
+    const std::string& atGate();
 
     int getTakeOffStatus() { return takeOffStatus; };
 

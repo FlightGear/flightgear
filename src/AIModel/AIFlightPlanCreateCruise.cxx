@@ -295,7 +295,7 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   wpt = createInAir(ac, "Cruise", SGGeod::fromDeg(longitude, latitude), alt, vCruise);
   pushBackWaypoint(wpt); 
   
-  string rwyClass = getRunwayClassFromTrafficType(fltType);
+  const string& rwyClass = getRunwayClassFromTrafficType(fltType);
   double heading = ac->getTrafficRef()->getCourse();
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
   FGRunway* rwy = arr->getRunwayByIdent(activeRunway);

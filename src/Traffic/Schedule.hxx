@@ -20,9 +20,9 @@
  **************************************************************************/
 
 /**************************************************************************
- * This file contains the definition of the class Shedule.
+ * This file contains the definition of the class Schedule.
  *
- * A schedule is basically a number of scheduled flights, wich can be
+ * A schedule is basically a number of scheduled flights, which can be
  * assigned to an AI aircraft. 
  **************************************************************************/
 
@@ -76,16 +76,16 @@ class FGAISchedule
   SGSharedPtr<FGAIAircraft> aiAircraft;
  public:
   FGAISchedule();                                           // constructor
-  FGAISchedule(string model, 
-               string livery,
-               string homePort, 
-               string registration, 
-               string flightId,
+  FGAISchedule(const std::string& model,
+               const std::string& livery,
+               const std::string& homePort,
+               const std::string& registration,
+               const std::string& flightId,
                bool   heavy, 
-               string acType, 
-               string airline, 
-               string m_class, 
-               string flight_type, 
+               const std::string& acType,
+               const std::string& airline,
+               const std::string& m_class,
+               const std::string& flight_type,
                double radius, 
                double offset);                              // construct & init
   FGAISchedule(const FGAISchedule &other);                  // copy constructor
@@ -110,12 +110,12 @@ class FGAISchedule
   int         getCruiseAlt        () { return (*flights.begin())->getCruiseAlt       (); };
   double      getRadius           () { return radius; };
   double      getGroundOffset     () { return groundOffset;};
-  const string& getFlightType     () { return flightType;};
-  const string& getAirline        () { return airline; };
-  const string& getAircraft       () { return acType; };
-  const string& getCallSign       () { return (*flights.begin())->getCallSign (); };
-  const string& getRegistration   () { return registration;};
-  const string& getFlightRules    () { return (*flights.begin())->getFlightRules (); };
+  const std::string& getFlightType     () { return flightType;};
+  const std::string& getAirline        () { return airline; };
+  const std::string& getAircraft       () { return acType; };
+  const std::string& getCallSign       () { return (*flights.begin())->getCallSign (); };
+  const std::string& getRegistration   () { return registration;};
+  const std::string& getFlightRules    () { return (*flights.begin())->getFlightRules (); };
   bool getHeavy                   () { return heavy; };
   double getCourse                () { return courseToDest; };
   unsigned int getRunCount        () { return runCount; };
@@ -127,14 +127,14 @@ class FGAISchedule
   double       getScore   () { return score; };
   void         setHeading (); 
   void         assign         (FGScheduledFlight *ref) { flights.push_back(ref); };
-  void         setFlightType  (string val            ) { flightType = val; };
-  FGScheduledFlight*findAvailableFlight (const string &currentDestination, const string &req, time_t min=0, time_t max=0);
-  // used to sort in decending order of score: I've probably found a better way to
-  // decending order sorting, but still need to test that.
+  void         setFlightType  (const std::string& val) { flightType = val; };
+  FGScheduledFlight*findAvailableFlight (const std::string& currentDestination, const std::string &req, time_t min=0, time_t max=0);
+  // used to sort in descending order of score: I've probably found a better way to
+  // descending order sorting, but still need to test that.
   bool operator< (const FGAISchedule &other) const;
     void taint() { valid = false; };
-    int getLastUsed() { return lastRun; };
-    void setLastUsed(unsigned int val) {lastRun = val; }; 
+  int getLastUsed() { return lastRun; };
+  void setLastUsed(unsigned int val) {lastRun = val; };
   //void * getAiRef                 () { return AIManagerRef; };
   //FGAISchedule* getAddress        () { return this;};
 

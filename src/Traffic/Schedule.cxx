@@ -71,29 +71,17 @@ FGAISchedule::FGAISchedule()
   //score = 0;
 }
 
-/*
-FGAISchedule::FGAISchedule(string    mdl, 
-			   string    liv, 
-			   string    reg, 
-			   bool      hvy, 
-			   string act, 
-			   string arln, 
-			   string mclass, 
-			   string fltpe,
-			   double rad,
-			   double grnd,
-			   int    scre,
-			   FGScheduledFlightVec flt)*/
-FGAISchedule::FGAISchedule(string model, 
-                           string lvry,
-                           string port, 
-                           string reg, 
-                           string flightId,
+
+FGAISchedule::FGAISchedule(const string& model,
+                           const string& lvry,
+                           const string& port,
+                           const string& reg,
+                           const string& flightId,
                            bool   hvy, 
-                           string act, 
-                           string arln, 
-                           string mclass, 
-                           string fltpe, 
+                           const string& act,
+                           const string& arln,
+                           const string& mclass,
+                           const string& fltpe,
                            double rad, 
                            double grnd)
 {
@@ -226,7 +214,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   FGScheduledFlight* flight = flights.front();
   if (!deptime) {
     deptime = flight->getDepartureTime();
-    //cerr << "Settiing departure time " << deptime << endl;
+    //cerr << "Setting departure time " << deptime << endl;
   }
     
   if (aiAircraft) {

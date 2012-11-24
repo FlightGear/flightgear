@@ -36,7 +36,7 @@ public:
 private:
     std::map<std::string, PerformanceData*> _db;
     
-    std::string findAlias(const std::string& acType) const;
+    const std::string& findAlias(const std::string& acType) const;
   
     typedef std::pair<std::string, std::string> StringPair;
   /// alias list, to allow type/class names to share data. This is used to merge

@@ -97,7 +97,7 @@ FGAIManager::postinit() {
         if (strcmp(n->getName(), "scenario"))
             continue;
 
-        string name = n->getStringValue();
+        const string& name = n->getStringValue();
         if (name.empty())
             continue;
 
@@ -275,7 +275,7 @@ FGAIManager::processScenario( const string &filename ) {
 
         if (strcmp(scEntry->getName(), "entry"))
             continue;
-        std::string type = scEntry->getStringValue("type", "aircraft");
+        const std::string& type = scEntry->getStringValue("type", "aircraft");
 
         if (type == "tanker") { // refueling scenarios
             FGAITanker* tanker = new FGAITanker;
@@ -349,8 +349,8 @@ FGAIManager::loadScenarioFile(const std::string& filename)
     } catch (const sg_exception &t) {
         SG_LOG(SG_AI, SG_ALERT, "Failed to load scenario '"
             << path.str() << "': " << t.getFormattedMessage());
-        return 0;
     }
+    return 0;
 }
 
 bool
@@ -365,16 +365,16 @@ FGAIManager::getStartPosition(const string& id, const string& pid,
     for (int i = 0 ; (!found) && i < root->nChildren() ; i++) {
         SGPropertyNode *aiEntry = root->getChild( i );
         if ( !strcmp( aiEntry->getName(), "scenario" ) ) {
-            string filename = aiEntry->getStringValue();
+            const string& filename = aiEntry->getStringValue();
             SGPropertyNode_ptr scenarioTop = loadScenarioFile(filename);
             if (scenarioTop) {
                 SGPropertyNode* scenarios = scenarioTop->getChild("scenario");
                 if (scenarios) {
                     for (int i = 0; i < scenarios->nChildren(); i++) {
                         SGPropertyNode* scEntry = scenarios->getChild(i);
-                        std::string type = scEntry->getStringValue("type");
-                        std::string pnumber = scEntry->getStringValue("pennant-number");
-                        std::string name = scEntry->getStringValue("name");
+                        const std::string& type = scEntry->getStringValue("type");
+                        const std::string& pnumber = scEntry->getStringValue("pennant-number");
+                        const std::string& name = scEntry->getStringValue("name");
                         if (type == "carrier" && (pnumber == id || name == id)) {
                             SGSharedPtr<FGAICarrier> carrier = new FGAICarrier;
                             carrier->readFromScenario(scEntry);

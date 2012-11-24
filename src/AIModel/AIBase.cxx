@@ -244,7 +244,7 @@ void FGAIBase::update(double dt) {
         // sound initialization
         if (fgGetBool("/sim/sound/aimodels/enabled",false))
         {
-            string fxpath = _modeldata->get_sound_path();
+            const string& fxpath = _modeldata->get_sound_path();
             if (fxpath != "")
             {
                 props->setStringValue("sim/sound/path", fxpath.c_str());
@@ -666,7 +666,7 @@ bool FGAIBase::setParentNode() {
             model = _selected_ac;
         } else {
             model = ai->getChild(i);
-            string path = ai->getPath();
+            //const string& path = ai->getPath();
             const string name = model->getStringValue("name");
 
             if (!model->nChildren()){

@@ -58,7 +58,7 @@ FGAIWaypoint::FGAIWaypoint() {
   trackLength = 0;
 }
 
-bool FGAIWaypoint::contains(string target) {
+bool FGAIWaypoint::contains(const string& target) {
     size_t found = name.find(target);
     if (found == string::npos)
         return false;
@@ -449,7 +449,7 @@ int FGAIFlightPlan::getRouteIndex(int i) {
     return 0;
 }
 
-double FGAIFlightPlan::checkTrackLength(string wptName) {
+double FGAIFlightPlan::checkTrackLength(const string& wptName) {
     // skip the first two waypoints: first one is behind, second one is partially done;
     double trackDistance = 0;
     wpt_vector_iterator wptvec = waypoints.begin();
