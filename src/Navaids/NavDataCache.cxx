@@ -1271,16 +1271,23 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
   sqlite_bind_temp_stdstring(d->statCacheCheck, 1, path.str());
   if (d->execSelect(d->statCacheCheck)) {
     time_t modtime = sqlite3_column_int64(d->statCacheCheck, 0);
-    bool modified = (modtime != path.modTime());
-    if (modified)
+    time_t delta = std::labs(modtime - path.modTime());
+    if (delta != 0)
     {
       SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: rebuild required for " << path << ". Timestamps: " << modtime << " != " << path.modTime());
+      if (delta < 30)
+      {
+          // File system time stamp has slightly changed. It's unlikely that the user has managed to change a file, start fgfs,
+          // and then changed file again within x seconds - so it's suspicious...
+          SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache: suspicious file timestamp change. Please report this to FlightGear. "
+                  << "Delta: " << delta << ", Timestamps: " << modtime << ", " << path.modTime() << ", path: " << path);
+      }
     }
     else
     {
       SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: no rebuild required for " << path);
     }
-    return (modtime != path.modTime());
+    return (delta != 0);
   } else {
     SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: initial build required for " << path);
     return true;
