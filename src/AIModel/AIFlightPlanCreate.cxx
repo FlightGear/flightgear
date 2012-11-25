@@ -311,7 +311,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     //cerr << "Building taxi route" << endl;
     while (taxiRoute.next(&node)) {
         char buffer[10];
-        snprintf(buffer, 10, "%lld", node);
+        snprintf(buffer, 10, "%lld", (long long int) node);
         FGTaxiNode *tn =
             apt->getDynamics()->getGroundNetwork()->findNode(node);
         FGAIWaypoint *wpt =
@@ -416,7 +416,7 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
     for (int i = 0; i < size - 2; i++) {
         taxiRoute.next(&node);
         char buffer[10];
-        snprintf(buffer, 10, "%lld", node);
+        snprintf(buffer, 10, "%lld",  (long long int) node);
         FGTaxiNode *tn = gn->findNode(node);
         FGAIWaypoint *wpt =
             createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
