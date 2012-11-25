@@ -153,6 +153,7 @@ private:
     void updateVerticalSpeedTarget();
     void updatePitchAngleTarget();
     void updateActualState();
+    void updateModelProperties(double dt);
     void handleATCRequests();
     void checkVisibility();
     inline bool isStationary() { return ((fabs(speed)<=0.0001)&&(fabs(tgt_speed)<=0.0001));}
@@ -170,8 +171,6 @@ private:
     double prev_dist_to_go;
 
     bool holdPos;
-
-    bool _getGearDown() const;
 
     const char * _getTransponderCode() const;
 

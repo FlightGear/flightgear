@@ -28,6 +28,7 @@
 #include <Scenery/tilemgr.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
+#include <Main/util.hxx>
 
 #include <string>
 #include <math.h>
@@ -123,9 +124,6 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 void FGAIAircraft::bind() {
     FGAIBase::bind();
 
-    tie("controls/gear/gear-down",
-        SGRawValueMethods<FGAIAircraft,bool>(*this,
-                &FGAIAircraft::_getGearDown));
     tie("transponder-id",
         SGRawValueMethods<FGAIAircraft,const char*>(*this,
                 &FGAIAircraft::_getTransponderCode));
@@ -165,8 +163,14 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
 
      handleATCRequests(); // ATC also has a word to say
      updateSecondaryTargetValues(); // target roll, vertical speed, pitch
-     updateActualState(); 
-    // We currently have one situation in which an AIAircraft object is used that is not attached to the 
+     updateActualState();
+#if 0
+   // 25/11/12 - added but disabled, since setting properties isn't
+   // affecting the AI-model as expected.
+     updateModelProperties(dt);
+#endif
+   
+    // We currently have one situation in which an AIAircraft object is used that is not attached to the
     // AI manager. In this particular case, the AIAircraft is used to shadow the user's aircraft's behavior in the AI world.
     // Since we perhaps don't want a radar entry of our own aircraft, the following conditional should probably be adequate
     // enough
@@ -448,12 +452,6 @@ void FGAIAircraft::checkTcas(void)
 
 void FGAIAircraft::initializeFlightPlan() {
 }
-
-
-bool FGAIAircraft::_getGearDown() const {
-    return _performance->gearExtensible(this);
-}
-
 
 const char * FGAIAircraft::_getTransponderCode() const {
   return transponderCode.c_str();
@@ -1375,3 +1373,44 @@ time_t FGAIAircraft::checkForArrivalTime(const string& wptName) {
      }
      return (ete - secondsToGo); // Positive when we're too slow...
 }
+
+double limitRateOfChange(double cur, double target, double maxDeltaSec, double dt)
+{
+  double delta = target - cur;
+  double maxDelta = maxDeltaSec * dt;
+  
+// if delta is > maxDelta, use maxDelta, but with the sign of delta.
+  return (fabs(delta) < maxDelta) ? delta : copysign(maxDelta, delta);
+}
+
+// drive various properties in a semi-realistic fashion.
+void FGAIAircraft::updateModelProperties(double dt)
+{
+  if (!props) {
+    return;
+  }
+  
+  SGPropertyNode* gear = props->getChild("gear", 0, true);
+  double targetGearPos = fp->getCurrentWaypoint()->getGear_down() ? 1.0 : 0.0;
+  if (!gear->hasValue("gear/position-norm")) {
+    gear->setDoubleValue("gear/position-norm", targetGearPos);
+  }
+  
+  double gearPosNorm = gear->getDoubleValue("gear/position-norm");
+  if (gearPosNorm != targetGearPos) {
+    gearPosNorm += limitRateOfChange(gearPosNorm, targetGearPos, 0.1, dt);
+    if (gearPosNorm < 0.001) {
+      gearPosNorm = 0.0;
+    } else if (gearPosNorm > 0.999) {
+      gearPosNorm = 1.0;
+    }
+    
+    for (int i=0; i<6; ++i) {
+      SGPropertyNode* g = gear->getChild("gear", i, true);
+      g->setDoubleValue("position-norm", gearPosNorm);
+    } // of gear setting loop      
+  } // of gear in-transit
+  
+//  double flapPosNorm = props->getDoubleValue();
+}
+
