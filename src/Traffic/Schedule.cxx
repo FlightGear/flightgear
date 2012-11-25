@@ -70,7 +70,8 @@ FGAISchedule::FGAISchedule()
     firstRun(false),
     courseToDest(0),
     initialized(false),
-    valid(false)
+    valid(false),
+    scheduleComplete(false)
 {
 }
 
@@ -98,7 +99,8 @@ FGAISchedule::FGAISchedule(const string& model,
       firstRun(true),
       courseToDest(0),
       initialized(false),
-      valid(true)
+      valid(true),
+      scheduleComplete(false)
 {
   modelPath        = model; 
   livery           = lvry; 
@@ -139,8 +141,10 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
   runCount           = other.runCount;
   hits               = other.hits;
   lastRun            = other.lastRun;
+  courseToDest       = other.courseToDest;
   initialized        = other.initialized;
   valid              = other.valid;
+  scheduleComplete   = other.scheduleComplete;
 }
 
 
@@ -186,22 +190,37 @@ bool FGAISchedule::init()
   return true;
 }
 
+/**
+ *  Returns true when processing is complete.
+ *  Returns false when processing was aborted due to timeout, so
+ *    more time required - and another call is requested (next sim iteration).
+ */
 bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
-{ 
-  time_t 
-    totalTimeEnroute, 
-    elapsedTimeEnroute,
-    //remainingTimeEnroute,
-    deptime = 0;
+{
+
+  time_t totalTimeEnroute,
+         elapsedTimeEnroute,
+         //remainingTimeEnroute,
+         deptime = 0;
+
   if (!valid) {
-    return false;
+    return true; // processing complete
   }
-  scheduleFlights(now);
+
+  if (!scheduleComplete) {
+      scheduleComplete = scheduleFlights(now);
+  }
+
+  if (!scheduleComplete) {
+      return false; // not ready yet, continue processing in next iteration
+  }
+
   if (flights.empty()) { // No flights available for this aircraft
       valid = false;
-      return false;
+      return true; // processing complete
   }
-  
+
+
   // Sort all the scheduled flights according to scheduled departure time.
   // Because this is done at every update, we only need to check the status
   // of the first listed flight. 
@@ -238,13 +257,13 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     // and detach it from the current list of aircraft. 
     flight->update();
     flights.erase(flights.begin()); // pop_front(), effectively
-    return true;
+    return true; // processing complete
   }
   
   FGAirport* dep = flight->getDepartureAirport();
   FGAirport* arr = flight->getArrivalAirport();
   if (!dep || !arr) {
-    return false;
+    return true; // processing complete
   }
     
   double speed = 450.0;
@@ -285,7 +304,8 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   // large distances involved here: see bug #80
   distanceToUser = dist(userCart, SGVec3d::fromGeod(position)) * SG_METER_TO_NM;
 
-  // If distance between user and simulated aircaft is less
+
+  // If distance between user and simulated aircraft is less
   // then 500nm, create this flight. At jet speeds 500 nm is roughly
   // one hour flight time, so that would be a good approximate point
   // to start a more detailed simulation of this aircraft.
@@ -295,7 +315,13 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   if (distanceToUser >= TRAFFICTOAIDISTTOSTART) {
     return true; // out of visual range, for the moment.
   }
-  return createAIAircraft(flight, speed, deptime);
+
+  if (!createAIAircraft(flight, speed, deptime)) {
+      valid = false;
+  }
+
+
+    return true; // processing complete
 }
 
 bool FGAISchedule::validModelPath(const std::string& modelPath)
@@ -373,30 +399,32 @@ void FGAISchedule::setHeading()
     courseToDest = SGGeodesy::courseDeg((*flights.begin())->getDepartureAirport()->geod(), (*flights.begin())->getArrivalAirport()->geod());
 }
 
-void FGAISchedule::scheduleFlights(time_t now)
+bool FGAISchedule::scheduleFlights(time_t now)
 {
-  if (!flights.empty()) {
-    return;
-  }
   //string startingPort;
-  string userPort = fgGetString("/sim/presets/airport-id");
+  const string& userPort = fgGetString("/sim/presets/airport-id");
   SG_LOG(SG_AI, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
   FGScheduledFlight *flight = NULL;
+  SGTimeStamp start;
+  start.stamp();
+
+  bool first = true;
+  if (currentDestination.empty())
+    flight = findAvailableFlight(userPort, flightIdentifier, now, (now+6400));
+
   do {
-    if (currentDestination.empty()) {
-        flight = findAvailableFlight(userPort, flightIdentifier, now, (now+6400));
-        if (!flight)
-            flight = findAvailableFlight(currentDestination, flightIdentifier);
-    } else {
+    if ((!flight)||(!first)) {
         flight = findAvailableFlight(currentDestination, flightIdentifier);
     }
     if (!flight) {
       break;
     }
+
+    first = false;
     currentDestination = flight->getArrivalAirport()->getId();
     //cerr << "Current destination " <<  currentDestination << endl;
     if (!initialized) {
-        string departurePort = flight->getDepartureAirport()->getId();
+        const string& departurePort = flight->getDepartureAirport()->getId();
         if (userPort == departurePort) {
             lastRun = 1;
             hits++;
@@ -407,23 +435,36 @@ void FGAISchedule::scheduleFlights(time_t now)
         initialized = true;
     }
   
-    time_t arr, dep;
-    dep = flight->getDepartureTime();
-    arr = flight->getArrivalTime();
-    string depT = asctime(gmtime(&dep));
-    string arrT = asctime(gmtime(&arr));
-
-    depT = depT.substr(0,24);
-    arrT = arrT.substr(0,24);
-    SG_LOG(SG_AI, SG_BULK, "  Flight " << flight->getCallSign() << ":" 
-                             << "  "        << flight->getDepartureAirport()->getId() << ":"
-                             << "  "        << depT << ":"
-                             << " \""       << flight->getArrivalAirport()->getId() << "\"" << ":"
-                             << "  "        << arrT << ":");
+    if (sglog().would_log(SG_AI, SG_BULK))
+    {
+        time_t arr, dep;
+        dep = flight->getDepartureTime();
+        arr = flight->getArrivalTime();
+        string depT = asctime(gmtime(&dep));
+        string arrT = asctime(gmtime(&arr));
+        depT = depT.substr(0,24);
+        arrT = arrT.substr(0,24);
+        SG_LOG(SG_AI, SG_BULK, "  Flight " << flight->getCallSign() << ":"
+                                 << "  "        << flight->getDepartureAirport()->getId() << ":"
+                                 << "  "        << depT << ":"
+                                 << " \""       << flight->getArrivalAirport()->getId() << "\"" << ":"
+                                 << "  "        << arrT << ":");
+    }
   
     flights.push_back(flight);
-  } while (currentDestination != homePort);
+
+    // continue processing until complete, or preempt after timeout
+  } while ((currentDestination != homePort)&&
+           (start.elapsedMSec()<3.0));
+
+  if (flight && (currentDestination != homePort))
+  {
+      // processing preempted, need to continue in next iteration
+      return false;
+  }
+
   SG_LOG(SG_AI, SG_BULK, " Done ");
+  return true;
 }
 
 bool FGAISchedule::next()

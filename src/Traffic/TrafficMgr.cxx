@@ -411,11 +411,12 @@ void FGTrafficManager::update(double dt)
     if (currAircraft == scheduledAircraft.end()) {
         currAircraft = scheduledAircraft.begin();
     }
+
     //cerr << "Processing << " << (*currAircraft)->getRegistration() << " with score " << (*currAircraft)->getScore() << endl;
-    if (!((*currAircraft)->update(now, userCart))) {
-        (*currAircraft)->taint();
+    if ((*currAircraft)->update(now, userCart)) {
+        // schedule is done - process another aircraft in next iteration
+        currAircraft++;
     }
-    currAircraft++;
 }
 
 void FGTrafficManager::readTimeTableFromFile(SGPath infileName)

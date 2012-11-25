@@ -62,8 +62,9 @@ class FGAISchedule
   double courseToDest;
   bool initialized;
   bool valid;
+  bool scheduleComplete;
 
-  void scheduleFlights(time_t now);
+  bool scheduleFlights(time_t now);
   int groundTimeFromRadius();
   
   /**
@@ -132,7 +133,6 @@ class FGAISchedule
   // used to sort in descending order of score: I've probably found a better way to
   // descending order sorting, but still need to test that.
   bool operator< (const FGAISchedule &other) const;
-    void taint() { valid = false; };
   int getLastUsed() { return lastRun; };
   void setLastUsed(unsigned int val) {lastRun = val; };
   //void * getAiRef                 () { return AIManagerRef; };
