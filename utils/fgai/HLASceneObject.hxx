@@ -36,8 +36,6 @@ public:
     void setLocation(const AIPhysics& physics);
 
 private:
-    /// Currently we have our own location. FIXME Extend Cartesian location at some point.
-    class Location;
     // The location of this object
     SGSharedPtr<simgear::HLAAbstractLocation> _location;
 };
