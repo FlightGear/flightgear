@@ -447,7 +447,7 @@ int FGAIFlightPlan::getRouteIndex(int i) {
     return 0;
 }
 
-double FGAIFlightPlan::checkTrackLength(const string& wptName) {
+double FGAIFlightPlan::checkTrackLength(const string& wptName) const {
     // skip the first two waypoints: first one is behind, second one is partially done;
     double trackDistance = 0;
     wpt_vector_iterator wptvec = waypoints.begin();
@@ -471,7 +471,7 @@ void FGAIFlightPlan::shortenToFirst(unsigned int number, string name)
     (waypoints.back())->setName((waypoints.back())->getName() + name);
 }
 
-void FGAIFlightPlan::setGate(ParkingAssignment pka)
+void FGAIFlightPlan::setGate(const ParkingAssignment& pka)
 {
   gate = pka;
 }

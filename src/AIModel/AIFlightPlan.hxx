@@ -130,7 +130,7 @@ public:
    double getBearing(FGAIWaypoint* previous, FGAIWaypoint* next) const;
    double getBearing(const SGGeod& aPos, FGAIWaypoint* next) const;
   
-   double checkTrackLength(const std::string& wptName);
+   double checkTrackLength(const std::string& wptName) const;
   time_t getStartTime() const { return start_time; }
    time_t getArrivalTime() const { return arrivalTime; }
 
@@ -173,7 +173,7 @@ public:
   
   void shortenToFirst(unsigned int number, std::string name);
 
-  void setGate(ParkingAssignment pka);
+  void setGate(const ParkingAssignment& pka);
   FGParking* getParkingGate();
 
 private:

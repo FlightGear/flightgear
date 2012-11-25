@@ -67,34 +67,34 @@ private:
 public:
 
     FGATCInstruction();
-    bool hasInstruction   ();
-    bool getHoldPattern   () {
+    bool hasInstruction   () const;
+    bool getHoldPattern   () const {
         return holdPattern;
     };
-    bool getHoldPosition  () {
+    bool getHoldPosition  () const {
         return holdPosition;
     };
-    bool getChangeSpeed   () {
+    bool getChangeSpeed   () const {
         return changeSpeed;
     };
-    bool getChangeHeading () {
+    bool getChangeHeading () const {
         return changeHeading;
     };
-    bool getChangeAltitude() {
+    bool getChangeAltitude() const {
         return changeAltitude;
     };
 
-    double getSpeed       () {
+    double getSpeed       () const {
         return speed;
     };
-    double getHeading     () {
+    double getHeading     () const {
         return heading;
     };
-    double getAlt         () {
+    double getAlt         () const {
         return alt;
     };
 
-    bool getCheckForCircularWait() {
+    bool getCheckForCircularWait() const {
         return resolveCircularWait;
     };
 
@@ -192,34 +192,34 @@ public:
     int  crosses                   (FGGroundNetwork *, FGTrafficRecord &other);
     bool isOpposing                (FGGroundNetwork *, FGTrafficRecord &other, int node);
     
-    bool isActive(int margin);
+    bool isActive(int margin) const;
 
     bool onRoute(FGGroundNetwork *, FGTrafficRecord &other);
 
-    bool getSpeedAdjustment() {
+    bool getSpeedAdjustment() const {
         return instruction.getChangeSpeed();
     };
 
-    double getLatitude () {
+    double getLatitude () const {
         return latitude ;
     };
-    double getLongitude() {
+    double getLongitude() const {
         return longitude;
     };
-    double getHeading  () {
+    double getHeading  () const {
         return heading  ;
     };
-    double getSpeed    () {
+    double getSpeed    () const {
         return speed    ;
     };
-    double getAltitude () {
+    double getAltitude () const {
         return altitude ;
     };
-    double getRadius   () {
+    double getRadius   () const {
         return radius   ;
     };
 
-    int getWaitsForId  () {
+    int getWaitsForId  () const {
         return waitsForId;
     };
 
@@ -232,10 +232,10 @@ public:
         instruction.setChangeHeading(false);
     };
 
-    bool hasHeadingAdjustment() {
+    bool hasHeadingAdjustment() const {
         return instruction.getChangeHeading();
     };
-    bool hasHoldPosition() {
+    bool hasHoldPosition() const {
         return instruction.getHoldPosition();
     };
     void setHoldPosition (bool inst) {
@@ -253,7 +253,7 @@ public:
         instruction.setResolveCircularWait(false);
     };
 
-    const std::string& getRunway() {
+    const std::string& getRunway() const {
         return runway;
     };
     //void setCallSign(string clsgn) { callsign = clsgn; };
@@ -265,21 +265,21 @@ public:
         allowTransmission=true;
     };
     //string getCallSign() { return callsign; };
-    FGAIAircraft *getAircraft() {
+    FGAIAircraft *getAircraft() const {
         return aircraft;
     };
-    int getTime() {
+    int getTime() const {
         return timer;
     };
-    int getLeg() {
+    int getLeg() const {
         return leg;
     };
     void setTime(time_t time) {
         timer = time;
     };
 
-    bool pushBackAllowed();
-    bool allowTransmissions() {
+    bool pushBackAllowed() const;
+    bool allowTransmissions() const {
         return allowTransmission;
     };
     void allowPushBack() { allowPushback =true;};
@@ -293,17 +293,17 @@ public:
     void nextFrequency() {
         frequencyId++;
     };
-    int  getNextFrequency() {
+    int  getNextFrequency() const {
         return frequencyId;
     };
     intVec& getIntentions() {
         return intentions;
     };
-    int getCurrentPosition() {
+    int getCurrentPosition() const {
         return currentPos;
     };
     void setPriority(int p) { priority = p; };
-    int getPriority()       { return priority; };
+    int getPriority() const { return priority; };
 };
 
 typedef std::list<FGTrafficRecord> TrafficVector;

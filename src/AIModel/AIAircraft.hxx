@@ -73,7 +73,7 @@ public:
     void setCompany(const std::string& comp) { company = comp;};
 
     void announcePositionToController(); //TODO have to be public?
-    void processATC(FGATCInstruction instruction);
+    void processATC(const FGATCInstruction& instruction);
     void setTaxiClearanceRequest(bool arg) { needsTaxiClearance = arg; };
     bool getTaxiClearanceRequest() { return needsTaxiClearance; };
     FGAISchedule * getTrafficRef() { return trafficRef; };

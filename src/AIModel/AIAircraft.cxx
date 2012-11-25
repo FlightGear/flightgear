@@ -96,6 +96,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     takeOffStatus = 0;
 
     trackCache.remainingLength = 0;
+    trackCache.startWptName = "-";
 }
 
 
@@ -631,7 +632,7 @@ void FGAIAircraft::scheduleForATCTowerDepartureControl(int state) {
 
 // Process ATC instructions and report back
 
-void FGAIAircraft::processATC(FGATCInstruction instruction) {
+void FGAIAircraft::processATC(const FGATCInstruction& instruction) {
     if (instruction.getCheckForCircularWait()) {
         // This is not exactly an elegant solution, 
         // but at least it gives me a chance to check

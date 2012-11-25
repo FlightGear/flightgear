@@ -79,6 +79,8 @@ FGScheduledFlight::FGScheduledFlight()
     repeatPeriod   = 0;
     initialized = false;
     available = true;
+    departurePort = NULL;
+    arrivalPort = NULL;
 }
   
 FGScheduledFlight::FGScheduledFlight(const FGScheduledFlight &other)

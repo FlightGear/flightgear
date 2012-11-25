@@ -179,7 +179,9 @@ FGTrafficRecord::FGTrafficRecord():
         allowTransmission(true),
         allowPushback(true),
         priority(0),
-        latitude(0), longitude(0), heading(0), speed(0), altitude(0), radius(0)
+        timer(0),
+        latitude(0), longitude(0), heading(0), speed(0), altitude(0), radius(0),
+        aircraft(NULL)
 {
 }
 
@@ -413,7 +415,7 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
     return false;
 }
 
-bool FGTrafficRecord::isActive(int margin)
+bool FGTrafficRecord::isActive(int margin) const
 {
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     time_t deptime = aircraft->getTrafficRef()->getDepartureTime();
@@ -433,7 +435,7 @@ void FGTrafficRecord::setHeadingAdjustment(double heading)
     instruction.setHeading(heading);
 }
 
-bool FGTrafficRecord::pushBackAllowed()
+bool FGTrafficRecord::pushBackAllowed() const
 {
     return allowPushback;
 }
@@ -460,7 +462,7 @@ FGATCInstruction::FGATCInstruction()
 }
 
 
-bool FGATCInstruction::hasInstruction()
+bool FGATCInstruction::hasInstruction() const
 {
     return (holdPattern || holdPosition || changeSpeed || changeHeading
             || changeAltitude || resolveCircularWait);
@@ -481,6 +483,8 @@ FGATCController::FGATCController()
     available = true;
     lastTransmission = 0;
     initialized = false;
+    lastTransmissionDirection = ATC_AIR_TO_GROUND;
+    group = NULL;
 }
 
 FGATCController::~FGATCController()
