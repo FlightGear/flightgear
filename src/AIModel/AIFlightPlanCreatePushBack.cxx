@@ -98,7 +98,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         while (route.next(&node))
         {
             char buffer[10];
-            snprintf (buffer, 10, "%ld", node);
+            snprintf (buffer, 10, "%lld", node);
             FGTaxiNode *tn = groundNet->findNode(node);
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), tn->geod(), dep->getElevation(), vTaxiBackward);
           
