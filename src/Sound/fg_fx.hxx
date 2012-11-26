@@ -55,6 +55,7 @@ public:
     virtual void init ();
     virtual void reinit ();
     virtual void update (double dt);
+            void unbind();
 
 private:
 

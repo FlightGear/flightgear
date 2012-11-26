@@ -135,7 +135,7 @@ FGAircraftModel::bind ()
 void
 FGAircraftModel::unbind ()
 {
-  // No-op
+  _fx->unbind();
 }
 
 void

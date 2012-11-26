@@ -229,6 +229,7 @@ protected:
     double UpdateRadar(FGAIManager* manager);
 
     void removeModel();
+    void removeSoundFx();
 
     static int _newAIModelID();
 

@@ -37,7 +37,6 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
 
@@ -76,7 +75,6 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _initialized(false),
     _modeldata(0),
     _fx(0)
-
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
@@ -143,18 +141,7 @@ FGAIBase::~FGAIBase() {
             model_removed->setStringValue(props->getPath());
     }
 
-  // refID=0 is supposedley impossible, refID=1 is the special ai_ac aircaft
-  // representing the current user, in the ATCManager. Maybe both these
-  // tests could die?
-    if (_fx && _refID != 0 && _refID !=  1) {
-        SGSoundMgr *smgr = globals->get_soundmgr();
-        if (smgr) {
-          std::stringstream name;
-          name <<  "aifx:";
-          name << _refID;
-          smgr->remove(name.str());
-        }
-    }
+    removeSoundFx();
 
     if (fp)
         delete fp;
@@ -477,8 +464,18 @@ void FGAIBase::unbind() {
 
     props->setBoolValue("/sim/controls/radar", true);
 
+    removeSoundFx();
+}
+
+void FGAIBase::removeSoundFx() {
     // drop reference to sound effects now
-    _fx = 0;
+    if (_fx)
+    {
+        // must remove explicitly - since the sound manager also keeps a reference
+        _fx->unbind();
+        // now drop last reference - kill the object
+        _fx = 0;
+    }
 }
 
 double FGAIBase::UpdateRadar(FGAIManager* manager) {

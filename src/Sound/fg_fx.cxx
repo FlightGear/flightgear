@@ -61,14 +61,13 @@ FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     _avionics_ext = _props->getNode("sim/sound/avionics/external-view", true);
     _internal = _props->getNode("sim/current-view/internal", true);
 
-    SGSoundMgr *smgr = globals->get_soundmgr();
-    if (!smgr) {
+    _smgr = globals->get_soundmgr();
+    if (!_smgr) {
       return;
     }
   
-    SGSampleGroup::_smgr = smgr;
-    SGSampleGroup::_refname = refname;
-    SGSampleGroup::_smgr->add(this, refname);
+    _refname = refname;
+    _smgr->add(this, refname);
 
     if (!_is_aimodel)
     {
@@ -77,6 +76,13 @@ FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     }
 }
 
+void FGFX::unbind()
+{
+    if (_smgr)
+    {
+        _smgr->remove(_refname);
+    }
+}
 
 FGFX::~FGFX ()
 {
@@ -147,7 +153,7 @@ FGFX::reinit()
     }
     _sound.clear();
     init();
-};
+}
 
 
 void
