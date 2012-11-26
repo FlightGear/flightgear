@@ -1,5 +1,6 @@
 // airspeed_indicator.cxx - a regular pitot-static airspeed indicator.
 // Written by David Megginson, started 2002.
+// Last modified by Eric van den Berg, 09 Dec 2012
 //
 // This file is in the Public Domain and comes with no warranty.
 
@@ -9,11 +10,14 @@
 
 #include <math.h>
 
+#include <simgear/constants.h>
 #include <simgear/math/interpolater.hxx>
 
 #include "airspeed_indicator.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
+#include <Environment/environment_mgr.hxx>
+#include <Environment/environment.hxx>
 
 
 // A higher number means more responsive.
@@ -31,6 +35,7 @@ AirspeedIndicator::AirspeedIndicator ( SGPropertyNode *node )
     _mach_limit(node->getDoubleValue("mach-limit", 0.48)),
     _alt_threshold(node->getDoubleValue("alt-threshold", 13200))
 {
+  _environmentManager = NULL;
 }
 
 AirspeedIndicator::~AirspeedIndicator ()
@@ -48,10 +53,6 @@ AirspeedIndicator::init ()
     _total_pressure_node = fgGetNode(_total_pressure.c_str(), true);
     _static_pressure_node = fgGetNode(_static_pressure.c_str(), true);
     _density_node = fgGetNode("/environment/density-slugft3", true);
-    
-    _sea_level_pressure_node = fgGetNode("/environment/pressure-sea-level-inhg", true);
-    _oat_celsius_node = fgGetNode("/environment/temperature-degc", true);
-  
     _speed_node = node->getChild("indicated-speed-kt", 0, true);
     _tas_node = node->getChild("true-speed-kt", 0, true);
     _mach_node = node->getChild("indicated-mach", 0, true);
@@ -77,6 +78,8 @@ AirspeedIndicator::init ()
         _airspeed_limit = node->getChild("airspeed-limit-kt", 0, true);
         _pressure_alt = fgGetNode(_pressure_alt_source.c_str(), true);
     }
+    
+    _environmentManager = (FGEnvironmentMgr*) globals->get_subsystem("environment");
 }
 
 void
@@ -85,14 +88,6 @@ AirspeedIndicator::reinit ()
     _speed_node->setDoubleValue(0.0);
 }
 
-#ifndef FPSTOKTS
-# define FPSTOKTS 0.592484
-#endif
-
-#ifndef INHGTOPSF
-# define INHGTOPSF (2116.217/29.9212)
-#endif
-
 void
 AirspeedIndicator::update (double dt)
 {
@@ -100,24 +95,25 @@ AirspeedIndicator::update (double dt)
         return;
     }
     
-    double pt = _total_pressure_node->getDoubleValue() * INHGTOPSF;
-    double p = _static_pressure_node->getDoubleValue() * INHGTOPSF;
-    double r = _density_node->getDoubleValue();
-    double q = ( pt - p );  // dynamic pressure
+    double pt = _total_pressure_node->getDoubleValue() ;
+    double p = _static_pressure_node->getDoubleValue() ;
+    double qc = ( pt - p ) * SG_INHG_TO_PA ;  // Impact pressure in Pa, _not_ to be confused with dynamic pressure!!!
 
-    // Now, reverse the equation (normalize dynamic pressure to
+    // Now, reverse the equation (normalize impact pressure to
     // avoid "nan" results from sqrt)
-    if ( q < 0 ) { q = 0.0; }
-    double v_fps = sqrt((2 * q) / r);
+    qc = std::max( qc , 0.0 );
+    // Calibrated airspeed (using compressible aerodynamics) based on impact pressure qc in m/s
+    // Using calibrated airspeed as indicated airspeed, neglecting any airspeed indicator errors.
+    double v_cal = sqrt( 7 * SG_p0_Pa/SG_rho0_kg_p_m3 * ( pow( 1 + qc/SG_p0_Pa  , 1/3.5 )  -1 ) );
 
                             // Publish the indicated airspeed
     double last_speed_kt = _speed_node->getDoubleValue();
-    double current_speed_kt = v_fps * FPSTOKTS;
+    double current_speed_kt = v_cal * SG_MPS_TO_KT;
     double filtered_speed = fgGetLowPass(last_speed_kt,
                                              current_speed_kt,
                                              dt * RESPONSIVENESS);
     _speed_node->setDoubleValue(filtered_speed);
-    computeMach(filtered_speed);
+    computeMach();
 
     if (!_has_overspeed) {
         return;
@@ -133,24 +129,32 @@ AirspeedIndicator::update (double dt)
 }
 
 void
-AirspeedIndicator::computeMach(double ias)
+AirspeedIndicator::computeMach()
 {
-   
-  // derived from http://williams.best.vwh.net/avform.htm#Mach
-  // names here are picked to be consistent with those formulae!
-
-  double oatK = _oat_celsius_node->getDoubleValue() + 273.15; // OAT in Kelvin
-  double CS = 38.967854 * sqrt(oatK); // speed-of-sound in knots at altitude
-  double CS_0 = 661.4786; // speed-of-sound in knots at sea-level
-  double P_0 = _sea_level_pressure_node->getDoubleValue();
-  double P = _static_pressure_node->getDoubleValue();
+  if (!_environmentManager) {
+    return;
+  }
   
-  double DP = P_0 * (pow(1 + 0.2*pow(ias/CS_0, 2), 3.5) - 1);
-  double mach = pow(5 * ( pow(DP/P + 1, 2.0/7.0) -1) , 0.5);
+  FGEnvironment env(_environmentManager->getEnvironment());
+  
+  double oatK = env.get_temperature_degc() + SG_T0_K - 15.0 ;         // OAT in Kelvin
+  oatK = std::max( oatK , 0.001 );                                // should never happen, but just in case someone flies into space...
+  double c = sqrt(SG_gamma * SG_R_m2_p_s2_p_K * oatK);                 // speed-of-sound in m/s at aircraft position
+  double pt = _total_pressure_node->getDoubleValue() * SG_INHG_TO_PA;  // total pressure in Pa
+  double p = _static_pressure_node->getDoubleValue() * SG_INHG_TO_PA;  // static pressure in Pa
+  p = std::max( p , 0.001 );                                           // should never happen, but just in case someone flies into space...
+  double rho = _density_node->getDoubleValue() * SG_SLUGFT3_TO_KGPM3;  // air density in kg/m3
+  rho = std::max( rho , 0.001 );                                      // should never happen, but just in case someone flies into space...
+  
+  // true airspeed in m/s
+  pt = std::max( pt , p );
+  double V_true = sqrt( 7 * p/rho * (pow( 1 + (pt-p)/p , 1/3.5 ) -1 ) );
+  // Mach number; _see notes in systems/pitot.cxx_
+  double mach = V_true / c;
   
   // publish Mach and TAS
   _mach_node->setDoubleValue(mach);
-  _tas_node->setDoubleValue(CS * mach);
+  _tas_node->setDoubleValue(V_true * SG_MPS_TO_KT );
 }
 
 // end of airspeed_indicator.cxx

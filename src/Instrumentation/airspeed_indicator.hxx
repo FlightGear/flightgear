@@ -1,6 +1,7 @@
 // airspeed_indicator.hxx - a regular VSI tied to the static port.
 // Written by David Megginson, started 2002.
 //
+// Last modified by Eric van den Berg, 24 Nov 2012
 // This file is in the Public Domain and comes with no warranty.
 
 
@@ -13,6 +14,9 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+
+// forward decls
+class FGEnvironmentMgr;
 
 /**
  * Model an airspeed indicator tied to the pitot and static ports.
@@ -27,6 +31,8 @@
  * Output properties:
  *
  * /instrumentation/"name"/indicated-speed-kt
+ * /instrumentation/"name"/true-speed-kt
+ * /instrumentation/"name"/indicated-mach
  */
 class AirspeedIndicator : public SGSubsystem
 {
@@ -41,7 +47,7 @@ public:
     virtual void update (double dt);
 
 private:
-    void computeMach(double ias);
+    void computeMach();
 
     std::string _name;
     unsigned int _num;
@@ -65,8 +71,8 @@ private:
     SGPropertyNode_ptr _pressure_alt;
     SGPropertyNode_ptr _mach_node;
     SGPropertyNode_ptr _tas_node;
-    SGPropertyNode_ptr _sea_level_pressure_node;
-    SGPropertyNode_ptr _oat_celsius_node;
+    
+    FGEnvironmentMgr* _environmentManager;
 };
 
 #endif // __INSTRUMENTS_AIRSPEED_INDICATOR_HXX

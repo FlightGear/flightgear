@@ -1,6 +1,7 @@
 // pitot.hxx - the pitot air system.
 // Written by David Megginson, started 2002.
 //
+// Last modified by Eric van den Berg, 24 Nov 2012
 // This file is in the Public Domain and comes with no warranty.
 
 
@@ -29,13 +30,13 @@ using std::string;
  * Input properties:
  *
  * /systems/"name"/serviceable
- * /environment/pressure-slugft3
- * /environment/density-slugft3
- * /velocities/airspeed-kt
+ * /environment/pressure-inhg
+ * /velocities/mach
  *
  * Output properties:
  *
  * /systems/"name"/total-pressure-inhg
+ * /systems/"name"/measured-total-pressure-inhg
  */
 class PitotSystem : public SGSubsystem
 {
@@ -56,10 +57,9 @@ private:
     int _num;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;
-    SGPropertyNode_ptr _density_node;
-    SGPropertyNode_ptr _velocity_node;
-    SGPropertyNode_ptr _slip_angle;
+    SGPropertyNode_ptr _mach_node;
     SGPropertyNode_ptr _total_pressure_node;
+    SGPropertyNode_ptr _measured_total_pressure_node;
 };
 
 #endif // __SYSTEMS_PITOT_HXX

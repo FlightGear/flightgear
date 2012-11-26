@@ -2,6 +2,7 @@
 // Written by David Megginson, started 2002.
 // Modified by John Denker in 2007 to use a two layer atmosphere
 // model in src/Environment/atmosphere.?xx
+// Last modified by Eric van den Berg, 25 Nov 2012
 //
 // This file is in the Public Domain and comes with no warranty.
 
@@ -19,6 +20,7 @@
 #  include <config.h>
 #endif
 
+#include <simgear/constants.h>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/SGMath.hxx>
 
@@ -27,8 +29,6 @@
 #include <Environment/atmosphere.hxx>
 
 #include "altimeter.hxx"
-
-const double hPa2inHg = 29.92 / 1013.25;
 
 Altimeter::Altimeter ( SGPropertyNode *node, double quantum )
     : _rootNode( 
@@ -62,13 +62,13 @@ Altimeter::setSettingInHg( double value )
 double
 Altimeter::getSettingHPa() const
 {
-    return _settingInHg / hPa2inHg;
+    return _settingInHg * SG_INHG_TO_PA / 100;
 }
 
 void
 Altimeter::setSettingHPa( double value )
 {
-    _settingInHg = value * hPa2inHg;
+    _settingInHg = value * SG_PA_TO_INHG * 100;
 }
 
 
