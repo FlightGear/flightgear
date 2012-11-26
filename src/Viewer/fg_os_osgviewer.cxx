@@ -345,10 +345,17 @@ void fgOSFullScreen()
         int height;
         window->getWindowRectangle(x, y, width, height);
 
-        bool isFullScreen = x == 0 && y == 0 && width == (int)screenWidth && height == (int)screenHeight;
+        /* Note: the simple "is window size == screen size" check to detect full screen state doesn't work with
+         * X screen servers in Xinerama mode, since the reported screen width (or height) exceeds the maximum width
+         * (or height) usable by a single window (Xserver automatically shrinks/moves the full screen window to fit a
+         * single display) - so we detect full screen mode using "WindowDecoration" state instead.
+         * "false" - even when a single window is display in fullscreen */
+        //bool isFullScreen = x == 0 && y == 0 && width == (int)screenWidth && height == (int)screenHeight;
+        bool isFullScreen = !window->getWindowDecoration();
 
         SG_LOG(SG_VIEW, SG_DEBUG, "Toggling fullscreen. Previous window rectangle ("
-               << x << ", " << y << ") x (" << width << ", " << height << "), fullscreen: " << isFullScreen);
+               << x << ", " << y << ") x (" << width << ", " << height << "), fullscreen: " << isFullScreen
+               << ", number of screens: " << wsi->getNumScreens());
         if (isFullScreen)
         {
             // limit x,y coordinates and window size to screen area
