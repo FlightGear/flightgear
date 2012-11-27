@@ -334,7 +334,7 @@ public:
     return stepSelect(stmt);
   }
   
-  const int MAX_RETRIES = 10;
+  static const int MAX_RETRIES = 10;
   
   bool stepSelect(sqlite3_stmt_ptr stmt)
   {
