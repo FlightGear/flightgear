@@ -124,7 +124,7 @@ osg::Group * FGPrecipitationMgr::getObject(void)
  * @returns Elevation max in meter
  *
  * This function permits you to know what is the altitude max where we can
- * find precipitation. The value is returned in meter.
+ * find precipitation. The value is returned in meters.
  */
 float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
 {
@@ -132,7 +132,12 @@ float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
     int max;
     float result;
     SGPropertyNode *boundaryNode, *boundaryEntry;
-
+    
+    if (fgGetBool("/environment/params/use-external-precipitation-level", false)) {
+        // If we're not modeling the precipitation level based on the cloud
+        // layers, take it directly from the property tree.
+        return fgGetFloat("/environment/params/external-precipitation-level-m", 0.0);    
+    }
 
     // By default (not cloud layer)
     max = SGCloudLayer::SG_MAX_CLOUD_COVERAGES;
@@ -216,18 +221,18 @@ void FGPrecipitationMgr::update(double dt)
     altitudeCloudLayer = this->getPrecipitationAtAltitudeMax() * SG_METER_TO_FEET;
     setPrecipitationLevel(altitudeCloudLayer);
 
-	// Does the user enable the precipitation ?
-	if (!precipitation->getEnabled() ) {
-		// Disable precipitations
-	    precipitation->setRainIntensity(0);
-	    precipitation->setSnowIntensity(0);
+    // Does the user enable the precipitation ?
+    if (!precipitation->getEnabled() ) {
+        // Disable precipitations
+        precipitation->setRainIntensity(0);
+        precipitation->setSnowIntensity(0);
 
-	    // Update the drawing...
-	    precipitation->update();
+        // Update the drawing...
+        precipitation->update();
 
-		// Exit
-		return;
-	}
+        // Exit
+        return;
+    }
 
     // Get the elevation of aicraft and of the cloud layer
     altitudeAircraft = fgGetDouble("/position/altitude-ft", 0.0);
