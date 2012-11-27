@@ -286,21 +286,21 @@ FGAIWaypoint* const FGAIFlightPlan::getNextWaypoint( void ) const
 
 void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 {
-  if (eraseWaypoints)
+    if (eraseWaypoints)
     {
-      if (wpt_iterator == waypoints.begin())
-	wpt_iterator++;
-      else
-	{
-	  delete *(waypoints.begin());
-	  waypoints.erase(waypoints.begin());
-	  wpt_iterator = waypoints.begin();
-	  wpt_iterator++;
-	}
+        if (wpt_iterator == waypoints.begin())
+            wpt_iterator++;
+        else
+        if (!waypoints.empty())
+        {
+            delete *(waypoints.begin());
+            waypoints.erase(waypoints.begin());
+            wpt_iterator = waypoints.begin();
+            wpt_iterator++;
+        }
     }
-  else
-    wpt_iterator++;
-
+    else
+        wpt_iterator++;
 }
 
 void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
@@ -310,9 +310,10 @@ void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
         if (wpt_iterator == waypoints.end())
             wpt_iterator--;
         else
+        if (!waypoints.empty())
         {
-            delete *(waypoints.end());
-            waypoints.erase(waypoints.end());
+            delete *(waypoints.end()-1);
+            waypoints.erase(waypoints.end()-1);
             wpt_iterator = waypoints.end();
             wpt_iterator--;
         }
@@ -397,6 +398,7 @@ void FGAIFlightPlan::deleteWaypoints()
   for (wpt_vector_iterator i = waypoints.begin(); i != waypoints.end();i++)
     delete (*i);
   waypoints.clear();
+  wpt_iterator = waypoints.begin();
 }
 
 // Delete all waypoints except the last, 
