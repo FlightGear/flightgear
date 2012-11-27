@@ -55,7 +55,8 @@ class GUIMgr:
     simgear::PropertyObject<int>        _width,
                                         _height;
 
-    canvas::WindowWeakPtr _last_push;
+    canvas::WindowWeakPtr _last_push,
+                          _last_mouse_over;
     float _last_x,
           _last_y;
 

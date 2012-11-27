@@ -209,9 +209,6 @@ bool GUIMgr::handleEvent(const osgGA::GUIEventAdapter& ea)
     case osgGA::GUIEventAdapter::MOVE:
     case osgGA::GUIEventAdapter::SCROLL:
       return handleMouse(ea);
-//        case osgGA::GUIEventAdapter::MOVE:
-//          std::cout << "MOVE" << std::endl;
-//          break;
     case osgGA::GUIEventAdapter::RESIZE:
       handleResize( ea.getWindowX(),
                     ea.getWindowY(),
@@ -260,18 +257,25 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   if( !_transform->getNumChildren() )
     return false;
 
-  simgear::canvas::MouseEvent event( ea.getEventType() );
+  namespace sc = simgear::canvas;
+  sc::MouseEventPtr event(new sc::MouseEvent);
 
-  event.x = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
-  event.y = 0.5 * (ea.getYnormalized() + 1) * _height + 0.5;
+  event->pos.x() = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
+  event->pos.y() = 0.5 * (ea.getYnormalized() + 1) * _height + 0.5;
   if(    ea.getMouseYOrientation()
       != osgGA::GUIEventAdapter::Y_INCREASING_DOWNWARDS )
-    event.y = _height - event.y;
+    event->pos.y() = _height - event->pos.y();
 
-  event.button = ea.getButton();
-  event.state = ea.getButtonMask();
-  event.mod = ea.getModKeyMask();
-  event.scroll = ea.getScrollingMotion();
+  event->delta.x() = event->pos.x() - _last_x;
+  event->delta.y() = event->pos.y() - _last_y;
+
+  _last_x = event->pos.x();
+  _last_y = event->pos.y();
+
+  event->button = ea.getButton();
+  event->state = ea.getButtonMask();
+  event->mod = ea.getModKeyMask();
+  //event->scroll = ea.getScrollingMotion();
 
   canvas::WindowPtr window_at_cursor;
   for( int i = _transform->getNumChildren() - 1; i >= 0; --i )
@@ -287,7 +291,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       canvas::WindowPtr window =
         static_cast<WindowUserData*>(layer->getChild(j)->getUserData())
           ->window.lock();
-      if( window->getRegion().contains(event.x, event.y) )
+      if( window->getRegion().contains(event->pos.x(), event->pos.y()) )
       {
         window_at_cursor = window;
         break;
@@ -303,19 +307,38 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   {
     case osgGA::GUIEventAdapter::PUSH:
       _last_push = window_at_cursor;
+      event->type = sc::Event::MOUSE_DOWN;
       break;
-    case osgGA::GUIEventAdapter::SCROLL:
+//    case osgGA::GUIEventAdapter::SCROLL:
+//      event->type = sc::Event::SCROLL;
+//      break;
     case osgGA::GUIEventAdapter::MOVE:
-      break;
+    {
+      canvas::WindowPtr last_mouse_over = _last_mouse_over.lock();
+      if( last_mouse_over != window_at_cursor && last_mouse_over )
+      {
+        sc::MouseEventPtr move_event( new sc::MouseEvent(*event) );
+        move_event->type = sc::Event::MOUSE_LEAVE;
 
+        // Let the event position be always relative to the top left window corner
+        move_event->pos.x() -= last_mouse_over->getRegion().x();
+        move_event->pos.y() -= last_mouse_over->getRegion().y();
+
+        last_mouse_over->handleMouseEvent(move_event);
+      }
+      _last_mouse_over = window_at_cursor;
+      event->type = sc::Event::MOUSE_MOVE;
+      break;
+    }
     case osgGA::GUIEventAdapter::RELEASE:
       target_window = _last_push.lock();
       _last_push.reset();
+      event->type = sc::Event::MOUSE_UP;
       break;
 
-    case osgGA::GUIEventAdapter::DRAG:
-      target_window = _last_push.lock();
-      break;
+//    case osgGA::GUIEventAdapter::DRAG:
+//      target_window = _last_push.lock();
+//      break;
 
     default:
       return false;
@@ -323,15 +346,9 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
 
   if( target_window )
   {
-    event.dx = event.x - _last_x;
-    event.dy = event.y - _last_y;
-
-    _last_x = event.x;
-    _last_y = event.y;
-
     // Let the event position be always relative to the top left window corner
-    event.x -= target_window->getRegion().x();
-    event.y -= target_window->getRegion().y();
+    event->pos.x() -= target_window->getRegion().x();
+    event->pos.y() -= target_window->getRegion().y();
 
     return target_window->handleMouseEvent(event);
   }

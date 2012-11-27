@@ -45,7 +45,7 @@ namespace canvas
       void setCanvas(simgear::canvas::CanvasPtr canvas);
       simgear::canvas::CanvasWeakPtr getCanvas() const;
 
-      bool handleMouseEvent(const simgear::canvas::MouseEvent& event);
+      bool handleMouseEvent(const simgear::canvas::MouseEventPtr& event);
 
     protected:
 

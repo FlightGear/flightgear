@@ -33,6 +33,7 @@
 
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/elements/CanvasElement.hxx>
+#include <simgear/canvas/MouseEvent.hxx>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
 #include <simgear/nasal/cppbind/to_nasal.hxx>
@@ -49,6 +50,8 @@ naRef elementGetNode(naContext c, Element& element)
   return propNodeGhostCreate(c, element.getProps());
 }
 
+typedef nasal::Ghost<sc::EventPtr> NasalEvent;
+typedef nasal::Ghost<sc::MouseEventPtr> NasalMouseEvent;
 typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
@@ -145,27 +148,28 @@ static naRef f_getCanvas(naContext c, naRef me, int argc, naRef* args)
   return NasalCanvas::create(c, canvas);
 }
 
-naRef f_canvasCreateGroup( sc::Canvas& canvas,
-                           naContext c,
-                           int argc,
-                           naRef* args )
+naRef f_canvasCreateGroup(sc::Canvas& canvas, const nasal::CallContext& ctx)
 {
   std::string name;
-  if( argc > 0 )
-    name = nasal::from_nasal<std::string>(c, args[0]);
+  if( ctx.argc > 0 )
+    name = nasal::from_nasal<std::string>(ctx.c, ctx.args[0]);
 
-  return NasalGroup::create(c, canvas.createGroup(name));
+  return NasalGroup::create(ctx.c, canvas.createGroup(name));
 }
 
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
 {
+  NasalEvent::init("canvas.Event");
+  NasalMouseEvent::init("canvas.MouseEvent")
+    .bases<NasalEvent>();
   NasalCanvas::init("Canvas")
     .member("_node_ghost", &elementGetNode<sc::Canvas>)
     .member("size_x", &sc::Canvas::getSizeX)
     .member("size_y", &sc::Canvas::getSizeY)
     .method_func<&f_canvasCreateGroup>("createGroup");
   NasalElement::init("canvas.Element")
-    .member("_node_ghost", &elementGetNode<sc::Element>);
+    .member("_node_ghost", &elementGetNode<sc::Element>)
+    .method<&sc::Element::addEventListener>("addEventListener");
   NasalGroup::init("canvas.Group")
     .bases<NasalElement>();
 

@@ -23,6 +23,11 @@ namespace canvas
 
       virtual int gcSave(naRef r);
       virtual void gcRelease(int key);
+      virtual naRef callMethod( naRef code,
+                                naRef self,
+                                int argc,
+                                naRef* args,
+                                naRef locals );
   };
 }
 

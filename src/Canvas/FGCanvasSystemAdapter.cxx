@@ -99,4 +99,14 @@ namespace canvas
     getNasalSys()->gcRelease(key);
   }
 
+  //------------------------------------------------------------------------------
+  naRef FGCanvasSystemAdapter::callMethod( naRef code,
+                                           naRef self,
+                                           int argc,
+                                           naRef* args,
+                                           naRef locals )
+  {
+    return getNasalSys()->callMethod(code, self, argc, args, locals);
+  }
+
 }
