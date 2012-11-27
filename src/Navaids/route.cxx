@@ -237,7 +237,17 @@ WayptRef Waypt::createFromProperties(RouteBase* aOwner, SGPropertyNode_ptr aProp
       "Waypt::createFromProperties");
   }
   
-  WayptRef nd(createInstance(aOwner, aProp->getStringValue("type")));
+  try {
+    WayptRef nd(createInstance(aOwner, aProp->getStringValue("type")));
+    nd->initFromProperties(aProp);
+    return nd;
+  } catch (sg_exception& e) {
+    SG_LOG(SG_GENERAL, SG_WARN, "failed to create waypoint, trying basic:" << e.getMessage());
+  }
+  
+// if we failed to make the waypoint, try again making a basic waypoint.
+// this handles the case where a navaid waypoint is missing, for example
+  WayptRef nd(new BasicWaypt(aOwner));
   nd->initFromProperties(aProp);
   return nd;
 }

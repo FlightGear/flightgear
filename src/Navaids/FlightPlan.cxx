@@ -612,8 +612,9 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
     string depIdent = dep->getStringValue("airport");
     setDeparture((FGAirport*) fgFindAirportID(depIdent));
     if (_departure) {
-      if (dep->hasChild("runway")) {
-        setDeparture(_departure->getRunwayByIdent(dep->getStringValue("runway")));
+      string rwy(dep->getStringValue("runway"));
+      if (_departure->hasRunwayWithIdent(rwy)) {
+        setDeparture(_departure->getRunwayByIdent(rwy));
       }
     
       if (dep->hasChild("sid")) {
@@ -628,8 +629,9 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
   if (dst) {
     setDestination((FGAirport*) fgFindAirportID(dst->getStringValue("airport")));
     if (_destination) {
-      if (dst->hasChild("runway")) {
-        setDestination(_destination->getRunwayByIdent(dst->getStringValue("runway")));
+      string rwy(dst->getStringValue("runway"));
+      if (_destination->hasRunwayWithIdent(rwy)) {
+        setDestination(_destination->getRunwayByIdent(rwy));
       }
       
       if (dst->hasChild("star")) {
@@ -709,18 +711,23 @@ WayptRef FlightPlan::parseVersion1XMLWaypt(SGPropertyNode* aWP)
   } else {
     string nid = aWP->getStringValue("navid", ident.c_str());
     FGPositionedRef p = FGPositioned::findClosestWithIdent(nid, lastPos);
-    if (!p) {
-      throw sg_io_exception("bad route file, unknown navid:" + nid);
+    SGGeod pos;
+    
+    if (p) {
+      pos = p->geod();
+    } else {
+      SG_LOG(SG_GENERAL, SG_WARN, "unknown navaid in flightplan:" << nid);
+      pos = SGGeod::fromDeg(aWP->getDoubleValue("longitude-deg"),
+                            aWP->getDoubleValue("latitude-deg"));
     }
     
-    SGGeod pos(p->geod());
     if (aWP->hasChild("offset-nm") && aWP->hasChild("offset-radial")) {
       double radialDeg = aWP->getDoubleValue("offset-radial");
       // convert magnetic radial to a true radial!
       radialDeg += magvarDegAt(pos);
       double offsetNm = aWP->getDoubleValue("offset-nm");
       double az2;
-      SGGeodesy::direct(p->geod(), radialDeg, offsetNm * SG_NM_TO_METER, pos, az2);
+      SGGeodesy::direct(pos, radialDeg, offsetNm * SG_NM_TO_METER, pos, az2);
     }
     
     w = new BasicWaypt(pos, ident, NULL);
