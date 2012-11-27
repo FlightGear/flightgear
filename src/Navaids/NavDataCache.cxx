@@ -70,7 +70,7 @@ using std::string;
 
 namespace {
 
-const int SCHEMA_VERSION = 5;
+const int SCHEMA_VERSION = 6;
 
 // bind a std::string to a sqlite statement. The std::string must live the
 // entire duration of the statement execution - do not pass a temporary
@@ -232,8 +232,8 @@ public:
     }
     
     readPropertyQuery = prepare("SELECT value FROM properties WHERE key=?");
-    writePropertyQuery = prepare("INSERT OR REPLACE INTO properties "
-                                 "(key, value) VALUES (?,?)");
+    writePropertyQuery = prepare("INSERT INTO properties (key, value) VALUES (?,?)");
+    clearProperty = prepare("DELETE FROM properties WHERE key=?1");
     
     if (didCreate) {
       writeIntProperty("schema-version", SCHEMA_VERSION);
@@ -507,7 +507,6 @@ public:
   
   void prepareQueries()
   {
-    clearProperty = prepare("DELETE FROM properties WHERE key=?1");
     writePropertyMulti = prepare("INSERT INTO properties (key, value) VALUES(?1,?2)");
     
 #define POSITIONED_COLS "rowid, type, ident, name, airport, lon, lat, elev_m, octree_node"
@@ -668,6 +667,10 @@ public:
   
   void writeIntProperty(const string& key, int value)
   {
+    reset(clearProperty);
+    sqlite_bind_stdstring(clearProperty, 1, key);
+    execUpdate(clearProperty);
+    
     sqlite_bind_stdstring(writePropertyQuery, 1, key);
     sqlite3_bind_int(writePropertyQuery, 2, value);
     execSelect(writePropertyQuery);
@@ -1117,6 +1120,12 @@ bool NavDataCache::isRebuildRequired()
     return true;
   }
 
+  string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");  
+  if (readStringProperty("scenery_paths") != sceneryPaths) {
+    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: scenery paths changed, main cache rebuild required");
+    return true;
+  }
+    
   SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: no main cache rebuild required");
   return false;
 }
@@ -1186,6 +1195,9 @@ void NavDataCache::doRebuild()
     
     d->flushDeferredOctreeUpdates();
     
+    string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");
+    writeStringProperty("scenery_paths", sceneryPaths);
+    
     d->runSQL("COMMIT");
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVCACHE, SG_ALERT, "caught exception rebuilding navCache:" << e.what());
@@ -1238,6 +1250,10 @@ void NavDataCache::writeIntProperty(const string& key, int value)
 
 void NavDataCache::writeStringProperty(const string& key, const string& value)
 {
+  d->reset(d->clearProperty);
+  sqlite_bind_stdstring(d->clearProperty, 1, key);
+  d->execUpdate(d->clearProperty);
+
   d->reset(d->writePropertyQuery);
   sqlite_bind_stdstring(d->writePropertyQuery, 1, key);
   sqlite_bind_stdstring(d->writePropertyQuery, 2, value);
@@ -1246,6 +1262,10 @@ void NavDataCache::writeStringProperty(const string& key, const string& value)
 
 void NavDataCache::writeDoubleProperty(const string& key, const double& value)
 {
+  d->reset(d->clearProperty);
+  sqlite_bind_stdstring(d->clearProperty, 1, key);
+  d->execUpdate(d->clearProperty);
+  
   d->reset(d->writePropertyQuery);
   sqlite_bind_stdstring(d->writePropertyQuery, 1, key);
   sqlite3_bind_double(d->writePropertyQuery, 2, value);
