@@ -334,15 +334,32 @@ public:
     return stepSelect(stmt);
   }
   
+  const int MAX_RETRIES = 10;
+  
   bool stepSelect(sqlite3_stmt_ptr stmt)
   {
-    int result = sqlite3_step(stmt);
-    if (result == SQLITE_ROW) {
-      return true; // at least one result row
-    }
+    int retries = 0;
+    int result;
+    while (retries < MAX_RETRIES) {
+      result = sqlite3_step(stmt);
+      if (result == SQLITE_ROW) {
+        return true; // at least one result row
+      }
+      
+      if (result == SQLITE_DONE) {
+        return false; // no result rows
+      }
+      
+      if (result != SQLITE_LOCKED) {
+        break;
+      }
+      
+      ++retries;
+    } // of retry loop for DB locked
     
-    if (result == SQLITE_DONE) {
-      return false; // no result rows
+    if (retries >= MAX_RETRIES) {
+      SG_LOG(SG_NAVCACHE, SG_ALERT, "exceeded maximum number of SQLITE_LOCKED retries");
+      return false;
     }
     
     string errMsg;
