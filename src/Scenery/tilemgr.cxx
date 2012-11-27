@@ -104,6 +104,10 @@ void FGTileMgr::refresh_tile(void* tileMgr, long tileIndex)
 
 void FGTileMgr::reinit()
 {
+    _terra_sync = static_cast<simgear::SGTerraSync*> (globals->get_subsystem("terrasync"));
+    if (_terra_sync)
+        _terra_sync->setTileRefreshCb(&refresh_tile, this);
+
     // protect against multiple scenery reloads and properly reset flags,
     // otherwise aircraft fall through the ground while reloading scenery
     if (!fgGetBool("/sim/sceneryloaded",true))
@@ -131,10 +135,6 @@ void FGTileMgr::reinit()
     current_bucket.make_bad();
     longitude = latitude = -1000.0;
     scheduled_visibility = 100.0;
-
-    _terra_sync = (simgear::SGTerraSync*) globals->get_subsystem("terrasync");
-    if (_terra_sync)
-        _terra_sync->setTileRefreshCb(&refresh_tile, this);
 
     // force an update now
     update(0.0);
