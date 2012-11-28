@@ -30,6 +30,7 @@
 #include <queue>
 #include <cassert>
 #include <map>
+#include <functional>
 
 // SimGear
 #include <simgear/math/SGGeometry.hxx>
