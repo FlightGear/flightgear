@@ -158,13 +158,16 @@ static PositionedID readNavFromStream(std::istream& aStream,
 
   if ((type >= FGPositioned::OM) && (type <= FGPositioned::IM)) {
     AirportRunwayPair arp(cache->findAirportRunway(name));
+#if 0
+      // code is disabled since it's causing some problems, see
+      // http://code.google.com/p/flightgear-bugs/issues/detail?id=926
     if (arp.second && (elev_ft < 0.01)) {
     // snap to runway elevation
       FGPositioned* runway = cache->loadById(arp.second);
       assert(runway);
       pos.setElevationFt(runway->geod().getElevationFt());
     }
-    
+#endif
     return cache->insertNavaid(type, string(), name, pos, 0, 0, 0,
                                arp.first, arp.second);
   }
