@@ -150,11 +150,21 @@ static naRef f_getCanvas(naContext c, naRef me, int argc, naRef* args)
 
 naRef f_canvasCreateGroup(sc::Canvas& canvas, const nasal::CallContext& ctx)
 {
-  std::string name;
-  if( ctx.argc > 0 )
-    name = nasal::from_nasal<std::string>(ctx.c, ctx.args[0]);
+  return NasalGroup::create
+  (
+    ctx.c,
+    canvas.createGroup( ctx.get<std::string>(0) )
+  );
+}
 
-  return NasalGroup::create(ctx.c, canvas.createGroup(name));
+naRef f_groupCreateChild(sc::Group& group, const nasal::CallContext& ctx)
+{
+  return NasalElement::create
+  (
+    ctx.c,
+    group.createChild( ctx.require<std::string>(0),
+                       ctx.get<std::string>(1) )
+  );
 }
 
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
@@ -171,7 +181,8 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .member("_node_ghost", &elementGetNode<sc::Element>)
     .method<&sc::Element::addEventListener>("addEventListener");
   NasalGroup::init("canvas.Group")
-    .bases<NasalElement>();
+    .bases<NasalElement>()
+    .method_func<&f_groupCreateChild>("createChild");
 
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
