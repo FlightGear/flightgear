@@ -56,16 +56,13 @@ typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
 
-SGPropertyNode& requireArg(naContext c, int argc, naRef* args, int index = 0)
+SGPropertyNode* from_nasal_helper(naContext c, naRef ref, SGPropertyNode**)
 {
-  if( argc <= index )
-    naRuntimeError(c, "missing argument #%d", index);
-
-  SGPropertyNode* props = ghostToPropNode(args[index]);
+  SGPropertyNode* props = ghostToPropNode(ref);
   if( !props )
-    naRuntimeError(c, "arg #%d: not a SGPropertyNode ghost");
+    naRuntimeError(c, "Not a SGPropertyNode ghost.");
 
-  return *props;
+  return props;
 }
 
 CanvasMgr& requireCanvasMgr(naContext c)
@@ -91,7 +88,8 @@ static naRef f_createCanvas(naContext c, naRef me, int argc, naRef* args)
  */
 static naRef f_getCanvas(naContext c, naRef me, int argc, naRef* args)
 {
-  SGPropertyNode& props = requireArg(c, argc, args);
+  nasal::CallContext ctx(c, argc, args);
+  SGPropertyNode& props = *ctx.requireArg<SGPropertyNode*>(0);
   CanvasMgr& canvas_mgr = requireCanvasMgr(c);
 
   sc::CanvasPtr canvas;
@@ -133,6 +131,24 @@ naRef f_groupCreateChild(sc::Group& group, const nasal::CallContext& ctx)
   );
 }
 
+naRef f_groupGetChild(sc::Group& group, const nasal::CallContext& ctx)
+{
+  return NasalElement::create
+  (
+    ctx.c,
+    group.getChild( ctx.requireArg<SGPropertyNode*>(0) )
+  );
+}
+
+naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
+{
+  return NasalElement::create
+  (
+    ctx.c,
+    group.getElementById( ctx.requireArg<std::string>(0) )
+  );
+}
+
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
 {
   NasalEvent::init("canvas.Event");
@@ -142,13 +158,15 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .member("_node_ghost", &elementGetNode<sc::Canvas>)
     .member("size_x", &sc::Canvas::getSizeX)
     .member("size_y", &sc::Canvas::getSizeY)
-    .method_func<&f_canvasCreateGroup>("createGroup");
+    .method_func<&f_canvasCreateGroup>("_createGroup");
   NasalElement::init("canvas.Element")
     .member("_node_ghost", &elementGetNode<sc::Element>)
     .method<&sc::Element::addEventListener>("addEventListener");
   NasalGroup::init("canvas.Group")
     .bases<NasalElement>()
-    .method_func<&f_groupCreateChild>("createChild");
+    .method_func<&f_groupCreateChild>("_createChild")
+    .method_func<&f_groupGetChild>("_getChild")
+    .method_func<&f_groupGetElementById>("_getElementById");
 
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
