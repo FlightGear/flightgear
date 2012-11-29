@@ -56,40 +56,6 @@ typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
 
-#if 0
-typedef osg::ref_ptr<osgGA::GUIEventAdapter> GUIEventPtr;
-
-class NasalCanvasEvent:
-  public NasalObject<GUIEventPtr, NasalCanvasEvent>
-{
-  public:
-
-    naRef getEventType(naContext c, const GUIEventPtr& event)
-    {
-#define RET_EVENT_STR(type, str)\
-  case osgGA::GUIEventAdapter::type:\
-    return nasal::to_nasal(c, str);
-
-      switch( event->getEventType() )
-      {
-        RET_EVENT_STR(PUSH,         "push");
-        RET_EVENT_STR(RELEASE,      "release");
-        RET_EVENT_STR(DOUBLECLICK,  "double-click");
-        RET_EVENT_STR(DRAG,         "drag");
-        RET_EVENT_STR(MOVE,         "move");
-        RET_EVENT_STR(SCROLL,       "scroll");
-        RET_EVENT_STR(KEYUP,        "key-up");
-        RET_EVENT_STR(KEYDOWN,      "key-down");
-
-#undef RET_EVENT_STR
-
-        default:
-          return naNil();
-      }
-    }
-};
-#endif
-
 SGPropertyNode& requireArg(naContext c, int argc, naRef* args, int index = 0)
 {
   if( argc <= index )
@@ -153,7 +119,7 @@ naRef f_canvasCreateGroup(sc::Canvas& canvas, const nasal::CallContext& ctx)
   return NasalGroup::create
   (
     ctx.c,
-    canvas.createGroup( ctx.get<std::string>(0) )
+    canvas.createGroup( ctx.getArg<std::string>(0) )
   );
 }
 
@@ -162,8 +128,8 @@ naRef f_groupCreateChild(sc::Group& group, const nasal::CallContext& ctx)
   return NasalElement::create
   (
     ctx.c,
-    group.createChild( ctx.require<std::string>(0),
-                       ctx.get<std::string>(1) )
+    group.createChild( ctx.requireArg<std::string>(0),
+                       ctx.getArg<std::string>(1) )
   );
 }
 
