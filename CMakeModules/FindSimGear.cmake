@@ -38,18 +38,14 @@ macro(find_sg_library libName varName libs)
       HINTS $ENV{SIMGEAR_DIR}
       PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
       PATHS
-      /usr/local
-      /usr
-      /opt
+      ${ADDITIONAL_LIBRARY_PATHS}
     )
     FIND_LIBRARY(${libVarName}_RELEASE
       NAMES ${libName}${CMAKE_RELEASE_POSTFIX}
       HINTS $ENV{SIMGEAR_DIR}
       PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
       PATHS
-      /usr/local
-      /usr
-      /opt
+      ${ADDITIONAL_LIBRARY_PATHS}
     )
     
    # message(STATUS "before: Simgear ${${libVarName}_RELEASE} ")
@@ -79,11 +75,7 @@ FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
   HINTS $ENV{SIMGEAR_DIR}
   PATH_SUFFIXES include
   PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
+  ${ADDITIONAL_LIBRARY_PATHS}
 )
 
 # make sure the simgear include directory exists

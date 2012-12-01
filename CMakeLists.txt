@@ -69,6 +69,39 @@ else()
     set(HUDSON_BUILD_ID "none")
 endif()
 
+#####################################################################################
+# Configure library search paths
+#####################################################################################
+
+if(APPLE)
+    # Custom library directories for Mac, which should have precedence over any other
+    list(APPEND ADDITIONAL_LIBRARY_PATHS
+         ~/Library/Frameworks
+         /Library/Frameworks)
+endif(APPLE)
+
+if(NOT "${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "")
+    # Workaround for Ubuntu/Debian which introduced the "multiarch" library
+    # directory structure, which is unsupported by CMake < 2.8.10, so we need to
+    # add paths manually
+    # see http://www.cmake.org/Bug/view.php?id=12049 and
+    # http://www.cmake.org/Bug/view.php?id=12037
+    list(APPEND ADDITIONAL_LIBRARY_PATHS
+         /usr/local/lib/${CMAKE_LIBRARY_ARCHITECTURE}
+         /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}
+         /lib/${CMAKE_LIBRARY_ARCHITECTURE})
+    message(STATUS "additional library directories: ${ADDITIONAL_LIBRARY_PATHS}")
+endif()
+
+if(NOT MSVC)
+    # TBD: are these really necessary? Aren't they considered by cmake automatically?
+    list(APPEND ADDITIONAL_LIBRARY_PATHS
+         /local
+         /usr/local
+         /usr)
+endif()
+#####################################################################################
+
 IF(APPLE)
     set(EVENT_INPUT_DEFAULT 1)
 

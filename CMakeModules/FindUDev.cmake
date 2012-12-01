@@ -20,9 +20,7 @@ FIND_PATH(
 FIND_LIBRARY(
     UDEV_LIBRARIES
     NAMES udev libudev
-    PATHS
-        /usr/${CMAKE_INSTALL_LIBDIR}
-        /usr/local/${CMAKE_INSTALL_LIBDIR}
+    PATHS ${ADDITIONAL_LIBRARY_PATHS}
         ${UDEV_PATH_LIB}
 )
 

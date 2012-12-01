@@ -23,26 +23,13 @@
 # (To distributed this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-# Per my request, CMake should search for frameworks first in
-# the following order:
-# ~/Library/Frameworks/OpenAL.framework/Headers
-# /Library/Frameworks/OpenAL.framework/Headers
-# /System/Library/Frameworks/OpenAL.framework/Headers
-#
-# On OS X, this will prefer the Framework version (if found) over others.
-# People will have to manually change the cache values of 
-# OPENAL_LIBRARY to override this selection or set the CMake environment
-# CMAKE_INCLUDE_PATH to modify the search paths.
-
 include(SelectLibraryConfigurations)
 
 set(save_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
 set(CMAKE_FIND_FRAMEWORK ONLY)
 FIND_PATH(PLIB_INCLUDE_DIR ul.h
   PATH_SUFFIXES include/plib include 
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
+  PATHS ${ADDITIONAL_LIBRARY_PATHS}
 )
 set(CMAKE_FIND_FRAMEWORK ${save_FIND_FRAMEWORK})
 
@@ -50,10 +37,7 @@ if(NOT PLIB_INCLUDE_DIR)
     FIND_PATH(PLIB_INCLUDE_DIR plib/ul.h
       PATH_SUFFIXES include 
       HINTS $ENV{PLIBDIR}
-      PATHS
-      /usr/local
-      /opt/local
-      /usr
+      PATHS ${ADDITIONAL_LIBRARY_PATHS}
     )
 endif()
 
@@ -64,9 +48,7 @@ FIND_LIBRARY(PLIB_LIBRARIES
   NAMES plib PLIB
   HINTS
   $ENV{PLIBDIR}
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
+  PATHS ${ADDITIONAL_LIBRARY_PATHS}
 )
 
 if (MSVC) 
@@ -91,19 +73,13 @@ macro(find_static_component comp libs)
       NAMES ${compLib}_d
       HINTS $ENV{PLIBDIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-      PATHS
-      /usr/local
-      /usr
-      /opt
+      PATHS ${ADDITIONAL_LIBRARY_PATHS}
     )
     FIND_LIBRARY(${compLibName}_RELEASE
       NAMES ${compLib}
       HINTS $ENV{PLIBDIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-      PATHS
-      /usr/local
-      /usr
-      /opt
+      PATHS ${ADDITIONAL_LIBRARY_PATHS}
     )
     select_library_configurations( ${compLibBase} )
 

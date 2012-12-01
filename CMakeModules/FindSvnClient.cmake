@@ -29,10 +29,7 @@ endif(APPLE)
       NAMES ${compLib}
       HINTS $ENV{LIBSVN_DIR} ${CMAKE_INSTALL_PREFIX} ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-      PATHS
-      /opt/local
-      /usr/local
-      /usr
+      PATHS ${ADDITIONAL_LIBRARY_PATHS}
     )
 
 	list(APPEND ${libs} ${${compLibName}})
@@ -62,10 +59,7 @@ if(HAVE_APR_CONFIG OR MSVC)
 	  HINTS
 	  $ENV{LIBSVN_DIR} ${CMAKE_INSTALL_PREFIX} ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include
 	  PATH_SUFFIXES include/subversion-1
-	  PATHS
-      /opt/local
-	  /usr/local
-	  /usr
+	  PATHS ${ADDITIONAL_LIBRARY_PATHS}
 	)
 	
 	set(LIBSVN_LIBRARIES "")

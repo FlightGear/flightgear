@@ -23,18 +23,13 @@ FIND_PATH(SQLITE3_INCLUDE_DIR sqlite3.h
     PATH_SUFFIXES include 
     HINTS $ENV{SQLITE3DIR}
     PATHS
-    /usr/local
-    /usr
-    /opt/local
+    ${ADDITIONAL_LIBRARY_PATHS}
   )
 
 FIND_LIBRARY(SQLITE3_LIBRARY NAMES sqlite3 sqlite3
     HINTS $ENV{SQLITE3DIR}
     PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-    PATHS
-    /usr/local
-    /usr
-    /opt/local
+    PATHS ${ADDITIONAL_LIBRARY_PATHS}
   )
 
 include(FindPackageHandleStandardArgs)
