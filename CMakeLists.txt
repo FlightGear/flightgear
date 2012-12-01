@@ -96,7 +96,7 @@ endif()
 if(NOT MSVC)
     # TBD: are these really necessary? Aren't they considered by cmake automatically?
     list(APPEND ADDITIONAL_LIBRARY_PATHS
-         /local
+         /opt/local
          /usr/local
          /usr)
 endif()
