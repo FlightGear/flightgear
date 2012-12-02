@@ -88,6 +88,12 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
+  naContext FGCanvasSystemAdapter::getNasalContext() const
+  {
+    return getNasalSys()->context();
+  }
+
+  //----------------------------------------------------------------------------
   int FGCanvasSystemAdapter::gcSave(naRef r)
   {
     return getNasalSys()->gcSave(r);

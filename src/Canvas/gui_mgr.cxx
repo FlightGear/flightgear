@@ -336,9 +336,10 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       event->type = sc::Event::MOUSE_UP;
       break;
 
-//    case osgGA::GUIEventAdapter::DRAG:
-//      target_window = _last_push.lock();
-//      break;
+    case osgGA::GUIEventAdapter::DRAG:
+      target_window = _last_push.lock();
+      event->type = sc::Event::DRAG;
+      break;
 
     default:
       return false;

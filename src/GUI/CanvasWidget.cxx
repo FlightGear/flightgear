@@ -16,6 +16,7 @@
 #include <Scripting/NasalSys.hxx>
 
 #include <simgear/canvas/Canvas.hxx>
+#include <simgear/canvas/MouseEvent.hxx>
 
 //------------------------------------------------------------------------------
 CanvasWidget::CanvasWidget( int x, int y,
@@ -25,7 +26,9 @@ CanvasWidget::CanvasWidget( int x, int y,
   puObject(x, y, width, height),
   _canvas_mgr( dynamic_cast<CanvasMgr*>(globals->get_subsystem("Canvas")) ),
   _tex_id(0),
-  _no_tex_cnt(0)
+  _no_tex_cnt(0),
+  _last_x(0),
+  _last_y(0)
 {
   if( !_canvas_mgr )
   {
@@ -100,6 +103,62 @@ void CanvasWidget::doHit(int button, int updown, int x, int y)
   if( fgGetKeyModifiers() & (KEYMOD_CTRL | KEYMOD_SHIFT) )
     return;
 
+  namespace sc = simgear::canvas;
+  sc::MouseEventPtr event(new sc::MouseEvent);
+  event->pos.set(x - abox.min[0], y - abox.min[1]);
+  event->delta.set(x - _last_x, y - _last_y);
+
+  _last_x = x;
+  _last_y = y;
+
+  switch( button )
+  {
+    case PU_LEFT_BUTTON:
+      event->button = osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON;
+      break;
+    case PU_MIDDLE_BUTTON:
+      event->button = osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON;
+      break;
+    case PU_RIGHT_BUTTON:
+      event->button = osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON;
+      break;
+    case PU_SCROLL_UP_BUTTON:
+    case PU_SCROLL_DOWN_BUTTON:
+      // Only let PU_DOWN trigger a scroll wheel event
+      if( updown != PU_DOWN )
+        return;
+
+      event->type = sc::Event::WHEEL;
+      event->delta.y() = button == PU_SCROLL_UP_BUTTON ? 1 : -1;
+
+      _canvas->handleMouseEvent(event);
+
+      return;
+    default:
+      SG_LOG(SG_INPUT, SG_WARN, "CanvasWidget: Unknown button: " << button);
+      return;
+  }
+
+  switch( updown )
+  {
+    case PU_DOWN:
+      event->type = sc::Event::MOUSE_DOWN;
+      puSetActiveWidget(this, x, y);
+      break;
+    case PU_UP:
+      event->type = sc::Event::MOUSE_UP;
+      puDeactivateWidget();
+      break;
+    case PU_DRAG:
+      event->type = sc::Event::DRAG;
+      break;
+    default:
+      SG_LOG(SG_INPUT, SG_WARN, "CanvasWidget: Unknown updown: " << updown);
+      return;
+  }
+
+  _canvas->handleMouseEvent(event);
+
   _mouse_x->setIntValue(x - abox.min[0]);
   _mouse_y->setIntValue(abox.max[1] - y);
 
@@ -107,14 +166,6 @@ void CanvasWidget::doHit(int button, int updown, int x, int y)
     _mouse_drag->setIntValue(button);
   else if( updown == PU_DOWN )
     _mouse_down->setIntValue(button);
-
-  if( button != active_mouse_button )
-    return;
-
-  if (updown == PU_UP)
-    puDeactivateWidget();
-  else if (updown == PU_DOWN)
-    puSetActiveWidget(this, x, y);
 }
 
 //------------------------------------------------------------------------------

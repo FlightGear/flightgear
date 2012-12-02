@@ -210,6 +210,7 @@ public:
     int checkHit(int b, int up, int x, int y);
     int checkKey(int key, int updown);
     int getHitObjects(puObject *, int x, int y);
+    bool checkHitCanvas(puObject *, int x, int y);
     puObject *getKeyObject(puObject *, int key);
     puObject *getActiveInputField(puObject *);
     void applySize(puObject *);

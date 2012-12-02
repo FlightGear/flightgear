@@ -149,16 +149,32 @@ naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
   );
 }
 
+// TODO allow directly exposing functions without parameters and return type
+naRef f_eventStopPropagation(sc::Event& event, const nasal::CallContext& ctx)
+{
+  if( ctx.argc != 0 )
+    naRuntimeError(ctx.c, "Event::stopPropagation no argument expected");
+  event.stopPropagation();
+  return naNil();
+}
+
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
 {
-  NasalEvent::init("canvas.Event");
+  NasalEvent::init("canvas.Event")
+    .member("type", &sc::Event::getTypeString)
+    .method_func<&f_eventStopPropagation>("stopPropagation");
   NasalMouseEvent::init("canvas.MouseEvent")
-    .bases<NasalEvent>();
+    .bases<NasalEvent>()
+    .member("x", &sc::MouseEvent::getPosX)
+    .member("y", &sc::MouseEvent::getPosY)
+    .member("deltaX", &sc::MouseEvent::getDeltaX)
+    .member("deltaY", &sc::MouseEvent::getDeltaY);
   NasalCanvas::init("Canvas")
     .member("_node_ghost", &elementGetNode<sc::Canvas>)
     .member("size_x", &sc::Canvas::getSizeX)
     .member("size_y", &sc::Canvas::getSizeY)
-    .method_func<&f_canvasCreateGroup>("_createGroup");
+    .method_func<&f_canvasCreateGroup>("_createGroup")
+    .method<&sc::Canvas::addEventListener>("addEventListener");
   NasalElement::init("canvas.Element")
     .member("_node_ghost", &elementGetNode<sc::Element>)
     .method<&sc::Element::addEventListener>("addEventListener");

@@ -139,7 +139,6 @@ void GUIInfo::apply_format(SGPropertyNode *n)
 }
 
 
-
 /**
  * Key handler.
  */
@@ -225,9 +224,16 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
         int hit = getHitObjects(this, x, y);
         if (hit & PUCLASS_LIST)  // ctrl-click in property browser (toggle bool)
             return result;
-        if (!global_resize && hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT
-                |PUCLASS_LARGEINPUT|PUCLASS_SCROLLBAR))
+        if(    !global_resize
+            && (  (hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT
+                         |PUCLASS_LARGEINPUT|PUCLASS_SCROLLBAR))
+                  // The canvas should handle drag events on its own so exit
+                  // here if mouse is over a CanvasWidget
+               || (!global_drag && checkHitCanvas(this, x, y))
+               ) )
+        {
             return result;
+        }
 
         getPosition(&_dlgX, &_dlgY);
         getSize(&_dlgW, &_dlgH);
@@ -340,6 +346,32 @@ int fgPopup::getHitObjects(puObject *object, int x, int y)
     return type;
 }
 
+bool fgPopup::checkHitCanvas(puObject* object, int x, int y)
+{
+  if( !object->isVisible() )
+    return 0;
+
+  if( object->getType() & PUCLASS_GROUP )
+  {
+    for( puObject* obj = ((puGroup*)object)->getFirstChild();
+                   obj;
+                   obj = obj->getNextObject() )
+    {
+      if( checkHitCanvas(obj, x, y) )
+        return true;
+    }
+  }
+
+  int cx, cy, cw, ch;
+  object->getAbsolutePosition(&cx, &cy);
+  object->getSize(&cw, &ch);
+  if(    x >= cx && x < cx + cw
+      && y >= cy && y < cy + ch
+      && dynamic_cast<CanvasWidget*>(object) )
+    return true;
+  return false;
+}
+
 void fgPopup::applySize(puObject *object)
 {
     // compound plib widgets use setUserData() for internal purposes, so refuse
@@ -405,7 +437,8 @@ void FGPUIDialog::ConditionalObject::update(FGPUIDialog* aDlg)
   
   aDlg->setNeedsLayout();
 }
-////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
 // Callbacks.
 ////////////////////////////////////////////////////////////////////////
 
@@ -428,7 +461,6 @@ action_callback (puObject *object)
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////
 // Static helper functions.
 ////////////////////////////////////////////////////////////////////////
@@ -511,7 +543,6 @@ copy_from_pui (puObject *object, SGPropertyNode *node)
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGDialog.
 ////////////////////////////////////////////////////////////////////////
@@ -1186,7 +1217,7 @@ FGPUIDialog::getKeyCode(const char *str)
     return key;
 }
 
-voidFGPUIDialog::relayout()
+void FGPUIDialog::relayout()
 {
   _needsRelayout = false;
   
@@ -1291,7 +1322,6 @@ FGPUIDialog::PropertyObject::PropertyObject(const char *n,
 
 
 
-
 ////////////////////////////////////////////////////////////////////////
 // Implementation of fgValueList and derived pui widgets
 ////////////////////////////////////////////////////////////////////////

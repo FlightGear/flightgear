@@ -26,7 +26,7 @@ class CanvasWidget:
     virtual ~CanvasWidget();
 
     virtual void doHit (int button, int updown, int x, int y);
-    virtual int  checkKey(int key   , int updown);
+    virtual int checkKey(int key, int updown);
 
     virtual void setSize ( int w, int h );
     virtual void draw(int dx, int dy);
@@ -44,6 +44,9 @@ class CanvasWidget:
                        *_mouse_y,
                        *_mouse_down,
                        *_mouse_drag;
+
+    int _last_x,
+        _last_y;
 };
 
 #endif /* CANVASWIDGET_HXX_ */
