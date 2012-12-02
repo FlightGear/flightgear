@@ -94,6 +94,14 @@ CanvasWidget::~CanvasWidget()
                           false );
 }
 
+// Old versions of PUI are missing this defines...
+#ifndef PU_SCROLL_UP_BUTTON
+# define PU_SCROLL_UP_BUTTON     3
+#endif
+#ifndef PU_SCROLL_DOWN_BUTTON
+# define PU_SCROLL_DOWN_BUTTON   4
+#endif
+
 //------------------------------------------------------------------------------
 void CanvasWidget::doHit(int button, int updown, int x, int y)
 {
