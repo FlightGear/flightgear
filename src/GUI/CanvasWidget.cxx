@@ -113,11 +113,12 @@ void CanvasWidget::doHit(int button, int updown, int x, int y)
 
   namespace sc = simgear::canvas;
   sc::MouseEventPtr event(new sc::MouseEvent);
-  event->pos.set(x - abox.min[0], y - abox.min[1]);
-  event->delta.set(x - _last_x, y - _last_y);
+  event->pos.set(x - abox.min[0], abox.max[1] - y);
+  event->delta.set( event->pos.x() - _last_x,
+                    event->pos.y() - _last_y );
 
-  _last_x = x;
-  _last_y = y;
+  _last_x = event->pos.x();
+  _last_y = event->pos.y();
 
   switch( button )
   {

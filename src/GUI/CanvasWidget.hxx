@@ -45,8 +45,8 @@ class CanvasWidget:
                        *_mouse_down,
                        *_mouse_drag;
 
-    int _last_x,
-        _last_y;
+    float _last_x,
+          _last_y;
 };
 
 #endif /* CANVASWIDGET_HXX_ */
