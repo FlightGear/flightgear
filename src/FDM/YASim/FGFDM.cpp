@@ -131,7 +131,7 @@ void FGFDM::init()
     // Allows the user to start with something other than full fuel
     _airplane.setFuelFraction(fgGetFloat("/sim/fuel-fraction", 1));
 
-    // Read out the resulting fuel state and stash engine/thruster properties
+    // stash engine/thruster properties
     _thrust_props.clear();
     for (int i=0; i<_thrusters.size(); i++) {
         SGPropertyNode_ptr node = fgGetNode("engines/engine", i, true);
@@ -173,8 +173,8 @@ void FGFDM::init()
         _thrust_props.push_back(tp);
     }
 
-    // stash properties for engines/fuel state
-    _thrust_props.clear();
+    // stash properties for fuel state
+    _fuel_props.clear();
     for(int i=0; i<_airplane.numThrusters(); i++) {
         SGPropertyNode_ptr e = fgGetNode("engines/engine", i, true);
         FuelProps f;
