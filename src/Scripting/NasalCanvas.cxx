@@ -121,6 +121,19 @@ naRef f_canvasCreateGroup(sc::Canvas& canvas, const nasal::CallContext& ctx)
   );
 }
 
+naRef f_elementGetTransformedBounds(sc::Element& el, const nasal::CallContext& ctx)
+{
+  osg::BoundingBox bb = el.getTransformedBounds( osg::Matrix::identity() );
+
+  std::vector<float> bb_vec(4);
+  bb_vec[0] = bb._min.x();
+  bb_vec[1] = bb._min.y();
+  bb_vec[2] = bb._max.x();
+  bb_vec[3] = bb._max.y();
+
+  return nasal::to_nasal(ctx.c, bb_vec);
+}
+
 naRef f_groupCreateChild(sc::Group& group, const nasal::CallContext& ctx)
 {
   return NasalElement::create
@@ -177,7 +190,8 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .method<&sc::Canvas::addEventListener>("addEventListener");
   NasalElement::init("canvas.Element")
     .member("_node_ghost", &elementGetNode<sc::Element>)
-    .method<&sc::Element::addEventListener>("addEventListener");
+    .method<&sc::Element::addEventListener>("addEventListener")
+    .method_func<&f_elementGetTransformedBounds>("getTransformedBounds");
   NasalGroup::init("canvas.Group")
     .bases<NasalElement>()
     .method_func<&f_groupCreateChild>("_createChild")
