@@ -52,10 +52,6 @@ private:
 	bool clouds_3d_enabled;
   int index;
   
-  // RNG seed to ensure cloud synchronization across multi-process
-  // deployments
-  mt seed;
-
 public:
 	FGClouds();
 	~FGClouds();

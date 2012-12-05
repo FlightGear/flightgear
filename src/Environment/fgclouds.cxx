@@ -47,6 +47,10 @@ static bool do_delete_3Dcloud (const SGPropertyNode *arg);
 static bool do_move_3Dcloud (const SGPropertyNode *arg);
 static bool do_add_3Dcloud (const SGPropertyNode *arg);
 
+// RNG seed to ensure cloud synchronization across multi-process
+// deployments
+static mt seed;
+
 FGClouds::FGClouds() :
 #if 0
     snd_lightning(0),
@@ -55,7 +59,6 @@ FGClouds::FGClouds() :
     index(0)
 {
 	update_event = 0;
-	mt_init_time_10(&seed);
 }
 
 FGClouds::~FGClouds()
@@ -82,6 +85,8 @@ void FGClouds::Init(void) {
 		sgr->add( snd_lightning, "thunder" );
 	}
 #endif
+
+	mt_init_time_10(&seed);
 
 	globals->get_commands()->addCommand("add-cloud", do_add_3Dcloud);
 	globals->get_commands()->addCommand("del-cloud", do_delete_3Dcloud);
@@ -161,7 +166,7 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 				z = h * z + pos[2]; // Up/Down. pos[2] is the cloudbase
 
 				//SGVec3f newpos = SGVec3f(x, y, z);
-				SGNewCloud cld(texture_root, cld_def);
+				SGNewCloud cld(texture_root, cld_def, &seed);
 
 				//layer->addCloud(newpos, cld.genCloud());
 				layer->addCloud(lon, lat, z, x, y, index++, cld.genCloud());
@@ -370,7 +375,7 @@ bool FGClouds::get_3dClouds() const
 
    SGSky* thesky = globals->get_renderer()->getSky();
    SGCloudField *layer = thesky->get_cloud_layer(l)->get_layer3D();
-   SGNewCloud cld(texture_root, arg);
+   SGNewCloud cld(texture_root, arg, &seed);
    bool success = layer->addCloud(lon, lat, alt, x, y, index, cld.genCloud());
 
    // Adding a 3D cloud immediately makes this layer 3D.
