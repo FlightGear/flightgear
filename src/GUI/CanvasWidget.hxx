@@ -47,6 +47,8 @@ class CanvasWidget:
 
     float _last_x,
           _last_y;
+
+    static SGPropertyNode_ptr _time;
 };
 
 #endif /* CANVASWIDGET_HXX_ */

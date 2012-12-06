@@ -181,7 +181,8 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .member("x", &sc::MouseEvent::getPosX)
     .member("y", &sc::MouseEvent::getPosY)
     .member("deltaX", &sc::MouseEvent::getDeltaX)
-    .member("deltaY", &sc::MouseEvent::getDeltaY);
+    .member("deltaY", &sc::MouseEvent::getDeltaY)
+    .member("click_count", &sc::MouseEvent::getCurrentClickCount);
   NasalCanvas::init("Canvas")
     .member("_node_ghost", &elementGetNode<sc::Canvas>)
     .member("size_x", &sc::Canvas::getSizeX)

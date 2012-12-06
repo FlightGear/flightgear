@@ -18,6 +18,8 @@
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/MouseEvent.hxx>
 
+SGPropertyNode_ptr CanvasWidget::_time;
+
 //------------------------------------------------------------------------------
 CanvasWidget::CanvasWidget( int x, int y,
                             int width, int height,
@@ -113,6 +115,11 @@ void CanvasWidget::doHit(int button, int updown, int x, int y)
 
   namespace sc = simgear::canvas;
   sc::MouseEventPtr event(new sc::MouseEvent);
+
+  if( !_time )
+    _time = globals->get_props()->getNode("/sim/time/elapsed-sec");
+  event->time = _time->getDoubleValue();
+
   event->pos.set(x - abox.min[0], abox.max[1] - y);
   event->delta.set( event->pos.x() - _last_x,
                     event->pos.y() - _last_y );

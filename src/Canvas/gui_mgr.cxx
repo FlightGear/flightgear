@@ -259,6 +259,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
 
   namespace sc = simgear::canvas;
   sc::MouseEventPtr event(new sc::MouseEvent);
+  event->time = ea.getTime();
 
   event->pos.x() = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
   event->pos.y() = 0.5 * (ea.getYnormalized() + 1) * _height + 0.5;
