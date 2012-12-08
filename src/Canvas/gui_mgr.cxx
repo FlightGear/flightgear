@@ -261,18 +261,19 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   sc::MouseEventPtr event(new sc::MouseEvent);
   event->time = ea.getTime();
 
-  event->pos.x() = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
-  event->pos.y() = 0.5 * (ea.getYnormalized() + 1) * _height + 0.5;
+  event->screen_pos.x() = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
+  event->screen_pos.y() = 0.5 * (ea.getYnormalized() + 1) * _height + 0.5;
   if(    ea.getMouseYOrientation()
       != osgGA::GUIEventAdapter::Y_INCREASING_DOWNWARDS )
-    event->pos.y() = _height - event->pos.y();
+    event->screen_pos.y() = _height - event->screen_pos.y();
 
-  event->delta.x() = event->pos.x() - _last_x;
-  event->delta.y() = event->pos.y() - _last_y;
+  event->delta.x() = event->getScreenX() - _last_x;
+  event->delta.y() = event->getScreenY() - _last_y;
 
-  _last_x = event->pos.x();
-  _last_y = event->pos.y();
+  _last_x = event->getScreenX();
+  _last_y = event->getScreenY();
 
+  event->client_pos = event->screen_pos;
   event->button = ea.getButton();
   event->state = ea.getButtonMask();
   event->mod = ea.getModKeyMask();
@@ -292,7 +293,8 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       canvas::WindowPtr window =
         static_cast<WindowUserData*>(layer->getChild(j)->getUserData())
           ->window.lock();
-      if( window->getRegion().contains(event->pos.x(), event->pos.y()) )
+      if( window->getRegion().contains( event->getScreenX(),
+                                        event->getScreenY() ) )
       {
         window_at_cursor = window;
         break;
@@ -322,8 +324,8 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
         move_event->type = sc::Event::MOUSE_LEAVE;
 
         // Let the event position be always relative to the top left window corner
-        move_event->pos.x() -= last_mouse_over->getRegion().x();
-        move_event->pos.y() -= last_mouse_over->getRegion().y();
+        move_event->client_pos.x() -= last_mouse_over->getRegion().x();
+        move_event->client_pos.y() -= last_mouse_over->getRegion().y();
 
         last_mouse_over->handleMouseEvent(move_event);
       }
@@ -349,8 +351,8 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   if( target_window )
   {
     // Let the event position be always relative to the top left window corner
-    event->pos.x() -= target_window->getRegion().x();
-    event->pos.y() -= target_window->getRegion().y();
+    event->client_pos.x() -= target_window->getRegion().x();
+    event->client_pos.y() -= target_window->getRegion().y();
 
     return target_window->handleMouseEvent(event);
   }

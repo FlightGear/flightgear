@@ -18,7 +18,8 @@
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/MouseEvent.hxx>
 
-SGPropertyNode_ptr CanvasWidget::_time;
+SGPropertyNode_ptr CanvasWidget::_time,
+                   CanvasWidget::_view_height;
 
 //------------------------------------------------------------------------------
 CanvasWidget::CanvasWidget( int x, int y,
@@ -120,12 +121,16 @@ void CanvasWidget::doHit(int button, int updown, int x, int y)
     _time = globals->get_props()->getNode("/sim/time/elapsed-sec");
   event->time = _time->getDoubleValue();
 
-  event->pos.set(x - abox.min[0], abox.max[1] - y);
-  event->delta.set( event->pos.x() - _last_x,
-                    event->pos.y() - _last_y );
+  if( !_view_height )
+    _view_height = globals->get_props()->getNode("/sim/gui/canvas/size[1]");
+  event->screen_pos.set(x, _view_height->getIntValue() - y);
 
-  _last_x = event->pos.x();
-  _last_y = event->pos.y();
+  event->client_pos.set(x - abox.min[0], abox.max[1] - y);
+  event->delta.set( event->getScreenX() - _last_x,
+                    event->getScreenY() - _last_y );
+
+  _last_x = event->getScreenX();
+  _last_y = event->getScreenY();
 
   switch( button )
   {

@@ -48,7 +48,8 @@ class CanvasWidget:
     float _last_x,
           _last_y;
 
-    static SGPropertyNode_ptr _time;
+    static SGPropertyNode_ptr _time,
+                              _view_height;
 };
 
 #endif /* CANVASWIDGET_HXX_ */

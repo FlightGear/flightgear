@@ -178,8 +178,10 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .method_func<&f_eventStopPropagation>("stopPropagation");
   NasalMouseEvent::init("canvas.MouseEvent")
     .bases<NasalEvent>()
-    .member("x", &sc::MouseEvent::getPosX)
-    .member("y", &sc::MouseEvent::getPosY)
+    .member("screenX", &sc::MouseEvent::getScreenX)
+    .member("screenY", &sc::MouseEvent::getScreenY)
+    .member("clientX", &sc::MouseEvent::getClientX)
+    .member("clientY", &sc::MouseEvent::getClientY)
     .member("deltaX", &sc::MouseEvent::getDeltaX)
     .member("deltaY", &sc::MouseEvent::getDeltaY)
     .member("click_count", &sc::MouseEvent::getCurrentClickCount);
