@@ -28,12 +28,17 @@ namespace flightgear
 // Set the initial position based on presets (or defaults)
 bool initPosition();
 
-
+/**
+ * finalize the position once subsystems, Nasal and scenarios are loaded;
+ * all of which can potentially affect the position.
+ * returns true if the position is finally set, or false if more time
+ * is required to finalize the position (eg, awaiting METAR to set the
+ * active runway)
+ */
+bool finalizePosition();
+    
 // Listen to /sim/tower/airport-id and set tower view position accordingly
 void initTowerLocationListener();
-  
-// FIXME - only public becuase of the evil runway-selection hack in main.cxx
-bool setPosFromAirportIDandHdg( const std::string& id, double tgt_hdg );
   
 } // of namespace flightgear
 

@@ -581,7 +581,8 @@ void fgCreateSubsystems() {
         exit(-1);
     }
 
-
+    globals->add_subsystem( "http", new FGHTTPClient );
+    
     ////////////////////////////////////////////////////////////////////
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
@@ -626,7 +627,6 @@ void fgCreateSubsystems() {
     // Initialize the Input-Output subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem( "io", new FGIO );
-    globals->add_subsystem( "http", new FGHTTPClient );
   
     ////////////////////////////////////////////////////////////////////
     // Create and register the logger.
@@ -756,29 +756,6 @@ void fgPostInitSubsystems()
     globals->get_subsystem_mgr()->postinit();
     SG_LOG(SG_GENERAL, SG_INFO, "Subsystems postinit took:" << st.elapsedMSec());
   
-    ////////////////////////////////////////////////////////////////////
-    // TODO FIXME! UGLY KLUDGE!
-    ////////////////////////////////////////////////////////////////////
-    {
-        /* Scenarios require Nasal, so FGAIManager loads the scenarios,
-         * including its models such as a/c carriers, in its 'postinit',
-         * which is the very last thing we do.
-         * flightgear::initPosition is called very early in main.cxx/fgIdleFunction,
-         * one of the first things we do, long before scenarios/carriers are
-         * loaded. => When requested "initial preset position" relates to a
-         * carrier, recalculate the 'initial' position here (how have things
-         * ever worked before this hack - this init sequence has always been
-         * this way...?)*/
-        std::string carrier = fgGetString("/sim/presets/carrier","");
-        if (carrier != "")
-        {
-            // clear preset location and re-trigger position setup
-            fgSetDouble("/sim/presets/longitude-deg", 9999);
-            fgSetDouble("/sim/presets/latitude-deg", 9999);
-            flightgear::initPosition();
-        }
-    }
-
     ////////////////////////////////////////////////////////////////////////
     // End of subsystem initialization.
     ////////////////////////////////////////////////////////////////////

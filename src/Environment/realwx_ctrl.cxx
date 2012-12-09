@@ -102,7 +102,7 @@ void LiveMetarProperties::update( double dt )
 {
     _timeToLive -= dt;
     _pollingTimer -= dt;
-    if( _timeToLive < 0.0 ) {
+    if( _timeToLive <= 0.0 ) {
         _timeToLive = 0.0;
         std::string stationId = getStationId();
         if( stationId.empty() ) return;
@@ -234,6 +234,8 @@ BasicRealWxController::~BasicRealWxController()
 void BasicRealWxController::init()
 {
     _wasEnabled = false;
+    
+    checkNearbyMetar();
     update(0); // fetch data ASAP
     
     globals->get_event_mgr()->addTask("checkNearbyMetar", this,
@@ -419,6 +421,11 @@ void NoaaMetarRealWxController::requestMetar( MetarDataHandler * metarDataHandle
                   SG_LOG(SG_ENVIRONMENT, SG_WARN, "metar download failed:" << url() << ": reason:" << responseReason());
               }
           }
+        
+        virtual void failed()
+        {
+            SG_LOG(SG_ENVIRONMENT, SG_INFO, "metar download failure");
+        }
 
 //          bool fromMetarProxy() const
 //          { return _fromProxy; }

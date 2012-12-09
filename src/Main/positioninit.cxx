@@ -39,6 +39,11 @@ using std::endl;
 
 namespace flightgear
 {
+    
+/// to avoid blocking when metar-fetch is enabled, but the network is
+/// unresponsive, we need a timeout value. This value is reset on initPosition,
+/// and tracked through each call to finalizePosition.
+static SGTimeStamp global_finalizeTime;
   
 // Set current tower position lon/lat given an airport id
 static bool fgSetTowerPosFromAirportID( const string& id) {
@@ -131,7 +136,7 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
 }
 
 // Set current_options lon/lat given an airport id and heading (degrees)
-bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
+static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
   if ( id.empty() )
     return false;
   
@@ -395,7 +400,8 @@ static bool fgSetPosFromFix( const string& id )
 // Set the initial position based on presets (or defaults)
 bool initPosition()
 {
-  // cout << "initPosition()" << endl;
+  global_finalizeTime = SGTimeStamp(); // reset to invalid
+  
   double gs = fgGetDouble("/sim/presets/glideslope-deg")
   * SG_DEGREES_TO_RADIANS ;
   double od = fgGetDouble("/sim/presets/offset-distance-nm");
@@ -541,4 +547,64 @@ bool initPosition()
   return true;
 }
   
+bool finalizePosition()
+{
+  // first call to finalize after an initPosition call
+  if (global_finalizeTime.get_usec() == 0) {
+    global_finalizeTime = SGTimeStamp::now();
+  }
+  
+    /* Scenarios require Nasal, so FGAIManager loads the scenarios,
+     * including its models such as a/c carriers, in its 'postinit',
+     * which is the very last thing we do.
+     * flightgear::initPosition is called very early in main.cxx/fgIdleFunction,
+     * one of the first things we do, long before scenarios/carriers are
+     * loaded. => When requested "initial preset position" relates to a
+     * carrier, recalculate the 'initial' position here 
+     */
+    std::string carrier = fgGetString("/sim/presets/carrier","");
+    if (!carrier.empty())
+    {
+        SG_LOG(SG_GENERAL, SG_INFO, "finalizePositioned: re-init-ing position on carrier");
+        // clear preset location and re-trigger position setup
+        fgSetDouble("/sim/presets/longitude-deg", 9999);
+        fgSetDouble("/sim/presets/latitude-deg", 9999);
+        return initPosition();
+    }
+
+    double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
+    string apt = fgGetString( "/sim/startup/options/airport" );
+    string rwy = fgGetString( "/sim/startup/options/runway" );
+    double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
+    string parkpos = fgGetString( "/sim/presets/parkpos" );
+    bool onground = fgGetBool( "/sim/presets/onground", false );
+// this logic is taken from former startup.nas
+    bool needMetar = (hdg < 360.0) && !apt.empty() && (strthdg > 360.0) &&
+        rwy.empty() && onground && parkpos.empty();
+    
+    if (needMetar) {
+      // timeout so we don't spin forever if the network is down
+      if (global_finalizeTime.elapsedMSec() > fgGetInt("/sim/startup/metar-fetch-timeout-msec", 5000)) {
+        SG_LOG(SG_GENERAL, SG_WARN, "finalizePosition: timed out waiting for METAR fetch");
+        return true;
+      }
+    
+      if (!fgGetBool( "/environment/metar/valid" )) {
+        // bit hacky - run these two subsystems. We can't run the whole
+        // lot since some view things aren't initialised and hence FGLight
+        // crashes.
+        globals->get_subsystem("http")->update(0.0);
+        globals->get_subsystem("environment")->update(0.0);
+        return false;
+      }
+      
+      SG_LOG(SG_ENVIRONMENT, SG_INFO,
+             "Using METAR for runway selection: '" << fgGetString("/environment/metar/data") << "'" );
+      setPosFromAirportIDandHdg( apt, hdg );
+        // fall through to return true
+    } // of need-metar case
+    
+    return true;
+}
+    
 } // of namespace flightgear

@@ -217,39 +217,15 @@ static void fgIdleFunction ( void ) {
         }
       
     } else if ( idle_state == 10 ) {
-        idle_state = 900;
+        idle_state = 800;
         fgPostInitSubsystems();
-      
-              // Torsten Dreyer:
-        // ugly hack for automatic runway selection on startup based on
-        // metar data. Makes startup.nas obsolete and guarantees the same
-        // runway selection as for AI traffic. However, this code belongs to
-        // somewhere(?) else - if I only new where...
-        if( true == fgGetBool( "/environment/metar/valid" ) ) {
-            SG_LOG(SG_ENVIRONMENT, SG_INFO,
-                "Using METAR for runway selection: '" << fgGetString("/environment/metar/data") << "'" );
-            // the realwx_ctrl fetches metar in the foreground on init,
-            // If it was able to fetch a metar or one was given on the commandline,
-            // the valid flag is set here, otherwise it is false
-            double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
-            string apt = fgGetString( "/sim/startup/options/airport" );
-            string rwy = fgGetString( "/sim/startup/options/runway" );
-            double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
-            string parkpos = fgGetString( "/sim/presets/parkpos" );
-            bool onground = fgGetBool( "/sim/presets/onground", false );
-            // don't check for wind-speed < 1kt, this belongs to the runway-selection code
-            // the other logic is taken from former startup.nas
-            if( hdg < 360.0 && apt.length() > 0 && strthdg > 360.0 && rwy.length() == 0 && onground && parkpos.length() == 0 ) {
-                extern bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
-                flightgear::setPosFromAirportIDandHdg( apt, hdg );
-            }
+    } else if ( idle_state == 800 ) {
+        if (flightgear::finalizePosition()) {
+            idle_state = 900;
+            fgSplashProgress("init-graphics");
         } else {
-            SG_LOG(SG_ENVIRONMENT, SG_INFO,
-                "No METAR available to pick active runway" );
+            fgSplashProgress("finalize-position");
         }
-
-        fgSplashProgress("init-graphics");
-
     } else if ( idle_state == 900 ) {
         idle_state = 1000;
         
