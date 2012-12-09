@@ -35,10 +35,9 @@ class CanvasMgr:
      *             implementation as PUI can't handle osg::Texture objects.
      *             Use getCanvas(index)->getTexture() instead.
      *
-     * @param Index of canvas
      * @return OpenGL texture name
      */
-    unsigned int getCanvasTexId(size_t index) const;
+    unsigned int getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const;
 };
 
 #endif /* CANVAS_MGR_H_ */

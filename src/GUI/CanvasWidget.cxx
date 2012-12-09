@@ -28,8 +28,6 @@ CanvasWidget::CanvasWidget( int x, int y,
                             const std::string& module ):
   puObject(x, y, width, height),
   _canvas_mgr( dynamic_cast<CanvasMgr*>(globals->get_subsystem("Canvas")) ),
-  _tex_id(0),
-  _no_tex_cnt(0),
   _last_x(0),
   _last_y(0)
 {
@@ -207,34 +205,8 @@ void CanvasWidget::setSize(int w, int h)
 //------------------------------------------------------------------------------
 void CanvasWidget::draw(int dx, int dy)
 {
-  if( !_tex_id )
-  {
-    _tex_id = _canvas_mgr->getCanvasTexId( _canvas->getProps()->getIndex() );
-
-    // Normally we should be able to get the texture after one frame. I don't
-    // know if there are circumstances where it can take longer, so we don't
-    // log a warning message until we have tried a few times.
-    if( !_tex_id )
-    {
-      if( ++_no_tex_cnt == 5 )
-        SG_LOG(SG_GENERAL, SG_WARN, "CanvasWidget: failed to get texture!");
-      return;
-    }
-    else
-    {
-      if( _no_tex_cnt >= 5 )
-        SG_LOG
-        (
-          SG_GENERAL,
-          SG_INFO,
-          "CanvasWidget: got texture after " << _no_tex_cnt << " tries."
-        );
-      _no_tex_cnt = 0;
-    }
-  }
-
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, _tex_id);
+  glBindTexture(GL_TEXTURE_2D, _canvas_mgr->getCanvasTexId(_canvas));
   glBegin( GL_QUADS );
     glColor3f(1,1,1);
     glTexCoord2f(0,0); glVertex2f(dx + abox.min[0], dy + abox.min[1]);

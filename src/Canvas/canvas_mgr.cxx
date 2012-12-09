@@ -48,13 +48,9 @@ CanvasMgr::CanvasMgr():
 }
 
 //------------------------------------------------------------------------------
-unsigned int CanvasMgr::getCanvasTexId(size_t index) const
+unsigned int
+CanvasMgr::getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const
 {
-  simgear::canvas::CanvasPtr canvas = getCanvas(index);
-
-  if( !canvas )
-    return 0;
-
   osg::Texture2D* tex = canvas->getTexture();
   if( !tex )
     return 0;
@@ -65,7 +61,7 @@ unsigned int CanvasMgr::getCanvasTexId(size_t index) const
 //  if( contexts.empty() )
 //    return 0;
 
-  osg::Camera* guiCamera =
+  static osg::Camera* guiCamera =
     flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
 
   osg::State* state = guiCamera->getGraphicsContext()->getState(); //contexts[0]->getState();

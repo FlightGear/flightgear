@@ -36,9 +36,6 @@ class CanvasWidget:
     CanvasMgr  *_canvas_mgr; // TODO maybe we should store this in some central
                              // location or make it static...
 
-    GLuint              _tex_id;    //<! OpenGL texture id if canvas
-    size_t              _no_tex_cnt;//<! Count since how many frames we were not
-                                    //   able to get the texture (for debugging)
     simgear::canvas::CanvasPtr _canvas;
     SGPropertyNode     *_mouse_x,
                        *_mouse_y,
