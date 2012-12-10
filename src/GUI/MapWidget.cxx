@@ -25,6 +25,7 @@
 #include <Airports/runways.hxx>
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
 #include <Navaids/routePath.hxx>
+#include <Aircraft/FlightHistory.hxx>
 
 const char* RULER_LEGEND_KEY = "ruler-legend";
 
@@ -411,6 +412,7 @@ void MapWidget::setProperty(SGPropertyNode_ptr prop)
   _root->setIntValue("max-zoom", MAX_ZOOM);
   _root->setBoolValue("centre-on-aircraft", true);
   _root->setBoolValue("draw-data", false);
+  _root->setBoolValue("draw-flight-history", false);
   _root->setBoolValue("magnetic-headings", true);
 }
 
@@ -611,6 +613,7 @@ void MapWidget::draw(int dx, int dy)
   drawNavRadio(fgGetNode("/instrumentation/nav[0]", false));
   drawNavRadio(fgGetNode("/instrumentation/nav[1]", false));
   paintAircraftLocation(_aircraft);
+  drawFlightHistory();
   paintRoute();
   paintRuler();
 
@@ -746,6 +749,28 @@ void MapWidget::paintRoute()
     d->setPriority(w < _route->currentIndex() ? 9000 : 12000);
 
   } // of second waypoint iteration
+}
+
+void MapWidget::drawFlightHistory()
+{
+  FGFlightHistory* history = (FGFlightHistory*) globals->get_subsystem("history");
+  if (!history || !_root->getBoolValue("draw-flight-history")) {
+    return;
+  }
+  
+  // first pass, draw the actual lines
+  glLineWidth(2.0);
+  
+  SGGeodVec gv(history->pathForHistory());
+  glColor4f(0.0, 0.0, 1.0, 0.7);
+
+  glBegin(GL_LINE_STRIP);
+  for (unsigned int i=0; i<gv.size(); ++i) {
+    SGVec2d p = project(gv[i]);
+    glVertex2d(p.x(), p.y());
+  }
+  
+  glEnd();
 }
 
 /**

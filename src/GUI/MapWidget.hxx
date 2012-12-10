@@ -43,6 +43,7 @@ private:
   void paintAircraftLocation(const SGGeod& aircraftPos);
   void paintRoute();
   void paintRuler();
+  void drawFlightHistory();
   
   void drawGPSData();
   void drawNavRadio(SGPropertyNode_ptr radio);

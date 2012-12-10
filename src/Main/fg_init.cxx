@@ -57,6 +57,7 @@
 
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
+#include <Aircraft/FlightHistory.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <Airports/dynamics.hxx>
@@ -711,7 +712,8 @@ void fgCreateSubsystems() {
     // Initialize the replay subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("replay", new FGReplay);
-
+    globals->add_subsystem("history", new FGFlightHistory);
+    
 #ifdef ENABLE_AUDIO_SUPPORT
     ////////////////////////////////////////////////////////////////////
     // Initialize the sound-effects subsystem.
