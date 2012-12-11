@@ -94,12 +94,17 @@ private:
     unsigned int m_validSampleCount;
     
     SGPropertyNode_ptr m_weightOnWheels;
+    SGPropertyNode_ptr m_enabled;
+  
     bool m_lastWoW;
-    
+    size_t m_maxMemoryUseBytes;
+  
     void allocateNewBucket();
     
     void clear();
     void capture();
+  
+    size_t currentMemoryUseBytes() const;
 };
 
 #endif

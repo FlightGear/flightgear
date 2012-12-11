@@ -51,6 +51,7 @@ FGFlightHistory::~FGFlightHistory()
 
 void FGFlightHistory::init()
 {
+    m_enabled = fgGetNode("/sim/history/enabled", true);
     m_sampleInterval = fgGetDouble("/sim/history/sample-interval-sec", 1.0);
     if (m_sampleInterval <= 0.0) { // would be bad
         SG_LOG(SG_FLIGHT, SG_INFO, "invalid flight-history sample interval:" << m_sampleInterval
@@ -58,6 +59,8 @@ void FGFlightHistory::init()
         m_sampleInterval = 1.0;
     }
     
+  // cap memory use at 4MB
+    m_maxMemoryUseBytes = fgGetInt("/sim/history/max-memory-use-bytes", 1024 * 1024 * 4);
     m_weightOnWheels = NULL;
 // reset the history when we detect a take-off
     if (fgGetBool("/sim/history/clear-on-takeoff", true)) {
@@ -82,7 +85,9 @@ void FGFlightHistory::reinit()
 
 void FGFlightHistory::update(double dt)
 {
-    SG_UNUSED(dt); // we care about sim-time, not frame-time
+    if ((dt == 0.0) || !m_enabled->getBoolValue()) {
+        return; // paused or disabled
+    }
     
     if (m_weightOnWheels) {
         
@@ -100,7 +105,14 @@ void FGFlightHistory::update(double dt)
 
 void FGFlightHistory::allocateNewBucket()
 {
-    SampleBucket* bucket = new SampleBucket;
+    SampleBucket* bucket = NULL;
+    if (!m_buckets.empty() && (currentMemoryUseBytes() > m_maxMemoryUseBytes)) {
+        bucket = m_buckets.front();
+        m_buckets.erase(m_buckets.begin());
+    } else {
+        bucket = new SampleBucket;
+    }
+    
     m_buckets.push_back(bucket);
     m_validSampleCount = 0;
 }
@@ -162,5 +174,10 @@ void FGFlightHistory::clear()
     }
     m_buckets.clear();
     m_validSampleCount = SAMPLE_BUCKET_WIDTH;
+}
+
+size_t FGFlightHistory::currentMemoryUseBytes() const
+{
+    return sizeof(SampleBucket) * m_buckets.size();
 }
 
