@@ -97,6 +97,15 @@ void FGFlightHistory::update(double dt)
         }
     } // of rest-on-takeoff enabled
     
+// spatial check - moved at least 1m since last capture
+    if (!m_buckets.empty()) {
+        SGVec3d lastCaptureCart(SGVec3d::fromGeod(m_buckets.back()->samples[m_validSampleCount - 1].position));
+        double d2 = distSqr(lastCaptureCart, globals->get_aircraft_position_cart());
+        if (d2 <= 1.0) {
+            return;
+        }
+    }
+    
     double elapsed = globals->get_sim_time_sec() - m_lastCaptureTime;
     if (elapsed > m_sampleInterval) {
         capture();
