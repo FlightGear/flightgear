@@ -106,6 +106,23 @@ public:
   }
 };
 
+class CurrentAircraftDirProvider : public simgear::ResourceProvider
+{
+public:
+  CurrentAircraftDirProvider() :
+    simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_HIGH)
+  {
+  }
+  
+  virtual SGPath resolve(const std::string& aResource, SGPath&) const
+  {
+    const char* aircraftDir = fgGetString("/sim/aircraft-dir");
+    SGPath p(aircraftDir);
+    p.append(aResource);
+    return p.exists() ? p : SGPath();
+  }
+};
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGGlobals.
 ////////////////////////////////////////////////////////////////////////
@@ -141,7 +158,8 @@ FGGlobals::FGGlobals() :
     channellist( NULL ),
     haveUserSettings(false)
 {
-  simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
+  simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider);
+  simgear::ResourceManager::instance()->addProvider(new CurrentAircraftDirProvider);
   simgear::PropertyObjectBase::setDefaultRoot(props);
   
   positionLon = props->getNode("position/longitude-deg", true);
