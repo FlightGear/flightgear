@@ -51,7 +51,7 @@ namespace canvas
       virtual void valueChanged(SGPropertyNode* node);
 
       osg::Group* getGroup();
-      const simgear::Rect<float>& getRegion() const;
+      const SGRect<float>& getRegion() const;
 
       void setCanvas(simgear::canvas::CanvasPtr canvas);
       simgear::canvas::CanvasWeakPtr getCanvas() const;

@@ -305,8 +305,6 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   event->state = ea.getButtonMask();
   event->mod = ea.getModKeyMask();
 
-  static simgear::Rect<float> resize_region;
-
   if( !_resize_window.expired() )
   {
     switch( ea.getEventType() )
@@ -353,7 +351,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
 
   if( window_at_cursor )
   {
-    const simgear::Rect<float>& reg = window_at_cursor->getRegion();
+    const SGRect<float>& reg = window_at_cursor->getRegion();
 
     if(     window_at_cursor->isResizable()
         && (  ea.getEventType() == osgGA::GUIEventAdapter::MOVE
@@ -434,7 +432,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       // duplicate events, so lets ignore the second event with the same
       // timestamp.
       if( _last_scroll_time == ea.getTime() )
-        return true;
+        return window_at_cursor ? true : false;
       _last_scroll_time = ea.getTime();
 
       event->type = sc::Event::WHEEL;

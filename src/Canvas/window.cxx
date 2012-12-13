@@ -89,7 +89,7 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  const simgear::Rect<float>& Window::getRegion() const
+  const SGRect<float>& Window::getRegion() const
   {
     return _image.getRegion();
   }
