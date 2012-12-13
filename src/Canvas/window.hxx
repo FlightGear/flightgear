@@ -33,11 +33,22 @@ namespace canvas
     public simgear::PropertyBasedElement
   {
     public:
+
+      enum Resize
+      {
+        NONE    = 0,
+        LEFT    = 1,
+        RIGHT   = LEFT << 1,
+        TOP     = RIGHT << 1,
+        BOTTOM  = TOP << 1,
+        INIT    = BOTTOM << 1
+      };
+
       Window(SGPropertyNode* node);
       virtual ~Window();
 
       virtual void update(double delta_time_sec);
-      virtual void valueChanged (SGPropertyNode * node);
+      virtual void valueChanged(SGPropertyNode* node);
 
       osg::Group* getGroup();
       const simgear::Rect<float>& getRegion() const;
@@ -45,13 +56,25 @@ namespace canvas
       void setCanvas(simgear::canvas::CanvasPtr canvas);
       simgear::canvas::CanvasWeakPtr getCanvas() const;
 
+      bool isResizable() const;
+
       bool handleMouseEvent(const simgear::canvas::MouseEventPtr& event);
+
+      void handleResize(uint8_t mode, const osg::Vec2f& delta = osg::Vec2f());
+
+      void doRaise(SGPropertyNode* node_raise = 0);
 
     protected:
 
       simgear::canvas::Image _image;
+      bool _resizable;
 
-      void doRaise(SGPropertyNode* node_raise);
+      simgear::PropertyObject<int> _resize_top,
+                                   _resize_right,
+                                   _resize_bottom,
+                                   _resize_left,
+                                   _resize_status;
+
   };
 } // namespace canvas
 

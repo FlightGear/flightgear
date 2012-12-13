@@ -165,6 +165,12 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
 bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
                             osgGA::GUIActionAdapter& us)
 {
+    // Event handlers seem to be called even if the according event has already
+    // been handled. Already handled events shouldn't be handled multiple times
+    // so we need to exit here manually.
+    if( ea.getHandled() )
+      return false;
+
     int x = 0;
     int y = 0;
 

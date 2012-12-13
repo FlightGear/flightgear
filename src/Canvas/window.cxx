@@ -30,7 +30,13 @@ namespace canvas
     PropertyBasedElement(node),
     _image( simgear::canvas::CanvasPtr(),
             node,
-            simgear::canvas::Style() )
+            simgear::canvas::Style() ),
+    _resizable(false),
+    _resize_top(node, "resize-top"),
+    _resize_right(node, "resize-right"),
+    _resize_bottom(node, "resize-bottom"),
+    _resize_left(node, "resize-left"),
+    _resize_status(node, "resize-status")
   {
     _image.removeListener();
 
@@ -60,9 +66,19 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Window::valueChanged(SGPropertyNode * node)
   {
-    if( node->getParent() == _node && node->getNameString() == "raise-top" )
-      doRaise(node);
-    else
+    bool handled = false;
+    if( node->getParent() == _node )
+    {
+      handled = true;
+      if( node->getNameString() == "raise-top" )
+        doRaise(node);
+      else if( node->getNameString()  == "resize" )
+        _resizable = node->getBoolValue();
+      else
+        handled = false;
+    }
+
+    if( !handled )
       _image.valueChanged(node);
   }
 
@@ -91,6 +107,12 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
+  bool Window::isResizable() const
+  {
+    return _resizable;
+  }
+
+  //----------------------------------------------------------------------------
   bool Window::handleMouseEvent(const simgear::canvas::MouseEventPtr& event)
   {
     if( !getCanvas().expired() )
@@ -100,9 +122,37 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
+  void Window::handleResize(uint8_t mode, const osg::Vec2f& delta)
+  {
+    if( mode == NONE )
+    {
+      _resize_status = 0;
+      return;
+    }
+    else if( mode & INIT )
+    {
+      _resize_top    = getRegion().t();
+      _resize_right  = getRegion().r();
+      _resize_bottom = getRegion().b();
+      _resize_left   = getRegion().l();
+      _resize_status = 1;
+    }
+
+    if( mode & BOTTOM )
+      _resize_bottom += delta.y();
+    else if( mode & TOP )
+      _resize_top += delta.y();
+
+    if( mode & canvas::Window::RIGHT )
+      _resize_right += delta.x();
+    else if( mode & canvas::Window::LEFT )
+      _resize_left += delta.x();
+  }
+
+  //----------------------------------------------------------------------------
   void Window::doRaise(SGPropertyNode* node_raise)
   {
-    if( !node_raise->getBoolValue() )
+    if( node_raise && !node_raise->getBoolValue() )
       return;
 
     BOOST_FOREACH(osg::Group* parent, getGroup()->getParents())
@@ -114,7 +164,8 @@ namespace canvas
       parent->addChild(getGroup());
     }
 
-    node_raise->setBoolValue(false);
+    if( node_raise )
+      node_raise->setBoolValue(false);
   }
 
 } // namespace canvas

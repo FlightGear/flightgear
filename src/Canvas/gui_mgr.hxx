@@ -49,6 +49,7 @@ class GUIMgr:
     bool handleEvent(const osgGA::GUIEventAdapter& ea);
 
   protected:
+
     osg::ref_ptr<GUIEventHandler>       _event_handler;
     osg::ref_ptr<osg::MatrixTransform>  _transform;
 
@@ -56,9 +57,14 @@ class GUIMgr:
                                         _height;
 
     canvas::WindowWeakPtr _last_push,
-                          _last_mouse_over;
+                          _last_mouse_over,
+                          _resize_window;
+    uint8_t _resize;
+    int     _last_cursor;
+
     float _last_x,
           _last_y;
+    double _last_scroll_time;
 
     canvas::WindowPtr getWindow(size_t i);
     simgear::canvas::Placements

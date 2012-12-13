@@ -19,6 +19,7 @@
 #include "gui_mgr.hxx"
 #include <Canvas/window.hxx>
 
+#include <Main/fg_os.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Viewer/CameraGroup.hxx>
@@ -49,6 +50,8 @@ class GUIEventHandler:
                  osg::Object*,
                  osg::NodeVisitor* )
     {
+      if( ea.getHandled() )
+        return false;
       return _gui_mgr->handleEvent(ea);
     }
 
@@ -116,7 +119,10 @@ GUIMgr::GUIMgr():
   _event_handler( new GUIEventHandler(this) ),
   _transform( new osg::MatrixTransform ),
   _width(_props, "size[0]"),
-  _height(_props, "size[1]")
+  _height(_props, "size[1]"),
+  _resize(canvas::Window::NONE),
+  _last_cursor(MOUSE_CURSOR_NONE),
+  _last_scroll_time(0)
 {
   _width = _height = -1;
 
@@ -157,7 +163,9 @@ void GUIMgr::init()
 
   globals->get_renderer()
          ->getViewer()
-         ->addEventHandler( _event_handler );
+         ->getEventHandlers()
+         // GUI is on top of everything so lets install as first event handler
+         .push_front( _event_handler );
 }
 
 //------------------------------------------------------------------------------
@@ -214,7 +222,7 @@ bool GUIMgr::handleEvent(const osgGA::GUIEventAdapter& ea)
                     ea.getWindowY(),
                     ea.getWindowWidth(),
                     ea.getWindowHeight() );
-      return true;
+      return false; // Let other event handlers also consume resize events
     default:
       return false;
   }
@@ -251,6 +259,25 @@ GUIMgr::addPlacement( SGPropertyNode* node,
   return placements;
 }
 
+/*
+RESIZE AREAS
+============
+
+|   || |      _ inside corner region (L-shaped part inside margin) both
+|___||_|_ _ _/  directions can be resized (outside only one axis)
+|   || |     |
+|   || |
+|   || |_____|__                  _
+|   ||       |   } margin_neg      \
+|    ========|== <-- window border  |_ area where resize
+|            |   } margin_pos       |  can be initiated
+|____________|__/                 _/
+|<- corner ->|
+*/
+const float resize_margin_pos = 12;
+const float resize_margin_neg = 2;
+const float resize_corner = 20;
+
 //------------------------------------------------------------------------------
 bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
 {
@@ -277,7 +304,24 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   event->button = ea.getButton();
   event->state = ea.getButtonMask();
   event->mod = ea.getModKeyMask();
-  //event->scroll = ea.getScrollingMotion();
+
+  static simgear::Rect<float> resize_region;
+
+  if( !_resize_window.expired() )
+  {
+    switch( ea.getEventType() )
+    {
+      case osgGA::GUIEventAdapter::RELEASE:
+        _resize_window.lock()->handleResize(canvas::Window::NONE);
+        _resize_window.reset();
+        break;
+      case osgGA::GUIEventAdapter::DRAG:
+        _resize_window.lock()->handleResize(_resize, event->delta);
+        return true;
+      default:
+        return false;
+    }
+  }
 
   canvas::WindowPtr window_at_cursor;
   for( int i = _transform->getNumChildren() - 1; i >= 0; --i )
@@ -293,8 +337,10 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       canvas::WindowPtr window =
         static_cast<WindowUserData*>(layer->getChild(j)->getUserData())
           ->window.lock();
+      float margin = window->isResizable() ? resize_margin_pos : 0;
       if( window->getRegion().contains( event->getScreenX(),
-                                        event->getScreenY() ) )
+                                        event->getScreenY(),
+                                        margin ) )
       {
         window_at_cursor = window;
         break;
@@ -305,6 +351,65 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       break;
   }
 
+  if( window_at_cursor )
+  {
+    const simgear::Rect<float>& reg = window_at_cursor->getRegion();
+
+    if(     window_at_cursor->isResizable()
+        && (  ea.getEventType() == osgGA::GUIEventAdapter::MOVE
+           || ea.getEventType() == osgGA::GUIEventAdapter::PUSH
+           || ea.getEventType() == osgGA::GUIEventAdapter::RELEASE
+           )
+        && !reg.contains( event->getScreenX(),
+                          event->getScreenY(),
+                          -resize_margin_neg ) )
+    {
+      if( !_last_cursor )
+        _last_cursor = fgGetMouseCursor();
+
+      _resize = 0;
+
+      if( event->getScreenX() <= reg.l() + resize_corner )
+        _resize |= canvas::Window::LEFT;
+      else if( event->getScreenX() >= reg.r() - resize_corner )
+        _resize |= canvas::Window::RIGHT;
+
+      if( event->getScreenY() <= reg.t() + resize_corner )
+        _resize |= canvas::Window::TOP;
+      else if( event->getScreenY() >= reg.b() - resize_corner )
+        _resize |= canvas::Window::BOTTOM;
+
+      static const int cursor_mapping[] =
+      {
+        0, MOUSE_CURSOR_LEFTSIDE, MOUSE_CURSOR_RIGHTSIDE, 0,
+        MOUSE_CURSOR_TOPSIDE, MOUSE_CURSOR_TOPLEFT, MOUSE_CURSOR_TOPRIGHT, 0,
+        MOUSE_CURSOR_BOTTOMSIDE, MOUSE_CURSOR_BOTTOMLEFT, MOUSE_CURSOR_BOTTOMRIGHT,
+      };
+
+      if( !cursor_mapping[_resize] )
+        return false;
+
+      fgSetMouseCursor(cursor_mapping[_resize]);
+
+      if( ea.getEventType() == osgGA::GUIEventAdapter::PUSH )
+      {
+        _resize_window = window_at_cursor;
+        window_at_cursor->doRaise();
+        window_at_cursor->handleResize( _resize | canvas::Window::INIT,
+                                        event->delta );
+      }
+
+      return true;
+    }
+  }
+
+  if( _last_cursor )
+  {
+    fgSetMouseCursor(_last_cursor);
+    _last_cursor = 0;
+    return true;
+  }
+
   canvas::WindowPtr target_window = window_at_cursor;
   switch( ea.getEventType() )
   {
@@ -312,9 +417,28 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       _last_push = window_at_cursor;
       event->type = sc::Event::MOUSE_DOWN;
       break;
-//    case osgGA::GUIEventAdapter::SCROLL:
-//      event->type = sc::Event::SCROLL;
-//      break;
+    case osgGA::GUIEventAdapter::SCROLL:
+      switch( ea.getScrollingMotion() )
+      {
+        case osgGA::GUIEventAdapter::SCROLL_UP:
+          event->delta.y() = 1;
+          break;
+        case osgGA::GUIEventAdapter::SCROLL_DOWN:
+          event->delta.y() = -1;
+          break;
+        default:
+          return false;
+      }
+
+      // osg sends two events for every scrolling motion. We don't need
+      // duplicate events, so lets ignore the second event with the same
+      // timestamp.
+      if( _last_scroll_time == ea.getTime() )
+        return true;
+      _last_scroll_time = ea.getTime();
+
+      event->type = sc::Event::WHEEL;
+      break;
     case osgGA::GUIEventAdapter::MOVE:
     {
       canvas::WindowPtr last_mouse_over = _last_mouse_over.lock();
@@ -323,7 +447,8 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
         sc::MouseEventPtr move_event( new sc::MouseEvent(*event) );
         move_event->type = sc::Event::MOUSE_LEAVE;
 
-        // Let the event position be always relative to the top left window corner
+        // Let the event position be always relative to the top left window
+        // corner
         move_event->client_pos.x() -= last_mouse_over->getRegion().x();
         move_event->client_pos.y() -= last_mouse_over->getRegion().y();
 
