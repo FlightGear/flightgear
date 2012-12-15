@@ -322,14 +322,19 @@ void FGTileMgr::update(double)
     if (!_scenery_loaded->getBoolValue())
     {
         bool fdmInited = fgGetBool("sim/fdm-initialized");
-        if (_scenery_override->getBoolValue() || (isSceneryLoaded() && fdmInited))
+        bool positionFinalized = fgGetBool("sim/position-finalized");
+        bool sceneryOverride = _scenery_override->getBoolValue();
+        
+    // we are done if final position is set and the scenery & FDM are done.
+    // scenery-override can ignore the last two, but not position finalization.
+        if (positionFinalized && (sceneryOverride || (isSceneryLoaded() && fdmInited)))
         {
             _scenery_loaded->setBoolValue(true);
             fgSplashProgress("");
         }
         else
         {
-            fgSplashProgress("loading-scenery");
+            fgSplashProgress(positionFinalized ? "loading-scenery" : "finalize-position");
             // be nice to loader threads while waiting for initial scenery, reduce to 20fps
             SGTimeStamp::sleepForMSec(50);
         }

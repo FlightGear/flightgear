@@ -517,6 +517,8 @@ FGRenderer::init( void )
     if (!_classicalRenderer)
         _pipeline = makeRenderingPipeline(_renderer, 0);
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
+    _position_finalized = fgGetNode("/sim/position-finalized", true);
+    
     _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
     _virtual_cockpit  = fgGetNode("/sim/virtual-cockpit", true);
 
@@ -1543,7 +1545,7 @@ FGRenderer::setupView( void )
 // Update all Visuals (redraws anything graphics related)
 void
 FGRenderer::update( ) {
-    if (!_scenery_loaded->getBoolValue())
+    if (!_position_finalized || !_scenery_loaded->getBoolValue())
     {
         _splash_alpha->setDoubleValue(1.0);
         return;

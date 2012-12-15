@@ -121,7 +121,8 @@ public:
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
-    SGPropertyNode_ptr _scenery_loaded;
+    SGPropertyNode_ptr _scenery_loaded, _position_finalized;
+    
     SGPropertyNode_ptr _skyblend, _splash_alpha;
     SGPropertyNode_ptr _point_sprites, _enhanced_lighting, _distance_attenuation;
     SGPropertyNode_ptr _textures;

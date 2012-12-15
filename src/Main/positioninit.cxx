@@ -25,6 +25,7 @@
 // simgear
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include "globals.hxx"
 #include "fg_props.hxx"
@@ -44,6 +45,9 @@ namespace flightgear
 /// unresponsive, we need a timeout value. This value is reset on initPosition,
 /// and tracked through each call to finalizePosition.
 static SGTimeStamp global_finalizeTime;
+static bool global_callbackRegistered = false;
+
+static void finalizePosition();
   
 // Set current tower position lon/lat given an airport id
 static bool fgSetTowerPosFromAirportID( const string& id) {
@@ -401,7 +405,11 @@ static bool fgSetPosFromFix( const string& id )
 bool initPosition()
 {
   global_finalizeTime = SGTimeStamp(); // reset to invalid
-  
+  if (!global_callbackRegistered) {
+    globals->get_event_mgr()->addTask("finalizePosition", &finalizePosition, 0.1);
+    global_callbackRegistered = true;
+  }
+    
   double gs = fgGetDouble("/sim/presets/glideslope-deg")
   * SG_DEGREES_TO_RADIANS ;
   double od = fgGetDouble("/sim/presets/offset-distance-nm");
@@ -544,15 +552,56 @@ bool initPosition()
     fgSetBool("/sim/presets/onground", true);
   }
   
+  fgSetBool("/sim/position-finalized", false);
+    
   return true;
 }
   
-bool finalizePosition()
+bool finalizeMetar()
+{
+  double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
+  string apt = fgGetString( "/sim/startup/options/airport" );
+  string rwy = fgGetString( "/sim/startup/options/runway" );
+  double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
+  string parkpos = fgGetString( "/sim/presets/parkpos" );
+  bool onground = fgGetBool( "/sim/presets/onground", false );
+  // this logic is taken from former startup.nas
+  bool needMetar = (hdg < 360.0) && !apt.empty() && (strthdg > 360.0) &&
+  rwy.empty() && onground && parkpos.empty();
+  
+  if (needMetar) {
+    // timeout so we don't spin forever if the network is down
+    if (global_finalizeTime.elapsedMSec() > fgGetInt("/sim/startup/metar-fetch-timeout-msec", 10000)) {
+      SG_LOG(SG_GENERAL, SG_WARN, "finalizePosition: timed out waiting for METAR fetch");
+      return true;
+    }
+    
+    if (!fgGetBool( "/environment/metar/valid" )) {
+      // bit hacky - run these two subsystems. We can't run the whole
+      // lot since some view things aren't initialised and hence FGLight
+      // crashes.
+      globals->get_subsystem("http")->update(0.0);
+      globals->get_subsystem("environment")->update(0.0);
+      return false;
+    }
+    
+    SG_LOG(SG_ENVIRONMENT, SG_INFO,
+           "Using METAR for runway selection: '" << fgGetString("/environment/metar/data") << "'" );
+    setPosFromAirportIDandHdg( apt, hdg );
+    // fall through to return true
+  } // of need-metar case
+  
+  return true;
+}
+  
+void finalizePosition()
 {
   // first call to finalize after an initPosition call
   if (global_finalizeTime.get_usec() == 0) {
     global_finalizeTime = SGTimeStamp::now();
   }
+  
+  bool done = true;
   
     /* Scenarios require Nasal, so FGAIManager loads the scenarios,
      * including its models such as a/c carriers, in its 'postinit',
@@ -569,42 +618,16 @@ bool finalizePosition()
         // clear preset location and re-trigger position setup
         fgSetDouble("/sim/presets/longitude-deg", 9999);
         fgSetDouble("/sim/presets/latitude-deg", 9999);
-        return initPosition();
+        initPosition();
+    } else {
+        done = finalizeMetar();
     }
-
-    double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
-    string apt = fgGetString( "/sim/startup/options/airport" );
-    string rwy = fgGetString( "/sim/startup/options/runway" );
-    double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
-    string parkpos = fgGetString( "/sim/presets/parkpos" );
-    bool onground = fgGetBool( "/sim/presets/onground", false );
-// this logic is taken from former startup.nas
-    bool needMetar = (hdg < 360.0) && !apt.empty() && (strthdg > 360.0) &&
-        rwy.empty() && onground && parkpos.empty();
-    
-    if (needMetar) {
-      // timeout so we don't spin forever if the network is down
-      if (global_finalizeTime.elapsedMSec() > fgGetInt("/sim/startup/metar-fetch-timeout-msec", 5000)) {
-        SG_LOG(SG_GENERAL, SG_WARN, "finalizePosition: timed out waiting for METAR fetch");
-        return true;
-      }
-    
-      if (!fgGetBool( "/environment/metar/valid" )) {
-        // bit hacky - run these two subsystems. We can't run the whole
-        // lot since some view things aren't initialised and hence FGLight
-        // crashes.
-        globals->get_subsystem("http")->update(0.0);
-        globals->get_subsystem("environment")->update(0.0);
-        return false;
-      }
-      
-      SG_LOG(SG_ENVIRONMENT, SG_INFO,
-             "Using METAR for runway selection: '" << fgGetString("/environment/metar/data") << "'" );
-      setPosFromAirportIDandHdg( apt, hdg );
-        // fall through to return true
-    } // of need-metar case
-    
-    return true;
+  
+    fgSetBool("/sim/position-finalized", done);
+    if (done) {
+        globals->get_event_mgr()->removeTask("finalizePosition");
+        global_callbackRegistered = false;
+    }
 }
     
 } // of namespace flightgear

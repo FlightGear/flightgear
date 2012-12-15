@@ -217,15 +217,9 @@ static void fgIdleFunction ( void ) {
         }
       
     } else if ( idle_state == 10 ) {
-        idle_state = 800;
+        idle_state = 900;
         fgPostInitSubsystems();
-    } else if ( idle_state == 800 ) {
-        if (flightgear::finalizePosition()) {
-            idle_state = 900;
-            fgSplashProgress("init-graphics");
-        } else {
-            fgSplashProgress("finalize-position");
-        }
+        fgSplashProgress("finalize-position");
     } else if ( idle_state == 900 ) {
         idle_state = 1000;
         

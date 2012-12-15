@@ -798,6 +798,8 @@ void fgReInitSubsystems()
     globals->restoreInitialState();
 
     // update our position based on current presets
+    // this will mark position as needed finalized which we'll do in the
+    // main-loop
     flightgear::initPosition();
     
     // Force reupdating the positions of the ai 3d models. They are used for
