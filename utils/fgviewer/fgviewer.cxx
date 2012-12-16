@@ -20,15 +20,9 @@
 #include <config.h>
 #endif
 
-#include <iostream>
-#include <cstdlib>
-
 #include <osg/ArgumentParser>
-#include <osg/Fog>
 #include <osgDB/ReadFile>
-#include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgViewer/Renderer>
 #include <osgGA/KeySwitchMatrixManipulator>
 #include <osgGA/StateSetManipulator>
 #include <osgGA/TrackballManipulator>
@@ -38,13 +32,21 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/util/SGSceneFeatures.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/misc/ResourceManager.hxx>
+
+#include "Renderer.hxx"
+#include "Viewer.hxx"
+
+#ifdef FG_HAVE_HLA
+#include "HLACameraManipulator.hxx"
+#include "HLAViewerFederate.hxx"
+#endif
+
 
 int
 main(int argc, char** argv)
@@ -54,6 +56,9 @@ main(int argc, char** argv)
     // use an ArgumentParser object to manage the program arguments.
     // FIXME implement a flightgear similar argument parser into simgear and use this one
     osg::ArgumentParser arguments(&argc, argv);
+
+    logbuf::set_log_classes(SG_ALL);
+    logbuf::set_log_priority(SG_ALERT);
 
     std::string fg_root;
     if (arguments.read("--fg-root", fg_root)) {
@@ -101,10 +106,39 @@ main(int argc, char** argv)
         props->setStringValue(prop, value);
     }
 
+    std::string renderer;
+    while (arguments.read("--renderer", renderer));
+
+    if (arguments.read("--hla")) {
+        props->setStringValue("hla/federate/federation", "rti:///FlightGear");
+    }
+    std::string federation;
+    if (arguments.read("--federation", federation)) {
+        props->setStringValue("hla/federate/federation", federation);
+    }
+
     /// Start setting up the viewer windows and start feeding them.
 
     // construct the viewer.
-    osgViewer::Viewer viewer(arguments);
+    fgviewer::Viewer viewer(arguments);
+
+    if (renderer.empty()) {
+        // Currently just the defautl renderer. More to come.
+        viewer.setRenderer(new fgviewer::Renderer);
+        
+    } else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Unknown renderer configuration \"" << renderer
+               << "\" given on the command line.");
+        return EXIT_FAILURE;
+    }
+
+    // A viewer configuration
+    if (const SGPropertyNode* viewerNode = props->getChild("viewer")) {
+        if (!viewer.readCameraConfig(*viewerNode)) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "Reading camera configuration failed.");
+            return EXIT_FAILURE;
+        }
+    }
 
     // set up the camera manipulators.
     osgGA::KeySwitchMatrixManipulator* keyswitchManipulator;
@@ -122,21 +156,13 @@ main(int argc, char** argv)
     viewer.setCameraManipulator(keyswitchManipulator);
 
     // Usefull stats
-    viewer.addEventHandler(new osgGA::StateSetManipulator(viewer.getCamera()->getOrCreateStateSet()));
+    viewer.addEventHandler(new osgGA::StateSetManipulator(viewer.getSceneDataGroup()->getOrCreateStateSet()));
     viewer.addEventHandler(new osgViewer::HelpHandler);
     viewer.addEventHandler(new osgViewer::StatsHandler);
     viewer.addEventHandler(new osgViewer::ThreadingHandler);
     viewer.addEventHandler(new osgViewer::LODScaleHandler);
     viewer.addEventHandler(new osgViewer::ScreenCaptureHandler);
     viewer.addEventHandler(new osgViewer::WindowSizeHandler);
-
-    // Sigh, we need our own cull visitor ...
-    osg::Camera* camera = viewer.getCamera();
-    osgViewer::Renderer* renderer = static_cast<osgViewer::Renderer*>(camera->getRenderer());
-    for (int j = 0; j < 2; ++j) {
-        osgUtil::SceneView* sceneView = renderer->getSceneView(j);
-        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
-    }
 
     // We want on demand database paging
     viewer.setDatabasePager(new osgDB::DatabasePager);
@@ -177,11 +203,42 @@ main(int argc, char** argv)
     options->setPluginStringData("SimGear::FG_ROOT", fg_root);
     // Omit building bounding volume trees, as the viewer will not run a simulation
     options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
+    viewer.setReaderWriterOptions(options.get());
 
     // Here, all arguments are processed
     arguments.reportRemainingOptionsAsUnrecognized();
     arguments.writeErrorMessages(std::cerr);
 
+    if (props->getNode("hla/federate/federation")) {
+#if !defined FG_HAVE_HLA
+        SG_LOG(SG_GENERAL, SG_ALERT, "Unable to enter HLA/RTI viewer mode: HLA/RTI disabled at compile time.");
+#else
+        const SGPropertyNode* federateNode = props->getNode("hla/federate");
+        
+        SGSharedPtr<fgviewer::HLAViewerFederate> viewerFederate;
+        viewerFederate = new fgviewer::HLAViewerFederate;
+        viewerFederate->setVersion(federateNode->getStringValue("version", "RTI13"));
+        // viewerFederate->setConnectArguments(federateNode->getStringValue("connect-arguments", ""));
+        viewerFederate->setFederateType(federateNode->getStringValue("type", "ViewerFederate"));
+        viewerFederate->setFederateName(federateNode->getStringValue("name", ""));
+        viewerFederate->setFederationExecutionName(federateNode->getStringValue("federation", ""));
+        std::string objectModel;
+        objectModel = federateNode->getStringValue("federation-object-model", "HLA/fg-local-fom.xml");
+        if (SGPath(objectModel).isRelative()) {
+            SGPath path = fg_root;
+            path.append(objectModel);
+            objectModel = path.str();
+        }
+        viewerFederate->setFederationObjectModel(objectModel);
+
+        if (!viewerFederate->init()) {
+            SG_LOG(SG_NETWORK, SG_ALERT, "Got error from federate init!");
+        } else {
+            viewer.setViewerFederate(viewerFederate.get());
+            viewer.setCameraManipulator(new fgviewer::HLACameraManipulator(viewerFederate->getViewer()));
+        }
+#endif
+    }
 
     /// Read the model files that are configured.
 
@@ -203,7 +260,10 @@ main(int argc, char** argv)
     }
 
     // pass the loaded scene graph to the viewer.
-    viewer.setSceneData(loadedModel.get());
+    viewer.insertSceneData(loadedModel.get());
+
+    // Note that this does not affect the hla camera manipulator
+    viewer.home();
 
     return viewer.run();
 }
