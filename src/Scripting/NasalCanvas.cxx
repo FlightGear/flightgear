@@ -33,6 +33,7 @@
 
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/elements/CanvasElement.hxx>
+#include <simgear/canvas/elements/CanvasText.hxx>
 #include <simgear/canvas/MouseEvent.hxx>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
@@ -55,6 +56,7 @@ typedef nasal::Ghost<sc::MouseEventPtr> NasalMouseEvent;
 typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
+typedef nasal::Ghost<sc::TextPtr> NasalText;
 
 SGPropertyNode* from_nasal_helper(naContext c, naRef ref, SGPropertyNode**)
 {
@@ -162,6 +164,15 @@ naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
   );
 }
 
+naRef f_textGetNearestCursor(sc::Text& text, const nasal::CallContext& ctx)
+{
+  return nasal::to_nasal
+  (
+    ctx.c,
+    text.getNearestCursor( ctx.requireArg<osg::Vec2>(0) )
+  );
+}
+
 naRef f_eventGetTarget(naContext c, sc::Event& event)
 {
   return NasalElement::create(c, event.getTarget().lock());
@@ -206,6 +217,9 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .method_func<&f_groupCreateChild>("_createChild")
     .method_func<&f_groupGetChild>("_getChild")
     .method_func<&f_groupGetElementById>("_getElementById");
+  NasalText::init("canvas.Text")
+    .bases<NasalElement>()
+    .method_func<&f_textGetNearestCursor>("getNearestCursor");
 
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
