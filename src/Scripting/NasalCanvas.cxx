@@ -162,6 +162,11 @@ naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
   );
 }
 
+naRef f_eventGetTarget(naContext c, sc::Event& event)
+{
+  return NasalElement::create(c, event.getTarget().lock());
+}
+
 // TODO allow directly exposing functions without parameters and return type
 naRef f_eventStopPropagation(sc::Event& event, const nasal::CallContext& ctx)
 {
@@ -175,6 +180,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
 {
   NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)
+    .member("target", &f_eventGetTarget)
     .method_func<&f_eventStopPropagation>("stopPropagation");
   NasalMouseEvent::init("canvas.MouseEvent")
     .bases<NasalEvent>()
