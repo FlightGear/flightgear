@@ -104,7 +104,7 @@ private:
            << _fps << ":w=" << _width << ":h=" << _height
            << ":format=rgb24 -o " << _fileName << " " << _options;
 #ifdef _WIN32
-        _file = popen(ss.str().c_str(), "wb");
+        _file = _popen(ss.str().c_str(), "wb");
 #else
         _file = popen(ss.str().c_str(), "w");
 #endif
@@ -114,7 +114,11 @@ private:
     {
         if (!_file)
             return;
+#ifdef _WIN32
+        _pclose(_file);
+#else
         pclose(_file);
+#endif
         _file = 0;
     }
 
