@@ -56,11 +56,6 @@ CanvasWidget::CanvasWidget( int x, int y,
   cprops->setBoolValue("render-always", true);
   cprops->setStringValue( "name",
                            props->getStringValue("name", "gui-anonymous") );
-  SGPropertyNode* input = cprops->getChild("input", 0, true);
-  _mouse_x = input->getChild("mouse-x", 0, true);
-  _mouse_y = input->getChild("mouse-y", 0, true);
-  _mouse_down = input->getChild("mouse-down", 0, true);
-  _mouse_drag = input->getChild("mouse-drag", 0, true);
 
   SGPropertyNode *nasal = props->getNode("nasal");
   if( !nasal )
@@ -177,14 +172,6 @@ void CanvasWidget::doHit(int button, int updown, int x, int y)
   }
 
   _canvas->handleMouseEvent(event);
-
-  _mouse_x->setIntValue(x - abox.min[0]);
-  _mouse_y->setIntValue(abox.max[1] - y);
-
-  if( updown == PU_DRAG )
-    _mouse_drag->setIntValue(button);
-  else if( updown == PU_DOWN )
-    _mouse_down->setIntValue(button);
 }
 
 //------------------------------------------------------------------------------

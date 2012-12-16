@@ -37,10 +37,6 @@ class CanvasWidget:
                              // location or make it static...
 
     simgear::canvas::CanvasPtr _canvas;
-    SGPropertyNode     *_mouse_x,
-                       *_mouse_y,
-                       *_mouse_down,
-                       *_mouse_drag;
 
     float _last_x,
           _last_y;
