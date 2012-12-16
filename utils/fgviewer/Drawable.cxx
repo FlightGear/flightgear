@@ -24,6 +24,8 @@
 
 #include "Viewer.hxx"
 
+#include <simgear/structure/SGWeakPtr.hxx>
+
 namespace fgviewer  {
 
 class Drawable::_ResizedCallback : public osg::GraphicsContext::ResizedCallback {

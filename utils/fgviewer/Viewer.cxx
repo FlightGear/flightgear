@@ -34,6 +34,8 @@
 
 #include "MEncoderCaptureOperation.hxx"
 
+#include <cassert>
+
 namespace fgviewer  {
 
 Viewer::Viewer(osg::ArgumentParser& arguments) :
