@@ -815,6 +815,17 @@ void fgReInitSubsystems()
     // reload offsets from config defaults
     globals->get_viewmgr()->reinit();
 
+    // ugly: finalizePosition waits for METAR to arrive for the new airport.
+    // we don't re-init the environment manager here, since historically we did
+    // not, and doing so seems to have other issues. All that's needed is to
+    // schedule METAR fetch immediately, so it's available for finalizePosition.
+    // So we manually extract the METAR-fetching component inside the environment
+    // manager, and re-init that.
+    SGSubsystemGroup* envMgr = static_cast<SGSubsystemGroup*>(globals->get_subsystem("environment"));
+    if (envMgr) {
+      envMgr->get_subsystem("realwx")->reinit();
+    }
+  
     globals->get_subsystem("time")->reinit();
 
     // need to bind FDMshell again, since we manually unbound it above...

@@ -68,7 +68,8 @@ public:
     virtual void update( double dt );
 
     virtual double getTimeToLive() const { return _timeToLive; }
-    virtual void setTimeToLive( double value ) { _timeToLive = value; }
+    virtual void resetTimeToLive()
+    { _timeToLive = 0.00; _pollingTimer = 0.0; }
 
     // implementation of MetarDataHandler
     virtual void handleMetarData( const std::string & data );
@@ -245,6 +246,8 @@ void BasicRealWxController::init()
 void BasicRealWxController::reinit()
 {
     _wasEnabled = false;
+    checkNearbyMetar();
+    update(0); // fetch data ASAP
 }
     
 void BasicRealWxController::shutdown()
@@ -264,14 +267,13 @@ void BasicRealWxController::unbind()
 }
 
 void BasicRealWxController::update( double dt )
-{
+{  
   if( _enabled ) {
     bool firstIteration = !_wasEnabled;
-
     // clock tick for every METAR in stock
     BOOST_FOREACH(LiveMetarProperties* p, _metarProperties) {
       // first round? All received METARs are outdated
-      if( firstIteration ) p->setTimeToLive( 0.0 );
+      if( firstIteration ) p->resetTimeToLive();
       p->update(dt);
     }
 
@@ -289,7 +291,7 @@ void BasicRealWxController::addMetarAtPath(const string& propPath, const string&
       // already exists
       if (p->getStationId() != icao) {
         p->setStationId(icao);
-        p->setTimeToLive(0.0);
+        p->resetTimeToLive();
       }
       
       return;
@@ -342,7 +344,7 @@ void BasicRealWxController::checkNearbyMetar()
               _metarProperties[0]->getStationId() <<
               "', new: '" << nearestAirport->ident() << "'" );
           _metarProperties[0]->setStationId( nearestAirport->ident() );
-          _metarProperties[0]->setTimeToLive( 0.0 );
+          _metarProperties[0]->resetTimeToLive();
       }
     }
     catch( sg_exception & ) {

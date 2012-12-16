@@ -560,8 +560,8 @@ bool initPosition()
 bool finalizeMetar()
 {
   double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
-  string apt = fgGetString( "/sim/startup/options/airport" );
-  string rwy = fgGetString( "/sim/startup/options/runway" );
+  string apt = fgGetString("/sim/presets/airport-id");
+  string rwy = fgGetString("/sim/presets/runway");
   double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
   string parkpos = fgGetString( "/sim/presets/parkpos" );
   bool onground = fgGetBool( "/sim/presets/onground", false );
@@ -577,11 +577,6 @@ bool finalizeMetar()
     }
     
     if (!fgGetBool( "/environment/metar/valid" )) {
-      // bit hacky - run these two subsystems. We can't run the whole
-      // lot since some view things aren't initialised and hence FGLight
-      // crashes.
-      globals->get_subsystem("http")->update(0.0);
-      globals->get_subsystem("environment")->update(0.0);
       return false;
     }
     
