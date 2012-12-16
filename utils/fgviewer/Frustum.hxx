@@ -33,12 +33,12 @@ struct Frustum {
         _top(1),
         _near(2)
     { }
-    Frustum(const double& left, const double& right, const double& bottom, const double& top, const double& near) :
+    Frustum(const double& left, const double& right, const double& bottom, const double& top, const double& zNear) :
         _left(left),
         _right(right),
         _bottom(bottom),
         _top(top),
-        _near(near)
+        _near(zNear)
     { }
     Frustum(const Frustum& frustum) :
         _left(frustum._left),
@@ -60,27 +60,27 @@ struct Frustum {
     /// Finite projection matrix
     osg::Matrix getMatrix(const osg::Vec2& depthRange) const
     {
-        double near = depthRange[0];
-        double far = depthRange[1];
-        /// left, right, bottom and top are rescaled by near/_near and the result is
+        double zNear = depthRange[0];
+        double zFar = depthRange[1];
+        /// left, right, bottom and top are rescaled by zNear/_near and the result is
         /// inserted into the final equations. This rescaling factor just cancels out mostly.
         double a00 = 2*_near/(_right - _left);
         double a11 = 2*_near/(_top - _bottom);
         double a20 = (_right + _left)/(_right - _left);
         double a21 = (_top + _bottom)/(_top - _bottom);
-        double a22 = (near + far)/(near - far);
+        double a22 = (zNear + zFar)/(zNear - zFar);
         double a23 = -1;
-        double a32 = 2*near*far/(near - far);
+        double a32 = 2*zNear*zFar/(zNear - zFar);
 
         return osg::Matrix(a00,   0,   0,   0,
                              0, a11,   0,   0,
                            a20, a21, a22, a23,
                              0,   0, a32,   0);
     }
-    /// Infinite projection matrix with a given near plane
-    osg::Matrix getMatrix(const double& near, const double& eps = 0) const
+    /// Infinite projection matrix with a given zNear plane
+    osg::Matrix getMatrix(const double& zNear, const double& eps = 0) const
     {
-        /// left, right, bottom and top are rescaled by near/_near and the result is
+        /// left, right, bottom and top are rescaled by zNear/_near and the result is
         /// inserted into the final equations. This rescaling factor just cancels out mostly.
         double a00 = 2*_near/(_right - _left);
         double a11 = 2*_near/(_top - _bottom);
@@ -88,7 +88,7 @@ struct Frustum {
         double a21 = (_top + _bottom)/(_top - _bottom);
         double a22 = eps - 1;
         double a23 = -1;
-        double a32 = near*(eps - 2);
+        double a32 = zNear*(eps - 2);
 
         return osg::Matrix(a00,   0,   0,   0,
                              0, a11,   0,   0,
@@ -126,8 +126,8 @@ struct Frustum {
         double right = _right - eyeOffset[0];
         double bottom = _bottom - eyeOffset[1];
         double top = _top - eyeOffset[1];
-        double near = _near + eyeOffset[2];
-        return Frustum(left, right, bottom, top, near);
+        double zNear = _near + eyeOffset[2];
+        return Frustum(left, right, bottom, top, zNear);
     }
     /// Scale this frustum around the scale center.
     /// Gives something similar like zooming into the view.
@@ -147,7 +147,7 @@ struct Frustum {
     double _right;
     double _bottom;
     double _top;
-    // Is not the real near plane. Just used to reference the other frustum parameters.
+    // Is not the real zNear plane. Just used to reference the other frustum parameters.
     double _near;
 };
 
