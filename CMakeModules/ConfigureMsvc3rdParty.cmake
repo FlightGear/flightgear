@@ -12,7 +12,7 @@ if (MSVC)
     else (EXISTS ${TEST_3RDPARTY_DIR})
         set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
     endif (EXISTS ${TEST_3RDPARTY_DIR})
-        list(APPEND PLATFORM_LIBS "winmm.lib")
+    list(APPEND PLATFORM_LIBS "winmm.lib")
 else (MSVC)
     set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
 endif (MSVC)
@@ -35,9 +35,15 @@ if (MSVC AND MSVC_3RDPARTY_ROOT)
         set( MSVC_3RDPARTY_DIR 3rdParty )
 		set( BOOST_LIB lib )
     endif (CMAKE_CL_64)
+    find_path(FLTK_DIR include/FL/Fl.H
+			${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/fltk
+			${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/fltk-1.3
+			${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}
+			)
+	list (APPEND CMAKE_PROGRAM_PATH ${FLTK_DIR}/bin)
 
-    set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/lib $(BOOST_ROOT)/$(BOOST_LIB) )
-    set (CMAKE_INCLUDE_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/include)
+    set (CMAKE_LIBRARY_PATH ${FLTK_DIR}/lib ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/lib $(BOOST_ROOT)/$(BOOST_LIB) )
+    set (CMAKE_INCLUDE_PATH ${FLTK_DIR}/include ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/include)
     find_path(BOOST_ROOT boost/version.hpp
 			${MSVC_3RDPARTY_ROOT}/boost
 			${MSVC_3RDPARTY_ROOT}/boost_1_52_0
