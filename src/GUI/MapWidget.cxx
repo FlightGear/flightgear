@@ -936,7 +936,8 @@ private:
 void MapWidget::drawAirports()
 {
   MapAirportFilter af(_root);
-  FGPositioned::List apts = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &af);
+  bool partial = false;
+  FGPositioned::List apts = FGPositioned::findWithinRangePartial(_projectionCenter, _drawRangeNm, &af, partial);
   for (unsigned int i=0; i<apts.size(); ++i) {
     drawAirport((FGAirport*) apts[i].get());
   }

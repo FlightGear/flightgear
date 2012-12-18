@@ -164,8 +164,10 @@ public:
     std::vector<Type> types;
     Type mMinType, mMaxType;
   };
-    
+  
   static List findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter = NULL);
+  
+  static List findWithinRangePartial(const SGGeod& aPos, double aRangeNm, Filter* aFilter, bool& aPartial);
         
   static FGPositionedRef findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter = NULL);
 

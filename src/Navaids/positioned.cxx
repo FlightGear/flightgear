@@ -202,7 +202,20 @@ FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilt
 
   List result;
   Octree::findAllWithinRange(SGVec3d::fromGeod(aPos), 
-    aRangeNm * SG_NM_TO_METER, aFilter, result);
+    aRangeNm * SG_NM_TO_METER, aFilter, result, 0xffffff);
+  return result;
+}
+
+FGPositioned::List
+FGPositioned::findWithinRangePartial(const SGGeod& aPos, double aRangeNm, Filter* aFilter, bool& aPartial)
+{
+  validateSGGeod(aPos);
+  
+  int limitMsec = 32;
+  List result;
+  aPartial = Octree::findAllWithinRange(SGVec3d::fromGeod(aPos),
+                             aRangeNm * SG_NM_TO_METER, aFilter, result,
+                                        limitMsec);
   return result;
 }
 

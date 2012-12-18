@@ -37,6 +37,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 namespace flightgear
 {
@@ -258,7 +259,7 @@ void findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
   }
 }
 
-void findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults)
+bool findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults, int aCutoffMsec)
 {
   aResults.clear();
   FindNearestPQueue pq;
@@ -266,7 +267,10 @@ void findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filte
   pq.push(Ordered<Node*>(global_spatialOctree, 0));
   double rng = aRangeM;
 
-  while (!pq.empty()) {
+  SGTimeStamp tm;
+  tm.stamp();
+  
+  while (!pq.empty() && (tm.elapsedMSec() < aCutoffMsec)) {
     Node* nd = pq.top().get();
     pq.pop();
   
@@ -279,6 +283,8 @@ void findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filte
   for (unsigned int r=0; r<numResults; ++r) {
     aResults[r] = results[r].get();
   }
+      
+  return !pq.empty();
 }
       
 } // of namespace Octree
