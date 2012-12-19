@@ -417,7 +417,7 @@ void FGAirport::readThresholdData(SGPropertyNode* aRoot)
     SGPropertyNode* t0 = runway->getChild("threshold", 0),
       *t1 = runway->getChild("threshold", 1);
     assert(t0);
-    assert(t1); // too strict? mayeb we should finally allow single-ended runways
+    assert(t1); // too strict? maybe we should finally allow single-ended runways
     
     processThreshold(t0);
     processThreshold(t1);
