@@ -85,11 +85,6 @@ public:
   string_list readStringListProperty(const std::string& key);
   void writeStringListProperty(const std::string& key, const string_list& values);
   
-// transaction API wrappers
-  void beginTransaction();
-  void commitTransaction();
-  void abortTransaction();
-  
   /**
    * retrieve an FGPositioned from the cache.
    * This may be trivial if the object is previously loaded, or require actual
@@ -250,12 +245,31 @@ public:
   
   PositionedIDVec findAirportParking(PositionedID airport, const std::string& flightType,
                                      int radius);
+
+
+    class Transaction
+    {
+    public:
+        Transaction(NavDataCache* cache);
+        ~Transaction();
+        
+        void commit();
+    private:
+        NavDataCache* _instance;
+        bool _committed;
+    };
 private:
   NavDataCache();
   
   friend class RebuildThread;
   void doRebuild();
   
+  friend class Transaction;
+  
+    void beginTransaction();
+    void commitTransaction();
+    void abortTransaction();
+    
   class NavDataCachePrivate;
   std::auto_ptr<NavDataCachePrivate> d;      
 };

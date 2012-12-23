@@ -43,7 +43,10 @@ double FGTaxiNode::getElevationFt()
       SGGeod newPos = mPosition;
       newPos.setElevationM(elevationEnd);
     // this will call modifyPosition to update mPosition
-      NavDataCache::instance()->updatePosition(guid(), newPos);
+      NavDataCache* cache = NavDataCache::instance();
+      NavDataCache::Transaction txn(cache);
+      cache->updatePosition(guid(), newPos);
+      txn.commit();
     }
   }
   

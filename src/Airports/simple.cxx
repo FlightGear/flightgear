@@ -396,17 +396,12 @@ void FGAirport::loadSceneryDefinitions() const
     return;
   }
   
-  try {
-    cache->beginTransaction();
+    flightgear::NavDataCache::Transaction txn(cache);
     SGPropertyNode_ptr rootNode = new SGPropertyNode;
     readProperties(path.str(), rootNode);
     const_cast<FGAirport*>(this)->readThresholdData(rootNode);
     cache->stampCacheFile(path);
-    cache->commitTransaction();
-  } catch (sg_exception& e) {
-    cache->abortTransaction();
-    throw e;
-  }
+    txn.commit();
 }
 
 void FGAirport::readThresholdData(SGPropertyNode* aRoot)
@@ -480,11 +475,13 @@ void FGAirport::validateTowerData() const
   // cached values are correct, we're all done
     return;
   }
-    
+   
+  flightgear::NavDataCache::Transaction txn(cache);
   SGPropertyNode_ptr rootNode = new SGPropertyNode;
   readProperties(path.str(), rootNode);
   const_cast<FGAirport*>(this)->readTowerData(rootNode);
   cache->stampCacheFile(path);
+  txn.commit();
 }
 
 void FGAirport::readTowerData(SGPropertyNode* aRoot)
@@ -529,9 +526,12 @@ bool FGAirport::validateILSData()
   
   SGPropertyNode_ptr rootNode = new SGPropertyNode;
   readProperties(path.str(), rootNode);
+
+  flightgear::NavDataCache::Transaction txn(cache);
   readILSData(rootNode);
   cache->stampCacheFile(path);
-  
+  txn.commit();
+    
 // we loaded data, tell the caller it might need to reload things
   return true;
 }
