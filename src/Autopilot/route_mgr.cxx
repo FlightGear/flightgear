@@ -926,21 +926,24 @@ flightgear::SID* createDefaultSID(FGRunway* aRunway)
   ss << aRunway->ident() << "-3";
   
   SGGeod p = aRunway->pointOnCenterline(aRunway->lengthM() + (3.0 * SG_NM_TO_METER));
-  p.setElevationFt(runwayElevFt + 2000.0);
-  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+  WayptRef w = new BasicWaypt(p, ss.str(), NULL);
+  w->setAltitude(runwayElevFt + 2000.0, RESTRICT_AT);
+  wpts.push_back(w);
   
   ss.str("");
   ss << aRunway->ident() << "-6";
   p = aRunway->pointOnCenterline(aRunway->lengthM() + (6.0 * SG_NM_TO_METER));
-  p.setElevationFt(runwayElevFt + 4000.0);
-  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+  w = new BasicWaypt(p, ss.str(), NULL);
+  w->setAltitude(runwayElevFt + 4000.0, RESTRICT_AT);
+  wpts.push_back(w);
 
-    ss.str("");
-    ss << aRunway->ident() << "-9";
-    p = aRunway->pointOnCenterline(aRunway->lengthM() + (9.0 * SG_NM_TO_METER));
-    p.setElevationFt(runwayElevFt + 6000.0);
-    wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
-    
+  ss.str("");
+  ss << aRunway->ident() << "-9";
+  p = aRunway->pointOnCenterline(aRunway->lengthM() + (9.0 * SG_NM_TO_METER));
+  w = new BasicWaypt(p, ss.str(), NULL);
+  w->setAltitude(runwayElevFt + 6000.0, RESTRICT_AT);
+  wpts.push_back(w);
+  
   BOOST_FOREACH(Waypt* w, wpts) {
     w->setFlag(WPT_DEPARTURE);
     w->setFlag(WPT_GENERATED);
@@ -1046,22 +1049,24 @@ flightgear::Approach* createDefaultApproach(FGRunway* aRunway)
   ss << aRunway->ident() << "-12";
   WayptVec wpts;
   SGGeod p = aRunway->pointOnCenterline(-12.0 * SG_NM_TO_METER);
-  p.setElevationFt(thresholdElevFt + 4000);
-  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+  WayptRef w = new BasicWaypt(p, ss.str(), NULL);
+  w->setAltitude(thresholdElevFt + 4000, RESTRICT_AT);
+  wpts.push_back(w);
 
     
   p = aRunway->pointOnCenterline(-8.0 * SG_NM_TO_METER);
-  p.setElevationFt(thresholdElevFt + approachHeightFt);
   ss.str("");
   ss << aRunway->ident() << "-8";
-  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+  w = new BasicWaypt(p, ss.str(), NULL);
+  w->setAltitude(thresholdElevFt + approachHeightFt, RESTRICT_AT);
+  wpts.push_back(w);
   
-  p = aRunway->pointOnCenterline(-glideslopeDistanceM);
-  p.setElevationFt(thresholdElevFt + approachHeightFt);
-    
+  p = aRunway->pointOnCenterline(-glideslopeDistanceM);    
   ss.str("");
   ss << aRunway->ident() << "-GS";
-  wpts.push_back(new BasicWaypt(p, ss.str(), NULL));
+  w = new BasicWaypt(p, ss.str(), NULL);
+  w->setAltitude(thresholdElevFt + approachHeightFt, RESTRICT_AT);
+  wpts.push_back(w);
     
   BOOST_FOREACH(Waypt* w, wpts) {
     w->setFlag(WPT_APPROACH);
