@@ -121,6 +121,9 @@ private:
     void processAI();
     void computeAIStates(const SGPropertyNode* ai, string_set& states);
     
+    void computeCustomSymbolStates(const SGPropertyNode* sym, string_set& states);
+    void processCustomSymbols();
+    
     void findRules(const std::string& type, const string_set& states, SymbolRuleVector& rules);
     
     SymbolInstance* addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars);
@@ -192,7 +195,8 @@ private:
     FGPositioned::List _itemsInRange;
     SGPropertyNode_ptr _excessDataNode;
     int _maxSymbols;
-  
+    SGPropertyNode_ptr _customSymbols;
+    
     class CacheListener;
     std::auto_ptr<CacheListener> _cacheListener;
     

@@ -566,6 +566,8 @@ NavDisplay::init ()
     _userLonNode = _Instrument->getChild("user-longitude-deg", 0, true);
     _userPositionEnable = _Instrument->getChild("user-position", 0, true);
     
+    _customSymbols = _Instrument->getChild("symbols", 0, true);
+    
 // OSG geometry setup
     _radarGeode = new osg::Geode;
 
@@ -745,6 +747,7 @@ NavDisplay::update (double delta_time_sec)
     processRoute();
     processNavRadios();
     processAI();
+    processCustomSymbols();
     findItems();
     limitDisplayedSymbols();
   }
@@ -1438,4 +1441,40 @@ void NavDisplay::addRule(SymbolRule* r)
 {
     _rules.push_back(r);
 }
+
+void NavDisplay::computeCustomSymbolStates(const SGPropertyNode* sym, string_set& states)
+{
+  BOOST_FOREACH(SGPropertyNode* st, sym->getChildren("state")) {
+    states.insert(st->getStringValue());
+  }
+}
+
+void NavDisplay::processCustomSymbols()
+{
+  for (int i = _customSymbols->nChildren() - 1; i >= 0; i--) {
+    SGPropertyNode *symNode = _customSymbols->getChild(i);
+    if (!symNode->nChildren()) {
+      continue;
+    }
+    string_set ss;
+    computeCustomSymbolStates(symNode, ss);
+    SymbolRuleVector rules;
+    findRules(symNode->getName(), ss, rules);
+    if (rules.empty()) {
+      return; // no rules matched, we can skip this item
+    }
+    
+    double heading = symNode->getDoubleValue("true-heading-deg", 0.0);
+    SGGeod pos = SGGeod::fromDegFt(symNode->getDoubleValue("longitude-deg"),
+                                          symNode->getDoubleValue("latitude-deg"),
+                                          symNode->getDoubleValue("altitude-ft"));
+ 
+    
+    osg::Vec2 projected = projectGeod(pos);
+    BOOST_FOREACH(SymbolRule* r, rules) {
+      addSymbolInstance(projected, heading, r->getDefinition(), symNode);
+    }
+  } // of custom symbols iteration
+}
+
 
