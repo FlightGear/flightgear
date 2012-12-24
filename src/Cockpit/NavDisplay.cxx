@@ -562,6 +562,10 @@ NavDisplay::init ()
     _testModeNode->setBoolValue(false);
   
     _viewHeadingNode = _Instrument->getChild("view-heading-deg", 0, true);
+    _userLatNode = _Instrument->getChild("user-latitude-deg", 0, true);
+    _userLonNode = _Instrument->getChild("user-longitude-deg", 0, true);
+    _userPositionEnable = _Instrument->getChild("user-position", 0, true);
+    
 // OSG geometry setup
     _radarGeode = new osg::Geode;
 
@@ -695,8 +699,12 @@ NavDisplay::update (double delta_time_sec)
   _projectMat = osg::Matrixf::scale(_scale, _scale, 1.0) * 
       degRotation(-_view_heading) * _centerTrans;
   
-  _pos = globals->get_aircraft_position();
-
+    if (_userPositionEnable->getBoolValue()) {
+        _pos = SGGeod::fromDeg(_userLonNode->getDoubleValue(), _userLatNode->getDoubleValue());
+    } else {
+        _pos = globals->get_aircraft_position();
+    }
+    
     // invalidate the cache of positioned items, if we travelled more than 1nm
     if (_cachedItemsValid) {
         SGVec3d cartNow(SGVec3d::fromGeod(_pos));

@@ -90,7 +90,8 @@ protected:
     SGPropertyNode_ptr _radar_mode_control_node;
     SGPropertyNode_ptr _user_heading_node;
     SGPropertyNode_ptr _testModeNode;
-  
+    SGPropertyNode_ptr _userLatNode, _userLonNode, _userPositionEnable;
+    
     FGODGauge *_odg;
 
     // Convenience function for creating a property node with a
