@@ -2125,6 +2125,31 @@ static naRef f_flightplan_clone(naContext c, naRef me, int argc, naRef* args)
   return ghostForFlightPlan(c, fp->clone());
 }
 
+static naRef f_flightplan_pathGeod(naContext c, naRef me, int argc, naRef* args)
+{
+  FlightPlan* fp = flightplanGhost(me);
+  if (!fp) {
+    naRuntimeError(c, "flightplan.clone called on non-flightplan object");
+  }
+
+  if ((argc < 1) || !naIsNum(args[0])) {
+    naRuntimeError(c, "bad argument to flightplan.pathGeod");
+  }
+
+  if ((argc > 1) && !naIsNum(args[1])) {
+    naRuntimeError(c, "bad argument to flightplan.pathGeod");
+  }
+
+  int index = (int) args[0].num;
+  double offset = (argc > 1) ? args[1].num : 0.0;
+  naRef result = naNewHash(c);
+  SGGeod g = fp->pointAlongRoute(index, offset);
+  hashset(c, result, "lat", naNum(g.getLatitudeDeg()));
+  hashset(c, result, "lon", naNum(g.getLongitudeDeg()));
+  return result;
+}
+
+
 static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
 {
   FlightPlan::Leg* leg = fpLegGhost(me);
@@ -2365,7 +2390,8 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, flightplanPrototype, "cleanPlan", naNewFunc(c, naNewCCode(c, f_flightplan_clearPlan))); 
     hashset(c, flightplanPrototype, "clearWPType", naNewFunc(c, naNewCCode(c, f_flightplan_clearWPType))); 
     hashset(c, flightplanPrototype, "clone", naNewFunc(c, naNewCCode(c, f_flightplan_clone))); 
-  
+    hashset(c, flightplanPrototype, "pathGeod", naNewFunc(c, naNewCCode(c, f_flightplan_pathGeod)));
+    
     waypointPrototype = naNewHash(c);
     hashset(c, gcSave, "wayptProto", waypointPrototype);
     

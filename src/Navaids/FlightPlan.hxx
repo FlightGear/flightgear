@@ -200,6 +200,13 @@ public:
   { return _totalDistance; }
   
   /**
+   * given a waypoint index, and an offset in NM, find the geodetic
+   * position on the route path. I.e the point 10nm before or after
+   * a particular waypoint.
+   */
+  SGGeod pointAlongRoute(int aIndex, double aOffsetNm) const;
+    
+  /**
    * Create a WayPoint from a string in the following format:
    *  - simple identifier
    *  - decimal-lon,decimal-lat
