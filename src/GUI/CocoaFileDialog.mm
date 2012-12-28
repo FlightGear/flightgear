@@ -7,11 +7,15 @@
 
 #include <boost/foreach.hpp>
 
+#include <osgViewer/Viewer>
+#include <osgViewer/api/Cocoa/GraphicsWindowCocoa>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/strutils.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Viewer/renderer.hxx>
 
 static NSString* stdStringToCocoa(const std::string& s)
 {
@@ -47,12 +51,13 @@ CocoaFileDialog::CocoaFileDialog(const std::string& aTitle, FGFileDialog::Usage 
     if (use == USE_SAVE_FILE) {
         d->panel = [NSSavePanel savePanel];
     } else {
-        d->panel = [NSOpenPanel openPanel];
-    }
-    
-    if (use == USE_CHOOSE_DIR) {
-        [d->panel setCanChooseDirectories:YES];
-    }
+        NSOpenPanel* openPanel = [NSOpenPanel openPanel]; 
+        d->panel = openPanel;
+        
+        if (use == USE_CHOOSE_DIR) {
+            [openPanel setCanChooseDirectories:YES];
+        }
+    } // of USE_OPEN_FILE or USE_CHOOSE_DIR -> building NSOpenPanel
 }
 
 CocoaFileDialog::~CocoaFileDialog()
@@ -62,6 +67,25 @@ CocoaFileDialog::~CocoaFileDialog()
 
 void CocoaFileDialog::exec()
 {
+// find the native Cocoa NSWindow handle so we can parent the dialog and show
+// it window-modal.
+    NSWindow* cocoaWindow = nil;
+    std::vector<osgViewer::GraphicsWindow*> windows;
+    globals->get_renderer()->getViewer()->getWindows(windows);
+    BOOST_FOREACH(osgViewer::GraphicsWindow* gw, windows) {
+        // OSG doesn't use RTTI, so no dynamic cast. Let's check the class type
+        // using OSG's own system, before we blindly static_cast<> and break
+        // everything.
+        if (strcmp(gw->className(), "GraphicsWindowCocoa")) {
+            continue; 
+        }
+            
+        osgViewer::GraphicsWindowCocoa* gwCocoa = static_cast<osgViewer::GraphicsWindowCocoa*>(gw);
+        cocoaWindow = (NSWindow*) gwCocoa->getWindow();
+        break;
+    }
+    
+// setup the panel fields now we have collected all the data
     if (_usage == USE_SAVE_FILE) {
         [d->panel setNameFieldStringValue:stdStringToCocoa(_placeholder)];
     }
@@ -83,13 +107,13 @@ void CocoaFileDialog::exec()
     
     [d->panel setDirectoryURL: pathToNSURL(_initialPath)];
     
-    [d->panel beginWithCompletionHandler:^(NSInteger result)
+    [d->panel beginSheetModalForWindow:cocoaWindow completionHandler:^(NSInteger result)
     {
         if (result == NSFileHandlingPanelOKButton) {
-            NSURL*  theDoc = [d->panel URL];
-            NSLog(@"the URL is: %@", theDoc);
-            // Open  the document.
+            NSString* path = [[d->panel URL] path];
+            //NSLog(@"the URL is: %@", d->panel URL]);
+            SGPath sgpath([path UTF8String]);
+            _callback->onFileDialogDone(this, sgpath);
         }
-        
     }];
 }
