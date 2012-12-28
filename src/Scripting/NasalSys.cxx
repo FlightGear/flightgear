@@ -37,6 +37,8 @@
 
 using std::map;
 
+void postinitNasalGUI(naRef globals, naContext c);
+
 static FGNasalSys* nasalSys = 0;
 
 // Listener class for loading Nasal modules on demand
@@ -585,6 +587,7 @@ void FGNasalSys::init()
   
     // now Nasal modules are loaded, we can do some delayed work
     postinitNasalPositioned(_globals, _context);
+    postinitNasalGUI(_globals, _context);
 }
 
 void FGNasalSys::update(double)

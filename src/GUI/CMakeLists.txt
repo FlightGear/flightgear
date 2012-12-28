@@ -18,6 +18,8 @@ set(SOURCES
 	property_list.cxx
 	FGFontCache.cxx
 	FGColor.cxx
+    FileDialog.cxx
+    PUIFileDialog.cxx
 	)
 
 set(HEADERS
@@ -35,11 +37,13 @@ set(HEADERS
 	property_list.hxx
 	FGFontCache.hxx
 	FGColor.hxx
+    FileDialog.hxx
+    PUIFileDialog.hxx
 	)
     		
 if (APPLE)
-    list(APPEND HEADERS FGCocoaMenuBar.hxx)
-    list(APPEND SOURCES FGCocoaMenuBar.mm)
+    list(APPEND HEADERS FGCocoaMenuBar.hxx CocoaFileDialog.hxx)
+    list(APPEND SOURCES FGCocoaMenuBar.mm CocoaFileDialog.mm)
 endif()
     		
 flightgear_component(GUI "${SOURCES}" "${HEADERS}")
