@@ -1354,6 +1354,14 @@ protected:
         propsData += string(s, n);
     }
     
+    virtual void failed()
+    {
+        SG_LOG(SG_IO, SG_INFO, "network level failure in RemoteXMLRequest");
+        if (_failed) {
+            _failed->setBoolValue(true);
+        }
+    }
+    
     virtual void responseComplete()
     {
         simgear::HTTP::Request::responseComplete();
