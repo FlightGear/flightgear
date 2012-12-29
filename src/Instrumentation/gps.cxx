@@ -767,7 +767,7 @@ void GPS::updateTurn()
   bool printProgress = false;
   
   if (_computeTurnData) {
-    if (_last_speed_kts < 60) {
+    if (_last_speed_kts < 10) {
       // need valid leg course and sensible ground speed to compute the turn
       return;
     }
