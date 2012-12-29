@@ -453,7 +453,7 @@ void FGRouteMgr::update( double dt )
   }
 
   if (checkFinished()) {
-    // maybe we're done
+    endOfRoute();
   }
   
 // basic course/distance information
@@ -535,14 +535,11 @@ int FGRouteMgr::currentIndex() const
 
 Waypt* FGRouteMgr::wayptAtIndex(int index) const
 {
-  if (_plan) {
-    FlightPlan::Leg* leg = _plan->legAtIndex(index);
-    if (leg) {
-      return leg->waypoint();
-    }
+  if (!_plan) {
+    throw sg_range_exception("wayptAtindex: no flightplan");
   }
   
-  return NULL;
+  return _plan->legAtIndex(index)->waypoint();
 }
 
 int FGRouteMgr::numLegs() const
@@ -590,8 +587,12 @@ void FGRouteMgr::removeLegAtIndex(int aIndex)
 void FGRouteMgr::waypointsChanged()
 {
   update_mirror();
-   _edited->fireValueChanged();
-  checkFinished();
+  _edited->fireValueChanged();
+  
+// removing waypoints, deactivate if we hit the end.
+  if (currentIndex() >= numLegs()) {
+    endOfRoute();
+  }
 }
 
 // mirror internal route to the property system for inspection by other subsystems
@@ -802,11 +803,21 @@ void FGRouteMgr::sequence()
     return;
   }
   
-  if (checkFinished()) {
+  int nextIndex = _plan->currentIndex() + 1;
+  if (nextIndex >= _plan->numLegs()) {
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "sequenced on final leg, deactivating route");
+    endOfRoute();
     return;
   }
-  
-  _plan->setCurrentIndex(_plan->currentIndex() + 1);
+
+  _plan->setCurrentIndex(nextIndex);
+}
+
+void FGRouteMgr::endOfRoute()
+{
+  SG_LOG(SG_AUTOPILOT, SG_INFO, "reached end of active route");
+  _finished->fireValueChanged();
+  active->setBoolValue(false);
 }
 
 bool FGRouteMgr::checkFinished()
@@ -824,15 +835,8 @@ bool FGRouteMgr::checkFinished()
     done = weightOnWheels->getBoolValue() && (gs < 25);
   }
   
-// also done if we hit the final waypoint
-  if (_plan->currentIndex() >= _plan->numLegs()) {
-    done = true;
-  }
-  
   if (done) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "reached end of active route");
-    _finished->fireValueChanged();
-    active->setBoolValue(false);
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "checkFinished: on the ground on destination runway, we're done");
   }
   
   return done;

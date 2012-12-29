@@ -877,18 +877,14 @@ double GPS::computeTurnProgress(double aBearing) const
 void GPS::computeTurnData()
 {
   _computeTurnData = false;
-  if (_mode != "leg") { // and approach modes in the future
+  int nextIndex = _routeMgr->currentIndex() + 1;
+  if ((_mode != "leg") || (nextIndex >= _routeMgr->numWaypts())) {
     _anticipateTurn = false;
     return;
   }
   
-  WayptRef next = _routeMgr->wayptAtIndex(_routeMgr->currentIndex() + 1);
-  if (!next || next->flag(WPT_DYNAMIC)) {
-    _anticipateTurn = false;
-    return;
-  }
-  
-  if (!_config.turnAnticipationEnabled()) {
+  WayptRef next = _routeMgr->wayptAtIndex(nextIndex);
+  if (next->flag(WPT_DYNAMIC) || !_config.turnAnticipationEnabled()) {
     _anticipateTurn = false;
     return;
   }
