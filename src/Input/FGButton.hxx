@@ -26,7 +26,7 @@
 #define FGBUTTON_H
 
 #include "FGCommonInput.hxx"
-#include <Main/fg_os.hxx>
+#include <Main/fg_os.hxx> // for KEYMOD_MAX
 
 class FGButton : public FGCommonInput {
 public:

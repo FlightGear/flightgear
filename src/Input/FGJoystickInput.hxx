@@ -25,12 +25,10 @@
 #ifndef _FGJOYSTICKINPUT_HXX
 #define _FGJOYSTICKINPUT_HXX
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
 #include "FGCommonInput.hxx"
 #include "FGButton.hxx"
+
+#include <memory> // for std::auto_ptr
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <plib/js.h>
 
@@ -52,6 +50,8 @@ public:
   static const int MAX_JOYSTICK_BUTTONS = 32;
 
 private:
+ 
+    
    void _remove(bool all);
    SGPropertyNode_ptr status_node;
 
@@ -79,15 +79,19 @@ private:
     joystick ();
     virtual ~joystick ();
     int jsnum;
-    jsJoystick * js;
+    std::auto_ptr<jsJoystick> plibJS;
     int naxes;
     int nbuttons;
     axis * axes;
     FGButton * buttons;
-    bool predefined;    
+    bool predefined;
+      
+    void clearAxesAndButtons();
   };
-  joystick bindings[MAX_JOYSTICKS];
-
+    
+  joystick joysticks[MAX_JOYSTICKS];
+  void updateJoystick(int index, joystick* joy, double dt);
+    
 };
 
 #endif

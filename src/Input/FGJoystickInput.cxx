@@ -52,7 +52,6 @@ FGJoystickInput::axis::~axis ()
 
 FGJoystickInput::joystick::joystick ()
   : jsnum(0),
-    js(0),
     naxes(0),
     nbuttons(0),
     axes(0),
@@ -61,17 +60,20 @@ FGJoystickInput::joystick::joystick ()
 {
 }
 
+void FGJoystickInput::joystick::clearAxesAndButtons()
+{
+    delete[] axes;
+    delete[] buttons;
+    axes = NULL;
+    buttons = NULL;
+    naxes = 0;
+    nbuttons = 0;
+}
+
 FGJoystickInput::joystick::~joystick ()
 {
-  //  delete js? no, since js == this - and we're in the destructor already.
-  delete[] axes;
-  delete[] buttons;
   jsnum = 0;
-  js = NULL;
-  naxes = 0;
-  nbuttons = 0;
-  axes = NULL;
-  buttons = NULL;
+  clearAxesAndButtons();
 }
 
 
@@ -90,12 +92,13 @@ void FGJoystickInput::_remove(bool all)
 
     for (int i = 0; i < MAX_JOYSTICKS; i++)
     {
+        joystick* joy = &joysticks[i];
         // do not remove predefined joysticks info on reinit
-        if (all || (!bindings[i].predefined))
+        if (all || (!joy->predefined))
             js_nodes->removeChild("js", i, false);
-        if (bindings[i].js)
-            delete bindings[i].js;
-        bindings[i].js = NULL;
+        
+        joy->plibJS.reset();
+        joy->clearAxesAndButtons();
     }
 }
 
@@ -110,8 +113,8 @@ void FGJoystickInput::init()
 
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
     jsJoystick * js = new jsJoystick(i);
-    bindings[i].js = js;
-
+    joysticks[i].plibJS.reset(js);
+    
     if (js->notWorking()) {
       SG_LOG(SG_INPUT, SG_DEBUG, "Joystick " << i << " not found");
       continue;
@@ -124,7 +127,7 @@ void FGJoystickInput::init()
       SG_LOG(SG_INPUT, SG_INFO, "Using existing bindings for joystick " << i);
 
     } else {
-      bindings[i].predefined = false;
+      joysticks[i].predefined = false;
       SG_LOG(SG_INPUT, SG_INFO, "Looking for bindings for joystick \"" << name << '"');
       SGPropertyNode_ptr named;
 
@@ -163,7 +166,7 @@ void FGJoystickInput::postinit()
 
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
     SGPropertyNode_ptr js_node = js_nodes->getChild("js", i);
-    jsJoystick *js = bindings[i].js;
+    jsJoystick *js = joysticks[i].plibJS.get();
     if (!js_node || js->notWorking())
       continue;
 
@@ -178,8 +181,8 @@ void FGJoystickInput::postinit()
 
     int naxes = js->getNumAxes();
     if (naxes > MAX_JOYSTICK_AXES) naxes = MAX_JOYSTICK_AXES;
-    bindings[i].naxes = naxes;
-    bindings[i].nbuttons = nbuttons;
+    joysticks[i].naxes = naxes;
+    joysticks[i].nbuttons = nbuttons;
 
     SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick " << i);
 
@@ -194,8 +197,8 @@ void FGJoystickInput::postinit()
     js->getCenter(center);
 
                                 // Allocate axes and buttons
-    bindings[i].axes = new axis[naxes];
-    bindings[i].buttons = new FGButton[nbuttons];
+    joysticks[i].axes = new axis[naxes];
+    joysticks[i].buttons = new FGButton[nbuttons];
 
     //
     // Initialize nasal groups.
@@ -243,7 +246,7 @@ void FGJoystickInput::postinit()
           SG_LOG(SG_INPUT, SG_DEBUG, "Dropping bindings for axis " << n_axis);
           continue;
       }
-      axis &a = bindings[i].axes[n_axis];
+      axis &a = joysticks[i].axes[n_axis];
 
       js->setDeadBand(n_axis, axis_node->getDoubleValue("dead-band", 0.0));
 
@@ -284,7 +287,7 @@ void FGJoystickInput::postinit()
       buf << (unsigned)n_but;
 
       SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << buf.str());
-      FGButton &b = bindings[i].buttons[n_but];
+      FGButton &b = joysticks[i].buttons[n_but];
       b.init(button_node, buf.str(), module );
       // get interval-sec property
       b.interval_sec = button_node->getDoubleValue("interval-sec",0.0);
@@ -297,69 +300,74 @@ void FGJoystickInput::postinit()
   }
 }
 
-void FGJoystickInput::update( double dt )
+void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, double dt)
 {
   float axis_values[MAX_JOYSTICK_AXES];
   int modifiers = fgGetKeyModifiers();
   int buttons;
-
-  for (int i = 0; i < MAX_JOYSTICKS; i++) {
-
-    jsJoystick * js = bindings[i].js;
-    if (js == 0 || js->notWorking())
-      continue;
-
-    js->read(&buttons, axis_values);
-    if (js->notWorking()) // If js is disconnected
-      continue;
-            
-    // Update device status    
-    SGPropertyNode_ptr status = status_node->getChild("joystick", i, true);
-    for (int j = 0; j < MAX_JOYSTICK_AXES; j++) {
-      status->getChild("axis", j, true)->setFloatValue(axis_values[j]);
+  
+  jsJoystick * js = joy->plibJS.get();
+  if (js == 0 || js->notWorking())
+    return;
+  
+  js->read(&buttons, axis_values);
+  if (js->notWorking()) // If js is disconnected
+    return;
+  
+  // Update device status
+  SGPropertyNode_ptr status = status_node->getChild("joystick", index, true);
+  for (int j = 0; j < MAX_JOYSTICK_AXES; j++) {
+    status->getChild("axis", j, true)->setFloatValue(axis_values[j]);
+  }
+  
+  for (int j = 0; j < MAX_JOYSTICK_BUTTONS; j++) {
+    status->getChild("button", j, true)->setBoolValue((buttons & (1u << j)) > 0 );
+  }
+  
+  // Fire bindings for the axes.
+  for (int j = 0; j < joy->naxes; j++) {
+    axis &a = joy->axes[j];
+    
+    // Do nothing if the axis position
+    // is unchanged; only a change in
+    // position fires the bindings.
+    // But only if there are bindings
+    if (fabs(axis_values[j] - a.last_value) > a.tolerance
+        && a.bindings[KEYMOD_NONE].size() > 0 ) {
+      a.last_value = axis_values[j];
+      for (unsigned int k = 0; k < a.bindings[KEYMOD_NONE].size(); k++)
+        a.bindings[KEYMOD_NONE][k]->fire(axis_values[j]);
     }
     
-    for (int j = 0; j < MAX_JOYSTICK_BUTTONS; j++) {
-      status->getChild("button", j, true)->setBoolValue((buttons & (1u << j)) > 0 );
+    // do we have to emulate axis buttons?
+    a.last_dt += dt;
+    if(a.last_dt >= a.interval_sec) {
+      if (a.low.bindings[modifiers].size())
+        joy->axes[j].low.update( modifiers, axis_values[j] < a.low_threshold );
+      
+      if (a.high.bindings[modifiers].size())
+        joy->axes[j].high.update( modifiers, axis_values[j] > a.high_threshold );
+      
+      a.last_dt -= a.interval_sec;
     }
-
-                                // Fire bindings for the axes.
-    for (int j = 0; j < bindings[i].naxes; j++) {
-      axis &a = bindings[i].axes[j];
-
-                                // Do nothing if the axis position
-                                // is unchanged; only a change in
-                                // position fires the bindings.
-                                // But only if there are bindings
-      if (fabs(axis_values[j] - a.last_value) > a.tolerance
-         && a.bindings[KEYMOD_NONE].size() > 0 ) {
-        a.last_value = axis_values[j];
-        for (unsigned int k = 0; k < a.bindings[KEYMOD_NONE].size(); k++)
-          a.bindings[KEYMOD_NONE][k]->fire(axis_values[j]);
-      }
-
-                                // do we have to emulate axis buttons?
-      a.last_dt += dt;
-      if(a.last_dt >= a.interval_sec) {
-        if (a.low.bindings[modifiers].size())
-          bindings[i].axes[j].low.update( modifiers, axis_values[j] < a.low_threshold );
-
-        if (a.high.bindings[modifiers].size())
-          bindings[i].axes[j].high.update( modifiers, axis_values[j] > a.high_threshold );
-
-        a.last_dt -= a.interval_sec;
-      }
+  } // of axes iteration
+  
+  // Fire bindings for the buttons.
+  for (int j = 0; j < joy->nbuttons; j++) {
+    FGButton &b = joy->buttons[j];
+    b.last_dt += dt;
+    if(b.last_dt >= b.interval_sec) {
+      joy->buttons[j].update( modifiers, (buttons & (1u << j)) > 0 );
+      b.last_dt -= b.interval_sec;
     }
+  } // of butotns iterations
 
-                                // Fire bindings for the buttons.
-    for (int j = 0; j < bindings[i].nbuttons; j++) {
-      FGButton &b = bindings[i].buttons[j];
-      b.last_dt += dt;
-      if(b.last_dt >= b.interval_sec) {
-        bindings[i].buttons[j].update( modifiers, (buttons & (1u << j)) > 0 );
-        b.last_dt -= b.interval_sec;
-      }
-    }
+}
+
+void FGJoystickInput::update( double dt )
+{
+  for (int i = 0; i < MAX_JOYSTICKS; i++) {
+    updateJoystick(i, &joysticks[i], dt);
   }
 }
 
