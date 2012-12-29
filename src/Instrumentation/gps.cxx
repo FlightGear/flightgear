@@ -501,7 +501,6 @@ GPS::update (double delta_time_sec)
     if (_mode != "init")
     {
       // allow a realistic delay in the future, here
-      SG_LOG(SG_INSTR, SG_INFO, "GPS initialisation complete");
     }
   } // of init mode check
   
@@ -595,7 +594,6 @@ GPS::updateBasicData(double dt)
   _trip_odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
   
   if (!_dataValid) {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS setting data valid");
     _dataValid = true;
   }
 }
@@ -624,7 +622,7 @@ void GPS::updateReferenceNavaid(double dt)
       FGPositioned::TypeFilter vorFilter(FGPositioned::VOR);
       FGPositionedRef nav = FGPositioned::findClosest(_indicated_pos, 400.0, &vorFilter);
       if (!nav) {
-        SG_LOG(SG_INSTR, SG_INFO, "GPS couldn't find a reference navaid");
+        SG_LOG(SG_INSTR, SG_DEBUG, "GPS couldn't find a reference navaid");
         _ref_navaid_id_node->setStringValue("");
         _ref_navaid_name_node->setStringValue("");
         _ref_navaid_bearing_node->setDoubleValue(0.0);
@@ -632,7 +630,7 @@ void GPS::updateReferenceNavaid(double dt)
         _ref_navaid_distance_node->setDoubleValue(0.0);
         _ref_navaid_frequency_node->setStringValue("");
       } else if (nav != _ref_navaid) {
-        SG_LOG(SG_INSTR, SG_INFO, "GPS code selected new ref-navaid:" << nav->ident());
+        SG_LOG(SG_INSTR, SG_DEBUG, "GPS code selected new ref-navaid:" << nav->ident());
         _listener->setGuard(true);
         _ref_navaid_id_node->setStringValue(nav->ident().c_str());
         _ref_navaid_name_node->setStringValue(nav->name().c_str());
@@ -722,7 +720,7 @@ void GPS::routeManagerSequenced()
     return;
   }
   
-  SG_LOG(SG_INSTR, SG_INFO, "GPS waypoint index is now " << index);
+  SG_LOG(SG_INSTR, SG_DEBUG, "GPS waypoint index is now " << index);
   
   if (index > 0) {
     _prevWaypt = _routeMgr->wayptAtIndex(index - 1);
@@ -845,7 +843,7 @@ void GPS::updateOverflight()
       wp1Changed();
     }
   } else if (_mode == "leg") {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS doing overflight sequencing");
+    SG_LOG(SG_INSTR, SG_DEBUG, "GPS doing overflight sequencing");
     _routeMgr->sequence();
   } else if (_mode == "obs") {
     // nothing to do here, TO/FROM will update but that's fine
@@ -1245,7 +1243,7 @@ double GPS::getScratchMagBearing() const
 
 void GPS::setCommand(const char* aCmd)
 {
-  SG_LOG(SG_INSTR, SG_INFO, "GPS command:" << aCmd);
+  SG_LOG(SG_INSTR, SG_DEBUG, "GPS command:" << aCmd);
   
   if (!strcmp(aCmd, "direct")) {
     directTo();
@@ -1400,7 +1398,6 @@ void GPS::loadNearest()
   _searchIsRoute = false;
   
   if (_searchResults.empty()) {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS:loadNearest: no matches at all");
     return;
   }
   
@@ -1577,9 +1574,7 @@ void GPS::selectOBSMode()
     return;
   }
   
-  SG_LOG(SG_INSTR, SG_INFO, "GPS switching to OBS mode");
   _mode = "obs";
-
   _currentWaypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
   _wp0_position = _indicated_pos;
   wp1Changed();
@@ -1596,9 +1591,7 @@ void GPS::selectLegMode()
     return;
   }
 
-  SG_LOG(SG_INSTR, SG_INFO, "GPS switching to LEG mode");
-  _mode = "leg";
-  
+  _mode = "leg";  
   // depending on the situation, this will either get over-written 
   // in routeManagerSequenced or not; either way it does no harm to
   // set it here.
