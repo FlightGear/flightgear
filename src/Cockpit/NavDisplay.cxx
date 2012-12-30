@@ -998,9 +998,16 @@ void NavDisplay::findItems()
     if (!_cachedItemsValid) {
         Filter filt(this);
         filt.minRunwayLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
-        _itemsInRange = FGPositioned::findClosestN(_pos, _maxSymbols, _rangeNm, &filt);
+        bool wasTimeLimited;
+        _itemsInRange = FGPositioned::findClosestNPartial(_pos, _maxSymbols, _rangeNm,
+                                                          &filt, wasTimeLimited);
         _cachedItemsValid = true;
         _cachedPos = SGVec3d::fromGeod(_pos);
+        
+        if (wasTimeLimited) {
+            // re-query next frame, to load incrementally
+            _cachedItemsValid = false;
+        }
     }
     
   // sort by distance from pos, so symbol limits are accurate

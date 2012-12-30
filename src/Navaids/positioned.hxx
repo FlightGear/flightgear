@@ -210,7 +210,13 @@ public:
    * @param aCutoffNm - maximum distance to search within, in nautical miles
    */
   static List findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter = NULL);
-  
+    
+  /**
+   * Same as above, but with a time-bound in msec too.
+   */
+  static List findClosestNPartial(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter,
+                           bool& aPartial);
+    
   /**
    * Map a candidate type string to a real type. Returns INVALID if the string
    * does not correspond to a defined type.

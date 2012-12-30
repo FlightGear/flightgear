@@ -251,10 +251,23 @@ FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm
   validateSGGeod(aPos);
   
   List result;
-  Octree::findNearestN(SGVec3d::fromGeod(aPos), aN, aCutoffNm * SG_NM_TO_METER, aFilter, result);
+  int limitMsec = 0xffff;
+  Octree::findNearestN(SGVec3d::fromGeod(aPos), aN, aCutoffNm * SG_NM_TO_METER, aFilter, result, limitMsec);
   return result;
 }
- 
+
+FGPositioned::List
+FGPositioned::findClosestNPartial(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter, bool &aPartial)
+{
+    validateSGGeod(aPos);
+    
+    List result;
+    int limitMsec = 32;
+    aPartial = Octree::findNearestN(SGVec3d::fromGeod(aPos), aN, aCutoffNm * SG_NM_TO_METER, aFilter, result,
+                        limitMsec);
+    return result;
+}
+
 void
 FGPositioned::sortByRange(List& aResult, const SGGeod& aPos)
 {

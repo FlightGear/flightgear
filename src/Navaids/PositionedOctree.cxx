@@ -223,7 +223,7 @@ int Branch::childMask() const
   return result;
 }
 
-void findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults)
+bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults, int aCutoffMsec)
 {
   aResults.clear();
   FindNearestPQueue pq;
@@ -231,13 +231,17 @@ void findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
   pq.push(Ordered<Node*>(global_spatialOctree, 0));
   double cut = aCutoffM;
 
-  while (!pq.empty()) {
+  SGTimeStamp tm;
+  tm.stamp();
+    
+  while (!pq.empty() && (tm.elapsedMSec() < aCutoffMsec)) {
     if (!results.empty()) {
       // terminate the search if we have sufficent results, and we are
       // sure no node still on the queue contains a closer match
       double furthestResultOrder = results.back().order();
-    //  std::cout << "furthest result:" << furthestResultOrder << ", top node order:" << pq.top().order() << std::endl;
       if ((results.size() >= aN) && (furthestResultOrder < pq.top().order())) {
+    // clear the PQ to mark this has 'full results' instead of partial
+        pq = FindNearestPQueue();
         break;
       }
     }
@@ -245,7 +249,6 @@ void findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
     Node* nd = pq.top().get();
     pq.pop();
   
-//    std::cout << "visiting:" << std::oct << nd->guid() << "(" << std::dec << nd->guid() << ")" << std::endl;
     nd->visit(aPos, cut, aFilter, results, pq);
   } // of queue iteration
 
@@ -257,6 +260,8 @@ void findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
   for (unsigned int r=0; r<numResults; ++r) {
     aResults[r] = results[r].get();
   }
+    
+  return !pq.empty();
 }
 
 bool findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults, int aCutoffMsec)

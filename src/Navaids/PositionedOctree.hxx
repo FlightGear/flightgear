@@ -215,7 +215,7 @@ namespace Octree
     mutable bool childrenLoaded;
   };
 
-  void findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults);
+  bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults, int aCutoffMsec);
   bool findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults, int aCutoffMsec);
 } // of namespace Octree
 
