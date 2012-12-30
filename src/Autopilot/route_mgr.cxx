@@ -918,7 +918,14 @@ const char* FGRouteMgr::getSID() const
   return "";
 }
 
-flightgear::SID* createDefaultSID(FGRunway* aRunway)
+static double headingDiffDeg(double a, double b)
+{
+  double rawDiff = b - a;
+  SG_NORMALIZE_RANGE(rawDiff, -180.0, 180.0);
+  return rawDiff;
+}
+
+flightgear::SID* createDefaultSID(FGRunway* aRunway, double enrouteCourse)
 {
   if (!aRunway) {
     return NULL;
@@ -931,22 +938,40 @@ flightgear::SID* createDefaultSID(FGRunway* aRunway)
   
   SGGeod p = aRunway->pointOnCenterline(aRunway->lengthM() + (3.0 * SG_NM_TO_METER));
   WayptRef w = new BasicWaypt(p, ss.str(), NULL);
-  w->setAltitude(runwayElevFt + 2000.0, RESTRICT_AT);
+  w->setAltitude(runwayElevFt + 3000.0, RESTRICT_AT);
   wpts.push_back(w);
   
   ss.str("");
   ss << aRunway->ident() << "-6";
   p = aRunway->pointOnCenterline(aRunway->lengthM() + (6.0 * SG_NM_TO_METER));
   w = new BasicWaypt(p, ss.str(), NULL);
-  w->setAltitude(runwayElevFt + 4000.0, RESTRICT_AT);
-  wpts.push_back(w);
-
-  ss.str("");
-  ss << aRunway->ident() << "-9";
-  p = aRunway->pointOnCenterline(aRunway->lengthM() + (9.0 * SG_NM_TO_METER));
-  w = new BasicWaypt(p, ss.str(), NULL);
   w->setAltitude(runwayElevFt + 6000.0, RESTRICT_AT);
   wpts.push_back(w);
+
+  if (enrouteCourse >= 0.0) {
+    // valid enroute course
+    int index = 3;
+    double course = aRunway->headingDeg();
+    double diff;
+    while (fabs(diff = headingDiffDeg(course, enrouteCourse)) > 45.0) {
+      // turn in the sign of the heading change 45 degrees
+      course += copysign(45.0, diff);
+      ss.str("");
+      ss << "DEP-" << index++;
+      SGGeod pos = wpts.back()->position();
+      pos = SGGeodesy::direct(pos, course, 3.0 * SG_NM_TO_METER);
+      w = new BasicWaypt(pos, ss.str(), NULL);
+      wpts.push_back(w);
+    }
+  } else {
+    // no enroute course, just keep runway heading
+    ss.str("");
+    ss << aRunway->ident() << "-9";
+    p = aRunway->pointOnCenterline(aRunway->lengthM() + (9.0 * SG_NM_TO_METER));
+    w = new BasicWaypt(p, ss.str(), NULL);
+    w->setAltitude(runwayElevFt + 9000.0, RESTRICT_AT);
+    wpts.push_back(w);
+  }
   
   BOOST_FOREACH(Waypt* w, wpts) {
     w->setFlag(WPT_DEPARTURE);
@@ -965,7 +990,12 @@ void FGRouteMgr::setSID(const char* aIdent)
   } 
   
   if (!strcmp(aIdent, "DEFAULT")) {
-    _plan->setSID(createDefaultSID(_plan->departureRunway()));
+    double enrouteCourse = -1.0;
+    if (_plan->destinationAirport()) {
+      enrouteCourse = SGGeodesy::courseDeg(apt->geod(), _plan->destinationAirport()->geod());
+    }
+    
+    _plan->setSID(createDefaultSID(_plan->departureRunway(), enrouteCourse));
     return;
   }
   
@@ -1038,7 +1068,7 @@ const char* FGRouteMgr::getApproach() const
   return "";
 }
 
-flightgear::Approach* createDefaultApproach(FGRunway* aRunway)
+flightgear::Approach* createDefaultApproach(FGRunway* aRunway, double aEnrouteCourse)
 {
   if (!aRunway) {
     return NULL;
@@ -1057,6 +1087,24 @@ flightgear::Approach* createDefaultApproach(FGRunway* aRunway)
   w->setAltitude(thresholdElevFt + 4000, RESTRICT_AT);
   wpts.push_back(w);
 
+// work back form the first point on the centerline
+  
+  if (aEnrouteCourse >= 0.0) {
+    // valid enroute course
+    int index = 4;
+    double course = aRunway->headingDeg();
+    double diff;
+    while (fabs(diff = headingDiffDeg(aEnrouteCourse, course)) > 45.0) {
+      // turn in the sign of the heading change 45 degrees
+      course -= copysign(45.0, diff);
+      ss.str("");
+      ss << "APP-" << index++;
+      SGGeod pos = wpts.front()->position();
+      pos = SGGeodesy::direct(pos, course + 180.0, 3.0 * SG_NM_TO_METER);
+      w = new BasicWaypt(pos, ss.str(), NULL);
+      wpts.insert(wpts.begin(), w);
+    }
+  }
     
   p = aRunway->pointOnCenterline(-8.0 * SG_NM_TO_METER);
   ss.str("");
@@ -1084,7 +1132,12 @@ void FGRouteMgr::setApproach(const char* aIdent)
 {
   FGAirport* apt = _plan->destinationAirport();
   if (!strcmp(aIdent, "DEFAULT")) {
-    _plan->setApproach(createDefaultApproach(_plan->destinationRunway()));
+    double enrouteCourse = -1.0;
+    if (_plan->departureAirport()) {
+      enrouteCourse = SGGeodesy::courseDeg(_plan->departureAirport()->geod(), apt->geod());
+    }
+    
+    _plan->setApproach(createDefaultApproach(_plan->destinationRunway(), enrouteCourse));
     return;
   }
   
