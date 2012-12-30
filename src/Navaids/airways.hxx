@@ -71,6 +71,9 @@ public:
   
     int findAirway(const std::string& aName, double aTop, double aBase);
 
+    bool cleanGeneratedPath(WayptRef aFrom, WayptRef aTo, WayptVec& aPath,
+                            bool exactTo, bool exactFrom);
+      
     bool search2(FGPositionedRef aStart, FGPositionedRef aDest, WayptVec& aRoute);
   
     /**

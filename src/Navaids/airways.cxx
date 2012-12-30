@@ -190,6 +190,13 @@ void Airway::Network::addEdge(int aWay, const SGGeod& aStartPos,
 
 //////////////////////////////////////////////////////////////////////////////
 
+static double headingDiffDeg(double a, double b)
+{
+    double rawDiff = b - a;
+    SG_NORMALIZE_RANGE(rawDiff, -180.0, 180.0);
+    return rawDiff;
+}
+    
 bool Airway::Network::inNetwork(PositionedID posID) const
 {
   NetworkMembershipDict::iterator it = _inNetworkCache.find(posID);
@@ -228,19 +235,46 @@ bool Airway::Network::route(WayptRef aFrom, WayptRef aTo,
     return false;
   }
   
-  if (exactTo) {
+  return cleanGeneratedPath(aFrom, aTo, aPath, exactTo, exactFrom);
+}
+  
+bool Airway::Network::cleanGeneratedPath(WayptRef aFrom, WayptRef aTo, WayptVec& aPath,
+                                bool exactTo, bool exactFrom)
+{
+  // path cleaning phase : various cases to handle here.
+  // if either the TO or FROM waypoints were 'exact', i.e part of the enroute
+  // structure, we don't want to duplicate them. This happens frequently with
+  // published SIDs and STARs.
+  // secondly, if the waypoints are NOT on the enroute structure, the course to
+  // them may be a significant dog-leg. Check how the leg course deviates
+  // from the direct course FROM->TO, and delete the first/last leg if it's more
+  // than 90 degrees out.
+  // note we delete a maximum of one leg, and no more. This is a heuristic - we
+  // could check the next (previous) legs, but at some point we'll end up
+  // deleting too much.
+  
+  const double MAX_DOG_LEG = 90.0;
+  double enrouteCourse = SGGeodesy::courseDeg(aFrom->position(), aTo->position()),
+  finalLegCourse = SGGeodesy::courseDeg(aPath.back()->position(), aTo->position());
+  
+  bool isDogLeg = fabs(headingDiffDeg(enrouteCourse, finalLegCourse)) > MAX_DOG_LEG;
+  if (exactTo || isDogLeg) {
     aPath.pop_back();
   }
   
-  if (exactFrom) {
-    // edge case - if from and to are equal, which can happen, don't
-    // crash here. This happens routing EGPH -> EGCC; 'DCS' is common
-    // to the EGPH departure and EGCC STAR.
-    if (!aPath.empty()) {
-      aPath.erase(aPath.begin());
-    }
+  // edge case - if from and to are equal, which can happen, don't
+  // crash here. This happens routing EGPH -> EGCC; 'DCS' is common
+  // to the EGPH departure and EGCC STAR.
+  if (aPath.empty()) {
+    return true;
   }
   
+  double initialLegCourse = SGGeodesy::courseDeg(aFrom->position(), aPath.front()->position());
+  isDogLeg = fabs(headingDiffDeg(enrouteCourse, initialLegCourse)) > MAX_DOG_LEG;
+  if (exactFrom || isDogLeg) {
+    aPath.erase(aPath.begin());
+  }
+
   return true;
 }
 
