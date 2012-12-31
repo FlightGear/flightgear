@@ -104,7 +104,7 @@ public:
     virtual void departureChanged() { }
     virtual void arrivalChanged() { }
     virtual void waypointsChanged() { }
-    
+    virtual void cleared() { }
     virtual void currentWaypointChanged() { }
   
   protected:
@@ -117,7 +117,8 @@ public:
     void runArrivalChanged();
     void runWaypointsChanged();
     void runCurrentWaypointChanged();
-    
+    void runCleared();
+      
     friend class FlightPlan;
     
     bool _deleteWithPlan;

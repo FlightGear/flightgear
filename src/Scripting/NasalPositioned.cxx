@@ -1772,6 +1772,11 @@ public:
   {
     callDelegateMethod("currentWaypointChanged");
   }
+    
+  virtual void cleared()
+  {
+    callDelegateMethod("cleared");
+  }
 private:
   
   void callDelegateMethod(const char* method)

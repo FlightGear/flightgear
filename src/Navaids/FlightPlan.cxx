@@ -226,6 +226,9 @@ void FlightPlan::clear()
   }
   _legs.clear();  
   
+  if (_delegate) {
+    _delegate->runCleared();
+  }
   unlockDelegate();
 }
   
@@ -1205,5 +1208,11 @@ void FlightPlan::Delegate::runCurrentWaypointChanged()
   if (_inner) _inner->runCurrentWaypointChanged();
   currentWaypointChanged();
 }
+
+void FlightPlan::Delegate::runCleared()
+{
+  if (_inner) _inner->runCleared();
+  cleared();
+}  
   
 } // of namespace flightgear

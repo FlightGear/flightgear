@@ -716,7 +716,7 @@ void GPS::routeManagerSequenced()
   if ((index < 0) || (index >= count)) {
     _currentWaypt=NULL;
     _prevWaypt=NULL;
-    SG_LOG(SG_INSTR, SG_ALERT, "GPS: malformed route, index=" << index);
+    // no active leg on the route
     return;
   }
   
