@@ -75,6 +75,7 @@ class DerivativeFilterImplementation : public GainFilterImplementation {
 public:
   DerivativeFilterImplementation();
   double compute(  double dt, double input );
+  virtual void initialize( double output );
 };
 
 class ExponentialFilterImplementation : public GainFilterImplementation {
@@ -179,6 +180,12 @@ DerivativeFilterImplementation::DerivativeFilterImplementation() :
   _input_1(0.0)
 {
 }
+
+void DerivativeFilterImplementation::initialize( double output )
+{
+  _input_1 = output;
+}
+
 
 bool DerivativeFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
 {
