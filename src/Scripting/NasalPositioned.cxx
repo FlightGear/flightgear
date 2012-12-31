@@ -28,6 +28,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/tuple/tuple.hpp> // for boost::tie
 
 #include <simgear/sg_inlines.h>
 #include <simgear/scene/material/mat.hxx>
