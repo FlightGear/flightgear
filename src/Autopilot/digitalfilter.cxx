@@ -42,7 +42,7 @@ protected:
 public:
   virtual ~DigitalFilterImplementation() {}
   DigitalFilterImplementation();
-  virtual void   initialize( double output ) {}
+  virtual void   initialize( double initvalue ) {}
   virtual double compute( double dt, double input ) = 0;
   bool configure( SGPropertyNode_ptr configNode );
 
@@ -75,7 +75,7 @@ class DerivativeFilterImplementation : public GainFilterImplementation {
 public:
   DerivativeFilterImplementation();
   double compute(  double dt, double input );
-  virtual void initialize( double output );
+  virtual void initialize( double initvalue );
 };
 
 class ExponentialFilterImplementation : public GainFilterImplementation {
@@ -87,7 +87,7 @@ protected:
 public:
   ExponentialFilterImplementation();
   double compute(  double dt, double input );
-  virtual void initialize( double output );
+  virtual void initialize( double initvalue );
 };
 
 class MovingAverageFilterImplementation : public DigitalFilterImplementation {
@@ -99,7 +99,7 @@ protected:
 public:
   MovingAverageFilterImplementation();
   double compute(  double dt, double input );
-  virtual void initialize( double output );
+  virtual void initialize( double initvalue );
 };
 
 class NoiseSpikeFilterImplementation : public DigitalFilterImplementation {
@@ -110,7 +110,7 @@ protected:
 public:
   NoiseSpikeFilterImplementation();
   double compute(  double dt, double input );
-  virtual void initialize( double output );
+  virtual void initialize( double initvalue );
 };
 
 /* --------------------------------------------------------------------------------- */
@@ -181,9 +181,9 @@ DerivativeFilterImplementation::DerivativeFilterImplementation() :
 {
 }
 
-void DerivativeFilterImplementation::initialize( double output )
+void DerivativeFilterImplementation::initialize( double initvalue )
 {
-  _input_1 = output;
+  _input_1 = initvalue;
 }
 
 
@@ -216,9 +216,9 @@ MovingAverageFilterImplementation::MovingAverageFilterImplementation() :
 {
 }
 
-void MovingAverageFilterImplementation::initialize( double output )
+void MovingAverageFilterImplementation::initialize( double initvalue )
 {
-  _output_1 = output;
+  _output_1 = initvalue;
 }
 
 double MovingAverageFilterImplementation::compute(  double dt, double input )
@@ -251,9 +251,9 @@ NoiseSpikeFilterImplementation::NoiseSpikeFilterImplementation() :
 {
 }
 
-void NoiseSpikeFilterImplementation::initialize( double output )
+void NoiseSpikeFilterImplementation::initialize( double initvalue )
 {
-  _output_1 = output;
+  _output_1 = initvalue;
 }
 
 double NoiseSpikeFilterImplementation::compute(  double dt, double input )
@@ -291,9 +291,9 @@ ExponentialFilterImplementation::ExponentialFilterImplementation()
 {
 }
 
-void ExponentialFilterImplementation::initialize( double output )
+void ExponentialFilterImplementation::initialize( double initvalue )
 {
-  output_1 = output_2 = output;
+  output_1 = output_2 = initvalue;
 }
 
 double ExponentialFilterImplementation::compute(  double dt, double input )
