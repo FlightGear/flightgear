@@ -55,6 +55,8 @@ private:
   double computeAltitudeForIndex(int index) const;
   double computeTrackForIndex(int index) const;
   
+  void interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, SGGeodVec& r) const;
+  
   /**
    * Find the distance (in Nm) to climb/descend a height in feet
    */
