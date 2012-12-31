@@ -2204,6 +2204,26 @@ static naRef f_leg_path(naContext c, naRef me, int argc, naRef* args)
   return result;
 }
 
+static naRef f_leg_courseAndDistanceFrom(naContext c, naRef me, int argc, naRef* args)
+{
+    FlightPlan::Leg* leg = fpLegGhost(me);
+    if (!leg) {
+        naRuntimeError(c, "leg.courseAndDistanceFrom called on non-flightplan-leg object");
+    }
+    
+    SGGeod pos;
+    geodFromArgs(args, 0, argc, pos);
+    
+    double courseDeg;
+    double distanceM;
+    boost::tie(courseDeg, distanceM) = leg->waypoint()->courseAndDistanceFrom(pos);
+    
+    naRef result = naNewVector(c);
+    naVec_append(result, naNum(courseDeg));
+    naVec_append(result, naNum(distanceM * SG_METER_TO_NM));
+    return result;
+}
+
 static naRef f_waypoint_navaid(naContext c, naRef me, int argc, naRef* args)
 {
   flightgear::Waypt* w = wayptGhost(me);
@@ -2409,6 +2429,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, fpLegPrototype, "setSpeed", naNewFunc(c, naNewCCode(c, f_leg_setSpeed)));
     hashset(c, fpLegPrototype, "setAltitude", naNewFunc(c, naNewCCode(c, f_leg_setAltitude)));
     hashset(c, fpLegPrototype, "path", naNewFunc(c, naNewCCode(c, f_leg_path)));
+    hashset(c, fpLegPrototype, "courseAndDistanceFrom", naNewFunc(c, naNewCCode(c, f_leg_courseAndDistanceFrom)));
   
     for(int i=0; funcs[i].name; i++) {
       hashset(c, globals, funcs[i].name,
