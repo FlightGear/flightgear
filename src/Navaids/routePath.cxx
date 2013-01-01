@@ -147,13 +147,13 @@ void RoutePath::interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, S
     return;
   }
   
-  lonDelta = SGMiscd::normalizeAngle2(lonDelta);
-
+  lonDelta = SGMiscd::normalizeAngle(lonDelta);    
   int steps = static_cast<int>(fabs(lonDelta) * SG_RADIANS_TO_DEGREES * 2);
   double lonStep = (lonDelta / steps);
   
   double lon = gcFrom.getLongitudeRad() + lonStep;
   for (int s=0; s < (steps - 1); ++s) {
+    lon = SGMiscd::normalizeAngle(lon);
     double lat = latitudeForGCLongitude(gcFrom, gcTo, lon);
     r.push_back(SGGeod::fromGeoc(SGGeoc::fromRadM(lon, lat, SGGeodesy::EQURAD)));
     //SG_LOG(SG_GENERAL, SG_INFO, "lon:" << lon * SG_RADIANS_TO_DEGREES << " gives lat " << lat * SG_RADIANS_TO_DEGREES);
