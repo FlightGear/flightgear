@@ -997,7 +997,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
   double lat = sqlite3_column_double(loadPositioned, 6);
   double elev = sqlite3_column_double(loadPositioned, 7);
   SGGeod pos = SGGeod::fromDegM(lon, lat, elev);
-  
+      
   reset(loadPositioned);
   
   switch (ty) {
@@ -1562,10 +1562,9 @@ void NavDataCache::updateRunwayThreshold(PositionedID runwayID, const SGGeod &aT
       
 // compute the new runway center, based on the threshold lat/lon and length,
   double offsetFt = (0.5 * d->runwayLengthFt(runwayID));
-  SGGeod newCenter;
-  double dummy;
-  SGGeodesy::direct(aThreshold, aHeading, offsetFt * SG_FEET_TO_METER, newCenter, dummy);
-    
+  SGGeod newCenter= SGGeodesy::direct(aThreshold, aHeading, offsetFt * SG_FEET_TO_METER);
+  newCenter.setElevationM(aThreshold.getElevationM());
+  
 // now update the positional data
   updatePosition(runwayID, newCenter);
 }
