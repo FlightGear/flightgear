@@ -131,9 +131,6 @@ GUIMgr::GUIMgr():
   assert(camera);
   camera->addChild(_transform);
 
-  osg::Viewport* vp = camera->getViewport();
-  handleResize(vp->x(), vp->y(), vp->width(), vp->height());
-
   simgear::canvas::Canvas::addPlacementFactory
   (
     "window",
@@ -159,6 +156,14 @@ GUIMgr::GUIMgr():
 //------------------------------------------------------------------------------
 void GUIMgr::init()
 {
+  handleResize
+  (
+    0,
+    0,
+    fgGetInt("/sim/startup/xsize"),
+    fgGetInt("/sim/startup/ysize")
+  );
+
   PropertyBasedMgr::init();
 
   globals->get_renderer()
