@@ -476,28 +476,23 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
         _definitions.push_back(def);
     } // of symbol definition parsing
     
-    SGPropertyNode* rulesNode = node->getNode("rules");
-    if (rulesNode) {
-        SGPropertyNode* rule;
+    BOOST_FOREACH(SGPropertyNode* rule, symbolsNode->getChildren("rule")) {
+        SymbolRule* r = new SymbolRule;
+        if (!r->initFromNode(rule, this)) {
+            delete r;
+            continue;
+        }
         
-        for (int i = 0; (rule = rulesNode->getChild("rule", i)) != NULL; ++i) {
-            SymbolRule* r = new SymbolRule;
-            if (!r->initFromNode(rule, this)) {
-                delete r;
-                continue;
-            }
-            
-            const char* id = symbol->getStringValue("symbol");
-            if (id && strlen(id) && (definitionDict.find(id) != definitionDict.end())) {
-                r->setDefinition(definitionDict[id]);
-            } else {
-                SG_LOG(SG_INSTR, SG_WARN, "symbol rule has missing/unknown definition id:" << id);
-                delete r;
-                continue;
-            }
-            
-            addRule(r);
-        } // of symbol rule parsing
+        const char* id = rule->getStringValue("symbol");
+        if (id && strlen(id) && (definitionDict.find(id) != definitionDict.end())) {
+            r->setDefinition(definitionDict[id]);
+        } else {
+            SG_LOG(SG_INSTR, SG_WARN, "symbol rule has missing/unknown definition id:" << id);
+            delete r;
+            continue;
+        }
+        
+        addRule(r);
     }
     
 }
