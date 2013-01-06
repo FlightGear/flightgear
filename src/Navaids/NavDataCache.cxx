@@ -2115,9 +2115,10 @@ void NavDataCache::dropGroundnetFor(PositionedID aAirport)
   sqlite3_bind_int64(q, 2, aAirport);
   d->execUpdate(q);
   
-  q = d->prepare("DELETE FROM taxi_node WHERE rowid IN (SELECT rowid FROM positioned WHERE type=?1 AND airport=?2)");
+  q = d->prepare("DELETE FROM taxi_node WHERE rowid IN (SELECT rowid FROM positioned WHERE (type=?1 OR type=?2) AND airport=?3)");
   sqlite3_bind_int(q, 1, FGPositioned::TAXI_NODE);
-  sqlite3_bind_int64(q, 2, aAirport);
+  sqlite3_bind_int(q, 2, FGPositioned::PARKING);
+  sqlite3_bind_int64(q, 3, aAirport);
   d->execUpdate(q);
   
   q = d->prepare("DELETE FROM positioned WHERE (type=?1 OR type=?2) AND airport=?3");
