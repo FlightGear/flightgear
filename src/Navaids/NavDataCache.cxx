@@ -72,7 +72,8 @@ namespace {
 
 const int MAX_RETRIES = 10;
 const int SCHEMA_VERSION = 6;
-
+const int CACHE_SIZE_KBYTES= 16000;
+    
 // bind a std::string to a sqlite statement. The std::string must live the
 // entire duration of the statement execution - do not pass a temporary
 // std::string, or the compiler may delete it, freeing the C-string storage,
@@ -248,6 +249,11 @@ public:
       }
     }
     
+    // see http://www.sqlite.org/pragma.html#pragma_cache_size
+    // for the details, small cache would cause thrashing.
+    std::ostringstream q;
+    q << "PRAGMA cache_size=-" << CACHE_SIZE_KBYTES << ";";
+    runSQL(q.str());
     prepareQueries();
   }
   
