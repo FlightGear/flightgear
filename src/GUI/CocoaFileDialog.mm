@@ -74,6 +74,7 @@ void CocoaFileDialog::exec()
     NSWindow* cocoaWindow = nil;
     std::vector<osgViewer::GraphicsWindow*> windows;
     globals->get_renderer()->getViewer()->getWindows(windows);
+    
     BOOST_FOREACH(osgViewer::GraphicsWindow* gw, windows) {
         // OSG doesn't use RTTI, so no dynamic cast. Let's check the class type
         // using OSG's own system, before we blindly static_cast<> and break
@@ -116,10 +117,13 @@ void CocoaFileDialog::exec()
     
     [d->panel beginSheetModalForWindow:cocoaWindow completionHandler:^(NSInteger result)
     {
+        NSString* path = nil;
+        SGPath sgpath;
+        
         if (result == NSFileHandlingPanelOKButton) {
-            NSString* path = [[d->panel URL] path];
+            path = [[d->panel URL] path];
             //NSLog(@"the URL is: %@", d->panel URL]);
-            SGPath sgpath([path UTF8String]);
+            sgpath = ([path UTF8String]);
             _callback->onFileDialogDone(this, sgpath);
         }
     }];
