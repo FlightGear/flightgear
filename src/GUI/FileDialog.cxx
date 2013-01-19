@@ -39,9 +39,8 @@
     #include "CocoaFileDialog.hxx"
 #endif
 
-FGFileDialog::FGFileDialog(const std::string& aTitle, Usage use) :
+FGFileDialog::FGFileDialog(Usage use) :
     _usage(use),
-    _title(aTitle),
     _showHidden(false)
 {
     
@@ -50,6 +49,11 @@ FGFileDialog::FGFileDialog(const std::string& aTitle, Usage use) :
 FGFileDialog::~FGFileDialog()
 {
     // ensure this is concrete so callback gets cleaned up.
+}
+
+void FGFileDialog::setTitle(const std::string& aText)
+{
+    _title = aText;
 }
 
 void FGFileDialog::setButton(const std::string& aText)
@@ -85,6 +89,12 @@ void FGFileDialog::setShowHidden(bool show)
 naRef FGFileDialog::openFromNasal(const nasal::CallContext& ctx)
 {
     exec();
+    return naNil();
+}
+
+naRef FGFileDialog::closeFromNasal(const nasal::CallContext& ctx)
+{
+    close();
     return naNil();
 }
 
@@ -142,13 +152,12 @@ typedef nasal::Ghost<FileDialogPtr> NasalFileDialog;
 static naRef f_createFileDialog(naContext c, naRef me, int argc, naRef* args)
 {
     nasal::CallContext ctx(c, argc, args);
-    std::string title = ctx.requireArg<std::string>(0);
-    FGFileDialog::Usage usage = (FGFileDialog::Usage) ctx.requireArg<int>(1);
-    
+    FGFileDialog::Usage usage = (FGFileDialog::Usage) ctx.requireArg<int>(0);
+  
 #ifdef SG_MAC
-    FileDialogPtr fd(new CocoaFileDialog(title, usage));
+    FileDialogPtr fd(new CocoaFileDialog(usage));
 #else
-    FileDialogPtr fd(new PUIFileDialog(title, usage));
+    FileDialogPtr fd(new PUIFileDialog(usage));
 #endif
     
     return NasalFileDialog::create(c, fd);
@@ -156,23 +165,21 @@ static naRef f_createFileDialog(naContext c, naRef me, int argc, naRef* args)
 
 void postinitNasalGUI(naRef globals, naContext c)
 {
-    NasalFileDialog::init("gui.FileSelector")
+    NasalFileDialog::init("gui._FileDialog")
+    .member("title", &FGFileDialog::getTitle,  &FGFileDialog::setTitle)
     .member("button", &FGFileDialog::getButton,  &FGFileDialog::setButton)
     .member("directory", &FGFileDialog::getDirectory, &FGFileDialog::setDirectory)
-    .member("show-hidden", &FGFileDialog::showHidden, &FGFileDialog::setShowHidden)
+    .member("show_hidden", &FGFileDialog::showHidden, &FGFileDialog::setShowHidden)
     .member("placeholder", &FGFileDialog::getPlaceholder, &FGFileDialog::setPlaceholderName)
     .member("pattern", &FGFileDialog::filterPatterns, &FGFileDialog::setFilterPatterns)
     .method<&FGFileDialog::openFromNasal>("open")
+    .method<&FGFileDialog::closeFromNasal>("close")
     .method<&FGFileDialog::setCallbackFromNasal>("setCallback");
+
+    nasal::Hash guiModule = nasal::Hash(globals, c).get<nasal::Hash>("gui");
     
-    naRef guiModule = naHash_cget(globals, (char*) "gui");
-    if (naIsNil(guiModule)) {
-        SG_LOG(SG_GENERAL, SG_WARN, "postinitNasalGUI: gui.nas not loaded");
-        return;
-    }
-    
-    nasal::Hash globals_module(globals, c),
-        gui_module = globals_module.get<nasal::Hash>("gui");
-    
-    gui_module.set("_newFileDialog", f_createFileDialog);
+    guiModule.set("FILE_DIALOG_OPEN_FILE", (int) FGFileDialog::USE_OPEN_FILE);
+    guiModule.set("FILE_DIALOG_SAVE_FILE", (int) FGFileDialog::USE_SAVE_FILE);
+    guiModule.set("FILE_DIALOG_CHOOSE_DIR", (int) FGFileDialog::USE_CHOOSE_DIR);
+    guiModule.set("_createFileDialog", f_createFileDialog);
 }

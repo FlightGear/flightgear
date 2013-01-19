@@ -9,12 +9,12 @@
 class PUIFileDialog : public FGFileDialog
 {
 public:
-    PUIFileDialog(const std::string& aTitle, FGFileDialog::Usage use);
+    PUIFileDialog(FGFileDialog::Usage use);
 
     virtual ~PUIFileDialog();
     
     virtual void exec();
-
+    virtual void close();
 private:
     class PathListener;
     friend class PathListener;

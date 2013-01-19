@@ -44,8 +44,8 @@ public:
     NSSavePanel* panel;
 };
 
-CocoaFileDialog::CocoaFileDialog(const std::string& aTitle, FGFileDialog::Usage use) :
-    FGFileDialog(aTitle, use)
+CocoaFileDialog::CocoaFileDialog(FGFileDialog::Usage use) :
+    FGFileDialog(use)
 {
     d.reset(new CocoaFileDialogPrivate);
     if (use == USE_SAVE_FILE) {
@@ -58,6 +58,8 @@ CocoaFileDialog::CocoaFileDialog(const std::string& aTitle, FGFileDialog::Usage 
             [openPanel setCanChooseDirectories:YES];
         }
     } // of USE_OPEN_FILE or USE_CHOOSE_DIR -> building NSOpenPanel
+    
+    [d->panel retain];
 }
 
 CocoaFileDialog::~CocoaFileDialog()
@@ -90,16 +92,21 @@ void CocoaFileDialog::exec()
         [d->panel setNameFieldStringValue:stdStringToCocoa(_placeholder)];
     }
     
-    NSMutableArray* extensions = [NSMutableArray arrayWithCapacity:0];
-    BOOST_FOREACH(std::string ext, _filterPatterns) {
-        if (!simgear::strutils::starts_with(ext, "*.")) {
-            SG_LOG(SG_GENERAL, SG_INFO, "can't use pattern on Cococa:" << ext);
-            continue;
+    if (_filterPatterns.empty()) {
+        [d->panel setAllowedFileTypes:nil];
+    } else {
+        NSMutableArray* extensions = [NSMutableArray arrayWithCapacity:0];
+        BOOST_FOREACH(std::string ext, _filterPatterns) {
+            if (!simgear::strutils::starts_with(ext, "*.")) {
+                SG_LOG(SG_GENERAL, SG_INFO, "can't use pattern on Cococa:" << ext);
+                continue;
+            }
+            [extensions addObject:stdStringToCocoa(ext.substr(2))];
         }
-        [extensions addObject:stdStringToCocoa(ext.substr(2))];
-    }
 
-    [d->panel setAllowedFileTypes:extensions];
+        [d->panel setAllowedFileTypes:extensions];
+    }
+    
     [d->panel setTitle:stdStringToCocoa(_title)];
     if (_showHidden) {
         [d->panel setShowsHiddenFiles:YES];
@@ -117,3 +124,9 @@ void CocoaFileDialog::exec()
         }
     }];
 }
+
+void CocoaFileDialog::close()
+{
+    [d->panel close];
+}
+

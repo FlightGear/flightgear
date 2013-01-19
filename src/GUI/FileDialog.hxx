@@ -17,11 +17,16 @@ class FGFileDialog
 {
 public:
     typedef enum {
-        USE_OPEN_FILE,
+        USE_OPEN_FILE = 0,
         USE_SAVE_FILE,
         USE_CHOOSE_DIR
     } Usage;
     
+    std::string getTitle() const
+    { return _title; }
+    
+    void setTitle(const std::string& aTitle);
+
     std::string getButton() const
     { return _buttonText; }
     
@@ -53,7 +58,8 @@ public:
     virtual ~FGFileDialog ();
 
      virtual void exec() = 0;
-
+     virtual void close() = 0;
+    
      class Callback
      {
      public:
@@ -64,9 +70,10 @@ public:
      virtual void setCallback(Callback* aCB);
 
     naRef openFromNasal(const nasal::CallContext& ctx);
+    naRef closeFromNasal(const nasal::CallContext& ctx);
     naRef setCallbackFromNasal(const nasal::CallContext& ctx);
 protected:
-    FGFileDialog(const std::string& aTitle, Usage use);
+    FGFileDialog(Usage use);
     
     const Usage _usage;
     std::string _title, _buttonText;

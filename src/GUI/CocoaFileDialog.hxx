@@ -8,12 +8,12 @@
 class CocoaFileDialog : public FGFileDialog
 {
 public:
-    CocoaFileDialog(const std::string& aTitle, FGFileDialog::Usage use);
+    CocoaFileDialog(FGFileDialog::Usage use);
     
     virtual ~CocoaFileDialog();
     
     virtual void exec();
-    
+    virtual void close();
 private:
     class CocoaFileDialogPrivate;
     std::auto_ptr<CocoaFileDialogPrivate> d;

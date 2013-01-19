@@ -27,8 +27,8 @@ private:
     PUIFileDialog* _dialog;
 };
 
-PUIFileDialog::PUIFileDialog(const std::string& aTitle, Usage use) :
-    FGFileDialog(aTitle, use),
+PUIFileDialog::PUIFileDialog(Usage use) :
+    FGFileDialog(use),
     _listener(NULL)
 {
     SG_LOG(SG_GENERAL, SG_INFO, "created PUIFileDialog");
@@ -39,6 +39,7 @@ PUIFileDialog::~PUIFileDialog()
     if (_listener) {
         SGPropertyNode_ptr path = _dialogRoot->getNode("path");
         path->removeChangeListener(_listener);
+        delete _listener;
     }
 }
 
@@ -77,6 +78,13 @@ void PUIFileDialog::exec()
     path->addChangeListener(_listener);
     
     gui->showDialog(name);
+}
+
+void PUIFileDialog::close()
+{
+    NewGUI* gui = static_cast<NewGUI*>(globals->get_subsystem("gui"));
+    std::string name("native-file-0");
+    gui->closeDialog(name);
 }
 
 void PUIFileDialog::pathChanged(const SGPath& aPath)
