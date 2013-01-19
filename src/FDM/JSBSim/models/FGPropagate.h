@@ -49,7 +49,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.69 2012/04/29 13:27:51 bcoconni Exp $"
+#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.74 2013/01/19 13:49:37 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -93,7 +93,7 @@ CLASS DOCUMENTATION
     @endcode
 
     @author Jon S. Berndt, Mathias Froehlich, Bertrand Coconnier
-    @version $Id: FGPropagate.h,v 1.69 2012/04/29 13:27:51 bcoconni Exp $
+    @version $Id: FGPropagate.h,v 1.74 2013/01/19 13:49:37 bcoconni Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -472,8 +472,14 @@ public:
   void SetInertialVelocity(const FGColumnVector3& Vi);
   void SetInertialRates(const FGColumnVector3& vRates);
 
+  /** Returns the quaternion that goes from Local to Body. */
   const FGQuaternion GetQuaternion(void) const { return VState.qAttitudeLocal; }
+
+  /** Returns the quaternion that goes from ECI to Body. */
   const FGQuaternion GetQuaternionECI(void) const { return VState.qAttitudeECI; }
+
+  /** Returns the quaternion that goes from ECEF to Body. */
+  const FGQuaternion GetQuaternionECEF(void) const { return Qec2b; }
 
   void SetPQR(unsigned int i, double val) {
     VState.vPQR(i) = val;
@@ -542,7 +548,6 @@ public:
     FGQuaternion vQtrndot;
     FGColumnVector3 vUVWidot;
     FGColumnVector3 vOmegaPlanet;
-    double RefRadius;
     double SemiMajor;
     double SemiMinor;
     double DeltaT;
@@ -555,7 +560,6 @@ private:
   struct VehicleState VState;
 
   FGColumnVector3 vVel;
-  FGColumnVector3 vInertialVelocity;
   FGColumnVector3 vLocation;
   FGMatrix33 Tec2b;
   FGMatrix33 Tb2ec;
@@ -569,6 +573,8 @@ private:
   FGMatrix33 Tb2i;   // body to ECI frame rotation matrix
   FGMatrix33 Ti2l;
   FGMatrix33 Tl2i;
+
+  FGQuaternion Qec2b;
 
   double VehicleRadius;
   FGColumnVector3 LocalTerrainVelocity, LocalTerrainAngularVelocity;
@@ -597,6 +603,7 @@ private:
   void UpdateBodyMatrices(void);
   void UpdateVehicleState(void);
 
+  void WriteStateFile(int num);
   void bind(void);
   void Debug(int from);
 };

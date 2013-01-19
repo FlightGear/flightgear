@@ -42,6 +42,7 @@ INCLUDES
 
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
 
 #include "FGLGear.h"
 #include "input_output/FGPropertyManager.h"
@@ -60,7 +61,7 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-static const char *IdSrc = "$Id: FGLGear.cpp,v 1.100 2012/04/01 17:05:51 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGLGear.cpp,v 1.103 2013/01/13 12:44:52 bcoconni Exp $";
 static const char *IdHdr = ID_LGEAR;
 
 // Body To Structural (body frame is rotated 180 deg about Y and lengths are given in
@@ -105,29 +106,39 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number, const struct Inputs&
     dynamicFCoeff = 1.0;
   }
 
-  if (el->FindElement("spring_coeff"))
-    kSpring = el->FindElementValueAsNumberConvertTo("spring_coeff", "LBS/FT");
-  if (el->FindElement("damping_coeff")) {
-    Element* dampCoeff = el->FindElement("damping_coeff");
-    if (dampCoeff->GetAttributeValue("type") == "SQUARE") {
-      eDampType = dtSquare;
-      bDamp   = el->FindElementValueAsNumberConvertTo("damping_coeff", "LBS/FT2/SEC2");
-    } else {
-      bDamp   = el->FindElementValueAsNumberConvertTo("damping_coeff", "LBS/FT/SEC");
-    }
-  }
+  PropertyManager = fdmex->GetPropertyManager();
 
-  if (el->FindElement("damping_coeff_rebound")) {
-    Element* dampCoeffRebound = el->FindElement("damping_coeff_rebound");
-    if (dampCoeffRebound->GetAttributeValue("type") == "SQUARE") {
-      eDampTypeRebound = dtSquare;
-      bDampRebound   = el->FindElementValueAsNumberConvertTo("damping_coeff_rebound", "LBS/FT2/SEC2");
-    } else {
-      bDampRebound   = el->FindElementValueAsNumberConvertTo("damping_coeff_rebound", "LBS/FT/SEC");
+  fStrutForce = 0;
+  Element* strutForce = el->FindElement("strut_force");
+  if (strutForce) {
+    Element* springFunc = strutForce->FindElement("function");
+    fStrutForce = new FGFunction(PropertyManager, springFunc);
+  }
+  else {
+    if (el->FindElement("spring_coeff"))
+      kSpring = el->FindElementValueAsNumberConvertTo("spring_coeff", "LBS/FT");
+    if (el->FindElement("damping_coeff")) {
+      Element* dampCoeff = el->FindElement("damping_coeff");
+      if (dampCoeff->GetAttributeValue("type") == "SQUARE") {
+        eDampType = dtSquare;
+        bDamp   = el->FindElementValueAsNumberConvertTo("damping_coeff", "LBS/FT2/SEC2");
+      } else {
+        bDamp   = el->FindElementValueAsNumberConvertTo("damping_coeff", "LBS/FT/SEC");
+      }
     }
-  } else {
-    bDampRebound   = bDamp;
-    eDampTypeRebound = eDampType;
+
+    if (el->FindElement("damping_coeff_rebound")) {
+      Element* dampCoeffRebound = el->FindElement("damping_coeff_rebound");
+      if (dampCoeffRebound->GetAttributeValue("type") == "SQUARE") {
+        eDampTypeRebound = dtSquare;
+        bDampRebound   = el->FindElementValueAsNumberConvertTo("damping_coeff_rebound", "LBS/FT2/SEC2");
+      } else {
+        bDampRebound   = el->FindElementValueAsNumberConvertTo("damping_coeff_rebound", "LBS/FT/SEC");
+      }
+    } else {
+      bDampRebound   = bDamp;
+      eDampTypeRebound = eDampType;
+    }
   }
 
   if (el->FindElement("dynamic_friction"))
@@ -153,7 +164,6 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number, const struct Inputs&
     eSteerType = stSteer;
 
   GroundReactions = fdmex->GetGroundReactions();
-  PropertyManager = fdmex->GetPropertyManager();
 
   ForceY_Table = 0;
   Element* force_table = el->FindElement("table");
@@ -240,6 +250,7 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number, const struct Inputs&
 FGLGear::~FGLGear()
 {
   delete ForceY_Table;
+  delete fStrutForce;
   Debug(1);
 }
 
@@ -500,7 +511,12 @@ void FGLGear::ReportTakeoffOrLanding(void)
     if (debug_lvl > 0) Report(erTakeoff);
   }
 
-  if (lastWOW != WOW) PutMessage("GEAR_CONTACT: " + name, WOW);
+  if (lastWOW != WOW)
+  {
+    ostringstream buf;
+    buf << "GEAR_CONTACT: " << fdmex->GetSimTime() << " seconds: " << name;
+    PutMessage(buf.str(), WOW);
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -566,25 +582,29 @@ void FGLGear::ComputeVerticalStrutForce(void)
   double springForce = 0;
   double dampForce = 0;
 
-  springForce = -compressLength * kSpring;
+  if (fStrutForce)
+    StrutForce = min(fStrutForce->GetValue(), (double)0.0);
+  else {
+    springForce = -compressLength * kSpring;
 
-  if (compressSpeed >= 0.0) {
+    if (compressSpeed >= 0.0) {
 
-    if (eDampType == dtLinear)
-      dampForce = -compressSpeed * bDamp;
-    else
-      dampForce = -compressSpeed * compressSpeed * bDamp;
+      if (eDampType == dtLinear)
+        dampForce = -compressSpeed * bDamp;
+      else
+        dampForce = -compressSpeed * compressSpeed * bDamp;
 
-  } else {
+    } else {
 
-    if (eDampTypeRebound == dtLinear)
-      dampForce   = -compressSpeed * bDampRebound;
-    else
-      dampForce   =  compressSpeed * compressSpeed * bDampRebound;
+      if (eDampTypeRebound == dtLinear)
+        dampForce   = -compressSpeed * bDampRebound;
+      else
+        dampForce   =  compressSpeed * compressSpeed * bDampRebound;
 
+    }
+
+    StrutForce = min(springForce + dampForce, (double)0.0);
   }
-
-  StrutForce = min(springForce + dampForce, (double)0.0);
 
   // The reaction force of the wheel is always normal to the ground
   switch (eContactType) {
@@ -725,6 +745,8 @@ void FGLGear::bind(void)
                           &FGForce::GetLocationZ, &FGForce::SetLocationZ);
   property_name = base_property_name + "/compression-ft";
   PropertyManager->Tie( property_name.c_str(), &compressLength );
+  property_name = base_property_name + "/compression-velocity-fps";
+  PropertyManager->Tie( property_name.c_str(), &compressSpeed );
   property_name = base_property_name + "/static_friction_coeff";
   PropertyManager->Tie( property_name.c_str(), &staticFCoeff );
   property_name = base_property_name + "/dynamic_friction_coeff";

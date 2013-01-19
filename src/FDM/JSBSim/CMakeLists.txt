@@ -7,6 +7,8 @@ set(HEADERS
     initialization/FGInitialCondition.h
     initialization/FGTrim.h
     initialization/FGTrimAxis.h
+    initialization/FGSimplexTrim.h
+    initialization/FGTrimmer.h
     input_output/FGXMLParse.h
     input_output/FGXMLFileRead.h
     input_output/FGPropertyManager.h
@@ -16,6 +18,11 @@ set(HEADERS
     input_output/FGXMLElement.h
     input_output/net_fdm.hxx
     input_output/FGGroundCallback.h
+    input_output/FGOutputFG.h
+    input_output/FGOutputFile.h
+    input_output/FGOutputSocket.h
+    input_output/FGOutputTextFile.h
+    input_output/FGOutputType.h
     math/FGParameter.h
     math/LagrangeMultiplier.h
     math/FGColumnVector3.h
@@ -29,6 +36,8 @@ set(HEADERS
     math/FGRealValue.h
     math/FGRungeKutta.h
     math/FGTable.h
+    math/FGNelderMead.h
+    math/FGStateSpace.h
     models/FGAccelerations.h
     models/FGAerodynamics.h
     models/FGAircraft.h
@@ -89,12 +98,19 @@ set(SOURCES
     initialization/FGInitialCondition.cpp
     initialization/FGTrim.cpp
     initialization/FGTrimAxis.cpp
+    initialization/FGSimplexTrim.cpp
+    initialization/FGTrimmer.cpp
     input_output/FGGroundCallback.cpp
     input_output/FGPropertyManager.cpp
     input_output/FGScript.cpp
     input_output/FGXMLElement.cpp
     input_output/FGXMLParse.cpp
     input_output/FGfdmSocket.cpp
+    input_output/FGOutputFG.cpp
+    input_output/FGOutputFile.cpp
+    input_output/FGOutputSocket.cpp
+    input_output/FGOutputTextFile.cpp
+    input_output/FGOutputType.cpp
     math/FGColumnVector3.cpp
     math/FGCondition.cpp
     math/FGFunction.cpp
@@ -106,6 +122,8 @@ set(SOURCES
     math/FGRealValue.cpp
     math/FGRungeKutta.cpp
     math/FGTable.cpp
+    math/FGNelderMead.cpp
+    math/FGStateSpace.cpp
     models/FGAccelerations.cpp
     models/FGAerodynamics.cpp
     models/FGAircraft.cpp

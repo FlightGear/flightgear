@@ -47,7 +47,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGRocket.cpp,v 1.27 2012/04/08 15:19:08 jberndt Exp $";
+static const char *IdSrc = "$Id: FGRocket.cpp,v 1.29 2013/01/12 21:11:59 jberndt Exp $";
 static const char *IdHdr = ID_ROCKET;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,9 +70,10 @@ FGRocket::FGRocket(FGFDMExec* exec, Element *el, int engine_number, struct Input
   SLOxiFlowMax = SLFuelFlowMax = PropFlowMax = 0.0;
   MxR = 0.0;
   BuildupTime = 0.0;
-  It = 0.0;
+  It = ItVac = 0.0;
   ThrustVariation = 0.0;
   TotalIspVariation = 0.0;
+  VacThrust = 0.0;
   Flameout = false;
 
   // Defaults
@@ -207,6 +208,7 @@ void FGRocket::Calculate(void)
 
   LoadThrusterInputs();
   It += Thruster->Calculate(VacThrust) * in.TotalDeltaT;
+  ItVac += VacThrust * in.TotalDeltaT;
 
   RunPostFunctions();
 }
@@ -249,6 +251,7 @@ string FGRocket::GetEngineLabels(const string& delimiter)
   std::ostringstream buf;
 
   buf << Name << " Total Impulse (engine " << EngineNumber << " in psf)" << delimiter
+      << Name << " Total Vacuum Impulse (engine " << EngineNumber << " in psf)" << delimiter
       << Thruster->GetThrusterLabels(EngineNumber, delimiter);
 
   return buf.str();
@@ -260,7 +263,9 @@ string FGRocket::GetEngineValues(const string& delimiter)
 {
   std::ostringstream buf;
 
-  buf << It << delimiter << Thruster->GetThrusterValues(EngineNumber, delimiter);
+  buf << It << delimiter 
+      << ItVac << delimiter 
+      << Thruster->GetThrusterValues(EngineNumber, delimiter);
 
   return buf.str();
 }

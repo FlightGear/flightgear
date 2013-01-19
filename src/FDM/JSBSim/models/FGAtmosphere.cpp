@@ -50,7 +50,7 @@ INCLUDES
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAtmosphere.cpp,v 1.51 2012/04/13 13:18:28 jberndt Exp $";
+static const char *IdSrc = "$Id: FGAtmosphere.cpp,v 1.54 2012/09/17 12:38:07 jberndt Exp $";
 static const char *IdHdr = ID_ATMOSPHERE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -111,9 +111,21 @@ bool FGAtmosphere::Run(bool Holding)
 
 void FGAtmosphere::Calculate(double altitude)
 {
+  if (!PropertyManager->HasNode("atmosphere/override/temperature"))
   Temperature = GetTemperature(altitude);
+  else 
+    Temperature = PropertyManager->getDoubleValue("atmosphere/override/temperature");
+
+  if (!PropertyManager->HasNode("atmosphere/override/pressure"))
   Pressure    = GetPressure(altitude);
+  else 
+    Pressure = PropertyManager->getDoubleValue("atmosphere/override/pressure");
+
+  if (!PropertyManager->HasNode("atmosphere/override/density"))
   Density     = Pressure/(Reng*Temperature);
+  else 
+    Density = PropertyManager->getDoubleValue("atmosphere/override/density");
+
   Soundspeed  = sqrt(SHRatio*Reng*(Temperature));
   PressureAltitude = altitude;
   DensityAltitude = altitude;
@@ -193,6 +205,30 @@ double FGAtmosphere::ConvertToPSF(double p, ePressure unit) const
     break;
   case eInchesHg:
     targetPressure = p*70.7180803;
+    break;
+  default:
+    throw("Undefined pressure unit given");
+  }
+
+  return targetPressure;
+}
+
+double FGAtmosphere::ConvertFromPSF(double p, ePressure unit) const
+{
+  double targetPressure=0; // Pressure in PSF
+
+  switch(unit) {
+  case ePSF:
+    targetPressure = p;
+    break;
+  case eMillibars:
+    targetPressure = p/2.08854342;
+    break;
+  case ePascals:
+    targetPressure = p/0.0208854342;
+    break;
+  case eInchesHg:
+    targetPressure = p/70.7180803;
     break;
   default:
     throw("Undefined pressure unit given");

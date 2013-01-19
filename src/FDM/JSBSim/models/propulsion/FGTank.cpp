@@ -47,7 +47,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGTank.cpp,v 1.33 2011/10/31 14:54:41 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGTank.cpp,v 1.36 2013/01/12 19:25:30 jberndt Exp $";
 static const char *IdHdr = ID_TANK;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,6 +64,7 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
   Density = 6.6;
   InitialTemperature = Temperature = -9999.0;
   Ixx = Iyy = Izz = 0.0;
+  InertiaFactor = 1.0;
   Radius = Contents = Standpipe = Length = InnerRadius = 0.0;
   PreviousUsed = 0.0;
   ExternalFlow = 0.0;
@@ -92,6 +93,8 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
 
   if (el->FindElement("radius"))
     Radius = el->FindElementValueAsNumberConvertTo("radius", "IN");
+  if (el->FindElement("inertia_factor"))
+    InertiaFactor = el->FindElementValueAsNumber("inertia_factor");
   if (el->FindElement("capacity"))
     Capacity = el->FindElementValueAsNumberConvertTo("capacity", "LBS");
   if (el->FindElement("contents"))
@@ -152,14 +155,18 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
         exit(-1);
     }
     Density = (Contents*lbtoslug)/Volume; // slugs/in^3
-    CalculateInertias();
   }
+
+    CalculateInertias();
 
   string property_name, base_property_name;
   base_property_name = CreateIndexedPropertyName("propulsion/tank", TankNumber);
   property_name = base_property_name + "/contents-lbs";
   PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetContents,
                                        &FGTank::SetContents );
+  property_name = base_property_name + "/pct-full";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetPctFull);
+
   property_name = base_property_name + "/priority";
   PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetPriority,
                                        &FGTank::SetPriority );
@@ -293,7 +300,19 @@ double FGTank::Calculate(double dt, double TAT_C)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //  This function calculates the moments of inertia for a solid propellant
 //  grain - either an end burning cylindrical grain or a bored cylindrical
-//  grain.
+//  grain, as well as liquid propellants IF a tank radius and inertia factor
+//  are given.
+//
+//  From NASA CR-383, the MoI of a tank with liquid propellant is specified
+//  for baffled and non-baffled tanks as a ratio compared to that in which the
+//  propellant is solid. The more baffles, the more "rigid" the propellant and
+//  the higher the ratio (up to 1.0). For a cube tank with five baffles, the
+//  ratio ranges from 0.5 to 0.7. For a cube tank with no baffles, the ratio is
+//  roughly 0.18. One might estimate that for a spherical tank with no baffles
+//  the ratio might be somewhere around 0.10 to 0.15. Cylindrical tanks with or
+//  without baffles might have biased moment of inertia effects based on the
+//  baffle layout and tank geometry. A vector inertia_factor may be supported
+//  at some point.
 
 void FGTank::CalculateInertias(void)
 {
@@ -301,8 +320,12 @@ void FGTank::CalculateInertias(void)
   double RadSumSqr;
   double Rad2 = Radius*Radius;
 
+  if (grainType != gtUNKNOWN) { // assume solid propellant
+
   if (Density > 0.0) {
     Volume = (Contents*lbtoslug)/Density; // in^3
+  } else if (Contents <= 0.0) {
+    Volume = 0;
   } else {
     cerr << endl << "  Solid propellant grain density is zero!" << endl << endl;
     exit(-1);
@@ -327,6 +350,11 @@ void FGTank::CalculateInertias(void)
   }
   Izz  = Iyy;
 
+  } else { // assume liquid propellant
+
+    if (Radius > 0.0) Ixx = Iyy = Izz = Mass * InertiaFactor * 0.4 * Radius * Radius / 144.0;
+
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

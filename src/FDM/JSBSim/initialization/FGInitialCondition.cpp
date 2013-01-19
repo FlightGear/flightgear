@@ -63,7 +63,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.81 2012/04/08 15:22:56 jberndt Exp $";
+static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.87 2013/01/19 14:19:43 bcoconni Exp $";
 static const char *IdHdr = ID_INITIALCONDITION;
 
 //******************************************************************************
@@ -75,9 +75,7 @@ FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec) : fdmex(FDMExec)
   if(FDMExec != NULL ) {
     PropertyManager=fdmex->GetPropertyManager();
     Atmosphere=fdmex->GetAtmosphere();
-    Constructing = true;
     bind();
-    Constructing = false;
   } else {
     cout << "FGInitialCondition: This class requires a pointer to a valid FGFDMExec object" << endl;
   }
@@ -151,41 +149,7 @@ void FGInitialCondition::InitializeIC(void)
 
   lastSpeedSet = setvt;
   lastAltitudeSet = setasl;
-}
-
-//******************************************************************************
-
-void FGInitialCondition::WriteStateFile(int num)
-{
-  if (Constructing) return;
-
-  string filename = fdmex->GetFullAircraftPath();
-
-  if (filename.empty())
-    filename = "initfile.xml";
-  else
-    filename.append("/initfile.xml");
-
-  ofstream outfile(filename.c_str());
-  FGPropagate* Propagate = fdmex->GetPropagate();
-
-  if (outfile.is_open()) {
-    outfile << "<?xml version=\"1.0\"?>" << endl;
-    outfile << "<initialize name=\"reset00\">" << endl;
-    outfile << "  <ubody unit=\"FT/SEC\"> " << Propagate->GetUVW(eU) << " </ubody> " << endl;
-    outfile << "  <vbody unit=\"FT/SEC\"> " << Propagate->GetUVW(eV) << " </vbody> " << endl;
-    outfile << "  <wbody unit=\"FT/SEC\"> " << Propagate->GetUVW(eW) << " </wbody> " << endl;
-    outfile << "  <phi unit=\"DEG\"> " << Propagate->GetEuler(ePhi)*radtodeg << " </phi>" << endl;
-    outfile << "  <theta unit=\"DEG\"> " << Propagate->GetEuler(eTht)*radtodeg << " </theta>" << endl;
-    outfile << "  <psi unit=\"DEG\"> " << Propagate->GetEuler(ePsi)*radtodeg << " </psi>" << endl;
-    outfile << "  <longitude unit=\"DEG\"> " << Propagate->GetLongitudeDeg() << " </longitude>" << endl;
-    outfile << "  <latitude unit=\"DEG\"> " << Propagate->GetLatitudeDeg() << " </latitude>" << endl;
-    outfile << "  <altitude unit=\"FT\"> " << Propagate->GetDistanceAGL() << " </altitude>" << endl;
-    outfile << "</initialize>" << endl;
-    outfile.close();
-  } else {
-    cerr << "Could not open and/or write the state to the initial conditions file: " << filename << endl;
-  }
+  enginesRunning.clear();
 }
 
 //******************************************************************************
@@ -899,9 +863,9 @@ double FGInitialCondition::GetBodyVelFpsIC(int idx) const
 
 bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
 {
-  string sep = "/";
+  string init_file_name;
   if( useStoredPath ) {
-    init_file_name = fdmex->GetFullAircraftPath() + sep + rstfile + ".xml";
+    init_file_name = fdmex->GetFullAircraftPath() + "/" + rstfile + ".xml";
   } else {
     init_file_name = rstfile;
   }
@@ -933,19 +897,10 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     result = Load_v1();
   }
 
-  fdmex->RunIC();
-
   // Check to see if any engines are specified to be initialized in a running state
-  FGPropulsion* propulsion = fdmex->GetPropulsion();
   Element* running_elements = document->FindElement("running");
   while (running_elements) {
-    int n = int(running_elements->GetDataAsNumber());
-    try {
-      propulsion->InitRunning(n);
-    } catch (string str) {
-      cerr << str << endl;
-      result = false;
-    }
+    enginesRunning.push_back(int(running_elements->GetDataAsNumber()));
     running_elements = document->FindNextElement("running");
   }
 
@@ -1067,9 +1022,6 @@ bool FGInitialCondition::Load_v2(void)
         if (position_el->FindElement("longitude"))
           position.SetLongitude(position_el->FindElementValueAsNumberConvertTo("longitude", "RAD"));
 
-        if (position_el->FindElement("latitude"))
-          position.SetLatitude(position_el->FindElementValueAsNumberConvertTo("latitude", "RAD"));
-
         if (position_el->FindElement("radius")) {
           position.SetRadius(position_el->FindElementValueAsNumberConvertTo("radius", "FT"));
         } else if (position_el->FindElement("altitudeAGL")) {
@@ -1082,6 +1034,19 @@ bool FGInitialCondition::Load_v2(void)
           result = false;
         }
 
+        Element* latitude_el = position_el->FindElement("latitude");
+        if (latitude_el) {
+          string lat_type = latitude_el->GetAttributeValue("type");
+          double latitude = position_el->FindElementValueAsNumberConvertTo("latitude", "RAD");
+          if (lat_type == "geod" || lat_type == "geodetic") {
+              double longitude = position.GetLongitude();
+              double altitude = position.GetAltitudeASL();                 // SetPositionGeodetic() assumes altitude 
+              position.SetPositionGeodetic(longitude, latitude, altitude); // is geodetic, but it's close enough for now.
+              position.SetAltitudeAGL(altitude, fdmex->GetSimTime());
+          } else {
+            position.SetLatitude(latitude);
+          }
+        }
       } else {
         position = position_el->FindElementTripletConvertTo("FT");
       }
@@ -1445,13 +1410,6 @@ void FGInitialCondition::bind(void)
                        &FGInitialCondition::GetRRadpsIC,
                        &FGInitialCondition::SetRRadpsIC,
                        true);
-
-  typedef int (FGInitialCondition::*iPMF)(void) const;
-  PropertyManager->Tie("simulation/write-state-file",
-                       this,
-                       (iPMF)0,
-                       &FGInitialCondition::WriteStateFile);
-
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

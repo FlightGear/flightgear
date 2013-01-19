@@ -40,13 +40,14 @@ INCLUDES
 
 #include "FGGroundReactions.h"
 #include "FGLGear.h"
+#include "FGAccelerations.h"
 #include "input_output/FGPropertyManager.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGGroundReactions.cpp,v 1.39 2012/04/01 17:05:51 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGGroundReactions.cpp,v 1.42 2012/12/15 15:16:15 bcoconni Exp $";
 static const char *IdHdr = ID_GROUNDREACTIONS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -124,25 +125,36 @@ bool FGGroundReactions::GetWOW(void) const
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGGroundReactions::Load(Element* el)
+bool FGGroundReactions::Load(Element* elem)
 {
   int num=0;
+  string fname="", file="";
+  string separator = "/";
+
+  fname = elem->GetAttributeValue("file");
+  if (!fname.empty()) {
+    file = FDMExec->GetFullAircraftPath() + separator + fname;
+    document = LoadXMLDocument(file);
+    if (document == 0L) return false;
+  } else {
+    document = elem;
+  }
 
   Debug(2);
 
-  unsigned int numContacts = el->GetNumElements("contact");
+  unsigned int numContacts = document->GetNumElements("contact");
   lGear.resize(numContacts);
-  Element* contact_element = el->FindElement("contact");
+  Element* contact_element = document->FindElement("contact");
   for (unsigned int idx=0; idx<numContacts; idx++) {
     lGear[idx] = new FGLGear(contact_element, FDMExec, num++, in);
-    contact_element = el->FindNextElement("contact");
+    contact_element = document->FindNextElement("contact");
   }
 
-  FGModel::Load(el); // Perform base class Load
+  FGModel::Load(document); // Perform base class Load
 
   for (unsigned int i=0; i<lGear.size();i++) lGear[i]->bind();
 
-  PostLoad(el, PropertyManager);
+  PostLoad(document, PropertyManager);
 
   return true;
 }
@@ -169,6 +181,12 @@ string FGGroundReactions::GetGroundReactionStrings(string delimeter) const
           << name << " wheel rolling velocity (ft/sec)" << delimeter
           << name << " wheel side velocity (ft/sec)" << delimeter
           << name << " wheel slip (deg)" << delimeter;
+    } else {
+      string name = lGear[i]->GetName();
+      buf << name << " WOW" << delimeter
+          << name << " stroke (ft)" << delimeter
+          << name << " stroke velocity (ft/sec)" << delimeter
+          << name << " compress force (lbs)" << delimeter;
     }
   }
 
@@ -204,15 +222,23 @@ string FGGroundReactions::GetGroundReactionValues(string delimeter) const
           << gear->GetWheelRollVel() << delimeter
           << gear->GetWheelSideVel() << delimeter
           << gear->GetWheelSlipAngle() << delimeter;
+    } else {
+      FGLGear *gear = lGear[i];
+      buf << (gear->GetWOW() ? "1" : "0") << delimeter
+          << setprecision(5) << gear->GetCompLen() << delimeter
+          << setprecision(6) << gear->GetCompVel() << delimeter
+          << setprecision(10) << gear->GetCompForce() << delimeter;
     }
   }
 
-  buf << vForces(eX) << delimeter
-      << vForces(eY) << delimeter
-      << vForces(eZ) << delimeter
-      << vMoments(eX) << delimeter
-      << vMoments(eY) << delimeter
-      << vMoments(eZ);
+  FGAccelerations* Accelerations = FDMExec->GetAccelerations();
+
+  buf << Accelerations->GetGroundForces(eX) << delimeter
+      << Accelerations->GetGroundForces(eY) << delimeter
+      << Accelerations->GetGroundForces(eZ) << delimeter
+      << Accelerations->GetGroundMoments(eX) << delimeter
+      << Accelerations->GetGroundMoments(eY) << delimeter
+      << Accelerations->GetGroundMoments(eZ);
 
   return buf.str();
 }

@@ -45,7 +45,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFCSFunction.cpp,v 1.9 2009/10/24 22:59:30 jberndt Exp $";
+static const char *IdSrc = "$Id: FGFCSFunction.cpp,v 1.12 2012/11/17 18:03:19 jberndt Exp $";
 static const char *IdHdr = ID_FCSFUNCTION;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,7 +89,6 @@ bool FGFCSFunction::Run(void )
   }
 
   Clip();
-
   if (IsOutput) SetOutput();
 
   return true;

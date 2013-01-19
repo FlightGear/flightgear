@@ -45,7 +45,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPropeller.cpp,v 1.44 2012/04/29 13:10:46 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGPropeller.cpp,v 1.46 2013/01/06 22:11:42 jentron Exp $";
 static const char *IdHdr = ID_PROPELLER;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -245,8 +245,11 @@ double FGPropeller::Calculate(double EnginePower)
   // (see H. Glauert, "The Elements of Airfoil and Airscrew Theory",
   // 2nd edition, §16.3, pp. 219-221)
 
-  if ((Vel+2.0*Vinduced)*Vel < 0.0)
-    Vinduced = 0.0; // We cannot calculate the induced velocity so let's assume it is zero.
+  if ((Vel+2.0*Vinduced)*Vel < 0.0) {
+    // The momentum theory is no longer applicable so let's assume the induced
+    // saturates to -0.5*Vel so that the total velocity Vel+2*Vinduced equals 0.
+    Vinduced = -0.5*Vel;
+  }
     
   // P-factor is simulated by a shift of the acting location of the thrust.
   // The shift is a multiple of the angle between the propeller shaft axis
@@ -355,17 +358,10 @@ double FGPropeller::GetPowerRequired(void)
   // Apply optional Mach effects from CP_MACH table
   if (CpMach) cPReq *= CpMach->GetValue(HelicalTipMach);
 
-  if (RPS > 0.1) {
-    PowerRequired = cPReq*RPS*RPS*RPS*D5*rho;
-    vTorque(eX) = -Sense*PowerRequired / (RPS*2.0*M_PI);
-  } else {
-     // For a stationary prop we have to estimate torque first.
-     double CL = (90.0 - Pitch) / 20.0;
-     if (CL > 1.5) CL = 1.5;
-     double BladeArea = Diameter * Diameter / 32.0 * numBlades;
-     vTorque(eX) = -Sense*BladeArea*Diameter*fabs(Vel)*Vel*rho*0.19*CL;
-     PowerRequired = Sense*(vTorque(eX))*0.2*M_PI;
-  }
+  double local_RPS = RPS < 0.01 ? 0.01 : RPS; 
+
+  PowerRequired = cPReq*local_RPS*RPS*local_RPS*D5*rho;
+  vTorque(eX) = -Sense*PowerRequired / (local_RPS*2.0*M_PI);
 
   return PowerRequired;
 }

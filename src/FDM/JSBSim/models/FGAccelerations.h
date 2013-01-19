@@ -50,7 +50,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_ACCELERATIONS "$Id: FGAccelerations.h,v 1.12 2012/02/19 14:07:27 bcoconni Exp $"
+#define ID_ACCELERATIONS "$Id: FGAccelerations.h,v 1.14 2012/09/25 12:44:36 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -97,7 +97,7 @@ CLASS DOCUMENTATION
          NASA SP-8024, May 1969
 
     @author Jon S. Berndt, Mathias Froehlich, Bertrand Coconnier
-    @version $Id: FGAccelerations.h,v 1.12 2012/02/19 14:07:27 bcoconni Exp $
+    @version $Id: FGAccelerations.h,v 1.14 2012/09/25 12:44:36 jberndt Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -233,6 +233,7 @@ public:
   */
   const FGColumnVector3& GetBodyAccel(void) const { return vBodyAccel; }
 
+  const FGColumnVector3& GetGravAccel(void) const {return vGravAccel; }
 
   /** Retrieves a component of the acceleration resulting from the applied forces.
       Retrieves a component of the ratio between the sum of all forces applied
@@ -321,6 +322,16 @@ public:
    */
   void InitializeDerivatives(void);
 
+  /** Sets the property forces/hold-down. This allows to do hard 'hold-down'
+      such as for rockets on a launch pad with engines ignited.
+      @param hd enables the 'hold-down' function if non-zero
+   */
+  void SetHoldDown(int hd) {HoldDown = hd;}
+  /** Gets the value of the property forces/hold-down.
+      @result zero if the 'hold-down' function is disabled, non-zero otherwise.
+   */
+  int GetHoldDown(void) const {return HoldDown;}
+
   struct Inputs {
     /// The body inertia matrix expressed in the body frame
     FGMatrix33 J;
@@ -382,6 +393,7 @@ private:
 
   int gravType;
   bool gravTorque;
+  int HoldDown;
 
   void CalculatePQRdot(void);
   void CalculateQuatdot(void);

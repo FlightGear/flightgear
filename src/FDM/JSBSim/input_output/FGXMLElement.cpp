@@ -28,11 +28,12 @@
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGXMLElement.h"
-
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+
+#include "FGXMLElement.h"
+#include "string_utilities.h"
 
 using namespace std;
 
@@ -42,7 +43,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGXMLElement.cpp,v 1.33 2011/08/05 12:28:20 jberndt Exp $";
+static const char *IdSrc = "$Id: FGXMLElement.cpp,v 1.38 2012/12/13 04:41:06 jberndt Exp $";
 static const char *IdHdr = ID_XMLELEMENT;
 
 bool Element::converterIsInitialized = false;
@@ -230,6 +231,7 @@ Element::Element(const string& nm)
     convert["KG/L"]["KG/L"] = 1.0;
     convert["LBS/GAL"]["LBS/GAL"] = 1.0;
   }
+  attribute_key.resize(0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -246,12 +248,24 @@ Element::~Element(void)
 
 string Element::GetAttributeValue(const string& attr)
 {
+  if (HasAttribute(attr))  return attributes[attr];
+  else                     return ("");
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool Element::HasAttribute(const string& attr)
+{
+  bool status=true;
   int select=-1;
-  for (unsigned int i=0; i<attribute_key.size(); i++) {
+
+  unsigned int attr_cnt = attribute_key.size();
+
+  for (unsigned int i=0; i<attr_cnt; i++) {
     if (attribute_key[i] == attr) select = i;
   }
-  if (select < 0) return string("");
-  else return attributes[attr];
+  if (select < 0) status=false;
+  return status;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -261,7 +275,15 @@ double Element::GetAttributeValueAsNumber(const string& attr)
   string attribute = GetAttributeValue(attr);
 
   if (attribute.empty()) return HUGE_VAL;
-  else return (atof(attribute.c_str()));
+  else {
+    double number=0;
+    if (is_number(trim(attribute)))
+      number = atof(attribute.c_str());
+    else
+      throw("Expecting numeric attribute value, but got: " + attribute);
+    
+    return (number);
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -304,7 +326,13 @@ string Element::GetDataLine(unsigned int i)
 double Element::GetDataAsNumber(void)
 {
   if (data_lines.size() == 1) {
-    return atof(data_lines[0].c_str());
+    double number=0;
+    if (is_number(trim(data_lines[0])))
+      number = atof(data_lines[0].c_str());
+    else
+      throw("Expected numeric value, but got: " + data_lines[0]);
+
+    return number;
   } else if (data_lines.size() == 0) {
     return HUGE_VAL;
   } else {
@@ -372,7 +400,9 @@ double Element::FindElementValueAsNumber(const string& el)
 {
   Element* element = FindElement(el);
   if (element) {
-    return element->GetDataAsNumber();
+    double value = element->GetDataAsNumber();
+    value = DisperseValue(element, value);
+    return value;
   } else {
     cerr << "Attempting to get single data value from multiple lines" << endl;
     return 0;
@@ -422,6 +452,8 @@ double Element::FindElementValueAsNumberConvertTo(const string& el, const string
     value *= convert[supplied_units][target_units];
   }
 
+  value = DisperseValue(element, value, supplied_units, target_units);
+
   return value;
 }
 
@@ -456,6 +488,8 @@ double Element::FindElementValueAsNumberConvertFromTo( const string& el,
     value *= convert[supplied_units][target_units];
   }
 
+  value = DisperseValue(element, value, supplied_units, target_units);
+
   return value;
 }
 
@@ -486,32 +520,85 @@ FGColumnVector3 Element::FindElementTripletConvertTo( const string& target_units
   if (item) {
     value = item->GetDataAsNumber();
     if (!supplied_units.empty()) value *= convert[supplied_units][target_units];
+    triplet(1) = DisperseValue(item, value, supplied_units, target_units);
   } else {
-    value = 0.0;
+    triplet(1) = 0.0;
   }
-  triplet(1) = value;
+  
 
   item = FindElement("y");
   if (!item) item = FindElement("pitch");
   if (item) {
     value = item->GetDataAsNumber();
     if (!supplied_units.empty()) value *= convert[supplied_units][target_units];
+    triplet(2) = DisperseValue(item, value, supplied_units, target_units);
   } else {
-    value = 0.0;
+    triplet(2) = 0.0;
   }
-  triplet(2) = value;
 
   item = FindElement("z");
   if (!item) item = FindElement("yaw");
   if (item) {
     value = item->GetDataAsNumber();
     if (!supplied_units.empty()) value *= convert[supplied_units][target_units];
+    triplet(3) = DisperseValue(item, value, supplied_units, target_units);
   } else {
-    value = 0.0;
+    triplet(3) = 0.0;
   }
-  triplet(3) = value;
 
   return triplet;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double Element::DisperseValue(Element *e, double val, const std::string supplied_units, const std::string target_units)
+{
+  double value=val;
+  double disp=0.0;
+  if (e->HasAttribute("dispersion")) {
+    disp = e->GetAttributeValueAsNumber("dispersion");
+    if (!supplied_units.empty()) disp *= convert[supplied_units][target_units];
+    string attType = e->GetAttributeValue("type");
+    if (attType == "gaussian") {
+      value = val + disp*GaussianRandomNumber();
+    } else if (attType == "uniform") {
+      value = val + disp * ((((double)rand()/RAND_MAX)-0.5)*2.0);
+    } else {
+      std::cerr << "Unknown dispersion type" << endl;
+      throw("Unknown dispersion type");
+    }
+
+  }
+  return value;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double Element::GaussianRandomNumber(void)
+{
+  static double V1, V2, S;
+  static int phase = 0;
+  double X;
+
+  if (phase == 0) {
+    V1 = V2 = S = X = 0.0;
+
+    do {
+      double U1 = (double)rand() / RAND_MAX;
+      double U2 = (double)rand() / RAND_MAX;
+
+      V1 = 2 * U1 - 1;
+      V2 = 2 * U2 - 1;
+      S = V1 * V1 + V2 * V2;
+    } while(S >= 1 || S == 0);
+
+    X = V1 * sqrt(-2 * log(S) / S);
+  } else
+    X = V2 * sqrt(-2 * log(S) / S);
+
+  phase = 1 - phase;
+
+  return X;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -50,7 +50,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAccelerometer.cpp,v 1.9 2011/07/17 13:51:23 jberndt Exp $";
+static const char *IdSrc = "$Id: FGAccelerometer.cpp,v 1.11 2012/11/17 18:03:19 jberndt Exp $";
 static const char *IdHdr = ID_ACCELEROMETER;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -90,11 +90,9 @@ bool FGAccelerometer::Run(void )
 
   vRadius = MassBalance->StructuralToBody(vLocation);
     
-  //gravitational forces
-  vAccel = Propagate->GetTl2b() * FGColumnVector3(0, 0, Inertial->gravity());
-
   //aircraft forces
-  vAccel += (Accelerations->GetUVWdot()
+  vAccel = (Accelerations->GetBodyAccel()
+              + Propagate->GetTi2b() * Accelerations->GetGravAccel()
               + Accelerations->GetPQRdot() * vRadius
               + Propagate->GetPQR() * (Propagate->GetPQR() * vRadius));
 
@@ -104,6 +102,8 @@ bool FGAccelerometer::Run(void )
   Input = vAccel(axis);
 
   ProcessSensorSignal();
+
+  if (IsOutput) SetOutput();
 
   return true;
 }

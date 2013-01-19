@@ -43,7 +43,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFunction.cpp,v 1.43 2012/02/05 11:15:54 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGFunction.cpp,v 1.46 2012/09/25 12:43:13 jberndt Exp $";
 static const char *IdHdr = ID_FUNCTION;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,6 +83,8 @@ const std::string FGFunction::avg_string = "avg";
 const std::string FGFunction::fraction_string = "fraction";
 const std::string FGFunction::mod_string = "mod";
 const std::string FGFunction::random_string = "random";
+const std::string FGFunction::urandom_string = "urandom";
+const std::string FGFunction::pi_string = "pi";
 const std::string FGFunction::integer_string = "integer";
 const std::string FGFunction::rotation_alpha_local_string = "rotation_alpha_local";
 const std::string FGFunction::rotation_beta_local_string = "rotation_beta_local";
@@ -101,6 +103,7 @@ const std::string FGFunction::or_string = "or";
 const std::string FGFunction::not_string = "not";
 const std::string FGFunction::ifthen_string = "ifthen";
 const std::string FGFunction::switch_string = "switch";
+const std::string FGFunction::interpolate1d_string = "interpolate1d";
 
 FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& prefix)
                                       : PropertyManager(propMan), Prefix(prefix)
@@ -110,11 +113,18 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
   cached = false;
   cachedValue = -HUGE_VAL;
   invlog2val = 1.0/log10(2.0);
+  pCopyTo = 0L;
 
   Name = el->GetAttributeValue("name");
   operation = el->GetName();
 
   if (operation == function_string) {
+    sCopyTo = el->GetAttributeValue("copyto");
+    if (!sCopyTo.empty()) {
+      pCopyTo = PropertyManager->GetNode(sCopyTo);
+      if (pCopyTo == 0L) cerr << "Property \"" << sCopyTo << "\" must be previously defined in function "
+                              << Name << endl;
+    }
     Type = eTopLevel;
   } else if (operation == product_string) {
     Type = eProduct;
@@ -166,6 +176,10 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
     Type = eMod;
   } else if (operation == random_string) {
     Type = eRandom;
+  } else if (operation == urandom_string) {
+    Type = eUrandom;
+  } else if (operation == pi_string) {
+    Type = ePi;
   } else if (operation == rotation_alpha_local_string) {
     Type = eRotation_alpha_local;
   } else if (operation == rotation_beta_local_string) {
@@ -198,12 +212,14 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
     Type = eIfThen;
   } else if (operation == switch_string) {
     Type = eSwitch;
+  } else if (operation == interpolate1d_string) {
+    Type = eInterpolate1D;
   } else if (operation != description_string) {
     cerr << "Bad operation " << operation << " detected in configuration file" << endl;
   }
 
   element = el->GetElement();
-  if (!element) {
+  if (!element && Type != eRandom && Type != eUrandom && Type != ePi) {
     cerr << fgred << highint << endl;
     cerr << "  No element was specified as an argument to the \"" << operation << "\" operation" << endl;
     cerr << "  This can happen when, for instance, a cos operation is specified and a " << endl;
@@ -263,6 +279,8 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
                operation == integer_string ||
                operation == mod_string ||
                operation == random_string ||
+               operation == urandom_string ||
+               operation == pi_string ||
                operation == avg_string ||
                operation == rotation_alpha_local_string||
                operation == rotation_beta_local_string||
@@ -279,7 +297,8 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
                operation == or_string ||
                operation == not_string ||
                operation == ifthen_string ||
-               operation == switch_string)
+               operation == switch_string ||
+               operation == interpolate1d_string)
     {
       Parameters.push_back(new FGFunction(PropertyManager, element, Prefix));
     } else if (operation != description_string) {
@@ -334,10 +353,13 @@ double FGFunction::GetValue(void) const
 
   if (cached) return cachedValue;
 
-  temp = Parameters[0]->GetValue();
+  if (   Type != eRandom
+      && Type != eUrandom
+      && Type != ePi      ) temp = Parameters[0]->GetValue();
   
   switch (Type) {
   case eTopLevel:
+    if (pCopyTo) pCopyTo->setDoubleValue(temp);
     break;
   case eProduct:
     for (i=1;i<Parameters.size();i++) {
@@ -434,6 +456,12 @@ double FGFunction::GetValue(void) const
   case eRandom:
     temp = GaussianRandomNumber();
     break;
+  case eUrandom:
+    temp = -1.0 + (((double)rand()/double(RAND_MAX))*2.0);
+    break;
+  case ePi:
+    temp = M_PI;
+    break;
   case eLT:
     temp = (temp < Parameters[1]->GetValue())?1:0;
     break;
@@ -496,6 +524,27 @@ double FGFunction::GetValue(void) const
       } else {
         throw(string("The switch function index selected a value above the range of supplied values"
                      " - not enough values were supplied."));
+      }
+    }
+    break;
+  case eInterpolate1D:
+    {
+      unsigned int sz = Parameters.size();
+      if (temp <= Parameters[1]->GetValue()) {
+        temp = Parameters[2]->GetValue();
+      } else if (temp >= Parameters[sz-2]->GetValue()) {
+        temp = Parameters[sz-1]->GetValue();
+      } else {
+        for (unsigned int i=1; i<=sz-4; i+=2) {
+          if (temp < Parameters[i+2]->GetValue()) {
+            double factor = (temp - Parameters[i]->GetValue()) /
+                            (Parameters[i+2]->GetValue() - Parameters[i]->GetValue());
+            double span = Parameters[i+3]->GetValue() - Parameters[i+1]->GetValue();
+            double val = factor*span;
+            temp = Parameters[i+1]->GetValue() + val;
+            break;
+          }
+        }
       }
     }
     break;
@@ -731,7 +780,11 @@ void FGFunction::bind(void)
       }
     }
 
+    if (PropertyManager->HasNode(tmp)) {
+      cout << "Property " << tmp << " has already been successfully bound (late)." << endl;
+    } else {
     PropertyManager->Tie( tmp, this, &FGFunction::GetValue);
+    }
   }
 }
 
