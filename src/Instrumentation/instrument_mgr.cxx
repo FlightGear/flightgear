@@ -206,7 +206,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         // the instruments file
           continue;
         } else if ( name == "radar-altimeter" ) {
-            set_subsystem( id, new radAlt( node ) );
+            set_subsystem( id, new RadarAltimeter( node ) );
 
         } else if ( name == "tcas" ) {
             set_subsystem( id, new TCAS( node ), 0.2);
