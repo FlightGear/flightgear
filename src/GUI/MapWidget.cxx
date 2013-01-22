@@ -537,8 +537,7 @@ void MapWidget::zoomOut()
 
 void MapWidget::draw(int dx, int dy)
 {
-  _aircraft = SGGeod::fromDeg(fgGetDouble("/position/longitude-deg"),
-    fgGetDouble("/position/latitude-deg"));
+  _aircraft = globals->get_aircraft_position();
     
   bool mag = _root->getBoolValue("magnetic-headings");
   if (mag != _magneticHeadings) {
