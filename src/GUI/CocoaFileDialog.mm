@@ -27,6 +27,11 @@ static NSURL* pathToNSURL(const SGPath& aPath)
     return [NSURL fileURLWithPath:stdStringToCocoa(aPath.str())];
 }
 
+// 10.6 compiler won't accept block-scoped locals in Objective-C++,
+// so making these globals.
+static NSString* completion_path = nil;
+static SGPath completion_sgpath;
+
 class CocoaFileDialog::CocoaFileDialogPrivate
 {
 public:
@@ -117,14 +122,11 @@ void CocoaFileDialog::exec()
     
     [d->panel beginSheetModalForWindow:cocoaWindow completionHandler:^(NSInteger result)
     {
-        NSString* path = nil;
-        SGPath sgpath;
-        
         if (result == NSFileHandlingPanelOKButton) {
-            path = [[d->panel URL] path];
+            completion_path = [[d->panel URL] path];
             //NSLog(@"the URL is: %@", d->panel URL]);
-            sgpath = ([path UTF8String]);
-            _callback->onFileDialogDone(this, sgpath);
+            completion_sgpath = ([completion_path UTF8String]);
+            _callback->onFileDialogDone(this, completion_sgpath);
         }
     }];
 }
