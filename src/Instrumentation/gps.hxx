@@ -23,23 +23,6 @@ class FGRouteMgr;
 class FGAirport;
 class GPSListener;
 
-class SGGeodProperty
-{
-public:
-    SGGeodProperty()
-    {
-    }
-
-    void init(SGPropertyNode* base, const char* lonStr, const char* latStr, const char* altStr = NULL);
-    void init(const char* lonStr, const char* latStr, const char* altStr = NULL);
-    void clear();
-    void operator=(const SGGeod& geod);
-    SGGeod get() const;
-
-private:
-    SGPropertyNode_ptr _lon, _lat, _alt;
-};
-
 /**
  * Model a GPS radio.
  *
@@ -366,7 +349,6 @@ private:
     std::string _name;
     int _num;
 
-    SGGeodProperty _position;
     SGGeod _wp0_position;
     SGGeod _indicated_pos;
     double _legDistanceNm;

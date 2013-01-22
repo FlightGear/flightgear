@@ -34,57 +34,6 @@ using std::auto_ptr;
 using std::string;
 using namespace flightgear;
 
-///////////////////////////////////////////////////////////////////
-
-void SGGeodProperty::init(SGPropertyNode* base, const char* lonStr, const char* latStr, const char* altStr)
-{
-    _lon = base->getChild(lonStr, 0, true);
-    _lat = base->getChild(latStr, 0, true);
-    if (altStr) {
-        _alt = base->getChild(altStr, 0, true);
-    }
-}
-
-void SGGeodProperty::init(const char* lonStr, const char* latStr, const char* altStr)
-{
-    _lon = fgGetNode(lonStr, true);
-    _lat = fgGetNode(latStr, true);
-    if (altStr) {
-        _alt = fgGetNode(altStr, true);
-    }
-}
-
-void SGGeodProperty::clear()
-{
-    _lon = _lat = _alt = NULL;
-}
-
-void SGGeodProperty::operator=(const SGGeod& geod)
-{
-    _lon->setDoubleValue(geod.getLongitudeDeg());
-    _lat->setDoubleValue(geod.getLatitudeDeg());
-    if (_alt) {
-        _alt->setDoubleValue(geod.getElevationFt());
-    }
-}
-
-SGGeod SGGeodProperty::get() const
-{
-    double lon = _lon->getDoubleValue(),
-        lat = _lat->getDoubleValue();
-        
-    if (SGMisc<double>::isNaN(lon) || SGMisc<double>::isNaN(lat)) {
-      SG_LOG(SG_INSTR, SG_WARN, "read NaN for lon/lat:" << _lon->getPath() 
-        << ", " << _lat->getPath());
-      return SGGeod();
-    }
-        
-    if (_alt) {
-        return SGGeod::fromDegFt(lon, lat, _alt->getDoubleValue());
-    } else {
-        return SGGeod::fromDeg(lon,lat);
-    }
-}
 
 static const char* makeTTWString(double TTW)
 {
@@ -256,7 +205,6 @@ GPS::init ()
   _routeMgr = (FGRouteMgr*) globals->get_subsystem("route-manager");
   assert(_routeMgr);
   
-  _position.init("/position/longitude-deg", "/position/latitude-deg", "/position/altitude-ft");
   _magvar_node = fgGetNode("/environment/magnetic-variation-deg", true);
   _serviceable_node = _gpsNode->getChild("serviceable", 0, true);
   _serviceable_node->setBoolValue(true);
@@ -457,7 +405,7 @@ GPS::update (double delta_time_sec)
   }    
   
   _raim_node->setDoubleValue(1.0);
-  _indicated_pos = _position.get();
+  _indicated_pos = globals->get_aircraft_position();
   updateBasicData(delta_time_sec);
 
   if (_dataValid) {
@@ -491,7 +439,7 @@ GPS::update (double delta_time_sec)
       // keep in mind at this point, _dataValid is not set
     
       auto_ptr<FGPositioned::Filter> f(createFilter(FGPositioned::AIRPORT));
-      FGPositionedRef apt = FGPositioned::findClosest(_position.get(), 20.0, f.get());
+      FGPositionedRef apt = FGPositioned::findClosest(_indicated_pos, 20.0, f.get());
       if (apt) {
         setScratchFromPositioned(apt, 0);
         selectOBSMode();
@@ -665,7 +613,7 @@ void GPS::referenceNavaidSet(const std::string& aNavaid)
   if (aNavaid.size() > 0) {
     FGPositioned::TypeFilter vorFilter(FGPositioned::VOR);
     _ref_navaid = FGPositioned::findClosestWithIdent(aNavaid, 
-      _position.get(), &vorFilter);
+      _indicated_pos, &vorFilter);
     
     if (!_ref_navaid) {
       SG_LOG(SG_INSTR, SG_ALERT, "GPS: unknown ref navaid:" << aNavaid);
