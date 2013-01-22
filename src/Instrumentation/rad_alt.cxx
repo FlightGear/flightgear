@@ -50,13 +50,13 @@ RadarAltimeter::~RadarAltimeter()
 void
 RadarAltimeter::init ()
 {
-    _serviceable_node = _Instrument->getNode("serviceable", true);
-    _sceneryLoaded = fgGetNode("/sim/sceneryloaded", true);
 
     std::string branch = "/instrumentation/" + _name;
     _Instrument = fgGetNode(branch.c_str(), _num, true);
 
-    
+    _sceneryLoaded = fgGetNode("/sim/sceneryloaded", true);
+    _serviceable_node = _Instrument->getNode("serviceable", true);
+
     _user_alt_agl_node     = fgGetNode("/position/altitude-agl-ft", true);
     _rad_alt_warning_node   = fgGetNode("/sim/alarms/rad-alt-warning", true);
 
