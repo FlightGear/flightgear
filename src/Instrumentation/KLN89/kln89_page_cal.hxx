@@ -71,7 +71,7 @@ private:
 };
 
 
-inline ostream& operator<< (ostream& out, const ClockTime& t) {
+inline std::ostream& operator<< (std::ostream& out, const ClockTime& t) {
     return(out << t._hr << ':' << t._min);
 }
 
