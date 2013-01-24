@@ -99,10 +99,12 @@ void FGDeviceConfigurationMap::scan_dir(const SGPath & path)
   if (!path.exists())
     return;
   
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  flightgear::NavDataCache::Transaction txn(cache);
+  
   simgear::Dir dir(path);
   simgear::PathList children = dir.children(simgear::Dir::TYPE_FILE | 
     simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
-  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
   
   BOOST_FOREACH(SGPath path, children) {
     if (path.isDir()) {
