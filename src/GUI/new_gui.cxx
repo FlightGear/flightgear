@@ -289,10 +289,11 @@ NewGUI::newDialog (SGPropertyNode* props)
 void
 NewGUI::readDir (const SGPath& path)
 {
+    flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+    flightgear::NavDataCache::Transaction txn(cache);
     simgear::Dir dir(path);
     simgear::PathList xmls = dir.children(simgear::Dir::TYPE_FILE, ".xml");
     
-    flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
     BOOST_FOREACH(SGPath xmlPath, xmls) {
       if (!cache->isCachedFileModified(xmlPath)) {
         // cached, easy
