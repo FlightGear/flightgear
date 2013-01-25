@@ -323,6 +323,8 @@ NewGUI::readDir (const SGPath& path)
       cache->stampCacheFile(xmlPath);
       cache->writeStringProperty(xmlPath.str(), name);
     } // of directory children iteration
+  
+    txn.commit();
 }
 ////////////////////////////////////////////////////////////////////////
 // Style handling.
