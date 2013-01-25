@@ -117,6 +117,8 @@ void FGDeviceConfigurationMap::scan_dir(const SGPath & path)
       } // of cached file stamp is valid
     } // of child is a file with '.xml' extension
   } // of directory children iteration
+  
+  txn.commit();
 }
 
 void FGDeviceConfigurationMap::readCachedData(const SGPath& path)
