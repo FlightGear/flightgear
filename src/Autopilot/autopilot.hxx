@@ -23,17 +23,13 @@
 #ifndef __AUTOPILOT_HXX
 #define __AUTOPILOT_HXX 1
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#include "component.hxx"
-
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
 namespace FGXMLAutopilot {
 
+class Component;
+  
 /**
  * @brief A SGSubsystemGroup implementation to serve as a collection
  * of Components

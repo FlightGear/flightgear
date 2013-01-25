@@ -25,12 +25,17 @@
 #  include <config.h>
 #endif
 
+#include "autopilot.hxx"
+
+#include <simgear/structure/StateMachine.hxx>
+#include <simgear/sg_inlines.h>
+
+#include "component.hxx"
 #include "functor.hxx"
 #include "predictor.hxx"
 #include "digitalfilter.hxx"
 #include "pisimplecontroller.hxx"
 #include "pidcontroller.hxx"
-#include "autopilot.hxx"
 #include "logic.hxx"
 #include "flipflop.hxx"
 
@@ -40,6 +45,40 @@ using std::map;
 using std::string;
 
 using namespace FGXMLAutopilot;
+
+class StateMachineComponent : public Component
+{
+public:
+  StateMachineComponent(SGPropertyNode_ptr config)
+  {
+    inner = simgear::StateMachine::createFromPlist(config, globals->get_props());
+  }
+  
+  virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr config)
+  {
+    return false;
+  }
+  
+  virtual void update( bool firstTime, double dt )
+  {
+    SG_UNUSED(firstTime);
+    inner->update(dt);
+  }
+  
+private:
+  simgear::StateMachine_ptr inner;
+};
+
+class StateMachineFunctor : public FunctorBase<Component>
+{
+public:
+  virtual ~StateMachineFunctor() {}
+  virtual Component* operator()( SGPropertyNode_ptr configNode )
+  {
+    return new StateMachineComponent(configNode);
+  }
+};
+
 
 class ComponentForge : public map<string,FunctorBase<Component> *> {
 public:
@@ -67,6 +106,7 @@ Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode
       componentForge["filter"]               = new CreateAndConfigureFunctor<DigitalFilter,Component>();
       componentForge["logic"]                = new CreateAndConfigureFunctor<Logic,Component>();
       componentForge["flipflop"]             = new CreateAndConfigureFunctor<FlipFlop,Component>();
+      componentForge["state-machine"]        = new StateMachineFunctor();
   }
 
   if( configNode == NULL ) configNode = rootNode;
