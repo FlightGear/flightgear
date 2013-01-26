@@ -231,7 +231,7 @@ list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
 find_package(PLIB REQUIRED puaux pu js fnt)
 
 if (EMBEDDED_SIMGEAR)
-    message(STATUS "Using embedded SimGear");
+    message(STATUS "Using embedded SimGear")
     # create the same variables that FindSimGear would define
     set(SIMGEAR_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/simgear)
     set(SIMGEAR_CORE_LIBRARIES SimGearCore)
