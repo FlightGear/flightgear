@@ -144,7 +144,7 @@ bool FGGeneric::gen_message_binary() {
         case FG_DOUBLE:
         {
             val = _out_message[i].offset +
-                 _out_message[i].prop->getFloatValue() * _out_message[i].factor;
+                 _out_message[i].prop->getDoubleValue() * _out_message[i].factor;
             u64 tmpun64;
             tmpun64.doubleVal = val;
 
