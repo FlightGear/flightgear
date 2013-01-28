@@ -780,11 +780,13 @@ void FGFunction::bind(void)
       }
     }
 
-    if (PropertyManager->HasNode(tmp)) {
-      cout << "Property " << tmp << " has already been successfully bound (late)." << endl;
-    } else {
+ // JMT commenting out on 2013/01/28 on advice of jentron - temporary fix
+ // for in-flux JSBSim property tie changes.
+ //   if (PropertyManager->HasNode(tmp)) {
+ //     cout << "Property " << tmp << " has already been successfully bound (late)." << endl;
+ //   } else {
     PropertyManager->Tie( tmp, this, &FGFunction::GetValue);
-    }
+ //   }
   }
 }
 
