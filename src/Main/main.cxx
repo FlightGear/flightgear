@@ -262,6 +262,16 @@ static void upper_case_property(const char *name)
     p->addChangeListener(new FGMakeUpperCase);
 }
 
+// see http://code.google.com/p/flightgear-bugs/issues/detail?id=385
+// for the details of this.
+static void ATIScreenSizeHack()
+{
+    osg::ref_ptr<osg::Camera> hackCam = new osg::Camera;
+    hackCam->setRenderOrder(osg::Camera::PRE_RENDER);
+    int prettyMuchAnyInt = 1;
+    hackCam->setViewport(0, 0, prettyMuchAnyInt, prettyMuchAnyInt);
+    globals->get_renderer()->addCamera(hackCam, false);
+}
 
 // Main top level initialization
 int fgMainInit( int argc, char **argv ) {
@@ -320,6 +330,11 @@ int fgMainInit( int argc, char **argv ) {
     fntInit();
     fgSplashInit();
 
+    if (fgGetBool("/sim/ati-viewport-hack", false)) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Enabling ATI viewport hack");
+        ATIScreenSizeHack();
+    }
+    
     // pass control off to the master event handler
     int result = fgOSMainLoop();
     
