@@ -27,7 +27,10 @@
 #include <sys/stat.h>
 #include "FGLinuxEventInput.hxx"
 
-#include <libudev.h>
+extern "C" {
+    #include <libudev.h>
+}
+
 #include <poll.h>
 #include <linux/input.h>
 #include <fcntl.h>
