@@ -68,6 +68,22 @@ FGEventHandler::FGEventHandler() :
     numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up] = '9';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Delete] = '.';
 
+#ifdef SG_MAC
+    // The comment above is incorrect on Mac osgViewer, at least. So we
+    // need to map the 'num-locked' key codes to real values.
+    numlockKeyMap[GUIEventAdapter::KEY_KP_0]  = '0';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_1] = '1';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_2] = '2';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_3] = '3';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_4] = '4';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_5] = '5';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_6] = '6';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_7] = '7';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_8] = '8';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_9] = '9';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Decimal] = '.';
+#endif
+    
     // mapping when NumLock is off
     noNumlockKeyMap[GUIEventAdapter::KEY_KP_Insert]     = PU_KEY_INSERT;
     noNumlockKeyMap[GUIEventAdapter::KEY_KP_End]        = PU_KEY_END;
