@@ -209,7 +209,8 @@ fgviewerMain(int argc, char** argv)
     options->getDatabasePathList() = filePathList;
     options->setMaterialLib(globals->get_matlib());
     options->setPropertyNode(globals->get_props());
-
+    options->setPluginStringData("SimGear::PREVIEW", "ON");
+    
     // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;
     loadedModel = osgDB::readNodeFiles(dataFiles, options);
