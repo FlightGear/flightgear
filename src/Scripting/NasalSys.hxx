@@ -186,7 +186,8 @@ private:
     naRef genPropsModule();
 
     naContext _context;
-    naRef _globals;
+    naRef _globals,
+          _string;
 
     SGPropertyNode_ptr _cmdArg;
 

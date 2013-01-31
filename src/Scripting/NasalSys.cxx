@@ -29,6 +29,7 @@
 #include "NasalCanvas.hxx"
 #include "NasalClipboard.hxx"
 #include "NasalCondition.hxx"
+#include "NasalString.hxx"
 
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
@@ -100,6 +101,7 @@ FGNasalSys::FGNasalSys()
     nasalSys = this;
     _context = 0;
     _globals = naNil();
+    _string = naNil();
     _gcHash = naNil();
     _nextGCKey = 0; // Any value will do
     _callCount = 0;
@@ -154,6 +156,7 @@ FGNasalSys::~FGNasalSys()
 
     naFreeContext(_context);
     _globals = naNil();
+    _string = naNil();
 }
 
 bool FGNasalSys::parseAndRun(const char* sourceCode)
@@ -547,8 +550,6 @@ void FGNasalSys::init()
         hashset(_globals, funcs[i].name,
                 naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
 
-
-  
     // And our SGPropertyNode wrapper
     hashset(_globals, "props", genPropsModule());
 
@@ -557,6 +558,11 @@ void FGNasalSys::init()
     // begin garbage-collected).
     _gcHash = naNewHash(_context);
     hashset(_globals, "__gcsave", _gcHash);
+
+    // Add string methods
+    _string = naInit_string(_context);
+    naSave(_context, _string);
+    initNasalString(_globals, _string, _context, _gcHash);
 
     initNasalPositioned(_globals, _context, _gcHash);
     NasalClipboard::init(this);
