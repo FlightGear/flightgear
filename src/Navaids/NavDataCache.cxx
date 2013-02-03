@@ -206,12 +206,7 @@ public:
   
   ~NavDataCachePrivate()
   {
-    BOOST_FOREACH(sqlite3_stmt_ptr stmt, prepared) {
-      sqlite3_finalize(stmt);
-    }
-    prepared.clear();
-    
-    sqlite3_close(db);
+    close();
   }
   
   void init()
@@ -255,6 +250,15 @@ public:
     q << "PRAGMA cache_size=-" << CACHE_SIZE_KBYTES << ";";
     runSQL(q.str());
     prepareQueries();
+  }
+  
+  void close()
+  {
+    BOOST_FOREACH(sqlite3_stmt_ptr stmt, prepared) {
+      sqlite3_finalize(stmt);
+    }
+    prepared.clear();
+    sqlite3_close(db);
   }
   
   void checkCacheFile()
@@ -1179,20 +1183,11 @@ bool NavDataCache::rebuild()
 void NavDataCache::doRebuild()
 {
   try {
-    Transaction txn(this);
-    d->runSQL("DELETE FROM positioned");
-    d->runSQL("DELETE FROM airport");
-    d->runSQL("DELETE FROM runway");
-    d->runSQL("DELETE FROM navaid");
-    d->runSQL("DELETE FROM comm");
-    d->runSQL("DELETE FROM octree");
-    d->runSQL("DELETE FROM airway");
-    d->runSQL("DELETE FROM airway_edge");
-    d->runSQL("DELETE FROM taxi_node");
-    d->runSQL("DELETE FROM parking");
-    d->runSQL("DELETE FROM groundnet_edge");
-    d->runSQL("DELETE FROM stat_cache");
+    d->close(); // completely close the sqlite object
+    d->path.remove(); // remove the file on disk
+    d->init(); // star again from scratch
     
+    Transaction txn(this);
   // initialise the root octree node
     d->runSQL("INSERT INTO octree (rowid, children) VALUES (1, 0)");
     
