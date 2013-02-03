@@ -453,6 +453,17 @@ FGGlobals::saveInitialState ()
   }
 }
 
+static std::string autosaveName()
+{
+    std::ostringstream os;
+    string_list versionParts = simgear::strutils::split(VERSION, ".");
+    if (versionParts.size() < 2) {
+        return "autosave.xml";
+    }
+    
+    os << "autosave_" << versionParts[0] << "_" << versionParts[1] << ".xml";
+    return os.str();
+}
 
 // Restore the saved initial state, if any
 void
@@ -483,7 +494,7 @@ FGGlobals::loadUserSettings(const SGPath& dataPath)
     // remember that we have (tried) to load any existing autsave.xml
     haveUserSettings = true;
 
-    SGPath autosaveFile = simgear::Dir(dataPath).file("autosave.xml");
+    SGPath autosaveFile = simgear::Dir(dataPath).file(autosaveName());
     SGPropertyNode autosave;
     if (autosaveFile.exists()) {
       SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << autosaveFile.str());
@@ -511,13 +522,13 @@ FGGlobals::saveUserSettings()
       haveUserSettings = false;
 
       SGPath autosaveFile(globals->get_fg_home());
-      autosaveFile.append( "autosave.xml" );
+      autosaveFile.append(autosaveName());
       autosaveFile.create_dir( 0700 );
       SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile.str());
       try {
         writeProperties(autosaveFile.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
       } catch (const sg_exception &e) {
-        guiErrorMessage("Error writing autosave.xml: ", e);
+        guiErrorMessage("Error writing autosave:", e);
       }
       SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
     }
