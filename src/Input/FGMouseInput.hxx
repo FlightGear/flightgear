@@ -45,7 +45,7 @@
 class ActivePickCallbacks : public std::map<int, std::list<SGSharedPtr<SGPickCallback> > > {
 public:
   void update( double dt );
-  void init( int b, const osgGA::GUIEventAdapter* ea );
+  void init( int button, const osgGA::GUIEventAdapter* ea );
 };
 
 

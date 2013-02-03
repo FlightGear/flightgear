@@ -61,7 +61,7 @@ public:
     panel(p)
   {}
   
-  virtual bool buttonPressed(int b, const Info& info)
+  virtual bool buttonPressed(int b, const osgGA::GUIEventAdapter*, const Info& info)
   {    
     button = b;
   // convert to panel coordinates

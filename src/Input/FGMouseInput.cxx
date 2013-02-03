@@ -27,11 +27,13 @@
 #endif
 
 #include "FGMouseInput.hxx"
+
+#include <osgGA/GUIEventAdapter>
 #include "Main/globals.hxx"
 
 using std::ios_base;
 
-void ActivePickCallbacks::init( int b, const osgGA::GUIEventAdapter* ea )
+void ActivePickCallbacks::init( int button, const osgGA::GUIEventAdapter* ea )
 {
   // Get the list of hit callbacks. Take the first callback that
   // accepts the mouse button press and ignore the rest of them
@@ -39,13 +41,15 @@ void ActivePickCallbacks::init( int b, const osgGA::GUIEventAdapter* ea )
   // The nearest one is the first one and the deepest
   // (the most specialized one in the scenegraph) is the first.
   std::vector<SGSceneryPick> pickList;
-  if (globals->get_renderer()->pick(pickList, ea)) {
-    std::vector<SGSceneryPick>::const_iterator i;
-    for (i = pickList.begin(); i != pickList.end(); ++i) {
-      if (i->callback->buttonPressed(b, i->info)) {
-          (*this)[b].push_back(i->callback);
-          return;
-      }
+  if (!globals->get_renderer()->pick(pickList, ea)) {
+    return;
+  }
+
+  std::vector<SGSceneryPick>::const_iterator i;
+  for (i = pickList.begin(); i != pickList.end(); ++i) {
+    if (i->callback->buttonPressed(button, ea, i->info)) {
+        (*this)[button].push_back(i->callback);
+        return;
     }
   }
 }
