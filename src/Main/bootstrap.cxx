@@ -120,7 +120,7 @@ static void initFPE()
 }
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(_WIN32)
 int main ( int argc, char **argv );
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                              LPSTR lpCmdLine, int nCmdShow) {
@@ -165,7 +165,7 @@ int _bootstrap_OSInit;
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv )
 {
-#if _MSC_VER
+#if defined(_MSC_VER) || defined(_WIN32) 
   // Don't show blocking "no disk in drive" error messages on Windows 7,
   // silently return errors to application instead.
   // See Microsoft MSDN #ms680621: "GUI apps should specify SEM_NOOPENFILEERRORBOX"
