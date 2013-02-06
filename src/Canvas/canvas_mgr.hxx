@@ -38,6 +38,12 @@ class CanvasMgr:
      * @return OpenGL texture name
      */
     unsigned int getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const;
+
+  protected:
+
+    SGPropertyChangeCallback<CanvasMgr> _cb_model_reinit;
+
+    void handleModelReinit(SGPropertyNode*);
 };
 
 #endif /* CANVAS_MGR_H_ */

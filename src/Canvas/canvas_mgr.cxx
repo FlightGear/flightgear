@@ -25,15 +25,22 @@
 
 #include <simgear/canvas/Canvas.hxx>
 
+using simgear::canvas::Canvas;
+
 //------------------------------------------------------------------------------
 CanvasMgr::CanvasMgr():
   simgear::canvas::CanvasMgr
   (
    fgGetNode("/canvas/by-index", true),
    simgear::canvas::SystemAdapterPtr( new canvas::FGCanvasSystemAdapter )
+  ),
+  _cb_model_reinit
+  (
+    this,
+    &CanvasMgr::handleModelReinit,
+    fgGetNode("/sim/signals/model-reinit", true)
   )
 {
-  using simgear::canvas::Canvas;
   Canvas::addPlacementFactory
   (
     "object",
@@ -74,4 +81,12 @@ CanvasMgr::getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const
     return 0;
 
   return tobj->_id;
+}
+
+//----------------------------------------------------------------------------
+void CanvasMgr::handleModelReinit(SGPropertyNode*)
+{
+  for(size_t i = 0; i < _elements.size(); ++i)
+    boost::static_pointer_cast<Canvas>(_elements[i])
+      ->reloadPlacements("object");
 }

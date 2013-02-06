@@ -102,6 +102,8 @@ FGAircraftModel::reinit()
   deinit();
   _fx->reinit();
   init();
+  // TODO globally create signals for all subsystems (re)initialized
+  fgSetBool("/sim/signals/model-reinit", true);
 }
 
 void
