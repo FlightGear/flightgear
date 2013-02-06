@@ -313,6 +313,18 @@ int fgMainInit( int argc, char **argv ) {
       SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
       exit(-1);
     }
+  
+    SGPath logPath = globals->get_fg_home();
+    logPath.append("fgfs.log");
+    if (logPath.exists()) {
+        SGPath prevLogPath = globals->get_fg_home();
+        prevLogPath.append("fgfs_0.log");
+        logPath.rename(prevLogPath);
+    // bit strange, we need to restore the correct value of logPath now
+        logPath = globals->get_fg_home();
+        logPath.append("fgfs.log");
+    }
+    sglog().logToFile(logPath, SG_ALL, SG_INFO);
 
     // Initialize the Window/Graphics environment.
     fgOSInit(&argc, argv);
