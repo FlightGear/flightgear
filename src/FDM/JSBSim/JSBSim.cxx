@@ -167,16 +167,16 @@ FGJSBsim::FGJSBsim( double dt )
         TURBULENCE_TYPE_NAMES["ttTustin"]   = FGWinds::ttTustin;
     }
 
-                                // Set up the debugging level
-                                // FIXME: this will not respond to
-                                // runtime changes
+    // Set up the debugging level
+    // FIXME: this will not respond to
+    // runtime changes
 
                                 // if flight is excluded, don't bother
-    if ((logbuf::get_log_classes() & SG_FLIGHT) != 0) {
+    if ((sglog().get_log_classes() & SG_FLIGHT) != 0) {
 
                                 // do a rough-and-ready mapping to
                                 // the levels documented in FGFDMExec.h
-        switch (logbuf::get_log_priority()) {
+        switch (sglog().get_log_priority()) {
         case SG_BULK:
             FGJSBBase::debug_lvl = 0x1f;
             break;

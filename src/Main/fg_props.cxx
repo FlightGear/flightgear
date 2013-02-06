@@ -97,7 +97,7 @@ string loggingResult;
 static const char *
 getLoggingClasses ()
 {
-  sgDebugClass classes = logbuf::get_log_classes();
+  sgDebugClass classes = sglog().get_log_classes();
   loggingResult.clear();
   for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
     if ((classes&log_class_mappings[i].c) > 0) {
@@ -113,10 +113,10 @@ getLoggingClasses ()
 static void
 addLoggingClass (const string &name)
 {
-  sgDebugClass classes = logbuf::get_log_classes();
+  sgDebugClass classes = sglog().get_log_classes();
   for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
     if (name == log_class_mappings[i].name) {
-      logbuf::set_log_classes(sgDebugClass(classes|log_class_mappings[i].c));
+      sglog().set_log_classes(sgDebugClass(classes|log_class_mappings[i].c));
       return;
     }
   }
@@ -131,7 +131,7 @@ void
 setLoggingClasses (const char * c)
 {
   string classes = c;
-  logbuf::set_log_classes(SG_NONE);
+  sglog().set_log_classes(SG_NONE);
 
   if (classes == "none") {
     SG_LOG(SG_GENERAL, SG_INFO, "Disabled all logging classes");
@@ -139,7 +139,7 @@ setLoggingClasses (const char * c)
   }
 
   if (classes.empty() || classes == "all") { // default
-    logbuf::set_log_classes(SG_ALL);
+    sglog().set_log_classes(SG_ALL);
     SG_LOG(SG_GENERAL, SG_INFO, "Enabled all logging classes: "
 	   << getLoggingClasses());
     return;
@@ -170,7 +170,7 @@ setLoggingClasses (const char * c)
 static const char *
 getLoggingPriority ()
 {
-  switch (logbuf::get_log_priority()) {
+  switch (sglog().get_log_priority()) {
   case SG_BULK:
     return "bulk";
   case SG_DEBUG:
@@ -183,7 +183,7 @@ getLoggingPriority ()
     return "alert";
   default:
     SG_LOG(SG_GENERAL, SG_WARN, "Internal: Unknown logging priority number: "
-	   << logbuf::get_log_priority());
+	   << sglog().get_log_priority());
     return "unknown";
   }
 }
@@ -199,15 +199,15 @@ setLoggingPriority (const char * p)
       return;
   string priority = p;
   if (priority == "bulk") {
-    logbuf::set_log_priority(SG_BULK);
+    sglog().set_log_priority(SG_BULK);
   } else if (priority == "debug") {
-    logbuf::set_log_priority(SG_DEBUG);
+    sglog().set_log_priority(SG_DEBUG);
   } else if (priority.empty() || priority == "info") { // default
-    logbuf::set_log_priority(SG_INFO);
+    sglog().set_log_priority(SG_INFO);
   } else if (priority == "warn") {
-    logbuf::set_log_priority(SG_WARN);
+    sglog().set_log_priority(SG_WARN);
   } else if (priority == "alert") {
-    logbuf::set_log_priority(SG_ALERT);
+    sglog().set_log_priority(SG_ALERT);
   } else {
     SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging priority " << priority);
   }
