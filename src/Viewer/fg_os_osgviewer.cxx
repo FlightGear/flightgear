@@ -42,6 +42,7 @@
 #include <osg/Matrixd>
 #include <osg/Viewport>
 #include <osg/Version>
+#include <osg/Notify>
 #include <osg/View>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgViewer/Viewer>
@@ -175,8 +176,42 @@ static const char * getStereoMode()
     return "OFF";
 }
 
+/**
+ * merge OSG output into our logging system, so it gets recorded to file,
+ * and so we can display a GUI console with renderer issues, especially
+ * shader compilation warnings and errors.
+ */
+class NotifyLogger : public osg::NotifyHandler
+{
+public:
+  // note this callback will be invoked by OSG from multiple threads.
+  // fortunately our Simgear logging implementation already handles
+  // that internally, so we simply pass the message on.
+  virtual void notify(osg::NotifySeverity severity, const char *message)
+  {
+    SG_LOG(SG_GL, translateSeverity(severity), message);
+  }
+  
+private:
+  sgDebugPriority translateSeverity(osg::NotifySeverity severity)
+  {
+    switch (severity) {
+      case osg::ALWAYS:
+      case osg::FATAL:  return SG_ALERT;
+      case osg::WARN:   return SG_WARN;
+      case osg::NOTICE:
+      case osg::INFO:   return SG_INFO;
+      case osg::DEBUG_FP:
+      case osg::DEBUG_INFO: return SG_DEBUG;
+    }
+  }
+};
+
 void fgOSOpenWindow(bool stencil)
 {
+    osg::setNotifyHandler(new NotifyLogger);
+    //osg::setNotifyLevel(osg::DEBUG_INFO);
+  
     viewer = new osgViewer::Viewer;
     viewer->setDatabasePager(FGScenery::getPagerSingleton());
     CameraGroup* cameraGroup = 0;
