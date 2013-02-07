@@ -25,6 +25,7 @@
 #endif
 
 #include <cstring>
+#include <cstdio>
 #include <Main/fg_props.hxx>
 
 #include <simgear/constants.h>

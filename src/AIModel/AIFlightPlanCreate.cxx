@@ -23,6 +23,7 @@
 #endif
 
 #include <cstdlib>
+#include <cstdio>
 
 #include "AIFlightPlan.hxx"
 #include <simgear/math/sg_geodesy.hxx>

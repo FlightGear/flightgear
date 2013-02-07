@@ -16,9 +16,8 @@
 #include <iostream>
 #include <iomanip>
 
-#ifdef TEST_DEBUG
+
 #include <stdio.h>
-#endif
 #include <string.h>
 #include <iostream>
 #include <sstream>

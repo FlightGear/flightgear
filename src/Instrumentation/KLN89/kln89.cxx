@@ -50,6 +50,8 @@
 #include <simgear/structure/commands.hxx>
 #include <Airports/simple.hxx>
 
+#include <cstdio>
+
 using std::cout;
 using std::string;
 

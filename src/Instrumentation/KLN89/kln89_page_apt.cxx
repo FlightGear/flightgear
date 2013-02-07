@@ -29,6 +29,7 @@
 
 #include <simgear/structure/exception.hxx>
 #include <cassert>
+#include <cstdio>
 
 #include <ATC/CommStation.hxx>
 #include <Main/globals.hxx>

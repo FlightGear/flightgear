@@ -4,6 +4,7 @@
 #endif
 
 #include <cstdlib>
+#include <cstdio>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>

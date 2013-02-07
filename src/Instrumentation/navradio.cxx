@@ -25,6 +25,7 @@
 
 #include <sstream>
 #include <cstring>
+#include <cstdio>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/timing/sg_time.hxx>

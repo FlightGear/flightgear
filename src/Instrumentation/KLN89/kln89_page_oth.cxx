@@ -25,6 +25,8 @@
 #  include "config.h"
 #endif
 
+#include <cstdio>
+
 #include "kln89_page_oth.hxx"
 
 using std::string;

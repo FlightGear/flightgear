@@ -23,6 +23,8 @@
 #  include "config.h"
 #endif
 
+#include <cstdio>
+
 #include "kln89_page_alt.hxx"
 
 using std::string;

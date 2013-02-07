@@ -25,6 +25,7 @@
 #  include "config.h"
 #endif
 
+#include <cstdio>
 #include <float.h>
 
 #include <simgear/constants.h>

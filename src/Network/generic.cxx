@@ -26,6 +26,7 @@
 
 #include <string.h>                // strstr()
 #include <stdlib.h>                // strtod(), atoi()
+#include <cstdio>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>

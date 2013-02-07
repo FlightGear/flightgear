@@ -26,6 +26,7 @@
 #endif
 
 #include <cstdlib>
+#include <cstdio>
 
 #include "kln89_page_nav.hxx"
 #include <Main/fg_props.hxx>

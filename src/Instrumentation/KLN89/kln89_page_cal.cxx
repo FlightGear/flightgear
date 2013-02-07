@@ -26,6 +26,7 @@
 #endif
 
 #include <cstdlib>
+#include <cstdio>
 
 #include <Main/fg_props.hxx>
 #include "kln89_page_cal.hxx"

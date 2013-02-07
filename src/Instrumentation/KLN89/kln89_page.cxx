@@ -24,6 +24,8 @@
 #include "kln89_page.hxx"
 #include <Main/fg_props.hxx>
 
+#include <cstdio>
+
 using std::string;
 
 KLN89Page::KLN89Page(KLN89* parent) {

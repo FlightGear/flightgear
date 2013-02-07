@@ -41,6 +41,7 @@
 #include <math.h>
 
 #include <string>
+#include <cstdio>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>

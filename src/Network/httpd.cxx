@@ -31,6 +31,7 @@
 #include <algorithm>		// sort()
 #include <cstdlib>		// atoi() atof()
 #include <cstring>
+#include <cstdio>
 #include <string>
 
 #include <simgear/debug/logstream.hxx>

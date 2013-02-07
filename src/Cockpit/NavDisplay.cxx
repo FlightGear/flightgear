@@ -46,6 +46,7 @@
 #include <simgear/misc/strutils.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
+#include <cstdio>
 #include <sstream>
 #include <iomanip>
 #include <iostream>             // for cout, endl

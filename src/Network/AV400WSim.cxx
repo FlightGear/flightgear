@@ -41,6 +41,8 @@
 #  include "config.h"
 #endif
 
+#include <cstdio>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/io/iochannel.hxx>

@@ -9,6 +9,8 @@
 #  include <config.h>
 #endif
 
+#include <cstdio>
+
 #include "clock.hxx"
 #include <simgear/timing/sg_time.hxx>
 #include <Main/fg_props.hxx>

@@ -31,6 +31,8 @@
 #include <time.h>
 #endif
 
+#include <cstdio>
+
 #include <simgear/compiler.h>
 
 #include "route_mgr.hxx"

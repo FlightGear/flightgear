@@ -25,6 +25,7 @@
 #endif
 
 #include <algorithm>
+#include <cstdio>
 
 #include <osg/Geode>
 #include <osg/Geometry>

@@ -57,8 +57,8 @@ main(int argc, char** argv)
     // FIXME implement a flightgear similar argument parser into simgear and use this one
     osg::ArgumentParser arguments(&argc, argv);
 
-    logbuf::set_log_classes(SG_ALL);
-    logbuf::set_log_priority(SG_ALERT);
+    sglog().set_log_classes(SG_ALL);
+    sglog().set_log_priority(SG_ALERT);
 
     std::string fg_root;
     if (arguments.read("--fg-root", fg_root)) {

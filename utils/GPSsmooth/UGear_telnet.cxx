@@ -27,6 +27,7 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/strutils.hxx>
 
+#include <cstdio>
 #include <sstream>
 
 #include "UGear_command.hxx"

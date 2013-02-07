@@ -17,6 +17,8 @@
 #  include "config.h"
 #endif
 
+#include <cstdio>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/misc/strutils.hxx>

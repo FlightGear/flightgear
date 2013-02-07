@@ -38,6 +38,7 @@
 
 #include <errno.h>
 #include <math.h>
+#include <cstdio>
 
 #include <string>
 

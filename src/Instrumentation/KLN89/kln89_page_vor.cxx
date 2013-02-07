@@ -25,6 +25,8 @@
 #  include "config.h"
 #endif
 
+#include <cstdio>
+
 #include "kln89_page_vor.hxx"
 #include <Navaids/navrecord.hxx>
 
