@@ -52,6 +52,8 @@ class GUIMgr:
 
     osg::ref_ptr<GUIEventHandler>       _event_handler;
     osg::ref_ptr<osg::MatrixTransform>  _transform;
+    SGPropertyChangeCallback<GUIMgr>    _cb_mouse_mode;
+    bool                                _handle_events;
 
     simgear::PropertyObject<int>        _width,
                                         _height;
@@ -68,10 +70,11 @@ class GUIMgr:
 
     canvas::WindowPtr getWindow(size_t i);
     simgear::canvas::Placements
-    addPlacement(SGPropertyNode*, simgear::canvas::CanvasPtr canvas );
+    addPlacement(SGPropertyNode*, simgear::canvas::CanvasPtr canvas);
 
     bool handleMouse(const osgGA::GUIEventAdapter& ea);
     void handleResize(int x, int y, int width, int height);
+    void handleMouseMode(SGPropertyNode* node);
 };
 
 #endif /* CANVAS_GUI_MGR_HXX_ */

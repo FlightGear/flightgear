@@ -57,6 +57,7 @@ namespace canvas
       simgear::canvas::CanvasWeakPtr getCanvas() const;
 
       bool isResizable() const;
+      bool isCapturingEvents() const;
 
       bool handleMouseEvent(const simgear::canvas::MouseEventPtr& event);
 
@@ -67,7 +68,8 @@ namespace canvas
     protected:
 
       simgear::canvas::Image _image;
-      bool _resizable;
+      bool _resizable,
+           _capture_events;
 
       simgear::PropertyObject<int> _resize_top,
                                    _resize_right,

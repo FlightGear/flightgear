@@ -118,6 +118,10 @@ GUIMgr::GUIMgr():
                     &windowFactory ),
   _event_handler( new GUIEventHandler(this) ),
   _transform( new osg::MatrixTransform ),
+  _cb_mouse_mode( this,
+                  &GUIMgr::handleMouseMode,
+                  fgGetNode("/devices/status/mice/mouse[0]/mode") ),
+  _handle_events(true),
   _width(_props, "size[0]"),
   _height(_props, "size[1]"),
   _resize(canvas::Window::NONE),
@@ -286,7 +290,7 @@ const float resize_corner = 20;
 //------------------------------------------------------------------------------
 bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
 {
-  if( !_transform->getNumChildren() )
+  if( !_transform->getNumChildren() || !_handle_events )
     return false;
 
   namespace sc = simgear::canvas;
@@ -340,6 +344,10 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       canvas::WindowPtr window =
         static_cast<WindowUserData*>(layer->getChild(j)->getUserData())
           ->window.lock();
+
+      if( !window->isCapturingEvents() )
+        continue;
+
       float margin = window->isResizable() ? resize_margin_pos : 0;
       if( window->getRegion().contains( event->getScreenX(),
                                         event->getScreenY(),
@@ -504,4 +512,12 @@ void GUIMgr::handleResize(int x, int y, int width, int height)
     0,  0, 1, 0,
     0, _height, 0, 1
   ));
+}
+
+//------------------------------------------------------------------------------
+void GUIMgr::handleMouseMode(SGPropertyNode* node)
+{
+  // pass-through indicates events should pass through to the UI
+  _handle_events = fgGetNode("/input/mice/mouse[0]/mode", node->getIntValue())
+                     ->getBoolValue("pass-through");
 }

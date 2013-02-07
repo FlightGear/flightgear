@@ -32,6 +32,7 @@ namespace canvas
             node,
             simgear::canvas::Style() ),
     _resizable(false),
+    _capture_events(true),
     _resize_top(node, "resize-top"),
     _resize_right(node, "resize-right"),
     _resize_bottom(node, "resize-bottom"),
@@ -74,6 +75,8 @@ namespace canvas
         doRaise(node);
       else if( node->getNameString()  == "resize" )
         _resizable = node->getBoolValue();
+      else if( node->getNameString() == "capture-events" )
+        _capture_events = node->getBoolValue();
       else
         handled = false;
     }
@@ -110,6 +113,12 @@ namespace canvas
   bool Window::isResizable() const
   {
     return _resizable;
+  }
+
+  //----------------------------------------------------------------------------
+  bool Window::isCapturingEvents() const
+  {
+    return _capture_events;
   }
 
   //----------------------------------------------------------------------------
