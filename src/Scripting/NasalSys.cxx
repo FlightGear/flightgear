@@ -314,6 +314,27 @@ static naRef f_print(naContext c, naRef me, int argc, naRef* args)
     return naNum(buf.length());
 }
 
+// logprint() extension function.  Same as above, all arguments after the
+// first argument are concatenated. Argument 0 is the log-level, matching
+// sgDebugPriority.
+static naRef f_logprint(naContext c, naRef me, int argc, naRef* args)
+{
+  if (argc < 1)
+    naRuntimeError(c, "no prioirty argument to logprint()");
+  
+  naRef priority = args[0];
+  string buf;
+  int n = argc;
+  for(int i=1; i<n; i++) {
+    naRef s = naStringValue(c, args[i]);
+    if(naIsNil(s)) continue;
+    buf += naStr_data(s);
+  }
+  SG_LOG(SG_NASAL, (sgDebugPriority) priority.num, buf);
+  return naNum(buf.length());
+}
+
+
 // fgcommand() extension function.  Executes a named command via the
 // FlightGear command manager.  Takes a single property node name as
 // an argument.
@@ -504,6 +525,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
     { "setprop",   f_setprop },
     { "print",     f_print },
+    { "logprint",  f_logprint },
     { "_fgcommand", f_fgcommand },
     { "settimer",  f_settimer },
     { "_setlistener", f_setlistener },
