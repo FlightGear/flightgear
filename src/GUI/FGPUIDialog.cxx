@@ -6,6 +6,8 @@
 
 #include <simgear/structure/SGBinding.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/debug/BufferedLogCallback.hxx>
+#include <simgear/scene/tsync/terrasync.hxx>
 
 #include <Scripting/NasalSys.hxx>
 #include <Main/fg_os.hxx>
@@ -160,6 +162,25 @@ public:
   virtual void recalc_bbox();
 private:
   bool _inHit;
+};
+
+class LogList : public puaList, public FGPUIDialog::ActiveWidget, public GUI_ID {
+public:
+    LogList(int x1, int y1, int x2, int y2, int sw) :
+        puaList(x1, y1, x2, y2, sw),
+        GUI_ID(FGCLASS_LOGLIST)
+    {
+        m_buffer = NULL;
+        m_stamp = 0;
+    }
+    
+    void setBuffer(simgear::BufferedLogCallback* buf);
+    
+    virtual void update();
+private:
+    std::vector<unsigned char*> m_items;
+    simgear::BufferedLogCallback* m_buffer;
+    unsigned int m_stamp;
 };
 
 class fgSelectBox : public fgValueList, public puaSelectBox {
@@ -749,6 +770,10 @@ FGPUIDialog::update ()
     _conditionalObjects[j]->update(this);
   }
   
+  for (unsigned int i = 0; i < _activeWidgets.size(); i++) {
+    _activeWidgets[i]->update();
+  }
+  
   if (_needsRelayout) {
     relayout();
   }
@@ -1023,6 +1048,21 @@ FGPUIDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeigh
     } else if (type == "waypointlist") {
         ScrolledWaypointList* obj = new ScrolledWaypointList(x, y, width, height);
         setupObject(obj, props);
+        return obj;
+        
+    } else if (type == "loglist") {
+        LogList* obj = new LogList(x, y, width, height, 20);
+        string logClass = props->getStringValue("logclass");
+        if (logClass == "terrasync") {
+          simgear::SGTerraSync* tsync = (simgear::SGTerraSync*) globals->get_subsystem("terrasync");
+          obj->setBuffer(tsync->log());
+        } else {
+          FGNasalSys* nasal = (FGNasalSys*) globals->get_subsystem("nasal");
+          obj->setBuffer(nasal->log());
+        }
+
+        setupObject(obj, props);
+        _activeWidgets.push_back(obj);
         return obj;
     } else {
         return 0;
@@ -1473,6 +1513,34 @@ fgList::update()
     newList(_list);
     setTopItem(top);
 }
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of fgLogList
+////////////////////////////////////////////////////////////////////////
+
+void LogList::update()
+{
+    if (!m_buffer) return;
+    
+    if (m_stamp != m_buffer->stamp()) {
+        m_stamp = m_buffer->threadsafeCopy(m_items);
+        m_items.push_back(NULL); // terminator value
+        newList((char**) m_items.data());
+        setTopItem(m_items.size() - 1); // scroll to bottom of list
+    }
+}
+
+void LogList::setBuffer(simgear::BufferedLogCallback* buf)
+{
+    m_buffer = buf;
+    m_stamp = m_buffer->stamp() - 1; // force an update
+    update();
+}
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of fgComboBox 
+////////////////////////////////////////////////////////////////////////
+
 
 void fgComboBox::update()
 {

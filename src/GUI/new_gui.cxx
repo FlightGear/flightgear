@@ -142,6 +142,7 @@ NewGUI::unbind ()
 void
 NewGUI::update (double delta_time_sec)
 {
+    SG_UNUSED(delta_time_sec);
     map<string,FGDialog *>::iterator iter = _active_dialogs.begin();
     for(/**/; iter != _active_dialogs.end(); iter++)
         iter->second->update();

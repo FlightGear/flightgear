@@ -27,6 +27,7 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/debug/BufferedLogCallback.hxx>
 
 #include "NasalSys.hxx"
 #include "NasalPositioned.hxx"
@@ -109,6 +110,10 @@ FGNasalSys::FGNasalSys()
     _gcHash = naNil();
     _nextGCKey = 0; // Any value will do
     _callCount = 0;
+    
+    _log = new simgear::BufferedLogCallback(SG_NASAL, SG_INFO);
+    _log->truncateAt(255);
+    sglog().addCallback(_log);
 }
 
 // Utility.  Sets a named key in a hash by C string, rather than nasal

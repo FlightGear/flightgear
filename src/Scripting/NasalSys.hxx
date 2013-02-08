@@ -16,6 +16,8 @@ class FGNasalScript;
 class FGNasalListener;
 class SGCondition;
 
+namespace simgear { class BufferedLogCallback; }
+
 /** Nasal model data container.
  * load and unload methods must be run in main thread (not thread-safe). */
 class FGNasalModelData : public SGReferenced
@@ -151,6 +153,11 @@ public:
     // when done.
     int gcSave(naRef r);
     void gcRelease(int key);
+    
+    /// retrive the associated log object, for displaying log
+    /// output somewhere (a UI, presumably)
+    simgear::BufferedLogCallback* log() const
+    { return _log; }
 private:
     friend class FGNasalScript;
     friend class FGNasalListener;
@@ -195,7 +202,9 @@ private:
     naRef _gcHash;
     int _callCount;
 
-    public: void handleTimer(NasalTimer* t);
+    simgear::BufferedLogCallback* _log;
+public:
+    void handleTimer(NasalTimer* t);
 };
 
 

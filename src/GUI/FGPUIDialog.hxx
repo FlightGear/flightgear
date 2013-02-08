@@ -100,6 +100,12 @@ public:
     void setNeedsLayout() {
       _needsRelayout = true;
     }
+    
+    class ActiveWidget
+    {
+    public:
+        virtual void update() = 0;
+    };
 private:
 
     enum {
@@ -191,6 +197,8 @@ private:
     
     typedef SGSharedPtr<ConditionalObject> ConditionalObjectRef;
     std::vector<ConditionalObjectRef> _conditionalObjects;
+    
+    std::vector<ActiveWidget*> _activeWidgets;
 };
 
 #endif // __DIALOG_HXX
