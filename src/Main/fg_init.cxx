@@ -390,23 +390,26 @@ static SGPath platformDefaultDataPath()
 #else
 static SGPath platformDefaultDataPath()
 {
-  SGPath config( homedir );
+  SGPath config( getenv("HOME") );
   config.append( ".fgfs" );
   return config;
 }
 #endif
 
+void fgInitHome()
+{
+    SGPath dataPath = platformDefaultDataPath();
+    const char *fg_home = getenv("FG_HOME");
+    if (fg_home)
+        dataPath = fg_home;
+    
+    globals->set_fg_home(dataPath.c_str());
+}
+
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv )
 {
-    SGPath dataPath = platformDefaultDataPath();
-    
-    const char *fg_home = getenv("FG_HOME");
-    if (fg_home)
-      dataPath = fg_home;
-      
-    globals->set_fg_home(dataPath.c_str());
-    
+    SGPath dataPath = globals->get_fg_home();
     simgear::Dir exportDir(simgear::Dir(dataPath).file("Export"));
     if (!exportDir.exists()) {
       exportDir.create(0777);

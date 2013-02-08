@@ -23,7 +23,6 @@
 
 int fgMainInit( int argc, char **argv );
 
-extern std::string homedir;
 extern std::string hostname;
 
 #endif

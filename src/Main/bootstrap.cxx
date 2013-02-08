@@ -163,16 +163,13 @@ static void fg_terminate() {
 int _bootstrap_OSInit;
 
 // Main entry point; catch any exceptions that have made it this far.
-int main ( int argc, char **argv ) {
+int main ( int argc, char **argv )
+{
 #if _MSC_VER
   // Don't show blocking "no disk in drive" error messages on Windows 7,
   // silently return errors to application instead.
   // See Microsoft MSDN #ms680621: "GUI apps should specify SEM_NOOPENFILEERRORBOX"
   SetErrorMode(SEM_NOOPENFILEERRORBOX);
-
-  // Windows has no $HOME aka %HOME%, so we have to construct the full path.
-  homedir = ::getenv("APPDATA");
-  homedir.append("\\flightgear.org");
 
   hostname = ::getenv( "COMPUTERNAME" );
 #else
@@ -180,9 +177,7 @@ int main ( int argc, char **argv ) {
   char _hostname[256];
   gethostname(_hostname, 256);
   hostname = _hostname;
-  
-  homedir = ::getenv( "HOME" );
-  
+    
   signal(SIGPIPE, SIG_IGN);
 #endif
 

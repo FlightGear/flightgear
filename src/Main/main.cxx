@@ -273,12 +273,34 @@ static void ATIScreenSizeHack()
     globals->get_renderer()->addCamera(hackCam, false);
 }
 
+
+static void logToFile()
+{
+    SGPath logPath = globals->get_fg_home();
+    logPath.append("fgfs.log");
+    if (logPath.exists()) {
+        SGPath prevLogPath = globals->get_fg_home();
+        prevLogPath.append("fgfs_0.log");
+        logPath.rename(prevLogPath);
+        // bit strange, we need to restore the correct value of logPath now
+        logPath = globals->get_fg_home();
+        logPath.append("fgfs.log");
+    }
+    sglog().logToFile(logPath, SG_ALL, SG_INFO);
+}
+
 // Main top level initialization
 int fgMainInit( int argc, char **argv ) {
 
     // set default log levels
     sglog().setLogLevels( SG_ALL, SG_ALERT );
 
+    globals = new FGGlobals;
+    fgInitHome();
+    
+    // now home is initialised, we can log to a file inside it
+    logToFile();
+    
     string version;
 #ifdef FLIGHTGEAR_VERSION
     version = FLIGHTGEAR_VERSION;
@@ -292,8 +314,8 @@ int fgMainInit( int argc, char **argv ) {
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
 
-    globals = new FGGlobals;
-
+    
+    
     // seed the random number generator
     sg_srandom_time();
 
@@ -313,18 +335,6 @@ int fgMainInit( int argc, char **argv ) {
       SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
       exit(-1);
     }
-  
-    SGPath logPath = globals->get_fg_home();
-    logPath.append("fgfs.log");
-    if (logPath.exists()) {
-        SGPath prevLogPath = globals->get_fg_home();
-        prevLogPath.append("fgfs_0.log");
-        logPath.rename(prevLogPath);
-    // bit strange, we need to restore the correct value of logPath now
-        logPath = globals->get_fg_home();
-        logPath.append("fgfs.log");
-    }
-    sglog().logToFile(logPath, SG_ALL, SG_INFO);
 
     // Initialize the Window/Graphics environment.
     fgOSInit(&argc, argv);

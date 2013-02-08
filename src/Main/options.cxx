@@ -1745,6 +1745,8 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 // then config files
   SGPath config;
   
+  std::string homedir(getenv("HOME"));
+    
   if( homedir.size() && hostname.size() ) {
     // Check for ~/.fgfsrc.hostname
     config.set(homedir);

@@ -34,6 +34,7 @@ class SGPath;
 // Return the current base package version
 std::string fgBasePackageVersion();
 
+void fgInitHome();
 
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv );
