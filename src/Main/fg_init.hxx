@@ -40,6 +40,9 @@ void fgInitHome();
 bool fgInitConfig ( int argc, char **argv );
 
 
+// log various settings / configuration state
+void fgOutputSettings();
+
 // Initialize the localization
 SGPropertyNode *fgInitLocale(const char *language);
 

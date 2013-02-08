@@ -527,6 +527,20 @@ bool fgInitGeneral() {
     return true;
 }
 
+// Write various configuraton values out to the logs
+void fgOutputSettings()
+{    
+    SG_LOG( SG_GENERAL, SG_INFO, "Configuration State" );
+    SG_LOG( SG_GENERAL, SG_INFO, "======= ==============" );
+    
+    SG_LOG( SG_GENERAL, SG_INFO, "aircraft-dir = " << '"' << fgGetString("/sim/aircraft-dir") << '"' );
+    SG_LOG( SG_GENERAL, SG_INFO, "fghome-dir = " << '"' << globals->get_fg_home() << '"');
+    SG_LOG( SG_GENERAL, SG_INFO, "aircraft-dir = " << '"' << fgGetString("/sim/aircraft-dir") << '"');
+    
+    SG_LOG( SG_GENERAL, SG_INFO, "aircraft-search-paths = \n\t" << simgear::strutils::join(globals->get_aircraft_paths(), "\n\t") );
+    SG_LOG( SG_GENERAL, SG_INFO, "scenary-search-paths = \n\t" << simgear::strutils::join(globals->get_fg_scenery(), "\n\t") );
+}
+
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.

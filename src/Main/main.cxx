@@ -357,6 +357,8 @@ int fgMainInit( int argc, char **argv ) {
         ATIScreenSizeHack();
     }
     
+    fgOutputSettings();
+    
     // pass control off to the master event handler
     int result = fgOSMainLoop();
     
