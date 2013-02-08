@@ -125,7 +125,6 @@ int main ( int argc, char **argv );
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                              LPSTR lpCmdLine, int nCmdShow) {
 
-  logbuf::has_no_console();
   main( __argc, __argv );
 }
 #endif
