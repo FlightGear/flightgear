@@ -1,6 +1,7 @@
 
 #include "NasalModelData.hxx"
 
+#include <cstring> // for strlen
 #include <simgear/debug/logstream.hxx>
 
 #include "NasalSys.hxx"
