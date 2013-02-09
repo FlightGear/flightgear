@@ -18,7 +18,10 @@
 #include <config.h>
 #endif
 
+#include <cstdio>
+
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include "AIObject.hxx"
 #include "AIManager.hxx"
@@ -547,8 +550,8 @@ main(int argc, char* argv[])
             manager->setFederationObjectModel(optarg);
             break;
         case 'p':
-            logbuf::set_log_classes(SG_ALL);
-            logbuf::set_log_priority(sgDebugPriority(atoi(optarg)));
+            sglog().set_log_classes(SG_ALL);
+            sglog().set_log_priority(sgDebugPriority(atoi(optarg)));
             break;
         case 'R':
             manager->setTimeRegulating(true);
