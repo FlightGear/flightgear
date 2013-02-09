@@ -8,7 +8,10 @@
 #include <simgear/threads/SGQueue.hxx>
 #include <simgear/props/props.hxx>
 
-#include <Scripting/NasalModelData.hxx>
+// Required only for MSVC
+#ifdef _MSC_VER
+#   include <Scripting/NasalModelData.hxx>
+#endif
 
 #include <map>
 
