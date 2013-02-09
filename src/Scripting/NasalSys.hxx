@@ -8,6 +8,8 @@
 #include <simgear/threads/SGQueue.hxx>
 #include <simgear/props/props.hxx>
 
+#include <Scripting/NasalModelData.hxx>
+
 #include <map>
 
 
