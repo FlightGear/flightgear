@@ -69,7 +69,7 @@ private:
         int simTimeMSec;
     };
     
-    static const int SAMPLE_BUCKET_WIDTH = 1024;
+    static const unsigned int SAMPLE_BUCKET_WIDTH = 1024;
     
     /**
      * Bucket is a fixed-size container of samples. This is a crude slab
