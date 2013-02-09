@@ -46,6 +46,7 @@
 #include <simgear/math/sg_types.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Scripting/NasalSys.hxx>
 #include <Main/fg_props.hxx>
