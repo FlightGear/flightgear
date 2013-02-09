@@ -101,7 +101,7 @@ void FGKeyboardInput::init()
 void FGKeyboardInput::postinit()
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing key bindings");
-  string module = "__kbd";
+  std::string module = "__kbd";
   SGPropertyNode * key_nodes = fgGetNode("/input/keyboard");
   if (key_nodes == NULL) {
     SG_LOG(SG_INPUT, SG_WARN, "No key bindings (/input/keyboard)!!");

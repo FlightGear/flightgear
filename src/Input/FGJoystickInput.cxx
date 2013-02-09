@@ -133,11 +133,11 @@ void FGJoystickInput::init()
 
       if (configMap.hasConfiguration(name)) {
         named = configMap.configurationForDeviceName(name);
-        string source = named->getStringValue("source", "user defined");
+        std::string source = named->getStringValue("source", "user defined");
         SG_LOG(SG_INPUT, SG_INFO, "... found joystick: " << source);
 
       } else if ((named = configMap.configurationForDeviceName("default"))) {
-        string source = named->getStringValue("source", "user defined");
+        std::string source = named->getStringValue("source", "user defined");
         SG_LOG(SG_INPUT, SG_INFO, "No config found for joystick \"" << name
             << "\"\nUsing default: \"" << source << '"');
 
@@ -205,7 +205,7 @@ void FGJoystickInput::postinit()
     //
     std::ostringstream str;
     str << "__js" << i;
-    string module = str.str();
+    std::string module = str.str();
     nasalsys->createModule(module.c_str(), module.c_str(), "", 0);
 
     PropertyList nasal = js_node->getChildren("nasal");

@@ -43,6 +43,7 @@
 #include <Viewer/renderer.hxx>
 #include <Viewer/splash.hxx>
 #include <Scripting/NasalSys.hxx>
+#include <Scripting/NasalModelData.hxx>
 
 #include "scenery.hxx"
 #include "SceneryPager.hxx"

@@ -5,9 +5,8 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/nasal/nasal.h>
-#include <simgear/scene/model/modellib.hxx>
-#include <simgear/xml/easyxml.hxx>
 #include <simgear/threads/SGQueue.hxx>
+#include <simgear/props/props.hxx>
 
 #include <map>
 
@@ -15,57 +14,9 @@
 class FGNasalScript;
 class FGNasalListener;
 class SGCondition;
+class FGNasalModelData;
 
 namespace simgear { class BufferedLogCallback; }
-
-/** Nasal model data container.
- * load and unload methods must be run in main thread (not thread-safe). */
-class FGNasalModelData : public SGReferenced
-{
-public:
-    /** Constructor to be run in an arbitrary thread. */
-    FGNasalModelData(SGPropertyNode *root, const string& path, SGPropertyNode *prop,
-                     SGPropertyNode* load, SGPropertyNode* unload) :
-        _path(path),
-        _root(root), _prop(prop),
-        _load(load), _unload(unload)
-     {
-     }
-
-    /** Load hook. Always call from inside the main loop. */
-    void load();
-
-    /** Unload hook. Always call from inside the main loop. */
-    void unload();
-
-private:
-    static unsigned int _module_id;
-
-    string _module, _path;
-    SGPropertyNode_ptr _root, _prop;
-    SGConstPropertyNode_ptr _load, _unload;
-};
-
-/** Thread-safe proxy for FGNasalModelData.
- * modelLoaded/destroy methods only register the requested
- * operation. Actual (un)loading of Nasal module is deferred
- * and done in the main loop. */
-class FGNasalModelDataProxy : public simgear::SGModelData
-{
-public:
-    FGNasalModelDataProxy(SGPropertyNode *root = 0) :
-        _root(root), _data(0)
-    {
-    }
-
-    ~FGNasalModelDataProxy();
-
-    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
-
-protected:
-    SGPropertyNode_ptr _root;
-    SGSharedPtr<FGNasalModelData> _data;
-};
 
 SGPropertyNode* ghostToPropNode(naRef ref);
 SGCondition* conditionGhost(naRef r);
@@ -94,7 +45,7 @@ public:
     // this function.  The "name" argument specifies the "file name"
     // for the source code that will be printed in Nasal stack traces
     // on error.
-    FGNasalScript* parseScript(const char* src, const char* name=0);
+ //   FGNasalScript* parseScript(const char* src, const char* name=0);
 
     // Implementation of the settimer extension function
     void setTimer(naContext c, int argc, naRef* args);
@@ -106,6 +57,8 @@ public:
     // Returns a ghost wrapper for the current _cmdArg
     naRef cmdArgGhost();
 
+    void setCmdArg(SGPropertyNode* aNode);
+    
     // Callbacks for command and timer bindings
     virtual bool handleCommand( const char* moduleName,
                                 const char* fileName,
@@ -135,8 +88,8 @@ public:
   
     naRef propNodeGhost(SGPropertyNode* handle);
   
-    void registerToLoad(FGNasalModelData* data)   { _loadList.push(data);}
-    void registerToUnload(FGNasalModelData* data) { _unloadList.push(data);}
+    void registerToLoad(FGNasalModelData* data);
+    void registerToUnload(FGNasalModelData* data);
 
     // can't call this 'globals' due to naming clash
     naRef nasalGlobals() const
@@ -159,7 +112,7 @@ public:
     simgear::BufferedLogCallback* log() const
     { return _log; }
 private:
-    friend class FGNasalScript;
+    //friend class FGNasalScript;
     friend class FGNasalListener;
     friend class FGNasalModuleListener;
 
@@ -181,13 +134,14 @@ private:
 
     // Listener
     std::map<int, FGNasalListener *> _listener;
-    vector<FGNasalListener *> _dead_listener;
+    std::vector<FGNasalListener *> _dead_listener;
+    
     static int _listenerId;
 
     void loadPropertyScripts();
     void loadPropertyScripts(SGPropertyNode* n);
     void loadScriptDirectory(simgear::Dir nasalDir);
-    void addModule(string moduleName, simgear::PathList scripts);
+    void addModule(std::string moduleName, simgear::PathList scripts);
     void logError(naContext);
     naRef parse(const char* filename, const char* buf, int len);
     naRef genPropsModule();
@@ -207,7 +161,7 @@ public:
     void handleTimer(NasalTimer* t);
 };
 
-
+#if 0
 class FGNasalScript {
 public:
     ~FGNasalScript() { _nas->gcRelease(_gcKey); }
@@ -217,61 +171,14 @@ public:
         naCall(_nas->_context, _code, 0, &n, naNil(), naNil());
         return naGetError(_nas->_context) == 0;
     }
-
+    
+    FGNasalSys* sys() const { return _nas; }
 private:
     friend class FGNasalSys;
     naRef _code;
     int _gcKey;
     FGNasalSys* _nas;
 };
-
-
-class FGNasalListener : public SGPropertyChangeListener {
-public:
-    FGNasalListener(SGPropertyNode* node, naRef code, FGNasalSys* nasal,
-                    int key, int id, int init, int type);
-
-    virtual ~FGNasalListener();
-    virtual void valueChanged(SGPropertyNode* node);
-    virtual void childAdded(SGPropertyNode* parent, SGPropertyNode* child);
-    virtual void childRemoved(SGPropertyNode* parent, SGPropertyNode* child);
-
-private:
-    bool changed(SGPropertyNode* node);
-    void call(SGPropertyNode* which, naRef mode);
-
-    friend class FGNasalSys;
-    SGPropertyNode_ptr _node;
-    naRef _code;
-    int _gcKey;
-    int _id;
-    FGNasalSys* _nas;
-    int _init;
-    int _type;
-    unsigned int _active;
-    bool _dead;
-    long _last_int;
-    double _last_float;
-    string _last_string;
-};
-
-
-class NasalXMLVisitor : public XMLVisitor {
-public:
-    NasalXMLVisitor(naContext c, int argc, naRef* args);
-    virtual ~NasalXMLVisitor() { naFreeContext(_c); }
-
-    virtual void startElement(const char* tag, const XMLAttributes& a);
-    virtual void endElement(const char* tag);
-    virtual void data(const char* str, int len);
-    virtual void pi(const char* target, const char* data);
-
-private:
-    void call(naRef func, int num, naRef a = naNil(), naRef b = naNil());
-    naRef make_string(const char* s, int n = -1);
-
-    naContext _c;
-    naRef _start_element, _end_element, _data, _pi;
-};
+#endif
 
 #endif // __NASALSYS_HXX

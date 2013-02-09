@@ -25,6 +25,8 @@
 #include "FGFontCache.hxx"
 #include "FGColor.hxx"
 
+using std::string;
+
 enum format_type { f_INVALID, f_INT, f_LONG, f_FLOAT, f_DOUBLE, f_STRING };
 static const int FORMAT_BUFSIZE = 255;
 static const int RESIZE_MARGIN = 7;
@@ -204,7 +206,7 @@ struct GUIInfo
 
     FGPUIDialog *dialog;
     SGPropertyNode_ptr node;
-    vector <SGBinding *> bindings;
+    std::vector <SGBinding *> bindings;
     int key;
     string label, legend, text, format;
     format_type fmt_type;
@@ -1153,7 +1155,7 @@ FGPUIDialog::setupObject (puObject *object, SGPropertyNode *props)
     }
 
     SGPropertyNode *dest = fgGetNode("/sim/bindings/gui", true);
-    vector<SGPropertyNode_ptr> bindings = props->getChildren("binding");
+    std::vector<SGPropertyNode_ptr> bindings = props->getChildren("binding");
     if (bindings.size() > 0) {
         info->key = props->getIntValue("keynum", -1);
         if (props->hasValue("key"))
@@ -1485,7 +1487,7 @@ fgValueList::make_list()
     vname = _props->getStringValue("property-name");
   }
   
-  vector<SGPropertyNode_ptr> value_nodes = values->getChildren(vname);
+  std::vector<SGPropertyNode_ptr> value_nodes = values->getChildren(vname);
   _list = new char *[value_nodes.size() + 1];
   unsigned int i;
   for (i = 0; i < value_nodes.size(); i++) {

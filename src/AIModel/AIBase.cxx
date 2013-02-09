@@ -43,6 +43,7 @@
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scripting/NasalSys.hxx>
+#include <Scripting/NasalModelData.hxx>
 #include <Sound/fg_fx.hxx>
 
 #include "AIBase.hxx"

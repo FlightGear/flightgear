@@ -8,15 +8,18 @@ set(SOURCES
     NasalClipboard.cxx
     NasalCondition.cxx
     NasalString.cxx
+    NasalModelData.cxx
 	)
 
 set(HEADERS
 	NasalSys.hxx
+    NasalSys_private.hxx
     NasalPositioned.hxx
     NasalCanvas.hxx
     NasalClipboard.hxx
     NasalCondition.hxx
     NasalString.hxx
+    NasalModelData.hxx
 	)
 
 if(WIN32)

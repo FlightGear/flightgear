@@ -30,6 +30,8 @@
 #include <simgear/debug/BufferedLogCallback.hxx>
 
 #include "NasalSys.hxx"
+#include "NasalSys_private.hxx"
+#include "NasalModelData.hxx"
 #include "NasalPositioned.hxx"
 #include "NasalCanvas.hxx"
 #include "NasalClipboard.hxx"
@@ -178,6 +180,7 @@ bool FGNasalSys::parseAndRun(const char* sourceCode)
     return true;
 }
 
+#if 0
 FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
 {
     FGNasalScript* script = new FGNasalScript();
@@ -199,6 +202,7 @@ FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
     script->_gcKey = gcSave(script->_code);
     return script;
 }
+#endif
 
 // The get/setprop functions accept a *list* of strings and walk
 // through the property tree with them to find the appropriate node.
@@ -339,7 +343,11 @@ static naRef f_logprint(naContext c, naRef me, int argc, naRef* args)
     if(naIsNil(s)) continue;
     buf += naStr_data(s);
   }
-  SG_LOG(SG_NASAL, (sgDebugPriority)(int) priority.num, buf);
+// use the nasal source file and line for the message location, since
+// that's more useful than the location here!
+  sglog().log(SG_NASAL, (sgDebugPriority)(int) priority.num,
+               naStr_data(naGetSourceFile(c, 0)),
+               naGetLine(c, 0), buf);
   return naNum(buf.length());
 }
 
@@ -475,6 +483,60 @@ static naRef f_resolveDataPath(naContext c, naRef me, int argc, naRef* args)
     return naStr_fromdata(naNewString(c), const_cast<char*>(pdata), strlen(pdata));
 }
 
+class NasalCommand : public SGCommandMgr::Command
+{
+public:
+    NasalCommand(FGNasalSys* sys, naRef f) :
+        _sys(sys),
+        _func(f)
+    {
+        _gcRoot =  sys->gcSave(f);
+    }
+    
+    virtual ~NasalCommand()
+    {
+        _sys->gcRelease(_gcRoot);
+    }
+    
+    virtual bool operator()(const SGPropertyNode* aNode)
+    {
+        _sys->setCmdArg(const_cast<SGPropertyNode*>(aNode));
+        naRef args[1];
+        args[0] = _sys->cmdArgGhost();
+    
+        _sys->callMethod(_func, naNil(), 1, args, naNil() /* locals */);
+
+        return true;
+    }
+    
+private:
+    FGNasalSys* _sys;
+    naRef _func;
+    int _gcRoot;
+};
+
+static naRef f_addCommand(naContext c, naRef me, int argc, naRef* args)
+{
+    if(argc != 2 || !naIsString(args[0]) || !naIsFunc(args[1]))
+        naRuntimeError(c, "bad arguments to addcommand()");
+    
+    naRef func = args[1];
+    NasalCommand* cmd = new NasalCommand(nasalSys, func);
+    globals->get_commands()->addCommandObject(naStr_data(args[0]), cmd);
+    return naNil();
+}
+
+static naRef f_removeCommand(naContext c, naRef me, int argc, naRef* args)
+{
+    SGCommandMgr::Command* cmd = globals->get_commands()->getCommand(naStr_data(args[0]));
+
+  //  SGCommandMgr::Command* cmd = globals->get_commands()->removeCommand(naStr_data(args[0]))
+    
+    delete cmd;
+    
+    return naNil();
+}
+
 // Parse XML file.
 //     parsexml(<path> [, <start-tag> [, <end-tag> [, <data> [, <pi>]]]]);
 //
@@ -539,6 +601,8 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "settimer",  f_settimer },
     { "_setlistener", f_setlistener },
     { "removelistener", f_removelistener },
+    { "addcommand", f_addCommand },
+    { "removecommand", f_removeCommand },
     { "_cmdarg",  f_cmdarg },
     { "_interpolate",  f_interpolate },
     { "rand",  f_rand },
@@ -554,6 +618,11 @@ static struct { const char* name; naCFunction func; } funcs[] = {
 naRef FGNasalSys::cmdArgGhost()
 {
     return propNodeGhost(_cmdArg);
+}
+
+void FGNasalSys::setCmdArg(SGPropertyNode* aNode)
+{
+    _cmdArg = aNode;
 }
 
 void FGNasalSys::init()
@@ -1034,6 +1103,15 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
     return naNum(_listener.size());
 }
 
+void FGNasalSys::registerToLoad(FGNasalModelData *data)
+{
+    _loadList.push(data);
+}
+
+void FGNasalSys::registerToUnload(FGNasalModelData *data)
+{
+    _unloadList.push(data);
+}
 
 
 // FGNasalListener class.
@@ -1130,90 +1208,6 @@ bool FGNasalListener::changed(SGPropertyNode* node)
             return result;
         }
     }
-}
-
-
-
-// FGNasalModelData class.  If sgLoad3DModel() is called with a pointer to
-// such a class, then it lets modelLoaded() run the <load> script, and the
-// destructor the <unload> script. The latter happens when the model branch
-// is removed from the scene graph.
-
-unsigned int FGNasalModelData::_module_id = 0;
-
-void FGNasalModelData::load()
-{
-    std::stringstream m;
-    m << "__model" << _module_id++;
-    _module = m.str();
-
-    SG_LOG(SG_NASAL, SG_DEBUG, "Loading nasal module " << _module.c_str());
-
-    const char *s = _load ? _load->getStringValue() : "";
-
-    naRef arg[2];
-    arg[0] = nasalSys->propNodeGhost(_root);
-    arg[1] = nasalSys->propNodeGhost(_prop);
-    nasalSys->createModule(_module.c_str(), _path.c_str(), s, strlen(s),
-                           _root, 2, arg);
-}
-
-void FGNasalModelData::unload()
-{
-    if (_module.empty())
-        return;
-
-    if(!nasalSys) {
-        SG_LOG(SG_NASAL, SG_WARN, "Trying to run an <unload> script "
-                "without Nasal subsystem present.");
-        return;
-    }
-
-    SG_LOG(SG_NASAL, SG_DEBUG, "Unloading nasal module " << _module.c_str());
-
-    if (_unload)
-    {
-        const char *s = _unload->getStringValue();
-        nasalSys->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _root);
-    }
-
-    nasalSys->deleteModule(_module.c_str());
-}
-
-void FGNasalModelDataProxy::modelLoaded(const string& path, SGPropertyNode *prop,
-                                   osg::Node *)
-{
-    if(!nasalSys) {
-        SG_LOG(SG_NASAL, SG_WARN, "Trying to run a <load> script "
-                "without Nasal subsystem present.");
-        return;
-    }
-
-    if(!prop)
-        return;
-
-    SGPropertyNode *nasal = prop->getNode("nasal");
-    if(!nasal)
-        return;
-
-    SGPropertyNode* load   = nasal->getNode("load");
-    SGPropertyNode* unload = nasal->getNode("unload");
-
-    if ((!load) && (!unload))
-        return;
-
-    _data = new FGNasalModelData(_root, path, prop, load, unload);
-
-    // register Nasal module to be created and loaded in the main thread.
-    nasalSys->registerToLoad(_data);
-}
-
-FGNasalModelDataProxy::~FGNasalModelDataProxy()
-{
-    // when necessary, register Nasal module to be destroyed/unloaded
-    // in the main thread.
-    if ((_data.valid())&&(nasalSys))
-        nasalSys->registerToUnload(_data);
 }
 
 // NasalXMLVisitor class: handles EasyXML visitor callback for parsexml()
