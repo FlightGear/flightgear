@@ -1,0 +1,203 @@
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif
+
+#include "MouseCursor.hxx"
+
+#include <cstring>
+#include <boost/foreach.hpp>
+
+#include <osgViewer/GraphicsWindow>
+#include <osgViewer/Viewer>
+
+#include <simgear/debug/logstream.hxx>
+#include <simgear/simgear_config.h>
+#include <simgear/structure/commands.hxx>
+
+#ifdef SG_MAC
+#include "CocoaMouseCursor.hxx"
+#endif
+
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include <Viewer/renderer.hxx>
+#include <Main/fg_os.hxx> // for fgWarpMouse
+
+namespace
+{
+    
+/**
+ * @brief when no native cursor implementation is available, use the osgViewer support. This
+ * has several limitations but is better than nothing
+ */
+class StockOSGCursor : public FGMouseCursor
+{
+public:
+    StockOSGCursor() :
+        mCursorObscured(false),
+        mCursorVisible(true),
+        mCursor(osgViewer::GraphicsWindow::InheritCursor)
+    {
+        mActualCursor = mCursor;
+        
+        globals->get_renderer()->getViewer()->getWindows(mWindows);
+    }
+
+    virtual void setCursor(Cursor aCursor)
+    {
+        mCursor = translateCursor(aCursor);
+        updateCursor();
+    }
+    
+    virtual void setCursorVisible(bool aVis)
+    {
+        if (mCursorObscured == aVis) {
+            return;
+        }
+        
+        mCursorVisible = aVis;
+        updateCursor();
+    }
+    
+    virtual void hideCursorUntilMouseMove()
+    {
+        if (mCursorObscured) {
+            return;
+        }
+        
+        mCursorObscured = true;
+        updateCursor();
+    }
+    
+    virtual void mouseMoved()
+    {
+        if (mCursorObscured) {
+            mCursorObscured = false;
+            updateCursor();
+        }
+    }
+private:
+    osgViewer::GraphicsWindow::MouseCursor translateCursor(Cursor aCursor)
+    {
+        switch (aCursor) {
+        case CURSOR_HAND: return osgViewer::GraphicsWindow::HandCursor;
+        case CURSOR_CROSSHAIR: return osgViewer::GraphicsWindow::CrosshairCursor;
+        case CURSOR_IBEAM: return osgViewer::GraphicsWindow::TextCursor;
+        case CURSOR_LEFT_RIGHT: return osgViewer::GraphicsWindow::LeftRightCursor;
+                    
+        default: return osgViewer::GraphicsWindow::InheritCursor;   
+        }
+    }
+    
+    void updateCursor()
+    {
+        osgViewer::GraphicsWindow::MouseCursor cur = osgViewer::GraphicsWindow::InheritCursor;
+        if (mCursorObscured || !mCursorVisible) {
+            cur = osgViewer::GraphicsWindow::NoCursor;
+        } else {
+            cur = mCursor;
+        }
+        
+        if (cur == mActualCursor) {
+            return;
+        }
+        
+        std::cout << "actually setting cursor" << std::endl;
+        BOOST_FOREACH(osgViewer::GraphicsWindow* gw, mWindows) {
+            gw->setCursor(cur);
+        }
+        
+        mActualCursor = cur;
+    }
+    
+    bool mCursorObscured;
+    bool mCursorVisible;
+    osgViewer::GraphicsWindow::MouseCursor mCursor, mActualCursor;
+    std::vector<osgViewer::GraphicsWindow*> mWindows;
+};
+    
+} // of anonymous namespace
+
+static FGMouseCursor* static_instance = NULL;
+
+FGMouseCursor::FGMouseCursor() :
+    mAutoHideTimeMsec(10000)
+{
+}
+
+FGMouseCursor* FGMouseCursor::instance()
+{
+    if (static_instance == NULL) {
+    #ifdef SG_MAC
+        if (true) {
+            static_instance = new CocoaMouseCursor;
+        }
+    #endif
+        
+        // windows
+        
+        // X11
+                
+        if (static_instance == NULL) {
+            static_instance = new StockOSGCursor;
+        }
+        
+        // initialise mouse-hide delay from global properties
+        
+        globals->get_commands()->addCommand("set-cursor", static_instance, &FGMouseCursor::setCursorCommand);
+    }
+    
+    return static_instance;
+}
+
+void FGMouseCursor::setAutoHideTimeMsec(unsigned int aMsec)
+{
+    mAutoHideTimeMsec = aMsec;
+}
+
+
+bool FGMouseCursor::setCursorCommand(const SGPropertyNode* arg)
+{
+    // JMT 2013 - I would prefer this was a seperate 'warp' command, but
+    // historically set-cursor has done both. 
+    if (arg->hasValue("x") || arg->hasValue("y")) {
+        SGPropertyNode *mx = fgGetNode("/devices/status/mice/mouse/x", true);
+        SGPropertyNode *my = fgGetNode("/devices/status/mice/mouse/y", true);
+        int x = arg->getIntValue("x", mx->getIntValue());
+        int y = arg->getIntValue("y", my->getIntValue());
+        fgWarpMouse(x, y);
+        mx->setIntValue(x);
+        my->setIntValue(y);
+    }
+
+    
+    Cursor c = cursorFromString(arg->getStringValue("cursor"));    
+    setCursor(c);
+    return true;
+}
+
+typedef struct {
+    const char * name;
+    FGMouseCursor::Cursor cursor;
+} MouseCursorMap;
+
+const MouseCursorMap mouse_cursor_map[] = {
+    { "inherit", FGMouseCursor::CURSOR_ARROW },
+    { "crosshair", FGMouseCursor::CURSOR_CROSSHAIR },
+    { "left-right", FGMouseCursor::CURSOR_LEFT_RIGHT },
+    { "hand", FGMouseCursor::CURSOR_HAND },
+    { "text", FGMouseCursor::CURSOR_IBEAM },
+    { 0, FGMouseCursor::CURSOR_ARROW }
+};
+
+FGMouseCursor::Cursor FGMouseCursor::cursorFromString(const char* cursor_name)
+{
+    for (unsigned int k = 0; mouse_cursor_map[k].name != 0; k++) {
+        if (!strcmp(mouse_cursor_map[k].name, cursor_name)) {
+            return mouse_cursor_map[k].cursor;
+        }
+    }
+
+    SG_LOG(SG_GENERAL, SG_WARN, "unknown cursor:" << cursor_name);
+    return CURSOR_ARROW;
+}

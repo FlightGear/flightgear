@@ -61,8 +61,7 @@ public:
   
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
-    bool pick( std::vector<SGSceneryPick>& pickList,
-               const osgGA::GUIEventAdapter* ea );
+    bool pick( std::vector<SGSceneryPick>& pickList, const osg::Vec2& windowPos);
 
     /** Get and set the OSG Viewer object, if any.
      */

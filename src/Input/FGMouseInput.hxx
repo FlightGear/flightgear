@@ -26,33 +26,19 @@
 #ifndef _FGMOUSEINPUT_HXX
 #define _FGMOUSEINPUT_HXX
 
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif
-
 #include "FGCommonInput.hxx"
-#include "FGButton.hxx"
 
-#include <map>
-#include <list>
+#include <memory>
+
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/scene/util/SGPickCallback.hxx>
-#include <Viewer/renderer.hxx>
 
-/**
-  * List of currently pressed mouse button events
-  */
-class ActivePickCallbacks : public std::map<int, std::list<SGSharedPtr<SGPickCallback> > > {
-public:
-  void update( double dt );
-  void init( int button, const osgGA::GUIEventAdapter* ea );
-};
-
+// forward decls
+namespace osgGA { class GUIEventAdapter; }
 
 ////////////////////////////////////////////////////////////////////////
 // The Mouse Input Class
 ////////////////////////////////////////////////////////////////////////
-class FGMouseInput : public SGSubsystem,FGCommonInput {
+class FGMouseInput : public SGSubsystem, FGCommonInput {
 public:
   FGMouseInput();
   virtual ~FGMouseInput();
@@ -60,74 +46,12 @@ public:
   virtual void init();
   virtual void update( double dt );
 
-  static const int MAX_MICE = 1;
-  static const int MAX_MOUSE_BUTTONS = 8;
-
+    void doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea);
+    void doMouseMotion (int x, int y, const osgGA::GUIEventAdapter*);
 private:
-  void doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea);
-  void doMouseMotion (int x, int y);
-  static FGMouseInput * mouseInput;
-  static void mouseClickHandler(int button, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter*);
-  static void mouseMotionHandler(int x, int y);
-
-  ActivePickCallbacks activePickCallbacks;
-  /**
-   * Settings for a mouse mode.
-   */
-  struct mouse_mode {
-    mouse_mode ();
-    virtual ~mouse_mode ();
-    int cursor;
-    bool constrained;
-    bool pass_through;
-    FGButton * buttons;
-    binding_list_t x_bindings[KEYMOD_MAX];
-    binding_list_t y_bindings[KEYMOD_MAX];
-  };
-
-
-  /**
-   * Settings for a mouse.
-   */
-  struct mouse {
-    mouse ();
-    virtual ~mouse ();
-    int x;
-    int y;
-    int save_x;
-    int save_y;
-    SGPropertyNode_ptr mode_node;
-    SGPropertyNode_ptr mouse_button_nodes[MAX_MOUSE_BUTTONS];
-    int nModes;
-    int current_mode;
-    double timeout;
-    mouse_mode * modes;
-  };
-
-  // 
-  // Map of all known cursor names
-  // This used to contain all the Glut cursors, but those are
-  // not defined by other toolkits.  It now supports only the cursor
-  // images we actually use, in the interest of portability.  Someday,
-  // it would be cool to write an OpenGL cursor renderer, with the
-  // cursors defined as textures referenced in the property tree.  This
-  // list could then be eliminated. -Andy
-  //
-  const static struct MouseCursorMap {
-    const char * name;
-    int cursor;
-  } mouse_cursor_map[];
-
-  mouse bindings[MAX_MICE];
+  class FGMouseInputPrivate;
+  std::auto_ptr<FGMouseInputPrivate> d;
   
-  bool haveWarped;
-
-  SGPropertyNode_ptr xSizeNode;
-  SGPropertyNode_ptr ySizeNode;
-  SGPropertyNode_ptr xAccelNode;
-  SGPropertyNode_ptr yAccelNode;
-  SGPropertyNode_ptr hideCursorNode;
-  SGPropertyNode_ptr cursorTimeoutNode;
 };
 
 #endif

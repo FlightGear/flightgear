@@ -28,20 +28,50 @@
 
 #include "FGMouseInput.hxx"
 
+#include <boost/foreach.hpp>
 #include <osgGA/GUIEventAdapter>
+
+#include <simgear/scene/util/SGPickCallback.hxx>
+#include <simgear/timing/timestamp.hxx>
+
+#include "FGButton.hxx"
 #include "Main/globals.hxx"
+#include <Viewer/renderer.hxx>
+#include <plib/pu.h>
+#include <Model/panelnode.hxx>
+#include <Cockpit/panel.hxx>
+#include <Viewer/FGEventHandler.hxx>
+#include <GUI/MouseCursor.hxx>
 
 using std::ios_base;
 
+const int MAX_MICE = 1;
+const int MAX_MOUSE_BUTTONS = 8;
+
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * List of currently pressed mouse button events
+ */
+class ActivePickCallbacks : public std::map<int, std::list<SGSharedPtr<SGPickCallback> > > {
+public:
+    void update( double dt );
+    void init( int button, const osgGA::GUIEventAdapter* ea );
+};
+
+
 void ActivePickCallbacks::init( int button, const osgGA::GUIEventAdapter* ea )
 {
+  osg::Vec2d windowPos;
+  flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
+    
   // Get the list of hit callbacks. Take the first callback that
   // accepts the mouse button press and ignore the rest of them
   // That is they get sorted by distance and by scenegraph depth.
   // The nearest one is the first one and the deepest
   // (the most specialized one in the scenegraph) is the first.
   std::vector<SGSceneryPick> pickList;
-  if (!globals->get_renderer()->pick(pickList, ea)) {
+  if (!globals->get_renderer()->pick(pickList, windowPos)) {
     return;
   }
 
@@ -65,42 +95,155 @@ void ActivePickCallbacks::update( double dt )
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
-#include <plib/pu.h>
-#include <Model/panelnode.hxx>
-#include <Cockpit/panel.hxx>
+
+/**
+ * Settings for a mouse mode.
+ */
+struct mouse_mode {
+    mouse_mode ();
+    virtual ~mouse_mode ();
+    FGMouseCursor::Cursor cursor;
+    bool constrained;
+    bool pass_through;
+    FGButton * buttons;
+    SGBindingList x_bindings[KEYMOD_MAX];
+    SGBindingList y_bindings[KEYMOD_MAX];
+};
+
+
+/**
+ * Settings for a mouse.
+ */
+struct mouse {
+    mouse ();
+    virtual ~mouse ();
+    int x, y;
+    SGPropertyNode_ptr mode_node;
+    SGPropertyNode_ptr mouse_button_nodes[MAX_MOUSE_BUTTONS];
+    int nModes;
+    int current_mode;
+    
+    SGTimeStamp timeSinceLastMove;
+    mouse_mode * modes;
+};
+
+////////////////////////////////////////////////////////////////////////
+
+class FGMouseInput::FGMouseInputPrivate
+{
+public:
+    FGMouseInputPrivate() :
+        haveWarped(false),
+        xSizeNode(fgGetNode("/sim/startup/xsize", false ) ),
+        ySizeNode(fgGetNode("/sim/startup/ysize", false ) ),
+        xAccelNode(fgGetNode("/devices/status/mice/mouse/accel-x", true ) ),
+        yAccelNode(fgGetNode("/devices/status/mice/mouse/accel-y", true ) ),
+        hideCursorNode(fgGetNode("/sim/mouse/hide-cursor", true ) ),
+        cursorTimeoutNode(fgGetNode("/sim/mouse/cursor-timeout-sec", true ) ),
+        rightButtonModeCycleNode(fgGetNode("/sim/mouse/right-button-mode-cycle-enabled", true)),
+        tooltipShowDelayNode( fgGetNode("/sim/mouse/tooltip-delay-msec", true) ),
+        clickTriggersTooltipNode( fgGetNode("/sim/mouse/click-shows-tooltip", true) )
+    {
+        tooltipTimeoutDone = false;
+    }
+  
+    void centerMouseCursor(mouse& m)
+    {    
+      // center the cursor
+      m.x = (xSizeNode ? xSizeNode->getIntValue() : 800) / 2;
+      m.y = (ySizeNode ? ySizeNode->getIntValue() : 600) / 2;
+      fgWarpMouse(m.x, m.y);
+      haveWarped = true;
+    }
+    
+    void doHoverPick(const osg::Vec2d& windowPos)
+    {
+        std::vector<SGSceneryPick> pickList;
+        SGPickCallback::Priority priority = SGPickCallback::PriorityScenery;
+        
+        if (globals->get_renderer()->pick(pickList, windowPos)) {
+            
+            std::vector<SGSceneryPick>::const_iterator i;
+            for (i = pickList.begin(); i != pickList.end(); ++i) {
+                if (i->callback->hover(windowPos, i->info)) {
+                    return;
+                }
+                
+            // if the callback is of higher prioirty (lower enum index),
+            // record that.
+                if (i->callback->getPriority() < priority) {
+                    priority = i->callback->getPriority();
+                }
+            }
+        } // of have valid pick
+                
+        if (priority < SGPickCallback::PriorityScenery) {
+            FGMouseCursor::instance()->setCursor(FGMouseCursor::CURSOR_HAND);
+        } else {
+            // restore normal cursor
+            FGMouseCursor::instance()->setCursor(FGMouseCursor::CURSOR_ARROW);
+        }
+        
+        updateHover();
+    }
+    
+    void updateHover()
+    {
+        SGPropertyNode_ptr args(new SGPropertyNode);
+        globals->get_commands()->execute("update-hover", args);
+    }
+
+    
+    ActivePickCallbacks activePickCallbacks;
+
+    mouse mice[MAX_MICE];
+    
+    bool haveWarped;
+    bool tooltipTimeoutDone;
+  
+    SGPropertyNode_ptr xSizeNode;
+    SGPropertyNode_ptr ySizeNode;
+    SGPropertyNode_ptr xAccelNode;
+    SGPropertyNode_ptr yAccelNode;
+    SGPropertyNode_ptr hideCursorNode;
+    SGPropertyNode_ptr cursorTimeoutNode;
+    SGPropertyNode_ptr rightButtonModeCycleNode;
+    SGPropertyNode_ptr tooltipShowDelayNode;
+    SGPropertyNode_ptr clickTriggersTooltipNode;
+};
+
+
 ////////////////////////////////////////////////////////////////////////
 // The Mouse Input Implementation
 ////////////////////////////////////////////////////////////////////////
 
-const FGMouseInput::MouseCursorMap FGMouseInput::mouse_cursor_map[] = {
-    { "none", MOUSE_CURSOR_NONE },
-    { "inherit", MOUSE_CURSOR_POINTER },
-    { "wait", MOUSE_CURSOR_WAIT },
-    { "crosshair", MOUSE_CURSOR_CROSSHAIR },
-    { "left-right", MOUSE_CURSOR_LEFTRIGHT },
-    { 0, 0 }
-};
+static FGMouseInput* global_mouseInput = NULL;
 
-FGMouseInput * FGMouseInput::mouseInput = NULL;
+static void mouseClickHandler(int button, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea)
+{
+    if(global_mouseInput)
+        global_mouseInput->doMouseClick(button, updown, x, y, mainWindow, ea);
+}
+
+static void mouseMotionHandler(int x, int y, const osgGA::GUIEventAdapter* ea)
+{
+    if (global_mouseInput != 0)
+        global_mouseInput->doMouseMotion(x, y, ea);
+}
+
+
 
 FGMouseInput::FGMouseInput() :
-  haveWarped(false),
-  xSizeNode(fgGetNode("/sim/startup/xsize", false ) ),
-  ySizeNode(fgGetNode("/sim/startup/ysize", false ) ),
-  xAccelNode(fgGetNode("/devices/status/mice/mouse/accel-x", true ) ),
-  yAccelNode(fgGetNode("/devices/status/mice/mouse/accel-y", true ) ),
-  hideCursorNode(fgGetNode("/sim/mouse/hide-cursor", true ) ),
-  cursorTimeoutNode(fgGetNode("/sim/mouse/cursor-timeout-sec", true ) )
+  d(new FGMouseInputPrivate)
 {
-  if( mouseInput == NULL )
-    mouseInput = this;
+    global_mouseInput = this;
 }
 
 FGMouseInput::~FGMouseInput()
 {
-  if( mouseInput == this )
-    mouseInput = NULL;
+    global_mouseInput = NULL;
 }
 
 void FGMouseInput::init()
@@ -117,7 +260,7 @@ void FGMouseInput::init()
   int j;
   for (int i = 0; i < MAX_MICE; i++) {
     SGPropertyNode * mouse_node = mouse_nodes->getChild("mouse", i, true);
-    mouse &m = bindings[i];
+    mouse &m = d->mice[i];
 
                                 // Grab node pointers
     std::ostringstream buf;
@@ -140,19 +283,11 @@ void FGMouseInput::init()
 
     for (int j = 0; j < m.nModes; j++) {
       int k;
-
-                                // Read the mouse cursor for this mode
       SGPropertyNode * mode_node = mouse_node->getChild("mode", j, true);
-      const char * cursor_name =
-        mode_node->getStringValue("cursor", "inherit");
-      m.modes[j].cursor = MOUSE_CURSOR_POINTER;
-      for (k = 0; mouse_cursor_map[k].name != 0; k++) {
-        if (!strcmp(mouse_cursor_map[k].name, cursor_name)) {
-          m.modes[j].cursor = mouse_cursor_map[k].cursor;
-          break;
-        }
-      }
 
+    // Read the mouse cursor for this mode
+      m.modes[j].cursor = FGMouseCursor::cursorFromString(mode_node->getStringValue("cursor", "inherit"));
+        
                                 // Read other properties for this mode
       m.modes[j].constrained = mode_node->getBoolValue("constrained", false);
       m.modes[j].pass_through = mode_node->getBoolValue("pass-through", false);
@@ -163,7 +298,6 @@ void FGMouseInput::init()
       for (k = 0; k < MAX_MOUSE_BUTTONS; k++) {
         buf.seekp(ios_base::beg);
         buf << "mouse button " << k;
-        SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << k);
         m.modes[j].buttons[k].init( mode_node->getChild("button", k), buf.str(), module );
       }
 
@@ -179,70 +313,68 @@ void FGMouseInput::init()
 
 void FGMouseInput::update ( double dt )
 {
-  double cursorTimeout = cursorTimeoutNode ? cursorTimeoutNode->getDoubleValue() : 10.0;
-
-  mouse &m = bindings[0];
+  int cursorTimeoutMsec = d->cursorTimeoutNode->getDoubleValue() * 1000;
+  int tooltipDelayMsec = d->tooltipShowDelayNode->getIntValue();
+  
+  mouse &m = d->mice[0];
   int mode =  m.mode_node->getIntValue();
   if (mode != m.current_mode) {
+    // current mode has changed
     m.current_mode = mode;
-    m.timeout = cursorTimeout;
+    m.timeSinceLastMove.stamp();
+      
     if (mode >= 0 && mode < m.nModes) {
-      fgSetMouseCursor(m.modes[mode].cursor);
-      m.x = (xSizeNode ? xSizeNode->getIntValue() : 800) / 2;
-      m.y = (ySizeNode ? ySizeNode->getIntValue() : 600) / 2;
-      fgWarpMouse(m.x, m.y);
-      haveWarped = true;
+      FGMouseCursor::instance()->setCursor(m.modes[mode].cursor);
+      d->centerMouseCursor(m);
     } else {
-      SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
-      fgSetMouseCursor(MOUSE_CURSOR_POINTER);
+      SG_LOG(SG_INPUT, SG_WARN, "Mouse mode " << mode << " out of range");
+      FGMouseCursor::instance()->setCursor(FGMouseCursor::CURSOR_ARROW);
     }
   }
 
-  if ( hideCursorNode ==NULL || hideCursorNode->getBoolValue() ) {
-      if ( m.x != m.save_x || m.y != m.save_y ) {
-          m.timeout = cursorTimeout;
-          if (fgGetMouseCursor() == MOUSE_CURSOR_NONE)
-              fgSetMouseCursor(m.modes[mode].cursor);
-      } else {
-          m.timeout -= dt;
-          if ( m.timeout <= 0.0 ) {
-              fgSetMouseCursor(MOUSE_CURSOR_NONE);
-              m.timeout = 0.0;
-          }
+  if ( d->hideCursorNode == NULL || d->hideCursorNode->getBoolValue() ) {
+      // if delay is <= 0, disable tooltips
+      if ( !d->tooltipTimeoutDone &&
+           (tooltipDelayMsec > 0) &&
+           (m.timeSinceLastMove.elapsedMSec() > tooltipDelayMsec))
+      {
+          d->tooltipTimeoutDone = true;
+          SGPropertyNode_ptr arg(new SGPropertyNode);
+          globals->get_commands()->execute("tooltip-timeout", arg);
       }
-      m.save_x = m.x;
-      m.save_y = m.y;
+    
+      if ( m.timeSinceLastMove.elapsedMSec() > cursorTimeoutMsec) {
+          FGMouseCursor::instance()->hideCursorUntilMouseMove();
+          m.timeSinceLastMove.stamp();
+      }
   }
-
-  activePickCallbacks.update( dt );
+    
+  d->activePickCallbacks.update( dt );
 }
 
-FGMouseInput::mouse::mouse ()
+mouse::mouse ()
   : x(-1),
     y(-1),
-    save_x(-1),
-    save_y(-1),
     nModes(1),
     current_mode(0),
-    timeout(0),
     modes(NULL)
 {
 }
 
-FGMouseInput::mouse::~mouse ()
+mouse::~mouse ()
 {
   delete [] modes;
 }
 
-FGMouseInput::mouse_mode::mouse_mode ()
-  : cursor(MOUSE_CURSOR_POINTER),
+mouse_mode::mouse_mode ()
+  : cursor(FGMouseCursor::CURSOR_ARROW),
     constrained(false),
     pass_through(false),
     buttons(NULL)
 {
 }
 
-FGMouseInput::mouse_mode::~mouse_mode ()
+mouse_mode::~mouse_mode ()
 {
                                 // FIXME: memory leak
 //   for (int i = 0; i < KEYMOD_MAX; i++) {
@@ -252,30 +384,36 @@ FGMouseInput::mouse_mode::~mouse_mode ()
 //     for (j = 0; j < y_bindings[i].size(); j++)
 //       delete bindings[i][j];
 //   }
-  delete [] buttons;
+  if (buttons) {
+    delete [] buttons;
+  }
 }
 
 void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea)
 {
   int modifiers = fgGetKeyModifiers();
 
-  mouse &m = bindings[0];
+  mouse &m = d->mice[0];
   mouse_mode &mode = m.modes[m.current_mode];
-
                                 // Let the property manager know.
   if (b >= 0 && b < MAX_MOUSE_BUTTONS)
     m.mouse_button_nodes[b]->setBoolValue(updown == MOUSE_BUTTON_DOWN);
 
-                                // Pass on to PUI and the panel if
-                                // requested, and return if one of
-                                // them consumes the event.
+  if (!d->rightButtonModeCycleNode->getBoolValue() && (b == 2)) {
+    // in spring-loaded look mode, ignore right clicks entirely here
+    return;
+  }
+  
+  // Pass on to PUI and the panel if
+  // requested, and return if one of
+  // them consumes the event.
 
   if (updown != MOUSE_BUTTON_DOWN) {
     // Execute the mouse up event in any case, may be we should
     // stop processing here?
-    while (!activePickCallbacks[b].empty()) {
-      activePickCallbacks[b].front()->buttonReleased();
-      activePickCallbacks[b].pop_front();
+    while (!d->activePickCallbacks[b].empty()) {
+      d->activePickCallbacks[b].front()->buttonReleased();
+      d->activePickCallbacks[b].pop_front();
     }
   }
 
@@ -287,7 +425,7 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
       // pui didn't want the click event so compute a
       // scenegraph intersection point corresponding to the mouse click
       if (updown == MOUSE_BUTTON_DOWN) {
-        activePickCallbacks.init( b, ea );
+        d->activePickCallbacks.init( b, ea );
       }
     }
   }
@@ -300,54 +438,91 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   }
 
   m.modes[m.current_mode].buttons[b].update( modifiers, 0 != updown, x, y);
+  
+  if (d->clickTriggersTooltipNode->getBoolValue()) {
+    SGPropertyNode_ptr args(new SGPropertyNode);
+    args->setStringValue("reason", "click");
+    globals->get_commands()->execute("tooltip-timeout", args);
+    d->tooltipTimeoutDone = true;
+  }
 }
 
-void FGMouseInput::doMouseMotion (int x, int y)
+void FGMouseInput::doMouseMotion (int x, int y, const osgGA::GUIEventAdapter* ea)
 {
-  // Don't call fgGetKeyModifiers() here, until we are using a
-  // toolkit that supports getting the mods from outside a key
-  // callback.  Glut doesn't.
-  int modifiers = KEYMOD_NONE;
+  int modifiers = fgGetKeyModifiers();
 
-  int xsize = xSizeNode ? xSizeNode->getIntValue() : 800;
-  int ysize = ySizeNode ? ySizeNode->getIntValue() : 600;
+  int xsize = d->xSizeNode ? d->xSizeNode->getIntValue() : 800;
+  int ysize = d->ySizeNode ? d->ySizeNode->getIntValue() : 600;
 
-  mouse &m = bindings[0];
+  mouse &m = d->mice[0];
 
   if (m.current_mode < 0 || m.current_mode >= m.nModes) {
       m.x = x;
       m.y = y;
       return;
   }
-  mouse_mode &mode = m.modes[m.current_mode];
 
-                                // Pass on to PUI if requested, and return
-                                // if PUI consumed the event.
+  if (!d->activePickCallbacks[0].empty()) {
+    SG_LOG(SG_GENERAL, SG_INFO, "mouse-motion, have active pick callback");
+    BOOST_FOREACH(SGPickCallback* cb, d->activePickCallbacks[0]) {
+      cb->mouseMoved(ea);
+    }
+    
+    m.x = x;
+    m.y = y;
+    return;
+  }
+  
+  m.timeSinceLastMove.stamp();
+  FGMouseCursor::instance()->mouseMoved();
+
+  int modeIndex = m.current_mode;
+  // are we in spring-loaded look mode?
+  if (!d->rightButtonModeCycleNode->getBoolValue()) {
+    if (m.mouse_button_nodes[2]->getBoolValue()) {
+      // right mouse is down, force look mode
+      modeIndex = 3;
+    }
+  }
+
+  if (modeIndex == 0) {
+    osg::Vec2d windowPos;
+    flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
+    d->doHoverPick(windowPos);
+    // mouse has moved, so we may need to issue tooltip-timeout command
+    // again
+    d->tooltipTimeoutDone = false;
+  }
+
+  mouse_mode &mode = m.modes[modeIndex];
+
+    // Pass on to PUI if requested, and return
+    // if PUI consumed the event.
   if (mode.pass_through && puMouse(x, y)) {
       m.x = x;
       m.y = y;
       return;
   }
   
-  if (haveWarped)
+  if (d->haveWarped)
   {
       // don't fire mouse-movement events at the first update after warping the mouse,
       // just remember the new mouse position
-      haveWarped = false;
+      d->haveWarped = false;
   }
   else
   {
-                                // OK, PUI didn't want the event,
-                                // so we can play with it.
+      // OK, PUI didn't want the event,
+      // so we can play with it.
       if (x != m.x) {
         int delta = x - m.x;
-        xAccelNode->setIntValue( delta );
+        d->xAccelNode->setIntValue( delta );
         for (unsigned int i = 0; i < mode.x_bindings[modifiers].size(); i++)
           mode.x_bindings[modifiers][i]->fire(double(delta), double(xsize));
       }
       if (y != m.y) {
         int delta = y - m.y;
-        yAccelNode->setIntValue( -delta );
+        d->yAccelNode->setIntValue( -delta );
         for (unsigned int i = 0; i < mode.y_bindings[modifiers].size(); i++)
           mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
       }
@@ -370,8 +545,7 @@ void FGMouseInput::doMouseMotion (int x, int y)
     if (need_warp)
     {
       fgWarpMouse(new_x, new_y);
-      haveWarped = true;
-      SG_LOG(SG_INPUT, SG_DEBUG, "Mouse warp: " << x << ", " << y << " => " << new_x << ", " << new_y);
+      d->haveWarped = true;
     }
   }
 
@@ -382,16 +556,5 @@ void FGMouseInput::doMouseMotion (int x, int y)
       fgSetInt("/devices/status/mice/mouse/y", m.y = y);
 }
 
-void FGMouseInput::mouseClickHandler(int button, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea)
-{
-    if(mouseInput)
-      mouseInput->doMouseClick(button, updown, x, y, mainWindow, ea);
-}
-
-void FGMouseInput::mouseMotionHandler(int x, int y)
-{
-    if (mouseInput != 0)
-        mouseInput->doMouseMotion(x, y);
-}
 
 

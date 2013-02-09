@@ -20,6 +20,7 @@ set(SOURCES
 	FGColor.cxx
     FileDialog.cxx
     PUIFileDialog.cxx
+    MouseCursor.cxx
 	)
 
 set(HEADERS
@@ -39,11 +40,12 @@ set(HEADERS
 	FGColor.hxx
     FileDialog.hxx
     PUIFileDialog.hxx
+    MouseCursor.hxx
 	)
     		
 if (APPLE)
-    list(APPEND HEADERS FGCocoaMenuBar.hxx CocoaFileDialog.hxx)
-    list(APPEND SOURCES FGCocoaMenuBar.mm CocoaFileDialog.mm)
+    list(APPEND HEADERS FGCocoaMenuBar.hxx CocoaFileDialog.hxx CocoaMouseCursor.hxx)
+    list(APPEND SOURCES FGCocoaMenuBar.mm CocoaFileDialog.mm CocoaMouseCursor.mm)
 endif()
     		
 flightgear_component(GUI "${SOURCES}" "${HEADERS}")

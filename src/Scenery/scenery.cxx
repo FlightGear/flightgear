@@ -47,9 +47,11 @@
 #include <simgear/scene/model/CheckSceneryVisitor.hxx>
 #include <simgear/bvh/BVHNode.hxx>
 #include <simgear/bvh/BVHLineSegmentVisitor.hxx>
+#include <simgear/structure/commands.hxx>
 
 #include <Viewer/renderer.hxx>
 #include <Main/fg_props.hxx>
+#include <GUI/MouseCursor.hxx>
 
 #include "tilemgr.hxx"
 #include "scenery.hxx"
@@ -59,6 +61,9 @@ using namespace simgear;
 
 class FGGroundPickCallback : public SGPickCallback {
 public:
+  FGGroundPickCallback() : SGPickCallback(PriorityScenery)
+  { }
+    
   virtual bool buttonPressed(int button, const osgGA::GUIEventAdapter*, const Info& info)
   {
     // only on left mouse button

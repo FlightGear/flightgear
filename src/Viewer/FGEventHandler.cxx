@@ -261,7 +261,7 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
         if (mouseWarped)
             return true;
         if (eventToViewport(ea, us, x, y) && mouseMotionHandler)
-            (*mouseMotionHandler)(x, y);
+            (*mouseMotionHandler)(x, y, &ea);
         return true;
     case osgGA::GUIEventAdapter::RESIZE:
         SG_LOG(SG_VIEW, SG_DEBUG, "FGEventHandler::handle: RESIZE event " << ea.getWindowHeight() << " x " << ea.getWindowWidth() << ", resizable: " << resizable);
@@ -417,6 +417,7 @@ void eventToWindowCoords(const osgGA::GUIEventAdapter* ea,
         y = (double)traits->height - y;
 }
 
+#if 0
 void eventToWindowCoordsYDown(const osgGA::GUIEventAdapter* ea,
                               double& x, double& y)
 {
@@ -431,4 +432,6 @@ void eventToWindowCoordsYDown(const osgGA::GUIEventAdapter* ea,
     if (ea->getMouseYOrientation() == osgGA::GUIEventAdapter::Y_INCREASING_UPWARDS)
         y = (double)traits->height - y;
 }
+#endif
+    
 }

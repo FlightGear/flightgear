@@ -1724,15 +1724,14 @@ FGRenderer::resize( int width, int height )
 }
 
 bool
-FGRenderer::pick(std::vector<SGSceneryPick>& pickList,
-                 const osgGA::GUIEventAdapter* ea)
+FGRenderer::pick(std::vector<SGSceneryPick>& pickList, const osg::Vec2& windowPos)
 {
     // wipe out the return ...
     pickList.clear();
     typedef osgUtil::LineSegmentIntersector::Intersections Intersections;
     Intersections intersections;
 
-    if (!computeIntersections(CameraGroup::getDefault(), ea, intersections))
+    if (!computeIntersections(CameraGroup::getDefault(), windowPos, intersections))
         return false;
     for (Intersections::iterator hit = intersections.begin(),
              e = intersections.end();

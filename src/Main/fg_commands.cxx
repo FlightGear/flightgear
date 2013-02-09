@@ -1108,32 +1108,6 @@ do_add_model (const SGPropertyNode * arg)
     return true;
 }
 
-
-/**
- * Set mouse cursor coordinates and cursor shape.
- */
-static bool
-do_set_cursor (const SGPropertyNode * arg)
-{
-    if (arg->hasValue("x") || arg->hasValue("y")) {
-        SGPropertyNode *mx = fgGetNode("/devices/status/mice/mouse/x", true);
-        SGPropertyNode *my = fgGetNode("/devices/status/mice/mouse/y", true);
-        int x = arg->getIntValue("x", mx->getIntValue());
-        int y = arg->getIntValue("y", my->getIntValue());
-        fgWarpMouse(x, y);
-        mx->setIntValue(x);
-        my->setIntValue(y);
-    }
-
-    SGPropertyNode *cursor = const_cast<SGPropertyNode *>(arg)->getNode("cursor", true);
-    if (cursor->getType() != simgear::props::NONE)
-        fgSetMouseCursor(cursor->getIntValue());
-
-    cursor->setIntValue(fgGetMouseCursor());
-    return true;
-}
-
-
 /**
  * Built-in command: play an audio message (i.e. a wav file) This is
  * fire and forget.  Call this once per message and it will get dumped
@@ -1612,7 +1586,6 @@ static struct {
     { "open-browser", do_open_browser },
     { "gui-redraw", do_gui_redraw },
     { "add-model", do_add_model },
-    { "set-cursor", do_set_cursor },
     { "play-audio-sample", do_play_audio_sample },
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },

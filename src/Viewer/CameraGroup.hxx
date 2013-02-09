@@ -292,11 +292,6 @@ protected:
 
 }
 
-namespace osgGA
-{
-class GUIEventAdapter;
-}
-
 namespace flightgear
 {
 /** Get the osg::Camera that draws the GUI, if any, from a camera
@@ -315,7 +310,7 @@ osg::Camera* getGUICamera(CameraGroup* cgroup);
  * @return true if any intersections are found
  */
 bool computeIntersections(const CameraGroup* cgroup,
-                          const osgGA::GUIEventAdapter* ea,
+                          const osg::Vec2d& windowPos,
                           osgUtil::LineSegmentIntersector::Intersections&
                           intersections);
 /** Warp the pointer to coordinates in the GUI camera of a camera group.

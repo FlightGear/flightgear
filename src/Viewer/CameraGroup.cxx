@@ -27,6 +27,8 @@
 #include "FGEventHandler.hxx"
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
+
+#include <simgear/math/SGRect.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/OSGUtils.hxx>
 #include <simgear/structure/OSGVersion.hxx>
@@ -1142,34 +1144,34 @@ Camera* getGUICamera(CameraGroup* cgroup)
     return info->getCamera(MAIN_CAMERA);
 }
 
-static bool computeCameraIntersection(const CameraInfo* cinfo,
-                                      const osgGA::GUIEventAdapter* ea,
+
+static bool computeCameraIntersection(const CameraInfo* cinfo, const osg::Vec2d& windowPos,
                                       osgUtil::LineSegmentIntersector::Intersections& intersections)
 {
   using osgUtil::Intersector;
   using osgUtil::LineSegmentIntersector;
-  double x, y;
-  eventToWindowCoords(ea, x, y);
-  
+
   if (!(cinfo->flags & CameraGroup::DO_INTERSECTION_TEST))
     return false;
   
   const Camera* camera = cinfo->getCamera(MAIN_CAMERA);
   if ( !camera )
     camera = cinfo->getCamera( GEOMETRY_CAMERA );
-  if (camera->getGraphicsContext() != ea->getGraphicsContext())
-    return false;
+ 
+  // if (camera->getGraphicsContext() != ea->getGraphicsContext())
+ //   return false;
   
   const Viewport* viewport = camera->getViewport();
+  SGRect<double> viewportRect(viewport->x(), viewport->y(),
+                              viewport->x() + viewport->width() - 1.0,
+                              viewport->y() + viewport->height()- 1.0);
+    
   double epsilon = 0.5;
-  if (!(x >= viewport->x() - epsilon
-        && x < viewport->x() + viewport->width() -1.0 + epsilon
-        && y >= viewport->y() - epsilon
-        && y < viewport->y() + viewport->height() -1.0 + epsilon))
+  if (!viewportRect.contains(windowPos.x(), windowPos.y(), epsilon))
     return false;
   
-  Vec4d start(x, y, 0.0, 1.0);
-  Vec4d end(x, y, 1.0, 1.0);
+  Vec4d start(windowPos.x(), windowPos.y(), 0.0, 1.0);
+  Vec4d end(windowPos.x(), windowPos.y(), 1.0, 1.0);
   Matrix windowMat = viewport->computeWindowMatrix();
   Matrix startPtMat = Matrix::inverse(camera->getProjectionMatrix()
                                       * windowMat);
@@ -1200,12 +1202,12 @@ static bool computeCameraIntersection(const CameraInfo* cinfo,
 }
   
 bool computeIntersections(const CameraGroup* cgroup,
-                          const osgGA::GUIEventAdapter* ea,
+                          const osg::Vec2d& windowPos,
                           osgUtil::LineSegmentIntersector::Intersections& intersections)
 {
     // test the GUI first
     const CameraInfo* guiCamera = cgroup->getGUICamera();
-    if (guiCamera && computeCameraIntersection(guiCamera, ea, intersections))
+    if (guiCamera && computeCameraIntersection(guiCamera, windowPos, intersections))
         return true;
     
     // Find camera that contains event
@@ -1217,7 +1219,7 @@ bool computeIntersections(const CameraGroup* cgroup,
         if (cinfo == guiCamera)
             continue;
         
-        if (computeCameraIntersection(cinfo, ea, intersections))
+        if (computeCameraIntersection(cinfo, windowPos, intersections))
             return true;
     }
   

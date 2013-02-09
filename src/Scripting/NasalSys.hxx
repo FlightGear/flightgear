@@ -64,6 +64,12 @@ public:
 
     void setCmdArg(SGPropertyNode* aNode);
     
+    /**
+     * create Nasal props.Node for an SGPropertyNode*
+     * This is the actual ghost, wrapped in a Nasal sugar class.
+     */
+    naRef wrappedPropsNode(SGPropertyNode* aProps);
+    
     // Callbacks for command and timer bindings
     virtual bool handleCommand( const char* moduleName,
                                 const char* fileName,

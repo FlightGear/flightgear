@@ -28,6 +28,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/debug/BufferedLogCallback.hxx>
+#include <simgear/nasal/cppbind/NasalHash.hxx>
 
 #include "NasalSys.hxx"
 #include "NasalSys_private.hxx"
@@ -502,7 +503,7 @@ public:
     {
         _sys->setCmdArg(const_cast<SGPropertyNode*>(aNode));
         naRef args[1];
-        args[0] = _sys->cmdArgGhost();
+        args[0] = _sys->wrappedPropsNode(const_cast<SGPropertyNode*>(aNode));
     
         _sys->callMethod(_func, naNil(), 1, args, naNil() /* locals */);
 
@@ -695,6 +696,20 @@ void FGNasalSys::init()
     // now Nasal modules are loaded, we can do some delayed work
     postinitNasalPositioned(_globals, _context);
     postinitNasalGUI(_globals, _context);
+}
+
+naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
+{
+    static naRef wrapNodeFunc = naNil();
+    if (naIsNil(wrapNodeFunc)) {
+        nasal::Hash g(_globals, _context);
+        nasal::Hash props = g.get<nasal::Hash>("props");
+        wrapNodeFunc = props.get("wrapNode");
+    }
+    
+    naRef args[1];
+    args[0] = propNodeGhost(aProps);
+    return naCall(_context, wrapNodeFunc, 1, args, naNil(), naNil());
 }
 
 void FGNasalSys::update(double)
