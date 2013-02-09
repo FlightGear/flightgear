@@ -26,6 +26,7 @@
 #include <simgear/io/sg_netChat.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include <cstdio>
 #include <sstream>
