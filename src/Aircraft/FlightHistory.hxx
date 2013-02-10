@@ -32,6 +32,8 @@
 
 typedef std::vector<SGGeod> SGGeodVec;
 
+const unsigned int SAMPLE_BUCKET_WIDTH = 1024;
+
 /**
  * record the history of the aircraft's movements, making it available
  * as a contiguous block. This can be used to show the historical flight-path
@@ -69,7 +71,7 @@ private:
         int simTimeMSec;
     };
     
-    static const unsigned int SAMPLE_BUCKET_WIDTH = 1024;
+    
     
     /**
      * Bucket is a fixed-size container of samples. This is a crude slab
