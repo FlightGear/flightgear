@@ -88,6 +88,7 @@ private:
 
     int m_TotalRecordSize;
     std::string m_ConfigName;
+    bool m_usingDefaultConfig;
 };
 
 #endif /* FLIGHTRECORDER_HXX_ */

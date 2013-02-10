@@ -43,7 +43,8 @@ using std::string;
 FGFlightRecorder::FGFlightRecorder(const char* pConfigName) :
     m_RecorderNode(fgGetNode("/sim/flight-recorder", true)),
     m_TotalRecordSize(0),
-    m_ConfigName(pConfigName)
+    m_ConfigName(pConfigName),
+    m_usingDefaultConfig(false)
 {
 }
 
@@ -55,6 +56,7 @@ void
 FGFlightRecorder::reinit(void)
 {
     m_ConfigNode = 0;
+    m_usingDefaultConfig = false;
 
     SGPropertyNode_ptr ConfigNode;
     int Selected = m_RecorderNode->getIntValue(m_ConfigName, 0);
@@ -188,6 +190,7 @@ FGFlightRecorder::getDefault(void)
         }
     }
 
+    m_usingDefaultConfig = true;
     return ConfigNode;
 }
 
@@ -254,9 +257,15 @@ FGFlightRecorder::processSignalList(const char* pSignalType, TSignalList& Signal
                     Capture.Signal = fgGetNode(PPath.c_str(),false);
                     if (!Capture.Signal.valid())
                     {
-                        // warn user: we're maybe going to record useless data
-                        // Or maybe the data is only initialized later. Warn anyway, so we can catch useless data. 
-                        SG_LOG(SG_SYSTEMS, SG_INFO, "FlightRecorder: Recording non-existent property '" << PPath << "'.");
+                        // JMT - only warn if using a custom config, not the default one. Since the generic config of
+                        // course requests many props, but we do want this warning for custom configs tailored to the
+                        // aircraft model.
+                        if (!m_usingDefaultConfig) {
+                            // warn user: we're maybe going to record useless data
+                            // Or maybe the data is only initialized later. Warn anyway, so we can catch useless data.
+                            SG_LOG(SG_SYSTEMS, SG_INFO, "FlightRecorder: Recording non-existent property '" << PPath << "'.");
+                        }
+                        
                         Capture.Signal = fgGetNode(PPath.c_str(),true);
                     }
 
