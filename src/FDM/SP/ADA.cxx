@@ -23,6 +23,7 @@
 #endif
 
 #include <cstring>
+#include <cstdio>
 
 #include <simgear/io/iochannel.hxx>
 #include <simgear/io/sg_socket.hxx>
