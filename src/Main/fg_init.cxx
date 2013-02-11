@@ -538,7 +538,7 @@ void fgOutputSettings()
     SG_LOG( SG_GENERAL, SG_INFO, "aircraft-dir = " << '"' << fgGetString("/sim/aircraft-dir") << '"');
     
     SG_LOG( SG_GENERAL, SG_INFO, "aircraft-search-paths = \n\t" << simgear::strutils::join(globals->get_aircraft_paths(), "\n\t") );
-    SG_LOG( SG_GENERAL, SG_INFO, "scenary-search-paths = \n\t" << simgear::strutils::join(globals->get_fg_scenery(), "\n\t") );
+    SG_LOG( SG_GENERAL, SG_INFO, "scenery-search-paths = \n\t" << simgear::strutils::join(globals->get_fg_scenery(), "\n\t") );
 }
 
 // This is the top level init routine which calls all the other
