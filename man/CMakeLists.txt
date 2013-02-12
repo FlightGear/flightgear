@@ -12,11 +12,24 @@ endif(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
 
 set(MANPAGES
     fgfs.1
-    fgjs.1
-    fgpanel.1
     gl-info.1
-    js_demo.1
-    terrasync.1)
+)
+
+if(WITH_FGPANEL)
+    list(APPEND MANPAGES fgpanel.1)
+endif()
+
+if(ENABLE_TERRASYNC)
+    list(APPEND MANPAGES terrasync.1)
+endif()
+
+if(ENABLE_FGJS)
+    list(APPEND MANPAGES fgjs.1)
+endif()
+
+if(ENABLE_JS_DEMO)
+    list(APPEND MANPAGES js_demo.1)
+endif()
 
 # map some variables to what the man-pages expect
 set(PACKAGE ${CMAKE_PROJECT_NAME})

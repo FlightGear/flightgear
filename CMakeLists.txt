@@ -144,7 +144,17 @@ option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite
 
 # additional utilities
 option(ENABLE_FGADMIN    "Set to ON to build the FGADMIN application (default)" ON)
+option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
 option(WITH_FGPANEL      "Set to ON to build the fgpanel application (default)" ON)
+option(ENABLE_FGVIEWER   "Set to ON to build the fgviewer application (default)" ON)
+option(ENABLE_GPSSMOOTH  "Set to ON to build the GPSsmooth application (default)" ON)
+option(ENABLE_TERRASYNC  "Set to ON to build the terrasync application (default)" ON)
+
+option(ENABLE_FGJS       "Set to ON to build the fgjs application (default)" ON)
+option(ENABLE_JS_DEMO    "Set to ON to build the js_demo application (default)" ON)
+
+option(ENABLE_METAR      "Set to ON to build the metar application (default)" ON)
+
 option(ENABLE_TESTS      "Set to ON to build test applications (default)" ON)
 
 if(LOGGING)

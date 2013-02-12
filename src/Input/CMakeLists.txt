@@ -39,26 +39,32 @@ if(EVENT_INPUT)
 	include_directories(${UDEV_INCLUDE_DIR})
 endif()
 
-set(FGJS_SOURCES
-	fgjs.cxx
-	jsinput.cxx
-	jssuper.cxx
-	)
+if(ENABLE_FGJS)
+    set(FGJS_SOURCES
+        fgjs.cxx
+        jsinput.cxx
+        jssuper.cxx
+    )
 
-add_executable(fgjs ${FGJS_SOURCES})
+    add_executable(fgjs ${FGJS_SOURCES})
+    target_link_libraries(fgjs
+        ${SIMGEAR_CORE_LIBRARIES}
+        ${PLIB_LIBRARIES}
+        ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+    )
 
-target_link_libraries(fgjs 
-	${SIMGEAR_CORE_LIBRARIES}
-	${PLIB_LIBRARIES}
-	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
+    install(TARGETS fgjs RUNTIME DESTINATION bin)
+endif()
 
-add_executable(js_demo js_demo.cxx)
+if(ENABLE_JS_DEMO)
+    add_executable(js_demo js_demo.cxx)
+    target_link_libraries(js_demo
+        ${SIMGEAR_CORE_LIBRARIES}
+        ${PLIB_LIBRARIES}
+        ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+    )
 
-target_link_libraries(js_demo 
-	${SIMGEAR_CORE_LIBRARIES}
-	${PLIB_LIBRARIES}
-	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
+    install(TARGETS js_demo RUNTIME DESTINATION bin)
+endif()
 
 flightgear_component(Input "${SOURCES}" "${HEADERS}")
-
-install(TARGETS fgjs js_demo RUNTIME DESTINATION bin)
