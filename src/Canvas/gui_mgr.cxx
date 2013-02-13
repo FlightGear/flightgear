@@ -345,7 +345,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
         static_cast<WindowUserData*>(layer->getChild(j)->getUserData())
           ->window.lock();
 
-      if( !window->isCapturingEvents() )
+      if( !window->isCapturingEvents() || !window->isVisible() )
         continue;
 
       float margin = window->isResizable() ? resize_margin_pos : 0;

@@ -56,6 +56,7 @@ namespace canvas
       void setCanvas(simgear::canvas::CanvasPtr canvas);
       simgear::canvas::CanvasWeakPtr getCanvas() const;
 
+      bool isVisible() const;
       bool isResizable() const;
       bool isCapturingEvents() const;
 

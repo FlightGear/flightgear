@@ -110,6 +110,12 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
+  bool Window::isVisible() const
+  {
+    return _image.isVisible();
+  }
+
+  //----------------------------------------------------------------------------
   bool Window::isResizable() const
   {
     return _resizable;
