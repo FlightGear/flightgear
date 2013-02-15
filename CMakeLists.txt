@@ -293,10 +293,13 @@ if(ENABLE_PROFILE)
 endif()
 
 if(ENABLE_RTI)
+    message(STATUS "RTI: ENABLED")
     find_package(RTI)
     if(RTI_FOUND)
         set(FG_HAVE_HLA 1)
     endif(RTI_FOUND)
+else()
+    message(STATUS "RTI: DISABLED")
 endif(ENABLE_RTI)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
