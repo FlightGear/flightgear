@@ -38,6 +38,7 @@ protected:
   */
   virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode ) { return false; }
 public:
+  virtual ~FlipFlopImplementation() {}
   /**
    * @brief evaluates the output state from the input lines
    * @param dt the elapsed time in seconds from since the last call

@@ -43,6 +43,7 @@ public:
     virtual ~MasterReferenceGyro ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);
@@ -51,7 +52,7 @@ private:
 
     static const double gravity; //conversion factor
 
-    string _name;
+    std::string _name;
     int _num;
 
     double _last_roll;

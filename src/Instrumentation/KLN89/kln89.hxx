@@ -68,10 +68,10 @@ const char* KLN89TimeCodes[20] = { "UTC", "GST", "GDT", "ATS", "ATD", "EST", "ED
 */
 
 // Used for storing airport town and county mapped by ID, since currently FG does not store this
-typedef map<string, string> airport_id_str_map_type;
+typedef std::map<std::string, std::string> airport_id_str_map_type;
 typedef airport_id_str_map_type::iterator airport_id_str_map_iterator;
 
-typedef vector<KLN89Page*> kln89_page_list_type;
+typedef std::vector<KLN89Page*> kln89_page_list_type;
 typedef kln89_page_list_type::iterator kln89_page_list_itr;
 
 class KLN89 : public DCLGPS {
@@ -150,14 +150,14 @@ private:
 	void ToggleOBSMode();
 	
 	// Initiate Direct To operation to the supplied ID.
-	void DtoInitiate(const string& id);
+	void DtoInitiate(const std::string& id);
 
 	//----------------------- Drawing functions which take CHARACTER units -------------------------
 	// Render string s in display field field at position x, y
 	// WHERE POSITION IS IN CHARACTER UNITS!
 	// zero y at bottom?
 	// invert: -1 => no inversion, 0 -> n => 1 char - s[invert] gets inverted, 99 => entire string gets inverted 
-	void DrawText(const string& s, int field, int px, int py, bool bold = false, int invert = -1);
+	void DrawText(const std::string& s, int field, int px, int py, bool bold = false, int invert = -1);
 	
 	void DrawLatitude(double d, int field, int px, int py);
 	void DrawLongitude(double d, int field, int px, int py);
@@ -307,7 +307,7 @@ private:
 	// Draw an airport or waypoint label on the moving map
 	// Specify position by the map pixel co-ordinate of the left or right, bottom, of the *visible* portion of the label.
 	// The black background quad will automatically overlap this by 1 pixel.
-	void DrawLabel(const string& s, int x1, int y1, bool right_align = false);
+	void DrawLabel(const std::string& s, int x1, int y1, bool right_align = false);
 	
 	int GetLabelQuadrant(double h);
 	int GetLabelQuadrant(double h1, double h2);
@@ -316,7 +316,7 @@ private:
 	void DrawLine(int x1, int y1, int x2, int y2);
 	
 	// Draw normal sized text on the moving map
-	void DrawMapText(const string& s, int x, int y, bool draw_background = false);
+	void DrawMapText(const std::string& s, int x, int y, bool draw_background = false);
 	
 	void DrawMapUpArrow(int x, int y);
 	

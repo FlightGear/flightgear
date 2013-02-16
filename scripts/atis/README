@@ -1,0 +1,50 @@
+The ATIS Voice Generation HowTo
+-------------------------------
+
+Required packages / installation hints by J. Denker
+---------------------------------------------------
+  cpan Audio::Wav
+  apt-get install festival mbrola sox festlex-oald
+  cd \$tars
+    wget http://tcts.fpms.ac.be/synthesis/mbrola/dba/en1/en1-980910.zip
+    wget http://www.cstr.ed.ac.uk/downloads/festival/1.95/festvox_en1.tar.gz
+  cd /usr/share/festival/voices/english
+  mkdir en1_mbrola
+  cd en1_mbrola
+  unzip \$tars/en1-980910.zip
+  cd /usr/share/festival
+  mkdir lib
+  cd lib
+  ln -s ../voices ./
+  cd /usr/share
+  tar -xpzvf \$tars/festvox_en1.tar.gz
+
+Generating Voice Files
+----------------------
+
+ 1. Configure paths to fgdata and flightgear sources
+    export FG_ROOT=/home/whatever/fgdata
+    export FG_SRC=/home/whatever/flightgear
+
+ 2. Create phraseology word list
+   ./atis-lex.pl > phraseology.vlist
+
+ 3. Create airport word list
+   export ATIS_ONLY=yes
+   ./list-airports.pl | ./words_per_line.sh > airports.vlist
+
+ 4. Check for and fix non-UTF8 encoded airport names
+   ./find_nonUTF8.pl
+
+ 5. Generate phraseology voice file
+   ./synth.pl phraseology.vlist phraseology.vce phraseology.wav
+
+ 6. Generate airport voice file
+   ./synth.pl airports.vlist airports.vce airports.wav
+
+ 7. Install *.vce and *.wav.gz files in fgdata:
+   cp phraseology.vce    $(FG_ROOT)/ATC/voices/default/.
+   cp phraseology.wav.gz $(FG_ROOT)/ATC/voices/default/.
+   cp airports.vce       $(FG_ROOT)/ATC/voices/default/.
+   cp airports.wav.gz    $(FG_ROOT)/ATC/voices/default/.
+

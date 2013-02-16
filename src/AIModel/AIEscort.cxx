@@ -27,12 +27,12 @@
 #include <vector>
 
 #include <simgear/sg_inlines.h>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/sg_random.h>
 
 #include <math.h>
 #include <Main/util.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/viewer.hxx>
 
 #include <Scenery/scenery.hxx>
 
@@ -91,50 +91,40 @@ void FGAIEscort::readFromScenario(SGPropertyNode* scFileNode) {
 void FGAIEscort::bind() {
     FGAIShip::bind();
 
-    props->tie("station/rel-bearing-deg",
+    tie("station/rel-bearing-deg",
         SGRawValuePointer<double>(&_stn_relbrg));
-    props->tie("station/true-bearing-deg",
+    tie("station/true-bearing-deg",
         SGRawValuePointer<double>(&_stn_truebrg));
-    props->tie("station/range-nm",
+    tie("station/range-nm",
         SGRawValuePointer<double>(&_stn_range));
-    props->tie("station/range-limit-nm",
+    tie("station/range-limit-nm",
         SGRawValuePointer<double>(&_stn_limit));
-    props->tie("station/angle-limit-deg",
+    tie("station/angle-limit-deg",
         SGRawValuePointer<double>(&_stn_angle_limit));
-    props->tie("station/speed-kts",
+    tie("station/speed-kts",
         SGRawValuePointer<double>(&_stn_speed));
-    props->tie("station/height-ft",
+    tie("station/height-ft",
         SGRawValuePointer<double>(&_stn_height));
-    props->tie("controls/update-interval-sec",
+    tie("controls/update-interval-sec",
         SGRawValuePointer<double>(&_interval));
-    props->tie("controls/parent-mp-control",
+    tie("controls/parent-mp-control",
         SGRawValuePointer<bool>(&_MPControl));
-    props->tie("station/target-range-nm",
+    tie("station/target-range-nm",
         SGRawValuePointer<double>(&_tgtrange));
-    props->tie("station/target-brg-deg-t",
+    tie("station/target-brg-deg-t",
         SGRawValuePointer<double>(&_tgtbrg));
-    props->tie("station/patrol",
+    tie("station/patrol",
         SGRawValuePointer<bool>(&_patrol));
-}
-
-void FGAIEscort::unbind() {
-    FGAIShip::unbind();
-
-    props->untie("station/rel-bearing-deg");
-    props->untie("station/true-bearing-deg");
-    props->untie("station/range-nm");
-    props->untie("station/range-limit-nm");
-    props->untie("station/angle-limit-deg");
-    props->untie("station/speed-kts");
-    props->untie("station/height-ft");
-    props->untie("controls/update-interval-sec");
-
 }
 
 bool FGAIEscort::init(bool search_in_AI_path) {
     if (!FGAIShip::init(search_in_AI_path))
         return false;
+    reinit();
+    return true;
+}
 
+void FGAIEscort::reinit() {
     invisible = false;
     no_roll = false;
 
@@ -147,7 +137,7 @@ bool FGAIEscort::init(bool search_in_AI_path) {
         hdg = _parent_hdg;
     }
 
-    return true;
+    FGAIShip::reinit();
 }
 
 void FGAIEscort::update(double dt) {
@@ -200,13 +190,15 @@ bool FGAIEscort::getGroundElev(SGGeod inpos) {
 
     double height_m ;
 
-    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &_material,0)){
+    const simgear::BVHMaterial* mat = 0;
+    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &mat, 0)){
+        const SGMaterial* material = dynamic_cast<const SGMaterial*>(mat);
         _ht_agl_ft = inpos.getElevationFt() - height_m * SG_METER_TO_FEET;
 
-        if (_material) {
-            const vector<string>& names = _material->get_names();
+        if (material) {
+            const vector<string>& names = material->get_names();
 
-            _solid = _material->get_solid();
+            _solid = material->get_solid();
 
             if (!names.empty())
                 props->setStringValue("material/name", names[0].c_str());
@@ -314,7 +306,7 @@ void FGAIEscort::setStationSpeed(){
     // these are the AI rules for the manoeuvring of escorts
 
     if (_MPControl && _tgtrange > 4 * _stn_limit){
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIEscort: " << _name
+        SG_LOG(SG_AI, SG_ALERT, "AIEscort: " << _name
             << " re-aligning to MP pos");
         pos = _tgtpos;
         speed = 0;

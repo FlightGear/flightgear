@@ -38,6 +38,7 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/math/interpolater.hxx>
 
 
@@ -89,6 +90,7 @@ private:
     SGVec4f _scene_chrome;
 
     // clear sky, fog and cloud color
+    SGVec4f _sun_color;
     SGVec4f _sky_color;
     SGVec4f _fog_color;
     SGVec4f _cloud_color;
@@ -112,6 +114,22 @@ private:
     // properties for chrome light; not a tie because I want to fire
     // property listeners when the values change.
     SGPropertyNode_ptr _chromeProps[4];
+  
+    SGPropertyNode_ptr _sunAngleRad;
+
+    SGPropertyNode_ptr _humidity;
+
+    simgear::TiedPropertyList _tiedProperties;
+
+    /**
+     * Tied-properties helper, record nodes which are tied for easy un-tie-ing
+     */
+    template <typename T>
+    void tie(SGPropertyNode* aNode, const char* aRelPath, const SGRawValue<T>& aRawValue)
+    {
+        _tiedProperties.Tie(aNode->getNode(aRelPath, true), aRawValue);
+    }
+
 public:
 
     FGLight ();

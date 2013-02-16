@@ -12,11 +12,10 @@
 .\"
 .\" You should have received a copy of the GNU General Public License
 .\" along with this program; if not, write to the Free Software
-.\" Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
-.Id $Id$
-.TH FGFS 1 "October 2003" "@VERSION@" "@PACKAGE@"
+.TH FGFS 1 "February 2012" "@VERSION@" "@PACKAGE@"
 .SH NAME
 fgfs \- FlightGear Flight Simulator
 .SH SYNOPSIS
@@ -27,6 +26,7 @@ fgfs \- FlightGear Flight Simulator
 is a free, open-source, multi-platform, and sophisticated flight
 simulator framework for the development and pursuit of interesting
 flight simulator ideas.
+For more information visit <http://www.flightgear.org>.
 .SH OPTIONS
 .TP
 .BI "--adf=" "[rotation:]frequency"
@@ -47,7 +47,7 @@ executable.  This is used for UIUC aircraft only.
 Specify starting postion by airport ID.
 .TP
 .BI "--altitude=" "value"
-Specify starting altitude (in feet unless --units-meters specified).
+Specify starting altitude (in feet unless \-\-units\-meters specified).
 .TP
 .BI "--atc610x"
 Enable atc610x interface.
@@ -275,7 +275,7 @@ Specify window geometry (ie. 640x480, 800x600, etc).
 Specify heading or yaw angle (degrees).
 .TP
 .BR "--help" ", " "-h"
-Show a brief help message.  Use --verbose,-v for a full listing of options.
+Show a brief help message.  Use \-\-verbose,\-v for a full listing of options.
 .TP
 .BI "--httpd=" "port"
 Start an HTTP server on the specified port.
@@ -371,7 +371,7 @@ set property <name> to <value>.
 Open an IO connection using the PVE (Provision Entertainment) protocol.
 .TP
 .B "--random-wind"
-Randomize initial wind parameters.  See also: --wind.
+Randomize initial wind parameters.  See also: \-\-wind.
 .TP
 .BI "--ray=" "medium" "," "direction" "," "hz" "," "options" "," "..."
 Open an IO connection to a "RayWoodworth" motion chair.
@@ -429,7 +429,7 @@ Specify turbulence from 0.0 (calm) to 1.0 (severe).
 .TP
 .BI "--uBody=" "value"
 Specify velocity along the body X axis (feet per second unless
---units-meters specified).
+\-\-units\-meters specified).
 .TP
 .B "--units-feet"
 Use feet instead of meters.  Affects other options as well as the
@@ -441,7 +441,7 @@ values displayed by the HUD.
 .TP
 .BI "--vBody=" "value"
 Specify velocity along the body Y axis (feet per second unless
---units-meters specified).
+\-\-units\-meters specified).
 .TP
 .BI "--vc=" "knots"
 Specify initial airspeed (knots).
@@ -465,7 +465,7 @@ Specify starting position relative to a VOR.
 .TP
 .BI "--wBody=" "value"
 Specify velocity along the body Z axis (feet per second unless
---units-meters specified).
+\-\-units-meters specified).
 .TP
 .BI "--wind=" "DIR@SPEED"
 Specify wind coming from DIR (degrees) at SPEED (knots).  Values may be
@@ -509,9 +509,10 @@ $FG_ROOT/mice.xml
 Mouse bindings.
 .RE
 .SH BUGS
-Send bug reports to <flightgear-devel@lists.sourceforge.net>.
+Send bug reports to <flightgear\-devel@lists.sourceforge.net> or visit
+<http://code.google.com/p/flightgear\-bugs>.
 .SH SEE ALSO
-fgjs(1)
+fgjs(1), fgpanel(1), js_demo(1), terrasync(1)
 .SH AUTHORS
 Curt L. Olson, et al.  See
 .I Thanks

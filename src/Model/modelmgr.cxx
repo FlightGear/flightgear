@@ -18,8 +18,6 @@
 #include <vector>
 #include <cstring>
 
-#include <osg/Math>
-
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/structure/exception.hxx>
@@ -68,20 +66,20 @@ FGModelMgr::init ()
 void
 FGModelMgr::add_model (SGPropertyNode * node)
 {
-  SG_LOG(SG_GENERAL, SG_INFO,
+  SG_LOG(SG_AIRCRAFT, SG_INFO,
          "Adding model " << node->getStringValue("name", "[unnamed]"));
 
   const char *path = node->getStringValue("path", "Models/Geometry/glider.ac");
   osg::Node *object;
 
   try {
-    object = SGModelLib::loadPagedModel(path, globals->get_props());
+      object = SGModelLib::loadDeferredModel(path, globals->get_props());
   } catch (const sg_throwable& t) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "Error loading " << path << ":\n  "
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "Error loading " << path << ":\n  "
         << t.getFormattedMessage() << t.getOrigin());
     return;
   }
-  
+
   Instance * instance = new Instance;
   SGModelPlacement *model = new SGModelPlacement;
   instance->model = model;
@@ -150,7 +148,7 @@ namespace
 {
 double testNan(double val) throw (sg_range_exception)
 {
-    if (osg::isNaN(val))
+    if (SGMisc<double>::isNaN(val))
         throw sg_range_exception("value is nan");
     return val;
 }
@@ -161,6 +159,7 @@ struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
     {
         SGModelPlacement* model = instance->model;
         double lon, lat, elev, roll, pitch, heading;
+        lon = lat = elev = roll = pitch = heading = 0.0;
 
         try {
             // Optionally set position from properties
@@ -181,7 +180,7 @@ struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
         } catch (const sg_range_exception&) {
             const char *path = instance->node->getStringValue("path",
                                                               "unknown");
-            SG_LOG(SG_GENERAL, SG_INFO, "Instance of model " << path
+            SG_LOG(SG_AIRCRAFT, SG_INFO, "Instance of model " << path
                    << " has invalid values");
             return;
         }

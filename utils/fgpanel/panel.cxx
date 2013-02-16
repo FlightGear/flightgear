@@ -40,7 +40,6 @@
 #include <plib/fnt.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #include "panel.hxx"
@@ -285,7 +284,7 @@ GLuint FGPanel::getInitDisplayList()
 void
 FGPanel::update (double dt)
 {
-  glCallList(getInitDisplayList());
+  /*glCallList*/(getInitDisplayList());
 
   // Draw the instruments.
   // Syd Adams: added instrument clipping
@@ -804,6 +803,11 @@ FGTextLayer::draw ()
     transform();
 
     text_renderer.setFont(ApplicationProperties::fontCache.getTexFont(_font_name.c_str()));
+    if (!text_renderer.getFont())
+    {
+        SG_LOG( SG_COCKPIT, SG_ALERT, "Missing font file: " << _font_name );
+        return;
+    }
 
     text_renderer.setPointSize(_pointSize);
     text_renderer.begin();

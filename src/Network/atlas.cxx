@@ -24,6 +24,7 @@
 #  include "config.h"
 #endif
 
+#include <cstdlib>
 #include <cstring>
 
 #include <simgear/debug/logstream.hxx>
@@ -39,8 +40,15 @@
 #include "atlas.hxx"
 
 
-FGAtlas::FGAtlas() {
-  fdm = new FlightProperties;
+FGAtlas::FGAtlas() :
+  length(0),
+  fdm(new FlightProperties)
+{
+  _adf_freq        = fgGetNode("/instrumentation/adf/frequencies/selected-khz", true);
+  _nav1_freq       = fgGetNode("/instrumentation/nav/frequencies/selected-mhz", true);
+  _nav1_sel_radial = fgGetNode("/instrumentation/nav/radials/selected-deg", true);
+  _nav2_freq       = fgGetNode("/instrumentation/nav[1]/frequencies/selected-mhz", true);
+  _nav2_sel_radial = fgGetNode("/instrumentation/nav[1]/radials/selected-deg", true);
 }
 
 FGAtlas::~FGAtlas() {
@@ -70,18 +78,6 @@ static char calc_atlas_cksum(char *sentence) {
 // generate Atlas message
 bool FGAtlas::gen_message() {
     // cout << "generating atlas message" << endl;
-
-    static SGPropertyNode *adf_freq
-        = fgGetNode("/instrumentation/adf/frequencies/selected-khz", true);
-    static SGPropertyNode *nav1_freq
-        = fgGetNode("/instrumentation/nav/frequencies/selected-mhz", true);
-    static SGPropertyNode *nav1_sel_radial
-        = fgGetNode("/instrumentation/nav/radials/selected-deg", true);
-    static SGPropertyNode *nav2_freq
-        = fgGetNode("/instrumentation/nav[1]/frequencies/selected-mhz", true);
-    static SGPropertyNode *nav2_sel_radial
-        = fgGetNode("/instrumentation/nav[1]/radials/selected-deg", true);
-
     char rmc[256], gga[256], patla[256];
     char rmc_sum[10], gga_sum[10], patla_sum[10];
     char dir;
@@ -145,11 +141,11 @@ bool FGAtlas::gen_message() {
     sprintf( gga_sum, "%02X", calc_atlas_cksum(gga) );
 
     sprintf( patla, "PATLA,%.2f,%.1f,%.2f,%.1f,%.0f",
-	     nav1_freq->getDoubleValue(),
-	     nav1_sel_radial->getDoubleValue(),
-	     nav2_freq->getDoubleValue(),
-	     nav2_sel_radial->getDoubleValue(),
-	     adf_freq->getDoubleValue() );
+             _nav1_freq->getDoubleValue(),
+             _nav1_sel_radial->getDoubleValue(),
+             _nav2_freq->getDoubleValue(),
+             _nav2_sel_radial->getDoubleValue(),
+             _adf_freq->getDoubleValue() );
     sprintf( patla_sum, "%02X", calc_atlas_cksum(patla) );
 
     SG_LOG( SG_IO, SG_DEBUG, rmc );

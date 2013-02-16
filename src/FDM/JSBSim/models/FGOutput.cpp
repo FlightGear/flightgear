@@ -39,9 +39,16 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <sstream>
+#include <iomanip>
+#include <cstring>
+#include <cstdlib>
+
 #include "FGOutput.h"
 #include "FGFDMExec.h"
 #include "FGAtmosphere.h"
+#include "FGAccelerations.h"
+#include "atmosphere/FGWinds.h"
 #include "FGFCS.h"
 #include "FGAerodynamics.h"
 #include "FGGroundReactions.h"
@@ -56,10 +63,6 @@ INCLUDES
 #include "models/propulsion/FGEngine.h"
 #include "models/propulsion/FGTank.h"
 #include "models/propulsion/FGPiston.h"
-#include <sstream>
-#include <iomanip>
-#include <cstring>
-#include <cstdlib>
 
 #if defined(WIN32) && !defined(__CYGWIN__)
 #  include <windows.h>
@@ -74,7 +77,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGOutput.cpp,v 1.55 2011/05/20 03:18:36 jberndt Exp $";
+static const char *IdSrc = "$Id: FGOutput.cpp,v 1.67 2012/04/27 12:14:56 jberndt Exp $";
 static const char *IdHdr = ID_OUTPUT;
 
 // (stolen from FGFS native_fdm.cxx)
@@ -213,7 +216,7 @@ void FGOutput::SetType(const string& type)
 {
   if (type == "CSV") {
     Type = otCSV;
-    delimeter = ", ";
+    delimeter = ",";
   } else if (type == "TABULAR") {
     Type = otTab;
     delimeter = "\t";
@@ -246,11 +249,12 @@ void FGOutput::DelimitedOutput(const string& fname)
   const FGAuxiliary* Auxiliary = FDMExec->GetAuxiliary();
   const FGAircraft* Aircraft = FDMExec->GetAircraft();
   const FGAtmosphere* Atmosphere = FDMExec->GetAtmosphere();
+  const FGWinds* Winds = FDMExec->GetWinds();
   const FGPropulsion* Propulsion = FDMExec->GetPropulsion();
   const FGMassBalance* MassBalance = FDMExec->GetMassBalance();
   const FGPropagate* Propagate = FDMExec->GetPropagate();
+  const FGAccelerations* Accelerations = FDMExec->GetAccelerations();
   const FGFCS* FCS = FDMExec->GetFCS();
-  const FGInertial* Inertial = FDMExec->GetInertial();
   const FGGroundReactions* GroundReactions = FDMExec->GetGroundReactions();
   const FGExternalReactions* ExternalReactions = FDMExec->GetExternalReactions();
   const FGBuoyantForces* BuoyantForces = FDMExec->GetBuoyantForces();
@@ -317,7 +321,7 @@ void FGOutput::DelimitedOutput(const string& fname)
     }
     if (SubSystems & ssMoments) {
       outstream << delimeter;
-      outstream << "L_{Aero} (ft-lbs)" + delimeter + "M_{Aero} ( ft-lbs)" + delimeter + "N_{Aero} (ft-lbs)" + delimeter;
+      outstream << "L_{Aero} (ft-lbs)" + delimeter + "M_{Aero} (ft-lbs)" + delimeter + "N_{Aero} (ft-lbs)" + delimeter;
       outstream << "L_{Prop} (ft-lbs)" + delimeter + "M_{Prop} (ft-lbs)" + delimeter + "N_{Prop} (ft-lbs)" + delimeter;
       outstream << "L_{Gear} (ft-lbs)" + delimeter + "M_{Gear} (ft-lbs)" + delimeter + "N_{Gear} (ft-lbs)" + delimeter;
       outstream << "L_{ext} (ft-lbs)" + delimeter + "M_{ext} (ft-lbs)" + delimeter + "N_{ext} (ft-lbs)" + delimeter;
@@ -409,7 +413,7 @@ void FGOutput::DelimitedOutput(const string& fname)
   if (SubSystems & ssRates) {
     outstream << delimeter;
     outstream << (radtodeg*Propagate->GetPQR()).Dump(delimeter) << delimeter;
-    outstream << (radtodeg*Propagate->GetPQRdot()).Dump(delimeter) << delimeter;
+    outstream << (radtodeg*Accelerations->GetPQRdot()).Dump(delimeter) << delimeter;
     outstream << (radtodeg*Propagate->GetPQRi()).Dump(delimeter);
   }
   if (SubSystems & ssVelocities) {
@@ -453,9 +457,9 @@ void FGOutput::DelimitedOutput(const string& fname)
     outstream << Atmosphere->GetTemperature() << delimeter;
     outstream << Atmosphere->GetPressureSL() << delimeter;
     outstream << Atmosphere->GetPressure() << delimeter;
-    outstream << Atmosphere->GetTurbMagnitude() << delimeter;
-    outstream << Atmosphere->GetTurbDirection().Dump(delimeter) << delimeter;
-    outstream << Atmosphere->GetTotalWindNED().Dump(delimeter);
+    outstream << Winds->GetTurbMagnitude() << delimeter;
+    outstream << Winds->GetTurbDirection().Dump(delimeter) << delimeter;
+    outstream << Winds->GetTotalWindNED().Dump(delimeter);
   }
   if (SubSystems & ssMassProps) {
     outstream << delimeter;
@@ -477,7 +481,7 @@ void FGOutput::DelimitedOutput(const string& fname)
     outstream << ((FGColumnVector3)Propagate->GetInertialPosition()).Dump(delimeter) << delimeter;
     outstream << ((FGColumnVector3)Propagate->GetLocation()).Dump(delimeter) << delimeter;
     outstream.precision(14);
-    outstream << Inertial->GetEarthPositionAngleDeg() << delimeter;
+    outstream << Propagate->GetEarthPositionAngleDeg() << delimeter;
     outstream << Propagate->GetDistanceAGL() << delimeter;
     outstream << Propagate->GetTerrainElevation();
     outstream.precision(10);
@@ -513,10 +517,8 @@ void FGOutput::DelimitedOutput(const string& fname)
 
 void FGOutput::SocketDataFill(FGNetFDM* net)
 {
-  const FGAerodynamics* Aerodynamics = FDMExec->GetAerodynamics();
   const FGAuxiliary* Auxiliary = FDMExec->GetAuxiliary();
   const FGPropulsion* Propulsion = FDMExec->GetPropulsion();
-  const FGMassBalance* MassBalance = FDMExec->GetMassBalance();
   const FGPropagate* Propagate = FDMExec->GetPropagate();
   const FGFCS* FCS = FDMExec->GetFCS();
   const FGGroundReactions* GroundReactions = FDMExec->GetGroundReactions();
@@ -733,8 +735,10 @@ void FGOutput::SocketOutput(void)
   const FGPropulsion* Propulsion = FDMExec->GetPropulsion();
   const FGMassBalance* MassBalance = FDMExec->GetMassBalance();
   const FGPropagate* Propagate = FDMExec->GetPropagate();
+  const FGAccelerations* Accelerations = FDMExec->GetAccelerations();
   const FGFCS* FCS = FDMExec->GetFCS();
   const FGAtmosphere* Atmosphere = FDMExec->GetAtmosphere();
+  const FGWinds* Winds = FDMExec->GetWinds();
   const FGAircraft* Aircraft = FDMExec->GetAircraft();
   const FGGroundReactions* GroundReactions = FDMExec->GetGroundReactions();
 
@@ -875,9 +879,9 @@ void FGOutput::SocketOutput(void)
     socket->Append(radtodeg*Propagate->GetPQR(eP));
     socket->Append(radtodeg*Propagate->GetPQR(eQ));
     socket->Append(radtodeg*Propagate->GetPQR(eR));
-    socket->Append(radtodeg*Propagate->GetPQRdot(eP));
-    socket->Append(radtodeg*Propagate->GetPQRdot(eQ));
-    socket->Append(radtodeg*Propagate->GetPQRdot(eR));
+    socket->Append(radtodeg*Accelerations->GetPQRdot(eP));
+    socket->Append(radtodeg*Accelerations->GetPQRdot(eQ));
+    socket->Append(radtodeg*Accelerations->GetPQRdot(eR));
   }
   if (SubSystems & ssVelocities) {
     socket->Append(Auxiliary->Getqbar());
@@ -910,9 +914,9 @@ void FGOutput::SocketOutput(void)
     socket->Append(Atmosphere->GetDensity());
     socket->Append(Atmosphere->GetPressureSL());
     socket->Append(Atmosphere->GetPressure());
-    socket->Append(Atmosphere->GetTurbMagnitude());
-    socket->Append(Atmosphere->GetTurbDirection().Dump(","));
-    socket->Append(Atmosphere->GetTotalWindNED().Dump(","));
+    socket->Append(Winds->GetTurbMagnitude());
+    socket->Append(Winds->GetTurbDirection().Dump(","));
+    socket->Append(Winds->GetTotalWindNED().Dump(","));
   }
   if (SubSystems & ssMassProps) {
     socket->Append(MassBalance->GetJ()(1,1));
@@ -977,15 +981,32 @@ void FGOutput::SocketStatusOutput(const string& out_str)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+bool FGOutput::Load(int subSystems, std::string protocol, std::string  type, std::string port, std::string name, double outRate, std::vector<FGPropertyManager *> & outputProperties)
+{
+  SetType(type);
+  SetRate(outRate);
+  SubSystems = subSystems;
+  OutputProperties = outputProperties;
+
+  if (((Type == otCSV) || (Type == otTab)) && (name != "cout") && (name !="COUT"))
+    name = FDMExec->GetRootDir() + name;
+
+  if (!port.empty() && (Type == otSocket || Type == otFlightGear)) {
+    SetProtocol(protocol);
+    socket = new FGfdmSocket(name, atoi(port.c_str()), Protocol);
+  } else {
+    BaseFilename = Filename = name;
+  }
+
+  Debug(2);
+  return true;
+}
+
 bool FGOutput::Load(Element* element)
 {
-  string parameter="";
-  string name="";
-  double OutRate = 0.0;
-  unsigned int port;
+  int subSystems = 0;
   Element *property_element;
-
-  string separator = "/";
+  std::vector<FGPropertyManager *> outputProperties;
 
   if (!DirectivesFile.empty()) { // A directives filename from the command line overrides
     output_file_name = DirectivesFile;      // one found in the config file.
@@ -999,48 +1020,42 @@ bool FGOutput::Load(Element* element)
 
   if (!document) return false;
 
-  name = FDMExec->GetRootDir() + document->GetAttributeValue("name");
-  SetType(document->GetAttributeValue("type"));
-  Port = document->GetAttributeValue("port");
-  if (!Port.empty() && (Type == otSocket || Type == otFlightGear)) {
-    port = atoi(Port.c_str());
-    SetProtocol(document->GetAttributeValue("protocol"));
-    socket = new FGfdmSocket(name, port, Protocol);
-  } else {
-    BaseFilename = Filename = name;
-  }
+  string type = document->GetAttributeValue("type");
+  string name = document->GetAttributeValue("name");
+  string port = document->GetAttributeValue("port");
+  string protocol = document->GetAttributeValue("protocol");
   if (!document->GetAttributeValue("rate").empty()) {
-    OutRate = document->GetAttributeValueAsNumber("rate");
+    rate = document->GetAttributeValueAsNumber("rate");
   } else {
-    OutRate = 1;
+    rate = 1;
   }
 
   if (document->FindElementValue("simulation") == string("ON"))
-    SubSystems += ssSimulation;
+    subSystems += ssSimulation;
   if (document->FindElementValue("aerosurfaces") == string("ON"))
-    SubSystems += ssAerosurfaces;
+    subSystems += ssAerosurfaces;
   if (document->FindElementValue("rates") == string("ON"))
-    SubSystems += ssRates;
+    subSystems += ssRates;
   if (document->FindElementValue("velocities") == string("ON"))
-    SubSystems += ssVelocities;
+    subSystems += ssVelocities;
   if (document->FindElementValue("forces") == string("ON"))
-    SubSystems += ssForces;
+    subSystems += ssForces;
   if (document->FindElementValue("moments") == string("ON"))
-    SubSystems += ssMoments;
+    subSystems += ssMoments;
   if (document->FindElementValue("atmosphere") == string("ON"))
-    SubSystems += ssAtmosphere;
+    subSystems += ssAtmosphere;
   if (document->FindElementValue("massprops") == string("ON"))
-    SubSystems += ssMassProps;
+    subSystems += ssMassProps;
   if (document->FindElementValue("position") == string("ON"))
-    SubSystems += ssPropagate;
-  if (document->FindElementValue("coefficients") == string("ON"))
-    SubSystems += ssAeroFunctions;
+    subSystems += ssPropagate;
+  if (document->FindElementValue("coefficients") == string("ON") || document->FindElementValue("aerodynamics") == string("ON"))
+    subSystems += ssAeroFunctions;
   if (document->FindElementValue("ground_reactions") == string("ON"))
-    SubSystems += ssGroundReactions;
+    subSystems += ssGroundReactions;
   if (document->FindElementValue("fcs") == string("ON"))
-    SubSystems += ssFCS;
+    subSystems += ssFCS;
   if (document->FindElementValue("propulsion") == string("ON"))
-    SubSystems += ssPropulsion;
+    subSystems += ssPropulsion;
   property_element = document->FindElement("property");
   while (property_element) {
     string property_str = property_element->GetDataLine();
@@ -1051,17 +1066,15 @@ bool FGOutput::Load(Element* element)
            << "  not be logged. You should check your configuration file."
            << reset << endl;
     } else {
-      OutputProperties.push_back(node);
+      outputProperties.push_back(node);
     }
     property_element = document->FindNextElement("property");
   }
 
-  SetRate(OutRate);
-
-  Debug(2);
-
-  return true;
+  return Load(subSystems, protocol, type, port, name, rate, outputProperties);
 }
+
+
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

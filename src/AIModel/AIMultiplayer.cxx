@@ -54,8 +54,8 @@ bool FGAIMultiplayer::init(bool search_in_AI_path) {
     isTanker = false; // do this until this property is
                       // passed over the net
 
-    string str1 = _getCallsign();
-    string str2 = "MOBIL";
+    const string& str1 = _getCallsign();
+    const string str2 = "MOBIL";
 
     string::size_type loc1= str1.find( str2, 0 );
     if ( (loc1 != string::npos && str2 != "") ){
@@ -74,10 +74,10 @@ bool FGAIMultiplayer::init(bool search_in_AI_path) {
 void FGAIMultiplayer::bind() {
     FGAIBase::bind();
 
-    props->tie("refuel/contact", SGRawValuePointer<bool>(&contact));
-    props->tie("tanker", SGRawValuePointer<bool>(&isTanker));
+    tie("refuel/contact", SGRawValuePointer<bool>(&contact));
+    tie("tanker", SGRawValuePointer<bool>(&isTanker));
 
-    props->tie("controls/invisible",
+    tie("controls/invisible",
         SGRawValuePointer<bool>(&invisible));
 
 #define AIMPROProp(type, name) \
@@ -87,28 +87,16 @@ SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
 SGRawValueMethods<FGAIMultiplayer, type>(*this, \
       &FGAIMultiplayer::get##name, &FGAIMultiplayer::set##name)
 
-    //props->tie("callsign", AIMPROProp(const char *, CallSign));
+    //tie("callsign", AIMPROProp(const char *, CallSign));
 
-    props->tie("controls/allow-extrapolation",
-               AIMPRWProp(bool, AllowExtrapolation));
-    props->tie("controls/lag-adjust-system-speed",
-               AIMPRWProp(double, LagAdjustSystemSpeed));
+    tie("controls/allow-extrapolation",
+        AIMPRWProp(bool, AllowExtrapolation));
+    tie("controls/lag-adjust-system-speed",
+        AIMPRWProp(double, LagAdjustSystemSpeed));
 
 
 #undef AIMPROProp
 #undef AIMPRWProp
-}
-
-void FGAIMultiplayer::unbind() {
-    FGAIBase::unbind();
-
-    //props->untie("callsign");
-    props->untie("controls/allow-extrapolation");
-    props->untie("controls/lag-adjust-system-speed");
-    props->untie("controls/invisible");
-    props->untie("refuel/contact");
-    props->untie("tanker");
-
 }
 
 void FGAIMultiplayer::update(double dt)
@@ -151,7 +139,7 @@ void FGAIMultiplayer::update(double dt)
     if ((!mAllowExtrapolation && offset + lag < mTimeOffset)
         || (offset - 10 > mTimeOffset)) {
       mTimeOffset = offset;
-      SG_LOG(SG_GENERAL, SG_DEBUG, "Resetting time offset adjust system to "
+      SG_LOG(SG_AI, SG_DEBUG, "Resetting time offset adjust system to "
              "avoid extrapolation: time offset = " << mTimeOffset);
     } else {
       // the error of the offset, respectively the negative error to avoid
@@ -178,7 +166,7 @@ void FGAIMultiplayer::update(double dt)
         systemIncrement = err;
       mTimeOffset += systemIncrement;
       
-      SG_LOG(SG_GENERAL, SG_DEBUG, "Offset adjust system: time offset = "
+      SG_LOG(SG_AI, SG_DEBUG, "Offset adjust system: time offset = "
              << mTimeOffset << ", expected longitudinal position error due to "
              " current adjustment of the offset: "
              << fabs(norm(it->second.linearVel)*systemIncrement));
@@ -200,7 +188,7 @@ void FGAIMultiplayer::update(double dt)
     // Find the first packet before the target time
     MotionInfo::iterator nextIt = mMotionInfo.upper_bound(tInterp);
     if (nextIt == mMotionInfo.begin()) {
-      SG_LOG(SG_GENERAL, SG_DEBUG, "Taking oldest packet!");
+      SG_LOG(SG_AI, SG_DEBUG, "Taking oldest packet!");
       // We have no packet before the target time, just use the first one
       MotionInfo::iterator firstIt = mMotionInfo.begin();
       ecPos = firstIt->second.position;
@@ -243,7 +231,7 @@ void FGAIMultiplayer::update(double dt)
         }
         else
         {
-          SG_LOG(SG_GENERAL, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
+          SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
         }
         ++firstPropIt;
       }
@@ -260,7 +248,7 @@ void FGAIMultiplayer::update(double dt)
       double intervalLen = intervalEnd - intervalStart;
       double tau = (tInterp - intervalStart)/intervalLen;
 
-      SG_LOG(SG_GENERAL, SG_DEBUG, "Multiplayer vehicle interpolation: ["
+      SG_LOG(SG_AI, SG_DEBUG, "Multiplayer vehicle interpolation: ["
              << intervalStart << ", " << intervalEnd << "], intervalLen = "
              << intervalLen << ", interpolation parameter = " << tau);
 
@@ -323,7 +311,7 @@ void FGAIMultiplayer::update(double dt)
           }
           else
           {
-            SG_LOG(SG_GENERAL, SG_DEBUG, "Unable to find property: " << (*prevPropIt)->id << "\n");
+            SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*prevPropIt)->id << "\n");
           }
           
           ++prevPropIt;
@@ -347,7 +335,7 @@ void FGAIMultiplayer::update(double dt)
     double t = tInterp - motionInfo.time;
     t = SGMisc<double>::min(t, 5);
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Multiplayer vehicle extrapolation: "
+    SG_LOG(SG_AI, SG_DEBUG, "Multiplayer vehicle extrapolation: "
            "extrapolation time = " << t);
 
     // Do a few explicit euler steps with the constant acceleration's
@@ -408,7 +396,7 @@ void FGAIMultiplayer::update(double dt)
       }
       else
       {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
+        SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
       }
       
       ++firstPropIt;
@@ -444,7 +432,7 @@ void FGAIMultiplayer::update(double dt)
   roll = rDeg;
   pitch = pDeg;
 
-  SG_LOG(SG_GENERAL, SG_DEBUG, "Multiplayer position and orientation: "
+  SG_LOG(SG_AI, SG_DEBUG, "Multiplayer position and orientation: "
          << ecPos << ", " << hlOr);
 
   //###########################//

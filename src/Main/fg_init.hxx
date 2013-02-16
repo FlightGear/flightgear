@@ -29,13 +29,7 @@
 
 // forward decls
 class SGPropertyNode;
-class SGTime;
 class SGPath;
-
-// Read in configuration (files and command line optoins) but only set
-// fg_root
-bool fgInitFGRoot ( int argc, char **argv );
-
 
 // Return the current base package version
 std::string fgBasePackageVersion();
@@ -57,21 +51,15 @@ bool fgInitNav ();
 bool fgInitGeneral ();
 
 
-// This is the top level init routine which calls all the other
-// initialization routines.  If you are adding a subsystem to flight
-// gear, its initialization call should located in this routine.
-bool fgInitSubsystems();
+// Create all the subsystems needed by the sim
+void fgCreateSubsystems();
 
+// called after the subsystems have been bound and initialised,
+// to peform final init
+void fgPostInitSubsystems();
  
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems();
-
-// Set the initial position based on presets (or defaults)
-bool fgInitPosition();
-
-
-// Listen to /sim/tower/airport-id and set tower view position accordingly
-void fgInitTowerLocationListener();
 
 /*
  * Search in the current directory, and in on directory deeper

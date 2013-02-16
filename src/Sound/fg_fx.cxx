@@ -32,27 +32,57 @@
 #include "fg_fx.hxx"
 
 #include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/sound/xmlsound.hxx>
 
-FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
-    _enabled( fgGetNode("/sim/sound/effects/enabled", true) ),
-    _volume( fgGetNode("/sim/sound/effects/volume", true) ),
-    _avionics_enabled( fgGetNode("/sim/sound/avionics/enabled", true) ),
-    _avionics_volume( fgGetNode("/sim/sound/avionics/volume", true) ),
-    _avionics_external( fgGetNode("/sim/sound/avionics/external-view", true) ),
-    _internal( fgGetNode("/sim/current-view/internal", true) )
+FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
+    _props( props )
 {
-    SGSampleGroup::_smgr = smgr;
-    SGSampleGroup::_refname = refname;
-    SGSampleGroup::_smgr->add(this, refname);
-    _avionics = _smgr->find("avionics", true);
-    _avionics->tie_to_listener();
+    if (!props) {
+        _is_aimodel = false;
+        _props = globals->get_props();
+        _enabled = fgGetNode("/sim/sound/effects/enabled", true);
+        _volume = fgGetNode("/sim/sound/effects/volume", true);
+    } else {
+        _is_aimodel = true;
+        _enabled = _props->getNode("/sim/sound/aimodels/enabled", true);
+        _enabled->setBoolValue(fgGetBool("/sim/sound/effects/enabled"));
+         _volume = _props->getNode("/sim/sound/aimodels/volume", true);
+        _volume->setFloatValue(fgGetFloat("/sim/sound/effects/volume"));
+    }
+
+    _avionics_enabled = _props->getNode("sim/sound/avionics/enabled", true);
+    _avionics_volume = _props->getNode("sim/sound/avionics/volume", true);
+    _avionics_ext = _props->getNode("sim/sound/avionics/external-view", true);
+    _internal = _props->getNode("sim/current-view/internal", true);
+
+    _smgr = globals->get_soundmgr();
+    if (!_smgr) {
+      return;
+    }
+  
+    _refname = refname;
+    _smgr->add(this, refname);
+
+    if (!_is_aimodel)
+    {
+        _avionics = _smgr->find("avionics", true);
+        _avionics->tie_to_listener();
+    }
 }
 
+void FGFX::unbind()
+{
+    if (_smgr)
+    {
+        _smgr->remove(_refname);
+    }
+}
 
 FGFX::~FGFX ()
 {
@@ -66,23 +96,33 @@ FGFX::~FGFX ()
 void
 FGFX::init()
 {
-    SGPropertyNode *node = fgGetNode("/sim/sound", true);
+    if (!_smgr) {
+        return;
+    }
+  
+    SGPropertyNode *node = _props->getNode("sim/sound", true);
 
-    string path_str = node->getStringValue("path");
+    std::string path_str = node->getStringValue("path");
     if (path_str.empty()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "No path in /sim/sound/path");
+        SG_LOG(SG_SOUND, SG_ALERT, "No path in sim/sound/path");
         return;
     }
     
     SGPath path = globals->resolve_aircraft_path(path_str);
-    SG_LOG(SG_GENERAL, SG_INFO, "Reading sound " << node->getName()
+    if (path.isNull())
+    {
+        SG_LOG(SG_SOUND, SG_ALERT,
+               "File not found: '" << path_str);
+        return;
+    }
+    SG_LOG(SG_SOUND, SG_INFO, "Reading sound " << node->getName()
            << " from " << path.str());
 
     SGPropertyNode root;
     try {
         readProperties(path.str(), &root);
     } catch (const sg_exception &) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_SOUND, SG_ALERT,
                "Error reading file '" << path.str() << '\'');
         return;
     }
@@ -90,16 +130,15 @@ FGFX::init()
     node = root.getNode("fx");
     if(node) {
         for (int i = 0; i < node->nChildren(); ++i) {
-            SGXmlSound *sound = new SGXmlSound();
+            SGXmlSound *soundfx = new SGXmlSound();
   
             try {
-                sound->init(globals->get_props(), node->getChild(i), this,
-                            _avionics, path.dir());
-  
-                _sound.push_back(sound);
+                soundfx->init( _props, node->getChild(i), this, _avionics,
+                               path.dir() );
+                _sound.push_back( soundfx );
             } catch ( sg_exception &e ) {
-                SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
-                delete sound;
+                SG_LOG(SG_SOUND, SG_ALERT, e.getFormattedMessage());
+                delete soundfx;
             }
         }
     }
@@ -114,22 +153,28 @@ FGFX::reinit()
     }
     _sound.clear();
     init();
-};
+}
 
 
 void
 FGFX::update (double dt)
 {
-    bool active = _avionics_external->getBoolValue() ||
-                  _internal->getBoolValue();
-
-    if ( active && _avionics_enabled->getBoolValue() )
-        _avionics->resume(); // no-op if already in resumed state
-    else
-        _avionics->suspend();
-    _avionics->set_volume( _avionics_volume->getFloatValue() );
-
+    if (!_smgr) {
+        return;
+    }
+      
     if ( _enabled->getBoolValue() ) {
+        if ( _avionics_enabled->getBoolValue())
+        {
+            if (_avionics_ext->getBoolValue() || _internal->getBoolValue()) {
+                // avionics sound is enabled
+                _avionics->resume(); // no-op if already in resumed state
+                _avionics->set_volume( _avionics_volume->getFloatValue() );
+            }
+            else
+                _avionics->suspend();
+        }
+
         set_volume( _volume->getDoubleValue() );
         resume();
 

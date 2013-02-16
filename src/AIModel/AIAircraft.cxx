@@ -22,14 +22,13 @@
 #  include <config.h>
 #endif
 
-#include <simgear/route/waypoint.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
+#include <Main/util.hxx>
 
 #include <string>
 #include <math.h>
@@ -42,15 +41,17 @@
 #  include <ieeefp.h>
 #endif
 
-using std::string;
 
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"
 #include "performancedb.hxx"
+#include <signal.h>
+
+using std::string;
+using std::cerr;
+using std::endl;
 
 //#include <Airports/trafficcontroller.hxx>
-
-static string tempReg;
 
 FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
      /* HOT must be disabled for AI Aircraft,
@@ -65,9 +66,10 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     else
         groundOffset = 0;
 
-    fp = 0;
-    controller = 0;
-    prevController = 0;
+    fp              = 0;
+    controller      = 0;
+    prevController  = 0;
+    towerController = 0;
     dt_count = 0;
     dt_elev_count = 0;
     use_perf_vs = true;
@@ -92,6 +94,10 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
 
     _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
     dt = 0;
+    takeOffStatus = 0;
+
+    trackCache.remainingLength = 0;
+    trackCache.startWptName = "-";
 }
 
 
@@ -108,7 +114,7 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 
     FGAIBase::readFromScenario(scFileNode);
 
-    setPerformance(scFileNode->getStringValue("class", "jet_transport"));
+    setPerformance("", scFileNode->getStringValue("class", "jet_transport"));
     setFlightPlan(scFileNode->getStringValue("flightplan"),
                   scFileNode->getBoolValue("repeat", false));
     setCallSign(scFileNode->getStringValue("callsign"));
@@ -118,22 +124,10 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 void FGAIAircraft::bind() {
     FGAIBase::bind();
 
-    props->tie("controls/gear/gear-down",
-               SGRawValueMethods<FGAIAircraft,bool>(*this,
-                                                    &FGAIAircraft::_getGearDown));
-    props->tie("transponder-id",
-               SGRawValueMethods<FGAIAircraft,const char*>(*this,
-                                                    &FGAIAircraft::_getTransponderCode));
+    tie("transponder-id",
+        SGRawValueMethods<FGAIAircraft,const char*>(*this,
+                &FGAIAircraft::_getTransponderCode));
 }
-
-
-void FGAIAircraft::unbind() {
-    FGAIBase::unbind();
-
-    props->untie("controls/gear/gear-down");
-    props->untie("transponder-id");
-}
-
 
 void FGAIAircraft::update(double dt) {
     FGAIBase::update(dt);
@@ -141,16 +135,17 @@ void FGAIAircraft::update(double dt) {
     Transform();
 }
 
-void FGAIAircraft::setPerformance(const std::string& acclass) {
-     static PerformanceDB perfdb; //TODO make it a global service
-     setPerformance(perfdb.getDataFor(acclass));
-  }
+void FGAIAircraft::setPerformance(const std::string& acType, const std::string& acclass)
+{
+  static PerformanceDB perfdb; //TODO make it a global service
+  _performance = perfdb.getDataFor(acType, acclass);
+}
 
-
+#if 0
  void FGAIAircraft::setPerformance(PerformanceData *ps) {
      _performance = ps;
   }
-
+#endif
 
  void FGAIAircraft::Run(double dt) {
       FGAIAircraft::dt = dt;
@@ -168,22 +163,33 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
 
      handleATCRequests(); // ATC also has a word to say
      updateSecondaryTargetValues(); // target roll, vertical speed, pitch
-     updateActualState(); 
-     UpdateRadar(manager);
+     updateActualState();
+#if 0
+   // 25/11/12 - added but disabled, since setting properties isn't
+   // affecting the AI-model as expected.
+     updateModelProperties(dt);
+#endif
+   
+    // We currently have one situation in which an AIAircraft object is used that is not attached to the
+    // AI manager. In this particular case, the AIAircraft is used to shadow the user's aircraft's behavior in the AI world.
+    // Since we perhaps don't want a radar entry of our own aircraft, the following conditional should probably be adequate
+    // enough
+     if (manager)
+        UpdateRadar(manager);
      checkVisibility();
   }
 
 void FGAIAircraft::checkVisibility() 
 {
   double visibility_meters = fgGetDouble("/environment/visibility-m");
-  FGViewer* vw = globals->get_current_view();
-  invisible = (SGGeodesy::distanceM(vw->getPosition(), pos) > visibility_meters);
+  invisible = (SGGeodesy::distanceM(globals->get_view_position(), pos) > visibility_meters);
 }
 
 
 
 void FGAIAircraft::AccelTo(double speed) {
     tgt_speed = speed;
+    //assertSpeed(speed);
     if (!isStationary())
         _needsGroundElevation = true;
 }
@@ -244,11 +250,11 @@ void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f) {
 void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
 
     // the one behind you
-    FGAIFlightPlan::waypoint* prev = 0;
+    FGAIWaypoint* prev = 0;
     // the one ahead
-    FGAIFlightPlan::waypoint* curr = 0;
+    FGAIWaypoint* curr = 0;
     // the next plus 1
-    FGAIFlightPlan::waypoint* next = 0;
+    FGAIWaypoint* next = 0;
 
     prev = fp->getPreviousWaypoint();
     curr = fp->getCurrentWaypoint();
@@ -277,11 +283,32 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
     }
+    if (!curr)
+    {
+        // Oops! FIXME
+        return;
+    }
+
     if (! leadPointReached(curr)) {
         controlHeading(curr);
         controlSpeed(curr, next);
+        
+            /*
+            if (speed < 0) { 
+                cerr << getCallSign() 
+                     << ": verifying lead distance to waypoint : " 
+                     << fp->getCurrentWaypoint()->name << " "
+                     << fp->getLeadDistance() << ". Distance to go " 
+                     << (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)) 
+                     << ". Target speed = " 
+                     << tgt_speed
+                     << ". Current speed = "
+                     << speed
+                     << ". Minimum Bearing " << minBearing
+                     << endl;
+            } */
     } else {
-        if (curr->finished)      //end of the flight plan
+        if (curr->isFinished())      //end of the flight plan
         {
             if (fp->getRepeat())
                 fp->restart();
@@ -329,24 +356,72 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             fp->setLeadDistance(tgt_speed, tgt_heading, curr, next);
         }
 
-        if (!(prev->on_ground))  // only update the tgt altitude from flightplan if not on the ground
+
+        if (!(prev->getOn_ground()))  // only update the tgt altitude from flightplan if not on the ground
         {
-            tgt_altitude_ft = prev->altitude;
-            if (curr->crossat > -1000.0) {
+            tgt_altitude_ft = prev->getAltitude();
+            if (curr->getCrossat() > -1000.0) {
                 use_perf_vs = false;
-                tgt_vs = (curr->crossat - altitude_ft) / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
-                         / 6076.0 / speed*60.0);
+                // Distance to go in meters
+                double vert_dist_ft = curr->getCrossat() - altitude_ft;
+                double err_dist     = prev->getCrossat() - altitude_ft;
+                double dist_m       = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
+                tgt_vs = calcVerticalSpeed(vert_dist_ft, dist_m, speed, err_dist);
+                
                 checkTcas();
-                tgt_altitude_ft = curr->crossat;
+                tgt_altitude_ft = curr->getCrossat();
             } else {
                 use_perf_vs = true;
             }
         }
-        AccelTo(prev->speed);
+        AccelTo(prev->getSpeed());
         hdg_lock = alt_lock = true;
-        no_roll = prev->on_ground;
+        no_roll = prev->getOn_ground();
     }
 }
+
+double FGAIAircraft::calcVerticalSpeed(double vert_ft, double dist_m, double speed, double err)
+{
+    // err is negative when we passed too high
+    double vert_m = vert_ft * SG_FEET_TO_METER;
+    //double err_m  = err     * SG_FEET_TO_METER;
+    //double angle = atan2(vert_m, dist_m);
+    double speedMs = (speed * SG_NM_TO_METER) / 3600;
+    //double vs = cos(angle) * speedMs; // Now in m/s
+    double vs = 0;
+    //cerr << "Error term = " << err_m << endl;
+    if (dist_m) {
+        vs = ((vert_m) / dist_m) * speedMs;
+    }
+    // Convert to feet per minute
+    vs *= (SG_METER_TO_FEET * 60);
+    //if (getCallSign() == "LUFTHANSA2002")
+    //if (fabs(vs) > 100000) {
+//     if (getCallSign() == "LUFTHANSA2057") {
+//         cerr << getCallSign() << " " << fp->getPreviousWaypoint()->getName() << ". Alt = " << altitude_ft <<  " vertical dist = " << vert_m << " horiz dist = " << dist_m << " << angle  = " << angle * SG_RADIANS_TO_DEGREES << " vs " << vs << " horizontal speed " << speed << "Previous crossAT " << fp->getPreviousWaypoint()->getCrossat() << endl;
+//     //= (curr->getCrossat() - altitude_ft) / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
+//     //                     / 6076.0 / speed*60.0);
+//         //raise(SIGSEGV);
+//     }
+    return vs;
+}
+
+void FGAIAircraft::assertSpeed(double speed)
+{
+    if ((speed < -50) || (speed > 1000)) {
+        cerr << getCallSign() << " " 
+            << "Previous waypoint " << fp->getPreviousWaypoint()->getName() << " "
+            << "Departure airport " << trafficRef->getDepartureAirport() << " "
+            << "Leg " << fp->getLeg() <<  " "
+            << "target_speed << " << tgt_speed <<  " "
+            << "speedFraction << " << speedFraction << " "
+            << "Currecnt speed << " << speed << " "
+            << endl;
+       //raise(SIGSEGV);
+    }
+}
+
+
 
 void FGAIAircraft::checkTcas(void)
 {
@@ -378,26 +453,22 @@ void FGAIAircraft::checkTcas(void)
 void FGAIAircraft::initializeFlightPlan() {
 }
 
-
-bool FGAIAircraft::_getGearDown() const {
-    return _performance->gearExtensible(this);
-}
-
-
 const char * FGAIAircraft::_getTransponderCode() const {
   return transponderCode.c_str();
 }
 
+// NOTE: Check whether the new (delayed leg increment code has any effect on this code.
+// Probably not, because it should only be executed after we have already passed the leg incrementing waypoint. 
 
 bool FGAIAircraft::loadNextLeg(double distance) {
 
     int leg;
-    if ((leg = fp->getLeg())  == 10) {
+    if ((leg = fp->getLeg())  == 9) {
         if (!trafficRef->next()) {
             return false;
         }
         setCallSign(trafficRef->getCallSign());
-        leg = 1;
+        leg = 0;
         fp->setLeg(leg);
     }
 
@@ -412,7 +483,7 @@ bool FGAIAircraft::loadNextLeg(double distance) {
         fp->create (this,
                     dep,
                     arr,
-                    leg,
+                    leg+1,
                     cruiseAlt,
                     trafficRef->getSpeed(),
                     _getLatitude(),
@@ -448,10 +519,8 @@ void FGAIAircraft::getGroundElev(double dt) {
 
     // Only do the proper hitlist stuff if we are within visible range of the viewer.
     if (!invisible) {
-        double visibility_meters = fgGetDouble("/environment/visibility-m");
-        FGViewer* vw = globals->get_current_view();
-        
-        if (SGGeodesy::distanceM(vw->getPosition(), pos) > visibility_meters) {
+        double visibility_meters = fgGetDouble("/environment/visibility-m");        
+        if (SGGeodesy::distanceM(globals->get_view_position(), pos) > visibility_meters) {
             return;
         }
 
@@ -474,12 +543,16 @@ void FGAIAircraft::getGroundElev(double dt) {
 
 
 void FGAIAircraft::doGroundAltitude() {
-    if ((fabs(altitude_ft - (tgt_altitude_ft+groundOffset)) > 1000.0)||
-        (isStationary()))
-        altitude_ft = (tgt_altitude_ft + groundOffset);
-    else
-        altitude_ft += 0.1 * ((tgt_altitude_ft+groundOffset) - altitude_ft);
-    tgt_vs = 0;
+    if ((fp->getLeg() == 7) && ((altitude_ft -  tgt_altitude_ft) > 5)) {
+        tgt_vs = -500;
+    } else {
+        if ((fabs(altitude_ft - (tgt_altitude_ft+groundOffset)) > 1000.0)||
+            (isStationary()))
+            altitude_ft = (tgt_altitude_ft + groundOffset);
+        else
+            altitude_ft += 0.1 * ((tgt_altitude_ft+groundOffset) - altitude_ft);
+        tgt_vs = 0;
+    }
 }
 
 
@@ -489,29 +562,32 @@ void FGAIAircraft::announcePositionToController() {
 
         // Note that leg has been incremented after creating the current leg, so we should use
         // leg numbers here that are one higher than the number that is used to create the leg
-        //
+        // NOTE: As of July, 30, 2011, the post-creation leg updating is no longer happening. 
+        // Leg numbers are updated only once the aircraft passes the last waypoint created for that legm so I should probably just use
+        // the original leg numbers here!
         switch (leg) {
-          case 2:              // Startup and Push back
+          case 1:              // Startup and Push back
             if (trafficRef->getDepartureAirport()->getDynamics())
                 controller = trafficRef->getDepartureAirport()->getDynamics()->getStartupController();
             break;
-        case 3:              // Taxiing to runway
+        case 2:              // Taxiing to runway
             if (trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork()->exists())
                 controller = trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork();
             break;
-        case 4:              //Take off tower controller
+        case 3:              //Take off tower controller
             if (trafficRef->getDepartureAirport()->getDynamics()) {
                 controller = trafficRef->getDepartureAirport()->getDynamics()->getTowerController();
+                towerController = 0;
             } else {
                 cerr << "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId() << endl;
             }
             break;
-        case 7:
+        case 6:
              if (trafficRef->getDepartureAirport()->getDynamics()) {
                  controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
               }
               break;
-        case 9:              // Taxiing for parking
+        case 8:              // Taxiing for parking
             if (trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork()->exists())
                 controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork();
             break;
@@ -525,16 +601,36 @@ void FGAIAircraft::announcePositionToController() {
         }
         prevController = controller;
         if (controller) {
-            controller->announcePosition(getID(), fp, fp->getCurrentWaypoint()->routeIndex,
+            controller->announcePosition(getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
                                          _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
                                          trafficRef->getRadius(), leg, this);
         }
     }
 }
 
+void FGAIAircraft::scheduleForATCTowerDepartureControl(int state) {
+    if (!takeOffStatus) {
+        int leg = fp->getLeg();
+        if (trafficRef) {
+            if (trafficRef->getDepartureAirport()->getDynamics()) {
+                towerController = trafficRef->getDepartureAirport()->getDynamics()->getTowerController();
+            } else {
+                cerr << "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId() << endl;
+            }
+            if (towerController) {
+                towerController->announcePosition(getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
+                                                   _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
+                                                    trafficRef->getRadius(), leg, this);
+                //cerr << "Scheduling " << trafficRef->getCallSign() << " for takeoff " << endl;
+            }
+        }
+    }
+    takeOffStatus = state;
+}
+
 // Process ATC instructions and report back
 
-void FGAIAircraft::processATC(FGATCInstruction instruction) {
+void FGAIAircraft::processATC(const FGATCInstruction& instruction) {
     if (instruction.getCheckForCircularWait()) {
         // This is not exactly an elegant solution, 
         // but at least it gives me a chance to check
@@ -568,7 +664,7 @@ void FGAIAircraft::processATC(FGATCInstruction instruction) {
             //cerr << trafficRef->getCallSign() << " Changing Speed " << endl;
             AccelTo(instruction.getSpeed());
         } else {
-            if (fp) AccelTo(fp->getPreviousWaypoint()->speed);
+            if (fp) AccelTo(fp->getPreviousWaypoint()->getSpeed());
         }
     }
     if (instruction.getChangeHeading ()) {
@@ -593,12 +689,11 @@ void FGAIAircraft::handleFirstWaypoint() {
         eraseWaypoints = false;
     }
 
-    FGAIFlightPlan::waypoint* prev = 0; // the one behind you
-    FGAIFlightPlan::waypoint* curr = 0; // the one ahead
-    FGAIFlightPlan::waypoint* next = 0;// the next plus 1
+    FGAIWaypoint* prev = 0; // the one behind you
+    FGAIWaypoint* curr = 0; // the one ahead
+    FGAIWaypoint* next = 0;// the next plus 1
 
     spinCounter = 0;
-    tempReg = "";
 
     //TODO fp should handle this
     fp->IncrementWaypoint(eraseWaypoints);
@@ -612,15 +707,15 @@ void FGAIAircraft::handleFirstWaypoint() {
     curr = fp->getCurrentWaypoint();    //second waypoint
     next = fp->getNextWaypoint();       //third waypoint (might not exist!)
 
-    setLatitude(prev->latitude);
-    setLongitude(prev->longitude);
-    setSpeed(prev->speed);
-    setAltitude(prev->altitude);
+    setLatitude(prev->getLatitude());
+    setLongitude(prev->getLongitude());
+    setSpeed(prev->getSpeed());
+    setAltitude(prev->getAltitude());
 
-    if (prev->speed > 0.0)
-        setHeading(fp->getBearing(prev->latitude, prev->longitude, curr));
+    if (prev->getSpeed() > 0.0)
+        setHeading(fp->getBearing(prev, curr));
     else
-        setHeading(fp->getBearing(curr->latitude, curr->longitude, prev));
+        setHeading(fp->getBearing(curr, prev));
 
     // If next doesn't exist, as in incrementally created flightplans for
     // AI/Trafficmanager created plans,
@@ -628,20 +723,24 @@ void FGAIAircraft::handleFirstWaypoint() {
     if (next)
         fp->setLeadDistance(speed, hdg, curr, next);
 
-    if (curr->crossat > -1000.0) //use a calculated descent/climb rate
+    if (curr->getCrossat() > -1000.0) //use a calculated descent/climb rate
     {
         use_perf_vs = false;
-        tgt_vs = (curr->crossat - prev->altitude)
-                 / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
-                    / 6076.0 / prev->speed*60.0);
+        //tgt_vs = (curr->getCrossat() - prev->getAltitude())
+        //         / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
+        //            / 6076.0 / prev->getSpeed()*60.0);
+        double vert_dist_ft = curr->getCrossat() - altitude_ft;
+        double err_dist     = prev->getCrossat() - altitude_ft;
+        double dist_m       = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
+        tgt_vs = calcVerticalSpeed(vert_dist_ft, dist_m, speed, err_dist);
         checkTcas();
-        tgt_altitude_ft = curr->crossat;
+        tgt_altitude_ft = curr->getCrossat();
     } else {
         use_perf_vs = true;
-        tgt_altitude_ft = prev->altitude;
+        tgt_altitude_ft = prev->getAltitude();
     }
     alt_lock = hdg_lock = true;
-    no_roll = prev->on_ground;
+    no_roll = prev->getOn_ground();
     if (no_roll) {
         Transform();             // make sure aip is initialized.
         getGroundElev(60.1);     // make sure it's executed first time around, so force a large dt value
@@ -674,13 +773,22 @@ bool FGAIAircraft::fpExecutable(time_t now) {
  * @param curr
  * @return
  */
-bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
+bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
     double dist_to_go = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
 
     //cerr << "2" << endl;
     double lead_dist = fp->getLeadDistance();
     // experimental: Use fabs, because speed can be negative (I hope) during push_back.
-
+    if ((dist_to_go < fabs(10.0* speed)) && (speed < 0) && (tgt_speed < 0) && fp->getCurrentWaypoint()->contains("PushBackPoint")) {
+          tgt_speed = -(dist_to_go / 10.0);
+          if (tgt_speed > -0.5) {
+                tgt_speed = -0.5;
+          }
+          //assertSpeed(tgt_speed);
+          if (fp->getPreviousWaypoint()->getSpeed() < tgt_speed) {
+              fp->getPreviousWaypoint()->setSpeed(tgt_speed);
+          }
+    }
     if (lead_dist < fabs(2*speed)) {
       //don't skip over the waypoint
       lead_dist = fabs(2*speed);
@@ -694,41 +802,45 @@ bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
     //          << lead_dist << " " << curr->name 
     //          << " Ground target speed " << groundTargetSpeed << endl;
     double bearing = 0;
-    if (speed > 50) { // don't do bearing calculations for ground traffic
-       bearing = getBearing(fp->getBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr));
+     // don't do bearing calculations for ground traffic
+       bearing = getBearing(fp->getBearing(pos, curr));
        if (bearing < minBearing) {
             minBearing = bearing;
             if (minBearing < 10) {
                  minBearing = 10;
             }
             if ((minBearing < 360.0) && (minBearing > 10.0)) {
-                speedFraction = cos(minBearing *SG_DEGREES_TO_RADIANS);
+                speedFraction = 0.5 + (cos(minBearing *SG_DEGREES_TO_RADIANS) * 0.5);
             } else {
                 speedFraction = 1.0;
             }
-       }
-    } 
+       } 
     if (trafficRef) {
          //cerr << "Tracking callsign : \"" << fgGetString("/ai/track-callsign") << "\"" << endl;
-/*         if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
-              cerr << trafficRef->getCallSign() << " " << tgt_altitude_ft << " " << _getSpeed() << " " 
-                   << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << " " << curr->name << " " << vs << " " << tgt_vs << " " << bearing << " " << minBearing << " " << speedFraction << endl; 
-         }*/
+         //if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+              //cerr << trafficRef->getCallSign() << " " << tgt_altitude_ft << " " << _getSpeed() << " " 
+              //     << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << " " << curr->getName() << " " << vs << " " << //tgt_vs << " " << bearing << " " << minBearing << " " << speedFraction << endl; 
+         //}
      }
-    if ((dist_to_go < lead_dist) || (bearing > (minBearing * 1.1))) {
+    if ((dist_to_go < lead_dist) ||
+        ((dist_to_go > prev_dist_to_go) && (bearing > (minBearing * 1.1))) ) {
         minBearing = 360;
+        speedFraction = 1.0;
+        prev_dist_to_go = HUGE_VAL;
         return true;
     } else {
+        prev_dist_to_go = dist_to_go;
         return false;
     }
 }
 
 
-bool FGAIAircraft::aiTrafficVisible() {
-  SGGeod userPos(SGGeod::fromDeg(fgGetDouble("/position/longitude-deg"), 
-    fgGetDouble("/position/latitude-deg")));
-  
-  return (SGGeodesy::distanceNm(userPos, pos) <= TRAFFICTOAIDISTTODIE);
+bool FGAIAircraft::aiTrafficVisible()
+{
+    SGVec3d cartPos = SGVec3d::fromGeod(pos);
+    const double d2 = (TRAFFICTOAIDISTTODIE * SG_NM_TO_METER) *
+        (TRAFFICTOAIDISTTODIE * SG_NM_TO_METER);
+    return (distSqr(cartPos, globals->get_aircraft_position_cart()) < d2);
 }
 
 
@@ -741,7 +853,7 @@ bool FGAIAircraft::aiTrafficVisible() {
  */
 
 //TODO the trafficRef is the right place for the method
-bool FGAIAircraft::handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t now) {
+bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
     // prepare routing from one airport to another
     FGAirport * dep = trafficRef->getDepartureAirport();
     FGAirport * arr = trafficRef->getArrivalAirport();
@@ -752,21 +864,48 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t
     // This waypoint marks the fact that the aircraft has passed the initial taxi
     // departure waypoint, so it can release the parking.
     //cerr << trafficRef->getCallSign() << " has passed waypoint " << prev->name << " at speed " << speed << endl;
-    if (prev->name == "PushBackPoint") {
-        dep->getDynamics()->releaseParking(fp->getGate());
+    //cerr << "Passing waypoint : " << prev->getName() << endl;
+    if (prev->contains("PushBackPoint")) {
+      // clearing the parking assignment will release the gate
+        fp->setGate(ParkingAssignment());
         AccelTo(0.0);
-        setTaxiClearanceRequest(true);
+        //setTaxiClearanceRequest(true);
     }
-
+    if (prev->contains("legend")) {
+        fp->incrementLeg();
+    }
+    if (prev->contains(string("DepartureHold"))) {
+        //cerr << "Passing point DepartureHold" << endl;
+        scheduleForATCTowerDepartureControl(1);
+    }
+    if (prev->contains(string("Accel"))) {
+        takeOffStatus = 3;
+    }
+    //if (prev->contains(string("landing"))) {
+    //    if (speed < _performance->vTaxi() * 2) {
+    //        fp->shortenToFirst(2, "legend");
+    //    }
+    //}
+    //if (prev->contains(string("final"))) {
+    //    
+    //     cerr << getCallSign() << " " 
+    //        << fp->getPreviousWaypoint()->getName() 
+    //        << ". Alt = " << altitude_ft 
+    //        << " vs " << vs 
+    //        << " horizontal speed " << speed 
+    //        << "Previous crossAT " << fp->getPreviousWaypoint()->getCrossat()
+    //        << "Airport elevation" << getTrafficRef()->getArrivalAirport()->getElevation() 
+    //        << "Altitude difference " << (altitude_ft -  fp->getPreviousWaypoint()->getCrossat()) << endl;
+    //q}
     // This is the last taxi waypoint, and marks the the end of the flight plan
     // so, the schedule should update and wait for the next departure time.
-    if (prev->name == "END") {
+    if (prev->contains("END")) {
         time_t nextDeparture = trafficRef->getDepartureTime();
         // make sure to wait at least 20 minutes at parking to prevent "nervous" taxi behavior
         if (nextDeparture < (now+1200)) {
             nextDeparture = now + 1200;
         }
-        fp->setTime(nextDeparture); // should be "next departure"
+        fp->setTime(nextDeparture);
     }
 
     return true;
@@ -778,13 +917,12 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t
  *
  * @param curr
  */
-void FGAIAircraft::controlHeading(FGAIFlightPlan::waypoint* curr) {
-    double calc_bearing = fp->getBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
+void FGAIAircraft::controlHeading(FGAIWaypoint* curr) {
+    double calc_bearing = fp->getBearing(pos, curr);
     //cerr << "Bearing = " << calc_bearing << endl;
     if (speed < 0) {
         calc_bearing +=180;
-        if (calc_bearing > 360)
-            calc_bearing -= 360;
+        SG_NORMALIZE_RANGE(calc_bearing, 0.0, 360.0);
     }
 
     if (finite(calc_bearing)) {
@@ -797,9 +935,9 @@ void FGAIAircraft::controlHeading(FGAIFlightPlan::waypoint* curr) {
         cerr << "calc_bearing is not a finite number : "
         << "Speed " << speed
         << "pos : " << pos.getLatitudeDeg() << ", " << pos.getLongitudeDeg()
-        << "waypoint " << curr->latitude << ", " << curr->longitude << endl;
-        cerr << "waypoint name " << curr->name;
-        exit(1);                 // FIXME
+        << ", waypoint: " << curr->getLatitude() << ", " << curr->getLongitude() << endl;
+        cerr << "waypoint name: '" << curr->getName() << "'" << endl;
+        //exit(1);                 // FIXME
     }
 }
 
@@ -811,11 +949,12 @@ void FGAIAircraft::controlHeading(FGAIFlightPlan::waypoint* curr) {
  * @param curr
  * @param next
  */
-void FGAIAircraft::controlSpeed(FGAIFlightPlan::waypoint* curr, FGAIFlightPlan::waypoint* next) {
+void FGAIAircraft::controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next) {
     double speed_diff = speed - prevSpeed;
 
     if (fabs(speed_diff) > 10) {
         prevSpeed = speed;
+        //assertSpeed(speed);
         if (next) {
             fp->setLeadDistance(speed, tgt_heading, curr, next);
         }
@@ -862,7 +1001,7 @@ void FGAIAircraft::updatePrimaryTargetValues(bool& flightplanActive, bool& aiOut
         // from control properties.  These default to the initial
         // settings in the config file, but can be changed "on the
         // fly".
-        string lat_mode = props->getStringValue("controls/flight/lateral-mode");
+        const string& lat_mode = props->getStringValue("controls/flight/lateral-mode");
         if ( lat_mode == "roll" ) {
             double angle
             = props->getDoubleValue("controls/flight/target-roll" );
@@ -888,19 +1027,6 @@ void FGAIAircraft::updatePrimaryTargetValues(bool& flightplanActive, bool& aiOut
     }
 }
 
-void FGAIAircraft::updatePosition() {
-    // convert speed to degrees per second
-    double speed_north_deg_sec = cos( hdg * SGD_DEGREES_TO_RADIANS )
-                                 * speed * 1.686 / ft_per_deg_lat;
-    double speed_east_deg_sec  = sin( hdg * SGD_DEGREES_TO_RADIANS )
-                                 * speed * 1.686 / ft_per_deg_lon;
-
-    // set new position
-    pos.setLatitudeDeg( pos.getLatitudeDeg() + speed_north_deg_sec * dt);
-    pos.setLongitudeDeg( pos.getLongitudeDeg() + speed_east_deg_sec * dt);
-}
-
-
 void FGAIAircraft::updateHeading() {
     // adjust heading based on current bank angle
     if (roll == 0.0)
@@ -915,7 +1041,7 @@ void FGAIAircraft::updateHeading() {
         // If on ground, calculate heading change directly
         if (onGround()) {
             double headingDiff = fabs(hdg-tgt_heading);
-            double bank_sense = 0.0;
+//            double bank_sense = 0.0;
         /*
         double diff = fabs(hdg - tgt_heading);
         if (diff > 180)
@@ -935,43 +1061,54 @@ void FGAIAircraft::updateHeading() {
             if (sum > 360.0) 
                 sum -= 360.0;
             if (fabs(sum - tgt_heading) > 0.0001) {
-                bank_sense = -1.0;
+//                bank_sense = -1.0;
             } else {
-                bank_sense = 1.0;
+//                bank_sense = 1.0;
             }
             //if (trafficRef)
-            	//cerr << trafficRef->getCallSign() << " Heading " 
-                //     << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << endl;
+            //	cerr << trafficRef->getCallSign() << " Heading " 
+            //         << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << endl;
             //if (headingDiff > 60) {
             groundTargetSpeed = tgt_speed; // * cos(headingDiff * SG_DEGREES_TO_RADIANS);
+            //assertSpeed(groundTargetSpeed);
                 //groundTargetSpeed = tgt_speed - tgt_speed * (headingDiff/180);
             //} else {
             //    groundTargetSpeed = tgt_speed;
             //}
             if (sign(groundTargetSpeed) != sign(tgt_speed))
                 groundTargetSpeed = 0.21 * sign(tgt_speed); // to prevent speed getting stuck in 'negative' mode
+            //assertSpeed(groundTargetSpeed);
+            // Only update the target values when we're not moving because otherwise we might introduce an enormous target change rate while waiting a the gate, or holding.
+            if (speed != 0) {
+                if (headingDiff > 30.0) {
+                    // invert if pushed backward
+                    headingChangeRate += 10.0 * dt * sign(roll);
 
-            if (headingDiff > 30.0) {
-                // invert if pushed backward
-                headingChangeRate += 10.0 * dt * sign(roll);
-
-                // Clamp the maximum steering rate to 30 degrees per second,
-                // But only do this when the heading error is decreasing.
-                if ((headingDiff < headingError)) {
-                    if (headingChangeRate > 30)
-                        headingChangeRate = 30;
-                    else if (headingChangeRate < -30)
-                        headingChangeRate = -30;
+                    // Clamp the maximum steering rate to 30 degrees per second,
+                    // But only do this when the heading error is decreasing.
+                    if ((headingDiff < headingError)) {
+                        if (headingChangeRate > 30)
+                            headingChangeRate = 30;
+                        else if (headingChangeRate < -30)
+                            headingChangeRate = -30;
+                    }
+                } else {
+                    if (speed != 0) {
+                        if (fabs(headingChangeRate) > headingDiff)
+                            headingChangeRate = headingDiff*sign(roll);
+                        else
+                            headingChangeRate += dt * sign(roll);
+                    }
                 }
-            } else {
-                   if (fabs(headingChangeRate) > headingDiff)
-                       headingChangeRate = headingDiff*sign(roll);
-                   else
-                       headingChangeRate += dt * sign(roll);
             }
-
-	    hdg += headingChangeRate * dt * (fabs(speed) / 15);
+            if (trafficRef)
+            	//cerr << trafficRef->getCallSign() << " Heading " 
+                //     << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << "Heading change rate : " << headingChangeRate << " bacnk sence " << bank_sense << endl;
+	    hdg += headingChangeRate * dt * sqrt(fabs(speed) / 15);
             headingError = headingDiff;
+            if (fabs(headingError) < 1.0) {
+                hdg = tgt_heading;
+            }
         } else {
             if (fabs(speed) > 1.0) {
                 turn_radius_ft = 0.088362 * speed * speed
@@ -1035,16 +1172,17 @@ void FGAIAircraft::updateVerticalSpeedTarget() {
         // find target vertical speed
         if (use_perf_vs) {
             if (altitude_ft < tgt_altitude_ft) {
-                tgt_vs = tgt_altitude_ft - altitude_ft;
-                if (tgt_vs > _performance->climbRate())
-                    tgt_vs = _performance->climbRate();
+                tgt_vs = std::min(tgt_altitude_ft - altitude_ft, _performance->climbRate());
             } else {
-                tgt_vs = tgt_altitude_ft - altitude_ft;
-                if (tgt_vs  < (-_performance->descentRate()))
-                    tgt_vs = -_performance->descentRate();
+                tgt_vs = std::max(tgt_altitude_ft - altitude_ft, -_performance->descentRate());
             }
         } else {
-            double max_vs = 4*(tgt_altitude_ft - altitude_ft);
+            double vert_dist_ft = fp->getCurrentWaypoint()->getCrossat() - altitude_ft;
+            double err_dist     = 0; //prev->getCrossat() - altitude_ft;
+            double dist_m       = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), fp->getCurrentWaypoint());
+            tgt_vs = calcVerticalSpeed(vert_dist_ft, dist_m, speed, err_dist);
+            //cerr << "Target vs before : " << tgt_vs;
+/*            double max_vs = 10*(tgt_altitude_ft - altitude_ft);
             double min_vs = 100;
             if (tgt_altitude_ft < altitude_ft)
                 min_vs = -100.0;
@@ -1053,7 +1191,8 @@ void FGAIAircraft::updateVerticalSpeedTarget() {
                 tgt_vs = max_vs;
 
             if (fabs(tgt_vs) < fabs(min_vs))
-                tgt_vs = min_vs;
+                tgt_vs = min_vs;*/
+            //cerr << "target vs : after " << tgt_vs << endl;
         }
     } //else 
     //    tgt_vs = 0.0;
@@ -1075,43 +1214,51 @@ void FGAIAircraft::updatePitchAngleTarget() {
     }
 }
 
-string FGAIAircraft::atGate() {
-     string tmp("");
-     if (fp->getLeg() < 3) {
-         if (trafficRef) {
-             if (fp->getGate() > 0) {
-                 FGParking *park =
-                     trafficRef->getDepartureAirport()->getDynamics()->getParking(fp->getGate());
-                 tmp = park->getName();
-             }
-         }
+const string& FGAIAircraft::atGate()
+{
+     if ((fp->getLeg() < 3) && trafficRef) {
+       if (fp->getParkingGate()) {
+         return fp->getParkingGate()->ident();
+       }
      }
-     return tmp;
+       
+     static const string empty;
+     return empty;
 }
 
 void FGAIAircraft::handleATCRequests() {
     //TODO implement NullController for having no ATC to save the conditionals
     if (controller) {
-        controller->update(getID(),
-                           pos.getLatitudeDeg(),
-                           pos.getLongitudeDeg(),
-                           hdg,
-                           speed,
-                           altitude_ft, dt);
+        controller->updateAircraftInformation(getID(),
+                                              pos.getLatitudeDeg(),
+                                              pos.getLongitudeDeg(),
+                                              hdg,
+                                              speed,
+                                              altitude_ft, dt);
         processATC(controller->getInstruction(getID()));
+    }
+    if (towerController) {
+        towerController->updateAircraftInformation(getID(),
+                                              pos.getLatitudeDeg(),
+                                              pos.getLongitudeDeg(),
+                                              hdg,
+                                              speed,
+                                              altitude_ft, dt);
     }
 }
 
 void FGAIAircraft::updateActualState() {
     //update current state
     //TODO have a single tgt_speed and check speed limit on ground on setting tgt_speed
-    updatePosition();
+    double distance = speed * SG_KT_TO_MPS * dt;
+    pos = SGGeodesy::direct(pos, hdg, distance);
+
 
     if (onGround())
-        speed = _performance->actualSpeed(this, groundTargetSpeed, dt);
+        speed = _performance->actualSpeed(this, groundTargetSpeed, dt, holdPos);
     else
-        speed = _performance->actualSpeed(this, (tgt_speed *speedFraction), dt);
-
+        speed = _performance->actualSpeed(this, (tgt_speed *speedFraction), dt, false);
+    //assertSpeed(speed);
     updateHeading();
     roll = _performance->actualBankAngle(this, tgt_roll, dt);
 
@@ -1134,8 +1281,8 @@ void FGAIAircraft::updateSecondaryTargetValues() {
 
 
 bool FGAIAircraft::reachedEndOfCruise(double &distance) {
-    FGAIFlightPlan::waypoint* curr = fp->getCurrentWaypoint();
-    if (curr->name == "BOD") {
+    FGAIWaypoint* curr = fp->getCurrentWaypoint();
+    if (curr->getName() == string("BOD")) {
         double dist = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
         double descentSpeed = (getPerformance()->vDescent() * SG_NM_TO_METER) / 3600.0;     // convert from kts to meter/s
         double descentRate  = (getPerformance()->descentRate() * SG_FEET_TO_METER) / 60.0;  // convert from feet/min to meter/s
@@ -1171,22 +1318,22 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
 void FGAIAircraft::resetPositionFromFlightPlan()
 {
     // the one behind you
-    FGAIFlightPlan::waypoint* prev = 0;
+    FGAIWaypoint* prev = 0;
     // the one ahead
-    FGAIFlightPlan::waypoint* curr = 0;
+    FGAIWaypoint* curr = 0;
     // the next plus 1
-    FGAIFlightPlan::waypoint* next = 0;
+    FGAIWaypoint* next = 0;
 
     prev = fp->getPreviousWaypoint();
     curr = fp->getCurrentWaypoint();
     next = fp->getNextWaypoint();
 
-    setLatitude(prev->latitude);
-    setLongitude(prev->longitude);
+    setLatitude(prev->getLatitude());
+    setLongitude(prev->getLongitude());
     double tgt_heading = fp->getBearing(curr, next);
     setHeading(tgt_heading);
-    setAltitude(prev->altitude);
-    setSpeed(prev->speed);
+    setAltitude(prev->getAltitude());
+    setSpeed(prev->getSpeed());
 }
 
 double FGAIAircraft::getBearing(double crse) 
@@ -1197,11 +1344,20 @@ double FGAIAircraft::getBearing(double crse)
   return hdgDiff;
 }
 
-time_t FGAIAircraft::checkForArrivalTime(string wptName) {
-     FGAIFlightPlan::waypoint* curr = 0;
+time_t FGAIAircraft::checkForArrivalTime(const string& wptName) {
+     FGAIWaypoint* curr = 0;
      curr = fp->getCurrentWaypoint();
 
-     double tracklength = fp->checkTrackLength(wptName);
+     // don't recalculate tracklength unless the start/stop waypoint has changed
+     if (curr &&
+         ((curr->getName() != trackCache.startWptName)||
+          (wptName != trackCache.finalWptName)))
+     {
+         trackCache.remainingLength = fp->checkTrackLength(wptName);
+         trackCache.startWptName = curr->getName();
+         trackCache.finalWptName = wptName;
+     }
+     double tracklength = trackCache.remainingLength;
      if (tracklength > 0.1) {
           tracklength += fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
      } else {
@@ -1217,3 +1373,44 @@ time_t FGAIAircraft::checkForArrivalTime(string wptName) {
      }
      return (ete - secondsToGo); // Positive when we're too slow...
 }
+
+double limitRateOfChange(double cur, double target, double maxDeltaSec, double dt)
+{
+  double delta = target - cur;
+  double maxDelta = maxDeltaSec * dt;
+  
+// if delta is > maxDelta, use maxDelta, but with the sign of delta.
+  return (fabs(delta) < maxDelta) ? delta : copysign(maxDelta, delta);
+}
+
+// drive various properties in a semi-realistic fashion.
+void FGAIAircraft::updateModelProperties(double dt)
+{
+  if (!props) {
+    return;
+  }
+  
+  SGPropertyNode* gear = props->getChild("gear", 0, true);
+  double targetGearPos = fp->getCurrentWaypoint()->getGear_down() ? 1.0 : 0.0;
+  if (!gear->hasValue("gear/position-norm")) {
+    gear->setDoubleValue("gear/position-norm", targetGearPos);
+  }
+  
+  double gearPosNorm = gear->getDoubleValue("gear/position-norm");
+  if (gearPosNorm != targetGearPos) {
+    gearPosNorm += limitRateOfChange(gearPosNorm, targetGearPos, 0.1, dt);
+    if (gearPosNorm < 0.001) {
+      gearPosNorm = 0.0;
+    } else if (gearPosNorm > 0.999) {
+      gearPosNorm = 1.0;
+    }
+    
+    for (int i=0; i<6; ++i) {
+      SGPropertyNode* g = gear->getChild("gear", i, true);
+      g->setDoubleValue("position-norm", gearPosNorm);
+    } // of gear setting loop      
+  } // of gear in-transit
+  
+//  double flapPosNorm = props->getDoubleValue();
+}
+

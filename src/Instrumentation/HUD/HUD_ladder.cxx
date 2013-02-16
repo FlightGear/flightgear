@@ -25,8 +25,14 @@
 
 #include <sstream>
 #include <simgear/math/SGGeometry.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/viewer.hxx>
+
 #include "HUD.hxx"
+#include "HUD_private.hxx"
+
+#include <Main/fg_props.hxx>
+
+using std::string;
 
 // FIXME
 static float get__heading() { return fgGetFloat("/orientation/heading-deg") * M_PI / 180.0; }
@@ -138,7 +144,7 @@ void HUD::Ladder::draw(void)
     //****************************************************************
     //velocity vector reticle - computations
     float xvvr, /* yvvr, */ Vxx = 0.0, Vyy = 0.0, Vzz = 0.0;
-    float Axx = 0.0, Ayy = 0.0, Azz = 0.0, total_vel = 0.0, pot_slope, t1;
+    float Axx = 0.0, Ayy = 0.0, Azz = 0.0, total_vel = 0.0, pot_slope; //, t1;
     float up_vel, ground_vel, actslope = 0.0, psi = 0.0;
     float vel_x = 0.0, vel_y = 0.0, drift;
     float alpha;
@@ -268,9 +274,10 @@ void HUD::Ladder::draw(void)
             SGPropertyNode *chld = models->getChild(i);
             string name;
             name = chld->getName();
-            if (name == "aircraft" || name == "multiplayer") {
-                string callsign = chld->getStringValue("callsign");
-                if (callsign != "") {
+            if (name == "tanker" || name == "aircraft" || name == "multiplayer") {
+                bool valid = chld->getBoolValue("valid");
+                bool in_range = chld->getBoolValue("radar/in-range", true);
+                if (valid && in_range) {
                     float h_deg = chld->getFloatValue("radar/h-offset");
                     float v_deg = chld->getFloatValue("radar/v-offset");
                     float pos_x = (h_deg * cos(roll_value) -
@@ -320,10 +327,10 @@ void HUD::Ladder::draw(void)
 
     if (_energy_marker) {
         if (total_vel < 5.0) {
-            t1 = 0;
+//            t1 = 0;
             t2 = 0;
         } else {
-            t1 = up_vel / total_vel;
+//            t1 = up_vel / total_vel;
             t2 = asin((Vxx * Axx + Vyy * Ayy + Vzz * Azz) / (9.81 * total_vel));
         }
         pot_slope = ((t2 / 3) * SGD_RADIANS_TO_DEGREES) * _compression + vel_y;

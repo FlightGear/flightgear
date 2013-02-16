@@ -43,8 +43,8 @@
 #include "fgmetar.hxx"
 
 
-FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, const string& auth) :
-	SGMetar(icao, proxy, port, auth, _rq_time = globals->get_time_params()->get_cur_time()),
+FGMetar::FGMetar(const string& icao) :
+	SGMetar(icao),
 	_snow_cover(false)
 {
 	int i;
@@ -59,7 +59,7 @@ FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, co
 			_min_visibility.set(12000.0);
 
 		vector<SGMetarCloud> cv = _clouds;;
-		if (!cv.size()) {
+		if (cv.empty()) {
 			SGMetarCloud cl;
 			cl.set(5500 * SG_FEET_TO_METER, SGMetarCloud::COVERAGE_SCATTERED);
 			_clouds.push_back(cl);
@@ -148,11 +148,11 @@ FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, co
 
 	_time = sgTimeGetGMT(_year - 1900, _month - 1, _day, _hour, _minute, 0);
 
-	SG_LOG(SG_GENERAL, SG_INFO, _data);
+	SG_LOG(SG_ENVIRONMENT, SG_INFO, _data);
 	if (_x_proxy)
-		SG_LOG(SG_GENERAL, SG_INFO, "METAR from proxy");
+		SG_LOG(SG_ENVIRONMENT, SG_INFO, "METAR from proxy");
 	else
-		SG_LOG(SG_GENERAL, SG_INFO, "METAR from weather.noaa.gov");
+		SG_LOG(SG_ENVIRONMENT, SG_INFO, "METAR from weather.noaa.gov");
 }
 
 

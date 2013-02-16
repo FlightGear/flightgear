@@ -39,6 +39,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <cstdlib>
 
 using namespace std;
 
@@ -205,9 +206,7 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	// Configuration Initialisation
 	// Should this be in kln89.cxx ?
 	_turnAnticipationEnabled = false;
-        
-	_time = new SGTime;
-	
+        	
 	_messageStack.clear();
 	
 	_dto = false;
@@ -220,7 +219,6 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 }
 
 DCLGPS::~DCLGPS() {
-	delete _time;
   delete _approachFP;		// Don't need to delete the waypoints inside since they point to
 							// the waypoints in the approach database.
 	// TODO - may need to delete the approach database!!
@@ -239,22 +237,18 @@ void DCLGPS::init() {
 }
 
 void DCLGPS::bind() {
-	fgTie("/instrumentation/gps/waypoint-alert", this, &DCLGPS::GetWaypointAlert);
-	fgTie("/instrumentation/gps/leg-mode", this, &DCLGPS::GetLegMode);
-	fgTie("/instrumentation/gps/obs-mode", this, &DCLGPS::GetOBSMode);
-	fgTie("/instrumentation/gps/approach-arm", this, &DCLGPS::GetApproachArm);
-	fgTie("/instrumentation/gps/approach-active", this, &DCLGPS::GetApproachActive);
-	fgTie("/instrumentation/gps/cdi-deflection", this, &DCLGPS::GetCDIDeflection);
-	fgTie("/instrumentation/gps/to-flag", this, &DCLGPS::GetToFlag);
+	_tiedProperties.setRoot(fgGetNode("/instrumentation/gps", true));
+	_tiedProperties.Tie("waypoint-alert",  this, &DCLGPS::GetWaypointAlert);
+	_tiedProperties.Tie("leg-mode",        this, &DCLGPS::GetLegMode);
+	_tiedProperties.Tie("obs-mode",        this, &DCLGPS::GetOBSMode);
+	_tiedProperties.Tie("approach-arm",    this, &DCLGPS::GetApproachArm);
+	_tiedProperties.Tie("approach-active", this, &DCLGPS::GetApproachActive);
+	_tiedProperties.Tie("cdi-deflection",  this, &DCLGPS::GetCDIDeflection);
+	_tiedProperties.Tie("to-flag",         this, &DCLGPS::GetToFlag);
 }
 
 void DCLGPS::unbind() {
-	fgUntie("/instrumentation/gps/waypoint-alert");
-	fgUntie("/instrumentation/gps/leg-mode");
-	fgUntie("/instrumentation/gps/obs-mode");
-	fgUntie("/instrumentation/gps/approach-arm");
-	fgUntie("/instrumentation/gps/approach-active");
-	fgUntie("/instrumentation/gps/cdi-deflection");
+	_tiedProperties.Untie();
 }
 
 void DCLGPS::update(double dt) {
@@ -308,7 +302,6 @@ void DCLGPS::update(double dt) {
 		_elapsedTime += dt;
 	}
 
-	_time->update(_gpsLon * SG_DEGREES_TO_RADIANS, _gpsLat * SG_DEGREES_TO_RADIANS, 0, 0);
 	// FIXME - currently all the below assumes leg mode and no DTO or OBS cancelled.
 	if(_activeFP->IsEmpty()) {
 		// Not sure if we need to reset these each update or only when fp altered
@@ -808,7 +801,7 @@ void DCLGPS::LoadApproachData() {
 											w.lat = rwy->begin().getLatitudeRad();
 											w.lon = rwy->begin().getLongitudeRad();
 										} catch(const sg_exception&) {
-											SG_LOG(SG_GENERAL, SG_WARN, "Unable to find runway " << w.id.substr(2, 2) << " at airport " << iap->_aptIdent);
+											SG_LOG(SG_INSTR, SG_WARN, "Unable to find runway " << w.id.substr(2, 2) << " at airport " << iap->_aptIdent);
 											//cout << "Unable to find runway " << w.id.substr(2, 2) << " at airport " << iap->_aptIdent << " ( w.id = " << w.id << ", rwystr = " << rwystr << " )\n";
 											wp_error = true;
 										}
@@ -1356,7 +1349,8 @@ void DCLGPS::CreateFlightPlan(GPSFlightPlan* fp, vector<string> ids, vector<GPSW
 class DCLGPSFilter : public FGPositioned::Filter
 {
 public:
-  virtual bool pass(const FGPositioned* aPos) const {
+  virtual bool pass(FGPositioned* aPos) const
+  {
     switch (aPos->type()) {
     case FGPositioned::AIRPORT:
     // how about heliports and seaports?
@@ -1373,9 +1367,14 @@ public:
 
 GPSWaypoint* DCLGPS::FindFirstById(const string& id) const
 {
-  DCLGPSFilter filter;
-  FGPositionedRef result = FGPositioned::findNextWithPartialId(NULL, id, &filter);
-  return GPSWaypoint::createFromPositioned(result);
+  DCLGPSFilter filter;  
+  FGPositioned::List matches = FGPositioned::findAllWithIdent(id, &filter, false);
+  if (matches.empty()) {
+    return NULL;
+  }
+  
+  FGPositioned::sortByRange(matches, SGGeod::fromRad(_lon, _lat));
+  return GPSWaypoint::createFromPositioned(matches.front());
 }
 
 GPSWaypoint* DCLGPS::FindFirstByExactId(const string& id) const
@@ -1391,15 +1390,14 @@ FGPositioned* DCLGPS::FindTypedFirstById(const string& id, FGPositioned::Type ty
   multi = false;
   FGPositioned::TypeFilter filter(ty);
   
-  if (exact) {
-    FGPositioned::List matches = 
-      FGPositioned::findAllWithIdent(id, &filter);
-    FGPositioned::sortByRange(matches, SGGeod::fromRad(_lon, _lat));
-    multi = (matches.size() > 1);
-    return matches.empty() ? NULL : matches.front().ptr();
+  FGPositioned::List matches =
+    FGPositioned::findAllWithIdent(id, &filter, exact);
+  if (matches.empty()) {
+    return NULL;
   }
   
-  return FGPositioned::findNextWithPartialId(NULL, id, &filter);
+  FGPositioned::sortByRange(matches, SGGeod::fromRad(_lon, _lat));
+  return matches.front();
 }
 
 FGNavRecord* DCLGPS::FindFirstVorById(const string& id, bool &multi, bool exact)
@@ -1441,7 +1439,8 @@ double DCLGPS::GetMagHeadingFromTo(double latA, double lonA, double latB, double
 	h *= SG_RADIANS_TO_DEGREES;
 	// TODO - use the real altitude below instead of 0.0!
 	//cout << "MagVar = " << sgGetMagVar(_gpsLon, _gpsLat, 0.0, _time->getJD()) * SG_RADIANS_TO_DEGREES << '\n';
-	h -= sgGetMagVar(_gpsLon, _gpsLat, 0.0, _time->getJD()) * SG_RADIANS_TO_DEGREES;
+  double jd = globals->get_time_params()->getJD();
+	h -= sgGetMagVar(_gpsLon, _gpsLat, 0.0, jd) * SG_RADIANS_TO_DEGREES;
 	while(h >= 360.0) h -= 360.0;
 	while(h < 0.0) h += 360.0;
 	return(h);
@@ -1523,7 +1522,8 @@ double DCLGPS::GetGreatCircleCourse (double lat1, double lon1, double lat2, doub
 // Return a position on a radial from wp1 given distance d (nm) and magnetic heading h (degrees)
 // Note that d should be less that 1/4 Earth diameter!
 GPSWaypoint DCLGPS::GetPositionOnMagRadial(const GPSWaypoint& wp1, double d, double h) {
-	h += sgGetMagVar(wp1.lon, wp1.lat, 0.0, _time->getJD()) * SG_RADIANS_TO_DEGREES;
+  double jd = globals->get_time_params()->getJD();
+	h += sgGetMagVar(wp1.lon, wp1.lat, 0.0, jd) * SG_RADIANS_TO_DEGREES;
 	return(GetPositionOnRadial(wp1, d, h));
 }
 

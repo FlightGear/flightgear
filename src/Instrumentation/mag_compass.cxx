@@ -11,10 +11,12 @@
 #endif
 
 #include <simgear/sg_inlines.h>
+#include <simgear/math/SGMath.hxx>
 
-#include "mag_compass.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
+
+#include "mag_compass.hxx"
 
 
 MagCompass::MagCompass ( SGPropertyNode *node )
@@ -32,7 +34,7 @@ MagCompass::~MagCompass ()
 void
 MagCompass::init ()
 {
-    string branch;
+    std::string branch;
     branch = "/instrumentation/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
@@ -46,8 +48,16 @@ MagCompass::init ()
     _y_accel_node = fgGetNode("/accelerations/pilot/y-accel-fps_sec", true);
     _z_accel_node = fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
     _out_node = node->getChild("indicated-heading-deg", 0, true);
+
+    reinit();
 }
 
+void
+MagCompass::reinit ()
+{
+    _error_deg = 0.0;
+    _rate_degps = 0.0;
+}
 
 void
 MagCompass::update (double delta_time_sec)

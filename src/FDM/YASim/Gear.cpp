@@ -1,8 +1,14 @@
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "Math.hpp"
 #include "BodyEnvironment.hpp"
 #include "RigidBody.hpp"
 
-#include <simgear/scene/material/mat.hxx>
+#include <cfloat>
+#include <simgear/bvh/BVHMaterial.hxx>
 #include <FDM/flight.hxx>
 #include "Gear.hpp"
 namespace yasim {
@@ -141,7 +147,7 @@ void Gear::setInitialLoad(float l)
 
 void Gear::setGlobalGround(double *global_ground, float* global_vel,
                            double globalX, double globalY,
-                           const SGMaterial *material)
+                           const simgear::BVHMaterial *material)
 {
     int i;
     double frictionFactor,rollingFriction,loadCapacity,loadResistance,bumpiness;
@@ -284,16 +290,20 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
 
     // Don't bother if it's not down
     if(_extension < 1)
-	return;
+    {
+        _wow = 0;
+        _frac = 0;
+        return;
+    }
 
     // Dont bother if we are in the "wrong" ground
     if (!((_onWater&&!_ground_isSolid)||(_onSolid&&_ground_isSolid)))  {
-	_wow = 0;
-	_frac = 0;
+         _wow = 0;
+         _frac = 0;
         _compressDist = 0;
         _rollSpeed = 0;
         _casterAngle = 0;
-	return;
+        return;
     }
 
     // The ground plane transformed to the local frame.

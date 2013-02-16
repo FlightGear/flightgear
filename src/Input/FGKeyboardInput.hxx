@@ -25,13 +25,14 @@
 #ifndef _FGKEYBOARDINPUT_HXX
 #define _FGKEYBOARDINPUT_HXX
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
 #endif
 
 #include "FGCommonInput.hxx"
 #include "FGButton.hxx"
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 
 ////////////////////////////////////////////////////////////////////////
 // The Keyboard Input Class
@@ -66,6 +67,7 @@ private:
   bool _key_meta;
   bool _key_super;
   bool _key_hyper;
+  simgear::TiedPropertyList _tiedProperties;
 };
 
 #endif

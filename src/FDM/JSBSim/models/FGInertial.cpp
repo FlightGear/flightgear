@@ -37,15 +37,13 @@ INCLUDES
 
 #include "FGInertial.h"
 #include "FGFDMExec.h"
-#include "FGPropagate.h"
-#include "FGMassBalance.h"
 #include <iostream>
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGInertial.cpp,v 1.21 2011/05/20 03:18:36 jberndt Exp $";
+static const char *IdSrc = "$Id: FGInertial.cpp,v 1.26 2011/12/11 17:03:05 bcoconni Exp $";
 static const char *IdHdr = ID_INERTIAL;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -63,9 +61,8 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
   RadiusReference = 20925650.00;        // Equatorial radius (WGS84)
   C2_0            = -4.84165371736E-04; // WGS84 value for the C2,0 coefficient
   J2              = 1.0826266836E-03;   // WGS84 value for J2
-  a               = 20925646.3255;      // WGS84 semimajor axis length in feet 
+  a               = 20925646.3255;      // WGS84 semimajor axis length in feet
   b               = 20855486.5951;      // WGS84 semiminor axis length in feet
-  earthPosAngle   = 0.0;
 
   // Lunar defaults
   /*
@@ -74,11 +71,11 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
   RadiusReference = 5702559.05;           // Equatorial radius
   C2_0            = 0;                    // value for the C2,0 coefficient
   J2              = 2.033542482111609E-4; // value for J2
-  a               = 5702559.05;           // semimajor axis length in feet 
+  a               = 5702559.05;           // semimajor axis length in feet
   b               = 5695439.63;           // semiminor axis length in feet
-  earthPosAngle   = 0.0;
   */
 
+  vOmegaPlanet = FGColumnVector3( 0.0, 0.0, RotationRate );
   gAccelReference = GM/(RadiusReference*RadiusReference);
   gAccel          = GM/(RadiusReference*RadiusReference);
 
@@ -98,8 +95,6 @@ FGInertial::~FGInertial(void)
 
 bool FGInertial::InitModel(void)
 {
-  earthPosAngle   = 0.0;
-
   return true;
 }
 
@@ -111,14 +106,8 @@ bool FGInertial::Run(bool Holding)
   if (FGModel::Run(Holding)) return true;
   if (Holding) return false;
 
-  RunPreFunctions();
-
   // Gravitation accel
-  double r = FDMExec->GetPropagate()->GetRadius();
-  gAccel = GetGAccel(r);
-  earthPosAngle += FDMExec->GetDeltaT()*RotationRate;
-
-  RunPostFunctions();
+  gAccel = GetGAccel(in.Radius);
 
   return false;
 }
@@ -137,14 +126,13 @@ double FGInertial::GetGAccel(double r) const
 // and therefore may need to be expressed (transformed) in another frame,
 // depending on how it is used. See Stevens and Lewis eqn. 1.4-16.
 
-FGColumnVector3 FGInertial::GetGravityJ2(FGColumnVector3 position) const
+FGColumnVector3 FGInertial::GetGravityJ2(const FGColumnVector3& position) const
 {
   FGColumnVector3 J2Gravity;
 
   // Gravitation accel
   double r = position.Magnitude();
-  double lat = FDMExec->GetPropagate()->GetLatitude();
-  double sinLat = sin(lat);
+  double sinLat = sin(in.Latitude);
 
   double adivr = a/r;
   double preCommon = 1.5*J2*adivr*adivr;
@@ -163,7 +151,7 @@ FGColumnVector3 FGInertial::GetGravityJ2(FGColumnVector3 position) const
 
 void FGInertial::bind(void)
 {
-  PropertyManager->Tie("position/epa-rad", this, &FGInertial::GetEarthPositionAngle);
+  PropertyManager->Tie("inertial/sea-level-radius_ft", this, &FGInertial::GetRefRadius);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

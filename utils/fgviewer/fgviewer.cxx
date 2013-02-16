@@ -1,13 +1,30 @@
-#include <iostream>
-#include <cstdlib>
+// fgviewer.cxx -- alternative flightgear viewer application
+//
+// Copyright (C) 2009 - 2012  Mathias Froehlich
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <osg/ArgumentParser>
-#include <osg/Fog>
 #include <osgDB/ReadFile>
-#include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
-#include <osgViewer/Renderer>
 #include <osgGA/KeySwitchMatrixManipulator>
+#include <osgGA/StateSetManipulator>
 #include <osgGA/TrackballManipulator>
 #include <osgGA/FlightManipulator>
 #include <osgGA/DriveManipulator>
@@ -15,43 +32,113 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/misc/sg_path.hxx>
-#include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/material/matlib.hxx>
-#include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
+#include <simgear/scene/util/SGSceneFeatures.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
-#include <simgear/scene/tgdb/TileEntry.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
-#include <simgear/scene/model/modellib.hxx>
+#include <simgear/misc/ResourceManager.hxx>
 
-class DummyLoadHelper : public simgear::ModelLoadHelper {
-public:
-    virtual osg::Node *loadTileModel(const string& modelPath, bool)
-    {
-        try {
-            return simgear::SGModelLib::loadModel(modelPath, simgear::getPropertyRoot());
-        } catch (...) {
-            std::cerr << "Error loading \"" << modelPath << "\"" << std::endl;
-            return 0;
-        }
-    }
-};
+#include "Renderer.hxx"
+#include "Viewer.hxx"
+
+#ifdef FG_HAVE_HLA
+#include "HLACameraManipulator.hxx"
+#include "HLAViewerFederate.hxx"
+#endif
+
 
 int
 main(int argc, char** argv)
 {
-    // Just reference simgears reader writer stuff so that the globals get
-    // pulled in by the linker ...
-    // FIXME: make that more explicit clear and call an initialization function
-    simgear::ModelRegistry::instance();
-    DummyLoadHelper dummyLoadHelper;
-    simgear::TileEntry::setModelLoadHelper(&dummyLoadHelper);
+    /// Read arguments and environment variables.
 
     // use an ArgumentParser object to manage the program arguments.
+    // FIXME implement a flightgear similar argument parser into simgear and use this one
     osg::ArgumentParser arguments(&argc, argv);
 
+    logbuf::set_log_classes(SG_ALL);
+    logbuf::set_log_priority(SG_ALERT);
+
+    std::string fg_root;
+    if (arguments.read("--fg-root", fg_root)) {
+    } else if (const char *fg_root_env = std::getenv("FG_ROOT")) {
+        fg_root = fg_root_env;
+    } else {
+        fg_root = PKGLIBDIR;
+    }
+
+    std::string fg_scenery;
+    if (arguments.read("--fg-scenery", fg_scenery)) {
+    } else if (const char *fg_scenery_env = std::getenv("FG_SCENERY")) {
+        fg_scenery = fg_scenery_env;
+    } else {
+        SGPath path(fg_root);
+        path.append("Scenery");
+        fg_scenery = path.str();
+    }
+
+    SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
+    try {
+        SGPath preferencesFile = fg_root;
+        preferencesFile.append("preferences.xml");
+        readProperties(preferencesFile.str(), props);
+    } catch (...) {
+        // In case of an error, at least make summer :)
+        props->getNode("sim/startup/season", true)->setStringValue("summer");
+
+        SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading FlightGear preferences.\n"
+               << "Probably FG_ROOT is not properly set.");
+    }
+
+    std::string config;
+    while (arguments.read("--config", config)) {
+        try {
+            readProperties(config, props);
+        } catch (...) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading config file \"" << config
+                   << "\" given on the command line.");
+        }
+    }
+
+    std::string prop, value;
+    while (arguments.read("--prop", prop, value)) {
+        props->setStringValue(prop, value);
+    }
+
+    std::string renderer;
+    while (arguments.read("--renderer", renderer));
+
+    if (arguments.read("--hla")) {
+        props->setStringValue("hla/federate/federation", "rti:///FlightGear");
+    }
+    std::string federation;
+    if (arguments.read("--federation", federation)) {
+        props->setStringValue("hla/federate/federation", federation);
+    }
+
+    /// Start setting up the viewer windows and start feeding them.
+
     // construct the viewer.
-    osgViewer::Viewer viewer(arguments);
+    fgviewer::Viewer viewer(arguments);
+
+    if (renderer.empty()) {
+        // Currently just the defautl renderer. More to come.
+        viewer.setRenderer(new fgviewer::Renderer);
+        
+    } else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Unknown renderer configuration \"" << renderer
+               << "\" given on the command line.");
+        return EXIT_FAILURE;
+    }
+
+    // A viewer configuration
+    if (const SGPropertyNode* viewerNode = props->getChild("viewer")) {
+        if (!viewer.readCameraConfig(*viewerNode)) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "Reading camera configuration failed.");
+            return EXIT_FAILURE;
+        }
+    }
 
     // set up the camera manipulators.
     osgGA::KeySwitchMatrixManipulator* keyswitchManipulator;
@@ -69,6 +156,7 @@ main(int argc, char** argv)
     viewer.setCameraManipulator(keyswitchManipulator);
 
     // Usefull stats
+    viewer.addEventHandler(new osgGA::StateSetManipulator(viewer.getSceneDataGroup()->getOrCreateStateSet()));
     viewer.addEventHandler(new osgViewer::HelpHandler);
     viewer.addEventHandler(new osgViewer::StatsHandler);
     viewer.addEventHandler(new osgViewer::ThreadingHandler);
@@ -76,102 +164,106 @@ main(int argc, char** argv)
     viewer.addEventHandler(new osgViewer::ScreenCaptureHandler);
     viewer.addEventHandler(new osgViewer::WindowSizeHandler);
 
-    // Sigh, we need our own cull visitor ...
-    osg::Camera* camera = viewer.getCamera();
-    osgViewer::Renderer* renderer = static_cast<osgViewer::Renderer*>(camera->getRenderer());
-    for (int j = 0; j < 2; ++j) {
-        osgUtil::SceneView* sceneView = renderer->getSceneView(j);
-        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
-    }
-    // Shaders expect valid fog
-    osg::Fog* fog = new osg::Fog;
-    fog->setMode(osg::Fog::EXP2);
-    fog->setColor(osg::Vec4(1, 1, 1, 1));
-    fog->setDensity(1e-6);
-    camera->getOrCreateStateSet()->setAttribute(fog);
+    // We want on demand database paging
+    viewer.setDatabasePager(new osgDB::DatabasePager);
+    viewer.getDatabasePager()->setUpThreads(1, 1);
 
-    std::string fg_root;
-    if (arguments.read("--fg-root", fg_root)) {
-    } else if (const char *fg_root_env = std::getenv("FG_ROOT")) {
-        fg_root = fg_root_env;
-    } else {
-#if defined(PKGDATADIR)
-        fg_root = PKGDATADIR;
-#else
-        fg_root = ".";
-#endif
-    }
+    /// now set up the simgears required model stuff
 
-    std::string fg_scenery;
-    string_list path_list;
-    if (arguments.read("--fg-scenery", fg_scenery)) {
-        path_list.push_back(fg_scenery);
-    } else if (const char *fg_scenery_env = std::getenv("FG_SCENERY")) {
-        path_list = sgPathSplit(fg_scenery_env);
-    } else {
-        SGPath path(fg_root);
-        path.append("Scenery");
-        path_list.push_back(path.str());
-    }
-    osgDB::FilePathList filePathList;
-    filePathList.push_back(fg_root);
-    for (unsigned i = 0; i < path_list.size(); ++i) {
-        SGPath pt(path_list[i]), po(path_list[i]);
-        pt.append("Terrain");
-        po.append("Objects");
-        filePathList.push_back(path_list[i]);
-        filePathList.push_back(pt.str());
-        filePathList.push_back(po.str());
-    }
+    simgear::ResourceManager::instance()->addBasePath(fg_root, simgear::ResourceManager::PRIORITY_DEFAULT);
+    // Just reference simgears reader writer stuff so that the globals get
+    // pulled in by the linker ...
+    // FIXME: make that more explicit clear and call an initialization function
+    simgear::ModelRegistry::instance();
 
-    SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
+    // FIXME Ok, replace this by querying the root of the property tree
     sgUserDataInit(props.get());
-    try {
-        SGPath preferencesFile = fg_root;
-        preferencesFile.append("preferences.xml");
-        readProperties(preferencesFile.str(), props);
-    } catch (...) {
-        // In case of an error, at least make summer :)
-        props->getNode("sim/startup/season", true)->setStringValue("summer");
-
-        std::cerr << "Problems loading FlightGear preferences.\n"
-                  << "Probably FG_ROOT is not properly set." << std::endl;
-    }
+    SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::DoNotUseCompression);
     SGMaterialLib* ml = new SGMaterialLib;
     SGPath mpath(fg_root);
-    mpath.append("materials.xml");
+    mpath.append("Materials/default/materials.xml");
     try {
         ml->load(fg_root, mpath.str(), props);
     } catch (...) {
-        std::cerr << "Problems loading FlightGear materials.\n"
-                  << "Probably FG_ROOT is not properly set." << std::endl;
+        SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading FlightGear materials.\n"
+               << "Probably FG_ROOT is not properly set.");
     }
     simgear::SGModelLib::init(fg_root, props);
 
-    // The file path list must be set in the registry.
-    osgDB::Registry::instance()->getDataFilePathList() = filePathList;
-
-    SGReaderWriterBTGOptions* btgOptions = new SGReaderWriterBTGOptions;
-    btgOptions->getDatabasePathList() = filePathList;
-    btgOptions->setMatlib(ml);
+    // Set up the reader/writer options
+    osg::ref_ptr<simgear::SGReaderWriterOptions> options;
+    if (osgDB::Options* ropt = osgDB::Registry::instance()->getOptions())
+        options = new simgear::SGReaderWriterOptions(*ropt);
+    else
+        options = new simgear::SGReaderWriterOptions;
+    osgDB::convertStringPathIntoFilePathList(fg_scenery,
+                                             options->getDatabasePathList());
+    options->setMaterialLib(ml);
+    options->setPropertyNode(props);
+    options->setPluginStringData("SimGear::FG_ROOT", fg_root);
+    // Omit building bounding volume trees, as the viewer will not run a simulation
+    options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
+    viewer.setReaderWriterOptions(options.get());
 
     // Here, all arguments are processed
     arguments.reportRemainingOptionsAsUnrecognized();
     arguments.writeErrorMessages(std::cerr);
 
-    // read the scene from the list of file specified command line args.
+    if (props->getNode("hla/federate/federation")) {
+#if !defined FG_HAVE_HLA
+        SG_LOG(SG_GENERAL, SG_ALERT, "Unable to enter HLA/RTI viewer mode: HLA/RTI disabled at compile time.");
+#else
+        const SGPropertyNode* federateNode = props->getNode("hla/federate");
+        
+        SGSharedPtr<fgviewer::HLAViewerFederate> viewerFederate;
+        viewerFederate = new fgviewer::HLAViewerFederate;
+        viewerFederate->setVersion(federateNode->getStringValue("version", "RTI13"));
+        // viewerFederate->setConnectArguments(federateNode->getStringValue("connect-arguments", ""));
+        viewerFederate->setFederateType(federateNode->getStringValue("type", "ViewerFederate"));
+        viewerFederate->setFederateName(federateNode->getStringValue("name", ""));
+        viewerFederate->setFederationExecutionName(federateNode->getStringValue("federation", ""));
+        std::string objectModel;
+        objectModel = federateNode->getStringValue("federation-object-model", "HLA/fg-local-fom.xml");
+        if (SGPath(objectModel).isRelative()) {
+            SGPath path = fg_root;
+            path.append(objectModel);
+            objectModel = path.str();
+        }
+        viewerFederate->setFederationObjectModel(objectModel);
+
+        if (!viewerFederate->init()) {
+            SG_LOG(SG_NETWORK, SG_ALERT, "Got error from federate init!");
+        } else {
+            viewer.setViewerFederate(viewerFederate.get());
+            viewer.setCameraManipulator(new fgviewer::HLACameraManipulator(viewerFederate->getViewer()));
+        }
+#endif
+    }
+
+    /// Read the model files that are configured.
+
     osg::ref_ptr<osg::Node> loadedModel;
-    loadedModel = osgDB::readNodeFiles(arguments, btgOptions);
+    if (1 < arguments.argc()) {
+        // read the scene from the list of file specified command line args.
+        loadedModel = osgDB::readNodeFiles(arguments, options.get());
+    } else {
+        // if no arguments given resort to the whole world scenery
+        options->setPluginStringData("SimGear::FG_EARTH", "ON");
+        loadedModel = osgDB::readNodeFile("w180s90-360x180.spt", options.get());
+    }
 
     // if no model has been successfully loaded report failure.
     if (!loadedModel.valid()) {
-        std::cerr << arguments.getApplicationName()
-                  << ": No data loaded" << std::endl;
+        SG_LOG(SG_GENERAL, SG_ALERT, arguments.getApplicationName()
+               << ": No data loaded");
         return EXIT_FAILURE;
     }
 
     // pass the loaded scene graph to the viewer.
-    viewer.setSceneData(loadedModel.get());
+    viewer.insertSceneData(loadedModel.get());
+
+    // Note that this does not affect the hla camera manipulator
+    viewer.home();
 
     return viewer.run();
 }

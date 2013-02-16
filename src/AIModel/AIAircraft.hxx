@@ -42,18 +42,17 @@ public:
 
     // virtual bool init(bool search_in_AI_path=false);
     virtual void bind();
-    virtual void unbind();
     virtual void update(double dt);
 
-    void setPerformance(const std::string& perfString);
-    void setPerformance(PerformanceData *ps);
+    void setPerformance(const std::string& acType, const std::string& perfString);
+  //  void setPerformance(PerformanceData *ps);
 
     void setFlightPlan(const std::string& fp, bool repat = false);
     void SetFlightPlan(FGAIFlightPlan *f);
     void initializeFlightPlan();
     FGAIFlightPlan* GetFlightPlan() const { return fp; };
     void ProcessFlightPlan( double dt, time_t now );
-    time_t checkForArrivalTime(string wptName);
+    time_t checkForArrivalTime(const string& wptName);
     
     void AccelTo(double speed);
     void PitchTo(double angle);
@@ -69,17 +68,25 @@ public:
     double getBearing(double crse);
 
     void setAcType(const std::string& ac) { acType = ac; };
+    const std::string& getAcType() const { return acType; }
+  
     void setCompany(const std::string& comp) { company = comp;};
 
     void announcePositionToController(); //TODO have to be public?
-    void processATC(FGATCInstruction instruction);
+    void processATC(const FGATCInstruction& instruction);
     void setTaxiClearanceRequest(bool arg) { needsTaxiClearance = arg; };
     bool getTaxiClearanceRequest() { return needsTaxiClearance; };
     FGAISchedule * getTrafficRef() { return trafficRef; };
+    void setTrafficRef(FGAISchedule *ref) { trafficRef = ref; };
+    void resetTakeOffStatus() { takeOffStatus = 0;};
+    void setTakeOffStatus(int status) { takeOffStatus = status; };
+    void scheduleForATCTowerDepartureControl(int state);
+
+    //inline bool isScheduledForTakeoff() { return scheduledForTakeoff; };
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
-    std::string GetTransponderCode() { return transponderCode; };
+    const std::string& GetTransponderCode() { return transponderCode; };
     void SetTransponderCode(const std::string& tc) { transponderCode = tc;};
 
     // included as performance data needs them, who else?
@@ -92,16 +99,23 @@ public:
     inline double getVerticalSpeed() const { return vs; };
     inline double altitudeAGL() const { return props->getFloatValue("position/altitude-agl-ft");};
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
-    std::string atGate();
+    const std::string& atGate();
+
+    int getTakeOffStatus() { return takeOffStatus; };
 
     void checkTcas();
+    double calcVerticalSpeed(double vert_ft, double dist_m, double speed, double error);
+
+    FGATCController * getATCController() { return controller; };
     
 protected:
     void Run(double dt);
 
 private:
     FGAISchedule *trafficRef;
-    FGATCController *controller, *prevController; 
+    FGATCController *controller, 
+                    *prevController,
+                    *towerController; // Only needed to make a pre-announcement
 
     bool hdg_lock;
     bool alt_lock;
@@ -123,27 +137,28 @@ private:
     //subclasses to override specific behaviour
     bool fpExecutable(time_t now);
     void handleFirstWaypoint(void);
-    bool leadPointReached(FGAIFlightPlan::waypoint* curr);
-    bool handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t now);
+    bool leadPointReached(FGAIWaypoint* curr);
+    bool handleAirportEndPoints(FGAIWaypoint* prev, time_t now);
     bool reachedEndOfCruise(double&);
     bool aiTrafficVisible(void);
-    void controlHeading(FGAIFlightPlan::waypoint* curr);
-    void controlSpeed(FGAIFlightPlan::waypoint* curr,
-                      FGAIFlightPlan::waypoint* next);
+    void controlHeading(FGAIWaypoint* curr);
+    void controlSpeed(FGAIWaypoint* curr,
+                      FGAIWaypoint* next);
     
     void updatePrimaryTargetValues(bool& flightplanActive, bool& aiOutOfSight);
     
     void updateSecondaryTargetValues();
-    void updatePosition();
     void updateHeading();
     void updateBankAngleTarget();
     void updateVerticalSpeedTarget();
     void updatePitchAngleTarget();
     void updateActualState();
+    void updateModelProperties(double dt);
     void handleATCRequests();
     void checkVisibility();
     inline bool isStationary() { return ((fabs(speed)<=0.0001)&&(fabs(tgt_speed)<=0.0001));}
     inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
+   
 
     double sign(double x);
 
@@ -157,16 +172,24 @@ private:
 
     bool holdPos;
 
-    bool _getGearDown() const;
-
     const char * _getTransponderCode() const;
 
     bool reachedWaypoint;
     bool needsTaxiClearance;
     bool _needsGroundElevation;
+    int  takeOffStatus; // 1 = joined departure cue; 2 = Passed DepartureHold waypoint; handover control to tower; 0 = any other state. 
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft
+    
+   void assertSpeed(double speed);
+
+   struct
+   {
+       double remainingLength;
+       std::string startWptName;
+       std::string finalWptName;
+   } trackCache;
 };
 
 

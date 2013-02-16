@@ -34,7 +34,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
-#include <osg/Math>             // isNaN
+#include <errno.h>
 
 #include <simgear/misc/stdint.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -171,6 +171,8 @@ static const IdPropertyList sIdPropertyList[] = {
 
   {1300, "tanker", simgear::props::INT},
 
+  {1400, "scenery/events", simgear::props::STRING},
+
   {10001, "sim/multiplay/transmission-freq-hz",  simgear::props::STRING},
   {10002, "sim/multiplay/chat",  simgear::props::STRING},
 
@@ -299,7 +301,7 @@ namespace
         case props::DOUBLE:
           {
             float val = XDR_decode_float(*xdr);
-            if (osg::isNaN(val))
+            if (SGMisc<float>::isNaN(val))
               return false;
             xdr++;
             break;
@@ -400,9 +402,11 @@ FGMultiplayMgr::init (void)
     SG_LOG(SG_NETWORK, SG_WARN, "FGMultiplayMgr::init - already initialised");
     return;
   }
-  
-  fgSetBool("/sim/multiplay/online", false);
-  
+
+  SGPropertyNode* propOnline = fgGetNode("/sim/multiplay/online", true);
+  propOnline->setBoolValue(false);
+  propOnline->setAttribute(SGPropertyNode::PRESERVE, true);
+
   //////////////////////////////////////////////////
   //  Set members from property values
   //////////////////////////////////////////////////
@@ -420,24 +424,28 @@ FGMultiplayMgr::init (void)
   mTimeUntilSend = 0.0;
   
   mCallsign = fgGetString("/sim/multiplay/callsign");
-  if (!txAddress.empty()) {
+  if ((!txAddress.empty()) && (txAddress!="0")) {
     mServer.set(txAddress.c_str(), txPort);
     if (strncmp (mServer.getHost(), "0.0.0.0", 8) == 0) {
       mHaveServer = false;
-      SG_LOG(SG_NETWORK, SG_WARN,
-        "FGMultiplayMgr - could not resolve '"
-        << txAddress << "', Multiplayermode disabled");
+      SG_LOG(SG_NETWORK, SG_ALERT,
+        "Cannot enable multiplayer mode: resolving MP server address '"
+        << txAddress << "' failed.");
       return;
     } else {
-        SG_LOG(SG_NETWORK, SG_INFO, "have server");
+      SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - have server");
       mHaveServer = true;
     }
     if (rxPort <= 0)
       rxPort = txPort;
+  } else {
+    SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - multiplayer mode disabled (no MP server specificed).");
+    return;
   }
+
   if (rxPort <= 0) {
-    SG_LOG(SG_NETWORK, SG_DEBUG,
-      "FGMultiplayMgr - No receiver port, Multiplayermode disabled");
+    SG_LOG(SG_NETWORK, SG_ALERT,
+      "Cannot enable multiplayer mode: No receiver port specified.");
     return;
   }
   if (mCallsign.empty())
@@ -450,15 +458,15 @@ FGMultiplayMgr::init (void)
   
   mSocket.reset(new simgear::Socket());
   if (!mSocket->open(false)) {
-    SG_LOG( SG_NETWORK, SG_WARN,
-            "FGMultiplayMgr::init - Failed to create data socket" );
+    SG_LOG( SG_NETWORK, SG_ALERT,
+            "Cannot enable multiplayer mode: creating data socket failed." );
     return;
   }
   mSocket->setBlocking(false);
   if (mSocket->bind(rxAddress.c_str(), rxPort) != 0) {
-    perror("bind");
-    SG_LOG( SG_NETWORK, SG_DEBUG,
-            "FGMultiplayMgr::Open - Failed to bind receive socket" );
+    SG_LOG( SG_NETWORK, SG_ALERT,
+            "Cannot enable multiplayer mode: binding receive socket failed. "
+            << strerror(errno) << "(errno " << errno << ")");
     return;
   }
   
@@ -468,6 +476,14 @@ FGMultiplayMgr::init (void)
   
   fgSetBool("/sim/multiplay/online", true);
   mInitialised = true;
+
+  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer mode active!");
+
+  if (!fgGetBool("/sim/ai/enabled"))
+  {
+      // multiplayer depends on AI module
+      fgSetBool("/sim/ai/enabled", true);
+  }
 } // FGMultiplayMgr::init()
 //////////////////////////////////////////////////////////////////////
 
@@ -594,8 +610,8 @@ FGMultiplayMgr::isSane(const FGExternalMotionData& motionInfo)
 {
     // check for corrupted data (NaNs)
     bool isCorrupted = false;
-    isCorrupted |= ((osg::isNaN(motionInfo.time           )) ||
-                    (osg::isNaN(motionInfo.lag            )) ||
+    isCorrupted |= ((SGMisc<double>::isNaN(motionInfo.time           )) ||
+                    (SGMisc<double>::isNaN(motionInfo.lag            )) ||
                     (osg::isNaN(motionInfo.orientation(3) )));
     for (unsigned i = 0; (i < 3)&&(!isCorrupted); ++i)
     {
@@ -635,7 +651,8 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 
   strncpy(PosMsg->Model, fgGetString("/sim/model/path"), MAX_MODEL_NAME_LEN);
   PosMsg->Model[MAX_MODEL_NAME_LEN - 1] = '\0';
-  if (fgGetBool("/sim/freeze/replay-state", true))
+  if (fgGetBool("/sim/freeze/replay-state", true)&&
+      fgGetBool("/sim/multiplay/freeze-on-replay",true))
   {
       // do not send position updates during replay
       for (unsigned i = 0 ; i < 3; ++i)
@@ -849,16 +866,33 @@ FGMultiplayMgr::update(double dt)
     //  packet waiting to be processed.
     //////////////////////////////////////////////////
     simgear::IPAddress SenderAddress;
-    bytes = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
+    int RecvStatus = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
                               &SenderAddress);
     //////////////////////////////////////////////////
     //  no Data received
     //////////////////////////////////////////////////
-    if (bytes <= 0) {
-      if (errno != EAGAIN && errno != 0) // MSVC output "NoError" otherwise
-        perror("FGMultiplayMgr::MP_ProcessData");
-      break;
+    if (RecvStatus == 0)
+        break;
+
+    // socket error reported?
+    // errno isn't thread-safe - so only check its value when
+    // socket return status < 0 really indicates a failure.
+    if ((RecvStatus < 0)&&
+        ((errno == EAGAIN) || (errno == 0))) // MSVC output "NoError" otherwise
+    {
+        // ignore "normal" errors
+        break;
     }
+
+    if (RecvStatus<0)
+    {
+        SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. "
+               << strerror(errno) << "(errno " << errno << ")");
+        break;
+    }
+
+    // status is positive: bytes received
+    bytes = (ssize_t) RecvStatus;
     if (bytes <= static_cast<ssize_t>(sizeof(T_MsgHdr))) {
       SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
               << "received message with insufficient data" );
@@ -942,10 +976,10 @@ FGMultiplayMgr::Send()
     }
 
     double sim_time = globals->get_sim_time_sec();
-    static double lastTime = 0.0;
+//    static double lastTime = 0.0;
     
    // SG_LOG(SG_GENERAL, SG_INFO, "actual dt=" << sim_time - lastTime);
-    lastTime = sim_time;
+//    lastTime = sim_time;
     
     FlightProperties ifce;
 
@@ -1286,7 +1320,7 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   mp->setCallSign(callsign);
   mMultiPlayerMap[callsign] = mp;
 
-  FGAIManager *aiMgr = (FGAIManager*)globals->get_subsystem("ai_model");
+  FGAIManager *aiMgr = (FGAIManager*)globals->get_subsystem("ai-model");
   if (aiMgr) {
     aiMgr->attach(mp);
 

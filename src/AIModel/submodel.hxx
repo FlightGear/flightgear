@@ -191,8 +191,8 @@ private:
     
     void loadAI();
     void loadSubmodels();
-    void setData(int id, std::string& path, bool serviceable);
-    void setSubData(int id, std::string& path, bool serviceable);
+    void setData(int id, const std::string& path, bool serviceable);
+    void setSubData(int id, const std::string& path, bool serviceable);
     void valueChanged (SGPropertyNode *);
     void transform(submodel *);
     void setParentNode(int parent_id);

@@ -43,20 +43,25 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/screen/screen-dump.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Cockpit/panel.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/fg_os.hxx>
-#include <Main/renderer.hxx>
-#include <Main/viewmgr.hxx>
-#include <Main/WindowSystemAdapter.hxx>
-#include <Main/CameraGroup.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/WindowSystemAdapter.hxx>
+#include <Viewer/CameraGroup.hxx>
 #include <GUI/new_gui.hxx>
 
 
 #ifdef _WIN32
 #  include <shellapi.h>
+#endif
+
+#ifdef SG_MAC
+# include "FGCocoaMenuBar.hxx" // for cocoaOpenUrl
 #endif
 
 #include "gui.h"
@@ -155,46 +160,65 @@ void guiErrorMessage (const char *txt, const sg_throwable &throwable)
 the Gui callback functions 
 ____________________________________________________________________*/
 
-
-// Hier Neu :-) This is my newly added code
-// Added by David Findlay <nedz@bigpond.com>
-// on Sunday 3rd of December
-
-
-void helpCb ()
+void helpCb()
 {
-    string command;
-	
-    SGPath path( globals->get_fg_root() );
-    path.append( "Docs/index.html" );
-	
-#ifndef _WIN32
+    openBrowser( "Docs/index.html" );
+}
 
-    command = globals->get_browser();
-    string::size_type pos;
-    if ((pos = command.find("%u", 0)) != string::npos)
-        command.replace(pos, 2, path.str());
-    else
-        command += " " + path.str();
+bool openBrowser(const std::string& aAddress)
+{
+    bool ok = true;
+    string address(aAddress);
+    
+    // do not resolve addresses with given protocol, i.e. "http://...", "ftp://..."
+    if (address.find("://")==string::npos)
+    {
+        // resolve local file path
+        SGPath path(address);
+        path = globals->resolve_maybe_aircraft_path(address);
+        if (!path.isNull())
+            address = path.str();
+        else
+        {
+            mkDialog ("Sorry, file not found!");
+            SG_LOG(SG_GENERAL, SG_ALERT, "openBrowser: Cannot find requested file '"  
+                    << address << "'.");
+            return false;
+        }
+    }
 
-    command += " &";
-    system( command.c_str() );
-
-#else // _WIN32
+#ifdef SG_MAC
+  if (address.find("://")==string::npos) {
+    address = "file://" + address;
+  }
+  
+  cocoaOpenUrl(address);
+#elif defined _WIN32
 
     // Look for favorite browser
     char win32_name[1024];
 # ifdef __CYGWIN__
-    cygwin32_conv_to_full_win32_path(path.c_str(),win32_name);
+    cygwin32_conv_to_full_win32_path(address.c_str(),win32_name);
 # else
-    strncpy(win32_name,path.c_str(), 1024);
+    strncpy(win32_name,address.c_str(), 1024);
 # endif
     ShellExecute ( NULL, "open", win32_name, NULL, NULL,
                    SW_SHOWNORMAL ) ;
+#else
+    // Linux, BSD, SGI etc
+    string command = globals->get_browser();
+    string::size_type pos;
+    if ((pos = command.find("%u", 0)) != string::npos)
+        command.replace(pos, 2, address);
+    else
+        command += " \"" + address +"\"";
 
+    command += " &";
+    ok = (system( command.c_str() ) == 0);
 #endif
-	
-    mkDialog ("Help started in your web browser window.");
+
+    mkDialog("The file is shown in your web browser window.");
+    return ok;
 }
 
 #if defined( TR_HIRES_SNAP)
@@ -206,12 +230,11 @@ void fgHiResDump()
     char *filename = new char [24];
     static int count = 1;
 
-    static const SGPropertyNode *master_freeze
-        = fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     fgSetBool("/sim/menubar/visibility", false);
@@ -321,7 +344,7 @@ void fgHiResDump()
         int curColumn = trGet(tr, TR_CURRENT_COLUMN);
         // int curRow =  trGet(tr, TR_CURRENT_ROW);
 
-        renderer->update( false );
+        renderer->update();
         // OSGFIXME
 //         if ( do_hud )
 //             fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
@@ -392,7 +415,7 @@ void fgHiResDump()
     fgSetBool("/sim/menubar/visibility", menu_status);
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
 }
 #endif // #if defined( TR_HIRES_SNAP)
@@ -459,7 +482,7 @@ namespace
             if (_path.create_dir( 0755 )) {
                 SG_LOG(SG_GENERAL, SG_ALERT, "Cannot create screenshot directory '"
                         << dir << "'. Trying home directory.");
-                dir = fgGetString("/sim/fg-home");
+                dir = globals->get_fg_home();
             }
 
             char filename[24];
@@ -534,11 +557,11 @@ bool fgDumpSnapShot ()
     return GUISnapShotOperation::start();
 #else
     // obsolete code => remove when new code is stable
-    static SGConstPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master");
+    SGPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     int mouse = fgGetMouseCursor();
@@ -564,7 +587,7 @@ bool fgDumpSnapShot ()
     if (path.create_dir( 0755 )) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Cannot create screenshot directory '"
                 << dir << "'. Trying home directory.");
-        dir = fgGetString("/sim/fg-home");
+        dir = globals->get_fg_home();
     }
 
     char filename[24];
@@ -590,7 +613,7 @@ bool fgDumpSnapShot ()
     fgSetMouseCursor(mouse);
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
     return result;
 #endif
@@ -603,12 +626,11 @@ void fgDumpSceneGraph()
     string message;
     static int count = 1;
 
-    static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     while (count < 1000) {
@@ -634,7 +656,7 @@ void fgDumpSceneGraph()
     delete [] filename;
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
 }
 
@@ -646,12 +668,11 @@ void fgDumpTerrainBranch()
     string message;
     static int count = 1;
 
-    static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     while (count < 1000) {
@@ -677,26 +698,22 @@ void fgDumpTerrainBranch()
     delete [] filename;
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
 }
 
 void fgPrintVisibleSceneInfoCommand()
 {
-    static const SGPropertyNode *master_freeze
-        = fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     flightgear::printVisibleSceneInfo(globals->get_renderer());
 
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
 }
-
-    
-

@@ -31,6 +31,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <Navaids/positioned.hxx>
 
@@ -40,10 +41,7 @@ class FGRunway;
 class FGTaxiway;
 class FGPavement;
 class SGPropertyNode;
-
-typedef SGSharedPtr<FGRunway> FGRunwayPtr;
-typedef SGSharedPtr<FGTaxiway> FGTaxiwayPtr;
-typedef SGSharedPtr<FGPavement> FGPavementPtr;
+class FGAirport;
 
 namespace flightgear {
   class SID;
@@ -56,6 +54,7 @@ namespace flightgear {
   typedef std::vector<WayptRef> WayptVec;
   
   typedef std::vector<CommStation*> CommStationList;
+  typedef std::map<std::string, FGAirport*> AirportCache;
 }
 
 
@@ -66,7 +65,7 @@ namespace flightgear {
 class FGAirport : public FGPositioned
 {
 public:
-    FGAirport(const std::string& id, const SGGeod& location, const SGGeod& tower, 
+    FGAirport(PositionedID aGuid, const std::string& id, const SGGeod& location,
             const std::string& name, bool has_metar, Type aType);
     ~FGAirport();
 
@@ -82,10 +81,19 @@ public:
     bool   isSeaport()    const;
     bool   isHeliport()   const;
 
+    static bool isAirportType(FGPositioned* pos);
+    
     virtual const std::string& name() const
     { return _name; }
 
-    const SGGeod& getTowerLocation() const { return _tower_location; }
+    /**
+     * reload the ILS data from XML if required.
+     * @result true if the data was refreshed, false if no data was loaded
+     * or previously cached data is still correct.
+     */
+    bool validateILSData();
+
+    SGGeod getTowerLocation() const;
 
     void setMetar(bool value) { _has_metar = value; }
 
@@ -120,10 +128,6 @@ public:
 
     unsigned int numPavements() const;
     FGPavement* getPavementByIndex(unsigned int aIndex) const;
-
-    void setRunwaysAndTaxiways(std::vector<FGRunwayPtr>& rwys,
-      std::vector<FGTaxiwayPtr>& txwys,
-      std::vector<FGPavementPtr>& pvts);
     
     class AirportFilter : public Filter
      {
@@ -159,7 +163,7 @@ public:
      class HardSurfaceFilter : public AirportFilter
      {
      public:
-       HardSurfaceFilter(double minLengthFt);
+       HardSurfaceFilter(double minLengthFt = -1);
        
        virtual bool passAirport(FGAirport* aApt) const;
        
@@ -186,9 +190,8 @@ public:
       
       unsigned int numApproaches() const;
       flightgear::Approach* getApproachByIndex(unsigned int aIndex) const;
-
-      static void installPropertyListener();
-      
+      flightgear::Approach* findApproachWithIdent(const std::string& aIdent) const;
+  
      /**
       * Syntactic wrapper around FGPositioned::findClosest - find the closest
       * match for filter, and return it cast to FGAirport. The default filter
@@ -215,37 +218,12 @@ public:
       * matches in a format suitable for use by a puaList. 
       */
      static char** searchNamesAndIdents(const std::string& aFilter);
-     
-     bool buildApproach(flightgear::Waypt* aEnroute, flightgear::STAR* aSTAR, 
-      FGRunway* aRwy, flightgear::WayptVec& aRoute);
-    
-    /**
-     * Given a destiation point, select the best SID and transition waypt from 
-     * this airport. Returns (NULL,NULL) is no SIDs are defined, otherwise the
-     * best SID/transition is that which is closest to the destination point.
-     */
-    std::pair<flightgear::SID*, flightgear::WayptRef> selectSID(const SGGeod& aDest, FGRunway* aRwy);
-    
-    /**
-     * Select a STAR and enroute transition waypt, given an origin (departure) position.
-     * returns (NULL, NULL) is no suitable STAR is exists
-     */
-    std::pair<flightgear::STAR*, flightgear::WayptRef> selectSTAR(const SGGeod& aOrigin, FGRunway* aRwy);
-    
-    virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
-    
-    void setCommStations(flightgear::CommStationList& comms);
-    
+         
     flightgear::CommStationList commStationsOfType(FGPositioned::Type aTy) const;
     
-    const flightgear::CommStationList& commStations() const
-        { return mCommStations; }
+    flightgear::CommStationList commStations() const;
 private:
-    typedef std::vector<FGRunwayPtr>::const_iterator Runway_iterator;
-    /**
-     * Helper to locate a runway by ident
-     */
-    Runway_iterator getIteratorForRunwayIdent(const std::string& aIdent) const;
+    static flightgear::AirportCache airportCache;
 
     // disable these
     FGAirport operator=(FGAirport &other);
@@ -261,13 +239,16 @@ private:
      */
     void readThresholdData(SGPropertyNode* aRoot);
     void processThreshold(SGPropertyNode* aThreshold);
+      
+    void readILSData(SGPropertyNode* aRoot);
+  
+    void validateTowerData() const;
     
     /**
      * Helper to parse property data loaded from an ICAO.twr.xml filke
      */
     void readTowerData(SGPropertyNode* aRoot);
     
-    SGGeod _tower_location;
     std::string _name;
     bool _has_metar;
     FGAirportDynamics *_dynamics;
@@ -276,20 +257,24 @@ private:
     void loadTaxiways() const;
     void loadProcedures() const;
     
+    mutable bool mTowerDataLoaded;
     mutable bool mRunwaysLoaded;
     mutable bool mTaxiwaysLoaded;
     mutable bool mProceduresLoaded;
+    bool mILSDataLoaded;
+  
+    mutable PositionedIDVec mRunways;
+    mutable PositionedIDVec mTaxiways;
+    PositionedIDVec mPavements;
     
-    std::vector<FGRunwayPtr> mRunways;
-    std::vector<FGTaxiwayPtr> mTaxiways;
-    std::vector<FGPavementPtr> mPavements;
+    typedef SGSharedPtr<flightgear::SID> SIDRef;
+    typedef SGSharedPtr<flightgear::STAR> STARRef;
+    typedef SGSharedPtr<flightgear::Approach> ApproachRef;
     
-    std::vector<flightgear::SID*> mSIDs;
-    std::vector<flightgear::STAR*> mSTARs;
-    std::vector<flightgear::Approach*> mApproaches;
-    
-    flightgear::CommStationList mCommStations;
-};
+    std::vector<SIDRef> mSIDs;
+    std::vector<STARRef> mSTARs;
+    std::vector<ApproachRef> mApproaches;
+  };
 
 // find basic airport location info from airport database
 const FGAirport *fgFindAirportID( const std::string& id);

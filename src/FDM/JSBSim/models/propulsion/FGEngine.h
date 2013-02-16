@@ -43,19 +43,19 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <vector>
+#include <string>
+
 #include "math/FGModelFunctions.h"
 #include "input_output/FGXMLFileRead.h"
 #include "input_output/FGXMLElement.h"
-#include "models/FGFCS.h"
 #include "math/FGColumnVector3.h"
-#include <vector>
-#include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_ENGINE "$Id: FGEngine.h,v 1.23 2011/03/03 12:16:26 jberndt Exp $"
+#define ID_ENGINE "$Id: FGEngine.h,v 1.35 2012/04/14 18:10:44 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -64,11 +64,6 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 class FGFDMExec;
-class FGAtmosphere;
-class FGAircraft;
-class FGPropagate;
-class FGPropulsion;
-class FGAuxiliary;
 class FGThruster;
 class Element;
 class FGPropertyManager;
@@ -113,12 +108,12 @@ CLASS DOCUMENTATION
 @endcode
 <pre>
     NOTES:
-	
-	Not all thruster types can be matched with a given engine type.  See the class
-	documentation for engine and thruster classes.
+
+  Not all thruster types can be matched with a given engine type.  See the class
+  documentation for engine and thruster classes.
 </pre>     
     @author Jon S. Berndt
-    @version $Id: FGEngine.h,v 1.23 2011/03/03 12:16:26 jberndt Exp $
+    @version $Id: FGEngine.h,v 1.35 2012/04/14 18:10:44 bcoconni Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,35 +123,63 @@ CLASS DECLARATION
 class FGEngine : public FGModelFunctions, public FGXMLFileRead
 {
 public:
-  FGEngine(FGFDMExec* exec, Element* el, int engine_number);
+  struct Inputs {
+    double SLPressure;
+    double Pressure;
+    double PressureRatio;
+    double Temperature;
+    double Density;
+    double DensityRatio;
+    double Soundspeed;
+    double TotalPressure;
+    double TotalTempearture;
+    double TAT_c;
+    double Vt;
+    double Vc;
+    double qbar;
+    double alpha;
+    double beta;
+    double H_agl;
+    FGColumnVector3 AeroUVW;
+    FGColumnVector3 AeroPQR;
+    FGColumnVector3 PQR;
+    vector <double> ThrottleCmd;
+    vector <double> MixtureCmd;
+    vector <double> ThrottlePos;
+    vector <double> MixturePos;
+    vector <double> PropAdvance;
+    vector <bool> PropFeather;
+    FGColumnVector3 vXYZcg; // CG coordinates expressed in the structural frame
+    double TotalDeltaT;
+  };
+
+  FGEngine(FGFDMExec* exec, Element* el, int engine_number, struct Inputs& input);
   virtual ~FGEngine();
 
   enum EngineType {etUnknown, etRocket, etPiston, etTurbine, etTurboprop, etElectric};
 
-  EngineType      GetType(void) { return Type; }
-  virtual string  GetName(void) { return Name; }
+  EngineType             GetType(void) const { return Type; }
+  virtual const string&  GetName(void) const { return Name; }
 
   // Engine controls
-  virtual double  GetThrottleMin(void) { return MinThrottle; }
-  virtual double  GetThrottleMax(void) { return MaxThrottle; }
-  virtual double  GetThrottle(void) { return Throttle; }
-  virtual double  GetMixture(void) { return Mixture; }
-  virtual bool    GetStarter(void) { return Starter; }
+  virtual double  GetThrottleMin(void) const { return MinThrottle; }
+  virtual double  GetThrottleMax(void) const { return MaxThrottle; }
+  virtual bool    GetStarter(void) const     { return Starter; }
 
   virtual double getFuelFlow_gph () const {return FuelFlow_gph;}
   virtual double getFuelFlow_pph () const {return FuelFlow_pph;}
   virtual double GetFuelFlowRate(void) const {return FuelFlowRate;}
+  virtual double GetFuelFlowRateGPH(void) const {return FuelFlowRate*3600/6.02;}
   virtual double GetFuelUsedLbs(void) const {return FuelUsedLbs;}
-  virtual bool   GetStarved(void) { return Starved; }
+  virtual bool   GetStarved(void) const { return Starved; }
   virtual bool   GetRunning(void) const { return Running; }
-  virtual bool   GetCranking(void) { return Cranking; }
+  virtual bool   GetCranking(void) const { return Cranking; }
 
   virtual void SetStarved(bool tt) { Starved = tt; }
   virtual void SetStarved(void)    { Starved = true; }
 
   virtual void SetRunning(bool bb) { Running=bb; }
-  virtual void SetName(string name) { Name = name; }
-  virtual void AddFeedTank(int tkID, int priority);
+  virtual void SetName(const string& name) { Name = name; }
   virtual void SetFuelFreeze(bool f) { FuelFreeze = f; }
 
   virtual void SetStarter(bool s) { Starter = s; }
@@ -169,33 +192,43 @@ public:
   /** Calculates the thrust of the engine, and other engine functions. */
   virtual void Calculate(void) = 0;
 
+  virtual double GetThrust(void) const;
+    
   /// Sets engine placement information
-  virtual void SetPlacement(FGColumnVector3& location, FGColumnVector3& orientation);
-
-  virtual double GetPowerAvailable(void) {return 0.0;};
-
-  virtual FGColumnVector3& GetBodyForces(void);
-  virtual FGColumnVector3& GetMoments(void);
-
-  bool LoadThruster(Element *el);
-  FGThruster* GetThruster(void) {return Thruster;}
-
-  virtual std::string GetEngineLabels(const std::string& delimiter) = 0;
-  virtual std::string GetEngineValues(const std::string& delimiter) = 0;
-
-protected:
-  /** Reduces the fuel in the active tanks by the amount required.
-      This function should be called from within the
-      derived class' Calculate() function before any other calculations are
-      done. This base class method removes fuel from the fuel tanks as
-      appropriate, and sets the starved flag if necessary. */
-  virtual void ConsumeFuel(void);
+  virtual void SetPlacement(const FGColumnVector3& location, const FGColumnVector3& orientation);
 
   /** The fuel need is calculated based on power levels and flow rate for that
       power level. It is also turned from a rate into an actual amount (pounds)
       by multiplying it by the delta T and the rate.
       @return Total fuel requirement for this engine in pounds. */
   virtual double CalcFuelNeed(void);
+
+  virtual double CalcOxidizerNeed(void) {return 0.0;}
+
+  virtual double GetPowerAvailable(void) {return 0.0;};
+
+  virtual const FGColumnVector3& GetBodyForces(void);
+  virtual const FGColumnVector3& GetMoments(void);
+
+  bool LoadThruster(Element *el);
+  FGThruster* GetThruster(void) const {return Thruster;}
+
+  unsigned int GetSourceTank(unsigned int i) const;
+  unsigned int GetNumSourceTanks() const {return SourceTanks.size();}
+
+  virtual std::string GetEngineLabels(const std::string& delimiter) = 0;
+  virtual std::string GetEngineValues(const std::string& delimiter) = 0;
+
+  struct Inputs& in;
+  void LoadThrusterInputs();
+
+protected:
+  /** Reduces the fuel in the active tanks by the amount required.
+      This function should be called from within the
+      derived class' Calculate() function before any other calculations are
+      done. This base class method removes fuel from the fuel tanks as
+      appropriate, and sets the starved flag if necessary. * /
+  virtual void ConsumeFuel(void); */
 
   FGPropertyManager* PropertyManager;
   std::string Name;
@@ -208,8 +241,6 @@ protected:
   double MaxThrottle;
   double MinThrottle;
 
-  double Throttle;
-  double Mixture;
   double FuelExpended;
   double FuelFlowRate;
   double PctPower;
@@ -221,16 +252,9 @@ protected:
 
   double FuelFlow_gph;
   double FuelFlow_pph;
-  double FuelDensity;
   double FuelUsedLbs;
 
   FGFDMExec*      FDMExec;
-  FGAtmosphere*   Atmosphere;
-  FGFCS*          FCS;
-  FGPropulsion*   Propulsion;
-  FGAircraft*     Aircraft;
-  FGPropagate*    Propagate;
-  FGAuxiliary*    Auxiliary;
   FGThruster*     Thruster;
 
   std::vector <int> SourceTanks;

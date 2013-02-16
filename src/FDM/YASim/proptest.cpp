@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -20,8 +24,8 @@ bool fgSetString(char const * name, char const * str) { return false; }
 SGPropertyNode* fgGetNode (const char * path, bool create) { return 0; }
 SGPropertyNode* fgGetNode (const char * path, int i, bool create) { return 0; }
 float fgGetFloat (const char * name, float defaultValue) { return 0; }
-float fgGetDouble (const char * name, double defaultValue) { return 0; }
-float fgSetDouble (const char * name, double defaultValue) { return 0; }
+double fgGetDouble (const char * name, double defaultValue) { return 0; }
+bool fgSetDouble (const char * name, double defaultValue) { return false; }
 
 static const float KTS2MPS = 0.514444444444;
 static const float RPM2RAD = 0.10471975512;
@@ -76,6 +80,8 @@ int main(int argc, char** argv)
 
     printf("Alt: %f\n", alt / FT2M);
     printf("Spd: %f\n", speed / KTS2MPS);
+    printf("-----------------\n");
+    printf("Throt   RPM   thrustlbs      HP   eff %%   torque\n");
     for(int i=0; i<COUNT; i++) {
         float throttle = i/(COUNT-1.0);
         pe->setThrottle(throttle);
@@ -91,13 +97,14 @@ int main(int argc, char** argv)
 
         float eff = thrust * speed / power;
 
-        printf("%6.3f: %6.1frpm %6.1flbs %6.1fhp %6.1f%% torque: %f\n",
+        printf("%5.3f %7.1f %8.1f %8.1f %7.1f %8.1f\n",
                throttle, rpm, thrust * N2LB, power * (1/HP2W), 100*eff, eng->getTorque());
     }
 
     printf("\n");
     printf("Propeller vs. RPM\n");
     printf("-----------------\n");
+    printf("RPM       thrustlbs         HP   eff %%      torque\n");
     for(int i=0; i<COUNT; i++) {
         float thrust, torque, rpm = 3000 * i/(COUNT-1.0);
         float omega = rpm * RPM2RAD;
@@ -105,7 +112,7 @@ int main(int argc, char** argv)
                    speed, omega, &thrust, &torque);
         float power = torque * omega;
         float eff = (thrust * speed) / power;
-        printf("%6.1frpm %6.1flbs %6.1fhp %.1f%% torque: %f\n",
+        printf("%7.1f %11.1f %10.1f %7.1f %11.1f\n",
                rpm, thrust * N2LB, power * (1/HP2W), 100*eff, torque);
     }
 }

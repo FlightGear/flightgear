@@ -34,47 +34,42 @@
 
 #include "fixlist.hxx"
 #include <Navaids/fix.hxx>
-#include <Airports/simple.hxx>
+#include <Navaids/NavDataCache.hxx>
 
-FGFix::FGFix(const std::string& aIdent, const SGGeod& aPos) :
-  FGPositioned(FIX, aIdent, aPos)
+FGFix::FGFix(PositionedID aGuid, const std::string& aIdent, const SGGeod& aPos) :
+  FGPositioned(aGuid, FIX, aIdent, aPos)
 {
-  init(true); // init FGPositioned
-}
-
-// Constructor
-FGFixList::FGFixList( void ) {
 }
 
 
-// Destructor
-FGFixList::~FGFixList( void ) {
+namespace flightgear
+{
+  
+void loadFixes(const SGPath& path)
+{
+  sg_gzifstream in( path.str() );
+  if ( !in.is_open() ) {
+    SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
+    exit(-1);
+  }
+  
+  // toss the first two lines of the file
+  in >> skipeol;
+  in >> skipeol;
+  
+  NavDataCache* cache = NavDataCache::instance();
+  
+  // read in each remaining line of the file
+  while ( ! in.eof() ) {
+    double lat, lon;
+    std::string ident;
+    in >> lat >> lon >> ident;
+    if (lat > 95) break;
+    
+    cache->insertFix(ident, SGGeod::fromDeg(lon, lat));
+    in >> skipcomment;
+  }
+
 }
-
-
-// load the navaids and build the map
-bool FGFixList::init(const SGPath& path ) {
-    sg_gzifstream in( path.str() );
-    if ( !in.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
-        exit(-1);
-    }
-
-    // toss the first two lines of the file
-    in >> skipeol;
-    in >> skipeol;
-
-    // read in each remaining line of the file
-    while ( ! in.eof() ) {
-      double lat, lon;
-      std::string ident;
-      in >> lat >> lon >> ident;
-      if (lat > 95) break;
-
-      // fix gets added to the FGPositioned spatial indices, so we don't need
-      // to hold onto it here.
-      new FGFix(ident, SGGeod::fromDeg(lon, lat));
-      in >> skipcomment;
-    }
-    return true;
-}
+  
+} // of namespace flightgear;

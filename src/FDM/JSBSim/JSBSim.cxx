@@ -16,7 +16,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 // $Id: JSBSim.cxx,v 1.64 2010/10/31 04:49:25 jberndt Exp $
 
@@ -60,6 +60,8 @@
 #include <FDM/JSBSim/models/FGLGear.h>
 #include <FDM/JSBSim/models/FGGroundReactions.h>
 #include <FDM/JSBSim/models/FGPropulsion.h>
+#include <FDM/JSBSim/models/FGAccelerations.h>
+#include <FDM/JSBSim/models/atmosphere/FGWinds.h>
 #include <FDM/JSBSim/models/propulsion/FGEngine.h>
 #include <FDM/JSBSim/models/propulsion/FGPiston.h>
 #include <FDM/JSBSim/models/propulsion/FGTurbine.h>
@@ -110,6 +112,26 @@ public:
     cont = FGColumnVector3( contact[0], contact[1], contact[2] );
     return agl;
   }
+
+  virtual double GetTerrainGeoCentRadius(double t, const FGLocation& l) const {
+    double loc_cart[3] = { l(eX), l(eY), l(eZ) };
+    double contact[3], normal[3], vel[3], angularVel[3], agl = 0;
+    mInterface->get_agl_ft(t, loc_cart, SG_METER_TO_FEET*2, contact, normal,
+                           vel, angularVel, &agl);
+    return sqrt(contact[0]*contact[0]+contact[1]*contact[1]+contact[2]*contact[2]);
+  }
+
+  virtual double GetSeaLevelRadius(const FGLocation& l) const {
+    double seaLevelRadius, latGeoc;
+
+    sgGeodToGeoc(l.GetGeodLatitudeRad(), l.GetGeodAltitude(),
+                 &seaLevelRadius, &latGeoc);
+
+    return seaLevelRadius * SG_METER_TO_FEET;
+  }
+
+  virtual void SetTerrainGeoCentRadius(double radius) {}
+  virtual void SetSeaLevelRadius(double radius) {}
 private:
   FGJSBsim* mInterface;
 };
@@ -138,12 +160,11 @@ FGJSBsim::FGJSBsim( double dt )
 {
     bool result;
     if( TURBULENCE_TYPE_NAMES.empty() ) {
-        TURBULENCE_TYPE_NAMES["ttNone"]     = FGAtmosphere::ttNone;
-        TURBULENCE_TYPE_NAMES["ttStandard"] = FGAtmosphere::ttStandard;
-//      TURBULENCE_TYPE_NAMES["ttBerndt"]   = FGAtmosphere::ttBerndt;
-        TURBULENCE_TYPE_NAMES["ttCulp"]     = FGAtmosphere::ttCulp;
-        TURBULENCE_TYPE_NAMES["ttMilspec"]  = FGAtmosphere::ttMilspec;
-        TURBULENCE_TYPE_NAMES["ttTustin"]   = FGAtmosphere::ttTustin;
+        TURBULENCE_TYPE_NAMES["ttNone"]     = FGWinds::ttNone;
+        TURBULENCE_TYPE_NAMES["ttStandard"] = FGWinds::ttStandard;
+        TURBULENCE_TYPE_NAMES["ttCulp"]     = FGWinds::ttCulp;
+        TURBULENCE_TYPE_NAMES["ttMilspec"]  = FGWinds::ttMilspec;
+        TURBULENCE_TYPE_NAMES["ttTustin"]   = FGWinds::ttTustin;
     }
 
                                 // Set up the debugging level
@@ -177,6 +198,7 @@ FGJSBsim::FGJSBsim( double dt )
     fdmex->SetGroundCallback( new FGFSGroundCallback(this) );
 
     Atmosphere      = fdmex->GetAtmosphere();
+    Winds           = fdmex->GetWinds();
     FCS             = fdmex->GetFCS();
     MassBalance     = fdmex->GetMassBalance();
     Propulsion      = fdmex->GetPropulsion();
@@ -186,6 +208,7 @@ FGJSBsim::FGJSBsim( double dt )
     Inertial        = fdmex->GetInertial();
     Aerodynamics    = fdmex->GetAerodynamics();
     GroundReactions = fdmex->GetGroundReactions();
+    Accelerations   = fdmex->GetAccelerations();
 
     fgic=fdmex->GetIC();
     needTrim=true;
@@ -305,9 +328,10 @@ FGJSBsim::FGJSBsim( double dt )
     ab_brake_left_pct = fgGetNode("/autopilot/autobrake/brake-left-output", true);
     ab_brake_right_pct = fgGetNode("/autopilot/autobrake/brake-right-output", true);
     
+    altitude = fgGetNode("/position/altitude-ft");
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
-    density = fgGetNode("/environment/density-slugft3",true);
+    pressureSL = fgGetNode("/environment/pressure-sea-level-inhg",true);
     ground_wind = fgGetNode("/environment/config/boundary/entry[0]/wind-speed-kt",true);
     turbulence_gain = fgGetNode("/environment/turbulence/magnitude-norm",true);
     turbulence_rate = fgGetNode("/environment/turbulence/rate-hz",true);
@@ -354,47 +378,27 @@ void FGJSBsim::init()
     // init method first.
 
     if (fgGetBool("/environment/params/control-fdm-atmosphere")) {
-      Atmosphere->UseExternal();
-      Atmosphere->SetExTemperature(
-                  9.0/5.0*(temperature->getDoubleValue()+273.15) );
-      Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
-      Atmosphere->SetExDensity(density->getDoubleValue());
+      Atmosphere->SetTemperature(temperature->getDoubleValue(), get_Altitude(), FGAtmosphere::eCelsius);
+      Atmosphere->SetPressureSL(FGAtmosphere::eInchesHg, pressureSL->getDoubleValue());
       // initialize to no turbulence, these values get set in the update loop
-      Atmosphere->SetTurbType(FGAtmosphere::ttNone);
-      Atmosphere->SetTurbGain(0.0);
-      Atmosphere->SetTurbRate(0.0);
-      Atmosphere->SetWindspeed20ft(0.0);
-      Atmosphere->SetProbabilityOfExceedence(0.0);
-    } else {
-      Atmosphere->UseInternal();
+      Winds->SetTurbType(FGWinds::ttNone);
+      Winds->SetTurbGain(0.0);
+      Winds->SetTurbRate(0.0);
+      Winds->SetWindspeed20ft(0.0);
+      Winds->SetProbabilityOfExceedence(0.0);
     }
 
     fgic->SetWindNEDFpsIC( -wind_from_north->getDoubleValue(),
                            -wind_from_east->getDoubleValue(),
                            -wind_from_down->getDoubleValue() );
 
-    //Atmosphere->SetExTemperature(get_Static_temperature());
-    //Atmosphere->SetExPressure(get_Static_pressure());
-    //Atmosphere->SetExDensity(get_Density());
-    SG_LOG(SG_FLIGHT,SG_INFO,"T,p,rho: " << fdmex->GetAtmosphere()->GetTemperature()
-     << ", " << fdmex->GetAtmosphere()->GetPressure()
-     << ", " << fdmex->GetAtmosphere()->GetDensity() );
-
-// deprecate egt_degf for egt-degf to have consistent naming
-// TODO: remove this by end of 2011
-    for (unsigned int i=0; i < Propulsion->GetNumEngines(); i++) {
-      SGPropertyNode * node = fgGetNode("engines/engine", i, true);
-      SGPropertyNode * egtn = node->getNode( "egt_degf" );
-      if( egtn != NULL ) {
-        SG_LOG(SG_FLIGHT,SG_ALERT,
-               "Aircraft uses deprecated node egt_degf. Please upgrade to egt-degf");
-        node->getNode("egt-degf", true)->alias( egtn );
-      }
-    }
-// end of egt_degf deprecation patch
+    SG_LOG(SG_FLIGHT,SG_INFO,"T,p,rho: " << Atmosphere->GetTemperature()
+     << ", " << Atmosphere->GetPressure()
+     << ", " << Atmosphere->GetDensity() );
 
     FCS->SetDfPos( ofNorm, globals->get_controls()->get_flaps() );
 
+    needTrim = startup_trim->getBoolValue();
     common_init();
 
     copy_to_JSBsim();
@@ -408,16 +412,16 @@ void FGJSBsim::init()
       }
     }
 
-    if ( startup_trim->getBoolValue() ) {
+    if ( needTrim ) {
       FGLocation cart(fgic->GetLongitudeRadIC(), fgic->GetLatitudeRadIC(),
-                    fgic->GetSeaLevelRadiusFtIC() + fgic->GetAltitudeASLFtIC());
+                      get_Sea_level_radius() + fgic->GetAltitudeASLFtIC());
       double cart_pos[3], contact[3], d[3], vel[3], agl;
       update_ground_cache(cart, cart_pos, 0.01);
 
       get_agl_ft(fdmex->GetSimTime(), cart_pos, SG_METER_TO_FEET*2, contact,
                  d, vel, d, &agl);
       double terrain_alt = sqrt(contact[0]*contact[0] + contact[1]*contact[1]
-           + contact[2]*contact[2]) - fgic->GetSeaLevelRadiusFtIC();
+           + contact[2]*contact[2]) - get_Sea_level_radius();
 
       SG_LOG(SG_FLIGHT, SG_INFO, "Ready to trim, terrain elevation is: "
                                  << terrain_alt * SG_METER_TO_FEET );
@@ -662,33 +666,27 @@ bool FGJSBsim::copy_to_JSBsim()
       } // end FGEngine code block
     }
 
+    Atmosphere->SetTemperature(temperature->getDoubleValue(), get_Altitude(), FGAtmosphere::eCelsius);
+    Atmosphere->SetPressureSL(FGAtmosphere::eInchesHg, pressureSL->getDoubleValue());
 
-    Propagate->SetSeaLevelRadius( get_Sea_level_radius() );
-
-    Atmosphere->SetExTemperature(
-                  9.0/5.0*(temperature->getDoubleValue()+273.15) );
-    Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
-    Atmosphere->SetExDensity(density->getDoubleValue());
-
-    Atmosphere->SetTurbType((FGAtmosphere::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
-    switch( Atmosphere->GetTurbType() ) {
-//      case FGAtmosphere::ttBerndt:
-        case FGAtmosphere::ttStandard:
-        case FGAtmosphere::ttCulp: {
+    Winds->SetTurbType((FGWinds::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
+    switch( Winds->GetTurbType() ) {
+        case FGWinds::ttStandard:
+        case FGWinds::ttCulp: {
             double tmp = turbulence_gain->getDoubleValue();
-            Atmosphere->SetTurbGain(tmp * tmp * 100.0);
-            Atmosphere->SetTurbRate(turbulence_rate->getDoubleValue());
+            Winds->SetTurbGain(tmp * tmp * 100.0);
+            Winds->SetTurbRate(turbulence_rate->getDoubleValue());
             break;
         }
-        case FGAtmosphere::ttMilspec:
-        case FGAtmosphere::ttTustin: {
+        case FGWinds::ttMilspec:
+        case FGWinds::ttTustin: {
             // milspec turbulence: 3=light, 4=moderate, 6=severe turbulence
             // turbulence_gain normalized: 0: none, 1/3: light, 2/3: moderate, 3/3: severe
             double tmp = turbulence_gain->getDoubleValue();
-            Atmosphere->SetProbabilityOfExceedence(
+            Winds->SetProbabilityOfExceedence(
               SGMiscd::roundToInt(TurbulenceSeverityTable.GetValue( tmp ) )
             );
-            Atmosphere->SetWindspeed20ft(ground_wind->getDoubleValue());
+            Winds->SetWindspeed20ft(ground_wind->getDoubleValue());
             break;
         }
 
@@ -696,9 +694,9 @@ bool FGJSBsim::copy_to_JSBsim()
             break;
     }
 
-    Atmosphere->SetWindNED( -wind_from_north->getDoubleValue(),
-                            -wind_from_east->getDoubleValue(),
-                            -wind_from_down->getDoubleValue() );
+    Winds->SetWindNED( -wind_from_north->getDoubleValue(),
+                       -wind_from_east->getDoubleValue(),
+                       -wind_from_down->getDoubleValue() );
 //    SG_LOG(SG_FLIGHT,SG_INFO, "Wind NED: "
 //                  << get_V_north_airmass() << ", "
 //                  << get_V_east_airmass()  << ", "
@@ -740,19 +738,19 @@ bool FGJSBsim::copy_from_JSBsim()
                       MassBalance->GetXYZcg(2),
                       MassBalance->GetXYZcg(3) );
 
-    _set_Accels_Body( Aircraft->GetBodyAccel(1),
-                      Aircraft->GetBodyAccel(2),
-                      Aircraft->GetBodyAccel(3) );
+    _set_Accels_Body( Accelerations->GetBodyAccel(1),
+                      Accelerations->GetBodyAccel(2),
+                      Accelerations->GetBodyAccel(3) );
 
-    _set_Accels_CG_Body_N ( Aircraft->GetNcg(1),
-                            Aircraft->GetNcg(2),
-                            Aircraft->GetNcg(3) );
+    _set_Accels_CG_Body_N ( Auxiliary->GetNcg(1),
+                            Auxiliary->GetNcg(2),
+                            Auxiliary->GetNcg(3) );
 
     _set_Accels_Pilot_Body( Auxiliary->GetPilotAccel(1),
                             Auxiliary->GetPilotAccel(2),
                             Auxiliary->GetPilotAccel(3) );
 
-    _set_Nlf( Aircraft->GetNlf() );
+    _set_Nlf( Auxiliary->GetNlf() );
 
     // Velocities
 
@@ -789,8 +787,8 @@ bool FGJSBsim::copy_from_JSBsim()
 
     // Positions of Visual Reference Point
     FGLocation l = Auxiliary->GetLocationVRP();
-    _updateGeocentricPosition( l.GetLatitude(), l.GetLongitude(),
-                               l.GetRadius() - get_Sea_level_radius() );
+    _updatePosition(SGGeoc::fromRadFt( l.GetLongitude(), l.GetLatitude(),
+                                       l.GetRadius() ));
 
     _set_Altitude_AGL( Propagate->GetDistanceAGL() );
     {
@@ -813,7 +811,7 @@ bool FGJSBsim::copy_from_JSBsim()
 
     _set_Gamma_vert_rad( Auxiliary->GetGamma() );
 
-    _set_Earth_position_angle( Inertial->GetEarthPositionAngle() );
+    _set_Earth_position_angle( Propagate->GetEarthPositionAngle() );
 
     _set_Climb_Rate( Propagate->Gethdot() );
 
@@ -1009,30 +1007,28 @@ bool FGJSBsim::ToggleDataLogging(bool state)
 //Positions
 void FGJSBsim::set_Latitude(double lat)
 {
-  static SGConstPropertyNode_ptr altitude = fgGetNode("/position/altitude-ft");
-  double alt;
+  double alt = altitude->getDoubleValue();
   double sea_level_radius_meters, lat_geoc;
 
-  if ( altitude->getDoubleValue() > -9990 )
-    alt = altitude->getDoubleValue();
-  else
-    alt = 0.0;
+  if ( alt < -9990 ) alt = 0.0;
 
   SG_LOG(SG_FLIGHT,SG_INFO,"FGJSBsim::set_Latitude: " << lat );
   SG_LOG(SG_FLIGHT,SG_INFO," cur alt (ft) =  " << alt );
 
   sgGeodToGeoc( lat, alt * SG_FEET_TO_METER,
                     &sea_level_radius_meters, &lat_geoc );
-  _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
+
+  double sea_level_radius_ft = sea_level_radius_meters * SG_METER_TO_FEET;
+  _set_Sea_level_radius( sea_level_radius_ft );
 
   if (needTrim) {
-    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET  );
+    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_ft );
     fgic->SetLatitudeRadIC( lat_geoc );
   }
-  else {
+  else
     Propagate->SetLatitude(lat_geoc);
-    FGInterface::set_Latitude(lat);
-  }
+
+  FGInterface::set_Latitude(lat);
 }
 
 
@@ -1042,10 +1038,10 @@ void FGJSBsim::set_Longitude(double lon)
 
   if (needTrim)
     fgic->SetLongitudeRadIC(lon);
-  else {
+  else
     Propagate->SetLongitude(lon);
-    FGInterface::set_Longitude(lon);
-  }
+
+  FGInterface::set_Longitude(lon);
 }
 
 // Sets the altitude above sea level.
@@ -1055,10 +1051,10 @@ void FGJSBsim::set_Altitude(double alt)
 
   if (needTrim)
     fgic->SetAltitudeASLFtIC(alt);
-  else {
+  else
     Propagate->SetAltitudeASL(alt);
-    FGInterface::set_Altitude(alt);
-  }
+
+  FGInterface::set_Altitude(alt);
 }
 
 void FGJSBsim::set_V_calibrated_kts(double vc)
@@ -1068,7 +1064,10 @@ void FGJSBsim::set_V_calibrated_kts(double vc)
   if (needTrim)
     fgic->SetVcalibratedKtsIC(vc);
   else {
-    double mach = getMachFromVcas(vc);
+    double p=pressure->getDoubleValue();
+    double psl=fdmex->GetAtmosphere()->GetPressureSL();
+    double rhosl=fdmex->GetAtmosphere()->GetDensitySL();
+    double mach = FGJSBBase::MachFromVcalibrated(vc, p, psl, rhosl);
     double temp = 1.8*(temperature->getDoubleValue()+273.15);
     double soundSpeed = sqrt(1.4*1716.0*temp);
     FGColumnVector3 vUVW = Propagate->GetUVW();
@@ -1077,9 +1076,9 @@ void FGJSBsim::set_V_calibrated_kts(double vc)
     Propagate->SetUVW(1, vUVW(1));
     Propagate->SetUVW(2, vUVW(2));
     Propagate->SetUVW(3, vUVW(3));
-
-    FGInterface::set_V_calibrated_kts(vc);
   }
+
+  FGInterface::set_V_calibrated_kts(vc);
 }
 
 void FGJSBsim::set_Mach_number(double mach)
@@ -1097,9 +1096,9 @@ void FGJSBsim::set_Mach_number(double mach)
     Propagate->SetUVW(1, vUVW(1));
     Propagate->SetUVW(2, vUVW(2));
     Propagate->SetUVW(3, vUVW(3));
-
-    FGInterface::set_Mach_number(mach);
   }
+
+  FGInterface::set_Mach_number(mach);
 }
 
 void FGJSBsim::set_Velocities_Local( double north, double east, double down )
@@ -1118,9 +1117,9 @@ void FGJSBsim::set_Velocities_Local( double north, double east, double down )
     Propagate->SetUVW(1, vUVW(1));
     Propagate->SetUVW(2, vUVW(2));
     Propagate->SetUVW(3, vUVW(3));
-
-    FGInterface::set_Velocities_Local(north, east, down);
   }
+
+  FGInterface::set_Velocities_Local(north, east, down);
 }
 
 void FGJSBsim::set_Velocities_Wind_Body( double u, double v, double w)
@@ -1137,9 +1136,9 @@ void FGJSBsim::set_Velocities_Wind_Body( double u, double v, double w)
     Propagate->SetUVW(1, u);
     Propagate->SetUVW(2, v);
     Propagate->SetUVW(3, w);
-
-    FGInterface::set_Velocities_Wind_Body(u, v, w);
   }
+
+  FGInterface::set_Velocities_Wind_Body(u, v, w);
 }
 
 //Euler angles
@@ -1159,9 +1158,9 @@ void FGJSBsim::set_Euler_Angles( double phi, double theta, double psi )
     FGMatrix33 Ti2b = Tl2b*Propagate->GetTi2l();
     FGQuaternion Qi = Ti2b.GetQuaternion();
     Propagate->SetInertialOrientation(Qi);
-
-    FGInterface::set_Euler_Angles(phi, theta, psi);
   }
+
+  FGInterface::set_Euler_Angles(phi, theta, psi);
 }
 
 //Flight Path
@@ -1172,7 +1171,7 @@ void FGJSBsim::set_Climb_Rate( double roc)
   //since both climb rate and flight path angle are set in the FG
   //startup sequence, something is needed to keep one from cancelling
   //out the other.
-  if( !(fabs(roc) > 1 && fabs(fgic->GetFlightPathAngleRadIC()) < 0.01) ) {
+  if( fabs(roc) > 1 && fabs(fgic->GetFlightPathAngleRadIC()) < 0.01 ) {
     if (needTrim)
       fgic->SetClimbRateFpsIC(roc);
     else {
@@ -1182,9 +1181,9 @@ void FGJSBsim::set_Climb_Rate( double roc)
       Propagate->SetUVW(1, vUVW(1));
       Propagate->SetUVW(2, vUVW(2));
       Propagate->SetUVW(3, vUVW(3));
-
-      FGInterface::set_Climb_Rate(roc);
     }
+
+    FGInterface::set_Climb_Rate(roc);
   }
 }
 
@@ -1203,45 +1202,9 @@ void FGJSBsim::set_Gamma_vert_rad( double gamma)
       Propagate->SetUVW(1, vUVW(1));
       Propagate->SetUVW(2, vUVW(2));
       Propagate->SetUVW(3, vUVW(3));
-
-      FGInterface::set_Gamma_vert_rad(gamma);
-    }
-  }
-}
-// Reverse the VCAS formula to obtain the corresponding Mach number. For subsonic
-// speeds, the reversed formula has a closed form. For supersonic speeds, the
-// formula is reversed by the Newton-Raphson algorithm.
-
-double FGJSBsim::getMachFromVcas(double vcas)
-{
-  double p=pressure->getDoubleValue();
-  double psl=fdmex->GetAtmosphere()->GetPressureSL();
-  double rhosl=fdmex->GetAtmosphere()->GetDensitySL();
-
-  double pt = p + psl*(pow(1+vcas*vcas*rhosl/(7.0*psl),3.5)-1);
-
-  if (pt/p < 1.89293)
-    return sqrt(5.0*(pow(pt/p, 0.2857143) -1)); // Mach < 1
-  else {
-    // Mach >= 1
-    double mach = sqrt(0.77666*pt/p); // Initial guess is based on a quadratic approximation of the Rayleigh formula
-    double delta = 1.;
-    double target = pt/(166.92158*p);
-    int iter = 0;
-
-    // Find the root with Newton-Raphson. Since the differential is never zero,
-    // the function is monotonic and has only one root with a multiplicity of one.
-    // Convergence is certain.
-    while (delta > 1E-5 && iter < 10) {
-      double m2 = mach*mach; // Mach^2
-      double m6 = m2*m2*m2;  // Mach^6
-      delta = mach*m6/pow(7.0*m2-1.0,2.5) - target;
-      double diff = 7.0*m6*(2.0*m2-1)/pow(7.0*m2-1.0,3.5); // Never zero when Mach >= 1
-      mach -= delta/diff;
-      iter++;
     }
 
-    return mach;
+    FGInterface::set_Gamma_vert_rad(gamma);
   }
 }
 
@@ -1259,7 +1222,7 @@ void FGJSBsim::init_gear(void )
       node->setDoubleValue("rollspeed-ms", gear->GetWheelRollVel()*0.3043);
       node->setBoolValue("has-brake", gear->GetBrakeGroup() > 0);
       node->setDoubleValue("position-norm", gear->GetGearUnitPos());
-      node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
+//    node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
       node->setDoubleValue("compression-norm", gear->GetCompLen());
       node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )
@@ -1277,7 +1240,7 @@ void FGJSBsim::update_gear(void)
       node->getChild("wow", 0, true)->setBoolValue( gear->GetWOW());
       node->getChild("rollspeed-ms", 0, true)->setDoubleValue(gear->GetWheelRollVel()*0.3043);
       node->getChild("position-norm", 0, true)->setDoubleValue(gear->GetGearUnitPos());
-      gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
+//    gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
       node->setDoubleValue("compression-norm", gear->GetCompLen());
       node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )
@@ -1350,7 +1313,7 @@ bool FGJSBsim::update_ground_cache(FGLocation cart, double* cart_pos, double dt)
                       << fgic->GetAltitudeASLFtIC());
 
     SG_LOG(SG_FLIGHT, SG_WARN, "sea level radius = "
-                      << fgic->GetSeaLevelRadiusFtIC());
+                      << get_Sea_level_radius());
 
     SG_LOG(SG_FLIGHT, SG_WARN, "latitude         = "
                       << fgic->GetLatitudeRadIC());
@@ -1367,7 +1330,7 @@ FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
                      double contact[3], double normal[3], double vel[3],
                      double angularVel[3], double *agl)
 {
-   const SGMaterial* material;
+   const simgear::BVHMaterial* material;
    simgear::BVHNode::Id id;
    if (!FGInterface::get_agl_ft(t, pt, alt_off, contact, normal, vel,
                                 angularVel, material, id))

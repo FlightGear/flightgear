@@ -24,7 +24,6 @@
 #include "waypoint.hxx"
 
 #include <simgear/structure/exception.hxx>
-#include <simgear/route/waypoint.hxx>
 
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
@@ -34,7 +33,7 @@ using std::string;
 namespace flightgear
 {
 
-BasicWaypt::BasicWaypt(const SGGeod& aPos, const string& aIdent, Route* aOwner) :
+BasicWaypt::BasicWaypt(const SGGeod& aPos, const string& aIdent, RouteBase* aOwner) :
   Waypt(aOwner),
   _pos(aPos),
   _ident(aIdent)
@@ -44,14 +43,7 @@ BasicWaypt::BasicWaypt(const SGGeod& aPos, const string& aIdent, Route* aOwner) 
   }
 }
 
-BasicWaypt::BasicWaypt(const SGWayPoint& aWP, Route* aOwner) :
-  Waypt(aOwner),
-  _pos(aWP.get_target()),
-  _ident(aWP.get_id())
-{
-}
-
-BasicWaypt::BasicWaypt(Route* aOwner) :
+BasicWaypt::BasicWaypt(RouteBase* aOwner) :
   Waypt(aOwner)
 {
 }
@@ -81,16 +73,16 @@ void BasicWaypt::writeToProperties(SGPropertyNode_ptr aProp) const
 
 //////////////////////////////////////////////////////////////////////////////
 
-NavaidWaypoint::NavaidWaypoint(FGPositioned* aPos, Route* aOwner) :
+NavaidWaypoint::NavaidWaypoint(FGPositioned* aPos, RouteBase* aOwner) :
   Waypt(aOwner),
   _navaid(aPos)
 {
   if (aPos->type() == FGPositioned::RUNWAY) {
-      SG_LOG(SG_GENERAL, SG_WARN, "sure you don't want to be building a runway waypt here?");
+      SG_LOG(SG_NAVAID, SG_WARN, "sure you don't want to be building a runway waypt here?");
   }
 }
 
-NavaidWaypoint::NavaidWaypoint(Route* aOwner) :
+NavaidWaypoint::NavaidWaypoint(RouteBase* aOwner) :
   Waypt(aOwner)
 {
 }
@@ -142,7 +134,7 @@ void NavaidWaypoint::writeToProperties(SGPropertyNode_ptr aProp) const
   aProp->setDoubleValue("lat", _navaid->geod().getLatitudeDeg());
 }
 
-OffsetNavaidWaypoint::OffsetNavaidWaypoint(FGPositioned* aPos, Route* aOwner,
+OffsetNavaidWaypoint::OffsetNavaidWaypoint(FGPositioned* aPos, RouteBase* aOwner,
   double aRadial, double aDistNm) :
   NavaidWaypoint(aPos, aOwner),
   _radial(aRadial),
@@ -151,7 +143,7 @@ OffsetNavaidWaypoint::OffsetNavaidWaypoint(FGPositioned* aPos, Route* aOwner,
   init();
 }
 
-OffsetNavaidWaypoint::OffsetNavaidWaypoint(Route* aOwner) :
+OffsetNavaidWaypoint::OffsetNavaidWaypoint(RouteBase* aOwner) :
   NavaidWaypoint(aOwner)
 {
 }
@@ -186,13 +178,13 @@ void OffsetNavaidWaypoint::writeToProperties(SGPropertyNode_ptr aProp) const
 
 /////////////////////////////////////////////////////////////////////////////
 
-RunwayWaypt::RunwayWaypt(FGRunway* aPos, Route* aOwner) :
+RunwayWaypt::RunwayWaypt(FGRunway* aPos, RouteBase* aOwner) :
   Waypt(aOwner),
   _runway(aPos)
 {
 }
 
-RunwayWaypt::RunwayWaypt(Route* aOwner) :
+RunwayWaypt::RunwayWaypt(RouteBase* aOwner) :
   Waypt(aOwner)
 {
 }
@@ -210,6 +202,11 @@ std::string RunwayWaypt::ident() const
 FGPositioned* RunwayWaypt::source() const
 {
   return _runway;
+}
+  
+double RunwayWaypt::headingRadialDeg() const
+{
+  return _runway->headingDeg();
 }
 
 void RunwayWaypt::initFromProperties(SGPropertyNode_ptr aProp)
@@ -234,7 +231,7 @@ void RunwayWaypt::writeToProperties(SGPropertyNode_ptr aProp) const
 
 /////////////////////////////////////////////////////////////////////////////
 
-Hold::Hold(const SGGeod& aPos, const string& aIdent, Route* aOwner) :
+Hold::Hold(const SGGeod& aPos, const string& aIdent, RouteBase* aOwner) :
   BasicWaypt(aPos, aIdent, aOwner),
   _righthanded(true),
   _isDistance(false)
@@ -242,7 +239,7 @@ Hold::Hold(const SGGeod& aPos, const string& aIdent, Route* aOwner) :
   setFlag(WPT_DYNAMIC);
 }
 
-Hold::Hold(Route* aOwner) :
+Hold::Hold(RouteBase* aOwner) :
   BasicWaypt(aOwner),
   _righthanded(true),
   _isDistance(false)
@@ -303,7 +300,7 @@ void Hold::writeToProperties(SGPropertyNode_ptr aProp) const
 
 /////////////////////////////////////////////////////////////////////////////
 
-HeadingToAltitude::HeadingToAltitude(Route* aOwner, const string& aIdent, 
+HeadingToAltitude::HeadingToAltitude(RouteBase* aOwner, const string& aIdent, 
   double aMagHdg) :
   Waypt(aOwner),
   _ident(aIdent),
@@ -312,7 +309,7 @@ HeadingToAltitude::HeadingToAltitude(Route* aOwner, const string& aIdent,
   setFlag(WPT_DYNAMIC);
 }
 
-HeadingToAltitude::HeadingToAltitude(Route* aOwner) :
+HeadingToAltitude::HeadingToAltitude(RouteBase* aOwner) :
   Waypt(aOwner)
 {
 }
@@ -338,7 +335,7 @@ void HeadingToAltitude::writeToProperties(SGPropertyNode_ptr aProp) const
 
 /////////////////////////////////////////////////////////////////////////////
 
-DMEIntercept::DMEIntercept(Route* aOwner, const string& aIdent, const SGGeod& aPos,
+DMEIntercept::DMEIntercept(RouteBase* aOwner, const string& aIdent, const SGGeod& aPos,
     double aCourseDeg, double aDistanceNm) :
   Waypt(aOwner),
   _ident(aIdent),
@@ -349,7 +346,7 @@ DMEIntercept::DMEIntercept(Route* aOwner, const string& aIdent, const SGGeod& aP
   setFlag(WPT_DYNAMIC);
 }
 
-DMEIntercept::DMEIntercept(Route* aOwner) :
+DMEIntercept::DMEIntercept(RouteBase* aOwner) :
   Waypt(aOwner)
 {
 }
@@ -383,7 +380,7 @@ void DMEIntercept::writeToProperties(SGPropertyNode_ptr aProp) const
 
 /////////////////////////////////////////////////////////////////////////////
 
-RadialIntercept::RadialIntercept(Route* aOwner, const string& aIdent, const SGGeod& aPos,
+RadialIntercept::RadialIntercept(RouteBase* aOwner, const string& aIdent, const SGGeod& aPos,
     double aCourseDeg, double aRadial) :
   Waypt(aOwner),
   _ident(aIdent),
@@ -394,7 +391,7 @@ RadialIntercept::RadialIntercept(Route* aOwner, const string& aIdent, const SGGe
   setFlag(WPT_DYNAMIC);
 }
 
-RadialIntercept::RadialIntercept(Route* aOwner) :
+RadialIntercept::RadialIntercept(RouteBase* aOwner) :
   Waypt(aOwner)
 {
 }
@@ -428,7 +425,7 @@ void RadialIntercept::writeToProperties(SGPropertyNode_ptr aProp) const
 
 /////////////////////////////////////////////////////////////////////////////
 
-ATCVectors::ATCVectors(Route* aOwner, FGAirport* aFacility) :
+ATCVectors::ATCVectors(RouteBase* aOwner, FGAirport* aFacility) :
   Waypt(aOwner),
   _facility(aFacility)
 {
@@ -439,7 +436,7 @@ ATCVectors::~ATCVectors()
 {
 }
 
-ATCVectors::ATCVectors(Route* aOwner) :
+ATCVectors::ATCVectors(RouteBase* aOwner) :
   Waypt(aOwner)
 {
 }

@@ -20,6 +20,7 @@
 //
 // $Id$
 
+// TODO FIXME Module still contains lots of "static SGPropertyNode"s below.
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -31,6 +32,7 @@
 #  include <sys/types.h>
 #  include <sys/stat.h>
 #  include <fcntl.h>
+#  include <stdlib.h>
 #  include <unistd.h>
 #  include <ostream>
 #endif

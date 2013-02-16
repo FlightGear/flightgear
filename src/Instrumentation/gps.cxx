@@ -73,7 +73,7 @@ SGGeod SGGeodProperty::get() const
     double lon = _lon->getDoubleValue(),
         lat = _lat->getDoubleValue();
         
-    if (osg::isNaN(lon) || osg::isNaN(lat)) {
+    if (SGMisc<double>::isNaN(lon) || SGMisc<double>::isNaN(lat)) {
       SG_LOG(SG_INSTR, SG_WARN, "read NaN for lon/lat:" << _lon->getPath() 
         << ", " << _lat->getPath());
       return SGGeod();
@@ -200,7 +200,6 @@ GPS::Config::Config() :
   _turnRate(3.0), // degrees-per-second, so 180 degree turn takes 60 seconds
   _overflightArmDistance(1.0),
   _waypointAlertTime(30.0),
-  _minRunwayLengthFt(0.0),
   _requireHardSurface(true),
   _cdiMaxDeflectionNm(3.0), // linear mode, 3nm at the peg
   _driveAutopilot(true),
@@ -214,7 +213,6 @@ void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
   aOwner->tie(aCfg, "turn-rate-deg-sec", SGRawValuePointer<double>(&_turnRate));
   aOwner->tie(aCfg, "turn-anticipation", SGRawValuePointer<bool>(&_enableTurnAnticipation));
   aOwner->tie(aCfg, "wpt-alert-time", SGRawValuePointer<double>(&_waypointAlertTime));
-  aOwner->tie(aCfg, "min-runway-length-ft", SGRawValuePointer<double>(&_minRunwayLengthFt));
   aOwner->tie(aCfg, "hard-surface-runways-only", SGRawValuePointer<bool>(&_requireHardSurface));
   aOwner->tie(aCfg, "cdi-max-deflection-nm", SGRawValuePointer<double>(&_cdiMaxDeflectionNm));
   aOwner->tie(aCfg, "drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
@@ -231,6 +229,11 @@ GPS::GPS ( SGPropertyNode *node) :
   _mode("init"),
   _name(node->getStringValue("name", "gps")),
   _num(node->getIntValue("number", 0)),
+  _searchResultIndex(0),
+  _searchExact(true),
+  _searchIsRoute(false),
+  _searchHasNext(false),
+  _searchNames(false),
   _computeTurnData(false),
   _anticipateTurn(false),
   _inTurn(false)
@@ -324,7 +327,11 @@ GPS::init ()
   
   // last thing, add the deprecated prop watcher
   new DeprecatedPropListener(_gpsNode);
-  
+}
+
+void
+GPS::reinit ()
+{
   clearOutput();
 }
 
@@ -332,10 +339,11 @@ void
 GPS::bind()
 {
   _config.bind(this, _gpsNode->getChild("config", 0, true));
+
 // basic GPS outputs
   tie(_gpsNode, "selected-course-deg", SGRawValueMethods<GPS, double>
     (*this, &GPS::getSelectedCourse, &GPS::setSelectedCourse));
-  
+
   tie(_gpsNode, "desired-course-deg", SGRawValueMethods<GPS, double>
     (*this, &GPS::getDesiredCourse, NULL));
   _desiredCourseNode = _gpsNode->getChild("desired-course-deg", 0, true);
@@ -352,7 +360,7 @@ GPS::bind()
   tie(_gpsNode, "indicated-ground-speed-kt", SGRawValueMethods<GPS, double>
     (*this, &GPS::getGroundspeedKts, NULL));
   
-// command system    
+// command system
   tie(_gpsNode, "mode", SGRawValueMethods<GPS, const char*>(*this, &GPS::getMode, NULL));
   tie(_gpsNode, "command", SGRawValueMethods<GPS, const char*>(*this, &GPS::getCommand, &GPS::setCommand));
     
@@ -405,10 +413,7 @@ GPS::bind()
 void
 GPS::unbind()
 {
-  for (unsigned int t=0; t<_tiedNodes.size(); ++t) {
-    _tiedNodes[t]->untie();
-  }
-  _tiedNodes.clear();
+  _tiedProperties.Untie();
 }
 
 void
@@ -476,8 +481,6 @@ GPS::update (double delta_time_sec)
   }
   
   if (_dataValid && (_mode == "init")) {
-    // allow a realistic delay in the future, here
-    SG_LOG(SG_INSTR, SG_INFO, "GPS initialisation complete");
         
     if (_route_active_node->getBoolValue()) {
       // GPS init with active route
@@ -493,6 +496,11 @@ GPS::update (double delta_time_sec)
         setScratchFromPositioned(apt, 0);
         selectOBSMode();
       }
+    }
+
+    if (_mode != "init")
+    {
+      // allow a realistic delay in the future, here
     }
   } // of init mode check
   
@@ -586,7 +594,6 @@ GPS::updateBasicData(double dt)
   _trip_odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
   
   if (!_dataValid) {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS setting data valid");
     _dataValid = true;
   }
 }
@@ -611,12 +618,11 @@ void GPS::updateReferenceNavaid(double dt)
   if (!_ref_navaid_set) {
     _ref_navaid_elapsed += dt;
     if (_ref_navaid_elapsed > 5.0) {
-      _ref_navaid_elapsed = 0.0;
 
       FGPositioned::TypeFilter vorFilter(FGPositioned::VOR);
       FGPositionedRef nav = FGPositioned::findClosest(_indicated_pos, 400.0, &vorFilter);
       if (!nav) {
-        SG_LOG(SG_INSTR, SG_INFO, "GPS couldn't find a reference navid");
+        SG_LOG(SG_INSTR, SG_DEBUG, "GPS couldn't find a reference navaid");
         _ref_navaid_id_node->setStringValue("");
         _ref_navaid_name_node->setStringValue("");
         _ref_navaid_bearing_node->setDoubleValue(0.0);
@@ -624,7 +630,7 @@ void GPS::updateReferenceNavaid(double dt)
         _ref_navaid_distance_node->setDoubleValue(0.0);
         _ref_navaid_frequency_node->setStringValue("");
       } else if (nav != _ref_navaid) {
-        SG_LOG(SG_INSTR, SG_INFO, "GPS code selected new ref-navaid:" << nav->ident());
+        SG_LOG(SG_INSTR, SG_DEBUG, "GPS code selected new ref-navaid:" << nav->ident());
         _listener->setGuard(true);
         _ref_navaid_id_node->setStringValue(nav->ident().c_str());
         _ref_navaid_name_node->setStringValue(nav->name().c_str());
@@ -636,6 +642,10 @@ void GPS::updateReferenceNavaid(double dt)
       }
       
       _ref_navaid = nav;
+      // reset elapsed time (do not do that before updating the properties above, since their
+      // listeners may request another update (_ref_navaid_elapsed = 9999), which results in
+      // excessive load (FGPositioned::findClosest called in every update loop...)
+      _ref_navaid_elapsed = 0.0; 
     }
   }
   
@@ -664,7 +674,7 @@ void GPS::referenceNavaidSet(const std::string& aNavaid)
 
   if (_ref_navaid) {
     _ref_navaid_set = true;
-    SG_LOG(SG_INSTR, SG_INFO, "GPS code set explict ref-navaid:" << _ref_navaid->ident());
+    SG_LOG(SG_INSTR, SG_INFO, "GPS code set explicit ref-navaid:" << _ref_navaid->ident());
     _ref_navaid_id_node->setStringValue(_ref_navaid->ident().c_str());
     _ref_navaid_name_node->setStringValue(_ref_navaid->name().c_str());
     FGNavRecord* vor = (FGNavRecord*) _ref_navaid.ptr();
@@ -697,7 +707,7 @@ void GPS::routeActivated()
 void GPS::routeManagerSequenced()
 {
   if (_mode != "leg") {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS ignoring route sequencing, not in LEG mode");
+    SG_LOG(SG_INSTR, SG_DEBUG, "GPS ignoring route sequencing, not in LEG mode");
     return;
   }
   
@@ -706,14 +716,14 @@ void GPS::routeManagerSequenced()
   if ((index < 0) || (index >= count)) {
     _currentWaypt=NULL;
     _prevWaypt=NULL;
-    SG_LOG(SG_INSTR, SG_ALERT, "GPS: malformed route, index=" << index);
+    // no active leg on the route
     return;
   }
   
-  SG_LOG(SG_INSTR, SG_INFO, "GPS waypoint index is now " << index);
+  SG_LOG(SG_INSTR, SG_DEBUG, "GPS waypoint index is now " << index);
   
   if (index > 0) {
-    _prevWaypt = _routeMgr->previousWaypt();
+    _prevWaypt = _routeMgr->wayptAtIndex(index - 1);
     if (_prevWaypt->flag(WPT_DYNAMIC)) {
       _wp0_position = _indicated_pos;
     } else {
@@ -755,7 +765,7 @@ void GPS::updateTurn()
   bool printProgress = false;
   
   if (_computeTurnData) {
-    if (_last_speed_kts < 60) {
+    if (_last_speed_kts < 10) {
       // need valid leg course and sensible ground speed to compute the turn
       return;
     }
@@ -818,7 +828,7 @@ void GPS::updateOverflight()
     
     // check for wp1 being on active route - resume leg mode
     if (_routeMgr->isRouteActive()) {
-      int index = _routeMgr->findWayptIndex(_currentWaypt->position());
+      int index = _routeMgr->flightPlan()->findWayptIndex(_currentWaypt->position());
       if (index >= 0) {
         SG_LOG(SG_INSTR, SG_INFO, "GPS DTO, resuming LEG mode at wp:" << index);
         _mode = "leg";
@@ -833,7 +843,7 @@ void GPS::updateOverflight()
       wp1Changed();
     }
   } else if (_mode == "leg") {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS doing overflight sequencing");
+    SG_LOG(SG_INSTR, SG_DEBUG, "GPS doing overflight sequencing");
     _routeMgr->sequence();
   } else if (_mode == "obs") {
     // nothing to do here, TO/FROM will update but that's fine
@@ -846,7 +856,7 @@ void GPS::beginTurn()
 {
   _inTurn = true;
   _turnSequenced = false;
-  SG_LOG(SG_INSTR, SG_INFO, "begining turn");
+  SG_LOG(SG_INSTR, SG_INFO, "beginning turn");
 }
 
 void GPS::endTurn()
@@ -865,18 +875,14 @@ double GPS::computeTurnProgress(double aBearing) const
 void GPS::computeTurnData()
 {
   _computeTurnData = false;
-  if (_mode != "leg") { // and approach modes in the future
+  int nextIndex = _routeMgr->currentIndex() + 1;
+  if ((_mode != "leg") || (nextIndex >= _routeMgr->numWaypts())) {
     _anticipateTurn = false;
     return;
   }
   
-  WayptRef next = _routeMgr->nextWaypt();
-  if (!next || next->flag(WPT_DYNAMIC)) {
-    _anticipateTurn = false;
-    return;
-  }
-  
-  if (!_config.turnAnticipationEnabled()) {
+  WayptRef next = _routeMgr->wayptAtIndex(nextIndex);
+  if (next->flag(WPT_DYNAMIC) || !_config.turnAnticipationEnabled()) {
     _anticipateTurn = false;
     return;
   }
@@ -1237,7 +1243,7 @@ double GPS::getScratchMagBearing() const
 
 void GPS::setCommand(const char* aCmd)
 {
-  SG_LOG(SG_INSTR, SG_INFO, "GPS command:" << aCmd);
+  SG_LOG(SG_INSTR, SG_DEBUG, "GPS command:" << aCmd);
   
   if (!strcmp(aCmd, "direct")) {
     directTo();
@@ -1392,7 +1398,6 @@ void GPS::loadNearest()
   _searchIsRoute = false;
   
   if (_searchResults.empty()) {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS:loadNearest: no matches at all");
     return;
   }
   
@@ -1422,13 +1427,13 @@ FGPositioned::Type GPS::SearchFilter::minType() const
 
 FGPositioned::Type GPS::SearchFilter::maxType() const
 {
-  return FGPositioned::WAYPOINT;
+  return FGPositioned::VOR;
 }
 
 FGPositioned::Filter* GPS::createFilter(FGPositioned::Type aTy)
 {
   if (aTy == FGPositioned::AIRPORT) {
-    return new FGAirport::HardSurfaceFilter(_config.minRunwayLengthFt());
+    return new FGAirport::HardSurfaceFilter();
   }
   
   // if we were passed INVALID, assume it means 'all types interesting to a GPS'
@@ -1569,9 +1574,7 @@ void GPS::selectOBSMode()
     return;
   }
   
-  SG_LOG(SG_INSTR, SG_INFO, "GPS switching to OBS mode");
   _mode = "obs";
-
   _currentWaypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
   _wp0_position = _indicated_pos;
   wp1Changed();
@@ -1588,9 +1591,7 @@ void GPS::selectLegMode()
     return;
   }
 
-  SG_LOG(SG_INSTR, SG_INFO, "GPS switching to LEG mode");
-  _mode = "leg";
-  
+  _mode = "leg";  
   // depending on the situation, this will either get over-written 
   // in routeManagerSequenced or not; either way it does no harm to
   // set it here.
@@ -1673,7 +1674,7 @@ void GPS::insertWaypointAtIndex(int aIndex)
   string ident = _scratchNode->getStringValue("ident");
 
   WayptRef wpt = new BasicWaypt(_scratchPos, ident, NULL);
-  _routeMgr->insertWayptAtIndex(wpt, aIndex);
+  _routeMgr->flightPlan()->insertWayptAtIndex(wpt, aIndex);
 }
 
 void GPS::removeWaypointAtIndex(int aIndex)
@@ -1682,7 +1683,7 @@ void GPS::removeWaypointAtIndex(int aIndex)
     throw sg_range_exception("GPS::removeWaypointAtIndex: index out of bounds");
   }
   
-  _routeMgr->removeWayptAtIndex(aIndex);
+  _routeMgr->removeLegAtIndex(aIndex);
 }
 
 void GPS::tieSGGeod(SGPropertyNode* aNode, SGGeod& aRef, 

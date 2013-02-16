@@ -44,6 +44,10 @@ you have chosen your IC's wisely) even after setting it up with this class.
 INCLUDES
 *******************************************************************************/
 
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+
 #include "FGInitialCondition.h"
 #include "FGFDMExec.h"
 #include "math/FGQuaternion.h"
@@ -51,17 +55,15 @@ INCLUDES
 #include "models/FGAtmosphere.h"
 #include "models/FGPropagate.h"
 #include "models/FGPropulsion.h"
+#include "models/FGFCS.h"
 #include "input_output/FGPropertyManager.h"
 #include "input_output/string_utilities.h"
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.63 2011/06/13 10:30:22 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.81 2012/04/08 15:22:56 jberndt Exp $";
 static const char *IdHdr = ID_INITIALCONDITION;
 
 //******************************************************************************
@@ -72,6 +74,7 @@ FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec) : fdmex(FDMExec)
 
   if(FDMExec != NULL ) {
     PropertyManager=fdmex->GetPropertyManager();
+    Atmosphere=fdmex->GetAtmosphere();
     Constructing = true;
     bind();
     Constructing = false;
@@ -103,19 +106,19 @@ void FGInitialCondition::ResetIC(double u0, double v0, double w0,
 
   InitializeIC();
 
-  p = p0;  q = q0;  r = r0;
+  vPQR_body = FGColumnVector3(p0, q0, r0);
   alpha = alpha0;  beta = beta0;
-  phi = phi0;  theta = theta0;  psi = psi0;
 
-  position.SetPosition(lonRad0, latRad0, altAGLFt0 + terrain_elevation + sea_level_radius);
+  position.SetLongitude(lonRad0);
+  position.SetLatitude(latRad0);
+  position.SetAltitudeAGL(altAGLFt0, fdmex->GetSimTime());
 
-  FGQuaternion Quat(phi, theta, psi);
-  Quat.Normalize();
-  Tl2b = Quat.GetT();
-  Tb2l = Tl2b.Transposed();
+  orientation = FGQuaternion(phi0, theta0, psi0);
+  const FGMatrix33& Tb2l = orientation.GetTInv();
 
   vUVW_NED = Tb2l * FGColumnVector3(u0, v0, w0);
   vt = vUVW_NED.Magnitude();
+  lastSpeedSet = setuvw;
 
   Tw2b = FGMatrix33(calpha*cbeta, -calpha*sbeta,  -salpha,
                            sbeta,         cbeta,      0.0,
@@ -130,21 +133,24 @@ void FGInitialCondition::ResetIC(double u0, double v0, double w0,
 void FGInitialCondition::InitializeIC(void)
 {
   alpha=beta=0;
-  theta=phi=psi=0;
-  terrain_elevation = 0;
-  sea_level_radius = fdmex->GetInertial()->GetRefRadius();
-  position.SetPosition(0., 0., sea_level_radius);
-  position.SetEarthPositionAngle(fdmex->GetInertial()->GetEarthPositionAngle());
+
+  position.SetEllipse(fdmex->GetInertial()->GetSemimajor(), fdmex->GetInertial()->GetSemiminor());
+
+  position.SetPositionGeodetic(0.0, 0.0, 0.0);
+  position.SetEarthPositionAngle(fdmex->GetPropagate()->GetEarthPositionAngle());
+
+  orientation = FGQuaternion(0.0, 0.0, 0.0);
   vUVW_NED.InitMatrix();
-  p=q=r=0;
+  vPQR_body.InitMatrix();
   vt=0;
 
   targetNlfIC = 1.0;
 
   Tw2b.InitMatrix(1., 0., 0., 0., 1., 0., 0., 0., 1.);
   Tb2w.InitMatrix(1., 0., 0., 0., 1., 0., 0., 0., 1.);
-  Tl2b.InitMatrix(1., 0., 0., 0., 1., 0., 0., 0., 1.);
-  Tb2l.InitMatrix(1., 0., 0., 0., 1., 0., 0., 0., 1.);
+
+  lastSpeedSet = setvt;
+  lastAltitudeSet = setasl;
 }
 
 //******************************************************************************
@@ -159,19 +165,19 @@ void FGInitialCondition::WriteStateFile(int num)
     filename = "initfile.xml";
   else
     filename.append("/initfile.xml");
-  
+
   ofstream outfile(filename.c_str());
   FGPropagate* Propagate = fdmex->GetPropagate();
-  
+
   if (outfile.is_open()) {
     outfile << "<?xml version=\"1.0\"?>" << endl;
     outfile << "<initialize name=\"reset00\">" << endl;
-    outfile << "  <ubody unit=\"FT/SEC\"> " << Propagate->GetUVW(eX) << " </ubody> " << endl;
-    outfile << "  <vbody unit=\"FT/SEC\"> " << Propagate->GetUVW(eY) << " </vbody> " << endl;
-    outfile << "  <wbody unit=\"FT/SEC\"> " << Propagate->GetUVW(eZ) << " </wbody> " << endl;
-    outfile << "  <phi unit=\"DEG\"> " << Propagate->GetEuler(ePhi) << " </phi>" << endl;
-    outfile << "  <theta unit=\"DEG\"> " << Propagate->GetEuler(eTht) << " </theta>" << endl;
-    outfile << "  <psi unit=\"DEG\"> " << Propagate->GetEuler(ePsi) << " </psi>" << endl;
+    outfile << "  <ubody unit=\"FT/SEC\"> " << Propagate->GetUVW(eU) << " </ubody> " << endl;
+    outfile << "  <vbody unit=\"FT/SEC\"> " << Propagate->GetUVW(eV) << " </vbody> " << endl;
+    outfile << "  <wbody unit=\"FT/SEC\"> " << Propagate->GetUVW(eW) << " </wbody> " << endl;
+    outfile << "  <phi unit=\"DEG\"> " << Propagate->GetEuler(ePhi)*radtodeg << " </phi>" << endl;
+    outfile << "  <theta unit=\"DEG\"> " << Propagate->GetEuler(eTht)*radtodeg << " </theta>" << endl;
+    outfile << "  <psi unit=\"DEG\"> " << Propagate->GetEuler(ePsi)*radtodeg << " </psi>" << endl;
     outfile << "  <longitude unit=\"DEG\"> " << Propagate->GetLongitudeDeg() << " </longitude>" << endl;
     outfile << "  <latitude unit=\"DEG\"> " << Propagate->GetLatitudeDeg() << " </latitude>" << endl;
     outfile << "  <altitude unit=\"FT\"> " << Propagate->GetDistanceAGL() << " </altitude>" << endl;
@@ -186,9 +192,9 @@ void FGInitialCondition::WriteStateFile(int num)
 
 void FGInitialCondition::SetVequivalentKtsIC(double ve)
 {
-  double altitudeASL = position.GetRadius() - sea_level_radius;
-  double rho = fdmex->GetAtmosphere()->GetDensity(altitudeASL);
-  double rhoSL = fdmex->GetAtmosphere()->GetDensitySL();
+  double altitudeASL = position.GetAltitudeASL();
+  double rho = Atmosphere->GetDensity(altitudeASL);
+  double rhoSL = Atmosphere->GetDensitySL();
   SetVtrueFpsIC(ve*ktstofps*sqrt(rhoSL/rho));
   lastSpeedSet = setve;
 }
@@ -197,8 +203,8 @@ void FGInitialCondition::SetVequivalentKtsIC(double ve)
 
 void FGInitialCondition::SetMachIC(double mach)
 {
-  double altitudeASL = position.GetRadius() - sea_level_radius;
-  double temperature = fdmex->GetAtmosphere()->GetTemperature(altitudeASL);
+  double altitudeASL = position.GetAltitudeASL();
+  double temperature = Atmosphere->GetTemperature(altitudeASL);
   double soundSpeed = sqrt(SHRatio*Reng*temperature);
   SetVtrueFpsIC(mach*soundSpeed);
   lastSpeedSet = setmach;
@@ -208,9 +214,12 @@ void FGInitialCondition::SetMachIC(double mach)
 
 void FGInitialCondition::SetVcalibratedKtsIC(double vcas)
 {
-  double altitudeASL = position.GetRadius() - sea_level_radius;
-  double mach = getMachFromVcas(fabs(vcas)*ktstofps);
-  double temperature = fdmex->GetAtmosphere()->GetTemperature(altitudeASL);
+  double altitudeASL = position.GetAltitudeASL();
+  double pressure = Atmosphere->GetPressure(altitudeASL);
+  double pressureSL = Atmosphere->GetPressureSL();
+  double rhoSL = Atmosphere->GetDensitySL();
+  double mach = MachFromVcalibrated(fabs(vcas)*ktstofps, pressure, pressureSL, rhoSL);
+  double temperature = Atmosphere->GetTemperature(altitudeASL);
   double soundSpeed = sqrt(SHRatio*Reng*temperature);
 
   SetVtrueFpsIC(mach*soundSpeed);
@@ -223,6 +232,7 @@ void FGInitialCondition::SetVcalibratedKtsIC(double vcas)
 
 void FGInitialCondition::calcAeroAngles(const FGColumnVector3& _vt_NED)
 {
+  const FGMatrix33& Tl2b = orientation.GetT();
   FGColumnVector3 _vt_BODY = Tl2b * _vt_NED;
   double ua = _vt_BODY(eX);
   double va = _vt_BODY(eY);
@@ -269,11 +279,12 @@ void FGInitialCondition::calcAeroAngles(const FGColumnVector3& _vt_NED)
 
 void FGInitialCondition::SetVgroundFpsIC(double vg)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
 
-  vUVW_NED(eU) = vg*cos(psi);
-  vUVW_NED(eV) = vg*sin(psi);
+  vUVW_NED(eU) = vg * orientation.GetCosEuler(ePsi);
+  vUVW_NED(eV) = vg * orientation.GetSinEuler(ePsi);
   vUVW_NED(eW) = 0.;
   _vt_NED = vUVW_NED + _vWIND_NED;
   vt = _vt_NED.Magnitude();
@@ -292,6 +303,7 @@ void FGInitialCondition::SetVgroundFpsIC(double vg)
 
 void FGInitialCondition::SetVtrueFpsIC(double vtrue)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
 
@@ -320,6 +332,7 @@ void FGInitialCondition::SetClimbRateFpsIC(double hdot)
     return;
   }
 
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _WIND_NED = _vt_NED - vUVW_NED;
   double hdot0 = -_vt_NED(eW);
@@ -343,6 +356,7 @@ void FGInitialCondition::SetClimbRateFpsIC(double hdot)
 
 void FGInitialCondition::SetAlphaRadIC(double alfa)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   calcThetaBeta(alfa, _vt_NED);
 }
@@ -354,9 +368,10 @@ void FGInitialCondition::SetAlphaRadIC(double alfa)
 
 void FGInitialCondition::calcThetaBeta(double alfa, const FGColumnVector3& _vt_NED)
 {
+  FGColumnVector3 vOrient = orientation.GetEuler();
   double calpha = cos(alfa), salpha = sin(alfa);
-  double cpsi = cos(psi), spsi = sin(psi);
-  double cphi = cos(phi), sphi = sin(phi);
+  double cpsi = orientation.GetCosEuler(ePsi), spsi = orientation.GetSinEuler(ePsi);
+  double cphi = orientation.GetCosEuler(ePhi), sphi = orientation.GetSinEuler(ePhi);
   FGMatrix33 Tpsi( cpsi, spsi, 0.,
                   -spsi, cpsi, 0.,
                      0.,   0., 1.);
@@ -398,13 +413,11 @@ void FGInitialCondition::calcThetaBeta(double alfa, const FGColumnVector3& _vt_N
   v0xz.Normalize();
   v1xz.Normalize();
   double sinTheta = (v1xz * v0xz)(eY);
-  theta = asin(sinTheta);
+  vOrient(eTht) = asin(sinTheta);
 
-  FGQuaternion Quat(phi, theta, psi);
-  Quat.Normalize();
-  Tl2b = Quat.GetT();
-  Tb2l = Quat.GetTInv();
+  orientation = FGQuaternion(vOrient);
 
+  const FGMatrix33& Tl2b = orientation.GetT();
   FGColumnVector3 v2 = Talpha * Tl2b * _vt_NED;
 
   alpha = alfa;
@@ -428,18 +441,24 @@ void FGInitialCondition::calcThetaBeta(double alfa, const FGColumnVector3& _vt_N
 
 void FGInitialCondition::SetBetaRadIC(double bta)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
+  FGColumnVector3 vOrient = orientation.GetEuler();
 
   beta = bta;
   double calpha = cos(alpha), salpha = sin(alpha);
   double cbeta = cos(beta), sbeta = sin(beta);
+  double cphi = orientation.GetCosEuler(ePhi), sphi = orientation.GetSinEuler(ePhi);
+  FGMatrix33 TphiInv(1.,   0.,   0.,
+                     0., cphi,-sphi,
+                     0., sphi, cphi);
 
   Tw2b = FGMatrix33(calpha*cbeta, -calpha*sbeta,  -salpha,
                            sbeta,         cbeta,      0.0,
                     salpha*cbeta, -salpha*sbeta,   calpha);
   Tb2w = Tw2b.Transposed();
 
-  FGColumnVector3 vf = FGQuaternion(eX, phi).GetTInv() * Tw2b * FGColumnVector3(vt, 0., 0.);
+  FGColumnVector3 vf = TphiInv * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 v0xy(_vt_NED(eX), _vt_NED(eY), 0.);
   FGColumnVector3 v1xy(sqrt(v0xy(eX)*v0xy(eX)+v0xy(eY)*v0xy(eY)-vf(eY)*vf(eY)),vf(eY),0.);
   v0xy.Normalize();
@@ -449,7 +468,7 @@ void FGInitialCondition::SetBetaRadIC(double bta)
 
   double sinPsi = (v1xy * v0xy)(eZ);
   double cosPsi = DotProduct(v0xy, v1xy);
-  psi = atan2(sinPsi, cosPsi);
+  vOrient(ePsi) = atan2(sinPsi, cosPsi);
   FGMatrix33 Tpsi( cosPsi, sinPsi, 0.,
                   -sinPsi, cosPsi, 0.,
                       0.,     0., 1.);
@@ -460,64 +479,32 @@ void FGInitialCondition::SetBetaRadIC(double bta)
   v2xz.Normalize();
   vfxz.Normalize();
   double sinTheta = (v2xz * vfxz)(eY);
-  theta = -asin(sinTheta);
+  vOrient(eTht) = -asin(sinTheta);
 
-  FGQuaternion Quat(phi, theta, psi);
-  Quat.Normalize();
-  Tl2b = Quat.GetT();
-  Tb2l = Quat.GetTInv();
+  orientation = FGQuaternion(vOrient);
 }
 
 //******************************************************************************
-// Modifies the body frame orientation (roll angle phi). The true airspeed in
-// the local NED frame is kept unchanged. Hence the true airspeed in the body
-// frame is modified.
+// Modifies the body frame orientation.
 
-void FGInitialCondition::SetPhiRadIC(double fi)
+void FGInitialCondition::SetEulerAngleRadIC(int idx, double angle)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
+  const FGMatrix33& Tl2b = orientation.GetT();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
+  FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
+  FGColumnVector3 _vUVW_BODY = Tl2b * vUVW_NED;
+  FGColumnVector3 vOrient = orientation.GetEuler();
 
-  phi = fi;
-  FGQuaternion Quat = FGQuaternion(phi, theta, psi);
-  Quat.Normalize();
-  Tl2b = Quat.GetT();
-  Tb2l = Quat.GetTInv();
+  vOrient(idx) = angle;
+  orientation = FGQuaternion(vOrient);
 
-  calcAeroAngles(_vt_NED);
-}
-
-//******************************************************************************
-// Modifies the body frame orientation (pitch angle theta). The true airspeed in
-// the local NED frame is kept unchanged. Hence the true airspeed in the body
-// frame is modified.
-
-void FGInitialCondition::SetThetaRadIC(double teta)
-{
-  FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
-
-  theta = teta;
-  FGQuaternion Quat = FGQuaternion(phi, theta, psi);
-  Quat.Normalize();
-  Tl2b = Quat.GetT();
-  Tb2l = Quat.GetTInv();
-
-  calcAeroAngles(_vt_NED);
-}
-
-//******************************************************************************
-// Modifies the body frame orientation (yaw angle psi). The true airspeed in
-// the local NED frame is kept unchanged. Hence the true airspeed in the body
-// frame is modified.
-
-void FGInitialCondition::SetPsiRadIC(double psy)
-{
-  FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
-
-  psi = psy;
-  FGQuaternion Quat = FGQuaternion(phi, theta, psi);
-  Quat.Normalize();
-  Tl2b = Quat.GetT();
-  Tb2l = Quat.GetTInv();
+  if ((lastSpeedSet != setned) && (lastSpeedSet != setvg)) {
+    const FGMatrix33& newTb2l = orientation.GetTInv();
+    vUVW_NED = newTb2l * _vUVW_BODY;
+    _vt_NED = vUVW_NED + _vWIND_NED;
+    vt = _vt_NED.Magnitude();
+  }
 
   calcAeroAngles(_vt_NED);
 }
@@ -529,6 +516,8 @@ void FGInitialCondition::SetPsiRadIC(double psy)
 
 void FGInitialCondition::SetBodyVelFpsIC(int idx, double vel)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
+  const FGMatrix33& Tl2b = orientation.GetT();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vUVW_BODY = Tl2b * vUVW_NED;
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
@@ -550,6 +539,7 @@ void FGInitialCondition::SetBodyVelFpsIC(int idx, double vel)
 
 void FGInitialCondition::SetNEDVelFpsIC(int idx, double vel)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
 
@@ -581,14 +571,16 @@ void FGInitialCondition::SetWindNEDFpsIC(double wN, double wE, double wD )
 
 void FGInitialCondition::SetCrossWindKtsIC(double cross)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
-  FGColumnVector3 _vCROSS(-sin(psi), cos(psi), 0.);
+  FGColumnVector3 _vCROSS(-orientation.GetSinEuler(ePsi), orientation.GetCosEuler(ePsi), 0.);
 
   // Gram-Schmidt process is used to remove the existing cross wind component
   _vWIND_NED -= DotProduct(_vWIND_NED, _vCROSS) * _vCROSS;
-  // which is now replaced by the new value.
-  _vWIND_NED += cross * _vCROSS;
+  // Which is now replaced by the new value. The input cross wind is expected
+  // in knots, so first convert to fps, which is the internal unit used.
+  _vWIND_NED += (cross * ktstofps) * _vCROSS;
   _vt_NED = vUVW_NED + _vWIND_NED;
   vt = _vt_NED.Magnitude();
 
@@ -602,15 +594,22 @@ void FGInitialCondition::SetCrossWindKtsIC(double cross)
 
 void FGInitialCondition::SetHeadWindKtsIC(double head)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
-  FGColumnVector3 _vHEAD(cos(psi), sin(psi), 0.);
+  // This is a head wind, so the direction vector for the wind
+  // needs to be set opposite to the heading the aircraft
+  // is taking. So, the cos and sin of the heading (psi)
+  // are negated in the line below.
+  FGColumnVector3 _vHEAD(-orientation.GetCosEuler(ePsi), -orientation.GetSinEuler(ePsi), 0.);
 
   // Gram-Schmidt process is used to remove the existing head wind component
   _vWIND_NED -= DotProduct(_vWIND_NED, _vHEAD) * _vHEAD;
-  // which is now replaced by the new value.
-  _vWIND_NED += head * _vHEAD;
+  // Which is now replaced by the new value. The input head wind is expected
+  // in knots, so first convert to fps, which is the internal unit used.
+  _vWIND_NED += (head * ktstofps) * _vHEAD;
   _vt_NED = vUVW_NED + _vWIND_NED;
+
   vt = _vt_NED.Magnitude();
 
   calcAeroAngles(_vt_NED);
@@ -623,6 +622,7 @@ void FGInitialCondition::SetHeadWindKtsIC(double head)
 
 void FGInitialCondition::SetWindDownKtsIC(double wD)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
 
   _vt_NED(eW) = vUVW_NED(eW) + wD;
@@ -638,15 +638,16 @@ void FGInitialCondition::SetWindDownKtsIC(double wD)
 
 void FGInitialCondition::SetWindMagKtsIC(double mag)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
   FGColumnVector3 _vHEAD(_vWIND_NED(eU), _vWIND_NED(eV), 0.);
   double windMag = _vHEAD.Magnitude();
 
   if (windMag > 0.001)
-    _vHEAD *= mag / windMag;
+    _vHEAD *= (mag*ktstofps) / windMag;
   else
-    _vHEAD = FGColumnVector3(mag, 0., 0.);
+    _vHEAD = FGColumnVector3((mag*ktstofps), 0., 0.);
 
   _vWIND_NED(eU) = _vHEAD(eU);
   _vWIND_NED(eV) = _vHEAD(eV);
@@ -663,6 +664,7 @@ void FGInitialCondition::SetWindMagKtsIC(double mag)
 
 void FGInitialCondition::SetWindDirDegIC(double dir)
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
   double mag = _vWIND_NED.Magnitude(eU, eV);
@@ -677,32 +679,80 @@ void FGInitialCondition::SetWindDirDegIC(double dir)
 }
 
 //******************************************************************************
+
+void FGInitialCondition::SetSeaLevelRadiusFtIC(double slr)
+{
+  fdmex->GetGroundCallback()->SetSeaLevelRadius(slr);
+}
+
+//******************************************************************************
+
+void FGInitialCondition::SetTerrainElevationFtIC(double elev)
+{
+  double agl = GetAltitudeAGLFtIC();
+
+  fdmex->GetGroundCallback()->SetTerrainGeoCentRadius(elev + position.GetSeaLevelRadius());
+
+  if (lastAltitudeSet == setagl)
+    SetAltitudeAGLFtIC(agl);
+}
+
+//******************************************************************************
+
+double FGInitialCondition::GetAltitudeAGLFtIC(void) const
+{
+  return position.GetAltitudeAGL(fdmex->GetSimTime());
+}
+
+//******************************************************************************
+
+double FGInitialCondition::GetTerrainElevationFtIC(void) const
+{
+  return position.GetTerrainRadius(fdmex->GetSimTime())
+       - position.GetSeaLevelRadius();
+}
+
+//******************************************************************************
+
+void FGInitialCondition::SetAltitudeAGLFtIC(double agl)
+{
+  double terrainElevation = position.GetTerrainRadius(fdmex->GetSimTime()) - position.GetSeaLevelRadius();
+  SetAltitudeASLFtIC(agl + terrainElevation);
+  lastAltitudeSet = setagl;
+}
+
+//******************************************************************************
 // Set the altitude SL. If the airspeed has been previously set with parameters
 // that are atmosphere dependent (Mach, VCAS, VEAS) then the true airspeed is
 // modified to keep the last set speed to its previous value.
 
 void FGInitialCondition::SetAltitudeASLFtIC(double alt)
 {
-  double altitudeASL = position.GetRadius() - sea_level_radius;
-  double temperature = fdmex->GetAtmosphere()->GetTemperature(altitudeASL);
+  double altitudeASL = position.GetAltitudeASL();
+  double temperature = Atmosphere->GetTemperature(altitudeASL);
+  double pressure = Atmosphere->GetPressure(altitudeASL);
+  double pressureSL = Atmosphere->GetPressureSL();
   double soundSpeed = sqrt(SHRatio*Reng*temperature);
-  double rho = fdmex->GetAtmosphere()->GetDensity(altitudeASL);
-  double rhoSL = fdmex->GetAtmosphere()->GetDensitySL();
+  double rho = Atmosphere->GetDensity(altitudeASL);
+  double rhoSL = Atmosphere->GetDensitySL();
 
   double mach0 = vt / soundSpeed;
-  double vc0 = calcVcas(mach0);
+  double vc0 = VcalibratedFromMach(mach0, pressure, pressureSL, rhoSL);
   double ve0 = vt * sqrt(rho/rhoSL);
 
   altitudeASL=alt;
-  position.SetRadius(alt + sea_level_radius);
+  position.SetAltitudeASL(alt);
 
-  temperature = fdmex->GetAtmosphere()->GetTemperature(altitudeASL);
+  temperature = Atmosphere->GetTemperature(altitudeASL);
   soundSpeed = sqrt(SHRatio*Reng*temperature);
-  rho = fdmex->GetAtmosphere()->GetDensity(altitudeASL);
+  rho = Atmosphere->GetDensity(altitudeASL);
+  pressure = Atmosphere->GetPressure(altitudeASL);
 
   switch(lastSpeedSet) {
     case setvc:
-      mach0 = getMachFromVcas(vc0);
+      mach0 = MachFromVcalibrated(vc0, pressure, pressureSL, rhoSL);
+      SetVtrueFpsIC(mach0 * soundSpeed);
+      break;
     case setmach:
       SetVtrueFpsIC(mach0 * soundSpeed);
       break;
@@ -712,85 +762,46 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
     default: // Make the compiler stop complaining about missing enums
       break;
   }
+
+  lastAltitudeSet = setasl;
 }
 
 //******************************************************************************
-// Calculate the VCAS. Uses the Rayleigh formula for supersonic speeds
-// (See "Introduction to Aerodynamics of a Compressible Fluid - H.W. Liepmann,
-// A.E. Puckett - Wiley & sons (1947)" §5.4 pp 75-80)
 
-double FGInitialCondition::calcVcas(double Mach) const
+void FGInitialCondition::SetLatitudeRadIC(double lat)
 {
-  double altitudeASL = position.GetRadius() - sea_level_radius;
-  double p=fdmex->GetAtmosphere()->GetPressure(altitudeASL);
-  double psl=fdmex->GetAtmosphere()->GetPressureSL();
-  double rhosl=fdmex->GetAtmosphere()->GetDensitySL();
-  double pt,A,vcas;
+  double altitude;
 
-  if (Mach < 0) Mach=0;
-  if (Mach < 1)    //calculate total pressure assuming isentropic flow
-    pt=p*pow((1 + 0.2*Mach*Mach),3.5);
-  else {
-    // shock in front of pitot tube, we'll assume its normal and use
-    // the Rayleigh Pitot Tube Formula, i.e. the ratio of total
-    // pressure behind the shock to the static pressure in front of
-    // the normal shock assumption should not be a bad one -- most supersonic
-    // aircraft place the pitot probe out front so that it is the forward
-    // most point on the aircraft.  The real shock would, of course, take
-    // on something like the shape of a rounded-off cone but, here again,
-    // the assumption should be good since the opening of the pitot probe
-    // is very small and, therefore, the effects of the shock curvature
-    // should be small as well. AFAIK, this approach is fairly well accepted
-    // within the aerospace community
-
-    // The denominator below is zero for Mach ~ 0.38, for which
-    // we'll never be here, so we're safe
-
-    pt = p*166.92158*pow(Mach,7.0)/pow(7*Mach*Mach-1,2.5);
+  switch(lastAltitudeSet) {
+  case setagl:
+    altitude = GetAltitudeAGLFtIC();
+    position.SetLatitude(lat);
+    SetAltitudeAGLFtIC(altitude);
+    break;
+  default:
+    altitude = position.GetAltitudeASL();
+    position.SetLatitude(lat);
+    position.SetAltitudeASL(altitude);
   }
-
-  A = pow(((pt-p)/psl+1),0.28571);
-  vcas = sqrt(7*psl/rhosl*(A-1));
-  //cout << "calcVcas: vcas= " << vcas*fpstokts << " mach= " << Mach << " pressure: " << pt << endl;
-  return vcas;
 }
 
 //******************************************************************************
-// Reverse the VCAS formula to obtain the corresponding Mach number. For subsonic
-// speeds, the reversed formula has a closed form. For supersonic speeds, the
-// formula is reversed by the Newton-Raphson algorithm.
 
-double FGInitialCondition::getMachFromVcas(double vcas)
+void FGInitialCondition::SetLongitudeRadIC(double lon)
 {
-  double altitudeASL = position.GetRadius() - sea_level_radius;
-  double p=fdmex->GetAtmosphere()->GetPressure(altitudeASL);
-  double psl=fdmex->GetAtmosphere()->GetPressureSL();
-  double rhosl=fdmex->GetAtmosphere()->GetDensitySL();
+  double altitude;
 
-  double pt = p + psl*(pow(1+vcas*vcas*rhosl/(7.0*psl),3.5)-1);
-
-  if (pt/p < 1.89293)
-    return sqrt(5.0*(pow(pt/p, 0.2857143) -1)); // Mach < 1
-  else {
-    // Mach >= 1
-    double mach = sqrt(0.77666*pt/p); // Initial guess is based on a quadratic approximation of the Rayleigh formula
-    double delta = 1.;
-    double target = pt/(166.92158*p);
-    int iter = 0;
-
-    // Find the root with Newton-Raphson. Since the differential is never zero,
-    // the function is monotonic and has only one root with a multiplicity of one.
-    // Convergence is certain.
-    while (delta > 1E-5 && iter < 10) {
-      double m2 = mach*mach; // Mach^2
-      double m6 = m2*m2*m2;  // Mach^6
-      delta = mach*m6/pow(7.0*m2-1.0,2.5) - target;
-      double diff = 7.0*m6*(2.0*m2-1)/pow(7.0*m2-1.0,3.5); // Never zero when Mach >= 1
-      mach -= delta/diff;
-      iter++;
-    }
-
-    return mach;
+  switch(lastAltitudeSet) {
+  case setagl:
+    altitude = GetAltitudeAGLFtIC();
+    position.SetLongitude(lon);
+    SetAltitudeAGLFtIC(altitude);
+    break;
+  default:
+    altitude = position.GetAltitudeASL();
+    position.SetLongitude(lon);
+    position.SetAltitudeASL(altitude);
+    break;
   }
 }
 
@@ -798,6 +809,7 @@ double FGInitialCondition::getMachFromVcas(double vcas)
 
 double FGInitialCondition::GetWindDirDegIC(void) const
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
 
@@ -809,6 +821,7 @@ double FGInitialCondition::GetWindDirDegIC(void) const
 
 double FGInitialCondition::GetNEDWindFpsIC(int idx) const
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
 
@@ -819,6 +832,7 @@ double FGInitialCondition::GetNEDWindFpsIC(int idx) const
 
 double FGInitialCondition::GetWindFpsIC(void) const
 {
+  const FGMatrix33& Tb2l = orientation.GetTInv();
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vWIND_NED = _vt_NED - vUVW_NED;
 
@@ -829,6 +843,7 @@ double FGInitialCondition::GetWindFpsIC(void) const
 
 double FGInitialCondition::GetBodyWindFpsIC(int idx) const
 {
+  const FGMatrix33& Tl2b = orientation.GetT();
   FGColumnVector3 _vt_BODY = Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _vUVW_BODY = Tl2b * vUVW_NED;
   FGColumnVector3 _vWIND_BODY = _vt_BODY - _vUVW_BODY;
@@ -840,20 +855,23 @@ double FGInitialCondition::GetBodyWindFpsIC(int idx) const
 
 double FGInitialCondition::GetVcalibratedKtsIC(void) const
 {
-  double altitudeASL = position.GetRadius() - sea_level_radius;
-  double temperature = fdmex->GetAtmosphere()->GetTemperature(altitudeASL);
+  double altitudeASL = position.GetAltitudeASL();
+  double temperature = Atmosphere->GetTemperature(altitudeASL);
+  double pressure = Atmosphere->GetPressure(altitudeASL);
+  double pressureSL = Atmosphere->GetPressureSL();
+  double rhoSL = Atmosphere->GetDensitySL();
   double soundSpeed = sqrt(SHRatio*Reng*temperature);
   double mach = vt / soundSpeed;
-  return fpstokts * calcVcas(mach);
+  return fpstokts * VcalibratedFromMach(mach, pressure, pressureSL, rhoSL);
 }
 
 //******************************************************************************
 
 double FGInitialCondition::GetVequivalentKtsIC(void) const
 {
-  double altitudeASL = position.GetRadius() - sea_level_radius;
-  double rho = fdmex->GetAtmosphere()->GetDensity(altitudeASL);
-  double rhoSL = fdmex->GetAtmosphere()->GetDensitySL();
+  double altitudeASL = position.GetAltitudeASL();
+  double rho = Atmosphere->GetDensity(altitudeASL);
+  double rhoSL = Atmosphere->GetDensitySL();
   return fpstokts * vt * sqrt(rho/rhoSL);
 }
 
@@ -861,8 +879,8 @@ double FGInitialCondition::GetVequivalentKtsIC(void) const
 
 double FGInitialCondition::GetMachIC(void) const
 {
-  double altitudeASL = position.GetRadius() - sea_level_radius;
-  double temperature = fdmex->GetAtmosphere()->GetTemperature(altitudeASL);
+  double altitudeASL = position.GetAltitudeASL();
+  double temperature = Atmosphere->GetTemperature(altitudeASL);
   double soundSpeed = sqrt(SHRatio*Reng*temperature);
   return vt / soundSpeed;
 }
@@ -871,6 +889,7 @@ double FGInitialCondition::GetMachIC(void) const
 
 double FGInitialCondition::GetBodyVelFpsIC(int idx) const
 {
+  const FGMatrix33& Tl2b = orientation.GetT();
   FGColumnVector3 _vUVW_BODY = Tl2b * vUVW_NED;
 
   return _vUVW_BODY(idx);
@@ -914,6 +933,8 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     result = Load_v1();
   }
 
+  fdmex->RunIC();
+
   // Check to see if any engines are specified to be initialized in a running state
   FGPropulsion* propulsion = fdmex->GetPropulsion();
   Element* running_elements = document->FindElement("running");
@@ -928,9 +949,6 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     running_elements = document->FindNextElement("running");
   }
 
-  fdmex->RunIC();
-  fdmex->GetPropagate()->DumpState();
-
   return result;
 }
 
@@ -941,30 +959,29 @@ bool FGInitialCondition::Load_v1(void)
   bool result = true;
 
   if (document->FindElement("latitude"))
-    position.SetLatitude(document->FindElementValueAsNumberConvertTo("latitude", "RAD"));
+    SetLatitudeRadIC(document->FindElementValueAsNumberConvertTo("latitude", "RAD"));
   if (document->FindElement("longitude"))
-    position.SetLongitude(document->FindElementValueAsNumberConvertTo("longitude", "RAD"));
+    SetLongitudeRadIC(document->FindElementValueAsNumberConvertTo("longitude", "RAD"));
   if (document->FindElement("elevation"))
-    terrain_elevation = document->FindElementValueAsNumberConvertTo("elevation", "FT");
+    SetTerrainElevationFtIC(document->FindElementValueAsNumberConvertTo("elevation", "FT"));
 
   if (document->FindElement("altitude")) // This is feet above ground level
-    position.SetRadius(document->FindElementValueAsNumberConvertTo("altitude", "FT") + terrain_elevation + sea_level_radius);
+    SetAltitudeAGLFtIC(document->FindElementValueAsNumberConvertTo("altitude", "FT"));
   else if (document->FindElement("altitudeAGL")) // This is feet above ground level
-    position.SetRadius(document->FindElementValueAsNumberConvertTo("altitudeAGL", "FT") + terrain_elevation + sea_level_radius);
+    SetAltitudeAGLFtIC(document->FindElementValueAsNumberConvertTo("altitudeAGL", "FT"));
   else if (document->FindElement("altitudeMSL")) // This is feet above sea level
-    position.SetRadius(document->FindElementValueAsNumberConvertTo("altitudeMSL", "FT") + sea_level_radius);
+    SetAltitudeASLFtIC(document->FindElementValueAsNumberConvertTo("altitudeMSL", "FT"));
+
+  FGColumnVector3 vOrient = orientation.GetEuler();
 
   if (document->FindElement("phi"))
-    phi = document->FindElementValueAsNumberConvertTo("phi", "RAD");
+    vOrient(ePhi) = document->FindElementValueAsNumberConvertTo("phi", "RAD");
   if (document->FindElement("theta"))
-    theta = document->FindElementValueAsNumberConvertTo("theta", "RAD");
+    vOrient(eTht) = document->FindElementValueAsNumberConvertTo("theta", "RAD");
   if (document->FindElement("psi"))
-    psi = document->FindElementValueAsNumberConvertTo("psi", "RAD");
+    vOrient(ePsi) = document->FindElementValueAsNumberConvertTo("psi", "RAD");
 
-  FGQuaternion Quat(phi, theta, psi);
-  Quat.Normalize();
-  Tl2b = Quat.GetT();
-  Tb2l = Quat.GetTInv();
+  orientation = FGQuaternion(vOrient);
 
   if (document->FindElement("ubody"))
     SetUBodyFpsIC(document->FindElementValueAsNumberConvertTo("ubody", "FT/SEC"));
@@ -1009,15 +1026,14 @@ bool FGInitialCondition::Load_v1(void)
 
   // Refer to Stevens and Lewis, 1.5-14a, pg. 49.
   // This is the rotation rate of the "Local" frame, expressed in the local frame.
+  const FGMatrix33& Tl2b = orientation.GetT();
   double radInv = 1.0 / position.GetRadius();
   FGColumnVector3 vOmegaLocal = FGColumnVector3(
    radInv*vUVW_NED(eEast),
   -radInv*vUVW_NED(eNorth),
   -radInv*vUVW_NED(eEast)*position.GetTanLatitude() );
 
-  p = vOmegaLocal(eP);
-  q = vOmegaLocal(eR);
-  r = vOmegaLocal(eQ);
+  vPQR_body = Tl2b * vOmegaLocal;
 
   return result;
 }
@@ -1028,13 +1044,10 @@ bool FGInitialCondition::Load_v2(void)
 {
   FGColumnVector3 vOrient;
   bool result = true;
-  FGColumnVector3 vOmegaEarth = FGColumnVector3(0.0, 0.0, fdmex->GetInertial()->omega());
+  FGColumnVector3 vOmegaEarth = fdmex->GetInertial()->GetOmegaPlanet();
 
   if (document->FindElement("earth_position_angle"))
     position.SetEarthPositionAngle(document->FindElementValueAsNumberConvertTo("earth_position_angle", "RAD"));
-
-  if (document->FindElement("elevation"))
-    terrain_elevation = document->FindElementValueAsNumberConvertTo("elevation", "FT");
 
   // Initialize vehicle position
   //
@@ -1050,20 +1063,25 @@ bool FGInitialCondition::Load_v2(void)
       position = position.GetTi2ec() * position_el->FindElementTripletConvertTo("FT");
     } else if (frame == "ecef") {
       if (!position_el->FindElement("x") && !position_el->FindElement("y") && !position_el->FindElement("z")) {
+
+        if (position_el->FindElement("longitude"))
+          position.SetLongitude(position_el->FindElementValueAsNumberConvertTo("longitude", "RAD"));
+
+        if (position_el->FindElement("latitude"))
+          position.SetLatitude(position_el->FindElementValueAsNumberConvertTo("latitude", "RAD"));
+
         if (position_el->FindElement("radius")) {
           position.SetRadius(position_el->FindElementValueAsNumberConvertTo("radius", "FT"));
         } else if (position_el->FindElement("altitudeAGL")) {
-          position.SetRadius(sea_level_radius + terrain_elevation + position_el->FindElementValueAsNumberConvertTo("altitudeAGL", "FT"));
+          position.SetAltitudeAGL(position_el->FindElementValueAsNumberConvertTo("altitudeAGL", "FT"),
+                                  fdmex->GetSimTime());
         } else if (position_el->FindElement("altitudeMSL")) {
-          position.SetRadius(sea_level_radius + position_el->FindElementValueAsNumberConvertTo("altitudeMSL", "FT"));
+          position.SetAltitudeASL(position_el->FindElementValueAsNumberConvertTo("altitudeMSL", "FT"));
         } else {
           cerr << endl << "  No altitude or radius initial condition is given." << endl;
           result = false;
         }
-        if (position_el->FindElement("longitude"))
-          position.SetLongitude(position_el->FindElementValueAsNumberConvertTo("longitude", "RAD"));
-        if (position_el->FindElement("latitude"))
-          position.SetLatitude(position_el->FindElementValueAsNumberConvertTo("latitude", "RAD"));
+
       } else {
         position = position_el->FindElementTripletConvertTo("FT");
       }
@@ -1075,6 +1093,9 @@ bool FGInitialCondition::Load_v2(void)
     cerr << endl << "  Initial position not specified in this initialization file." << endl;
     result = false;
   }
+
+  if (document->FindElement("elevation"))
+    fdmex->GetGroundCallback()->SetTerrainGeoCentRadius(document->FindElementValueAsNumberConvertTo("elevation", "FT")+position.GetSeaLevelRadius());
 
   // End of position initialization
 
@@ -1102,7 +1123,6 @@ bool FGInitialCondition::Load_v2(void)
   // ToDo: Do we need to deal with normalization of the quaternions here?
 
   Element* orientation_el = document->FindElement("orientation");
-  FGQuaternion QuatLocal2Body;
   if (orientation_el) {
     string frame = orientation_el->GetAttributeValue("frame");
     frame = to_lower(frame);
@@ -1123,7 +1143,7 @@ bool FGInitialCondition::Load_v2(void)
       QuatI2Body.Normalize();
       FGQuaternion QuatLocal2I = position.GetTl2i();
       QuatLocal2I.Normalize();
-      QuatLocal2Body = QuatLocal2I * QuatI2Body;
+      orientation = QuatLocal2I * QuatI2Body;
 
     } else if (frame == "ecef") {
 
@@ -1141,11 +1161,11 @@ bool FGInitialCondition::Load_v2(void)
       QuatEC2Body.Normalize();
       FGQuaternion QuatLocal2EC = position.GetTl2ec(); // Get Q_e/l from matrix
       QuatLocal2EC.Normalize();
-      QuatLocal2Body = QuatLocal2EC * QuatEC2Body; // Q_b/l = Q_e/l * Q_b/e
+      orientation = QuatLocal2EC * QuatEC2Body; // Q_b/l = Q_e/l * Q_b/e
 
     } else if (frame == "local") {
 
-      QuatLocal2Body = FGQuaternion(vOrient);
+      orientation = FGQuaternion(vOrient);
 
     } else {
 
@@ -1156,13 +1176,6 @@ bool FGInitialCondition::Load_v2(void)
     }
   }
 
-  QuatLocal2Body.Normalize();
-  phi = QuatLocal2Body.GetEuler(ePhi);
-  theta = QuatLocal2Body.GetEuler(eTht);
-  psi = QuatLocal2Body.GetEuler(ePsi);
-  Tl2b = QuatLocal2Body.GetT();
-  Tb2l = QuatLocal2Body.GetTInv();
-
   // Initialize vehicle velocity
   // Allowable frames
   // - ECI (Earth Centered Inertial)
@@ -1170,10 +1183,12 @@ bool FGInitialCondition::Load_v2(void)
   // - Local
   // - Body
   // The vehicle will be defaulted to (0,0,0) in the Body frame if nothing is provided.
-  
+
   Element* velocity_el = document->FindElement("velocity");
   FGColumnVector3 vInitVelocity = FGColumnVector3(0.0, 0.0, 0.0);
   FGMatrix33 mTec2l = position.GetTec2l();
+  const FGMatrix33& Tb2l = orientation.GetTInv();
+
   if (velocity_el) {
 
     string frame = velocity_el->GetAttributeValue("frame");
@@ -1183,8 +1198,10 @@ bool FGInitialCondition::Load_v2(void)
     if (frame == "eci") {
       FGColumnVector3 omega_cross_r = vOmegaEarth * (position.GetTec2i() * position);
       vUVW_NED = mTec2l * (vInitVelocity - omega_cross_r);
+      lastSpeedSet = setned;
     } else if (frame == "ecef") {
       vUVW_NED = mTec2l * vInitVelocity;
+      lastSpeedSet = setned;
     } else if (frame == "local") {
       vUVW_NED = vInitVelocity;
       lastSpeedSet = setned;
@@ -1214,9 +1231,9 @@ bool FGInitialCondition::Load_v2(void)
   // - ECI (Earth Centered Inertial)
   // - ECEF (Earth Centered, Earth Fixed)
   // - Body
-  
-  FGColumnVector3 vLocalRate;
+
   Element* attrate_el = document->FindElement("attitude_rate");
+  const FGMatrix33& Tl2b = orientation.GetT();
 
   // Refer to Stevens and Lewis, 1.5-14a, pg. 49.
   // This is the rotation rate of the "Local" frame, expressed in the local frame.
@@ -1233,28 +1250,26 @@ bool FGInitialCondition::Load_v2(void)
     FGColumnVector3 vAttRate = attrate_el->FindElementTripletConvertTo("RAD/SEC");
 
     if (frame == "eci") {
-      vLocalRate = Tl2b * position.GetTi2l() * (vAttRate - vOmegaEarth);
+      vPQR_body = Tl2b * position.GetTi2l() * (vAttRate - vOmegaEarth);
     } else if (frame == "ecef") {
-      vLocalRate = Tl2b * position.GetTec2l() * vAttRate;
+      vPQR_body = Tl2b * position.GetTec2l() * vAttRate;
     } else if (frame == "local") {
-      vLocalRate = vAttRate + vOmegaLocal;
+      vPQR_body = Tl2b * (vAttRate + vOmegaLocal);
+    } else if (frame == "body") {
+      vPQR_body = vAttRate;
     } else if (!frame.empty()) { // misspelling of frame
-      
+
       cerr << endl << fgred << "  Attitude rate frame type: \"" << frame
            << "\" is not supported!" << reset << endl << endl;
       result = false;
 
     } else if (frame.empty()) {
-      vLocalRate = vOmegaLocal;
+      vPQR_body = Tl2b * vOmegaLocal;
     }
 
   } else { // Body frame attitude rate assumed 0 relative to local.
-      vLocalRate = vOmegaLocal;
+      vPQR_body = Tl2b * vOmegaLocal;
   }
-
-  p = vLocalRate(eP);
-  q = vLocalRate(eQ);
-  r = vLocalRate(eR);
 
   return result;
 }
@@ -1308,7 +1323,9 @@ void FGInitialCondition::bind(void)
                        &FGInitialCondition::SetPhiDegIC,
                        true);
   PropertyManager->Tie("ic/psi-true-deg", this,
-                       &FGInitialCondition::GetPsiDegIC );
+                       &FGInitialCondition::GetPsiDegIC,
+                       &FGInitialCondition::SetPsiDegIC,
+                       true);
   PropertyManager->Tie("ic/lat-gc-deg", this,
                        &FGInitialCondition::GetLatitudeDegIC,
                        &FGInitialCondition::SetLatitudeDegIC,
@@ -1324,10 +1341,6 @@ void FGInitialCondition::bind(void)
   PropertyManager->Tie("ic/h-agl-ft", this,
                        &FGInitialCondition::GetAltitudeAGLFtIC,
                        &FGInitialCondition::SetAltitudeAGLFtIC,
-                       true);
-  PropertyManager->Tie("ic/sea-level-radius-ft", this,
-                       &FGInitialCondition::GetSeaLevelRadiusFtIC,
-                       &FGInitialCondition::SetSeaLevelRadiusFtIC,
                        true);
   PropertyManager->Tie("ic/terrain-elevation-ft", this,
                        &FGInitialCondition::GetTerrainElevationFtIC,
@@ -1409,7 +1422,9 @@ void FGInitialCondition::bind(void)
                        &FGInitialCondition::SetPhiRadIC,
                        true);
   PropertyManager->Tie("ic/psi-true-rad", this,
-                       &FGInitialCondition::GetPsiRadIC);
+                       &FGInitialCondition::GetPsiRadIC,
+                       &FGInitialCondition::SetPsiRadIC,
+                       true);
   PropertyManager->Tie("ic/lat-gc-rad", this,
                        &FGInitialCondition::GetLatitudeRadIC,
                        &FGInitialCondition::SetLatitudeRadIC,

@@ -31,24 +31,58 @@
 
 #include <simgear/constants.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props_io.hxx>
 #include <osg/GLU>
 
+#include <plib/fnt.h>
+
 #include <Main/globals.hxx>
-#include <Main/viewmgr.hxx>
-#include <Main/viewer.hxx>
+#include <Main/fg_props.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
+#include <GUI/FGFontCache.hxx>
+#include <GUI/gui.h> // for guiErrorMessage
 
 #include "HUD.hxx"
+#include "HUD_private.hxx"
 
+using std::endl;
+using std::ifstream;
+using std::string;
+using std::deque;
+using std::vector;
 
 static float clamp(float f)
 {
     return f < 0.0f ? 0.0f : f > 1.0f ? 1.0f : f;
 }
 
+HUD::Input::Input(const SGPropertyNode *n, float factor, float offset,
+      float min, float max) :
+  _valid(false),
+  _property(0),
+  _damped(SGLimitsf::max())
+{
+  if (!n)
+    return;
+  _factor = n->getFloatValue("factor", factor);
+  _offset = n->getFloatValue("offset", offset);
+  _min = n->getFloatValue("min", min);
+  _max = n->getFloatValue("max", max);
+  _coeff = 1.0 - 1.0 / powf(10, fabs(n->getFloatValue("damp", 0.0)));
+  SGPropertyNode *p = ((SGPropertyNode *)n)->getNode("property", false);
+  if (p) {
+    const char *path = p->getStringValue();
+    if (path && path[0]) {
+      _property = fgGetNode(path, true);
+      _valid = true;
+    }
+  }
+}
 
 HUD::HUD() :
-    _path(fgGetNode("/sim/hud/path[1]", "Huds/default.xml")),
-    _current(fgGetNode("/sim/hud/current-color", true)),
+    _currentPath(fgGetNode("/sim/hud/current-path", true)),
+    _currentColor(fgGetNode("/sim/hud/current-color", true)),
     _visibility(fgGetNode("/sim/hud/visibility[1]", true)),
     _3DenabledN(fgGetNode("/sim/hud/enable3d[1]", true)),
     _antialiasing(fgGetNode("/sim/hud/color/antialiased", true)),
@@ -60,6 +94,7 @@ HUD::HUD() :
     _alpha_clamp(fgGetNode("/sim/hud/color/alpha-clamp", true)),
     _brightness(fgGetNode("/sim/hud/color/brightness", true)),
     _visible(false),
+    _loaded(false),
     _antialiased(false),
     _transparent(false),
     _a(0.67),									// FIXME better names
@@ -79,43 +114,16 @@ HUD::HUD() :
 {
     SG_LOG(SG_COCKPIT, SG_INFO, "Initializing HUD Instrument");
 
-    _path->addChangeListener(this);
-    _visibility->addChangeListener(this);
-    _3DenabledN->addChangeListener(this);
-    _antialiasing->addChangeListener(this);
-    _transparency->addChangeListener(this);
-    _red->addChangeListener(this);
-    _green->addChangeListener(this);
-    _blue->addChangeListener(this);
-    _alpha->addChangeListener(this);
-    _alpha_clamp->addChangeListener(this);
-    _brightness->addChangeListener(this);
-    _current->addChangeListener(this);
-    _scr_widthN->addChangeListener(this);
-    _scr_heightN->addChangeListener(this);
-    _unitsN->addChangeListener(this, true);
+    SGPropertyNode* hud = fgGetNode("/sim/hud");
+    hud->addChangeListener(this);
 }
 
 
 HUD::~HUD()
 {
-    _path->removeChangeListener(this);
-    _visibility->removeChangeListener(this);
-    _3DenabledN->removeChangeListener(this);
-    _antialiasing->removeChangeListener(this);
-    _transparency->removeChangeListener(this);
-    _red->removeChangeListener(this);
-    _green->removeChangeListener(this);
-    _blue->removeChangeListener(this);
-    _alpha->removeChangeListener(this);
-    _alpha_clamp->removeChangeListener(this);
-    _brightness->removeChangeListener(this);
-    _current->removeChangeListener(this);
-    _scr_widthN->removeChangeListener(this);
-    _scr_heightN->removeChangeListener(this);
-    _unitsN->removeChangeListener(this);
-    delete _font_renderer;
-    
+    SGPropertyNode* hud = fgGetNode("/sim/hud");
+    hud->removeChangeListener(this);
+
     deinit();
 }
 
@@ -136,10 +144,10 @@ void HUD::init()
     _font_renderer->setFont(_font);
     _font_renderer->setPointSize(_font_size);
     _text_list.setFont(_font_renderer);
-
+    _loaded = false;
+  
     currentColorChanged();
-    
-    _path->fireValueChanged();
+    _currentPath->fireValueChanged();
 }
 
 void HUD::deinit()
@@ -156,12 +164,14 @@ void HUD::deinit()
   
   delete _clip_box;
   _clip_box = NULL;
+  
+  _loaded = false;
 }
 
 void HUD::reinit()
 {
     deinit();
-    _path->fireValueChanged();
+    _currentPath->fireValueChanged();
 }
 
 void HUD::update(double dt)
@@ -449,9 +459,30 @@ void HUD::valueChanged(SGPropertyNode *node)
     if (_listener_active)
         return;
     _listener_active = true;
-    if (!strcmp(node->getName(), "path"))
-        load(fgGetString("/sim/hud/path[1]", "Huds/default.xml"));
-
+  
+    bool loadNow = false;
+    _visible = _visibility->getBoolValue();
+    if (_visible && !_loaded) {
+      loadNow = true;
+    }
+  
+    if (!strcmp(node->getName(), "current-path") && _visible) {
+      loadNow = true;
+    }
+  
+    if (loadNow) {
+      int pathIndex = _currentPath->getIntValue();
+      SGPropertyNode* pathNode = fgGetNode("/sim/hud/path", pathIndex);
+      std::string path("Huds/default.xml");
+      if (pathNode && pathNode->hasValue()) {
+        path = pathNode->getStringValue();
+        SG_LOG(SG_INSTR, SG_INFO, "will load Hud from " << path);
+      }
+      
+      _loaded = true;
+      load(path.c_str());
+    }
+  
     if (!strcmp(node->getName(), "current-color")) {
         currentColorChanged();
     }
@@ -459,7 +490,7 @@ void HUD::valueChanged(SGPropertyNode *node)
     _scr_width = _scr_widthN->getIntValue();
     _scr_height = _scr_heightN->getIntValue();
 
-    _visible = _visibility->getBoolValue();
+    
     _3Denabled = _3DenabledN->getBoolValue();
     _transparent = _transparency->getBoolValue();
     _antialiased = _antialiasing->getBoolValue();
@@ -477,7 +508,7 @@ void HUD::valueChanged(SGPropertyNode *node)
 void HUD::currentColorChanged()
 {
   SGPropertyNode *n = fgGetNode("/sim/hud/palette", true);
-  int index = _current->getIntValue();
+  int index = _currentColor->getIntValue();
   if (index < 0) {
     index = 0;
   }

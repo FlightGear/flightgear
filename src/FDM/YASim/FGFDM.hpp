@@ -83,6 +83,29 @@ private:
     void* _currObj;
     bool _cruiseCurr;
     int _nextEngine;
+
+    class FuelProps
+    {
+    public:
+        SGPropertyNode_ptr _out_of_fuel;
+        SGPropertyNode_ptr _fuel_consumed_lbs;
+    };
+
+    class ThrusterProps
+    {
+    public:
+        SGPropertyNode_ptr _running, _cranking;
+        SGPropertyNode_ptr _prop_thrust, _thrust_lbs, _fuel_flow_gph;
+        SGPropertyNode_ptr _rpm, _torque_ftlb, _mp_osi, _mp_inhg;
+        SGPropertyNode_ptr _oil_temperature_degf, _boost_gauge_inhg;
+        SGPropertyNode_ptr _n1, _n2, _epr, _egt_degf;
+    };
+
+    SGPropertyNode_ptr _turb_magnitude_norm, _turb_rate_hz;
+    SGPropertyNode_ptr _gross_weight_lbs;
+    vector<SGPropertyNode_ptr> _tank_level_lbs;
+    vector<ThrusterProps> _thrust_props;
+    vector<FuelProps> _fuel_props;
 };
 
 }; // namespace yasim

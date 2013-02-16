@@ -40,34 +40,12 @@
 #include <Airports/simple.hxx>
 #include <Navaids/procedure.hxx>
 #include <Navaids/navrecord.hxx>
-#include <Navaids/PositionedBinding.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 using std::string;
 
-static std::string cleanRunwayNo(const std::string& aRwyNo)
-{
-  if (aRwyNo[0] == 'x') {
-    return std::string(); // no ident for taxiways
-  }
-  
-  string result(aRwyNo);
-  // canonicalise runway ident
-  if ((aRwyNo.size() == 1) || !isdigit(aRwyNo[1])) {
-	  result = "0" + aRwyNo;
-  }
-
-  // trim off trailing garbage
-  if (result.size() > 2) {
-    char suffix = toupper(result[2]);
-    if (suffix == 'X') {
-       result = result.substr(0, 2);
-    }
-  }
-  
-  return result;
-}
-
-FGRunway::FGRunway(FGAirport* aAirport, const string& aIdent,
+FGRunway::FGRunway(PositionedID aGuid,
+                   PositionedID aAirport, const string& aIdent,
                         const SGGeod& aGeod,
                         const double heading, const double length,
                         const double width,
@@ -75,13 +53,14 @@ FGRunway::FGRunway(FGAirport* aAirport, const string& aIdent,
                         const double stopway,
                         const int surface_code,
                         bool reciprocal) :
-  FGRunwayBase(RUNWAY, cleanRunwayNo(aIdent), aGeod, heading, length, width, surface_code, true),
+  FGRunwayBase(aGuid, RUNWAY, aIdent, aGeod,
+               heading, length, width, surface_code),
   _airport(aAirport),
   _isReciprocal(reciprocal),
-  _reciprocal(NULL),
+  _reciprocal(0),
   _displ_thresh(displ_thresh),
   _stopway(stopway),
-  _ils(NULL)
+  _ils(0)
 {
 }
 
@@ -145,39 +124,48 @@ SGGeod FGRunway::threshold() const
   return pointOnCenterline(_displ_thresh * SG_FEET_TO_METER);
 }
 
-void FGRunway::processThreshold(SGPropertyNode* aThreshold)
+void FGRunway::setReciprocalRunway(PositionedID other)
 {
-  assert(ident() == aThreshold->getStringValue("rwy"));
-  
-  double lon = aThreshold->getDoubleValue("lon"),
-    lat = aThreshold->getDoubleValue("lat");
-  SGGeod newThreshold(SGGeod::fromDegM(lon, lat, mPosition.getElevationM()));
-  
-  _heading = aThreshold->getDoubleValue("hdg-deg");
-  _displ_thresh = aThreshold->getDoubleValue("displ-m") * SG_METER_TO_FEET;
-  _stopway = aThreshold->getDoubleValue("stopw-m") * SG_METER_TO_FEET;
-  
-  // compute the new runway center, based on the threshold lat/lon and length,
-  double offsetFt = (0.5 * _length);
-  SGGeod newCenter;
-  double dummy;
-  SGGeodesy::direct(newThreshold, _heading, offsetFt * SG_FEET_TO_METER, newCenter, dummy);
-  mPosition = newCenter;
-} 
-
-void FGRunway::setReciprocalRunway(FGRunway* other)
-{
-  assert(_reciprocal==NULL);
-  assert((other->_reciprocal == NULL) || (other->_reciprocal == this));
-  
+  assert(_reciprocal==0);  
   _reciprocal = other;
 }
 
-std::vector<flightgear::SID*> FGRunway::getSIDs()
+FGAirport* FGRunway::airport() const
 {
+  return (FGAirport*) flightgear::NavDataCache::instance()->loadById(_airport);
+}
+
+FGRunway* FGRunway::reciprocalRunway() const
+{
+  return (FGRunway*) flightgear::NavDataCache::instance()->loadById(_reciprocal);
+}
+
+FGNavRecord* FGRunway::ILS() const
+{
+  if (_ils == 0) {
+    return NULL;
+  }
+  
+  return (FGNavRecord*) flightgear::NavDataCache::instance()->loadById(_ils);
+}
+
+FGNavRecord* FGRunway::glideslope() const
+{
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  PositionedID gsId = cache->findNavaidForRunway(guid(), FGPositioned::GS);
+  if (gsId == 0) {
+    return NULL;
+  }
+  
+  return (FGNavRecord*) cache->loadById(gsId);
+}
+
+std::vector<flightgear::SID*> FGRunway::getSIDs() const
+{
+  FGAirport* apt = airport();
   std::vector<flightgear::SID*> result;
-  for (unsigned int i=0; i<_airport->numSIDs(); ++i) {
-    flightgear::SID* s = _airport->getSIDByIndex(i);
+  for (unsigned int i=0; i<apt->numSIDs(); ++i) {
+    flightgear::SID* s = apt->getSIDByIndex(i);
     if (s->isForRunway(this)) {
       result.push_back(s);
     }
@@ -186,11 +174,12 @@ std::vector<flightgear::SID*> FGRunway::getSIDs()
   return result;
 }
 
-std::vector<flightgear::STAR*> FGRunway::getSTARs()
+std::vector<flightgear::STAR*> FGRunway::getSTARs() const
 {
+  FGAirport* apt = airport();
   std::vector<flightgear::STAR*> result;
-  for (unsigned int i=0; i<_airport->numSTARs(); ++i) {
-    flightgear::STAR* s = _airport->getSTARByIndex(i);
+  for (unsigned int i=0; i<apt->numSTARs(); ++i) {
+    flightgear::STAR* s = apt->getSTARByIndex(i);
     if (s->isForRunway(this)) {
       result.push_back(s);
     }
@@ -199,9 +188,17 @@ std::vector<flightgear::STAR*> FGRunway::getSTARs()
   return result;
 }
 
-flightgear::PositionedBinding*
-FGRunway::createBinding(SGPropertyNode* nd) const
+std::vector<flightgear::Approach*> FGRunway::getApproaches() const
 {
-    return new flightgear::RunwayBinding(this, nd);
+  FGAirport* apt = airport();
+  std::vector<flightgear::Approach*> result;
+  for (unsigned int i=0; i<apt->numApproaches(); ++i) {
+    flightgear::Approach* s = apt->getApproachByIndex(i);
+    if (s->runway() == this) {
+      result.push_back(s);
+    }
+  } // of approaches at the airport iteration
+  
+  return result;
 }
 

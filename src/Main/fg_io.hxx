@@ -1,4 +1,4 @@
-// fg_io.hxx -- Higher level I/O managment routines
+// fg_io.hxx -- Higher level I/O management routines
 //
 // Written by Curtis Olson, started November 1999.
 //
@@ -50,6 +50,7 @@ public:
 
 private:
 
+    void add_channel(const std::string& config);
     FGProtocol* parse_port_config( const std::string& cfgstr );
 
 private:

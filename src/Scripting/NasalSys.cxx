@@ -20,21 +20,22 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/interpolator.hxx>
-#include <simgear/scene/material/mat.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/event_mgr.hxx>
 
-#include <Airports/runways.hxx>
-#include <Airports/simple.hxx>
-#include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
-#include <Main/util.hxx>
-#include <Scenery/scenery.hxx>
-#include <Navaids/navrecord.hxx>
-#include <Navaids/procedure.hxx>
-
 #include "NasalSys.hxx"
+#include "NasalPositioned.hxx"
+#include "NasalCanvas.hxx"
+#include "NasalClipboard.hxx"
+#include "NasalCondition.hxx"
+
+#include <Main/globals.hxx>
+#include <Main/util.hxx>
+#include <Main/fg_props.hxx>
+
+
+using std::map;
 
 static FGNasalSys* nasalSys = 0;
 
@@ -102,18 +103,38 @@ FGNasalSys::FGNasalSys()
     _callCount = 0;
 }
 
+// Utility.  Sets a named key in a hash by C string, rather than nasal
+// string object.
+void FGNasalSys::hashset(naRef hash, const char* key, naRef val)
+{
+    naRef s = naNewString(_context);
+    naStr_fromdata(s, (char*)key, strlen(key));
+    naHash_set(hash, s, val);
+}
+
+void FGNasalSys::globalsSet(const char* key, naRef val)
+{
+  hashset(_globals, key, val);
+}
+
+naRef FGNasalSys::call(naRef code, int argc, naRef* args, naRef locals)
+{
+  return callMethod(code, naNil(), argc, args, locals);
+}
+
 // Does a naCall() in a new context.  Wrapped here to make lock
 // tracking easier.  Extension functions are called with the lock, but
 // we have to release it before making a new naCall().  So rather than
 // drop the lock in every extension function that might call back into
 // Nasal, we keep a stack depth counter here and only unlock/lock
 // around the naCall if it isn't the first one.
-naRef FGNasalSys::call(naRef code, int argc, naRef* args, naRef locals)
+
+naRef FGNasalSys::callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals)
 {
     naContext ctx = naNewContext();
     if(_callCount) naModUnlock();
     _callCount++;
-    naRef result = naCall(ctx, code, argc, args, naNil(), locals);
+    naRef result = naCall(ctx, code, argc, args, self, locals);
     if(naGetError(ctx))
         logError(ctx);
     _callCount--;
@@ -165,15 +186,6 @@ FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
     return script;
 }
 
-// Utility.  Sets a named key in a hash by C string, rather than nasal
-// string object.
-void FGNasalSys::hashset(naRef hash, const char* key, naRef val)
-{
-    naRef s = naNewString(_context);
-    naStr_fromdata(s, (char*)key, strlen(key));
-    naHash_set(hash, s, val);
-}
-
 // The get/setprop functions accept a *list* of strings and walk
 // through the property tree with them to find the appropriate node.
 // This allows a Nasal object to hold onto a property path and use it
@@ -213,8 +225,8 @@ static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
     case props::DOUBLE:
         {
         double dv = p->getDoubleValue();
-        if (osg::isNaN(dv)) {
-          SG_LOG(SG_GENERAL, SG_ALERT, "Nasal getprop: property " << p->getPath() << " is NaN");
+        if (SGMisc<double>::isNaN(dv)) {
+          SG_LOG(SG_NASAL, SG_ALERT, "Nasal getprop: property " << p->getPath() << " is NaN");
           return naNil();
         }
         
@@ -268,7 +280,7 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
             if(naIsNil(n))
                 naRuntimeError(c, "setprop() value is not string or number");
                 
-            if (osg::isNaN(n.num)) {
+            if (SGMisc<double>::isNaN(n.num)) {
                 naRuntimeError(c, "setprop() passed a NaN");
             }
             
@@ -293,7 +305,7 @@ static naRef f_print(naContext c, naRef me, int argc, naRef* args)
         if(naIsNil(s)) continue;
         buf += naStr_data(s);
     }
-    SG_LOG(SG_GENERAL, SG_ALERT, buf);
+    SG_LOG(SG_NASAL, SG_ALERT, buf);
     return naNum(buf.length());
 }
 
@@ -482,219 +494,6 @@ static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
 #endif
 }
 
-// Convert a cartesian point to a geodetic lat/lon/altitude.
-static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
-{
-    double lat, lon, alt, xyz[3];
-    if(argc != 3) naRuntimeError(c, "carttogeod() expects 3 arguments");
-    for(int i=0; i<3; i++)
-        xyz[i] = naNumValue(args[i]).num;
-    sgCartToGeod(xyz, &lat, &lon, &alt);
-    lat *= SG_RADIANS_TO_DEGREES;
-    lon *= SG_RADIANS_TO_DEGREES;
-    naRef vec = naNewVector(c);
-    naVec_append(vec, naNum(lat));
-    naVec_append(vec, naNum(lon));
-    naVec_append(vec, naNum(alt));
-    return vec;
-}
-
-// Convert a geodetic lat/lon/altitude to a cartesian point.
-static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
-{
-    if(argc != 3) naRuntimeError(c, "geodtocart() expects 3 arguments");
-    double lat = naNumValue(args[0]).num * SG_DEGREES_TO_RADIANS;
-    double lon = naNumValue(args[1]).num * SG_DEGREES_TO_RADIANS;
-    double alt = naNumValue(args[2]).num;
-    double xyz[3];
-    sgGeodToCart(lat, lon, alt, xyz);
-    naRef vec = naNewVector(c);
-    naVec_append(vec, naNum(xyz[0]));
-    naVec_append(vec, naNum(xyz[1]));
-    naVec_append(vec, naNum(xyz[2]));
-    return vec;
-}
-
-// For given geodetic point return array with elevation, and a material data
-// hash, or nil if there's no information available (tile not loaded). If
-// information about the material isn't available, then nil is returned instead
-// of the hash.
-static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
-{
-#define HASHSET(s,l,n) naHash_set(matdata, naStr_fromdata(naNewString(c),s,l),n)
-    if(argc < 2 || argc > 3)
-        naRuntimeError(c, "geodinfo() expects 2 or 3 arguments: lat, lon [, maxalt]");
-    double lat = naNumValue(args[0]).num;
-    double lon = naNumValue(args[1]).num;
-    double elev = argc == 3 ? naNumValue(args[2]).num : 10000;
-    const SGMaterial *mat;
-    SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
-    if(!globals->get_scenery()->get_elevation_m(geod, elev, &mat))
-        return naNil();
-    naRef vec = naNewVector(c);
-    naVec_append(vec, naNum(elev));
-    naRef matdata = naNil();
-    if(mat) {
-        matdata = naNewHash(c);
-        naRef names = naNewVector(c);
-        const vector<string> n = mat->get_names();
-        for(unsigned int i=0; i<n.size(); i++)
-            naVec_append(names, naStr_fromdata(naNewString(c),
-                    const_cast<char*>(n[i].c_str()), n[i].size()));
-        HASHSET("names", 5, names);
-        HASHSET("solid", 5, naNum(mat->get_solid()));
-        HASHSET("friction_factor", 15, naNum(mat->get_friction_factor()));
-        HASHSET("rolling_friction", 16, naNum(mat->get_rolling_friction()));
-        HASHSET("load_resistance", 15, naNum(mat->get_load_resistance()));
-        HASHSET("bumpiness", 9, naNum(mat->get_bumpiness()));
-        HASHSET("light_coverage", 14, naNum(mat->get_light_coverage()));
-    }
-    naVec_append(vec, matdata);
-    return vec;
-#undef HASHSET
-}
-
-
-class AirportInfoFilter : public FGAirport::AirportFilter
-{
-public:
-    AirportInfoFilter() : type(FGPositioned::AIRPORT) {
-    }
-
-    virtual FGPositioned::Type minType() const {
-        return type;
-    }
-
-    virtual FGPositioned::Type maxType() const {
-        return type;
-    }
-
-    FGPositioned::Type type;
-};
-
-// Returns data hash for particular or nearest airport of a <type>, or nil
-// on error.
-//
-// airportinfo(<id>);                   e.g. "KSFO"
-// airportinfo(<type>);                 type := ("airport"|"seaport"|"heliport")
-// airportinfo()                        same as  airportinfo("airport")
-// airportinfo(<lat>, <lon> [, <type>]);
-static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
-{
-    static SGConstPropertyNode_ptr latn = fgGetNode("/position/latitude-deg", true);
-    static SGConstPropertyNode_ptr lonn = fgGetNode("/position/longitude-deg", true);
-    SGGeod pos;
-    FGAirport* apt = NULL;
-
-    if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
-        pos = SGGeod::fromDeg(args[1].num, args[0].num);
-        args += 2;
-        argc -= 2;
-    } else {
-        pos = SGGeod::fromDeg(lonn->getDoubleValue(), latn->getDoubleValue());
-    }
-
-    double maxRange = 10000.0; // expose this? or pick a smaller value?
-
-    AirportInfoFilter filter; // defaults to airports only
-
-    if(argc == 0) {
-        // fall through and use AIRPORT
-    } else if(argc == 1 && naIsString(args[0])) {
-        const char *s = naStr_data(args[0]);
-        if(!strcmp(s, "airport")) filter.type = FGPositioned::AIRPORT;
-        else if(!strcmp(s, "seaport")) filter.type = FGPositioned::SEAPORT;
-        else if(!strcmp(s, "heliport")) filter.type = FGPositioned::HELIPORT;
-        else {
-            // user provided an <id>, hopefully
-            apt = FGAirport::findByIdent(s);
-            if (!apt) {
-                // return nil here, but don't raise a runtime error; this is a
-                // legitamate way to validate an ICAO code, for example in a
-                // dialog box or similar.
-                return naNil();
-            }
-        }
-    } else {
-        naRuntimeError(c, "airportinfo() with invalid function arguments");
-        return naNil();
-    }
-
-    if(!apt) {
-        apt = FGAirport::findClosest(pos, maxRange, &filter);
-        if(!apt) return naNil();
-    }
-
-    string id = apt->ident();
-    string name = apt->name();
-
-    // set runway hash
-    naRef rwys = naNewHash(c);
-    for(unsigned int r=0; r<apt->numRunways(); ++r) {
-        FGRunway* rwy(apt->getRunwayByIndex(r));
-
-        naRef rwyid = naStr_fromdata(naNewString(c),
-                      const_cast<char *>(rwy->ident().c_str()),
-                      rwy->ident().length());
-
-        naRef rwydata = naNewHash(c);
-#define HASHSET(s,l,n) naHash_set(rwydata, naStr_fromdata(naNewString(c),s,l),n)
-        HASHSET("id", 2, rwyid);
-        HASHSET("lat", 3, naNum(rwy->latitude()));
-        HASHSET("lon", 3, naNum(rwy->longitude()));
-        HASHSET("heading", 7, naNum(rwy->headingDeg()));
-        HASHSET("length", 6, naNum(rwy->lengthM()));
-        HASHSET("width", 5, naNum(rwy->widthM()));
-        HASHSET("threshold", 9, naNum(rwy->displacedThresholdM()));
-        HASHSET("stopway", 7, naNum(rwy->stopwayM()));
-        
-        if (rwy->ILS()) {
-          HASHSET("ils_frequency_mhz", 17, naNum(rwy->ILS()->get_freq() / 100.0));
-        }
-        
-        std::vector<flightgear::SID*> sids(rwy->getSIDs());
-        naRef sidVec = naNewVector(c);
-        
-        for (unsigned int s=0; s < sids.size(); ++s) {
-          naRef procId = naStr_fromdata(naNewString(c),
-                    const_cast<char *>(sids[s]->ident().c_str()),
-                    sids[s]->ident().length());
-          naVec_append(sidVec, procId);
-        }
-        HASHSET("sids", 4, sidVec); 
-        
-        std::vector<flightgear::STAR*> stars(rwy->getSTARs());
-        naRef starVec = naNewVector(c);
-      
-        for (unsigned int s=0; s < stars.size(); ++s) {
-          naRef procId = naStr_fromdata(naNewString(c),
-                    const_cast<char *>(stars[s]->ident().c_str()),
-                    stars[s]->ident().length());
-          naVec_append(starVec, procId);
-        }
-        HASHSET("stars", 5, starVec); 
-
-#undef HASHSET
-        naHash_set(rwys, rwyid, rwydata);
-    }
-
-    // set airport hash
-    naRef aptdata = naNewHash(c);
-#define HASHSET(s,l,n) naHash_set(aptdata, naStr_fromdata(naNewString(c),s,l),n)
-    HASHSET("id", 2, naStr_fromdata(naNewString(c),
-            const_cast<char *>(id.c_str()), id.length()));
-    HASHSET("name", 4, naStr_fromdata(naNewString(c),
-            const_cast<char *>(name.c_str()), name.length()));
-    HASHSET("lat", 3, naNum(apt->getLatitude()));
-    HASHSET("lon", 3, naNum(apt->getLongitude()));
-    HASHSET("elevation", 9, naNum(apt->getElevation() * SG_FEET_TO_METER));
-    HASHSET("has_metar", 9, naNum(apt->getMetar()));
-    HASHSET("runways", 7, rwys);
-#undef HASHSET
-    return aptdata;
-}
-
-
 // Table of extension functions.  Terminate with zeros.
 static struct { const char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
@@ -713,10 +512,6 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "resolvepath", f_resolveDataPath },
     { "parsexml", f_parsexml },
     { "systime", f_systime },
-    { "carttogeod", f_carttogeod },
-    { "geodtocart", f_geodtocart },
-    { "geodinfo", f_geodinfo },
-    { "airportinfo", f_airportinfo },
     { 0, 0 }
 };
 
@@ -750,6 +545,8 @@ void FGNasalSys::init()
         hashset(_globals, funcs[i].name,
                 naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
 
+
+  
     // And our SGPropertyNode wrapper
     hashset(_globals, "props", genPropsModule());
 
@@ -759,6 +556,11 @@ void FGNasalSys::init()
     _gcHash = naNewHash(_context);
     hashset(_globals, "__gcsave", _gcHash);
 
+    initNasalPositioned(_globals, _context, _gcHash);
+    NasalClipboard::init(this);
+    initNasalCanvas(_globals, _context, _gcHash);
+    initNasalCondition(_globals, _context, _gcHash);
+  
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
     loadScriptDirectory(nasalDir);
@@ -780,14 +582,33 @@ void FGNasalSys::init()
 
     // Pull scripts out of the property tree, too
     loadPropertyScripts();
+  
+    // now Nasal modules are loaded, we can do some delayed work
+    postinitNasalPositioned(_globals, _context);
 }
 
 void FGNasalSys::update(double)
 {
+    if( NasalClipboard::getInstance() )
+        NasalClipboard::getInstance()->update();
+
     if(!_dead_listener.empty()) {
         vector<FGNasalListener *>::iterator it, end = _dead_listener.end();
         for(it = _dead_listener.begin(); it != end; ++it) delete *it;
         _dead_listener.clear();
+    }
+
+    if (!_loadList.empty())
+    {
+        // process Nasal load hook (only one per update loop to avoid excessive lags)
+        _loadList.pop()->load();
+    }
+    else
+    if (!_unloadList.empty())
+    {
+        // process pending Nasal unload hooks after _all_ load hooks were processed
+        // (only unload one per update loop to avoid excessive lags)
+        _unloadList.pop()->unload();
     }
 
     // The global context is a legacy thing.  We use dynamically
@@ -813,10 +634,8 @@ bool pathSortPredicate(const SGPath& p1, const SGPath& p2)
 void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir)
 {
     simgear::PathList scripts = nasalDir.children(simgear::Dir::TYPE_FILE, ".nas");
-    // sort scripts, avoid loading sequence effects due to file system's
-    // random directory order
-    std::sort(scripts.begin(), scripts.end(), pathSortPredicate);
-
+    // Note: simgear::Dir already reports file entries in a deterministic order,
+    // so a fixed loading sequence is guaranteed (same for every user)
     for (unsigned int i=0; i<scripts.size(); ++i) {
       SGPath fullpath(scripts[i]);
       SGPath file = fullpath.file();
@@ -1010,11 +829,12 @@ naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
     return naBindFunction(_context, code, _globals);
 }
 
-bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
+bool FGNasalSys::handleCommand( const char* moduleName,
+                                const char* fileName,
+                                const char* src,
+                                const SGPropertyNode* arg )
 {
-    const char* nasal = arg->getStringValue("script");
-    const char* moduleName = arg->getStringValue("module");
-    naRef code = parse(arg->getPath(true).c_str(), nasal, strlen(nasal));
+    naRef code = parse(fileName, src, strlen(src));
     if(naIsNil(code)) return false;
 
     // Commands can be run "in" a module.  Make sure that module
@@ -1037,6 +857,17 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
 
     call(code, 0, 0, locals);
     return true;
+}
+
+bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
+{
+  const char* src = arg->getStringValue("script");
+  const char* moduleName = arg->getStringValue("module");
+
+  return handleCommand( moduleName,
+                        arg ? arg->getPath(true).c_str() : moduleName,
+                        src,
+                        arg );
 }
 
 // settimer(func, dt, simtime) extension function.  The first argument
@@ -1139,7 +970,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
     FGNasalListener *nl = new FGNasalListener(node, code, this,
             gcSave(code), _listenerId, init, type);
 
-    node->addChangeListener(nl, init);
+    node->addChangeListener(nl, init != 0);
 
     _listener[_listenerId] = nl;
     return naNum(_listenerId++);
@@ -1270,36 +1101,26 @@ bool FGNasalListener::changed(SGPropertyNode* node)
 
 unsigned int FGNasalModelData::_module_id = 0;
 
-void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
-                                   osg::Node *)
+void FGNasalModelData::load()
 {
-    if(!prop)
-        return;
-    SGPropertyNode *nasal = prop->getNode("nasal");
-    if(!nasal)
-        return;
-
-    SGPropertyNode *load = nasal->getNode("load");
-    _unload = nasal->getNode("unload");
-    if(!load && !_unload)
-        return;
-
     std::stringstream m;
     m << "__model" << _module_id++;
     _module = m.str();
 
-    const char *s = load ? load->getStringValue() : "";
+    SG_LOG(SG_NASAL, SG_DEBUG, "Loading nasal module " << _module.c_str());
+
+    const char *s = _load ? _load->getStringValue() : "";
 
     naRef arg[2];
     arg[0] = nasalSys->propNodeGhost(_root);
-    arg[1] = nasalSys->propNodeGhost(prop);
-    nasalSys->createModule(_module.c_str(), path.c_str(), s, strlen(s),
+    arg[1] = nasalSys->propNodeGhost(_prop);
+    nasalSys->createModule(_module.c_str(), _path.c_str(), s, strlen(s),
                            _root, 2, arg);
 }
 
-FGNasalModelData::~FGNasalModelData()
+void FGNasalModelData::unload()
 {
-    if(_module.empty())
+    if (_module.empty())
         return;
 
     if(!nasalSys) {
@@ -1308,14 +1129,52 @@ FGNasalModelData::~FGNasalModelData()
         return;
     }
 
-    if(_unload) {
+    SG_LOG(SG_NASAL, SG_DEBUG, "Unloading nasal module " << _module.c_str());
+
+    if (_unload)
+    {
         const char *s = _unload->getStringValue();
         nasalSys->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _root);
     }
+
     nasalSys->deleteModule(_module.c_str());
 }
 
+void FGNasalModelDataProxy::modelLoaded(const string& path, SGPropertyNode *prop,
+                                   osg::Node *)
+{
+    if(!nasalSys) {
+        SG_LOG(SG_NASAL, SG_WARN, "Trying to run a <load> script "
+                "without Nasal subsystem present.");
+        return;
+    }
 
+    if(!prop)
+        return;
+
+    SGPropertyNode *nasal = prop->getNode("nasal");
+    if(!nasal)
+        return;
+
+    SGPropertyNode* load   = nasal->getNode("load");
+    SGPropertyNode* unload = nasal->getNode("unload");
+
+    if ((!load) && (!unload))
+        return;
+
+    _data = new FGNasalModelData(_root, path, prop, load, unload);
+
+    // register Nasal module to be created and loaded in the main thread.
+    nasalSys->registerToLoad(_data);
+}
+
+FGNasalModelDataProxy::~FGNasalModelDataProxy()
+{
+    // when necessary, register Nasal module to be destroyed/unloaded
+    // in the main thread.
+    if ((_data.valid())&&(nasalSys))
+        nasalSys->registerToUnload(_data);
+}
 
 // NasalXMLVisitor class: handles EasyXML visitor callback for parsexml()
 //

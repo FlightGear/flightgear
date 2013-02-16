@@ -26,13 +26,13 @@
 #define FGBUTTON_H
 
 #include "FGCommonInput.hxx"
-#include <Main/fg_os.hxx>
+#include <Main/fg_os.hxx> // for KEYMOD_MAX
 
 class FGButton : public FGCommonInput {
 public:
   FGButton();
   virtual ~FGButton();
-  void init( const SGPropertyNode * node, const std::string name, std::string & module );
+  void init( const SGPropertyNode * node, const std::string & name, std::string & module );
   void update( int modifiers, bool pressed, int x = -1, int y = -1);
   bool is_repeatable;
   float interval_sec;

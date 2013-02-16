@@ -5,4 +5,9 @@ set(SOURCES
 	tiny_xdr.cxx
 	)
 
-flightgear_component(MultiPlayer "${SOURCES}")
+set(HEADERS
+	multiplaymgr.hxx
+	tiny_xdr.hxx
+	)
+    	
+flightgear_component(MultiPlayer "${SOURCES}" "${HEADERS}")

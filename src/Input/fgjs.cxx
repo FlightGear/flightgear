@@ -58,6 +58,10 @@ using std::string;
 
 #include "jsinput.h"
 
+#ifdef __APPLE__
+#  include <CoreFoundation/CoreFoundation.h>
+#endif
+
 using simgear::PropertyList;
 
 bool confirmAnswer() {
@@ -133,12 +137,12 @@ int main( int argc, char *argv[] ) {
     SGPropertyNode *templatetree = new SGPropertyNode();
     try {
         readProperties(templatefile.str().c_str(), templatetree);
-    } catch (sg_io_exception e) {
+    } catch (sg_io_exception & e) {
         cout << e.getFormattedMessage ();
     }
 
     PropertyList axes = templatetree->getChildren("axis");
-    for(PropertyList::iterator iter = axes.begin(); iter != axes.end(); iter++) {
+    for(PropertyList::iterator iter = axes.begin(); iter != axes.end(); ++iter) {
         cout << "Move the control you wish to use for " << (*iter)->getStringValue("desc")
              << " " << (*iter)->getStringValue("direction") << endl;
         cout << "Pressing a button skips this axis" << endl;
@@ -155,18 +159,18 @@ int main( int argc, char *argv[] ) {
                         ->getDeadBand(jsi->getInputAxis()));
                 axis->setDoubleValue("binding/factor", jsi->getInputAxisPositive() ? 1.0 : -1.0);
             } else {
-                iter--;
+                --iter;
             }
         } else {
             cout << "Skipping control" << endl;
             if ( ! confirmAnswer() )
-                iter--;
+                --iter;
         }
         cout << endl;
     }
 
     PropertyList buttons = templatetree->getChildren("button");
-    for(PropertyList::iterator iter = buttons.begin(); iter != buttons.end(); iter++) {
+    for(PropertyList::iterator iter = buttons.begin(); iter != buttons.end(); ++iter) {
         cout << "Press the button you wish to use for " << (*iter)->getStringValue("desc") << endl;
         cout << "Moving a joystick axis skips this button" << endl;
         fflush( stdout );
@@ -179,12 +183,12 @@ int main( int argc, char *argv[] ) {
                 SGPropertyNode *button = jstree[ jsi->getInputJoystick() ]->getChild("button", jsi->getInputButton(), true);
                 copyProperties(*iter, button);
             } else {
-                iter--;
+                --iter;
             }
         } else {
             cout << "Skipping control" << endl;
             if (! confirmAnswer())
-                iter--;
+                --iter;
         }
         cout << endl;
     }
@@ -200,7 +204,7 @@ int main( int argc, char *argv[] ) {
 
             jstree[i]->setStringValue("name", jss->getJoystick(i)->getName());
             writeProperties(xfs[i], jstree[i], true);
-        } catch (sg_io_exception e) {
+        } catch (sg_io_exception & e) {
             cout << e.getFormattedMessage ();
         }
         xfs[i].close();
@@ -234,12 +238,12 @@ static string fgScanForOption( const string& option, int argc, char **argv ) {
         free_hostname = true;
     }
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Scanning command line for: " << option );
+    SG_LOG(SG_INPUT, SG_INFO, "Scanning command line for: " << option );
 
     int len = option.length();
 
     while ( i < argc ) {
-        SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
+        SG_LOG( SG_INPUT, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
 
         string arg = argv[i];
         if ( arg.find( option ) == 0 ) {
@@ -260,7 +264,7 @@ static string fgScanForOption( const string& option, const string& path ) {
         return "";
     }
 
-    SG_LOG( SG_GENERAL, SG_INFO, "Scanning " << path << " for: " << option );
+    SG_LOG( SG_INPUT, SG_INFO, "Scanning " << path << " for: " << option );
 
     int len = option.length();
 
@@ -342,25 +346,23 @@ string getFGRoot ( int argc, char **argv ) {
         root = "../data";
 #elif defined( _WIN32 )
         root = "..\\data";
-#elif defined(OSX_BUNDLE)
-        /* the following code looks for the base package directly inside
-            the application bundle. This can be changed fairly easily by
-            fiddling with the code below. And yes, I know it's ugly and verbose.
+#elif defined(__APPLE__) 
+        /*
+        The following code looks for the base package inside the application 
+        bundle, in the standard Contents/Resources location. 
         */
-        CFBundleRef appBundle = CFBundleGetMainBundle();
-        CFURLRef appUrl = CFBundleCopyBundleURL(appBundle);
-        CFRelease(appBundle);
 
-        // look for a 'data' subdir directly inside the bundle : is there
-        // a better place? maybe in Resources? I don't know ...
-        CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, appUrl, CFSTR("data"), true);
+        CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+
+        // look for a 'data' subdir
+        CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
 
         // now convert down to a path, and the a c-string
         CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
         root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
 
         // tidy up.
-        CFRelease(appBundle);
+        CFRelease(resourcesUrl);
         CFRelease(dataDir);
         CFRelease(path);
 #else

@@ -16,106 +16,33 @@
 #ifndef _GN_NODE_HXX_
 #define _GN_NODE_HXX_
 
-#include <vector>
-#include <string>
-
 #include <simgear/compiler.h>
-#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 
-class FGTaxiSegment;
-typedef std::vector<FGTaxiSegment*>  FGTaxiSegmentVector;
-typedef FGTaxiSegmentVector::iterator FGTaxiSegmentVectorIterator;
+#include <Navaids/positioned.hxx>
 
-bool sortByHeadingDiff(FGTaxiSegment *a, FGTaxiSegment *b);
-bool sortByLength     (FGTaxiSegment *a, FGTaxiSegment *b);
-
-class FGTaxiNode 
+class FGTaxiNode : public FGPositioned
 {
-private:
-  SGGeod geod;
-  int index;
-
+protected:
   bool isOnRunway;
   int  holdType;
-  FGTaxiSegmentVector next; // a vector of pointers to all the segments leaving from this node
 
-  // used in way finding
-  double pathScore;
-  FGTaxiNode* previousNode;
-  FGTaxiSegment* previousSeg;
+public:    
+  FGTaxiNode(PositionedID aGuid, const SGGeod& pos, bool aOnRunway, int aHoldType);
+  virtual ~FGTaxiNode();
+  
+  void setElevation(double val);
 
-public:
-  FGTaxiNode() :
-      index(0),
-      isOnRunway(false),
-      holdType(0),
-      pathScore(0),
-      previousNode(0),
-      previousSeg(0)
-{
+  double getElevationM ();
+  double getElevationFt();
+  
+  PositionedID getIndex() const { return guid(); };
+  int getHoldPointType() const { return holdType; };
+  bool getIsOnRunway() const { return isOnRunway; };
 };
 
-  FGTaxiNode(const FGTaxiNode &other) :
-      geod(other.geod),
-      index(other.index),
-      isOnRunway(other.isOnRunway),
-      holdType(other.holdType),
-      next(other.next),
-      pathScore(other.pathScore),
-      previousNode(other.previousNode),
-      previousSeg(other.previousSeg)
-{
-};
-
-FGTaxiNode &operator =(const FGTaxiNode &other)
-{
-   geod          = other.geod;
-   index        = other.index;
-   isOnRunway   = other.isOnRunway;
-   holdType     = other.holdType;
-   next         = other.next;
-   pathScore    = other.pathScore;
-   previousNode = other.previousNode;
-   previousSeg  = other.previousSeg;
-   return *this;
-};
-
-  void setIndex(int idx)                  { index = idx;                 };
-  void setLatitude (double val);
-  void setLongitude(double val);
-  void setLatitude (const std::string& val);
-  void setLongitude(const std::string& val);
-  void addSegment(FGTaxiSegment *segment) { next.push_back(segment);     };
-  void setHoldPointType(int val)          { holdType = val;              };
-  void setOnRunway(bool val)              { isOnRunway = val;            };
-
-  void setPathScore   (double val)         { pathScore    = val; };
-  void setPreviousNode(FGTaxiNode *val)    { previousNode = val; };
-  void setPreviousSeg (FGTaxiSegment *val) { previousSeg  = val; };
-
-  FGTaxiNode    *getPreviousNode()    { return previousNode; };
-  FGTaxiSegment *getPreviousSegment() { return previousSeg;  };
-
-  double getPathScore() { return pathScore; };
-  double getLatitude() { return geod.getLatitudeDeg();};
-  double getLongitude(){ return geod.getLongitudeDeg();};
-
-  const SGGeod& getGeod() const { return geod; }
-
-  int getIndex() { return index; };
-  int getHoldPointType() { return holdType; };
-  bool getIsOnRunway() { return isOnRunway; };
-
-  FGTaxiNode *getAddress() { return this;};
-  FGTaxiSegmentVectorIterator getBeginRoute() { return next.begin(); };
-  FGTaxiSegmentVectorIterator getEndRoute()   { return next.end();   }; 
-  bool operator<(const FGTaxiNode &other) const { return index < other.index; };
-
-  void sortEndSegments(bool);
-
-};
-
-typedef std::vector<FGTaxiNode*> FGTaxiNodeVector;
+typedef SGSharedPtr<FGTaxiNode> FGTaxiNode_ptr;
+typedef std::vector<FGTaxiNode_ptr> FGTaxiNodeVector;
 typedef FGTaxiNodeVector::iterator FGTaxiNodeVectorIterator;
 
 #endif

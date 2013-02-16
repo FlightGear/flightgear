@@ -5,23 +5,19 @@
 #include <osg/Matrix>
 #include <osg/Drawable>
 
+#include <simgear/structure/SGSharedPtr.hxx>
+#include <simgear/props/props.hxx>
+
 class FGPanel;
 class SGPropertyNode;
 
-// PanelNode defines an SSG leaf object that draws a FGPanel object
-// into the scene graph.  Note that this is an incomplete SSG object,
-// many methods, mostly involved with modelling and runtime
-// inspection, are unimplemented.
+// PanelNode defines an OSG drawable wrapping the 2D panel drawing code
 
-// Static mouse handler for all FGPanelNodes.  Very clumsy; this
-// should really be done through our container (an aircraft model,
-// typically).
-bool fgHandle3DPanelMouseEvent(int button, int updown, int x, int y);
-void fgUpdate3DPanels();
-
-class FGPanelNode : public osg::Drawable // OSGFIXME 
+class FGPanelNode : public osg::Drawable
 {
 public:
+    FGPanelNode();
+  
     FGPanelNode(SGPropertyNode* props);
     virtual ~FGPanelNode();
 
@@ -29,35 +25,55 @@ public:
     virtual osg::Object* cloneType() const { return 0; }
     virtual osg::Object* clone(const osg::CopyOp& copyop) const { return 0; }        
 
-    bool doMouseAction(int button, int updown, int x, int y);
-
     FGPanel* getPanel() { return _panel; }
 
     virtual void drawImplementation(osg::RenderInfo& renderInfo) const
     { drawImplementation(*renderInfo.getState()); }
+  
     void drawImplementation(osg::State& state) const;
     virtual osg::BoundingBox computeBound() const;
 
+    /** Return true, FGPanelNode does support accept(PrimitiveFunctor&). */
+    virtual bool supports(const osg::PrimitiveFunctor&) const { return true; }
+  
+    virtual void accept(osg::PrimitiveFunctor& functor) const;
+  
+    static osg::Node* load(SGPropertyNode *n);
+    static osg::Node* create2DPanelNode();
+  
+    osg::Matrix transformMatrix() const;
+  
+    void setPanelPath(const std::string& panel);
+    void lazyLoad();
+  
+    /**
+      * is visible in 2D mode or not?
+      */
+    bool isVisible2d() const;
 private:
-    FGPanel* _panel;
-
+    void commonInit();
+    void initWithPanel();
+    
+    SGSharedPtr<FGPanel> _panel;
+    std::string _panelPath;
+  
+    bool _resizeToViewport;
+    bool _depthTest;
+  
     // Panel corner coordinates
     osg::Vec3 _bottomLeft, _topLeft, _bottomRight;
 
-    // The input range expected in the panel definition.  These x/y
-    // coordinates will map to the right/top sides.
-    float _xmax, _ymax;
-    
+    int _xmin, _ymin, _xmax, _ymax;
+  
     // The matrix that results, which transforms 2D x/y panel
     // coordinates into 3D coordinates of the panel quadrilateral.
-    osg::Matrix _xform;
-
-    // The matrix transformation state that was active the last time
-    // we were rendered.  Used by the mouse code to compute
-    // intersections.
-    mutable osg::Matrix _lastModelview;
-    mutable osg::Matrix _lastProjection;
-    mutable double _lastViewport[4];
+    osg::Matrix _xform;  
+  
+    /// should the 2D panel auto-hide when the view orientation changes
+    mutable SGPropertyNode_ptr _autoHide2d;
+    
+    /// should the 2D panel be hidden in views other than the default (view 0)
+    mutable SGPropertyNode_ptr _hideNonDefaultViews;
 };
 
 

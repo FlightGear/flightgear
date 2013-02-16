@@ -26,6 +26,7 @@
 
 #include <algorithm>
 
+#include <simgear/math/SGMath.hxx>
 #include <Main/fg_props.hxx>
 #include "environment_ctrl.hxx"
 #include "environment.hxx"
@@ -182,7 +183,7 @@ void LayerTable::read(FGEnvironment * parent )
     // cleanup entries with (almost)same altitude
     for( size_type n = 1; n < size(); n++ ) {
         if( fabs(at(n)->altitude_ft - at(n-1)->altitude_ft ) < 1 ) {
-            SG_LOG( SG_GENERAL, SG_ALERT, "Removing duplicate altitude entry in environment config for altitude " << at(n)->altitude_ft );
+            SG_LOG( SG_ENVIRONMENT, SG_ALERT, "Removing duplicate altitude entry in environment config for altitude " << at(n)->altitude_ft );
             erase( begin() + n );
         }
     }

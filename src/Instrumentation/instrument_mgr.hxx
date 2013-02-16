@@ -33,7 +33,8 @@ public:
     virtual ~FGInstrumentMgr ();
     
     virtual void init();
-    virtual void reinit();
+    virtual InitStatus incrementalInit();
+
 private:
     bool build (SGPropertyNode* config_props);
     

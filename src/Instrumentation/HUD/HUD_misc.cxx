@@ -23,6 +23,9 @@
 #endif
 
 #include "HUD.hxx"
+#include "HUD_private.hxx"
+
+#include <Main/globals.hxx>
 
 // MIL-STD-1787B aiming reticle
 

@@ -3,11 +3,7 @@
 You *must* have OpenSceneGraph (OSG) installed to build this version of 
 FlightGear.
 
-Notice that from FlightGear version 1.9.0, OSG version 2.7.8 or later
-is required. Using earlier versions of OSG will yield serious 
-rendering bugs. If you are using an 'older' distribution, this may mean
-a suitable version of OSG may not be availble through the usual package
-repositories.
+Notice that this version of SimGear/FlightGear requires at least OSG 3.0.0.
 
 You can get the latest version of OSG from:
 

@@ -51,7 +51,7 @@ public:
 	virtual void update(double dt);
 
 private:
-	string _name;
+  std::string _name;
 	unsigned int _num;
 
 	SGPropertyNode_ptr _serviceableN;

@@ -35,7 +35,7 @@ void
 VacuumSystem::init()
 {
     unsigned int i;
-    string branch;
+    std::string branch;
     branch = "/systems/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
@@ -46,6 +46,14 @@ VacuumSystem::init()
     }
     _pressure_node = fgGetNode("/environment/pressure-inhg", true);
     _suction_node = node->getChild("suction-inhg", 0, true);
+
+    reinit();
+}
+
+void
+VacuumSystem::reinit()
+{
+    _suction_node->setDoubleValue(0.0);
 }
 
 void
@@ -69,14 +77,14 @@ VacuumSystem::update (double dt)
     if (!_serviceable_node->getBoolValue()) {
         suction = 0.0;
     } else {
-	// select the source with the max rpm
+        // select the source with the max rpm
         double rpm = 0.0;
-	for ( i = 0; i < _rpm_nodes.size(); i++ ) {
-	  double tmp = _rpm_nodes[i]->getDoubleValue() * _scale;
-	  if ( tmp > rpm ) {
-	    rpm = tmp;
-	  }
-	}
+        for ( i = 0; i < _rpm_nodes.size(); i++ ) {
+          double tmp = _rpm_nodes[i]->getDoubleValue() * _scale;
+          if ( tmp > rpm ) {
+            rpm = tmp;
+          }
+        }
         double pressure = _pressure_node->getDoubleValue();
         // This magic formula yields about 4 inhg at 700 rpm
         suction = pressure * rpm / (rpm + 4875.0);

@@ -1,3 +1,8 @@
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/debug/logstream.hxx>
 
 #include "Math.hpp"
@@ -11,8 +16,6 @@
 #include <iostream>
 #include <iomanip>
 
-using std::setprecision;
-
 #ifdef TEST_DEBUG
 #include <stdio.h>
 #endif
@@ -20,7 +23,8 @@ using std::setprecision;
 #include <iostream>
 #include <sstream>
 
-
+using std::setprecision;
+using std::endl;
 
 namespace yasim {
 
@@ -732,7 +736,7 @@ void Rotor::setParameter(const char *parametername, float value)
         p(rotor_correction_factor,1)
         SG_LOG(SG_INPUT, SG_ALERT,
             "internal error in parameter set up for rotor: '" << 
-            parametername <<"'" << endl);
+               parametername <<"'" << std::endl);
 #undef p
 }
 
@@ -1303,7 +1307,7 @@ void Rotor::compile()
         &(torque[1]),&(lift[1])); //pitch b
     rps[0]->calculateAlpha(v_wind,rho_null,0,0,0,
         &(torque[3]),&(lift[3])); //pitch 0
-    SG_LOG(SG_GENERAL, SG_INFO,
+    SG_LOG(SG_FLIGHT, SG_INFO,
         "Rotor: coefficients for airfoil:" << endl << setprecision(6)
         << " drag0: " << _dragcoef0*_number_of_parts/_number_of_blades/_c2
         << " drag1: " << _dragcoef1*_number_of_parts/_number_of_blades/_c2
@@ -1539,6 +1543,8 @@ void Rotorgear::calcForces(float* torqueOut)
         }
         total_torque*=-1;
         _ddt_omegarel=0;
+
+#if 0
         float rel_torque_engine=1;
         if (total_torque<=0)
             rel_torque_engine=0;
@@ -1547,6 +1553,7 @@ void Rotorgear::calcForces(float* torqueOut)
                 rel_torque_engine=1/max_torque_of_engine*total_torque;
             else
                 rel_torque_engine=0;
+#endif
 
         //add the rotor brake and the gear fritcion
         float dt=0.1f;

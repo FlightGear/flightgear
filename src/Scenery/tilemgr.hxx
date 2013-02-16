@@ -28,10 +28,9 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/bucket/newbucket.hxx>
-#include <simgear/scene/tgdb/TileEntry.hxx>
-#include <simgear/scene/tgdb/TileCache.hxx>
-
-class SGReaderWriterBTGOptions;
+#include "SceneryPager.hxx"
+#include "tileentry.hxx"
+#include "tilecache.hxx"
 
 namespace osg
 {
@@ -41,21 +40,22 @@ class Node;
 namespace simgear
 {
 class SGTerraSync;
+class SGReaderWriterOptions;
 }
 
-class FGTileMgr : public SGSubsystem, public simgear::ModelLoadHelper {
+class FGTileMgr : public SGSubsystem {
 
 private:
 
     // Tile loading state
     enum load_state {
-	Start = 0,
-	Inited = 1,
-	Running = 2
+        Start = 0,
+        Inited = 1,
+        Running = 2
     };
 
-    load_state state;
-    
+    load_state state, last_state;
+
     // schedule a tile for loading, returns true when tile is already loaded
     bool sched_tile( const SGBucket& b, double priority,bool current_view, double request_time);
 
@@ -65,11 +65,7 @@ private:
     SGBucket previous_bucket;
     SGBucket current_bucket;
     SGBucket pending;
-    osg::ref_ptr<SGReaderWriterBTGOptions> _options;
-
-    // x and y distance of tiles to load/draw
-    float vis;
-    int xrange, yrange;
+    osg::ref_ptr<simgear::SGReaderWriterOptions> _options;
 
     // current longitude latitude
     double longitude;
@@ -79,45 +75,38 @@ private:
     /**
      * tile cache
      */
-    simgear::TileCache tile_cache;
+    TileCache tile_cache;
     simgear::SGTerraSync* _terra_sync;
 
-    // Update the various queues maintained by the tilemagr (private
-    // internal function, do not call directly.)
+    // update various queues internal queues
     void update_queues();
-    
-    SGPropertyNode* _visibilityMeters;
-    SGPropertyChangeListener* _propListener;
-    SGPropertyNode_ptr _randomObjects;
-    SGPropertyNode_ptr _randomVegetation;
-    SGPropertyNode_ptr _maxTileRangeM;
-    
+
+    // schedule tiles for the viewer bucket
+    void schedule_tiles_at(const SGGeod& location, double rangeM);
+
+    static void refresh_tile(void* tileMgr, long tileIndex);
+
+    SGPropertyNode_ptr _visibilityMeters;
+    SGPropertyNode_ptr _maxTileRangeM, _disableNasalHooks;
+    SGPropertyNode_ptr _scenery_loaded, _scenery_override;
+
+    osg::ref_ptr<flightgear::SceneryPager> _pager;
+
 public:
     FGTileMgr();
-
     ~FGTileMgr();
 
     // Initialize the Tile Manager
     virtual void init();
     virtual void reinit();
-
     virtual void update(double dt);
-
-    // update loader configuration options
-    void configChanged();
-
-    int schedule_tiles_at(const SGGeod& location, double rangeM);
-
 
     const SGBucket& get_current_bucket () const { return current_bucket; }
 
-    /// Returns true if scenery is available for the given lat, lon position
-    /// within a range of range_m.
-    /// lat and lon are expected to be in degrees.
+    // Returns true if scenery is available for the given lat, lon position
+    // within a range of range_m.
+    // lat and lon are expected to be in degrees.
     bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
-
-    // Load a model for a tile
-    osg::Node* loadTileModel(const string& modelPath, bool cacheModel);
 
     // Returns true if tiles around current view position have been loaded
     bool isSceneryLoaded();

@@ -44,7 +44,6 @@
 #  include <simgear/threads/SGQueue.hxx>
 #else
 #  include <queue>
-   using std::queue;
 #endif // ENABLE_THREADS
 
 using std::vector;
@@ -66,12 +65,12 @@ private:
 	FGVoiceThread *_thread;
 #endif
 
-	string _host;
-	string _port;
+  std::string _host;
+  std::string _port;
 	bool _enabled;
 	SGPropertyNode_ptr _pausedNode;
 	bool _paused;
-	vector<FGVoice *> _voices;
+  std::vector<FGVoice *> _voices;
 };
 
 
@@ -102,7 +101,7 @@ public:
 	void setVolume(double);
 	void setPitch(double);
 	void setSpeed(double);
-	void pushMessage(string);
+	void pushMessage(std::string);
 
 private:
 	class FGVoiceListener;
@@ -117,9 +116,9 @@ private:
 	FGVoiceMgr *_mgr;
 
 #if defined(ENABLE_THREADS)
-	SGLockedQueue<string> _msg;
+	SGLockedQueue<std::string> _msg;
 #else
-	queue<string> _msg;
+  std::queue<std::string> _msg;
 #endif
 
 };

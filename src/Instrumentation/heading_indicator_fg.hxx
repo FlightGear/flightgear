@@ -41,8 +41,9 @@ public:
     HeadingIndicatorFG ();
     virtual ~HeadingIndicatorFG ();
 
-    virtual void init ();   
-    virtual void bind (); 
+    virtual void init ();
+    virtual void reinit ();
+    virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);
 
@@ -51,7 +52,7 @@ private:
     Gyro _gyro;
     double _last_heading_deg;
 
-    string name;
+    std::string name;
     int num;
     
     SGPropertyNode_ptr _offset_node;

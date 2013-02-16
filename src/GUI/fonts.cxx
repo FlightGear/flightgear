@@ -649,7 +649,192 @@ const SFG_Font fgFontSans12B = {"-*-bitstream vera sans-bold-r-*-*-*-120-75-75-*
 static fntBitmapFont fntSans12B(fgFontSans12B.Characters, 1,
 		fgFontSans12B.Height, fgFontSans12B.xorig, fgFontSans12B.yorig);
 
+/* Helvetica12 character set copied from PLIB and extended... */
+static const GLubyte Helvetica12_Character_032[] = {  4,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}; /* " " */
+static const GLubyte Helvetica12_Character_097[] = {  7,  0,  0,  0,116,136,136,120,  8,136,112,  0,  0,  0,  0,  0}; /* "a" */
+static const GLubyte Helvetica12_Character_098[] = {  7,  0,  0,  0,176,200,136,136,136,200,176,128,128,  0,  0,  0}; /* "b" */
+static const GLubyte Helvetica12_Character_099[] = {  7,  0,  0,  0,112,136,128,128,128,136,112,  0,  0,  0,  0,  0}; /* "c" */
+static const GLubyte Helvetica12_Character_100[] = {  7,  0,  0,  0,104,152,136,136,136,152,104,  8,  8,  0,  0,  0}; /* "d" */
+static const GLubyte Helvetica12_Character_101[] = {  7,  0,  0,  0,112,136,128,248,136,136,112,  0,  0,  0,  0,  0}; /* "e" */
+static const GLubyte Helvetica12_Character_102[] = {  4,  0,  0,  0, 64, 64, 64, 64, 64, 64,224, 64, 48,  0,  0,  0}; /* "f" */
+static const GLubyte Helvetica12_Character_103[] = {  7,112,136,  8,104,152,136,136,136,152,104,  0,  0,  0,  0,  0}; /* "g" */
+static const GLubyte Helvetica12_Character_104[] = {  7,  0,  0,  0,136,136,136,136,136,200,176,128,128,  0,  0,  0}; /* "h" */
+static const GLubyte Helvetica12_Character_105[] = {  3,  0,  0,  0,128,128,128,128,128,128,128,  0,128,  0,  0,  0}; /* "i" */
+static const GLubyte Helvetica12_Character_106[] = {  4,128, 64, 64, 64, 64, 64, 64, 64, 64, 64,  0, 64,  0,  0,  0}; /* "j" */
+static const GLubyte Helvetica12_Character_107[] = {  6,  0,  0,  0,136,144,160,192,192,160,144,128,128,  0,  0,  0}; /* "k" */
+static const GLubyte Helvetica12_Character_108[] = {  3,  0,  0,  0,128,128,128,128,128,128,128,128,128,  0,  0,  0}; /* "l" */
+static const GLubyte Helvetica12_Character_109[] = {  9,  0,  0,  0,  0,  0,  0,146,  0,146,  0,146,  0,146,  0,146,  0,218,  0,164,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}; /* "m" */
+static const GLubyte Helvetica12_Character_110[] = {  7,  0,  0,  0,136,136,136,136,136,200,176,  0,  0,  0,  0,  0}; /* "n" */
+static const GLubyte Helvetica12_Character_111[] = {  7,  0,  0,  0,112,136,136,136,136,136,112,  0,  0,  0,  0,  0}; /* "o" */
+static const GLubyte Helvetica12_Character_112[] = {  7,128,128,128,176,200,136,136,136,200,176,  0,  0,  0,  0,  0}; /* "p" */
+static const GLubyte Helvetica12_Character_113[] = {  7,  8,  8,  8,104,152,136,136,136,152,104,  0,  0,  0,  0,  0}; /* "q" */
+static const GLubyte Helvetica12_Character_114[] = {  4,  0,  0,  0,128,128,128,128,128,192,160,  0,  0,  0,  0,  0}; /* "r" */
+static const GLubyte Helvetica12_Character_115[] = {  6,  0,  0,  0, 96,144, 16, 96,128,144, 96,  0,  0,  0,  0,  0}; /* "s" */
+static const GLubyte Helvetica12_Character_116[] = {  4,  0,  0,  0, 96, 64, 64, 64, 64, 64,224, 64, 64,  0,  0,  0}; /* "t" */
+static const GLubyte Helvetica12_Character_117[] = {  7,  0,  0,  0,104,152,136,136,136,136,136,  0,  0,  0,  0,  0}; /* "u" */
+static const GLubyte Helvetica12_Character_118[] = {  7,  0,  0,  0, 32, 32, 80, 80,136,136,136,  0,  0,  0,  0,  0}; /* "v" */
+static const GLubyte Helvetica12_Character_119[] = { 10,  0,  0,  0,  0,  0,  0, 34,  0, 34,  0, 85,  0, 73,  0, 73,  0,136,128,136,128,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}; /* "w" */
+static const GLubyte Helvetica12_Character_120[] = {  6,  0,  0,  0,132,132, 72, 48, 48, 72,132,  0,  0,  0,  0,  0}; /* "x" */
+static const GLubyte Helvetica12_Character_121[] = {  7,128, 64, 32, 32, 80, 80,144,136,136,136,  0,  0,  0,  0,  0}; /* "y" */
+static const GLubyte Helvetica12_Character_122[] = {  6,  0,  0,  0,240,128, 64, 64, 32, 16,240,  0,  0,  0,  0,  0}; /* "z" */
+static const GLubyte Helvetica12_Character_065[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,130,  0,130,  0,124,  0, 68,  0, 68,  0, 40,  0, 40,  0, 16,  0,  0,  0,  0,  0,  0,  0}; /* "A" */
+static const GLubyte Helvetica12_Character_066[] = {  8,  0,  0,  0,248,132,132,132,248,132,132,132,248,  0,  0,  0}; /* "B" */
+static const GLubyte Helvetica12_Character_067[] = {  9,  0,  0,  0,  0,  0,  0, 60,  0, 66,  0,128,  0,128,  0,128,  0,128,  0,128,  0, 66,  0, 60,  0,  0,  0,  0,  0,  0,  0}; /* "C" */
+static const GLubyte Helvetica12_Character_068[] = {  9,  0,  0,  0,  0,  0,  0,248,  0,132,  0,130,  0,130,  0,130,  0,130,  0,130,  0,132,  0,248,  0,  0,  0,  0,  0,  0,  0}; /* "D" */
+static const GLubyte Helvetica12_Character_069[] = {  8,  0,  0,  0,252,128,128,128,252,128,128,128,252,  0,  0,  0}; /* "E" */
+static const GLubyte Helvetica12_Character_070[] = {  8,  0,  0,  0,128,128,128,128,248,128,128,128,252,  0,  0,  0}; /* "F" */
+static const GLubyte Helvetica12_Character_071[] = {  9,  0,  0,  0,  0,  0,  0, 58,  0, 70,  0,130,  0,130,  0,142,  0,128,  0,128,  0, 66,  0, 60,  0,  0,  0,  0,  0,  0,  0}; /* "G" */
+static const GLubyte Helvetica12_Character_072[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,130,  0,130,  0,130,  0,254,  0,130,  0,130,  0,130,  0,130,  0,  0,  0,  0,  0,  0,  0}; /* "H" */
+static const GLubyte Helvetica12_Character_073[] = {  3,  0,  0,  0,128,128,128,128,128,128,128,128,128,  0,  0,  0}; /* "I" */
+static const GLubyte Helvetica12_Character_074[] = {  7,  0,  0,  0,112,136,136,  8,  8,  8,  8,  8,  8,  0,  0,  0}; /* "J" */
+static const GLubyte Helvetica12_Character_075[] = {  8,  0,  0,  0,130,132,136,144,224,160,144,136,132,  0,  0,  0}; /* "K" */
+static const GLubyte Helvetica12_Character_076[] = {  7,  0,  0,  0,248,128,128,128,128,128,128,128,128,  0,  0,  0}; /* "L" */
+static const GLubyte Helvetica12_Character_077[] = { 11,  0,  0,  0,  0,  0,  0,136,128,136,128,148,128,148,128,162,128,162,128,193,128,193,128,128,128,  0,  0,  0,  0,  0,  0}; /* "M" */
+static const GLubyte Helvetica12_Character_078[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,134,  0,138,  0,138,  0,146,  0,162,  0,162,  0,194,  0,130,  0,  0,  0,  0,  0,  0,  0}; /* "N" */
+static const GLubyte Helvetica12_Character_079[] = { 10,  0,  0,  0,  0,  0,  0, 60,  0, 66,  0,129,  0,129,  0,129,  0,129,  0,129,  0, 66,  0, 60,  0,  0,  0,  0,  0,  0,  0}; /* "O" */
+static const GLubyte Helvetica12_Character_080[] = {  8,  0,  0,  0,128,128,128,128,248,132,132,132,248,  0,  0,  0}; /* "P" */
+static const GLubyte Helvetica12_Character_081[] = { 10,  0,  0,  0,  0,  0,  0, 61,  0, 66,  0,133,  0,137,  0,129,  0,129,  0,129,  0, 66,  0, 60,  0,  0,  0,  0,  0,  0,  0}; /* "Q" */
+static const GLubyte Helvetica12_Character_082[] = {  8,  0,  0,  0,132,132,132,136,248,132,132,132,248,  0,  0,  0}; /* "R" */
+static const GLubyte Helvetica12_Character_083[] = {  8,  0,  0,  0,120,132,132,  4, 24, 96,128,132,120,  0,  0,  0}; /* "S" */
+static const GLubyte Helvetica12_Character_084[] = {  7,  0,  0,  0, 16, 16, 16, 16, 16, 16, 16, 16,254,  0,  0,  0}; /* "T" */
+static const GLubyte Helvetica12_Character_085[] = {  8,  0,  0,  0,120,132,132,132,132,132,132,132,132,  0,  0,  0}; /* "U" */
+static const GLubyte Helvetica12_Character_086[] = {  9,  0,  0,  0,  0,  0,  0, 16,  0, 16,  0, 40,  0, 40,  0, 68,  0, 68,  0, 68,  0,130,  0,130,  0,  0,  0,  0,  0,  0,  0}; /* "V" */
+static const GLubyte Helvetica12_Character_087[] = { 11,  0,  0,  0,  0,  0,  0, 34,  0, 34,  0, 34,  0, 85,  0, 85,  0, 73,  0,136,128,136,128,136,128,  0,  0,  0,  0,  0,  0}; /* "W" */
+static const GLubyte Helvetica12_Character_088[] = {  9,  0,  0,  0,  0,  0,  0,130,  0, 68,  0, 68,  0, 40,  0, 16,  0, 40,  0, 68,  0, 68,  0,130,  0,  0,  0,  0,  0,  0,  0}; /* "X" */
+static const GLubyte Helvetica12_Character_089[] = {  9,  0,  0,  0,  0,  0,  0, 16,  0, 16,  0, 16,  0, 16,  0, 40,  0, 68,  0, 68,  0,130,  0,130,  0,  0,  0,  0,  0,  0,  0}; /* "Y" */
+static const GLubyte Helvetica12_Character_090[] = {  9,  0,  0,  0,  0,  0,  0,254,  0,128,  0, 64,  0, 32,  0, 16,  0,  8,  0,  4,  0,  2,  0,254,  0,  0,  0,  0,  0,  0,  0}; /* "Z" */
+static const GLubyte Helvetica12_Character_048[] = {  7,  0,  0,  0,112,136,136,136,136,136,136,136,112,  0,  0,  0}; /* "0" */
+static const GLubyte Helvetica12_Character_049[] = {  7,  0,  0,  0, 32, 32, 32, 32, 32, 32, 32,224, 32,  0,  0,  0}; /* "1" */
+static const GLubyte Helvetica12_Character_050[] = {  7,  0,  0,  0,248,128,128, 64, 32, 16,  8,136,112,  0,  0,  0}; /* "2" */
+static const GLubyte Helvetica12_Character_051[] = {  7,  0,  0,  0,112,136,136,  8,  8, 48,  8,136,112,  0,  0,  0}; /* "3" */
+static const GLubyte Helvetica12_Character_052[] = {  7,  0,  0,  0,  8,  8,252,136, 72, 40, 40, 24,  8,  0,  0,  0}; /* "4" */
+static const GLubyte Helvetica12_Character_053[] = {  7,  0,  0,  0,112,136,136,  8,  8,240,128,128,248,  0,  0,  0}; /* "5" */
+static const GLubyte Helvetica12_Character_054[] = {  7,  0,  0,  0,112,136,136,136,200,176,128,136,112,  0,  0,  0}; /* "6" */
+static const GLubyte Helvetica12_Character_055[] = {  7,  0,  0,  0, 64, 64, 32, 32, 32, 16, 16,  8,248,  0,  0,  0}; /* "7" */
+static const GLubyte Helvetica12_Character_056[] = {  7,  0,  0,  0,112,136,136,136,136,112,136,136,112,  0,  0,  0}; /* "8" */
+static const GLubyte Helvetica12_Character_057[] = {  7,  0,  0,  0,112,136,  8,  8,120,136,136,136,112,  0,  0,  0}; /* "9" */
+static const GLubyte Helvetica12_Character_096[] = {  4,  0,  0,  0,  0,  0,  0,  0,  0,  0,192,128, 64,  0,  0,  0}; /* "`" */
+static const GLubyte Helvetica12_Character_126[] = {  8,  0,  0,  0,  0,  0,  0,152,100,  0,  0,  0,  0,  0,  0,  0}; /* "~" */
+static const GLubyte Helvetica12_Character_033[] = {  3,  0,  0,  0,128,  0,128,128,128,128,128,128,128,  0,  0,  0}; /* "!" */
+static const GLubyte Helvetica12_Character_064[] = { 12,  0,  0,  0,  0, 62,  0, 64,  0,155,  0,166,128,162, 64,162, 64,146, 64, 77, 64, 96,128, 31,  0,  0,  0,  0,  0,  0,  0}; /* "@" */
+static const GLubyte Helvetica12_Character_035[] = {  7,  0,  0,  0, 80, 80, 80,252, 40,252, 40, 40,  0,  0,  0,  0}; /* "#" */
+static const GLubyte Helvetica12_Character_036[] = {  7,  0,  0, 32,112,168,168, 40,112,160,168,112, 32,  0,  0,  0}; /* "$" */
+static const GLubyte Helvetica12_Character_037[] = { 11,  0,  0,  0,  0,  0,  0, 35,  0, 20,128, 20,128, 19,  0,  8,  0,104,  0,148,  0,148,  0, 98,  0,  0,  0,  0,  0,  0,  0}; /* "%" */
+static const GLubyte Helvetica12_Character_094[] = {  6,  0,  0,  0,  0,  0,  0,  0,  0,136, 80, 32,  0,  0,  0,  0}; /* "^" */
+static const GLubyte Helvetica12_Character_038[] = {  9,  0,  0,  0,  0,  0,  0,114,  0,140,  0,132,  0,138,  0, 80,  0, 48,  0, 72,  0, 72,  0, 48,  0,  0,  0,  0,  0,  0,  0}; /* "&" */
+static const GLubyte Helvetica12_Character_042[] = {  5,  0,  0,  0,  0,  0,  0,  0,  0,  0,160, 64,160,  0,  0,  0}; /* "*" */
+static const GLubyte Helvetica12_Character_040[] = {  4, 32, 64, 64,128,128,128,128,128,128, 64, 64, 32,  0,  0,  0}; /* "(" */
+static const GLubyte Helvetica12_Character_041[] = {  4,128, 64, 64, 32, 32, 32, 32, 32, 32, 64, 64,128,  0,  0,  0}; /* ")" */
+static const GLubyte Helvetica12_Character_045[] = {  8,  0,  0,  0,  0,  0,  0,248,  0,  0,  0,  0,  0,  0,  0,  0}; /* "-" */
+static const GLubyte Helvetica12_Character_095[] = {  7,  0,255,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}; /* "_" */
+static const GLubyte Helvetica12_Character_061[] = {  7,  0,  0,  0,  0,  0,248,  0,248,  0,  0,  0,  0,  0,  0,  0}; /* "=" */
+static const GLubyte Helvetica12_Character_043[] = {  7,  0,  0,  0,  0, 32, 32,248, 32, 32,  0,  0,  0,  0,  0,  0}; /* "+" */
+static const GLubyte Helvetica12_Character_091[] = {  3,192,128,128,128,128,128,128,128,128,128,128,192,  0,  0,  0}; /* "[" */
+static const GLubyte Helvetica12_Character_123[] = {  4, 48, 64, 64, 64, 64, 64,128, 64, 64, 64, 64, 48,  0,  0,  0}; /* "{" */
+static const GLubyte Helvetica12_Character_125[] = {  4,192, 32, 32, 32, 32, 32, 16, 32, 32, 32, 32,192,  0,  0,  0}; /* "}" */
+static const GLubyte Helvetica12_Character_093[] = {  3,192, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,192,  0,  0,  0}; /* "]" */
+static const GLubyte Helvetica12_Character_059[] = {  3,  0,128, 64, 64,  0,  0,  0,  0, 64,  0,  0,  0,  0,  0,  0}; /* ";" */
+static const GLubyte Helvetica12_Character_058[] = {  3,  0,  0,  0,128,  0,  0,  0,  0,128,  0,  0,  0,  0,  0,  0}; /* ":" */
+static const GLubyte Helvetica12_Character_044[] = {  4,  0,128, 64, 64,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}; /* "," */
+static const GLubyte Helvetica12_Character_046[] = {  3,  0,  0,  0,128,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}; /* "." */
+static const GLubyte Helvetica12_Character_060[] = {  7,  0,  0,  0,  0, 12, 48,192, 48, 12,  0,  0,  0,  0,  0,  0}; /* "<" */
+static const GLubyte Helvetica12_Character_062[] = {  7,  0,  0,  0,  0,192, 48, 12, 48,192,  0,  0,  0,  0,  0,  0}; /* ">" */
+static const GLubyte Helvetica12_Character_047[] = {  4,  0,  0,  0,128,128,128, 64, 64, 64, 32, 32, 32,  0,  0,  0}; /* "/" */
+static const GLubyte Helvetica12_Character_063[] = {  7,  0,  0,  0, 32,  0, 32, 32, 16, 16,136,136,112,  0,  0,  0}; /* "?" */
+static const GLubyte Helvetica12_Character_092[] = {  4,  0,  0,  0, 32, 32, 32, 64, 64, 64,128,128,128,  0,  0,  0}; /* "\" */
+static const GLubyte Helvetica12_Character_034[] = {  5,  0,  0,  0,  0,  0,  0,  0,  0,  0,160,160,160,  0,  0,  0}; /* """ */
+static const GLubyte Helvetica12_Character_039[] = {  3,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,128, 64, 64,  0,  0}; /* "'" */
+static const GLubyte Helvetica12_Character_124[] = {  3, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,  0,  0}; /* "|" */
+
+/* Custom FG extension, adding Latin1 characters... */
+static const GLubyte Helvetica12_Character_192[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,130,  0,130,  0,124,  0, 68,  0, 68,  0, 40,  0, 40,  0, 16,  0,  0,  0, 16,  0, 32,  0}; /* "A" grave */
+static const GLubyte Helvetica12_Character_193[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,130,  0,130,  0,124,  0, 68,  0, 68,  0, 40,  0, 40,  0, 16,  0,  0,  0, 32,  0, 16,  0}; /* "A" acute */
+static const GLubyte Helvetica12_Character_194[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,130,  0,130,  0,124,  0, 68,  0, 68,  0, 40,  0, 40,  0, 16,  0,  0,  0, 40,  0, 16,  0}; /* "A" circumflex */
+static const GLubyte Helvetica12_Character_195[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,130,  0,130,  0,124,  0, 68,  0, 68,  0, 40,  0, 40,  0, 16,  0,  0,  0, 80,  0, 40,  0}; /* "A" tilde */
+static const GLubyte Helvetica12_Character_196[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,130,  0,130,  0,124,  0, 68,  0, 68,  0, 40,  0, 40,  0, 16,  0,  0,  0, 68,  0,  0,  0}; /* "A" dieresis */
+static const GLubyte Helvetica12_Character_197[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,130,  0,130,  0,124,  0, 68,  0, 68,  0, 40,  0, 40,  0, 16,  0, 16,  0, 40,  0, 16,  0}; /* "A" ring */
+static const GLubyte Helvetica12_Character_199[] = {  9, 24,  0,  4,  0,  8,  0, 60,  0, 66,  0,128,  0,128,  0,128,  0,128,  0,128,  0, 66,  0, 60,  0,  0,  0,  0,  0,  0,  0}; /* "C" cedilla */
+static const GLubyte Helvetica12_Character_200[] = {  8,  0,  0,  0,252,128,128,128,252,128,128,128,252,  0, 16, 32}; /* "E" grave */
+static const GLubyte Helvetica12_Character_201[] = {  8,  0,  0,  0,252,128,128,128,252,128,128,128,252,  0, 64, 32}; /* "E" acute */
+static const GLubyte Helvetica12_Character_202[] = {  8,  0,  0,  0,252,128,128,128,252,128,128,128,252,  0, 80, 32}; /* "E" circumflex */
+static const GLubyte Helvetica12_Character_203[] = {  8,  0,  0,  0,252,128,128,128,252,128,128,128,252,  0, 72,  0}; /* "E" dieresis */
+static const GLubyte Helvetica12_Character_204[] = {  4,  0,  0,  0, 64, 64, 64, 64, 64, 64, 64, 64,  0, 64,128,  0}; /* "I" grave */
+static const GLubyte Helvetica12_Character_205[] = {  4,  0,  0,  0,128,128,128,128,128,128,128,128,  0,128, 64,  0}; /* "I" acute */
+static const GLubyte Helvetica12_Character_206[] = {  4,  0,  0,  0, 64, 64, 64, 64, 64, 64, 64, 64,  0,160, 64,  0}; /* "I" circumflex */
+static const GLubyte Helvetica12_Character_207[] = {  4,  0,  0,  0, 64, 64, 64, 64, 64, 64, 64, 64,  0,160,  0,  0}; /* "I" dieresis */
+static const GLubyte Helvetica12_Character_209[] = {  9,  0,  0,  0,  0,  0,  0,130,  0,134,  0,138,  0,138,  0,146,  0,162,  0,162,  0,194,  0,130,  0,  0,  0, 80,  0, 40,  0}; /* "N" tilde */
+static const GLubyte Helvetica12_Character_210[] = { 10,  0,  0,  0,  0,  0,  0, 60,  0, 66,  0,129,  0,129,  0,129,  0,129,  0,129,  0, 66,  0, 60,  0,  0,  0, 16,  0, 32,  0}; /* "O" grave */
+static const GLubyte Helvetica12_Character_211[] = { 10,  0,  0,  0,  0,  0,  0, 60,  0, 66,  0,129,  0,129,  0,129,  0,129,  0,129,  0, 66,  0, 60,  0,  0,  0, 16,  0,  8,  0}; /* "O" acute */
+static const GLubyte Helvetica12_Character_212[] = { 10,  0,  0,  0,  0,  0,  0, 60,  0, 66,  0,129,  0,129,  0,129,  0,129,  0,129,  0, 66,  0, 60,  0,  0,  0, 20,  0,  8,  0}; /* "O" circumflex */
+static const GLubyte Helvetica12_Character_213[] = { 10,  0,  0,  0,  0,  0,  0, 60,  0, 66,  0,129,  0,129,  0,129,  0,129,  0,129,  0, 66,  0, 60,  0,  0,  0, 40,  0, 20,  0}; /* "O" tilde */
+static const GLubyte Helvetica12_Character_214[] = { 10,  0,  0,  0,  0,  0,  0, 60,  0, 66,  0,129,  0,129,  0,129,  0,129,  0,129,  0, 66,  0, 60,  0,  0,  0, 68,  0,  0,  0}; /* "O" dieresis */
+static const GLubyte Helvetica12_Character_216[] = { 10,  0,  0,  0,  0,  0,  0,188,  0, 66,  0,161,  0,145,  0,137,  0,137,  0,133,  0, 66,  0, 61,  0,  0,  0,  0,  0,  0,  0}; /* "O" slash */
+static const GLubyte Helvetica12_Character_217[] = {  8,  0,  0,  0,120,132,132,132,132,132,132,132,  0, 16, 32,  0}; /* "U" grave */
+static const GLubyte Helvetica12_Character_218[] = {  8,  0,  0,  0,120,132,132,132,132,132,132,132,  0, 64, 32,  0}; /* "U" acute */
+static const GLubyte Helvetica12_Character_219[] = {  8,  0,  0,  0,120,132,132,132,132,132,132,132,  0, 80, 32,  0}; /* "U" circumflex */
+static const GLubyte Helvetica12_Character_220[] = {  8,  0,  0,  0,120,132,132,132,132,132,132,132,  0, 72,  0,  0}; /* "U" dieresis */
+static const GLubyte Helvetica12_Character_221[] = {  9,  0,  0,  0,  0,  0,  0, 16,  0, 16,  0, 16,  0, 16,  0, 40,  0, 68,  0, 68,  0,130,  0,130,  0, 16, 0,  8,  0,  0,  0}; /* "Y" acute */
+static const GLubyte Helvetica12_Character_223[] = {  8,  0,  0,  0,184,132,132,132,248,136,136,136,112,  0,  0,  0}; /* German "sz */
+static const GLubyte Helvetica12_Character_224[] = {  7,  0,  0,  0,116,136,136,120,  8,136,112,  0, 16, 32,  0,  0}; /* "a" grave */
+static const GLubyte Helvetica12_Character_225[] = {  7,  0,  0,  0,116,136,136,120,  8,136,112,  0, 64, 32,  0,  0}; /* "a" acute */
+static const GLubyte Helvetica12_Character_226[] = {  7,  0,  0,  0,116,136,136,120,  8,136,112,  0, 80, 32,  0,  0}; /* "a" circumflex */
+static const GLubyte Helvetica12_Character_227[] = {  7,  0,  0,  0,116,136,136,120,  8,136,112,  0, 80, 40,  0,  0}; /* "a" tilde */
+static const GLubyte Helvetica12_Character_228[] = {  7,  0,  0,  0,116,136,136,120,  8,136,112,  0, 80,  0,  0,  0}; /* "a" dieresis */
+static const GLubyte Helvetica12_Character_229[] = {  7,  0,  0,  0,116,136,136,120,  8,136,112,  0, 32, 80, 32,  0}; /* "a" ring */
+static const GLubyte Helvetica12_Character_231[] = {  7, 96, 16, 32,112,136,128,128,128,136,112,  0,  0,  0,  0,  0}; /* "c" cedilla */
+static const GLubyte Helvetica12_Character_232[] = {  7,  0,  0,  0,112,136,128,248,136,136,112,  0, 16, 32,  0,  0}; /* "e" grave */
+static const GLubyte Helvetica12_Character_233[] = {  7,  0,  0,  0,112,136,128,248,136,136,112,  0, 64, 32,  0,  0}; /* "e" acute */
+static const GLubyte Helvetica12_Character_234[] = {  7,  0,  0,  0,112,136,128,248,136,136,112,  0, 80, 32,  0,  0}; /* "e" circumflex */
+static const GLubyte Helvetica12_Character_235[] = {  7,  0,  0,  0,112,136,128,248,136,136,112,  0, 80,  0,  0,  0}; /* "e" dieresis */
+static const GLubyte Helvetica12_Character_236[] = {  4,  0,  0,  0, 64, 64, 64, 64, 64, 64, 64,  0, 64,128,  0,  0}; /* "i" grave */
+static const GLubyte Helvetica12_Character_237[] = {  4,  0,  0,  0,128,128,128,128,128,128,128,  0,128, 64,  0,  0}; /* "i" acute */
+static const GLubyte Helvetica12_Character_238[] = {  4,  0,  0,  0, 64, 64, 64, 64, 64, 64, 64,  0,160, 64,  0,  0}; /* "i" circumflex */
+static const GLubyte Helvetica12_Character_239[] = {  4,  0,  0,  0, 64, 64, 64, 64, 64, 64, 64,  0,160,  0,  0,  0}; /* "i" dieresis */
+static const GLubyte Helvetica12_Character_241[] = {  7,  0,  0,  0,136,136,136,136,136,200,176,  0, 80, 40,  0,  0}; /* "n" tilde */
+static const GLubyte Helvetica12_Character_242[] = {  7,  0,  0,  0,112,136,136,136,136,136,112,  0, 16, 32,  0,  0}; /* "o" grave */
+static const GLubyte Helvetica12_Character_243[] = {  7,  0,  0,  0,112,136,136,136,136,136,112,  0, 64, 32,  0,  0}; /* "o" acute */
+static const GLubyte Helvetica12_Character_244[] = {  7,  0,  0,  0,112,136,136,136,136,136,112,  0, 80, 32,  0,  0}; /* "o" circumflex */
+static const GLubyte Helvetica12_Character_245[] = {  7,  0,  0,  0,112,136,136,136,136,136,112,  0, 80, 40,  0,  0}; /* "o" tilde */
+static const GLubyte Helvetica12_Character_246[] = {  7,  0,  0,  0,112,136,136,136,136,136,112,  0, 80,  0,  0,  0}; /* "o" dieresis */
+static const GLubyte Helvetica12_Character_248[] = {  7,  0,  0,  0,240,200,168,168,168,152,120,  4,  0,  0,  0,  0}; /* "o" slash */
+static const GLubyte Helvetica12_Character_249[] = {  7,  0,  0,  0,104,152,136,136,136,136,136,  0, 16, 32,  0,  0}; /* "u" grave */
+static const GLubyte Helvetica12_Character_250[] = {  7,  0,  0,  0,104,152,136,136,136,136,136,  0, 64, 32,  0,  0}; /* "u" acute */
+static const GLubyte Helvetica12_Character_251[] = {  7,  0,  0,  0,104,152,136,136,136,136,136,  0, 80, 32,  0,  0}; /* "u" circumflex */
+static const GLubyte Helvetica12_Character_252[] = {  7,  0,  0,  0,104,152,136,136,136,136,136,  0, 80,  0,  0,  0}; /* "u" dieresis */
+static const GLubyte Helvetica12_Character_253[] = {  7,128, 64, 32, 32, 80, 80,144,136,136,136,  0, 64, 32,  0,  0}; /* "y" acute */
+static const GLubyte Helvetica12_Character_255[] = {  7,128, 64, 32, 32, 80, 80,144,136,136,136,  0, 80,  0,  0,  0}; /* "y" dieresis */
+
+
+/* The font characters mapping: */
+static const GLubyte* Helvetica12_Character_Map[] = {
+ Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_032,Helvetica12_Character_033,Helvetica12_Character_034,Helvetica12_Character_035,Helvetica12_Character_036,Helvetica12_Character_037,
+ Helvetica12_Character_038,Helvetica12_Character_039,Helvetica12_Character_040,Helvetica12_Character_041,Helvetica12_Character_042,Helvetica12_Character_043,Helvetica12_Character_044,Helvetica12_Character_045,Helvetica12_Character_046,Helvetica12_Character_047,Helvetica12_Character_048,Helvetica12_Character_049,Helvetica12_Character_050,Helvetica12_Character_051,Helvetica12_Character_052,Helvetica12_Character_053,Helvetica12_Character_054,Helvetica12_Character_055,Helvetica12_Character_056,Helvetica12_Character_057,Helvetica12_Character_058,Helvetica12_Character_059,Helvetica12_Character_060,Helvetica12_Character_061,Helvetica12_Character_062,Helvetica12_Character_063,Helvetica12_Character_064,Helvetica12_Character_065,Helvetica12_Character_066,Helvetica12_Character_067,Helvetica12_Character_068,Helvetica12_Character_069,Helvetica12_Character_070,Helvetica12_Character_071,Helvetica12_Character_072,Helvetica12_Character_073,Helvetica12_Character_074,Helvetica12_Character_075,Helvetica12_Character_076,
+ Helvetica12_Character_077,Helvetica12_Character_078,Helvetica12_Character_079,Helvetica12_Character_080,Helvetica12_Character_081,Helvetica12_Character_082,Helvetica12_Character_083,Helvetica12_Character_084,Helvetica12_Character_085,Helvetica12_Character_086,Helvetica12_Character_087,Helvetica12_Character_088,Helvetica12_Character_089,Helvetica12_Character_090,Helvetica12_Character_091,Helvetica12_Character_092,Helvetica12_Character_093,Helvetica12_Character_094,Helvetica12_Character_095,Helvetica12_Character_096,Helvetica12_Character_097,Helvetica12_Character_098,Helvetica12_Character_099,Helvetica12_Character_100,Helvetica12_Character_101,Helvetica12_Character_102,Helvetica12_Character_103,Helvetica12_Character_104,Helvetica12_Character_105,Helvetica12_Character_106,Helvetica12_Character_107,Helvetica12_Character_108,Helvetica12_Character_109,Helvetica12_Character_110,Helvetica12_Character_111,Helvetica12_Character_112,Helvetica12_Character_113,Helvetica12_Character_114,Helvetica12_Character_115,
+ Helvetica12_Character_116,Helvetica12_Character_117,Helvetica12_Character_118,Helvetica12_Character_119,Helvetica12_Character_120,Helvetica12_Character_121,Helvetica12_Character_122,Helvetica12_Character_123,Helvetica12_Character_124,Helvetica12_Character_125,Helvetica12_Character_126,
+ Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,
+ Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,
+ Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_042,
+ Helvetica12_Character_042,Helvetica12_Character_042,Helvetica12_Character_192,Helvetica12_Character_193,Helvetica12_Character_194,
+ Helvetica12_Character_195,Helvetica12_Character_196,Helvetica12_Character_197,Helvetica12_Character_042,Helvetica12_Character_199,
+ Helvetica12_Character_200,Helvetica12_Character_201,Helvetica12_Character_202,Helvetica12_Character_203,Helvetica12_Character_204,
+ Helvetica12_Character_205,Helvetica12_Character_206,Helvetica12_Character_207,Helvetica12_Character_042,Helvetica12_Character_209,
+ Helvetica12_Character_210,Helvetica12_Character_211,Helvetica12_Character_212,Helvetica12_Character_213,Helvetica12_Character_214,
+ Helvetica12_Character_042,Helvetica12_Character_216,Helvetica12_Character_217,Helvetica12_Character_218,Helvetica12_Character_219,
+ Helvetica12_Character_220,Helvetica12_Character_221,Helvetica12_Character_042,Helvetica12_Character_223,Helvetica12_Character_224,
+ Helvetica12_Character_225,Helvetica12_Character_226,Helvetica12_Character_227,Helvetica12_Character_228,Helvetica12_Character_229,
+ Helvetica12_Character_042,Helvetica12_Character_231,Helvetica12_Character_232,Helvetica12_Character_233,Helvetica12_Character_234,
+ Helvetica12_Character_235,Helvetica12_Character_236,Helvetica12_Character_237,Helvetica12_Character_238,Helvetica12_Character_239,
+ Helvetica12_Character_042,Helvetica12_Character_241,Helvetica12_Character_242,Helvetica12_Character_243,Helvetica12_Character_244,
+ Helvetica12_Character_245,Helvetica12_Character_246,Helvetica12_Character_042,Helvetica12_Character_248,Helvetica12_Character_249,
+ Helvetica12_Character_250,Helvetica12_Character_251,Helvetica12_Character_252,Helvetica12_Character_253,Helvetica12_Character_042,
+ Helvetica12_Character_255,NULL};
+
+/* The font structure: */
+static const SFG_Font FontHelvetica12 = { "-adobe-helvetica-medium-r-normal--12-120-75-75-p-67-iso8859-1", 93, 15, Helvetica12_Character_Map, -1.0f, 3.0f };
+
+static fntBitmapFont fntHelvetica12(FontHelvetica12.Characters, 1,
+    FontHelvetica12.Height, FontHelvetica12.xorig, FontHelvetica12.yorig);
 
 puFont FONT_HELVETICA_14(&fntHelvetica14, 14, 0);
 puFont FONT_SANS_12B(&fntSans12B, 12, 0);
-
+puFont FONT_HELVETICA_12(&fntHelvetica12, 13 /*[sic!]*/, 0); /* Original plib Helvetica 12 font also reported size 13, instead of 12 */

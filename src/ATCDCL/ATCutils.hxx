@@ -21,7 +21,6 @@
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
 
-#include <simgear/math/SGMath.hxx>
 #include <math.h>
 #include <string>
 using std::string;

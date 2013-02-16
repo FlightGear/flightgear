@@ -1,0 +1,169 @@
+Canvas - A 2D Drawing API
+=========================
+
+Author: Thomas Geymayer <admin@tomprogs.at>
+Revision: 2012/05/18
+
+Introduction
+------------
+
+With the increasing complexity of (glass) cockpits the need for a simple API to
+draw on a 2D surface without modifying the C++ core increased heavily in the
+last time. The 2D canvas is an effort to satisfy this needs. It is now possible
+to create offscreen rendertargets only by using the property tree and placing
+them on any 3D object on the aircraft by using certain filter criteria.
+
+Currently it is only possible to place text on the canvas but 2d shapes (using
+OpenVG) are going to follow.
+
+Creating a canvas
+-----------------
+
+A new canvas can be instantiated by creating a node /canvas/texture[<INDEX>]
+with at least the following children:
+
+ <size n="0" type="int">       The width of the underlying texture
+ <size n="1" type="int">       The height of the underlying texture
+
+ <view n="0" type="int">    The width of the canvas
+ <view n="1" type="int">    The height of the canvas
+
+The dimensions of the canvas are needed to be able to use textures with
+different resolutions but use the same units for rendering to the canvas.
+Therefore you can choose any texture size with the same canvas size and always
+get the same results (apart from resolution dependent artifacts).
+
+* Filtering:
+
+ Optionally you can enable mipmapping and/or multisampling (Coverage Sampling
+ Antialiasing):
+
+  <mipmapping type="bool">       Use mipmapping (default: false)
+  <coverage-samples type="int">  Coverage Samples (default: 0)
+  <color-samples type="int">     Color Samples (default: 0, always
+                                 have to be <= coverage-samples)
+Drawing
+-------
+
+Drawing to the canvas is accomplished by creating nodes as childs of the
+canvas root node. Every shape has to be a child of a <group> node. Currently
+only drawing Text is possible:
+
+* General:
+ The following parameters are used by multiple elements:
+
+ Color:
+  A color can be specified by the following subtree (NAME is replaced by
+  another name depending on the usage of the color)
+
+  <NAME>
+    <red type="float">
+    <green type="float">
+    <blue type="float">
+    <alpha type="float">
+  </NAME>
+
+* Text:
+ Create a <text> node and configure with the following properties:
+
+ <text type="string">        The text to be displayed
+ <font type="string">        The font to be used (Searched in
+                              1. aircraft-dir/Fonts
+                              2. aircraft-dir
+                              3. $FG_DATA/Fonts
+                              4. Default osg font paths
+ <character-size type="float">          The font size (default: 32)
+ <character-aspect-ratio type="float">  Ratio between character height and width
+                                        (default: 1)
+ <tf>               A 3x3 transformation matrix specified by 6 values
+                    (child elements <m n="0">, ..., <m n="5"> which equal to a,
+                     ...,f used in the SVG standard) See
+                    http://www.w3.org/TR/SVG/coords.html#TransformMatrixDefined
+                    for details.
+                    You can also use shortcuts and use an alternative to
+                    specifying six values:
+                     - Translation: <t n="0">, <t n="1"> (both default to 0)
+                     - Rotation: <rot>
+                     - Scale: <s n="0">, <s n="1"> (s[0] is required, s[1]
+                                                    defaults to s[0])
+ <alginment type="string">   Text alignment (default: "left-baseline") One of:
+
+                              "left-top"
+                              "left-center"
+                              "left-bottom"
+                               
+                              "center-top"
+                              "center-center"
+                              "center-bottom"
+                               
+                              "right-top"
+                              "right-center"
+                              "right-bottom"
+                               
+                              "left-baseline"
+                              "center-baseline"
+                              "right-baseline"
+                               
+                              "left-bottom-baseline"
+                              "center-bottom-baseline"
+                              "right-bottom-baseline"
+ <draw-mode type="int">      A bitwise combination of the following values
+                             1 (Text - default)
+                             2 (Boundingbox)
+                             4 (Filled boundingbox)
+                             8 (Alignment -> Draw a cross at the position
+                               of the text)
+ <padding type="float">      Padding between for the boundingbox (default: 0)
+ <color>                     Text color
+ <color-fill>                Fill color (for the bounding box)
+
+Placement
+---------
+
+To place the canvas into the scene one ore more <placement> elements can be
+added to the texture node. By setting at least on of the following nodes
+the objects where the canvas texture should be placed on are selected:
+
+ <texture type="string">  Match objects with the given texture assigned
+ <node type="string">     Match objects with the given name
+ <parent type="string">   Match objects with a parent matching the given name
+                          (Not necessarily the direct parent)
+
+Example
+-------
+
+<canvas>
+  <texture>
+    <size n="0" type="int">384</size-x>
+    <size n="1" type="int">512</size-y>
+    <view n="0" type="int">768</view-width>
+    <view n="1" type="int">1024</view-height>
+    <mipmapping type="bool">false</mipmapping>
+    <coverage-samples type="int">0</coverage-samples>
+    <color-samples type="int">0</color-samples>
+    <color-background>
+      <red type="float">0</red>
+      <green type="float">0.02</green>
+      <blue type="float">0</blue>
+      <alpha type="float">1</alpha>
+    </color-background>
+    <group>
+      <text>
+        <text type="string">TEST MESSAGE</text>
+        <font type="string">helvetica_bold.txf</font>
+        <character-size type="float">40</character-size>
+        <tf>
+          <!-- Translate (18|50) -->
+          <tx>18</tx>
+          <ty>50</ty>
+        </tf>
+      </text>
+    </group>
+    <placement>
+      <!-- Place on objects with the texture EICAS.png
+           and a parent called HDD 1 -->
+      <texture type="string">EICAS.png</texture>
+      <parent type="string">HDD 1</parent>
+    </placement>
+  </texture>
+</canvas>

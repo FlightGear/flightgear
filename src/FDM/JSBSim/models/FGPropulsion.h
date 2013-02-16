@@ -42,6 +42,7 @@ INCLUDES
 #include <iosfwd>
 
 #include "FGModel.h"
+#include "propulsion/FGEngine.h"
 #include "math/FGMatrix33.h"
 #include "input_output/FGXMLFileRead.h"
 
@@ -49,7 +50,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPULSION "$Id: FGPropulsion.h,v 1.27 2011/05/20 03:18:36 jberndt Exp $"
+#define ID_PROPULSION "$Id: FGPropulsion.h,v 1.31 2011/10/31 14:54:41 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -91,7 +92,7 @@ CLASS DOCUMENTATION
   @endcode
 
     @author Jon S. Berndt
-    @version $Id: FGPropulsion.h,v 1.27 2011/05/20 03:18:36 jberndt Exp $
+    @version $Id: FGPropulsion.h,v 1.31 2011/10/31 14:54:41 bcoconni Exp $
     @see
     FGEngine
     FGTank
@@ -164,6 +165,7 @@ public:
 
   std::string GetPropulsionStrings(const std::string& delimiter) const;
   std::string GetPropulsionValues(const std::string& delimiter) const;
+  std::string GetPropulsionTankReport();
 
   const FGColumnVector3& GetForces(void) const {return vForces; }
   double GetForces(int n) const { return vForces(n);}
@@ -178,13 +180,13 @@ public:
   void DoRefuel(double time_slice);
   void DumpFuel(double time_slice);
 
-  FGColumnVector3& GetTanksMoment(void);
-  double GetTanksWeight(void);
+  const FGColumnVector3& GetTanksMoment(void);
+  double GetTanksWeight(void) const;
 
   std::ifstream* FindEngineFile(const std::string& filename);
   std::string FindEngineFullPathname(const std::string& engine_filename);
   inline int GetActiveEngine(void) const {return ActiveEngine;}
-  inline bool GetFuelFreeze(void) {return fuel_freeze;}
+  inline bool GetFuelFreeze(void) const {return FuelFreeze;}
   double GetTotalFuelQuantity(void) const {return TotalFuelQuantity;}
 
   void SetMagnetos(int setting);
@@ -192,7 +194,9 @@ public:
   void SetCutoff(int setting=0);
   void SetActiveEngine(int engine);
   void SetFuelFreeze(bool f);
-  FGMatrix33& CalculateTankInertias(void);
+  const FGMatrix33& CalculateTankInertias(void);
+
+  struct FGEngine::Inputs in;
 
 private:
   std::vector <FGEngine*>   Engines;
@@ -211,7 +215,7 @@ private:
   FGMatrix33 tankJ;
   bool refuel;
   bool dump;
-  bool fuel_freeze;
+  bool FuelFreeze;
   double TotalFuelQuantity;
   double DumpRate;
   bool IsBound;
@@ -220,6 +224,7 @@ private:
   bool HaveTurboPropEngine;
   bool HaveRocketEngine;
   bool HaveElectricEngine;
+  void ConsumeFuel(FGEngine* engine);
 
   int InitializedEngines;
   bool HasInitializedEngines;

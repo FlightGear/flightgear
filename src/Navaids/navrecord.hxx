@@ -28,10 +28,10 @@
 
 #include "positioned.hxx"
 
-#define FG_NAV_DEFAULT_RANGE 50 // nm
-#define FG_LOC_DEFAULT_RANGE 18 // nm
-#define FG_DME_DEFAULT_RANGE 50 // nm
-#define FG_NAV_MAX_RANGE 300    // nm
+const double FG_NAV_DEFAULT_RANGE = 50; // nm
+const double FG_LOC_DEFAULT_RANGE = 18; // nm
+const double FG_DME_DEFAULT_RANGE = 50; // nm
+const double FG_NAV_MAX_RANGE = 300;    // nm
 
 // forward decls
 class FGRunway;
@@ -46,27 +46,18 @@ class FGNavRecord : public FGPositioned
                                 // (degrees) or localizer heading
                                 // (degrees) or dme bias (nm)
 
-    std::string _name;                // verbose name in nav database
-    FGRunway* mRunway;        // associated runway, if there is one
+    std::string mName;                // verbose name in nav database
+    PositionedID mRunway;        // associated runway, if there is one
 
     bool serviceable;		// for failure modeling
-    std::string trans_ident;         // for failure modeling
 
-  /**
-   * Helper to init data when a navrecord is associated with an airport
-   */
-  void initAirportRelation();
-  
-  void alignLocaliserWithRunway(double aThreshold);
-  
-  void readAirportSceneryData();
   void processSceneryILS(SGPropertyNode* aILSNode);
 public:
-  inline ~FGNavRecord(void) {}
-
-    FGNavRecord(Type type, const std::string& ident, const std::string& name,
-      const SGGeod& aPos,
-      int freq, int range, double multiuse);
+  FGNavRecord(PositionedID aGuid, Type type, const std::string& ident,
+              const std::string& name,
+              const SGGeod& aPos,
+              int freq, int range, double multiuse,
+              PositionedID aRunway);
     
     inline double get_lon() const { return longitude(); } // degrees
     inline double get_lat() const { return latitude(); } // degrees
@@ -79,18 +70,16 @@ public:
     inline const char *get_ident() const { return ident().c_str(); }
 
     inline bool get_serviceable() const { return serviceable; }
-    inline const char *get_trans_ident() const { return trans_ident.c_str(); }
+    inline const char *get_trans_ident() const { return get_ident(); }
 
   virtual const std::string& name() const
-  { return _name; }
+  { return mName; }
   
   /**
    * Retrieve the runway this navaid is associated with (for ILS/LOC/GS)
    */
-  FGRunway* runway() const { return mRunway; }
+  FGRunway* runway() const;
   
-  virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
-
   /**
    * return the localizer width, in degrees
    * computation is based up ICAO stdandard width at the runway threshold

@@ -1,4 +1,4 @@
-// FGAIFlightPlan - class for loading and storing  AI flight plans
+// // FGAIFlightPlan - class for loading and storing  AI flight plans
 // Written by David Culp, started May 2004
 // - davidculp2@comcast.net
 //
@@ -24,7 +24,6 @@
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/constants.h>
@@ -35,6 +34,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/fg_init.hxx>
 #include <Airports/simple.hxx>
+#include <Airports/dynamics.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/groundnetwork.hxx>
 
@@ -46,59 +46,83 @@
 
 using std::cerr;
 
-FGAIFlightPlan::FGAIFlightPlan() 
-{
-   sid = 0;
-   wpt_iterator = waypoints.begin();
+FGAIWaypoint::FGAIWaypoint() {
+  speed       = 0;
+  crossat     = 0;
+  finished    = 0;
+  gear_down   = 0;
+  flaps_down  = 0;
+  on_ground   = 0;
+  routeIndex  = 0;
+  time_sec    = 0;
+  trackLength = 0;
 }
 
-FGAIFlightPlan::FGAIFlightPlan(const string& filename)
+bool FGAIWaypoint::contains(const string& target) {
+    size_t found = name.find(target);
+    if (found == string::npos)
+        return false;
+    else
+        return true;
+}
+
+double FGAIWaypoint::getLatitude()
 {
-  int i;
-  sid = 0;
-  start_time = 0;
-  leg = 10;
-  gateId = 0;
-  taxiRoute = 0;
-  SGPath path( globals->get_fg_root() );
-  path.append( ("/AI/FlightPlans/" + filename).c_str() );
-  SGPropertyNode root;
-  repeat = false;
+  return pos.getLatitudeDeg();
+}
 
-  try {
-      readProperties(path.str(), &root);
-  } catch (const sg_exception &) {
-      SG_LOG(SG_GENERAL, SG_ALERT,
-       "Error reading AI flight plan: " << path.str());
-       // cout << path.str() << endl;
-     return;
-  }
+double FGAIWaypoint::getLongitude()
+{
+  return pos.getLongitudeDeg();
+}
 
-  SGPropertyNode * node = root.getNode("flightplan");
-  for (i = 0; i < node->nChildren(); i++) { 
-     //cout << "Reading waypoint " << i << endl;        
-     waypoint* wpt = new waypoint;
-     SGPropertyNode * wpt_node = node->getChild(i);
-     wpt->name      = wpt_node->getStringValue("name", "END");
-     wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
-     wpt->longitude = wpt_node->getDoubleValue("lon", 0);
-     wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
-     wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
-     wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
-     wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
-     wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
-     wpt->on_ground = wpt_node->getBoolValue("on-ground", false);
-     wpt->time_sec   = wpt_node->getDoubleValue("time-sec", 0);
-     wpt->time       = wpt_node->getStringValue("time", "");
+double FGAIWaypoint::getAltitude()
+{
+  return pos.getElevationFt();
+}
 
-     if (wpt->name == "END") wpt->finished = true;
-     else wpt->finished = false;
+void FGAIWaypoint::setLatitude(double lat)
+{
+  pos.setLatitudeDeg(lat);
+}
 
-     waypoints.push_back( wpt );
-   }
+void FGAIWaypoint::setLongitude(double lon)
+{
+  pos.setLongitudeDeg(lon);
+}
 
-  wpt_iterator = waypoints.begin();
-  //cout << waypoints.size() << " waypoints read." << endl;
+void FGAIWaypoint::setAltitude(double alt)
+{
+  pos.setElevationFt(alt);
+}
+
+FGAIFlightPlan::FGAIFlightPlan() :
+    sid(NULL),
+    repeat(false),
+    distance_to_go(0),
+    lead_distance(0),
+    leadInAngle(0),
+    start_time(0),
+    arrivalTime(0),
+    leg(0),
+    lastNodeVisited(0),
+    isValid(true)
+{
+    wpt_iterator    = waypoints.begin();
+}
+
+FGAIFlightPlan::FGAIFlightPlan(const string& filename) :
+    sid(NULL),
+    repeat(false),
+    distance_to_go(0),
+    lead_distance(0),
+    leadInAngle(0),
+    start_time(0),
+    arrivalTime(0),
+    leg(10),
+    lastNodeVisited(0),
+    isValid(parseProperties(filename))
+{
 }
 
 
@@ -110,210 +134,128 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
 // traffic manager. 
 FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
                                const std::string& p,
-			       double course,
-			       time_t start,
-			       FGAirport *dep,
-			       FGAirport *arr,
-			       bool firstLeg,
-			       double radius,
+                               double course,
+                               time_t start,
+                               FGAirport *dep,
+                               FGAirport *arr,
+                               bool firstLeg,
+                               double radius,
                                double alt,
                                double lat,
                                double lon,
                                double speed,
-			       const string& fltType,
-			       const string& acType,
-			       const string& airline)
+                               const string& fltType,
+                               const string& acType,
+                               const string& airline) :
+    sid(NULL),
+    repeat(false),
+    distance_to_go(0),
+    lead_distance(0),
+    leadInAngle(0),
+    start_time(start),
+    arrivalTime(0),
+    leg(10),
+    lastNodeVisited(0),
+    isValid(false),
+    departure(dep),
+    arrival(arr)
 {
-  sid = 0;
-  repeat = false;
-  leg = 10;
-  gateId=0;
-  taxiRoute = 0;
-  start_time = start;
-  bool useInitialWayPoint = true;
-  bool useCurrentWayPoint = false;
-  SGPath path( globals->get_fg_root() );
-  path.append( "/AI/FlightPlans" );
-  path.append( p );
-  
-  SGPropertyNode root;
-  
-  // This is a bit of a hack:
-  // Normally the value of course will be used to evaluate whether
-  // or not a waypoint will be used for midair initialization of 
-  // an AI aircraft. However, if a course value of 999 will be passed
-  // when an update request is received, which will by definition always be
-  // on the ground and should include all waypoints.
-  if (course == 999) 
-    {
-      useInitialWayPoint = false;
-      useCurrentWayPoint = true;
-    }
-
-  if (path.exists()) 
-    {
-      try 
-	{
-	  readProperties(path.str(), &root);
-	  
-	  SGPropertyNode * node = root.getNode("flightplan");
-	  
-	  //waypoints.push_back( init_waypoint );
-	  for (int i = 0; i < node->nChildren(); i++) { 
-	    //cout << "Reading waypoint " << i << endl;
-	    waypoint* wpt = new waypoint;
-	    SGPropertyNode * wpt_node = node->getChild(i);
-	    wpt->name      = wpt_node->getStringValue("name", "END");
-	    wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
-	    wpt->longitude = wpt_node->getDoubleValue("lon", 0);
-	    wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
-	    wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
-	    //wpt->speed     = speed;
-	    wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
-	    wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
-	    wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
-	    
-	    if (wpt->name == "END") wpt->finished = true;
-	    else wpt->finished = false;
-	    waypoints.push_back(wpt);
-	  } // of node loop
-          wpt_iterator = waypoints.begin();
-	} catch (const sg_exception &e) {
-      SG_LOG(SG_GENERAL, SG_WARN, "Error reading AI flight plan: " << 
-        e.getMessage() << " from " << e.getOrigin());
-    }
+  if (parseProperties(p)) {
+    isValid = true;
   } else {
-      // cout << path.str() << endl;
-      // cout << "Trying to create this plan dynamically" << endl;
-      // cout << "Route from " << dep->id << " to " << arr->id << endl;
-      time_t now = time(NULL) + fgGetLong("/sim/time/warp");
-      time_t timeDiff = now-start; 
-      leg = 1;
-      
-      if ((timeDiff > 60) && (timeDiff < 1200))
-	leg = 2;
-      else if ((timeDiff >= 1200) && (timeDiff < 1500))
-	leg = 3;
-      else if ((timeDiff >= 1500) && (timeDiff < 2000))
-	leg = 4;
-      else if (timeDiff >= 2000)
-	leg = 5;
-      /*
-      if (timeDiff >= 2000)
-          leg = 5;
-      */
-      SG_LOG(SG_GENERAL, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
-      wpt_iterator = waypoints.begin();
-      bool dist = 0;
-      create(ac, dep,arr, leg, alt, speed, lat, lon,
-	     firstLeg, radius, fltType, acType, airline, dist);
-      wpt_iterator = waypoints.begin();
-      //cerr << "after create: " << (*wpt_iterator)->name << endl;
-      //leg++;
-      // Now that we have dynamically created a flight plan,
-      // we need to add some code that pops any waypoints already past.
-      //return;
-    }
-  /*
-    waypoint* init_waypoint   = new waypoint;
-    init_waypoint->name       = string("initial position");
-    init_waypoint->latitude   = entity->latitude;
-    init_waypoint->longitude  = entity->longitude;
-    init_waypoint->altitude   = entity->altitude;
-    init_waypoint->speed      = entity->speed;
-    init_waypoint->crossat    = - 10000;
-    init_waypoint->gear_down  = false;
-    init_waypoint->flaps_down = false;
-    init_waypoint->finished   = false;
-    
-    wpt_vector_iterator i = waypoints.begin();
-    while (i != waypoints.end())
-    {
-      //cerr << "Checking status of each waypoint: " << (*i)->name << endl;
-       SGWayPoint first(init_waypoint->longitude, 
-		       init_waypoint->latitude, 
-		       init_waypoint->altitude);
-      SGWayPoint curr ((*i)->longitude, 
-		       (*i)->latitude, 
-		       (*i)->altitude);
-      double crse, crsDiff;
-      double dist;
-      curr.CourseAndDistance(first, &crse, &dist);
-      
-      dist *= SG_METER_TO_NM;
-      
-      // We're only interested in the absolute value of crsDiff
-      // wich should fall in the 0-180 deg range.
-      crsDiff = fabs(crse-course);
-      if (crsDiff > 180)
-	crsDiff = 360-crsDiff;
-      // These are the three conditions that we consider including
-      // in our flight plan:
-      // 1) current waypoint is less then 100 miles away OR
-      // 2) curren waypoint is ahead of us, at any distance
-     
-      if ((dist > 20.0) && (crsDiff > 90.0) && ((*i)->name != string ("EOF")))
-	{
-	  //useWpt = false;
-	  // Once we start including waypoints, we have to continue, even though
-	  // one of the following way point would suffice. 
-	  // so once is the useWpt flag is set to true, we cannot reset it to false.
-	  //cerr << "Discarding waypoint: " << (*i)->name 
-	  //   << ": Course difference = " << crsDiff
-	  //  << "Course = " << course
-	  // << "crse   = " << crse << endl;
-	}
-      else
-	useCurrentWayPoint = true;
-      
-      if (useCurrentWayPoint)
-	{
-	  if ((dist > 100.0) && (useInitialWayPoint))
-	    {
-	      //waypoints.push_back(init_waypoint);;
-	      waypoints.insert(i, init_waypoint);
-	      //cerr << "Using waypoint : " << init_waypoint->name <<  endl;
-	    }
-	  //if (useInitialWayPoint)
-	  // {
-	  //    (*i)->speed = dist; // A hack
-	  //  }
-	  //waypoints.push_back( wpt );
-	  //cerr << "Using waypoint : " << (*i)->name 
-	  //  << ": course diff : " << crsDiff 
-	  //   << "Course = " << course
-	  //   << "crse   = " << crse << endl
-	  //    << "distance      : " << dist << endl;
-	  useInitialWayPoint = false;
-	  i++;
-	}
-      else 
-	{
-	  //delete wpt;
-	  delete *(i);
-	  i = waypoints.erase(i);
-	  }
-	  
-	}
-  */
-  //for (i = waypoints.begin(); i != waypoints.end(); i++)
-  //  cerr << "Using waypoint : " << (*i)->name << endl;
-  //wpt_iterator = waypoints.begin();
-  //cout << waypoints.size() << " waypoints read." << endl;
+    createWaypoints(ac, course, start, dep, arr, firstLeg, radius,
+                    alt, lat, lon, speed, fltType, acType, airline);
+  }
 }
-
-
-
 
 FGAIFlightPlan::~FGAIFlightPlan()
 {
   deleteWaypoints();
-  delete taxiRoute;
+  //delete taxiRoute;
 }
 
+void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
+                                     double course,
+                                     time_t start,
+                                     FGAirport *dep,
+                                     FGAirport *arr,
+                                     bool firstLeg,
+                                     double radius,
+                                     double alt,
+                                     double lat,
+                                     double lon,
+                                     double speed,
+                                     const string& fltType,
+                                     const string& acType,
+                                     const string& airline)
+{
+  time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+  time_t timeDiff = now-start;
+  leg = 1;
+  
+  if ((timeDiff > 60) && (timeDiff < 1500))
+    leg = 2;
+  //else if ((timeDiff >= 1200) && (timeDiff < 1500)) {
+	//leg = 3;
+  //ac->setTakeOffStatus(2);
+  //}
+  else if ((timeDiff >= 1500) && (timeDiff < 2000))
+    leg = 4;
+  else if (timeDiff >= 2000)
+    leg = 5;
+  /*
+   if (timeDiff >= 2000)
+   leg = 5;
+   */
+  SG_LOG(SG_AI, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
+  wpt_iterator = waypoints.begin();
+  bool dist = 0;
+  isValid = create(ac, dep, arr, leg, alt, speed, lat, lon,
+                   firstLeg, radius, fltType, acType, airline, dist);
+  wpt_iterator = waypoints.begin();
+}
 
-FGAIFlightPlan::waypoint* const
-FGAIFlightPlan::getPreviousWaypoint( void ) const
+bool FGAIFlightPlan::parseProperties(const std::string& filename)
+{
+  SGPath path( globals->get_fg_root() );
+  path.append( "/AI/FlightPlans/" + filename );
+  if (!path.exists()) {
+    return false;
+  }
+  
+  SGPropertyNode root;
+  try {
+    readProperties(path.str(), &root);
+  } catch (const sg_exception &e) {
+    SG_LOG(SG_AI, SG_ALERT, "Error reading AI flight plan: " << path.str()
+           << "message:" << e.getFormattedMessage());
+    return false;
+  }
+  
+  SGPropertyNode * node = root.getNode("flightplan");
+  for (int i = 0; i < node->nChildren(); i++) {
+    FGAIWaypoint* wpt = new FGAIWaypoint;
+    SGPropertyNode * wpt_node = node->getChild(i);
+    wpt->setName       (wpt_node->getStringValue("name", "END"     ));
+    wpt->setLatitude   (wpt_node->getDoubleValue("lat", 0          ));
+    wpt->setLongitude  (wpt_node->getDoubleValue("lon", 0          ));
+    wpt->setAltitude   (wpt_node->getDoubleValue("alt", 0          ));
+    wpt->setSpeed      (wpt_node->getDoubleValue("ktas", 0         ));
+    wpt->setCrossat    (wpt_node->getDoubleValue("crossat", -10000 ));
+    wpt->setGear_down  (wpt_node->getBoolValue("gear-down", false  ));
+    wpt->setFlaps_down (wpt_node->getBoolValue("flaps-down", false ));
+    wpt->setOn_ground  (wpt_node->getBoolValue("on-ground", false  ));
+    wpt->setTime_sec   (wpt_node->getDoubleValue("time-sec", 0     ));
+    wpt->setTime       (wpt_node->getStringValue("time", ""        ));
+    wpt->setFinished   ((wpt->getName() == "END"));
+    pushBackWaypoint( wpt );
+  }
+  
+  wpt_iterator = waypoints.begin();
+  return true;
+}
+
+FGAIWaypoint* const FGAIFlightPlan::getPreviousWaypoint( void ) const
 {
   if (wpt_iterator == waypoints.begin()) {
     return 0;
@@ -323,14 +265,14 @@ FGAIFlightPlan::getPreviousWaypoint( void ) const
   }
 }
 
-FGAIFlightPlan::waypoint* const
-FGAIFlightPlan::getCurrentWaypoint( void ) const
+FGAIWaypoint* const FGAIFlightPlan::getCurrentWaypoint( void ) const
 {
+  if (wpt_iterator == waypoints.end())
+      return 0;
   return *wpt_iterator;
 }
 
-FGAIFlightPlan::waypoint* const
-FGAIFlightPlan::getNextWaypoint( void ) const
+FGAIWaypoint* const FGAIFlightPlan::getNextWaypoint( void ) const
 {
   wpt_vector_iterator i = waypoints.end();
   i--;  // end() points to one element after the last one. 
@@ -344,21 +286,21 @@ FGAIFlightPlan::getNextWaypoint( void ) const
 
 void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 {
-  if (eraseWaypoints)
+    if (eraseWaypoints)
     {
-      if (wpt_iterator == waypoints.begin())
-	wpt_iterator++;
-      else
-	{
-	  delete *(waypoints.begin());
-	  waypoints.erase(waypoints.begin());
-	  wpt_iterator = waypoints.begin();
-	  wpt_iterator++;
-	}
+        if (wpt_iterator == waypoints.begin())
+            wpt_iterator++;
+        else
+        if (!waypoints.empty())
+        {
+            delete *(waypoints.begin());
+            waypoints.erase(waypoints.begin());
+            wpt_iterator = waypoints.begin();
+            wpt_iterator++;
+        }
     }
-  else
-    wpt_iterator++;
-
+    else
+        wpt_iterator++;
 }
 
 void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
@@ -368,28 +310,37 @@ void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
         if (wpt_iterator == waypoints.end())
             wpt_iterator--;
         else
+        if (!waypoints.empty())
         {
-            delete *(waypoints.end());
-            waypoints.erase(waypoints.end());
+            delete *(waypoints.end()-1);
+            waypoints.erase(waypoints.end()-1);
             wpt_iterator = waypoints.end();
             wpt_iterator--;
         }
     }
     else
         wpt_iterator--;
+}
 
+void FGAIFlightPlan::eraseLastWaypoint()
+{
+    delete (waypoints.back());
+    waypoints.pop_back();;
+    wpt_iterator = waypoints.begin();
+    wpt_iterator++;
 }
 
 
+
+
 // gives distance in feet from a position to a waypoint
-double FGAIFlightPlan::getDistanceToGo(double lat, double lon, waypoint* wp) const{
-  return SGGeodesy::distanceM(SGGeod::fromDeg(lon, lat), 
-      SGGeod::fromDeg(wp->longitude, wp->latitude));
+double FGAIFlightPlan::getDistanceToGo(double lat, double lon, FGAIWaypoint* wp) const{
+  return SGGeodesy::distanceM(SGGeod::fromDeg(lon, lat), wp->getPos());
 }
 
 // sets distance in feet from a lead point to the current waypoint
 void FGAIFlightPlan::setLeadDistance(double speed, double bearing, 
-                                     waypoint* current, waypoint* next){
+                                     FGAIWaypoint* current, FGAIWaypoint* next){
   double turn_radius;
   // Handle Ground steering
   // At a turn rate of 30 degrees per second, it takes 12 seconds to do a full 360 degree turn
@@ -432,14 +383,14 @@ void FGAIFlightPlan::setLeadDistance(double distance_ft){
 }
 
 
-double FGAIFlightPlan::getBearing(waypoint* first, waypoint* second) const{
-  return getBearing(first->latitude, first->longitude, second);
+double FGAIFlightPlan::getBearing(FGAIWaypoint* first, FGAIWaypoint* second) const
+{
+  return SGGeodesy::courseDeg(first->getPos(), second->getPos());
 }
 
-
-double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp) const{
-  return SGGeodesy::courseDeg(SGGeod::fromDeg(lon, lat), 
-      SGGeod::fromDeg(wp->longitude, wp->latitude));
+double FGAIFlightPlan::getBearing(const SGGeod& aPos, FGAIWaypoint* wp) const
+{
+  return SGGeodesy::courseDeg(aPos, wp->getPos());
 }
 
 void FGAIFlightPlan::deleteWaypoints()
@@ -447,6 +398,7 @@ void FGAIFlightPlan::deleteWaypoints()
   for (wpt_vector_iterator i = waypoints.begin(); i != waypoints.end();i++)
     delete (*i);
   waypoints.clear();
+  wpt_iterator = waypoints.begin();
 }
 
 // Delete all waypoints except the last, 
@@ -457,23 +409,30 @@ void FGAIFlightPlan::resetWaypoints()
     return;
   else
     {
-      waypoint *wpt = new waypoint;
+      FGAIWaypoint *wpt = new FGAIWaypoint;
       wpt_vector_iterator i = waypoints.end();
       i--;
-      wpt->name      = (*i)->name;
-      wpt->latitude  = (*i)->latitude;
-      wpt->longitude =  (*i)->longitude;
-      wpt->altitude  =  (*i)->altitude;
-      wpt->speed     =  (*i)->speed;
-      wpt->crossat   =  (*i)->crossat;
-      wpt->gear_down =  (*i)->gear_down;
-      wpt->flaps_down=  (*i)->flaps_down;
-      wpt->finished  = false;
-      wpt->on_ground =  (*i)->on_ground;
+      wpt->setName        ( (*i)->getName()       );
+      wpt->setPos         ( (*i)->getPos()        );
+      wpt->setCrossat     ( (*i)->getCrossat()    );
+      wpt->setGear_down   ( (*i)->getGear_down()  );
+      wpt->setFlaps_down  ( (*i)->getFlaps_down() );
+      wpt->setFinished    ( false                 );
+      wpt->setOn_ground   ( (*i)->getOn_ground()  );
       //cerr << "Recycling waypoint " << wpt->name << endl;
       deleteWaypoints();
-      waypoints.push_back(wpt);
+      pushBackWaypoint(wpt);
     }
+}
+
+void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
+{
+  // std::vector::push_back invalidates waypoints
+  //  so we should restore wpt_iterator after push_back
+  //  (or it could be an index in the vector)
+  size_t pos = wpt_iterator - waypoints.begin();
+  waypoints.push_back(wpt);
+  wpt_iterator = waypoints.begin() + pos;
 }
 
 // Start flightplan over from the beginning
@@ -482,35 +441,44 @@ void FGAIFlightPlan::restart()
   wpt_iterator = waypoints.begin();
 }
 
-
-void FGAIFlightPlan::deleteTaxiRoute() 
-{
-  delete taxiRoute;
-  taxiRoute = 0;
-}
-
-
 int FGAIFlightPlan::getRouteIndex(int i) {
   if ((i > 0) && (i < (int)waypoints.size())) {
-    return waypoints[i]->routeIndex;
+    return waypoints[i]->getRouteIndex();
   }
   else
     return 0;
 }
 
-
-double FGAIFlightPlan::checkTrackLength(string wptName) {
+double FGAIFlightPlan::checkTrackLength(const string& wptName) const {
     // skip the first two waypoints: first one is behind, second one is partially done;
     double trackDistance = 0;
     wpt_vector_iterator wptvec = waypoints.begin();
     wptvec++;
     wptvec++;
-    while ((wptvec != waypoints.end()) && ((*wptvec)->name != wptName)) {
-           trackDistance += (*wptvec)->trackLength;
+    while ((wptvec != waypoints.end()) && (!((*wptvec)->contains(wptName)))) {
+           trackDistance += (*wptvec)->getTrackLength();
            wptvec++;
     }
     if (wptvec == waypoints.end()) {
         trackDistance = 0; // name not found
     }
     return trackDistance;
+}
+
+void FGAIFlightPlan::shortenToFirst(unsigned int number, string name)
+{
+    while (waypoints.size() > number + 3) {
+        eraseLastWaypoint();
+    }
+    (waypoints.back())->setName((waypoints.back())->getName() + name);
+}
+
+void FGAIFlightPlan::setGate(const ParkingAssignment& pka)
+{
+  gate = pka;
+}
+
+FGParking* FGAIFlightPlan::getParkingGate()
+{
+  return gate.parking();
 }

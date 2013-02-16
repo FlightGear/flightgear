@@ -18,15 +18,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
-
 
 #include <stdlib.h>
 #include <cstring>
 
 #include "beacon.hxx"
 
+#include <simgear/sound/sample_openal.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/debug/logstream.hxx>
 
 // constructor
 FGBeacon::FGBeacon()
@@ -99,8 +99,19 @@ bool FGBeacon::init() {
         outer->set_reference_dist( 10.0 );
         outer->set_max_dist( 20.0 );
     } catch ( sg_io_exception &e ) {
-        SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+        SG_LOG(SG_SOUND, SG_ALERT, e.getFormattedMessage());
     }
 
     return true;
+}
+
+FGBeacon * FGBeacon::_instance = NULL;
+
+FGBeacon * FGBeacon::instance()
+{
+    if( _instance == NULL ) {
+        _instance = new FGBeacon();
+        _instance->init();
+    }
+    return _instance;
 }

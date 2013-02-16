@@ -45,7 +45,8 @@ private:
      InputValue_ptr maxPeriod; // The maximum value of the period
 public:
      PeriodicalValue( SGPropertyNode_ptr node );
-     double normalize( double value );
+     double normalize( double value ) const;
+     double normalizeSymmetric( double value ) const;
 };
 
 /**

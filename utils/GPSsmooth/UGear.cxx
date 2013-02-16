@@ -1,6 +1,6 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
-#endif 
+#endif
 
 #include <iostream>
 #include <cstdio>
@@ -430,7 +430,7 @@ int UGTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
     myread( ch, log, tmpbuf, 2 );
     uint8_t cksum0 = (unsigned char)tmpbuf[0];
     uint8_t cksum1 = (unsigned char)tmpbuf[1];
-    
+
     if ( validate_cksum( id, size, savebuf, cksum0, cksum1, ignore_checksum ) )
     {
         parse_msg( id, savebuf, gpspacket, imupacket, navpacket, servopacket,
@@ -451,7 +451,6 @@ int UGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
 {
     char tmpbuf[256];
     char savebuf[256];
-    int result = 0;
 
     // cout << "in next_message()" << endl;
 
@@ -460,7 +459,7 @@ int UGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     // scan for sync characters
     int scan_count = 0;
     uint8_t sync0, sync1;
-    result = serial_read( serial, log, tmpbuf, 2 );
+    serial_read( serial, log, tmpbuf, 2 );
     sync0 = (unsigned char)tmpbuf[0];
     sync1 = (unsigned char)tmpbuf[1];
     while ( (sync0 != START_OF_MSG0 || sync1 != START_OF_MSG1) && !myeof ) {
@@ -493,7 +492,7 @@ int UGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     uint8_t cksum1 = (unsigned char)tmpbuf[1];
     // cout << "cksum0 = " << (int)cksum0 << " cksum1 = " << (int)cksum1
     //      << endl;
-    
+
     if ( validate_cksum( id, size, savebuf, cksum0, cksum1, ignore_checksum ) )
     {
         parse_msg( id, savebuf, gpspacket, imupacket, navpacket, servopacket,
@@ -505,7 +504,7 @@ int UGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     cout << "Check sum failure!" << endl;
     return -1;
 
-    
+
 }
 
 

@@ -27,11 +27,6 @@
 
 #include <simgear/compiler.h>
 
-#if defined(__linux__) && defined(__i386__)
-#  include <fpu_control.h>
-#  include <signal.h>
-#endif
-
 #include <iostream>
 
 #include <osg/Camera>
@@ -39,280 +34,79 @@
 #include <osgDB/Registry>
 
 // Class references
+#include <simgear/canvas/VGInitOperation.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/material/matlib.hxx>
-#include <simgear/scene/model/animation.hxx>
-#include <simgear/scene/sky/sky.hxx>
-#include <simgear/structure/event_mgr.hxx>
 #include <simgear/props/AtomicChangeListener.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/magvar/magvar.hxx>
-#include <simgear/math/sg_random.h>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
-#include <simgear/misc/sg_sleep.hxx>
+#include <simgear/math/SGMath.hxx>
+#include <simgear/math/sg_random.h>
 
-#include <Time/light.hxx>
-#include <Aircraft/replay.hxx>
-#include <Aircraft/controls.hxx>
 #include <Model/panelnode.hxx>
-#include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <Sound/fg_fx.hxx>
-#include <Sound/beacon.hxx>
-#include <Sound/morse.hxx>
-#include <Sound/fg_fx.hxx>
-#include <ATCDCL/ATCmgr.hxx>
+#include <Sound/soundmanager.hxx>
 #include <Time/TimeManager.hxx>
-#include <Environment/environment_mgr.hxx>
-#include <Environment/ephemeris.hxx>
 #include <GUI/gui.h>
-#include <GUI/new_gui.hxx>
-#include <MultiPlayer/multiplaymgr.hxx>
+#include <Viewer/splash.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/WindowSystemAdapter.hxx>
+#include <Navaids/NavDataCache.hxx>
 
-#include "CameraGroup.hxx"
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
-#include "renderer.hxx"
-#include "splash.hxx"
 #include "main.hxx"
 #include "util.hxx"
 #include "fg_init.hxx"
 #include "fg_os.hxx"
-#include "WindowSystemAdapter.hxx"
-#include <Main/viewer.hxx>
-
+#include "fg_props.hxx"
+#include "positioninit.hxx"
+#include "subsystemFactory.hxx"
 
 using namespace flightgear;
 
 using std::cerr;
-
-// Specify our current idle function state.  This is used to run all
-// our initializations out of the idle callback so that we can get a
-// splash screen up and running right away.
-int idle_state = 0;
-
-
-void fgInitSoundManager();
-void fgSetNewSoundDevice(const char *);
+using std::vector;
 
 // The atexit() function handler should know when the graphical subsystem
 // is initialized.
 extern int _bootstrap_OSInit;
 
+static SGPropertyNode_ptr frame_signal;
+static TimeManager* timeMgr;
+
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
-static void fgMainLoop( void ) {
-    
-    static SGConstPropertyNode_ptr longitude
-        = fgGetNode("/position/longitude-deg");
-    static SGConstPropertyNode_ptr latitude
-        = fgGetNode("/position/latitude-deg");
-    static SGConstPropertyNode_ptr altitude
-        = fgGetNode("/position/altitude-ft");
-    static SGConstPropertyNode_ptr vn_fps
-        = fgGetNode("/velocities/speed-north-fps");
-    static SGConstPropertyNode_ptr ve_fps
-        = fgGetNode("/velocities/speed-east-fps");
-    static SGConstPropertyNode_ptr vd_fps
-        = fgGetNode("/velocities/speed-down-fps");
-      
-    static SGPropertyNode_ptr frame_signal
-        = fgGetNode("/sim/signals/frame", true);
-
-    static SGPropertyNode_ptr _statisticsFlag
-        = fgGetNode("/sim/timing-statistics/enabled", true);
-    static SGPropertyNode_ptr _statisticsInterval
-        = fgGetNode("/sim/timing-statistics/interval-s", true);
-    static SGPropertyNode_ptr _statiticsMinJitter
-        = fgGetNode("/sim/timing-statistics/min-jitter-ms", true);
-    static SGPropertyNode_ptr _statiticsMinTime
-        = fgGetNode("/sim/timing-statistics/min-time-ms", true);
-
+static void fgMainLoop( void )
+{
     frame_signal->fireValueChanged();
-    SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
-    
-    SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
-    SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
-    
-    
-  // update "time"
-    double sim_dt, real_dt;
-    TimeManager* timeMgr = (TimeManager*) globals->get_subsystem("time");
+
+    SG_LOG( SG_GENERAL, SG_DEBUG, "Running Main Loop");
+    SG_LOG( SG_GENERAL, SG_DEBUG, "======= ==== ====");
+
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
+    double sim_dt, real_dt;
     timeMgr->computeTimeDeltas(sim_dt, real_dt);
 
-    // update magvar model
-    globals->get_mag()->update( longitude->getDoubleValue()
-                                * SGD_DEGREES_TO_RADIANS,
-                                latitude->getDoubleValue()
-                                * SGD_DEGREES_TO_RADIANS,
-                                altitude->getDoubleValue() * SG_FEET_TO_METER,
-                                globals->get_time_params()->getJD() );
-
-    // Run ATC subsystem
-    globals->get_ATC_mgr()->update(sim_dt);
-    
+    // update all subsystems
     globals->get_subsystem_mgr()->update(sim_dt);
-
-    // Update the sound manager last so it can use the CPU while the GPU
-    // is processing the scenery (doubled the frame-rate for me) -EMH-
-#ifdef ENABLE_AUDIO_SUPPORT
-    static bool smgr_init = true;
-    static SGPropertyNode *sound_working = fgGetNode("/sim/sound/working");
-    if (smgr_init == true) {
-        if (sound_working->getBoolValue() == true) {
-            fgInitSoundManager();
-            smgr_init = false;
-        }
-    } else {
-        static SGPropertyNode *sound_enabled = fgGetNode("/sim/sound/enabled");
-        static SGSoundMgr *smgr = globals->get_soundmgr();
-        static bool smgr_enabled = true;
-
-        if (sound_working->getBoolValue() == false) {	// request to reinit
-           smgr->reinit();
-           smgr->resume();
-           sound_working->setBoolValue(true);
-        }
-
-        if (smgr_enabled != sound_enabled->getBoolValue()) {
-            if (smgr_enabled == true) { // request to suspend
-                smgr->suspend();
-                smgr_enabled = false;
-            } else {
-                smgr->resume();
-                smgr_enabled = true;
-            }
-        }
-
-        if (smgr_enabled == true) {
-            static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
-            smgr->set_volume(volume->getFloatValue());
-            smgr->update(sim_dt);
-        }
-    }
-#endif
-
-    // END Tile Manager updates
-    bool scenery_loaded = fgGetBool("sim/sceneryloaded");
-    if (!scenery_loaded)
-    {
-        if (globals->get_tile_mgr()->isSceneryLoaded()
-             && fgGetBool("sim/fdm-initialized")) {
-            fgSetBool("sim/sceneryloaded",true);
-            fgSplashProgress("");
-            if (fgGetBool("/sim/sound/working")) {
-                globals->get_soundmgr()->activate();
-            }
-            globals->get_props()->tie("/sim/sound/devices/name",
-                  SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
-        }
-        else
-        {
-            fgSplashProgress("loading scenery");
-            // be nice to loader threads while waiting for initial scenery, reduce to 2fps
-            simgear::sleepForMSec(500);
-        }
-    }
-
-    // print timing statistics
-    static bool _lastStatisticsFlag = false;
-    if (_lastStatisticsFlag != _statisticsFlag->getBoolValue())
-    {
-        // flag has changed, update subsystem manager
-        _lastStatisticsFlag = _statisticsFlag->getBoolValue();
-        globals->get_subsystem_mgr()->collectDebugTiming(_lastStatisticsFlag);
-    }
-    if (_lastStatisticsFlag)
-    {
-        static double elapsed = 0;
-        elapsed += real_dt;
-        if (elapsed >= _statisticsInterval->getDoubleValue())
-        {
-            // print and reset timing statistics
-            globals->get_subsystem_mgr()->printTimingStatistics(_statiticsMinTime->getDoubleValue(),
-                                                                _statiticsMinJitter->getDoubleValue());
-            elapsed = 0;
-        }
-    }
 
     simgear::AtomicChangeListener::fireChangeListeners();
 
-    SG_LOG( SG_ALL, SG_DEBUG, "" );
+    SG_LOG( SG_GENERAL, SG_DEBUG, "" );
 }
 
-void fgInitSoundManager()
+
+static void registerMainLoop()
 {
-    SGSoundMgr *smgr = globals->get_soundmgr();
-
-    smgr->bind();
-    smgr->init(fgGetString("/sim/sound/device-name", NULL));
-
-    vector <const char*>devices = smgr->get_available_devices();
-    for (unsigned int i=0; i<devices.size(); i++) {
-        SGPropertyNode *p = fgGetNode("/sim/sound/devices/device", i, true);
-        p->setStringValue(devices[i]);
-    }
-    devices.clear();
-}
-
-void fgSetNewSoundDevice(const char *device)
-{
-    globals->get_soundmgr()->suspend();
-    globals->get_soundmgr()->stop();
-    globals->get_soundmgr()->init(device);
-    globals->get_soundmgr()->resume();
-}
-
-// Operation for querying OpenGL parameters. This must be done in a
-// valid OpenGL context, potentially in another thread.
-namespace
-{
-struct GeneralInitOperation : public GraphicsContextOperation
-{
-    GeneralInitOperation()
-        : GraphicsContextOperation(std::string("General init"))
-    {
-    }
-    void run(osg::GraphicsContext* gc)
-    {
-        SGPropertyNode* simRendering = fgGetNode("/sim/rendering");
-        
-        simRendering->setStringValue("gl-vendor", (char*) glGetString(GL_VENDOR));
-        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VENDOR));
-        
-        simRendering->setStringValue("gl-renderer", (char*) glGetString(GL_RENDERER));
-        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_RENDERER));
-        
-        simRendering->setStringValue("gl-version", (char*) glGetString(GL_VERSION));
-        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VERSION));
-
-        GLint tmp;
-        glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
-        simRendering->setIntValue("max-texture-size", tmp);
-
-        glGetIntegerv( GL_DEPTH_BITS, &tmp );
-        simRendering->setIntValue("depth-buffer-bits", tmp);
-    }
-};
-
-
-osg::Node* load_panel(SGPropertyNode *n)
-{
-    osg::Geode* geode = new osg::Geode;
-    geode->addDrawable(new FGPanelNode(n));
-    return geode;
-}
-
-SGPath resolve_path(const std::string& s)
-{
-  return globals->resolve_maybe_aircraft_path(s);
-}
-
+    // stash current frame signal property
+    frame_signal = fgGetNode("/sim/signals/frame", true);
+    timeMgr = (TimeManager*) globals->get_subsystem("time");
+    fgRegisterIdleHandler( fgMainLoop );
 }
 
 // This is the top level master main function that is registered as
@@ -323,51 +117,38 @@ SGPath resolve_path(const std::string& s)
 // then on.
 
 static void fgIdleFunction ( void ) {
-    static osg::ref_ptr<GeneralInitOperation> genOp;
+    // Specify our current idle function state.  This is used to run all
+    // our initializations out of the idle callback so that we can get a
+    // splash screen up and running right away.
+    static int idle_state = 0;
+  
     if ( idle_state == 0 ) {
-        idle_state++;
-        // Pick some window on which to do queries.
-        // XXX Perhaps all this graphics initialization code should be
-        // moved to renderer.cxx?
-        genOp = new GeneralInitOperation;
-        osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
-        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
-        osg::GraphicsContext* gc = 0;
-        if (guiCamera)
-            gc = guiCamera->getGraphicsContext();
-        if (gc) {
-            gc->add(genOp.get());
-        } else {
-            wsa->windows[0]->gc->add(genOp.get());
+        if (guiInit())
+        {
+            idle_state+=2;
+            fgSplashProgress("loading-aircraft-list");
         }
-        guiStartInit(gc);
-    } else if ( idle_state == 1 ) {
-        if (genOp.valid()) {
-            if (!genOp->isFinished())
-                return;
-            genOp = 0;
-        }
-        if (!guiFinishInit())
-            return;
-        idle_state++;
-        fgSplashProgress("loading aircraft list");
 
     } else if ( idle_state == 2 ) {
         idle_state++;
-        fgSplashProgress("loading navigation data");
+        fgSplashProgress("loading-nav-dat");
 
     } else if ( idle_state == 3 ) {
-        idle_state++;
-        fgInitNav();
-
-        fgSplashProgress("initializing scenery system");
-
+        
+        bool done = fgInitNav();
+        if (done) {
+          ++idle_state;
+          fgSplashProgress("init-scenery");
+        } else {
+          fgSplashProgress("loading-nav-dat");
+        }
+      
     } else if ( idle_state == 4 ) {
-        idle_state++;
+        idle_state+=2;
         // based on the requested presets, calculate the true starting
         // lon, lat
-        fgInitPosition();
-        fgInitTowerLocationListener();
+        flightgear::initPosition();
+        flightgear::initTowerLocationListener();
 
         TimeManager* t = new TimeManager;
         globals->add_subsystem("time", t, SGSubsystemMgr::INIT);
@@ -385,12 +166,14 @@ static void fgIdleFunction ( void ) {
         ////////////////////////////////////////////////////////////////////
         fgInitCommands();
 
+        flightgear::registerSubsystemCommands(globals->get_commands());
+
         ////////////////////////////////////////////////////////////////////
         // Initialize the material manager
         ////////////////////////////////////////////////////////////////////
         globals->set_matlib( new SGMaterialLib );
         simgear::SGModelLib::init(globals->get_fg_root(), globals->get_props());
-        simgear::SGModelLib::setPanelFunc(load_panel);
+        simgear::SGModelLib::setPanelFunc(FGPanelNode::load);
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.
@@ -402,134 +185,42 @@ static void fgIdleFunction ( void ) {
         globals->get_scenery()->bind();
         globals->set_tile_mgr( new FGTileMgr );
 
-        fgSplashProgress("loading aircraft");
-
-    } else if ( idle_state == 5 ) {
-        idle_state++;
-
-        fgSplashProgress("initializing sky elements");
+        fgSplashProgress("loading-aircraft");
 
     } else if ( idle_state == 6 ) {
         idle_state++;
-        // Initialize the sky
-
-        Ephemeris* eph = new Ephemeris;
-        globals->add_subsystem("ephemeris", eph);
-        eph->init(); // FIXME - remove this once SGSky code below is also a subsystem
-        eph->bind();
-
-        // TODO: move to environment mgr
-        thesky = new SGSky;
-        SGPath texture_path(globals->get_fg_root());
-        texture_path.append("Textures");
-        texture_path.append("Sky");
-        for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-            SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
-            thesky->add_cloud_layer(layer);
-        }
-
-        SGPath sky_tex_path( globals->get_fg_root() );
-        sky_tex_path.append( "Textures" );
-        sky_tex_path.append( "Sky" );
-        thesky->texture_path( sky_tex_path.str() );
-
-        // The sun and moon diameters are scaled down numbers of the
-        // actual diameters. This was needed to fit both the sun and the
-        // moon within the distance to the far clip plane.
-        // Moon diameter:    3,476 kilometers
-        // Sun diameter: 1,390,000 kilometers
-        thesky->build( 80000.0, 80000.0,
-                       463.3, 361.8,
-                       *globals->get_ephem(),
-                       fgGetNode("/environment", true));
-
-        // Initialize MagVar model
-        SGMagVar *magvar = new SGMagVar();
-        globals->set_mag( magvar );
-
-
-                                    // kludge to initialize mag compass
-                                    // (should only be done for in-flight
-                                    // startup)
-        // update magvar model
-        globals->get_mag()->update( fgGetDouble("/position/longitude-deg")
-                                    * SGD_DEGREES_TO_RADIANS,
-                                    fgGetDouble("/position/latitude-deg")
-                                    * SGD_DEGREES_TO_RADIANS,
-                                    fgGetDouble("/position/altitude-ft")
-                                    * SG_FEET_TO_METER,
-                                    globals->get_time_params()->getJD() );
-        double var = globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
-        fgSetDouble("/instrumentation/heading-indicator/offset-deg", -var);
-        fgSetDouble("/instrumentation/heading-indicator-fg/offset-deg", -var);
-
-
-        // airport = new ssgBranch;
-        // airport->setName( "Airport Lighting" );
-        // lighting->addKid( airport );
-
-        fgSplashProgress("initializing subsystems");
+        fgSplashProgress("creating-subsystems");
 
     } else if ( idle_state == 7 ) {
         idle_state++;
-        // Initialize audio support
-#ifdef ENABLE_AUDIO_SUPPORT
-
-        // Start the intro music
-        if ( fgGetBool("/sim/startup/intro-music") ) {
-            SGPath mp3file( globals->get_fg_root() );
-            mp3file.append( "Sounds/intro.mp3" );
-
-            SG_LOG( SG_GENERAL, SG_INFO,
-                "Starting intro music: " << mp3file.str() );
-
-# if defined( __CYGWIN__ )
-            string command = "start /m `cygpath -w " + mp3file.str() + "`";
-# elif defined( _WIN32 )
-            string command = "start /m " + mp3file.str();
-# else
-            string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
-# endif
-
-            system ( command.c_str() );
-        }
-#endif
-        // This is the top level init routine which calls all the
-        // other subsystem initialization routines.  If you are adding
-        // a subsystem to flightgear, its initialization call should be
-        // located in this routine.
-        if( !fgInitSubsystems()) {
-            SG_LOG( SG_GENERAL, SG_ALERT,
-                "Subsystem initialization failed ..." );
-            exit(-1);
-        }
-
-        // Torsten Dreyer:
-        // ugly hack for automatic runway selection on startup based on
-        // metar data. Makes startup.nas obsolete and guarantees the same
-        // runway selection as for AI traffic. However, this code belongs to
-        // somewhere(?) else - if I only new where...
-        if( true == fgGetBool( "/environment/metar/valid" ) ) {
-            // the realwx_ctrl fetches metar in the foreground on init,
-            // If it was able to fetch a metar or one was given on the commandline,
-            // the valid flag is set here, otherwise it is false
-            double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
-            string apt = fgGetString( "/sim/startup/options/airport" );
-            string rwy = fgGetString( "/sim/startup/options/runway" );
-            double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
-            string parkpos = fgGetString( "/sim/presets/parkpos" );
-            bool onground = fgGetBool( "/sim/presets/onground", false );
-            // don't check for wind-speed < 1kt, this belongs to the runway-selection code
-            // the other logic is taken from former startup.nas
-            if( hdg < 360.0 && apt.length() > 0 && strthdg > 360.0 && rwy.length() == 0 && onground && parkpos.length() == 0 ) {
-                extern bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
-                fgSetPosFromAirportIDandHdg( apt, hdg );
-            }
-        }
-
-        fgSplashProgress("initializing graphics engine");
-
+        SGTimeStamp st;
+        st.stamp();
+        fgCreateSubsystems();
+        SG_LOG(SG_GENERAL, SG_INFO, "Creating subsystems took:" << st.elapsedMSec());
+        fgSplashProgress("binding-subsystems");
+      
     } else if ( idle_state == 8 ) {
+        idle_state++;
+        SGTimeStamp st;
+        st.stamp();
+        globals->get_subsystem_mgr()->bind();
+        SG_LOG(SG_GENERAL, SG_INFO, "Binding subsystems took:" << st.elapsedMSec());
+
+        fgSplashProgress("init-subsystems");
+    } else if ( idle_state == 9 ) {
+        SGSubsystem::InitStatus status = globals->get_subsystem_mgr()->incrementalInit();
+        if ( status == SGSubsystem::INIT_DONE) {
+          ++idle_state;
+          fgSplashProgress("finishing-subsystems");
+        } else {
+          fgSplashProgress("init-subsystems");
+        }
+      
+    } else if ( idle_state == 10 ) {
+        idle_state = 900;
+        fgPostInitSubsystems();
+        fgSplashProgress("finalize-position");
+    } else if ( idle_state == 900 ) {
         idle_state = 1000;
         
         // setup OpenGL view parameters
@@ -537,6 +228,9 @@ static void fgIdleFunction ( void ) {
 
         globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
                                          fgGetInt("/sim/startup/ysize") );
+        WindowSystemAdapter::getWSA()->windows[0]->gc->add(
+          new simgear::canvas::VGInitOperation()
+        );
 
         int session = fgGetInt("/sim/session",0);
         session++;
@@ -547,13 +241,8 @@ static void fgIdleFunction ( void ) {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
         fgSetBool("sim/sceneryloaded", false);
-        fgRegisterIdleHandler( fgMainLoop );
+        registerMainLoop();
     }
-}
-
-static void fgWinResizeFunction(int width, int height)
-{
-    globals->get_renderer()->resize(width, height);
 }
 
 static void upper_case_property(const char *name)
@@ -573,6 +262,16 @@ static void upper_case_property(const char *name)
     p->addChangeListener(new FGMakeUpperCase);
 }
 
+// see http://code.google.com/p/flightgear-bugs/issues/detail?id=385
+// for the details of this.
+static void ATIScreenSizeHack()
+{
+    osg::ref_ptr<osg::Camera> hackCam = new osg::Camera;
+    hackCam->setRenderOrder(osg::Camera::PRE_RENDER);
+    int prettyMuchAnyInt = 1;
+    hackCam->setViewport(0, 0, prettyMuchAnyInt, prettyMuchAnyInt);
+    globals->get_renderer()->addCamera(hackCam, false);
+}
 
 // Main top level initialization
 int fgMainInit( int argc, char **argv ) {
@@ -588,7 +287,7 @@ int fgMainInit( int argc, char **argv ) {
 #endif
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
             << version );
-    SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR << endl );
+    SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR << std::endl );
 
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
@@ -597,9 +296,6 @@ int fgMainInit( int argc, char **argv ) {
 
     // seed the random number generator
     sg_srandom_time();
-
-    FGControls *controls = new FGControls;
-    globals->set_controls( controls );
 
     string_list *col = new string_list;
     globals->set_channel_options_list( col );
@@ -610,44 +306,19 @@ int fgMainInit( int argc, char **argv ) {
     upper_case_property("/sim/tower/airport-id");
     upper_case_property("/autopilot/route-manager/input");
 
-    // Scan the config file(s) and command line options to see if
-    // fg_root was specified (ignore all other options for now)
-    fgInitFGRoot(argc, argv);
-
-    // Check for the correct base package version
-    static char required_version[] = "2.4.0";
-    string base_version = fgBasePackageVersion();
-    if ( !(base_version == required_version) ) {
-        // tell the operator how to use this application
-
-        SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on windows
-        cerr << endl << "Base package check failed:" << endl \
-             << "  Version " << base_version << " found at: " \
-             << globals->get_fg_root() << endl \
-             << "  Version " << required_version << " is required." << endl \
-             << "Please upgrade/downgrade base package." << endl;
-#ifdef _MSC_VER
-        cerr << "Hit a key to continue..." << endl;
-        cin.get();
-#endif
-        exit(-1);
-    }
-
     // Load the configuration parameters.  (Command line options
     // override config file options.  Config file options override
     // defaults.)
     if ( !fgInitConfig(argc, argv) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
-        exit(-1);
+      SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
+      exit(-1);
     }
 
     // Initialize the Window/Graphics environment.
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;
 
-    fgRegisterWindowResizeHandler( &fgWinResizeFunction );
     fgRegisterIdleHandler( &fgIdleFunction );
-    fgRegisterDrawHandler( &FGRenderer::update );
 
     // Initialize sockets (WinSock needs this)
     simgear::Socket::initSockets();
@@ -659,6 +330,11 @@ int fgMainInit( int argc, char **argv ) {
     fntInit();
     fgSplashInit();
 
+    if (fgGetBool("/sim/ati-viewport-hack", false)) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Enabling ATI viewport hack");
+        ATIScreenSizeHack();
+    }
+    
     // pass control off to the master event handler
     int result = fgOSMainLoop();
     
@@ -667,5 +343,9 @@ int fgMainInit( int argc, char **argv ) {
     delete globals;
     globals = NULL;
     
+    // delete the NavCache here. This will cause the destruction of many cached
+    // objects (eg, airports, navaids, runways).
+    delete flightgear::NavDataCache::instance();
+  
     return result;
 }

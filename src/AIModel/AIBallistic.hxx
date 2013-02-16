@@ -45,11 +45,10 @@ public:
 
     bool init(bool search_in_AI_path=false);
     virtual void bind();
-    virtual void unbind();
+    virtual void reinit();
+    virtual void update(double dt);
 
-    void update(double dt);
-
-    FGAIBallistic *ballistic;
+    virtual const char* getTypeString(void) const { return "ballistic"; }
 
     void Run(double dt);
 
@@ -114,7 +113,8 @@ public:
 //    bool getFormate() const;
     bool getSlavedLoad() const;
 
-    virtual const char* getTypeString(void) const { return "ballistic"; }
+    FGAIBallistic *ballistic;
+
     static const double slugs_to_kgs; //conversion factor
     static const double slugs_to_lbs; //conversion factor
 
@@ -170,8 +170,6 @@ public:
 
 private:
 
-    virtual void reinit() { init(); }
-
     bool   _aero_stabilised; // if true, object will align with trajectory
     double _drag_area;       // equivalent drag area in ft2
     double _life_timer;      // seconds
@@ -220,8 +218,6 @@ private:
     string _submodel;
     string _force_path;
     string _contents_path;
-
-    const SGMaterial* _material;
 
     void handle_collision();
     void handle_expiry();

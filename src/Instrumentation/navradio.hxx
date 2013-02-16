@@ -26,14 +26,10 @@
 
 
 #include <Main/fg_props.hxx>
-#include "Sound/morse.hxx"
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
-
-// forward decls
-class SGInterpTable;
 
 class SGSampleGroup;
 class FGNavRecord;
@@ -41,16 +37,7 @@ typedef SGSharedPtr<FGNavRecord> FGNavRecordPtr;
 
 class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
 {
-    FGMorse morse;
-
-    SGInterpTable *term_tbl;
-    SGInterpTable *low_tbl;
-    SGInterpTable *high_tbl;
-
     SGPropertyNode_ptr _radio_node;
-    SGPropertyNode_ptr lon_node;
-    SGPropertyNode_ptr lat_node;
-    SGPropertyNode_ptr alt_node;
     SGPropertyNode_ptr bus_power_node;
 
     // property inputs
@@ -59,6 +46,7 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr power_btn_node;
     SGPropertyNode_ptr freq_node;       // primary freq
     SGPropertyNode_ptr alt_freq_node;   // standby freq
+    SGPropertyNode_ptr is_loc_freq_node;// is the primary freq a loc/gs (paired) freq?
     SGPropertyNode_ptr sel_radial_node; // selected radial
     SGPropertyNode_ptr vol_btn_node;
     SGPropertyNode_ptr ident_btn_node;
@@ -68,7 +56,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr cdi_serviceable_node;
     SGPropertyNode_ptr gs_serviceable_node;
     SGPropertyNode_ptr tofrom_serviceable_node;
-    SGPropertyNode_ptr dme_serviceable_node;
     
     // property outputs
     SGPropertyNode_ptr fmt_freq_node;     // formated frequency
@@ -130,13 +117,11 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
 
     bool _operable; ///< is the unit serviceable, on, powered, etc
     int play_count;
-    time_t last_time;
+    bool _nav_search;
+    double _last_freq;
     FGNavRecordPtr _navaid;
     FGNavRecordPtr _gs;
     
-    string nav_fx_name;
-    string dme_fx_name;
-
     double target_radial;
     double effective_range;
     double target_gs;
@@ -147,7 +132,7 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     double xrate_ms;
     double _localizerWidth; // cached localizer width in degrees
     
-    string _name;
+    std::string _name;
     int _num;
 
     // internal periodic station search timer
@@ -155,9 +140,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
 
     SGVec3d _gsCart, _gsAxis, _gsVertical, _gsBaseline;
 
-    FGNavRecordPtr _dme;
-    bool _dmeInRange;
-    
     // CDI properties
     bool _toFlag, _fromFlag;
     double _cdiDeflection;
@@ -165,9 +147,8 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     double _gsNeedleDeflection;
     double _gsNeedleDeflectionNorm;
     double _gsDirect;
-    
-    SGSharedPtr<SGSampleGroup> _sgr;
-    std::vector<SGPropertyNode_ptr> _tiedNodes;
+
+    class AudioIdent * _audioIdent;
     
     bool updateWithPower(double aDt);
 
@@ -179,11 +160,9 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     double adjustILSRange( double stationElev, double aircraftElev,
 			   double offsetDegrees, double distance );
 
-    void updateAudio();
-    void audioNavidChanged();
+    void updateAudio( double dt );
 
     void updateReceiver(double dt);
-    void updateDME(const SGVec3d& aircraft);
     void updateGlideSlope(double dt, const SGVec3d& aircraft, double signal_quality_norm);
     void updateGPSSlaved();
     void updateCDI(double dt);
@@ -196,17 +175,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     bool isOperable() const
       { return _operable; }
       
-    /**
-     * Tied-properties helper, record nodes which are tied for easy un-tie-ing
-     */
-    template <typename T>
-    void tie(const char* aRelPath, const SGRawValue<T>& aRawValue)
-    {
-      SGPropertyNode_ptr nd = _radio_node->getNode(aRelPath, true);
-      _tiedNodes.push_back(nd);
-      nd->tie(aRawValue);
-    }
-    
   // implement SGPropertyChangeListener
     virtual void valueChanged (SGPropertyNode * prop);
 public:
@@ -215,12 +183,14 @@ public:
     ~FGNavRadio();
 
     void init ();
+    void reinit ();
     void bind ();
     void unbind ();
     void update (double dt);
 
     // Update nav/adf radios based on current postition
     void search ();
+    void updateNav();
 };
 
 

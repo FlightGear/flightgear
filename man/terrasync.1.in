@@ -1,0 +1,47 @@
+.\" Copyright (C) 2011 Thorsten Brehm
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or see here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH TERRASYNC 1 "February 2012" "@VERSION@" "@PACKAGE@"
+.SH NAME
+terrasync \- FlightGear Flight Simulator Terrain Synchronization
+.SH SYNOPSIS
+.B "terrasync "
+[\-\fId\fP path] [\-\fIp\fP port] [\-\fIv\fP]
+.SH DESCRIPTION
+.B FlightGear TerraSync
+is a utility that automatically downloads the newest version of the FlightGear
+scenery while the simulator is running.
+For more information visit <http://wiki.flightgear.org/TerraSync>.
+.SH OPTIONS
+.TP
+.BI "-d" " path"
+Specify the path where to store the scenery data.
+.TP
+.BI "-p" " port"
+Specify the UDP port where terrasync listens for a FlightGear Flight Simulator connection.
+.TP
+.BI "-v"
+Enable verbose output.
+.SH BUGS
+Send bug reports to <flightgear\-devel@lists.sourceforge.net> or visit
+<http://code.google.com/p/flightgear\-bugs>.
+.SH SEE ALSO
+fgfs(1), fgjs(1), js_demo(1), terrasync(1)
+.SH AUTHORS
+Curt L. Olson, et al.  See
+.I Thanks
+file for a list of contributors.

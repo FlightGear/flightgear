@@ -37,13 +37,14 @@ public:
     virtual ~SlipSkidBall ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void update (double dt);
 
 private:
 
     double _last_pos;
 
-    string _name;
+    std::string _name;
     int _num;
 
     SGPropertyNode_ptr _serviceable_node;

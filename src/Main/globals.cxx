@@ -24,35 +24,37 @@
 #  include <config.h>
 #endif
 
+#include <boost/foreach.hpp>
+#include <algorithm>
+
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/magvar/magvar.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/propertyObject.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
-#include <ATCDCL/ATCmgr.hxx>
+#include <ATCDCL/ATISmgr.hxx>
 #include <Autopilot/route_mgr.hxx>
-#include <Cockpit/panel.hxx>
-#include <GUI/new_gui.hxx>
-#include <Model/acmodel.hxx>
-#include <Model/modelmgr.hxx>
+#include <GUI/FGFontCache.hxx>
+#include <GUI/gui.h>
 #include <MultiPlayer/multiplaymgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Navaids/navlist.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/viewmgr.hxx>
 
 #include "globals.hxx"
-#include "renderer.hxx"
-#include "viewmgr.hxx"
+#include "locale.hxx"
 
 #include "fg_props.hxx"
 #include "fg_io.hxx"
@@ -104,6 +106,23 @@ public:
   }
 };
 
+class CurrentAircraftDirProvider : public simgear::ResourceProvider
+{
+public:
+  CurrentAircraftDirProvider() :
+    simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_HIGH)
+  {
+  }
+  
+  virtual SGPath resolve(const std::string& aResource, SGPath&) const
+  {
+    const char* aircraftDir = fgGetString("/sim/aircraft-dir");
+    SGPath p(aircraftDir);
+    p.append(aResource);
+    return p.exists() ? p : SGPath();
+  }
+};
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGGlobals.
 ////////////////////////////////////////////////////////////////////////
@@ -116,106 +135,99 @@ FGGlobals *globals;
 FGGlobals::FGGlobals() :
     props( new SGPropertyNode ),
     initial_state( NULL ),
-    locale( NULL ),
+    locale( new FGLocale(props) ),
     renderer( new FGRenderer ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
-    soundmgr( new SGSoundMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),
+    fg_home( "" ),
     time_params( NULL ),
     ephem( NULL ),
-    mag( NULL ),
     matlib( NULL ),
     route_mgr( NULL ),
-    current_panel( NULL ),
-    ATC_mgr( NULL ),
+    ATIS_mgr( NULL ),
     controls( NULL ),
     viewmgr( NULL ),
     commands( SGCommandMgr::instance() ),
-    acmodel( NULL ),
-    model_mgr( NULL ),
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
     scenery( NULL ),
     tile_mgr( NULL ),
     fontcache ( new FGFontCache ),
-    navlist( NULL ),
-    loclist( NULL ),
-    gslist( NULL ),
-    dmelist( NULL ),
-    tacanlist( NULL ),
-    carrierlist( NULL ),
-    channellist( NULL )    
+    channellist( NULL ),
+    haveUserSettings(false)
 {
-  simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
+  simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider);
+  simgear::ResourceManager::instance()->addProvider(new CurrentAircraftDirProvider);
   simgear::PropertyObjectBase::setDefaultRoot(props);
+  
+  positionLon = props->getNode("position/longitude-deg", true);
+  positionLat = props->getNode("position/latitude-deg", true);
+  positionAlt = props->getNode("position/altitude-ft", true);
+  
+  viewLon = props->getNode("sim/current-view/viewer-lon-deg", true);
+  viewLat = props->getNode("sim/current-view/viewer-lat-deg", true);
+  viewAlt = props->getNode("sim/current-view/viewer-elev-ft", true);
+  
+  orientPitch = props->getNode("orientation/pitch-deg", true);
+  orientHeading = props->getNode("orientation/heading-deg", true);
+  orientRoll = props->getNode("orientation/roll-deg", true);
 }
-
 
 // Destructor
 FGGlobals::~FGGlobals() 
 {
-    delete renderer;
-    renderer = NULL;
-    
-// The AIModels manager performs a number of actions upon
+    // save user settings (unless already saved)
+    saveUserSettings();
+
+    // The AIModels manager performs a number of actions upon
     // Shutdown that implicitly assume that other subsystems
     // are still operational (Due to the dynamic allocation and
     // deallocation of AIModel objects. To ensure we can safely
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
-    SGSubsystem* ai = subsystem_mgr->remove("ai_model");
+    SGSubsystem* ai = subsystem_mgr->remove("ai-model");
     if (ai) {
         ai->unbind();
         delete ai;
     }
-    
+    SGSubsystem* sound = subsystem_mgr->remove("sound");
+
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
     delete subsystem_mgr;
     
+    delete renderer;
+    renderer = NULL;
+    
     delete time_params;
-    delete mag;
     delete matlib;
     delete route_mgr;
-    delete current_panel;
 
-    delete ATC_mgr;
-
-    if (controls)
-    {
-        controls->unbind();
-        delete controls;
-    }
+    delete ATIS_mgr;
 
     delete channel_options_list;
     delete initial_waypoints;
     delete scenery;
     delete fontcache;
 
-    delete navlist;
-    delete loclist;
-    delete gslist;
-    delete dmelist;
-    delete tacanlist;
-    delete carrierlist;
     delete channellist;
+    delete sound;
 
-    soundmgr->unbind();
-    delete soundmgr;
+    delete locale;
+    locale = NULL;
 }
-
 
 // set the fg_root path
 void FGGlobals::set_fg_root (const string &root) {
-    fg_root = root;
+    SGPath tmp(root);
+    fg_root = tmp.realpath();
 
     // append /data to root if it exists
-    SGPath tmp( fg_root );
     tmp.append( "data" );
     tmp.append( "version" );
-    if ( ulFileExists( tmp.c_str() ) ) {
+    if ( tmp.exists() ) {
         fgGetNode("BAD_FG_ROOT", true)->setStringValue(fg_root);
         fg_root += "/data";
         fgGetNode("GOOD_FG_ROOT", true)->setStringValue(fg_root);
@@ -234,27 +246,38 @@ void FGGlobals::set_fg_root (const string &root) {
       simgear::ResourceManager::PRIORITY_DEFAULT);
 }
 
-void FGGlobals::set_fg_scenery (const string &scenery)
-{
-    SGPath s;
-    if (scenery.empty()) {
-        s.set( fg_root );
-        s.append( "Scenery" );
-    } else
-        s.set( scenery );
+// set the fg_home path
+void FGGlobals::set_fg_home (const string &home) {
+    SGPath tmp(home);
+    fg_home = tmp.realpath();
+}
 
-    string_list path_list = sgPathSplit( s.str() );
-    fg_scenery.clear();
+void FGGlobals::append_fg_scenery (const string &paths)
+{
+//    fg_scenery.clear();
     SGPropertyNode* sim = fgGetNode("/sim", true);
-    
-    for (unsigned i = 0; i < path_list.size(); i++) {
-        SGPath path(path_list[i]);
-        if (!path.exists()) {
-          SG_LOG(SG_GENERAL, SG_WARN, "scenery path not found:" << path.str());
+
+  // find first unused fg-scenery property in /sim
+    int propIndex = 0;
+    while (sim->getChild("fg-scenery", propIndex) != NULL) {
+      ++propIndex; 
+    }
+  
+    BOOST_FOREACH(const SGPath& path, sgPathSplit( paths )) {
+        SGPath abspath(path.realpath());
+        if (!abspath.exists()) {
+          SG_LOG(SG_GENERAL, SG_WARN, "scenery path not found:" << abspath.str());
           continue;
         }
 
-        simgear::Dir dir(path);
+      // check for duplicates
+      string_list::const_iterator ex = std::find(fg_scenery.begin(), fg_scenery.end(), abspath.str());
+      if (ex != fg_scenery.end()) {
+        SG_LOG(SG_GENERAL, SG_INFO, "skipping duplicate add of scenery path:" << abspath.str());
+        continue;
+      }
+      
+        simgear::Dir dir(abspath);
         SGPath terrainDir(dir.file("Terrain"));
         SGPath objectsDir(dir.file("Objects"));
         
@@ -262,7 +285,7 @@ void FGGlobals::set_fg_scenery (const string &scenery)
       // Terrain and Objects subdirs, but the conditional logic was commented
       // out, such that all three dirs are added. Unfortunately there's
       // no information as to why the change was made.
-        fg_scenery.push_back(path.str());
+        fg_scenery.push_back(abspath.str());
         
         if (terrainDir.exists()) {
           fg_scenery.push_back(terrainDir.str());
@@ -278,9 +301,8 @@ void FGGlobals::set_fg_scenery (const string &scenery)
         fg_scenery.push_back("");
         
       // make scenery dirs available to Nasal
-        sim->removeChild("fg-scenery", i, false);
-        SGPropertyNode* n = sim->getChild("fg-scenery", i, true);
-        n->setStringValue(path.str());
+        SGPropertyNode* n = sim->getChild("fg-scenery", propIndex++, true);
+        n->setStringValue(abspath.str());
         n->setAttribute(SGPropertyNode::WRITE, false);
     } // of path list iteration
 }
@@ -292,15 +314,16 @@ void FGGlobals::append_aircraft_path(const std::string& path)
     SG_LOG(SG_GENERAL, SG_WARN, "aircraft path not found:" << path);
     return;
   }
+  std::string abspath = dirPath.realpath();
   
   unsigned int index = fg_aircraft_dirs.size();  
-  fg_aircraft_dirs.push_back(path);
+  fg_aircraft_dirs.push_back(abspath);
   
 // make aircraft dirs available to Nasal
   SGPropertyNode* sim = fgGetNode("/sim", true);
   sim->removeChild("fg-aircraft", index, false);
   SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
-  n->setStringValue(path);
+  n->setStringValue(abspath);
   n->setAttribute(SGPropertyNode::WRITE, false);
 }
 
@@ -320,6 +343,12 @@ SGPath FGGlobals::resolve_aircraft_path(const std::string& branch) const
 SGPath FGGlobals::resolve_maybe_aircraft_path(const std::string& branch) const
 {
   return simgear::ResourceManager::instance()->findPath(branch);
+}
+
+SGPath FGGlobals::resolve_resource_path(const std::string& branch) const
+{
+  return simgear::ResourceManager::instance()
+    ->findPath(branch, SGPath(fgGetString("/sim/aircraft-dir")));
 }
 
 FGRenderer *
@@ -352,7 +381,10 @@ FGGlobals::add_subsystem (const char * name,
 SGSoundMgr *
 FGGlobals::get_soundmgr () const
 {
-    return soundmgr;
+    if (subsystem_mgr)
+        return (SGSoundMgr*) subsystem_mgr->get_subsystem("sound");
+
+    return NULL;
 }
 
 SGEventMgr *
@@ -361,6 +393,40 @@ FGGlobals::get_event_mgr () const
     return event_mgr;
 }
 
+SGGeod
+FGGlobals::get_aircraft_position() const
+{
+  return SGGeod::fromDegFt(positionLon->getDoubleValue(),
+                           positionLat->getDoubleValue(),
+                           positionAlt->getDoubleValue());
+}
+
+SGVec3d
+FGGlobals::get_aircraft_position_cart() const
+{
+    return SGVec3d::fromGeod(get_aircraft_position());
+}
+
+void FGGlobals::get_aircraft_orientation(double& heading, double& pitch, double& roll)
+{
+  heading = orientHeading->getDoubleValue();
+  pitch = orientPitch->getDoubleValue();
+  roll = orientRoll->getDoubleValue();
+}
+
+SGGeod
+FGGlobals::get_view_position() const
+{
+  return SGGeod::fromDegFt(viewLon->getDoubleValue(),
+                           viewLat->getDoubleValue(),
+                           viewAlt->getDoubleValue());
+}
+
+SGVec3d
+FGGlobals::get_view_position_cart() const
+{
+  return SGVec3d::fromGeod(get_view_position());
+}
 
 // Save the current state as the initial state.
 void
@@ -410,6 +476,53 @@ FGGlobals::restoreInitialState ()
 
 }
 
+// Load user settings from autosave.xml
+void
+FGGlobals::loadUserSettings(const SGPath& dataPath)
+{
+    // remember that we have (tried) to load any existing autsave.xml
+    haveUserSettings = true;
+
+    SGPath autosaveFile = simgear::Dir(dataPath).file("autosave.xml");
+    SGPropertyNode autosave;
+    if (autosaveFile.exists()) {
+      SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << autosaveFile.str());
+      try {
+          readProperties(autosaveFile.str(), &autosave, SGPropertyNode::USERARCHIVE);
+      } catch (sg_exception& e) {
+          SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
+            << "(from " << e.getOrigin() << ")");
+      }
+    }
+    copyProperties(&autosave, globals->get_props());
+}
+
+// Save user settings in autosave.xml
+void
+FGGlobals::saveUserSettings()
+{
+    // only save settings when we have (tried) to load the previous
+    // settings (otherwise user data was lost)
+    if (!haveUserSettings)
+        return;
+
+    if (fgGetBool("/sim/startup/save-on-exit")) {
+      // don't save settings more than once on shutdown
+      haveUserSettings = false;
+
+      SGPath autosaveFile(globals->get_fg_home());
+      autosaveFile.append( "autosave.xml" );
+      autosaveFile.create_dir( 0700 );
+      SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile.str());
+      try {
+        writeProperties(autosaveFile.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+      } catch (const sg_exception &e) {
+        guiErrorMessage("Error writing autosave.xml: ", e);
+      }
+      SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
+    }
+}
+
 FGViewer *
 FGGlobals::get_current_view () const
 {
@@ -435,5 +548,5 @@ void FGGlobals::set_warp_delta( long int d )
 {
   fgSetInt("/sim/time/warp-delta", d);
 }
-    
+
 // end of globals.cxx

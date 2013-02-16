@@ -18,7 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
 
 
 #ifdef HAVE_CONFIG_H
@@ -31,11 +30,13 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/sound/sample_group.hxx>
 
 #include <Navaids/navlist.hxx>
 
 #include "kr_87.hxx"
 
+#include <Sound/morse.hxx>
 #include <string>
 using std::string;
 
@@ -70,9 +71,6 @@ static double kludgeRange ( double stationElev, double aircraftElev,
 
 // Constructor
 FGKR_87::FGKR_87( SGPropertyNode *node ) :
-    lon_node(fgGetNode("/position/longitude-deg", true)),
-    lat_node(fgGetNode("/position/latitude-deg", true)),
-    alt_node(fgGetNode("/position/altitude-ft", true)),
     bus_power(fgGetNode("/systems/electrical/outputs/adf", true)),
     serviceable(fgGetNode("/instrumentation/adf/serviceable", true)),
     need_update(true),
@@ -119,139 +117,104 @@ void FGKR_87::init () {
     SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
-    morse.init();
 }
 
+void FGKR_87::reinit () {
+    _time_before_search_sec = 0;
+}
 
 void FGKR_87::bind () {
+    _tiedProperties.setRoot(fgGetNode("/instrumentation/kr-87", true));
     // internal values
-    fgTie("/instrumentation/kr-87/internal/valid", this, &FGKR_87::get_valid);
-    fgTie("/instrumentation/kr-87/internal/inrange", this,
-          &FGKR_87::get_inrange);
-    fgTie("/instrumentation/kr-87/internal/dist", this,
-          &FGKR_87::get_dist);
-    fgTie("/instrumentation/kr-87/internal/heading", this,
-          &FGKR_87::get_heading);
+    _tiedProperties.Tie("internal/valid", this, &FGKR_87::get_valid);
+    _tiedProperties.Tie("internal/inrange", this,
+                        &FGKR_87::get_inrange);
+    _tiedProperties.Tie("internal/dist", this,
+                        &FGKR_87::get_dist);
+    _tiedProperties.Tie("internal/heading", this,
+                        &FGKR_87::get_heading);
 
     // modes
-    fgTie("/instrumentation/kr-87/modes/ant", this,
-	  &FGKR_87::get_ant_mode);
-    fgTie("/instrumentation/kr-87/modes/stby", this,
-	  &FGKR_87::get_stby_mode);
-    fgTie("/instrumentation/kr-87/modes/timer", this,
-	  &FGKR_87::get_timer_mode);
-    fgTie("/instrumentation/kr-87/modes/count", this,
-	  &FGKR_87::get_count_mode);
+    _tiedProperties.Tie("modes/ant", this,
+                        &FGKR_87::get_ant_mode);
+    _tiedProperties.Tie("modes/stby", this,
+                        &FGKR_87::get_stby_mode);
+    _tiedProperties.Tie("modes/timer", this,
+                        &FGKR_87::get_timer_mode);
+    _tiedProperties.Tie("modes/count", this,
+                        &FGKR_87::get_count_mode);
 
     // input and buttons
-    fgTie("/instrumentation/kr-87/inputs/rotation-deg", this,
-	  &FGKR_87::get_rotation, &FGKR_87::set_rotation);
+    _tiedProperties.Tie("inputs/rotation-deg", this,
+                        &FGKR_87::get_rotation, &FGKR_87::set_rotation);
     fgSetArchivable("/instrumentation/kr-87/inputs/rotation-deg");
-    fgTie("/instrumentation/kr-87/inputs/power-btn", this,
-	  &FGKR_87::get_power_btn,
-	  &FGKR_87::set_power_btn);
+    _tiedProperties.Tie("inputs/power-btn", this,
+                        &FGKR_87::get_power_btn,
+                        &FGKR_87::set_power_btn);
     fgSetArchivable("/instrumentation/kr-87/inputs/power-btn");
-    fgTie("/instrumentation/kr-87/inputs/audio-btn", this,
-	  &FGKR_87::get_audio_btn,
-	  &FGKR_87::set_audio_btn);
+    _tiedProperties.Tie("inputs/audio-btn", this,
+                        &FGKR_87::get_audio_btn,
+                        &FGKR_87::set_audio_btn);
     fgSetArchivable("/instrumentation/kr-87/inputs/audio-btn");
-    fgTie("/instrumentation/kr-87/inputs/volume", this,
-	  &FGKR_87::get_vol_btn,
-	  &FGKR_87::set_vol_btn);
+    _tiedProperties.Tie("inputs/volume", this,
+                        &FGKR_87::get_vol_btn,
+                        &FGKR_87::set_vol_btn);
     fgSetArchivable("/instrumentation/kr-87/inputs/volume");
-    fgTie("/instrumentation/kr-87/inputs/adf-btn", this,
-	  &FGKR_87::get_adf_btn,
-	  &FGKR_87::set_adf_btn);
-    fgTie("/instrumentation/kr-87/inputs/bfo-btn", this,
-	  &FGKR_87::get_bfo_btn,
-	  &FGKR_87::set_bfo_btn);
-    fgTie("/instrumentation/kr-87/inputs/frq-btn", this,
-	  &FGKR_87::get_frq_btn,
-	  &FGKR_87::set_frq_btn);
-    fgTie("/instrumentation/kr-87/inputs/flt-et-btn", this,
-	  &FGKR_87::get_flt_et_btn,
-	  &FGKR_87::set_flt_et_btn);
-    fgTie("/instrumentation/kr-87/inputs/set-rst-btn", this,
-	  &FGKR_87::get_set_rst_btn,
-	  &FGKR_87::set_set_rst_btn);
+    _tiedProperties.Tie("inputs/adf-btn", this,
+                        &FGKR_87::get_adf_btn,
+                        &FGKR_87::set_adf_btn);
+    _tiedProperties.Tie("inputs/bfo-btn", this,
+                        &FGKR_87::get_bfo_btn,
+                        &FGKR_87::set_bfo_btn);
+    _tiedProperties.Tie("inputs/frq-btn", this,
+                        &FGKR_87::get_frq_btn,
+                        &FGKR_87::set_frq_btn);
+    _tiedProperties.Tie("inputs/flt-et-btn", this,
+                        &FGKR_87::get_flt_et_btn,
+                        &FGKR_87::set_flt_et_btn);
+    _tiedProperties.Tie("inputs/set-rst-btn", this,
+                        &FGKR_87::get_set_rst_btn,
+                        &FGKR_87::set_set_rst_btn);
 
     // outputs
-    fgTie("/instrumentation/kr-87/outputs/selected-khz", this,
-	  &FGKR_87::get_freq, &FGKR_87::set_freq);
+    _tiedProperties.Tie("outputs/selected-khz", this,
+                        &FGKR_87::get_freq, &FGKR_87::set_freq);
     fgSetArchivable("/instrumentation/kr-87/outputs/selected-khz");
-    fgTie("/instrumentation/kr-87/outputs/standby-khz", this,
-	  &FGKR_87::get_stby_freq, &FGKR_87::set_stby_freq);
+    _tiedProperties.Tie("outputs/standby-khz", this,
+                        &FGKR_87::get_stby_freq, &FGKR_87::set_stby_freq);
     fgSetArchivable("/instrumentation/kr-87/outputs/standby-khz");
-    fgTie("/instrumentation/kr-87/outputs/needle-deg", this,
-	  &FGKR_87::get_needle_deg);
-    fgTie("/instrumentation/kr-87/outputs/flight-timer", this,
-          &FGKR_87::get_flight_timer);
-    fgTie("/instrumentation/kr-87/outputs/elapsed-timer", this,
-          &FGKR_87::get_elapsed_timer,
-          &FGKR_87::set_elapsed_timer);
+    _tiedProperties.Tie("outputs/needle-deg", this,
+                        &FGKR_87::get_needle_deg);
+    _tiedProperties.Tie("outputs/flight-timer", this,
+                        &FGKR_87::get_flight_timer);
+    _tiedProperties.Tie("outputs/elapsed-timer", this,
+                        &FGKR_87::get_elapsed_timer,
+                        &FGKR_87::set_elapsed_timer);
 
     // annunciators
-    fgTie("/instrumentation/kr-87/annunciators/ant", this,
-          &FGKR_87::get_ant_ann );
-    fgTie("/instrumentation/kr-87/annunciators/adf", this,
-          &FGKR_87::get_adf_ann );
-    fgTie("/instrumentation/kr-87/annunciators/bfo", this,
-          &FGKR_87::get_bfo_ann );
-    fgTie("/instrumentation/kr-87/annunciators/frq", this,
-          &FGKR_87::get_frq_ann );
-    fgTie("/instrumentation/kr-87/annunciators/flt", this,
-          &FGKR_87::get_flt_ann );
-    fgTie("/instrumentation/kr-87/annunciators/et", this,
-          &FGKR_87::get_et_ann );
+    _tiedProperties.Tie("annunciators/ant", this,
+                        &FGKR_87::get_ant_ann );
+    _tiedProperties.Tie("annunciators/adf", this,
+                        &FGKR_87::get_adf_ann );
+    _tiedProperties.Tie("annunciators/bfo", this,
+                        &FGKR_87::get_bfo_ann );
+    _tiedProperties.Tie("annunciators/frq", this,
+                        &FGKR_87::get_frq_ann );
+    _tiedProperties.Tie("annunciators/flt", this,
+                        &FGKR_87::get_flt_ann );
+    _tiedProperties.Tie("annunciators/et", this,
+                        &FGKR_87::get_et_ann );
 }
 
 
 void FGKR_87::unbind () {
-    // internal values
-    fgUntie("/instrumentation/kr-87/internal/valid");
-    fgUntie("/instrumentation/kr-87/internal/inrange");
-    fgUntie("/instrumentation/kr-87/internal/dist");
-    fgUntie("/instrumentation/kr-87/internal/heading");
-
-    // modes
-    fgUntie("/instrumentation/kr-87/modes/ant");
-    fgUntie("/instrumentation/kr-87/modes/stby");
-    fgUntie("/instrumentation/kr-87/modes/timer");
-    fgUntie("/instrumentation/kr-87/modes/count");
-
-    // input and buttons
-    fgUntie("/instrumentation/kr-87/inputs/rotation-deg");
-    fgUntie("/instrumentation/kr-87/inputs/power-btn");
-    fgUntie("/instrumentation/kr-87/inputs/volume");
-    fgUntie("/instrumentation/kr-87/inputs/adf-btn");
-    fgUntie("/instrumentation/kr-87/inputs/bfo-btn");
-    fgUntie("/instrumentation/kr-87/inputs/frq-btn");
-    fgUntie("/instrumentation/kr-87/inputs/flt-et-btn");
-    fgUntie("/instrumentation/kr-87/inputs/set-rst-btn");
-    fgUntie("/instrumentation/kr-87/inputs/ident-btn");
-
-    // outputs
-    fgUntie("/instrumentation/kr-87/outputs/selected-khz");
-    fgUntie("/instrumentation/kr-87/outputs/standby-khz");
-    fgUntie("/instrumentation/kr-87/outputs/needle-deg");
-    fgUntie("/instrumentation/kr-87/outputs/flight-timer");
-    fgUntie("/instrumentation/kr-87/outputs/elapsed-timer");
-
-    // annunciators
-    fgUntie("/instrumentation/kr-87/annunciators/ant");
-    fgUntie("/instrumentation/kr-87/annunciators/adf");
-    fgUntie("/instrumentation/kr-87/annunciators/bfo");
-    fgUntie("/instrumentation/kr-87/annunciators/frq");
-    fgUntie("/instrumentation/kr-87/annunciators/flt");
-    fgUntie("/instrumentation/kr-87/annunciators/et");
+    _tiedProperties.Untie();
 }
 
 
 // Update the various nav values based on position and valid tuned in navs
 void FGKR_87::update( double dt_sec ) {
-    SGGeod acft = SGGeod::fromDegFt(lon_node->getDoubleValue(),
-                                    lat_node->getDoubleValue(),
-                                    alt_node->getDoubleValue());
+    SGGeod acft = globals->get_aircraft_position();
 
     need_update = false;
 
@@ -497,8 +460,7 @@ void FGKR_87::update( double dt_sec ) {
 
 // Update current nav/adf radio stations based on current postition
 void FGKR_87::search() {
-  SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(), 
-    lat_node->getDoubleValue(), alt_node->getDoubleValue());
+  SGGeod pos = globals->get_aircraft_position();
   
 				// FIXME: the panel should handle this
     static string last_ident = "";
@@ -511,7 +473,8 @@ void FGKR_87::search() {
     ////////////////////////////////////////////////////////////////////////
 
   
-    FGNavRecord *adf = globals->get_navlist()->findByFreq( freq, pos);
+  FGNavList::TypeFilter filter(FGPositioned::NDB);
+  FGNavRecord *adf = FGNavList::findByFreq( freq, pos, &filter);
     if ( adf != NULL ) {
 	char sfreq[128];
 	snprintf( sfreq, 10, "%d", freq );
@@ -531,10 +494,12 @@ void FGKR_87::search() {
 	    xyz = adf->cart();
 
 	    if ( _sgr->exists( "adf-ident" ) ) {
-		_sgr->remove( "adf-ident" );
+	        // stop is required! -- remove alone wouldn't stop immediately
+	        _sgr->stop( "adf-ident" );
+	        _sgr->remove( "adf-ident" );
 	    }
 	    SGSoundSample *sound;
-	    sound = morse.make_ident( trans_ident, LO_FREQUENCY );
+        sound = FGMorse::instance()->make_ident( trans_ident, FGMorse::LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    _sgr->add( sound, "adf-ident" );
 

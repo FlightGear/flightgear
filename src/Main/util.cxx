@@ -28,7 +28,6 @@
 #include <cstdlib>
 
 #include <vector>
-using std::vector;
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGLimits.hxx>
@@ -42,6 +41,8 @@ using std::vector;
 #ifdef OSG_LIBRARY_STATIC
 #include "osgDB/Registry"
 #endif
+
+using std::vector;
 
 // Originally written by Alex Perry.
 double
@@ -71,10 +72,10 @@ fgGetLowPass (double current, double target, double timeratio)
 }
 
 
-string
+std::string
 fgUnescape (const char *s)
 {
-    string r;
+    std::string r;
     while (*s) {
         if (*s != '\\') {
             r += *s++;
@@ -128,16 +129,15 @@ fgUnescape (const char *s)
 // or an empty string otherwise.
 const char *fgValidatePath (const char *str, bool write)
 {
-    static SGPropertyNode_ptr r, w;
-    if (!r) {
-        r = fgGetNode("/sim/paths/validate/read", true);
-        r->setAttribute(SGPropertyNode::READ, true);
-        r->setAttribute(SGPropertyNode::WRITE, true);
+    SGPropertyNode_ptr r, w;
+    r = fgGetNode("/sim/paths/validate/read", true);
+    r->setAttribute(SGPropertyNode::READ, true);
+    r->setAttribute(SGPropertyNode::WRITE, true);
 
-        w = fgGetNode("/sim/paths/validate/write", true);
-        w->setAttribute(SGPropertyNode::READ, true);
-        w->setAttribute(SGPropertyNode::WRITE, true);
-    }
+    w = fgGetNode("/sim/paths/validate/write", true);
+    w->setAttribute(SGPropertyNode::READ, true);
+    w->setAttribute(SGPropertyNode::WRITE, true);
+
     SGPropertyNode *prop = write ? w : r;
     prop->setStringValue(str);
     const char *result = prop->getStringValue();

@@ -22,6 +22,8 @@
 #  include <config.h>
 #endif
 
+#include <cstdlib>
+
 #include "AIFlightPlan.hxx"
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props.hxx>
@@ -35,6 +37,8 @@
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
+#include <FDM/LaRCsim/basic_aero.h>
+#include <Navaids/navrecord.hxx>
 
 
 /* FGAIFlightPlan::create()
@@ -47,7 +51,7 @@
 
 
 // Check lat/lon values during initialization;
-void FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
+bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                             FGAirport * arr, int legNr, double alt,
                             double speed, double latitude,
                             double longitude, bool firstFlight,
@@ -55,131 +59,129 @@ void FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                             const string & aircraftType,
                             const string & airline, double distance)
 {
+    bool retVal = true;
     int currWpt = wpt_iterator - waypoints.begin();
     switch (legNr) {
     case 1:
-        createPushBack(ac, firstFlight, dep, latitude, longitude,
-                       radius, fltType, aircraftType, airline);
+        retVal = createPushBack(ac, firstFlight, dep,
+                                radius, fltType, aircraftType, airline);
+        // Pregenerate the taxi leg.
+        //if (retVal) {
+        //    waypoints.back()->setName( waypoints.back()->getName() + string("legend")); 
+        //    retVal = createTakeoffTaxi(ac, false, dep, radius, fltType, aircraftType, airline);
+        //}
         break;
     case 2:
-        createTakeoffTaxi(ac, firstFlight, dep, radius, fltType,
+        retVal =  createTakeoffTaxi(ac, firstFlight, dep, radius, fltType,
                           aircraftType, airline);
         break;
     case 3:
-        createTakeOff(ac, firstFlight, dep, speed, fltType);
+        retVal = createTakeOff(ac, firstFlight, dep, speed, fltType);
         break;
     case 4:
-        createClimb(ac, firstFlight, dep, speed, alt, fltType);
+        retVal = createClimb(ac, firstFlight, dep, arr, speed, alt, fltType);
         break;
     case 5:
-        createCruise(ac, firstFlight, dep, arr, latitude, longitude, speed,
+        retVal = createCruise(ac, firstFlight, dep, arr, latitude, longitude, speed,
                      alt, fltType);
         break;
     case 6:
-        createDescent(ac, arr, latitude, longitude, speed, alt, fltType,
+        retVal = createDescent(ac, arr, latitude, longitude, speed, alt, fltType,
                       distance);
         break;
     case 7:
-        createLanding(ac, arr, fltType);
+        retVal = createLanding(ac, arr, fltType);
         break;
     case 8:
-        createLandingTaxi(ac, arr, radius, fltType, aircraftType, airline);
+        retVal = createLandingTaxi(ac, arr, radius, fltType, aircraftType, airline);
         break;
     case 9:
-        createParking(ac, arr, radius);
+        retVal = createParking(ac, arr, radius);
         break;
     default:
         //exit(1);
-        SG_LOG(SG_INPUT, SG_ALERT,
+        SG_LOG(SG_AI, SG_ALERT,
                "AIFlightPlan::create() attempting to create unknown leg"
                " this is probably an internal program error");
+        break;
     }
     wpt_iterator = waypoints.begin() + currWpt;
-    leg++;
+    //don't  increment leg right away, but only once we pass the actual last waypoint that was created.
+    // to do so, mark the last waypoint with a special status flag
+   if (retVal) {
+        waypoints.back()->setName( waypoints.back()->getName() + string("legend")); 
+        // "It's pronounced Leg-end" (Roger Glover (Deep Purple): come Hell or High Water DvD, 1993)
+   }
+
+
+    //leg++;
+    return retVal;
 }
 
-FGAIFlightPlan::waypoint *
-    FGAIFlightPlan::createOnGround(FGAIAircraft * ac,
+FGAIWaypoint * FGAIFlightPlan::createOnGround(FGAIAircraft * ac,
                                    const std::string & aName,
                                    const SGGeod & aPos, double aElev,
                                    double aSpeed)
 {
-    waypoint *wpt = new waypoint;
-    wpt->name = aName;
-    wpt->longitude = aPos.getLongitudeDeg();
-    wpt->latitude = aPos.getLatitudeDeg();
-    wpt->altitude = aElev;
-    wpt->speed = aSpeed;
-    wpt->crossat = -10000.1;
-    wpt->gear_down = true;
-    wpt->flaps_down = true;
-    wpt->finished = false;
-    wpt->on_ground = true;
-    wpt->routeIndex = 0;
+    FGAIWaypoint *wpt  = new FGAIWaypoint;
+    wpt->setName       (aName                  );
+    wpt->setLongitude  (aPos.getLongitudeDeg() );
+    wpt->setLatitude   (aPos.getLatitudeDeg()  );
+    wpt->setAltitude   (aElev                  );
+    wpt->setSpeed      (aSpeed                 );
+    wpt->setCrossat    (-10000.1               );
+    wpt->setGear_down  (true                   );
+    wpt->setFlaps_down (true                   );
+    wpt->setFinished   (false                  );
+    wpt->setOn_ground  (true                   );
+    wpt->setRouteIndex (0                      );
     return wpt;
 }
 
-FGAIFlightPlan::waypoint *
-    FGAIFlightPlan::createInAir(FGAIAircraft * ac,
+FGAIWaypoint *    FGAIFlightPlan::createInAir(FGAIAircraft * ac,
                                 const std::string & aName,
                                 const SGGeod & aPos, double aElev,
                                 double aSpeed)
 {
-    waypoint *wpt = new waypoint;
-    wpt->name = aName;
-    wpt->longitude = aPos.getLongitudeDeg();
-    wpt->latitude = aPos.getLatitudeDeg();
-    wpt->altitude = aElev;
-    wpt->speed = aSpeed;
-    wpt->crossat = -10000.1;
-    wpt->gear_down = false;
-    wpt->flaps_down = false;
-    wpt->finished = false;
-    wpt->on_ground = false;
-    wpt->routeIndex = 0;
+    FGAIWaypoint * wpt = createOnGround(ac, aName, aPos, aElev, aSpeed);
+    wpt->setGear_down  (false                   );
+    wpt->setFlaps_down (false                   );
+    wpt->setOn_ground  (false                   );
+    wpt->setCrossat    (aElev                   );
     return wpt;
 }
 
-FGAIFlightPlan::waypoint *
-    FGAIFlightPlan::cloneWithPos(FGAIAircraft * ac, waypoint * aWpt,
+FGAIWaypoint * FGAIFlightPlan::clone(FGAIWaypoint * aWpt)
+{
+    FGAIWaypoint *wpt = new FGAIWaypoint;
+    wpt->setName       ( aWpt->getName ()      );
+    wpt->setLongitude  ( aWpt->getLongitude()  );
+    wpt->setLatitude   ( aWpt->getLatitude()   );
+    wpt->setAltitude   ( aWpt->getAltitude()   );
+    wpt->setSpeed      ( aWpt->getSpeed()      );
+    wpt->setCrossat    ( aWpt->getCrossat()    );
+    wpt->setGear_down  ( aWpt->getGear_down()  );
+    wpt->setFlaps_down ( aWpt->getFlaps_down() );
+    wpt->setFinished   ( aWpt->isFinished()    );
+    wpt->setOn_ground  ( aWpt->getOn_ground()  );
+    wpt->setRouteIndex ( 0                     );
+
+    return wpt;
+}
+
+
+FGAIWaypoint * FGAIFlightPlan::cloneWithPos(FGAIAircraft * ac, FGAIWaypoint * aWpt,
                                  const std::string & aName,
                                  const SGGeod & aPos)
 {
-    waypoint *wpt = new waypoint;
-    wpt->name = aName;
-    wpt->longitude = aPos.getLongitudeDeg();
-    wpt->latitude = aPos.getLatitudeDeg();
-
-    wpt->altitude = aWpt->altitude;
-    wpt->speed = aWpt->speed;
-    wpt->crossat = aWpt->crossat;
-    wpt->gear_down = aWpt->gear_down;
-    wpt->flaps_down = aWpt->flaps_down;
-    wpt->finished = aWpt->finished;
-    wpt->on_ground = aWpt->on_ground;
-    wpt->routeIndex = 0;
+    FGAIWaypoint *wpt = clone(aWpt);
+    wpt->setName       ( aName                   );
+    wpt->setLongitude  ( aPos.getLongitudeDeg () );
+    wpt->setLatitude   ( aPos.getLatitudeDeg  () );
 
     return wpt;
 }
 
-FGAIFlightPlan::waypoint * FGAIFlightPlan::clone(waypoint * aWpt)
-{
-    waypoint *wpt = new waypoint;
-    wpt->name = aWpt->name;
-    wpt->longitude = aWpt->longitude;
-    wpt->latitude = aWpt->latitude;
-
-    wpt->altitude = aWpt->altitude;
-    wpt->speed = aWpt->speed;
-    wpt->crossat = aWpt->crossat;
-    wpt->gear_down = aWpt->gear_down;
-    wpt->flaps_down = aWpt->flaps_down;
-    wpt->finished = aWpt->finished;
-    wpt->on_ground = aWpt->on_ground;
-    wpt->routeIndex = 0;
-
-    return wpt;
-}
 
 
 void FGAIFlightPlan::createDefaultTakeoffTaxi(FGAIAircraft * ac,
@@ -189,43 +191,42 @@ void FGAIFlightPlan::createDefaultTakeoffTaxi(FGAIAircraft * ac,
     SGGeod runwayTakeoff = aRunway->pointOnCenterline(5.0);
     double airportElev = aAirport->getElevation();
 
-    waypoint *wpt;
+    FGAIWaypoint *wpt;
     wpt =
         createOnGround(ac, "Airport Center", aAirport->geod(), airportElev,
                        ac->getPerformance()->vTaxi());
-    waypoints.push_back(wpt);
+    pushBackWaypoint(wpt);
     wpt =
         createOnGround(ac, "Runway Takeoff", runwayTakeoff, airportElev,
                        ac->getPerformance()->vTaxi());
-    waypoints.push_back(wpt);
+    pushBackWaypoint(wpt);
 }
 
-void FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
+bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
                                        FGAirport * apt,
                                        double radius,
                                        const string & fltType,
                                        const string & acType,
                                        const string & airline)
 {
-    double heading, lat, lon;
 
     // If this function is called during initialization,
     // make sure we obtain a valid gate ID first
     // and place the model at the location of the gate.
-    if (firstFlight) {
-        if (!(apt->getDynamics()->getAvailableParking(&lat, &lon,
-                                                      &heading, &gateId,
-                                                      radius, fltType,
-                                                      acType, airline))) {
-            SG_LOG(SG_INPUT, SG_WARN, "Could not find parking for a " <<
-                   acType <<
-                   " of flight type " << fltType <<
-                   " of airline     " << airline <<
-                   " at airport     " << apt->getId());
-        }
+    if (firstFlight)
+    {
+      gate =  apt->getDynamics()->getAvailableParking(radius, fltType,
+                                                        acType, airline);
+      if (!gate.isValid()) {
+        SG_LOG(SG_AI, SG_WARN, "Could not find parking for a " <<
+               acType <<
+               " of flight type " << fltType <<
+               " of airline     " << airline <<
+               " at airport     " << apt->getId());
+      }
     }
 
-    string rwyClass = getRunwayClassFromTrafficType(fltType);
+    const string& rwyClass = getRunwayClassFromTrafficType(fltType);
 
     // Only set this if it hasn't been set by ATC already.
     if (activeRunway.empty()) {
@@ -234,171 +235,212 @@ void FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             depHeading);
     }
-    rwy = apt->getRunwayByIdent(activeRunway);
+    FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+    assert( rwy != NULL );
     SGGeod runwayTakeoff = rwy->pointOnCenterline(5.0);
 
     FGGroundNetwork *gn = apt->getDynamics()->getGroundNetwork();
     if (!gn->exists()) {
         createDefaultTakeoffTaxi(ac, apt, rwy);
-        return;
+        return true;
     }
 
     intVec ids;
-    int runwayId = gn->findNearestNode(runwayTakeoff);
+    PositionedID runwayId = 0;
+    if (gn->getVersion() > 0) {
+        runwayId = gn->findNearestNodeOnRunway(runwayTakeoff);
+    } else {
+        runwayId = gn->findNearestNode(runwayTakeoff);
+    }
 
     // A negative gateId indicates an overflow parking, use a
     // fallback mechanism for this. 
     // Starting from gate 0 in this case is a bit of a hack
     // which requires a more proper solution later on.
-    delete taxiRoute;
-    taxiRoute = new FGTaxiRoute;
+  //  delete taxiRoute;
+  //  taxiRoute = new FGTaxiRoute;
 
     // Determine which node to start from.
-    int node = 0;
+    PositionedID node = 0;
     // Find out which node to start from
-    FGParking *park = apt->getDynamics()->getParking(gateId);
+    FGParking *park = gate.parking();
     if (park) {
         node = park->getPushBackPoint();
-    }
-
-    if (node == -1) {
-        node = gateId;
-    }
-    // HAndle case where parking doens't have a node
-    if ((node == 0) && park) {
-        if (firstFlight) {
-            node = gateId;
-        } else {
-            node = lastNodeVisited;
+        if (node == -1) {
+            node = park->guid();
+        } else if (node == 0) {
+            // HAndle case where parking doens't have a node
+            if (firstFlight) {
+                node = park->guid();
+            } else {
+                node = lastNodeVisited;
+            }
         }
     }
-
-    *taxiRoute = gn->findShortestRoute(node, runwayId);
+    
+    FGTaxiRoute taxiRoute = gn->findShortestRoute(node, runwayId);
     intVecIterator i;
 
-    if (taxiRoute->empty()) {
+    if (taxiRoute.empty()) {
         createDefaultTakeoffTaxi(ac, apt, rwy);
-        return;
+        return true;
     }
 
-    taxiRoute->first();
+    taxiRoute.first();
     //bool isPushBackPoint = false;
     if (firstFlight) {
         // If this is called during initialization, randomly
         // skip a number of waypoints to get a more realistic
         // taxi situation.
-        int nrWaypointsToSkip = rand() % taxiRoute->size();
+        int nrWaypointsToSkip = rand() % taxiRoute.size();
         // but make sure we always keep two active waypoints
         // to prevent a segmentation fault
         for (int i = 0; i < nrWaypointsToSkip - 3; i++) {
-            taxiRoute->next(&node);
+            taxiRoute.next(&node);
         }
-        apt->getDynamics()->releaseParking(gateId);
+        
+        gate.release(); // free up our gate as required
     } else {
-        if (taxiRoute->size() > 1) {
-            taxiRoute->next(&node);     // chop off the first waypoint, because that is already the last of the pushback route
+        if (taxiRoute.size() > 1) {
+            taxiRoute.next(&node);     // chop off the first waypoint, because that is already the last of the pushback route
         }
     }
 
     // push each node on the taxi route as a waypoint
-    int route;
-    while (taxiRoute->next(&node, &route)) {
+  //  int route;
+    //cerr << "Building taxi route" << endl;
+    while (taxiRoute.next(&node)) {
         char buffer[10];
-        snprintf(buffer, 10, "%d", node);
+        snprintf(buffer, 10, "%lld", (long long int) node);
         FGTaxiNode *tn =
             apt->getDynamics()->getGroundNetwork()->findNode(node);
-        waypoint *wpt =
-            createOnGround(ac, buffer, tn->getGeod(), apt->getElevation(),
+        FGAIWaypoint *wpt =
+            createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
-        wpt->routeIndex = route;
-        waypoints.push_back(wpt);
+       // wpt->setRouteIndex(route);
+        //cerr << "Nodes left " << taxiRoute->nodesLeft() << " ";
+        if (taxiRoute.nodesLeft() == 1) {
+            // Note that we actually have hold points in the ground network, but this is just an initial test.
+            //cerr << "Setting departurehold point: " << endl;
+            wpt->setName( wpt->getName() + string("DepartureHold"));
+        }
+        if (taxiRoute.nodesLeft() == 0) {
+            wpt->setName(wpt->getName() + string("Accel"));
+        }
+        pushBackWaypoint(wpt);
     }
+    // Acceleration point, 105 meters into the runway,
+    SGGeod accelPoint = rwy->pointOnCenterline(105.0);
+    FGAIWaypoint *wpt = createOnGround(ac, "accel", accelPoint, apt->getElevation(), ac->getPerformance()->vRotate());
+    pushBackWaypoint(wpt);
+
+    //cerr << "[done]" << endl;
+    return true;
 }
 
 void FGAIFlightPlan::createDefaultLandingTaxi(FGAIAircraft * ac,
                                               FGAirport * aAirport)
 {
     SGGeod lastWptPos =
-        SGGeod::fromDeg(waypoints.back()->longitude,
-                        waypoints.back()->latitude);
+        SGGeod::fromDeg(waypoints.back()->getLongitude(),
+                        waypoints.back()->getLatitude());
     double airportElev = aAirport->getElevation();
 
-    waypoint *wpt;
+    FGAIWaypoint *wpt;
     wpt =
         createOnGround(ac, "Runway Exit", lastWptPos, airportElev,
                        ac->getPerformance()->vTaxi());
-    waypoints.push_back(wpt);
+    pushBackWaypoint(wpt);
     wpt =
         createOnGround(ac, "Airport Center", aAirport->geod(), airportElev,
                        ac->getPerformance()->vTaxi());
-    waypoints.push_back(wpt);
+    pushBackWaypoint(wpt);
 
-    double heading, lat, lon;
-    aAirport->getDynamics()->getParking(gateId, &lat, &lon, &heading);
-    wpt =
-        createOnGround(ac, "END", SGGeod::fromDeg(lon, lat), airportElev,
-                       ac->getPerformance()->vTaxi());
-    waypoints.push_back(wpt);
+    if (gate.isValid()) {
+        wpt = createOnGround(ac, "ENDtaxi", gate.parking()->geod(), airportElev,
+                         ac->getPerformance()->vTaxi());
+        pushBackWaypoint(wpt);
+    }
 }
 
-void FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
+bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
                                        double radius,
                                        const string & fltType,
                                        const string & acType,
                                        const string & airline)
 {
-    double heading, lat, lon;
-    apt->getDynamics()->getAvailableParking(&lat, &lon, &heading,
-                                            &gateId, radius, fltType,
+    gate = apt->getDynamics()->getAvailableParking(radius, fltType,
                                             acType, airline);
 
-    SGGeod lastWptPos =
-        SGGeod::fromDeg(waypoints.back()->longitude,
-                        waypoints.back()->latitude);
+    SGGeod lastWptPos = waypoints.back()->getPos();
     FGGroundNetwork *gn = apt->getDynamics()->getGroundNetwork();
 
     // Find a route from runway end to parking/gate.
     if (!gn->exists()) {
         createDefaultLandingTaxi(ac, apt);
-        return;
+        return true;
     }
 
     intVec ids;
-    int runwayId = gn->findNearestNode(lastWptPos);
+    PositionedID runwayId = 0;
+    if (gn->getVersion() == 1) {
+        runwayId = gn->findNearestNodeOnRunway(lastWptPos);
+    } else {
+        runwayId = gn->findNearestNode(lastWptPos);
+    }
+    //cerr << "Using network node " << runwayId << endl;
     // A negative gateId indicates an overflow parking, use a
     // fallback mechanism for this. 
     // Starting from gate 0 is a bit of a hack...
     //FGTaxiRoute route;
-    delete taxiRoute;
-    taxiRoute = new FGTaxiRoute;
-    if (gateId >= 0)
-        *taxiRoute = gn->findShortestRoute(runwayId, gateId);
+  //  delete taxiRoute;
+   // taxiRoute = new FGTaxiRoute;
+    FGTaxiRoute taxiRoute;
+    if (gate.isValid())
+        taxiRoute = gn->findShortestRoute(runwayId, gate.parking()->guid());
     else
-        *taxiRoute = gn->findShortestRoute(runwayId, 0);
+        taxiRoute = gn->findShortestRoute(runwayId, 0);
     intVecIterator i;
 
-    if (taxiRoute->empty()) {
+    if (taxiRoute.empty()) {
         createDefaultLandingTaxi(ac, apt);
-        return;
+        return true;
     }
 
-    int node;
-    taxiRoute->first();
-    int size = taxiRoute->size();
+    PositionedID node;
+    taxiRoute.first();
+    int size = taxiRoute.size();
     // Omit the last two waypoints, as 
     // those are created by createParking()
-    int route;
+   // int route;
     for (int i = 0; i < size - 2; i++) {
-        taxiRoute->next(&node, &route);
+        taxiRoute.next(&node);
         char buffer[10];
-        snprintf(buffer, 10, "%d", node);
+        snprintf(buffer, 10, "%lld",  (long long int) node);
         FGTaxiNode *tn = gn->findNode(node);
-        waypoint *wpt =
-            createOnGround(ac, buffer, tn->getGeod(), apt->getElevation(),
+        FGAIWaypoint *wpt =
+            createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
-        wpt->routeIndex = route;
-        waypoints.push_back(wpt);
+       // wpt->setRouteIndex(route);
+        pushBackWaypoint(wpt);
     }
+    return true;
+}
+
+static double accelDistance(double v0, double v1, double accel)
+{
+  double t = fabs(v1 - v0) / accel; // time in seconds to change velocity
+  // area under the v/t graph: (t * v0) + (dV / 2t) where (dV = v1 - v0)
+  return t * 0.5 * (v1 + v0); 
+}
+
+// find the horizontal distance to gain the specific altiude, holding
+// a constant pitch angle. Used to compute distance based on standard FD/AP
+// PITCH mode prior to VS or CLIMB engaging. Visually, we want to avoid
+// a dip in the nose angle after rotation, during initial climb-out.
+static double pitchDistance(double pitchAngleDeg, double altGainM)
+{
+  return altGainM / tan(pitchAngleDeg * SG_DEGREES_TO_RADIANS);
 }
 
 /*******************************************************************
@@ -412,121 +454,124 @@ void FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
  *  more likely however. 
  * 
  ******************************************************************/
-void FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
+bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
                                    FGAirport * apt, double speed,
                                    const string & fltType)
 {
+    const double ACCEL_POINT = 105.0;
+  // climb-out angle in degrees. could move this to the perf-db but this
+  // value is pretty sane
+    const double INITIAL_PITCH_ANGLE = 10.0;
+  
     double accel = ac->getPerformance()->acceleration();
     double vTaxi = ac->getPerformance()->vTaxi();
     double vRotate = ac->getPerformance()->vRotate();
     double vTakeoff = ac->getPerformance()->vTakeoff();
-    //double vClimb = ac->getPerformance()->vClimb();
 
-    double accelMetric = (accel * SG_NM_TO_METER) / 3600;
-    double vTaxiMetric = (vTaxi * SG_NM_TO_METER) / 3600;
-    double vRotateMetric = (vRotate * SG_NM_TO_METER) / 3600;
-    double vTakeoffMetric = (vTakeoff * SG_NM_TO_METER) / 3600;
-    //double vClimbMetric = (vClimb * SG_NM_TO_METER) / 3600;
-    // Acceleration = dV / dT
-    // Acceleration X dT = dV
-    // dT = dT / Acceleration
-    //d = (Vf^2 - Vo^2) / (2*a)
-    //double accelTime = (vRotate - vTaxi) / accel;
-    //cerr << "Using " << accelTime << " as total acceleration time" << endl;
-    double accelDistance =
-        (vRotateMetric * vRotateMetric -
-         vTaxiMetric * vTaxiMetric) / (2 * accelMetric);
-    //cerr << "Using " << accelDistance << " " << accelMetric << " " << vRotateMetric << endl;
-    waypoint *wpt;
+    double accelMetric = accel * SG_KT_TO_MPS;
+    double vTaxiMetric = vTaxi * SG_KT_TO_MPS;
+    double vRotateMetric = vRotate * SG_KT_TO_MPS;
+   
+    FGAIWaypoint *wpt;
     // Get the current active runway, based on code from David Luff
     // This should actually be unified and extended to include 
     // Preferential runway use schema's 
     // NOTE: DT (2009-01-18: IIRC, this is currently already the case, 
     // because the getActive runway function takes care of that.
     if (firstFlight) {
-        string rwyClass = getRunwayClassFromTrafficType(fltType);
+        const string& rwyClass = getRunwayClassFromTrafficType(fltType);
         double heading = ac->getTrafficRef()->getCourse();
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
-        rwy = apt->getRunwayByIdent(activeRunway);
     }
-
+  
+    FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+    assert( rwy != NULL );
     double airportElev = apt->getElevation();
-    // Acceleration point, 105 meters into the runway,
-    SGGeod accelPoint = rwy->pointOnCenterline(105.0);
-    wpt = createOnGround(ac, "accel", accelPoint, airportElev, vRotate);
-    waypoints.push_back(wpt);
-
-
-    accelDistance =
-        (vTakeoffMetric * vTakeoffMetric -
-         vTaxiMetric * vTaxiMetric) / (2 * accelMetric);
-    //cerr << "Using " << accelDistance << " " << accelMetric << " " << vTakeoffMetric << endl;
-    accelPoint = rwy->pointOnCenterline(105.0 + accelDistance);
+    
+    double d = accelDistance(vTaxiMetric, vRotateMetric, accelMetric) + ACCEL_POINT;
+  
+    SGGeod accelPoint = rwy->pointOnCenterline(d);
     wpt = createOnGround(ac, "rotate", accelPoint, airportElev, vTakeoff);
-    waypoints.push_back(wpt);
+    pushBackWaypoint(wpt);
 
-    accelDistance =
-        ((vTakeoffMetric * 1.1) * (vTakeoffMetric * 1.1) -
-         vTaxiMetric * vTaxiMetric) / (2 * accelMetric);
-    //cerr << "Using " << accelDistance << " " << accelMetric << " " << vTakeoffMetric << endl;
-    accelPoint = rwy->pointOnCenterline(105.0 + accelDistance);
-    wpt =
-        createOnGround(ac, "rotate", accelPoint, airportElev + 1000,
-                       vTakeoff * 1.1);
-    wpt->on_ground = false;
-    waypoints.push_back(wpt);
+    double vRef = vTakeoff + 20; // climb-out at v2 + 20kts
+  
+    double gearUpDist = d + pitchDistance(INITIAL_PITCH_ANGLE, 400 * SG_FEET_TO_METER);
+    accelPoint = rwy->pointOnCenterline(gearUpDist);
+    
+    wpt = cloneWithPos(ac, wpt, "gear-up", accelPoint);
+    wpt->setSpeed(vRef);
+    wpt->setCrossat(airportElev + 400);
+    wpt->setOn_ground(false);
+    wpt->setGear_down(false);
+    pushBackWaypoint(wpt);
+  
+  // limit climbout speed to 240kts below 10000'
+    double vClimbBelow10000 = std::min(240.0, ac->getPerformance()->vClimb());
+  
+  // create two climb-out points. This is important becuase the first climb point will
+  // be a (sometimes large) turn towards the destination, and we don't want to
+  // commence that turn below 2000'
+    double climbOut = d + pitchDistance(INITIAL_PITCH_ANGLE, 2000 * SG_FEET_TO_METER);
+    accelPoint = rwy->pointOnCenterline(climbOut);
+    wpt = createInAir(ac, "2000'", accelPoint, airportElev + 2000, vClimbBelow10000);
+    pushBackWaypoint(wpt);
+  
+    climbOut = d + pitchDistance(INITIAL_PITCH_ANGLE, 2500 * SG_FEET_TO_METER);
+    accelPoint = rwy->pointOnCenterline(climbOut);
+    wpt = createInAir(ac, "2500'", accelPoint, airportElev + 2500, vClimbBelow10000);
+    pushBackWaypoint(wpt);
 
-    wpt = cloneWithPos(ac, wpt, "3000 ft", rwy->end());
-    wpt->altitude = airportElev + 3000;
-    waypoints.push_back(wpt);
-
-    // Finally, add two more waypoints, so that aircraft will remain under
-    // Tower control until they have reached the 3000 ft climb point
-    SGGeod pt = rwy->pointOnCenterline(5000 + rwy->lengthM() * 0.5);
-    wpt = cloneWithPos(ac, wpt, "5000 ft", pt);
-    wpt->altitude = airportElev + 5000;
-    waypoints.push_back(wpt);
+    return true;
 }
 
 /*******************************************************************
  * CreateClimb
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
-                                 FGAirport * apt, double speed, double alt,
+bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
+                                 FGAirport * apt, FGAirport* arrival,
+                                 double speed, double alt,
                                  const string & fltType)
 {
-    waypoint *wpt;
-//  bool planLoaded = false;
-    string fPLName;
+    FGAIWaypoint *wpt;
+  //  string fPLName;
     double vClimb = ac->getPerformance()->vClimb();
-
+  
     if (firstFlight) {
-        string rwyClass = getRunwayClassFromTrafficType(fltType);
+        const string& rwyClass = getRunwayClassFromTrafficType(fltType);
         double heading = ac->getTrafficRef()->getCourse();
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
-        rwy = apt->getRunwayByIdent(activeRunway);
     }
     if (sid) {
         for (wpt_vector_iterator i = sid->getFirstWayPoint();
              i != sid->getLastWayPoint(); i++) {
-            waypoints.push_back(clone(*(i)));
+            pushBackWaypoint(clone(*(i)));
             //cerr << " Cloning waypoint " << endl;
         }
     } else {
-        SGGeod climb1 = rwy->pointOnCenterline(10 * SG_NM_TO_METER);
-        wpt = createInAir(ac, "10000ft climb", climb1, vClimb, 10000);
-        wpt->gear_down = true;
-        wpt->flaps_down = true;
-        waypoints.push_back(wpt);
+        FGRunway* runway = apt->getRunwayByIdent(activeRunway);
+        SGGeod cur = runway->end();
+        if (!waypoints.empty()) {
+          cur = waypoints.back()->getPos();
+        }
+      
+      // compute course towards destination
+        double course = SGGeodesy::courseDeg(cur, arrival->geod());
+      
+        SGGeod climb1 = SGGeodesy::direct(cur, course, 10 * SG_NM_TO_METER);
+        wpt = createInAir(ac, "10000ft climb", climb1, 10000, vClimb);
+        wpt->setGear_down(true);
+        wpt->setFlaps_down(true);
+        pushBackWaypoint(wpt);
 
-        SGGeod climb2 = rwy->pointOnCenterline(20 * SG_NM_TO_METER);
-        wpt = cloneWithPos(ac, wpt, "18000ft climb", climb2);
-        wpt->altitude = 18000;
-        waypoints.push_back(wpt);
+        SGGeod climb2 = SGGeodesy::direct(cur, course, 20 * SG_NM_TO_METER);
+        wpt = createInAir(ac, "18000ft climb", climb2, 18000, vClimb);
+        pushBackWaypoint(wpt);
     }
+    return true;
 }
 
 
@@ -536,26 +581,24 @@ void FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
  * Generate a flight path from the last waypoint of the cruise to 
  * the permission to land point
  ******************************************************************/
-void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
+bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
                                    double latitude, double longitude,
                                    double speed, double alt,
                                    const string & fltType,
                                    double requiredDistance)
 {
     bool reposition = false;
-    waypoint *wpt;
+    FGAIWaypoint *wpt;
     double vDescent = ac->getPerformance()->vDescent();
     double vApproach = ac->getPerformance()->vApproach();
 
-
     //Beginning of Descent 
-    string rwyClass = getRunwayClassFromTrafficType(fltType);
+    const string& rwyClass = getRunwayClassFromTrafficType(fltType);
     double heading = ac->getTrafficRef()->getCourse();
     apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway,
                                         heading);
-    rwy = apt->getRunwayByIdent(activeRunway);
-
-
+    FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+    assert( rwy != NULL );
 
     // Create a slow descent path that ends 250 lateral to the runway.
     double initialTurnRadius = getTurnRadius(vDescent, true);
@@ -593,11 +636,20 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         origin = current;
     }
 
-
-    double dAlt = alt - (apt->getElevation() + 2000);
-
+    double dAlt = 0; //  = alt - (apt->getElevation() + 2000);
+    FGTaxiNode * tn = 0;
+    if (apt->getDynamics()->getGroundNetwork()) {
+        int node = apt->getDynamics()->getGroundNetwork()->findNearestNode(refPoint);
+        tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
+    }
+  
+    if (tn) {
+        dAlt = alt - ((tn->getElevationFt()) + 2000);
+    } else {
+        dAlt = alt - (apt->getElevation() + 2000);
+    }
+  
     double nPoints = 100;
-
     char buffer[16];
 
     // The descent path contains the following phases:
@@ -611,11 +663,11 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     //cerr << "Distance       : " << distance      << endl;
     //cerr << "Azimuth        : " << azimuth       << endl;
     //cerr << "Initial Lateral point: " << lateralOffset << endl;
-    double lat = refPoint.getLatitudeDeg();
-    double lon = refPoint.getLongitudeDeg();
+//    double lat = refPoint.getLatitudeDeg();
+//    double lon = refPoint.getLongitudeDeg();
     //cerr << "Reference point (" << lat << ", " << lon << ")." << endl;
-    lat = initialTarget.getLatitudeDeg();
-    lon = initialTarget.getLongitudeDeg();
+//    lat = initialTarget.getLatitudeDeg();
+//    lon = initialTarget.getLongitudeDeg();
     //cerr << "Initial Target point (" << lat << ", " << lon << ")." << endl;
 
     double ratio = initialTurnRadius / distance;
@@ -684,8 +736,8 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     azimuth = SGGeodesy::courseDeg(origin, secondaryTarget);
 
 
-    lat = secondaryTarget.getLatitudeDeg();
-    lon = secondaryTarget.getLongitudeDeg();
+//    lat = secondaryTarget.getLatitudeDeg();
+//    lon = secondaryTarget.getLongitudeDeg();
     //cerr << "Secondary Target point (" << lat << ", " << lon << ")." << endl;
     //cerr << "Distance       : " << distance      << endl;
     //cerr << "Azimuth        : " << azimuth       << endl;
@@ -709,8 +761,8 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     SGGeodesy::direct(origin, azimuth,
                       newDistance, tertiaryTarget, dummyAz2);
 
-    lat = tertiaryTarget.getLatitudeDeg();
-    lon = tertiaryTarget.getLongitudeDeg();
+//    lat = tertiaryTarget.getLatitudeDeg();
+//    lon = tertiaryTarget.getLongitudeDeg();
     //cerr << "tertiary Target point (" << lat << ", " << lon << ")." << endl;
 
 
@@ -721,9 +773,9 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         SGGeodesy::direct(origin, azimuth, currentDist, result, dummyAz2);
         snprintf(buffer, 16, "descent%03d", i);
         wpt = createInAir(ac, buffer, result, currentAltitude, vDescent);
-        wpt->crossat = currentAltitude;
-        wpt->trackLength = (newDistance / nPoints);
-        waypoints.push_back(wpt);
+        wpt->setCrossat(currentAltitude);
+        wpt->setTrackLength((newDistance / nPoints));
+        pushBackWaypoint(wpt);
         //cerr << "Track Length : " << wpt->trackLength;
         //cerr << "  Position : " << result.getLatitudeDeg() << " " << result.getLongitudeDeg() << " " << currentAltitude << endl;
     }
@@ -756,44 +808,34 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     }
 
     //cerr << "creating circle between " << startval << " and " << endval << " using " << increment << endl;
+    //FGTaxiNode * tn = apt->getDynamics()->getGroundNetwork()->findNearestNode(initialTarget);
+    double currentAltitude = 0;
+    if (tn) {
+        currentAltitude = (tn->getElevationFt()) + 2000;
+    } else {
+        currentAltitude = apt->getElevation() + 2000;
+    }
+        
     double trackLength = (2 * M_PI * initialTurnRadius) / 360.0;
     for (int i = startval; i != endval; i += increment) {
         SGGeod result;
-        double currentAltitude = apt->getElevation() + 2000;
+        //double currentAltitude = apt->getElevation() + 2000;
+        
         SGGeodesy::direct(secondaryTarget, i,
                           initialTurnRadius, result, dummyAz2);
         snprintf(buffer, 16, "turn%03d", i);
         wpt = createInAir(ac, buffer, result, currentAltitude, vDescent);
-        wpt->crossat = currentAltitude;
-        wpt->trackLength = trackLength;
+        wpt->setCrossat(currentAltitude);
+        wpt->setTrackLength(trackLength);
         //cerr << "Track Length : " << wpt->trackLength;
-        waypoints.push_back(wpt);
+        pushBackWaypoint(wpt);
         //cerr << "  Position : " << result.getLatitudeDeg() << " " << result.getLongitudeDeg() << " " << currentAltitude << endl;
     }
 
 
-    // The approach leg should bring the aircraft to approximately 4-6 out, after which the landing phase should take over. 
+    // The approach leg should bring the aircraft to approximately 4-6 nm out, after which the landing phase should take over. 
     //cerr << "Phase 3: Approach" << endl;
-    distanceOut -= distanceCovered;
-    for (int i = 1; i < nPoints; i++) {
-        SGGeod result;
-        double currentDist = i * (distanceOut / nPoints);
-        double currentAltitude =
-            apt->getElevation() + 2000 - (i * 2000 / nPoints);
-        snprintf(buffer, 16, "final%03d", i);
-        result = rwy->pointOnCenterline((-distanceOut) + currentDist);
-        wpt = createInAir(ac, buffer, result, currentAltitude, vApproach);
-        wpt->crossat = currentAltitude;
-        wpt->trackLength = (distanceOut / nPoints);
-        // account for the extra distance due to an extended downwind leg
-        if (i == 1) {
-            wpt->trackLength += distanceCovered;
-        }
-        //cerr << "Track Length : " << wpt->trackLength;
-        waypoints.push_back(wpt);
-        //cerr << "  Position : " << result.getLatitudeDeg() << " " << result.getLongitudeDeg() << " " << currentAltitude << endl;
-    }
-
+    
     //cerr << "Done" << endl;
 
     // Erase the two bogus BOD points: Note check for conflicts with scripted AI flightPlans
@@ -803,7 +845,7 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     if (reposition) {
         double tempDistance;
         //double minDistance = HUGE_VAL;
-        string wptName;
+        //string wptName;
         tempDistance = SGGeodesy::distanceM(current, initialTarget);
         time_t eta =
             tempDistance / ((vDescent * SG_NM_TO_METER) / 3600.0) + now;
@@ -823,8 +865,30 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         //cerr << "Repositioning to waypoint " << (*waypoints.begin())->name << endl;
         ac->resetPositionFromFlightPlan();
     }
+    waypoints[1]->setName( (waypoints[1]->getName() + string("legend"))); 
+    return true;
+}
 
-
+/**
+ * compute the distance along the centerline, to the ILS glideslope
+ * transmitter. Return -1 if there's no GS for the runway
+ */
+static double runwayGlideslopeTouchdownDistance(FGRunway* rwy)
+{
+  FGNavRecord* gs = rwy->glideslope();
+  if (!gs) {
+    return -1;
+  }
+  
+  SGVec3d runwayPosCart = SGVec3d::fromGeod(rwy->pointOnCenterline(0.0));
+  // compute a unit vector in ECF cartesian space, from the runway beginning to the end
+  SGVec3d runwayDirectionVec = normalize(SGVec3d::fromGeod(rwy->end()) - runwayPosCart);
+  SGVec3d gsTransmitterVec = gs->cart() - runwayPosCart;
+  
+// project the gsTransmitterVec along the runwayDirctionVec to get out
+// final value (in metres)
+  double dist = dot(runwayDirectionVec, gsTransmitterVec);
+  return dist;
 }
 
 /*******************************************************************
@@ -832,88 +896,130 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
  * Create a flight path from the "permision to land" point (currently
    hardcoded at 5000 meters from the threshold) to the threshold, at
    a standard glide slope angle of 3 degrees. 
+   Position : 50.0354 8.52592 384 364 11112
  ******************************************************************/
-void FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
+bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
                                    const string & fltType)
 {
     double vTouchdown = ac->getPerformance()->vTouchdown();
-    //double vTaxi = ac->getPerformance()->vTaxi();
+    double vTaxi      = ac->getPerformance()->vTaxi();
+    double decel     = ac->getPerformance()->decelerationOnGround();
+    double vApproach = ac->getPerformance()->vApproach();
+  
+    double vTouchdownMetric = vTouchdown  * SG_KT_TO_MPS;
+    double vTaxiMetric      = vTaxi       * SG_KT_TO_MPS;
+    double decelMetric      = decel       * SG_KT_TO_MPS;
 
-    //string rwyClass = getRunwayClassFromTrafficType(fltType);
-    //double heading = ac->getTrafficRef()->getCourse();
-    //apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
-    //rwy = apt->getRunwayByIdent(activeRunway);
-
-
-    waypoint *wpt;
-    double aptElev = apt->getElevation();
-
-    SGGeod coord;
     char buffer[12];
-    for (int i = 1; i < 10; i++) {
-        snprintf(buffer, 12, "wpt%d", i);
-        coord = rwy->pointOnCenterline(rwy->lengthM() * (i / 10.0));
-        wpt = createOnGround(ac, buffer, coord, aptElev, (vTouchdown / i));
-        wpt->crossat = apt->getElevation();
-        waypoints.push_back(wpt);
+    FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+    assert( rwy != NULL );
+    SGGeod threshold = rwy->threshold();
+    double currElev = threshold.getElevationFt();
+  
+    double touchdownDistance = runwayGlideslopeTouchdownDistance(rwy);
+    if (touchdownDistance < 0.0) {
+      double landingLength = rwy->lengthM() - (rwy->displacedThresholdM());
+      // touchdown 25% of the way along the landing area
+      touchdownDistance = rwy->displacedThresholdM() + (landingLength * 0.25);
+    }
+  
+    SGGeod coord;
+  // find glideslope entry point, 2000' above touchdown elevation
+    double glideslopeEntry = -((2000 * SG_FEET_TO_METER) / tan(3.0)) + touchdownDistance;
+    FGAIWaypoint *wpt = createInAir(ac, "Glideslope begin", rwy->pointOnCenterline(glideslopeEntry),
+                                  currElev + 2000, vApproach);
+    pushBackWaypoint(wpt);
+  
+  // deceleration point, 500' above touchdown elevation - slow from approach speed
+  // to touchdown speed
+    double decelPoint = -((500 * SG_FEET_TO_METER) / tan(3.0)) + touchdownDistance;
+    wpt = createInAir(ac, "500' decel", rwy->pointOnCenterline(decelPoint),
+                                  currElev + 2000, vTouchdown);
+    pushBackWaypoint(wpt);
+  
+  // compute elevation above the runway start, based on a 3-degree glideslope
+    double heightAboveRunwayStart = touchdownDistance *
+      tan(3.0 * SG_DEGREES_TO_RADIANS) * SG_METER_TO_FEET;
+    wpt = createInAir(ac, "CrossThreshold", rwy->begin(),
+                      heightAboveRunwayStart + currElev, vTouchdown);
+    pushBackWaypoint(wpt);
+  
+    double rolloutDistance = accelDistance(vTouchdownMetric, vTaxiMetric, decelMetric);
+  
+    int nPoints = 50;
+    for (int i = 1; i < nPoints; i++) {
+        snprintf(buffer, 12, "landing03%d", i);
+        double t = ((double) i) / nPoints;
+        coord = rwy->pointOnCenterline(touchdownDistance + (rolloutDistance * t));
+        double vel = (vTouchdownMetric * (1.0 - t)) + (vTaxiMetric * t);
+        wpt = createOnGround(ac, buffer, coord, currElev, vel);
+        wpt->setCrossat(currElev);
+        pushBackWaypoint(wpt);
+    }
+  
+    wpt->setSpeed(vTaxi);
+    double mindist = (1.1 * rolloutDistance) + touchdownDistance;
+
+    FGGroundNetwork *gn = apt->getDynamics()->getGroundNetwork();
+    if (!gn) {
+      return true;
+    }
+  
+    coord = rwy->pointOnCenterline(mindist);
+    int nodeId = 0;
+    if (gn->getVersion() > 0) {
+        nodeId = gn->findNearestNodeOnRunway(coord, rwy);
+    } else {
+        nodeId = gn->findNearestNode(coord);
+    }
+      
+    FGTaxiNode* tn = gn->findNode(nodeId);
+    if (tn) {
+        wpt = createOnGround(ac, buffer, tn->geod(), currElev, vTaxi);
+        pushBackWaypoint(wpt);
     }
 
-    /*
-       //Runway Threshold
-       wpt = createOnGround(ac, "Threshold", rwy->threshold(), aptElev, vTouchdown);
-       wpt->crossat = apt->getElevation();
-       waypoints.push_back(wpt); 
-
-       // Roll-out
-       wpt = createOnGround(ac, "Center", rwy->geod(), aptElev, vTaxi*2);
-       waypoints.push_back(wpt);
-
-       SGGeod rollOut = rwy->pointOnCenterline(rwy->lengthM() * 0.9);
-       wpt = createOnGround(ac, "Roll Out", rollOut, aptElev, vTaxi);
-       wpt->crossat   = apt->getElevation();
-       waypoints.push_back(wpt); 
-     */
+    return true;
 }
 
 /*******************************************************************
  * CreateParking
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
+bool FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
                                    double radius)
 {
-    waypoint *wpt;
+    FGAIWaypoint *wpt;
     double aptElev = apt->getElevation();
-    double lat = 0.0, lat2 = 0.0;
-    double lon = 0.0, lon2 = 0.0;
-    double az2 = 0.0;
-    double heading = 0.0;
-
     double vTaxi = ac->getPerformance()->vTaxi();
     double vTaxiReduced = vTaxi * (2.0 / 3.0);
-    apt->getDynamics()->getParking(gateId, &lat, &lon, &heading);
-    heading += 180.0;
-    if (heading > 360)
-        heading -= 360;
-    geo_direct_wgs_84(0, lat, lon, heading,
-                      2.2 * radius, &lat2, &lon2, &az2);
-    wpt =
-        createOnGround(ac, "taxiStart", SGGeod::fromDeg(lon2, lat2),
-                       aptElev, vTaxiReduced);
-    waypoints.push_back(wpt);
+    if (!gate.isValid()) {
+      wpt = createOnGround(ac, "END-Parking", apt->geod(), aptElev,
+                           vTaxiReduced);
+      pushBackWaypoint(wpt);
+      return true;
+    }
+  
+    FGParking* parking = gate.parking();
+    double heading = SGMiscd::normalizePeriodic(0, 360, parking->getHeading() + 180.0);
+    double az; // unused
+    SGGeod pos;
+  
+    SGGeodesy::direct(parking->geod(), heading, 2.2 * parking->getRadius(),
+                      pos, az);
+  
+    wpt = createOnGround(ac, "taxiStart", pos, aptElev, vTaxiReduced);
+    pushBackWaypoint(wpt);
 
-    geo_direct_wgs_84(0, lat, lon, heading,
-                      0.1 * radius, &lat2, &lon2, &az2);
+    SGGeodesy::direct(parking->geod(), heading, 0.1 * parking->getRadius(),
+                    pos, az);
+    wpt = createOnGround(ac, "taxiStart2", pos, aptElev, vTaxiReduced);
+    pushBackWaypoint(wpt);
 
-    wpt =
-        createOnGround(ac, "taxiStart2", SGGeod::fromDeg(lon2, lat2),
-                       aptElev, vTaxiReduced);
-    waypoints.push_back(wpt);
-
-    wpt =
-        createOnGround(ac, "END", SGGeod::fromDeg(lon, lat), aptElev,
+    wpt = createOnGround(ac, "END-Parking", parking->geod(), aptElev,
                        vTaxiReduced);
-    waypoints.push_back(wpt);
+    pushBackWaypoint(wpt);
+    return true;
 }
 
 /**
@@ -939,21 +1045,21 @@ void FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
  * - ul (ultralight: I can imagine that these may share a runway with ga on some airports)
  * - mil (all military traffic)
  */
-string FGAIFlightPlan::getRunwayClassFromTrafficType(string fltType)
+const char* FGAIFlightPlan::getRunwayClassFromTrafficType(const string& fltType)
 {
     if ((fltType == "gate") || (fltType == "cargo")) {
-        return string("com");
+        return "com";
     }
     if (fltType == "ga") {
-        return string("gen");
+        return "gen";
     }
     if (fltType == "ul") {
-        return string("ul");
+        return "ul";
     }
     if ((fltType == "mil-fighter") || (fltType == "mil-transport")) {
-        return string("mil");
+        return "mil";
     }
-    return string("com");
+    return "com";
 }
 
 

@@ -8,6 +8,8 @@ foreach( mylibfolder
 		Aircraft
 		ATC
 		ATCDCL
+		Canvas
+		Radio
 		Autopilot
 		Cockpit
 		Environment
@@ -16,8 +18,8 @@ foreach( mylibfolder
 		Instrumentation
 		Model
 		MultiPlayer
-    AIModel
-    Navaids
+		AIModel
+		Navaids
 		Network
 		Scenery
 		Scripting
@@ -26,9 +28,11 @@ foreach( mylibfolder
 		Time
 		Traffic
 		FDM
+		Viewer
 		Main
-    )
+	)
 
-    add_subdirectory(${mylibfolder})
+	add_subdirectory(${mylibfolder})
+
 endforeach( mylibfolder )
 

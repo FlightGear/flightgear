@@ -16,7 +16,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #ifndef __SOUND_VOICEPLAYER_HXX
@@ -30,12 +30,9 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
-#include <simgear/sound/sample_openal.hxx>
-using std::vector;
-using std::deque;
-using std::map;
 
 class SGSampleGroup;
+class SGSoundSample;
 
 #include <Main/globals.hxx>
 
@@ -152,13 +149,12 @@ public:
         float               _volume;
 
     public:
-        inline SampleElement (SGSharedPtr<SGSoundSample> sample, float volume = 1.0)
-          : _sample(sample), _volume(volume) { silence = false; }
-
-        virtual inline void play (float volume) { if (_sample && (volume > 0.05)) { set_volume(volume); _sample->play_once(); } }
-        virtual inline void stop () { if (_sample) _sample->stop(); }
-        virtual inline bool is_playing () { return _sample ? _sample->is_playing() : false; }
-        virtual inline void set_volume (float volume) { if (_sample) _sample->set_volume(volume * _volume); }
+        SampleElement (SGSharedPtr<SGSoundSample> sample, float volume = 1.0);
+      
+        virtual void play (float volume);
+        virtual void stop ();
+        virtual bool is_playing ();
+        virtual void set_volume (float volume);
     };
 
     /////////////////////////////////////////////////////////////////////////
@@ -202,8 +198,8 @@ public:
 
       float volume;
 
-      vector<Element *>         elements;
-      vector<Element *>::iterator   iter;
+      std::vector<Element *>         elements;
+      std::vector<Element *>::iterator   iter;
 
       inline float get_volume () const { return player->volume * player->speaker.volume * volume; }
   };
@@ -222,14 +218,11 @@ public:
   Voice *voice;
   Voice *next_voice;
   bool paused;
-  string dev_name;
-  string dir_prefix;
+  std::string dev_name;
+  std::string dir_prefix;
 
-  inline FGVoicePlayer (PropertiesHandler* properties_handler, string _dev_name)
-    : volume(1.0), voice(NULL), next_voice(NULL), paused(false),
-      dev_name(_dev_name), dir_prefix(""),
-      speaker(this,properties_handler) {}
-
+  FGVoicePlayer (PropertiesHandler* properties_handler, std::string _dev_name);
+  
   virtual ~FGVoicePlayer ();
 
   void init ();
@@ -272,7 +265,7 @@ public:
     inline void tie (SGPropertyNode *node, const char *name, T *ptr)
     {
     properties_handler->tie
-    (node, (string("speaker/") + name).c_str(),
+      (node, (std::string("speaker/") + name).c_str(),
      RawValueMethodsData<FGVoicePlayer::Speaker,T,T*>
      (*this, ptr,
       &FGVoicePlayer::Speaker::get_property,
@@ -308,8 +301,8 @@ protected:
   SGSharedPtr<SGSampleGroup> _sgr;
   Speaker speaker;
 
-  map< string, SGSharedPtr<SGSoundSample> >   samples;
-  vector<Voice *>         _voices;
+  std::map< std::string, SGSharedPtr<SGSoundSample> >   samples;
+  std::vector<Voice *>         _voices;
 
   bool looped;
   bool next_looped;
@@ -317,7 +310,7 @@ protected:
   SGSoundSample *get_sample (const char *name);
 
   inline void append (Voice *voice, Voice::Element *element) { voice->append(element); }
-  inline void append (Voice *voice, const char *sample_name) { voice->append(new Voice::SampleElement(get_sample(sample_name))); }
+  void append (Voice *voice, const char *sample_name);
   inline void append (Voice *voice, double silence) { voice->append(new Voice::SilenceElement(silence)); }
 
   inline void make_voice (Voice **voice) { *voice = new Voice(this); _voices.push_back(*voice); }

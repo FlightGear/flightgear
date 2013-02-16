@@ -28,7 +28,6 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/particles.hxx>
@@ -74,7 +73,13 @@ LogClassMapping log_class_mappings [] = {
   LogClassMapping(SG_CLIPPER, "clipper"),
   LogClassMapping(SG_NETWORK, "network"),
   LogClassMapping(SG_INSTR, "instrumentation"),
+  LogClassMapping(SG_ATC, "atc"),
+  LogClassMapping(SG_NASAL, "nasal"),
   LogClassMapping(SG_SYSTEMS, "systems"),
+  LogClassMapping(SG_AI, "ai"),
+  LogClassMapping(SG_ENVIRONMENT, "environment"),
+  LogClassMapping(SG_SOUND, "sound"),
+  LogClassMapping(SG_NAVAID, "navaid"),
   LogClassMapping(SG_UNDEFD, "")
 };
 
@@ -122,7 +127,7 @@ addLoggingClass (const string &name)
 /**
  * Set the logging classes.
  */
-static void
+void
 setLoggingClasses (const char * c)
 {
   string classes = c;
@@ -142,12 +147,16 @@ setLoggingClasses (const char * c)
 
   string rest = classes;
   string name = "";
-  int sep = rest.find('|');
-  while (sep > 0) {
+  string::size_type sep = rest.find('|');
+  if (sep == string::npos)
+    sep = rest.find(',');
+  while (sep != string::npos) {
     name = rest.substr(0, sep);
     rest = rest.substr(sep+1);
     addLoggingClass(name);
     sep = rest.find('|');
+    if (sep == string::npos)
+      sep = rest.find(',');
   }
   addLoggingClass(rest);
   SG_LOG(SG_GENERAL, SG_INFO, "Set logging classes to "
@@ -183,7 +192,7 @@ getLoggingPriority ()
 /**
  * Set the logging priority.
  */
-static void
+void
 setLoggingPriority (const char * p)
 {
   if (p == 0)
@@ -331,35 +340,14 @@ getGMTString ()
 }
 
 /**
- * Return the magnetic variation
- */
-static double
-getMagVar ()
-{
-  return globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
-}
-
-
-/**
- * Return the magnetic dip
- */
-static double
-getMagDip ()
-{
-  return globals->get_mag()->get_magdip() * SGD_RADIANS_TO_DEGREES;
-}
-
-
-/**
  * Return the current heading in degrees.
  */
 static double
 getHeadingMag ()
 {
-  double magheading;
-  magheading = fgGetDouble("/orientation/heading-deg") - getMagVar();
-  if (magheading < 0) magheading += 360;
-  return magheading;
+  double magheading = fgGetDouble("/orientation/heading-deg") -
+    fgGetDouble("/environment/magnetic-variation-deg");
+  return SGMiscd::normalizePeriodic(0, 360, magheading );
 }
 
 /**
@@ -368,10 +356,9 @@ getHeadingMag ()
 static double
 getTrackMag ()
 {
-  double magtrack;
-  magtrack = fgGetDouble("/orientation/track-deg") - getMagVar();
-  if (magtrack < 0) magtrack += 360;
-  return magtrack;
+  double magtrack = fgGetDouble("/orientation/track-deg") -
+    fgGetDouble("/environment/magnetic-variation-deg");
+  return SGMiscd::normalizePeriodic(0, 360, magtrack );
 }
 
 static bool
@@ -390,14 +377,19 @@ setWindingCCW (bool state)
     glFrontFace ( GL_CW );
 }
 
-static const char *
-getLongitudeString ()
+////////////////////////////////////////////////////////////////////////
+// Tie the properties.
+////////////////////////////////////////////////////////////////////////
+SGConstPropertyNode_ptr FGProperties::_longDeg;
+SGConstPropertyNode_ptr FGProperties::_latDeg;
+SGConstPropertyNode_ptr FGProperties::_lonLatformat;
+
+const char *
+FGProperties::getLongitudeString ()
 {
-  static SGConstPropertyNode_ptr n = fgGetNode("/position/longitude-deg", true);
-  static SGConstPropertyNode_ptr f = fgGetNode("/sim/lon-lat-format", true);
   static char buf[32];
-  double d = n->getDoubleValue();
-  int format = f->getIntValue();
+  double d = _longDeg->getDoubleValue();
+  int format = _lonLatformat->getIntValue();
   char c = d < 0.0 ? 'W' : 'E';
 
   if (format == 0) {
@@ -425,14 +417,12 @@ getLongitudeString ()
   return buf;
 }
 
-static const char *
-getLatitudeString ()
+const char *
+FGProperties::getLatitudeString ()
 {
-  static SGConstPropertyNode_ptr n = fgGetNode("/position/latitude-deg", true);
-  static SGConstPropertyNode_ptr f = fgGetNode("/sim/lon-lat-format", true);
   static char buf[32];
-  double d = n->getDoubleValue();
-  int format = f->getIntValue();
+  double d = _latDeg->getDoubleValue();
+  int format = _lonLatformat->getIntValue();
   char c = d < 0.0 ? 'S' : 'N';
 
   if (format == 0) {
@@ -457,9 +447,6 @@ getLatitudeString ()
 
 
 
-////////////////////////////////////////////////////////////////////////
-// Tie the properties.
-////////////////////////////////////////////////////////////////////////
 
 FGProperties::FGProperties ()
 {
@@ -477,107 +464,92 @@ FGProperties::init ()
 void
 FGProperties::bind ()
 {
-				// Simulation
-  fgTie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
-  fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
-  fgTie("/sim/freeze/master", getFreeze, setFreeze);
+  _longDeg      = fgGetNode("/position/longitude-deg", true);
+  _latDeg       = fgGetNode("/position/latitude-deg", true);
+  _lonLatformat = fgGetNode("/sim/lon-lat-format", true);
 
-  fgTie("/sim/time/elapsed-sec", getElapsedTime_sec);
-  fgTie("/sim/time/gmt", getDateString, setDateString);
+  _offset = fgGetNode("/sim/time/local-offset", true);
+
+  // utc date/time
+  _uyear = fgGetNode("/sim/time/utc/year", true);
+  _umonth = fgGetNode("/sim/time/utc/month", true);
+  _uday = fgGetNode("/sim/time/utc/day", true);
+  _uhour = fgGetNode("/sim/time/utc/hour", true);
+  _umin = fgGetNode("/sim/time/utc/minute", true);
+  _usec = fgGetNode("/sim/time/utc/second", true);
+  _uwday = fgGetNode("/sim/time/utc/weekday", true);
+  _udsec = fgGetNode("/sim/time/utc/day-seconds", true);
+
+  // real local date/time
+  _ryear = fgGetNode("/sim/time/real/year", true);
+  _rmonth = fgGetNode("/sim/time/real/month", true);
+  _rday = fgGetNode("/sim/time/real/day", true);
+  _rhour = fgGetNode("/sim/time/real/hour", true);
+  _rmin = fgGetNode("/sim/time/real/minute", true);
+  _rsec = fgGetNode("/sim/time/real/second", true);
+  _rwday = fgGetNode("/sim/time/real/weekday", true);
+
+  _tiedProperties.setRoot(globals->get_props());
+
+  // Simulation
+  _tiedProperties.Tie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
+  _tiedProperties.Tie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
+  _tiedProperties.Tie("/sim/freeze/master", getFreeze, setFreeze);
+
+  _tiedProperties.Tie("/sim/time/elapsed-sec", getElapsedTime_sec);
+  _tiedProperties.Tie("/sim/time/gmt", getDateString, setDateString);
   fgSetArchivable("/sim/time/gmt");
-  fgTie("/sim/time/gmt-string", getGMTString);
+  _tiedProperties.Tie("/sim/time/gmt-string", getGMTString);
 
-				// Position
-  fgTie("/position/latitude-string", getLatitudeString);
-  fgTie("/position/longitude-string", getLongitudeString);
+  // Position
+  _tiedProperties.Tie("/position/latitude-string", getLatitudeString);
+  _tiedProperties.Tie("/position/longitude-string", getLongitudeString);
 
-				// Orientation
-  fgTie("/orientation/heading-magnetic-deg", getHeadingMag);
-  fgTie("/orientation/track-magnetic-deg", getTrackMag);
+  // Orientation
+  _tiedProperties.Tie("/orientation/heading-magnetic-deg", getHeadingMag);
+  _tiedProperties.Tie("/orientation/track-magnetic-deg", getTrackMag);
 
-  fgTie("/environment/magnetic-variation-deg", getMagVar);
-  fgTie("/environment/magnetic-dip-deg", getMagDip);
-
-				// Misc. Temporary junk.
-  fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
+  // Misc. Temporary junk.
+  _tiedProperties.Tie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
 }
 
 void
 FGProperties::unbind ()
 {
-				// Simulation
-  fgUntie("/sim/logging/priority");
-  fgUntie("/sim/logging/classes");
-  fgUntie("/sim/freeze/master");
+    _tiedProperties.Untie();
 
-  fgUntie("/sim/time/elapsed-sec");
-  fgUntie("/sim/time/gmt");
-  fgUntie("/sim/time/gmt-string");
-				// Position
-  fgUntie("/position/latitude-string");
-  fgUntie("/position/longitude-string");
-
-				// Orientation
-  fgUntie("/orientation/heading-magnetic-deg");
-  fgUntie("/orientation/track-magnetic-deg");
-
-				// Environment
-  fgUntie("/environment/magnetic-variation-deg");
-  fgUntie("/environment/magnetic-dip-deg");
-
-				// Misc. Temporary junk.
-  fgUntie("/sim/temp/winding-ccw");
-//  fgUntie("/sim/temp/full-screen");
-//  fgUntie("/sim/temp/fdm-data-logging");
+    // drop static references to properties
+    _longDeg = 0;
+    _latDeg = 0;
+    _lonLatformat = 0;
 }
 
 void
 FGProperties::update (double dt)
 {
-    static SGPropertyNode_ptr offset = fgGetNode("/sim/time/local-offset", true);
-    offset->setIntValue(globals->get_time_params()->get_local_offset());
-
+    _offset->setIntValue(globals->get_time_params()->get_local_offset());
 
     // utc date/time
-    static SGPropertyNode_ptr uyear = fgGetNode("/sim/time/utc/year", true);
-    static SGPropertyNode_ptr umonth = fgGetNode("/sim/time/utc/month", true);
-    static SGPropertyNode_ptr uday = fgGetNode("/sim/time/utc/day", true);
-    static SGPropertyNode_ptr uhour = fgGetNode("/sim/time/utc/hour", true);
-    static SGPropertyNode_ptr umin = fgGetNode("/sim/time/utc/minute", true);
-    static SGPropertyNode_ptr usec = fgGetNode("/sim/time/utc/second", true);
-    static SGPropertyNode_ptr uwday = fgGetNode("/sim/time/utc/weekday", true);
-    static SGPropertyNode_ptr udsec = fgGetNode("/sim/time/utc/day-seconds", true);
-
     struct tm *u = globals->get_time_params()->getGmt();
-    uyear->setIntValue(u->tm_year + 1900);
-    umonth->setIntValue(u->tm_mon + 1);
-    uday->setIntValue(u->tm_mday);
-    uhour->setIntValue(u->tm_hour);
-    umin->setIntValue(u->tm_min);
-    usec->setIntValue(u->tm_sec);
-    uwday->setIntValue(u->tm_wday);
-
-    udsec->setIntValue(u->tm_hour * 3600 + u->tm_min * 60 + u->tm_sec);
-
+    _uyear->setIntValue(u->tm_year + 1900);
+    _umonth->setIntValue(u->tm_mon + 1);
+    _uday->setIntValue(u->tm_mday);
+    _uhour->setIntValue(u->tm_hour);
+    _umin->setIntValue(u->tm_min);
+    _usec->setIntValue(u->tm_sec);
+    _uwday->setIntValue(u->tm_wday);
+    _udsec->setIntValue(u->tm_hour * 3600 + u->tm_min * 60 + u->tm_sec);
 
     // real local date/time
-    static SGPropertyNode_ptr ryear = fgGetNode("/sim/time/real/year", true);
-    static SGPropertyNode_ptr rmonth = fgGetNode("/sim/time/real/month", true);
-    static SGPropertyNode_ptr rday = fgGetNode("/sim/time/real/day", true);
-    static SGPropertyNode_ptr rhour = fgGetNode("/sim/time/real/hour", true);
-    static SGPropertyNode_ptr rmin = fgGetNode("/sim/time/real/minute", true);
-    static SGPropertyNode_ptr rsec = fgGetNode("/sim/time/real/second", true);
-    static SGPropertyNode_ptr rwday = fgGetNode("/sim/time/real/weekday", true);
-
     time_t real = time(0);
     struct tm *r = localtime(&real);
-    ryear->setIntValue(r->tm_year + 1900);
-    rmonth->setIntValue(r->tm_mon + 1);
-    rday->setIntValue(r->tm_mday);
-    rhour->setIntValue(r->tm_hour);
-    rmin->setIntValue(r->tm_min);
-    rsec->setIntValue(r->tm_sec);
-    rwday->setIntValue(r->tm_wday);
+    _ryear->setIntValue(r->tm_year + 1900);
+    _rmonth->setIntValue(r->tm_mon + 1);
+    _rday->setIntValue(r->tm_mday);
+    _rhour->setIntValue(r->tm_hour);
+    _rmin->setIntValue(r->tm_min);
+    _rsec->setIntValue(r->tm_sec);
+    _rwday->setIntValue(r->tm_wday);
 }
 
 
@@ -707,7 +679,7 @@ fgGetInt (const char * name, int defaultValue)
   return globals->get_props()->getIntValue(name, defaultValue);
 }
 
-int
+long
 fgGetLong (const char * name, long defaultValue)
 {
   return globals->get_props()->getLongValue(name, defaultValue);

@@ -40,20 +40,20 @@ and the cg.
 
 */
 
-#include "FGForce.h"
-#include "FGFDMExec.h"
-#include "models/FGAircraft.h"
-#include "models/FGPropagate.h"
-#include "models/FGMassBalance.h"
-#include "models/FGAerodynamics.h"
 #include <iostream>
 #include <cstdlib>
+
+#include "FGForce.h"
+#include "FGFDMExec.h"
+#include "models/FGPropagate.h"
+#include "models/FGMassBalance.h"
+#include "models/FGAuxiliary.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGForce.cpp,v 1.15 2011/02/17 00:20:52 jberndt Exp $";
+static const char *IdSrc = "$Id: FGForce.cpp,v 1.17 2011/10/31 14:54:41 bcoconni Exp $";
 static const char *IdHdr = ID_FORCE;
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,7 +89,7 @@ FGForce::~FGForce()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector3& FGForce::GetBodyForces(void)
+const FGColumnVector3& FGForce::GetBodyForces(void)
 {
   vFb = Transform()*vFn;
 
@@ -106,11 +106,11 @@ FGColumnVector3& FGForce::GetBodyForces(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGMatrix33 FGForce::Transform(void)
+const FGMatrix33& FGForce::Transform(void) const
 {
   switch(ttype) {
   case tWindBody:
-    return fdmex->GetAerodynamics()->GetTw2b();
+    return fdmex->GetAuxiliary()->GetTw2b();
   case tLocalBody:
     return fdmex->GetPropagate()->GetTl2b();
   case tCustom:

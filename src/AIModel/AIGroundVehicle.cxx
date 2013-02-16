@@ -24,7 +24,7 @@
 
 #include <simgear/sg_inlines.h>
 
-#include <Main/viewer.hxx>
+#include <Viewer/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Airports/dynamics.hxx>
 
@@ -84,65 +84,48 @@ void FGAIGroundVehicle::readFromScenario(SGPropertyNode* scFileNode) {
 void FGAIGroundVehicle::bind() {
     FGAIShip::bind();
 
-    props->tie("controls/constants/elevation-coeff",
+    tie("controls/constants/elevation-coeff",
         SGRawValuePointer<double>(&_elevation_coeff));
-    props->tie("controls/constants/pitch-coeff",
+    tie("controls/constants/pitch-coeff",
         SGRawValuePointer<double>(&_pitch_coeff));
-    props->tie("position/ht-AGL-ft",
+    tie("position/ht-AGL-ft",
         SGRawValuePointer<double>(&_ht_agl_ft));
-    props->tie("hitch/rel-bearing-deg",
+    tie("hitch/rel-bearing-deg",
          SGRawValuePointer<double>(&_relbrg));
-    props->tie("hitch/tow-angle-deg",
+    tie("hitch/tow-angle-deg",
          SGRawValuePointer<double>(&_tow_angle));
-    props->tie("hitch/range-ft",
+    tie("hitch/range-ft",
         SGRawValuePointer<double>(&_range_ft));
-    props->tie("hitch/x-offset-ft",
+    tie("hitch/x-offset-ft",
         SGRawValuePointer<double>(&_x_offset));
-    props->tie("hitch/y-offset-ft",
+    tie("hitch/y-offset-ft",
         SGRawValuePointer<double>(&_y_offset));
-    props->tie("hitch/z-offset-ft",
+    tie("hitch/z-offset-ft",
         SGRawValuePointer<double>(&_z_offset));
-    props->tie("hitch/parent-x-offset-ft",
+    tie("hitch/parent-x-offset-ft",
         SGRawValuePointer<double>(&_parent_x_offset));
-    props->tie("hitch/parent-y-offset-ft",
+    tie("hitch/parent-y-offset-ft",
         SGRawValuePointer<double>(&_parent_y_offset));
-    props->tie("hitch/parent-z-offset-ft",
+    tie("hitch/parent-z-offset-ft",
         SGRawValuePointer<double>(&_parent_z_offset));
-    props->tie("controls/constants/tow-angle/gain",
+    tie("controls/constants/tow-angle/gain",
         SGRawValuePointer<double>(&_tow_angle_gain));
-    props->tie("controls/constants/tow-angle/limit-deg",
+    tie("controls/constants/tow-angle/limit-deg",
         SGRawValuePointer<double>(&_tow_angle_limit));
-    props->tie("controls/contact-x1-offset-ft",
+    tie("controls/contact-x1-offset-ft",
         SGRawValuePointer<double>(&_contact_x1_offset));
-    props->tie("controls/contact-x2-offset-ft",
+    tie("controls/contact-x2-offset-ft",
         SGRawValuePointer<double>(&_contact_x2_offset));
-}
-
-void FGAIGroundVehicle::unbind() {
-    FGAIShip::unbind();
-
-    props->untie("controls/constants/elevation-coeff");
-    props->untie("controls/constants/pitch-coeff");
-    props->untie("position/ht-AGL-ft");
-    props->untie("hitch/rel-bearing-deg");
-    props->untie("hitch/tow-angle-deg");
-    props->untie("hitch/range-ft");
-    props->untie("hitch/x-offset-ft");
-    props->untie("hitch/y-offset-ft");
-    props->untie("hitch/z-offset-ft");
-    props->untie("hitch/parent-x-offset-ft");
-    props->untie("hitch/parent-y-offset-ft");
-    props->untie("hitch/parent-y-offset-ft");
-    props->untie("controls/constants/tow-angle/gain");
-    props->untie("controls/constants/tow-angle/limit-deg");
-    props->untie("controls/contact-x1-offset-ft");
-    props->untie("controls/contact-x2-offset-ft");
 }
 
 bool FGAIGroundVehicle::init(bool search_in_AI_path) {
     if (!FGAIShip::init(search_in_AI_path))
         return false;
+    reinit();
+    return true;
+}
 
+void FGAIGroundVehicle::reinit() {
     invisible = false;
     _limit = 200;
     no_roll = true;
@@ -162,11 +145,11 @@ bool FGAIGroundVehicle::init(bool search_in_AI_path) {
         setParent();
     }
 
-    return true;
+    FGAIShip::reinit();
 }
 
 void FGAIGroundVehicle::update(double dt) {
-    //    SG_LOG(SG_GENERAL, SG_ALERT, "updating GroundVehicle: " << _name );
+    //    SG_LOG(SG_AI, SG_ALERT, "updating GroundVehicle: " << _name );
     FGAIShip::update(dt);
 
     RunGroundVehicle(dt);
@@ -254,13 +237,13 @@ bool FGAIGroundVehicle::getPitch() {
         //double max_alt = 10000;
 
         if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodFront, 3000),
-            elev_front, &_material, 0)){
+            elev_front, NULL, 0)){
                 front_elev_m = elev_front + _z_offset_m;
         } else
             return false;
 
         if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodRear, 3000),
-            elev_rear, &_material, 0)){
+            elev_rear, NULL, 0)){
                 rear_elev_m = elev_rear;
         } else
             return false;
@@ -280,7 +263,7 @@ bool FGAIGroundVehicle::getPitch() {
 
     } else {
 
-        if (prev->altitude == 0 || curr->altitude == 0) return false;
+        if (prev->getAltitude() == 0 || curr->getAltitude() == 0) return false;
 
         static double distance;
         static double d_alt;
@@ -289,20 +272,20 @@ bool FGAIGroundVehicle::getPitch() {
 
         if (_new_waypoint){
             //cout << "new waypoint, calculating pitch " << endl;
-            curr_alt = curr->altitude;
-            prev_alt = prev->altitude;
+            curr_alt = curr->getAltitude();
+            prev_alt = prev->getAltitude();
             //cout << "prev_alt" <<prev_alt << endl;
             d_alt = (curr_alt - prev_alt) * SG_METER_TO_FEET;
             //_elevation = prev->altitude;
-            distance = SGGeodesy::distanceM(SGGeod::fromDeg(prev->longitude, prev->latitude),
-            SGGeod::fromDeg(curr->longitude, curr->latitude));
+            distance = SGGeodesy::distanceM(SGGeod::fromDeg(prev->getLongitude(), prev->getLatitude()),
+            SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
             _pitch = atan2(d_alt, distance * SG_METER_TO_FEET) * SG_RADIANS_TO_DEGREES;
             //cout << "new waypoint, calculating pitch " <<  _pitch << 
             //    " " << _pitch_offset << " " << _elevation <<endl;
         }
 
         double distance_to_go = SGGeodesy::distanceM(SGGeod::fromDeg(pos.getLongitudeDeg(), pos.getLatitudeDeg()),
-            SGGeod::fromDeg(curr->longitude, curr->latitude));
+            SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
 
         /*cout << "tunnel " << _tunnel
              << " distance prev & curr " << prev->name << " " << curr->name << " " << distance * SG_METER_TO_FEET
@@ -385,13 +368,13 @@ void FGAIGroundVehicle::AdvanceFP(){
     double count = 0;
     string parent_next_name =_selected_ac->getStringValue("waypoint/name-next");
 
-    while(fp->getNextWaypoint() != 0 && fp->getNextWaypoint()->name != "END" && count < 5){
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+    while(fp->getNextWaypoint() != 0 && fp->getNextWaypoint()->getName() != "END" && count < 5){
+        SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             <<" advancing waypoint to: " << parent_next_name);
 
-        if (fp->getNextWaypoint()->name == parent_next_name){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
-                << " not setting waypoint already at: " << fp->getNextWaypoint()->name);
+        if (fp->getNextWaypoint()->getName() == parent_next_name){
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
+                << " not setting waypoint already at: " << fp->getNextWaypoint()->getName());
             return;
         }
 
@@ -400,9 +383,9 @@ void FGAIGroundVehicle::AdvanceFP(){
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
 
-        if (fp->getNextWaypoint()->name == parent_next_name){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
-            << " waypoint set to: " << fp->getNextWaypoint()->name);
+        if (fp->getNextWaypoint()->getName() == parent_next_name){
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
+            << " waypoint set to: " << fp->getNextWaypoint()->getName());
             return;
         }
 
@@ -410,15 +393,15 @@ void FGAIGroundVehicle::AdvanceFP(){
 
     }// end while loop
 
-    while(fp->getPreviousWaypoint() != 0 && fp->getPreviousWaypoint()->name != "END"
+    while(fp->getPreviousWaypoint() != 0 && fp->getPreviousWaypoint()->getName() != "END"
         && count > -10){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " retreating waypoint to: " << parent_next_name
-            << " at: " << fp->getNextWaypoint()->name);
+            << " at: " << fp->getNextWaypoint()->getName());
 
-        if (fp->getNextWaypoint()->name == parent_next_name){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
-                << " not setting waypoint already at:" << fp->getNextWaypoint()->name );
+        if (fp->getNextWaypoint()->getName() == parent_next_name){
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
+                << " not setting waypoint already at:" << fp->getNextWaypoint()->getName() );
             return;
         }
 
@@ -427,9 +410,9 @@ void FGAIGroundVehicle::AdvanceFP(){
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
 
-        if (fp->getNextWaypoint()->name == parent_next_name){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
-            << " waypoint set to: " << fp->getNextWaypoint()->name);
+        if (fp->getNextWaypoint()->getName() == parent_next_name){
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
+            << " waypoint set to: " << fp->getNextWaypoint()->getName());
             return;
         }
 
@@ -488,7 +471,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
     }
 
     if(_parent == ""){
-        AccelTo(prev->speed);
+        AccelTo(prev->getSpeed());
         _dt_count = 0;
         return;
     }
@@ -499,8 +482,8 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
     bool parent_waiting = _selected_ac->getBoolValue("waypoint/waiting");
     //bool parent_restart = _selected_ac->getBoolValue("controls/restart"); 
 
-    if (parent_next_name == "END" && fp->getNextWaypoint()->name != "END" ){
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+    if (parent_next_name == "END" && fp->getNextWaypoint()->getName() != "END" ){
+        SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " setting END: getting new waypoints ");
         AdvanceFP();
         setWPNames();
@@ -508,21 +491,21 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
         if(_restart) _missed_count = 200;
         /*} else if (parent_next_name == "WAIT" && fp->getNextWaypoint()->name != "WAIT" ){*/
     } else if (parent_waiting && !_waiting){
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+        SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " setting WAIT/WAITUNTIL: getting new waypoints ");
         AdvanceFP();
         setWPNames();
         _waiting = true;
-    } else if (parent_next_name != "WAIT" && fp->getNextWaypoint()->name == "WAIT"){
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+    } else if (parent_next_name != "WAIT" && fp->getNextWaypoint()->getName() == "WAIT"){
+        SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " wait done: getting new waypoints ");
         _waiting = false;
         _wait_count = 0;
         fp->IncrementWaypoint(false);
         next = fp->getNextWaypoint();
 
-        if (next->name == "WAITUNTIL" || next->name == "WAIT"
-            || next->name == "END"){
+        if (next->getName() == "WAITUNTIL" || next->getName() == "WAIT"
+            || next->getName() == "END"){
         } else {
             prev = curr;
             fp->IncrementWaypoint(false);
@@ -533,7 +516,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
         setWPNames();
     } else if (_range_ft > (_x_offset +_parent_x_offset)* 4
         ){
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIGroundVeh1cle: " << _name
+        SG_LOG(SG_AI, SG_ALERT, "AIGroundVeh1cle: " << _name
             << " rescue: reforming train " << _range_ft 
             );
 

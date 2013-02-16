@@ -3,12 +3,17 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/math/interpolater.hxx>
 
 #include "vertical_speed_indicator.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+using std::string;
 
 VerticalSpeedIndicator::VerticalSpeedIndicator ( SGPropertyNode *node )
     : _internal_pressure_inhg(29.92),
@@ -34,7 +39,13 @@ VerticalSpeedIndicator::init ()
     _speed_node = node->getChild("indicated-speed-fpm", 0, true);
     _speed_up_node = fgGetNode("/sim/speed-up", true);
 
-                                // Initialize at ambient pressure
+    reinit();
+}
+
+void
+VerticalSpeedIndicator::reinit ()
+{
+    // Initialize at ambient pressure
     _internal_pressure_inhg = _pressure_node->getDoubleValue();
 }
 

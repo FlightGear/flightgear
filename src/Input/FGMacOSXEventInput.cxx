@@ -22,6 +22,9 @@
 
 #include "FGMacOSXEventInput.hxx"
 
+using std::stringstream;
+using std::map;
+using std::string;
 
 #define GetHIDElementLongValue(element, key) ({ \
       long value = 0; \
@@ -36,10 +39,12 @@
       value; })
 
 #define GetHIDElementStringValue(element, key) ({ \
-      const char *buf = ""; \
+      const char *ref = ""; \
+      const char *buf = ref; \
       CFStringRef refType = (CFStringRef)CFDictionaryGetValue(element, CFSTR(key)); \
       if (refType) { \
         buf = CFStringGetCStringPtr(refType, CFStringGetSystemEncoding());  \
+        if (!buf) buf = ref; \
        } \
       buf; })
 
@@ -123,19 +128,19 @@ struct HIDTypes HID_USAGE_TABLE[] = {
   {GD_USAGE(kHIDUsage_GD_Vbrz), kHIDUsageAxis, "z-rel-vector"},
   {GD_USAGE(kHIDUsage_GD_Vno),  kHIDUsageAxis, "no-vector"},
 
-  {GD_USAGE(kHIDUsage_GD_SystemPowerDown), kHIDUsageOSC, "button-system-power-down"},
-  {GD_USAGE(kHIDUsage_GD_SystemSleep), kHIDUsageOSC, "button-system-sleep"},
-  {GD_USAGE(kHIDUsage_GD_SystemWakeUp), kHIDUsageOSC, "button-system-wake-up"},
-  {GD_USAGE(kHIDUsage_GD_SystemContextMenu), kHIDUsageOSC, "button-system-context-menu"},
-  {GD_USAGE(kHIDUsage_GD_SystemMainMenu), kHIDUsageOSC, "button-system-main-menu"},
-  {GD_USAGE(kHIDUsage_GD_SystemAppMenu), kHIDUsageOSC, "button-system-app-menu"},
-  {GD_USAGE(kHIDUsage_GD_SystemMenuHelp), kHIDUsageOSC, "button-system-menu-help"},
-  {GD_USAGE(kHIDUsage_GD_SystemMenuExit), kHIDUsageOSC, "button-system-menu-exit"},
-  {GD_USAGE(kHIDUsage_GD_SystemMenu), kHIDUsageOSC, "button-system-menu"},
-  {GD_USAGE(kHIDUsage_GD_SystemMenuRight), kHIDUsageRTC, "button-system-menu-right"},
-  {GD_USAGE(kHIDUsage_GD_SystemMenuLeft), kHIDUsageRTC, "button-system-menu-left"},
-  {GD_USAGE(kHIDUsage_GD_SystemMenuUp), kHIDUsageRTC, "button-system-menu-up"},
-  {GD_USAGE(kHIDUsage_GD_SystemMenuDown), kHIDUsageRTC, "button-system-menu-down"},
+  {GD_USAGE(kHIDUsage_GD_SystemPowerDown), kHIDUsageOSC, "system-power-down"},
+  {GD_USAGE(kHIDUsage_GD_SystemSleep), kHIDUsageOSC, "system-sleep"},
+  {GD_USAGE(kHIDUsage_GD_SystemWakeUp), kHIDUsageOSC, "system-wake-up"},
+  {GD_USAGE(kHIDUsage_GD_SystemContextMenu), kHIDUsageOSC, "system-context-menu"},
+  {GD_USAGE(kHIDUsage_GD_SystemMainMenu), kHIDUsageOSC, "system-main-menu"},
+  {GD_USAGE(kHIDUsage_GD_SystemAppMenu), kHIDUsageOSC, "system-app-menu"},
+  {GD_USAGE(kHIDUsage_GD_SystemMenuHelp), kHIDUsageOSC, "system-menu-help"},
+  {GD_USAGE(kHIDUsage_GD_SystemMenuExit), kHIDUsageOSC, "system-menu-exit"},
+  {GD_USAGE(kHIDUsage_GD_SystemMenu), kHIDUsageOSC, "system-menu"},
+  {GD_USAGE(kHIDUsage_GD_SystemMenuRight), kHIDUsageRTC, "system-menu-right"},
+  {GD_USAGE(kHIDUsage_GD_SystemMenuLeft), kHIDUsageRTC, "system-menu-left"},
+  {GD_USAGE(kHIDUsage_GD_SystemMenuUp), kHIDUsageRTC, "system-menu-up"},
+  {GD_USAGE(kHIDUsage_GD_SystemMenuDown), kHIDUsageRTC, "system-menu-down"},
   {GD_USAGE(kHIDUsage_GD_DPadUp), kHIDUsageOOC, "dpad-up"},
   {GD_USAGE(kHIDUsage_GD_DPadDown), kHIDUsageOOC, "dpad-down"},
   {GD_USAGE(kHIDUsage_GD_DPadRight), kHIDUsageOOC, "dpad-right"},
@@ -148,7 +153,7 @@ struct HIDTypes HID_USAGE_TABLE[] = {
   {GAME_USAGE(kHIDUsage_Game_MoveForwardOrBackward), kHIDUsageAxis, "y-move"},
   {GAME_USAGE(kHIDUsage_Game_MoveUpOrDown), kHIDUsageAxis, "z-move"},
   {GAME_USAGE(kHIDUsage_Game_LeanRightOrLeft), kHIDUsageAxis, "x-lean"},
-  {GAME_USAGE(kHIDUsage_Game_LeanForwardOrBackward), kHIDUsageAxis, "z-lean"},
+  {GAME_USAGE(kHIDUsage_Game_LeanForwardOrBackward), kHIDUsageAxis, "y-lean"},
 
   // General Control Devices Page
   {GDC_USAGE(0x20), kHIDUsageDV, "battery-strength"},
@@ -379,7 +384,7 @@ ButtonElement::ButtonElement(CFDictionaryRef element, long page, long usage) :
 {
   if (name == "") {
     stringstream ss;
-    ss << (page == kHIDPage_KeyboardOrKeypad ? "keyboard-" : "button-") << usage;
+    ss << (page == kHIDPage_KeyboardOrKeypad ? "keyboard-" : "button-") << usage - 1;
     ss >> name;
   }
 }
@@ -495,7 +500,7 @@ void HIDElementFactory::parseElement(CFDictionaryRef element, FGMacOSXInputDevic
     // FIXME: Any other elegant way for counting the same usage on a device?
     // This is mainly needed for feature / hat elements to avoid assigning the sane event name.
     elementCount[inputDevice][USAGE_KEY(page, usage)] += 1;
-    
+
     switch (usageType) {
       case kHIDUsageAxis:
 	  inputDevice->addElement(new AxisElement(element, page, usage));
@@ -516,7 +521,7 @@ void HIDElementFactory::parseElement(CFDictionaryRef element, FGMacOSXInputDevic
           break;
           
       default:
-        if (page == kHIDPage_Button || type == kIOHIDElementTypeInput_Button && usage > 0) {
+        if ((page == kHIDPage_Button || type == kIOHIDElementTypeInput_Button) && usage > 0) {
         // FIXME: most of KeyboardOrKeypad elements should be treated as Selector type, not as Button...
 	  inputDevice->addElement(new ButtonElement(element, page, usage));
         } else if (page == kHIDPage_LEDs && usage > 0) {
@@ -612,7 +617,7 @@ void FGMacOSXInputDevice::Open() {
 	
   if (ret != kIOReturnSuccess) {
     SG_LOG(SG_INPUT, SG_ALERT, "Error creating a plugin for HID : " << GetName());
-    throw exception();
+    throw std::exception();
     return;
   }
 
@@ -626,14 +631,14 @@ void FGMacOSXInputDevice::Open() {
   (*plugin)->Release(plugin); // don't leak a ref
   if (devInterface == NULL) {
     return;
-    throw exception();
+    throw std::exception();
   }
 	
   // store the interface in this instance
   ret = (*devInterface)->open(devInterface, 0);
   if (ret != kIOReturnSuccess) {
     SG_LOG(SG_INPUT, SG_ALERT, "Error opening device interface: " << GetName());
-    throw exception();
+    throw std::exception();
     return;
   }
   CFDictionaryRef props = getProperties();

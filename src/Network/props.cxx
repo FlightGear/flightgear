@@ -33,16 +33,26 @@
 #include <simgear/misc/strutils.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <sstream>
 #include <iostream>
+#include <errno.h>
 
 #include <Main/globals.hxx>
-#include <Main/viewmgr.hxx>
+#include <Viewer/viewmgr.hxx>
 
 #include <simgear/io/sg_netChat.hxx>
 
+#include <simgear/misc/strutils.hxx>
+
 #include "props.hxx"
+
+#include <map>
+#include <vector>
+#include <string>
+
+#include <boost/foreach.hpp>
 
 using std::stringstream;
 using std::ends;
@@ -54,7 +64,7 @@ using std::endl;
  * Props connection class.
  * This class represents a connection to props client.
  */
-class PropsChannel : public simgear::NetChat
+class PropsChannel : public simgear::NetChat, public SGPropertyChangeListener
 {
     simgear::NetBuffer buffer;
 
@@ -74,6 +84,7 @@ public:
      * Constructor.
      */
     PropsChannel();
+    ~PropsChannel();
 
     /**
      * Append incoming data to our request buffer.
@@ -88,10 +99,37 @@ public:
      */
     void foundTerminator();
 
+    // callback for registered listeners (subscriptions)
+    void valueChanged(SGPropertyNode *node);
 private:
+
+    typedef string_list ParameterList;
+
     inline void node_not_found_error( const string& s ) const {
         throw "node '" + s + "' not found";
     }
+
+    void error(std::string msg) {  // wrapper: prints errors to STDERR and to the telnet client
+	    push( msg.c_str() ); push( getTerminator() );
+	    SG_LOG(SG_NETWORK, SG_ALERT, __FILE__<<"@" << __LINE__ <<" in " << __FUNCTION__ <<":"<< msg.c_str() << std::endl);
+    }
+
+
+    bool check_args(const ParameterList &tok, const unsigned int num, const char* func) {
+	    if (tok.size()-1 < num) {
+		    error(string("Error:Wrong argument count for:")+string(func) );
+		    return false;
+	    }
+	    return true;
+    }
+
+    std::vector<SGPropertyNode_ptr> _listeners;
+    typedef void (PropsChannel::*TelnetCallback) (const ParameterList&);
+    std::map<std::string, TelnetCallback> callback_map;
+
+    // callback implementations:
+    void subscribe(const ParameterList &p);
+    void unsubscribe(const ParameterList &p);
 };
 
 /**
@@ -103,6 +141,62 @@ PropsChannel::PropsChannel()
       mode(PROMPT)
 {
     setTerminator( "\r\n" );
+    callback_map["subscribe"] 	= 	&PropsChannel::subscribe;
+    callback_map["unsubscribe"]	=	&PropsChannel::unsubscribe;
+}
+
+PropsChannel::~PropsChannel() {
+  // clean up all registered listeners
+  BOOST_FOREACH(SGPropertyNode_ptr l, _listeners) { 
+    l->removeChangeListener( this  );
+ }
+}
+
+void PropsChannel::subscribe(const ParameterList &param) {
+	if (! check_args(param,1,"subscribe")) return;
+
+	std::string command = param[0];
+	const char* p = param[1].c_str();
+	if (!p) return;
+
+  //SG_LOG(SG_GENERAL, SG_ALERT, p << std::endl);
+  push( command.c_str() ); push ( " " );
+  push( p );
+  push( getTerminator() );
+
+  SGPropertyNode *n = globals->get_props()->getNode( p,true );
+	if ( n->isTied() ) { 
+		error("Error:Tied properties cannot register listeners"); 
+		return;
+	}
+  
+ 	if (n) {
+    n->addChangeListener( this );
+	 _listeners.push_back( n ); // housekeeping, save for deletion in dtor later on
+  } else {
+		 error("listener could not be added");
+  }
+}
+
+void PropsChannel::unsubscribe(const ParameterList &param) {
+  if (!check_args(param,1,"unsubscribe")) return;
+
+  try {
+   SGPropertyNode *n = globals->get_props()->getNode( param[1].c_str() );
+   if (n)
+    n->removeChangeListener( this );
+  } catch (sg_exception&) {
+	  error("Error:Listener could not be removed");
+  }
+}
+
+
+//TODO: provide support for different types of subscriptions MODES ? (child added/removed, thesholds, min/max)
+void PropsChannel::valueChanged(SGPropertyNode* ptr) {
+  //SG_LOG(SG_GENERAL, SG_ALERT, __FILE__<< "@"<<__LINE__ << ":" << __FUNCTION__ << std::endl);  
+  std::stringstream response;
+  response << ptr->getPath(true) << "=" <<  ptr->getStringValue() << getTerminator(); //TODO: use hashes, echo several properties at once
+  push( response.str().c_str() );
 }
 
 /**
@@ -159,7 +253,7 @@ PropsChannel::foundTerminator()
     const char* cmd = buffer.getData();
     SG_LOG( SG_IO, SG_INFO, "processing command = \"" << cmd << "\"" );
 
-    vector<string> tokens = simgear::strutils::split( cmd );
+    ParameterList tokens = simgear::strutils::split( cmd );
 
     SGPropertyNode* node = globals->get_props()->getNode( path.c_str() );
 
@@ -291,7 +385,7 @@ PropsChannel::foundTerminator()
                     if ( !globals->get_commands()
                              ->execute( "reinit", &args) )
                     {
-                        SG_LOG( SG_GENERAL, SG_ALERT,
+                        SG_LOG( SG_NETWORK, SG_ALERT,
                                 "Command " << tokens[1] << " failed.");
                         if ( mode == PROMPT ) {
                             tmp += "*failed*";
@@ -356,7 +450,7 @@ PropsChannel::foundTerminator()
                     if ( !globals->get_commands()
                              ->execute(tokens[1].c_str(), &args) )
                     {
-                        SG_LOG( SG_GENERAL, SG_ALERT,
+                        SG_LOG( SG_NETWORK, SG_ALERT,
                                 "Command " << tokens[1] << " failed.");
                         if ( mode == PROMPT ) {
                             tmp += "*failed*";
@@ -385,7 +479,14 @@ PropsChannel::foundTerminator()
                 mode = DATA;
             } else if ( command == "prompt" ) {
                 mode = PROMPT;
-            } else {
+            } else if (callback_map.find(command) != callback_map.end() ) {
+		   TelnetCallback t = callback_map[ command ]; 
+		   if (t) 
+		     	   (this->*t) (tokens); 
+		   else
+			   error("No matching callback found for command:"+command);
+	    }
+	    else {
                 const char* msg = "\
 Valid commands are:\r\n\
 \r\n\
@@ -399,7 +500,9 @@ prompt             switch to interactive mode (default)\r\n\
 pwd                display your current path\r\n\
 quit               terminate connection\r\n\
 run <command>      run built in command\r\n\
-set <var> <val>    set <var> to a new <val>\r\n";
+set <var> <val>    set <var> to a new <val>\r\n\
+subscribe <var>	   subscribe to property changes \r\n\
+unscubscribe <var>  unscubscribe from property changes (var must be the property name/path used by subscribe)\r\n";
                 push( msg );
             }
         }
@@ -449,7 +552,6 @@ FGProps::FGProps( const vector<string>& tokens )
     } else {
         throw FGProtocolConfigError( "FGProps: incorrect number of configuration arguments" );
     }
-    printf( "Property server started on port %d\n", port );
 }
 
 /**
@@ -472,9 +574,26 @@ FGProps::open()
         return false;
     }
 
-    simgear::NetChannel::open();
-    simgear::NetChannel::bind( "", port );
-    simgear::NetChannel::listen( 5 );
+    if (!simgear::NetChannel::open())
+    {
+        SG_LOG( SG_IO, SG_ALERT, "FGProps: Failed to open network socket.");
+        return false;
+    }
+
+    int err = simgear::NetChannel::bind( "", port );
+    if (err)
+    {
+        SG_LOG( SG_IO, SG_ALERT, "FGProps: Failed to open port #" << port << " - the port is already used (error " << err << ").");
+        return false;
+    }
+
+    err = simgear::NetChannel::listen( 5 );
+    if (err)
+    {
+        SG_LOG( SG_IO, SG_ALERT, "FGProps: Failed to listen on port #" << port << "(error " << err << ").");
+        return false;
+    }
+
     SG_LOG( SG_IO, SG_INFO, "Props server started on port " << port );
 
     set_enabled( true );

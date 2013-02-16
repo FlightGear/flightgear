@@ -36,6 +36,7 @@
 #include <stdio.h>	// sprintf
 #include <string.h>
 #include <iostream>
+#include <cassert>
 
 #include <osg/CullFace>
 #include <osg/Depth>
@@ -48,6 +49,7 @@
 
 #include <plib/fnt.h>
 
+#include <boost/foreach.hpp>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/model.hxx>
@@ -55,10 +57,10 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/viewmgr.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
 #include <Time/light.hxx>
-#include <GUI/new_gui.hxx>	// FGFontCache
-#include <Main/viewer.hxx>
+#include <GUI/FGFontCache.hxx>	
 #include <Instrumentation/dclgps.hxx>
 
 #define WIN_X 0
@@ -70,6 +72,11 @@
 // principle, one is supposed to be enough.  In practice, I find that
 // my hardware/driver requires many more.
 #define POFF_UNITS 8
+
+const double MOUSE_ACTION_REPEAT_DELAY = 0.5; // 500msec initial delay
+const double MOUSE_ACTION_REPEAT_INTERVAL = 0.1; // 10Hz repeat rate
+
+using std::map;
 
 ////////////////////////////////////////////////////////////////////////
 // Local functions.
@@ -86,28 +93,6 @@ get_aspect_adjust (int xsize, int ysize)
   float real_aspect = float(xsize) / float(ysize);
   return (real_aspect / ideal_aspect);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Global functions.
-////////////////////////////////////////////////////////////////////////
-
-bool
-fgPanelVisible ()
-{
-     const FGPanel* current = globals->get_current_panel();
-     if (current == 0)
-	return false;
-     if (current->getVisibility() == 0)
-	return false;
-     if (globals->get_viewmgr()->get_current() != 0)
-	return false;
-     if (current->getAutohide() && globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS != 0)
-	return false;
-     return true;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGTextureManager.
@@ -194,15 +179,15 @@ FGPanel::FGPanel ()
   : _mouseDown(false),
     _mouseInstrument(0),
     _width(WIN_W), _height(int(WIN_H * 0.5768 + 1)),
-    _view_height(int(WIN_H * 0.4232)),
-    _visibility(fgGetNode("/sim/panel/visibility", true)),
     _x_offset(fgGetNode("/sim/panel/x-offset", true)),
     _y_offset(fgGetNode("/sim/panel/y-offset", true)),
     _jitter(fgGetNode("/sim/panel/jitter", true)),
     _flipx(fgGetNode("/sim/panel/flip-x", true)),
     _xsize_node(fgGetNode("/sim/startup/xsize", true)),
     _ysize_node(fgGetNode("/sim/startup/ysize", true)),
-    _enable_depth_test(false)
+    _enable_depth_test(false),
+    _autohide(true),
+    _drawPanelHotspots("/sim/panel-hotspots")
 {
 }
 
@@ -230,101 +215,19 @@ FGPanel::addInstrument (FGPanelInstrument * instrument)
   _instruments.push_back(instrument);
 }
 
-
-/**
- * Initialize the panel.
- */
-void
-FGPanel::init ()
+double
+FGPanel::getAspectScale() const
 {
-}
-
-
-/**
- * Bind panel properties.
- */
-void
-FGPanel::bind ()
-{
-  fgSetArchivable("/sim/panel/visibility");
-  fgSetArchivable("/sim/panel/x-offset");
-  fgSetArchivable("/sim/panel/y-offset");
-  fgSetArchivable("/sim/panel/jitter");
-}
-
-
-/**
- * Unbind panel properties.
- */
-void
-FGPanel::unbind ()
-{
-}
-
-
-void
-FGPanel::update (double dt)
-{
-  std::cout << "OSGFIXME" << std::endl;
-}
-
-void
-FGPanel::update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
-{
-  using namespace osg;
-                               // Calculate accelerations
-                               // and jiggle the panel accordingly
-                               // The factors and bounds are just
-                               // initial guesses; using sqrt smooths
-                               // out the spikes.
-  double x_offset = _x_offset->getIntValue();
-  double y_offset = _y_offset->getIntValue();
-
-
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  Matrixf proj;
-  if ( _flipx->getBoolValue() ) {
-      proj = Matrixf::ortho2D(winx + winw, winx, winy + winh, winy); /* up side down */
-  } else {
-      proj = Matrixf::ortho2D(winx, winx + winw, winy, winy + winh); /* right side up */
-  }
-  glLoadMatrix(proj.ptr());
+  // set corner-coordinates correctly
   
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
+  int xsize = _xsize_node->getIntValue();
+  int ysize = _ysize_node->getIntValue();
+  float aspect_adjust = get_aspect_adjust(xsize, ysize);
   
-  glTranslated(x_offset, y_offset, 0);
-  
-  draw(state);
-
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-}
-
-/**
- * Update the panel.
- */
-void
-FGPanel::update (osg::State& state)
-{
-				// Do nothing if the panel isn't visible.
-    if ( !fgPanelVisible() ) {
-        return;
-    }
-
-    updateMouseDelay();
-
-				// Now, draw the panel
-    float aspect_adjust = get_aspect_adjust(_xsize_node->getIntValue(),
-                                            _ysize_node->getIntValue());
-    if (aspect_adjust <1.0)
-        update(state, WIN_X, int(WIN_W * aspect_adjust), WIN_Y, WIN_H);
-    else
-        update(state, WIN_X, WIN_W, WIN_Y, int(WIN_H / aspect_adjust));
+  if (aspect_adjust < 1.0)
+    return ysize / (double) WIN_H;
+  else
+    return xsize /(double) WIN_W;  
 }
 
 /**
@@ -332,21 +235,24 @@ FGPanel::update (osg::State& state)
  * fgUpdate3DPanels().  This functionality needs to move into the
  * input subsystem.  Counting a tick every two frames is clumsy...
  */
-void FGPanel::updateMouseDelay()
+void FGPanel::updateMouseDelay(double dt)
 {
-    if (_mouseDown) {
-        _mouseDelay--;
-        if (_mouseDelay < 0) {
-            _mouseInstrument->doMouseAction(_mouseButton, 0, _mouseX, _mouseY);
-            _mouseDelay = 2;
-        }
-    }
-}
+  if (!_mouseDown) {
+    return;
+  }
 
+  _mouseActionRepeat -= dt;
+  while (_mouseActionRepeat < 0.0) {
+    _mouseActionRepeat += MOUSE_ACTION_REPEAT_INTERVAL;
+    _mouseInstrument->doMouseAction(_mouseButton, 0, _mouseX, _mouseY);
+    
+  }
+}
 
 void
 FGPanel::draw(osg::State& state)
 {
+    
   // In 3D mode, it's possible that we are being drawn exactly on top
   // of an existing polygon.  Use an offset to prevent z-fighting.  In
   // 2D mode, this is a no-op.
@@ -361,6 +267,7 @@ FGPanel::draw(osg::State& state)
     panelStateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     panelStateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     panelStateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
+  
     osg::Material* material = new osg::Material;
     material->setColorMode(osg::Material::AMBIENT_AND_DIFFUSE);
     material->setDiffuse(osg::Material::FRONT_AND_BACK, osg::Vec4(1, 1, 1, 1));
@@ -368,6 +275,7 @@ FGPanel::draw(osg::State& state)
     material->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
     material->setEmission(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
     panelStateSet->setAttribute(material);
+    
     panelStateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
     panelStateSet->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK));
     panelStateSet->setAttributeAndModes(new osg::Depth(osg::Depth::LEQUAL));
@@ -493,7 +401,7 @@ FGPanel::draw(osg::State& state)
 
   // Draw yellow "hotspots" if directed to.  This is a panel authoring
   // feature; not intended to be high performance or to look good.
-  if ( fgGetBool("/sim/panel-hotspots") ) {
+  if ( _drawPanelHotspots ) {
     static osg::ref_ptr<osg::StateSet> hotspotStateSet;
     if (!hotspotStateSet.valid()) {
       hotspotStateSet = new osg::StateSet;
@@ -514,6 +422,22 @@ FGPanel::draw(osg::State& state)
     for ( unsigned int i = 0; i < _instruments.size(); i++ )
       _instruments[i]->drawHotspots(state);
 
+  // disable drawing of panel extents for the 2.8 release, since it
+  // confused use of hot-spot drawing in tutorials.
+#ifdef DRAW_PANEL_EXTENTS
+    glColor3f(0, 1, 1);
+
+    int x0, y0, x1, y1;
+    getLogicalExtent(x0, y0, x1, y1);
+    
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(x0, y0);
+    glVertex2f(x1, y0);
+    glVertex2f(x1, y1);
+    glVertex2f(x0, y1);
+    glEnd();
+#endif
+    
     glPopAttrib();
 
     state.popStateSet();
@@ -523,26 +447,6 @@ FGPanel::draw(osg::State& state)
 
   }
 }
-
-/**
- * Set the panel's visibility.
- */
-void
-FGPanel::setVisibility (bool visibility)
-{
-  _visibility->setBoolValue( visibility );
-}
-
-
-/**
- * Return true if the panel is visible.
- */
-bool
-FGPanel::getVisibility () const
-{
-  return _visibility->getBoolValue();
-}
-
 
 /**
  * Set the panel's background texture.
@@ -619,7 +523,7 @@ FGPanel::doLocalMouseAction(int button, int updown, int x, int y)
     int ih = inst->getHeight() / 2;
     if (x >= ix - iw && x < ix + iw && y >= iy - ih && y < iy + ih) {
       _mouseDown = true;
-      _mouseDelay = 20;
+      _mouseActionRepeat = MOUSE_ACTION_REPEAT_DELAY;
       _mouseInstrument = inst;
       _mouseButton = button;
       _mouseX = x - ix;
@@ -665,7 +569,55 @@ void FGPanel::setDepthTest (bool enable) {
     _enable_depth_test = enable;
 }
 
+class IntRect
+{
+  
+public:
+  IntRect() : 
+    x0(std::numeric_limits<int>::max()), 
+    y0(std::numeric_limits<int>::max()), 
+    x1(std::numeric_limits<int>::min()), 
+    y1(std::numeric_limits<int>::min()) 
+  { }
+  
+  IntRect(int x, int y, int w, int h) :
+    x0(x), y0(y), x1(x + w), y1( y + h)
+  { 
+    if (x1 < x0) {
+      std::swap(x0, x1);
+    }
+    
+    if (y1 < y0) {
+      std::swap(y0, y1);
+    }
+    
+    assert(x0 <= x1);
+    assert(y0 <= y1);
+  }
+  
+  void extend(const IntRect& r)
+  {
+    x0 = std::min(x0, r.x0);
+    y0 = std::min(y0, r.y0);
+    x1 = std::max(x1, r.x1);
+    y1 = std::max(y1, r.y1);
+  }
+  
+  int x0, y0, x1, y1;
+};
 
+void FGPanel::getLogicalExtent(int &x0, int& y0, int& x1, int &y1)
+{  
+  IntRect result;
+  BOOST_FOREACH(FGPanelInstrument *inst, _instruments) {
+    inst->extendRect(result);
+  }
+  
+  x0 = result.x0;
+  y0 = result.y0;
+  x1 = result.x1;
+  y1 = result.y1;
+}
 
 ////////////////////////////////////////////////////////////////////////.
 // Implementation of FGPanelAction.
@@ -811,6 +763,21 @@ int
 FGPanelInstrument::getHeight () const
 {
   return _h;
+}
+
+void
+FGPanelInstrument::extendRect(IntRect& r) const
+{
+  IntRect instRect(_x, _y, _w, _h);
+  r.extend(instRect);
+  
+  BOOST_FOREACH(FGPanelAction* act, _actions) {
+    r.extend(IntRect(getXPos() + act->getX(), 
+                     getYPos() + act->getY(),
+                     act->getWidth(),
+                     act->getHeight()
+                     ));
+  }
 }
 
 void
@@ -1174,7 +1141,7 @@ FGTextLayer::setFontName(const string &name)
   FGFontCache *fc = globals->get_fontcache();
   fntFont* font = fc->getTexFont(_font_name.c_str());
   if (!font) {
-      SG_LOG(SG_GENERAL, SG_WARN, "unable to find font:" << name);
+      SG_LOG(SG_COCKPIT, SG_WARN, "unable to find font:" << name);
   }
 }
 

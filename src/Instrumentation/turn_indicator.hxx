@@ -44,6 +44,7 @@ public:
     virtual ~TurnIndicator ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);
@@ -53,7 +54,7 @@ private:
     Gyro _gyro;
     double _last_rate;
 
-    string _name;
+    std::string _name;
     int _num;
 
     SGPropertyNode_ptr _roll_rate_node;

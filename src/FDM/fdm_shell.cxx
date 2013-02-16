@@ -43,12 +43,21 @@
 #endif
 #include <FDM/ExternalNet/ExternalNet.hxx>
 #include <FDM/ExternalPipe/ExternalPipe.hxx>
+
+#ifdef ENABLE_JSBSIM
 #include <FDM/JSBSim/JSBSim.hxx>
+#endif
+
+#ifdef ENABLE_LARCSIM
 #include <FDM/LaRCsim/LaRCsim.hxx>
+#endif
+
 #include <FDM/UFO.hxx>
 #include <FDM/NullFDM.hxx>
-#include <FDM/YASim/YASim.hxx>
 
+#ifdef ENABLE_YASIM
+#include <FDM/YASim/YASim.hxx>
+#endif
 
 /*
  * Evil global variable required by Network/FGNative,
@@ -72,6 +81,17 @@ void FDMShell::init()
 {
   _props = globals->get_props();
   fgSetBool("/sim/fdm-initialized", false);
+
+  _wind_north       = _props->getNode("environment/wind-from-north-fps",    true);
+  _wind_east        = _props->getNode("environment/wind-from-east-fps",     true);
+  _wind_down        = _props->getNode("environment/wind-from-down-fps",     true);
+  _control_fdm_atmo = _props->getNode("environment/params/control-fdm-atmosphere", true);
+  _temp_degc        = _props->getNode("environment/temperature-degc",       true);
+  _pressure_inhg    = _props->getNode("environment/pressure-inhg",          true);
+  _density_slugft   = _props->getNode("environment/density-slugft3",        true);
+  _data_logging     = _props->getNode("/sim/temp/fdm-data-logging",         true);
+  _replay_master    = _props->getNode("/sim/freeze/replay-state",           true);
+
   createImplementation();
 }
 
@@ -138,30 +158,42 @@ void FDMShell::update(double dt)
 
 // pull environmental data in, since the FDMs are lazy
   _impl->set_Velocities_Local_Airmass(
-      _props->getDoubleValue("environment/wind-from-north-fps", 0.0),
-      _props->getDoubleValue("environment/wind-from-east-fps", 0.0),
-      _props->getDoubleValue("environment/wind-from-down-fps", 0.0));
+          _wind_north->getDoubleValue(),
+          _wind_east->getDoubleValue(),
+          _wind_down->getDoubleValue());
 
-  if (_props->getBoolValue("environment/params/control-fdm-atmosphere")) {
+  if (_control_fdm_atmo->getBoolValue()) {
     // convert from Rankine to Celsius
-    double tempDegC = _props->getDoubleValue("environment/temperature-degc");
+    double tempDegC = _temp_degc->getDoubleValue();
     _impl->set_Static_temperature((9.0/5.0) * (tempDegC + 273.15));
     
     // convert from inHG to PSF
-    double pressureInHg = _props->getDoubleValue("environment/pressure-inhg");
+    double pressureInHg = _pressure_inhg->getDoubleValue();
     _impl->set_Static_pressure(pressureInHg * 70.726566);
     // keep in slugs/ft^3
-    _impl->set_Density(_props->getDoubleValue("environment/density-slugft3"));
+    _impl->set_Density(_density_slugft->getDoubleValue());
   }
 
-  bool doLog = _props->getBoolValue("/sim/temp/fdm-data-logging", false);
+  bool doLog = _data_logging->getBoolValue();
   if (doLog != _dataLogging) {
     _dataLogging = doLog;
     _impl->ToggleDataLogging(doLog);
   }
 
-  if (!_impl->is_suspended())
-      _impl->update(dt);
+  switch(_replay_master->getIntValue())
+  {
+      case 0:
+          // normal FDM operation
+          _impl->update(dt);
+          break;
+      case 3:
+          // resume FDM operation at current replay position
+          _impl->reinit();
+          break;
+      default:
+          // replay is active
+          break;
+  }
 }
 
 void FDMShell::createImplementation()
@@ -171,12 +203,83 @@ void FDMShell::createImplementation()
   double dt = 1.0 / fgGetInt("/sim/model-hz");
   string model = fgGetString("/sim/flight-model");
 
-    if ( model == "larcsim" ) {
+  bool fdmUnavailable = false;
+
+  if ( model == "ufo" ) {
+    _impl = new FGUFO( dt );
+  } else if ( model == "external" ) {
+    // external is a synonym for "--fdm=null" and is
+    // maintained here for backwards compatibility
+    _impl = new FGNullFDM( dt );
+  } else if ( model.find("network") == 0 ) {
+    string host = "localhost";
+    int port1 = 5501;
+    int port2 = 5502;
+    int port3 = 5503;
+    string net_options = model.substr(8);
+    string::size_type begin, end;
+    begin = 0;
+    // host
+    end = net_options.find( ",", begin );
+    if ( end != string::npos ) {
+      host = net_options.substr(begin, end - begin);
+      begin = end + 1;
+    }
+    // port1
+    end = net_options.find( ",", begin );
+    if ( end != string::npos ) {
+      port1 = atoi( net_options.substr(begin, end - begin).c_str() );
+      begin = end + 1;
+    }
+    // port2
+    end = net_options.find( ",", begin );
+    if ( end != string::npos ) {
+      port2 = atoi( net_options.substr(begin, end - begin).c_str() );
+      begin = end + 1;
+    }
+    // port3
+    end = net_options.find( ",", begin );
+    if ( end != string::npos ) {
+      port3 = atoi( net_options.substr(begin, end - begin).c_str() );
+      begin = end + 1;
+    }
+    _impl = new FGExternalNet( dt, host, port1, port2, port3 );
+  } else if ( model.find("pipe") == 0 ) {
+    // /* old */ string pipe_path = model.substr(5);
+    // /* old */ _impl = new FGExternalPipe( dt, pipe_path );
+    string pipe_path = "";
+    string pipe_protocol = "";
+    string pipe_options = model.substr(5);
+    string::size_type begin, end;
+    begin = 0;
+    // pipe file path
+    end = pipe_options.find( ",", begin );
+    if ( end != string::npos ) {
+      pipe_path = pipe_options.substr(begin, end - begin);
+      begin = end + 1;
+    }
+    // protocol (last option)
+    pipe_protocol = pipe_options.substr(begin);
+    _impl = new FGExternalPipe( dt, pipe_path, pipe_protocol );
+  } else if ( model == "null" ) {
+    _impl = new FGNullFDM( dt );
+  }
+    else if ( model == "larcsim" ) {
+#ifdef ENABLE_LARCSIM
         _impl = new FGLaRCsim( dt );
-    } else if ( model == "jsb" ) {
+#else
+        fdmUnavailable = true;
+#endif
+    }
+    else if ( model == "jsb" ) {
+#ifdef ENABLE_JSBSIM
         _impl = new FGJSBsim( dt );
+#else
+        fdmUnavailable = true;
+#endif
+    }
 #ifdef ENABLE_SP_FDM
-    } else if ( model == "ada" ) {
+    else if ( model == "ada" ) {
         _impl = new FGADA( dt );
     } else if ( model == "acms" ) {
         _impl = new FGACMS( dt );
@@ -184,81 +287,29 @@ void FDMShell::createImplementation()
         _impl = new FGBalloonSim( dt );
     } else if ( model == "magic" ) {
         _impl = new FGMagicCarpet( dt );
+    }
+#else
+    else if (( model == "ada" )||(model == "acms")||( model == "balloon" )||( model == "magic" ))
+    {
+        fdmUnavailable = true;
+    }
 #endif
-    } else if ( model == "ufo" ) {
-        _impl = new FGUFO( dt );
-    } else if ( model == "external" ) {
-        // external is a synonym for "--fdm=null" and is
-        // maintained here for backwards compatibility
-        _impl = new FGNullFDM( dt );
-    } else if ( model.find("network") == 0 ) {
-        string host = "localhost";
-        int port1 = 5501;
-        int port2 = 5502;
-        int port3 = 5503;
-        string net_options = model.substr(8);
-        string::size_type begin, end;
-        begin = 0;
-        // host
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            host = net_options.substr(begin, end - begin);
-            begin = end + 1;
-        }
-        // port1
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            port1 = atoi( net_options.substr(begin, end - begin).c_str() );
-            begin = end + 1;
-        }
-        // port2
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            port2 = atoi( net_options.substr(begin, end - begin).c_str() );
-            begin = end + 1;
-        }
-        // port3
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            port3 = atoi( net_options.substr(begin, end - begin).c_str() );
-            begin = end + 1;
-        }
-        _impl = new FGExternalNet( dt, host, port1, port2, port3 );
-    } else if ( model.find("pipe") == 0 ) {
-        // /* old */ string pipe_path = model.substr(5);
-        // /* old */ _impl = new FGExternalPipe( dt, pipe_path );
-        string pipe_path = "";
-        string pipe_protocol = "";
-        string pipe_options = model.substr(5);
-        string::size_type begin, end;
-        begin = 0;
-        // pipe file path
-        end = pipe_options.find( ",", begin );
-        if ( end != string::npos ) {
-            pipe_path = pipe_options.substr(begin, end - begin);
-            begin = end + 1;
-        }
-        // protocol (last option)
-        pipe_protocol = pipe_options.substr(begin);
-        _impl = new FGExternalPipe( dt, pipe_path, pipe_protocol );
-    } else if ( model == "null" ) {
-        _impl = new FGNullFDM( dt );
-    } else if ( model == "yasim" ) {
+    else if ( model == "yasim" ) {
+#ifdef ENABLE_YASIM
         _impl = new YASim( dt );
+#else
+        fdmUnavailable = true;
+#endif
     } else {
         throw sg_exception(string("Unrecognized flight model '") + model
                + "', cannot init flight dynamics model.");
     }
 
-}
-
-/*
- * Return FDM subsystem.
- */
-
-SGSubsystem* FDMShell::getFDM()
-{
-    /* FIXME we could drop/replace this method, when _impl was a added
-     * to the global subsystem manager - like other proper subsystems... */
-    return _impl;
+    if (fdmUnavailable)
+    {
+        // FDM type is known, but its support was disabled at compile-time.
+        throw sg_exception(string("Support for flight model '") + model
+                + ("' is not available with this binary (deprecated/disabled).\n"
+                   "If you still need it, please rebuild FlightGear and enable its support."));
+    }
 }

@@ -6,6 +6,10 @@
 // TODO:
 // - better spin-up
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/compiler.h>
 
 #include <iostream>
@@ -18,6 +22,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+using std::string;
 
 AttitudeIndicator::AttitudeIndicator ( SGPropertyNode *node )
     :
@@ -60,6 +65,16 @@ AttitudeIndicator::init ()
     _roll_int_node = node->getChild("internal-roll-deg", 0, true);
     _pitch_out_node = node->getChild("indicated-pitch-deg", 0, true);
     _roll_out_node = node->getChild("indicated-roll-deg", 0, true);
+
+    reinit();
+}
+
+void
+AttitudeIndicator::reinit ()
+{
+    _roll_int_node->setDoubleValue(0.0);
+    _pitch_int_node->setDoubleValue(0.0);
+    _gyro.reinit();
 }
 
 void

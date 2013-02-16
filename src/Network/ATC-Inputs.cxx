@@ -31,6 +31,7 @@
 #  include <sys/types.h>
 #  include <sys/stat.h>
 #  include <fcntl.h>
+#  include <stdlib.h>
 #  include <unistd.h>
 #  include <istream>
 #endif
@@ -49,7 +50,7 @@
 #include "ATC-Inputs.hxx"
 
 using std::string;
-
+using std::vector;
 
 
 // Constructor: The _board parameter specifies which board to

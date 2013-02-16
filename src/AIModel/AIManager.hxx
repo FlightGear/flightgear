@@ -27,6 +27,7 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -53,12 +54,12 @@ public:
     ai_list_type ai_list;
 
     inline const ai_list_type& get_ai_list() const {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AI Manager: AI model return list size " << ai_list.size());
+        SG_LOG(SG_AI, SG_DEBUG, "AI Manager: AI model return list size " << ai_list.size());
         return ai_list;
     }
 
     FGAIManager();
-    ~FGAIManager();
+    virtual ~FGAIManager();
 
     void init();
     void postinit();
@@ -66,9 +67,9 @@ public:
     void bind();
     void unbind();
     void update(double dt);
+    void updateLOD(SGPropertyNode* node);
     void attach(FGAIBase *model);
 
-    void destroyObject( int ID );
     const FGAIBase *calcCollision(double alt, double lat, double lon, double fuse_range);
 
     inline double get_user_latitude() const { return user_latitude; }
@@ -93,14 +94,12 @@ public:
         SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
 private:
-
-    bool enabled;
-    int mNumAiTypeModels[FGAIBase::MAX_OBJECTS];
-    int mNumAiModels;
-
-    double calcRange(double lat, double lon, double lat2, double lon2)const;
+    void removeDeadItem(FGAIBase* base);
+  
+    double calcRange(const SGVec3d& aCartPos, FGAIBase* aObject) const;
 
     SGPropertyNode_ptr root;
+    SGPropertyNode_ptr enabled;
     SGPropertyNode_ptr thermal_lift_node;
     SGPropertyNode_ptr user_latitude_node;
     SGPropertyNode_ptr user_longitude_node;
@@ -126,15 +125,16 @@ private:
     double user_agl;
     double wind_from_east;
     double wind_from_north;
-    double _dt;
 
     void fetchUserState( void );
 
     // used by thermals
     double range_nearest;
     double strength;
-    void processThermal( FGAIThermal* thermal ); 
+    void processThermal( double dt, FGAIThermal* thermal );
 
+    SGPropertyChangeCallback<FGAIManager> cb_ai_bare;
+    SGPropertyChangeCallback<FGAIManager> cb_ai_detailed;
 };
 
 #endif  // _FG_AIMANAGER_HXX

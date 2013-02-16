@@ -20,9 +20,9 @@
  **************************************************************************/
 
 /**************************************************************************
- * This file contains the definition of the class Shedule.
+ * This file contains the definition of the class Schedule.
  *
- * A schedule is basically a number of scheduled flights, wich can be
+ * A schedule is basically a number of scheduled flights, which can be
  * assigned to an AI aircraft. 
  **************************************************************************/
 
@@ -32,35 +32,40 @@
 #define TRAFFICTOAIDISTTOSTART 150.0
 #define TRAFFICTOAIDISTTODIE   200.0
 
+// forward decls
+class FGAIAircraft;
 
 class FGAISchedule
 {
  private:
-  string modelPath;
-  string homePort;
-  string livery;
-  string registration;
-  string airline;
-  string acType;
-  string m_class;
-  string flightType;
-  string flightIdentifier;
-  string currentDestination;
+  std::string modelPath;
+  std::string homePort;
+  std::string livery;
+  std::string registration;
+  std::string airline;
+  std::string acType;
+  std::string m_class;
+  std::string flightType;
+  std::string flightIdentifier;
+  std::string currentDestination;
   bool heavy;
   FGScheduledFlightVec flights;
   SGGeod position;
   double radius;
   double groundOffset;
   double distanceToUser;
-  int AIManagerRef;
   double score;
   unsigned int runCount;
   unsigned int hits;
+  unsigned int lastRun;
   bool firstRun;
   double courseToDest;
   bool initialized;
+  bool valid;
+  bool scheduleComplete;
 
-  void scheduleFlights();
+  bool scheduleFlights(time_t now);
+  int groundTimeFromRadius();
   
   /**
    * Transition this schedule from distant mode to AI mode;
@@ -68,18 +73,20 @@ class FGAISchedule
    */
   bool createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime);
   
+  // the aiAircraft associated with us
+  SGSharedPtr<FGAIAircraft> aiAircraft;
  public:
   FGAISchedule();                                           // constructor
-  FGAISchedule(string model, 
-               string livery,
-               string homePort, 
-               string registration, 
-               string flightId,
+  FGAISchedule(const std::string& model,
+               const std::string& livery,
+               const std::string& homePort,
+               const std::string& registration,
+               const std::string& flightId,
                bool   heavy, 
-               string acType, 
-               string airline, 
-               string m_class, 
-               string flight_type, 
+               const std::string& acType,
+               const std::string& airline,
+               const std::string& m_class,
+               const std::string& flight_type,
                double radius, 
                double offset);                              // construct & init
   FGAISchedule(const FGAISchedule &other);                  // copy constructor
@@ -88,6 +95,8 @@ class FGAISchedule
 
   ~FGAISchedule(); //destructor
 
+    static bool validModelPath(const std::string& model);
+    
   bool update(time_t now, const SGVec3d& userCart);
   bool init();
 
@@ -102,12 +111,12 @@ class FGAISchedule
   int         getCruiseAlt        () { return (*flights.begin())->getCruiseAlt       (); };
   double      getRadius           () { return radius; };
   double      getGroundOffset     () { return groundOffset;};
-  const string& getFlightType     () { return flightType;};
-  const string& getAirline        () { return airline; };
-  const string& getAircraft       () { return acType; };
-  const string& getCallSign       () { return (*flights.begin())->getCallSign (); };
-  const string& getRegistration   () { return registration;};
-  const string& getFlightRules    () { return (*flights.begin())->getFlightRules (); };
+  const std::string& getFlightType     () { return flightType;};
+  const std::string& getAirline        () { return airline; };
+  const std::string& getAircraft       () { return acType; };
+  const std::string& getCallSign       () { return (*flights.begin())->getCallSign (); };
+  const std::string& getRegistration   () { return registration;};
+  const std::string& getFlightRules    () { return (*flights.begin())->getFlightRules (); };
   bool getHeavy                   () { return heavy; };
   double getCourse                () { return courseToDest; };
   unsigned int getRunCount        () { return runCount; };
@@ -117,10 +126,15 @@ class FGAISchedule
   void         setHits    (unsigned int count) { hits     = count; };
   void         setScore   ();
   double       getScore   () { return score; };
-  FGScheduledFlight*findAvailableFlight (const string &currentDestination, const string &req);
-  // used to sort in decending order of score: I've probably found a better way to
-  // decending order sorting, but still need to test that.
-  bool operator< (const FGAISchedule &other) const { return (score > other.score); };
+  void         setHeading (); 
+  void         assign         (FGScheduledFlight *ref) { flights.push_back(ref); };
+  void         setFlightType  (const std::string& val) { flightType = val; };
+  FGScheduledFlight*findAvailableFlight (const std::string& currentDestination, const std::string &req, time_t min=0, time_t max=0);
+  // used to sort in descending order of score: I've probably found a better way to
+  // descending order sorting, but still need to test that.
+  bool operator< (const FGAISchedule &other) const;
+  int getLastUsed() { return lastRun; };
+  void setLastUsed(unsigned int val) {lastRun = val; };
   //void * getAiRef                 () { return AIManagerRef; };
   //FGAISchedule* getAddress        () { return this;};
 

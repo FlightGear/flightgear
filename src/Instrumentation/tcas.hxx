@@ -16,7 +16,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #ifndef __INSTRUMENTS_TCAS_HXX
 #define __INSTRUMENTS_TCAS_HXX
@@ -140,7 +140,8 @@ class TCAS : public SGSubsystem
     {
         double lat;
         double lon;
-        float  altFt;
+        float  pressureAltFt;
+        float  radarAltFt;
         float  heading;
         float  velocityKt;
         float  verticalFps;
@@ -237,6 +238,7 @@ class TCAS : public SGSubsystem
 
         void bind            (SGPropertyNode* node);
         void init            (void);
+        void reinit          (void);
         void update          (int mode);
 
         void clear           (void);
@@ -324,8 +326,12 @@ class TCAS : public SGSubsystem
         void  horizontalThreat    (float bearing, float distanceNm, float heading,
                                    float velocityKt);
 
-        void  setAlt              (float altFt) { self.altFt = altFt;}
-        float getAlt              (void)        { return self.altFt;}
+        void  setPressureAlt      (float altFt) { self.pressureAltFt = altFt;}
+        float getPressureAlt      (void)        { return self.pressureAltFt;}
+
+        void  setRadarAlt         (float altFt) { self.radarAltFt = altFt;}
+        float getRadarAlt         (void)        { return self.radarAltFt;}
+
         float getVelocityKt       (void)        { return self.velocityKt;}
         int   getRASense          (void)        { return currentThreat.RASense;}
 
@@ -340,7 +346,8 @@ class TCAS : public SGSubsystem
 
         SGPropertyNode_ptr nodeLat;
         SGPropertyNode_ptr nodeLon;
-        SGPropertyNode_ptr nodeAlt;
+        SGPropertyNode_ptr nodePressureAlt;
+        SGPropertyNode_ptr nodeRadarAlt;
         SGPropertyNode_ptr nodeHeading;
         SGPropertyNode_ptr nodeVelocity;
         SGPropertyNode_ptr nodeVerticalFps;
@@ -379,6 +386,7 @@ public:
     virtual void bind   (void);
     virtual void unbind (void);
     virtual void init   (void);
+    virtual void reinit (void);
     virtual void update (double dt);
 };
 

@@ -16,10 +16,7 @@
 #include <simgear/props/props.hxx>
 
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <Sound/morse.hxx>
-
-using std::string;
-
+#include <simgear/math/SGMath.hxx>
 
 class SGSampleGroup;
 
@@ -61,15 +58,11 @@ private:
 
     void set_bearing (double delta_time_sec, double bearing);
 
-    void search (double frequency, double longitude_rad,
-                 double latitude_rad, double altitude_m);
+    void search (double frequency, const SGGeod& pos);
 
-    string _name;
+    std::string _name;
     unsigned int _num;
 
-    SGPropertyNode_ptr _longitude_node;
-    SGPropertyNode_ptr _latitude_node;
-    SGPropertyNode_ptr _altitude_node;
     SGPropertyNode_ptr _heading_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _error_node;
@@ -83,21 +76,21 @@ private:
     SGPropertyNode_ptr _ident_audible_node;
     SGPropertyNode_ptr _volume_node;
     SGPropertyNode_ptr _power_btn_node;
+    SGPropertyNode_ptr _operable_node;
 
     double _time_before_search_sec;
 
     int _last_frequency_khz;
     bool _transmitter_valid;
-    string _last_ident;
+    std::string _last_ident;
     SGGeod _transmitter_pos;
     SGVec3d _transmitter_cart;
     double _transmitter_range_nm;
 
-    FGMorse morse;
     int _ident_count;
     time_t _last_ident_time;
     float _last_volume;
-    string _adf_ident;
+    std::string _adf_ident;
 
     SGSharedPtr<SGSampleGroup> _sgr;
 };

@@ -34,39 +34,12 @@
 
 // Constructor
 FGControls::FGControls() :
-    aileron( 0.0 ),
-    aileron_trim( 0.0 ),
-    elevator( 0.0 ),
-    elevator_trim( 0.0 ),
-    rudder( 0.0 ),
-    rudder_trim( 0.0 ),
     flaps( 0.0 ),
     slats( 0.0 ),
-    BLC( false ),
-    spoilers( 0.0 ),
-    speedbrake( 0.0 ),
-    wing_sweep( 0.0 ),
-    wing_fold( false ),
-    drag_chute( false ),
-    throttle_idle( true ),
-    dump_valve( false ),
-    brake_left( 0.0 ),
-    brake_right( 0.0 ),
-    copilot_brake_left( 0.0 ),
-    copilot_brake_right( 0.0 ),
-    brake_parking( 0.0 ),
-    steering( 0.0 ),
-    nose_wheel_steering( true ),
-    gear_down( true ),
     antiskid( true ),
     tailhook( false ),
     launchbar( false ),
-    catapult_launch_cmd( false ),
     tailwheel_lock( true ),
-    wing_heat( false ),
-    pitot_heat( true ),
-    wiper( 0 ),
-    window_heat( false ),
     battery_switch( true ),
     external_power( false ),
     APU_generator( false ),
@@ -82,15 +55,12 @@ FGControls::FGControls() :
     panel_norm( 0.0 ),
     instruments_norm( 0.0 ),
     dome_norm( 0.0 ),
-    master_arm( false ),
     station_select( 1 ),
     release_ALL( false ),
     vertical_adjust( 0.0 ),
     fore_aft_adjust( 0.0 ),
+    cmd_selector_valve( 0 ),
     off_start_run( 0 ),
-    APU_fire_switch( false ),
-    autothrottle_arm( false ),
-    autothrottle_engage( false ),
     heading_select( 0.0 ),
     altitude_select( 50000.0 ),
     bank_angle_select( 30.0 ),
@@ -100,6 +70,15 @@ FGControls::FGControls() :
     vertical_mode( 0 ),
     lateral_mode( 0 )
 {
+    auto_coordination = fgGetNode("/controls/flight/auto-coordination", true);
+    auto_coordination_factor = fgGetNode("/controls/flight/auto-coordination-factor", false );
+    if( NULL == auto_coordination_factor ) {
+      auto_coordination_factor = fgGetNode("/controls/flight/auto-coordination-factor", true );
+      auto_coordination_factor->setDoubleValue( 0.5 );
+    }
+  
+    reset_all();
+    globals->set_controls( this );
 }
 
 
@@ -160,62 +139,44 @@ void FGControls::reset_all()
     autothrottle_arm = false;
     autothrottle_engage = false;
     set_autopilot_engage( ALL_AUTOPILOTS, false );
+  
+    brake_left = brake_right
+      = copilot_brake_left = copilot_brake_right
+      = brake_parking = 0.0;
+
+    set_fuel_selector(ALL_TANKS, false);
+    set_to_engine(ALL_TANKS, 0);
+    set_to_tank(ALL_TANKS, 0);
+    set_boost_pump(ALL_TANKS, false);
+  
+    set_alternate_extension(ALL_WHEELS, false);
+  
+    set_mixture(ALL_ENGINES, 1.0);
+    set_prop_advance(ALL_ENGINES, 1.0);
+    set_generator_breaker(ALL_ENGINES, false);
+    set_bus_tie(ALL_ENGINES, false);
+    set_engine_bleed(ALL_ENGINES, false);
+    set_feed_tank(ALL_ENGINES, -1); // feed off
+    set_cowl_flaps_norm(ALL_ENGINES, 0.0);
 }
 
 
 // Destructor
 FGControls::~FGControls() {
+    if (globals)
+        globals->set_controls( NULL );
 }
 
 
 void
 FGControls::init ()
 {
-    throttle_idle = true;
-    for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
-        throttle[engine] = 0.0;
-        mixture[engine] = 1.0;
-        fuel_pump[engine] = false;
-        prop_advance[engine] = 1.0;
-        magnetos[engine] = 0;
-        feed_tank[engine] = -1; // set to -1 to turn off all tanks 0 feeds all engines from center body tank
-        starter[engine] = false;
-        feather[engine] = false;
-        ignition[engine] = false;
-        fire_switch[engine] = false;
-        fire_bottle_discharge[engine] = false;
-        cutoff[engine] = true;
-        augmentation[engine] = false;
-        reverser[engine] = false;
-        water_injection[engine] = false;
-        nitrous_injection[engine] = false;
-        cowl_flaps_norm[engine] = 0.0;
-        condition[engine] = 1.0;
-        carb_heat[engine] = false;
-        inlet_heat[engine] = false;
-        generator_breaker[engine] = false;
-        bus_tie[engine] = false;
-        engine_bleed[engine] = false;
-    }
+}
 
-    for ( int tank = 0; tank < MAX_TANKS; tank++ ) {
-        fuel_selector[tank] = false;
-        to_engine[tank] = 0;
-        to_tank[tank] = 0;
-    }
-
-    for( int pump = 0; pump < MAX_TANKS * MAX_BOOSTPUMPS; pump++ ) {
-        boost_pump[pump] = false;
-    }
-
-    brake_left = brake_right
-        = copilot_brake_left = copilot_brake_right
-        = brake_parking = 0.0;
-    for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
-        alternate_extension[wheel] = false;
-    }
-
-    auto_coordination = fgGetNode("/sim/auto-coordination", true);
+void
+FGControls::reinit()
+{
+  reset_all();
 }
 
 static inline void _SetRoot( simgear::TiedPropertyList & tiedProperties, const char * root, int index = 0 )
@@ -226,6 +187,7 @@ static inline void _SetRoot( simgear::TiedPropertyList & tiedProperties, const c
 void
 FGControls::bind ()
 {
+    reset_all();
     int index, i;
 
     // flight controls
@@ -643,9 +605,11 @@ void FGControls::unbind ()
 void
 FGControls::update (double dt)
 {
+  SG_UNUSED(dt);
+
+  // nothing here, don't call again
+  suspend();
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // Setters and adjusters.
@@ -656,11 +620,7 @@ FGControls::set_aileron (double pos)
 {
     aileron = pos;
     SG_CLAMP_RANGE<double>( aileron, -1.0, 1.0 );
-
-    // check for autocoordination
-    if ( auto_coordination->getBoolValue() ) {
-        set_rudder( aileron / 2.0 );
-    }
+    do_autocoordination();
 }
 
 void
@@ -668,11 +628,7 @@ FGControls::move_aileron (double amt)
 {
     aileron += amt;
     SG_CLAMP_RANGE<double>( aileron, -1.0, 1.0 );
-
-    // check for autocoordination
-    if ( auto_coordination->getBoolValue() ) {
-        set_rudder( aileron / 2.0 );
-    }
+    do_autocoordination();
 }
 
 void

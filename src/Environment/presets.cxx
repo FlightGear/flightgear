@@ -24,7 +24,9 @@
 #endif
 #include "presets.hxx"
 
+#include <cmath>
 #include <simgear/math/SGMisc.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <Main/fg_props.hxx>
 
 namespace Environment {

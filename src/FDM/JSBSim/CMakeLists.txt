@@ -1,5 +1,87 @@
 include(FlightGearComponent)
 
+set(HEADERS
+    FGFDMExec.h
+    FGJSBBase.h
+    JSBSim.hxx
+    initialization/FGInitialCondition.h
+    initialization/FGTrim.h
+    initialization/FGTrimAxis.h
+    input_output/FGXMLParse.h
+    input_output/FGXMLFileRead.h
+    input_output/FGPropertyManager.h
+    input_output/FGScript.h
+    input_output/FGfdmSocket.h
+    input_output/string_utilities.h
+    input_output/FGXMLElement.h
+    input_output/net_fdm.hxx
+    input_output/FGGroundCallback.h
+    math/FGParameter.h
+    math/LagrangeMultiplier.h
+    math/FGColumnVector3.h
+    math/FGCondition.h
+    math/FGFunction.h
+    math/FGLocation.h
+    math/FGMatrix33.h
+    math/FGModelFunctions.h
+    math/FGPropertyValue.h
+    math/FGQuaternion.h
+    math/FGRealValue.h
+    math/FGRungeKutta.h
+    math/FGTable.h
+    models/FGAccelerations.h
+    models/FGAerodynamics.h
+    models/FGAircraft.h
+    models/FGAtmosphere.h
+    models/FGAuxiliary.h
+    models/FGBuoyantForces.h
+    models/FGExternalForce.h
+    models/FGExternalReactions.h
+    models/FGFCS.h
+    models/FGGasCell.h
+    models/FGGroundReactions.h
+    models/FGInertial.h
+    models/FGInput.h
+    models/FGLGear.h
+    models/FGMassBalance.h
+    models/FGModel.h
+    models/FGOutput.h
+    models/FGPropagate.h
+    models/FGPropulsion.h
+    models/atmosphere/FGMSIS.h
+    models/atmosphere/FGStandardAtmosphere.h
+    models/atmosphere/FGMars.h
+    models/atmosphere/FGWinds.h
+    models/flight_control/FGAccelerometer.h
+    models/flight_control/FGActuator.h
+    models/flight_control/FGDeadBand.h
+    models/flight_control/FGFCSComponent.h
+    models/flight_control/FGFCSFunction.h
+    models/flight_control/FGFilter.h
+    models/flight_control/FGGain.h
+    models/flight_control/FGGyro.h
+    models/flight_control/FGKinemat.h
+    models/flight_control/FGMagnetometer.h
+    models/flight_control/FGPID.h
+    models/flight_control/FGSensor.h
+    models/flight_control/FGSensorOrientation.h
+    models/flight_control/FGSummer.h
+    models/flight_control/FGSwitch.h
+    models/propulsion/FGElectric.h
+    models/propulsion/FGEngine.h
+    models/propulsion/FGForce.h
+    models/propulsion/FGNozzle.h
+    models/propulsion/FGPiston.h
+    models/propulsion/FGPropeller.h
+    models/propulsion/FGRocket.h
+    models/propulsion/FGRotor.h
+    models/propulsion/FGTank.h
+    models/propulsion/FGThruster.h
+    models/propulsion/FGTransmission.h
+    models/propulsion/FGTurbine.h
+    models/propulsion/FGTurboProp.h
+    )
+
 set(SOURCES
     FGFDMExec.cpp
     FGJSBBase.cpp
@@ -24,6 +106,7 @@ set(SOURCES
     math/FGRealValue.cpp
     math/FGRungeKutta.cpp
     math/FGTable.cpp
+    models/FGAccelerations.cpp
     models/FGAerodynamics.cpp
     models/FGAircraft.cpp
     models/FGAtmosphere.cpp
@@ -44,7 +127,9 @@ set(SOURCES
     models/FGPropulsion.cpp
     models/atmosphere/FGMSIS.cpp
     models/atmosphere/FGMSISData.cpp
+    models/atmosphere/FGStandardAtmosphere.cpp
     models/atmosphere/FGMars.cpp
+    models/atmosphere/FGWinds.cpp
     models/flight_control/FGAccelerometer.cpp
     models/flight_control/FGActuator.cpp
     models/flight_control/FGDeadBand.cpp
@@ -52,7 +137,6 @@ set(SOURCES
     models/flight_control/FGFCSFunction.cpp
     models/flight_control/FGFilter.cpp
     models/flight_control/FGGain.cpp
-    models/flight_control/FGGradient.cpp
     models/flight_control/FGGyro.cpp
     models/flight_control/FGKinemat.cpp
     models/flight_control/FGMagnetometer.cpp
@@ -70,10 +154,11 @@ set(SOURCES
     models/propulsion/FGRotor.cpp
     models/propulsion/FGTank.cpp
     models/propulsion/FGThruster.cpp
+    models/propulsion/FGTransmission.cpp
     models/propulsion/FGTurbine.cpp
     models/propulsion/FGTurboProp.cpp
     )
     
 include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
 
-flightgear_component(JSBSim "${SOURCES}")
+add_library(JSBSim STATIC ${SOURCES} ${HEADERS})

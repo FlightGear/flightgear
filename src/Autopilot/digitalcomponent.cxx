@@ -24,6 +24,7 @@
 #include "digitalcomponent.hxx"
 #include <Main/fg_props.hxx>
 
+using std::string;
 using namespace FGXMLAutopilot;
 
 DigitalComponent::DigitalComponent() :

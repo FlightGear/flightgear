@@ -29,6 +29,7 @@
 #  include "config.h"
 #endif
 
+#include <cstdlib>
 #include <cstring>
 
 #include <simgear/debug/logstream.hxx>

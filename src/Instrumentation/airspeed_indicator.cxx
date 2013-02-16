@@ -3,6 +3,10 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <math.h>
 
 #include <simgear/math/interpolater.hxx>
@@ -10,8 +14,6 @@
 #include "airspeed_indicator.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
-#include <Environment/environment_mgr.hxx>
-#include <Environment/environment.hxx>
 
 
 // A higher number means more responsive.
@@ -29,7 +31,6 @@ AirspeedIndicator::AirspeedIndicator ( SGPropertyNode *node )
     _mach_limit(node->getDoubleValue("mach-limit", 0.48)),
     _alt_threshold(node->getDoubleValue("alt-threshold", 13200))
 {
-  _environmentManager = NULL;
 }
 
 AirspeedIndicator::~AirspeedIndicator ()
@@ -47,6 +48,10 @@ AirspeedIndicator::init ()
     _total_pressure_node = fgGetNode(_total_pressure.c_str(), true);
     _static_pressure_node = fgGetNode(_static_pressure.c_str(), true);
     _density_node = fgGetNode("/environment/density-slugft3", true);
+    
+    _sea_level_pressure_node = fgGetNode("/environment/pressure-sea-level-inhg", true);
+    _oat_celsius_node = fgGetNode("/environment/temperature-degc", true);
+  
     _speed_node = node->getChild("indicated-speed-kt", 0, true);
     _tas_node = node->getChild("true-speed-kt", 0, true);
     _mach_node = node->getChild("indicated-mach", 0, true);
@@ -72,8 +77,12 @@ AirspeedIndicator::init ()
         _airspeed_limit = node->getChild("airspeed-limit-kt", 0, true);
         _pressure_alt = fgGetNode(_pressure_alt_source.c_str(), true);
     }
-    
-    _environmentManager = (FGEnvironmentMgr*) globals->get_subsystem("environment");
+}
+
+void
+AirspeedIndicator::reinit ()
+{
+    _speed_node->setDoubleValue(0.0);
 }
 
 #ifndef FPSTOKTS
@@ -126,19 +135,14 @@ AirspeedIndicator::update (double dt)
 void
 AirspeedIndicator::computeMach(double ias)
 {
-  if (!_environmentManager) {
-    return;
-  }
-  
-  FGEnvironment env(_environmentManager->getEnvironment());
-  
+   
   // derived from http://williams.best.vwh.net/avform.htm#Mach
   // names here are picked to be consistent with those formulae!
 
-  double oatK = env.get_temperature_degc() + 273.15; // OAT in Kelvin
+  double oatK = _oat_celsius_node->getDoubleValue() + 273.15; // OAT in Kelvin
   double CS = 38.967854 * sqrt(oatK); // speed-of-sound in knots at altitude
   double CS_0 = 661.4786; // speed-of-sound in knots at sea-level
-  double P_0 = env.get_pressure_sea_level_inhg();
+  double P_0 = _sea_level_pressure_node->getDoubleValue();
   double P = _static_pressure_node->getDoubleValue();
   
   double DP = P_0 * (pow(1 + 0.2*pow(ias/CS_0, 2), 3.5) - 1);

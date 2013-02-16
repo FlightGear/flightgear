@@ -40,7 +40,8 @@
  * FlightGear properties.
  */
 class FGProps : public FGProtocol,
-		public simgear::NetChannel
+		public simgear::NetChannel,
+		public SGPropertyChangeListener // for subscriptions
 {
 private:
 

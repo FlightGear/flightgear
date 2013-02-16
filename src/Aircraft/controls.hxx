@@ -253,6 +253,7 @@ private:
      
 
     SGPropertyNode_ptr auto_coordination;
+    SGPropertyNode_ptr auto_coordination_factor;
     simgear::TiedPropertyList _tiedProperties;
 public:
 
@@ -264,7 +265,8 @@ public:
     void bind ();
     void unbind ();
     void update (double dt);
-
+    virtual void reinit();
+  
     // Reset function
     void reset_all(void);
         
@@ -637,6 +639,14 @@ public:
     // controls/autoflight/autopilot[n]/
     void set_autopilot_engage( int ap, bool val );
 
+private:
+    inline void do_autocoordination() {
+      // check for autocoordination
+      if ( auto_coordination->getBoolValue() ) {
+        double factor = auto_coordination_factor->getDoubleValue();
+        if( factor > 0.0 ) set_rudder( aileron * factor );
+      }
+    }    
 };
 
 

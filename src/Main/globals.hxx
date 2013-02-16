@@ -46,7 +46,6 @@ typedef std::vector<std::string> string_list;
 
 class SGEphemeris;
 class SGCommandMgr;
-class SGMagVar;
 class SGMaterialLib;
 class SGPropertyNode;
 class SGTime;
@@ -55,16 +54,12 @@ class SGSubsystemMgr;
 class SGSubsystem;
 class SGSoundMgr;
 
-class FGATCMgr;
-class FGAircraftModel;
+class FGATISMgr;
 class FGControls;
-class FGFlightPlanDispatcher;
-class FGNavList;
 class FGTACANList;
-class FGModelMgr;
+class FGLocale;
 class FGRouteMgr;
 class FGScenery;
-class FGPanel;
 class FGTileMgr;
 class FGViewMgr;
 class FGViewer;
@@ -86,18 +81,20 @@ private:
     SGPropertyNode_ptr initial_state;
 
     // localization
-    SGPropertyNode_ptr locale;
+    FGLocale* locale;
 
     FGRenderer *renderer;
     SGSubsystemMgr *subsystem_mgr;
     SGEventMgr *event_mgr;
-    SGSoundMgr *soundmgr;
 
     // Number of milliseconds elapsed since the start of the program.
     double sim_time_sec;
 
     // Root of FlightGear data tree
     std::string fg_root;
+
+    // Users home directory for data
+    std::string fg_home;
 
     // Roots of FlightGear scenery tree
     string_list fg_scenery;
@@ -110,20 +107,14 @@ private:
     // Sky structures
     SGEphemeris *ephem;
 
-    // Magnetic Variation
-    SGMagVar *mag;
-
     // Material properties library
     SGMaterialLib *matlib;
 
     // Global autopilot "route"
     FGRouteMgr *route_mgr;
 
-    // 2D panel
-    FGPanel *current_panel;
-
     // ATC manager
-    FGATCMgr *ATC_mgr;
+    FGATISMgr *ATIS_mgr;
 
     // control input state
     FGControls *controls;
@@ -132,12 +123,6 @@ private:
     FGViewMgr *viewmgr;
 
     SGCommandMgr *commands;
-
-  //FGFlightPlanDispatcher *fpDispatcher;
-
-    FGAircraftModel *acmodel;
-
-    FGModelMgr * model_mgr;
 
     // list of serial port-like configurations
     string_list *channel_options_list;
@@ -155,16 +140,16 @@ private:
     FGFontCache *fontcache;
 
     // Navigational Aids
-    FGNavList *navlist;
-    FGNavList *loclist;
-    FGNavList *gslist;
-    FGNavList *dmelist;
-    FGNavList *tacanlist;
-    FGNavList *carrierlist;
     FGTACANList *channellist;
 
     /// roots of Aircraft trees
     string_list fg_aircraft_dirs;
+
+    bool haveUserSettings;
+
+    SGPropertyNode_ptr positionLon, positionLat, positionAlt;
+    SGPropertyNode_ptr viewLon, viewLat, viewAlt;
+    SGPropertyNode_ptr orientHeading, orientPitch, orientRoll;
 public:
 
     FGGlobals();
@@ -193,8 +178,11 @@ public:
     inline const std::string &get_fg_root () const { return fg_root; }
     void set_fg_root (const std::string &root);
 
+    inline const std::string &get_fg_home () const { return fg_home; }
+    void set_fg_home (const std::string &home);
+
     inline const string_list &get_fg_scenery () const { return fg_scenery; }
-    void set_fg_scenery (const std::string &scenery);
+    void append_fg_scenery (const std::string &scenery);
 
     const string_list& get_aircraft_paths() const { return fg_aircraft_dirs; }
     void append_aircraft_path(const std::string& path);
@@ -216,6 +204,15 @@ public:
      */
     SGPath resolve_maybe_aircraft_path(const std::string& branch) const;
     
+    /**
+     * Search in the following directories:
+     *
+     *  1. Root directory of current aircraft (defined by /sim/aircraft-dir)
+     *  2. All aircraft directories if branch starts with Aircraft/
+     *  3. fg_data directory
+     */
+    SGPath resolve_resource_path(const std::string& branch) const;
+
     inline const std::string &get_browser () const { return browser; }
     void set_browser (const std::string &b) { browser = b; }
 
@@ -231,17 +228,11 @@ public:
     inline SGEphemeris *get_ephem() const { return ephem; }
     inline void set_ephem( SGEphemeris *e ) { ephem = e; }
 
-    inline SGMagVar *get_mag() const { return mag; }
-    inline void set_mag( SGMagVar *m ) { mag = m; }
-
     inline SGMaterialLib *get_matlib() const { return matlib; }
     inline void set_matlib( SGMaterialLib *m ) { matlib = m; }
 
-    inline FGATCMgr *get_ATC_mgr() const { return ATC_mgr; }
-    inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }
-
-    inline FGPanel *get_current_panel() const { return current_panel; }
-    inline void set_current_panel( FGPanel *cp ) { current_panel = cp; }
+    inline FGATISMgr *get_ATIS_mgr() const { return ATIS_mgr; }
+    inline void set_ATIS_mgr( FGATISMgr *a ) {ATIS_mgr = a; }
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }
@@ -253,25 +244,20 @@ public:
     inline SGPropertyNode *get_props () { return props; }
     inline void set_props( SGPropertyNode *n ) { props = n; }
 
-    inline SGPropertyNode *get_locale () { return locale; }
-    inline void set_locale( SGPropertyNode *n ) { locale = n; }
+    inline FGLocale* get_locale () { return locale; }
 
     inline SGCommandMgr *get_commands () { return commands; }
 
-    inline FGAircraftModel *get_aircraft_model () { return acmodel; }
+    SGGeod get_aircraft_position() const;
 
-    inline void set_aircraft_model (FGAircraftModel * model)
-    {
-        acmodel = model;
-    }
+    SGVec3d get_aircraft_position_cart() const;
 
-    inline FGModelMgr *get_model_mgr () { return model_mgr; }
-
-    inline void set_model_mgr (FGModelMgr * mgr)
-    {
-      model_mgr = mgr;
-    }
-
+    void get_aircraft_orientation(double& heading, double& pitch, double& roll);
+  
+    SGGeod get_view_position() const;
+  
+    SGVec3d get_view_position_cart() const;
+  
     inline string_list *get_channel_options_list () {
 	return channel_options_list;
     }
@@ -294,22 +280,10 @@ public:
     inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
     inline FGFontCache *get_fontcache() const { return fontcache; }
-
-    inline FGNavList *get_navlist() const { return navlist; }
-    inline void set_navlist( FGNavList *n ) { navlist = n; }
-    inline FGNavList *get_loclist() const { return loclist; }
-    inline void set_loclist( FGNavList *n ) { loclist = n; }
-    inline FGNavList *get_gslist() const { return gslist; }
-    inline void set_gslist( FGNavList *n ) { gslist = n; }
-    inline FGNavList *get_dmelist() const { return dmelist; }
-    inline void set_dmelist( FGNavList *n ) { dmelist = n; }
-    inline FGNavList *get_tacanlist() const { return tacanlist; }
-    inline void set_tacanlist( FGNavList *n ) { tacanlist = n; }
-    inline FGNavList *get_carrierlist() const { return carrierlist; }
-    inline void set_carrierlist( FGNavList *n ) { carrierlist = n; }
+  
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
-
+  
    /**
      * Save the current state as the initial state.
      */
@@ -321,6 +295,15 @@ public:
      */
     void restoreInitialState ();
 
+    /**
+     * Load user settings from autosave.xml
+     */
+    void loadUserSettings(const SGPath& datapath);
+
+    /**
+     * Save user settings in autosave.xml
+     */
+    void saveUserSettings();
 };
 
 

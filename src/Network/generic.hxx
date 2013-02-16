@@ -42,7 +42,7 @@ public:
     ~FGGeneric();
 
     bool gen_message();
-    bool parse_message(int length);
+    bool parse_message_len(int length);
 
     // open hailing frequencies
     bool open();
@@ -57,6 +57,7 @@ public:
 
     void setExitOnError(bool val) { exitOnError = val; }
     bool getExitOnError() { return exitOnError; }
+    bool getInitOk(void) { return initOk; }
 protected:
 
     enum e_type { FG_BOOL=0, FG_INT, FG_FLOAT, FG_DOUBLE, FG_STRING, FG_FIXED };
@@ -67,6 +68,9 @@ protected:
         e_type type;
         double offset;
         double factor;
+        double min, max;
+        bool wrap;
+        bool rel;
         SGPropertyNode_ptr prop;
     } _serial_prot;
 
@@ -97,8 +101,30 @@ private:
     bool gen_message_binary();
     bool parse_message_ascii(int length);
     bool parse_message_binary(int length);
-    void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
+    bool read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
     bool exitOnError;
+    bool initOk;
+    
+    template<class T>
+    static void updateValue(_serial_prot& prot, const T& val)
+    {
+      T new_val = (prot.rel ? getValue<T>(prot.prop) : 0)
+                + prot.offset
+                + prot.factor * val;
+                
+      if( prot.max > prot.min )
+      {
+        if( prot.wrap )
+          new_val = SGMisc<double>::normalizePeriodic(prot.min, prot.max, new_val);
+        else
+          new_val = SGMisc<T>::clip(new_val, prot.min, prot.max);
+      }
+
+      setValue(prot.prop, new_val);
+    }
+    
+    // Special handling for bool (relative change = toggle, no min/max, no wrap)
+    static void updateValue(_serial_prot& prot, bool val);
 };
 
 

@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#include <string.h>
+
 #include <simgear/compiler.h>
 
 #include <string>
@@ -32,7 +34,6 @@
 #include <osg/Node>
 #include <osgDB/FileUtils>
 
-#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
@@ -42,6 +43,7 @@
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scripting/NasalSys.hxx>
+#include <Sound/fg_fx.hxx>
 
 #include "AIBase.hxx"
 #include "AIManager.hxx"
@@ -70,8 +72,9 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _impact_speed(0),
     _refID( _newAIModelID() ),
     _otype(ot),
-    _initialized(false)
-
+    _initialized(false),
+    _modeldata(0),
+    _fx(0)
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
@@ -129,9 +132,7 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
 
 FGAIBase::~FGAIBase() {
     // Unregister that one at the scenery manager
-    if (globals->get_scenery()) {
-        globals->get_scenery()->get_scene_graph()->removeChild(aip.getSceneGraph());
-    }
+    removeModel();
 
     if (props) {
         SGPropertyNode* parent = props->getParent();
@@ -139,8 +140,38 @@ FGAIBase::~FGAIBase() {
         if (parent)
             model_removed->setStringValue(props->getPath());
     }
-    delete fp;
+
+    removeSoundFx();
+
+    if (fp)
+        delete fp;
     fp = 0;
+}
+
+/** Cleanly remove the model
+ * and let the scenery database pager do the clean-up work.
+ */
+void
+FGAIBase::removeModel()
+{
+    if (!_model.valid())
+        return;
+
+    FGScenery* pSceneryManager = globals->get_scenery();
+    if (pSceneryManager)
+    {
+        osg::ref_ptr<osg::Object> temp = _model.get();
+        pSceneryManager->get_scene_graph()->removeChild(aip.getSceneGraph());
+        // withdraw from SGModelPlacement and drop own reference (unref)
+        aip.init( 0 );
+        _model = 0;
+        // pass it on to the pager, to be be deleted in the pager thread
+        pSceneryManager->getPager()->queueDeleteRequest(temp);
+    }
+    else
+    {
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: Could not unload model. Missing scenery manager!");
+    }
 }
 
 void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
@@ -177,6 +208,64 @@ void FGAIBase::update(double dt) {
 
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.getLatitudeRad());
     ft_per_deg_lon = 365228.16 * cos(pos.getLatitudeRad());
+
+    if ( _fx )
+    {
+        // update model's audio sample values
+        _fx->set_position_geod( pos );
+
+        SGQuatd orient = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+        _fx->set_orientation( orient );
+
+        SGVec3d velocity;
+        velocity = SGVec3d( speed_north_deg_sec, speed_east_deg_sec,
+                            pitch*speed );
+        _fx->set_velocity( velocity );
+    }
+    else if ((_modeldata)&&(_modeldata->needInitilization()))
+    {
+        // process deferred nasal initialization,
+        // which must be done in main thread
+        _modeldata->init();
+
+        // sound initialization
+        if (fgGetBool("/sim/sound/aimodels/enabled",false))
+        {
+            const string& fxpath = _modeldata->get_sound_path();
+            if (fxpath != "")
+            {
+                props->setStringValue("sim/sound/path", fxpath.c_str());
+
+                // initialize the sound configuration
+                std::stringstream name;
+                name <<  "aifx:";
+                name << _refID;
+                _fx = new FGFX(name.str(), props);
+                _fx->init();
+            }
+        }
+    }
+}
+
+/** update LOD properties of the model */
+void FGAIBase::updateLOD()
+{
+    double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/ai-detailed", 10000.0);
+    double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/ai-bare", 20000.0);
+    if (_model.valid())
+    {
+        if( maxRangeDetail == 0.0 )
+        {
+            // disable LOD
+            _model->setRange(0, 0.0,     FLT_MAX);
+            _model->setRange(1, FLT_MAX, FLT_MAX);
+        }
+        else
+        {
+            _model->setRange(0, 0.0, maxRangeDetail);
+            _model->setRange(1, maxRangeDetail,maxRangeBare);
+        }
+    }
 }
 
 void FGAIBase::Transform() {
@@ -198,8 +287,14 @@ void FGAIBase::Transform() {
 
 }
 
-bool FGAIBase::init(bool search_in_AI_path) {
-    
+bool FGAIBase::init(bool search_in_AI_path)
+{
+    if (_model.valid())
+    {
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: Cannot initialize a model multiple times! " << model_path);
+        return false;
+    }
+
     string f;
     if(search_in_AI_path)
     {
@@ -225,17 +320,33 @@ bool FGAIBase::init(bool search_in_AI_path) {
     else
         _installed = true;
 
-    model = load3DModel(f, props);
+    _modeldata = new FGAIModelData(props);
+    osg::Node * mdl = SGModelLib::loadDeferredModel(f, props, _modeldata);
 
-    if (model.valid() && _initialized == false) {
-        aip.init( model.get() );
+    _model = new osg::LOD;
+    _model->setName("AI-model range animation node");
+
+    _model->addChild( mdl, 0, FLT_MAX );
+    _model->setCenterMode(osg::LOD::USE_BOUNDING_SPHERE_CENTER);
+    _model->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
+//    We really need low-resolution versions of AI/MP aircraft.
+//    Or at least dummy "stubs" with some default silhouette.
+//        _model->addChild( SGModelLib::loadPagedModel(fgGetString("/sim/multiplay/default-model", default_model),
+//                                                    props, new FGNasalModelData(props)), FLT_MAX, FLT_MAX);
+    updateLOD();
+
+    initModel(mdl);
+    if (_model.valid() && _initialized == false) {
+        aip.init( _model.get() );
         aip.setVisible(true);
         invisible = false;
         globals->get_scenery()->get_scene_graph()->addChild(aip.getSceneGraph());
         _initialized = true;
 
+        SG_LOG(SG_AI, SG_DEBUG, "AIBase: Loaded model " << model_path);
+
     } else if (!model_path.empty()) {
-        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
+        SG_LOG(SG_AI, SG_WARN, "AIBase: Could not load model " << model_path);
         // not properly installed...
         _installed = false;
     }
@@ -246,11 +357,11 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
 void FGAIBase::initModel(osg::Node *node)
 {
-    if (model.valid()) { 
+    if (_model.valid()) { 
 
         if( _path != ""){
             props->setStringValue("submodels/path", _path.c_str());
-            SG_LOG(SG_INPUT, SG_DEBUG, "AIBase: submodels/path " << _path);
+            SG_LOG(SG_AI, SG_DEBUG, "AIBase: submodels/path " << _path);
         }
 
         if( _parent!= ""){
@@ -259,19 +370,12 @@ void FGAIBase::initModel(osg::Node *node)
 
         fgSetString("/ai/models/model-added", props->getPath().c_str());
     } else if (!model_path.empty()) {
-        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
+        SG_LOG(SG_AI, SG_WARN, "AIBase: Could not load model " << model_path);
     }
 
     setDie(false);
 }
 
-
-osg::Node* FGAIBase::load3DModel(const string &path, SGPropertyNode *prop_root)
-{
-  model = SGModelLib::loadPagedModel(path, prop_root, new FGNasalModelData(prop_root));
-  initModel(model.get());
-  return model.get();
-}
 
 bool FGAIBase::isa( object_type otype ) {
     return otype == _otype;
@@ -279,61 +383,62 @@ bool FGAIBase::isa( object_type otype ) {
 
 
 void FGAIBase::bind() {
-    props->tie("id", SGRawValueMethods<FGAIBase,int>(*this,
+    _tiedProperties.setRoot(props);
+    tie("id", SGRawValueMethods<FGAIBase,int>(*this,
         &FGAIBase::getID));
-    props->tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
-    props->tie("velocities/vertical-speed-fps",
+    tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
+    tie("velocities/vertical-speed-fps",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getVS_fps,
         &FGAIBase::_setVS_fps));
 
-    props->tie("position/altitude-ft",
+    tie("position/altitude-ft",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getAltitude,
         &FGAIBase::_setAltitude));
-    props->tie("position/latitude-deg",
+    tie("position/latitude-deg",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getLatitude,
         &FGAIBase::_setLatitude));
-    props->tie("position/longitude-deg",
+    tie("position/longitude-deg",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getLongitude,
         &FGAIBase::_setLongitude));
 
-    props->tie("position/global-x",
+    tie("position/global-x",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosX,
         0));
-    props->tie("position/global-y",
+    tie("position/global-y",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosY,
         0));
-    props->tie("position/global-z",
+    tie("position/global-z",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosZ,
         0));
-    props->tie("callsign",
+    tie("callsign",
         SGRawValueMethods<FGAIBase,const char*>(*this,
         &FGAIBase::_getCallsign,
         0));
 
-    props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
-    props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
-    props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
+    tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
+    tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
+    tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
 
-    props->tie("radar/in-range", SGRawValuePointer<bool>(&in_range));
-    props->tie("radar/bearing-deg",   SGRawValuePointer<double>(&bearing));
-    props->tie("radar/elevation-deg", SGRawValuePointer<double>(&elevation));
-    props->tie("radar/range-nm", SGRawValuePointer<double>(&range));
-    props->tie("radar/h-offset", SGRawValuePointer<double>(&horiz_offset));
-    props->tie("radar/v-offset", SGRawValuePointer<double>(&vert_offset));
-    props->tie("radar/x-shift", SGRawValuePointer<double>(&x_shift));
-    props->tie("radar/y-shift", SGRawValuePointer<double>(&y_shift));
-    props->tie("radar/rotation", SGRawValuePointer<double>(&rotation));
-    props->tie("radar/ht-diff-ft", SGRawValuePointer<double>(&ht_diff));
-    props->tie("subID", SGRawValuePointer<int>(&_subID));
-    props->tie("controls/lighting/nav-lights",
-        SGRawValueFunctions<bool>(_isNight));
+    tie("radar/in-range", SGRawValuePointer<bool>(&in_range));
+    tie("radar/bearing-deg",   SGRawValuePointer<double>(&bearing));
+    tie("radar/elevation-deg", SGRawValuePointer<double>(&elevation));
+    tie("radar/range-nm", SGRawValuePointer<double>(&range));
+    tie("radar/h-offset", SGRawValuePointer<double>(&horiz_offset));
+    tie("radar/v-offset", SGRawValuePointer<double>(&vert_offset));
+    tie("radar/x-shift", SGRawValuePointer<double>(&x_shift));
+    tie("radar/y-shift", SGRawValuePointer<double>(&y_shift));
+    tie("radar/rotation", SGRawValuePointer<double>(&rotation));
+    tie("radar/ht-diff-ft", SGRawValuePointer<double>(&ht_diff));
+    tie("subID", SGRawValuePointer<int>(&_subID));
+    tie("controls/lighting/nav-lights", SGRawValueFunctions<bool>(_isNight));
+
     props->setBoolValue("controls/lighting/beacon", true);
     props->setBoolValue("controls/lighting/strobe", true);
     props->setBoolValue("controls/glide-path", true);
@@ -346,42 +451,31 @@ void FGAIBase::bind() {
     props->setDoubleValue("controls/flight/target-alt", altitude_ft);
     props->setDoubleValue("controls/flight/target-pitch", pitch);
 
-   props->setDoubleValue("controls/flight/target-spd", speed);
+    props->setDoubleValue("controls/flight/target-spd", speed);
 
+    props->setBoolValue("sim/sound/avionics/enabled", false);
+    props->setDoubleValue("sim/sound/avionics/volume", 0.0);
+    props->setBoolValue("sim/sound/avionics/external-view", false);
+    props->setBoolValue("sim/current-view/internal", false);
 }
 
 void FGAIBase::unbind() {
-    props->untie("id");
-    props->untie("velocities/true-airspeed-kt");
-    props->untie("velocities/vertical-speed-fps");
+    _tiedProperties.Untie();
 
-    props->untie("position/altitude-ft");
-    props->untie("position/latitude-deg");
-    props->untie("position/longitude-deg");
-    props->untie("position/global-x");
-    props->untie("position/global-y");
-    props->untie("position/global-z");
-    props->untie("callsign");
+    props->setBoolValue("/sim/controls/radar", true);
 
-    props->untie("orientation/pitch-deg");
-    props->untie("orientation/roll-deg");
-    props->untie("orientation/true-heading-deg");
+    removeSoundFx();
+}
 
-    props->untie("radar/in-range");
-    props->untie("radar/bearing-deg");
-    props->untie("radar/elevation-deg");
-    props->untie("radar/range-nm");
-    props->untie("radar/h-offset");
-    props->untie("radar/v-offset");
-    props->untie("radar/x-shift");
-    props->untie("radar/y-shift");
-    props->untie("radar/rotation");
-    props->untie("radar/ht-diff-ft");
-
-    props->untie("controls/lighting/nav-lights");
-
-    props->setBoolValue("/sim/controls/radar/", true);
-
+void FGAIBase::removeSoundFx() {
+    // drop reference to sound effects now
+    if (_fx)
+    {
+        // must remove explicitly - since the sound manager also keeps a reference
+        _fx->unbind();
+        // now drop last reference - kill the object
+        _fx = 0;
+    }
 }
 
 double FGAIBase::UpdateRadar(FGAIManager* manager) {
@@ -514,9 +608,9 @@ SGVec3d FGAIBase::getCartPos() const {
 }
 
 bool FGAIBase::getGroundElevationM(const SGGeod& pos, double& elev,
-                                   const SGMaterial** material) const {
+                                   const simgear::BVHMaterial** material) const {
     return globals->get_scenery()->get_elevation_m(pos, elev, material,
-                                                   model.get());
+                                                   _model.get());
 }
 
 double FGAIBase::_getCartPosX() const {
@@ -555,7 +649,7 @@ void FGAIBase::_setSubID( int s ) {
 bool FGAIBase::setParentNode() {
 
     if (_parent == ""){
-       SG_LOG(SG_GENERAL, SG_ALERT, "AIBase: " << _name
+       SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name
             << " parent not set ");
        return false;
     }
@@ -569,7 +663,7 @@ bool FGAIBase::setParentNode() {
             model = _selected_ac;
         } else {
             model = ai->getChild(i);
-            string path = ai->getPath();
+            //const string& path = ai->getPath();
             const string name = model->getStringValue("name");
 
             if (!model->nChildren()){
@@ -590,7 +684,7 @@ bool FGAIBase::setParentNode() {
         const string name = _selected_ac->getStringValue("name");
         return true;
     } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIBase: " << _name
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name
             << " parent not found: dying ");
         setDie(true);
         return false;
@@ -636,7 +730,7 @@ double FGAIBase::_getAltitude() const {
 
 double FGAIBase::_getAltitudeAGL(SGGeod inpos, double start){
     getGroundElevationM(SGGeod::fromGeodM(inpos, start),
-        _elevation_m, &_material);
+        _elevation_m, NULL);
     return inpos.getElevationFt() - _elevation_m * SG_METER_TO_FEET;
 }
 
@@ -793,3 +887,28 @@ int FGAIBase::_newAIModelID() {
     return id;
 }
 
+
+FGAIModelData::FGAIModelData(SGPropertyNode *root)
+  : _nasal( new FGNasalModelDataProxy(root) ),
+    _ready(false),
+    _initialized(false)
+{
+}
+
+FGAIModelData::~FGAIModelData()
+{
+    delete _nasal;
+    _nasal = NULL;
+}
+
+void FGAIModelData::modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n)
+{
+    // WARNING: Called in a separate OSG thread! Only use thread-safe stuff here...
+    if (_ready)
+        return;
+
+    _fxpath = prop->getStringValue("sound/path");
+    _nasal->modelLoaded(path, prop, n);
+
+    _ready = true;
+}

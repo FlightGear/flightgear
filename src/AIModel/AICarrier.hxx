@@ -49,7 +49,6 @@ public:
     void setTACANChannelID(const string &);
 
     virtual void bind();
-    virtual void unbind();
     void UpdateWind ( double dt );
     void setWind_from_east( double fps );
     void setWind_from_north( double fps );

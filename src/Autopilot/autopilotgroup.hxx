@@ -24,7 +24,6 @@
 #ifndef _XMLAUTO_HXX
 #define _XMLAUTO_HXX 1
 
-
 /**
  * @brief Model an autopilot system by implementing a SGSubsystemGroup
  * 
@@ -32,7 +31,10 @@
 class FGXMLAutopilotGroup : public SGSubsystemGroup
 {
 public:
-    static FGXMLAutopilotGroup * createInstance();
+    static FGXMLAutopilotGroup * createInstance(const std::string& nodeName);
+    void addAutopilotFromFile( const std::string & name, SGPropertyNode_ptr apNode, const char * path );
+    virtual void addAutopilot( const std::string & name, SGPropertyNode_ptr apNode, SGPropertyNode_ptr config ) = 0;
+    virtual void removeAutopilot( const std::string & name ) = 0;
 protected:
     FGXMLAutopilotGroup() : SGSubsystemGroup() {}
 

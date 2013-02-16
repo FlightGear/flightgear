@@ -1,6 +1,6 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
-#endif 
+#endif
 
 #include <simgear/compiler.h>
 
@@ -23,8 +23,10 @@ MIDGTrack::MIDGTrack() {};
 MIDGTrack::~MIDGTrack() {};
 
 
-
-
+/*
+ * Unused function
+ */
+#if(0)
 static uint32_t read_swab( char *buf, size_t offset, size_t size ) {
     uint32_t result = 0;
 
@@ -51,6 +53,7 @@ static uint32_t read_swab( char *buf, size_t offset, size_t size ) {
 
     return result;
 }
+#endif
 
 
 static bool validate_cksum( uint8_t id, uint8_t size, char *buf,
@@ -88,6 +91,10 @@ static bool validate_cksum( uint8_t id, uint8_t size, char *buf,
 
 void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
 {
+/*
+ * Completely unused parser results. Removed from compiling to remove the warnings
+ */
+#if(0)
     if ( id == 1 ) {
         uint32_t ts;
         uint16_t status;
@@ -98,7 +105,7 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
         // timestamp
         ts = (uint32_t)read_swab( buf, 0, 4 );
         // cout << "  time stamp = " << ts << endl;
-            
+
         // status
         status = (uint16_t)read_swab( buf, 4, 2 );
         // cout << "  status = " << status << endl;
@@ -312,18 +319,19 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
         // position dop
         pdop = (uint16_t)read_swab( buf, 32, 2 );
         // cout << "  pdop = " << pdop <<  endl;
-       
+
         // position accuracy
         pacc = (uint16_t)read_swab( buf, 34, 2 );
         // cout << "  pacc = " << pacc <<  endl;
-       
+
         // speed accuracy
         sacc = (uint16_t)read_swab( buf, 36, 2 );
         // cout << "  sacc = " << sacc <<  endl;
-       
+
     } else {
         cout << "unknown id = " << id << endl;
     }
+#endif
 }
 
 
@@ -463,7 +471,7 @@ int MIDGTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
     // read checksum
     myread( ch, log, tmpbuf, 1 ); uint8_t cksum0 = (unsigned char)tmpbuf[0];
     myread( ch, log, tmpbuf, 1 ); uint8_t cksum1 = (unsigned char)tmpbuf[0];
-    
+
     if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
         parse_msg( id, savebuf, pos, att );
         return id;
@@ -480,7 +488,6 @@ int MIDGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
 {
     char tmpbuf[256];
     char savebuf[256];
-    int result = 0;
 
     cout << "in next_message()" << endl;
 
@@ -488,7 +495,7 @@ int MIDGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
 
     // scan for sync characters
     uint8_t sync0, sync1;
-    result = serial_read( serial, tmpbuf, 2 );
+    serial_read( serial, tmpbuf, 2 );
     sync0 = (unsigned char)tmpbuf[0];
     sync1 = (unsigned char)tmpbuf[1];
     while ( (sync0 != 129 || sync1 != 161) && !myeof ) {
@@ -514,7 +521,7 @@ int MIDGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     serial_read( serial, tmpbuf, 2 );
     uint8_t cksum0 = (unsigned char)tmpbuf[0];
     uint8_t cksum1 = (unsigned char)tmpbuf[1];
-    
+
     if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
         parse_msg( id, savebuf, pos, att );
 
@@ -529,7 +536,7 @@ int MIDGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     cout << "Check sum failure!" << endl;
     return -1;
 
-    
+
 }
 
 

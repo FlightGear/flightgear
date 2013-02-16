@@ -65,21 +65,21 @@ public:
 	inline void SetEntInvert(bool b) { _entInvert = b; }
 	
 	// Get / Set a waypoint id, NOT the page name!
-	virtual void SetId(const string& s);
-	virtual const string& GetId();
+	virtual void SetId(const std::string& s);
+	virtual const std::string& GetId();
 	
 	inline int GetSubPage() { return(_subPage); }
 	void SetSubPage(int n);
 	
 	inline int GetNSubPages() { return(_nSubPages); }
 	
-	inline const string& GetName() { return(_name); }
+	inline const std::string& GetName() { return(_name); }
 	
 protected:
 
 	KLN89* _kln89;
 	
-	string _name;	// eg. "APT", "NAV" etc
+	std::string _name;	// eg. "APT", "NAV" etc
 	int _nSubPages;
 	// _subpage is zero based
 	int _subPage;	// The subpage gets remembered when other pages are displayed
@@ -97,18 +97,18 @@ protected:
 	// Invert ID and display ENT in field 1
 	bool _entInvert;
 	
-	string _id;		// The ID of the waypoint that the page is displaying.
+	std::string _id;		// The ID of the waypoint that the page is displaying.
 					// Doesn't make sense for all pages, but does for all the data pages.
 					
-	void ShowScratchpadMessage(const string& line1, const string& line2);
+	void ShowScratchpadMessage(const std::string& line1, const std::string& line2);
 					
 	bool _scratchpadMsg;		// Set true when there is a scratchpad message to display
 	double _scratchpadTimer;	// Used for displaying the scratchpad messages for the right amount of time.
-	string _scratchpadLine1;
-	string _scratchpadLine2;
+	std::string _scratchpadLine1;
+	std::string _scratchpadLine2;
 	
 	// TODO - remove this function from this class and use a built in method instead.
-	string GPSitoa(int n);
+	std::string GPSitoa(int n);
 };
 
 #endif	// _KLN89_PAGE_HXX

@@ -1,4 +1,4 @@
-// generic.cxx -- generic protocal class
+// generic.cxx -- generic protocol class
 //
 // Written by Curtis Olson, started November 1999.
 //
@@ -34,6 +34,7 @@
 #include <simgear/misc/stdint.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -41,9 +42,7 @@
 #include <Main/util.hxx>
 #include "generic.hxx"
 
-
-
-FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
+FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false), initOk(false)
 {
     size_t configToken;
     if (tokens[1] == "socket") {
@@ -54,9 +53,9 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
         configToken = 6; 
     }
 
-    if (configToken >= tokens.size()) {
-       SG_LOG(SG_GENERAL, SG_ALERT,
-              "Not enough tokens passed for generic protocol");
+    if ((configToken >= tokens.size())||(tokens[ configToken ] == "")) {
+       SG_LOG(SG_NETWORK, SG_ALERT,
+              "Not enough tokens passed for generic '" << tokens[1] << "' protocol. ");
        return;
     }
 
@@ -64,9 +63,10 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
     file_name = config+".xml";
     direction = tokens[2];
 
-    if (direction != "in" && direction != "out") {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Unsuported protocol direction: "
+    if (direction != "in" && direction != "out" && direction != "bi") {
+        SG_LOG(SG_NETWORK, SG_ALERT, "Unsuported protocol direction: "
                << direction);
+        return;
     }
 
     reinit();
@@ -177,6 +177,7 @@ bool FGGeneric::gen_message_binary() {
             /* FIXME padding for alignment? Something like: 
              * length += (strlength % 4 > 0 ? sizeof(int32_t) - strlength % 4 : 0;
              */
+            break;
         }
     }
 
@@ -275,7 +276,6 @@ bool FGGeneric::gen_message() {
 bool FGGeneric::parse_message_binary(int length) {
     char *p2, *p1 = buf;
     int32_t tmp32;
-    double val;
     int i = -1;
 
     p2 = p1 + length;
@@ -288,15 +288,12 @@ bool FGGeneric::parse_message_binary(int length) {
             } else {
                 tmp32 = *(int32_t *)p1;
             }
-
-            val = _in_message[i].offset + (double)tmp32 * _in_message[i].factor;
-
-            _in_message[i].prop->setIntValue((int)val);
+            updateValue(_in_message[i], (int)tmp32);
             p1 += sizeof(int32_t);
             break;
 
         case FG_BOOL:
-            _in_message[i].prop->setBoolValue( p1[0] != 0 );
+            updateValue(_in_message[i], p1[0] != 0);
             p1 += 1;
             break;
 
@@ -306,11 +303,7 @@ bool FGGeneric::parse_message_binary(int length) {
             } else {
                 tmp32 = *(int32_t *)p1;
             }
-
-            val = _in_message[i].offset +
-                  ((double)tmp32 / 65536.0f) * _in_message[i].factor;
-
-            _in_message[i].prop->setFloatValue(val);
+            updateValue(_in_message[i], (float)tmp32 / 65536.0f);
             p1 += sizeof(int32_t);
             break;
 
@@ -321,11 +314,7 @@ bool FGGeneric::parse_message_binary(int length) {
             } else {
                 tmpun32.floatVal = *(float *)p1;
             }
-
-            val = _in_message[i].offset +
-                  tmpun32.floatVal * _in_message[i].factor;
-
-            _in_message[i].prop->setFloatValue(val);
+            updateValue(_in_message[i], tmpun32.floatVal);
             p1 += sizeof(int32_t);
             break;
 
@@ -336,17 +325,14 @@ bool FGGeneric::parse_message_binary(int length) {
             } else {
                 tmpun64.doubleVal = *(double *)p1;
             }
-
-            val = _in_message[i].offset +
-                   tmpun64.doubleVal * _in_message[i].factor;
-
-            _in_message[i].prop->setDoubleValue(val);
+            updateValue(_in_message[i], tmpun64.doubleVal);
             p1 += sizeof(int64_t);
             break;
 
         default: // SG_STRING
             SG_LOG( SG_IO, SG_ALERT, "Generic protocol: "
                     "Ignoring unsupported binary input chunk type.");
+            break;
         }
     }
     
@@ -354,8 +340,7 @@ bool FGGeneric::parse_message_binary(int length) {
 }
 
 bool FGGeneric::parse_message_ascii(int length) {
-    char *p2, *p1 = buf;
-    double val;
+    char *p1 = buf;
     int i = -1;
     int chunks = _in_message.size();
     int line_separator_size = line_separator.size();
@@ -369,36 +354,40 @@ bool FGGeneric::parse_message_ascii(int length) {
         buf[length - line_separator_size] = 0;
     }
 
+    size_t varsep_len = var_separator.length();
     while ((++i < chunks) && p1) {
-        p2 = strstr(p1, var_separator.c_str());
-        if (p2) {
-            *p2 = 0;
-            p2 += var_separator.length();
+        char* p2 = NULL;
+
+        if (varsep_len > 0)
+        {
+            p2 = strstr(p1, var_separator.c_str());
+            if (p2) {
+                *p2 = 0;
+                p2 += varsep_len;
+            }
         }
 
         switch (_in_message[i].type) {
         case FG_INT:
-            val = _in_message[i].offset + atoi(p1) * _in_message[i].factor;
-            _in_message[i].prop->setIntValue((int)val);
+            updateValue(_in_message[i], atoi(p1));
             break;
 
         case FG_BOOL:
-            _in_message[i].prop->setBoolValue( atof(p1) != 0.0 );
+            updateValue(_in_message[i], atof(p1) != 0.0);
             break;
 
         case FG_FIXED:
         case FG_FLOAT:
-            val = _in_message[i].offset + strtod(p1, 0) * _in_message[i].factor;
-            _in_message[i].prop->setFloatValue((float)val);
+            updateValue(_in_message[i], (float)strtod(p1, 0));
             break;
 
         case FG_DOUBLE:
-            val = _in_message[i].offset + strtod(p1, 0) * _in_message[i].factor;
-            _in_message[i].prop->setDoubleValue(val);
+            updateValue(_in_message[i], (double)strtod(p1, 0));
             break;
 
         default: // SG_STRING
             _in_message[i].prop->setStringValue(p1);
+            break;
         }
 
         p1 = p2;
@@ -407,7 +396,7 @@ bool FGGeneric::parse_message_ascii(int length) {
     return true;
 }
 
-bool FGGeneric::parse_message(int length) {
+bool FGGeneric::parse_message_len(int length) {
     if (binary_mode) {
         return parse_message_binary(length);
     } else {
@@ -433,7 +422,9 @@ bool FGGeneric::open() {
 
     set_enabled( true );
 
-    if ( get_direction() == SG_IO_OUT && ! preamble.empty() ) {
+    if ( ((get_direction() == SG_IO_OUT )||
+          (get_direction() == SG_IO_BI))
+          && ! preamble.empty() ) {
         if ( ! io->write( preamble.c_str(), preamble.size() ) ) {
             SG_LOG( SG_IO, SG_WARN, "Error writing preamble." );
             return false;
@@ -448,18 +439,22 @@ bool FGGeneric::open() {
 bool FGGeneric::process() {
     SGIOChannel *io = get_io_channel();
 
-    if ( get_direction() == SG_IO_OUT ) {
+    if ( (get_direction() == SG_IO_OUT) ||
+         (get_direction() == SG_IO_BI) ) {
         gen_message();
         if ( ! io->write( buf, length ) ) {
             SG_LOG( SG_IO, SG_WARN, "Error writing data." );
             goto error_out;
         }
-    } else if ( get_direction() == SG_IO_IN ) {
+    }
+
+    if (( get_direction() == SG_IO_IN ) ||
+        (get_direction() == SG_IO_BI) ) {
         if ( io->get_type() == sgFileType ) {
             if (!binary_mode) {
                 length = io->readline( buf, FG_MAX_MSG_SIZE );
                 if ( length > 0 ) {
-                    parse_message( length );
+                    parse_message_len( length );
                 } else {
                     SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
                     return false;
@@ -467,7 +462,7 @@ bool FGGeneric::process() {
             } else {
                 length = io->read( buf, binary_record_length );
                 if ( length == binary_record_length ) {
-                    parse_message( length );
+                    parse_message_len( length );
                 } else {
                     SG_LOG( SG_IO, SG_ALERT,
                             "Generic protocol: Received binary "
@@ -479,12 +474,12 @@ bool FGGeneric::process() {
         } else {
             if (!binary_mode) {
                 while ((length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-                    parse_message( length );
+                    parse_message_len( length );
                 }
             } else {
                 while ((length = io->read( buf, binary_record_length )) 
                           == binary_record_length ) {
-                    parse_message( length );
+                    parse_message_len( length );
                 }
 
                 if ( length > 0 ) {
@@ -511,7 +506,9 @@ error_out:
 bool FGGeneric::close() {
     SGIOChannel *io = get_io_channel();
 
-    if ( get_direction() == SG_IO_OUT && ! postamble.empty() ) {
+    if ( ((get_direction() == SG_IO_OUT)||
+          (get_direction() == SG_IO_BI))
+          && ! postamble.empty() ) {
         if ( ! io->write( postamble.c_str(), postamble.size() ) ) {
             SG_LOG( SG_IO, SG_ALERT, "Error writing postamble." );
             return false;
@@ -535,14 +532,14 @@ FGGeneric::reinit()
     path.append("Protocol");
     path.append(file_name.c_str());
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Reading communication protocol from "
+    SG_LOG(SG_NETWORK, SG_INFO, "Reading communication protocol from "
                                 << path.str());
 
     SGPropertyNode root;
     try {
         readProperties(path.str(), &root);
     } catch (const sg_exception & ex) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_NETWORK, SG_ALERT,
          "Unable to load the protocol configuration file: " << ex.getFormattedMessage() );
          return;
     }
@@ -551,13 +548,21 @@ FGGeneric::reinit()
         SGPropertyNode *output = root.getNode("generic/output");
         if (output) {
             _out_message.clear();
-            read_config(output, _out_message);
+            if (!read_config(output, _out_message))
+            {
+                // bad configuration
+                return;
+            }
         }
     } else if (direction == "in") {
         SGPropertyNode *input = root.getNode("generic/input");
         if (input) {
             _in_message.clear();
-            read_config(input, _in_message);
+            if (!read_config(input, _in_message))
+            {
+                // bad configuration
+                return;
+            }
             if (!binary_mode && (line_separator.size() == 0 ||
                 *line_separator.rbegin() != '\n')) {
 
@@ -567,10 +572,12 @@ FGGeneric::reinit()
             }
         }
     }
+
+    initOk = true;
 }
 
 
-void
+bool
 FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 {
     binary_mode = root->getBoolValue("binary_mode");
@@ -670,6 +677,7 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 
     int record_length = 0; // Only used for binary protocols.
     vector<SGPropertyNode_ptr> chunks = root->getChildren("chunk");
+
     for (unsigned int i = 0; i < chunks.size(); i++) {
 
         _serial_prot chunk;
@@ -678,6 +686,10 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         chunk.format = fgUnescape(chunks[i]->getStringValue("format", "%d"));
         chunk.offset = chunks[i]->getDoubleValue("offset");
         chunk.factor = chunks[i]->getDoubleValue("factor", 1.0);
+        chunk.min = chunks[i]->getDoubleValue("min");
+        chunk.max = chunks[i]->getDoubleValue("max");
+        chunk.wrap = chunks[i]->getBoolValue("wrap");
+        chunk.rel = chunks[i]->getBoolValue("relative");
 
         string node = chunks[i]->getStringValue("node", "/null");
         chunk.prop = fgGetNode(node.c_str(), true);
@@ -708,7 +720,19 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 
     }
 
-    if( binary_mode ) {
+    if( !binary_mode )
+    {
+        if ((chunks.size() > 1)&&(var_sep_string.length() == 0))
+        {
+            // ASCII protocols really need a separator when there is more than one chunk per line
+            SG_LOG(SG_IO, SG_ALERT,
+                   "generic protocol: Invalid configuration. "
+                   "'var_separator' must not be empty for protocols which have more than one chunk per line.");
+            return false;
+        }
+    }
+    else
+    {
         if (binary_record_length == -1) {
             binary_record_length = record_length;
         } else if (binary_record_length < record_length) {
@@ -718,4 +742,20 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
             binary_record_length = record_length;
         }
     }
+
+    return true;
+}
+
+void FGGeneric::updateValue(FGGeneric::_serial_prot& prot, bool val)
+{
+  if( prot.rel )
+  {
+    // value inverted if received true, otherwise leave unchanged
+    if( val )
+      setValue(prot.prop, !getValue<bool>(prot.prop));
+  }
+  else
+  {
+    setValue(prot.prop, val);
+  }
 }

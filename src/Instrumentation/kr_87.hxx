@@ -29,28 +29,24 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Navaids/navlist.hxx>
-#include <Sound/morse.hxx>
 
 class SGSampleGroup;
 
 class FGKR_87 : public SGSubsystem
 {
-    FGMorse morse;
-
-    SGPropertyNode_ptr lon_node;
-    SGPropertyNode_ptr lat_node;
-    SGPropertyNode_ptr alt_node;
+private:
     SGPropertyNode_ptr bus_power;
     SGPropertyNode_ptr serviceable;
 
     bool need_update;
 
     // internal values
-    string ident;
-    string trans_ident;
+    std::string ident;
+    std::string trans_ident;
     bool valid;
     bool inrange;
     double stn_lon;
@@ -106,13 +102,14 @@ class FGKR_87 : public SGSubsystem
     double _time_before_search_sec;
 
     SGSharedPtr<SGSampleGroup> _sgr;
+    simgear::TiedPropertyList _tiedProperties;
 
 public:
-
     FGKR_87( SGPropertyNode *node );
     ~FGKR_87();
 
     void init ();
+    void reinit ();
     void bind ();
     void unbind ();
     void update (double dt_sec);
@@ -121,7 +118,7 @@ public:
     void search ();
 
     // internal values
-    inline const string& get_ident() const { return ident; }
+    inline const std::string& get_ident() const { return ident; }
     inline bool get_valid() const { return valid; }
     inline bool get_inrange() const { return inrange; }
     inline double get_stn_lon() const { return stn_lon; }

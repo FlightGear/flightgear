@@ -29,6 +29,7 @@
 namespace flightgear
 {
   class Hold;
+  class FlightPlan;
 }
 
 typedef std::vector<SGGeod> SGGeodVec;
@@ -37,12 +38,15 @@ class RoutePath
 {
 public:
   RoutePath(const flightgear::WayptVec& wpts);
-
+  RoutePath(const flightgear::FlightPlan* fp);
+  
   SGGeodVec pathForIndex(int index) const;
   
   SGGeod positionForIndex(int index) const;
   
 private:
+  void commonInit();
+  
   class PathCtx;
   
   SGGeodVec pathForHold(flightgear::Hold* hold) const;
@@ -50,6 +54,8 @@ private:
   bool computedPositionForIndex(int index, SGGeod& pos) const;
   double computeAltitudeForIndex(int index) const;
   double computeTrackForIndex(int index) const;
+  
+  void interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, SGGeodVec& r) const;
   
   /**
    * Find the distance (in Nm) to climb/descend a height in feet

@@ -38,7 +38,7 @@ FGLogger::init ()
   if (logging == 0)
     return;
 
-  vector<SGPropertyNode_ptr> children = logging->getChildren("log");
+  std::vector<SGPropertyNode_ptr> children = logging->getChildren("log");
   for (unsigned int i = 0; i < children.size(); i++) {
 
     SGPropertyNode * child = children[i];
@@ -64,9 +64,9 @@ FGLogger::init ()
     log.interval_ms = child->getLongValue("interval-ms");
     log.last_time_ms = globals->get_sim_time_sec() * 1000;
     log.delimiter = delimiter.c_str()[0];
-    log.output = new ofstream(filename.c_str());
+    log.output = new std::ofstream(filename.c_str());
     if (!log.output) {
-      SG_LOG(SG_INPUT, SG_ALERT, "Cannot write log to " << filename);
+      SG_LOG(SG_GENERAL, SG_ALERT, "Cannot write log to " << filename);
       continue;
     }
 

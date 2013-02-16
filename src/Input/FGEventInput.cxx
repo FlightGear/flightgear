@@ -28,9 +28,14 @@
 #include "FGEventInput.hxx"
 #include <Main/fg_props.hxx>
 #include <simgear/io/sg_file.hxx>
+#include <simgear/props/props_io.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <Scripting/NasalSys.hxx>
 
 using simgear::PropertyList;
+using std::cout;
+using std::endl;
+using std::map;
 
 FGEventSetting::FGEventSetting( SGPropertyNode_ptr base ) :
   value(0.0)
@@ -97,7 +102,7 @@ FGInputEvent::FGInputEvent( FGInputDevice * aDevice, SGPropertyNode_ptr node ) :
   read_bindings( node, bindings, KEYMOD_NONE, device->GetNasalModule() );
 
   PropertyList settingNodes = node->getChildren("setting");
-  for( PropertyList::iterator it = settingNodes.begin(); it != settingNodes.end(); it++ )
+  for( PropertyList::iterator it = settingNodes.begin(); it != settingNodes.end(); ++it )
     settings.push_back( new FGEventSetting( *it ) );
 }
 
@@ -107,7 +112,7 @@ FGInputEvent::~FGInputEvent()
 
 void FGInputEvent::update( double dt )
 {
-  for( setting_list_t::iterator it = settings.begin(); it != settings.end(); it++ ) {
+  for( setting_list_t::iterator it = settings.begin(); it != settings.end(); ++it ) {
     if( (*it)->Test() ) {
       double value = (*it)->GetValue();
       if( value != lastSettingValue ) {
@@ -123,7 +128,7 @@ void FGInputEvent::fire( FGEventData & eventData )
   lastDt += eventData.dt;
   if( lastDt >= intervalSec ) {
 
-    for( binding_list_t::iterator it = bindings[eventData.modifiers].begin(); it != bindings[eventData.modifiers].end(); it++ )
+    for( binding_list_t::iterator it = bindings[eventData.modifiers].begin(); it != bindings[eventData.modifiers].end(); ++it )
       fire( *it, eventData );
 
     lastDt -= intervalSec;
@@ -239,7 +244,7 @@ void FGInputDevice::Configure( SGPropertyNode_ptr aDeviceNode )
   nasalModule = string("__event:") + GetName();
 
   PropertyList eventNodes = deviceNode->getChildren( "event" );
-  for( PropertyList::iterator it = eventNodes.begin(); it != eventNodes.end(); it++ )
+  for( PropertyList::iterator it = eventNodes.begin(); it != eventNodes.end(); ++it )
     AddHandledEvent( FGInputEvent::NewObject( this, *it ) );
 
   debugEvents = deviceNode->getBoolValue("debug-events", debugEvents );
@@ -289,13 +294,13 @@ void FGInputDevice::SetName( string name )
 const char * FGEventInput::PROPERTY_ROOT = "/input/event";
 
 FGEventInput::FGEventInput() : 
-  configMap( "Input/Event", fgGetNode( PROPERTY_ROOT, true ), "device-named" )
+  configMap( "Input/Event", fgGetNode(PROPERTY_ROOT, true), "device-named")
 {
 }
 
 FGEventInput::~FGEventInput()
 {
-  for( map<int,FGInputDevice*>::iterator it = input_devices.begin(); it != input_devices.end(); it++ )
+  for( map<int,FGInputDevice*>::iterator it = input_devices.begin(); it != input_devices.end(); ++it )
     delete (*it).second;
   input_devices.clear();
 }
@@ -314,7 +319,7 @@ void FGEventInput::postinit ()
 void FGEventInput::update( double dt )
 {
   // call each associated device's update() method
-  for( map<int,FGInputDevice*>::iterator it =  input_devices.begin(); it != input_devices.end(); it++ )
+  for( map<int,FGInputDevice*>::iterator it =  input_devices.begin(); it != input_devices.end(); ++it )
     (*it).second->update( dt );
 }
 
@@ -324,7 +329,7 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
   SGPropertyNode_ptr deviceNode = NULL;
 
   // look for configuration in the device map
-  if( configMap.count( inputDevice->GetName() ) > 0 ) {
+  if ( configMap.hasConfiguration( inputDevice->GetName() ) ) {
     // found - copy to /input/event/device[n]
 
     // find a free index
@@ -342,7 +347,7 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
     deviceNode = baseNode->getNode( "device", index, true );
 
     // and copy the properties from the configuration tree
-    copyProperties( configMap[ inputDevice->GetName() ], deviceNode );
+    copyProperties( configMap.configurationForDeviceName(inputDevice->GetName()), deviceNode );
 
   }
 

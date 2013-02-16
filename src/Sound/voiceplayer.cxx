@@ -16,7 +16,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -28,6 +28,8 @@
 #  include <config.h>
 #endif
 
+#include "voiceplayer.hxx"
+
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -38,11 +40,12 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/sample_group.hxx>
 #include <simgear/structure/exception.hxx>
 
 using std::string;
-
-#include "voiceplayer.hxx"
+using std::map;
+using std::vector;
 
 ///////////////////////////////////////////////////////////////////////////////
 // constants //////////////////////////////////////////////////////////////////
@@ -57,6 +60,36 @@ using std::string;
       if (Twice) append(Var,Sample); }
 
 #define test_bits(_bits, _test) (((_bits) & (_test)) != 0)
+
+/////////////////////////////////////////////////////////////////////////
+// FGVoicePlayer::Voice::SampleElement ///////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+FGVoicePlayer::Voice::SampleElement::SampleElement (SGSharedPtr<SGSoundSample> sample, float volume)
+: _sample(sample), _volume(volume)
+{
+  silence = false;
+}
+
+void FGVoicePlayer::Voice::SampleElement::play (float volume)
+{
+  if (_sample && (volume > 0.05)) { set_volume(volume); _sample->play_once(); }
+}
+
+void FGVoicePlayer::Voice::SampleElement::stop ()
+{
+  if (_sample) _sample->stop();
+}
+
+bool FGVoicePlayer::Voice::SampleElement::is_playing ()
+{
+  return _sample ? _sample->is_playing() : false;
+}
+
+void FGVoicePlayer::Voice::SampleElement::set_volume (float volume)
+{
+  if (_sample) _sample->set_volume(volume * _volume);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // FGVoicePlayer //////////////////////////////////////////////////////////////
@@ -148,6 +181,14 @@ FGVoicePlayer::Voice::update ()
     }
 }
 
+FGVoicePlayer::FGVoicePlayer (PropertiesHandler* properties_handler, string _dev_name)
+: volume(1.0), voice(NULL), next_voice(NULL), paused(false),
+dev_name(_dev_name), dir_prefix(""),
+speaker(this,properties_handler)
+{
+  _sgr = NULL;
+}
+
 FGVoicePlayer::~FGVoicePlayer ()
 {
     vector<Voice *>::iterator iter1;
@@ -214,7 +255,7 @@ FGVoicePlayer::get_sample (const char *name)
         }
         catch (const sg_exception &e)
         {
-            SG_LOG(SG_INSTR, SG_ALERT, "Error loading sound sample \"" + filename + "\": " + e.getFormattedMessage());
+            SG_LOG(SG_SOUND, SG_ALERT, "Error loading sound sample \"" + filename + "\": " + e.getFormattedMessage());
             exit(1);
         }
 
@@ -306,3 +347,10 @@ FGVoicePlayer::update ()
         }
     }
 }
+
+void
+FGVoicePlayer::append (Voice *voice, const char *sample_name)
+{
+  voice->append(new Voice::SampleElement(get_sample(sample_name)));
+}
+

@@ -14,11 +14,11 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sg_inlines.h>
+#include <simgear/props/props_io.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
-#include <Instrumentation/HUD/HUD.hxx>
 
 #include "instrument_mgr.hxx"
 #include "adf.hxx"
@@ -36,32 +36,31 @@
 #include "kt_70.hxx"
 #include "mag_compass.hxx"
 #include "marker_beacon.hxx"
-#include "navradio.hxx"
+#include "newnavradio.hxx"
 #include "slip_skid_ball.hxx"
 #include "transponder.hxx"
 #include "turn_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
 #include "inst_vertical_speed_indicator.hxx"
-#include "od_gauge.hxx"
-#include "wxradar.hxx"
 #include "tacan.hxx"
 #include "mk_viii.hxx"
 #include "mrg.hxx"
-#include "groundradar.hxx"
-#include "agradar.hxx"
 #include "rad_alt.hxx"
 #include "tcas.hxx"
 
 FGInstrumentMgr::FGInstrumentMgr () :
   _explicitGps(false)
-{
-    set_subsystem("od_gauge", new FGODGauge);
-    
-    globals->add_subsystem("hud", new HUD, SGSubsystemMgr::DISPLAY);
+{    
 }
 
 FGInstrumentMgr::~FGInstrumentMgr ()
 {
+}
+
+SGSubsystem::InitStatus FGInstrumentMgr::incrementalInit()
+{
+  init();
+  return INIT_DONE;
 }
 
 void FGInstrumentMgr::init()
@@ -79,13 +78,13 @@ void FGInstrumentMgr::init()
   try {
     readProperties( config.str(), config_props );
     if (!build(config_props)) {
-      throw sg_error(
+      throw sg_exception(
                     "Detected an internal inconsistency in the instrumentation\n"
                     "system specification file.  See earlier errors for details.");
     }
-  } catch (const sg_exception&) {
+  } catch (const sg_exception& e) {
     SG_LOG(SG_COCKPIT, SG_ALERT, "Failed to load instrumentation system model: "
-                    << config.str() );
+                    << config.str() << ":" << e.getFormattedMessage() );
   }
 
 
@@ -108,20 +107,6 @@ void FGInstrumentMgr::init()
   SGSubsystemGroup::init();
 }
 
-void FGInstrumentMgr::reinit()
-{  
-// delete all our instrument
-  for (unsigned int i=0; i<_instruments.size(); ++i) {
-    const std::string& nm(_instruments[i]);
-    SGSubsystem* instr = get_subsystem(nm);
-    instr->unbind();
-    remove_subsystem(nm);
-    delete instr;
-  }
-  
-  init();
-}
-
 bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 {
     for ( int i = 0; i < config_props->nChildren(); ++i ) {
@@ -135,8 +120,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         if (index > 0)
             subsystemname << '['<< index << ']';
         string id = subsystemname.str();
-        _instruments.push_back(id);
-
+      
         if ( name == "adf" ) {
             set_subsystem( id, new ADF( node ), 0.15 );
 
@@ -156,7 +140,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new DME( node ), 1.0 );
 
         } else if ( name == "encoder" ) {
-            set_subsystem( id, new Altimeter( node ) );
+            set_subsystem( id, new Altimeter( node ), 0.15 );
 
         } else if ( name == "gps" ) {
             set_subsystem( id, new GPS( node ) );
@@ -183,16 +167,16 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new MagCompass( node ) );
 
         } else if ( name == "marker-beacon" ) {
-            set_subsystem( id, new FGMarkerBeacon( node ) );
+            set_subsystem( id, new FGMarkerBeacon( node ), 0.2 );
 
         } else if ( name == "nav-radio" ) {
-            set_subsystem( id, new FGNavRadio( node ) );
+            set_subsystem( id, Instrumentation::NavRadio::createInstance( node ) );
 
         } else if ( name == "slip-skid-ball" ) {
-            set_subsystem( id, new SlipSkidBall( node ) );
+            set_subsystem( id, new SlipSkidBall( node ), 0.03 );
 
         } else if ( name == "transponder" ) {
-            set_subsystem( id, new Transponder( node ) );
+            set_subsystem( id, new Transponder( node ), 0.2 );
 
         } else if ( name == "turn-indicator" ) {
             set_subsystem( id, new TurnIndicator( node ) );
@@ -200,39 +184,42 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         } else if ( name == "vertical-speed-indicator" ) {
             set_subsystem( id, new VerticalSpeedIndicator( node ) );
 
-        } else if ( name == "radar" ) {
-            set_subsystem( id, new wxRadarBg ( node ), 1);
-
         } else if ( name == "inst-vertical-speed-indicator" ) {
             set_subsystem( id, new InstVerticalSpeedIndicator( node ) );
 
         } else if ( name == "tacan" ) {
-            set_subsystem( id, new TACAN( node ) );
+            set_subsystem( id, new TACAN( node ), 0.2 );
 
         } else if ( name == "mk-viii" ) {
-            set_subsystem( id, new MK_VIII( node ) );
+            set_subsystem( id, new MK_VIII( node ), 0.2);
 
         } else if ( name == "master-reference-gyro" ) {
             set_subsystem( id, new MasterReferenceGyro( node ) );
 
-        } else if ( name == "groundradar" ) {
-            set_subsystem( id, new GroundRadar( node ), 1 );
-
-        } else if ( name == "air-ground-radar" ) {
-            set_subsystem( id, new agRadar( node ),1);
-
+        } else if (( name == "groundradar" ) ||
+                   ( name == "radar" ) ||
+                   ( name == "air-ground-radar" ) ||
+                   ( name == "navigation-display" ))
+        {
+        // these instruments are handled by the CockpitDisplayManager
+        // catch them here so we can still warn about bogus names in
+        // the instruments file
+          continue;
         } else if ( name == "radar-altimeter" ) {
-            set_subsystem( id, new radAlt( node ),1);
+            set_subsystem( id, new radAlt( node ) );
 
         } else if ( name == "tcas" ) {
-            set_subsystem( id, new TCAS( node ) );
-
+            set_subsystem( id, new TCAS( node ), 0.2);
+            
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: "
                     << name );
             return false;
         }
-    }
+      
+      // only push to our array if we actually built an insturment
+        _instruments.push_back(id);
+    } // of instruments iteration
     return true;
 }
 

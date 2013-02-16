@@ -51,7 +51,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_OUTPUT "$Id: FGOutput.h,v 1.23 2011/05/20 03:18:36 jberndt Exp $"
+#define ID_OUTPUT "$Id: FGOutput.h,v 1.25 2012/02/07 23:15:37 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -91,13 +91,13 @@ CLASS DOCUMENTATION
       Examples:
 </pre>
 @code
-	<output name="localhost" type="FLIGHTGEAR" port="5500" protocol="tcp" rate="10"/>
+<output name="localhost" type="FLIGHTGEAR" port="5500" protocol="tcp" rate="10"/>
 @endcode
 @code
-	<output name="B737_datalog.csv" type="CSV" rate="20">
-	   <property> velocities/vc-kts </property>
-	   <velocities> ON </velocities>
-	</output>
+<output name="B737_datalog.csv" type="CSV" rate="20">
+   <property> velocities/vc-kts </property>
+   <velocities> ON </velocities>
+</output>
 @endcode
 <br>
 <pre>
@@ -124,7 +124,7 @@ CLASS DOCUMENTATION
     propulsion       ON|OFF
 </pre>
     NOTE that Time is always output with the data.
-    @version $Id: FGOutput.h,v 1.23 2011/05/20 03:18:36 jberndt Exp $
+    @version $Id: FGOutput.h,v 1.25 2012/02/07 23:15:37 bcoconni Exp $
  */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -167,6 +167,9 @@ public:
   bool Toggle(void) {enabled = !enabled; return enabled;}
 
   bool Load(Element* el);
+  bool Load(int subSystems, std::string protocol, std::string type, std::string port, 
+                            std::string name, double outRate,
+                            std::vector<FGPropertyManager *> & outputProperties);
   string GetOutputFileName(void) const {return Filename;}
 
   /// Subsystem types for specifying which will be output in the FDM data logging

@@ -42,50 +42,81 @@ class SGGeod;
 
 typedef SGSharedPtr<FGNavRecord> nav_rec_ptr;
 typedef std::vector < nav_rec_ptr > nav_list_type;
-typedef nav_list_type::iterator nav_list_iterator;
-typedef nav_list_type::const_iterator nav_list_const_iterator;
 
-typedef std::map < int, nav_list_type > nav_map_type;
-typedef nav_map_type::iterator nav_map_iterator;
-typedef nav_map_type::const_iterator nav_map_const_iterator;
-
-class FGNavList {
-
-    nav_list_type carrierlist;
-    nav_map_type navaids;
-
-    // Given a point and a list of stations, return the closest one to
-    // the specified point.
-    FGNavRecord *findNavFromList( const SGGeod &aircraft,
-                                  const nav_list_type &stations );
-
+class FGNavList
+{
 public:
-
-    FGNavList();
-    ~FGNavList();
-
-    // initialize the nav list
-    bool init();
-
-    // add an entry
-    bool add( FGNavRecord *n );
-
+  class TypeFilter : public FGPositioned::Filter
+  {
+  public:
+    TypeFilter(const FGPositioned::Type type);
+    
+    TypeFilter(const FGPositioned::Type minType,
+               const FGPositioned::Type maxType);
+    
+    virtual FGPositioned::Type minType() const {
+      return _mintype;
+    }
+    
+    virtual FGPositioned::Type maxType()  const {
+      return _maxtype;
+    }
+    
+  protected:
+    FGPositioned::Type _mintype;
+    FGPositioned::Type _maxtype;
+  };
+  
+  /**
+   filter matching VOR & ILS/LOC transmitters
+   */
+  static TypeFilter* navFilter();
+  
+  /**
+    * filter matching ILS/LOC transmitter
+   */
+  static TypeFilter* locFilter();
+  
+  static TypeFilter* ndbFilter();
+  
+  /**
+   * Filter returning TACANs and VORTACs
+   */
+  static TypeFilter* tacanFilter();
+  
+  
+  static TypeFilter* carrierFilter();
+  
     /** Query the database for the specified station.  It is assumed
       * that there will be multiple stations with matching frequencies
       * so a position must be specified.
       */
-    FGNavRecord *findByFreq( double freq, const SGGeod& position);
+    static FGNavRecord *findByFreq( double freq, const SGGeod& position,
+                                   TypeFilter* filter = NULL);
 
-    // Given an Ident and optional freqency, return the first matching
-    // station.
-    FGNavRecord *findByIdentAndFreq( const std::string& ident,
-                                     const double freq = 0.0 );
+    /**
+     * Overloaded version above - no positioned supplied so can be used with
+     * mobile TACANs which have no valid position. The first match is
+     * returned only.
+     */
+    static FGNavRecord *findByFreq( double freq, TypeFilter* filter = NULL);
+  
+    static nav_list_type findAllByFreq( double freq, const SGGeod& position,
+                                       TypeFilter* filter = NULL);
+  
+    // Given an Ident and optional frequency and type ,
+    // return a list of matching stations.
+    static nav_list_type findByIdentAndFreq( const std::string& ident,
+                                             const double freq,
+                                            TypeFilter* filter = NULL);
 
-    // given a frequency returns the first matching entry
-    FGNavRecord *findStationByFreq( double frequency );
-};
-
-
+    // Given an Ident and optional frequency and type ,
+    // return a list of matching stations sorted by distance to the given position
+    static nav_list_type findByIdentAndFreq( const SGGeod & position,
+        const std::string& ident, const double freq = 0.0,
+                                            TypeFilter* filter = NULL);
+  
+  };
 
 
 // FGTACANList ----------------------------------------------------------------

@@ -25,15 +25,11 @@
 #include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <poll.h>
-#include <linux/input.h>
-#include <dbus/dbus.h>
-#include <fcntl.h>
 #include "FGLinuxEventInput.hxx"
 
+#include <libudev.h>
 #include <poll.h>
 #include <linux/input.h>
-#include <dbus/dbus.h>
 #include <fcntl.h>
 
 #include <string.h>
@@ -46,7 +42,7 @@ struct TypeCode {
     return (unsigned long)type << 16 | (unsigned long)code;
   }
 
-  bool operator < ( const TypeCode other) const {
+  bool operator < ( const TypeCode & other) const {
     return hashCode() < other.hashCode();
   }
 };
@@ -225,7 +221,7 @@ static struct enbet {
 };
 
 
-class EventNameByEventType : public map<unsigned,const char*> {
+class EventNameByEventType : public std::map<unsigned,const char*> {
 public:
   EventNameByEventType() {
     for( unsigned i = 0; i < sizeof(EVENT_NAMES_BY_EVENT_TYPE)/sizeof(EVENT_NAMES_BY_EVENT_TYPE[0]); i++ )
@@ -234,7 +230,7 @@ public:
 };
 static EventNameByEventType EVENT_NAME_BY_EVENT_TYPE;
 
-class EventNameByType : public map<TypeCode,const char*> {
+class EventNameByType : public std::map<TypeCode,const char*> {
 public:
   EventNameByType() {
     for( unsigned i = 0; i < sizeof(EVENT_TYPES)/sizeof(EVENT_TYPES[0]); i++ )
@@ -246,11 +242,11 @@ static EventNameByType EVENT_NAME_BY_TYPE;
 
 struct ltstr {
   bool operator()(const char * s1, const char * s2 ) const {
-    return string(s1).compare( s2 ) < 0;
+    return std::string(s1).compare( s2 ) < 0;
   }
 };
 
-class EventTypeByName : public map<const char *,TypeCode,ltstr> {
+class EventTypeByName : public std::map<const char *,TypeCode,ltstr> {
 public:
   EventTypeByName() {
     for( unsigned i = 0; i < sizeof(EVENT_TYPES)/sizeof(EVENT_TYPES[0]); i++ )
@@ -260,7 +256,7 @@ public:
 static EventTypeByName EVENT_TYPE_BY_NAME;
 
 
-FGLinuxInputDevice::FGLinuxInputDevice( string aName, string aDevname ) :
+FGLinuxInputDevice::FGLinuxInputDevice( std::string aName, std::string aDevname ) :
   FGInputDevice(aName),
   devname( aDevname ),
   fd(-1)
@@ -290,7 +286,7 @@ void FGLinuxInputDevice::Open()
 {
   if( fd != -1 ) return;
   if( (fd = ::open( devname.c_str(), O_RDWR )) == -1 ) { 
-    throw exception();
+    throw std::exception();
   }
 
   if( GetGrab() && ioctl( fd, EVIOCGRAB, 2 ) == -1 ) {
@@ -440,97 +436,47 @@ const char * FGLinuxInputDevice::TranslateEventName( FGEventData & eventData )
   return EVENT_NAME_BY_TYPE[typeCode];
 }
 
-void FGLinuxInputDevice::SetDevname( string name )
+void FGLinuxInputDevice::SetDevname( const std::string & name )
 {
   this->devname = name; 
 }
 
-FGLinuxEventInput::FGLinuxEventInput() : 
-  halcontext(NULL)
+FGLinuxEventInput::FGLinuxEventInput()
 {
 }
 
 FGLinuxEventInput::~FGLinuxEventInput()
 {
-  if( halcontext != NULL ) {
-    libhal_ctx_shutdown( halcontext, NULL);
-    libhal_ctx_free( halcontext );
-    halcontext = NULL;
-  }
 }
-
-#if 0
-//TODO: enable hotplug support
-static void DeviceAddedCallback (LibHalContext *ctx, const char *udi)
-{
-  FGLinuxEventInput * linuxEventInput = (FGLinuxEventInput*)libhal_ctx_get_user_data (ctx);
-  linuxEventInput->AddHalDevice( udi );
-}
-
-static void DeviceRemovedCallback (LibHalContext *ctx, const char *udi)
-{
-}
-#endif
 
 void FGLinuxEventInput::postinit()
 {
   FGEventInput::postinit();
 
-  DBusConnection * connection;
-  DBusError dbus_error;
+  struct udev * udev = udev_new();
 
-  dbus_error_init(&dbus_error);
-  connection = dbus_bus_get (DBUS_BUS_SYSTEM, &dbus_error);
-  if (dbus_error_is_set(&dbus_error)) {
-    SG_LOG( SG_INPUT, SG_ALERT, "Can't connect to system bus " << dbus_error.message);
-    dbus_error_free (&dbus_error);
-    return;
+  struct udev_enumerate *enumerate = udev_enumerate_new(udev);
+  udev_enumerate_add_match_subsystem(enumerate, "input");
+  udev_enumerate_scan_devices(enumerate);
+  struct udev_list_entry *devices = udev_enumerate_get_list_entry(enumerate);
+  struct udev_list_entry *dev_list_entry;
+
+  udev_list_entry_foreach(dev_list_entry, devices) {
+    const char * path = udev_list_entry_get_name(dev_list_entry);
+    struct udev_device *dev = udev_device_new_from_syspath(udev, path);
+    const char * node = udev_device_get_devnode(dev);
+ 
+    dev = udev_device_get_parent( dev );
+    const char * name = udev_device_get_sysattr_value(dev,"name");
+
+    SG_LOG(SG_INPUT,SG_DEBUG, "name=" << (name?name:"<null>") << ", node=" << (node?node:"<null>"));
+    if( name && node )
+      AddDevice( new FGLinuxInputDevice(name, node) );
+
+    udev_device_unref(dev);
   }
 
-  halcontext = libhal_ctx_new();
-
-  libhal_ctx_set_dbus_connection (halcontext, connection );
-  dbus_error_init (&dbus_error);
-
-  if( libhal_ctx_init( halcontext,  &dbus_error )) {
-
-      int num_devices = 0;
-      char ** devices = libhal_find_device_by_capability(halcontext, "input", &num_devices, NULL);
-
-      for ( int i = 0; i < num_devices; i++)
-        AddHalDevice( devices[i] );
-
-      libhal_free_string_array (devices);
-
-//TODO: enable hotplug support
-//      libhal_ctx_set_user_data( halcontext, this );
-//      libhal_ctx_set_device_added( halcontext, DeviceAddedCallback );
-//      libhal_ctx_set_device_removed( halcontext, DeviceRemovedCallback );
-    } else {
-      if(dbus_error_is_set (&dbus_error) ) {
-        SG_LOG( SG_INPUT, SG_ALERT, "Can't connect to hald: " << dbus_error.message);
-        dbus_error_free (&dbus_error);
-      } else {
-        SG_LOG( SG_INPUT, SG_ALERT, "Can't connect to hald." );
-      }
-
-      libhal_ctx_free (halcontext);
-      halcontext = NULL;
-    }
-}
-
-void FGLinuxEventInput::AddHalDevice( const char * udi )
-{
-  char * device = libhal_device_get_property_string( halcontext, udi, "input.device", NULL);
-  char * product = libhal_device_get_property_string( halcontext, udi, "input.product", NULL);
-
-  if( product != NULL && device != NULL ) 
-    AddDevice( new FGLinuxInputDevice(product, device) );
-  else
-    SG_LOG( SG_INPUT, SG_ALERT, "Can't get device or product property of " << udi );
-
-  if( device != NULL ) libhal_free_string( device );
-  if( product != NULL ) libhal_free_string( product );
+  udev_unref(udev);
 
 }
 
@@ -540,8 +486,8 @@ void FGLinuxEventInput::update( double dt )
   // index the input devices by the associated fd and prepare
   // the pollfd array by filling in the file descriptor
   struct pollfd fds[input_devices.size()];
-  map<int,FGLinuxInputDevice*> devicesByFd;
-  map<int,FGInputDevice*>::const_iterator it;
+  std::map<int,FGLinuxInputDevice*> devicesByFd;
+  std::map<int,FGInputDevice*>::const_iterator it;
   int i;
   for( i=0, it = input_devices.begin(); it != input_devices.end(); ++it, i++ ) {
     FGInputDevice* p = (*it).second;

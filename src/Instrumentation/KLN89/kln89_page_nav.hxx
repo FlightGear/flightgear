@@ -42,7 +42,7 @@ public:
 	void LooseFocus();
 	
 	// Returns the id string of the selected waypoint on NAV4 if valid, else returns an empty string.
-	string GetNav4WpId();
+	std::string GetNav4WpId();
 	
 private:
 	int _posFormat;		// 0 => lat,lon; 1 => ref to wp.

@@ -40,6 +40,7 @@ public:
     virtual ~HeadingIndicatorDG ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);
@@ -47,11 +48,10 @@ public:
 private:
 
     Gyro _gyro;
-    double _last_heading_deg;
+    double _last_heading_deg, _last_indicated_heading_dg;
 
-    string name;
+    std::string name;
     int num;
-    //string vacuum_system;
 
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;

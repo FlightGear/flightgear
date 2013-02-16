@@ -4,7 +4,9 @@
 #include "Ground.hpp"
 
 class FGInterface;
-class SGMaterial;
+namespace simgear {
+class BVHMaterial;
+}
 
 namespace yasim {
 
@@ -21,7 +23,7 @@ public:
 
     virtual void getGroundPlane(const double pos[3],
                                 double plane[4], float vel[3],
-                                const SGMaterial **material);
+                                const simgear::BVHMaterial **material);
 
     virtual bool caughtWire(const double pos[4][3]);
 

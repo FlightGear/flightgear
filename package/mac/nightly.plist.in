@@ -11,7 +11,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleExecutable</key>
-	<string>fgfs</string>
+	<string>FlightGear</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.flightgear.FlightGear</string>
 	<key>CFBundleVersion</key>
@@ -19,7 +19,11 @@
 	<key>CFBundleShortVersionString</key>
 	<string>unstable nightly build</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.5.0</string>
+	<string>10.6.0</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>
 

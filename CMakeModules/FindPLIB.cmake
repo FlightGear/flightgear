@@ -23,26 +23,13 @@
 # (To distributed this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-# Per my request, CMake should search for frameworks first in
-# the following order:
-# ~/Library/Frameworks/OpenAL.framework/Headers
-# /Library/Frameworks/OpenAL.framework/Headers
-# /System/Library/Frameworks/OpenAL.framework/Headers
-#
-# On OS X, this will prefer the Framework version (if found) over others.
-# People will have to manually change the cache values of 
-# OPENAL_LIBRARY to override this selection or set the CMake environment
-# CMAKE_INCLUDE_PATH to modify the search paths.
-
 include(SelectLibraryConfigurations)
 
 set(save_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
 set(CMAKE_FIND_FRAMEWORK ONLY)
 FIND_PATH(PLIB_INCLUDE_DIR ul.h
   PATH_SUFFIXES include/plib include 
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
+  PATHS ${ADDITIONAL_LIBRARY_PATHS}
 )
 set(CMAKE_FIND_FRAMEWORK ${save_FIND_FRAMEWORK})
 
@@ -50,10 +37,7 @@ if(NOT PLIB_INCLUDE_DIR)
     FIND_PATH(PLIB_INCLUDE_DIR plib/ul.h
       PATH_SUFFIXES include 
       HINTS $ENV{PLIBDIR}
-      PATHS
-      /usr/local
-      /opt/local
-      /usr
+      PATHS ${ADDITIONAL_LIBRARY_PATHS}
     )
 endif()
 
@@ -64,9 +48,7 @@ FIND_LIBRARY(PLIB_LIBRARIES
   NAMES plib PLIB
   HINTS
   $ENV{PLIBDIR}
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
+  PATHS ${ADDITIONAL_LIBRARY_PATHS}
 )
 
 if (MSVC) 
@@ -91,19 +73,13 @@ macro(find_static_component comp libs)
       NAMES ${compLib}_d
       HINTS $ENV{PLIBDIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-      PATHS
-      /usr/local
-      /usr
-      /opt
+      PATHS ${ADDITIONAL_LIBRARY_PATHS}
     )
     FIND_LIBRARY(${compLibName}_RELEASE
       NAMES ${compLib}
       HINTS $ENV{PLIBDIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-      PATHS
-      /usr/local
-      /usr
-      /opt
+      PATHS ${ADDITIONAL_LIBRARY_PATHS}
     )
     select_library_configurations( ${compLibBase} )
 
@@ -125,17 +101,17 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
     set(PLIB_LIBRARIES "") # clear value
     
 # based on the contents of deps, add other required PLIB
-# static library dependencies. Eg PUI requires SSG and FNT
+# static library dependencies. Eg PUI requires FNT
     set(outDeps ${PLIB_FIND_COMPONENTS})
     
     foreach(c ${PLIB_FIND_COMPONENTS})
         if (${c} STREQUAL "pu")
             # handle MSVC confusion over pu/pui naming, by removing
             # 'pu' and then adding it back
-            list(REMOVE_ITEM outDeps "pu")
-            list(APPEND outDeps ${PUNAME} "fnt" "ssg" "sg")
+            list(REMOVE_ITEM outDeps "pu" "fnt" "sg")
+            list(APPEND outDeps ${PUNAME} "fnt" "sg")
         elseif (${c} STREQUAL "puaux")
-            list(APPEND outDeps ${PUNAME} "fnt" "ssg" "sg")
+            list(APPEND outDeps ${PUNAME} "fnt" "sg")
         elseif (${c} STREQUAL "ssg")
             list(APPEND outDeps "sg")
         endif()
@@ -144,7 +120,6 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
     list(APPEND outDeps "ul") # everything needs ul
     list(REMOVE_DUPLICATES outDeps) # clean up
 
-    
 
     # look for traditional static libraries
     foreach(component ${outDeps})
@@ -161,7 +136,7 @@ if(${haveJs} GREATER -1)
         find_library(CF_LIBRARY CoreFoundation)
         set(JS_LIBS ${IOKIT_LIBRARY} ${CF_LIBRARY})
     elseif(WIN32)
-        find_library(WINMM_LIBRARY winmm)
+        set(WINMM_LIBRARY winmm)
         set(JS_LIBS ${WINMM_LIBRARY})
     elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
         # anything needed here?

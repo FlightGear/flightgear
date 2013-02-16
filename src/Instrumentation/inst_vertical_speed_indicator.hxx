@@ -58,11 +58,12 @@ public:
     virtual ~InstVerticalSpeedIndicator ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void update (double dt);
 
 private:
 
-    string _name;
+    std::string _name;
     int _num;
 
     double _internal_pressure_inhg;

@@ -52,7 +52,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_AERODYNAMICS "$Id: FGAerodynamics.h,v 1.23 2011/05/20 03:18:36 jberndt Exp $"
+#define ID_AERODYNAMICS "$Id: FGAerodynamics.h,v 1.25 2011/08/04 12:46:32 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -109,7 +109,7 @@ CLASS DOCUMENTATION
     Systems may NOT be combined, or a load error will occur.
 
     @author Jon S. Berndt, Tony Peden
-    @version $Revision: 1.23 $
+    @version $Revision: 1.25 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -202,17 +202,21 @@ public:
       aero functions */
   std::string GetAeroFunctionValues(const std::string& delimeter) const;
 
-  /** Calculates and returns the wind-to-body axis transformation matrix.
-      @return a reference to the wind-to-body transformation matrix.
-      */
-  FGMatrix33& GetTw2b(void);
-
-  /** Calculates and returns the body-to-wind axis transformation matrix.
-      @return a reference to the wind-to-body transformation matrix.
-      */
-  FGMatrix33& GetTb2w(void);
-
   std::vector <FGFunction*> * GetAeroFunctions(void) const { return AeroFunctions; }
+
+  struct Inputs {
+    double Alpha;
+    double Beta;
+    double Vt;
+    double Qbar;
+    double Wingarea;
+    double Wingspan;
+    double Wingchord;
+    double Wingincidence;
+    FGColumnVector3 RPBody;
+    FGMatrix33 Tb2w;
+    FGMatrix33 Tw2b;
+  } in;
 
 private:
   enum eAxisType {atNone, atLiftDrag, atAxialNormal, atBodyXYZ} axisType;
@@ -227,8 +231,6 @@ private:
   FGColumnVector3 vMoments;
   FGColumnVector3 vDXYZcg;
   FGColumnVector3 vDeltaRP;
-  FGMatrix33 mTw2b;
-  FGMatrix33 mTb2w;
   double alphaclmax, alphaclmin;
   double alphahystmax, alphahystmin;
   double impending_stall, stall_hyst;

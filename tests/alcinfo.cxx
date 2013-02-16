@@ -145,36 +145,13 @@ int main(int argc, char **argv)
    if ((error = alGetError()) != AL_NO_ERROR)
       printf("Error #%x: %s\n", error, alGetString(error));
    else if (!s)
-      printf("Quering AL_VERSION returned NULL pointer!\n");
+      printf("Querying AL_VERSION returned NULL pointer!\n");
    else
       printf("OpenAL version string: %s\n", s);
 
    s = (char *)alGetString(AL_EXTENSIONS);
    printExtensions ("OpenAL extensions", ' ', s);
-   testForALCError(device);
-
-/* alut testing mechanism */
-   context = alcGetCurrentContext();
-   if (context == NULL)
-   {
-      printf("Error: no current context\n");
-   }
-   else
-   {
-      if (alGetError () != AL_NO_ERROR)
-      {
-         printf("Alert: AL error on entry\n");
-      }
-      else
-      {
-         if (alcGetError (alcGetContextsDevice (context)) != ALC_NO_ERROR)
-         {
-            printf("Alert: ALC error on entry\n");
-         }
-      }
-   }
-/* end of alut test */
- 
+   testForALCError(device); 
    
    if (alcMakeContextCurrent(NULL) == 0)
       printf("alcMakeContextCurrent failed.\n");

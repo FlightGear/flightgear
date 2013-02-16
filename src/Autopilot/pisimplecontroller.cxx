@@ -25,6 +25,9 @@
 
 using namespace FGXMLAutopilot;
 
+using std::endl;
+using std::cout;
+
 PISimpleController::PISimpleController() :
     AnalogComponent(),
     _int_sum( 0.0 )

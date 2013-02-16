@@ -39,10 +39,10 @@ public:
 
     virtual bool init(bool search_in_AI_path=false);
     virtual void bind();
-    virtual void unbind();
     virtual void update(double dt);
+    virtual void reinit();
+
     void setFlightPlan(FGAIFlightPlan* f);
-//    void setName(const string&);
     void setRudder(float r);
     void setRoll(double rl);
     void ProcessFlightPlan( double dt);
@@ -61,11 +61,14 @@ public:
     void setRudderConstant(double rc);
     void setSpeedConstant(double sc);
     void setFixedTurnRadius(double ft);
+    void setRollFactor(double rf);
+
     void setTunnel(bool t);
     void setInitialTunnel(bool t);
 
     void setWPNames();
     void setWPPos();
+
     double sign(double x);
 
     bool _hdg_lock;
@@ -81,19 +84,14 @@ public:
     double _missed_range, _tow_angle, _wait_count, _missed_count,_wp_range;
     double _dt_count, _next_run;
 
-    FGAIFlightPlan::waypoint* prev; // the one behind you
-    FGAIFlightPlan::waypoint* curr; // the one ahead
-    FGAIFlightPlan::waypoint* next; // the next plus 1
+    FGAIWaypoint* prev; // the one behind you
+    FGAIWaypoint* curr; // the one ahead
+    FGAIWaypoint* next; // the next plus 1
 
 protected:
 
-//    string _name; // The name of this ship.
-
 private:
 
-
-
-    virtual void reinit() { init(); }
 
     void setRepeat(bool r);
     void setRestart(bool r);
@@ -108,8 +106,6 @@ private:
     void setXTrackError();
 
     SGGeod wppos;
-
-    const SGMaterial* _material;
 
     double getRange(double lat, double lon, double lat2, double lon2) const;
     double getCourse(double lat, double lon, double lat2, double lon2) const;

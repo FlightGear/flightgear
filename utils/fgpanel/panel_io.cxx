@@ -29,12 +29,12 @@
 #include <string.h>		// for strcmp()
 
 #include <simgear/compiler.h>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/condition.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include "panel.hxx"
 #include "panel_io.hxx"

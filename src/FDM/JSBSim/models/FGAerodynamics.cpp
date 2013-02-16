@@ -40,19 +40,15 @@ INCLUDES
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
-#include <FGFDMExec.h>
+#include "FGFDMExec.h"
 #include "FGAerodynamics.h"
-#include "FGPropagate.h"
-#include "FGAircraft.h"
-#include "FGAuxiliary.h"
-#include "FGMassBalance.h"
 #include "input_output/FGPropertyManager.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAerodynamics.cpp,v 1.38 2011/05/20 03:18:36 jberndt Exp $";
+static const char *IdSrc = "$Id: FGAerodynamics.cpp,v 1.45 2012/04/13 13:25:52 jberndt Exp $";
 static const char *IdHdr = ID_AERODYNAMICS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -139,36 +135,31 @@ bool FGAerodynamics::Run(bool Holding)
   if (Holding) return false; // if paused don't execute
 
   unsigned int axis_ctr, ctr;
-  const double alpha=FDMExec->GetAuxiliary()->Getalpha();
-  const double twovel=2*FDMExec->GetAuxiliary()->GetVt();
-  const double qbar = FDMExec->GetAuxiliary()->Getqbar();
-  const double wingarea = FDMExec->GetAircraft()->GetWingArea();  // TODO: Make these constants constant!
-  const double wingspan = FDMExec->GetAircraft()->GetWingSpan();
-  const double wingchord = FDMExec->GetAircraft()->Getcbar();
-  const double wingincidence = FDMExec->GetAircraft()->GetWingIncidence();
+  const double twovel=2*in.Vt;
+
   RunPreFunctions();
 
   // calculate some oft-used quantities for speed
 
   if (twovel != 0) {
-    bi2vel = wingspan / twovel;
-    ci2vel = wingchord / twovel;
+    bi2vel = in.Wingspan / twovel;
+    ci2vel = in.Wingchord / twovel;
   }
-  alphaw = alpha + wingincidence;
-  qbar_area = wingarea * qbar;
+  alphaw = in.Alpha + in.Wingincidence;
+  qbar_area = in.Wingarea * in.Qbar;
 
   if (alphaclmax != 0) {
-    if (alpha > 0.85*alphaclmax) {
-      impending_stall = 10*(alpha/alphaclmax - 0.85);
+    if (in.Alpha > 0.85*alphaclmax) {
+      impending_stall = 10*(in.Alpha/alphaclmax - 0.85);
     } else {
       impending_stall = 0;
     }
   }
 
   if (alphahystmax != 0.0 && alphahystmin != 0.0) {
-    if (alpha > alphahystmax) {
+    if (in.Alpha > alphahystmax) {
        stall_hyst = 1;
-    } else if (alpha < alphahystmin) {
+    } else if (in.Alpha < alphahystmin) {
        stall_hyst = 0;
     }
   }
@@ -188,16 +179,16 @@ bool FGAerodynamics::Run(bool Holding)
 
   switch (axisType) {
     case atBodyXYZ:       // Forces already in body axes; no manipulation needed
-      vFw = GetTb2w()*vFnative;
+      vFw = in.Tb2w*vFnative;
       vForces = vFnative;
       break;
     case atLiftDrag:      // Copy forces into wind axes
       vFw = vFnative;
       vFw(eDrag)*=-1; vFw(eLift)*=-1;
-      vForces = GetTw2b()*vFw;
+      vForces = in.Tw2b*vFw;
       break;
     case atAxialNormal:   // Convert native forces into Axial|Normal|Side system
-      vFw = GetTb2w()*vFnative;
+      vFw = in.Tb2w*vFnative;
       vFnative(eX)*=-1; vFnative(eZ)*=-1;
       vForces = vFnative;
       break;
@@ -207,19 +198,25 @@ bool FGAerodynamics::Run(bool Holding)
       exit(-1);
   }
 
-  // Calculate aerodynamic reference point shift, if any
-  if (AeroRPShift) vDeltaRP(eX) = AeroRPShift->GetValue()*wingchord*12.0;
-
   // Calculate lift coefficient squared
-  if ( qbar > 0) {
-    clsq = vFw(eLift) / (wingarea*qbar);
+  if ( in.Qbar > 0) {
+    clsq = vFw(eLift) / (in.Wingarea*in.Qbar);
     clsq *= clsq;
   }
 
   // Calculate lift Lift over Drag
   if ( fabs(vFw(eDrag)) > 0.0) lod = fabs( vFw(eLift) / vFw(eDrag) );
 
-  vDXYZcg = FDMExec->GetMassBalance()->StructuralToBody(FDMExec->GetAircraft()->GetXYZrp() + vDeltaRP);
+  // Calculate aerodynamic reference point shift, if any. The shift
+  // takes place in the structual axis. That is, if the shift is positive,
+  // it is towards the back (tail) of the vehicle. The AeroRPShift
+  // function should be non-dimensionalized by the wing chord. The
+  // calculated vDeltaRP will be in feet.
+  if (AeroRPShift) vDeltaRP(eX) = AeroRPShift->GetValue()*in.Wingchord;
+
+  vDXYZcg(eX) = in.RPBody(eX) - vDeltaRP(eX); // vDeltaRP is given in the structural frame
+  vDXYZcg(eY) = in.RPBody(eY) + vDeltaRP(eY);
+  vDXYZcg(eZ) = in.RPBody(eZ) - vDeltaRP(eZ);
 
   vMoments = vDXYZcg*vForces; // M = r X F
 
@@ -232,75 +229,6 @@ bool FGAerodynamics::Run(bool Holding)
   RunPostFunctions();
 
   return false;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-//
-// From Stevens and Lewis, "Aircraft Control and Simulation", 3rd Ed., the
-// transformation from body to wind axes is defined (where "a" is alpha and "B"
-// is beta):
-//
-//   cos(a)*cos(B)     sin(B)    sin(a)*cos(B)
-//  -cos(a)*sin(B)     cos(B)   -sin(a)*sin(B)
-//  -sin(a)              0       cos(a)
-//
-// The transform from wind to body axes is then,
-//
-//   cos(a)*cos(B)  -cos(a)*sin(B)  -sin(a)
-//          sin(B)          cos(B)     0
-//   sin(a)*cos(B)  -sin(a)*sin(B)   cos(a)
-
-FGMatrix33& FGAerodynamics::GetTw2b(void)
-{
-  double ca, cb, sa, sb;
-
-  double alpha = FDMExec->GetAuxiliary()->Getalpha();
-  double beta  = FDMExec->GetAuxiliary()->Getbeta();
-
-  ca = cos(alpha);
-  sa = sin(alpha);
-  cb = cos(beta);
-  sb = sin(beta);
-
-  mTw2b(1,1) =  ca*cb;
-  mTw2b(1,2) = -ca*sb;
-  mTw2b(1,3) = -sa;
-  mTw2b(2,1) =  sb;
-  mTw2b(2,2) =  cb;
-  mTw2b(2,3) =  0.0;
-  mTw2b(3,1) =  sa*cb;
-  mTw2b(3,2) = -sa*sb;
-  mTw2b(3,3) =  ca;
-
-  return mTw2b;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FGMatrix33& FGAerodynamics::GetTb2w(void)
-{
-  double alpha,beta;
-  double ca, cb, sa, sb;
-
-  alpha = FDMExec->GetAuxiliary()->Getalpha();
-  beta  = FDMExec->GetAuxiliary()->Getbeta();
-
-  ca = cos(alpha);
-  sa = sin(alpha);
-  cb = cos(beta);
-  sb = sin(beta);
-
-  mTb2w(1,1) = ca*cb;
-  mTb2w(1,2) = sb;
-  mTb2w(1,3) = sa*cb;
-  mTb2w(2,1) = -ca*sb;
-  mTb2w(2,2) = cb;
-  mTb2w(2,3) = -sa*sb;
-  mTb2w(3,1) = -sa;
-  mTb2w(3,2) = 0.0;
-  mTb2w(3,3) = ca;
-
-  return mTb2w;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -318,6 +246,7 @@ bool FGAerodynamics::Load(Element *element)
   if (!fname.empty()) {
     file = FDMExec->GetFullAircraftPath() + separator + fname;
     document = LoadXMLDocument(file);
+    if (document == 0L) return false;
   } else {
     document = element;
   }
@@ -443,6 +372,17 @@ string FGAerodynamics::GetAeroFunctionStrings(const string& delimeter) const
       AeroFunctionStrings += AeroFunctions[axis][sd]->GetName();
     }
   }
+
+  string FunctionStrings = FGModelFunctions::GetFunctionStrings(delimeter);
+
+  if (FunctionStrings.size() > 0) {
+    if (AeroFunctionStrings.size() > 0) {
+      AeroFunctionStrings += delimeter + FunctionStrings;
+    } else {
+      AeroFunctionStrings = FunctionStrings;
+    }
+  }
+
   return AeroFunctionStrings;
 }
 
@@ -455,7 +395,17 @@ string FGAerodynamics::GetAeroFunctionValues(const string& delimeter) const
   for (unsigned int axis = 0; axis < 6; axis++) {
     for (unsigned int sd = 0; sd < AeroFunctions[axis].size(); sd++) {
       if (buf.tellp() > 0) buf << delimeter;
-      buf << setw(9) << AeroFunctions[axis][sd]->GetValue();
+      buf << AeroFunctions[axis][sd]->GetValue();
+    }
+  }
+
+  string FunctionValues = FGModelFunctions::GetFunctionValues(delimeter);
+
+  if (FunctionValues.size() > 0) {
+    if (buf.str().size() > 0) {
+      buf << delimeter << FunctionValues;
+    } else {
+      buf << FunctionValues;
     }
   }
 

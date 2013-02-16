@@ -1,7 +1,8 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=Flight Gear
-Comment=Flight Gear Flight Simulator
+Type=Application
+Name=FlightGear
+Comment=FlightGear Flight Simulator
 Exec=fgfs
-Icon=
-Categories=GNOME;Application;Game
+Icon=flightgear
+Categories=Game;Simulation

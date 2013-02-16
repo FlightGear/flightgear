@@ -17,11 +17,14 @@
 #include <Navaids/navlist.hxx>
 
 #include "adf.hxx"
+#include <Sound/morse.hxx>
+#include <simgear/sound/sample_group.hxx>
 
 #include <iostream>
 #include <string>
 #include <sstream>
 
+using std::string;
 
 // Use a bigger number to be more responsive, or a smaller number
 // to be more sluggish.
@@ -83,34 +86,36 @@ ADF::init ()
 {
     string branch;
     branch = "/instrumentation/" + _name;
-
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
-    _longitude_node = fgGetNode("/position/longitude-deg", true);
-    _latitude_node = fgGetNode("/position/latitude-deg", true);
-    _altitude_node = fgGetNode("/position/altitude-ft", true);
-    _heading_node = fgGetNode("/orientation/heading-deg", true);
-    _serviceable_node = node->getChild("serviceable", 0, true);
-    _error_node = node->getChild("error-deg", 0, true);
-    _electrical_node = fgGetNode("/systems/electrical/outputs/adf", true);
-    branch = branch + "/frequencies";
-    SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
-    _frequency_node = fnode->getChild("selected-khz", 0, true);
-    _mode_node = node->getChild("mode", 0, true);
-    _volume_node = node->getChild("volume-norm", 0, true);
-    _in_range_node = node->getChild("in-range", 0, true);
-    _bearing_node = node->getChild("indicated-bearing-deg", 0, true);
-    _ident_node = node->getChild("ident", 0, true);
-    _ident_audible_node = node->getChild("ident-audible", 0, true);
-    _power_btn_node = node->getChild("power-btn", 0, true);
 
+    // instrument properties
+    _error_node         = node->getChild("error-deg", 0, true);
+    _mode_node          = node->getChild("mode", 0, true);
+    _volume_node        = node->getChild("volume-norm", 0, true);
+    _in_range_node      = node->getChild("in-range", 0, true);
+    _bearing_node       = node->getChild("indicated-bearing-deg", 0, true);
+    _ident_node         = node->getChild("ident", 0, true);
+    _ident_audible_node = node->getChild("ident-audible", 0, true);
+    _serviceable_node   = node->getChild("serviceable", 0, true);
+    _power_btn_node     = node->getChild("power-btn", 0, true);
+    _operable_node      = node->getChild("operable", 0, true);
+
+    // frequency properties
+    SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
+    _frequency_node       = fnode->getChild("selected-khz", 0, true);
+
+    // foreign simulator properties
+    _electrical_node    = fgGetNode("/systems/electrical/outputs/adf", true);
+    _heading_node       = fgGetNode("/orientation/heading-deg", true);
+
+    // backward compatibility check
     if (_power_btn_node->getType() == simgear::props::NONE) 
       _power_btn_node->setBoolValue(true); // front end didn't implement a power button
 
+    // sound support (audible ident code)
     SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
-
-    morse.init();
 
     std::ostringstream temp;
     temp << _name << _num;
@@ -124,13 +129,18 @@ ADF::update (double delta_time_sec)
     if (_electrical_node->getDoubleValue() < 8.0
             || !_serviceable_node->getBoolValue()
             || !_power_btn_node->getBoolValue()     ) {
+        _in_range_node->setBoolValue(false);
+        _operable_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
 
+    _operable_node->setBoolValue(true);
+
     string mode = _mode_node->getStringValue();
     if (mode == "ant" || mode == "test") set_bearing(delta_time_sec, 90);
     if (mode != "bfo" && mode != "adf") {
+        _in_range_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
@@ -141,31 +151,25 @@ ADF::update (double delta_time_sec)
         _last_frequency_khz = frequency_khz;
     }
 
-                                // Get the aircraft position
-    double longitude_deg = _longitude_node->getDoubleValue();
-    double latitude_deg = _latitude_node->getDoubleValue();
-    double altitude_m = _altitude_node->getDoubleValue();
-
-    double longitude_rad = longitude_deg * SGD_DEGREES_TO_RADIANS;
-    double latitude_rad = latitude_deg * SGD_DEGREES_TO_RADIANS;
-
+    SGGeod acPos(globals->get_aircraft_position());
+  
                                 // On timeout, scan again
     _time_before_search_sec -= delta_time_sec;
     if (_time_before_search_sec < 0)
-        search(frequency_khz, longitude_rad, latitude_rad, altitude_m);
+        search(frequency_khz, acPos);
 
     if (!_transmitter_valid) {
+        _in_range_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
 
                                 // Calculate the bearing to the transmitter
-    SGGeod geod = SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m);
-    SGVec3d location = SGVec3d::fromGeod(geod);
+  SGVec3d location = globals->get_aircraft_position_cart();
     
     double distance_nm = dist(_transmitter_cart, location) * SG_METER_TO_NM;
     double range_nm = adjust_range(_transmitter_pos.getElevationFt(),
-                                   altitude_m * SG_METER_TO_FEET,
+                                   acPos.getElevationFt(),
                                    _transmitter_range_nm);
 
     if (distance_nm <= range_nm) {
@@ -173,7 +177,7 @@ ADF::update (double delta_time_sec)
         double bearing, az2, s;
         double heading = _heading_node->getDoubleValue();
 
-        geo_inverse_wgs_84(geod, _transmitter_pos,
+        geo_inverse_wgs_84(acPos, _transmitter_pos,
                            &bearing, &az2, &s);
         _in_range_node->setBoolValue(true);
 
@@ -197,7 +201,7 @@ ADF::update (double delta_time_sec)
             if ( sound != NULL )
                 sound->set_volume( volume );
             else
-                SG_LOG( SG_GENERAL, SG_ALERT, "Can't find adf-ident sound" );
+                SG_LOG( SG_INSTR, SG_ALERT, "Can't find adf-ident sound" );
         }
 
         time_t cur_time = globals->get_time_params()->get_cur_time();
@@ -220,16 +224,14 @@ ADF::update (double delta_time_sec)
 }
 
 void
-ADF::search (double frequency_khz, double longitude_rad,
-             double latitude_rad, double altitude_m)
+ADF::search (double frequency_khz, const SGGeod& pos)
 {
     string ident = "";
                                 // reset search time
     _time_before_search_sec = 1.0;
 
-                                // try the ILS list first
-    FGNavRecord *nav = globals->get_navlist()->findByFreq(frequency_khz,
-      SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m));
+  FGNavList::TypeFilter filter(FGPositioned::NDB);
+  FGNavRecord *nav = FGNavList::findByFreq(frequency_khz, pos, &filter);
 
     _transmitter_valid = (nav != NULL);
     if ( _transmitter_valid ) {
@@ -252,7 +254,7 @@ ADF::search (double frequency_khz, double longitude_rad,
         }
 
         SGSoundSample *sound;
-        sound = morse.make_ident( ident, LO_FREQUENCY );
+        sound = FGMorse::instance()->make_ident( ident, FGMorse::LO_FREQUENCY );
         sound->set_volume(_last_volume = 0);
         _sgr->add( sound, _adf_ident );
 

@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  *
  **************************************************************************/
@@ -25,7 +25,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <simgear/route/waypoint.hxx>
 
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
@@ -127,7 +126,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     init_waypoint->flaps_down= false;
     init_waypoint->finished  = false;
     init_waypoint->on_ground = false;
-    waypoints.push_back(init_waypoint);
+    pushBackWaypoint(init_waypoint);
     routefile.append("Data/AI/FlightPlans");
     snprintf(buffer, 32, "%s-%s.txt",
 	     dep->getId().c_str(),
@@ -221,7 +220,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
 	    wpt->flaps_down= false;
 	    wpt->finished  = false;
 	    wpt->on_ground = false;
-	    waypoints.push_back(wpt);
+	    pushBackWaypoint(wpt);
 	  }
 
 	  if (!(routefile.exists()))
@@ -274,7 +273,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     wpt->flaps_down= false;
     wpt->finished  = false;
     wpt->on_ground = false;
-    waypoints.push_back(wpt);
+    pushBackWaypoint(wpt);
 }
 */
 
@@ -286,26 +285,28 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
  * Note that this is the original version that does not 
  * do any dynamic route computation.
  ******************************************************************/
-void FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport *dep, 
+bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport *dep, 
 				  FGAirport *arr, double latitude, 
 				  double longitude, double speed, 
 				  double alt, const string& fltType)
 {
   double vCruise = ac->getPerformance()->vCruise();
-  waypoint *wpt;
+  FGAIWaypoint *wpt;
   wpt = createInAir(ac, "Cruise", SGGeod::fromDeg(longitude, latitude), alt, vCruise);
-  waypoints.push_back(wpt); 
+  pushBackWaypoint(wpt); 
   
-  string rwyClass = getRunwayClassFromTrafficType(fltType);
+  const string& rwyClass = getRunwayClassFromTrafficType(fltType);
   double heading = ac->getTrafficRef()->getCourse();
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
-  rwy = arr->getRunwayByIdent(activeRunway);
+  FGRunway* rwy = arr->getRunwayByIdent(activeRunway);
+  assert( rwy != NULL );
   // begin descent 110km out
   SGGeod beginDescentPoint     = rwy->pointOnCenterline(0);
   SGGeod secondaryDescentPoint = rwy->pointOnCenterline(-10000);
   
   wpt = createInAir(ac, "BOD", beginDescentPoint,  alt, vCruise);
-  waypoints.push_back(wpt); 
+  pushBackWaypoint(wpt); 
   wpt = createInAir(ac, "BOD2", secondaryDescentPoint, alt, vCruise);
-  waypoints.push_back(wpt); 
+  pushBackWaypoint(wpt); 
+  return true;
 }

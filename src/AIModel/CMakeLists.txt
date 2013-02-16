@@ -23,6 +23,27 @@ set(SOURCES
 	performancedb.cxx
 	submodel.cxx
 	)
-	
-flightgear_component(AIModel "${SOURCES}")
+
+set(HEADERS
+	AIAircraft.hxx
+	AIBallistic.hxx
+	AIBase.hxx
+	AICarrier.hxx
+	AIEscort.hxx
+	AIFlightPlan.hxx
+	AIGroundVehicle.hxx
+	AIManager.hxx
+	AIMultiplayer.hxx
+	AIShip.hxx
+	AIStatic.hxx
+	AIStorm.hxx
+	AITanker.hxx
+	AIThermal.hxx
+	AIWingman.hxx
+	performancedata.hxx
+	performancedb.hxx
+	submodel.hxx
+	)
+    		
+flightgear_component(AIModel "${SOURCES}" "${HEADERS}")
 	

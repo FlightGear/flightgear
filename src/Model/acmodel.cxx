@@ -18,9 +18,9 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/renderer.hxx>
-#include <Main/viewmgr.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Sound/fg_fx.hxx>
 
@@ -48,32 +48,48 @@ FGAircraftModel::FGAircraftModel ()
     _speed_e(0),
     _speed_d(0)
 {
-    SGSoundMgr *smgr = globals->get_soundmgr();
-    _fx = new FGFX(smgr, "fx");
+    _fx = new FGFX("fx");
     _fx->init();
 }
 
 FGAircraftModel::~FGAircraftModel ()
 {
+  // drop reference
+  _fx = 0;
   deinit();
 }
 
 void 
 FGAircraftModel::init ()
 {
+  osg::Node *model = NULL;
+
   _aircraft = new SGModelPlacement;
   string path = fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
-  try {
-    osg::Node *model = fgLoad3DModelPanel( path, globals->get_props());
-    _aircraft->init( model );
-  } catch (const sg_exception &ex) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load aircraft from " << path << ':');
-    SG_LOG(SG_GENERAL, SG_ALERT, "  " << ex.getFormattedMessage());
-    SG_LOG(SG_GENERAL, SG_ALERT, "(Falling back to glider.ac.)");
-    osg::Node *model = fgLoad3DModelPanel( "Models/Geometry/glider.ac",
-                                           globals->get_props());
-    _aircraft->init( model );
+
+  SGPath resolvedPath = globals->resolve_aircraft_path(path);
+  if (resolvedPath.isNull())
+  {
+      SG_LOG(SG_AIRCRAFT, SG_ALERT, "Failed to load aircraft from " << path << ':');
   }
+  else
+  {
+      try {
+        model = fgLoad3DModelPanel( resolvedPath.str(), globals->get_props());
+      } catch (const sg_exception &ex) {
+        SG_LOG(SG_AIRCRAFT, SG_ALERT, "Failed to load aircraft from " << path << ':');
+        SG_LOG(SG_AIRCRAFT, SG_ALERT, "  " << ex.getFormattedMessage());
+      }
+  }
+
+  if (!model)
+  {
+      SG_LOG(SG_AIRCRAFT, SG_ALERT, "(Falling back to glider.ac.)");
+      model = fgLoad3DModelPanel( "Models/Geometry/glider.ac",
+                                  globals->get_props());
+  }
+  _aircraft->init( model );
+
   osg::Node* node = _aircraft->getSceneGraph();
   // Do not do altitude computations with that model
   node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
@@ -119,7 +135,7 @@ FGAircraftModel::bind ()
 void
 FGAircraftModel::unbind ()
 {
-  // No-op
+  _fx->unbind();
 }
 
 void

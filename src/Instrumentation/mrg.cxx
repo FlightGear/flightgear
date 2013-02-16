@@ -6,9 +6,13 @@
 // TODO:
 // - better spin-up
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
-
+#include <simgear/math/SGMath.hxx>
 
 #include <iostream>
 #include <string>
@@ -21,6 +25,8 @@
 #include "mrg.hxx"
 
 const double MasterReferenceGyro::gravity = -32.1740485564;
+
+using std::string;
 
 MasterReferenceGyro::MasterReferenceGyro ( SGPropertyNode *node ) :
 _name(node->getStringValue("name", "master-reference-gyro")),
@@ -35,19 +41,6 @@ MasterReferenceGyro::~MasterReferenceGyro ()
 void
 MasterReferenceGyro::init ()
 {
-    _last_hdg = 0;
-    _last_roll = 0;
-    _last_pitch = 0;
-    _indicated_hdg = 0;
-    _indicated_roll = 0;
-    _indicated_pitch = 0;
-    _indicated_hdg_rate = 0;
-    _indicated_roll_rate = 0;
-    _indicated_pitch_rate = 0;
-    _erect_time = 180;
-    _last_g = 1;
-    _g_error = 10;
-
     string branch;
     branch = "/instrumentation/" + _name;
 
@@ -77,12 +70,32 @@ MasterReferenceGyro::init ()
     _hdg_input_source_node = node->getChild("heading-source", 0, true);
     _fast_erect_node = node->getChild("fast-erect", 0, true);
 
+    reinit();
+}
+
+void
+MasterReferenceGyro::reinit ()
+{
+    _last_hdg = 0;
+    _last_roll = 0;
+    _last_pitch = 0;
+    _indicated_hdg = 0;
+    _indicated_roll = 0;
+    _indicated_pitch = 0;
+    _indicated_hdg_rate = 0;
+    _indicated_roll_rate = 0;
+    _indicated_pitch_rate = 0;
+    _erect_time = 180;
+    _last_g = 1;
+    _g_error = 10;
+
     _electrical_node->setDoubleValue(0);
     _responsiveness_node->setDoubleValue(0.75);
     _off_node->setBoolValue(false);
     _hdg_input_source_node->setBoolValue(false);
     _fast_erect_node->setBoolValue(false);
     _g_in_node->setDoubleValue(1);
+    _gyro.reinit();
 }
 
 void
@@ -200,7 +213,7 @@ MasterReferenceGyro::update (double dt)
     } else {
         _g_error += (max_g_error /(erect_time * 0.33)) * dt * 2; 
 
-        //SG_LOG(SG_GENERAL, SG_ALERT,_num <<
+        //SG_LOG(SG_INSTR, SG_ALERT,_num <<
         //    " g input " << _g_in_node->getDoubleValue() * gravity
         //    <<" _erect_time " << _erect_time 
         //    << " yaw " <<   yaw_rate
@@ -220,7 +233,7 @@ MasterReferenceGyro::update (double dt)
     indicated_hdg_rate = _last_yaw_rate;
     // calculate the difference between the indicated heading
     // and the selected heading for use with an autopilot
-    static SGPropertyNode *bnode
+    SGPropertyNode *bnode
         = fgGetNode( "/autopilot/settings/heading-bug-deg", false );
 
     if ( bnode ) {
@@ -228,7 +241,7 @@ MasterReferenceGyro::update (double dt)
         if ( diff < -180.0 ) { diff += 360.0; }
         if ( diff > 180.0 ) { diff -= 360.0; }
         _error_out_node->setDoubleValue( diff );
-        //SG_LOG(SG_GENERAL, SG_ALERT,
+        //SG_LOG(SG_INSTR, SG_ALERT,
         //"autopilot input " << bnode->getDoubleValue() 
         //<< " output " << _error_out_node->getDoubleValue()<<);
     }

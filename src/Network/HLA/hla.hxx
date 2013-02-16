@@ -21,17 +21,10 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/SGSharedPtr.hxx>
-#include <simgear/props/props.hxx>
 
 #include <string>
 #include <vector>
 #include <Network/protocol.hxx>
-
-namespace simgear {
-class HLAFederate;
-class HLAObjectClass;
-class HLAObjectInstance;
-}
 
 class FGHLA : public FGProtocol {
 public:
@@ -45,6 +38,11 @@ public:
 private:
     /// All the utility classes we need currently
     class XMLConfigReader;
+    class MPUpdateCallback;
+    class MPReflectCallback;
+    class MultiplayerObjectInstance;
+    class MultiplayerObjectClass;
+    class Federate;
 
     /// The configuration parameters extracted from the tokens in the constructor
     std::string _objectModelConfig;
@@ -52,11 +50,7 @@ private:
     std::string _federate;
 
     /// The toplevel rti class
-    SGSharedPtr<simgear::HLAFederate> _hlaFederate;
-    /// This class that is used to send register the local instance
-    SGSharedPtr<simgear::HLAObjectClass> _localAircraftClass;
-    /// The local aircraft instance
-    SGSharedPtr<simgear::HLAObjectInstance> _localAircraftInstance;
+    SGSharedPtr<Federate> _hlaFederate;
 };
 
 #endif // _FG_HLA_HXX

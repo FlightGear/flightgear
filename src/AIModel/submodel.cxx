@@ -23,6 +23,8 @@
 #include "AIManager.hxx"
 #include "AIBallistic.hxx"
 
+using std::cout;
+using std::endl;
 
 const double FGSubmodelMgr::lbs_to_slugs = 0.031080950172;
 
@@ -33,7 +35,7 @@ FGSubmodelMgr::FGSubmodelMgr()
     yaw_offset = 0.0;
 
     //out[0] = out[1] = out[2] = 0;
-    string contents_node;
+    //string contents_node;
     contrail_altitude = 30000;
     _count = 0;
     _found_sub = true;
@@ -45,7 +47,7 @@ FGSubmodelMgr::~FGSubmodelMgr()
 
 FGAIManager* FGSubmodelMgr::aiManager()
 {
-   return (FGAIManager*)globals->get_subsystem("ai_model");
+   return (FGAIManager*)globals->get_subsystem("ai-model");
 }
 
 void FGSubmodelMgr::init()
@@ -136,19 +138,19 @@ void FGSubmodelMgr::update(double dt)
         if ( parent_subID == 0 || id == -1) // this entry in the list has no associated submodel
             continue;                       // or is invalid so we can continue
 
-        //SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! "
+        //SG_LOG(SG_AI, SG_DEBUG, "Submodel: Impact " << _impact << " hit! "
         //        << _hit <<" parent_subID " << parent_subID);
 
         _hit = (*sm_list_itr)->_getCollisionData();
         _impact = (*sm_list_itr)->_getImpactData();
         _expiry = (*sm_list_itr)->_getExpiryData();
 
-        //SG_LOG(SG_GENERAL, SG_ALERT, "Submodel: " << (*sm_list_itr)->_getName()
+        //SG_LOG(SG_AI, SG_ALERT, "Submodel: " << (*sm_list_itr)->_getName()
         //    << " Impact " << _impact << " hit! " << _hit
         //    << " exipiry :-( " << _expiry );
 
         if (_impact || _hit || _expiry) {
-    //        SG_LOG(SG_GENERAL, SG_ALERT, "Submodel: Impact " << _impact << " hit! " << _hit 
+    //        SG_LOG(SG_AI, SG_ALERT, "Submodel: Impact " << _impact << " hit! " << _hit
                 //<< " exipiry :-( " << _expiry );
 
             submodel_iterator = submodels.begin();
@@ -191,7 +193,7 @@ void FGSubmodelMgr::update(double dt)
     while (submodel_iterator != submodels.end())  {
         i++;
 
-        /*SG_LOG(SG_GENERAL, SG_DEBUG,
+        /*SG_LOG(SG_AI, SG_DEBUG,
                 "Submodels:  " << (*submodel_iterator)->id
                 << " name " << (*submodel_iterator)->name
                 );*/
@@ -208,9 +210,9 @@ void FGSubmodelMgr::update(double dt)
         if (trigger && (*submodel_iterator)->count != 0) {
 
             //int id = (*submodel_iterator)->id;
-            string name = (*submodel_iterator)->name;
+            //const string& name = (*submodel_iterator)->name;
             
-            SG_LOG(SG_GENERAL, SG_DEBUG,
+            SG_LOG(SG_AI, SG_DEBUG,
             "Submodels release:  " << (*submodel_iterator)->id
             << " name " << (*submodel_iterator)->name
             << " count " << (*submodel_iterator)->count
@@ -317,7 +319,7 @@ void FGSubmodelMgr::load()
 
     if (path) {
         const int id = 0;
-        string Path = path->getStringValue();
+        const string& Path = path->getStringValue();
         bool Seviceable =_serviceable_node->getBoolValue();
         setData(id, Path, Seviceable);
     }
@@ -343,7 +345,7 @@ void FGSubmodelMgr::transform(submodel *sm)
 
     int id = sm->id;
     //int sub_id = sm->sub_id;
-    string name = sm->name;
+    //const string& name = sm->name;
 
 
     if (sm->speed_node != 0)
@@ -477,12 +479,12 @@ void FGSubmodelMgr::updatelat(double lat)
 
 void FGSubmodelMgr::loadAI()
 {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: Loading AI submodels ");
+    SG_LOG(SG_AI, SG_DEBUG, "Submodels: Loading AI submodels ");
 
     FGAIManager::ai_list_type sm_list(aiManager()->get_ai_list());
 
     if (sm_list.empty()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Submodels: Unable to read AI submodel list");
+        SG_LOG(SG_AI, SG_ALERT, "Submodels: Unable to read AI submodel list");
         return;
     }
 
@@ -498,9 +500,9 @@ void FGSubmodelMgr::loadAI()
         }
 
         int id = (*sm_list_itr)->getID();
-        string type = (*sm_list_itr)->getTypeString();
         bool serviceable = (*sm_list_itr)->_getServiceable();
 
+        //string type = (*sm_list_itr)->getTypeString();
         //cout << "loadAI: type " << type << " path "<< path << " serviceable " << serviceable << endl;
 
         setData(id, path, serviceable);
@@ -510,17 +512,17 @@ void FGSubmodelMgr::loadAI()
 
 
 
-void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
+void FGSubmodelMgr::setData(int id, const string& path, bool serviceable)
 {
     SGPropertyNode root;
 
     SGPath config = globals->resolve_aircraft_path(path);
     try {
-        SG_LOG(SG_GENERAL, SG_DEBUG,
+        SG_LOG(SG_AI, SG_DEBUG,
                 "Submodels: Trying to read AI submodels file: " << config.str());
         readProperties(config.str(), &root);
     } catch (const sg_exception &) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_AI, SG_ALERT,
                 "Submodels: Unable to read AI submodels file: " << config.str());
         return;
     }
@@ -596,13 +598,13 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         sm->prop->tie("serviceable", SGRawValuePointer<bool>(&(sm->serviceable)));
         sm->prop->tie("random", SGRawValuePointer<bool>(&(sm->random)));
         sm->prop->tie("slaved", SGRawValuePointer<bool>(&(sm->slaved)));
-        string name = sm->name;
+        const string& name = sm->name;
         sm->prop->setStringValue("name", name.c_str());
 
-        string submodel = sm->submodel;
+        const string& submodel = sm->submodel;
         sm->prop->setStringValue("submodel", submodel.c_str());
 
-        string force_path = sm->force_path;
+        const string& force_path = sm->force_path;
         sm->prop->setStringValue("force_path", force_path.c_str());
         //cout << "set force_path Sub " << force_path << endl;
 
@@ -614,18 +616,18 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
     }
 }
 
-void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
+void FGSubmodelMgr::setSubData(int id, const string& path, bool serviceable)
 {
     SGPropertyNode root;
     SGPath config = globals->resolve_aircraft_path(path);
 
     try {
-        SG_LOG(SG_GENERAL, SG_DEBUG,
+        SG_LOG(SG_AI, SG_DEBUG,
                 "Submodels: Trying to read AI submodels file: " << config.str());
         readProperties(config.str(), &root);
 
     } catch (const sg_exception &) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_AI, SG_ALERT,
                 "Submodels: Unable to read AI submodels file: " << config.str());
         return;
     }
@@ -701,14 +703,14 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
         sm->prop->tie("random", SGRawValuePointer<bool>(&(sm->random)));
         sm->prop->tie("slaved", SGRawValuePointer<bool>(&(sm->slaved)));
 
-        string name = sm->name;
+        const string& name = sm->name;
         sm->prop->setStringValue("name", name.c_str());
 
-        string submodel = sm->submodel;
+        const string& submodel = sm->submodel;
         sm->prop->setStringValue("submodel-path", submodel.c_str());
         // cout << " set submodel path AI" << submodel<< endl;
 
-        string force_path = sm->force_path;
+        const string& force_path = sm->force_path;
         sm->prop->setStringValue("force_path", force_path.c_str());
         //cout << "set force_path  AI" << force_path << endl;
 
@@ -722,18 +724,18 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
 
 void FGSubmodelMgr::loadSubmodels()
 {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: Loading sub submodels");
+    SG_LOG(SG_AI, SG_DEBUG, "Submodels: Loading sub submodels");
 
     _found_sub = false;
 
     submodel_iterator = submodels.begin();
 
     while (submodel_iterator != submodels.end()) {
-        string submodel  = (*submodel_iterator)->submodel;
+        const string& submodel  = (*submodel_iterator)->submodel;
         if (!submodel.empty()) {
             //int id = (*submodel_iterator)->id;
             bool serviceable = true;
-            SG_LOG(SG_GENERAL, SG_DEBUG, "found path sub sub "
+            SG_LOG(SG_AI, SG_DEBUG, "found path sub sub "
                     << submodel
                     << " index " << index
                     << " name " << (*submodel_iterator)->name);
@@ -766,7 +768,7 @@ void FGSubmodelMgr::loadSubmodels()
     //    int id = (*submodel_iterator)->id;
     //    subcount++;
 
-    //    SG_LOG(SG_GENERAL, SG_ALERT,"after pushback "
+    //    SG_LOG(SG_AI, SG_ALERT,"after pushback "
     //            << " parent id " << id
     //            << " name " << (*submodel_iterator)->name
     //            << " sub id " << (*submodel_iterator)->sub_id
@@ -824,7 +826,7 @@ void FGSubmodelMgr::valueChanged(SGPropertyNode *prop)
 
     const char* _model_added = _model_added_node->getStringValue();
 
-    basic_string <char>::size_type indexCh2b;
+    std::basic_string <char>::size_type indexCh2b;
 
     string str2 = _model_added;
     const char *cstr2b = "multiplayer";
@@ -839,8 +841,7 @@ void FGSubmodelMgr::valueChanged(SGPropertyNode *prop)
         SGPropertyNode_ptr path_node = sub_node->getChild("path", 0, true);
         SGPropertyNode_ptr callsign_node = a_node->getChild("callsign", 0, true);
 
-        string callsign = callsign_node->getStringValue();
-
+        //const string& callsign = callsign_node->getStringValue();
         //cout << "Submodels: model added - " << callsign <<" read callsign "<< endl;
             return;
 
@@ -862,8 +863,8 @@ void FGSubmodelMgr::setParentNode(int id) {
             model = _selected_ac;
         } else {
             model = ai->getChild(i);
-            string path = ai->getPath();
-            const string name = model->getStringValue("name");
+            //const string& path = ai->getPath();
+            //const string& name = model->getStringValue("name");
             int parent_id = model->getIntValue("id");
             if (!model->nChildren()){
                 continue;
@@ -898,7 +899,7 @@ void FGSubmodelMgr::setParentNode(int id) {
         //cout << name << " IC.speed " << IC.speed << endl;
 
     } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "AISubmodel: parent node not found ");
+        SG_LOG(SG_AI, SG_ALERT, "AISubmodel: parent node not found ");
     }
 
 }

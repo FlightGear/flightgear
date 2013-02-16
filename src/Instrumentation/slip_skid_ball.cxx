@@ -3,10 +3,15 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "slip_skid_ball.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+using std::string;
 
 SlipSkidBall::SlipSkidBall ( SGPropertyNode *node)
     :
@@ -31,6 +36,14 @@ SlipSkidBall::init ()
     _z_accel_node = fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
     _out_node = node->getChild("indicated-slip-skid", 0, true);
     _override_node = node->getChild("override", 0, true);
+
+    reinit();
+}
+
+void
+SlipSkidBall::reinit ()
+{
+    _out_node->setDoubleValue(0.0);
 }
 
 void

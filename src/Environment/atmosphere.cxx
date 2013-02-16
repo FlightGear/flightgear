@@ -108,7 +108,7 @@ pair<double,double> PT_vs_hpt(
   }
   
 // Should never get here.
-  SG_LOG(SG_GENERAL, SG_ALERT, "PT_vs_hpt: ran out of layers for h=" << hh );
+  SG_LOG(SG_ENVIRONMENT, SG_ALERT, "PT_vs_hpt: ran out of layers for h=" << hh );
   return make_pair(d0, d0);
 }
 
@@ -250,7 +250,7 @@ double FGAtmo::QNH(const double field_elev, const double field_press) {
     double rslt =  field_press
             * pow(1. + ISA::lam0 * field_elev / ISA::T0 * prat, 1./nn);
 #if 0
-    SG_LOG(SG_GENERAL, SG_ALERT, "QNH: elev: " << field_elev
+    SG_LOG(SG_ENVIRONMENT, SG_ALERT, "QNH: elev: " << field_elev
                 << "  press: " << field_press
                 << "  prat: "  << prat
                 << "  rslt: " << rslt

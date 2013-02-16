@@ -28,10 +28,14 @@
 
 #ifdef _WIN32
 #  include <direct.h>
+#  include <io.h>
+#define unlink _unlink
+#define mkdir _mkdir
+#else // !_WIN32
+#include <unistd.h>
 #endif
 
 #include <FL/Fl_File_Chooser.H>
-#include <plib/ul.h>
 
 #include <simgear/misc/sg_path.hxx>
 
@@ -48,6 +52,32 @@ extern string def_scenery_dest;
 
 static const float min_progress = 0.0;
 static const float max_progress = 5000.0;
+
+// FIXME: Ugly hack to detect the situation below 
+#ifdef FL_Volume_Down
+//#if (FL_MAJOR_VERSION > 1)||((FL_MAJOR_VERSION == 1)&&(FL_MINOR_VERSION >= 3))
+    // Fltk 1.3 or newer, need to use "fl_filename_free_list"
+    #define FL_FREE_DIR_ENTRY(e) // do nothing, since "fl_filename_free_list" frees entire list
+    #define FL_FREE_DIR_LIST(list,count) fl_filename_free_list(&list, count)
+    #define FL_STAT(file,info) fl_stat( file.str().c_str(), info )
+#else
+    // Fltk < 1.3, "fl_filename_free_list", "fl_stat" not available
+    #define FL_FREE_DIR_ENTRY(e) free(e)
+    #define FL_FREE_DIR_LIST(list,count) free(list)
+    #define FL_STAT(file,info) stat( file.str().c_str(), info );
+#endif
+
+/** Strip a single trailing '/' or '\\' */
+static char* stripSlash(char* str)
+{
+    int l = strlen(str);
+    if ((l>0)&&
+        ((str[l-1]=='/')||(str[l-1]=='\\')))
+    {
+        str[l-1] = 0;
+    }
+    return str;
+}
 
 // destructor
 FGAdminUI::~FGAdminUI() {
@@ -103,7 +133,7 @@ void FGAdminUI::select_install_source() {
                               source.c_str(),
                               0 );
     if ( p != 0 ) {
-	source = p;
+        source = p;
         source_text->value( p );
         prefs->set( "install-source", p );
         prefs->flush();
@@ -117,14 +147,14 @@ void FGAdminUI::select_install_dest() {
                               dest.c_str(),
                               0 );
     if ( p != 0 ) {
-	dest = p;
+        dest = p;
         dest_text->value( p );
         prefs->set( "scenery-dest", p );
         prefs->flush();
     }
 }
 
-
+#if 0
 // Like strcmp, but for strings
 static int stringCompare(const void *string1, const void *string2)
 {
@@ -134,7 +164,7 @@ static int stringCompare(const void *string1, const void *string2)
     // Compare name first, and then index.
     return strcmp(s1->c_str(), s2->c_str());
 }
-
+#endif
 
 void FGAdminUI::update_install_box() {
     set<string> file_list;
@@ -142,14 +172,17 @@ void FGAdminUI::update_install_box() {
     install_box->clear();
 
     if ( source.length() ) {
-        ulDir *dir = ulOpenDir( source.c_str() ) ;
-        ulDirEnt *ent;
-        while ( dir != 0 && ( ent = ulReadDir( dir ) ) ) {
+        struct dirent **list;
+        int nb = fl_filename_list( source.c_str(), &list );
+        for ( int i = 0; i < nb; ++i ) {
             // find base name of archive file
             char base[FL_PATH_MAX];
+            dirent *ent = list[i];
+            stripSlash(ent->d_name);
             strncpy( base, ent->d_name, FL_PATH_MAX );
             const char *p = fl_filename_ext( base );
-            int offset, expected_length = 0;
+            int offset;
+            string::size_type expected_length = 0;
             if ( strcmp( p, ".gz" ) == 0 ) {
                 offset = p - base;
                 base[offset] = '\0';
@@ -186,9 +219,10 @@ void FGAdminUI::update_install_box() {
                     // cout << install.str() << " exists." << endl;
                 }
             }
+            FL_FREE_DIR_ENTRY(ent);
         }
+        FL_FREE_DIR_LIST(list, nb);
 
-        ulCloseDir( dir );
         for ( set<string>::iterator it = file_list.begin(); it != file_list.end(); ++it ) {
             install_box->add( it->c_str() );
         }
@@ -217,16 +251,19 @@ void FGAdminUI::update_remove_box() {
         set<string> dir_list;
         for ( int i = 0; i < 2; i++ ) {
             if ( !path[i].empty() ) {
-                ulDir *dir = ulOpenDir( path[i].c_str() ) ;
-                ulDirEnt *ent;
-                while ( dir != 0 && ( ent = ulReadDir( dir ) ) ) {
+                dirent **list;
+                int nb = fl_filename_list( path[i].c_str(), &list );
+                for ( int i = 0; i < nb; ++i ) {
+                    dirent *ent = list[i];
+                    stripSlash(ent->d_name);
                     if ( strlen(ent->d_name) == 7 &&
                             ( ent->d_name[0] == 'e' || ent->d_name[0] == 'w' ) &&
                             ( ent->d_name[4] == 'n' || ent->d_name[4] == 's' ) ) {
                         dir_list.insert( ent->d_name );
                     }
+                    FL_FREE_DIR_ENTRY(ent);
                 }
-                ulCloseDir( dir );
+                FL_FREE_DIR_LIST(list, nb);
             }
         }
 
@@ -253,8 +290,8 @@ void FGAdminUI::install_selected() {
             f = install_box->text( i );
             SGPath file( source );
             file.append( f );
-            struct stat info;
-            stat( file.str().c_str(), &info );
+            struct ::stat info;
+            FL_STAT( file, &info );
             float old_max = progress->maximum();
             progress->maximum( info.st_size );
             progress_label = "Installing ";
@@ -279,23 +316,26 @@ void FGAdminUI::install_selected() {
 
 static unsigned long count_dir( const char *dir_name, bool top = true ) {
     unsigned long cnt = 0L;
-    ulDir *dir = ulOpenDir( dir_name ) ;
-    if ( dir ) {
-        ulDirEnt *ent;
-        while ( ent = ulReadDir( dir ) ) {
+    dirent **list;
+    int nb = fl_filename_list( dir_name, &list );
+    if ( nb != 0 ) {
+        for ( int i = 0; i < nb; ++i ) {
+            dirent *ent = list[i];
+            stripSlash(ent->d_name);
             if ( strcmp( ent->d_name, "." ) == 0 ) {
                 // ignore "."
             } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
                 // ignore ".."
-            } else if ( ent->d_isdir ) {
+            } else if ( fl_filename_isdir( ent->d_name ) ) {
                 SGPath child( dir_name );
                 child.append( ent->d_name );
                 cnt += count_dir( child.c_str(), false );
             } else {
                 cnt += 1;
             }
+            FL_FREE_DIR_ENTRY(ent);
         }
-        ulCloseDir( dir );
+        FL_FREE_DIR_LIST(list, nb);
     } else if ( top ) {
         string base = dir_name;
         size_t pos = base.rfind('/');
@@ -310,26 +350,27 @@ static unsigned long count_dir( const char *dir_name, bool top = true ) {
 }
 
 static void remove_dir( const char *dir_name, void (*step)(void*,int), void *data, bool top = true ) {
-    ulDir *dir = ulOpenDir( dir_name ) ;
-    if ( dir ) {
-        ulDirEnt *ent;
-        while ( ent = ulReadDir( dir ) ) {
+    dirent **list;
+    int nb = fl_filename_list( dir_name, &list );
+    if ( nb > 0 ) {
+        for ( int i = 0; i < nb; ++i ) {
+            dirent *ent = list[i];
+            SGPath child( dir_name );
+            child.append( ent->d_name );
+            stripSlash(ent->d_name);
             if ( strcmp( ent->d_name, "." ) == 0 ) {
                 // ignore "."
             } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
                 // ignore ".."
-            } else if ( ent->d_isdir ) {
-                SGPath child( dir_name );
-                child.append( ent->d_name );
+            } else if ( child.isDir() ) {
                 remove_dir( child.c_str(), step, data, false );
             } else {
-                SGPath child( dir_name );
-                child.append( ent->d_name );
                 unlink( child.c_str() );
                 if (step) step( data, 1 );
             }
+            FL_FREE_DIR_ENTRY(ent);
         }
-        ulCloseDir( dir );
+        FL_FREE_DIR_LIST(list, nb);
         rmdir( dir_name );
     } else if ( top ) {
         string base = dir_name;

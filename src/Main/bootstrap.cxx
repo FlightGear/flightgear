@@ -25,6 +25,10 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
 #if defined(HAVE_FEENABLEEXCEPT)
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -32,6 +36,10 @@
 #include <fenv.h>
 #elif defined(__linux__) && defined(__i386__)
 #  include <fpu_control.h>
+#endif
+
+#ifndef _WIN32
+#  include <unistd.h> // for gethostname()
 #endif
 
 #include <errno.h>
@@ -42,39 +50,31 @@
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/SGMath.hxx>
 
 #include <cstring>
 #include <iostream>
 using std::cerr;
 using std::endl;
 
+#include <Viewer/fgviewer.hxx>
 #include "main.hxx"
 #include "globals.hxx"
 #include "fg_props.hxx"
-#include "fgviewer.hxx"
 
 
 #include "fg_os.hxx"
 
-#ifdef _MSC_VER
-char homepath[256] = "";
-char * homedir = homepath;
-char *hostname = ::getenv( "COMPUTERNAME" );
-#else
-char *homedir = ::getenv( "HOME" );
-char *hostname = ::getenv( "HOSTNAME" );
-#endif
-bool free_hostname = false;
+std::string homedir;
+std::string hostname;
 
-// foreward declaration.
+// forward declaration.
 void fgExitCleanup();
 
 static bool fpeAbort = false;
-static void handleFPE(int);
 static void initFPE();
 
 #if defined(HAVE_FEENABLEEXCEPT)
+static void handleFPE(int);
 static void
 initFPE ()
 {
@@ -93,6 +93,7 @@ static void handleFPE(int)
 }
 #elif defined(__linux__) && defined(__i386__)
 
+static void handleFPE(int);
 static void
 initFPE ()
 {
@@ -115,10 +116,6 @@ handleFPE (int num)
   SG_LOG(SG_GENERAL, SG_ALERT, "Floating point interrupt (SIGFPE)");
 }
 #else
-static void handleFPE(int)
-{
-}
-
 static void initFPE()
 {
 }
@@ -170,12 +167,25 @@ int _bootstrap_OSInit;
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
 #if _MSC_VER
+  // Don't show blocking "no disk in drive" error messages on Windows 7,
+  // silently return errors to application instead.
+  // See Microsoft MSDN #ms680621: "GUI apps should specify SEM_NOOPENFILEERRORBOX"
+  SetErrorMode(SEM_NOOPENFILEERRORBOX);
+
   // Windows has no $HOME aka %HOME%, so we have to construct the full path.
-  // make sure it fits into the buffer. Max. path length is 255, but who knows
-  // what's in these environment variables?
-  homepath[sizeof(homepath)-1] = 0;
-  strncpy( homepath, ::getenv("APPDATA"), sizeof(homepath)-1 );
-  strncat( homepath, "\\flightgear.org", sizeof(homepath)-strlen(homepath)-1 );
+  homedir = ::getenv("APPDATA");
+  homedir.append("\\flightgear.org");
+
+  hostname = ::getenv( "COMPUTERNAME" );
+#else
+  // Unix(alike) systems
+  char _hostname[256];
+  gethostname(_hostname, 256);
+  hostname = _hostname;
+  
+  homedir = ::getenv( "HOME" );
+  
+  signal(SIGPIPE, SIG_IGN);
 #endif
 
 #ifdef PTW32_STATIC_LIB
@@ -196,9 +206,6 @@ int main ( int argc, char **argv ) {
         }
     }
     initFPE();
-#endif
-#ifndef _WIN32
-    signal(SIGPIPE, SIG_IGN);
 #endif
 
 #if defined(sgi)
@@ -224,6 +231,7 @@ int main ( int argc, char **argv ) {
 #if defined( HAVE_BC5PLUS )
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
 #endif
+  
     bool fgviewer = false;
     for (int i = 0; i < argc; ++i) {
         if (!strcmp("--fgviewer", argv[i])) {
@@ -251,7 +259,7 @@ int main ( int argc, char **argv ) {
         if (std::strlen(t.getOrigin()) != 0)
             cerr << " (received from " << t.getOrigin() << ')' << endl;
 
-    } catch (const string &s) {
+    } catch (const std::string &s) {
         cerr << "Fatal error: " << s << endl;
 
     } catch (const char *s) {
@@ -266,16 +274,13 @@ int main ( int argc, char **argv ) {
     return 0;
 }
 
-// do some clean up on exit.  Specifically we want to call alutExit()
-// which happens in the sound manager destructor.
+// do some clean up on exit.  Specifically we want to delete the sound-manager,
+// so OpenAL device and context are released cleanly
 void fgExitCleanup() {
 
     if (_bootstrap_OSInit != 0)
         fgSetMouseCursor(MOUSE_CURSOR_POINTER);
 
     delete globals;
-
-    if (free_hostname && hostname != NULL)
-        free(hostname);
 }
 

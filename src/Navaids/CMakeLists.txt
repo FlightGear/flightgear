@@ -2,7 +2,6 @@ include(FlightGearComponent)
 
 set(SOURCES
 	airways.cxx
-	awynet.cxx
 	fixlist.cxx
 	markerbeacon.cxx
 	navdb.cxx
@@ -13,7 +12,33 @@ set(SOURCES
 	route.cxx
 	routePath.cxx
 	waypoint.cxx
-	PositionedBinding.cxx
+    LevelDXML.cxx
+    FlightPlan.cxx
+    NavDataCache.cxx
+    PositionedOctree.cxx
 	)
 
-flightgear_component(Navaids "${SOURCES}")
+set(HEADERS
+    airways.hxx
+	fixlist.hxx
+	markerbeacon.hxx
+	navdb.hxx
+	navlist.hxx
+	navrecord.hxx
+	positioned.hxx
+	procedure.hxx
+	route.hxx
+	routePath.hxx
+	waypoint.hxx
+    LevelDXML.hxx
+    FlightPlan.hxx
+    NavDataCache.hxx
+    PositionedOctree.hxx
+    )
+
+if (NOT SYSTEM_SQLITE)
+    list(APPEND SOURCES sqlite3.c)
+    list(APPEND HEADERS sqlite3.h)
+endif()
+
+flightgear_component(Navaids "${SOURCES}" "${HEADERS}")

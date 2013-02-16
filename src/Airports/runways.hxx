@@ -36,19 +36,21 @@ class SGPropertyNode;
 namespace flightgear {
   class SID;
   class STAR;
+  class Approach;
 }
 
 class FGRunway : public FGRunwayBase
 {
-  FGAirport* _airport;
+  PositionedID _airport;
   bool _isReciprocal;
-  FGRunway* _reciprocal;
+  PositionedID _reciprocal;
   double _displ_thresh;
   double _stopway;
-  FGNavRecord* _ils;
+  PositionedID _ils;
 public:
   
-  FGRunway(FGAirport* aAirport, const std::string& rwy_no,
+  FGRunway(PositionedID aGuid,
+           PositionedID aAirport, const std::string& rwy_no,
             const SGGeod& aGeod,
             const double heading, const double length,
             const double width,
@@ -77,7 +79,7 @@ public:
   { return _isReciprocal; }
 
   /**
-   * Get the runway begining point - this is syntatic sugar, equivalent to
+   * Get the runway beginning point - this is syntatic sugar, equivalent to
    * calling pointOnCenterline(0.0);
    */
   SGGeod begin() const;
@@ -102,36 +104,33 @@ public:
   /**
    * Airport this runway is located at
    */
-  FGAirport* airport() const
-  { return _airport; }
+  FGAirport* airport() const;
   
-  // FIXME - should die once airport / runway creation is cleaned up
-  void setAirport(FGAirport* aAirport)
-  { _airport = aAirport; }
-  
-  FGNavRecord* ILS() const { return _ils; }
-  void setILS(FGNavRecord* nav) { _ils = nav; }
-  
-  FGRunway* reciprocalRunway() const
-  { return _reciprocal; }
-  void setReciprocalRunway(FGRunway* other);
-  
-  virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
+  FGNavRecord* ILS() const;
   
   /**
-   * Helper to process property data loaded from an ICAO.threshold.xml file
+   * retrieve the associated glideslope transmitter, if one is defined.
    */
-  void processThreshold(SGPropertyNode* aThreshold);
+  FGNavRecord* glideslope() const;
+  
+  void setILS(PositionedID nav) { _ils = nav; }
+  
+  FGRunway* reciprocalRunway() const;
+  
+  void setReciprocalRunway(PositionedID other);
   
   /**
    * Get SIDs (DPs) associated with this runway
    */
-  std::vector<flightgear::SID*> getSIDs();
+  std::vector<flightgear::SID*> getSIDs() const;
   
   /**
    * Get STARs associared with this runway
    */ 
-  std::vector<flightgear::STAR*> getSTARs();
+  std::vector<flightgear::STAR*> getSTARs() const;
+  
+  
+  std::vector<flightgear::Approach*> getApproaches() const;
   
 };
 

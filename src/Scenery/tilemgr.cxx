@@ -29,59 +29,42 @@
 #include <functional>
 
 #include <osgViewer/Viewer>
+#include <osgDB/Registry>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/scene/model/modellib.hxx>
-#include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/renderer.hxx>
-#include <Main/viewer.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/splash.hxx>
 #include <Scripting/NasalSys.hxx>
 
 #include "scenery.hxx"
 #include "SceneryPager.hxx"
 #include "tilemgr.hxx"
 
-using std::for_each;
 using flightgear::SceneryPager;
-using simgear::SGModelLib;
-using simgear::TileEntry;
-using simgear::TileCache;
-
-
-// helper: listen to property changes affecting tile loading
-class LoaderPropertyWatcher : public SGPropertyChangeListener
-{
-public:
-    LoaderPropertyWatcher(FGTileMgr* pTileMgr) :
-        _pTileMgr(pTileMgr)
-    {
-    }
-
-    virtual void valueChanged(SGPropertyNode*)
-    {
-        _pTileMgr->configChanged();
-    }
-
-private:
-    FGTileMgr* _pTileMgr;
-};
 
 
 FGTileMgr::FGTileMgr():
     state( Start ),
-    vis( 16000 ),
+    last_state( Running ),
+    longitude(-1000.0),
+    latitude(-1000.0),
+    scheduled_visibility(100.0),
     _terra_sync(NULL),
-    _propListener(new LoaderPropertyWatcher(this))
+    _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
+    _maxTileRangeM(fgGetNode("/sim/rendering/static-lod/bare", true)),
+    _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true)),
+    _scenery_loaded(fgGetNode("/sim/sceneryloaded", true)),
+    _scenery_override(fgGetNode("/sim/sceneryloaded-override", true)),
+    _pager(FGScenery::getPagerSingleton())
 {
-    _randomObjects = fgGetNode("/sim/rendering/random-objects", true);
-    _randomVegetation = fgGetNode("/sim/rendering/random-vegetation", true);
-    _maxTileRangeM = fgGetNode("/sim/rendering/static-lod/bare", true);
 }
 
 
@@ -90,8 +73,6 @@ FGTileMgr::~FGTileMgr()
     // remove all nodes we might have left behind
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
-    delete _propListener;
-    _propListener = NULL;
     // clear OSG cache
     osgDB::Registry::instance()->clearObjectCache();
 }
@@ -101,28 +82,42 @@ FGTileMgr::~FGTileMgr()
 void FGTileMgr::init() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
 
-    _options = new SGReaderWriterBTGOptions;
-    _options->setMatlib(globals->get_matlib());
-
-    _randomObjects.get()->addChangeListener(_propListener, false);
-    _randomVegetation.get()->addChangeListener(_propListener, false);
-    configChanged();
+    _options = new simgear::SGReaderWriterOptions;
+    _options->setMaterialLib(globals->get_matlib());
+    _options->setPropertyNode(globals->get_props());
 
     osgDB::FilePathList &fp = _options->getDatabasePathList();
     const string_list &sc = globals->get_fg_scenery();
     fp.clear();
     std::copy(sc.begin(), sc.end(), back_inserter(fp));
-
-    TileEntry::setModelLoadHelper(this);
-    
-    _visibilityMeters = fgGetNode("/environment/visibility-m", true);
+    _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root());
+    if (!_disableNasalHooks->getBoolValue())
+        _options->setModelData(new FGNasalModelDataProxy);
 
     reinit();
 }
 
+void FGTileMgr::refresh_tile(void* tileMgr, long tileIndex)
+{
+    ((FGTileMgr*) tileMgr)->tile_cache.refresh_tile(tileIndex);
+}
 
 void FGTileMgr::reinit()
 {
+    _terra_sync = static_cast<simgear::SGTerraSync*> (globals->get_subsystem("terrasync"));
+    if (_terra_sync)
+        _terra_sync->setTileRefreshCb(&refresh_tile, this);
+
+    // protect against multiple scenery reloads and properly reset flags,
+    // otherwise aircraft fall through the ground while reloading scenery
+    if (!fgGetBool("/sim/sceneryloaded",true))
+        return;
+    fgSetBool("/sim/sceneryloaded",false);
+    fgSetDouble("/sim/startup/splash-alpha", 1.0);
+    
+    // Reload the materials definitions
+    _options->setMaterialLib(globals->get_matlib());
+
     // remove all old scenery nodes from scenegraph and clear cache
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
@@ -139,19 +134,10 @@ void FGTileMgr::reinit()
     previous_bucket.make_bad();
     current_bucket.make_bad();
     longitude = latitude = -1000.0;
-
-    _terra_sync = (simgear::SGTerraSync*) globals->get_subsystem("terrasync");
-    if (_terra_sync)
-        _terra_sync->setTileCache(&tile_cache);
+    scheduled_visibility = 100.0;
 
     // force an update now
     update(0.0);
-}
-
-void FGTileMgr::configChanged()
-{
-    _options->setUseRandomObjects(_randomObjects.get()->getBoolValue());
-    _options->setUseRandomVegetation(_randomVegetation.get()->getBoolValue());
 }
 
 /* schedule a tile for loading, keep request for given amount of time.
@@ -168,6 +154,7 @@ bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_vie
         if ( tile_cache.insert_tile( t ) )
         {
             // Attach to scene graph
+
             t->addToSceneGraph(globals->get_scenery()->get_terrain_branch());
         } else
         {
@@ -208,9 +195,9 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     // cout << "tile width = " << tile_width << "  tile_height = "
     //      << tile_height << endl;
 
-    double tileRangeM = min(vis,_maxTileRangeM->getDoubleValue());
-    xrange = (int)(tileRangeM / tile_width) + 1;
-    yrange = (int)(tileRangeM / tile_height) + 1;
+    double tileRangeM = std::min(vis,_maxTileRangeM->getDoubleValue());
+    int xrange = (int)(tileRangeM / tile_width) + 1;
+    int yrange = (int)(tileRangeM / tile_height) + 1;
     if ( xrange < 1 ) { xrange = 1; }
     if ( yrange < 1 ) { yrange = 1; }
 
@@ -246,52 +233,12 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     }
 }
 
-osg::Node*
-FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
-{
-    SGPath fullPath;
-    if (fgGetBool("/sim/paths/use-custom-scenery-data") == true) {
-        string_list sc = globals->get_fg_scenery();
-
-        for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
-            SGPath tmpPath(*it);
-            tmpPath.append(modelPath);
-            if (tmpPath.exists()) {
-                fullPath = tmpPath;
-                break;
-            } 
-        }
-    } else {
-         fullPath.append(modelPath);
-    }
-    osg::Node* result = 0;
-    try {
-        if(cacheModel)
-            result =
-                SGModelLib::loadModel(fullPath.str(), globals->get_props(),
-                                      new FGNasalModelData);
-        else
-            result=
-                SGModelLib::loadPagedModel(modelPath, globals->get_props(),
-                                           new FGNasalModelData);
-    } catch (const sg_io_exception& exc) {
-        string m(exc.getMessage());
-        m += " ";
-        m += exc.getLocation().asString();
-        SG_LOG( SG_ALL, SG_ALERT, m );
-    } catch (const sg_exception& exc) { // XXX may be redundant
-        SG_LOG( SG_ALL, SG_ALERT, exc.getMessage());
-    }
-    return result;
-}
-
 /**
  * Update the various queues maintained by the tilemagr (private
  * internal function, do not call directly.)
  */
 void FGTileMgr::update_queues()
 {
-    SceneryPager* pager = FGScenery::getPagerSingleton();
     osg::FrameStamp* framestamp
         = globals->get_renderer()->getViewer()->getFrameStamp();
     double current_time = framestamp->getReferenceTime();
@@ -319,17 +266,17 @@ void FGTileMgr::update_queues()
                   e->is_current_view() ))
             {
                 // schedule tile for loading with osg pager
-                pager->queueRequest(e->tileFileName,
-                                    e->getNode(),
-                                    e->get_priority(),
-                                    framestamp,
-                                    e->getDatabaseRequest(),
-                                    _options.get());
+                _pager->queueRequest(e->tileFileName,
+                                     e->getNode(),
+                                     e->get_priority(),
+                                     framestamp,
+                                     e->getDatabaseRequest(),
+                                     _options.get());
                 loading++;
             }
         } else
         {
-            SG_LOG(SG_INPUT, SG_ALERT, "Warning: empty tile in cache!");
+            SG_LOG(SG_TERRAIN, SG_ALERT, "Warning: empty tile in cache!");
         }
         tile_cache.next();
         sz++;
@@ -351,7 +298,7 @@ void FGTileMgr::update_queues()
             delete old;
             // zeros out subgraph ref_ptr, so subgraph is owned by
             // the pager and will be deleted in the pager thread.
-            pager->queueDeleteRequest(subgraph);
+            _pager->queueDeleteRequest(subgraph);
             
             if (--drop_count > 0)
                 drop_index = tile_cache.get_drop_tile();
@@ -366,29 +313,49 @@ void FGTileMgr::update_queues()
 // disk.
 void FGTileMgr::update(double)
 {
-    SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
-    SGVec3d viewPos = globals->get_current_view()->get_view_pos();
     double vis = _visibilityMeters->getDoubleValue();
-    schedule_tiles_at(SGGeod::fromCart(viewPos), vis);
+    schedule_tiles_at(globals->get_view_position(), vis);
 
     update_queues();
+
+    // scenery loading check, triggers after each sim (tile manager) reinit
+    if (!_scenery_loaded->getBoolValue())
+    {
+        bool fdmInited = fgGetBool("sim/fdm-initialized");
+        bool positionFinalized = fgGetBool("sim/position-finalized");
+        bool sceneryOverride = _scenery_override->getBoolValue();
+        
+    // we are done if final position is set and the scenery & FDM are done.
+    // scenery-override can ignore the last two, but not position finalization.
+        if (positionFinalized && (sceneryOverride || (isSceneryLoaded() && fdmInited)))
+        {
+            _scenery_loaded->setBoolValue(true);
+            fgSplashProgress("");
+        }
+        else
+        {
+            fgSplashProgress(positionFinalized ? "loading-scenery" : "finalize-position");
+            // be nice to loader threads while waiting for initial scenery, reduce to 20fps
+            SGTimeStamp::sleepForMSec(50);
+        }
+    }
 }
 
-// schedule tiles for the viewer bucket (FDM/AI/groundcache/... use
-// "schedule_scenery" instead
-int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
+// schedule tiles for the viewer bucket
+// (FDM/AI/groundcache/... should use "schedule_scenery" instead)
+void FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
 {
     longitude = location.getLongitudeDeg();
     latitude = location.getLatitudeDeg();
 
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
-    //         << longitude << " " << latatitude );
+    //         << longitude << " " << latitude );
 
     current_bucket.set_bucket( location );
 
     // schedule more tiles when visibility increased considerably
     // TODO Calculate tile size - instead of using fixed value (5000m)
-    if (range_m-scheduled_visibility > 5000.0)
+    if (range_m - scheduled_visibility > 5000.0)
         previous_bucket.make_bad();
 
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating tile list for "
@@ -398,7 +365,10 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
     // do tile load scheduling.
     // Note that we need keep track of both viewer buckets and fdm buckets.
     if ( state == Running ) {
-        SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
+        if (last_state != state)
+        {
+            SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
+        }
         if (current_bucket != previous_bucket) {
             // We've moved to a new bucket, we need to schedule any
             // needed tiles for loading.
@@ -411,13 +381,12 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
         // save bucket
         previous_bucket = current_bucket;
     } else if ( state == Start || state == Inited ) {
-        SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Start || Inited" );
         // do not update bucket yet (position not valid in initial loop)
         state = Running;
         previous_bucket.make_bad();
     }
-
-    return 1;
+    last_state = state;
 }
 
 /** Schedules scenery for given position. Load request remains valid for given duration

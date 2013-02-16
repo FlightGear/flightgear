@@ -8,7 +8,6 @@
 #include <algorithm> // for std::sort
 #include <plib/puAux.h>
 
-#include <simgear/route/waypoint.hxx>
 #include <simgear/sg_inlines.h>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/magvar/magvar.hxx>
@@ -26,6 +25,7 @@
 #include <Airports/runways.hxx>
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
 #include <Navaids/routePath.hxx>
+#include <Aircraft/FlightHistory.hxx>
 
 const char* RULER_LEGEND_KEY = "ruler-legend";
 
@@ -373,7 +373,7 @@ int MapData::_fontDescender = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 
-const int MAX_ZOOM = 16;
+const int MAX_ZOOM = 12;
 const int SHOW_DETAIL_ZOOM = 8;
 const int CURSOR_PAN_STEP = 32;
 
@@ -383,11 +383,11 @@ MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
   _route = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
   _gps = fgGetNode("/instrumentation/gps");
 
-  _zoom = 6;
   _width = maxX - x;
   _height = maxY - y;
   _hasPanned = false;
-
+  _orthoAzimuthProject = false;
+  
   MapData::setFont(legendFont);
   MapData::setPalette(colour);
 
@@ -397,13 +397,22 @@ MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
 MapWidget::~MapWidget()
 {
   delete _magVar;
+  clearData();
 }
 
 void MapWidget::setProperty(SGPropertyNode_ptr prop)
 {
   _root = prop;
+  int zoom = _root->getIntValue("zoom", -1);
+  if (zoom < 0) {
+    _root->setIntValue("zoom", 6); // default zoom
+  }
+  
+// expose MAX_ZOOM to the UI
+  _root->setIntValue("max-zoom", MAX_ZOOM);
   _root->setBoolValue("centre-on-aircraft", true);
   _root->setBoolValue("draw-data", false);
+  _root->setBoolValue("draw-flight-history", false);
   _root->setBoolValue("magnetic-headings", true);
 }
 
@@ -501,39 +510,47 @@ void MapWidget::pan(const SGVec2d& delta)
   _projectionCenter = unproject(-delta);
 }
 
+int MapWidget::zoom() const
+{
+  int z = _root->getIntValue("zoom");
+  SG_CLAMP_RANGE(z, 0, MAX_ZOOM);
+  return z;
+}
+
 void MapWidget::zoomIn()
 {
-  if (_zoom <= 0) {
+  if (zoom() >= MAX_ZOOM) {
     return;
   }
 
-  --_zoom;
-  SG_LOG(SG_GENERAL, SG_INFO, "zoom is now:" << _zoom);
+  _root->setIntValue("zoom", zoom() + 1);
 }
 
 void MapWidget::zoomOut()
 {
-  if (_zoom >= MAX_ZOOM) {
+  if (zoom() <= 0) {
     return;
   }
 
-  ++_zoom;
-  SG_LOG(SG_GENERAL, SG_INFO, "zoom is now:" << _zoom);
+  _root->setIntValue("zoom", zoom() - 1);
 }
 
 void MapWidget::draw(int dx, int dy)
 {
   _aircraft = SGGeod::fromDeg(fgGetDouble("/position/longitude-deg"),
     fgGetDouble("/position/latitude-deg"));
-  _magneticHeadings = _root->getBoolValue("magnetic-headings");
-
-  if (_hasPanned)
-  {
+    
+  bool mag = _root->getBoolValue("magnetic-headings");
+  if (mag != _magneticHeadings) {
+    clearData(); // flush cached data text, since it often includes heading
+    _magneticHeadings =  mag;
+  }
+  
+  if (_hasPanned) {
       _root->setBoolValue("centre-on-aircraft", false);
       _hasPanned = false;
   }
-  else
-  if (_root->getBoolValue("centre-on-aircraft")) {
+  else if (_root->getBoolValue("centre-on-aircraft")) {
     _projectionCenter = _aircraft;
   }
 
@@ -547,6 +564,7 @@ void MapWidget::draw(int dx, int dy)
     _upHeading = 0.0;
   }
 
+  _cachedZoom = MAX_ZOOM - zoom();
   SGGeod topLeft = unproject(SGVec2d(_width/2, _height/2));
   // compute draw range, including a fudge factor for ILSs and other 'long'
   // symbols
@@ -595,6 +613,7 @@ void MapWidget::draw(int dx, int dy)
   drawNavRadio(fgGetNode("/instrumentation/nav[0]", false));
   drawNavRadio(fgGetNode("/instrumentation/nav[1]", false));
   paintAircraftLocation(_aircraft);
+  drawFlightHistory();
   paintRoute();
   paintRuler();
 
@@ -620,14 +639,9 @@ void MapWidget::paintRuler()
 
   double dist, az, az2;
   SGGeodesy::inverse(_aircraft, _clickGeod, az, az2, dist);
-  if (_magneticHeadings) {
-    az -= _magVar->get_magvar();
-    SG_NORMALIZE_RANGE(az, 0.0, 360.0);
-  }
-
   char buffer[1024];
 	::snprintf(buffer, 1024, "%03d/%.1fnm",
-		SGMiscd::roundToInt(az), dist * SG_METER_TO_NM);
+		displayHeading(az), dist * SG_METER_TO_NM);
 
   MapData* d = getOrCreateDataForKey((void*) RULER_LEGEND_KEY);
   d->setLabel(buffer);
@@ -669,7 +683,7 @@ void MapWidget::paintRoute()
     return;
   }
 
-  RoutePath path(_route->waypts());
+  RoutePath path(_route->flightPlan());
 
 // first pass, draw the actual lines
   glLineWidth(2.0);
@@ -735,6 +749,28 @@ void MapWidget::paintRoute()
     d->setPriority(w < _route->currentIndex() ? 9000 : 12000);
 
   } // of second waypoint iteration
+}
+
+void MapWidget::drawFlightHistory()
+{
+  FGFlightHistory* history = (FGFlightHistory*) globals->get_subsystem("history");
+  if (!history || !_root->getBoolValue("draw-flight-history")) {
+    return;
+  }
+  
+  // first pass, draw the actual lines
+  glLineWidth(2.0);
+  
+  SGGeodVec gv(history->pathForHistory());
+  glColor4f(0.0, 0.0, 1.0, 0.7);
+
+  glBegin(GL_LINE_STRIP);
+  for (unsigned int i=0; i<gv.size(); ++i) {
+    SGVec2d p = project(gv[i]);
+    glVertex2d(p.x(), p.y());
+  }
+  
+  glEnd();
 }
 
 /**
@@ -876,7 +912,7 @@ public:
   {
     _heliports = nd->getBoolValue("show-heliports", false);
     _hardRunwaysOnly = nd->getBoolValue("hard-surfaced-airports", true);
-    _minLengthFt = nd->getDoubleValue("min-runway-length-ft", 2000.0);
+    _minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
   }
 
   virtual FGPositioned::Type maxType() const {
@@ -900,7 +936,8 @@ private:
 void MapWidget::drawAirports()
 {
   MapAirportFilter af(_root);
-  FGPositioned::List apts = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &af);
+  bool partial = false;
+  FGPositioned::List apts = FGPositioned::findWithinRangePartial(_projectionCenter, _drawRangeNm, &af, partial);
   for (unsigned int i=0; i<apts.size(); ++i) {
     drawAirport((FGAirport*) apts[i].get());
   }
@@ -926,11 +963,11 @@ public:
   }
 
   virtual FGPositioned::Type minType() const {
-    return _fixes ? FGPositioned::FIX : FGPositioned::VOR;
+    return _fixes ? FGPositioned::FIX : FGPositioned::NDB;
   }
 
   virtual FGPositioned::Type maxType() const {
-    return _navaids ? FGPositioned::NDB : FGPositioned::FIX;
+    return _navaids ? FGPositioned::VOR : FGPositioned::FIX;
   }
 
 private:
@@ -1028,7 +1065,7 @@ void MapWidget::drawFix(FGFix* fix)
   glColor3f(0.0, 0.0, 0.0);
   circleAt(pos, 3, 6);
 
-  if (_zoom > SHOW_DETAIL_ZOOM) {
+  if (_cachedZoom > SHOW_DETAIL_ZOOM) {
     return; // hide fix labels beyond a certain zoom level
   }
 
@@ -1058,7 +1095,9 @@ void MapWidget::drawNavRadio(SGPropertyNode_ptr radio)
   // identify the tuned station - unfortunately we don't get lat/lon directly,
   // need to do the frequency search again
   double mhz = radio->getDoubleValue("frequencies/selected-mhz", 0.0);
-  FGNavRecord* nav = globals->get_navlist()->findByFreq(mhz, _aircraft);
+
+  FGNavRecord* nav = FGNavList::findByFreq(mhz, _aircraft,
+                                           FGNavList::navFilter());
   if (!nav || (nav->ident() != radio->getStringValue("nav-id"))) {
     // mismatch between navradio selection logic and ours!
     return;
@@ -1100,7 +1139,7 @@ void MapWidget::drawNavRadio(SGPropertyNode_ptr radio)
 void MapWidget::drawTunedLocalizer(SGPropertyNode_ptr radio)
 {
   double mhz = radio->getDoubleValue("frequencies/selected-mhz", 0.0);
-  FGNavRecord* loc = globals->get_loclist()->findByFreq(mhz, _aircraft);
+  FGNavRecord* loc = FGNavList::findByFreq(mhz, _aircraft, FGNavList::locFilter());
   if (!loc || (loc->ident() != radio->getStringValue("nav-id"))) {
     // mismatch between navradio selection logic and ours!
     return;
@@ -1126,7 +1165,7 @@ void MapWidget::drawAirport(FGAirport* apt)
 	// draw tower location
 	SGVec2d towerPos = project(apt->getTowerLocation());
 
-  if (_zoom <= SHOW_DETAIL_ZOOM) {
+  if (_cachedZoom <= SHOW_DETAIL_ZOOM) {
     glColor3f(1.0, 1.0, 1.0);
     glLineWidth(1.0);
 
@@ -1152,7 +1191,7 @@ void MapWidget::drawAirport(FGAirport* apt)
     d->setAnchor(towerPos);
   }
 
-  if (_zoom > SHOW_DETAIL_ZOOM) {
+  if (_cachedZoom > SHOW_DETAIL_ZOOM) {
     return;
   }
 
@@ -1233,13 +1272,13 @@ void MapWidget::drawRunway(FGRunway* rwy)
     setAnchorForKey(rwy, (p1 + p2) * 0.5);
     return;
   }
-
+  
 	char buffer[1024];
-	::snprintf(buffer, 1024, "%s/%s\n%3.0f/%3.0f\n%.0f'",
+	::snprintf(buffer, 1024, "%s/%s\n%03d/%03d\n%.0f'",
 		rwy->ident().c_str(),
 		rwy->reciprocalRunway()->ident().c_str(),
-		rwy->headingDeg(),
-		rwy->reciprocalRunway()->headingDeg(),
+		displayHeading(rwy->headingDeg()),
+		displayHeading(rwy->reciprocalRunway()->headingDeg()),
 		rwy->lengthFt());
 
   MapData* d = createDataForKey(rwy);
@@ -1301,8 +1340,10 @@ void MapWidget::drawILS(bool tuned, FGRunway* rwy)
   }
 
 	char buffer[1024];
-	::snprintf(buffer, 1024, "%s\n%s\n%3.2fMHz",
-		loc->name().c_str(), loc->ident().c_str(),loc->get_freq()/100.0);
+	::snprintf(buffer, 1024, "%s\n%s\n%03d - %3.2fMHz",
+		loc->ident().c_str(), loc->name().c_str(),
+    displayHeading(radial),
+    loc->get_freq()/100.0);
 
   MapData* d = createDataForKey(loc);
   d->setPriority(40);
@@ -1318,7 +1359,7 @@ void MapWidget::drawTraffic()
     return;
   }
 
-  if (_zoom > SHOW_DETAIL_ZOOM) {
+  if (_cachedZoom > SHOW_DETAIL_ZOOM) {
     return;
   }
 
@@ -1376,21 +1417,15 @@ void MapWidget::drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, d
     drawLine(p, project(advance));
   }
 
-  if (validDataForKey((void*) model)) {
-    setAnchorForKey((void*) model, p);
-    return;
-  }
 
   // draw callsign / altitude / speed
-
-
   char buffer[1024];
 	::snprintf(buffer, 1024, "%s\n%d'\n%dkts",
 		model->getStringValue("callsign", "<>"),
 		static_cast<int>(pos.getElevationFt() / 50.0) * 50,
     speedKts);
 
-  MapData* d = createDataForKey((void*) model);
+  MapData* d = getOrCreateDataForKey((void*) model);
   d->setText(buffer);
   d->setLabel(model->getStringValue("callsign", "<>"));
   d->setPriority(speedKts > 5 ? 60 : 10); // low priority for parked aircraft
@@ -1422,18 +1457,13 @@ void MapWidget::drawAIShip(const SGPropertyNode* model, const SGGeod& pos, doubl
     drawLine(p, project(advance));
   }
 
-  if (validDataForKey((void*) model)) {
-    setAnchorForKey((void*) model, p);
-    return;
-  }
-
   // draw callsign / speed
   char buffer[1024];
 	::snprintf(buffer, 1024, "%s\n%dkts",
 		model->getStringValue("name", "<>"),
     speedKts);
 
-  MapData* d = createDataForKey((void*) model);
+  MapData* d = getOrCreateDataForKey((void*) model);
   d->setText(buffer);
   d->setLabel(model->getStringValue("name", "<>"));
   d->setPriority(speedKts > 2 ? 30 : 10); // low priority for slow moving ships
@@ -1443,13 +1473,30 @@ void MapWidget::drawAIShip(const SGPropertyNode* model, const SGGeod& pos, doubl
 
 SGVec2d MapWidget::project(const SGGeod& geod) const
 {
-  // Sanson-Flamsteed projection, relative to the projection center
+  SGVec2d p;
   double r = earth_radius_lat(geod.getLatitudeRad());
-  double lonDiff = geod.getLongitudeRad() - _projectionCenter.getLongitudeRad(),
-    latDiff = geod.getLatitudeRad() - _projectionCenter.getLatitudeRad();
+  
+  if (_orthoAzimuthProject) {
+    // http://mathworld.wolfram.com/OrthographicProjection.html
+    double cosTheta = cos(geod.getLatitudeRad());
+    double sinDLambda = sin(geod.getLongitudeRad() - _projectionCenter.getLongitudeRad());
+    double cosDLambda = cos(geod.getLongitudeRad() - _projectionCenter.getLongitudeRad());
+    double sinTheta1 = sin(_projectionCenter.getLatitudeRad());
+    double sinTheta = sin(geod.getLatitudeRad());
+    double cosTheta1 = cos(_projectionCenter.getLatitudeRad());
+    
+    p = SGVec2d(cosTheta * sinDLambda,
+                (cosTheta1 * sinTheta) - (sinTheta1 * cosTheta * cosDLambda)) * r * currentScale();
+    
+  } else {
+    // Sanson-Flamsteed projection, relative to the projection center
+    double lonDiff = geod.getLongitudeRad() - _projectionCenter.getLongitudeRad(),
+      latDiff = geod.getLatitudeRad() - _projectionCenter.getLatitudeRad();
 
-  SGVec2d p = SGVec2d(cos(geod.getLatitudeRad()) * lonDiff, latDiff) * r * currentScale();
-
+    p = SGVec2d(cos(geod.getLatitudeRad()) * lonDiff, latDiff) * r * currentScale();
+      
+  }
+  
 // rotate as necessary
   double cost = cos(_upHeading * SG_DEGREES_TO_RADIANS),
     sint = sin(_upHeading * SG_DEGREES_TO_RADIANS);
@@ -1469,15 +1516,26 @@ SGGeod MapWidget::unproject(const SGVec2d& p) const
   double r = earth_radius_lat(_projectionCenter.getLatitudeRad());
   SGVec2d unscaled = ur * (1.0 / (currentScale() * r));
 
-  double lat = unscaled.y() + _projectionCenter.getLatitudeRad();
-  double lon = (unscaled.x() / cos(lat)) + _projectionCenter.getLongitudeRad();
-
-  return SGGeod::fromRad(lon, lat);
+  if (_orthoAzimuthProject) {
+      double phi = length(p);
+      double c = asin(phi);
+      double sinTheta1 = sin(_projectionCenter.getLatitudeRad());
+      double cosTheta1 = cos(_projectionCenter.getLatitudeRad());
+      
+      double lat = asin(cos(c) * sinTheta1 + ((unscaled.y() * sin(c) * cosTheta1) / phi));
+      double lon = _projectionCenter.getLongitudeRad() + 
+        atan((unscaled.x()* sin(c)) / (phi  * cosTheta1 * cos(c) - unscaled.y() * sinTheta1 * sin(c)));
+      return SGGeod::fromRad(lon, lat);
+  } else {
+      double lat = unscaled.y() + _projectionCenter.getLatitudeRad();
+      double lon = (unscaled.x() / cos(lat)) + _projectionCenter.getLongitudeRad();
+      return SGGeod::fromRad(lon, lat);
+  }
 }
 
 double MapWidget::currentScale() const
 {
-  return 1.0 / pow(2.0, _zoom);
+  return 1.0 / pow(2.0, _cachedZoom);
 }
 
 void MapWidget::circleAt(const SGVec2d& center, int nSides, double r)
@@ -1669,4 +1727,24 @@ MapData* MapWidget::createDataForKey(void* key)
   _dataQueue.push_back(d);
   d->resetAge();
   return d;
+}
+
+void MapWidget::clearData()
+{
+  KeyDataMap::iterator it = _mapData.begin();
+  for (; it != _mapData.end(); ++it) {
+    delete it->second;
+  }
+  
+  _mapData.clear();
+}
+
+int MapWidget::displayHeading(double h) const
+{
+  if (_magneticHeadings) {
+    h -= _magVar->get_magvar() * SG_RADIANS_TO_DEGREES;
+  }
+  
+  SG_NORMALIZE_RANGE(h, 0.0, 360.0);
+  return SGMiscd::roundToInt(h);
 }

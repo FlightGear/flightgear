@@ -35,6 +35,8 @@
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 
+using std::string;
+
 KLN89AptPage::KLN89AptPage(KLN89* parent) 
 : KLN89Page(parent) {
 	_nSubPages = 8;

@@ -51,7 +51,6 @@
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/xml/easyxml.hxx>
@@ -74,8 +73,14 @@
 
 FGScheduledFlight::FGScheduledFlight()
 {
-   initialized = false;
-   available = true;
+    departureTime  = 0;
+    arrivalTime    = 0;
+    cruiseAltitude = 0;
+    repeatPeriod   = 0;
+    initialized = false;
+    available = true;
+    departurePort = NULL;
+    arrivalPort = NULL;
 }
   
 FGScheduledFlight::FGScheduledFlight(const FGScheduledFlight &other)
@@ -129,7 +134,7 @@ FGScheduledFlight::FGScheduledFlight(const string& cs,
   else
     {
       repeatPeriod = 365*24*60*60;
-      SG_LOG( SG_GENERAL, SG_ALERT, "Unknown repeat period in flight plan "
+      SG_LOG( SG_AI, SG_ALERT, "Unknown repeat period in flight plan "
                                     "of flight '" << cs << "': " << rep );
     }
 
@@ -269,13 +274,13 @@ bool FGScheduledFlight::initializeAirports()
   departurePort = FGAirport::findByIdent(depId);
   if(departurePort == NULL)
     {
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Traffic manager could not find departure airport : " << depId);
+      SG_LOG( SG_AI, SG_DEBUG, "Traffic manager could not find departure airport : " << depId);
       return false;
     }
   arrivalPort = FGAirport::findByIdent(arrId);
   if(arrivalPort == NULL)
     {
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Traffic manager could not find arrival airport   : " << arrId);
+      SG_LOG( SG_AI, SG_DEBUG, "Traffic manager could not find arrival airport   : " << arrId);
       return false;
     }
 

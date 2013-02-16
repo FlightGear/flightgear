@@ -43,18 +43,12 @@ void FGAITanker::readFromScenario(SGPropertyNode* scFileNode) {
 void FGAITanker::bind() {
     FGAIAircraft::bind();
 
-    props->tie("refuel/contact", SGRawValuePointer<bool>(&contact));
-    props->tie("position/altitude-agl-ft",SGRawValuePointer<double>(&altitude_agl_ft));
+    tie("refuel/contact", SGRawValuePointer<bool>(&contact));
+    tie("position/altitude-agl-ft",SGRawValuePointer<double>(&altitude_agl_ft));
+
     props->setStringValue("navaids/tacan/channel-ID", TACAN_channel_id.c_str());
     props->setStringValue("name", _name.c_str());
     props->setBoolValue("tanker", true);
-}
-
-void FGAITanker::unbind() {
-    FGAIAircraft::unbind();
-    props->untie("refuel/contact");
-    props->untie("position/altitude-agl-ft");
-
 }
 
 void FGAITanker::setTACANChannelID(const string& id) {

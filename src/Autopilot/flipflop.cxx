@@ -24,6 +24,11 @@
 #include "inputvalue.hxx"
 #include <Main/fg_props.hxx>
 
+using std::map;
+using std::string;
+using std::endl;
+using std::cout;
+
 namespace FGXMLAutopilot {
 
 /**
@@ -267,7 +272,7 @@ public:
    * @brief constructor for a MonoFlopImplementation
    * @param rIsDominant boolean flag to signal if RESET shall be dominant (true) or SET shall be dominant (false)
    */
-  MonoFlopImplementation( bool rIsDominant = true ) : JKFlipFlopImplementation( rIsDominant ) {}
+  MonoFlopImplementation( bool rIsDominant = true ) : JKFlipFlopImplementation( rIsDominant ), _t(0.0) {}
   /**
    * @brief evaluates the output state from the input lines and returns to the stable state 
    * after expiry of the internal timer
@@ -459,7 +464,7 @@ void FlipFlop::update( bool firstTime, double dt )
     if(_debug) {
       cout << "updating flip-flop \"" << get_name() << "\"" << endl;
       cout << "prev. Output:" << q0 << endl;
-      for( InputMap::const_iterator it = _input.begin(); it != _input.end(); it++ ) 
+      for( InputMap::const_iterator it = _input.begin(); it != _input.end(); ++it ) 
         cout << "Input \"" << (*it).first << "\":" << (*it).second->test() << endl;
       cout << "new Output:" << q << endl;
     }

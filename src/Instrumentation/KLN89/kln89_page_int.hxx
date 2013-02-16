@@ -42,12 +42,12 @@ public:
 	void Knob2Left1();
 	void Knob2Right1();
 	
-	void SetId(const string& s);
+	void SetId(const std::string& s);
 	
 private:
-	string _int_id;
-	string _last_int_id;
-	string _save_int_id;
+	std::string _int_id;
+	std::string _last_int_id;
+	std::string _save_int_id;
 	const FGFix* _fp;
 	FGNavRecord* _nearestVor;
 	FGNavRecord* _refNav;	// Will usually be the same as _nearestVor, and gets reset to _nearestVor when page looses focus.

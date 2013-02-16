@@ -3,11 +3,21 @@ include(FlightGearComponent)
 set(SOURCES
 	ATC.cxx
 	atis.cxx
-	ATCDialog.cxx
 	ATCVoice.cxx
-	ATCmgr.cxx
+	ATISmgr.cxx
 	ATCutils.cxx
 	ATCProjection.cxx
 	)
-	
-flightgear_component(ATCDCL "${SOURCES}")
+
+set(HEADERS
+	ATC.hxx
+	atis.hxx
+	ATCVoice.hxx
+	ATISmgr.hxx
+	ATCutils.hxx
+	ATCProjection.hxx
+	atis_lexicon.hxx
+	atis_remap.hxx
+	)
+    	
+flightgear_component(ATCDCL "${SOURCES}" "${HEADERS}")

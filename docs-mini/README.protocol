@@ -131,6 +131,26 @@ each of which describes the properties of on variable to write/read.
   <offset>      an optional offset which can be used for unit conversion.
                 (for example, degrees Celcius to degrees Fahrenheit).
 
+For input chunks there exist some more options:
+
+  <rel>         optional boolean parameter to enable handling of incoming values
+                as relative changes (default: false)
+                (Can be eg. used to realise up/down buttons by just sending 1 or
+                -1 respectively)
+
+  <min>         an optional minimum limit for the value to be clamped to. This
+                limit is always specified as absolute value, also with relative
+                changes enabled. (default: 0)
+  <max>         an optional upper limit for the input value to be clamped to. If
+                <min> equals <max> no limit is applied. (default: 0)
+  <wrap>        instead of clamping to minimum and maximum limits, wrap values
+                around. Values will be in [min, max[ (default: false)
+                (Usefull for eg. heading selector to start again with 1 for
+                values higher than 360)
+
+<rel>, <min>, <max> and <wrap> are only used for numeric data types. <rel> can
+additionally be used with type 'bool', where it toggles the value, if the received
+value evaluates to 'true', otherwise the value is left unchanged.
 
 Chunks can also consist of a single constant <format>, like in:
   <format>Data Section</format>
@@ -184,7 +204,30 @@ P=3.59
 </PropertyList>
 
 
+Control the heading bug by sending relative changes separated by newlines:
 
+<?xml version="1.0"?>
+
+<PropertyList>
+  <generic>
+
+    <input>
+      <line_separator>newline</line_separator>
+
+       <chunk>
+         <name>heading bug</name>
+         <type>int</type>
+         <node>/autopilot/settings/heading-bug-deg</node>
+         <relative>true</relative>
+         <min>1</min>
+         <max>360</max>
+         <wrap>true</wrap>
+     </chunk>
+
+   </input>
+
+ </generic>
+</PropertyList>
 
 -- writing data in XML syntax -------------------------------------------------
 

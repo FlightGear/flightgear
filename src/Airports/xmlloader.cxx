@@ -13,9 +13,14 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -25,60 +30,52 @@
 #include "runwayprefloader.hxx"
 
 #include "dynamics.hxx"
+#include "simple.hxx"
 #include "runwayprefs.hxx"
+
+#include <Navaids/NavDataCache.hxx>
 
 using std::string;
 
 XMLLoader::XMLLoader() {}
 XMLLoader::~XMLLoader() {}
 
-void XMLLoader::load(FGAirportDynamics* d) {
-  FGAirportDynamicsXMLLoader visitor(d);
-  if (fgGetBool("/sim/paths/use-custom-scenery-data") == false) {
-   SGPath parkpath( globals->get_fg_root() );
-   parkpath.append( "/AI/Airports/" );
-   parkpath.append( d->getId() );
-   parkpath.append( "parking.xml" );
-   SG_LOG(SG_GENERAL, SG_DEBUG, "running old loader:" << parkpath.c_str());
-   if (parkpath.exists()) {
-       try {
-           readXML(parkpath.str(), visitor);
-           d->init();
-       } 
-       catch (const sg_exception &) {
-       }
-   }
-  } else {
-    if(loadAirportXMLDataIntoVisitor(d->getId(), "groundnet", visitor)) {
-        d->init();
-    }
+void XMLLoader::load(FGAirportDynamics* d)
+{
+  SGPath path;
+  if (!findAirportData(d->parent()->ident(), "groundnet", path)) {
+    return;
   }
+
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  if (!cache->isCachedFileModified(path)) {
+    return;
+  }
+  
+  SG_LOG(SG_NAVAID, SG_INFO, "reading groundnet data from " << path);
+  SGTimeStamp t;
+  try {
+    flightgear::NavDataCache::Transaction txn(cache);
+    t.stamp();
+    {
+      // drop all current data
+      cache->dropGroundnetFor(d->parent()->guid());
+      
+      FGAirportDynamicsXMLLoader visitor(d);
+      readXML(path.str(), visitor);
+    } // ensure visitor is destroyed so its destructor runs
+    cache->stampCacheFile(path);
+    txn.commit();
+  } catch (sg_exception& e) {
+    SG_LOG(SG_NAVAID, SG_INFO, "parsing groundnet XML failed:" << e.getFormattedMessage());
+  }
+
+  SG_LOG(SG_NAVAID, SG_INFO, "parsing groundnet XML took " << t.elapsedMSec());
 }
 
 void XMLLoader::load(FGRunwayPreference* p) {
   FGRunwayPreferenceXMLLoader visitor(p);
-  if (fgGetBool("/sim/paths/use-custom-scenery-data") == false) {
-    SGPath rwyPrefPath( globals->get_fg_root() );
-    rwyPrefPath.append( "AI/Airports/" );
-    rwyPrefPath.append( p->getId() );
-    rwyPrefPath.append( "rwyuse.xml" );
-    if (rwyPrefPath.exists()) {
-        try {
-            readXML(rwyPrefPath.str(), visitor);
-        } 
-        catch (const sg_exception &) {
-        }
-     }
-  } else {
-    loadAirportXMLDataIntoVisitor(p->getId(), "rwyuse", visitor);
-  }
-}
-
-void XMLLoader::load(FGSidStar* p) {
-  SGPath path;
-  if (findAirportData(p->getId(), "SID", path)) {
-    p->load(path);
-  }
+  loadAirportXMLDataIntoVisitor(p->getId(), "rwyuse", visitor);
 }
 
 bool XMLLoader::findAirportData(const std::string& aICAO, 
@@ -96,13 +93,16 @@ bool XMLLoader::findAirportData(const std::string& aICAO,
     aICAO.c_str(), fileName.c_str());
 
   for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
-    SGPath path(*it);
-    path.append("Airports");
-    path.append(string(buffer));
-    if (path.exists()) {
-      aPath = path;
-      return true;
-    } // of path exists
+    // fg_senery contains empty strings as "markers" (see FGGlobals::set_fg_scenery)
+    if (!it->empty()) {
+        SGPath path(*it);
+        path.append("Airports");
+        path.append(string(buffer));
+        if (path.exists()) {
+          aPath = path;
+          return true;
+        } // of path exists
+    }
   } // of scenery path iteration
   return false;
 }
@@ -112,7 +112,7 @@ bool XMLLoader::loadAirportXMLDataIntoVisitor(const string& aICAO,
 {
   SGPath path;
   if (!findAirportData(aICAO, aFileName, path)) {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "loadAirportXMLDataIntoVisitor: failed to find data for " << aICAO << "/" << aFileName);
+    SG_LOG(SG_NAVAID, SG_DEBUG, "loadAirportXMLDataIntoVisitor: failed to find data for " << aICAO << "/" << aFileName);
     return false;
   }
 

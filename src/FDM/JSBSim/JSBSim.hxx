@@ -19,7 +19,7 @@
 
  You should have received a copy of the GNU Lesser General Public License
  along with this program; if not, write to the Free Software
- Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 
 HISTORY
 --------------------------------------------------------------------------------
@@ -58,6 +58,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 class FGAtmosphere;
+class FGWinds;
 class FGFCS;
 class FGPropulsion;
 class FGMassBalance;
@@ -69,6 +70,7 @@ class FGAuxiliary;
 class FGOutput;
 class FGInitialCondition;
 class FGLocation;
+class FGAccelerations;
 }
 
 // Adding it here will cause a namespace clash in FlightGear -EMH-
@@ -221,16 +223,18 @@ private:
     JSBSim::FGInitialCondition *fgic;
     bool needTrim;
 
-    JSBSim::FGAtmosphere*   Atmosphere;
-    JSBSim::FGFCS*          FCS;
-    JSBSim::FGPropulsion*   Propulsion;
-    JSBSim::FGMassBalance*  MassBalance;
-    JSBSim::FGAircraft*     Aircraft;
-    JSBSim::FGPropagate*    Propagate;
-    JSBSim::FGAuxiliary*    Auxiliary;
-    JSBSim::FGAerodynamics* Aerodynamics;
+    JSBSim::FGAtmosphere*      Atmosphere;
+    JSBSim::FGWinds*           Winds;
+    JSBSim::FGFCS*             FCS;
+    JSBSim::FGPropulsion*      Propulsion;
+    JSBSim::FGMassBalance*     MassBalance;
+    JSBSim::FGAircraft*        Aircraft;
+    JSBSim::FGPropagate*       Propagate;
+    JSBSim::FGAuxiliary*       Auxiliary;
+    JSBSim::FGAerodynamics*    Aerodynamics;
     JSBSim::FGGroundReactions* GroundReactions;
-    JSBSim::FGInertial*     Inertial;
+    JSBSim::FGInertial*        Inertial;
+    JSBSim::FGAccelerations*   Accelerations;
 
     int runcount;
     double trim_elev;
@@ -267,9 +271,10 @@ private:
     SGPropertyNode_ptr wing_fold_pos_pct;
     SGPropertyNode_ptr tailhook_pos_pct;
 
+    SGConstPropertyNode_ptr altitude;
     SGPropertyNode_ptr temperature;
     SGPropertyNode_ptr pressure;
-    SGPropertyNode_ptr density;
+    SGPropertyNode_ptr pressureSL;
     SGPropertyNode_ptr ground_wind;
     SGPropertyNode_ptr turbulence_gain;
     SGPropertyNode_ptr turbulence_rate;
@@ -293,7 +298,6 @@ private:
 
     void do_trim(void);
 
-    double getMachFromVcas(double vcas);
     bool update_ground_cache(JSBSim::FGLocation cart, double* cart_pos, double dt);
     void init_gear(void);
     void update_gear(void);

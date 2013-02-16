@@ -83,15 +83,13 @@ inline void MagneticVariation::recalc( double lon, double lat, double alt )
   // calculation of magnetic variation is expensive. Cache the position
   // and perform this calculation only if it has changed
   if( _lon != lon || _lat != lat || _alt != alt ) {
-    SG_LOG(SG_ALL, SG_DEBUG, "Recalculating magvar for lon=" << lon << ", lat=" << lat << ", alt=" << alt );
+    SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Recalculating magvar for lon=" << lon << ", lat=" << lat << ", alt=" << alt );
     _lon = lon;
     _lat = lat;
     _alt = alt;
 
-    lon *= SGD_DEGREES_TO_RADIANS;
-    lat *= SGD_DEGREES_TO_RADIANS;
-    alt *= SG_FEET_TO_METER;
-   _time.update( lon, lat, 0, 0 );
+    SGGeod location(SGGeod::fromDegFt(lon, lat, alt));
+   _time.update( location, 0, 0 );
     update( lon, lat, alt, _time.getJD() );
   }
 }
@@ -137,7 +135,7 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _magneticVariation(new MagneticVariation())
 {
   // Hack to avoid static initialization order problems on OSX
-  if( coverage_string.size() == 0 ) {
+  if( coverage_string.empty() ) {
     coverage_string.push_back(SGCloudLayer::SG_CLOUD_CLEAR_STRING);
     coverage_string.push_back(SGCloudLayer::SG_CLOUD_FEW_STRING);
     coverage_string.push_back(SGCloudLayer::SG_CLOUD_SCATTERED_STRING);
@@ -194,14 +192,14 @@ void MetarProperties::set_metar( const char * metar )
         m = new FGMetar( _metar );
     }
     catch( sg_io_exception ) {
-        SG_LOG( SG_GENERAL, SG_WARN, "Can't parse metar: " << _metar );
+        SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << _metar );
         _metarValidNode->setBoolValue(false);
         return;
     }
 
     _decoded.clear();
     const vector<string> weather = m->getWeather();
-    for( vector<string>::const_iterator it = weather.begin(); it != weather.end(); it++ ) {
+    for( vector<string>::const_iterator it = weather.begin(); it != weather.end(); ++it ) {
         if( false == _decoded.empty() ) _decoded.append(", ");
         _decoded.append(*it);
     }

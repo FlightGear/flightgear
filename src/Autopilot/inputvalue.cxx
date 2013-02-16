@@ -18,8 +18,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+#include <cstdlib>
+
 #include "inputvalue.hxx"
 #include <Main/fg_props.hxx>
+
 using namespace FGXMLAutopilot;
 
 PeriodicalValue::PeriodicalValue( SGPropertyNode_ptr root )
@@ -34,9 +37,19 @@ PeriodicalValue::PeriodicalValue( SGPropertyNode_ptr root )
   }
 }
 
-double PeriodicalValue::normalize( double value )
+double PeriodicalValue::normalize( double value ) const
 {
   return SGMiscd::normalizePeriodic( minPeriod->get_value(), maxPeriod->get_value(), value );
+}
+
+double PeriodicalValue::normalizeSymmetric( double value ) const
+{
+  double minValue = minPeriod->get_value();
+  double maxValue = maxPeriod->get_value();
+  
+  value = SGMiscd::normalizePeriodic( minValue, maxValue, value );
+  double width_2 = (maxValue - minValue)/2;
+  return value > width_2 ? width_2 - value : value;
 }
 
 InputValue::InputValue( SGPropertyNode_ptr node, double value, double offset, double scale) :

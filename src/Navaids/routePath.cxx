@@ -1,3 +1,8 @@
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <Navaids/routePath.hxx>
 
 #include <simgear/structure/exception.hxx>
@@ -7,6 +12,7 @@
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
 #include <Navaids/waypoint.hxx>
+#include <Navaids/FlightPlan.hxx>
 #include <Navaids/positioned.hxx>
 
 namespace flightgear {
@@ -33,7 +39,7 @@ double pointsKnownDistanceFromGC(const SGGeoc& a, const SGGeoc&b, const SGGeoc& 
   double p = atan2(sin(bDist)*cos(A), cos(bDist));
   
   if (sqr(cos(dist)) > sqr(r)) {
-    SG_LOG(SG_GENERAL, SG_INFO, "pointsKnownDistanceFromGC, no points exist");
+    SG_LOG(SG_NAVAID, SG_INFO, "pointsKnownDistanceFromGC, no points exist");
     return -1.0;
   }
   
@@ -46,13 +52,45 @@ double pointsKnownDistanceFromGC(const SGGeoc& a, const SGGeoc&b, const SGGeoc& 
   return SGMiscd::min(dp1Nm, dp2Nm);
 }
 
+// http://williams.best.vwh.net/avform.htm#Int
+double latitudeForGCLongitude(const SGGeoc& a, const SGGeoc& b, double lon)
+{
+#if 0
+Intermediate points {lat,lon} lie on the great circle connecting points 1 and 2 when:
+
+lat=atan((sin(lat1)*cos(lat2)*sin(lon-lon2)
+     -sin(lat2)*cos(lat1)*sin(lon-lon1))/(cos(lat1)*cos(lat2)*sin(lon1-lon2)))
+#endif
+  double lonDiff = a.getLongitudeRad() - b.getLongitudeRad();
+  double cosLat1 = cos(a.getLatitudeRad()),
+      cosLat2 = cos(b.getLatitudeRad());
+  double x = sin(a.getLatitudeRad()) * cosLat2 * sin(lon - b.getLongitudeRad());
+  double y = sin(b.getLatitudeRad()) * cosLat1 * sin(lon - a.getLongitudeRad());
+  double denom = cosLat1 * cosLat2 * sin(lonDiff);
+  double lat = atan((x - y) / denom);
+  return lat;
+}
+
 RoutePath::RoutePath(const flightgear::WayptVec& wpts) :
   _waypts(wpts)
+{
+  commonInit();
+}
+
+RoutePath::RoutePath(const flightgear::FlightPlan* fp)
+{
+  for (int l=0; l<fp->numLegs(); ++l) {
+    _waypts.push_back(fp->legAtIndex(l)->waypoint());
+  }
+  commonInit();
+}
+
+void RoutePath::commonInit()
 {
   _pathClimbFPM = 1200;
   _pathDescentFPM = 800;
   _pathIAS = 190; 
-  _pathTurnRate = 3.0; // 3 deg/sec = 180def/min = standard rate turn
+  _pathTurnRate = 3.0; // 3 deg/sec = 180def/min = standard rate turn  
 }
 
 SGGeodVec RoutePath::pathForIndex(int index) const
@@ -70,17 +108,24 @@ SGGeodVec RoutePath::pathForIndex(int index) const
   }
     
   SGGeodVec r;
-  SGGeod pos;
-  if (!computedPositionForIndex(index-1, pos)) {
+  SGGeod from, to;
+  if (!computedPositionForIndex(index-1, from)) {
     return SGGeodVec();
   }
   
-  r.push_back(pos);
-  if (!computedPositionForIndex(index, pos)) {
+  r.push_back(from);
+  if (!computedPositionForIndex(index, to)) {
     return SGGeodVec();
   }
   
-  r.push_back(pos);
+  // compute rounding offset, we want to round towards the direction of travel
+  // which depends on the east/west sign of the longitude change
+  double lonDelta = to.getLongitudeDeg() - from.getLongitudeDeg();
+  if (fabs(lonDelta) > 0.5) {
+    interpolateGreatCircle(from, to, r);
+  }
+  
+  r.push_back(to);
   
   if (_waypts[index]->type() == "runway") {
     // runways get an extra point, at the end. this is particularly
@@ -90,6 +135,30 @@ SGGeodVec RoutePath::pathForIndex(int index) const
   }
   
   return r;
+}
+
+void RoutePath::interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, SGGeodVec& r) const
+{
+  SGGeoc gcFrom = SGGeoc::fromGeod(aFrom),
+    gcTo = SGGeoc::fromGeod(aTo);
+  
+  double lonDelta = gcTo.getLongitudeRad() - gcFrom.getLongitudeRad();
+  if (fabs(lonDelta) < 1e-3) {
+    return;
+  }
+  
+  lonDelta = SGMiscd::normalizeAngle(lonDelta);    
+  int steps = static_cast<int>(fabs(lonDelta) * SG_RADIANS_TO_DEGREES * 2);
+  double lonStep = (lonDelta / steps);
+  
+  double lon = gcFrom.getLongitudeRad() + lonStep;
+  for (int s=0; s < (steps - 1); ++s) {
+    lon = SGMiscd::normalizeAngle(lon);
+    double lat = latitudeForGCLongitude(gcFrom, gcTo, lon);
+    r.push_back(SGGeod::fromGeoc(SGGeoc::fromRadM(lon, lat, SGGeodesy::EQURAD)));
+    //SG_LOG(SG_GENERAL, SG_INFO, "lon:" << lon * SG_RADIANS_TO_DEGREES << " gives lat " << lat * SG_RADIANS_TO_DEGREES);
+    lon += lonStep;
+  }
 }
 
 SGGeod RoutePath::positionForIndex(int index) const
@@ -237,7 +306,7 @@ bool RoutePath::computedPositionForIndex(int index, SGGeod& r) const
     return true;
   }
   
-  SG_LOG(SG_GENERAL, SG_INFO, "RoutePath::computedPositionForIndex: unhandled type:" << w->type());
+  SG_LOG(SG_NAVAID, SG_INFO, "RoutePath::computedPositionForIndex: unhandled type:" << w->type());
   return false;
 }
 
@@ -268,7 +337,7 @@ double RoutePath::computeAltitudeForIndex(int index) const
   if (!computedPositionForIndex(index, pos) ||
       !computedPositionForIndex(index - 1, prevPos))
   {
-    SG_LOG(SG_GENERAL, SG_WARN, "unable to compute position for waypoints");
+    SG_LOG(SG_NAVAID, SG_WARN, "unable to compute position for waypoints");
     throw sg_range_exception("unable to compute position for waypoints");
   }
   
@@ -306,7 +375,7 @@ double RoutePath::computeTrackForIndex(int index) const
     Hold* h = (Hold*) w.get();
     return h->inboundRadial();
   } else if (w->type() == "vectors") {
-    SG_LOG(SG_GENERAL, SG_WARN, "asked for track from VECTORS");
+    SG_LOG(SG_NAVAID, SG_WARN, "asked for track from VECTORS");
     throw sg_range_exception("asked for track from vectors waypt");
   } else if (w->type() == "runway") {
     FGRunway* rwy = static_cast<RunwayWaypt*>(w.get())->runway();
@@ -319,7 +388,7 @@ double RoutePath::computeTrackForIndex(int index) const
   if (!computedPositionForIndex(index, pos) ||
       !computedPositionForIndex(index - 1, prevPos))
   {
-    SG_LOG(SG_GENERAL, SG_WARN, "unable to compute position for waypoints");
+    SG_LOG(SG_NAVAID, SG_WARN, "unable to compute position for waypoints");
     throw sg_range_exception("unable to compute position for waypoints");
   }
 
@@ -341,6 +410,6 @@ double RoutePath::distanceForClimb(double climbFt) const
 double RoutePath::magVarFor(const SGGeod& geod) const
 {
   double jd = globals->get_time_params()->getJD();
-  return sgGetMagVar(geod, jd);
+  return sgGetMagVar(geod, jd) * SG_RADIANS_TO_DEGREES;
 }
 

@@ -19,12 +19,13 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/misc/interpolator.hxx>
+#include <simgear/io/HTTPRequest.hxx>
 
-#include <Cockpit/panel.hxx>
-#include <Cockpit/panel_io.hxx>
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
@@ -34,9 +35,10 @@
 #include <Scripting/NasalSys.hxx>
 #include <Sound/sample_queue.hxx>
 #include <Airports/xmlloader.hxx>
-#include <ATC/CommStation.hxx>
-#include <Navaids/navrecord.hxx>
-#include <Navaids/navlist.hxx>
+#include <Network/HTTPClient.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
+#include <Environment/presets.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -46,17 +48,20 @@
 #include "globals.hxx"
 #include "logger.hxx"
 #include "util.hxx"
-#include "viewmgr.hxx"
 #include "main.hxx"
-#include <Main/viewer.hxx>
-#include <Environment/presets.hxx>
+#include "positioninit.hxx"
+
+#include <boost/scoped_array.hpp>
+
+#ifdef FG_HAVE_GPERFTOOLS
+# include <google/profiler.h>
+#endif
 
 using std::string;
 using std::ifstream;
 using std::ofstream;
 
 
-
 ////////////////////////////////////////////////////////////////////////
 // Static helper functions.
 ////////////////////////////////////////////////////////////////////////
@@ -188,31 +193,7 @@ do_exit (const SGPropertyNode * arg)
 {
     SG_LOG(SG_INPUT, SG_INFO, "Program exit requested.");
     fgSetBool("/sim/signals/exit", true);
-
-    if (fgGetBool("/sim/startup/save-on-exit")) {
-#ifdef _WIN32
-        char* envp = ::getenv( "APPDATA" );
-        if ( envp != NULL ) {
-            SGPath config( envp );
-            config.append( "flightgear.org" );
-#else
-        if ( homedir != NULL ) {
-            SGPath config( homedir );
-            config.append( ".fgfs" );
-#endif
-            config.append( "autosave.xml" );
-            config.create_dir( 0700 );
-            SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << config.str());
-            try {
-                writeProperties(config.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
-            } catch (const sg_exception &e) {
-                guiErrorMessage("Error writing autosave.xml: ", e);
-            }
-
-            SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
-        }
-    }
-    
+    globals->saveUserSettings();
     fgOSExit(arg->getIntValue("status", 0));
     return true;
 }
@@ -228,103 +209,32 @@ do_reset (const SGPropertyNode * arg)
     return true;
 }
 
-
 /**
- * Built-in command: reinitialize one or more subsystems.
- *
- * subsystem[*]: the name(s) of the subsystem(s) to reinitialize; if
- * none is specified, reinitialize all of them.
+ * Built-in command: replay the FDR buffer
  */
 static bool
-do_reinit (const SGPropertyNode * arg)
+do_replay (const SGPropertyNode * arg)
 {
-    bool result = true;
-
-    vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
-    if (subsystems.size() == 0) {
-        globals->get_subsystem_mgr()->reinit();
-    } else {
-        for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
-            const char * name = subsystems[i]->getStringValue();
-            SGSubsystem * subsystem = globals->get_subsystem(name);
-            if (subsystem == 0) {
-                result = false;
-                SG_LOG( SG_GENERAL, SG_ALERT,
-                        "Subsystem " << name << " not found" );
-            } else {
-                subsystem->reinit();
-            }
-        }
-    }
-
-    globals->get_event_mgr()->reinit();
-
-    return result;
-}
-
-#if 0
-  //
-  // these routines look useful ??? but are never used in the code ???
-  //
-
-/**
- * Built-in command: suspend one or more subsystems.
- *
- * subsystem[*] - the name(s) of the subsystem(s) to suspend.
- */
-static bool
-do_suspend (const SGPropertyNode * arg)
-{
-    bool result = true;
-
-    vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
-    for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
-        const char * name = subsystems[i]->getStringValue();
-        SGSubsystem * subsystem = globals->get_subsystem(name);
-        if (subsystem == 0) {
-            result = false;
-            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << " not found");
-        } else {
-            subsystem->suspend();
-        }
-    }
-    return result;
+    FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
+    return r->start();
 }
 
 /**
- * Built-in command: suspend one or more subsystems.
- *
- * subsystem[*] - the name(s) of the subsystem(s) to suspend.
+ * Built-in command: pause/unpause the sim
  */
-static bool
-do_resume (const SGPropertyNode * arg)
-{
-    bool result = true;
-
-    vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
-    for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
-        const char * name = subsystems[i]->getStringValue();
-        SGSubsystem * subsystem = globals->get_subsystem(name);
-        if (subsystem == 0) {
-            result = false;
-            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << " not found");
-        } else {
-            subsystem->resume();
-        }
-    }
-    return result;
-}
-
-#endif
-
 static bool
 do_pause (const SGPropertyNode * arg)
 {
     bool paused = fgGetBool("/sim/freeze/master",true) || fgGetBool("/sim/freeze/clock",true);
-    fgSetBool("/sim/freeze/master",!paused);
-    fgSetBool("/sim/freeze/clock",!paused);
-    if (fgGetBool("/sim/freeze/replay-state",false))
-        fgSetBool("/sim/replay/disable",true);
+    if (paused && (fgGetInt("/sim/freeze/replay-state",0)>0))
+    {
+        do_replay(NULL);
+    }
+    else
+    {
+        fgSetBool("/sim/freeze/master",!paused);
+        fgSetBool("/sim/freeze/clock",!paused);
+    }
     return true;
 }
 
@@ -391,6 +301,30 @@ do_save (const SGPropertyNode * arg)
     }
 }
 
+/**
+ * Built-in command: save flight recorder tape.
+ *
+ */
+static bool
+do_save_tape (const SGPropertyNode * arg)
+{
+    FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
+    replay->saveTape(arg);
+
+    return true;
+}
+/**
+ * Built-in command: load flight recorder tape.
+ *
+ */
+static bool
+do_load_tape (const SGPropertyNode * arg)
+{
+    FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
+    replay->loadTape(arg);
+
+    return true;
+}
 
 /**
  * Built-in command: (re)load the panel.
@@ -402,48 +336,14 @@ do_save (const SGPropertyNode * arg)
 static bool
 do_panel_load (const SGPropertyNode * arg)
 {
-  string panel_path =
-    arg->getStringValue("path", fgGetString("/sim/panel/path"));
-  if (panel_path.empty()) {
-    return false;
+  string panel_path = arg->getStringValue("path");
+  if (!panel_path.empty()) {
+    // write to the standard property, which will force a load
+    fgSetString("/sim/panel/path", panel_path.c_str());
   }
   
-  FGPanel * new_panel = fgReadPanel(panel_path);
-  if (new_panel == 0) {
-    SG_LOG(SG_INPUT, SG_ALERT,
-	   "Error reading new panel from " << panel_path);
-    return false;
-  }
-  SG_LOG(SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path);
-  globals->get_current_panel()->unbind();
-  delete globals->get_current_panel();
-  globals->set_current_panel( new_panel );
-  globals->get_current_panel()->bind();
   return true;
 }
-
-
-/**
- * Built-in command: pass a mouse click to the panel.
- *
- * button: the mouse button number, zero-based.
- * is-down: true if the button is down, false if it is up.
- * x-pos: the x position of the mouse click.
- * y-pos: the y position of the mouse click.
- */
-static bool
-do_panel_mouse_click (const SGPropertyNode * arg)
-{
-  if (globals->get_current_panel() != 0)
-    return globals->get_current_panel()
-      ->doMouseAction(arg->getIntValue("button"),
-		      arg->getBoolValue("is-down") ? PU_DOWN : PU_UP,
-		      arg->getIntValue("x-pos"),
-		      arg->getIntValue("y-pos"));
-  else
-    return false;
-}
-
 
 /**
  * Built-in command: (re)load preferences.
@@ -477,6 +377,17 @@ do_view_prev( bool )
 {
     globals->get_current_view()->setHeadingOffset_deg(0.0);
     globals->get_viewmgr()->prev_view();
+}
+
+/**
+ * An fgcommand to toggle fullscreen mode.
+ * No parameters.
+ */
+static bool
+do_toggle_fullscreen(const SGPropertyNode *arg)
+{
+    fgOSFullScreen();
+    return true;
 }
 
 /**
@@ -554,21 +465,44 @@ do_hires_screen_capture (const SGPropertyNode * arg)
 static bool
 do_tile_cache_reload (const SGPropertyNode * arg)
 {
-    static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
     bool freeze = master_freeze->getBoolValue();
     SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
     if ( !freeze ) {
-	fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
 
     globals->get_subsystem("tile-manager")->reinit();
 
     if ( !freeze ) {
-	fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
     return true;
 }
+
+/**
+ * Reload the materials definition
+ */
+ static bool
+ do_materials_reload (const SGPropertyNode * arg)
+ {
+   SG_LOG(SG_INPUT, SG_INFO, "Reloading Materials");
+   SGMaterialLib* new_matlib =  new SGMaterialLib;
+   SGPath mpath( globals->get_fg_root() );
+   mpath.append( fgGetString("/sim/rendering/materials-file") );
+   bool loaded = new_matlib->load(globals->get_fg_root(), 
+                                  mpath.str(), 
+                                  globals->get_props());
+   
+   if ( ! loaded ) {
+       SG_LOG( SG_GENERAL, SG_ALERT,
+               "Error loading materials file " << mpath.str() );
+       return false;
+   }  
+   
+   globals->set_matlib(new_matlib);    
+   return true;   
+ }
 
 
 #if 0
@@ -935,6 +869,83 @@ do_property_randomize (const SGPropertyNode * arg)
     return true;
 }
 
+/**
+ * Built-in command: interpolate a property value over time
+ *
+ * property:        the name of the property value to interpolate.
+ * value[0..n]      any number of constant values to interpolate
+ * time/rate[0..n]  time between each value, number of time elements must
+ *                  match those of value elements. Instead of time also rate can
+ *                  be used which automatically calculates the time to change
+ *                  the property value at the given speed.
+ * -or-
+ * property[1..n]   any number of target values taken from named properties
+ * time/rate[0..n]  time between each value, number of time elements must
+ *                  match those of value elements. Instead of time also rate can
+ *                  be used which automatically calculates the time to change
+ *                  the property value at the given speed.
+ */
+static bool
+do_property_interpolate (const SGPropertyNode * arg)
+{
+    SGPropertyNode * prop = get_prop(arg);
+
+    simgear::PropertyList valueNodes = arg->getChildren( "value" );
+    simgear::PropertyList timeNodes = arg->getChildren( "time" );
+    simgear::PropertyList rateNodes = arg->getChildren( "rate" );
+
+    if( !timeNodes.empty() && !rateNodes.empty() )
+      // mustn't specify time and rate
+      return false;
+
+    simgear::PropertyList::size_type num_times = timeNodes.empty()
+                                               ? rateNodes.size()
+                                               : timeNodes.size();
+
+    boost::scoped_array<double> value;
+    boost::scoped_array<double> time;
+
+    if( valueNodes.size() > 0 ) {
+        // must match
+        if( num_times != valueNodes.size() )
+            return false;
+
+        value.reset( new double[valueNodes.size()] );
+        for( simgear::PropertyList::size_type n = 0; n < valueNodes.size(); n++ ) {
+            value[n] = valueNodes[n]->getDoubleValue();
+        }
+    } else {
+        valueNodes = arg->getChildren("property");
+        // must have one more property node
+        if( valueNodes.size() - 1 != num_times )
+          return false;
+
+        value.reset( new double[valueNodes.size()-1] );
+        for( simgear::PropertyList::size_type n = 0; n < valueNodes.size()-1; n++ ) {
+            value[n] = fgGetNode(valueNodes[n+1]->getStringValue(), "/null")->getDoubleValue();
+        }
+
+    }
+
+    time.reset( new double[num_times] );
+    if( !timeNodes.empty() ) {
+        for( simgear::PropertyList::size_type n = 0; n < num_times; n++ ) {
+            time[n] = timeNodes[n]->getDoubleValue();
+        }
+    } else {
+        for( simgear::PropertyList::size_type n = 0; n < num_times; n++ ) {
+            double delta = value[n]
+                         - (n > 0 ? value[n - 1] : prop->getDoubleValue());
+            time[n] = fabs(delta / rateNodes[n]->getDoubleValue());
+        }
+    }
+
+    ((SGInterpolator*)globals->get_subsystem_mgr()
+      ->get_group(SGSubsystemMgr::INIT)->get_subsystem("interpolator"))
+      ->interpolate(prop, num_times, value.get(), time.get() );
+
+    return true;
+}
 
 /**
  * Built-in command: reinit the data logging system based on the
@@ -959,7 +970,10 @@ static bool
 do_dialog_new (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-
+    if (!gui) {
+      return false;
+    }
+  
     // Note the casting away of const: this is *real*.  Doing a
     // "dialog-apply" command later on will mutate this property node.
     // I'm not convinced that this isn't the Right Thing though; it
@@ -1021,6 +1035,20 @@ do_dialog_update (const SGPropertyNode * arg)
     }
 }
 
+static bool
+do_open_browser (const SGPropertyNode * arg)
+{
+    string path;
+    if (arg->hasValue("path"))
+        path = arg->getStringValue("path");
+    else
+    if (arg->hasValue("url"))
+        path = arg->getStringValue("url");
+    else
+        return false;
+
+    return openBrowser(path);
+}
 
 /**
  * Apply a value in the active XML-configured dialog.
@@ -1115,6 +1143,12 @@ do_set_cursor (const SGPropertyNode * arg)
 static bool
 do_play_audio_sample (const SGPropertyNode * arg)
 {
+    SGSoundMgr *smgr = globals->get_soundmgr();
+    if (!smgr) {
+        SG_LOG(SG_GENERAL, SG_WARN, "play-audio-sample: sound-manager not running");
+        return false;
+    }
+  
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
     float volume = arg->getFloatValue("volume");
@@ -1122,7 +1156,6 @@ do_play_audio_sample (const SGPropertyNode * arg)
     try {
         static FGSampleQueue *queue = 0;
         if ( !queue ) {
-           SGSoundMgr *smgr = globals->get_soundmgr();
            queue = new FGSampleQueue(smgr, "chatter");
            queue->tie_to_listener();
         }
@@ -1152,7 +1185,7 @@ do_presets_commit (const SGPropertyNode * arg)
       // Nasal can trigger this during initial init, which confuses
       // the logic in ReInitSubsystems, since initial state has not been
       // saved at that time. Short-circuit everything here.
-      fgInitPosition();
+      flightgear::initPosition();
     }
     
     return true;
@@ -1167,24 +1200,6 @@ do_log_level (const SGPropertyNode * arg)
    sglog().setLogLevels( SG_ALL, (sgDebugPriority)arg->getIntValue() );
 
    return true;
-}
-
-/**
- * Built-in command: replay the FDR buffer
- */
-static bool
-do_replay (const SGPropertyNode * arg)
-{
-    // freeze the fdm, resume from sim pause 
-    fgSetInt( "/sim/freeze/replay-state", 1 );
-    fgSetBool("/sim/freeze/master", 0 );
-    fgSetBool("/sim/freeze/clock", 0 );
-    fgSetDouble( "/sim/replay/time", -1 );
-
-    // cout << "start = " << r->get_start_time()
-    //      << "  end = " << r->get_end_time() << endl;
-
-    return true;
 }
 
 /*
@@ -1264,6 +1279,148 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
         return false;
     }
 
+    return true;
+}
+
+class RemoteXMLRequest : public simgear::HTTP::Request
+{
+public:
+    SGPropertyNode_ptr _complete;
+    SGPropertyNode_ptr _status;
+    SGPropertyNode_ptr _failed;
+    SGPropertyNode_ptr _target;
+    string propsData;
+    mutable string _requestBody;
+    int _requestBodyLength;
+    string _method;
+    
+    RemoteXMLRequest(const std::string& url, SGPropertyNode* targetNode) :
+        simgear::HTTP::Request(url),
+        _target(targetNode),
+        _requestBodyLength(-1),
+        _method("GET")
+    {
+    }
+    
+    void setCompletionProp(SGPropertyNode_ptr p)
+    {
+        _complete = p;
+    }
+    
+    void setStatusProp(SGPropertyNode_ptr p)
+    {
+        _status = p;
+    }
+    
+    void setFailedProp(SGPropertyNode_ptr p)
+    {
+        _failed = p;
+    }
+  
+    void setRequestData(const SGPropertyNode* body)
+    {
+        _method = "POST";
+        std::stringstream buf;
+        writeProperties(buf, body, true);
+        _requestBody = buf.str();
+        _requestBodyLength = _requestBody.size();
+    }
+    
+    virtual std::string method() const
+    {
+        return _method;
+    }
+protected:
+    virtual int requestBodyLength() const
+    {
+        return _requestBodyLength;
+    }
+    
+    virtual void getBodyData(char* s, int& count) const
+    {
+        int toRead = std::min(count, (int) _requestBody.size());
+        memcpy(s, _requestBody.c_str(), toRead);
+        count = toRead;
+        _requestBody = _requestBody.substr(count);
+    }
+    
+    virtual std::string requestBodyType() const
+    {
+        return "application/xml";
+    }
+    
+    virtual void gotBodyData(const char* s, int n)
+    {
+        propsData += string(s, n);
+    }
+    
+    virtual void failed()
+    {
+        SG_LOG(SG_IO, SG_INFO, "network level failure in RemoteXMLRequest");
+        if (_failed) {
+            _failed->setBoolValue(true);
+        }
+    }
+    
+    virtual void responseComplete()
+    {
+        simgear::HTTP::Request::responseComplete();
+        
+        int response = responseCode();
+        bool failed = false;
+        if (response == 200) {
+            try {
+                const char* buffer = propsData.c_str();
+                readProperties(buffer, propsData.size(), _target, true);
+            } catch (const sg_exception &e) {
+                SG_LOG(SG_IO, SG_WARN, "parsing XML from remote, failed: " << e.getFormattedMessage());
+                failed = true;
+                response = 406; // 'not acceptable', anything better?
+            }
+        } else {
+            failed = true;
+        }
+    // now the response data is output, signal Nasal / listeners
+        if (_complete) _complete->setBoolValue(true);
+        if (_status) _status->setIntValue(response);
+        if (_failed && failed) _failed->setBoolValue(true);
+    }
+};
+
+
+static bool
+do_load_xml_from_url(const SGPropertyNode * arg)
+{
+    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    if (!http) {
+        SG_LOG(SG_IO, SG_ALERT, "xmlhttprequest: HTTP client not running");
+        return false;
+    }
+  
+    std::string url(arg->getStringValue("url"));
+    if (url.empty())
+        return false;
+        
+    SGPropertyNode *targetnode;
+    if (arg->hasValue("targetnode"))
+        targetnode = fgGetNode(arg->getStringValue("targetnode"), true);
+    else
+        targetnode = const_cast<SGPropertyNode *>(arg)->getNode("data", true);
+    
+    RemoteXMLRequest* req = new RemoteXMLRequest(url, targetnode);
+    
+    if (arg->hasChild("body"))
+        req->setRequestData(arg->getChild("body"));
+    
+// connect up optional reporting properties
+    if (arg->hasValue("complete")) 
+        req->setCompletionProp(fgGetNode(arg->getStringValue("complete"), true));
+    if (arg->hasValue("failure")) 
+        req->setFailedProp(fgGetNode(arg->getStringValue("failure"), true));
+    if (arg->hasValue("status")) 
+        req->setStatusProp(fgGetNode(arg->getStringValue("status"), true));
+        
+    http->makeRequest(req);
     return true;
 }
 
@@ -1358,63 +1515,48 @@ do_release_cockpit_button (const SGPropertyNode *arg)
   return true;
 }
 
-static SGGeod commandSearchPos(const SGPropertyNode* arg)
+// Optional profiling commands using gperftools:
+// http://code.google.com/p/gperftools/
+
+#ifndef FG_HAVE_GPERFTOOLS
+static void
+no_profiling_support()
 {
-  if (arg->hasChild("longitude-deg") && arg->hasChild("latitude-deg")) {
-    return SGGeod::fromDeg(arg->getDoubleValue("longitude-deg"),
-                           arg->getDoubleValue("latitude-deg"));
-  }
-  
-  // use current viewer/aircraft position
-  return SGGeod::fromDeg(fgGetDouble("/position/longitude-deg"), 
-                         fgGetDouble("/position/latitude-deg"));
+  SG_LOG
+  (
+    SG_GENERAL,
+    SG_WARN,
+    "No profiling support! Install gperftools and reconfigure/rebuild fgfs."
+  );
 }
-  
+#endif
+
 static bool
-do_comm_search(const SGPropertyNode* arg)
+do_profiler_start(const SGPropertyNode *arg)
 {
-  SGGeod pos = commandSearchPos(arg);
-  int khz = static_cast<int>(arg->getDoubleValue("frequency-mhz") * 100.0 + 0.25);
-  
-  flightgear::CommStation* sta = flightgear::CommStation::findByFreq(khz, pos, NULL);
-  if (!sta) {
-    return true;
-  }
-  
-  SGPropertyNode* result = fgGetNode(arg->getStringValue("result"));
-  sta->createBinding(result);
+#ifdef FG_HAVE_GPERFTOOLS
+  const char *filename = arg->getStringValue("filename", "fgfs.profile");
+  ProfilerStart(filename);
   return true;
+#else
+  no_profiling_support();
+  return false;
+#endif
 }
 
 static bool
-do_nav_search(const SGPropertyNode* arg)
+do_profiler_stop(const SGPropertyNode *arg)
 {
-  SGGeod pos = commandSearchPos(arg);
-  double mhz = arg->getDoubleValue("frequency-mhz");
-
-  FGNavList* navList = globals->get_navlist();
-  string type(arg->getStringValue("type", "vor"));
-  if (type == "dme") {
-    navList = globals->get_dmelist();
-  } else if (type == "tacan") {
-    navList = globals->get_tacanlist();
-  }
-  
-  FGNavRecord* nav = navList->findByFreq(mhz, pos);
-  if (!nav && (type == "vor")) {
-    // if we're searching VORs, look for localizers too
-    nav = globals->get_loclist()->findByFreq(mhz, pos);
-  }
-  
-  if (!nav) {
-    return true;
-  }
-  
-  SGPropertyNode* result = fgGetNode(arg->getStringValue("result"));
-  nav->createBinding(result);
+#ifdef FG_HAVE_GPERFTOOLS
+  ProfilerStop();
   return true;
+#else
+  no_profiling_support();
+  return false;
+#endif
 }
-  
+
+
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
 ////////////////////////////////////////////////////////////////////////
@@ -1434,15 +1576,14 @@ static struct {
     { "nasal", do_nasal },
     { "exit", do_exit },
     { "reset", do_reset },
-    { "reinit", do_reinit },
-    { "suspend", do_reinit },
-    { "resume", do_reinit },
     { "pause", do_pause },
     { "load", do_load },
     { "save", do_save },
+    { "save-tape", do_save_tape },
+    { "load-tape", do_load_tape },
     { "panel-load", do_panel_load },
-    { "panel-mouse-click", do_panel_mouse_click },
     { "preferences-load", do_preferences_load },
+    { "toggle-fullscreen", do_toggle_fullscreen },
     { "view-cycle", do_view_cycle },
     { "screen-capture", do_screen_capture },
     { "hires-screen-capture", do_hires_screen_capture },
@@ -1461,12 +1602,14 @@ static struct {
     { "property-scale", do_property_scale },
     { "property-cycle", do_property_cycle },
     { "property-randomize", do_property_randomize },
+    { "property-interpolate", do_property_interpolate },
     { "data-logging-commit", do_data_logging_commit },
     { "dialog-new", do_dialog_new },
     { "dialog-show", do_dialog_show },
     { "dialog-close", do_dialog_close },
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
+    { "open-browser", do_open_browser },
     { "gui-redraw", do_gui_redraw },
     { "add-model", do_add_model },
     { "set-cursor", do_set_cursor },
@@ -1480,16 +1623,18 @@ static struct {
     */
     { "loadxml", do_load_xml_to_proptree},
     { "savexml", do_save_xml_from_proptree },
+    { "xmlhttprequest", do_load_xml_from_url },
     { "press-cockpit-button", do_press_cockpit_button },
     { "release-cockpit-button", do_release_cockpit_button },
     { "dump-scenegraph", do_dump_scene_graph },
     { "dump-terrainbranch", do_dump_terrain_branch },
     { "print-visible-scene", do_print_visible_scene_info },
     { "reload-shaders", do_reload_shaders },
-  
-    { "find-navaid", do_nav_search },
-    { "find-comm", do_comm_search },
-  
+    { "reload-materials", do_materials_reload },
+
+    { "profiler-start", do_profiler_start },
+    { "profiler-stop",  do_profiler_stop },
+
     { 0, 0 }			// zero-terminated
 };
 
@@ -1512,6 +1657,15 @@ fgInitCommands ()
   typedef bool (*dummy)();
   fgTie( "/command/view/next", dummy(0), do_view_next );
   fgTie( "/command/view/prev", dummy(0), do_view_prev );
+
+  SGPropertyNode* profiler_available =
+    globals->get_props()->getNode("/sim/debug/profiler-available", true);
+#ifdef FG_HAVE_GPERFTOOLS
+  profiler_available->setBoolValue(true);
+#else
+  profiler_available->setBoolValue(false);
+#endif
+  profiler_available->setAttributes(SGPropertyNode::READ);
 }
 
 // end of fg_commands.cxx

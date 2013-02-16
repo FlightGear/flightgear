@@ -20,6 +20,10 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <limits>
 #include <simgear/math/interpolater.hxx>
 
@@ -181,9 +185,14 @@ void InstVerticalSpeedIndicator::init ()
         node->getNode("indicated-speed-fps", true);
     _speed_min_node =
         node->getNode("indicated-speed-fpm", true);
+}
 
+void InstVerticalSpeedIndicator::reinit ()
+{
     // Initialize at ambient pressure
     _internal_pressure_inhg = _pressure_node->getDoubleValue();
+    _speed_ft_per_s = 0.0;
+    _internal_sea_inhg = _sea_node->getDoubleValue();
 }
 
 

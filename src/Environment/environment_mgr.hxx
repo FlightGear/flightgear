@@ -24,7 +24,6 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
@@ -34,10 +33,9 @@
 #endif
 
 class FGEnvironment;
-class FGMetarCtrl;
-class FGMetarFetcher;
 class FGClouds;
 class FGPrecipitationMgr;
+class SGSky;
 
 /**
  * Manage environment information.
@@ -54,8 +52,9 @@ public:
   FGEnvironmentMgr ();
   virtual ~FGEnvironmentMgr ();
 
-  virtual void init ();
+  virtual InitStatus incrementalInit ();
   virtual void reinit ();
+  virtual void shutdown ();
   virtual void bind ();
   virtual void unbind ();
   virtual void update (double dt);
@@ -74,7 +73,8 @@ public:
 
   virtual FGEnvironment getEnvironment(const SGGeod& aPos) const;
 private:
-
+  void updateClosestAirport();
+  
   double get_cloud_layer_span_m (int index) const;
   void set_cloud_layer_span_m (int index, double span_m);
   double get_cloud_layer_elevation_ft (int index) const;
@@ -98,9 +98,9 @@ private:
   SGPropertyNode_ptr _altitude_n;
   SGPropertyNode_ptr _longitude_n;
   SGPropertyNode_ptr _latitude_n;
-  double _positionTimeToLive;
   simgear::TiedPropertyList _tiedProperties;
   SGPropertyChangeListener * _3dCloudsEnableListener;
+  SGSky* _sky;
 };
 
 #endif // _ENVIRONMENT_MGR_HXX

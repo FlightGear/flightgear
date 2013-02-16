@@ -19,7 +19,8 @@
 #define PACKAGE "FlightGear"
 
 /* Define to package version - use in main.cxx */
-#define FLIGHTGEAR_VERSION "MSVC9.0-WIN32-2.0.0"
+// define in version.h and no_version.h
+/* #define FLIGHTGEAR_VERSION "MSVC9.0-WIN32-2.0.0" */ 
 
 /* Define as the return type of signal handlers (int or void).  */
 #define RETSIGTYPE void
@@ -163,12 +164,13 @@
 
 #define NOMINMAX 1
 
-#define HAVE_CULLSETTINGS_CLEAR_MASK 1
-
 #ifndef ENABLE_AUDIO_SUPPORT
 #define  ENABLE_AUDIO_SUPPORT
 #endif
 
 #define FG_GLUT_H <GL/glut.h>
+
+#define ENABLE_JSBSIM 1
+#define ENABLE_YASIM 1
 
 // eof - config.h-msvc90 - single flightgear config.h file

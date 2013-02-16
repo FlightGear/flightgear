@@ -44,6 +44,7 @@ public:
     virtual ~MagCompass ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void update (double dt);
 
 private:
@@ -51,7 +52,7 @@ private:
     double _error_deg;
     double _rate_degps;
 
-    string _name;
+    std::string _name;
     int _num;
 
     SGPropertyNode_ptr _serviceable_node;

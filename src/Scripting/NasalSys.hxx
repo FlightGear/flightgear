@@ -7,13 +7,66 @@
 #include <simgear/nasal/nasal.h>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/xml/easyxml.hxx>
+#include <simgear/threads/SGQueue.hxx>
 
 #include <map>
-using std::map;
 
 
 class FGNasalScript;
 class FGNasalListener;
+class SGCondition;
+
+/** Nasal model data container.
+ * load and unload methods must be run in main thread (not thread-safe). */
+class FGNasalModelData : public SGReferenced
+{
+public:
+    /** Constructor to be run in an arbitrary thread. */
+    FGNasalModelData(SGPropertyNode *root, const string& path, SGPropertyNode *prop,
+                     SGPropertyNode* load, SGPropertyNode* unload) :
+        _path(path),
+        _root(root), _prop(prop),
+        _load(load), _unload(unload)
+     {
+     }
+
+    /** Load hook. Always call from inside the main loop. */
+    void load();
+
+    /** Unload hook. Always call from inside the main loop. */
+    void unload();
+
+private:
+    static unsigned int _module_id;
+
+    string _module, _path;
+    SGPropertyNode_ptr _root, _prop;
+    SGConstPropertyNode_ptr _load, _unload;
+};
+
+/** Thread-safe proxy for FGNasalModelData.
+ * modelLoaded/destroy methods only register the requested
+ * operation. Actual (un)loading of Nasal module is deferred
+ * and done in the main loop. */
+class FGNasalModelDataProxy : public simgear::SGModelData
+{
+public:
+    FGNasalModelDataProxy(SGPropertyNode *root = 0) :
+        _root(root), _data(0)
+    {
+    }
+
+    ~FGNasalModelDataProxy();
+
+    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
+
+protected:
+    SGPropertyNode_ptr _root;
+    SGSharedPtr<FGNasalModelData> _data;
+};
+
+SGPropertyNode* ghostToPropNode(naRef ref);
+SGCondition* conditionGhost(naRef r);
 
 class FGNasalSys : public SGSubsystem
 {
@@ -52,6 +105,10 @@ public:
     naRef cmdArgGhost();
 
     // Callbacks for command and timer bindings
+    virtual bool handleCommand( const char* moduleName,
+                                const char* fileName,
+                                const char* src,
+                                const SGPropertyNode* arg = 0 );
     virtual bool handleCommand(const SGPropertyNode* arg);
 
     bool createModule(const char* moduleName, const char* fileName,
@@ -60,13 +117,47 @@ public:
 
     void deleteModule(const char* moduleName);
 
-    naRef call(naRef code, int argc, naRef* args, naRef locals);
-    naRef propNodeGhost(SGPropertyNode* handle);
+    /**
+     * Set member of specified hash to given value
+     */
+    void hashset(naRef hash, const char* key, naRef val);
 
+    /**
+     * Set member of globals hash to given value
+     */
+    void globalsSet(const char* key, naRef val);
+
+    naRef call(naRef code, int argc, naRef* args, naRef locals);
+  
+    naRef callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals);
+  
+    naRef propNodeGhost(SGPropertyNode* handle);
+  
+    void registerToLoad(FGNasalModelData* data)   { _loadList.push(data);}
+    void registerToUnload(FGNasalModelData* data) { _unloadList.push(data);}
+
+    // can't call this 'globals' due to naming clash
+    naRef nasalGlobals() const
+    { return _globals; }
+  
+    naContext context() const
+    { return _context; }
+  
+    // This mechanism is here to allow naRefs to be passed to
+    // locations "outside" the interpreter.  Normally, such a
+    // reference would be garbage collected unexpectedly.  By passing
+    // it to gcSave and getting a key/handle, it can be cached in a
+    // globals.__gcsave hash.  Be sure to release it with gcRelease
+    // when done.
+    int gcSave(naRef r);
+    void gcRelease(int key);
 private:
     friend class FGNasalScript;
     friend class FGNasalListener;
     friend class FGNasalModuleListener;
+
+    SGLockedQueue<SGSharedPtr<FGNasalModelData> > _loadList;
+    SGLockedQueue<SGSharedPtr<FGNasalModelData> > _unloadList;
 
     //
     // FGTimer subclass for handling Nasal timer callbacks.
@@ -82,7 +173,7 @@ private:
     };
 
     // Listener
-    map<int, FGNasalListener *> _listener;
+    std::map<int, FGNasalListener *> _listener;
     vector<FGNasalListener *> _dead_listener;
     static int _listenerId;
 
@@ -90,19 +181,9 @@ private:
     void loadPropertyScripts(SGPropertyNode* n);
     void loadScriptDirectory(simgear::Dir nasalDir);
     void addModule(string moduleName, simgear::PathList scripts);
-    void hashset(naRef hash, const char* key, naRef val);
     void logError(naContext);
     naRef parse(const char* filename, const char* buf, int len);
     naRef genPropsModule();
-
-    // This mechanism is here to allow naRefs to be passed to
-    // locations "outside" the interpreter.  Normally, such a
-    // reference would be garbage collected unexpectedly.  By passing
-    // it to gcSave and getting a key/handle, it can be cached in a
-    // globals.__gcsave hash.  Be sure to release it with gcRelease
-    // when done.
-    int gcSave(naRef r);
-    void gcRelease(int key);
 
     naContext _context;
     naRef _globals;
@@ -162,20 +243,6 @@ private:
     long _last_int;
     double _last_float;
     string _last_string;
-};
-
-
-class FGNasalModelData : public simgear::SGModelData {
-public:
-    FGNasalModelData(SGPropertyNode *root = 0) : _root(root), _unload(0) {}
-    ~FGNasalModelData();
-    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
-
-private:
-    static unsigned int _module_id;
-    string _module;
-    SGPropertyNode_ptr _root;
-    SGConstPropertyNode_ptr _unload;
 };
 
 

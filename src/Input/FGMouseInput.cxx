@@ -22,8 +22,14 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "FGMouseInput.hxx"
 #include "Main/globals.hxx"
+
+using std::ios_base;
 
 void ActivePickCallbacks::init( int b, const osgGA::GUIEventAdapter* ea )
 {
@@ -270,13 +276,8 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   }
 
   if (mode.pass_through) {
+    // remove once PUI uses standard picking mechanism
     if (0 <= x && 0 <= y && puMouse(b, updown, x, y))
-      return;
-    else if (0 <= x && 0 <= y && (globals->get_current_panel() != 0) &&
-             globals->get_current_panel()->getVisibility() &&
-             globals->get_current_panel()->doMouseAction(b, updown, x, y))
-      return;
-    else if (0 <= x && 0 <= y && fgHandle3DPanelMouseEvent(b, updown, x, y))
       return;
     else {
       // pui didn't want the click event so compute a

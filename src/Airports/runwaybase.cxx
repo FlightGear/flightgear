@@ -46,35 +46,29 @@ using std::string;
  * 12 -  lakebed
  */
 
-FGRunwayBase::FGRunwayBase(Type aTy, const string& aIdent,
+FGRunwayBase::FGRunwayBase(PositionedID aGuid, Type aTy, const string& aIdent,
                         const SGGeod& aGeod,
                         const double heading, const double length,
                         const double width,
-                        const int surface_code,
-                        bool index) :
-  FGPositioned(aTy, aIdent, aGeod)
+                        const int surface_code) :
+  FGPositioned(aGuid, aTy, aIdent, aGeod)
 {
   _heading = heading;
   _length = length;
   _width = width;
   _surface_code = surface_code;
-  
-  init(index);
 }
 
 SGGeod FGRunwayBase::pointOnCenterline(double aOffset) const
 {
-  SGGeod result;
-  double dummyAz2;
   double halfLengthMetres = lengthM() * 0.5;
   
-  SGGeodesy::direct(mPosition, _heading, 
-    aOffset - halfLengthMetres,
-    result, dummyAz2);
+  SGGeod result = SGGeodesy::direct(mPosition, _heading,
+    aOffset - halfLengthMetres);
+  result.setElevationM(mPosition.getElevationM());
+    
   return result;
 }
-
-
 
 SGGeod FGRunwayBase::pointOffCenterline(double aOffset, double lateralOffset) const
 {
@@ -100,11 +94,12 @@ bool FGRunwayBase::isHardSurface() const
   return ((_surface_code == 1) || (_surface_code == 2));
 }
 
-FGTaxiway::FGTaxiway(const string& aIdent,
+FGTaxiway::FGTaxiway(PositionedID aGuid,
+                     const string& aIdent,
                         const SGGeod& aGeod,
                         const double heading, const double length,
                         const double width,
                         const int surface_code) :
-  FGRunwayBase(TAXIWAY, aIdent, aGeod, heading, length, width, surface_code, false)
+  FGRunwayBase(aGuid, TAXIWAY, aIdent, aGeod, heading, length, width, surface_code)
 {
 }

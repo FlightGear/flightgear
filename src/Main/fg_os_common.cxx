@@ -24,10 +24,10 @@
 #include <plib/pu.h>
 #include <osg/GraphicsContext>
 
+#include <Viewer/renderer.hxx>
+#include <Viewer/FGEventHandler.hxx>
 #include "fg_os.hxx"
 #include "globals.hxx"
-#include "renderer.hxx"
-#include "FGEventHandler.hxx"
 
 // fg_os callback registration APIs
 //
@@ -37,16 +37,6 @@
 void fgRegisterIdleHandler(fgIdleHandler func)
 {
     globals->get_renderer()->getEventHandler()->setIdleHandler(func);
-}
-
-void fgRegisterDrawHandler(fgDrawHandler func)
-{
-    globals->get_renderer()->getEventHandler()->setDrawHandler(func);
-}
-
-void fgRegisterWindowResizeHandler(fgWindowResizeHandler func)
-{
-    globals->get_renderer()->getEventHandler()->setWindowResizeHandler(func);
 }
 
 void fgRegisterKeyHandler(fgKeyHandler func)

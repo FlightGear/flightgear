@@ -44,7 +44,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_NOZZLE "$Id: FGNozzle.h,v 1.8 2009/10/26 03:49:58 jberndt Exp $";
+#define ID_NOZZLE "$Id: FGNozzle.h,v 1.10 2012/03/18 15:48:36 jentron Exp $";
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -75,7 +75,7 @@ CLASS DOCUMENTATION
 
     All parameters MUST be specified.  
     @author Jon S. Berndt
-    @version $Id: FGNozzle.h,v 1.8 2009/10/26 03:49:58 jberndt Exp $
+    @version $Id: FGNozzle.h,v 1.10 2012/03/18 15:48:36 jentron Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,7 +83,6 @@ CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGNozzle : public FGThruster {
-
 public:
   /// Constructor
   FGNozzle(FGFDMExec* exec, Element* el, int num = 0);
@@ -91,8 +90,8 @@ public:
   ~FGNozzle();
 
   double Calculate(double vacThrust);
-  string GetThrusterLabels(int id, string delimeter);
-  string GetThrusterValues(int id, string delimeter);
+  string GetThrusterLabels(int id, const string& delimeter);
+  string GetThrusterValues(int id, const string& delimeter);
 
 private:
 //  double PE;

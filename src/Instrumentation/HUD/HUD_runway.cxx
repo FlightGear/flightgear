@@ -25,20 +25,21 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/math/project.hxx>
+#include <simgear/scene/util/project.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 #include <Aircraft/controls.hxx>
 #include <FDM/flight.hxx>
 #include <Environment/environment.hxx>
 #include <Environment/environment_mgr.hxx>
-#include <Main/viewer.hxx>
-#include <Main/viewmgr.hxx>
+#include <Viewer/viewer.hxx>
+#include <Viewer/viewmgr.hxx>
 #include <ATCDCL/ATCutils.hxx>
 
 #include "HUD.hxx"
-
+#include "HUD_private.hxx"
 
 HUD::Runway::Runway(HUD *hud, const SGPropertyNode *node, float x, float y) :
     Item(hud, node, x, y),
@@ -75,7 +76,8 @@ void HUD::Runway::draw()
         return;
 
     glPushAttrib(GL_LINE_STIPPLE | GL_LINE_STIPPLE_PATTERN | GL_LINE_WIDTH);
-    float modelView[4][4], projMat[4][4];
+    float projMat[4][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
+    float modelView[4][4];
     bool anyLines;
     //Get the current view
 //    FGViewer* curr_view = globals->get_viewmgr()->get_current_view();
@@ -122,9 +124,9 @@ void HUD::Runway::draw()
     }
 
     //Calculate the 2D points via gluProject
-    int result = GL_TRUE;
+//    int result = GL_TRUE;
     for (int i = 0; i < 6; i++) {
-        result = simgear::project(_points3d[i][0], _points3d[i][1], _points3d[i][2],
+        /*result = */simgear::project(_points3d[i][0], _points3d[i][1], _points3d[i][2],
                                   _mm, _pm, _view,
                                   &_points2d[i][0], &_points2d[i][1], &_points2d[i][2]);
     }

@@ -20,8 +20,6 @@
 #  include <config.h>
 #endif
 
-#include <simgear/scene/model/SGPagedLOD.hxx>
-#include <simgear/math/SGMath.hxx>
 #include "SceneryPager.hxx"
 #include <algorithm>
 #include <functional>
@@ -43,25 +41,6 @@ SceneryPager::SceneryPager(const SceneryPager& rhs) :
 SceneryPager::~SceneryPager()
 {
 }
-
-#if SG_PAGEDLOD_HAS_OPTIONS
-#else
-void SceneryPager::requestNodeFile(const std::string& fileName, Group* group,
-                                   float priority, const FrameStamp* framestamp,
-                                   ref_ptr<Referenced>& databaseRequest,
-                                   osgDB::ReaderWriter::Options* options)
-{
-    simgear::SGPagedLOD *sgplod = dynamic_cast<simgear::SGPagedLOD*>(group);
-    if(sgplod)
-        DatabasePager::requestNodeFile(fileName, group, priority, framestamp,
-                                       databaseRequest,
-                                       sgplod->getReaderWriterOptions());
-    else
-        DatabasePager::requestNodeFile(fileName, group, priority, framestamp,
-                                       databaseRequest,
-                                       options);
-}
-#endif
 
 void SceneryPager::queueRequest(const std::string& fileName, Group* group,
                                 float priority, FrameStamp* frameStamp,

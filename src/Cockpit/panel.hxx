@@ -27,7 +27,8 @@
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/propertyObject.hxx>
+
 #include <simgear/structure/SGBinding.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -41,6 +42,7 @@
 class FGPanelInstrument;
 class fntFont;
 class DCLGPS;
+class IntRect;
 
 ////////////////////////////////////////////////////////////////////////
 // Texture management.
@@ -115,23 +117,16 @@ private:
  * redraw themselves when necessary, and will pass mouse clicks on to
  * the appropriate instruments for processing.
  */
-class FGPanel : public SGSubsystem
+class FGPanel : public SGReferenced
 {
 public:
 
   FGPanel ();
   virtual ~FGPanel ();
 
-				// Update the panel (every frame).
-  virtual void init ();
-  virtual void bind ();
-  virtual void unbind ();
   virtual void draw (osg::State& state);
-  virtual void update (double);
-  void update (osg::State& state);
-  virtual void update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
-
-  virtual void updateMouseDelay();
+ 
+  virtual void updateMouseDelay(double dt);
 
 				// transfer pointer ownership!!!
   virtual void addInstrument (FGPanelInstrument * instrument);
@@ -142,11 +137,6 @@ public:
 				// Background multiple textures.
   virtual void setMultiBackground (osg::Texture2D* texture, int idx);
 
-				// Make the panel visible or invisible.
-  virtual bool getVisibility () const;
-  virtual void setVisibility (bool visibility);
-
-				// Full width of panel.
   virtual void setWidth (int width) { _width = width; }
   virtual int getWidth () const { return _width; }
 
@@ -163,9 +153,15 @@ public:
   virtual int getYOffset () const { return _y_offset->getIntValue(); }
 
 				// View height.
-  virtual void setViewHeight (int height) { _view_height = height; }
-  virtual int getViewHeight () const { return _view_height; }
+ // virtual void setViewHeight (int height) { _view_height = height; }
+ // virtual int getViewHeight () const { return _view_height; }
 
+  /**
+   * find the actual logical extend of the panel, including all instruments
+   * and actions.
+   */
+  void getLogicalExtent(int &x0, int& y0, int& x1, int &y1);
+  
 				// Handle a mouse click.
   virtual bool doMouseAction (int button, int updown, int x, int y);
   virtual bool doLocalMouseAction(int button, int updown, int x, int y);
@@ -174,6 +170,8 @@ public:
 
   bool getAutohide(void) const { return _autohide; };
   void setAutohide(bool enable) { _autohide = enable; };
+  
+  double getAspectScale() const;
 
 private:
   void setupVirtualCockpit();
@@ -181,14 +179,14 @@ private:
 
   mutable bool _mouseDown;
   mutable int _mouseButton, _mouseX, _mouseY;
-  mutable int _mouseDelay;
+  double _mouseActionRepeat;
+    
   mutable FGPanelInstrument * _mouseInstrument;
   typedef std::vector<FGPanelInstrument *> instrument_list_type;
   int _width;
   int _height;
-  int _view_height;
+ // int _view_height;
 
-  SGPropertyNode_ptr _visibility;
   SGPropertyNode_ptr _x_offset;
   SGPropertyNode_ptr _y_offset;
   SGPropertyNode_ptr _jitter;
@@ -203,6 +201,8 @@ private:
   instrument_list_type _instruments;
   bool _enable_depth_test;
   bool _autohide;
+  
+  SGPropObjBool _drawPanelHotspots;
 };
 
 
@@ -385,6 +385,7 @@ public:
 				// Coordinates relative to centre.
   virtual bool doMouseAction (int button, int updown, int x, int y);
 
+  void extendRect(IntRect& r) const;
 protected:
   int _x, _y, _w, _h;
   typedef std::vector<FGPanelAction *> action_list_type;
@@ -568,22 +569,7 @@ public:
   FGSwitchLayer ();
   virtual void draw (osg::State& state);
 
-};
-
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Functions.
-////////////////////////////////////////////////////////////////////////
-
-/**
- * Test whether the panel should be visible.
- */
-bool fgPanelVisible ();
-
-
-
+};
 #endif // __PANEL_HXX
 
 // end of panel.hxx

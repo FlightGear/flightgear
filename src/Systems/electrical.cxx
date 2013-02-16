@@ -24,6 +24,7 @@
 #  include <config.h>
 #endif
 
+#include <cstdlib>
 #include <cstring>
 
 #include <simgear/structure/exception.hxx>
@@ -119,7 +120,7 @@ float FGElectricalSupplier::apply_load( float amps, float dt ) {
         float available_amps = ideal_amps;
         return available_amps - amps;
     } else {
-        SG_LOG( SG_ALL, SG_ALERT, "unknown supplier type" );
+        SG_LOG( SG_SYSTEMS, SG_ALERT, "unknown supplier type" );
     }
 
     return 0.0;
@@ -151,7 +152,7 @@ float FGElectricalSupplier::get_output_volts() {
         // cout << "external amps = " << 0.0 << endl;
         return ideal_volts;
     } else {
-        SG_LOG( SG_ALL, SG_ALERT, "unknown supplier type" );
+        SG_LOG( SG_SYSTEMS, SG_ALERT, "unknown supplier type" );
     }
 
     return 0.0;
@@ -180,7 +181,7 @@ float FGElectricalSupplier::get_output_amps() {
         // cout << "external amps = " << 0.0 << endl;
         return ideal_amps;
     } else {
-        SG_LOG( SG_ALL, SG_ALERT, "unknown supplier type" );
+        SG_LOG( SG_SYSTEMS, SG_ALERT, "unknown supplier type" );
     }
 
     return 0.0;
@@ -274,12 +275,12 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
                 } else if ( s->get_kind() == FG_BUS ) {
                     s->add_output( this );
                 } else {
-                    SG_LOG( SG_ALL, SG_ALERT,
+                    SG_LOG( SG_SYSTEMS, SG_ALERT,
                             "Attempt to connect to something that can't provide an output: " 
                             << child->getStringValue() );
                 }
             } else {
-                SG_LOG( SG_ALL, SG_ALERT, "Can't find named source: " 
+                SG_LOG( SG_SYSTEMS, SG_ALERT, "Can't find named source: " 
                         << child->getStringValue() );
             }
         } else if ( cname == "output" ) {
@@ -295,12 +296,12 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
                             == FGElectricalSupplier::FG_BATTERY ) {
                     s->add_output( this );
                 } else {
-                    SG_LOG( SG_ALL, SG_ALERT,
+                    SG_LOG( SG_SYSTEMS, SG_ALERT,
                             "Attempt to connect to something that can't provide an input: " 
                             << child->getStringValue() );
                 }
             } else {
-                SG_LOG( SG_ALL, SG_ALERT, "Can't find named source: " 
+                SG_LOG( SG_SYSTEMS, SG_ALERT, "Can't find named source: " 
                         << child->getStringValue() );
             }
         } else if ( cname == "switch" ) {
@@ -362,7 +363,7 @@ void FGElectricalSystem::init () {
     SGPropertyNode *path_n = fgGetNode("/sim/systems/electrical/path");
     if ( path_n ) {
         if ( path.length() ) {
-            SG_LOG( SG_ALL, SG_INFO,
+            SG_LOG( SG_SYSTEMS, SG_INFO,
                     "NOTICE: System manager configuration specifies an " <<
                     "electrical system: " << path << " but it is " <<
                     "being overridden by the one specified in the -set.xml " <<
@@ -376,7 +377,7 @@ void FGElectricalSystem::init () {
         SGPath config = globals->resolve_aircraft_path(path);
         
         // load an obsolete xml configuration
-        SG_LOG( SG_ALL, SG_WARN,
+        SG_LOG( SG_SYSTEMS, SG_WARN,
                 "Reading deprecated xml electrical system model from\n    "
                 << config.str() );
         try {
@@ -385,21 +386,21 @@ void FGElectricalSystem::init () {
             if ( build(config_props) ) {
                 enabled = true;
             } else {
-                SG_LOG( SG_ALL, SG_ALERT,
+                SG_LOG( SG_SYSTEMS, SG_ALERT,
                         "Detected a logic error in the electrical system ");
-                SG_LOG( SG_ALL, SG_ALERT,
+                SG_LOG( SG_SYSTEMS, SG_ALERT,
                         "specification file.  See earlier errors for " );
-                SG_LOG( SG_ALL, SG_ALERT,
+                SG_LOG( SG_SYSTEMS, SG_ALERT,
                         "details.");
                 exit(-1);
             }        
         } catch (const sg_exception&) {
-            SG_LOG( SG_ALL, SG_ALERT,
+            SG_LOG( SG_SYSTEMS, SG_ALERT,
                     "Failed to load electrical system model: "
                     << config.str() );
         }
     } else {
-        SG_LOG( SG_ALL, SG_INFO,
+        SG_LOG( SG_SYSTEMS, SG_INFO,
                 "No xml-based electrical model specified for this model!");
     }
 
@@ -455,7 +456,7 @@ void FGElectricalSystem::update (double dt) {
                               " " );
 
             if ( node->apply_load( load, dt ) < 0.0 ) {
-                SG_LOG(SG_ALL, SG_ALERT,
+                SG_LOG(SG_SYSTEMS, SG_ALERT,
                        "Error drawing more current than available!");
             }
         }     
@@ -475,7 +476,7 @@ void FGElectricalSystem::update (double dt) {
                               " " );
 
             if ( node->apply_load( load, dt ) < 0.0 ) {
-                SG_LOG(SG_ALL, SG_ALERT,
+                SG_LOG(SG_SYSTEMS, SG_ALERT,
                        "Error drawing more current than available!");
             }
         }     
@@ -496,7 +497,7 @@ void FGElectricalSystem::update (double dt) {
             // cout << "battery load = " << load << endl;
 
             if ( node->apply_load( load, dt ) < 0.0 ) {
-                SG_LOG(SG_ALL, SG_ALERT,
+                SG_LOG(SG_SYSTEMS, SG_ALERT,
                        "Error drawing more current than available!");
             }
         }     
@@ -579,7 +580,7 @@ bool FGElectricalSystem::build (SGPropertyNode* config_props) {
                 new FGElectricalConnector( node, this );
             connectors.push_back( c );
         } else {
-            SG_LOG( SG_ALL, SG_ALERT, "Unknown component type specified: " 
+            SG_LOG( SG_SYSTEMS, SG_ALERT, "Unknown component type specified: " 
                     << name );
             return false;
         }
@@ -637,7 +638,7 @@ float FGElectricalSystem::propagate( FGElectricalComponent *node, double dt,
         }
         // cout << s << "  input_volts = " << volts << endl;
     } else {
-        SG_LOG( SG_ALL, SG_ALERT, "unkown node type" );
+        SG_LOG( SG_SYSTEMS, SG_ALERT, "unknown node type" );
     }
 
     int i;

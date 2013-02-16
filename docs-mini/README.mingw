@@ -62,44 +62,6 @@ patch header:
   #ifndef NEED_FTIME
   #include <time.h>
 
-GLUT
-====
-
-use precompiled in order to avoid conflicts with glut32.dll already installed.
-
-http://www.xmission.com/~nate/glut.html
-http://www.xmission.com/~nate/glut/glut-3.7.6-bin.zip
-
-The header has to be updated with respect to MINGW.
-
-*** glut.h      Tue Dec 12 22:22:52 2000
---- /local_old/include/GL/glut.h        Thu Aug 18 20:41:15 2005
-***************
-*** 20,26 ****
-     /* XXX This is from Win32's <windef.h> */
-  #  ifndef APIENTRY
-  #   define GLUT_APIENTRY_DEFINED
-! #   if (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED) || defined(__BORLANDC__) || defined(__LCC__)
-  #    define APIENTRY    __stdcall
-  #   else
-  #    define APIENTRY
---- 20,26 ----
-     /* XXX This is from Win32's <windef.h> */
-  #  ifndef APIENTRY
-  #   define GLUT_APIENTRY_DEFINED
-! #   if (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED) || defined(__BORLANDC__) || defined(__LCC__) || defined(__MINGW32__)
-  #    define APIENTRY    __stdcall
-  #   else
-  #    define APIENTRY
-
-
-install:
-cp glut.h /usr/local/include
-cp glut32.dll /usr/local/bin
-
-reimp glut32.lib 
-cp libglut32.a /usr/local/lib
-
 OpenAL
 ======
 
@@ -114,7 +76,6 @@ install:
 cd libs
 reimp  OpenAL32.lib
 cp libopenal32.a  /usr/local/lib
-cp alut.lib  /usr/local/lib/libalut.a
 cd ..
 mkdir /usr/local/include/AL
 cp Include/* /usr/local/include/AL

@@ -287,6 +287,8 @@ void FGExternalPipe::init_binary() {
     fflush( pd1 );
 
     SG_LOG( SG_IO, SG_ALERT, "Remote FDM init() finished." );
+
+    (void) result; // ignore result
 }
 
 
@@ -350,6 +352,8 @@ void FGExternalPipe::init_property() {
     fflush( pd1 );
 
     SG_LOG( SG_IO, SG_ALERT, "Remote FDM init() finished." );
+
+    (void) result; // ignore result
 }
 
 
@@ -573,6 +577,7 @@ void FGExternalPipe::update_property( double dt ) {
         }
     }
 
+    (void) result; // ignore result
 #endif
 }
 

@@ -20,6 +20,10 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <Main/globals.hxx>
 #include <sstream>
 #include <simgear/compiler.h>
@@ -28,6 +32,7 @@
 
 #define VOICE "/sim/sound/voices"
 
+using std::string;
 
 /// MANAGER ///
 
@@ -67,8 +72,8 @@ void FGVoiceMgr::init()
 	try {
 		for (unsigned int i = 0; i < voices.size(); i++)
 			_voices.push_back(new FGVoice(this, voices[i]));
-	} catch (const string& s) {
-		SG_LOG(SG_IO, SG_ALERT, "VOICE: " << s);
+	} catch (const std::string& s) {
+		SG_LOG(SG_SOUND, SG_ALERT, "VOICE: " << s);
 	}
 
 #if defined(ENABLE_THREADS)
@@ -105,7 +110,7 @@ FGVoiceMgr::FGVoice::FGVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node) :
 	_festival(node->getBoolValue("festival", true)),
 	_mgr(mgr)
 {
-	SG_LOG(SG_IO, SG_INFO, "VOICE: adding `" << node->getStringValue("desc", "<unnamed>")
+	SG_LOG(SG_SOUND, SG_INFO, "VOICE: adding `" << node->getStringValue("desc", "<unnamed>")
 			<< "' voice");
 	const string &host = _mgr->_host;
 	const string &port = _mgr->_port;
@@ -124,7 +129,7 @@ FGVoiceMgr::FGVoice::FGVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node) :
 					+ "'. Either it's not\n       Festival listening,"
 					" or Festival couldn't open a sound device.";
 
-		SG_LOG(SG_IO, SG_INFO, "VOICE: connection to Festival server on `"
+		SG_LOG(SG_SOUND, SG_INFO, "VOICE: connection to Festival server on `"
 				<< host << ':' << port << "' established");
 
 		setVolume(_volume = _volumeNode->getDoubleValue());

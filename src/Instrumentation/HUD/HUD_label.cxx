@@ -24,7 +24,9 @@
 #endif
 
 #include "HUD.hxx"
+#include "HUD_private.hxx"
 
+#include <Main/globals.hxx>
 
 HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
     Item(hud, n, x, y),
@@ -80,7 +82,7 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
 void HUD::Label::draw(void)
 {
-    if (!(_mode == NONE || (_input.isValid() && blink())))
+    if (!((_mode == NONE || _input.isValid()) && blink()))
         return;
 
     if (_box) {

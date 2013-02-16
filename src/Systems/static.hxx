@@ -40,13 +40,14 @@ public:
     virtual ~StaticSystem ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);
 
 private:
 
-    string _name;
+    std::string _name;
     int _num;
     double _tau;
     SGPropertyNode_ptr _serviceable_node;

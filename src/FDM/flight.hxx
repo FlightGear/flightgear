@@ -82,11 +82,16 @@
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <FDM/groundcache.hxx>
 
 using std::list;
 using std::vector;
 using std::string;
+
+namespace simgear {
+class BVHMaterial;
+}
 
 /**
  * A little helper class to update the track if
@@ -127,7 +132,7 @@ private:
     bool inited;
 
     // Have we bound to the property system
-    bool bound; 
+    bool bound;
 
     // periodic update management variable.  This is a scheme to run
     // the fdm with a fixed delta-t.  We control how many iteration of
@@ -186,6 +191,9 @@ private:
     double climb_rate;                // in feet per second
     double altitude_agl;
     double track;
+    double delta_loops;
+
+    simgear::TiedPropertyList _tiedProperties;
 
     // the ground cache object itself.
     FGGroundCache ground_cache;
@@ -552,6 +560,7 @@ public:
 
     inline double get_V_ground_speed() const { return v_ground_speed; }
     inline double get_V_ground_speed_kt() const { return v_ground_speed * SG_FEET_TO_METER * 3600 * SG_METER_TO_NM; }
+    inline void   set_V_ground_speed_kt(double ground_speed) { v_ground_speed = ground_speed / ( SG_FEET_TO_METER * 3600 * SG_METER_TO_NM); }
 
     inline double get_V_equiv_kts() const { return v_equiv_kts; }
 
@@ -687,11 +696,11 @@ public:
     // contact point.
     bool get_agl_m(double t, const double pt[3], double max_altoff,
                    double contact[3], double normal[3], double linearVel[3],
-                   double angularVel[3], SGMaterial const*& material,
+                   double angularVel[3], simgear::BVHMaterial const*& material,
                    simgear::BVHNode::Id& id);
     bool get_agl_ft(double t, const double pt[3], double max_altoff,
                     double contact[3], double normal[3], double linearVel[3],
-                    double angularVel[3], SGMaterial const*& material,
+                    double angularVel[3], simgear::BVHMaterial const*& material,
                     simgear::BVHNode::Id& id);
     double get_groundlevel_m(double lat, double lon, double alt);
     double get_groundlevel_m(const SGGeod& geod);
@@ -702,11 +711,11 @@ public:
     // position pt.
     bool get_nearest_m(double t, const double pt[3], double maxDist,
                        double contact[3], double normal[3], double linearVel[3],
-                       double angularVel[3], SGMaterial const*& material,
+                       double angularVel[3], simgear::BVHMaterial const*& material,
                        simgear::BVHNode::Id& id);
     bool get_nearest_ft(double t, const double pt[3], double maxDist,
                         double contact[3], double normal[3],double linearVel[3],
-                        double angularVel[3], SGMaterial const*& material,
+                        double angularVel[3], simgear::BVHMaterial const*& material,
                         simgear::BVHNode::Id& id);
 
 

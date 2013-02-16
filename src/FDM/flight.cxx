@@ -28,8 +28,8 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/scene/material/mat.hxx>
 
 #include <Scenery/scenery.hxx>
 #include <Main/globals.hxx>
@@ -64,14 +64,16 @@ int
 FGInterface::_calc_multiloop (double dt)
 {
   // Since some time the simulation time increments we get here are
-  // already a multiple of the basic update freqency.
+  // already a multiple of the basic update frequency.
   // So, there is no need to do our own multiloop rounding with all bad
   // roundoff problems when we already have nearly accurate values.
   // Only the speedup thing must be still handled here
   int hz = fgGetInt("/sim/model-hz");
-  int multiloop = SGMiscd::roundToInt(dt*hz);
-  int speedup = fgGetInt("/sim/speed-up");
-  return multiloop * speedup;
+  double speedup = fgGetDouble("/sim/speed-up");
+  double loops = dt * hz * speedup + delta_loops;
+  int iloops = SGMiscd::roundToInt(loops);
+  delta_loops = loops-iloops; // delta_loops required for speed-ups < 1 (to do one iteration every n-th step)
+  return iloops;
 }
 
 
@@ -119,6 +121,7 @@ FGInterface::_setup ()
     climb_rate=0;
     altitude_agl=0;
     track=0;
+    delta_loops = 0.0;
 }
 
 void
@@ -159,6 +162,8 @@ FGInterface::common_init ()
     double ground_elev_m = get_groundlevel_m(lat, lon, alt_m);
     double ground_elev_ft = ground_elev_m * SG_METER_TO_FEET;
     _set_Runway_altitude ( ground_elev_ft );
+
+    // Set aircraft altitude
     if ( fgGetBool("/sim/presets/onground") || alt_ft < ground_elev_ft ) {
         fgSetDouble("/position/altitude-ft", ground_elev_ft + 0.1);
         set_Altitude( ground_elev_ft + 0.1);
@@ -219,8 +224,11 @@ FGInterface::common_init ()
     if ( fgHasNode("/sim/presets/glideslope-deg") )
         set_Gamma_vert_rad( fgGetDouble("/sim/presets/glideslope-deg")
                               * SGD_DEGREES_TO_RADIANS );
-    else if ( fgHasNode( "/velocities/vertical-speed-fps") )
-        set_Climb_Rate( fgGetDouble("/velocities/vertical-speed-fps") );
+    else if ( fgHasNode("/sim/presets/speed-set") &&
+              fgHasNode( "/sim/presets/vertical-speed-fps") )
+    {
+        set_Climb_Rate( fgGetDouble("/sim/presets/vertical-speed-fps") );
+    }
 
     SG_LOG( SG_FLIGHT, SG_INFO, "End common FDM init" );
 }
@@ -240,174 +248,174 @@ FGInterface::bind ()
 {
   bound = true;
 
-			// Aircraft position
-  fgTie("/position/latitude-deg", this,
-        &FGInterface::get_Latitude_deg,
-        &FGInterface::set_Latitude_deg,
-        false);
+  _tiedProperties.setRoot(globals->get_props());
+  // Aircraft position
+  _tiedProperties.Tie("/position/latitude-deg", this,
+                      &FGInterface::get_Latitude_deg,
+                      &FGInterface::set_Latitude_deg,
+                      false);
   fgSetArchivable("/position/latitude-deg");
-  fgTie("/position/longitude-deg", this,
-        &FGInterface::get_Longitude_deg,
-        &FGInterface::set_Longitude_deg,
-        false);
+  _tiedProperties.Tie("/position/longitude-deg", this,
+                      &FGInterface::get_Longitude_deg,
+                      &FGInterface::set_Longitude_deg,
+                      false);
   fgSetArchivable("/position/longitude-deg");
-  fgTie("/position/altitude-ft", this,
-        &FGInterface::get_Altitude,
-        &FGInterface::set_Altitude,
-        false);
+  _tiedProperties.Tie("/position/altitude-ft", this,
+                      &FGInterface::get_Altitude,
+                      &FGInterface::set_Altitude,
+                      false);
   fgSetArchivable("/position/altitude-ft");
-  fgTie("/position/altitude-agl-ft", this,
-        &FGInterface::get_Altitude_AGL, &FGInterface::set_AltitudeAGL, false);
+  _tiedProperties.Tie("/position/altitude-agl-ft", this,
+                      &FGInterface::get_Altitude_AGL, &FGInterface::set_AltitudeAGL, false);
   fgSetArchivable("/position/ground-elev-ft");
-  fgTie("/position/ground-elev-ft", this,
-        &FGInterface::get_Runway_altitude); // read-only
+  _tiedProperties.Tie("/position/ground-elev-ft", this,
+                      &FGInterface::get_Runway_altitude); // read-only
   fgSetArchivable("/position/ground-elev-m");
-  fgTie("/position/ground-elev-m", this,
-        &FGInterface::get_Runway_altitude_m); // read-only
-  fgTie("/environment/ground-elevation-m", this,
-        &FGInterface::get_Runway_altitude_m); // read-only
+  _tiedProperties.Tie("/position/ground-elev-m", this,
+                      &FGInterface::get_Runway_altitude_m); // read-only
+  _tiedProperties.Tie("/environment/ground-elevation-m", this,
+                      &FGInterface::get_Runway_altitude_m); // read-only
   fgSetArchivable("/position/sea-level-radius-ft");
-  fgTie("/position/sea-level-radius-ft", this,
-        &FGInterface::get_Sea_level_radius,
-        &FGInterface::_set_Sea_level_radius, false);
+  _tiedProperties.Tie("/position/sea-level-radius-ft", this,
+                      &FGInterface::get_Sea_level_radius,
+                      &FGInterface::_set_Sea_level_radius, false);
 
-				// Orientation
-  fgTie("/orientation/roll-deg", this,
-	&FGInterface::get_Phi_deg,
-	&FGInterface::set_Phi_deg, false);
+  // Orientation
+  _tiedProperties.Tie("/orientation/roll-deg", this,
+                      &FGInterface::get_Phi_deg,
+                      &FGInterface::set_Phi_deg, false);
   fgSetArchivable("/orientation/roll-deg");
-  fgTie("/orientation/pitch-deg", this,
-	&FGInterface::get_Theta_deg,
-	&FGInterface::set_Theta_deg, false);
+  _tiedProperties.Tie("/orientation/pitch-deg", this,
+                      &FGInterface::get_Theta_deg,
+                      &FGInterface::set_Theta_deg, false);
   fgSetArchivable("/orientation/pitch-deg");
-  fgTie("/orientation/heading-deg", this,
-	&FGInterface::get_Psi_deg,
-	&FGInterface::set_Psi_deg, false);
+  _tiedProperties.Tie("/orientation/heading-deg", this,
+                      &FGInterface::get_Psi_deg,
+                      &FGInterface::set_Psi_deg, false);
   fgSetArchivable("/orientation/heading-deg");
-  fgTie("/orientation/track-deg", this,
-	&FGInterface::get_Track); // read-only
+  _tiedProperties.Tie("/orientation/track-deg", this,
+                      &FGInterface::get_Track); // read-only
 
   // Body-axis "euler rates" (rotation speed, but in a funny
   // representation).
-  fgTie("/orientation/roll-rate-degps", this,
-	&FGInterface::get_Phi_dot_degps,
-	&FGInterface::set_Phi_dot_degps, false);
-  fgTie("/orientation/pitch-rate-degps", this,
-	&FGInterface::get_Theta_dot_degps,
-	&FGInterface::set_Theta_dot_degps, false);
-  fgTie("/orientation/yaw-rate-degps", this,
-	&FGInterface::get_Psi_dot_degps,
-	&FGInterface::set_Psi_dot_degps, false);
+  _tiedProperties.Tie("/orientation/roll-rate-degps", this,
+                      &FGInterface::get_Phi_dot_degps,
+                      &FGInterface::set_Phi_dot_degps, false);
+  _tiedProperties.Tie("/orientation/pitch-rate-degps", this,
+                      &FGInterface::get_Theta_dot_degps,
+                      &FGInterface::set_Theta_dot_degps, false);
+  _tiedProperties.Tie("/orientation/yaw-rate-degps", this,
+                      &FGInterface::get_Psi_dot_degps,
+                      &FGInterface::set_Psi_dot_degps, false);
 
-  fgTie("/orientation/p-body", this, &FGInterface::get_P_body); // read-only
-  fgTie("/orientation/q-body", this, &FGInterface::get_Q_body); // read-only
-  fgTie("/orientation/r-body", this, &FGInterface::get_R_body); // read-only
-  
-                                // Ground speed knots
-  fgTie("/velocities/groundspeed-kt", this,
-        &FGInterface::get_V_ground_speed_kt); // read-only
+  _tiedProperties.Tie("/orientation/p-body", this, &FGInterface::get_P_body); // read-only
+  _tiedProperties.Tie("/orientation/q-body", this, &FGInterface::get_Q_body); // read-only
+  _tiedProperties.Tie("/orientation/r-body", this, &FGInterface::get_R_body); // read-only
 
-				// Calibrated airspeed
-  fgTie("/velocities/airspeed-kt", this,
-	&FGInterface::get_V_calibrated_kts,
-	&FGInterface::set_V_calibrated_kts,
-	false);
+  // Ground speed knots
+  _tiedProperties.Tie("/velocities/groundspeed-kt", this,
+                      &FGInterface::get_V_ground_speed_kt,
+                      &FGInterface::set_V_ground_speed_kt); // read-only
 
-    fgTie("/velocities/equivalent-kt", this,
-        &FGInterface::get_V_equiv_kts); // read-only
+  // Calibrated airspeed
+  _tiedProperties.Tie("/velocities/airspeed-kt", this,
+                      &FGInterface::get_V_calibrated_kts,
+                      &FGInterface::set_V_calibrated_kts,
+                      false);
 
-				// Mach number
-  fgTie("/velocities/mach", this,
-	&FGInterface::get_Mach_number,
-	&FGInterface::set_Mach_number,
-	false);
+  _tiedProperties.Tie("/velocities/equivalent-kt", this,
+                      &FGInterface::get_V_equiv_kts); // read-only
 
-				// Local velocities
-//   fgTie("/velocities/speed-north-fps", this,
-// 	&FGInterface::get_V_north,
-// 	&FGInterface::set_V_north);
+  // Mach number
+  _tiedProperties.Tie("/velocities/mach", this,
+                      &FGInterface::get_Mach_number,
+                      &FGInterface::set_Mach_number,
+                      false);
+
+  // Local velocities
+//   _tiedProperties.Tie("/velocities/speed-north-fps", this,
+//                       &FGInterface::get_V_north,
+//                       &FGInterface::set_V_north);
 //   fgSetArchivable("/velocities/speed-north-fps");
-//   fgTie("/velocities/speed-east-fps", this,
-// 	&FGInterface::get_V_east,
-// 	&FGInterface::set_V_east);
+//   _tiedProperties.Tie("/velocities/speed-east-fps", this,
+//                       &FGInterface::get_V_east,
+//                       &FGInterface::set_V_east);
 //   fgSetArchivable("/velocities/speed-east-fps");
-//   fgTie("/velocities/speed-down-fps", this,
-// 	&FGInterface::get_V_down,
-// 	&FGInterface::set_V_down);
+//   _tiedProperties.Tie("/velocities/speed-down-fps", this,
+//                       &FGInterface::get_V_down,
+//                       &FGInterface::set_V_down);
 //   fgSetArchivable("/velocities/speed-down-fps");
-				// FIXME: Temporarily read-only, until the
-				// incompatibilities between JSBSim and
-				// LaRCSim are fixed (LaRCSim adds the
-				// earth's rotation to the east velocity).
-  fgTie("/velocities/speed-north-fps", this,
-	&FGInterface::get_V_north, &FGInterface::set_V_north, false);
-  fgTie("/velocities/speed-east-fps", this,
-	&FGInterface::get_V_east, &FGInterface::set_V_east, false);
-  fgTie("/velocities/speed-down-fps", this,
-	&FGInterface::get_V_down, &FGInterface::set_V_down, false);
 
-  fgTie("/velocities/north-relground-fps", this,
-    &FGInterface::get_V_north_rel_ground); // read-only
-  fgTie("/velocities/east-relground-fps", this,
-    &FGInterface::get_V_east_rel_ground); // read-only
-  fgTie("/velocities/down-relground-fps", this,
-    &FGInterface::get_V_down_rel_ground); // read-only
+  // FIXME: Temporarily read-only, until the
+  // incompatibilities between JSBSim and
+  // LaRCSim are fixed (LaRCSim adds the
+  // earth's rotation to the east velocity).
+  _tiedProperties.Tie("/velocities/speed-north-fps", this,
+                      &FGInterface::get_V_north, &FGInterface::set_V_north, false);
+  _tiedProperties.Tie("/velocities/speed-east-fps", this,
+                      &FGInterface::get_V_east, &FGInterface::set_V_east, false);
+  _tiedProperties.Tie("/velocities/speed-down-fps", this,
+                      &FGInterface::get_V_down, &FGInterface::set_V_down, false);
 
+  _tiedProperties.Tie("/velocities/north-relground-fps", this,
+                      &FGInterface::get_V_north_rel_ground); // read-only
+  _tiedProperties.Tie("/velocities/east-relground-fps", this,
+                      &FGInterface::get_V_east_rel_ground); // read-only
+  _tiedProperties.Tie("/velocities/down-relground-fps", this,
+                      &FGInterface::get_V_down_rel_ground); // read-only
 
-				// Relative wind
-				// FIXME: temporarily archivable, until
-				// the NED problem is fixed.
-  fgTie("/velocities/uBody-fps", this,
-	&FGInterface::get_uBody,
-	&FGInterface::set_uBody,
-	false);
+  // Relative wind
+  // FIXME: temporarily archivable, until the NED problem is fixed.
+  _tiedProperties.Tie("/velocities/uBody-fps", this,
+                      &FGInterface::get_uBody,
+                      &FGInterface::set_uBody,
+                      false);
   fgSetArchivable("/velocities/uBody-fps");
-  fgTie("/velocities/vBody-fps", this,
-	&FGInterface::get_vBody,
-	&FGInterface::set_vBody,
-	false);
+  _tiedProperties.Tie("/velocities/vBody-fps", this,
+                      &FGInterface::get_vBody,
+                      &FGInterface::set_vBody,
+                      false);
   fgSetArchivable("/velocities/vBody-fps");
-  fgTie("/velocities/wBody-fps", this,
-	&FGInterface::get_wBody,
-	&FGInterface::set_wBody,
-	false);
+  _tiedProperties.Tie("/velocities/wBody-fps", this,
+                      &FGInterface::get_wBody,
+                      &FGInterface::set_wBody,
+                      false);
   fgSetArchivable("/velocities/wBody-fps");
 
-				// Climb and slip (read-only)
-  fgTie("/velocities/vertical-speed-fps", this,
-	&FGInterface::get_Climb_Rate,
-        &FGInterface::set_Climb_Rate, false );
-  fgTie("/velocities/glideslope", this,
-  &FGInterface::get_Gamma_vert_rad,
-  &FGInterface::set_Gamma_vert_rad, false );
-  fgTie("/orientation/side-slip-rad", this,
-	&FGInterface::get_Beta, &FGInterface::_set_Beta, false);
-  fgTie("/orientation/side-slip-deg", this,
-  &FGInterface::get_Beta_deg); // read-only
-  fgTie("/orientation/alpha-deg", this,
-  &FGInterface::get_Alpha_deg, &FGInterface::set_Alpha_deg, false);
-  fgTie("/accelerations/nlf", this,
-  &FGInterface::get_Nlf); // read-only
+  // Climb and slip (read-only)
+  _tiedProperties.Tie("/velocities/vertical-speed-fps", this,
+                      &FGInterface::get_Climb_Rate,
+                      &FGInterface::set_Climb_Rate, false );
+  _tiedProperties.Tie("/velocities/glideslope", this,
+                      &FGInterface::get_Gamma_vert_rad,
+                      &FGInterface::set_Gamma_vert_rad, false );
+  _tiedProperties.Tie("/orientation/side-slip-rad", this,
+                      &FGInterface::get_Beta, &FGInterface::_set_Beta, false);
+  _tiedProperties.Tie("/orientation/side-slip-deg", this,
+                      &FGInterface::get_Beta_deg); // read-only
+  _tiedProperties.Tie("/orientation/alpha-deg", this,
+                      &FGInterface::get_Alpha_deg, &FGInterface::set_Alpha_deg, false);
+  _tiedProperties.Tie("/accelerations/nlf", this,
+                      &FGInterface::get_Nlf); // read-only
 
-                                // NED accelerations
-  fgTie("/accelerations/ned/north-accel-fps_sec",
-        this, &FGInterface::get_V_dot_north); // read-only
-  fgTie("/accelerations/ned/east-accel-fps_sec",
-        this, &FGInterface::get_V_dot_east); // read-only
-  fgTie("/accelerations/ned/down-accel-fps_sec",
-        this, &FGInterface::get_V_dot_down); // read-only
+  // NED accelerations
+  _tiedProperties.Tie("/accelerations/ned/north-accel-fps_sec",
+                      this, &FGInterface::get_V_dot_north); // read-only
+  _tiedProperties.Tie("/accelerations/ned/east-accel-fps_sec",
+                      this, &FGInterface::get_V_dot_east); // read-only
+  _tiedProperties.Tie("/accelerations/ned/down-accel-fps_sec",
+                      this, &FGInterface::get_V_dot_down); // read-only
 
-                                // Pilot accelerations
-  fgTie("/accelerations/pilot/x-accel-fps_sec",
-        this, &FGInterface::get_A_X_pilot, &FGInterface::set_A_X_pilot, false);
-  fgTie("/accelerations/pilot/y-accel-fps_sec",
-        this, &FGInterface::get_A_Y_pilot, &FGInterface::set_A_Y_pilot, false);
-  fgTie("/accelerations/pilot/z-accel-fps_sec",
-        this, &FGInterface::get_A_Z_pilot, &FGInterface::set_A_Z_pilot, false);
-        
-  fgTie("/accelerations/n-z-cg-fps_sec",
-        this, &FGInterface::get_N_Z_cg); // read-only
+  // Pilot accelerations
+  _tiedProperties.Tie("/accelerations/pilot/x-accel-fps_sec",
+                      this, &FGInterface::get_A_X_pilot, &FGInterface::set_A_X_pilot, false);
+  _tiedProperties.Tie("/accelerations/pilot/y-accel-fps_sec",
+                      this, &FGInterface::get_A_Y_pilot, &FGInterface::set_A_Y_pilot, false);
+  _tiedProperties.Tie("/accelerations/pilot/z-accel-fps_sec",
+                      this, &FGInterface::get_A_Z_pilot, &FGInterface::set_A_Z_pilot, false);
 
+  _tiedProperties.Tie("/accelerations/n-z-cg-fps_sec",
+                      this, &FGInterface::get_N_Z_cg); // read-only
 }
 
 
@@ -420,56 +428,8 @@ FGInterface::bind ()
 void
 FGInterface::unbind ()
 {
-  if (!bound) {
-    return;
-  }
-  
+  _tiedProperties.Untie();
   bound = false;
-
-  fgUntie("/position/latitude-deg");
-  fgUntie("/position/longitude-deg");
-  fgUntie("/position/altitude-ft");
-  fgUntie("/position/altitude-agl-ft");
-  fgUntie("/position/ground-elev-ft");
-  fgUntie("/position/ground-elev-m");
-  fgUntie("/environment/ground-elevation-m");
-  fgUntie("/position/sea-level-radius-ft");
-  fgUntie("/orientation/roll-deg");
-  fgUntie("/orientation/pitch-deg");
-  fgUntie("/orientation/heading-deg");
-  fgUntie("/orientation/track-deg");
-  fgUntie("/orientation/roll-rate-degps");
-  fgUntie("/orientation/pitch-rate-degps");
-  fgUntie("/orientation/yaw-rate-degps");
-  fgUntie("/orientation/p-body");
-  fgUntie("/orientation/q-body");
-  fgUntie("/orientation/r-body");
-  fgUntie("/orientation/side-slip-rad");
-  fgUntie("/orientation/side-slip-deg");
-  fgUntie("/orientation/alpha-deg");
-  fgUntie("/velocities/airspeed-kt");
-  fgUntie("/velocities/groundspeed-kt");
-  fgUntie("/velocities/equivalent-kt");
-  fgUntie("/velocities/mach");
-  fgUntie("/velocities/speed-north-fps");
-  fgUntie("/velocities/speed-east-fps");
-  fgUntie("/velocities/speed-down-fps");
-  fgUntie("/velocities/north-relground-fps");
-  fgUntie("/velocities/east-relground-fps");
-  fgUntie("/velocities/down-relground-fps");
-  fgUntie("/velocities/uBody-fps");
-  fgUntie("/velocities/vBody-fps");
-  fgUntie("/velocities/wBody-fps");
-  fgUntie("/velocities/vertical-speed-fps");
-  fgUntie("/velocities/glideslope");
-  fgUntie("/accelerations/nlf");
-  fgUntie("/accelerations/pilot/x-accel-fps_sec");
-  fgUntie("/accelerations/pilot/y-accel-fps_sec");
-  fgUntie("/accelerations/pilot/z-accel-fps_sec");
-  fgUntie("/accelerations/ned/north-accel-fps_sec");
-  fgUntie("/accelerations/ned/east-accel-fps_sec");
-  fgUntie("/accelerations/ned/down-accel-fps_sec");
-  fgUntie("/accelerations/n-z-cg-fps_sec");
 }
 
 /**
@@ -524,7 +484,7 @@ void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
 
 
 void FGInterface::_updateGeocentricPosition( double lat, double lon,
-					     double alt )
+                                             double alt )
 {
     _updatePosition(SGGeoc::fromRadFt(lon, lat, get_Sea_level_radius() + alt));
 }
@@ -561,16 +521,16 @@ void FGInterface::set_Mach_number(double mach) {
 }
 
 void FGInterface::set_Velocities_Local( double north, 
-					double east, 
-					double down ){
+                                        double east,
+                                        double down ){
     v_local_v[0] = north;
     v_local_v[1] = east;
     v_local_v[2] = down;
 }
 
 void FGInterface::set_Velocities_Wind_Body( double u, 
-					    double v, 
-					    double w){
+                                            double v,
+                                            double w){
     v_wind_body_v[0] = u;
     v_wind_body_v[1] = v;
     v_wind_body_v[2] = w;
@@ -578,11 +538,11 @@ void FGInterface::set_Velocities_Wind_Body( double u,
 
 // Euler angles 
 void FGInterface::set_Euler_Angles( double phi, 
-				    double theta, 
-				    double psi ) {
+                                    double theta,
+                                    double psi ) {
     euler_angles_v[0] = phi;
     euler_angles_v[1] = theta;
-    euler_angles_v[2] = psi;                                            
+    euler_angles_v[2] = psi;
 }  
 
 // Flight Path
@@ -599,16 +559,16 @@ void FGInterface::set_Static_temperature(double T) { static_temperature = T; }
 void FGInterface::set_Density(double rho) { density = rho; }
 
 void FGInterface::set_Velocities_Local_Airmass (double wnorth, 
-						double weast, 
-						double wdown ) {
+                                                double weast,
+                                                double wdown ) {
     v_local_airmass_v[0] = wnorth;
     v_local_airmass_v[1] = weast;
     v_local_airmass_v[2] = wdown;
 }
 
 
-void FGInterface::_busdump(void) {
-
+void FGInterface::_busdump(void)
+{
     SG_LOG(SG_FLIGHT,SG_INFO,"d_cg_rp_body_v: " << d_cg_rp_body_v);
     SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_local_v: " << v_dot_local_v);
     SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_body_v: " << v_dot_body_v);
@@ -736,7 +696,7 @@ bool
 FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
                        double contact[3], double normal[3],
                        double linearVel[3], double angularVel[3],
-                       SGMaterial const*& material, simgear::BVHNode::Id& id)
+                       simgear::BVHMaterial const*& material, simgear::BVHNode::Id& id)
 {
   SGVec3d pt_m = SGVec3d(pt) - max_altoff*ground_cache.get_down();
   SGVec3d _contact, _normal, _linearVel, _angularVel;
@@ -759,7 +719,7 @@ bool
 FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
                         double contact[3], double normal[3],
                         double linearVel[3], double angularVel[3],
-                        SGMaterial const*& material, simgear::BVHNode::Id& id)
+                        simgear::BVHMaterial const*& material, simgear::BVHNode::Id& id)
 {
   // Convert units and do the real work.
   SGVec3d pt_m = SGVec3d(pt) - max_altoff*ground_cache.get_down();
@@ -785,10 +745,11 @@ bool
 FGInterface::get_nearest_m(double t, const double pt[3], double maxDist,
                            double contact[3], double normal[3],
                            double linearVel[3], double angularVel[3],
-                           SGMaterial const*& material,
+                           simgear::BVHMaterial const*& material,
                            simgear::BVHNode::Id& id)
 {
   SGVec3d _contact, _linearVel, _angularVel;
+  material = 0;
   if (!ground_cache.get_nearest(t, SGVec3d(pt), maxDist, _contact, _linearVel,
                                 _angularVel, id, material))
       return false;
@@ -803,10 +764,11 @@ bool
 FGInterface::get_nearest_ft(double t, const double pt[3], double maxDist,
                             double contact[3], double normal[3],
                             double linearVel[3], double angularVel[3],
-                            SGMaterial const*& material,
+                            simgear::BVHMaterial const*& material,
                             simgear::BVHNode::Id& id)
 {
   SGVec3d _contact, _linearVel, _angularVel;
+  material = 0;
   if (!ground_cache.get_nearest(t, SG_FEET_TO_METER*SGVec3d(pt),
                                 SG_FEET_TO_METER*maxDist, _contact, _linearVel,
                                 _angularVel, id, material))
@@ -868,7 +830,7 @@ FGInterface::get_groundlevel_m(const SGGeod& geod)
   }
   
   double contact[3], normal[3], vel[3], angvel[3];
-  const SGMaterial* material;
+  const simgear::BVHMaterial* material;
   simgear::BVHNode::Id id;
   // Ignore the return value here, since it just tells us if
   // the returns stem from the groundcache or from the coarse

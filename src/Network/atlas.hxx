@@ -30,6 +30,7 @@
 #include <string>
 
 #include "protocol.hxx"
+#include <simgear/props/props.hxx>
 
 class FlightProperties;
 
@@ -38,7 +39,8 @@ class FGAtlas : public FGProtocol {
     char buf[ FG_MAX_MSG_SIZE ];
     int length;
     FlightProperties* fdm;
-    
+    SGPropertyNode_ptr _adf_freq, _nav1_freq,_nav1_sel_radial, _nav2_freq, _nav2_sel_radial;
+
 public:
 
     FGAtlas();

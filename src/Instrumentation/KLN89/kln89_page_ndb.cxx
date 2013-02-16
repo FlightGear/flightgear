@@ -28,6 +28,8 @@
 #include "kln89_page_ndb.hxx"
 #include <Navaids/navrecord.hxx>
 
+using std::string;
+
 KLN89NDBPage::KLN89NDBPage(KLN89* parent) 
 : KLN89Page(parent) {
 	_nSubPages = 2;

@@ -36,7 +36,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/sound/sample_openal.hxx>
 
-FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const string &refname ) :
+FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const std::string &refname ) :
     last_enabled( true ),
     last_volume( 0.0 ),
     _enabled( fgGetNode("/sim/sound/chatter/enabled", true) ),
@@ -45,8 +45,6 @@ FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const string &refname ) :
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_smgr->add(this, refname);
     SGSampleGroup::_refname = refname;
-    _enabled->setBoolValue(true);
-    _volume->setFloatValue(1.0);
 }
 
 
@@ -81,7 +79,7 @@ FGSampleQueue::update (double dt)
         }
 
         // process message queue
-        const string msgid = "Sequential Audio Message";
+        const std::string msgid = "Sequential Audio Message";
         bool now_playing = false;
         if ( exists( msgid ) ) {
             now_playing = is_playing( msgid );

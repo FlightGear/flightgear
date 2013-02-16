@@ -30,19 +30,19 @@
 #include <simgear/compiler.h>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/sound/sample_group.hxx>
 
 #include <Navaids/navlist.hxx>
 
 #include "marker_beacon.hxx"
+#include <Sound/beacon.hxx>
 
 #include <string>
 using std::string;
 
-
 // Constructor
 FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
     audio_vol(NULL),
-    need_update(true),
     outer_blink(false),
     middle_blink(false),
     inner_blink(false),
@@ -51,18 +51,6 @@ FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
     _time_before_search_sec(0.0),
     _sgr(NULL)
 {
-    SGPath path( globals->get_fg_root() );
-    SGPath term = path;
-    term.append( "Navaids/range.term" );
-    SGPath low = path;
-    low.append( "Navaids/range.low" );
-    SGPath high = path;
-    high.append( "Navaids/range.high" );
-
-    term_tbl = new SGInterpTable( term.str() );
-    low_tbl = new SGInterpTable( low.str() );
-    high_tbl = new SGInterpTable( high.str() );
-
     for ( int i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
@@ -85,9 +73,6 @@ FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
 // Destructor
 FGMarkerBeacon::~FGMarkerBeacon()
 {
-    delete term_tbl;
-    delete low_tbl;
-    delete high_tbl;
 }
 
 
@@ -120,13 +105,16 @@ FGMarkerBeacon::init ()
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
 
-    morse.init();
-    beacon.init();
-    blink.stamp();
-
-    outer_marker = middle_marker = inner_marker = false;
+    reinit();
 }
 
+void
+FGMarkerBeacon::reinit ()
+{
+    blink.stamp();
+    outer_marker = middle_marker = inner_marker = false;
+    _time_before_search_sec = 0.0;
+}
 
 void
 FGMarkerBeacon::bind ()
@@ -161,8 +149,6 @@ FGMarkerBeacon::unbind ()
 void
 FGMarkerBeacon::update(double dt)
 {
-    need_update = false;
-
     // On timeout, scan again, this needs to run every iteration no
     // matter what the power or serviceable state.  If power is turned
     // off or the unit becomes unserviceable while a beacon sound is
@@ -317,7 +303,7 @@ void FGMarkerBeacon::search()
             // cout << "OUTER MARKER" << endl;
             if ( last_beacon != OUTER ) {
                 if ( ! _sgr->exists( current_sound_name ) ) {
-                    SGSoundSample *sound = beacon.get_outer();
+                    SGSoundSample *sound = FGBeacon::instance()->get_outer();
                     if ( sound ) {
                         _sgr->add( sound, current_sound_name );
                     }
@@ -336,7 +322,7 @@ void FGMarkerBeacon::search()
             // cout << "MIDDLE MARKER" << endl;
             if ( last_beacon != MIDDLE ) {
                 if ( ! _sgr->exists( current_sound_name ) ) {
-                    SGSoundSample *sound = beacon.get_middle();
+                    SGSoundSample *sound = FGBeacon::instance()->get_middle();
                     if ( sound ) {
                         _sgr->add( sound, current_sound_name );
                     }
@@ -355,7 +341,7 @@ void FGMarkerBeacon::search()
             // cout << "INNER MARKER" << endl;
             if ( last_beacon != INNER ) {
                 if ( ! _sgr->exists( current_sound_name ) ) {
-                    SGSoundSample *sound = beacon.get_inner();
+                    SGSoundSample *sound = FGBeacon::instance()->get_inner();
                     if ( sound ) {
                         _sgr->add( sound, current_sound_name );
                     }

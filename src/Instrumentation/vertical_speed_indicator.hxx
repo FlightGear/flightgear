@@ -36,15 +36,16 @@ public:
     virtual ~VerticalSpeedIndicator ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void update (double dt);
 
 private:
 
     double _internal_pressure_inhg;
 
-    string _name;
+    std::string _name;
     int _num;
-    string _static_pressure;
+    std::string _static_pressure;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;

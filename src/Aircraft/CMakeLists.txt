@@ -3,6 +3,16 @@ include(FlightGearComponent)
 set(SOURCES
 	controls.cxx
 	replay.cxx
+	flightrecorder.cxx
+    FlightHistory.cxx
 	)
-	
-flightgear_component(Aircraft "${SOURCES}")
+
+set(HEADERS
+	controls.hxx
+	replay.hxx
+	flightrecorder.hxx
+    FlightHistory.hxx
+	)
+
+
+flightgear_component(Aircraft "${SOURCES}" "${HEADERS}")

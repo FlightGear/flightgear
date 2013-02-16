@@ -2,7 +2,6 @@ include(FlightGearComponent)
 
 set(SOURCES
 	apt_loader.cxx
-	calc_loc.cxx
 	dynamicloader.cxx
 	dynamics.cxx
 	gnnode.cxx
@@ -17,5 +16,22 @@ set(SOURCES
 	simple.cxx
 	xmlloader.cxx
 	)
-	
-flightgear_component(Airports "${SOURCES}")
+
+set(HEADERS
+	apt_loader.hxx
+	dynamicloader.hxx
+	dynamics.hxx
+	gnnode.hxx
+	groundnetwork.hxx
+	parking.hxx
+	pavement.hxx
+	runwaybase.hxx
+	runwayprefloader.hxx
+	runwayprefs.hxx
+	runways.hxx
+	sidstar.hxx
+	simple.hxx
+	xmlloader.hxx
+	)
+    		
+flightgear_component(Airports "${SOURCES}" "${HEADERS}")

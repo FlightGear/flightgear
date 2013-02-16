@@ -39,16 +39,13 @@ INCLUDES
 #include <sstream>
 
 #include "FGPropeller.h"
-#include "models/FGPropagate.h"
-#include "models/FGAtmosphere.h"
-#include "models/FGAuxiliary.h"
 #include "input_output/FGXMLElement.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPropeller.cpp,v 1.34 2011/06/16 14:54:06 jentron Exp $";
+static const char *IdSrc = "$Id: FGPropeller.cpp,v 1.44 2012/04/29 13:10:46 bcoconni Exp $";
 static const char *IdHdr = ID_PROPELLER;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -102,7 +99,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
     ConstantSpeed = (int)prop_element->FindElementValueAsNumber("constspeed");
   if (prop_element->FindElement("reversepitch"))
     ReversePitch = prop_element->FindElementValueAsNumber("reversepitch");
-  while(table_element = prop_element->FindNextElement("table")) {
+  while((table_element = prop_element->FindNextElement("table")) != 0) {
     name = table_element->GetAttributeValue("name");
     try {
       if (name == "C_THRUST") {
@@ -127,7 +124,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
   local_element = prop_element->GetParent()->FindElement("sense");
   if (local_element) {
     double Sense = local_element->GetDataAsNumber();
-    SetSense(fabs(Sense)/Sense);
+    SetSense(Sense >= 0.0 ? 1.0 : -1.0);
   }
   local_element = prop_element->GetParent()->FindElement("p_factor");
   if (local_element) {
@@ -150,6 +147,8 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
 
   string property_name, base_property_name;
   base_property_name = CreateIndexedPropertyName("propulsion/engine", EngineNum);
+  property_name = base_property_name + "/engine-rpm";
+  PropertyManager->Tie( property_name.c_str(), this, &FGPropeller::GetEngineRPM );
   property_name = base_property_name + "/advance-ratio";
   PropertyManager->Tie( property_name.c_str(), &J );
   property_name = base_property_name + "/blade-angle";
@@ -195,51 +194,77 @@ FGPropeller::~FGPropeller()
 
 double FGPropeller::Calculate(double EnginePower)
 {
-  double omega, alpha, beta, PowerAvailable;
+  FGColumnVector3 localAeroVel = Transform().Transposed() * in.AeroUVW;
+  double omega, PowerAvailable;
 
-  double Vel = fdmex->GetAuxiliary()->GetAeroUVW(eU);
-  double rho = fdmex->GetAtmosphere()->GetDensity();
+  double Vel = localAeroVel(eU);
+  double rho = in.Density;
   double RPS = RPM/60.0;
-
-  PowerAvailable = EnginePower - GetPowerRequired();
 
   // Calculate helical tip Mach
   double Area = 0.25*Diameter*Diameter*M_PI;
   double Vtip = RPS * Diameter * M_PI;
-  HelicalTipMach = sqrt(Vtip*Vtip + Vel*Vel) / 
-                   fdmex->GetAtmosphere()->GetSoundSpeed(); 
+  HelicalTipMach = sqrt(Vtip*Vtip + Vel*Vel) / in.Soundspeed;
+
+  PowerAvailable = EnginePower - GetPowerRequired();
 
   if (RPS > 0.0) J = Vel / (Diameter * RPS); // Calculate J normally
-  else           J = Vel / Diameter;      
+  else           J = Vel / Diameter;
 
   if (MaxPitch == MinPitch) {    // Fixed pitch prop
-         ThrustCoeff = cThrust->GetValue(J);
+    ThrustCoeff = cThrust->GetValue(J);
   } else {                       // Variable pitch prop
-         ThrustCoeff = cThrust->GetValue(J, Pitch);
+    ThrustCoeff = cThrust->GetValue(J, Pitch);
   }
- 
+
   // Apply optional scaling factor to Ct (default value = 1)
   ThrustCoeff *= CtFactor;
 
   // Apply optional Mach effects from CT_MACH table
   if (CtMach) ThrustCoeff *= CtMach->GetValue(HelicalTipMach);
 
-  if (P_Factor > 0.0001) {
-    alpha = fdmex->GetAuxiliary()->Getalpha();
-    beta  = fdmex->GetAuxiliary()->Getbeta();
-    SetActingLocationY( GetLocationY() + P_Factor*alpha*Sense);
-    SetActingLocationZ( GetLocationZ() + P_Factor*beta*Sense);
-  }
-
   Thrust = ThrustCoeff*RPS*RPS*D4*rho;
 
-  // From B. W. McCormick, "Aerodynamics, Aeronautics, and Flight Mechanics"
-  // first edition, eqn. 6.15 (propeller analysis chapter).
-  Vinduced = 0.5 * (-Vel + sqrt(Vel*Vel + 2.0*Thrust/(rho*Area)));
+  // Induced velocity in the propeller disk area. This formula is obtained
+  // from momentum theory - see B. W. McCormick, "Aerodynamics, Aeronautics,
+  // and Flight Mechanics" 1st edition, eqn. 6.15 (propeller analysis chapter).
+  // Since Thrust and Vel can both be negative we need to adjust this formula
+  // To handle sign (direction) separately from magnitude.
+  double Vel2sum = Vel*abs(Vel) + 2.0*Thrust/(rho*Area);
+  
+  if( Vel2sum > 0.0)
+    Vinduced = 0.5 * (-Vel + sqrt(Vel2sum));
+  else
+    Vinduced = 0.5 * (-Vel - sqrt(-Vel2sum));
+
+  // We need to drop the case where the downstream velocity is opposite in
+  // direction to the aircraft velocity. For example, in such a case, the
+  // direction of the airflow on the tail would be opposite to the airflow on
+  // the wing tips. When such complicated airflows occur, the momentum theory
+  // breaks down and the formulas above are no longer applicable
+  // (see H. Glauert, "The Elements of Airfoil and Airscrew Theory",
+  // 2nd edition, §16.3, pp. 219-221)
+
+  if ((Vel+2.0*Vinduced)*Vel < 0.0)
+    Vinduced = 0.0; // We cannot calculate the induced velocity so let's assume it is zero.
+    
+  // P-factor is simulated by a shift of the acting location of the thrust.
+  // The shift is a multiple of the angle between the propeller shaft axis
+  // and the relative wind that goes through the propeller disk.
+  if (P_Factor > 0.0001) {
+    double tangentialVel = localAeroVel.Magnitude(eV, eW);
+
+    if (tangentialVel > 0.0001) {
+      double angle = atan2(tangentialVel, localAeroVel(eU));
+      double factor = Sense * P_Factor * angle / tangentialVel;
+      SetActingLocationY( GetLocationY() + factor * localAeroVel(eW));
+      SetActingLocationZ( GetLocationZ() + factor * localAeroVel(eV));
+    }
+  }
 
   omega = RPS*2.0*M_PI;
 
-  vFn(1) = Thrust;
+  vFn(eX) = Thrust;
 
   // The Ixx value and rotation speed given below are for rotation about the
   // natural axis of the engine. The transform takes place in the base class
@@ -258,7 +283,7 @@ double FGPropeller::Calculate(double EnginePower)
 
   // Transform Torque and momentum first, as PQR is used in this
   // equation and cannot be transformed itself.
-  vMn = fdmex->GetPropagate()->GetPQR()*(Transform()*vH) + Transform()*vTorque;
+  vMn = in.PQR*(Transform()*vH) + Transform()*vTorque;
 
   return Thrust; // return thrust in pounds
 }
@@ -268,12 +293,12 @@ double FGPropeller::Calculate(double EnginePower)
 double FGPropeller::GetPowerRequired(void)
 {
   double cPReq, J;
-  double rho = fdmex->GetAtmosphere()->GetDensity();
-  double Vel = fdmex->GetAuxiliary()->GetAeroUVW(eU);
+  double rho = in.Density;
+  double Vel = in.AeroUVW(eU);
   double RPS = RPM / 60.0;
 
   if (RPS != 0.0) J = Vel / (Diameter * RPS);
-  else            J = Vel / Diameter; 
+  else            J = Vel / Diameter;
 
   if (MaxPitch == MinPitch) {   // Fixed pitch prop
     cPReq = cPower->GetValue(J);
@@ -320,7 +345,7 @@ double FGPropeller::GetPowerRequired(void)
     } else { // Manual Pitch Mode, pitch is controlled externally
 
     }
-  
+
     cPReq = cPower->GetValue(J, Pitch);
   }
 
@@ -338,8 +363,8 @@ double FGPropeller::GetPowerRequired(void)
      double CL = (90.0 - Pitch) / 20.0;
      if (CL > 1.5) CL = 1.5;
      double BladeArea = Diameter * Diameter / 32.0 * numBlades;
-     vTorque(eX) = -Sense*BladeArea*Diameter*Vel*Vel*rho*0.19*CL;
-     PowerRequired = fabs(vTorque(eX))*0.2*M_PI;
+     vTorque(eX) = -Sense*BladeArea*Diameter*fabs(Vel)*Vel*rho*0.19*CL;
+     PowerRequired = Sense*(vTorque(eX))*0.2*M_PI;
   }
 
   return PowerRequired;
@@ -347,7 +372,7 @@ double FGPropeller::GetPowerRequired(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector3 FGPropeller::GetPFactor()
+FGColumnVector3 FGPropeller::GetPFactor() const
 {
   double px=0.0, py, pz;
 
@@ -359,7 +384,7 @@ FGColumnVector3 FGPropeller::GetPFactor()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropeller::GetThrusterLabels(int id, string delimeter)
+string FGPropeller::GetThrusterLabels(int id, const string& delimeter)
 {
   std::ostringstream buf;
 
@@ -376,7 +401,7 @@ string FGPropeller::GetThrusterLabels(int id, string delimeter)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropeller::GetThrusterValues(int id, string delimeter)
+string FGPropeller::GetThrusterValues(int id, const string& delimeter)
 {
   std::ostringstream buf;
 

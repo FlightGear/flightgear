@@ -34,7 +34,6 @@ public:
 
   virtual bool init(bool search_in_AI_path=false);
   virtual void bind();
-  virtual void unbind();
   virtual void update(double dt);
 
   void addMotionInfo(FGExternalMotionData& motionInfo, long stamp);
@@ -86,7 +85,7 @@ private:
 
   long mLastTimestamp;
 
-  // Propertiies for tankers
+  // Properties for tankers
   SGPropertyNode_ptr refuel_node;
   bool isTanker;
   bool contact;          // set if this tanker is within fuelling range

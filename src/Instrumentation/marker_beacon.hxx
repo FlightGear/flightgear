@@ -29,22 +29,12 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
-
-#include <Sound/beacon.hxx>
-#include <Sound/morse.hxx>
 
 class SGSampleGroup;
 
 class FGMarkerBeacon : public SGSubsystem
 {
-    FGBeacon beacon;
-    FGMorse morse;
-
-    SGInterpTable *term_tbl;
-    SGInterpTable *low_tbl;
-    SGInterpTable *high_tbl;
 
     // Inputs
     SGPropertyNode_ptr lon_node;
@@ -57,8 +47,6 @@ class FGMarkerBeacon : public SGSubsystem
     SGPropertyNode_ptr serviceable;
     SGPropertyNode_ptr sound_working;
 
-    bool need_update;
-
     bool outer_marker;
     bool middle_marker;
     bool inner_marker;
@@ -68,7 +56,7 @@ class FGMarkerBeacon : public SGSubsystem
     bool middle_blink;
     bool inner_blink;
 
-    string name;
+    std::string name;
     int num;
 
     // internal periodic station search timer
@@ -89,6 +77,7 @@ public:
     ~FGMarkerBeacon();
 
     void init ();
+    void reinit ();
     void bind ();
     void unbind ();
     void update (double dt);

@@ -1,11 +1,10 @@
 include(FlightGearComponent)
 
-set(SOURCES
-    Airplane.cpp
+set(COMMON
+	Airplane.cpp
 	Atmosphere.cpp
 	ControlMap.cpp
 	FGFDM.cpp
-	FGGround.cpp
 	Gear.cpp
 	Glue.cpp
 	Ground.cpp
@@ -14,7 +13,6 @@ set(SOURCES
 	Integrator.cpp
 	Jet.cpp
 	Launchbar.cpp
-	Math.cpp
 	Model.cpp
 	PistonEngine.cpp
 	PropEngine.cpp
@@ -28,18 +26,29 @@ set(SOURCES
 	TurbineEngine.cpp
 	Turbulence.cpp
 	Wing.cpp
+	)
+
+set(SOURCES
+	${COMMON}
 	YASim.cxx
-    )
+	FGGround.cpp
+	)
 
-flightgear_component(YASim "${SOURCES}")
-    
-add_executable(yasim yasim-test.cpp)
+flightgear_component(YASim  "${SOURCES}")
 
-target_link_libraries(yasim 
-	fgYASim
-	${SIMGEAR_LIBRARIES}
-	${ZLIB_LIBRARIES})
+if(ENABLE_TESTS)
+add_executable(yasim yasim-test.cpp ${COMMON})
+add_executable(yasim-proptest proptest.cpp ${COMMON})
 
-install(TARGETS yasim RUNTIME DESTINATION bin)
-	
+target_link_libraries(yasim
+		${SIMGEAR_CORE_LIBRARIES}
+		${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
+
+target_link_libraries(yasim-proptest
+		${SIMGEAR_CORE_LIBRARIES}
+		${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
+
+install(TARGETS yasim yasim-proptest RUNTIME DESTINATION bin)
+
+endif(ENABLE_TESTS)
 

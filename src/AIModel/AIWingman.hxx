@@ -26,7 +26,6 @@
 #include "AIBase.hxx"
 
 #include <simgear/sg_inlines.h>
-#include <simgear/math/SGMath.hxx>
 
 
 class FGAIWingman : public FGAIBallistic {
@@ -35,17 +34,15 @@ public:
     virtual ~FGAIWingman();
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
-    virtual void bind();
-    virtual void unbind();
-    virtual const char* getTypeString(void) const { return "wingman"; }
 
     bool init(bool search_in_AI_path=false);
-
-private:
-
-    virtual void reinit() { init(); }
+    virtual void bind();
+    virtual void reinit();
     virtual void update (double dt);
 
+    virtual const char* getTypeString(void) const { return "wingman"; }
+
+private:
     void formateToAC(double dt);
     void Break(double dt);
     void Join(double dt);

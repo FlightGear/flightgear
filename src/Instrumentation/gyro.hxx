@@ -18,12 +18,15 @@ public:
      */
     Gyro ();
 
-
     /**
      * Destructor.
      */
     virtual ~Gyro ();
 
+    /**
+     * Reset the gyro.
+     */
+    void reinit(void);
 
     /**
      * Update the gyro.

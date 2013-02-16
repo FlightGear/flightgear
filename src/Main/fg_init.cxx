@@ -29,21 +29,9 @@
 #include <stdlib.h>
 #include <string.h>             // strcmp()
 
-#if defined( unix ) || defined( __CYGWIN__ )
-#  include <unistd.h>           // for gethostname()
-#endif
 #ifdef _WIN32
-#  include <direct.h>           // for getcwd()
-#  define getcwd _getcwd
 #  include <io.h>               // isatty()
 #  define isatty _isatty
-#  include "winsock2.h"		// for gethostname()
-#endif
-
-// work around a stdc++ lib bug in some versions of linux, but doesn't
-// seem to hurt to have this here for all versions of Linux.
-#ifdef linux
-#  define _G_NO_EXTERN_TEMPLATES
 #endif
 
 #include <simgear/compiler.h>
@@ -56,25 +44,28 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/structure/SGPerfMon.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/misc/strutils.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
-#include <Airports/apt_loader.hxx>
+#include <Aircraft/FlightHistory.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <Airports/dynamics.hxx>
 
 #include <AIModel/AIManager.hxx>
 
-#include <ATCDCL/ATCmgr.hxx>
+#include <ATCDCL/ATISmgr.hxx>
+#include <ATC/atc_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/autopilotgroup.hxx>
@@ -82,6 +73,8 @@
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 
+#include <Canvas/canvas_mgr.hxx>
+#include <Canvas/gui_mgr.hxx>
 #include <GUI/new_gui.hxx>
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
@@ -91,20 +84,24 @@
 #include <AIModel/AIManager.hxx>
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
-#include <Navaids/fix.hxx>
-#include <Navaids/fixlist.hxx>
-#include <Navaids/airways.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/voice.hxx>
+#include <Sound/soundmanager.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
 #include <Traffic/TrafficMgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 #include <FDM/fdm_shell.hxx>
-
+#include <Environment/ephemeris.hxx>
 #include <Environment/environment_mgr.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/viewmgr.hxx>
+#include <Navaids/NavDataCache.hxx>
+#include <Instrumentation/HUD/HUD.hxx>
+#include <Cockpit/cockpitDisplayManager.hxx>
+#include <Network/HTTPClient.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -113,229 +110,14 @@
 #include "options.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
-#include "renderer.hxx"
-#include "viewmgr.hxx"
 #include "main.hxx"
-
-
-#ifdef __APPLE__
-#  include <CoreFoundation/CoreFoundation.h>
-#endif
+#include "positioninit.hxx"
 
 using std::string;
+using std::endl;
+using std::cerr;
+using std::cout;
 using namespace boost::algorithm;
-
-extern const char *default_root;
-
-
-// Scan the command line options for the specified option and return
-// the value.
-static string fgScanForOption( const string& option, int argc, char **argv ) {
-    int i = 1;
-
-    if (hostname == NULL)
-    {
-        char _hostname[256];
-        if( gethostname(_hostname, 256) >= 0 ) {
-            hostname = strdup(_hostname);
-            free_hostname = true;
-        }
-    }
-
-    SG_LOG(SG_GENERAL, SG_INFO, "Scanning command line for: " << option );
-
-    int len = option.length();
-
-    while ( i < argc ) {
-	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
-
-	string arg = argv[i];
-	if ( arg.find( option ) == 0 ) {
-	    return arg.substr( len );
-	}
-
-	i++;
-    }
-
-    return "";
-}
-
-
-// Scan the user config files for the specified option and return
-// the value.
-static string fgScanForOption( const string& option, const string& path ) {
-    sg_gzifstream in( path );
-    if ( !in.is_open() ) {
-        return "";
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO, "Scanning " << path << " for: " << option );
-
-    int len = option.length();
-
-    in >> skipcomment;
-    while ( ! in.eof() ) {
-	string line;
-	getline( in, line, '\n' );
-
-        // catch extraneous (DOS) line ending character
-        if ( line[line.length() - 1] < 32 ) {
-            line = line.substr( 0, line.length()-1 );
-        }
-
-	if ( line.find( option ) == 0 ) {
-	    return line.substr( len );
-	}
-
-	in >> skipcomment;
-    }
-
-    return "";
-}
-
-// Scan the user config files for the specified option and return
-// the value.
-static string fgScanForOption( const string& option ) {
-    string arg("");
-
-#if defined( unix ) || defined( __CYGWIN__ ) || defined(_MSC_VER)
-    // Next check home directory for .fgfsrc.hostname file
-    if ( arg.empty() ) {
-        if ( homedir != NULL && hostname != NULL && strlen(hostname) > 0) {
-            SGPath config( homedir );
-            config.append( ".fgfsrc" );
-            config.concat( "." );
-            config.concat( hostname );
-            arg = fgScanForOption( option, config.str() );
-        }
-    }
-#endif
-
-    // Next check home directory for .fgfsrc file
-    if ( arg.empty() ) {
-        if ( homedir != NULL ) {
-            SGPath config( homedir );
-            config.append( ".fgfsrc" );
-            arg = fgScanForOption( option, config.str() );
-        }
-    }
-
-    if ( arg.empty() ) {
-        // Check for $fg_root/system.fgfsrc
-        SGPath config( globals->get_fg_root() );
-        config.append( "system.fgfsrc" );
-        arg = fgScanForOption( option, config.str() );
-    }
-
-    return arg;
-}
-
-
-// Read in configuration (files and command line options) but only set
-// fg_root and aircraft_paths, which are needed *before* do_options() is called
-// in fgInitConfig
-
-bool fgInitFGRoot ( int argc, char **argv ) {
-    string root;
-
-    // First parse command line options looking for --fg-root=, this
-    // will override anything specified in a config file
-    root = fgScanForOption( "--fg-root=", argc, argv);
-
-    // Check in one of the user configuration files.
-    if (root.empty() )
-        root = fgScanForOption( "--fg-root=" );
-    
-    // Next check if fg-root is set as an env variable
-    if ( root.empty() ) {
-        char *envp = ::getenv( "FG_ROOT" );
-        if ( envp != NULL ) {
-            root = envp;
-        }
-    }
-
-    // Otherwise, default to a random compiled-in location if we can't
-    // find fg-root any other way.
-    if ( root.empty() ) {
-#if defined( __CYGWIN__ )
-        root = "../data";
-#elif defined( _WIN32 )
-        root = "..\\data";
-#elif defined(__APPLE__) 
-        /*
-        The following code looks for the base package inside the application 
-        bundle, in the standard Contents/Resources location. 
-        */
-        CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
-
-        // look for a 'data' subdir
-        CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
-
-        // now convert down to a path, and the a c-string
-        CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
-        root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
-
-        CFRelease(resourcesUrl);
-        CFRelease(dataDir);
-        CFRelease(path);
-#else
-        root = PKGLIBDIR;
-#endif
-    }
-
-    SG_LOG(SG_INPUT, SG_INFO, "fg_root = " << root );
-    globals->set_fg_root(root);
-    
-    return true;
-}
-
-
-// Read in configuration (files and command line options) but only set
-// aircraft
-bool fgInitFGAircraft ( int argc, char **argv ) {
-    
-    string aircraftDir = fgScanForOption("--fg-aircraft=", argc, argv);
-    if (aircraftDir.empty()) {
-      aircraftDir =  fgScanForOption("--fg-aircraft="); 
-    }
-
-    const char* envp = ::getenv("FG_AIRCRAFT");
-    if (aircraftDir.empty() && envp) {
-      globals->append_aircraft_paths(envp);
-    }
-    
-    if (!aircraftDir.empty()) {
-      globals->append_aircraft_paths(aircraftDir);
-    }
-    
-    string aircraft;
-
-    // First parse command line options looking for --aircraft=, this
-    // will override anything specified in a config file
-    aircraft = fgScanForOption( "--aircraft=", argc, argv );
-    if ( aircraft.empty() ) {
-        // check synonym option
-        aircraft = fgScanForOption( "--vehicle=", argc, argv );
-    }
-
-    // Check in one of the user configuration files.
-    if ( aircraft.empty() ) {
-        aircraft = fgScanForOption( "--aircraft=" );
-    }
-    if ( aircraft.empty() ) {
-        aircraft = fgScanForOption( "--vehicle=" );
-    }
-
-    // if an aircraft was specified, set the property name
-    if ( !aircraft.empty() ) {
-        SG_LOG(SG_INPUT, SG_INFO, "aircraft = " << aircraft );
-        fgSetString("/sim/aircraft", aircraft.c_str() );
-    } else {
-        SG_LOG(SG_INPUT, SG_INFO, "No user specified aircraft, using default" );
-    }
-
-    return true;
-}
 
 
 // Return the current base package version
@@ -361,157 +143,6 @@ string fgBasePackageVersion() {
     return version;
 }
 
-
-// Initialize the localization
-SGPropertyNode *fgInitLocale(const char *language) {
-   SGPropertyNode *c_node = NULL, *d_node = NULL;
-   SGPropertyNode *intl = fgGetNode("/sim/intl");
-
-   SG_LOG(SG_GENERAL, SG_INFO, "Selecting language: " << language );
-
-   // localization not defined
-   if (!intl)
-      return NULL;
-
-   //
-   // Select the proper language from the list
-   //
-   vector<SGPropertyNode_ptr> locale = intl->getChildren("locale");
-   for (unsigned int i = 0; i < locale.size(); i++) {
-
-      vector<SGPropertyNode_ptr> lang = locale[i]->getChildren("lang");
-      for (unsigned int j = 0; j < lang.size(); j++) {
-
-         if (!strcmp(lang[j]->getStringValue(), language)) {
-            c_node = locale[i];
-            break;
-         }
-      }
-   }
-
-
-   // Get the defaults
-   d_node = intl->getChild("locale");
-   if (!c_node)
-      c_node = d_node;
-
-   // Check for localized font
-   SGPropertyNode *font_n = c_node->getNode("font", true);
-   if ( !strcmp(font_n->getStringValue(), "") )
-      font_n->setStringValue(d_node->getStringValue("font", "typewriter.txf"));
-
-
-   //
-   // Load the default strings
-   //
-   SGPath d_path( globals->get_fg_root() );
-
-   const char *d_path_str = d_node->getStringValue("strings");
-   if (!d_path_str) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "No path in " << d_node->getPath() << "/strings.");
-      return NULL;
-   }
-
-   d_path.append(d_path_str);
-   SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from " << d_path.str());
-
-   SGPropertyNode *strings = c_node->getNode("strings");
-   try {
-      readProperties(d_path.str(), strings);
-   } catch (const sg_exception &) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings");
-      return NULL;
-   }
-
-   //
-   // Load the language specific strings
-   //
-   if (c_node != d_node) {
-      SGPath c_path( globals->get_fg_root() );
-
-      const char *c_path_str = c_node->getStringValue("strings");
-      if (!c_path_str) {
-         SG_LOG(SG_GENERAL, SG_ALERT, "No path in " << c_node->getPath() << "/strings");
-         return NULL;
-      }
-
-      c_path.append(c_path_str);
-      SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from " << c_path.str());
-
-      try {
-         readProperties(c_path.str(), strings);
-      } catch (const sg_exception &) {
-         SG_LOG(SG_GENERAL, SG_ALERT,
-                 "Unable to read the localized strings from " << c_path.str());
-         return NULL;
-      }
-   }
-
-   return c_node;
-}
-
-
-
-// Initialize the localization routines
-bool fgDetectLanguage() {
-    const char *language = ::getenv("LANG");
-
-    if (language == NULL) {
-        SG_LOG(SG_GENERAL, SG_INFO, "Unable to detect the language" );
-        language = "C";
-    }
-
-    SGPropertyNode *locale = fgInitLocale(language);
-    if (!locale) {
-       SG_LOG(SG_GENERAL, SG_ALERT,
-              "No internationalization settings specified in preferences.xml" );
-
-       return false;
-    }
-
-    globals->set_locale( locale );
-
-    return true;
-}
-
-// Attempt to locate and parse the various non-XML config files in order
-// from least precidence to greatest precidence
-static void
-do_options (int argc, char ** argv)
-{
-    // Check for $fg_root/system.fgfsrc
-    SGPath config( globals->get_fg_root() );
-    config.append( "system.fgfsrc" );
-    fgParseOptions(config.str());
-
-#if defined( unix ) || defined( __CYGWIN__ ) || defined(_MSC_VER)
-    if( hostname != NULL && strlen(hostname) > 0 ) {
-        config.concat( "." );
-        config.concat( hostname );
-        fgParseOptions(config.str());
-    }
-#endif
-
-    // Check for ~/.fgfsrc
-    if ( homedir != NULL ) {
-        config.set( homedir );
-        config.append( ".fgfsrc" );
-        fgParseOptions(config.str());
-    }
-
-#if defined( unix ) || defined( __CYGWIN__ ) || defined(_MSC_VER)
-    if( hostname != NULL && strlen(hostname) > 0 ) {
-        // Check for ~/.fgfsrc.hostname
-        config.concat( "." );
-        config.concat( hostname );
-        fgParseOptions(config.str());
-    }
-#endif
-
-    // Parse remaining command line options
-    // These will override anything specified in a config file
-    fgParseArgs(argc, argv);
-}
 
 template <class T>
 bool fgFindAircraftInDir(const SGPath& dirPath, T* obj, bool (T::*pred)(const SGPath& p))
@@ -590,6 +221,29 @@ public:
     }
     
     _searchAircraft = aircraft + "-set.xml";
+    std::string aircraftDir = fgGetString("/sim/aircraft-dir", "");
+    if (!aircraftDir.empty()) {
+      // aircraft-dir was set, skip any searching at all, if it's valid
+      simgear::Dir acPath(aircraftDir);
+      SGPath setFile = acPath.file(_searchAircraft);
+      if (setFile.exists()) {
+        SG_LOG(SG_GENERAL, SG_INFO, "found aircraft in dir: " << aircraftDir );
+        
+        try {
+          readProperties(setFile.str(), globals->get_props());
+        } catch ( const sg_exception &e ) {
+          SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
+          return false;
+        }
+        
+        return true;
+      } else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "aircraft '" << _searchAircraft << 
+               "' not found in specified dir:" << aircraftDir);
+        return false;
+      }
+    }
+    
     if (!checkCache()) {
       // prepare cache for re-scan
       SGPropertyNode *n = _cache->getNode("fg-root", true);
@@ -703,571 +357,139 @@ private:
   SGPropertyNode* _cache;
 };
 
-// Read in configuration (file and command line)
-bool fgInitConfig ( int argc, char **argv ) {
-
-    // First, set some sane default values
-    fgSetDefaults();
-
-    // Read global preferences from $FG_ROOT/preferences.xml
-    SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
-    fgLoadProps("preferences.xml", globals->get_props());
-    SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
-
-    // Detect the required language as early as possible
-    if ( !fgDetectLanguage() ) {
-        return false;
-    }
-
-    SGPropertyNode autosave;
 #ifdef _WIN32
-    char *envp = ::getenv( "APPDATA" );
-    if (envp != NULL ) {
-        SGPath config( envp );
-        config.append( "flightgear.org" );
+static SGPath platformDefaultDataPath()
+{
+  char *envp = ::getenv( "APPDATA" );
+  SGPath config( envp );
+  config.append( "flightgear.org" );
+  return config;
+}
+#elif __APPLE__
+
+#include <CoreServices/CoreServices.h>
+
+static SGPath platformDefaultDataPath()
+{
+  FSRef ref;
+  OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &ref);
+  if (err) {
+    return SGPath();
+  }
+  
+  unsigned char path[1024];
+  if (FSRefMakePath(&ref, path, 1024) != noErr) {
+    return SGPath();
+  }
+  
+  SGPath appData;
+  appData.set((const char*) path);
+  appData.append("FlightGear");
+  return appData;
+}
 #else
-    if ( homedir != NULL ) {
-        SGPath config( homedir );
-        config.append( ".fgfs" );
+static SGPath platformDefaultDataPath()
+{
+  SGPath config( homedir );
+  config.append( ".fgfs" );
+  return config;
+}
 #endif
-        const char *fg_home = getenv("FG_HOME");
-        if (fg_home)
-            config = fg_home;
 
-        SGPath home_export(config.str());
-        home_export.append("Export/dummy");
-        home_export.create_dir(0777);
-
-        // Set /sim/fg-home and don't allow malign code to override it until
-        // Nasal security is set up.  Use FG_HOME if necessary.
-        SGPropertyNode *home = fgGetNode("/sim", true);
-        home->removeChild("fg-home", 0, false);
-        home = home->getChild("fg-home", 0, true);
-        home->setStringValue(config.c_str());
-        home->setAttribute(SGPropertyNode::WRITE, false);
-
-        config.append( "autosave.xml" );
-        if (config.exists()) {
-          SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << config.str());
-          try {
-              readProperties(config.str(), &autosave, SGPropertyNode::USERARCHIVE);
-          } catch (sg_exception& e) {
-              SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
-                << "(from " << e.getOrigin() << ")");
-          }
-        }
+// Read in configuration (file and command line)
+bool fgInitConfig ( int argc, char **argv )
+{
+    SGPath dataPath = platformDefaultDataPath();
+    
+    const char *fg_home = getenv("FG_HOME");
+    if (fg_home)
+      dataPath = fg_home;
+      
+    globals->set_fg_home(dataPath.c_str());
+    
+    simgear::Dir exportDir(simgear::Dir(dataPath).file("Export"));
+    if (!exportDir.exists()) {
+      exportDir.create(0777);
     }
     
+    // Set /sim/fg-home and don't allow malign code to override it until
+    // Nasal security is set up.  Use FG_HOME if necessary.
+    SGPropertyNode *home = fgGetNode("/sim", true);
+    home->removeChild("fg-home", 0, false);
+    home = home->getChild("fg-home", 0, true);
+    home->setStringValue(dataPath.c_str());
+    home->setAttribute(SGPropertyNode::WRITE, false);
+  
+    flightgear::Options* options = flightgear::Options::sharedInstance();
+    options->init(argc, argv, dataPath);
+    bool loadDefaults = flightgear::Options::sharedInstance()->shouldLoadDefaultConfig();
+    if (loadDefaults) {
+      // Read global preferences from $FG_ROOT/preferences.xml
+      SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
+      fgLoadProps("preferences.xml", globals->get_props());
+      SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
+
+      // do not load user settings when reset to default is requested
+      if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults"))
+      {
+          SG_LOG(SG_ALL, SG_ALERT, "Ignoring user settings. Restoring defaults.");
+      }
+      else
+      {
+          globals->loadUserSettings(dataPath);
+      }
+    } else {
+      SG_LOG(SG_GENERAL, SG_INFO, "not reading default configuration files");
+    }// of no-default-config selected
+  
     // Scan user config files and command line for a specified aircraft.
-    fgInitFGAircraft(argc, argv);
-    FindAndCacheAircraft f(&autosave);
+    options->initAircraft();
+
+    FindAndCacheAircraft f(globals->get_props());
     if (!f.loadAircraft()) {
       return false;
     }
 
-    copyProperties(&autosave, globals->get_props());
-
     // parse options after loading aircraft to ensure any user
     // overrides of defaults are honored.
-    do_options(argc, argv);
-
-    return true;
-}
-
-// Set current tower position lon/lat given an airport id
-static bool fgSetTowerPosFromAirportID( const string& id) {
-    const FGAirport *a = fgFindAirportID( id);
-    if (a) {
-        SGGeod tower = a->getTowerLocation();
-        fgSetDouble("/sim/tower/longitude-deg",  tower.getLongitudeDeg());
-        fgSetDouble("/sim/tower/latitude-deg",  tower.getLatitudeDeg());
-        fgSetDouble("/sim/tower/altitude-ft", tower.getElevationFt());
-        return true;
-    } else {
-        return false;
-    }
-
-}
-
-struct FGTowerLocationListener : SGPropertyChangeListener {
-    void valueChanged(SGPropertyNode* node) {
-        string id(node->getStringValue());
-        if (fgGetBool("/sim/tower/auto-position",true))
-        {
-            // enforce using closest airport when auto-positioning is enabled 
-            const char* closest_airport = fgGetString("/sim/airport/closest-airport-id", "");
-            if (closest_airport && (id != closest_airport))
-            {
-                id = closest_airport;
-                node->setStringValue(id);
-            }
-        }
-        fgSetTowerPosFromAirportID(id);
-    }
-};
-
-struct FGClosestTowerLocationListener : SGPropertyChangeListener
-{
-    void valueChanged(SGPropertyNode* )
-    {
-        // closest airport has changed
-        if (fgGetBool("/sim/tower/auto-position",true))
-        {
-            // update tower position
-            const char* id = fgGetString("/sim/airport/closest-airport-id", "");
-            if (id && *id!=0)
-                fgSetString("/sim/tower/airport-id", id);
-        }
-    }
-};
-
-void fgInitTowerLocationListener() {
-    fgGetNode("/sim/tower/airport-id",  true)
-        ->addChangeListener( new FGTowerLocationListener(), true );
-    FGClosestTowerLocationListener* ntcl = new FGClosestTowerLocationListener();
-    fgGetNode("/sim/airport/closest-airport-id", true)
-        ->addChangeListener(ntcl , true );
-    fgGetNode("/sim/tower/auto-position", true)
-           ->addChangeListener(ntcl, true );
-}
-
-static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double aTargetHeading = HUGE_VAL)
-{
-  SGGeod startPos(aStartPos);
-  if (aTargetHeading == HUGE_VAL) {
-    aTargetHeading = aHeading;
-  }
-  
-  if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON ) {
-    double offsetDistance = fgGetDouble("/sim/presets/offset-distance-nm");
-    offsetDistance *= SG_NM_TO_METER;
-    double offsetAzimuth = aHeading;
-    if ( fabs(fgGetDouble("/sim/presets/offset-azimuth-deg")) > SG_EPSILON ) {
-      offsetAzimuth = fgGetDouble("/sim/presets/offset-azimuth-deg");
-      aHeading = aTargetHeading;
-    }
-
-    SGGeod offset;
-    double az2; // dummy
-    SGGeodesy::direct(startPos, offsetAzimuth + 180, offsetDistance, offset, az2);
-    startPos = offset;
-  }
-
-  // presets
-  fgSetDouble("/sim/presets/longitude-deg", startPos.getLongitudeDeg() );
-  fgSetDouble("/sim/presets/latitude-deg", startPos.getLatitudeDeg() );
-  fgSetDouble("/sim/presets/heading-deg", aHeading );
-
-  // other code depends on the actual values being set ...
-  fgSetDouble("/position/longitude-deg",  startPos.getLongitudeDeg() );
-  fgSetDouble("/position/latitude-deg",  startPos.getLatitudeDeg() );
-  fgSetDouble("/orientation/heading-deg", aHeading );
-}
-
-// Set current_options lon/lat given an airport id and heading (degrees)
-bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
-    if ( id.empty() )
-        return false;
-
-    // set initial position from runway and heading
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "Attempting to set starting position from airport code "
-            << id << " heading " << tgt_hdg );
-
-    const FGAirport* apt = fgFindAirportID(id);
-    if (!apt) return false;
-    FGRunway* r = apt->findBestRunwayForHeading(tgt_hdg);
-    fgSetString("/sim/atc/runway", r->ident().c_str());
-
-    SGGeod startPos = r->pointOnCenterline(fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
-	  fgApplyStartOffset(startPos, r->headingDeg(), tgt_hdg);
-    return true;
-}
-
-// Set current_options lon/lat given an airport id and parkig position name
-static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& parkpos ) {
-    if ( id.empty() )
-        return false;
-
-    // can't see an easy way around this const_cast at the moment
-    FGAirport* apt = const_cast<FGAirport*>(fgFindAirportID(id));
-    if (!apt) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport " << id );
-        return false;
-    }
-    FGAirportDynamics* dcs = apt->getDynamics();
-    if (!dcs) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Failed to find parking position " << parkpos <<
-                " at airport " << id );
-        return false;
-    }
-    
-    int park_index = dcs->getNrOfParkings() - 1;
-    while (park_index >= 0 && dcs->getParkingName(park_index) != parkpos) park_index--;
-    if (park_index < 0) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Failed to find parking position " << parkpos <<
-                " at airport " << id );
-        return false;
-    }
-    FGParking* parking = dcs->getParking(park_index);
-    parking->setAvailable(false);
-    fgApplyStartOffset(
-      SGGeod::fromDeg(parking->getLongitude(), parking->getLatitude()),
-      parking->getHeading());
+    options->processOptions();
+      
     return true;
 }
 
 
-// Set current_options lon/lat given an airport id and runway number
-static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bool rwy_req ) {
-    if ( id.empty() )
-        return false;
-
-    // set initial position from airport and runway number
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "Attempting to set starting position for "
-            << id << ":" << rwy );
-
-    const FGAirport* apt = fgFindAirportID(id);
-    if (!apt) {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport:" << id);
-      return false;
-    }
-    
-    if (!apt->hasRunwayWithIdent(rwy)) {
-      SG_LOG( SG_GENERAL, rwy_req ? SG_ALERT : SG_INFO,
-                "Failed to find runway " << rwy <<
-                " at airport " << id << ". Using default runway." );
-      return false;
-    }
-    
-    FGRunway* r(apt->getRunwayByIdent(rwy));
-    fgSetString("/sim/atc/runway", r->ident().c_str());
-    SGGeod startPos = r->pointOnCenterline( fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
-	  fgApplyStartOffset(startPos, r->headingDeg());
-    return true;
-}
-
-
-static void fgSetDistOrAltFromGlideSlope() {
-    // cout << "fgSetDistOrAltFromGlideSlope()" << endl;
-    string apt_id = fgGetString("/sim/presets/airport-id");
-    double gs = fgGetDouble("/sim/presets/glideslope-deg")
-        * SG_DEGREES_TO_RADIANS ;
-    double od = fgGetDouble("/sim/presets/offset-distance-nm");
-    double alt = fgGetDouble("/sim/presets/altitude-ft");
-
-    double apt_elev = 0.0;
-    if ( ! apt_id.empty() ) {
-        apt_elev = fgGetAirportElev( apt_id );
-        if ( apt_elev < -9990.0 ) {
-            apt_elev = 0.0;
-        }
-    } else {
-        apt_elev = 0.0;
-    }
-
-    if( fabs(gs) > 0.01 && fabs(od) > 0.1 && alt < -9990 ) {
-        // set altitude from glideslope and offset-distance
-        od *= SG_NM_TO_METER * SG_METER_TO_FEET;
-        alt = fabs(od*tan(gs)) + apt_elev;
-        fgSetDouble("/sim/presets/altitude-ft", alt);
-        fgSetBool("/sim/presets/onground", false);
-        SG_LOG( SG_GENERAL, SG_INFO, "Calculated altitude as: "
-                << alt  << " ft" );
-    } else if( fabs(gs) > 0.01 && alt > 0 && fabs(od) < 0.1) {
-        // set offset-distance from glideslope and altitude
-        od  = (alt - apt_elev) / tan(gs);
-        od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
-        fgSetDouble("/sim/presets/offset-distance-nm", od);
-        fgSetBool("/sim/presets/onground", false);
-        SG_LOG( SG_GENERAL, SG_INFO, "Calculated offset distance as: " 
-                << od  << " nm" );
-    } else if( fabs(gs) > 0.01 ) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Glideslope given but not altitude or offset-distance." );
-        SG_LOG( SG_GENERAL, SG_ALERT, "Resetting glideslope to zero" );
-        fgSetDouble("/sim/presets/glideslope-deg", 0);
-        fgSetBool("/sim/presets/onground", true);
-    }
-}
-
-
-// Set current_options lon/lat given an airport id and heading (degrees)
-static bool fgSetPosFromNAV( const string& id, const double& freq ) {
-    FGNavRecord *nav
-        = globals->get_navlist()->findByIdentAndFreq( id.c_str(), freq );
-
-  if (!nav) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
-                << id << ":" << freq );
-    return false;
-  }
-  
-  fgApplyStartOffset(nav->geod(), fgGetDouble("/sim/presets/heading-deg"));
-  return true;
-}
-
-// Set current_options lon/lat given an aircraft carrier id
-static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
-
-    // set initial position from runway and heading
-    SGGeod geodPos;
-    double heading;
-    SGVec3d uvw;
-    if (FGAIManager::getStartPosition(carrier, posid, geodPos, heading, uvw)) {
-        double lon = geodPos.getLongitudeDeg();
-        double lat = geodPos.getLatitudeDeg();
-        double alt = geodPos.getElevationFt();
-
-        SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
-                << carrier << " at lat = " << lat << ", lon = " << lon
-                << ", alt = " << alt << ", heading = " << heading);
-
-        fgSetDouble("/sim/presets/longitude-deg",  lon);
-        fgSetDouble("/sim/presets/latitude-deg",  lat);
-        fgSetDouble("/sim/presets/altitude-ft", alt);
-        fgSetDouble("/sim/presets/heading-deg", heading);
-        fgSetDouble("/position/longitude-deg",  lon);
-        fgSetDouble("/position/latitude-deg",  lat);
-        fgSetDouble("/position/altitude-ft", alt);
-        fgSetDouble("/orientation/heading-deg", heading);
-
-        fgSetString("/sim/presets/speed-set", "UVW");
-        fgSetDouble("/velocities/uBody-fps", uvw(0));
-        fgSetDouble("/velocities/vBody-fps", uvw(1));
-        fgSetDouble("/velocities/wBody-fps", uvw(2));
-        fgSetDouble("/sim/presets/uBody-fps", uvw(0));
-        fgSetDouble("/sim/presets/vBody-fps", uvw(1));
-        fgSetDouble("/sim/presets/wBody-fps", uvw(2));
-
-        fgSetBool("/sim/presets/onground", true);
-
-        return true;
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = "
-                << carrier );
-        return false;
-    }
-}
- 
-// Set current_options lon/lat given an airport id and heading (degrees)
-static bool fgSetPosFromFix( const string& id )
-{
-  FGPositioned::TypeFilter fixFilter(FGPositioned::FIX);
-  FGPositioned* fix = FGPositioned::findNextWithPartialId(NULL, id, &fixFilter);
-  if (!fix) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate fix = " << id );
-    return false;
-  }
-  
-  fgApplyStartOffset(fix->geod(), fgGetDouble("/sim/presets/heading-deg"));
-  return true;
-}
 
 /**
  * Initialize vor/ndb/ils/fix list management and query systems (as
  * well as simple airport db list)
+ * This is called multiple times in the case of a cache rebuild,
+ * to allow length caching to take place in the background, without
+ * blocking the main/UI thread.
  */
 bool
 fgInitNav ()
 {
-    SG_LOG(SG_GENERAL, SG_INFO, "Loading Airport Database ...");
-
-    SGPath aptdb( globals->get_fg_root() );
-    aptdb.append( "Airports/apt.dat" );
-
-    SGPath p_metar( globals->get_fg_root() );
-    p_metar.append( "Airports/metar.dat" );
-
-    fgAirportDBLoad( aptdb.str(), p_metar.str() );
-    FGAirport::installPropertyListener();
-    FGPositioned::installCommands();
-    
-    FGNavList *navlist = new FGNavList;
-    FGNavList *loclist = new FGNavList;
-    FGNavList *gslist = new FGNavList;
-    FGNavList *dmelist = new FGNavList;
-    FGNavList *tacanlist = new FGNavList;
-    FGNavList *carrierlist = new FGNavList;
-    FGTACANList *channellist = new FGTACANList;
-
-    globals->set_navlist( navlist );
-    globals->set_loclist( loclist );
-    globals->set_gslist( gslist );
-    globals->set_dmelist( dmelist );
-    globals->set_tacanlist( tacanlist );
-    globals->set_carrierlist( carrierlist );
-    globals->set_channellist( channellist );
-
-    if ( !fgNavDBInit(navlist, loclist, gslist, dmelist, tacanlist, carrierlist, channellist) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Problems loading one or more navigational database" );
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  static bool doingRebuild = false;
+  if (doingRebuild || cache->isRebuildRequired()) {
+    doingRebuild = true;
+    bool finished = cache->rebuild();
+    if (!finished) {
+      // sleep to give the rebuild thread more time
+      SGTimeStamp::sleepForMSec(50);
+      return false;
     }
-    
-    SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
-    SGPath p_fix( globals->get_fg_root() );
-    p_fix.append( "Navaids/fix.dat" );
-    FGFixList fixlist;
-    fixlist.init( p_fix );  // adds fixes to the DB in positioned.cxx
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  Airways");
-    flightgear::Airway::load();
-    
-    return true;
+  }
+  
+  FGTACANList *channellist = new FGTACANList;
+  globals->set_channellist( channellist );
+  
+  SGPath path(globals->get_fg_root());
+  path.append( "Navaids/TACAN_freq.dat" );
+  flightgear::loadTacan(path, channellist);
+  
+  return true;
 }
-
-
-// Set the initial position based on presets (or defaults)
-bool fgInitPosition() {
-    // cout << "fgInitPosition()" << endl;
-    double gs = fgGetDouble("/sim/presets/glideslope-deg")
-        * SG_DEGREES_TO_RADIANS ;
-    double od = fgGetDouble("/sim/presets/offset-distance-nm");
-    double alt = fgGetDouble("/sim/presets/altitude-ft");
-
-    bool set_pos = false;
-
-    // If glideslope is specified, then calculate offset-distance or
-    // altitude relative to glide slope if either of those was not
-    // specified.
-    if ( fabs( gs ) > 0.01 ) {
-        fgSetDistOrAltFromGlideSlope();
-    }
-
-
-    // If we have an explicit, in-range lon/lat, don't change it, just use it.
-    // If not, check for an airport-id and use that.
-    // If not, default to the middle of the KSFO field.
-    // The default values for lon/lat are deliberately out of range
-    // so that the airport-id can take effect; valid lon/lat will
-    // override airport-id, however.
-    double lon_deg = fgGetDouble("/sim/presets/longitude-deg");
-    double lat_deg = fgGetDouble("/sim/presets/latitude-deg");
-    if ( lon_deg >= -180.0 && lon_deg <= 180.0
-         && lat_deg >= -90.0 && lat_deg <= 90.0 )
-    {
-        set_pos = true;
-    }
-
-    string apt = fgGetString("/sim/presets/airport-id");
-    string rwy_no = fgGetString("/sim/presets/runway");
-    bool rwy_req = fgGetBool("/sim/presets/runway-requested");
-    string vor = fgGetString("/sim/presets/vor-id");
-    double vor_freq = fgGetDouble("/sim/presets/vor-freq");
-    string ndb = fgGetString("/sim/presets/ndb-id");
-    double ndb_freq = fgGetDouble("/sim/presets/ndb-freq");
-    string carrier = fgGetString("/sim/presets/carrier");
-    string parkpos = fgGetString("/sim/presets/parkpos");
-    string fix = fgGetString("/sim/presets/fix");
-    SGPropertyNode *hdg_preset = fgGetNode("/sim/presets/heading-deg", true);
-    double hdg = hdg_preset->getDoubleValue();
-
-    // save some start parameters, so that we can later say what the
-    // user really requested. TODO generalize that and move it to options.cxx
-    static bool start_options_saved = false;
-    if (!start_options_saved) {
-        start_options_saved = true;
-        SGPropertyNode *opt = fgGetNode("/sim/startup/options", true);
-
-        opt->setDoubleValue("latitude-deg", lat_deg);
-        opt->setDoubleValue("longitude-deg", lon_deg);
-        opt->setDoubleValue("heading-deg", hdg);
-        opt->setStringValue("airport", apt.c_str());
-        opt->setStringValue("runway", rwy_no.c_str());
-    }
-
-    if (hdg > 9990.0)
-        hdg = fgGetDouble("/environment/config/boundary/entry/wind-from-heading-deg", 270);
-
-    if ( !set_pos && !apt.empty() && !parkpos.empty() ) {
-        // An airport + parking position is requested
-        if ( fgSetPosFromAirportIDandParkpos( apt, parkpos ) ) {
-            // set tower position
-            fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
-            fgSetString("/sim/tower/airport-id",  apt.c_str());
-            set_pos = true;
-        }
-    }
-
-    if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
-        // An airport + runway is requested
-        if ( fgSetPosFromAirportIDandRwy( apt, rwy_no, rwy_req ) ) {
-            // set tower position (a little off the heading for single
-            // runway airports)
-            fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
-            fgSetString("/sim/tower/airport-id",  apt.c_str());
-            set_pos = true;
-        }
-    }
-
-    if ( !set_pos && !apt.empty() ) {
-        // An airport is requested (find runway closest to hdg)
-        if ( fgSetPosFromAirportIDandHdg( apt, hdg ) ) {
-            // set tower position (a little off the heading for single
-            // runway airports)
-            fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
-            fgSetString("/sim/tower/airport-id",  apt.c_str());
-            set_pos = true;
-        }
-    }
-
-    if (hdg_preset->getDoubleValue() > 9990.0)
-        hdg_preset->setDoubleValue(hdg);
-
-    if ( !set_pos && !vor.empty() ) {
-        // a VOR is requested
-        if ( fgSetPosFromNAV( vor, vor_freq ) ) {
-            set_pos = true;
-        }
-    }
-
-    if ( !set_pos && !ndb.empty() ) {
-        // an NDB is requested
-        if ( fgSetPosFromNAV( ndb, ndb_freq ) ) {
-            set_pos = true;
-        }
-    }
-
-    if ( !set_pos && !carrier.empty() ) {
-        // an aircraft carrier is requested
-        if ( fgSetPosFromCarrier( carrier, parkpos ) ) {
-            set_pos = true;
-        }
-    }
-
-    if ( !set_pos && !fix.empty() ) {
-        // a Fix is requested
-        if ( fgSetPosFromFix( fix ) ) {
-            set_pos = true;
-        }
-    }
-
-    if ( !set_pos ) {
-        // No lon/lat specified, no airport specified, default to
-        // middle of KSFO field.
-        fgSetDouble("/sim/presets/longitude-deg", -122.374843);
-        fgSetDouble("/sim/presets/latitude-deg", 37.619002);
-    }
-
-    fgSetDouble( "/position/longitude-deg",
-                 fgGetDouble("/sim/presets/longitude-deg") );
-    fgSetDouble( "/position/latitude-deg",
-                 fgGetDouble("/sim/presets/latitude-deg") );
-    fgSetDouble( "/orientation/heading-deg", hdg_preset->getDoubleValue());
-
-    // determine if this should be an on-ground or in-air start
-    if ((fabs(gs) > 0.01 || fabs(od) > 0.1 || alt > 0.1) && carrier.empty()) {
-        fgSetBool("/sim/presets/onground", false);
-    } else {
-        fgSetBool("/sim/presets/onground", true);
-    }
-
-    return true;
-}
-
 
 // General house keeping initializations
 bool fgInitGeneral() {
@@ -1286,14 +508,15 @@ bool fgInitGeneral() {
     }
     SG_LOG( SG_GENERAL, SG_INFO, "FG_ROOT = " << '"' << root << '"' << endl );
 
-    globals->set_browser(fgGetString("/sim/startup/browser-app", "firefox %u"));
+    // Note: browser command is hard-coded for Mac/Windows, so this only affects other platforms
+    globals->set_browser(fgGetString("/sim/startup/browser-app", WEB_BROWSER));
+    fgSetString("/sim/startup/browser-app", globals->get_browser());
 
-    char buf[512], *cwd = getcwd(buf, 511);
-    buf[511] = '\0';
+    simgear::Dir cwd(simgear::Dir::current());
     SGPropertyNode *curr = fgGetNode("/sim", true);
     curr->removeChild("fg-current", 0, false);
     curr = curr->getChild("fg-current", 0, true);
-    curr->setStringValue(cwd ? cwd : "");
+    curr->setStringValue(cwd.path().str());
     curr->setAttribute(SGPropertyNode::WRITE, false);
 
     fgSetBool("/sim/startup/stdout-to-terminal", isatty(1) != 0 );
@@ -1305,16 +528,19 @@ bool fgInitGeneral() {
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
-bool fgInitSubsystems() {
-    // static const SGPropertyNode *longitude
-    //     = fgGetNode("/sim/presets/longitude-deg");
-    // static const SGPropertyNode *latitude
-    //     = fgGetNode("/sim/presets/latitude-deg");
-    // static const SGPropertyNode *altitude
-    //     = fgGetNode("/sim/presets/altitude-ft");
+void fgCreateSubsystems() {
 
-    SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
+    SG_LOG( SG_GENERAL, SG_INFO, "Creating Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the sound subsystem.
+    ////////////////////////////////////////////////////////////////////
+    // Sound manager uses an own subsystem group "SOUND" which is the last
+    // to be updated in every loop.
+    // Sound manager is updated last so it can use the CPU while the GPU
+    // is processing the scenery (doubled the frame-rate for me) -EMH-
+    globals->add_subsystem("sound", new FGSoundManager, SGSubsystemMgr::SOUND);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the event manager subsystem.
@@ -1335,19 +561,29 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("properties", new FGProperties);
 
+
+    ////////////////////////////////////////////////////////////////////
+    // Add the performance monitoring system.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("performance-mon",
+            new SGPerformanceMonitor(globals->get_subsystem_mgr(),
+                                     fgGetNode("/sim/performance-monitor", true)));
+
     ////////////////////////////////////////////////////////////////////
     // Initialize the material property subsystem.
     ////////////////////////////////////////////////////////////////////
 
     SGPath mpath( globals->get_fg_root() );
-    mpath.append( "materials.xml" );
+    mpath.append( fgGetString("/sim/rendering/materials-file") );
     if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
             globals->get_props()) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Error loading materials file " << mpath.str() );
         exit(-1);
     }
 
-
+    globals->add_subsystem( "http", new FGHTTPClient );
+    
     ////////////////////////////////////////////////////////////////////
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
@@ -1368,27 +604,31 @@ bool fgInitSubsystems() {
 
     // Initialize the weather modeling subsystem
     globals->add_subsystem("environment", new FGEnvironmentMgr);
-
+    globals->add_subsystem("ephemeris", new Ephemeris);
+    
     ////////////////////////////////////////////////////////////////////
     // Initialize the aircraft systems and instrumentation (before the
     // autopilot.)
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("instrumentation", new FGInstrumentMgr, SGSubsystemMgr::FDM);
     globals->add_subsystem("systems", new FGSystemMgr, SGSubsystemMgr::FDM);
-
+    globals->add_subsystem("instrumentation", new FGInstrumentMgr, SGSubsystemMgr::FDM);
+    globals->add_subsystem("hud", new HUD, SGSubsystemMgr::DISPLAY);
+    globals->add_subsystem("cockpit-displays", new flightgear::CockpitDisplayManager, SGSubsystemMgr::DISPLAY);
+  
     ////////////////////////////////////////////////////////////////////
     // Initialize the XML Autopilot subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance(), SGSubsystemMgr::FDM );
+    globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance("autopilot"), SGSubsystemMgr::FDM );
+    globals->add_subsystem( "xml-proprules", FGXMLAutopilotGroup::createInstance("property-rule"), SGSubsystemMgr::GENERAL );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the Input-Output subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem( "io", new FGIO );
-
+  
     ////////////////////////////////////////////////////////////////////
     // Create and register the logger.
     ////////////////////////////////////////////////////////////////////
@@ -1406,15 +646,26 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     fgGetBool("/sim/rendering/bump-mapping", false);
 
-
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the canvas 2d drawing subsystem.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("Canvas", new CanvasMgr, SGSubsystemMgr::DISPLAY);
+    globals->add_subsystem("CanvasGUI", new GUIMgr, SGSubsystemMgr::DISPLAY);
 
     ////////////////////////////////////////////////////////////////////
-    // Initialise the ATC Manager
+    // Initialise the ATIS Manager
+    // Note that this is old stuff, but is necessary for the
+    // current ATIS implementation. Therefore, leave it in here
+    // until the ATIS system is ported over to make use of the ATIS 
+    // sub system infrastructure.
     ////////////////////////////////////////////////////////////////////
 
-    SG_LOG(SG_GENERAL, SG_INFO, "  ATC Manager");
-    globals->set_ATC_mgr(new FGATCMgr);
-    globals->get_ATC_mgr()->init(); 
+    globals->add_subsystem("ATIS", new FGATISMgr, SGSubsystemMgr::INIT, 0.4);
+
+    ////////////////////////////////////////////////////////////////////
+   // Initialize the ATC subsystem
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("ATC", new FGATCManager, SGSubsystemMgr::POST_FDM);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize multiplayer subsystem
@@ -1426,53 +677,43 @@ bool fgInitSubsystems() {
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Model Manager");
-    globals->add_subsystem("ai_model", new FGAIManager, SGSubsystemMgr::POST_FDM);
-    globals->add_subsystem("submodel_mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("submodel-mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
 
 
     // It's probably a good idea to initialize the top level traffic manager
     // After the AI and ATC systems have been initialized properly.
     // AI Traffic manager
-    globals->add_subsystem("Traffic Manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("traffic-manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
 
     ////////////////////////////////////////////////////////////////////
     // Add a new 2D panel.
     ////////////////////////////////////////////////////////////////////
 
-    string panel_path(fgGetString("/sim/panel/path"));
-    if (!panel_path.empty()) {
-      FGPanel* p = fgReadPanel(panel_path);
-      if (p) {
-        globals->set_current_panel(p);
-        p->init();
-        p->bind();
-        SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
-      } else {
-        SG_LOG( SG_INPUT, SG_ALERT,
-                "Error reading new panel from " << panel_path );
-      }
-    }
-
+    fgSetArchivable("/sim/panel/visibility");
+    fgSetArchivable("/sim/panel/x-offset");
+    fgSetArchivable("/sim/panel/y-offset");
+    fgSetArchivable("/sim/panel/jitter");
+  
     ////////////////////////////////////////////////////////////////////
     // Initialize the controls subsystem.
     ////////////////////////////////////////////////////////////////////
-
-    globals->get_controls()->init();
-    globals->get_controls()->bind();
-
+    
+    globals->add_subsystem("controls", new FGControls, SGSubsystemMgr::GENERAL);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the input subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("input", new FGInput);
+    globals->add_subsystem("input", new FGInput, SGSubsystemMgr::GENERAL);
 
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the replay subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("replay", new FGReplay);
-
+    globals->add_subsystem("history", new FGFlightHistory);
+    
 #ifdef ENABLE_AUDIO_SUPPORT
     ////////////////////////////////////////////////////////////////////
     // Initialize the sound-effects subsystem.
@@ -1488,29 +729,21 @@ bool fgInitSubsystems() {
     
     // ordering here is important : Nasal (via events), then models, then views
     globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
-    
-    FGAircraftModel* acm = new FGAircraftModel;
-    globals->set_aircraft_model(acm);
-    globals->add_subsystem("aircraft-model", acm, SGSubsystemMgr::DISPLAY);
 
-    FGModelMgr* mm = new FGModelMgr;
-    globals->set_model_mgr(mm);
-    globals->add_subsystem("model-manager", mm, SGSubsystemMgr::DISPLAY);
+    globals->add_subsystem("aircraft-model", new FGAircraftModel, SGSubsystemMgr::DISPLAY);
+    globals->add_subsystem("model-manager", new FGModelMgr, SGSubsystemMgr::DISPLAY);
 
-    FGViewMgr *viewmgr = new FGViewMgr;
-    globals->set_viewmgr( viewmgr );
-    globals->add_subsystem("view-manager", viewmgr, SGSubsystemMgr::DISPLAY);
+    globals->add_subsystem("view-manager", new FGViewMgr, SGSubsystemMgr::DISPLAY);
 
     globals->add_subsystem("tile-manager", globals->get_tile_mgr(), 
       SGSubsystemMgr::DISPLAY);
-      
-    ////////////////////////////////////////////////////////////////////
-    // Bind and initialize subsystems.
-    ////////////////////////////////////////////////////////////////////
+}
 
-    globals->get_subsystem_mgr()->bind();
-    globals->get_subsystem_mgr()->init();
-
+void fgPostInitSubsystems()
+{
+    SGTimeStamp st;
+    st.stamp();
+  
     ////////////////////////////////////////////////////////////////////////
     // Initialize the Nasal interpreter.
     // Do this last, so that the loaded scripts see initialized state
@@ -1518,14 +751,18 @@ bool fgInitSubsystems() {
     FGNasalSys* nasal = new FGNasalSys();
     globals->add_subsystem("nasal", nasal, SGSubsystemMgr::INIT);
     nasal->init();
-
+    SG_LOG(SG_GENERAL, SG_INFO, "Nasal init took:" << st.elapsedMSec());
+  
     // initialize methods that depend on other subsystems.
+    st.stamp();
     globals->get_subsystem_mgr()->postinit();
-
+    SG_LOG(SG_GENERAL, SG_INFO, "Subsystems postinit took:" << st.elapsedMSec());
+  
     ////////////////////////////////////////////////////////////////////////
     // End of subsystem initialization.
     ////////////////////////////////////////////////////////////////////
 
+    fgSetBool("/sim/crashed", false);
     fgSetBool("/sim/initialized", true);
 
     SG_LOG( SG_GENERAL, SG_INFO, endl);
@@ -1533,22 +770,19 @@ bool fgInitSubsystems() {
                                 // Save the initial state for future
                                 // reference.
     globals->saveInitialState();
-    
-    return true;
 }
 
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems()
 {
-    static const SGPropertyNode *master_freeze
-        = fgGetNode("/sim/freeze/master");
+    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     SG_LOG( SG_GENERAL, SG_INFO, "fgReInitSubsystems()");
 
 // setup state to begin re-init
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
+        master_freeze->setBoolValue(true);
     }
     
     fgSetBool("/sim/signals/reinit", true);
@@ -1564,11 +798,13 @@ void fgReInitSubsystems()
     globals->restoreInitialState();
 
     // update our position based on current presets
-    fgInitPosition();
+    // this will mark position as needed finalized which we'll do in the
+    // main-loop
+    flightgear::initPosition();
     
     // Force reupdating the positions of the ai 3d models. They are used for
     // initializing ground level for the FDM.
-    globals->get_subsystem("ai_model")->reinit();
+    globals->get_subsystem("ai-model")->reinit();
 
     // Initialize the FDM
     globals->get_subsystem("flight")->reinit();
@@ -1579,15 +815,32 @@ void fgReInitSubsystems()
     // reload offsets from config defaults
     globals->get_viewmgr()->reinit();
 
+    // ugly: finalizePosition waits for METAR to arrive for the new airport.
+    // we don't re-init the environment manager here, since historically we did
+    // not, and doing so seems to have other issues. All that's needed is to
+    // schedule METAR fetch immediately, so it's available for finalizePosition.
+    // So we manually extract the METAR-fetching component inside the environment
+    // manager, and re-init that.
+    SGSubsystemGroup* envMgr = static_cast<SGSubsystemGroup*>(globals->get_subsystem("environment"));
+    if (envMgr) {
+      envMgr->get_subsystem("realwx")->reinit();
+    }
+  
     globals->get_subsystem("time")->reinit();
 
     // need to bind FDMshell again, since we manually unbound it above...
     globals->get_subsystem("flight")->bind();
 
+    // need to reset aircraft (systems/instruments) so they can adapt to current environment
+    globals->get_subsystem("systems")->reinit();
+    globals->get_subsystem("instrumentation")->reinit();
+
+    globals->get_subsystem("ATIS")->reinit();
+
 // setup state to end re-init
     fgSetBool("/sim/signals/reinit", false);
     if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+        master_freeze->setBoolValue(false);
     }
     fgSetBool("/sim/sceneryloaded",false);
 }
@@ -1704,7 +957,7 @@ void fgShowAircraft(const SGPath &path)
         
 #ifdef _MSC_VER
     cout << "Hit a key to continue..." << endl;
-    cin.get();
+    std::cin.get();
 #endif
 }
 

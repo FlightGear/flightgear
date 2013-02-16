@@ -24,14 +24,95 @@
 #ifndef _OPTIONS_HXX
 #define _OPTIONS_HXX
 
+#include <memory>
+#include <string>
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
+#include <simgear/misc/strutils.hxx>
 
-extern void fgSetDefaults ();
-extern void fgParseArgs (int argc, char ** argv);
-extern void fgParseOptions (const string &file_path);
-extern void fgUsage (bool verbose = false);
+// forward decls
+class SGPath;
+
+namespace flightgear
+{
+  
+class Options
+{
+private:
+  Options();
+  
+public:
+  static Options* sharedInstance();
+
+  ~Options();
+  
+  /**
+   * pass command line arguments, read default config files
+   */
+  void init(int argc, char* argv[], const SGPath& appDataPath);
+  
+  /**
+    * parse a config file (eg, .fgfsrc) 
+    */
+  void readConfig(const SGPath& path);
+  
+  /**
+    * read the value for an option, if it has been set
+    */
+  std::string valueForOption(const std::string& key, const std::string& defValue = std::string()) const;
+  
+  /**
+    * return all values for a multi-valued option
+    */
+  string_list valuesForOption(const std::string& key) const;
+  
+  /**
+    * check if a particular option has been set (so far)
+    */
+  bool isOptionSet(const std::string& key) const;
+  
+  
+  /**
+    * set an option value, assuming it is not already set (or multiple values
+    * are permitted)
+    * This can be used to inject option values, eg based upon environment variables
+    */
+  int addOption(const std::string& key, const std::string& value);
+  
+  /**
+   * apply option values to the simulation state
+   * (set properties, etc)
+   */
+  void processOptions();
+  
+  /**
+   * init the aircraft options
+   */
+  void initAircraft();
+  
+  /**
+   * should defualt configuration files be loaded and processed or not?
+   * There's many configuration files we have historically read by default
+   * on startup - preferences.xml, fgfs.rc in various places and so on.
+   * --no-default-config allows this behaviour to be changed, so only
+   * expicitly listed files are read - this is useful for testing. Expose
+   * the value of the option here.
+   */
+  bool shouldLoadDefaultConfig() const;
+private:
+  void showUsage() const;
+  
+  int parseOption(const std::string& s);
+  
+  void processArgResult(int result);
+  
+  void setupRoot();
+  
+  std::string platformDefaultRoot() const;
+  
+  class OptionsPrivate;
+  std::auto_ptr<OptionsPrivate> p;
+};
+  
+} // of namespace flightgear
 
 #endif /* _OPTIONS_HXX */

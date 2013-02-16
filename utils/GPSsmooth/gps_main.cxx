@@ -60,15 +60,15 @@ bool inited = false;
 // point value.  By doing the BIG_ENDIAN test, I can optimize the
 // routine for big-endian processors so it can be as efficient as
 // possible
-static void htond (double &x)	
+static void htond (double &x)
 {
     if ( sgIsLittleEndian() ) {
         int    *Double_Overlay;
         int     Holding_Buffer;
-    
+
         Double_Overlay = (int *) &x;
         Holding_Buffer = Double_Overlay [0];
-    
+
         Double_Overlay [0] = htonl (Double_Overlay [1]);
         Double_Overlay [1] = htonl (Holding_Buffer);
     } else {
@@ -77,15 +77,15 @@ static void htond (double &x)
 }
 
 // Float version
-static void htonf (float &x)	
+static void htonf (float &x)
 {
     if ( sgIsLittleEndian() ) {
         int    *Float_Overlay;
         int     Holding_Buffer;
-    
+
         Float_Overlay = (int *) &x;
         Holding_Buffer = Float_Overlay [0];
-    
+
         Float_Overlay [0] = htonl (Holding_Buffer);
     } else {
         return;
@@ -281,7 +281,6 @@ static void gps2fg( const GPSPoint p, FGNetFDM *fdm, FGNetCtrls *ctrls )
 
 
 static void send_data( const GPSPoint p ) {
-    int len;
 //    int ctrlsize = sizeof( FGNetCtrls );
     int fdmsize = sizeof( FGNetFDM );
 
@@ -291,7 +290,7 @@ static void send_data( const GPSPoint p ) {
     FGNetCtrls fgctrls;
 
     gps2fg( p, &fgfdm, &fgctrls );
-    len = fdm_sock.send(&fgfdm, fdmsize, 0);
+    fdm_sock.send(&fgfdm, fdmsize, 0);
 }
 
 
@@ -431,7 +430,7 @@ int main( int argc, char **argv ) {
 
     GPSPoint p, p0, p1;
     p0 = p1 = track.get_point( 0 );
-    
+
     while ( current_time < end_time ) {
         // cout << "current_time = " << current_time << " end_time = "
         //      << end_time << endl;

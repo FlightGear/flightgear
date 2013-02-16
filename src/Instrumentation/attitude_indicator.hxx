@@ -45,15 +45,16 @@ public:
     virtual ~AttitudeIndicator ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);
 
 private:
 
-    string _name;
+    std::string _name;
     int _num;
-    string _suction;
+    std::string _suction;
 
     Gyro _gyro;
 

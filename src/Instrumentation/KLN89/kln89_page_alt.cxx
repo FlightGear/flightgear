@@ -25,6 +25,8 @@
 
 #include "kln89_page_alt.hxx"
 
+using std::string;
+
 KLN89AltPage::KLN89AltPage(KLN89* parent) 
 : KLN89Page(parent) {
 	_nSubPages = 2;

@@ -19,15 +19,17 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <cstring>
+#include <algorithm>
 
+#include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
+#include <boost/mem_fn.hpp>
+#include <boost/foreach.hpp>
 
 #include <Main/globals.hxx>
-
 #include <Airports/simple.hxx>
-#include <Traffic/TrafficMgr.hxx>
 
 #include "AIManager.hxx"
 #include "AIAircraft.hxx"
@@ -43,31 +45,25 @@
 #include "AIGroundVehicle.hxx"
 #include "AIEscort.hxx"
 
-FGAIManager::FGAIManager() {
-    _dt = 0.0;
-    mNumAiModels = 0;
+FGAIManager::FGAIManager() :
+    cb_ai_bare(SGPropertyChangeCallback<FGAIManager>(this,&FGAIManager::updateLOD,
+               fgGetNode("/sim/rendering/static-lod/ai-bare", true))),
+    cb_ai_detailed(SGPropertyChangeCallback<FGAIManager>(this,&FGAIManager::updateLOD,
+                   fgGetNode("/sim/rendering/static-lod/ai-detailed", true)))
+{
 
-    for (unsigned i = 0; i < FGAIBase::MAX_OBJECTS; ++i)
-        mNumAiTypeModels[i] = 0;
 }
 
-FGAIManager::~FGAIManager() {
-    ai_list_iterator ai_list_itr = ai_list.begin();
-
-    while(ai_list_itr != ai_list.end()) {
-        (*ai_list_itr)->unbind();
-        ++ai_list_itr;
-    }
+FGAIManager::~FGAIManager()
+{
+    std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::unbind));
 }
 
 void
 FGAIManager::init() {
     root = fgGetNode("sim/ai", true);
 
-    enabled = root->getNode("enabled", true)->getBoolValue();
-
-    if (!enabled)
-        return;
+    enabled = root->getNode("enabled", true);
 
     thermal_lift_node = fgGetNode("/environment/thermal-lift-fps", true);
     wind_from_east_node  = fgGetNode("/environment/wind-from-east-fps",true);
@@ -87,37 +83,41 @@ FGAIManager::init() {
 void
 FGAIManager::postinit() {
     // postinit, so that it can access the Nasal subsystem
-    map<string, bool> scenarios;
+
+    if (!root->getBoolValue("scenarios-enabled", true))
+        return;
+
+    // scenarios enabled, AI subsystem required
+    if (!enabled->getBoolValue())
+        enabled->setBoolValue(true);
+
+    // process all scenarios
+    std::map<string, bool> scenarios;
     for (int i = 0 ; i < root->nChildren() ; i++) {
         SGPropertyNode *n = root->getChild(i);
         if (strcmp(n->getName(), "scenario"))
             continue;
 
-        string name = n->getStringValue();
+        const string& name = n->getStringValue();
         if (name.empty())
             continue;
 
         if (scenarios.find(name) != scenarios.end()) {
-            SG_LOG(SG_GENERAL, SG_DEBUG, "won't load scenario '" << name << "' twice");
+            SG_LOG(SG_AI, SG_DEBUG, "won't load scenario '" << name << "' twice");
             continue;
         }
 
-        SG_LOG(SG_GENERAL, SG_ALERT, "loading scenario '" << name << '\'');
+        SG_LOG(SG_AI, SG_ALERT, "loading scenario '" << name << '\'');
         processScenario(name);
         scenarios[name] = true;
     }
 }
 
 void
-FGAIManager::reinit() {
+FGAIManager::reinit()
+{
     update(0.0);
-
-    ai_list_iterator ai_list_itr = ai_list.begin();
-
-    while(ai_list_itr != ai_list.end()) {
-        (*ai_list_itr)->reinit();
-        ++ai_list_itr;
-    }
+    std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::reinit));
 }
 
 void
@@ -132,59 +132,66 @@ FGAIManager::unbind() {
     root->untie("count");
 }
 
+void FGAIManager::removeDeadItem(FGAIBase* base)
+{
+    SGPropertyNode *props = base->_getProps();
+    
+    props->setBoolValue("valid", false);
+    base->unbind();
+    
+    // for backward compatibility reset properties, so that aircraft,
+    // which don't know the <valid> property, keep working
+    // TODO: remove after a while
+    props->setIntValue("id", -1);
+    props->setBoolValue("radar/in-range", false);
+    props->setIntValue("refuel/tanker", false);
+}
+
 void
 FGAIManager::update(double dt) {
     // initialize these for finding nearest thermals
     range_nearest = 10000.0;
     strength = 0.0;
 
-    if (!enabled)
+    if (!enabled->getBoolValue())
         return;
 
-    FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
-    _dt = dt;
+    fetchUserState();
 
-    ai_list_iterator ai_list_itr = ai_list.begin();
-
-    while(ai_list_itr != ai_list.end()) {
-
-        if ((*ai_list_itr)->getDie()) {
-            tmgr->release((*ai_list_itr)->getID());
-            --mNumAiModels;
-            --(mNumAiTypeModels[(*ai_list_itr)->getType()]);
-            FGAIBase *base = (*ai_list_itr).get();
-            SGPropertyNode *props = base->_getProps();
-
-            props->setBoolValue("valid", false);
-            base->unbind();
-
-            // for backward compatibility reset properties, so that aircraft,
-            // which don't know the <valid> property, keep working
-            // TODO: remove after a while
-            props->setIntValue("id", -1);
-            props->setBoolValue("radar/in-range", false);
-            props->setIntValue("refuel/tanker", false);
-
-            ai_list_itr = ai_list.erase(ai_list_itr);
-        } else {
-            fetchUserState();
-            if ((*ai_list_itr)->isa(FGAIBase::otThermal)) {
-                FGAIBase *base = (*ai_list_itr).get();
-                processThermal((FGAIThermal*)base);
-            } else {
-                (*ai_list_itr)->update(_dt);
-            }
-            ++ai_list_itr;
-        }
+    // partition the list into dead followed by alive
+    ai_list_iterator firstAlive =
+      std::stable_partition(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::getDie));
+    
+    // clean up each item and finally remove from the container
+    for (ai_list_iterator it=ai_list.begin(); it != firstAlive; ++it) {
+        removeDeadItem(*it);
     }
+  
+    ai_list.erase(ai_list.begin(), firstAlive);
+  
+    // every remaining item is alive
+    BOOST_FOREACH(FGAIBase* base, ai_list) {
+        if (base->isa(FGAIBase::otThermal)) {
+            processThermal(dt, (FGAIThermal*)base);
+        } else {
+            base->update(dt);
+        }
+    } // of live AI objects iteration
 
     thermal_lift_node->setDoubleValue( strength );  // for thermals
+}
+
+/** update LOD settings of all AI/MP models */
+void
+FGAIManager::updateLOD(SGPropertyNode* node)
+{
+    SG_UNUSED(node);
+    std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::updateLOD));
 }
 
 void
 FGAIManager::attach(FGAIBase *model)
 {
-    //unsigned idx = mNumAiTypeModels[model->getType()];
     const char* typeString = model->getTypeString();
     SGPropertyNode* root = globals->get_props()->getNode("ai/models", true);
     SGPropertyNode* p;
@@ -206,8 +213,7 @@ FGAIManager::attach(FGAIBase *model)
     p = root->getNode(typeString, i, true);
     model->setManager(this, p);
     ai_list.push_back(model);
-    ++mNumAiModels;
-    ++(mNumAiTypeModels[model->getType()]);
+
     model->init(model->getType()==FGAIBase::otAircraft
         || model->getType()==FGAIBase::otMultiplayer
         || model->getType()==FGAIBase::otStatic);
@@ -215,27 +221,10 @@ FGAIManager::attach(FGAIBase *model)
     p->setBoolValue("valid", true);
 }
 
-void
-FGAIManager::destroyObject( int ID ) {
-    ai_list_iterator ai_list_itr = ai_list.begin();
-
-    while(ai_list_itr != ai_list.end()) {
-
-        if ((*ai_list_itr)->getID() == ID) {
-            --mNumAiModels;
-            --(mNumAiTypeModels[(*ai_list_itr)->getType()]);
-            (*ai_list_itr)->unbind();
-            ai_list_itr = ai_list.erase(ai_list_itr);
-        } else
-            ++ai_list_itr;
-    }
-
-}
-
 int
 FGAIManager::getNumAiObjects(void) const
 {
-    return mNumAiModels;
+    return ai_list.size();
 }
 
 void
@@ -257,8 +246,8 @@ FGAIManager::fetchUserState( void ) {
 
 // only keep the results from the nearest thermal
 void
-FGAIManager::processThermal( FGAIThermal* thermal ) {
-    thermal->update(_dt);
+FGAIManager::processThermal( double dt, FGAIThermal* thermal ) {
+    thermal->update(dt);
 
     if ( thermal->_getRange() < range_nearest ) {
         range_nearest = thermal->_getRange();
@@ -287,7 +276,7 @@ FGAIManager::processScenario( const string &filename ) {
 
         if (strcmp(scEntry->getName(), "entry"))
             continue;
-        std::string type = scEntry->getStringValue("type", "aircraft");
+        const std::string& type = scEntry->getStringValue("type", "aircraft");
 
         if (type == "tanker") { // refueling scenarios
             FGAITanker* tanker = new FGAITanker;
@@ -359,10 +348,10 @@ FGAIManager::loadScenarioFile(const std::string& filename)
         readProperties(path.str(), root);
         return root;
     } catch (const sg_exception &t) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load scenario '"
+        SG_LOG(SG_AI, SG_ALERT, "Failed to load scenario '"
             << path.str() << "': " << t.getFormattedMessage());
-        return 0;
     }
+    return 0;
 }
 
 bool
@@ -377,16 +366,16 @@ FGAIManager::getStartPosition(const string& id, const string& pid,
     for (int i = 0 ; (!found) && i < root->nChildren() ; i++) {
         SGPropertyNode *aiEntry = root->getChild( i );
         if ( !strcmp( aiEntry->getName(), "scenario" ) ) {
-            string filename = aiEntry->getStringValue();
+            const string& filename = aiEntry->getStringValue();
             SGPropertyNode_ptr scenarioTop = loadScenarioFile(filename);
             if (scenarioTop) {
                 SGPropertyNode* scenarios = scenarioTop->getChild("scenario");
                 if (scenarios) {
                     for (int i = 0; i < scenarios->nChildren(); i++) {
                         SGPropertyNode* scEntry = scenarios->getChild(i);
-                        std::string type = scEntry->getStringValue("type");
-                        std::string pnumber = scEntry->getStringValue("pennant-number");
-                        std::string name = scEntry->getStringValue("name");
+                        const std::string& type = scEntry->getStringValue("type");
+                        const std::string& pnumber = scEntry->getStringValue("pennant-number");
+                        const std::string& name = scEntry->getStringValue("name");
                         if (type == "carrier" && (pnumber == id || name == id)) {
                             SGSharedPtr<FGAICarrier> carrier = new FGAICarrier;
                             carrier->readFromScenario(scEntry);
@@ -413,6 +402,9 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
     ai_list_iterator ai_list_itr = ai_list.begin();
     ai_list_iterator end = ai_list.end();
 
+    SGGeod pos(SGGeod::fromDegFt(lon, lat, alt));
+    SGVec3d cartPos(SGVec3d::fromGeod(pos));
+    
     while (ai_list_itr != end) {
         double tgt_alt = (*ai_list_itr)->_getAltitude();
         int type       = (*ai_list_itr)->getType();
@@ -420,7 +412,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 
         if (fabs(tgt_alt - alt) > tgt_ht[type] || type == FGAIBase::otBallistic
             || type == FGAIBase::otStorm || type == FGAIBase::otThermal ) {
-                //SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager: skipping "
+                //SG_LOG(SG_AI, SG_DEBUG, "AIManager: skipping "
                 //    << fabs(tgt_alt - alt)
                 //    << " "
                 //    << type
@@ -429,13 +421,11 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
                 continue;
         }
 
-        double tgt_lat = (*ai_list_itr)->_getLatitude();
-        double tgt_lon = (*ai_list_itr)->_getLongitude();
         int id         = (*ai_list_itr)->getID();
 
-        double range = calcRange(lat, lon, tgt_lat, tgt_lon);
+        double range = calcRange(cartPos, (*ai_list_itr));
 
-        //SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager:  AI list size "
+        //SG_LOG(SG_AI, SG_DEBUG, "AIManager:  AI list size "
         //    << ai_list.size()
         //    << " type " << type
         //    << " ID " << id
@@ -447,7 +437,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
         tgt_length[type] += fuse_range;
 
         if (range < tgt_length[type]){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager: HIT! "
+            SG_LOG(SG_AI, SG_DEBUG, "AIManager: HIT! "
                 << " type " << type
                 << " ID " << id
                 << " range " << range
@@ -461,14 +451,10 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 }
 
 double
-FGAIManager::calcRange(double lat, double lon, double lat2, double lon2) const
+FGAIManager::calcRange(const SGVec3d& aCartPos, FGAIBase* aObject) const
 {
-    double course, az2, distance;
-
-    //calculate the bearing and range of the second pos from the first
-    geo_inverse_wgs_84(lat, lon, lat2, lon2, &course, &az2, &distance);
-    distance *= SG_METER_TO_FEET;
-    return distance;
+    double distM = dist(aCartPos, aObject->getCartPos());
+    return distM * SG_METER_TO_FEET;
 }
 
 //end AIManager.cxx

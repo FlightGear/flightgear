@@ -100,15 +100,15 @@ float gps_status = -1.0;
 // point value.  By doing the BIG_ENDIAN test, I can optimize the
 // routine for big-endian processors so it can be as efficient as
 // possible
-static void htond (double &x)	
+static void htond (double &x)
 {
     if ( sgIsLittleEndian() ) {
         int    *Double_Overlay;
         int     Holding_Buffer;
-    
+
         Double_Overlay = (int *) &x;
         Holding_Buffer = Double_Overlay [0];
-    
+
         Double_Overlay [0] = htonl (Double_Overlay [1]);
         Double_Overlay [1] = htonl (Holding_Buffer);
     } else {
@@ -117,15 +117,15 @@ static void htond (double &x)
 }
 
 // Float version
-static void htonf (float &x)	
+static void htonf (float &x)
 {
     if ( sgIsLittleEndian() ) {
         int    *Float_Overlay;
         int     Holding_Buffer;
-    
+
         Float_Overlay = (int *) &x;
         Holding_Buffer = Float_Overlay [0];
-    
+
         Float_Overlay [0] = htonl (Holding_Buffer);
     } else {
         return;
@@ -353,7 +353,7 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     htonf(fdm->speedbrake);
     htonf(fdm->spoilers);
 
-#if 0    
+#if 0
     ctrls->version = FG_NET_CTRLS_VERSION;
     ctrls->elevator_trim = 0.0;
     ctrls->flaps = 0.0;
@@ -499,7 +499,6 @@ static void ugear2opengc( gps *gpspacket, imu *imupacket, nav *navpacket,
 static void send_data_udp( gps *gpspacket, imu *imupacket, nav *navpacket,
                            servo *servopacket, health *healthpacket )
 {
-    int len;
     int ogcsize = sizeof( ogcFGData );
     int fdmsize = sizeof( FGNetFDM );
     // int ctrlsize = sizeof( FGNetCtrls );
@@ -514,8 +513,8 @@ static void send_data_udp( gps *gpspacket, imu *imupacket, nav *navpacket,
 	      &fgfdm, &fgctrls );
     ugear2opengc( gpspacket, imupacket, navpacket, servopacket, healthpacket,
                   &fgogc );
-    len = opengc_sock.send(&fgogc, ogcsize, 0);
-    len = fdm_sock.send(&fgfdm, fdmsize, 0);
+    opengc_sock.send(&fgogc, ogcsize, 0);
+    fdm_sock.send(&fgfdm, fdmsize, 0);
     // len = ctrls_sock.send(&fgctrls, ctrlsize, 0);
 }
 
@@ -776,16 +775,16 @@ int main( int argc, char **argv ) {
 
         gps gps0, gps1;
         gps0 = gps1 = track.get_gpspt( 0 );
-    
+
         imu imu0, imu1;
         imu0 = imu1 = track.get_imupt( 0 );
-    
+
         nav nav0, nav1;
         nav0 = nav1 = track.get_navpt( 0 );
-    
+
         servo servo0, servo1;
         servo0 = servo1 = track.get_servopt( 0 );
-    
+
         health health0, health1;
         health0 = health1 = track.get_healthpt( 0 );
 
@@ -1087,7 +1086,7 @@ int main( int argc, char **argv ) {
                 } else {
                     cout << "oops health back in time: " << healthpacket.time << " " << health_time << endl;
                 }
-                
+
             }
 
             if ( (current_time > gps_time + 2) ||
@@ -1106,7 +1105,7 @@ int main( int argc, char **argv ) {
                 command_mgr.add("hb");
                 command_heartbeat = current_time;
             }
-                
+
             // Command update @ 1hz
             if ( current_time >= command_time + 1 ) {
                 command_mgr.update(&uavcom);
@@ -1120,8 +1119,6 @@ int main( int argc, char **argv ) {
                 // double lonmin = fabs(navpacket.lon - londeg);
                 int latdeg = (int)navpacket.lat;
                 // double latmin = fabs(navpacket.lat - latdeg);
-                char londir = 'E'; if ( londeg < 0 ) londir = 'W';
-                char latdir = 'N'; if ( latdeg < 0 ) latdir = 'S';
                 londeg = abs(londeg);
                 latdeg = abs(latdeg);
                 /*printf( "%.2f  %c%02d:%.4f %c%03d:%.4f %.1f  %.2f %.2f %.2f\n",

@@ -30,7 +30,12 @@
 #include <deque>
 
 #include "terrainsampler.hxx"
+
 using simgear::PropertyList;
+using std::deque;
+using std::vector;
+using std::ostringstream;
+using std::string;
 
 #include <simgear/props/tiedpropertylist.hxx>
 
@@ -316,6 +321,7 @@ public:
     virtual ~TerrainSamplerImplementation ();
     
     virtual void init ();
+    virtual InitStatus incrementalInit ();
     virtual void postinit();
     virtual void reinit ();
     virtual void bind();
@@ -342,6 +348,12 @@ TerrainSamplerImplementation::TerrainSamplerImplementation( SGPropertyNode_ptr r
 TerrainSamplerImplementation::~TerrainSamplerImplementation()
 {
 }
+  
+SGSubsystem::InitStatus TerrainSamplerImplementation::incrementalInit()
+{
+  init();
+  return INIT_DONE;
+}
 
 void TerrainSamplerImplementation::init()
 {
@@ -366,6 +378,8 @@ void TerrainSamplerImplementation::reinit()
         if( subsys == NULL )
             break;
         remove_subsystem( subsystemName );
+        subsys->unbind();
+        delete subsys;
     }
     
     init();

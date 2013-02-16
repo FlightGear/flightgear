@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -64,25 +68,28 @@ FGFDM::FGFDM()
 
 FGFDM::~FGFDM()
 {
-    int i;
-    for(i=0; i<_axes.size(); i++) {
-	AxisRec* a = (AxisRec*)_axes.get(i);
-	delete[] a->name;
-	delete a;
+    for(int i=0; i<_axes.size(); i++) {
+        AxisRec* a = (AxisRec*)_axes.get(i);
+        delete[] a->name;
+        delete a;
     }
-    for(i=0; i<_thrusters.size(); i++) {
-	EngRec* er = (EngRec*)_thrusters.get(i);
-	delete[] er->prefix;
-	delete er->eng;
-	delete er;
+
+    for(int i=0; i<_thrusters.size(); i++) {
+        EngRec* er = (EngRec*)_thrusters.get(i);
+        delete[] er->prefix;
+        delete er->eng;
+        delete er;
     }
-    for(i=0; i<_weights.size(); i++) {
-	WeightRec* wr = (WeightRec*)_weights.get(i);
-	delete[] wr->prop;
-	delete wr;
+
+    for(int i=0; i<_weights.size(); i++) {
+        WeightRec* wr = (WeightRec*)_weights.get(i);
+        delete[] wr->prop;
+        delete wr;
     }
-    for(i=0; i<_controlProps.size(); i++)
+
+    for(int i=0; i<_controlProps.size(); i++)
         delete (PropOut*)_controlProps.get(i);
+
     delete _turb;
 }
 
@@ -91,22 +98,20 @@ void FGFDM::iterate(float dt)
     getExternalInput(dt);
     _airplane.iterate(dt);
 
-    // Do fuel stuff (FIXME: should stash SGPropertyNode objects here)
-    char buf[256];
+    // Do fuel stuff
     for(int i=0; i<_airplane.numThrusters(); i++) {
         Thruster* t = _airplane.getThruster(i);
 
-        sprintf(buf, "/engines/engine[%d]/out-of-fuel", i);
-        t->setFuelState(!fgGetBool(buf));
+        bool out_of_fuel = _fuel_props[i]._out_of_fuel->getBoolValue();
+        t->setFuelState(!out_of_fuel);
 
-        sprintf(buf, "/engines/engine[%d]/fuel-consumed-lbs", i);
-        double consumed = fgGetDouble(buf) + dt * KG2LBS * t->getFuelFlow();
-        fgSetDouble(buf, consumed);
+        double consumed = _fuel_props[i]._fuel_consumed_lbs->getDoubleValue();
+        _fuel_props[i]._fuel_consumed_lbs->setDoubleValue(
+                consumed + dt * KG2LBS * t->getFuelFlow());
     }
     for(int i=0; i<_airplane.numTanks(); i++) {
-        sprintf(buf, "/consumables/fuel/tank[%d]/level-lbs", i);
-        _airplane.setFuel(i, LBS2KG * fgGetFloat(buf));
-    } 
+        _airplane.setFuel(i, LBS2KG * _tank_level_lbs[i]->getFloatValue());
+    }
     _airplane.calcFuelWeights();
     
     setOutputProperties(dt);
@@ -119,14 +124,72 @@ Airplane* FGFDM::getAirplane()
 
 void FGFDM::init()
 {
+    _turb_magnitude_norm = fgGetNode("/environment/turbulence/magnitude-norm", true);
+    _turb_rate_hz        = fgGetNode("/environment/turbulence/rate-hz", true);
+    _gross_weight_lbs    = fgGetNode("/yasim/gross-weight-lbs", true);
+
     // Allows the user to start with something other than full fuel
     _airplane.setFuelFraction(fgGetFloat("/sim/fuel-fraction", 1));
 
-    // Read out the resulting fuel state
-    char buf[256];
+    // stash engine/thruster properties
+    _thrust_props.clear();
+    for (int i=0; i<_thrusters.size(); i++) {
+        SGPropertyNode_ptr node = fgGetNode("engines/engine", i, true);
+        Thruster* t = ((EngRec*)_thrusters.get(i))->eng;
+
+        ThrusterProps tp;
+        tp._running =       node->getChild("running", 0, true);
+        tp._cranking =      node->getChild("cranking", 0, true);
+        tp._prop_thrust =   node->getChild("prop-thrust", 0, true); // Deprecated name
+        tp._thrust_lbs =    node->getChild("thrust-lbs", 0, true);
+        tp._fuel_flow_gph = node->getChild("fuel-flow-gph", 0, true);
+
+        if(t->getPropEngine())
+        {
+            tp._rpm = node->getChild("rpm", 0, true);
+            tp._torque_ftlb = node->getChild("torque-ftlb", 0, true);
+
+            PropEngine* p = t->getPropEngine();
+            if(p->getEngine()->isPistonEngine())
+            {
+                tp._mp_osi =   node->getChild("mp-osi",   0, true);
+                tp._mp_inhg =  node->getChild("mp-inhg",  0, true);
+                tp._egt_degf = node->getChild("egt-degf", 0, true);
+
+                tp._oil_temperature_degf = node->getChild("oil-temperature-degf", 0, true);
+                tp._boost_gauge_inhg =     node->getChild("boost-gauge-inhg", 0, true);
+            } else if(p->getEngine()->isTurbineEngine()) {
+                tp._n2 = node->getChild("n2", 0, true);
+            }
+        }
+
+        if(t->getJet())
+        {
+            tp._n1 =       node->getChild("n1",       0, true);
+            tp._n2 =       node->getChild("n2",       0, true);
+            tp._epr =      node->getChild("epr",      0, true);
+            tp._egt_degf = node->getChild("egt-degf", 0, true);
+        }
+        _thrust_props.push_back(tp);
+    }
+
+    // stash properties for fuel state
+    _fuel_props.clear();
+    for(int i=0; i<_airplane.numThrusters(); i++) {
+        SGPropertyNode_ptr e = fgGetNode("engines/engine", i, true);
+        FuelProps f;
+        f._out_of_fuel       = e->getChild("out-of-fuel", 0, true);
+        f._fuel_consumed_lbs = e->getChild("fuel-consumed-lbs", 0, true);
+        _fuel_props.push_back(f);
+    }
+
+    // initialize tanks and stash properties for tank level
+    _tank_level_lbs.clear();
     for(int i=0; i<_airplane.numTanks(); i++) {
+        char buf[256];
         sprintf(buf, "/consumables/fuel/tank[%d]/level-lbs", i);
         fgSetDouble(buf, _airplane.getFuel(i) * KG2LBS);
+        _tank_level_lbs.push_back(fgGetNode(buf, true));
 
         double density = _airplane.getFuelDensity(i);
         sprintf(buf, "/consumables/fuel/tank[%d]/density-ppg", i);
@@ -138,7 +201,7 @@ void FGFDM::init()
 
         sprintf(buf, "/consumables/fuel/tank[%d]/capacity-gal_us", i);
         fgSetDouble(buf, CM2GALS * _airplane.getTankCapacity(i)/density);
-    }    
+    }
 
     // This has a nasty habit of being false at startup.  That's not
     // good.
@@ -480,31 +543,31 @@ void FGFDM::getExternalInput(float dt)
 {
     char buf[256];
 
-    _turb->setMagnitude(fgGetFloat("/environment/turbulence/magnitude-norm"));
-    _turb->update(dt, fgGetFloat("/environment/turbulence/rate-hz"));
+    _turb->setMagnitude(_turb_magnitude_norm->getFloatValue());
+    _turb->update(dt, _turb_rate_hz->getFloatValue());
 
     // The control axes
     ControlMap* cm = _airplane.getControlMap();
     cm->reset();
-    int i;
-    for(i=0; i<_axes.size(); i++) {
-	AxisRec* a = (AxisRec*)_axes.get(i);
-	float val = fgGetFloat(a->name, 0);
-	cm->setInput(a->handle, val);
+
+    for(int i=0; i<_axes.size(); i++) {
+        AxisRec* a = (AxisRec*)_axes.get(i);
+        float val = fgGetFloat(a->name, 0);
+        cm->setInput(a->handle, val);
     }
     cm->applyControls(dt);
 
     // Weights
-    for(i=0; i<_weights.size(); i++) {
-	WeightRec* wr = (WeightRec*)_weights.get(i);
-	_airplane.setWeight(wr->handle, LBS2KG * fgGetFloat(wr->prop));
+    for(int i=0; i<_weights.size(); i++) {
+        WeightRec* wr = (WeightRec*)_weights.get(i);
+        _airplane.setWeight(wr->handle, LBS2KG * fgGetFloat(wr->prop));
     }
 
-    for(i=0; i<_thrusters.size(); i++) {
-	EngRec* er = (EngRec*)_thrusters.get(i);
+    for(int i=0; i<_thrusters.size(); i++) {
+        EngRec* er = (EngRec*)_thrusters.get(i);
         Thruster* t = er->eng;
 
-	if(t->getPropEngine()) {
+        if(t->getPropEngine()) {
             PropEngine* p = t->getPropEngine();
             sprintf(buf, "%s/rpm", er->prefix);
             p->setOmega(fgGetFloat(buf, 500) * RPM2RAD);
@@ -526,14 +589,11 @@ static void moveprop(SGPropertyNode* node, const char* prop,
 
 void FGFDM::setOutputProperties(float dt)
 {
-    // char buf[256];
-    int i;
-
     float grossWgt = _airplane.getModel()->getBody()->getTotalMass() * KG2LBS;
-    fgSetFloat("/yasim/gross-weight-lbs", grossWgt);
+    _gross_weight_lbs->setFloatValue(grossWgt);
 
     ControlMap* cm = _airplane.getControlMap();
-    for(i=0; i<_controlProps.size(); i++) {
+    for(int i=0; i<_controlProps.size(); i++) {
         PropOut* p = (PropOut*)_controlProps.get(i);
         float val = (p->left
                      ? cm->getOutput(p->handle)
@@ -545,7 +605,7 @@ void FGFDM::setOutputProperties(float dt)
         p->prop->setFloatValue(val);
     }
 
-    for(i=0; i<_airplane.getRotorgear()->getNumRotors(); i++) {
+    for(int i=0; i<_airplane.getRotorgear()->getNumRotors(); i++) {
         Rotor*r=(Rotor*)_airplane.getRotorgear()->getRotor(i);
         int j = 0;
         float f;
@@ -570,52 +630,54 @@ void FGFDM::setOutputProperties(float dt)
     float fuelDensity = 1.0;
     if(_airplane.numTanks())
         fuelDensity = _airplane.getFuelDensity(0);
-    for(i=0; i<_thrusters.size(); i++) {
-	EngRec* er = (EngRec*)_thrusters.get(i);
+    for(int i=0; i<_thrusters.size(); i++) {
+        EngRec* er = (EngRec*)_thrusters.get(i);
         Thruster* t = er->eng;
         SGPropertyNode * node = fgGetNode("engines/engine", i, true);
 
+        ThrusterProps& tp = _thrust_props[i];
+
         // Set: running, cranking, prop-thrust, max-hp, power-pct
-	node->setBoolValue("running", t->isRunning());
-	node->setBoolValue("cranking", t->isCranking());
+        tp._running->setBoolValue(t->isRunning());
+        tp._cranking->setBoolValue(t->isCranking());
 
         float tmp[3];
         t->getThrust(tmp);
         float lbs = Math::mag3(tmp) * (KG2LBS/9.8);
-	node->setFloatValue("prop-thrust", lbs); // Deprecated name
-	node->setFloatValue("thrust-lbs", lbs);
-        node->setFloatValue("fuel-flow-gph",
-                            (t->getFuelFlow()/fuelDensity) * 3600 * CM2GALS);
+        tp._prop_thrust->setFloatValue(lbs); // Deprecated name
+        tp._thrust_lbs->setFloatValue(lbs);
+        tp._fuel_flow_gph->setFloatValue(
+                (t->getFuelFlow()/fuelDensity) * 3600 * CM2GALS);
 
-	if(t->getPropEngine()) {
+        if(t->getPropEngine()) {
             PropEngine* p = t->getPropEngine();
-            node->setFloatValue("rpm", p->getOmega() * (1/RPM2RAD));
-            node->setFloatValue("torque-ftlb",
-                                p->getEngine()->getTorque() * NM2FTLB);
-        
+            tp._rpm->setFloatValue(p->getOmega() * (1/RPM2RAD));
+            tp._torque_ftlb->setFloatValue(
+                    p->getEngine()->getTorque() * NM2FTLB);
+
             if(p->getEngine()->isPistonEngine()) {
                 PistonEngine* pe = p->getEngine()->isPistonEngine();
-                node->setFloatValue("mp-osi", pe->getMP() * (1/INHG2PA));
-                node->setFloatValue("mp-inhg", pe->getMP() * (1/INHG2PA));
-                node->setFloatValue("egt-degf",
-                                    pe->getEGT() * K2DEGF + K2DEGFOFFSET);
-                node->setFloatValue("oil-temperature-degf",
-                                    pe->getOilTemp() * K2DEGF + K2DEGFOFFSET);
-                node->setFloatValue("boost-gauge-inhg",
-                                    pe->getBoost() * (1/INHG2PA));
+                tp._mp_osi->setFloatValue(pe->getMP() * (1/INHG2PA));
+                tp._mp_inhg->setFloatValue(pe->getMP() * (1/INHG2PA));
+                tp._egt_degf->setFloatValue(
+                        pe->getEGT() * K2DEGF + K2DEGFOFFSET);
+                tp._oil_temperature_degf->setFloatValue(
+                        pe->getOilTemp() * K2DEGF + K2DEGFOFFSET);
+                tp._boost_gauge_inhg->setFloatValue(
+                        pe->getBoost() * (1/INHG2PA));
             } else if(p->getEngine()->isTurbineEngine()) {
                 TurbineEngine* te = p->getEngine()->isTurbineEngine();
-                node->setFloatValue("n2", te->getN2());
+                tp._n2->setFloatValue(te->getN2());
             }
         }
 
         if(t->getJet()) {
             Jet* j = t->getJet();
-            node->setFloatValue("n1", j->getN1());
-            node->setFloatValue("n2", j->getN2());
-            node->setFloatValue("epr", j->getEPR());
-            node->setFloatValue("egt-degf",
-                                j->getEGT() * K2DEGF + K2DEGFOFFSET);
+            tp._n1->setFloatValue(j->getN1());
+            tp._n2->setFloatValue(j->getN2());
+            tp._epr->setFloatValue(j->getEPR());
+            tp._egt_degf->setFloatValue(
+                    j->getEGT() * K2DEGF + K2DEGFOFFSET);
 
             // These are "unmodeled" values that are still needed for
             // many cockpits.  Tie them all to the N1 speed, but
@@ -917,11 +979,10 @@ void FGFDM::parsePropeller(XMLAttributes* a)
 // yet.
 int FGFDM::parseAxis(const char* name)
 {
-    int i;
-    for(i=0; i<_axes.size(); i++) {
-	AxisRec* a = (AxisRec*)_axes.get(i);
-	if(eq(a->name, name))
-	    return a->handle;
+    for(int i=0; i<_axes.size(); i++) {
+        AxisRec* a = (AxisRec*)_axes.get(i);
+        if(eq(a->name, name))
+            return a->handle;
     }
 
     // Not there, make a new one.

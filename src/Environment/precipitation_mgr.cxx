@@ -33,18 +33,16 @@
 #include <osg/MatrixTransform>
 
 #include <simgear/constants.h>
-#include <simgear/math/SGMath.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/sky/cloud.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Viewer/renderer.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "precipitation_mgr.hxx"
-
-extern SGSky *thesky;
-
 
 /** 
  * @brief FGPrecipitation Manager constructor 
@@ -83,7 +81,7 @@ void FGPrecipitationMgr::init()
     SGGeod geod = SGGeod::fromDegM(fgGetDouble("/position/longitude-deg", 0.0),
                                    fgGetDouble("/position/latitude-deg", 0.0),
                                    0.0);
-    osg::Matrix position(geod.makeZUpFrame());
+    osg::Matrix position(makeZUpFrame(geod));
     // Move the precipitation object to player position
     transform->setMatrix(position);
     // Add to scene graph
@@ -126,21 +124,27 @@ osg::Group * FGPrecipitationMgr::getObject(void)
  * @returns Elevation max in meter
  *
  * This function permits you to know what is the altitude max where we can
- * find precipitation. The value is returned in meter.
+ * find precipitation. The value is returned in meters.
  */
 float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
 {
     int i;
     int max;
-	double elev;
     float result;
     SGPropertyNode *boundaryNode, *boundaryEntry;
-
+    
+    if (fgGetBool("/environment/params/use-external-precipitation-level", false)) {
+        // If we're not modeling the precipitation level based on the cloud
+        // layers, take it directly from the property tree.
+        return fgGetFloat("/environment/params/external-precipitation-level-m", 0.0);    
+    }
 
     // By default (not cloud layer)
     max = SGCloudLayer::SG_MAX_CLOUD_COVERAGES;
     result = 0;
 
+     SGSky* thesky = globals->get_renderer()->getSky();
+    
     // To avoid messing up
     if (thesky == NULL)
         return result;
@@ -180,7 +184,7 @@ float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
 
         // For each boundary layers
         while ( ( boundaryEntry = boundaryNode->getNode( "entry", i ) ) != NULL ) {
-            elev = boundaryEntry->getDoubleValue( "elevation-ft" );
+            double elev = boundaryEntry->getDoubleValue( "elevation-ft" );
 
             if (elev > result)
                 result = elev;
@@ -217,18 +221,18 @@ void FGPrecipitationMgr::update(double dt)
     altitudeCloudLayer = this->getPrecipitationAtAltitudeMax() * SG_METER_TO_FEET;
     setPrecipitationLevel(altitudeCloudLayer);
 
-	// Does the user enable the precipitation ?
-	if (!precipitation->getEnabled() ) {
-		// Disable precipitations
-	    precipitation->setRainIntensity(0);
-	    precipitation->setSnowIntensity(0);
+    // Does the user enable the precipitation ?
+    if (!precipitation->getEnabled() ) {
+        // Disable precipitations
+        precipitation->setRainIntensity(0);
+        precipitation->setSnowIntensity(0);
 
-	    // Update the drawing...
-	    precipitation->update();
+        // Update the drawing...
+        precipitation->update();
 
-		// Exit
-		return;
-	}
+        // Exit
+        return;
+    }
 
     // Get the elevation of aicraft and of the cloud layer
     altitudeAircraft = fgGetDouble("/position/altitude-ft", 0.0);

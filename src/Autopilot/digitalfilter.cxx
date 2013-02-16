@@ -25,7 +25,32 @@
 #include "functor.hxx"
 #include <deque>
 
+using std::map;
+using std::string;
+using std::endl;
+using std::cout;
+
 namespace FGXMLAutopilot {
+
+/**
+ *
+ *
+ */
+class DigitalFilterImplementation : public SGReferenced {
+protected:
+  virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode) = 0;
+public:
+  virtual ~DigitalFilterImplementation() {}
+  DigitalFilterImplementation();
+  virtual void   initialize( double initvalue ) {}
+  virtual double compute( double dt, double input ) = 0;
+  bool configure( SGPropertyNode_ptr configNode );
+
+  void setDigitalFilter( DigitalFilter * digitalFilter ) { _digitalFilter = digitalFilter; }
+
+protected:
+  DigitalFilter * _digitalFilter;
+};
 
 /* --------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------- */
@@ -50,6 +75,7 @@ class DerivativeFilterImplementation : public GainFilterImplementation {
 public:
   DerivativeFilterImplementation();
   double compute(  double dt, double input );
+  virtual void initialize( double initvalue );
 };
 
 class ExponentialFilterImplementation : public GainFilterImplementation {
@@ -61,7 +87,7 @@ protected:
 public:
   ExponentialFilterImplementation();
   double compute(  double dt, double input );
-  virtual void initialize( double output );
+  virtual void initialize( double initvalue );
 };
 
 class MovingAverageFilterImplementation : public DigitalFilterImplementation {
@@ -73,7 +99,7 @@ protected:
 public:
   MovingAverageFilterImplementation();
   double compute(  double dt, double input );
-  virtual void initialize( double output );
+  virtual void initialize( double initvalue );
 };
 
 class NoiseSpikeFilterImplementation : public DigitalFilterImplementation {
@@ -84,7 +110,7 @@ protected:
 public:
   NoiseSpikeFilterImplementation();
   double compute(  double dt, double input );
-  virtual void initialize( double output );
+  virtual void initialize( double initvalue );
 };
 
 /* --------------------------------------------------------------------------------- */
@@ -96,6 +122,10 @@ using namespace FGXMLAutopilot;
 
 /* --------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------- */
+DigitalFilterImplementation::DigitalFilterImplementation() :
+  _digitalFilter(NULL)
+{
+}
 
 bool DigitalFilterImplementation::configure( SGPropertyNode_ptr configNode )
 {
@@ -136,7 +166,7 @@ bool GainFilterImplementation::configure( const std::string & nodeName, SGProper
 
 double ReciprocalFilterImplementation::compute(  double dt, double input )
 {
-  if( input >= -SGLimitsd::min() || input <= SGLimitsd::min() )
+  if( input >= -SGLimitsd::min() && input <= SGLimitsd::min() )
     return SGLimitsd::max();
 
   return _gainInput.get_value() / input;
@@ -150,6 +180,12 @@ DerivativeFilterImplementation::DerivativeFilterImplementation() :
   _input_1(0.0)
 {
 }
+
+void DerivativeFilterImplementation::initialize( double initvalue )
+{
+  _input_1 = initvalue;
+}
+
 
 bool DerivativeFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
 {
@@ -180,9 +216,9 @@ MovingAverageFilterImplementation::MovingAverageFilterImplementation() :
 {
 }
 
-void MovingAverageFilterImplementation::initialize( double output )
+void MovingAverageFilterImplementation::initialize( double initvalue )
 {
-  _output_1 = output;
+  _output_1 = initvalue;
 }
 
 double MovingAverageFilterImplementation::compute(  double dt, double input )
@@ -215,26 +251,24 @@ NoiseSpikeFilterImplementation::NoiseSpikeFilterImplementation() :
 {
 }
 
-void NoiseSpikeFilterImplementation::initialize( double output )
+void NoiseSpikeFilterImplementation::initialize( double initvalue )
 {
-  _output_1 = output;
+  _output_1 = initvalue;
 }
 
 double NoiseSpikeFilterImplementation::compute(  double dt, double input )
 {
+  double delta = input - _output_1;
+  if( fabs(delta) <= SGLimitsd::min() ) return input; // trivial
+
   double maxChange = _rateOfChangeInput.get_value() * dt;
+  const PeriodicalValue * periodical = _digitalFilter->getPeriodicalValue();
+  if( periodical ) delta = periodical->normalizeSymmetric( delta );
 
-  double output_0 = _output_1;
-
-  if (_output_1 - input > maxChange) {
-    output_0 = _output_1 - maxChange;
-  } else if( _output_1 - input < -maxChange ) {
-    output_0 = _output_1 + maxChange;
-  } else if (fabs(input - _output_1) <= maxChange) {
-    output_0 = input;
-  }
-  _output_1 = output_0;
-  return output_0;
+  if( fabs(delta) <= maxChange )
+    return (_output_1 = input);
+  else
+    return (_output_1 = _output_1 + copysign( maxChange, delta ));
 }
 
 bool NoiseSpikeFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
@@ -257,9 +291,9 @@ ExponentialFilterImplementation::ExponentialFilterImplementation()
 {
 }
 
-void ExponentialFilterImplementation::initialize( double output )
+void ExponentialFilterImplementation::initialize( double initvalue )
 {
-  output_1 = output_2 = output;
+  output_1 = output_2 = initvalue;
 }
 
 double ExponentialFilterImplementation::compute(  double dt, double input )
@@ -313,6 +347,11 @@ DigitalFilter::DigitalFilter() :
 {
 }
 
+DigitalFilter::~DigitalFilter()
+{
+}
+
+
 static map<string,FunctorBase<DigitalFilterImplementation> *> componentForge;
 
 bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configNode)
@@ -338,6 +377,7 @@ bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configN
       return true;
     }
     _implementation = (*componentForge[type])( configNode->getParent() );
+    _implementation->setDigitalFilter( this );
     return true;
   }
 

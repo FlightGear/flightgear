@@ -14,10 +14,15 @@
 //
 #ifndef __FGFONTCACHE_HXX
 #define __FGFONTCACHE_HXX
-#include <simgear/math/SGMath.hxx>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
-#include <plib/pu.h>
+
+
+// forward declare only!
+class puFont;
+class fntTexFont;
+
 /**
  * A class to keep all fonts available for future use.
  * This also assures a font isn't resident more than once.
@@ -47,7 +52,7 @@ private:
     };
     struct fnt {
         fnt(puFont *pu = 0) : pufont(pu), texfont(0) {}
-        ~fnt() { if (texfont) { delete pufont; delete texfont; } }
+        ~fnt();
         // Font used by plib GUI code
         puFont *pufont;
         // TXF font

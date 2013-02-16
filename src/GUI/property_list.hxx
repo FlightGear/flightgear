@@ -27,7 +27,7 @@
 
 #include <plib/puAux.h>
 #include <simgear/props/props.hxx>
-#include "dialog.hxx"
+#include "FGPUIDialog.hxx"
 
 
 class PropertyList : public puaList, public SGPropertyChangeListener, public GUI_ID {

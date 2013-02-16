@@ -16,7 +16,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -70,6 +70,7 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/sample_group.hxx>
 #include <simgear/structure/exception.hxx>
 
 using std::string;

@@ -18,7 +18,6 @@
 
 #cmakedefine HAVE_SYS_TIME_H
 #cmakedefine HAVE_WINDOWS_H
-#cmakedefine HAVE_CULLSETTINGS_CLEAR_MASK
 #cmakedefine HAVE_MKFIFO
 
 #define VERSION "@FLIGHTGEAR_VERSION@"
@@ -33,6 +32,11 @@
 #cmakedefine HAVE_SVN_CLIENT_H
 #cmakedefine HAVE_LIBSVN_CLIENT_1
 
-#define PKGLIBDIR "@PKGLIBDIR"
+#define PKGLIBDIR "@FG_DATA_DIR@"
+#define WEB_BROWSER "@WEB_BROWSER@"
 
 #cmakedefine FG_HAVE_HLA
+#cmakedefine FG_HAVE_GPERFTOOLS
+#cmakedefine FG_JPEG_SERVER
+
+#cmakedefine SYSTEM_SQLITE

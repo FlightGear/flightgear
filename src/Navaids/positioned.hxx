@@ -21,20 +21,21 @@
 #ifndef FG_POSITIONED_HXX
 #define FG_POSITIONED_HXX
 
+#include <string>
 #include <vector>
+#include <stdint.h>
 
+#include <simgear/sg_inlines.h>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/math/SGMath.hxx>
 
 class FGPositioned;
-class SGPropertyNode;
-
 typedef SGSharedPtr<FGPositioned> FGPositionedRef;
 
-namespace flightgear
-{
-    class PositionedBinding;
-}
+typedef int64_t PositionedID;
+typedef std::vector<PositionedID> PositionedIDVec;
+
+namespace flightgear { class NavDataCache; }
 
 class FGPositioned : public SGReferenced
 {
@@ -48,20 +49,26 @@ public:
     RUNWAY,
     TAXIWAY,
     PAVEMENT,
-    PARK_STAND,
     WAYPOINT,
     FIX,
-    VOR,
     NDB,
+    VOR,
     ILS,
     LOC,
     GS,
     OM,
     MM,
     IM,
+/// important that DME & TACAN are adjacent to keep the TacanFilter
+/// efficient - DMEs are proxies for TACAN/VORTAC stations
     DME,
     TACAN,
+    MOBILE_TACAN,
     OBSTACLE,
+/// an actual airport tower - not a radio comms facility!
+/// some airports have multiple towers, eg EHAM, although our data source
+/// doesn't necessarily include them     
+    TOWER,
     FREQ_GROUND,
     FREQ_TOWER,
     FREQ_ATIS,
@@ -70,6 +77,9 @@ public:
     FREQ_ENROUTE,
     FREQ_CLEARANCE,
     FREQ_UNICOM,
+// groundnet items
+    PARKING,  ///< parking position - might be a gate, or stand
+    TAXI_NODE,
     LAST_TYPE
   } Type;
 
@@ -93,6 +103,9 @@ public:
 
   const SGGeod& geod() const
   { return mPosition; }
+  
+  PositionedID guid() const
+  { return mGuid; }
 
   /**
    *  The cartesian position associated with this object
@@ -108,9 +121,6 @@ public:
   double elevation() const
   { return mPosition.getElevationFt(); }
   
-
-  virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
-
   /**
    * Predicate class to support custom filtering of FGPositioned queries
    * Default implementation of this passes any FGPositioned instance.
@@ -132,15 +142,6 @@ public:
     virtual Type maxType() const
     { return INVALID; }
     
-    /**
-     * Test if this filter has a non-empty type range
-     */
-    bool hasTypeRange() const;
-    
-    /**
-     * Assuming hasTypeRange is true, test if a given type passes the range
-     */
-    bool passType(Type aTy) const;
     
     bool operator()(FGPositioned* aPos) const
     { return pass(aPos); }
@@ -151,27 +152,27 @@ public:
   public:
     TypeFilter(Type aTy);
     virtual bool pass(FGPositioned* aPos) const;
+    
+    virtual Type minType() const
+    { return mMinType; }
+    
+    virtual Type maxType() const
+    { return mMaxType; }
+    
     void addType(Type aTy);
   private:
-      std::vector<Type> types;
+    std::vector<Type> types;
+    Type mMinType, mMaxType;
   };
   
-  static void installCommands();
-  
   static List findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter = NULL);
+  
+  static List findWithinRangePartial(const SGGeod& aPos, double aRangeNm, Filter* aFilter, bool& aPartial);
         
   static FGPositionedRef findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter = NULL);
-  
-  /**
-   * Find the next item with the specified partial ID, after the 'current' item
-   * Note this function is not hyper-efficient, particular where the partial id
-   * spans a large number of candidates.
-   *
-   * @param aCur - Current item, or NULL to retrieve the first item with partial id
-   * @param aId - the (partial) id to lookup
-   */
-  static FGPositionedRef findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter = NULL);
-  
+
+  static FGPositionedRef findFirstWithIdent(const std::string& aIdent, Filter* aFilter = NULL);
+
   /**
    * Find all items with the specified ident
    * @param aFilter - optional filter on items
@@ -209,7 +210,13 @@ public:
    * @param aCutoffNm - maximum distance to search within, in nautical miles
    */
   static List findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter = NULL);
-  
+    
+  /**
+   * Same as above, but with a time-bound in msec too.
+   */
+  static List findClosestNPartial(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter,
+                           bool& aPartial);
+    
   /**
    * Map a candidate type string to a real type. Returns INVALID if the string
    * does not correspond to a defined type.
@@ -223,18 +230,20 @@ public:
   
   static FGPositioned* createUserWaypoint(const std::string& aIdent, const SGGeod& aPos);
 protected:
+  friend class flightgear::NavDataCache;
   
-  FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos);
+  FGPositioned(PositionedID aGuid, Type ty, const std::string& aIdent, const SGGeod& aPos);
+    
+  void modifyPosition(const SGGeod& newPos);
   
-  void init(bool aIndexed);
-  
-  // can't be const right now, navrecord at least needs to fix up the position
-  // after navaids are parsed
-  SGGeod mPosition; 
-  
-  SGVec3d mCart; // once mPosition is const, this can be const too
+  const PositionedID mGuid;
+  const SGGeod mPosition;
+  const SGVec3d mCart;
   const Type mType;
   const std::string mIdent;
+  
+private:
+  SG_DISABLE_COPY(FGPositioned);
 };
 
 #endif // of FG_POSITIONED_HXX

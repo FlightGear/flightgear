@@ -53,7 +53,8 @@ const double FGRidgeLift::dist_probe_m[] = { // in meters
 };
 
 //constructor
-FGRidgeLift::FGRidgeLift ()
+FGRidgeLift::FGRidgeLift () :
+  lift_factor(0.0)
 {	
 	strength = 0.0;
 	timer = 0.0;
@@ -187,8 +188,8 @@ void FGRidgeLift::update(double dt) {
 	//boundaries
 	double boundary2_m = 130.0; // in the lift
 	if (lift_factor < 0.0) { // in the sink
-		double highest_probe_temp= max ( probe_elev_m[1], probe_elev_m[2] );
-		double highest_probe_downwind_m= max ( highest_probe_temp, probe_elev_m[3] );
+		double highest_probe_temp= std::max ( probe_elev_m[1], probe_elev_m[2] );
+		double highest_probe_downwind_m= std::max ( highest_probe_temp, probe_elev_m[3] );
 		boundary2_m = highest_probe_downwind_m - probe_elev_m[0];
 	}
 
@@ -199,7 +200,7 @@ void FGRidgeLift::update(double dt) {
 		agl_factor = 1.0;
 	} else {
 		agl_factor = exp(-(2 + probe_elev_m[0] / 2000) * 
-				(user_altitude_agl_m - boundary2_m) / max(probe_elev_m[0],200.0));
+                     (user_altitude_agl_m - boundary2_m) / std::max(probe_elev_m[0],200.0));
 	}
 	
 	double ground_wind_speed_mps = _surface_wind_speed_node->getDoubleValue() * SG_NM_TO_METER / 3600;

@@ -49,12 +49,13 @@ INCLUDES
 
 #include "input_output/FGXMLFileRead.h"
 #include "math/FGLocation.h"
+#include "math/FGQuaternion.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_INITIALCONDITION "$Id: FGInitialCondition.h,v 1.27 2011/05/20 00:47:03 bcoconni Exp $"
+#define ID_INITIALCONDITION "$Id: FGInitialCondition.h,v 1.33 2011/12/10 15:49:21 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -65,8 +66,10 @@ namespace JSBSim {
 class FGFDMExec;
 class FGMatrix33;
 class FGColumnVector3;
+class FGAtmosphere;
 
 typedef enum { setvt, setvc, setve, setmach, setuvw, setned, setvg } speedset;
+typedef enum { setasl, setagl} altitudeset;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -213,7 +216,7 @@ CLASS DOCUMENTATION
    @property ic/r-rad_sec (read/write) Yaw rate initial condition in radians/second
 
    @author Tony Peden
-   @version "$Id: FGInitialCondition.h,v 1.27 2011/05/20 00:47:03 bcoconni Exp $"
+   @version "$Id: FGInitialCondition.h,v 1.33 2011/12/10 15:49:21 bcoconni Exp $"
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -237,7 +240,7 @@ public:
   void SetVequivalentKtsIC(double ve);
 
   /** Set true airspeed initial condition in knots.
-      @param vt True airspeed in knots  */
+      @param vtrue True airspeed in knots  */
   void SetVtrueKtsIC(double vtrue) { SetVtrueFpsIC(vtrue*ktstofps); }
 
   /** Set ground speed initial condition in knots.
@@ -290,24 +293,23 @@ public:
 
   /** Sets the initial Altitude above ground level.
       @param agl Altitude above ground level in feet */
-  void SetAltitudeAGLFtIC(double agl)
-  { SetAltitudeASLFtIC(terrain_elevation + agl); }
+  void SetAltitudeAGLFtIC(double agl);
 
   /** Sets the initial sea level radius from planet center
       @param sl_rad sea level radius in feet */
-  void SetSeaLevelRadiusFtIC(double sl_rad) { sea_level_radius = sl_rad; }
+  void SetSeaLevelRadiusFtIC(double slr);
 
   /** Sets the initial terrain elevation.
       @param elev Initial terrain elevation in feet */
-  void SetTerrainElevationFtIC(double elev) { terrain_elevation = elev; }
+  void SetTerrainElevationFtIC(double elev);
 
   /** Sets the initial latitude.
       @param lat Initial latitude in degrees */
-  void SetLatitudeDegIC(double lat) { position.SetLatitude(lat*degtorad); }
+  void SetLatitudeDegIC(double lat) { SetLatitudeRadIC(lat*degtorad); }
 
   /** Sets the initial longitude.
       @param lon Initial longitude in degrees */
-  void SetLongitudeDegIC(double lon) { position.SetLongitude(lon*degtorad); }
+  void SetLongitudeDegIC(double lon) { SetLongitudeRadIC(lon*degtorad); }
 
   /** Gets the initial calibrated airspeed.
       @return Initial calibrated airspeed in knots */
@@ -349,15 +351,15 @@ public:
 
   /** Gets the initial pitch angle.
       @return Initial pitch angle in degrees */
-  double GetThetaDegIC(void) const { return theta*radtodeg; }
+  double GetThetaDegIC(void) const { return orientation.GetEulerDeg(eTht); }
 
   /** Gets the initial roll angle.
       @return Initial phi in degrees */
-  double GetPhiDegIC(void) const { return phi*radtodeg; }
+  double GetPhiDegIC(void) const { return orientation.GetEulerDeg(ePhi); }
 
   /** Gets the initial heading angle.
       @return Initial psi in degrees */
-  double GetPsiDegIC(void) const { return psi*radtodeg; }
+  double GetPsiDegIC(void) const { return orientation.GetEulerDeg(ePsi); }
 
   /** Gets the initial latitude.
       @return Initial geocentric latitude in degrees */
@@ -369,19 +371,15 @@ public:
 
   /** Gets the initial altitude above sea level.
       @return Initial altitude in feet. */
-  double GetAltitudeASLFtIC(void) const { return position.GetRadius() - sea_level_radius; }
+  double GetAltitudeASLFtIC(void) const { return position.GetAltitudeASL(); }
 
   /** Gets the initial altitude above ground level.
       @return Initial altitude AGL in feet */
-  double GetAltitudeAGLFtIC(void) const { return position.GetRadius() - sea_level_radius - terrain_elevation; }
-
-  /** Gets the initial sea level radius.
-      @return Initial sea level radius */
-  double GetSeaLevelRadiusFtIC(void) const { return sea_level_radius; }
+  double GetAltitudeAGLFtIC(void) const;
 
   /** Gets the initial terrain elevation.
       @return Initial terrain elevation in feet */
-  double GetTerrainElevationFtIC(void) const { return terrain_elevation; }
+  double GetTerrainElevationFtIC(void) const;
 
   /** Sets the initial ground speed.
       @param vg Initial ground speed in feet/second */
@@ -415,17 +413,17 @@ public:
       @param vd Initial down velocity in feet/second */
   void SetVDownFpsIC(double vd) { SetNEDVelFpsIC(eW, vd); }
 
-  /** Sets the initial roll rate.
+  /** Sets the initial body axis roll rate.
       @param P Initial roll rate in radians/second */
-  void SetPRadpsIC(double P)  { p = P; }
+  void SetPRadpsIC(double P)  { vPQR_body(eP) = P; }
 
-  /** Sets the initial pitch rate.
+  /** Sets the initial body axis pitch rate.
       @param Q Initial pitch rate in radians/second */
-  void SetQRadpsIC(double Q) { q = Q; }
+  void SetQRadpsIC(double Q) { vPQR_body(eQ) = Q; }
 
-  /** Sets the initial yaw rate.
+  /** Sets the initial body axis yaw rate.
       @param R initial yaw rate in radians/second */
-  void SetRRadpsIC(double R) { r = R; }
+  void SetRRadpsIC(double R) { vPQR_body(eR) = R; }
 
   /** Sets the initial wind velocity.
       @param wN Initial wind velocity in local north direction, feet/second
@@ -477,6 +475,14 @@ public:
       @return Initial body axis Z wind velocity in feet/second */
   double GetWindWFpsIC(void) const { return GetBodyWindFpsIC(eW); }
 
+  /** Gets the initial wind velocity in the NED local frame
+      @return Initial wind velocity in NED frame in feet/second */
+  const FGColumnVector3 GetWindNEDFpsIC(void) const {
+    const FGMatrix33& Tb2l = orientation.GetTInv();
+    FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
+    return _vt_NED - vUVW_NED;
+  }
+
   /** Gets the initial wind velocity in local frame.
       @return Initial wind velocity toward north in feet/second */
   double GetWindNFpsIC(void) const { return GetNEDWindFpsIC(eX); }
@@ -501,8 +507,16 @@ public:
       @return Initial rate of climb in feet/second */
   double GetClimbRateFpsIC(void) const
   {
+    const FGMatrix33& Tb2l = orientation.GetTInv();
     FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
     return _vt_NED(eW);
+  }
+
+  /** Gets the initial body velocity
+      @return Initial body velocity in feet/second. */
+  const FGColumnVector3 GetUVWFpsIC(void) const {
+    const FGMatrix33& Tl2b = orientation.GetT();
+    return Tl2b * vUVW_NED;
   }
 
   /** Gets the initial body axis X velocity.
@@ -529,17 +543,21 @@ public:
       @return Initial local frame Z (Down) axis velocity in feet/second. */
   double GetVDownFpsIC(void) const { return vUVW_NED(eW); }
 
+  /** Gets the initial body rotation rate
+      @return Initial body rotation rate in radians/second */
+  const FGColumnVector3 GetPQRRadpsIC(void) const { return vPQR_body; }
+
   /** Gets the initial body axis roll rate.
       @return Initial body axis roll rate in radians/second */
-  double GetPRadpsIC() const { return p; }
+  double GetPRadpsIC() const { return vPQR_body(eP); }
 
   /** Gets the initial body axis pitch rate.
       @return Initial body axis pitch rate in radians/second */
-  double GetQRadpsIC() const { return q; }
+  double GetQRadpsIC() const { return vPQR_body(eQ); }
 
   /** Gets the initial body axis yaw rate.
       @return Initial body axis yaw rate in radians/second */
-  double GetRRadpsIC() const { return r; }
+  double GetRRadpsIC() const { return vPQR_body(eR); }
 
   /** Sets the initial flight path angle.
       @param gamma Initial flight path angle in radians */
@@ -550,29 +568,29 @@ public:
       @param alpha Initial angle of attack in radians */
   void SetAlphaRadIC(double alpha);
 
-  /** Sets the initial pitch angle.
-      @param theta Initial pitch angle in radians */
-  void SetThetaRadIC(double theta);
-
   /** Sets the initial sideslip angle.
       @param beta Initial angle of sideslip in radians. */
   void SetBetaRadIC(double beta);
 
   /** Sets the initial roll angle.
       @param phi Initial roll angle in radians */
-  void SetPhiRadIC(double phi);
+  void SetPhiRadIC(double phi) { SetEulerAngleRadIC(ePhi, phi); }
+
+  /** Sets the initial pitch angle.
+      @param theta Initial pitch angle in radians */
+  void SetThetaRadIC(double theta) { SetEulerAngleRadIC(eTht, theta); }
 
   /** Sets the initial heading angle.
       @param psi Initial heading angle in radians */
-  void SetPsiRadIC(double psi);
+  void SetPsiRadIC(double psi) { SetEulerAngleRadIC(ePsi, psi); }
 
   /** Sets the initial latitude.
       @param lat Initial latitude in radians */
-  void SetLatitudeRadIC(double lat) { position.SetLatitude(lat); }
+  void SetLatitudeRadIC(double lat);
 
   /** Sets the initial longitude.
       @param lon Initial longitude in radians */
-  void SetLongitudeRadIC(double lon) { position.SetLongitude(lon); }
+  void SetLongitudeRadIC(double lon);
 
   /** Sets the target normal load factor.
       @param nlf Normal load factor*/
@@ -592,9 +610,9 @@ public:
       @return Initial sideslip angle in radians */
   double GetBetaRadIC(void) const { return beta; }
 
-  /** Gets the initial roll angle.
-      @return Initial roll angle in radians */
-  double GetPhiRadIC(void) const { return phi; }
+  /** Gets the initial position
+      @return Initial location */
+  const FGLocation& GetPosition(void) const { return position; }
 
   /** Gets the initial latitude.
       @return Initial latitude in radians */
@@ -604,13 +622,21 @@ public:
       @return Initial longitude in radians */
   double GetLongitudeRadIC(void) const { return position.GetLongitude(); }
 
+  /** Gets the initial orientation
+      @return Initial orientation */
+  const FGQuaternion& GetOrientation(void) const { return orientation; }
+
+  /** Gets the initial roll angle.
+      @return Initial roll angle in radians */
+  double GetPhiRadIC(void) const { return orientation.GetEuler(ePhi); }
+
   /** Gets the initial pitch angle.
       @return Initial pitch angle in radians */
-  double GetThetaRadIC(void) const { return theta; }
+  double GetThetaRadIC(void) const { return orientation.GetEuler(eTht); }
 
   /** Gets the initial heading angle.
       @return Initial heading angle in radians */
-  double GetPsiRadIC(void) const   { return psi; }
+  double GetPsiRadIC(void) const   { return orientation.GetEuler(ePsi); }
 
   /** Gets the initial speedset.
       @return Initial speedset */
@@ -636,21 +662,22 @@ public:
 
 private:
   FGColumnVector3 vUVW_NED;
+  FGColumnVector3 vPQR_body;
   FGLocation position;
+  FGQuaternion orientation;
   double vt;
-  double p,q,r;
-  double sea_level_radius;
-  double terrain_elevation;
+
   double targetNlfIC;
 
   FGMatrix33 Tw2b, Tb2w;
-  FGMatrix33 Tl2b, Tb2l;
-  double  alpha, beta, theta, phi, psi;
+  double  alpha, beta;
 
   speedset lastSpeedSet;
+  altitudeset lastAltitudeSet;
 
   FGFDMExec *fdmex;
   FGPropertyManager *PropertyManager;
+  FGAtmosphere* Atmosphere;
 
   bool Load_v1(void);
   bool Load_v2(void);
@@ -658,13 +685,12 @@ private:
   bool Constructing;
 
   void InitializeIC(void);
+  void SetEulerAngleRadIC(int idx, double angle);
   void SetBodyVelFpsIC(int idx, double vel);
   void SetNEDVelFpsIC(int idx, double vel);
   double GetBodyWindFpsIC(int idx) const;
   double GetNEDWindFpsIC(int idx) const;
   double GetBodyVelFpsIC(int idx) const;
-  double getMachFromVcas(double vcas);
-  double calcVcas(double Mach) const;
   void calcAeroAngles(const FGColumnVector3& _vt_BODY);
   void calcThetaBeta(double alfa, const FGColumnVector3& _vt_NED);
   void bind(void);

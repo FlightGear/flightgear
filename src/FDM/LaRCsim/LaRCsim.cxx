@@ -166,7 +166,7 @@ void FGLaRCsim::update( double dt ) {
 	fgSetDouble("/engines/engine/running", eng.getRunningFlag());
 	fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
 
-	static const SGPropertyNode *fuel_freeze
+	const SGPropertyNode *fuel_freeze
 	    = fgGetNode("/sim/freeze/fuel");
 
 	if ( ! fuel_freeze->getBoolValue() ) {
@@ -237,7 +237,7 @@ void FGLaRCsim::update( double dt ) {
 	fgSetDouble("/engines/engine/running", eng.getRunningFlag());
 	fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
 
-	static const SGPropertyNode *fuel_freeze
+	const SGPropertyNode *fuel_freeze
 	    = fgGetNode("/sim/freeze/fuel");
 
 	if ( ! fuel_freeze->getBoolValue() ) {
@@ -269,10 +269,10 @@ void FGLaRCsim::update( double dt ) {
     }
 
     // copy control positions into the LaRCsim structure
-    Lat_control = globals->get_controls()->get_aileron() / speed_up->getIntValue();
+    Lat_control = globals->get_controls()->get_aileron() / speed_up->getDoubleValue();
     Long_control = globals->get_controls()->get_elevator();
     Long_trim = globals->get_controls()->get_elevator_trim();
-    Rudder_pedal = globals->get_controls()->get_rudder() / speed_up->getIntValue();
+    Rudder_pedal = globals->get_controls()->get_rudder() / speed_up->getDoubleValue();
 
     // IO360.cxx for the C172 thrust is broken (not sure why).  
     // So force C172 to use engine model in c172_engine.c instead of the IO360.cxx.

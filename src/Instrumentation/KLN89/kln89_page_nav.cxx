@@ -25,8 +25,12 @@
 #  include "config.h"
 #endif
 
+#include <cstdlib>
+
 #include "kln89_page_nav.hxx"
 #include <Main/fg_props.hxx>
+
+using std::string;
 
 KLN89NavPage::KLN89NavPage(KLN89* parent) 
 : KLN89Page(parent) {

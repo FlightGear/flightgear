@@ -42,20 +42,6 @@ namespace flightgear
     class CommStation;
 }
 
-// Convert a frequency in MHz to tens of kHz
-// so we can use it e.g. as an index into commlist_freq
-//
-// If freq > 1000 assume it's already in tens of KHz;
-// otherwise assume MHz.
-//
-// Note:  122.375 must be rounded DOWN to 12237 
-// in order to be consistent with apt.dat et cetera.
-inline int kHz10(double freq)
-{
- if (freq > 1000.) return int(freq);
- return int(freq*100.0 + 0.25);
-}
-
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.
 enum atc_type {
@@ -69,6 +55,7 @@ enum atc_type {
 	INVALID	 /* must be last element;  see ATC_NUM_TYPES */
 };
 
+#ifdef OLD_ATC_MGR
 const int ATC_NUM_TYPES = 1 + INVALID;
 
 // DCL - new experimental ATC data store
@@ -98,30 +85,32 @@ struct RunwayDetails {
 };
 
 std::ostream& operator << (std::ostream& os, atc_type atc);
+#endif
 
 class FGATC {
-	friend class FGATCMgr;
+	friend class FGATISMgr;
 public:
-	
+
 	FGATC();
 	virtual ~FGATC();
-	
-	virtual void Init()=0;
-  
+
+	virtual void init()=0;
+
 	// Run the internal calculations
 	// Derived classes should call this method from their own Update methods if they 
 	// wish to use the response timer functionality.
-	virtual void Update(double dt);
-	
-	// Recieve a coded callback from the ATC menu system based on the user's selection
-	virtual void ReceiveUserCallback(int code);
-	
+	virtual void update(double dt);
+
 	// Indicate that this instance should output to the display if appropriate 
 	inline void SetDisplay() { _display = true; }
 	
 	// Indicate that this instance should not output to the display
 	inline void SetNoDisplay() { _display = false; }
 	
+#ifdef OLD_ATC_MGR
+	// Receive a coded callback from the ATC menu system based on the user's selection
+	virtual void ReceiveUserCallback(int code);
+
 	// Generate the text of a message from its parameters and the current context.
 	virtual std::string GenText(const std::string& m, int c);
 	
@@ -141,21 +130,24 @@ public:
 	// AI traffic should check FreqClear() is true prior to transmitting.
 	// The user will just have to wait for a gap in dialog as in real life.
 	
-	// Return the type of ATC station that the class represents
-	inline atc_type GetType() { return _type; }
 	
-	// Set the core ATC data
-    void SetStation(flightgear::CommStation* sta);
 
 	inline int get_freq() const { return freq; }
 	inline void set_freq(const int fq) {freq = fq;}
 	inline int get_range() const { return range; }
 	inline void set_range(const int rg) {range = rg;}
+#endif
+	// Return the type of ATC station that the class represents
+	inline atc_type GetType() { return _type; }
+
+	// Set the core ATC data
+	void SetStation(flightgear::CommStation* sta);
+
 	inline const std::string& get_ident() { return ident; }
 	inline void set_ident(const std::string& id) { ident = id; }
 	inline const std::string& get_name() { return name; }
 	inline void set_name(const std::string& nm) { name = nm; }
-	
+
 protected:
 	
 	// Render a transmission
@@ -163,31 +155,31 @@ protected:
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
 	void Render(std::string& msg, const float volume = 1.0, 
-	const std::string& refname = "", bool repeating = false);
+	            const std::string& refname = "", bool repeating = false);
 	
 	// Cease rendering all transmission from this station.
 	// Requires the sound manager refname if audio, else "".
 	void NoRender(const std::string& refname);
 	
+	virtual FGATCVoice* GetVoicePointer() = 0;
+
 	SGGeod _geod;
 	SGVec3d _cart;
 	int freq;
-	std::map<std::string,int> active_on;
-  
+	flightgear::CommStation* _currentStation;
+
 	int range;
 	std::string ident;	// Code of the airport its at.
 	std::string name;	// Name transmitted in the broadcast.
+	std::string _currentMsg; // Current message being transmitted
 
-	
 	// Rendering related stuff
 	bool _voice;	// Flag - true if we are using voice
-	bool _playing;	// Indicates a message in progress	
-	bool _voiceOK;	// Flag - true if at least one voice has loaded OK
-	FGATCVoice* _vPtr;
+	bool _playing;	// Indicates a message in progress
 
 	SGSharedPtr<SGSampleGroup> _sgr; // default sample group;
 
-	
+#ifdef OLD_ATC_MGR
 	bool freqClear;	// Flag to indicate if the frequency is clear of ongoing dialog
 	bool receiving;	// Flag to indicate we are receiving a transmission
 	
@@ -204,11 +196,14 @@ protected:
 	bool responseReqd;	// Flag to indicate we should be responding to a request/report 
 	double _releaseTime;
 	double _releaseCounter;
+	std::string pending_transmission; // derived classes set this string before calling Transmit(...)
+#endif
 	atc_type _type;
 	bool _display;	// Flag to indicate whether we should be outputting to the ATC display.
-	std::string pending_transmission; // derived classes set this string before calling Transmit(...)	
-	
+
 private:
+
+#ifdef OLD_ATC_MGR
 	// Transmission timing stuff.
 	double _timeout;
 	bool _pending;
@@ -216,13 +211,16 @@ private:
 	bool _transmitting;	// we are transmitting
 	double _counter;
 	double _max_count;
+#endif
 
-	SGPropertyNode_ptr _volume;
+	SGPropertyNode_ptr _masterVolume;
 	SGPropertyNode_ptr _enabled;
 	SGPropertyNode_ptr _atc_external;
 	SGPropertyNode_ptr _internal;
 };
 
+#ifdef OLD_ATC_MGR
 std::istream& operator>> ( std::istream& fin, ATCData& a );
+#endif
 
 #endif  // _FG_ATC_HXX

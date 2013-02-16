@@ -3,6 +3,10 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/compiler.h>
 #include <iostream>
 #include <string>
@@ -12,6 +16,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+using std::string;
 
 // Use a bigger number to be more responsive, or a smaller number
 // to be more sluggish.
@@ -41,6 +46,15 @@ TurnIndicator::init ()
     _electric_current_node = 
         fgGetNode("/systems/electrical/outputs/turn-coordinator", true);
     _rate_out_node = node->getChild("indicated-turn-rate", 0, true);
+
+    reinit();
+}
+
+void
+TurnIndicator::reinit ()
+{
+    _last_rate = 0;
+    _gyro.reinit();
 }
 
 void

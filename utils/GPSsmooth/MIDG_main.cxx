@@ -77,15 +77,15 @@ bool inited = false;
 // point value.  By doing the BIG_ENDIAN test, I can optimize the
 // routine for big-endian processors so it can be as efficient as
 // possible
-static void htond (double &x)	
+static void htond (double &x)
 {
     if ( sgIsLittleEndian() ) {
         int    *Double_Overlay;
         int     Holding_Buffer;
-    
+
         Double_Overlay = (int *) &x;
         Holding_Buffer = Double_Overlay [0];
-    
+
         Double_Overlay [0] = htonl (Double_Overlay [1]);
         Double_Overlay [1] = htonl (Holding_Buffer);
     } else {
@@ -94,15 +94,15 @@ static void htond (double &x)
 }
 
 // Float version
-static void htonf (float &x)	
+static void htonf (float &x)
 {
     if ( sgIsLittleEndian() ) {
         int    *Float_Overlay;
         int     Holding_Buffer;
-    
+
         Float_Overlay = (int *) &x;
         Holding_Buffer = Float_Overlay [0];
-    
+
         Float_Overlay [0] = htonl (Holding_Buffer);
     } else {
         return;
@@ -279,16 +279,13 @@ static void midg2fg( const MIDGpos pos, const MIDGatt att,
 
 
 static void send_data( const MIDGpos pos, const MIDGatt att ) {
-    int len;
     int fdmsize = sizeof( FGNetFDM );
-
-    // cout << "Running main loop" << endl;
 
     FGNetFDM fgfdm;
     FGNetCtrls fgctrls;
 
     midg2fg( pos, att, &fgfdm, &fgctrls );
-    len = fdm_sock.send(&fgfdm, fdmsize, 0);
+    fdm_sock.send(&fgfdm, fdmsize, 0);
 }
 
 
@@ -466,10 +463,10 @@ int main( int argc, char **argv ) {
 
         MIDGpos pos0, pos1;
         pos0 = pos1 = track.get_pospt( 0 );
-    
+
         MIDGatt att0, att1;
         att0 = att1 = track.get_attpt( 0 );
-    
+
         while ( current_time < end_time ) {
             // cout << "current_time = " << current_time << " end_time = "
             //      << end_time << endl;
@@ -566,7 +563,6 @@ int main( int argc, char **argv ) {
         // process incoming data from the serial port
 
         int count = 0;
-        double current_time = 0.0;
 
         MIDGpos pos;
         MIDGatt att;
@@ -602,14 +598,14 @@ int main( int argc, char **argv ) {
             if ( id == 10 ) {
                 if ( att.get_msec() > att_time ) {
                     att_time = att.get_msec();
-                    current_time = att_time;
+                    //current_time = att_time;
                 } else {
                     cout << "oops att back in time" << endl;
                 }
             } else if ( id == 12 ) {
                 if ( pos.get_msec() > pos_time ) {
                     pos_time = pos.get_msec();
-                    current_time = pos_time;
+                    //current_time = pos_time;
                 } else {
                     cout << "oops pos back in time" << endl;
                 }

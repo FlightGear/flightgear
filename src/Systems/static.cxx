@@ -3,7 +3,14 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "static.hxx"
+
+#include <string>
+
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
@@ -24,13 +31,21 @@ StaticSystem::~StaticSystem ()
 void
 StaticSystem::init ()
 {
-    string branch;
-    branch = "/systems/" + _name;
+    std::string branch = "/systems/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
     _pressure_in_node = fgGetNode("/environment/pressure-inhg", true);
     _pressure_out_node = node->getChild("pressure-inhg", 0, true);
+
+    reinit();
+}
+
+void
+StaticSystem::reinit ()
+{
+    // start with settled static pressure
+    _pressure_out_node->setDoubleValue(_pressure_in_node->getDoubleValue());
 }
 
 void
@@ -50,7 +65,6 @@ StaticSystem::update (double dt)
         double trat = _tau ? dt/_tau : 100;
         double target = _pressure_in_node->getDoubleValue();
         double current = _pressure_out_node->getDoubleValue();
-        // double delta = target - current;
         _pressure_out_node->setDoubleValue(fgGetLowPass(current, target, trat));
     }
 }

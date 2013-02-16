@@ -22,11 +22,16 @@
 #include <windows.h>
 #endif
 
-
 #include <map>
 #include <algorithm>
+
+#include <plib/fnt.h>
+#include <plib/pu.h>
+
 #include "ApplicationProperties.hxx"
 #include "FGFontCache.hxx"
+
+
 ////////////////////////////////////////////////////////////////////////
 // FGFontCache class.
 ////////////////////////////////////////////////////////////////////////
@@ -61,11 +66,20 @@ const GuiFont guifonts[] = {
     { "HELVETICA_10", &PUFONT_HELVETICA_10 },
     { "HELVETICA_12", &PUFONT_HELVETICA_12 },
 //    { "HELVETICA_14", &FONT_HELVETICA_14 },
-    { "HELVETICA_18", &PUFONT_HELVETICA_18 }
-//    { "SANS_12B",     &FONT_SANS_12B }
+    { "HELVETICA_18", &PUFONT_HELVETICA_18 },
+//    { "SANS_12B",     &FONT_SANS_12B },
+    { 0 }
 };
 
-const GuiFont* guifontsEnd = &guifonts[sizeof(guifonts)/ sizeof(guifonts[0])];
+const GuiFont* guifontsEnd = &guifonts[sizeof(guifonts)/ sizeof(guifonts[0])-1];
+}
+
+FGFontCache::fnt::~fnt()
+{
+    if (texfont) { 
+        delete pufont; 
+        delete texfont;
+    }
 }
 
 FGFontCache::FGFontCache() :

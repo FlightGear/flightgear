@@ -44,7 +44,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MODELFUNCTIONS "$Id: FGModelFunctions.h,v 1.3 2010/11/17 03:18:37 jberndt Exp $"
+#define ID_MODELFUNCTIONS "$Id: FGModelFunctions.h,v 1.5 2012/04/13 13:25:52 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -76,12 +76,23 @@ DECLARATION: FGModelFunctions
 class FGModelFunctions : public FGJSBBase
 {
 public:
-  ~FGModelFunctions();
+  virtual ~FGModelFunctions();
   void RunPreFunctions(void);
   void RunPostFunctions(void);
   bool Load(Element* el, FGPropertyManager* PropertyManager, std::string prefix="");
   void PreLoad(Element* el, FGPropertyManager* PropertyManager, std::string prefix="");
   void PostLoad(Element* el, FGPropertyManager* PropertyManager, std::string prefix="");
+
+  /** Gets the strings for the current set of functions.
+      @param delimeter either a tab or comma string depending on output type
+      @return a string containing the descriptive names for all functions */
+  std::string GetFunctionStrings(const std::string& delimeter) const;
+
+  /** Gets the function values.
+      @param delimeter either a tab or comma string depending on output type
+      @return a string containing the numeric values for the current set of
+      functions */
+  std::string GetFunctionValues(const std::string& delimeter) const;
 
 protected:
   std::vector <FGFunction*> PreFunctions;

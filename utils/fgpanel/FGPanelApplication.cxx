@@ -22,6 +22,11 @@
 
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
+#include <direct.h>
+#endif
+
+#ifdef __APPLE__
+#  include <CoreFoundation/CoreFoundation.h>
 #endif
 
 #include "FGGLApplication.hxx"
@@ -38,6 +43,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/misc/ResourceManager.hxx>
 
 #include <iostream>
 
@@ -62,6 +68,48 @@ inline static string ParseArgs( int argc, char ** argv, const char * token )
   return ParseArgs( argc, argv, s );
 }
 
+
+// define default location of fgdata (use the same as for fgfs)
+#if defined(__CYGWIN__)
+inline static string platformDefaultRoot()
+{
+  return "../data";
+}
+
+#elif defined(_WIN32)
+inline static string platformDefaultRoot()
+{
+  return "..\\data";
+}
+#elif defined(__APPLE__)
+inline static string platformDefaultRoot()
+{
+  /*
+   The following code looks for the base package inside the application
+   bundle, in the standard Contents/Resources location.
+   */
+  CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+
+  // look for a 'data' subdir
+  CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
+
+  // now convert down to a path, and the a c-string
+  CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
+  string root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
+
+  CFRelease(resourcesUrl);
+  CFRelease(dataDir);
+  CFRelease(path);
+
+  return root;
+}
+#else
+inline static string platformDefaultRoot()
+{
+  return PKGLIBDIR;
+}
+#endif
+
 #include "FGPNGTextureLoader.hxx"
 #include "FGRGBTextureLoader.hxx"
 static FGPNGTextureLoader pngTextureLoader;
@@ -74,6 +122,8 @@ FGPanelApplication::FGPanelApplication( int argc, char ** argv ) :
   FGCroppedTexture::registerTextureLoader( "png", &pngTextureLoader );
   FGCroppedTexture::registerTextureLoader( "rgb", &rgbTextureLoader );
 
+  ApplicationProperties::root = platformDefaultRoot();
+
   string panelFilename;
   string fgRoot;
 
@@ -85,9 +135,20 @@ FGPanelApplication::FGPanelApplication( int argc, char ** argv ) :
   if( fgRoot.length() > 0 )
     ApplicationProperties::root = fgRoot;
 
+  simgear::ResourceManager::instance()->addBasePath(ApplicationProperties::root);
+
   if( panelFilename.length() == 0 ) {
     cerr << "Need a panel filename. Use --panel=path_to_filename" << endl; 
     throw exception();
+  }
+
+  // see if we got a valid fgdata path
+  SGPath BaseCheck(ApplicationProperties::root);
+  BaseCheck.append("version");
+  if (!BaseCheck.exists())
+  {
+      cerr << "Missing base package. Use --fg-root=path_to_fgdata" << endl; 
+      throw exception();
   }
 
   try {
@@ -284,11 +345,46 @@ double ApplicationProperties::getDouble( const char * name, double def )
   if( n == NULL ) return def;
   return n->getDoubleValue();
 }
+
+SGPath ApplicationProperties::GetCwd()
+{
+  SGPath path(".");
+  char buf[512], *cwd = getcwd(buf, 511);
+  buf[511] = '\0';
+  if (cwd)
+  {
+    path = cwd;
+  }
+  return path;
+}
+
 SGPath ApplicationProperties::GetRootPath( const char * sub )
 {
+  if( sub != NULL )
+  {
+    SGPath subpath( sub );
+
+    // relative path to current working dir?
+    if (subpath.isRelative())
+    {
+      SGPath path = GetCwd();
+      path.append( sub );
+      if (path.exists())
+        return path;
+    }
+    else
+    if ( subpath.exists() )
+    {
+      // absolute path
+      return subpath;
+    }
+  }
+
+  // default: relative path to FGROOT
   SGPath path( ApplicationProperties::root );
   if( sub != NULL )
     path.append( sub );
+
   return path;
 }
 

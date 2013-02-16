@@ -49,7 +49,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.23 2011/05/20 03:18:36 jberndt Exp $"
+#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.27 2011/11/09 21:58:26 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONSS
@@ -138,13 +138,13 @@ public:
       slugs at the given vector r in the structural frame. The units
       should be for the mass in slug and the vector in the structural
       frame as usual in inches.
-      @param slugs the mass of this single pointmass given in slugs
+      @param mass_sl the mass of this single pointmass given in slugs
       @param r the location of this single pointmass in the structural frame
    */
-  FGMatrix33 GetPointmassInertia(double slugs, const FGColumnVector3& r) const
+  FGMatrix33 GetPointmassInertia(double mass_sl, const FGColumnVector3& r) const
   {
     FGColumnVector3 v = StructuralToBody( r );
-    FGColumnVector3 sv = slugs*v;
+    FGColumnVector3 sv = mass_sl*v;
     double xx = sv(1)*v(1);
     double yy = sv(2)*v(2);
     double zz = sv(3)*v(3);
@@ -171,14 +171,23 @@ public:
   void SetBaseCG(const FGColumnVector3& CG) {vbaseXYZcg = vXYZcg = CG;}
 
   void AddPointMass(Element* el);
-  double GetTotalPointMassWeight(void);
+  double GetTotalPointMassWeight(void) const;
 
-  FGColumnVector3& GetPointMassMoment(void);
+  const FGColumnVector3& GetPointMassMoment(void);
   const FGMatrix33& GetJ(void) const {return mJ;}
   const FGMatrix33& GetJinv(void) const {return mJinv;}
-  void SetAircraftBaseInertias(FGMatrix33 BaseJ) {baseJ = BaseJ;}
+  void SetAircraftBaseInertias(const FGMatrix33& BaseJ) {baseJ = BaseJ;}
   void GetMassPropertiesReport(void) const;
   
+  struct Inputs {
+    double GasMass;
+    double TanksWeight;
+    FGColumnVector3 GasMoment;
+    FGMatrix33 GasInertia;
+    FGColumnVector3 TanksMoment;
+    FGMatrix33 TankInertia;
+  } in;
+
 private:
   double Weight;
   double EmptyWeight;
@@ -195,7 +204,7 @@ private:
   FGColumnVector3 vbaseXYZcg;
   FGColumnVector3 vPMxyz;
   FGColumnVector3 PointMassCG;
-  FGMatrix33& CalculatePMInertias(void);
+  const FGMatrix33& CalculatePMInertias(void);
 
 
   /** The PointMass structure encapsulates a point mass object, moments of inertia
@@ -246,9 +255,9 @@ private:
     double GetPointMassLocation(int axis) const {return Location(axis);}
     double GetPointMassWeight(void) const {return Weight;}
     esShape GetShapeType(void) {return eShapeType;}
-    FGColumnVector3 GetLocation(void) {return Location;}
-    FGMatrix33 GetPointMassInertia(void) {return mPMInertia;}
-    string GetName(void) {return Name;}
+    const FGColumnVector3& GetLocation(void) {return Location;}
+    const FGMatrix33& GetPointMassInertia(void) {return mPMInertia;}
+    const string& GetName(void) {return Name;}
 
     void SetPointMassLocation(int axis, double value) {Location(axis) = value;}
     void SetPointMassWeight(double wt) {Weight = wt;}

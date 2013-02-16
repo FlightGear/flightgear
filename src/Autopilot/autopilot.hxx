@@ -52,9 +52,9 @@ public:
     bool is_serviceable() const { return _serviceable; }
 
     std::string get_name() const { return _name; }
-    void set_name( std::string & name ) { _name = name; }
+    void set_name( const std::string & name ) { _name = name; }
 
-    void add_component( Component * component );
+    void add_component( Component * component, double updateInterval );
 
 protected:
 

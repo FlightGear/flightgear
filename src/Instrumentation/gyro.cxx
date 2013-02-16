@@ -13,6 +13,12 @@ Gyro::~Gyro ()
 {
 }
 
+void Gyro::reinit(void)
+{
+    _power_norm = 0.0;
+    _spin_norm = 0.0;
+}
+
 void
 Gyro::update (double delta_time_sec)
 {

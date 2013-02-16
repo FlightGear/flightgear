@@ -40,8 +40,8 @@ namespace osg
 class GraphicsContext;
 }
 // gui.cxx
-extern void guiStartInit(osg::GraphicsContext*);
-extern bool guiFinishInit();
+extern bool guiInit();
+extern bool openBrowser(const std::string& address);
 extern void mkDialog(const char *txt);
 extern void guiErrorMessage(const char *txt);
 extern void guiErrorMessage(const char *txt, const sg_throwable &throwable);

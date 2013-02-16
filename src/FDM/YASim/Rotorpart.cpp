@@ -149,8 +149,7 @@ float Rotorpart::getWeight(void)
 
 void Rotorpart::setPosition(float* p)
 {
-    int i;
-    for(i=0; i<3; i++) _pos[i] = p[i];
+    for(int i=0; i<3; i++) _pos[i] = p[i];
 }
 
 float Rotorpart::getIncidence()
@@ -160,39 +159,33 @@ float Rotorpart::getIncidence()
 
 void Rotorpart::getPosition(float* out)
 {
-    int i;
-    for(i=0; i<3; i++) out[i] = _pos[i];
+    for(int i=0; i<3; i++) out[i] = _pos[i];
 }
 
 void Rotorpart::setPositionForceAttac(float* p)
 {
-    int i;
-    for(i=0; i<3; i++) _posforceattac[i] = p[i];
+    for(int i=0; i<3; i++) _posforceattac[i] = p[i];
 }
 
 void Rotorpart::getPositionForceAttac(float* out)
 {
-    int i;
-    for(i=0; i<3; i++) out[i] = _posforceattac[i];
+    for(int i=0; i<3; i++) out[i] = _posforceattac[i];
 }
 
 void Rotorpart::setSpeed(float* p)
 {
-    int i;
-    for(i=0; i<3; i++) _speed[i] = p[i];
+    for(int i=0; i<3; i++) _speed[i] = p[i];
     Math::unit3(_speed,_direction_of_movement); 
 }
 
 void Rotorpart::setDirectionofZentipetalforce(float* p)
 {
-    int i;
-    for(i=0; i<3; i++) _directionofcentripetalforce[i] = p[i];
+    for(int i=0; i<3; i++) _directionofcentripetalforce[i] = p[i];
 }
 
 void Rotorpart::setDirectionofRotorPart(float* p)
 {
-    int i;
-    for(i=0; i<3; i++) _directionofrotorpart[i] = p[i];
+    for(int i=0; i<3; i++) _directionofrotorpart[i] = p[i];
 }
 
 void Rotorpart::setDirection(float direction)
@@ -330,14 +323,12 @@ void Rotorpart::setLen(float value)
 
 void Rotorpart::setNormal(float* p)
 {
-    int i;
-    for(i=0; i<3; i++) _normal[i] = p[i];
+    for(int i=0; i<3; i++) _normal[i] = p[i];
 }
 
 void Rotorpart::getNormal(float* out)
 {
-    int i;
-    for(i=0; i<3; i++) out[i] = _normal[i];
+    for(int i=0; i<3; i++) out[i] = _normal[i];
 }
 
 void Rotorpart::setCollective(float pos)
@@ -377,22 +368,18 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
     float incidence, float cyc, float alphaalt, float *torque,
     float *returnlift)
 {
-    float moment[3],v_local[3],v_local_scalar,lift_moment,v_flap[3],v_help[3];
-    float ias;//nur f. dgb
-    int i,n;
-    for (i=0;i<3;i++)
-        moment[i]=0;
+    float v_local[3],v_local_scalar,lift_moment,v_flap[3],v_help[3];
     float relgrav = Math::dot3(_normal,_rotor->getGravDirection());
     lift_moment=-_mass*_len*9.81*relgrav;
     *torque=0;//
     if((_nextrp==NULL)||(_lastrp==NULL)||(_rotor==NULL)) 
-        return 0.0;//not initialized. Can happen during startupt of flightgear
+        return 0.0;//not initialized. Can happen during startup of flightgear
     if (returnlift!=NULL) *returnlift=0;
     float flap_omega=(_next90rp->getrealAlpha()-_last90rp->getrealAlpha())
         *_omega / pi;
     float local_width=_diameter*(1-_rel_len_blade_start)/2.
         /(float (_number_of_segments));
-    for (n=0;n<_number_of_segments;n++)
+    for (int n=0;n<_number_of_segments;n++)
     {
         float rel = (n+.5)/(float (_number_of_segments));
         float r= _diameter *0.5 *(rel*(1-_rel_len_blade_start)
@@ -427,7 +414,7 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
             Math::mul3(1/v_local_scalar,v_local,v_help);
         float incidence_of_airspeed = Math::asin(Math::clamp(
             Math::dot3(v_help,_normal),-1,1)) + local_incidence;
-        ias = incidence_of_airspeed;
+        //ias = incidence_of_airspeed;
 
         //reduce the ias (Prantl factor)
         float prantl_factor=2/pi*Math::acos(Math::exp(
@@ -437,7 +424,7 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
         incidence_of_airspeed = (incidence_of_airspeed+
             _rotor->getAirfoilIncidenceNoLift())*prantl_factor
             *_rotor_correction_factor-_rotor->getAirfoilIncidenceNoLift();
-        ias = incidence_of_airspeed;
+        //ias = incidence_of_airspeed;
         float lift_wo_cyc = _rotor->getLiftCoef(incidence_of_airspeed
             -cyc*_rotor_correction_factor*prantl_factor,v_local_scalar)
             * v_local_scalar * v_local_scalar * A *rho *0.5;
@@ -569,9 +556,8 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
     *torque_scalar=scalar_torque;
     scalar_torque+= 0*_ddt_omega*_torque_of_inertia;
     float thetorque = scalar_torque;
-    int i;
     float f=_rotor->getCcw()?1:-1;
-    for(i=0; i<3; i++) {
+    for(int i=0; i<3; i++) {
         _last_torque[i]=torque[i] = f*_normal[i]*thetorque;
         out[i] = _normal[i]*zforce*_rotor->getLiftFactor()
             +_directionofcentripetalforce[i]*xforce;
@@ -580,13 +566,13 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
 
 void Rotorpart::getAccelTorque(float relaccel,float *t)
 {
-    int i;
     float f=_rotor->getCcw()?1:-1;
-    for(i=0; i<3; i++) {
+    for(int i=0; i<3; i++) {
         t[i]=f*-1* _normal[i]*relaccel*_omegan* _torque_of_inertia;// *_omeagan ?
         _rotor->addTorque(-relaccel*_omegan* _torque_of_inertia);
     }
 }
+
 std::ostream &  operator<<(std::ostream & out, const Rotorpart& rp)
 {
 #define i(x) << #x << ":" << rp.x << endl

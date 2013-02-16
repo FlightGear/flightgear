@@ -54,7 +54,9 @@
 #include "ATC-Main.hxx"
 
 using std::string;
-
+using std::cout;
+using std::endl;
+using std::vector;
 
 // Lock the ATC hardware
 static int fgATCMainLock( int fd ) {
@@ -96,7 +98,7 @@ void FGATCMain::init_config() {
         SGPath atcsim_config( envp );
         atcsim_config.append( ".fgfs-atc610x.xml" );
 	try {
-	  SG_LOG(SG_GENERAL, SG_ALERT,
+	  SG_LOG(SG_NETWORK, SG_ALERT,
 		 "Warning: loading deprecated config file: " <<
 		 atcsim_config.str() );
 	  readProperties( atcsim_config.str(), globals->get_props() );
@@ -222,7 +224,7 @@ bool FGATCMain::process() {
     FGNasalSys *n = (FGNasalSys*)globals->get_subsystem("nasal");
     bool result = n->parseAndRun( "atcsim.update()" );
     if ( !result ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Nasal: atcsim.update() failed!" );
+        SG_LOG( SG_NETWORK, SG_ALERT, "Nasal: atcsim.update() failed!" );
     }
 
     // process the ATC outputs

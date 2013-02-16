@@ -39,17 +39,15 @@ public:
     virtual ~FGAIEscort();
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
-    virtual void bind();
-    virtual void unbind();
-    virtual const char* getTypeString(void) const { return "escort"; }
 
     bool init(bool search_in_AI_path=false);
-
-private:
-
-    virtual void reinit() { init(); }
+    virtual void bind();
+    virtual void reinit();
     virtual void update (double dt);
 
+    virtual const char* getTypeString(void) const { return "escort"; }
+
+private:
     void setStnRange(double r);
     void setStnBrg(double y);
     void setStationSpeed();
@@ -90,8 +88,6 @@ private:
     double _stn_speed, _stn_angle_limit, _stn_limit;
 
     double _max_speed;
-
-    const SGMaterial* _material;
 
     bool _MPControl, _patrol, _stn_deg_true;
 

@@ -24,22 +24,18 @@
 
 #include "TimeManager.hxx"
 
-#ifdef _WIN32
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h> // for Sleep()
-#else
-#  include <unistd.h> // for usleep()
-#endif
-
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/timing/lowleveltime.h>
 #include <simgear/structure/commands.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Time/sunsolver.hxx>
+
+using std::string;
 
 static bool do_timeofday (const SGPropertyNode * arg)
 {
@@ -58,7 +54,11 @@ static bool do_timeofday (const SGPropertyNode * arg)
 
 TimeManager::TimeManager() :
   _inited(false),
-  _impl(NULL)
+  _impl(NULL),
+  _sceneryLoaded("sim/sceneryloaded"),
+  _modelHz("sim/model-hz"),
+  _timeDelta("sim/time/delta-realtime-sec"),
+  _simTimeDelta("sim/time/delta-sec")
 {
   SGCommandMgr::instance()->addCommand("timeofday", do_timeofday);
 }
@@ -84,15 +84,10 @@ void TimeManager::init()
   
   _warpDelta = fgGetNode("/sim/time/warp-delta", true);
   
-  _longitudeDeg = fgGetNode("/position/longitude-deg", true);
-  _latitudeDeg = fgGetNode("/position/latitude-deg", true);
-  
   SGPath zone(globals->get_fg_root());
   zone.append("Timezone");
-  double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
   
-  _impl = new SGTime(lon, lat, zone.str(), _timeOverride->getLongValue());
+  _impl = new SGTime(globals->get_aircraft_position(), zone, _timeOverride->getLongValue());
   
   _warpDelta->setIntValue(0);
   
@@ -100,13 +95,14 @@ void TimeManager::init()
                             &TimeManager::updateLocalTime, 30*60 );
   updateLocalTime();
   
-  _impl->update(lon, lat, _timeOverride->getLongValue(),
+  _impl->update(globals->get_aircraft_position(), _timeOverride->getLongValue(),
                _warp->getIntValue());
   globals->set_time_params(_impl);
     
   // frame-rate / worst-case latency / update-rate counters
   _frameRate = fgGetNode("/sim/frame-rate", true);
   _frameLatency = fgGetNode("/sim/frame-latency-max-ms", true);
+  _frameRateWorst = fgGetNode("/sim/frame-rate-worst", true);
   _lastFrameTime = 0;
   _frameLatencyMax = 0.0;
   _frameCount = 0;
@@ -145,9 +141,7 @@ void TimeManager::valueChanged(SGPropertyNode* aProp)
       _adjustWarpOnUnfreeze = false;
     }
     
-    double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-    double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-    _impl->update(lon, lat,
+    _impl->update(globals->get_aircraft_position(),
                    _timeOverride->getLongValue(),
                    _warp->getIntValue());
   }
@@ -162,9 +156,7 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
     _lastClockFreeze = _clockFreeze->getBoolValue();
   }
 
-  bool scenery_loaded = fgGetBool("sim/sceneryloaded");
-  bool wait_for_scenery = !(scenery_loaded || fgGetBool("sim/sceneryloaded-override"));
-  
+  bool wait_for_scenery = !_sceneryLoaded;
   if (!wait_for_scenery) {
     throttleUpdateRate();
   }
@@ -194,20 +186,18 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   if (0 < dtMax && dtMax < dt) {
     dt = dtMax;
   }
-  
-  int model_hz = fgGetInt("/sim/model-hz");
-  
+    
   SGSubsystemGroup* fdmGroup = 
     globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::FDM);
-  fdmGroup->set_fixed_update_time(1.0 / model_hz);
+  fdmGroup->set_fixed_update_time(1.0 / _modelHz);
   
 // round the real time down to a multiple of 1/model-hz.
 // this way all systems are updated the _same_ amount of dt.
   dt += _dtRemainder;
-  int multiLoop = long(floor(dt * model_hz));
+  int multiLoop = long(floor(dt * _modelHz));
   multiLoop = SGMisc<long>::max(0, multiLoop);
-  _dtRemainder = dt - double(multiLoop)/double(model_hz);
-  dt = double(multiLoop)/double(model_hz);
+  _dtRemainder = dt - double(multiLoop)/double(_modelHz);
+  dt = double(multiLoop)/double(_modelHz);
 
   realDt = dt;
   if (_clockFreeze->getBoolValue() || wait_for_scenery) {
@@ -220,8 +210,8 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   globals->inc_sim_time_sec(simDt);
 
 // These are useful, especially for Nasal scripts.
-  fgSetDouble("/sim/time/delta-realtime-sec", realDt);
-  fgSetDouble("/sim/time/delta-sec", simDt);
+  _timeDelta = realDt;
+  _simTimeDelta = simDt;
 }
 
 void TimeManager::update(double dt)
@@ -257,9 +247,7 @@ void TimeManager::update(double dt)
   }
 
   _lastClockFreeze = freeze;
-  double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  _impl->update(lon, lat,
+  _impl->update(globals->get_aircraft_position(),
                _timeOverride->getLongValue(),
                _warp->getIntValue());
 
@@ -272,6 +260,8 @@ void TimeManager::computeFrameRate()
   if ((_impl->get_cur_time() != _lastFrameTime)) {
     _frameRate->setIntValue(_frameCount);
     _frameLatency->setDoubleValue(_frameLatencyMax*1000);
+    if (_frameLatencyMax>0)
+        _frameRateWorst->setIntValue(1/_frameLatencyMax);
     _frameCount = 0;
     _frameLatencyMax = 0.0;
   }
@@ -282,69 +272,13 @@ void TimeManager::computeFrameRate()
 
 void TimeManager::throttleUpdateRate()
 {
-  double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
-  SGTimeStamp currentStamp;
-  
   // common case, no throttle requested
-  if (throttle_hz <= 0.0) {
+  double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
+  if (throttle_hz <= 0)
     return; // no-op
-  }
-  
-  double frame_us = 1000000.0 / throttle_hz;
-#define FG_SLEEP_BASED_TIMING 1
-#if defined(FG_SLEEP_BASED_TIMING)
-  // sleep based timing loop.
-  //
-  // Calling sleep, even usleep() on linux is less accurate than
-  // we like, but it does free up the cpu for other tasks during
-  // the sleep so it is desirable.  Because of the way sleep()
-  // is implemented in consumer operating systems like windows
-  // and linux, you almost always sleep a little longer than the
-  // requested amount.
-  //
-  // To combat the problem of sleeping too long, we calculate the
-  // desired wait time and shorten it by 2000us (2ms) to avoid
-  // [hopefully] over-sleep'ing.  The 2ms value was arrived at
-  // via experimentation.  We follow this up at the end with a
-  // simple busy-wait loop to get the final pause timing exactly
-  // right.
-  //
-  // Assuming we don't oversleep by more than 2000us, this
-  // should be a reasonable compromise between sleep based
-  // waiting, and busy waiting.
 
-  // sleep() will always overshoot by a bit so undersleep by
-  // 2000us in the hopes of never oversleeping.
-  frame_us -= 2000.0;
-  if ( frame_us < 0.0 ) {
-      frame_us = 0.0;
-  }
-  
-  currentStamp.stamp();
-
-  double elapsed_us = (currentStamp - _lastStamp).toUSecs();
-  if ( elapsed_us < frame_us ) {
-    double requested_us = frame_us - elapsed_us;
- 
-#ifdef _WIN32
-    Sleep ((int)(requested_us / 1000.0)) ;
-#else
-    usleep(requested_us) ;
-#endif
-  }
-#endif
-
-  // busy wait timing loop.
-  //
-  // This yields the most accurate timing.  If the previous
-  // ulMilliSecondSleep() call is omitted this will peg the cpu
-  // (which is just fine if FG is the only app you care about.)
-  currentStamp.stamp();
-  SGTimeStamp next_time_stamp = _lastStamp;
-  next_time_stamp += SGTimeStamp::fromSec(1e-6*frame_us);
-  while ( currentStamp < next_time_stamp ) {
-      currentStamp.stamp();
-  }
+  // sleep for exactly 1/hz seconds relative to the past valid timestamp
+  SGTimeStamp::sleepUntil(_lastStamp + SGTimeStamp::fromSec(1/throttle_hz));
 }
 
 // periodic time updater wrapper
@@ -352,23 +286,18 @@ void TimeManager::updateLocalTime()
 {
   SGPath zone(globals->get_fg_root());
   zone.append("Timezone");
-  
-  double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  
-  SG_LOG(SG_GENERAL, SG_INFO, "updateLocal(" << lon << ", " << lat << ", " << zone.str() << ")");
-  _impl->updateLocal(lon, lat, zone.str());
+  _impl->updateLocal(globals->get_aircraft_position(), zone.str());
 }
 
 void TimeManager::initTimeOffset()
 {
 
-  int offset = fgGetInt("/sim/startup/time-offset");
+  long int offset = fgGetLong("/sim/startup/time-offset");
   string offset_type = fgGetString("/sim/startup/time-offset-type");
   setTimeOffset(offset_type, offset);
 }
 
-void TimeManager::setTimeOffset(const std::string& offset_type, int offset)
+void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
 {
   // Handle potential user specified time offsets
   int orig_warp = _warp->getIntValue();
@@ -379,26 +308,25 @@ void TimeManager::setTimeOffset(const std::string& offset_type, int offset)
       sgTimeGetGMT( fgLocaltime(&cur_time, _impl->get_zonename() ) );
     
   // Okay, we now have several possible scenarios
-  double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-  double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
+  SGGeod loc = globals->get_aircraft_position();
   int warp = 0;
   
   if ( offset_type == "real" ) {
       warp = 0;
   } else if ( offset_type == "dawn" ) {
-      warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 90.0, true ); 
+      warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 90.0, true );
   } else if ( offset_type == "morning" ) {
-     warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 75.0, true ); 
+     warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 75.0, true ); 
   } else if ( offset_type == "noon" ) {
-     warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 0.0, true ); 
+     warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 0.0, true ); 
   } else if ( offset_type == "afternoon" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 60.0, false );  
+    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 75.0, false );  
   } else if ( offset_type == "dusk" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 90.0, false );
+    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 90.0, false );
   } else if ( offset_type == "evening" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 100.0, false );
+    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 100.0, false );
   } else if ( offset_type == "midnight" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 180.0, false );
+    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 180.0, false );
   } else if ( offset_type == "system-offset" ) {
     warp = offset;
     orig_warp = 0;

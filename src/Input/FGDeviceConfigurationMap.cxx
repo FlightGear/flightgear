@@ -26,55 +26,139 @@
 #  include <config.h>
 #endif
 
-#include <simgear/math/SGMath.hxx>
-
 #include "FGDeviceConfigurationMap.hxx"
+
+#include <boost/foreach.hpp>
 
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/structure/exception.hxx>
+
 #include <Main/globals.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 using simgear::PropertyList;
+using std::string;
 
-FGDeviceConfigurationMap::FGDeviceConfigurationMap( const char * relative_path, SGPropertyNode_ptr aBase, const char * aChildname ) :
-  base(aBase),
-  childname(aChildname)
+FGDeviceConfigurationMap::FGDeviceConfigurationMap( const string& relative_path,
+                                                   SGPropertyNode* nodePath,
+                                                   const std::string& nodeName)
 {
-  int index = 1000;
-  scan_dir( SGPath(globals->get_fg_root(), relative_path), &index);
-
-  PropertyList childNodes = base->getChildren(childname);
-  for (int k = (int)childNodes.size() - 1; k >= 0; k--) {
-    SGPropertyNode *n = childNodes[k];
-    PropertyList names = n->getChildren("name");
-    if (names.size() ) // && (n->getChildren("axis").size() || n->getChildren("button").size()))
-      for (unsigned int j = 0; j < names.size(); j++)
-        (*this)[names[j]->getStringValue()] = n;
-  }
+  // scan for over-ride configurations, loaded via joysticks.xml, etc
+  BOOST_FOREACH(SGPropertyNode_ptr preloaded, nodePath->getChildren(nodeName)) {
+    BOOST_FOREACH(SGPropertyNode* nameProp, preloaded->getChildren("name")) {
+      overrideDict[nameProp->getStringValue()] = preloaded;
+    } // of names iteration
+  } // of defined overrides iteration
+  
+  scan_dir( SGPath(globals->get_fg_home(), relative_path));
+  scan_dir( SGPath(globals->get_fg_root(), relative_path));
 }
 
 FGDeviceConfigurationMap::~FGDeviceConfigurationMap()
 {
-  base->removeChildren( childname );
 }
 
-void FGDeviceConfigurationMap::scan_dir(const SGPath & path, int *index)
+SGPropertyNode_ptr
+FGDeviceConfigurationMap::configurationForDeviceName(const std::string& name)
 {
+  NameNodeMap::iterator j = overrideDict.find(name);
+  if (j != overrideDict.end()) {
+    return j->second;
+  }
+  
+// no override, check out list of config files
+  NamePathMap::iterator it = namePathMap.find(name);
+  if (it == namePathMap.end()) {
+    return SGPropertyNode_ptr();
+  }
+      
+  SGPropertyNode_ptr result(new SGPropertyNode);
+  try {
+    readProperties(it->second.str(), result);
+    result->setStringValue("source", it->second.c_str());
+  } catch (sg_exception&) {
+    SG_LOG(SG_INPUT, SG_WARN, "parse failure reading:" << it->second);
+    return NULL;
+  }
+  return result;
+}
+
+bool FGDeviceConfigurationMap::hasConfiguration(const std::string& name) const
+{
+  NameNodeMap::const_iterator j = overrideDict.find(name);
+  if (j != overrideDict.end()) {
+    return true;
+  }
+  
+  return namePathMap.find(name) != namePathMap.end();
+}
+
+void FGDeviceConfigurationMap::scan_dir(const SGPath & path)
+{
+  if (!path.exists())
+    return;
+  
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  flightgear::NavDataCache::Transaction txn(cache);
+  
   simgear::Dir dir(path);
   simgear::PathList children = dir.children(simgear::Dir::TYPE_FILE | 
     simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
-
-  for (unsigned int c=0; c<children.size(); ++c) {
-    SGPath path(children[c]);
+  
+  BOOST_FOREACH(SGPath path, children) {
     if (path.isDir()) {
-      scan_dir(path, index);
+      scan_dir(path);
     } else if (path.extension() == "xml") {
-      SG_LOG(SG_INPUT, SG_DEBUG, "Reading joystick file " << path.str());
-      SGPropertyNode_ptr n = base->getChild(childname, (*index)++, true);
-      readProperties(path.str(), n);
-      n->setStringValue("source", path.c_str());
-    }
-  }
+      if (cache->isCachedFileModified(path)) {
+        refreshCacheForFile(path);
+      } else {
+        readCachedData(path);
+      } // of cached file stamp is valid
+    } // of child is a file with '.xml' extension
+  } // of directory children iteration
+  
+  txn.commit();
 }
 
+void FGDeviceConfigurationMap::readCachedData(const SGPath& path)
+{
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  NamePathMap::iterator it;
+  BOOST_FOREACH(string s, cache->readStringListProperty(path.str())) {
+    // important - only insert if not already present. This ensures
+    // user configs can override those in the base package, since they are
+    // searched first.
+    it = namePathMap.find(s);
+    if (it == namePathMap.end()) {
+      namePathMap.insert(std::make_pair(s, path));
+    }
+  } // of cached names iteration
+}
 
+void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
+{
+  SG_LOG(SG_INPUT, SG_DEBUG, "Reading joystick file " << path.str());
+  SGPropertyNode_ptr n(new SGPropertyNode);
+  try {
+    readProperties(path.str(), n);
+  } catch (sg_exception&) {
+    SG_LOG(SG_INPUT, SG_WARN, "parse failure reading:" << path);
+    return;
+  }
+  
+  NamePathMap::iterator it;
+  string_list names;
+  BOOST_FOREACH(SGPropertyNode* nameProp, n->getChildren("name")) {
+    names.push_back(nameProp->getStringValue());
+    // same comment as readCachedData: only insert if not already present
+    it = namePathMap.find(names.back());
+    if (it == namePathMap.end()) {
+      namePathMap.insert(std::make_pair(names.back(), path));
+    }
+  }
+  
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  cache->stampCacheFile(path);
+  cache->writeStringListProperty(path.str(), names);
+}

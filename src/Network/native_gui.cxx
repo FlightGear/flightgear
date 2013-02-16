@@ -20,6 +20,7 @@
 //
 // $Id$
 
+// TODO FIXME Module still contains lots of "static SGPropertyNode"s below.
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -314,7 +315,7 @@ void FGNetGUI2Props( FGNetGUI *net ) {
         // Approach
         fgSetDouble( "/instrumentation/nav[0]/frequencies/selected-mhz",
                      net->tuned_freq );
-        fgSetBool( "/instrumentation/nav[0]/in-range", net->in_range );
+        fgSetBool( "/instrumentation/nav[0]/in-range", net->in_range > 0);
         fgSetDouble( "/instrumentation/dme/indicated-distance-nm", net->dist_nm );
         fgSetDouble( "/instrumentation/nav[0]/heading-needle-deflection",
                      net->course_deviation_deg );

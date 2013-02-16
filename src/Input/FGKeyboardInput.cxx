@@ -22,6 +22,10 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "FGKeyboardInput.hxx"
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -67,7 +71,16 @@ static bool getModHyper ()
 FGKeyboardInput * FGKeyboardInput::keyboardInput = NULL;
 
 FGKeyboardInput::FGKeyboardInput() :
-    _key_event(fgGetNode("/devices/status/keyboard/event", true))
+    _key_event(fgGetNode("/devices/status/keyboard/event", true)),
+    _key_code(0),
+    _key_modifiers(0),
+    _key_pressed(0),
+    _key_shift(0),
+    _key_ctrl(0),
+    _key_alt(0),
+    _key_meta(0),
+    _key_super(0),
+    _key_hyper(0)
 {
   if( keyboardInput == NULL )
     keyboardInput = this;
@@ -120,44 +133,29 @@ void FGKeyboardInput::postinit()
 
 void FGKeyboardInput::bind()
 {
-  fgTie("/devices/status/keyboard", getModifiers);
-  fgTie("/devices/status/keyboard/shift", getModShift);
-  fgTie("/devices/status/keyboard/ctrl", getModCtrl);
-  fgTie("/devices/status/keyboard/alt", getModAlt);
-  fgTie("/devices/status/keyboard/meta", getModMeta);
-  fgTie("/devices/status/keyboard/super", getModSuper);
-  fgTie("/devices/status/keyboard/hyper", getModHyper);
+  _tiedProperties.setRoot(fgGetNode("/devices/status", true));
+  _tiedProperties.Tie("keyboard",       getModifiers);
+  _tiedProperties.Tie("keyboard/shift", getModShift);
+  _tiedProperties.Tie("keyboard/ctrl",  getModCtrl);
+  _tiedProperties.Tie("keyboard/alt",   getModAlt);
+  _tiedProperties.Tie("keyboard/meta",  getModMeta);
+  _tiedProperties.Tie("keyboard/super", getModSuper);
+  _tiedProperties.Tie("keyboard/hyper", getModHyper);
 
-  _key_event->tie("key", SGRawValuePointer<int>(&_key_code));
-  _key_event->tie("pressed", SGRawValuePointer<bool>(&_key_pressed));
-  _key_event->tie("modifier", SGRawValuePointer<int>(&_key_modifiers));
-  _key_event->tie("modifier/shift", SGRawValuePointer<bool>(&_key_shift));
-  _key_event->tie("modifier/ctrl", SGRawValuePointer<bool>(&_key_ctrl));
-  _key_event->tie("modifier/alt", SGRawValuePointer<bool>(&_key_alt));
-  _key_event->tie("modifier/meta", SGRawValuePointer<bool>(&_key_meta));
-  _key_event->tie("modifier/super", SGRawValuePointer<bool>(&_key_super));
-  _key_event->tie("modifier/hyper", SGRawValuePointer<bool>(&_key_hyper));
+  _tiedProperties.Tie(_key_event->getNode("key", true),            SGRawValuePointer<int>(&_key_code));
+  _tiedProperties.Tie(_key_event->getNode("pressed", true),        SGRawValuePointer<bool>(&_key_pressed));
+  _tiedProperties.Tie(_key_event->getNode("modifier", true),       SGRawValuePointer<int>(&_key_modifiers));
+  _tiedProperties.Tie(_key_event->getNode("modifier/shift", true), SGRawValuePointer<bool>(&_key_shift));
+  _tiedProperties.Tie(_key_event->getNode("modifier/ctrl", true),  SGRawValuePointer<bool>(&_key_ctrl));
+  _tiedProperties.Tie(_key_event->getNode("modifier/alt", true),   SGRawValuePointer<bool>(&_key_alt));
+  _tiedProperties.Tie(_key_event->getNode("modifier/meta", true),  SGRawValuePointer<bool>(&_key_meta));
+  _tiedProperties.Tie(_key_event->getNode("modifier/super", true), SGRawValuePointer<bool>(&_key_super));
+  _tiedProperties.Tie(_key_event->getNode("modifier/hyper", true), SGRawValuePointer<bool>(&_key_hyper));
 }
 
 void FGKeyboardInput::unbind()
 {
-  fgUntie("/devices/status/keyboard");
-  fgUntie("/devices/status/keyboard/shift");
-  fgUntie("/devices/status/keyboard/ctrl");
-  fgUntie("/devices/status/keyboard/alt");
-  fgUntie("/devices/status/keyboard/meta");
-  fgUntie("/devices/status/keyboard/super");
-  fgUntie("/devices/status/keyboard/hyper");
-
-  _key_event->untie("key");
-  _key_event->untie("pressed");
-  _key_event->untie("modifier");
-  _key_event->untie("modifier/shift");
-  _key_event->untie("modifier/ctrl");
-  _key_event->untie("modifier/alt");
-  _key_event->untie("modifier/meta");
-  _key_event->untie("modifier/super");
-  _key_event->untie("modifier/hyper");
+  _tiedProperties.Untie();
 }
 
 void FGKeyboardInput::update( double dt )
@@ -204,7 +202,8 @@ void FGKeyboardInput::doKey (int k, int modifiers, int x, int y)
 {
   // Sanity check.
   if (k < 0 || k >= MAX_KEYS) {
-    SG_LOG(SG_INPUT, SG_WARN, "Key value " << k << " out of range");
+    // normal for unsupported keys (i.e. left/right shift key press events)
+    SG_LOG(SG_INPUT, SG_DEBUG, "Key value " << k << " out of range");
     return;
   }
 

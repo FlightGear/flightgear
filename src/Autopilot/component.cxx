@@ -23,6 +23,7 @@
 #include "component.hxx"
 #include <Main/fg_props.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/props/condition.hxx>
 
 using namespace FGXMLAutopilot;
 
@@ -45,7 +46,7 @@ bool Component::configure( SGPropertyNode_ptr configNode )
     SGPropertyNode_ptr prop;
 
     SGPropertyNode_ptr child = configNode->getChild(i);
-    string cname(child->getName());
+    std::string cname(child->getName());
 
     if( configure( cname, child ) )
       continue;
@@ -57,7 +58,7 @@ bool Component::configure( SGPropertyNode_ptr configNode )
 
 bool Component::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
 {
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ")" << endl );
+  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ")" << std::endl );
 
   if ( nodeName == "name" ) {
     _name = configNode->getStringValue();
@@ -86,7 +87,7 @@ bool Component::configure( const std::string & nodeName, SGPropertyNode_ptr conf
 
     if ( (prop = configNode->getChild( "value" )) != NULL ) {
       delete _enable_value;
-      _enable_value = new string(prop->getStringValue());
+      _enable_value = new std::string(prop->getStringValue());
     }
 
     if ( (prop = configNode->getChild( "honor-passive" )) != NULL ) {
@@ -96,7 +97,7 @@ bool Component::configure( const std::string & nodeName, SGPropertyNode_ptr conf
     return true;
   } // enable
 
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ") [unhandled]" << endl );
+  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ") [unhandled]" << std::endl );
   return false;
 }
 

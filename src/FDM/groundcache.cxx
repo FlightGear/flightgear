@@ -41,25 +41,27 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGMisc.hxx>
+#include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 
-#include <simgear/scene/bvh/BVHNode.hxx>
-#include <simgear/scene/bvh/BVHGroup.hxx>
-#include <simgear/scene/bvh/BVHTransform.hxx>
-#include <simgear/scene/bvh/BVHMotionTransform.hxx>
-#include <simgear/scene/bvh/BVHLineGeometry.hxx>
-#include <simgear/scene/bvh/BVHStaticGeometry.hxx>
-#include <simgear/scene/bvh/BVHStaticData.hxx>
-#include <simgear/scene/bvh/BVHStaticNode.hxx>
-#include <simgear/scene/bvh/BVHStaticTriangle.hxx>
-#include <simgear/scene/bvh/BVHStaticBinary.hxx>
-#include <simgear/scene/bvh/BVHSubTreeCollector.hxx>
-#include <simgear/scene/bvh/BVHLineSegmentVisitor.hxx>
-#include <simgear/scene/bvh/BVHNearestPointVisitor.hxx>
+#include <simgear/bvh/BVHNode.hxx>
+#include <simgear/bvh/BVHGroup.hxx>
+#include <simgear/bvh/BVHTransform.hxx>
+#include <simgear/bvh/BVHMotionTransform.hxx>
+#include <simgear/bvh/BVHLineGeometry.hxx>
+#include <simgear/bvh/BVHStaticGeometry.hxx>
+#include <simgear/bvh/BVHStaticData.hxx>
+#include <simgear/bvh/BVHStaticNode.hxx>
+#include <simgear/bvh/BVHStaticTriangle.hxx>
+#include <simgear/bvh/BVHStaticBinary.hxx>
+#include <simgear/bvh/BVHSubTreeCollector.hxx>
+#include <simgear/bvh/BVHLineSegmentVisitor.hxx>
+#include <simgear/bvh/BVHNearestPointVisitor.hxx>
 
 #ifdef GROUNDCACHE_DEBUG
-#include <simgear/scene/bvh/BVHDebugCollectVisitor.hxx>
+#include <simgear/scene/model/BVHDebugCollectVisitor.hxx>
 #include <Main/fg_props.hxx>
 #endif
 
@@ -148,7 +150,7 @@ public:
         SGVec3d down = _down;
         double radius = _radius;
         bool haveHit = _haveHit;
-        const SGMaterial* material = _material;
+        const simgear::BVHMaterial* material = _material;
 
         _haveHit = false;
         _center = toSG(inverseMatrix.preMult(toOsg(_center)));
@@ -274,7 +276,7 @@ public:
     { return _haveHit; }
     double getElevationBelowCache() const
     { return SGGeod::fromCart(_sceneryHit).getElevationM(); }
-    const SGMaterial* getMaterialBelowCache() const
+    const simgear::BVHMaterial* getMaterialBelowCache() const
     { return _material; }
     
 private:
@@ -287,7 +289,7 @@ private:
     simgear::BVHSubTreeCollector mSubTreeCollector;
     SGVec3d _sceneryHit;
     double _maxDown;
-    const SGMaterial* _material;
+    const simgear::BVHMaterial* _material;
     bool _haveHit;
 };
 
@@ -380,6 +382,7 @@ FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
     if (!found_ground) {
         // Ok, still nothing here?? Last resort ...
         double alt = 0;
+        _material = 0;
         found_ground = globals->get_scenery()->
             get_elevation_m(SGGeod::fromGeodM(geodPt, 10000), alt, &_material);
         if (found_ground)
@@ -450,6 +453,12 @@ public:
     { }
     
     virtual void apply(BVHGroup& leaf)
+    {
+        if (_foundId)
+            return;
+        leaf.traverse(*this);
+    }
+    virtual void apply(BVHPageNode& leaf)
     {
         if (_foundId)
             return;
@@ -547,6 +556,12 @@ public:
     { }
     
     virtual void apply(BVHGroup& leaf)
+    {
+        if (!intersects(_sphere, leaf.getBoundingSphere()))
+            return;
+        leaf.traverse(*this);
+    }
+    virtual void apply(BVHPageNode& leaf)
     {
         if (!intersects(_sphere, leaf.getBoundingSphere()))
             return;
@@ -677,7 +692,7 @@ FGGroundCache::get_cat(double t, const SGVec3d& pt,
 bool
 FGGroundCache::get_agl(double t, const SGVec3d& pt, SGVec3d& contact,
                        SGVec3d& normal, SGVec3d& linearVel, SGVec3d& angularVel,
-                       simgear::BVHNode::Id& id, const SGMaterial*& material)
+                       simgear::BVHNode::Id& id, const simgear::BVHMaterial*& material)
 {
 #ifdef GROUNDCACHE_DEBUG
     SGTimeStamp t0 = SGTimeStamp::now();
@@ -730,7 +745,7 @@ bool
 FGGroundCache::get_nearest(double t, const SGVec3d& pt, double maxDist,
                            SGVec3d& contact, SGVec3d& linearVel,
                            SGVec3d& angularVel, simgear::BVHNode::Id& id,
-                           const SGMaterial*& material)
+                           const simgear::BVHMaterial*& material)
 {
     if (!_localBvhTree)
         return false;
@@ -780,6 +795,13 @@ public:
     }
 
     virtual void apply(BVHGroup& leaf)
+    {
+        if (!_intersects(leaf.getBoundingSphere()))
+            return;
+
+        leaf.traverse(*this);
+    }
+    virtual void apply(BVHPageNode& leaf)
     {
         if (!_intersects(leaf.getBoundingSphere()))
             return;
@@ -899,7 +921,7 @@ bool FGGroundCache::caught_wire(double t, const SGVec3d pt[4])
         _localBvhTree->accept(wireIntersector);
     
     _wire = wireIntersector.getWire();
-    return _wire;
+    return (_wire != NULL);
 }
 
 class FGGroundCache::WireFinder : public BVHVisitor {
@@ -914,6 +936,12 @@ public:
     { }
 
     virtual void apply(BVHGroup& leaf)
+    {
+        if (_haveLineSegment)
+            return;
+        leaf.traverse(*this);
+    }
+    virtual void apply(BVHPageNode& leaf)
     {
         if (_haveLineSegment)
             return;

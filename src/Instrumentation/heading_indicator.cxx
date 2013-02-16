@@ -3,8 +3,13 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
+#include <simgear/math/SGMath.hxx>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -12,7 +17,6 @@
 #include "heading_indicator.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
-
 
 HeadingIndicator::HeadingIndicator ( SGPropertyNode *node )
     :
@@ -29,25 +33,36 @@ HeadingIndicator::~HeadingIndicator ()
 void
 HeadingIndicator::init ()
 {
-    string branch;
+    std::string branch;
     branch = "/instrumentation/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
-    _offset_node = node->getChild("offset-deg", 0, true);
+    if( NULL == (_offset_node = node->getChild("offset-deg", 0, false)) ) {
+      _offset_node = node->getChild("offset-deg", 0, true);
+      _offset_node->setDoubleValue( -fgGetDouble("/environment/magnetic-variation-deg") );
+    }
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
     _suction_node = fgGetNode(_suction.c_str(), true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _heading_bug_error_node = node->getChild("heading-bug-error-deg", 0, true);
     _heading_bug_node = node->getChild("heading-bug-deg", 0, true);
+  
+    reinit();
+}
+
+void
+HeadingIndicator::reinit ()
+{
     _last_heading_deg = (_heading_in_node->getDoubleValue() +
                          _offset_node->getDoubleValue());
+    _gyro.reinit();
 }
 
 void
 HeadingIndicator::bind ()
 {
     std::ostringstream temp;
-    string branch;
+    std::string branch;
     temp << _num;
     branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
@@ -61,7 +76,7 @@ void
 HeadingIndicator::unbind ()
 {
     std::ostringstream temp;
-    string branch;
+    std::string branch;
     temp << _num;
     branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 

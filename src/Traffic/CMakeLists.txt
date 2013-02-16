@@ -5,5 +5,12 @@ set(SOURCES
 	Schedule.cxx
 	TrafficMgr.cxx
 	)
-	
-flightgear_component(Traffic "${SOURCES}")
+
+set(HEADERS
+	SchedFlight.hxx
+	Schedule.hxx
+	TrafficMgr.hxx
+)
+
+
+flightgear_component(Traffic "${SOURCES}" "${HEADERS}")

@@ -5,15 +5,23 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/compiler.h>
 #include <iostream>
 #include <string>
 #include <sstream>
 
-#include "heading_indicator_fg.hxx"
-#include <Main/fg_props.hxx>
-#include <Main/util.hxx>			    
+#include <simgear/math/SGMath.hxx>
 
+#include <Main/fg_props.hxx>
+#include <Main/util.hxx>
+
+#include "heading_indicator_fg.hxx"
+
+using std::string;
 
 HeadingIndicatorFG::HeadingIndicatorFG ( SGPropertyNode *node )
     :
@@ -52,19 +60,30 @@ HeadingIndicatorFG::init ()
     string branch;
     branch = "/instrumentation/" + name;
     
-	_heading_in_node = fgGetNode("/orientation/heading-deg", true);
+    _heading_in_node = fgGetNode("/orientation/heading-deg", true);
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
-    _offset_node = node->getChild("offset-deg", 0, true);
+    if( NULL == (_offset_node = node->getChild("offset-deg", 0, false)) ) {
+      _offset_node = node->getChild("offset-deg", 0, true);
+      _offset_node->setDoubleValue( -fgGetDouble("/environment/magnetic-variation-deg") );
+    }
     _serviceable_node = node->getChild("serviceable", 0, true);
-	_error_node = node->getChild("heading-bug-error-deg", 0, true);
-	_nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);
+    _error_node = node->getChild("heading-bug-error-deg", 0, true);
+    _nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _off_node         = node->getChild("off-flag", 0, true);
 
+    _electrical_node = fgGetNode("/systems/electrical/outputs/DG", true);
+
+    reinit();
+}
+
+void
+HeadingIndicatorFG::reinit ()
+{
     _last_heading_deg = (_heading_in_node->getDoubleValue() +
                          _offset_node->getDoubleValue());
-	_electrical_node = fgGetNode("/systems/electrical/outputs/DG", true);
+    _gyro.reinit();
 }
 
 void
@@ -79,7 +98,6 @@ HeadingIndicatorFG::bind ()
           &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
     fgTie((branch + "/spin").c_str(),
           &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
-	
 }
 
 void
@@ -142,7 +160,7 @@ HeadingIndicatorFG::update (double dt)
 
 	                             // calculate the difference between the indicated heading
 	                             // and the selected heading for use with an autopilot
-	static SGPropertyNode *bnode
+	SGPropertyNode *bnode
         = fgGetNode( "/autopilot/settings/heading-bug-deg", false );
 	double diff = 0;
 	if ( bnode ){
