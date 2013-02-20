@@ -71,7 +71,7 @@ using std::string;
 namespace {
 
 const int MAX_RETRIES = 10;
-const int SCHEMA_VERSION = 6;
+const int SCHEMA_VERSION = 7;
 const int CACHE_SIZE_KBYTES= 16000;
     
 // bind a std::string to a sqlite statement. The std::string must live the
@@ -724,6 +724,9 @@ public:
     if (ty == FGPositioned::TAXIWAY) {
       reset(loadRunwayStmt);
       return new FGTaxiway(rowId, id, pos, heading, lengthM, widthM, surface);
+    } else if (ty == FGPositioned::HELIPAD) {
+        reset(loadRunwayStmt);
+        return new FGHelipad(rowId, apt, id, pos, heading, lengthM, widthM, surface);
     } else {
       double displacedThreshold = sqlite3_column_double(loadRunwayStmt, 4);
       double stopway = sqlite3_column_double(loadRunwayStmt, 5);
@@ -1020,6 +1023,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
       return new AirportTower(rowid, aptId, ident, pos);
       
     case FGPositioned::RUNWAY:
+    case FGPositioned::HELIPAD:
     case FGPositioned::TAXIWAY:
       return loadRunway(rowid, ty, ident, pos, aptId);
       
@@ -1516,7 +1520,7 @@ NavDataCache::insertRunway(FGPositioned::Type ty, const string& ident,
 {
   // only runways are spatially indexed; don't bother indexing taxiways
   // or pavements
-  bool spatialIndex = (ty == FGPositioned::RUNWAY);
+  bool spatialIndex = ( ty == FGPositioned::RUNWAY || ty == FGPositioned::HELIPAD);
   
   sqlite3_int64 rowId = d->insertPositioned(ty, cleanRunwayNo(ident), "", pos, apt,
                                             spatialIndex);

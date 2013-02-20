@@ -1,6 +1,6 @@
 // runwaybase.cxx -- a base class for runways and taxiways
 //
-// Written by James Turber, started December 2008.
+// Written by James Turner, started December 2008.
 //
 // Copyright (C) 2000  Curtis L. Olson  - http://www.flightgear.org/~curt
 //

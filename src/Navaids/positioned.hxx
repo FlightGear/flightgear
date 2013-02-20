@@ -47,6 +47,7 @@ public:
     HELIPORT,
     SEAPORT,
     RUNWAY,
+    HELIPAD,
     TAXIWAY,
     PAVEMENT,
     WAYPOINT,

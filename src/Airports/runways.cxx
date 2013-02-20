@@ -202,3 +202,14 @@ std::vector<flightgear::Approach*> FGRunway::getApproaches() const
   return result;
 }
 
+FGHelipad::FGHelipad(PositionedID aGuid,
+                        PositionedID aAirport, const string& aIdent,
+                        const SGGeod& aGeod,
+                        const double heading, const double length,
+                        const double width,
+                        const int surface_code) :
+  FGRunwayBase(aGuid, RUNWAY, aIdent, aGeod,
+               heading, length, width, surface_code),
+  _airport(aAirport)
+{
+}

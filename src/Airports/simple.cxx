@@ -131,12 +131,26 @@ unsigned int FGAirport::numRunways() const
   return mRunways.size();
 }
 
+unsigned int FGAirport::numHelipads() const
+{
+  loadHelipads();
+  return mHelipads.size();
+}
+
 FGRunway* FGAirport::getRunwayByIndex(unsigned int aIndex) const
 {
   loadRunways();
   
   assert(aIndex >= 0 && aIndex < mRunways.size());
   return (FGRunway*) flightgear::NavDataCache::instance()->loadById(mRunways[aIndex]);
+}
+
+FGHelipad* FGAirport::getHelipadByIndex(unsigned int aIndex) const
+{
+  loadHelipads();
+
+  assert(aIndex >= 0 && aIndex < mHelipads.size());
+  return (FGHelipad*) flightgear::NavDataCache::instance()->loadById(mHelipads[aIndex]);
 }
 
 bool FGAirport::hasRunwayWithIdent(const string& aIdent) const
@@ -354,6 +368,18 @@ void FGAirport::loadRunways() const
   
   mRunwaysLoaded = true;
   mRunways = flightgear::NavDataCache::instance()->airportItemsOfType(guid(), FGPositioned::RUNWAY);
+}
+
+void FGAirport::loadHelipads() const
+{
+  if (mHelipadsLoaded) {
+    return; // already loaded, great
+  }
+
+  loadSceneryDefinitions();
+
+  mHelipadsLoaded = true;
+  mHelipads = flightgear::NavDataCache::instance()->airportItemsOfType(guid(), FGPositioned::HELIPAD);
 }
 
 void FGAirport::loadTaxiways() const

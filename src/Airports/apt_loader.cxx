@@ -436,7 +436,7 @@ private:
     const string& rwy_no(token[1]);
     int surface_code = atoi( token[7].c_str() );
 
-    cache->insertRunway(FGPositioned::RUNWAY, rwy_no, pos,
+    cache->insertRunway(FGPositioned::HELIPAD, rwy_no, pos,
                         currentAirportID, heading, length,
                         width, 0.0, 0.0, surface_code);
   }

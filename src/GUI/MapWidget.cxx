@@ -1195,22 +1195,27 @@ void MapWidget::drawAirport(FGAirport* apt)
   }
 
   for (unsigned int r=0; r<apt->numRunways(); ++r) {
-    FGRunway* rwy = apt->getRunwayByIndex(r);
-		if (!rwy->isReciprocal()) {
-			drawRunwayPre(rwy);
-		}
+      FGRunway* rwy = apt->getRunwayByIndex(r);
+      if (!rwy->isReciprocal()) {
+          drawRunwayPre(rwy);
+      }
   }
 
-	for (unsigned int r=0; r<apt->numRunways(); ++r) {
-		FGRunway* rwy = apt->getRunwayByIndex(r);
-		if (!rwy->isReciprocal()) {
-			drawRunway(rwy);
-		}
+  for (unsigned int r=0; r<apt->numRunways(); ++r) {
+      FGRunway* rwy = apt->getRunwayByIndex(r);
+      if (!rwy->isReciprocal()) {
+          drawRunway(rwy);
+      }
 
-		if (rwy->ILS()) {
-			drawILS(false, rwy);
-		}
-	} // of runway iteration
+      if (rwy->ILS()) {
+          drawILS(false, rwy);
+      }
+  }
+
+  for (unsigned int r=0; r<apt->numHelipads(); ++r) {
+      FGHelipad* hp = apt->getHelipadByIndex(r);
+      drawHelipad(hp);
+  }  // of runway iteration
 
 }
 
@@ -1390,6 +1395,32 @@ void MapWidget::drawTraffic()
       drawAIShip(model, pos, heading);
     }
   } // of ai/models iteration
+}
+
+void MapWidget::drawHelipad(FGHelipad* hp)
+{
+  SGVec2d pos = project(hp->geod());
+  glLineWidth(1.0);
+  glColor3f(1.0, 1.0, 1.0);
+  circleAt(pos, 16, 5.0);
+
+  if (validDataForKey(hp)) {
+    setAnchorForKey(hp, pos);
+    return;
+  }
+
+  char buffer[1024];
+  ::snprintf(buffer, 1024, "%s\n%03d\n%.0f'",
+             hp->ident().c_str(),
+             displayHeading(hp->headingDeg()),
+             hp->lengthFt());
+
+  MapData* d = createDataForKey(hp);
+  d->setText(buffer);
+  d->setLabel(hp->ident());
+  d->setPriority(40);
+  d->setOffset(MapData::HALIGN_CENTER | MapData::VALIGN_BOTTOM, 8);
+  d->setAnchor(pos);
 }
 
 void MapWidget::drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, double hdg)

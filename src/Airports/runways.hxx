@@ -134,4 +134,17 @@ public:
   
 };
 
+class FGHelipad : public FGRunwayBase
+{
+  PositionedID _airport;
+public:
+    FGHelipad(PositionedID aGuid,
+           PositionedID aAirport, const std::string& rwy_no,
+            const SGGeod& aGeod,
+            const double heading, const double length,
+            const double width,
+            const int surface_code);
+};
+
+
 #endif // _FG_RUNWAYS_HXX

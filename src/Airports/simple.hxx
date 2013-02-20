@@ -38,6 +38,7 @@
 // forward decls
 class FGAirportDynamics;
 class FGRunway;
+class FGHelipad;
 class FGTaxiway;
 class FGPavement;
 class SGPropertyNode;
@@ -102,7 +103,9 @@ public:
     FGAirportDynamics *getDynamics();
     
     unsigned int numRunways() const;
+    unsigned int numHelipads() const;
     FGRunway* getRunwayByIndex(unsigned int aIndex) const;
+    FGHelipad* getHelipadByIndex(unsigned int aIndex) const;
 
     bool hasRunwayWithIdent(const std::string& aIdent) const;
     FGRunway* getRunwayByIdent(const std::string& aIdent) const;
@@ -245,7 +248,7 @@ private:
     void validateTowerData() const;
     
     /**
-     * Helper to parse property data loaded from an ICAO.twr.xml filke
+     * Helper to parse property data loaded from an ICAO.twr.xml file
      */
     void readTowerData(SGPropertyNode* aRoot);
     
@@ -254,16 +257,19 @@ private:
     FGAirportDynamics *_dynamics;
 
     void loadRunways() const;
+    void loadHelipads() const;
     void loadTaxiways() const;
     void loadProcedures() const;
     
     mutable bool mTowerDataLoaded;
     mutable bool mRunwaysLoaded;
+    mutable bool mHelipadsLoaded;
     mutable bool mTaxiwaysLoaded;
     mutable bool mProceduresLoaded;
     bool mILSDataLoaded;
   
     mutable PositionedIDVec mRunways;
+    mutable PositionedIDVec mHelipads;
     mutable PositionedIDVec mTaxiways;
     PositionedIDVec mPavements;
     

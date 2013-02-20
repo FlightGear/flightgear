@@ -13,6 +13,7 @@
 // forward decls
 class FGRouteMgr;
 class FGRunway;
+class FGHelipad;
 class FGAirport;
 class FGNavRecord;
 class FGFix;
@@ -58,6 +59,7 @@ private:
   int scoreAirportRunways(FGAirport* apt);
   void drawRunwayPre(FGRunway* rwy);
   void drawRunway(FGRunway* rwy);
+  void drawHelipad(FGHelipad* hp);
   void drawILS(bool tuned, FGRunway* rwy);
   
   void drawNavaids();
