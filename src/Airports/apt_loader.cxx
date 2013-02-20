@@ -179,11 +179,13 @@ public:
         pavement = false;
       } else if ( line_id == 130 ) {
         pavement = false;
+      } else if ( line_id >= 1000 ) {
+          // airport traffic flow (ignore)
       } else if ( line_id == 99 ) {
           SG_LOG( SG_GENERAL, SG_DEBUG, "End of file reached" );
       } else {
           SG_LOG( SG_GENERAL, SG_ALERT, 
-                  "Unknown line(#" << line_num << ") in file: " << line );
+                  "Unknown line(#" << line_num << ") in apt.dat file: " << line );
           exit( -1 );
       }
     }
