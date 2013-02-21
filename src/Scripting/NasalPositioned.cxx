@@ -73,6 +73,7 @@ naGhostType NavaidGhostType = { positionedGhostDestroy, "navaid", navaidGhostGet
 
 static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 naGhostType RunwayGhostType = { positionedGhostDestroy, "runway", runwayGhostGetMember, 0 };
+naGhostType HelipadGhostType = { positionedGhostDestroy, "helipad", runwayGhostGetMember, 0 };
 naGhostType TaxiwayGhostType = { positionedGhostDestroy, "taxiway", runwayGhostGetMember, 0 };
 
 static const char* fixGhostGetMember(naContext c, void* g, naRef field, naRef* out);
@@ -289,6 +290,16 @@ naRef ghostForRunway(naContext c, const FGRunway* r)
   return naNewGhost2(c, &RunwayGhostType, (void*) r);
 }
 
+naRef ghostForHelipad(naContext c, const FGHelipad* r)
+{
+  if (!r) {
+    return naNil();
+  }
+
+  FGPositioned::get(r); // take a ref
+  return naNewGhost2(c, &HelipadGhostType, (void*) r);
+}
+
 naRef ghostForTaxiway(naContext c, const FGTaxiway* r)
 {
   if (!r) {
@@ -376,6 +387,16 @@ static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRe
       
       naRef rwyid = stringToNasal(c, rwy->ident());
       naRef rwydata = ghostForRunway(c, rwy);
+      naHash_set(*out, rwyid, rwydata);
+    }
+  } else if (!strcmp(fieldName, "helipads")) {
+    *out = naNewHash(c);
+
+    for(unsigned int r=0; r<apt->numHelipads(); ++r) {
+      FGHelipad* hp(apt->getHelipadByIndex(r));
+
+      naRef rwyid = stringToNasal(c, hp->ident());
+      naRef rwydata = ghostForHelipad(c, hp);
       naHash_set(*out, rwyid, rwydata);
     }
 
@@ -1167,11 +1188,13 @@ static naRef f_airport_runway(naContext c, naRef me, int argc, naRef* args)
   
   std::string ident(naStr_data(args[0]));
   boost::to_upper(ident);
-  if (!apt->hasRunwayWithIdent(ident)) {
-    return naNil();
+
+  if (apt->hasRunwayWithIdent(ident)) {
+    return ghostForRunway(c, apt->getRunwayByIdent(ident));
+  } else if (apt->hasHelipadWithIdent(ident)) {
+    return ghostForHelipad(c, apt->getHelipadByIdent(ident));
   }
-  
-  return ghostForRunway(c, apt->getRunwayByIdent(ident));
+  return naNil();
 }
 
 static naRef f_airport_taxiway(naContext c, naRef me, int argc, naRef* args)
@@ -2389,6 +2412,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, gcSave, "airportProto", airportPrototype);
   
     hashset(c, airportPrototype, "runway", naNewFunc(c, naNewCCode(c, f_airport_runway)));
+    hashset(c, airportPrototype, "helipad", naNewFunc(c, naNewCCode(c, f_airport_runway)));
     hashset(c, airportPrototype, "taxiway", naNewFunc(c, naNewCCode(c, f_airport_taxiway)));
     hashset(c, airportPrototype, "tower", naNewFunc(c, naNewCCode(c, f_airport_tower)));
     hashset(c, airportPrototype, "comms", naNewFunc(c, naNewCCode(c, f_airport_comms)));

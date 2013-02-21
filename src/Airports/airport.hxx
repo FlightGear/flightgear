@@ -108,7 +108,9 @@ public:
     FGHelipad* getHelipadByIndex(unsigned int aIndex) const;
 
     bool hasRunwayWithIdent(const std::string& aIdent) const;
+    bool hasHelipadWithIdent(const std::string& aIdent) const;
     FGRunway* getRunwayByIdent(const std::string& aIdent) const;
+    FGHelipad* getHelipadByIdent(const std::string& aIdent) const;
     FGRunway* findBestRunwayForHeading(double aHeading) const;
     
     /**

@@ -158,6 +158,11 @@ bool FGAirport::hasRunwayWithIdent(const string& aIdent) const
   return flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent) != 0;
 }
 
+bool FGAirport::hasHelipadWithIdent(const string& aIdent) const
+{
+  return flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::HELIPAD, aIdent) != 0;
+}
+
 FGRunway* FGAirport::getRunwayByIdent(const string& aIdent) const
 {
   PositionedID id = flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent);  
@@ -167,6 +172,17 @@ FGRunway* FGAirport::getRunwayByIdent(const string& aIdent) const
   }
   
   return (FGRunway*) flightgear::NavDataCache::instance()->loadById(id);
+}
+
+FGHelipad* FGAirport::getHelipadByIdent(const string& aIdent) const
+{
+  PositionedID id = flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::HELIPAD, aIdent);
+  if (id == 0) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "no such helipad '" << aIdent << "' at airport " << ident());
+    throw sg_range_exception("unknown helipad " + aIdent + " at airport:" + ident(), "FGAirport::getRunwayByIdent");
+  }
+
+  return (FGHelipad*) flightgear::NavDataCache::instance()->loadById(id);
 }
 
 
