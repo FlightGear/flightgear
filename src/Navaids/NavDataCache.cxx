@@ -1089,7 +1089,16 @@ NavDataCache::NavDataCache()
 {
   const int MAX_TRIES = 3;
   SGPath homePath(globals->get_fg_home());
-  homePath.append("navdata.cache");
+  
+  std::ostringstream os;
+  string_list versionParts = simgear::strutils::split(VERSION, ".");
+  if (versionParts.size() < 2) {
+    os << "navdata.cache";
+  } else {
+    os << "navdata_" << versionParts[0] << "_" << versionParts[1] << ".cache";
+  }
+    
+  homePath.append(os.str());
   
   for (int t=0; t < MAX_TRIES; ++t) {
     try {
