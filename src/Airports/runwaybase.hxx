@@ -54,16 +54,16 @@ public:
   SGGeod pointOffCenterline(double aOffset, double lateralOffset) const;
   
   double lengthFt() const
-  { return _length; }
+  { return _length * SG_METER_TO_FEET; }
   
   double lengthM() const
-  { return _length * SG_FEET_TO_METER; }
+  { return _length; }
   
   double widthFt() const
-  { return _width; }
+  { return _width * SG_METER_TO_FEET; }
   
   double widthM() const
-  { return _width * SG_FEET_TO_METER; }
+  { return _width; }
   
    /**
    * Runway heading in degrees.

@@ -287,16 +287,21 @@ private:
     double heading = atof( token[4].c_str() );
     double length = atoi( token[5].c_str() );
     double width = atoi( token[8].c_str() );
+    length *= SG_FEET_TO_METER;
+    width *= SG_FEET_TO_METER;
+
+    // adjust lat / lon to the start of the runway/taxiway, not the middle
+    SGGeod pos_1 = SGGeodesy::direct( SGGeod::fromDegFt(lon, lat, last_apt_elev), heading, -length/2 );
 
     last_rwy_heading = heading;
 
     int surface_code = atoi( token[10].c_str() );
-    SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
 
     if (rwy_no[0] == 'x') {  // Taxiway
-      cache->insertRunway(FGPositioned::TAXIWAY, rwy_no, pos, currentAirportID,
+      cache->insertRunway(FGPositioned::TAXIWAY, rwy_no, pos_1, currentAirportID,
                           heading, length, width, 0.0, 0.0, surface_code);
     } else if (rwy_no[0] == 'H') {  // Helipad
+      SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
       cache->insertRunway(FGPositioned::HELIPAD, rwy_no, pos, currentAirportID,
                           heading, length, width, 0.0, 0.0, surface_code);
     } else {
@@ -306,22 +311,29 @@ private:
           = simgear::strutils::split( rwy_displ_threshold, "." );
       double displ_thresh1 = atof( displ[0].c_str() );
       double displ_thresh2 = atof( displ[1].c_str() );
+      displ_thresh1 *= SG_FEET_TO_METER;
+      displ_thresh2 *= SG_FEET_TO_METER;
 
       string rwy_stopway = token[7];
       vector<string> stop
           = simgear::strutils::split( rwy_stopway, "." );
       double stopway1 = atof( stop[0].c_str() );
       double stopway2 = atof( stop[1].c_str() );
+      stopway1 *= SG_FEET_TO_METER;
+      stopway2 *= SG_FEET_TO_METER;
 
-      PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no, pos,
+      SGGeod pos_2 = SGGeodesy::direct( pos_1, heading, length );
+
+      PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no, pos_1,
                                              currentAirportID, heading, length,
                                              width, displ_thresh1, stopway1,
                                              surface_code);
       
       PositionedID reciprocal = cache->insertRunway(FGPositioned::RUNWAY,
-                                              FGRunway::reverseIdent(rwy_no), pos,
-                                             currentAirportID, heading + 180.0, length,
-                                             width, displ_thresh2, stopway2,
+                                             FGRunway::reverseIdent(rwy_no), pos_2,
+                                             currentAirportID,
+                                             SGMiscd::normalizePeriodic(0, 360, heading + 180.0),
+                                             length, width, displ_thresh2, stopway2,
                                              surface_code);
 
       cache->setRunwayReciprocal(rwy, reciprocal);
@@ -330,7 +342,7 @@ private:
 
   void parseRunwayLine850(const vector<string>& token)
   {
-    double width = atof( token[1].c_str() ) * SG_METER_TO_FEET;
+    double width = atof( token[1].c_str() );
     int surface_code = atoi( token[2].c_str() );
 
     double lat_1 = atof( token[9].c_str() );
@@ -347,11 +359,8 @@ private:
     rwy_lon_accum += lon_2;
     rwy_count++;
 
-    double length, heading_1, heading_2, dummy;
+    double length, heading_1, heading_2;
     SGGeodesy::inverse( pos_1, pos_2, heading_1, heading_2, length );
-    SGGeod pos;
-    SGGeodesy::direct( pos_1, heading_1, length / 2.0, pos, dummy );
-    length *= SG_METER_TO_FEET;
 
     last_rwy_heading = heading_1;
 
@@ -366,13 +375,13 @@ private:
     double stopway1 = atof( token[12].c_str() );
     double stopway2 = atof( token[21].c_str() );
 
-    PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos,
+    PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos_1,
                                            currentAirportID, heading_1, length,
                                            width, displ_thresh1, stopway1,
                                            surface_code);
     
     PositionedID reciprocal = cache->insertRunway(FGPositioned::RUNWAY,
-                                                  rwy_no_2, pos,
+                                                  rwy_no_2, pos_2,
                                                   currentAirportID, heading_2, length,
                                                   width, displ_thresh2, stopway2,
                                                   surface_code);
@@ -382,7 +391,7 @@ private:
 
   void parseWaterRunwayLine850(const vector<string>& token)
   {
-    double width = atof( token[1].c_str() ) * SG_METER_TO_FEET;
+    double width = atof( token[1].c_str() );
 
     double lat_1 = atof( token[4].c_str() );
     double lon_1 = atof( token[5].c_str() );
@@ -398,22 +407,20 @@ private:
     rwy_lon_accum += lon_2;
     rwy_count++;
 
-    double length, heading_1, heading_2, dummy;
+    double length, heading_1, heading_2;
     SGGeodesy::inverse( pos_1, pos_2, heading_1, heading_2, length );
-    SGGeod pos;
-    SGGeodesy::direct( pos_1, heading_1, length / 2.0, pos, dummy );
 
     last_rwy_heading = heading_1;
 
     const string& rwy_no_1(token[3]);
     const string& rwy_no_2(token[6]);
 
-    PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos,
+    PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos_1,
                                            currentAirportID, heading_1, length,
                                            width, 0.0, 0.0, 13);
     
     PositionedID reciprocal = cache->insertRunway(FGPositioned::RUNWAY,
-                                                  rwy_no_2, pos,
+                                                  rwy_no_2, pos_2,
                                                   currentAirportID, heading_2, length,
                                                   width, 0.0, 0.0, 13);
     
@@ -422,8 +429,8 @@ private:
 
   void parseHelipadLine850(const vector<string>& token)
   {
-    double length = atof( token[5].c_str() ) * SG_METER_TO_FEET;
-    double width = atof( token[6].c_str() ) * SG_METER_TO_FEET;
+    double length = atof( token[5].c_str() );
+    double width = atof( token[6].c_str() );
 
     double lat = atof( token[2].c_str() );
     double lon = atof( token[3].c_str() );

@@ -478,8 +478,8 @@ void FGAirport::processThreshold(SGPropertyNode* aThreshold)
   SGGeod newThreshold(SGGeod::fromDegM(lon, lat, mPosition.getElevationM()));
   
   double newHeading = aThreshold->getDoubleValue("hdg-deg");
-  double newDisplacedThreshold = aThreshold->getDoubleValue("displ-m") * SG_METER_TO_FEET;
-  double newStopway = aThreshold->getDoubleValue("stopw-m") * SG_METER_TO_FEET;
+  double newDisplacedThreshold = aThreshold->getDoubleValue("displ-m");
+  double newStopway = aThreshold->getDoubleValue("stopw-m");
   
   cache->updateRunwayThreshold(id, newThreshold,
                                newHeading, newDisplacedThreshold, newStopway);

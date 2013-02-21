@@ -96,10 +96,10 @@ public:
   SGGeod end() const;
   
   double displacedThresholdM() const
-  { return _displ_thresh * SG_FEET_TO_METER; }
+  { return _displ_thresh; }
   
   double stopwayM() const
-  { return _stopway * SG_FEET_TO_METER; }
+  { return _stopway; }
   
   /**
    * Airport this runway is located at

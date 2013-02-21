@@ -121,7 +121,7 @@ SGGeod FGRunway::end() const
 
 SGGeod FGRunway::threshold() const
 {
-  return pointOnCenterline(_displ_thresh * SG_FEET_TO_METER);
+  return pointOnCenterline(_displ_thresh);
 }
 
 void FGRunway::setReciprocalRunway(PositionedID other)

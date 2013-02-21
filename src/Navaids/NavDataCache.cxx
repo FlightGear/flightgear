@@ -71,7 +71,7 @@ using std::string;
 namespace {
 
 const int MAX_RETRIES = 10;
-const int SCHEMA_VERSION = 7;
+const int SCHEMA_VERSION = 8;
 const int CACHE_SIZE_KBYTES= 16000;
     
 // bind a std::string to a sqlite statement. The std::string must live the
@@ -1579,14 +1579,9 @@ void NavDataCache::updateRunwayThreshold(PositionedID runwayID, const SGGeod &aT
   sqlite3_bind_double(d->updateRunwayThreshold, 3, aDisplacedThreshold);
   sqlite3_bind_double(d->updateRunwayThreshold, 4, aStopway);
   d->execUpdate(d->updateRunwayThreshold);
-      
-// compute the new runway center, based on the threshold lat/lon and length,
-  double offsetFt = (0.5 * d->runwayLengthFt(runwayID));
-  SGGeod newCenter= SGGeodesy::direct(aThreshold, aHeading, offsetFt * SG_FEET_TO_METER);
-  newCenter.setElevationM(aThreshold.getElevationM());
-  
-// now update the positional data
-  updatePosition(runwayID, newCenter);
+
+  // now update the positional data
+  updatePosition(runwayID, aThreshold);
 }
   
 PositionedID
