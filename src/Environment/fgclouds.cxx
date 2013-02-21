@@ -40,7 +40,7 @@
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 #include <Viewer/renderer.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 #include "fgclouds.hxx"
 

@@ -43,7 +43,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/timing/timestamp.hxx>
 
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/runways.hxx>
 

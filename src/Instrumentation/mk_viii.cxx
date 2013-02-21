@@ -76,7 +76,7 @@
 using std::string;
 
 #include <Airports/runways.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 #if defined( HAVE_VERSION_H ) && HAVE_VERSION_H
 #  include <Include/version.h>

@@ -36,7 +36,7 @@
 #include <Airports/runways.hxx>
 
 #include "runwayprefs.hxx"
-#include "simple.hxx"
+#include "airport.hxx"
 
 /******************************************************************************
  * ScheduleTime

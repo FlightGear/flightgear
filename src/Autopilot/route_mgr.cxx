@@ -51,7 +51,7 @@
 #include "Navaids/positioned.hxx"
 #include <Navaids/waypoint.hxx>
 #include <Navaids/procedure.hxx>
-#include "Airports/simple.hxx"
+#include "Airports/airport.hxx"
 #include "Airports/runways.hxx"
 #include <GUI/new_gui.hxx>
 #include <GUI/dialog.hxx>

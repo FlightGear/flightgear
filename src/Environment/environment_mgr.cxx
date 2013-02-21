@@ -43,7 +43,7 @@
 #include "precipitation_mgr.hxx"
 #include "ridge_lift.hxx"
 #include "terrainsampler.hxx"
-#include "Airports/simple.hxx"
+#include "Airports/airport.hxx"
 #include "gravity.hxx"
 #include "magvarmanager.hxx"
 

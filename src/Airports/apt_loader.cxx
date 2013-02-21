@@ -43,7 +43,7 @@
 
 #include <string>
 
-#include "simple.hxx"
+#include "airport.hxx"
 #include "runways.hxx"
 #include "pavement.hxx"
 #include <Navaids/NavDataCache.hxx>

@@ -30,7 +30,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
 #include "AIAircraft.hxx"

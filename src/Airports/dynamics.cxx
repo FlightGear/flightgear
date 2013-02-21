@@ -42,7 +42,7 @@
 #include <ATCDCL/ATCutils.hxx>
 #include <Navaids/NavDataCache.hxx>
 
-#include "simple.hxx"
+#include "airport.hxx"
 #include "dynamics.hxx"
 
 using std::string;

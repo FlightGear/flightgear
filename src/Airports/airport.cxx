@@ -28,7 +28,7 @@
 #  include <config.h>
 #endif
 
-#include "simple.hxx"
+#include "airport.hxx"
 
 #include <cassert>
 #include <boost/foreach.hpp>

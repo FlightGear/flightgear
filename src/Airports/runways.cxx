@@ -37,7 +37,7 @@
 
 #include "runways.hxx"
 
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Navaids/procedure.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Navaids/NavDataCache.hxx>

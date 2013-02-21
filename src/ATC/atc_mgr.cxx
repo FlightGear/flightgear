@@ -27,7 +27,7 @@
 #include <iostream>
 
 #include <Airports/dynamics.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Scenery/scenery.hxx>
 #include "atc_mgr.hxx"
 

@@ -34,7 +34,7 @@
 #include <Main/fg_props.hxx>
 #include <Navaids/fix.hxx>
 #include <Navaids/navrecord.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
 
 #include <fstream>

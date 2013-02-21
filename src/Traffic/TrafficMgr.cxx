@@ -64,7 +64,7 @@
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIBase.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Main/fg_init.hxx>
 
 #include "TrafficMgr.hxx"

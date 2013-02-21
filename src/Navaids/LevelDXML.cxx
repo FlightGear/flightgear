@@ -10,7 +10,7 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include <Navaids/waypoint.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 using std::string;
 using std::vector;

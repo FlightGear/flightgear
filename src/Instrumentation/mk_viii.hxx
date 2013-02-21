@@ -38,7 +38,7 @@ using std::map;
 class SGSampleGroup;
 
 #include <Airports/runways.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Main/globals.hxx>
 #include <Sound/voiceplayer.hxx>
 

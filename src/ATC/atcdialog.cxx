@@ -41,7 +41,7 @@
 #include <Main/fg_props.hxx>
 #include <GUI/gui.h>		// mkDialog
 #include <GUI/new_gui.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <ATC/CommStation.hxx>
 
 using std::string;

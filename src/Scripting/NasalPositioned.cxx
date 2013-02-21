@@ -37,7 +37,7 @@
 #include <simgear/bucket/newbucket.hxx>
 
 #include <Airports/runways.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/parking.hxx>
 #include <Scripting/NasalSys.hxx>

@@ -48,7 +48,7 @@
 #include <Traffic/TrafficMgr.hxx>
 #include <Airports/groundnetwork.hxx>
 #include <Airports/dynamics.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Radio/radio.hxx>
 #include <signal.h>
 

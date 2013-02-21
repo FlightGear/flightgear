@@ -33,7 +33,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/fg_init.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/groundnetwork.hxx>

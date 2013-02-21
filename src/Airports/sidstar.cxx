@@ -30,7 +30,7 @@
 
 
 
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 
 #include "sidstar.hxx"

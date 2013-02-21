@@ -47,7 +47,7 @@
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIManager.hxx>
 #include <AIModel/AIAircraft.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Main/fg_init.hxx>   // That's pretty ugly, but I need fgFindAirportID
 
 

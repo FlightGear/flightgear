@@ -22,7 +22,7 @@
 #include "Navaids/positioned.hxx"
 #include <Navaids/waypoint.hxx>
 #include "Navaids/navrecord.hxx"
-#include "Airports/simple.hxx"
+#include "Airports/airport.hxx"
 #include "Airports/runways.hxx"
 #include "Autopilot/route_mgr.hxx"
 

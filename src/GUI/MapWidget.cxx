@@ -21,7 +21,7 @@
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/fix.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
 #include <Navaids/routePath.hxx>

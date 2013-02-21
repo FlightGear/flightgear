@@ -1,4 +1,4 @@
-// simple.hxx -- a really simplistic class to manage airport ID,
+// airport.hxx -- a really simplistic class to manage airport ID,
 //                 lat, lon of the center of one of it's runways, and
 //                 elevation in feet.
 //

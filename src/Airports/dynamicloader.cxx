@@ -25,7 +25,7 @@
 
 #include <Navaids/NavDataCache.hxx>
 #include <Airports/dynamics.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 /*****************************************************************************
  * Helper function for parsing position string

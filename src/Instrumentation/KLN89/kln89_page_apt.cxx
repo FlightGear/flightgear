@@ -34,7 +34,7 @@
 #include <ATC/CommStation.hxx>
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 using std::string;
 

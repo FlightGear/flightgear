@@ -26,7 +26,7 @@
 #include <fstream>
 #include <iostream>
 
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
 

@@ -33,7 +33,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <ATC/CommStation.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 FGATC::FGATC() :
     freq(0),

@@ -23,7 +23,7 @@
 #ifndef __METARPROPERTIES_HXX
 #define __METARPROPERTIES_HXX
 
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 

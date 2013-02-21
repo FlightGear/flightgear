@@ -13,7 +13,7 @@ set(SOURCES
 	runwayprefs.cxx
 	runways.cxx
 	sidstar.cxx
-	simple.cxx
+	airport.cxx
 	xmlloader.cxx
 	)
 
@@ -30,7 +30,7 @@ set(HEADERS
 	runwayprefs.hxx
 	runways.hxx
 	sidstar.hxx
-	simple.hxx
+	airport.hxx
 	xmlloader.hxx
 	)
     		

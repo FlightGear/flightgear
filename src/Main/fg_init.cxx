@@ -59,7 +59,7 @@
 #include <Aircraft/replay.hxx>
 #include <Aircraft/FlightHistory.hxx>
 #include <Airports/runways.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
 
 #include <AIModel/AIManager.hxx>

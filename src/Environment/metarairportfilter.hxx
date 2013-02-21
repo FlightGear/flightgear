@@ -22,7 +22,7 @@
 #ifndef __METARAIRPORTFILTER_HXX
 #define __METARAIRPORTFILTER_HXX
 
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <simgear/props/props.hxx>
 
 namespace Environment {

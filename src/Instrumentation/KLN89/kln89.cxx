@@ -48,7 +48,7 @@
 
 #include <Main/fg_props.hxx>
 #include <simgear/structure/commands.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 #include <cstdio>
 

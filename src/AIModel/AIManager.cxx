@@ -29,7 +29,7 @@
 #include <boost/foreach.hpp>
 
 #include <Main/globals.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 #include "AIManager.hxx"
 #include "AIAircraft.hxx"

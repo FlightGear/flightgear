@@ -51,7 +51,7 @@
 #include <Main/globals.hxx>
 #include "markerbeacon.hxx"
 #include "navrecord.hxx"
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
 #include <ATC/CommStation.hxx>
 #include "fix.hxx"

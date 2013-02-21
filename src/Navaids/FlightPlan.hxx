@@ -25,7 +25,7 @@
 #define FG_FLIGHTPLAN_HXX
 
 #include <Navaids/route.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 typedef SGSharedPtr<FGAirport> FGAirportRef;
     

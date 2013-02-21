@@ -32,7 +32,7 @@
 #include "runwayprefloader.hxx"
 
 #include "dynamics.hxx"
-#include "simple.hxx"
+#include "airport.hxx"
 #include "runwayprefs.hxx"
 
 #include <Navaids/NavDataCache.hxx>

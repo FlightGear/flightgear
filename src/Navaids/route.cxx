@@ -48,7 +48,7 @@
 #include <Navaids/procedure.hxx>
 #include <Navaids/waypoint.hxx>
 #include <Navaids/LevelDXML.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 
 using std::string;
 using std::vector;

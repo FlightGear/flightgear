@@ -70,7 +70,7 @@ using std::string;
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/fix.hxx>
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
 #include "od_gauge.hxx"
 

@@ -25,7 +25,7 @@
 
 #include <simgear/structure/exception.hxx>
 
-#include <Airports/simple.hxx>
+#include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
 
 using std::string;
