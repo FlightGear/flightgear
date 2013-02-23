@@ -1561,6 +1561,12 @@ void NavDataCache::setRunwayILS(PositionedID runway, PositionedID ils)
   sqlite3_bind_int64(d->setRunwayILS, 1, runway);
   sqlite3_bind_int64(d->setRunwayILS, 2, ils);
   d->execUpdate(d->setRunwayILS);
+    
+  // and the in-memory one
+  if (d->cache.find(runway) != d->cache.end()) {
+    FGRunway* instance = (FGRunway*) d->cache[runway].ptr();
+    instance->setILS(ils);
+  }
 }
   
 void NavDataCache::updateRunwayThreshold(PositionedID runwayID, const SGGeod &aThreshold,
