@@ -105,10 +105,10 @@ public:
       line = tmp; // string copy, ack
       line_num++;
 
-      if ( !line.size() || isspace(tmp[0])) {
+      if ( line.empty() || isspace(tmp[0]) || tmp[0] == '#' ) {
         continue;
       }
-      
+
       if (line.size() >= 3) {
           char *p = (char *)memchr(tmp, ' ', 3);
           if ( p )
@@ -116,16 +116,16 @@ public:
       }
 
       line_id = atoi(tmp);
-      if ( tmp[0] == 'I' ) {
-        // First line, indicates IBM (i.e. DOS line endings I
-        // believe.)
+      if ( tmp[0] == 'I' || tmp[0] == 'A' ) {
+        // First line, indicates IBM ("I") or Macintosh ("A")
+        // line endings.
 
         // move past this line and read and discard the next line
         // which is the version and copyright information
         in.getline(tmp, 2048);
-        // vector<string> vers_token = simgear::strutils::split( tmp );
-        if ( strlen(tmp) > 4 ) {
-           char *p = (char *)memchr(tmp, ' ', 4);
+
+        if ( strlen(tmp) > 5 ) {
+           char *p = (char *)memchr(tmp, ' ', 5);
            if ( p )
               *p = 0;
         }
