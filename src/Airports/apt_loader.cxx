@@ -292,10 +292,13 @@ private:
 
     int surface_code = atoi( token[10].c_str() );
     SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
-    
-    if (rwy_no[0] == 'x') {
-      cache->insertRunway(FGPositioned::TAXIWAY,rwy_no, pos, currentAirportID,
-                          heading, length, width, 0, 0, surface_code);
+
+    if (rwy_no[0] == 'x') {  // Taxiway
+      cache->insertRunway(FGPositioned::TAXIWAY, rwy_no, pos, currentAirportID,
+                          heading, length, width, 0.0, 0.0, surface_code);
+    } else if (rwy_no[0] == 'H') {  // Helipad
+      cache->insertRunway(FGPositioned::HELIPAD, rwy_no, pos, currentAirportID,
+                          heading, length, width, 0.0, 0.0, surface_code);
     } else {
       // (pair of) runways
       string rwy_displ_threshold = token[6];
