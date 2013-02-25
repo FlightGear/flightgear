@@ -40,6 +40,9 @@ class CanvasWidget:
 
     float _last_x,
           _last_y;
+    bool  _auto_viewport; //!< Set true to get the canvas view dimensions
+                          //   automatically resized if the size of the widget
+                          //   changes.
 
     static SGPropertyNode_ptr _time,
                               _view_height;

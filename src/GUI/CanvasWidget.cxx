@@ -29,7 +29,8 @@ CanvasWidget::CanvasWidget( int x, int y,
   puObject(x, y, width, height),
   _canvas_mgr( dynamic_cast<CanvasMgr*>(globals->get_subsystem("Canvas")) ),
   _last_x(0),
-  _last_y(0)
+  _last_y(0),
+  _auto_viewport( props->getBoolValue("auto-viewport", true) )
 {
   if( !_canvas_mgr )
   {
@@ -185,8 +186,11 @@ void CanvasWidget::setSize(int w, int h)
 {
   puObject::setSize(w, h);
 
-  _canvas->getProps()->setIntValue("view[0]", w);
-  _canvas->getProps()->setIntValue("view[1]", h);
+  if( _auto_viewport )
+  {
+    _canvas->getProps()->setIntValue("view[0]", w);
+    _canvas->getProps()->setIntValue("view[1]", h);
+  }
 }
 
 //------------------------------------------------------------------------------
