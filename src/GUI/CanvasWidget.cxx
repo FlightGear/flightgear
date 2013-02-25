@@ -30,7 +30,8 @@ CanvasWidget::CanvasWidget( int x, int y,
   _canvas_mgr( dynamic_cast<CanvasMgr*>(globals->get_subsystem("Canvas")) ),
   _last_x(0),
   _last_y(0),
-  _auto_viewport( props->getBoolValue("auto-viewport", true) )
+  // automatically resize viewport of canvas if no size is given
+  _auto_viewport( !props->hasChild("view") )
 {
   if( !_canvas_mgr )
   {
