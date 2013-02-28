@@ -34,6 +34,7 @@
 #include <map>
 
 #include <Navaids/positioned.hxx>
+#include <Airports/runways.hxx>
 
 // forward decls
 class FGAirportDynamics;

@@ -30,6 +30,7 @@
 
 #include "airport.hxx"
 
+#include <algorithm>
 #include <cassert>
 #include <boost/foreach.hpp>
 
