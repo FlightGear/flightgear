@@ -1194,22 +1194,26 @@ void MapWidget::drawAirport(FGAirport* apt)
     return;
   }
 
-  for (unsigned int r=0; r<apt->numRunways(); ++r) {
-      FGRunway* rwy = apt->getRunwayByIndex(r);
-      if (!rwy->isReciprocal()) {
-          drawRunwayPre(rwy);
-      }
+  FGRunwayList runways(apt->getRunwaysWithoutReciprocals());
+    
+  for (unsigned int r=0; r<runways.size(); ++r) {
+    drawRunwayPre(runways[r]);
   }
 
-  for (unsigned int r=0; r<apt->numRunways(); ++r) {
-      FGRunway* rwy = apt->getRunwayByIndex(r);
-      if (!rwy->isReciprocal()) {
-          drawRunway(rwy);
-      }
+  for (unsigned int r=0; r<runways.size(); ++r) {
+    FGRunway* rwy = runways[r];
+    drawRunway(rwy);
 
-      if (rwy->ILS()) {
-          drawILS(false, rwy);
+    if (rwy->ILS()) {
+        drawILS(false, rwy);
+    }
+    
+    if (rwy->reciprocalRunway()) {
+      FGRunway* recip = rwy->reciprocalRunway();
+      if (recip->ILS()) {
+        drawILS(false, recip);
       }
+    }
   }
 
   for (unsigned int r=0; r<apt->numHelipads(); ++r) {
@@ -1224,14 +1228,11 @@ int MapWidget::scoreAirportRunways(FGAirport* apt)
   bool needHardSurface = _root->getBoolValue("hard-surfaced-airports", true);
   double minLength = _root->getDoubleValue("min-runway-length-ft", 2000.0);
 
-  int score = 0;
-  unsigned int numRunways(apt->numRunways());
-  for (unsigned int r=0; r<numRunways; ++r) {
-    FGRunway* rwy = apt->getRunwayByIndex(r);
-    if (rwy->isReciprocal()) {
-      continue;
-    }
+  FGRunwayList runways(apt->getRunwaysWithoutReciprocals());
 
+  int score = 0;
+  for (unsigned int r=0; r<runways.size(); ++r) {
+    FGRunway* rwy = runways[r];
     if (needHardSurface && !rwy->isHardSurface()) {
       continue;
     }

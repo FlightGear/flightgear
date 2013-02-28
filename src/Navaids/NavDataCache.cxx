@@ -733,7 +733,7 @@ public:
       PositionedID reciprocal = sqlite3_column_int64(loadRunwayStmt, 6);
       PositionedID ils = sqlite3_column_int64(loadRunwayStmt, 7);
       FGRunway* r = new FGRunway(rowId, apt, id, pos, heading, lengthM, widthM,
-                          displacedThreshold, stopway, surface, false);
+                          displacedThreshold, stopway, surface);
       
       if (reciprocal > 0) {
         r->setReciprocalRunway(reciprocal);

@@ -247,17 +247,34 @@ bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
   
   BOOST_FOREACH(PositionedID id, mRunways) {
     FGRunway* rwy = (FGRunway*) flightgear::NavDataCache::instance()->loadById(id);
-
-    if (rwy->isReciprocal()) {
-      continue; // we only care about lengths, so don't do work twice
-    }
-
     if (rwy->isHardSurface() && (rwy->lengthFt() >= aLengthFt)) {
       return true; // we're done!
     }
   } // of runways iteration
 
   return false;
+}
+
+FGRunwayList FGAirport::getRunwaysWithoutReciprocals() const
+{
+  loadRunways();
+  
+  FGRunwayList r;
+  
+  BOOST_FOREACH(PositionedID id, mRunways) {
+    FGRunway* rwy = (FGRunway*) flightgear::NavDataCache::instance()->loadById(id);
+    FGRunway* recip = rwy->reciprocalRunway();
+    if (recip) {
+      FGRunwayList::iterator it = std::find(r.begin(), r.end(), recip);
+      if (it != r.end()) {
+        continue; // reciprocal already in result set, don't include us
+      }
+    }
+    
+    r.push_back(rwy);
+  }
+  
+  return r;
 }
 
 unsigned int FGAirport::numTaxiways() const

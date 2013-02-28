@@ -51,12 +51,10 @@ FGRunway::FGRunway(PositionedID aGuid,
                         const double width,
                         const double displ_thresh,
                         const double stopway,
-                        const int surface_code,
-                        bool reciprocal) :
+                        const int surface_code) :
   FGRunwayBase(aGuid, RUNWAY, aIdent, aGeod,
                heading, length, width, surface_code),
   _airport(aAirport),
-  _isReciprocal(reciprocal),
   _reciprocal(0),
   _displ_thresh(displ_thresh),
   _stopway(stopway),
@@ -209,7 +207,6 @@ FGHelipad::FGHelipad(PositionedID aGuid,
                         const double width,
                         const int surface_code) :
   FGRunwayBase(aGuid, RUNWAY, aIdent, aGeod,
-               heading, length, width, surface_code),
-  _airport(aAirport)
+               heading, length, width, surface_code)
 {
 }

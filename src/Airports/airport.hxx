@@ -58,6 +58,7 @@ namespace flightgear {
   typedef std::map<std::string, FGAirport*> AirportCache;
 }
 
+typedef std::vector<FGRunway*> FGRunwayList;
 
 
 /***************************************************************************************
@@ -121,6 +122,19 @@ public:
      * aiming towards.
      */
     FGRunway* findBestRunwayForPos(const SGGeod& aPos) const;
+    
+    /**
+     * Retrieve all runways at the airport, but excluding the reciprocal
+     * runways. For example at KSFO this might return 1L, 1R, 28L and 28R,
+     * but would not then include 19L/R or 10L/R.
+     *
+     * Exactly which runways you get, is undefined (i.e, dont assumes it's
+     * runways with heading < 180 degrees) - it depends on order in apt.dat.
+     *
+     * This is useful for code that wants to process each piece of tarmac at
+     * an airport *once*, not *twice* - eg mapping and nav-display code.
+     */
+    FGRunwayList getRunwaysWithoutReciprocals() const;
     
      /**
      * Useful predicate for FMS/GPS/NAV displays and similar - check if this

@@ -336,12 +336,10 @@ void GroundRadar::updateTexture()
     }
     pvt_geom->setVertexArray(pvt_vertices.get());
 
-    for (unsigned int i=0; i<apt->numRunways(); ++i)
+    FGRunwayList rwys(apt->getRunwaysWithoutReciprocals());
+    for (unsigned int i=0; i<rwys.size(); ++i)
     {
-      FGRunway* runway(apt->getRunwayByIndex(i));
-      if (runway->isReciprocal()) continue;
-      
-      addRunwayVertices(runway, tower_lat, tower_lon, scale, rwy_vertices.get());
+      addRunwayVertices(rwys[i], tower_lat, tower_lon, scale, rwy_vertices.get());
     }
     osg::Geometry *rwy_geom = dynamic_cast<osg::Geometry *>(_geode->getDrawable(2));
     rwy_geom->setVertexArray(rwy_vertices.get());

@@ -42,7 +42,6 @@ namespace flightgear {
 class FGRunway : public FGRunwayBase
 {
   PositionedID _airport;
-  bool _isReciprocal;
   PositionedID _reciprocal;
   double _displ_thresh;
   double _stopway;
@@ -56,8 +55,7 @@ public:
             const double width,
             const double displ_thresh,
             const double stopway,
-            const int surface_code,
-            const bool reciprocal);
+            const int surface_code);
   
   /**
    * given a runway identifier (06, 18L, 31R) compute the identifier for the
@@ -70,13 +68,6 @@ public:
    * FGAirport::findBestRunwayForHeading
    */
   double score(double aLengthWt, double aWidthWt, double aSurfaceWt) const;
-
-  /**
-   * Test if this runway is the reciprocal. This allows users who iterate
-   * over runways to avoid counting runways twice, if desired.
-   */
-  bool isReciprocal() const
-  { return _isReciprocal; }
 
   /**
    * Get the runway beginning point - this is syntatic sugar, equivalent to
@@ -136,7 +127,6 @@ public:
 
 class FGHelipad : public FGRunwayBase
 {
-  PositionedID _airport;
 public:
     FGHelipad(PositionedID aGuid,
            PositionedID aAirport, const std::string& rwy_no,
