@@ -379,12 +379,10 @@ static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRe
     double minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft");
     for(unsigned int r=0; r<apt->numRunways(); ++r) {
       FGRunway* rwy(apt->getRunwayByIndex(r));
-      
-    // ignore unusably short runways
+      // ignore unusably short runways
       if (rwy->lengthFt() < minLengthFt) {
         continue;
       }
-      
       naRef rwyid = stringToNasal(c, rwy->ident());
       naRef rwydata = ghostForRunway(c, rwy);
       naHash_set(*out, rwyid, rwydata);
@@ -756,7 +754,9 @@ static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef
     FGRunway* rwy = (FGRunway*) g;
     if (!strcmp(fieldName, "threshold")) *out = naNum(rwy->displacedThresholdM());
     else if (!strcmp(fieldName, "stopway")) *out = naNum(rwy->stopwayM());
-    else if (!strcmp(fieldName, "ils_frequency_mhz")) {
+    else if (!strcmp(fieldName, "reciprocal")) {
+      *out = ghostForRunway(c, rwy->reciprocalRunway());
+    } else if (!strcmp(fieldName, "ils_frequency_mhz")) {
       *out = rwy->ILS() ? naNum(rwy->ILS()->get_freq() / 100.0) : naNil();
     } else if (!strcmp(fieldName, "ils")) {
       *out = ghostForNavaid(c, rwy->ILS());
@@ -1181,11 +1181,11 @@ static naRef f_airport_runway(naContext c, naRef me, int argc, naRef* args)
   if (!apt) {
     naRuntimeError(c, "airport.runway called on non-airport object");
   }
-  
+
   if ((argc < 1) || !naIsString(args[0])) {
     naRuntimeError(c, "airport.runway expects a runway ident argument");
   }
-  
+
   std::string ident(naStr_data(args[0]));
   boost::to_upper(ident);
 
@@ -1195,6 +1195,22 @@ static naRef f_airport_runway(naContext c, naRef me, int argc, naRef* args)
     return ghostForHelipad(c, apt->getHelipadByIdent(ident));
   }
   return naNil();
+}
+
+static naRef f_airport_runwaysWithoutReciprocals(naContext c, naRef me, int argc, naRef* args)
+{
+  FGAirport* apt = airportGhost(me);
+  if (!apt) {
+    naRuntimeError(c, "airport.runwaysWithoutReciprocals called on non-airport object");
+  }
+
+  FGRunwayList rwylist(apt->getRunwaysWithoutReciprocals());
+  naRef runways = naNewVector(c);
+  for (unsigned int r=0; r<rwylist.size(); ++r) {
+    FGRunway* rwy(rwylist[r]);
+    naVec_append(runways, ghostForRunway(c, apt->getRunwayByIdent(rwy->ident())));
+  }
+  return runways;
 }
 
 static naRef f_airport_taxiway(naContext c, naRef me, int argc, naRef* args)
@@ -2412,6 +2428,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, gcSave, "airportProto", airportPrototype);
   
     hashset(c, airportPrototype, "runway", naNewFunc(c, naNewCCode(c, f_airport_runway)));
+    hashset(c, airportPrototype, "runwaysWithoutReciprocals", naNewFunc(c, naNewCCode(c, f_airport_runwaysWithoutReciprocals)));
     hashset(c, airportPrototype, "helipad", naNewFunc(c, naNewCCode(c, f_airport_runway)));
     hashset(c, airportPrototype, "taxiway", naNewFunc(c, naNewCCode(c, f_airport_taxiway)));
     hashset(c, airportPrototype, "tower", naNewFunc(c, naNewCCode(c, f_airport_tower)));
