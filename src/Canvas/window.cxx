@@ -130,10 +130,7 @@ namespace canvas
   //----------------------------------------------------------------------------
   bool Window::handleMouseEvent(const simgear::canvas::MouseEventPtr& event)
   {
-    if( !getCanvas().expired() )
-      return getCanvas().lock()->handleMouseEvent(event);
-    else
-      return false;
+    return _image.handleMouseEvent(event);
   }
 
   //----------------------------------------------------------------------------
