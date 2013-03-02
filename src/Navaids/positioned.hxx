@@ -81,6 +81,11 @@ public:
 // groundnet items
     PARKING,  ///< parking position - might be a gate, or stand
     TAXI_NODE,
+// POI items
+    COUNTRY,
+    CITY,
+    TOWN,
+      
     LAST_TYPE
   } Type;
 
@@ -230,6 +235,7 @@ public:
   static const char* nameForType(Type aTy);
   
   static FGPositioned* createUserWaypoint(const std::string& aIdent, const SGGeod& aPos);
+  static void deleteUserWaypoint(const std::string& aIdent);
 protected:
   friend class flightgear::NavDataCache;
   

@@ -116,8 +116,10 @@ public:
                                 PositionedID apt);
   PositionedID insertFix(const std::string& ident, const SGGeod& aPos);
   
-  PositionedID createUserWaypoint(const std::string& ident, const SGGeod& aPos);
+  PositionedID createPOI(FGPositioned::Type ty, const std::string& ident, const SGGeod& aPos);
   
+  void removePOI(FGPositioned::Type ty, const std::string& aIdent);
+    
   void dropGroundnetFor(PositionedID aAirport);
   
   PositionedID insertParking(const std::string& name, const SGGeod& aPos,

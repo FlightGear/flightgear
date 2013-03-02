@@ -573,6 +573,8 @@ public:
                            " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)");
     runwayLengthFtQuery = prepare("SELECT length_ft FROM runway WHERE rowid=?1");
     
+    removePOIQuery = prepare("DELETE FROM positioned WHERE type=?1 AND ident=?2");
+    
   // query statement    
     findClosestWithIdent = prepare("SELECT rowid FROM positioned WHERE ident=?1 "
                                    AND_TYPED " ORDER BY distanceCartSqr(cart_x, cart_y, cart_z, ?4, ?5, ?6)");
@@ -921,6 +923,14 @@ public:
     
     deferredOctreeUpdates.clear();
   }
+    
+  void removePositionedWithIdent(FGPositioned::Type ty, const std::string& aIdent)
+  {
+    sqlite3_bind_int(removePOIQuery, 1, ty);
+    sqlite_bind_stdstring(removePOIQuery, 2, aIdent);
+    execUpdate(removePOIQuery);
+    reset(removePOIQuery);
+  }
   
   NavDataCache* outer;
   sqlite3* db;
@@ -952,6 +962,7 @@ public:
   insertCommStation, insertNavaid;
   sqlite3_stmt_ptr setAirportMetar, setRunwayReciprocal, setRunwayILS,
     setAirportPos, updateRunwayThreshold, updateILS;
+  sqlite3_stmt_ptr removePOIQuery;
   
   sqlite3_stmt_ptr findClosestWithIdent;
 // octree (spatial index) related queries
@@ -1056,8 +1067,11 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
       return new FGFix(rowid, ident, pos);
       
     case FGPositioned::WAYPOINT:
+    case FGPositioned::COUNTRY:
+    case FGPositioned::CITY:
+    case FGPositioned::TOWN:
     {
-      FGPositioned* wpt = new FGPositioned(rowid, FGPositioned::WAYPOINT, ident, pos);
+        FGPositioned* wpt = new FGPositioned(rowid, ty, ident, pos);
       return wpt;
     }
       
@@ -1629,10 +1643,16 @@ PositionedID NavDataCache::insertFix(const std::string& ident, const SGGeod& aPo
   return d->insertPositioned(FGPositioned::FIX, ident, string(), aPos, 0, true);
 }
 
-PositionedID NavDataCache::createUserWaypoint(const std::string& ident, const SGGeod& aPos)
+PositionedID NavDataCache::createPOI(FGPositioned::Type ty, const std::string& ident, const SGGeod& aPos)
 {
-  return d->insertPositioned(FGPositioned::WAYPOINT, ident, string(), aPos, 0,
+  return d->insertPositioned(ty, ident, string(), aPos, 0,
                              true /* spatial index */);
+}
+    
+void NavDataCache::removePOI(FGPositioned::Type ty, const std::string& aIdent)
+{
+  d->removePositionedWithIdent(ty, aIdent);
+  // should remove from the live cache too?
 }
   
 void NavDataCache::setAirportMetar(const string& icao, bool hasMetar)

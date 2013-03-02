@@ -73,9 +73,24 @@ FGPositioned::~FGPositioned()
 FGPositioned*
 FGPositioned::createUserWaypoint(const std::string& aIdent, const SGGeod& aPos)
 {
-  PositionedID id = NavDataCache::instance()->createUserWaypoint(aIdent, aPos);
-  return NavDataCache::instance()->loadById(id);
+  NavDataCache* cache = NavDataCache::instance();
+  TypeFilter filter(WAYPOINT);
+  FGPositioned::List existing = cache->findAllWithIdent(aIdent, &filter, true);
+  if (!existing.empty()) {
+    SG_LOG(SG_NAVAID, SG_WARN, "attempt to insert duplicate WAYPOINT:" << aIdent);
+    return existing.front().ptr();
+  }
+  
+  PositionedID id = cache->createPOI(WAYPOINT, aIdent, aPos);
+  return cache->loadById(id);
 }
+
+void FGPositioned::deleteUserWaypoint(const std::string& aIdent)
+{
+  NavDataCache* cache = NavDataCache::instance();
+  cache->removePOI(WAYPOINT, aIdent);
+}
+
 
 const SGVec3d&
 FGPositioned::cart() const
@@ -111,12 +126,19 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     {"ground", FREQ_GROUND},
     {"approach", FREQ_APP_DEP},
     {"departure", FREQ_APP_DEP},
+    {"runway", RUNWAY},
+    {"helipad", HELIPAD},
+    {"country", COUNTRY},
+    {"city", CITY},
+    {"town", TOWN},
+      
   // aliases
     {"gnd", FREQ_GROUND},
     {"twr", FREQ_TOWER},
     {"waypoint", WAYPOINT},
     {"apt", AIRPORT},
     {"arpt", AIRPORT},
+    {"rwy", RUNWAY},
     {"any", INVALID},
     {"all", INVALID},
     
@@ -139,6 +161,7 @@ const char* FGPositioned::nameForType(Type aTy)
 {
  switch (aTy) {
  case RUNWAY: return "runway";
+ case HELIPAD: return "helipad";
  case TAXIWAY: return "taxiway";
  case PAVEMENT: return "pavement";
  case PARKING: return "parking stand";
@@ -165,6 +188,9 @@ const char* FGPositioned::nameForType(Type aTy)
  case FREQ_UNICOM: return "unicom";
  case FREQ_APP_DEP: return "approach-departure";
  case TAXI_NODE: return "taxi-node";
+ case COUNTRY: return "country";
+ case CITY: return "city";
+ case TOWN: return "town";
  default:
   return "unknown";
  }
