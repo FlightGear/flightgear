@@ -178,13 +178,9 @@ naRef f_eventGetTarget(naContext c, sc::Event& event)
   return NasalElement::create(c, event.getTarget().lock());
 }
 
-// TODO allow directly exposing functions without parameters and return type
-naRef f_eventStopPropagation(sc::Event& event, const nasal::CallContext& ctx)
+void f_eventStopPropagation(sc::Event& event)
 {
-  if( ctx.argc != 0 )
-    naRuntimeError(ctx.c, "Event::stopPropagation no argument expected");
   event.stopPropagation();
-  return naNil();
 }
 
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
@@ -192,7 +188,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
   NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)
     .member("target", &f_eventGetTarget)
-    .method_func<&f_eventStopPropagation>("stopPropagation");
+    .method("stopPropagation", &f_eventStopPropagation);
   NasalMouseEvent::init("canvas.MouseEvent")
     .bases<NasalEvent>()
     .member("screenX", &sc::MouseEvent::getScreenX)
@@ -206,20 +202,20 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .member("_node_ghost", &elementGetNode<sc::Canvas>)
     .member("size_x", &sc::Canvas::getSizeX)
     .member("size_y", &sc::Canvas::getSizeY)
-    .method_func<&f_canvasCreateGroup>("_createGroup")
-    .method<&sc::Canvas::addEventListener>("addEventListener");
+    .method("_createGroup", &f_canvasCreateGroup)
+    .method("addEventListener", &sc::Canvas::addEventListener);
   NasalElement::init("canvas.Element")
     .member("_node_ghost", &elementGetNode<sc::Element>)
-    .method<&sc::Element::addEventListener>("addEventListener")
-    .method_func<&f_elementGetTransformedBounds>("getTransformedBounds");
+    .method("addEventListener", &sc::Element::addEventListener)
+    .method("getTransformedBounds", &f_elementGetTransformedBounds);
   NasalGroup::init("canvas.Group")
     .bases<NasalElement>()
-    .method_func<&f_groupCreateChild>("_createChild")
-    .method_func<&f_groupGetChild>("_getChild")
-    .method_func<&f_groupGetElementById>("_getElementById");
+    .method("_createChild", &f_groupCreateChild)
+    .method("_getChild", &f_groupGetChild)
+    .method("_getElementById", &f_groupGetElementById);
   NasalText::init("canvas.Text")
     .bases<NasalElement>()
-    .method_func<&f_textGetNearestCursor>("getNearestCursor");
+    .method("getNearestCursor", &f_textGetNearestCursor);
 
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");

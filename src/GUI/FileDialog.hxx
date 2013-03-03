@@ -57,21 +57,19 @@ public:
      */
     virtual ~FGFileDialog ();
 
-     virtual void exec() = 0;
-     virtual void close() = 0;
+    virtual void exec() = 0;
+    virtual void close() = 0;
     
-     class Callback
-     {
-     public:
-         virtual ~Callback() { }
-         virtual void onFileDialogDone(FGFileDialog* ins, const SGPath& result) = 0;
-     };
+    class Callback
+    {
+      public:
+        virtual ~Callback() { }
+        virtual void onFileDialogDone(FGFileDialog* ins, const SGPath& result) = 0;
+    };
 
-     virtual void setCallback(Callback* aCB);
+    virtual void setCallback(Callback* aCB);
 
-    naRef openFromNasal(const nasal::CallContext& ctx);
-    naRef closeFromNasal(const nasal::CallContext& ctx);
-    naRef setCallbackFromNasal(const nasal::CallContext& ctx);
+    void setCallbackFromNasal(const nasal::CallContext& ctx);
 protected:
     FGFileDialog(Usage use);
     

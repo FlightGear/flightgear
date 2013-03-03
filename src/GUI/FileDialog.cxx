@@ -86,18 +86,6 @@ void FGFileDialog::setShowHidden(bool show)
     _showHidden = show;
 }
 
-naRef FGFileDialog::openFromNasal(const nasal::CallContext& ctx)
-{
-    exec();
-    return naNil();
-}
-
-naRef FGFileDialog::closeFromNasal(const nasal::CallContext& ctx)
-{
-    close();
-    return naNil();
-}
-
 class NasalCallback : public FGFileDialog::Callback
 {
 public:
@@ -133,21 +121,20 @@ private:
     int _gcKeys[2];
 };
 
-naRef FGFileDialog::setCallbackFromNasal(const nasal::CallContext& ctx)
+void FGFileDialog::setCallbackFromNasal(const nasal::CallContext& ctx)
 {
     // wrap up the naFunc in our callback type
     naRef func = ctx.requireArg<naRef>(0);
     naRef object = ctx.getArg<naRef>(1, naNil());
     
     setCallback(new NasalCallback(func, object));
-    return naNil();
 }
 
 typedef boost::shared_ptr<FGFileDialog> FileDialogPtr;
 typedef nasal::Ghost<FileDialogPtr> NasalFileDialog;
 
 /**
- * Create new Canvas and get ghost for it.
+ * Create new FGFileDialog and get ghost for it.
  */
 static naRef f_createFileDialog(naContext c, naRef me, int argc, naRef* args)
 {
@@ -172,9 +159,9 @@ void postinitNasalGUI(naRef globals, naContext c)
     .member("show_hidden", &FGFileDialog::showHidden, &FGFileDialog::setShowHidden)
     .member("placeholder", &FGFileDialog::getPlaceholder, &FGFileDialog::setPlaceholderName)
     .member("pattern", &FGFileDialog::filterPatterns, &FGFileDialog::setFilterPatterns)
-    .method<&FGFileDialog::openFromNasal>("open")
-    .method<&FGFileDialog::closeFromNasal>("close")
-    .method<&FGFileDialog::setCallbackFromNasal>("setCallback");
+    .method("open", &FGFileDialog::exec)
+    .method("close", &FGFileDialog::close)
+    .method("setCallback", &FGFileDialog::setCallbackFromNasal);
 
     nasal::Hash guiModule = nasal::Hash(globals, c).get<nasal::Hash>("gui");
     
