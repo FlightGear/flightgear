@@ -1,7 +1,7 @@
 # ConfigureMsvc3rdParty.cmake - Configure 3rd Party Library Paths on Windows
 
 if (MSVC)
-    GET_FILENAME_COMPONENT(PARENT_DIR ${PROJECT_SOURCE_DIR} PATH)
+    GET_FILENAME_COMPONENT(PARENT_DIR ${PROJECT_BINARY_DIR} PATH)
     if (CMAKE_CL_64)
         SET(TEST_3RDPARTY_DIR "${PARENT_DIR}/3rdparty.x64")
     else (CMAKE_CL_64)
