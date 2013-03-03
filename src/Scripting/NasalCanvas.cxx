@@ -164,23 +164,9 @@ naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
   );
 }
 
-naRef f_textGetNearestCursor(sc::Text& text, const nasal::CallContext& ctx)
-{
-  return nasal::to_nasal
-  (
-    ctx.c,
-    text.getNearestCursor( ctx.requireArg<osg::Vec2>(0) )
-  );
-}
-
 naRef f_eventGetTarget(naContext c, sc::Event& event)
 {
   return NasalElement::create(c, event.getTarget().lock());
-}
-
-void f_eventStopPropagation(sc::Event& event)
-{
-  event.stopPropagation();
 }
 
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
@@ -188,7 +174,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
   NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)
     .member("target", &f_eventGetTarget)
-    .method("stopPropagation", &f_eventStopPropagation);
+    .method("stopPropagation", &sc::Event::stopPropagation);
   NasalMouseEvent::init("canvas.MouseEvent")
     .bases<NasalEvent>()
     .member("screenX", &sc::MouseEvent::getScreenX)
@@ -215,7 +201,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .method("_getElementById", &f_groupGetElementById);
   NasalText::init("canvas.Text")
     .bases<NasalElement>()
-    .method("getNearestCursor", &f_textGetNearestCursor);
+    .method("getNearestCursor", &sc::Text::getNearestCursor);
 
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
