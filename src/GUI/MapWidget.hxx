@@ -63,9 +63,12 @@ private:
   void drawILS(bool tuned, FGRunway* rwy);
   
   void drawNavaids();
+  void drawPOIs();
   void drawNDB(bool tuned, FGNavRecord* nav);
   void drawVOR(bool tuned, FGNavRecord* nav);
   void drawFix(FGFix* fix);
+
+  void drawCities(FGNavRecord* rec);
   
   void drawTraffic();
   void drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, double hdg);

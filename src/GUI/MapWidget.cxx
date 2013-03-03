@@ -607,6 +607,7 @@ void MapWidget::draw(int dx, int dy)
 
   drawAirports();
   drawNavaids();
+  drawPOIs();
   drawTraffic();
   drawGPSData();
   drawNavRadio(fgGetNode("/instrumentation/nav[0]", false));
@@ -995,6 +996,20 @@ void MapWidget::drawNavaids()
   } // of navaids || fixes are drawn test
 }
 
+void MapWidget::drawPOIs()
+{
+  FGPositioned::TypeFilter f(FGPositioned::CITY);
+  FGPositioned::List poi = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &f);
+
+    glLineWidth(1.0);
+    for (unsigned int i=0; i<poi.size(); ++i) {
+      FGPositioned::Type ty = poi[i]->type();
+      if (ty == FGPositioned::CITY) {
+        drawCities((FGNavRecord*) poi[i].get());
+      }
+    } // of navaid iteration
+}
+
 void MapWidget::drawNDB(bool tuned, FGNavRecord* ndb)
 {
   SGVec2d pos = project(ndb->geod());
@@ -1147,6 +1162,31 @@ void MapWidget::drawTunedLocalizer(SGPropertyNode_ptr radio)
   if (loc->runway()) {
     drawILS(true, loc->runway());
   }
+}
+
+void MapWidget::drawCities(FGNavRecord* rec)
+{
+  SGVec2d pos = project(rec->geod());
+  glColor3f(1.0, 1.0, 1.0);
+
+  circleAt(pos, 4, 8);
+
+  if (validDataForKey(rec)) {
+    setAnchorForKey(rec, pos);
+    return;
+  }
+
+  char buffer[1024];
+        ::snprintf(buffer, 1024, "%s",
+                rec->name().c_str());
+
+  MapData* d = createDataForKey(rec);
+  d->setPriority(40);
+  d->setLabel(rec->ident());
+  d->setText(buffer);
+  d->setOffset(MapData::HALIGN_CENTER | MapData::VALIGN_BOTTOM, 10);
+  d->setAnchor(pos);
+
 }
 
 /*
