@@ -131,6 +131,7 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     {"country", COUNTRY},
     {"city", CITY},
     {"town", TOWN},
+    {"village", VILLAGE},
       
   // aliases
     {"gnd", FREQ_GROUND},
@@ -191,6 +192,7 @@ const char* FGPositioned::nameForType(Type aTy)
  case COUNTRY: return "country";
  case CITY: return "city";
  case TOWN: return "town";
+ case VILLAGE: return "village";
  default:
   return "unknown";
  }

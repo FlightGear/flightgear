@@ -85,6 +85,7 @@ public:
     COUNTRY,
     CITY,
     TOWN,
+    VILLAGE,
       
     LAST_TYPE
   } Type;

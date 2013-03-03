@@ -60,6 +60,7 @@
 #include "PositionedOctree.hxx"
 #include <Airports/apt_loader.hxx>
 #include <Navaids/airways.hxx>
+#include "poidb.hxx"
 #include <Airports/parking.hxx>
 #include <Airports/gnnode.hxx>
 
@@ -949,7 +950,7 @@ public:
   bool transactionAborted;
   sqlite3_stmt_ptr beginTransactionStmt, commitTransactionStmt, rollbackTransactionStmt;
   
-  SGPath aptDatPath, metarDatPath, navDatPath, fixDatPath,
+  SGPath aptDatPath, metarDatPath, navDatPath, fixDatPath, poiDatPath,
   carrierDatPath, airwayDatPath;
   
   sqlite3_stmt_ptr readPropertyQuery, writePropertyQuery,
@@ -1070,6 +1071,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
     case FGPositioned::COUNTRY:
     case FGPositioned::CITY:
     case FGPositioned::TOWN:
+    case FGPositioned::VILLAGE:
     {
         FGPositioned* wpt = new FGPositioned(rowid, ty, ident, pos);
       return wpt;
@@ -1145,6 +1147,9 @@ NavDataCache::NavDataCache()
 
   d->fixDatPath = SGPath(globals->get_fg_root());
   d->fixDatPath.append("Navaids/fix.dat.gz");
+
+  d->poiDatPath = SGPath(globals->get_fg_root());
+  d->poiDatPath.append("Navaids/poi.dat.gz");
   
   d->carrierDatPath = SGPath(globals->get_fg_root());
   d->carrierDatPath.append("Navaids/carrier_nav.dat.gz");
@@ -1176,6 +1181,7 @@ bool NavDataCache::isRebuildRequired()
       isCachedFileModified(d->metarDatPath) ||
       isCachedFileModified(d->navDatPath) ||
       isCachedFileModified(d->fixDatPath) ||
+      isCachedFileModified(d->poiDatPath) ||
       isCachedFileModified(d->airwayDatPath))
   {
     SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: main cache rebuild required");
@@ -1237,6 +1243,11 @@ void NavDataCache::doRebuild()
     navDBInit(d->navDatPath);
     stampCacheFile(d->navDatPath);
     SG_LOG(SG_NAVCACHE, SG_INFO, "nav.dat load took:" << st.elapsedMSec());
+
+    st.stamp();
+    poiDBInit(d->poiDatPath);
+    stampCacheFile(d->poiDatPath);
+    SG_LOG(SG_NAVCACHE, SG_INFO, "poi.dat load took:" << st.elapsedMSec());
     
     loadCarrierNav(d->carrierDatPath);
     stampCacheFile(d->carrierDatPath);

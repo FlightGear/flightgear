@@ -7,6 +7,7 @@ set(SOURCES
 	navdb.cxx
 	navlist.cxx
 	navrecord.cxx
+	poidb.cxx
 	positioned.cxx
 	procedure.cxx
 	route.cxx
@@ -25,6 +26,7 @@ set(HEADERS
 	navdb.hxx
 	navlist.hxx
 	navrecord.hxx
+	poidb.hxx
 	positioned.hxx
 	procedure.hxx
 	route.hxx
