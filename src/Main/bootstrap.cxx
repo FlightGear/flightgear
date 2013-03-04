@@ -252,11 +252,14 @@ int main ( int argc, char **argv )
         if (std::strlen(t.getOrigin()) != 0)
             cerr << " (received from " << t.getOrigin() << ')' << endl;
 
+    } catch (const std::exception &e ) {
+        cerr << "Fatal error (std::exception): " << e.what() << endl;
+
     } catch (const std::string &s) {
-        cerr << "Fatal error: " << s << endl;
+        cerr << "Fatal error (std::string): " << s << endl;
 
     } catch (const char *s) {
-        cerr << "Fatal error: " << s << endl;
+        cerr << "Fatal error (const char*): " << s << endl;
 
     } catch (...) {
         cerr << "Unknown exception in the main loop. Aborting..." << endl;
