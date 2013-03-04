@@ -21,9 +21,7 @@
 #ifndef _TRAFFIC_CONTROL_HXX_
 #define _TRAFFIC_CONTROL_HXX_
 
-#include <string>
-#include <vector>
-#include <list>
+#include <Airports/airports_fwd.hxx>
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -37,14 +35,25 @@
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
+class FGAIAircraft;
+typedef std::vector<FGAIAircraft*> AircraftVec;
+typedef std::vector<FGAIAircraft*>::iterator AircraftVecIterator;
+
+class FGAIFlightPlan;
+typedef std::vector<FGAIFlightPlan*>           FlightPlanVec;
+typedef std::vector<FGAIFlightPlan*>::iterator FlightPlanVecIterator;
+typedef std::map<std::string, FlightPlanVec>   FlightPlanVecMap;
+
+class FGTrafficRecord;
+typedef std::list<FGTrafficRecord> TrafficVector;
+typedef std::list<FGTrafficRecord>::iterator TrafficVectorIterator;
+
+class ActiveRunway;
+typedef std::vector<ActiveRunway> ActiveRunwayVec;
+typedef std::vector<ActiveRunway>::iterator ActiveRunwayVecIterator;
+
 typedef std::vector<int> intVec;
 typedef std::vector<int>::iterator intVecIterator;
-
-
-class FGAIFlightPlan;  // forward reference
-class FGGroundNetwork; // forward reference
-class FGAIAircraft;    // forward reference
-class FGAirportDynamics;
 
 /**************************************************************************************
  * class FGATCInstruction
@@ -306,15 +315,6 @@ public:
     int getPriority() const { return priority; };
 };
 
-typedef std::list<FGTrafficRecord> TrafficVector;
-typedef std::list<FGTrafficRecord>::iterator TrafficVectorIterator;
-
-typedef std::vector<time_t> TimeVector;
-typedef std::vector<time_t>::iterator TimeVectorIterator;
-
-typedef std::vector<FGAIAircraft*> AircraftVec;
-typedef std::vector<FGAIAircraft*>::iterator AircraftVecIterator;
-
 /***********************************************************************
  * Active runway, a utility class to keep track of which aircraft has
  * clearance for a given runway.
@@ -367,9 +367,6 @@ public:
     }
     void printDepartureCue();
 };
-
-typedef std::vector<ActiveRunway> ActiveRunwayVec;
-typedef std::vector<ActiveRunway>::iterator ActiveRunwayVecIterator;
 
 /**
  * class FGATCController

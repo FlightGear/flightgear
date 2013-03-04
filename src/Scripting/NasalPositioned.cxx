@@ -462,7 +462,7 @@ static const char* wayptGhostGetMember(naContext c, void* g, naRef field, naRef*
 
 static RouteRestriction routeRestrictionFromString(const char* s)
 {
-  string u(s);
+  std::string u(s);
   boost::to_lower(u);
   if (u == "computed") return RESTRICT_COMPUTED;
   if (u == "at") return RESTRICT_AT;
@@ -728,7 +728,7 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
         
     ArrivalDeparture* ad = static_cast<ArrivalDeparture*>(proc);
     *out = naNewVector(c);
-    BOOST_FOREACH(string id, ad->transitionIdents()) {
+    BOOST_FOREACH(std::string id, ad->transitionIdents()) {
       naVec_append(*out, stringToNasal(c, id));
     }
   } else {
@@ -1112,7 +1112,7 @@ static naRef f_findAirportsByICAO(naContext c, naRef me, int argc, naRef* args)
   }
   
   int argOffset = 0;
-  string prefix(naStr_data(args[argOffset++]));
+  std::string prefix(naStr_data(args[argOffset++]));
   AirportInfoFilter filter; // defaults to airports only
   if (argOffset < argc) {
     filter.fromArg(args[argOffset++]);
@@ -1211,26 +1211,6 @@ static naRef f_airport_runwaysWithoutReciprocals(naContext c, naRef me, int argc
     naVec_append(runways, ghostForRunway(c, apt->getRunwayByIdent(rwy->ident())));
   }
   return runways;
-}
-
-static naRef f_airport_taxiway(naContext c, naRef me, int argc, naRef* args)
-{
-  FGAirport* apt = airportGhost(me);
-  if (!apt) {
-    naRuntimeError(c, "airport.taxiway called on non-airport object");
-  }
-  
-  if ((argc < 1) || !naIsString(args[0])) {
-    naRuntimeError(c, "airport.taxiway expects a taxiway ident argument");
-  }
-  
-  naRef taxiways = naNewVector(c);
-  
-  for (unsigned int i = 0; i < apt->numTaxiways(); i++) {
-    naVec_append(taxiways, ghostForTaxiway(c, apt->getTaxiwayByIndex(i)));
-  }
-  
-  return taxiways;  
 }
 
 static naRef f_airport_sids(naContext c, naRef me, int argc, naRef* args)
@@ -1417,7 +1397,7 @@ static naRef f_airport_getSid(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "airport.getSid passed invalid argument");
   }
   
-  string ident = naStr_data(args[0]);
+  std::string ident = naStr_data(args[0]);
   return ghostForProcedure(c, apt->findSIDWithIdent(ident));
 }
 
@@ -1432,7 +1412,7 @@ static naRef f_airport_getStar(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "airport.getStar passed invalid argument");
   }
   
-  string ident = naStr_data(args[0]);
+  std::string ident = naStr_data(args[0]);
   return ghostForProcedure(c, apt->findSTARWithIdent(ident));
 }
 
@@ -1447,7 +1427,7 @@ static naRef f_airport_getApproach(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "airport.getIAP passed invalid argument");
   }
   
-  string ident = naStr_data(args[0]);
+  std::string ident = naStr_data(args[0]);
   return ghostForProcedure(c, apt->findApproachWithIdent(ident));
 }
 
@@ -1621,7 +1601,7 @@ static naRef f_findNavaidsByIdent(naContext c, naRef me, int argc, naRef* args)
   }
   
   FGPositioned::Type type = FGPositioned::INVALID;
-  string ident = naStr_data(args[argOffset++]);
+  std::string ident = naStr_data(args[argOffset++]);
   if (argOffset < argc) {
     type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
   }
@@ -1647,7 +1627,7 @@ static naRef f_findFixesByIdent(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "findFixesByIdent expectes ident string as arg %d", argOffset);
   }
   
-  string ident(naStr_data(args[argOffset]));
+  std::string ident(naStr_data(args[argOffset]));
   naRef r = naNewVector(c);
   
   FGPositioned::TypeFilter filter(FGPositioned::FIX);
@@ -1954,7 +1934,7 @@ static naRef f_createWP(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "createWP: no identifier supplied");
   }
     
-  string ident = naStr_data(args[argOffset++]);
+  std::string ident = naStr_data(args[argOffset++]);
   WayptRef wpt = new BasicWaypt(pos, ident, NULL);
   
 // set waypt flags - approach, departure, pseudo, etc
@@ -2430,7 +2410,6 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, airportPrototype, "runway", naNewFunc(c, naNewCCode(c, f_airport_runway)));
     hashset(c, airportPrototype, "runwaysWithoutReciprocals", naNewFunc(c, naNewCCode(c, f_airport_runwaysWithoutReciprocals)));
     hashset(c, airportPrototype, "helipad", naNewFunc(c, naNewCCode(c, f_airport_runway)));
-    hashset(c, airportPrototype, "taxiway", naNewFunc(c, naNewCCode(c, f_airport_taxiway)));
     hashset(c, airportPrototype, "tower", naNewFunc(c, naNewCCode(c, f_airport_tower)));
     hashset(c, airportPrototype, "comms", naNewFunc(c, naNewCCode(c, f_airport_comms)));
     hashset(c, airportPrototype, "sids", naNewFunc(c, naNewCCode(c, f_airport_sids)));

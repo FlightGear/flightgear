@@ -27,25 +27,10 @@
 #include <simgear/compiler.h>
 
 #include <string>
-#include <vector>
-#include <list>
-#include <map>
 
 #include "gnnode.hxx"
 #include "parking.hxx"
 #include <ATC/trafficcontrol.hxx>
-
-
-class Block;
-class FGRunway;
-class FGTaxiSegment; // forward reference
-class FGAIFlightPlan; // forward reference
-class FGAirport;      // forward reference
-
-typedef std::vector<FGTaxiSegment*>  FGTaxiSegmentVector;
-typedef FGTaxiSegmentVector::iterator FGTaxiSegmentVectorIterator;
-
-typedef std::map<int, FGTaxiNode_ptr> IndexTaxiNodeMap;
 
 class Block
 {
@@ -62,9 +47,6 @@ public:
     time_t getTimeStamp() { return touch; };
     bool operator< (const Block &other) const { return blocktime < other.blocktime; };
 };
-
-typedef std::vector<Block> BlockList;
-typedef BlockList::iterator BlockListIterator;
 
 /***************************************************************************************
  * class FGTaxiSegment
@@ -119,14 +101,6 @@ public:
     };
 };
 
-
-
-
-typedef std::vector<int> intVec;
-typedef std::vector<int>::iterator intVecIterator;
-
-
-
 /***************************************************************************************
  * class FGTaxiRoute
  **************************************************************************************/
@@ -180,9 +154,6 @@ public:
         return nodes.end() - currNode;
     };
 };
-
-typedef std::vector<FGTaxiRoute> TaxiRouteVector;
-typedef std::vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
 
 /**************************************************************************************
  * class FGGroundNetWork

@@ -164,16 +164,16 @@ naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
   );
 }
 
-naRef f_eventGetTarget(naContext c, sc::Event& event)
+naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
 {
-  return NasalElement::create(c, event.getTarget().lock());
+  return NasalElement::create(c, el.lock());
 }
 
 naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
 {
   NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)
-    .member("target", &f_eventGetTarget)
+    .member("target", &sc::Event::getTarget)
     .method("stopPropagation", &sc::Event::stopPropagation);
   NasalMouseEvent::init("canvas.MouseEvent")
     .bases<NasalEvent>()

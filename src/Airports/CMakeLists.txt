@@ -18,6 +18,7 @@ set(SOURCES
 	)
 
 set(HEADERS
+    airports_fwd.hxx
 	apt_loader.hxx
 	dynamicloader.hxx
 	dynamics.hxx

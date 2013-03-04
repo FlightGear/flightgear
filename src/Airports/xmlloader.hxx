@@ -16,9 +16,7 @@
 #ifndef _XML_LOADER_HXX_
 #define _XML_LOADER_HXX_
 
-class FGAirportDynamics;
-class FGRunwayPreference;
-class FGSidStar;
+#include "airports_fwd.hxx"
 
 class XMLVisitor; // ffrom easyxml.hxx
 

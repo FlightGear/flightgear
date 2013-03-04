@@ -29,8 +29,8 @@ private:
     int mRangeNM;
     int mFreqKhz;
     PositionedID mAirport;
-}; 
-    
+};
+
 } // of namespace flightgear
 
 #endif // of FG_ATC_COMM_STATION_HXX

@@ -24,23 +24,18 @@
 #ifndef _RUNWAYPREFS_HXX_
 #define _RUNWAYPREFS_HXX_
 
-#include <time.h>
-#include <vector>
-#include <string>
+#include "airports_fwd.hxx"
 
 #include <simgear/compiler.h>
+#include <time.h>
 
-using std::vector;
-using std::string;
+typedef std::vector<time_t> timeVec;
+typedef std::vector<time_t>::const_iterator timeVecConstIterator;
 
-typedef vector<time_t> timeVec;
-typedef vector<time_t>::const_iterator timeVecConstIterator;
+typedef std::vector<std::string> stringVec;
+typedef std::vector<std::string>::iterator stringVecIterator;
+typedef std::vector<std::string>::const_iterator stringVecConstIterator;
 
-typedef vector<string> stringVec;
-typedef vector<string>::iterator stringVecIterator;
-typedef vector<string>::const_iterator stringVecConstIterator;
-
-class FGAirport;
 
 /***************************************************************************/
 class ScheduleTime {
@@ -54,12 +49,12 @@ public:
   ScheduleTime() : tailWind(0), crssWind(0) {};
   ScheduleTime(const ScheduleTime &other);
   ScheduleTime &operator= (const ScheduleTime &other);
-  string getName(time_t dayStart);
+  std::string getName(time_t dayStart);
 
   void clear();
   void addStartTime(time_t time)     { start.push_back(time);            };
   void addEndTime  (time_t time)     { end.  push_back(time);            };
-  void addScheduleName(const string& sched) { scheduleNames.push_back(sched);   };
+  void addScheduleName(const std::string& sched) { scheduleNames.push_back(sched);   };
   void setTailWind(double wnd)  { tailWind = wnd;                        };
   void setCrossWind(double wnd) { tailWind = wnd;                        };
 
@@ -73,32 +68,27 @@ public:
 class RunwayList
 {
 private:
-  string type;
+  std::string type;
   stringVec preferredRunways;
 public:
   RunwayList() {};
   RunwayList(const RunwayList &other);
   RunwayList& operator= (const RunwayList &other);
 
-  void set(const string&, const string&);
+  void set(const std::string&, const std::string&);
   void clear();
 
-  string getType() { return type; };
+  std::string getType() { return type; };
   stringVec *getRwyList() { return &preferredRunways;    };
-  string getRwyList(int j) { return preferredRunways[j]; };
+  std::string getRwyList(int j) { return preferredRunways[j]; };
 };
-
-typedef vector<RunwayList> RunwayListVec;
-typedef vector<RunwayList>::iterator RunwayListVectorIterator;
-typedef vector<RunwayList>::const_iterator RunwayListVecConstIterator;
-
 
 /*****************************************************************************/
 
 class RunwayGroup
 {
 private:
-  string name;
+  std::string name;
   RunwayListVec rwyList;
   int active;
   //stringVec runwayNames;
@@ -110,21 +100,17 @@ public:
   RunwayGroup(const RunwayGroup &other);
   RunwayGroup &operator= (const RunwayGroup &other);
 
-  void setName(const string& nm) { name = nm;                };
+  void setName(const std::string& nm) { name = nm;                };
   void add(const RunwayList& list) { rwyList.push_back(list);};
   void setActive(const FGAirport* airport, double windSpeed, double windHeading, double maxTail, double maxCross, stringVec *curr);
 
   int getNrActiveRunways() { return nrActive;};
-  void getActive(int i, string& name, string& type);
+  void getActive(int i, std::string& name, std::string& type);
 
-  string getName() { return name; };
+  std::string getName() { return name; };
   void clear() { rwyList.clear(); }; 
   //void add(string, string);
 };
-
-typedef vector<RunwayGroup> PreferenceList;
-typedef vector<RunwayGroup>::iterator PreferenceListIterator;
-typedef vector<RunwayGroup>::const_iterator PreferenceListConstIterator;
 
 /******************************************************************************/
 
@@ -148,9 +134,9 @@ public:
   FGRunwayPreference & operator= (const FGRunwayPreference &other);
 
   ScheduleTime *getSchedule(const char *trafficType);
-  RunwayGroup *getGroup(const string& groupName);
+  RunwayGroup *getGroup(const std::string& groupName);
 
-  string getId();
+  std::string getId();
 
   bool available() { return initialized; };
   void setInitialized(bool state) { initialized = state; };

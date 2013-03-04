@@ -394,7 +394,7 @@ public:
   {}
   
   double score;
-  FGTaxiNode_ptr previousNode;
+  FGTaxiNodeRef previousNode;
 };
 
 FGTaxiRoute FGGroundNetwork::findShortestRoute(PositionedID start, PositionedID end,

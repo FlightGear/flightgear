@@ -23,9 +23,8 @@
 #include <set>
 
 #include <simgear/math/sg_types.hxx> // for string_list
-
+#include <Airports/airports_fwd.hxx>
 #include <Navaids/route.hxx>
-#include <Airports/runways.hxx>
 
 typedef SGSharedPtr<FGRunway> FGRunwayRef;
 

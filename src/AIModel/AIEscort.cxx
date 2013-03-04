@@ -196,7 +196,7 @@ bool FGAIEscort::getGroundElev(SGGeod inpos) {
         _ht_agl_ft = inpos.getElevationFt() - height_m * SG_METER_TO_FEET;
 
         if (material) {
-            const vector<string>& names = material->get_names();
+            const std::vector<std::string>& names = material->get_names();
 
             _solid = material->get_solid();
 

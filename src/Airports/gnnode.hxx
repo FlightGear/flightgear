@@ -41,8 +41,4 @@ public:
   bool getIsOnRunway() const { return isOnRunway; };
 };
 
-typedef SGSharedPtr<FGTaxiNode> FGTaxiNode_ptr;
-typedef std::vector<FGTaxiNode_ptr> FGTaxiNodeVector;
-typedef FGTaxiNodeVector::iterator FGTaxiNodeVectorIterator;
-
 #endif

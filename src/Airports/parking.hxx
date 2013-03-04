@@ -33,7 +33,6 @@
 #include <simgear/sg_inlines.h>
 
 #include <string>
-#include <vector>
 #include <memory> // for std::auto_ptr
 
 #include "gnnode.hxx"
@@ -78,9 +77,5 @@ public:
   bool operator< (const FGParking &other) const {
     return radius < other.radius; };
 };
-
-typedef std::vector<FGParking*> FGParkingVec;
-typedef FGParkingVec::iterator FGParkingVecIterator;
-typedef FGParkingVec::const_iterator FGParkingVecConstIterator;
 
 #endif

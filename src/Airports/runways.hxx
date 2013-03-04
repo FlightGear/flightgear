@@ -26,18 +26,9 @@
 
 #include <simgear/compiler.h>
 
-#include <Airports/runwaybase.hxx>
-
-// forward decls
-class FGAirport;
-class FGNavRecord;
-class SGPropertyNode;
-
-namespace flightgear {
-  class SID;
-  class STAR;
-  class Approach;
-}
+#include <Navaids/procedure.hxx>
+#include "runwaybase.hxx"
+#include "airports_fwd.hxx"
 
 class FGRunway : public FGRunwayBase
 {
@@ -113,15 +104,18 @@ public:
   /**
    * Get SIDs (DPs) associated with this runway
    */
-  std::vector<flightgear::SID*> getSIDs() const;
+  flightgear::SIDList getSIDs() const;
   
   /**
    * Get STARs associared with this runway
    */ 
-  std::vector<flightgear::STAR*> getSTARs() const;
+  flightgear::STARList getSTARs() const;
   
   
-  std::vector<flightgear::Approach*> getApproaches() const;
+  flightgear::ApproachList getApproaches
+  (
+    flightgear::ProcedureType type = flightgear::PROCEDURE_INVALID
+  ) const;
   
 };
 

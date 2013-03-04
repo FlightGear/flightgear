@@ -130,12 +130,12 @@ void FGRunway::setReciprocalRunway(PositionedID other)
 
 FGAirport* FGRunway::airport() const
 {
-  return (FGAirport*) flightgear::NavDataCache::instance()->loadById(_airport);
+  return loadById<FGAirport>(_airport);
 }
 
 FGRunway* FGRunway::reciprocalRunway() const
 {
-  return (FGRunway*) flightgear::NavDataCache::instance()->loadById(_reciprocal);
+  return loadById<FGRunway>(_reciprocal);
 }
 
 FGNavRecord* FGRunway::ILS() const
@@ -144,7 +144,7 @@ FGNavRecord* FGRunway::ILS() const
     return NULL;
   }
   
-  return (FGNavRecord*) flightgear::NavDataCache::instance()->loadById(_ils);
+  return loadById<FGNavRecord>(_ils);
 }
 
 FGNavRecord* FGRunway::glideslope() const
@@ -158,10 +158,10 @@ FGNavRecord* FGRunway::glideslope() const
   return (FGNavRecord*) cache->loadById(gsId);
 }
 
-std::vector<flightgear::SID*> FGRunway::getSIDs() const
+flightgear::SIDList FGRunway::getSIDs() const
 {
   FGAirport* apt = airport();
-  std::vector<flightgear::SID*> result;
+  flightgear::SIDList result;
   for (unsigned int i=0; i<apt->numSIDs(); ++i) {
     flightgear::SID* s = apt->getSIDByIndex(i);
     if (s->isForRunway(this)) {
@@ -172,10 +172,10 @@ std::vector<flightgear::SID*> FGRunway::getSIDs() const
   return result;
 }
 
-std::vector<flightgear::STAR*> FGRunway::getSTARs() const
+flightgear::STARList FGRunway::getSTARs() const
 {
   FGAirport* apt = airport();
-  std::vector<flightgear::STAR*> result;
+  flightgear::STARList result;
   for (unsigned int i=0; i<apt->numSTARs(); ++i) {
     flightgear::STAR* s = apt->getSTARByIndex(i);
     if (s->isForRunway(this)) {
@@ -186,13 +186,17 @@ std::vector<flightgear::STAR*> FGRunway::getSTARs() const
   return result;
 }
 
-std::vector<flightgear::Approach*> FGRunway::getApproaches() const
+flightgear::ApproachList
+FGRunway::getApproaches(flightgear::ProcedureType type) const
 {
   FGAirport* apt = airport();
-  std::vector<flightgear::Approach*> result;
-  for (unsigned int i=0; i<apt->numApproaches(); ++i) {
+  flightgear::ApproachList result;
+  for (unsigned int i=0; i<apt->numApproaches(); ++i)
+  {
     flightgear::Approach* s = apt->getApproachByIndex(i);
-    if (s->runway() == this) {
+    if(    s->runway() == this
+        && (type == flightgear::PROCEDURE_INVALID || type == s->type()) )
+    {
       result.push_back(s);
     }
   } // of approaches at the airport iteration

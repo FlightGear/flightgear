@@ -25,13 +25,10 @@
 #include <set>
 
 #include <ATC/trafficcontrol.hxx>
+#include "airports_fwd.hxx"
 #include "parking.hxx"
 #include "groundnetwork.hxx"
 #include "runwayprefs.hxx"
-
-// forward decls
-class FGAirport;
-class FGEnvironment;
 
 class ParkingAssignment
 {
@@ -125,7 +122,10 @@ public:
     FGAirport* parent() const
     { return _ap; }
   
-    void getActiveRunway(const string& trafficType, int action, string& runway, double heading);
+    void getActiveRunway( const std::string& trafficType,
+                          int action,
+                          std::string& runway,
+                          double heading );
     
     /**
      * retrieve an available parking by GateID, or -1 if no suitable

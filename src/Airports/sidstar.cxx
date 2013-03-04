@@ -28,10 +28,8 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 
-
-
+#include <AIModel/AIFlightPlan.hxx>
 #include <Airports/airport.hxx>
-
 
 #include "sidstar.hxx"
 

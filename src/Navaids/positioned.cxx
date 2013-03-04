@@ -326,6 +326,12 @@ void FGPositioned::modifyPosition(const SGGeod& newPos)
   const_cast<SGVec3d&>(mCart) = SGVec3d::fromGeod(newPos);
 }
 
+//------------------------------------------------------------------------------
+FGPositioned* FGPositioned::loadByIdImpl(PositionedID id)
+{
+  return flightgear::NavDataCache::instance()->loadById(id);
+}
+
 FGPositioned::TypeFilter::TypeFilter(Type aTy) :
   mMinType(aTy),
   mMaxType(aTy)

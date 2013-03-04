@@ -711,10 +711,10 @@ void FGATIS::genFacilityInfo(void)
 
     // Note that at this point, multi-word facility names
     // will sometimes contain hyphens, not spaces.
-    vector<string> name_words;
+    std::vector<std::string> name_words;
     boost::split(name_words, name, boost::is_any_of(" -"));
 
-    for (vector<string>::const_iterator wordp = name_words.begin();
+    for( std::vector<string>::const_iterator wordp = name_words.begin();
                   wordp != name_words.end(); wordp++) {
       string word(*wordp);
     // Remap some abbreviations that occur in apt.dat, to

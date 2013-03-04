@@ -21,6 +21,7 @@
 #ifndef FG_POSITIONED_HXX
 #define FG_POSITIONED_HXX
 
+#include <cassert>
 #include <string>
 #include <vector>
 #include <stdint.h>
@@ -128,6 +129,9 @@ public:
   double elevation() const
   { return mPosition.getElevationFt(); }
   
+  double elevationM() const
+  { return mPosition.getElevationM(); }
+
   /**
    * Predicate class to support custom filtering of FGPositioned queries
    * Default implementation of this passes any FGPositioned instance.
@@ -243,7 +247,33 @@ protected:
   FGPositioned(PositionedID aGuid, Type ty, const std::string& aIdent, const SGGeod& aPos);
     
   void modifyPosition(const SGGeod& newPos);
-  
+
+  static FGPositioned* loadByIdImpl(PositionedID id);
+
+  template<class T>
+  static T* loadById(PositionedID id)
+  {
+    return static_cast<T*>( loadByIdImpl(id) );
+  }
+
+  template<class T>
+  static T* loadById(const PositionedIDVec& id_vec, size_t index)
+  {
+    assert(index >= 0 && index < id_vec.size());
+    return loadById<T>(id_vec[index]);
+  }
+
+  template<class T>
+  static std::vector<T*> loadAllById(const PositionedIDVec& id_vec)
+  {
+    std::vector<T*> vec(id_vec.size());
+
+    for(size_t i = 0; i < id_vec.size(); ++i)
+      vec[i] = loadById<T>(id_vec[i]);
+
+    return vec;
+  }
+
   const PositionedID mGuid;
   const SGGeod mPosition;
   const SGVec3d mCart;

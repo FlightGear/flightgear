@@ -90,7 +90,7 @@ ScheduleTime & ScheduleTime::operator=(const ScheduleTime & other)
     return *this;
 }
 
-string ScheduleTime::getName(time_t dayStart)
+std::string ScheduleTime::getName(time_t dayStart)
 {
     if ((start.size() != end.size())
         || (start.size() != scheduleNames.size())) {
@@ -109,7 +109,7 @@ string ScheduleTime::getName(time_t dayStart)
         //couldn't find one so return 0;
         //cerr << "Returning 0 " << endl;
     }
-    return string("");
+    return std::string("");
 }
 
 /******************************************************************************
@@ -136,15 +136,15 @@ RunwayList & RunwayList::operator=(const RunwayList & other)
     return *this;
 }
 
-void RunwayList::set(const string & tp, const string & lst)
+void RunwayList::set(const std::string & tp, const std::string & lst)
 {
     //weekday          = atoi(timeCopy.substr(0,1).c_str());
     //    timeOffsetInDays = weekday - currTimeDate->getGmt()->tm_wday;
     //    timeCopy = timeCopy.substr(2,timeCopy.length());
     type = tp;
-    string rwys = lst;
-    string rwy;
-    while (rwys.find(",") != string::npos) {
+    std::string rwys = lst;
+    std::string rwy;
+    while (rwys.find(",") != std::string::npos) {
         rwy = rwys.substr(0, rwys.find(",", 0));
         //cerr << "adding runway [" << rwy << "] to the list " << endl;
         preferredRunways.push_back(rwy);
@@ -206,7 +206,7 @@ void RunwayGroup::setActive(const FGAirport * airport,
     double hdgDiff;
     double crossWind;
     double tailWind;
-    string name;
+    std::string name;
     //stringVec names;
     int bestMatch = 0, bestChoice = 0;
 
@@ -229,7 +229,7 @@ void RunwayGroup::setActive(const FGAirport * airport,
             validSelection = true;
             
             for (int j = 0; j < activeRwys; j++) {
-                string ident(rwyList[j].getRwyList(i));
+                std::string ident(rwyList[j].getRwyList(i));
                 if (!airport->hasRunwayWithIdent(ident)) {
                     SG_LOG(SG_GENERAL, SG_WARN,
                            "no such runway:" << ident << " at " <<
@@ -290,9 +290,9 @@ void RunwayGroup::setActive(const FGAirport * airport,
         choice[0] = 0;
         choice[1] = 0;
         for (int i = activeRwys - 1; i; i--) {
-            if (rwyList[i].getType() == string("landing"))
+            if (rwyList[i].getType() == std::string("landing"))
                 choice[0] = i;
-            if (rwyList[i].getType() == string("takeoff"))
+            if (rwyList[i].getType() == std::string("takeoff"))
                 choice[1] = i;
         }
         //cerr << "Choosing " << choice[0] << " for landing and " << choice[1] << "for takeoff" << endl;
@@ -327,7 +327,7 @@ void RunwayGroup::setActive(const FGAirport * airport,
     nrActive = 0;
 }
 
-void RunwayGroup::getActive(int i, string & name, string & type)
+void RunwayGroup::getActive(int i, std::string & name, std::string & type)
 {
     if (i == -1) {
         return;
@@ -394,7 +394,7 @@ ScheduleTime *FGRunwayPreference::getSchedule(const char *trafficType)
     return 0;
 }
 
-RunwayGroup *FGRunwayPreference::getGroup(const string & groupName)
+RunwayGroup *FGRunwayPreference::getGroup(const std::string & groupName)
 {
     PreferenceListIterator i = preferences.begin();
     if (preferences.begin() == preferences.end())
@@ -407,7 +407,7 @@ RunwayGroup *FGRunwayPreference::getGroup(const string & groupName)
         return 0;
 }
 
-string FGRunwayPreference::getId()
+std::string FGRunwayPreference::getId()
 {
     return _ap->getId();
 };

@@ -140,8 +140,8 @@ class FGAISchedule
 
 };
 
-typedef vector<FGAISchedule*>           ScheduleVector;
-typedef vector<FGAISchedule*>::iterator ScheduleVectorIterator;
+typedef std::vector<FGAISchedule*>           ScheduleVector;
+typedef std::vector<FGAISchedule*>::iterator ScheduleVectorIterator;
 
 bool compareSchedules(FGAISchedule*a, FGAISchedule*b);
 

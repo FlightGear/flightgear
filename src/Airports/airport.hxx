@@ -34,33 +34,10 @@
 #include <map>
 
 #include <Navaids/positioned.hxx>
-#include <Airports/runways.hxx>
+#include <Navaids/procedure.hxx>
 
-// forward decls
-class FGAirportDynamics;
-class FGRunway;
-class FGHelipad;
-class FGTaxiway;
-class FGPavement;
-class SGPropertyNode;
-class FGAirport;
-
-namespace flightgear {
-  class SID;
-  class STAR;
-  class Approach;
-  class Waypt;
-  class CommStation;
-
-  typedef SGSharedPtr<Waypt> WayptRef;
-  typedef std::vector<WayptRef> WayptVec;
-  
-  typedef std::vector<CommStation*> CommStationList;
-  typedef std::map<std::string, FGAirport*> AirportCache;
-}
-
-typedef std::vector<FGRunway*> FGRunwayList;
-
+#include "airports_fwd.hxx"
+#include "runways.hxx"
 
 /***************************************************************************************
  *
@@ -108,6 +85,8 @@ public:
     unsigned int numHelipads() const;
     FGRunway* getRunwayByIndex(unsigned int aIndex) const;
     FGHelipad* getHelipadByIndex(unsigned int aIndex) const;
+    FGRunwayMap getRunwayMap() const;
+    FGHelipadMap getHelipadMap() const;
 
     bool hasRunwayWithIdent(const std::string& aIdent) const;
     bool hasHelipadWithIdent(const std::string& aIdent) const;
@@ -145,9 +124,11 @@ public:
 
     unsigned int numTaxiways() const;
     FGTaxiway* getTaxiwayByIndex(unsigned int aIndex) const;
+    FGTaxiwayList getTaxiways() const;
 
     unsigned int numPavements() const;
     FGPavement* getPavementByIndex(unsigned int aIndex) const;
+    FGPavementList getPavements() const;
     
     class AirportFilter : public Filter
      {
@@ -203,14 +184,20 @@ public:
       unsigned int numSIDs() const;
       flightgear::SID* getSIDByIndex(unsigned int aIndex) const;
       flightgear::SID* findSIDWithIdent(const std::string& aIdent) const;
+      flightgear::SIDList getSIDs() const;
       
       unsigned int numSTARs() const;
       flightgear::STAR* getSTARByIndex(unsigned int aIndex) const;
       flightgear::STAR* findSTARWithIdent(const std::string& aIdent) const;
+      flightgear::STARList getSTARs() const;
       
       unsigned int numApproaches() const;
       flightgear::Approach* getApproachByIndex(unsigned int aIndex) const;
       flightgear::Approach* findApproachWithIdent(const std::string& aIdent) const;
+      flightgear::ApproachList getApproaches
+      (
+        flightgear::ProcedureType type = flightgear::PROCEDURE_INVALID
+      ) const;
   
      /**
       * Syntactic wrapper around FGPositioned::findClosest - find the closest

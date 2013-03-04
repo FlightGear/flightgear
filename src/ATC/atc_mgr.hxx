@@ -41,8 +41,8 @@
 //class FGATCController;
 
 
-typedef vector<FGATCController*> AtcVec;
-typedef vector<FGATCController*>::iterator AtcVecIterator;
+typedef std::vector<FGATCController*> AtcVec;
+typedef std::vector<FGATCController*>::iterator AtcVecIterator;
 
 class FGATCManager : public SGSubsystem
 {
