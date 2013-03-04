@@ -20,12 +20,9 @@
 #ifndef FG_WAYPOINT_HXX
 #define FG_WAYPOINT_HXX
 
+#include <Airports/airports_fwd.hxx>
 #include <Navaids/route.hxx>
 #include <Navaids/positioned.hxx>
-
-class FGAirport;
-typedef SGSharedPtr<FGAirport> FGAirportRef;
-class FGRunway;
 
 namespace flightgear
 {

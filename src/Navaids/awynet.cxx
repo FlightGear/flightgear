@@ -163,10 +163,10 @@ void FGAirwayNetwork::addAirway(const FGAirway &seg)
 //}
 
 /*
-  void FGAirwayNetwork::addNodes(FGParkingVec *parkings)
+  void FGAirwayNetwork::addNodes(FGParkingList *parkings)
   {
   FGTaxiNode n;
-  FGParkingVecIterator i = parkings->begin();
+  FGParkingList::iterator i = parkings->begin();
   while (i != parkings->end())
   {
   n.setIndex(i->getIndex());

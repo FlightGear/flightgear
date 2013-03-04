@@ -28,14 +28,6 @@
 #include <Navaids/positioned.hxx>
 #include <Airports/dynamics.hxx>
 
-// forward decls
-class FGTaxiRoute;
-class FGRunway;
-class FGAIAircraft;
-class FGAirport;
-
-typedef SGSharedPtr<FGAirport> FGAirportRef;
-
 class FGAIWaypoint {
 private:
    std::string name;

@@ -26,8 +26,6 @@
 #include <Airports/airports_fwd.hxx>
 #include <Navaids/route.hxx>
 
-typedef SGSharedPtr<FGRunway> FGRunwayRef;
-
 namespace flightgear {
 
 // forward decls

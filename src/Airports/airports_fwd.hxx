@@ -59,12 +59,17 @@ namespace flightgear {
   typedef std::map<std::string, FGAirport*> AirportCache;
 }
 
+typedef SGSharedPtr<FGAirport> FGAirportRef;
+typedef SGSharedPtr<FGRunway> FGRunwayRef;
+typedef SGSharedPtr<FGParking> FGParkingRef;
+
 typedef std::vector<FGRunway*> FGRunwayList;
 typedef std::map<std::string, FGRunway*> FGRunwayMap;
 typedef std::map<std::string, FGHelipad*> FGHelipadMap;
 
 typedef std::vector<FGTaxiway*> FGTaxiwayList;
 typedef std::vector<FGPavement*> FGPavementList;
+typedef std::vector<FGParking*> FGParkingList;
 
 typedef std::vector<FGTaxiSegment*>  FGTaxiSegmentVector;
 typedef FGTaxiSegmentVector::iterator FGTaxiSegmentVectorIterator;
@@ -82,10 +87,6 @@ typedef std::vector<time_t>::iterator TimeVectorIterator;
 
 typedef std::vector<FGTaxiRoute> TaxiRouteVector;
 typedef std::vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
-
-typedef std::vector<FGParking*> FGParkingVec;
-typedef FGParkingVec::iterator FGParkingVecIterator;
-typedef FGParkingVec::const_iterator FGParkingVecConstIterator;
 
 typedef std::vector<RunwayList> RunwayListVec;
 typedef std::vector<RunwayList>::iterator RunwayListVectorIterator;

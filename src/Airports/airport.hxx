@@ -51,6 +51,8 @@ public:
 
     const std::string& getId() const { return ident(); }
     const std::string& getName() const { return _name; }
+    std::string toString() const { return "an airport " + ident(); }
+
     double getLongitude() const { return longitude(); }
     // Returns degrees
     double getLatitude()  const { return latitude(); }

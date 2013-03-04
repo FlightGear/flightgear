@@ -72,6 +72,9 @@ public:
   std::string getCodes    () const { return airlineCodes;};
   std::string getName     () const { return parkingName; };
 
+  // TODO do parkings have different name and ident?
+  virtual const std::string& name() const { return parkingName; }
+
   int getPushBackPoint () { return pushBackPoint; };
 
   bool operator< (const FGParking &other) const {

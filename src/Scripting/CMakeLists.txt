@@ -4,6 +4,7 @@ set(SOURCES
 	NasalSys.cxx
 	nasal-props.cxx
     NasalPositioned.cxx
+    NasalPositioned_cppbind.cxx
     NasalCanvas.cxx
     NasalClipboard.cxx
     NasalCondition.cxx

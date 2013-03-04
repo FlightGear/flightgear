@@ -27,8 +27,6 @@
 #include <Navaids/route.hxx>
 #include <Airports/airport.hxx>
 
-typedef SGSharedPtr<FGAirport> FGAirportRef;
-    
 namespace flightgear
 {
 

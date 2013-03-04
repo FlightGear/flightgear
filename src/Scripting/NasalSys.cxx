@@ -665,6 +665,7 @@ void FGNasalSys::init()
     initNasalString(_globals, _string, _context, _gcHash);
 
     initNasalPositioned(_globals, _context, _gcHash);
+    initNasalPositioned_cppbind(_globals, _context, _gcHash);
     NasalClipboard::init(this);
     initNasalCanvas(_globals, _context, _gcHash);
     initNasalCondition(_globals, _context, _gcHash);
