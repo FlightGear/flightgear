@@ -44,7 +44,7 @@
  **************************************************************************************/
 class FGAirport : public FGPositioned
 {
-public:
+  public:
     FGAirport(PositionedID aGuid, const std::string& id, const SGGeod& location,
             const std::string& name, bool has_metar, Type aType);
     ~FGAirport();
@@ -133,23 +133,23 @@ public:
     FGPavementList getPavements() const;
     
     class AirportFilter : public Filter
-     {
-     public:
-       virtual bool pass(FGPositioned* aPos) const { 
-         return passAirport(static_cast<FGAirport*>(aPos));
-       }
-       
-       virtual Type minType() const {
-         return AIRPORT;
-       }
-       
-       virtual Type maxType() const {
-         return AIRPORT;
-       }
-       
-       virtual bool passAirport(FGAirport* aApt) const {
-         return true;
-       }
+    {
+      public:
+        virtual bool pass(FGPositioned* aPos) const {
+          return passAirport(static_cast<FGAirport*>(aPos));
+        }
+
+        virtual Type minType() const {
+          return AIRPORT;
+        }
+
+        virtual Type maxType() const {
+          return AIRPORT;
+        }
+
+        virtual bool passAirport(FGAirport* aApt) const {
+          return true;
+        }
      };
      
      /**
@@ -174,6 +174,30 @@ public:
        double mMinLengthFt;
      };
      
+     /**
+      * Filter which passes specified port type and in case of airport checks
+      * if a runway larger the /sim/navdb/min-runway-lenght-ft exists.
+      */
+     class TypeRunwayFilter:
+       public AirportFilter
+     {
+       public:
+         TypeRunwayFilter();
+
+         /**
+          * Construct from string containing type (airport, seaport or heliport)
+          */
+         bool fromTypeString(const std::string& type);
+
+         virtual FGPositioned::Type minType() const { return _type; }
+         virtual FGPositioned::Type maxType() const { return _type; }
+         virtual bool pass(FGPositioned* pos) const;
+
+       protected:
+         FGPositioned::Type _type;
+         double _min_runway_length_ft;
+     };
+
      
      void setProcedures(const std::vector<flightgear::SID*>& aSids,
       const std::vector<flightgear::STAR*>& aStars,

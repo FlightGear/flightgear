@@ -408,12 +408,44 @@ FGAirport::HardSurfaceFilter::HardSurfaceFilter(double minLengthFt) :
     mMinLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 0.0);
   }
 }
-      
+
 bool FGAirport::HardSurfaceFilter::passAirport(FGAirport* aApt) const
 {
   return aApt->hasHardRunwayOfLengthFt(mMinLengthFt);
 }
 
+//------------------------------------------------------------------------------
+FGAirport::TypeRunwayFilter::TypeRunwayFilter():
+  _type(FGPositioned::AIRPORT),
+  _min_runway_length_ft( fgGetDouble("/sim/navdb/min-runway-length-ft", 0.0) )
+{
+
+}
+
+//------------------------------------------------------------------------------
+bool FGAirport::TypeRunwayFilter::fromTypeString(const std::string& type)
+{
+  if(      type == "heliport" ) _type = FGPositioned::HELIPORT;
+  else if( type == "seaport"  ) _type = FGPositioned::SEAPORT;
+  else if( type == "airport"  ) _type = FGPositioned::AIRPORT;
+  else                          return false;
+
+  return true;
+}
+
+//------------------------------------------------------------------------------
+bool FGAirport::TypeRunwayFilter::pass(FGPositioned* pos) const
+{
+  FGAirport* apt = static_cast<FGAirport*>(pos);
+  if(  (apt->type() == FGPositioned::AIRPORT)
+    && !apt->hasHardRunwayOfLengthFt(_min_runway_length_ft)
+    )
+    return false;
+
+  return true;
+}
+
+//------------------------------------------------------------------------------
 FGAirport* FGAirport::findByIdent(const std::string& aIdent)
 {
   AirportCache::iterator it = airportCache.find(aIdent);

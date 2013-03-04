@@ -983,49 +983,6 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 }
 
 
-class AirportInfoFilter : public FGAirport::AirportFilter
-{
-public:
-  AirportInfoFilter() : type(FGPositioned::AIRPORT) {
-    minRunwayLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 0.0);
-  }
-  
-  bool fromArg(naRef arg)
-  {
-    const char *s = naStr_data(arg);
-    if(!strcmp(s, "airport")) type = FGPositioned::AIRPORT;
-    else if(!strcmp(s, "seaport")) type = FGPositioned::SEAPORT;
-    else if(!strcmp(s, "heliport")) type = FGPositioned::HELIPORT;
-    else
-      return false;
-    
-    return true;
-  }
-  
-  virtual FGPositioned::Type minType() const {
-    return type;
-  }
-  
-  virtual FGPositioned::Type maxType() const {
-    return type;
-  }
-    
-  virtual bool pass(FGPositioned* aPos) const
-  {
-    FGAirport* apt = (FGAirport*) aPos;
-    if ((apt->type() == FGPositioned::AIRPORT) && 
-        !apt->hasHardRunwayOfLengthFt(minRunwayLengthFt)) 
-    {
-      return false;
-    }
-
-    return true;
-  }
-  
-  FGPositioned::Type type;
-  double minRunwayLengthFt;
-};
-
 // Returns data hash for particular or nearest airport of a <type>, or nil
 // on error.
 //
@@ -1046,12 +1003,12 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
   
   double maxRange = 10000.0; // expose this? or pick a smaller value?
   
-  AirportInfoFilter filter; // defaults to airports only
+  FGAirport::TypeRunwayFilter filter; // defaults to airports only
   
   if(argc == 0) {
     // fall through and use AIRPORT
   } else if(argc == 1 && naIsString(args[0])) {
-    if (filter.fromArg(args[0])) {
+    if (filter.fromTypeString(naStr_data(args[0]))) {
       // done!
     } else {
       // user provided an <id>, hopefully
@@ -1086,10 +1043,10 @@ static naRef f_findAirportsWithinRange(naContext c, naRef me, int argc, naRef* a
     naRuntimeError(c, "findAirportsWithinRange expected range (in nm) as arg %d", argOffset);
   }
   
-  AirportInfoFilter filter; // defaults to airports only
+  FGAirport::TypeRunwayFilter filter; // defaults to airports only
   double rangeNm = args[argOffset++].num;
   if (argOffset < argc) {
-    filter.fromArg(args[argOffset++]);
+    filter.fromTypeString(naStr_data(args[argOffset++]));
   }
   
   naRef r = naNewVector(c);
@@ -1113,9 +1070,9 @@ static naRef f_findAirportsByICAO(naContext c, naRef me, int argc, naRef* args)
   
   int argOffset = 0;
   std::string prefix(naStr_data(args[argOffset++]));
-  AirportInfoFilter filter; // defaults to airports only
+  FGAirport::TypeRunwayFilter filter; // defaults to airports only
   if (argOffset < argc) {
-    filter.fromArg(args[argOffset++]);
+    filter.fromTypeString(naStr_data(args[argOffset++]));
   }
   
   naRef r = naNewVector(c);

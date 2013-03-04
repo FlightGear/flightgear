@@ -39,6 +39,7 @@
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
 #include <ATC/CommStation.hxx>
+#include <Main/globals.hxx>
 #include <Navaids/NavDataCache.hxx>
 
 typedef nasal::Ghost<FGPositionedRef> NasalPositioned;
@@ -252,7 +253,7 @@ f_airport_parking(FGAirport& apt, const nasal::CallContext& ctx)
 
 //------------------------------------------------------------------------------
 // Returns Nasal ghost for particular or nearest airport of a <type>, or nil
-// on error. (Currently only airportinfo(<id>) is implemented)
+// on error.
 //
 // airportinfo(<id>);                   e.g. "KSFO"
 // airportinfo(<type>);                 type := ("airport"|"seaport"|"heliport")
@@ -263,7 +264,34 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
   nasal::CallContext ctx(c, argc, args);
   // TODO think of something comfortable to overload functions or use variable
   //      number/types of arguments.
-  return ctx.to_nasal(FGAirport::findByIdent( ctx.requireArg<std::string>(0) ));
+
+  std::string ident = "airport";
+  SGGeod pos = globals->get_aircraft_position();
+
+  if( ctx.argc == 1 )
+  {
+    ident = ctx.requireArg<std::string>(0);
+  }
+  else if( ctx.argc >= 2 )
+  {
+    // Why are lat/lon swapped?
+    pos = SGGeod::fromDeg( ctx.requireArg<double>(1),
+                           ctx.requireArg<double>(0) );
+
+    if( ctx.argc >= 3 )
+      ident = ctx.requireArg<std::string>(2);
+
+    if( ctx.argc > 3 )
+      naRuntimeError(ctx.c, "airportinfo() with invalid function arguments");
+  }
+
+  FGAirport::TypeRunwayFilter filter;
+  if( !filter.fromTypeString(ident) )
+    // user provided an <id>, hopefully
+    return ctx.to_nasal(FGAirport::findByIdent(ident));
+
+  double maxRange = 10000.0; // expose this? or pick a smaller value?
+  return ctx.to_nasal( FGAirport::findClosest(pos, maxRange, &filter) );
 }
 
 //------------------------------------------------------------------------------
