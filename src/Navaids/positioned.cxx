@@ -360,7 +360,9 @@ FGPositioned::TypeFilter::pass(FGPositioned* aPos) const
     std::vector<Type>::const_iterator it = types.begin(),
         end = types.end();
     for (; it != end; ++it) {
-        return aPos->type() == *it;
+        if (aPos->type() == *it) {
+            return true;
+        }
     }
     
     return false;

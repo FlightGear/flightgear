@@ -68,7 +68,9 @@ private:
   void drawVOR(bool tuned, FGNavRecord* nav);
   void drawFix(FGFix* fix);
 
+  void drawCountries(FGNavRecord* rec);
   void drawCities(FGNavRecord* rec);
+  void drawTowns(FGNavRecord* rec);
   
   void drawTraffic();
   void drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, double hdg);

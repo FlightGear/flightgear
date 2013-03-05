@@ -375,6 +375,7 @@ int MapData::_fontDescender = 0;
 
 const int MAX_ZOOM = 12;
 const int SHOW_DETAIL_ZOOM = 8;
+const int SHOW_DETAIL2_ZOOM = 5;
 const int CURSOR_PAN_STEP = 32;
 
 MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
@@ -998,14 +999,20 @@ void MapWidget::drawNavaids()
 
 void MapWidget::drawPOIs()
 {
-  FGPositioned::TypeFilter f(FGPositioned::CITY);
+  FGPositioned::TypeFilter f(FGPositioned::COUNTRY);
+  f.addType(FGPositioned::CITY);
+  f.addType(FGPositioned::TOWN);
   FGPositioned::List poi = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &f);
 
     glLineWidth(1.0);
     for (unsigned int i=0; i<poi.size(); ++i) {
       FGPositioned::Type ty = poi[i]->type();
-      if (ty == FGPositioned::CITY) {
+      if (ty == FGPositioned::COUNTRY) {
+        drawCountries((FGNavRecord*) poi[i].get());
+      } else if (ty == FGPositioned::CITY) {
         drawCities((FGNavRecord*) poi[i].get());
+      } else if (ty == FGPositioned::TOWN) {
+        drawTowns((FGNavRecord*) poi[i].get());
       }
     } // of navaid iteration
 }
@@ -1164,12 +1171,74 @@ void MapWidget::drawTunedLocalizer(SGPropertyNode_ptr radio)
   }
 }
 
+void MapWidget::drawCountries(FGNavRecord* rec)
+{
+  if (_cachedZoom < 9) {
+    return; // hide labels beyond a certain zoom level
+  }
+
+  SGVec2d pos = project(rec->geod());
+  glColor3f(1.0, 1.0, 0.0);
+
+  circleAt(pos, 4, 10);
+
+  if (validDataForKey(rec)) {
+    setAnchorForKey(rec, pos);
+    return;
+  }
+
+  char buffer[1024];
+        ::snprintf(buffer, 1024, "%s",
+                rec->name().c_str());
+
+  MapData* d = createDataForKey(rec);
+  d->setPriority(200);
+  d->setLabel(rec->ident());
+  d->setText(buffer);
+  d->setOffset(MapData::HALIGN_CENTER | MapData::VALIGN_BOTTOM, 10);
+  d->setAnchor(pos);
+
+}
+
 void MapWidget::drawCities(FGNavRecord* rec)
 {
+  if (_cachedZoom > SHOW_DETAIL_ZOOM) {
+    return; // hide labels beyond a certain zoom level
+  }
+
   SGVec2d pos = project(rec->geod());
-  glColor3f(1.0, 1.0, 1.0);
+  glColor3f(0.0, 1.0, 0.0);
 
   circleAt(pos, 4, 8);
+
+  if (validDataForKey(rec)) {
+    setAnchorForKey(rec, pos);
+    return;
+  }
+
+  char buffer[1024];
+        ::snprintf(buffer, 1024, "%s",
+                rec->name().c_str());
+
+  MapData* d = createDataForKey(rec);
+  d->setPriority(40);
+  d->setLabel(rec->ident());
+  d->setText(buffer);
+  d->setOffset(MapData::HALIGN_CENTER | MapData::VALIGN_BOTTOM, 10);
+  d->setAnchor(pos);
+
+}
+
+void MapWidget::drawTowns(FGNavRecord* rec)
+{
+  if (_cachedZoom > SHOW_DETAIL2_ZOOM) {
+    return; // hide labels beyond a certain zoom level
+  }
+
+  SGVec2d pos = project(rec->geod());
+  glColor3f(0.2, 1.0, 0.0);
+
+  circleAt(pos, 4, 5);
 
   if (validDataForKey(rec)) {
     setAnchorForKey(rec, pos);
@@ -1442,7 +1511,7 @@ void MapWidget::drawHelipad(FGHelipad* hp)
 {
   SGVec2d pos = project(hp->geod());
   glLineWidth(1.0);
-  glColor3f(1.0, 1.0, 1.0);
+  glColor3f(1.0, 0.0, 1.0);
   circleAt(pos, 16, 5.0);
 
   if (validDataForKey(hp)) {
