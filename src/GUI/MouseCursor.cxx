@@ -102,7 +102,6 @@ private:
             return;
         }
         
-        std::cout << "actually setting cursor" << std::endl;
         BOOST_FOREACH(osgViewer::GraphicsWindow* gw, mWindows) {
             gw->setCursor(cur);
         }
