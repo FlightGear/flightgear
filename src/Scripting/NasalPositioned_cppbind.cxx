@@ -224,7 +224,7 @@ static naRef f_airport_approaches(FGAirport& apt, const nasal::CallContext& ctx)
 
 //------------------------------------------------------------------------------
 static FGParkingList
-f_airport_parking(FGAirport& apt, const nasal::CallContext& ctx)
+f_airport_parking(FGAirport& apt, nasal::CallContext ctx)
 {
   std::string type = ctx.getArg<std::string>(0);
   bool only_available = ctx.getArg<bool>(1);
@@ -251,6 +251,69 @@ f_airport_parking(FGAirport& apt, const nasal::CallContext& ctx)
   return ret;
 }
 
+/**
+ * Extract a SGGeod from a nasal function argument list.
+ *
+ * <lat>, <lon>
+ * {"lat": <lat-deg>, "lon": <lon-deg>}
+ * geo.Coord.new() (aka. {"_lat": <lat-rad>, "_lon": <lon-rad>})
+ */
+static bool extractGeod(nasal::CallContext& ctx, SGGeod& result)
+{
+  if( !ctx.argc )
+    return false;
+
+  if( ctx.isGhost(0) )
+  {
+    FGPositioned* pos =
+      NasalPositioned::fromNasal(ctx.c, ctx.requireArg<naRef>(0));
+
+    if( pos )
+    {
+      result = pos->geod();
+      ctx.popFront();
+      return true;
+    }
+  }
+  else if( ctx.isHash(0) )
+  {
+    nasal::Hash pos_hash = ctx.requireArg<nasal::Hash>(0);
+
+    // check for manual latitude / longitude names
+    naRef lat = pos_hash.get("lat"),
+          lon = pos_hash.get("lon");
+    if( naIsNum(lat) && naIsNum(lon) )
+    {
+      result = SGGeod::fromDeg( ctx.from_nasal<double>(lon),
+                                ctx.from_nasal<double>(lat) );
+      ctx.popFront();
+      return true;
+    }
+
+    // geo.Coord uses _lat/_lon in radians
+    // TODO should we check if its really a geo.Coord?
+    lat = pos_hash.get("_lat");
+    lon = pos_hash.get("_lon");
+    if( naIsNum(lat) && naIsNum(lon) )
+    {
+      result = SGGeod::fromRad( ctx.from_nasal<double>(lon),
+                                ctx.from_nasal<double>(lat) );
+      ctx.popFront();
+      return true;
+    }
+  }
+  else if( ctx.isNumeric(0) && ctx.isNumeric(1) )
+  {
+    // lat, lon
+    result = SGGeod::fromDeg( ctx.requireArg<double>(1),
+                              ctx.requireArg<double>(0) );
+    ctx.popFront(2);
+    return true;
+  }
+
+  return false;
+}
+
 //------------------------------------------------------------------------------
 // Returns Nasal ghost for particular or nearest airport of a <type>, or nil
 // on error.
@@ -262,28 +325,16 @@ f_airport_parking(FGAirport& apt, const nasal::CallContext& ctx)
 static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 {
   nasal::CallContext ctx(c, argc, args);
-  // TODO think of something comfortable to overload functions or use variable
-  //      number/types of arguments.
 
-  std::string ident = "airport";
-  SGGeod pos = globals->get_aircraft_position();
+  SGGeod pos;
+  if( !extractGeod(ctx, pos) )
+    pos = globals->get_aircraft_position();
 
-  if( ctx.argc == 1 )
-  {
-    ident = ctx.requireArg<std::string>(0);
-  }
-  else if( ctx.argc >= 2 )
-  {
-    // Why are lat/lon swapped?
-    pos = SGGeod::fromDeg( ctx.requireArg<double>(1),
-                           ctx.requireArg<double>(0) );
+  if( ctx.argc > 1 )
+    naRuntimeError(ctx.c, "airportinfo() with invalid function arguments");
 
-    if( ctx.argc >= 3 )
-      ident = ctx.requireArg<std::string>(2);
-
-    if( ctx.argc > 3 )
-      naRuntimeError(ctx.c, "airportinfo() with invalid function arguments");
-  }
+  // optional type/ident
+  std::string ident = ctx.getArg<std::string>(0, "airport");
 
   FGAirport::TypeRunwayFilter filter;
   if( !filter.fromTypeString(ident) )
