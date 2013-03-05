@@ -144,7 +144,9 @@ public:
         cursorTimeoutNode(fgGetNode("/sim/mouse/cursor-timeout-sec", true ) ),
         rightButtonModeCycleNode(fgGetNode("/sim/mouse/right-button-mode-cycle-enabled", true)),
         tooltipShowDelayNode( fgGetNode("/sim/mouse/tooltip-delay-msec", true) ),
-        clickTriggersTooltipNode( fgGetNode("/sim/mouse/click-shows-tooltip", true) )
+        clickTriggersTooltipNode( fgGetNode("/sim/mouse/click-shows-tooltip", true) ),
+        mouseXNode(fgGetNode("/devices/status/mice/mouse/x", true)),
+        mouseYNode(fgGetNode("/devices/status/mice/mouse/y", true))
     {
         tooltipTimeoutDone = false;
     }
@@ -157,7 +159,31 @@ public:
       fgWarpMouse(m.x, m.y);
       haveWarped = true;
     }
-    
+  
+    void constrainMouse(int x, int y)
+    {
+        int new_x=x,new_y=y;
+        int xsize = xSizeNode ? xSizeNode->getIntValue() : 800;
+        int ysize = ySizeNode ? ySizeNode->getIntValue() : 600;
+        
+        bool need_warp = false;
+        if (x <= (xsize * .25) || x >= (xsize * .75)) {
+          new_x = int(xsize * .5);
+          need_warp = true;
+        }
+
+        if (y <= (ysize * .25) || y >= (ysize * .75)) {
+          new_y = int(ysize * .5);
+          need_warp = true;
+        }
+
+        if (need_warp)
+        {
+          fgWarpMouse(new_x, new_y);
+          haveWarped = true;
+        }
+    }
+
     void doHoverPick(const osg::Vec2d& windowPos)
     {
         std::vector<SGSceneryPick> pickList;
@@ -212,6 +238,7 @@ public:
     SGPropertyNode_ptr rightButtonModeCycleNode;
     SGPropertyNode_ptr tooltipShowDelayNode;
     SGPropertyNode_ptr clickTriggersTooltipNode;
+    SGPropertyNode_ptr mouseXNode, mouseYNode;
 };
 
 
@@ -447,35 +474,17 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   }
 }
 
-void FGMouseInput::doMouseMotion (int x, int y, const osgGA::GUIEventAdapter* ea)
+void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
 {
-  int modifiers = fgGetKeyModifiers();
-
-  int xsize = d->xSizeNode ? d->xSizeNode->getIntValue() : 800;
-  int ysize = d->ySizeNode ? d->ySizeNode->getIntValue() : 600;
-
-  mouse &m = d->mice[0];
-
-  if (m.current_mode < 0 || m.current_mode >= m.nModes) {
-      m.x = x;
-      m.y = y;
-      return;
-  }
-
   if (!d->activePickCallbacks[0].empty()) {
-    SG_LOG(SG_GENERAL, SG_INFO, "mouse-motion, have active pick callback");
+    //SG_LOG(SG_GENERAL, SG_INFO, "mouse-motion, have active pick callback");
     BOOST_FOREACH(SGPickCallback* cb, d->activePickCallbacks[0]) {
       cb->mouseMoved(ea);
     }
-    
-    m.x = x;
-    m.y = y;
     return;
   }
   
-  m.timeSinceLastMove.stamp();
-  FGMouseCursor::instance()->mouseMoved();
-
+  mouse &m = d->mice[0];
   int modeIndex = m.current_mode;
   // are we in spring-loaded look mode?
   if (!d->rightButtonModeCycleNode->getBoolValue()) {
@@ -489,71 +498,71 @@ void FGMouseInput::doMouseMotion (int x, int y, const osgGA::GUIEventAdapter* ea
     osg::Vec2d windowPos;
     flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
     d->doHoverPick(windowPos);
-    // mouse has moved, so we may need to issue tooltip-timeout command
-    // again
+    // mouse has moved, so we may need to issue tooltip-timeout command again
     d->tooltipTimeoutDone = false;
   }
-
+  
   mouse_mode &mode = m.modes[modeIndex];
-
-    // Pass on to PUI if requested, and return
-    // if PUI consumed the event.
+  
+  // Pass on to PUI if requested, and return
+  // if PUI consumed the event.
   if (mode.pass_through && puMouse(x, y)) {
+    return;
+  }
+
+  if (d->haveWarped)
+  {
+    // don't fire mouse-movement events at the first update after warping the mouse,
+    // just remember the new mouse position
+    d->haveWarped = false;
+  }
+  else
+  {
+    int modifiers = fgGetKeyModifiers();
+    int xsize = d->xSizeNode ? d->xSizeNode->getIntValue() : 800;
+    int ysize = d->ySizeNode ? d->ySizeNode->getIntValue() : 600;
+      
+    // OK, PUI didn't want the event,
+    // so we can play with it.
+    if (x != m.x) {
+      int delta = x - m.x;
+      d->xAccelNode->setIntValue( delta );
+      for (unsigned int i = 0; i < mode.x_bindings[modifiers].size(); i++)
+        mode.x_bindings[modifiers][i]->fire(double(delta), double(xsize));
+    }
+    if (y != m.y) {
+      int delta = y - m.y;
+      d->yAccelNode->setIntValue( -delta );
+      for (unsigned int i = 0; i < mode.y_bindings[modifiers].size(); i++)
+        mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
+    }
+  }
+  
+  // Constrain the mouse if requested
+  if (mode.constrained) {
+    d->constrainMouse(x, y);
+  }
+}
+
+void FGMouseInput::doMouseMotion (int x, int y, const osgGA::GUIEventAdapter* ea)
+{
+  mouse &m = d->mice[0];
+
+  if (m.current_mode < 0 || m.current_mode >= m.nModes) {
       m.x = x;
       m.y = y;
       return;
   }
-  
-  if (d->haveWarped)
-  {
-      // don't fire mouse-movement events at the first update after warping the mouse,
-      // just remember the new mouse position
-      d->haveWarped = false;
-  }
-  else
-  {
-      // OK, PUI didn't want the event,
-      // so we can play with it.
-      if (x != m.x) {
-        int delta = x - m.x;
-        d->xAccelNode->setIntValue( delta );
-        for (unsigned int i = 0; i < mode.x_bindings[modifiers].size(); i++)
-          mode.x_bindings[modifiers][i]->fire(double(delta), double(xsize));
-      }
-      if (y != m.y) {
-        int delta = y - m.y;
-        d->yAccelNode->setIntValue( -delta );
-        for (unsigned int i = 0; i < mode.y_bindings[modifiers].size(); i++)
-          mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
-      }
-  }
-                                // Constrain the mouse if requested
-  if (mode.constrained) {
-    int new_x=x,new_y=y;
+
+  m.timeSinceLastMove.stamp();
+  FGMouseCursor::instance()->mouseMoved();
+
+  processMotion(x, y, ea);
     
-    bool need_warp = false;
-    if (x <= (xsize * .25) || x >= (xsize * .75)) {
-      new_x = int(xsize * .5);
-      need_warp = true;
-    }
-
-    if (y <= (ysize * .25) || y >= (ysize * .75)) {
-      new_y = int(ysize * .5);
-      need_warp = true;
-    }
-
-    if (need_warp)
-    {
-      fgWarpMouse(new_x, new_y);
-      d->haveWarped = true;
-    }
-  }
-
-  if (m.x != x)
-      fgSetInt("/devices/status/mice/mouse/x", m.x = x);
-
-  if (m.y != y)
-      fgSetInt("/devices/status/mice/mouse/y", m.y = y);
+  m.x = x;
+  m.y = y;
+  d->mouseXNode->setIntValue(x);
+  d->mouseYNode->setIntValue(y);
 }
 
 

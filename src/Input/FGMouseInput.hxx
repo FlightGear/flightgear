@@ -49,6 +49,8 @@ public:
     void doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea);
     void doMouseMotion (int x, int y, const osgGA::GUIEventAdapter*);
 private:
+  void processMotion(int x, int y, const osgGA::GUIEventAdapter* ea);
+    
   class FGMouseInputPrivate;
   std::auto_ptr<FGMouseInputPrivate> d;
   
