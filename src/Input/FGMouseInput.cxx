@@ -179,7 +179,7 @@ public:
             }
         } // of have valid pick
                 
-        if (priority < SGPickCallback::PriorityScenery) {
+        if (priority == SGPickCallback::PriorityPanel) {
             FGMouseCursor::instance()->setCursor(FGMouseCursor::CURSOR_HAND);
         } else {
             // restore normal cursor
