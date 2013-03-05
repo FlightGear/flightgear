@@ -103,28 +103,11 @@ void FGATCManager::init() {
     FGAirport *apt = FGAirport::findByIdent(airport); 
     if (apt && onGround) {// && !runway.empty()) {
         FGAirportDynamics* dcs = apt->getDynamics();
-        fp = new FGAIFlightPlan;
         ParkingAssignment pk(dcs->getParkingByName(parking));
       
         // No valid parking location, so either at the runway or at a random location.
-        if (!pk.isValid()) {
-            if (!runway.empty()) {
-                controller = apt->getDynamics()->getTowerController();
-                int stationFreq = apt->getDynamics()->getTowerFrequency(2);
-                if (stationFreq > 0)
-                {
-                    //cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
-                    fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
-                }
-                leg = 3;
-                string fltType = "ga";
-                fp->setRunway(runway);
-                fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
-                ai_ac.setTakeOffStatus(2);
-            } else {
-                // We're on the ground somewhere. Handle this case later.
-            }
-        } else {
+        if (pk.isValid()) {
+            fp = new FGAIFlightPlan;
             controller = apt->getDynamics()->getStartupController();
             int stationFreq = apt->getDynamics()->getGroundFrequency(1);
             if (stationFreq > 0)
@@ -141,18 +124,39 @@ void FGATCManager::init() {
             string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
             fp->setGate(pk);
             if (!(fp->createPushBack(&ai_ac,
-                               false, 
-                               apt, 
-                               aircraftRadius,
-                               fltType,
-                               aircraftType,
-                               airline))) {
+                                     false,
+                                     apt,
+                                     aircraftRadius,
+                                     fltType,
+                                     aircraftType,
+                                     airline))) {
                 controller = 0;
                 return;
             }
 
+            
+            
+        } else if (!runway.empty()) {
+            controller = apt->getDynamics()->getTowerController();
+            int stationFreq = apt->getDynamics()->getTowerFrequency(2);
+            if (stationFreq > 0)
+            {
+                //cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
+                fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+            }
+            fp = new FGAIFlightPlan;
+            leg = 3;
+            string fltType = "ga";
+            fp->setRunway(runway);
+            fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
+            ai_ac.setTakeOffStatus(2);
+        } else {
+                // We're on the ground somewhere. Handle this case later.
         }
-        fp->getLastWaypoint()->setName( fp->getLastWaypoint()->getName() + string("legend")); 
+        
+        if (fp) {
+            fp->getLastWaypoint()->setName( fp->getLastWaypoint()->getName() + string("legend"));
+        }
      } else {
         controller = 0;
      }

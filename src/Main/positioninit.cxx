@@ -151,11 +151,23 @@ static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
   
   const FGAirport* apt = fgFindAirportID(id);
   if (!apt) return false;
-  FGRunway* r = apt->findBestRunwayForHeading(tgt_hdg);
-  fgSetString("/sim/atc/runway", r->ident().c_str());
   
-  SGGeod startPos = r->pointOnCenterline(fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
-  fgApplyStartOffset(startPos, r->headingDeg(), tgt_hdg);
+  SGGeod startPos;
+  double heading = tgt_hdg;
+  if (apt->type() == FGPositioned::HELIPORT) {
+    if (apt->numHelipads() > 0) {
+      startPos = apt->getHelipadByIndex(0)->geod();
+    } else {
+      startPos = apt->geod();
+    }
+  } else {
+    FGRunway* r = apt->findBestRunwayForHeading(tgt_hdg);
+    fgSetString("/sim/atc/runway", r->ident().c_str());
+    startPos = r->pointOnCenterline(fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
+    heading = r->headingDeg();
+  }
+
+  fgApplyStartOffset(startPos, heading, tgt_hdg);
   return true;
 }
 
