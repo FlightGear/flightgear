@@ -304,7 +304,7 @@ void FGMouseInput::init()
       m.mouse_button_nodes[j]->setBoolValue(false);
     }
 
-                                // Read all the modes
+   // Read all the modes
     m.nModes = mouse_node->getIntValue("mode-count", 1);
     m.modes = new mouse_mode[m.nModes];
 
@@ -315,11 +315,11 @@ void FGMouseInput::init()
     // Read the mouse cursor for this mode
       m.modes[j].cursor = FGMouseCursor::cursorFromString(mode_node->getStringValue("cursor", "inherit"));
         
-                                // Read other properties for this mode
+      // Read other properties for this mode
       m.modes[j].constrained = mode_node->getBoolValue("constrained", false);
       m.modes[j].pass_through = mode_node->getBoolValue("pass-through", false);
 
-                                // Read the button bindings for this mode
+      // Read the button bindings for this mode
       m.modes[j].buttons = new FGButton[MAX_MOUSE_BUTTONS];
       std::ostringstream buf;
       for (k = 0; k < MAX_MOUSE_BUTTONS; k++) {
@@ -328,10 +328,18 @@ void FGMouseInput::init()
         m.modes[j].buttons[k].init( mode_node->getChild("button", k), buf.str(), module );
       }
 
-                                // Read the axis bindings for this mode
+      // Read the axis bindings for this mode
       read_bindings(mode_node->getChild("x-axis", 0, true), m.modes[j].x_bindings, KEYMOD_NONE, module );
       read_bindings(mode_node->getChild("y-axis", 0, true), m.modes[j].y_bindings, KEYMOD_NONE, module );
-    }
+      
+      if (mode_node->hasChild("x-axis-ctrl")) {
+        read_bindings(mode_node->getChild("x-axis-ctrl"), m.modes[j].x_bindings, KEYMOD_CTRL, module );
+      }
+      
+      if (mode_node->hasChild("y-axis-ctrl")) {
+        read_bindings(mode_node->getChild("y-axis-ctrl"), m.modes[j].y_bindings, KEYMOD_CTRL, module );
+      }
+    } // of modes iteration
   }
 
   fgRegisterMouseClickHandler(mouseClickHandler);
