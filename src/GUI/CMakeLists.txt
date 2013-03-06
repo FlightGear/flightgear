@@ -42,7 +42,14 @@ set(HEADERS
     PUIFileDialog.hxx
     MouseCursor.hxx
 	)
-    		
+
+if(WIN32)
+	message(STATUS "on Windows")
+
+	list(APPEND HEADERS WindowsMouseCursor.hxx)
+	list(APPEND SOURCES WindowsMouseCursor.cxx)
+endif()
+		
 if (APPLE)
     list(APPEND HEADERS FGCocoaMenuBar.hxx CocoaFileDialog.hxx CocoaMouseCursor.hxx)
     list(APPEND SOURCES FGCocoaMenuBar.mm CocoaFileDialog.mm CocoaMouseCursor.mm)

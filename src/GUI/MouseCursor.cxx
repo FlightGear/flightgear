@@ -37,6 +37,10 @@
 #include "CocoaMouseCursor.hxx"
 #endif
 
+#ifdef SG_WINDOWS
+#include "WindowsMouseCursor.hxx"
+#endif
+
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Viewer/renderer.hxx>
@@ -99,12 +103,14 @@ private:
     osgViewer::GraphicsWindow::MouseCursor translateCursor(Cursor aCursor)
     {
         switch (aCursor) {
+		case CURSOR_ARROW: return osgViewer::GraphicsWindow::RightArrowCursor;
         case CURSOR_HAND: return osgViewer::GraphicsWindow::HandCursor;
         case CURSOR_CROSSHAIR: return osgViewer::GraphicsWindow::CrosshairCursor;
         case CURSOR_IBEAM: return osgViewer::GraphicsWindow::TextCursor;
         case CURSOR_LEFT_RIGHT: return osgViewer::GraphicsWindow::LeftRightCursor;
                     
-        default: return osgViewer::GraphicsWindow::InheritCursor;   
+        default:
+			return osgViewer::GraphicsWindow::RightArrowCursor;  
         }
     }
     
@@ -151,8 +157,17 @@ FGMouseCursor* FGMouseCursor::instance()
             static_instance = new CocoaMouseCursor;
         }
     #endif
-        
-        // windows
+	#ifdef SG_WINDOWS
+	// set osgViewer cursor inherit, otherwise it will interefere
+		std::vector<osgViewer::GraphicsWindow*> gws;
+		globals->get_renderer()->getViewer()->getWindows(gws);
+		BOOST_FOREACH(osgViewer::GraphicsWindow* gw, gws) {
+            gw->setCursor(osgViewer::GraphicsWindow::InheritCursor);
+        }
+
+	// and create our real implementation
+		static_instance = new WindowsMouseCursor;
+	#endif
         
         // X11
                 
