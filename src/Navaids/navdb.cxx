@@ -74,10 +74,10 @@ static bool autoAlignLocalizers = false;
 static double autoAlignThreshold = 0.0;
 
 /**
- * Given a runway, and proposed localiser data (ident, positioned and heading),
- * precisely align the localiser with the actual runway heading, providing the
- * difference between the localiser course and runway heading is less than a
- * threshold. (To allow for localizers such as Kai-Tek requiring a turn on final).
+ * Given a runway, and proposed localizer data (ident, positioned and heading),
+ * precisely align the localizer with the actual runway heading, providing the
+ * difference between the localizer course and runway heading is less than a
+ * threshold. (To allow for localizers such as Kai-Tak requiring a turn on final).
  *
  * The positioned and heading argument are modified if changes are made.
  */

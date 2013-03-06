@@ -571,7 +571,7 @@ void FGNavRadio::updateReceiver(double dt)
     } // of false courses disabled
     
     const double VOR_FULL_ARC = 20.0; // VOR is -10 .. 10 degree swing
-    _cdiDeflection *= VOR_FULL_ARC / _localizerWidth; // increased localiser sensitivity
+    _cdiDeflection *= VOR_FULL_ARC / _localizerWidth; // increased localizer sensitivity
     
     if (backcourse_node->getBoolValue()) {
       _cdiDeflection = -_cdiDeflection;
@@ -582,7 +582,7 @@ void FGNavRadio::updateReceiver(double dt)
       r = ( r<0.0 ? -r-180.0 : -r+180.0 );
     }
     _cdiDeflection = r;
-  } // of non-localiser case
+  } // of non-localizer case
   
   SG_CLAMP_RANGE(_cdiDeflection, -10.0, 10.0 );
   _cdiDeflection *= signal_quality_norm;

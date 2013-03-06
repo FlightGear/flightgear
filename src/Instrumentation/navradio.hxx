@@ -24,7 +24,7 @@
 #ifndef _FG_NAVRADIO_HXX
 #define _FG_NAVRADIO_HXX
 
-
+#include <Navaids/navaids_fwd.hxx>
 #include <Main/fg_props.hxx>
 
 #include <simgear/compiler.h>
@@ -32,8 +32,6 @@
 #include <simgear/timing/timestamp.hxx>
 
 class SGSampleGroup;
-class FGNavRecord;
-typedef SGSharedPtr<FGNavRecord> FGNavRecordPtr;
 
 class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
 {
@@ -119,8 +117,8 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     int play_count;
     bool _nav_search;
     double _last_freq;
-    FGNavRecordPtr _navaid;
-    FGNavRecordPtr _gs;
+    FGNavRecordRef _navaid;
+    FGNavRecordRef _gs;
     
     double target_radial;
     double effective_range;
