@@ -113,7 +113,21 @@ void Leaf::loadChildren()
   
   childrenLoaded = true;
 }
-  
+    
+void Leaf::addPolyLine(PolyLineRef aLine)
+{
+    lines.push_back(aLine);
+}
+
+void Leaf::visitForLines(const SGVec3d& aPos, double aCutoff,
+                           PolyLineList& aLines,
+                           FindLinesDeque& aQ) const
+{
+    aLines.insert(aLines.end(), lines.begin(), lines.end());
+}
+    
+///////////////////////////////////////////////////////////////////////////////
+    
 Branch::Branch(const SGBoxd& aBox, int64_t aIdent) :
   Node(aBox, aIdent),
   childrenLoaded(false)
@@ -138,6 +152,24 @@ void Branch::visit(const SGVec3d& aPos, double aCutoff,
     
     aQ.push(Ordered<Node*>(children[i], d));
   } // of child iteration
+}
+    
+void Branch::visitForLines(const SGVec3d& aPos, double aCutoff,
+                           PolyLineList& aLines,
+                           FindLinesDeque& aQ) const
+{
+    for (unsigned int i=0; i<8; ++i) {
+        if (!children[i]) {
+            continue;
+        }
+        
+        double d = children[i]->distToNearest(aPos);
+        if (d > aCutoff) {
+            continue; // exceeded cutoff
+        }
+        
+        aQ.push_back(children[i]);
+    } // of child iteration
 }
 
 Node* Branch::childForPos(const SGVec3d& aCart) const

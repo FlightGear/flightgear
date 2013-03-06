@@ -17,6 +17,7 @@ set(SOURCES
     FlightPlan.cxx
     NavDataCache.cxx
     PositionedOctree.cxx
+    PolyLine.cxx
 	)
 
 set(HEADERS
@@ -36,6 +37,7 @@ set(HEADERS
     FlightPlan.hxx
     NavDataCache.hxx
     PositionedOctree.hxx
+    PolyLine.hxx
     )
 
 if (NOT SYSTEM_SQLITE)

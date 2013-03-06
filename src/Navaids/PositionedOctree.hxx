@@ -37,6 +37,7 @@
 
 #include <Navaids/positioned.hxx>
 #include <Navaids/NavDataCache.hxx>
+#include <Navaids/PolyLine.hxx>
 
 namespace flightgear
 {
@@ -112,6 +113,10 @@ namespace Octree
   typedef Ordered<FGPositioned*> OrderedPositioned;
   typedef std::vector<OrderedPositioned> FindNearestResults;
   
+  // for extracting lines, we don't care about distance ordering, since
+  // we're always grabbing all the lines in an area
+  typedef std::deque<Node*> FindLinesDeque;
+  
   extern Node* global_spatialOctree;
   
   class Leaf;
@@ -144,6 +149,10 @@ namespace Octree
                        FindNearestResults& aResults, FindNearestPQueue&) = 0;
     
     virtual Leaf* findLeafForPos(const SGVec3d& aPos) const = 0;
+      
+    virtual void visitForLines(const SGVec3d& aPos, double aCutoff,
+                         PolyLineList& aLines,
+                         FindLinesDeque& aQ) const = 0;
   protected:
     Node(const SGBoxd &aBox, int64_t aIdent) :
     _ident(aIdent),
@@ -170,12 +179,20 @@ namespace Octree
     }
     
     void insertChild(FGPositioned::Type ty, PositionedID id);
+      
+    void addPolyLine(PolyLineRef);
+    
+    virtual void visitForLines(const SGVec3d& aPos, double aCutoff,
+                               PolyLineList& aLines,
+                               FindLinesDeque& aQ) const;
   private:
     bool childrenLoaded;
     
     typedef std::multimap<FGPositioned::Type, PositionedID> ChildMap;
     ChildMap children;
-    
+      
+    PolyLineList lines;
+      
     void loadChildren();
   };
   
@@ -195,6 +212,10 @@ namespace Octree
     }
     
     int childMask() const;
+    
+    virtual void visitForLines(const SGVec3d& aPos, double aCutoff,
+                               PolyLineList& aLines,
+                               FindLinesDeque& aQ) const;
   private:
     Node* childForPos(const SGVec3d& aCart) const;
     Node* childAtIndex(int childIndex) const;
