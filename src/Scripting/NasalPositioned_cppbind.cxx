@@ -41,12 +41,15 @@
 #include <ATC/CommStation.hxx>
 #include <Main/globals.hxx>
 #include <Navaids/NavDataCache.hxx>
+#include <Navaids/navlist.hxx>
+#include <Navaids/navrecord.hxx>
 
 typedef nasal::Ghost<FGPositionedRef> NasalPositioned;
 typedef nasal::Ghost<FGRunwayRef> NasalRunway;
 typedef nasal::Ghost<FGParkingRef> NasalParking;
 typedef nasal::Ghost<FGAirportRef> NasalAirport;
 typedef nasal::Ghost<flightgear::CommStationRef> NasalCommStation;
+typedef nasal::Ghost<FGNavRecordRef> NasalNavRecord;
 
 //------------------------------------------------------------------------------
 naRef to_nasal_helper(naContext c, FGPositioned* positioned)
@@ -107,6 +110,18 @@ naRef to_nasal_helper(naContext c, const SGGeod& pos)
   hash.set("lon", pos.getLongitudeDeg());
   hash.set("elevation", pos.getElevationM());
   return hash.get_naRef();
+}
+
+//------------------------------------------------------------------------------
+static naRef f_navaid_course(naContext, FGNavRecord& nav)
+{
+  if( !(  nav.type() == FGPositioned::ILS
+       || nav.type() == FGPositioned::LOC
+       ) )
+    return naNil();
+
+  double radial = nav.get_multiuse();
+  return naNum(SGMiscd::normalizePeriodic(0.5, 360.5, radial));
 }
 
 //------------------------------------------------------------------------------
@@ -314,6 +329,18 @@ static bool extractGeod(nasal::CallContext& ctx, SGGeod& result)
   return false;
 }
 
+/**
+ * Extract position from ctx or return current aircraft position if not given.
+ */
+static SGGeod getPosition(nasal::CallContext& ctx)
+{
+  SGGeod pos;
+  if( !extractGeod(ctx, pos) )
+    pos = globals->get_aircraft_position();
+
+  return pos;
+}
+
 //------------------------------------------------------------------------------
 // Returns Nasal ghost for particular or nearest airport of a <type>, or nil
 // on error.
@@ -326,15 +353,15 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 {
   nasal::CallContext ctx(c, argc, args);
 
-  SGGeod pos;
-  if( !extractGeod(ctx, pos) )
-    pos = globals->get_aircraft_position();
+  SGGeod pos = getPosition(ctx);
 
   if( ctx.argc > 1 )
     naRuntimeError(ctx.c, "airportinfo() with invalid function arguments");
 
   // optional type/ident
-  std::string ident = ctx.getArg<std::string>(0, "airport");
+  std::string ident("airport");
+  if( ctx.isString(0) )
+    ident = ctx.requireArg<std::string>(0);
 
   FGAirport::TypeRunwayFilter filter;
   if( !filter.fromTypeString(ident) )
@@ -345,23 +372,110 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
   return ctx.to_nasal( FGAirport::findClosest(pos, maxRange, &filter) );
 }
 
+/**
+ * findAirportsWithinRange([<position>,] <range-nm> [, type])
+ */
+static naRef f_findAirportsWithinRange(naContext c, naRef me, int argc, naRef* args)
+{
+  nasal::CallContext ctx(c, argc, args);
+
+  SGGeod pos = getPosition(ctx);
+  double range_nm = ctx.requireArg<double>(0);
+
+  FGAirport::TypeRunwayFilter filter; // defaults to airports only
+  filter.fromTypeString( ctx.getArg<std::string>(1) );
+
+  FGPositioned::List apts =
+    FGPositioned::findWithinRange(pos, range_nm, &filter);
+  FGPositioned::sortByRange(apts, pos);
+
+  return ctx.to_nasal(apts);
+}
+
+/**
+ * findAirportsByICAO(<ident/prefix> [, type])
+ */
+static naRef f_findAirportsByICAO(naContext c, naRef me, int argc, naRef* args)
+{
+  nasal::CallContext ctx(c, argc, args);
+  std::string prefix = ctx.requireArg<std::string>(0);
+
+  FGAirport::TypeRunwayFilter filter; // defaults to airports only
+  filter.fromTypeString( ctx.getArg<std::string>(1) );
+
+  return ctx.to_nasal( FGPositioned::findAllWithIdent(prefix, &filter, false) );
+}
+
+// Returns vector of data hash for navaid of a <type>, nil on error
+// navaids sorted by ascending distance
+// navinfo([<lat>,<lon>],[<type>],[<id>])
+// lat/lon (numeric): use latitude/longitude instead of ac position
+// type:              ("fix"|"vor"|"ndb"|"ils"|"dme"|"tacan"|"any")
+// id:                (partial) id of the fix
+// examples:
+// navinfo("vor")     returns all vors
+// navinfo("HAM")     return all navaids who's name start with "HAM"
+// navinfo("vor", "HAM") return all vor who's name start with "HAM"
+//navinfo(34,48,"vor","HAM") return all vor who's name start with "HAM"
+//                           sorted by distance relative to lat=34, lon=48
+static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
+{
+  nasal::CallContext ctx(c, argc, args);
+
+  SGGeod pos = getPosition(ctx);
+  std::string id = ctx.getArg<std::string>(0);
+
+  FGNavList::TypeFilter filter;
+  if( filter.fromTypeString(id) )
+    id = ctx.getArg<std::string>(1);
+  else if( ctx.argc > 1 )
+    naRuntimeError(c, "navinfo() already got an ident");
+
+  return ctx.to_nasal( FGNavList::findByIdentAndFreq(pos, id, 0.0, &filter) );
+}
+
+//------------------------------------------------------------------------------
+static naRef f_findNavaidsWithinRange(naContext c, naRef me, int argc, naRef* args)
+{
+  nasal::CallContext ctx(c, argc, args);
+
+  SGGeod pos = getPosition(ctx);
+  double range_nm = ctx.requireArg<double>(0);
+
+  FGNavList::TypeFilter filter;
+  filter.fromTypeString(ctx.getArg<std::string>(0));
+
+  FGPositioned::List navs =
+    FGPositioned::findWithinRange(pos, range_nm, &filter);
+  FGPositioned::sortByRange(navs, pos);
+
+  return ctx.to_nasal(navs);
+}
+
 //------------------------------------------------------------------------------
 naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c, naRef gcSave)
 {
-  NasalPositioned::init("FGPositioned")
+  NasalPositioned::init("Positioned")
     .member("id", &FGPositioned::ident)
     .member("ident", &FGPositioned::ident) // TODO to we really need id and ident?
     .member("name", &FGPositioned::name)
+    .member("type", &FGPositioned::typeString)
     .member("lat", &FGPositioned::latitude)
     .member("lon", &FGPositioned::longitude)
     .member("elevation", &FGPositioned::elevationM);
-  NasalRunway::init("FGRunway")
+  NasalRunway::init("Runway")
     .bases<NasalPositioned>();
-  NasalParking::init("FGParking")
+  NasalParking::init("Parking")
     .bases<NasalPositioned>();
   NasalCommStation::init("CommStation")
     .bases<NasalPositioned>()
     .member("frequency", &flightgear::CommStation::freqMHz);
+  NasalNavRecord::init("Navaid")
+    .bases<NasalPositioned>()
+    .member("frequency", &FGNavRecord::get_freq)
+    .member("range_nm", &FGNavRecord::get_range)
+    .member("course", &f_navaid_course);
+
   NasalAirport::init("FGAirport")
     .bases<NasalPositioned>()
     .member("has_metar", &FGAirport::getMetar)
@@ -386,6 +500,10 @@ naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c, naRef gcSave)
               positioned( globals.createHash("positioned") );
 
   positioned.set("airportinfo", &f_airportinfo);
+  positioned.set("findAirportsWithinRange", f_findAirportsWithinRange);
+  positioned.set("findAirportsByICAO", &f_findAirportsByICAO);
+  positioned.set("navinfo", &f_navinfo);
+  positioned.set("findNavaidsWithinRange", &f_findNavaidsWithinRange);
 
   return naNil();
 }

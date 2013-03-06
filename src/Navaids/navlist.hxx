@@ -49,18 +49,19 @@ public:
   class TypeFilter : public FGPositioned::Filter
   {
   public:
-    TypeFilter(const FGPositioned::Type type);
+    TypeFilter( const FGPositioned::Type type = FGPositioned::INVALID );
+    TypeFilter( const FGPositioned::Type minType,
+                const FGPositioned::Type maxType );
     
-    TypeFilter(const FGPositioned::Type minType,
-               const FGPositioned::Type maxType);
+    /**
+     * Construct from string containing type
+     *
+     * @param type One of "fix"|"vor"|"ndb"|"ils"|"dme"|"tacan"|"any"
+     */
+    bool fromTypeString(const std::string& type);
     
-    virtual FGPositioned::Type minType() const {
-      return _mintype;
-    }
-    
-    virtual FGPositioned::Type maxType()  const {
-      return _maxtype;
-    }
+    virtual FGPositioned::Type minType() const { return _mintype; }
+    virtual FGPositioned::Type maxType() const { return _maxtype; }
     
   protected:
     FGPositioned::Type _mintype;

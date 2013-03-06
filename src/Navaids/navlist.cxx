@@ -91,6 +91,7 @@ bool navidUsable(FGNavRecord* aNav, const SGGeod &aircraft)
 // FGNavList ------------------------------------------------------------------
 
 
+//------------------------------------------------------------------------------
 FGNavList::TypeFilter::TypeFilter(const FGPositioned::Type type)
 {
   if (type == FGPositioned::INVALID) {
@@ -101,12 +102,30 @@ FGNavList::TypeFilter::TypeFilter(const FGPositioned::Type type)
   }
 }
 
-
-FGNavList::TypeFilter::TypeFilter(const FGPositioned::Type minType,
-                                  const FGPositioned::Type maxType) :
+//------------------------------------------------------------------------------
+FGNavList::TypeFilter::TypeFilter( const FGPositioned::Type minType,
+                                   const FGPositioned::Type maxType ):
   _mintype(minType),
   _maxtype(maxType)
 {
+}
+
+//------------------------------------------------------------------------------
+bool FGNavList::TypeFilter::fromTypeString(const std::string& type)
+{
+  FGPositioned::Type t;
+  if(      type == "any"  ) t = FGPositioned::INVALID;
+  else if( type == "fix"  ) t = FGPositioned::FIX;
+  else if( type == "vor"  ) t = FGPositioned::VOR;
+  else if( type == "ndb"  ) t = FGPositioned::NDB;
+  else if( type == "ils"  ) t = FGPositioned::ILS;
+  else if( type == "dme"  ) t = FGPositioned::DME;
+  else if( type == "tacan") t = FGPositioned::TACAN;
+  else                      return false;
+
+  _mintype = _maxtype = t;
+
+  return true;
 }
 
 /**

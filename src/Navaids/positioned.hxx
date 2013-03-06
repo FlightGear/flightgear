@@ -98,6 +98,9 @@ public:
   Type type() const
   { return mType; }
 
+  const char* typeString() const
+  { return nameForType(mType); }
+
   const std::string& ident() const
   { return mIdent; }
 

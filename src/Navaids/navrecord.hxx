@@ -26,16 +26,14 @@
 
 #include <iosfwd>
 
+#include "navaids_fwd.hxx"
 #include "positioned.hxx"
+#include <Airports/airports_fwd.hxx>
 
 const double FG_NAV_DEFAULT_RANGE = 50; // nm
 const double FG_LOC_DEFAULT_RANGE = 18; // nm
 const double FG_DME_DEFAULT_RANGE = 50; // nm
 const double FG_NAV_MAX_RANGE = 300;    // nm
-
-// forward decls
-class FGRunway;
-class SGPropertyNode;
 
 class FGNavRecord : public FGPositioned 
 {

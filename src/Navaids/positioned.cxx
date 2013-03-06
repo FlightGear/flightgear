@@ -134,6 +134,7 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     {"village", VILLAGE},
       
   // aliases
+    {"localizer", LOC},
     {"gnd", FREQ_GROUND},
     {"twr", FREQ_TOWER},
     {"waypoint", WAYPOINT},
@@ -170,7 +171,7 @@ const char* FGPositioned::nameForType(Type aTy)
  case VOR: return "VOR";
  case NDB: return "NDB";
  case ILS: return "ILS";
- case LOC: return "localiser";
+ case LOC: return "localizer";
  case GS: return "glideslope";
  case OM: return "outer-marker";
  case MM: return "middle-marker";
