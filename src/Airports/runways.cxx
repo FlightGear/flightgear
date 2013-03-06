@@ -155,7 +155,7 @@ FGNavRecord* FGRunway::glideslope() const
     return NULL;
   }
   
-  return (FGNavRecord*) cache->loadById(gsId);
+  return loadById<FGNavRecord>(gsId);
 }
 
 flightgear::SIDList FGRunway::getSIDs() const

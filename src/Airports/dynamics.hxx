@@ -138,7 +138,7 @@ public:
   
     bool isParkingAvailable(PositionedID parking) const;
   
-    FGParking *getParking(PositionedID i) const;
+    FGParkingRef getParking(PositionedID i) const;
     void releaseParking(PositionedID id);
     std::string getParkingName(PositionedID i) const;
 

@@ -1,5 +1,5 @@
 #include "CommStation.hxx"
-
+#include <Airports/airport.hxx>
 #include <Navaids/NavDataCache.hxx>
 
 namespace flightgear {
@@ -17,9 +17,9 @@ void CommStation::setAirport(PositionedID apt)
     mAirport = apt;
 }
   
-FGAirport* CommStation::airport() const
+FGAirportRef CommStation::airport() const
 {
-  return (FGAirport*) NavDataCache::instance()->loadById(mAirport);
+  return FGPositioned::loadById<FGAirport>(mAirport);
 }
 
 double CommStation::freqMHz() const
@@ -27,7 +27,7 @@ double CommStation::freqMHz() const
     return mFreqKhz / 1000.0;
 }
 
-CommStation*
+CommStationRef
 CommStation::findByFreq(int freqKhz, const SGGeod& pos, FGPositioned::Filter* filt)
 {
   return (CommStation*) NavDataCache::instance()->findCommByFreq(freqKhz, pos, filt).ptr();

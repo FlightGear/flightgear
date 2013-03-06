@@ -92,7 +92,7 @@ public:
       * that there will be multiple stations with matching frequencies
       * so a position must be specified.
       */
-    static FGNavRecord *findByFreq( double freq, const SGGeod& position,
+    static FGNavRecordRef findByFreq( double freq, const SGGeod& position,
                                    TypeFilter* filter = NULL);
 
     /**
@@ -100,7 +100,7 @@ public:
      * mobile TACANs which have no valid position. The first match is
      * returned only.
      */
-    static FGNavRecord *findByFreq( double freq, TypeFilter* filter = NULL);
+    static FGNavRecordRef findByFreq( double freq, TypeFilter* filter = NULL);
   
     static nav_list_type findAllByFreq( double freq, const SGGeod& position,
                                        TypeFilter* filter = NULL);

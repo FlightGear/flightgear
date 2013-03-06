@@ -79,22 +79,22 @@ class FGAirport : public FGPositioned
 
     void setMetar(bool value) { _has_metar = value; }
 
-    FGRunway* getActiveRunwayForUsage() const;
+    FGRunwayRef getActiveRunwayForUsage() const;
 
     FGAirportDynamics *getDynamics();
     
     unsigned int numRunways() const;
     unsigned int numHelipads() const;
-    FGRunway* getRunwayByIndex(unsigned int aIndex) const;
-    FGHelipad* getHelipadByIndex(unsigned int aIndex) const;
+    FGRunwayRef getRunwayByIndex(unsigned int aIndex) const;
+    FGHelipadRef getHelipadByIndex(unsigned int aIndex) const;
     FGRunwayMap getRunwayMap() const;
     FGHelipadMap getHelipadMap() const;
 
     bool hasRunwayWithIdent(const std::string& aIdent) const;
     bool hasHelipadWithIdent(const std::string& aIdent) const;
-    FGRunway* getRunwayByIdent(const std::string& aIdent) const;
-    FGHelipad* getHelipadByIdent(const std::string& aIdent) const;
-    FGRunway* findBestRunwayForHeading(double aHeading) const;
+    FGRunwayRef getRunwayByIdent(const std::string& aIdent) const;
+    FGHelipadRef getHelipadByIdent(const std::string& aIdent) const;
+    FGRunwayRef findBestRunwayForHeading(double aHeading) const;
     
     /**
      * return the most likely target runway based on a position.
@@ -103,7 +103,7 @@ class FGAirport : public FGPositioned
      * This is a good approximation of which runway the position is on or
      * aiming towards.
      */
-    FGRunway* findBestRunwayForPos(const SGGeod& aPos) const;
+    FGRunwayRef findBestRunwayForPos(const SGGeod& aPos) const;
     
     /**
      * Retrieve all runways at the airport, but excluding the reciprocal
@@ -125,11 +125,11 @@ class FGAirport : public FGPositioned
     bool hasHardRunwayOfLengthFt(double aLengthFt) const;
 
     unsigned int numTaxiways() const;
-    FGTaxiway* getTaxiwayByIndex(unsigned int aIndex) const;
+    FGTaxiwayRef getTaxiwayByIndex(unsigned int aIndex) const;
     FGTaxiwayList getTaxiways() const;
 
     unsigned int numPavements() const;
-    FGPavement* getPavementByIndex(unsigned int aIndex) const;
+    FGPavementRef getPavementByIndex(unsigned int aIndex) const;
     FGPavementList getPavements() const;
     
     class AirportFilter : public Filter
@@ -230,20 +230,20 @@ class FGAirport : public FGPositioned
       * match for filter, and return it cast to FGAirport. The default filter
       * passes airports, but not seaports or heliports
       */
-     static FGAirport* findClosest(const SGGeod& aPos, double aCuttofNm, Filter* filter = NULL);
+     static FGAirportRef findClosest(const SGGeod& aPos, double aCuttofNm, Filter* filter = NULL);
      
      /**
       * Helper to look up an FGAirport instance by unique ident. Throws an 
       * exception if the airport could not be found - so callers can assume
       * the result is non-NULL.
       */
-     static FGAirport* getByIdent(const std::string& aIdent);
+     static FGAirportRef getByIdent(const std::string& aIdent);
      
      /**
       * Helper to look up an FGAirport instance by unique ident. Returns NULL
       * if the airport could not be found.
       */
-     static FGAirport* findByIdent(const std::string& aIdent);
+     static FGAirportRef findByIdent(const std::string& aIdent);
      
      /**
       * Specialised helper to implement the AirportList dialog. Performs a

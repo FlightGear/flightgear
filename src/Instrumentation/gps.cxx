@@ -1596,7 +1596,7 @@ void GPS::defineWaypoint()
     
 // check for duplicate idents
   FGPositioned::TypeFilter f(FGPositioned::WAYPOINT);
-  FGPositioned::List dups = FGPositioned::findAllWithIdent(ident, &f);
+  FGPositionedList dups = FGPositioned::findAllWithIdent(ident, &f);
   if (!dups.empty()) {
     SG_LOG(SG_INSTR, SG_WARN, "GPS:defineWaypoint: non-unique waypoint identifier, ho-hum");
   }

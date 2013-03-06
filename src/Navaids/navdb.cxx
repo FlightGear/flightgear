@@ -181,7 +181,7 @@ static PositionedID readNavFromStream(std::istream& aStream,
   if ((type >= FGPositioned::ILS) && (type <= FGPositioned::GS)) {
     arp = cache->findAirportRunway(name);
     if (arp.second) {
-      runway = static_cast<FGRunway*>(cache->loadById(arp.second));
+      runway = FGPositioned::loadById<FGRunway>(arp.second);
       assert(runway);
 #if 0
       // code is disabled since it's causing some problems, see

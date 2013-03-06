@@ -40,7 +40,6 @@
 #include <Airports/airport.hxx>
 #include <Airports/xmlloader.hxx>
 #include <Main/fg_props.hxx>
-#include <Navaids/NavDataCache.hxx>
 
 FGNavRecord::FGNavRecord(PositionedID aGuid, Type aTy, const std::string& aIdent,
   const std::string& aName, const SGGeod& aPos,
@@ -55,9 +54,9 @@ FGNavRecord::FGNavRecord(PositionedID aGuid, Type aTy, const std::string& aIdent
 { 
 }
 
-FGRunway* FGNavRecord::runway() const
+FGRunwayRef FGNavRecord::runway() const
 {
-  return (FGRunway*) flightgear::NavDataCache::instance()->loadById(mRunway);
+  return loadById<FGRunway>(mRunway);
 }
 
 double FGNavRecord::localizerWidth() const

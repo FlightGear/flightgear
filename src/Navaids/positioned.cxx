@@ -75,7 +75,7 @@ FGPositioned::createUserWaypoint(const std::string& aIdent, const SGGeod& aPos)
 {
   NavDataCache* cache = NavDataCache::instance();
   TypeFilter filter(WAYPOINT);
-  FGPositioned::List existing = cache->findAllWithIdent(aIdent, &filter, true);
+  FGPositionedList existing = cache->findAllWithIdent(aIdent, &filter, true);
   if (!existing.empty()) {
     SG_LOG(SG_NAVAID, SG_WARN, "attempt to insert duplicate WAYPOINT:" << aIdent);
     return existing.front().ptr();
@@ -216,7 +216,8 @@ FGPositioned::findFirstWithIdent(const std::string& aIdent, Filter* aFilter)
     return NULL;
   }
   
-  List r = NavDataCache::instance()->findAllWithIdent(aIdent, aFilter, true);
+  FGPositionedList r =
+    NavDataCache::instance()->findAllWithIdent(aIdent, aFilter, true);
   if (r.empty()) {
     return NULL;
   }
@@ -224,37 +225,37 @@ FGPositioned::findFirstWithIdent(const std::string& aIdent, Filter* aFilter)
   return r.front();
 }
 
-FGPositioned::List
+FGPositionedList
 FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter)
 {
   validateSGGeod(aPos);
 
-  List result;
+  FGPositionedList result;
   Octree::findAllWithinRange(SGVec3d::fromGeod(aPos), 
     aRangeNm * SG_NM_TO_METER, aFilter, result, 0xffffff);
   return result;
 }
 
-FGPositioned::List
+FGPositionedList
 FGPositioned::findWithinRangePartial(const SGGeod& aPos, double aRangeNm, Filter* aFilter, bool& aPartial)
 {
   validateSGGeod(aPos);
   
   int limitMsec = 32;
-  List result;
+  FGPositionedList result;
   aPartial = Octree::findAllWithinRange(SGVec3d::fromGeod(aPos),
                              aRangeNm * SG_NM_TO_METER, aFilter, result,
                                         limitMsec);
   return result;
 }
 
-FGPositioned::List
+FGPositionedList
 FGPositioned::findAllWithIdent(const std::string& aIdent, Filter* aFilter, bool aExact)
 {
   return NavDataCache::instance()->findAllWithIdent(aIdent, aFilter, aExact);
 }
 
-FGPositioned::List
+FGPositionedList
 FGPositioned::findAllWithName(const std::string& aName, Filter* aFilter, bool aExact)
 {
   return NavDataCache::instance()->findAllWithName(aName, aFilter, aExact);
@@ -265,7 +266,7 @@ FGPositioned::findClosest(const SGGeod& aPos, double aCutoffNm, Filter* aFilter)
 {
   validateSGGeod(aPos);
   
-  List l(findClosestN(aPos, 1, aCutoffNm, aFilter));
+  FGPositionedList l(findClosestN(aPos, 1, aCutoffNm, aFilter));
   if (l.empty()) {
     return NULL;
   }
@@ -274,23 +275,23 @@ FGPositioned::findClosest(const SGGeod& aPos, double aCutoffNm, Filter* aFilter)
   return l.front();
 }
 
-FGPositioned::List
+FGPositionedList
 FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter)
 {
   validateSGGeod(aPos);
   
-  List result;
+  FGPositionedList result;
   int limitMsec = 0xffff;
   Octree::findNearestN(SGVec3d::fromGeod(aPos), aN, aCutoffNm * SG_NM_TO_METER, aFilter, result, limitMsec);
   return result;
 }
 
-FGPositioned::List
+FGPositionedList
 FGPositioned::findClosestNPartial(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter, bool &aPartial)
 {
     validateSGGeod(aPos);
     
-    List result;
+    FGPositionedList result;
     int limitMsec = 32;
     aPartial = Octree::findNearestN(SGVec3d::fromGeod(aPos), aN, aCutoffNm * SG_NM_TO_METER, aFilter, result,
                         limitMsec);
@@ -298,14 +299,14 @@ FGPositioned::findClosestNPartial(const SGGeod& aPos, unsigned int aN, double aC
 }
 
 void
-FGPositioned::sortByRange(List& aResult, const SGGeod& aPos)
+FGPositioned::sortByRange(FGPositionedList& aResult, const SGGeod& aPos)
 {
   validateSGGeod(aPos);
   
   SGVec3d cartPos(SGVec3d::fromGeod(aPos));
 // computer ordering values
   Octree::FindNearestResults r;
-  List::iterator it = aResult.begin(), lend = aResult.end();
+  FGPositionedList::iterator it = aResult.begin(), lend = aResult.end();
   for (; it != lend; ++it) {
     double d2 = distSqr((*it)->cart(), cartPos);
     r.push_back(Octree::OrderedPositioned(*it, d2));
@@ -328,7 +329,7 @@ void FGPositioned::modifyPosition(const SGGeod& newPos)
 }
 
 //------------------------------------------------------------------------------
-FGPositioned* FGPositioned::loadByIdImpl(PositionedID id)
+FGPositionedRef FGPositioned::loadByIdImpl(PositionedID id)
 {
   return flightgear::NavDataCache::instance()->loadById(id);
 }

@@ -938,7 +938,7 @@ void MapWidget::drawAirports()
 {
   MapAirportFilter af(_root);
   bool partial = false;
-  FGPositioned::List apts = FGPositioned::findWithinRangePartial(_projectionCenter, _drawRangeNm, &af, partial);
+  FGPositionedList apts = FGPositioned::findWithinRangePartial(_projectionCenter, _drawRangeNm, &af, partial);
   for (unsigned int i=0; i<apts.size(); ++i) {
     drawAirport((FGAirport*) apts[i].get());
   }
@@ -981,7 +981,7 @@ void MapWidget::drawNavaids()
   NavaidFilter f(fixes, _root->getBoolValue("draw-navaids"));
 
   if (f.minType() <= f.maxType()) {
-    FGPositioned::List navs = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &f);
+    FGPositionedList navs = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &f);
 
     glLineWidth(1.0);
     for (unsigned int i=0; i<navs.size(); ++i) {
@@ -1002,7 +1002,7 @@ void MapWidget::drawPOIs()
   FGPositioned::TypeFilter f(FGPositioned::COUNTRY);
   f.addType(FGPositioned::CITY);
   f.addType(FGPositioned::TOWN);
-  FGPositioned::List poi = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &f);
+  FGPositionedList poi = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &f);
 
     glLineWidth(1.0);
     for (unsigned int i=0; i<poi.size(); ++i) {

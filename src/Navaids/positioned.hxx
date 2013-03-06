@@ -32,6 +32,7 @@
 
 class FGPositioned;
 typedef SGSharedPtr<FGPositioned> FGPositionedRef;
+typedef std::vector<FGPositionedRef> FGPositionedList;
 
 typedef int64_t PositionedID;
 typedef std::vector<PositionedID> PositionedIDVec;
@@ -91,8 +92,6 @@ public:
     LAST_TYPE
   } Type;
 
-  typedef std::vector<FGPositionedRef> List;
-  
   virtual ~FGPositioned();
   
   Type type() const
@@ -179,9 +178,9 @@ public:
     Type mMinType, mMaxType;
   };
   
-  static List findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter = NULL);
+  static FGPositionedList findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter = NULL);
   
-  static List findWithinRangePartial(const SGGeod& aPos, double aRangeNm, Filter* aFilter, bool& aPartial);
+  static FGPositionedList findWithinRangePartial(const SGGeod& aPos, double aRangeNm, Filter* aFilter, bool& aPartial);
         
   static FGPositionedRef findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter = NULL);
 
@@ -191,17 +190,17 @@ public:
    * Find all items with the specified ident
    * @param aFilter - optional filter on items
    */
-  static List findAllWithIdent(const std::string& aIdent, Filter* aFilter = NULL, bool aExact = true);
+  static FGPositionedList findAllWithIdent(const std::string& aIdent, Filter* aFilter = NULL, bool aExact = true);
   
   /**
    * As above, but searches names instead of idents
    */
-  static List findAllWithName(const std::string& aName, Filter* aFilter = NULL, bool aExact = true);
+  static FGPositionedList findAllWithName(const std::string& aName, Filter* aFilter = NULL, bool aExact = true);
   
   /**
    * Sort an FGPositionedList by distance from a position
    */
-  static void sortByRange(List&, const SGGeod& aPos);
+  static void sortByRange(FGPositionedList&, const SGGeod& aPos);
   
   /**
    * Find the closest item to a position, which pass the specified filter
@@ -223,59 +222,59 @@ public:
    * @param aN - number of matches to find
    * @param aCutoffNm - maximum distance to search within, in nautical miles
    */
-  static List findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter = NULL);
+  static FGPositionedList findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter = NULL);
     
   /**
    * Same as above, but with a time-bound in msec too.
    */
-  static List findClosestNPartial(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter,
+  static FGPositionedList findClosestNPartial(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter,
                            bool& aPartial);
-    
-  /**
-   * Map a candidate type string to a real type. Returns INVALID if the string
-   * does not correspond to a defined type.
-   */
-  static Type typeFromName(const std::string& aName);
   
-  /**
-   * Map a type to a human-readable string
-   */
-  static const char* nameForType(Type aTy);
-  
-  static FGPositioned* createUserWaypoint(const std::string& aIdent, const SGGeod& aPos);
-  static void deleteUserWaypoint(const std::string& aIdent);
-protected:
-  friend class flightgear::NavDataCache;
-  
-  FGPositioned(PositionedID aGuid, Type ty, const std::string& aIdent, const SGGeod& aPos);
-    
-  void modifyPosition(const SGGeod& newPos);
-
-  static FGPositioned* loadByIdImpl(PositionedID id);
-
   template<class T>
-  static T* loadById(PositionedID id)
+  static SGSharedPtr<T> loadById(PositionedID id)
   {
-    return static_cast<T*>( loadByIdImpl(id) );
+    return static_pointer_cast<T>( loadByIdImpl(id) );
   }
 
   template<class T>
-  static T* loadById(const PositionedIDVec& id_vec, size_t index)
+  static SGSharedPtr<T> loadById(const PositionedIDVec& id_vec, size_t index)
   {
     assert(index >= 0 && index < id_vec.size());
     return loadById<T>(id_vec[index]);
   }
 
   template<class T>
-  static std::vector<T*> loadAllById(const PositionedIDVec& id_vec)
+  static std::vector<SGSharedPtr<T> > loadAllById(const PositionedIDVec& id_vec)
   {
-    std::vector<T*> vec(id_vec.size());
+    std::vector<SGSharedPtr<T> > vec(id_vec.size());
 
     for(size_t i = 0; i < id_vec.size(); ++i)
       vec[i] = loadById<T>(id_vec[i]);
 
     return vec;
   }
+
+  /**
+   * Map a candidate type string to a real type. Returns INVALID if the string
+   * does not correspond to a defined type.
+   */
+  static Type typeFromName(const std::string& aName);
+
+  /**
+   * Map a type to a human-readable string
+   */
+  static const char* nameForType(Type aTy);
+
+  static FGPositioned* createUserWaypoint(const std::string& aIdent, const SGGeod& aPos);
+  static void deleteUserWaypoint(const std::string& aIdent);
+protected:
+  friend class flightgear::NavDataCache;
+
+  FGPositioned(PositionedID aGuid, Type ty, const std::string& aIdent, const SGGeod& aPos);
+
+  void modifyPosition(const SGGeod& newPos);
+
+  static FGPositionedRef loadByIdImpl(PositionedID id);
 
   const PositionedID mGuid;
   const SGGeod mPosition;

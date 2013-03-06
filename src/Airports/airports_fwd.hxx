@@ -29,6 +29,7 @@
 // forward decls
 class FGAirport;
 class FGAirportDynamics;
+class FGRunwayBase;
 class FGRunway;
 class FGHelipad;
 class FGTaxiway;
@@ -66,21 +67,25 @@ namespace flightgear {
   typedef std::vector<WayptRef> WayptVec;
 
   typedef SGSharedPtr<CommStation> CommStationRef;
-  typedef std::vector<CommStation*> CommStationList;
+  typedef std::vector<CommStationRef> CommStationList;
   typedef std::map<std::string, FGAirport*> AirportCache;
 }
 
 typedef SGSharedPtr<FGAirport> FGAirportRef;
+typedef SGSharedPtr<FGRunwayBase> FGRunwayBaseRef;
 typedef SGSharedPtr<FGRunway> FGRunwayRef;
+typedef SGSharedPtr<FGHelipad> FGHelipadRef;
+typedef SGSharedPtr<FGTaxiway> FGTaxiwayRef;
+typedef SGSharedPtr<FGPavement> FGPavementRef;
 typedef SGSharedPtr<FGParking> FGParkingRef;
 
-typedef std::vector<FGRunway*> FGRunwayList;
-typedef std::map<std::string, FGRunway*> FGRunwayMap;
-typedef std::map<std::string, FGHelipad*> FGHelipadMap;
+typedef std::vector<FGRunwayRef> FGRunwayList;
+typedef std::map<std::string, FGRunwayRef> FGRunwayMap;
+typedef std::map<std::string, FGHelipadRef> FGHelipadMap;
 
-typedef std::vector<FGTaxiway*> FGTaxiwayList;
-typedef std::vector<FGPavement*> FGPavementList;
-typedef std::vector<FGParking*> FGParkingList;
+typedef std::vector<FGTaxiwayRef> FGTaxiwayList;
+typedef std::vector<FGPavementRef> FGPavementList;
+typedef std::vector<FGParkingRef> FGParkingList;
 
 typedef std::vector<FGTaxiSegment*>  FGTaxiSegmentVector;
 typedef FGTaxiSegmentVector::iterator FGTaxiSegmentVectorIterator;

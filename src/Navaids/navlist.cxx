@@ -37,6 +37,7 @@
 
 #include <Airports/runways.hxx>
 #include <Navaids/NavDataCache.hxx>
+#include <Navaids/navrecord.hxx>
 
 using std::string;
 
@@ -184,8 +185,9 @@ FGNavList::TypeFilter* FGNavList::carrierFilter()
   return &tf;
 }
 
-FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position,
-                                   TypeFilter* filter)
+FGNavRecordRef FGNavList::findByFreq( double freq,
+                                      const SGGeod& position,
+                                      TypeFilter* filter )
 {
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
   int freqKhz = static_cast<int>(freq * 100 + 0.5);
@@ -200,7 +202,7 @@ FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position,
     = FG_NAV_MAX_RANGE*SG_NM_TO_METER*FG_NAV_MAX_RANGE*SG_NM_TO_METER;
     
   BOOST_FOREACH(PositionedID id, stations) {
-    FGNavRecord* station = (FGNavRecord*) cache->loadById(id);
+    FGNavRecordRef station = FGPositioned::loadById<FGNavRecord>(id);
     if (!filter->pass(station)) {
       continue;
     }
@@ -221,7 +223,7 @@ FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position,
   return NULL;
 }
 
-FGNavRecord *FGNavList::findByFreq( double freq, TypeFilter* filter)
+FGNavRecordRef FGNavList::findByFreq(double freq, TypeFilter* filter)
 {
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
   int freqKhz = static_cast<int>(freq * 100 + 0.5);
@@ -231,7 +233,7 @@ FGNavRecord *FGNavList::findByFreq( double freq, TypeFilter* filter)
   }
 
   BOOST_FOREACH(PositionedID id, stations) {
-    FGNavRecord* station = (FGNavRecord*) cache->loadById(id);
+    FGNavRecordRef station = FGPositioned::loadById<FGNavRecord>(id);
     if (filter->pass(station)) {
       return station;
     }
@@ -250,7 +252,7 @@ nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position,
   PositionedIDVec ids(cache->findNavaidsByFreq(freqKhz, position, filter));
   
   BOOST_FOREACH(PositionedID id, ids) {
-    FGNavRecord* station = (FGNavRecord*) cache->loadById(id);
+    FGNavRecordRef station = FGPositioned::loadById<FGNavRecord>(id);
     if (!filter->pass(station)) {
       continue;
     }
@@ -267,7 +269,7 @@ nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const double fr
   nav_list_type reply;
   int f = (int)(freq*100.0 + 0.5);
   
-  FGPositioned::List stations = FGPositioned::findAllWithIdent(ident, filter);
+  FGPositionedList stations = FGPositioned::findAllWithIdent(ident, filter);
   BOOST_FOREACH(FGPositionedRef ref, stations) {
     FGNavRecord* nav = static_cast<FGNavRecord*>(ref.ptr());
     if ( f <= 0.0 || nav->get_freq() == f) {

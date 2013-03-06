@@ -144,14 +144,14 @@ unsigned int FGAirport::numHelipads() const
 }
 
 //------------------------------------------------------------------------------
-FGRunway* FGAirport::getRunwayByIndex(unsigned int aIndex) const
+FGRunwayRef FGAirport::getRunwayByIndex(unsigned int aIndex) const
 {
   loadRunways();
   return loadById<FGRunway>(mRunways, aIndex);
 }
 
 //------------------------------------------------------------------------------
-FGHelipad* FGAirport::getHelipadByIndex(unsigned int aIndex) const
+FGHelipadRef FGAirport::getHelipadByIndex(unsigned int aIndex) const
 {
   loadHelipads();
   return loadById<FGHelipad>(mHelipads, aIndex);
@@ -196,18 +196,24 @@ FGHelipadMap FGAirport::getHelipadMap() const
 //------------------------------------------------------------------------------
 bool FGAirport::hasRunwayWithIdent(const std::string& aIdent) const
 {
-  return flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent) != 0;
-}
-
-bool FGAirport::hasHelipadWithIdent(const std::string& aIdent) const
-{
-  return flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::HELIPAD, aIdent) != 0;
+  return flightgear::NavDataCache::instance()
+    ->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent) != 0;
 }
 
 //------------------------------------------------------------------------------
-FGRunway* FGAirport::getRunwayByIdent(const std::string& aIdent) const
+bool FGAirport::hasHelipadWithIdent(const std::string& aIdent) const
 {
-  PositionedID id = flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent);  
+  return flightgear::NavDataCache::instance()
+    ->airportItemWithIdent(guid(), FGPositioned::HELIPAD, aIdent) != 0;
+}
+
+//------------------------------------------------------------------------------
+FGRunwayRef FGAirport::getRunwayByIdent(const std::string& aIdent) const
+{
+  PositionedID id =
+    flightgear::NavDataCache::instance()
+      ->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent);
+
   if (id == 0) {
     SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << ident());
     throw sg_range_exception("unknown runway " + aIdent + " at airport:" + ident(), "FGAirport::getRunwayByIdent");
@@ -217,7 +223,7 @@ FGRunway* FGAirport::getRunwayByIdent(const std::string& aIdent) const
 }
 
 //------------------------------------------------------------------------------
-FGHelipad* FGAirport::getHelipadByIdent(const std::string& aIdent) const
+FGHelipadRef FGAirport::getHelipadByIdent(const std::string& aIdent) const
 {
   PositionedID id = flightgear::NavDataCache::instance()->airportItemWithIdent(guid(), FGPositioned::HELIPAD, aIdent);
   if (id == 0) {
@@ -229,7 +235,7 @@ FGHelipad* FGAirport::getHelipadByIdent(const std::string& aIdent) const
 }
 
 //------------------------------------------------------------------------------
-FGRunway* FGAirport::findBestRunwayForHeading(double aHeading) const
+FGRunwayRef FGAirport::findBestRunwayForHeading(double aHeading) const
 {
   loadRunways();
   
@@ -260,7 +266,7 @@ FGRunway* FGAirport::findBestRunwayForHeading(double aHeading) const
 }
 
 //------------------------------------------------------------------------------
-FGRunway* FGAirport::findBestRunwayForPos(const SGGeod& aPos) const
+FGRunwayRef FGAirport::findBestRunwayForPos(const SGGeod& aPos) const
 {
   loadRunways();
   
@@ -331,7 +337,7 @@ unsigned int FGAirport::numTaxiways() const
 }
 
 //------------------------------------------------------------------------------
-FGTaxiway* FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
+FGTaxiwayRef FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
 {
   loadTaxiways();
   return loadById<FGTaxiway>(mTaxiways, aIndex);
@@ -352,7 +358,7 @@ unsigned int FGAirport::numPavements() const
 }
 
 //------------------------------------------------------------------------------
-FGPavement* FGAirport::getPavementByIndex(unsigned int aIndex) const
+FGPavementRef FGAirport::getPavementByIndex(unsigned int aIndex) const
 {
   loadTaxiways();
   return loadById<FGPavement>(mPavements, aIndex);
@@ -366,7 +372,7 @@ FGPavementList FGAirport::getPavements() const
 }
 
 //------------------------------------------------------------------------------
-FGRunway* FGAirport::getActiveRunwayForUsage() const
+FGRunwayRef FGAirport::getActiveRunwayForUsage() const
 {
   FGEnvironmentMgr* envMgr = (FGEnvironmentMgr *) globals->get_subsystem("environment");
   
@@ -386,19 +392,19 @@ FGRunway* FGAirport::getActiveRunwayForUsage() const
   return findBestRunwayForHeading(hdg);
 }
 
-FGAirport* FGAirport::findClosest(const SGGeod& aPos, double aCuttofNm, Filter* filter)
+//------------------------------------------------------------------------------
+FGAirportRef FGAirport::findClosest( const SGGeod& aPos,
+                                     double aCuttofNm,
+                                     Filter* filter )
 {
   AirportFilter aptFilter;
-  if (filter == NULL) {
+  if( !filter )
     filter = &aptFilter;
-  }
   
-  FGPositionedRef r = FGPositioned::findClosest(aPos, aCuttofNm, filter);
-  if (!r) {
-    return NULL;
-  }
-  
-  return static_cast<FGAirport*>(r.ptr());
+  return static_pointer_cast<FGAirport>
+  (
+    FGPositioned::findClosest(aPos, aCuttofNm, filter)
+  );
 }
 
 FGAirport::HardSurfaceFilter::HardSurfaceFilter(double minLengthFt) :
@@ -446,14 +452,17 @@ bool FGAirport::TypeRunwayFilter::pass(FGPositioned* pos) const
 }
 
 //------------------------------------------------------------------------------
-FGAirport* FGAirport::findByIdent(const std::string& aIdent)
+FGAirportRef FGAirport::findByIdent(const std::string& aIdent)
 {
   AirportCache::iterator it = airportCache.find(aIdent);
   if (it != airportCache.end())
    return it->second;
 
   PortsFilter filter;
-  FGAirport* r = static_cast<FGAirport*> (FGPositioned::findFirstWithIdent(aIdent, &filter).get());
+  FGAirportRef r = static_pointer_cast<FGAirport>
+  (
+    FGPositioned::findFirstWithIdent(aIdent, &filter)
+  );
 
   // add airport to the cache (even when it's NULL, so we don't need to search in vain again)
   airportCache[aIdent] = r;
@@ -462,9 +471,10 @@ FGAirport* FGAirport::findByIdent(const std::string& aIdent)
   return r;
 }
 
-FGAirport* FGAirport::getByIdent(const std::string& aIdent)
+//------------------------------------------------------------------------------
+FGAirportRef FGAirport::getByIdent(const std::string& aIdent)
 {
-  FGAirport* r = findByIdent(aIdent);
+  FGAirportRef r = findByIdent(aIdent);
   if (!r)
     throw sg_range_exception("No such airport with ident: " + aIdent);
   return r;
@@ -854,7 +864,7 @@ FGAirport::commStations() const
                                                             FGPositioned::FREQ_GROUND,
                                                             FGPositioned::FREQ_UNICOM))
   {
-    result.push_back((CommStation*) cache->loadById(pos));
+    result.push_back( loadById<CommStation>(pos) );
   }
   
   return result;
@@ -866,7 +876,7 @@ FGAirport::commStationsOfType(FGPositioned::Type aTy) const
   NavDataCache* cache = NavDataCache::instance();
   CommStationList result;
   BOOST_FOREACH(PositionedID pos, cache->airportItemsOfType(guid(), aTy)) {
-    result.push_back((CommStation*) cache->loadById(pos));
+    result.push_back( loadById<CommStation>(pos) );
   }
   
   return result;

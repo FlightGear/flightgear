@@ -90,7 +90,7 @@ public:
    * This may be trivial if the object is previously loaded, or require actual
    * disk IO.
    */
-  FGPositioned* loadById(PositionedID guid);
+  FGPositionedRef loadById(PositionedID guid);
   
   PositionedID insertAirport(FGPositioned::Type ty, const std::string& ident,
                              const std::string& name);
@@ -141,13 +141,16 @@ public:
    */
   void updatePosition(PositionedID item, const SGGeod &pos);
   
-  FGPositioned::List findAllWithIdent(const std::string& ident,
-                                      FGPositioned::Filter* filter, bool exact);
-  FGPositioned::List findAllWithName(const std::string& ident,
-                                      FGPositioned::Filter* filter, bool exact);
+  FGPositionedList findAllWithIdent( const std::string& ident,
+                                     FGPositioned::Filter* filter,
+                                     bool exact );
+  FGPositionedList findAllWithName( const std::string& ident,
+                                    FGPositioned::Filter* filter,
+                                    bool exact );
   
-  FGPositionedRef findClosestWithIdent(const std::string& aIdent,
-                                      const SGGeod& aPos, FGPositioned::Filter* aFilter);
+  FGPositionedRef findClosestWithIdent( const std::string& aIdent,
+                                        const SGGeod& aPos,
+                                        FGPositioned::Filter* aFilter );
   
 
   /**

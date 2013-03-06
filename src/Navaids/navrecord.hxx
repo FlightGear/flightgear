@@ -76,7 +76,7 @@ public:
   /**
    * Retrieve the runway this navaid is associated with (for ILS/LOC/GS)
    */
-  FGRunway* runway() const;
+  FGRunwayRef runway() const;
   
   /**
    * return the localizer width, in degrees

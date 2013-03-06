@@ -1368,7 +1368,7 @@ public:
 GPSWaypoint* DCLGPS::FindFirstById(const string& id) const
 {
   DCLGPSFilter filter;  
-  FGPositioned::List matches = FGPositioned::findAllWithIdent(id, &filter, false);
+  FGPositionedList matches = FGPositioned::findAllWithIdent(id, &filter, false);
   if (matches.empty()) {
     return NULL;
   }
@@ -1390,7 +1390,7 @@ FGPositioned* DCLGPS::FindTypedFirstById(const string& id, FGPositioned::Type ty
   multi = false;
   FGPositioned::TypeFilter filter(ty);
   
-  FGPositioned::List matches =
+  FGPositionedList matches =
     FGPositioned::findAllWithIdent(id, &filter, exact);
   if (matches.empty()) {
     return NULL;

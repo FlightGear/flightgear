@@ -226,9 +226,9 @@ ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const st
   return result ? ParkingAssignment(result, _ap) : ParkingAssignment();
 }
 
-FGParking *FGAirportDynamics::getParking(PositionedID id) const
+FGParkingRef FGAirportDynamics::getParking(PositionedID id) const
 {
-  return static_cast<FGParking*>(flightgear::NavDataCache::instance()->loadById(id));
+  return FGPositioned::loadById<FGParking>(id);
 }
 
 string FGAirportDynamics::getParkingName(PositionedID id) const

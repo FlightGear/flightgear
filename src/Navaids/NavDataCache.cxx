@@ -853,7 +853,7 @@ public:
     return r;
   }
   
-  FGPositioned::List findAllByString(const string& s, const string& column,
+  FGPositionedList findAllByString(const string& s, const string& column,
                                      FGPositioned::Filter* filter, bool exact)
   {
     string query = s;
@@ -879,7 +879,7 @@ public:
       sqlite3_bind_int(stmt, 3, filter->maxType());
     }
     
-    FGPositioned::List result;
+    FGPositionedList result;
   // run the prepared SQL
     while (stepSelect(stmt))
     {
@@ -1052,7 +1052,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
     case FGPositioned::MOBILE_TACAN:
     {
       if (aptId > 0) {
-        FGAirport* apt = (FGAirport*) outer->loadById(aptId);
+        FGAirport* apt = FGPositioned::loadById<FGAirport>(aptId);
         if (apt->validateILSData()) {
           SG_LOG(SG_NAVCACHE, SG_INFO, "re-loaded ILS data for " << apt->ident());
           // queried data above is probably invalid, force us to go around again
@@ -1473,7 +1473,7 @@ void NavDataCache::abortTransaction()
   d->transactionAborted = true;
 }
 
-FGPositioned* NavDataCache::loadById(PositionedID rowid)
+FGPositionedRef NavDataCache::loadById(PositionedID rowid)
 {
   if (rowid == 0) {
     return NULL;
@@ -1673,20 +1673,26 @@ void NavDataCache::setAirportMetar(const string& icao, bool hasMetar)
   d->execUpdate(d->setAirportMetar);
 }
 
-FGPositioned::List NavDataCache::findAllWithIdent(const string& s,
-                                                  FGPositioned::Filter* filter, bool exact)
+//------------------------------------------------------------------------------
+FGPositionedList NavDataCache::findAllWithIdent( const string& s,
+                                                 FGPositioned::Filter* filter,
+                                                 bool exact )
 {
   return d->findAllByString(s, "ident", filter, exact);
 }
 
-FGPositioned::List NavDataCache::findAllWithName(const string& s,
-                                                  FGPositioned::Filter* filter, bool exact)
+//------------------------------------------------------------------------------
+FGPositionedList NavDataCache::findAllWithName( const string& s,
+                                                FGPositioned::Filter* filter,
+                                                bool exact )
 {
   return d->findAllByString(s, "name", filter, exact);
 }
-  
-FGPositionedRef NavDataCache::findClosestWithIdent(const string& aIdent,
-                                                   const SGGeod& aPos, FGPositioned::Filter* aFilter)
+
+//------------------------------------------------------------------------------
+FGPositionedRef NavDataCache::findClosestWithIdent( const string& aIdent,
+                                                    const SGGeod& aPos,
+                                                    FGPositioned::Filter* aFilter )
 {
   sqlite_bind_stdstring(d->findClosestWithIdent, 1, aIdent);
   if (aFilter) {

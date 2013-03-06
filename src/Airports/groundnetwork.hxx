@@ -76,8 +76,8 @@ public:
     void unblock(time_t now); 
     bool hasBlock(time_t now);
 
-    FGTaxiNode * getEnd() const;
-    FGTaxiNode * getStart() const;
+    FGTaxiNodeRef getEnd() const;
+    FGTaxiNodeRef getStart() const;
   
     double getLength() const;
   
@@ -208,7 +208,7 @@ public:
     int findNearestNode(const SGGeod& aGeod) const;
     int findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL) const;
 
-    FGTaxiNode *findNode(PositionedID idx) const;
+    FGTaxiNodeRef findNode(PositionedID idx) const;
     FGTaxiSegment *findSegment(unsigned idx) const;
   
     /**

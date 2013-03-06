@@ -82,14 +82,14 @@ SGGeod FGTaxiSegment::getCenter() const
   return SGGeodesy::direct(start->geod(), heading, length * 0.5);
 }
 
-FGTaxiNode* FGTaxiSegment::getEnd() const
+FGTaxiNodeRef FGTaxiSegment::getEnd() const
 {
-  return static_cast<FGTaxiNode*>(NavDataCache::instance()->loadById(endNode));
+  return FGPositioned::loadById<FGTaxiNode>(endNode);
 }
 
-FGTaxiNode* FGTaxiSegment::getStart() const
+FGTaxiNodeRef FGTaxiSegment::getStart() const
 {
-  return static_cast<FGTaxiNode*>(NavDataCache::instance()->loadById(startNode));
+  return FGPositioned::loadById<FGTaxiNode>(startNode);
 }
 
 double FGTaxiSegment::getLength() const
@@ -343,10 +343,9 @@ int FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGRunway* aRu
   return NavDataCache::instance()->findGroundNetNode(parent->guid(), aGeod, onRunway, aRunway);
 }
 
-FGTaxiNode* FGGroundNetwork::findNode(PositionedID idx) const
+FGTaxiNodeRef FGGroundNetwork::findNode(PositionedID idx) const
 {
-
-  return static_cast<FGTaxiNode*>(NavDataCache::instance()->loadById(idx));
+  return FGPositioned::loadById<FGTaxiNode>(idx);
 }
 
 FGTaxiSegment *FGGroundNetwork::findSegment(unsigned idx) const
@@ -447,7 +446,7 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(PositionedID start, PositionedID 
         }
       
         BOOST_FOREACH(PositionedID targetId, cache->groundNetEdgesFrom(best->guid(), !fullSearch)) {
-            FGTaxiNode* tgt = (FGTaxiNode*) cache->loadById(targetId);
+            FGTaxiNodeRef tgt = FGPositioned::loadById<FGTaxiNode>(targetId);
             double edgeLength = dist(best->cart(), tgt->cart());          
             double alt = searchData[best].score + edgeLength + edgePenalty(tgt);
             if (alt < searchData[tgt].score) {    // Relax (u,v)

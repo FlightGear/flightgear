@@ -192,7 +192,7 @@ private:
     
     bool _cachedItemsValid;
     SGVec3d _cachedPos;
-    FGPositioned::List _itemsInRange;
+    FGPositionedList _itemsInRange;
     SGPropertyNode_ptr _excessDataNode;
     int _maxSymbols;
     SGPropertyNode_ptr _customSymbols;

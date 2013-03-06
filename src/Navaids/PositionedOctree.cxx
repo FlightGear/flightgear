@@ -255,7 +255,7 @@ int Branch::childMask() const
   return result;
 }
 
-bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults, int aCutoffMsec)
+bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPositioned::Filter* aFilter, FGPositionedList& aResults, int aCutoffMsec)
 {
   aResults.clear();
   FindNearestPQueue pq;
@@ -296,7 +296,7 @@ bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
   return !pq.empty();
 }
 
-bool findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults, int aCutoffMsec)
+bool findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filter* aFilter, FGPositionedList& aResults, int aCutoffMsec)
 {
   aResults.clear();
   FindNearestPQueue pq;

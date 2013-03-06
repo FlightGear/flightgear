@@ -38,6 +38,7 @@
 
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
+#include <Airports/pavement.hxx>
 #include <ATC/CommStation.hxx>
 #include <Main/globals.hxx>
 #include <Navaids/NavDataCache.hxx>
@@ -50,30 +51,6 @@ typedef nasal::Ghost<FGParkingRef> NasalParking;
 typedef nasal::Ghost<FGAirportRef> NasalAirport;
 typedef nasal::Ghost<flightgear::CommStationRef> NasalCommStation;
 typedef nasal::Ghost<FGNavRecordRef> NasalNavRecord;
-
-//------------------------------------------------------------------------------
-naRef to_nasal_helper(naContext c, FGPositioned* positioned)
-{
-  return NasalPositioned::create(c, positioned);
-}
-
-//------------------------------------------------------------------------------
-naRef to_nasal_helper(naContext c, FGPavement* rwy)
-{
-  return NasalPositioned::create(c, (FGPositioned*)rwy);
-}
-
-//------------------------------------------------------------------------------
-naRef to_nasal_helper(naContext c, FGRunwayBase* rwy)
-{
-  return NasalPositioned::create(c, (FGPositioned*)rwy);
-}
-
-//------------------------------------------------------------------------------
-naRef to_nasal_helper(naContext c, FGParking* parking)
-{
-  return NasalParking::create(c, parking);
-}
 
 //------------------------------------------------------------------------------
 naRef to_nasal_helper(naContext c, flightgear::SID* sid)
@@ -94,12 +71,6 @@ naRef to_nasal_helper(naContext c, flightgear::Approach* iap)
 {
   // TODO Approach ghost
   return nasal::to_nasal(c, iap->ident());
-}
-
-//------------------------------------------------------------------------------
-naRef to_nasal_helper(naContext c, FGAirport* apt)
-{
-  return NasalAirport::create(c, apt);
 }
 
 //------------------------------------------------------------------------------
@@ -125,7 +96,7 @@ static naRef f_navaid_course(naContext, FGNavRecord& nav)
 }
 
 //------------------------------------------------------------------------------
-static FGRunwayBase* f_airport_runway(FGAirport& apt, std::string ident)
+static FGRunwayBaseRef f_airport_runway(FGAirport& apt, std::string ident)
 {
   boost::to_upper(ident);
 
@@ -139,7 +110,7 @@ static FGRunwayBase* f_airport_runway(FGAirport& apt, std::string ident)
 
 //------------------------------------------------------------------------------
 template<class T, class C1, class C2>
-std::vector<T> extract( const std::vector<C1*>& in,
+std::vector<T> extract( const std::vector<C1>& in,
                         T (C2::*getter)() const )
 {
   std::vector<T> ret(in.size());
@@ -349,10 +320,8 @@ static SGGeod getPosition(nasal::CallContext& ctx)
 // airportinfo(<type>);                 type := ("airport"|"seaport"|"heliport")
 // airportinfo()                        same as  airportinfo("airport")
 // airportinfo(<lat>, <lon> [, <type>]);
-static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
+static naRef f_airportinfo(nasal::CallContext ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-
   SGGeod pos = getPosition(ctx);
 
   if( ctx.argc > 1 )
@@ -375,18 +344,15 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 /**
  * findAirportsWithinRange([<position>,] <range-nm> [, type])
  */
-static naRef f_findAirportsWithinRange(naContext c, naRef me, int argc, naRef* args)
+static naRef f_findAirportsWithinRange(nasal::CallContext ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-
   SGGeod pos = getPosition(ctx);
   double range_nm = ctx.requireArg<double>(0);
 
   FGAirport::TypeRunwayFilter filter; // defaults to airports only
   filter.fromTypeString( ctx.getArg<std::string>(1) );
 
-  FGPositioned::List apts =
-    FGPositioned::findWithinRange(pos, range_nm, &filter);
+  FGPositionedList apts = FGPositioned::findWithinRange(pos, range_nm, &filter);
   FGPositioned::sortByRange(apts, pos);
 
   return ctx.to_nasal(apts);
@@ -395,9 +361,8 @@ static naRef f_findAirportsWithinRange(naContext c, naRef me, int argc, naRef* a
 /**
  * findAirportsByICAO(<ident/prefix> [, type])
  */
-static naRef f_findAirportsByICAO(naContext c, naRef me, int argc, naRef* args)
+static naRef f_findAirportsByICAO(nasal::CallContext ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
   std::string prefix = ctx.requireArg<std::string>(0);
 
   FGAirport::TypeRunwayFilter filter; // defaults to airports only
@@ -418,10 +383,8 @@ static naRef f_findAirportsByICAO(naContext c, naRef me, int argc, naRef* args)
 // navinfo("vor", "HAM") return all vor who's name start with "HAM"
 //navinfo(34,48,"vor","HAM") return all vor who's name start with "HAM"
 //                           sorted by distance relative to lat=34, lon=48
-static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
+static naRef f_navinfo(nasal::CallContext ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-
   SGGeod pos = getPosition(ctx);
   std::string id = ctx.getArg<std::string>(0);
 
@@ -429,24 +392,21 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
   if( filter.fromTypeString(id) )
     id = ctx.getArg<std::string>(1);
   else if( ctx.argc > 1 )
-    naRuntimeError(c, "navinfo() already got an ident");
+    naRuntimeError(ctx.c, "navinfo() already got an ident");
 
   return ctx.to_nasal( FGNavList::findByIdentAndFreq(pos, id, 0.0, &filter) );
 }
 
 //------------------------------------------------------------------------------
-static naRef f_findNavaidsWithinRange(naContext c, naRef me, int argc, naRef* args)
+static naRef f_findNavaidsWithinRange(nasal::CallContext ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-
   SGGeod pos = getPosition(ctx);
   double range_nm = ctx.requireArg<double>(0);
 
   FGNavList::TypeFilter filter;
   filter.fromTypeString(ctx.getArg<std::string>(0));
 
-  FGPositioned::List navs =
-    FGPositioned::findWithinRange(pos, range_nm, &filter);
+  FGPositionedList navs = FGPositioned::findWithinRange(pos, range_nm, &filter);
   FGPositioned::sortByRange(navs, pos);
 
   return ctx.to_nasal(navs);

@@ -1051,7 +1051,7 @@ static naRef f_findAirportsWithinRange(naContext c, naRef me, int argc, naRef* a
   
   naRef r = naNewVector(c);
   
-  FGPositioned::List apts = FGPositioned::findWithinRange(pos, rangeNm, &filter);
+  FGPositionedList apts = FGPositioned::findWithinRange(pos, rangeNm, &filter);
   FGPositioned::sortByRange(apts, pos);
   
   BOOST_FOREACH(FGPositionedRef a, apts) {
@@ -1077,7 +1077,7 @@ static naRef f_findAirportsByICAO(naContext c, naRef me, int argc, naRef* args)
   
   naRef r = naNewVector(c);
   
-  FGPositioned::List apts = FGPositioned::findAllWithIdent(prefix, &filter, false);
+  FGPositionedList apts = FGPositioned::findAllWithIdent(prefix, &filter, false);
   
   BOOST_FOREACH(FGPositionedRef a, apts) {
     FGAirport* apt = (FGAirport*) a.get();
@@ -1483,7 +1483,7 @@ static naRef f_findNavaidsWithinRange(naContext c, naRef me, int argc, naRef* ar
   
   naRef r = naNewVector(c);
   FGNavList::TypeFilter filter(type);
-  FGPositioned::List navs = FGPositioned::findWithinRange(pos, rangeNm, &filter);
+  FGPositionedList navs = FGPositioned::findWithinRange(pos, rangeNm, &filter);
   FGPositioned::sortByRange(navs, pos);
   
   BOOST_FOREACH(FGPositionedRef a, navs) {
@@ -1588,7 +1588,7 @@ static naRef f_findFixesByIdent(naContext c, naRef me, int argc, naRef* args)
   naRef r = naNewVector(c);
   
   FGPositioned::TypeFilter filter(FGPositioned::FIX);
-  FGPositioned::List fixes = FGPositioned::findAllWithIdent(ident, &filter);
+  FGPositionedList fixes = FGPositioned::findAllWithIdent(ident, &filter);
   FGPositioned::sortByRange(fixes, pos);
   
   BOOST_FOREACH(FGPositionedRef f, fixes) {

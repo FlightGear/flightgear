@@ -1,9 +1,8 @@
 #ifndef FG_ATC_COMM_STATION_HXX
 #define FG_ATC_COMM_STATION_HXX
 
+#include <Airports/airports_fwd.hxx>
 #include <Navaids/positioned.hxx>
-
-class FGAirport;
 
 namespace flightgear
 {
@@ -14,7 +13,7 @@ public:
     CommStation(PositionedID aGuid, const std::string& name, FGPositioned::Type t, const SGGeod& pos, int range, int freq);
 
     void setAirport(PositionedID apt);
-    FGAirport* airport() const;
+    FGAirportRef airport() const;
     
     int rangeNm() const
         { return mRangeNM; }
@@ -24,7 +23,7 @@ public:
         
     double freqMHz() const;
     
-    static CommStation* findByFreq(int freqKhz, const SGGeod& pos, FGPositioned::Filter* filt = NULL);
+    static CommStationRef findByFreq(int freqKhz, const SGGeod& pos, FGPositioned::Filter* filt = NULL);
 private:
     int mRangeNM;
     int mFreqKhz;

@@ -20,7 +20,6 @@
 // forward decls
 class SGRoute;
 class FGRouteMgr;
-class FGAirport;
 class GPSListener;
 
 /**
@@ -363,7 +362,7 @@ private:
     std::string _searchQuery;
     FGPositioned::Type _searchType;
     bool _searchExact;
-    FGPositioned::List _searchResults;
+    FGPositionedList _searchResults;
     bool _searchIsRoute; ///< set if 'search' is actually the current route
     bool _searchHasNext; ///< is there a result after this one?
     bool _searchNames; ///< set if we're searching names instead of idents

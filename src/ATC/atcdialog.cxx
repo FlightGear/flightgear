@@ -92,7 +92,7 @@ void FGATCDialogNew::frequencySearch()
 	button_group->removeChildren("button", false);
   
   AirportsWithATC filt;
-  FGPositioned::List results = FGPositioned::findWithinRange(globals->get_aircraft_position(), 50.0, &filt);
+  FGPositionedList results = FGPositioned::findWithinRange(globals->get_aircraft_position(), 50.0, &filt);
   FGPositioned::sortByRange(results, globals->get_aircraft_position());
   for (unsigned int r=0; (r<results.size()) && (r < 6); ++r) {
     
