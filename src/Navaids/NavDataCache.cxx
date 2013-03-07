@@ -557,6 +557,7 @@ public:
     
     setRunwayReciprocal = prepare("UPDATE runway SET reciprocal=?2 WHERE rowid=?1");
     setRunwayILS = prepare("UPDATE runway SET ils=?2 WHERE rowid=?1");
+    setNavaidColocated = prepare("UPDATE navaid SET colocated=?2 WHERE rowid=?1");
     updateRunwayThreshold = prepare("UPDATE runway SET heading=?2, displaced_threshold=?3, stopway=?4 WHERE rowid=?1");
     
     insertPositionedQuery = prepare("INSERT INTO positioned "
@@ -789,12 +790,17 @@ public:
     }
     
     int rangeNm = sqlite3_column_int(loadNavaid, 0),
-      freq = sqlite3_column_int(loadNavaid, 1);
+    freq = sqlite3_column_int(loadNavaid, 1);
     double mulituse = sqlite3_column_double(loadNavaid, 2);
-    //sqlite3_int64 colocated = sqlite3_column_int64(loadNavaid, 4);
+    PositionedID colocated = sqlite3_column_int64(loadNavaid, 4);
     reset(loadNavaid);
-    
-    return new FGNavRecord(rowId, ty, id, name, pos, freq, rangeNm, mulituse, runway);
+
+    FGNavRecord* n = new FGNavRecord(rowId, ty, id, name, pos, freq, rangeNm, mulituse, runway);
+    if (colocated) {
+        n->setColocatedDME(colocated);
+    }
+
+    return n;
   }
   
   FGPositioned* loadParking(sqlite3_int64 rowId,
@@ -965,7 +971,7 @@ public:
   
   sqlite3_stmt_ptr insertPositionedQuery, insertAirport, insertTower, insertRunway,
   insertCommStation, insertNavaid;
-  sqlite3_stmt_ptr setAirportMetar, setRunwayReciprocal, setRunwayILS,
+  sqlite3_stmt_ptr setAirportMetar, setRunwayReciprocal, setRunwayILS, setNavaidColocated,
     setAirportPos, updateRunwayThreshold, updateILS;
   sqlite3_stmt_ptr removePOIQuery;
   
@@ -1631,7 +1637,22 @@ NavDataCache::insertNavaid(FGPositioned::Type ty, const string& ident,
   sqlite3_bind_int(d->insertNavaid, 3, range);
   sqlite3_bind_double(d->insertNavaid, 4, multiuse);
   sqlite3_bind_int64(d->insertNavaid, 5, runway);
+  sqlite3_bind_int64(d->insertNavaid, 6, 0);
   return d->execInsert(d->insertNavaid);
+}
+
+void NavDataCache::setNavaidColocated(PositionedID navaid, PositionedID colocatedDME)
+{
+  // Update DB entries...
+  sqlite3_bind_int64(d->setNavaidColocated, 1, navaid);
+  sqlite3_bind_int64(d->setNavaidColocated, 2, colocatedDME);
+  d->execUpdate(d->setNavaidColocated);
+
+  // ...and the in-memory copy of the navrecord
+  if (d->cache.find(navaid) != d->cache.end()) {
+    FGNavRecord* rec = (FGNavRecord*) d->cache[navaid].get();
+    rec->setColocatedDME(colocatedDME);
+  }
 }
 
 void NavDataCache::updateILS(PositionedID ils, const SGGeod& newPos, double aHdg)

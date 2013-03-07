@@ -126,7 +126,7 @@ static double defaultNavRange(const string& ident, FGPositioned::Type type)
 
 namespace flightgear
 {
-  
+
 static PositionedID readNavFromStream(std::istream& aStream,
                                         FGPositioned::Type type = FGPositioned::INVALID)
 {
@@ -175,9 +175,36 @@ static PositionedID readNavFromStream(std::istream& aStream,
   
   AirportRunwayPair arp;
   FGRunway* runway = NULL;
-  
-  // FIXME - also relate DMEs, but only ILS/LOC DMEs - need a heuristic
-  // on the DME naming string
+  PositionedID navaid_dme = 0;
+
+  if (type == FGPositioned::DME) {
+    FGPositioned::TypeFilter f(FGPositioned::INVALID);
+    if ( name.find("VOR-DME") != std::string::npos ) {
+      f.addType(FGPositioned::VOR);
+    } else if ( name.find("DME-ILS") != std::string::npos ) {
+      f.addType(FGPositioned::ILS);
+      f.addType(FGPositioned::LOC);
+    } else if ( name.find("VORTAC") != std::string::npos ) {
+      f.addType(FGPositioned::VOR);
+    } else if ( name.find("NDB-DME") != std::string::npos ) {
+      f.addType(FGPositioned::NDB);
+    } else if ( name.find("TACAN") != std::string::npos ) {
+      f.addType(FGPositioned::VOR);
+    }
+
+    if (f.maxType() > 0) {
+      FGPositionedRef ref = FGPositioned::findClosestWithIdent(ident, pos, &f);
+      if (ref.valid()) {
+        string_list dme_part = simgear::strutils::split(name , 0 ,1);
+        string_list navaid_part = simgear::strutils::split(ref.get()->name(), 0 ,1);
+
+        if ( simgear::strutils::uppercase(navaid_part[0]) == simgear::strutils::uppercase(dme_part[0]) ) {
+          navaid_dme = ref.get()->guid();
+        }
+      }
+    }
+  }
+
   if ((type >= FGPositioned::ILS) && (type <= FGPositioned::GS)) {
     arp = cache->findAirportRunway(name);
     if (arp.second) {
@@ -210,6 +237,10 @@ static PositionedID readNavFromStream(std::istream& aStream,
   
   if (isLoc) {
     cache->setRunwayILS(arp.second, r);
+  }
+
+  if (navaid_dme) {
+    cache->setNavaidColocated(navaid_dme, r);
   }
   
   return r;

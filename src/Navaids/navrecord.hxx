@@ -46,7 +46,7 @@ class FGNavRecord : public FGPositioned
 
     std::string mName;                // verbose name in nav database
     PositionedID mRunway;        // associated runway, if there is one
-
+    PositionedID mColocated;     // Colocated DME at a navaid (ILS, VOR, TACAN, NDB)
     bool serviceable;		// for failure modeling
 
   void processSceneryILS(SGPropertyNode* aILSNode);
@@ -87,6 +87,9 @@ public:
   
   void bindToNode(SGPropertyNode* nd) const;
   void unbindFromNode(SGPropertyNode* nd) const;
+
+  void setColocatedDME(PositionedID other);
+  bool hasDME();
 };
 
 class FGTACANRecord : public SGReferenced {

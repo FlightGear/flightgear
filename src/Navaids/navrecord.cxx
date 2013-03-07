@@ -50,6 +50,7 @@ FGNavRecord::FGNavRecord(PositionedID aGuid, Type aTy, const std::string& aIdent
   multiuse(aMultiuse),
   mName(aName),
   mRunway(aRunway),
+  mColocated(0),
   serviceable(true)
 { 
 }
@@ -90,6 +91,16 @@ double FGNavRecord::localizerWidth() const
   double raw_width = 210.0 / axisLength * SGD_RADIANS_TO_DEGREES;
   return raw_width < 6.0? raw_width : 6.0;
 
+}
+
+bool FGNavRecord::hasDME()
+{
+  return (mColocated > 0);
+}
+
+void FGNavRecord::setColocatedDME(PositionedID other)
+{
+  mColocated = other;
 }
 
 FGTACANRecord::FGTACANRecord(void) :
