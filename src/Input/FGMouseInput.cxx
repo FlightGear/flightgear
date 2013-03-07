@@ -55,7 +55,7 @@ const int MAX_MOUSE_BUTTONS = 8;
  */
 class ActivePickCallbacks : public std::map<int, std::list<SGSharedPtr<SGPickCallback> > > {
 public:
-    void update( double dt );
+    void update( double dt, unsigned int keyModState );
     void init( int button, const osgGA::GUIEventAdapter* ea );
 };
 
@@ -84,13 +84,13 @@ void ActivePickCallbacks::init( int button, const osgGA::GUIEventAdapter* ea )
   }
 }
 
-void ActivePickCallbacks::update( double dt )
+void ActivePickCallbacks::update( double dt, unsigned int keyModState )
 {
   // handle repeatable mouse press events
   for( iterator mi = begin(); mi != end(); ++mi ) {
     std::list<SGSharedPtr<SGPickCallback> >::iterator li;
     for (li = mi->second.begin(); li != mi->second.end(); ++li) {
-      (*li)->update(dt);
+      (*li)->update(dt, keyModState);
     }
   }
 }
@@ -384,7 +384,7 @@ void FGMouseInput::update ( double dt )
       }
   }
     
-  d->activePickCallbacks.update( dt );
+  d->activePickCallbacks.update( dt, fgGetKeyModifiers() );
 }
 
 mouse::mouse ()
@@ -447,7 +447,7 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
     // Execute the mouse up event in any case, may be we should
     // stop processing here?
     while (!d->activePickCallbacks[b].empty()) {
-      d->activePickCallbacks[b].front()->buttonReleased();
+      d->activePickCallbacks[b].front()->buttonReleased(ea->getModKeyMask());
       d->activePickCallbacks[b].pop_front();
     }
   }
