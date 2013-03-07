@@ -165,8 +165,12 @@ FGMouseCursor* FGMouseCursor::instance()
             gw->setCursor(osgViewer::GraphicsWindow::InheritCursor);
         }
 
+        // Windows native curosr disabled while interaction with OSG
+        // is resolved - right now NCHITs (non-client-area hits)
+        // overwire the InheritCursor value above, and hence our cursor
+        // get stuck.
 	// and create our real implementation
-		static_instance = new WindowsMouseCursor;
+	//	static_instance = new WindowsMouseCursor;
 	#endif
         
         // X11
