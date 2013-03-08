@@ -33,6 +33,7 @@
 
 #include <simgear/scene/util/SGPickCallback.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/scene/model/SGPickAnimation.hxx>
 
 #include "FGButton.hxx"
 #include "Main/globals.hxx"
@@ -131,7 +132,7 @@ struct mouse {
 
 ////////////////////////////////////////////////////////////////////////
 
-class FGMouseInput::FGMouseInputPrivate
+class FGMouseInput::FGMouseInputPrivate : public SGPropertyChangeListener
 {
 public:
     FGMouseInputPrivate() :
@@ -140,15 +141,18 @@ public:
         ySizeNode(fgGetNode("/sim/startup/ysize", false ) ),
         xAccelNode(fgGetNode("/devices/status/mice/mouse/accel-x", true ) ),
         yAccelNode(fgGetNode("/devices/status/mice/mouse/accel-y", true ) ),
-        hideCursorNode(fgGetNode("/sim/mouse/hide-cursor", true ) ),
-        cursorTimeoutNode(fgGetNode("/sim/mouse/cursor-timeout-sec", true ) ),
-        rightButtonModeCycleNode(fgGetNode("/sim/mouse/right-button-mode-cycle-enabled", true)),
-        tooltipShowDelayNode( fgGetNode("/sim/mouse/tooltip-delay-msec", true) ),
-        clickTriggersTooltipNode( fgGetNode("/sim/mouse/click-shows-tooltip", true) ),
         mouseXNode(fgGetNode("/devices/status/mice/mouse/x", true)),
         mouseYNode(fgGetNode("/devices/status/mice/mouse/y", true))
     {
         tooltipTimeoutDone = false;
+
+        fgGetNode("/sim/mouse/hide-cursor", true )->addChangeListener(this, true);
+        fgGetNode("/sim/mouse/cursor-timeout-sec", true )->addChangeListener(this, true);
+        fgGetNode("/sim/mouse/right-button-mode-cycle-enabled", true)->addChangeListener(this, true);
+        fgGetNode("/sim/mouse/tooltip-delay-msec", true)->addChangeListener(this, true);
+        fgGetNode("/sim/mouse/click-shows-tooltip", true)->addChangeListener(this, true);
+        fgGetNode("/sim/mouse/drag-sensitivity", true)->addChangeListener(this, true);
+        fgGetNode("/sim/mouse/invert-mouse-wheel", true)->addChangeListener(this, true);
     }
   
     void centerMouseCursor(mouse& m)
@@ -222,22 +226,41 @@ public:
     }
 
     
+    // implement the property-change-listener interfacee
+    virtual void valueChanged( SGPropertyNode * node )
+    {
+        if (node->getNameString() == "drag-sensitivity") {
+            SGKnobAnimation::setDragSensitivity(node->getDoubleValue());
+        } else if (node->getNameString() == "invert-mouse-wheel") {
+            SGKnobAnimation::setAlternateMouseWheelDirection(node->getBoolValue());
+        } else if (node->getNameString() == "hide-cursor") {
+            hideCursor = node->getBoolValue();
+        } else if (node->getNameString() == "cursor-timeout-sec") {
+            cursorTimeoutMsec = node->getDoubleValue() * 1000;
+        } else if (node->getNameString() == "tooltip-delay-msec") {
+            tooltipDelayMsec = node->getIntValue();
+        } else if (node->getNameString() == "right-button-mode-cycle-enabled") {
+            rightClickModeCycle = node->getBoolValue();
+        } else if (node->getNameString() == "click-shows-tooltip") {
+            clickTriggersTooltip = node->getBoolValue();
+
+        }
+    }
+    
     ActivePickCallbacks activePickCallbacks;
 
     mouse mice[MAX_MICE];
     
-    bool haveWarped;
+    bool hideCursor, haveWarped;
     bool tooltipTimeoutDone;
-  
+    bool clickTriggersTooltip;
+    int tooltipDelayMsec, cursorTimeoutMsec;
+    bool rightClickModeCycle;
+    
     SGPropertyNode_ptr xSizeNode;
     SGPropertyNode_ptr ySizeNode;
     SGPropertyNode_ptr xAccelNode;
     SGPropertyNode_ptr yAccelNode;
-    SGPropertyNode_ptr hideCursorNode;
-    SGPropertyNode_ptr cursorTimeoutNode;
-    SGPropertyNode_ptr rightButtonModeCycleNode;
-    SGPropertyNode_ptr tooltipShowDelayNode;
-    SGPropertyNode_ptr clickTriggersTooltipNode;
     SGPropertyNode_ptr mouseXNode, mouseYNode;
 };
 
@@ -348,9 +371,6 @@ void FGMouseInput::init()
 
 void FGMouseInput::update ( double dt )
 {
-  int cursorTimeoutMsec = d->cursorTimeoutNode->getDoubleValue() * 1000;
-  int tooltipDelayMsec = d->tooltipShowDelayNode->getIntValue();
-  
   mouse &m = d->mice[0];
   int mode =  m.mode_node->getIntValue();
   if (mode != m.current_mode) {
@@ -367,18 +387,18 @@ void FGMouseInput::update ( double dt )
     }
   }
 
-  if ( d->hideCursorNode == NULL || d->hideCursorNode->getBoolValue() ) {
+  if ( d->hideCursor ) {
       // if delay is <= 0, disable tooltips
       if ( !d->tooltipTimeoutDone &&
-           (tooltipDelayMsec > 0) &&
-           (m.timeSinceLastMove.elapsedMSec() > tooltipDelayMsec))
+           (d->tooltipDelayMsec > 0) &&
+           (m.timeSinceLastMove.elapsedMSec() > d->tooltipDelayMsec))
       {
           d->tooltipTimeoutDone = true;
           SGPropertyNode_ptr arg(new SGPropertyNode);
           globals->get_commands()->execute("tooltip-timeout", arg);
       }
     
-      if ( m.timeSinceLastMove.elapsedMSec() > cursorTimeoutMsec) {
+      if ( m.timeSinceLastMove.elapsedMSec() > d->cursorTimeoutMsec) {
           FGMouseCursor::instance()->hideCursorUntilMouseMove();
           m.timeSinceLastMove.stamp();
       }
@@ -434,7 +454,7 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   if (b >= 0 && b < MAX_MOUSE_BUTTONS)
     m.mouse_button_nodes[b]->setBoolValue(updown == MOUSE_BUTTON_DOWN);
 
-  if (!d->rightButtonModeCycleNode->getBoolValue() && (b == 2)) {
+  if (!d->rightClickModeCycle && (b == 2)) {
     // in spring-loaded look mode, ignore right clicks entirely here
     return;
   }
@@ -474,7 +494,7 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
 
   m.modes[m.current_mode].buttons[b].update( modifiers, 0 != updown, x, y);
   
-  if (d->clickTriggersTooltipNode->getBoolValue()) {
+  if (d->clickTriggersTooltip) {
     SGPropertyNode_ptr args(new SGPropertyNode);
     args->setStringValue("reason", "click");
     globals->get_commands()->execute("tooltip-timeout", args);
@@ -495,7 +515,7 @@ void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
   mouse &m = d->mice[0];
   int modeIndex = m.current_mode;
   // are we in spring-loaded look mode?
-  if (!d->rightButtonModeCycleNode->getBoolValue()) {
+  if (!d->rightClickModeCycle) {
     if (m.mouse_button_nodes[2]->getBoolValue()) {
       // right mouse is down, force look mode
       modeIndex = 3;
