@@ -212,7 +212,11 @@ public:
   void init()
   {
     SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache at:" << path);
-    sqlite3_open_v2(path.c_str(), &db,
+	
+	// see http://code.google.com/p/flightgear-bugs/issues/detail?id=1055
+	// for the logic here. Sigh.
+	std::string pathUtf8 = simgear::strutils::convertWindowsLocal8BitToUtf8(path.str());
+    sqlite3_open_v2(pathUtf8.c_str(), &db,
                     SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
     
     
