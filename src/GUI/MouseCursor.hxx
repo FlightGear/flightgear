@@ -33,7 +33,8 @@ public:
     enum Cursor
     {
         CURSOR_ARROW,
-        CURSOR_HAND,
+        CURSOR_HAND, ///< the browser 'link' cursor
+        CURSOR_CLOSED_HAND,
         CURSOR_CROSSHAIR,
         CURSOR_IBEAM, ///< for editing text
         CURSOR_IN_OUT, ///< arrow pointing into / out of the screen

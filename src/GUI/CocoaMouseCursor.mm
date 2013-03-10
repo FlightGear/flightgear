@@ -45,9 +45,11 @@ NSCursor* cocoaCursorForKey(FGMouseCursor::Cursor aKey)
     case FGMouseCursor::CURSOR_HAND: return [NSCursor pointingHandCursor];
     case FGMouseCursor::CURSOR_CROSSHAIR: return [NSCursor crosshairCursor];
     case FGMouseCursor::CURSOR_IBEAM: return [NSCursor IBeamCursor];
-    
+    case FGMouseCursor::CURSOR_CLOSED_HAND: return [NSCursor closedHandCursor];
+            
     // FIXME - use a proper left-right cursor here.
     case FGMouseCursor::CURSOR_LEFT_RIGHT: return [NSCursor resizeLeftRightCursor];
+    case FGMouseCursor::CURSOR_UP_DOWN: return [NSCursor resizeUpDownCursor];
             
     case FGMouseCursor::CURSOR_SPIN_CW:
         path = [path stringByAppendingPathComponent:@"cursor-spin-cw.png"];

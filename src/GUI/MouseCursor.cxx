@@ -105,10 +105,11 @@ private:
         switch (aCursor) {
 		case CURSOR_ARROW: return osgViewer::GraphicsWindow::RightArrowCursor;
         case CURSOR_HAND: return osgViewer::GraphicsWindow::HandCursor;
+        case CURSOR_CLOSED_HAND: return osgViewer::GraphicsWindow::HandCursor;
         case CURSOR_CROSSHAIR: return osgViewer::GraphicsWindow::CrosshairCursor;
         case CURSOR_IBEAM: return osgViewer::GraphicsWindow::TextCursor;
         case CURSOR_LEFT_RIGHT: return osgViewer::GraphicsWindow::LeftRightCursor;
-                    
+        case CURSOR_UP_DOWN: return osgViewer::GraphicsWindow::UpDownCursor;
         default:
 			return osgViewer::GraphicsWindow::RightArrowCursor;  
         }
@@ -223,7 +224,12 @@ const MouseCursorMap mouse_cursor_map[] = {
     { "crosshair", FGMouseCursor::CURSOR_CROSSHAIR },
     { "left-right", FGMouseCursor::CURSOR_LEFT_RIGHT },
     { "hand", FGMouseCursor::CURSOR_HAND },
+    { "closed-hand", FGMouseCursor::CURSOR_CLOSED_HAND },
     { "text", FGMouseCursor::CURSOR_IBEAM },
+    
+// aliases
+    { "drag-horizontal", FGMouseCursor::CURSOR_LEFT_RIGHT },
+    { "drag-vertical", FGMouseCursor::CURSOR_UP_DOWN },
     { 0, FGMouseCursor::CURSOR_ARROW }
 };
 
