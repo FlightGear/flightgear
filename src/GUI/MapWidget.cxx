@@ -388,6 +388,7 @@ MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
   _height = maxY - y;
   _hasPanned = false;
   _orthoAzimuthProject = false;
+  _magneticHeadings = false;
   
   MapData::setFont(legendFont);
   MapData::setPalette(colour);

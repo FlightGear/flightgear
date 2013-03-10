@@ -76,6 +76,7 @@ FGAirport::FGAirport( PositionedID aGuid,
     _dynamics(0),
     mTowerDataLoaded(false),
     mRunwaysLoaded(false),
+    mHelipadsLoaded(false),
     mTaxiwaysLoaded(false),
     mProceduresLoaded(false),
     mILSDataLoaded(false)
