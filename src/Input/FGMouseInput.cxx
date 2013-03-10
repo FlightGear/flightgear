@@ -387,17 +387,17 @@ void FGMouseInput::update ( double dt )
     }
   }
 
+  // if delay is <= 0, disable tooltips
+  if ( !d->tooltipTimeoutDone &&
+      (d->tooltipDelayMsec > 0) &&
+      (m.timeSinceLastMove.elapsedMSec() > d->tooltipDelayMsec))
+  {
+      d->tooltipTimeoutDone = true;
+      SGPropertyNode_ptr arg(new SGPropertyNode);
+      globals->get_commands()->execute("tooltip-timeout", arg);
+  }
+  
   if ( d->hideCursor ) {
-      // if delay is <= 0, disable tooltips
-      if ( !d->tooltipTimeoutDone &&
-           (d->tooltipDelayMsec > 0) &&
-           (m.timeSinceLastMove.elapsedMSec() > d->tooltipDelayMsec))
-      {
-          d->tooltipTimeoutDone = true;
-          SGPropertyNode_ptr arg(new SGPropertyNode);
-          globals->get_commands()->execute("tooltip-timeout", arg);
-      }
-    
       if ( m.timeSinceLastMove.elapsedMSec() > d->cursorTimeoutMsec) {
           FGMouseCursor::instance()->hideCursorUntilMouseMove();
           m.timeSinceLastMove.stamp();
