@@ -1061,7 +1061,11 @@ void MapWidget::drawVOR(bool tuned, FGNavRecord* vor)
     glColor3f(0.0, 0.0, 1.0);
   }
 
-  circleAt(pos, 6, 8);
+  circleAt(pos, 6, 9);
+  circleAt(pos, 8, 1);
+
+  if (vor->hasDME())
+  squareAt(pos, 9);
 
   if (validDataForKey(vor)) {
     setAnchorForKey(vor, pos);
@@ -1683,12 +1687,22 @@ void MapWidget::circleAt(const SGVec2d& center, int nSides, double r)
 {
   glBegin(GL_LINE_LOOP);
   double advance = (SGD_PI * 2) / nSides;
-  glVertex2d(center.x(), center.y() + r);
+  glVertex2d(center.x() +r, center.y());
   double t=advance;
   for (int i=1; i<nSides; ++i) {
-    glVertex2d(center.x() + (sin(t) * r), center.y() + (cos(t) * r));
+    glVertex2d(center.x() + (cos(t) * r), center.y() + (sin(t) * r));
     t += advance;
   }
+  glEnd();
+}
+
+void MapWidget::squareAt(const SGVec2d& center, double r)
+{
+  glBegin(GL_LINE_LOOP);
+  glVertex2d(center.x() + r, center.y() + r);
+  glVertex2d(center.x() + r, center.y() - r);
+  glVertex2d(center.x() - r, center.y() - r);
+  glVertex2d(center.x() - r, center.y() + r);
   glEnd();
 }
 

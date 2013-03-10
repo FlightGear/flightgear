@@ -91,6 +91,7 @@ private:
   
   void circleAt(const SGVec2d& center, int nSides, double r);
   void circleAtAlt(const SGVec2d& center, int nSides, double r, double r2);
+  void squareAt(const SGVec2d& center, double r);
   void drawLine(const SGVec2d& p1, const SGVec2d& p2);
   void drawLegendBox(const SGVec2d& pos, const std::string& t);
   
