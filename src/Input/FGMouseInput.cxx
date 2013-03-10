@@ -192,13 +192,19 @@ public:
     {
         std::vector<SGSceneryPick> pickList;
         SGPickCallback::Priority priority = SGPickCallback::PriorityScenery;
+      
+        FGMouseCursor::Cursor cur = FGMouseCursor::CURSOR_ARROW;
+        bool explicitCursor = false;
         
         if (globals->get_renderer()->pick(pickList, windowPos)) {
             
             std::vector<SGSceneryPick>::const_iterator i;
             for (i = pickList.begin(); i != pickList.end(); ++i) {
-                if (i->callback->hover(windowPos, i->info)) {
-                    return;
+                bool done = i->callback->hover(windowPos, i->info);
+                std::string curName(i->callback->getCursor());
+                if (!curName.empty()) {
+                    explicitCursor = true;
+                    cur = FGMouseCursor::cursorFromString(curName.c_str());
                 }
                 
             // if the callback is of higher prioirty (lower enum index),
@@ -206,17 +212,35 @@ public:
                 if (i->callback->getPriority() < priority) {
                     priority = i->callback->getPriority();
                 }
-            }
-        } // of have valid pick
                 
-        if (priority == SGPickCallback::PriorityPanel) {
-            FGMouseCursor::instance()->setCursor(FGMouseCursor::CURSOR_HAND);
-        } else {
-            // restore normal cursor
-            FGMouseCursor::instance()->setCursor(FGMouseCursor::CURSOR_ARROW);
+                if (done) {
+                    break;
+                }
+            } // of picks iteration
+        } // of have valid pick
+      
+        
+        if (!explicitCursor && (priority == SGPickCallback::PriorityPanel)) {
+            cur = FGMouseCursor::CURSOR_HAND;
         }
         
+        FGMouseCursor::instance()->setCursor(cur);
         updateHover();
+    }
+    
+    void doMouseMoveWithCallbacks(const osgGA::GUIEventAdapter* ea)
+    {
+        FGMouseCursor::Cursor cur = FGMouseCursor::CURSOR_CLOSED_HAND;
+        
+        BOOST_FOREACH(SGPickCallback* cb, activePickCallbacks[0]) {
+            cb->mouseMoved(ea);
+            std::string curName(cb->getCursor());
+            if (!curName.empty()) {
+                cur = FGMouseCursor::cursorFromString(curName.c_str());
+            }
+        }
+
+        FGMouseCursor::instance()->setCursor(cur);
     }
     
     void updateHover()
@@ -475,15 +499,26 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   if (mode.pass_through) {
     // remove once PUI uses standard picking mechanism
     if (0 <= x && 0 <= y && puMouse(b, updown, x, y))
-      return;
-    else {
-      // pui didn't want the click event so compute a
-      // scenegraph intersection point corresponding to the mouse click
-      if (updown == MOUSE_BUTTON_DOWN) {
-        d->activePickCallbacks.init( b, ea );
+      return; // pui handled it
+
+    // pui didn't want the click event so compute a
+    // scenegraph intersection point corresponding to the mouse click
+    if (updown == MOUSE_BUTTON_DOWN) {
+      d->activePickCallbacks.init( b, ea );
+        
+      if (d->clickTriggersTooltip) {
+            SGPropertyNode_ptr args(new SGPropertyNode);
+            args->setStringValue("reason", "click");
+            globals->get_commands()->execute("tooltip-timeout", args);
+            d->tooltipTimeoutDone = true;
       }
-    }
-  }
+    } else {
+      // do a hover pick now, to fix up cursor
+      osg::Vec2d windowPos;
+      flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
+      d->doHoverPick(windowPos);
+    } // mouse button was released
+  } // of pass-through mode
 
   // OK, PUI and the panel didn't want the click
   if (b >= MAX_MOUSE_BUTTONS) {
@@ -492,23 +527,13 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
     return;
   }
 
-  m.modes[m.current_mode].buttons[b].update( modifiers, 0 != updown, x, y);
-  
-  if (d->clickTriggersTooltip) {
-    SGPropertyNode_ptr args(new SGPropertyNode);
-    args->setStringValue("reason", "click");
-    globals->get_commands()->execute("tooltip-timeout", args);
-    d->tooltipTimeoutDone = true;
-  }
+  m.modes[m.current_mode].buttons[b].update( modifiers, 0 != updown, x, y);  
 }
 
 void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
 {
   if (!d->activePickCallbacks[0].empty()) {
-    //SG_LOG(SG_GENERAL, SG_INFO, "mouse-motion, have active pick callback");
-    BOOST_FOREACH(SGPickCallback* cb, d->activePickCallbacks[0]) {
-      cb->mouseMoved(ea);
-    }
+    d->doMouseMoveWithCallbacks(ea);
     return;
   }
   
