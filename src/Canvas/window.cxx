@@ -79,6 +79,17 @@ namespace canvas
         _capture_events = node->getBoolValue();
       else
         handled = false;
+
+      // Ensure canvas is redrawn before the window is displayed after it has
+      // been hidden. We can't rely on the cull callback as it gets called too
+      // late (GUI camera is attached as POST_RENDER whereas canvas contents are
+      // rendered during PRE_RENDER).
+      if( node->getNameString() == "visible" && node->getBoolValue() )
+      {
+        simgear::canvas::CanvasPtr canvas = getCanvas().lock();
+        if( canvas )
+          canvas->enableRendering();
+      }
     }
 
     if( !handled )
