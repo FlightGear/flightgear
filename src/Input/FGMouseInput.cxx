@@ -195,7 +195,8 @@ public:
       
         FGMouseCursor::Cursor cur = FGMouseCursor::CURSOR_ARROW;
         bool explicitCursor = false;
-        
+        bool didPick = false;
+      
         if (globals->get_renderer()->pick(pickList, windowPos)) {
             
             std::vector<SGSceneryPick>::const_iterator i;
@@ -214,18 +215,21 @@ public:
                 }
                 
                 if (done) {
+                    didPick = true;
                     break;
                 }
             } // of picks iteration
-        } // of have valid pick
+        } else { // of have valid pick
+        }
       
-        
         if (!explicitCursor && (priority == SGPickCallback::PriorityPanel)) {
             cur = FGMouseCursor::CURSOR_HAND;
         }
         
         FGMouseCursor::instance()->setCursor(cur);
-        updateHover();
+        if (!didPick) {
+          updateHover();
+        }
     }
     
     void doMouseMoveWithCallbacks(const osgGA::GUIEventAdapter* ea)
