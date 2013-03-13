@@ -386,9 +386,21 @@ void FGMouseInput::init()
       if (mode_node->hasChild("x-axis-ctrl")) {
         read_bindings(mode_node->getChild("x-axis-ctrl"), m.modes[j].x_bindings, KEYMOD_CTRL, module );
       }
+      if (mode_node->hasChild("x-axis-shift")) {
+        read_bindings(mode_node->getChild("x-axis-shift"), m.modes[j].x_bindings, KEYMOD_SHIFT, module );
+      }
+      if (mode_node->hasChild("x-axis-ctrl-shift")) {
+        read_bindings(mode_node->getChild("x-axis-ctrl-shift"), m.modes[j].x_bindings, KEYMOD_CTRL|KEYMOD_SHIFT, module );
+      }
       
       if (mode_node->hasChild("y-axis-ctrl")) {
         read_bindings(mode_node->getChild("y-axis-ctrl"), m.modes[j].y_bindings, KEYMOD_CTRL, module );
+      }
+      if (mode_node->hasChild("y-axis-shift")) {
+        read_bindings(mode_node->getChild("y-axis-shift"), m.modes[j].y_bindings, KEYMOD_SHIFT, module );
+      }
+      if (mode_node->hasChild("y-axis-ctrl-shift")) {
+        read_bindings(mode_node->getChild("y-axis-ctrl-shift"), m.modes[j].y_bindings, KEYMOD_CTRL|KEYMOD_SHIFT, module );
       }
     } // of modes iteration
   }
