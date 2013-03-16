@@ -25,6 +25,8 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/structure/commands.hxx>
+
 #include <boost/mem_fn.hpp>
 #include <boost/foreach.hpp>
 
@@ -44,6 +46,33 @@
 #include "AIWingman.hxx"
 #include "AIGroundVehicle.hxx"
 #include "AIEscort.hxx"
+
+class FGAIManager::Scenario
+{
+public:
+    Scenario(FGAIManager* man, SGPropertyNode* scenarios) :
+        _manager(man)
+    {
+        BOOST_FOREACH(SGPropertyNode* scEntry, scenarios->getChildren("entry")) {
+            FGAIBasePtr ai = man->addObject(scEntry);
+            if (ai) {
+                _objects.push_back(ai);
+            }
+        } // of scenario entry iteration
+    }
+    
+    ~Scenario()
+    {
+        BOOST_FOREACH(FGAIBasePtr ai, _objects) {
+            ai->setDie(true);
+        }
+    }
+private:
+    FGAIManager* _manager;
+    std::vector<FGAIBasePtr> _objects;
+};
+
+///////////////////////////////////////////////////////////////////////////////
 
 FGAIManager::FGAIManager() :
     cb_ai_bare(SGPropertyChangeCallback<FGAIManager>(this,&FGAIManager::updateLOD,
@@ -72,6 +101,9 @@ FGAIManager::init() {
     user_altitude_agl_node  = fgGetNode("/position/altitude-agl-ft", true);
     user_yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
     user_speed_node     = fgGetNode("/velocities/uBody-fps", true);
+    
+    globals->get_commands()->addCommand("load-scenario", this, &FGAIManager::loadScenarioCommand);
+    globals->get_commands()->addCommand("unload-scenario", this, &FGAIManager::unloadScenarioCommand);
 }
 
 void
@@ -86,20 +118,18 @@ FGAIManager::postinit() {
         enabled->setBoolValue(true);
 
     // process all scenarios
-    std::set<std::string> loadedScenarios;
     BOOST_FOREACH(SGPropertyNode* n, root->getChildren("scenario")) {
         const string& name = n->getStringValue();
         if (name.empty())
             continue;
 
-        if (loadedScenarios.find(name) != loadedScenarios.end()) {
+        if (_scenarios.find(name) != _scenarios.end()) {
             SG_LOG(SG_AI, SG_WARN, "won't load scenario '" << name << "' twice");
             continue;
         }
 
         SG_LOG(SG_AI, SG_INFO, "loading scenario '" << name << '\'');
         loadScenario(name);
-        loadedScenarios.insert(name);
     }
 }
 
@@ -242,81 +272,101 @@ FGAIManager::processThermal( double dt, FGAIThermal* thermal ) {
 
 }
 
+bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args)
+{
+    std::string name = args->getStringValue("name");
+    return loadScenario(name);
+}
+
+bool FGAIManager::unloadScenarioCommand(const SGPropertyNode* args)
+{
+    std::string name = args->getStringValue("name");
+    unloadScenario(name);
+    return true;
+}
+
+bool FGAIManager::addObjectCommand(const SGPropertyNode* definition)
+{
+    addObject(definition);
+    return true;
+}
+
+FGAIBasePtr FGAIManager::addObject(const SGPropertyNode* definition)
+{
+    const std::string& type = definition->getStringValue("type", "aircraft");
+    
+    FGAIBase* ai = NULL;
+    if (type == "tanker") { // refueling scenarios
+        ai = new FGAITanker; 
+    } else if (type == "wingman") {
+        ai = new FGAIWingman;
+    } else if (type == "aircraft") {
+        ai = new FGAIAircraft;
+    } else if (type == "ship") {
+        ai = new FGAIShip;
+    } else if (type == "carrier") {
+        ai = new FGAICarrier;
+    } else if (type == "groundvehicle") {
+        ai = new FGAIGroundVehicle;
+    } else if (type == "escort") {
+        ai = new FGAIEscort;
+    } else if (type == "thunderstorm") {
+        ai = new FGAIStorm;
+    } else if (type == "thermal") {
+        ai = new FGAIThermal;
+    } else if (type == "ballistic") {
+        ai = new FGAIBallistic;
+    } else if (type == "static") {
+        ai = new FGAIStatic;
+    }
+
+    ai->readFromScenario(const_cast<SGPropertyNode*>(definition));
+    attach(ai);
+    return ai;
+}
+
+bool FGAIManager::removeObject(const SGPropertyNode* args)
+{
+    int id = args->getIntValue("id");
+    BOOST_FOREACH(FGAIBase* ai, get_ai_list()) {
+        if (ai->getID() == id) {
+            ai->setDie(true);
+            break;
+        }
+    }
+    
+    return false;
+}
+
+bool
+FGAIManager::loadScenario( const string &filename )
+{
+    SGPropertyNode_ptr file = loadScenarioFile(filename);
+    if (!file) {
+        return false;
+    }
+    
+    SGPropertyNode_ptr scNode = file->getChild("scenario");
+    if (!scNode) {
+        return false;
+    }
+    
+    _scenarios[filename] = new Scenario(this, scNode);
+    return true;
+}
 
 
 void
-FGAIManager::loadScenario( const string &filename ) {
-
-    SGPropertyNode_ptr scenarioTop = loadScenarioFile(filename);
-
-    if (!scenarioTop)
+FGAIManager::unloadScenario( const string &filename)
+{
+    ScenarioDict::iterator it = _scenarios.find(filename);
+    if (it == _scenarios.end()) {
+        SG_LOG(SG_AI, SG_WARN, "unload scenario: not found:" << filename);
         return;
-
-    SGPropertyNode* scenarios = scenarioTop->getChild("scenario");
-
-    if (!scenarios)
-        return;
-
-    BOOST_FOREACH(SGPropertyNode* scEntry, scenarios->getChildren("entry")) {
-        const std::string& type = scEntry->getStringValue("type", "aircraft");
-
-        if (type == "tanker") { // refueling scenarios
-            FGAITanker* tanker = new FGAITanker;
-            tanker->readFromScenario(scEntry);
-            attach(tanker);
-
-        } else if (type == "wingman") {
-            FGAIWingman* wingman = new FGAIWingman;
-            wingman->readFromScenario(scEntry);
-            attach(wingman);
-
-        } else if (type == "aircraft") {
-            FGAIAircraft* aircraft = new FGAIAircraft;
-            aircraft->readFromScenario(scEntry);
-            attach(aircraft);
-
-        } else if (type == "ship") {
-            FGAIShip* ship = new FGAIShip;
-            ship->readFromScenario(scEntry);
-            attach(ship);
-
-        } else if (type == "carrier") {
-            FGAICarrier* carrier = new FGAICarrier;
-            carrier->readFromScenario(scEntry);
-            attach(carrier);
-
-        } else if (type == "groundvehicle") {
-            FGAIGroundVehicle* groundvehicle = new FGAIGroundVehicle;
-            groundvehicle->readFromScenario(scEntry);
-            attach(groundvehicle);
-
-        } else if (type == "escort") {
-            FGAIEscort* escort = new FGAIEscort;
-            escort->readFromScenario(scEntry);
-            attach(escort);
-
-        } else if (type == "thunderstorm") {
-            FGAIStorm* storm = new FGAIStorm;
-            storm->readFromScenario(scEntry);
-            attach(storm);
-
-        } else if (type == "thermal") {
-            FGAIThermal* thermal = new FGAIThermal;
-            thermal->readFromScenario(scEntry);
-            attach(thermal);
-
-        } else if (type == "ballistic") {
-            FGAIBallistic* ballistic = new FGAIBallistic;
-            ballistic->readFromScenario(scEntry);
-            attach(ballistic);
-
-        } else if (type == "static") {
-            FGAIStatic* aistatic = new FGAIStatic;
-            aistatic->readFromScenario(scEntry);
-            attach(aistatic);
-        }
-
-    } // of scenario entry iteration
+    }
+    
+    delete it->second;
+    _scenarios.erase(it);
 }
 
 SGPropertyNode_ptr

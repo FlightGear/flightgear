@@ -24,6 +24,7 @@
 #define _FG_AIMANAGER_HXX
 
 #include <list>
+#include <map>
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
@@ -37,9 +38,9 @@
 #include <Traffic/SchedFlight.hxx>
 #include <Traffic/Schedule.hxx>
 
-using std::list;
-
 class FGAIThermal;
+
+typedef SGSharedPtr<FGAIBase> FGAIBasePtr;
 
 class FGAIManager : public SGSubsystem
 {
@@ -47,14 +48,11 @@ class FGAIManager : public SGSubsystem
 public:
 
     // A list of pointers to AI objects
-    typedef list <SGSharedPtr<FGAIBase> > ai_list_type;
+    typedef std::list <FGAIBasePtr> ai_list_type;
     typedef ai_list_type::iterator ai_list_iterator;
     typedef ai_list_type::const_iterator ai_list_const_iterator;
 
-    ai_list_type ai_list;
-
-    inline const ai_list_type& get_ai_list() const {
-        SG_LOG(SG_AI, SG_DEBUG, "AI Manager: AI model return list size " << ai_list.size());
+    const ai_list_type& get_ai_list() const {
         return ai_list;
     }
 
@@ -72,9 +70,6 @@ public:
 
     const FGAIBase *calcCollision(double alt, double lat, double lon, double fuse_range);
 
- //   inline double get_user_latitude() const { return user_latitude; }
-  //  inline double get_user_longitude() const { return user_longitude; }
-  //  inline double get_user_altitude() const { return user_altitude; }
     inline double get_user_heading() const { return user_heading; }
     inline double get_user_pitch() const { return user_pitch; }
     inline double get_user_yaw() const { return user_yaw; }
@@ -86,18 +81,27 @@ public:
 
     int getNumAiObjects(void) const;
 
-    void loadScenario( const string &filename );
+    bool loadScenario( const string &filename );
 
     static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
 
     static bool getStartPosition(const string& id, const string& pid,
         SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
+    FGAIBasePtr addObject(const SGPropertyNode* definition);
+    
 private:
     void removeDeadItem(FGAIBase* base);
   
     double calcRange(const SGVec3d& aCartPos, FGAIBase* aObject) const;
 
+    bool loadScenarioCommand(const SGPropertyNode* args);
+    bool unloadScenarioCommand(const SGPropertyNode* args);
+    bool addObjectCommand(const SGPropertyNode* definition);
+    
+    bool removeObject(const SGPropertyNode* args);
+    void unloadScenario( const string &filename );
+    
     SGPropertyNode_ptr root;
     SGPropertyNode_ptr enabled;
     SGPropertyNode_ptr thermal_lift_node;
@@ -108,6 +112,8 @@ private:
     SGPropertyNode_ptr wind_from_north_node;
 
 
+    ai_list_type ai_list;
+    
     double user_altitude_agl;
     double user_heading;
     double user_pitch;
@@ -127,6 +133,10 @@ private:
 
     SGPropertyChangeCallback<FGAIManager> cb_ai_bare;
     SGPropertyChangeCallback<FGAIManager> cb_ai_detailed;
+    
+    class Scenario;
+    typedef std::map<std::string, Scenario*> ScenarioDict;
+    ScenarioDict _scenarios;
 };
 
 #endif  // _FG_AIMANAGER_HXX
