@@ -234,7 +234,7 @@ void TimeManager::update(double dt)
       // time jump (and corresponding sky object and lighting
       // jump.)
         int adjust = _timeOverride->getLongValue() - now;
-        SG_LOG(SG_GENERAL, SG_INFO, "adjusting on un-freeze:" << adjust);
+        SG_LOG(SG_GENERAL, SG_DEBUG, "adjusting on un-freeze:" << adjust);
         _warp->setIntValue(_warp->getIntValue() + adjust);
       }
       _timeOverride->setLongValue(0);
