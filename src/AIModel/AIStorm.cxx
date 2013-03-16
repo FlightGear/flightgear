@@ -155,17 +155,11 @@ void FGAIStorm::Run(double dt) {
    // ***************************************************
 
    // copy user's position from the AIManager
-   double user_latitude  = manager->get_user_latitude();
-   double user_longitude = manager->get_user_longitude();
-   double user_altitude  = manager->get_user_altitude();
-
-   // calculate range to target in feet and nautical miles
-   double lat_range = fabs(pos.getLatitudeDeg() - user_latitude) * ft_per_deg_lat;
-   double lon_range = fabs(pos.getLongitudeDeg() - user_longitude) * ft_per_deg_lon;
-   double range_ft = sqrt(lat_range*lat_range + lon_range*lon_range);
-   range = range_ft / 6076.11549;
-
-   if (range < (diameter * 0.5) &&
+   double d = dist(SGVec3d::fromGeod(pos), globals->get_aircraft_position_cart());
+   double rangeNm =  d * SG_METER_TO_NM;
+   double user_altitude = globals->get_aircraft_position().getElevationFt();
+    
+   if (rangeNm < (diameter * 0.5) &&
        user_altitude > (altitude_ft - 1000.0) &&
        user_altitude < height) {
               turb_mag_node->setDoubleValue(strength_norm);

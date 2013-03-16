@@ -255,9 +255,9 @@ void FGAIBallistic::bind() {
 
 }
 
-void FGAIBallistic::update(double dt) {
+void FGAIBallistic::update(double dt)
+{
     FGAIBase::update(dt);
-    _setUserPos();
 
     if (_slave_to_ac){
         slaveToAC(dt);
@@ -623,7 +623,7 @@ void FGAIBallistic::slaveToAC(double dt){
         pch = manager->get_user_pitch();
         rll = manager->get_user_roll();
 //        agl = manager->get_user_agl();
-        setOffsetPos(userpos, hdg, pch, rll);
+        setOffsetPos(globals->get_aircraft_position(), hdg, pch, rll);
         setSpeed(manager->get_user_speed());
     }
 
@@ -1011,15 +1011,11 @@ void FGAIBallistic::report_impact(double elevation, const FGAIBase *object)
     _impact_report_node->setStringValue(props->getPath());
 }
 
-SGVec3d FGAIBallistic::getCartUserPos() const {
-    SGVec3d cartUserPos = SGVec3d::fromGeod(userpos);
-    return cartUserPos;
-}
-
 SGVec3d FGAIBallistic::getCartHitchPos() const{
 
     // convert geodetic positions to geocentered
-    SGVec3d cartuserPos = SGVec3d::fromGeod(userpos);
+    SGVec3d cartuserPos = globals->get_aircraft_position_cart();
+    
     //SGVec3d cartPos = getCartPos();
 
     // Transform to the right coordinate frame, configuration is done in
@@ -1031,7 +1027,7 @@ SGVec3d FGAIBallistic::getCartHitchPos() const{
             -_z_offset * SG_FEET_TO_METER);
 
     // Transform the user position to the horizontal local coordinate system.
-    SGQuatd hlTrans = SGQuatd::fromLonLat(userpos);
+    SGQuatd hlTrans = SGQuatd::fromLonLat(globals->get_aircraft_position());
 
     // and postrotate the orientation of the user model wrt the horizontal
     // local frame
@@ -1103,7 +1099,7 @@ double FGAIBallistic::getRelBrgHitchToUser() const {
     //calculate the relative bearing 
     double az1, az2, distance;
 
-    geo_inverse_wgs_84(_offsetpos, userpos, &az1, &az2, &distance);
+    geo_inverse_wgs_84(_offsetpos, globals->get_aircraft_position(), &az1, &az2, &distance);
 
     double rel_brg = az1 - hdg;
 
@@ -1116,14 +1112,14 @@ double FGAIBallistic::getElevHitchToUser() const {
 
     //calculate the distance from the user position
     SGVec3d carthitchPos = getCartHitchPos();
-    SGVec3d cartuserPos = getCartUserPos();
+    SGVec3d cartuserPos = globals->get_aircraft_position_cart();
 
     SGVec3d diff = cartuserPos - carthitchPos;
 
     double distance = norm(diff);
     double angle = 0;
 
-    double daltM = userpos.getElevationM() - _offsetpos.getElevationM();
+    double daltM = globals->get_aircraft_position().getElevationM() - _offsetpos.getElevationM();
 
     // now the angle, positive angles are upwards
     if (fabs(distance) < SGLimits<float>::min()) {

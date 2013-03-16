@@ -201,14 +201,6 @@ double slice_center_lat;
 
 
 
-// **************************************
-// various variables relative to the user
-// **************************************
-
-double user_latitude  = manager->get_user_latitude();
-double user_longitude = manager->get_user_longitude();
-double user_altitude  = manager->get_user_altitude(); // MSL
-
 //we need to know the thermal foot AGL altitude
 
 
@@ -227,6 +219,9 @@ if (dt_count >= 10.0 ) {
 }
 
 //user altitude relative to the thermal height, seen AGL from the thermal foot
+    
+
+double user_altitude = globals->get_aircraft_position().getElevationFt();
 if ( user_altitude < 1.0 ) { user_altitude = 1.0 ;}; // an ugly way to avoid NaNs for users at alt 0
 double user_altitude_agl= ( user_altitude - ground_elev_ft ) ;
 alt_rel = user_altitude_agl / altitude_agl_ft;
@@ -343,14 +338,9 @@ double dt_slice_lat = dt_slice_lat_FT / ft_per_deg_lat;
 slice_center_lon = thermal_foot_lon + dt_slice_lon;
 slice_center_lat = thermal_foot_lat + dt_slice_lat;
 
-double dist_center_lon = fabs(slice_center_lon - user_longitude)* ft_per_deg_lon;
-double dist_center_lat = fabs(slice_center_lat - user_latitude)* ft_per_deg_lat;
-
-double dist_center_FT = sqrt ( dist_center_lon*dist_center_lon + dist_center_lat*dist_center_lat ); // feet
-
-dist_center = dist_center_FT/ 6076.11549; //nautic miles
-
-
+dist_center = SGGeodesy::distanceNm(SGGeod::fromDeg(slice_center_lon, slice_center_lat),
+                                    globals->get_aircraft_position());
+    
 // Now we can calculate Vup
 
 if ( max_strength >=0.0 ) { // this is a thermal

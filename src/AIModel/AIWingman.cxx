@@ -243,7 +243,6 @@ void FGAIWingman::formateToAC(double dt){
     double p_hdg, p_pch, p_rll, p_agl, p_ht, p_wow = 0;
 
     setTgtOffsets(dt, 25);
-    _setUserPos();
 
     if (_pnode != 0) {
         setParentPos();
@@ -257,8 +256,8 @@ void FGAIWingman::formateToAC(double dt){
         p_hdg = manager->get_user_heading();
         p_pch = manager->get_user_pitch();
         p_rll = manager->get_user_roll();
-        p_ht  = manager->get_user_altitude();
-        setOffsetPos(userpos, p_hdg,p_pch, p_rll);
+        p_ht  = globals->get_aircraft_position().getElevationFt();
+        setOffsetPos(globals->get_aircraft_position(), p_hdg,p_pch, p_rll);
         setSpeed(manager->get_user_speed());
     }
 
@@ -341,7 +340,6 @@ void FGAIWingman::Join(double dt) {
     double p_hdg, p_pch, p_rll = 0;
 
     setTgtOffsets(dt, 25);
-    _setUserPos();
 
     if (_pnode != 0) {
         setParentPos();
@@ -355,7 +353,7 @@ void FGAIWingman::Join(double dt) {
         p_hdg = manager->get_user_heading();
         p_pch = manager->get_user_pitch();
         p_rll = manager->get_user_roll();
-        setOffsetPos(userpos, p_hdg, p_pch, p_rll);
+        setOffsetPos(globals->get_aircraft_position(), p_hdg, p_pch, p_rll);
         parent_hdg = manager->get_user_heading();
         parent_spd = manager->get_user_speed();
     }

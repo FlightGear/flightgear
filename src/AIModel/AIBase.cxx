@@ -100,8 +100,6 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _roll_offset = 0;
     _yaw_offset = 0;
 
-    userpos = SGGeod::fromDeg(0, 0);
-
     pos = SGGeod::fromDeg(0, 0);
     speed = 0;
     altitude_ft = 0;
@@ -479,106 +477,68 @@ void FGAIBase::removeSoundFx() {
     }
 }
 
-double FGAIBase::UpdateRadar(FGAIManager* manager) {
+double FGAIBase::UpdateRadar(FGAIManager* manager)
+{
     bool control = fgGetBool("/sim/controls/radar", true);
 
     if(!control) return 0;
 
-    double radar_range_ft2 = fgGetDouble("/instrumentation/radar/range");
+    double radar_range_m = fgGetDouble("/instrumentation/radar/range");
     bool force_on = fgGetBool("/instrumentation/radar/debug-mode", false);
-    radar_range_ft2 *= SG_NM_TO_METER * SG_METER_TO_FEET * 1.1; // + 10%
-    radar_range_ft2 *= radar_range_ft2;
-
-    double user_latitude  = manager->get_user_latitude();
-    double user_longitude = manager->get_user_longitude();
-    double lat_range = fabs(pos.getLatitudeDeg() - user_latitude) * ft_per_deg_lat;
-    double lon_range = fabs(pos.getLongitudeDeg() - user_longitude) * ft_per_deg_lon;
-    double range_ft2 = lat_range*lat_range + lon_range*lon_range;
-
-    //
-    // Test whether the target is within radar range.
-    //
-    in_range = (range_ft2 && (range_ft2 <= radar_range_ft2));
-
-    if ( in_range || force_on ) {
-        props->setBoolValue("radar/in-range", true);
-
-        // copy values from the AIManager
-        double user_altitude  = manager->get_user_altitude();
-        double user_heading   = manager->get_user_heading();
-        double user_pitch     = manager->get_user_pitch();
-        //double user_yaw       = manager->get_user_yaw();
-        //double user_speed     = manager->get_user_speed();
-
-        // calculate range to target in feet and nautical miles
-        double range_ft = sqrt( range_ft2 );
-        range = range_ft / 6076.11549;
-
-        // calculate bearing to target
-        if (pos.getLatitudeDeg() >= user_latitude) {
-            bearing = atan2(lat_range, lon_range) * SG_RADIANS_TO_DEGREES;
-            if (pos.getLongitudeDeg() >= user_longitude) {
-                bearing = 90.0 - bearing;
-            } else {
-                bearing = 270.0 + bearing;
-            }
-        } else {
-            bearing = atan2(lon_range, lat_range) * SG_RADIANS_TO_DEGREES;
-            if (pos.getLongitudeDeg() >= user_longitude) {
-                bearing = 180.0 - bearing;
-            } else {
-                bearing = 180.0 + bearing;
-            }
-        }
-
-        // This is an alternate way to compute bearing and distance which
-        // agrees with the original scheme within about 0.1 degrees.
-        //
-        // Point3D start( user_longitude * SGD_DEGREES_TO_RADIANS,
-        //                user_latitude * SGD_DEGREES_TO_RADIANS, 0 );
-        // Point3D dest( pos.getLongitudeRad(), pos.getLatitudeRad(), 0 );
-        // double gc_bearing, gc_range;
-        // calc_gc_course_dist( start, dest, &gc_bearing, &gc_range );
-        // gc_range *= SG_METER_TO_NM;
-        // gc_bearing *= SGD_RADIANS_TO_DEGREES;
-        // printf("orig b = %.3f %.2f  gc b= %.3f, %.2f\n",
-        //        bearing, range, gc_bearing, gc_range);
-
-        // calculate look left/right to target, without yaw correction
-        horiz_offset = bearing - user_heading;
-        if (horiz_offset > 180.0) horiz_offset -= 360.0;
-        if (horiz_offset < -180.0) horiz_offset += 360.0;
-
-        // calculate elevation to target
-        elevation = atan2( altitude_ft - user_altitude, range_ft ) * SG_RADIANS_TO_DEGREES;
-
-        // calculate look up/down to target
-        vert_offset = elevation - user_pitch;
-
-        /* this calculation needs to be fixed, but it isn't important anyway
-        // calculate range rate
-        double recip_bearing = bearing + 180.0;
-        if (recip_bearing > 360.0) recip_bearing -= 360.0;
-        double my_horiz_offset = recip_bearing - hdg;
-        if (my_horiz_offset > 180.0) my_horiz_offset -= 360.0;
-        if (my_horiz_offset < -180.0) my_horiz_offset += 360.0;
-        rdot = (-user_speed * cos( horiz_offset * SG_DEGREES_TO_RADIANS ))
-        +(-speed * 1.686 * cos( my_horiz_offset * SG_DEGREES_TO_RADIANS ));
-        */
-
-        // now correct look left/right for yaw
-        // horiz_offset += user_yaw; // FIXME: WHY WOULD WE WANT TO ADD IN SIDE-SLIP HERE?
-
-        // calculate values for radar display
-        y_shift = range * cos( horiz_offset * SG_DEGREES_TO_RADIANS);
-        x_shift = range * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
-        rotation = hdg - user_heading;
-        if (rotation < 0.0) rotation += 360.0;
-        ht_diff = altitude_ft - user_altitude;
-
+    radar_range_m *= SG_NM_TO_METER  * 1.1; // + 10%
+    radar_range_m *= radar_range_m; // squared
+    
+    double d2 = distSqr(SGVec3d::fromGeod(pos), globals->get_aircraft_position_cart());
+    double range_ft = sqrt(d2) * SG_METER_TO_FEET;
+    
+    if (!force_on && (d2 > radar_range_m)) {
+        return range_ft * range_ft;
     }
+    
+    props->setBoolValue("radar/in-range", true);
 
-    return range_ft2;
+    // copy values from the AIManager
+    double user_heading   = manager->get_user_heading();
+    double user_pitch     = manager->get_user_pitch();
+  
+    range = range_ft * SG_FEET_TO_METER * SG_METER_TO_NM;
+
+    // calculate bearing to target
+    bearing = SGGeodesy::courseDeg(globals->get_aircraft_position(), pos);
+
+    // calculate look left/right to target, without yaw correction
+    horiz_offset = bearing - user_heading;
+    SG_NORMALIZE_RANGE(horiz_offset, -180.0, 180.0);
+   
+    // calculate elevation to target
+    ht_diff = altitude_ft - globals->get_aircraft_position().getElevationFt();
+    elevation = atan2( ht_diff, range_ft ) * SG_RADIANS_TO_DEGREES;
+
+    // calculate look up/down to target
+    vert_offset = elevation - user_pitch;
+
+    /* this calculation needs to be fixed, but it isn't important anyway
+    // calculate range rate
+    double recip_bearing = bearing + 180.0;
+    if (recip_bearing > 360.0) recip_bearing -= 360.0;
+    double my_horiz_offset = recip_bearing - hdg;
+    if (my_horiz_offset > 180.0) my_horiz_offset -= 360.0;
+    if (my_horiz_offset < -180.0) my_horiz_offset += 360.0;
+    rdot = (-user_speed * cos( horiz_offset * SG_DEGREES_TO_RADIANS ))
+    +(-speed * 1.686 * cos( my_horiz_offset * SG_DEGREES_TO_RADIANS ));
+    */
+
+    // now correct look left/right for yaw
+    // horiz_offset += user_yaw; // FIXME: WHY WOULD WE WANT TO ADD IN SIDE-SLIP HERE?
+
+    // calculate values for radar display
+    y_shift = range * cos( horiz_offset * SG_DEGREES_TO_RADIANS);
+    x_shift = range * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
+    
+    rotation = hdg - user_heading;
+    SG_NORMALIZE_RANGE(rotation, 0.0, 360.0);
+
+    return range_ft * range_ft;
 }
 
 /*
@@ -635,12 +595,6 @@ void FGAIBase::_setLongitude( double longitude ) {
 
 void FGAIBase::_setLatitude ( double latitude )  {
     pos.setLatitudeDeg(latitude);
-}
-
-void FGAIBase::_setUserPos(){
-    userpos.setLatitudeDeg(manager->get_user_latitude());
-    userpos.setLongitudeDeg(manager->get_user_longitude());
-    userpos.setElevationM(manager->get_user_altitude() * SG_FEET_TO_METER);
 }
 
 void FGAIBase::_setSubID( int s ) {

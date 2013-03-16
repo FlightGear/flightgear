@@ -140,9 +140,6 @@ public:
     std::string _name;
     string _parent;
 
-    SGGeod userpos;
-
-
 protected:
     /**
      * Tied-properties helper, record nodes which are tied for easy un-tie-ing
@@ -255,7 +252,6 @@ public:
     void _setLongitude( double longitude );
     void _setLatitude ( double latitude );
     void _setSubID( int s );
-    void _setUserPos();
 
     double _getAltitudeAGL(SGGeod inpos, double start);
 

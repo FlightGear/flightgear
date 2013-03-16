@@ -230,7 +230,6 @@ private:
     //void setOffsetPos(SGGeod pos, double heading, double pitch, double roll);
     //void setOffsetVelocity(double dt, SGGeod pos);
 
-    SGVec3d getCartUserPos() const;
     SGVec3d getCartOffsetPos(SGGeod pos, double heading, double pitch, double roll) const;
 
     //double getDistanceLoadToHitch() const;
