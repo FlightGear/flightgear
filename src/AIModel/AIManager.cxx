@@ -69,14 +69,8 @@ FGAIManager::init() {
     wind_from_east_node  = fgGetNode("/environment/wind-from-east-fps",true);
     wind_from_north_node = fgGetNode("/environment/wind-from-north-fps",true);
 
-    user_latitude_node  = fgGetNode("/position/latitude-deg", true);
-    user_longitude_node = fgGetNode("/position/longitude-deg", true);
-    user_altitude_node  = fgGetNode("/position/altitude-ft", true);
     user_altitude_agl_node  = fgGetNode("/position/altitude-agl-ft", true);
-    user_heading_node   = fgGetNode("/orientation/heading-deg", true);
-    user_pitch_node     = fgGetNode("/orientation/pitch-deg", true);
     user_yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
-    user_roll_node      = fgGetNode("/orientation/roll-deg", true);
     user_speed_node     = fgGetNode("/velocities/uBody-fps", true);
 }
 
@@ -92,24 +86,20 @@ FGAIManager::postinit() {
         enabled->setBoolValue(true);
 
     // process all scenarios
-    std::map<string, bool> scenarios;
-    for (int i = 0 ; i < root->nChildren() ; i++) {
-        SGPropertyNode *n = root->getChild(i);
-        if (strcmp(n->getName(), "scenario"))
-            continue;
-
+    std::set<std::string> loadedScenarios;
+    BOOST_FOREACH(SGPropertyNode* n, root->getChildren("scenario")) {
         const string& name = n->getStringValue();
         if (name.empty())
             continue;
 
-        if (scenarios.find(name) != scenarios.end()) {
-            SG_LOG(SG_AI, SG_DEBUG, "won't load scenario '" << name << "' twice");
+        if (loadedScenarios.find(name) != loadedScenarios.end()) {
+            SG_LOG(SG_AI, SG_WARN, "won't load scenario '" << name << "' twice");
             continue;
         }
 
-        SG_LOG(SG_AI, SG_ALERT, "loading scenario '" << name << '\'');
-        processScenario(name);
-        scenarios[name] = true;
+        SG_LOG(SG_AI, SG_INFO, "loading scenario '" << name << '\'');
+        loadScenario(name);
+        loadedScenarios.insert(name);
     }
 }
 
@@ -230,14 +220,10 @@ FGAIManager::getNumAiObjects(void) const
 void
 FGAIManager::fetchUserState( void ) {
 
-    user_latitude  = user_latitude_node->getDoubleValue();
-    user_longitude = user_longitude_node->getDoubleValue();
-    user_altitude  = user_altitude_node->getDoubleValue();
-    user_heading   = user_heading_node->getDoubleValue();
-    user_pitch     = user_pitch_node->getDoubleValue();
     user_yaw       = user_yaw_node->getDoubleValue();
+    globals->get_aircraft_orientation(user_heading, user_pitch, user_roll);
+
     user_speed     = user_speed_node->getDoubleValue() * 0.592484;
-    user_roll      = user_roll_node->getDoubleValue();
     wind_from_east = wind_from_east_node->getDoubleValue();
     wind_from_north   = wind_from_north_node->getDoubleValue();
     user_altitude_agl = user_altitude_agl_node->getDoubleValue();
@@ -259,7 +245,7 @@ FGAIManager::processThermal( double dt, FGAIThermal* thermal ) {
 
 
 void
-FGAIManager::processScenario( const string &filename ) {
+FGAIManager::loadScenario( const string &filename ) {
 
     SGPropertyNode_ptr scenarioTop = loadScenarioFile(filename);
 
@@ -271,11 +257,7 @@ FGAIManager::processScenario( const string &filename ) {
     if (!scenarios)
         return;
 
-    for (int i = 0; i < scenarios->nChildren(); i++) {
-        SGPropertyNode* scEntry = scenarios->getChild(i);
-
-        if (strcmp(scEntry->getName(), "entry"))
-            continue;
+    BOOST_FOREACH(SGPropertyNode* scEntry, scenarios->getChildren("entry")) {
         const std::string& type = scEntry->getStringValue("type", "aircraft");
 
         if (type == "tanker") { // refueling scenarios
@@ -334,8 +316,7 @@ FGAIManager::processScenario( const string &filename ) {
             attach(aistatic);
         }
 
-    }
-
+    } // of scenario entry iteration
 }
 
 SGPropertyNode_ptr

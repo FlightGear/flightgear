@@ -72,9 +72,9 @@ public:
 
     const FGAIBase *calcCollision(double alt, double lat, double lon, double fuse_range);
 
-    inline double get_user_latitude() const { return user_latitude; }
-    inline double get_user_longitude() const { return user_longitude; }
-    inline double get_user_altitude() const { return user_altitude; }
+ //   inline double get_user_latitude() const { return user_latitude; }
+  //  inline double get_user_longitude() const { return user_longitude; }
+  //  inline double get_user_altitude() const { return user_altitude; }
     inline double get_user_heading() const { return user_heading; }
     inline double get_user_pitch() const { return user_pitch; }
     inline double get_user_yaw() const { return user_yaw; }
@@ -86,7 +86,7 @@ public:
 
     int getNumAiObjects(void) const;
 
-    void processScenario( const string &filename );
+    void loadScenario( const string &filename );
 
     static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
 
@@ -101,21 +101,13 @@ private:
     SGPropertyNode_ptr root;
     SGPropertyNode_ptr enabled;
     SGPropertyNode_ptr thermal_lift_node;
-    SGPropertyNode_ptr user_latitude_node;
-    SGPropertyNode_ptr user_longitude_node;
-    SGPropertyNode_ptr user_altitude_node;
     SGPropertyNode_ptr user_altitude_agl_node;
-    SGPropertyNode_ptr user_heading_node;
-    SGPropertyNode_ptr user_pitch_node;
     SGPropertyNode_ptr user_yaw_node;
-    SGPropertyNode_ptr user_roll_node;
     SGPropertyNode_ptr user_speed_node;
     SGPropertyNode_ptr wind_from_east_node;
     SGPropertyNode_ptr wind_from_north_node;
 
-    double user_latitude;
-    double user_longitude;
-    double user_altitude;
+
     double user_altitude_agl;
     double user_heading;
     double user_pitch;
