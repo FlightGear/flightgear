@@ -33,8 +33,8 @@
 
 // subsystem includes
 #include <Aircraft/controls.hxx>
-#include <simgear/misc/interpolator.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/FGInterpolator.hxx>
 #include <Main/fg_io.hxx>
 #include <FDM/fdm_shell.hxx>
 #include <Environment/environment_mgr.hxx>
@@ -76,7 +76,7 @@ SGSubsystem* createSubsystemByName(const std::string& name)
     
     MAKE_SUB(FGControls, "controls");  
     MAKE_SUB(FGSoundManager, "sound");
-    MAKE_SUB(SGInterpolator, "interpolator");
+    MAKE_SUB(FGInterpolator, "prop-interpolator")
     MAKE_SUB(FGProperties, "properties");
     MAKE_SUB(FDMShell, "fdm");
     MAKE_SUB(FGEnvironmentMgr, "environment");

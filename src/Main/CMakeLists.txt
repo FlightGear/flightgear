@@ -14,6 +14,7 @@ set(SOURCES
 	fg_io.cxx
 	fg_os_common.cxx
 	fg_props.cxx
+	FGInterpolator.cxx
 	globals.cxx
 	locale.cxx
 	logger.cxx
@@ -30,6 +31,7 @@ set(HEADERS
 	fg_init.hxx
 	fg_io.hxx
 	fg_props.hxx
+	FGInterpolator.hxx
 	globals.hxx
 	locale.hxx
 	logger.hxx

@@ -23,7 +23,6 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
-#include <simgear/misc/interpolator.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/event_mgr.hxx>
@@ -46,7 +45,7 @@
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 #include <Main/fg_props.hxx>
-
+#include <Main/FGInterpolator.hxx>
 
 using std::map;
 
@@ -514,29 +513,52 @@ static naRef f_cmdarg(naContext c, naRef me, int argc, naRef* args)
 // value/delta numbers.
 static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
 {
-    SGPropertyNode* node;
-    naRef prop = argc > 0 ? args[0] : naNil();
-    if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
-    else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
-    else return naNil();
-
-    naRef curve = argc > 1 ? args[1] : naNil();
-    if(!naIsVector(curve)) return naNil();
-    int nPoints = naVec_size(curve) / 2;
-    double* values = new double[nPoints];
-    double* deltas = new double[nPoints];
-    for(int i=0; i<nPoints; i++) {
-        values[i] = naNumValue(naVec_get(curve, 2*i)).num;
-        deltas[i] = naNumValue(naVec_get(curve, 2*i+1)).num;
-    }
-
-    ((SGInterpolator*)globals->get_subsystem_mgr()
-        ->get_group(SGSubsystemMgr::INIT)->get_subsystem("interpolator"))
-        ->interpolate(node, nPoints, values, deltas);
-
-    delete[] values;
-    delete[] deltas;
+  FGInterpolator* mgr =
+    static_cast<FGInterpolator*>
+    (
+      globals->get_subsystem_mgr()
+             ->get_group(SGSubsystemMgr::INIT)
+             ->get_subsystem("prop-interpolator")
+    );
+  if( !mgr )
+  {
+    SG_LOG(SG_GENERAL, SG_WARN, "No property interpolator available");
     return naNil();
+  };
+
+  SGPropertyNode* node;
+  naRef prop = argc > 0 ? args[0] : naNil();
+  if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
+  else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
+  else return naNil();
+
+  naRef curve = argc > 1 ? args[1] : naNil();
+  if(!naIsVector(curve)) return naNil();
+  int nPoints = naVec_size(curve) / 2;
+
+  simgear::PropertyList value_nodes;
+  value_nodes.reserve(nPoints);
+  double_list deltas;
+  deltas.reserve(nPoints);
+
+  for( int i = 0; i < nPoints; ++i )
+  {
+    SGPropertyNode* val = new SGPropertyNode;
+    val->setDoubleValue(naNumValue(naVec_get(curve, 2*i)).num);
+    value_nodes.push_back(val);
+    deltas.push_back(naNumValue(naVec_get(curve, 2*i+1)).num);
+  }
+
+  mgr->interpolate
+  (
+    node,
+    "numeric",
+    value_nodes,
+    deltas,
+    "linear"
+  );
+
+  return naNil();
 }
 
 // This is a better RNG than the one in the default Nasal distribution

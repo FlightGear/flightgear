@@ -23,7 +23,6 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/misc/interpolator.hxx>
 #include <simgear/io/HTTPRequest.hxx>
 
 #include <FDM/flight.hxx>
@@ -45,6 +44,7 @@
 #include "fg_os.hxx"
 #include "fg_commands.hxx"
 #include "fg_props.hxx"
+#include "FGInterpolator.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
 #include "util.hxx"
@@ -883,13 +883,15 @@ do_property_randomize (const SGPropertyNode * arg)
  * Built-in command: interpolate a property value over time
  *
  * property:        the name of the property value to interpolate.
+ * type:            the interpolation type ("numeric", "color", etc.)
+ * easing:          name of easing function (see http://easings.net/)
  * value[0..n]      any number of constant values to interpolate
  * time/rate[0..n]  time between each value, number of time elements must
  *                  match those of value elements. Instead of time also rate can
  *                  be used which automatically calculates the time to change
  *                  the property value at the given speed.
  * -or-
- * property[1..n]   any number of target values taken from named properties
+ * property[1..n+1] any number of target values taken from named properties
  * time/rate[0..n]  time between each value, number of time elements must
  *                  match those of value elements. Instead of time also rate can
  *                  be used which automatically calculates the time to change
@@ -898,63 +900,82 @@ do_property_randomize (const SGPropertyNode * arg)
 static bool
 do_property_interpolate (const SGPropertyNode * arg)
 {
-    SGPropertyNode * prop = get_prop(arg);
+  FGInterpolator* mgr =
+    static_cast<FGInterpolator*>
+    (
+      globals->get_subsystem_mgr()
+             ->get_group(SGSubsystemMgr::INIT)
+             ->get_subsystem("prop-interpolator")
+    );
 
-    simgear::PropertyList valueNodes = arg->getChildren( "value" );
-    simgear::PropertyList timeNodes = arg->getChildren( "time" );
-    simgear::PropertyList rateNodes = arg->getChildren( "rate" );
+  if( !mgr )
+  {
+    SG_LOG(SG_GENERAL, SG_WARN, "No property interpolator available");
+    return false;
+  }
 
-    if( !timeNodes.empty() && !rateNodes.empty() )
-      // mustn't specify time and rate
+  SGPropertyNode * prop = get_prop(arg);
+  simgear::PropertyList time_nodes = arg->getChildren("time");
+  simgear::PropertyList rate_nodes = arg->getChildren("rate");
+
+  if( !time_nodes.empty() && !rate_nodes.empty() )
+    // mustn't specify time and rate
+    return false;
+
+  simgear::PropertyList::size_type num_times = time_nodes.empty()
+                                             ? rate_nodes.size()
+                                             : time_nodes.size();
+
+  simgear::PropertyList value_nodes = arg->getChildren("value");
+  if( value_nodes.empty() )
+  {
+    simgear::PropertyList prop_nodes = arg->getChildren("property");
+
+    // must have one more property node
+    if( prop_nodes.size() != num_times + 1 )
       return false;
 
-    simgear::PropertyList::size_type num_times = timeNodes.empty()
-                                               ? rateNodes.size()
-                                               : timeNodes.size();
+    value_nodes.reserve(num_times);
+    for( size_t i = 1; i < prop_nodes.size(); ++i )
+      value_nodes.push_back( fgGetNode(prop_nodes[i]->getStringValue()) );
+  }
 
-    boost::scoped_array<double> value;
-    boost::scoped_array<double> time;
+  // must match
+  if( value_nodes.size() != num_times )
+    return false;
 
-    if( valueNodes.size() > 0 ) {
-        // must match
-        if( num_times != valueNodes.size() )
-            return false;
+  double_list deltas;
+  deltas.reserve(num_times);
 
-        value.reset( new double[valueNodes.size()] );
-        for( simgear::PropertyList::size_type n = 0; n < valueNodes.size(); n++ ) {
-            value[n] = valueNodes[n]->getDoubleValue();
-        }
-    } else {
-        valueNodes = arg->getChildren("property");
-        // must have one more property node
-        if( valueNodes.size() - 1 != num_times )
-          return false;
-
-        value.reset( new double[valueNodes.size()-1] );
-        for( simgear::PropertyList::size_type n = 0; n < valueNodes.size()-1; n++ ) {
-            value[n] = fgGetNode(valueNodes[n+1]->getStringValue(), "/null")->getDoubleValue();
-        }
-
+  if( !time_nodes.empty() )
+  {
+    for( size_t i = 0; i < num_times; ++i )
+      deltas.push_back( time_nodes[i]->getDoubleValue() );
+  }
+  else
+  {
+    for( size_t i = 0; i < num_times; ++i )
+    {
+      // TODO calculate delta based on property type
+      double delta = value_nodes[i]->getDoubleValue()
+                   - ( i > 0
+                     ? value_nodes[i - 1]->getDoubleValue()
+                     : prop->getDoubleValue()
+                     );
+      deltas.push_back( fabs(delta / rate_nodes[i]->getDoubleValue()) );
     }
+  }
 
-    time.reset( new double[num_times] );
-    if( !timeNodes.empty() ) {
-        for( simgear::PropertyList::size_type n = 0; n < num_times; n++ ) {
-            time[n] = timeNodes[n]->getDoubleValue();
-        }
-    } else {
-        for( simgear::PropertyList::size_type n = 0; n < num_times; n++ ) {
-            double delta = value[n]
-                         - (n > 0 ? value[n - 1] : prop->getDoubleValue());
-            time[n] = fabs(delta / rateNodes[n]->getDoubleValue());
-        }
-    }
+  mgr->interpolate
+  (
+    prop,
+    arg->getStringValue("type", "numeric"),
+    value_nodes,
+    deltas,
+    arg->getStringValue("easing", "linear")
+  );
 
-    ((SGInterpolator*)globals->get_subsystem_mgr()
-      ->get_group(SGSubsystemMgr::INIT)->get_subsystem("interpolator"))
-      ->interpolate(prop, num_times, value.get(), time.get() );
-
-    return true;
+  return true;
 }
 
 /**

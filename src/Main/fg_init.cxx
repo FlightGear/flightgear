@@ -51,7 +51,6 @@
 #include <simgear/misc/strutils.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
 
@@ -107,6 +106,7 @@
 #include "fg_io.hxx"
 #include "fg_commands.hxx"
 #include "fg_props.hxx"
+#include "FGInterpolator.hxx"
 #include "options.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
@@ -570,7 +570,9 @@ void fgCreateSubsystems() {
     // Initialize the property interpolator subsystem. Put into the INIT
     // group because the "nasal" subsystem may need it at GENERAL take-down.
     ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("interpolator", new SGInterpolator, SGSubsystemMgr::INIT);
+    globals->add_subsystem( "prop-interpolator",
+                            new FGInterpolator,
+                            SGSubsystemMgr::INIT );
 
 
     ////////////////////////////////////////////////////////////////////
