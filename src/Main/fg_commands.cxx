@@ -235,6 +235,16 @@ do_pause (const SGPropertyNode * arg)
         fgSetBool("/sim/freeze/master",!paused);
         fgSetBool("/sim/freeze/clock",!paused);
     }
+  
+    SGPropertyNode_ptr args(new SGPropertyNode);
+    args->setStringValue("id", "sim-pause");
+    if (!paused) {
+      args->setStringValue("label", "Simulation is paused");
+      globals->get_commands()->execute("show-message", args);
+    } else {
+      globals->get_commands()->execute("clear-message", args);
+    }
+  
     return true;
 }
 
