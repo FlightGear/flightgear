@@ -28,6 +28,10 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/debug/BufferedLogCallback.hxx>
+
+#include <simgear/nasal/cppbind/from_nasal.hxx>
+#include <simgear/nasal/cppbind/to_nasal.hxx>
+#include <simgear/nasal/cppbind/Ghost.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 
 #include "NasalSys.hxx"
@@ -75,6 +79,91 @@ void FGNasalModuleListener::valueChanged(SGPropertyNode*)
     }
 }
 
+//////////////////////////////////////////////////////////////////////////
+
+
+class TimerObj : public SGReferenced
+{
+public:
+  TimerObj(FGNasalSys* sys, naRef f, naRef self, double interval) :
+    _sys(sys),
+    _func(f),
+    _self(self),
+    _isRunning(false),
+    _interval(interval),
+    _singleShot(false)
+  {
+    char nm[128];
+    snprintf(nm, 128, "nasal-timer-%p", this);
+    _name = nm;
+    _gcRoot =  sys->gcSave(f);
+    _gcSelf = sys->gcSave(self);
+  }
+  
+  virtual ~TimerObj()
+  {
+    stop();
+    _sys->gcRelease(_gcRoot);
+    _sys->gcRelease(_gcSelf);
+  }
+  
+  void stop()
+  {
+    if (_isRunning) {
+      globals->get_event_mgr()->removeTask(_name);
+      _isRunning = false;
+    }
+  }
+  
+  void start()
+  {
+    if (_isRunning) {
+      return;
+    }
+    
+    _isRunning = true;
+    if (_singleShot) {
+      globals->get_event_mgr()->addEvent(_name, this, &TimerObj::invoke, _interval);
+    } else {
+      globals->get_event_mgr()->addTask(_name, this, &TimerObj::invoke, _interval);
+    }
+  }
+  
+  // stop and then start -
+  void restart(double newInterval)
+  {
+    _interval = newInterval;
+    stop();
+    start();
+  }
+  
+  void invoke()
+  {
+    naRef *args = NULL;
+    _sys->callMethod(_func, _self, 0, args, naNil() /* locals */);
+  }
+  
+  void setSingleShot(bool aSingleShot)
+  {
+    _singleShot = aSingleShot;
+  }
+  
+  bool isSingleShot() const
+  { return _singleShot; }
+private:
+  std::string _name;
+  FGNasalSys* _sys;
+  naRef _func, _self;
+  int _gcRoot, _gcSelf;
+  bool _isRunning;
+  double _interval;
+  bool _singleShot;
+};
+
+typedef SGSharedPtr<TimerObj> TimerObjRef;
+typedef nasal::Ghost<TimerObjRef> NasalTimerObj;
+
+///////////////////////////////////////////////////////////////////////////
 
 // Read and return file contents in a single buffer.  Note use of
 // stat() to get the file size.  This is a win32 function, believe it
@@ -380,6 +469,24 @@ static naRef f_settimer(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
+static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
+{
+  if (!naIsNum(args[0])) {
+    naRuntimeError(c, "bad interval argument to maketimer");
+  }
+    
+  naRef func, self = naNil();
+  if (naIsFunc(args[1])) {
+    func = args[1];
+  } else if ((argc == 3) && naIsFunc(args[2])) {
+    self = args[1];
+    func = args[2];
+  }
+  
+  TimerObj* timerObj = new TimerObj(nasalSys, func, self, args[0].num);
+  return NasalTimerObj::create(c, timerObj);
+}
+
 // setlistener(func, property, bool) extension function.  Falls through to
 // FGNasalSys::setListener().  See there for docs.
 static naRef f_setlistener(naContext c, naRef me, int argc, naRef* args)
@@ -600,6 +707,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "logprint",  f_logprint },
     { "_fgcommand", f_fgcommand },
     { "settimer",  f_settimer },
+    { "maketimer", f_makeTimer },
     { "_setlistener", f_setlistener },
     { "removelistener", f_removelistener },
     { "addcommand", f_addCommand },
@@ -670,6 +778,12 @@ void FGNasalSys::init()
     NasalClipboard::init(this);
     initNasalCanvas(_globals, _context, _gcHash);
     initNasalCondition(_globals, _context, _gcHash);
+  
+    NasalTimerObj::init("Timer")
+      .method("start", &TimerObj::start)
+      .method("stop", &TimerObj::stop)
+      .method("restart", &TimerObj::restart)
+      .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot);
   
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
@@ -1129,7 +1243,7 @@ void FGNasalSys::registerToUnload(FGNasalModelData *data)
     _unloadList.push(data);
 }
 
-
+//////////////////////////////////////////////////////////////////////////
 // FGNasalListener class.
 
 FGNasalListener::FGNasalListener(SGPropertyNode *node, naRef code,
