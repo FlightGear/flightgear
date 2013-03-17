@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#include <cstring> // for strlen
+
 #include "metarproperties.hxx"
 #include "fgmetar.hxx"
 #include "environment.hxx"
