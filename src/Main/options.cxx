@@ -2265,16 +2265,28 @@ void Options::setupRoot()
   globals->set_fg_root(root);
   
 // validate it
-  static char required_version[] = FLIGHTGEAR_VERSION;
-  string base_version = fgBasePackageVersion();
-  if ( !(base_version == required_version) ) {
+  string_list versionParts = simgear::strutils::split(FLIGHTGEAR_VERSION, ".");
+  string_list baseVersionParts = simgear::strutils::split(fgBasePackageVersion(), ".");
+  bool versionOk = true;
+  if ((versionParts.size() >= 2) && (baseVersionParts.size() >= 2)) {
+    for (int i=0; i<2; ++i) {
+      if (versionParts[i] != baseVersionParts[i]) {
+        versionOk = false;
+        break;
+      }
+    } // of parts iteration
+  } else {
+    versionOk = false;
+  }
+
+  if (!versionOk) {
     // tell the operator how to use this application
     
     SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on windows
     cerr << endl << "Base package check failed:" << endl \
-    << "  Version " << base_version << " found at: " \
+    << "  Version " << fgBasePackageVersion() << " found at: " \
     << globals->get_fg_root() << endl \
-    << "  Version " << required_version << " is required." << endl \
+    << "  Version " << FLIGHTGEAR_VERSION << " is required." << endl \
     << "Please upgrade/downgrade base package and set the path to your fgdata" << endl \
     << "with --fg-root=path_to_your_fgdata" << endl;
 #ifdef _MSC_VER
