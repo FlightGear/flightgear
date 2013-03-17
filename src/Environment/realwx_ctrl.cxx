@@ -63,7 +63,7 @@ public:
 
 class LiveMetarProperties : public MetarProperties, MetarDataHandler {
 public:
-    LiveMetarProperties( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester );
+    LiveMetarProperties( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester, int maxAge );
     virtual ~LiveMetarProperties();
     virtual void update( double dt );
 
@@ -81,15 +81,17 @@ private:
     double _timeToLive;
     double _pollingTimer;
     MetarRequester * _metarRequester;
+    int _maxAge;
 };
 
 typedef SGSharedPtr<LiveMetarProperties> LiveMetarProperties_ptr;
 
-LiveMetarProperties::LiveMetarProperties( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester ) :
+LiveMetarProperties::LiveMetarProperties( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester, int maxAge ) :
     MetarProperties( rootNode ),
     _timeToLive(0.0),
     _pollingTimer(0.0),
-    _metarRequester(metarRequester)
+    _metarRequester(metarRequester),
+    _maxAge(maxAge)
 {
     _tiedProperties.Tie("time-to-live", &_timeToLive );
 }
@@ -115,9 +117,25 @@ void LiveMetarProperties::update( double dt )
 
 void LiveMetarProperties::handleMetarData( const std::string & data )
 {
-    SG_LOG( SG_ENVIRONMENT, SG_INFO, "LiveMetarProperties::handleMetarData() received METAR for " << getStationId() << ": " << data );
+    SG_LOG( SG_ENVIRONMENT, SG_DEBUG, "LiveMetarProperties::handleMetarData() received METAR for " << getStationId() << ": " << data );
     _timeToLive = DEFAULT_TIME_TO_LIVE_SECONDS;
-    setMetar( data );
+    
+    SGSharedPtr<FGMetar> m;
+    try {
+        m = new FGMetar(data.c_str());
+    }
+    catch( sg_io_exception ) {
+        SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << data );
+        return;
+    }
+
+    if (_maxAge && (m->getAge_min() > _maxAge)) {
+        // METAR is older than max-age, ignore
+        SG_LOG( SG_ENVIRONMENT, SG_DEBUG, "Ignoring outdated METAR for " << getStationId());
+        return;
+    }
+    
+    setMetar( m );
 }
 
 /* -------------------------------------------------------------------------------- */
@@ -216,7 +234,9 @@ BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode, Metar
 {
     // at least instantiate MetarProperties for /environment/metar
     _metarProperties.push_back( new LiveMetarProperties( 
-            fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ), metarRequester ));
+            fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ),
+            metarRequester,
+            getMetarMaxAgeMin()));
 
     BOOST_FOREACH( SGPropertyNode_ptr n, rootNode->getChildren("metar") ) {
         SGPropertyNode_ptr metarNode = fgGetNode( n->getStringValue(), true );
@@ -300,7 +320,7 @@ void BasicRealWxController::addMetarAtPath(const string& propPath, const string&
 
   SGPropertyNode_ptr metarNode = fgGetNode(propPath, true);
   SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << propPath );
-  LiveMetarProperties_ptr p(new LiveMetarProperties( metarNode, _requester ));
+  LiveMetarProperties_ptr p(new LiveMetarProperties( metarNode, _requester, getMetarMaxAgeMin() ));
   _metarProperties.push_back(p);
   p->setStationId(icao);
 }

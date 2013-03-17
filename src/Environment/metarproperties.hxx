@@ -27,6 +27,8 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 
+class FGMetar;
+
 namespace Environment {
 
 class MagneticVariation;
@@ -41,11 +43,12 @@ public:
     virtual bool isValid() const { return _metarValidNode->getBoolValue(); }
     virtual const std::string & getStationId() const { return _station_id; }
     virtual void setStationId( const std::string & value );
-    virtual void setMetar( const std::string & value ) { set_metar( value.c_str() ); }
+    virtual void setMetar(SGSharedPtr<FGMetar> m);
 
 private:
-    const char * get_metar() const { return _metar.c_str(); }
+    const char * get_metar() const;
     void set_metar( const char * metar );
+    
     const char * get_station_id() const { return _station_id.c_str(); }
     void set_station_id( const char * value );
     const char * get_decoded() const { return _decoded.c_str(); }
@@ -60,9 +63,10 @@ private:
     void set_base_wind_dir( double value );
     void set_wind_speed( double value );
 
+    SGSharedPtr<FGMetar> _metar;
     SGPropertyNode_ptr _rootNode;
     SGPropertyNode_ptr _metarValidNode;
-    std::string _metar;
+    
     std::string _station_id;
     double _station_elevation;
     double _station_latitude;

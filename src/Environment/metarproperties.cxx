@@ -183,21 +183,40 @@ MetarProperties::~MetarProperties()
 
 static const double thickness_value[] = { 0, 65, 600, 750, 1000 };
 
-void MetarProperties::set_metar( const char * metar )
+const char* MetarProperties::get_metar() const
 {
-    _metar = metar;
-
+    if (!_metar) return "";
+    return _metar->getData();
+}
+    
+void MetarProperties::set_metar( const char * metarString )
+{
     SGSharedPtr<FGMetar> m;
+    if ((metarString == NULL) || (strlen(metarString) == 0)) {
+        setMetar(m);
+        return;
+    }
+    
     try {
-        m = new FGMetar( _metar );
+        m = new FGMetar( metarString );
     }
     catch( sg_io_exception ) {
-        SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << _metar );
+        SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << metarString );
         _metarValidNode->setBoolValue(false);
         return;
     }
-
+    
+    setMetar(m);
+}
+    
+void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
+{
+    _metar = m;
     _decoded.clear();
+    if (!m) {
+        return;
+    }
+    
     const vector<string> weather = m->getWeather();
     for( vector<string>::const_iterator it = weather.begin(); it != weather.end(); ++it ) {
         if( false == _decoded.empty() ) _decoded.append(", ");
