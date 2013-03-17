@@ -105,6 +105,7 @@ static std::auto_ptr<SGInterpTable> static_terminalRangeInterp,
 FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     _operable(false),
     play_count(0),
+    _nav_search(true),
     _last_freq(0.0),
     target_radial(0.0),
     effective_range(0.0),

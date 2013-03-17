@@ -70,6 +70,7 @@ void FGFlightHistory::init()
     
     // force bucket re-allocation
     m_validSampleCount = SAMPLE_BUCKET_WIDTH;
+    m_lastCaptureTime = globals->get_sim_time_sec();
 }
 
 void FGFlightHistory::shutdown()

@@ -274,6 +274,8 @@ GPS::init ()
     _realismSimpleGps->setBoolValue(true);
   }
   
+  clearOutput();
+    
   // last thing, add the deprecated prop watcher
   new DeprecatedPropListener(_gpsNode);
 }
