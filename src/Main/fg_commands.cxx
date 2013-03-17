@@ -44,7 +44,6 @@
 #include "fg_os.hxx"
 #include "fg_commands.hxx"
 #include "fg_props.hxx"
-#include "FGInterpolator.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
 #include "util.hxx"
@@ -900,21 +899,10 @@ do_property_randomize (const SGPropertyNode * arg)
 static bool
 do_property_interpolate (const SGPropertyNode * arg)
 {
-  FGInterpolator* mgr =
-    static_cast<FGInterpolator*>
-    (
-      globals->get_subsystem_mgr()
-             ->get_group(SGSubsystemMgr::INIT)
-             ->get_subsystem("prop-interpolator")
-    );
-
-  if( !mgr )
-  {
-    SG_LOG(SG_GENERAL, SG_WARN, "No property interpolator available");
-    return false;
-  }
-
   SGPropertyNode * prop = get_prop(arg);
+  if( !prop )
+    return false;
+
   simgear::PropertyList time_nodes = arg->getChildren("time");
   simgear::PropertyList rate_nodes = arg->getChildren("rate");
 
@@ -966,16 +954,13 @@ do_property_interpolate (const SGPropertyNode * arg)
     }
   }
 
-  mgr->interpolate
+  return prop->interpolate
   (
-    prop,
     arg->getStringValue("type", "numeric"),
     value_nodes,
     deltas,
     arg->getStringValue("easing", "linear")
   );
-
-  return true;
 }
 
 /**

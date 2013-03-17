@@ -45,7 +45,6 @@
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/FGInterpolator.hxx>
 
 using std::map;
 
@@ -513,19 +512,6 @@ static naRef f_cmdarg(naContext c, naRef me, int argc, naRef* args)
 // value/delta numbers.
 static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
 {
-  FGInterpolator* mgr =
-    static_cast<FGInterpolator*>
-    (
-      globals->get_subsystem_mgr()
-             ->get_group(SGSubsystemMgr::INIT)
-             ->get_subsystem("prop-interpolator")
-    );
-  if( !mgr )
-  {
-    SG_LOG(SG_GENERAL, SG_WARN, "No property interpolator available");
-    return naNil();
-  };
-
   SGPropertyNode* node;
   naRef prop = argc > 0 ? args[0] : naNil();
   if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
@@ -549,15 +535,7 @@ static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
     deltas.push_back(naNumValue(naVec_get(curve, 2*i+1)).num);
   }
 
-  mgr->interpolate
-  (
-    node,
-    "numeric",
-    value_nodes,
-    deltas,
-    "linear"
-  );
-
+  node->interpolate("numeric", value_nodes, deltas, "linear");
   return naNil();
 }
 
