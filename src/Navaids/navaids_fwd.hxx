@@ -22,6 +22,9 @@
 #include <simgear/structure/SGSharedPtr.hxx>
 
 class FGNavRecord;
+class FGFix;
+
 typedef SGSharedPtr<FGNavRecord> FGNavRecordRef;
+typedef SGSharedPtr<FGFix> FGFixRef;
 
 #endif /* NAVAIDS_FWD_HXX_ */

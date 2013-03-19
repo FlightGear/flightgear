@@ -44,6 +44,7 @@
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/navrecord.hxx>
+#include <Navaids/fix.hxx>
 
 typedef nasal::Ghost<FGPositionedRef> NasalPositioned;
 typedef nasal::Ghost<FGRunwayRef> NasalRunway;
@@ -51,6 +52,8 @@ typedef nasal::Ghost<FGParkingRef> NasalParking;
 typedef nasal::Ghost<FGAirportRef> NasalAirport;
 typedef nasal::Ghost<flightgear::CommStationRef> NasalCommStation;
 typedef nasal::Ghost<FGNavRecordRef> NasalNavRecord;
+typedef nasal::Ghost<FGRunwayRef> NasalRunway;
+typedef nasal::Ghost<FGFixRef> NasalFix;
 
 //------------------------------------------------------------------------------
 naRef to_nasal_helper(naContext c, flightgear::SID* sid)
@@ -398,18 +401,68 @@ static naRef f_navinfo(nasal::CallContext ctx)
 }
 
 //------------------------------------------------------------------------------
-static naRef f_findNavaidsWithinRange(nasal::CallContext ctx)
+static naRef f_findWithinRange(nasal::CallContext ctx)
 {
   SGGeod pos = getPosition(ctx);
   double range_nm = ctx.requireArg<double>(0);
 
-  FGNavList::TypeFilter filter;
-  filter.fromTypeString(ctx.getArg<std::string>(0));
+  FGPositioned::TypeFilter filter(FGPositioned::typeFromName(ctx.getArg<std::string>(1)));
+    
+  FGPositionedList items = FGPositioned::findWithinRange(pos, range_nm, &filter);
+  FGPositioned::sortByRange(items, pos);
+  return ctx.to_nasal(items);
+}
 
-  FGPositionedList navs = FGPositioned::findWithinRange(pos, range_nm, &filter);
-  FGPositioned::sortByRange(navs, pos);
+static naRef f_findByIdent(nasal::CallContext ctx)
+{
+  std::string prefix = ctx.requireArg<std::string>(0);
+  
+  FGPositioned::TypeFilter filter(FGPositioned::typeFromName(ctx.getArg<std::string>(1)));
+  bool exact = ctx.getArg<bool>(2, false);
 
-  return ctx.to_nasal(navs);
+  return ctx.to_nasal( FGPositioned::findAllWithIdent(prefix, &filter, exact) );
+}
+
+static naRef f_findByName(nasal::CallContext ctx)
+{
+  std::string prefix = ctx.requireArg<std::string>(0);
+  
+  FGPositioned::TypeFilter filter(FGPositioned::typeFromName(ctx.getArg<std::string>(1)));
+  
+  return ctx.to_nasal( FGPositioned::findAllWithName(prefix, &filter, false) );
+}
+
+//------------------------------------------------------------------------------
+
+static naRef f_courseAndDistance(nasal::CallContext ctx)
+{
+  SGGeod from = globals->get_aircraft_position(), to, pos;
+  bool ok = extractGeod(ctx, pos);
+  if (!ok) {
+    naRuntimeError(ctx.c, "invalid arguments to courseAndDistance");
+  }
+  
+  if (extractGeod(ctx, to)) {
+    from = pos; // we parsed both FROM and TO args, so first was FROM
+  } else {
+    to = pos; // only parsed one arg, so FROM is current
+  }
+  
+  double course, course2, d;
+  SGGeodesy::inverse(from, to, course, course2, d);
+  
+  naRef result = naNewVector(ctx.c);
+  naVec_append(result, naNum(course));
+  naVec_append(result, naNum(d * SG_METER_TO_NM));
+  return result;
+}
+
+static naRef f_sortByRange(nasal::CallContext ctx)
+{
+  FGPositionedList items = ctx.requireArg<FGPositionedList>(0);
+  ctx.popFront();
+  FGPositioned::sortByRange(items, getPosition(ctx));
+  return ctx.to_nasal(items);
 }
 
 //------------------------------------------------------------------------------
@@ -436,6 +489,9 @@ naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c, naRef gcSave)
     .member("range_nm", &FGNavRecord::get_range)
     .member("course", &f_navaid_course);
 
+  NasalFix::init("Fix")
+    .bases<NasalPositioned>();
+  
   NasalAirport::init("FGAirport")
     .bases<NasalPositioned>()
     .member("has_metar", &FGAirport::getMetar)
@@ -463,7 +519,12 @@ naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c, naRef gcSave)
   positioned.set("findAirportsWithinRange", f_findAirportsWithinRange);
   positioned.set("findAirportsByICAO", &f_findAirportsByICAO);
   positioned.set("navinfo", &f_navinfo);
-  positioned.set("findNavaidsWithinRange", &f_findNavaidsWithinRange);
-
+  
+  positioned.set("findWithinRange", &f_findWithinRange);
+  positioned.set("findByIdent", &f_findByIdent);
+  positioned.set("findByName", &f_findByName);
+  positioned.set("courseAndDistance", &f_courseAndDistance);
+  positioned.set("sortByRange", &f_sortByRange);
+  
   return naNil();
 }
