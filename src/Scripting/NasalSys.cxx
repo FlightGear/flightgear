@@ -105,6 +105,8 @@ public:
     _sys->gcRelease(_gcSelf);
   }
   
+  bool isRunning() const { return _isRunning; }
+    
   void stop()
   {
     if (_isRunning) {
@@ -139,6 +141,9 @@ public:
   {
     naRef *args = NULL;
     _sys->callMethod(_func, _self, 0, args, naNil() /* locals */);
+    if (_singleShot) {
+      _isRunning = false;
+    }
   }
   
   void setSingleShot(bool aSingleShot)
@@ -783,7 +788,8 @@ void FGNasalSys::init()
       .method("start", &TimerObj::start)
       .method("stop", &TimerObj::stop)
       .method("restart", &TimerObj::restart)
-      .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot);
+      .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot)
+      .member("isRunning", &TimerObj::isRunning);
   
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
