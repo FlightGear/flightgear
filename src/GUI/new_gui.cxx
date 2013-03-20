@@ -290,9 +290,15 @@ NewGUI::newDialog (SGPropertyNode* props)
 void
 NewGUI::readDir (const SGPath& path)
 {
+    simgear::Dir dir(path);
+    if( !dir.exists() )
+    {
+      SG_LOG(SG_INPUT, SG_INFO, "directory does not exist: " << path.str());
+      return;
+    }
+
     flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
     flightgear::NavDataCache::Transaction txn(cache);
-    simgear::Dir dir(path);
     simgear::PathList xmls = dir.children(simgear::Dir::TYPE_FILE, ".xml");
     
     BOOST_FOREACH(SGPath xmlPath, xmls) {
