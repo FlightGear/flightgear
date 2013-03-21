@@ -20,7 +20,9 @@
 #include <simgear/nasal/nasal.h>
 #include <simgear/scene/model/modellib.hxx>
 
-using std::string;
+class FGNasalModelData;
+typedef SGSharedPtr<FGNasalModelData> FGNasalModelDataRef;
+typedef std::list<FGNasalModelData*> FGNasalModelDataList;
 
 /** Nasal model data container.
  * load and unload methods must be run in main thread (not thread-safe). */
@@ -28,26 +30,45 @@ class FGNasalModelData : public SGReferenced
 {
 public:
     /** Constructor to be run in an arbitrary thread. */
-    FGNasalModelData(SGPropertyNode *root, const string& path, SGPropertyNode *prop,
-                     SGPropertyNode* load, SGPropertyNode* unload) :
-    _path(path),
-    _root(root), _prop(prop),
-    _load(load), _unload(unload)
-    {
-    }
+    FGNasalModelData( SGPropertyNode *root,
+                      const std::string& path,
+                      SGPropertyNode *prop,
+                      SGPropertyNode* load,
+                      SGPropertyNode* unload,
+                      osg::Node* branch );
     
+    ~FGNasalModelData();
+
     /** Load hook. Always call from inside the main loop. */
     void load();
     
     /** Unload hook. Always call from inside the main loop. */
     void unload();
     
+    /**
+     * Get osg scenegraph node of model
+     */
+    osg::Node* getNode();
+
+    /**
+     * Get FGNasalModelData for model with the given module id. Every scenery
+     * model containing a nasal load or unload tag gets assigned a module id
+     * automatically.
+     *
+     * @param id    Module id
+     * @return model data or NULL if does not exists
+     */
+    static FGNasalModelData* getByModuleId(unsigned int id);
+
 private:
-    static unsigned int _module_id;
-    
-    string _module, _path;
+    static unsigned int _max_module_id;
+    static FGNasalModelDataList _loaded_models;
+
+    std::string _module, _path;
     SGPropertyNode_ptr _root, _prop;
     SGConstPropertyNode_ptr _load, _unload;
+    osg::Node *_branch;
+    unsigned int _module_id;
 };
 
 /** Thread-safe proxy for FGNasalModelData.
@@ -64,11 +85,13 @@ public:
     
     ~FGNasalModelDataProxy();
     
-    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
+    void modelLoaded( const std::string& path,
+                      SGPropertyNode *prop,
+                      osg::Node *branch );
     
 protected:
     SGPropertyNode_ptr _root;
-    SGSharedPtr<FGNasalModelData> _data;
+    FGNasalModelDataRef _data;
 };
 
 #endif // of NASAL_MODEL_DATA_HXX

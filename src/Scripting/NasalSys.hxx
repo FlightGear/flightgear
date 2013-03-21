@@ -4,6 +4,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_dir.hxx>
+#include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/nasal.h>
 #include <simgear/threads/SGQueue.hxx>
 #include <simgear/props/props.hxx>
@@ -108,6 +109,9 @@ public:
   
     naContext context() const
     { return _context; }
+
+    nasal::Hash getGlobals() const
+    { return nasal::Hash(_globals, _context); }
   
     // This mechanism is here to allow naRefs to be passed to
     // locations "outside" the interpreter.  Normally, such a

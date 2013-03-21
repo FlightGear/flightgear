@@ -822,8 +822,7 @@ naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
 {
     static naRef wrapNodeFunc = naNil();
     if (naIsNil(wrapNodeFunc)) {
-        nasal::Hash g(_globals, _context);
-        nasal::Hash props = g.get<nasal::Hash>("props");
+        nasal::Hash props = getGlobals().get<nasal::Hash>("props");
         wrapNodeFunc = props.get("wrapNode");
     }
     

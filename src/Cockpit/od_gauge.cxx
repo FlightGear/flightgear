@@ -303,23 +303,51 @@ class ReplaceStaticTextureVisitor:
 
 //------------------------------------------------------------------------------
 simgear::canvas::Placements
-FGODGauge::set_texture( const char* name,
+FGODGauge::set_texture( osg::Node* branch,
+                        const char * name,
                         osg::Texture2D* new_texture )
 {
-  osg::Group* root = globals->get_scenery()->get_aircraft_branch();
   ReplaceStaticTextureVisitor visitor(name, new_texture);
-  root->accept(visitor);
+  branch->accept(visitor);
   return visitor.getPlacements();
 }
 
 //------------------------------------------------------------------------------
 simgear::canvas::Placements
-FGODGauge::set_texture( SGPropertyNode* placement,
+FGODGauge::set_aircraft_texture( const char* name,
+                                 osg::Texture2D* new_texture )
+{
+  return set_texture
+  (
+    globals->get_scenery()->get_aircraft_branch(),
+    name,
+    new_texture
+  );
+}
+
+//------------------------------------------------------------------------------
+simgear::canvas::Placements
+FGODGauge::set_texture( osg::Node* branch,
+                        SGPropertyNode* placement,
                         osg::Texture2D* new_texture,
                         osg::NodeCallback* cull_callback )
 {
-  osg::Group* root = globals->get_scenery()->get_aircraft_branch();
   ReplaceStaticTextureVisitor visitor(placement, new_texture, cull_callback);
-  root->accept(visitor);
+  branch->accept(visitor);
   return visitor.getPlacements();
+}
+
+//------------------------------------------------------------------------------
+simgear::canvas::Placements
+FGODGauge::set_aircraft_texture( SGPropertyNode* placement,
+                                 osg::Texture2D* new_texture,
+                                 osg::NodeCallback* cull_callback )
+{
+  return set_texture
+  (
+    globals->get_scenery()->get_aircraft_branch(),
+    placement,
+    new_texture,
+    cull_callback
+  );
 }

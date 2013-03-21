@@ -21,18 +21,45 @@
 #include <Canvas/FGCanvasSystemAdapter.hxx>
 #include <Cockpit/od_gauge.hxx>
 #include <Main/fg_props.hxx>
+#include <Scripting/NasalModelData.hxx>
 #include <Viewer/CameraGroup.hxx>
 
 #include <simgear/canvas/Canvas.hxx>
 
-using simgear::canvas::Canvas;
+namespace sc = simgear::canvas;
+
+//------------------------------------------------------------------------------
+static sc::Placements addSceneObjectPlacement( SGPropertyNode* placement,
+                                               sc::CanvasPtr canvas )
+{
+  int module_id = placement->getIntValue("module-id", -1);
+  if( module_id < 0 )
+    return sc::Placements();
+
+  FGNasalModelData* model_data =
+    FGNasalModelData::getByModuleId( static_cast<unsigned int>(module_id) );
+
+  if( !model_data )
+    return sc::Placements();
+
+  if( !model_data->getNode() )
+    return sc::Placements();
+
+  return FGODGauge::set_texture
+  (
+    model_data->getNode(),
+    placement,
+    canvas->getTexture(),
+    canvas->getCullCallback()
+  );
+}
 
 //------------------------------------------------------------------------------
 CanvasMgr::CanvasMgr():
   simgear::canvas::CanvasMgr
   (
    fgGetNode("/canvas/by-index", true),
-   simgear::canvas::SystemAdapterPtr( new canvas::FGCanvasSystemAdapter )
+   sc::SystemAdapterPtr( new canvas::FGCanvasSystemAdapter )
   ),
   _cb_model_reinit
   (
@@ -41,17 +68,19 @@ CanvasMgr::CanvasMgr():
     fgGetNode("/sim/signals/model-reinit", true)
   )
 {
-  Canvas::addPlacementFactory
+  sc::Canvas::addPlacementFactory
   (
     "object",
     boost::bind
     (
-      &FGODGauge::set_texture,
+      &FGODGauge::set_aircraft_texture,
       _1,
-      boost::bind(&Canvas::getTexture, _2),
-      boost::bind(&Canvas::getCullCallback, _2)
+      boost::bind(&sc::Canvas::getTexture, _2),
+      boost::bind(&sc::Canvas::getCullCallback, _2)
     )
   );
+
+  sc::Canvas::addPlacementFactory("scenery-object", &addSceneObjectPlacement);
 }
 
 //------------------------------------------------------------------------------
@@ -87,6 +116,6 @@ CanvasMgr::getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const
 void CanvasMgr::handleModelReinit(SGPropertyNode*)
 {
   for(size_t i = 0; i < _elements.size(); ++i)
-    boost::static_pointer_cast<Canvas>(_elements[i])
+    boost::static_pointer_cast<sc::Canvas>(_elements[i])
       ->reloadPlacements("object");
 }
