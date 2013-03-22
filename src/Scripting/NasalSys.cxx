@@ -893,7 +893,7 @@ void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir)
 // Create module with list of scripts
 void FGNasalSys::addModule(string moduleName, simgear::PathList scripts)
 {
-    if (scripts.size()>0)
+    if (! scripts.empty())
     {
         SGPropertyNode* nasal = globals->get_props()->getNode("nasal");
         SGPropertyNode* module_node = nasal->getChild(moduleName,0,true);
