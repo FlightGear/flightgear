@@ -1159,7 +1159,7 @@ void Rotor::updateDirectionsAndPositions(float *rot)
 void Rotor::compile()
 {
     // Have we already been compiled?
-    if(_rotorparts.size() != 0) return;
+    if(! _rotorparts.empty()) return;
 
     //rotor is divided into _number_of_parts parts
     //each part is calcualted at _number_of_segments points
@@ -1498,7 +1498,7 @@ void Rotorgear::initRotorIteration(float *lrot,float dt)
 {
     int i;
     float omegarel;
-    if (!_rotors.size()) return;
+    if (_rotors.empty()) return;
     Rotor* r0 = (Rotor*)_rotors.get(0);
     omegarel= r0->getOmegaRelNeu();
     for(i=0; i<_rotors.size(); i++) {
@@ -1514,7 +1514,7 @@ void Rotorgear::calcForces(float* torqueOut)
     // check,<if the engine can handle the torque of the rotors. 
     // If not reduce the torque to the fueselage and change rotational 
     // speed of the rotors instead
-    if (_rotors.size())
+    if (! _rotors.empty())
     {
         float omegarel,omegan;
         Rotor* r0 = (Rotor*)_rotors.get(0);
@@ -1556,7 +1556,7 @@ void Rotorgear::calcForces(float* torqueOut)
 
         //add the rotor brake and the gear fritcion
         float dt=0.1f;
-        if (r0->_rotorparts.size()) dt=((Rotorpart*)r0->_rotorparts.get(0))->getDt();
+        if (! r0->_rotorparts.empty()) dt=((Rotorpart*)r0->_rotorparts.get(0))->getDt();
 
         float rotor_brake_torque;
         rotor_brake_torque=_rotorbrake*_max_power_rotor_brake+_rotorgear_friction;

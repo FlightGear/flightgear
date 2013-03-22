@@ -254,7 +254,7 @@ bool Wing::isMirrored()
 void Wing::compile()
 {
     // Have we already been compiled?
-    if(_surfs.size() != 0) return;
+    if(! _surfs.empty()) return;
 
     // Assemble the start/end coordinates of all control surfaces
     // and the wing itself into an array, sort them,

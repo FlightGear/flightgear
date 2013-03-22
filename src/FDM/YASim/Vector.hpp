@@ -15,6 +15,7 @@ public:
     void* get(int i);
     void  set(int i, void* p);
     int   size();
+    bool  empty();
 private:
     void realloc();
 
@@ -56,6 +57,11 @@ inline void Vector::set(int i, void* p)
 inline int Vector::size()
 {
     return _sz;
+}
+
+inline bool Vector::empty()
+{
+    return _sz == 0;
 }
 
 inline void Vector::realloc()
