@@ -330,7 +330,7 @@ void printReport(SGMetar *m)
 			surface.push_back(buf);
 		}
 
-		if (surface.size()) {
+		if (! surface.empty()) {
 			vector<string>::iterator rwysurf = surface.begin();
 			for (i = 0; rwysurf != surface.end(); rwysurf++, i++) {
 				if (i)

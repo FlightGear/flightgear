@@ -61,6 +61,7 @@ public:
     void add(const LineSegment& seg) { _list.push_back(seg); }
     void erase() { _list.erase(_list.begin(), _list.end()); }
     inline unsigned int size() const { return _list.size(); }
+    inline bool empty() const { return _list.empty(); }
     void draw() {
         glBegin(GL_LINES);
         std::vector<LineSegment>::const_iterator it, end = _list.end();

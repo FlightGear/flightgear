@@ -350,7 +350,7 @@ void fgOSFullScreen()
     std::vector<osgViewer::GraphicsWindow*> windows;
     viewer->getWindows(windows);
 
-    if (windows.size() == 0)
+    if (windows.empty())
         return; // Huh?!?
 
     /* Toggling window fullscreen is only supported for the main GUI window.

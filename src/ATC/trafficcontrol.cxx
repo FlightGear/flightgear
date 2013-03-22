@@ -65,7 +65,7 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
     time_t newEta;
     time_t separation = 90;
     bool found = false;
-    if (estimatedArrivalTimes.size() == 0) {
+    if (estimatedArrivalTimes.empty()) {
         estimatedArrivalTimes.push_back(eta);
         return eta;
     } else {
@@ -191,7 +191,7 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
 {
 
     currentPos = pos;
-    if (intentions.size()) {
+    if (! intentions.empty()) {
         intVecIterator i = intentions.begin();
         if ((*i) != pos) {
             SG_LOG(SG_ATC, SG_ALERT,
@@ -223,7 +223,7 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
         //cerr << callsign << ": Check Position and intentions: we are on the same taxiway" << other.callsign << "Index = " << currentPos << endl;
         result = true;
     }
-    //  else if (other.intentions.size())
+    //  else if (! other.intentions.empty())
     //     {
     //       cerr << "Start check 2" << endl;
     //       intVecIterator i = other.intentions.begin();
@@ -233,7 +233,7 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
     //     cerr << "Check Position and intentions: current matches other.intentions" << endl;
     //     result = true;
     //       }
-    else if (intentions.size()) {
+    else if (! intentions.empty()) {
         //cerr << "Start check 3" << endl;
         intVecIterator i = intentions.begin();
         //while (!((i == intentions.end()) || ((*i) == other.currentPos)))
@@ -277,7 +277,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
         otherTargetNode = net->findSegment(other.currentPos)->getEnd()->getIndex();     // OKAY,...
     if ((currentTargetNode == otherTargetNode) && currentTargetNode > 0)
         return currentTargetNode;
-    if (intentions.size()) {
+    if (! intentions.empty()) {
         for (i = intentions.begin(); i != intentions.end(); i++) {
             if ((*i) > 0) {
                 if (currentTargetNode ==
@@ -288,7 +288,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
             }
         }
     }
-    if (other.intentions.size()) {
+    if (! other.intentions.empty()) {
         for (i = other.intentions.begin(); i != other.intentions.end();
                 i++) {
             if ((*i) > 0) {
@@ -300,7 +300,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
             }
         }
     }
-    if (intentions.size() && other.intentions.size()) {
+    if (! intentions.empty() && ! other.intentions.empty()) {
         for (i = intentions.begin(); i != intentions.end(); i++) {
             for (j = other.intentions.begin(); j != other.intentions.end();
                     j++) {
@@ -332,7 +332,7 @@ bool FGTrafficRecord::onRoute(FGGroundNetwork * net,
             net->findSegment(other.currentPos)->getEnd()->getIndex();
     if ((node == othernode) && (node != -1))
         return true;
-    if (other.intentions.size()) {
+    if (! other.intentions.empty()) {
         for (intVecIterator i = other.intentions.begin();
                 i != other.intentions.end(); i++) {
             if (*i > 0) {
@@ -344,7 +344,7 @@ bool FGTrafficRecord::onRoute(FGGroundNetwork * net,
     }
     //if (other.currentPos > 0)
     //  othernode = net->findSegment(other.currentPos)->getEnd()->getIndex();
-    //if (intentions.size())
+    //if (! intentions.empty())
     //  {
     //    for (intVecIterator i = intentions.begin(); i != intentions.end(); i++)
     //    {
@@ -388,7 +388,7 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
                         }
                     }
             }
-            if (other.intentions.size()) {
+            if (! other.intentions.empty()) {
                 for (intVecIterator j = other.intentions.begin();
                         j != other.intentions.end(); j++) {
                     // cerr << "Current segment 1 " << (*i) << endl;
@@ -820,7 +820,7 @@ void FGTowerController::announcePosition(int id,
     TrafficVectorIterator i = activeTraffic.begin();
     // Search whether the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -830,7 +830,7 @@ void FGTowerController::announcePosition(int id,
         }
     }
     // Add a new TrafficRecord if no one exsists for this aircraft.
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || (activeTraffic.empty())) {
         FGTrafficRecord rec;
         rec.setId(id);
 
@@ -843,7 +843,7 @@ void FGTowerController::announcePosition(int id,
         activeTraffic.push_back(rec);
         // Don't just schedule the aircraft for the tower controller, also assign if to the correct active runway.
         ActiveRunwayVecIterator rwy = activeRunways.begin();
-        if (activeRunways.size()) {
+        if (! activeRunways.empty()) {
             while (rwy != activeRunways.end()) {
                 if (rwy->getRunwayName() == intendedRoute->getRunway()) {
                     break;
@@ -874,7 +874,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     // Search whether the current id has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
     TrafficVectorIterator current, closest;
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -884,7 +884,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
         }
     }
 //    // update position of the current aircraft
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || (activeTraffic.empty())) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
     } else {
@@ -957,7 +957,7 @@ void FGTowerController::signOff(int id)
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -968,7 +968,7 @@ void FGTowerController::signOff(int id)
     }
     // If this aircraft has left the runway, we can clear the departure record for this runway
     ActiveRunwayVecIterator rwy = activeRunways.begin();
-    if (activeRunways.size()) {
+    if (! activeRunways.empty()) {
         //while ((rwy->getRunwayName() != i->getRunway()) && (rwy != activeRunways.end())) {
         while (rwy != activeRunways.end()) {
             if (rwy->getRunwayName() == i->getRunway()) {
@@ -984,7 +984,7 @@ void FGTowerController::signOff(int id)
                    "AI error: Attempting to erase non-existing runway clearance record in FGTowerController::signoff at " << SG_ORIGIN);
         }
     }
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || (activeTraffic.empty())) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower at " << SG_ORIGIN);
     } else {
@@ -1005,7 +1005,7 @@ bool FGTowerController::hasInstruction(int id)
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1014,7 +1014,7 @@ bool FGTowerController::hasInstruction(int id)
             i++;
         }
     }
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
@@ -1029,7 +1029,7 @@ FGATCInstruction FGTowerController::getInstruction(int id)
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1038,7 +1038,7 @@ FGATCInstruction FGTowerController::getInstruction(int id)
             i++;
         }
     }
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
@@ -1084,7 +1084,7 @@ void FGStartupController::announcePosition(int id,
     TrafficVectorIterator i = activeTraffic.begin();
     // Search whether the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1094,7 +1094,7 @@ void FGStartupController::announcePosition(int id,
         }
     }
     // Add a new TrafficRecord if no one exsists for this aircraft.
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         FGTrafficRecord rec;
         rec.setId(id);
 
@@ -1124,7 +1124,7 @@ bool FGStartupController::hasInstruction(int id)
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1133,7 +1133,7 @@ bool FGStartupController::hasInstruction(int id)
             i++;
         }
     }
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
@@ -1148,7 +1148,7 @@ FGATCInstruction FGStartupController::getInstruction(int id)
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1157,7 +1157,7 @@ FGATCInstruction FGStartupController::getInstruction(int id)
             i++;
         }
     }
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
@@ -1171,7 +1171,7 @@ void FGStartupController::signOff(int id)
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1180,7 +1180,7 @@ void FGStartupController::signOff(int id)
             i++;
         }
     }
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower at " << SG_ORIGIN);
     } else {
@@ -1230,7 +1230,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
     // Search search if the current id has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
     TrafficVectorIterator current, closest;
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1542,7 +1542,7 @@ void FGApproachController::announcePosition(int id,
     TrafficVectorIterator i = activeTraffic.begin();
     // Search whether the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1552,7 +1552,7 @@ void FGApproachController::announcePosition(int id,
         }
     }
     // Add a new TrafficRecord if no one exsists for this aircraft.
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         FGTrafficRecord rec;
         rec.setId(id);
 
@@ -1575,7 +1575,7 @@ void FGApproachController::updateAircraftInformation(int id, double lat, double 
     // Search search if the current id has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
     TrafficVectorIterator current, closest;
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1585,7 +1585,7 @@ void FGApproachController::updateAircraftInformation(int id, double lat, double 
         }
     }
 //    // update position of the current aircraft
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
     } else {
@@ -1624,7 +1624,7 @@ void FGApproachController::signOff(int id)
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1633,7 +1633,7 @@ void FGApproachController::signOff(int id)
             i++;
         }
     }
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from approach at " << SG_ORIGIN);
     } else {
@@ -1653,7 +1653,7 @@ bool FGApproachController::hasInstruction(int id)
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -1662,7 +1662,7 @@ bool FGApproachController::hasInstruction(int id)
             i++;
         }
     }
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {

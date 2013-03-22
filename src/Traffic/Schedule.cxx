@@ -545,7 +545,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
                    continue;
               }
           }
-          if (flights.size()) {
+          if (! flights.empty()) {
             time_t arrival = flights.back()->getArrivalTime();
             int groundTime = groundTimeFromRadius();
             if ((*i)->getDepartureTime() < (arrival+(groundTime)))

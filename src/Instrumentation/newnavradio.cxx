@@ -904,7 +904,7 @@ NavRadioImpl::~NavRadioImpl()
 
 void NavRadioImpl::init()
 {
-  if( 0 < _components.size() )
+  if( ! _components.empty() )
     return;
 
   _components.push_back( new VOR(_rootNode) );

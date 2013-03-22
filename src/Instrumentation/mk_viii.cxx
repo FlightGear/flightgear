@@ -977,7 +977,7 @@ MK_VIII::IOHandler::TerrainClearanceFilter::update (double agl)
 
   // calculate average
   double new_value = 0;
-  if (samples.size() > 0)
+  if (! samples.empty())
     {
       // time consuming loop => queue limited to 75 samples
       // (= 15seconds * 5samples/second)

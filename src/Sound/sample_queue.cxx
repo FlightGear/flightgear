@@ -50,7 +50,7 @@ FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const std::string &refname ) :
 
 FGSampleQueue::~FGSampleQueue ()
 {
-    while ( _messages.size() > 0 ) {
+    while ( ! _messages.empty() ) {
         delete _messages.front();
         _messages.pop();
     }
@@ -92,7 +92,7 @@ FGSampleQueue::update (double dt)
 
         if ( !now_playing ) {
             // message queue idle, add next sound if we have one
-            if ( _messages.size() > 0 ) {
+            if ( ! _messages.empty() ) {
                 SGSampleGroup::add( _messages.front(), msgid );
                 _messages.pop();
                 play_once( msgid );

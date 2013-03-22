@@ -209,7 +209,7 @@ do_reinit (const SGPropertyNode * arg)
     bool result = true;
 
     vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
-    if (subsystems.size() == 0) {
+    if (subsystems.empty()) {
         globals->get_subsystem_mgr()->reinit();
     } else {
         for ( unsigned int i = 0; i < subsystems.size(); i++ ) {

@@ -50,13 +50,13 @@ FGLogger::init ()
     Log &log = _logs[_logs.size()-1];
     
     string filename = child->getStringValue("filename");
-    if (filename.size() == 0) {
+    if (filename.empty()) {
         filename = "fg_log.csv";
         child->setStringValue("filename", filename.c_str());
     }
 
     string delimiter = child->getStringValue("delimiter");
-    if (delimiter.size() == 0) {
+    if (delimiter.empty()) {
         delimiter = ",";
         child->setStringValue("delimiter", delimiter.c_str());
     }

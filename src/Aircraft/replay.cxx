@@ -572,7 +572,7 @@ FGReplay::record(double time)
 {
     FGReplayData* r = NULL;
 
-    if (recycler.size())
+    if (! recycler.empty())
     {
         r = recycler.front();
         recycler.pop_front();
@@ -588,7 +588,7 @@ void
 FGReplay::interpolate( double time, const replay_list_type &list)
 {
     // sanity checking
-    if ( list.size() == 0 )
+    if ( list.empty() )
     {
         // handle empty list
         return;
@@ -639,7 +639,7 @@ FGReplay::replay( double time ) {
 
     replayMessage(time);
 
-    if ( short_term.size() > 0 ) {
+    if ( ! short_term.empty() ) {
         t1 = short_term.back()->sim_time;
         t2 = short_term.front()->sim_time;
         if ( time > t1 ) {
@@ -649,7 +649,7 @@ FGReplay::replay( double time ) {
             return true;
         } else if ( time <= t1 && time >= t2 ) {
             interpolate( time, short_term );
-        } else if ( medium_term.size() > 0 ) {
+        } else if ( ! medium_term.empty() ) {
             t1 = short_term.front()->sim_time;
             t2 = medium_term.back()->sim_time;
             if ( time <= t1 && time >= t2 )
@@ -660,7 +660,7 @@ FGReplay::replay( double time ) {
                 t2 = medium_term.front()->sim_time;
                 if ( time <= t1 && time >= t2 ) {
                     interpolate( time, medium_term );
-                } else if ( long_term.size() > 0 ) {
+                } else if ( ! long_term.empty() ) {
                     t1 = medium_term.front()->sim_time;
                     t2 = long_term.back()->sim_time;
                     if ( time <= t1 && time >= t2 )
@@ -704,13 +704,13 @@ FGReplay::replay(double time, FGReplayData* pCurrentFrame, FGReplayData* pOldFra
 double
 FGReplay::get_start_time()
 {
-    if ( long_term.size() > 0 )
+    if ( ! long_term.empty() )
     {
         return long_term.front()->sim_time;
-    } else if ( medium_term.size() > 0 )
+    } else if ( ! medium_term.empty() )
     {
         return medium_term.front()->sim_time;
-    } else if ( short_term.size() )
+    } else if ( ! short_term.empty() )
     {
         return short_term.front()->sim_time;
     } else
@@ -722,7 +722,7 @@ FGReplay::get_start_time()
 double
 FGReplay::get_end_time()
 {
-    if ( short_term.size() )
+    if ( ! short_term.empty() )
     {
         return short_term.back()->sim_time;
     } else

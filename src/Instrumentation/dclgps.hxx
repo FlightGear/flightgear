@@ -97,7 +97,7 @@ typedef gps_waypoint_map::const_iterator gps_waypoint_map_const_iterator;
 class GPSFlightPlan {
 public:
   std::vector<GPSWaypoint*> waypoints;
-	inline bool IsEmpty() { return(waypoints.size() == 0); }
+	inline bool IsEmpty() { return waypoints.empty(); }
 };
 
 // TODO - probably de-public the internals of the next 2 classes and add some methods!

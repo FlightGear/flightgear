@@ -366,7 +366,7 @@ private:
 
     const string& rwy_no_1(token[8]);
     const string& rwy_no_2(token[17]);
-    if ( rwy_no_1.size() == 0 || rwy_no_2.size() == 0 )
+    if ( rwy_no_1.empty() || rwy_no_2.empty() )
         return;
 
     double displ_thresh1 = atof( token[11].c_str() );

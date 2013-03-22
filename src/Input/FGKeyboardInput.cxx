@@ -169,7 +169,7 @@ const FGCommonInput::binding_list_t & FGKeyboardInput::_find_key_bindings (unsig
   FGButton &b = bindings[k];
 
                                 // Try it straight, first.
-  if (b.bindings[modifiers].size() > 0)
+  if (! b.bindings[modifiers].empty())
     return b.bindings[modifiers];
 
                                 // Alt-Gr is CTRL+ALT

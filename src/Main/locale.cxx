@@ -313,14 +313,14 @@ FGLocale::getLocalizedStrings(const char* id, const char* resource)
         if (_currentLocale)
         {
             simgear::PropertyList s = getLocalizedStrings(_currentLocale, id, resource);
-            if (s.size())
+            if (! s.empty())
                 return s;
         }
 
         if (_defaultLocale)
         {
             simgear::PropertyList s = getLocalizedStrings(_defaultLocale, id, resource);
-            if (s.size())
+            if (! s.empty())
                 return s;
         }
     }

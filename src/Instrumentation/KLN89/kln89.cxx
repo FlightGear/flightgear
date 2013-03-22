@@ -587,7 +587,7 @@ void KLN89::DtoPressed() {
 			} else {
 				_dir_page->SetId(_activeWaypoint.id);
 			}
-		} else if(_curPage == 6 && _activePage->GetSubPage() == 3 && fgGetBool("/instrumentation/kln89/scan-pull") && _activeFP->waypoints.size()) {
+		} else if(_curPage == 6 && _activePage->GetSubPage() == 3 && fgGetBool("/instrumentation/kln89/scan-pull") && ! _activeFP->waypoints.empty()) {
 			// NAV 4
 			_dir_page->SetId(((KLN89NavPage*)_activePage)->GetNav4WpId());
 		} else if(_curPage == 7 && _activePage->GetSubPage() == 0 && _mode == KLN89_MODE_CRSR) {
@@ -658,7 +658,7 @@ void KLN89::MsgPressed() {
 	// TODO - handle persistent messages such as SUA alerting.
 	// (The message annunciation flashes before first view, but afterwards remains continuously lit with the message available
 	// until the potential conflict no longer pertains).
-	if(_dispMsg && _messageStack.size()) {
+	if(_dispMsg && ! _messageStack.empty()) {
 		_messageStack.pop_front();
 	}
 	_dispMsg = !_dispMsg;

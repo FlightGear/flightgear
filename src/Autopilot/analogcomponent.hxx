@@ -115,7 +115,7 @@ protected:
      * values of &lt;min&gt; and/or &lt;max&gt;. 
      */
     inline double get_output_value() const {
-      return _output_list.size() == 0 ? 0.0 : clamp(_output_list[0]->getDoubleValue());
+      return _output_list.empty() ? 0.0 : clamp(_output_list[0]->getDoubleValue());
     }
 
     simgear::PropertyList _output_list;
@@ -140,7 +140,7 @@ public:
 
 inline void AnalogComponent::disabled( double dt )
 {
-  if( _feedback_if_disabled && _output_list.size() > 0 ) {    
+  if( _feedback_if_disabled && ! _output_list.empty() ) {    
     InputValue * input;
     if( (input = _valueInput.get_active() ) != NULL )
       input->set_value( _output_list[0]->getDoubleValue() );

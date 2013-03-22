@@ -185,7 +185,7 @@ void HUD::draw(osg::State&)
     if (!isVisible())
         return;
 
-    if (!_items.size() && !_ladders.size())
+    if (_items.empty() && _ladders.empty())
         return;
 
     if (is3D()) {
@@ -321,7 +321,7 @@ void HUD::common_draw()
     _text_list.draw();
     _line_list.draw();
 
-    if (_stipple_line_list.size()) {
+    if (! _stipple_line_list.empty()) {
         glEnable(GL_LINE_STIPPLE);
         glLineStipple(1, 0x00FF);
         _stipple_line_list.draw();

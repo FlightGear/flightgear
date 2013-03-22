@@ -1775,7 +1775,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   setupRoot();
   
 // system.fgfsrc handling
-  if( hostname.size() > 0 ) {
+  if( ! hostname.empty() ) {
     config.set(globals->get_fg_root());
     config.append( "system.fgfsrc" );
     config.concat( "." );
@@ -2160,7 +2160,7 @@ void Options::showUsage() const
         
         vector<SGPropertyNode_ptr> desc;
         desc = option[k]->getChildren("description");
-        if (desc.size() > 0) {
+        if (! desc.empty()) {
           for ( unsigned int l = 0; l < desc.size(); l++) {
             string t = desc[l]->getStringValue();
 

@@ -567,7 +567,7 @@ FGGeneric::reinit()
                 // bad configuration
                 return;
             }
-            if (!binary_mode && (line_separator.size() == 0 ||
+            if (!binary_mode && (line_separator.empty() ||
                 *line_separator.rbegin() != '\n')) {
 
                 SG_LOG(SG_IO, SG_WARN,

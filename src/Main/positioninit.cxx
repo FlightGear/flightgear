@@ -329,7 +329,7 @@ static bool fgSetPosFromNAV( const string& id, const double& freq, FGPositioned:
   FGNavList::TypeFilter filter(type);
   const nav_list_type navlist = FGNavList::findByIdentAndFreq( id.c_str(), freq, &filter );
   
-  if (navlist.size() == 0 ) {
+  if (navlist.empty()) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
            << id << ":" << freq );
     return false;

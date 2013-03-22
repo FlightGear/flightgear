@@ -479,7 +479,7 @@ public:
     virtual std::string getName();
     virtual void update(double dt);
     bool hasActiveTraffic() {
-        return activeTraffic.size() != 0;
+        return ! activeTraffic.empty();
     };
     TrafficVector &getActiveTraffic() {
         return activeTraffic;
@@ -516,7 +516,7 @@ public:
     virtual void update(double dt);
 
     bool hasActiveTraffic() {
-        return activeTraffic.size() != 0;
+        return ! activeTraffic.empty();
     };
     TrafficVector &getActiveTraffic() {
         return activeTraffic;
@@ -558,7 +558,7 @@ public:
     ActiveRunway* getRunway(const std::string& name);
 
     bool hasActiveTraffic() {
-        return activeTraffic.size() != 0;
+        return ! activeTraffic.empty();
     };
     TrafficVector &getActiveTraffic() {
         return activeTraffic;
