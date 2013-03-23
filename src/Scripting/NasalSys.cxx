@@ -844,8 +844,11 @@ void FGNasalSys::update(double)
 
     if (!_loadList.empty())
     {
-        // process Nasal load hook (only one per update loop to avoid excessive lags)
-        _loadList.pop()->load();
+        if( _delay_load )
+          _delay_load = false;
+        else
+          // process Nasal load hook (only one per update loop to avoid excessive lags)
+          _loadList.pop()->load();
     }
     else
     if (!_unloadList.empty())
@@ -1240,7 +1243,9 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 
 void FGNasalSys::registerToLoad(FGNasalModelData *data)
 {
-    _loadList.push(data);
+  if( _loadList.empty() )
+    _delay_load = true;
+  _loadList.push(data);
 }
 
 void FGNasalSys::registerToUnload(FGNasalModelData *data)

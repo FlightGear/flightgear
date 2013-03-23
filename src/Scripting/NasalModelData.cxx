@@ -3,7 +3,12 @@
 #include "NasalSys.hxx"
 #include <Main/globals.hxx>
 
+#include <simgear/math/SGMath.hxx>
+#include <simgear/nasal/cppbind/Ghost.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/debug/logstream.hxx>
+
+#include <osg/Transform>
 
 #include <boost/bind.hpp>
 
@@ -17,6 +22,48 @@
 
 unsigned int FGNasalModelData::_max_module_id = 0;
 FGNasalModelDataList FGNasalModelData::_loaded_models;
+
+typedef osg::ref_ptr<osg::Node> NodeRef;
+typedef nasal::Ghost<NodeRef> NasalNode;
+
+/**
+ * Get position (lat, lon, elevation) and orientation (heading, pitch, roll) of
+ * model.
+ */
+static naRef f_node_getPose( const osg::Node& node,
+                                   const nasal::CallContext& ctx )
+{
+  osg::NodePathList parent_paths = node.getParentalNodePaths();
+  for( osg::NodePathList::const_iterator path = parent_paths.begin();
+                                         path != parent_paths.end();
+                                       ++path )
+  {
+    osg::Matrix local_to_world = osg::computeLocalToWorld(*path);
+    if( !local_to_world.valid() )
+      continue;
+
+    SGGeod coord = SGGeod::fromCart( toSG(local_to_world.getTrans()) );
+    if( !coord.isValid() )
+      continue;
+
+    osg::Matrix local_frame = makeZUpFrameRelative(coord),
+                inv_local;
+    inv_local.invert_4x3(local_frame);
+    local_to_world.postMult(inv_local);
+
+    SGQuatd rotate = toSG(local_to_world.getRotate());
+    double hdg, pitch, roll;
+    rotate.getEulerDeg(hdg, pitch, roll);
+
+    nasal::Hash pose(ctx.to_nasal(coord), ctx.c);
+    pose.set("heading", hdg);
+    pose.set("pitch", pitch);
+    pose.set("roll", roll);
+    return pose.get_naRef();
+  }
+
+  return naNil();
+}
 
 //------------------------------------------------------------------------------
 FGNasalModelData::FGNasalModelData( SGPropertyNode *root,
@@ -43,24 +90,33 @@ FGNasalModelData::~FGNasalModelData()
 //------------------------------------------------------------------------------
 void FGNasalModelData::load()
 {
-    std::stringstream m;
-    m << "__model" << _module_id;
-    _module = m.str();
-    
-    SG_LOG(SG_NASAL, SG_DEBUG, "Loading nasal module " << _module.c_str());
-    
-    const char *s = _load ? _load->getStringValue() : "";
-    FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
-    
-    // Add _module_id to script local hash to allow placing canvasses on objects
-    // inside the model.
-    nasalSys->getGlobals().createHash(_module).set("_module_id", _module_id);
+  std::stringstream m;
+  m << "__model" << _module_id;
+  _module = m.str();
 
-    naRef arg[2];
-    arg[0] = nasalSys->propNodeGhost(_root);
-    arg[1] = nasalSys->propNodeGhost(_prop);
-    nasalSys->createModule(_module.c_str(), _path.c_str(), s, strlen(s),
-                           _root, 2, arg);
+  SG_LOG(SG_NASAL, SG_DEBUG, "Loading nasal module " << _module.c_str());
+
+  const char *s = _load ? _load->getStringValue() : "";
+  FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
+
+  // Add _module_id to script local hash to allow placing canvasses on objects
+  // inside the model.
+  nasal::Hash module = nasalSys->getGlobals().createHash(_module);
+  module.set("_module_id", _module_id);
+
+  if( !NasalNode::isInit() )
+  {
+    NasalNode::init("osg.Node")
+      .method("getPose", &f_node_getPose);
+  }
+
+  module.set("_model", NodeRef(_branch));
+
+  naRef arg[2];
+  arg[0] = nasalSys->propNodeGhost(_root);
+  arg[1] = nasalSys->propNodeGhost(_prop);
+  nasalSys->createModule(_module.c_str(), _path.c_str(), s, strlen(s),
+                         _root, 2, arg);
 }
 
 //------------------------------------------------------------------------------
@@ -143,7 +199,7 @@ void FGNasalModelDataProxy::modelLoaded( const std::string& path,
     
     if ((!load) && (!unload))
         return;
-    
+
     _data = new FGNasalModelData(_root, path, prop, load, unload, branch);
     
     // register Nasal module to be created and loaded in the main thread.

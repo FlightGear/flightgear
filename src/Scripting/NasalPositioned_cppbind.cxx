@@ -77,16 +77,6 @@ naRef to_nasal_helper(naContext c, flightgear::Approach* iap)
 }
 
 //------------------------------------------------------------------------------
-naRef to_nasal_helper(naContext c, const SGGeod& pos)
-{
-  nasal::Hash hash(c);
-  hash.set("lat", pos.getLatitudeDeg());
-  hash.set("lon", pos.getLongitudeDeg());
-  hash.set("elevation", pos.getElevationM());
-  return hash.get_naRef();
-}
-
-//------------------------------------------------------------------------------
 static naRef f_navaid_course(naContext, FGNavRecord& nav)
 {
   if( !(  nav.type() == FGPositioned::ILS

@@ -134,6 +134,11 @@ private:
     SGLockedQueue<SGSharedPtr<FGNasalModelData> > _loadList;
     SGLockedQueue<SGSharedPtr<FGNasalModelData> > _unloadList;
 
+    // Delay removing items of the _loadList to ensure the are already attached
+    // to the scene graph (eg. enables to retrieve world position in load
+    // callback).
+    bool _delay_load;
+
     //
     // FGTimer subclass for handling Nasal timer callbacks.
     // See the implementation of the settimer() extension function for
