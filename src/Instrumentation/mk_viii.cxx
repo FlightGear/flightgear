@@ -180,7 +180,7 @@ MK_VIII::PropertiesHandler::init ()
   mk_node(longitude) = fgGetNode("/position/longitude-deg", true);
   mk_node(nav0_cdi_serviceable) = fgGetNode("/instrumentation/nav/cdi/serviceable", true);
   mk_node(nav0_gs_distance) = fgGetNode("/instrumentation/nav/gs-distance", true);
-  mk_node(nav0_gs_needle_deflection) = fgGetNode("/instrumentation/nav/gs-needle-deflection", true);
+  mk_node(nav0_gs_needle_deflection) = fgGetNode("/instrumentation/nav/gs-needle-deflection-deg", true);
   mk_node(nav0_gs_serviceable) = fgGetNode("/instrumentation/nav/gs/serviceable", true);
   mk_node(nav0_has_gs) = fgGetNode("/instrumentation/nav/has-gs", true);
   mk_node(nav0_heading_needle_deflection) = fgGetNode("/instrumentation/nav/heading-needle-deflection", true);
