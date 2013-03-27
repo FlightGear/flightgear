@@ -1270,13 +1270,7 @@ private:
   {
     typedef struct
     {
-      double latitude;		// latitude in degrees
-      double longitude;		// longitude in degrees
-    } Position;
-
-    typedef struct
-    {
-      Position	position;	// position of threshold
+      SGGeod	position;	// position of threshold
       double	heading;	// runway heading
     } RunwayEdge;
 
@@ -1289,32 +1283,19 @@ private:
 
     struct
     {
-      Position		center;		// center point
+      SGGeod		center;		// center point
       double		elevation;	// elevation in feet
       double		half_length;	// runway half length, in nautical miles
+      double            half_width_m;   // runway half width, in meters
       RunwayEdge	edges[2];	// runway threshold and end
-      Position		bias_area[4];	// vertices of the bias area
+      SGVec3d		bias_points[2];	// vertices of the bias area
     } runway;
 
     double bias;
     double *reference;
     double initial_value;
 
-    double get_azimuth_difference (double from_lat,
-				   double from_lon,
-				   double to_lat,
-				   double to_lon,
-				   double to_heading);
-    double get_azimuth_difference (const FGRunway *_runway);
-
-    FGRunway* select_runway (const FGAirport *airport);
     void update_runway ();
-
-    void get_bias_area_edges (Position *edge,
-			      double reciprocal,
-			      double half_width_m,
-			      Position *bias_edge1,
-			      Position *bias_edge2);
 
     bool is_inside_edge_triangle (RunwayEdge *edge);
     bool is_inside_bias_area ();

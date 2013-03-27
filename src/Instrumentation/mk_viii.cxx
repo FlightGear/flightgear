@@ -66,8 +66,13 @@
 #include <simgear/constants.h>
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/SGMathFwd.hxx>
+#include <simgear/math/SGLimits.hxx>
+#include <simgear/math/SGGeometryFwd.hxx>
+#include <simgear/math/SGGeodesy.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/math/SGLineSegment.hxx>
+#include <simgear/math/SGIntersect.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/sound/sample_group.hxx>
@@ -137,24 +142,6 @@ modify_amplitude (double amplitude, double dB)
 }
 
 static double
-heading_add (double h1, double h2)
-{
-  double result = h1 + h2;
-  if (result >= 360)
-    result -= 360;
-  return result;
-}
-
-static double
-heading_substract (double h1, double h2)
-{
-  double result = h1 - h2;
-  if (result < 0)
-    result += 360;
-  return result;
-}
-
-static double
 get_heading_difference (double h1, double h2)
 {
   double diff = h1 - h2;
@@ -165,12 +152,6 @@ get_heading_difference (double h1, double h2)
     diff -= 360;
 
   return fabs(diff);
-}
-
-static double
-get_reciprocal_heading (double h)
-{
-  return heading_add(h, 180);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4068,9 +4049,7 @@ MK_VIII::Mode6Handler::test_runway (const FGRunway *_runway)
     SGGeod::fromDeg(mk_data(gps_longitude).get(), mk_data(gps_latitude).get()));
   
   // get distance to threshold
-  double distance, az1, az2;
-  SGGeodesy::inverse(pos, _runway->threshold(), az1, az2, distance);
-  return distance * SG_METER_TO_NM <= 5;
+  return SGGeodesy::distanceNm(pos, _runway->threshold()) <= 5;
 }
 
 bool
@@ -4270,60 +4249,6 @@ MK_VIII::Mode6Handler::update ()
 // TCFHandler /////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-// Gets the difference between the azimuth from @from_lat,@from_lon to
-// @to_lat,@to_lon, and @to_heading, in degrees.
-double
-MK_VIII::TCFHandler::get_azimuth_difference (double from_lat,
-					     double from_lon,
-					     double to_lat,
-					     double to_lon,
-					     double to_heading)
-{
-  double az1, az2, distance;
-  geo_inverse_wgs_84(0, from_lat, from_lon, to_lat, to_lon, &az1, &az2, &distance);
-  return get_heading_difference(az1, to_heading);
-}
-
-// Gets the difference between the azimuth from the current GPS
-// position to the center of @_runway, and the heading of @_runway, in
-// degrees.
-double
-MK_VIII::TCFHandler::get_azimuth_difference (const FGRunway *_runway)
-{
-  return get_azimuth_difference(mk_data(gps_latitude).get(),
-				mk_data(gps_longitude).get(),
-				_runway->latitude(),
-				_runway->longitude(),
-				_runway->headingDeg());
-}
-
-// Selects the most likely intended destination runway of @airport,
-// and returns it in @_runway. For each runway, the difference between
-// the azimuth from the current GPS position to the center of the
-// runway and its heading is computed. The runway having the smallest
-// difference wins.
-//
-// This selection algorithm is not specified in [SPEC], but
-// http://www.egpws.com/general_information/description/runway_select.htm
-// talks about automatic runway selection.
-FGRunway*
-MK_VIII::TCFHandler::select_runway (const FGAirport *airport)
-{
-  FGRunway* _runway = 0;
-  double min_diff = 360;
-  
-  for (unsigned int r=0; r<airport->numRunways(); ++r) {
-    FGRunway* rwy(airport->getRunwayByIndex(r));
-    double diff = get_azimuth_difference(rwy);
-    if (diff < min_diff)
-	  {
-      min_diff = diff;
-      _runway = rwy;
-    }
-  } // of airport runways iteration
-  return _runway;
-}
-
 bool MK_VIII::TCFHandler::AirportFilter::passAirport(FGAirport* aApt) const
 {
   return aApt->hasHardRunwayOfLengthFt(mk->conf.runway_database);
@@ -4343,109 +4268,43 @@ MK_VIII::TCFHandler::update_runway ()
   // large airports, which may have a runway located far away from
   // the airport's reference point.
   AirportFilter filter(mk);
-  FGAirport* apt = FGAirport::findClosest(
-    SGGeod::fromDeg(mk_data(gps_longitude).get(), mk_data(gps_latitude).get()),
-    30.0, &filter);
+  SGGeod apos = SGGeod::fromDeg(mk_data(gps_longitude).get(), mk_data(gps_latitude).get());
+  FGAirport* apt = FGAirport::findClosest(apos, 30.0, &filter);
       
   if (!apt) return;
   
-	  FGRunway* _runway = select_runway(apt);
+	  FGRunway* _runway = apt->findBestRunwayForPos(apos).get();
     
   if (!_runway) return;
 
 	  has_runway = true;
 
-	  runway.center.latitude = _runway->latitude();
-	  runway.center.longitude = _runway->longitude();
+	  runway.center = _runway->pointOnCenterline(_runway->lengthM() * 0.5);
 
 	  runway.elevation = apt->elevation();
 
+          runway.half_width_m = _runway->widthM() * 0.5;
 	  double half_length_m = _runway->lengthM() * 0.5;
 	  runway.half_length = half_length_m * SG_METER_TO_NM;
 
-	  //        b3 ________________ b0
+	  //           ________________
 	  //          |                |
 	  //    h1>>> |  e1<<<<<<<<e0  | <<<h0
 	  //          |________________|
-	  //        b2                  b1
 
 	  // get heading to runway threshold (h0) and end (h1)
 	  runway.edges[0].heading = _runway->headingDeg();
-	  runway.edges[1].heading = get_reciprocal_heading(_runway->headingDeg());
-
-	  double az;
+	  runway.edges[1].heading = _runway->reciprocalRunway()->headingDeg();
 
 	  // get position of runway threshold (e0)
-	  geo_direct_wgs_84(0,
-			    runway.center.latitude,
-			    runway.center.longitude,
-			    runway.edges[1].heading,
-			    half_length_m,
-			    &runway.edges[0].position.latitude,
-			    &runway.edges[0].position.longitude,
-			    &az);
+          runway.edges[0].position = _runway->begin();
 
 	  // get position of runway end (e1)
-	  geo_direct_wgs_84(0,
-			    runway.center.latitude,
-			    runway.center.longitude,
-			    runway.edges[0].heading,
-			    half_length_m,
-			    &runway.edges[1].position.latitude,
-			    &runway.edges[1].position.longitude,
-			    &az);
+          runway.edges[1].position = _runway->end();
 
-	  double half_width_m = _runway->widthM() * 0.5;
-
-	  // get position of threshold bias area edges (b0 and b1)
-	  get_bias_area_edges(&runway.edges[0].position,
-			      runway.edges[1].heading,
-			      half_width_m,
-			      &runway.bias_area[0],
-			      &runway.bias_area[1]);
-
-	  // get position of end bias area edges (b2 and b3)
-	  get_bias_area_edges(&runway.edges[1].position,
-			      runway.edges[0].heading,
-			      half_width_m,
-			      &runway.bias_area[2],
-			      &runway.bias_area[3]);
-}
-
-void
-MK_VIII::TCFHandler::get_bias_area_edges (Position *edge,
-					  double reciprocal,
-					  double half_width_m,
-					  Position *bias_edge1,
-					  Position *bias_edge2)
-{
-  double half_bias_width_m = k * SG_NM_TO_METER + half_width_m;
-  double tmp_latitude = 0.0, tmp_longitude = 0.0, az = 0.0;
-
-  geo_direct_wgs_84(0,
-		    edge->latitude,
-		    edge->longitude,
-		    reciprocal,
-		    k * SG_NM_TO_METER,
-		    &tmp_latitude,
-		    &tmp_longitude,
-		    &az);
-  geo_direct_wgs_84(0,
-		    tmp_latitude,
-		    tmp_longitude,
-		    heading_substract(reciprocal, 90),
-		    half_bias_width_m,
-		    &bias_edge1->latitude,
-		    &bias_edge1->longitude,
-		    &az);
-  geo_direct_wgs_84(0,
-		    tmp_latitude,
-		    tmp_longitude,
-		    heading_add(reciprocal, 90),
-		    half_bias_width_m,
-		    &bias_edge2->latitude,
-		    &bias_edge2->longitude,
-		    &az);
+          // get cartesian coordinates of both runway ends
+          runway.bias_points[0] = _runway->cart();
+          runway.bias_points[1] = _runway->reciprocalRunway()->cart();
 }
 
 // Returns true if the current GPS position is inside the edge
@@ -4457,11 +4316,10 @@ MK_VIII::TCFHandler::get_bias_area_edges (Position *edge,
 bool
 MK_VIII::TCFHandler::is_inside_edge_triangle (RunwayEdge *edge)
 {
-  return get_azimuth_difference(mk_data(gps_latitude).get(),
-				mk_data(gps_longitude).get(),
-				edge->position.latitude,
-				edge->position.longitude,
-				edge->heading) <= 45;
+  double az = SGGeodesy::courseDeg( SGGeod::fromDeg(mk_data(gps_longitude).get(),
+                                                    mk_data(gps_latitude).get()),
+                                    edge->position);
+  return get_heading_difference(az, edge->heading) <= 45;
 }
 
 // Returns true if the current GPS position is inside the bias area of
@@ -4469,30 +4327,10 @@ MK_VIII::TCFHandler::is_inside_edge_triangle (RunwayEdge *edge)
 bool
 MK_VIII::TCFHandler::is_inside_bias_area ()
 {
-  double az1[4];
-  double angles_sum = 0;
-
-  for (int i = 0; i < 4; i++)
-    {
-      double az2, distance;
-      geo_inverse_wgs_84(0,
-			 mk_data(gps_latitude).get(),
-			 mk_data(gps_longitude).get(),
-			 runway.bias_area[i].latitude,
-			 runway.bias_area[i].longitude,
-			 &az1[i], &az2, &distance);
-    }
-
-  for (int i = 0; i < 4; i++)
-    {
-      double angle = az1[i == 3 ? 0 : i + 1] - az1[i];
-      if (angle < -180)
-	angle += 360;
-
-      angles_sum += angle;
-    }
-
-  return angles_sum > 180;
+  double half_bias_width_m = k * SG_NM_TO_METER + runway.half_width_m;
+  SGVec3d cpos = SGVec3d::fromGeod(  SGGeod::fromDeg(mk_data(gps_longitude).get(), mk_data(gps_latitude).get()) );
+  SGLineSegmentd bias_line = SGLineSegmentd(runway.bias_points[0], runway.bias_points[1]);
+  return dist(cpos, bias_line) < half_bias_width_m;
 }
 
 bool
@@ -4502,17 +4340,9 @@ MK_VIII::TCFHandler::is_tcf ()
     {
       if (has_runway)
 	{
-	  double distance, az1, az2;
-
-	  geo_inverse_wgs_84(0,
-			     mk_data(gps_latitude).get(),
-			     mk_data(gps_longitude).get(),
-			     runway.center.latitude,
-			     runway.center.longitude,
-			     &az1, &az2, &distance);
-
-	  distance *= SG_METER_TO_NM;
-
+	  double distance = SGGeodesy::distanceNm( SGGeod::fromDeg(mk_data(gps_longitude).get(),
+                                                                   mk_data(gps_latitude).get()),
+                                                   runway.center);
 	  // distance to the inner envelope edge
 	  double edge_distance = distance - runway.half_length - k;
 
@@ -4576,16 +4406,13 @@ MK_VIII::TCFHandler::is_rfcf ()
 {
   if (has_runway)
     {
-      double distance, az1, az2;
-      geo_inverse_wgs_84(0,
-			 mk_data(gps_latitude).get(),
-			 mk_data(gps_longitude).get(),
-			 runway.center.latitude,
-			 runway.center.longitude,
-			 &az1, &az2, &distance);
+
+      double distance = SGGeodesy::distanceNm( SGGeod::fromDeg(mk_data(gps_longitude).get(),
+                                                               mk_data(gps_latitude).get()),
+                                               runway.center);
 
       double krf = k + mk_data(gps_vertical_figure_of_merit).get() / 200;
-      distance = distance * SG_METER_TO_NM - runway.half_length - krf;
+      distance = distance - runway.half_length - krf;
 
       if (distance <= 5)
 	{
