@@ -15,12 +15,9 @@
 #include <simgear/props/tiedpropertylist.hxx>
 
 #include <Navaids/positioned.hxx>
+#include <Navaids/FlightPlan.hxx>
 #include <Instrumentation/rnav_waypt_controller.hxx>
 
-// forward decls
-class SGRoute;
-class FGRouteMgr;
-class GPSListener;
 
 /**
  * Model a GPS radio.
@@ -57,10 +54,12 @@ class GPSListener;
  * /instrumentation/gps/true-bug-error-deg
  * /instrumentation/gps/magnetic-bug-error-deg
  */
-class GPS : public SGSubsystem, public flightgear::RNAV
+class GPS : public SGSubsystem,
+            public flightgear::RNAV,
+            public flightgear::FlightPlan::Delegate
 {
 public:
-    GPS (SGPropertyNode *node);
+    GPS (SGPropertyNode *node, bool defaultGPSMode = false);
     GPS ();
     virtual ~GPS ();
 
@@ -82,7 +81,6 @@ public:
     virtual double overflightArmDistanceM();
 
 private:
-    friend class GPSListener;
     friend class SearchFilter;
 
     /**
@@ -142,9 +140,6 @@ private:
       // (in seconds)
       double _waypointAlertTime;
 
-      // minimum runway length to require when filtering
-      double _minRunwayLengthFt;
-
       // should we require a hard-surfaced runway when filtering?
       bool _requireHardSurface;
 
@@ -172,15 +167,8 @@ private:
     void updateBasicData(double dt);
 
     void updateTrackingBug();
-    void updateReferenceNavaid(double dt);
-    void referenceNavaidSet(const std::string& aNavaid);
     void updateRouteData();
     void driveAutopilot();
-    
-    void routeActivated();
-    void routeManagerSequenced();
-    void routeEdited();
-    void routeFinished();
 
     void updateTurn();
     void updateOverflight();
@@ -195,49 +183,24 @@ private:
     /** Update one-shot things when WP1 / leg data change */
     void wp1Changed();
 
-// scratch maintenance utilities
-    void setScratchFromPositioned(FGPositioned* aPos, int aIndex);
-    void setScratchFromCachedSearchResult();
-    void setScratchFromRouteWaypoint(int aIndex);
-
-    /** Add airport-specific information to a scratch result */
-    void addAirportToScratch(FGAirport* aAirport);
-  
     void clearScratch();
 
     /** Predicate, determine if the lon/lat position in the scratch is
      * valid or not. */
     bool isScratchPositionValid() const;
 
-    FGPositioned::Filter* createFilter(FGPositioned::Type aTy);
-  
-   /** Search kernel - called each time we step through a result */
-    void performSearch();
 
 // command handlers
     void selectLegMode();
-    void selectOBSMode();
+    void selectOBSMode(flightgear::Waypt* waypt);
     void directTo();
-    void loadRouteWaypoint();
-    void loadNearest();
-    void search();
-    void nextResult();
-    void previousResult();
-    void defineWaypoint();
-    void insertWaypointAtIndex(int aIndex);
-    void removeWaypointAtIndex(int aIndex);
 
 // tied-property getter/setters
     void setCommand(const char* aCmd);
     const char* getCommand() const { return ""; }
 
     const char* getMode() const { return _mode.c_str(); }
-
     bool getScratchValid() const { return _scratchValid; }
-    double getScratchDistance() const;
-    double getScratchMagBearing() const;
-    double getScratchTrueBearing() const;
-    bool getScratchHasNext() const;
 
     double getSelectedCourse() const { return _selectedCourse; }
     void setSelectedCourse(double crs);
@@ -253,9 +216,6 @@ private:
     double getMagTrack() const;
     double getGroundspeedKts() const { return _last_speed_kts; }
     double getVerticalSpeed() const { return _last_vertical_speed; }
-
-    //bool getLegMode() const { return _mode == "leg"; }
-    //bool getObsMode() const { return _mode == "obs"; }
 
     const char* getWP0Ident() const;
     const char* getWP0Name() const;
@@ -293,6 +253,16 @@ private:
     void tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef,
                            const char* lonStr, const char* latStr, const char* altStr);
 
+// FlightPlan::Delegate
+    virtual void currentWaypointChanged();
+    virtual void waypointsChanged();
+    virtual void cleared();
+    virtual void endOfFlightPlan();
+    
+    void sequence();
+    void routeManagerFlightPlanChanged(SGPropertyNode*);
+    void routeActivated(SGPropertyNode*);
+    
 // members
     SGPropertyNode_ptr _gpsNode;
     SGPropertyNode_ptr _currentWayptNode;
@@ -308,22 +278,13 @@ private:
     SGPropertyNode_ptr _magnetic_bug_error_node;
     SGPropertyNode_ptr _eastWestVelocity;
     SGPropertyNode_ptr _northSouthVelocity;
-
-    SGPropertyNode_ptr _ref_navaid_id_node;
-    SGPropertyNode_ptr _ref_navaid_bearing_node;
-    SGPropertyNode_ptr _ref_navaid_distance_node;
-    SGPropertyNode_ptr _ref_navaid_mag_bearing_node;
-    SGPropertyNode_ptr _ref_navaid_frequency_node;
-    SGPropertyNode_ptr _ref_navaid_name_node;
-
-    SGPropertyNode_ptr _route_active_node;
+    
+  //  SGPropertyNode_ptr _route_active_node;
     SGPropertyNode_ptr _route_current_wp_node;
     SGPropertyNode_ptr _routeDistanceNm;
     SGPropertyNode_ptr _routeETE;
-    SGPropertyNode_ptr _routeEditedSignal;
-    SGPropertyNode_ptr _routeFinishedSignal;
     SGPropertyNode_ptr _desiredCourseNode;
-
+    
     double _selectedCourse;
     double _desiredCourse;
 
@@ -336,15 +297,17 @@ private:
     double _lastEWVelocity;
     double _lastNSVelocity;
 
+    /**
+     * the instrument manager creates a default instance of us,
+     * if no explicit GPS is specific in the aircraft's instruments.xml file.
+     * This allows default route-following to work with the generic autopilot.
+     * This flat is set in that case, to inform us we're a 'fake' installation,
+     * and not to worry about electrical power or similar.
+     */
+    bool _defaultGPSMode;
+    
     std::string _mode;
-    GPSListener* _listener;
     Config _config;
-    FGRouteMgr* _routeMgr;
-
-    bool _ref_navaid_set;
-    double _ref_navaid_elapsed;
-    FGPositionedRef _ref_navaid;
-
     std::string _name;
     int _num;
 
@@ -356,17 +319,7 @@ private:
     SGGeod _scratchPos;
     SGPropertyNode_ptr _scratchNode;
     bool _scratchValid;
-
-// search data
-    int _searchResultIndex;
-    std::string _searchQuery;
-    FGPositioned::Type _searchType;
-    bool _searchExact;
-    FGPositionedList _searchResults;
-    bool _searchIsRoute; ///< set if 'search' is actually the current route
-    bool _searchHasNext; ///< is there a result after this one?
-    bool _searchNames; ///< set if we're searching names instead of idents
-
+    
 // turn data
     bool _computeTurnData; ///< do we need to update the turn data?
     bool _anticipateTurn; ///< are we anticipating the next turn or not?
@@ -380,18 +333,19 @@ private:
 
     std::auto_ptr<flightgear::WayptController> _wayptController;
 
-    SGPropertyNode_ptr _realismSimpleGps; ///< should the GPS be simple or realistic?
     flightgear::WayptRef _prevWaypt;
     flightgear::WayptRef _currentWaypt;
 
 // autopilot drive properties
     SGPropertyNode_ptr _apDrivingFlag;
     SGPropertyNode_ptr _apTrueHeading;
-    SGPropertyNode_ptr _apTargetAltitudeFt;
-    SGPropertyNode_ptr _apAltitudeLock;
-
+    
     simgear::TiedPropertyList _tiedProperties;
 
+    SGSharedPtr<flightgear::FlightPlan> _route;
+    
+    SGPropertyChangeCallback<GPS> _callbackFlightPlanChanged;
+    SGPropertyChangeCallback<GPS> _callbackRouteActivated;
 };
 
 #endif // __INSTRUMENTS_GPS_HXX

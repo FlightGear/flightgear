@@ -163,7 +163,7 @@ public:
   class TypeFilter : public Filter
   {
   public:
-    TypeFilter(Type aTy);
+    TypeFilter(Type aTy = INVALID);
     virtual bool pass(FGPositioned* aPos) const;
     
     virtual Type minType() const
@@ -173,7 +173,10 @@ public:
     { return mMaxType; }
     
     void addType(Type aTy);
+      
+    static TypeFilter fromString(const std::string& aFilterSpec);
   private:
+      
     std::vector<Type> types;
     Type mMinType, mMaxType;
   };
@@ -266,7 +269,7 @@ public:
   static const char* nameForType(Type aTy);
 
   static FGPositioned* createUserWaypoint(const std::string& aIdent, const SGGeod& aPos);
-  static void deleteUserWaypoint(const std::string& aIdent);
+  static bool deleteUserWaypoint(const std::string& aIdent);
 protected:
   friend class flightgear::NavDataCache;
 

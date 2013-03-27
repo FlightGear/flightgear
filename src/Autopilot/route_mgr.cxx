@@ -215,13 +215,17 @@ FGRouteMgr::FGRouteMgr() :
   input->setStringValue("");
   input->addChangeListener(listener);
   
-  SGCommandMgr::instance()->addCommand("load-flightplan", commandLoadFlightPlan);
-  SGCommandMgr::instance()->addCommand("save-flightplan", commandSaveFlightPlan);
-  SGCommandMgr::instance()->addCommand("activate-flightplan", commandActivateFlightPlan);
-  SGCommandMgr::instance()->addCommand("clear-flightplan", commandClearFlightPlan);
-  SGCommandMgr::instance()->addCommand("set-active-waypt", commandSetActiveWaypt);
-  SGCommandMgr::instance()->addCommand("insert-waypt", commandInsertWaypt);
-  SGCommandMgr::instance()->addCommand("delete-waypt", commandDeleteWaypt);
+  SGCommandMgr* cmdMgr = SGCommandMgr::instance();
+  cmdMgr->addCommand("define-user-waypoint", this, &FGRouteMgr::commandDefineUserWaypoint);
+  cmdMgr->addCommand("delete-user-waypoint", this, &FGRouteMgr::commandDeleteUserWaypoint);
+    
+  cmdMgr->addCommand("load-flightplan", commandLoadFlightPlan);
+  cmdMgr->addCommand("save-flightplan", commandSaveFlightPlan);
+  cmdMgr->addCommand("activate-flightplan", commandActivateFlightPlan);
+  cmdMgr->addCommand("clear-flightplan", commandClearFlightPlan);
+  cmdMgr->addCommand("set-active-waypt", commandSetActiveWaypt);
+  cmdMgr->addCommand("insert-waypt", commandInsertWaypt);
+  cmdMgr->addCommand("delete-waypt", commandDeleteWaypt);
 }
 
 
@@ -229,6 +233,10 @@ FGRouteMgr::~FGRouteMgr()
 {
   input->removeChangeListener(listener);
   delete listener;
+    
+  SGCommandMgr* cmdMgr = SGCommandMgr::instance();
+  //cmdMgr->removeCommand("define-user-waypoint");
+    
 }
 
 
@@ -306,14 +314,12 @@ void FGRouteMgr::init() {
   airborne->setBoolValue(false);
     
   _edited = fgGetNode(RM "signals/edited", true);
-  _finished = fgGetNode(RM "signals/finished", true);
   _flightplanChanged = fgGetNode(RM "signals/flightplan-changed", true);
   
   _currentWpt = fgGetNode(RM "current-wp", true);
   _currentWpt->tie(SGRawValueMethods<FGRouteMgr, int>
     (*this, &FGRouteMgr::currentIndex, &FGRouteMgr::jumpToIndex));
       
-  // temporary distance / eta calculations, for backward-compatability
   wp0 = fgGetNode(RM "wp", 0, true);
   wp0->getChild("id", 0, true);
   wp0->getChild("dist", 0, true);
@@ -454,10 +460,6 @@ void FGRouteMgr::update( double dt )
     return;
   }
 
-  if (checkFinished()) {
-    endOfRoute();
-  }
-  
 // basic course/distance information
   SGGeod currentPos = globals->get_aircraft_position();
 
@@ -590,11 +592,6 @@ void FGRouteMgr::waypointsChanged()
 {
   update_mirror();
   _edited->fireValueChanged();
-  
-// removing waypoints, deactivate if we hit the end.
-  if (currentIndex() >= numLegs()) {
-    endOfRoute();
-  }
 }
 
 // mirror internal route to the property system for inspection by other subsystems
@@ -713,61 +710,8 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
             r++;
         if (*r)
             mgr->flightPlan()->insertWayptAtIndex(mgr->waypointFromString(r), pos);
-    } else if (!strcmp(s, "@POSINIT")) {
-      mgr->initAtPosition();
     } else
       mgr->flightPlan()->insertWayptAtIndex(mgr->waypointFromString(s), -1);
-}
-
-void FGRouteMgr::initAtPosition()
-{
-  if (isRouteActive()) {
-    return; // don't mess with the active route
-  }
-  
-  if (haveUserWaypoints()) {
-    // user has already defined, loaded or entered a route, again
-    // don't interfere with it
-    return; 
-  }
-  
-  if (airborne->getBoolValue()) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: airborne, clearing departure info");
-    _plan->setDeparture((FGAirport*) NULL);
-    return;
-  }
-  
-// on the ground
-  SGGeod pos = globals->get_aircraft_position();
-  if (!_plan->departureAirport()) {
-    _plan->setDeparture(FGAirport::findClosest(pos, 20.0));
-    if (!_plan->departureAirport()) {
-      SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: couldn't find an airport within 20nm");
-      return;
-    }
-  }
-  
-  std::string rwy = departure->getStringValue("runway");
-  FGRunway* r = NULL;
-  if (!rwy.empty()) {
-    r = _plan->departureAirport()->getRunwayByIdent(rwy);
-  } else {
-    r = _plan->departureAirport()->findBestRunwayForPos(pos);
-  }
-  
-  if (!r) {
-    return;
-  }
-  
-  _plan->setDeparture(r);
-  SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: starting at " 
-    << _plan->departureAirport()->ident() << " on runway " << r->ident());
-}
-
-bool FGRouteMgr::haveUserWaypoints() const
-{
-  // FIXME
-  return false;
 }
 
 bool FGRouteMgr::activate()
@@ -796,52 +740,6 @@ void FGRouteMgr::deactivate()
   
   SG_LOG(SG_AUTOPILOT, SG_INFO, "deactivating flight plan");
   active->setBoolValue(false);
-}
-
-void FGRouteMgr::sequence()
-{
-  if (!_plan || !active->getBoolValue()) {
-    SG_LOG(SG_AUTOPILOT, SG_ALERT, "trying to sequence waypoints with no active route");
-    return;
-  }
-  
-  int nextIndex = _plan->currentIndex() + 1;
-  if (nextIndex >= _plan->numLegs()) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "sequenced on final leg, deactivating route");
-    endOfRoute();
-    return;
-  }
-
-  _plan->setCurrentIndex(nextIndex);
-}
-
-void FGRouteMgr::endOfRoute()
-{
-  SG_LOG(SG_AUTOPILOT, SG_INFO, "reached end of active route");
-  _finished->fireValueChanged();
-  active->setBoolValue(false);
-}
-
-bool FGRouteMgr::checkFinished()
-{
-  if (!_plan) {
-    return true;
-  }
-  
-  bool done = false;
-// done if we're stopped on the destination runway 
-  if (_plan->currentLeg() && 
-      (_plan->currentLeg()->waypoint()->source() == _plan->destinationRunway())) 
-  {
-    double gs = groundSpeed->getDoubleValue();
-    done = weightOnWheels->getBoolValue() && (gs < 25);
-  }
-  
-  if (done) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "checkFinished: on the ground on destination runway, we're done");
-  }
-  
-  return done;
 }
 
 void FGRouteMgr::jumpToIndex(int index)
@@ -1212,3 +1110,37 @@ SGPropertyNode_ptr FGRouteMgr::wayptNodeAtIndex(int index) const
   
   return mirror->getChild("wp", index);
 }
+
+bool FGRouteMgr::commandDefineUserWaypoint(const SGPropertyNode* arg)
+{
+    std::string ident = arg->getStringValue("ident");
+    if (ident.empty()) {
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "missing ident defining user waypoint");
+        return false;
+    }
+    
+    // check for duplicate idents
+    FGPositioned::TypeFilter f(FGPositioned::WAYPOINT);
+    FGPositionedList dups = FGPositioned::findAllWithIdent(ident, &f);
+    if (!dups.empty()) {
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "defineUserWaypoint: non-unique waypoint identifier:" << ident);
+        return false;
+    }
+
+    SGGeod pos(SGGeod::fromDeg(arg->getDoubleValue("longitude-deg"),
+                               arg->getDoubleValue("latitude-deg")));
+    FGPositioned::createUserWaypoint(ident, pos);
+    return true;
+}
+
+bool FGRouteMgr::commandDeleteUserWaypoint(const SGPropertyNode* arg)
+{
+    std::string ident = arg->getStringValue("ident");
+    if (ident.empty()) {
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "missing ident deleting user waypoint");
+        return false;
+    }
+    
+    return FGPositioned::deleteUserWaypoint(ident);
+}
+

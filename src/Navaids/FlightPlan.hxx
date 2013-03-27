@@ -104,7 +104,7 @@ public:
     virtual void waypointsChanged() { }
     virtual void cleared() { }
     virtual void currentWaypointChanged() { }
-  
+    virtual void endOfFlightPlan() { }
   protected:
     Delegate();
     
@@ -116,6 +116,7 @@ public:
     void runWaypointsChanged();
     void runCurrentWaypointChanged();
     void runCleared();
+    void runFinished();
       
     friend class FlightPlan;
     
@@ -135,6 +136,8 @@ public:
   
   void setCurrentIndex(int index);
   
+  void finish();
+    
   Leg* currentLeg() const;
   Leg* nextLeg() const;
   Leg* previousLeg() const;

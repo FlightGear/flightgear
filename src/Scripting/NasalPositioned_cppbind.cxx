@@ -406,8 +406,8 @@ static naRef f_findWithinRange(nasal::CallContext ctx)
 static naRef f_findByIdent(nasal::CallContext ctx)
 {
   std::string prefix = ctx.requireArg<std::string>(0);
-  
-  FGPositioned::TypeFilter filter(FGPositioned::typeFromName(ctx.getArg<std::string>(1)));
+  std::string typeSpec = ctx.getArg<std::string>(1);
+  FGPositioned::TypeFilter filter(FGPositioned::TypeFilter::fromString(typeSpec));
   bool exact = ctx.getArg<bool>(2, false);
 
   return ctx.to_nasal( FGPositioned::findAllWithIdent(prefix, &filter, exact) );
@@ -416,8 +416,8 @@ static naRef f_findByIdent(nasal::CallContext ctx)
 static naRef f_findByName(nasal::CallContext ctx)
 {
   std::string prefix = ctx.requireArg<std::string>(0);
-  
-  FGPositioned::TypeFilter filter(FGPositioned::typeFromName(ctx.getArg<std::string>(1)));
+  std::string typeSpec = ctx.getArg<std::string>(1);
+  FGPositioned::TypeFilter filter(FGPositioned::TypeFilter::fromString(typeSpec));
   
   return ctx.to_nasal( FGPositioned::findAllWithName(prefix, &filter, false) );
 }
@@ -501,7 +501,7 @@ naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c, naRef gcSave)
     .method("getStar", &FGAirport::findSTARWithIdent)
     .method("getIAP", &FGAirport::findApproachWithIdent)
     .method("tostring", &FGAirport::toString);
-
+    
   nasal::Hash globals(globalsRef, c),
               positioned( globals.createHash("positioned") );
 

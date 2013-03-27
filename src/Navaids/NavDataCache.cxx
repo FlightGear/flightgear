@@ -1690,10 +1690,12 @@ PositionedID NavDataCache::createPOI(FGPositioned::Type ty, const std::string& i
                              true /* spatial index */);
 }
     
-void NavDataCache::removePOI(FGPositioned::Type ty, const std::string& aIdent)
+bool NavDataCache::removePOI(FGPositioned::Type ty, const std::string& aIdent)
 {
   d->removePositionedWithIdent(ty, aIdent);
   // should remove from the live cache too?
+    
+    return true;
 }
   
 void NavDataCache::setAirportMetar(const string& icao, bool hasMetar)

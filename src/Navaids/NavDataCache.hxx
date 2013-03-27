@@ -122,7 +122,7 @@ public:
   
   PositionedID createPOI(FGPositioned::Type ty, const std::string& ident, const SGGeod& aPos);
   
-  void removePOI(FGPositioned::Type ty, const std::string& aIdent);
+  bool removePOI(FGPositioned::Type ty, const std::string& aIdent);
     
   void dropGroundnetFor(PositionedID aAirport);
   

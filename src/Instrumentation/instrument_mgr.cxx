@@ -94,7 +94,7 @@ void FGInstrumentMgr::init()
     nd->setStringValue("name", "gps");
     nd->setIntValue("number", 0);
     _instruments.push_back("gps[0]");
-    set_subsystem("gps[0]", new GPS(nd));
+    set_subsystem("gps[0]", new GPS(nd, true /* default GPS mode */));
   }
 
   // bind() created instruments before init.

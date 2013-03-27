@@ -265,6 +265,12 @@ int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
     }
   }
   
+  // test if the current leg will be removed
+  bool currentIsBeingCleared = false;
+  if (_currentIndex >= 0) {
+    currentIsBeingCleared = _legs[_currentIndex]->waypoint()->flag(flag);
+  }
+  
   _currentIndex -= count;
   
 // now delete and remove
@@ -276,11 +282,18 @@ int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
   
   lockDelegate();
   _waypointsChanged = true;
-  if (count > 0) {
+  if ((count > 0) || currentIsBeingCleared) {
     _currentWaypointChanged = true;
   }
   
   _legs.erase(it, _legs.end());
+    
+  if (_legs.empty()) { // maybe all legs were deleted
+    if (_delegate) {
+      _delegate->runCleared();
+    }
+  }
+  
   unlockDelegate();
   return rf.numDeleted();
 }
@@ -299,6 +312,23 @@ void FlightPlan::setCurrentIndex(int index)
   _currentIndex = index;
   _currentWaypointChanged = true;
   unlockDelegate();
+}
+    
+void FlightPlan::finish()
+{
+    if (_currentIndex == -1) {
+        return;
+    }
+    
+    lockDelegate();
+    _currentIndex = -1;
+    _currentWaypointChanged = true;
+    
+    if (_delegate) {
+        _delegate->runFinished();
+    }
+    
+    unlockDelegate();
 }
   
 int FlightPlan::findWayptIndex(const SGGeod& aPos) const
@@ -1214,5 +1244,11 @@ void FlightPlan::Delegate::runCleared()
   if (_inner) _inner->runCleared();
   cleared();
 }  
-  
+
+void FlightPlan::Delegate::runFinished()
+{
+    if (_inner) _inner->runFinished();
+    endOfFlightPlan();
+}
+    
 } // of namespace flightgear

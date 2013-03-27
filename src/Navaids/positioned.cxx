@@ -30,6 +30,7 @@
 #include <queue>
 #include <memory>
 
+#include <boost/foreach.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -85,10 +86,10 @@ FGPositioned::createUserWaypoint(const std::string& aIdent, const SGGeod& aPos)
   return cache->loadById(id);
 }
 
-void FGPositioned::deleteUserWaypoint(const std::string& aIdent)
+bool FGPositioned::deleteUserWaypoint(const std::string& aIdent)
 {
   NavDataCache* cache = NavDataCache::instance();
-  cache->removePOI(WAYPOINT, aIdent);
+  return cache->removePOI(WAYPOINT, aIdent);
 }
 
 
@@ -335,8 +336,8 @@ FGPositionedRef FGPositioned::loadByIdImpl(PositionedID id)
 }
 
 FGPositioned::TypeFilter::TypeFilter(Type aTy) :
-  mMinType(aTy),
-  mMaxType(aTy)
+  mMinType(LAST_TYPE),
+  mMaxType(INVALID)
 {
   addType(aTy);
 }
@@ -350,6 +351,23 @@ void FGPositioned::TypeFilter::addType(Type aTy)
   types.push_back(aTy);
   mMinType = std::min(mMinType, aTy);
   mMaxType = std::max(mMaxType, aTy);
+}
+
+FGPositioned::TypeFilter
+FGPositioned::TypeFilter::fromString(const std::string& aFilterSpec)
+{
+  if (aFilterSpec.empty()) {
+    throw sg_format_exception("empty filter spec:", aFilterSpec);
+  }
+  
+  string_list parts = simgear::strutils::split(aFilterSpec, ",");
+  TypeFilter f;
+  
+  BOOST_FOREACH(std::string token, parts) {
+    f.addType(typeFromName(token));
+  }
+  
+  return f;
 }
 
 bool
