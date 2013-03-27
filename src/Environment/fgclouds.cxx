@@ -24,6 +24,8 @@
 #  include "config.h"
 #endif
 
+#include "fgclouds.hxx"
+
 #include <cstring>
 #include <cstdio>
 #include <Main/fg_props.hxx>
@@ -42,20 +44,11 @@
 #include <Viewer/renderer.hxx>
 #include <Airports/airport.hxx>
 
-#include "fgclouds.hxx"
-
-static bool do_delete_3Dcloud (const SGPropertyNode *arg);
-static bool do_move_3Dcloud (const SGPropertyNode *arg);
-static bool do_add_3Dcloud (const SGPropertyNode *arg);
-
 // RNG seed to ensure cloud synchronization across multi-process
 // deployments
 static mt seed;
 
 FGClouds::FGClouds() :
-#if 0
-    snd_lightning(0),
-#endif
     clouds_3d_enabled(false),
     index(0)
 {
@@ -75,27 +68,19 @@ void FGClouds::set_update_event(int count) {
 	buildCloudLayers();
 }
 
-void FGClouds::Init(void) {
-#if 0
-	if( snd_lightning == NULL ) {
-		snd_lightning = new SGSoundSample("Sounds/thunder.wav", SGPath());
-		snd_lightning->set_max_dist(7000.0f);
-		snd_lightning->set_reference_dist(3000.0f);
-		SGSoundMgr *smgr = globals->get_soundmgr();
-		SGSampleGroup *sgr = smgr->find("weather", true);
-		sgr->add( snd_lightning, "thunder" );
-	}
-#endif
-
+void FGClouds::Init(void)
+{
 	mt_init_time_10(&seed);
 
-	globals->get_commands()->addCommand("add-cloud", do_add_3Dcloud);
-	globals->get_commands()->addCommand("del-cloud", do_delete_3Dcloud);
-	globals->get_commands()->addCommand("move-cloud", do_move_3Dcloud);
+	globals->get_commands()->addCommand("add-cloud", this, &FGClouds::add3DCloud);
+	globals->get_commands()->addCommand("del-cloud", this, &FGClouds::delete3DCloud);
+	globals->get_commands()->addCommand("move-cloud", this, &FGClouds::move3DCloud);
 }
 
 // Build an invidual cloud. Returns the extents of the cloud for coverage calculations
-double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, const string& name, double grid_z_rand, SGCloudField *layer) {
+double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root,
+                            const std::string& name, double grid_z_rand, SGCloudField *layer)
+{
 	SGPropertyNode *box_def=NULL;
 	SGPropertyNode *cld_def=NULL;
 	double extent = 0.0;
@@ -358,8 +343,7 @@ bool FGClouds::get_3dClouds() const
  * (Various) - cloud definition properties. See README.3DClouds
  *
  */
- static bool
- do_add_3Dcloud (const SGPropertyNode *arg)
+ bool FGClouds::add3DCloud(const SGPropertyNode *arg)
  {
    int l = arg->getIntValue("layer", 0);
    int index = arg->getIntValue("index", 0);
@@ -394,8 +378,7 @@ bool FGClouds::get_3dClouds() const
   * index - the cloud index
   *
   */
- static bool
- do_delete_3Dcloud (const SGPropertyNode *arg)
+ bool FGClouds::delete3DCloud(const SGPropertyNode *arg)
  {
    int l = arg->getIntValue("layer", 0);
    int i = arg->getIntValue("index", 0);
@@ -414,8 +397,7 @@ bool FGClouds::get_3dClouds() const
  * lon/lat/alt - the position for the cloud
  *
  */
- static bool
- do_move_3Dcloud (const SGPropertyNode *arg)
+bool FGClouds::move3DCloud(const SGPropertyNode *arg)
  {
    int l = arg->getIntValue("layer", 0);
    int i = arg->getIntValue("index", 0);

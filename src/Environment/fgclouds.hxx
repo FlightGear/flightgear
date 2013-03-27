@@ -22,36 +22,30 @@
 #ifndef _FGCLOUDS_HXX
 #define _FGCLOUDS_HXX
 
-#ifdef HAVE_CONFIG
-#  include <config.h>
-#endif
-
-#include <simgear/compiler.h>
-#include <simgear/math/sg_random.h>
-#include <simgear/sound/soundmgr_openal.hxx>
-#include <Main/fg_props.hxx>
-
 #include <string>
 
-using std::string;
-
+// forward decls
+class SGPropertyNode;
 class SGCloudField;
 
 class FGClouds {
 
 private:
-	double buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, const string& name, double grid_z_rand, SGCloudField *layer);
-	void buildLayer(int iLayer, const string& name, double coverage);
+	double buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root,
+                      const std::string& name, double grid_z_rand, SGCloudField *layer);
+	void buildLayer(int iLayer, const std::string& name, double coverage);
 
 	void buildCloudLayers(void);
 
 	int update_event;
-#if 0
-	SGSoundSample *snd_lightning;
-#endif
+
 	bool clouds_3d_enabled;
-  int index;
+    int index;
   
+    bool add3DCloud(const SGPropertyNode *arg);
+    bool delete3DCloud(const SGPropertyNode *arg);
+    bool move3DCloud(const SGPropertyNode *arg);
+    
 public:
 	FGClouds();
 	~FGClouds();
