@@ -93,7 +93,7 @@ public:
 private:
     void removeDeadItem(FGAIBase* base);
   
-    double calcRange(const SGVec3d& aCartPos, FGAIBase* aObject) const;
+    double calcRangeFt(const SGVec3d& aCartPos, FGAIBase* aObject) const;
 
     bool loadScenarioCommand(const SGPropertyNode* args);
     bool unloadScenarioCommand(const SGPropertyNode* args);

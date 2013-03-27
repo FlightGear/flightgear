@@ -454,7 +454,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 
         int id         = (*ai_list_itr)->getID();
 
-        double range = calcRange(cartPos, (*ai_list_itr));
+        double range = calcRangeFt(cartPos, (*ai_list_itr));
 
         //SG_LOG(SG_AI, SG_DEBUG, "AIManager:  AI list size "
         //    << ai_list.size()
@@ -482,7 +482,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 }
 
 double
-FGAIManager::calcRange(const SGVec3d& aCartPos, FGAIBase* aObject) const
+FGAIManager::calcRangeFt(const SGVec3d& aCartPos, FGAIBase* aObject) const
 {
     double distM = dist(aCartPos, aObject->getCartPos());
     return distM * SG_METER_TO_FEET;
