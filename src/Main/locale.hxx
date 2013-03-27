@@ -72,10 +72,7 @@ public:
      */
     static void utf8toLatin1        (std::string& s);
 
-    /**
-     * Obtain user's default language setting.
-     */
-    const char* getUserLanguage();
+
 
 protected:
     /**
@@ -98,6 +95,11 @@ protected:
      */
     simgear::PropertyList getLocalizedStrings(SGPropertyNode *localeNode, const char* id, const char* context);
 
+    /**
+     * Obtain user's default language setting.
+     */
+    string_list getUserLanguage();
+    
     SGPropertyNode_ptr _intl;
     SGPropertyNode_ptr _currentLocale;
     SGPropertyNode_ptr _defaultLocale;

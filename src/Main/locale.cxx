@@ -26,6 +26,8 @@
 #include <windows.h>
 #endif
 
+#include <boost/foreach.hpp>
+
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
@@ -57,9 +59,10 @@ FGLocale::~FGLocale()
  *
  * This software comes with no warranty. Use at your own risk.
  */
-const char*
+string_list
 FGLocale::getUserLanguage()
 {
+    string_list result;
     static char locale[100] = {0};
 
     if (GetLocaleInfo(LOCALE_USER_DEFAULT,
@@ -72,23 +75,55 @@ FGLocale::getUserLanguage()
         if (GetLocaleInfo(LOCALE_USER_DEFAULT,
                           LOCALE_SISO3166CTRYNAME,
                           locale+i, (int)(sizeof(locale)-i)))
-            return locale;
-
+        {
+            result.push_back(locale);
+            return result;
+        }
+        
         locale[--i] = 0;
         SG_LOG(SG_GENERAL, SG_WARN, "Failed to detected locale's country setting.");
-        return locale;
+        result.push_back(locale);
+        return result;
     }
 
-    return NULL;
+    return result;
 }
-#else
-/**
- * Determine locale/language settings on Linux (and Mac?).
- */
-const char*
+#elif __APPLE__
+
+// determine locale / langauge on Mac
+#include <CoreFoundation/CoreFoundation.h>
+
+string_list
 FGLocale::getUserLanguage()
 {
-    return ::getenv("LANG");
+    string_list result;
+    CFArrayRef langs = CFLocaleCopyPreferredLanguages();
+    
+    char buffer[64];
+    for (int i=0; i<CFArrayGetCount(langs); ++i) {
+        CFStringRef s = (CFStringRef) CFArrayGetValueAtIndex(langs, i);
+        CFStringGetCString(s, buffer, 64, kCFStringEncodingASCII);
+        result.push_back(buffer);
+    }
+    
+    CFRelease(langs);
+    return result;
+}
+
+#else
+/**
+ * Determine locale/language settings on Linux/Unix.
+ */
+string_list
+FGLocale::getUserLanguage()
+{
+    string_list result;
+    const char* langEnv = ::getenv("LANG");
+    if (langEnv) {
+        result.push_back(langEnv);
+    }
+    
+    return result;
 }
 #endif
 
@@ -142,21 +177,27 @@ FGLocale::findLocaleNode(const string& language)
 bool
 FGLocale::selectLanguage(const char *language)
 {
-    // Use system setting when no language is given.
-    if ((language == NULL)||(language[0]==0))
-    {
-        language = getUserLanguage();
-        SG_LOG(SG_GENERAL, SG_INFO, "System language: " << ((language) ? language : "<unavailable>"));
-    }
-
-    // Use plain C locale if nothing is available.
-    if ((language == NULL)||(language[0]==0))
-    {
+    string_list languages = getUserLanguage();
+    if (languages.empty()) {
+        // Use plain C locale if nothing is available.
         SG_LOG(SG_GENERAL, SG_WARN, "Unable to detect system language" );
-        language = "C";
+        languages.push_back("C");
+    }
+    
+    // if we were passed a language option, try it first
+    if ((language != NULL) && (strlen(language) > 0)) {
+        languages.insert(languages.begin(), string(language));
     }
 
-    SGPropertyNode *locale = findLocaleNode(language);
+    
+    SGPropertyNode *locale = NULL;
+    BOOST_FOREACH(string lang, languages) {
+        locale = findLocaleNode(lang);
+        if (locale) {
+            break;
+        }
+    }
+    
     if (!locale)
     {
        SG_LOG(SG_GENERAL, SG_ALERT,
