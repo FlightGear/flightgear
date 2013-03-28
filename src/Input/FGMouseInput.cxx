@@ -145,7 +145,8 @@ public:
         mouseYNode(fgGetNode("/devices/status/mice/mouse/y", true))
     {
         tooltipTimeoutDone = false;
-
+        hoverPickScheduled = false;
+      
         fgGetNode("/sim/mouse/hide-cursor", true )->addChangeListener(this, true);
         fgGetNode("/sim/mouse/cursor-timeout-sec", true )->addChangeListener(this, true);
         fgGetNode("/sim/mouse/right-button-mode-cycle-enabled", true)->addChangeListener(this, true);
@@ -188,6 +189,12 @@ public:
         }
     }
 
+    void scheduleHoverPick(const osg::Vec2d& windowPos)
+    {
+      hoverPickScheduled = true;
+      hoverPos = windowPos;
+    }
+  
     void doHoverPick(const osg::Vec2d& windowPos)
     {
         std::vector<SGSceneryPick> pickList;
@@ -228,7 +235,9 @@ public:
         
         FGMouseCursor::instance()->setCursor(cur);
         if (!didPick) {
-          updateHover();
+          SGPropertyNode_ptr args(new SGPropertyNode);
+          globals->get_commands()->execute("update-hover", args);
+
         }
     }
     
@@ -246,14 +255,7 @@ public:
 
         FGMouseCursor::instance()->setCursor(cur);
     }
-    
-    void updateHover()
-    {
-        SGPropertyNode_ptr args(new SGPropertyNode);
-        globals->get_commands()->execute("update-hover", args);
-    }
 
-    
     // implement the property-change-listener interfacee
     virtual void valueChanged( SGPropertyNode * node )
     {
@@ -290,6 +292,9 @@ public:
     SGPropertyNode_ptr xAccelNode;
     SGPropertyNode_ptr yAccelNode;
     SGPropertyNode_ptr mouseXNode, mouseYNode;
+  
+    bool hoverPickScheduled;
+    osg::Vec2d hoverPos;
 };
 
 
@@ -427,6 +432,11 @@ void FGMouseInput::update ( double dt )
     }
   }
 
+  if ((mode == 0) && d->hoverPickScheduled) {
+    d->doHoverPick(d->hoverPos);
+    d->hoverPickScheduled = false;
+  }
+  
   // if delay is <= 0, disable tooltips
   if ( !d->tooltipTimeoutDone &&
       (d->tooltipDelayMsec > 0) &&
@@ -566,7 +576,7 @@ void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
   if (modeIndex == 0) {
     osg::Vec2d windowPos;
     flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
-    d->doHoverPick(windowPos);
+    d->scheduleHoverPick(windowPos);
     // mouse has moved, so we may need to issue tooltip-timeout command again
     d->tooltipTimeoutDone = false;
   }
