@@ -29,6 +29,7 @@
 
 #include "AIMultiplayer.hxx"
 
+using std::string;
 
 // #define SG_DEBUG SG_ALERT
 

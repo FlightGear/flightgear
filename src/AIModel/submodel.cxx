@@ -25,6 +25,8 @@
 
 using std::cout;
 using std::endl;
+using std::string;
+using std::vector;
 
 const double FGSubmodelMgr::lbs_to_slugs = 0.031080950172;
 

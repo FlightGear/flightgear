@@ -41,6 +41,7 @@
 #include <FDM/LaRCsim/basic_aero.h>
 #include <Navaids/navrecord.hxx>
 
+using std::string;
 
 /* FGAIFlightPlan::create()
  * dynamically create a flight plan for AI traffic, based on data provided by the

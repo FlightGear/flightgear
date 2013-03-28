@@ -25,6 +25,8 @@
 
 #include "AITanker.hxx"
 
+using std::string;
+
 FGAITanker::FGAITanker(FGAISchedule* ref): FGAIAircraft(ref){
 }
 

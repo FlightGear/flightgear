@@ -32,6 +32,8 @@
 #include "atc_mgr.hxx"
 
 
+using std::string;
+
 FGATCManager::FGATCManager() {
     controller = 0;
     prevController = 0;

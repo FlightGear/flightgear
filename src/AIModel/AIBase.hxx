@@ -22,9 +22,10 @@
 
 #include <string>
 
+#include <osg/LOD>
+
 #include <simgear/constants.h>
 #include <simgear/scene/model/placement.hxx>
-#include <simgear/scene/model/modellib.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/structure/SGReferenced.hxx>
@@ -35,16 +36,12 @@
 
 #include <Main/fg_props.hxx>
 
-
-using std::string;
-
 namespace simgear {
 class BVHMaterial;
 }
 class FGAIManager;
 class FGAIFlightPlan;
 class FGFX;
-class FGNasalModelDataProxy;
 class FGAIModelData;    // defined below
 
 
@@ -71,8 +68,8 @@ public:
     void updateLOD();
     void setManager(FGAIManager* mgr, SGPropertyNode* p);
     void setPath( const char* model );
-    void setSMPath( const string& p );
-    void setCallSign(const string& );
+    void setSMPath( const std::string& p );
+    void setCallSign(const std::string& );
     void setSpeed( double speed_KTAS );
     void setAltitude( double altitude_ft );
     void setAltitudeAGL( double altitude_agl_ft );
@@ -95,8 +92,8 @@ public:
     void setImpactLat( double lat );
     void setImpactLon( double lon );
     void setImpactElev( double e );
-    void setParentName(const string& p);
-    void setName(const string& n);
+    void setParentName(const std::string& p);
+    void setName(const std::string& n);
     void setMaxSpeed(double kts);
 
     void calcRangeBearing(double lat, double lon, double lat2, double lon2,
@@ -118,29 +115,31 @@ public:
     bool getGroundElevationM(const SGGeod& pos, double& elev,
                              const simgear::BVHMaterial** material) const;
 
-    double _elevation_m;
 
     double _getCartPosX() const;
     double _getCartPosY() const;
     double _getCartPosZ() const;
+    
+protected:
+    double _elevation_m;
+    
 
     double _x_offset;
     double _y_offset;
     double _z_offset;
-
+    
     double _pitch_offset;
     double _roll_offset;
     double _yaw_offset;
-
+    
     double _max_speed;
-
-    string _path;
-    string _callsign;
-    string _submodel;
+    
+    std::string _path;
+    std::string _callsign;
+    std::string _submodel;
     std::string _name;
-    string _parent;
-
-protected:
+    std::string _parent;
+    
     /**
      * Tied-properties helper, record nodes which are tied for easy un-tie-ing
      */
@@ -195,7 +194,7 @@ protected:
     double rotation;     // value used by radar display instrument
     double ht_diff;      // value used by radar display instrument
 
-    string model_path;   //Path to the 3D model
+    std::string model_path;   //Path to the 3D model
     SGModelPlacement aip;
 
     bool delete_me;
@@ -318,7 +317,7 @@ public:
 
     static bool _isNight();
 
-     string & getCallSign();
+    std::string & getCallSign();
 };
 
 inline void FGAIBase::setManager(FGAIManager* mgr, SGPropertyNode* p) {
@@ -330,7 +329,7 @@ inline void FGAIBase::setPath(const char* model ) {
     model_path.append(model);
 }
 
-inline void FGAIBase::setSMPath(const string& p) {
+inline void FGAIBase::setSMPath(const std::string& p) {
     _path = p;
 }
 
@@ -376,10 +375,10 @@ inline void FGAIBase::setLatitude ( double latitude ) {
     pos.setLatitudeDeg( latitude );
 }
 
-inline void FGAIBase::setCallSign(const string& s) {
+inline void FGAIBase::setCallSign(const std::string& s) {
     _callsign = s;
 }
-inline string& FGAIBase::getCallSign() {
+inline std::string& FGAIBase::getCallSign() {
     return _callsign;
 }
 
@@ -407,11 +406,11 @@ inline void FGAIBase::setYawoffset(double y) {
     _yaw_offset = y;
 }
 
-inline void FGAIBase::setParentName(const string& p) {
+inline void FGAIBase::setParentName(const std::string& p) {
     _parent = p;
 }
 
-inline void FGAIBase::setName(const string& n) {
+inline void FGAIBase::setName(const std::string& n) {
     _name = n;
 }
 
@@ -452,28 +451,5 @@ inline void FGAIBase::setMaxSpeed(double m) {
     _max_speed = m;
 }
 
-
-class FGAIModelData : public simgear::SGModelData {
-public:
-    FGAIModelData(SGPropertyNode *root = 0);
-    ~FGAIModelData();
-
-    /** osg callback, thread-safe */
-    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n);
-
-    /** init hook to be called after model is loaded.
-     * Not thread-safe. Call from main thread only. */
-    void init(void) { _initialized = true; }
-
-    bool needInitilization(void) { return _ready && !_initialized;}
-    bool isInitialized(void) { return _initialized;}
-    inline std::string& get_sound_path() { return _fxpath;}
-
-private:
-    FGNasalModelDataProxy *_nasal;
-    std::string _fxpath;
-    bool _ready;
-    bool _initialized;
-};
 
 #endif // _FG_AIBASE_HXX

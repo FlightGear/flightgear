@@ -38,6 +38,7 @@
 #include "performancedata.hxx"
 
 using std::iostream;
+using std::string;
 
 /*
 void FGAIFlightPlan::evaluateRoutePart(double deplat,

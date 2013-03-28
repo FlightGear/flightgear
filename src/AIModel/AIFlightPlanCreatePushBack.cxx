@@ -38,6 +38,7 @@
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"
 
+using std::string;
 
 // TODO: Use James Turner's createOnGround functions.
 bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,

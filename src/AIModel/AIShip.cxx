@@ -40,6 +40,7 @@
 
 #include "AIShip.hxx"
 
+using std::string;
 
 FGAIShip::FGAIShip(object_type ot) :
 // allow HOT to be enabled

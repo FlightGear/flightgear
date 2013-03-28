@@ -31,9 +31,6 @@
 #include "AIManager.hxx"
 #include "AIBase.hxx"
 
-using std::vector;
-using std::list;
-
 class FGAIBallistic : public FGAIBase {
 
 public:
@@ -72,15 +69,15 @@ public:
     void setCollision(bool c);
     void setExpiry(bool e);
     void setImpact(bool i);
-    void setImpactReportNode(const string&);
+    void setImpactReportNode(const std::string&);
     void setContentsNode(const SGPropertyNode_ptr);
     void setFuseRange(double f);
-    void setSMPath(const string&);
+    void setSMPath(const std::string&);
     void setSubID(int i);
-    void setSubmodel(const string&);
+    void setSubmodel(const std::string&);
     void setExternalForce( bool f );
-    void setForcePath(const string&);
-    void setContentsPath(const string&);
+    void setForcePath(const std::string&);
+    void setContentsPath(const std::string&);
     void setForceStabilisation( bool val );
     void setGroundOffset(double g);
     void setLoadOffset(double l);
@@ -188,7 +185,7 @@ private:
     bool   _slave_load_to_ac;// if true, object will be slaved to the parent ac pos
     double _contents_lb;     // contents of the object
     double _weight_lb;       // weight of the object (no contents if appropriate) (lbs)
-    string _mat_name;
+    std::string _mat_name;
 
     bool   _report_collision;       // if true a collision point with AI Objects is calculated
     bool   _report_impact;          // if true an impact point on the terrain is calculated
@@ -215,9 +212,9 @@ private:
     double _dt_count;
     double _next_run;
 
-    string _submodel;
-    string _force_path;
-    string _contents_path;
+    std::string _submodel;
+    std::string _force_path;
+    std::string _contents_path;
 
     void handle_collision();
     void handle_expiry();

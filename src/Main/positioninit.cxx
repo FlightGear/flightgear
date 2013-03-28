@@ -37,6 +37,7 @@
 #include <AIModel/AIManager.hxx>
 
 using std::endl;
+using std::string;
 
 namespace flightgear
 {

@@ -35,6 +35,7 @@
 #include <Environment/gravity.hxx>
 
 using namespace simgear;
+using std::string;
 
 const double FGAIBallistic::slugs_to_kgs = 14.5939029372;
 const double FGAIBallistic::slugs_to_lbs = 32.1740485564;
@@ -505,7 +506,7 @@ bool FGAIBallistic::getHtAGL(double start){
             _ht_agl_ft = pos.getElevationFt() - _elevation_m * SG_METER_TO_FEET;
 
             if (material) {
-                const vector<string>& names = material->get_names();
+                const std::vector<string>& names = material->get_names();
                 _solid = material->get_solid();
                 _load_resistance = material->get_load_resistance();
                 _frictionFactor = material->get_friction_factor();

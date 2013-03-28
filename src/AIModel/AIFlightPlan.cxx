@@ -45,6 +45,7 @@
 #include "AIAircraft.hxx"
 
 using std::cerr;
+using std::string;
 
 FGAIWaypoint::FGAIWaypoint() {
   speed       = 0;

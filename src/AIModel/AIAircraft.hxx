@@ -52,7 +52,7 @@ public:
     void initializeFlightPlan();
     FGAIFlightPlan* GetFlightPlan() const { return fp; };
     void ProcessFlightPlan( double dt, time_t now );
-    time_t checkForArrivalTime(const string& wptName);
+    time_t checkForArrivalTime(const std::string& wptName);
     
     void AccelTo(double speed);
     void PitchTo(double angle);

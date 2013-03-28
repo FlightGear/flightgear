@@ -44,10 +44,10 @@ public:
 
     virtual const char* getTypeString(void) const { return "tanker"; }
 
-    void setTACANChannelID(const string& id);
+    void setTACANChannelID(const std::string& id);
     
 private:
-    string TACAN_channel_id;     // The TACAN channel of this tanker
+    std::string TACAN_channel_id;     // The TACAN channel of this tanker
     bool contact;                // set if this tanker is within fuelling range
 
     virtual void Run(double dt);

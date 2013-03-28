@@ -30,6 +30,8 @@
 
 #include "AIGroundVehicle.hxx"
 
+using std::string;
+
 FGAIGroundVehicle::FGAIGroundVehicle() :
 FGAIShip(otGroundVehicle),
 

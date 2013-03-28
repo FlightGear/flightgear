@@ -53,7 +53,51 @@ const char *default_model = "Models/Geometry/glider.ac";
 const double FGAIBase::e = 2.71828183;
 const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
+using std::string;
 using namespace simgear;
+
+class FGAIModelData : public simgear::SGModelData {
+public:
+    FGAIModelData(SGPropertyNode *root = NULL)
+        : _nasal( new FGNasalModelDataProxy(root) ),
+        _ready(false),
+        _initialized(false)
+    {
+    }
+
+    
+    ~FGAIModelData()
+    {
+    }
+    
+    /** osg callback, thread-safe */
+    void modelLoaded(const std::string& path, SGPropertyNode *prop, osg::Node *n)
+    {
+        // WARNING: Called in a separate OSG thread! Only use thread-safe stuff here...
+        if (_ready)
+            return;
+        
+        _fxpath = prop->getStringValue("sound/path");
+        _nasal->modelLoaded(path, prop, n);
+        
+        _ready = true;
+
+    }
+    
+    /** init hook to be called after model is loaded.
+     * Not thread-safe. Call from main thread only. */
+    void init(void) { _initialized = true; }
+    
+    bool needInitilization(void) { return _ready && !_initialized;}
+    bool isInitialized(void) { return _initialized;}
+    inline std::string& get_sound_path() { return _fxpath;}
+    
+private:
+    std::auto_ptr<FGNasalModelDataProxy> _nasal;
+    std::string _fxpath;
+    bool _ready;
+    bool _initialized;
+};
 
 FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _max_speed(300),
@@ -843,27 +887,4 @@ int FGAIBase::_newAIModelID() {
 }
 
 
-FGAIModelData::FGAIModelData(SGPropertyNode *root)
-  : _nasal( new FGNasalModelDataProxy(root) ),
-    _ready(false),
-    _initialized(false)
-{
-}
 
-FGAIModelData::~FGAIModelData()
-{
-    delete _nasal;
-    _nasal = NULL;
-}
-
-void FGAIModelData::modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n)
-{
-    // WARNING: Called in a separate OSG thread! Only use thread-safe stuff here...
-    if (_ready)
-        return;
-
-    _fxpath = prop->getStringValue("sound/path");
-    _nasal->modelLoaded(path, prop, n);
-
-    _ready = true;
-}

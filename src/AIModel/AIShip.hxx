@@ -52,9 +52,9 @@ public:
     void YawTo(double angle);
     void ClimbTo(double altitude);
     void TurnTo(double heading);
-    void setCurrName(const string&);
-    void setNextName(const string&);
-    void setPrevName(const string&);
+    void setCurrName(const std::string&);
+    void setNextName(const std::string&);
+    void setPrevName(const std::string&);
     void setLeadAngleGain(double g);
     void setLeadAngleLimit(double l);
     void setLeadAngleProp(double p);
@@ -99,8 +99,8 @@ private:
 
     void setServiceable(bool s);
     void Run(double dt);
-    void setStartTime(const string&);
-    void setUntilTime(const string&);
+    void setStartTime(const std::string&);
+    void setUntilTime(const std::string&);
     //void setWPPos();
     void setWPAlt();
     void setXTrackError();
@@ -110,7 +110,7 @@ private:
     double getRange(double lat, double lon, double lat2, double lon2) const;
     double getCourse(double lat, double lon, double lat2, double lon2) const;
     double getDaySeconds();
-    double processTimeString(const string& time);
+    double processTimeString(const std::string& time);
 
     bool initFlightPlan();
     bool advanceFlightPlan (double elapsed_sec, double day_sec);
@@ -129,9 +129,9 @@ private:
     double _xtrack_error;
     double _curr_alt, _prev_alt;
 
-    string _prev_name, _curr_name, _next_name;
-    string _path;
-    string _start_time, _until_time;
+    std::string _prev_name, _curr_name, _next_name;
+    std::string _path;
+    std::string _start_time, _until_time;
 
     bool _repeat;
     bool _fp_init;
