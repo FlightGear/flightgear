@@ -81,11 +81,11 @@ public:
 
     int getNumAiObjects(void) const;
 
-    bool loadScenario( const string &filename );
+    bool loadScenario( const std::string &filename );
 
     static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
 
-    static bool getStartPosition(const string& id, const string& pid,
+    static bool getStartPosition(const std::string& id, const std::string& pid,
         SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
     FGAIBasePtr addObject(const SGPropertyNode* definition);
@@ -100,7 +100,7 @@ private:
     bool addObjectCommand(const SGPropertyNode* definition);
     
     bool removeObject(const SGPropertyNode* args);
-    void unloadScenario( const string &filename );
+    bool unloadScenario( const std::string &filename );
     
     SGPropertyNode_ptr root;
     SGPropertyNode_ptr enabled;

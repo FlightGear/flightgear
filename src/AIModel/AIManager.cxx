@@ -26,12 +26,14 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/commands.hxx>
+#include <simgear/structure/SGBinding.hxx>
 
 #include <boost/mem_fn.hpp>
 #include <boost/foreach.hpp>
 
 #include <Main/globals.hxx>
 #include <Airports/airport.hxx>
+#include <Scripting/NasalSys.hxx>
 
 #include "AIManager.hxx"
 #include "AIAircraft.hxx"
@@ -50,8 +52,8 @@
 class FGAIManager::Scenario
 {
 public:
-    Scenario(FGAIManager* man, SGPropertyNode* scenarios) :
-        _manager(man)
+    Scenario(FGAIManager* man, const std::string& nm, SGPropertyNode* scenarios) :
+        _internalName(nm)
     {
         BOOST_FOREACH(SGPropertyNode* scEntry, scenarios->getChildren("entry")) {
             FGAIBasePtr ai = man->addObject(scEntry);
@@ -59,6 +61,21 @@ public:
                 _objects.push_back(ai);
             }
         } // of scenario entry iteration
+        
+        SGPropertyNode* nasalScripts = scenarios->getChild("nasal");
+        if (!nasalScripts) {
+            return;
+        }
+        
+        _unloadScript = nasalScripts->getStringValue("unload");
+        std::string loadScript = nasalScripts->getStringValue("load");
+        if (!loadScript.empty()) {
+            FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
+            std::string moduleName = "scenario_" + _internalName;
+            nasalSys->createModule(moduleName.c_str(), moduleName.c_str(),
+                                   loadScript.c_str(), loadScript.size(),
+                                   0);
+        }
     }
     
     ~Scenario()
@@ -66,10 +83,21 @@ public:
         BOOST_FOREACH(FGAIBasePtr ai, _objects) {
             ai->setDie(true);
         }
+        
+        FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
+        std::string moduleName = "scenario_" + _internalName;
+        if (!_unloadScript.empty()) {
+            nasalSys->createModule(moduleName.c_str(), moduleName.c_str(),
+                                   _unloadScript.c_str(), _unloadScript.size(),
+                                   0);
+        }
+        
+        nasalSys->deleteModule(moduleName.c_str());
     }
 private:
-    FGAIManager* _manager;
     std::vector<FGAIBasePtr> _objects;
+    std::string _internalName;
+    std::string _unloadScript;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -275,14 +303,28 @@ FGAIManager::processThermal( double dt, FGAIThermal* thermal ) {
 bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args)
 {
     std::string name = args->getStringValue("name");
-    return loadScenario(name);
+    if (_scenarios.find(name) != _scenarios.end()) {
+        SG_LOG(SG_AI, SG_WARN, "scenario '" << name << "' already loaded");
+        return false;
+    }
+    
+    bool ok = loadScenario(name);
+    if (ok) {
+        // create /sim/ai node for consistency
+        int index = 0;
+        for (; root->hasChild("scenario", index); ++index) {}
+        
+        SGPropertyNode* scenarioNode = root->getChild("scenario", index, true);
+        scenarioNode->setStringValue(name);
+    }
+    
+    return ok;
 }
 
 bool FGAIManager::unloadScenarioCommand(const SGPropertyNode* args)
 {
     std::string name = args->getStringValue("name");
-    unloadScenario(name);
-    return true;
+    return unloadScenario(name);
 }
 
 bool FGAIManager::addObjectCommand(const SGPropertyNode* definition)
@@ -351,22 +393,32 @@ FGAIManager::loadScenario( const string &filename )
         return false;
     }
     
-    _scenarios[filename] = new Scenario(this, scNode);
+    _scenarios[filename] = new Scenario(this, filename, scNode);
     return true;
 }
 
 
-void
+bool
 FGAIManager::unloadScenario( const string &filename)
 {
     ScenarioDict::iterator it = _scenarios.find(filename);
     if (it == _scenarios.end()) {
         SG_LOG(SG_AI, SG_WARN, "unload scenario: not found:" << filename);
-        return;
+        return false;
+    }
+    
+// remove /sim/ai node
+    unsigned int index = 0;
+    for (SGPropertyNode* n = NULL; (n = root->getChild("scenario", index)) != NULL; ++index) {
+        if (n->getStringValue() == filename) {
+            root->removeChild("scenario", index);
+            break;
+        }
     }
     
     delete it->second;
     _scenarios.erase(it);
+    return true;
 }
 
 SGPropertyNode_ptr
