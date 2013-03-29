@@ -1287,7 +1287,7 @@ private:
       double		elevation;	// elevation in feet
       double		half_length;	// runway half length, in nautical miles
       double            half_width_m;   // runway half width, in meters
-      RunwayEdge	edges[2];	// runway threshold and end
+      RunwayEdge	edge;	        // runway threshold
       SGVec3d		bias_points[2];	// vertices of the bias area
     } runway;
 

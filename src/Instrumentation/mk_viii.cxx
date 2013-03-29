@@ -4287,20 +4287,16 @@ MK_VIII::TCFHandler::update_runway ()
 	  double half_length_m = _runway->lengthM() * 0.5;
 	  runway.half_length = half_length_m * SG_METER_TO_NM;
 
-	  //           ________________
-	  //          |                |
-	  //    h1>>> |  e1<<<<<<<<e0  | <<<h0
-	  //          |________________|
+	  // _________
+	  //          |
+	  //  <<<<e0  | <<<h0
+	  // _________|
 
-	  // get heading to runway threshold (h0) and end (h1)
-	  runway.edges[0].heading = _runway->headingDeg();
-	  runway.edges[1].heading = _runway->reciprocalRunway()->headingDeg();
+	  // get heading of runway end (h0)
+	  runway.edge.heading = _runway->headingDeg();
 
 	  // get position of runway threshold (e0)
-          runway.edges[0].position = _runway->begin();
-
-	  // get position of runway end (e1)
-          runway.edges[1].position = _runway->end();
+          runway.edge.position = _runway->begin();
 
           // get cartesian coordinates of both runway ends
           runway.bias_points[0] = _runway->cart();
@@ -4328,7 +4324,9 @@ bool
 MK_VIII::TCFHandler::is_inside_bias_area ()
 {
   double half_bias_width_m = k * SG_NM_TO_METER + runway.half_width_m;
-  SGVec3d cpos = SGVec3d::fromGeod(  SGGeod::fromDeg(mk_data(gps_longitude).get(), mk_data(gps_latitude).get()) );
+  SGVec3d cpos = SGVec3d::fromGeod(  SGGeod::fromDegFt(mk_data(gps_longitude).get(),
+                                                       mk_data(gps_latitude).get(),
+                                                       runway.elevation) );
   SGLineSegmentd bias_line = SGLineSegmentd(runway.bias_points[0], runway.bias_points[1]);
   return dist(cpos, bias_line) < half_bias_width_m;
 }
@@ -4337,67 +4335,53 @@ bool
 MK_VIII::TCFHandler::is_tcf ()
 {
   if (mk_data(radio_altitude).get() > 10)
+  {
+    if (has_runway)
     {
-      if (has_runway)
-	{
-	  double distance = SGGeodesy::distanceNm( SGGeod::fromDeg(mk_data(gps_longitude).get(),
-                                                                   mk_data(gps_latitude).get()),
-                                                   runway.center);
-	  // distance to the inner envelope edge
-	  double edge_distance = distance - runway.half_length - k;
+      double distance = SGGeodesy::distanceNm( SGGeod::fromDegFt(mk_data(gps_longitude).get(),
+                                                                 mk_data(gps_latitude).get(),
+                                                                 runway.elevation),
+                                               runway.center);
 
-	  if (edge_distance >= 15)
-	    {
-	      if (mk_data(radio_altitude).get() < 700)
-		return true;
-	    }
-	  else if (edge_distance >= 12)
-	    {
-	      if (mk_data(radio_altitude).get() < 100 * edge_distance - 800)
-		return true;
-	    }
-	  else if (edge_distance >= 4)
-	    {
-	      if (mk_data(radio_altitude).get() < 400)
-		return true;
-	    }
-	  else if (edge_distance >= 2.45)
-	    {
-	      if (mk_data(radio_altitude).get() < 66.666667 * edge_distance + 133.33333)
-		return true;
-	    }
-	  else
-	    {
-	      if (is_inside_edge_triangle(&runway.edges[0]) || is_inside_edge_triangle(&runway.edges[1]))
-		{
-		  if (edge_distance >= 1)
-		    {
-		      if (mk_data(radio_altitude).get() < 66.666667 * edge_distance + 133.33333)
-			return true;
-		    }
-		  else if (edge_distance >= 0.05)
-		    {
-		      if (mk_data(radio_altitude).get() < 200 * edge_distance)
-			return true;
-		    }
-		}
-	      else
-		{
-		  if (! is_inside_bias_area())
-		    {
-		      if (mk_data(radio_altitude).get() < 245)
-			return true;
-		    }
-		}
-	    }
-	}
-      else
-	{
-	  if (mk_data(radio_altitude).get() < 700)
-	    return true;
-	}
+      // distance to the inner envelope edge
+      double edge_distance = distance - runway.half_length - k;
+
+      if (edge_distance > 15)
+      {
+        if (mk_data(radio_altitude).get() < 700)
+          return true;
+      }
+      else if (edge_distance > 12)
+      {
+        if (mk_data(radio_altitude).get() < 100 * edge_distance - 800)
+          return true;
+      }
+      else if (edge_distance > 4)
+      {
+        if (mk_data(radio_altitude).get() < 400)
+          return true;
+      }
+      else if (edge_distance > 2.45)
+      {
+        if (mk_data(radio_altitude).get() < 100 * edge_distance)
+          return true;
+      }
+      else if ( is_inside_edge_triangle(&runway.edge) && (edge_distance > 0.01) )
+      {
+        if (mk_data(radio_altitude).get() < 100 * edge_distance)
+          return true;
+      }
+      else if (! is_inside_bias_area())
+      {
+        if (mk_data(radio_altitude).get() < 245)
+          return true;
+      }
     }
-
+    else if (mk_data(radio_altitude).get() < 700)
+    {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -4405,31 +4389,25 @@ bool
 MK_VIII::TCFHandler::is_rfcf ()
 {
   if (has_runway)
+  {
+    double distance = SGGeodesy::distanceNm( SGGeod::fromDegFt(mk_data(gps_longitude).get(),
+                                                               mk_data(gps_latitude).get(),
+                                                               runway.elevation),
+                                             runway.center);
+    distance -= runway.half_length;
+
+    if (distance < 5.0)
     {
-
-      double distance = SGGeodesy::distanceNm( SGGeod::fromDeg(mk_data(gps_longitude).get(),
-                                                               mk_data(gps_latitude).get()),
-                                               runway.center);
-
       double krf = k + mk_data(gps_vertical_figure_of_merit).get() / 200;
-      distance = distance - runway.half_length - krf;
+      distance -= krf;
+      double altitude_above_field = mk_data(geometric_altitude).get() - runway.elevation;
 
-      if (distance <= 5)
-	{
-	  double altitude_above_field = mk_data(geometric_altitude).get() - runway.elevation;
-
-	  if (distance >= 1.5)
-	    {
-	      if (altitude_above_field < 300)
-		return true;
-	    }
-	  else if (distance >= 0)
-	    {
-	      if (altitude_above_field < 200 * distance)
-		return true;
-	    }
-	}
+      if ( (distance > 1.5) && (altitude_above_field < 300.0) )
+        return true;
+      else if ( (distance > 0.0) && (altitude_above_field < 200 * distance) )
+        return true;
     }
+  }
 
   return false;
 }
