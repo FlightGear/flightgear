@@ -70,6 +70,8 @@ public:
     {
     }
     
+    virtual FGAIModelData* clone() const { return new FGAIModelData(); }
+
     /** osg callback, thread-safe */
     void modelLoaded(const std::string& path, SGPropertyNode *prop, osg::Node *n)
     {

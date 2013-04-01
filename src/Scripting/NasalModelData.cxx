@@ -31,7 +31,7 @@ typedef nasal::Ghost<NodeRef> NasalNode;
  * model.
  */
 static naRef f_node_getPose( const osg::Node& node,
-                                   const nasal::CallContext& ctx )
+                             const nasal::CallContext& ctx )
 {
   osg::NodePathList parent_paths = node.getParentalNodePaths();
   for( osg::NodePathList::const_iterator path = parent_paths.begin();

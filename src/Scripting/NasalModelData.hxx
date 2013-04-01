@@ -89,6 +89,8 @@ public:
                       SGPropertyNode *prop,
                       osg::Node *branch );
     
+    virtual FGNasalModelDataProxy* clone() const { return new FGNasalModelDataProxy(_root); }
+
 protected:
     SGPropertyNode_ptr _root;
     FGNasalModelDataRef _data;
