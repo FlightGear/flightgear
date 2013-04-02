@@ -56,6 +56,8 @@ public:
     {
     }
 
+    virtual FGNasalModelDataProxy* clone() const { return new FGNasalModelDataProxy(_root); }
+
     ~FGNasalModelDataProxy();
 
     void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
