@@ -303,6 +303,16 @@ FGAIManager::processThermal( double dt, FGAIThermal* thermal ) {
 bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args)
 {
     std::string name = args->getStringValue("name");
+    if (args->hasChild("load-property")) {
+        // slightly ugly, to simplify life in the dialogs, make load allow
+        // loading or unloading based on a bool property.
+        bool loadIt = fgGetBool(args->getStringValue("load-property"));
+        if (!loadIt) {
+            // user actually wants to unload, fine.
+            return unloadScenario(name);
+        }
+    }
+    
     if (_scenarios.find(name) != _scenarios.end()) {
         SG_LOG(SG_AI, SG_WARN, "scenario '" << name << "' already loaded");
         return false;
@@ -315,6 +325,7 @@ bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args)
         for (; root->hasChild("scenario", index); ++index) {}
         
         SGPropertyNode* scenarioNode = root->getChild("scenario", index, true);
+        scenarioNode->setAttribute(SGPropertyNode::USERARCHIVE, true);
         scenarioNode->setStringValue(name);
     }
     
