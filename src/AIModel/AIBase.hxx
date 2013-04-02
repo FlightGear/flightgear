@@ -462,6 +462,8 @@ public:
     FGAIModelData(SGPropertyNode *root = 0);
     ~FGAIModelData();
 
+    virtual FGAIModelData* clone() const { return new FGAIModelData(); }
+
     /** osg callback, thread-safe */
     void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n);
 
