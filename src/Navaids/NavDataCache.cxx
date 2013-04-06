@@ -40,6 +40,7 @@
 #include "sqlite3.h"
 
 // SimGear
+#include <simgear/sg_inlines.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/bucket/newbucket.hxx>
@@ -1254,11 +1255,15 @@ void NavDataCache::doRebuild()
     stampCacheFile(d->navDatPath);
     SG_LOG(SG_NAVCACHE, SG_INFO, "nav.dat load took:" << st.elapsedMSec());
 
+#ifdef SG_WINDOWS
+    SG_LOG(SG_NAVCACHE, SG_ALERT, "SKIPPING POI load on Windows");
+#else
     st.stamp();
     poiDBInit(d->poiDatPath);
     stampCacheFile(d->poiDatPath);
     SG_LOG(SG_NAVCACHE, SG_INFO, "poi.dat load took:" << st.elapsedMSec());
-    
+#endif
+      
     loadCarrierNav(d->carrierDatPath);
     stampCacheFile(d->carrierDatPath);
     
