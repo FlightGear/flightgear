@@ -120,8 +120,15 @@ struct GeneralInitOperation : public GraphicsContextOperation
         simRendering->setStringValue("gl-version", (char*) glGetString(GL_VERSION));
         SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VERSION));
 
-        simRendering->setStringValue("gl-shading-language-version", (char*) glGetString(GL_SHADING_LANGUAGE_VERSION));
-        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_SHADING_LANGUAGE_VERSION));
+        // Old hardware without support for OpenGL 2.0 does not support GLSL and
+        // glGetString returns NULL for GL_SHADING_LANGUAGE_VERSION.
+        //
+        // See http://flightgear.org/forums/viewtopic.php?f=17&t=19670&start=15#p181945
+        const char* glsl_version = (const char*) glGetString(GL_SHADING_LANGUAGE_VERSION);
+        if( !glsl_version )
+          glsl_version = "UNSUPPORTED";
+        simRendering->setStringValue("gl-shading-language-version", glsl_version);
+        SG_LOG( SG_GENERAL, SG_INFO, glsl_version);
 
         GLint tmp;
         glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
