@@ -19,6 +19,7 @@
 #include "FGCanvasSystemAdapter.hxx"
 
 #include <Main/globals.hxx>
+#include <Main/util.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Viewer/renderer.hxx>
 
@@ -77,14 +78,24 @@ namespace canvas
   //----------------------------------------------------------------------------
   osg::Image* FGCanvasSystemAdapter::getImage(const std::string& path) const
   {
-    SGPath tpath = globals->resolve_resource_path(path);
-    if( tpath.isNull() || !tpath.exists() )
+    if( SGPath(path).isAbsolute() )
     {
-      SG_LOG(SG_GL, SG_ALERT, "canvas::Image: No such image: " << path);
-      return 0;
+      const char* valid_path = fgValidatePath(path.c_str(), false);
+      if( valid_path )
+        return osgDB::readImageFile(valid_path);
+
+      SG_LOG(SG_IO, SG_ALERT, "canvas::Image: reading '" << path << "' denied");
+    }
+    else
+    {
+      SGPath tpath = globals->resolve_resource_path(path);
+      if( !tpath.isNull() )
+        return osgDB::readImageFile(tpath.c_str());
+
+      SG_LOG(SG_IO, SG_ALERT, "canvas::Image: No such image: '" << path << "'");
     }
 
-    return osgDB::readImageFile(tpath.c_str());
+    return 0;
   }
 
   /**
