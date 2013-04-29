@@ -112,6 +112,7 @@
 #include "logger.hxx"
 #include "main.hxx"
 #include "positioninit.hxx"
+#include "util.hxx"
 
 using std::string;
 using std::endl;
@@ -771,6 +772,29 @@ void fgPostInitSubsystems()
     globals->add_subsystem("nasal", nasal, SGSubsystemMgr::INIT);
     nasal->init();
     SG_LOG(SG_GENERAL, SG_INFO, "Nasal init took:" << st.elapsedMSec());
+
+    // Ensure IOrules and path validation are working properly by trying to
+    // access a folder/file which should never be accessible.
+    const char* no_access_path =
+#ifdef _WIN32
+      "Z:"
+#endif
+      "/do-not-access";
+
+    if( fgValidatePath(no_access_path, true) )
+      SG_LOG
+      (
+        SG_GENERAL,
+        SG_ALERT,
+        "Check your IOrules! (write to '" << no_access_path << "' is allowed)"
+      );
+    if( fgValidatePath(no_access_path, false) )
+      SG_LOG
+      (
+        SG_GENERAL,
+        SG_ALERT,
+        "Check your IOrules! (read from '" << no_access_path << "' is allowed)"
+      );
   
     // initialize methods that depend on other subsystems.
     st.stamp();
