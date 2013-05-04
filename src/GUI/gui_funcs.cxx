@@ -52,6 +52,7 @@
 #include <Cockpit/panel.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/fg_init.hxx> // for platformDesktopPath
 #include <Main/fg_os.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/viewmgr.hxx>
@@ -480,7 +481,7 @@ namespace
 
             string dir = fgGetString("/sim/paths/screenshot-dir");
             if (dir.empty())
-                dir = fgGetString("/sim/fg-current");
+              dir = platformDesktopPath().str();
 
             _path.set(dir + '/');
             if (_path.create_dir( 0755 )) {

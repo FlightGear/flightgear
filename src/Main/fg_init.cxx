@@ -366,6 +366,34 @@ static SGPath platformDefaultDataPath()
   config.append( "flightgear.org" );
   return config;
 }
+
+SGPath platformDesktopPath()
+{  
+    /*
+  typedef BOOL (WINAPI*GetSpecialFolderPath)(HWND, LPWSTR, int, BOOL);
+  static GetSpecialFolderPath SHGetSpecialFolderPath = NULL;
+
+  // lazy open+resolve of shell32
+  if (!SHGetSpecialFolderPath) {
+    HINSTANCE shellDll = ::LoadLibrary("shell32");
+    SHGetSpecialFolderPath = (GetSpecialFolderPath) GetProcAddress(shellDll, "SHGetSpecialFolderPathA");
+  }
+  
+  if (!SHGetSpecialFolderPath)
+    return SGPath();
+  
+  char path[PATH_MAX];
+  if (SHGetSpecialFolderPath(0, path, CSIDL_DESKTOPDIRECTORY, false)) {
+    return SGPath(path);
+  }
+  
+  // failed, bad
+  return SGPath();
+    */
+    
+    return SGPath(fgGetString("/sim/fg-current"));
+}
+
 #elif __APPLE__
 
 #include <CoreServices/CoreServices.h>
@@ -388,11 +416,35 @@ static SGPath platformDefaultDataPath()
   appData.append("FlightGear");
   return appData;
 }
+
+SGPath platformDesktopPath()
+{
+  FSRef ref;
+  OSErr err = FSFindFolder(kUserDomain, kDesktopFolderType, false, &ref);
+  if (err) {
+    return SGPath();
+  }
+  
+  unsigned char path[1024];
+  if (FSRefMakePath(&ref, path, 1024) != noErr) {
+    return SGPath();
+  }
+  
+  return SGPath((const char*) path);
+}
+
 #else
 static SGPath platformDefaultDataPath()
 {
   SGPath config( getenv("HOME") );
   config.append( ".fgfs" );
+  return config;
+}
+
+SGPath platformDesktopPath()
+{
+  SGPath config( getenv("HOME") );
+  config.append( "Desktop" );
   return config;
 }
 #endif

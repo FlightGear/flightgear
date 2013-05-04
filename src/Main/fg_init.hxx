@@ -26,10 +26,10 @@
 #define _FG_INIT_HXX
 
 #include <string>
+#include <simgear/misc/sg_path.hxx>
 
 // forward decls
 class SGPropertyNode;
-class SGPath;
 
 // Return the current base package version
 std::string fgBasePackageVersion();
@@ -46,6 +46,8 @@ void fgOutputSettings();
 // Initialize the localization
 SGPropertyNode *fgInitLocale(const char *language);
 
+/// retrieve the user's desktop directory path
+SGPath platformDesktopPath();
 
 // Init navaids and waypoints
 bool fgInitNav ();
