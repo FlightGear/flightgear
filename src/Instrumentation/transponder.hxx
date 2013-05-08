@@ -3,6 +3,7 @@
 // Written by Roy Vegard Ovesen, started September 2004.
 //
 // Copyright (C) 2004  Roy Vegard Ovesen - rvovesen@tiscali.no
+// Copyright (C) 2013  Clement de l'Hamaide - clemaez@hotmail.fr
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -30,29 +31,64 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 
-class Transponder : public SGSubsystem
+class Transponder : public SGSubsystem, public SGPropertyChangeListener
 {
 public:
     Transponder(SGPropertyNode *node);
-    ~Transponder();
+    virtual ~Transponder();
 
-    void init ();
-    void update (double dt);
+    virtual void init ();
+    virtual void update (double dt);
 
 private:
+    enum Mode
+    {
+        MODE_A = 0,
+        MODE_C,
+        MODE_S
+    };
+    
+    enum KnobPosition
+    {
+        KNOB_OFF = 0,
+        KNOB_STANDBY,
+        KNOB_ON,
+        KNOB_ALT,
+        KNOB_TEST
+    };
+    
     // Inputs
-    SGPropertyNode_ptr pressureAltitudeNode;
-    SGPropertyNode_ptr busPowerNode;
-    SGPropertyNode_ptr serviceableNode;
+    SGPropertyNode_ptr _pressureAltitude_node;
+    SGPropertyNode_ptr _busPower_node;
+    SGPropertyNode_ptr _serviceable_node;
+
+    SGPropertyNode_ptr _mode_node;
+    SGPropertyNode_ptr _knob_node;
+    SGPropertyNode_ptr _idCode_node;
+    SGPropertyNode_ptr _digit_node[4];
+    
+    
+    SGPropertyNode_ptr _identBtn_node;
+    bool _identMode;
 
     // Outputs
-    SGPropertyNode_ptr idCodeNode;
-    SGPropertyNode_ptr flightLevelNode;
+    SGPropertyNode_ptr _altitude_node;
+    SGPropertyNode_ptr _altitudeValid_node;
+    SGPropertyNode_ptr _transmittedId_node;
+    SGPropertyNode_ptr _ident_node;
 
     // Internal
     std::string _name;
     int _num;
-    std::string _mode_c_altitude;
+    Mode _mode;
+    double _identTime;
+    int _listener_active;
+    double _requiredBusVolts;
+    std::string _altitudeSourcePath;
+    
+    void valueChanged (SGPropertyNode *);
+    int setMinMax(int val);
+    bool has_power() const;
 };
 
 #endif // TRANSPONDER_HXX

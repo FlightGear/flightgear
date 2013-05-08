@@ -41,6 +41,11 @@ Altimeter::Altimeter ( SGPropertyNode *node, double quantum )
       _quantum(node->getDoubleValue("quantum", quantum)),
       _settingInHg(29.921260)
 {
+    // FIXME: change default to false once all aircraft which use
+    // altimiter as an encoder are converted to request this explicitly
+    _encodeModeC = node->getBoolValue("encode-mode-c", true);
+    _encodeModeS = node->getBoolValue("encode-mode-s", false);
+    
     _tiedProperties.setRoot( _rootNode );
 }
 
@@ -78,7 +83,14 @@ Altimeter::init ()
     _pressure_node     = fgGetNode(_static_pressure.c_str(), true);
     _serviceable_node  = _rootNode->getChild("serviceable", 0, true);
     _press_alt_node    = _rootNode->getChild("pressure-alt-ft", 0, true);
-    _mode_c_node       = _rootNode->getChild("mode-c-alt-ft", 0, true);
+    if (_encodeModeC) {
+        _mode_c_node = _rootNode->getChild("mode-c-alt-ft", 0, true);
+    }
+    
+    if (_encodeModeS) {
+        _mode_s_node = _rootNode->getChild("mode-s-alt-ft", 0, true);
+    }
+    
     _altitude_node     = _rootNode->getChild("indicated-altitude-ft", 0, true);
 
     reinit();
@@ -113,7 +125,15 @@ Altimeter::update (double dt)
         double press_alt = _press_alt_node->getDoubleValue();
         // The mechanism settles slowly toward new pressure altitude:
         _raw_PA = fgGetLowPass(_raw_PA, _altimeter.press_alt_ft(pressure), trat);
-        _mode_c_node->setDoubleValue(100 * SGMiscd::round(_raw_PA/100));
+        
+        if (_encodeModeC) {
+            _mode_c_node->setDoubleValue(100 * SGMiscd::round(_raw_PA/100));
+        }
+        
+        if (_encodeModeS) {
+            _mode_s_node->setDoubleValue(10 * SGMiscd::round(_raw_PA/10));
+        }
+
         _kollsman = fgGetLowPass(_kollsman, _altimeter.kollsman_ft(_settingInHg), trat);
         if (_quantum)
             press_alt = _quantum * SGMiscd::round(_raw_PA/_quantum);

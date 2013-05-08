@@ -54,11 +54,15 @@ private:
     double _kollsman;
     double _raw_PA;
     double _settingInHg;
-
+    bool _encodeModeC;
+    bool _encodeModeS;
+    
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _press_alt_node;
     SGPropertyNode_ptr _mode_c_node;
+    SGPropertyNode_ptr _mode_s_node;
+    SGPropertyNode_ptr _transponder_node;
     SGPropertyNode_ptr _altitude_node;
 
     FGAltimeter _altimeter;
