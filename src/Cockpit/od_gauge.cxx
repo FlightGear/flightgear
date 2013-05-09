@@ -36,7 +36,6 @@
 #include <osg/Camera>
 #include <osg/Geode>
 #include <osg/NodeVisitor>
-#include <osg/Material>
 #include <osg/Matrix>
 #include <osg/PolygonMode>
 #include <osg/ShadeModel>
@@ -45,6 +44,7 @@
 
 #include <osgDB/FileNameUtils>
 
+#include <simgear/canvas/CanvasObjectPlacement.hxx>
 #include <simgear/scene/material/EffectGeode.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 
@@ -86,12 +86,15 @@ class ReplaceStaticTextureVisitor:
                                  osg::Texture2D* new_texture ):
         osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
         _tex_name( osgDB::getSimpleFileName(name) ),
-        _new_texture(new_texture)
+        _new_texture(new_texture),
+        _cull_callback(0)
     {}
 
     ReplaceStaticTextureVisitor( SGPropertyNode* placement,
                                  osg::Texture2D* new_texture,
-                                 osg::NodeCallback* cull_callback = 0 ):
+                                 osg::NodeCallback* cull_callback = 0,
+                                 const simgear::canvas::CanvasWeakPtr& canvas =
+                                   simgear::canvas::CanvasWeakPtr() ):
         osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
         _tex_name( osgDB::getSimpleFileName(
           placement->getStringValue("texture"))
@@ -100,7 +103,8 @@ class ReplaceStaticTextureVisitor:
         _parent_name( placement->getStringValue("parent") ),
         _node(placement),
         _new_texture(new_texture),
-        _cull_callback(cull_callback)
+        _cull_callback(cull_callback),
+        _canvas(canvas)
     {
       if(    _tex_name.empty()
           && _node_name.empty()
@@ -200,7 +204,7 @@ class ReplaceStaticTextureVisitor:
                                         osg::StateAttribute::ON );
 
         _placements.push_back( simgear::canvas::PlacementPtr(
-          new ObjectPlacement(_node, group)
+          new simgear::canvas::ObjectPlacement(_node, group, _canvas)
         ));
 
         SG_LOG
@@ -218,77 +222,6 @@ class ReplaceStaticTextureVisitor:
 
   protected:
 
-    class ObjectPlacement:
-      public simgear::canvas::Placement
-    {
-      public:
-
-        ObjectPlacement( SGPropertyNode* node,
-                         GroupPtr group ):
-          Placement(node),
-          _group(group)
-        {
-          // TODO make more generic and extendable for more properties
-          if( node->hasValue("emission") )
-            setEmission( node->getFloatValue("emission") );
-        }
-
-        virtual bool childChanged(SGPropertyNode* node)
-        {
-          if( node->getParent() != _node )
-            return false;
-
-          if( node->getNameString() == "emission" )
-            setEmission( node->getFloatValue() );
-          else
-            return false;
-
-          return true;
-        }
-
-        void setEmission(float emit)
-        {
-          emit = SGMiscf::clip(emit, 0, 1);
-
-          if( !_material )
-          {
-            _material = new osg::Material;
-            _material->setColorMode(osg::Material::OFF);
-            _material->setDataVariance(osg::Object::DYNAMIC);
-            _group->getOrCreateStateSet()
-                  ->setAttribute(_material, ( osg::StateAttribute::ON
-                                            | osg::StateAttribute::OVERRIDE ) );
-          }
-
-          _material->setEmission(
-            osg::Material::FRONT_AND_BACK,
-            osg::Vec4(emit, emit, emit, emit)
-          );
-        }
-
-        /**
-         * Remove placement from the scene
-         */
-        virtual ~ObjectPlacement()
-        {
-          assert( _group->getNumChildren() == 1 );
-          osg::Node *child = _group->getChild(0);
-
-          if( _group->getNumParents() )
-          {
-            osg::Group *parent = _group->getParent(0);
-            parent->addChild(child);
-            parent->removeChild(_group);
-          }
-
-          _group->removeChild(child);
-        }
-
-      private:
-        GroupPtr            _group;
-        MaterialPtr         _material;
-    };
-
     std::string _tex_name,      ///<! Name of texture to be replaced
                 _node_name,     ///<! Only replace if node name matches
                 _parent_name;   ///<! Only replace if any parent node matches
@@ -298,7 +231,8 @@ class ReplaceStaticTextureVisitor:
     osg::Texture2D     *_new_texture;
     osg::NodeCallback  *_cull_callback;
 
-    simgear::canvas::Placements _placements;
+    simgear::canvas::CanvasWeakPtr  _canvas;
+    simgear::canvas::Placements     _placements;
 };
 
 //------------------------------------------------------------------------------
@@ -330,9 +264,13 @@ simgear::canvas::Placements
 FGODGauge::set_texture( osg::Node* branch,
                         SGPropertyNode* placement,
                         osg::Texture2D* new_texture,
-                        osg::NodeCallback* cull_callback )
+                        osg::NodeCallback* cull_callback,
+                        const simgear::canvas::CanvasWeakPtr& canvas )
 {
-  ReplaceStaticTextureVisitor visitor(placement, new_texture, cull_callback);
+  ReplaceStaticTextureVisitor visitor( placement,
+                                       new_texture,
+                                       cull_callback,
+                                       canvas );
   branch->accept(visitor);
   return visitor.getPlacements();
 }
@@ -341,13 +279,15 @@ FGODGauge::set_texture( osg::Node* branch,
 simgear::canvas::Placements
 FGODGauge::set_aircraft_texture( SGPropertyNode* placement,
                                  osg::Texture2D* new_texture,
-                                 osg::NodeCallback* cull_callback )
+                                 osg::NodeCallback* cull_callback,
+                                 const simgear::canvas::CanvasWeakPtr& canvas )
 {
   return set_texture
   (
     globals->get_scenery()->get_aircraft_branch(),
     placement,
     new_texture,
-    cull_callback
+    cull_callback,
+    canvas
   );
 }

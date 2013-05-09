@@ -49,13 +49,19 @@ using std::ios_base;
 const int MAX_MICE = 1;
 const int MAX_MOUSE_BUTTONS = 8;
 
+typedef std::vector<SGSceneryPick> SGSceneryPicks;
+typedef SGSharedPtr<SGPickCallback> SGPickCallbackPtr;
+typedef std::list<SGPickCallbackPtr> SGPickCallbackList;
+
 ////////////////////////////////////////////////////////////////////////
 
 /**
  * List of currently pressed mouse button events
  */
-class ActivePickCallbacks : public std::map<int, std::list<SGSharedPtr<SGPickCallback> > > {
-public:
+class ActivePickCallbacks:
+  public std::map<int, SGPickCallbackList>
+{
+  public:
     void update( double dt, unsigned int keyModState );
     void init( int button, const osgGA::GUIEventAdapter* ea );
 };
@@ -71,14 +77,14 @@ void ActivePickCallbacks::init( int button, const osgGA::GUIEventAdapter* ea )
   // That is they get sorted by distance and by scenegraph depth.
   // The nearest one is the first one and the deepest
   // (the most specialized one in the scenegraph) is the first.
-  std::vector<SGSceneryPick> pickList;
+  SGSceneryPicks pickList;
   if (!globals->get_renderer()->pick(pickList, windowPos)) {
     return;
   }
 
-  std::vector<SGSceneryPick>::const_iterator i;
+  SGSceneryPicks::const_iterator i;
   for (i = pickList.begin(); i != pickList.end(); ++i) {
-    if (i->callback->buttonPressed(button, ea, i->info)) {
+    if (i->callback->buttonPressed(button, *ea, i->info)) {
         (*this)[button].push_back(i->callback);
         return;
     }
@@ -89,7 +95,7 @@ void ActivePickCallbacks::update( double dt, unsigned int keyModState )
 {
   // handle repeatable mouse press events
   for( iterator mi = begin(); mi != end(); ++mi ) {
-    std::list<SGSharedPtr<SGPickCallback> >::iterator li;
+    SGPickCallbackList::iterator li;
     for (li = mi->second.begin(); li != mi->second.end(); ++li) {
       (*li)->update(dt, keyModState);
     }
@@ -129,6 +135,18 @@ struct mouse {
     SGTimeStamp timeSinceLastMove;
     mouse_mode * modes;
 };
+
+static
+const SGSceneryPick*
+getPick( const SGSceneryPicks& pick_list,
+         const SGPickCallback* cb )
+{
+  for(size_t i = 0; i < pick_list.size(); ++i)
+    if( pick_list[i].callback == cb )
+      return &pick_list[i];
+
+  return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -197,37 +215,44 @@ public:
   
     void doHoverPick(const osg::Vec2d& windowPos)
     {
-        std::vector<SGSceneryPick> pickList;
-        SGPickCallback::Priority priority = SGPickCallback::PriorityScenery;
-      
         FGMouseCursor::Cursor cur = FGMouseCursor::CURSOR_ARROW;
         bool explicitCursor = false;
         bool didPick = false;
-      
-        if (globals->get_renderer()->pick(pickList, windowPos)) {
+
+        SGPickCallback::Priority priority = SGPickCallback::PriorityScenery;
+        SGSceneryPicks pickList;
+        globals->get_renderer()->pick(pickList, windowPos);
+
+        SGSceneryPicks::const_iterator i;
+        for( i = pickList.begin(); i != pickList.end(); ++i )
+        {
+            bool done = i->callback->hover(windowPos, i->info);
+            std::string curName(i->callback->getCursor());
+            if (!curName.empty()) {
+                explicitCursor = true;
+                cur = FGMouseCursor::cursorFromString(curName.c_str());
+            }
             
-            std::vector<SGSceneryPick>::const_iterator i;
-            for (i = pickList.begin(); i != pickList.end(); ++i) {
-                bool done = i->callback->hover(windowPos, i->info);
-                std::string curName(i->callback->getCursor());
-                if (!curName.empty()) {
-                    explicitCursor = true;
-                    cur = FGMouseCursor::cursorFromString(curName.c_str());
-                }
-                
             // if the callback is of higher prioirty (lower enum index),
             // record that.
-                if (i->callback->getPriority() < priority) {
-                    priority = i->callback->getPriority();
-                }
-                
-                if (done) {
-                    didPick = true;
-                    break;
-                }
-            } // of picks iteration
-        } else { // of have valid pick
+            if (i->callback->getPriority() < priority) {
+                priority = i->callback->getPriority();
+            }
+
+            if (done) {
+                didPick = true;
+                break;
+            }
+        } // of picks iteration
+
+        // Check if any pick from the previous iteration has disappeared. If so
+        // notify the callback that the mouse has left its element.
+        for( i = _previous_picks.begin(); i != _previous_picks.end(); ++i )
+        {
+          if( !getPick(pickList, i->callback) )
+            i->callback->mouseLeave(windowPos);
         }
+        _previous_picks = pickList;
       
         if (!explicitCursor && (priority == SGPickCallback::PriorityPanel)) {
             cur = FGMouseCursor::CURSOR_HAND;
@@ -245,12 +270,27 @@ public:
     {
         FGMouseCursor::Cursor cur = FGMouseCursor::CURSOR_CLOSED_HAND;
         
-        BOOST_FOREACH(SGPickCallback* cb, activePickCallbacks[0]) {
-            cb->mouseMoved(ea);
-            std::string curName(cb->getCursor());
-            if (!curName.empty()) {
-                cur = FGMouseCursor::cursorFromString(curName.c_str());
-            }
+        osg::Vec2d windowPos;
+        flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
+
+        SGSceneryPicks pickList;
+        if( !globals->get_renderer()->pick(pickList, windowPos) )
+          return;
+
+        for( ActivePickCallbacks::iterator mi = activePickCallbacks.begin();
+                                           mi != activePickCallbacks.end();
+                                         ++mi )
+        {
+          SGPickCallbackList::iterator li;
+          for( li = mi->second.begin(); li != mi->second.end(); ++li )
+          {
+            const SGSceneryPick* pick = getPick(pickList, *li);
+            (*li)->mouseMoved(*ea, pick ? &pick->info : 0);
+
+            std::string curName((*li)->getCursor());
+            if( !curName.empty() )
+              cur = FGMouseCursor::cursorFromString(curName.c_str());
+          }
         }
 
         FGMouseCursor::instance()->setCursor(cur);
@@ -278,6 +318,7 @@ public:
     }
     
     ActivePickCallbacks activePickCallbacks;
+    SGSceneryPicks _previous_picks;
 
     mouse mice[MAX_MICE];
     
@@ -513,12 +554,26 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   // requested, and return if one of
   // them consumes the event.
 
-  if (updown != MOUSE_BUTTON_DOWN) {
+  osg::Vec2d windowPos;
+  flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
+
+  SGSceneryPicks pickList;
+  globals->get_renderer()->pick(pickList, windowPos);
+
+  if( updown != MOUSE_BUTTON_DOWN )
+  {
     // Execute the mouse up event in any case, may be we should
     // stop processing here?
-    while (!d->activePickCallbacks[b].empty()) {
-      d->activePickCallbacks[b].front()->buttonReleased(ea->getModKeyMask());
-      d->activePickCallbacks[b].pop_front();
+
+    SGPickCallbackList& callbacks = d->activePickCallbacks[b];
+
+    while( !callbacks.empty() )
+    {
+      SGPickCallbackPtr& cb = callbacks.front();
+      const SGSceneryPick* pick = getPick(pickList, cb);
+      cb->buttonReleased(ea->getModKeyMask(), *ea, pick ? &pick->info : 0);
+
+      callbacks.pop_front();
     }
   }
 
@@ -540,8 +595,6 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
       }
     } else {
       // do a hover pick now, to fix up cursor
-      osg::Vec2d windowPos;
-      flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
       d->doHoverPick(windowPos);
     } // mouse button was released
   } // of pass-through mode

@@ -86,7 +86,9 @@ class FGODGauge:
     set_texture( osg::Node* branch,
                  SGPropertyNode* placement,
                  osg::Texture2D* new_texture,
-                 osg::NodeCallback* cull_callback = 0 );
+                 osg::NodeCallback* cull_callback = 0,
+                 const simgear::canvas::CanvasWeakPtr& canvas =
+                   simgear::canvas::CanvasWeakPtr() );
 
     /**
      * Replace an opengl texture name inside the aircraft scene graph.
@@ -101,7 +103,9 @@ class FGODGauge:
     simgear::canvas::Placements
     set_aircraft_texture( SGPropertyNode* placement,
                           osg::Texture2D* new_texture,
-                          osg::NodeCallback* cull_callback = 0 );
+                          osg::NodeCallback* cull_callback = 0,
+                          const simgear::canvas::CanvasWeakPtr& canvas =
+                            simgear::canvas::CanvasWeakPtr() );
 
 };
 

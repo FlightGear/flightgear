@@ -294,8 +294,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
     return false;
 
   namespace sc = simgear::canvas;
-  sc::MouseEventPtr event(new sc::MouseEvent);
-  event->time = ea.getTime();
+  sc::MouseEventPtr event(new sc::MouseEvent(ea));
 
   event->screen_pos.x() = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
   event->screen_pos.y() = 0.5 * (ea.getYnormalized() + 1) * _height + 0.5;
@@ -310,9 +309,6 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   _last_y = event->getScreenY();
 
   event->client_pos = event->screen_pos;
-  event->button = ea.getButton();
-  event->state = ea.getButtonMask();
-  event->mod = ea.getModKeyMask();
 
   if( !_resize_window.expired() )
   {

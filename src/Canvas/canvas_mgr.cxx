@@ -50,7 +50,8 @@ static sc::Placements addSceneObjectPlacement( SGPropertyNode* placement,
     model_data->getNode(),
     placement,
     canvas->getTexture(),
-    canvas->getCullCallback()
+    canvas->getCullCallback(),
+    canvas
   );
 }
 
@@ -76,7 +77,8 @@ CanvasMgr::CanvasMgr():
       &FGODGauge::set_aircraft_texture,
       _1,
       boost::bind(&sc::Canvas::getTexture, _2),
-      boost::bind(&sc::Canvas::getCullCallback, _2)
+      boost::bind(&sc::Canvas::getCullCallback, _2),
+      _2
     )
   );
 
