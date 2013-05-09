@@ -318,7 +318,7 @@ int fgOSMainLoop()
         if (idleFunc)
             (*idleFunc)();
         globals->get_renderer()->update();
-        viewer->frame();
+        viewer->frame( globals->get_sim_time_sec() );
     }
     
     return status;
