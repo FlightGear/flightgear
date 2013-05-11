@@ -127,7 +127,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new AirspeedIndicator( node ) );
 
         } else if ( name == "altimeter" ) {
-            set_subsystem( id, new Altimeter( node ) );
+            set_subsystem( id, new Altimeter( node, "altimeter" ) );
 
         } else if ( name == "attitude-indicator" ) {
             set_subsystem( id, new AttitudeIndicator( node ) );
@@ -139,7 +139,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new DME( node ), 1.0 );
 
         } else if ( name == "encoder" ) {
-            set_subsystem( id, new Altimeter( node ), 0.15 );
+            set_subsystem( id, new Altimeter( node, "encoder" ), 0.15 );
 
         } else if ( name == "gps" ) {
             set_subsystem( id, new GPS( node ) );

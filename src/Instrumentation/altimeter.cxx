@@ -30,12 +30,9 @@
 
 #include "altimeter.hxx"
 
-Altimeter::Altimeter ( SGPropertyNode *node, double quantum )
-    : _rootNode( 
-       fgGetNode("/instrumentation",true)->
-           getChild( node->getStringValue("name", "altimeter"),
-                     node->getIntValue("number", 0),
-                     true)),
+Altimeter::Altimeter ( SGPropertyNode *node, const std::string& aDefaultName, double quantum ) :
+      _name(node->getStringValue("name", aDefaultName.c_str())),
+      _num(node->getIntValue("number", 0)),
       _static_pressure(node->getStringValue("static-pressure", "/systems/static/pressure-inhg")),
       _tau(node->getDoubleValue("tau", 0.1)),
       _quantum(node->getDoubleValue("quantum", quantum)),
@@ -106,6 +103,9 @@ Altimeter::reinit ()
 void
 Altimeter::bind()
 {
+    _rootNode = fgGetNode("/instrumentation/" + _name, _num, true );
+    _tiedProperties.setRoot(_rootNode);
+    
     _tiedProperties.Tie("setting-inhg", this, &Altimeter::getSettingInHg, &Altimeter::setSettingInHg );
     _tiedProperties.Tie("setting-hpa", this, &Altimeter::getSettingHPa, &Altimeter::setSettingHPa );
 }

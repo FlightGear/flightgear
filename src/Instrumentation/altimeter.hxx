@@ -32,7 +32,7 @@ class Altimeter : public SGSubsystem
 
 public:
 
-    Altimeter (SGPropertyNode *node, double quantum = 0);
+    Altimeter (SGPropertyNode *node, const std::string& aDefaultName, double quantum = 0);
     virtual ~Altimeter ();
 
     virtual void init ();
@@ -47,6 +47,8 @@ public:
     void setSettingHPa( double value );
 
 private:
+    std::string _name;
+    int _num;
     SGPropertyNode_ptr _rootNode;
     string _static_pressure;
     double _tau;
