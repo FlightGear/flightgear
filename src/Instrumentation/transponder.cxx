@@ -55,6 +55,7 @@ Transponder::Transponder(SGPropertyNode *node)
 {
     _requiredBusVolts = node->getDoubleValue("bus-volts", 8.0);
     _altitudeSourcePath = node->getStringValue("encoder-path", "/instrumentation/altimeter");
+    _kt70Compat = node->getBoolValue("kt70-compatability", false);
 }
 
 
@@ -65,10 +66,7 @@ Transponder::~Transponder()
 
 void Transponder::init()
 {
-    string branch;
-    branch = "/instrumentation/" + _name;
-
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode("/instrumentation/" + _name, _num, true );
 
     // Inputs
     _busPower_node = fgGetNode("/systems/electrical/outputs/transponder", true);
@@ -80,10 +78,17 @@ void Transponder::init()
         _digit_node[i]->addChangeListener(this);
     }
    
-    _knob_node = in_node->getChild("knob-mode", 0, true); // 0=OFF, 1=SBY, 2=ON, 3=ALT, 4=TST
-    if (!_knob_node->hasValue()) { 
-        _knob_node->setIntValue(0);
+    _knob_node = in_node->getChild("knob-mode", 0, true);
+    if (!_knob_node->hasValue()) {
+        _knob = KNOB_ON;
+        // default to, if aircraft wants to start dark, it can do this
+        // in its -set.xml
+        _knob_node->setIntValue(_knob);
+    } else {
+        _knob = static_cast<KnobPosition>(_knob_node->getIntValue());
     }
+    
+    _knob_node->addChangeListener(this);
     
     _mode_node = in_node->getChild("mode", 0, true);
     _mode_node->setIntValue(_mode);
@@ -108,6 +113,40 @@ void Transponder::init()
     _altitudeValid_node = node->getChild("altitude-valid", 0, true);
     _ident_node = node->getChild("ident", 0, true);
     _transmittedId_node = node->getChild("transmitted-id", 0, true);
+    
+    if (_kt70Compat) {
+        // alias the properties through
+        SGPropertyNode_ptr output = node->getChild("outputs", 0, true);
+        output->getChild("flight-level", 0, true)->alias(_altitude_node);
+        output->getChild("id-code", 0, true)->alias(_idCode_node);
+        in_node->getChild("func-knob", 0, true)->alias(_knob_node);
+    }
+}
+
+void Transponder::bind()
+{
+    if (_kt70Compat) {
+        SGPropertyNode *node = fgGetNode("/instrumentation/" + _name, _num, true );
+        _tiedProperties.setRoot(node);
+        
+        _tiedProperties.Tie("annunciators/fl", this,
+                            &Transponder::getFLAnnunciator );
+        _tiedProperties.Tie("annunciators/alt", this,
+                            &Transponder::getAltAnnunciator );
+        _tiedProperties.Tie("annunciators/gnd", this,
+                            &Transponder::getGroundAnnuciator );
+        _tiedProperties.Tie("annunciators/on", this,
+                            &Transponder::getOnAnnunciator );
+        _tiedProperties.Tie("annunciators/sby", this,
+                            &Transponder::getStandbyAnnunciator );
+        _tiedProperties.Tie("annunciators/reply", this,
+                            &Transponder::getReplyAnnunciator );
+    } // of kt70 backwards compatability
+}
+
+void Transponder::unbind()
+{
+    _tiedProperties.Untie();
 }
 
 
@@ -116,7 +155,7 @@ void Transponder::update(double dt)
     if (has_power() && _serviceable_node->getBoolValue())
     {
         // Mode C & S send also altitude
-        Mode effectiveMode = (_knob_node->getIntValue() == KNOB_ALT) ? _mode : MODE_A;
+        Mode effectiveMode = (_knob == KNOB_ALT) ? _mode : MODE_A;
         SGPropertyNode* altitudeSource = NULL;
         
         switch (effectiveMode) {
@@ -152,7 +191,11 @@ void Transponder::update(double dt)
             }
         }
         
-        _transmittedId_node->setIntValue(_idCode_node->getIntValue());
+        if (_knob > KNOB_ON) {
+            _transmittedId_node->setIntValue(_idCode_node->getIntValue());
+        } else {
+            _transmittedId_node->setIntValue(INVALID_ID);
+        }
     }
     else
     {
@@ -193,6 +236,11 @@ void Transponder::valueChanged(SGPropertyNode *prop)
         return;
     }
     
+    if (prop == _knob_node) {
+        _knob = static_cast<KnobPosition>(prop->getIntValue());
+        return;
+    }
+    
     if (_listener_active)
         return;
 
@@ -219,3 +267,34 @@ bool Transponder::has_power() const
 {
     return (_knob_node->getIntValue() > KNOB_STANDBY) && (_busPower_node->getDoubleValue() > _requiredBusVolts);
 }
+
+bool Transponder::getFLAnnunciator() const
+{
+    return (_knob == KNOB_ALT) || (_knob == KNOB_GROUND) || (_knob == KNOB_TEST);
+}
+
+bool Transponder::getAltAnnunciator() const
+{
+    return (_knob == KNOB_ALT) || (_knob == KNOB_TEST);
+}
+
+bool Transponder::getGroundAnnuciator() const
+{
+    return (_knob == KNOB_GROUND) || (_knob == KNOB_TEST);
+}
+
+bool Transponder::getOnAnnunciator() const
+{
+    return (_knob == KNOB_ON) || (_knob == KNOB_TEST);
+}
+
+bool Transponder::getStandbyAnnunciator() const
+{
+    return (_knob == KNOB_STANDBY) || (_knob == KNOB_TEST);
+}
+
+bool Transponder::getReplyAnnunciator() const
+{
+    return _identMode || (_knob == KNOB_TEST);
+}
+

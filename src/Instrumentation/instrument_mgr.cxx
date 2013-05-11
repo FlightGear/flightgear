@@ -33,7 +33,6 @@
 #include "heading_indicator_fg.hxx"
 #include "heading_indicator_dg.hxx"
 #include "kr_87.hxx"
-#include "kt_70.hxx"
 #include "mag_compass.hxx"
 #include "marker_beacon.hxx"
 #include "newnavradio.hxx"
@@ -160,9 +159,6 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         } else if ( name == "KR-87" ) {
             set_subsystem( id, new FGKR_87( node ) );
 
-        } else if ( name == "KT-70" ) {
-            set_subsystem( id, new FGKT_70( node ) );
-
         } else if ( name == "magnetic-compass" ) {
             set_subsystem( id, new MagCompass( node ) );
 
@@ -175,7 +171,13 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         } else if ( name == "slip-skid-ball" ) {
             set_subsystem( id, new SlipSkidBall( node ), 0.03 );
 
-        } else if ( name == "transponder" ) {
+        } else if (( name == "transponder" ) || ( name == "KT-70" )) {
+            if  (name == "KT-70") {
+                SG_LOG(SG_INSTR, SG_WARN, "KT-70 legacy instrument compatability. "
+                       "Please update aircraft to use transponder directly");
+                // force configuration into compatability mode
+                node->setBoolValue("kt70-compatability", true);
+            }
             set_subsystem( id, new Transponder( node ), 0.2 );
 
         } else if ( name == "turn-indicator" ) {

@@ -17,7 +17,6 @@ set(SOURCES
     inst_vertical_speed_indicator.cxx
     instrument_mgr.cxx
     kr_87.cxx
-    kt_70.cxx
     mag_compass.cxx
     marker_beacon.cxx
     mk_viii.cxx
@@ -78,7 +77,6 @@ set(HEADERS
     inst_vertical_speed_indicator.hxx
     instrument_mgr.hxx
     kr_87.hxx
-    kt_70.hxx
     mag_compass.hxx
     marker_beacon.hxx
     mk_viii.hxx
