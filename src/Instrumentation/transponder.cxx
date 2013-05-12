@@ -191,7 +191,7 @@ void Transponder::update(double dt)
             }
         }
         
-        if (_knob > KNOB_ON) {
+        if (_knob >= KNOB_ON) {
             _transmittedId_node->setIntValue(_idCode_node->getIntValue());
         } else {
             _transmittedId_node->setIntValue(INVALID_ID);
