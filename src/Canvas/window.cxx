@@ -130,7 +130,7 @@ namespace canvas
   //----------------------------------------------------------------------------
   bool Window::handleMouseEvent(const simgear::canvas::MouseEventPtr& event)
   {
-    return _image.handleMouseEvent(event);
+    return _image.handleEvent(event);
   }
 
   //----------------------------------------------------------------------------

@@ -308,7 +308,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   _last_x = event->getScreenX();
   _last_y = event->getScreenY();
 
-  event->client_pos = event->screen_pos;
+  event->local_pos = event->client_pos = event->screen_pos;
 
   if( !_resize_window.expired() )
   {
@@ -454,11 +454,6 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
         sc::MouseEventPtr move_event( new sc::MouseEvent(*event) );
         move_event->type = sc::Event::MOUSE_LEAVE;
 
-        // Let the event position be always relative to the top left window
-        // corner
-        move_event->client_pos.x() -= last_mouse_over->getRegion().x();
-        move_event->client_pos.y() -= last_mouse_over->getRegion().y();
-
         last_mouse_over->handleMouseEvent(move_event);
       }
       _last_mouse_over = window_at_cursor;
@@ -481,13 +476,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   }
 
   if( target_window )
-  {
-    // Let the event position be always relative to the top left window corner
-    event->client_pos.x() -= target_window->getRegion().x();
-    event->client_pos.y() -= target_window->getRegion().y();
-
     return target_window->handleMouseEvent(event);
-  }
   else
     return false;
 }
