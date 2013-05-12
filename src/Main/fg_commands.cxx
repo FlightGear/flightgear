@@ -836,6 +836,11 @@ do_property_cycle (const SGPropertyNode * arg)
 {
     SGPropertyNode * prop = get_prop(arg);
     vector<SGPropertyNode_ptr> values = arg->getChildren("value");
+    
+    bool wrap = arg->getBoolValue("wrap", true);
+    // compatible with knob/pick animations
+    int offset = arg->getIntValue("offset", 1);
+    
     int selection = -1;
     int nSelections = values.size();
 
@@ -847,15 +852,22 @@ do_property_cycle (const SGPropertyNode * arg)
                                 // Try to find the current selection
     for (int i = 0; i < nSelections; i++) {
         if (compare_values(prop, values[i])) {
-            selection = i + 1;
+            selection = i;
             break;
         }
     }
 
-                                // Default or wrap to the first selection
-    if (selection < 0 || selection >= nSelections)
+    if (selection < 0) { // default to first selection
         selection = 0;
-
+    } else {
+        selection += offset;
+        if (wrap) {
+            selection = (selection + nSelections) % nSelections;
+        } else {
+            SG_CLAMP_RANGE(selection, 0, nSelections - 1);
+        }
+    }
+    
     prop->setUnspecifiedValue(values[selection]->getStringValue());
     return true;
 }
