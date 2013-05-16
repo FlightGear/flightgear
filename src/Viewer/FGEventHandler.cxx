@@ -151,6 +151,8 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
     y = -1;
 
     const osg::GraphicsContext* eventGC = ea.getGraphicsContext();
+    if( !eventGC )
+      return false; // TODO how can this happen?
     const osg::GraphicsContext::Traits* traits = eventGC->getTraits();
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (!guiCamera)
