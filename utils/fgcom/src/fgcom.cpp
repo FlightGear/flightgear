@@ -8,6 +8,7 @@
  * For more information read: http://squonk.abacab.org/dokuwiki/fgcom
  *
  * (c) H. Wirtz <dcoredump@gmail.com>
+ * (c) C. de l Hamaide <clemaez@hotmail.fr> - 2013
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -35,7 +36,8 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
-#include <plib/netSocket.h>
+#include <simgear/io/raw_socket.hxx>
+#include <plib/netSocket.h> /* FIXME: need to replace ulClock	 */
 #include "fgcom.h"
 #include "fgcom_init.h"
 #include "utils.h"
@@ -106,6 +108,8 @@ char icao[5];
 double special_frq[] =
   { 999.999, 910.0, 123.45, 122.75, 123.5, 121.5, 732.34, -1.0 };
 double *special_frequencies;
+
+simgear::Socket sgSocket;
 
 double previous_com_frequency = 0.0;
 int previous_ptt = 0;
@@ -503,10 +507,9 @@ main (int argc, char *argv[])
   if (mode == 1)
     {
       /* only in FG mode */
-      /*netInit ();
-      netSocket fgsocket;
-      fgsocket.open (false);
-      fgsocket.bind (fgserver, port);*/
+      simgear::Socket::initSockets();
+      sgSocket.open (false);
+      sgSocket.bind (fgserver, port);
 
       /* mute mic, speaker on */
       iaxc_input_level_set (0);
@@ -522,14 +525,13 @@ main (int argc, char *argv[])
 	  double wait = next_update - clock.getAbsTime ();
 	  if (wait > 0.001)
 	    {
-	      /*netSocket *readsockets[2] = { &fgsocket, 0 };
-	      if (fgsocket.select (readsockets, readsockets + 1,
+	      simgear::Socket *readSockets[2] = { &sgSocket, 0 };
+	      if (sgSocket.select (readSockets, readSockets + 1,
 				   (int) (wait * 1000)) == 1)
 		{
-		  netAddress their_addr;
-		  if ((numbytes =
-		       fgsocket.recvfrom (buf, MAXBUFLEN - 1, 0,
-					  &their_addr)) == -1)
+                  simgear::IPAddress their_addr;
+                  numbytes = sgSocket.recvfrom(buf, MAXBUFLEN - 1, 0, &their_addr);
+		  if (numbytes == -1)
 		    {
 		      perror ("recvfrom");
 		      exit (1);
@@ -545,7 +547,7 @@ main (int argc, char *argv[])
 		    cout << "packet contains \"" << buf << "\"" << std::endl;
 #endif
 		  process_packet (buf);
-		}*/
+		}
 	    }
 	  else
 	    {

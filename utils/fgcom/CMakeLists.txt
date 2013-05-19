@@ -586,7 +586,9 @@ target_link_libraries( fgcom iaxclient_lib )
 target_link_Libraries( fgcom
     ${win_LIBS}
     ${PLIB_LIBRARIES}
-    ${ZLIB_LIBRARIES} )
+    ${ZLIB_LIBRARIES}
+    ${SIMGEAR_CORE_LIBRARIES}
+    ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES} )
 
 if(AUDIO_OPENAL)
 target_link_Libraries( fgcom
