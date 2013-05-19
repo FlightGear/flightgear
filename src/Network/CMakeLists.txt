@@ -55,6 +55,11 @@ set(HEADERS
 	ray.hxx
 	rul.hxx
 	)
+
+if(ENABLE_IAX)
+    list(APPEND SOURCES fgcom.cxx)
+    list(APPEND HEADERS fgcom.hxx)
+endif()
 	
 if(FG_JPEG_SERVER)
     list(APPEND SOURCES jpg-httpd.cxx)

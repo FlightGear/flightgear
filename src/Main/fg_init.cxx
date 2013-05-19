@@ -101,6 +101,7 @@
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Cockpit/cockpitDisplayManager.hxx>
 #include <Network/HTTPClient.hxx>
+#include <Network/fgcom.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -739,6 +740,13 @@ void fgCreateSubsystems() {
     // Initialize the sound-effects subsystem.
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
+#endif
+
+#ifdef ENABLE_IAX
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the FGCom subsystem.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("fgcom", new FGCom);
 #endif
 
     ////////////////////////////////////////////////////////////////////

@@ -185,6 +185,7 @@ fgSetDefaults ()
     fgSetBool("/sim/panel/visibility", true);
     fgSetBool("/sim/sound/enabled", true);
     fgSetBool("/sim/sound/working", true);
+    fgSetBool("/sim/fgcom/enabled", false);
 
 				// Flight Model options
     fgSetString("/sim/flight-model", "jsb");
@@ -1490,6 +1491,10 @@ struct OptionDesc {
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"vehicle",                      true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"failure",                      true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFailure },
+#ifdef ENABLE_IAX
+    {"enable-fgcom",                 false, OPTION_BOOL,   "/sim/fgcom/enabled", true, "", 0 },
+    {"disable-fgcom",                false, OPTION_BOOL,   "/sim/fgcom/enabled", false, "", 0 },
+#endif
     {"com1",                         true,  OPTION_DOUBLE, "/instrumentation/comm[0]/frequencies/selected-mhz", false, "", 0 },
     {"com2",                         true,  OPTION_DOUBLE, "/instrumentation/comm[1]/frequencies/selected-mhz", false, "", 0 },
     {"nav1",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV1 },

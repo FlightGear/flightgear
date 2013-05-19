@@ -149,6 +149,7 @@ option(WITH_FGPANEL      "Set to ON to build the fgpanel application (default)" 
 option(ENABLE_FGVIEWER   "Set to ON to build the fgviewer application (default)" ON)
 option(ENABLE_GPSSMOOTH  "Set to ON to build the GPSsmooth application (default)" ON)
 option(ENABLE_TERRASYNC  "Set to ON to build the terrasync application (default)" ON)
+option(ENABLE_IAX        "Set to ON to build the IAXClient library (default)" ON)
 
 option(ENABLE_FGJS       "Set to ON to build the fgjs application (default)" ON)
 option(ENABLE_JS_DEMO    "Set to ON to build the js_demo application (default)" ON)
@@ -347,8 +348,14 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
     ${SIMGEAR_INCLUDE_DIR}
     ${PLIB_INCLUDE_DIR} )
 
+include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
-
+if(ENABLE_IAX)
+    include_directories(${PROJECT_SOURCE_DIR}/utils/fgcom/iaxclient/lib)
+    if(WIN32)
+        include_directories(${PROJECT_SOURCE_DIR}/utils/fgcom/iaxclient/lib/libiax2/src)
+    endif()
+endif()
 # following is needed, because config.h is include 'bare', whereas
 # version.h is included as <Include/version.h> - this should be cleaned up
 include_directories(${PROJECT_BINARY_DIR}/src)
@@ -379,8 +386,8 @@ if (EMBEDDED_SIMGEAR)
     include_directories(${PROJECT_BINARY_DIR}/simgear)
 endif(EMBEDDED_SIMGEAR)
 
-add_subdirectory(src)
 add_subdirectory(utils)
+add_subdirectory(src)
 add_subdirectory(man)
 
 #-----------------------------------------------------------------------------
