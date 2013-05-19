@@ -503,10 +503,10 @@ main (int argc, char *argv[])
   if (mode == 1)
     {
       /* only in FG mode */
-      netInit ();
+      /*netInit ();
       netSocket fgsocket;
       fgsocket.open (false);
-      fgsocket.bind (fgserver, port);
+      fgsocket.bind (fgserver, port);*/
 
       /* mute mic, speaker on */
       iaxc_input_level_set (0);
@@ -522,7 +522,7 @@ main (int argc, char *argv[])
 	  double wait = next_update - clock.getAbsTime ();
 	  if (wait > 0.001)
 	    {
-	      netSocket *readsockets[2] = { &fgsocket, 0 };
+	      /*netSocket *readsockets[2] = { &fgsocket, 0 };
 	      if (fgsocket.select (readsockets, readsockets + 1,
 				   (int) (wait * 1000)) == 1)
 		{
@@ -545,7 +545,7 @@ main (int argc, char *argv[])
 		    cout << "packet contains \"" << buf << "\"" << std::endl;
 #endif
 		  process_packet (buf);
-		}
+		}*/
 	    }
 	  else
 	    {

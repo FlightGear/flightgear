@@ -23,7 +23,6 @@
 #define HAVE_IAX12		/* Only for newer iaxclient libraries */
 #endif
 
-#define VERSION "1.2.3"
 #define DEFAULT_USER "guest"
 #define DEFAULT_PASSWORD "guest"
 #define DEFAULT_FG_SERVER "localhost"

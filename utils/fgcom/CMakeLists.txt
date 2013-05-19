@@ -535,7 +535,7 @@ set( iaxclient_lib_HEADERS iaxclient/lib/audio_encode.h iaxclient/lib/audio_file
 # always includes ul - will seek "d" or "_d"
 #find_package(PLIB   REQUIRED net)
 ### find_package(SG     REQUIRED sgdebug sgmisc)
-#find_package(ZLIB   REQUIRED)
+find_package(ZLIB   REQUIRED)
 
 
 include_directories(
