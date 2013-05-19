@@ -1,0 +1,1030 @@
+<?xml version="1.0" ?>
+<resource version="2.3.0.1" xmlns="http://www.wxwindows.org/wxxrc">
+  <object class="wxDialog" name="Prefs">
+    <title>Preferences</title>
+    <centered>1</centered>
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>0</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>0</growablerows>
+      <object class="sizeritem">
+        <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+        <border>5</border>
+        <object class="wxNotebook" name="PrefsNotebook">
+          <usenotebooksizer>1</usenotebooksizer>
+          <size>200,160</size>
+          <object class="notebookpage">
+            <label>Audio</label>
+            <object class="wxPanel" name="AudioTab">
+              <object class="wxFlexGridSizer">
+                <cols>1</cols>
+                <object class="spacer">
+                  <size>5,5</size>
+                </object>
+                <vgap>8</vgap>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Ringback Tone:  </label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="RingBack"/>
+                      <minsize>260,24</minsize>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                    <object class="spacer">
+                      <size>4,4</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxBitmapButton" name="BrowseRingBack">
+                        <bitmap stock_id="wxART_FILE_OPEN"></bitmap>
+                      </object>
+                      <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxButton" name="PreviewRingBack">
+                        <style>wxNO_BORDER</style>
+                        <label>Preview</label>
+                      </object>
+                    </object>
+                  </object>
+                  <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Ring Tone:  </label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="RingTone"/>
+                      <minsize>260,24</minsize>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                    <object class="spacer">
+                      <size>4,4</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxBitmapButton" name="BrowseRingTone">
+                        <bitmap stock_id="wxART_FILE_OPEN"></bitmap>
+                      </object>
+                      <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxButton" name="PreviewRingTone">
+                        <label>Preview</label>
+                      </object>
+                    </object>
+                  </object>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Intercom Tone:  </label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="Intercom"/>
+                      <minsize>260,24</minsize>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                    <object class="spacer">
+                      <size>4,4</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxBitmapButton" name="BrowseIntercom">
+                        <bitmap stock_id="wxART_FILE_OPEN"></bitmap>
+                      </object>
+                      <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxButton" name="PreviewIntercom">
+                        <label>Preview</label>
+                      </object>
+                    </object>
+                  </object>
+                  <border>10</border>
+                </object>
+                <growablecols>0</growablecols>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="SaveAudio">
+                        <label>Save</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="ApplyAudio">
+                        <label>Apply</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="CancelAudio">
+                        <label>Done</label>
+                      </object>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <flag>wxALIGN_BOTTOM|wxALIGN_CENTRE_HORIZONTAL</flag>
+                </object>
+                <growablerows>4</growablerows>
+              </object>
+            </object>
+          </object>
+          <object class="notebookpage">
+            <label>CallerID</label>
+            <object class="wxPanel" name="Caller ID">
+              <object class="wxFlexGridSizer">
+                <cols>1</cols>
+                <object class="spacer">
+                  <size>5,5</size>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Name:</label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="Name"/>
+                      <minsize>260,24</minsize>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <vgap>8</vgap>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Number:</label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="Number"/>
+                      <minsize>260,24</minsize>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <growablecols>0</growablecols>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="SaveCallerID">
+                        <label>Save</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="ApplyCallerID">
+                        <label>Apply</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="CancelCallerID">
+                        <label>Done</label>
+                      </object>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <flag>wxALIGN_BOTTOM|wxALIGN_CENTRE_HORIZONTAL</flag>
+                </object>
+                <growablerows>3</growablerows>
+              </object>
+            </object>
+          </object>
+          <object class="notebookpage">
+            <label>Misc</label>
+            <object class="wxPanel" name="Misc">
+              <object class="wxFlexGridSizer">
+                <cols>1</cols>
+                <object class="spacer">
+                  <size>5,5</size>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Use This Skin:  </label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxComboBox" name="UseSkin">
+                        <content/>
+                      </object>
+                      <minsize>260,24</minsize>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <vgap>8</vgap>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Default Account:  </label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxChoice" name="DefaultAccount">
+                        <content/>
+                      </object>
+                      <minsize>260,24</minsize>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Intercom Password:  </label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="IntercomPass"/>
+                      <minsize>260,24</minsize>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Call Appearances:  </label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxSpinCtrl" name="nCalls">
+                        <min>1</min>
+                        <max>99</max>
+                        <size>50,28</size>
+                        <tooltip>The number of calls to show in main window</tooltip>
+                      </object>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label> (requires restart)</label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                  </object>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="SaveMisc">
+                        <label>Save</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="ApplyMisc">
+                        <label>Apply</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="CancelMisc">
+                        <label>Done</label>
+                      </object>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <flag>wxALIGN_BOTTOM|wxALIGN_CENTRE_HORIZONTAL</flag>
+                </object>
+                <growablecols>0</growablecols>
+                <growablerows>5</growablerows>
+              </object>
+            </object>
+          </object>
+          <object class="notebookpage">
+            <label>Filters</label>
+            <object class="wxPanel" name="Filters">
+              <object class="wxFlexGridSizer">
+                <cols>1</cols>
+                <object class="spacer">
+                  <size>5,5</size>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Automatic Gain Control:  </label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxCheckBox" name="AGC">
+                        <label> Digital Automatic Gain Detection</label>
+                      </object>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <vgap>8</vgap>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Analog AGC</label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxCheckBox" name="AAGC">
+                        <label> Analog Automatic Gain Detection</label>
+                      </object>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Noise Reduction:</label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxCheckBox" name="NoiseReduce">
+                        <label></label>
+                      </object>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Comfort Noise:</label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxCheckBox" name="CN">
+                        <label> Sends CN Frames when silence is detected</label>
+                      </object>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="spacer">
+                      <size>10,10</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Echo Cancellation:</label>
+                      </object>
+                      <minsize>130,20</minsize>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxCheckBox" name="EchoCancel">
+                        <label> Still Experimental.  May cause application crash.</label>
+                      </object>
+                      <border>10</border>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <border>10</border>
+                </object>
+                <growablecols>0</growablecols>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="SaveFilters">
+                        <label>Save</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="ApplyFilters">
+                        <label>Apply</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="CancelFilters">
+                        <label>Done</label>
+                      </object>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <flag>wxALIGN_BOTTOM|wxALIGN_CENTRE_HORIZONTAL</flag>
+                </object>
+                <growablerows>5</growablerows>
+              </object>
+            </object>
+          </object>
+          <object class="notebookpage">
+            <label>Codecs</label>
+            <object class="wxPanel" name="Codecs">
+              <object class="wxFlexGridSizer">
+                <cols>1</cols>
+                <object class="spacer">
+                  <size>5,5</size>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxFlexGridSizer">
+                    <cols>4</cols>
+                    <object class="spacer">
+                      <size>5,5</size>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticBoxSizer">
+                        <label>Preferred Codec</label>
+                        <orient>wxVERTICAL</orient>
+                        <object class="spacer">
+                          <size>5,27</size>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>iLBC</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxRadioButton" name="PreferiLBC">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>Speex</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxRadioButton" name="PreferSpeex">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>GSM</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxRadioButton" name="PreferGSM">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>a-law</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxRadioButton" name="PreferaLaw">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>u-law</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxRadioButton" name="PreferuLaw">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                      </object>
+                    </object>
+                    <hgap>4</hgap>
+                    <object class="sizeritem">
+                      <object class="wxStaticBoxSizer">
+                        <label>Allowed Codecs</label>
+                        <orient>wxVERTICAL</orient>
+                        <object class="spacer">
+                          <size>5,27</size>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>iLBC</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxCheckBox" name="AllowiLBC">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>Speex</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxCheckBox" name="AllowSpeex">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>GSM</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxCheckBox" name="AllowGSM">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>a-law</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxCheckBox" name="AllowaLaw">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>u-law</label>
+                              </object>
+                              <minsize>80,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxCheckBox" name="AllowuLaw">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticBoxSizer">
+                        <label>Speex Tuning (Advanced)</label>
+                        <orient>wxVERTICAL</orient>
+                        <object class="spacer">
+                          <size>5,5</size>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>Enable Speex Tuning</label>
+                              </object>
+                              <minsize>130,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxCheckBox" name="SPXTune">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>Enhanced Decoding</label>
+                              </object>
+                              <minsize>130,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxCheckBox" name="SPXEnhance">
+                                <label></label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>Quality</label>
+                              </object>
+                              <minsize>130,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxSpinCtrl" name="SPXQuality">
+                                <max>10</max>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                              <minsize>45,22</minsize>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>Bit Rate (kbps)</label>
+                              </object>
+                              <minsize>130,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxSpinCtrl" name="SPXBitrate">
+                                <max>32</max>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                              <minsize>45,20</minsize>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>Average Bit Rate (kbps)</label>
+                              </object>
+                              <minsize>130,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxSpinCtrl" name="SPXABR">
+                                <max>32</max>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                              <minsize>45,20</minsize>
+                            </object>
+                            <orient></orient>
+                            <object class="spacer">
+                              <size>4,4</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxCheckBox" name="SPXVBR">
+                                <label>VBR</label>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                              <minsize>40,20</minsize>
+                            </object>
+                          </object>
+                          <border>10</border>
+                        </object>
+                        <object class="sizeritem">
+                          <object class="wxBoxSizer">
+                            <object class="spacer">
+                              <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxStaticText">
+                                <label>Complexity</label>
+                              </object>
+                              <minsize>130,20</minsize>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                            </object>
+                            <object class="sizeritem">
+                              <object class="wxSpinCtrl" name="SPXComplexity">
+                                <min>0</min>
+                                <max>10</max>
+                              </object>
+                              <border>10</border>
+                              <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                              <minsize>45,20</minsize>
+                            </object>
+                            <orient></orient>
+                          </object>
+                          <border>10</border>
+                        </object>
+                      </object>
+                    </object>
+                  </object>
+                </object>
+                <vgap>8</vgap>
+                <growablecols>0</growablecols>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="SaveCodecs">
+                        <label>Save</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="ApplyCodecs">
+                        <label>Apply</label>
+                        <enabled>0</enabled>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="CancelCodecs">
+                        <label>Done</label>
+                      </object>
+                    </object>
+                    <orient></orient>
+                  </object>
+                  <flag>wxALIGN_BOTTOM|wxALIGN_CENTRE_HORIZONTAL</flag>
+                </object>
+                <growablerows>3</growablerows>
+              </object>
+            </object>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+</resource>

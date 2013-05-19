@@ -1,0 +1,280 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAIN_DLG DIALOG DISCARDABLE  0, 0, 234, 175
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "WinIAX Client"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Dial",IDC_BN_DIAL,56,103,50,14
+    EDITTEXT        IDC_E_IAX_URI,50,7,177,14,ES_AUTOHSCROLL
+    LTEXT           "IAX URI:",IDC_STATIC,17,10,29,8
+    PUSHBUTTON      "Hangup",IDC_BN_HANGUP,126,104,50,14
+    LTEXT           "Welcome to WinIAX Client",IDC_ST_STATUS,7,124,220,9
+    PUSHBUTTON      "1",IDC_BN_1,90,45,17,14
+    PUSHBUTTON      "2",IDC_BN_2,108,45,17,14
+    PUSHBUTTON      "3",IDC_BN_3,126,45,17,14
+    PUSHBUTTON      "4",IDC_BN_4,90,59,17,14
+    PUSHBUTTON      "5",IDC_BN_5,108,59,17,14
+    PUSHBUTTON      "6",IDC_BN_6,126,59,17,14
+    PUSHBUTTON      "7",IDC_BN_7,90,73,17,14
+    PUSHBUTTON      "8",IDC_BN_8,108,73,17,14
+    PUSHBUTTON      "9",IDC_BN_9,126,73,17,14
+    PUSHBUTTON      "*",IDC_BN_ASTERISK,90,87,17,14
+    PUSHBUTTON      "0",IDC_BN_0,108,87,17,14
+    PUSHBUTTON      "#",IDC_BN_HASH,126,87,17,14
+    CONTROL         "Progress1",IDC_PROG_OUTPUT,"msctls_progress32",
+                    PBS_VERTICAL | WS_BORDER,204,30,8,73
+    CONTROL         "Progress2",IDC_PROG_INPUT,"msctls_progress32",
+                    PBS_VERTICAL | WS_BORDER,219,30,8,73
+    CONTROL         "Line 1",IDC_RD_LINE_1,"Button",BS_AUTORADIOBUTTON,47,31,
+                    35,10
+    CONTROL         "Line 2",IDC_RD_LINE_2,"Button",BS_AUTORADIOBUTTON,99,31,
+                    35,10
+    CONTROL         "Line 3",IDC_RD_LINE_3,"Button",BS_AUTORADIOBUTTON,151,
+                    31,35,10
+    LTEXT           "State",IDC_ST_STATE,7,151,175,17
+END
+
+IDD_DLG_REGISTER DIALOG DISCARDABLE  0, 0, 286, 98
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Registration info"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,65,77,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,149,77,50,14
+    EDITTEXT        IDC_E_GATEWAY,59,52,210,14,ES_AUTOHSCROLL
+    LTEXT           "IAX Server",IDC_ST_GATEWAY,21,54,35,8
+    EDITTEXT        IDC_E_USER,59,10,111,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_PASS,59,31,111,14,ES_AUTOHSCROLL
+    LTEXT           "Password",IDC_ST_PASSWORD,24,37,32,8
+    LTEXT           "User",IDC_ST_USER_NAME,40,16,16,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_MAIN_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 227
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 168
+    END
+
+    IDD_DLG_REGISTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 279
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 91
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Dutch (Netherlands) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NLD)
+#ifdef _WIN32
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU1 MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Register",                   ID_FILE_REGISTER
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Sound Settings",              ID_TOOLS_SOUNDSETTINGS
+        MENUITEM "Preferences",                 ID_TOOLS_PREFERENCES
+    END
+END
+
+#endif    // Dutch (Netherlands) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DLG_SOUND DIALOG DISCARDABLE  0, 0, 249, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sound Device Configuration"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Save",IDOK,72,108,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,127,108,50,14
+    LTEXT           "Sound Playback:",IDC_STATIC,7,27,55,8
+    LTEXT           "Sound Recording:",IDC_STATIC,7,52,58,8
+    LTEXT           "Ring Tone Device:",IDC_STATIC,7,77,61,8
+    COMBOBOX        IDC_CMB_PLAYBACK,71,28,171,38,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_CMB_RECORDING,71,51,171,42,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_CMB_RINGTONE,71,74,171,38,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+END
+
+IDD_DLG_PREFERENCES DIALOG DISCARDABLE  0, 0, 261, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&Save",IDOK,74,114,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,134,114,50,14
+    CONTROL         "Enable push to talk.",IDC_CHK_PTT,"Button",
+                    BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,7,7,247,10
+    LTEXT           "Your voice will be recorded and sent over network when you have \n Ctrl key pressed. ",
+                    IDC_STATIC,7,17,264,17
+    CONTROL         "Enable Silence Filter",IDC_CHK_SILENCE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,40,80,10
+    LTEXT           "This will automatically recognize when you are silent and will send voice data \nover internet according to that.",
+                    IDC_STATIC,7,51,247,18
+    LTEXT           "",IDC_ST_BGCLR,80,83,22,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Background",IDC_BN_BG,21,83,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Text",IDC_BN_TEXT,135,83,50,14,NOT WS_VISIBLE
+    LTEXT           "",IDC_ST_TXTCLR,195,83,22,14,NOT WS_VISIBLE
+    GROUPBOX        "Window Color Settings",IDC_STATIC,7,74,247,36,NOT 
+                    WS_VISIBLE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DLG_SOUND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 242
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 122
+    END
+
+    IDD_DLG_PREFERENCES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 254
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON1               ICON    DISCARDABLE     "icon1.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 24
+//
+
+1                       24      DISCARDABLE     "default1.bin"
+#endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

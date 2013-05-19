@@ -1,0 +1,4350 @@
+2005-05-09 21:27  jm
+
+	* trunk/speex/include/speex/speex_echo.h,
+	  trunk/speex/libspeex/mdf.c: Smoothed correlation/energy
+
+2005-05-09 21:03  jm
+
+	* trunk/speex/include/speex/speex_echo.h,
+	  trunk/speex/libspeex/mdf.c: Some more regularization work for mdf
+
+2005-05-09 18:15  jm
+
+	* trunk/speex/libspeex/mdf.c: System in underdetermined, trying to
+	  work around that.
+
+2005-05-08 04:49  jm
+
+	* trunk/speex/include/speex/speex_echo.h,
+	  trunk/speex/libspeex/mdf.c: Some more AEC cleanup. Played a bit
+	  with echo energy estimation.
+
+2005-05-08 00:08  jm
+
+	* trunk/speex/include/speex/speex_echo.h,
+	  trunk/speex/include/speex/speex_preprocess.h,
+	  trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/preprocess.c:
+	  Simplified the code a lot. Put back the denoiser hooks for further
+	  cancellation (changed spectral param to float* at least for now).
+
+2005-05-07 08:07  jm
+
+	* trunk/speex/libspeex/mdf.c: trying some ideas for soft-decision
+	  DTD based on residual-to-signal ratio
+
+2005-05-04 05:38  jm
+
+	* trunk/speex/libspeex/misc.h: changed version number for those not
+	  using autoconf
+
+2005-05-02 07:05  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/src/Makefile.am,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c,
+	  trunk/speex/src/wav_io.h: support for top_builddir != top_srcdir
+
+2005-05-02 00:49  jm
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h: Added some control on the
+	  aggressiveness of the pitch predictor in the form of a
+	  SPEEX_SET_PLC_TUNING call.
+
+2005-04-29 05:33  jm
+
+	* trunk/speex/Speex.spec.in, trunk/speex/libspeex/arch.h,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c: Think I fixed the PLC slowdown due
+	  to denorm/underflow. Also don't re- synthesize on encode (i.e.
+	  don't overwrite input buffer).
+
+2005-04-25 18:21  jm
+
+	* trunk/speex/libspeex/sb_celp.c: pseudo-stack optional for wideband
+	  too
+
+2005-04-25 08:12  jm
+
+	* trunk/speex/configure.ac, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/stack_alloc.h: Autodetection of C99 variable
+	  arrays and alloca. The pseudo-stack is only used if nothing else
+	  is available.
+
+2005-04-25 07:16  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/ltp.c:
+	  convert codebook data (signed char) to spx_word16_t in a cleaner
+	  manner
+
+2005-04-25 06:16  jm
+
+	* trunk/speex/configure.ac, trunk/speex/include/speex/speex.h,
+	  trunk/speex/include/speex/speex_header.h,
+	  trunk/speex/include/speex/speex_preprocess.h,
+	  trunk/speex/include/speex/speex_stereo.h,
+	  trunk/speex/include/speex/speex_types.h.in,
+	  trunk/speex/libspeex/arch.h, trunk/speex/libspeex/fixed_debug.h,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/misc.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/speex.c, trunk/speex/libspeex/stereo.c,
+	  trunk/speex/src/wav_io.c, trunk/speex/src/wav_io.h: Now
+	  autodetects (and handles) size of integer types.
+
+2005-04-24 04:45  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/fixed_debug.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c: some cleaning up
+
+2005-04-24 03:23  jm
+
+	* trunk/speex/libspeex/filters.c: fixed-point stuff
+
+2005-04-22 08:57  jm
+
+	* trunk/speex/libspeex/filters_arm4.h: oops
+
+2005-04-22 07:39  jm
+
+	* trunk/speex/libspeex/arch.h, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/filters.c, trunk/speex/libspeex/fixed_arm4.h,
+	  trunk/speex/libspeex/fixed_arm5e.h,
+	  trunk/speex/libspeex/fixed_debug.h,
+	  trunk/speex/libspeex/fixed_generic.h, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/math_approx.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/vq.c: More work on fixed-point operators
+
+2005-04-22 06:23  jm
+
+	* trunk/speex/libspeex/arch.h, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/filters.c, trunk/speex/libspeex/fixed_arm4.h,
+	  trunk/speex/libspeex/fixed_arm5e.h,
+	  trunk/speex/libspeex/fixed_debug.h,
+	  trunk/speex/libspeex/fixed_generic.h, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c: Added some more fixed-point
+	  operators
+
+2005-04-22 04:40  jm
+
+	* trunk/speex/TODO, trunk/speex/configure.ac,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  Fixed-point improvements (moved some stuff to 16-bit arithmetic)
+
+2005-04-02 04:10  jm
+
+	* trunk/speex/libspeex/arch.h: Oops, forgot to add MAC16_16_Q13 for
+	  float too.
+
+2005-03-30 03:31  jm
+
+	* trunk/speex/include/speex/speex.h,
+	  trunk/speex/include/speex/speex_jitter.h,
+	  trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex.c: Removed another bunch of warnings
+	  (when using some of the -W options)
+
+2005-03-30 01:13  jm
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/misc.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex_header.c: fixed-point cleanup, removed
+	  some warnings
+
+2005-03-25 02:58  jm
+
+	* trunk/speex/libspeex/medfilter.c,
+	  trunk/speex/libspeex/medfilter.h: Median filter. May need that in
+	  the future.
+
+2005-03-15 05:18  jm
+
+	* trunk/speex/configure.ac, trunk/speex/include/speex/speex_bits.h,
+	  trunk/speex/include/speex/speex_header.h,
+	  trunk/speex/libspeex/arch.h, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/fixed_arm4.h,
+	  trunk/speex/libspeex/fixed_arm5e.h,
+	  trunk/speex/libspeex/fixed_debug.h,
+	  trunk/speex/libspeex/fixed_generic.h,
+	  trunk/speex/libspeex/jitter.c, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/misc.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/quant_lsp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/testenc.c: Merged a modified version of Jamey
+	  Hicks' C55 patch, fixed a long-standing fixed-point wideband
+	  overflow. Replaced some "+" and "-" with ADD() and SUB().
+
+2005-03-11 20:08  jm
+
+	* trunk/speex/libspeex/stack_alloc.h: Support for alloca (untested)
+
+2005-03-03 18:30  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search_sse.h,
+	  trunk/speex/libspeex/filters.c, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp_sse.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/stack_alloc.h, trunk/speex/libspeex/vq.c: Now
+	  possible to put temporary arrays directly on the (real) stack
+
+2005-03-03 06:08  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  First cleanup step for stack allocation
+
+2005-03-02 08:23  jm
+
+	* trunk/speex/libspeex/cb_search.c: Comment
+
+2005-03-01 23:47  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c: cleanup
+
+2005-03-01 09:22  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h:
+	  Reduced unnecessary buffers (reduced memory usage)
+
+2005-02-17 05:42  jm
+
+	* trunk/speex/libspeex/ltp.c: oops, that should fix the float
+	  version
+
+2005-02-09 09:13  jm
+
+	* trunk/speex/libspeex/filters_arm4.h: Unrolled version of
+	  filter_mem2 and iir_mem2
+
+2005-02-09 09:13  jm
+
+	* trunk/speex/libspeex/nb_celp.c: Added a shortcut for ringing
+	  computation
+
+2005-02-09 08:32  jm
+
+	* trunk/speex/libspeex/ltp_arm4.h: oops...
+
+2005-02-09 08:19  jm
+
+	* trunk/speex/libspeex/ltp_arm4.h: added a shortcut to skip every
+	  second sample in open-loop pitch
+
+2005-02-09 08:14  jm
+
+	* trunk/speex/libspeex/ltp_arm4.h: reordering asm
+
+2005-02-09 08:02  jm
+
+	* trunk/speex/libspeex/ltp_arm4.h: no "memory" clobbered in inline
+	  asm
+
+2005-02-09 07:47  jm
+
+	* trunk/speex/libspeex/vq_arm4.h: oops
+
+2005-02-09 07:34  jm
+
+	* trunk/speex/libspeex/Makefile.am: ...
+
+2005-02-09 07:31  jm
+
+	* trunk/speex/libspeex/fixed_arm4.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/vq.c: misc
+	  optimizations
+
+2005-02-09 04:10  jm
+
+	* trunk/speex/libspeex/filters.c: Cleared the last float ops from
+	  the comb filter
+
+2005-02-09 03:56  jm
+
+	* trunk/speex/libspeex/cb_search.c: Removed warning, unnecessary
+	  variables
+
+2005-02-09 03:47  jm
+
+	* trunk/speex/libspeex/ltp.c: oops... ANSI C fix
+
+2005-02-09 03:35  jm
+
+	* trunk/speex/libspeex/cb_search.c: Special case for complexity=1
+
+2005-02-09 02:56  jm
+
+	* trunk/speex/libspeex/filters.c: Fixed-point-ized a critical divide
+	  in the comb filter
+
+2005-02-08 23:54  jm
+
+	* trunk/speex/libspeex/vq_arm4.h: ARM version of VQ quantizer, but
+	  only for N=1
+
+2005-02-08 22:29  jm
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c: Make use of cb_search_arm4.h
+
+2005-02-08 22:28  jm
+
+	* trunk/speex/libspeex/nb_celp.c: A bit less agressive on ringing
+	  computation (complexity 0), but simplified memory update at end of
+	  subframe
+
+2005-02-08 21:40  jm
+
+	* trunk/speex/libspeex/fixed_arm4.h,
+	  trunk/speex/libspeex/fixed_arm5e.h: ARM arch fixes, assembly
+	  version of MULT16_32_Q15 and MULT16_32_Q14
+
+2005-02-08 18:29  jm
+
+	* trunk/speex/libspeex/nb_celp.c: removed some useless memory access
+
+2005-02-08 10:18  jm
+
+	* trunk/speex/libspeex/cb_search_arm4.h: ARM assembly version of
+	  compute_weighted_codebook()
+
+2005-02-08 06:23  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c: Some general (minor) optimizations
+
+2005-02-07 22:21  jm
+
+	* trunk/speex/libspeex/lsp.c: changed 0.0 to 0 for fixed-point
+	  version
+
+2005-02-07 22:06  jm
+
+	* trunk/speex/libspeex/cb_search.c: Brought back a version
+	  split_cb_search_shape_sign optimized for complexity 1
+
+2005-02-07 21:14  jm
+
+	* trunk/speex/libspeex/ltp.c: Removed unnecessary initialization
+
+2005-02-07 10:01  jm
+
+	* trunk/speex/libspeex/filters_arm4.h,
+	  trunk/speex/libspeex/ltp_arm4.h: added some %= signs for labels
+
+2005-02-07 09:03  jm
+
+	* trunk/speex/libspeex/fixed_arm4.h,
+	  trunk/speex/libspeex/fixed_arm5e.h,
+	  trunk/speex/libspeex/ltp_arm4.h: oops. Fixed some bad copy/paste
+
+2005-02-07 08:46  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/arch.h,
+	  trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters_arm4.h,
+	  trunk/speex/libspeex/fixed_arm4.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp_arm4.h: ARM assembly version of
+	  pitch_xcorr, moved all ARM assembly to separate files
+
+2005-02-07 04:00  jm
+
+	* trunk/speex/libspeex/ltp.c: an alternative implementation of
+	  pitch_xcorr for machines with enough registers (more than x86,
+	  that is).
+
+2005-02-07 00:35  jm
+
+	* trunk/speex/libspeex/fixed_arm5e.h: ARM assembly version of
+	  DIV32_16
+
+2005-02-05 23:23  jm
+
+	* trunk/speex/libspeex/ltp.c: ARM assembly version of inner_prod
+	  with 8x unrolling
+
+2005-02-05 08:16  jm
+
+	* trunk/speex/libspeex/bits.c: removed unnecessary
+	  (re)initialization of the bit packer bytes
+
+2005-02-05 07:43  jm
+
+	* trunk/speex/libspeex/fixed_arm.h: That was renamed to
+	  fixed_arm5e.h
+
+2005-02-05 07:42  jm
+
+	* trunk/speex/configure.ac, trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/arch.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/fixed_arm5e.h: Renamed --enable-arm-asm to
+	  --enable-arm5e-asm to reflect the fact that these instructions
+	  aren't supported everywhere. Also added --enable-arm4-asm.
+
+2005-02-05 06:37  jm
+
+	* trunk/speex/libspeex/filters.c: ARM instruction scheduling for
+	  iir_mem2
+
+2005-02-05 06:00  jm
+
+	* trunk/speex/libspeex/filters.c: More ARM stuff
+
+2005-02-05 05:38  jm
+
+	* trunk/speex/libspeex/filters.c: Better instruction scheduling for
+	  ARM
+
+2005-02-05 05:36  jm
+
+	* trunk/speex/libspeex/filters.c: An ARM assembly implementation of
+	  filters_mem2 -- work in progress
+
+2005-02-03 22:18  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c: Removed redundent filtering calls,
+	  added complexity 0 (even more shortcuts)
+
+2005-02-02 19:20  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c: Misc fixed-point fixes
+
+2005-01-06 01:52  conrad
+
+	* trunk/speex/libspeex/arch.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/symbian/config.h: applied symbian related config and
+	  casting diffs from Colin Ward
+
+2004-10-29 12:22  jm
+
+	* trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/smallft.c, trunk/speex/libspeex/smallft.h:
+	  Renamed the FFT in order to remove the symbol clash with Vorbis.
+
+2004-10-24 03:37  jm
+
+	* trunk/speex/libspeex/cb_search.c: Shouldn't warn with fixed-point
+	  anymore
+
+2004-10-10 02:38  conrad
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/src/Makefile.am,
+	  trunk/speex/src/wave_out.h: Applied build system patch from Erik
+	  de Castro Lopo; now builds on MinGW: * guard src/wave_out.h
+	  against multiple includes * add @OGG_CFLAGS@ to INCLUDES in
+	  subdirs
+
+2004-09-22 07:09  jm
+
+	* trunk/speex/libspeex/nb_celp.c: Fixed scaling problem for
+	  fixed-point
+
+2004-08-13 07:29  conrad
+
+	* trunk/speex/configure.ac, trunk/speex/include/speex/Makefile.am,
+	  trunk/speex/libspeex/Makefile.am: remove references to noglobals
+	  stuff from build
+
+2004-08-11 00:56  conrad
+
+	* trunk/speex/libspeex/modes.c: remove spurious #if 0 around
+	  speex_lib_get_mode() definition. in other news, kfish is crazy.
+
+2004-08-10 06:40  conrad
+
+	* trunk/speex/include/speex/speex.h, trunk/speex/libspeex/modes.c:
+	  added speex_get_mode() function
+
+2004-08-10 06:22  conrad
+
+	* trunk/speex/include/speex/speex.h, trunk/speex/libspeex/modes.c:
+	  add explicit consts in front of speex_mode_list[] declarations
+
+2004-07-21 07:18  conrad
+
+	* trunk/speex/include/speex/speex_noglobals.h,
+	  trunk/speex/libspeex/modes_noglobals.c: remove unneeded public
+	  constructors/destructors for _noglobals modes; replaced with
+	  cleaner speex_mode_{new,destroy}() functions.
+
+2004-07-21 06:03  conrad
+
+	* trunk/speex/include/speex/speex_noglobals.h,
+	  trunk/speex/libspeex/modes_noglobals.c: add speex_mode_new() and
+	  speex_mode_destroy() API calls to _noglobals API
+
+2004-07-16 06:32  conrad
+
+	* trunk/speex/libspeex/modes_noglobals.c: add some (void *) casts in
+	  calls to speex_free to stop random errors on random compilers ...
+	  it must be almost time for beer
+
+2004-07-16 06:20  conrad
+
+	* trunk/speex/include/speex/speex_noglobals.h,
+	  trunk/speex/libspeex/modes_noglobals.c: add some attribution lines
+	  to *_noglobals
+
+2004-07-16 06:11  conrad
+
+	* trunk/speex/libspeex/modes_noglobals.c: add const to params_free()
+	  functions
+
+2004-07-16 06:07  conrad
+
+	* trunk/speex/libspeex/modes_noglobals.c: free alloc'd params in
+	  malloc'd submodes
+
+2004-07-16 05:22  conrad
+
+	* trunk/speex/libspeex/modes_noglobals.c: add include of <string.h>
+	  to modes_noglobals.c to remove *link* error on vc++
+
+2004-07-15 07:52  jm
+
+	* trunk/speex/Makefile.am, trunk/speex/include/speex/speex_echo.h,
+	  trunk/speex/include/speex/speex_jitter.h,
+	  trunk/speex/libspeex/jitter.c, trunk/speex/libspeex/mdf.c: cleanup
+	  in EC and hitter buffer. removed some automake options
+
+2004-07-15 04:31  conrad
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/filters.c, trunk/speex/libspeex/jitter.c,
+	  trunk/speex/libspeex/lbr_48k_tables.c, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/math_approx.c, trunk/speex/libspeex/mdf.c,
+	  trunk/speex/libspeex/misc.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes_noglobals.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/quant_lsp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/smallft.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/stereo.c, trunk/speex/libspeex/testdenoise.c,
+	  trunk/speex/libspeex/testecho.c, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_uwb.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/libspeex/vbr.c,
+	  trunk/speex/libspeex/vq.c, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c, trunk/speex/src/wav_io.c,
+	  trunk/speex/src/wave_out.c: added guarded #include "config.h"
+	  throughout libspeex/ and src/
+
+2004-07-15 01:55  conrad
+
+	* trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/modes_noglobals.c,
+	  trunk/speex/libspeex/vbr.c, trunk/speex/libspeex/vbr.h: added
+	  const in front of vbr_*_thresh tables (internal change, affects
+	  libspeex memory layout only; no impact on modes.c code). Patch
+	  from Colin Ward.
+
+2004-07-15 01:38  conrad
+
+	* trunk/speex/libspeex/modes_noglobals.c: remove empty statements
+	  which codewarrior complains about. patch from Colin Ward.
+
+2004-07-14 04:34  conrad
+
+	* trunk/speex/libspeex/modes_noglobals.c: minor fixes to
+	  modes_noglobals.c
+
+2004-07-14 03:50  jm
+
+	* trunk/speex/Makefile.am, trunk/speex/configure.in,
+	  trunk/speex/include, trunk/speex/include/Makefile.am,
+	  trunk/speex/include/speex, trunk/speex/include/speex/Makefile.am,
+	  trunk/speex/include/speex/speex.h,
+	  trunk/speex/include/speex/speex_bits.h,
+	  trunk/speex/include/speex/speex_callbacks.h,
+	  trunk/speex/include/speex/speex_echo.h,
+	  trunk/speex/include/speex/speex_header.h,
+	  trunk/speex/include/speex/speex_jitter.h,
+	  trunk/speex/include/speex/speex_noglobals.h,
+	  trunk/speex/include/speex/speex_preprocess.h,
+	  trunk/speex/include/speex/speex_stereo.h,
+	  trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/jitter.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_callbacks.h,
+	  trunk/speex/libspeex/speex_echo.h,
+	  trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/speex_header.h,
+	  trunk/speex/libspeex/speex_jitter.h,
+	  trunk/speex/libspeex/speex_noglobals.h,
+	  trunk/speex/libspeex/speex_preprocess.h,
+	  trunk/speex/libspeex/speex_stereo.h,
+	  trunk/speex/libspeex/stereo.c, trunk/speex/libspeex/testdenoise.c,
+	  trunk/speex/libspeex/testecho.c, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_uwb.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/speex.m4,
+	  trunk/speex/speex.pc.in, trunk/speex/src/Makefile.am,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: Moved all
+	  the includes from /usr/include to /usr/include/speex
+
+2004-07-10 00:12  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/mdf.c,
+	  trunk/speex/libspeex/misc.h: minor stuff for 1.1.6
+
+2004-07-09 18:56  jm
+
+	* trunk/speex/libspeex/mdf.c: Echo canceller sucks less (cross-talk
+	  detection works a bit better).
+
+2004-07-09 18:56  jm
+
+	* trunk/speex/libspeex/jitter.c, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/speex_jitter.h: Removed some warnings
+
+2004-07-09 07:06  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes_noglobals.c,
+	  trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex_noglobals.h,
+	  trunk/speex/libspeex/testecho.c: Symbian support by Conrad Parker
+
+2004-07-09 05:18  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/speex.c: moved
+	  the mode list back to modes.c
+
+2004-07-09 04:31  jm
+
+	* trunk/speex/Makefile.am, trunk/speex/autogen.sh,
+	  trunk/speex/configure.in, trunk/speex/libspeex/mdf.c: Separated
+	  the version macros
+
+2004-07-09 04:28  jm
+
+	* trunk/speex/libspeex/misc.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_header.c:
+	  run-time calls for identifying the Speex version
+
+2004-07-08 05:26  jm
+
+	* trunk/speex/libspeex/preprocess.c: Removed the frame probability
+	  of speech presence and increased noise estimate by a constant
+	  factor.
+
+2004-07-08 05:25  jm
+
+	* trunk/speex/libspeex/jitter.c, trunk/speex/libspeex/misc.h: ...
+
+2004-07-08 05:24  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/modes.h:
+	  Rest of the modes.c split
+
+2004-07-08 05:23  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/speex.c: Split
+	  modes.c in two. Now modes.c only contains the mode struct
+	  definitions
+
+2004-07-03 04:37  jm
+
+	* trunk/speex/libspeex/jitter.c,
+	  trunk/speex/libspeex/speex_jitter.h: Removed all the drift_average
+	  crap and just kept the timing histogram. Simple and works good
+	  now.
+
+2004-06-20 04:52  jm
+
+	* trunk/speex/libspeex/jitter.c,
+	  trunk/speex/libspeex/speex_jitter.h: Jitter buffer is now adaptive
+	  and should resume properly when link is lost.
+
+2004-06-06 03:02  giles
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Recommit changes lost in server
+	  migration. Original commit (r6809) 2004-06-04 00:54:26 -0400 (Fri,
+	  04 Jun 2004) by jm. Think I've got gapless working properly now.
+	  Also, started implementing the speex_lib_ctl() interface and
+	  simplified speex_bits_advance (patch by Alfr?\195?\169do Moreira)
+
+2004-05-26 15:26  jm
+
+	* trunk/speex/libspeex/preprocess.c: oops... that wasn't ansi C
+
+2004-04-20 21:52  jm
+
+	* trunk/speex/Speex.kdevelop, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/jitter.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/speex_stereo.h,
+	  trunk/speex/libspeex/stereo.c, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_uwb.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/libspeex/vbr.c,
+	  trunk/speex/libspeex/vbr.h, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: speex_encode/speex_decode are back to
+	  using floats, new speex_encode_int and speex_decode_int for the
+	  short version
+
+2004-04-10 07:56  jm
+
+	* trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/testdenoise.c: At least the dereverb now has
+	  a chance of working...
+
+2004-04-02 21:16  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/vq.c: Changed
+	  some constants to single-precision
+
+2004-04-02 21:09  jm
+
+	* trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/speex_echo.h:
+	  Echo cancellor interface changed to short (instead of float)
+
+2004-04-02 21:08  jm
+
+	* trunk/speex/libspeex/preprocess.c: changed constants to single
+	  precision
+
+2004-03-31 04:17  jm
+
+	* trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/speex_preprocess.h: Fixed a minor memory
+	  leak, added de-reverberation, fixed denoiser hook for residual
+	  echo cancellation.
+
+2004-03-30 08:52  jm
+
+	* trunk/speex/libspeex/sb_celp.c: oops, encoder calls
+	  speex_encoder_ctl
+
+2004-02-18 07:20  jm
+
+	* trunk/speex/.cvsignore, trunk/speex/ChangeLog,
+	  trunk/speex/doc/.cvsignore, trunk/speex/libspeex/.cvsignore,
+	  trunk/speex/src/.cvsignore: .cvsignore files
+
+2004-02-12 08:41  jm
+
+	* trunk/speex/libspeex/sb_celp.c: Valgrind support for sb_celp.c too
+
+2004-02-12 08:30  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/stack_alloc.h: added extra valgrind checks
+	  for the Speex stack
+
+2004-02-06 14:20  oddsock
+
+	* trunk/speex/libspeex/quant_lsp.c: M_PI not defined on win32 (and
+	  possibly other platforms)
+
+2004-01-21 19:50  jm
+
+	* trunk/speex/libspeex/speex_echo.h,
+	  trunk/speex/libspeex/speex_jitter.h,
+	  trunk/speex/libspeex/speex_preprocess.h,
+	  trunk/speex/libspeex/speex_stereo.h: include gards and c++
+	  compatibility (extern "C")
+
+2004-01-19 09:10  jm
+
+	* trunk/speex/libspeex/ltp_sse.h: Now works on multiples of 8
+	  (instead of 40), so it's a bit more general
+
+2004-01-19 08:58  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/ltp.c: Fixed
+	  FIXED_POINT bug caused during SSE-ification.
+
+2004-01-19 08:09  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search_sse.h, trunk/speex/libspeex/vq.c,
+	  trunk/speex/libspeex/vq.h: VQ search has been SSE-ized. Not really
+	  clean yet, though.
+
+2004-01-18 23:37  jm
+
+	* trunk/speex/libspeex/lsp.c: Saves some useless "cos" calculations
+
+2004-01-18 08:20  jm
+
+	* trunk/speex/libspeex/Makefile.am: The CVS tag was annoying
+
+2004-01-18 08:13  jm
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search_sse.h: SSE speedup for the codebook
+	  response part of split_cb_search_shape_sign
+
+2004-01-18 06:47  jm
+
+	* trunk/speex/libspeex/ltp_sse.h: converted the inner product
+	  function to SSE intrinsics too
+
+2004-01-17 20:52  jm
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp_sse.h: faster
+	  SSE implementation (reduced unaligned loads)
+
+2004-01-17 16:06  jm
+
+	* trunk/speex/libspeex/lsp.c: replaced cos by an approximation for
+	  the float version
+
+2004-01-16 08:07  jm
+
+	* trunk/speex/libspeex/filters_sse.h: A couple 'const's to make that
+	  compile cleanly
+
+2004-01-16 07:50  jm
+
+	* trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters_sse.h: New SSE implementation based
+	  on intrinsics instead of assembly
+
+2003-12-24 06:14  jm
+
+	* trunk/speex/libspeex/fixed_arm.h: removed unnecessary 'volatile'
+	  keyword
+
+2003-12-23 08:20  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h:
+	  fixed-point: converted comb_gain
+
+2003-12-23 08:11  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c: fixed-point: some perceptual
+	  enhancement coef converted.
+
+2003-12-05 14:59  jm
+
+	* trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/sb_celp.c:
+	  more const stuff, fixed a stupid bug in sb_decoder_ctl
+
+2003-12-04 21:29  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h,
+	  trunk/speex/libspeex/exc_10_16_table.c,
+	  trunk/speex/libspeex/exc_10_32_table.c,
+	  trunk/speex/libspeex/exc_20_32_table.c,
+	  trunk/speex/libspeex/exc_5_256_table.c,
+	  trunk/speex/libspeex/exc_5_64_table.c,
+	  trunk/speex/libspeex/exc_8_128_table.c,
+	  trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/fixed_debug.h,
+	  trunk/speex/libspeex/gain_table.c,
+	  trunk/speex/libspeex/gain_table_lbr.c,
+	  trunk/speex/libspeex/hexc_10_32_table.c,
+	  trunk/speex/libspeex/hexc_table.c,
+	  trunk/speex/libspeex/high_lsp_tables.c,
+	  trunk/speex/libspeex/lbr_48k_tables.c,
+	  trunk/speex/libspeex/lsp_tables_nb.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/speex_header.h,
+	  trunk/speex/libspeex/stereo.c, trunk/speex/libspeex/vq.c,
+	  trunk/speex/libspeex/vq.h, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Added const's all over the place
+
+2003-12-01 01:00  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h:
+	  fixed-point: comb filter, part 4.12
+
+2003-11-30 22:22  jm
+
+	* trunk/speex/libspeex/filters.c: fixed-point: comb filter, part III
+
+2003-11-30 20:23  jm
+
+	* trunk/speex/libspeex/filters.c: fixed-point: comb filter, part II
+
+2003-11-30 19:38  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h:
+	  fixed-point: started work on comb filter
+
+2003-11-30 17:56  jm
+
+	* trunk/speex/libspeex/filters.c: fixed-point: oops, fixed another
+	  overflow for 4 kbps mode.
+
+2003-11-30 16:43  jm
+
+	* trunk/speex/libspeex/ltp.c: oops. Got pitch_unquant_3tap to
+	  compile again with floating point.
+
+2003-11-30 16:35  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/quant_lsp.c: ...
+
+2003-11-30 07:11  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/sb_celp.c:
+	  fixed-point: Think I got rid of all overflows I could find
+
+2003-11-30 05:46  jm
+
+	* trunk/speex/libspeex/arch.h, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/filters.c, trunk/speex/libspeex/fixed_arm.h,
+	  trunk/speex/libspeex/fixed_debug.h,
+	  trunk/speex/libspeex/fixed_generic.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/nb_celp.c: fixed-point: Fixed several
+	  overflows. Added an explicit saturation function
+
+2003-11-29 19:25  jm
+
+	* trunk/speex/libspeex/fixed_debug.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c: fixed-point: fixed another overflow
+	  problem
+
+2003-11-29 08:12  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/fixed_debug.h,
+	  trunk/speex/libspeex/nb_celp.c: fixed-point: fixed some overflows
+
+2003-11-29 07:38  jm
+
+	* trunk/speex/libspeex/fixed_debug.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_uwb.c,
+	  trunk/speex/libspeex/testenc_wb.c: debug code for fixed-point
+	  operators. Already fixed an overflow in lsp code
+
+2003-11-29 07:03  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/arch.h,
+	  trunk/speex/libspeex/fixed_arm.h,
+	  trunk/speex/libspeex/fixed_debug.h,
+	  trunk/speex/libspeex/fixed_generic.h, trunk/speex/libspeex/misc.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_uwb.c,
+	  trunk/speex/libspeex/testenc_wb.c: separated fixed-point operators
+	  in: generic, ARM, debug
+
+2003-11-29 05:17  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h:
+	  fixed-point: pitch gain again
+
+2003-11-29 02:45  jm
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c:
+	  fixed-point: pitch gain stuff
+
+2003-11-28 05:39  jm
+
+	* trunk/speex/libspeex/arch.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c: fixed-point: some work on pitch
+	  gain, fixed a packet-loss bug
+
+2003-11-27 08:42  jm
+
+	* trunk/speex/libspeex/arch.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/lsp.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h: fixed-point: bw_lpc and lpc_to_lsp
+	  are now done.
+
+2003-11-27 05:00  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/lsp.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  fixed-point: lsp_enforce_margin argument no longer a float
+
+2003-11-25 16:40  jm
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/testenc.c: ...
+
+2003-11-25 06:58  jm
+
+	* trunk/speex/libspeex/arch.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/testenc.c: fixed-point: done quantizing
+	  open-loop pitch
+
+2003-11-21 06:59  jm
+
+	* trunk/speex/libspeex/quant_lsp.c, trunk/speex/libspeex/sb_celp.c:
+	  fixed-point: wideband work (LSP and excitation gain decoding)
+
+2003-11-21 03:06  jm
+
+	* trunk/speex/libspeex/arch.h,
+	  trunk/speex/libspeex/lbr_48k_tables.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/math_approx.c,
+	  trunk/speex/libspeex/sb_celp.c: fixed-point: converted pitch gain
+	  computation in open-loop search
+
+2003-11-14 19:16  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  fixed-point: integerized pi_gain's
+
+2003-11-14 18:46  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  fixed-point: sb_celp gain quantization, fixed missing entry in
+	  nb_celp gain
+
+2003-11-14 18:28  jm
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/testenc_wb.c:
+	  fixed-point: before I screw everything up...
+
+2003-11-14 18:04  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/sb_celp.c:
+	  fixed-point: fixed float regression
+
+2003-11-14 17:48  jm
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h: cleanup
+
+2003-11-13 20:39  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/src/speexdec.c: spelling, cleanup
+
+2003-11-13 08:47  jm
+
+	* trunk/speex/libspeex/sb_celp.c: ...
+
+2003-11-13 08:45  jm
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/testenc_wb.c:
+	  fixed-point: converting wideband excitation gain to int (halfway
+	  done)
+
+2003-11-12 17:16  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/arch.h,
+	  trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/sb_celp.c: put
+	  all fixed-point macros in a separate file (arch.h), some cleanup
+	  with wideband excitation gain
+
+2003-11-12 07:30  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/vq.c, trunk/speex/libspeex/vq.h: fixed-point:
+	  excitation gain completely converted to fixed-point
+
+2003-11-12 06:00  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/vq.c,
+	  trunk/speex/libspeex/vq.h: fixed-point: converting excitation gain
+	  quantization (halfway done)
+
+2003-11-12 05:09  jm
+
+	* trunk/speex/libspeex/misc.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/testenc_uwb.c: think I've fixed the
+	  performance problem caused by underflows.
+
+2003-11-11 15:51  jm
+
+	* trunk/speex/libspeex/filters.c: oops... fixed an #ifdef that
+	  wasn't including compute_rms when compiling with SSE support.
+
+2003-11-11 07:33  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c: fixed-point: increased precision
+	  of the cos approximation, fixed some floating-point/fixed-point
+	  mismatch
+
+2003-11-11 04:33  jm
+
+	* trunk/speex/libspeex/sb_celp.c: fixed-point: some wideband work
+
+2003-11-11 00:19  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/vq.c: fixed-point: Defined fused multiply-add
+	  operators and some ARM assembly to use it.
+
+2003-11-10 19:38  jm
+
+	* trunk/speex/libspeex/filters.c: oops...
+
+2003-11-10 19:28  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/nb_celp.c:
+	  fixed-point: integerized pi_gain, pitch prediction error
+	  accumulation in 64 bits (should make that 32 if possible).
+
+2003-11-10 17:17  jm
+
+	* trunk/speex/libspeex/filters.c: fixed-point: integerized bandwidth
+	  expansion
+
+2003-11-10 08:57  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/nb_celp.c:
+	  fixed-point: converted lsp_enforce_margin, some assembly ARM
+	  optimizations
+
+2003-11-10 06:56  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/lsp.h,
+	  trunk/speex/libspeex/nb_celp.c: fixed-point: integerized lsp
+	  interpolation
+
+2003-11-10 06:27  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/nb_celp.c:
+	  fixed-point: scaling functions are a bit less ugly, fine exc gain
+	  quantization now done in the linear domain and it didn't change
+	  anything
+
+2003-11-09 06:20  jm
+
+	* trunk/speex/libspeex/ltp.c: removed sqrt's that ended up not being
+	  used in some cases in the open-loop pitch function
+
+2003-11-08 06:52  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/testenc.c: fixed-point: removed some float
+	  ops in lpc_to_lsp and wrote signal scaling functions (which need
+	  to be improved).
+
+2003-11-07 08:34  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/math_approx.c,
+	  trunk/speex/libspeex/math_approx.h,
+	  trunk/speex/libspeex/nb_celp.c: fixed-point: acos function
+	  approximated with fixed-point arithmetic
+
+2003-11-06 21:35  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/testenc_uwb.c: fixed-point: some ARM work
+
+2003-11-06 09:14  jm
+
+	* trunk/speex/libspeex/math_approx.c: ...
+
+2003-11-06 08:41  jm
+
+	* trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/math_approx.c,
+	  trunk/speex/libspeex/math_approx.h: fixed-point: interger version
+	  of sqrt function
+
+2003-11-03 08:59  jm
+
+	* trunk/speex/libspeex/quant_lsp.c: fixed-point: integerized lsp
+	  weight computation
+
+2003-11-02 07:44  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/misc.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/testenc.c:
+	  fixed-point: added code to count MIPS
+
+2003-11-02 06:59  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/vq.c: fixed-point: cleanup
+
+2003-11-02 06:38  jm
+
+	* trunk/speex/libspeex/lsp.c: fixed-point: removed some float ops in
+	  the LSP root search.
+
+2003-11-02 05:55  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/misc.h: ...
+
+2003-11-02 05:08  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/quant_lsp.c:
+	  fixed-point: cleaned up operators, removed a couple float ops,
+	  fixed a MULT16_16 that had a 32-bit operand in ltp.c
+
+2003-11-01 17:42  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/quant_lsp.c:
+	  fixed-point: cos approximation for lsp_to_lpc, removed some float
+	  ops in LSP quantization (more to do).
+
+2003-10-28 01:02  jm
+
+	* trunk/speex/libspeex/ltp.c: fixed-point: oops...
+
+2003-10-28 00:57  jm
+
+	* trunk/speex/libspeex/ltp.c: fixed-point: pitch decoder (mostly)
+	  converted
+
+2003-10-27 23:05  jm
+
+	* trunk/speex/libspeex/misc.h: fixed-point: don't cast MUL* operands
+	  to int. Compiler should generate better code now.
+
+2003-10-27 22:53  jm
+
+	* trunk/speex/libspeex/ltp.c: fixed-point: excitation and error
+	  computation for closed-loop search mostly converted
+
+2003-10-27 21:43  jm
+
+	* trunk/speex/libspeex/ltp.c: fixed-point: integerized open-loop
+	  pitch score computation
+
+2003-10-24 15:01  jm
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/misc.h:
+	  fixed-point: open-loop score calculation converted
+
+2003-10-24 06:00  jm
+
+	* trunk/speex/libspeex/ltp.c: ...
+
+2003-10-09 21:33  jm
+
+	* trunk/speex/libspeex/sb_celp.c: output saturation for wideband
+
+2003-10-09 20:53  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/testenc.c:
+	  output saturation for narrowband (need to do the same for
+	  wideband)
+
+2003-10-09 06:51  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/quant_lsp.c:
+	  fixed-point: LSP quantization cleanup
+
+2003-10-09 03:54  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/lsp.h,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h: fixed-point: LSPs are now stored
+	  quantized
+
+2003-10-08 22:31  jm
+
+	* trunk/speex/AUTHORS, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/lsp.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  fixed-point: QMF entirely in fixed-point now
+
+2003-10-08 05:12  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/smallft.c:
+	  fixed-point: converted QMF functions
+
+2003-10-08 05:11  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/quant_lsp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/smallft.c: fixed-point: rounding for shifts
+
+2003-10-08 05:09  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/lpc.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/smallft.c: fixed-point: merged floating-point
+	  and fixed-point functions (LPC and open-loop pitch), converted the
+	  gain search of the closed-loop pitch
+
+2003-10-08 05:06  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/quant_lsp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/smallft.c: fixed-point: LSP quantization
+	  work, also LSP's are now in the angle domain
+
+2003-10-08 05:03  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/jitter.c,
+	  trunk/speex/libspeex/misc.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/preprocess.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/smallft.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_jitter.h,
+	  trunk/speex/libspeex/speex_preprocess.h,
+	  trunk/speex/libspeex/speex_stereo.h,
+	  trunk/speex/libspeex/stereo.c, trunk/speex/libspeex/testdenoise.c,
+	  trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_uwb.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/libspeex/vbr.c,
+	  trunk/speex/libspeex/vbr.h, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: fixed-point: converted user-visible
+	  functions to use "short" signals, fixed (fixed-point) bug in
+	  comb-filter.
+
+2003-10-08 05:01  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/smallft.c: fixed-point: replace divisions by
+	  shifts...
+
+2003-10-08 04:57  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/smallft.c: fixed-point: normalization
+	  function, some work on pitch closed-loop search
+
+2003-10-08 04:56  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/smallft.c:
+	  fixed-point: pitch stuff
+
+2003-10-08 04:53  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/smallft.c: fixed-point: conversion of the
+	  open-loop pitch analysis
+
+2003-10-08 04:52  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/smallft.c:
+	  fixed-point: computation of rms values in fp
+
+2003-10-08 04:50  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/smallft.c:
+	  fixed-point: removed some float's in innovation search
+
+2003-10-08 04:49  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/smallft.c:
+	  fixed-point: some innovation search details
+
+2003-10-08 04:47  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/smallft.c,
+	  trunk/speex/libspeex/vq.c, trunk/speex/libspeex/vq.h: fixed-point:
+	  most of the innovation search converted
+
+2003-10-08 04:45  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/smallft.c, trunk/speex/libspeex/vq.c,
+	  trunk/speex/libspeex/vq.h: fixed-point: some work on innovation
+	  quantization
+
+2003-10-08 04:44  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/smallft.c: fixed-point: saturation for
+	  lsp_to_lpc, probably not the best solution
+
+2003-10-08 04:42  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/smallft.c:
+	  fixed-point: more conversion to spx_sig_t
+
+2003-10-08 04:40  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/misc.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/vq.c, trunk/speex/libspeex/vq.h: fixed-point:
+	  converted all signals to spx_sig_t
+
+2003-10-08 04:38  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lpc.h, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/testenc.c: fixed-point: more signal scaling
+	  again, some auto-correlation work
+
+2003-10-08 04:37  jm
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/testenc.c:
+	  fixed-point: signal scaling... again
+
+2003-10-08 04:36  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/nb_celp.c: more signal scaling
+
+2003-10-08 04:35  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/nb_celp.c:
+	  fixed-point: signals scaling
+
+2003-10-08 04:35  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/preprocess.c, trunk/speex/libspeex/stereo.c,
+	  trunk/speex/src/speexdec.c: fixed-point: removed pre-emphasis,
+	  more cleanup
+
+2003-10-08 04:33  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/sb_celp.c: fixed-point: more LPC/LSP cleanup
+
+2003-10-08 04:32  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/testenc_wb.c: fixed-point: LPC/LSP cleanup
+
+2003-10-08 04:31  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/nb_celp.c: fixed-point: LPC and LSP types
+	  changed to word16
+
+2003-10-08 04:30  jm
+
+	* trunk/speex/libspeex/lpc.c, trunk/speex/libspeex/lpc.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  fixed-point: more lpc stuff
+
+2003-10-08 04:29  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c:
+	  fixed-point: lpc stuff
+
+2003-10-08 04:29  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/misc.h:
+	  fixed-point work on LSP's
+
+2003-10-08 04:27  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lpc.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/lsp.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/src/speexdec.c: first
+	  step in fixed-point port, converted the LPC filters
+
+2003-10-01 22:17  jm
+
+	* trunk/speex/libspeex/lpc.c: improved LPC analysis (mostly for very
+	  tonal signals)
+
+2003-09-30 00:44  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/preprocess.c, trunk/speex/src/speexdec.c:
+	  denoiser tuning, Solaris support, small optimization in codebook
+	  computations.
+
+2003-09-18 03:58  jm
+
+	* trunk/speex/libspeex/jitter.c, trunk/speex/libspeex/mdf.c,
+	  trunk/speex/libspeex/preprocess.c, trunk/speex/libspeex/smallft.c:
+	  cleaning up for 1.1
+
+2003-09-18 03:46  jm
+
+	* trunk/speex/libspeex/testenc.c: oops...
+
+2003-09-18 03:34  jm
+
+	* trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/speex_preprocess.h,
+	  trunk/speex/libspeex/testdenoise.c: Added probability of speech
+	  presence to denoiser.
+
+2003-09-18 01:08  jm
+
+	* trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/speex_preprocess.h: cleanup
+
+2003-09-17 21:31  jm
+
+	* trunk/speex/libspeex/preprocess.c: made a table-lookup version
+	  instead of approximating using pow's
+
+2003-09-17 17:30  jm
+
+	* trunk/speex/libspeex/preprocess.c: some AGC tuning
+
+2003-09-17 04:12  jm
+
+	* trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/speex_preprocess.h: based the AGC adaptation
+	  decision on the MCRA stuff.
+
+2003-09-17 00:15  jm
+
+	* trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/speex_preprocess.h: added function to update
+	  the estimates without applying denoising
+
+2003-09-16 23:44  jm
+
+	* trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/speex_preprocess.h,
+	  trunk/speex/libspeex/testdenoise.c: cleaned up stuff that was no
+	  longer necessary.
+
+2003-09-16 20:41  jm
+
+	* trunk/speex/libspeex/speex_preprocess.h: implemented MCRA noise
+	  adaptation
+
+2003-09-16 20:39  jm
+
+	* trunk/speex/libspeex/preprocess.c: added MCRA noise estimation,
+	  fixed stupid bug in a priori SNR adaptation
+
+2003-09-16 19:36  jm
+
+	* trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/speex_preprocess.h,
+	  trunk/speex/libspeex/testdenoise.c: added sampling rate option to
+	  preprocessor
+
+2003-09-16 18:35  jm
+
+	* trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/smallft.c, trunk/speex/libspeex/smallft.h,
+	  trunk/speex/libspeex/speex_echo.h,
+	  trunk/speex/libspeex/speex_preprocess.h: smallft.h doesn't need to
+	  be included from the .h files anymore
+
+2003-09-16 17:50  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/denoise.c,
+	  trunk/speex/libspeex/preprocess.c,
+	  trunk/speex/libspeex/speex_denoise.h,
+	  trunk/speex/libspeex/speex_preprocess.h,
+	  trunk/speex/libspeex/testdenoise.c: Renamed the 'denoiser' to
+	  'preprocessor', added options to enable/disable the denoiser, the
+	  agc and the vad.
+
+2003-09-16 01:51  jm
+
+	* trunk/speex/libspeex/denoise.c: prevented the AGC from causing
+	  clipping
+
+2003-09-02 06:26  jm
+
+	* trunk/speex/libspeex/testenc.c: segmental SNR estimate works
+
+2003-08-26 05:42  jm
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/speex_bits.h:
+	  fixed an "off by one". Moved definition of MAX_BYTES_PER_FRAME to
+	  the .c file.
+
+2003-08-24 04:28  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  Allow setting the decode submode in case it's not embedded in the
+	  stream (which you shouldn't think about unless you know what
+	  you're doing and want to be incompatible with everyone else)
+
+2003-08-23 03:10  jm
+
+	* trunk/speex/libspeex/bits.c: oops...
+
+2003-08-22 22:01  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  added a call telling the codec not to encode the submode in the
+	  frame.
+
+2003-08-22 21:44  jm
+
+	* trunk/speex/libspeex/bits.c: speex_bits_write now properly inserts
+	  a terminator before copying the data
+
+2003-08-22 21:30  jm
+
+	* trunk/speex/libspeex/denoise.c: cleanup: separated VAD and AGC
+	  from the denoising (put them in different functions) and added
+	  some comments
+
+2003-08-22 20:17  jm
+
+	* trunk/speex/libspeex/mdf.c: Added some comments
+
+2003-08-22 05:10  jm
+
+	* trunk/speex/libspeex/denoise.c, trunk/speex/libspeex/mdf.c,
+	  trunk/speex/libspeex/speex_denoise.h,
+	  trunk/speex/libspeex/testdenoise.c: Coupling between the echo
+	  canceller and the denoiser so that residual echo can be removed.
+
+2003-08-21 23:25  jm
+
+	* trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/speex_echo.h:
+	  first shot at dealing with cross-talk
+
+2003-08-21 22:39  jm
+
+	* trunk/speex/libspeex/mdf.c: Well, it seems like implementing the
+	  algorithm correctly helps getting good results.
+
+2003-08-21 04:25  jm
+
+	* trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/speex_echo.h: did
+	  some cleanup. Still some work to do with adaptation rate
+	  adjustment and cross-talk detection.
+
+2003-08-19 06:07  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/denoise.c,
+	  trunk/speex/libspeex/speex.h: minor stuff
+
+2003-08-19 05:47  jm
+
+	* trunk/speex/libspeex/mdf.c: implemented destructor
+
+2003-08-19 03:59  jm
+
+	* trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/speex_echo.h:
+	  added normalization. Should be roughly equivalent to NLMS.
+
+2003-08-18 21:52  jm
+
+	* trunk/speex/libspeex/mdf.c, trunk/speex/libspeex/speex_echo.h:
+	  Initial checkin of MDF-based echo canceller (still incomplete)
+
+2003-08-12 17:17  jm
+
+	* trunk/speex/libspeex/denoise.c: some tuning...
+
+2003-08-12 05:21  jm
+
+	* trunk/speex/libspeex/denoise.c: Fixed a couple bugs, changed the
+	  estimator to log-amplitude (second Ephraim-Malah paper).
+
+2003-08-10 06:35  jm
+
+	* trunk/speex/libspeex/sb_celp.c: oops.
+
+2003-08-04 17:28  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/jitter.c:
+	  removed debug stuff
+
+2003-08-04 17:17  jm
+
+	* trunk/speex/libspeex/jitter.c,
+	  trunk/speex/libspeex/speex_jitter.h: Adaptive (though not yet)
+	  jitter buffer.
+
+2003-06-13 03:59  jm
+
+	* trunk/speex/libspeex/hexc_table.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/stack_alloc.h: minor stuff...
+
+2003-06-03 21:21  jm
+
+	* trunk/speex/libspeex/hexc_10_32_table.c,
+	  trunk/speex/libspeex/hexc_table.c: codebook update for lsp bug
+
+2003-06-03 05:29  jm
+
+	* trunk/speex/libspeex/modes.c: oops. Fixed a bug in frame size mode
+	  query
+
+2003-05-30 21:36  jm
+
+	* trunk/speex/libspeex/sb_celp.c: new high-band lsp margins
+
+2003-05-30 19:44  jm
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/speex_bits.h, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: implemented new
+	  speex_bits_insert_terminator call so that the number of frames in
+	  a packet can be automatically determined.
+
+2003-05-25 04:13  jm
+
+	* trunk/speex/libspeex/denoise.c: made the VAD a bit more sensitive
+
+2003-05-25 03:01  jm
+
+	* trunk/speex/libspeex/denoise.c: VAD seems to work better, though
+	  the code is now a complete mess :(
+
+2003-05-22 21:57  jm
+
+	* trunk/speex/libspeex/denoise.c: fixed some variance estimation
+	  problems. still some work to do.
+
+2003-05-22 16:25  jm
+
+	* trunk/speex/libspeex/denoise.c,
+	  trunk/speex/libspeex/speex_denoise.h: experimental sub-bands VAD
+
+2003-05-21 22:16  jm
+
+	* trunk/speex/libspeex/denoise.c: oops...
+
+2003-05-21 22:05  jm
+
+	* trunk/speex/libspeex/denoise.c: made the VAD less sensitive
+
+2003-05-21 21:20  jm
+
+	* trunk/speex/libspeex/denoise.c,
+	  trunk/speex/libspeex/speex_denoise.h,
+	  trunk/speex/libspeex/testdenoise.c: improved the VAD with a simple
+	  Markov chain.
+
+2003-05-21 19:53  jm
+
+	* trunk/speex/libspeex/denoise.c,
+	  trunk/speex/libspeex/speex_denoise.h,
+	  trunk/speex/libspeex/testdenoise.c: added the "speex" prefix to
+	  the denoising stuff
+
+2003-05-21 18:24  jm
+
+	* trunk/speex/libspeex/denoise.c: returning VAD results in the
+	  denoiser
+
+2003-05-21 06:03  jm
+
+	* trunk/speex/libspeex/denoise.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/win32/libspeex/libspeex.dsp: minor compilation fixes
+
+2003-05-20 02:46  jm
+
+	* trunk/speex/libspeex/denoise.c,
+	  trunk/speex/libspeex/testdenoise.c: denoiser now behaves correctly
+	  with 240-sample frames
+
+2003-05-17 05:46  jm
+
+	* trunk/speex/libspeex/lpc.c: oops. Shouldn't have removed that in
+	  the previous update
+
+2003-05-16 20:41  jm
+
+	* trunk/speex/libspeex/lpc.c, trunk/speex/libspeex/lpc.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  Minor cleanup (who needs reflection coefficients anyway) in LPC
+	  code.
+
+2003-05-14 04:37  jm
+
+	* trunk/speex/libspeex/denoise.c,
+	  trunk/speex/libspeex/speex_denoise.h: Basic adaptive gain control
+	  working
+
+2003-05-13 20:57  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/denoise.c,
+	  trunk/speex/libspeex/lbr_48k_tables.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/speex.h:
+	  Merged an experimental (and non-standard) 4.8 kbps mode. Note that
+	  this mode is completely independent from the other modes and
+	  cannot be used in multi-rate operation.
+
+2003-05-12 01:23  jm
+
+	* trunk/speex/libspeex/denoise.c, trunk/speex/libspeex/smallft.h,
+	  trunk/speex/libspeex/speex_denoise.h: made the code OK for
+	  inclusion with C++ files. Merge some early AGC work.
+
+2003-05-12 01:02  jm
+
+	* trunk/speex/libspeex/denoise.c, trunk/speex/libspeex/denoise.h,
+	  trunk/speex/libspeex/speex_denoise.h,
+	  trunk/speex/libspeex/testdenoise.c: renamed denoise.h to
+	  speex_denoise.h, removed some C++-style stuff
+
+2003-05-09 05:28  jm
+
+	* trunk/speex/libspeex/nb_celp.c: oops... another stupid bug
+
+2003-05-08 04:27  jm
+
+	* trunk/speex/libspeex/sb_celp.c: fixed bug (found by segher) where
+	  lsp_enforce_margin would be called on x-domain (instead of angle
+	  domain) LSP's.
+
+2003-05-08 04:04  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/smallft.c,
+	  trunk/speex/libspeex/smallft.h,
+	  trunk/speex/libspeex/testdenoise.c: the rest of the files for the
+	  Ephraim-Malah denoiser
+
+2003-05-08 03:58  jm
+
+	* trunk/speex/libspeex/denoise.c, trunk/speex/libspeex/denoise.h:
+	  modif to only adapt noise when 3 consecutive noise frames are
+	  detected.
+
+2003-05-08 03:56  jm
+
+	* trunk/speex/libspeex/denoise.c, trunk/speex/libspeex/denoise.h:
+	  First version of denoiser (Epic contract) using Ephraim-Malah
+	  algorithm
+
+2003-05-06 01:19  jm
+
+	* trunk/speex/libspeex/ltp.c: oops...
+
+2003-05-05 23:34  jm
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/src/speexenc.c: merged
+	  some fixes in the main branch
+
+2003-05-02 02:08  jm
+
+	* trunk/speex/libspeex/filters_sse.h,
+	  trunk/speex/libspeex/ltp_sse.h: removed multi-line strings
+
+2003-03-22 19:19  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/doc/manual.pdf, trunk/speex/libspeex/misc.h,
+	  trunk/speex/src/speexdec.1, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.1, trunk/speex/src/speexenc.c: cosmetic
+	  fixes
+
+2003-03-19 01:07  jm
+
+	* trunk/speex/libspeex/filters_sse.h: gets rid of some warnings
+
+2003-03-18 06:13  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/Makefile.am,
+	  trunk/speex/doc/manual.lyx, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/sb_celp.c: minor tweaks, removed some
+	  warnings
+
+2003-03-17 22:40  jm
+
+	* trunk/speex/Speex.spec.in, trunk/speex/configure.in,
+	  trunk/speex/doc/manual.lyx, trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/math_approx.c: manual update. Made libtool
+	  use -version-info. removed math_approx tables when not needed.
+
+2003-03-10 17:16  jm
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/math_approx.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/speex_callbacks.h: Removed some gcc warnings
+
+2003-03-05 17:47  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/misc.h, trunk/speex/src/speexdec.1,
+	  trunk/speex/src/speexenc.1: version number bump
+
+2003-03-05 17:46  jm
+
+	* trunk/speex/libspeex/math_approx.c: oops...
+
+2003-03-03 06:52  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/speex_callbacks.h,
+	  trunk/speex/libspeex/speex_stereo.h, trunk/speex/src/speexenc.c:
+	  build fix for FreeBSD (gnugetopt), allow VBR without DTX
+
+2003-03-03 03:36  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/modes.c: some tuning
+
+2003-02-05 06:03  jm
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/misc.h,
+	  trunk/speex/src/speexenc.c: version change
+
+2003-02-05 06:01  jm
+
+	* trunk/speex/libspeex/exc_10_16_table.c,
+	  trunk/speex/libspeex/exc_10_32_table.c,
+	  trunk/speex/libspeex/exc_20_32_table.c,
+	  trunk/speex/libspeex/exc_8_128_table.c: Added an entry with real
+	  zeros to remove some artifacts in some transients when the energy
+	  is quickly rising in the middle of a frame.
+
+2003-01-31 01:42  jm
+
+	* trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/exc_10_16_table.c,
+	  trunk/speex/libspeex/exc_10_32_table.c,
+	  trunk/speex/libspeex/exc_20_32_table.c,
+	  trunk/speex/libspeex/exc_5_256_table.c,
+	  trunk/speex/libspeex/exc_5_64_table.c,
+	  trunk/speex/libspeex/exc_8_128_table.c,
+	  trunk/speex/libspeex/gain_table.c,
+	  trunk/speex/libspeex/gain_table_lbr.c,
+	  trunk/speex/libspeex/hexc_10_32_table.c,
+	  trunk/speex/libspeex/hexc_table.c,
+	  trunk/speex/libspeex/high_lsp_tables.c,
+	  trunk/speex/libspeex/lsp_tables_nb.c, trunk/speex/libspeex/misc.h:
+	  Some cleaning up that might help with MS compilers.
+
+2003-01-28 08:48  jm
+
+	* trunk/speex/libspeex/filters_sse.h, trunk/speex/src/speexenc.c:
+	  some rc2 fixes
+
+2003-01-28 08:15  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/gain_table.c,
+	  trunk/speex/libspeex/gain_table_lbr.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/src/speexdec.1,
+	  trunk/speex/src/speexenc.1: Preparing for rc2
+
+2003-01-28 06:52  jm
+
+	* trunk/speex/libspeex/gain_table.c,
+	  trunk/speex/libspeex/gain_table_lbr.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.c: Gain
+	  codebook also converted to signed char.
+
+2003-01-28 05:22  jm
+
+	* trunk/speex/libspeex/quant_lsp.c: oops...
+
+2003-01-28 00:50  jm
+
+	* trunk/speex/libspeex/high_lsp_tables.c,
+	  trunk/speex/libspeex/lsp_tables_nb.c,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h: LSP codebooks are now signed
+	  short instead of float, reducing size in binary by a factor of 4.
+
+2003-01-28 00:02  jm
+
+	* trunk/speex/libspeex/high_lsp_tables.c,
+	  trunk/speex/libspeex/quant_lsp.c: Quantization for high-band LSP
+	  codebook.
+
+2003-01-27 22:09  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/lsp_tables_nb.c,
+	  trunk/speex/libspeex/quant_lsp.c: Some work for shrinking the LSP
+	  codebook size
+
+2003-01-27 08:31  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h,
+	  trunk/speex/libspeex/exc_10_16_table.c,
+	  trunk/speex/libspeex/exc_10_32_table.c,
+	  trunk/speex/libspeex/exc_20_32_table.c,
+	  trunk/speex/libspeex/exc_5_256_table.c,
+	  trunk/speex/libspeex/exc_5_64_table.c,
+	  trunk/speex/libspeex/exc_8_128_table.c,
+	  trunk/speex/libspeex/exc_8_256_table.c,
+	  trunk/speex/libspeex/hexc_10_32_table.c,
+	  trunk/speex/libspeex/hexc_table.c, trunk/speex/libspeex/modes.c:
+	  Transformed all excitation codebooks into sighed short arrays,
+	  reducing their size (in the final binary) by a factor of 4.
+
+2003-01-25 05:45  jm
+
+	* trunk/speex/libspeex/gain_table.c,
+	  trunk/speex/libspeex/gain_table_lbr.c, trunk/speex/libspeex/ltp.c:
+	  Shrunk the pitch gain codebook by removing redundent data.
+
+2003-01-23 07:29  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_header.h: Fixed a bunch of typos
+	  pointed to by: larry@doolittle.boa.org
+
+2003-01-17 05:15  jm
+
+	* trunk/speex/libspeex/vbr.c, trunk/speex/libspeex/vbr.h,
+	  trunk/speex/src/speexdec.c: oops... last minute fixes
+
+2003-01-15 07:51  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/vbr.c: oops...
+	  I broke the 6 kbps mode. it's fixed now.
+
+2003-01-15 07:20  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/vbr.c: adjusted VBR for the new 4 kbps mode
+	  (still early stage)
+
+2003-01-15 06:47  jm
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/exc_20_32_table.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c: Added a new 3.95 kbps mode
+
+2003-01-13 22:29  jm
+
+	* trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/speex_header.h, trunk/speex/src/speexdec.c:
+	  slightly changed the header format (still compatible)
+
+2003-01-11 01:32  jm
+
+	* trunk/speex/libspeex/speex_header.c: oops...
+
+2003-01-11 01:24  jm
+
+	* trunk/speex/doc/manual.lyx, trunk/speex/libspeex/speex_header.h,
+	  trunk/speex/src/speexdec.1, trunk/speex/src/speexenc.1: misc.
+
+2003-01-10 07:27  jm
+
+	* trunk/speex/doc/manual.lyx, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/vbr.c, trunk/speex/src/speexdec.c: mostly
+	  wideband tuning...
+
+2003-01-09 16:30  jm
+
+	* trunk/speex/libspeex/bits.c: Fixed (I think) potential overflow in
+	  Speex Bits
+
+2003-01-08 21:59  jm
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/misc.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/src/speexdec.c: Added a return value (error) to the
+	  *ctl functions, added re-allocation to SpeexBits when buffer is
+	  too small.
+
+2003-01-08 06:57  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex.h: Fixed some bad
+	  DTX/packet-loss/wideband interactions.
+
+2003-01-07 04:30  jm
+
+	* trunk/speex/libspeex/misc.c, trunk/speex/libspeex/misc.h: oops!
+	  stupid bug
+
+2003-01-07 04:11  jm
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/src/speexdec.c: Added some bounds checking when
+	  reading bits, including a bug when forcing higher bit-rates
+	  (force-wb on a narrowband stream). Some cleaning up too.
+
+2003-01-06 22:06  jm
+
+	* trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex_stereo.h,
+	  trunk/speex/libspeex/stereo.c, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Some stereo enhancements
+
+2003-01-06 20:43  jm
+
+	* trunk/speex/doc/manual.lyx, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/src/speexdec.c: Used
+	  the last 4 bits of mode1 for a CNG flag, plus some cleanup, bugfix
+
+2003-01-06 08:35  jm
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  Cleaned up mem allocation in sb_celp.c like in nb_celp.c
+
+2003-01-06 06:53  jm
+
+	* trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/stack_alloc.h: Replaced all the alloc's by
+	  one big memory allocation for a whole state
+
+2003-01-06 05:56  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/lsp.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/stack_alloc.h: Think I made the stack
+	  operations more portable in case sizeof(int) != sizeof(void*)
+
+2003-01-06 04:18  jm
+
+	* trunk/speex/doc/manual.lyx, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/misc.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_header.c: cleanup: all use of libc has
+	  been moved to misc.c to make porting easier.
+
+2003-01-05 08:46  jm
+
+	* trunk/speex/doc/manual.lyx, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c,
+	  trunk/speex/src/wav_io.c: fixed some bugs in wave input: should
+	  now handle extra chunks as well as extended "fmt " chunks. Also,
+	  fixed a bug in invalid comment handling.
+
+2002-12-31 06:07  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/speex_callbacks.h,
+	  trunk/speex/libspeex/speex_stereo.h: documentation update
+
+2002-12-31 03:25  jm
+
+	* trunk/speex/libspeex/sb_celp.c: Fixed a segfault in
+	  wideband/ultra-wideband decoding when a packet is lost while in
+	  NULL mode.
+
+2002-12-20 19:51  jm
+
+	* trunk/speex/libspeex/nb_celp.c: removed debug printf...
+
+2002-12-20 17:45  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/vbr.c:
+	  Allowed CNG in VBR mode
+
+2002-12-20 08:24  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/doc/manual.pdf, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/src/speexdec.1,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.1,
+	  trunk/speex/src/speexenc.c: misc stuff for beta4
+
+2002-12-20 07:16  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h: Improvements to the perceptual
+	  enhancement code: smoother pitch comb filter, better tuning, and a
+	  stupid bugfix (gain hard-coded to .5).
+
+2002-12-20 05:20  jm
+
+	* trunk/speex/TODO, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/vbr.c, trunk/speex/src/speexdec.c: Think DTX
+	  now works for wideband too
+
+2002-12-19 08:21  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex.h:
+	  Started work on discontinuous transmission (DTX)
+
+2002-12-19 04:07  jm
+
+	* trunk/speex/libspeex/lsp.c: Oops... this bug was found by Ming Wu
+	  <mingwu@cyberon.com.tw>
+
+2002-12-15 06:45  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  ABR seems to work for wideband too...
+
+2002-12-15 06:01  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/src/speexenc.c: Average bit-rate (ABR) now seems to
+	  work good for narrowband (no wideband yet, but shouldn't be hard)
+
+2002-12-15 04:45  jm
+
+	* trunk/speex/libspeex/vq.c: Patch by Bernard Blackham
+	  <b-speex@blackham.com.au> that speeds up the VQ N-best search. Can
+	  reach up to 10-15% speed improvement on higher complexity
+	  settings.
+
+2002-12-14 06:29  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/speex.h: More
+	  ABR work...
+
+2002-12-13 22:59  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c: Starting (still incomplete)
+	  average bit-rate (ABR) implementation
+
+2002-12-13 01:47  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h: VAD should now work on wideband
+	  too.
+
+2002-12-12 07:51  jm
+
+	* trunk/speex/TODO, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/vbr.c, trunk/speex/src/speexenc.c:
+	  Implemented VAD-only mode with comfort noise generation, did some
+	  tuning to the VAD too. Next thing: adapt VAD-only to work with
+	  wideband too.
+
+2002-12-12 03:28  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h: First shot at high-band perceptual
+	  enhancement
+
+2002-12-11 22:03  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/vbr.c:
+	  Improvements to the way silence is handled in VBR.
+
+2002-12-11 08:24  jm
+
+	* trunk/speex/libspeex/nb_celp.c: More 2.15 kbps tuning, improved
+	  open-loop pitch estimation (less pitch doubling)
+
+2002-12-11 06:49  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h:
+	  Big (hopefully) improvement in quality for the 2.15 kbps mode
+	  (better excitation).
+
+2002-12-02 00:12  jm
+
+	* trunk/speex/TODO, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex.h:
+	  Implemented SPEEX_RESET_STATE and reduced memory allocation size.
+
+2002-11-30 05:24  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/vbr.c, trunk/speex/libspeex/vbr.h:
+	  Ultra-wideband VBR seems to work. Also, fixed a bug for wideband
+	  VBR.
+
+2002-11-28 06:32  jm
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h: Many improvements (hopefully) to
+	  packet loss concealing, part of it from a patch sent by Guilhem
+	  Tardy.
+
+2002-11-27 20:36  jm
+
+	* trunk/speex/TODO, trunk/speex/libspeex/sb_celp.c: ...
+
+2002-11-27 05:22  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  wideband VBR seems to (almost) work. Need to adapt it to work on
+	  ultra- wideband too.
+
+2002-11-27 02:54  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/vbr.c, trunk/speex/libspeex/vbr.h: ...
+
+2002-11-15 06:26  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/vbr.c: Fixed a bug in the VBR analyzer,
+	  trying to re-tune it... also, started implementing VBR for
+	  wideband (still a big kludge for now).
+
+2002-11-14 04:49  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/stereo.c, trunk/speex/libspeex/vbr.c: Fixed
+	  bugs in stereo and zero-mode and did some VBR tuning... it's
+	  looking good.
+
+2002-11-14 00:51  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/vbr.c,
+	  trunk/speex/libspeex/vbr.h: Trying a new VBR implementation...
+	  still experimental
+
+2002-11-11 06:05  jm
+
+	* trunk/speex/doc/manual.lyx, trunk/speex/doc/manual.pdf,
+	  trunk/speex/libspeex/speex_header.h,
+	  trunk/speex/libspeex/speex_stereo.h, trunk/speex/src/speexdec.1,
+	  trunk/speex/src/speexdec.c: Last updates (hopefully) for beta 3.
+
+2002-11-11 01:08  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/src/speexdec.1, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.1, trunk/speex/src/speexenc.c: Misc stuff
+	  for beta 3
+
+2002-11-10 05:17  jm
+
+	* trunk/speex/Speex.spec.in, trunk/speex/configure.in,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Update for non-standard (not 8,16,32
+	  kHz) sampling rates, changed package name from "Speex" to "speex"
+	  (removed capital S) and moved doc to the devel package.
+
+2002-11-09 06:00  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/src/speexdec.1, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.1, trunk/speex/src/speexenc.c,
+	  trunk/speex/win32/libspeex/libspeex.dsp: Preparing for beta 3,
+	  cleaned up the mode/bit-rate code in speexdec, updated the help
+	  and man pages, updated MSVC project.
+
+2002-11-08 05:58  jm
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/src/speexenc.c: Some
+	  temporary kludging to make ultra-wideband work...
+
+2002-11-08 05:00  jm
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/sb_celp.c:
+	  Fixed a couple stupid bugs
+
+2002-11-07 22:13  jm
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/speex_stereo.h,
+	  trunk/speex/libspeex/stereo.c, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Implemented stereo at the decoder side
+
+2002-11-07 06:10  jm
+
+	* trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/speex_callbacks.h,
+	  trunk/speex/libspeex/stereo.c, trunk/speex/src/speexenc.c,
+	  trunk/speex/src/wav_io.c: First stereo support in encoder (might
+	  be buggy), not in decoder yet.
+
+2002-11-06 21:27  jm
+
+	* trunk/speex/TODO, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: Misc.
+	  cosmetic stuff
+
+2002-11-06 01:47  jm
+
+	* trunk/speex/libspeex/lpc.c, trunk/speex/libspeex/lpc.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  Prevents a symbol name clash with the G729 version used by
+	  OpenH323
+
+2002-11-05 15:57  jm
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/speex_stereo.h,
+	  trunk/speex/libspeex/stereo.c: before my laptop drops dead... :(
+
+2002-11-04 03:00  jm
+
+	* trunk/speex/doc/manual.lyx, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc_uwb.c, trunk/speex/src/speexenc.c,
+	  trunk/speex/src/wav_io.c: Integrated "ultra-wideband" with
+	  encoder/decoder.
+
+2002-11-02 15:27  jm
+
+	* trunk/speex/libspeex/nb_celp.c: To make the OpenH323 people happy
+	  (warning on Win32)
+
+2002-11-02 06:25  jm
+
+	* trunk/speex/libspeex/sb_celp.c: Think I fixed the "ultra-wideband"
+	  gain problem
+
+2002-11-02 06:08  jm
+
+	* trunk/speex/libspeex/cb_search.c: Stupid bug :-<
+
+2002-11-01 03:50  jm
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/src/speexenc.c: VBR
+	  quality is now a float parameter
+
+2002-10-30 22:12  jm
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/math_approx.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc_uwb.c: Wideband code cleanup, first
+	  shot at an "ultra-wideband" mode at 32 kHz, but still buggy.
+
+2002-10-30 20:27  jm
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/math_approx.c,
+	  trunk/speex/libspeex/math_approx.h,
+	  trunk/speex/libspeex/nb_celp.c: New cos approximation for slow
+	  CPU's (don't use it on x86)
+
+2002-10-27 06:01  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp_sse.h,
+	  trunk/speex/libspeex/misc.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: Made the
+	  code valid for a C++ compiler (void* stuff), plus some cleanup
+
+2002-10-27 02:59  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/lsp.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/stack_alloc.h,
+	  trunk/speex/libspeex/testenc_wb.c: The temp stack is now void*
+	  instead of float*
+
+2002-10-27 02:36  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/stack_alloc.h: ...
+
+2002-10-26 19:16  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/stack_alloc.h: Stack allocation cleanup...
+
+2002-10-26 04:51  jm
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/misc.h, trunk/speex/src/speexdec.c: Getting
+	  ready for beta2
+
+2002-10-26 04:37  jm
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters_sse.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp_sse.h: Added SSE support (gcc only) by
+	  defining _USE_SSE
+
+2002-10-26 02:58  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h: QMF optimizations by segher
+
+2002-10-25 04:11  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/nb_celp.c: Code cleanup
+
+2002-10-24 06:29  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/nb_celp.c: Decoder optimizations, mostly when
+	  perceptual enhancement is off.
+
+2002-10-24 03:59  jm
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/nb_celp.c: More
+	  cleanups, do something more intelligent with LPC->LSP
+
+2002-10-23 19:06  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c: fixed a double_codebook bug and
+	  prevented pitch from doing weird things in VBR mode when the last
+	  frame was vocoded.
+
+2002-10-23 16:35  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  Compute impulse response of "perceptual synthesis filter" globally
+	  and use it in pitch prediction to reduce some calculations.
+
+2002-10-23 06:24  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/nb_celp.c:
+	  Continuing cleanup, removed unused functions, ...
+
+2002-10-23 06:10  jm
+
+	* trunk/speex/libspeex/filters.c: ...
+
+2002-10-23 06:03  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/sb_celp.c: Merged split_cb_search_nogain and
+	  split_cb_search_shape_sign so there's now only one search function
+	  with an option to search for a sign or not.
+
+2002-10-23 05:18  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/vq.c,
+	  trunk/speex/libspeex/vq.h: Re-wrote the signed search to be like
+	  the unsigned one (should make them use the same code now)
+
+2002-10-23 02:56  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/sb_celp.c: Modified QMF filters so we don't
+	  calculate useless (zeros) values.
+
+2002-10-23 00:53  jm
+
+	* trunk/speex/libspeex/cb_search.c: Removed un-necessary copies and
+	  re-ordered some calculations to make them faster.
+
+2002-10-22 19:29  jm
+
+	* trunk/speex/libspeex/nb_celp.c: Prevents useless calculation of
+	  perceptually-weighted frame
+
+2002-10-22 19:14  jm
+
+	* trunk/speex/libspeex/nb_celp.c: Don't compute open-loop pitch when
+	  mode has a per-subframe pitch and VBR is not used. This gains a
+	  bit of CPU.
+
+2002-10-22 03:22  jm
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/stack_alloc.h: Slight optimization to the way
+	  the target is updated in the search. Also fixed the stack PUSH.
+
+2002-10-22 01:50  jm
+
+	* trunk/speex/libspeex/stack_alloc.h: oops... there was a bug in
+	  PUSH (don't know what yet)
+
+2002-10-21 20:39  jm
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/stack_alloc.h,
+	  trunk/speex/libspeex/testenc.c: Filter optimizations, cleanup,
+	  removed the stack POP to simplify things and prevent errors
+
+2002-10-20 23:56  jm
+
+	* trunk/speex/libspeex/nb_celp.c: Separated the enhanced LPC filter
+	  in 2
+
+2002-10-20 21:11  jm
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h:
+	  Big cleanup, removed Direct-Form I filters
+
+2002-10-11 03:44  jm
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/src/wave_out.c,
+	  trunk/speex/src/wave_out.h: ...
+
+2002-10-11 03:39  jm
+
+	* trunk/speex/COPYING, trunk/speex/Speex.spec.in, trunk/speex/TODO,
+	  trunk/speex/libspeex/bits.c, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lpc.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/lsp.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/misc.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_callbacks.h,
+	  trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/speex_header.h,
+	  trunk/speex/libspeex/stack_alloc.h, trunk/speex/libspeex/vbr.c,
+	  trunk/speex/libspeex/vbr.h, trunk/speex/libspeex/vq.c,
+	  trunk/speex/libspeex/vq.h, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c, trunk/speex/src/wav_io.c,
+	  trunk/speex/src/wav_io.h: Changed license to BSD
+
+2002-10-10 04:49  jm
+
+	* trunk/speex/Speex.spec.in, trunk/speex/libspeex/speex_callbacks.h:
+	  Put manual in the right place
+
+2002-10-03 04:00  jmvalin
+
+	* trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_callbacks.h,
+	  trunk/speex/libspeex/testenc.c: Most of the request/callback
+	  mechanism is implemented, not completely tested yet.
+
+2002-10-02 22:49  jmvalin
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_callbacks.h: First version of in-band
+	  signalling and user callbacks
+
+2002-10-02 19:52  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/speex_callbacks.c,
+	  trunk/speex/libspeex/speex_callbacks.h: adding in-band signalling
+	  and callback handling
+
+2002-10-02 04:24  jmvalin
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex.h:
+	  Fixed (hopefully) once and for all the LSP root-finding problem.
+	  We now try twice and if it still fails, we "create" a flat filter.
+
+2002-09-20 17:14  jmvalin
+
+	* trunk/speex/TODO, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h:
+	  ...
+
+2002-09-20 03:37  jmvalin
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c: Converted filters with memory to
+	  direct form II transposed, this creates a "minor
+	  incompatibility"...
+
+2002-09-18 22:01  jmvalin
+
+	* trunk/speex/TODO, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/src/speexdec.c: packet
+	  loss handling...
+
+2002-09-18 07:35  jmvalin
+
+	* trunk/speex/libspeex/ltp.c: Fixed a bug in the pitch_gain return
+	  value (make all _unquant functions return a 3-tap gain)
+
+2002-09-13 20:08  jmvalin
+
+	* trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/speex_header.h: Doxygen...
+
+2002-09-12 15:11  jmvalin
+
+	* trunk/speex/libspeex/speex_bits.h: Doxygen...
+
+2002-09-12 14:55  jmvalin
+
+	* trunk/speex/libspeex/misc.h, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/speex.h:
+	  Doxygen...
+
+2002-09-12 03:31  jmvalin
+
+	* trunk/speex/libspeex/misc.h, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/speex_header.h: More Doxygen doc
+
+2002-09-12 02:48  jmvalin
+
+	* trunk/speex/Doxyfile, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/speex_header.h: Comments for Doxygen
+
+2002-08-30 14:31  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/testenc.c: ...
+
+2002-08-30 04:04  jmvalin
+
+	* trunk/speex/libspeex/misc.h: Just in case someone forgets to
+	  define VERSION
+
+2002-08-27 20:57  jmvalin
+
+	* trunk/speex/doc/manual.lyx, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/src/speexdec.c: Moved
+	  modeID check in nb_celp/sb_celp
+
+2002-08-27 07:29  jmvalin
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c: speeded up lpc_to_lsp and
+	  open-loop pitch estimation
+
+2002-08-22 21:17  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c,
+	  trunk/speex/src/getopt.c, trunk/speex/src/getopt1.c,
+	  trunk/speex/src/speexdec.c: API change: a couple fields were
+	  removed from SpeexMode because they can now be accessed through
+	  the speex_mode_query call. Also, the "lost" argument has been
+	  removed from speex_decode since a lost packet is now specified as
+	  a NULL "bits" argument.
+
+2002-08-22 20:47  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/speex.h: Added
+	  query function for modes Support for modes > 7 at decoder
+
+2002-08-22 17:58  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/cb_search.c, trunk/speex/src/getopt.c,
+	  trunk/speex/src/getopt.h, trunk/speex/src/getopt1.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c,
+	  trunk/speex/src/wave_out.c, trunk/speex/src/wave_out.h,
+	  trunk/speex/win32, trunk/speex/win32/libspeex,
+	  trunk/speex/win32/libspeex/libspeex.dsp,
+	  trunk/speex/win32/libspeex/libspeex.dsw,
+	  trunk/speex/win32/speexdec,
+	  trunk/speex/win32/speexdec/speexdec.dsp,
+	  trunk/speex/win32/speexdec/speexdec.dsw,
+	  trunk/speex/win32/speexenc,
+	  trunk/speex/win32/speexenc/speexenc.dsp,
+	  trunk/speex/win32/speexenc/speexenc.dsw: Win32 support, thanks to
+	  john33 (Hydrogen Audio)
+
+2002-08-22 06:33  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_wb.c: Implemented packet loss
+	  interpolation for wideband... not optimal yet...
+
+2002-08-22 05:49  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/testenc.c: The decode function can now do the
+	  packet loss interpolation without the last bit-stream received...
+	  for narrowband. Next: wideband.
+
+2002-08-22 05:07  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex_bits.h: New very high quality modes for
+	  narrowband and wideband by using a double codebook
+
+2002-08-16 18:24  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c: Changed wideband quality mode to
+	  adapt to better high-band spectral folding
+
+2002-08-16 07:08  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/nb_celp.c: stupid VBR bug corrected +
+	  improvements
+
+2002-08-16 06:02  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/testenc_wb.c: Improved spectral folding
+	  wideband mode
+
+2002-08-15 20:08  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c: oops...
+
+2002-08-14 20:19  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c:
+	  Cleaned up vocoder mode...
+
+2002-08-14 17:58  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex_bits.h:
+	  Now the narrowband and wideband bit-streams are compatible and can
+	  be decoded in either mode
+
+2002-08-13 21:11  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/speex_bits.h:
+	  Make sure we don't destroy user buffer when SpeexBits is
+	  destructed
+
+2002-08-13 20:58  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/testenc_wb.c: ...
+
+2002-08-08 20:53  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c:
+	  Reduced number of bits to code subframe excitation gain on low
+	  modes
+
+2002-08-02 14:39  jmvalin
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  removed debugging code
+
+2002-08-02 05:46  jmvalin
+
+	* trunk/speex/libspeex/modes.c: Enhancer tuning...
+
+2002-08-02 04:00  jmvalin
+
+	* trunk/speex/Speex.spec, trunk/speex/configure.in,
+	  trunk/speex/doc/manual.lyx, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/libspeex/vq.c,
+	  trunk/speex/libspeex/vq.h, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Bug fixes, many leaks/errors fixed
+	  thanks to valgrind. Some filter roundoff improvement kludge for
+	  enhancer...
+
+2002-08-01 19:58  jmvalin
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  Implemented "null mode", i.e. silence. Only submodeID is
+	  transmitted
+
+2002-08-01 15:14  jmvalin
+
+	* trunk/speex/libspeex/nb_celp.c: oops:-(
+
+2002-08-01 14:48  jmvalin
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/testenc.c:
+	  oops... forgot to remove some useless stuff
+
+2002-08-01 14:45  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/post_filter.c,
+	  trunk/speex/libspeex/post_filter.h, trunk/speex/libspeex/roots.c,
+	  trunk/speex/libspeex/roots.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c:
+	  Replaced the post-filter by a simple pitch comb filter plus an LPC
+	  synthesis filter enhancer.
+
+2002-07-31 22:30  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: Added
+	  bit-rate information via speex_*_ctl calls, fixed stupid bug in
+	  speexenc
+
+2002-07-30 06:03  jmvalin
+
+	* trunk/speex/libspeex/filters.c: Think I got rid of all the
+	  problems when the roots are wrong...
+
+2002-07-30 04:43  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/post_filter.c,
+	  trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex_header.c, trunk/speex/libspeex/vbr.c,
+	  trunk/speex/libspeex/vq.c, trunk/speex/libspeex/vq.h: Fixed
+	  post-filter producing NaN's, started writing some SSE code
+
+2002-07-29 04:38  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/doc/manual.lyx,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/roots.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/src/speexenc.c: added encoder complexity option
+
+2002-07-28 04:09  jmvalin
+
+	* trunk/speex/doc/manual.lyx, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/speex_header.h, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Allow more than one frame per packet
+
+2002-07-22 05:44  jmvalin
+
+	* trunk/speex/libspeex/misc.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  Replaced memmove by speex_move
+
+2002-07-22 04:46  jmvalin
+
+	* trunk/speex/libspeex/misc.c, trunk/speex/libspeex/misc.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex_header.c: Replaced all
+	  malloc/calloc/free calls by speex_alloc/speex_free to ease
+	  portability
+
+2002-07-20 04:58  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h: Implemented new "global" search
+	  for the whole sub-frame, slight improvement over the regular
+	  search, but it comes with increased CPU requirement.
+
+2002-07-20 02:27  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c: Removed redundent searches
+
+2002-07-20 02:08  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/vq.c,
+	  trunk/speex/libspeex/vq.h: Added an n-best VQ search function in
+	  order to simplify the code
+
+2002-07-19 19:21  jmvalin
+
+	* trunk/speex/libspeex/filters.c: work around a convergence problem
+	  in ploy_roots
+
+2002-07-19 18:48  jmvalin
+
+	* trunk/speex/libspeex/filters.c, trunk/speex/libspeex/ltp.c: Fixed
+	  a root stability bug...
+
+2002-07-19 18:15  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c: Fixed a pitch prediction bug when
+	  pitch is forced (end=start)
+
+2002-07-18 22:55  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/exc_10_16_table.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/roots.c: Improved very low bit-rate (~5.9
+	  kbps) mode
+
+2002-07-17 06:35  jmvalin
+
+	* trunk/speex/Speex.spec, trunk/speex/configure.in,
+	  trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/post_filter.c, trunk/speex/libspeex/roots.c,
+	  trunk/speex/libspeex/roots.h: New post-filter based on a new way
+	  of moving poles in the LPC polynomial
+
+2002-07-16 14:44  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/testenc_wb.c:
+	  cleanup
+
+2002-07-11 06:10  jmvalin
+
+	* trunk/speex/Speex.spec, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c,
+	  trunk/speex/libspeex/vbr.c, trunk/speex/src/speexenc.c: Completed
+	  VBR for 0.5.0 release
+
+2002-07-10 20:45  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/libspeex/vbr.c:
+	  More VBR work. Also added a 5.5 kbps mode and added frame-wide
+	  pitch to comfort noise mode (now at 2.3 kbps).
+
+2002-07-08 18:06  jmvalin
+
+	* trunk/speex/libspeex/vbr.c, trunk/speex/libspeex/vbr.h: Added
+	  noise energy estimation and beginning of a VAD.
+
+2002-07-07 07:30  jmvalin
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/vbr.c, trunk/speex/libspeex/vbr.h: Improved
+	  VBR by adding pitch and some constraints...
+
+2002-07-07 03:27  jmvalin
+
+	* trunk/speex/libspeex/lpc.c, trunk/speex/libspeex/lpc.h,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/lsp.h:
+	  license/header stuff
+
+2002-07-06 05:30  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h: Cleanup Put mode decision before
+	  open-loops analysis Open-loop pitch analysis returns pitch "pseudo
+	  gain" (bound to [0,1])
+
+2002-07-05 16:01  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/lsp.h,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/vq.c, trunk/speex/libspeex/vq.h: code cleanup
+
+2002-07-05 06:51  jmvalin
+
+	* trunk/speex/libspeex/modes.c: Played slightly with bit-rates...
+
+2002-07-04 21:55  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/exc_8_128_table.c,
+	  trunk/speex/libspeex/gain_table.c,
+	  trunk/speex/libspeex/gain_table_lbr.c: Trained some codebooks...
+
+2002-07-02 05:14  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/exc_10_32_table.c,
+	  trunk/speex/libspeex/exc_5_256_table.c,
+	  trunk/speex/libspeex/exc_5_64_table.c,
+	  trunk/speex/libspeex/exc_8_128_table.c,
+	  trunk/speex/libspeex/gain_table.c,
+	  trunk/speex/libspeex/gain_table_lbr.c,
+	  trunk/speex/libspeex/hexc_10_32_table.c,
+	  trunk/speex/libspeex/hexc_table.c,
+	  trunk/speex/libspeex/high_lsp_tables.c,
+	  trunk/speex/libspeex/lsp_tables_nb.c,
+	  trunk/speex/libspeex/lsp_tables_wb.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h: Cleaned up unused stuff and
+	  licensed all codebooks under the BSD license
+
+2002-07-01 08:18  jmvalin
+
+	* trunk/speex/libspeex/post_filter.c: Comments...
+
+2002-07-01 08:10  jmvalin
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/vbr.c,
+	  trunk/speex/libspeex/vbr.h: First try at VBR... off by default
+
+2002-06-28 19:01  jmvalin
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/speex.h: Just
+	  some cleanup and comments.
+
+2002-06-27 16:33  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/src/speexdec.c:
+	  Oops...
+
+2002-06-27 07:23  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Created quality modes for wideband,
+	  updated encoder. Getting close to 0.4.0
+
+2002-06-26 20:59  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c: Added a comfort noise mode...
+
+2002-06-26 06:23  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/exc_8_128_table.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/sb_celp.c:
+	  Added narrowband mode at 11.75 kbps
+
+2002-06-25 18:46  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: First step
+	  to variable bit-rate (VBR): it is now possible to change the modes
+	  (bit-rate) of the encoder dynamically (decoder adjusts itself).
+
+2002-06-21 19:38  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/speex_header.h, trunk/speex/src/speexdec.c:
+	  Improved (I think) quality in presence of packet loss...
+
+2002-06-18 21:22  jmvalin
+
+	* trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  s/hanning/hamming/ for analysis window provides a slight
+	  improvement
+
+2002-06-18 18:28  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/sb_celp.c:
+	  Changed the LPC analysis window to an asymetric (pseudo-)Hanning
+	  window so the lookahead necesary is now only 10 ms, making the
+	  total algorithmic delay 30 ms (down from 40 ms).
+
+2002-06-17 07:14  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/sb_celp.c: ...
+
+2002-06-17 06:47  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/hexc_10_32_table.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/src/speexenc.c: New "low bit-rate" wideband mode
+	  (20150 kbps)
+
+2002-06-13 05:12  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c: folding mode is a bit better...
+
+2002-06-12 21:33  jmvalin
+
+	* trunk/speex/Makefile.am, trunk/speex/configure.in,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/post_filter.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c,
+	  trunk/speex/src/wav_io.c: Speex *should* now work on big-endian
+	  architectures.
+
+2002-06-12 08:33  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/speex_header.h,
+	  trunk/speex/libspeex/testenc.c: Introduced bit-stream version
+	  number (for compatibility)
+
+2002-06-12 06:39  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/speex_header.h: More header work
+
+2002-06-12 05:15  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/misc.c,
+	  trunk/speex/libspeex/misc.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_header.c,
+	  trunk/speex/libspeex/speex_header.h: Header work...
+
+2002-06-11 08:34  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/modes.c:
+	  oops...
+
+2002-06-11 08:27  jmvalin
+
+	* trunk/speex/libspeex/exc_10_32_table.c,
+	  trunk/speex/libspeex/gain_table_lbr.c,
+	  trunk/speex/libspeex/modes.c: low bit-rate codebooks optimized
+
+2002-06-11 06:08  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/exc_10_32_table.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/speex_header.h: Added low bit-rate (8 kbps)
+	  narrowband mode. It is still sub-optimal but at least it seems to
+	  work...
+
+2002-06-10 08:25  jmvalin
+
+	* trunk/speex/libspeex/gain_table.c, trunk/speex/libspeex/ltp.c:
+	  codebook retrained (again)
+
+2002-06-10 07:50  jmvalin
+
+	* trunk/speex/libspeex/exc_5_64_table.c,
+	  trunk/speex/libspeex/gain_table.c: Codebooks retrained about 0.3
+	  dB in SNR
+
+2002-06-07 21:57  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/testenc.c: Implemented an n-best open-loop
+	  pitch search to speed up the closed-loop search. Also fixed a bug
+	  in open-loop pitch estimation. Some cleanup too as well as
+	  PUSH/POP matching.
+
+2002-06-07 05:30  jmvalin
+
+	* trunk/speex/Speex.spec, trunk/speex/configure.in,
+	  trunk/speex/libspeex/testenc_wb.c: Getting ready for 0.2.0
+
+2002-06-07 05:11  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c: Oops... screwed up in the order
+
+2002-06-07 04:55  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c: Make sure the filters are always
+	  stable in the LSP domain
+
+2002-06-07 04:30  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/hexc_table.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/sb_celp.c: Removed some warnings, fixed
+	  posfilter mode for wideband
+
+2002-06-07 03:20  jmvalin
+
+	* trunk/speex/doc/programming.html,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h,
+	  trunk/speex/libspeex/hexc_table.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/testenc_wb.c: High-band (for wideband) is now
+	  a shape-sign codebook, reducing search by a factor two
+
+2002-06-06 22:18  jmvalin
+
+	* trunk/speex/libspeex/exc_5_256_table.c: Retrained (optimized)
+	  codebook
+
+2002-06-06 22:08  jmvalin
+
+	* trunk/speex/libspeex/exc_5_64_table.c: ...
+
+2002-06-06 19:12  jmvalin
+
+	* trunk/speex/libspeex/exc_5_64_table.c: retrained the codebook
+
+2002-06-06 06:32  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/post_filter.c,
+	  trunk/speex/libspeex/post_filter.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c:
+	  New post-filter A(z/g1)/A(z/g2)
+
+2002-06-06 04:04  jmvalin
+
+	* trunk/speex/libspeex/ltp.c: Fixed a bug allowing the pitch to be
+	  larger than the maximum allowed (hence screwing up at the decoder)
+
+2002-06-05 06:07  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/speex_header.h, trunk/speex/src/Makefile.am,
+	  trunk/speex/src/speexenc.c, trunk/speex/src/wav_io.c: Encoder now
+	  understands wav files, slight modif to LSP quantization weighting
+
+2002-06-05 02:56  jmvalin
+
+	* trunk/speex/Speex.spec, trunk/speex/configure.in,
+	  trunk/speex/html/index.html, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/lsp.h, trunk/speex/libspeex/nb_celp.c:
+	  Constrain LSP's to produce a stable filter
+
+2002-06-04 04:10  jmvalin
+
+	* trunk/speex/Speex.spec, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/src/speexdec.c: Last modifs for 0.1.2
+
+2002-06-03 14:48  jmvalin
+
+	* trunk/speex/libspeex/post_filter.h: ...
+
+2002-06-03 02:54  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: Added
+	  SPEEX_GET_FRAME_SIZE to speex_*_ctl calls
+
+2002-06-03 02:14  jmvalin
+
+	* trunk/speex/OPTIMIZE, trunk/speex/Speex.spec,
+	  trunk/speex/Speex.spec.in, trunk/speex/configure.in,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c,
+	  trunk/speex/src/speexdec.c: Added speex_ctl call to set codec
+	  parameters (e.g. enable/disable post-filter)
+
+2002-06-03 00:51  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/post_filter.c,
+	  trunk/speex/libspeex/post_filter.h: "unified" narrowband and
+	  wideband post-filters
+
+2002-05-29 03:41  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/post_filter.c,
+	  trunk/speex/libspeex/post_filter.h: Added a post-filter for
+	  narrowband (and thus 0-4 kHz in wideband)
+
+2002-05-21 21:49  jmvalin
+
+	* trunk/speex/html/index.html, trunk/speex/html/speex.png,
+	  trunk/speex/html/speex.xcf, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/src/speexdec.c: Documentation, cleanup, comments
+
+2002-05-21 02:12  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/speex_bits.h: API documentation
+
+2002-05-20 18:53  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: Every
+	  symbol in <speex.h> now has a speex_ prefix.
+
+2002-05-18 20:00  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/nb_celp.h, trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/speex_bits.h, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: FrameBits renamed to SpeexBits and a
+	  "lost" argument was added to the decode function to handle lost
+	  packets
+
+2002-05-16 19:16  jmvalin
+
+	* trunk/speex/README, trunk/speex/libspeex/hexc_table.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/sb_celp.c: Wideband quantization improved by
+	  adding a sub-frame gain, codebook re-trained.
+
+2002-05-15 21:47  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/modes.c, trunk/speex/src/Makefile.am,
+	  trunk/speex/src/speexenc.c: Removed narrowband 256x8 codebook from
+	  build.
+
+2002-05-14 21:58  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: speexenc
+	  and speexdec now use the Ogg bitstream. This is very preliminary
+	  there are probably a couple dozens of bugs...
+
+2002-05-14 14:21  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/testenc_wb.c: ...
+
+2002-05-14 04:08  jmvalin
+
+	* trunk/speex/libspeex/hexc_table.c: shouldn't have been deleted...
+
+2002-05-14 03:25  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h,
+	  trunk/speex/libspeex/exc_5_256_table.c,
+	  trunk/speex/libspeex/exc_5_64_table.c,
+	  trunk/speex/libspeex/exc_8_256_table.c,
+	  trunk/speex/libspeex/exc_gains_table.c,
+	  trunk/speex/libspeex/exc_gains_wb2_table.c,
+	  trunk/speex/libspeex/exc_gains_wb_table.c,
+	  trunk/speex/libspeex/exc_sb_table.c,
+	  trunk/speex/libspeex/exc_table.c,
+	  trunk/speex/libspeex/exc_wb_table.c,
+	  trunk/speex/libspeex/hexc_table.c,
+	  trunk/speex/libspeex/lsp_tables_nb.c,
+	  trunk/speex/libspeex/matrix.c, trunk/speex/libspeex/matrix.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/mpulse.c,
+	  trunk/speex/libspeex/mpulse.h, trunk/speex/libspeex/nb_celp.c,
+	  trunk/speex/libspeex/quant_lsp.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/stoc.c, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Big changes in both narrowband and
+	  wideband. Retrained LSP codebook, replaced pseudo-multi-pulse by
+	  split codebook (no gain) for narrowband. Changed gain-shape
+	  approach to gain-only split-VQ for wideband. Wideband bit-rate
+	  goes down (31.3 kbps to 26.9 kbps). Narrowband is about the same
+	  (now 15.1 kbps).
+
+2002-05-09 03:55  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex_modes.h: Last cleanup for 0.0.3
+
+2002-05-07 19:51  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h: More comments
+
+2002-05-06 21:12  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  Finished cleaning up the sub-band mode
+
+2002-05-06 18:53  jmvalin
+
+	* trunk/speex/libspeex/speex.h: Oops... forgot to add that
+
+2002-05-03 19:27  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Now, all the includes we need to use
+	  Speex are speex.h and speex_bits.h
+
+2002-05-03 19:22  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/mpulse.c,
+	  trunk/speex/libspeex/nb_celp.c, trunk/speex/libspeex/nb_celp.h,
+	  trunk/speex/libspeex/quant_lsp.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: speex.[ch]
+	  renamed to nb_celp.[ch] for consistency
+
+2002-05-03 19:13  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/bits.h, trunk/speex/libspeex/cb_search.h,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/mpulse.h,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_bits.h,
+	  trunk/speex/libspeex/speex_modes.h: bits.h was renamed to
+	  speex_bits to prevent name clashes
+
+2002-05-03 19:05  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex_modes.h: First part of VBR: High-band
+	  excitation is coded or folded from low-band
+
+2002-05-02 22:36  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/sb_celp.c: fixed
+	  two FIXME's
+
+2002-05-02 22:28  jmvalin
+
+	* trunk/speex/TODO, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c:
+	  implemented high-band spectral folding at the decoder
+
+2002-05-02 20:55  jmvalin
+
+	* trunk/speex/libspeex/testdec.c: *** empty log message ***
+
+2002-05-02 20:55  jmvalin
+
+	* trunk/speex/TODO, trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/speex_modes.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_sb.c,
+	  trunk/speex/libspeex/testenc_wb.c, trunk/speex/libspeex/vbr.h,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c:
+	  Unification of narrowband and wideband modes to simplify the API
+
+2002-04-29 22:45  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h: Added simple (optional)
+	  post-filter
+
+2002-04-29 11:12  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c: removed unused variable
+
+2002-04-29 09:59  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/testenc_sb.c: Decoder back in sync with the
+	  encoder
+
+2002-04-24 21:53  jmvalin
+
+	* trunk/speex/libspeex/ltp.c: pitch search now considers two ranges:
+	  start < T < subframe and subframe < T < end
+
+2002-04-24 07:26  jmvalin
+
+	* trunk/speex/libspeex/hexc_table.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h:
+	  Updated high-band codebook...
+
+2002-04-24 06:50  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/mpulse.c,
+	  trunk/speex/libspeex/speex.c: Made the initial pitch search
+	  open-loop. Removed some modulo and devide operations.
+
+2002-04-23 21:18  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/sb_celp.c:
+	  Fixed warnings
+
+2002-04-23 08:12  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/hexc_table.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/mpulse.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/testenc_sb.c:
+	  Many, many updates. Better split-VQ search, better handling of
+	  pitch for periods shorter than subframe length. Slightly improved
+	  multi-pulse search.
+
+2002-04-15 05:04  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/mpulse.c,
+	  trunk/speex/libspeex/speex.c, trunk/speex/libspeex/testenc_sb.c,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: Moving on
+	  for 0.0.2, updated the "real" encoder and decoder (speexenc,
+	  speexdec). Fixed a memory leak.
+
+2002-04-14 04:05  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/sb_celp.c: Got
+	  rid of a couple mallocs...
+
+2002-04-12 22:58  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/testenc_sb.c: Removed warnings, debug code
+	  and un-necessary synthesis in coder
+
+2002-04-12 22:15  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/sb_celp.c:
+	  Speed improvements (got rid of a couple divide ops), cleanup...
+
+2002-04-12 05:58  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c:
+	  Speed improvements: faster FIR filter and better algorithm for
+	  updating target in split-codebook search.
+
+2002-04-10 20:57  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/testenc_sb.c:
+	  Big code cleanup, some minor bug fixed too
+
+2002-04-10 07:42  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/vbr.c,
+	  trunk/speex/libspeex/vbr.h: ...
+
+2002-04-10 05:46  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex.c: Think both encoder and decoder for
+	  SB-CELP work...
+
+2002-04-09 23:33  jmvalin
+
+	* trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc_sb.c: decoder stuff
+
+2002-04-09 08:08  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/testenc_sb.c: SB-CELP decoder (continued)
+
+2002-04-09 07:48  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/testenc_sb.c: SB-CELP work... more to go
+
+2002-04-09 07:23  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h: More decoder work
+
+2002-04-09 06:44  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c: Fixed a bug in the gain
+	  quantization (it's now done in the log domain)
+
+2002-04-09 05:15  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c: Fully quantized test encoder for
+	  SB-CELP at (currently) 31.3 kbps.
+
+2002-04-09 02:20  jmvalin
+
+	* trunk/speex/libspeex/testenc_sb.c: Test encoder for SB-CELP
+
+2002-04-08 23:01  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Quantizing high-band excitation
+	  gains (SB-CELP).
+
+2002-04-08 19:08  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/high_lsp_tables.c,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/sb_celp.c:
+	  Added LSP quantization for SB-CELP
+
+2002-04-08 06:26  jmvalin
+
+	* trunk/speex/html/index.html, trunk/speex/libspeex/cb_search.c:
+	  Removed useless stuff
+
+2002-04-08 06:23  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h,
+	  trunk/speex/libspeex/exc_sb_table.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/mpulse.c, trunk/speex/libspeex/mpulse.h,
+	  trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h,
+	  trunk/speex/libspeex/speex.c: Re-wrote the gain quantization for
+	  split-VQ excitation. Added more bits and quantize one at a time.
+
+2002-04-05 19:51  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/speex.c: Cleaned up SB-CELP and added more
+	  pulses and tracks for low-band.
+
+2002-04-04 23:36  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  Fixed interpolation bugs, ...
+
+2002-04-04 21:22  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h: Using spectral folding (ie
+	  aliasing) for high-band excitation
+
+2002-04-03 05:02  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c: ...
+
+2002-04-03 00:01  jmvalin
+
+	* trunk/speex/libspeex/sb_celp.c, trunk/speex/libspeex/sb_celp.h:
+	  more sub-band stuff...
+
+2002-04-02 22:58  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/sb_celp.c,
+	  trunk/speex/libspeex/sb_celp.h, trunk/speex/libspeex/testenc.c,
+	  trunk/speex/libspeex/testenc_wb.c: Adding sub-band CELP (SB-CELP)
+	  -like encoding. Still incomplete.
+
+2002-03-27 22:36  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/mpulse.c:
+	  code cleanup, some optimizations
+
+2002-03-27 21:16  jmvalin
+
+	* trunk/speex/ChangeLog, trunk/speex/INSTALL, trunk/speex/README,
+	  trunk/speex/TODO, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/mpulse.c,
+	  trunk/speex/libspeex/quant_lsp.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/src/speexdec.c: All debug printf's are now within
+	  #ifdef DEBUG
+
+2002-03-27 06:53  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/bits.h,
+	  trunk/speex/src/speexdec.c, trunk/speex/src/speexenc.c: Added a
+	  header to speex files. Should eventually choose a "real" magic
+	  number for the format.
+
+2002-03-27 06:30  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/bits.h,
+	  trunk/speex/src/Makefile.am, trunk/speex/src/speexdec.c,
+	  trunk/speex/src/speexenc.c: Think the encoder and decoder work!
+	  Still a couple fixes left...
+
+2002-03-27 03:40  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/bits.h,
+	  trunk/speex/src/speexenc.c: Don't fill the last byte in the frame
+	  before saving (saves a couple bits per frame).
+
+2002-03-26 23:56  jmvalin
+
+	* trunk/speex/Makefile.am, trunk/speex/configure.in,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/testdec.c,
+	  trunk/speex/src/speexenc.c: ...
+
+2002-03-26 20:48  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/mpulse.c,
+	  trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc_wb.c: Fixed pre-emphasis/de-emphasis
+	  in the decoder for wideband (and narrowband). Now both should work
+	  (really!)
+
+2002-03-25 20:06  jmvalin
+
+	* trunk/speex/libspeex/mpulse.c: oops...
+
+2002-03-25 19:45  jmvalin
+
+	* trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c:
+	  Wideband encoding seems to work
+
+2002-03-25 19:38  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/mpulse.c,
+	  trunk/speex/libspeex/mpulse.h: Multi-pulse narrowband seem to work
+	  (encode+decode). Didn't test the wideband yet.
+
+2002-03-25 15:59  jmvalin
+
+	* trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/mpulse.c, trunk/speex/libspeex/mpulse.h,
+	  trunk/speex/libspeex/testenc.c, trunk/speex/libspeex/testenc_wb.c:
+	  Multi-pulse quantization (not complete yet)
+
+2002-03-22 09:42  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/mpulse.c: Multi-pulse seems to work not too
+	  bad (but disabled by default)
+
+2002-03-22 05:03  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/mpulse.c, trunk/speex/libspeex/mpulse.h,
+	  trunk/speex/libspeex/speex.c, trunk/speex/libspeex/testenc.c:
+	  Modified WB perceptual filter, starting a multi-pulse "branch"
+
+2002-03-20 06:59  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/matrix.c,
+	  trunk/speex/libspeex/matrix.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/speex.c: Added joint optimization of
+	  excitation gains
+
+2002-03-19 07:37  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/exc_gains_wb2_table.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h: crappy
+	  wideband codec at 28.5 kbps...
+
+2002-03-18 05:25  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/exc_gains_wb_table.c,
+	  trunk/speex/libspeex/exc_wb_table.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/speex.c: Wideband almost done but buggy...
+
+2002-03-15 23:16  jmvalin
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/testenc_wb.c:
+	  Adjustable LPC analysis (lag windowing, noise floor), changed
+	  wideband frame size
+
+2002-03-15 19:28  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h: wideband coexists with
+	  narrowband now
+
+2002-03-15 08:06  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/modes.c:
+	  OK, back to normal (narrowband codec works)
+
+2002-03-15 07:30  jmvalin
+
+	* trunk/speex/libspeex/testenc_wb.c: Wideband encorer
+
+2002-03-15 07:30  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/exc_wb_table.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/speex.c: More wideband stuff...
+
+2002-03-15 03:29  jmvalin
+
+	* trunk/speex/libspeex/speex.c, trunk/speex/libspeex/testenc.c:
+	  Oops... let's leave a working narrowband codec...
+
+2002-03-15 03:24  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/lsp_tables_wb.c,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/testenc.c: We're going wideband...
+
+2002-03-14 19:31  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Think the modularity stuff is mostly
+	  done...
+
+2002-03-14 07:32  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Cleanup mostly done for the encoder.
+	  All functions are now in the mode struct.
+
+2002-03-14 07:08  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/vq.c, trunk/speex/libspeex/vq.h: More cleanup
+	  in codebook search...
+
+2002-03-14 03:58  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/modes.c, trunk/speex/libspeex/modes.h,
+	  trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h,
+	  trunk/speex/libspeex/testenc.c: Cleaning up the code and making it
+	  easier to switch algorithms...
+
+2002-03-13 18:28  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/testdec.c:
+	  Decoder seems to be working...
+
+2002-03-13 18:06  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/testenc.c: Decoder seems to work
+
+2002-03-13 07:29  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/speex.c: More decoder stuff
+
+2002-03-13 05:08  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/speex.c: Decoding of pitch (still untested)
+
+2002-03-13 02:45  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/bits.h,
+	  trunk/speex/libspeex/quant_lsp.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/testenc.c: More
+	  decoder work
+
+2002-03-13 00:31  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/testenc.c: Code cleanup, removed warnings
+
+2002-03-12 18:47  jmvalin
+
+	* trunk/speex/html/index.html, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Some decoder stuff, web page update
+
+2002-03-11 19:32  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/bits.h,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/testenc.c: The encoder (testenc) now produces
+	  a bitstream
+
+2002-03-11 18:34  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/exc_gains_table.c,
+	  trunk/speex/libspeex/exc_table.c, trunk/speex/libspeex/testenc.c:
+	  Working demo at 14.5 kbps (fully quantized)
+
+2002-03-08 13:09  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/exc_table.c, trunk/speex/libspeex/speex.c:
+	  Working demo...
+
+2002-03-07 21:55  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: The code is getting horribly messy,
+	  but there's too much stuff that needs to be added: - Fractional
+	  pitch - SNR measurements - Split-codebook search for excitation -
+	  ...
+
+2002-03-05 17:02  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/lsp.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/stack_alloc.h,
+	  trunk/speex/libspeex/stoc.c: Big cleanup... filter memories, stack
+	  allocation, ...
+
+2002-03-01 20:54  jmvalin
+
+	* trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h: Some
+	  early decoder stuff
+
+2002-03-01 15:40  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/bits.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/testenc.c:
+	  Integrating the modes and bitstream.
+
+2002-02-28 21:12  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/speex.c: Pitch
+	  prediction stuff...
+
+2002-02-28 05:18  jmvalin
+
+	* trunk/speex/libspeex/bits.c, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h: Bit manipulations seem to work...
+
+2002-02-28 01:32  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/bits.c,
+	  trunk/speex/libspeex/bits.h, trunk/speex/libspeex/modes.c,
+	  trunk/speex/libspeex/modes.h: Bit manipulation stuff
+
+2002-02-27 21:50  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Started the decoder part, I think we
+	  now update filters in a better way to take into account the
+	  encoding error.
+
+2002-02-27 19:32  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/stack_alloc.h: Added 3-tap pitch predictor by
+	  analysis by synthesis
+
+2002-02-27 07:34  jmvalin
+
+	* trunk/speex/libspeex/speex.c: First working demo of the encoder
+	  (not fully quantized yet, no fancy pitch prediction, ...)
+
+2002-02-27 07:10  jmvalin
+
+	* trunk/speex/libspeex/speex.c: Looks like W(z)=A(z/.9)/A(z/.5)
+	  works now...
+
+2002-02-27 06:44  jmvalin
+
+	* trunk/speex/libspeex/speex.c: For the 1000th time, I think I've
+	  figured out the filter memory details for W(z)=A(z/.9)... now
+	  let's try W(z)=A(z/.9)/A(z/.5)
+
+2002-02-26 22:19  jmvalin
+
+	* trunk/speex/libspeex/speex.c: oops... buggy again...
+
+2002-02-26 21:35  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/filters.h,
+	  trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h: Think
+	  the filter stuff works with W(z)=A(z/.9)/A(z/.5)
+
+2002-02-26 21:08  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c, trunk/speex/libspeex/speex.c:
+	  This time the filters really work with W(z)=A(z/.9)
+
+2002-02-26 17:29  jmvalin
+
+	* trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Think I figuring out the filter
+	  stuff
+
+2002-02-25 08:46  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am, trunk/speex/libspeex/filters.c,
+	  trunk/speex/libspeex/filters.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Fixed algorithmic errors, rewiting
+	  the main subframe loop from scratch...
+
+2002-02-19 22:44  jmvalin
+
+	* trunk/speex/libspeex/Makefile.am,
+	  trunk/speex/libspeex/cb_search.c,
+	  trunk/speex/libspeex/cb_search.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/stoc.c: Excitation codebook stuff, but it
+	  doesn't work;-(
+
+2002-02-19 17:08  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Think I figured out the filter
+	  memory (ringing) stuff, not too sure though. Added notion of
+	  target signal and excitation.
+
+2002-02-19 03:14  jmvalin
+
+	* trunk/speex/configure.in, trunk/speex/libspeex/Makefile.am: Forgot
+	  the includes...
+
+2002-02-19 03:07  jmvalin
+
+	* trunk/speex/Makefile.am, trunk/speex/configure.in,
+	  trunk/speex/libspeex/Makefile.am: Makefile system seems to work
+
+2002-02-19 02:43  jmvalin
+
+	* trunk/speex/AUTHORS, trunk/speex/COPYING, trunk/speex/ChangeLog,
+	  trunk/speex/INSTALL, trunk/speex/NEWS, trunk/speex/README,
+	  trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Checking in license stuff
+
+2002-02-19 00:27  jmvalin
+
+	* trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/speex.c:
+	  Some more comments
+
+2002-02-18 20:47  jmvalin
+
+	* trunk/speex/libspeex/gain_table.c,
+	  trunk/speex/libspeex/lsp_tables_nb.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/quant_lsp.c,
+	  trunk/speex/libspeex/quant_lsp.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: Added both LSP and prediction gain
+	  quantization... the code is a bit ugly but it seems to work. For
+	  now we assume a fixed narrowband codebook... Next step: Analysis
+	  by synthesis and excitation quantization
+
+2002-02-17 22:54  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/testenc.c: Save synthesized speech in second
+	  file
+
+2002-02-17 00:05  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/speex.c: fixed a bug in in-place predictor.
+	  Think most of the framework is now in place...
+
+2002-02-16 06:02  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/ltp.h,
+	  trunk/speex/libspeex/speex.c: 3-tap pitch predictor seems to work
+
+2002-02-15 20:48  jmvalin
+
+	* trunk/speex/libspeex/ltp.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/testenc.c: Implementing a 3-tap long-term
+	  predictor. Also changed frame size to 160
+
+2002-02-15 08:14  jmvalin
+
+	* trunk/speex/libspeex/ltp.c: Comments
+
+2002-02-15 07:39  jmvalin
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/ltp.c,
+	  trunk/speex/libspeex/ltp.h, trunk/speex/libspeex/speex.c: Added
+	  long-term prediction, fixed subframe bugs, maybe not fully
+	  debugged
+
+2002-02-15 07:15  jmvalin
+
+	* trunk/speex/libspeex/lsp.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/testenc.c:
+	  added perceptual weighting filter, bug fixes, fixed warnings
+
+2002-02-15 06:10  jmvalin
+
+	* trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h: Fixed
+	  a couple bugs (notably in buffer) and added LSP interpolation
+
+2002-02-15 00:31  jmvalin
+
+	* trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h: Some
+	  comments
+
+2002-02-14 23:46  jmvalin
+
+	* trunk/speex/libspeex/speex.c, trunk/speex/libspeex/speex.h: Think
+	  I have the LPC->LSP->LPC right this time
+
+2002-02-14 01:57  jmvalin
+
+	* trunk/speex/libspeex/lpc.c, trunk/speex/libspeex/lsp.c,
+	  trunk/speex/libspeex/lsp.h, trunk/speex/libspeex/speex.c: Oops...
+	  now the LSPs are there. Also, lpcSize now represents the order
+	  instead of the filter length (including a[0]=1). Cleaner that way
+	  and more like what everybody else is doing.
+
+2002-02-14 01:31  jmvalin
+
+	* trunk/speex/libspeex/lpc.c, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h: integrated LSPs
+
+2002-02-14 00:19  jmvalin
+
+	* trunk/speex, trunk/speex/libspeex, trunk/speex/libspeex/lpc.c,
+	  trunk/speex/libspeex/lpc.h, trunk/speex/libspeex/speex.c,
+	  trunk/speex/libspeex/speex.h, trunk/speex/libspeex/testenc.c:
+	  Initial commit, some LPC stuff is already there...
+

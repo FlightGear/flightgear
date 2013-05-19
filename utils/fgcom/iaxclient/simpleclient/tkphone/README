@@ -1,0 +1,105 @@
+Simple cross platform IAX phone client: version 0.5 By Stephen Uhler
+
+This phone has been tested on Linux/x86, Linux/ppc, Windows/2000-XP,
+OSX/PPC, Solaris/sparc, Solaris/x86.  It is likely to work on any system
+that supports TK and the underlying client library
+
+INSTALLATION
+
+General installation instructions:
+  The user interface files: monitor.ui.tcl, phone.ui.tcl,i and pref.ui.tcl
+  should all be in the same directory as "tkiaxphone". so should "iaxcli"
+  (or iaxcli.exe on windows).
+
+  iaxcli is named: iaxcli-`uname -m`-`uname -s` on Unix systems to allow
+  this to be installed for multiple platforms.
+
+  Make sure the path name to "wish" is correct for your platform in tkiaxphone.
+  The default is "/usr/bin/wish".  Tk version at 8.4 is required.
+
+Mac OSX
+  Install the Aqua version of tcl/tk.
+  (http://www.apple.com/downloads/macosx/unix_open_source/tcltkaqua.html)
+  To run "tkiaxphone", double-click on it from the finder.  If you would
+  like to run in a wish shell, set the environment variable IAXPHONEHOME
+  to the location of the tcl files.
+
+Linux, Solaris
+  see: http://www.tcl.tk/ for a suitable version of tcl/tk
+
+Windows
+  see: http://www.tcl.tk/ for a suitable version of tcl/tk
+  Create a  short cut whose executable is: "<your path to wish> tkiaxphone"
+  and set the initial directory to be where the .tcl files are located.
+  double-click on the short cut to start the phone.
+
+Using the GUI
+  - phone extensions may be entered using either the buttons or keypad.
+    alphabetic characters are auctomatically converted to digits
+  - the phone must be "registered" to receive calls; to place calls
+    "unregistered", leave the user and password empty in the settings panel
+  - the kbd shortcuts ^a, ^c, ^e, ^h and ^p may be used to: toggle the audio
+    controls, open a console (if available), activate the preferences dialog,
+    hang up, and toggle push-to-talk mode respectively.
+
+NOTES
+
+* To receive calls on the phone, it needs to be registered.  Here is
+   a sample asterisk iax.conf entry:
+     [joe]
+     type=friend
+     auth=md5,plaintext,rsa
+     username=joe
+     secret=joe
+     context=local
+     host=dynamic
+     mailbox=1098
+     nat=no
+     qualify=no
+     notransfer=yes
+     disallow=all
+     allow=gsm
+     allow=ulaw
+     allow=speex
+
+* Make sure all the files stay in the same directory
+
+* the environment variable DEBUG (or tkiaxphone -d) causes
+  diagnostic information on stderr
+
+* The environment variable IAXPHONEHOME is used to locate the
+  user interface files.  If not set, they are assumed to be in
+  the same directory as "tkiaxphone"
+
+* This phone listens on localhost port 4550 to accept remote commands
+  (and to detect multiple instances of the phone running on the same host).
+  Commands a single \n terminated lines which result in a single line
+  response:
+    "who"		returns the registered server and userid
+    "expose"		makes the GUI visible
+    "die"		kills the phone
+    "call nnn"		places a call to nnn
+
+* The phone is designed to be packaged with "freewrap" (see
+  freewrap.sourceforge.net) to produce a single file self-contained
+  binary.
+
+* There are preferences available in the startup file that are not
+  exposed in the preferences GUI.  See the source code for more details.
+
+FILES:
+  iaxcli.c:		command line interface to the IAX VOIP protocol
+  tone.[ch]		tone generator for ringing, dtmf
+  tkiaxphone:		Main tcl/tk GUI
+  monitor.ui.tcl	The audio monitor panel
+  phone.ui.tcl		The main GUI
+  pref.ui.tcl		The preferences
+  *.ui			the SpecTcl project files
+
+
+BUGS/LIMITATIONS
+ - only one call appearance is supported
+ - the local audio signaling support is incomplete
+
+Stephen Uhler
+6/7/06

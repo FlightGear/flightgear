@@ -1,0 +1,355 @@
+WidGet file, version 1.2, created:  Mon Oct 25 12:18:03 PDT 2004
+Widget button#4
+	other ActionCommand {}
+	other ActionListener {}
+	geometry column 1
+	configure command pref_ok
+	other comments {}
+	other error {}
+	other help {}
+	other item_name button#4
+	other level {}
+	other master .frame#1
+	other pathname button#4
+	geometry row 1
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text ok
+	other type button
+Widget button#5
+	other ActionCommand {}
+	other ActionListener {}
+	geometry column 2
+	configure command pref_cancel
+	other comments {}
+	other error {}
+	other help {}
+	other item_name button#5
+	other level {}
+	other master .frame#1
+	other pathname button#5
+	geometry row 1
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text cancel
+	other type button
+Widget entry#1
+	other ActionCommand {}
+	other ActionListener {}
+	other TextListener {}
+	geometry column 2
+	other comments {}
+	other error {}
+	other help {}
+	other item_name entry#1
+	other level {}
+	other master {}
+	other pathname entry#1
+	geometry row 2
+	geometry sticky w
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure textvariable input_server
+	other type entry
+Widget entry#2
+	other ActionCommand {}
+	other ActionListener {}
+	other TextListener {}
+	geometry column 2
+	other comments {}
+	other error {}
+	other help {}
+	other item_name entry#2
+	other level {}
+	other master {}
+	other pathname entry#2
+	geometry row 3
+	geometry sticky w
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure textvariable input_user
+	other type entry
+	configure width 8
+Widget entry#3
+	other ActionCommand {}
+	other ActionListener {}
+	other TextListener {}
+	geometry column 2
+	other comments {}
+	other error {}
+	other help {}
+	other item_name entry#3
+	other level {}
+	other master {}
+	other pathname entry#3
+	geometry row 4
+	configure show *
+	geometry sticky w
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure textvariable input_pass
+	other type entry
+	configure width 8
+Widget entry#4
+	other ActionCommand {}
+	other ActionListener {}
+	other TextListener {}
+	geometry column 2
+	other comments {}
+	other error {}
+	other help {}
+	other item_name entry#4
+	other level {}
+	other master {}
+	other pathname entry#4
+	geometry row 5
+	geometry sticky w
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure textvariable input_ext
+	other type entry
+	configure width 5
+Widget f
+	other Colors {black white bisque grey red green blue magenta yellow SystemButtonFace}
+	configure background #e9e9e9
+	other comments {}
+	other generic_options {button {
+		} canvas {
+		} checkbutton {
+		} entry {
+		} frame {
+		} label {
+		} listbox {
+		} menu {
+		} menubutton {
+		} message {
+		} radiobutton {
+		} scale {
+		} scrollbar {
+		} text {
+		}
+	}
+	other help {}
+	other item_name f
+	other level 0
+	other master {}
+	other min_column {30 30}
+	other min_row {30 9 5 6 11 5 30}
+	other pad_column {0 0}
+	other pad_row {0 0 0 0 0 0 0}
+	other panel {}
+	other pathname f
+	other resize_column {0 0}
+	other resize_row {0 0 0 0 0 0 0}
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	other type frame
+	other weight_column {0 0}
+	other weight_row {0 0 0 0 0 0 0}
+Widget frame#1
+	geometry column 1
+	geometry columnspan 2
+	other comments {}
+	other error {- Frame configuration -}
+	other help {}
+	other item_name frame#1
+	other level 1
+	other master {}
+	other min_column {30 30}
+	other min_row 30
+	other pad_column {0 0}
+	other pad_row 0
+	other panel {}
+	other pathname frame#1
+	other resize_column {0 0}
+	other resize_row 0
+	geometry row 7
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	other type frame
+	other weight_column {0 0}
+	other weight_row 0
+Widget frame#2
+	geometry column 2
+	other comments {}
+	other help {}
+	other item_name frame#2
+	other level 1
+	other master {}
+	other min_column {30 30 30}
+	other min_row 9
+	other pad_column {0 0 0}
+	other pad_row 0
+	other panel {}
+	other pathname frame#2
+	other resize_column {0 0 0}
+	other resize_row 0
+	geometry row 6
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	other type frame
+	other weight_column {0 0 0}
+	other weight_row 0
+Widget label#1
+	configure anchor e
+	geometry column 1
+	other comments {}
+	other error {}
+	other help {}
+	other item_name label#1
+	other level {}
+	other master {}
+	other pathname label#1
+	geometry row 2
+	geometry sticky ew
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text {IAX server}
+	other type label
+Widget label#2
+	configure anchor e
+	geometry column 1
+	other comments {}
+	other error {}
+	other help {}
+	other item_name label#2
+	other level {}
+	other master {}
+	other pathname label#2
+	geometry row 3
+	geometry sticky ew
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text {auth name}
+	other type label
+Widget label#3
+	configure anchor e
+	geometry column 1
+	other comments {}
+	other error {}
+	other help {}
+	other item_name label#3
+	other level {}
+	other master {}
+	other pathname label#3
+	geometry row 4
+	geometry sticky ew
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text {auth password }
+	other type label
+Widget label#4
+	configure anchor e
+	geometry column 1
+	other comments {}
+	other error {}
+	other help {}
+	other item_name label#4
+	other level {}
+	other master {}
+	other pathname label#4
+	geometry row 5
+	geometry sticky ew
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text {phone extension}
+	other type label
+Widget label#6
+	geometry column 1
+	geometry columnspan 2
+	other comments {}
+	other error {- Label configuration -}
+	other help {}
+	other item_name label#6
+	other level {}
+	other master {}
+	other pathname label#6
+	geometry row 1
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text Settings
+	other type label
+Widget label#7
+	geometry column 1
+	other comments {}
+	other help {}
+	other item_name label#7
+	other level {}
+	other master {}
+	other pathname label#7
+	geometry row 6
+	geometry sticky e
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text {preferred codec}
+	other type label
+Widget radiobutton#1
+	other ItemListener {}
+	geometry column 1
+	other comments {}
+	other error {}
+	other help {}
+	other item_name radiobutton#1
+	other level {}
+	other master .frame#2
+	other pathname radiobutton#1
+	geometry row 1
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text gsm
+	other type radiobutton
+	configure value gsm
+	configure variable input_preferred_codec
+Widget radiobutton#2
+	other ItemListener {}
+	geometry column 2
+	other comments {}
+	other error {}
+	other help {}
+	other item_name radiobutton#2
+	other level {}
+	other master .frame#2
+	other pathname radiobutton#2
+	geometry row 1
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text ulaw
+	other type radiobutton
+	configure value ulaw
+	configure variable input_preferred_codec
+Widget radiobutton#3
+	other ItemListener {}
+	geometry column 3
+	other comments {}
+	other error {}
+	other help {}
+	other item_name radiobutton#3
+	other level {}
+	other master .frame#2
+	other pathname radiobutton#3
+	geometry row 1
+	other subclass {}
+	other tabbing {}
+	other tags {}
+	configure text speex
+	other type radiobutton
+	configure value speex
+	configure variable input_preferred_codec
+

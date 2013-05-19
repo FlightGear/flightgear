@@ -1,0 +1,35 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: simpleiax - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\shawn\LOCALS~1\Temp\RSPE8.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /I "..\..\lib" /I "..\..\lib\libiax\src" /I "..\..\lib\gsm\inc" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "DEBUG_SUPPORT" /Fp"Debug/simpleiax.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"D:\terracedev\asterisk\iaxclient\simpleclient\win32\simpleiax.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\shawn\LOCALS~1\Temp\RSPE8.tmp" 
+Creating temporary file "C:\DOCUME~1\shawn\LOCALS~1\Temp\RSPE9.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes /pdb:"Debug/simpleiax.pdb" /debug /machine:I386 /nodefaultlib:"libc" /out:"Debug/simpleiax.exe" /pdbtype:sept 
+.\Debug\simpleiax.obj
+"C:\Program Files\Microsoft Visual Studio\VC98\Lib\WINMM.LIB"
+"C:\Program Files\Microsoft Visual Studio\VC98\Lib\WS2_32.LIB"
+..\..\lib\Debug\iaxclient_lib.lib
+]
+Creating command line "link.exe @C:\DOCUME~1\shawn\LOCALS~1\Temp\RSPE9.tmp"
+<h3>Output Window</h3>
+Compiling...
+simpleiax.c
+Linking...
+
+
+
+<h3>Results</h3>
+simpleiax.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

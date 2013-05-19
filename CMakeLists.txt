@@ -149,6 +149,7 @@ option(WITH_FGPANEL      "Set to ON to build the fgpanel application (default)" 
 option(ENABLE_FGVIEWER   "Set to ON to build the fgviewer application (default)" ON)
 option(ENABLE_GPSSMOOTH  "Set to ON to build the GPSsmooth application (default)" ON)
 option(ENABLE_TERRASYNC  "Set to ON to build the terrasync application (default)" ON)
+option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" OFF)
 
 option(ENABLE_FGJS       "Set to ON to build the fgjs application (default)" ON)
 option(ENABLE_JS_DEMO    "Set to ON to build the js_demo application (default)" ON)

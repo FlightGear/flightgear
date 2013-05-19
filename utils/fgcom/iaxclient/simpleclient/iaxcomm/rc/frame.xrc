@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<resource version="2.3.0.1" xmlns="http://www.wxwindows.org/wxxrc">
+  <object class="wxFrame" name="MyFrame">
+    <title>iaxComm</title>
+  </object>
+</resource>

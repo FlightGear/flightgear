@@ -1,0 +1,33 @@
+//----------------------------------------------------------------------------------------
+// Name:        iaxcomm.rc
+// Purpose:     wxWindows resource includes for the applicaton to compile for MSW.
+// Author:      Michael Van Donselaar
+// Modified by:
+// Created:     2003
+// Copyright:   (c) Michael Van Donselaar ( michael@vandonselaar.org )
+// Licence:     GPL
+//----------------------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------------------
+// The program icon for the application
+// ---------------------------------------------------------------------------------------
+
+// NOTE: To fulfill the MSW API, the program icon declaration needs
+// to be the first one, before the icons and resources in the included "wx/msw/wx.rc" 
+// (declared later down).
+// Best to call the icon file the same as the application, so that the .xpm can be 
+// also be dropped into directories of icons for use on some desktops.
+// If we weren't loading the full icon bundle at rutime, and instead used the 
+// ICON macro in SetIcon, then the name 'main' would have to match the 
+// variable name in "SetIcon()" in the file main_frame.cpp/h.
+// But since we aren't, the name doesn't matter. Just put the icon in first in the 
+// application so that the .exe has an icon.
+
+application ICON "rc/application.ico"
+
+// ---------------------------------------------------------------------------------------
+// The generic resources for MSW programs (cursors, error icons, etc).
+// Required for all wxWindows apps.
+// ---------------------------------------------------------------------------------------
+
+#include "wx/msw/wx.rc"

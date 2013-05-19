@@ -1,0 +1,83 @@
+INTRODUCTION
+
+This is iaxComm, a portable IAX2 protocol telephony client.
+
+=======================================================================
+INSTALLATION
+
+Unzip or untar, depending on your OS.  There; you're done.
+
+iaxComm no longer needs to be able to see the rc directory, as it did in
+previuos versions.
+
+If you've never run iaxComm before, you'll be prompted for account info.
+If you want to register with an asterisk server, enter that info now.
+
+You only need to configure an account if you want to register with a
+a server for inbound calls, or simplify your dialling.  If you add an
+account on a server called asterisk and set it as your default account, 
+dialling "100" would connect you to "user:password@asterisk/100"
+
+To test, type a destination in the box above the "Dial" button and click
+"Dial". Example:
+"guest@misery.digium.com/s"
+
+* LINUX BUG NOTE *
+Before you make any calls, you will need to make at least one entry in
+your Phone Book (Not a One Touch).
+
+=======================================================================
+PEER TO PEER CONFIGURATION EXAMPLE
+
+This example assumes that you wish to call between two PCs that are PC1
+at 192.168.1.1 and PC2 at 192.168.1.2
+
+Just install iaxComm. No need to configure anything.
+
+From PC1, enter 192.168.1.2/s and click Dial.
+=======================================================================
+ASTERISK CONFIGURATION EXAMPLE
+
+Assume asterisk server at 192.168.1.1
+iaxComm user is extension 100, with intercom at extension 200.
+
+Put this in extensions.conf on the asterisk server:
+
+  exten => 100,1,Dial(IAX2/100)
+  exten => 200,1,Dial(IAX2/100/password@intercom)
+
+
+Put this in iax.conf:
+
+  [100]
+  type=friend
+  host=dynamic
+  secret=secret
+  context=default
+
+(NOTE: You don't want a username= line in iax.conf)
+
+Configure an account in iaxComm with username set to "100", and password
+set to "secret".  To enable intercom calls (autoanswered), set the 
+intercom password to "password".
+
+Now any calls to extension 100 or extension 200 ring to iaxComm on the PC. 
+Calls to extension 200 are answered automatically.
+=======================================================================
+RINGTONE CONVERSIONS
+
+iaxComm only recognizes 8Khz 16 bit signed raw audio.  You can use sox to
+convert standard wav files for use as ringtones with the following command
+line:
+
+ sox ringin.wav -c 1 -r 8000 ringin.sw
+
+=======================================================================
+SPEEX TUNING
+
+You can now tune serveral of the speex codec parameters.  Note that this
+only controls the speex encoder for your outgoing audio.  Incoming audio
+quality is controlled by the remote end.
+
+Asterisk has recently added the capability to tune it's speex encoder.  If
+you have this capability, it can be adjusted in /etc/asterisk/codecs.conf

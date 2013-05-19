@@ -1,0 +1,242 @@
+<?xml version="1.0" ?>
+<resource version="2.3.0.1" xmlns="http://www.wxwindows.org/wxxrc">
+  <object class="wxDialog" name="Devices">
+    <title>Audio Devices</title>
+    <centered>1</centered>
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>0</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>0</growablerows>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>1</cols>
+          <object class="spacer">
+            <size>5,5</size>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticBoxSizer">
+                  <label>Normal Calls</label>
+                  <orient>wxVERTICAL</orient>
+                  <object class="sizeritem">
+                    <object class="wxBoxSizer">
+                      <orient>wxHORIZONTAL</orient>
+                      <object class="sizeritem">
+                        <object class="wxStaticText">
+                          <label> Input Device:  </label>
+                        </object>
+                        <minsize>130,20</minsize>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                      <object class="sizeritem">
+                        <object class="wxChoice" name="InputDevice">
+                          <content/>
+                        </object>
+                        <minsize>260,24</minsize>
+                        <border>10</border>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                    </object>
+                  </object>
+                  <object class="spacer">
+                    <size>5,5</size>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxBoxSizer">
+                      <orient>wxHORIZONTAL</orient>
+                      <object class="sizeritem">
+                        <object class="wxStaticText">
+                          <label> Output Device:  </label>
+                        </object>
+                        <minsize>130,20</minsize>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                      <object class="sizeritem">
+                        <object class="wxChoice" name="OutputDevice">
+                          <content/>
+                        </object>
+                        <minsize>260,24</minsize>
+                        <border>10</border>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                    </object>
+                  </object>
+                </object>
+              </object>
+              <orient>wxHORIZONTAL</orient>
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+            </object>
+            <border>10</border>
+            <minsize></minsize>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticBoxSizer">
+                  <label>Speaker Phone</label>
+                  <orient>wxVERTICAL</orient>
+                  <object class="sizeritem">
+                    <object class="wxBoxSizer">
+                      <orient>wxHORIZONTAL</orient>
+                      <object class="sizeritem">
+                        <object class="wxStaticText">
+                          <label> Input Device:  </label>
+                        </object>
+                        <minsize>130,20</minsize>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                      <object class="sizeritem">
+                        <object class="wxChoice" name="SpeakerInputDevice">
+                          <content/>
+                        </object>
+                        <minsize>260,24</minsize>
+                        <border>10</border>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                    </object>
+                  </object>
+                  <object class="spacer">
+                    <size>5,5</size>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxBoxSizer">
+                      <orient>wxHORIZONTAL</orient>
+                      <object class="sizeritem">
+                        <object class="wxStaticText">
+                          <label> Output Device:  </label>
+                        </object>
+                        <minsize>130,20</minsize>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                      <object class="sizeritem">
+                        <object class="wxChoice" name="SpeakerOutputDevice">
+                          <content/>
+                        </object>
+                        <minsize>260,24</minsize>
+                        <border>10</border>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                    </object>
+                  </object>
+                </object>
+              </object>
+              <orient>wxHORIZONTAL</orient>
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+            </object>
+            <border>10</border>
+            <minsize></minsize>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticBoxSizer">
+                  <label>Incoming Ring</label>
+                  <orient>wxVERTICAL</orient>
+                  <object class="sizeritem">
+                    <object class="wxBoxSizer">
+                      <object class="sizeritem">
+                        <object class="wxStaticText">
+                          <label> Ring Device:  </label>
+                        </object>
+                        <minsize>130,20</minsize>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                      <object class="sizeritem">
+                        <object class="wxChoice" name="RingDevice">
+                          <content/>
+                        </object>
+                        <minsize>260,24</minsize>
+                        <border>10</border>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                      <orient></orient>
+                    </object>
+                    <border>10</border>
+                    <minsize></minsize>
+                  </object>
+                  <object class="spacer">
+                    <size>5,5</size>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxBoxSizer">
+                      <orient></orient>
+                      <object class="spacer">
+                        <size>130,5</size>
+                      </object>
+                      <object class="sizeritem">
+                        <object class="wxCheckBox" name="RingOnSpeaker">
+                          <label>Incoming ring on PC speaker</label>
+                        </object>
+                        <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                      </object>
+                    </object>
+                    <border>10</border>
+                    <minsize></minsize>
+                  </object>
+                </object>
+              </object>
+              <orient>wxHORIZONTAL</orient>
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+            </object>
+            <border>10</border>
+            <minsize></minsize>
+          </object>
+          <vgap>8</vgap>
+          <object class="spacer">
+            <size>0,0</size>
+          </object>
+        </object>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <object class="sizeritem">
+            <flag>wxALIGN_CENTRE|wxALL</flag>
+            <border>5</border>
+            <object class="wxButton" name="wxID_SAVE">
+              <label>Save</label>
+              <enabled>0</enabled>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <flag>wxALIGN_CENTRE|wxALL</flag>
+            <border>5</border>
+            <object class="wxButton" name="wxID_APPLY">
+              <label>Apply</label>
+              <enabled>0</enabled>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <flag>wxALIGN_CENTRE|wxALL</flag>
+            <border>5</border>
+            <object class="wxButton" name="wxID_CANCEL">
+              <label>Done</label>
+            </object>
+          </object>
+          <orient></orient>
+        </object>
+        <border></border>
+        <minsize></minsize>
+        <flag>wxALL|wxALIGN_CENTER</flag>
+      </object>
+    </object>
+  </object>
+</resource>

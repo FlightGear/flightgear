@@ -1,0 +1,115 @@
+=======================================================================
+INTRODUCTION
+
+This is iaxComm, a portable IAX2 protocol telephony client. It is
+distributed along with the sources for the iaxclient library.
+
+The home page for iaxclient is "http://iaxclient.sourceforge.net/"
+
+=======================================================================
+LICENSES
+
+iaxComm is provided under the terms of the GPL.
+
+=======================================================================
+CONTRIBUTORS:
+
+iaxComm evolved from Steve Kann's original wx client.
+
+=======================================================================
+VERSION:
+
+Work will begin soon on new features, so we're going to call 1.0rc3
+1.0final, and resume development with 1.1.x version numbers.
+
+=======================================================================
+BUILDING THE APPLICATION:
+
+Here are new, updated instructions for the new wxWidgets 2.6 series:
+
+WINDOWS CYGWIN:
+
+I develop and build iaxComm on a Windows XP box using a cygwin environment
+without MinGW.  Here's how I set up my environment:
+
+1. Download and run setup.exe from www.cygwin.com.
+   Install the base plus Devel/make and Devel/gcc.
+
+2. Download wxMSW-2.6.2-setup.exe from wxwindows.org
+   Install to the default directory, c:\wxWidgets-2.6.2
+
+3. Compile the wxWindows library.  Use the no-cygwin and disable-shared
+   options.  You'll also need to disable precompiled headers:
+
+   Start a cygwin session.
+    cd c:/wxwindows-2.6.2
+    mkdir win32
+    cd win32
+    CXX="g++ -mno-cygwin" CC="gcc -mno-cygwin" ../configure --disable-shared --disable-precomp-headers
+    make install
+
+4.  Now change to this directory and "make"
+
+WINDOWS CYGWIN/MINGW:
+
+These instructions are provided by Jeremy Howard <iaxclient@j.howard.fm>
+
+  - Download and install MinGW, MSYS, and MSYS-DTK current versions
+  - Download and install WxWidgets 2.6 (current version)
+  - Create WXWIN env var pointing to wherever you install WxWidgets
+  - Run MSYS (installed in the Start Menu by default)
+  # cd $WXWIN
+  # mkdir build-debug
+  # ../configure --with-msw --disable-shared \
+      --enable-optimise --disable-precomp-headers
+  # make
+  # make install
+  # cd ~/iaxclient/simpleclient/iaxcomm  # or whereever installed
+  # make
+ 
+ To make iaxcomm using these directions, you need to apply the patch
+ below:
+ 
+ Index: Makefile
+ ===================================================================
+ RCS file: /cvsroot/iaxclient/iaxclient/simpleclient/iaxcomm/Makefile,v
+ retrieving revision 1.19
+ diff -u -r1.19 Makefile
+ --- Makefile    29 Jul 2005 03:28:53 -0000      1.19
+ +++ Makefile    31 Jul 2005 05:24:28 -0000
+ @@ -27,6 +27,10 @@
+  ifneq (,$(findstring WIN,$(shell uname)))
+  OSTYPE=WIN32
+  else
+ +# MinGW reports MINGW32_NT-5.1 under WinXP
+ +ifneq (,$(findstring MINGW,$(shell uname)))
+ +OSTYPE=WIN32
+ +else
+
+LINUX:
+
+In order to make linux binaries redistibutable, we need to compile the
+wxWindows stuff as static libraries, rather than shared.
+
+The rpms on the wxWindows web page do not have xrc support compiled in.
+You will need to compile wxWindows from sources.
+
+1. Untar the wxWindows source distribution, and cd into it.
+2. run configure
+    ./configure --disable-shared
+3. make and install
+    make install
+4. Now we need to compile the xrc library
+    cd contrib/src/xrc
+    make install
+5. Since we're now compiling in the xrc resources, we need to compile wxrc
+    cd ../../utils/wxrc
+    make
+    cp wxrc /usr/bin
+6. cd back here and "make"
+
+
+MACOSX NOTES:
+
+I don't have an OSX box, so I can't offer any advice here.  Everything
+*should* build OK, though.

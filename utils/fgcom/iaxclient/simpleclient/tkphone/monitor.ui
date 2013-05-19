@@ -1,0 +1,178 @@
+WidGet file, version 1.1, created:  Thu Aug 26 15:18:14  2004
+Widget label#5
+	geometry row 1
+	other error {- Label configuration -}
+	other type label
+	other master .frame#4
+	configure text play
+	other pathname label#5
+	other tags {}
+	other level {}
+	other help {}
+	geometry column 1
+	other comments {}
+	other item_name label#5
+	other tabbing {}
+Widget scale#1
+	configure orient v
+	configure to 0.0
+	configure variable record
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from 100.0
+	other master .frame#3
+	other pathname scale#1
+	other tabbing {}
+	other item_name record
+	geometry sticky ns
+	geometry row 2
+	other type scale
+	other comments {}
+	geometry column 1
+Widget button#1
+	geometry columnspan 2
+	geometry row 3
+	other error {}
+	other type button
+	other master {}
+	configure text dismiss
+	other pathname button#1
+	other tags {}
+	other level {}
+	other help {}
+	geometry column 1
+	other comments {}
+	other item_name dismiss_audio
+	other tabbing {}
+Widget frame#3
+	other panel {}
+	geometry row 2
+	other resize_row {0 3}
+	other error {}
+	other type frame
+	other min_row {30 30}
+	other master {}
+	geometry ipadx 2
+	geometry ipady 2
+	other pathname frame#3
+	other resize_column 0
+	other tags {}
+	other level 1
+	other min_column 30
+	other help {}
+	geometry padx 2
+	geometry pady 2
+	geometry column 1
+	other comments {}
+	configure borderwidth 2
+	geometry sticky ns
+	other item_name frame#3
+	other tabbing {}
+	configure relief ridge
+Widget scale#2
+	configure orient v
+	configure to 0.0
+	configure variable play
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from 100.0
+	other master .frame#4
+	other pathname scale#2
+	other tabbing {}
+	other item_name play
+	geometry sticky ns
+	geometry row 2
+	other type scale
+	other comments {}
+	geometry column 1
+Widget frame#4
+	other panel {}
+	geometry row 2
+	other resize_row {0 3}
+	other error {}
+	other type frame
+	other min_row {30 30}
+	other master {}
+	geometry ipadx 2
+	geometry ipady 2
+	other pathname frame#4
+	other resize_column 0
+	other tags {}
+	other level 1
+	other min_column 30
+	other help {}
+	geometry padx 2
+	geometry pady 2
+	geometry column 2
+	other comments {}
+	configure borderwidth 2
+	geometry sticky ns
+	other item_name frame#4
+	other tabbing {}
+	configure relief ridge
+Widget f
+	other generic_options {button {
+		} canvas {
+		} checkbutton {
+		} entry {
+		} frame {
+		} label {
+		} listbox {
+		} menubutton {
+		} message {
+		} radiobutton {
+		} scale {
+		} scrollbar {
+		} text {
+		}
+	}
+	other panel {}
+	other resize_row {0 2 0}
+	other type frame
+	other min_row {30 30 30}
+	other master {}
+	other pathname f
+	other tags {}
+	other resize_column {0 0}
+	other level {}
+	configure background #e9e9e9
+	other help {}
+	other min_column {11 25}
+	other Colors {black white bisque grey red green blue magenta yellow SystemButtonFace}
+	other comments {}
+	other item_name f
+	other tabbing {}
+Widget label#3
+	geometry columnspan 2
+	geometry row 1
+	other error {- Label configuration -}
+	other type label
+	other master {}
+	configure text {audio control}
+	other pathname label#3
+	other tags {}
+	other level {}
+	other help {}
+	geometry column 1
+	other comments {}
+	other item_name label#3
+	other tabbing {}
+Widget label#4
+	geometry row 1
+	other error {- Label configuration -}
+	other type label
+	other master .frame#3
+	configure text record
+	other pathname label#4
+	other tags {}
+	other level {}
+	other help {}
+	geometry column 1
+	other comments {}
+	other item_name label#4
+	other tabbing {}
+
