@@ -64,7 +64,9 @@ public:
   FGGroundPickCallback() : SGPickCallback(PriorityScenery)
   { }
     
-  virtual bool buttonPressed(int button, const osgGA::GUIEventAdapter*, const Info& info)
+  virtual bool buttonPressed( int button,
+                              const osgGA::GUIEventAdapter&,
+                              const Info& info )
   {
     // only on left mouse button
     if (button != 0)

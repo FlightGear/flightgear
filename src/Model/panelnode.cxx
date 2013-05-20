@@ -61,7 +61,9 @@ public:
     panel(p)
   {}
   
-  virtual bool buttonPressed(int b, const osgGA::GUIEventAdapter*, const Info& info)
+  virtual bool buttonPressed( int b,
+                              const osgGA::GUIEventAdapter&,
+                              const Info& info )
   {    
     button = b;
   // convert to panel coordinates
@@ -74,12 +76,14 @@ public:
                                           picked.x(), picked.y());
   }
   
-  virtual void update(double dt)
+  virtual void update(double dt, int keyModState)
   {
     panel->getPanel()->updateMouseDelay(dt);
   }
   
-  virtual void buttonReleased(void)
+  virtual void buttonReleased( int,
+                               const osgGA::GUIEventAdapter&,
+                               const Info* )
   {
     panel->getPanel()->doLocalMouseAction(button, MOUSE_BUTTON_UP, 
                                           picked.x(), picked.y());
