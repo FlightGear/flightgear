@@ -31,7 +31,10 @@ namespace flightgear
 {
 
 class Transition;
-
+class FlightPlan;
+    
+typedef SGSharedPtr<FlightPlan> FlightPlanRef;
+    
 class FlightPlan : public RouteBase
 {
 public:

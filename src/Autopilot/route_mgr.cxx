@@ -401,12 +401,12 @@ bool FGRouteMgr::loadRoute(const SGPath& p)
   return true;
 }
 
-FlightPlan* FGRouteMgr::flightPlan() const
+FlightPlanRef FGRouteMgr::flightPlan() const
 {
   return _plan;
 }
 
-void FGRouteMgr::setFlightPlan(FlightPlan* plan)
+void FGRouteMgr::setFlightPlan(const FlightPlanRef& plan)
 {
   if (plan == _plan) {
     return;
@@ -414,7 +414,6 @@ void FGRouteMgr::setFlightPlan(FlightPlan* plan)
   
   if (_plan) {
     _plan->removeDelegate(this);
-    delete _plan;
     active->setBoolValue(false);
   }
   

@@ -91,6 +91,11 @@ FlightPlan::~FlightPlan()
       delete cur;
     }
   }
+    
+// delete legs
+    BOOST_FOREACH(Leg* l, _legs) {
+        delete l;
+    }
 }
   
 FlightPlan* FlightPlan::clone(const string& newIdent) const
@@ -1193,18 +1198,16 @@ FlightPlan::Delegate::Delegate() :
   _deleteWithPlan(false),
   _inner(NULL)
 {
-  
 }
 
 FlightPlan::Delegate::~Delegate()
-{
-  
+{  
 }
 
 void FlightPlan::Delegate::removeInner(Delegate* d)
 {
   if (!_inner) {
-    return;
+      throw sg_exception("FlightPlan delegate not found");
   }
   
   if (_inner == d) {

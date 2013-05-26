@@ -55,8 +55,8 @@ public:
          
   int currentIndex() const;
   
-  void setFlightPlan(flightgear::FlightPlan* plan);
-  flightgear::FlightPlan* flightPlan() const;
+  void setFlightPlan(const flightgear::FlightPlanRef& plan);
+  flightgear::FlightPlanRef flightPlan() const;
   
   void clearRoute();
   
@@ -104,7 +104,7 @@ private:
     bool commandDefineUserWaypoint(const SGPropertyNode* arg);
     bool commandDeleteUserWaypoint(const SGPropertyNode* arg);
     
-    flightgear::FlightPlan* _plan;
+    flightgear::FlightPlanRef _plan;
   
     time_t _takeoffTime;
     time_t _touchdownTime;
