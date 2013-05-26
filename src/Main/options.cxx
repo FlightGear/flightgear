@@ -240,7 +240,12 @@ fgSetDefaults ()
     fgSetString("/sim/version/revision", REVISION);
     fgSetInt("/sim/version/build-number", HUDSON_BUILD_NUMBER);
     fgSetString("/sim/version/build-id", HUDSON_BUILD_ID);
-  
+#ifdef FG_HAVE_HLA  	// -DENABLE_RTI=ON
+    fgSetBool("/sim/version/hla-support", true);
+#else			// -DENABLE_RTI=OFF
+    fgSetBool("/sim/version/hla-support", false);
+#endif
+
   char* envp = ::getenv( "http_proxy" );
     if( envp != NULL )
       fgSetupProxy( envp );
