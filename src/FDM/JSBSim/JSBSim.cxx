@@ -1215,9 +1215,9 @@ void FGJSBsim::init_gear(void )
     for (int i=0;i<Ngear;i++) {
       FGLGear *gear = gr->GetGearUnit(i);
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
-      node->setDoubleValue("xoffset-in", gear->GetBodyLocation()(1));
-      node->setDoubleValue("yoffset-in", gear->GetBodyLocation()(2));
-      node->setDoubleValue("zoffset-in", gear->GetBodyLocation()(3));
+      node->setDoubleValue("xoffset-in", gear->GetBodyLocation()(1) * 12);
+      node->setDoubleValue("yoffset-in", gear->GetBodyLocation()(2) * 12);
+      node->setDoubleValue("zoffset-in", gear->GetBodyLocation()(3) * 12);
       node->setBoolValue("wow", gear->GetWOW());
       node->setDoubleValue("rollspeed-ms", gear->GetWheelRollVel()*0.3043);
       node->setBoolValue("has-brake", gear->GetBrakeGroup() > 0);
