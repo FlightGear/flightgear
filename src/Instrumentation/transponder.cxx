@@ -224,10 +224,14 @@ static int modifyCodeDigit(int code, int index, int digitValue)
 void Transponder::valueChanged(SGPropertyNode *prop)
 {
     // Ident button pressed
-    if ((prop == _identBtn_node) && prop->getBoolValue()) {
-        _identTime = 0.0;
-        _ident_node->setBoolValue(true);
-        _identMode = true;
+    if (prop == _identBtn_node) {
+        if (prop->getBoolValue()) {
+            _identTime = 0.0;
+            _ident_node->setBoolValue(true);
+            _identMode = true;
+        } else {
+            // don't cancel state on release
+        }
         return;
     }
     
