@@ -18,6 +18,7 @@
 #include <Navaids/FlightPlan.hxx>
 #include <Instrumentation/rnav_waypt_controller.hxx>
 
+#define FG_210_COMPAT 1
 
 /**
  * Model a GPS radio.
@@ -189,7 +190,37 @@ private:
      * valid or not. */
     bool isScratchPositionValid() const;
 
+#if FG_210_COMPAT
+    void setScratchFromPositioned(FGPositioned* aPos, int aIndex);
+    void setScratchFromCachedSearchResult();
+    void setScratchFromRouteWaypoint(int aIndex);
+    
+    /** Add airport-specific information to a scratch result */
+    void addAirportToScratch(FGAirport* aAirport);
+    
+    FGPositioned::Filter* createFilter(FGPositioned::Type aTy);
+    
+    /** Search kernel - called each time we step through a result */
+    void performSearch();
+    
+    // command handlers
+    void loadRouteWaypoint();
+    void loadNearest();
+    void search();
+    void nextResult();
+    void previousResult();
+    void defineWaypoint();
+    void insertWaypointAtIndex(int aIndex);
+    void removeWaypointAtIndex(int aIndex);
+    
+    // tied-property getter/setters
+    double getScratchDistance() const;
+    double getScratchMagBearing() const;
+    double getScratchTrueBearing() const;
+    bool getScratchHasNext() const;
 
+#endif
+    
 // command handlers
     void selectLegMode();
     void selectOBSMode(flightgear::Waypt* waypt);
@@ -319,6 +350,17 @@ private:
     SGGeod _scratchPos;
     SGPropertyNode_ptr _scratchNode;
     bool _scratchValid;
+#if FG_210_COMPAT
+// search data
+    int _searchResultIndex;
+    std::string _searchQuery;
+    FGPositioned::Type _searchType;
+    bool _searchExact;
+    FGPositionedList _searchResults;
+    bool _searchIsRoute; ///< set if 'search' is actually the current route
+    bool _searchHasNext; ///< is there a result after this one?
+    bool _searchNames; ///< set if we're searching names instead of idents
+#endif
     
 // turn data
     bool _computeTurnData; ///< do we need to update the turn data?
@@ -342,7 +384,7 @@ private:
     
     simgear::TiedPropertyList _tiedProperties;
 
-    SGSharedPtr<flightgear::FlightPlan> _route;
+    flightgear::FlightPlanRef _route;
     
     SGPropertyChangeCallback<GPS> _callbackFlightPlanChanged;
     SGPropertyChangeCallback<GPS> _callbackRouteActivated;
