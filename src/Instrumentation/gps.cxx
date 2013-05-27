@@ -193,6 +193,18 @@ GPS::bind()
   tie(_gpsNode, "command", SGRawValueMethods<GPS, const char*>(*this, &GPS::getCommand, &GPS::setCommand));
   tieSGGeod(_scratchNode, _scratchPos, "longitude-deg", "latitude-deg", "altitude-ft");
   
+#if FG_210_COMPAT
+    tie(_scratchNode, "valid", SGRawValueMethods<GPS, bool>(*this, &GPS::getScratchValid, NULL));
+    tie(_scratchNode, "distance-nm", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchDistance, NULL));
+    tie(_scratchNode, "true-bearing-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchTrueBearing, NULL));
+    tie(_scratchNode, "mag-bearing-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchMagBearing, NULL));
+    tie(_scratchNode, "has-next", SGRawValueMethods<GPS, bool>(*this, &GPS::getScratchHasNext, NULL));
+    _scratchValid = false;
+    
+    _scratchNode->setStringValue("type", "");
+    _scratchNode->setStringValue("query", "");
+#endif
+    
   SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);
   SGPropertyNode* wp0_node = wp_node->getChild("wp", 0, true);
   tieSGGeodReadOnly(wp0_node, _wp0_position, "longitude-deg", "latitude-deg", "altitude-ft");
@@ -977,6 +989,38 @@ bool GPS::getWP1FromFlag() const
   return !getWP1ToFlag();
 }
 
+#if FG_210_COMPAT
+double GPS::getScratchDistance() const
+{
+    if (!_scratchValid) {
+        return 0.0;
+    }
+    
+    return SGGeodesy::distanceNm(_indicated_pos, _scratchPos);
+}
+
+double GPS::getScratchTrueBearing() const
+{
+    if (!_scratchValid) {
+        return 0.0;
+    }
+    
+    return SGGeodesy::courseDeg(_indicated_pos, _scratchPos);
+}
+
+double GPS::getScratchMagBearing() const
+{
+    if (!_scratchValid) {
+        return 0.0;
+    }
+    
+    double crs = getScratchTrueBearing() - _magvar_node->getDoubleValue();
+    SG_NORMALIZE_RANGE(crs, 0.0, 360.0);
+    return crs;
+}
+
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 // scratch system
 
@@ -990,6 +1034,56 @@ void GPS::setCommand(const char* aCmd)
     selectOBSMode(NULL);
   } else if (!strcmp(aCmd, "leg")) {
     selectLegMode();
+#if FG_210_COMPAT
+  } else if (!strcmp(aCmd, "load-route-wpt")) {
+      loadRouteWaypoint();
+  } else if (!strcmp(aCmd, "nearest")) {
+      loadNearest();
+  } else if (!strcmp(aCmd, "search")) {
+      _searchNames = false;
+      search();
+  } else if (!strcmp(aCmd, "search-names")) {
+      _searchNames = true;
+      search();
+  } else if (!strcmp(aCmd, "next")) {
+      nextResult();
+  } else if (!strcmp(aCmd, "previous")) {
+      previousResult();
+  } else if (!strcmp(aCmd, "define-user-wpt")) {
+      defineWaypoint();
+  } else if (!strcmp(aCmd, "route-insert-before")) {
+      int index = _scratchNode->getIntValue("index");
+      if (index < 0 || (_route->numLegs() == 0)) {
+          index = _route->numLegs();
+      } else if (index >= _route->numLegs()) {
+          SG_LOG(SG_INSTR, SG_WARN, "GPS:route-insert-before, bad index:" << index);
+          return;
+      }
+      
+      insertWaypointAtIndex(index);
+  } else if (!strcmp(aCmd, "route-insert-after")) {
+      int index = _scratchNode->getIntValue("index");
+      if (index < 0 || (_route->numLegs() == 0)) {
+          index = _route->numLegs();
+      } else if (index >= _route->numLegs()) {
+          SG_LOG(SG_INSTR, SG_WARN, "GPS:route-insert-after, bad index:" << index);
+          return;
+      } else {
+          ++index;
+      }
+      
+      insertWaypointAtIndex(index);
+  } else if (!strcmp(aCmd, "route-delete")) {
+      int index = _scratchNode->getIntValue("index");
+      if (index < 0) {
+          index = _route->numLegs();
+      } else if (index >= _route->numLegs()) {
+          SG_LOG(SG_INSTR, SG_WARN, "GPS:route-delete, bad index:" << index);
+          return;
+      }
+      
+      removeWaypointAtIndex(index);
+#endif
   } else {
     SG_LOG(SG_INSTR, SG_WARN, "GPS:unrecognized command:" << aCmd);
   }
@@ -999,6 +1093,10 @@ void GPS::clearScratch()
 {
   _scratchPos = SGGeod::fromDegFt(-9999.0, -9999.0, -9999.0);
   _scratchNode->setBoolValue("valid", false);
+#if FG_210_COMPAT
+    _scratchNode->setStringValue("type", "");
+    _scratchNode->setStringValue("query", "");
+#endif
 }
 
 bool GPS::isScratchPositionValid() const
@@ -1063,6 +1161,321 @@ void GPS::selectLegMode()
   // not really sequenced, but does all the work of updating wp0/1
   currentWaypointChanged();
 }
+
+#if FG_210_COMPAT
+
+void GPS::loadRouteWaypoint()
+{
+    _scratchValid = false;    
+    int index = _scratchNode->getIntValue("index", -9999);
+    clearScratch();
+    
+    if ((index < 0) || (index >= _route->numLegs())) { // no index supplied, use current wp
+        index = _route->currentIndex();
+    }
+    
+    _searchIsRoute = true;
+    setScratchFromRouteWaypoint(index);
+}
+
+void GPS::setScratchFromRouteWaypoint(int aIndex)
+{
+    assert(_searchIsRoute);
+    if ((aIndex < 0) || (aIndex >= _route->numLegs())) {
+        SG_LOG(SG_INSTR, SG_WARN, "GPS:setScratchFromRouteWaypoint: route-index out of bounds");
+        return;
+    }
+    
+    _searchResultIndex = aIndex;
+    WayptRef wp = _route->legAtIndex(aIndex)->waypoint();
+    _scratchNode->setStringValue("ident", wp->ident());
+    _scratchPos = wp->position();
+    _scratchValid = true;
+    _scratchNode->setIntValue("index", aIndex);
+}
+
+void GPS::loadNearest()
+{
+    string sty(_scratchNode->getStringValue("type"));
+    FGPositioned::Type ty = FGPositioned::typeFromName(sty);
+    if (ty == FGPositioned::INVALID) {
+        SG_LOG(SG_INSTR, SG_WARN, "GPS:loadNearest: request type is invalid:" << sty);
+        return;
+    }
+    
+    auto_ptr<FGPositioned::Filter> f(createFilter(ty));
+    int limitCount = _scratchNode->getIntValue("max-results", 1);
+    double cutoffDistance = _scratchNode->getDoubleValue("cutoff-nm", 400.0);
+    
+    SGGeod searchPos = _indicated_pos;
+    if (isScratchPositionValid()) {
+        searchPos = _scratchPos;
+    }
+    
+    clearScratch(); // clear now, regardless of whether we find a match or not
+    
+    _searchResults =
+    FGPositioned::findClosestN(searchPos, limitCount, cutoffDistance, f.get());
+    _searchResultIndex = 0;
+    _searchIsRoute = false;
+    
+    if (_searchResults.empty()) {
+        return;
+    }
+    
+    setScratchFromCachedSearchResult();
+}
+
+bool GPS::SearchFilter::pass(FGPositioned* aPos) const
+{
+    switch (aPos->type()) {
+        case FGPositioned::AIRPORT:
+            // heliport and seaport too?
+        case FGPositioned::VOR:
+        case FGPositioned::NDB:
+        case FGPositioned::FIX:
+        case FGPositioned::TACAN:
+        case FGPositioned::WAYPOINT:
+            return true;
+        default:
+            return false;
+    }
+}
+
+FGPositioned::Type GPS::SearchFilter::minType() const
+{
+    return FGPositioned::AIRPORT;
+}
+
+FGPositioned::Type GPS::SearchFilter::maxType() const
+{
+    return FGPositioned::VOR;
+}
+
+FGPositioned::Filter* GPS::createFilter(FGPositioned::Type aTy)
+{
+    if (aTy == FGPositioned::AIRPORT) {
+        return new FGAirport::HardSurfaceFilter();
+    }
+    
+    // if we were passed INVALID, assume it means 'all types interesting to a GPS'
+    if (aTy == FGPositioned::INVALID) {
+        return new SearchFilter;
+    }
+    
+    return new FGPositioned::TypeFilter(aTy);
+}
+
+void GPS::search()
+{
+    // parse search terms into local members, and exec the first search
+    string sty(_scratchNode->getStringValue("type"));
+    _searchType = FGPositioned::typeFromName(sty);
+    _searchQuery = _scratchNode->getStringValue("query");
+    if (_searchQuery.empty()) {
+        SG_LOG(SG_INSTR, SG_WARN, "empty GPS search query");
+        clearScratch();
+        return;
+    }
+    
+    _searchExact = _scratchNode->getBoolValue("exact", true);
+    _searchResultIndex = 0;
+    _searchIsRoute = false;
+    
+    auto_ptr<FGPositioned::Filter> f(createFilter(_searchType));
+    if (_searchNames) {
+        _searchResults = FGPositioned::findAllWithName(_searchQuery, f.get(), _searchExact);
+    } else {
+        _searchResults = FGPositioned::findAllWithIdent(_searchQuery, f.get(), _searchExact);
+    }
+    
+    bool orderByRange = _scratchNode->getBoolValue("order-by-distance", true);
+    if (orderByRange) {
+        FGPositioned::sortByRange(_searchResults, _indicated_pos);
+    }
+    
+    if (_searchResults.empty()) {
+        clearScratch();
+        return;
+    }
+    
+    setScratchFromCachedSearchResult();
+}
+
+bool GPS::getScratchHasNext() const
+{
+    int lastResult;
+    if (_searchIsRoute) {
+        lastResult = _route->numLegs() - 1;
+    } else {
+        lastResult = (int) _searchResults.size() - 1;
+    }
+    
+    if (lastResult < 0) { // search array might be empty
+        return false;
+    }
+    
+    return (_searchResultIndex < lastResult);
+}
+
+void GPS::setScratchFromCachedSearchResult()
+{
+    int index = _searchResultIndex;
+    
+    if ((index < 0) || (index >= (int) _searchResults.size())) {
+        SG_LOG(SG_INSTR, SG_WARN, "GPS:setScratchFromCachedSearchResult: index out of bounds:" << index);
+        return;
+    }
+    
+    setScratchFromPositioned(_searchResults[index], index);
+}
+
+void GPS::setScratchFromPositioned(FGPositioned* aPos, int aIndex)
+{
+    clearScratch();
+    assert(aPos);
+    
+    _scratchPos = aPos->geod();
+    _scratchNode->setStringValue("name", aPos->name());
+    _scratchNode->setStringValue("ident", aPos->ident());
+    _scratchNode->setStringValue("type", FGPositioned::nameForType(aPos->type()));
+    
+    if (aIndex >= 0) {
+        _scratchNode->setIntValue("index", aIndex);
+    }
+    
+    _scratchValid = true;
+    _scratchNode->setIntValue("result-count", _searchResults.size());
+    
+    switch (aPos->type()) {
+        case FGPositioned::VOR:
+            _scratchNode->setDoubleValue("frequency-mhz", static_cast<FGNavRecord*>(aPos)->get_freq() / 100.0);
+            break;
+            
+        case FGPositioned::NDB:
+            _scratchNode->setDoubleValue("frequency-khz", static_cast<FGNavRecord*>(aPos)->get_freq() / 100.0);
+            break;
+            
+        case FGPositioned::AIRPORT:
+            addAirportToScratch((FGAirport*)aPos);
+            break;
+            
+        default:
+            // no-op
+            break;
+    }
+    
+    // look for being on the route and set?
+}
+
+void GPS::addAirportToScratch(FGAirport* aAirport)
+{
+    for (unsigned int r=0; r<aAirport->numRunways(); ++r) {
+        SGPropertyNode* rwyNd = _scratchNode->getChild("runways", r, true);
+        FGRunway* rwy = aAirport->getRunwayByIndex(r);
+        // TODO - filter out unsuitable runways in the future
+        // based on config again
+        
+        rwyNd->setStringValue("id", rwy->ident().c_str());
+        rwyNd->setIntValue("length-ft", rwy->lengthFt());
+        rwyNd->setIntValue("width-ft", rwy->widthFt());
+        rwyNd->setIntValue("heading-deg", rwy->headingDeg());
+        // map surface code to a string
+        // TODO - lighting information
+        
+        if (rwy->ILS()) {
+            rwyNd->setDoubleValue("ils-frequency-mhz", rwy->ILS()->get_freq() / 100.0);
+        }
+    } // of runways iteration
+}
+
+void GPS::nextResult()
+{
+    if (!getScratchHasNext()) {
+        return;
+    }
+    
+    clearScratch();
+    if (_searchIsRoute) {
+        setScratchFromRouteWaypoint(++_searchResultIndex);
+    } else {
+        ++_searchResultIndex;
+        setScratchFromCachedSearchResult();
+    }
+}
+
+void GPS::previousResult()
+{
+    if (_searchResultIndex <= 0) {
+        return;
+    }
+    
+    clearScratch();
+    --_searchResultIndex;
+    
+    if (_searchIsRoute) {
+        setScratchFromRouteWaypoint(_searchResultIndex);
+    } else {
+        setScratchFromCachedSearchResult();
+    }
+}
+
+void GPS::defineWaypoint()
+{
+    if (!isScratchPositionValid()) {
+        SG_LOG(SG_INSTR, SG_WARN, "GPS:defineWaypoint: invalid lat/lon");
+        return;
+    }
+    
+    string ident = _scratchNode->getStringValue("ident");
+    if (ident.size() < 2) {
+        SG_LOG(SG_INSTR, SG_WARN, "GPS:defineWaypoint: waypoint identifier must be at least two characters");
+        return;
+    }
+    
+    // check for duplicate idents
+    FGPositioned::TypeFilter f(FGPositioned::WAYPOINT);
+    FGPositionedList dups = FGPositioned::findAllWithIdent(ident, &f);
+    if (!dups.empty()) {
+        SG_LOG(SG_INSTR, SG_WARN, "GPS:defineWaypoint: non-unique waypoint identifier, ho-hum");
+    }
+    
+    SG_LOG(SG_INSTR, SG_INFO, "GPS:defineWaypoint: creating waypoint:" << ident);
+    FGPositionedRef wpt = FGPositioned::createUserWaypoint(ident, _scratchPos);
+    _searchResults.clear();
+    _searchResults.push_back(wpt);
+    setScratchFromPositioned(wpt.get(), -1);
+}
+
+void GPS::insertWaypointAtIndex(int aIndex)
+{
+    // note we do allow index = routeMgr->size(), that's an append
+    if ((aIndex < 0) || (aIndex > _route->numLegs())) {
+        throw sg_range_exception("GPS::insertWaypointAtIndex: index out of bounds");
+    }
+    
+    if (!isScratchPositionValid()) {
+        SG_LOG(SG_INSTR, SG_WARN, "GPS:insertWaypointAtIndex: invalid lat/lon");
+        return;
+    }
+    
+    string ident = _scratchNode->getStringValue("ident");
+    
+    WayptRef wpt = new BasicWaypt(_scratchPos, ident, NULL);
+    _route->insertWayptAtIndex(wpt, aIndex);
+}
+
+void GPS::removeWaypointAtIndex(int aIndex)
+{
+    if ((aIndex < 0) || (aIndex >= _route->numLegs())) {
+        throw sg_range_exception("GPS::removeWaypointAtIndex: index out of bounds");
+    }
+    
+    _route->deleteIndex(aIndex);
+}
+
+
+#endif // of FG_210_COMPAT
 
 void GPS::tieSGGeod(SGPropertyNode* aNode, SGGeod& aRef, 
   const char* lonStr, const char* latStr, const char* altStr)
