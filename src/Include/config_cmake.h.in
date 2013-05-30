@@ -40,3 +40,5 @@
 #cmakedefine FG_JPEG_SERVER
 
 #cmakedefine SYSTEM_SQLITE
+
+#cmakedefine ENABLE_IAX
