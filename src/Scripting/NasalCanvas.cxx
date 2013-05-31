@@ -181,6 +181,8 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .member("screenY", &sc::MouseEvent::getScreenY)
     .member("clientX", &sc::MouseEvent::getClientX)
     .member("clientY", &sc::MouseEvent::getClientY)
+    .member("localX", &sc::MouseEvent::getLocalX)
+    .member("localY", &sc::MouseEvent::getLocalY)
     .member("deltaX", &sc::MouseEvent::getDeltaX)
     .member("deltaY", &sc::MouseEvent::getDeltaY)
     .member("click_count", &sc::MouseEvent::getCurrentClickCount);

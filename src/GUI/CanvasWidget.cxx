@@ -95,12 +95,7 @@ CanvasWidget::CanvasWidget( int x, int y,
 CanvasWidget::~CanvasWidget()
 {
   if( _canvas )
-    // TODO check if really not in use anymore
-    _canvas->getProps()
-           ->getParent()
-           ->removeChild( _canvas->getProps()->getName(),
-                          _canvas->getProps()->getIndex(),
-                          false );
+    _canvas->destroy();
 }
 
 // Old versions of PUI are missing this defines...
