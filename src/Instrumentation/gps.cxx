@@ -107,6 +107,12 @@ GPS::GPS ( SGPropertyNode *node, bool defaultGPSMode) :
   
   SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);
   _currentWayptNode = wp_node->getChild("wp", 1, true);
+    
+#if FG_210_COMPAT
+    _searchIsRoute = false;
+    _searchHasNext = false;
+    _searchType = FGPositioned::INVALID;
+#endif
 }
 
 GPS::~GPS ()

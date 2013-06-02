@@ -48,6 +48,7 @@ const int INVALID_ID = -9999;
 
 Transponder::Transponder(SGPropertyNode *node)
     :
+    _identMode(false),
     _name(node->getStringValue("name", "transponder")),
     _num(node->getIntValue("number", 0)),
     _mode((Mode) node->getIntValue("mode", 1)),
