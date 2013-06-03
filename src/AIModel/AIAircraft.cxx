@@ -1101,10 +1101,8 @@ void FGAIAircraft::updateHeading() {
                     }
                 }
             }
-            if (trafficRef)
-            	//cerr << trafficRef->getCallSign() << " Heading " 
-                //     << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << "Heading change rate : " << headingChangeRate << " bacnk sence " << bank_sense << endl;
-	    hdg += headingChangeRate * dt * sqrt(fabs(speed) / 15);
+
+            hdg += headingChangeRate * dt * sqrt(fabs(speed) / 15);
             headingError = headingDiff;
             if (fabs(headingError) < 1.0) {
                 hdg = tgt_heading;
