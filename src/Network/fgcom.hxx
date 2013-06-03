@@ -16,7 +16,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#define IAX_OLD_VERSION 1
+
+#if IAX_OLD_VERSION
+#include <utils/fgcom/iaxclient/lib/iaxclient.h>
+#else
+#include <utils/iaxclient/iaxclient.h>
+#endif
+
 #include <simgear/structure/subsystem_mgr.hxx>
+
+#define DEFAULT_IAX_AUDIO AUDIO_INTERNAL
 
 
 class FGCom : public SGSubsystem, public SGPropertyChangeListener
@@ -34,25 +44,39 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
 
   private:
 
-    SGPropertyNode_ptr _nav0_node;         // instrumentation/nav[0]/frequencies/selected-mhz
-    SGPropertyNode_ptr _nav1_node;         // instrumentation/nav[1]/frequencies/selected-mhz
-    SGPropertyNode_ptr _comm0_node;        // instrumentation/comm[0]/frequencies/selected-mhz
-    SGPropertyNode_ptr _comm1_node;        // instrumentation/comm[1]/frequencies/selected-mhz
-    SGPropertyNode_ptr _server_node;       // sim/fgcom/server
-    SGPropertyNode_ptr _enabled_node;      // sim/fgcom/enabled
-    SGPropertyNode_ptr _micBoost_node;     // sim/fgcom/mic-boost
-    SGPropertyNode_ptr _callsign_node;     // sim/callsign
-    SGPropertyNode_ptr _register_node;     // sim/fgcom/register/enabled
-    SGPropertyNode_ptr _username_node;     // sim/fgcom/register/username
-    SGPropertyNode_ptr _password_node;     // sim/fgcom/register/password
-    SGPropertyNode_ptr _micLevel_node;     // sim/fgcom/mic-level
-    SGPropertyNode_ptr _speakerLevel_node; // sim/fgcom/speaker-level
+    SGPropertyNode_ptr _ptt0_node;                            // instrumentation/nav[0]/ptt
+    SGPropertyNode_ptr _chat_node;                            // sim/multiplay/chat
+    SGPropertyNode_ptr _nav0_node;                            // instrumentation/nav[0]/frequencies/selected-mhz
+    SGPropertyNode_ptr _nav1_node;                            // instrumentation/nav[1]/frequencies/selected-mhz
+    SGPropertyNode_ptr _comm0_node;                           // instrumentation/comm[0]/frequencies/selected-mhz
+    SGPropertyNode_ptr _comm1_node;                           // instrumentation/comm[1]/frequencies/selected-mhz
+    SGPropertyNode_ptr _server_node;                          // sim/fgcom/server
+    SGPropertyNode_ptr _enabled_node;                         // sim/fgcom/enabled
+    SGPropertyNode_ptr _micBoost_node;                        // sim/fgcom/mic-boost
+    SGPropertyNode_ptr _callsign_node;                        // sim/multiplay/callsign
+    SGPropertyNode_ptr _register_node;                        // sim/fgcom/register/enabled
+    SGPropertyNode_ptr _username_node;                        // sim/fgcom/register/username
+    SGPropertyNode_ptr _password_node;                        // sim/fgcom/register/password
+    SGPropertyNode_ptr _micLevel_node;                        // sim/fgcom/mic-level
+    SGPropertyNode_ptr _speakerLevel_node;                    // sim/fgcom/speaker-level
+    SGPropertyNode_ptr _deviceID_node[4];                     // sim/fgcom/device[n]/id
+    SGPropertyNode_ptr _deviceName_node[4];                   // sim/fgcom/device[n]/name
+    SGPropertyNode_ptr _deviceInput_node[4];                  // sim/fgcom/device[n]/available-input
+    SGPropertyNode_ptr _deviceOutput_node[4];                 // sim/fgcom/device[n]/available-output
+    SGPropertyNode_ptr _selectedInput_node;                   // sim/fgcom/device-input
+    SGPropertyNode_ptr _selectedOutput_node;                  // sim/fgcom/device-output
 
 
+
+    double   _currentComm0;
+    double   _currentComm1;
+    double   _currentNav0;
+    double   _currentNav1;
     bool     _nav0Changed;
     bool     _nav1Changed;
     bool     _comm0Changed;
     bool     _comm1Changed;
+    bool     _chatChanged;
     bool     _register;
     bool     _enabled;
     int      _regId;
@@ -66,7 +90,11 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     std::string   _username;
     std::string   _password;
 
-    std::string   computePhoneNumber(const std::string& icao, const double& freq) const;
-    std::string   computeCallerId(const std::string& callSign) const;
+    std::string   computePhoneNumber(const double& freq, const std::string& icao) const;
+    std::string   getAirportCode(const double& freq) const;
+    std::string   getVorCode(const double& freq) const;
+    int           iaxc_callback(iaxc_event e);
+    int           textEvent(int type, int callNo, char *message);
+    int           isOutOfRange();
 
 };
