@@ -158,6 +158,12 @@ GUIMgr::GUIMgr():
 }
 
 //------------------------------------------------------------------------------
+canvas::WindowPtr GUIMgr::createWindow(const std::string& name)
+{
+  return boost::static_pointer_cast<canvas::Window>( createElement(name) );
+}
+
+//------------------------------------------------------------------------------
 void GUIMgr::init()
 {
   handleResize
@@ -188,6 +194,30 @@ void GUIMgr::shutdown()
 }
 
 //------------------------------------------------------------------------------
+bool GUIMgr::handleEvent(const osgGA::GUIEventAdapter& ea)
+{
+  switch( ea.getEventType() )
+  {
+    case osgGA::GUIEventAdapter::PUSH:
+    case osgGA::GUIEventAdapter::RELEASE:
+//    case osgGA::GUIEventAdapter::DOUBLECLICK:
+//    // DOUBLECLICK doesn't seem to be triggered...
+    case osgGA::GUIEventAdapter::DRAG:
+    case osgGA::GUIEventAdapter::MOVE:
+    case osgGA::GUIEventAdapter::SCROLL:
+      return handleMouse(ea);
+    case osgGA::GUIEventAdapter::RESIZE:
+      handleResize( ea.getWindowX(),
+                    ea.getWindowY(),
+                    ea.getWindowWidth(),
+                    ea.getWindowHeight() );
+      return false; // Let other event handlers also consume resize events
+    default:
+      return false;
+  }
+}
+
+//------------------------------------------------------------------------------
 void GUIMgr::elementCreated(simgear::PropertyBasedElementPtr element)
 {
   canvas::WindowPtr window =
@@ -211,30 +241,6 @@ void GUIMgr::elementCreated(simgear::PropertyBasedElementPtr element)
   }
   window->getGroup()->setUserData(new WindowUserData(window));
   layer->addChild(window->getGroup());
-}
-
-//------------------------------------------------------------------------------
-bool GUIMgr::handleEvent(const osgGA::GUIEventAdapter& ea)
-{
-  switch( ea.getEventType() )
-  {
-    case osgGA::GUIEventAdapter::PUSH:
-    case osgGA::GUIEventAdapter::RELEASE:
-//    case osgGA::GUIEventAdapter::DOUBLECLICK:
-//    // DOUBLECLICK doesn't seem to be triggered...
-    case osgGA::GUIEventAdapter::DRAG:
-    case osgGA::GUIEventAdapter::MOVE:
-    case osgGA::GUIEventAdapter::SCROLL:
-      return handleMouse(ea);
-    case osgGA::GUIEventAdapter::RESIZE:
-      handleResize( ea.getWindowX(),
-                    ea.getWindowY(),
-                    ea.getWindowWidth(),
-                    ea.getWindowHeight() );
-      return false; // Let other event handlers also consume resize events
-    default:
-      return false;
-  }
 }
 
 //------------------------------------------------------------------------------

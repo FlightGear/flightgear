@@ -24,6 +24,8 @@
 
 #include "NasalCanvas.hxx"
 #include <Canvas/canvas_mgr.hxx>
+#include <Canvas/gui_mgr.hxx>
+#include <Canvas/window.hxx>
 #include <Main/globals.hxx>
 #include <Scripting/NasalSys.hxx>
 
@@ -57,6 +59,7 @@ typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
 typedef nasal::Ghost<sc::TextPtr> NasalText;
+typedef nasal::Ghost<canvas::WindowWeakPtr> NasalWindow;
 
 SGPropertyNode* from_nasal_helper(naContext c, naRef ref, SGPropertyNode**)
 {
@@ -77,12 +80,34 @@ CanvasMgr& requireCanvasMgr(naContext c)
   return *canvas_mgr;
 }
 
+GUIMgr& requireGUIMgr(naContext c)
+{
+  GUIMgr* mgr =
+    static_cast<GUIMgr*>(globals->get_subsystem("CanvasGUI"));
+  if( !mgr )
+    naRuntimeError(c, "Failed to get CanvasGUI subsystem");
+
+  return *mgr;
+}
+
 /**
  * Create new Canvas and get ghost for it.
  */
-static naRef f_createCanvas(naContext c, naRef me, int argc, naRef* args)
+static naRef f_createCanvas(const nasal::CallContext& ctx)
 {
-  return NasalCanvas::create(c, requireCanvasMgr(c).createCanvas());
+  return NasalCanvas::create(ctx.c, requireCanvasMgr(ctx.c).createCanvas());
+}
+
+/**
+ * Create new Window and get ghost for it.
+ */
+static naRef f_createWindow(const nasal::CallContext& ctx)
+{
+  return NasalWindow::create
+  (
+    ctx.c,
+    requireGUIMgr(ctx.c).createWindow( ctx.getArg<std::string>(0) )
+  );
 }
 
 /**
@@ -191,6 +216,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .member("size_x", &sc::Canvas::getSizeX)
     .member("size_y", &sc::Canvas::getSizeY)
     .method("_createGroup", &f_canvasCreateGroup)
+    .method("_getGroup", &sc::Canvas::getGroup)
     .method("addEventListener", &sc::Canvas::addEventListener);
   NasalElement::init("canvas.Element")
     .member("_node_ghost", &elementGetNode<sc::Element>)
@@ -205,10 +231,14 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .bases<NasalElement>()
     .method("getNearestCursor", &sc::Text::getNearestCursor);
 
+  NasalWindow::init("canvas.Window")
+    .member("_node_ghost", &elementGetNode<canvas::Window>);
+
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
 
   canvas_module.set("_newCanvasGhost", f_createCanvas);
+  canvas_module.set("_newWindowGhost", f_createWindow);
   canvas_module.set("_getCanvasGhost", f_getCanvas);
 
   return naNil();

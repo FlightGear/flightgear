@@ -41,10 +41,10 @@ class GUIMgr:
   public:
     GUIMgr();
 
+    canvas::WindowPtr createWindow(const std::string& name = "");
+
     virtual void init();
     virtual void shutdown();
-
-    virtual void elementCreated(simgear::PropertyBasedElementPtr element);
 
     bool handleEvent(const osgGA::GUIEventAdapter& ea);
 
@@ -67,6 +67,8 @@ class GUIMgr:
     float _last_x,
           _last_y;
     double _last_scroll_time;
+
+    virtual void elementCreated(simgear::PropertyBasedElementPtr element);
 
     canvas::WindowPtr getWindow(size_t i);
     simgear::canvas::Placements
