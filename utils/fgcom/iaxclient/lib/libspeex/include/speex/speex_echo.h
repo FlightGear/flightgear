@@ -63,16 +63,7 @@ typedef struct SpeexEchoState {
    float *Y2;
    float *E;
    float *PHI;
-#if defined(_MSC_VER)
-# if ((_MSC_VER < 1300) || (_MSC_VER >= 1400))
-   /* this works with older or newer MS compilers, but not .Net 2002 or 2003 */
-   float * __restrict W;
-# else
    float * W;
-# endif
-#else
-   float * restrict W;
-#endif
    float *power;
    float *power_1;
    float *grad;

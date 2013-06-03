@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifdef _MSC_VER
-#include <Windows.h>
+#include "winpoop.h"
 #else /* !_MSC_VER */
 #include <unistd.h>
 #include <stdint.h>

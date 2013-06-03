@@ -29,7 +29,6 @@ extern "C" {
 
 #if defined(WIN32)  ||  defined(_WIN32_WCE)
 #include "winpoop.h" // Win32 Support Functions
-#include <winsock.h>
 #if !defined(_WIN32_WCE)
 #include <process.h>
 #endif

@@ -14,11 +14,18 @@
 
 #if defined(_MSC_VER)
 #define INLINE __inline
+#define inline __inline
+#define snprintf _snprintf
+// should try without these
+#pragma warning(disable: 4996 4244 4305 4018 4804)
+typedef __int64 ssize_t;
 #else
 #define INLINE inline
 #endif
 
-#include <winsock.h>
+#include <winsock2.h>
+#include <io.h> // for open, close, write, read
+#include <stdio.h>
 
 void gettimeofday(struct timeval *tv, void /*struct timezone*/ *tz);
 

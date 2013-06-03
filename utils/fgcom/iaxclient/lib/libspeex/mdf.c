@@ -42,15 +42,19 @@
 #include "speex/speex_echo.h"
 #include "smallft.h"
 #include <math.h>
-
+#ifdef _MSC_VER
+#include "winpoop.h"
+#endif
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
 #define BETA .65
 
+#ifndef min
 #define min(a,b) ((a)<(b) ? (a) : (b))
 #define max(a,b) ((a)>(b) ? (a) : (b))
+#endif
 
 /** Compute inner product of two real vectors */
 static inline float inner_prod(float *x, float *y, int N)

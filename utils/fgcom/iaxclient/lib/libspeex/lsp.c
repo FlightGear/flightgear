@@ -52,7 +52,9 @@ Heavily modified by Jean-Marc Valin (fixed-point, optimizations,
 #include "lsp.h"
 #include "stack_alloc.h"
 #include "math_approx.h"
-
+#ifdef _MSC_VER
+#include "winpoop.h"
+#endif
 #ifndef M_PI
 #define M_PI           3.14159265358979323846  /* pi */
 #endif
