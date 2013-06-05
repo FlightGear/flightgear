@@ -45,18 +45,22 @@
 #endif
 #endif
 
-#else
-
+#else // !#if defined(WIN32)  ||  defined(_WIN32_WCE)
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <sys/time.h>
+#include <sys/time.h>   // gettimeofday
+#ifndef HAVE_GETTIMEOFDAY
+#define HAVE_GETTIMEOFDAY 1
+#endif
 #include <stdlib.h>
+
 #ifdef __GNUC__
 #ifndef __USE_SVID
 #define __USE_SVID
 #endif
 #endif
+
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -75,6 +79,9 @@
 #endif
 #endif
 
+#endif // #if defined(WIN32)  ||  defined(_WIN32_WCE) yes or no
+
+#ifndef _MSC_VER
 #endif
 
 #include "jitterbuf.h"

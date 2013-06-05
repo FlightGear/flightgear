@@ -41,13 +41,7 @@
 #include "iax-client.h"
 #include "jitterbuf.h"
 
-#if STDC_HEADERS
-# include <stdarg.h>
-#else
-# if HAVE_VARARGS_H
-#  include <varargs.h>
-# endif
-#endif
+#include <stdarg.h>
 
 #ifdef AUDIO_ALSA
 #include "audio_alsa.h"

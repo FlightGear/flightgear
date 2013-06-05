@@ -1,4 +1,8 @@
+// file : fgcom.h
+
+
 #include <stdlib.h>
+#include <stdio.h> // for FILE *
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
