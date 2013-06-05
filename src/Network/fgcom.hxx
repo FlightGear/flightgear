@@ -16,17 +16,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#define IAX_OLD_VERSION 1
-
-#if IAX_OLD_VERSION
-#include <utils/fgcom/iaxclient/lib/iaxclient.h>
-#else
-#include <utils/iaxclient/iaxclient.h>
-#endif
-
+#include "iaxclient.h"
 #include <simgear/structure/subsystem_mgr.hxx>
-
-#define DEFAULT_IAX_AUDIO AUDIO_INTERNAL
 
 
 class FGCom : public SGSubsystem, public SGPropertyChangeListener

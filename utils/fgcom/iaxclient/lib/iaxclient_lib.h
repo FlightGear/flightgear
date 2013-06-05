@@ -234,6 +234,18 @@ struct iaxc_call {
 	struct iax_session *session;
 };
 
+#include "audio_encode.h"
+
+#ifdef AUDIO_PA
+  #include "audio_portaudio.h"
+#endif
+
+#include "audio_file.h"
+
+#ifdef AUDIO_OPENAL
+  #include "audio_openal.h"
+#endif
+
 extern int iaxci_audio_output_mode;
 
 int iaxci_post_event_callback(iaxc_event e);

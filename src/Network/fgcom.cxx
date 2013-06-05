@@ -20,6 +20,8 @@
 #  include <config.h>
 #endif
 
+#include <stdio.h>
+
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
@@ -154,11 +156,7 @@ void FGCom::init()
   */
 
   // INITIALIZE IAX
-#if IAX_OLD_VERSION
-  if( iaxc_initialize(4,4) )
-#else
   if( iaxc_initialize(4) )
-#endif
     SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot initialize iaxclient!");
 
   // SET MIC BOOST
@@ -251,46 +249,26 @@ void FGCom::update(double dt)
 
     if( _comm0Changed ) {
       SG_LOG( SG_IO, SG_ALERT, "FGCom manage comm0 change" );
-#if IAX_OLD_VERSION
-      iaxc_select_call( _callComm0 );
-      iaxc_dump_call();
-#else
-      // iaxc_dump_call_number( _callComm0 );
-#endif
+      iaxc_dump_call_number( _callComm0 );
       const double freq = _comm0_node->getDoubleValue();
       std::string num = computePhoneNumber(freq, getAirportCode(freq)); // num = "username:password@fgcom.flightgear.org/0165676568122825"
       if( num.size() > 0 ) {
         SG_LOG( SG_IO, SG_ALERT, "FGCom comm[0] number=" << num );
-#if IAX_OLD_VERSION
-        iaxc_call(const_cast<char*>(num.c_str()));
-        _callComm0 = iaxc_selected_call();
-#else
-        _callComm0 = iaxc_call(const num.c_str());
-#endif
+        _callComm0 = iaxc_call(num.c_str());
       }
       if( _callComm0 == -1 )
         SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call comm[0] freq" );
-      _comm0Changed = false;
+        _comm0Changed = false;
     }
 
     if( _comm1Changed ) {
       SG_LOG( SG_IO, SG_ALERT, "FGCom manage comm1 change" );
-#if IAX_OLD_VERSION
-      iaxc_select_call( _callComm1 );
-      iaxc_dump_call();
-#else
       iaxc_dump_call_number( _callComm1 );
-#endif
       const double freq = _comm1_node->getDoubleValue();
       std::string num = computePhoneNumber(freq, getAirportCode(freq)); // num = "username:password@fgcom.flightgear.org/0165676568122825"
       if( num.size() > 0 ) {
         SG_LOG( SG_IO, SG_ALERT, "FGCom comm[1] number=" << num );
-#if IAX_OLD_VERSION
-      iaxc_call(const_cast<char*>(num.c_str()));
-      _callComm1 = iaxc_selected_call();
-#else
-      _callComm1 = iaxc_call(const num.c_str());
-#endif
+        _callComm1 = iaxc_call(num.c_str());
       }
       if( _callComm1 == -1 )
         SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call comm[1] freq" );
@@ -299,22 +277,12 @@ void FGCom::update(double dt)
 
     if( _nav0Changed ) {
       SG_LOG( SG_IO, SG_ALERT, "FGCom manage nav0 change" );
-#if IAX_OLD_VERSION
-      iaxc_select_call( _callNav0 );
-      iaxc_dump_call();
-#else
       iaxc_dump_call_number( _callNav0 );
-#endif
       const double freq = _nav0_node->getDoubleValue();
       std::string num = computePhoneNumber(freq, getVorCode(freq)); // num = "username:password@fgcom.flightgear.org/0165676568122825"
       if( num.size() > 0 ) {
         SG_LOG( SG_IO, SG_ALERT, "FGCom nav[0] number=" << num );
-#if IAX_OLD_VERSION
-      iaxc_call(const_cast<char*>(num.c_str()));
-      _callNav0 = iaxc_selected_call();
-#else
-      _callNav0 = iaxc_call(const num.c_str());
-#endif
+        _callNav0 = iaxc_call(num.c_str());
       }
       if( _callNav0 == -1 )
         SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call nav[0] freq" );
@@ -323,22 +291,12 @@ void FGCom::update(double dt)
 
     if( _nav1Changed ) {
       SG_LOG( SG_IO, SG_ALERT, "FGCom manage nav1 change" );
-#if IAX_OLD_VERSION
-      iaxc_select_call( _callNav1 );
-      iaxc_dump_call();
-#else
       iaxc_dump_call_number( _callNav1 );
-#endif
       const double freq = _nav1_node->getDoubleValue();
       std::string num = computePhoneNumber(freq, getVorCode(freq)); // num = "username:password@fgcom.flightgear.org/0165676568122825"
       if( num.size() > 0 ) {
         SG_LOG( SG_IO, SG_ALERT, "FGCom nav[1] number=" << num );
-#if IAX_OLD_VERSION
-      iaxc_call(const_cast<char*>(num.c_str()));
-      _callNav1 = iaxc_selected_call();
-#else
-      _callNav1 = iaxc_call(const num.c_str());
-#endif
+        _callNav1 = iaxc_call(num.c_str());
       }
       if( _callNav1 == -1 )
         SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call nav[1] freq" );
@@ -348,10 +306,7 @@ void FGCom::update(double dt)
     if( _chatChanged ) {
       SG_LOG( SG_IO, SG_ALERT, "FGCom manage chat change" );
       const std::string msg = _chat_node->getStringValue();
-#if IAX_OLD_VERSION
-#else
       iaxc_send_text_call( _callComm0, msg.c_str() );
-#endif
       _chatChanged = false;
     }
 

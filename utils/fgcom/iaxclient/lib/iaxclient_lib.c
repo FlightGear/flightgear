@@ -638,6 +638,13 @@ EXPORT int iaxc_initialize(int num_calls)
 		if ( alsa_initialize(&audio_driver, 8000) )
 			return -1;
 #endif
+#ifdef AUDIO_OPENAL
+		if ( openal_initialize(&audio_driver, 8000) )
+		{
+			iaxci_usermsg(IAXC_ERROR, "failed openal_initialize");
+			return -1;
+		}
+#endif
 	}
 #ifdef USE_VIDEO
 	if ( video_initialize() )
