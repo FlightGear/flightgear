@@ -76,6 +76,14 @@ extern "C" {
 #define AST_FORMAT_H261         (1 << 18)
 	/*! H.263 Video */
 #define AST_FORMAT_H263         (1 << 19)
+	/*! H.263+ Video  */
+#define AST_FORMAT_H263p	(1 << 20)
+	/*! H.264 Video*/
+#define AST_FORMAT_H264		(1 << 21)
+	/*! MPEG4 Video*/
+#define AST_FORMAT_MPEG4	(1 << 22)
+	/*! Theora Video */
+#define AST_FORMAT_THEORA	(1 << 24)
 	/*! Max one */
 #define AST_FORMAT_MAX_VIDEO    (1 << 24)
 

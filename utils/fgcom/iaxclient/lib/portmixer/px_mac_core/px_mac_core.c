@@ -43,44 +43,19 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "portaudio.h"
-#include "portmixer.h"
-
-#if defined(PaStream)
-#define PA_V18
-#include "pa_host.h"
+#include <portaudio.h>
+#if 0
+#include <pa_mac_core.h>
 #else
-#define PA_V19
-#include "pa_mac_core_internal.h"
+/* TODO: Fix this when portaudio gets their hostapi-specific stuff
+ * straightened up.
+ */
+#include <AudioUnit/AudioUnit.h>
+AudioDeviceID PaMacCore_GetStreamInputDevice( PaStream* s );
+AudioDeviceID PaMacCore_GetStreamOutputDevice( PaStream* s );
 #endif
 
-typedef enum PaDeviceMode
-{
-    PA_MODE_OUTPUT_ONLY,
-    PA_MODE_INPUT_ONLY,
-    PA_MODE_IO_ONE_DEVICE,
-    PA_MODE_IO_TWO_DEVICES
-} PaDeviceMode;
-
-typedef struct PaHostInOut_s
-{
-    AudioDeviceID      audioDeviceID; /* CoreAudio specific ID */
-    int                bytesPerUserNativeBuffer; /* User buffer size in native host format. Depends on numChannels. */
-    AudioConverterRef  converter;
-    void              *converterBuffer;
-    int                numChannels;
-} PaHostInOut;
-
-/**************************************************************
- * Structure for internal host specific stream data.
- * This is allocated on a per stream basis.
- */
-typedef struct PaHostSoundControl
-{
-    PaHostInOut        input;
-    PaHostInOut        output;
-    AudioDeviceID      primaryDeviceID;
-} PaHostSoundControl;
+#include "portmixer.h"
 
 // define value of isInput passed to CoreAudio routines
 #define IS_INPUT    (true)
@@ -105,31 +80,14 @@ const char *Px_GetMixerName( void *pa_stream, int index )
 PxMixer *Px_OpenMixer( void *pa_stream, int index )
 {
    PxInfo                      *info;
-   PaHostSoundControl          *macInfo;
    
    info = (PxInfo *)malloc(sizeof(PxInfo));   
    if (!info) {
       return (PxMixer *)info;
    }
 
-#if defined(PA_V18)
-   internalPortAudioStream     *past;
-   
-   past = (internalPortAudioStream *) pa_stream;
-   macInfo = (PaHostSoundControl *) past->past_DeviceData;
-
-   info->input = macInfo->input.audioDeviceID;
-   info->output = macInfo->output.audioDeviceID;
-#endif
-
-#if defined(PA_V19)
-   PaMacCoreStream             *pamcs;
-   
-   pamcs = (PaMacCoreStream *) pa_stream;
-
-   info->input = pamcs->inputDevice;
-   info->output = pamcs->outputDevice;
-#endif 
+   info->input = PaMacCore_GetStreamInputDevice(pa_stream);
+   info->output = PaMacCore_GetStreamOutputDevice(pa_stream);
 
    return (PxMixer *)info;
 }
@@ -152,14 +110,11 @@ void Px_CloseMixer(PxMixer *mixer)
 
 PxVolume Px_GetMasterVolume( PxMixer *mixer )
 {
-   PxInfo *info = (PxInfo *)mixer;
-
    return 0.0;
 }
 
 void Px_SetMasterVolume( PxMixer *mixer, PxVolume volume )
 {
-   PxInfo *info = (PxInfo *)mixer;
 }
 
 /*
@@ -173,7 +128,6 @@ static PxVolume Px_GetVolume(AudioDeviceID device, Boolean isInput)
    Float32  vol, maxvol=0.0;
    UInt32   mute, anymuted=0;
    int ch;
-   PxVolume max;
 
    for(ch=0; ch<=2; ch++) {
       outSize = sizeof(Float32);
@@ -253,8 +207,6 @@ void Px_SetPCMOutputVolume( PxMixer *mixer, PxVolume volume )
 
 int Px_GetNumOutputVolumes( PxMixer *mixer )
 {
-   PxInfo *info = (PxInfo *)mixer;
-
    return 1;
 }
 
@@ -282,28 +234,21 @@ void Px_SetOutputVolume( PxMixer *mixer, int i, PxVolume volume )
 
 int Px_GetNumInputSources( PxMixer *mixer )
 {
-   PxInfo *info = (PxInfo *)mixer;
-
    return 1 ;
 }
 
 const char *Px_GetInputSourceName( PxMixer *mixer, int i)
 {
-   PxInfo *info = (PxInfo *)mixer;
-
    return "Default Input Source" ;
 }
 
 int Px_GetCurrentInputSource( PxMixer *mixer )
 {
-   PxInfo *info = (PxInfo *)mixer;
-
    return -1; /* none */
 }
 
 void Px_SetCurrentInputSource( PxMixer *mixer, int i )
 {
-   PxInfo *info = (PxInfo *)mixer;
 }
 
 /*

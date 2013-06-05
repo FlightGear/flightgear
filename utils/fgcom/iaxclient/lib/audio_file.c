@@ -82,19 +82,19 @@ static int file_destroy (struct iaxc_audio_driver *d )
     return 0;
 }
 
-static double file_input_level_get(struct iaxc_audio_driver *d){
+static float file_input_level_get(struct iaxc_audio_driver *d){
     return -1;
 }
 
-static double file_output_level_get(struct iaxc_audio_driver *d){
+static float file_output_level_get(struct iaxc_audio_driver *d){
     return -1;
 }
 
-static int file_input_level_set(struct iaxc_audio_driver *d, double level){
+static int file_input_level_set(struct iaxc_audio_driver *d, float level){
     return -1;
 }
 
-static int file_output_level_set(struct iaxc_audio_driver *d, double level){
+static int file_output_level_set(struct iaxc_audio_driver *d, float level){
     return -1;
 }
 

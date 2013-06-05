@@ -37,7 +37,7 @@
     bug. (see msdn kb Q274323).
 */
  
-#include <windows.h>
+#include "winpoop.h"
 #include <mmsystem.h> /* for timeGetTime() */
 
 #include "pa_util.h"

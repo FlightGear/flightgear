@@ -1,12 +1,15 @@
 /*
- * iaxclient: a portable telephony toolkit
+ * iaxclient: a cross-platform IAX softphone library
  *
- * Copyright (C) 2003-2004, Horizon Wimba, Inc.
+ * Copyrights:
+ * Copyright (C) 2003-2006, Horizon Wimba, Inc.
+ * Copyright (C) 2007, Wimba, Inc.
  *
+ * Contributors:
  * Steve Kann <stevek@stevek.com>
  *
  * This program is free software, distributed under the terms of
- * the GNU Lesser (Library) General Public License
+ * the GNU Lesser (Library) General Public License.
  */
 
 #include "codec_ulaw.h"
@@ -20,14 +23,14 @@ static short ulaw_2lin [256];
 static unsigned char lin_2ulaw [16384];
 static int initialized=0;
 
-/* this looks similar to asterisk, but comes from public domain code by craig reese 
+/* this looks similar to asterisk, but comes from public domain code by craig reese
    I've just followed asterisk's table sizes for lin_2u, and also too lazy to do binary arith to decide which
    iterations to skip -- this way we get the same result.. */
 static void initialize() {
     int i;
 
     /* ulaw_2lin */
-    for(i=0;i<256;i++) { 
+    for(i=0;i<256;i++) {
 	  int b = ~i;
 	  int exp_lut[8] = {0,132,396,924,1980,4092,8316,16764};
 	  int sign, exponent, mantissa, sample;
@@ -38,10 +41,10 @@ static void initialize() {
 	  sample = exp_lut[exponent] + (mantissa << (exponent + 3));
 	  if (sign != 0) sample = -sample;
 	  ulaw_2lin[i] = sample;
-    }	
+    }
 
     /* lin_2ulaw */
-    for(i=-32767;i<32768;i+=4) { 
+    for(i=-32767;i<32768;i+=4) {
 	int sample = i;
 	int exp_lut[256] = {0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,
                              4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
@@ -73,21 +76,23 @@ static void initialize() {
 	mantissa = (sample >> (exponent + 3)) & 0x0F;
 	ulawbyte = ~(sign | (exponent << 4) | mantissa);
 	if (ulawbyte == 0) ulawbyte = 0x02;	/* optional CCITT trap */
-	
-	lin_2ulaw[((unsigned short)i) >> 2] = ulawbyte;		
-    }	
-   
-    initialized = 1; 
+
+	lin_2ulaw[((unsigned short)i) >> 2] = ulawbyte;
+    }
+
+    initialized = 1;
 }
 
 static void destroy ( struct iaxc_audio_codec *c) {
-    free(c);
+	if ( c->decstate )
+		free(c->decstate);
+	free(c);
 }
 
 
-static int decode ( struct iaxc_audio_codec *c, 
+static int decode ( struct iaxc_audio_codec *c,
     int *inlen, unsigned char *in, int *outlen, short *out ) {
-    struct state *state = c->decstate;
+    struct state *state = (struct state *)c->decstate;
     short *orig_out = out;
     short sample;
 
@@ -104,12 +109,12 @@ static int decode ( struct iaxc_audio_codec *c,
 	*(out++) = sample;
 	(*inlen)--; (*outlen)--;
     }
-    plc_rx(&state->plc,orig_out,out-orig_out);
+    plc_rx(&state->plc, orig_out, (int)(out - orig_out));
 
     return 0;
 }
 
-static int encode ( struct iaxc_audio_codec *c, 
+static int encode ( struct iaxc_audio_codec *c,
     int *inlen, short *in, int *outlen, unsigned char *out ) {
 
     while ((*inlen > 0) && (*outlen > 0)) {
@@ -121,10 +126,10 @@ static int encode ( struct iaxc_audio_codec *c,
 }
 
 
-struct iaxc_audio_codec *iaxc_audio_codec_ulaw_new() {
+struct iaxc_audio_codec *codec_audio_ulaw_new() {
 
-  struct iaxc_audio_codec *c = calloc(sizeof(struct iaxc_audio_codec),1);
-  
+  struct iaxc_audio_codec *c = (struct iaxc_audio_codec *)calloc(sizeof(struct iaxc_audio_codec),1);
+
   if(!c) return c;
 
   if(!initialized) initialize();

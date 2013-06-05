@@ -37,14 +37,14 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
+#ifdef _MSC_VER
+#include "winpoop.h"
+#endif
 #include "misc.h"
 #include "speex/speex_echo.h"
 #include "smallft.h"
 #include <math.h>
-#ifdef _MSC_VER
-#include "winpoop.h"
-#endif
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif

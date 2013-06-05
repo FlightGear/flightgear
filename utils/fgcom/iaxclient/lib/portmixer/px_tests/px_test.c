@@ -3,34 +3,57 @@
 #include "portmixer.h"
 #include "portaudio.h"
 
-static int DummyCallbackFunc(void *inputBuffer, void *outputBuffer,
+static int DummyCallbackFunc(const void *inputBuffer, 
+			     void *outputBuffer,
                              unsigned long framesPerBuffer,
-                             PaTimestamp outTime, void *userData)
+			     const PaStreamCallbackTimeInfo* timeInfo,
+			     PaStreamCallbackFlags statusFlags,
+			     void *userData )
 {
    return 0;
 }
+#define NUM_CHANNELS    (2)
+#define PA_SAMPLE_TYPE  paFloat32
+#define SAMPLE_RATE         (44100)
+#define FRAMES_PER_BUFFER   (1024)
 
 int main(int argc, char **argv)
 {
    int num_mixers;
    int i;
    PaError          error;
-   PortAudioStream *stream;
-   int             recDeviceNum;
-   int             playDeviceNum;
-   int             inputChannels = 2;
+   PaStream*       stream;
+   PaStreamParameters inputParameters;
+   PaStreamParameters outputParameters;
 
-   recDeviceNum = Pa_GetDefaultInputDeviceID();
-   playDeviceNum = Pa_GetDefaultOutputDeviceID();
+   error = Pa_Initialize();
+   if ( error != paNoError ) {
+      printf("PortAudio error %d: %s\n", error, Pa_GetErrorText(error));
+      return -1;
+   }
+   inputParameters.device = Pa_GetDefaultInputDevice();
+   inputParameters.channelCount = NUM_CHANNELS;
+   inputParameters.sampleFormat = PA_SAMPLE_TYPE;
+   inputParameters.suggestedLatency = 
+       Pa_GetDeviceInfo(inputParameters.device )->defaultLowInputLatency;
+   inputParameters.hostApiSpecificStreamInfo = NULL;
 
-   error = Pa_OpenStream(&stream, recDeviceNum, inputChannels, paFloat32, NULL,
-                         paNoDevice, 0, paFloat32, NULL,
-                         44101, 512, 1, paClipOff | paDitherOff,
+   outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
+   outputParameters.channelCount = 2;       /* stereo output */
+   outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+   outputParameters.suggestedLatency = 
+       Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
+   outputParameters.hostApiSpecificStreamInfo = NULL;
+
+
+
+   error = Pa_OpenStream(&stream, &inputParameters, &outputParameters, 
+			 SAMPLE_RATE,FRAMES_PER_BUFFER,
+                         paClipOff | paDitherOff,
                          DummyCallbackFunc, NULL);
 
    if (error) {
-      printf("PortAudio error %d: %s\n", error,
-             Pa_GetErrorText(error));
+      printf("PortAudio error %d: %s\n", error, Pa_GetErrorText(error));
       return -1;
    }
    

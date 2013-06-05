@@ -1,12 +1,15 @@
 /*
- * iaxclient: a portable telephony toolkit
+ * iaxclient: a cross-platform IAX softphone library
  *
- * Copyright (C) 2003-2004, Horizon Wimba, Inc.
+ * Copyrights:
+ * Copyright (C) 2003-2006, Horizon Wimba, Inc.
+ * Copyright (C) 2007, Wimba, Inc.
  *
+ * Contributors:
  * Steve Kann <stevek@stevek.com>
  *
  * This program is free software, distributed under the terms of
- * the GNU Lesser (Library) General Public License
+ * the GNU Lesser (Library) General Public License.
  */
 
 #include "codec_ilbc.h"
@@ -22,7 +25,7 @@ static void destroy ( struct iaxc_audio_codec *c) {
 }
 
 
-static int decode ( struct iaxc_audio_codec *c, 
+static int decode ( struct iaxc_audio_codec *c,
     int *inlen, char *in, int *outlen, short *out ) {
 
     float fbuf[240];
@@ -58,7 +61,7 @@ static int decode ( struct iaxc_audio_codec *c,
     return 0;
 }
 
-static int encode ( struct iaxc_audio_codec *c, 
+static int encode ( struct iaxc_audio_codec *c,
     int *inlen, short *in, int *outlen, char *out ) {
 
     float fbuf[240];
@@ -80,10 +83,10 @@ static int encode ( struct iaxc_audio_codec *c,
     return 0;
 }
 
-struct iaxc_audio_codec *iaxc_audio_codec_ilbc_new() {
+struct iaxc_audio_codec *codec_audio_ilbc_new() {
   struct iaxc_audio_codec *c = calloc(sizeof(struct iaxc_audio_codec),1);
 
-  
+
   if(!c) return c;
 
   strcpy(c->name,"iLBC");
@@ -98,11 +101,11 @@ struct iaxc_audio_codec *iaxc_audio_codec_ilbc_new() {
   c->decstate = calloc(sizeof(iLBC_Dec_Inst_t),1);
 
   /* leaks a bit on no-memory */
-  if(!(c->encstate && c->decstate)) 
+  if(!(c->encstate && c->decstate))
       return NULL;
 
-  /* the 30 parameters are used for the latest iLBC sources, in 
-   * http://www.ietf.org/internet-drafts/draft-ietf-avt-ilbc-codec-05.txt 
+  /* the 30 parameters are used for the latest iLBC sources, in
+   * http://www.ietf.org/internet-drafts/draft-ietf-avt-ilbc-codec-05.txt
    * as used in asterisk-CVS as of 14 Oct 2004 */
   initEncode(c->encstate, 30);
   initDecode(c->decstate, 30, 1); /* use enhancer */

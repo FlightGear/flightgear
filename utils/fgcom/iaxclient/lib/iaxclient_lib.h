@@ -2,16 +2,16 @@
  * iaxclient: a cross-platform IAX softphone library
  *
  * Copyrights:
- * Copyright (C) 2003 HorizonLive.com, (c) 2004, Horizon Wimba, Inc.
+ * Copyright (C) 2003-2006, Horizon Wimba, Inc.
+ * Copyright (C) 2007, Wimba, Inc.
  *
  * Contributors:
  * Steve Kann <stevek@stevek.com>
- * Michael Van Donselaar <mvand@vandonselaar.org> 
+ * Michael Van Donselaar <mvand@vandonselaar.org>
  * Shawn Lawrence <shawn.lawrence@terracecomm.com>
  *
- *
  * This program is free software, distributed under the terms of
- * the GNU Lesser (Library) General Public License
+ * the GNU Lesser (Library) General Public License.
  */
 #ifndef _iaxclient_lib_h
 #define _iaxclient_lib_h
@@ -24,16 +24,21 @@ extern "C" {
 /* This is the internal include file for IAXCLIENT -- externally
  * accessible APIs should be declared in iaxclient.h */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
 #if defined(WIN32)  ||  defined(_WIN32_WCE)
-#include "winpoop.h" // Win32 Support Functions
+#include "winpoop.h"
 #if !defined(_WIN32_WCE)
 #include <process.h>
 #endif
 #include <stddef.h>
 #include <time.h>
+
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -42,8 +47,9 @@ extern "C" {
 #include <pthread.h>
 #endif
 
-#if (SPEEX_PREPROCESS == 1)
-#include "speex/speex_preprocess.h"
+#ifdef USE_FFMPEG
+// To access to check_ff function
+#include "codec_ffmpeg.h"
 #endif
 
 #include <stdlib.h>
@@ -53,7 +59,7 @@ extern "C" {
 
 
 /* os-dependent macros, etc */
-#if defined(WIN32)  ||  defined(_WIN32_WCE)
+#if defined(WIN32) || defined(_WIN32_WCE)
 #define THREAD HANDLE
 #define THREADID unsigned
 #define THREADCREATE(func, args, thread, id) \
@@ -64,9 +70,13 @@ extern "C" {
 #define THREADJOIN(t)
 /* causes deadlock with wx GUI on MSW */
 /* #define THREADJOIN(t) WaitForSingleObject(t, INFINITE) */
+#ifndef _WIN32_WINNT
+extern WINBASEAPI BOOL WINAPI TryEnterCriticalSection( LPCRITICAL_SECTION lpCriticalSection );
+#endif
 #define MUTEX CRITICAL_SECTION
 #define MUTEXINIT(m) InitializeCriticalSection(m)
 #define MUTEXLOCK(m) EnterCriticalSection(m)
+#define MUTEXTRYLOCK(m) (!TryEnterCriticalSection(m))
 #define MUTEXUNLOCK(m) LeaveCriticalSection(m)
 #define MUTEXDESTROY(m) DeleteCriticalSection(m)
 
@@ -82,6 +92,7 @@ pthread_create(&thread, NULL, func, args)
 #define MUTEX pthread_mutex_t
 #define MUTEXINIT(m) pthread_mutex_init(m, NULL) //TODO: check error
 #define MUTEXLOCK(m) pthread_mutex_lock(m)
+#define MUTEXTRYLOCK(m) pthread_mutex_trylock(m)
 #define MUTEXUNLOCK(m) pthread_mutex_unlock(m)
 #define MUTEXDESTROY(m) pthread_mutex_destroy(m)
 #endif
@@ -101,14 +112,12 @@ pthread_create(&thread, NULL, func, args)
 /* millisecond interval to time out calls */
 #define IAXC_CALL_TIMEOUT 30000
 
-#include "iax-client.h" // LibIAX functions
-
 
 void os_init(void);
-void iaxc_usermsg(int type, const char *fmt, ...);
-long iaxc_usecdiff( struct timeval *timeA, struct timeval *timeB );
-void iaxc_handle_network_event(struct iax_event *e, int callNo);
-void iaxc_do_levels_callback(float input, float output);
+void iaxci_usermsg(int type, const char *fmt, ...);
+void iaxci_do_levels_callback(float input, float output);
+void iaxci_do_audio_callback(int callNo, unsigned int ts, int remote,
+		int encoded, int format, int size, unsigned char *data);
 
 #include "iaxclient.h"
 
@@ -125,8 +134,8 @@ struct iaxc_audio_driver {
 	int (*select_devices)(struct iaxc_audio_driver *d, int input, int output, int ring);
 	int (*selected_devices)(struct iaxc_audio_driver *d, int *input, int *output, int *ring);
 
-	/* 
-	 * select_ring ? 
+	/*
+	 * select_ring ?
 	 * set_latency
 	 */
 
@@ -136,10 +145,10 @@ struct iaxc_audio_driver {
 	int (*input)(struct iaxc_audio_driver *d, void *samples, int *nSamples);
 
 	/* levels */
-	double (*input_level_get)(struct iaxc_audio_driver *d);
-	double (*output_level_get)(struct iaxc_audio_driver *d);
-	int (*input_level_set)(struct iaxc_audio_driver *d, double level);
-	int (*output_level_set)(struct iaxc_audio_driver *d, double level);
+	float (*input_level_get)(struct iaxc_audio_driver *d);
+	float (*output_level_get)(struct iaxc_audio_driver *d);
+	int (*input_level_set)(struct iaxc_audio_driver *d, float level);
+	int (*output_level_set)(struct iaxc_audio_driver *d, float level);
 
 	/* sounds */
 	int (*play_sound)(struct iaxc_sound *s, int ring);
@@ -148,31 +157,7 @@ struct iaxc_audio_driver {
 	/* mic boost */
 	int (*mic_boost_get)(struct iaxc_audio_driver *d ) ;
 	int (*mic_boost_set)(struct iaxc_audio_driver *d, int enable);
-}; 
-
-struct iaxc_video_driver {
-	/* data */
-	char *name; 	/* driver name */
-	//struct iaxc_audio_device *devices; /* list of devices */
-	//int nDevices;	/* count of devices */
-	void *priv;	/* pointer to private data */
-
-	/* methods */
-	int (*initialize)(struct iaxc_video_driver *d, int w, int h, int framerate);
-	int (*destroy)(struct iaxc_video_driver *d);  /* free resources */
-	int (*select_devices)(struct iaxc_video_driver *d, int input, int output);
-	int (*selected_devices)(struct iaxc_video_driver *d, int *input, int *output);
-
-	/* 
-	 * select_ring ? 
-	 * set_latency
-	 */
-
-	int (*start)(struct iaxc_video_driver *d);
-	int (*stop)(struct iaxc_video_driver *d);
-	int (*output)(struct iaxc_video_driver *d, unsigned char *data);
-	int (*input)(struct iaxc_video_driver *d, unsigned char **data);
-}; 
+};
 
 struct iaxc_audio_codec {
 	char name[256];
@@ -185,14 +170,34 @@ struct iaxc_audio_codec {
 	void (*destroy) ( struct iaxc_audio_codec *codec);
 };
 
+#define MAX_TRUNK_LEN	(1<<16)
+#define MAX_NO_SLICES	32
+
+struct slice_set_t
+{
+	int	num_slices;
+	int	key_frame;
+	int	size[MAX_NO_SLICES];
+	char	data[MAX_NO_SLICES][MAX_TRUNK_LEN];
+};
+
 struct iaxc_video_codec {
 	char name[256];
 	int format;
+	int width;
+	int height;
+	int framerate;
+	int bitrate;
+	int fragsize;
+	int params_changed;
 	void *encstate;
 	void *decstate;
-	int (*encode) ( struct iaxc_video_codec *codec, int *inlen, char *in, int *outlen, char *out );
-	int (*decode) ( struct iaxc_video_codec *codec, int *inlen, char *in, int *outlen, char *out );
-	void (*destroy) ( struct iaxc_video_codec *codec);
+	struct iaxc_video_stats video_stats;
+	int (*encode)(struct iaxc_video_codec * codec, int inlen,
+			const char * in, struct slice_set_t * out);
+	int (*decode)(struct iaxc_video_codec * codec, int inlen,
+			const char * in, int * outlen, char * out);
+	void (*destroy)(struct iaxc_video_codec * codec);
 };
 
 
@@ -201,11 +206,9 @@ struct iaxc_call {
 	/* to be replaced with codec-structures, with codec-private data  */
 	struct iaxc_audio_codec *encoder;
 	struct iaxc_audio_codec *decoder;
-
-#ifdef IAXC_VIDEO
 	struct iaxc_video_codec *vencoder;
 	struct iaxc_video_codec *vdecoder;
-#endif
+	int vformat;
 
 	/* the "state" of this call */
 	int state;
@@ -231,46 +234,23 @@ struct iaxc_call {
 	struct iax_session *session;
 };
 
-#include "audio_encode.h"
-#ifdef AUDIO_PA
-#include "audio_portaudio.h"
-#endif
-#include "audio_file.h"
+extern int iaxci_audio_output_mode;
 
-#ifdef AUDIO_OPENAL
-#include "audio_openal.h"
-#endif
-
-#ifdef IAXC_VIDEO
-#include "video_portvideo.h"
-#endif
-
-
-/* our format capabilities */
-extern int audio_format_capability;
-
-/* our preferred audio format */
-extern int audio_format_preferred;
-
-extern double iaxc_silence_threshold;
-extern int iaxc_audio_output_mode;
-
-/* post_event_callback */
-int post_event_callback(iaxc_event e);
+int iaxci_post_event_callback(iaxc_event e);
 
 /* post an event to the application */
-void iaxc_post_event(iaxc_event e);
+void iaxci_post_event(iaxc_event e);
 
 /* parameters for callback */
 extern void * post_event_handle;
 extern int post_event_id;
 
 /* Priority boost support */
-extern int iaxc_prioboostbegin(void);
-extern int iaxc_prioboostend(void);
+extern int iaxci_prioboostbegin(void);
+extern int iaxci_prioboostend(void);
 
-/* get the raw in/out levels, as int */
-extern int iaxc_get_inout_volumes(int *input, int *output);
+long iaxci_usecdiff(struct timeval *t0, struct timeval *t1);
+long iaxci_msecdiff(struct timeval *t0, struct timeval *t1);
 
 #ifdef __cplusplus
 }

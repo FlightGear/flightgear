@@ -2,49 +2,18 @@
  * iaxclient: a cross-platform IAX softphone library
  *
  * Copyrights:
- * Copyright (C) 2003 HorizonLive.com, (c) 2004, Horizon Wimba, Inc.
+ * Copyright (C) 2003-2006, Horizon Wimba, Inc.
+ * Copyright (C) 2007, Wimba, Inc.
  *
  * Contributors:
  * Steve Kann <stevek@stevek.com>
  *
- *
  * This program is free software, distributed under the terms of
- * the GNU Lesser (Library) General Public License
+ * the GNU Lesser (Library) General Public License.
  */
 
+#include "winpoop.h"    // include winsock2.h, windows.h, stdio.h, io.h
 #include "iaxclient_lib.h"
-
-#include <windows.h>
-#include <winbase.h>
-
-#include <stdio.h>
-
-#if !defined(_WIN32_WCE)
-#include <sys/timeb.h>
-
-/* Win-doze doesnt have gettimeofday(). This sux. So, what we did is
-provide some gettimeofday-like functionality that works for our purposes. */
-
-/*
-	changed 'struct timezone*' to 'void*' since
-	timezone is defined as a long in MINGW and caused compile-time warnings.
-	this should be okay since we don't use the passed value. 
-*/
-
-
-/* 
- * functions implementations
- */
-
-void gettimeofday( struct timeval* tv, void* tz )
-{
-	struct _timeb curSysTime;
-
-	_ftime(&curSysTime);
-	tv->tv_sec = curSysTime.time;
-	tv->tv_usec = curSysTime.millitm * 1000;
-}
-#endif
 
 void os_init(void)
 {
@@ -62,12 +31,12 @@ EXPORT void iaxc_millisleep(long ms)
 	Sleep(ms);
 }
 
-int post_event_callback(iaxc_event ev) {
+int iaxci_post_event_callback(iaxc_event ev) {
 	iaxc_event *e;
-	e = malloc(sizeof(ev));
+	e = (iaxc_event *)malloc(sizeof(ev));
 	*e = ev;
 
-	if (!PostMessage(post_event_handle,post_event_id,(WPARAM) NULL, (LPARAM) e))
+	if (!PostMessage((HWND)post_event_handle,post_event_id,(WPARAM) NULL, (LPARAM) e))
 		free(e);
 	return 0;
 }
@@ -77,14 +46,14 @@ int post_event_callback(iaxc_event ev) {
  * for discussion on Win32 scheduling priorities.
  */
 
-int iaxc_prioboostbegin() {
+int iaxci_prioboostbegin() {
     if ( !SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_TIME_CRITICAL)  ) {
         fprintf(stderr, "SetThreadPriority failed: %ld.\n", GetLastError());
     }
     return 0;
 }
 
-int iaxc_prioboostend() {
+int iaxci_prioboostend() {
     /* TODO */
     return 0;
 }

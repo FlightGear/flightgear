@@ -18,12 +18,16 @@
 #define snprintf _snprintf
 // should try without these
 #pragma warning(disable: 4996 4244 4305 4018 4804)
-typedef __int64 ssize_t;
+#if defined(_WIN64)
+   typedef __int64      ssize_t;
+#elif defined(_WIN32)
+   typedef __int32      ssize_t;
+#endif
 #else
 #define INLINE inline
 #endif
 
-#include <winsock2.h>
+#include <winsock2.h>   // this include <windows.h>
 #include <io.h> // for open, close, write, read
 #include <stdio.h>
 

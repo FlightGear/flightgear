@@ -195,21 +195,21 @@ int openal_stop(struct iaxc_audio_driver *d)
     return iret;
 }
 
-double openal_input_level_get(struct iaxc_audio_driver *d)
+float openal_input_level_get(struct iaxc_audio_driver *d)
 {
     struct openal_priv_data* priv = (struct openal_priv_data*)(d->priv);
 
-    return priv->input_level;
+    return (float)priv->input_level;
 }
 
-double openal_output_level_get(struct iaxc_audio_driver *d)
+float openal_output_level_get(struct iaxc_audio_driver *d)
 {
     struct openal_priv_data* priv = (struct openal_priv_data*)(d->priv);
 
     return priv->output_level;
 }
 
-int openal_input_level_set(struct iaxc_audio_driver *d, double level)
+int openal_input_level_set(struct iaxc_audio_driver *d, float level)
 {
     struct openal_priv_data* priv = (struct openal_priv_data*)(d->priv);
     priv->input_level = (level < 0.5) ? 0 : 1;
@@ -217,7 +217,7 @@ int openal_input_level_set(struct iaxc_audio_driver *d, double level)
     return 0;
 }
 
-int openal_output_level_set(struct iaxc_audio_driver *d, double level)
+int openal_output_level_set(struct iaxc_audio_driver *d, float level)
 {
     struct openal_priv_data* priv = (struct openal_priv_data*)(d->priv);
     priv->output_level = level;

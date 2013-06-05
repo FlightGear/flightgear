@@ -86,10 +86,7 @@ void Gsm_Preprocess P3((S, s, so),
 		/*   Execution of a 31 bv 16 bits multiplication
 		 */
 		{
-		word		msp;
-#ifndef __GNUC__ 
-        word        lsp;
-#endif
+		word		msp, lsp;
 		longword L_s2;
 		longword L_temp;
 		

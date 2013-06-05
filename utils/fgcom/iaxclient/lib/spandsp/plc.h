@@ -35,7 +35,11 @@
 #ifdef SOLARIS
 #include <sys/int_types.h>
 #else
+#ifndef _MSC_VER
 #include <inttypes.h>
+#else
+typedef short int16_t;
+#endif
 #endif
 
 /*! \page plc_page Packet loss concealment

@@ -44,10 +44,10 @@
 				AdditionalOptions="/O2"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;..\..\portaudio-v19\include&quot;;&quot;..\..\portaudio-v19\src\common&quot;;..\..\portaudio\pa_common;..\px_common"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;..\..\portaudio-v19\include&quot;;&quot;..\..\portaudio-v19\src\common&quot;;..\..\portaudio\pa_common;..\px_common;..\..\portaudio\include;..\..\portaudio\src\common"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;strncasecmp=strnicmp"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\$(ConfigurationName)/portmixer.pch"
@@ -119,10 +119,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;..\..\portaudio-v19\include&quot;;&quot;..\..\portaudio-v19\src\common&quot;;..\..\portaudio\pa_common;..\px_common"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;..\..\portaudio-v19\include&quot;;&quot;..\..\portaudio-v19\src\common&quot;;..\..\portaudio\pa_common;..\px_common;..\..\portaudio\include;..\..\portaudio\src\common"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;strncasecmp=strnicmp"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\$(ConfigurationName)/portmixer.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
@@ -131,7 +131,7 @@
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
-				CompileAs="0"
+				CompileAs="2"
 				DisableSpecificWarnings="4996"
 			/>
 			<Tool
@@ -260,6 +260,7 @@
 						Optimization="2"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
+						CompileAs="2"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -271,6 +272,7 @@
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
+						CompileAs="2"
 					/>
 				</FileConfiguration>
 				<FileConfiguration

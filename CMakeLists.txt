@@ -346,7 +346,12 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
-
+if(ENABLE_IAX)
+    include_directories(${PROJECT_SOURCE_DIR}/utils/fgcom/iaxclient/lib)
+    if(WIN32)
+        include_directories(${PROJECT_SOURCE_DIR}/utils/fgcom/iaxclient/lib/libiax2/src)
+    endif()
+endif()
 # following is needed, because config.h is include 'bare', whereas
 # version.h is included as <Include/version.h> - this should be cleaned up
 include_directories(${PROJECT_BINARY_DIR}/src)
