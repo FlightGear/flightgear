@@ -475,8 +475,8 @@ main (int argc, char *argv[])
 
   iaxc_set_callerid (const_cast < char *>(username),
 		     const_cast < char *>("0125252525122750"));
-  iaxc_set_formats (codec,
-		    IAXC_FORMAT_ULAW | IAXC_FORMAT_GSM | IAXC_FORMAT_SPEEX);
+
+  iaxc_set_formats (IAXC_FORMAT_GSM, IAXC_FORMAT_GSM);
   iaxc_set_event_callback (iaxc_callback);
 
   iaxc_start_processing_thread ();

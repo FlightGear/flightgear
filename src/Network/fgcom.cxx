@@ -166,7 +166,7 @@ void FGCom::init()
   iaxc_set_callerid( const_cast<char*>(callerID.c_str()), const_cast<char*>(callerID.c_str()) ); 
 
   // SET FORMATS
-  iaxc_set_formats( IAXC_FORMAT_ULAW, IAXC_FORMAT_GSM | IAXC_FORMAT_SPEEX );
+  iaxc_set_formats( IAXC_FORMAT_GSM, IAXC_FORMAT_GSM );
 
   // SET CALLBACK FUNCTION ????
   //iaxc_set_event_callback( iaxc_callback );

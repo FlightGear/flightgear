@@ -44,9 +44,10 @@ option( ADD_DEBUG_OUTPUT "Add a DEBUG define to output more information." OFF )
 # USE_PA_JACK=0 in Makefile, defines PA_USE_JACK, default off
 # USE_NEWJB=1 in Makefile, defines NEWJB, in source iaxclient/lib/libiax2/src/iax.c
 option( CODEC_ILBC  "Use ILBC codec. Need to add support code. Default OFF." OFF )
-option( SPEEX_PREPROCESS "Use SPEEX_PREPROCESS. Defaults ON." ON )
+option( CODEC_GSM  "Use GSM codec. Need to add support code. Default ON." ON )
+option( SPEEX_PREPROCESS "Use SPEEX_PREPROCESS. Defaults OFF." OFF )
 option( SPAN_EC "Use SPAN_EC. Defaults OFF." OFF )
-option( SPEEX_EC "Use SPEEX_EC. Default ON." ON )
+option( SPEEX_EC "Use SPEEX_EC. Default OFF." OFF )
 option( MEC2_EC "Use MEC2_EC. Default OFF." OFF )
 option( USE_NEWJB "Use NEWJB. Default ON." ON )
 option( USE_VIDEO "Use VIDEAO. Default OFF." OFF )
@@ -219,9 +220,15 @@ set(OBJS_VIDEO
 set(OBJS ${OBJS} ${OBJS_GSM} ${OBJS_LIBSPEEX} ) 
 
 if(CODEC_ILBC)
+    message(STATUS "*** Codec iLBc")
    list(APPEND OBJS ${OBJS_ILBC} iaxclient/lib/codec_ilbc.c )
    list(APPEND EXTRA_FLAGS -DCODEC_ILBC )
 endif(CODEC_ILBC)
+
+if(CODEC_GSM)
+    message(STATUS "*** Codec GSM")
+    add_definitions( -DCODEC_GSM )
+endif(CODEC_GSM)
 
 # 20120614 - appears these sources no longer compile, but do NOT seem required
 #    iaxclient/lib/portmixer/px_win_wmme/px_win_wmme.c
