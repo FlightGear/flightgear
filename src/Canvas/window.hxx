@@ -23,6 +23,7 @@
 #include <simgear/canvas/MouseEvent.hxx>
 #include <simgear/props/PropertyBasedElement.hxx>
 #include <simgear/props/propertyObject.hxx>
+#include <simgear/misc/CSSBorder.hxx>
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -49,12 +50,18 @@ namespace canvas
 
       virtual void update(double delta_time_sec);
       virtual void valueChanged(SGPropertyNode* node);
+      virtual void childAdded(SGPropertyNode* parent, SGPropertyNode* child);
+      virtual void childRemoved(SGPropertyNode* parent, SGPropertyNode* child);
 
       osg::Group* getGroup();
       const SGRect<float>& getRegion() const;
+      const SGVec2<float> getPosition() const;
+      const SGRect<float>  getScreenRegion() const;
 
       void setCanvas(simgear::canvas::CanvasPtr canvas);
       simgear::canvas::CanvasWeakPtr getCanvas() const;
+
+      simgear::canvas::CanvasPtr getCanvasDecoration();
 
       bool isVisible() const;
       bool isResizable() const;
@@ -68,7 +75,20 @@ namespace canvas
 
     protected:
 
-      simgear::canvas::Image _image;
+      enum Attributes
+      {
+        SHADOW = 1
+      };
+
+      uint32_t  _attributes_dirty;
+
+      simgear::canvas::CanvasPtr        _canvas_decoration;
+      simgear::canvas::CanvasWeakPtr    _canvas_content;
+
+      simgear::canvas::Image    _image;
+      simgear::canvas::ImagePtr _image_content,
+                                _image_shadow;
+
       bool _resizable,
            _capture_events;
 
@@ -78,6 +98,9 @@ namespace canvas
                                    _resize_left,
                                    _resize_status;
 
+      simgear::CSSBorder    _decoration_border;
+
+      void parseDecorationBorder(const std::string& str);
   };
 } // namespace canvas
 

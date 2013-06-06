@@ -27,6 +27,7 @@
 
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/CanvasPlacement.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 
 #include <osg/BlendFunc>
 #include <osgViewer/Viewer>
@@ -351,9 +352,9 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
         continue;
 
       float margin = window->isResizable() ? resize_margin_pos : 0;
-      if( window->getRegion().contains( event->getScreenX(),
-                                        event->getScreenY(),
-                                        margin ) )
+      if( window->getScreenRegion().contains( event->getScreenX(),
+                                              event->getScreenY(),
+                                              margin ) )
       {
         window_at_cursor = window;
         break;
@@ -366,7 +367,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
 
   if( window_at_cursor )
   {
-    const SGRect<float>& reg = window_at_cursor->getRegion();
+    const SGRect<float>& reg = window_at_cursor->getScreenRegion();
 
     if(     window_at_cursor->isResizable()
         && (  ea.getEventType() == osgGA::GUIEventAdapter::MOVE
@@ -459,6 +460,8 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       {
         sc::MouseEventPtr move_event( new sc::MouseEvent(*event) );
         move_event->type = sc::Event::MOUSE_LEAVE;
+        move_event->client_pos -= toOsg(last_mouse_over->getPosition());
+        move_event->local_pos = move_event->client_pos;
 
         last_mouse_over->handleMouseEvent(move_event);
       }
@@ -482,7 +485,11 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   }
 
   if( target_window )
+  {
+    event->client_pos -= toOsg(target_window->getPosition());
+    event->local_pos = event->client_pos;
     return target_window->handleMouseEvent(event);
+  }
   else
     return false;
 }

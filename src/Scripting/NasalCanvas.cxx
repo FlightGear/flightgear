@@ -232,7 +232,8 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .method("getNearestCursor", &sc::Text::getNearestCursor);
 
   NasalWindow::init("canvas.Window")
-    .member("_node_ghost", &elementGetNode<canvas::Window>);
+    .member("_node_ghost", &elementGetNode<canvas::Window>)
+    .method("_getCanvasDecoration", &canvas::Window::getCanvasDecoration);
 
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
