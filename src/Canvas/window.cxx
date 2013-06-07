@@ -29,11 +29,13 @@
 
 namespace canvas
 {
+  namespace sc = simgear::canvas;
+
   //----------------------------------------------------------------------------
   Window::Window(SGPropertyNode* node):
     PropertyBasedElement(node),
     _attributes_dirty(0),
-    _image(simgear::canvas::CanvasPtr(), node),
+    _image(sc::CanvasPtr(), node),
     _resizable(false),
     _capture_events(true),
     _resize_top(node, "resize-top"),
@@ -59,52 +61,13 @@ namespace canvas
   //----------------------------------------------------------------------------
   void Window::update(double delta_time_sec)
   {
-    _image.update(delta_time_sec);
-
-    if( _attributes_dirty & SHADOW )
+    if( _attributes_dirty & DECORATION )
     {
-      float radius = get<float>("shadow-radius"),
-            inset = get<float>("shadow-inset"),
-            slice_width = radius + inset;
-
-      if( slice_width <= 1 || _canvas_content.expired() )
-      {
-        if( _image_shadow )
-        {
-          getGroup()->removeChild(_image_shadow->getMatrixTransform());
-          _image_shadow.reset();
-        }
-      }
-      else
-      {
-        if( !_image_shadow )
-        {
-          _image_shadow.reset(new simgear::canvas::Image(
-            _canvas_content,
-            _node->getChild("image-shadow", 0, true)
-          ));
-          _image_shadow->set<std::string>("file", "gui/images/shadow.png");
-          _image_shadow->set<float>("slice", 7);
-          _image_shadow->set<std::string>("fill", "#000000");
-          getGroup()->insertChild(0, _image_shadow->getMatrixTransform());
-        }
-
-        simgear::canvas::CanvasPtr canvas = _canvas_decoration
-                                          ? _canvas_decoration
-                                          : _canvas_content.lock();
-
-        _image_shadow->set<float>("slice-width", slice_width);
-        _image_shadow->set<int>("x", -radius);
-        _image_shadow->set<int>("y", -radius);
-        _image_shadow->set<int>("size[0]", canvas->getViewWidth() + 2 * radius);
-        _image_shadow->set<int>("size[1]", canvas->getViewHeight()+ 2 * radius);
-      }
-
-      _attributes_dirty &= ~SHADOW;
+      updateDecoration();
+      _attributes_dirty &= ~DECORATION;
     }
 
-    if( _image_shadow )
-      _image_shadow->update(delta_time_sec);
+    _image.update(delta_time_sec);
   }
 
   //----------------------------------------------------------------------------
@@ -119,12 +82,14 @@ namespace canvas
         doRaise(node);
       else if( name  == "resize" )
         _resizable = node->getBoolValue();
+      else if( name == "update" )
+        update(0);
       else if( name == "capture-events" )
         _capture_events = node->getBoolValue();
       else if( name == "decoration-border" )
         parseDecorationBorder(node->getStringValue());
       else if( boost::starts_with(name, "shadow-") )
-        _attributes_dirty |= SHADOW;
+        _attributes_dirty |= DECORATION;
       else
         handled = false;
     }
@@ -171,20 +136,20 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  void Window::setCanvas(simgear::canvas::CanvasPtr canvas)
+  void Window::setCanvas(sc::CanvasPtr canvas)
   {
     _canvas_content = canvas;
     _image.setSrcCanvas(canvas);
   }
 
   //----------------------------------------------------------------------------
-  simgear::canvas::CanvasWeakPtr Window::getCanvas() const
+  sc::CanvasWeakPtr Window::getCanvas() const
   {
     return _image.getSrcCanvas();
   }
 
   //----------------------------------------------------------------------------
-  simgear::canvas::CanvasPtr Window::getCanvasDecoration()
+  sc::CanvasPtr Window::getCanvasDecoration()
   {
     return _canvas_decoration;
   }
@@ -208,7 +173,7 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  bool Window::handleMouseEvent(const simgear::canvas::MouseEventPtr& event)
+  bool Window::handleMouseEvent(const sc::MouseEventPtr& event)
   {
     return _image.handleEvent(event);
   }
@@ -261,23 +226,34 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  void Window::parseDecorationBorder( const std::string& str )
+  void Window::parseDecorationBorder(const std::string& str)
   {
     _decoration_border = simgear::CSSBorder::parse(str);
-    if( _decoration_border.isNone() )
+    _attributes_dirty |= DECORATION;
+  }
+
+  //----------------------------------------------------------------------------
+  void Window::updateDecoration()
+  {
+    int shadow_radius = get<float>("shadow-radius") + 0.5;
+    if( shadow_radius < 2 )
+      shadow_radius = 0;
+
+    if( _decoration_border.isNone() && !shadow_radius )
     {
-      simgear::canvas::CanvasPtr canvas_content = _canvas_content.lock();
+      sc::CanvasPtr canvas_content = _canvas_content.lock();
       _image.setSrcCanvas(canvas_content);
       _image.set<int>("size[0]", canvas_content->getViewWidth());
       _image.set<int>("size[1]", canvas_content->getViewHeight());
 
       _image_content.reset();
+      _image_shadow.reset();
       _canvas_decoration->destroy();
       _canvas_decoration.reset();
       return;
     }
 
-    simgear::canvas::CanvasPtr content = _canvas_content.lock();
+    sc::CanvasPtr content = _canvas_content.lock();
     if( !_canvas_decoration )
     {
       CanvasMgr* mgr =
@@ -290,37 +266,69 @@ namespace canvas
       }
 
       _canvas_decoration = mgr->createCanvas("window-decoration");
-      _canvas_decoration->getProps()->setStringValue("background", "rgba(0,0,0,0)");
+      _canvas_decoration->getProps()
+                        ->setStringValue("background", "rgba(0,0,0,0)");
       _image.setSrcCanvas(_canvas_decoration);
 
-      // Decoration should be drawn first...
-      _canvas_decoration->createGroup("decoration");
-
-      // ...to allow drawing the actual content on top of the decoration
-      _image_content =
-        boost::dynamic_pointer_cast<simgear::canvas::Image>(
-            _canvas_decoration->getRootGroup()->createChild("image", "content")
-        );
+      _image_content = _canvas_decoration->getRootGroup()
+                                         ->createChild<sc::Image>("content");
       _image_content->setSrcCanvas(content);
+
+      // Draw content on top of decoration
+      _image_content->set<int>("z-index", 1);
     }
+
+    sc::GroupPtr group_decoration =
+      _canvas_decoration->getOrCreateGroup("decoration");
+    group_decoration->set<int>("tf/t[0]", shadow_radius);
+    group_decoration->set<int>("tf/t[1]", shadow_radius);
+    // TODO do we need clipping or shall we trust the decorator not to draw over
+    //      the shadow?
 
     simgear::CSSBorder::Offsets const border =
       _decoration_border.getAbsOffsets(content->getViewport());
 
-    int outer_width  = border.l + content->getViewWidth()  + border.r,
-        outer_height = border.t + content->getViewHeight() + border.b;
+    int shad2 = 2 * shadow_radius,
+        outer_width  = border.l + content->getViewWidth()  + border.r + shad2,
+        outer_height = border.t + content->getViewHeight() + border.b + shad2;
 
     _canvas_decoration->setSizeX( outer_width );
     _canvas_decoration->setSizeY( outer_height );
     _canvas_decoration->setViewWidth( outer_width );
     _canvas_decoration->setViewHeight( outer_height );
 
-    _image.set<int>("size[0]", outer_width);
-    _image.set<int>("size[1]", outer_height);
+    _image.set<int>("size[0]", outer_width - shad2);
+    _image.set<int>("size[1]", outer_height - shad2);
+    _image.set<int>("outset", shadow_radius);
 
     assert(_image_content);
-    _image_content->set<int>("x", border.l);
-    _image_content->set<int>("y", border.t);
+    _image_content->set<int>("x", shadow_radius + border.l);
+    _image_content->set<int>("y", shadow_radius + border.t);
+
+    if( !shadow_radius )
+    {
+      if( _image_shadow )
+      {
+        _image_shadow->destroy();
+        _image_shadow.reset();
+      }
+      return;
+    }
+
+    int shadow_inset = std::max<int>(get<float>("shadow-inset") + 0.5, 0),
+        slice_width  = shadow_radius + shadow_inset;
+
+    _image_shadow = _canvas_decoration->getRootGroup()
+                                      ->getOrCreateChild<sc::Image>("shadow");
+    _image_shadow->set<std::string>("file", "gui/images/shadow.png");
+    _image_shadow->set<float>("slice", 7);
+    _image_shadow->set<std::string>("fill", "#000000");
+    _image_shadow->set<float>("slice-width", slice_width);
+    _image_shadow->set<int>("size[0]", outer_width);
+    _image_shadow->set<int>("size[1]", outer_height);
+
+    // Draw shadow below decoration
+    _image_shadow->set<int>("z-index", -1);
   }
 
 } // namespace canvas

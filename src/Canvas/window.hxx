@@ -77,7 +77,7 @@ namespace canvas
 
       enum Attributes
       {
-        SHADOW = 1
+        DECORATION = 1
       };
 
       uint32_t  _attributes_dirty;
@@ -101,6 +101,7 @@ namespace canvas
       simgear::CSSBorder    _decoration_border;
 
       void parseDecorationBorder(const std::string& str);
+      void updateDecoration();
   };
 } // namespace canvas
 
