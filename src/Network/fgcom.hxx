@@ -29,6 +29,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     virtual void bind();
     virtual void unbind();
     virtual void init();
+    virtual void postinit();
     virtual void update(double dt);
     virtual void valueChanged(SGPropertyNode *prop);
     virtual void shutdown();

@@ -255,13 +255,18 @@ int openal_initialize(struct iaxc_audio_driver *d, int sample_rate)
 {
     struct openal_priv_data* priv = malloc(sizeof(struct openal_priv_data));
     int err = alGetError();
-    ALCdevice* out_dev = alcOpenDevice(0);
-    if (out_dev == 0) return openal_error("alcOpenDevice", alGetError());
     d->priv = priv;
    
-    priv->out_ctx = alcCreateContext(out_dev, 0);
-    if (priv->out_ctx == 0) return openal_error("alcCreateContext", alGetError());
-    
+    priv->out_ctx = alcGetCurrentContext();
+
+    if( priv->out_ctx == NULL ) { // FGCom standalone only
+       ALCdevice* out_dev = alcOpenDevice(0);
+       if (out_dev == 0) return openal_error("alcOpenDevice", alGetError());
+
+       priv->out_ctx = alcCreateContext(out_dev, 0);
+       if (priv->out_ctx == 0) return openal_error("alcCreateContext", alGetError());
+    }
+
     alcMakeContextCurrent(priv->out_ctx);
     if ((err = alGetError())) return openal_error("alcMakeContextCurrent", err);
 
@@ -273,6 +278,7 @@ int openal_initialize(struct iaxc_audio_driver *d, int sample_rate)
     priv->buffers_tail = 0;
     priv->buffers_free = priv->num_buffers;
     priv->buffers = (ALuint*)malloc(sizeof(ALuint) * priv->num_buffers);
+
     alGenBuffers(priv->num_buffers, priv->buffers);
     if ((err = alGetError())) return openal_error("alGenBuffers", err);
     
