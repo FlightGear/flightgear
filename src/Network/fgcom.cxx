@@ -78,7 +78,6 @@ void FGCom::bind()
   _callsign_node           = fgGetNode("/sim/multiplay/callsign", true);
   _chat_node               = fgGetNode("/sim/multiplay/chat", true); // Because we can do it, we do it :)
 
-
   // Set default values if not provided
   if ( !_enabled_node->hasValue() )
       _enabled_node->setBoolValue(true);
@@ -104,7 +103,6 @@ void FGCom::bind()
   if ( !_password_node->hasValue() )
       _password_node->setStringValue("guest");
 
-
   // Add some listeners
   _selectedOutput_node->addChangeListener(this);
   _selectedInput_node->addChangeListener(this);
@@ -117,7 +115,6 @@ void FGCom::bind()
   _nav0_node->addChangeListener(this);
   _nav1_node->addChangeListener(this);
   _chat_node->addChangeListener(this);
-
 }
 
 
@@ -130,7 +127,6 @@ void FGCom::unbind()
 
 void FGCom::init()
 {
-
   // Link some property often used in order to 
   //     reduce reading impact in property tree
   _enabled          = _enabled_node->getBoolValue();
@@ -147,7 +143,6 @@ void FGCom::init()
   _comm1Changed     = false;
   _nav0Changed      = false;
   _nav1Changed      = false;
-
 }
 
 
@@ -168,6 +163,7 @@ void FGCom::postinit()
   //iaxc_mic_boost_set( _micBoost_node->getIntValue() );
 
   // SET CALLER ID
+  // FIXME: is it really necessary ?
   std::string callerID = _callsign_node->getStringValue();
   iaxc_set_callerid( const_cast<char*>(callerID.c_str()), const_cast<char*>(callerID.c_str()) ); 
 
@@ -182,6 +178,8 @@ void FGCom::postinit()
   iaxc_start_processing_thread ();
 
   // REGISTER IAX
+  // FIXME: require server-side implementation.
+  //        AFAIK no one is ready for this feature... keep it ?
   if ( _register ) {
     _regId = iaxc_register( const_cast<char*>(_username.c_str()),
                             const_cast<char*>(_password.c_str()),
@@ -247,6 +245,18 @@ void FGCom::postinit()
   }
 
   iaxc_millisleep(300);
+
+  if( _enabled ) {
+    // Do the first call at start
+    const double freq = _comm0_node->getDoubleValue();
+    std::string num = computePhoneNumber(freq, getAirportCode(freq));
+    if( num.size() > 0 ) {
+      SG_LOG( SG_IO, SG_INFO, "FGCom comm[0] number=" << num );
+      _callComm0 = iaxc_call(num.c_str());
+    }
+    if( _callComm0 == -1 )
+      SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call comm[0] freq" );
+  }
 }
 
 
