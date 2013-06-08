@@ -92,19 +92,6 @@ class WindowPlacement:
     simgear::canvas::CanvasWeakPtr _canvas;
 };
 
-/**
- * Store pointer to window as user data
- */
-class WindowUserData:
-  public osg::Referenced
-{
-  public:
-    canvas::WindowWeakPtr window;
-    WindowUserData(canvas::WindowPtr window):
-      window(window)
-    {}
-};
-
 //------------------------------------------------------------------------------
 typedef boost::shared_ptr<canvas::Window> WindowPtr;
 WindowPtr windowFactory(SGPropertyNode* node)
@@ -240,7 +227,7 @@ void GUIMgr::elementCreated(simgear::PropertyBasedElementPtr element)
       _transform->addChild(layer);
     }
   }
-  window->getGroup()->setUserData(new WindowUserData(window));
+
   layer->addChild(window->getGroup());
 }
 
@@ -345,8 +332,13 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
     {
       assert(layer->getChild(j)->getUserData());
       canvas::WindowPtr window =
-        static_cast<WindowUserData*>(layer->getChild(j)->getUserData())
-          ->window.lock();
+        boost::static_pointer_cast<canvas::Window>
+        (
+          static_cast<sc::Element::OSGUserData*>
+          (
+            layer->getChild(j)->getUserData()
+          )->element
+        );
 
       if( !window->isCapturingEvents() || !window->isVisible() )
         continue;
@@ -463,7 +455,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
         move_event->client_pos -= toOsg(last_mouse_over->getPosition());
         move_event->local_pos = move_event->client_pos;
 
-        last_mouse_over->handleMouseEvent(move_event);
+        last_mouse_over->handleEvent(move_event);
       }
       _last_mouse_over = window_at_cursor;
       event->type = sc::Event::MOUSE_MOVE;
@@ -488,7 +480,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   {
     event->client_pos -= toOsg(target_window->getPosition());
     event->local_pos = event->client_pos;
-    return target_window->handleMouseEvent(event);
+    return target_window->handleEvent(event);
   }
   else
     return false;

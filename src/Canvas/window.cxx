@@ -33,9 +33,8 @@ namespace canvas
 
   //----------------------------------------------------------------------------
   Window::Window(SGPropertyNode* node):
-    PropertyBasedElement(node),
+    Image(sc::CanvasPtr(), node),
     _attributes_dirty(0),
-    _image(sc::CanvasPtr(), node),
     _resizable(false),
     _capture_events(true),
     _resize_top(node, "resize-top"),
@@ -44,8 +43,6 @@ namespace canvas
     _resize_left(node, "resize-left"),
     _resize_status(node, "resize-status")
   {
-    _image.removeListener();
-
     node->setFloatValue("source/right", 1);
     node->setFloatValue("source/bottom", 1);
     node->setBoolValue("source/normalized", true);
@@ -67,7 +64,7 @@ namespace canvas
       _attributes_dirty &= ~DECORATION;
     }
 
-    _image.update(delta_time_sec);
+    Image::update(delta_time_sec);
   }
 
   //----------------------------------------------------------------------------
@@ -95,37 +92,19 @@ namespace canvas
     }
 
     if( !handled )
-      _image.valueChanged(node);
-  }
-
-  //----------------------------------------------------------------------------
-  void Window::childAdded(SGPropertyNode* parent, SGPropertyNode* child)
-  {
-    _image.childAdded(parent, child);
-  }
-
-  //----------------------------------------------------------------------------
-  void Window::childRemoved(SGPropertyNode* parent, SGPropertyNode* child)
-  {
-    _image.childRemoved(parent, child);
+      Image::valueChanged(node);
   }
 
   //----------------------------------------------------------------------------
   osg::Group* Window::getGroup()
   {
-    return _image.getMatrixTransform();
-  }
-
-  //----------------------------------------------------------------------------
-  const SGRect<float>& Window::getRegion() const
-  {
-    return _image.getRegion();
+    return getMatrixTransform();
   }
 
   //----------------------------------------------------------------------------
   const SGVec2<float> Window::getPosition() const
   {
-    const osg::Matrix& m = _image.getMatrixTransform()->getMatrix();
+    const osg::Matrix& m = getMatrixTransform()->getMatrix();
     return SGVec2<float>( m(3, 0), m(3, 1) );
   }
 
@@ -139,25 +118,19 @@ namespace canvas
   void Window::setCanvas(sc::CanvasPtr canvas)
   {
     _canvas_content = canvas;
-    _image.setSrcCanvas(canvas);
+    setSrcCanvas(canvas);
   }
 
   //----------------------------------------------------------------------------
   sc::CanvasWeakPtr Window::getCanvas() const
   {
-    return _image.getSrcCanvas();
+    return getSrcCanvas();
   }
 
   //----------------------------------------------------------------------------
   sc::CanvasPtr Window::getCanvasDecoration()
   {
     return _canvas_decoration;
-  }
-
-  //----------------------------------------------------------------------------
-  bool Window::isVisible() const
-  {
-    return _image.isVisible();
   }
 
   //----------------------------------------------------------------------------
@@ -170,12 +143,6 @@ namespace canvas
   bool Window::isCapturingEvents() const
   {
     return _capture_events;
-  }
-
-  //----------------------------------------------------------------------------
-  bool Window::handleMouseEvent(const sc::MouseEventPtr& event)
-  {
-    return _image.handleEvent(event);
   }
 
   //----------------------------------------------------------------------------
@@ -212,13 +179,17 @@ namespace canvas
     if( node_raise && !node_raise->getBoolValue() )
       return;
 
+    // Keep a reference to ensure the window is not deleted between removing and
+    // adding it back to the scenegraph
+    osg::ref_ptr<osg::Group> window = getGroup();
+
     BOOST_FOREACH(osg::Group* parent, getGroup()->getParents())
     {
       // Remove window...
-      parent->removeChild(getGroup());
+      parent->removeChild(window);
 
       // ...and add again as topmost window
-      parent->addChild(getGroup());
+      parent->addChild(window);
     }
 
     if( node_raise )
@@ -242,9 +213,9 @@ namespace canvas
     if( _decoration_border.isNone() && !shadow_radius )
     {
       sc::CanvasPtr canvas_content = _canvas_content.lock();
-      _image.setSrcCanvas(canvas_content);
-      _image.set<int>("size[0]", canvas_content->getViewWidth());
-      _image.set<int>("size[1]", canvas_content->getViewHeight());
+      setSrcCanvas(canvas_content);
+      set<int>("size[0]", canvas_content->getViewWidth());
+      set<int>("size[1]", canvas_content->getViewHeight());
 
       _image_content.reset();
       _image_shadow.reset();
@@ -268,7 +239,7 @@ namespace canvas
       _canvas_decoration = mgr->createCanvas("window-decoration");
       _canvas_decoration->getProps()
                         ->setStringValue("background", "rgba(0,0,0,0)");
-      _image.setSrcCanvas(_canvas_decoration);
+      setSrcCanvas(_canvas_decoration);
 
       _image_content = _canvas_decoration->getRootGroup()
                                          ->createChild<sc::Image>("content");
@@ -297,9 +268,9 @@ namespace canvas
     _canvas_decoration->setViewWidth( outer_width );
     _canvas_decoration->setViewHeight( outer_height );
 
-    _image.set<int>("size[0]", outer_width - shad2);
-    _image.set<int>("size[1]", outer_height - shad2);
-    _image.set<int>("outset", shadow_radius);
+    set<int>("size[0]", outer_width - shad2);
+    set<int>("size[1]", outer_height - shad2);
+    set<int>("outset", shadow_radius);
 
     assert(_image_content);
     _image_content->set<int>("x", shadow_radius + border.l);

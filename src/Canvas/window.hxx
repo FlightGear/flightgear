@@ -31,7 +31,7 @@
 namespace canvas
 {
   class Window:
-    public simgear::PropertyBasedElement
+    public simgear::canvas::Image
   {
     public:
 
@@ -50,11 +50,8 @@ namespace canvas
 
       virtual void update(double delta_time_sec);
       virtual void valueChanged(SGPropertyNode* node);
-      virtual void childAdded(SGPropertyNode* parent, SGPropertyNode* child);
-      virtual void childRemoved(SGPropertyNode* parent, SGPropertyNode* child);
 
       osg::Group* getGroup();
-      const SGRect<float>& getRegion() const;
       const SGVec2<float> getPosition() const;
       const SGRect<float>  getScreenRegion() const;
 
@@ -63,11 +60,8 @@ namespace canvas
 
       simgear::canvas::CanvasPtr getCanvasDecoration();
 
-      bool isVisible() const;
       bool isResizable() const;
       bool isCapturingEvents() const;
-
-      bool handleMouseEvent(const simgear::canvas::MouseEventPtr& event);
 
       void handleResize(uint8_t mode, const osg::Vec2f& delta = osg::Vec2f());
 
@@ -85,7 +79,6 @@ namespace canvas
       simgear::canvas::CanvasPtr        _canvas_decoration;
       simgear::canvas::CanvasWeakPtr    _canvas_content;
 
-      simgear::canvas::Image    _image;
       simgear::canvas::ImagePtr _image_content,
                                 _image_shadow;
 
