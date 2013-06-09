@@ -115,6 +115,7 @@ void FGCom::bind()
   _nav0_node->addChangeListener(this);
   _nav1_node->addChangeListener(this);
   _chat_node->addChangeListener(this);
+  _ptt0_node->addChangeListener(this);
 }
 
 
@@ -337,14 +338,7 @@ void FGCom::update(double dt)
       _chatChanged = false;
     }
 
-    //FIXME: should be better with a listener
-    if( _ptt0_node->getBoolValue() ) {
-      iaxc_input_level_set( _micLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max
-      iaxc_output_level_set( 0.0 );
-    } else {
-      iaxc_input_level_set( 0.0 );
-      iaxc_output_level_set( _speakerLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max    
-    }
+
 
     //FIXME: need to handle range:
     //       check - for each nav0, nav1, comm0, comm1 - if the freq is out of range
@@ -395,7 +389,17 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     return;
   }
 
-  if (prop == _micBoost_node) {
+  if (prop == _ptt0_node && _enabled) {
+    if( _ptt0_node->getBoolValue() ) {
+      iaxc_input_level_set( _micLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max
+      iaxc_output_level_set( 0.0 );
+    } else {
+      iaxc_input_level_set( 0.0 );
+      iaxc_output_level_set( _speakerLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max    
+    }
+  }
+
+  if (prop == _micBoost_node && _enabled) { //FIXME: not implemented in IAX side (audio_openal.c)
     int micBoost = prop->getIntValue();
     SG_LOG( SG_IO, SG_INFO, "FGCom mic-boost= " << micBoost );
     SG_CLAMP_RANGE<int>( micBoost, 0, 1 );
@@ -403,7 +407,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     return;
   }
 
-  if (prop == _selectedInput_node || prop == _selectedOutput_node) {
+  if (prop == _selectedInput_node || prop == _selectedOutput_node && _enabled) {
     int selectedInput = _selectedInput_node->getIntValue();
     int selectedOutput = _selectedOutput_node->getIntValue();
     SG_LOG( SG_IO, SG_INFO, "FGCom selected-input= " << selectedInput );
