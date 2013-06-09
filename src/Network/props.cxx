@@ -594,6 +594,8 @@ FGProps::open()
         return false;
     }
 
+    poller.addChannel(this);
+    
     SG_LOG( SG_IO, SG_INFO, "Props server started on port " << port );
 
     set_enabled( true );
@@ -616,7 +618,7 @@ FGProps::close()
 bool
 FGProps::process()
 {
-    simgear::NetChannel::poll();
+    poller.poll();
     return true;
 }
 
@@ -632,4 +634,5 @@ FGProps::handleAccept()
             << addr.getHost() << ":" << addr.getPort() );
     PropsChannel* channel = new PropsChannel();
     channel->setHandle( handle );
+    poller.addChannel( channel );
 }

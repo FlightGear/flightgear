@@ -58,7 +58,7 @@ using std::string;
 class HttpdChannel : public simgear::NetChat
 {
     simgear::NetBuffer buffer;
-
+    
     string urlEncode(string);
     string urlDecode(string);
 
@@ -90,11 +90,18 @@ class HttpdServer : private simgear::NetChannel
 
         HttpdChannel *hc = new HttpdChannel;
         hc->setHandle ( handle );
+        poller.addChannel( hc );
     }
 
+    simgear::NetChannelPoller poller;
 public:
 
     HttpdServer ( int port );
+    
+    void poll()
+    {
+        poller.poll();
+    }
 };
 
 HttpdServer::HttpdServer(int port)
@@ -116,6 +123,8 @@ HttpdServer::HttpdServer(int port)
         SG_LOG( SG_IO, SG_ALERT, "Failed to listen on HTTP port.");
         return;
     }
+    
+    poller.addChannel(this);
 
     SG_LOG(SG_IO, SG_ALERT, "Httpd server started on port " << port);
 }
@@ -152,8 +161,7 @@ bool FGHttpd::open() {
 
 
 bool FGHttpd::process() {
-    simgear::NetChannel::poll();
-
+    server->poll();
     return true;
 }
 

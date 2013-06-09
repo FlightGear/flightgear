@@ -42,7 +42,7 @@ class HTTPClient : public simgear::NetBufferChannel
 
     bool done;
     SGTimeStamp start;
-
+    simgear::NetChannelPoller poller;
 public:
 
     HTTPClient ( const char* host, int port, const char* path ) :
@@ -55,6 +55,7 @@ public:
   ::snprintf (buffer, 256, "GET %s HTTP/1.0\r\n\r\n", path );
 	bufferSend(buffer, strlen(buffer) ) ;
 
+        poller.addChannel(this);
         start.stamp();
     }
 
@@ -77,6 +78,11 @@ public:
         } else {
             return done;
         }
+    }
+    
+    void poll(int timeout)
+    {
+        poller.poll(timeout);
     }
 };
 

@@ -49,7 +49,7 @@ private:
      * Server port to listen on.
      */
     int port;
-
+    simgear::NetChannelPoller poller;
 public:
     /**
      * Create a new TCP server.
