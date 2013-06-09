@@ -19,6 +19,10 @@
 #include "iaxclient.h"
 #include <simgear/structure/subsystem_mgr.hxx>
 
+#define NUM_CALLS 4
+#define DEFAULT_RANGE 50.0
+#define DEFAULT_SERVER "clemaez.dyndns.org"
+
 
 class FGCom : public SGSubsystem, public SGPropertyChangeListener
 {
@@ -37,7 +41,6 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
   private:
 
     SGPropertyNode_ptr _ptt0_node;                            // instrumentation/nav[0]/ptt
-    SGPropertyNode_ptr _chat_node;                            // sim/multiplay/chat
     SGPropertyNode_ptr _nav0_node;                            // instrumentation/nav[0]/frequencies/selected-mhz
     SGPropertyNode_ptr _nav1_node;                            // instrumentation/nav[1]/frequencies/selected-mhz
     SGPropertyNode_ptr _comm0_node;                           // instrumentation/comm[0]/frequencies/selected-mhz
@@ -68,7 +71,6 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     bool     _nav1Changed;
     bool     _comm0Changed;
     bool     _comm1Changed;
-    bool     _chatChanged;
     bool     _register;
     bool     _enabled;
     int      _regId;
@@ -85,8 +87,6 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     std::string   computePhoneNumber(const double& freq, const std::string& icao) const;
     std::string   getAirportCode(const double& freq) const;
     std::string   getVorCode(const double& freq) const;
-    int           iaxc_callback(iaxc_event e);
-    int           textEvent(int type, int callNo, char *message);
     int           isOutOfRange();
 
 };
