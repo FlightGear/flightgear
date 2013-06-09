@@ -146,117 +146,121 @@ void FGCom::init()
 }
 
 
+
 void FGCom::postinit()
 {
-  /*
-    Here we want initiate some IAX state
-    Also we will provide the list of available devices
-    WARNING: this_must_ be executed after sound system is totally initialized !
-  */
-
-  // INITIALIZE IAX
-  if( iaxc_initialize(4) )
-    SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot initialize iaxclient!");
-
-  // SET MIC BOOST
-  // FIXME: //Not used by OpenAL (should we implement it ?)
-  //iaxc_mic_boost_set( _micBoost_node->getIntValue() );
-
-  // SET CALLER ID
-  // FIXME: is it really necessary ?
-  std::string callerID = _callsign_node->getStringValue();
-  iaxc_set_callerid( const_cast<char*>(callerID.c_str()), const_cast<char*>(callerID.c_str()) ); 
-
-  // SET FORMATS
-  iaxc_set_formats( IAXC_FORMAT_GSM, IAXC_FORMAT_GSM );
-
-  // SET CALLBACK FUNCTION ????
-  // FIXME: to be done...
-  //iaxc_set_event_callback( iaxc_callback );
-
-  // INTERNAL PROCESSING OF IAX
-  iaxc_start_processing_thread ();
-
-  // REGISTER IAX
-  // FIXME: require server-side implementation.
-  //        AFAIK no one is ready for this feature... keep it ?
-  if ( _register ) {
-    _regId = iaxc_register( const_cast<char*>(_username.c_str()),
-                            const_cast<char*>(_password.c_str()),
-                            const_cast<char*>(_server.c_str()) );
-    if( _regId == -1 )
-      SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot register iaxclient!");
-  }
-
-  /*
-    Here we will create the list of available audio devices
-    Each audio device has a name, an ID, and a list of capabilities
-    If an audio device can output sound, available-output=true 
-    If an audio device can input sound, available-input=true 
-
-    /sim/fgcom/selected-input (int)
-    /sim/fgcom/selected-output (int)
-
-    /sim/fgcom/device[n]/id (int)
-    /sim/fgcom/device[n]/name (string)
-    /sim/fgcom/device[n]/available-input (bool)
-    /sim/fgcom/device[n]/available-output (bool)
-  */
-
-  //FIXME: OpenAL driver use an hard-coded device
-  //       so all following is unused finally
-  SGPropertyNode *node     = fgGetNode("/sim/fgcom", 0, true);
-
-  struct iaxc_audio_device *devs;
-  int nDevs, input, output, ring;
-
-  iaxc_audio_devices_get(&devs,&nDevs, &input, &output, &ring);
-
-  for(int i=0; i<nDevs; i++ ) {
-    SGPropertyNode *in_node = node->getChild("device", i, true);
-
-    // devID
-    _deviceID_node[i] = in_node->getChild("id", 0, true);
-    _deviceID_node[i]->setIntValue(devs[i].devID);
-
-    // name
-    _deviceName_node[i] = in_node->getChild("name", 0, true);
-    _deviceName_node[i]->setStringValue(devs[i].name);
-
-    // input capability
-    _deviceInput_node[i] = in_node->getChild("available-input", 0, true);
-    if( devs[i].capabilities & IAXC_AD_INPUT )
-      _deviceInput_node[i]->setBoolValue(true);
-    else 
-      _deviceInput_node[i]->setBoolValue(false);
-
-    // output capability
-    _deviceOutput_node[i] = in_node->getChild("available-output", 0, true);
-    if( devs[i].capabilities & IAXC_AD_OUTPUT )
-      _deviceOutput_node[i]->setBoolValue(true);
-    else 
-      _deviceOutput_node[i]->setBoolValue(false);
-
-    // use default device at start
-    if( devs[i].capabilities & IAXC_AD_INPUT_DEFAULT )
-      _selectedInput_node->setIntValue(devs[i].devID);
-    if( devs[i].capabilities & IAXC_AD_OUTPUT_DEFAULT )
-      _selectedOutput_node->setIntValue(devs[i].devID);
-  }
-
-  iaxc_millisleep(300);
 
   if( _enabled ) {
-    // Do the first call at start
-    const double freq = _comm0_node->getDoubleValue();
-    std::string num = computePhoneNumber(freq, getAirportCode(freq));
-    if( num.size() > 0 ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom comm[0] number=" << num );
-      _callComm0 = iaxc_call(num.c_str());
+    /*
+      Here we want initiate some IAX state
+      Also we will provide the list of available devices
+      WARNING: this_must_ be executed after sound system is totally initialized !
+    */
+
+    // INITIALIZE IAX
+    if( iaxc_initialize(4) )
+      SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot initialize iaxclient!");
+
+    // SET MIC BOOST
+    // FIXME: //Not used by OpenAL (should we implement it ?)
+    //iaxc_mic_boost_set( _micBoost_node->getIntValue() );
+
+    // SET CALLER ID
+    // FIXME: is it really necessary ?
+    std::string callerID = _callsign_node->getStringValue();
+    iaxc_set_callerid( const_cast<char*>(callerID.c_str()), const_cast<char*>(callerID.c_str()) ); 
+
+    // SET FORMATS
+    iaxc_set_formats( IAXC_FORMAT_GSM, IAXC_FORMAT_GSM );
+
+    // SET CALLBACK FUNCTION ????
+    // FIXME: to be done...
+    //iaxc_set_event_callback( iaxc_callback );
+
+    // INTERNAL PROCESSING OF IAX
+    iaxc_start_processing_thread ();
+
+    // REGISTER IAX
+    // FIXME: require server-side implementation.
+    //        AFAIK no one is ready for this feature... keep it ?
+    if ( _register ) {
+      _regId = iaxc_register( const_cast<char*>(_username.c_str()),
+                              const_cast<char*>(_password.c_str()),
+                              const_cast<char*>(_server.c_str()) );
+      if( _regId == -1 )
+        SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot register iaxclient!");
     }
-    if( _callComm0 == -1 )
-      SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call comm[0] freq" );
-  }
+
+    /*
+      Here we will create the list of available audio devices
+      Each audio device has a name, an ID, and a list of capabilities
+      If an audio device can output sound, available-output=true 
+      If an audio device can input sound, available-input=true 
+
+      /sim/fgcom/selected-input (int)
+      /sim/fgcom/selected-output (int)
+
+      /sim/fgcom/device[n]/id (int)
+      /sim/fgcom/device[n]/name (string)
+      /sim/fgcom/device[n]/available-input (bool)
+      /sim/fgcom/device[n]/available-output (bool)
+    */
+
+    //FIXME: OpenAL driver use an hard-coded device
+    //       so all following is unused finally
+    SGPropertyNode *node     = fgGetNode("/sim/fgcom", 0, true);
+
+    struct iaxc_audio_device *devs;
+    int nDevs, input, output, ring;
+
+    iaxc_audio_devices_get(&devs,&nDevs, &input, &output, &ring);
+
+    for(int i=0; i<nDevs; i++ ) {
+      SGPropertyNode *in_node = node->getChild("device", i, true);
+
+      // devID
+      _deviceID_node[i] = in_node->getChild("id", 0, true);
+      _deviceID_node[i]->setIntValue(devs[i].devID);
+
+      // name
+      _deviceName_node[i] = in_node->getChild("name", 0, true);
+      _deviceName_node[i]->setStringValue(devs[i].name);
+
+      // input capability
+      _deviceInput_node[i] = in_node->getChild("available-input", 0, true);
+      if( devs[i].capabilities & IAXC_AD_INPUT )
+        _deviceInput_node[i]->setBoolValue(true);
+      else 
+        _deviceInput_node[i]->setBoolValue(false);
+
+      // output capability
+      _deviceOutput_node[i] = in_node->getChild("available-output", 0, true);
+      if( devs[i].capabilities & IAXC_AD_OUTPUT )
+        _deviceOutput_node[i]->setBoolValue(true);
+      else 
+        _deviceOutput_node[i]->setBoolValue(false);
+
+      // use default device at start
+      if( devs[i].capabilities & IAXC_AD_INPUT_DEFAULT )
+        _selectedInput_node->setIntValue(devs[i].devID);
+      if( devs[i].capabilities & IAXC_AD_OUTPUT_DEFAULT )
+        _selectedOutput_node->setIntValue(devs[i].devID);
+    }
+
+    iaxc_millisleep(300);
+
+    //if( _enabled ) {
+      // Do the first call at start
+      const double freq = _comm0_node->getDoubleValue();
+      std::string num = computePhoneNumber(freq, getAirportCode(freq));
+      if( num.size() > 0 ) {
+        SG_LOG( SG_IO, SG_INFO, "FGCom comm[0] number=" << num );
+        _callComm0 = iaxc_call(num.c_str());
+      }
+      if( _callComm0 == -1 )
+        SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call comm[0] freq" );
+    //}
+  } //if( _enabled )
 }
 
 
@@ -383,12 +387,10 @@ void FGCom::valueChanged(SGPropertyNode *prop)
   if (prop == _enabled_node) {
     SG_LOG( SG_IO, SG_INFO, "FGCom enabled= " << prop->getBoolValue() );
     if( prop->getBoolValue() ) {
-      //FIXME: how to handle enabled/disabled ?
-      //shutdown();
-      //init();
-      //_enabled = true;
+      init();
+      postinit();
     } else {
-      //shutdown();
+      shutdown();
     }
     return;
   }
