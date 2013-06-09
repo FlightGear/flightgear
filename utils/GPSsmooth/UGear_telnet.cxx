@@ -194,7 +194,8 @@ UGTelnet::open()
     printf("Telnet server started on port %d\n", port );
 
     enabled = true;
-
+    poller.addChannel(this);
+    
     return true;
 }
 
@@ -214,7 +215,7 @@ UGTelnet::close()
 bool
 UGTelnet::process()
 {
-    simgear::NetChannel::poll();
+    poller.poll();
     return true;
 }
 
@@ -230,4 +231,5 @@ UGTelnet::handleAccept()
            addr.getHost(), addr.getPort() );
     PropsChannel* channel = new PropsChannel();
     channel->setHandle( handle );
+    poller.addChannel(channel);
 }

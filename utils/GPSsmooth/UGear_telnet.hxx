@@ -51,7 +51,7 @@ private:
      */
     int port;
     bool enabled;
-
+    simgear::NetChannelPoller poller;
 public:
 
     /**
