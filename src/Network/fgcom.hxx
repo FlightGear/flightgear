@@ -20,7 +20,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 #define NUM_CALLS 4
-#define DEFAULT_RANGE 50.0
+#define MAX_RANGE 150.0
 #define DEFAULT_SERVER "clemaez.dyndns.org"
 
 
@@ -87,6 +87,6 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     std::string   computePhoneNumber(const double& freq, const std::string& icao) const;
     std::string   getAirportCode(const double& freq) const;
     std::string   getVorCode(const double& freq) const;
-    int           isOutOfRange();
+    bool          isInRange();
 
 };

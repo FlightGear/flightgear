@@ -248,6 +248,8 @@ void FGCom::update(double dt)
       iaxc_millisleep(50);
       const double freq = _comm0_node->getDoubleValue();
       std::string num = computePhoneNumber(freq, getAirportCode(freq));
+      if( !isInRange() )
+        return;
       if( num.size() > 0 ) {
         SG_LOG( SG_IO, SG_INFO, "FGCom comm[0] number=" << num );
         _callComm0 = iaxc_call(num.c_str());
@@ -263,6 +265,8 @@ void FGCom::update(double dt)
       iaxc_millisleep(50);
       const double freq = _comm1_node->getDoubleValue();
       std::string num = computePhoneNumber(freq, getAirportCode(freq));
+      if( !isInRange() )
+        return;
       if( num.size() > 0 ) {
         SG_LOG( SG_IO, SG_INFO, "FGCom comm[1] number=" << num );
         _callComm1 = iaxc_call(num.c_str());
@@ -301,6 +305,9 @@ void FGCom::update(double dt)
         SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call nav[1] freq" );
       _nav1Changed = false;
     }
+
+    if( !isInRange() )
+      iaxc_dump_call();
 
     //FIXME: need to handle range:
     //       check - for each nav0, nav1, comm0, comm1 - if the freq is out of range
@@ -459,7 +466,7 @@ std::string FGCom::getVorCode(const double& freq) const
   SGGeod aircraftPos = globals->get_aircraft_position();
   FGNavList::TypeFilter filter(FGPositioned::VOR);
 
-  FGNavRecord *vor = FGNavList::findByFreq( freq, aircraftPos, &filter);
+  FGNavRecord* vor = FGNavList::findByFreq( freq, aircraftPos, &filter);
   if( !vor ) {
     SG_LOG( SG_IO, SG_INFO, "FGCom getVorCode: not found" );
     return std::string();
@@ -513,11 +520,27 @@ std::string FGCom::computePhoneNumber(const double& freq, const std::string& ica
 
 
 
-int FGCom::isOutOfRange()
+bool FGCom::isInRange()
 {
+/*
+  //SGGeod airportPos;
   //SGGeod aircraftPos = globals->get_aircraft_position();
 
-  return 0;
+  // Get airport position
+
+  // Calculate aircraft range
+  double delta_elevation_ft = fabs(aircraft_altitude_ft - airport_elevation_ft);
+  double range_nm = 1.23 * sqrt(delta_elevation_ft);
+  if(range_nm > MAX_RANGE)
+    range_nm = MAX_RANGE;
+
+  // Calculate distance btw aircraft <-> airport
+
+  // Return 1 if in range else 0
+  if(toto > range_nm)
+     return 0;
+*/
+  return 1;
 }
 
 
