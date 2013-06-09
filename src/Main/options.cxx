@@ -2041,16 +2041,17 @@ void Options::processOptions()
     if (terrasyncDir.empty()) {
       SGPath p(globals->get_fg_home());
       p.append("TerraSync");
-      if (!p.exists()) {
-        simgear::Dir dd(p);
-        dd.create(0700);
-      }
-      
       terrasyncDir = p.str();
       SG_LOG(SG_GENERAL, SG_INFO,
              "Using default TerraSync dir: " << terrasyncDir);
       fgSetString("/sim/terrasync/scenery-dir", terrasyncDir);
     }
+      
+      SGPath p(terrasyncDir);
+      if (!p.exists()) {
+          simgear::Dir dd(p);
+          dd.create(0700);
+      }
     
     const string_list& scenery_paths(globals->get_fg_scenery());
     if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
