@@ -33,6 +33,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/stdint.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/math/SGMath.hxx>
@@ -42,6 +43,8 @@
 #include <Main/fg_os.hxx>
 #include <Main/util.hxx>
 #include "generic.hxx"
+
+using simgear::strutils::unescape;
 
 FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false), initOk(false)
 {
@@ -591,10 +594,10 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
          * line_sep_string = the string/charachter to place at the end of each
          *                   lot of variables
          */
-        preamble = fgUnescape(root->getStringValue("preamble"));
-        postamble = fgUnescape(root->getStringValue("postamble"));
-        var_sep_string = fgUnescape(root->getStringValue("var_separator"));
-        line_sep_string = fgUnescape(root->getStringValue("line_separator"));
+        preamble = unescape(root->getStringValue("preamble"));
+        postamble = unescape(root->getStringValue("postamble"));
+        var_sep_string = unescape(root->getStringValue("var_separator"));
+        line_sep_string = unescape(root->getStringValue("line_separator"));
 
         if ( var_sep_string == "newline" ) {
             var_separator = '\n';
@@ -684,7 +687,7 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         _serial_prot chunk;
 
         // chunk.name = chunks[i]->getStringValue("name");
-        chunk.format = fgUnescape(chunks[i]->getStringValue("format", "%d"));
+        chunk.format = unescape(chunks[i]->getStringValue("format", "%d"));
         chunk.offset = chunks[i]->getDoubleValue("offset");
         chunk.factor = chunks[i]->getDoubleValue("factor", 1.0);
         chunk.min = chunks[i]->getDoubleValue("min");

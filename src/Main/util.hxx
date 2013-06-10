@@ -39,16 +39,6 @@
  */
 extern double fgGetLowPass (double current, double target, double timeratio);
 
-
-/**
- * Unescape string.
- *
- * @param str String possibly containing escaped characters.
- * @return string with escaped characters replaced by single character values.
- */
-extern std::string fgUnescape (const char *str);
-
-
 /**
  * Validation listener interface for io.nas, used by fgcommands.
  * @param path Path to be validated

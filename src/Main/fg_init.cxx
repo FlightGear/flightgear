@@ -390,12 +390,12 @@ SGPath platformDesktopPath()
   // failed, bad
   return SGPath();
     */
-    
+    // TODO real implementation and move to SGPath
     return SGPath(fgGetString("/sim/fg-current"));
 }
+#else
 
-#elif __APPLE__
-
+#ifdef __APPLE__
 #include <CoreServices/CoreServices.h>
 
 static SGPath platformDefaultDataPath()
@@ -405,58 +405,33 @@ static SGPath platformDefaultDataPath()
   if (err) {
     return SGPath();
   }
-  
+
   unsigned char path[1024];
   if (FSRefMakePath(&ref, path, 1024) != noErr) {
     return SGPath();
   }
-  
+
   SGPath appData;
   appData.set((const char*) path);
   appData.append("FlightGear");
   return appData;
 }
-
-SGPath platformDesktopPath()
-{
-  FSRef ref;
-  OSErr err = FSFindFolder(kUserDomain, kDesktopFolderType, false, &ref);
-  if (err) {
-    return SGPath();
-  }
-  
-  unsigned char path[1024];
-  if (FSRefMakePath(&ref, path, 1024) != noErr) {
-    return SGPath();
-  }
-  
-  return SGPath((const char*) path);
-}
-
 #else
 static SGPath platformDefaultDataPath()
 {
-  SGPath config( getenv("HOME") );
-  config.append( ".fgfs" );
-  return config;
+  return SGPath::home() / ".fgfs";
 }
-
+#endif
 SGPath platformDesktopPath()
 {
-  SGPath config( getenv("HOME") );
-  config.append( "Desktop" );
-  return config;
+  return SGPath::desktop();
 }
 #endif
 
 void fgInitHome()
 {
-    SGPath dataPath = platformDefaultDataPath();
-    const char *fg_home = getenv("FG_HOME");
-    if (fg_home)
-        dataPath = fg_home;
-    
-    globals->set_fg_home(dataPath.c_str());
+  SGPath dataPath = SGPath::fromEnv("FG_HOME", platformDefaultDataPath());
+  globals->set_fg_home(dataPath.c_str());
 }
 
 // Read in configuration (file and command line)

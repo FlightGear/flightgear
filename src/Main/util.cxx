@@ -71,59 +71,6 @@ fgGetLowPass (double current, double target, double timeratio)
     return current;
 }
 
-
-std::string
-fgUnescape (const char *s)
-{
-    std::string r;
-    while (*s) {
-        if (*s != '\\') {
-            r += *s++;
-            continue;
-        }
-        if (!*++s)
-            break;
-        if (*s == '\\') {
-            r += '\\';
-        } else if (*s == 'n') {
-            r += '\n';
-        } else if (*s == 'r') {
-            r += '\r';
-        } else if (*s == 't') {
-            r += '\t';
-        } else if (*s == 'v') {
-            r += '\v';
-        } else if (*s == 'f') {
-            r += '\f';
-        } else if (*s == 'a') {
-            r += '\a';
-        } else if (*s == 'b') {
-            r += '\b';
-        } else if (*s == 'x') {
-            if (!*++s)
-                break;
-            int v = 0;
-            for (int i = 0; i < 2 && isxdigit(*s); i++, s++)
-                v = v * 16 + (isdigit(*s) ? *s - '0' : 10 + tolower(*s) - 'a');
-            r += v;
-            continue;
-
-        } else if (*s >= '0' && *s <= '7') {
-            int v = *s++ - '0';
-            for (int i = 0; i < 3 && *s >= '0' && *s <= '7'; i++, s++)
-                v = v * 8 + *s - '0';
-            r += v;
-            continue;
-
-        } else {
-            r += *s;
-        }
-        s++;
-    }
-    return r;
-}
-
-
 // Write out path to validation node and read it back in. A Nasal
 // listener is supposed to replace the path with a validated version
 // or an empty string otherwise.
