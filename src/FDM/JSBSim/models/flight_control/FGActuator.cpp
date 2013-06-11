@@ -43,7 +43,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGActuator.cpp,v 1.25 2013/01/12 19:24:05 jberndt Exp $";
+static const char *IdSrc = "$Id: FGActuator.cpp,v 1.28 2013/06/10 02:04:50 jberndt Exp $";
 static const char *IdHdr = ID_ACTUATOR;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,12 +83,12 @@ FGActuator::FGActuator(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, eleme
   Element* ratelim_el = element->FindElement("rate_limit");
   while ( ratelim_el ) {
     rate_limited = true;
-    FGPropertyManager* rate_limit_prop=0;
+    FGPropertyNode* rate_limit_prop=0;
 
     string rate_limit_str = ratelim_el->GetDataLine();
     trim(rate_limit_str);
     if (is_number(rate_limit_str)) {
-    rate_limit = fabs(element->FindElementValueAsNumber("rate_limit"));
+      rate_limit = fabs(element->FindElementValueAsNumber("rate_limit"));
     } else {
       if (rate_limit_str[0] == '-') rate_limit_str.erase(0,1);
       rate_limit_prop = PropertyManager->GetNode(rate_limit_str, true);
@@ -104,7 +104,7 @@ FGActuator::FGActuator(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, eleme
       } else if (sense.substr(0,4) == "decr") {
         if (rate_limit_prop != 0) rate_limit_decr_prop = rate_limit_prop;
         else                      rate_limit_decr = -rate_limit;
-  }
+      }
     } else {
       rate_limit_incr =  rate_limit;
       rate_limit_decr = -rate_limit;
@@ -157,7 +157,8 @@ bool FGActuator::Run(void )
     Output = PreviousOutput;
   } else {
     if (lag != 0.0)              Lag();        // models actuator lag
-    if (rate_limit != 0)         RateLimit();  // limit the actuator rate
+    if (rate_limit != 0 || (rate_limit_incr_prop != 0
+        || rate_limit_decr_prop != 0)) RateLimit();  // limit the actuator rate
     if (deadband_width != 0.0)   Deadband();
     if (hysteresis_width != 0.0) Hysteresis();
     if (bias != 0.0)             Bias();       // models a finite bias

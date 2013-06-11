@@ -90,9 +90,9 @@ public:
 
   /** Get the altitude above sea level dependent on the location. */
   virtual double GetAltitude(const FGLocation& l) const {
-    double pt[3] = { SG_FEET_TO_METER*l(eX),
-                     SG_FEET_TO_METER*l(eY),
-                     SG_FEET_TO_METER*l(eZ) };
+    double pt[3] = { SG_FEET_TO_METER*l(FGJSBBase::eX),
+                     SG_FEET_TO_METER*l(FGJSBBase::eY),
+                     SG_FEET_TO_METER*l(FGJSBBase::eZ) };
     double lat, lon, alt;
     sgCartToGeod( pt, &lat, &lon, &alt);
     return alt * SG_METER_TO_FEET;
@@ -102,7 +102,7 @@ public:
   virtual double GetAGLevel(double t, const FGLocation& l,
                             FGLocation& cont, FGColumnVector3& n,
                             FGColumnVector3& v, FGColumnVector3& w) const {
-    double loc_cart[3] = { l(eX), l(eY), l(eZ) };
+    double loc_cart[3] = { l(FGJSBBase::eX), l(FGJSBBase::eY), l(FGJSBBase::eZ) };
     double contact[3], normal[3], vel[3], angularVel[3], agl = 0;
     mInterface->get_agl_ft(t, loc_cart, SG_METER_TO_FEET*2, contact, normal,
                            vel, angularVel, &agl);
@@ -114,7 +114,7 @@ public:
   }
 
   virtual double GetTerrainGeoCentRadius(double t, const FGLocation& l) const {
-    double loc_cart[3] = { l(eX), l(eY), l(eZ) };
+    double loc_cart[3] = { l(FGJSBBase::eX), l(FGJSBBase::eY), l(FGJSBBase::eZ) };
     double contact[3], normal[3], vel[3], angularVel[3], agl = 0;
     mInterface->get_agl_ft(t, loc_cart, SG_METER_TO_FEET*2, contact, normal,
                            vel, angularVel, &agl);
@@ -192,7 +192,8 @@ FGJSBsim::FGJSBsim( double dt )
         }
     }
 
-    fdmex = new FGFDMExec( (FGPropertyManager*)globals->get_props() );
+    PropertyManager = new FGPropertyManager( (FGPropertyNode*)globals->get_props() );
+    fdmex = new FGFDMExec( PropertyManager );
 
     // Register ground callback.
     fdmex->SetGroundCallback( new FGFSGroundCallback(this) );
@@ -363,6 +364,7 @@ FGJSBsim::FGJSBsim( double dt )
 FGJSBsim::~FGJSBsim(void)
 {
   delete fdmex;
+  delete PropertyManager;
 }
 
 /******************************************************************************/

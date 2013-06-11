@@ -9,6 +9,7 @@ set(HEADERS
     initialization/FGTrimAxis.h
     initialization/FGSimplexTrim.h
     initialization/FGTrimmer.h
+    initialization/FGLinearization.h
     input_output/FGXMLParse.h
     input_output/FGXMLFileRead.h
     input_output/FGPropertyManager.h
@@ -100,6 +101,7 @@ set(SOURCES
     initialization/FGTrimAxis.cpp
     initialization/FGSimplexTrim.cpp
     initialization/FGTrimmer.cpp
+    initialization/FGLinearization.cpp
     input_output/FGGroundCallback.cpp
     input_output/FGPropertyManager.cpp
     input_output/FGScript.cpp

@@ -43,7 +43,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFunction.cpp,v 1.46 2012/09/25 12:43:13 jberndt Exp $";
+static const char *IdSrc = "$Id: FGFunction.cpp,v 1.50 2013/06/10 02:05:12 jberndt Exp $";
 static const char *IdHdr = ID_FUNCTION;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,6 +64,9 @@ const std::string FGFunction::difference_string = "difference";
 const std::string FGFunction::product_string = "product";
 const std::string FGFunction::quotient_string = "quotient";
 const std::string FGFunction::pow_string = "pow";
+const std::string FGFunction::sqrt_string = "sqrt";
+const std::string FGFunction::toradians_string = "toradians";
+const std::string FGFunction::todegrees_string = "todegrees";
 const std::string FGFunction::exp_string = "exp";
 const std::string FGFunction::log2_string = "log2";
 const std::string FGFunction::ln_string = "ln";
@@ -121,6 +124,11 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
   if (operation == function_string) {
     sCopyTo = el->GetAttributeValue("copyto");
     if (!sCopyTo.empty()) {
+
+      if (sCopyTo.find("#") != string::npos) {
+        if (is_number(Prefix)) sCopyTo = replace(sCopyTo,"#",Prefix);
+      }
+
       pCopyTo = PropertyManager->GetNode(sCopyTo);
       if (pCopyTo == 0L) cerr << "Property \"" << sCopyTo << "\" must be previously defined in function "
                               << Name << endl;
@@ -136,6 +144,12 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
     Type = eQuotient;
   } else if (operation == pow_string) {
     Type = ePow;
+  } else if (operation == sqrt_string) {
+    Type = eSqrt;
+  } else if (operation == toradians_string) {
+    Type = eToRadians;
+  } else if (operation == todegrees_string) {
+    Type = eToDegrees;
   } else if (operation == log2_string) {
     Type = eLog2;
   } else if (operation == ln_string) {
@@ -240,13 +254,13 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
           property_name = replace(property_name,"#",Prefix);
         }
       }
-      FGPropertyManager* newNode = 0L;
+      FGPropertyNode* newNode = 0L;
       if (PropertyManager->HasNode(property_name)) {
         newNode = PropertyManager->GetNode(property_name);
         Parameters.push_back(new FGPropertyValue( newNode ));
       } else {
-        cerr << fgcyan << "Warning: The property " + property_name + " is initially undefined."
-             << reset << endl;
+        // cerr << fgcyan << "Warning: The property " + property_name + " is initially undefined."
+        //      << reset << endl;
         Parameters.push_back(new FGPropertyValue( property_name,
                                                   PropertyManager ));
       }
@@ -260,6 +274,9 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
                operation == sum_string ||
                operation == quotient_string ||
                operation == pow_string ||
+               operation == sqrt_string ||
+               operation == toradians_string ||
+               operation == todegrees_string ||
                operation == exp_string ||
                operation == log2_string ||
                operation == ln_string ||
@@ -384,6 +401,15 @@ double FGFunction::GetValue(void) const
     break;
   case ePow:
     temp = pow(temp,Parameters[1]->GetValue());
+    break;
+  case eSqrt:
+    temp = sqrt(temp);
+    break;
+  case eToRadians:
+    temp *= M_PI/180.0;
+    break;
+  case eToDegrees:
+    temp *= 180.0/M_PI;
     break;
   case eExp:
     temp = exp(temp);
@@ -780,13 +806,15 @@ void FGFunction::bind(void)
       }
     }
 
- // JMT commenting out on 2013/01/28 on advice of jentron - temporary fix
- // for in-flux JSBSim property tie changes.
- //   if (PropertyManager->HasNode(tmp)) {
- //     cout << "Property " << tmp << " has already been successfully bound (late)." << endl;
- //   } else {
+    if (PropertyManager->HasNode(tmp)) {
+      FGPropertyNode* property = PropertyManager->GetNode(tmp);
+      if (property->isTied()) {
+        cout << "Property " << tmp << " has already been successfully bound (late)." << endl;
+        return;
+      }
+    }
+
     PropertyManager->Tie( tmp, this, &FGFunction::GetValue);
- //   }
   }
 }
 

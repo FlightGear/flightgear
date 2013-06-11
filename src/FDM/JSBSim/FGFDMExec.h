@@ -56,7 +56,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.80 2012/10/25 04:56:57 jberndt Exp $"
+#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.83 2013/06/10 01:46:27 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -179,7 +179,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision: 1.80 $
+    @version $Revision: 1.83 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -392,13 +392,14 @@ public:
   /** Retrieves the value of a property.
       @param property the name of the property
       @result the value of the specified property */
-  inline double GetPropertyValue(const string& property) {return instance->GetDouble(property);}
+  inline double GetPropertyValue(const string& property)
+  { return instance->GetNode()->GetDouble(property); }
 
   /** Sets a property value.
       @param property the property to be set
       @param value the value to set the property to */
   inline void SetPropertyValue(const string& property, double value) {
-    instance->SetDouble(property, value);
+    instance->GetNode()->SetDouble(property, value);
   }
 
   /// Returns the model name.
@@ -448,12 +449,13 @@ public:
   /** Sets (or overrides) the output filename
       @param fname the name of the file to output data to
       @return true if successful, false if there is no output specified for the flight model */
-  bool SetOutputFileName(const string& fname) { return Output->SetOutputName(0, fname); }
+  bool SetOutputFileName(const int n, const string& fname) { return Output->SetOutputName(n, fname); }
 
   /** Retrieves the current output filename.
-      @return the name of the output file for the first output specified by the flight model.
+      @param n index of file
+      @return the name of the output file for the output specified by the flight model.
               If none is specified, the empty string is returned. */
-  string GetOutputFileName(void) const { return Output->GetOutputName(0); }
+  string GetOutputFileName(int n) const { return Output->GetOutputName(n); }
 
   /** Executes trimming in the selected mode.
   *   @param mode Specifies how to trim:
@@ -466,6 +468,11 @@ public:
   * - tNone  */
   void DoTrim(int mode);
   void DoSimplexTrim(int mode);
+
+  /** Executes linearization with state-space output
+   * You must trim first to get an accurate state-space model
+   */
+  void DoLinearization(int mode);
 
   /// Disables data logging to all outputs.
   void DisableOutput(void) { Output->Disable(); }
@@ -490,7 +497,7 @@ public:
     /// Name of the property.
     string base_string;
     /// The node for the property.
-    FGPropertyManager *node;
+    FGPropertyNode_ptr node;
   };
 
   /** Builds a catalog of properties.

@@ -44,7 +44,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PID "$Id: FGPID.h,v 1.13 2012/05/10 12:10:48 jberndt Exp $"
+#define ID_PID "$Id: FGPID.h,v 1.15 2013/02/02 06:05:26 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -116,7 +116,7 @@ For example,
 </pre>
 
     @author Jon S. Berndt
-    @version $Revision: 1.13 $
+    @version $Revision: 1.15 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -135,6 +135,11 @@ public:
     /// These define the indices use to select the various integrators.
   enum eIntegrateType {eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3};
 
+  void SetInitialOutput(double val) {
+    I_out_total = val;
+    Output = val;
+  }
+
 private:
   double Kp, Ki, Kd;
   double I_out_total;
@@ -147,11 +152,11 @@ private:
 
   eIntegrateType IntType;
 
-  FGPropertyManager *Trigger;
-  FGPropertyManager* KpPropertyNode;
-  FGPropertyManager* KiPropertyNode;
-  FGPropertyManager* KdPropertyNode;
-  FGPropertyManager* ProcessVariableDot;
+  FGPropertyNode_ptr Trigger;
+  FGPropertyNode_ptr KpPropertyNode;
+  FGPropertyNode_ptr KiPropertyNode;
+  FGPropertyNode_ptr KdPropertyNode;
+  FGPropertyNode_ptr ProcessVariableDot;
 
   void Debug(int from);
 };

@@ -71,6 +71,7 @@ class FGOutput;
 class FGInitialCondition;
 class FGLocation;
 class FGAccelerations;
+class FGPropertyManager;
 }
 
 // Adding it here will cause a namespace clash in FlightGear -EMH-
@@ -235,6 +236,7 @@ private:
     JSBSim::FGGroundReactions* GroundReactions;
     JSBSim::FGInertial*        Inertial;
     JSBSim::FGAccelerations*   Accelerations;
+    JSBSim::FGPropertyManager* PropertyManager;
 
     int runcount;
     double trim_elev;

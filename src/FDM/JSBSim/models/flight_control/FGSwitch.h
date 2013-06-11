@@ -48,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_SWITCH "$Id: FGSwitch.h,v 1.15 2012/10/27 20:29:01 jberndt Exp $"
+#define ID_SWITCH "$Id: FGSwitch.h,v 1.16 2013/01/26 17:06:50 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -127,7 +127,7 @@ ap/attitude_hold takes the value 1), the value of the switch component will be
 whatever value fcs/roll-ap-error-summer is.
 
 @author Jon S. Berndt
-@version $Id: FGSwitch.h,v 1.15 2012/10/27 20:29:01 jberndt Exp $
+@version $Id: FGSwitch.h,v 1.16 2013/01/26 17:06:50 bcoconni Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -185,7 +185,7 @@ private:
           } else {
             sign = 1.0;
           }
-          FGPropertyManager *node = propMan->GetNode(value, false);
+          FGPropertyNode *node = propMan->GetNode(value, false);
           if (node) {
             OutputProp = new FGPropertyValue(node);
           } else {
