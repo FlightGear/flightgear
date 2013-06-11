@@ -262,7 +262,7 @@ public:
               angle about the Y axis, and the third item is the angle
               about the Z axis (Phi, Theta, Psi).
   */
-  const FGColumnVector3& GetEulerDeg(void) const { return VState.qAttitudeLocal.GetEuler() * radtodeg; }
+  FGColumnVector3 GetEulerDeg(void) const;
 
   /** Retrieves a body frame velocity component.
       Retrieves a body frame velocity component. The velocity returned is

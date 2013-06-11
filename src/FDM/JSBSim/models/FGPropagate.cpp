@@ -559,6 +559,13 @@ void FGPropagate::SetLocation(const FGLocation& l)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+FGColumnVector3 FGPropagate::GetEulerDeg(void) const
+{
+  return VState.qAttitudeLocal.GetEuler() * radtodeg;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void FGPropagate::DumpState(void)
 {
   cout << endl;
