@@ -115,8 +115,11 @@ class HttpdImageServer : private simgear::NetChannel
 
         HttpdImageChannel *hc = new HttpdImageChannel;
         hc->setHandle ( handle );
+        
+        poller.addChannel( hc );
     }
 
+    simgear::NetChannelPoller poller;
 public:
 
     HttpdImageServer ( int port )
@@ -139,9 +142,14 @@ public:
             return;
         }
 
+        poller.addChannel(this);
         SG_LOG(SG_IO, SG_ALERT, "HttpdImage server started on port " << port);
     }
 
+    void poll()
+    {
+        poller.poll();
+    }
 };
 
 //////////////////////////////////////////////////////////////
@@ -176,7 +184,7 @@ bool FGJpegHttpd::open() {
 
 
 bool FGJpegHttpd::process() {
-    simgear::NetChannel::poll();
+    imageServer->poll();
 
     return true;
 }
