@@ -34,6 +34,7 @@ namespace canvas
     public simgear::canvas::Image
   {
     public:
+      static const std::string TYPE_NAME;
 
       enum Resize
       {
@@ -45,7 +46,12 @@ namespace canvas
         INIT    = BOTTOM << 1
       };
 
-      Window(SGPropertyNode* node);
+      typedef simgear::canvas::Style Style;
+
+      Window( const simgear::canvas::CanvasWeakPtr& canvas,
+              const SGPropertyNode_ptr& node,
+              const Style& parent_style = Style(),
+              Element* parent = 0 );
       virtual ~Window();
 
       virtual void update(double delta_time_sec);
@@ -55,17 +61,22 @@ namespace canvas
       const SGVec2<float> getPosition() const;
       const SGRect<float>  getScreenRegion() const;
 
-      void setCanvas(simgear::canvas::CanvasPtr canvas);
-      simgear::canvas::CanvasWeakPtr getCanvas() const;
+      void setCanvasContent(simgear::canvas::CanvasPtr canvas);
+      simgear::canvas::CanvasWeakPtr getCanvasContent() const;
 
       simgear::canvas::CanvasPtr getCanvasDecoration();
 
       bool isResizable() const;
       bool isCapturingEvents() const;
 
-      void handleResize(uint8_t mode, const osg::Vec2f& delta = osg::Vec2f());
+      /**
+       * Moves window on top of all other windows with the same z-index.
+       *
+       * @note If no z-index is set it defaults to 0.
+       */
+      void raise();
 
-      void doRaise(SGPropertyNode* node_raise = 0);
+      void handleResize(uint8_t mode, const osg::Vec2f& delta = osg::Vec2f());
 
     protected:
 

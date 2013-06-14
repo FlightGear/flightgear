@@ -34,6 +34,7 @@
 #include <osgGA/GUIEventHandler>
 
 #include <boost/bind.hpp>
+#include <boost/lexical_cast.hpp>
 
 /**
  * Event handler
@@ -83,8 +84,8 @@ class WindowPlacement:
       canvas::WindowPtr window = _window.lock();
       simgear::canvas::CanvasPtr canvas = _canvas.lock();
 
-      if( window && canvas && canvas == window->getCanvas().lock() )
-        window->setCanvas( simgear::canvas::CanvasPtr() );
+      if( window && canvas && canvas == window->getCanvasContent().lock() )
+        window->setCanvasContent( simgear::canvas::CanvasPtr() );
     }
 
   private:
@@ -93,35 +94,30 @@ class WindowPlacement:
 };
 
 //------------------------------------------------------------------------------
-typedef boost::shared_ptr<canvas::Window> WindowPtr;
-WindowPtr windowFactory(SGPropertyNode* node)
-{
-  return WindowPtr(new canvas::Window(node));
-}
-
-//------------------------------------------------------------------------------
 GUIMgr::GUIMgr():
-  PropertyBasedMgr( fgGetNode("/sim/gui/canvas", true),
-                    "window",
-                    &windowFactory ),
+  Group(simgear::canvas::CanvasPtr(), fgGetNode("/sim/gui/canvas", true)),
   _event_handler( new GUIEventHandler(this) ),
-  _transform( new osg::MatrixTransform ),
   _cb_mouse_mode( this,
                   &GUIMgr::handleMouseMode,
                   fgGetNode("/devices/status/mice/mouse[0]/mode") ),
   _handle_events(true),
-  _width(_props, "size[0]"),
-  _height(_props, "size[1]"),
+  _width(_node, "size[0]"),
+  _height(_node, "size[1]"),
   _resize(canvas::Window::NONE),
   _last_cursor(MOUSE_CURSOR_NONE),
+  _last_x(-1),
+  _last_y(-1),
   _last_scroll_time(0)
 {
+  // We handle the property listener manually within ::init and ::shutdown.
+  removeListener();
+
   _width = _height = -1;
 
   osg::Camera* camera =
     flightgear::getGUICamera( flightgear::CameraGroup::getDefault() );
   assert(camera);
-  camera->addChild(_transform);
+  camera->addChild( getMatrixTransform() );
 
   simgear::canvas::Canvas::addPlacementFactory
   (
@@ -148,7 +144,14 @@ GUIMgr::GUIMgr():
 //------------------------------------------------------------------------------
 canvas::WindowPtr GUIMgr::createWindow(const std::string& name)
 {
-  return boost::static_pointer_cast<canvas::Window>( createElement(name) );
+  canvas::WindowPtr window = createChild<canvas::Window>(name);
+  if( name.empty() )
+    window->set<std::string>
+    (
+      "id",
+      boost::lexical_cast<std::string>(window->getProps()->getIndex())
+    );
+  return window;
 }
 
 //------------------------------------------------------------------------------
@@ -162,23 +165,30 @@ void GUIMgr::init()
     fgGetInt("/sim/startup/ysize")
   );
 
-  PropertyBasedMgr::init();
-
   globals->get_renderer()
          ->getViewer()
          ->getEventHandlers()
          // GUI is on top of everything so lets install as first event handler
          .push_front( _event_handler );
+
+  _node->addChangeListener(this);
+  _node->fireCreatedRecursive();
 }
 
 //------------------------------------------------------------------------------
 void GUIMgr::shutdown()
 {
-  PropertyBasedMgr::shutdown();
+  _node->removeChangeListener(this);
 
   globals->get_renderer()
          ->getViewer()
          ->removeEventHandler( _event_handler );
+}
+
+//------------------------------------------------------------------------------
+void GUIMgr::update(double dt)
+{
+  Group::update(dt);
 }
 
 //------------------------------------------------------------------------------
@@ -206,35 +216,12 @@ bool GUIMgr::handleEvent(const osgGA::GUIEventAdapter& ea)
 }
 
 //------------------------------------------------------------------------------
-void GUIMgr::elementCreated(simgear::PropertyBasedElementPtr element)
+GUIMgr::ElementFactory GUIMgr::getChildFactory(const std::string& type) const
 {
-  canvas::WindowPtr window =
-    boost::static_pointer_cast<canvas::Window>(element);
+  if( type == "window" )
+    return &Element::create<canvas::Window>;
 
-  size_t layer_index = std::max(0, window->getProps()->getIntValue("layer", 1));
-  osg::Group *layer = 0;
-
-  if( layer_index < _transform->getNumChildren() )
-  {
-    layer = _transform->getChild(layer_index)->asGroup();
-    assert(layer);
-  }
-  else
-  {
-    while( _transform->getNumChildren() <= layer_index )
-    {
-      layer = new osg::Group;
-      _transform->addChild(layer);
-    }
-  }
-
-  layer->addChild(window->getGroup());
-}
-
-//------------------------------------------------------------------------------
-canvas::WindowPtr GUIMgr::getWindow(size_t i)
-{
-  return boost::static_pointer_cast<canvas::Window>(_elements[i]);
+  return Group::getChildFactory(type);
 }
 
 //------------------------------------------------------------------------------
@@ -242,19 +229,13 @@ simgear::canvas::Placements
 GUIMgr::addPlacement( SGPropertyNode* node,
                       simgear::canvas::CanvasPtr canvas )
 {
-  int placement_index = node->getIntValue("index", -1);
+  const std::string& id = node->getStringValue("id");
 
   simgear::canvas::Placements placements;
-  for( size_t i = 0; i < _elements.size(); ++i )
+  canvas::WindowPtr window = getChild<canvas::Window>(id);
+  if( window )
   {
-    if( placement_index >= 0 && static_cast<int>(i) != placement_index )
-      continue;
-
-    canvas::WindowPtr window = getWindow(i);
-    if( !window )
-      continue;
-
-    window->setCanvas(canvas);
+    window->setCanvasContent(canvas);
     placements.push_back(
       simgear::canvas::PlacementPtr(new WindowPlacement(node, window, canvas))
     );
@@ -323,38 +304,28 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
   canvas::WindowPtr window_at_cursor;
   for( int i = _transform->getNumChildren() - 1; i >= 0; --i )
   {
-    osg::Group *layer = _transform->getChild(i)->asGroup();
-    assert(layer);
-    if( !layer->getNumChildren() )
+    osg::Group *element = _transform->getChild(i)->asGroup();
+
+    assert(element);
+    assert(element->getUserData());
+
+    canvas::WindowPtr window =
+      boost::static_pointer_cast<canvas::Window>
+      (
+        static_cast<sc::Element::OSGUserData*>(element->getUserData())->element
+      );
+
+    if( !window->isCapturingEvents() || !window->isVisible() )
       continue;
 
-    for( int j = layer->getNumChildren() - 1; j >= 0; --j )
+    float margin = window->isResizable() ? resize_margin_pos : 0;
+    if( window->getScreenRegion().contains( event->getScreenX(),
+                                            event->getScreenY(),
+                                            margin ) )
     {
-      assert(layer->getChild(j)->getUserData());
-      canvas::WindowPtr window =
-        boost::static_pointer_cast<canvas::Window>
-        (
-          static_cast<sc::Element::OSGUserData*>
-          (
-            layer->getChild(j)->getUserData()
-          )->element
-        );
-
-      if( !window->isCapturingEvents() || !window->isVisible() )
-        continue;
-
-      float margin = window->isResizable() ? resize_margin_pos : 0;
-      if( window->getScreenRegion().contains( event->getScreenX(),
-                                              event->getScreenY(),
-                                              margin ) )
-      {
-        window_at_cursor = window;
-        break;
-      }
-    }
-
-    if( window_at_cursor )
+      window_at_cursor = window;
       break;
+    }
   }
 
   if( window_at_cursor )
@@ -400,7 +371,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       if( ea.getEventType() == osgGA::GUIEventAdapter::PUSH )
       {
         _resize_window = window_at_cursor;
-        window_at_cursor->doRaise();
+        window_at_cursor->raise();
         window_at_cursor->handleResize( _resize | canvas::Window::INIT,
                                         event->delta );
       }

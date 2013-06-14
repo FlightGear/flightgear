@@ -32,8 +32,14 @@ namespace canvas
   namespace sc = simgear::canvas;
 
   //----------------------------------------------------------------------------
-  Window::Window(SGPropertyNode* node):
-    Image(sc::CanvasPtr(), node),
+  const std::string Window::TYPE_NAME = "window";
+
+  //----------------------------------------------------------------------------
+  Window::Window( const simgear::canvas::CanvasWeakPtr& canvas,
+                  const SGPropertyNode_ptr& node,
+                  const Style& parent_style,
+                  Element* parent ):
+    Image(canvas, node, parent_style, parent),
     _attributes_dirty(0),
     _resizable(false),
     _capture_events(true),
@@ -75,9 +81,7 @@ namespace canvas
     {
       handled = true;
       const std::string& name = node->getNameString();
-      if( name == "raise-top" )
-        doRaise(node);
-      else if( name  == "resize" )
+      if( name  == "resize" )
         _resizable = node->getBoolValue();
       else if( name == "update" )
         update(0);
@@ -115,16 +119,16 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  void Window::setCanvas(sc::CanvasPtr canvas)
+  void Window::setCanvasContent(sc::CanvasPtr canvas)
   {
     _canvas_content = canvas;
     setSrcCanvas(canvas);
   }
 
   //----------------------------------------------------------------------------
-  sc::CanvasWeakPtr Window::getCanvas() const
+  sc::CanvasWeakPtr Window::getCanvasContent() const
   {
-    return getSrcCanvas();
+    return _canvas_content;
   }
 
   //----------------------------------------------------------------------------
@@ -143,6 +147,14 @@ namespace canvas
   bool Window::isCapturingEvents() const
   {
     return _capture_events;
+  }
+
+  //----------------------------------------------------------------------------
+  void Window::raise()
+  {
+    // on writing the z-index the window always is moved to the top of all other
+    // windows with the same z-index.
+    set<int>("z-index", get<int>("z-index", 0));
   }
 
   //----------------------------------------------------------------------------
@@ -171,29 +183,6 @@ namespace canvas
       _resize_right += delta.x();
     else if( mode & canvas::Window::LEFT )
       _resize_left += delta.x();
-  }
-
-  //----------------------------------------------------------------------------
-  void Window::doRaise(SGPropertyNode* node_raise)
-  {
-    if( node_raise && !node_raise->getBoolValue() )
-      return;
-
-    // Keep a reference to ensure the window is not deleted between removing and
-    // adding it back to the scenegraph
-    osg::ref_ptr<osg::Group> window = getGroup();
-
-    BOOST_FOREACH(osg::Group* parent, getGroup()->getParents())
-    {
-      // Remove window...
-      parent->removeChild(window);
-
-      // ...and add again as topmost window
-      parent->addChild(window);
-    }
-
-    if( node_raise )
-      node_raise->setBoolValue(false);
   }
 
   //----------------------------------------------------------------------------

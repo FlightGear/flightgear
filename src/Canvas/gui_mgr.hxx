@@ -22,6 +22,7 @@
 #include "canvas_fwd.hpp"
 
 #include <simgear/canvas/canvas_fwd.hxx>
+#include <simgear/canvas/elements/CanvasGroup.hxx>
 #include <simgear/props/PropertyBasedMgr.hxx>
 #include <simgear/props/propertyObject.hxx>
 
@@ -36,7 +37,8 @@ namespace osgGA
 
 class GUIEventHandler;
 class GUIMgr:
-  public simgear::PropertyBasedMgr
+  public simgear::canvas::Group,
+  public SGSubsystem
 {
   public:
     GUIMgr();
@@ -46,12 +48,15 @@ class GUIMgr:
     virtual void init();
     virtual void shutdown();
 
+    virtual void update(double dt);
+
     bool handleEvent(const osgGA::GUIEventAdapter& ea);
 
   protected:
 
+    typedef simgear::canvas::ElementFactory ElementFactory;
+
     osg::ref_ptr<GUIEventHandler>       _event_handler;
-    osg::ref_ptr<osg::MatrixTransform>  _transform;
     SGPropertyChangeCallback<GUIMgr>    _cb_mouse_mode;
     bool                                _handle_events;
 
@@ -68,9 +73,8 @@ class GUIMgr:
           _last_y;
     double _last_scroll_time;
 
-    virtual void elementCreated(simgear::PropertyBasedElementPtr element);
+    virtual ElementFactory getChildFactory(const std::string& type) const;
 
-    canvas::WindowPtr getWindow(size_t i);
     simgear::canvas::Placements
     addPlacement(SGPropertyNode*, simgear::canvas::CanvasPtr canvas);
 
