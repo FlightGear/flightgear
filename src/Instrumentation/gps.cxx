@@ -287,7 +287,10 @@ GPS::update (double delta_time_sec)
 {
   if (!_defaultGPSMode) {
     // If it's off, don't bother.
-    if (!_serviceable_node->getBoolValue() || !_electrical_node->getBoolValue()) {
+      // check if value is defined, since many aircraft don't define an output
+      // for the GPS, but expect the default one to work.
+      bool elecOn = !_electrical_node->hasValue() || _electrical_node->getBoolValue();
+    if (!_serviceable_node->getBoolValue() || !elecOn) {
       clearOutput();
       return;
     }
