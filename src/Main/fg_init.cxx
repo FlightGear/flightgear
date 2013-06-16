@@ -432,12 +432,18 @@ void fgInitHome()
 {
   SGPath dataPath = SGPath::fromEnv("FG_HOME", platformDefaultDataPath());
   globals->set_fg_home(dataPath.c_str());
+    
+    simgear::Dir fgHome(dataPath);
+    if (!fgHome.exists()) {
+        fgHome.create(0755);
+    }
 }
 
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv )
 {
     SGPath dataPath = globals->get_fg_home();
+    
     simgear::Dir exportDir(simgear::Dir(dataPath).file("Export"));
     if (!exportDir.exists()) {
       exportDir.create(0777);
