@@ -142,7 +142,11 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new Altimeter( node, "encoder" ), 0.15 );
 
         } else if ( name == "gps" ) {
-            set_subsystem( id, new GPS( node ) );
+            // post 2.12.0, add a new name (distinct from 'gps'), so
+            // it is possible to create non-default GPS instruments.
+            // then authors of realistic GPS and FMSs can transition to using
+            // that name as they choose.
+            set_subsystem( id, new GPS( node, true /* default GPS mode */ ) );
             _explicitGps = true;
         } else if ( name == "gsdi" ) {
             set_subsystem( id, new GSDI( node ) );
