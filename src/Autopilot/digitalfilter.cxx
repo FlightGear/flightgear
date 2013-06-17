@@ -431,4 +431,7 @@ void DigitalFilter::update( bool firstTime, double dt)
     cout << "input:" << input
          << "\toutput:" << output << endl;
   }
+
+  if( _debug_node )
+    _debug_node->setDoubleValue("input", input);
 }
