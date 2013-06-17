@@ -20,7 +20,7 @@
 #  include <config.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
@@ -35,8 +35,24 @@
 
 #include "fgcom.hxx"
 
+static FGCom* static_instance = NULL;
 
-FGCom::FGCom()
+static int IAXCallbackFunction(iaxc_event event)
+{
+    switch (event.type)
+    {
+    case IAXC_EVENT_STATE:
+        static_instance->stateChanged(event.ev.call.state);
+        break;
+            
+    default: return 0;
+    }
+    
+    return 1; // success
+}
+
+FGCom::FGCom() :
+    _register(true)
 {
   _listener_active = 0;
 }
@@ -145,24 +161,38 @@ void FGCom::init()
 
 void FGCom::postinit()
 {
-  if( _enabled ) {
+  if( !_enabled ) {
+      return;
+  }
+    
     //WARNING: this _must_ be executed after sound system is totally initialized !
 
-    if( iaxc_initialize(NUM_CALLS) )
-      SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot initialize iaxclient!");
-
+      if( iaxc_initialize(NUM_CALLS) ) {
+          SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot initialize iaxclient!");
+          _enabled = false;
+          return;
+      }
+    
+    assert(static_instance == NULL);
+    static_instance = this;
+    iaxc_set_event_callback(IAXCallbackFunction);
+    
     // FIXME: To be implemented in IAX audio driver
     //iaxc_mic_boost_set( _micBoost_node->getIntValue() );
     iaxc_set_formats( IAXC_FORMAT_GSM, IAXC_FORMAT_GSM );
     iaxc_start_processing_thread ();
-
+    
     if ( _register ) {
       _regId = iaxc_register( const_cast<char*>(_username.c_str()),
                               const_cast<char*>(_password.c_str()),
                               const_cast<char*>(_server.c_str()) );
-      if( _regId == -1 )
-        SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot register iaxclient!");
+        if( _regId == -1 ) {
+            SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot register iaxclient!");
+            return;
+        }
     }
+    
+    
 
     /*
       Here we will create the list of available audio devices
@@ -232,103 +262,71 @@ void FGCom::postinit()
     }
     if( _callComm0 == -1 )
       SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call comm[0] freq" );
-  } //if( _enabled )
+
+    
 }
 
+void FGCom::updateCall(bool& changed, int& phoneNumber, double freqMHz)
+{
+    if (!changed) {
+        return;
+    }
+    
+    SG_LOG( SG_IO, SG_INFO, "FGCom manage change" );
+    changed = false; // FIXME, out-params are confusing
 
+    iaxc_dump_call_number( phoneNumber );
+    iaxc_millisleep(50);
+    std::string num = computePhoneNumber(freqMHz, getAirportCode(freqMHz));
+    if( !isInRange() )
+        return;
+    if( !num.empty() ) {
+        SG_LOG( SG_IO, SG_INFO, "FGCom number=" << num );
+        phoneNumber = iaxc_call_ex(num.c_str(), _callsign.c_str(), NULL, 0 /* no video */);
+    }
+
+    if( phoneNumber == -1 )
+        SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call comm[0] freq" );
+}
 
 void FGCom::update(double dt)
 {
 
-  if( _enabled ) {
-
-    if( _comm0Changed ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom manage comm0 change" );
-      iaxc_dump_call_number( _callComm0 );
-      iaxc_millisleep(50);
-      const double freq = _comm0_node->getDoubleValue();
-      std::string num = computePhoneNumber(freq, getAirportCode(freq));
-      if( !isInRange() )
-        return;
-      if( num.size() > 0 ) {
-        SG_LOG( SG_IO, SG_INFO, "FGCom comm[0] number=" << num );
-        _callComm0 = iaxc_call(num.c_str());
-      }
-      if( _callComm0 == -1 )
-        SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call comm[0] freq" );
-        _comm0Changed = false;
-    }
-
-    if( _comm1Changed ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom manage comm1 change" );
-      iaxc_dump_call_number( _callComm1 );
-      iaxc_millisleep(50);
-      const double freq = _comm1_node->getDoubleValue();
-      std::string num = computePhoneNumber(freq, getAirportCode(freq));
-      if( !isInRange() )
-        return;
-      if( num.size() > 0 ) {
-        SG_LOG( SG_IO, SG_INFO, "FGCom comm[1] number=" << num );
-        _callComm1 = iaxc_call(num.c_str());
-      }
-      if( _callComm1 == -1 )
-        SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call comm[1] freq" );
-      _comm1Changed = false;
-    }
-
-    if( _nav0Changed ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom manage nav0 change" );
-      iaxc_dump_call_number( _callNav0 );
-      iaxc_millisleep(50);
-      const double freq = _nav0_node->getDoubleValue();
-      std::string num = computePhoneNumber(freq, getVorCode(freq));
-      if( num.size() > 0 ) {
-        SG_LOG( SG_IO, SG_INFO, "FGCom nav[0] number=" << num );
-        _callNav0 = iaxc_call(num.c_str());
-      }
-      if( _callNav0 == -1 )
-        SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call nav[0] freq" );
-      _nav0Changed = false;
-    }
-
-    if( _nav1Changed ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom manage nav1 change" );
-      iaxc_dump_call_number( _callNav1 );
-      iaxc_millisleep(50);
-      const double freq = _nav1_node->getDoubleValue();
-      std::string num = computePhoneNumber(freq, getVorCode(freq));
-      if( num.size() > 0 ) {
-        SG_LOG( SG_IO, SG_INFO, "FGCom nav[1] number=" << num );
-        _callNav1 = iaxc_call(num.c_str());
-      }
-      if( _callNav1 == -1 )
-        SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call nav[1] freq" );
-      _nav1Changed = false;
-    }
-
-    if( !isInRange() )
+  if ( !_enabled ) {
+      return;
+  }
+    
+    updateCall(_comm0Changed, _callComm0, _comm0_node->getDoubleValue());
+    updateCall(_comm1Changed, _callComm1, _comm1_node->getDoubleValue());
+    
+    // updateCall(_nav0Changed, _callNav0, _nav0_node->getDoubleValue());
+    // updateCall(_nav1Changed, _callNav1, _nav1_node->getDoubleValue());
+    
+    if( !isInRange() ) {
       iaxc_dump_call();
-
+    }
+    
     //FIXME: need to handle range:
     //       check - for each nav0, nav1, comm0, comm1 - if the freq is out of range
     //       if it's out of range we must dump the call
     //       if it was out of range and now in range, we must re activate the call
     //       if it was in range and still in range, nothing to do :)
 
-  } //if( _enabled )
 
 }
-
-
 
 void FGCom::shutdown()
 {
   SG_LOG( SG_IO, SG_INFO, "FGCom shutdown()" );
   _enabled = false;
 
+    iaxc_set_event_callback(NULL);
   iaxc_unregister(_regId);
   iaxc_stop_processing_thread();
   iaxc_shutdown();
+    
+    assert(static_instance == this);
+    static_instance = NULL;
 }
 
 
@@ -473,7 +471,7 @@ std::string FGCom::getVorCode(const double& freq) const
   }
   SG_LOG( SG_IO, SG_INFO, "FGCom getVorCode: found " << vor->get_ident(); );
 
-  return vor->get_ident();;
+  return vor->get_ident();
 }
 
 
@@ -486,7 +484,7 @@ std::string FGCom::getVorCode(const double& freq) const
 
 std::string FGCom::computePhoneNumber(const double& freq, const std::string& icao) const
 {
-  if( !icao.size() )
+  if( icao.empty() )
     return std::string(); 
 
   char phoneNumber[256];
@@ -543,6 +541,9 @@ bool FGCom::isInRange()
   return 1;
 }
 
-
+void FGCom::stateChanged(int newState)
+{
+    SG_LOG(SG_IO, SG_INFO, "FGCom transition to state:" << newState);
+}
 
 

@@ -38,6 +38,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     virtual void valueChanged(SGPropertyNode *prop);
     virtual void shutdown();
 
+    void stateChanged(int newState);
   private:
 
     SGPropertyNode_ptr _ptt0_node;                            // instrumentation/nav[0]/ptt
@@ -88,5 +89,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     std::string   getAirportCode(const double& freq) const;
     std::string   getVorCode(const double& freq) const;
     bool          isInRange();
+    
+    void updateCall(bool& changed, int& phoneNumber, double freqMHz);
 
 };
