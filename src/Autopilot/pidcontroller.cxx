@@ -137,16 +137,6 @@ void PIDController::update( bool firstTime, double dt )
         double e_n = r_n - y_n;
         if ( _debug ) cout << " e_n = " << e_n;
 
-        if( _debug_node )
-        {
-          _debug_node->setDoubleValue("Ts", Ts);
-          _debug_node->setDoubleValue("y_n", y_n);
-          _debug_node->setDoubleValue("r_n", r_n);
-          _debug_node->setDoubleValue("ep_n", ep_n);
-          _debug_node->setDoubleValue("ep_n_1", ep_n_1);
-          _debug_node->setDoubleValue("e_n", e_n);
-        }
-
         double td = Td.get_value();
         if ( td > 0.0 ) { // do we need to calcluate derivative error?
 
@@ -162,13 +152,6 @@ void PIDController::update( bool firstTime, double dt )
             edf_n = edf_n_1 / (Ts/Tf + 1)
                 + ed_n * (Ts/Tf) / (Ts/Tf + 1);
             if ( _debug ) cout << " edf_n = " << edf_n;
-
-            if( _debug_node )
-            {
-              _debug_node->setDoubleValue("ed_n", ed_n);
-              _debug_node->setDoubleValue("Tf", Tf);
-              _debug_node->setDoubleValue("edf_n", edf_n);
-            }
         } else {
             edf_n_2 = edf_n_1 = edf_n = 0.0;
         }
@@ -181,20 +164,13 @@ void PIDController::update( bool firstTime, double dt )
                                + ((Ts/ti) * e_n)
                                + ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
 
-          double Pn = Kp.get_value() * (ep_n - ep_n_1),
-                 In = Kp.get_value() * ((Ts/ti) * e_n),
-                 Dn = Kp.get_value() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2));
-          if ( _debug )
-          {
+          if ( _debug ) {
               cout << " delta_u_n = " << delta_u_n << endl;
-              cout << "P:" << Pn << " I:" << In << " D:" << Dn << endl;
-          }
-          if( _debug_node )
-          {
-            _debug_node->setDoubleValue("Pn", Pn);
-            _debug_node->setDoubleValue("In", In);
-            _debug_node->setDoubleValue("Dn", Dn);
-          }
+              cout << "P:" << Kp.get_value() * (ep_n - ep_n_1)
+                   << " I:" << Kp.get_value() * ((Ts/ti) * e_n)
+                   << " D:" << Kp.get_value() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
+                   << endl;
+        }
         }
 
         // Integrator anti-windup logic:
@@ -209,9 +185,6 @@ void PIDController::update( bool firstTime, double dt )
         // Calculates absolute output:
         u_n = u_n_1 + delta_u_n;
         if ( _debug ) cout << "  output = " << u_n << endl;
-
-        if( _debug_node )
-          _debug_node->setDoubleValue("dU", delta_u_n);
 
         // Updates indexed values;
         u_n_1   = u_n;

@@ -132,9 +132,6 @@ protected:
         for( simgear::PropertyList::iterator it = _output_list.begin();
              it != _output_list.end(); ++it)
           (*it)->setDoubleValue( value );
-
-        if( _debug_node )
-          _debug_node->setDoubleValue("Un", value);
     }
 
 public:

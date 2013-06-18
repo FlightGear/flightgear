@@ -88,13 +88,4 @@ void PISimpleController::update( bool firstTime, double dt )
 
     set_output_value( clamped_output );
     if ( _debug ) cout << "output = " << clamped_output << endl;
-
-    if( _debug_node )
-    {
-      _debug_node->setDoubleValue("y_n", y_n);
-      _debug_node->setDoubleValue("r_n", r_n);
-      _debug_node->setDoubleValue("e_n", error);
-      _debug_node->setDoubleValue("ep_n", prop_comp);
-      _debug_node->setDoubleValue("In", _int_sum);
-    }
 }

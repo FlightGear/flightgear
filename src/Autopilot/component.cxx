@@ -70,11 +70,6 @@ bool Component::configure( const std::string & nodeName, SGPropertyNode_ptr conf
     return true;
   }
 
-  if ( nodeName == "debug-node" ) {
-    _debug_node = fgGetNode( configNode->getStringValue(), true );
-    return true;
-  }
-
   if ( nodeName == "enable" ) {
     SGPropertyNode_ptr prop;
 

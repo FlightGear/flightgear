@@ -77,11 +77,6 @@ protected:
      */
     bool _debug;
 
-    /**
-     * @brief property node to write debug values in child nodes on every
-     *        iteration
-     */
-    SGPropertyNode_ptr _debug_node;
 
     /** 
      * @brief a (historic) flag signalling the derived class that it should compute it's internal
