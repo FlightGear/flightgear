@@ -60,6 +60,7 @@ public:
     virtual ~FGAIManager();
 
     void init();
+    virtual void shutdown();
     void postinit();
     void reinit();
     void bind();
@@ -101,6 +102,7 @@ private:
     
     bool removeObject(const SGPropertyNode* args);
     bool unloadScenario( const std::string &filename );
+    void unloadAllScenarios();
     
     SGPropertyNode_ptr root;
     SGPropertyNode_ptr enabled;

@@ -162,8 +162,20 @@ FGAIManager::postinit()
 void
 FGAIManager::reinit()
 {
+    // shutdown scenarios
+    unloadAllScenarios();
+    
     update(0.0);
     std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::reinit));
+    
+    // (re-)load scenarios
+    postinit();
+}
+
+void
+FGAIManager::shutdown()
+{
+    unloadAllScenarios();
 }
 
 void
@@ -428,6 +440,21 @@ FGAIManager::unloadScenario( const string &filename)
     _scenarios.erase(it);
     return true;
 }
+
+void
+FGAIManager::unloadAllScenarios()
+{
+    ScenarioDict::iterator it = _scenarios.begin();
+    for (; it != _scenarios.end(); ++it) {
+        delete it->second;
+    } // of scenarios iteration
+    
+    
+    // remove /sim/ai node
+    root->removeChildren("scenario");
+    _scenarios.clear();
+}
+
 
 SGPropertyNode_ptr
 FGAIManager::loadScenarioFile(const std::string& filename)
