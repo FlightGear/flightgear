@@ -46,9 +46,6 @@ void fgOutputSettings();
 // Initialize the localization
 SGPropertyNode *fgInitLocale(const char *language);
 
-/// retrieve the user's desktop directory path
-SGPath platformDesktopPath();
-
 // Init navaids and waypoints
 bool fgInitNav ();
 
