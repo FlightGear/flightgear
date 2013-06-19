@@ -1,3 +1,6 @@
+#ifndef FG_FGCOM_HXX
+#define FG_FGCOM_HXX
+
 // fgcom.hxx -- FGCom: Voice communication
 //
 // Written by Clement de l'Hamaide, started Mai 2013.
@@ -16,13 +19,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "iaxclient.h"
 #include <simgear/structure/subsystem_mgr.hxx>
-
-#define NUM_CALLS 4
-#define MAX_RANGE 150.0
-#define DEFAULT_SERVER "clemaez.dyndns.org"
-
+#include <simgear/props/props.hxx>
 
 class FGCom : public SGSubsystem, public SGPropertyChangeListener
 {
@@ -93,3 +91,6 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     void updateCall(bool& changed, int& phoneNumber, double freqMHz);
 
 };
+
+#endif // of FG_FGCOM_HXX
+

@@ -20,20 +20,30 @@
 #  include <config.h>
 #endif
 
+#include "fgcom.hxx"
+
+// standard library includes
 #include <cstdio>
 
+// simgear includes
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
+// flightgear includes
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <ATC/CommStation.hxx>
 #include <Airports/airport.hxx>
 #include <Navaids/navlist.hxx>
 
-#include "fgcom.hxx"
+#include <utils/iaxclient/lib/iaxclient.h>
+
+
+#define NUM_CALLS 4
+#define MAX_RANGE 150.0
+#define DEFAULT_SERVER "clemaez.dyndns.org"
 
 static FGCom* static_instance = NULL;
 
