@@ -1,0 +1,1083 @@
+#!/bin/bash
+# TK interface to iax client library command line interface.
+# Copyright 2004-2005 Sun Microsystems, by Stephen Uhler.
+# see License for license terms
+# This line is a tcl comment (but not a shell comment) \
+wish $0 -- $* & exit 0
+
+# This is my name
+set appname "tkiaxphone"
+set version "0.5"
+
+# items saved via preferences
+# items on the gui preference foo are tied to the variable input_foo
+
+set prefs(server) ""
+set prefs(user) ""
+set prefs(pass) ""
+set prefs(ext) ""
+set prefs(preferred_codec) ulaw
+
+set prefs(repeat_time) 200	;# ms:  The slowest key autorepeat
+set prefs(mute_play_level) 0	;# %: playback level while talking in PTT
+set prefs(ring_on) .5		;# ringing rate (on) s
+set prefs(ring_off) 0.25	;# ringing rate (off) s
+set prefs(shortcut_modifier) Control
+set prefs(filters) 3		;# The iaxc filter bits
+set prefs(audio_ring) 1		;# use audio ringing
+set prefs(ring_volume) 90	;# audio ringing volume (%)
+set prefs(audio_min_latency) 1	;# portaudio minimum latency (ms)
+
+# debugging, enable with "debug" environment variable or "-d".
+
+set pid [pid]
+proc debug {{msg ""}} {
+    global env pid
+    if {[info exists env(DEBUG)]} {
+	puts stderr "$pid [lindex [info level -1] 0]:\t$msg"
+    }
+}
+
+# compute platform specific settings
+
+array set platform {
+   cli_cmd	 "iaxcli"
+   pref_format   "%s.ini"
+}
+if {$tcl_platform(platform) == "windows"} {
+   append platform(cli_cmd) .exe
+}
+
+# uname -m -s seems to be the most x-plaform on unices
+if {$tcl_platform(platform) == "unix"} {
+   set ext -[exec uname -s]-[exec uname -m]
+   set platform(pref_format) ".%src"
+   append platform(cli_cmd) $ext
+}
+
+# verify sufficient tk version number (need spinbox)
+
+if {[info commands spinbox] == ""} {
+    set m "$appname requires at least tk version 8.4."
+    append m "  You have: [info patchlevel]"
+    tk_messageBox -message $m -type ok -icon error -parent . \
+	 -title "$appname failure"
+    exit 1
+}
+
+# in case we want to do cleanup some day
+
+proc my_exit {code} {
+    catch {unregister}
+    catch {file delete -force $::Remove}
+    exit $code
+}
+
+wm protocol . WM_DELETE_WINDOW {
+    do_quit
+}
+
+# Return the real path of a file, relative to us, so we can find our gui.
+# This works when the GUI files are in the same directory as us.
+# override with the environment variable IAXPHONEHOME
+
+proc real_path {file} {
+    global argv0 env
+    if {[info exists env(IAXPHONEHOME)]} {
+	set base $env(IAXPHONEHOME)
+    } else {
+	set base [file dirname [file join [pwd] $argv0]]
+    }
+    set result [file join $base $file]
+    debug "$result"
+    return $result
+}
+
+# This version makes us freewrap-able
+# we need to copy "iaxcli" somewhere, since it won't run from
+# the wrapped location. 
+# make sure to change root accordingly when wrapping
+
+if {[info exists ::freewrap::patchLevel]} {
+    proc real_path {file {root /export/home/suhler/tkphone}} {
+        global platform
+	# we need to do special stuff with our command line
+        if {$file == $platform(cli_cmd)} {
+            set tmpdir [tmp_dir]
+            debug "copying cli from $root to $tmpdir"
+	    set result [file join $tmpdir tmp-[pid]-$file]
+            file copy -force [file join $root $file] $result
+	    # we need to make sure the copy finishes before we exec it!
+	    catch {file attributes $result -permissions 00700}
+	    set ::Remove $result
+        } else {
+            set result [file join $root $file]
+        }
+        debug "freewrap: $result"
+        return $result
+    }
+
+    # Get a temporary directory to stash the cli in.
+
+    proc tmp_dir {} {
+        global env tcl_platform
+        if {$tcl_platform(platform) == "windows" } {
+            set dir c:/tmp
+        } else {
+            set dir /tmp
+        }
+        catch {set dir $env(TMP)}
+        catch {set dir $env(TEMP)}
+        catch {set dir $env(TRASH_FOLDER)} ;# for the mac
+        # catch {set dir [::freewrap::getSpecialDir INTERNET_CACHE]}
+        catch {file mkdir $dir}
+        return $dir
+    }
+
+    # Unpack application to /tmp
+
+    proc unpack {"root /export/home/suhler/tkphone"} {
+	global appname
+        catch {file mkdir /tmp}
+        foreach i [glob $root/*] {
+            file copy $i /tmp
+        }
+	tk_messageBox -message "unpacking application to /tmp" \
+		-type ok -icon warning -parent . -title "$appname unpack"
+    }
+}
+
+# wait a bit
+
+proc hold_on {time} {
+   catch {destroy .wait}
+   toplevel .wait
+   label .wait.l -text "Hold on..." -font 36
+   pack .wait.l
+   update
+   after $time
+   destroy .wait
+}
+   
+
+# find our rc file name for storing preferences.
+
+proc getrcfile {{name ""}} {
+    global env platform
+    if {$name == ""} {
+	global appname
+	set name $appname
+    }
+    set result [file join $env(HOME) [format $platform(pref_format) $name]]
+    debug $result
+    return $result
+}
+
+# Make the touch-pad buttons work.
+
+proc do_button {win} {
+  global state
+  set digit [$win cget -text]
+  if {$state == "free"} {
+      global number
+      append number $digit
+  } elseif {[regexp complete $state]} {
+      phone_command "t $digit"
+      phone_command "p $digit"
+      status "sending $digit"
+  }
+}
+
+# Accept a number remotely, and dial it.
+# (This may be called from another process using TK send)
+
+proc make_call {num} {
+    global number
+
+    debug $num
+    set number $num
+    do_send
+    make_visible
+
+}
+
+# Place the call
+
+proc do_send {} {
+    global state number phone prefs
+
+    # no server to connect to, bring up settings panel
+
+    if {$prefs(server) == ""} {
+       do_prefs
+       status "no server specified"
+       return
+    }
+    if {$state == "free" && $number != ""} {
+	if {$prefs(user) != ""} {
+	    set prefix "$prefs(user):$prefs(pass)@"
+	} else {
+	    set prefix ""
+	}
+	phone_command "dial $prefix$prefs(server)/$number"
+	status "dialing $number"
+	.phone.hangup configure -text hangup -command "phone_command h"
+    } else {
+	status "no number to dial"
+    }
+}
+
+# manage what the "hangup button" does
+
+proc do_hangup {} {
+    global number state
+    switch -regexp $state {
+        active {
+	    phone_command "hangup"
+	    status hangup
+        }
+        default {
+	    set number ""
+        }
+    }
+}
+
+# Set the status line text
+
+proc status {text {max 20}} {
+    global status
+    set status  [wrap $text $max]
+}
+
+# Wrap text, try to use word boundaries
+
+proc wrap {text max} {
+   set result ""
+   set len [string length $text]
+   while {$len > $max} {
+       set index [string wordstart $text $max]
+       if {$index == 0} {
+           lappend result [string range $text 0 [expr {$max - 1}]]
+           set text [string range $text $max end]
+       } else {
+           lappend result [string range $text 0 [expr {$index - 1}]]
+           set text [string range $text $index end]
+       }
+       set len [string length $text]
+   }
+   if {$len > 0} {
+       lappend result $text
+   }
+   return [join $result \n]
+}
+
+# initialize the phone interface
+
+proc phone_setup {} {
+    global phone env platform prefs
+    catch {close $phone}
+    set cli [real_path $platform(cli_cmd)]
+    debug $cli
+    if {![file executable $cli]} {
+	global appname
+	tk_messageBox \
+		-message "Can't find command line interface:\n[file nativename $cli]" \
+		-type ok -icon error -parent . -title "$appname error"
+	my_exit 0
+    }
+    if {![info exists env(PA_MIN_LATENCY_MSEC]} {
+        set env(PA_MIN_LATENCY_MSEC) $prefs(audio_min_latency)
+    }
+    hold_on 2000
+    set phone [open |[list $cli] w+]
+    fconfigure $phone -buffering line
+    fileevent $phone r phone_event
+    phone_command "set delim !"
+    phone_command "set filters $prefs(filters)"
+}
+
+# called from the preferences gui to select a device
+#  which:	in/out
+#  what:	the device string
+
+proc select_device {which what} {
+   switch $which {
+       in {
+	   phone_command "set input $what"
+	   }
+       out {
+	   phone_command "set output $what"
+	   }
+   }
+}
+
+# register with the iax server, this "unregisters" all existing
+# registrations
+
+proc register {} {
+    global prefs
+    if {[info exists prefs(preferred_codec)]} {
+         phone_command "set codec $prefs(preferred_codec)"
+    }
+    if {[info exists prefs(server)]} {
+        unregister	
+        phone_command "register $prefs(user) $prefs(pass) $prefs(server)"
+	status "registering..."
+	if {$prefs(ext) != ""} {
+            phone_command "set name $prefs(ext)"
+	}
+    }
+}
+
+# unregister from everywhere
+
+proc unregister {} {
+    global registrations
+    if {[info exists registrations]} {
+	foreach name [array names registrations] {
+	    phone_command "unregister $name"
+	}
+	unset registrations
+    }
+}
+
+# keep track of the last command issued so we can correlate the appropriate
+# response
+
+proc phone_command {cmd} {
+    global phone
+    debug $cmd
+    puts $phone $cmd
+}
+
+# issue command to phone, get response.
+# XXX there might be a race condition here as an "Event" could sneak in
+
+proc phone_response {cmd} {
+    global phone
+
+    set save_event [fileevent $phone r]
+    fileevent $phone r {}
+    phone_command $cmd
+    while {![regexp {^[?]!(.*)} [set line [gets $phone]] x result]} {
+	puts stderr "AARG, lost: ($line)"
+    }
+    debug ($result)
+    fileevent $phone r $save_event
+    return $result
+}
+
+# handle events from the phone interface (cli)
+
+proc phone_event {args} {
+    global phone appname
+    if {[eof $phone]} {
+	fileevent $phone r {}
+	wm withdraw .
+	tk_messageBox -message "lost connection to cli, terminating" \
+		-type ok -icon error -parent . -title "$appname error"
+	my_exit 0
+    }
+    set line [split [gets $phone] !]
+    debug $line
+    set cmd [lindex $line 0] 
+    switch $cmd {
+       T {
+           set msg [lindex $line 2]
+	   set type [lindex $line 1]
+
+	   # got a text message, do something different
+
+	   if {$type == 5} {
+	       do_text $msg
+	       return
+	   }
+	   # don't display un-interpreted messages, or "incoming call"s.
+	   # The incoming calls are handled in state messages instead
+	   if {![regexp {\(type|Incoming call} $msg]} {
+	       status $msg
+	   }
+       }
+       S { do_state [lindex $line 2] [lindex $line 3] [lindex $line 4]}
+       L { do_level [lindex $line 1] [lindex $line 2] }
+       R { do_register [lindex $line 1] [lindex $line 2] }
+       default { debug "unprocessed: $cmd" }
+    }
+}
+
+# display text messages, and process message commands
+
+proc do_text {msg} {
+    global Messages
+    grid .phone.message
+    status "new msg: [clock format [clock seconds] -format  %H:%M%p]"
+    set Messages $msg
+}
+
+# Start ringing, then continue to "ring" for a while
+# win: the widget to blink for visual ringing
+
+proc start_ringing {win {continue start}} {
+    global prefs
+    if {$continue == "start"} {
+       upvar #0 $win-bg bg $win-fg fg
+       set fg [$win cget -fg]
+       set bg [$win cget -bg]
+       start_ringing $win on
+    } elseif {$continue == "on"}  {
+       $win configure -fg white -bg black
+       after [expr {int(1000*$prefs(ring_on))}] [list start_ringing $win off]
+       if {$prefs(audio_ring)} {phone_command "Ring 0 $prefs(ring_volume)"}
+    } elseif {$continue == "off"}  {
+       $win configure -fg black -bg red
+       after [expr {int(1000*$prefs(ring_off))}] [list start_ringing $win on]
+       if {$prefs(audio_ring)} {phone_command "Ring off"}
+    } elseif {$continue == "stop"} {
+       after cancel [list start_ringing $win off]
+       after cancel [list start_ringing $win on]
+       phone_command "Ring off"
+       upvar #0 $win-bg bg $win-fg fg
+       catch {
+           $win configure -bg $bg -fg $fg
+           unset fg bg
+       }
+    }
+}
+
+# stop flashing (ringing) a window
+
+proc stop_ringing {win} {
+    start_ringing $win stop
+}
+
+# handle an incoming call
+
+proc ring_on {} {
+    debug
+    make_visible
+
+    start_ringing .phone.status
+    .phone.send configure -text answer -command call_answer -state normal
+    .phone.hangup configure -text reject -command call_reject -state normal
+}
+
+# Make sure I'm visible
+
+set W [winfo screenwidth .]
+set H [winfo screenheight .]
+proc make_visible {} {
+    global W H
+    wm deiconify .
+    raise .
+    update idletasks
+
+    # We could be in the wrong virtual root window.  If so, try to move us.
+
+    regexp {([0-9]*)x([0-9]*)\+([0-9-]*)\+([0-9-]*)} [wm geometry .] foo w h x y
+    if {$x < 0 || $y < 0 || $x > ($W - $w) || $y > ($H - $h)} {
+       set geom "+[expr {($W - $w)/2}]+[expr {($H - $h)/2}]"
+       debug $geom
+       wm geometry . $geom
+    }
+}
+
+# the user answered the call
+
+proc call_answer {} {
+    phone_command answer
+    status answered
+}
+
+# the user rejected the call
+
+proc call_reject {} {
+    phone_command x
+    status "Call rejected"
+}
+
+# The called party picked up the call
+
+proc ring_answered {} {
+    debug
+    stop_ringing .phone.status
+    .phone.send configure -text send -command "" -state disabled
+    .phone.hangup configure -text hangup -command "phone_command h"
+}
+
+# The call was terminated
+
+proc call_done {} {
+    debug
+    stop_ringing .phone.status
+   .phone.send configure -text send -command do_send -state normal
+   .phone.hangup configure -command do_clear -text clear
+}
+
+# the number-to-dial was cleared
+
+proc do_clear {} {
+   global number
+   set number ""
+   stop_ringing .phone.status
+}
+
+# process state transitions from the phone (cli) interface
+
+proc do_state {new {num ""} {name ""}} {
+    global state
+    if {$state == $new} return
+    set state $new
+    debug $state
+    switch -glob $state {
+        active,ringing {
+	    ring_on
+	    if {$name != ""} {
+	        status "call from $name"
+	    } elseif {$num != ""} {
+	        status "call from $num"
+	    } else {
+	        status "Incoming call"
+	    }
+        }
+	active,outgoing,complete -
+	active,complete {
+	    ring_answered
+	}
+	*free* {
+	    call_done
+	}
+	* {
+	    debug "unimplemented"
+	}
+    }
+}
+
+# Manage record/play levels
+
+set last_play ""
+set last_record ""
+proc do_level {rec_db play_db} {
+    global last_play last_record
+    if {$last_play==$play_db && $last_record==$rec_db} return
+
+    set last_play $play_db
+    set last_record $rec_db
+
+    set p [expr {($play_db + 99.0) / 99.0}]
+    place .monitor.play_value -in .monitor.play \
+	-anchor sw -bordermode outside -width 5 -relheight $p \
+	-y [winfo height .monitor.play]
+
+    set r [expr {($rec_db + 99.0) / 99.0}]
+    place .monitor.record_value -in .monitor.record \
+	-anchor sw -bordermode outside -width 5 -relheight $r \
+	-y [winfo height .monitor.record]
+}
+
+# registration response event
+# temporary, until I figure out how I want to have multiple registrations
+
+proc do_register {id state} {
+    global registrations
+    if {![info exists registrations($id)]} {
+	set registrations($id) $state
+	status "Registration: $state"
+    }
+}
+
+# This could be a real "about" box, but it's not.
+
+proc show_about {} {
+    global appname version
+    status "$appname/$version"
+    set m "$appname/$version\nby Stephen A Uhler\n(c) 2004-2006 Sun Microsystems"
+    tk_messageBox -message $m -type ok -icon info -parent . -title "$appname about"
+}
+
+# Display the audio control panel, start monitoring.
+
+proc show_audio {turn_on} {
+    global show_audio	;# checkbutton state
+    global was_down ptt	;# "Talking" in ptt
+    set show_audio $turn_on
+    if {$turn_on} {
+        global record play	;# these are keyed to the volume sliders
+        grid .monitor -row 0 -column 0
+        # if ptt, then we need to be careful
+        if {$ptt && $was_down} {
+            set record [phone_response "get record"]
+        } elseif {$ptt} {
+            set play [phone_response "get play"]
+        } else {
+            set record [phone_response "get record"]
+            set play [phone_response "get play"]
+        }
+        debug "record=$record play=$play"
+        phone_command "set monitor on"
+	status "showing audio controls"
+    } else {
+	grid forget .monitor
+	phone_command "set monitor off"
+	status "audio controls removed"
+    }
+}
+
+# Set audio level.
+# what: record|play
+# value: 0-100 (%)
+
+proc set_audio {what value} {
+    phone_command "set $what $value"
+}
+
+# Process push-to-talk checkbox menu item.
+
+proc ptt_menu {turn_on} {
+  global play record show_audio
+  debug $turn_on
+  if {$turn_on} {
+     if {[info commands .ptt] == ""} {
+        label .ptt -border 4
+     }
+     set record [phone_response "get record"]
+     set play [phone_response "get play"]
+     debug "record=$record play=$play"
+     space off	;# simulate release-space
+     grid .ptt -row 1 -columnspan 2
+     bind . <KeyPress-space> "space down; break"
+     bind . <KeyRelease-space> "space up; break"
+  } else {
+     grid forget .ptt
+     bind . <KeyPress-space> {}
+     bind . <KeyRelease-space> {}
+     phone_command "set play $play"
+     phone_command "set record $record"
+     phone_command "Mute 0"
+     .monitor.play configure -state normal -cursor {}
+     .monitor.record configure -state normal -cursor {}
+  }
+}
+
+# Process space bar for push to talk.
+# state: down, up, off
+# When holding down a (noncontrol) key, some platforms (e.g. windows)
+# multiple *presses* are followed by a single *release*.  Others (e.g. mac)
+# send *press*/*release* pairs, so we need to use a timer to get the last
+# release.
+
+proc space {ptt_state} {
+    global was_down play record prefs
+    switch -exact $ptt_state {
+
+
+        down {
+           after cancel "space off"
+           if {$was_down} return ;# if space bar auto-repeats presses.
+           debug talking
+           set was_down 1
+           .ptt configure -relief sunken -text "talking" -bg red
+           .monitor.play configure -state disabled -cursor watch
+           .monitor.record configure -state normal -cursor {}
+           phone_command "set play $prefs(mute_play_level)"
+           phone_command "set record $record"
+	   phone_command "Mute 0"
+        }
+        up {
+           after $prefs(repeat_time) "space off"
+
+        }
+        off {
+           debug listening
+           set was_down 0
+           .ptt configure -relief raised -text {press "space" to talk} -bg green
+           .monitor.play configure -state normal -cursor {}
+           .monitor.record configure -state disabled -cursor watch
+
+           phone_command "set play $play"
+           phone_command "set record 0"
+	   phone_command "Mute 1"
+        }
+    }
+}
+
+# exit
+
+proc do_quit {} {
+    global prefs_saved appname
+    if {!$prefs_saved} {
+        switch [tk_dialog .warning $appname "Unsaved preferences" \
+		question 0 "quit now" "save preferences and quit" "cancel"] {
+	    1	{prefs_save}
+	    2	{return}
+	}
+    }
+    my_exit 0
+}
+
+# preferences management
+
+# called from preferences menu
+
+proc do_prefs {} {
+    global appname
+    catch {destroy .prefs}
+    toplevel .prefs
+    wm title .prefs "$appname settings"
+    pref_ui .prefs
+
+    # setup the device list (we need to make sure the widget names are in sync
+
+    set ins [split [phone_response "get inputs"] !]
+    set outs [split [phone_response "get outputs"] !]
+    .prefs.in_device_list configure -values $ins
+    .prefs.out_device_list configure -values $outs
+}
+
+# reset preferences to previous values
+
+proc pref_cancel {} {
+   pref_setup
+   status "settings cancelled"
+   update idletasks
+   after 100
+   destroy .prefs
+}
+
+# Initialize the settings form.  Copy prefs(x) to input_x
+# A field on the input form named "input_xxx" will set
+# the preference "xxx".
+# The field filter_n set flag bit n in filters
+
+proc pref_setup {} {
+   global prefs
+   foreach i [array names prefs] {
+       upvar #0 input_$i value
+       set value $prefs($i)
+   }
+
+   set bit 0
+   for {set f $prefs(filters)} {$f != 0} {set f [expr {$f >> 1}]; incr bit} {
+       upvar #0 filter_$bit value
+       set value [expr {$f & 1}]
+   }
+}
+
+# Save settings into array
+# Copy input_x to prefs(x)
+
+set prefs_saved 1
+proc pref_ok {} {
+   global prefs	;# preferences array
+   global prefs_saved
+   foreach i [array names prefs] {
+       upvar #0 input_$i value
+       catch {set prefs($i) $value}
+   }
+   set filters 0
+   foreach i [info globals {filter_[0-9]}] {
+       upvar #0 $i value
+       regexp {[0-9]} $i bit
+       if {$value} {
+           set filters [expr {$filters | (1 << $bit)}]
+       }
+   }
+   set prefs(filters) $filters
+
+   if {$prefs(user) != ""} {
+       register
+   }
+   set prefs_saved 0
+   destroy .prefs
+}
+
+# save the current preferences
+
+proc prefs_save {} {
+    global prefs prefs_saved appname
+    set name [getrcfile]
+    if {[catch {
+       set fd [open $name w]
+       foreach i [lsort [array names prefs]] {
+           puts $fd [list $i $prefs($i)]
+       }
+       close $fd
+       status "settings saved"
+    }]} {
+       status "ERROR saving settings"
+       debug $::errorInfo
+       tk_messageBox -message "Can't save preferences to $name" \
+		-type ok -icon error -parent . -title "$appname error"
+    }
+   set prefs_saved 1
+}
+
+# load the preferences
+
+proc prefs_load {} {
+    global prefs
+    if {[catch {
+       set fd [open [getrcfile] r]
+       set data [read $fd]
+       # we could strip comments here
+       array set prefs $data
+       status "settings initialized"
+       debug "prefs: [array get prefs]"
+       close $fd
+    }]} {
+       array set prefs { user "" pass "" server "" ext "" }
+       status "ERROR reading settings"
+       debug $::errorInfo
+    }
+    pref_setup
+}
+
+# accept keyboard dialing
+
+array set alphamap {
+                   a 2 b 2 c 2   d 3 e 3 f 3
+ g 4 h 4 i 4       j 5 k 5 l 5   m 6 n 6 o 6
+ p 7 q 7 r 7 s 7   t 8 u 8 v 8   w 9 x 9 y 9 z 9
+}
+
+proc map_key {code} {
+    global alphamap number
+
+    switch -regexp [string tolower $code] {
+       {^[a-z]$}	{append number $alphamap($code)}
+       {^[0-9]$}	{append number $code}
+       {delete}	-
+       {backspace}	{set number [string range $number 0 \
+			   [expr { [string length $number] - 2} ]]}
+       {return}		{do_send}
+       default	{status "invalid key: $code"}
+    }
+}
+
+# keyboard shortcuts for menus
+
+proc shortcut {key} {
+    debug $key
+    switch -exact -- $key {
+        a {
+           global show_audio
+           set show_audio [expr {1 - $show_audio}]
+           show_audio $show_audio
+        }
+        p {
+           global ptt
+           set ptt [expr {1 - $ptt}]
+           ptt_menu $ptt
+        }
+        e { do_prefs }
+        h { do_hangup }
+	c {console show}
+    }
+}
+
+# Make sure there isn't another one of me running.
+# we can't use "send" 'cause it only works on X.  We'll try
+# localhost sockets instead.  We can also use this for remote control.
+
+set control_port 4550	;# we should reserver a port for this from iana
+
+# When we accept remote-control sockets we go here
+
+proc accept {sock args} {
+    debug $args
+    fconfigure $sock -blocking 0 -buffering line
+    fileevent $sock r "netread $sock"
+}
+
+# Read remote-control commands from a socket. Kiss.
+
+proc netread {sock args} {
+    global prefs appname
+    set data [gets $sock]
+    if {[eof $sock]} {
+	close $sock
+	return
+    } elseif {$data != ""} {
+       debug ($data)
+       set result ?
+       status "Incoming remote command"
+       switch -glob -- $data {
+	   who {
+	       set result "server $prefs(server), user $prefs(user)"
+	   }
+	   expose {
+	       make_visible
+	       set result "visible"
+	   }
+	   die {
+	       debug DIE!!!
+	       exit 0
+	   }
+	   call* {
+	       set result call
+	       if {[regexp {call *([^ ]+)} $data x num]} {
+		   debug $num
+	           make_call $num
+	       }
+	   }
+	   * {
+	       debug "invalid remote: $data"
+	   }
+	}
+	puts $sock $result
+	close $sock
+    }
+}
+
+# send a remote command,
+
+proc remote {command} {
+    global appname control_port
+    set sock [socket localhost $control_port]
+    fconfigure $sock -blocking 0 -buffering line
+    puts $sock $command
+    set data [gets $sock]
+    debug "$command -> $data"
+    close $sock
+    return $data
+}
+# Try to start a server on our port to see if I'm already running.  If
+# not, then listen for remote commands, otherwise ask user what to do.
+
+proc me_too {} {
+    global control_port appname
+
+    if {[catch {socket -server accept -myaddr localhost $control_port}]} {
+	# already running, can't start the server
+	status "Starting up..."
+	set remote [remote who]
+	set msg "There is already a $appname phone running: $remote"
+	set code [tk_dialog .warning $appname $msg warning 0 \
+	    "exit, exposing other $appname" \
+	    "run anyway" \
+	    "stop other $appname, then continue"]
+	switch $code {
+	    0	{
+		remote expose
+		exit
+	    }
+	    2	{
+		catch {remote die}
+		after 500 me_too
+	    }
+	}
+    }
+}
+
+# set up extra "soft" keys in prefs(soft[n])
+
+proc setup_soft {} {
+    global prefs
+    set row 0
+    foreach i [lsort [array names prefs {soft[1-4]}]] {
+        debug "soft key: $i"
+        foreach {label action} $prefs($i) break
+	button .phone.$i -text $label -command [list do_soft $label $action]
+        grid  .phone.$i -in .phone.extra -row $row -stick ew
+        incr row
+    }
+}
+
+proc do_soft {label action} {
+    global number
+    debug "$label,$action"
+    set number $action
+    status $label
+    do_send
+}
+
+# initialization
+
+if {[lsearch -glob $argv "-d*"] >= 0} {
+    set env(DEBUG) on
+    catch {console show}
+}
+
+prefs_load
+wm title . $appname
+tk appname $appname
+catch "destroy .phone .monitor .menubar"
+
+# create the menus
+
+menu .menubar
+menu .menubar.file -tearoff 0
+.menubar add cascade -label "File" -menu .menubar.file -underline 0
+.menubar.file add command -label "Save prefs" -command prefs_save \
+	-underline 0
+.menubar.file add command -label Quit -command do_quit
+
+menu .menubar.edit -tearoff 0
+.menubar add cascade -label "Edit" -menu .menubar.edit -underline 0
+.menubar.edit add command -label settings... -command do_prefs \
+	-accelerator ^E
+.menubar.edit add checkbutton -label "show audio controls" \
+	-command {show_audio $show_audio} -variable show_audio  \
+	-accelerator ^A
+
+set ptt 0	;# push to talk
+.menubar.edit add checkbutton -label {push to talk} \
+	-command {ptt_menu $ptt} -variable ptt -accelerator ^P
+
+menu .menubar.help -tearoff 0
+.menubar add cascade -label "Help" -menu .menubar.help -underline 0
+.menubar.help add command -label About -command show_about
+
+. configure -menu .menubar
+
+# create the GUI
+
+source [real_path phone.ui.tcl]
+source [real_path pref.ui.tcl]
+source [real_path monitor.ui.tcl]
+
+frame .phone
+grid .phone -column 1 -row 0
+
+phone_ui .phone
+setup_soft
+
+# setup audio control
+
+frame .monitor -border 2 -relief groove
+monitor_ui .monitor
+frame .monitor.play_value -bg green
+frame .monitor.record_value -bg red
+.monitor.dismiss_audio configure -command "show_audio 0"
+.monitor.record configure -command "set_audio record"
+.monitor.play configure -command "set_audio play"
+
+# allow kbd input anywhere on the main panel
+
+bind . <Key> {map_key %K} ;# enable keyboard dialing
+bindtags .phone.entry {all}	;# XXX fix to allow select/cut/paste
+catch {bind . <$prefs(shortcut_modifier)-Key> {shortcut %K; break}}
+raise .
+
+set number ""	;# The number to dial
+set state free	;# state of the phone line
+
+# set keypad bindings
+
+foreach i {0 1 2 3 4 5 6 7 8 9 0 sharp star} {
+ .phone.b$i configure -bg white -fg black -command "do_button .phone.b$i"
+}
+
+# set up bindings for messages
+
+bind .phone.message <1> {grid remove %W; status -}
+grid remove .phone.message
+
+# Its usually a bad idea to have 2 phones running at once 'cause
+# there is only one audio in/out.  We'll check with the user just in case.
+
+me_too	;# check for only one phone running at a time
+tk appname $appname	;# must come after me_too check
+phone_setup
+call_done
+
+register

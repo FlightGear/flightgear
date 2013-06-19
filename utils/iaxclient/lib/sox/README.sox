@@ -1,0 +1,59 @@
+
+16Apr2003 Steve Kann <stevek@stevek.com>
+
+The code in resample.c/resample.h has been liberally yanked from the SoX
+distribution, and reworked just a tiny bit to allow compilation outside
+of SoX.
+
+Aside from some minor changes to the calling conventions (to use just
+the private resample data structure, not the larget sox structures), and
+generic code moves/defines that needed to be localized, the other
+notable changes are:
+
+1) st_sample_t is here defined as a 16 bit integer, and not a 32 bit
+integer, so this code will will be able to operate over 16 bit unsigned
+samples (the resample effect works with floating point internally
+anyway, so it was a small change in the code).
+
+2) The "getopts" call is not necessary (nor, at this point helpful,
+	since the options are set to their default now ad the beginning of
+	start).
+
+3) start now takes two additional parameters, "inrate" and "outrate"
+
+To use this, the basic idea is:
+
+
+st_resample_t resampler;
+
+st_resample_start(&resampler, inrate, outrate);
+
+while(you have input data)
+{
+	iNum = (number of Input samples we have);
+	oNum = (size of Output buffer available)
+	iBuf = input buffer;
+	oBuf = output buffer;
+	if(st_resample_flow(&resampler, ibuf, obuf, &iNum, &oNum) != ST_SUCCESS)
+	{
+		handle error.
+	}
+
+	(after calling, iNum, oNum will the the count of buffers
+	read/written)
+}
+
+finally, you call st_sample_drain, to get the "last" output;
+
+if(st_sample_drain(&resampler, obuf, &oNum) != ST_SUCCESS)
+{
+	error
+}
+
+Then, call st_sample_stop, to free resources:
+st_sample_stop(&resampler);
+
+For a discussion on this and other resampling algorithms, see this page for a
+great analysis by K. Bradley and Andreas Wilde at:
+	http://leute.server.de/wilde/resample.html
+

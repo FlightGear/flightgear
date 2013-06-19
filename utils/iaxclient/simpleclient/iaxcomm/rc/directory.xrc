@@ -1,0 +1,398 @@
+<?xml version="1.0" ?>
+<resource version="2.3.0.1" xmlns="http://www.wxwindows.org/wxxrc">
+  <object class="wxDialog" name="Directory">
+    <title>Dialing Directory</title>
+    <centered>1</centered>
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>0</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>0</growablerows>
+      <object class="sizeritem">
+        <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+        <border>5</border>
+        <object class="wxNotebook" name="DirectoryNotebook">
+          <usenotebooksizer>1</usenotebooksizer>
+          <size>200,160</size>
+          <object class="notebookpage">
+            <label>One Touch</label>
+            <object class="wxPanel" name="OneTouch">
+              <object class="wxFlexGridSizer">
+                <cols>1</cols>
+                <object class="spacer">
+                  <size>5,5</size>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxListCtrl" name="OTList">
+                    <style>wxLC_REPORT</style>
+                  </object>
+                  <flag>wxALL|wxGROW</flag>
+                  <border>10</border>
+                  <minsize>320,200</minsize>
+                </object>
+                <growablerows>1</growablerows>
+                <growablecols>0</growablecols>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="AddOTList">
+                        <label>Add ...</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="EditOTList">
+                        <label>Edit ...</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="RemoveOTList">
+                        <label>Remove</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="DialOTList">
+                        <label>Dial</label>
+                      </object>
+                    </object>
+                    <orient></orient>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="wxID_OK">
+                        <label>Done</label>
+                      </object>
+                    </object>
+                  </object>
+                  <flag>wxALIGN_CENTRE</flag>
+                </object>
+              </object>
+            </object>
+          </object>
+          <object class="notebookpage">
+            <label>Phone Book</label>
+            <object class="wxPanel" name="PhoneBook">
+              <object class="wxFlexGridSizer">
+                <cols>1</cols>
+                <object class="spacer">
+                  <size>5,5</size>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxListCtrl" name="PhoneList">
+                    <style>wxLC_REPORT</style>
+                  </object>
+                  <flag>wxALL|wxGROW</flag>
+                  <border>10</border>
+                </object>
+                <growablerows>1</growablerows>
+                <growablecols>0</growablecols>
+                <object class="sizeritem">
+                  <object class="wxBoxSizer">
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="AddPhoneList">
+                        <label>Add ...</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="EditPhoneList">
+                        <label>Edit ...</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="RemovePhoneList">
+                        <label>Remove</label>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="DialPhoneList">
+                        <label>Dial</label>
+                      </object>
+                    </object>
+                    <orient></orient>
+                    <object class="sizeritem">
+                      <flag>wxALIGN_CENTRE|wxALL</flag>
+                      <border>5</border>
+                      <object class="wxButton" name="wxID_OK">
+                        <label>Done</label>
+                      </object>
+                    </object>
+                  </object>
+                  <flag>wxALIGN_CENTRE</flag>
+                </object>
+              </object>
+            </object>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+  <object class="wxDialog" name="AddOT">
+    <title>Add a One Touch Key</title>
+    <centered>1</centered>
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>0</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>0</growablerows>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>1</cols>
+          <object class="spacer">
+            <size>5,5</size>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText">
+                  <label>One Touch No:  </label>
+                </object>
+                <minsize>100,20</minsize>
+                <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxSpinCtrl" name="OTNo">
+                  <value>0</value>
+                  <min>0</min>
+                  <max>10</max>
+                  <size>48,28</size>
+                  <style>wxSP_WRAP</style>
+                </object>
+                <flag>wxALIGN_RIGHT</flag>
+                <border>10</border>
+              </object>
+              <orient></orient>
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+            </object>
+            <border>10</border>
+            <minsize></minsize>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText">
+                  <label>Name:  </label>
+                </object>
+                <minsize>100,20</minsize>
+                <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="Name"/>
+                <minsize>240,24</minsize>
+                <flag>wxALIGN_RIGHT</flag>
+                <border>10</border>
+              </object>
+              <orient></orient>
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+            </object>
+            <border>10</border>
+            <minsize></minsize>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText">
+                  <label>Extension:  </label>
+                </object>
+                <minsize>100,20</minsize>
+                <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="Extension"/>
+                <minsize>240,24</minsize>
+              </object>
+              <orient></orient>
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+            </object>
+            <border>10</border>
+            <minsize></minsize>
+          </object>
+          <vgap>8</vgap>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="sizeritem">
+                <flag>wxALIGN_CENTRE|wxALL</flag>
+                <border>5</border>
+                <object class="wxButton" name="Add">
+                  <label>Save</label>
+                </object>
+              </object>
+              <orient></orient>
+              <object class="sizeritem">
+                <flag>wxALIGN_CENTRE|wxALL</flag>
+                <border>5</border>
+                <object class="wxButton" name="wxID_CANCEL">
+                  <label>Cancel</label>
+                </object>
+              </object>
+            </object>
+            <flag>wxALIGN_CENTRE</flag>
+          </object>
+          <object class="spacer">
+            <size>5,5</size>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+  <object class="wxDialog" name="AddPhoneList">
+    <title>Add to Phone List</title>
+    <centered>1</centered>
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>0</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>0</growablerows>
+      <object class="sizeritem">
+        <object class="wxFlexGridSizer">
+          <cols>1</cols>
+          <object class="spacer">
+            <size>5,5</size>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText">
+                  <label>Name:  </label>
+                </object>
+                <minsize>100,20</minsize>
+                <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="Name"/>
+                <minsize>240,24</minsize>
+                <flag>wxALIGN_RIGHT</flag>
+                <border>10</border>
+              </object>
+              <orient></orient>
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+            </object>
+            <border>10</border>
+            <minsize></minsize>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText">
+                  <label>Extension:  </label>
+                </object>
+                <minsize>100,20</minsize>
+                <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="Extension"/>
+                <minsize>240,24</minsize>
+              </object>
+              <orient></orient>
+            </object>
+            <border>10</border>
+            <minsize></minsize>
+          </object>
+          <vgap>8</vgap>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="spacer">
+                <size>10,10</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxStaticText">
+                  <label>Ring Tone:  </label>
+                </object>
+                <minsize>100,20</minsize>
+                <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="RingTone"/>
+                <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                <minsize>240,24</minsize>
+              </object>
+              <orient></orient>
+              <object class="spacer">
+                <size>4,4</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxBitmapButton" name="BrowseRingTone">
+                  <bitmap stock_id="wxART_FILE_OPEN"></bitmap>
+                </object>
+                <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="PreviewRingTone">
+                  <label>Preview</label>
+                </object>
+              </object>
+            </object>
+            <border>10</border>
+            <minsize></minsize>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="sizeritem">
+                <flag>wxALIGN_CENTRE|wxALL</flag>
+                <border>5</border>
+                <object class="wxButton" name="Add">
+                  <label>Save</label>
+                </object>
+              </object>
+              <orient></orient>
+              <object class="sizeritem">
+                <flag>wxALIGN_CENTRE|wxALL</flag>
+                <border>5</border>
+                <object class="wxButton" name="wxID_CANCEL">
+                  <label>Cancel</label>
+                </object>
+              </object>
+            </object>
+            <flag>wxALIGN_CENTRE</flag>
+          </object>
+          <object class="spacer">
+            <size>5,5</size>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+</resource>

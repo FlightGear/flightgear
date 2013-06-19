@@ -1,0 +1,361 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 38;
+	objects = {
+		034768DDFF38A45A11DB9C8B = {
+			children = (
+				F550918E036C35030130931B,
+			);
+			isa = PBXGroup;
+			name = Products;
+			path = "";
+			refType = 4;
+		};
+//030
+//031
+//032
+//033
+//034
+//080
+//081
+//082
+//083
+//084
+		0867D690FE84028FC02AAC07 = {
+			buildStyles = (
+				4F0BB7EC011F40E904CA0E50,
+				4F0BB7ED011F40E904CA0E50,
+			);
+			hasScannedForEncodings = 1;
+			isa = PBXProject;
+			mainGroup = 0867D691FE84028FC02AAC07;
+			productRefGroup = 034768DDFF38A45A11DB9C8B;
+			projectDirPath = "";
+			targets = (
+				F550918D036C35030130931B,
+			);
+		};
+		0867D691FE84028FC02AAC07 = {
+			children = (
+				08FB77ACFE841707C02AAC07,
+				089C1665FE841158C02AAC07,
+				0867D69AFE84028FC02AAC07,
+				034768DDFF38A45A11DB9C8B,
+			);
+			isa = PBXGroup;
+			refType = 4;
+		};
+		0867D69AFE84028FC02AAC07 = {
+			children = (
+				F5A272820377DE8D01FEA954,
+				F94429230420B8C2006F146B,
+				9A5373C3095596A100A80065,
+				9A665C310AE8F711002F6F7B,
+				9A665C340AE8F73C002F6F7B,
+				9A5373CF0955A06700A80065,
+				9A5373D10955A08400A80065,
+			);
+			isa = PBXGroup;
+			name = "External Frameworks and Libraries";
+			refType = 4;
+		};
+		089C1665FE841158C02AAC07 = {
+			children = (
+				9AF53C2F0952FBDE00A80065,
+			);
+			isa = PBXGroup;
+			name = Resources;
+			refType = 4;
+		};
+		08FB77ACFE841707C02AAC07 = {
+			children = (
+				9AF53C360952FCFB00A80065,
+				9A5373C809559D2400A80065,
+				9A8A09570987AFF400A80065,
+			);
+			isa = PBXGroup;
+			name = Source;
+			refType = 4;
+		};
+//080
+//081
+//082
+//083
+//084
+//4F0
+//4F1
+//4F2
+//4F3
+//4F4
+		4F0BB7EC011F40E904CA0E50 = {
+			buildRules = (
+			);
+			buildSettings = {
+				TEMP_DIR = "${OBJROOT}/Development.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
+				UNSTRIPPED_PRODUCT = YES;
+			};
+			isa = PBXBuildStyle;
+			name = Development;
+		};
+		4F0BB7ED011F40E904CA0E50 = {
+			buildRules = (
+			);
+			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
+				OPTIMIZATION_CFLAGS = "-Os -mcpu=750";
+				TEMP_DIR = "${OBJROOT}/Deployment.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
+			};
+			isa = PBXBuildStyle;
+			name = Deployment;
+		};
+//4F0
+//4F1
+//4F2
+//4F3
+//4F4
+//9A0
+//9A1
+//9A2
+//9A3
+//9A4
+		9A5373C3095596A100A80065 = {
+			isa = PBXFileReference;
+			name = libiaxclient.a;
+			path = ../../../lib/libiaxclient.a;
+			refType = 2;
+		};
+		9A5373C4095596A100A80065 = {
+			fileRef = 9A5373C3095596A100A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A5373C809559D2400A80065 = {
+			fileEncoding = 30;
+			indentWidth = 4;
+			isa = PBXFileReference;
+			name = tones.c;
+			path = ../tones.c;
+			refType = 2;
+			tabWidth = 8;
+			usesTabs = 0;
+		};
+		9A5373C909559D2400A80065 = {
+			fileRef = 9A5373C809559D2400A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A5373CF0955A06700A80065 = {
+			isa = PBXFrameworkReference;
+			name = CoreAudio.framework;
+			path = /System/Library/Frameworks/CoreAudio.framework;
+			refType = 0;
+		};
+		9A5373D00955A06700A80065 = {
+			fileRef = 9A5373CF0955A06700A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A5373D10955A08400A80065 = {
+			isa = PBXFrameworkReference;
+			name = AudioToolbox.framework;
+			path = /System/Library/Frameworks/AudioToolbox.framework;
+			refType = 0;
+		};
+		9A5373D20955A08400A80065 = {
+			fileRef = 9A5373D10955A08400A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A665C310AE8F711002F6F7B = {
+			isa = PBXFrameworkReference;
+			name = AudioUnit.framework;
+			path = /System/Library/Frameworks/AudioUnit.framework;
+			refType = 0;
+		};
+		9A665C330AE8F711002F6F7B = {
+			fileRef = 9A665C310AE8F711002F6F7B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A665C340AE8F73C002F6F7B = {
+			isa = PBXFrameworkReference;
+			name = CoreServices.framework;
+			path = /System/Library/Frameworks/CoreServices.framework;
+			refType = 0;
+		};
+		9A665C360AE8F73C002F6F7B = {
+			fileRef = 9A665C340AE8F73C002F6F7B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A88C5AF0988B57C00A80065 = {
+			fileRef = 9A8A09570987AFF400A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		9A8A09570987AFF400A80065 = {
+			isa = PBXFileReference;
+			name = XThreadUtil.c;
+			path = ../XThreadUtil.c;
+			refType = 2;
+		};
+		9AF53C2F0952FBDE00A80065 = {
+			isa = PBXFileReference;
+			name = pkgIndex.tcl;
+			path = ../pkgIndex.tcl;
+			refType = 2;
+		};
+		9AF53C360952FCFB00A80065 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = iaxclient.c;
+			path = ../iaxclient.c;
+			refType = 2;
+		};
+		9AF53C370952FCFB00A80065 = {
+			fileRef = 9AF53C360952FCFB00A80065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//9A0
+//9A1
+//9A2
+//9A3
+//9A4
+//F50
+//F51
+//F52
+//F53
+//F54
+		F550918A036C35030130931B = {
+			buildActionMask = 2147483647;
+			files = (
+				9AF53C370952FCFB00A80065,
+				9A5373C909559D2400A80065,
+				9A88C5AF0988B57C00A80065,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F550918B036C35030130931B = {
+			buildActionMask = 2147483647;
+			files = (
+				F5A272830377DE8E01FEA954,
+				9A5373C4095596A100A80065,
+				9A5373D00955A06700A80065,
+				9A5373D20955A08400A80065,
+				9A665C330AE8F711002F6F7B,
+				9A665C360AE8F73C002F6F7B,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F550918D036C35030130931B = {
+			buildPhases = (
+				F96B6BDA0420C120006F146B,
+				F550918A036C35030130931B,
+				F550918B036C35030130931B,
+				F96B6BDB0420C430006F146B,
+			);
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 0.1;
+				DYLIB_CURRENT_VERSION = 0.1;
+				DYLIB_INSTALLED_NAME = iaxclient.dylib;
+				EXPORTED_SYMBOLS_FILE = ./PBExportedSymbols;
+				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "../../../lib ../../../lib/libiax2/src ../../../lib/gsm/inc";
+				INSTALL_PATH = "/Library/Tcl/iaxclient${DYLIB_COMPATIBILITY_VERSION}";
+				LIBRARY_SEARCH_PATHS = "/Library/Frameworks/Tcl.framework ../../../lib";
+				LIBRARY_STYLE = DYNAMIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "-DUSE_TCL_STUBS -DTARGET_OS_MAC=1 -DTARGET_API_MAC_CARBON=1 --std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREFIX_HEADER = ./Prefixes.h;
+				PRODUCT_NAME = iaxclient.dylib;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			dependencies = (
+			);
+			isa = PBXLibraryTarget;
+			name = iaxclient;
+			productInstallPath = "/Library/Tcl/iaxclient${DYLIB_COMPATIBILITY_VERSION}";
+			productName = "TclSpeech dylib";
+			productReference = F550918E036C35030130931B;
+		};
+		F550918E036C35030130931B = {
+			isa = PBXLibraryReference;
+			path = iaxclient.dylib;
+			refType = 3;
+		};
+		F5A272820377DE8D01FEA954 = {
+			isa = PBXFileReference;
+			name = libtclstub8.4.a;
+			path = /Library/Frameworks/Tcl.framework/libtclstub8.4.a;
+			refType = 0;
+		};
+		F5A272830377DE8E01FEA954 = {
+			fileRef = F5A272820377DE8D01FEA954;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//F50
+//F51
+//F52
+//F53
+//F54
+//F90
+//F91
+//F92
+//F93
+//F94
+		F94429230420B8C2006F146B = {
+			isa = PBXFrameworkReference;
+			name = Tcl.framework;
+			path = /Library/Frameworks/Tcl.framework;
+			refType = 0;
+		};
+		F96B6BDA0420C120006F146B = {
+			buildActionMask = 8;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# ensure we can overwrite a previous install\nif [ -d \"${INSTALL_ROOT}${INSTALL_PATH}\" ]; then\n    chmod -RH u+w \"${INSTALL_ROOT}${INSTALL_PATH}\"\nfi";
+		};
+		F96B6BDB0420C430006F146B = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "";
+		};
+	};
+	rootObject = 0867D690FE84028FC02AAC07;
+}

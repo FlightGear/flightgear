@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iaxclient_dll", "iaxclient_dll.vcproj", "{00920B8E-2080-45AB-8742-6499B262FB7E}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iaxclient_lib", "iaxclient_lib.vcproj", "{EA324E13-9C5F-4AF3-9DE8-9360628DB3B0}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{00920B8E-2080-45AB-8742-6499B262FB7E}.Debug.ActiveCfg = Debug|Win32
+		{00920B8E-2080-45AB-8742-6499B262FB7E}.Debug.Build.0 = Debug|Win32
+		{00920B8E-2080-45AB-8742-6499B262FB7E}.Release.ActiveCfg = Release|Win32
+		{00920B8E-2080-45AB-8742-6499B262FB7E}.Release.Build.0 = Release|Win32
+		{EA324E13-9C5F-4AF3-9DE8-9360628DB3B0}.Debug.ActiveCfg = Debug|Win32
+		{EA324E13-9C5F-4AF3-9DE8-9360628DB3B0}.Debug.Build.0 = Debug|Win32
+		{EA324E13-9C5F-4AF3-9DE8-9360628DB3B0}.Release.ActiveCfg = Release|Win32
+		{EA324E13-9C5F-4AF3-9DE8-9360628DB3B0}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

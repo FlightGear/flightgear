@@ -1,0 +1,107 @@
+EXPORTS
+    iaxc_answer_call = iaxc_answer_call@4 @1
+    iaxc_answer_call@4 @2
+    iaxc_audio_devices_get = iaxc_audio_devices_get@20 @3
+    iaxc_audio_devices_get@20 @4
+    iaxc_audio_devices_set = iaxc_audio_devices_set@12 @5
+    iaxc_audio_devices_set@12 @6
+    iaxc_blind_transfer_call = iaxc_blind_transfer_call@8 @7
+    iaxc_blind_transfer_call@8 @8
+    iaxc_call = iaxc_call@4 @9
+    iaxc_call@4 @10
+    iaxc_dump_all_calls = iaxc_dump_all_calls@0 @11
+    iaxc_dump_all_calls@0 @12
+    iaxc_dump_call = iaxc_dump_call@0 @13
+    iaxc_dump_call@0 @14
+    iaxc_first_free_call = iaxc_first_free_call@0 @15
+    iaxc_first_free_call@0 @16
+    iaxc_free_event = iaxc_free_event@4 @17
+    iaxc_free_event@4 @18
+    iaxc_get_event_levels = iaxc_get_event_levels@4 @19
+    iaxc_get_event_levels@4 @20
+    iaxc_get_event_state = iaxc_get_event_state@4 @21
+    iaxc_get_event_state@4 @22
+    iaxc_get_event_text = iaxc_get_event_text@4 @23
+    iaxc_get_event_text@4 @24
+    iaxc_get_filters = iaxc_get_filters@0 @25
+    iaxc_get_filters@0 @26
+    iaxc_get_netstats = iaxc_get_netstats@16 @27
+    iaxc_get_netstats@16 @28
+    iaxc_initialize = iaxc_initialize@8 @29
+    iaxc_initialize@8 @30
+    iaxc_input_level_get = iaxc_input_level_get@0 @31
+    iaxc_input_level_get@0 @32
+    iaxc_input_level_set = iaxc_input_level_set@8 @33
+    iaxc_input_level_set@8 @34
+    iaxc_mic_boost_get = iaxc_mic_boost_get@0 @35
+    iaxc_mic_boost_get@0 @36
+    iaxc_mic_boost_set = iaxc_mic_boost_set@4 @37
+    iaxc_mic_boost_set@4 @38
+    iaxc_millisleep = iaxc_millisleep@4 @39
+    iaxc_millisleep@4 @40
+    iaxc_output_level_get = iaxc_output_level_get@0 @41
+    iaxc_output_level_get@0 @42
+    iaxc_output_level_set = iaxc_output_level_set@8 @43
+    iaxc_output_level_set@8 @44
+    iaxc_play_sound = iaxc_play_sound@8 @45
+    iaxc_play_sound@8 @46
+    iaxc_process_calls = iaxc_process_calls@0 @47
+    iaxc_process_calls@0 @48
+    iaxc_quelch = iaxc_quelch@8 @49
+    iaxc_quelch@8 @50
+    iaxc_register = iaxc_register@12 @51
+    iaxc_register@12 @52
+    iaxc_reject_call = iaxc_reject_call@0 @53
+    iaxc_reject_call@0 @54
+    iaxc_reject_call_number = iaxc_reject_call_number@4 @55
+    iaxc_reject_call_number@4 @56
+    iaxc_select_call = iaxc_select_call@4 @57
+    iaxc_select_call@4 @58
+    iaxc_selected_call = iaxc_selected_call@0 @59
+    iaxc_selected_call@0 @60
+    iaxc_send_busy_on_incoming_call = iaxc_send_busy_on_incoming_call@4 @61
+    iaxc_send_busy_on_incoming_call@4 @62
+    iaxc_send_dtmf = iaxc_send_dtmf@4 @63
+    iaxc_send_dtmf@4 @64
+    iaxc_send_text = iaxc_send_text@4 @65
+    iaxc_send_text@4 @66
+    iaxc_send_url = iaxc_send_url@8 @67
+    iaxc_send_url@8 @68
+    iaxc_set_audio_output = iaxc_set_audio_output@4 @69
+    iaxc_set_audio_output@4 @70
+    iaxc_set_callerid = iaxc_set_callerid@8 @71
+    iaxc_set_callerid@8 @72
+    iaxc_set_event_callback = iaxc_set_event_callback@4 @73
+    iaxc_set_event_callback@4 @74
+    iaxc_set_event_callpost = iaxc_set_event_callpost@8 @75
+    iaxc_set_event_callpost@8 @76
+    iaxc_set_files = iaxc_set_files@8 @77
+    iaxc_set_files@8 @78
+    iaxc_set_filters = iaxc_set_filters@4 @79
+    iaxc_set_filters@4 @80
+    iaxc_set_formats = iaxc_set_formats@8 @81
+    iaxc_set_formats@8 @82
+    iaxc_set_min_outgoing_framesize = iaxc_set_min_outgoing_framesize@4 @83
+    iaxc_set_min_outgoing_framesize@4 @84
+    iaxc_set_networking = iaxc_set_networking@8 @85
+    iaxc_set_networking@8 @86
+    iaxc_set_preferred_source_udp_port = iaxc_set_preferred_source_udp_port@4 @87
+    iaxc_set_preferred_source_udp_port@4 @88
+    iaxc_set_silence_threshold = iaxc_set_silence_threshold@8 @89
+    iaxc_set_silence_threshold@8 @90
+    iaxc_set_speex_settings = iaxc_set_speex_settings@24 @91
+    iaxc_set_speex_settings@24 @92
+    iaxc_shutdown = iaxc_shutdown@0 @93
+    iaxc_shutdown@0 @94
+    iaxc_start_processing_thread = iaxc_start_processing_thread@0 @95
+    iaxc_start_processing_thread@0 @96
+    iaxc_stop_processing_thread = iaxc_stop_processing_thread@0 @97
+    iaxc_stop_processing_thread@0 @98
+    iaxc_stop_sound = iaxc_stop_sound@4 @99
+    iaxc_stop_sound@4 @100
+    iaxc_unquelch = iaxc_unquelch@4 @101
+    iaxc_unquelch@4 @102
+    iaxc_unregister = iaxc_unregister@4 @103
+    iaxc_unregister@4 @104
+    iaxc_version = iaxc_version@4 @105
+    iaxc_version@4 @106

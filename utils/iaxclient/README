@@ -1,0 +1,259 @@
+=======================================================================
+INTRODUCTION
+
+This is iaxclient, a portable IAX/IAX2 protocol telephony client library.
+
+The library itself is in the directory "lib", located in the same
+directory as this README file.
+
+The library is designed to build for multiple platforms, and currently
+supports Linux, MacOSX, Solaris, and Win32 platforms.  It is designed to handle
+the "backend" of IAX telephony operations, including call handling,
+network protocols, audio encoding/decoding, and audio capture/playback.
+In it's future, it may be extended to also handle video encode, decode,
+capture and playback.
+
+There are also sample clients, which use the library, included here.
+
+Currently, these are all stored under the "simpleclient" directory, and
+there are three of them:
+
+simpleclient/testcall:  A simple command-line oriented test program,
+			useful for testing and debugging.   It supports 
+			all of the same platforms as the library itself.
+
+simpleclient/wx:	A wxWindows (see wxwindows.org) based GUI
+			client.  This client also supports all of the
+			same platforms as the library itself.
+
+simpleclient/WinIAX:  	A MSVC/Win32 client.  This only works with
+			Win32, obviously, and was contributed by
+			Faizan "Tili" Naqvi <faizan@tilizone.com>
+
+simpleclient/tkiaxphone	A command-line client, with a Tcl/Tk GUI
+			client that drives it.  It should work on
+			all the platforms
+
+
+The home page for iaxclient is "http://iaxclient.sourceforge.net/"
+
+Up-to-date versions of iaxclient are available from a sourceforge SVN
+repository.
+
+CVS tarballs are also available as a link from the home page.
+
+
+=======================================================================
+LICENSES
+
+
+The iaxclient library itself, is provided under the terms of the LGPL:
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Library General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Library General Public License for more details.
+
+    You should have received a copy of the GNU Library General Public
+    License along with this library; if not, write to the Free
+    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+    MA 02111-1307, USA
+
+The iaxclient library may also include, when compiled, works distributed
+under other licenses.  See those directories and source files for
+specifics.  These include:
+
+    libiax: 		(c) 2001 Mark Spencer under the LGPL.
+    libiax2: 		(c) 2001 Mark Spencer under the LGPL.
+    gsm encoder:	Copyright 1992, 1993, 1994 by Jutta Degener 
+			and Carsten Bormann, Technische Universitaet Berlin
+			(free license, terms in gsm/copyright)
+    portaudio:		Copyright (c) 1999-2000 Ross Bencina and Phil Burk
+			Modified BSD style license, in portaudio/LICENSE.txt
+
+    sox tools: 		compand.c: Copyright 1999 Chris Bagwell And 
+					Nick Bailey
+			resample.c: (not currently used) Copyright 1991
+			Lance Norskog And Sundry Contributors, 
+			free licenses in source files.
+    libspeex:		(c) various authors
+			BSD-like license.
+
+
+=======================================================================
+CONTRIBUTORS:
+
+IAXCLIENT itself was contributed to by:
+
+Steve Kann <stevek@stevek.com>
+Shawn Lawrence <shawn.lawrence@terracecomm.com>
+Faizan "Tili" Naqvi <faizan@tilizone.com> [Win32 VC++ build/client]
+Scott Lambert <lambert@lambertfam.org> [FreeBSD build changes]
+Michael Van Donselaar <mvand@vandonselaar.org> [Win32/MinGW build directions, UI changes, IAXComm phone ]
+Steven Sokol <ssokol@sokol-associates.com> [ Debugging, Blind Transfer ]
+Stephan Kauss <Stephan@kauss.org> [ 32-bit alignment for IAX2 ]
+Stephen Uhler <suhler@sun.com> [Solaris build, tkiaxphone]
+Steve Underwood <steveu@coppice.org> [PLC implementation from spandsp]
+Jean-Denis Girard <jd.girard@sysnux.pf> [URL Receive implementation]
+Panfilov Dmitry <dima@bdpu.org> [Basic ALSA-native audio driver]
+Mihai Balea <mihai at hates dot ms>
+Bill Welch <welch1820 at gmail dot com> [Project files for several MS development environments]
+
+
+In addition to including libiax, IAXCLIENT is also based in part on code
+included in test clients within libiax itself.
+
+The included sub-libraries, including libiax, libiax2, gsm, portaudio,
+and the sox-derived filters, were developed by others, as noted in above
+and in their sources.  We couldn't have built IAXCLIENT (or, it would
+have been much more difficult!) without the great work from these
+projects.
+
+=======================================================================
+BUILDING THE LIBRARY:
+
+From the "lib" directory:
+	Linux: type "make" using standard gnu make/gcc
+	FreeBSD: type "gmake" using standard gnu make/gcc
+	MacOSX: type "make" using Apple Dev Tools (gnu make/gcc)
+	Win32: type "make" using Cygwin or Cygwin and MinGW (see below)
+	Solaris: type "gmake" using standard gnu make/gcc
+
+For a shared library, make clean, then make shared.
+You should receive a shared library (.dll, .so, .dylib, depending on your platform).
+
+Win32 Cygwin/MinGW; General:
+The Win32 build has been tested using the Cygwin Environment, and the
+MinGW port of the GCC compiler suite.   Previously, we only supported
+compilation with the cygwin _and_ mingw environments installed.  We are
+moving (4/20/2005) to support having the cygwin environment alone, with
+cygwin's own mingw packages, instead.   Compilation of the basic sample
+clients (but not iaxcomm), works fine with cygwin alone.
+
+Cygwin Alone:
+To install cygwin, download and run http://www.cygwin.com/setup.exe
+You will need to install, in addition to the defaults, these packages:
+gcc-mingw, gcc-mingw-core, (and for C++ clients, gcc-mingw-g++).
+[please let the maintainers know if other non-default packages are
+required].
+
+There's lots of goodies available from cygwin.
+
+Once you have this installed, open the cygwin shell, and build.  The
+library makefiles use the -mno-cygwin option, to create native Win32
+binaries which do _not_ require cygwin.dll, or any special runtimes.
+
+Cygwin and MinGW:
+Previously, we advocated installing cygwin environment (for Gnu Make and
+such), alongside the MinGW distribution itself, as outlined here.  This
+may still be necessary for the Wx-Windows based clients like iaxcomm.
+
+http://www.mingw.org/mingwfaq.shtml#faq-usingwithcygwin for the
+MinGW FAQ entry on using MinGW with Cygwin.  You do need to make sure
+that you install the Gnu "make" utility when you install cygwin.
+
+It should probably also work if you use the MSYS environment and the
+MinGW compiler, but this configuration is not as well tested.
+
+=======================================================================
+LIBRARY ORGANIZATION/DESIGN/CODING CONVENTION NOTES
+
+The iaxclient library is designed to be a small, simple library that
+encapsulates all that you need in order to make IAX protocol telephony
+programs.
+
+All exported symbols should be prefixed with "iaxc_", to avoid namespace
+collisions/pollution in programs using this library.
+
+The header file "iaxclient.h" should contain those declarations needed
+by client programs, but not rely on other headers (i.e. those from
+included libraries).  The "iaxclient-lib.h" header file is the main
+header file for the library's internal declarations.
+
+
+=======================================================================
+
+SAMPLE CLIENTS
+
+The "testcall" sample program, provided in the simpleclient/testcall
+directory (above this "lib" directory) is a simple client program which
+should also be portable.  
+
+The Makefile for "testcall" will automatically build or update the
+library when it it built, and the requirements for building testcall are
+the same as for the library itself.
+
+
+See README files in the other sample clients for directions for building
+these.
+
+=========================================================================
+
+CODECS
+
+The codec API is pretty straightforward; just use any of the existing
+available codecs as a guide.  The only place in the main code they
+interface is the switch in audio_encode.c:create_codec
+
+ILBC
+
+Lots of people are enamored with iLBC lately, so I put this together for
+them.  Personally, I prefer speex, because it seems to sound just as
+good, but has no license restrictions.  With proper compilation options
+(i.e. use it's SSE optimizations), it can be made even faster than the
+iLBC reference.
+
+There is glue to build iaxclient with iLBC available in the source, but
+the source to iLBC itself is _not_ included.  This is primarily because
+of the licensing issues.
+
+I'm not a lawyer, but it appears that iLBC's license would make it
+impossible to build iaxclient and link it with a GPL front-end, meaning
+a library built this way is no longer something that could be considered
+LGPL.  However, you could probably build a client using iLBC and
+distribute it legally, if you follow the rules in the LGPL.  So, this is
+an issue for you and your legal counsel to figure out.
+
+To actually build iaxclient with iLBC, though is very easy.  Just make a
+directory under lib named iLBC, and drop the iLBC reference sources into
+it, then change CODEC_ILBC=0 to CODEC_ILBC=1 in the Makefile, and away
+you go.
+
+The source presently is set up for the draft-5 version.
+
+The iLBC license and software can be found here 
+http://www.ilbcfreeware.org/software.html
+(sources are also in asterisk).  
+
+=========================================================================
+
+AUDIO DRIVERS
+
+The supported audio driver for iaxclient is audio_portaudio; which uses
+a snapshot of the portaudio v19 library (included, with some minor 
+modifications) to access native audio services on each platform.  
+It includes support for Windows (WMME), Linux (OSS, ALSA, JACK) and
+MacOS X (CoreAudio). 
+
+There is a (presently broken) WMME-native audio driver which was used
+during early development, and is no longer maintained.  You probably
+don't want to use this.
+
+All three Linux PortAudio drivers are enabled by default and supporting
+libraries need to be present on the system in order to build. If you
+prefer to disable one or more of the drivers, use the USE_PA_* options
+in the main Makefile.  
+
+Dmitry Panfilov has contributed a basic native ALSA driver for Linux.
+Not all features are supported with this driver.  It is not compiled in
+by default, because this would add alsa libraries to the build and link
+dependencies -- and we don't have a good way of communicating that to
+applications (like pkg-config stuff, etc). To use it, though, you just
+need to change AUDIO_ALSA=0 to AUDIO_ALSA=1 in the Makefile.
+
+

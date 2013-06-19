@@ -1,0 +1,179 @@
+
+=============================================================
+Building
+
+In order to build the wxWindows GUI client, you must have the wxwindows
+library had header files installed on your system.
+
+You can get wxWindows from www.wxwindows.org
+
+
+The makefiles are set up to build binaries with wxwindows (and
+libiaxclient) statically linked.  This will make it such that users of
+the binaries will not need wxwindows (or any iacxclient libraries)
+installed in order to run the application.
+
+
+For Linux and MacOSX, you should have "wx-config" installed somewhere in
+your PATH when you build.  The default "configure" install of wxwindows
+will do this for you.  You might need to build wxwindows with
+"--disable-shared" in order to compile the static libraries.
+
+
+For Win32, when compiling with cygwin/mingw, you'll need to have
+wxwindows compiled to static libraries, and the "WXWIN" environment
+variable set to the location of your wxwindows installation.
+
+
+=============================================================
+Contributions sought:
+
+The contribution of Step-by-step build directions, especially for Win32
+developers,  is encouraged, and will be included here in this README.
+If you can write such directions, please send them to the
+iaxclient-devel@lists.sourceforge.net mailing list, and we can include
+them here for the benefit of others.
+
+Also, if someone would like to contribute MSVC "project files" (i.e. a
+.dsp/.dsw file set), and directions for those building with MSVC, those
+would also be helpful for people afraid of the command-line.
+
+=============================================================
+
+Building WXWindows on Win32, with MinGW/Cygwin:
+
+These were the steps taken by 
+Michael Van Donselaar <mvand@vandonselaar.org> to build wx on
+his box, and are similar to what were taken for the initial development:
+
+(Thanks to Michael for contributing these directions)
+After tearing out what little hair I have left, I've finally gotten this
+figured out.
+
+The two things that bit me were a borken make in minGW and using
+./configure to configure wxWindows.
+
+The docs in  wxWindows say there's two ways to compile: directly with
+the makefiles, or using configure.  ./configure is your friend right?
+Wrong.  Use the makefiles directly.
+
+I have verified the following for WinXP and for Win2000.  Steve, feel
+free to include these in your README.
+
+1)  Download and run setup.exe from www.cygwin.com.
+    Install the base plus Devel/make.
+    *** You need to use the make from cygwin ***
+    The make in MinGW extras is borken.
+
+2)  Download MinGW-2.0.0-3.exe from www.mingw.org.
+    Install, accepting defaults
+
+3)  Download wxMSW-2.4.1-setup.zip from wxwindows.org
+    Install to the default directory, c:\wxWindows-2.4.1
+
+4)  Configure the WXWIN environment variable and add cygwin/minGW paths:
+    Right click "My Computer".  Click Properties.  Click "Advanced" tab
+    Click "Environment Variables"
+    Prepend "C:\mingw\bin;c:\cygwin\bin;" to the path
+    Create a WXWIN env variable with value "c:/wxwin-2.4.1" (Note the
+    forward slash, rather than back slash.)
+
+5)  Compile the wxWindows library.  The docs outline two methods.
+    *** DO NOT ./confgure -- USE THE MAKEFILES DIRECTLY ***
+    Start a cygwin session. 
+    cd c:/wxwindows-2.4.1/src/msw
+    make -f makefile.g95
+
+6)  Test the wxWindows library:
+    cd c:/wxwindows-2.4.1/samples/minimal
+    make -f makefile.g95 minimal
+    ./minimal.exe
+
+7)  Install the iaxclient sources in /usr/src/iaxclient
+    cd /usr/src/iaxclient/simpleclient/wx
+    make
+    strip wx
+    ./wx.exe
+
+=========================================================
+
+Building wx with MSVC 6 on Win32 (by Babar Shafiq <babarnazmi@yahoo.com>)
+
+Builing wx on MSVC is easy, 
+
+Here is step by step procedure how to build wx on MSVC 6.
+
+First we make libraries and DLLs for wxWindows
+1) Download wxWindows from http://wxwindows.org for VC we will have latest release:
+http://prdownloads.sourceforge.net/wxwindows/wxMSW-2.4.1-setup.zip (approx 12MB)
+
+2) After running the setup it will install and create a directory for us such as
+wxWindows-2.4.1
+if we install on D: Drive to we will have D:\wxWindows-2.4.1\
+
+3) Now we have to compile wxWindows for VC we have wxWindows.dsw in d:\wxWindows-2.4.1\src
+directory.
+
+4) Setup include directories from VC->Tools->Options->Include directories 
+(This is Global settings for all wxWindows projects)
+
+add D:\wxWindows-2.4.1\CONTRIB\INCLUDE
+and D:\wxWindows-2.4.1\INCLUDE
+
+Setup Lib directories from VC->Tools->Options->Lib directories
+add D:\wxWindows-2.4.1\CONTRIB\LIB
+and D:\wxWindows-2.4.1\LIB
+
+5) Now from Build->Batch Build use Build to build all libraries and DLLs for us.(on my P3
+667 MHz
+256 MB Ram it tooks more then an hour :) ).
+
+6) After the build process we will have all the libraires and DLLs in the lib folder it mean
+we
+are done.
+
+
+http://www.geocities.com/babarnazmi/wxVC.zip ( unzip project files in wx folder)
+[ These are now included in the CVS sources as well - SteveK ]
+
+or 
+
+for wx we need to set up a new project
+
+1) Create a new empty project Win32 Application.
+
+2) I just renamed the wx.cc file from the iaxclient distribution to wx.cpp and then added
+iaxclient.h in this new project.
+
+3) For Win32 Release.
+update Project->Settings->C/C++->General(Category) update the Preprocessor Defination to 
+NDEBUG,WIN32,_WINDOWS,WINVER=0x400,_MT,wxUSE_GUI=1
+select Category Code Generation to "Multithreaded DLL"
+
+   For Win32 Debug
+update Project->Settings->C/C++->General(Category) update the Preprocessor Defination to 
+_DEBUG,WIN32,_WINDOWS,WINVER=0x400,_MT,wxUSE_GUI=1,__WXDEBUG__,WXDEBUG=1
+select Category Code Generation to "Debug Multithreaded DLL"
+
+4) Now in Link Tab 
+
+for Win32 Release add
+zlib.lib regex.lib png.lib jpeg.lib tiff.lib wxmsw.lib (for wxWidnows support)
+winmm.lib ws2_32.lib (for iaxcleint support)
+libiaxclient.lib (Win32 iaxlib must be Release version)
+(other then default libs)
+
+for Win32 Debug add
+zlibd.lib regexd.lib pngd.lib jpegd.lib tiffd.lib wxmswd.lib ( fow wxWindows support)
+winmm.lib ws2_32.lib (for iaxcleint support)
+libiaxclient.lib (Win32 iaxlib must be Debug version)
+(other then default libs)
+
+update the #include "iaxclient.h" to #include "..\..\..\lib\iaxclient.h"
+(or copy iaxclient.h to the souce directory)
+
+Build the new project and we are done.
+
+===========================================================
+
+

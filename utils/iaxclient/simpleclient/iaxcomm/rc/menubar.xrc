@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<resource version="2.3.0.1" xmlns="http://www.wxwindows.org/wxxrc">
+  <object class="wxMenuBar" name="main_menubar">
+    <style>wxMB_DOCKABLE</style>
+    <object class="wxMenu">
+      <label>_File</label>
+      <style>wxMENU_TEAROFF</style>
+      <object class="wxMenuItem" name="Exit">
+        <label>E_xit</label>
+        <accel>Alt-F4</accel>
+        <help>Exit the application</help>
+      </object>
+    </object>
+    <object class="wxMenu" name="Options">
+      <label>_Options</label>
+      <style>wxMENU_TEAROFF</style>
+      <object class="wxMenuItem" name="PTT">
+        <label>Push to Talk</label>
+        <accel>Ctrl-P</accel>
+        <help>Toggle PTT with Ctrl Key</help>
+        <checkable>1</checkable>
+      </object>
+      <object class="wxMenuItem" name="Silence">
+        <label>Silence Suppression</label>
+        <accel>Ctrl-S</accel>
+        <help>Suppress Silence</help>
+        <checkable>1</checkable>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="Accounts">
+        <label>_Accounts ...</label>
+        <help>Configure audio options, etc.</help>
+      </object>
+      <object class="wxMenuItem" name="Devices">
+        <label>De_vices ...</label>
+        <help>Configure audio options, etc.</help>
+      </object>
+      <object class="wxMenuItem" name="Prefs">
+        <label>_Preferences ...</label>
+        <help>Configure audio options, etc.</help>
+      </object>
+      <object class="wxMenuItem" name="Directory">
+        <label>_Directory ...</label>
+        <help>Manage directory</help>
+      </object>
+    </object>
+    <object class="wxMenu">
+      <label>_Help</label>
+      <style>wxMENU_TEAROFF</style>
+      <object class="wxMenuItem" name="About">
+        <label>_About</label>
+        <help>Display version number and copyright notice</help>
+      </object>
+      <object class="wxMenuItem" name="Help">
+        <label>iaxComm H_elp...</label>
+        <help>Online manual</help>
+      </object>
+    </object>
+  </object>
+</resource>
