@@ -367,35 +367,7 @@ static SGPath platformDefaultDataPath()
   return config;
 }
 
-SGPath platformDesktopPath()
-{  
-    /*
-  typedef BOOL (WINAPI*GetSpecialFolderPath)(HWND, LPWSTR, int, BOOL);
-  static GetSpecialFolderPath SHGetSpecialFolderPath = NULL;
-
-  // lazy open+resolve of shell32
-  if (!SHGetSpecialFolderPath) {
-    HINSTANCE shellDll = ::LoadLibrary("shell32");
-    SHGetSpecialFolderPath = (GetSpecialFolderPath) GetProcAddress(shellDll, "SHGetSpecialFolderPathA");
-  }
-  
-  if (!SHGetSpecialFolderPath)
-    return SGPath();
-  
-  char path[PATH_MAX];
-  if (SHGetSpecialFolderPath(0, path, CSIDL_DESKTOPDIRECTORY, false)) {
-    return SGPath(path);
-  }
-  
-  // failed, bad
-  return SGPath();
-    */
-    // TODO real implementation and move to SGPath
-    return SGPath(fgGetString("/sim/fg-current"));
-}
-#else
-
-#ifdef __APPLE__
+#elif __APPLE__
 #include <CoreServices/CoreServices.h>
 
 static SGPath platformDefaultDataPath()
@@ -420,11 +392,6 @@ static SGPath platformDefaultDataPath()
 static SGPath platformDefaultDataPath()
 {
   return SGPath::home() / ".fgfs";
-}
-#endif
-SGPath platformDesktopPath()
-{
-  return SGPath::desktop();
 }
 #endif
 
