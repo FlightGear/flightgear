@@ -114,6 +114,10 @@ GUIMgr::GUIMgr():
 
   _width = _height = -1;
 
+  // Do not change values on reinit
+  _width.node()->setAttribute(SGPropertyNode::PRESERVE, true);
+  _height.node()->setAttribute(SGPropertyNode::PRESERVE, true);
+
   osg::Camera* camera =
     flightgear::getGUICamera( flightgear::CameraGroup::getDefault() );
   assert(camera);
