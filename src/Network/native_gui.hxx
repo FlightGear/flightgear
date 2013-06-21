@@ -33,7 +33,6 @@
 class FGNativeGUI : public FGProtocol {
 
     FGNetGUI buf;
-    int length;
     
 public:
 

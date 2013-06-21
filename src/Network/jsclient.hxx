@@ -40,7 +40,6 @@ using std::string;
 class FGJsClient : public FGProtocol {
 
     char buf[256];
-    int length;
     double axis[4];
     SGPropertyNode_ptr axisdef[4];
     string axisdefstr[4];

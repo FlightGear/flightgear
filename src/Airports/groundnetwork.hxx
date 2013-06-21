@@ -173,7 +173,6 @@ private:
     TrafficVector activeTraffic;
     TrafficVectorIterator currTraffic;
 
-    bool foundRoute;
     double totalDistance, maxDistance;
     FGTowerController *towerController;
     FGAirport *parent;

@@ -35,7 +35,6 @@
 class FGNative : public FGProtocol {
 
     FGInterface buf;
-    int length;
 
 public:
 

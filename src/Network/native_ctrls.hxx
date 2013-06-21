@@ -40,8 +40,6 @@ class FGNativeCtrls : public FGProtocol {
     FGNetCtrls net_ctrls;
     FGControls ctrls;
 
-    int length;
-
 public:
 
     FGNativeCtrls();

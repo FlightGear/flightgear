@@ -25,6 +25,8 @@
 #endif
 
 #include <Navaids/markerbeacon.hxx>
+#include <Airports/runways.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 using std::string;
 
@@ -33,4 +35,11 @@ FGMarkerBeaconRecord::FGMarkerBeaconRecord(PositionedID aGuid, Type aTy,
   FGPositioned(aGuid, aTy, string(), aPos),
   _runway(aRunway)
 {
+}
+
+FGRunwayRef FGMarkerBeaconRecord::runway() const
+{
+    FGPositioned* p = flightgear::NavDataCache::instance()->loadById(_runway);
+    assert(p->type() == FGPositioned::RUNWAY);
+    return static_cast<FGRunway*>(p);
 }

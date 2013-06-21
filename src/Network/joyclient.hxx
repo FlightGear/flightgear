@@ -39,7 +39,6 @@ using std::string;
 class FGJoyClient : public FGProtocol {
 
     char buf[256];
-    int length;
 
 public:
 

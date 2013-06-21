@@ -38,7 +38,6 @@
 class FGLFSGlass : public FGProtocol {
 
     FGLFSGlassData buf;
-    int length;
     
     // Environment
     SGPropertyNode_ptr press_node;

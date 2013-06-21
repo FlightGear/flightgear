@@ -27,13 +27,15 @@
 #include <simgear/compiler.h>
 
 #include "positioned.hxx"
-
+#include <Airports/airports_fwd.hxx>
 
 class FGMarkerBeaconRecord : public FGPositioned
 {
 public:
 
   FGMarkerBeaconRecord(PositionedID aGuid, Type aTy, PositionedID aRunway, const SGGeod& aPos);
+    
+    FGRunwayRef runway() const;
 private:
   
   PositionedID _runway;

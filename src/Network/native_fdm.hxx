@@ -36,7 +36,6 @@
 class FGNativeFDM : public FGProtocol {
 
     FGNetFDM buf;
-    int length;
     
 public:
 
