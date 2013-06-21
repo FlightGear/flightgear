@@ -48,7 +48,7 @@ class GUIEventHandler:
     {}
 
     bool handle( const osgGA::GUIEventAdapter& ea,
-                 osgGA::GUIActionAdapter& aa,
+                 osgGA::GUIActionAdapter&,
                  osg::Object*,
                  osg::NodeVisitor* )
     {
