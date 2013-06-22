@@ -1293,6 +1293,9 @@ osg::Node*
 FGRenderer::buildLightingSkyCloudsPass(FGRenderingPipeline::Pass* pass)
 {
     Group* group = new Group;
+    group->setName("skyCloudsGroup");
+    group->setNodeMask(simgear::BACKGROUND_BIT);
+    
     StateSet* ss = group->getOrCreateStateSet();
     ss->setAttributeAndModes( new osg::ColorMask( true, true, true, false ), osg::StateAttribute::ON );
     group->addChild( _sky->getPreRoot() );
