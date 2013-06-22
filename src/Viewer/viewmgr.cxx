@@ -144,6 +144,8 @@ FGViewMgr::init ()
 void
 FGViewMgr::reinit ()
 {
+  int current_view_index = current;
+
   // reset offsets and fov to configuration defaults
   for (unsigned int i = 0; i < config_list.size(); i++) {
     SGPropertyNode *n = config_list[i];
@@ -175,7 +177,7 @@ FGViewMgr::reinit ()
     fgSetDouble("/sim/current-view/target-z-offset-m",
         n->getDoubleValue("config/target-z-offset-m"));
   }
-  setView(0);
+  setView(current_view_index);
 }
 
 typedef double (FGViewMgr::*double_getter)() const;
@@ -219,7 +221,12 @@ FGViewMgr::do_bind()
 
   _tiedProperties.Tie("view-number", this,
                       &FGViewMgr::getView, &FGViewMgr::setView);
-  fgSetArchivable("/sim/current-view/view-number", false);
+  SGPropertyNode* view_number =
+    _tiedProperties.getRoot()->getNode("view-number");
+  view_number->setAttribute(SGPropertyNode::ARCHIVE, false);
+
+  // Keep view on reset/reinit
+  view_number->setAttribute(SGPropertyNode::PRESERVE, true);
 
   _tiedProperties.Tie("axes/long", this,
                       (double_getter)0, &FGViewMgr::setViewAxisLong);

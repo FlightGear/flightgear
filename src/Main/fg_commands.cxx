@@ -158,7 +158,7 @@ compare_values (SGPropertyNode * value1, SGPropertyNode * value2)
 }
 
 
-
+
 ////////////////////////////////////////////////////////////////////////
 // Command implementations.
 ////////////////////////////////////////////////////////////////////////
@@ -375,17 +375,25 @@ do_preferences_load (const SGPropertyNode * arg)
 }
 
 static void
-do_view_next( bool )
+do_view_next(bool do_it)
 {
+  // Only switch view if really requested to do so (and not for example while
+  // reset/reposition where /command/view/next is set to false)
+  if( do_it )
+  {
     globals->get_current_view()->setHeadingOffset_deg(0.0);
     globals->get_viewmgr()->next_view();
+  }
 }
 
 static void
-do_view_prev( bool )
+do_view_prev(bool do_it)
 {
+  if( do_it )
+  {
     globals->get_current_view()->setHeadingOffset_deg(0.0);
     globals->get_viewmgr()->prev_view();
+  }
 }
 
 /**
