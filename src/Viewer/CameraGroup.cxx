@@ -756,6 +756,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         return 0;
     }
     Camera* camera = new Camera;
+    camera->setName("windowCamera");
     camera->setAllowEventFocus(false);
     camera->setGraphicsContext(window->gc.get());
     camera->setViewport(new Viewport);
@@ -1020,6 +1021,7 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     const int cameraFlags = GUI | DO_INTERSECTION_TEST;
 
     CameraInfo* result = new CameraInfo(cameraFlags);
+    result->name = "GUI camera";
     // The camera group will always update the camera
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
 

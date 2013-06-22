@@ -409,6 +409,9 @@ FGRenderer::FGRenderer() :
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = updateRenderer;
 #endif
+    
+    // it's not the real root, whatever that means
+    mRoot->setName("fakeRoot"); 
 
    _numCascades = 4;
    _cascadeFar[0] = 5.f;
@@ -431,7 +434,10 @@ FGRenderer::~FGRenderer()
 void
 FGRenderer::splashinit( void ) {
     osgViewer::Viewer* viewer = getViewer();
+    viewer->setName("osgViewer");
     mRealRoot = dynamic_cast<osg::Group*>(viewer->getSceneData());
+    mRealRoot->setName("realRoot");
+    
     ref_ptr<Node> splashNode = fgCreateSplashNode();
     if (_classicalRenderer) {
         mRealRoot->addChild(splashNode.get());
@@ -639,10 +645,12 @@ FGRenderer::buildClassicalPipeline(CameraGroup* cgroup, unsigned flags, osg::Cam
     CameraInfo* info = new CameraInfo(flags);
     // The camera group will always update the camera
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
-
+    info->name = "classic";
+    
     Camera* farCamera = 0;
     if ((flags & (CameraGroup::GUI | CameraGroup::ORTHO)) == 0) {
         farCamera = new Camera;
+        farCamera->setName("farCamera");
         farCamera->setAllowEventFocus(camera->getAllowEventFocus());
         farCamera->setGraphicsContext(camera->getGraphicsContext());
         farCamera->setCullingMode(camera->getCullingMode());
@@ -1441,6 +1449,7 @@ FGRenderer::setupView( void )
     stateSet->setAttribute(hint);
 
     osg::Group* sceneGroup = new osg::Group;
+    sceneGroup->setName("rendererScene");
     sceneGroup->addChild(globals->get_scenery()->get_scene_graph());
     sceneGroup->setNodeMask(~simgear::BACKGROUND_BIT);
 
@@ -1460,6 +1469,7 @@ FGRenderer::setupView( void )
     // affect geometry anywhere in the scene graph that has its light
     // number enabled in a state set. 
     LightSource* lightSource = new LightSource;
+    lightSource->setName("FGLightSource");
     lightSource->getLight()->setDataVariance(Object::DYNAMIC);
     // relative because of CameraView being just a clever transform node
     lightSource->setReferenceFrame(osg::LightSource::RELATIVE_RF);
@@ -1468,6 +1478,7 @@ FGRenderer::setupView( void )
     mRealRoot->addChild(lightSource);
     // we need a white diffuse light for the phase of the moon
     osg::LightSource* sunLight = new osg::LightSource;
+    sunLight->setName("sunLightSource");
     sunLight->getLight()->setDataVariance(Object::DYNAMIC);
     sunLight->getLight()->setLightNum(1);
     sunLight->setUpdateCallback(new FGLightSourceUpdateCallback(true));
@@ -1477,6 +1488,7 @@ FGRenderer::setupView( void )
     // Hang a StateSet above the sky subgraph in order to turn off
     // light 0
     Group* skyGroup = new Group;
+    skyGroup->setName("rendererSkyParent");
     StateSet* skySS = skyGroup->getOrCreateStateSet();
     skySS->setMode(GL_LIGHT0, StateAttribute::OFF);
     skyGroup->addChild(_sky->getPreRoot());
@@ -1522,6 +1534,7 @@ FGRenderer::setupView( void )
     }
     
     osg::Switch* sw = new osg::Switch;
+    sw->setName("scenerySwitch");
     sw->setUpdateCallback(new FGScenerySwitchCallback);
     sw->addChild(mRoot.get());
     mRealRoot->addChild(sw);
@@ -1795,10 +1808,12 @@ FGRenderer::pick(std::vector<SGSceneryPick>& pickList, const osg::Vec2& windowPo
          ++hit) {
         const osg::NodePath& np = hit->nodePath;
         osg::NodePath::const_reverse_iterator npi;
+        
         for (npi = np.rbegin(); npi != np.rend(); ++npi) {
             SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
-            if (!ud)
+            if (!ud || (ud->getNumPickCallbacks() == 0))
                 continue;
+            
             for (unsigned i = 0; i < ud->getNumPickCallbacks(); ++i) {
                 SGPickCallback* pickCallback = ud->getPickCallback(i);
                 if (!pickCallback)
@@ -1812,9 +1827,10 @@ FGRenderer::pick(std::vector<SGSceneryPick>& pickList, const osg::Vec2& windowPo
 
                 sceneryPick.callback = pickCallback;
                 pickList.push_back(sceneryPick);
-            }
-        }
+            } // of installed pick callbacks iteration
+        } // of reverse node path walk
     }
+    
     return !pickList.empty();
 }
 

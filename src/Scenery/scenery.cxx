@@ -234,7 +234,7 @@ FGScenery::~FGScenery() {
 void FGScenery::init() {
     // Scene graph root
     scene_graph = new osg::Group;
-    scene_graph->setName( "Scene" );
+    scene_graph->setName( "FGScenery" );
 
     // Terrain branch
     terrain_branch = new osg::Group;

@@ -374,6 +374,7 @@ private:
 
 osg::Node* fgCreateSplashNode() {
   osg::Group* group = new osg::Group;
+    group->setName("splashGroup");
   group->setUpdateCallback(new FGSplashGroupUpdateCallback);
   return group;
 }
