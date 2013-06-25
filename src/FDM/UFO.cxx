@@ -151,7 +151,7 @@ void FGUFO::update( double dt ) {
     // angle of turn
     double turn_rate = sin(roll) * SGD_PI_4; // radians/sec
     double turn = turn_rate * time_step;
-    double yaw = fabs(rudder) < .2 ? 0.0 : rudder / (25 + fabs(speed) * .1);
+    double yaw = fabs(rudder) < .05 ? 0.0 : (rudder * (fabs(rudder) - 0.05) / 10);
 
     // update (lon/lat) position
     double lat2 = 0.0, lon2 = 0.0, az2 = 0.0;
