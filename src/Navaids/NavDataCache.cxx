@@ -1390,13 +1390,6 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
     if (delta != 0)
     {
       SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: rebuild required for " << path << ". Timestamps: " << modtime << " != " << path.modTime());
-      if (delta < 30)
-      {
-          // File system time stamp has slightly changed. It's unlikely that the user has managed to change a file, start fgfs,
-          // and then changed file again within x seconds - so it's suspicious...
-          SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache: suspicious file timestamp change. Please report this to FlightGear. "
-                  << "Delta: " << delta << ", Timestamps: " << modtime << ", " << path.modTime() << ", path: " << path);
-      }
     }
     else
     {
