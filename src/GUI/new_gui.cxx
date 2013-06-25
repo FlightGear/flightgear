@@ -76,6 +76,9 @@ NewGUI::init ()
     readDir(p);
     const std::string aircraft_dir(fgGetString("/sim/aircraft-dir"));
     readDir( SGPath(aircraft_dir, "gui/dialogs") );
+    
+    // Fix for http://code.google.com/p/flightgear-bugs/issues/detail?id=947
+    fgGetNode("sim/menubar")->setAttribute(SGPropertyNode::PRESERVE, true);
     _menubar->init();
 }
 

@@ -428,6 +428,8 @@ FGMultiplayMgr::init (void)
   mTimeUntilSend = 0.0;
   
   mCallsign = fgGetString("/sim/multiplay/callsign");
+  fgGetNode("/sim/multiplay/callsign", true)->setAttribute(SGPropertyNode::PRESERVE, true);
+    
   if ((!txAddress.empty()) && (txAddress!="0")) {
     mServer.set(txAddress.c_str(), txPort);
     if (strncmp (mServer.getHost(), "0.0.0.0", 8) == 0) {
