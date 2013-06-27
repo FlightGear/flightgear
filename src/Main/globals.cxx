@@ -252,6 +252,54 @@ void FGGlobals::set_fg_home (const std::string &home) {
     fg_home = tmp.realpath();
 }
 
+PathList FGGlobals::get_data_paths() const
+{
+    PathList r(additional_data_paths);
+    r.push_back(SGPath(fg_root));
+    return r;
+}
+
+PathList FGGlobals::get_data_paths(const std::string& suffix) const
+{
+    PathList r;
+    BOOST_FOREACH(SGPath p, get_data_paths()) {
+        p.append(suffix);
+        if (p.exists()) {
+            r.push_back(p);
+        }
+    }
+
+    return r;
+}
+
+void FGGlobals::append_data_path(const SGPath& path)
+{
+    if (!path.exists()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "adding non-existant data path:" << path);
+    }
+    
+    additional_data_paths.push_back(path);
+}
+
+SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
+{
+    BOOST_FOREACH(SGPath p, additional_data_paths) {
+        p.append(pathSuffix);
+        if (p.exists()) {
+            return p;
+        }
+    }
+    
+    SGPath rootPath(fg_root);
+    rootPath.append(pathSuffix);
+    if (rootPath.exists()) {
+        return rootPath;
+    }
+    
+    SG_LOG(SG_GENERAL, SG_WARN, "dir not found in any data path:" << pathSuffix);
+    return SGPath();
+}
+
 void FGGlobals::append_fg_scenery (const std::string &paths)
 {
 //    fg_scenery.clear();

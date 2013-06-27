@@ -51,9 +51,7 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/propertyObject.hxx>
-#include <simgear/xml/easyxml.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/misc/sg_dir.hxx>
 
 #include "SchedFlight.hxx"
 #include "Schedule.hxx"
@@ -77,7 +75,7 @@ typedef HeuristicMap::iterator             HeuristicMapIterator;
 
 class ScheduleParseThread;
 
-class FGTrafficManager : public SGSubsystem, public XMLVisitor
+class FGTrafficManager : public SGSubsystem
 {
 private:
   bool inited;
@@ -87,24 +85,11 @@ private:
   
   ScheduleVector scheduledAircraft;
   ScheduleVectorIterator currAircraft, currAircraftClosest;
-  vector<string> elementValueStack;
-
-  // record model paths which are missing, to avoid duplicate
-  // warnings when parsing traffic schedules.
-  std::set<std::string> missingModels;
-    
-  std::string mdl, livery, registration, callsign, fltrules, 
-    port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
-    repeat, acType, airline, m_class, flighttype, requiredAircraft, homePort;
-  int cruiseAlt;
-  int score, acCounter;
-  double radius, offset;
-  bool heavy;
     
   FGScheduledFlightMap flights;
 
   void readTimeTableFromFile(SGPath infilename);
-  void Tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ");
+    void Tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = " ");
 
   simgear::PropertyObject<bool> enabled, aiEnabled, realWxEnabled, metarValid;
   
@@ -129,20 +114,9 @@ public:
   void init();
   void update(double time);
 
-  FGScheduledFlightVecIterator getFirstFlight(const string &ref) { return flights[ref].begin(); }
-  FGScheduledFlightVecIterator getLastFlight(const string &ref) { return flights[ref].end(); }
+    FGScheduledFlightVecIterator getFirstFlight(const std::string &ref) { return flights[ref].begin(); }
+    FGScheduledFlightVecIterator getLastFlight(const std::string &ref) { return flights[ref].end(); }
 
-  void endAircraft();
-  
-  // Some overloaded virtual XMLVisitor members
-  virtual void startXML (); 
-  virtual void endXML   ();
-  virtual void startElement (const char * name, const XMLAttributes &atts);
-  virtual void endElement (const char * name);
-  virtual void data (const char * s, int len);
-  virtual void pi (const char * target, const char * data);
-  virtual void warning (const char * message, int line, int column);
-  virtual void error (const char * message, int line, int column);
 };
 
 #endif

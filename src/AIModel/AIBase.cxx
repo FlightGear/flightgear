@@ -28,6 +28,7 @@
 
 #include <simgear/compiler.h>
 
+#include <boost/foreach.hpp>
 #include <string>
 
 #include <osg/ref_ptr>
@@ -350,9 +351,11 @@ bool FGAIBase::init(bool search_in_AI_path)
         osg::ref_ptr<osgDB::ReaderWriter::Options> 
           opt(osg::clone(osgDB::Registry::instance()->getOptions(), osg::CopyOp::SHALLOW_COPY));
 
-        SGPath ai_path(globals->get_fg_root(), "AI");
-        opt->setDatabasePath(ai_path.str());
-        
+        osgDB::FilePathList& paths(opt->getDatabasePathList());
+        paths.clear();
+        BOOST_FOREACH(SGPath p, globals->get_data_paths("AI")) {
+            paths.push_back(p.str());
+        }
         f = osgDB::findDataFile(model_path, opt.get());
     }
 

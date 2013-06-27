@@ -33,6 +33,7 @@
 #include <string>
 
 typedef std::vector<std::string> string_list;
+typedef std::vector<SGPath> PathList;
 
 // Forward declarations
 
@@ -93,6 +94,11 @@ private:
     // Root of FlightGear data tree
     std::string fg_root;
 
+    /**
+     * locations to search for (non-scenery) data. 
+     */
+    PathList additional_data_paths;
+    
     // Users home directory for data
     std::string fg_home;
 
@@ -178,6 +184,26 @@ public:
     inline const std::string &get_fg_root () const { return fg_root; }
     void set_fg_root (const std::string &root);
 
+    /**
+     * Get list of data locations. fg_root is always the final item in the
+     * result.
+     */
+    PathList get_data_paths() const;
+    
+    /**
+     * Get data locations which contain the file path suffix. Eg pass ing
+     * 'AI/Traffic' to get all data paths which define <path>/AI/Traffic subdir
+     */
+    PathList get_data_paths(const std::string& suffix) const;
+    
+    void append_data_path(const SGPath& path);
+    
+    /**
+     * Given a path suffix (eg 'Textures' or 'AI/Traffic'), find the
+     * first data directory which defines it.
+     */
+    SGPath find_data_dir(const std::string& pathSuffix) const;
+    
     inline const std::string &get_fg_home () const { return fg_home; }
     void set_fg_home (const std::string &home);
 

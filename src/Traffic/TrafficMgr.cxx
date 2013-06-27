@@ -76,13 +76,19 @@ using std::endl;
 /**
  * Thread encapsulating parsing the traffic schedules. 
  */
-class ScheduleParseThread : public SGThread
+class ScheduleParseThread : public SGThread, public XMLVisitor
 {
 public:
   ScheduleParseThread(FGTrafficManager* traffic) :
     _trafficManager(traffic),
     _isFinished(false),
-    _cancelThread(false)
+    _cancelThread(false),
+    cruiseAlt(0),
+    score(0),
+    acCounter(0),
+    radius(0),
+    offset(0),
+    heavy(false)
   {
     
   }
@@ -100,9 +106,9 @@ public:
     }
   }
   
-  void setTrafficDir(const SGPath& trafficDirPath)
+  void setTrafficDirs(const PathList& dirs)
   {
-    _trafficDirPath = trafficDirPath;
+    _trafficDirPaths = dirs;
   }
   
   bool isFinished() const
@@ -113,35 +119,289 @@ public:
   
   virtual void run()
   {
-    SGTimeStamp st;
-    st.stamp();
-    
-    simgear::Dir trafficDir(_trafficDirPath);
-    simgear::PathList d = trafficDir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
-    
-    BOOST_FOREACH(SGPath p, d) {
-      simgear::Dir d2(p);
-      simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
-      BOOST_FOREACH(SGPath xml, trafficFiles) {
-        _trafficManager->parseSchedule(xml);
-        if (_cancelThread) {
-          return;
-        }
+      BOOST_FOREACH(SGPath p, _trafficDirPaths) {
+          parseTrafficDir(p);
+          if (_cancelThread) {
+              return;
+          }
       }
-    } // of sub-directories in AI/Traffic iteration
-    
-  //  _trafficManager->parseSchedules(schedulesToRead);
-    SG_LOG(SG_AI, SG_INFO, "parsing traffic schedules took:" << st.elapsedMSec() << "msec");
     
     SGGuard<SGMutex> g(_lock);
     _isFinished = true;
   }
+    
+    void startXML()
+    {
+        //cout << "Start XML" << endl;
+        requiredAircraft = "";
+        homePort = "";
+    }
+    
+    void endXML()
+    {
+        //cout << "End XML" << endl;
+    }
+    
+    void startElement(const char *name,
+                                        const XMLAttributes & atts)
+    {
+        const char *attval;
+        //cout << "Start element " << name << endl;
+        //FGTrafficManager temp;
+        //for (int i = 0; i < atts.size(); i++)
+        //  if (string(atts.getName(i)) == string("include"))
+        attval = atts.getValue("include");
+        if (attval != 0) {
+            //cout << "including " << attval << endl;
+            SGPath path = globals->get_fg_root();
+            path.append("/Traffic/");
+            path.append(attval);
+            readXML(path.str(), *this);
+        }
+        elementValueStack.push_back("");
+        //  cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl;
+    }
+    
+    void endElement(const char *name)
+    {
+        //cout << "End element " << name << endl;
+        const string & value = elementValueStack.back();
+        
+        if (!strcmp(name, "model"))
+            mdl = value;
+        else if (!strcmp(name, "livery"))
+            livery = value;
+        else if (!strcmp(name, "home-port"))
+            homePort = value;
+        else if (!strcmp(name, "registration"))
+            registration = value;
+        else if (!strcmp(name, "airline"))
+            airline = value;
+        else if (!strcmp(name, "actype"))
+            acType = value;
+        else if (!strcmp(name, "required-aircraft"))
+            requiredAircraft = value;
+        else if (!strcmp(name, "flighttype"))
+            flighttype = value;
+        else if (!strcmp(name, "radius"))
+            radius = atoi(value.c_str());
+        else if (!strcmp(name, "offset"))
+            offset = atoi(value.c_str());
+        else if (!strcmp(name, "performance-class"))
+            m_class = value;
+        else if (!strcmp(name, "heavy")) {
+            if (value == string("true"))
+                heavy = true;
+            else
+                heavy = false;
+        } else if (!strcmp(name, "callsign"))
+            callsign = value;
+        else if (!strcmp(name, "fltrules"))
+            fltrules = value;
+        else if (!strcmp(name, "port"))
+            port = value;
+        else if (!strcmp(name, "time"))
+            timeString = value;
+        else if (!strcmp(name, "departure")) {
+            departurePort = port;
+            departureTime = timeString;
+        } else if (!strcmp(name, "cruise-alt"))
+            cruiseAlt = atoi(value.c_str());
+        else if (!strcmp(name, "arrival")) {
+            arrivalPort = port;
+            arrivalTime = timeString;
+        } else if (!strcmp(name, "repeat"))
+            repeat = value;
+        else if (!strcmp(name, "flight")) {
+            // We have loaded and parsed all the information belonging to this flight
+            // so we temporarily store it.
+            //cerr << "Pusing back flight " << callsign << endl;
+            //cerr << callsign  <<  " " << fltrules     << " "<< departurePort << " " <<  arrivalPort << " "
+            //   << cruiseAlt <<  " " << departureTime<< " "<< arrivalTime   << " " << repeat << endl;
+            
+            //Prioritize aircraft
+            string apt = fgGetString("/sim/presets/airport-id");
+            //cerr << "Airport information: " << apt << " " << departurePort << " " << arrivalPort << endl;
+            //if (departurePort == apt) score++;
+            //flights.push_back(new FGScheduledFlight(callsign,
+            //                                fltrules,
+            //                                departurePort,
+            //                                arrivalPort,
+            //                                cruiseAlt,
+            //                                departureTime,
+            //                                arrivalTime,
+            //                                repeat));
+            if (requiredAircraft == "") {
+                char buffer[16];
+                snprintf(buffer, 16, "%d", acCounter);
+                requiredAircraft = buffer;
+            }
+            SG_LOG(SG_AI, SG_DEBUG, "Adding flight: " << callsign << " "
+                   << fltrules << " "
+                   << departurePort << " "
+                   << arrivalPort << " "
+                   << cruiseAlt << " "
+                   << departureTime << " "
+                   << arrivalTime << " " << repeat << " " << requiredAircraft);
+            // For database maintainance purposes, it may be convenient to
+            //
+            if (fgGetBool("/sim/traffic-manager/dumpdata") == true) {
+                SG_LOG(SG_AI, SG_ALERT, "Traffic Dump FLIGHT," << callsign << ","
+                       << fltrules << ","
+                       << departurePort << ","
+                       << arrivalPort << ","
+                       << cruiseAlt << ","
+                       << departureTime << ","
+                       << arrivalTime << "," << repeat << "," << requiredAircraft);
+            }
+            
+            _trafficManager->flights[requiredAircraft].push_back(new FGScheduledFlight(callsign,
+                                                                      fltrules,
+                                                                      departurePort,
+                                                                      arrivalPort,
+                                                                      cruiseAlt,
+                                                                      departureTime,
+                                                                      arrivalTime,
+                                                                      repeat,
+                                                                      requiredAircraft));
+            requiredAircraft = "";
+        } else if (!strcmp(name, "aircraft")) {
+            endAircraft();
+        }
+        
+        elementValueStack.pop_back();
+    }
+
+    
+    void data(const char *s, int len)
+    {
+        string token = string(s, len);
+        //cout << "Character data " << string(s,len) << endl;
+        elementValueStack.back() += token;
+    }
+    
+    void pi(const char *target, const char *data)
+    {
+        //cout << "Processing instruction " << target << ' ' << data << endl;
+    }
+    
+    void warning(const char *message, int line, int column)
+    {
+        SG_LOG(SG_IO, SG_WARN,
+               "Warning: " << message << " (" << line << ',' << column << ')');
+    }
+    
+    void error(const char *message, int line, int column)
+    {
+        SG_LOG(SG_IO, SG_ALERT,
+               "Error: " << message << " (" << line << ',' << column << ')');
+    }
+    
 private:
+    void endAircraft()
+    {
+        string isHeavy = heavy ? "true" : "false";
+        
+        if (missingModels.find(mdl) != missingModels.end()) {
+            // don't stat() or warn again
+            requiredAircraft = homePort = "";
+            return;
+        }
+        
+        if (!FGAISchedule::validModelPath(mdl)) {
+            missingModels.insert(mdl);
+            SG_LOG(SG_AI, SG_WARN, "TrafficMgr: Missing model path:" << mdl);
+            requiredAircraft = homePort = "";
+            return;
+        }
+        
+        int proportion =
+        (int) (fgGetDouble("/sim/traffic-manager/proportion") * 100);
+        int randval = rand() & 100;
+        if (randval > proportion) {
+            requiredAircraft = homePort = "";
+            return;
+        }
+        
+        if (fgGetBool("/sim/traffic-manager/dumpdata") == true) {
+            SG_LOG(SG_AI, SG_ALERT, "Traffic Dump AC," << homePort << "," << registration << "," << requiredAircraft
+                   << "," << acType << "," << livery << ","
+                   << airline << ","  << m_class << "," << offset << "," << radius << "," << flighttype << "," << isHeavy << "," << mdl);
+        }
+        
+        if (requiredAircraft == "") {
+            char buffer[16];
+            snprintf(buffer, 16, "%d", acCounter);
+            requiredAircraft = buffer;
+        }
+        if (homePort == "") {
+            homePort = departurePort;
+        }
+        
+        // caution, modifying the scheduled aircraft strucutre from the
+        // 'wrong' thread. This is safe becuase FGTrafficManager won't touch
+        // the structure while we exist.
+        _trafficManager->scheduledAircraft.push_back(new FGAISchedule(mdl,
+                                                     livery,
+                                                     homePort,
+                                                     registration,
+                                                     requiredAircraft,
+                                                     heavy,
+                                                     acType,
+                                                     airline,
+                                                     m_class,
+                                                     flighttype,
+                                                     radius, offset));
+        
+        acCounter++;
+        requiredAircraft = "";
+        homePort = "";
+        score = 0;
+    }
+    
+    void parseTrafficDir(const SGPath& path)
+    {
+        SGTimeStamp st;
+        st.stamp();
+        
+        simgear::Dir trafficDir(path);
+        simgear::PathList d = trafficDir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
+        
+        BOOST_FOREACH(SGPath p, d) {
+            simgear::Dir d2(p);
+            simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
+            BOOST_FOREACH(SGPath xml, trafficFiles) {                
+                readXML(xml.str(), *this);
+                if (_cancelThread) {
+                    return;
+                }
+            }
+        } // of sub-directories iteration
+        
+        SG_LOG(SG_AI, SG_INFO, "parsing traffic schedules took:" << st.elapsedMSec() << "msec");
+    }
+    
   FGTrafficManager* _trafficManager;
   mutable SGMutex _lock;
   bool _isFinished;
   bool _cancelThread;
-  SGPath _trafficDirPath;
+  PathList _trafficDirPaths;
+   
+// parser state
+    
+    string_list elementValueStack;
+    // record model paths which are missing, to avoid duplicate
+    // warnings when parsing traffic schedules.
+    std::set<std::string> missingModels;
+    
+    std::string mdl, livery, registration, callsign, fltrules,
+    port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
+    repeat, acType, airline, m_class, flighttype, requiredAircraft, homePort;
+    int cruiseAlt;
+    int score, acCounter;
+    double radius, offset;
+    bool heavy;
+
 };
 
 /******************************************************************************
@@ -151,12 +411,6 @@ FGTrafficManager::FGTrafficManager() :
   inited(false),
   doingInit(false),
   waitingMetarTime(0.0),
-  cruiseAlt(0),
-  score(0),
-  acCounter(0),
-  radius(0),
-  offset(0),
-  heavy(false),
   enabled("/sim/traffic-manager/enabled"),
   aiEnabled("/sim/ai/enabled"),
   realWxEnabled("/environment/realwx/enabled"),
@@ -224,14 +478,6 @@ void FGTrafficManager::shutdown()
     inited = false;
 }
 
-/// caution - this is run on the helper thread to improve startup
-/// responsiveness - do not access properties or global state from
-/// here, since there's no locking protection at all
-void FGTrafficManager::parseSchedule(const SGPath& path)
-{
-  readXML(path.str(), *this);
-}
-
 void FGTrafficManager::init()
 {
     if (!enabled) {
@@ -240,9 +486,15 @@ void FGTrafficManager::init()
 
     assert(!doingInit);
     doingInit = true;
-    if (string(fgGetString("/sim/traffic-manager/datafile")).empty()) {
+    if (string(fgGetString("/sim/traffic-manager/datafile")).empty()) {        
+        PathList dirs = globals->get_data_paths("AI/Traffic");
+        if (dirs.empty()) {
+            doingInit = false;
+            return;
+        }
+        
         scheduleParser.reset(new ScheduleParseThread(this));
-        scheduleParser->setTrafficDir(SGPath(globals->get_fg_root(), "AI/Traffic"));      
+        scheduleParser->setTrafficDirs(dirs);
         scheduleParser->start();
     } else {
         fgSetBool("/sim/traffic-manager/heuristics", false);
@@ -250,7 +502,10 @@ void FGTrafficManager::init()
         string ext = path.extension();
         if (path.extension() == "xml") {
             if (path.exists()) {
-                readXML(path.str(), *this);
+                // use a SchedulerParser to parse, but run it in this thread,
+                // i.e don't start it
+                ScheduleParseThread parser(this);
+                readXML(path.str(), parser);
             }
         } else if (path.extension() == "conf") {
             if (path.exists()) {
@@ -597,225 +852,3 @@ void FGTrafficManager::Tokenize(const string& str,
 }
 
 
-void FGTrafficManager::startXML()
-{
-    //cout << "Start XML" << endl;
-    requiredAircraft = "";
-    homePort = "";
-}
-
-void FGTrafficManager::endXML()
-{
-    //cout << "End XML" << endl;
-}
-
-void FGTrafficManager::startElement(const char *name,
-                                    const XMLAttributes & atts)
-{
-    const char *attval;
-    //cout << "Start element " << name << endl;
-    //FGTrafficManager temp;
-    //for (int i = 0; i < atts.size(); i++)
-    //  if (string(atts.getName(i)) == string("include"))
-    attval = atts.getValue("include");
-    if (attval != 0) {
-        //cout << "including " << attval << endl;
-        SGPath path = globals->get_fg_root();
-        path.append("/Traffic/");
-        path.append(attval);
-        readXML(path.str(), *this);
-    }
-    elementValueStack.push_back("");
-    //  cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl; 
-}
-
-void FGTrafficManager::endElement(const char *name)
-{
-    //cout << "End element " << name << endl;
-    const string & value = elementValueStack.back();
-
-    if (!strcmp(name, "model"))
-        mdl = value;
-    else if (!strcmp(name, "livery"))
-        livery = value;
-    else if (!strcmp(name, "home-port"))
-        homePort = value;
-    else if (!strcmp(name, "registration"))
-        registration = value;
-    else if (!strcmp(name, "airline"))
-        airline = value;
-    else if (!strcmp(name, "actype"))
-        acType = value;
-    else if (!strcmp(name, "required-aircraft"))
-        requiredAircraft = value;
-    else if (!strcmp(name, "flighttype"))
-        flighttype = value;
-    else if (!strcmp(name, "radius"))
-        radius = atoi(value.c_str());
-    else if (!strcmp(name, "offset"))
-        offset = atoi(value.c_str());
-    else if (!strcmp(name, "performance-class"))
-        m_class = value;
-    else if (!strcmp(name, "heavy")) {
-        if (value == string("true"))
-            heavy = true;
-        else
-            heavy = false;
-    } else if (!strcmp(name, "callsign"))
-        callsign = value;
-    else if (!strcmp(name, "fltrules"))
-        fltrules = value;
-    else if (!strcmp(name, "port"))
-        port = value;
-    else if (!strcmp(name, "time"))
-        timeString = value;
-    else if (!strcmp(name, "departure")) {
-        departurePort = port;
-        departureTime = timeString;
-    } else if (!strcmp(name, "cruise-alt"))
-        cruiseAlt = atoi(value.c_str());
-    else if (!strcmp(name, "arrival")) {
-        arrivalPort = port;
-        arrivalTime = timeString;
-    } else if (!strcmp(name, "repeat"))
-        repeat = value;
-    else if (!strcmp(name, "flight")) {
-        // We have loaded and parsed all the information belonging to this flight
-        // so we temporarily store it. 
-        //cerr << "Pusing back flight " << callsign << endl;
-        //cerr << callsign  <<  " " << fltrules     << " "<< departurePort << " " <<  arrivalPort << " "
-        //   << cruiseAlt <<  " " << departureTime<< " "<< arrivalTime   << " " << repeat << endl;
-
-        //Prioritize aircraft 
-        string apt = fgGetString("/sim/presets/airport-id");
-        //cerr << "Airport information: " << apt << " " << departurePort << " " << arrivalPort << endl;
-        //if (departurePort == apt) score++;
-        //flights.push_back(new FGScheduledFlight(callsign,
-        //                                fltrules,
-        //                                departurePort,
-        //                                arrivalPort,
-        //                                cruiseAlt,
-        //                                departureTime,
-        //                                arrivalTime,
-        //                                repeat));
-        if (requiredAircraft == "") {
-            char buffer[16];
-            snprintf(buffer, 16, "%d", acCounter);
-            requiredAircraft = buffer;
-        }
-        SG_LOG(SG_AI, SG_DEBUG, "Adding flight: " << callsign << " "
-               << fltrules << " "
-               << departurePort << " "
-               << arrivalPort << " "
-               << cruiseAlt << " "
-               << departureTime << " "
-               << arrivalTime << " " << repeat << " " << requiredAircraft);
-        // For database maintainance purposes, it may be convenient to
-        // 
-        if (fgGetBool("/sim/traffic-manager/dumpdata") == true) {
-             SG_LOG(SG_AI, SG_ALERT, "Traffic Dump FLIGHT," << callsign << ","
-                          << fltrules << ","
-                          << departurePort << ","
-                          << arrivalPort << ","
-                          << cruiseAlt << ","
-                          << departureTime << ","
-                          << arrivalTime << "," << repeat << "," << requiredAircraft);
-        }
-        flights[requiredAircraft].push_back(new FGScheduledFlight(callsign,
-                                                                  fltrules,
-                                                                  departurePort,
-                                                                  arrivalPort,
-                                                                  cruiseAlt,
-                                                                  departureTime,
-                                                                  arrivalTime,
-                                                                  repeat,
-                                                                  requiredAircraft));
-        requiredAircraft = "";
-    } else if (!strcmp(name, "aircraft")) {
-        endAircraft();
-    }
-    
-    elementValueStack.pop_back();
-}
-
-void FGTrafficManager::endAircraft()
-{
-    string isHeavy = heavy ? "true" : "false";
-
-    if (missingModels.find(mdl) != missingModels.end()) {
-    // don't stat() or warn again
-        requiredAircraft = homePort = "";
-        return;
-    }
-    
-    if (!FGAISchedule::validModelPath(mdl)) {
-        missingModels.insert(mdl);
-        SG_LOG(SG_AI, SG_WARN, "TrafficMgr: Missing model path:" << mdl);
-        requiredAircraft = homePort = "";
-        return;
-    }
-        
-    int proportion =
-        (int) (fgGetDouble("/sim/traffic-manager/proportion") * 100);
-    int randval = rand() & 100;
-    if (randval > proportion) {
-        requiredAircraft = homePort = "";
-        return;
-    }
-    
-    if (fgGetBool("/sim/traffic-manager/dumpdata") == true) {
-        SG_LOG(SG_AI, SG_ALERT, "Traffic Dump AC," << homePort << "," << registration << "," << requiredAircraft
-               << "," << acType << "," << livery << "," 
-               << airline << ","  << m_class << "," << offset << "," << radius << "," << flighttype << "," << isHeavy << "," << mdl);
-    }
-
-    if (requiredAircraft == "") {
-        char buffer[16];
-        snprintf(buffer, 16, "%d", acCounter);
-        requiredAircraft = buffer;
-    }
-    if (homePort == "") {
-        homePort = departurePort;
-    }
-    
-    scheduledAircraft.push_back(new FGAISchedule(mdl,
-                                                 livery,
-                                                 homePort,
-                                                 registration,
-                                                 requiredAircraft,
-                                                 heavy,
-                                                 acType,
-                                                 airline,
-                                                 m_class,
-                                                 flighttype,
-                                                 radius, offset));
-            
-    acCounter++;
-    requiredAircraft = "";
-    homePort = "";
-    score = 0;
-}
-    
-void FGTrafficManager::data(const char *s, int len)
-{
-    string token = string(s, len);
-    //cout << "Character data " << string(s,len) << endl;
-    elementValueStack.back() += token;
-}
-
-void FGTrafficManager::pi(const char *target, const char *data)
-{
-    //cout << "Processing instruction " << target << ' ' << data << endl;
-}
-
-void FGTrafficManager::warning(const char *message, int line, int column)
-{
-    SG_LOG(SG_IO, SG_WARN,
-           "Warning: " << message << " (" << line << ',' << column << ')');
-}
-
-void FGTrafficManager::error(const char *message, int line, int column)
-{
-    SG_LOG(SG_IO, SG_ALERT,
-           "Error: " << message << " (" << line << ',' << column << ')');
-}

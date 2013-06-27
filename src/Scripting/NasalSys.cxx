@@ -596,6 +596,16 @@ static naRef f_resolveDataPath(naContext c, naRef me, int argc, naRef* args)
     return naStr_fromdata(naNewString(c), const_cast<char*>(pdata), strlen(pdata));
 }
 
+static naRef f_findDataDir(naContext c, naRef me, int argc, naRef* args)
+{
+    if(argc != 1 || !naIsString(args[0]))
+        naRuntimeError(c, "bad arguments to findDataDir()");
+    
+    SGPath p = globals->find_data_dir(naStr_data(args[0]));
+    const char* pdata = p.c_str();
+    return naStr_fromdata(naNewString(c), const_cast<char*>(pdata), strlen(pdata));
+}
+
 class NasalCommand : public SGCommandMgr::Command
 {
 public:
@@ -724,6 +734,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "abort", f_abort },
     { "directory", f_directory },
     { "resolvepath", f_resolveDataPath },
+    { "finddata", f_findDataDir },
     { "parsexml", f_parsexml },
     { "systime", f_systime },
     { 0, 0 }
