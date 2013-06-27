@@ -50,7 +50,7 @@ private:
     std::string _name;
     int _num;
     SGPropertyNode_ptr _rootNode;
-    string _static_pressure;
+    std::string _static_pressure;
     double _tau;
     double _quantum;
     double _kollsman;

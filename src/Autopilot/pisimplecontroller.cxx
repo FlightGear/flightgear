@@ -34,7 +34,7 @@ PISimpleController::PISimpleController() :
 {
 }
 
-bool PISimpleController::configure( const string& nodeName, SGPropertyNode_ptr configNode)
+bool PISimpleController::configure( const std::string& nodeName, SGPropertyNode_ptr configNode)
 {
   if( AnalogComponent::configure( nodeName, configNode ) )
     return true;

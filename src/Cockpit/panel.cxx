@@ -98,10 +98,10 @@ get_aspect_adjust (int xsize, int ysize)
 // Implementation of FGTextureManager.
 ////////////////////////////////////////////////////////////////////////
 
-map<string,osg::ref_ptr<osg::Texture2D> > FGTextureManager::_textureMap;
+map<std::string,osg::ref_ptr<osg::Texture2D> > FGTextureManager::_textureMap;
 
 osg::Texture2D*
-FGTextureManager::createTexture (const string &relativePath, bool staticTexture)
+FGTextureManager::createTexture (const std::string &relativePath, bool staticTexture)
 {
   osg::Texture2D* texture = _textureMap[relativePath].get();
   if (texture == 0) {
@@ -118,7 +118,7 @@ FGTextureManager::createTexture (const string &relativePath, bool staticTexture)
 }
 
 
-void FGTextureManager::addTexture(const string &relativePath,
+void FGTextureManager::addTexture(const std::string &relativePath,
                                   osg::Texture2D* texture)
 {
     _textureMap[relativePath] = texture;
@@ -136,7 +136,7 @@ FGCroppedTexture::FGCroppedTexture ()
 }
 
 
-FGCroppedTexture::FGCroppedTexture (const string &path,
+FGCroppedTexture::FGCroppedTexture (const std::string &path,
 				    float minX, float minY,
 				    float maxX, float maxY)
   : _path(path), _texture(0),
@@ -1135,7 +1135,7 @@ FGTextLayer::setPointSize (float size)
 }
 
 void
-FGTextLayer::setFontName(const string &name)
+FGTextLayer::setFontName(const std::string &name)
 {
   _font_name = name + ".txf";
   FGFontCache *fc = globals->get_fontcache();
@@ -1170,7 +1170,7 @@ FGTextLayer::recalc_value () const
 // Implementation of FGTextLayer::Chunk.
 ////////////////////////////////////////////////////////////////////////
 
-FGTextLayer::Chunk::Chunk (const string &text, const string &fmt)
+FGTextLayer::Chunk::Chunk (const std::string &text, const std::string &fmt)
   : _type(FGTextLayer::TEXT), _fmt(fmt)
 {
   _text = text;
@@ -1179,7 +1179,7 @@ FGTextLayer::Chunk::Chunk (const string &text, const string &fmt)
 }
 
 FGTextLayer::Chunk::Chunk (ChunkType type, const SGPropertyNode * node,
-			   const string &fmt, float mult, float offs,
+                           const std::string &fmt, float mult, float offs,
                            bool truncation)
   : _type(type), _fmt(fmt), _mult(mult), _offs(offs), _trunc(truncation)
 {

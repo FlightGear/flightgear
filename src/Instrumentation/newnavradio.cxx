@@ -174,7 +174,7 @@ protected:
   PropertyObject<double> _trackDistance_m;
   PropertyObject<double> _slantDistance_m;
   PropertyObject<double> _heightAboveStation_ft;
-  PropertyObject<string> _ident;
+  PropertyObject<std::string> _ident;
   PropertyObject<bool>   _inRange;
   PropertyObject<double> _range_nm;
 };
@@ -378,7 +378,9 @@ double VOR::ServiceVolume::adjustRange( double height_ft, double nominalRange_nm
 }
 
 VOR::VOR( SGPropertyNode_ptr rootNode) :
-  NavRadioComponentWithIdent("vor", rootNode, new VORAudioIdent(getIdentString(string("vor"), rootNode->getIndex()))),
+    NavRadioComponentWithIdent("vor", rootNode,
+                               new VORAudioIdent(getIdentString(std::string("vor"),
+                                                                rootNode->getIndex()))),
   _totalTime(0.0),
   _radial( rootNode->getNode(_name,true)->getNode("radial",true) ),
   _radialInbound( rootNode->getNode(_name,true)->getNode("radial-inbound",true) )
@@ -523,7 +525,8 @@ double LOC::ServiceVolume::adjustRange( double azimuthAngle_deg, double elevatio
 }
 
 LOC::LOC( SGPropertyNode_ptr rootNode) :
-  NavRadioComponentWithIdent("loc", rootNode, new LOCAudioIdent(getIdentString(string("loc"), rootNode->getIndex()))),
+    NavRadioComponentWithIdent("loc", rootNode, new LOCAudioIdent(getIdentString(std::string("loc"),
+                                                                                 rootNode->getIndex()))),
   _serviceVolume(),
   _localizerOffset_norm( rootNode->getNode(_name,true)->getNode("offset-norm",true) ),
   _localizerWidth_deg( rootNode->getNode(_name,true)->getNode("width-deg",true) )
@@ -882,7 +885,7 @@ NavRadioImpl::NavRadioImpl( SGPropertyNode_ptr node ) :
   _legacy( this ),
   _name(node->getStringValue("name", "nav")),
   _num(node->getIntValue("number", 0)),
-  _rootNode(fgGetNode( string("/instrumentation/") + _name, _num, true)),
+  _rootNode(fgGetNode( std::string("/instrumentation/") + _name, _num, true)),
   _useFrequencyFormatter( _rootNode->getNode("frequencies/selected-mhz",true), _rootNode->getNode("frequencies/selected-mhz-fmt",true), 0.05 ),
   _stbyFrequencyFormatter( _rootNode->getNode("frequencies/standby-mhz",true), _rootNode->getNode("frequencies/standby-mhz-fmt",true), 0.05 ),
   _navIndicator(_rootNode),
@@ -968,7 +971,7 @@ void NavRadioImpl::Legacy::update( double dt )
         _navRadioImpl->_components[VOR_COMPONENT]->valid() || _navRadioImpl->_components[LOC_COMPONENT]->valid()  
         );
 
-    string ident = _navRadioImpl->_components[VOR_COMPONENT]->getIdent();
+    std::string ident = _navRadioImpl->_components[VOR_COMPONENT]->getIdent();
     if( ident.empty() )
         ident = _navRadioImpl->_components[LOC_COMPONENT]->getIdent();
 

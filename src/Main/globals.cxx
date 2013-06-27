@@ -220,7 +220,7 @@ FGGlobals::~FGGlobals()
 }
 
 // set the fg_root path
-void FGGlobals::set_fg_root (const string &root) {
+void FGGlobals::set_fg_root (const std::string &root) {
     SGPath tmp(root);
     fg_root = tmp.realpath();
 
@@ -247,12 +247,12 @@ void FGGlobals::set_fg_root (const string &root) {
 }
 
 // set the fg_home path
-void FGGlobals::set_fg_home (const string &home) {
+void FGGlobals::set_fg_home (const std::string &home) {
     SGPath tmp(home);
     fg_home = tmp.realpath();
 }
 
-void FGGlobals::append_fg_scenery (const string &paths)
+void FGGlobals::append_fg_scenery (const std::string &paths)
 {
 //    fg_scenery.clear();
     SGPropertyNode* sim = fgGetNode("/sim", true);

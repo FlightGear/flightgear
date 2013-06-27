@@ -179,7 +179,7 @@ void FGPanelNode::lazyLoad()
     _panel = fgReadPanel(_panelPath);
     if (!_panel) {
       SG_LOG(SG_COCKPIT, SG_WARN, "failed to read panel from:" << _panelPath);
-      _panelPath = string(); // don't keep trying to read
+      _panelPath = std::string(); // don't keep trying to read
       return;
     }
     

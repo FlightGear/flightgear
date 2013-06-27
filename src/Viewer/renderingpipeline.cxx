@@ -132,8 +132,8 @@ void findAttrOrHex(const simgear::effect::EffectPropertyMap<T>& pMap,
         try {
             result = boost::lexical_cast<T>(val);
         } catch (boost::bad_lexical_cast &) {
-            throw simgear::effect::BuilderException(string("findAttrOrHex: could not find attribute ")
-                                   + string(val));
+            throw simgear::effect::BuilderException(std::string("findAttrOrHex: could not find attribute ")
+                                                    + std::string(val));
         }
     }
 }

@@ -114,7 +114,7 @@ class TCAS : public SGSubsystem
 
     typedef struct
     {
-        string callsign;
+        std::string callsign;
         bool   verticalTA;
         bool   verticalRA;
         bool   horizontalTA;
@@ -134,7 +134,7 @@ class TCAS : public SGSubsystem
         double RAtimestamp;
     } TrackerTarget;
 
-    typedef map<string,TrackerTarget*> TrackerTargets;
+    typedef map<std::string,TrackerTarget*> TrackerTargets;
 
     typedef struct
     {
@@ -264,12 +264,12 @@ class TCAS : public SGSubsystem
 
         void update          (void);
 
-        void add             (const string callsign, int detectedLevel);
+        void add             (const std::string callsign, int detectedLevel);
         bool active          (void) { return haveTargets;}
         bool newTraffic      (void) { return newTargets;}
-        bool isTracked       (string callsign) { if (!haveTargets) return false;else return _isTracked(callsign);}
-        bool _isTracked      (string callsign);
-        int  getThreatLevel  (string callsign);
+        bool isTracked       (std::string callsign) { if (!haveTargets) return false;else return _isTracked(callsign);}
+        bool _isTracked      (std::string callsign);
+        int  getThreatLevel  (std::string callsign);
 
     private:
         TCAS*  tcas;
@@ -358,7 +358,7 @@ class TCAS : public SGSubsystem
     };
 
 private:
-    string              name;
+    std::string              name;
     int                 num;
     double              nextUpdateTime;
     int                 selfTestStep;

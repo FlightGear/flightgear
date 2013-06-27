@@ -301,7 +301,7 @@ int fgMainInit( int argc, char **argv ) {
     // now home is initialised, we can log to a file inside it
     logToFile();
     
-    string version;
+    std::string version;
 #ifdef FLIGHTGEAR_VERSION
     version = FLIGHTGEAR_VERSION;
 #else

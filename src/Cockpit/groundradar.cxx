@@ -221,7 +221,7 @@ void GroundRadar::updateTexture()
     osg::ref_ptr<osg::Vec3Array> taxi_vertices = new osg::Vec3Array;
     osg::ref_ptr<osg::Vec3Array> pvt_vertices = new osg::Vec3Array;
 
-    const string airport_name = _airport_node->getStringValue();
+    const std::string airport_name = _airport_node->getStringValue();
 
     const FGAirport* airport = fgFindAirportID(airport_name);
     if (airport == 0)

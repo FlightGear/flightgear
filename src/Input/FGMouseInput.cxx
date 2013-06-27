@@ -373,7 +373,7 @@ FGMouseInput::~FGMouseInput()
 void FGMouseInput::init()
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse bindings");
-  string module = "";
+  std::string module = "";
 
   SGPropertyNode * mouse_nodes = fgGetNode("/input/mice");
   if (mouse_nodes == 0) {

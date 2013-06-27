@@ -110,7 +110,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 {
     for ( int i = 0; i < config_props->nChildren(); ++i ) {
         SGPropertyNode *node = config_props->getChild(i);
-        string name = node->getName();
+        std::string name = node->getName();
 
         std::ostringstream subsystemname;
         subsystemname << "instrument-" << i << '-'
@@ -118,7 +118,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         int index = node->getIntValue("number", 0);
         if (index > 0)
             subsystemname << '['<< index << ']';
-        string id = subsystemname.str();
+        std::string id = subsystemname.str();
       
         if ( name == "adf" ) {
             set_subsystem( id, new ADF( node ), 0.15 );

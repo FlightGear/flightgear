@@ -65,7 +65,7 @@ FGAircraftModel::init ()
   osg::Node *model = NULL;
 
   _aircraft = new SGModelPlacement;
-  string path = fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
+  std::string path = fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
 
   SGPath resolvedPath = globals->resolve_aircraft_path(path);
   if (resolvedPath.isNull())

@@ -388,7 +388,7 @@ void fgSplashInit () {
 void fgSplashProgress( const char *identifier ) {
   const char* spinChars = "-\\|/";
   static int spin_count = 0;
-  string spin_status = string("");
+  std::string spin_status = std::string("");
 
   if (identifier[0] != 0)
       spin_status += spinChars[spin_count++ % 4];
@@ -398,7 +398,7 @@ void fgSplashProgress( const char *identifier ) {
   const char* text = "";
   if (identifier[0] != 0)
   {
-      string id = string("splash/") + identifier;
+      std::string id = std::string("splash/") + identifier;
       text = globals->get_locale()->getLocalizedString(id.c_str(),
                                                        "sys", "<incomplete language resource>");
   }

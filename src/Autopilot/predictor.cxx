@@ -34,7 +34,7 @@ Predictor::Predictor () :
 {
 }
 
-bool Predictor::configure(const string& nodeName, SGPropertyNode_ptr configNode)
+bool Predictor::configure(const std::string& nodeName, SGPropertyNode_ptr configNode)
 {
   SG_LOG( SG_AUTOPILOT, SG_BULK, "Predictor::configure(" << nodeName << ")" << endl );
 
