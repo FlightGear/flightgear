@@ -1741,13 +1741,11 @@ public:
     _plan(fp),
     _instance(ins)
   {
-    SG_LOG(SG_NASAL, SG_INFO, "created Nasal delegate for " << fp);
     _gcSaveKey = _nasal->gcSave(ins);
   }
   
   virtual ~NasalFPDelegate()
   {
-    SG_LOG(SG_NASAL, SG_INFO, "destroying Nasal delegate for " << _plan);
     _nasal->gcRelease(_gcSaveKey);
   }
   
