@@ -437,11 +437,24 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
       break;
     }
     case osgGA::GUIEventAdapter::RELEASE:
-      target_window = _last_push.lock();
-      _last_push.reset();
+    {
       event->type = sc::Event::MOUSE_UP;
-      break;
 
+      canvas::WindowPtr last_push = _last_push.lock();
+      _last_push.reset();
+
+      if( last_push && last_push != target_window )
+      {
+        // Leave old window
+        sc::MouseEventPtr leave_event( new sc::MouseEvent(*event) );
+        leave_event->type = sc::Event::MOUSE_LEAVE;
+        leave_event->client_pos -= toOsg(last_push->getPosition());
+        leave_event->local_pos = leave_event->client_pos;
+
+        last_push->handleEvent(leave_event);
+      }
+      break;
+    }
     case osgGA::GUIEventAdapter::DRAG:
       target_window = _last_push.lock();
       event->type = sc::Event::DRAG;
