@@ -251,6 +251,12 @@ FGRunwayRef FGAirport::findBestRunwayForHeading(double aHeading) const
     
   BOOST_FOREACH(PositionedID id, mRunways) {
     FGRunway* rwy = loadById<FGRunway>(id);
+    // bug http://code.google.com/p/flightgear-bugs/issues/detail?id=1149
+    // (and probably some other issues besides). 
+    if (rwy->type() == FGPositioned::HELIPAD) {
+      continue;
+    }
+      
     double good = rwy->score(lengthWeight, widthWeight, surfaceWeight);
     double dev = aHeading - rwy->headingDeg();
     SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
