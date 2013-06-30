@@ -33,6 +33,12 @@ public:
     
   void setProperty(SGPropertyNode_ptr prop);
 private:
+    enum Projection {
+        PROJECTION_SAMSON_FLAMSTEED,
+        PROJECTION_ORTHO_AZIMUTH,
+        PROJECTION_SPHERICAL
+    };
+    
   int zoom() const;
   
   void handlePan(int x, int y);
@@ -103,7 +109,7 @@ private:
   bool _hasPanned;
   
   SGGeod _projectionCenter;
-  bool _orthoAzimuthProject;
+  Projection _projection;
   SGGeod _aircraft;
   SGGeod _clickGeod;
   SGVec2d _hitLocation;
