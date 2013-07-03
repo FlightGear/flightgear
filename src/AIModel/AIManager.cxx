@@ -227,12 +227,20 @@ FGAIManager::update(double dt) {
   
     ai_list.erase(ai_list.begin(), firstAlive);
   
-    // every remaining item is alive
+    // every remaining item is alive. update them in turn, but guard for
+    // exceptions, so a single misbehaving AI object doesn't bring down the
+    // entire subsystem.
     BOOST_FOREACH(FGAIBase* base, ai_list) {
-        if (base->isa(FGAIBase::otThermal)) {
-            processThermal(dt, (FGAIThermal*)base);
-        } else {
-            base->update(dt);
+        try {
+            if (base->isa(FGAIBase::otThermal)) {
+                processThermal(dt, (FGAIThermal*)base);
+            } else {
+                base->update(dt);
+            }
+        } catch (sg_exception& e) {
+            SG_LOG(SG_AI, SG_WARN, "caught exception updating AI model:" << base->_getName()<< ", which will be killed."
+                   "\n\tError:" << e.getFormattedMessage());
+            base->setDie(true);
         }
     } // of live AI objects iteration
 

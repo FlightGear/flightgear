@@ -30,6 +30,8 @@
 #include <Airports/airport.hxx>
 #include <Main/util.hxx>
 
+#include <simgear/structure/exception.hxx>
+
 #include <string>
 #include <math.h>
 #include <time.h>
@@ -557,54 +559,61 @@ void FGAIAircraft::doGroundAltitude() {
 
 
 void FGAIAircraft::announcePositionToController() {
-    if (trafficRef) {
-        int leg = fp->getLeg();
+    if (!trafficRef) {
+        return;
+    }
+    
+    int leg = fp->getLeg();
+    if (!fp->getCurrentWaypoint()) {
+        // http://code.google.com/p/flightgear-bugs/issues/detail?id=1153
+        // throw an exception so this aircraft gets killed by the AIManager.
+        throw sg_exception("bad AI flight plan");
+    }
+    
+    // Note that leg has been incremented after creating the current leg, so we should use
+    // leg numbers here that are one higher than the number that is used to create the leg
+    // NOTE: As of July, 30, 2011, the post-creation leg updating is no longer happening. 
+    // Leg numbers are updated only once the aircraft passes the last waypoint created for that legm so I should probably just use
+    // the original leg numbers here!
+    switch (leg) {
+      case 1:              // Startup and Push back
+        if (trafficRef->getDepartureAirport()->getDynamics())
+            controller = trafficRef->getDepartureAirport()->getDynamics()->getStartupController();
+        break;
+    case 2:              // Taxiing to runway
+        if (trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork()->exists())
+            controller = trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork();
+        break;
+    case 3:              //Take off tower controller
+        if (trafficRef->getDepartureAirport()->getDynamics()) {
+            controller = trafficRef->getDepartureAirport()->getDynamics()->getTowerController();
+            towerController = 0;
+        } else {
+            cerr << "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId() << endl;
+        }
+        break;
+    case 6:
+         if (trafficRef->getDepartureAirport()->getDynamics()) {
+             controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
+          }
+          break;
+    case 8:              // Taxiing for parking
+        if (trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork()->exists())
+            controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork();
+        break;
+    default:
+        controller = 0;
+        break;
+    }
 
-        // Note that leg has been incremented after creating the current leg, so we should use
-        // leg numbers here that are one higher than the number that is used to create the leg
-        // NOTE: As of July, 30, 2011, the post-creation leg updating is no longer happening. 
-        // Leg numbers are updated only once the aircraft passes the last waypoint created for that legm so I should probably just use
-        // the original leg numbers here!
-        switch (leg) {
-          case 1:              // Startup and Push back
-            if (trafficRef->getDepartureAirport()->getDynamics())
-                controller = trafficRef->getDepartureAirport()->getDynamics()->getStartupController();
-            break;
-        case 2:              // Taxiing to runway
-            if (trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork()->exists())
-                controller = trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork();
-            break;
-        case 3:              //Take off tower controller
-            if (trafficRef->getDepartureAirport()->getDynamics()) {
-                controller = trafficRef->getDepartureAirport()->getDynamics()->getTowerController();
-                towerController = 0;
-            } else {
-                cerr << "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId() << endl;
-            }
-            break;
-        case 6:
-             if (trafficRef->getDepartureAirport()->getDynamics()) {
-                 controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
-              }
-              break;
-        case 8:              // Taxiing for parking
-            if (trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork()->exists())
-                controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork();
-            break;
-        default:
-            controller = 0;
-            break;
-        }
-
-        if ((controller != prevController) && (prevController != 0)) {
-            prevController->signOff(getID());
-        }
-        prevController = controller;
-        if (controller) {
-            controller->announcePosition(getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
-                                         _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
-                                         trafficRef->getRadius(), leg, this);
-        }
+    if ((controller != prevController) && (prevController != 0)) {
+        prevController->signOff(getID());
+    }
+    prevController = controller;
+    if (controller) {
+        controller->announcePosition(getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
+                                     _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
+                                     trafficRef->getRadius(), leg, this);
     }
 }
 
