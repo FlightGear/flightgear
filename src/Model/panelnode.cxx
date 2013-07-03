@@ -30,6 +30,19 @@
 
 using std::vector;
 
+class PanelTransformListener : public SGPropertyChangeListener
+{
+public:
+    PanelTransformListener(FGPanelNode* pn) : _panelNode(pn) {}
+    
+    virtual void valueChanged (SGPropertyNode * node)
+    {
+        _panelNode->dirtyBound();
+    }
+private:
+    FGPanelNode* _panelNode;
+};
+
 static FGPanelNode* global_panel = NULL;
 
 /**
@@ -158,7 +171,17 @@ FGPanelNode::FGPanelNode() :
   _resizeToViewport(true),
   _depthTest(false)
 {
-  commonInit();
+    // for a 2D panel, various options adjust the transformation
+    // matrix. We need to pass this data on to OSG or its bounding box
+    // will be stale, and picking will break.
+    // http://code.google.com/p/flightgear-bugs/issues/detail?id=864
+    PanelTransformListener* ptl = new PanelTransformListener(this);
+    fgGetNode("/sim/panel/x-offset", true)->addChangeListener(ptl);
+    fgGetNode("/sim/panel/y-offset", true)->addChangeListener(ptl);
+    fgGetNode("/sim/startup/xsize", true)->addChangeListener(ptl);
+    fgGetNode("/sim/startup/ysize", true)->addChangeListener(ptl);
+    
+    commonInit();
 }
 
 void FGPanelNode::setPanelPath(const std::string& panel)
@@ -205,7 +228,7 @@ void FGPanelNode::initWithPanel()
   float panelHeight = _panel->getHeight();
 
   _panel->getLogicalExtent(_xmin, _ymin, _xmax, _ymax);
-
+    
   // Now generate our transformation matrix.  For shorthand, use
   // "a", "b", and "c" as our corners and "m" as the matrix. The
   // vector u goes from a to b, v from a to c, and w is a
@@ -217,14 +240,18 @@ void FGPanelNode::initWithPanel()
   osg::Vec3 v = c - a;
   osg::Vec3 w = u^v;
 
-  osg::Matrix& m = _xform;
-  // Now generate a trivial basis transformation matrix.  If we want
-  // to map the three unit vectors to three arbitrary vectors U, V,
-  // and W, then those just become the columns of the 3x3 matrix.
-  m(0,0) = u[0]; m(1,0) = v[0]; m(2,0) = w[0]; m(3,0) = a[0];//    |Ux Vx Wx|
-  m(0,1) = u[1]; m(1,1) = v[1]; m(2,1) = w[1]; m(3,1) = a[1];//m = |Uy Vy Wy|
-  m(0,2) = u[2]; m(1,2) = v[2]; m(2,2) = w[2]; m(3,2) = a[2];//    |Uz Vz Wz|
-  m(0,3) = 0;    m(1,3) = 0;    m(2,3) = 0;    m(3,3) = 1;
+    osg::Matrix& m = _xform;
+    if ((u.length2() == 0.0) || (b.length2() == 0.0)) {
+        m.makeIdentity();
+    } else {
+        // Now generate a trivial basis transformation matrix.  If we want
+        // to map the three unit vectors to three arbitrary vectors U, V,
+        // and W, then those just become the columns of the 3x3 matrix.
+        m(0,0) = u[0]; m(1,0) = v[0]; m(2,0) = w[0]; m(3,0) = a[0];//    |Ux Vx Wx|
+        m(0,1) = u[1]; m(1,1) = v[1]; m(2,1) = w[1]; m(3,1) = a[1];//m = |Uy Vy Wy|
+        m(0,2) = u[2]; m(1,2) = v[2]; m(2,2) = w[2]; m(3,2) = a[2];//    |Uz Vz Wz|
+        m(0,3) = 0;    m(1,3) = 0;    m(2,3) = 0;    m(3,3) = 1;
+    }
 
   // The above matrix maps the unit (!) square to the panel
   // rectangle.  Postmultiply scaling factors that match the
@@ -347,10 +374,10 @@ static osg::Node* createGeode(FGPanelNode* panel)
     return geode;
 }
 
-class PanelPathObserver : public SGPropertyChangeListener
+class PanelPathListener : public SGPropertyChangeListener
 {
 public:
-  PanelPathObserver(FGPanelNode* pn) : _panelNode(pn) {}
+  PanelPathListener(FGPanelNode* pn) : _panelNode(pn) {}
   
   virtual void valueChanged (SGPropertyNode * node)
   {
@@ -359,6 +386,7 @@ public:
 private:
   FGPanelNode* _panelNode;
 };
+
 
 osg::Node* FGPanelNode::create2DPanelNode()
 {
@@ -370,10 +398,10 @@ osg::Node* FGPanelNode::create2DPanelNode()
 // need a global to keep the panel_mouse_click command working, sadly
   global_panel = drawable;
   
-  PanelPathObserver* ppo = new PanelPathObserver(drawable);
+  PanelPathListener* ppo = new PanelPathListener(drawable);
   pathNode->addChangeListener(ppo);
   drawable->setPanelPath(pathNode->getStringValue());
-  
+    
   osg::Switch* ps = new osg::Switch;
   osg::StateSet* stateSet = ps->getOrCreateStateSet();
   stateSet->setRenderBinDetails(1000, "RenderBin");
