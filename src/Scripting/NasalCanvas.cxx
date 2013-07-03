@@ -199,6 +199,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
   NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)
     .member("target", &sc::Event::getTarget)
+    .member("currentTarget", &sc::Event::getCurrentTarget)
     .method("stopPropagation", &sc::Event::stopPropagation);
   NasalMouseEvent::init("canvas.MouseEvent")
     .bases<NasalEvent>()
