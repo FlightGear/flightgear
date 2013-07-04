@@ -153,7 +153,6 @@ FGTrafficManager::FGTrafficManager() :
   waitingMetarTime(0.0),
   cruiseAlt(0),
   score(0),
-  runCount(0),
   acCounter(0),
   radius(0),
   offset(0),

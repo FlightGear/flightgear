@@ -265,7 +265,6 @@ hz2count(0),
 hz2cycles(0),    
 flight_phase(0xFF),
 req_hostid(true),
-req_raimap(false),
 req_sbas(false)
 {
     hal.clear();

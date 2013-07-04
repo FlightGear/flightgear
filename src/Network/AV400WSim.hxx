@@ -88,7 +88,6 @@ class FGAV400WSimB : public FGProtocol {
     string val;
     string sbas_sel;
     bool req_hostid;
-    bool req_raimap;
     bool req_sbas;
     int outputctr;
 

@@ -174,7 +174,6 @@ private:
 
     const char * _getTransponderCode() const;
 
-    bool reachedWaypoint;
     bool needsTaxiClearance;
     bool _needsGroundElevation;
     int  takeOffStatus; // 1 = joined departure cue; 2 = Passed DepartureHold waypoint; handover control to tower; 0 = any other state. 

@@ -162,7 +162,6 @@ protected:
 
 private:
     SGSharedPtr<SGCondition> _condition;
-    float       _disp_factor;   // Multiply by to get numbers shown on scale.
     float       _scr_span;      // Working values for draw;
     int         _digits;
 };

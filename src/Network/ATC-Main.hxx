@@ -50,8 +50,6 @@ class FGATCMain : public FGProtocol {
     SGPath output0_path;
     SGPath output1_path;
 
-    int board;
-
     int lock0_fd;
     int lock1_fd;
 

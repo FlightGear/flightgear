@@ -43,7 +43,6 @@ class FGATCOutput {
     int board;
     SGPath config;
 
-    int lock_fd;
     int analog_out_fd;
     int lamps_fd;
     int radio_display_fd;
