@@ -258,7 +258,11 @@ void YASim::update(double dt)
     // ground.  Calculate a cartesian coordinate for the ground under
     // us, find the (geodetic) up vector normal to the ground, then
     // use that to find the final (radius) term of the plane equation.
-    float v[3] = { get_uBody(), get_vBody(), get_wBody() };
+    float v[3] = {
+      static_cast<float>(get_uBody()),
+      static_cast<float>(get_vBody()),
+      static_cast<float>(get_wBody())
+    };
     float lat = get_Latitude(); float lon = get_Longitude();
     float alt = get_Altitude() * FT2M; double xyz[3];
     sgGeodToCart(lat, lon, alt, xyz);

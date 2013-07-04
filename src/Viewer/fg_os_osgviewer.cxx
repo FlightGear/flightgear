@@ -203,6 +203,7 @@ private:
       case osg::INFO:   return SG_INFO;
       case osg::DEBUG_FP:
       case osg::DEBUG_INFO: return SG_DEBUG;
+      default: return SG_ALERT;
     }
   }
 };
