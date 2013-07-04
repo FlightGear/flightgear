@@ -33,9 +33,6 @@ public:
     virtual ~FGSystemMgr ();
     bool build (SGPropertyNode* config_props);
 
-private:
-    bool enabled;
-
 };
 
 #endif // __SYSTEM_MGR_HXX

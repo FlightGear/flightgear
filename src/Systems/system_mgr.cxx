@@ -39,23 +39,15 @@ FGSystemMgr::FGSystemMgr ()
 
         SG_LOG( SG_SYSTEMS, SG_INFO, "Reading systems from "
                 << config.str() );
-        try {
-            readProperties( config.str(), config_props );
-
-            if ( build(config_props) ) {
-                enabled = true;
-            } else {
-                SG_LOG( SG_SYSTEMS, SG_ALERT,
-                        "Detected an internal inconsistency in the systems");
-                SG_LOG( SG_SYSTEMS, SG_ALERT,
-                        " system specification file.  See earlier errors for" );
-                SG_LOG( SG_SYSTEMS, SG_ALERT,
-                        " details.");
-                exit(-1);
-            }        
-        } catch (const sg_exception&) {
-            SG_LOG( SG_SYSTEMS, SG_ALERT, "Failed to load systems system model: "
-                    << config.str() );
+        try
+        {
+          readProperties( config.str(), config_props );
+          build(config_props);
+        }
+        catch( const sg_exception& )
+        {
+          SG_LOG( SG_SYSTEMS, SG_ALERT, "Failed to load systems system model: "
+                  << config.str() );
         }
 
     } else {
@@ -93,9 +85,7 @@ bool FGSystemMgr::build (SGPropertyNode* config_props)
             set_subsystem( "system" + temp.str(), 
                            new VacuumSystem( node ) );
         } else {
-            SG_LOG( SG_SYSTEMS, SG_ALERT, "Unknown top level section: " 
-                    << name );
-            return false;
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "Ignoring unknown system: " << name);
         }
     }
     return true;
