@@ -29,14 +29,19 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <simgear/compiler.h>
+#include <boost/foreach.hpp>
 
+#include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/strutils.hxx>
+
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
 
 #include "runwayprefs.hxx"
 #include "airport.hxx"
+
+using namespace simgear;
 
 /******************************************************************************
  * ScheduleTime
@@ -142,19 +147,20 @@ void RunwayList::set(const std::string & tp, const std::string & lst)
     //    timeOffsetInDays = weekday - currTimeDate->getGmt()->tm_wday;
     //    timeCopy = timeCopy.substr(2,timeCopy.length());
     type = tp;
-    std::string rwys = lst;
-    std::string rwy;
-    while (rwys.find(",") != std::string::npos) {
-        rwy = rwys.substr(0, rwys.find(",", 0));
-        //cerr << "adding runway [" << rwy << "] to the list " << endl;
-        preferredRunways.push_back(rwy);
-        rwys.erase(0, rwys.find(",", 0) + 1);   // erase until after the first whitspace
-        while (rwys[0] == ' ')
-            rwys.erase(0, 1);   // Erase any leading whitespaces.
-        //cerr << "Remaining runway list " << rwys;
+    
+    
+    
+    BOOST_FOREACH(std::string s, strutils::split(lst, ",")) {
+        std::string ident = strutils::strip(s);
+        
+        // http://code.google.com/p/flightgear-bugs/issues/detail?id=1137
+        if ((ident.size() < 2) || !isdigit(ident[1])) {
+            SG_LOG(SG_GENERAL, SG_INFO, "RunwayList::set: padding runway ident '" << ident << "'");
+            ident = "0" + ident;
+        }
+        
+        preferredRunways.push_back(ident);
     }
-    preferredRunways.push_back(rwys);
-    //exit(1);
 }
 
 void RunwayList::clear()
