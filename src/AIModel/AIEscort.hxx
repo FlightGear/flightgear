@@ -76,11 +76,9 @@ private:
     SGGeod _tgtpos;
 
     bool   _solid;           // if true ground is solid for FDMs
-    double _load_resistance; // ground load resistanc N/m^2
-    double _frictionFactor;  // dimensionless modifier for Coefficient of Friction
     double _tgtrange, _tgtbrg;
     double _ht_agl_ft;
-    double _relbrg, _truebrg;
+    double _relbrg;
     double _parent_speed, _parent_hdg;
     double _interval;
 

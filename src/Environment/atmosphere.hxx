@@ -136,9 +136,6 @@ public:
 
 
 class FGAltimeter : public FGAtmoCache {
-    double kset;
-    double kft;
-
 public:
     FGAltimeter();
     double reading_ft(const double p_inHg,

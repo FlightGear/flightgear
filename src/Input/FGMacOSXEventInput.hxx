@@ -119,7 +119,6 @@ private:
   long min;
   long max;
   float dead_band;
-  float saturate;
   long center;
   bool isRelative;
   bool isWrapping;

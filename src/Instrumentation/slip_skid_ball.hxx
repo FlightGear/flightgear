@@ -41,9 +41,6 @@ public:
     virtual void update (double dt);
 
 private:
-
-    double _last_pos;
-
     std::string _name;
     int _num;
 

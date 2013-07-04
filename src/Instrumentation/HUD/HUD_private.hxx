@@ -181,9 +181,7 @@ private:
     Format  _mode;
     std::string  _format;
     int     _halign;    // HUDText alignment
-    int     _blink;
     bool    _box;
-    float   _text_y;
     float   _pointer_width;
     float   _pointer_length;
 

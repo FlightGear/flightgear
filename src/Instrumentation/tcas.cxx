@@ -112,11 +112,6 @@ using std::string;
 #  include <Include/no_version.h>
 #endif
 
-#include <Main/fg_props.hxx>
-#include <Main/globals.hxx>
-#include "instrument_mgr.hxx"
-#include "tcas.hxx"
-
 ///////////////////////////////////////////////////////////////////////////////
 // debug switches /////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -126,6 +121,11 @@ using std::string;
 //#define FEATURE_TCAS_DEBUG_TRACKER
 //#define FEATURE_TCAS_DEBUG_ADV_GENERATOR
 //#define FEATURE_TCAS_DEBUG_PROPERTIES
+
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include "instrument_mgr.hxx"
+#include "tcas.hxx"
 
 ///////////////////////////////////////////////////////////////////////////////
 // constants //////////////////////////////////////////////////////////////////
@@ -532,9 +532,11 @@ TCAS::AdvisoryCoordinator::update(int mode)
 
 TCAS::ThreatDetector::ThreatDetector(TCAS* _tcas) :
     tcas(_tcas),
-    checkCount(0),
     pAlarmThresholds(&sensitivityLevels[0])
 {
+#ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
+    checkCount = 0;
+#endif
     self.radarAltFt = 0.0;
     unitTest();
 }

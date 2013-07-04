@@ -93,14 +93,12 @@ private:
     SGVec3d _transmitter;
     SGGeod _transmitter_pos;
     double _transmitter_range_nm;
-    double _transmitter_bearing_deg;
     double _transmitter_bias;
     std::string _transmitter_name;
     std::string _transmitter_ident;
 
     SGGeod _mobilePos;
     double _mobile_range_nm;
-    double _mobile_bearing_deg;
     double _mobile_bias;
     std::string _mobile_name;
     std::string _mobile_ident;

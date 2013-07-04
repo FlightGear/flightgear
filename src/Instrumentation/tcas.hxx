@@ -342,8 +342,10 @@ class TCAS : public SGSubsystem
         static const SensitivityLevel sensitivityLevels[];
 
         TCAS*              tcas;
+#ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
         int                checkCount;
-
+#endif // of FEATURE_TCAS_DEBUG_THREAT_DETECTOR
+        
         SGPropertyNode_ptr nodeLat;
         SGPropertyNode_ptr nodeLon;
         SGPropertyNode_ptr nodePressureAlt;

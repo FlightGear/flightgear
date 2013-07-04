@@ -223,7 +223,7 @@ void FGAtmoCache::check_model() {
 
 //////////////////////////////////////////////////////////////////////
 
-FGAltimeter::FGAltimeter() : kset(atmodel::ISA::P0), kft(0)
+FGAltimeter::FGAltimeter()
 {
     cache();
 }

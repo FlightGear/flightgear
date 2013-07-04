@@ -343,7 +343,7 @@ void HIDElement::generateEvent(FGMacOSXInputDevice *device, double dt, int modif
 }
 
 AxisElement::AxisElement(CFDictionaryRef element, long page, long usage) : 
-  HIDElement(element, page, usage), dead_band(0.00), saturate(1.0)
+  HIDElement(element, page, usage), dead_band(0.00)
 {
   min = GetHIDElementLongValue(element, kIOHIDElementMinKey); 
   max = GetHIDElementLongValue(element, kIOHIDElementMaxKey);
