@@ -208,9 +208,6 @@ private:
     //SGPropertyNode_ptr _p_spd_node;
 
     double _fuse_range;
-    double _distance;
-    double _dt_count;
-    double _next_run;
 
     std::string _submodel;
     std::string _force_path;
@@ -237,7 +234,6 @@ private:
 
     double _ground_offset;
     double _load_offset;
-    double _old_height;
 
     SGVec3d _oldcartoffsetPos;
     SGVec3d _oldcartPos;

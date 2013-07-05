@@ -67,8 +67,7 @@ _report_collision(false),
 _report_impact(false),
 _external_force(false),
 _report_expiry(false),
-_impact_report_node(fgGetNode("/ai/models/model-impact", true)),
-_old_height(0)
+_impact_report_node(fgGetNode("/ai/models/model-impact", true))
 
 {
     no_roll = false;
