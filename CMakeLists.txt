@@ -213,6 +213,10 @@ if(ENABLE_FGADMIN)
             list(APPEND FLTK_LIBRARIES ${X11_Xft_LIB})
         endif()
 
+        if ( CMAKE_DL_LIBS )
+            list(APPEND FLTK_LIBRARIES ${CMAKE_DL_LIBS})
+        endif()
+
         message(STATUS "Using FLTK_LIBRARIES for fgadmin: ${FLTK_LIBRARIES}")
     endif ( FLTK_FOUND )
 endif(ENABLE_FGADMIN)
