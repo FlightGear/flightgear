@@ -273,6 +273,12 @@ static void ATIScreenSizeHack()
     globals->get_renderer()->addCamera(hackCam, false);
 }
 
+// Propose NVIDIA Optimus to use high-end GPU
+#if defined(SG_WINDOWS)
+extern "C" {
+    _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
+#endif
 
 static void logToFile()
 {
