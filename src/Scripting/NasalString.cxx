@@ -60,6 +60,18 @@ static naRef f_starts_with(naContext c, naRef me, int argc, naRef* args)
 }
 
 /**
+ *  Check whether string ends with other string
+ */
+static naRef f_ends_with(naContext c, naRef me, int argc, naRef* args)
+{
+  nasal::CallContext ctx(c, argc, args);
+  nasal::String str = nasal::from_nasal<nasal::String>(c, me),
+                rhs = ctx.requireArg<nasal::String>(0);
+
+  return naNum( str.ends_with(rhs) );
+}
+
+/**
  *  Helper to convert size_t position/npos to Nasal conventions (-1 == npos)
  */
 naRef pos_to_nasal(size_t pos)
@@ -125,6 +137,7 @@ naRef initNasalString(naRef globals, naRef string, naContext c, naRef gcSave)
 
   string_module.set("compare", f_compare);
   string_module.set("starts_with", f_starts_with);
+  string_module.set("ends_with", f_ends_with);
   string_module.set("find", f_find);
   string_module.set("find_first_of", f_find_first_of);
   string_module.set("find_first_not_of", f_find_first_not_of);
