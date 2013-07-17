@@ -269,14 +269,24 @@ int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
       ++count;
     }
   }
-  
+
   // test if the current leg will be removed
   bool currentIsBeingCleared = false;
-  if (_currentIndex >= 0) {
-    currentIsBeingCleared = _legs[_currentIndex]->waypoint()->flag(flag);
+  Leg* curLeg = currentLeg();
+  if (curLeg) {
+    currentIsBeingCleared = curLeg->waypoint()->flag(flag);
   }
   
   _currentIndex -= count;
+    
+    // if we're clearing the current waypoint, what shall we do with the
+    // index? there's various options, but safest is to select no waypoint
+    // and let the use re-activate.
+    // http://code.google.com/p/flightgear-bugs/issues/detail?id=1134
+    if (currentIsBeingCleared) {
+        SG_LOG(SG_GENERAL, SG_INFO, "currentIsBeingCleared:" << currentIsBeingCleared);
+        _currentIndex = -1;
+    }
   
 // now delete and remove
   RemoveWithFlag rf(flag);
