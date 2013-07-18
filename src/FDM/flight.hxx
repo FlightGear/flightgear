@@ -93,6 +93,8 @@ namespace simgear {
 class BVHMaterial;
 }
 
+class SGIOChannel;
+
 /**
  * A little helper class to update the track if
  * the position has changed. In the constructor, 
@@ -134,6 +136,8 @@ private:
     // Have we bound to the property system
     bool bound;
 
+    double delta_loops;
+
     // periodic update management variable.  This is a scheme to run
     // the fdm with a fixed delta-t.  We control how many iteration of
     // the fdm to run with the fixed dt based on the elapsed time from
@@ -144,69 +148,79 @@ private:
     // next elapsed time.  This yields a small amount of temporal
     // jitter ( < dt ) but in practice seems to work well.
 
-    // CG position w.r.t. ref. point
-    SGVec3d d_cg_rp_body_v;
+    /**
+     * encapsulate primary flight state. This is packaged so it can be
+     * (unfortunately) sent directly over the wire by the 'native' FDM
+     * protocol.
+     */
+    struct FlightState
+    {
+        // CG position w.r.t. ref. point
+        SGVec3d d_cg_rp_body_v;
 
-    // Accelerations
-    SGVec3d v_dot_local_v;
-    SGVec3d v_dot_body_v;
-    SGVec3d a_cg_body_v;
-    SGVec3d a_pilot_body_v;
-    SGVec3d n_cg_body_v;
-    SGVec3d omega_dot_body_v;
+        // Accelerations
+        SGVec3d v_dot_local_v;
+        SGVec3d v_dot_body_v;
+        SGVec3d a_cg_body_v;
+        SGVec3d a_pilot_body_v;
+        SGVec3d n_cg_body_v;
+        SGVec3d omega_dot_body_v;
 
-    // Velocities
-    SGVec3d v_local_v;
-    SGVec3d v_local_rel_ground_v; // V rel w.r.t. earth surface
-    SGVec3d v_local_airmass_v;    // velocity of airmass (steady winds)
-    SGVec3d v_wind_body_v;        // Wind-relative velocities in body axis
+        // Velocities
+        SGVec3d v_local_v;
+        SGVec3d v_local_rel_ground_v; // V rel w.r.t. earth surface
+        SGVec3d v_local_airmass_v;    // velocity of airmass (steady winds)
+        SGVec3d v_wind_body_v;        // Wind-relative velocities in body axis
 
-    SGVec3d omega_body_v;         // Angular B rates
-    SGVec3d euler_rates_v;
-    SGVec3d geocentric_rates_v;   // Geocentric linear velocities
+        SGVec3d omega_body_v;         // Angular B rates
+        SGVec3d euler_rates_v;
+        SGVec3d geocentric_rates_v;   // Geocentric linear velocities
 
-    // Positions
-    SGGeod geodetic_position_v;
-    SGVec3d cartesian_position_v;
-    SGGeoc geocentric_position_v;
-    SGVec3d euler_angles_v;
+        // Positions
+        SGGeod geodetic_position_v;
+        SGVec3d cartesian_position_v;
+        SGGeoc geocentric_position_v;
+        SGVec3d euler_angles_v;
 
-    // Normal Load Factor
-    double nlf;
+        // Normal Load Factor
+        double nlf;
 
-    // Velocities
-    double v_rel_wind, v_true_kts;
-    double v_ground_speed, v_equiv_kts;
-    double v_calibrated_kts;
+        // Velocities
+        double v_rel_wind, v_true_kts;
+        double v_ground_speed, v_equiv_kts;
+        double v_calibrated_kts;
 
-    // Miscellaneious Quantities
-    double alpha, beta;  // in radians
-    double gamma_vert_rad;  // Flight path angles
-    double density, mach_number;
-    double static_pressure, total_pressure;
-    double dynamic_pressure;
-    double static_temperature, total_temperature;
-    double sea_level_radius, earth_position_angle;
-    double runway_altitude;
-    double climb_rate;                // in feet per second
-    double altitude_agl;
-    double track;
-    double delta_loops;
-
+        // Miscellaneious Quantities
+        double alpha, beta;  // in radians
+        double gamma_vert_rad;  // Flight path angles
+        double density, mach_number;
+        double static_pressure, total_pressure;
+        double dynamic_pressure;
+        double static_temperature, total_temperature;
+        double sea_level_radius, earth_position_angle;
+        double runway_altitude;
+        double climb_rate;                // in feet per second
+        double altitude_agl;
+        double track;
+    };
+    
+    FlightState _state;
+    
     simgear::TiedPropertyList _tiedProperties;
 
     // the ground cache object itself.
     FGGroundCache ground_cache;
 
     void set_A_X_pilot(double x)
-    { _set_Accels_Pilot_Body(x, a_pilot_body_v[1], a_pilot_body_v[2]); }
+    { _set_Accels_Pilot_Body(x, _state.a_pilot_body_v[1], _state.a_pilot_body_v[2]); }
     
     void set_A_Y_pilot(double y)
-    { _set_Accels_Pilot_Body(a_pilot_body_v[0], y, a_pilot_body_v[2]); }
+    { _set_Accels_Pilot_Body(_state.a_pilot_body_v[0], y, _state.a_pilot_body_v[2]); }
     
     void set_A_Z_pilot(double z)
-    { _set_Accels_Pilot_Body(a_pilot_body_v[0], a_pilot_body_v[1], z); }
+    { _set_Accels_Pilot_Body(_state.a_pilot_body_v[0], _state.a_pilot_body_v[1], z); }
     
+
 protected:
 
     int _calc_multiloop (double dt);
@@ -231,97 +245,97 @@ public:
     void _update_ground_elev_at_pos( void );
 
     inline void _set_CG_Position( double dx, double dy, double dz ) {
-	d_cg_rp_body_v[0] = dx;
-	d_cg_rp_body_v[1] = dy;
-	d_cg_rp_body_v[2] = dz;
+	_state.d_cg_rp_body_v[0] = dx;
+	_state.d_cg_rp_body_v[1] = dy;
+	_state.d_cg_rp_body_v[2] = dz;
     }
     inline void _set_Accels_Local( double north, double east, double down ) {
-	v_dot_local_v[0] = north;
-	v_dot_local_v[1] = east;
-	v_dot_local_v[2] = down;
+	_state.v_dot_local_v[0] = north;
+	_state.v_dot_local_v[1] = east;
+	_state.v_dot_local_v[2] = down;
     }
     inline void _set_Accels_Body( double u, double v, double w ) {
-	v_dot_body_v[0] = u;
-	v_dot_body_v[1] = v;
-	v_dot_body_v[2] = w;
+	_state.v_dot_body_v[0] = u;
+	_state.v_dot_body_v[1] = v;
+	_state.v_dot_body_v[2] = w;
     }
     inline void _set_Accels_CG_Body( double x, double y, double z ) {
-	a_cg_body_v[0] = x;
-	a_cg_body_v[1] = y;
-	a_cg_body_v[2] = z;
+	_state.a_cg_body_v[0] = x;
+	_state.a_cg_body_v[1] = y;
+	_state.a_cg_body_v[2] = z;
     }
     inline void _set_Accels_Pilot_Body( double x, double y, double z ) {
-	a_pilot_body_v[0] = x;
-	a_pilot_body_v[1] = y;
-	a_pilot_body_v[2] = z;
+	_state.a_pilot_body_v[0] = x;
+	_state.a_pilot_body_v[1] = y;
+	_state.a_pilot_body_v[2] = z;
     }
     inline void _set_Accels_CG_Body_N( double x, double y, double z ) {
-	n_cg_body_v[0] = x;
-	n_cg_body_v[1] = y;
-	n_cg_body_v[2] = z;
+	_state.n_cg_body_v[0] = x;
+	_state.n_cg_body_v[1] = y;
+	_state.n_cg_body_v[2] = z;
     }
-    void _set_Nlf(double n) { nlf=n;  }
+    void _set_Nlf(double n) { _state.nlf=n;  }
     inline void _set_Velocities_Local( double north, double east, double down ){
-	v_local_v[0] = north;
-	v_local_v[1] = east;
-	v_local_v[2] = down;
+	_state.v_local_v[0] = north;
+	_state.v_local_v[1] = east;
+	_state.v_local_v[2] = down;
     }
     inline void _set_Velocities_Ground(double north, double east, double down) {
-	v_local_rel_ground_v[0] = north;
-	v_local_rel_ground_v[1] = east;
-	v_local_rel_ground_v[2] = down;
+	_state.v_local_rel_ground_v[0] = north;
+	_state.v_local_rel_ground_v[1] = east;
+	_state.v_local_rel_ground_v[2] = down;
     }
     inline void _set_Velocities_Local_Airmass( double north, double east, 
 					      double down)
     {
-	v_local_airmass_v[0] = north;
-	v_local_airmass_v[1] = east;
-	v_local_airmass_v[2] = down;
+	_state.v_local_airmass_v[0] = north;
+	_state.v_local_airmass_v[1] = east;
+	_state.v_local_airmass_v[2] = down;
     }
     inline void _set_Velocities_Wind_Body( double u, double v, double w) {
-	v_wind_body_v[0] = u;
-	v_wind_body_v[1] = v;
-	v_wind_body_v[2] = w;
+	_state.v_wind_body_v[0] = u;
+	_state.v_wind_body_v[1] = v;
+	_state.v_wind_body_v[2] = w;
     }
-    inline void _set_V_rel_wind(double vt) { v_rel_wind = vt; }
-    inline void _set_V_ground_speed( double v) { v_ground_speed = v; }
-    inline void _set_V_equiv_kts( double kts ) { v_equiv_kts = kts; }
-    inline void _set_V_calibrated_kts( double kts ) { v_calibrated_kts = kts; }
+    inline void _set_V_rel_wind(double vt) { _state.v_rel_wind = vt; }
+    inline void _set_V_ground_speed( double v) { _state.v_ground_speed = v; }
+    inline void _set_V_equiv_kts( double kts ) { _state.v_equiv_kts = kts; }
+    inline void _set_V_calibrated_kts( double kts ) { _state.v_calibrated_kts = kts; }
     inline void _set_Omega_Body( double p, double q, double r ) {
-	omega_body_v[0] = p;
-	omega_body_v[1] = q;
-	omega_body_v[2] = r;
+	_state.omega_body_v[0] = p;
+	_state.omega_body_v[1] = q;
+	_state.omega_body_v[2] = r;
     }
     inline void _set_Euler_Rates( double phi, double theta, double psi ) {
-	euler_rates_v[0] = phi;
-	euler_rates_v[1] = theta;
-	euler_rates_v[2] = psi;
+	_state.euler_rates_v[0] = phi;
+	_state.euler_rates_v[1] = theta;
+	_state.euler_rates_v[2] = psi;
     }
     
     void set_Phi_dot_degps(double x)
     {
-      euler_rates_v[0] = x * SG_DEGREES_TO_RADIANS;
+      _state.euler_rates_v[0] = x * SG_DEGREES_TO_RADIANS;
     }
     
     void set_Theta_dot_degps(double x)
     {
-      euler_rates_v[1] = x * SG_DEGREES_TO_RADIANS;
+      _state.euler_rates_v[1] = x * SG_DEGREES_TO_RADIANS;
     }
     
     void set_Psi_dot_degps(double x)
     {
-      euler_rates_v[2] = x * SG_DEGREES_TO_RADIANS;
+      _state.euler_rates_v[2] = x * SG_DEGREES_TO_RADIANS;
     }
     
     inline void _set_Geocentric_Rates( double lat, double lon, double rad ) {
-	geocentric_rates_v[0] = lat;
-	geocentric_rates_v[1] = lon;
-	geocentric_rates_v[2] = rad;
+	_state.geocentric_rates_v[0] = lat;
+	_state.geocentric_rates_v[1] = lon;
+	_state.geocentric_rates_v[2] = rad;
     }
     inline void _set_Geocentric_Position( double lat, double lon, double rad ) {
-        geocentric_position_v.setLatitudeRad(lat);
-	geocentric_position_v.setLongitudeRad(lon);
-	geocentric_position_v.setRadiusFt(rad);
+        _state.geocentric_position_v.setLatitudeRad(lat);
+        _state.geocentric_position_v.setLongitudeRad(lon);
+        _state.geocentric_position_v.setRadiusFt(rad);
     }
 /*  Don't call _set_L[at|ong]itude() directly, use _set_Geodetic_Position() instead.
     These methods can't update the track.
@@ -334,42 +348,42 @@ public:
     }
 */
     inline void _set_Altitude(double altitude) {
-        geodetic_position_v.setElevationFt(altitude);
+        _state.geodetic_position_v.setElevationFt(altitude);
     }
     inline void _set_Altitude_AGL(double agl) {
-	altitude_agl = agl;
+        _state.altitude_agl = agl;
     }
     inline void _set_Geodetic_Position( double lat, double lon ) {
-        _set_Geodetic_Position( lat, lon, geodetic_position_v.getElevationFt());
+        _set_Geodetic_Position( lat, lon, _state.geodetic_position_v.getElevationFt());
     }
     inline void _set_Geodetic_Position( double lat, double lon, double alt ) {
-        TrackComputer tracker( track, geodetic_position_v );
-	geodetic_position_v.setLatitudeRad(lat);
-	geodetic_position_v.setLongitudeRad(lon);
-	geodetic_position_v.setElevationFt(alt);
+        TrackComputer tracker( _state.track, _state.geodetic_position_v );
+        _state.geodetic_position_v.setLatitudeRad(lat);
+        _state.geodetic_position_v.setLongitudeRad(lon);
+        _state.geodetic_position_v.setElevationFt(alt);
     }
     inline void _set_Euler_Angles( double phi, double theta, double psi ) {
-	euler_angles_v[0] = phi;
-	euler_angles_v[1] = theta;
-	euler_angles_v[2] = psi;
+	_state.euler_angles_v[0] = phi;
+	_state.euler_angles_v[1] = theta;
+	_state.euler_angles_v[2] = psi;
     }
     // FIXME, for compatibility with JSBSim
     inline void _set_T_Local_to_Body( int i, int j, double value) { }
-    inline void _set_Alpha( double a ) { alpha = a; }
-    inline void _set_Beta( double b ) { beta = b; }
+    inline void _set_Alpha( double a ) { _state.alpha = a; }
+    inline void _set_Beta( double b ) { _state.beta = b; }
     
-    inline void set_Alpha_deg( double a ) { alpha = a * SG_DEGREES_TO_RADIANS; }
+    inline void set_Alpha_deg( double a ) { _state.alpha = a * SG_DEGREES_TO_RADIANS; }
     
-    inline void _set_Gamma_vert_rad( double gv ) { gamma_vert_rad = gv; }
-    inline void _set_Density( double d ) { density = d; }
-    inline void _set_Mach_number( double m ) { mach_number = m; }
-    inline void _set_Static_pressure( double sp ) { static_pressure = sp; }
-    inline void _set_Static_temperature( double t ) { static_temperature = t; } 
-    inline void _set_Total_temperature( double tat ) { total_temperature = tat; } //JW
-    inline void _set_Sea_level_radius( double r ) { sea_level_radius = r; }
-    inline void _set_Earth_position_angle(double a) { earth_position_angle = a; }
-    inline void _set_Runway_altitude( double alt ) { runway_altitude = alt; }
-    inline void _set_Climb_Rate(double rate) { climb_rate = rate; }
+    inline void _set_Gamma_vert_rad( double gv ) { _state.gamma_vert_rad = gv; }
+    inline void _set_Density( double d ) { _state.density = d; }
+    inline void _set_Mach_number( double m ) { _state.mach_number = m; }
+    inline void _set_Static_pressure( double sp ) { _state.static_pressure = sp; }
+    inline void _set_Static_temperature( double t ) { _state.static_temperature = t; } 
+    inline void _set_Total_temperature( double tat ) { _state.total_temperature = tat; } //JW
+    inline void _set_Sea_level_radius( double r ) { _state.sea_level_radius = r; }
+    inline void _set_Earth_position_angle(double a) {_state.earth_position_angle = a; }
+    inline void _set_Runway_altitude( double alt ) { _state.runway_altitude = alt; }
+    inline void _set_Climb_Rate(double rate) { _state.climb_rate = rate; }
 
 public:
   
@@ -384,6 +398,9 @@ public:
     virtual bool ToggleDataLogging(bool state) { return false; }
     virtual bool ToggleDataLogging(void) { return false; }
 
+    bool readState(SGIOChannel* io);
+    bool writeState(SGIOChannel* io);
+    
     // Define the various supported flight models (many not yet implemented)
     enum {
 	// Magic Carpet mode
@@ -439,23 +456,23 @@ public:
     virtual void set_Mach_number(double mach);
     virtual void set_Velocities_Local( double north, double east, double down );
     inline void set_V_north (double north) { 
-      set_Velocities_Local(north, v_local_v[1], v_local_v[2]);
+      set_Velocities_Local(north, _state.v_local_v[1], _state.v_local_v[2]);
     }
     inline void set_V_east (double east) { 
-      set_Velocities_Local(v_local_v[0], east, v_local_v[2]);
+      set_Velocities_Local(_state.v_local_v[0], east, _state.v_local_v[2]);
     }
     inline void set_V_down (double down) { 
-      set_Velocities_Local(v_local_v[0], v_local_v[1], down);
+      set_Velocities_Local(_state.v_local_v[0], _state.v_local_v[1], down);
     }
     virtual void set_Velocities_Wind_Body( double u, double v, double w);
     virtual void set_uBody (double uBody) { 
-      set_Velocities_Wind_Body(uBody, v_wind_body_v[1], v_wind_body_v[2]);
+      set_Velocities_Wind_Body(uBody, _state.v_wind_body_v[1], _state.v_wind_body_v[2]);
     }
     virtual void set_vBody (double vBody) { 
-      set_Velocities_Wind_Body(v_wind_body_v[0], vBody, v_wind_body_v[2]);
+      set_Velocities_Wind_Body(_state.v_wind_body_v[0], vBody, _state.v_wind_body_v[2]);
     }
     virtual void set_wBody (double wBody) {
-      set_Velocities_Wind_Body(v_wind_body_v[0], v_wind_body_v[1], wBody);
+      set_Velocities_Wind_Body(_state.v_wind_body_v[0], _state.v_wind_body_v[1], wBody);
     }
     
     // Euler angles 
@@ -496,129 +513,129 @@ public:
     // ========== Mass properties and geometry values ==========
 
     // CG position w.r.t. ref. point
-    inline double get_Dx_cg() const { return d_cg_rp_body_v[0]; }
-    inline double get_Dy_cg() const { return d_cg_rp_body_v[1]; }
-    inline double get_Dz_cg() const { return d_cg_rp_body_v[2]; }
+    inline double get_Dx_cg() const { return _state.d_cg_rp_body_v[0]; }
+    inline double get_Dy_cg() const { return _state.d_cg_rp_body_v[1]; }
+    inline double get_Dz_cg() const { return _state.d_cg_rp_body_v[2]; }
 
     // ========== Accelerations ==========
 
-    inline double get_V_dot_north() const { return v_dot_local_v[0]; }
-    inline double get_V_dot_east() const { return v_dot_local_v[1]; }
-    inline double get_V_dot_down() const { return v_dot_local_v[2]; }
+    inline double get_V_dot_north() const { return _state.v_dot_local_v[0]; }
+    inline double get_V_dot_east() const { return _state.v_dot_local_v[1]; }
+    inline double get_V_dot_down() const { return _state.v_dot_local_v[2]; }
 
-    inline double get_U_dot_body() const { return v_dot_body_v[0]; }
-    inline double get_V_dot_body() const { return v_dot_body_v[1]; }
-    inline double get_W_dot_body() const { return v_dot_body_v[2]; }
+    inline double get_U_dot_body() const { return _state.v_dot_body_v[0]; }
+    inline double get_V_dot_body() const { return _state.v_dot_body_v[1]; }
+    inline double get_W_dot_body() const { return _state.v_dot_body_v[2]; }
 
-    inline double get_A_X_cg() const { return a_cg_body_v[0]; }
-    inline double get_A_Y_cg() const { return a_cg_body_v[1]; }
-    inline double get_A_Z_cg() const { return a_cg_body_v[2]; }
+    inline double get_A_X_cg() const { return _state.a_cg_body_v[0]; }
+    inline double get_A_Y_cg() const { return _state.a_cg_body_v[1]; }
+    inline double get_A_Z_cg() const { return _state.a_cg_body_v[2]; }
 
-    inline double get_A_X_pilot() const { return a_pilot_body_v[0]; }
-    inline double get_A_Y_pilot() const { return a_pilot_body_v[1]; }
-    inline double get_A_Z_pilot() const { return a_pilot_body_v[2]; }
+    inline double get_A_X_pilot() const { return _state.a_pilot_body_v[0]; }
+    inline double get_A_Y_pilot() const { return _state.a_pilot_body_v[1]; }
+    inline double get_A_Z_pilot() const { return _state.a_pilot_body_v[2]; }
 
-    inline double get_N_X_cg() const { return n_cg_body_v[0]; }
-    inline double get_N_Y_cg() const { return n_cg_body_v[1]; }
-    inline double get_N_Z_cg() const { return n_cg_body_v[2]; }
+    inline double get_N_X_cg() const { return _state.n_cg_body_v[0]; }
+    inline double get_N_Y_cg() const { return _state.n_cg_body_v[1]; }
+    inline double get_N_Z_cg() const { return _state.n_cg_body_v[2]; }
 
-    inline double get_Nlf(void) const { return nlf; }
+    inline double get_Nlf(void) const { return _state.nlf; }
 
     // ========== Velocities ==========
 
-    inline double get_V_north() const { return v_local_v[0]; }
-    inline double get_V_east() const { return v_local_v[1]; }
-    inline double get_V_down() const { return v_local_v[2]; }
-    inline double get_uBody () const { return v_wind_body_v[0]; }
-    inline double get_vBody () const { return v_wind_body_v[1]; }
-    inline double get_wBody () const { return v_wind_body_v[2]; }
+    inline double get_V_north() const { return _state.v_local_v[0]; }
+    inline double get_V_east() const { return _state.v_local_v[1]; }
+    inline double get_V_down() const { return _state.v_local_v[2]; }
+    inline double get_uBody () const { return _state.v_wind_body_v[0]; }
+    inline double get_vBody () const { return _state.v_wind_body_v[1]; }
+    inline double get_wBody () const { return _state.v_wind_body_v[2]; }
 
     // Please dont comment these out. fdm=ada uses these (see
     // cockpit.cxx) --->
     inline double get_V_north_rel_ground() const {
-        return v_local_rel_ground_v[0];
+        return _state.v_local_rel_ground_v[0];
     }
     inline double get_V_east_rel_ground() const {
-        return v_local_rel_ground_v[1];
+        return _state.v_local_rel_ground_v[1];
     }
     inline double get_V_down_rel_ground() const {
-        return v_local_rel_ground_v[2];
+        return _state.v_local_rel_ground_v[2];
     }
     // <--- fdm=ada uses these (see cockpit.cxx)
 
-    inline double get_V_north_airmass() const { return v_local_airmass_v[0]; }
-    inline double get_V_east_airmass() const { return v_local_airmass_v[1]; }
-    inline double get_V_down_airmass() const { return v_local_airmass_v[2]; }
+    inline double get_V_north_airmass() const { return _state.v_local_airmass_v[0]; }
+    inline double get_V_east_airmass() const { return _state.v_local_airmass_v[1]; }
+    inline double get_V_down_airmass() const { return _state.v_local_airmass_v[2]; }
 
-    inline double get_U_body() const { return v_wind_body_v[0]; }
-    inline double get_V_body() const { return v_wind_body_v[1]; }
-    inline double get_W_body() const { return v_wind_body_v[2]; }
+    inline double get_U_body() const { return _state.v_wind_body_v[0]; }
+    inline double get_V_body() const { return _state.v_wind_body_v[1]; }
+    inline double get_W_body() const { return _state.v_wind_body_v[2]; }
 
-    inline double get_V_rel_wind() const { return v_rel_wind; }
+    inline double get_V_rel_wind() const { return _state.v_rel_wind; }
 
-    inline double get_V_true_kts() const { return v_true_kts; }
+    inline double get_V_true_kts() const { return _state.v_true_kts; }
 
-    inline double get_V_ground_speed() const { return v_ground_speed; }
-    inline double get_V_ground_speed_kt() const { return v_ground_speed * SG_FEET_TO_METER * 3600 * SG_METER_TO_NM; }
-    inline void   set_V_ground_speed_kt(double ground_speed) { v_ground_speed = ground_speed / ( SG_FEET_TO_METER * 3600 * SG_METER_TO_NM); }
+    inline double get_V_ground_speed() const { return _state.v_ground_speed; }
+    inline double get_V_ground_speed_kt() const { return _state.v_ground_speed * SG_FEET_TO_METER * 3600 * SG_METER_TO_NM; }
+    inline void   set_V_ground_speed_kt(double ground_speed) { _state.v_ground_speed = ground_speed / ( SG_FEET_TO_METER * 3600 * SG_METER_TO_NM); }
 
-    inline double get_V_equiv_kts() const { return v_equiv_kts; }
+    inline double get_V_equiv_kts() const { return _state.v_equiv_kts; }
 
-    inline double get_V_calibrated_kts() const { return v_calibrated_kts; }
+    inline double get_V_calibrated_kts() const { return _state.v_calibrated_kts; }
 
-    inline double get_P_body() const { return omega_body_v[0]; }
-    inline double get_Q_body() const { return omega_body_v[1]; }
-    inline double get_R_body() const { return omega_body_v[2]; }
+    inline double get_P_body() const { return _state.omega_body_v[0]; }
+    inline double get_Q_body() const { return _state.omega_body_v[1]; }
+    inline double get_R_body() const { return _state.omega_body_v[2]; }
 
-    inline double get_Phi_dot() const { return euler_rates_v[0]; }
-    inline double get_Theta_dot() const { return euler_rates_v[1]; }
-    inline double get_Psi_dot() const { return euler_rates_v[2]; }
-    inline double get_Phi_dot_degps() const { return euler_rates_v[0] * SGD_RADIANS_TO_DEGREES; }
-    inline double get_Theta_dot_degps() const { return euler_rates_v[1] * SGD_RADIANS_TO_DEGREES; }
-    inline double get_Psi_dot_degps() const { return euler_rates_v[2] * SGD_RADIANS_TO_DEGREES; }
+    inline double get_Phi_dot() const { return _state.euler_rates_v[0]; }
+    inline double get_Theta_dot() const { return _state.euler_rates_v[1]; }
+    inline double get_Psi_dot() const { return _state.euler_rates_v[2]; }
+    inline double get_Phi_dot_degps() const { return _state.euler_rates_v[0] * SGD_RADIANS_TO_DEGREES; }
+    inline double get_Theta_dot_degps() const { return _state.euler_rates_v[1] * SGD_RADIANS_TO_DEGREES; }
+    inline double get_Psi_dot_degps() const { return _state.euler_rates_v[2] * SGD_RADIANS_TO_DEGREES; }
 
-    inline double get_Latitude_dot() const { return geocentric_rates_v[0]; }
-    inline double get_Longitude_dot() const { return geocentric_rates_v[1]; }
-    inline double get_Radius_dot() const { return geocentric_rates_v[2]; }
+    inline double get_Latitude_dot() const { return _state.geocentric_rates_v[0]; }
+    inline double get_Longitude_dot() const { return _state.geocentric_rates_v[1]; }
+    inline double get_Radius_dot() const { return _state.geocentric_rates_v[2]; }
 
     // ========== Positions ==========
 
     inline double get_Lat_geocentric() const {
-        return geocentric_position_v.getLatitudeRad();
+        return _state.geocentric_position_v.getLatitudeRad();
     }
     inline double get_Lon_geocentric() const {
-	return geocentric_position_v.getLongitudeRad();
+	return _state.geocentric_position_v.getLongitudeRad();
     }
     inline double get_Radius_to_vehicle() const {
-	return geocentric_position_v.getRadiusFt();
+	return _state.geocentric_position_v.getRadiusFt();
     }
 
-    const SGGeod& getPosition() const { return geodetic_position_v; }
-    const SGGeoc& getGeocPosition() const { return geocentric_position_v; }
-    const SGVec3d& getCartPosition() const { return cartesian_position_v; }
+    const SGGeod& getPosition() const { return _state.geodetic_position_v; }
+    const SGGeoc& getGeocPosition() const { return _state.geocentric_position_v; }
+    const SGVec3d& getCartPosition() const { return _state.cartesian_position_v; }
 
     inline double get_Latitude() const {
-        return geodetic_position_v.getLatitudeRad();
+        return _state.geodetic_position_v.getLatitudeRad();
     }
     inline double get_Longitude() const {
-        return geodetic_position_v.getLongitudeRad();
+        return _state.geodetic_position_v.getLongitudeRad();
     }
     inline double get_Altitude() const {
-        return geodetic_position_v.getElevationFt();
+        return _state.geodetic_position_v.getElevationFt();
     }
-    inline double get_Altitude_AGL(void) const { return altitude_agl; }
-    inline double get_Track(void) const { return track; }
+    inline double get_Altitude_AGL(void) const { return _state.altitude_agl; }
+    inline double get_Track(void) const { return _state.track; }
 
     inline double get_Latitude_deg () const {
-      return geodetic_position_v.getLatitudeDeg();
+      return _state.geodetic_position_v.getLatitudeDeg();
     }
     inline double get_Longitude_deg () const {
-      return geodetic_position_v.getLongitudeDeg();
+      return _state.geodetic_position_v.getLongitudeDeg();
     }
 
-    inline double get_Phi() const { return euler_angles_v[0]; }
-    inline double get_Theta() const { return euler_angles_v[1]; }
-    inline double get_Psi() const { return euler_angles_v[2]; }
+    inline double get_Phi() const { return _state.euler_angles_v[0]; }
+    inline double get_Theta() const { return _state.euler_angles_v[1]; }
+    inline double get_Psi() const { return _state.euler_angles_v[2]; }
     inline double get_Phi_deg () const { return get_Phi() * SGD_RADIANS_TO_DEGREES; }
     inline double get_Theta_deg () const { return get_Theta() * SGD_RADIANS_TO_DEGREES; }
     inline double get_Psi_deg () const { return get_Psi() * SGD_RADIANS_TO_DEGREES; }
@@ -626,34 +643,34 @@ public:
 
     // ========== Miscellaneous quantities ==========
 
-    inline double get_Alpha() const { return alpha; }
-    inline double get_Alpha_deg() const { return alpha * SGD_RADIANS_TO_DEGREES; }
-    inline double get_Beta() const { return beta; }
-    inline double get_Beta_deg() const { return beta * SGD_RADIANS_TO_DEGREES; }
-    inline double get_Gamma_vert_rad() const { return gamma_vert_rad; }
+    inline double get_Alpha() const { return _state.alpha; }
+    inline double get_Alpha_deg() const { return _state.alpha * SGD_RADIANS_TO_DEGREES; }
+    inline double get_Beta() const { return _state.beta; }
+    inline double get_Beta_deg() const { return _state.beta * SGD_RADIANS_TO_DEGREES; }
+    inline double get_Gamma_vert_rad() const { return _state.gamma_vert_rad; }
 
-    inline double get_Density() const { return density; }
-    inline double get_Mach_number() const { return mach_number; }
+    inline double get_Density() const { return _state.density; }
+    inline double get_Mach_number() const { return _state.mach_number; }
 
-    inline double get_Static_pressure() const { return static_pressure; }
-    inline double get_Total_pressure() const { return total_pressure; }
-    inline double get_Dynamic_pressure() const { return dynamic_pressure; }
+    inline double get_Static_pressure() const { return _state.static_pressure; }
+    inline double get_Total_pressure() const { return _state.total_pressure; }
+    inline double get_Dynamic_pressure() const { return _state.dynamic_pressure; }
 
-    inline double get_Static_temperature() const { return static_temperature; }
-    inline double get_Total_temperature() const { return total_temperature; }
+    inline double get_Static_temperature() const { return _state.static_temperature; }
+    inline double get_Total_temperature() const { return _state.total_temperature; }
 
-    inline double get_Sea_level_radius() const { return sea_level_radius; }
+    inline double get_Sea_level_radius() const { return _state.sea_level_radius; }
     inline double get_Earth_position_angle() const {
-	return earth_position_angle;
+	return _state.earth_position_angle;
     }
 
-    inline double get_Runway_altitude() const { return runway_altitude; }
-    inline double get_Runway_altitude_m() const { return SG_FEET_TO_METER * runway_altitude; }
+    inline double get_Runway_altitude() const { return _state.runway_altitude; }
+    inline double get_Runway_altitude_m() const { return SG_FEET_TO_METER * _state.runway_altitude; }
 
-    inline double get_Climb_Rate() const { return climb_rate; }
+    inline double get_Climb_Rate() const { return _state.climb_rate; }
 
     // Note that currently this is the "same" value runway altitude...
-    inline double get_ground_elev_ft() const { return runway_altitude; }
+    inline double get_ground_elev_ft() const { return _state.runway_altitude; }
 
 
     //////////////////////////////////////////////////////////////////////////

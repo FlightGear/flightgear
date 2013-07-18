@@ -25,10 +25,12 @@
 #endif
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/io/iochannel.hxx>
+
 
 #include "native.hxx"
 
+#include <Main/globals.hxx>
+#include <FDM/fdm_shell.hxx>
 #include <FDM/flight.hxx>
 
 FGNative::FGNative() {
@@ -58,40 +60,21 @@ bool FGNative::open() {
     return true;
 }
 
-/**
- * The design of FGNative requires direct, memcpy access to FGInterface,
- * unfortunately. Since this is the only remaining place that does, the
- * extern lives here, rather than a header file.
- *
- */
-extern FGInterface* evil_global_fdm_state;
-
 // process work for this port
-bool FGNative::process() {
-    SGIOChannel *io = get_io_channel();
-    int length = sizeof(FGInterface);
-
-    if ( get_direction() == SG_IO_OUT ) {
-	buf = *evil_global_fdm_state;
-	if ( ! io->write( (char *)(& buf), length ) ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
-	    return false;
-	}
-    } else if ( get_direction() == SG_IO_IN ) {
-	if ( io->get_type() == sgFileType ) {
-	    if ( io->read( (char *)(& buf), length ) == length ) {
-		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		*evil_global_fdm_state = buf;
-	    }
-	} else {
-	    while ( io->read( (char *)(& buf), length ) == length ) {
-		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		*evil_global_fdm_state = buf;
-	    }
-	}
+bool FGNative::process()
+{
+    FDMShell* fdm = static_cast<FDMShell*>(globals->get_subsystem("flight"));
+    FGInterface* fdmState = fdm->getInterface();
+    if (!fdmState) {
+        return false;
     }
-
-    return true;
+    
+    SGIOChannel *io = get_io_channel();
+    if ( get_direction() == SG_IO_OUT ) {
+        return fdmState->writeState(io);
+    } else {
+        return fdmState->readState(io);
+    }
 }
 
 

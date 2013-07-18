@@ -27,15 +27,10 @@
 
 #include <simgear/compiler.h>
 
-#include <string>
-
 #include "protocol.hxx"
-#include <FDM/flight.hxx>
 
-class FGNative : public FGProtocol {
-
-    FGInterface buf;
-
+class FGNative : public FGProtocol
+{
 public:
 
     FGNative();

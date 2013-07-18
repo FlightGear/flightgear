@@ -30,6 +30,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/scene/material/mat.hxx>
+#include <simgear/io/iochannel.hxx>
 
 #include <Scenery/scenery.hxx>
 #include <Main/globals.hxx>
@@ -88,39 +89,40 @@ FGInterface::_setup ()
     inited = false;
     bound = false;
 
-    d_cg_rp_body_v = SGVec3d::zeros();
-    v_dot_local_v = SGVec3d::zeros();
-    v_dot_body_v = SGVec3d::zeros();
-    a_cg_body_v = SGVec3d::zeros();
-    a_pilot_body_v = SGVec3d::zeros();
-    n_cg_body_v = SGVec3d::zeros();
-    v_local_v = SGVec3d::zeros();
-    v_local_rel_ground_v = SGVec3d::zeros();
-    v_local_airmass_v = SGVec3d::zeros();
-    v_wind_body_v = SGVec3d::zeros();
-    omega_body_v = SGVec3d::zeros();
-    euler_rates_v = SGVec3d::zeros();
-    geocentric_rates_v = SGVec3d::zeros();
-    geodetic_position_v = SGGeod::fromRadM(0, 0, 0);
-    cartesian_position_v = SGVec3d::fromGeod(geodetic_position_v);
-    geocentric_position_v = SGGeoc::fromCart(cartesian_position_v);
-    euler_angles_v = SGVec3d::zeros();
+    _state.d_cg_rp_body_v = SGVec3d::zeros();
+    _state.v_dot_local_v = SGVec3d::zeros();
+    _state.v_dot_body_v = SGVec3d::zeros();
+    _state.a_cg_body_v = SGVec3d::zeros();
+    _state.a_pilot_body_v = SGVec3d::zeros();
+    _state.n_cg_body_v = SGVec3d::zeros();
+    _state.v_local_v = SGVec3d::zeros();
+    _state.v_local_rel_ground_v = SGVec3d::zeros();
+    _state.v_local_airmass_v = SGVec3d::zeros();
+    _state.v_wind_body_v = SGVec3d::zeros();
+    _state.omega_body_v = SGVec3d::zeros();
+    _state.euler_rates_v = SGVec3d::zeros();
+    _state.geocentric_rates_v = SGVec3d::zeros();
+    _state.geodetic_position_v = SGGeod::fromRadM(0, 0, 0);
+    _state.cartesian_position_v = SGVec3d::fromGeod(_state.geodetic_position_v);
+    _state.geocentric_position_v = SGGeoc::fromCart(_state.cartesian_position_v);
+    _state.euler_angles_v = SGVec3d::zeros();
     
-    nlf=0;
-    v_rel_wind=v_true_kts=0;
-    v_ground_speed=v_equiv_kts=0;
-    v_calibrated_kts=0;
-    alpha=beta=0;
-    gamma_vert_rad=0;
-    density=mach_number=0;
-    static_pressure=total_pressure=0;
-    dynamic_pressure=0;
-    static_temperature=total_temperature=0;
-    sea_level_radius=earth_position_angle=0;
-    runway_altitude=0;
-    climb_rate=0;
-    altitude_agl=0;
-    track=0;
+    _state.nlf=0;
+    _state.v_rel_wind=_state.v_true_kts=0;
+    _state.v_ground_speed=_state.v_equiv_kts=0;
+    _state.v_calibrated_kts=0;
+    _state.alpha=_state.beta=0;
+    _state.gamma_vert_rad=0;
+    _state.density=_state.mach_number=0;
+    _state.static_pressure=_state.total_pressure=0;
+    _state.dynamic_pressure=0;
+    _state.static_temperature=_state.total_temperature=0;
+    _state.sea_level_radius=_state.earth_position_angle=0;
+    _state.runway_altitude=0;
+    _state.climb_rate=0;
+    _state.altitude_agl=0;
+    _state.track=0;
+    
     delta_loops = 0.0;
 }
 
@@ -181,7 +183,7 @@ FGInterface::common_init ()
     SG_LOG( SG_FLIGHT, SG_INFO, " lat = "
             << fgGetDouble("/sim/presets/latitude-deg")
             << " alt = " << get_Altitude() );
-    double slr = SGGeodesy::SGGeodToSeaLevelRadius(geodetic_position_v);
+    double slr = SGGeodesy::SGGeodToSeaLevelRadius(_state.geodetic_position_v);
     _set_Sea_level_radius( slr * SG_METER_TO_FEET );
 
     // Set initial Euler angles
@@ -441,38 +443,73 @@ FGInterface::update (double dt)
     SG_LOG(SG_FLIGHT, SG_ALERT, "dummy update() ... SHOULDN'T BE CALLED!");
 }
 
+bool FGInterface::readState(SGIOChannel* io)
+{
+    FlightState buf;
+    int length = sizeof(FlightState);
+    
+    if ( io->get_type() == sgFileType ) {
+	    if ( io->read( (char *)(& buf), length ) == length ) {
+            SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
+	    } else {
+            return false;
+        }
+	} else {
+	    while ( io->read( (char *)(& buf), length ) == length ) {
+            SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
+	    }
+	}
+    
+    _state = buf; // copy the read state over
+    return true;
+}
+
+bool FGInterface::writeState(SGIOChannel* io)
+{
+    if (!bound || !inited) {
+        return false;
+    }
+    
+    int length = sizeof(FlightState);
+    if ( ! io->write( (char *)(& _state), length ) ) {
+	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+	    return false;
+	}
+    
+    return true;
+}
 
 void FGInterface::_updatePositionM(const SGVec3d& cartPos)
 {
-    TrackComputer tracker( track, geodetic_position_v );
-    cartesian_position_v = cartPos;
-    geodetic_position_v = SGGeod::fromCart(cartesian_position_v);
-    geocentric_position_v = SGGeoc::fromCart(cartesian_position_v);
-    _set_Sea_level_radius( SGGeodesy::SGGeodToSeaLevelRadius(geodetic_position_v)*SG_METER_TO_FEET );
+    TrackComputer tracker( _state.track, _state.geodetic_position_v );
+    _state.cartesian_position_v = cartPos;
+    _state.geodetic_position_v = SGGeod::fromCart(_state.cartesian_position_v);
+    _state.geocentric_position_v = SGGeoc::fromCart(_state.cartesian_position_v);
+    _set_Sea_level_radius( SGGeodesy::SGGeodToSeaLevelRadius(_state.geodetic_position_v)*SG_METER_TO_FEET );
     _update_ground_elev_at_pos();
 }
 
 
 void FGInterface::_updatePosition(const SGGeod& geod)
 {
-    TrackComputer tracker( track, geodetic_position_v );
-    geodetic_position_v = geod;
-    cartesian_position_v = SGVec3d::fromGeod(geodetic_position_v);
-    geocentric_position_v = SGGeoc::fromCart(cartesian_position_v);
+    TrackComputer tracker( _state.track, _state.geodetic_position_v );
+    _state.geodetic_position_v = geod;
+    _state.cartesian_position_v = SGVec3d::fromGeod(_state.geodetic_position_v);
+    _state.geocentric_position_v = SGGeoc::fromCart(_state.cartesian_position_v);
 
-    _set_Sea_level_radius( SGGeodesy::SGGeodToSeaLevelRadius(geodetic_position_v)*SG_METER_TO_FEET );
+    _set_Sea_level_radius( SGGeodesy::SGGeodToSeaLevelRadius(_state.geodetic_position_v)*SG_METER_TO_FEET );
     _update_ground_elev_at_pos();
 }
 
 
 void FGInterface::_updatePosition(const SGGeoc& geoc)
 {
-    TrackComputer tracker( track, geodetic_position_v );
-    geocentric_position_v = geoc;
-    cartesian_position_v = SGVec3d::fromGeoc(geocentric_position_v);
-    geodetic_position_v = SGGeod::fromCart(cartesian_position_v);
+    TrackComputer tracker( _state.track, _state.geodetic_position_v );
+    _state.geocentric_position_v = geoc;
+    _state.cartesian_position_v = SGVec3d::fromGeoc(_state.geocentric_position_v);
+    _state.geodetic_position_v = SGGeod::fromCart(_state.cartesian_position_v);
 
-    _set_Sea_level_radius( SGGeodesy::SGGeodToSeaLevelRadius(geodetic_position_v)*SG_METER_TO_FEET );
+    _set_Sea_level_radius( SGGeodesy::SGGeodToSeaLevelRadius(_state.geodetic_position_v)*SG_METER_TO_FEET );
     _update_ground_elev_at_pos();
 }
 
@@ -490,123 +527,123 @@ void FGInterface::_updateGeocentricPosition( double lat, double lon,
 }
 
 void FGInterface::_update_ground_elev_at_pos( void ) {
-    double groundlevel_m = get_groundlevel_m(geodetic_position_v);
+    double groundlevel_m = get_groundlevel_m(_state.geodetic_position_v);
     _set_Runway_altitude( groundlevel_m * SG_METER_TO_FEET );
 }
 
 // Positions
 void FGInterface::set_Latitude(double lat) {
-    geodetic_position_v.setLatitudeRad(lat);
+    _state.geodetic_position_v.setLatitudeRad(lat);
 }
 
 void FGInterface::set_Longitude(double lon) {
-    geodetic_position_v.setLongitudeRad(lon);
+    _state.geodetic_position_v.setLongitudeRad(lon);
 }
 
 void FGInterface::set_Altitude(double alt) {
-    geodetic_position_v.setElevationFt(alt);
+    _state.geodetic_position_v.setElevationFt(alt);
 }
 
 void FGInterface::set_AltitudeAGL(double altagl) {
-    altitude_agl=altagl;
+    _state.altitude_agl=altagl;
 }
 
 // Velocities
 void FGInterface::set_V_calibrated_kts(double vc) {
-    v_calibrated_kts = vc;
+    _state.v_calibrated_kts = vc;
 }
 
 void FGInterface::set_Mach_number(double mach) {
-    mach_number = mach;
+    _state.mach_number = mach;
 }
 
 void FGInterface::set_Velocities_Local( double north, 
                                         double east,
                                         double down ){
-    v_local_v[0] = north;
-    v_local_v[1] = east;
-    v_local_v[2] = down;
+    _state.v_local_v[0] = north;
+    _state.v_local_v[1] = east;
+    _state.v_local_v[2] = down;
 }
 
 void FGInterface::set_Velocities_Wind_Body( double u, 
                                             double v,
                                             double w){
-    v_wind_body_v[0] = u;
-    v_wind_body_v[1] = v;
-    v_wind_body_v[2] = w;
+    _state.v_wind_body_v[0] = u;
+    _state.v_wind_body_v[1] = v;
+    _state.v_wind_body_v[2] = w;
 }
 
 // Euler angles 
 void FGInterface::set_Euler_Angles( double phi, 
                                     double theta,
                                     double psi ) {
-    euler_angles_v[0] = phi;
-    euler_angles_v[1] = theta;
-    euler_angles_v[2] = psi;
+    _state.euler_angles_v[0] = phi;
+    _state.euler_angles_v[1] = theta;
+    _state.euler_angles_v[2] = psi;
 }  
 
 // Flight Path
 void FGInterface::set_Climb_Rate( double roc) {
-    climb_rate = roc;
+    _state.climb_rate = roc;
 }
 
 void FGInterface::set_Gamma_vert_rad( double gamma) {
-    gamma_vert_rad = gamma;
+    _state.gamma_vert_rad = gamma;
 }
 
-void FGInterface::set_Static_pressure(double p) { static_pressure = p; }
-void FGInterface::set_Static_temperature(double T) { static_temperature = T; }
-void FGInterface::set_Density(double rho) { density = rho; }
+void FGInterface::set_Static_pressure(double p) { _state.static_pressure = p; }
+void FGInterface::set_Static_temperature(double T) { _state.static_temperature = T; }
+void FGInterface::set_Density(double rho) { _state.density = rho; }
 
 void FGInterface::set_Velocities_Local_Airmass (double wnorth, 
                                                 double weast,
                                                 double wdown ) {
-    v_local_airmass_v[0] = wnorth;
-    v_local_airmass_v[1] = weast;
-    v_local_airmass_v[2] = wdown;
+    _state.v_local_airmass_v[0] = wnorth;
+    _state.v_local_airmass_v[1] = weast;
+    _state.v_local_airmass_v[2] = wdown;
 }
 
 
 void FGInterface::_busdump(void)
 {
-    SG_LOG(SG_FLIGHT,SG_INFO,"d_cg_rp_body_v: " << d_cg_rp_body_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_local_v: " << v_dot_local_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_body_v: " << v_dot_body_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"a_cg_body_v: " << a_cg_body_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"a_pilot_body_v: " << a_pilot_body_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"n_cg_body_v: " << n_cg_body_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_v: " << v_local_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_rel_ground_v: " << v_local_rel_ground_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_airmass_v: " << v_local_airmass_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_wind_body_v: " << v_wind_body_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"omega_body_v: " << omega_body_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"euler_rates_v: " << euler_rates_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"geocentric_rates_v: " << geocentric_rates_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"geocentric_position_v: " << geocentric_position_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"geodetic_position_v: " << geodetic_position_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"euler_angles_v: " << euler_angles_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"d_cg_rp_body_v: " << _state.d_cg_rp_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_local_v: " << _state.v_dot_local_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_body_v: " << _state.v_dot_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"a_cg_body_v: " << _state.a_cg_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"a_pilot_body_v: " << _state.a_pilot_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"n_cg_body_v: " << _state.n_cg_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_v: " << _state.v_local_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_rel_ground_v: " << _state.v_local_rel_ground_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_airmass_v: " << _state.v_local_airmass_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_wind_body_v: " << _state.v_wind_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"omega_body_v: " << _state.omega_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"euler_rates_v: " << _state.euler_rates_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"geocentric_rates_v: " << _state.geocentric_rates_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"geocentric_position_v: " << _state.geocentric_position_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"geodetic_position_v: " << _state.geodetic_position_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"euler_angles_v: " << _state.euler_angles_v);
 
-    SG_LOG(SG_FLIGHT,SG_INFO,"nlf: " << nlf );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_rel_wind: " << v_rel_wind );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_true_kts: " << v_true_kts );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_ground_speed: " << v_ground_speed );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_equiv_kts: " << v_equiv_kts );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_calibrated_kts: " << v_calibrated_kts );
-    SG_LOG(SG_FLIGHT,SG_INFO,"alpha: " << alpha );
-    SG_LOG(SG_FLIGHT,SG_INFO,"beta: " << beta );
-    SG_LOG(SG_FLIGHT,SG_INFO,"gamma_vert_rad: " << gamma_vert_rad );
-    SG_LOG(SG_FLIGHT,SG_INFO,"density: " << density );
-    SG_LOG(SG_FLIGHT,SG_INFO,"mach_number: " << mach_number );
-    SG_LOG(SG_FLIGHT,SG_INFO,"static_pressure: " << static_pressure );
-    SG_LOG(SG_FLIGHT,SG_INFO,"total_pressure: " << total_pressure );
-    SG_LOG(SG_FLIGHT,SG_INFO,"dynamic_pressure: " << dynamic_pressure );
-    SG_LOG(SG_FLIGHT,SG_INFO,"static_temperature: " << static_temperature );
-    SG_LOG(SG_FLIGHT,SG_INFO,"total_temperature: " << total_temperature );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sea_level_radius: " << sea_level_radius );
-    SG_LOG(SG_FLIGHT,SG_INFO,"earth_position_angle: " << earth_position_angle );
-    SG_LOG(SG_FLIGHT,SG_INFO,"runway_altitude: " << runway_altitude );
-    SG_LOG(SG_FLIGHT,SG_INFO,"climb_rate: " << climb_rate );
-    SG_LOG(SG_FLIGHT,SG_INFO,"altitude_agl: " << altitude_agl );
+    SG_LOG(SG_FLIGHT,SG_INFO,"nlf: " << _state.nlf );
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_rel_wind: " << _state.v_rel_wind );
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_true_kts: " << _state.v_true_kts );
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_ground_speed: " << _state.v_ground_speed );
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_equiv_kts: " << _state.v_equiv_kts );
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_calibrated_kts: " << _state.v_calibrated_kts );
+    SG_LOG(SG_FLIGHT,SG_INFO,"alpha: " << _state.alpha );
+    SG_LOG(SG_FLIGHT,SG_INFO,"beta: " << _state.beta );
+    SG_LOG(SG_FLIGHT,SG_INFO,"gamma_vert_rad: " << _state.gamma_vert_rad );
+    SG_LOG(SG_FLIGHT,SG_INFO,"density: " << _state.density );
+    SG_LOG(SG_FLIGHT,SG_INFO,"mach_number: " << _state.mach_number );
+    SG_LOG(SG_FLIGHT,SG_INFO,"static_pressure: " << _state.static_pressure );
+    SG_LOG(SG_FLIGHT,SG_INFO,"total_pressure: " << _state.total_pressure );
+    SG_LOG(SG_FLIGHT,SG_INFO,"dynamic_pressure: " << _state.dynamic_pressure );
+    SG_LOG(SG_FLIGHT,SG_INFO,"static_temperature: " << _state.static_temperature );
+    SG_LOG(SG_FLIGHT,SG_INFO,"total_temperature: " << _state.total_temperature );
+    SG_LOG(SG_FLIGHT,SG_INFO,"sea_level_radius: " << _state.sea_level_radius );
+    SG_LOG(SG_FLIGHT,SG_INFO,"earth_position_angle: " << _state.earth_position_angle );
+    SG_LOG(SG_FLIGHT,SG_INFO,"runway_altitude: " << _state.runway_altitude );
+    SG_LOG(SG_FLIGHT,SG_INFO,"climb_rate: " << _state.climb_rate );
+    SG_LOG(SG_FLIGHT,SG_INFO,"altitude_agl: " << _state.altitude_agl );
 }
 
 bool

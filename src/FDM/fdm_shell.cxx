@@ -59,12 +59,6 @@
 #include <FDM/YASim/YASim.hxx>
 #endif
 
-/*
- * Evil global variable required by Network/FGNative,
- * see that class for more information
- */
-FGInterface* evil_global_fdm_state = NULL;
-
 FDMShell::FDMShell() :
   _tankProperties( fgGetNode("/consumables/fuel", true) ),
   _impl(NULL),
@@ -99,7 +93,6 @@ void FDMShell::reinit()
 {
   if (_impl) {
     fgSetBool("/sim/fdm-initialized", false);
-    evil_global_fdm_state = NULL;
     _impl->unbind();
     delete _impl;
     _impl = NULL;
@@ -146,7 +139,6 @@ void FDMShell::update(double dt)
         }
         _impl->bind();
         
-        evil_global_fdm_state = _impl;
         fgSetBool("/sim/fdm-initialized", true);
         fgSetBool("/sim/signals/fdm-initialized", true);
     }
@@ -194,6 +186,11 @@ void FDMShell::update(double dt)
           // replay is active
           break;
   }
+}
+
+FGInterface* FDMShell::getInterface() const
+{
+    return _impl;
 }
 
 void FDMShell::createImplementation()

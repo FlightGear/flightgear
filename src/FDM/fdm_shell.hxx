@@ -51,6 +51,7 @@ public:
   
   virtual void update(double dt);
 
+    FGInterface* getInterface() const;
 private:
 
   void createImplementation();
