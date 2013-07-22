@@ -38,9 +38,6 @@ BasicWaypt::BasicWaypt(const SGGeod& aPos, const string& aIdent, RouteBase* aOwn
   _pos(aPos),
   _ident(aIdent)
 {
-  if (aPos.getElevationFt() > -999.0) {
-    setAltitude(aPos.getElevationFt(), RESTRICT_AT);
-  }
 }
 
 BasicWaypt::BasicWaypt(RouteBase* aOwner) :
