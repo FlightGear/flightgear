@@ -74,7 +74,7 @@ namespace {
 
 const int MAX_RETRIES = 10;
 const int SCHEMA_VERSION = 8;
-const int CACHE_SIZE_KBYTES= 16000;
+const int CACHE_SIZE_KBYTES= 32 * 1024;
     
 // bind a std::string to a sqlite statement. The std::string must live the
 // entire duration of the statement execution - do not pass a temporary
@@ -1065,7 +1065,6 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
       if (aptId > 0) {
         FGAirport* apt = FGPositioned::loadById<FGAirport>(aptId);
         if (apt->validateILSData()) {
-          SG_LOG(SG_NAVCACHE, SG_INFO, "re-loaded ILS data for " << apt->ident());
           // queried data above is probably invalid, force us to go around again
           // (the next time through, validateILSData will return false)
           return outer->loadById(rowid);
@@ -1228,55 +1227,76 @@ void NavDataCache::doRebuild()
   try {
     d->close(); // completely close the sqlite object
     d->path.remove(); // remove the file on disk
-    d->init(); // star again from scratch
+    d->init(); // start again from scratch
     
-    Transaction txn(this);
-  // initialise the root octree node
+    // initialise the root octree node
     d->runSQL("INSERT INTO octree (rowid, children) VALUES (1, 0)");
-    
+      
     SGTimeStamp st;
-    st.stamp();
-    
-    airportDBLoad(d->aptDatPath);
-    SG_LOG(SG_NAVCACHE, SG_INFO, "apt.dat load took:" << st.elapsedMSec());
-    
-    metarDataLoad(d->metarDatPath);
-    stampCacheFile(d->aptDatPath);
-    stampCacheFile(d->metarDatPath);
-    
-    st.stamp();
-    loadFixes(d->fixDatPath);
-    stampCacheFile(d->fixDatPath);
-    SG_LOG(SG_NAVCACHE, SG_INFO, "fix.dat load took:" << st.elapsedMSec());
-    
-    st.stamp();
-    navDBInit(d->navDatPath);
-    stampCacheFile(d->navDatPath);
-    SG_LOG(SG_NAVCACHE, SG_INFO, "nav.dat load took:" << st.elapsedMSec());
-
+    {
+        Transaction txn(this);
+      
+        st.stamp();
+        airportDBLoad(d->aptDatPath);
+        SG_LOG(SG_NAVCACHE, SG_INFO, "apt.dat load took:" << st.elapsedMSec());
+        
+        metarDataLoad(d->metarDatPath);
+        stampCacheFile(d->aptDatPath);
+        stampCacheFile(d->metarDatPath);
+        
+        st.stamp();
+        loadFixes(d->fixDatPath);
+        stampCacheFile(d->fixDatPath);
+        SG_LOG(SG_NAVCACHE, SG_INFO, "fix.dat load took:" << st.elapsedMSec());
+        
+        st.stamp();
+        navDBInit(d->navDatPath);
+        stampCacheFile(d->navDatPath);
+        SG_LOG(SG_NAVCACHE, SG_INFO, "nav.dat load took:" << st.elapsedMSec());
+        
+        st.stamp();
+        txn.commit();
+        SG_LOG(SG_NAVCACHE, SG_INFO, "stage 1 commit took:" << st.elapsedMSec());
+    }
+      
 #ifdef SG_WINDOWS
-    SG_LOG(SG_NAVCACHE, SG_ALERT, "SKIPPING POI load on Windows");
+      SG_LOG(SG_NAVCACHE, SG_ALERT, "SKIPPING POI load on Windows");
 #else
-    st.stamp();
-    poiDBInit(d->poiDatPath);
-    stampCacheFile(d->poiDatPath);
-    SG_LOG(SG_NAVCACHE, SG_INFO, "poi.dat load took:" << st.elapsedMSec());
+      {
+          Transaction txn(this);
+          
+          st.stamp();
+          poiDBInit(d->poiDatPath);
+          stampCacheFile(d->poiDatPath);
+          SG_LOG(SG_NAVCACHE, SG_INFO, "poi.dat load took:" << st.elapsedMSec());
+          
+          st.stamp();
+          txn.commit();
+          SG_LOG(SG_NAVCACHE, SG_INFO, "POI commit took:" << st.elapsedMSec());
+      }
 #endif
       
-    loadCarrierNav(d->carrierDatPath);
-    stampCacheFile(d->carrierDatPath);
-    
-    st.stamp();
-    Airway::load(d->airwayDatPath);
-    stampCacheFile(d->airwayDatPath);
-    SG_LOG(SG_NAVCACHE, SG_INFO, "awy.dat load took:" << st.elapsedMSec());
-    
-    d->flushDeferredOctreeUpdates();
-    
-    string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");
-    writeStringProperty("scenery_paths", sceneryPaths);
-    
-    txn.commit();
+      {
+          Transaction txn(this);
+          loadCarrierNav(d->carrierDatPath);
+          stampCacheFile(d->carrierDatPath);
+          
+          st.stamp();
+          Airway::load(d->airwayDatPath);
+          stampCacheFile(d->airwayDatPath);
+          SG_LOG(SG_NAVCACHE, SG_INFO, "awy.dat load took:" << st.elapsedMSec());
+          
+          d->flushDeferredOctreeUpdates();
+          
+          string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");
+          writeStringProperty("scenery_paths", sceneryPaths);
+          
+          st.stamp();
+          txn.commit();
+          SG_LOG(SG_NAVCACHE, SG_INFO, "final commit took:" << st.elapsedMSec());
+
+      }
+
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVCACHE, SG_ALERT, "caught exception rebuilding navCache:" << e.what());
   }
