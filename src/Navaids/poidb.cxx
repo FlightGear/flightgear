@@ -22,6 +22,8 @@
 #  include "config.h"
 #endif
 
+#include "poidb.hxx"
+
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -30,7 +32,7 @@
 #include <simgear/misc/sgstream.hxx>
 
 #include <Navaids/NavDataCache.hxx>
-#include "poidb.hxx"
+
 
 using std::string;
 
@@ -47,22 +49,24 @@ mapPOITypeToFGPType(int aTy)
   }
 }
 
-
-
 namespace flightgear
 {
 
-static PositionedID readPOIFromStream(std::istream& aStream,
+static PositionedID readPOIFromStream(std::istream& aStream, NavDataCache* cache,
                                         FGPositioned::Type type = FGPositioned::INVALID)
 {
-  NavDataCache* cache = NavDataCache::instance();
+    if (aStream.eof()) {
+        return 0;
+    }
 
+    aStream >> skipws;
+    if (aStream.peek() == '#') {
+        aStream >> skipeol;
+        return 0;
+    }
+    
   int rawType;
   aStream >> rawType;
-  if (aStream.eof() || (rawType == '#')) {
-    return 0;
-  }
-
   double lat, lon;
   std::string name;
   aStream >> lat >> lon;
@@ -80,8 +84,7 @@ static PositionedID readPOIFromStream(std::istream& aStream,
     return 0;
   }
 
-  PositionedID r = cache->createPOI(type, name, pos);
-  return r;
+  return cache->createPOI(type, name, pos);
 }
 
 // load and initialize the POI database
@@ -93,14 +96,12 @@ bool poiDBInit(const SGPath& path)
       return false;
     }
 
-    in >> skipcomment;
-
+    NavDataCache* cache = NavDataCache::instance();
     while (!in.eof()) {
-      readPOIFromStream(in);
-      in >> skipcomment;
+      readPOIFromStream(in, cache);
     } // of stream data loop
 
-  return true;
+    return true;
 }
 
 } // of namespace flightgear
