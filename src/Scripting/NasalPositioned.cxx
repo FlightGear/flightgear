@@ -1920,6 +1920,10 @@ static naRef f_createWP(naContext c, naRef me, int argc, naRef* args)
 // set waypt flags - approach, departure, pseudo, etc
   if (argc > argOffset) {
     WayptFlag f = wayptFlagFromString(naStr_data(args[argOffset++]));
+    if (f == 0) {
+      naRuntimeError(c, "createWP: bad waypoint role");
+    }
+      
     wpt->setFlag(f);
   }
   
@@ -1947,6 +1951,9 @@ static naRef f_createWPFrom(naContext c, naRef me, int argc, naRef* args)
   // set waypt flags - approach, departure, pseudo, etc
   if (argc > 1) {
     WayptFlag f = wayptFlagFromString(naStr_data(args[1]));
+    if (f == 0) {
+      naRuntimeError(c, "createWPFrom: bad waypoint role");
+    }
     wpt->setFlag(f);
   }
   
@@ -2116,6 +2123,10 @@ static naRef f_flightplan_clearWPType(naContext c, naRef me, int argc, naRef* ar
   }
   
   WayptFlag flag = wayptFlagFromString(naStr_data(args[0]));
+  if (flag == 0) {
+    naRuntimeError(c, "clearWPType: bad waypoint role");
+  }
+    
   fp->clearWayptsWithFlag(flag);
   return naNil();
 }

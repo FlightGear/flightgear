@@ -91,6 +91,10 @@ bool Waypt::flag(WayptFlag aFlag) const
 	
 void Waypt::setFlag(WayptFlag aFlag, bool aV)
 {
+    if (aFlag == 0) {
+        throw sg_range_exception("invalid waypoint flag set");
+    }
+    
   _flags = (_flags & ~aFlag);
   if (aV) _flags |= aFlag;
 }
