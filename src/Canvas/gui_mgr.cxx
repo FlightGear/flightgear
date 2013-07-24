@@ -318,12 +318,12 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     assert(element->getUserData());
 
     canvas::WindowPtr window =
-      boost::static_pointer_cast<canvas::Window>
+      boost::dynamic_pointer_cast<canvas::Window>
       (
         static_cast<sc::Element::OSGUserData*>(element->getUserData())->element
       );
 
-    if( !window->isCapturingEvents() || !window->isVisible() )
+    if( !window || !window->isCapturingEvents() || !window->isVisible() )
       continue;
 
     float margin = window->isResizable() ? resize_margin_pos : 0;
