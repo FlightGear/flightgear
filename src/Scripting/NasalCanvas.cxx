@@ -148,6 +148,14 @@ naRef f_canvasCreateGroup(sc::Canvas& canvas, const nasal::CallContext& ctx)
   );
 }
 
+/**
+ * Get group containing all gui windows
+ */
+naRef f_getDesktop(naContext c, naRef me, int argc, naRef* args)
+{
+  return NasalGroup::create(c, requireGUIMgr(c).getDesktop());
+}
+
 naRef f_elementGetTransformedBounds(sc::Element& el, const nasal::CallContext& ctx)
 {
   osg::BoundingBox bb = el.getTransformedBounds( osg::Matrix::identity() );
@@ -233,6 +241,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
     .method("getNearestCursor", &sc::Text::getNearestCursor);
 
   NasalWindow::init("canvas.Window")
+    .bases<NasalElement>()
     .member("_node_ghost", &elementGetNode<canvas::Window>)
     .method("_getCanvasDecoration", &canvas::Window::getCanvasDecoration);
 
@@ -242,6 +251,7 @@ naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
   canvas_module.set("_newCanvasGhost", f_createCanvas);
   canvas_module.set("_newWindowGhost", f_createWindow);
   canvas_module.set("_getCanvasGhost", f_getCanvas);
+  canvas_module.set("_getDesktopGhost", f_getDesktop);
 
   return naNil();
 }

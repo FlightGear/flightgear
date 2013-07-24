@@ -37,7 +37,6 @@ namespace osgGA
 
 class GUIEventHandler;
 class GUIMgr:
-  public simgear::canvas::Group,
   public SGSubsystem
 {
   public:
@@ -50,37 +49,15 @@ class GUIMgr:
 
     virtual void update(double dt);
 
-    bool handleEvent(const osgGA::GUIEventAdapter& ea);
+    /**
+     * Get simgear::canvas::Group containing all windows
+     */
+    simgear::canvas::GroupPtr getDesktop();
 
   protected:
 
-    typedef simgear::canvas::ElementFactory ElementFactory;
-
+    simgear::canvas::GroupPtr           _desktop;
     osg::ref_ptr<GUIEventHandler>       _event_handler;
-    SGPropertyChangeCallback<GUIMgr>    _cb_mouse_mode;
-    bool                                _handle_events;
-
-    simgear::PropertyObject<int>        _width,
-                                        _height;
-
-    canvas::WindowWeakPtr _last_push,
-                          _last_mouse_over,
-                          _resize_window;
-    uint8_t _resize;
-    int     _last_cursor;
-
-    float _last_x,
-          _last_y;
-    double _last_scroll_time;
-
-    virtual ElementFactory getChildFactory(const std::string& type) const;
-
-    simgear::canvas::Placements
-    addPlacement(SGPropertyNode*, simgear::canvas::CanvasPtr canvas);
-
-    bool handleMouse(const osgGA::GUIEventAdapter& ea);
-    void handleResize(int x, int y, int width, int height);
-    void handleMouseMode(SGPropertyNode* node);
 };
 
 #endif /* CANVAS_GUI_MGR_HXX_ */

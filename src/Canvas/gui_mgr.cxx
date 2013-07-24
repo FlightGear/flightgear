@@ -36,6 +36,10 @@
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 
+class DesktopGroup;
+typedef boost::shared_ptr<DesktopGroup> DesktopPtr;
+typedef boost::weak_ptr<DesktopGroup> DesktopWeakPtr;
+
 /**
  * Event handler
  */
@@ -43,22 +47,15 @@ class GUIEventHandler:
   public osgGA::GUIEventHandler
 {
   public:
-    GUIEventHandler(GUIMgr* gui_mgr):
-      _gui_mgr( gui_mgr )
-    {}
+    GUIEventHandler(const DesktopWeakPtr& desktop_group);
 
     bool handle( const osgGA::GUIEventAdapter& ea,
                  osgGA::GUIActionAdapter&,
                  osg::Object*,
-                 osg::NodeVisitor* )
-    {
-      if( ea.getHandled() )
-        return false;
-      return _gui_mgr->handleEvent(ea);
-    }
+                 osg::NodeVisitor* );
 
   protected:
-    GUIMgr *_gui_mgr;
+    DesktopWeakPtr _desktop;
 };
 
 /**
@@ -93,12 +90,99 @@ class WindowPlacement:
     simgear::canvas::CanvasWeakPtr _canvas;
 };
 
+/**
+ * Desktop root group
+ */
+class DesktopGroup:
+  public simgear::canvas::Group
+{
+  public:
+    DesktopGroup();
+    bool handleEvent(const osgGA::GUIEventAdapter& ea);
+
+  protected:
+
+    friend class GUIMgr;
+
+    SGPropertyChangeCallback<DesktopGroup> _cb_mouse_mode;
+    bool                                   _handle_events;
+
+    simgear::PropertyObject<int>        _width,
+                                        _height;
+
+    canvas::WindowWeakPtr _last_push,
+                          _last_mouse_over,
+                          _resize_window;
+    uint8_t _resize;
+    int     _last_cursor;
+
+    float _last_x,
+          _last_y;
+    double _last_scroll_time;
+
+    bool handleMouse(const osgGA::GUIEventAdapter& ea);
+    void handleResize(int x, int y, int width, int height);
+    void handleMouseMode(SGPropertyNode* node);
+
+    /**
+     *
+     */
+    simgear::canvas::ElementFactory
+    getChildFactory(const std::string& type) const
+    {
+      if( type == "window" )
+        return &Element::create<canvas::Window>;
+
+      return Group::getChildFactory(type);
+    }
+
+    /**
+     *
+     */
+    simgear::canvas::Placements
+    addPlacement(SGPropertyNode* node, simgear::canvas::CanvasPtr canvas)
+    {
+      const std::string& id = node->getStringValue("id");
+
+      simgear::canvas::Placements placements;
+      canvas::WindowPtr window = getChild<canvas::Window>(id);
+      if( window )
+      {
+        window->setCanvasContent(canvas);
+        placements.push_back(
+          simgear::canvas::PlacementPtr(
+            new WindowPlacement(node, window, canvas)
+        ));
+      }
+      return placements;
+    }
+};
+
 //------------------------------------------------------------------------------
-GUIMgr::GUIMgr():
+GUIEventHandler::GUIEventHandler(const DesktopWeakPtr& desktop_group):
+  _desktop( desktop_group )
+{
+
+}
+
+//------------------------------------------------------------------------------
+bool GUIEventHandler::handle( const osgGA::GUIEventAdapter& ea,
+                              osgGA::GUIActionAdapter&,
+                              osg::Object*,
+                              osg::NodeVisitor* )
+{
+  if( ea.getHandled() )
+    return false;
+
+  DesktopPtr desktop = _desktop.lock();
+  return desktop && desktop->handleEvent(ea);
+}
+
+//------------------------------------------------------------------------------
+DesktopGroup::DesktopGroup():
   Group(simgear::canvas::CanvasPtr(), fgGetNode("/sim/gui/canvas", true)),
-  _event_handler( new GUIEventHandler(this) ),
   _cb_mouse_mode( this,
-                  &GUIMgr::handleMouseMode,
+                  &DesktopGroup::handleMouseMode,
                   fgGetNode("/devices/status/mice/mouse[0]/mode") ),
   _handle_events(true),
   _width(_node, "size[0]"),
@@ -109,15 +193,6 @@ GUIMgr::GUIMgr():
   _last_y(-1),
   _last_scroll_time(0)
 {
-  // We handle the property listener manually within ::init and ::shutdown.
-  removeListener();
-
-  _width = _height = -1;
-
-  // Do not change values on reinit
-  _width.node()->setAttribute(SGPropertyNode::PRESERVE, true);
-  _height.node()->setAttribute(SGPropertyNode::PRESERVE, true);
-
   osg::Camera* camera =
     flightgear::getGUICamera( flightgear::CameraGroup::getDefault() );
   assert(camera);
@@ -126,8 +201,9 @@ GUIMgr::GUIMgr():
   simgear::canvas::Canvas::addPlacementFactory
   (
     "window",
-    boost::bind(&GUIMgr::addPlacement, this, _1, _2)
+    boost::bind(&DesktopGroup::addPlacement, this, _1, _2)
   );
+
 
   osg::StateSet* stateSet = _transform->getOrCreateStateSet();
   stateSet->setDataVariance(osg::Object::STATIC);
@@ -143,60 +219,16 @@ GUIMgr::GUIMgr():
   stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
   stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
   stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+
+  _width = _height = -1;
+
+  // Do not change values on reinit
+  _width.node()->setAttribute(SGPropertyNode::PRESERVE, true);
+  _height.node()->setAttribute(SGPropertyNode::PRESERVE, true);
 }
 
 //------------------------------------------------------------------------------
-canvas::WindowPtr GUIMgr::createWindow(const std::string& name)
-{
-  canvas::WindowPtr window = createChild<canvas::Window>(name);
-  if( name.empty() )
-    window->set<std::string>
-    (
-      "id",
-      boost::lexical_cast<std::string>(window->getProps()->getIndex())
-    );
-  return window;
-}
-
-//------------------------------------------------------------------------------
-void GUIMgr::init()
-{
-  handleResize
-  (
-    0,
-    0,
-    fgGetInt("/sim/startup/xsize"),
-    fgGetInt("/sim/startup/ysize")
-  );
-
-  globals->get_renderer()
-         ->getViewer()
-         ->getEventHandlers()
-         // GUI is on top of everything so lets install as first event handler
-         .push_front( _event_handler );
-
-  _node->addChangeListener(this);
-  _node->fireCreatedRecursive();
-}
-
-//------------------------------------------------------------------------------
-void GUIMgr::shutdown()
-{
-  _node->removeChangeListener(this);
-
-  globals->get_renderer()
-         ->getViewer()
-         ->removeEventHandler( _event_handler );
-}
-
-//------------------------------------------------------------------------------
-void GUIMgr::update(double dt)
-{
-  Group::update(dt);
-}
-
-//------------------------------------------------------------------------------
-bool GUIMgr::handleEvent(const osgGA::GUIEventAdapter& ea)
+bool DesktopGroup::handleEvent(const osgGA::GUIEventAdapter& ea)
 {
   switch( ea.getEventType() )
   {
@@ -219,34 +251,6 @@ bool GUIMgr::handleEvent(const osgGA::GUIEventAdapter& ea)
   }
 }
 
-//------------------------------------------------------------------------------
-GUIMgr::ElementFactory GUIMgr::getChildFactory(const std::string& type) const
-{
-  if( type == "window" )
-    return &Element::create<canvas::Window>;
-
-  return Group::getChildFactory(type);
-}
-
-//------------------------------------------------------------------------------
-simgear::canvas::Placements
-GUIMgr::addPlacement( SGPropertyNode* node,
-                      simgear::canvas::CanvasPtr canvas )
-{
-  const std::string& id = node->getStringValue("id");
-
-  simgear::canvas::Placements placements;
-  canvas::WindowPtr window = getChild<canvas::Window>(id);
-  if( window )
-  {
-    window->setCanvasContent(canvas);
-    placements.push_back(
-      simgear::canvas::PlacementPtr(new WindowPlacement(node, window, canvas))
-    );
-  }
-  return placements;
-}
-
 /*
 RESIZE AREAS
 ============
@@ -267,7 +271,7 @@ const float resize_margin_neg = 2;
 const float resize_corner = 20;
 
 //------------------------------------------------------------------------------
-bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
+bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
 {
   if( !_transform->getNumChildren() || !_handle_events )
     return false;
@@ -475,7 +479,7 @@ bool GUIMgr::handleMouse(const osgGA::GUIEventAdapter& ea)
 }
 
 //------------------------------------------------------------------------------
-void GUIMgr::handleResize(int x, int y, int width, int height)
+void DesktopGroup::handleResize(int x, int y, int width, int height)
 {
   if( _width == width && _height == height )
     return;
@@ -493,9 +497,76 @@ void GUIMgr::handleResize(int x, int y, int width, int height)
 }
 
 //------------------------------------------------------------------------------
-void GUIMgr::handleMouseMode(SGPropertyNode* node)
+void DesktopGroup::handleMouseMode(SGPropertyNode* node)
 {
   // pass-through indicates events should pass through to the UI
   _handle_events = fgGetNode("/input/mice/mouse[0]/mode", node->getIntValue())
                      ->getBoolValue("pass-through");
+}
+
+//------------------------------------------------------------------------------
+GUIMgr::GUIMgr():
+  _desktop( new DesktopGroup ),
+  _event_handler( new GUIEventHandler(
+    boost::static_pointer_cast<DesktopGroup>(_desktop)
+  ))
+{
+  // We handle the property listener manually within ::init and ::shutdown.
+  _desktop->removeListener();
+}
+
+//------------------------------------------------------------------------------
+canvas::WindowPtr GUIMgr::createWindow(const std::string& name)
+{
+  canvas::WindowPtr window = _desktop->createChild<canvas::Window>(name);
+  if( name.empty() )
+    window->set<std::string>
+    (
+      "id",
+      boost::lexical_cast<std::string>(window->getProps()->getIndex())
+    );
+  return window;
+}
+
+//------------------------------------------------------------------------------
+void GUIMgr::init()
+{
+  boost::static_pointer_cast<DesktopGroup>(_desktop)->handleResize
+  (
+    0,
+    0,
+    fgGetInt("/sim/startup/xsize"),
+    fgGetInt("/sim/startup/ysize")
+  );
+
+  globals->get_renderer()
+         ->getViewer()
+         ->getEventHandlers()
+         // GUI is on top of everything so lets install as first event handler
+         .push_front( _event_handler );
+
+  _desktop->getProps()->addChangeListener(_desktop.get());
+  _desktop->getProps()->fireCreatedRecursive();
+}
+
+//------------------------------------------------------------------------------
+void GUIMgr::shutdown()
+{
+  _desktop->getProps()->removeChangeListener(_desktop.get());
+
+  globals->get_renderer()
+         ->getViewer()
+         ->removeEventHandler( _event_handler );
+}
+
+//------------------------------------------------------------------------------
+void GUIMgr::update(double dt)
+{
+  _desktop->update(dt);
+}
+
+//------------------------------------------------------------------------------
+simgear::canvas::GroupPtr GUIMgr::getDesktop()
+{
+  return _desktop;
 }
