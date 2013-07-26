@@ -89,7 +89,8 @@ namespace canvas
         _capture_events = node->getBoolValue();
       else if( name == "decoration-border" )
         parseDecorationBorder(node->getStringValue());
-      else if( boost::starts_with(name, "shadow-") )
+      else if(    boost::starts_with(name, "shadow-")
+               || name == "content-size" )
         _attributes_dirty |= DECORATION;
       else
         handled = false;
@@ -205,21 +206,29 @@ namespace canvas
     if( shadow_radius < 2 )
       shadow_radius = 0;
 
+    sc::CanvasPtr content = _canvas_content.lock();
+    SGRect<int> content_view
+    (
+      0,
+      0,
+      get<int>("content-size[0]", content->getViewWidth()),
+      get<int>("content-size[1]", content->getViewHeight())
+    );
+
     if( _decoration_border.isNone() && !shadow_radius )
     {
-      sc::CanvasPtr canvas_content = _canvas_content.lock();
-      setSrcCanvas(canvas_content);
-      set<int>("size[0]", canvas_content->getViewWidth());
-      set<int>("size[1]", canvas_content->getViewHeight());
+      setSrcCanvas(content);
+      set<int>("size[0]", content_view.width());
+      set<int>("size[1]", content_view.height());
 
       _image_content.reset();
       _image_shadow.reset();
-      _canvas_decoration->destroy();
+      if( _canvas_decoration )
+        _canvas_decoration->destroy();
       _canvas_decoration.reset();
       return;
     }
 
-    sc::CanvasPtr content = _canvas_content.lock();
     if( !_canvas_decoration )
     {
       CanvasMgr* mgr =
@@ -252,11 +261,11 @@ namespace canvas
     //      the shadow?
 
     simgear::CSSBorder::Offsets const border =
-      _decoration_border.getAbsOffsets(content->getViewport());
+      _decoration_border.getAbsOffsets(content_view);
 
     int shad2 = 2 * shadow_radius,
-        outer_width  = border.l + content->getViewWidth()  + border.r + shad2,
-        outer_height = border.t + content->getViewHeight() + border.b + shad2;
+        outer_width  = border.l + content_view.width()  + border.r + shad2,
+        outer_height = border.t + content_view.height() + border.b + shad2;
 
     _canvas_decoration->setSizeX( outer_width );
     _canvas_decoration->setSizeY( outer_height );
@@ -270,6 +279,8 @@ namespace canvas
     assert(_image_content);
     _image_content->set<int>("x", shadow_radius + border.l);
     _image_content->set<int>("y", shadow_radius + border.t);
+    _image_content->set<int>("size[0]", content_view.width());
+    _image_content->set<int>("size[1]", content_view.height());
 
     if( !shadow_radius )
     {

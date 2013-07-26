@@ -48,6 +48,16 @@ namespace canvas
 
       typedef simgear::canvas::Style Style;
 
+      /**
+       * @param node    Property node containing settings for this window:
+       *                  capture-events    Disable/Enable event capturing
+       *                  content-size[0-1] Size of content area (excluding
+       *                                    decoration border)
+       *                  decoration-border Size of decoration border
+       *                  resize            Enable resize cursor and properties
+       *                  shadow-inset      Inset of shadow image
+       *                  shadow-radius     Radius/outset of shadow image
+       */
       Window( const simgear::canvas::CanvasWeakPtr& canvas,
               const SGPropertyNode_ptr& node,
               const Style& parent_style = Style(),
