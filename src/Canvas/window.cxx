@@ -163,7 +163,8 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  void Window::handleResize(uint8_t mode, const osg::Vec2f& delta)
+  void Window::handleResize( uint8_t mode,
+                             const osg::Vec2f& offset )
   {
     if( mode == NONE )
     {
@@ -180,14 +181,14 @@ namespace canvas
     }
 
     if( mode & BOTTOM )
-      _resize_bottom += delta.y();
+      _resize_bottom = getRegion().b() + offset.y();
     else if( mode & TOP )
-      _resize_top += delta.y();
+      _resize_top = getRegion().t() + offset.y();
 
     if( mode & canvas::Window::RIGHT )
-      _resize_right += delta.x();
+      _resize_right = getRegion().r() + offset.x();
     else if( mode & canvas::Window::LEFT )
-      _resize_left += delta.x();
+      _resize_left = getRegion().l() + offset.x();
   }
 
   //----------------------------------------------------------------------------

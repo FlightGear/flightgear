@@ -116,6 +116,7 @@ class DesktopGroup:
     uint8_t _resize;
     int     _last_cursor;
 
+    osg::Vec2 _drag_start;
     float _last_x,
           _last_y;
     double _last_scroll_time;
@@ -302,7 +303,8 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
         _resize_window.reset();
         break;
       case osgGA::GUIEventAdapter::DRAG:
-        _resize_window.lock()->handleResize(_resize, event->delta);
+        _resize_window.lock()->handleResize( _resize,
+                                             event->screen_pos - _drag_start );
         return true;
       default:
         return false;
@@ -379,9 +381,10 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
       if( ea.getEventType() == osgGA::GUIEventAdapter::PUSH )
       {
         _resize_window = window_at_cursor;
+        _drag_start = event->screen_pos;
+
         window_at_cursor->raise();
-        window_at_cursor->handleResize( _resize | canvas::Window::INIT,
-                                        event->delta );
+        window_at_cursor->handleResize(_resize | canvas::Window::INIT);
       }
 
       return true;

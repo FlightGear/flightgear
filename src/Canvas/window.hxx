@@ -76,7 +76,8 @@ namespace canvas
        */
       void raise();
 
-      void handleResize(uint8_t mode, const osg::Vec2f& delta = osg::Vec2f());
+      void handleResize( uint8_t mode,
+                         const osg::Vec2f& offset = osg::Vec2f() );
 
     protected:
 
