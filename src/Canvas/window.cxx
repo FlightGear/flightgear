@@ -122,7 +122,12 @@ namespace canvas
   void Window::setCanvasContent(sc::CanvasPtr canvas)
   {
     _canvas_content = canvas;
-    setSrcCanvas(canvas);
+
+    if( _image_content )
+      // Placement within decoration canvas
+      _image_content->setSrcCanvas(canvas);
+    else
+      setSrcCanvas(canvas);
   }
 
   //----------------------------------------------------------------------------
