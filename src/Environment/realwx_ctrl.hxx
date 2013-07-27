@@ -29,6 +29,8 @@ namespace Environment {
 class RealWxController : public SGSubsystem
 {
 public:
+    virtual ~RealWxController();
+    
 	static RealWxController * createInstance( SGPropertyNode_ptr rootNode );
 };
 

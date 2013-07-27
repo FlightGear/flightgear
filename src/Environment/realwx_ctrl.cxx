@@ -382,6 +382,9 @@ public:
     // implementation of MetarRequester
     virtual void requestMetar( MetarDataHandler * metarDataHandler, const std::string & id );
 
+    virtual ~NoaaMetarRealWxController()
+    {
+    }
 private:
     
 };
@@ -457,10 +460,14 @@ void NoaaMetarRealWxController::requestMetar
 }
 
 /* -------------------------------------------------------------------------------- */
-
+    
 RealWxController * RealWxController::createInstance( SGPropertyNode_ptr rootNode )
 {
   return new NoaaMetarRealWxController( rootNode );
+}
+    
+RealWxController::~RealWxController()
+{
 }
 
 /* -------------------------------------------------------------------------------- */
