@@ -211,8 +211,8 @@ namespace canvas
     (
       0,
       0,
-      get<int>("content-size[0]", content->getViewWidth()),
-      get<int>("content-size[1]", content->getViewHeight())
+      get<int>("content-size[0]", content ? content->getViewWidth()  : 400),
+      get<int>("content-size[1]", content ? content->getViewHeight() : 300)
     );
 
     if( _decoration_border.isNone() && !shadow_radius )
