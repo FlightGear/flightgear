@@ -61,7 +61,9 @@ static const char* makeTTWString(double TTW)
 GPS::Config::Config() :
   _enableTurnAnticipation(true),
   _turnRate(3.0), // degrees-per-second, so 180 degree turn takes 60 seconds
+  _overflightDistance(0.0),
   _overflightArmDistance(1.0),
+  _overflightArmAngle(90.0),
   _waypointAlertTime(30.0),
   _requireHardSurface(true),
   _cdiMaxDeflectionNm(3.0), // linear mode, 3nm at the peg
@@ -80,6 +82,9 @@ void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
   aOwner->tie(aCfg, "cdi-max-deflection-nm", SGRawValuePointer<double>(&_cdiMaxDeflectionNm));
   aOwner->tie(aCfg, "drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
   aOwner->tie(aCfg, "course-selectable", SGRawValuePointer<bool>(&_courseSelectable));
+  aOwner->tie(aCfg, "over-flight-distance-nm", SGRawValuePointer<double>(&_overflightDistance));
+  aOwner->tie(aCfg, "over-flight-arm-distance-nm", SGRawValuePointer<double>(&_overflightArmDistance));
+  aOwner->tie(aCfg, "over-flight-arm-angle-deg", SGRawValuePointer<double>(&_overflightArmAngle));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -417,9 +422,19 @@ double GPS::magvarDeg()
   return _magvar_node->getDoubleValue();
 }
 
+double GPS::overflightDistanceM()
+{
+  return _config.overflightDistanceNm() * SG_NM_TO_METER;
+}
+
 double GPS::overflightArmDistanceM()
 {
   return _config.overflightArmDistanceNm() * SG_NM_TO_METER;
+}
+
+double GPS::overflightArmAngleDeg()
+{
+  return _config.overflightArmAngleDeg();
 }
 
 double GPS::selectedMagCourse()
@@ -427,6 +442,19 @@ double GPS::selectedMagCourse()
   return _selectedCourse;
 }
 
+SGGeod GPS::previousLegWaypointPosition(bool& isValid)
+{
+	FlightPlan::Leg* leg = _route->previousLeg();
+	if (leg){
+		Waypt* waypt = leg->waypoint();
+		if(waypt){
+			isValid = true;
+			return waypt->position();
+		}
+	}
+	isValid = false;
+  return SGGeod();
+}
 ///////////////////////////////////////////////////////////////////////////
 
 void
@@ -653,7 +681,6 @@ void GPS::updateOverflight()
   } else if (_mode == "obs") {
     // nothing to do here, TO/FROM will update but that's fine
   }
-  
   _computeTurnData = true;
 }
 
@@ -1128,7 +1155,6 @@ void GPS::directTo()
   _wp0_position = _indicated_pos;
   _currentWaypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
   _mode = "dto";
-
   clearScratch();
   wp1Changed();
 }
@@ -1145,6 +1171,7 @@ void GPS::selectOBSMode(flightgear::Waypt* waypt)
   }
   
   _mode = "obs";
+
   _currentWaypt = waypt;
   _wp0_position = _indicated_pos;
   wp1Changed();
@@ -1162,6 +1189,7 @@ void GPS::selectLegMode()
   }
 
   _mode = "leg";  
+
   // depending on the situation, this will either get over-written 
   // in routeManagerSequenced or not; either way it does no harm to
   // set it here.

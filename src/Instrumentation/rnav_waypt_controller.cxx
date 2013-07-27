@@ -121,6 +121,34 @@ bool geocRadialIntersection(const SGGeoc& a, double r1, const SGGeoc& b, double 
   return true;
 }
 
+
+/**
+ * Helper function Cross track error:
+ * http://williams.best.vwh.net/avform.htm#XTE
+ *
+ * param	distanceOriginToPosition in Nautical Miles
+ * param	courseDev difference between courseOriginToAircraft(AD) and courseOriginToTarget(AB)
+ * return 	XTE in Nautical Miles
+ *
+ * A(origin)
+ * B(target)
+ * D(aircraft) perhaps off course
+ *
+ * 			A-->--B
+ * 			 \   /
+ * 			  \ /
+ * 			   D
+ */
+
+double greatCircleCrossTrackError(double distanceOriginToPosition,double courseDev){
+	double crossTrackError = asin(
+			sin(distanceOriginToPosition * SG_NM_TO_RAD) *
+			sin(courseDev * SG_DEGREES_TO_RADIANS)
+			 );
+	return crossTrackError * SG_RAD_TO_NM;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////
 
 WayptController::~WayptController()
@@ -158,7 +186,7 @@ class BasicWayptCtl : public WayptController
 public:
   BasicWayptCtl(RNAV* aRNAV, const WayptRef& aWpt) :
     WayptController(aRNAV, aWpt),
-    _distanceM(0.0),
+    _distanceAircraftTargetMeter(0.0),
     _courseDev(0.0)
   {
     if (aWpt->flag(WPT_DYNAMIC)) {
@@ -173,30 +201,33 @@ public:
 
   virtual void update()
   {
-    double brg, az2;
-    SGGeodesy::inverse(_rnav->position(), _waypt->position(), brg, az2, _distanceM); 
-    _courseDev = brg - _targetTrack;
+    double bearingAircraftToTarget;
+
+    bearingAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(), _waypt->position());
+    _distanceAircraftTargetMeter	= SGGeodesy::distanceM(_rnav->position(), _waypt->position());
+
+    _courseDev = bearingAircraftToTarget - _targetTrack;
     SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
     
-    if ((fabs(_courseDev) > 90.0) && (_distanceM < _rnav->overflightArmDistanceM())) {
+    if ((fabs(_courseDev) > _rnav->overflightArmAngleDeg()) && (_distanceAircraftTargetMeter < _rnav->overflightArmDistanceM())) {
       setDone();
     }
   } 
 
   virtual double distanceToWayptM() const
   {
-    return _distanceM;
+    return _distanceAircraftTargetMeter;
   }
   
   virtual double xtrackErrorNm() const
   {
-    double x = sin(courseDeviationDeg() * SG_DEGREES_TO_RADIANS) * _distanceM;
+    double x = sin(courseDeviationDeg() * SG_DEGREES_TO_RADIANS) * _distanceAircraftTargetMeter;
     return x * SG_METER_TO_NM;
   }
   
   virtual bool toFlag() const
   {
-    return (fabs(_courseDev) < 90.0);
+    return (fabs(_courseDev) < _rnav->overflightArmAngleDeg());
   }
   
   virtual double courseDeviationDeg() const
@@ -215,8 +246,134 @@ public:
   }
 
 private:
-  double _distanceM;
+  double _distanceAircraftTargetMeter;
   double _courseDev;
+};
+
+/**
+ * Controller for leg course interception.
+ * In leg mode, we want to intercept the leg between 2 waypoints(A->B).
+ * If we can't reach the the selected waypoint leg,we going direct to B.
+ */
+
+class LegWayptCtl : public WayptController
+{
+public:
+	LegWayptCtl(RNAV* aRNAV, const WayptRef& aWpt) :
+    WayptController(aRNAV, aWpt),
+    _waypointOrigin(),
+    _distanceOriginTargetMeter(0.0),
+    _distanceOriginAircraftMeter(0.0),
+    _distanceAircraftTargetMeter(0.0),
+    _courseOriginToAircraft(0.0),
+    _courseAircraftToTarget(0.0),
+    _courseDev(0.0),
+    _toFlag(true)
+  {
+    if (aWpt->flag(WPT_DYNAMIC)) {
+      throw sg_exception("LegWayptCtl doesn't work with dynamic waypoints");
+    }
+  }
+
+  virtual void init()
+  {
+	double courseOriginTarget;
+	bool isPreviousLegValid = false;
+
+	_waypointOrigin = _rnav->previousLegWaypointPosition(isPreviousLegValid);
+
+	courseOriginTarget 				= SGGeodesy::courseDeg(_waypointOrigin,_waypt->position());
+
+	_courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
+	_distanceAircraftTargetMeter 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
+
+
+	// check reach the leg in 45Deg or going direct
+	bool canReachLeg = (fabs(courseOriginTarget -_courseAircraftToTarget) < 45.0);
+
+	if ( isPreviousLegValid && canReachLeg){
+		_targetTrack = courseOriginTarget;
+	}else{
+		_targetTrack = _courseAircraftToTarget;
+		_waypointOrigin	 = _rnav->position();
+	}
+
+  }
+
+  virtual void update()
+  {
+    _courseOriginToAircraft			= SGGeodesy::courseDeg(_waypointOrigin,_rnav->position());
+    _distanceOriginAircraftMeter 	= SGGeodesy::distanceM(_waypointOrigin,_rnav->position());
+
+    _courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
+    _distanceAircraftTargetMeter 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
+
+    _courseDev = -(_courseOriginToAircraft - _targetTrack);
+
+    bool isMinimumOverFlightDistanceReached = _distanceAircraftTargetMeter < _rnav->overflightDistanceM();
+    bool isOverFlightConeArmed 				= _distanceAircraftTargetMeter < ( _rnav->overflightArmDistanceM() + _rnav->overflightDistanceM() );
+    bool leavingOverFlightCone 				= (fabs(_courseAircraftToTarget - _targetTrack) > _rnav->overflightArmAngleDeg());
+
+    if( isMinimumOverFlightDistanceReached ){
+    	_toFlag = false;
+    	setDone();
+    }else{
+		if( isOverFlightConeArmed ){
+			_toFlag = false;
+			if ( leavingOverFlightCone ) {
+				setDone();
+			}
+		}else{
+			_toFlag = true;
+		}
+    }
+  }
+
+  virtual double distanceToWayptM() const
+  {
+    return _distanceAircraftTargetMeter;
+  }
+
+  virtual double xtrackErrorNm() const
+  {
+	  return greatCircleCrossTrackError(_distanceOriginAircraftMeter * SG_METER_TO_NM, _courseDev);
+  }
+
+  virtual bool toFlag() const
+  {
+    return _toFlag;
+  }
+
+  virtual double courseDeviationDeg() const
+  {
+    return _courseDev;
+  }
+
+  virtual double trueBearingDeg() const
+  {
+    return _courseAircraftToTarget;
+  }
+
+  virtual SGGeod position() const
+  {
+    return _waypt->position();
+  }
+
+private:
+
+  /*
+   * great circle route
+   * A(from), B(to), D(position) perhaps off course
+   */
+  SGGeod _waypointOrigin;
+  double _distanceOriginTargetMeter;
+  double _distanceOriginAircraftMeter;
+  double _distanceAircraftTargetMeter;
+  double _courseOriginToAircraft;
+  double _courseAircraftToTarget;
+  double _courseDev;
+  bool _toFlag;
+
 };
 
 /**
@@ -230,7 +387,7 @@ public:
   RunwayCtl(RNAV* aRNAV, const WayptRef& aWpt) :
     WayptController(aRNAV, aWpt),
     _runway(NULL),
-    _distanceM(0.0),
+    _distanceAircraftRunwayEnd(0.0),
     _courseDev(0.0)
   {
   }
@@ -243,16 +400,19 @@ public:
 
   virtual void update()
   {
-    double brg, az2;
+    double bearingAircraftRunwayEnd;
     // use the far end of the runway for course deviation calculations. 
     // this should do the correct thing both for takeoffs (including entering 
     // the runway at a taxiway after the threshold) and also landings.
     // seperately compute the distance to the threshold for timeToWaypt calc
-    SGGeodesy::inverse(_rnav->position(), _runway->end(), brg, az2, _distanceM); 
-    double _courseDev = brg - _targetTrack;
+
+    bearingAircraftRunwayEnd	= SGGeodesy::courseDeg(_rnav->position(), _runway->end());
+    _distanceAircraftRunwayEnd	= SGGeodesy::distanceM(_rnav->position(), _runway->end());
+
+    double _courseDev = bearingAircraftRunwayEnd - _targetTrack;
     SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
     
-    if ((fabs(_courseDev) > 90.0) && (_distanceM < _rnav->overflightArmDistanceM())) {
+    if ((fabs(_courseDev) > _rnav->overflightArmAngleDeg()) && (_distanceAircraftRunwayEnd < _rnav->overflightArmDistanceM())) {
       setDone();
     }
   } 
@@ -264,7 +424,7 @@ public:
   
   virtual double xtrackErrorNm() const
   {
-    double x = sin(_courseDev * SG_RADIANS_TO_DEGREES) * _distanceM;
+    double x = sin(_courseDev * SG_RADIANS_TO_DEGREES) * _distanceAircraftRunwayEnd;
     return x * SG_METER_TO_NM;
   }
 
@@ -286,7 +446,7 @@ public:
   }
 private:
   FGRunway* _runway;
-  double _distanceM;
+  double _distanceAircraftRunwayEnd;
   double _courseDev;
 };
 
@@ -554,8 +714,9 @@ private:
 DirectToController::DirectToController(RNAV* aRNAV, const WayptRef& aWpt, const SGGeod& aOrigin) :
   WayptController(aRNAV, aWpt),
   _origin(aOrigin),
-  _distanceM(0.0),
-  _courseDev(0.0)
+  _distanceAircraftTargetMeter(0.0),
+  _courseDev(0.0),
+  _courseAircraftToTarget(0.0)
 {
 }
 
@@ -564,31 +725,44 @@ void DirectToController::init()
   if (_waypt->flag(WPT_DYNAMIC)) {
     throw sg_exception("can't direct-to a dynamic waypoint");
   }
-  
+
   _targetTrack = SGGeodesy::courseDeg(_origin, _waypt->position());
 }
 
 void DirectToController::update()
 {
-  double brg, az2;
-  SGGeodesy::inverse(_rnav->position(), _waypt->position(), brg, az2, _distanceM); 
-  _courseDev = brg - _targetTrack;
+  double courseOriginToAircraft;
+
+  courseOriginToAircraft 		= SGGeodesy::courseDeg(_origin,_rnav->position());
+
+  _courseAircraftToTarget		= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
+  _distanceAircraftTargetMeter	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
+
+  _courseDev = -(courseOriginToAircraft - _targetTrack);
+
   SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
-    
-  if ((fabs(_courseDev) > 90.0) && (_distanceM < _rnav->overflightArmDistanceM())) {
-    setDone();
+
+  bool isMinimumOverFlightDistanceReached 	= _distanceAircraftTargetMeter < _rnav->overflightDistanceM();
+  bool isOverFlightConeArmed 				= _distanceAircraftTargetMeter < ( _rnav->overflightArmDistanceM() + _rnav->overflightDistanceM() );
+  bool leavingOverFlightCone 				= (fabs(_courseAircraftToTarget - _targetTrack) > _rnav->overflightArmAngleDeg());
+
+  if( isMinimumOverFlightDistanceReached ){
+  	setDone();
+  }else{
+		if( isOverFlightConeArmed && leavingOverFlightCone ){
+				setDone();
+		}
   }
 }
 
 double DirectToController::distanceToWayptM() const
 {
-  return _distanceM;
+  return _distanceAircraftTargetMeter;
 }
 
 double DirectToController::xtrackErrorNm() const
 {
-  double x = sin(courseDeviationDeg() * SG_DEGREES_TO_RADIANS) * _distanceM;
-  return x * SG_METER_TO_NM;
+	return greatCircleCrossTrackError(_distanceAircraftTargetMeter * SG_METER_TO_NM, _courseDev);
 }
 
 double DirectToController::courseDeviationDeg() const
@@ -598,7 +772,7 @@ double DirectToController::courseDeviationDeg() const
 
 double DirectToController::trueBearingDeg() const
 {
-  return SGGeodesy::courseDeg(_rnav->position(), _waypt->position());
+  return _courseAircraftToTarget;
 }
 
 SGGeod DirectToController::position() const
@@ -610,8 +784,9 @@ SGGeod DirectToController::position() const
 
 OBSController::OBSController(RNAV* aRNAV, const WayptRef& aWpt) :
   WayptController(aRNAV, aWpt),
-  _distanceM(0.0),
-  _courseDev(0.0)
+  _distanceAircraftTargetMeter(0.0),
+  _courseDev(0.0),
+  _courseAircraftToTarget(0.0)
 {
 }
 
@@ -627,26 +802,28 @@ void OBSController::init()
 void OBSController::update()
 {
   _targetTrack = _rnav->selectedMagCourse() + _rnav->magvarDeg();
-  double brg, az2;
-  SGGeodesy::inverse(_rnav->position(), _waypt->position(), brg, az2, _distanceM); 
-  _courseDev = brg - _targetTrack;
+
+  _courseAircraftToTarget		= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
+  _distanceAircraftTargetMeter	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
+
+  // _courseDev inverted we use point target as origin
+  _courseDev = (_courseAircraftToTarget - _targetTrack);
   SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
 }
 
 bool OBSController::toFlag() const
 {
-  return (fabs(_courseDev) < 90.0);
+  return (fabs(_courseDev) < _rnav->overflightArmAngleDeg());
 }
 
 double OBSController::distanceToWayptM() const
 {
-  return _distanceM;
+  return _distanceAircraftTargetMeter;
 }
 
 double OBSController::xtrackErrorNm() const
 {
-  double x = sin(_courseDev * SG_DEGREES_TO_RADIANS) * _distanceM;
-  return x * SG_METER_TO_NM;
+	return greatCircleCrossTrackError(_distanceAircraftTargetMeter * SG_METER_TO_NM, _courseDev);
 }
 
 double OBSController::courseDeviationDeg() const
@@ -662,7 +839,7 @@ double OBSController::courseDeviationDeg() const
 
 double OBSController::trueBearingDeg() const
 {
-  return SGGeodesy::courseDeg(_rnav->position(), _waypt->position());
+  return _courseAircraftToTarget;
 }
 
 SGGeod OBSController::position() const
@@ -703,7 +880,7 @@ WayptController* WayptController::createForWaypt(RNAV* aRNAV, const WayptRef& aW
     return new HoldCtl(aRNAV, aWpt);
   }
   
-  return new BasicWayptCtl(aRNAV, aWpt);
+  return new LegWayptCtl(aRNAV, aWpt);
 }
 
 } // of namespace flightgear

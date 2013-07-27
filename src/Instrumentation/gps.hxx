@@ -79,7 +79,10 @@ public:
     virtual double vspeedFPM();
     virtual double magvarDeg();
     virtual double selectedMagCourse();
+    virtual double overflightDistanceM();
     virtual double overflightArmDistanceM();
+    virtual double overflightArmAngleDeg();
+    virtual SGGeod previousLegWaypointPosition(bool& isValid);
 
 private:
     friend class SearchFilter;
@@ -103,11 +106,19 @@ private:
       double turnRateDegSec() const        { return _turnRate; }
 
       /**
+       * Distance at which we switch to next waypoint.
+       */
+      double overflightDistanceNm() const { return _overflightDistance; }
+      /**
        * Distance at which we arm overflight sequencing. Once inside this
        * distance, a change of the wp1 'TO' flag to false will be considered
        * overlight of the wp.
        */
       double overflightArmDistanceNm() const { return _overflightArmDistance; }
+      /**
+		 * abs angle at which we arm overflight sequencing.
+		 */
+      double overflightArmAngleDeg() const { return _overflightArmAngle; }
 
       /**
        * Time before the next WP to activate an external annunciator
@@ -135,7 +146,13 @@ private:
       double _turnRate;
 
       // distance from waypoint to arm overflight sequencing (in nm)
+      double _overflightDistance;
+
+      // distance from waypoint to arm overflight sequencing (in nm)
       double _overflightArmDistance;
+
+      //abs angle from course to waypoint to arm overflight sequencing (in deg)
+      double _overflightArmAngle;
 
       // time before reaching a waypoint to trigger annunciator light/sound
       // (in seconds)

@@ -60,9 +60,23 @@ public:
   virtual double selectedMagCourse() = 0;
 
   /**
+   * minimum distance to switch next waypoint.
+   */
+  virtual double overflightDistanceM() = 0;
+  /**
    * minimum distance to a waypoint for overflight sequencing. 
    */
   virtual double overflightArmDistanceM() = 0;
+  /**
+     * angle for overflight sequencing.
+     */
+    virtual double overflightArmAngleDeg() = 0;
+
+  /**
+   * device leg previous waypoint position(eg, from route manager)
+   */
+  virtual SGGeod previousLegWaypointPosition(bool& isValid)= 0;
+
 };
 
 class WayptController
@@ -164,8 +178,9 @@ public:
   virtual SGGeod position() const;
 private:
   SGGeod _origin;
-  double _distanceM;
+  double _distanceAircraftTargetMeter;
   double _courseDev;
+  double _courseAircraftToTarget;
 };
 
 /**
@@ -185,8 +200,9 @@ public:
   virtual bool toFlag() const;
   virtual SGGeod position() const;
 private:
-  double _distanceM;
+  double _distanceAircraftTargetMeter;
   double _courseDev;
+  double _courseAircraftToTarget;
 };
 
 } // of namespace flightgear
