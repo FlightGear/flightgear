@@ -127,7 +127,6 @@ FGAIManager::init() {
     wind_from_north_node = fgGetNode("/environment/wind-from-north-fps",true);
 
     user_altitude_agl_node  = fgGetNode("/position/altitude-agl-ft", true);
-    user_yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
     user_speed_node     = fgGetNode("/velocities/uBody-fps", true);
     
     globals->get_commands()->addCommand("load-scenario", this, &FGAIManager::loadScenarioCommand);
@@ -296,9 +295,7 @@ FGAIManager::getNumAiObjects(void) const
 void
 FGAIManager::fetchUserState( void ) {
 
-    user_yaw       = user_yaw_node->getDoubleValue();
     globals->get_aircraft_orientation(user_heading, user_pitch, user_roll);
-
     user_speed     = user_speed_node->getDoubleValue() * 0.592484;
     wind_from_east = wind_from_east_node->getDoubleValue();
     wind_from_north   = wind_from_north_node->getDoubleValue();

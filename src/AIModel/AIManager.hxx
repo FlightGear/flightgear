@@ -73,7 +73,6 @@ public:
 
     inline double get_user_heading() const { return user_heading; }
     inline double get_user_pitch() const { return user_pitch; }
-    inline double get_user_yaw() const { return user_yaw; }
     inline double get_user_speed() const {return user_speed; }
     inline double get_wind_from_east() const {return wind_from_east; }
     inline double get_wind_from_north() const {return wind_from_north; }
@@ -108,7 +107,6 @@ private:
     SGPropertyNode_ptr enabled;
     SGPropertyNode_ptr thermal_lift_node;
     SGPropertyNode_ptr user_altitude_agl_node;
-    SGPropertyNode_ptr user_yaw_node;
     SGPropertyNode_ptr user_speed_node;
     SGPropertyNode_ptr wind_from_east_node;
     SGPropertyNode_ptr wind_from_north_node;
@@ -119,7 +117,6 @@ private:
     double user_altitude_agl;
     double user_heading;
     double user_pitch;
-    double user_yaw;
     double user_roll;
     double user_speed;
     double wind_from_east;

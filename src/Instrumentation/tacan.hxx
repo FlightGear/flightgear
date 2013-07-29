@@ -53,7 +53,6 @@ private:
     unsigned int _num;
 
     SGPropertyNode_ptr _heading_node;
-    SGPropertyNode_ptr _yaw_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _electrical_node;
     SGPropertyNode_ptr _frequency_node;

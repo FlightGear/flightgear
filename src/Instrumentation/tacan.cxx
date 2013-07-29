@@ -115,7 +115,6 @@ TACAN::init ()
     _mp_callsign_node = mnode ? mnode->getChild("callsign", 0, false) : 0;
 
     _heading_node = fgGetNode("/orientation/heading-deg", true);
-    _yaw_node = fgGetNode("/orientation/side-slip-deg", true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/tacan", true);
 }
 
