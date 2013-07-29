@@ -75,19 +75,11 @@
 
 #include <math.h>
 
-#include <list>
-#include <vector>
-#include <string>
-
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 #include <FDM/groundcache.hxx>
-
-using std::list;
-using std::vector;
-using std::string;
 
 namespace simgear {
 class BVHMaterial;

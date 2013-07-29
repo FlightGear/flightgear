@@ -200,7 +200,7 @@ FGInterface::common_init ()
     if ( !fgHasNode("/sim/presets/speed-set") ) {
         set_V_calibrated_kts(0.0);
     } else {
-        const string speedset = fgGetString("/sim/presets/speed-set");
+        const std::string speedset = fgGetString("/sim/presets/speed-set");
         if ( speedset == "knots" || speedset == "KNOTS" ) {
             set_V_calibrated_kts( fgGetDouble("/sim/presets/airspeed-kt") );
         } else if ( speedset == "mach" || speedset == "MACH" ) {

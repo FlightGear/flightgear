@@ -38,7 +38,7 @@ private:
     int data_in_port;
     int data_out_port;
     int cmd_port;
-    string fdm_host;
+    std::string fdm_host;
 
     simgear::Socket data_client;
     simgear::Socket data_server;
@@ -51,7 +51,7 @@ private:
 public:
 
     // Constructor
-    FGExternalNet( double dt, string host, int dop, int dip, int cp );
+    FGExternalNet( double dt, std::string host, int dop, int dip, int cp );
 
     // Destructor
     ~FGExternalNet();

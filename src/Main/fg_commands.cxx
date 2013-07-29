@@ -843,7 +843,7 @@ static bool
 do_property_cycle (const SGPropertyNode * arg)
 {
     SGPropertyNode * prop = get_prop(arg);
-    vector<SGPropertyNode_ptr> values = arg->getChildren("value");
+    std::vector<SGPropertyNode_ptr> values = arg->getChildren("value");
     
     bool wrap = arg->getBoolValue("wrap", true);
     // compatible with knob/pick animations

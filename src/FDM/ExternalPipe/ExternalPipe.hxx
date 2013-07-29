@@ -38,11 +38,11 @@ private:
 
     bool valid;
 
-    string fifo_name_1;
-    string fifo_name_2;
+    std::string fifo_name_1;
+    std::string fifo_name_2;
     FILE *pd1;
     FILE *pd2;
-    string _protocol;
+    std::string _protocol;
 
     FGNetCtrls ctrls;
     FGNetFDM fdm;
@@ -51,8 +51,8 @@ private:
     double last_weight;
     double last_cg_offset;
 
-    vector <string> property_names;
-    vector <SGPropertyNode_ptr> nodes;
+    std::vector <std::string> property_names;
+    std::vector <SGPropertyNode_ptr> nodes;
 
     // Protocol specific init routines
     void init_binary();
@@ -66,7 +66,7 @@ private:
 public:
 
     // Constructor
-    FGExternalPipe( double dt, string fifo_name, string protocol );
+    FGExternalPipe( double dt, std::string fifo_name, std::string protocol );
 
     // Destructor
     ~FGExternalPipe();
