@@ -306,10 +306,7 @@ void CameraGroup::update(const osg::Vec3d& position,
         Camera* camera = info->getCamera(MAIN_CAMERA);
         if ( camera ) {
             const View::Slave& slave = _viewer->getSlave(info->getMainSlaveIndex());
-#if SG_OSG_VERSION_LESS_THAN(3,0,0)
-            // refreshes camera viewports (for now)
-            info->updateCameras();
-#endif
+
             Matrix viewMatrix;
             if (info->flags & GUI) {
                 viewMatrix = osg::Matrix(); // identifty transform on the GUI camera

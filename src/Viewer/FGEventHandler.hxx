@@ -16,12 +16,10 @@ namespace flightgear
         public:
             FGStatsHandler()
             {
-#if (SG_OSG_VERSION >= 30000)
                 // Adjust font type/size for >=OSG3.
                 // OSG defaults aren't working/available for FG.
                 _font = "Fonts/helvetica_medium.txf";
                 _characterSize = 12.0f;
-#endif
             }
     };
 

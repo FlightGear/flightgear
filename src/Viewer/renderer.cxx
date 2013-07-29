@@ -597,9 +597,7 @@ void installCullVisitor(Camera* camera)
         = static_cast<osgViewer::Renderer*>(camera->getRenderer());
     for (int i = 0; i < 2; ++i) {
         osgUtil::SceneView* sceneView = renderer->getSceneView(i);
-#if SG_OSG_VERSION_LESS_THAN(3,0,0)
-        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
-#else
+
         osg::ref_ptr<osgUtil::CullVisitor::Identifier> identifier;
         identifier = sceneView->getCullVisitor()->getIdentifier();
         sceneView->setCullVisitor(new simgear::EffectCullVisitor);
@@ -612,7 +610,7 @@ void installCullVisitor(Camera* camera)
         identifier = sceneView->getCullVisitorRight()->getIdentifier();
         sceneView->setCullVisitorRight(sceneView->getCullVisitor()->clone());
         sceneView->getCullVisitorRight()->setIdentifier(identifier.get());
-#endif
+
     }
 }
 

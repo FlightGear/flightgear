@@ -1078,13 +1078,9 @@ wxRadarBg::updateFont()
     } else {
         tpath = path;
     }
-
-#if (FG_OSG_VERSION >= 21000)
+    
     osg::ref_ptr<osgDB::ReaderWriter::Options> fontOptions = new osgDB::ReaderWriter::Options("monochrome");
     osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str(), fontOptions.get());
-#else
-    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str());
-#endif
 
     if (font != 0) {
         _font = font;
