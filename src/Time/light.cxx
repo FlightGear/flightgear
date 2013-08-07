@@ -361,7 +361,10 @@ void FGLight::update_adj_fog_color () {
        sif = 1e-4;
 
     // determine horizontal angle between current view direction and sun
-    double hor_rotation = -_sun_rotation - SGD_PI_2 - heading + heading_offset;
+    // since _sun_rotation is relative to South, and heading is in the local frame
+    // we need to account for the 180 degrees offset and differing signs 
+    // hence the negation and SGD_PI adjustment.
+    double hor_rotation = -_sun_rotation - SGD_PI - heading + heading_offset;
     if (hor_rotation < 0 )
         hor_rotation = fmod(hor_rotation, SGD_2PI) + SGD_2PI;
     else
@@ -430,8 +433,14 @@ void FGLight::updateSunPos()
     // Get direction to the sun in the local frame.
     SGVec3d local_sun_vec = hlOr.transform(nsun);
 
-    // Angle from south. 
-    _sun_rotation = 2.0 * atan2(local_sun_vec.x(), -local_sun_vec.y());
+    // Angle from South. 
+    // atan2(y,x) returns the angle between the positive X-axis
+    // and the vector with the origin at 0, going through (x,y)
+    // Since the local frame coordinates have x-positive pointing Nord and 
+    // y-positive pointing East we need to negate local_sun_vec.x()
+    // _sun_rotation is positive counterclockwise from South (sun in the East)
+    // and negative clockwise from South (sun in the West)
+    _sun_rotation = atan2(local_sun_vec.y(), -local_sun_vec.x());
 
     // cout << "  Sky needs to rotate = " << _sun_rotation << " rads = "
     //      << _sun_rotation * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
