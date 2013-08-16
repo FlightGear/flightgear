@@ -32,6 +32,8 @@
 FGButton::FGButton ()
   : is_repeatable(false),
     interval_sec(0),
+    delay_sec(0),
+    release_delay_sec(0),
     last_dt(0),
     last_state(0)
 {

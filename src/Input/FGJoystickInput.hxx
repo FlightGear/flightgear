@@ -68,7 +68,7 @@ private:
     float high_threshold;
     FGButton low;
     FGButton high;
-    float interval_sec;
+    float interval_sec, delay_sec, release_delay_sec;
     double last_dt;
   };
 

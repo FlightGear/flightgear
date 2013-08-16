@@ -42,6 +42,8 @@ FGJoystickInput::axis::axis ()
     low_threshold(-0.9),
     high_threshold(0.9),
     interval_sec(0),
+    delay_sec(0),
+    release_delay_sec(0),
     last_dt(0)
 {
 }
@@ -264,6 +266,8 @@ void FGJoystickInput::postinit()
       a.high.init(axis_node->getChild("high"), "high", module );
       a.high_threshold = axis_node->getDoubleValue("high-threshold", 0.9);
       a.interval_sec = axis_node->getDoubleValue("interval-sec",0.0);
+      a.delay_sec = axis_node->getDoubleValue("delay-sec",0.0);
+      a.release_delay_sec = axis_node->getDoubleValue("release-delay-sec",0.0);
       a.last_dt = 0.0;
     }
 
@@ -291,6 +295,8 @@ void FGJoystickInput::postinit()
       b.init(button_node, buf.str(), module );
       // get interval-sec property
       b.interval_sec = button_node->getDoubleValue("interval-sec",0.0);
+      b.delay_sec = button_node->getDoubleValue("delay-sec",0.0);
+      b.release_delay_sec = button_node->getDoubleValue("release-delay-sec",0.0);
       b.last_dt = 0.0;
     }
 
@@ -305,6 +311,8 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   float axis_values[MAX_JOYSTICK_AXES];
   int modifiers = fgGetKeyModifiers();
   int buttons;
+  bool pressed, last_state;
+  float delay;
   
   jsJoystick * js = joy->plibJS.get();
   if (js == 0 || js->notWorking())
@@ -340,25 +348,33 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
     }
     
     // do we have to emulate axis buttons?
-    a.last_dt += dt;
-    if(a.last_dt >= a.interval_sec) {
+    last_state = joy->axes[j].low.last_state || joy->axes[j].high.last_state;
+    pressed = axis_values[j] < a.low_threshold || axis_values[j] > a.high_threshold;
+    delay = (pressed ? last_state ? a.interval_sec : a.delay_sec : a.release_delay_sec );
+    if(pressed || last_state) a.last_dt += dt;
+    else a.last_dt = 0;
+    if(a.last_dt >= delay) {
       if (a.low.bindings[modifiers].size())
         joy->axes[j].low.update( modifiers, axis_values[j] < a.low_threshold );
       
       if (a.high.bindings[modifiers].size())
         joy->axes[j].high.update( modifiers, axis_values[j] > a.high_threshold );
       
-      a.last_dt -= a.interval_sec;
+      a.last_dt -= delay;
     }
   } // of axes iteration
   
   // Fire bindings for the buttons.
   for (int j = 0; j < joy->nbuttons; j++) {
     FGButton &b = joy->buttons[j];
-    b.last_dt += dt;
-    if(b.last_dt >= b.interval_sec) {
-      joy->buttons[j].update( modifiers, (buttons & (1u << j)) > 0 );
-      b.last_dt -= b.interval_sec;
+    pressed = (buttons & (1u << j)) > 0;
+    last_state = joy->buttons[j].last_state;
+    delay = (pressed ? last_state ? b.interval_sec : b.delay_sec : b.release_delay_sec );
+    if(pressed || last_state) b.last_dt += dt;
+    else b.last_dt = 0;
+    if(b.last_dt >= delay) {
+      joy->buttons[j].update( modifiers, pressed );
+      b.last_dt -= delay;
     }
   } // of butotns iterations
 
