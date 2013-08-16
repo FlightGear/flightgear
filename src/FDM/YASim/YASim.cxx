@@ -513,7 +513,7 @@ void YASim::copyFromYASim()
     float alpha, beta;
     Glue::calcAlphaBeta(s, wind, &alpha, &beta);
     _set_Alpha(alpha);
-    _set_Beta(beta);
+    _set_Beta(-beta);
 
     float tmp[9];
     Math::trans33(xyz2ned, tmp);
