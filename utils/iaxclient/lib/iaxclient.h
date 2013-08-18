@@ -40,7 +40,7 @@ extern "C" {
 typedef int socklen_t;
 #endif
 #if defined(WIN32)  ||  defined(_WIN32_WCE)
-#include "winpoop.h"
+#include "winsock2.h"
 #else
 #include <sys/socket.h>
 #endif
