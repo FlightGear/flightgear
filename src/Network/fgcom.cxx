@@ -330,6 +330,10 @@ void FGCom::update(double dt)
 
 void FGCom::shutdown()
 {
+    if( !_enabled ) {
+        return;
+    }
+    
   SG_LOG( SG_IO, SG_INFO, "FGCom shutdown()" );
   _enabled = false;
 
