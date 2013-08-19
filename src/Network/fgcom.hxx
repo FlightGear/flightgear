@@ -79,6 +79,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     int      _callComm0;
     //int      _callComm1;
     int      _listener_active;
+    int      _currentFreqKhz;
     std::string   _server;
     std::string   _callsign;
     std::string   _username;

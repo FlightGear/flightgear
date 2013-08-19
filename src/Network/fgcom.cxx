@@ -259,8 +259,9 @@ void FGCom::postinit()
 
     // Do the first call at start
     const double freq = _comm0_node->getDoubleValue();
+    _currentFreqKhz = 10 * static_cast<int>(freq * 100 + 0.25);
     std::string num = computePhoneNumber(freq, getAirportCode(freq));
-    if( num.size() > 0 ) {
+    if( !num.empty() ) {
       SG_LOG( SG_IO, SG_INFO, "FGCom comm[0] number=" << num );
       _callComm0 = iaxc_call(num.c_str());
     }
@@ -272,6 +273,9 @@ void FGCom::postinit()
 
 void FGCom::updateCall(bool& changed, int& callNo, double freqMHz)
 {
+
+    _currentFreqKhz = 10 * static_cast<int>(freqMHz * 100 + 0.25);
+
     if (!changed) {
         if( !isInRange(freqMHz) ) {
             iaxc_dump_call_number(callNo);
@@ -479,16 +483,14 @@ std::string FGCom::getAirportCode(const double& freq)
 {
   SGGeod aircraftPos = globals->get_aircraft_position();
 
-  int freqKhz = 10 * static_cast<int>(freq * 100 + 0.25);
-
   for(size_t i=0; i<sizeof(special_freq)/sizeof(special_freq[0]); i++) { // Check if it's a special freq
-    if(special_freq[i] == freqKhz) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom getAirportCode: " << freqKhz << " is specially associated to " << NULL_ICAO );
+    if(special_freq[i] == _currentFreqKhz) {
+      SG_LOG( SG_IO, SG_INFO, "FGCom getAirportCode: " << freq << " is specially associated to " << NULL_ICAO );
       return NULL_ICAO;
     }
   }
 
-  flightgear::CommStation* apt = flightgear::CommStation::findByFreq(freqKhz, aircraftPos);
+  flightgear::CommStation* apt = flightgear::CommStation::findByFreq(_currentFreqKhz, aircraftPos);
   if( !apt ) {
     SG_LOG( SG_IO, SG_INFO, "FGCom getAirportCode: not found" );
     return std::string();
@@ -571,6 +573,12 @@ std::string FGCom::computePhoneNumber(const double& freq, const std::string& ica
 
 bool FGCom::isInRange(const double &freq) const
 {
+    for(size_t i=0; i<sizeof(special_freq)/sizeof(special_freq[0]); i++) { // Check if it's a special freq
+      if( (special_freq[i]) == _currentFreqKhz ) {
+        return 1;
+      }
+    }
+
     SGGeod acftPos = globals->get_aircraft_position();
     double distNm = SGGeodesy::distanceNm(_aptPos, acftPos);
     double delta_elevation_ft = fabs(acftPos.getElevationFt() - _aptPos.getElevationFt());
