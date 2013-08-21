@@ -51,6 +51,7 @@
 #define NULL_ICAO "ZZZZ"
 
 const int special_freq[] = { // Define some freq who need to be used with NULL_ICAO
+	910000,
 	911000,
 	700000,
 	123450,
@@ -137,7 +138,7 @@ void FGCom::bind()
   //_comm1_node->addChangeListener(this);
   //_nav0_node->addChangeListener(this);
   //_nav1_node->addChangeListener(this);
-  _ptt0_node->addChangeListener(this);
+  //_ptt0_node->addChangeListener(this);
   _test_node->addChangeListener(this);
 }
 
@@ -255,6 +256,10 @@ void FGCom::postinit()
         _selectedOutput_node->setIntValue(devs[i].devID);
     }
 
+    // Mute the mic and set speaker at start
+    iaxc_input_level_set( 0.0 );
+    iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
+
     iaxc_millisleep(50);
 
     // Do the first call at start
@@ -318,6 +323,15 @@ void FGCom::update(double dt)
     if ( !_enabled ) {
         return;
     }
+
+    if( _ptt0_node->getBoolValue() ) {
+      iaxc_input_level_set( _micLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max
+      iaxc_output_level_set( 0.0 );
+    } else {
+      iaxc_input_level_set( 0.0 );
+      iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
+    }
+
     // For now we manage FGCom for only one freq because IAXClient
     // is not able to handle multiple calls at same time.
     updateCall(_comm0Changed, _callComm0, _comm0_node->getDoubleValue());
@@ -357,7 +371,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     return;
   }
 
-  if (prop == _ptt0_node && _enabled) {
+  /*if (prop == _ptt0_node && _enabled) {
     if( _ptt0_node->getBoolValue() ) {
       iaxc_input_level_set( _micLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max
       iaxc_output_level_set( 0.0 );
@@ -365,7 +379,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
       iaxc_input_level_set( 0.0 );
       iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
     }
-  }
+  }*/
 
   if (prop == _test_node) {
     SG_LOG( SG_IO, SG_INFO, "FGCom test= " << prop->getBoolValue() );
@@ -402,7 +416,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     SG_LOG( SG_IO, SG_INFO, "FGCom speaker-level= " << speakerLevel );
     SG_CLAMP_RANGE<float>( speakerLevel, 0.0, 1.0 );
     _speakerLevel_node->setFloatValue(speakerLevel);
-    iaxc_output_level_set(speakerLevel);
+    //iaxc_output_level_set(speakerLevel);
   }
 
   if (prop == _micLevel_node && _enabled) {
@@ -410,7 +424,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     SG_LOG( SG_IO, SG_INFO, "FGCom mic-level= " << micLevel );
     SG_CLAMP_RANGE<float>( micLevel, 0.0, 1.0 );
     _micLevel_node->setFloatValue(micLevel);
-    iaxc_input_level_set(micLevel);
+    //iaxc_input_level_set(micLevel);
   }
 
   if (prop == _comm0_node) {
