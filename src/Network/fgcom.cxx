@@ -188,6 +188,9 @@ void FGCom::postinit()
     //iaxc_mic_boost_set( _micBoost_node->getIntValue() );
     iaxc_set_formats( IAXC_FORMAT_GSM, IAXC_FORMAT_GSM );
     iaxc_start_processing_thread ();
+
+    // Now IAXClient is initialized
+    _initialized = true;
     
     if ( _register ) {
       _regId = iaxc_register( const_cast<char*>(_username.c_str()),
@@ -320,7 +323,7 @@ void FGCom::updateCall(bool& changed, int& callNo, double freqMHz)
 
 void FGCom::update(double dt)
 {
-    if ( !_enabled ) {
+    if ( !_enabled || !_initialized ) {
         return;
     }
 
@@ -349,6 +352,7 @@ void FGCom::shutdown()
     }
     
   SG_LOG( SG_IO, SG_INFO, "FGCom shutdown()" );
+  _initialized = false;
   _enabled = false;
 
   iaxc_unregister(_regId);
@@ -388,7 +392,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
   }
 
   //FIXME: not implemented in IAX audio driver (audio_openal.c)
-  if (prop == _micBoost_node && _enabled) {
+  if (prop == _micBoost_node && _initialized) {
     int micBoost = prop->getIntValue();
     SG_LOG( SG_IO, SG_INFO, "FGCom mic-boost= " << micBoost );
     SG_CLAMP_RANGE<int>( micBoost, 0, 1 );
@@ -397,7 +401,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
   }
 
   //FIXME: not implemented in IAX audio driver (audio_openal.c)
-  if ((prop == _selectedInput_node || prop == _selectedOutput_node) && _enabled) {
+  if ((prop == _selectedInput_node || prop == _selectedOutput_node) && _initialized) {
     int selectedInput = _selectedInput_node->getIntValue();
     int selectedOutput = _selectedOutput_node->getIntValue();
     SG_LOG( SG_IO, SG_INFO, "FGCom selected-input= " << selectedInput );
@@ -469,7 +473,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
 
 void FGCom::testMode(bool testMode)
 {
-  if(testMode) {
+  if(testMode && _initialized) {
     _enabled = false;
     iaxc_dump_call_number(_callComm0);
     iaxc_input_level_set( _micLevel_node->getFloatValue() );
@@ -483,10 +487,12 @@ void FGCom::testMode(bool testMode)
     if( _callComm0 == -1 )
       SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call selected freq (test mode)" );
   } else {
-    iaxc_dump_call_number(_callComm0);
-    iaxc_millisleep(IAX_DELAY);
-    _callComm0 = -1;
-    _enabled = true;
+    if( _initialized ) {
+      iaxc_dump_call_number(_callComm0);
+      iaxc_millisleep(IAX_DELAY);
+      _callComm0 = -1;
+      _enabled = true;
+    }
   }
 }
 

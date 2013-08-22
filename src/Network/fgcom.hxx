@@ -73,6 +73,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     //bool     _comm1Changed;
     bool     _register;
     bool     _enabled;
+    bool     _initialized;
     int      _regId;
     //int      _callNav0;
     //int      _callNav1;
