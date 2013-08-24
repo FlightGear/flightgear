@@ -22,8 +22,8 @@ struct openal_priv_data
     ALCcontext* out_ctx;
     ALuint source;
     ALCdevice* in_dev;
-    double input_level;
-    double output_level;
+    float input_level;
+    float output_level;
 };
 
 static struct iaxc_audio_device device = { 
@@ -199,7 +199,7 @@ float openal_input_level_get(struct iaxc_audio_driver *d)
 {
     struct openal_priv_data* priv = (struct openal_priv_data*)(d->priv);
 
-    return (float)priv->input_level;
+    return priv->input_level;
 }
 
 float openal_output_level_get(struct iaxc_audio_driver *d)
@@ -212,7 +212,7 @@ float openal_output_level_get(struct iaxc_audio_driver *d)
 int openal_input_level_set(struct iaxc_audio_driver *d, float level)
 {
     struct openal_priv_data* priv = (struct openal_priv_data*)(d->priv);
-    priv->input_level = level;
+    priv->input_level = (level < 0.5) ? 0 : 1;
 
     return 0;
 }
@@ -286,7 +286,7 @@ int openal_initialize(struct iaxc_audio_driver *d, int sample_rate)
 
     priv->sample_rate = sample_rate;    
     priv->num_buffers = 20;
-    priv->input_level = 1;
+    priv->input_level = 0;
     priv->output_level = 1;
     priv->buffers_head = 0;
     priv->buffers_tail = 0;

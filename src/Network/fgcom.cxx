@@ -138,7 +138,7 @@ void FGCom::bind()
   //_comm1_node->addChangeListener(this);
   //_nav0_node->addChangeListener(this);
   //_nav1_node->addChangeListener(this);
-  //_ptt0_node->addChangeListener(this);
+  _ptt0_node->addChangeListener(this);
   _test_node->addChangeListener(this);
 }
 
@@ -179,7 +179,7 @@ void FGCom::postinit()
     
     //WARNING: this _must_ be executed after sound system is totally initialized !
     if( iaxc_initialize(NUM_CALLS) ) {
-        SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot initialize iaxclient!");
+        SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot initialize iaxclient");
         _enabled = false;
         return;
     }
@@ -197,7 +197,7 @@ void FGCom::postinit()
                               const_cast<char*>(_password.c_str()),
                               const_cast<char*>(_server.c_str()) );
         if( _regId == -1 ) {
-            SG_LOG(SG_IO, SG_INFO, "FGCom: cannot register iaxclient!");
+            SG_LOG(SG_IO, SG_ALERT, "FGCom: cannot register iaxclient");
             return;
         }
     }
@@ -270,11 +270,10 @@ void FGCom::postinit()
     _currentFreqKhz = 10 * static_cast<int>(freq * 100 + 0.25);
     std::string num = computePhoneNumber(freq, getAirportCode(freq));
     if( !num.empty() ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom comm[0] number=" << num );
       _callComm0 = iaxc_call(num.c_str());
     }
     if( _callComm0 == -1 )
-      SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call selected freq" );
+      SG_LOG( SG_IO, SG_DEBUG, "FGCom: cannot call " << num.c_str() );
 }
 
 
@@ -294,8 +293,7 @@ void FGCom::updateCall(bool& changed, int& callNo, double freqMHz)
                 return;
         }
     }
-    
-    SG_LOG( SG_IO, SG_INFO, "FGCom manage change" );
+
     changed = false; // FIXME, out-params are confusing
 
     if( callNo != -1 ) {
@@ -308,11 +306,10 @@ void FGCom::updateCall(bool& changed, int& callNo, double freqMHz)
         if( !isInRange(freqMHz) )
             return;
         if( !num.empty() ) {
-            SG_LOG( SG_IO, SG_INFO, "FGCom number=" << num );
             callNo = iaxc_call_ex(num.c_str(), _callsign.c_str(), NULL, 0 /* no video */);
 
             if( callNo == -1 )
-                SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call selected freq" );
+                SG_LOG( SG_IO, SG_DEBUG, "FGCom: cannot call " << num.c_str() );
         }
     } else {
         changed = true;
@@ -325,14 +322,6 @@ void FGCom::update(double dt)
 {
     if ( !_enabled || !_initialized ) {
         return;
-    }
-
-    if( _ptt0_node->getBoolValue() ) {
-      iaxc_input_level_set( _micLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max
-      iaxc_output_level_set( 0.0 );
-    } else {
-      iaxc_input_level_set( 0.0 );
-      iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
     }
 
     // For now we manage FGCom for only one freq because IAXClient
@@ -350,8 +339,7 @@ void FGCom::shutdown()
     if( !_enabled ) {
         return;
     }
-    
-  SG_LOG( SG_IO, SG_INFO, "FGCom shutdown()" );
+
   _initialized = false;
   _enabled = false;
 
@@ -365,7 +353,6 @@ void FGCom::shutdown()
 void FGCom::valueChanged(SGPropertyNode *prop)
 {
   if (prop == _enabled_node) {
-    SG_LOG( SG_IO, SG_INFO, "FGCom enabled= " << prop->getBoolValue() );
     if( prop->getBoolValue() ) {
       init();
       postinit();
@@ -375,18 +362,17 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     return;
   }
 
-  /*if (prop == _ptt0_node && _enabled) {
+  if (prop == _ptt0_node && _enabled) {
     if( _ptt0_node->getBoolValue() ) {
-      iaxc_input_level_set( _micLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max
       iaxc_output_level_set( 0.0 );
+      iaxc_input_level_set( _micLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max
     } else {
-      iaxc_input_level_set( 0.0 );
       iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
+      iaxc_input_level_set( 0.0 );
     }
-  }*/
+  }
 
   if (prop == _test_node) {
-    SG_LOG( SG_IO, SG_INFO, "FGCom test= " << prop->getBoolValue() );
     testMode( prop->getBoolValue() );
     return;
   }
@@ -394,7 +380,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
   //FIXME: not implemented in IAX audio driver (audio_openal.c)
   if (prop == _micBoost_node && _initialized) {
     int micBoost = prop->getIntValue();
-    SG_LOG( SG_IO, SG_INFO, "FGCom mic-boost= " << micBoost );
     SG_CLAMP_RANGE<int>( micBoost, 0, 1 );
     iaxc_mic_boost_set( micBoost ) ; // 0 = enabled , 1 = disabled
     return;
@@ -404,8 +389,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
   if ((prop == _selectedInput_node || prop == _selectedOutput_node) && _initialized) {
     int selectedInput = _selectedInput_node->getIntValue();
     int selectedOutput = _selectedOutput_node->getIntValue();
-    SG_LOG( SG_IO, SG_INFO, "FGCom selected-input= " << selectedInput );
-    SG_LOG( SG_IO, SG_INFO, "FGCom selected-output= " << selectedOutput );
     iaxc_audio_devices_set(selectedInput, selectedOutput, 0);
     return;
   }
@@ -417,7 +400,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
 
   if (prop == _speakerLevel_node && _enabled) {
     float speakerLevel = prop->getFloatValue();
-    SG_LOG( SG_IO, SG_INFO, "FGCom speaker-level= " << speakerLevel );
     SG_CLAMP_RANGE<float>( speakerLevel, 0.0, 1.0 );
     _speakerLevel_node->setFloatValue(speakerLevel);
     //iaxc_output_level_set(speakerLevel);
@@ -425,7 +407,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
 
   if (prop == _micLevel_node && _enabled) {
     float micLevel = prop->getFloatValue();
-    SG_LOG( SG_IO, SG_INFO, "FGCom mic-level= " << micLevel );
     SG_CLAMP_RANGE<float>( micLevel, 0.0, 1.0 );
     _micLevel_node->setFloatValue(micLevel);
     //iaxc_input_level_set(micLevel);
@@ -433,7 +414,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
 
   if (prop == _comm0_node) {
     if( _currentComm0 != prop->getDoubleValue() ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom comm[0]/freq= " << prop->getDoubleValue() );
       _currentComm0 = prop->getDoubleValue();
       _p.stamp();
       _comm0Changed = true;
@@ -442,7 +422,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
 /*
   if (prop == _comm1_node) {
     if( _currentComm1 != prop->getDoubleValue() ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom comm[1]/freq= " << prop->getDoubleValue() );
       _currentComm1 = prop->getDoubleValue();
       _p.stamp();
       _comm1Changed = true;
@@ -451,7 +430,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
 
   if (prop == _nav0_node) {
     if( _currentNav0 != prop->getDoubleValue() ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom nav[0]/freq= " << prop->getDoubleValue() );
       _currentNav0 = prop->getDoubleValue();
       _nav0Changed = true;
     }
@@ -459,7 +437,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
 
   if (prop == _nav1_node) {
     if( _currentNav1 != prop->getDoubleValue() ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom nav[1]/freq= " << prop->getDoubleValue() );
       _currentNav1 = prop->getDoubleValue();
       _nav1Changed = true;
     }
@@ -480,12 +457,11 @@ void FGCom::testMode(bool testMode)
     iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
     std::string num = computePhoneNumber(TEST_FREQ, NULL_ICAO);
     if( num.size() > 0 ) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom test mode =" << num );
       iaxc_millisleep(IAX_DELAY);
       _callComm0 = iaxc_call(num.c_str());
     }
     if( _callComm0 == -1 )
-      SG_LOG( SG_IO, SG_ALERT, "FGCom cannot call selected freq (test mode)" );
+      SG_LOG( SG_IO, SG_DEBUG, "FGCom: cannot call " << num.c_str() );
   } else {
     if( _initialized ) {
       iaxc_dump_call_number(_callComm0);
@@ -509,17 +485,14 @@ std::string FGCom::getAirportCode(const double& freq)
 
   for(size_t i=0; i<sizeof(special_freq)/sizeof(special_freq[0]); i++) { // Check if it's a special freq
     if(special_freq[i] == _currentFreqKhz) {
-      SG_LOG( SG_IO, SG_INFO, "FGCom getAirportCode: " << freq << " is specially associated to " << NULL_ICAO );
       return NULL_ICAO;
     }
   }
 
   flightgear::CommStation* apt = flightgear::CommStation::findByFreq(_currentFreqKhz, aircraftPos);
   if( !apt ) {
-    SG_LOG( SG_IO, SG_INFO, "FGCom getAirportCode: not found" );
     return std::string();
   }
-  SG_LOG( SG_IO, SG_INFO, "FGCom getAirportCode: found " << apt->airport()->ident() );
 
   _aptPos = apt->geod();
   return apt->airport()->ident();
@@ -539,10 +512,8 @@ std::string FGCom::getVorCode(const double& freq) const
 
   FGNavRecord* vor = FGNavList::findByFreq( freq, aircraftPos, &filter);
   if( !vor ) {
-    SG_LOG( SG_IO, SG_INFO, "FGCom getVorCode: not found" );
     return std::string();
   }
-  SG_LOG( SG_IO, SG_INFO, "FGCom getVorCode: found " << vor->get_ident(); );
 
   return vor->get_ident();
 }
