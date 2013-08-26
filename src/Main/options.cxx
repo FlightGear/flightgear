@@ -2233,10 +2233,13 @@ string Options::platformDefaultRoot() const
   // look for a 'data' subdir
   CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
   
+  CFURLRef absoluteDataUrl = CFURLCopyAbsoluteURL(dataDir);
+  
   // now convert down to a path, and the a c-string
-  CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
+  CFStringRef path = CFURLCopyFileSystemPath(absoluteDataUrl, kCFURLPOSIXPathStyle);  
   string root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
   
+  CFRelease(absoluteDataUrl);
   CFRelease(resourcesUrl);
   CFRelease(dataDir);
   CFRelease(path);
