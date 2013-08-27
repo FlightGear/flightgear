@@ -43,8 +43,11 @@
 
 
 #define NUM_CALLS 4
+#define MAX_GND_RANGE 10.0
+#define MAX_TWR_RANGE 50.0
 #define MAX_RANGE 100.0
 #define MIN_RANGE  20.0
+#define MIN_GNDTWR_RANGE 0.0
 #define DEFAULT_SERVER "fgcom.flightgear.org"
 #define IAX_DELAY 300  // delay between calls in milliseconds
 #define TEST_FREQ 910.00
@@ -167,6 +170,9 @@ void FGCom::init()
   //_comm1Changed     = false;
   //_nav0Changed      = false;
   //_nav1Changed      = false;
+
+  _maxRange         = MAX_RANGE;
+  _minRange         = MIN_RANGE;
 }
 
 
@@ -494,6 +500,17 @@ std::string FGCom::getAirportCode(const double& freq)
     return std::string();
   }
 
+  if( apt->type() == FGPositioned::FREQ_TOWER ) {
+    _maxRange = MAX_TWR_RANGE;
+    _minRange = MIN_GNDTWR_RANGE;
+  } else if( apt->type() == FGPositioned::FREQ_GROUND ) {
+    _maxRange = MAX_GND_RANGE;
+    _minRange = MIN_GNDTWR_RANGE;
+  } else {
+    _maxRange = MAX_RANGE;
+    _minRange = MIN_RANGE;
+  }
+
   _aptPos = apt->geod();
   return apt->airport()->ident();
 }
@@ -579,8 +596,8 @@ bool FGCom::isInRange(const double &freq) const
     double delta_elevation_ft = fabs(acftPos.getElevationFt() - _aptPos.getElevationFt());
     double rangeNm = 1.23 * sqrt(delta_elevation_ft);
 
-    if (rangeNm > MAX_RANGE) rangeNm = MAX_RANGE;
-    if (rangeNm < MIN_RANGE) rangeNm = MIN_RANGE;
+    if (rangeNm > _maxRange) rangeNm = _maxRange;
+    if (rangeNm < _minRange) rangeNm = _minRange;
     if( distNm > rangeNm )   return 0;
     return 1;
 }

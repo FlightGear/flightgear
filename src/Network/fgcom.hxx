@@ -63,6 +63,8 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
 
 
 
+    double   _maxRange;
+    double   _minRange;
     double   _currentComm0;
     //double   _currentComm1;
     //double   _currentNav0;
