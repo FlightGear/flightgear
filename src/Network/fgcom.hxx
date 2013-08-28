@@ -3,7 +3,7 @@
 
 // fgcom.hxx -- FGCom: Voice communication
 //
-// Written by Clement de l'Hamaide, started Mai 2013.
+// Written by Clement de l'Hamaide, started May 2013.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -36,6 +36,8 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     virtual void update(double dt);
     virtual void valueChanged(SGPropertyNode *prop);
     virtual void shutdown();
+    void iaxTextEvent(struct iaxc_ev_text text);
+
 
   private:
 
@@ -45,6 +47,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr _comm0_node;                           // instrumentation/comm[0]/frequencies/selected-mhz
     //SGPropertyNode_ptr _comm1_node;                         // instrumentation/comm[1]/frequencies/selected-mhz
     SGPropertyNode_ptr _test_node;                            // sim/fgcom/test
+    SGPropertyNode_ptr _text_node;                            // sim/fgcom/text
     SGPropertyNode_ptr _server_node;                          // sim/fgcom/server
     SGPropertyNode_ptr _enabled_node;                         // sim/fgcom/enabled
     SGPropertyNode_ptr _micBoost_node;                        // sim/fgcom/mic-boost
@@ -60,6 +63,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr _deviceOutput_node[4];                 // sim/fgcom/device[n]/available-output
     SGPropertyNode_ptr _selectedInput_node;                   // sim/fgcom/device-input
     SGPropertyNode_ptr _selectedOutput_node;                  // sim/fgcom/device-output
+    SGPropertyNode_ptr _showMessages_node;                    // sim/fgcom/show-messages
 
 
 

@@ -1,6 +1,6 @@
 // fgcom.cxx -- FGCom: Voice communication
 //
-// Written by Clement de l'Hamaide, started Mai 2013.
+// Written by Clement de l'Hamaide, started May 2013.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -64,6 +64,36 @@ const int special_freq[] = { // Define some freq who need to be used with NULL_I
 	121000,
 	723340 };
 
+static FGCom* static_instance = NULL;
+
+
+
+static int iaxc_callback( iaxc_event e )
+{
+  switch( e.type )
+  {
+    case IAXC_EVENT_TEXT:
+      static_instance->iaxTextEvent(e.ev.text);
+      break;
+    default:
+      return 0;
+  }
+  return 1;
+}
+
+
+
+void FGCom::iaxTextEvent(struct iaxc_ev_text text)
+{
+  if( (text.type == IAXC_TEXT_TYPE_STATUS ||
+       text.type == IAXC_TEXT_TYPE_IAX) &&
+       _showMessages_node->getBoolValue() )
+  {
+    _text_node->setStringValue(text.message);
+  }
+}
+
+
 
 FGCom::FGCom() :
     _register(true)
@@ -90,6 +120,7 @@ void FGCom::bind()
   _speakerLevel_node       = node->getChild( "speaker-level", 0, true );
   _selectedInput_node      = node->getChild( "device-input", 0, true );
   _selectedOutput_node     = node->getChild( "device-output", 0, true );
+  _showMessages_node       = node->getChild( "show-messages", 0, true );
 
   SGPropertyNode *reg_node = node->getChild("register", 0, true);
   _register_node           = reg_node->getChild( "enabled", 0, true );
@@ -102,6 +133,7 @@ void FGCom::bind()
   //_comm1_node              = fgGetNode("/instrumentation/comm[1]/frequencies/selected-mhz", true);
   _ptt0_node               = fgGetNode("/instrumentation/comm[0]/ptt", true); //FIXME: what about /instrumentation/comm[1]/ptt ?
   _callsign_node           = fgGetNode("/sim/multiplay/callsign", true);
+  _text_node               = fgGetNode("/sim/messages/atc", true );
 
   // Set default values if not provided
   if ( !_enabled_node->hasValue() )
@@ -130,6 +162,9 @@ void FGCom::bind()
 
   if ( !_password_node->hasValue() )
       _password_node->setStringValue("guest");
+
+  if ( !_showMessages_node->hasValue() )
+      _showMessages_node->setBoolValue(false);
 
   _selectedOutput_node->addChangeListener(this);
   _selectedInput_node->addChangeListener(this);
@@ -189,6 +224,10 @@ void FGCom::postinit()
         _enabled = false;
         return;
     }
+
+    assert( static_instance == NULL );
+    static_instance = this;
+    iaxc_set_event_callback( iaxc_callback );
     
     // FIXME: To be implemented in IAX audio driver
     //iaxc_mic_boost_set( _micBoost_node->getIntValue() );
@@ -349,9 +388,13 @@ void FGCom::shutdown()
   _initialized = false;
   _enabled = false;
 
+  iaxc_set_event_callback(NULL);
   iaxc_unregister(_regId);
   iaxc_stop_processing_thread();
   iaxc_shutdown();
+
+  assert( static_instance == this );
+  static_instance = NULL;
 }
 
 
