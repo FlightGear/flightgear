@@ -92,6 +92,11 @@ void FGTileMgr::init() {
     fp.clear();
     std::copy(sc.begin(), sc.end(), back_inserter(fp));
     _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root());
+    
+    if (globals->get_subsystem("terrasync")) {
+        _options->setPluginStringData("SimGear::TERRASYNC_ROOT", fgGetString("/sim/terrasync/scenery-dir"));
+    }
+    
     if (!_disableNasalHooks->getBoolValue())
         _options->setModelData(new FGNasalModelDataProxy);
 
