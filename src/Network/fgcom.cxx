@@ -402,7 +402,12 @@ void FGCom::shutdown()
 void FGCom::valueChanged(SGPropertyNode *prop)
 {
   if (prop == _enabled_node) {
-    if( prop->getBoolValue() ) {
+      bool isEnabled = prop->getBoolValue();
+      if (_enabled == isEnabled) {
+          return;
+      }
+      
+    if( isEnabled ) {
       init();
       postinit();
     } else {
