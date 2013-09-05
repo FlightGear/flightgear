@@ -178,14 +178,14 @@ void HUD::Ladder::draw(void)
             actslope = atan(up_vel / ground_vel) * SGD_RADIANS_TO_DEGREES;
         }
 
-        xvvr = (-drift * (_compression / globals->get_current_view()->get_aspect_ratio()));
+        xvvr = drift * _compression;
         // drift = ((atan2(Vyy, Vxx) * SGD_RADIANS_TO_DEGREES) - psi);
         // yvvr = (-alpha * _compression);
         // vel_y = (-alpha * cos(roll_value) + drift * sin(roll_value)) * _compression;
         // vel_x = (alpha * sin(roll_value) + drift * cos(roll_value))
         //         * (_compression / globals->get_current_view()->get_aspect_ratio());
         vel_y = -alpha * _compression;
-        vel_x = -drift * (_compression / globals->get_current_view()->get_aspect_ratio());
+        vel_x = drift * _compression;
         //  printf("%f %f %f %f\n",vel_x, vel_y, drift, psi);
 
         //****************************************************************
