@@ -223,7 +223,8 @@ void MovingAverageFilterImplementation::initialize( double initvalue )
 
 double MovingAverageFilterImplementation::compute(  double dt, double input )
 {
-  std::deque<double>::size_type samples = _samplesInput.get_value();
+  typedef std::deque<double>::size_type size_type;
+  size_type samples = _samplesInput.get_value();
 
   if (_inputQueue.size() != samples) {
     // For constant size filters, this code executed once.
@@ -231,7 +232,7 @@ double MovingAverageFilterImplementation::compute(  double dt, double input )
     _inputQueue.resize(samples, _output_1);
     if (shrunk) {
       _output_1 = 0.0;
-      for (int ii = 0; ii < samples; ii++)
+      for (size_type ii = 0; ii < samples; ii++)
       _output_1 += _inputQueue[ii];
       _output_1 /= samples;
     }
