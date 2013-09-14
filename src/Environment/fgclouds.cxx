@@ -214,11 +214,10 @@ void FGClouds::buildLayer(int iLayer, const string& name, double coverage) {
 			double count = acloud->getDoubleValue("count", 1.0);
 			tCloudVariety[CloudVarietyCount].count = count;
 			int variety = 0;
-			cloud_name = cloud_name + "-%d";
 			char variety_name[50];
 			do {
 				variety++;
-				snprintf(variety_name, sizeof(variety_name) - 1, cloud_name.c_str(), variety);
+				snprintf(variety_name, sizeof(variety_name) - 1, "%s-%d", cloud_name.c_str(), variety);
 			} while( box_def_root->getChild(variety_name, 0, false) );
 
 			totalCount += count;
