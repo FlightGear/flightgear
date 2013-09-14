@@ -210,6 +210,8 @@ bool FGGeneric::gen_message_binary() {
 
 bool FGGeneric::gen_message_ascii() {
     string generic_sentence;
+    string unsafe ("%n");
+    size_t found;
     char tmp[255];
     length = 0;
 
@@ -218,6 +220,13 @@ bool FGGeneric::gen_message_ascii() {
 
         if (i > 0) {
             generic_sentence += var_separator;
+        }
+
+        // It is never safe for _out_message[i].format.c_str to be %n.
+        found=_out_message[i].format.find(unsafe);
+        if (found!=string::npos) {
+          SG_LOG(SG_COCKPIT, SG_WARN, "format type contained %n, but this is unsafe, reverting to %s");
+          _out_message[i].format = "%s";
         }
 
         switch (_out_message[i].type) {
