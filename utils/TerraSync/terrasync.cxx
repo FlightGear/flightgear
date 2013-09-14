@@ -26,13 +26,18 @@
 #include <config.h>
 #endif
 
+#include <simgear/simgear_config.h>
+
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
 #endif
 
+#ifdef HAVE_UNISTD_H
+#include "unistd.h"
+#endif
+
 #ifdef __MINGW32__
-#include <time.h>
-#include <unistd.h>
+#   include <time.h>
 #elif defined(_MSC_VER)
 #   include <io.h>
 #endif
