@@ -287,7 +287,7 @@ FGAIManager::attach(FGAIBase *model)
 }
 
 int
-FGAIManager::getNumAiObjects(void) const
+FGAIManager::getNumAiObjects() const
 {
     return ai_list.size();
 }
@@ -403,6 +403,17 @@ bool FGAIManager::removeObject(const SGPropertyNode* args)
     }
     
     return false;
+}
+
+FGAIBasePtr FGAIManager::getObjectFromProperty(const SGPropertyNode* aProp) const
+{
+    BOOST_FOREACH(FGAIBase* ai, get_ai_list()) {
+        if (ai->_getProps() == aProp) {
+            return ai;
+        }
+    } // of AI objects iteration
+    
+    return NULL;
 }
 
 bool

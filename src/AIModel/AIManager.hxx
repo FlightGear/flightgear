@@ -46,16 +46,6 @@ class FGAIManager : public SGSubsystem
 {
 
 public:
-
-    // A list of pointers to AI objects
-    typedef std::list <FGAIBasePtr> ai_list_type;
-    typedef ai_list_type::iterator ai_list_iterator;
-    typedef ai_list_type::const_iterator ai_list_const_iterator;
-
-    const ai_list_type& get_ai_list() const {
-        return ai_list;
-    }
-
     FGAIManager();
     virtual ~FGAIManager();
 
@@ -79,8 +69,6 @@ public:
     inline double get_user_roll() const { return user_roll; }
     inline double get_user_agl() const { return user_altitude_agl; }
 
-    int getNumAiObjects(void) const;
-
     bool loadScenario( const std::string &filename );
 
     static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
@@ -90,7 +78,26 @@ public:
 
     FGAIBasePtr addObject(const SGPropertyNode* definition);
     
+    /**
+     * @brief given a reference to an /ai/models/<foo>[n] node, return the
+     * corresponding AIObject implementation, or NULL.
+     */
+    FGAIBasePtr getObjectFromProperty(const SGPropertyNode* aProp) const;
 private:
+    // FGSubmodelMgr is a friend for access to the AI_list
+    friend class FGSubmodelMgr;
+    
+    // A list of pointers to AI objects
+    typedef std::list <FGAIBasePtr> ai_list_type;
+    typedef ai_list_type::iterator ai_list_iterator;
+    typedef ai_list_type::const_iterator ai_list_const_iterator;
+    
+    const ai_list_type& get_ai_list() const {
+        return ai_list;
+    }
+
+    int getNumAiObjects() const;
+    
     void removeDeadItem(FGAIBase* base);
   
     double calcRangeFt(const SGVec3d& aCartPos, FGAIBase* aObject) const;

@@ -26,6 +26,8 @@
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
 #include <Navaids/routePath.hxx>
 #include <Aircraft/FlightHistory.hxx>
+#include <AIModel/AIAircraft.hxx>
+#include <AIModel/AIFlightPlan.hxx>
 
 const char* RULER_LEGEND_KEY = "ruler-legend";
 
@@ -1561,22 +1563,38 @@ void MapWidget::drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, d
 
     drawLine(p, project(advance));
   }
-
+   
+    // try to access the flight-plan of the aircraft. There are several layers
+    // of potential NULL-ness here, so we have to be defensive at each stage.
+    std::string originICAO, destinationICAO;
+    FGAIManager* aiManager = static_cast<FGAIManager*>(globals->get_subsystem("ai-model"));
+    FGAIBasePtr aircraft = aiManager ? aiManager->getObjectFromProperty(model) : NULL;
+    if (aircraft) {
+        FGAIAircraft* p = static_cast<FGAIAircraft*>(aircraft.get());
+        if (p->GetFlightPlan()) {
+            originICAO = p->GetFlightPlan()->departureAirport()->ident();
+            destinationICAO = p->GetFlightPlan()->arrivalAirport()->ident();
+        }
+    }
 
   // draw callsign / altitude / speed
-  char buffer[1024];
-	::snprintf(buffer, 1024, "%s\n%d'\n%dkts",
-		model->getStringValue("callsign", "<>"),
-		static_cast<int>(pos.getElevationFt() / 50.0) * 50,
-    speedKts);
-
-  MapData* d = getOrCreateDataForKey((void*) model);
-  d->setText(buffer);
-  d->setLabel(model->getStringValue("callsign", "<>"));
-  d->setPriority(speedKts > 5 ? 60 : 10); // low priority for parked aircraft
-  d->setOffset(MapData::VALIGN_CENTER | MapData::HALIGN_LEFT, 10);
-  d->setAnchor(p);
-
+    int altFt50 = static_cast<int>(pos.getElevationFt() / 50.0) * 50;
+    std::ostringstream ss;
+    ss << model->getStringValue("callsign", "<>");
+    if (speedKts > 1) {
+        ss << "\n" << altFt50 << "' " << speedKts << "kts";
+    }
+    
+    if (!originICAO.empty() || ! destinationICAO.empty()) {
+        ss << "\n" << originICAO << " -> " << destinationICAO;
+    }
+    
+    MapData* d = getOrCreateDataForKey((void*) model);
+    d->setText(ss.str().c_str());
+    d->setLabel(model->getStringValue("callsign", "<>"));
+    d->setPriority(speedKts > 5 ? 60 : 10); // low priority for parked aircraft
+    d->setOffset(MapData::VALIGN_CENTER | MapData::HALIGN_LEFT, 10);
+    d->setAnchor(p);
 }
 
 void MapWidget::drawAIShip(const SGPropertyNode* model, const SGGeod& pos, double hdg)

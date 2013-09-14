@@ -168,6 +168,8 @@ public:
   void setGate(const ParkingAssignment& pka);
   FGParking* getParkingGate();
 
+    FGAirportRef departureAirport() const;
+    FGAirportRef arrivalAirport() const;
 private:
   FGAIFlightPlan *sid;
   typedef std::vector <FGAIWaypoint*> wpt_vector_type;

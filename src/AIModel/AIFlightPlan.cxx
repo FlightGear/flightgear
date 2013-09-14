@@ -483,3 +483,13 @@ FGParking* FGAIFlightPlan::getParkingGate()
 {
   return gate.parking();
 }
+
+FGAirportRef FGAIFlightPlan::departureAirport() const
+{
+    return departure;
+}
+
+FGAirportRef FGAIFlightPlan::arrivalAirport() const
+{
+    return arrival;
+}
