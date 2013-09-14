@@ -1178,10 +1178,10 @@ FGTextLayer::Chunk::Chunk (const std::string &text, const std::string &fmt)
     _fmt = "%s"; 
   } else {
     // It is never safe for _fmt.c_str to be %n.    
-    string unsafe ("%n");
+    std::string unsafe ("%n");
     size_t found;
     found=_fmt.find(unsafe);
-    if (found!=string::npos) {
+    if (found!=std::string::npos) {
       SG_LOG(SG_COCKPIT, SG_WARN, "format type contained %n, but this is unsafe, reverting to %s");
       _fmt = "%s";
     }
@@ -1200,10 +1200,10 @@ FGTextLayer::Chunk::Chunk (ChunkType type, const SGPropertyNode * node,
       _fmt = "%.2f";
   } else {
     // It is never safe for _fmt.c_str to be %n.
-    string unsafe ("%n");
+    std::string unsafe ("%n");
     size_t found;
     found=_fmt.find(unsafe);
-    if (found!=string::npos) {
+    if (found!=std::string::npos) {
       if (type == TEXT_VALUE) {
         SG_LOG(SG_COCKPIT, SG_WARN, "format type contained %n, but this is unsafe, reverting to %s");
         _fmt = "%s";
