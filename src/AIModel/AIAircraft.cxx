@@ -89,6 +89,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     headingError = 0;
     minBearing = 360;
     speedFraction =1.0;
+    prev_dist_to_go = 0.0;
 
     holdPos = false;
     needsTaxiClearance = false;
