@@ -52,6 +52,7 @@
 #include <boost/foreach.hpp>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/scene/model/model.hxx>
 #include <osg/GLU>
 
@@ -1171,7 +1172,8 @@ FGTextLayer::recalc_value () const
 ////////////////////////////////////////////////////////////////////////
 
 FGTextLayer::Chunk::Chunk (const std::string &text, const std::string &fmt)
-  : _type(FGTextLayer::TEXT), _fmt(fmt)
+    : _type(FGTextLayer::TEXT),
+    _fmt(simgear::strutils::sanitizePrintfFormat(fmt))
 {
   _text = text;
   if (_fmt.empty()) 
@@ -1181,7 +1183,11 @@ FGTextLayer::Chunk::Chunk (const std::string &text, const std::string &fmt)
 FGTextLayer::Chunk::Chunk (ChunkType type, const SGPropertyNode * node,
                            const std::string &fmt, float mult, float offs,
                            bool truncation)
-  : _type(type), _fmt(fmt), _mult(mult), _offs(offs), _trunc(truncation)
+: _type(type),
+    _fmt(simgear::strutils::sanitizePrintfFormat(fmt)),
+    _mult(mult),
+    _offs(offs),
+    _trunc(truncation)
 {
   if (_fmt.empty()) {
     if (type == TEXT_VALUE)
