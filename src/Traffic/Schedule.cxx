@@ -36,6 +36,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <boost/foreach.hpp>
 
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
@@ -326,14 +327,28 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
 
 bool FGAISchedule::validModelPath(const std::string& modelPath)
 {
-    SGPath mp(globals->get_fg_root());
-    SGPath mp_ai = mp;
+    return (resolveModelPath(modelPath) != SGPath());
+}
 
-    mp.append(modelPath);
-    mp_ai.append("AI");
-    mp_ai.append(modelPath);
+SGPath FGAISchedule::resolveModelPath(const std::string& modelPath)
+{
+    BOOST_FOREACH(SGPath aiPath, globals->get_data_paths("AI")) {
+        aiPath.append(modelPath);
+        if (aiPath.exists()) {
+            return aiPath;
+        }
+    }
+    
+    // check aircraft dirs
+    BOOST_FOREACH(std::string aircraftPath, globals->get_aircraft_paths()) {
+        SGPath mp(aircraftPath);
+        mp.append(modelPath);
+        if (mp.exists()) {
+            return mp;
+        }
+    }
 
-    return mp.exists() || mp_ai.exists();
+    return SGPath();
 }
 
 bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime)
@@ -341,20 +356,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   FGAirport* dep = flight->getDepartureAirport();
   FGAirport* arr = flight->getArrivalAirport();
   string flightPlanName = dep->getId() + "-" + arr->getId() + ".xml";
-  SG_LOG(SG_AI, SG_INFO, "Traffic manager: Creating AIModel from:" << flightPlanName);
-
-  // Only allow traffic to be created when the model path (or the AI version of mp) exists
-  SGPath mp(globals->get_fg_root());
-  SGPath mp_ai = mp;
-
-  mp.append(modelPath);
-  mp_ai.append("AI");
-  mp_ai.append(modelPath);
-
-  if (!mp.exists() && !mp_ai.exists()) {
-    SG_LOG(SG_AI, SG_WARN, "TrafficManager: Could not load model " << mp_ai.str());
-    return true;
-  }
+  SG_LOG(SG_AI, SG_DEBUG, "Traffic manager: Creating AIModel from:" << flightPlanName);
 
   aiAircraft = new FGAIAircraft(this);
   aiAircraft->setPerformance(acType, m_class); //"jet_transport";
