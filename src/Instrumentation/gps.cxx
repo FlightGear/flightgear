@@ -137,7 +137,7 @@ GPS::init ()
   _northSouthVelocity = _gpsNode->getChild("ns-velocity-msec", 0, true);
   
 // waypoints
-  // for compatability, alias selected course down to wp/wp[1]/desired-course-deg
+  // for compatibility, alias selected course down to wp/wp[1]/desired-course-deg
   SGPropertyNode* wp1Crs = _currentWayptNode->getChild("desired-course-deg", 0, true);
   wp1Crs->alias(_gpsNode->getChild("desired-course-deg", 0, true));
 
@@ -776,7 +776,7 @@ void GPS::driveAutopilot()
     return;
   }
  
-  // compatability feature - allow the route-manager / GPS to drive the
+  // compatibility feature - allow the route-manager / GPS to drive the
   // generic autopilot heading hold *in leg mode only* 
   
   bool drive = _mode == "leg";

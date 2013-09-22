@@ -60,7 +60,7 @@ private:
         KNOB_ALT
     };
     
-    // annunciators, for KT-70 compatability only
+    // annunciators, for KT-70 compatibility only
     // these should be replaced with conditionals in the instrument
     bool getFLAnnunciator() const;
     bool getAltAnnunciator() const;

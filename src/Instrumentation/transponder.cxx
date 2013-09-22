@@ -56,7 +56,7 @@ Transponder::Transponder(SGPropertyNode *node)
 {
     _requiredBusVolts = node->getDoubleValue("bus-volts", 8.0);
     _altitudeSourcePath = node->getStringValue("encoder-path", "/instrumentation/altimeter");
-    _kt70Compat = node->getBoolValue("kt70-compatability", false);
+    _kt70Compat = node->getBoolValue("kt70-compatibility", false);
 }
 
 
@@ -142,7 +142,7 @@ void Transponder::bind()
                             &Transponder::getStandbyAnnunciator );
         _tiedProperties.Tie("annunciators/reply", this,
                             &Transponder::getReplyAnnunciator );
-    } // of kt70 backwards compatability
+    } // of kt70 backwards compatibility
 }
 
 void Transponder::unbind()
