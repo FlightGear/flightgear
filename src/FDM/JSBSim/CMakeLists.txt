@@ -64,6 +64,7 @@ set(HEADERS
     models/atmosphere/FGWinds.h
     models/flight_control/FGAccelerometer.h
     models/flight_control/FGActuator.h
+    models/flight_control/FGAngles.h
     models/flight_control/FGDeadBand.h
     models/flight_control/FGFCSComponent.h
     models/flight_control/FGFCSFunction.h
@@ -77,6 +78,7 @@ set(HEADERS
     models/flight_control/FGSensorOrientation.h
     models/flight_control/FGSummer.h
     models/flight_control/FGSwitch.h
+    models/flight_control/FGWaypoint.h
     models/propulsion/FGElectric.h
     models/propulsion/FGEngine.h
     models/propulsion/FGForce.h
@@ -152,6 +154,7 @@ set(SOURCES
     models/atmosphere/FGWinds.cpp
     models/flight_control/FGAccelerometer.cpp
     models/flight_control/FGActuator.cpp
+    models/flight_control/FGAngles.cpp
     models/flight_control/FGDeadBand.cpp
     models/flight_control/FGFCSComponent.cpp
     models/flight_control/FGFCSFunction.cpp
@@ -164,6 +167,7 @@ set(SOURCES
     models/flight_control/FGSensor.cpp
     models/flight_control/FGSummer.cpp
     models/flight_control/FGSwitch.cpp
+    models/flight_control/FGWaypoint.cpp
     models/propulsion/FGElectric.cpp
     models/propulsion/FGEngine.cpp
     models/propulsion/FGForce.cpp
