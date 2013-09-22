@@ -52,7 +52,6 @@
 #define IAX_DELAY 300  // delay between calls in milliseconds
 #define TEST_FREQ 910.00
 #define NULL_ICAO "ZZZZ"
-#define NUM_ID "0100000000000001"
 
 const int special_freq[] = { // Define some freq who need to be used with NULL_ICAO
 	910000,
