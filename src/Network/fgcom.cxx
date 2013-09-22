@@ -52,6 +52,7 @@
 #define IAX_DELAY 300  // delay between calls in milliseconds
 #define TEST_FREQ 910.00
 #define NULL_ICAO "ZZZZ"
+#define NUM_ID "0100000000000001"
 
 const int special_freq[] = { // Define some freq who need to be used with NULL_ICAO
 	910000,
@@ -134,6 +135,7 @@ void FGCom::bind()
   _ptt0_node               = fgGetNode("/instrumentation/comm[0]/ptt", true); //FIXME: what about /instrumentation/comm[1]/ptt ?
   _callsign_node           = fgGetNode("/sim/multiplay/callsign", true);
   _text_node               = fgGetNode("/sim/messages/atc", true );
+  _version_node            = fgGetNode("/sim/version/flightgear", true );
 
   // Set default values if not provided
   if ( !_enabled_node->hasValue() )
@@ -231,6 +233,10 @@ void FGCom::postinit()
     
     // FIXME: To be implemented in IAX audio driver
     //iaxc_mic_boost_set( _micBoost_node->getIntValue() );
+    std::string app = "FGFS-";
+    app += _version_node->getStringValue();
+
+    iaxc_set_callerid( _callsign_node->getStringValue(), app.c_str() );
     iaxc_set_formats( IAXC_FORMAT_GSM, IAXC_FORMAT_GSM );
     iaxc_start_processing_thread ();
 
@@ -351,7 +357,7 @@ void FGCom::updateCall(bool& changed, int& callNo, double freqMHz)
         if( !isInRange(freqMHz) )
             return;
         if( !num.empty() ) {
-            callNo = iaxc_call_ex(num.c_str(), _callsign.c_str(), NULL, 0 /* no video */);
+            callNo = iaxc_call(num.c_str());
 
             if( callNo == -1 )
                 SG_LOG( SG_IO, SG_DEBUG, "FGCom: cannot call " << num.c_str() );

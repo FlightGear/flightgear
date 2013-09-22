@@ -50,6 +50,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr _text_node;                            // sim/fgcom/text
     SGPropertyNode_ptr _server_node;                          // sim/fgcom/server
     SGPropertyNode_ptr _enabled_node;                         // sim/fgcom/enabled
+    SGPropertyNode_ptr _version_node;                         // sim/version/flightgear
     SGPropertyNode_ptr _micBoost_node;                        // sim/fgcom/mic-boost
     SGPropertyNode_ptr _callsign_node;                        // sim/multiplay/callsign
     SGPropertyNode_ptr _register_node;                        // sim/fgcom/register/enabled
