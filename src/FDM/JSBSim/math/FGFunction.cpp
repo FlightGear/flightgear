@@ -807,11 +807,12 @@ void FGFunction::bind(void)
     }
 
     if (PropertyManager->HasNode(tmp)) {
+      FGPropertyNode* property = PropertyManager->GetNode(tmp);
+      if (property->isTied()) {
         cout << "Property " << tmp << " has already been successfully bound (late)." << endl;
-    } else {
-    PropertyManager->Tie( tmp, this, &FGFunction::GetValue);
       }
-
+    }
+    PropertyManager->Tie( tmp, this, &FGFunction::GetValue);
   }
 }
 

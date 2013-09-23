@@ -676,7 +676,8 @@ void FGPropagate::WriteStateFile(int num)
       outfile.close();
     break;
     default:
-      throw("When writing a state file, the supplied value must be 1 or 2 for the version number of teh resulting IC file");
+      return; // Ignore other writes to the property, e.g. on FlightGear reset.
+      throw("When writing a state file, the supplied value must be 1 or 2 for the version number of the resulting IC file");
     }
   } else {
     cerr << "Could not open and/or write the state to the initial conditions file: " << filename << endl;
