@@ -234,14 +234,23 @@ if(ENABLE_LIBSVN)
     endif(LIBSVN_FOUND)
 endif(ENABLE_LIBSVN)
 
+##############################################################################
+## Sqlite3 setup
+
 if (SYSTEM_SQLITE)
     find_package(SQLite3 REQUIRED)
-    set(CMAKE_REQUIRED_INCLUDES ${SQLITE3_INCLUDED_DIR})
+    
     message(STATUS "Using system SQLite3 library")
+else()
+    set(SQLITE3_INCLUDED_DIR "${CMAKE_SOURCE_DIR}/3rdparty/sqlite3")
+    # this target is defined in src/Navaids/CMakeLists.txt
+    list(APPEND SQLITE3_LIBRARY fgsqlite3)
 endif (SYSTEM_SQLITE)
 
 # Sqlite always depends on the threading lib
 list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
+
+##############################################################################
 
 find_package(PLIB REQUIRED puaux pu js fnt)
 
@@ -346,7 +355,8 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${OPENAL_INCLUDE_DIR}
     ${SIMGEAR_INCLUDE_DIR}
-    ${PLIB_INCLUDE_DIR} )
+    ${PLIB_INCLUDE_DIR}
+    ${SQLITE3_INCLUDED_DIR} )
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -386,6 +396,7 @@ if (EMBEDDED_SIMGEAR)
     include_directories(${PROJECT_BINARY_DIR}/simgear)
 endif(EMBEDDED_SIMGEAR)
 
+add_subdirectory(3rdparty)
 add_subdirectory(utils)
 add_subdirectory(src)
 add_subdirectory(man)

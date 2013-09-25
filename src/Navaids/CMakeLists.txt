@@ -40,9 +40,4 @@ set(HEADERS
     PolyLine.hxx
     )
 
-if (NOT SYSTEM_SQLITE)
-    list(APPEND SOURCES sqlite3.c)
-    list(APPEND HEADERS sqlite3.h)
-endif()
-
 flightgear_component(Navaids "${SOURCES}" "${HEADERS}")

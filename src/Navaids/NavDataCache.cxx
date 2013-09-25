@@ -23,11 +23,6 @@
 # include "config.h"
 #endif
 
-// to ensure compatability between sqlite3_int64 and PositionedID,
-// force the type used by sqlite to match PositionedID explicitly
-#define SQLITE_INT64_TYPE int64_t
-#define SQLITE_UINT64_TYPE uint64_t
-
 #include "NavDataCache.hxx"
 
 // std
@@ -37,7 +32,16 @@
 // boost
 #include <boost/foreach.hpp>
 
-#include "sqlite3.h"
+// to ensure compatability between sqlite3_int64 and PositionedID,
+// force the type used by sqlite to match PositionedID explicitly
+#define SQLITE_INT64_TYPE int64_t
+#define SQLITE_UINT64_TYPE uint64_t
+
+#ifdef SYSTEM_SQLITE
+  #include "sqlite3.h"
+#else
+  #include "fg_sqlite3.h"
+#endif
 
 // SimGear
 #include <simgear/sg_inlines.h>
