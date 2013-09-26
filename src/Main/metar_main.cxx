@@ -28,6 +28,8 @@
 #include <cstdlib>
 #include <cstdio>
 
+#include <boost/algorithm/string.hpp>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/environment/metar.hxx>
 #include <simgear/structure/exception.hxx>
@@ -49,7 +51,7 @@ public:
     bool fromProxy;
     
     MetarRequest(const std::string& stationId) : 
-        HTTP::Request("http://weather.noaa.gov/pub/data/observations/metar/stations/" + stationId + ".TXT"),
+        HTTP::Request("http://weather.noaa.gov/pub/data/observations/metar/stations/" + boost::to_upper_copy(stationId) + ".TXT"),
         complete(false),
         failed(false)
     {
