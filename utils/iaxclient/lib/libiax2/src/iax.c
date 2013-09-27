@@ -923,8 +923,12 @@ void iax_set_jb_target_extra( long value )
 int iax_init(int preferredportno)
 {
 	int portno = preferredportno;
-
+#ifndef _MSC_VER // avoid compare of address of imported function
+     /* MSVC only - In certain circumstances the addresses placed in iax_sendto and iax_recvfrom 
+        can be an offset to a jump table, making a compare of the current address to the address 
+        of the actual imported function fail. */
 	if (iax_recvfrom == (iax_recvfrom_t)recvfrom)
+#endif // !_MSC_VER
 	{
 		struct sockaddr_in sin;
 		socklen_t sinlen;

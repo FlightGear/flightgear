@@ -263,14 +263,7 @@ int openal_initialize(struct iaxc_audio_driver *d, int sample_rate)
     int err = alGetError();
     d->priv = priv;
 
-    // First we are looking for input device
-    priv->in_dev = alcCaptureOpenDevice(NULL, 8000, AL_FORMAT_MONO16, 800);
-    if (!priv->in_dev) return openal_error("alcCaptureOpenDevice", alGetError());
-
-    alcCaptureStart(priv->in_dev);
-    if ((err = alGetError())) return openal_error("alcCaptureStart", err);
-
-    // Then we look for output device
+    // First we are looking for output device
     priv->out_ctx = alcGetCurrentContext();
 
     if( priv->out_ctx == NULL ) { // FGCom standalone only
@@ -283,6 +276,14 @@ int openal_initialize(struct iaxc_audio_driver *d, int sample_rate)
 
     alcMakeContextCurrent(priv->out_ctx);
     if ((err = alGetError())) return openal_error("alcMakeContextCurrent", err);
+
+    // Then we look for input device
+    priv->in_dev = alcCaptureOpenDevice(NULL, 8000, AL_FORMAT_MONO16, 800);
+    if (!priv->in_dev) return openal_error("alcCaptureOpenDevice", alGetError());
+    if ((err = alGetError())) return openal_error("alcCaptureOpenDevice1", alGetError());
+
+    alcCaptureStart(priv->in_dev);
+    if ((err = alGetError())) return openal_error("alcCaptureStart", err);
 
     priv->sample_rate = sample_rate;    
     priv->num_buffers = 20;

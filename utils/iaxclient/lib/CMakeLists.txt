@@ -1,4 +1,4 @@
-
+# CMakeLists.txt, for utils/iaxclient/lib - 20130925
 # even if we don't select the codec, speex is used for pre-processing audio
 set(ENABLE_SPEXX 1)
 
@@ -112,6 +112,18 @@ add_definitions(-DLIBIAX)
 add_definitions(-DHAS_STRING_H -DHAS_STDLIB_H)
 add_definitions(-DCODEC_GSM)
 
+if (MSVC)
+    # turn off various warnings
+    set(WFLAGS)
+    foreach(warning 4244 4305 4996)
+        set(WFLAGS "${WFLAGS} /wd${warning}")
+    endforeach()
+    add_definitions(${WFLAGS})
+endif ()
+
+add_definitions( -DHAVE_CONFIG_H ) # to use fgfs config.h to get FG version, if needed
+add_definitions( -DLIBVER="SVN 261" ) # add an iaxclient_lib version string
+
 include_directories(${PROJECT_SOURCE_DIR}/utils/iaxclient/lib)
 include_directories(${PROJECT_SOURCE_DIR}/utils/iaxclient/lib/libiax2/src)
 include_directories(${PROJECT_SOURCE_DIR}/utils/iaxclient/lib/gsm/inc)
@@ -122,3 +134,4 @@ add_library(iaxclient_lib STATIC
     ${SPEEX_SOURCES}
     ${LIBIAX2_SOURCES})
 
+# eof
