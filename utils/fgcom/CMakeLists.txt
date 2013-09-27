@@ -1,16 +1,6 @@
 # 20130904 - build of fgcom standalone - geoff
-if(ENABLE_IAX)
     # set data installed location
-    if (UNIX)
-     if (APPLE)
-      set(PKGDATAPATH "fgcom-data")
-     else ()
-      set(PKGDATAPATH 
-        "${CMAKE_INSTALL_PREFIX}/share/flightgear")
-     endif ()
-    else ()
-      set(PKGDATAPATH "fgcom-data")
-    endif ()
+    set(PKGDATAPATH "${CMAKE_INSTALL_PREFIX}/share/flightgear")
 
     # then to define the files themselves, in their 'installed' 
     # location, not their source location...
@@ -38,7 +28,7 @@ if(ENABLE_IAX)
     endif()
     target_link_libraries( ${name} iaxclient_lib )
     # this could be just on a target basis, but for now
-    include_directories( ${CMAKE_SOURCE_DIR}/utils/iaxclient/lib ) # for iaxclient.h
+    include_directories( ${CMAKE_SOURCE_DIR}/3rdparty/iaxclient/lib ) # for iaxclient.h
     # Now include simgear libraries 
     target_link_Libraries( ${name}
         ${win_LIBS}
@@ -52,15 +42,5 @@ if(ENABLE_IAX)
     # then install, from their source to install destination
     set( inst_FILES utils/positions.txt
         utils/special_frequencies.txt )
-    if (UNIX)
-     if (APPLE)
-      install(FILES ${inst_FILES} DESTINATION bin/${PKGDATAPATH})
-     else ()
-      install(FILES ${inst_FILES} DESTINATION ${PKGDATAPATH})
-     endif ()
-    else ()
-     install(FILES ${inst_FILES} DESTINATION bin/${PKGDATAPATH})
-    endif ()
-endif()
-
+    install(FILES ${inst_FILES} DESTINATION ${PKGDATAPATH})
 # eof
