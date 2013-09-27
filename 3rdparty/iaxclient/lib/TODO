@@ -1,0 +1,101 @@
+TODO items:
+
+
+1) Audio driver work:
+	Properly abstract audio drivers (currently, we use only
+		portaudio, but we may also want to support others.
+		The most likely candidate here would be zaptel devices.
+
+	Instead of the "switch" statements in the code, define an audio
+	driver structure, with 
+	
+	- function pointers for actual driver entry points.	
+		initialization: (scans available devices, sets up data
+				structures)
+		destruction: (stops everything, cleans up)
+		"start":  starts audio for a particular call?
+		"stop": stops audio for a particular call?
+		"playsound": plays a particular sound: can be used for
+			incoming call notification, ringback, dialtone etc?
+		"select": select input and output devices to use?	
+		[maybe extend this for zap devices to have "ring", etc
+		functions?]
+
+		
+	- Common audio driver data members:
+		a) perhaps an array of devices the driver has found,
+			with for each device, a device name, an
+			indication of whether this device is the default
+			input or output, and whether this device
+			supports input, output, or both.
+
+	For portaudio, we probably want to switch to the "standard"
+	portaudio callback interface, and away from pablio, which isn't
+	really robust enough for our needs once we do this stuff.
+
+
+
+2) Codecs:  (I think that someone is working on this)
+
+	Currently, the library assumes that all calls will be GSM only,
+	and further assumes that all frames will be 20ms.  It can
+	control the frame size (within reason) for frames it sends out,
+	but should deal gracefully with incoming frames that aren't
+	20ms.
+
+	Codecs should probably be implemented via a similar set of
+	structure abstractions as audio drivers, above.  They also need
+	to handle incoming packets which may switch formats abruptly(?).
+
+DONE (or, at least, mostly done):
+==============================================================
+Call handling 
+	currently, the library really only supports one call, and not
+	very well.  It should have a collection of calls (either an
+	array, or a linked list), and keep track of the current state of
+	each call.
+
+	An array might be easiest to manage, and would map well to a
+	softphone client.  We would then just refer to calls by their
+	index, and a GUI client might present these like call
+	appearances on their display.
+
+	Incoming calls might come in on the first free call appearance,
+	and outgoing calls by default would do the same.
+
+	The state of each call might be similar to phonecore
+	(incoming_incomplete, incoming, outgoing_incomplete, outgoing),
+	but we'd also have to keep track of which call, if any, we
+	currenly have "selected" -- i.e. which one we should connect to
+	the audio system.
+
+	We'd need to send events to the client whenever a call changed
+	"state" in any way.
+
+	We can make the number of calls in the array defined at runtime
+	when the library is initialized.  A very simple client like
+	testcall would just ask for a single call, so it wouldn't have
+	to worry about a lot of this.
+
+Events:
+	We might want to consolidate the (currently three) callbacks
+	that the library makes to clients, into a single callback, that
+	passes back a structure with event info.  I was thinking of a
+	structure with an event type, and then a union of different
+	structures depending on the event type.
+
+	The only thing is that we might want to decide whether or not,
+	or how clients will "register" for different event types, even
+	if they're handled through the same callback mechanism.
+
+	Ideally, the library would handle all of the events itself, via
+	some "default" handlers.  (I.e. for messages, it might just print
+	them to stdout or stderr.  For incoming calls, it might accept
+	them by default).
+
+	So, the choices then are whether the client should register for
+	individual events, or perhaps it can just decline events as they
+	happen, and then the library could handle them. 
+
+
+	

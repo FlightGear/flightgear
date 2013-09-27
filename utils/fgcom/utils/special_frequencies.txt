@@ -1,0 +1,22 @@
+# 
+# Special frequencies file. To use any of the frequencies listed here,
+# there is no need to be closed to an airport.
+#
+
+# Do not know ?
+999.999
+
+# Echo test
+910.000
+
+# Auto information
+123.450
+122.750
+123.500
+121.500
+
+# Emergency
+121.000
+
+# French Air Patrol (Patrouille de France)
+723.340

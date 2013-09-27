@@ -149,14 +149,11 @@ option(WITH_FGPANEL      "Set to ON to build the fgpanel application (default)" 
 option(ENABLE_FGVIEWER   "Set to ON to build the fgviewer application (default)" ON)
 option(ENABLE_GPSSMOOTH  "Set to ON to build the GPSsmooth application (default)" ON)
 option(ENABLE_TERRASYNC  "Set to ON to build the terrasync application (default)" ON)
-option(ENABLE_IAX        "Set to ON to build the IAXClient library (default)" ON)
-
 option(ENABLE_FGJS       "Set to ON to build the fgjs application (default)" ON)
 option(ENABLE_JS_DEMO    "Set to ON to build the js_demo application (default)" ON)
-
 option(ENABLE_METAR      "Set to ON to build the metar application (default)" ON)
-
 option(ENABLE_TESTS      "Set to ON to build test applications (default)" ON)
+option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON)
 
 if(LOGGING)
     # nothing
@@ -360,12 +357,7 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
-if(ENABLE_IAX)
-    include_directories(${PROJECT_SOURCE_DIR}/utils/fgcom/iaxclient/lib)
-    if(WIN32)
-        include_directories(${PROJECT_SOURCE_DIR}/utils/fgcom/iaxclient/lib/libiax2/src)
-    endif()
-endif()
+include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib ) # for iaxclient.h
 # following is needed, because config.h is include 'bare', whereas
 # version.h is included as <Include/version.h> - this should be cleaned up
 include_directories(${PROJECT_BINARY_DIR}/src)

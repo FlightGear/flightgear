@@ -39,7 +39,7 @@
 #include <Airports/airport.hxx>
 #include <Navaids/navlist.hxx>
 
-#include <utils/iaxclient/lib/iaxclient.h>
+#include <3rdparty/iaxclient/lib/iaxclient.h>
 
 
 #define NUM_CALLS 4
