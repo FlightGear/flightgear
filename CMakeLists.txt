@@ -141,6 +141,7 @@ option(ENABLE_RTI        "Set to ON to build FlightGear with RTI support" OFF)
 option(ENABLE_PROFILE    "Set to ON to build FlightGear with gperftools profiling support" OFF)
 option(JPEG_FACTORY      "Set to ON to build FlightGear with JPEG-factory support" OFF)
 option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
+option(ENABLE_IAX        "Set to ON to build FlightGear with IAXClient/fgcom built-in (default)" ON)
 
 # additional utilities
 option(ENABLE_FGADMIN    "Set to ON to build the FGADMIN application (default)" ON)
@@ -163,6 +164,10 @@ endif()
 
 if(SP_FDMS)
     set(ENABLE_SP_FDM 1)
+endif()
+
+if(ENABLE_FGCOM)
+  set(ENABLE_IAX 1)
 endif()
 
 # Setup MSVC 3rd party directories
