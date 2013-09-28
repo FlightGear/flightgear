@@ -305,8 +305,6 @@ void FGLight::update_adj_fog_color () {
     double heading_offset = globals->get_current_view()->getHeadingOffset_deg()
                             * SGD_DEGREES_TO_RADIANS;
 
-    SG_LOG( SG_EVENT, SG_DEBUG, "Updating adjusted fog parameters." );
-
     // set fog color (we'll try to match the sunset color in the
     // direction we are looking
 

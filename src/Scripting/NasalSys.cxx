@@ -1295,7 +1295,6 @@ FGNasalListener::~FGNasalListener()
 void FGNasalListener::call(SGPropertyNode* which, naRef mode)
 {
     if(_active || _dead) return;
-    SG_LOG(SG_NASAL, SG_DEBUG, "trigger listener #" << _id);
     _active++;
     naRef arg[4];
     arg[0] = _nas->propNodeGhost(which);

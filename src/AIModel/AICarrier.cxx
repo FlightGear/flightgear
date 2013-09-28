@@ -497,7 +497,6 @@ bool FGAICarrier::OutsideBox() { //returns true if the carrier is outside operat
             return true;
     }
 
-    SG_LOG(SG_AI, SG_DEBUG, "AICarrier: Inside Operating Box" );
     return false;
 
 } // end OutsideBox

@@ -84,9 +84,6 @@ static void fgMainLoop( void )
 {
     frame_signal->fireValueChanged();
 
-    SG_LOG( SG_GENERAL, SG_DEBUG, "Running Main Loop");
-    SG_LOG( SG_GENERAL, SG_DEBUG, "======= ==== ====");
-
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
     double sim_dt, real_dt;
@@ -96,8 +93,6 @@ static void fgMainLoop( void )
     globals->get_subsystem_mgr()->update(sim_dt);
 
     simgear::AtomicChangeListener::fireChangeListeners();
-
-    SG_LOG( SG_GENERAL, SG_DEBUG, "" );
 }
 
 
