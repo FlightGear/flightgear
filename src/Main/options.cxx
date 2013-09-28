@@ -2058,11 +2058,19 @@ void Options::processOptions()
     }
       
       SGPath p(terrasyncDir);
-      if (!p.exists()) {
-          simgear::Dir dd(p);
-          dd.create(0700);
+      // following is necessary to ensure NavDataCache sees stable scenery paths from
+      // terrasync. Ensure the Terrain and Objects subdirs exist immediately, rather
+      // than waiting for the first tiles to be scheduled.
+      simgear::Dir terrainDir(SGPath(p, "Terrain")),
+        objectsDir(SGPath(p, "Objects"));
+      if (!terrainDir.exists()) {
+          terrainDir.create(0755);
       }
-    
+      
+      if (!objectsDir.exists()) {
+          objectsDir.create(0755);
+      }
+      
     const string_list& scenery_paths(globals->get_fg_scenery());
     if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
       // terrasync dir is not in the scenery paths, add it

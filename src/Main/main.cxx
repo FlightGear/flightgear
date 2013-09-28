@@ -130,6 +130,19 @@ static void fgIdleFunction ( void ) {
         }
 
     } else if ( idle_state == 2 ) {
+        
+        // start TerraSync up now, so it can be synchronizing shared models
+        // and airports data in parallel with a nav-cahce rebuild. 
+        SGPath tsyncCache(globals->get_fg_home());
+        tsyncCache.append("terrasync-cache.xml");
+        fgSetString("/sim/terrasync/cache-path", tsyncCache.c_str());
+        
+        simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync(globals->get_props());
+        globals->add_subsystem("terrasync", terra_sync);
+        
+        terra_sync->bind();
+        terra_sync->init();
+        
         idle_state++;
         fgSplashProgress("loading-nav-dat");
 
@@ -178,8 +191,7 @@ static void fgIdleFunction ( void ) {
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.
         ////////////////////////////////////////////////////////////////////
-        simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync(globals->get_props());
-        globals->add_subsystem("terrasync", terra_sync);
+
         globals->set_scenery( new FGScenery );
         globals->get_scenery()->init();
         globals->get_scenery()->bind();

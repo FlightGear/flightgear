@@ -53,6 +53,7 @@
 
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
+#include <simgear/scene/tsync/terrasync.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
@@ -852,6 +853,12 @@ void fgReInitSubsystems()
     // this will mark position as needed finalized which we'll do in the
     // main-loop
     flightgear::initPosition();
+    
+    simgear::SGTerraSync* terraSync =
+        static_cast<simgear::SGTerraSync*>(globals->get_subsystem("terrasync"));
+    if (terraSync) {
+        terraSync->reposition();
+    }
     
     // Force reupdating the positions of the ai 3d models. They are used for
     // initializing ground level for the FDM.
