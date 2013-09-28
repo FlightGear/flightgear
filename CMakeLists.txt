@@ -243,26 +243,8 @@ list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
 
 find_package(PLIB REQUIRED puaux pu js fnt)
 
-if (EMBEDDED_SIMGEAR)
-    message(STATUS "Using embedded SimGear")
-    # create the same variables that FindSimGear would define
-    set(SIMGEAR_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/simgear)
-    set(SIMGEAR_CORE_LIBRARIES SimGearCore)
-    set(SIMGEAR_LIBRARIES SimGearScene)
-
-    if (NOT SIMGEAR_SHARED)
-        set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES
-            ${CMAKE_THREAD_LIBS_INIT}
-            ${ZLIB_LIBRARY}
-            ${WINMM_LIBRARY})
-
-        set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES 
-            ${OPENAL_LIBRARY})
-    endif()
-else(EMBEDDED_SIMGEAR)
-    # FlightGear and SimGear versions need to match
-    find_package(SimGear ${FLIGHTGEAR_VERSION} REQUIRED)
-endif (EMBEDDED_SIMGEAR)
+# FlightGear and SimGear versions need to match
+find_package(SimGear ${FLIGHTGEAR_VERSION} REQUIRED)
 
 ##############################################################################
 
@@ -372,14 +354,6 @@ configure_file (
     "${PROJECT_SOURCE_DIR}/src/Include/version.h.cmake-in"
     "${PROJECT_BINARY_DIR}/src/Include/version.h"
 )
-
-if (EMBEDDED_SIMGEAR)
-    add_subdirectory(simgear)
-    # since we build without SimGear installed, we need to
-    # search this path directly to find the generated
-    # simgear_config.h
-    include_directories(${PROJECT_BINARY_DIR}/simgear)
-endif(EMBEDDED_SIMGEAR)
 
 add_subdirectory(3rdparty)
 add_subdirectory(utils)
