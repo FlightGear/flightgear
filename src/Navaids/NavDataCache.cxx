@@ -32,14 +32,18 @@
 // boost
 #include <boost/foreach.hpp>
 
+
+#ifdef SYSTEM_SQLITE
+// the standard sqlite3.h doesn't give a way to set SQLITE_UINT64_TYPE,
+// so we have to hope sizeof(int64_t) matches sizeof(sqlite3_int64).
+// otherwise things will go bad quickly.
+  #include "sqlite3.h"
+#else
 // to ensure compatability between sqlite3_int64 and PositionedID,
 // force the type used by sqlite to match PositionedID explicitly
 #define SQLITE_INT64_TYPE int64_t
 #define SQLITE_UINT64_TYPE uint64_t
 
-#ifdef SYSTEM_SQLITE
-  #include "sqlite3.h"
-#else
   #include "fg_sqlite3.h"
 #endif
 
