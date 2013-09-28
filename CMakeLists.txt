@@ -136,7 +136,6 @@ option(ENABLE_LARCSIM    "Set to ON to build FlightGear with LaRCsim FDM" OFF)
 option(ENABLE_YASIM      "Set to ON to build FlightGear with YASIM FDM (default)" ON)
 option(ENABLE_JSBSIM     "Set to ON to build FlightGear with JSBSim FDM (default)" ON)
 option(EVENT_INPUT       "Set to ON to build FlightGear with event-based Input support" ${EVENT_INPUT_DEFAULT})
-option(ENABLE_LIBSVN     "Set to ON to build FlightGear/terrasync with libsvnclient support (default)" ON)
 option(ENABLE_RTI        "Set to ON to build FlightGear with RTI support" OFF)
 option(ENABLE_PROFILE    "Set to ON to build FlightGear with gperftools profiling support" OFF)
 option(JPEG_FACTORY      "Set to ON to build FlightGear with JPEG-factory support" OFF)
@@ -224,18 +223,6 @@ if(ENABLE_FGADMIN)
     endif ( FLTK_FOUND )
 endif(ENABLE_FGADMIN)
 
-if(ENABLE_LIBSVN)
-    find_package(SvnClient)
-
-    if(LIBSVN_FOUND)
-        message(STATUS "libsvn found, enabling in terrasync")
-        set(HAVE_SVN_CLIENT_H 1)
-        set(HAVE_LIBSVN_CLIENT_1 1)
-    else()
-        message(STATUS "libsvn missing. Disabling...")
-    endif(LIBSVN_FOUND)
-endif(ENABLE_LIBSVN)
-
 ##############################################################################
 ## Sqlite3 setup
 
@@ -267,7 +254,6 @@ if (EMBEDDED_SIMGEAR)
         set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES
             ${CMAKE_THREAD_LIBS_INIT}
             ${ZLIB_LIBRARY}
-            ${LIBSVN_LIBRARIES}
             ${WINMM_LIBRARY})
 
         set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES 
@@ -277,6 +263,8 @@ else(EMBEDDED_SIMGEAR)
     # FlightGear and SimGear versions need to match
     find_package(SimGear ${FLIGHTGEAR_VERSION} REQUIRED)
 endif (EMBEDDED_SIMGEAR)
+
+##############################################################################
 
 if (JPEG_FACTORY)
     # check simgear was built with JPEG-factory support
