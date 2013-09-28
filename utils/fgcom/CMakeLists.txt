@@ -5,10 +5,10 @@
     # then to define the files themselves, in their 'installed' 
     # location, not their source location...
     if (NOT DEFAULT_POSITIONS_FILE)
-      set(DEFAULT_POSITIONS_FILE "${PKGDATAPATH}/positions.txt")
+      set(DEFAULT_POSITIONS_FILE "../share/flightgear/positions.txt")
     endif ()
     if (NOT SPECIAL_FREQUENCIES_FILE)
-      set(SPECIAL_FREQUENCIES_FILE "${PKGDATAPATH}/special_frequencies.txt")
+      set(SPECIAL_FREQUENCIES_FILE "../share/flightgear/special_frequencies.txt")
     endif ()
     # pass these to the compiler
     add_definitions( -DDEFAULT_POSITIONS_FILE="${DEFAULT_POSITIONS_FILE}" )
