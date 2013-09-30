@@ -134,4 +134,6 @@ add_library(iaxclient_lib STATIC
     ${SPEEX_SOURCES}
     ${LIBIAX2_SOURCES})
 
+target_link_libraries(iaxclient_lib ${CMAKE_THREAD_LIBS_INIT})
+
 # eof
