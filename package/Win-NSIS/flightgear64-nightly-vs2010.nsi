@@ -81,7 +81,7 @@ Section "" ;No components page, name is not important
   File ${OSGInstallDir}\bin\osg${OSGSoNumber}-osgSim.dll
   File ${OSGInstallDir}\bin\osg${OSGSoNumber}-osgFX.dll
   
-  File ${OSGInstallDir}\bin\ot12-OpenThreads.dll
+  File ${OSGInstallDir}\bin\ot13-OpenThreads.dll
   
   File ${ThirdPartyBinDir}\*.dll
   
