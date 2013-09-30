@@ -38,6 +38,7 @@ set(HEADERS
     NavDataCache.hxx
     PositionedOctree.hxx
     PolyLine.hxx
+    CacheSchema.h
     )
 
 flightgear_component(Navaids "${SOURCES}" "${HEADERS}")

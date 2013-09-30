@@ -72,6 +72,7 @@
 #include "poidb.hxx"
 #include <Airports/parking.hxx>
 #include <Airports/gnnode.hxx>
+#include "CacheSchema.h"
 
 using std::string;
 
@@ -81,7 +82,7 @@ using std::string;
 namespace {
 
 const int MAX_RETRIES = 10;
-const int SCHEMA_VERSION = 8;
+    
 const int CACHE_SIZE_KBYTES= 32 * 1024;
     
 // bind a std::string to a sqlite statement. The std::string must live the
@@ -422,116 +423,17 @@ public:
     execSelect(stmt);
     reset(stmt);
   }
-  
+    
   void initTables()
   {
-    runSQL("CREATE TABLE properties ("
-           "key VARCHAR,"
-           "value VARCHAR"
-           ")");
-    
-    runSQL("CREATE TABLE stat_cache ("
-           "path VARCHAR unique,"
-           "stamp INT"
-           ")");
-    
-    runSQL("CREATE TABLE positioned ("
-           "type INT,"
-           "ident VARCHAR collate nocase,"
-           "name VARCHAR collate nocase,"
-           "airport INT64,"
-           "lon FLOAT,"
-           "lat FLOAT,"
-           "elev_m FLOAT,"
-           "octree_node INT,"
-           "cart_x FLOAT,"
-           "cart_y FLOAT,"
-           "cart_z FLOAT"
-           ")");
-    
-    runSQL("CREATE INDEX pos_octree ON positioned(octree_node)");
-    runSQL("CREATE INDEX pos_ident ON positioned(ident collate nocase)");
-    runSQL("CREATE INDEX pos_name ON positioned(name collate nocase)");
-    // allow efficient querying of 'all ATIS at this airport' or
-    // 'all towers at this airport'
-    runSQL("CREATE INDEX pos_apt_type ON positioned(airport, type)");
-    
-    runSQL("CREATE TABLE airport ("
-           "has_metar BOOL"
-           ")"
-           );
-    
-    runSQL("CREATE TABLE comm ("
-           "freq_khz INT,"
-           "range_nm INT"
-           ")"
-           );
-    
-    runSQL("CREATE INDEX comm_freq ON comm(freq_khz)");
-    
-    runSQL("CREATE TABLE runway ("
-           "heading FLOAT,"
-           "length_ft FLOAT,"
-           "width_m FLOAT,"
-           "surface INT,"
-           "displaced_threshold FLOAT,"
-           "stopway FLOAT,"
-           "reciprocal INT64,"
-           "ils INT64"
-           ")"
-           );
-    
-    runSQL("CREATE TABLE navaid ("
-           "freq INT,"
-           "range_nm INT,"
-           "multiuse FLOAT,"
-           "runway INT64,"
-           "colocated INT64"
-           ")"
-           );
-    
-    runSQL("CREATE INDEX navaid_freq ON navaid(freq)");
-    
-    runSQL("CREATE TABLE octree (children INT)");
-    
-    runSQL("CREATE TABLE airway ("
-           "ident VARCHAR collate nocase,"
-           "network INT" // high-level or low-level
-           ")");
-    
-    runSQL("CREATE INDEX airway_ident ON airway(ident)");
-    
-    runSQL("CREATE TABLE airway_edge ("
-           "network INT,"
-           "airway INT64,"
-           "a INT64,"
-           "b INT64"
-           ")");
-    
-    runSQL("CREATE INDEX airway_edge_from ON airway_edge(a)");
-    
-    runSQL("CREATE TABLE taxi_node ("
-           "hold_type INT,"
-           "on_runway BOOL,"
-           "pushback BOOL"
-           ")");
-    
-    runSQL("CREATE TABLE parking ("
-           "heading FLOAT,"
-           "radius INT,"
-           "gate_type VARCHAR,"
-           "airlines VARCHAR,"
-           "pushback INT64"
-           ")");
-    
-    runSQL("CREATE TABLE groundnet_edge ("
-           "airport INT64,"
-           "a INT64,"
-           "b INT64"
-           ")");
-    
-    runSQL("CREATE INDEX groundnet_edge_airport ON groundnet_edge(airport)");
-    runSQL("CREATE INDEX groundnet_edge_from ON groundnet_edge(a)");
+      string_list commands = simgear::strutils::split(SCHEMA_SQL, ";");
+      BOOST_FOREACH(std::string sql, commands) {
+          if (sql.empty()) {
+              continue;
+          }
+          
+          runSQL(sql);
+      } // of commands in scheme loop
   }
   
   void prepareQueries()
