@@ -37,6 +37,7 @@
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -194,7 +195,8 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     }
 
     SG_LOG( SG_TERRAIN, SG_INFO,
-            "scheduling needed tiles for " << longitude << " " << latitude );
+            "scheduling needed tiles for " << longitude << " " << latitude << ", curr_bucket:"
+           <<  curr_bucket.gen_base_path() << "/" << curr_bucket.gen_index_str());
 
     double tile_width = curr_bucket.get_width_m();
     double tile_height = curr_bucket.get_height_m();
@@ -235,6 +237,10 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
             SGBucket b = sgBucketOffset( longitude, latitude, x, y );
             float priority = (-1.0) * (x*x+y*y);
             sched_tile( b, priority, true, 0.0 );
+            
+            if (_terra_sync) {
+                _terra_sync->scheduleTile(b);
+            }
         }
     }
 }
@@ -259,18 +265,18 @@ void FGTileMgr::update_queues()
     while ( ! tile_cache.at_end() )
     {
         e = tile_cache.get_current();
-        // cout << "processing a tile" << endl;
         if ( e )
         {
             // Prepare the ssg nodes corresponding to each tile.
             // Set the ssg transform and update it's range selector
             // based on current visibilty
             e->prep_ssg_node(vis);
-
-            if (( !e->is_loaded() )&&
-                ((!e->is_expired(current_time))||
-                  e->is_current_view() ))
-            {
+            
+            bool nonExpiredOrCurrent = !e->is_expired(current_time) || e->is_current_view();
+            if ( !e->is_loaded() &&
+                !isTileDirSyncing(e->tileFileName) &&
+                nonExpiredOrCurrent)
+            {                
                 // schedule tile for loading with osg pager
                 _pager->queueRequest(e->tileFileName,
                                      e->getNode(),
@@ -378,12 +384,11 @@ void FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
         if (current_bucket != previous_bucket) {
             // We've moved to a new bucket, we need to schedule any
             // needed tiles for loading.
-            SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr::update()" );
+            SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
             scheduled_visibility = range_m;
             schedule_needed(current_bucket, range_m);
-            if (_terra_sync)
-                _terra_sync->schedulePosition(latitude,longitude);
         }
+        
         // save bucket
         previous_bucket = current_bucket;
     } else if ( state == Start || state == Inited ) {
@@ -463,3 +468,17 @@ bool FGTileMgr::isSceneryLoaded()
 
     return schedule_scenery(SGGeod::fromDeg(longitude, latitude), range_m, 0.0);
 }
+
+bool FGTileMgr::isTileDirSyncing(const std::string& tileFileName) const
+{
+    if (!_terra_sync) {
+        return false;
+    }
+    
+    std::string nameWithoutExtension = tileFileName.substr(0, tileFileName.size() - 4);
+    long int bucketIndex = simgear::strutils::to_int(nameWithoutExtension);
+    SGBucket bucket(bucketIndex);
+    
+    return _terra_sync->isTileDirPending(bucket.gen_base_path());
+}
+

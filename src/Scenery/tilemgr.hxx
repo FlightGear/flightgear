@@ -62,6 +62,8 @@ private:
     // schedule a needed buckets for loading
     void schedule_needed(const SGBucket& curr_bucket, double rangeM);
 
+    bool isTileDirSyncing(const std::string& tileFileName) const;
+    
     SGBucket previous_bucket;
     SGBucket current_bucket;
     SGBucket pending;
