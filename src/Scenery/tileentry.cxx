@@ -119,19 +119,3 @@ TileEntry::removeFromSceneGraph()
     }
 }
 
-void
-TileEntry::refresh()
-{
-    osg::Group *parent = NULL;
-    // find the nodes branch parent
-    if ( _node->getNumParents() > 0 ) {
-        // find the first parent (should only be one)
-        parent = _node->getParent( 0 ) ;
-        if( parent ) {
-            parent->removeChild( _node.get() );
-        }
-    }
-    _node = new osg::LOD;
-    if (parent)
-        parent->addChild(_node.get());
-}

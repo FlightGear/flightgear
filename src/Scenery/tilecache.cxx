@@ -179,21 +179,6 @@ bool TileCache::insert_tile( TileEntry *e ) {
     return true;
 }
 
-/**
- * Reloads a tile when it's already in memory.
- */
-void TileCache::refresh_tile(long tile_index)
-{
-    const_tile_map_iterator it = tile_cache.find( tile_index );
-    if ( it == tile_cache.end() )
-        return;
-
-    SG_LOG( SG_TERRAIN, SG_DEBUG, "REFRESHING CACHE ENTRY = " << tile_index );
-
-    if (it->second)
-        it->second->refresh();
-}
-
 // update tile's priority and expiry time according to current request
 void TileCache::request_tile(TileEntry* t,float priority,bool current_view,double request_time)
 {

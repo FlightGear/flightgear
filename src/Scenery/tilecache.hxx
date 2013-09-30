@@ -81,9 +81,6 @@ public:
     // and this does not free the object which is pointed to.
     void clear_entry( long cache_entry );
 
-    // Refresh/reload a tile when it's already in memory.
-    void refresh_tile(long tile_index);
-
     // Clear all completely loaded tiles (ignores partially loaded tiles)
     void clear_cache();
 

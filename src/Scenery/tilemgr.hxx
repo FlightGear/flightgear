@@ -86,8 +86,6 @@ private:
     // schedule tiles for the viewer bucket
     void schedule_tiles_at(const SGGeod& location, double rangeM);
 
-    static void refresh_tile(void* tileMgr, long tileIndex);
-
     SGPropertyNode_ptr _visibilityMeters;
     SGPropertyNode_ptr _maxTileRangeM, _disableNasalHooks;
     SGPropertyNode_ptr _scenery_loaded, _scenery_override;

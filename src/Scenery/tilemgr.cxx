@@ -104,17 +104,10 @@ void FGTileMgr::init() {
     reinit();
 }
 
-void FGTileMgr::refresh_tile(void* tileMgr, long tileIndex)
-{
-    ((FGTileMgr*) tileMgr)->tile_cache.refresh_tile(tileIndex);
-}
-
 void FGTileMgr::reinit()
 {
     _terra_sync = static_cast<simgear::SGTerraSync*> (globals->get_subsystem("terrasync"));
-    if (_terra_sync)
-        _terra_sync->setTileRefreshCb(&refresh_tile, this);
-
+    
     // protect against multiple scenery reloads and properly reset flags,
     // otherwise aircraft fall through the ground while reloading scenery
     if (!fgGetBool("/sim/sceneryloaded",true))
