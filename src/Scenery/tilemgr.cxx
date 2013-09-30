@@ -242,7 +242,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
  * Update the various queues maintained by the tilemagr (private
  * internal function, do not call directly.)
  */
-void FGTileMgr::update_queues()
+void FGTileMgr::update_queues(bool& isDownloadingScenery)
 {
     osg::FrameStamp* framestamp
         = globals->get_renderer()->getViewer()->getFrameStamp();
@@ -265,22 +265,22 @@ void FGTileMgr::update_queues()
             // based on current visibilty
             e->prep_ssg_node(vis);
             
-            bool nonExpiredOrCurrent = !e->is_expired(current_time) || e->is_current_view();
-            if ( !e->is_loaded() &&
-                !isTileDirSyncing(e->tileFileName) &&
-                nonExpiredOrCurrent)
-            {                
-                // schedule tile for loading with osg pager
-                _pager->queueRequest(e->tileFileName,
-                                     e->getNode(),
-                                     e->get_priority(),
-                                     framestamp,
-                                     e->getDatabaseRequest(),
-                                     _options.get());
-                loading++;
-            }
-        } else
-        {
+            if (!e->is_loaded()) {
+                bool nonExpiredOrCurrent = !e->is_expired(current_time) || e->is_current_view();
+                bool downloading = isTileDirSyncing(e->tileFileName);
+                isDownloadingScenery |= downloading;
+                if ( !downloading && nonExpiredOrCurrent) {
+                    // schedule tile for loading with osg pager
+                    _pager->queueRequest(e->tileFileName,
+                                         e->getNode(),
+                                         e->get_priority(),
+                                         framestamp,
+                                         e->getDatabaseRequest(),
+                                         _options.get());
+                    loading++;
+                }
+            } // of tile not loaded case
+        } else {
             SG_LOG(SG_TERRAIN, SG_ALERT, "Warning: empty tile in cache!");
         }
         tile_cache.next();
@@ -321,7 +321,8 @@ void FGTileMgr::update(double)
     double vis = _visibilityMeters->getDoubleValue();
     schedule_tiles_at(globals->get_view_position(), vis);
 
-    update_queues();
+    bool waitingOnTerrasync = false;
+    update_queues(waitingOnTerrasync);
 
     // scenery loading check, triggers after each sim (tile manager) reinit
     if (!_scenery_loaded->getBoolValue())
@@ -329,6 +330,7 @@ void FGTileMgr::update(double)
         bool fdmInited = fgGetBool("sim/fdm-initialized");
         bool positionFinalized = fgGetBool("sim/position-finalized");
         bool sceneryOverride = _scenery_override->getBoolValue();
+        
         
     // we are done if final position is set and the scenery & FDM are done.
     // scenery-override can ignore the last two, but not position finalization.
@@ -339,7 +341,14 @@ void FGTileMgr::update(double)
         }
         else
         {
-            fgSplashProgress(positionFinalized ? "loading-scenery" : "finalize-position");
+            if (!positionFinalized) {
+                fgSplashProgress("finalize-position");
+            } else if (waitingOnTerrasync) {
+                fgSplashProgress("downloading-scenery");
+            } else {
+                fgSplashProgress("loading-scenery");
+            }
+            
             // be nice to loader threads while waiting for initial scenery, reduce to 20fps
             SGTimeStamp::sleepForMSec(50);
         }

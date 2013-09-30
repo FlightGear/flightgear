@@ -81,7 +81,7 @@ private:
     simgear::SGTerraSync* _terra_sync;
 
     // update various queues internal queues
-    void update_queues();
+    void update_queues(bool& isDownloadingScenery);
 
     // schedule tiles for the viewer bucket
     void schedule_tiles_at(const SGGeod& location, double rangeM);

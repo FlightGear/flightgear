@@ -402,11 +402,22 @@ void fgSplashProgress( const char *identifier ) {
       text = globals->get_locale()->getLocalizedString(id.c_str(),
                                                        "sys", "<incomplete language resource>");
   }
-
-  if (!strcmp(fgGetString("/sim/startup/splash-progress-text"), text)) {
-    return;
-  }
+    
+    if (!strcmp(fgGetString("/sim/startup/splash-progress-text"), text)) {
+        return;
+    }
+    
+    if (!strcmp(identifier,"downloading-scenery")) {
+        std::ostringstream oss;
+        unsigned int kbytesPerSec = fgGetInt("/sim/terrasync/transfer-rate-bytes-sec") / 1024;
+        oss << text;
+        if (kbytesPerSec > 0) {
+            oss << " - " << kbytesPerSec << " KBytes/sec";
+        }
+        fgSetString("/sim/startup/splash-progress-text", oss.str());
+    } else {
+        SG_LOG( SG_VIEW, SG_INFO, "Splash screen progress " << identifier );
+        fgSetString("/sim/startup/splash-progress-text", text);
+    }
   
-  SG_LOG( SG_VIEW, SG_INFO, "Splash screen progress " << identifier );
-  fgSetString("/sim/startup/splash-progress-text", text);
 }
