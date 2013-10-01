@@ -235,11 +235,19 @@ double FGAIAircraft::sign(double x) {
 }
 
 
-void FGAIAircraft::setFlightPlan(const std::string& flightplan, bool repeat) {
-    if (!flightplan.empty()) {
-        FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
+void FGAIAircraft::setFlightPlan(const std::string& flightplan, bool repeat)
+{
+    if (flightplan.empty()) {
+        SG_LOG(SG_AI, SG_WARN, "setFlightPlan: empty flight plan");
+    }
+    
+    FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
+    if (fp->isValidPlan()) {
         fp->setRepeat(repeat);
         SetFlightPlan(fp);
+    } else {
+        SG_LOG(SG_AI, SG_WARN, "setFlightPlan: invalid flightplan specified:" << flightplan);
+        delete fp;
     }
 }
 
