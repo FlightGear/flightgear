@@ -62,6 +62,7 @@
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/threads/SGThread.hxx>
 #include <simgear/threads/SGGuard.hxx>
+#include <simgear/scene/tsync/terrasync.hxx>
 
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
@@ -371,6 +372,7 @@ private:
         
         BOOST_FOREACH(SGPath p, d) {
             simgear::Dir d2(p);
+            SG_LOG(SG_AI, SG_INFO, "parsing traffic in:" << p);
             simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
             BOOST_FOREACH(SGPath xml, trafficFiles) {                
                 readXML(xml.str(), *this);
@@ -412,6 +414,7 @@ private:
 FGTrafficManager::FGTrafficManager() :
   inited(false),
   doingInit(false),
+  trafficSyncRequested(false),
   waitingMetarTime(0.0),
   enabled("/sim/traffic-manager/enabled"),
   aiEnabled("/sim/ai/enabled"),
@@ -478,6 +481,7 @@ void FGTrafficManager::shutdown()
     currAircraft = scheduledAircraft.begin();
     doingInit = false;
     inited = false;
+    trafficSyncRequested = false;
 }
 
 void FGTrafficManager::init()
@@ -487,9 +491,36 @@ void FGTrafficManager::init()
     }
 
     assert(!doingInit);
+    simgear::SGTerraSync* terraSync = static_cast<simgear::SGTerraSync*>(globals->get_subsystem("terrasync"));
+    
+    if (terraSync) {
+        if (!trafficSyncRequested) {
+            terraSync->scheduleDataDir("AI/Traffic");
+            trafficSyncRequested = true;
+        }
+        
+        if (terraSync->isDataDirPending("AI/Traffic")) {
+            return; // remain in the init state
+        }
+        
+        SG_LOG(SG_AI, SG_INFO, "Traffic files sync complete");
+    }
+    
     doingInit = true;
-    if (string(fgGetString("/sim/traffic-manager/datafile")).empty()) {        
+    if (string(fgGetString("/sim/traffic-manager/datafile")).empty()) {
         PathList dirs = globals->get_data_paths("AI/Traffic");
+        
+        // temporary flag to restrict loading while traffic data is found
+        // through terrasync /and/ fgdata. Ultimatley we *do* want to be able to
+        // overlay sources.
+        
+        if (dirs.size() > 1) {
+            SGPath p = dirs.back();
+            if (simgear::strutils::starts_with(p.str(), globals->get_fg_root())) {
+                dirs.pop_back();
+            }
+        }
+        
         if (dirs.empty()) {
             doingInit = false;
             return;
@@ -649,8 +680,8 @@ void FGTrafficManager::update(double dt)
         if (!doingInit) {
             init();
         }
-        
-        if (!scheduleParser->isFinished()) {
+                
+        if (!doingInit || !scheduleParser->isFinished()) {
           return;
         }
       

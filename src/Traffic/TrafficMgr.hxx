@@ -80,6 +80,8 @@ class FGTrafficManager : public SGSubsystem
 private:
   bool inited;
   bool doingInit;
+    bool trafficSyncRequested;
+    
   double waitingMetarTime;
   std::string waitingMetarStation;
   
