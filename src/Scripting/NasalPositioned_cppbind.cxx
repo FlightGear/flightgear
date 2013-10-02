@@ -395,9 +395,13 @@ static naRef f_findWithinRange(nasal::CallContext ctx)
 {
   SGGeod pos = getPosition(ctx);
   double range_nm = ctx.requireArg<double>(0);
-
-  FGPositioned::TypeFilter filter(FGPositioned::typeFromName(ctx.getArg<std::string>(1)));
+  
+    FGPositioned::Type ty = FGPositioned::typeFromName(ctx.getArg<std::string>(1));
+    if (ty == FGPositioned::INVALID)
+        naRuntimeError(ctx.c, "invalid filter type specification");
     
+  FGPositioned::TypeFilter filter(ty);
+  
   FGPositionedList items = FGPositioned::findWithinRange(pos, range_nm, &filter);
   FGPositioned::sortByRange(items, pos);
   return ctx.to_nasal(items);
