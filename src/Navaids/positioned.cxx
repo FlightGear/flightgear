@@ -54,6 +54,16 @@ static void validateSGGeod(const SGGeod& geod)
   }
 }
 
+static bool validateFilter(FGPositioned::Filter* filter)
+{
+    if (filter->maxType() < filter->minType()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "invalid positioned filter specified");
+        return false;
+    }
+    
+    return true;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -231,6 +241,10 @@ FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilt
 {
   validateSGGeod(aPos);
 
+    if (!validateFilter(aFilter)) {
+        return FGPositionedList();
+    }
+    
   FGPositionedList result;
   Octree::findAllWithinRange(SGVec3d::fromGeod(aPos), 
     aRangeNm * SG_NM_TO_METER, aFilter, result, 0xffffff);
@@ -242,6 +256,10 @@ FGPositioned::findWithinRangePartial(const SGGeod& aPos, double aRangeNm, Filter
 {
   validateSGGeod(aPos);
   
+    if (!validateFilter(aFilter)) {
+        return FGPositionedList();
+    }
+    
   int limitMsec = 32;
   FGPositionedList result;
   aPartial = Octree::findAllWithinRange(SGVec3d::fromGeod(aPos),
@@ -253,12 +271,20 @@ FGPositioned::findWithinRangePartial(const SGGeod& aPos, double aRangeNm, Filter
 FGPositionedList
 FGPositioned::findAllWithIdent(const std::string& aIdent, Filter* aFilter, bool aExact)
 {
+    if (!validateFilter(aFilter)) {
+        return FGPositionedList();
+    }
+    
   return NavDataCache::instance()->findAllWithIdent(aIdent, aFilter, aExact);
 }
 
 FGPositionedList
 FGPositioned::findAllWithName(const std::string& aName, Filter* aFilter, bool aExact)
 {
+    if (!validateFilter(aFilter)) {
+        return FGPositionedList();
+    }
+    
   return NavDataCache::instance()->findAllWithName(aName, aFilter, aExact);
 }
 
@@ -267,6 +293,10 @@ FGPositioned::findClosest(const SGGeod& aPos, double aCutoffNm, Filter* aFilter)
 {
   validateSGGeod(aPos);
   
+    if (!validateFilter(aFilter)) {
+        return NULL;
+    }
+    
   FGPositionedList l(findClosestN(aPos, 1, aCutoffNm, aFilter));
   if (l.empty()) {
     return NULL;
