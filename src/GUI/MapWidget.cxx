@@ -930,6 +930,11 @@ public:
 
     return true;
   }
+    
+    void showAll()
+    {
+        _hardRunwaysOnly = false;
+    }
 
 private:
   bool _heliports;
@@ -940,6 +945,11 @@ private:
 void MapWidget::drawAirports()
 {
   MapAirportFilter af(_root);
+    if (_cachedZoom <= SHOW_DETAIL2_ZOOM) {
+        // show all airports when zoomed in sufficently
+        af.showAll();
+    }
+    
   bool partial = false;
   FGPositionedList apts = FGPositioned::findWithinRangePartial(_projectionCenter, _drawRangeNm, &af, partial);
   for (unsigned int i=0; i<apts.size(); ++i) {
