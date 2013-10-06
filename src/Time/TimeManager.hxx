@@ -40,6 +40,8 @@ public:
   virtual void postinit();
   virtual void shutdown();
   
+  virtual void unbind();
+    
   void update(double dt);
   
 // SGPropertyChangeListener overrides

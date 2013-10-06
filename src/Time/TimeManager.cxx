@@ -108,6 +108,20 @@ void TimeManager::init()
   _frameCount = 0;
 }
 
+void TimeManager::unbind()
+{
+    _maxDtPerFrame.clear();
+    _clockFreeze.clear();
+    _timeOverride.clear();
+    _warp.clear();
+    _warpDelta.clear();
+    _frameRate.clear();
+    _frameLatency.clear();
+    _frameRateWorst.clear();
+    
+    // and the property objects too
+}
+
 void TimeManager::postinit()
 {
   initTimeOffset();
