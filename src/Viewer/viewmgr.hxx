@@ -53,7 +53,8 @@ public:
     virtual void unbind ();
     virtual void update (double dt);
     virtual void reinit ();
-
+    virtual void shutdown();
+    
     // getters
     inline int size() const { return views.size(); }
     inline int get_current() const { return current; }

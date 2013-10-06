@@ -142,6 +142,16 @@ FGViewMgr::init ()
 }
 
 void
+FGViewMgr::shutdown()
+{
+    if (!inited) {
+        return;
+    }
+    
+    inited = false;
+}
+
+void
 FGViewMgr::reinit ()
 {
   int current_view_index = current;
@@ -290,6 +300,8 @@ void
 FGViewMgr::unbind ()
 {
   _tiedProperties.Untie();
+    config_list.clear();
+    view_number.clear();
 }
 
 void
