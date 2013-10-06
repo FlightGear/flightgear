@@ -175,6 +175,12 @@ void
 FGAIManager::shutdown()
 {
     unloadAllScenarios();
+    
+    BOOST_FOREACH(FGAIBase* ai, ai_list) {
+        ai->unbind();
+    }
+    
+    ai_list.clear();
 }
 
 void
