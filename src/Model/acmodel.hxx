@@ -26,6 +26,7 @@ public:
   virtual ~FGAircraftModel ();
 
   virtual void init ();
+  virtual void shutdown ();
   virtual void reinit ();
   virtual void bind ();
   virtual void unbind ();

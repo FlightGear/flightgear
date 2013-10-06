@@ -58,7 +58,7 @@ FGAircraftModel::~FGAircraftModel ()
 {
   // drop reference
   _fx = 0;
-  deinit();
+  shutdown();
 }
 
 void 
@@ -129,7 +129,7 @@ FGAircraftModel::init ()
 void
 FGAircraftModel::reinit()
 {
-  deinit();
+  shutdown();
   _fx->reinit();
   init();
   // TODO globally create signals for all subsystems (re)initialized
@@ -137,7 +137,7 @@ FGAircraftModel::reinit()
 }
 
 void
-FGAircraftModel::deinit()
+FGAircraftModel::shutdown()
 {
   if (!_aircraft.get()) {
     return;
