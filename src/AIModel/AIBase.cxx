@@ -209,8 +209,10 @@ FGAIBase::removeModel()
         osg::ref_ptr<osg::Object> temp = _model.get();
         pSceneryManager->get_scene_graph()->removeChild(aip.getSceneGraph());
         // withdraw from SGModelPlacement and drop own reference (unref)
-        aip.init( 0 );
+        aip.clear();
+        _modeldata = 0;
         _model = 0;
+        
         // pass it on to the pager, to be be deleted in the pager thread
         pSceneryManager->getPager()->queueDeleteRequest(temp);
     }
