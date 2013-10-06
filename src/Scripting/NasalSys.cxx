@@ -246,13 +246,6 @@ naRef FGNasalSys::callMethod(naRef code, naRef self, int argc, naRef* args, naRe
 FGNasalSys::~FGNasalSys()
 {
     nasalSys = 0;
-    map<int, FGNasalListener *>::iterator it, end = _listener.end();
-    for(it = _listener.begin(); it != end; ++it)
-        delete it->second;
-
-    naFreeContext(_context);
-    _globals = naNil();
-    _string = naNil();
 }
 
 bool FGNasalSys::parseAndRun(const char* sourceCode)
@@ -601,10 +594,12 @@ static naRef f_findDataDir(naContext c, naRef me, int argc, naRef* args)
 class NasalCommand : public SGCommandMgr::Command
 {
 public:
-    NasalCommand(FGNasalSys* sys, naRef f) :
+    NasalCommand(FGNasalSys* sys, naRef f, const std::string& name) :
         _sys(sys),
-        _func(f)
+        _func(f),
+        _name(name)
     {
+        globals->get_commands()->addCommandObject(_name, this);
         _gcRoot =  sys->gcSave(f);
     }
     
@@ -628,6 +623,7 @@ private:
     FGNasalSys* _sys;
     naRef _func;
     int _gcRoot;
+    std::string _name;
 };
 
 static naRef f_addCommand(naContext c, naRef me, int argc, naRef* args)
@@ -635,20 +631,16 @@ static naRef f_addCommand(naContext c, naRef me, int argc, naRef* args)
     if(argc != 2 || !naIsString(args[0]) || !naIsFunc(args[1]))
         naRuntimeError(c, "bad arguments to addcommand()");
     
-    naRef func = args[1];
-    NasalCommand* cmd = new NasalCommand(nasalSys, func);
-    globals->get_commands()->addCommandObject(naStr_data(args[0]), cmd);
+    nasalSys->addCommand(args[1], naStr_data(args[0]));
     return naNil();
 }
 
 static naRef f_removeCommand(naContext c, naRef me, int argc, naRef* args)
 {
-    SGCommandMgr::Command* cmd = globals->get_commands()->getCommand(naStr_data(args[0]));
-
-  //  SGCommandMgr::Command* cmd = globals->get_commands()->removeCommand(naStr_data(args[0]))
+    if ((argc < 1) || !naIsString(args[0]))
+        naRuntimeError(c, "bad argument to removecommand()");
     
-    delete cmd;
-    
+    globals->get_commands()->removeCommand(naStr_data(args[0]));
     return naNil();
 }
 
@@ -782,13 +774,15 @@ void FGNasalSys::init()
     initNasalCondition(_globals, _context);
     initNasalHTTP(_globals, _context);
   
-    NasalTimerObj::init("Timer")
-      .method("start", &TimerObj::start)
-      .method("stop", &TimerObj::stop)
-      .method("restart", &TimerObj::restart)
-      .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot)
-      .member("isRunning", &TimerObj::isRunning);
-  
+    if (!NasalTimerObj::isInit()) {
+        NasalTimerObj::init("Timer")
+          .method("start", &TimerObj::start)
+          .method("stop", &TimerObj::stop)
+          .method("restart", &TimerObj::restart)
+          .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot)
+          .member("isRunning", &TimerObj::isRunning);
+    }
+    
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
     loadScriptDirectory(nasalDir);
@@ -814,6 +808,36 @@ void FGNasalSys::init()
     // now Nasal modules are loaded, we can do some delayed work
     postinitNasalPositioned(_globals, _context);
     postinitNasalGUI(_globals, _context);
+}
+
+void FGNasalSys::shutdown()
+{
+    shutdownNasalPositioned();
+    
+    map<int, FGNasalListener *>::iterator it, end = _listener.end();
+    for(it = _listener.begin(); it != end; ++it)
+        delete it->second;
+    _listener.clear();
+    
+    NasalCommandDict::iterator j = _commands.begin();
+    for (; j != _commands.end(); ++j) {
+        globals->get_commands()->removeCommand(j->first);
+    }
+    _commands.clear();
+    
+    naClearSaved();
+    
+    _string = naNil(); // will be freed by _context
+    naFreeContext(_context);
+   
+    //setWatchedRef(_globals);
+    
+    // remove the recursive reference in globals
+    hashset(_globals, "globals", naNil());
+    _globals = naNil();    
+    
+    naGC();
+    
 }
 
 naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
@@ -1249,6 +1273,30 @@ void FGNasalSys::registerToLoad(FGNasalModelData *data)
 void FGNasalSys::registerToUnload(FGNasalModelData *data)
 {
     _unloadList.push(data);
+}
+
+void FGNasalSys::addCommand(naRef func, const std::string& name)
+{
+    if (_commands.find(name) != _commands.end()) {
+        SG_LOG(SG_NASAL, SG_WARN, "duplicate add of command:" << name);
+        return;
+    }
+    
+    NasalCommand* cmd = new NasalCommand(this, func, name);
+    _commands[name] = cmd;
+}
+
+void FGNasalSys::removeCommand(const std::string& name)
+{
+    NasalCommandDict::iterator it = _commands.find(name);
+    if (it == _commands.end()) {
+        SG_LOG(SG_NASAL, SG_WARN, "remove of unknwon command:" << name);
+        return;
+    }
+
+    // will delete the NasalCommand instance
+    globals->get_commands()->removeCommand(name);
+    _commands.erase(it);
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -1813,6 +1813,7 @@ private:
   int _gcSaveKey;
 };
 
+
 class NasalFPDelegateFactory : public FlightPlan::DelegateFactory
 {
 public:
@@ -1823,7 +1824,7 @@ public:
     _gcSaveKey = _nasal->gcSave(_func);
   }
   
-  ~NasalFPDelegateFactory()
+  virtual ~NasalFPDelegateFactory()
   {
     _nasal->gcRelease(_gcSaveKey);
   }
@@ -1845,6 +1846,20 @@ private:
   int _gcSaveKey;
 };
 
+static std::vector<NasalFPDelegateFactory*> static_nasalDelegateFactories;
+
+void shutdownNasalPositioned()
+{
+    std::vector<NasalFPDelegateFactory*>::iterator it;
+    for (it = static_nasalDelegateFactories.begin();
+         it != static_nasalDelegateFactories.end(); ++it)
+    {
+        FlightPlan::unregisterDelegateFactory(*it);
+        delete (*it);
+    }
+    static_nasalDelegateFactories.clear();
+}
+
 static naRef f_registerFPDelegate(naContext c, naRef me, int argc, naRef* args)
 {
   if ((argc < 1) || !naIsFunc(args[0])) {
@@ -1853,7 +1868,7 @@ static naRef f_registerFPDelegate(naContext c, naRef me, int argc, naRef* args)
   
   NasalFPDelegateFactory* factory = new NasalFPDelegateFactory(args[0]);
   FlightPlan::registerDelegateFactory(factory);
-  
+    static_nasalDelegateFactories.push_back(factory);
   return naNil();
 }
 

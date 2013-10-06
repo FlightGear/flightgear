@@ -152,17 +152,19 @@ static naRef f_createFileDialog(naContext c, naRef me, int argc, naRef* args)
 
 void postinitNasalGUI(naRef globals, naContext c)
 {
-    NasalFileDialog::init("gui._FileDialog")
-    .member("title", &FGFileDialog::getTitle,  &FGFileDialog::setTitle)
-    .member("button", &FGFileDialog::getButton,  &FGFileDialog::setButton)
-    .member("directory", &FGFileDialog::getDirectory, &FGFileDialog::setDirectory)
-    .member("show_hidden", &FGFileDialog::showHidden, &FGFileDialog::setShowHidden)
-    .member("placeholder", &FGFileDialog::getPlaceholder, &FGFileDialog::setPlaceholderName)
-    .member("pattern", &FGFileDialog::filterPatterns, &FGFileDialog::setFilterPatterns)
-    .method("open", &FGFileDialog::exec)
-    .method("close", &FGFileDialog::close)
-    .method("setCallback", &FGFileDialog::setCallbackFromNasal);
-
+    if (!NasalFileDialog::isInit()) {
+        NasalFileDialog::init("gui._FileDialog")
+        .member("title", &FGFileDialog::getTitle,  &FGFileDialog::setTitle)
+        .member("button", &FGFileDialog::getButton,  &FGFileDialog::setButton)
+        .member("directory", &FGFileDialog::getDirectory, &FGFileDialog::setDirectory)
+        .member("show_hidden", &FGFileDialog::showHidden, &FGFileDialog::setShowHidden)
+        .member("placeholder", &FGFileDialog::getPlaceholder, &FGFileDialog::setPlaceholderName)
+        .member("pattern", &FGFileDialog::filterPatterns, &FGFileDialog::setFilterPatterns)
+        .method("open", &FGFileDialog::exec)
+        .method("close", &FGFileDialog::close)
+        .method("setCallback", &FGFileDialog::setCallbackFromNasal);
+    }
+    
     nasal::Hash guiModule = nasal::Hash(globals, c).get<nasal::Hash>("gui");
     
     guiModule.set("FILE_DIALOG_OPEN_FILE", (int) FGFileDialog::USE_OPEN_FILE);

@@ -81,6 +81,8 @@ static naRef f_http_load(const nasal::CallContext& ctx)
 //------------------------------------------------------------------------------
 naRef initNasalHTTP(naRef globals, naContext c)
 {
+    if (!NasalRequest::isInit()) {
+
   using simgear::HTTP::Request;
   NasalRequest::init("http.Request")
     .member("url", &Request::url)
@@ -107,6 +109,8 @@ naRef initNasalHTTP(naRef globals, naContext c)
     .bases<NasalRequest>()
     .member("response", &MemoryRequest::responseBody);
 
+    }
+    
   nasal::Hash globals_module(globals, c),
               http = globals_module.createHash("http");
 

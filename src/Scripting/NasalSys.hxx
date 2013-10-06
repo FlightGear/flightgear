@@ -21,6 +21,7 @@ class FGNasalScript;
 class FGNasalListener;
 class SGCondition;
 class FGNasalModelData;
+class NasalCommand;
 
 namespace simgear { class BufferedLogCallback; }
 
@@ -33,6 +34,8 @@ public:
     FGNasalSys();
     virtual ~FGNasalSys();
     virtual void init();
+    virtual void shutdown();
+    
     virtual void update(double dt);
 
     // Loads a nasal script from an external file and inserts it as a
@@ -84,6 +87,9 @@ public:
 
     void deleteModule(const char* moduleName);
 
+    void addCommand(naRef func, const std::string& name);
+    void removeCommand(const std::string& name);
+    
     /**
      * Set member of specified hash to given value
      */
@@ -173,6 +179,9 @@ private:
     SGPropertyNode_ptr _cmdArg;
 
     simgear::BufferedLogCallback* _log;
+    
+    typedef std::map<std::string, NasalCommand*> NasalCommandDict;
+    NasalCommandDict _commands;
 public:
     void handleTimer(NasalTimer* t);
 };
