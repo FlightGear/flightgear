@@ -52,18 +52,10 @@ using std::string;
 NewGUI::NewGUI () :
   _active_dialog(0)
 {
-#if defined(SG_MAC)
-    if (fgGetBool("/sim/menubar/native", true)) {
-        _menubar.reset(new FGCocoaMenuBar);
-        return;
-    }
-#endif
-  _menubar.reset(new FGPUIMenuBar);
 }
 
 NewGUI::~NewGUI ()
 {
-    _dialog_props.clear();
     for (_itt_t it = _colors.begin(); it != _colors.end(); ++it)
         delete it->second;
 }
@@ -71,6 +63,18 @@ NewGUI::~NewGUI ()
 void
 NewGUI::init ()
 {
+#if defined(SG_MAC)
+    if (fgGetBool("/sim/menubar/native", true)) {
+        _menubar.reset(new FGCocoaMenuBar);
+    }
+#endif
+    if (!_menubar.get()) {
+        _menubar.reset(new FGPUIMenuBar);
+    }
+    
+    fgTie("/sim/menubar/visibility", this,
+          &NewGUI::getMenuBarVisible, &NewGUI::setMenuBarVisible);
+    
     setStyle();
     SGPath p(globals->get_fg_root(), "gui/dialogs");
     readDir(p);
@@ -80,6 +84,14 @@ NewGUI::init ()
     // Fix for http://code.google.com/p/flightgear-bugs/issues/detail?id=947
     fgGetNode("sim/menubar")->setAttribute(SGPropertyNode::PRESERVE, true);
     _menubar->init();
+}
+
+void
+NewGUI::shutdown()
+{
+    fgUntie("/sim/menubar/visibility");
+    _menubar.reset();
+    _dialog_props.clear();
 }
 
 void
@@ -132,14 +144,11 @@ NewGUI::reset (bool reload)
 void
 NewGUI::bind ()
 {
-    fgTie("/sim/menubar/visibility", this,
-          &NewGUI::getMenuBarVisible, &NewGUI::setMenuBarVisible);
 }
 
 void
 NewGUI::unbind ()
 {
-    fgUntie("/sim/menubar/visibility");
 }
 
 void

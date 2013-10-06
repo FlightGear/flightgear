@@ -46,6 +46,8 @@ public:
      */
     virtual void init ();
 
+    virtual void shutdown ();
+    
     /**
      * Reinitialize the GUI subsystem. Reloads all XML dialogs.
      */
