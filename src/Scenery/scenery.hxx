@@ -61,6 +61,7 @@ public:
 
     // Implementation of SGSubsystem.
     void init ();
+    void shutdown ();
     void bind ();
     void unbind ();
     void update (double dt);

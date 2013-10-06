@@ -269,6 +269,16 @@ void FGScenery::init() {
     sgUserDataInit( globals->get_props() );
 }
 
+void FGScenery::shutdown()
+{
+    sgUserDataInit( NULL );
+    
+    scene_graph = NULL;
+    terrain_branch = NULL;
+    models_branch = NULL;
+    aircraft_branch = NULL;
+}
+
 
 void FGScenery::update(double dt)
 {
