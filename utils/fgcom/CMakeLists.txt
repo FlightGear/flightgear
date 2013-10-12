@@ -31,9 +31,6 @@
     include_directories( ${CMAKE_SOURCE_DIR}/3rdparty/iaxclient/lib ) # for iaxclient.h
     # Now include simgear libraries 
     target_link_Libraries( ${name}
-        ${win_LIBS}
-        ${PLIB_LIBRARIES}
-        ${ZLIB_LIBRARIES}
         ${OPENAL_LIBRARY}
         ${SIMGEAR_CORE_LIBRARIES}
         ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES} )
