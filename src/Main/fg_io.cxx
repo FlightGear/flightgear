@@ -49,6 +49,7 @@
 #include <Network/AV400WSim.hxx>
 #include <Network/garmin.hxx>
 #include <Network/httpd.hxx>
+#include <Network/igc.hxx>
 #ifdef FG_JPEG_SERVER
 #  include <Network/jpg-httpd.hxx>
 #endif
@@ -147,6 +148,9 @@ FGIO::parse_port_config( const string& config )
         } else if ( protocol == "garmin" ) {
             FGGarmin *garmin = new FGGarmin;
             io = garmin;
+        } else if ( protocol == "igc" ) {
+            IGCProtocol *igc = new IGCProtocol;
+            io = igc;
         } else if ( protocol == "httpd" ) {
             // determine port
             string port = tokens[1];

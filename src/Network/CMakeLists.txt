@@ -12,6 +12,7 @@ set(SOURCES
 	generic.cxx
 	httpd.cxx
 	HTTPClient.cxx
+	igc.cxx
 	joyclient.cxx
 	jsclient.cxx
 	lfsglass.cxx
@@ -40,6 +41,7 @@ set(HEADERS
 	generic.hxx
 	httpd.hxx
 	HTTPClient.hxx
+	igc.hxx
 	joyclient.hxx
 	jsclient.hxx
 	lfsglass.hxx

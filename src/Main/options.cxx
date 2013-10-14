@@ -1458,6 +1458,7 @@ struct OptionDesc {
     {"AV400WSimA",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"AV400WSimB",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"garmin",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"igc",                          true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"nmea",                         true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"generic",                      true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"props",                        true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
