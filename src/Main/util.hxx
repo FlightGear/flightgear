@@ -17,14 +17,10 @@
 //
 // $Id$
 
-
 #ifndef __UTIL_HXX
 #define __UTIL_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
+#include <string>
 
 /**
  * Move a value towards a target.
@@ -37,7 +33,7 @@
  *        (elapsed time/smoothing time)
  * @return The new value.
  */
-extern double fgGetLowPass (double current, double target, double timeratio);
+double fgGetLowPass (double current, double target, double timeratio);
 
 /**
  * Validation listener interface for io.nas, used by fgcommands.
@@ -45,6 +41,7 @@ extern double fgGetLowPass (double current, double target, double timeratio);
  * @param write True for write operations and false for read operations.
  * @return The validated path on success or 0 if access denied.
  */
-extern const char *fgValidatePath (const char *path, bool write);
+const char *fgValidatePath (const char *path, bool write);
+std::string fgValidatePath(const std::string& path, bool write);
 
 #endif // __UTIL_HXX

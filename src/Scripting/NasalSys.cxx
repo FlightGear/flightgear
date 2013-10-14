@@ -40,6 +40,7 @@
 #include "NasalCanvas.hxx"
 #include "NasalClipboard.hxx"
 #include "NasalCondition.hxx"
+#include "NasalHTTP.hxx"
 #include "NasalString.hxx"
 
 #include <Main/globals.hxx>
@@ -778,6 +779,7 @@ void FGNasalSys::init()
     NasalClipboard::init(this);
     initNasalCanvas(_globals, _context);
     initNasalCondition(_globals, _context);
+    initNasalHTTP(_globals, _context);
   
     NasalTimerObj::init("Timer")
       .method("start", &TimerObj::start)

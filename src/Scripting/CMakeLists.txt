@@ -1,27 +1,29 @@
 include(FlightGearComponent)
 
 set(SOURCES
-	NasalSys.cxx
-	nasal-props.cxx
-    NasalPositioned.cxx
-    NasalPositioned_cppbind.cxx
-    NasalCanvas.cxx
-    NasalClipboard.cxx
-    NasalCondition.cxx
-    NasalString.cxx
-    NasalModelData.cxx
-	)
+  NasalSys.cxx
+  nasal-props.cxx
+  NasalPositioned.cxx
+  NasalPositioned_cppbind.cxx
+  NasalCanvas.cxx
+  NasalClipboard.cxx
+  NasalCondition.cxx
+  NasalHTTP.cxx
+  NasalString.cxx
+  NasalModelData.cxx
+)
 
 set(HEADERS
-	NasalSys.hxx
-    NasalSys_private.hxx
-    NasalPositioned.hxx
-    NasalCanvas.hxx
-    NasalClipboard.hxx
-    NasalCondition.hxx
-    NasalString.hxx
-    NasalModelData.hxx
-	)
+  NasalSys.hxx
+  NasalSys_private.hxx
+  NasalPositioned.hxx
+  NasalCanvas.hxx
+  NasalClipboard.hxx
+  NasalCondition.hxx
+  NasalHTTP.hxx
+  NasalString.hxx
+  NasalModelData.hxx
+)
 
 if(WIN32)
   list(APPEND SOURCES ClipboardWindows.cxx)

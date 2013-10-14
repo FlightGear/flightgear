@@ -91,5 +91,12 @@ const char *fgValidatePath (const char *str, bool write)
     return result[0] ? result : 0;
 }
 
+//------------------------------------------------------------------------------
+std::string fgValidatePath(const std::string& path, bool write)
+{
+  const char* validate_path = fgValidatePath(path.c_str(), write);
+  return std::string(validate_path ? validate_path : "");
+}
+
 // end of util.cxx
 
