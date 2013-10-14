@@ -122,18 +122,6 @@ namespace canvas
     return getNasalSys()->context();
   }
 
-  //----------------------------------------------------------------------------
-  int FGCanvasSystemAdapter::gcSave(naRef r)
-  {
-    return getNasalSys()->gcSave(r);
-  }
-
-  //----------------------------------------------------------------------------
-  void FGCanvasSystemAdapter::gcRelease(int key)
-  {
-    getNasalSys()->gcRelease(key);
-  }
-
   //------------------------------------------------------------------------------
   naRef FGCanvasSystemAdapter::callMethod( naRef code,
                                            naRef self,

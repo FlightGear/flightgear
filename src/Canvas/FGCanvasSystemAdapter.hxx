@@ -33,8 +33,6 @@ namespace canvas
       virtual osg::Image* getImage(const std::string& path) const;
 
       virtual naContext getNasalContext() const;
-      virtual int gcSave(naRef r);
-      virtual void gcRelease(int key);
       virtual naRef callMethod( naRef code,
                                 naRef self,
                                 int argc,

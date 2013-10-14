@@ -131,7 +131,7 @@ static naRef f_find_first_not_of(naContext c, naRef me, int argc, naRef* args)
 }
 
 //------------------------------------------------------------------------------
-naRef initNasalString(naRef globals, naRef string, naContext c, naRef gcSave)
+naRef initNasalString(naRef globals, naRef string, naContext c)
 {
   nasal::Hash string_module(string, c);
 

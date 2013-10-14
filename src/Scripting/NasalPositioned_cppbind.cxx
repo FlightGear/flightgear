@@ -457,7 +457,7 @@ static naRef f_sortByRange(nasal::CallContext ctx)
 }
 
 //------------------------------------------------------------------------------
-naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c, naRef gcSave)
+naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c)
 {
   NasalPositioned::init("Positioned")
     .member("id", &FGPositioned::ident)

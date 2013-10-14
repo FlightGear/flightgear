@@ -172,8 +172,6 @@ private:
 
     SGPropertyNode_ptr _cmdArg;
 
-    int _nextGCKey;
-    naRef _gcHash;
     int _callCount;
 
     simgear::BufferedLogCallback* _log;

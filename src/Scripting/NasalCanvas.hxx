@@ -23,7 +23,7 @@
 
 #include <simgear/nasal/nasal.h>
 
-naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave);
+naRef initNasalCanvas(naRef globals, naContext c);
 
 #endif // of SCRIPTING_NASAL_CANVAS_HXX
 

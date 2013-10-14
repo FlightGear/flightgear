@@ -28,7 +28,7 @@ class SGCondition;
 
 naRef ghostForCondition(naContext c, const SGCondition* cond);
 
-naRef initNasalCondition(naRef globals, naContext c, naRef gcSave);
+naRef initNasalCondition(naRef globals, naContext c);
 
 #endif // of SCRIPTING_NASAL_CONDITION_HXX
 

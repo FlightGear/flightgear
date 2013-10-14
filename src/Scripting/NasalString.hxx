@@ -21,7 +21,7 @@
 
 #include <simgear/nasal/nasal.h>
 
-naRef initNasalString(naRef globals, naRef string, naContext c, naRef gcSave);
+naRef initNasalString(naRef globals, naRef string, naContext c);
 
 #endif // of SCRIPTING_NASAL_STRING_HXX
 

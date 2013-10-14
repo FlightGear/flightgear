@@ -202,7 +202,7 @@ naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
   return NasalElement::create(c, el.lock());
 }
 
-naRef initNasalCanvas(naRef globals, naContext c, naRef gcSave)
+naRef initNasalCanvas(naRef globals, naContext c)
 {
   NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)

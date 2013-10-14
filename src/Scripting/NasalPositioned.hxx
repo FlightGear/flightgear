@@ -28,8 +28,8 @@ class SGGeod;
 
 bool geodFromHash(naRef ref, SGGeod& result); 
 
-naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave);
-naRef initNasalPositioned_cppbind(naRef globals, naContext c, naRef gcSave);
+naRef initNasalPositioned(naRef globals, naContext c);
+naRef initNasalPositioned_cppbind(naRef globals, naContext c);
 void postinitNasalPositioned(naRef globals, naContext c);
 
 #endif // of SCRIPTING_NASAL_POSITIONED_HXX

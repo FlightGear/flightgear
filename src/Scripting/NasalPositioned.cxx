@@ -2403,10 +2403,10 @@ static struct { const char* name; naCFunction func; } funcs[] = {
 };
 
 
-naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
+naRef initNasalPositioned(naRef globals, naContext c)
 {
     airportPrototype = naNewHash(c);
-    hashset(c, gcSave, "airportProto", airportPrototype);
+    naSave(c, airportPrototype);
   
     hashset(c, airportPrototype, "runway", naNewFunc(c, naNewCCode(c, f_airport_runway)));
     hashset(c, airportPrototype, "runwaysWithoutReciprocals", naNewFunc(c, naNewCCode(c, f_airport_runwaysWithoutReciprocals)));
@@ -2424,7 +2424,7 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, airportPrototype, "tostring", naNewFunc(c, naNewCCode(c, f_airport_toString)));
   
     flightplanPrototype = naNewHash(c);
-    hashset(c, gcSave, "flightplanProto", flightplanPrototype);
+    naSave(c, flightplanPrototype);
       
     hashset(c, flightplanPrototype, "getWP", naNewFunc(c, naNewCCode(c, f_flightplan_getWP)));
     hashset(c, flightplanPrototype, "currentWP", naNewFunc(c, naNewCCode(c, f_flightplan_currentWP))); 
@@ -2442,19 +2442,19 @@ naRef initNasalPositioned(naRef globals, naContext c, naRef gcSave)
     hashset(c, flightplanPrototype, "finish", naNewFunc(c, naNewCCode(c, f_flightplan_finish)));
     
     waypointPrototype = naNewHash(c);
-    hashset(c, gcSave, "wayptProto", waypointPrototype);
+    naSave(c, waypointPrototype);
     
     hashset(c, waypointPrototype, "navaid", naNewFunc(c, naNewCCode(c, f_waypoint_navaid)));
     hashset(c, waypointPrototype, "runway", naNewFunc(c, naNewCCode(c, f_waypoint_runway)));
     hashset(c, waypointPrototype, "airport", naNewFunc(c, naNewCCode(c, f_waypoint_airport)));
   
     procedurePrototype = naNewHash(c);
-    hashset(c, gcSave, "procedureProto", procedurePrototype);
+    naSave(c, procedurePrototype);
     hashset(c, procedurePrototype, "transition", naNewFunc(c, naNewCCode(c, f_procedure_transition)));
     hashset(c, procedurePrototype, "route", naNewFunc(c, naNewCCode(c, f_procedure_route)));
   
     fpLegPrototype = naNewHash(c);
-    hashset(c, gcSave, "fpLegProto", fpLegPrototype);
+    naSave(c, fpLegPrototype);
     hashset(c, fpLegPrototype, "setSpeed", naNewFunc(c, naNewCCode(c, f_leg_setSpeed)));
     hashset(c, fpLegPrototype, "setAltitude", naNewFunc(c, naNewCCode(c, f_leg_setAltitude)));
     hashset(c, fpLegPrototype, "path", naNewFunc(c, naNewCCode(c, f_leg_path)));

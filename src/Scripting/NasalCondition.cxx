@@ -100,10 +100,10 @@ static struct { const char* name; naCFunction func; } funcs[] = {
 };
 
 
-naRef initNasalCondition(naRef globals, naContext c, naRef gcSave)
+naRef initNasalCondition(naRef globals, naContext c)
 {
   conditionPrototype = naNewHash(c);
-  hashset(c, gcSave, "conditionProto", conditionPrototype);
+  naSave(c, conditionPrototype);
   
   hashset(c, conditionPrototype, "test", naNewFunc(c, naNewCCode(c, f_condition_test)));  
   for(int i=0; funcs[i].name; i++) {

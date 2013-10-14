@@ -202,8 +202,6 @@ FGNasalSys::FGNasalSys()
     _context = 0;
     _globals = naNil();
     _string = naNil();
-    _gcHash = naNil();
-    _nextGCKey = 0; // Any value will do
     _callCount = 0;
     
     _log = new simgear::BufferedLogCallback(SG_NASAL, SG_INFO);
@@ -778,22 +776,16 @@ void FGNasalSys::init()
     // And our SGPropertyNode wrapper
     hashset(_globals, "props", genPropsModule());
 
-    // Make a "__gcsave" hash to hold the naRef objects which get
-    // passed to handles outside the interpreter (to protect them from
-    // begin garbage-collected).
-    _gcHash = naNewHash(_context);
-    hashset(_globals, "__gcsave", _gcHash);
-
     // Add string methods
     _string = naInit_string(_context);
     naSave(_context, _string);
-    initNasalString(_globals, _string, _context, _gcHash);
+    initNasalString(_globals, _string, _context);
 
-    initNasalPositioned(_globals, _context, _gcHash);
-    initNasalPositioned_cppbind(_globals, _context, _gcHash);
+    initNasalPositioned(_globals, _context);
+    initNasalPositioned_cppbind(_globals, _context);
     NasalClipboard::init(this);
-    initNasalCanvas(_globals, _context, _gcHash);
-    initNasalCondition(_globals, _context, _gcHash);
+    initNasalCanvas(_globals, _context);
+    initNasalCondition(_globals, _context);
   
     NasalTimerObj::init("Timer")
       .method("start", &TimerObj::start)
@@ -1174,14 +1166,12 @@ void FGNasalSys::handleTimer(NasalTimer* t)
 
 int FGNasalSys::gcSave(naRef r)
 {
-    int key = _nextGCKey++;
-    naHash_set(_gcHash, naNum(key), r);
-    return key;
+    return naGCSave(r);
 }
 
 void FGNasalSys::gcRelease(int key)
 {
-    naHash_delete(_gcHash, naNum(key));
+    naGCRelease(key);
 }
 
 void FGNasalSys::NasalTimer::timerExpired()
