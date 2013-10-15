@@ -1572,10 +1572,15 @@ void MapWidget::drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, d
     if (aircraft) {
         FGAIAircraft* p = static_cast<FGAIAircraft*>(aircraft.get());
         if (p->GetFlightPlan()) {
-            originICAO = p->GetFlightPlan()->departureAirport()->ident();
-            destinationICAO = p->GetFlightPlan()->arrivalAirport()->ident();
-        }
-    }
+            if (p->GetFlightPlan()->departureAirport()) {
+                originICAO = p->GetFlightPlan()->departureAirport()->ident();
+            }
+            
+            if (p->GetFlightPlan()->arrivalAirport()) {
+                destinationICAO = p->GetFlightPlan()->arrivalAirport()->ident();
+            }
+        } // of flight-plan exists
+    } // of check for AIBase-derived instance
 
   // draw callsign / altitude / speed
     int altFt50 = static_cast<int>(pos.getElevationFt() / 50.0) * 50;
