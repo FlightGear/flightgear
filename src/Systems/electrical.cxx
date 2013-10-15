@@ -386,13 +386,7 @@ void FGElectricalSystem::init () {
             if ( build(config_props) ) {
                 enabled = true;
             } else {
-                SG_LOG( SG_SYSTEMS, SG_ALERT,
-                        "Detected a logic error in the electrical system ");
-                SG_LOG( SG_SYSTEMS, SG_ALERT,
-                        "specification file.  See earlier errors for " );
-                SG_LOG( SG_SYSTEMS, SG_ALERT,
-                        "details.");
-                exit(-1);
+                throw sg_exception("Logic error in electrical system file.");
             }        
         } catch (const sg_exception&) {
             SG_LOG( SG_SYSTEMS, SG_ALERT,

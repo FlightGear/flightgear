@@ -31,6 +31,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include "fixlist.hxx"
 #include <Navaids/fix.hxx>
@@ -49,8 +50,7 @@ void loadFixes(const SGPath& path)
 {
   sg_gzifstream in( path.str() );
   if ( !in.is_open() ) {
-    SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
-    exit(-1);
+      throw sg_io_exception("Cannot open file:", path);
   }
   
   // toss the first two lines of the file

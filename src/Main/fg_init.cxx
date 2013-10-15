@@ -409,7 +409,7 @@ void fgInitHome()
 }
 
 // Read in configuration (file and command line)
-bool fgInitConfig ( int argc, char **argv )
+int fgInitConfig ( int argc, char **argv )
 {
     SGPath dataPath = globals->get_fg_home();
     
@@ -453,14 +453,12 @@ bool fgInitConfig ( int argc, char **argv )
 
     FindAndCacheAircraft f(globals->get_props());
     if (!f.loadAircraft()) {
-      return false;
+      return flightgear::FG_OPTIONS_ERROR;
     }
 
     // parse options after loading aircraft to ensure any user
     // overrides of defaults are honored.
-    options->processOptions();
-      
-    return true;
+    return options->processOptions();
 }
 
 
@@ -510,7 +508,7 @@ bool fgInitGeneral() {
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Cannot continue without a path to the base package "
                 << "being defined." );
-        exit(-1);
+        return false;
     }
     SG_LOG( SG_GENERAL, SG_INFO, "FG_ROOT = " << '"' << root << '"' << endl );
 
@@ -599,9 +597,7 @@ void fgCreateSubsystems() {
     mpath.append( fgGetString("/sim/rendering/materials-file") );
     if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
             globals->get_props()) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Error loading materials file " << mpath.str() );
-        exit(-1);
+        throw sg_io_exception("Error loading materials file", mpath);
     }
 
     globals->add_subsystem( "http", new FGHTTPClient );

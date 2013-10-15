@@ -65,6 +65,7 @@
 #include "fg_props.hxx"
 #include "positioninit.hxx"
 #include "subsystemFactory.hxx"
+#include "options.hxx"
 
 using namespace flightgear;
 
@@ -164,9 +165,7 @@ static void fgIdleFunction ( void ) {
         
         // Do some quick general initializations
         if( !fgInitGeneral()) {
-            SG_LOG( SG_GENERAL, SG_ALERT,
-                "General initialization failed ..." );
-            exit(-1);
+            throw sg_exception("General initialization failed");
         }
 
         ////////////////////////////////////////////////////////////////////
@@ -344,11 +343,13 @@ int fgMainInit( int argc, char **argv ) {
     // Load the configuration parameters.  (Command line options
     // override config file options.  Config file options override
     // defaults.)
-    if ( !fgInitConfig(argc, argv) ) {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
-      exit(-1);
+    int configResult = fgInitConfig(argc, argv);
+    if (configResult == flightgear::FG_OPTIONS_ERROR) {
+        return EXIT_FAILURE;
+    } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
+        return EXIT_SUCCESS;
     }
-
+    
     // Initialize the Window/Graphics environment.
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;

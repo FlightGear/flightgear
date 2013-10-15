@@ -90,7 +90,7 @@ public:
 
     if ( !in.is_open() ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << aptdb_file );
-        exit(-1);
+        throw sg_io_exception("cannot open APT file", aptdb_file);
     }
 
     string line;
@@ -186,7 +186,7 @@ public:
       } else {
           SG_LOG( SG_GENERAL, SG_ALERT, 
                   "Unknown line(#" << line_num << ") in apt.dat file: " << line );
-          exit( -1 );
+          throw sg_format_exception("malformed line in apt.dat:", line);
       }
     }
 

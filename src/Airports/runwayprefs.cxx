@@ -34,6 +34,7 @@
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
@@ -100,7 +101,7 @@ std::string ScheduleTime::getName(time_t dayStart)
     if ((start.size() != end.size())
         || (start.size() != scheduleNames.size())) {
         SG_LOG(SG_GENERAL, SG_INFO, "Unable to parse schedule times");
-        exit(1);
+        throw sg_exception("Unable to parse schedule times");
     } else {
         int nrItems = start.size();
         //cerr << "Nr of items to process: " << nrItems << endl;

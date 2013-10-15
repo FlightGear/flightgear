@@ -57,6 +57,8 @@
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/structure/exception.hxx>
+
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/threads/SGThread.hxx>
 #include <simgear/threads/SGGuard.hxx>
@@ -709,9 +711,10 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
          if (!tokens.empty()) {
              if (tokens[0] == string("AC")) {
                  if (tokens.size() != 13) {
-                     SG_LOG(SG_AI, SG_ALERT, "Error parsing traffic file " << infileName.str() << " at " << buffString);
-                     exit(1);
+                     throw sg_io_exception("Error parsing traffic file @ " + buffString, sg_location(infileName.str()));
                  }
+                 
+                 
                  model          = tokens[12];
                  livery         = tokens[6];
                  homePort       = tokens[1];

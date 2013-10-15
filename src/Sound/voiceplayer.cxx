@@ -249,16 +249,8 @@ FGVoicePlayer::get_sample (const char *name)
     if (! sample)
     {
         string filename = dir_prefix + string(name) + ".wav";
-        try
-        {
-            sample = new SGSoundSample(filename.c_str(), SGPath());
-        }
-        catch (const sg_exception &e)
-        {
-            SG_LOG(SG_SOUND, SG_ALERT, "Error loading sound sample \"" + filename + "\": " + e.getFormattedMessage());
-            exit(1);
-        }
-
+        sample = new SGSoundSample(filename.c_str(), SGPath());
+        
         _sgr->add(sample, refname);
         samples[refname] = sample;
     }

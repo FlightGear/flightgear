@@ -29,6 +29,7 @@
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/scene/model/modellib.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Scenery/scenery.hxx>
 
@@ -170,9 +171,11 @@ fgviewerMain(int argc, char** argv)
 
     globals = new FGGlobals;
 
-    if ( !fgInitConfig(arguments.argc(), arguments.argv()) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
-        exit(-1);
+    int configResult = fgInitConfig(arguments.argc(), arguments.argv());
+    if (configResult == flightgear::FG_OPTIONS_ERROR) {
+        return EXIT_FAILURE;
+    } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
+        return EXIT_SUCCESS;
     }
 
     osgDB::FilePathList filePathList
@@ -193,9 +196,7 @@ fgviewerMain(int argc, char** argv)
     mpath.append( fgGetString("/sim/rendering/materials-file") );
     if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
             globals->get_props()) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Error loading materials file " << mpath.str() );
-        exit(-1);
+        throw sg_io_exception("Error loading materials file", mpath);
     }
 
     globals->set_scenery( new FGScenery );

@@ -84,19 +84,9 @@ using std::endl;
 using std::vector;
 using std::cin;
 
-#define NEW_DEFAULT_MODEL_HZ 120
+using namespace flightgear;
 
-enum
-{
-    FG_OPTIONS_OK = 0,
-    FG_OPTIONS_HELP = 1,
-    FG_OPTIONS_ERROR = 2,
-    FG_OPTIONS_EXIT = 3,
-    FG_OPTIONS_VERBOSE_HELP = 4,
-    FG_OPTIONS_SHOW_AIRCRAFT = 5,
-    FG_OPTIONS_SHOW_SOUND_DEVICES = 6,
-    FG_OPTIONS_NO_DEFAULT_CONFIG = 7
-};
+#define NEW_DEFAULT_MODEL_HZ 120
 
 static flightgear::Options* shared_instance = NULL;
 
@@ -1016,12 +1006,12 @@ fgOptConfig( const char *arg )
 {
     string file = arg;
     try {
-	readProperties(file, globals->get_props());
+        readProperties(file, globals->get_props());
     } catch (const sg_exception &e) {
-	string message = "Error loading config file: ";
-	message += e.getFormattedMessage() + e.getOrigin();
-	SG_LOG(SG_INPUT, SG_ALERT, message);
-	exit(2);
+        string message = "Error loading config file: ";
+        message += e.getFormattedMessage() + e.getOrigin();
+        SG_LOG(SG_INPUT, SG_ALERT, message);
+        return FG_OPTIONS_ERROR;
     }
     return FG_OPTIONS_OK;
 }
@@ -1988,7 +1978,7 @@ string_list Options::valuesForOption(const std::string& key) const
   return result;
 }
 
-void Options::processOptions()
+OptionResult Options::processOptions()
 {
   // establish locale before showing help (this selects the default locale,
   // when no explicit option was set)
@@ -1998,7 +1988,7 @@ void Options::processOptions()
   // out quickly, but rely on aircraft / root settings
   if (p->showHelp) {
     showUsage();
-    exit(0);
+      return FG_OPTIONS_EXIT;
   }
   
   // processing order is complicated. We must process groups LIFO, but the
@@ -2018,9 +2008,11 @@ void Options::processOptions()
       {
           case FG_OPTIONS_ERROR:
               showUsage();
-              exit(-1); // exit and return an error
+              return FG_OPTIONS_ERROR;
+              
           case FG_OPTIONS_EXIT:
-              exit(0);  // clean exit
+              return FG_OPTIONS_EXIT;
+              
           default:
               break;
       }
@@ -2085,6 +2077,8 @@ void Options::processOptions()
     root.append("Scenery");
     globals->append_fg_scenery(root.str());
   }
+    
+    return FG_OPTIONS_OK;
 }
   
 void Options::showUsage() const

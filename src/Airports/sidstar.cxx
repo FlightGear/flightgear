@@ -44,7 +44,6 @@ FGSidStar::FGSidStar(FGAirport *ap) {
 
 FGSidStar::FGSidStar(const FGSidStar &other) {
      cerr << "TODO" << endl;
-     exit(1);
 }
 
 void FGSidStar::load(SGPath filename) {

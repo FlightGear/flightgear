@@ -34,7 +34,22 @@ class SGPath;
 
 namespace flightgear
 {
-  
+
+/// option processing can have various result values
+/// depending on what the user requested. Note processOptions only
+/// returns a subset of these.
+enum OptionResult
+{
+    FG_OPTIONS_OK = 0,
+    FG_OPTIONS_HELP = 1,
+    FG_OPTIONS_ERROR = 2,
+    FG_OPTIONS_EXIT = 3,
+    FG_OPTIONS_VERBOSE_HELP = 4,
+    FG_OPTIONS_SHOW_AIRCRAFT = 5,
+    FG_OPTIONS_SHOW_SOUND_DEVICES = 6,
+    FG_OPTIONS_NO_DEFAULT_CONFIG = 7
+};
+    
 class Options
 {
 private:
@@ -80,9 +95,9 @@ public:
   
   /**
    * apply option values to the simulation state
-   * (set properties, etc)
+   * (set properties, etc). 
    */
-  void processOptions();
+  OptionResult processOptions();
   
   /**
    * init the aircraft options

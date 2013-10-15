@@ -37,7 +37,7 @@ std::string fgBasePackageVersion();
 void fgInitHome();
 
 // Read in configuration (file and command line)
-bool fgInitConfig ( int argc, char **argv );
+int fgInitConfig ( int argc, char **argv );
 
 
 // log various settings / configuration state
