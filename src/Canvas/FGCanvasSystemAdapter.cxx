@@ -20,7 +20,6 @@
 
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
-#include <Scripting/NasalSys.hxx>
 #include <Viewer/renderer.hxx>
 
 #include <osgDB/ReadFile>
@@ -96,40 +95,6 @@ namespace canvas
     }
 
     return 0;
-  }
-
-  /**
-   * Get current FGNasalSys instance.
-   */
-  static FGNasalSys* getNasalSys()
-  {
-    static FGNasalSys* nasal_sys = 0;
-    // TODO if Nasal is able to be removed and/or recreated at runtime we need
-    //      to ensure that always the current instance is used
-    if( !nasal_sys )
-    {
-      nasal_sys = dynamic_cast<FGNasalSys*>(globals->get_subsystem("nasal"));
-      if( !nasal_sys )
-        throw std::runtime_error("FGCanvasSystemAdapter: no NasalSys");
-    }
-
-    return nasal_sys;
-  }
-
-  //----------------------------------------------------------------------------
-  naContext FGCanvasSystemAdapter::getNasalContext() const
-  {
-    return getNasalSys()->context();
-  }
-
-  //------------------------------------------------------------------------------
-  naRef FGCanvasSystemAdapter::callMethod( naRef code,
-                                           naRef self,
-                                           int argc,
-                                           naRef* args,
-                                           naRef locals )
-  {
-    return getNasalSys()->callMethod(code, self, argc, args, locals);
   }
 
 }

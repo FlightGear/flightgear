@@ -226,10 +226,10 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("size_y", &sc::Canvas::getSizeY)
     .method("_createGroup", &f_canvasCreateGroup)
     .method("_getGroup", &sc::Canvas::getGroup)
-    .method("addEventListener", &sc::Canvas::addNasalEventListener);
+    .method("addEventListener", &sc::Canvas::addEventListener);
   NasalElement::init("canvas.Element")
     .member("_node_ghost", &elementGetNode<sc::Element>)
-    .method("addEventListener", &sc::Element::addNasalEventListener)
+    .method("addEventListener", &sc::Element::addEventListener)
     .method("getTransformedBounds", &f_elementGetTransformedBounds);
   NasalGroup::init("canvas.Group")
     .bases<NasalElement>()

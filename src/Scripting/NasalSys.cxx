@@ -202,11 +202,12 @@ FGNasalSys::FGNasalSys()
     _context = 0;
     _globals = naNil();
     _string = naNil();
-    _callCount = 0;
     
     _log = new simgear::BufferedLogCallback(SG_NASAL, SG_INFO);
     _log->truncateAt(255);
     sglog().addCallback(_log);
+
+    naSetErrorHandler(&logError);
 }
 
 // Utility.  Sets a named key in a hash by C string, rather than nasal
@@ -237,16 +238,7 @@ naRef FGNasalSys::call(naRef code, int argc, naRef* args, naRef locals)
 
 naRef FGNasalSys::callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals)
 {
-    naContext ctx = naNewContext();
-    if(_callCount) naModUnlock();
-    _callCount++;
-    naRef result = naCall(ctx, code, argc, args, self, locals);
-    if(naGetError(ctx))
-        logError(ctx);
-    _callCount--;
-    if(_callCount) naModLock();
-    naFreeContext(ctx);
-    return result;
+  return naCallMethod(code, self, argc, args, locals);
 }
 
 FGNasalSys::~FGNasalSys()

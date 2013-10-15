@@ -162,7 +162,7 @@ private:
     void loadPropertyScripts(SGPropertyNode* n);
     void loadScriptDirectory(simgear::Dir nasalDir);
     void addModule(std::string moduleName, simgear::PathList scripts);
-    void logError(naContext);
+    static void logError(naContext);
     naRef parse(const char* filename, const char* buf, int len);
     naRef genPropsModule();
 
@@ -171,8 +171,6 @@ private:
           _string;
 
     SGPropertyNode_ptr _cmdArg;
-
-    int _callCount;
 
     simgear::BufferedLogCallback* _log;
 public:

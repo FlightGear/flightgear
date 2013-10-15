@@ -31,13 +31,6 @@ namespace canvas
       virtual void addCamera(osg::Camera* camera) const;
       virtual void removeCamera(osg::Camera* camera) const;
       virtual osg::Image* getImage(const std::string& path) const;
-
-      virtual naContext getNasalContext() const;
-      virtual naRef callMethod( naRef code,
-                                naRef self,
-                                int argc,
-                                naRef* args,
-                                naRef locals );
   };
 }
 
