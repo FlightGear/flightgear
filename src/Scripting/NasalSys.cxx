@@ -993,12 +993,14 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
 // Logs a runtime error, with stack trace, to the FlightGear log stream
 void FGNasalSys::logError(naContext context)
 {
-    SG_LOG(SG_NASAL, SG_ALERT,
-           "Nasal runtime error: " << naGetError(context));
+    SG_LOG(SG_NASAL, SG_ALERT, "Nasal runtime error: " << naGetError(context));
+    int stack_depth = naStackDepth(context);
+    if( stack_depth < 1 )
+      return;
     SG_LOG(SG_NASAL, SG_ALERT,
            "  at " << naStr_data(naGetSourceFile(context, 0)) <<
            ", line " << naGetLine(context, 0));
-    for(int i=1; i<naStackDepth(context); i++)
+    for(int i=1; i<stack_depth; i++)
         SG_LOG(SG_NASAL, SG_ALERT,
                "  called from: " << naStr_data(naGetSourceFile(context, i)) <<
                ", line " << naGetLine(context, i));
