@@ -79,12 +79,26 @@ FGNasalModelData::FGNasalModelData( SGPropertyNode *root,
   _module_id( _max_module_id++ )
 {
   _loaded_models.push_back(this);
+
+  SG_LOG
+  (
+    SG_NASAL,
+    SG_INFO,
+    "New model with attached script(s) (branch = " << branch << ")"
+  );
 }
 
 //------------------------------------------------------------------------------
 FGNasalModelData::~FGNasalModelData()
 {
   _loaded_models.remove(this);
+
+  SG_LOG
+  (
+    SG_NASAL,
+    SG_INFO,
+    "Removed model with script(s) (branch = " << _branch << ")"
+  );
 }
 
 //------------------------------------------------------------------------------
@@ -180,13 +194,6 @@ void FGNasalModelDataProxy::modelLoaded( const std::string& path,
                                          SGPropertyNode *prop,
                                          osg::Node *branch )
 {
-    FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
-    if(!nasalSys) {
-        SG_LOG(SG_NASAL, SG_WARN, "Trying to run a <load> script "
-               "without Nasal subsystem present.");
-        return;
-    }
-    
     if(!prop)
         return;
     
@@ -194,6 +201,18 @@ void FGNasalModelDataProxy::modelLoaded( const std::string& path,
     if(!nasal)
         return;
     
+    FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
+    if(!nasalSys)
+    {
+        SG_LOG
+        (
+          SG_NASAL,
+          SG_WARN,
+          "Can not load model script(s) (Nasal subsystem not available)."
+        );
+        return;
+    }
+
     SGPropertyNode* load   = nasal->getNode("load");
     SGPropertyNode* unload = nasal->getNode("unload");
     
