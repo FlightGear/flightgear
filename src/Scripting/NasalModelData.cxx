@@ -5,6 +5,7 @@
 
 #include <simgear/math/SGMath.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
+#include <simgear/scene/util/OsgDebug.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/debug/logstream.hxx>
 
@@ -84,7 +85,9 @@ FGNasalModelData::FGNasalModelData( SGPropertyNode *root,
   (
     SG_NASAL,
     SG_INFO,
-    "New model with attached script(s) (branch = " << branch << ")"
+    "New model with attached script(s) "
+    "(branch = " << branch << ","
+    " path = " << simgear::getNodePathString(branch) << ")"
   );
 }
 
