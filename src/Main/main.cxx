@@ -328,6 +328,12 @@ int fgMainInit( int argc, char **argv ) {
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
             << version );
     SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR << std::endl );
+    SG_LOG( SG_GL,
+            SG_INFO,
+            "osg::Referenced thread safe reference counting is "
+            << (osg::Referenced::getThreadSafeReferenceCounting() ? "enabled"
+                                                                  : "disabled")
+          );
 
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
