@@ -1118,7 +1118,11 @@ static naRef f_airport_comms(naContext c, naRef me, int argc, naRef* args)
     naRef comms = naNewVector(c);
     
 // if we have an explicit type, return a simple vector of frequencies
-    if (argc > 0 && naIsScalar(args[0])) {
+    if (argc > 0 && !naIsString(args[0])) {
+        naRuntimeError(c, "airport.comms argument must be a frequency type name");
+    }
+    
+    if (argc > 0) {
         std::string commName = naStr_data(args[0]);
         FGPositioned::Type commType = FGPositioned::typeFromName(commName);
         
