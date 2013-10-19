@@ -190,6 +190,15 @@ public:
   virtual void notify(osg::NotifySeverity severity, const char *message)
   {
     SG_LOG(SG_GL, translateSeverity(severity), message);
+
+    // Detect whether a osg::Reference derived object is deleted with a non-zero
+    // reference count. In this case trigger a segfault to get a stack trace.
+    if( strstr(message, "the final reference count was") )
+    {
+
+      int* trigger_segfault = 0;
+      *trigger_segfault = 0;
+    }
   }
   
 private:
