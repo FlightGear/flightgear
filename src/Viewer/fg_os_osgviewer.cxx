@@ -29,6 +29,8 @@
 
 #include <stdlib.h>
 
+// Boost
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/foreach.hpp>
 
 #include <simgear/compiler.h>
@@ -217,11 +219,41 @@ private:
   }
 };
 
+class NotifyLevelListener : public SGPropertyChangeListener
+{
+public:
+    void valueChanged(SGPropertyNode* node)
+    {
+        osg::NotifySeverity severity = osg::WARN;
+        string val = boost::to_lower_copy(string(node->getStringValue()));
+        
+        if (val == "fatal") {
+            severity = osg::FATAL;
+        } else if (val == "warn") {
+            severity = osg::WARN;
+        } else if (val == "notice") {
+            severity = osg::NOTICE;
+        } else if (val == "info") {
+            severity = osg::INFO;
+        } else if ((val == "debug") || (val == "debug-info")) {
+            severity = osg::DEBUG_INFO;
+        }
+        
+        osg::setNotifyLevel(severity);
+    }
+};
+
+void updateOSGNotifyLevel()
+{
+   }
+
 void fgOSOpenWindow(bool stencil)
 {
     osg::setNotifyHandler(new NotifyLogger);
-    //osg::setNotifyLevel(osg::DEBUG_INFO);
-  
+    
+    SGPropertyNode* osgLevel = fgGetNode("/sim/rendering/osg-notify-level", true);
+    osgLevel->addChangeListener(new NotifyLevelListener, true);
+    
     viewer = new osgViewer::Viewer;
     viewer->setDatabasePager(FGScenery::getPagerSingleton());
     CameraGroup* cameraGroup = 0;
