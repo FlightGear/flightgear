@@ -33,6 +33,8 @@
 #include <osg/MatrixTransform>
 #include <osg/PositionAttitudeTransform>
 #include <osg/CameraView>
+#include <osg/LOD>
+
 #include <osgViewer/Viewer>
 
 #include <simgear/constants.h>
@@ -252,6 +254,17 @@ void FGScenery::init() {
     aircraft_branch->setName( "Aircraft" );
     scene_graph->addChild( aircraft_branch.get() );
 
+// choosing to make the interior branch a child of the main
+// aircraft group, for the moment. This simplifes places which
+// assume all aircraft elements are within this group - principally
+// FGODGuage::set_aircraft_texture.
+    interior_branch = new osg::Group;
+    interior_branch->setName( "Interior" );
+    
+    osg::LOD* interiorLOD = new osg::LOD;
+    interiorLOD->addChild(interior_branch.get(), 0.0, 50.0);
+    aircraft_branch->addChild( interiorLOD );
+    
     // Initials values needed by the draw-time object loader
     sgUserDataInit( globals->get_props() );
 }

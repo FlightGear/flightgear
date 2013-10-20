@@ -10,6 +10,7 @@
 #include <osg/Group>
 #include <osg/Switch>
 
+#include <memory>
 #include <simgear/structure/subsystem_mgr.hxx>	// for SGSubsystem
 
 
@@ -29,22 +30,18 @@ public:
   virtual void bind ();
   virtual void unbind ();
   virtual void update (double dt);
-  virtual SGModelPlacement * get3DModel() { return _aircraft; }
+  virtual SGModelPlacement * get3DModel() { return _aircraft.get(); }
   virtual SGVec3d& getVelocity() { return _velocity; }
 
 private:
   void deinit ();
   
-  SGModelPlacement * _aircraft;
+    std::auto_ptr<SGModelPlacement> _aircraft;
+    std::auto_ptr<SGModelPlacement> _interior;
+    
   SGVec3d _velocity;
   SGSharedPtr<FGFX>  _fx;
 
-  SGPropertyNode_ptr _lon;
-  SGPropertyNode_ptr _lat;
-  SGPropertyNode_ptr _alt;
-  SGPropertyNode_ptr _pitch;
-  SGPropertyNode_ptr _roll;
-  SGPropertyNode_ptr _heading;
   SGPropertyNode_ptr _speed_n;
   SGPropertyNode_ptr _speed_e;
   SGPropertyNode_ptr _speed_d;

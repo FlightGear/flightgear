@@ -86,27 +86,25 @@ FGModelMgr::add_model (SGPropertyNode * node)
   instance->node = node;
 
   model->init( object );
+    double lon = node->getDoubleValue("longitude-deg"),
+        lat = node->getDoubleValue("latitude-deg"),
+        elevFt = node->getDoubleValue("elevation-ft");
 
-				// Set position and orientation either
-				// indirectly through property refs
-				// or directly with static values.
+    model->setPosition(SGGeod::fromDegFt(lon, lat, elevFt));
+// Set position and orientation either
+// indirectly through property refs
+// or directly with static values.
   SGPropertyNode * child = node->getChild("longitude-deg-prop");
   if (child != 0)
     instance->lon_deg_node = fgGetNode(child->getStringValue(), true);
-  else
-    model->setLongitudeDeg(node->getDoubleValue("longitude-deg"));
 
   child = node->getChild("latitude-deg-prop");
   if (child != 0)
     instance->lat_deg_node = fgGetNode(child->getStringValue(), true);
-  else
-    model->setLatitudeDeg(node->getDoubleValue("latitude-deg"));
 
   child = node->getChild("elevation-ft-prop");
   if (child != 0)
     instance->elev_ft_node = fgGetNode(child->getStringValue(), true);
-  else
-    model->setElevationFt(node->getDoubleValue("elevation-ft"));
 
   child = node->getChild("roll-deg-prop");
   if (child != 0)
@@ -158,18 +156,19 @@ struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
     void operator()(FGModelMgr::Instance* instance) const
     {
         SGModelPlacement* model = instance->model;
-        double lon, lat, elev, roll, pitch, heading;
-        lon = lat = elev = roll = pitch = heading = 0.0;
-
+        double roll, pitch, heading;
+        roll = pitch = heading = 0.0;
+        SGGeod pos = model->getPosition();
+        
         try {
             // Optionally set position from properties
             if (instance->lon_deg_node != 0)
-                lon = testNan(instance->lon_deg_node->getDoubleValue());
+                pos.setLongitudeDeg(testNan(instance->lon_deg_node->getDoubleValue()));
             if (instance->lat_deg_node != 0)
-                lat = testNan(instance->lat_deg_node->getDoubleValue());
+                pos.setLatitudeDeg(testNan(instance->lat_deg_node->getDoubleValue()));
             if (instance->elev_ft_node != 0)
-                elev = testNan(instance->elev_ft_node->getDoubleValue());
-
+                pos.setElevationFt(testNan(instance->elev_ft_node->getDoubleValue()));
+            
             // Optionally set orientation from properties
             if (instance->roll_deg_node != 0)
                 roll = testNan(instance->roll_deg_node->getDoubleValue());
@@ -184,14 +183,8 @@ struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
                    << " has invalid values");
             return;
         }
-        // Optionally set position from properties
-        if (instance->lon_deg_node != 0)
-            model->setLongitudeDeg(lon);
-        if (instance->lat_deg_node != 0)
-            model->setLatitudeDeg(lat);
-        if (instance->elev_ft_node != 0)
-            model->setElevationFt(elev);
 
+        model->setPosition(pos);
         // Optionally set orientation from properties
         if (instance->roll_deg_node != 0)
             model->setRollDeg(roll);
