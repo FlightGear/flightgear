@@ -225,19 +225,18 @@ fgSetDefaults ()
     fgSetInt("/sim/multiplay/rxport", 0);
     fgSetInt("/sim/multiplay/txport", 0);
     
-    fgSetString("/sim/version/flightgear", FLIGHTGEAR_VERSION);
-    fgSetString("/sim/version/simgear", SG_STRINGIZE(SIMGEAR_VERSION));
-    fgSetString("/sim/version/openscenegraph", osgGetVersion());
-    fgSetString("/sim/version/revision", REVISION);
-    fgSetInt("/sim/version/build-number", HUDSON_BUILD_NUMBER);
-    fgSetString("/sim/version/build-id", HUDSON_BUILD_ID);
-#ifdef FG_HAVE_HLA  	// -DENABLE_RTI=ON
-    fgSetBool("/sim/version/hla-support", true);
-#else			// -DENABLE_RTI=OFF
-    fgSetBool("/sim/version/hla-support", false);
-#endif
+    SGPropertyNode* v = globals->get_props()->getNode("/sim/version", true);
+    v->setValueReadOnly("flightgear", FLIGHTGEAR_VERSION);
+    v->setValueReadOnly("simgear", SG_STRINGIZE(SIMGEAR_VERSION));
+    v->setValueReadOnly("openscenegraph", osgGetVersion());
+    v->setValueReadOnly("openscenegraph-thread-safe-reference-counting",
+                         osg::Referenced::getThreadSafeReferenceCounting());
+    v->setValueReadOnly("revision", REVISION);
+    v->setValueReadOnly("build-number", HUDSON_BUILD_NUMBER);
+    v->setValueReadOnly("build-id", HUDSON_BUILD_ID);
+    v->setValueReadOnly("hla-support", bool(FG_HAVE_HLA));
 
-  char* envp = ::getenv( "http_proxy" );
+    char* envp = ::getenv( "http_proxy" );
     if( envp != NULL )
       fgSetupProxy( envp );
 }
@@ -1461,7 +1460,7 @@ struct OptionDesc {
     {"proxy",                        true,  OPTION_FUNC,    "", false, "", fgSetupProxy },
     {"callsign",                     true,  OPTION_FUNC,    "", false, "", fgOptCallSign},
     {"multiplay",                    true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
     {"hla",                          true,  OPTION_CHANNEL, "", false, "", 0 },
     {"hla-local",                    true,  OPTION_CHANNEL, "", false, "", 0 },
 #endif

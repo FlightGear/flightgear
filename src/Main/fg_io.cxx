@@ -67,7 +67,7 @@
 #include <Network/rul.hxx>
 #include <Network/generic.hxx>
 
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
 #include <Network/HLA/hla.hxx>
 #endif
 
@@ -228,7 +228,7 @@ FGIO::parse_port_config( const string& config )
 
             return NULL;
         }
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
         else if ( protocol == "hla" ) {
             return new FGHLA(tokens);
         }

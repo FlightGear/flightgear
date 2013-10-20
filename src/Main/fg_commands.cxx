@@ -52,7 +52,7 @@
 
 #include <boost/scoped_array.hpp>
 
-#ifdef FG_HAVE_GPERFTOOLS
+#if FG_HAVE_GPERFTOOLS
 # include <google/profiler.h>
 #endif
 
@@ -1528,7 +1528,7 @@ do_release_cockpit_button (const SGPropertyNode *arg)
 // Optional profiling commands using gperftools:
 // http://code.google.com/p/gperftools/
 
-#ifndef FG_HAVE_GPERFTOOLS
+#if !FG_HAVE_GPERFTOOLS
 static void
 no_profiling_support()
 {
@@ -1544,7 +1544,7 @@ no_profiling_support()
 static bool
 do_profiler_start(const SGPropertyNode *arg)
 {
-#ifdef FG_HAVE_GPERFTOOLS
+#if FG_HAVE_GPERFTOOLS
   const char *filename = arg->getStringValue("filename", "fgfs.profile");
   ProfilerStart(filename);
   return true;
@@ -1557,7 +1557,7 @@ do_profiler_start(const SGPropertyNode *arg)
 static bool
 do_profiler_stop(const SGPropertyNode *arg)
 {
-#ifdef FG_HAVE_GPERFTOOLS
+#if FG_HAVE_GPERFTOOLS
   ProfilerStop();
   return true;
 #else
@@ -1667,14 +1667,8 @@ fgInitCommands ()
   fgTie( "/command/view/next", dummy(0), do_view_next );
   fgTie( "/command/view/prev", dummy(0), do_view_prev );
 
-  SGPropertyNode* profiler_available =
-    globals->get_props()->getNode("/sim/debug/profiler-available", true);
-#ifdef FG_HAVE_GPERFTOOLS
-  profiler_available->setBoolValue(true);
-#else
-  profiler_available->setBoolValue(false);
-#endif
-  profiler_available->setAttributes(SGPropertyNode::READ);
+  globals->get_props()->setValueReadOnly( "/sim/debug/profiler-available",
+                                          bool(FG_HAVE_GPERFTOOLS) );
 }
 
 // end of fg_commands.cxx

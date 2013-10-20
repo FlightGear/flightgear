@@ -87,8 +87,7 @@ FGNasalModelData::FGNasalModelData( SGPropertyNode *root,
     SG_INFO,
     "New model with attached script(s) "
     "(branch = " << branch << ","
-    " path = " << simgear::getNodePathString(branch) <<
-    " thread-safe = " << branch->getThreadSafeRefUnref() << ")"
+    " path = " << simgear::getNodePathString(branch) << ")"
   );
 }
 
