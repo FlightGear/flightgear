@@ -26,7 +26,7 @@
 
 #include "Viewer.hxx"
 
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
 #include "HLAViewerFederate.hxx"    
 #include "HLAPerspectiveViewer.hxx"    
 #endif
@@ -203,7 +203,7 @@ SlaveCamera::setMonitorProjectionReferences(double width, double height,
 osg::Vec3
 SlaveCamera::getLeftEyeOffset(const Viewer& viewer) const
 {
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
     const HLAViewerFederate* viewerFederate = viewer.getViewerFederate();
     if (!viewerFederate)
         return osg::Vec3(0, 0, 0);
@@ -219,7 +219,7 @@ SlaveCamera::getLeftEyeOffset(const Viewer& viewer) const
 osg::Vec3
 SlaveCamera::getRightEyeOffset(const Viewer& viewer) const
 {
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
     const HLAViewerFederate* viewerFederate = viewer.getViewerFederate();
     if (!viewerFederate)
         return osg::Vec3(0, 0, 0);
@@ -235,7 +235,7 @@ SlaveCamera::getRightEyeOffset(const Viewer& viewer) const
 double
 SlaveCamera::getZoomFactor(const Viewer& viewer) const
 {
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
     const HLAViewerFederate* viewerFederate = viewer.getViewerFederate();
     if (!viewerFederate)
         return 1;

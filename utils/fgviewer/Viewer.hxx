@@ -32,7 +32,7 @@
 #include "Renderer.hxx"
 #include "SlaveCamera.hxx"
 
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
 #include "HLAViewerFederate.hxx"    
 #endif
 
@@ -105,7 +105,7 @@ public:
     /// Helper to create an new graphics context from traits.
     osg::GraphicsContext* createGraphicsContext(osg::GraphicsContext::Traits* traits);
 
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
     /// The federate if configured, can only be set once
     const HLAViewerFederate* getViewerFederate() const;
     HLAViewerFederate* getViewerFederate();
@@ -147,7 +147,7 @@ private:
     /// The current simulation time of the viewer
     SGTimeStamp _simTime;
 
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
     /// The federate if configured
     SGSharedPtr<HLAViewerFederate> _viewerFederate;
 #endif

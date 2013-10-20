@@ -55,7 +55,7 @@ Viewer::~Viewer()
 {
     stopThreading();
 
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
     if (_viewerFederate.valid())
         _viewerFederate->shutdown();
     _viewerFederate = 0;
@@ -476,7 +476,7 @@ Viewer::advance(double)
 void
 Viewer::updateTraversal()
 {
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
     if (_viewerFederate.valid()) {
         if (_timeIncrement == SGTimeStamp::fromSec(0)) {
             if (!_viewerFederate->timeAdvanceAvailable()) {
@@ -733,7 +733,7 @@ Viewer::createGraphicsContext(osg::GraphicsContext::Traits* traits)
     return graphicsContext;
 }
 
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
 const HLAViewerFederate*
 Viewer::getViewerFederate() const
 {

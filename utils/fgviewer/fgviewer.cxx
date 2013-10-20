@@ -42,7 +42,7 @@
 #include "Renderer.hxx"
 #include "Viewer.hxx"
 
-#ifdef FG_HAVE_HLA
+#if FG_HAVE_HLA
 #include "HLACameraManipulator.hxx"
 #include "HLAViewerFederate.hxx"
 #endif
@@ -210,9 +210,7 @@ main(int argc, char** argv)
     arguments.writeErrorMessages(std::cerr);
 
     if (props->getNode("hla/federate/federation")) {
-#if !defined FG_HAVE_HLA
-        SG_LOG(SG_GENERAL, SG_ALERT, "Unable to enter HLA/RTI viewer mode: HLA/RTI disabled at compile time.");
-#else
+#if FG_HAVE_HLA
         const SGPropertyNode* federateNode = props->getNode("hla/federate");
         
         SGSharedPtr<fgviewer::HLAViewerFederate> viewerFederate;
@@ -230,13 +228,16 @@ main(int argc, char** argv)
             objectModel = path.str();
         }
         viewerFederate->setFederationObjectModel(objectModel);
-
+        
         if (!viewerFederate->init()) {
             SG_LOG(SG_NETWORK, SG_ALERT, "Got error from federate init!");
         } else {
             viewer.setViewerFederate(viewerFederate.get());
             viewer.setCameraManipulator(new fgviewer::HLACameraManipulator(viewerFederate->getViewer()));
         }
+
+#else
+        SG_LOG(SG_GENERAL, SG_ALERT, "Unable to enter HLA/RTI viewer mode: HLA/RTI disabled at compile time.");
 #endif
     }
 
