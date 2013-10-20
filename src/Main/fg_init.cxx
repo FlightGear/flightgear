@@ -467,7 +467,7 @@ int fgInitConfig ( int argc, char **argv )
  * Initialize vor/ndb/ils/fix list management and query systems (as
  * well as simple airport db list)
  * This is called multiple times in the case of a cache rebuild,
- * to allow length caching to take place in the background, without
+ * to allow lengthy caching to take place in the background, without
  * blocking the main/UI thread.
  */
 bool
