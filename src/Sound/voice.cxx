@@ -261,6 +261,8 @@ void FGVoiceMgr::FGVoice::FGVoiceListener::valueChanged(SGPropertyNode *node)
 			m += ' ';	// don't say "vertical bar" or "underscore"
 		else if (c == '&')
 			m += " and ";
+        else if (c == '>' || c == '<')
+            m += ' ';      // don't say "greater than" or "less than" either
 		else if (c == '{') {
 			while (i < s.size())
 				if (s[++i] == '|')
