@@ -234,6 +234,10 @@ FGRouteMgr::~FGRouteMgr()
   input->removeChangeListener(listener);
   delete listener;
     
+    if (_plan) {
+		_plan->removeDelegate(this);
+	}
+
   //SGCommandMgr* cmdMgr = SGCommandMgr::instance();
   //cmdMgr->removeCommand("define-user-waypoint");
     
