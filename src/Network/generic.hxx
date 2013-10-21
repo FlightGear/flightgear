@@ -33,7 +33,6 @@
 
 using std::string;
 
-
 class FGGeneric : public FGProtocol {
 
 public:
@@ -60,7 +59,7 @@ public:
     bool getInitOk(void) { return initOk; }
 protected:
 
-    enum e_type { FG_BOOL=0, FG_INT, FG_FLOAT, FG_DOUBLE, FG_STRING, FG_FIXED };
+    enum e_type { FG_BOOL=0, FG_INT, FG_FLOAT, FG_DOUBLE, FG_STRING, FG_FIXED, FG_BYTE };
 
     typedef struct {
      // string name;
@@ -104,6 +103,8 @@ private:
     bool read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
     bool exitOnError;
     bool initOk;
+
+    class FGProtocolWrapper * wrapper;
     
     template<class T>
     static void updateValue(_serial_prot& prot, const T& val)

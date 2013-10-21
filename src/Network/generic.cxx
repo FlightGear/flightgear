@@ -46,7 +46,191 @@
 
 using simgear::strutils::unescape;
 
-FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false), initOk(false)
+class FGProtocolWrapper {
+public:
+  virtual ~FGProtocolWrapper() {}
+  virtual int wrap( size_t n, uint8_t * buf ) = 0;
+  virtual int unwrap( size_t n, uint8_t * buf ) = 0;
+};
+
+/**
+ * http://www.ka9q.net/papers/kiss.html
+ */
+class FGKissWrapper : public FGProtocolWrapper {
+public:
+  virtual int wrap( size_t n, uint8_t * buf );
+  virtual int unwrap( size_t n, uint8_t * buf );
+private:
+  static const uint8_t  FEND  = 0xC0;
+  static const uint8_t  FESC  = 0xDB;
+  static const uint8_t  TFEND = 0xDC;
+  static const uint8_t  TFESC = 0xDD;
+};
+
+int FGKissWrapper::wrap( size_t n, uint8_t * buf )
+{
+  uint8_t dest[2*n+3]; // worst case, FEND+command+all bytes escaped+FEND
+  uint8_t *sp = buf, *dp = dest;
+
+  *dp++ = FEND;
+  *dp++ = 0; // command/channel always zero
+  for( size_t i = 0; i < n; i++ ) {
+    uint8_t c = *sp++;
+    switch( c ) {
+      case FESC:
+        *dp++ = FESC;
+        *dp++ = TFESC;
+        break;
+
+      case FEND:
+        *dp++ = FESC;
+        *dp++ = TFEND;
+        break;
+
+      default:
+       *dp++ = c;
+       break;
+    }
+  }
+  *dp++ = FEND;
+
+  // copy the result to the input buffer
+  // and count the buffer size
+  int reply = 0;
+  for( sp = dest; sp < dp; ) {
+    *buf++ = *sp++;
+    reply++;
+  }
+  return reply;
+}
+
+int FGKissWrapper::unwrap( size_t n, uint8_t * buf )
+{
+  uint8_t * sp = buf;
+
+  // look for FEND
+  while( 0 < n && FEND != *sp ) {
+    sp++;
+    n--;
+  }
+
+  // ignore all leading FEND
+  while( 0 < n && FEND == *sp ) {
+    sp++;
+    n--;
+  }
+
+  if( 0 == n ) return 0;
+
+  uint8_t dest[n];
+  uint8_t * dp = dest;
+
+  {
+    bool escaped = false;
+
+    while( 0 < n ) {
+
+      n--;
+      uint8_t c = *sp++;
+
+      if( escaped ) {
+        switch( c ) {
+
+          case TFESC:
+            *dp++ = FESC;
+            break;
+
+          case TFEND:
+            *dp++ = FEND;
+            break;
+
+          default: // this is an error - ignore and continue
+            break;
+        }
+
+        escaped = false;
+
+      } else {
+
+        switch( c ) {
+          case FESC:
+            escaped = true;
+            break;
+
+          case FEND:
+            if( 0 != n ) {
+              SG_LOG(SG_IO, SG_WARN,
+               "KISS frame detected FEND before end of frame. Trailing data dropped." );
+            }
+            n = 0; 
+            break;
+
+          default:
+            *dp++ = c;
+            break;
+
+        }
+      }
+    }
+  }
+
+  n = 0;
+  for( sp = dest; sp != dp; ) {
+    *buf++ = *sp++;
+    n++;
+  }
+
+  return n;
+}
+
+
+class FGSTXETXWrapper : public FGProtocolWrapper {
+public:
+  virtual int wrap( size_t n, uint8_t * buf );
+  virtual int unwrap( size_t n, uint8_t * buf );
+
+  static const uint8_t  STX  = 0x02;
+  static const uint8_t  ETX  = 0x03;
+  static const uint8_t  DLE  = 0x00;
+};
+
+int FGSTXETXWrapper::wrap( size_t n, uint8_t * buf )
+{
+  // stuff payload as
+  // <dle><stx>payload<dle><etx>
+  // if payload contains <dle>, stuff <dle> as <dle><dle>
+  uint8_t dest[2*n+4*sizeof(uint8_t)]; // worst case, all payload is dle plus header plus footer
+  uint8_t *sp = buf, *dp = dest;
+
+  *dp++ = DLE;
+  *dp++ = STX;
+
+  while( n > 0 ) {
+    n--;
+
+    if( DLE == *sp )
+      *dp++ = DLE;
+
+    *dp++ = *sp++;
+  }
+
+  *dp++ = DLE;
+  *dp++ = ETX;
+
+  for( n = 0, sp = dest; sp < dp; ) {
+    n++;
+    *buf++ = *sp++;
+  } 
+
+  return n;
+}
+
+int FGSTXETXWrapper::unwrap( size_t n, uint8_t * buf )
+{
+  return n;
+}
+
+FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false), initOk(false), wrapper(NULL)
 {
     size_t configToken;
     if (tokens[1] == "socket") {
@@ -77,6 +261,7 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false), initOk(false)
 }
 
 FGGeneric::~FGGeneric() {
+  delete wrapper;
 }
 
 union u32 {
@@ -160,6 +345,16 @@ bool FGGeneric::gen_message_binary() {
             break;
         }
 
+        case FG_BYTE:
+        {
+            val = _out_message[i].offset +
+                  _out_message[i].prop->getIntValue() * _out_message[i].factor;
+            int8_t byteVal = val;
+            memcpy(&buf[length], &byteVal, sizeof(int8_t));
+            length += sizeof(int8_t);
+            break;
+        }
+
         default: // SG_STRING
             const char *strdata = _out_message[i].prop->getStringValue();
             int32_t strlength = strlen(strdata);
@@ -182,6 +377,7 @@ bool FGGeneric::gen_message_binary() {
              * length += (strlength % 4 > 0 ? sizeof(int32_t) - strlength % 4 : 0;
              */
             break;
+
         }
     }
 
@@ -205,6 +401,8 @@ bool FGGeneric::gen_message_binary() {
         length += sizeof(int32_t);
     }
 
+    if( wrapper ) length = wrapper->wrap( length, reinterpret_cast<uint8_t*>(buf) );
+
     return true;
 }
 
@@ -223,6 +421,7 @@ bool FGGeneric::gen_message_ascii() {
         string format = simgear::strutils::sanitizePrintfFormat(_out_message[i].format);
 
         switch (_out_message[i].type) {
+        case FG_BYTE:
         case FG_INT:
             val = _out_message[i].offset +
                   _out_message[i].prop->getIntValue() * _out_message[i].factor;
@@ -335,6 +534,12 @@ bool FGGeneric::parse_message_binary(int length) {
             p1 += sizeof(int64_t);
             break;
 
+        case FG_BYTE:
+            tmp32 = *(int8_t *)p1;
+            updateValue(_in_message[i], (int)tmp32);
+            p1 += sizeof(int8_t);
+            break;
+
         default: // SG_STRING
             SG_LOG( SG_IO, SG_ALERT, "Generic protocol: "
                     "Ignoring unsupported binary input chunk type.");
@@ -374,6 +579,7 @@ bool FGGeneric::parse_message_ascii(int length) {
         }
 
         switch (_in_message[i].type) {
+        case FG_BYTE:
         case FG_INT:
             updateValue(_in_message[i], atoi(p1));
             break;
@@ -679,6 +885,14 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
                        "byte order, using HOST byte order.");
             }
         }
+
+        if( root->hasValue( "wrapper" ) ) {
+            string w = root->getStringValue( "wrapper" );
+            if( w == "kiss" )  wrapper = new FGKissWrapper();
+            else if( w == "stxetx" )  wrapper = new FGSTXETXWrapper();
+            else SG_LOG(SG_IO, SG_ALERT,
+                       "generic protocol: Undefined binary protocol wrapper '" + w + "' ignored" );
+        }
     }
 
     int record_length = 0; // Only used for binary protocols.
@@ -697,8 +911,13 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         chunk.wrap = chunks[i]->getBoolValue("wrap");
         chunk.rel = chunks[i]->getBoolValue("relative");
 
-        string node = chunks[i]->getStringValue("node", "/null");
-        chunk.prop = fgGetNode(node.c_str(), true);
+        if( chunks[i]->hasChild("const") ) {
+            chunk.prop = new SGPropertyNode();
+            chunk.prop->setStringValue( chunks[i]->getStringValue("const", "" ) );
+        } else {
+            string node = chunks[i]->getStringValue("node", "/null");
+            chunk.prop = fgGetNode(node.c_str(), true);
+        }
 
         string type = chunks[i]->getStringValue("type");
 
@@ -716,9 +935,12 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         } else if (type == "fixed") {
             chunk.type = FG_FIXED;
             record_length += sizeof(int32_t);
-        } else if (type == "string")
+        } else if (type == "string") {
             chunk.type = FG_STRING;
-        else {
+        } else if (type == "byte") {
+            chunk.type = FG_BYTE;
+            record_length += sizeof(int8_t);
+        } else {
             chunk.type = FG_INT;
             record_length += sizeof(int32_t);
         }
