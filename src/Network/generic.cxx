@@ -61,47 +61,46 @@ public:
   virtual int wrap( size_t n, uint8_t * buf );
   virtual int unwrap( size_t n, uint8_t * buf );
 private:
-  static const uint8_t  FEND  = 0xC0;
-  static const uint8_t  FESC  = 0xDB;
-  static const uint8_t  TFEND = 0xDC;
-  static const uint8_t  TFESC = 0xDD;
+  static const uint8_t  FEND;
+  static const uint8_t  FESC;
+  static const uint8_t  TFEND;
+  static const uint8_t  TFESC;
 };
+
+const uint8_t  FGKissWrapper::FEND  = 0xC0;
+const uint8_t  FGKissWrapper::FESC  = 0xDB;
+const uint8_t  FGKissWrapper::TFEND = 0xDC;
+const uint8_t  FGKissWrapper::TFESC = 0xDD;
 
 int FGKissWrapper::wrap( size_t n, uint8_t * buf )
 {
-  uint8_t dest[2*n+3]; // worst case, FEND+command+all bytes escaped+FEND
-  uint8_t *sp = buf, *dp = dest;
+  std::vector<uint8_t> dest;
+  uint8_t *sp = buf;
 
-  *dp++ = FEND;
-  *dp++ = 0; // command/channel always zero
+  dest.push_back(FEND);
+  dest.push_back(0); // command/channel always zero
   for( size_t i = 0; i < n; i++ ) {
     uint8_t c = *sp++;
     switch( c ) {
       case FESC:
-        *dp++ = FESC;
-        *dp++ = TFESC;
+        dest.push_back(FESC);
+        dest.push_back(TFESC);
         break;
 
       case FEND:
-        *dp++ = FESC;
-        *dp++ = TFEND;
+        dest.push_back(FESC);
+        dest.push_back(TFEND);
         break;
 
       default:
-       *dp++ = c;
-       break;
+        dest.push_back(c);
+        break;
     }
   }
-  *dp++ = FEND;
+  dest.push_back(FEND);
 
-  // copy the result to the input buffer
-  // and count the buffer size
-  int reply = 0;
-  for( sp = dest; sp < dp; ) {
-    *buf++ = *sp++;
-    reply++;
-  }
-  return reply;
+  memcpy( buf, dest.data(), dest.size() );
+  return dest.size();
 }
 
 int FGKissWrapper::unwrap( size_t n, uint8_t * buf )
@@ -189,40 +188,40 @@ public:
   virtual int wrap( size_t n, uint8_t * buf );
   virtual int unwrap( size_t n, uint8_t * buf );
 
-  static const uint8_t  STX  = 0x02;
-  static const uint8_t  ETX  = 0x03;
-  static const uint8_t  DLE  = 0x00;
+  static const uint8_t  STX;
+  static const uint8_t  ETX;
+  static const uint8_t  DLE;
 };
+
+const uint8_t  FGSTXETXWrapper::STX  = 0x02;
+const uint8_t  FGSTXETXWrapper::ETX  = 0x03;
+const uint8_t  FGSTXETXWrapper::DLE  = 0x00;
 
 int FGSTXETXWrapper::wrap( size_t n, uint8_t * buf )
 {
   // stuff payload as
   // <dle><stx>payload<dle><etx>
   // if payload contains <dle>, stuff <dle> as <dle><dle>
-  uint8_t dest[2*n+4*sizeof(uint8_t)]; // worst case, all payload is dle plus header plus footer
-  uint8_t *sp = buf, *dp = dest;
+  std::vector<uint8_t> dest;
+  uint8_t *sp = buf;
 
-  *dp++ = DLE;
-  *dp++ = STX;
+  dest.push_back(DLE);
+  dest.push_back(STX);
 
   while( n > 0 ) {
     n--;
 
     if( DLE == *sp )
-      *dp++ = DLE;
+      dest.push_back(DLE);
 
-    *dp++ = *sp++;
+    dest.push_back(*sp++);
   }
 
-  *dp++ = DLE;
-  *dp++ = ETX;
+  dest.push_back(DLE);
+  dest.push_back(ETX);
 
-  for( n = 0, sp = dest; sp < dp; ) {
-    n++;
-    *buf++ = *sp++;
-  } 
-
-  return n;
+  memcpy( buf, dest.data(), dest.size() ); 
+  return dest.size();
 }
 
 int FGSTXETXWrapper::unwrap( size_t n, uint8_t * buf )
