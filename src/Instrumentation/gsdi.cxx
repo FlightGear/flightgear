@@ -55,12 +55,9 @@ void GSDI::init()
 	_serviceableN = n->getNode("serviceable", true);
 
 	// input
-	_headingN = fgGetNode("/orientation/heading-deg", true);
 	_ubodyN = fgGetNode("/velocities/uBody-fps", true);
 	_vbodyN = fgGetNode("/velocities/vBody-fps", true);
-	_wind_dirN = fgGetNode("/environment/wind-from-heading-deg", true);
-	_wind_speedN = fgGetNode("/environment/wind-speed-kt", true);
-
+	
 	// output
 	_drift_uN = n->getNode("drift-u-kt", true);
 	_drift_vN = n->getNode("drift-v-kt", true);
@@ -74,14 +71,8 @@ void GSDI::update(double /*delta_time_sec*/)
 	if (!_serviceableN->getBoolValue())
 		return;
 
-	double wind_speed = _wind_speedN->getDoubleValue();
-	double rel_wind_dir = (_headingN->getDoubleValue() - _wind_dirN->getDoubleValue())
-			* SGD_DEGREES_TO_RADIANS;
-	double wind_u = wind_speed * cos(rel_wind_dir);
-	double wind_v = wind_speed * sin(rel_wind_dir);
-
-	double u = _ubodyN->getDoubleValue() * SG_FPS_TO_KT - wind_u;
-	double v = _vbodyN->getDoubleValue() * SG_FPS_TO_KT + wind_v;
+	double u = _ubodyN->getDoubleValue() * SG_FPS_TO_KT;
+	double v = _vbodyN->getDoubleValue() * SG_FPS_TO_KT;
 
 	double speed = sqrt(u * u + v * v);
 	double angle = atan2(v, u) * SGD_RADIANS_TO_DEGREES;
