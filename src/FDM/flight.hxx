@@ -162,7 +162,7 @@ private:
         SGVec3d v_local_v;
         SGVec3d v_local_rel_ground_v; // V rel w.r.t. earth surface
         SGVec3d v_local_airmass_v;    // velocity of airmass (steady winds)
-        SGVec3d v_wind_body_v;        // Wind-relative velocities in body axis
+        SGVec3d v_body_v;        // ECEF velocities in body axis
 
         SGVec3d omega_body_v;         // Angular B rates
         SGVec3d euler_rates_v;
@@ -284,10 +284,10 @@ public:
 	_state.v_local_airmass_v[1] = east;
 	_state.v_local_airmass_v[2] = down;
     }
-    inline void _set_Velocities_Wind_Body( double u, double v, double w) {
-	_state.v_wind_body_v[0] = u;
-	_state.v_wind_body_v[1] = v;
-	_state.v_wind_body_v[2] = w;
+    inline void _set_Velocities_Body( double u, double v, double w) {
+	_state.v_body_v[0] = u;
+	_state.v_body_v[1] = v;
+	_state.v_body_v[2] = w;
     }
     inline void _set_V_rel_wind(double vt) { _state.v_rel_wind = vt; }
     inline void _set_V_ground_speed( double v) { _state.v_ground_speed = v; }
@@ -456,15 +456,15 @@ public:
     inline void set_V_down (double down) { 
       set_Velocities_Local(_state.v_local_v[0], _state.v_local_v[1], down);
     }
-    virtual void set_Velocities_Wind_Body( double u, double v, double w);
+    virtual void set_Velocities_Body( double u, double v, double w);
     virtual void set_uBody (double uBody) { 
-      set_Velocities_Wind_Body(uBody, _state.v_wind_body_v[1], _state.v_wind_body_v[2]);
+      set_Velocities_Body(uBody, _state.v_body_v[1], _state.v_body_v[2]);
     }
     virtual void set_vBody (double vBody) { 
-      set_Velocities_Wind_Body(_state.v_wind_body_v[0], vBody, _state.v_wind_body_v[2]);
+      set_Velocities_Body(_state.v_body_v[0], vBody, _state.v_body_v[2]);
     }
     virtual void set_wBody (double wBody) {
-      set_Velocities_Wind_Body(_state.v_wind_body_v[0], _state.v_wind_body_v[1], wBody);
+      set_Velocities_Body(_state.v_body_v[0], _state.v_body_v[1], wBody);
     }
     
     // Euler angles 
@@ -538,9 +538,9 @@ public:
     inline double get_V_north() const { return _state.v_local_v[0]; }
     inline double get_V_east() const { return _state.v_local_v[1]; }
     inline double get_V_down() const { return _state.v_local_v[2]; }
-    inline double get_uBody () const { return _state.v_wind_body_v[0]; }
-    inline double get_vBody () const { return _state.v_wind_body_v[1]; }
-    inline double get_wBody () const { return _state.v_wind_body_v[2]; }
+    inline double get_uBody () const { return _state.v_body_v[0]; }
+    inline double get_vBody () const { return _state.v_body_v[1]; }
+    inline double get_wBody () const { return _state.v_body_v[2]; }
 
     // Please dont comment these out. fdm=ada uses these (see
     // cockpit.cxx) --->
@@ -559,9 +559,9 @@ public:
     inline double get_V_east_airmass() const { return _state.v_local_airmass_v[1]; }
     inline double get_V_down_airmass() const { return _state.v_local_airmass_v[2]; }
 
-    inline double get_U_body() const { return _state.v_wind_body_v[0]; }
-    inline double get_V_body() const { return _state.v_wind_body_v[1]; }
-    inline double get_W_body() const { return _state.v_wind_body_v[2]; }
+    inline double get_U_body() const { return _state.v_body_v[0]; }
+    inline double get_V_body() const { return _state.v_body_v[1]; }
+    inline double get_W_body() const { return _state.v_body_v[2]; }
 
     inline double get_V_rel_wind() const { return _state.v_rel_wind; }
 

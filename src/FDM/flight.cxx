@@ -98,7 +98,7 @@ FGInterface::_setup ()
     _state.v_local_v = SGVec3d::zeros();
     _state.v_local_rel_ground_v = SGVec3d::zeros();
     _state.v_local_airmass_v = SGVec3d::zeros();
-    _state.v_wind_body_v = SGVec3d::zeros();
+    _state.v_body_v = SGVec3d::zeros();
     _state.omega_body_v = SGVec3d::zeros();
     _state.euler_rates_v = SGVec3d::zeros();
     _state.geocentric_rates_v = SGVec3d::zeros();
@@ -206,7 +206,7 @@ FGInterface::common_init ()
         } else if ( speedset == "mach" || speedset == "MACH" ) {
             set_Mach_number( fgGetDouble("/sim/presets/mach") );
         } else if ( speedset == "UVW" || speedset == "uvw" ) {
-            set_Velocities_Wind_Body(
+            set_Velocities_Body(
                                      fgGetDouble("/sim/presets/uBody-fps"),
                                      fgGetDouble("/sim/presets/vBody-fps"),
                                      fgGetDouble("/sim/presets/wBody-fps") );
@@ -366,7 +366,7 @@ FGInterface::bind ()
   _tiedProperties.Tie("/velocities/down-relground-fps", this,
                       &FGInterface::get_V_down_rel_ground); // read-only
 
-  // Relative wind
+  // ECEF velocity in body axis
   // FIXME: temporarily archivable, until the NED problem is fixed.
   _tiedProperties.Tie("/velocities/uBody-fps", this,
                       &FGInterface::get_uBody,
@@ -565,12 +565,12 @@ void FGInterface::set_Velocities_Local( double north,
     _state.v_local_v[2] = down;
 }
 
-void FGInterface::set_Velocities_Wind_Body( double u, 
+void FGInterface::set_Velocities_Body( double u, 
                                             double v,
                                             double w){
-    _state.v_wind_body_v[0] = u;
-    _state.v_wind_body_v[1] = v;
-    _state.v_wind_body_v[2] = w;
+    _state.v_body_v[0] = u;
+    _state.v_body_v[1] = v;
+    _state.v_body_v[2] = w;
 }
 
 // Euler angles 
@@ -615,7 +615,7 @@ void FGInterface::_busdump(void)
     SG_LOG(SG_FLIGHT,SG_INFO,"v_local_v: " << _state.v_local_v);
     SG_LOG(SG_FLIGHT,SG_INFO,"v_local_rel_ground_v: " << _state.v_local_rel_ground_v);
     SG_LOG(SG_FLIGHT,SG_INFO,"v_local_airmass_v: " << _state.v_local_airmass_v);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_wind_body_v: " << _state.v_wind_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_body_v: " << _state.v_body_v);
     SG_LOG(SG_FLIGHT,SG_INFO,"omega_body_v: " << _state.omega_body_v);
     SG_LOG(SG_FLIGHT,SG_INFO,"euler_rates_v: " << _state.euler_rates_v);
     SG_LOG(SG_FLIGHT,SG_INFO,"geocentric_rates_v: " << _state.geocentric_rates_v);

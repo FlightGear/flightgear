@@ -266,10 +266,10 @@ void FlightProperties::set_Velocities_Local(double x, double y, double z)
   _root->setDoubleValue("velocities/speed-down-fps", z);
 }
 
-void FlightProperties::set_Velocities_Wind_Body(double x, double y, double z)
+void FlightProperties::set_Velocities_Body(double x, double y, double z)
 {
-  _root->setDoubleValue("velocities/vBody-fps", x);
-  _root->setDoubleValue("velocities/uBody-fps", y);
+  _root->setDoubleValue("velocities/uBody-fps", x);
+  _root->setDoubleValue("velocities/vBody-fps", y);
   _root->setDoubleValue("velocities/wBody-fps", z);
 }
 

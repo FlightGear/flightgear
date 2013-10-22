@@ -119,7 +119,7 @@ public:
   void set_Climb_Rate(double fps);
   
   void set_Velocities_Local(double x, double y, double z);
-  void set_Velocities_Wind_Body(double x, double y, double z);
+  void set_Velocities_Body(double x, double y, double z);
   void set_Accels_Pilot_Body(double x, double y, double z);
 private:
   SGPropertyNode* _root;

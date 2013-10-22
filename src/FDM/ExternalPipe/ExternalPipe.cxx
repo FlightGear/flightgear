@@ -470,9 +470,9 @@ void FGExternalPipe::process_set_command( const string_list &tokens ) {
     _set_Velocities_Local( net->v_north,
                                           net->v_east,
                                           net->v_down );
-    _set_Velocities_Wind_Body( net->v_wind_body_north,
-                                              net->v_wind_body_east,
-                                              net->v_wind_body_down );
+    _set_Velocities_Body( net->v_body_u,
+                                              net->v_body_v,
+                                              net->v_body_w );
 
     _set_Accels_Pilot_Body( net->A_X_pilot,
                                            net->A_Y_pilot,

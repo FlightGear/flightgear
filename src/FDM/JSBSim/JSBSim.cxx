@@ -760,9 +760,9 @@ bool FGJSBsim::copy_from_JSBsim()
                            Propagate->GetVel(FGJSBBase::eEast),
                            Propagate->GetVel(FGJSBBase::eDown) );
 
-    _set_Velocities_Wind_Body( Propagate->GetUVW(1),
-                               Propagate->GetUVW(2),
-                               Propagate->GetUVW(3) );
+    _set_Velocities_Body( Propagate->GetUVW(1),
+                          Propagate->GetUVW(2),
+                          Propagate->GetUVW(3) );
 
     // Make the HUD work ...
     _set_Velocities_Ground( Propagate->GetVel(FGJSBBase::eNorth),
@@ -1124,9 +1124,9 @@ void FGJSBsim::set_Velocities_Local( double north, double east, double down )
   FGInterface::set_Velocities_Local(north, east, down);
 }
 
-void FGJSBsim::set_Velocities_Wind_Body( double u, double v, double w)
+void FGJSBsim::set_Velocities_Body( double u, double v, double w)
 {
-  SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Wind_Body: "
+  SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Body: "
      << u << ", " <<  v << ", " <<  w );
 
   if (needTrim) {
@@ -1140,7 +1140,7 @@ void FGJSBsim::set_Velocities_Wind_Body( double u, double v, double w)
     Propagate->SetUVW(3, w);
   }
 
-  FGInterface::set_Velocities_Wind_Body(u, v, w);
+  FGInterface::set_Velocities_Body(u, v, w);
 }
 
 //Euler angles

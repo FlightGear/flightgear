@@ -151,9 +151,9 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     net->v_north = fdm_state.get_V_north();
     net->v_east = fdm_state.get_V_east();
     net->v_down = fdm_state.get_V_down();
-    net->v_wind_body_north = fdm_state.get_uBody();
-    net->v_wind_body_east = fdm_state.get_vBody();
-    net->v_wind_body_down = fdm_state.get_wBody();
+    net->v_body_u = fdm_state.get_uBody();
+    net->v_body_v = fdm_state.get_vBody();
+    net->v_body_w = fdm_state.get_wBody();
 
     net->A_X_pilot = fdm_state.get_A_X_pilot();
     net->A_Y_pilot = fdm_state.get_A_Y_pilot();
@@ -245,9 +245,9 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->v_north);
         htonf(net->v_east);
         htonf(net->v_down);
-        htonf(net->v_wind_body_north);
-        htonf(net->v_wind_body_east);
-        htonf(net->v_wind_body_down);
+        htonf(net->v_body_u);
+        htonf(net->v_body_v);
+        htonf(net->v_body_w);
 
         htonf(net->A_X_pilot);
         htonf(net->A_Y_pilot);
@@ -327,9 +327,9 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->v_north);
         htonf(net->v_east);
         htonf(net->v_down);
-        htonf(net->v_wind_body_north);
-        htonf(net->v_wind_body_east);
-        htonf(net->v_wind_body_down);
+        htonf(net->v_body_u);
+        htonf(net->v_body_v);
+        htonf(net->v_body_w);
 
         htonf(net->A_X_pilot);
         htonf(net->A_Y_pilot);
@@ -410,9 +410,9 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         fdm_state.set_Velocities_Local( net->v_north,
                                               net->v_east,
                                               net->v_down );
-        fdm_state.set_Velocities_Wind_Body( net->v_wind_body_north,
-                                                  net->v_wind_body_east,
-                                                  net->v_wind_body_down );
+        fdm_state.set_Velocities_Body( net->v_body_u,
+                                                  net->v_body_v,
+                                                  net->v_body_w );
 
         fdm_state.set_Accels_Pilot_Body( net->A_X_pilot,
 					       net->A_Y_pilot,

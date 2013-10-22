@@ -653,7 +653,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     // set_Velocities_Local_Rel_Airmass( V_north_rel_airmass, 
     //                          V_east_rel_airmass, V_down_rel_airmass );
     // set_Velocities_Gust( U_gust, V_gust, W_gust );
-    _set_Velocities_Wind_Body( U_body, V_body, W_body );
+    _set_Velocities_Body( U_body, V_body, W_body );
 
     _set_V_rel_wind( V_rel_wind );
     // set_V_true_kts( V_true_kts );
@@ -865,8 +865,8 @@ void FGLaRCsim::set_Velocities_Local( double north, double east, double down ){
     copy_from_LaRCsim(); //update the bus
 }
 
-void FGLaRCsim::set_Velocities_Wind_Body( double u, double v, double w){
-    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_Wind_Body: " 
+void FGLaRCsim::set_Velocities_Body( double u, double v, double w){
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_Body: " 
 	    << u << "  " << v << "  " << w   );
     snap_shot();
     lsic->SetUVWFpsIC(u,v,w);

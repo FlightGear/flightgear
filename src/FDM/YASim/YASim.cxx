@@ -396,7 +396,7 @@ void YASim::copyToYASim(bool copyState)
 // _set_Accels_CG_Body_N 
 // _set_Velocities_Local
 // _set_Velocities_Ground
-// _set_Velocities_Wind_Body
+// _set_Velocities_Body
 // _set_Omega_Body
 // _set_Euler_Rates
 // _set_Euler_Angles
@@ -469,6 +469,10 @@ void YASim::copyFromYASim()
 
     // _set_Geocentric_Rates(M2FT*v[0], M2FT*v[1], M2FT*v[2]); // UNUSED
 
+    // ecef speed in body axis
+    Math::vmul33(s->orient, s->v, v);
+    _set_Velocities_Body(v[0]*M2FT, -v[1]*M2FT, -v[2]*M2FT);
+
     // Airflow velocity.
     float wind[3];
     wind[0] = get_V_north_airmass() * FT2M * -1.0;  // Wind in NED
@@ -477,7 +481,6 @@ void YASim::copyFromYASim()
     Math::tmul33(xyz2ned, wind, wind);              // Wind in global
     Math::sub3(s->v, wind, v);                      // V - wind in global
     Math::vmul33(s->orient, v, v);               // to body coordinates
-    _set_Velocities_Wind_Body(v[0]*M2FT, -v[1]*M2FT, -v[2]*M2FT);
     _set_V_rel_wind(Math::mag3(v)*M2FT); // units?
 
     float P = _pressure_inhg->getFloatValue() * INHG2PA;

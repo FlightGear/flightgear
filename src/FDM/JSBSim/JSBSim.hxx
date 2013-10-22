@@ -166,7 +166,7 @@ public:
         @param u X velocity in ft/sec
         @param v Y velocity  in ft/sec
         @param w Z velocity in ft/sec */
-    void set_Velocities_Wind_Body( double u, double v, double w);
+    void set_Velocities_Body( double u, double v, double w);
     //@}
 
     /** Euler Angle Parameter Set

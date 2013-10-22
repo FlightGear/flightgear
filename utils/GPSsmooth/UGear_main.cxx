@@ -210,9 +210,9 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     fdm->v_north = 0.0;
     fdm->v_east = 0.0;
     fdm->v_down = 0.0;
-    fdm->v_wind_body_north = 0.0;
-    fdm->v_wind_body_east = 0.0;
-    fdm->v_wind_body_down = 0.0;
+    fdm->v_body_u = 0.0;
+    fdm->v_body_v = 0.0;
+    fdm->v_body_w = 0.0;
     fdm->stall_warning = 0.0;
 
     fdm->A_X_pilot = 0.0;
@@ -301,9 +301,9 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     htonf(fdm->v_north);
     htonf(fdm->v_east);
     htonf(fdm->v_down);
-    htonf(fdm->v_wind_body_north);
-    htonf(fdm->v_wind_body_east);
-    htonf(fdm->v_wind_body_down);
+    htonf(fdm->v_body_u);
+    htonf(fdm->v_body_v);
+    htonf(fdm->v_body_w);
 
     htonf(fdm->A_X_pilot);
     htonf(fdm->A_Y_pilot);
