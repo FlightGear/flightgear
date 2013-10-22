@@ -121,9 +121,7 @@ int FGKissWrapper::unwrap( size_t n, uint8_t * buf )
 
   if( 0 == n ) return 0;
 
-  uint8_t dest[n];
-  uint8_t * dp = dest;
-
+  std::vector<uint8_t> dest;
   {
     bool escaped = false;
 
@@ -136,11 +134,11 @@ int FGKissWrapper::unwrap( size_t n, uint8_t * buf )
         switch( c ) {
 
           case TFESC:
-            *dp++ = FESC;
+            dest.push_back( FESC );
             break;
 
           case TFEND:
-            *dp++ = FEND;
+            dest.push_back( FEND );
             break;
 
           default: // this is an error - ignore and continue
@@ -165,21 +163,15 @@ int FGKissWrapper::unwrap( size_t n, uint8_t * buf )
             break;
 
           default:
-            *dp++ = c;
+            dest.push_back( c );
             break;
-
         }
       }
     }
   }
 
-  n = 0;
-  for( sp = dest; sp != dp; ) {
-    *buf++ = *sp++;
-    n++;
-  }
-
-  return n;
+  memcpy( buf, dest.data(), dest.size() );
+  return dest.size();
 }
 
 
