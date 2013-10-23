@@ -138,7 +138,7 @@ class ReplaceStaticTextureVisitor:
         return;
 
       osg::Group *parent = node.getParent(0);
-      if( !_node_name.empty() && parent->getName() != _node_name )
+      if( !_node_name.empty() && getNodeName(*parent) != _node_name )
         return;
 
       if( !_parent_name.empty() )
@@ -233,6 +233,21 @@ class ReplaceStaticTextureVisitor:
 
     simgear::canvas::CanvasWeakPtr  _canvas;
     simgear::canvas::Placements     _placements;
+
+    const std::string& getNodeName(const osg::Node& node) const
+    {
+      if( !node.getName().empty() )
+        return node.getName();
+
+      // Special handling for pick animation which clears the name of the object
+      // and instead sets the name of a parent group with one or two groups
+      // attached (one for normal rendering and one for the picking highlight).
+      osg::Group const* parent = node.getParent(0);
+      if( parent->getName() == "pick render group" )
+        return parent->getParent(0)->getName();
+
+      return node.getName();
+    }
 };
 
 //------------------------------------------------------------------------------
