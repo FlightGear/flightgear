@@ -96,9 +96,11 @@ void FGCom::iaxTextEvent(struct iaxc_ev_text text)
 
 
 FGCom::FGCom() :
-    _register(true)
+    _register(true),
+    _enabled(false),
+    _initialized(false),
+    _listener_active(0)
 {
-  _listener_active = 0;
 }
 
 
