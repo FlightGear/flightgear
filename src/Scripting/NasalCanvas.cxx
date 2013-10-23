@@ -229,6 +229,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("addEventListener", &sc::Canvas::addEventListener);
   NasalElement::init("canvas.Element")
     .member("_node_ghost", &elementGetNode<sc::Element>)
+    .method("_getParent", &sc::Element::getParent)
     .method("addEventListener", &sc::Element::addEventListener)
     .method("getTransformedBounds", &f_elementGetTransformedBounds);
   NasalGroup::init("canvas.Group")
