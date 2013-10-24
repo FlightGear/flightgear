@@ -238,7 +238,8 @@ void FGCom::postinit()
     app += _version_node->getStringValue();
 
     iaxc_set_callerid( _callsign_node->getStringValue(), app.c_str() );
-    iaxc_set_formats( IAXC_FORMAT_GSM, IAXC_FORMAT_GSM );
+    iaxc_set_formats (IAXC_FORMAT_SPEEX, IAXC_FORMAT_SPEEX);
+    iaxc_set_speex_settings(1, 5, 0, 1, 0, 3);
     iaxc_start_processing_thread ();
 
     // Now IAXClient is initialized
