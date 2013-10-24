@@ -237,7 +237,7 @@ do_pause (const SGPropertyNode * arg)
   
     SGPropertyNode_ptr args(new SGPropertyNode);
     args->setStringValue("id", "sim-pause");
-    if (!paused) {
+    if (!paused && fgGetBool("/sim/view-name-popup")) {
       args->setStringValue("label", "Simulation is paused");
       globals->get_commands()->execute("show-message", args);
     } else {
