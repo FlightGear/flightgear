@@ -42,10 +42,8 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
   private:
 
     SGPropertyNode_ptr _ptt0_node;                            // instrumentation/nav[0]/ptt
-    //SGPropertyNode_ptr _nav0_node;                          // instrumentation/nav[0]/frequencies/selected-mhz
-    //SGPropertyNode_ptr _nav1_node;                          // instrumentation/nav[1]/frequencies/selected-mhz
     SGPropertyNode_ptr _comm0_node;                           // instrumentation/comm[0]/frequencies/selected-mhz
-    //SGPropertyNode_ptr _comm1_node;                         // instrumentation/comm[1]/frequencies/selected-mhz
+    SGPropertyNode_ptr _comm1_node;                           // instrumentation/comm[1]/frequencies/selected-mhz
     SGPropertyNode_ptr _test_node;                            // sim/fgcom/test
     SGPropertyNode_ptr _text_node;                            // sim/fgcom/text
     SGPropertyNode_ptr _server_node;                          // sim/fgcom/server
@@ -71,23 +69,18 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     double   _maxRange;
     double   _minRange;
     double   _currentComm0;
-    //double   _currentComm1;
-    //double   _currentNav0;
-    //double   _currentNav1;
-    //bool     _nav0Changed;
-    //bool     _nav1Changed;
+    double   _currentComm1;
     bool     _comm0Changed;
-    //bool     _comm1Changed;
+    bool     _comm1Changed;
     bool     _register;
     bool     _enabled;
     bool     _initialized;
     int      _regId;
-    //int      _callNav0;
-    //int      _callNav1;
     int      _callComm0;
     //int      _callComm1;
     int      _listener_active;
     int      _currentFreqKhz;
+    int      _selectedComm;
     std::string   _server;
     std::string   _callsign;
     std::string   _username;
@@ -97,7 +90,6 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
 
     std::string   computePhoneNumber(const double& freq, const std::string& icao) const;
     std::string   getAirportCode(const double& freq);
-    //std::string   getVorCode(const double& freq) const;
     SGGeod        getAirportPos(const double& freq) const;
     bool          isInRange(const double& freq) const;
     

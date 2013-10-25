@@ -129,10 +129,8 @@ void FGCom::bind()
   _username_node           = reg_node->getChild( "username", 0, true );
   _password_node           = reg_node->getChild( "password", 0, true );
 
-  //_nav0_node               = fgGetNode("/instrumentation/nav[0]/frequencies/selected-mhz", true);
-  //_nav1_node               = fgGetNode("/instrumentation/nav[1]/frequencies/selected-mhz", true);
   _comm0_node              = fgGetNode("/instrumentation/comm[0]/frequencies/selected-mhz", true);
-  //_comm1_node              = fgGetNode("/instrumentation/comm[1]/frequencies/selected-mhz", true);
+  _comm1_node              = fgGetNode("/instrumentation/comm[1]/frequencies/selected-mhz", true);
   _ptt0_node               = fgGetNode("/instrumentation/comm[0]/ptt", true); //FIXME: what about /instrumentation/comm[1]/ptt ?
   _callsign_node           = fgGetNode("/sim/multiplay/callsign", true);
   _text_node               = fgGetNode("/sim/messages/atc", true );
@@ -176,9 +174,7 @@ void FGCom::bind()
   _micLevel_node->addChangeListener(this);
   _enabled_node->addChangeListener(this);
   _comm0_node->addChangeListener(this);
-  //_comm1_node->addChangeListener(this);
-  //_nav0_node->addChangeListener(this);
-  //_nav1_node->addChangeListener(this);
+  _comm1_node->addChangeListener(this);
   _ptt0_node->addChangeListener(this);
   _test_node->addChangeListener(this);
 }
@@ -198,16 +194,13 @@ void FGCom::init()
   _register         = _register_node->getBoolValue();
   _username         = _username_node->getStringValue();
   _password         = _password_node->getStringValue();
+  _selectedComm     = 0;
 
   _currentComm0     = _comm0_node->getDoubleValue();
-  //_currentComm1     = _comm1_node->getDoubleValue();
-  //_currentNav0      = _nav0_node->getDoubleValue();
-  //_currentNav1      = _nav1_node->getDoubleValue();
+  _currentComm1     = _comm1_node->getDoubleValue();
 
   _comm0Changed     = false;
-  //_comm1Changed     = false;
-  //_nav0Changed      = false;
-  //_nav1Changed      = false;
+  _comm1Changed     = false;
 
   _maxRange         = MAX_RANGE;
   _minRange         = MIN_RANGE;
@@ -379,10 +372,11 @@ void FGCom::update(double dt)
 
     // For now we manage FGCom for only one freq because IAXClient
     // is not able to handle multiple calls at same time.
-    updateCall(_comm0Changed, _callComm0, _comm0_node->getDoubleValue());
-    // updateCall(_comm1Changed, _callComm1, _comm1_node->getDoubleValue());
-    // updateCall(_nav0Changed, _callNav0, _nav0_node->getDoubleValue());
-    // updateCall(_nav1Changed, _callNav1, _nav1_node->getDoubleValue());
+    if( _selectedComm == 0) {
+        updateCall(_comm0Changed, _callComm0, _comm0_node->getDoubleValue());
+    } else {
+        updateCall(_comm1Changed, _callComm0, _comm1_node->getDoubleValue());
+    }
 }
 
 
@@ -425,6 +419,18 @@ void FGCom::valueChanged(SGPropertyNode *prop)
   }
 
   if (prop == _ptt0_node && _enabled) {
+    if( _ptt0_node->getIntValue() == 2 ) {
+      if( _selectedComm == 0 ) {
+          SG_LOG( SG_IO, SG_INFO, "FGCom: change comm source to comm[1]" );
+          _comm1Changed = true;
+          _selectedComm = 1;
+      } else {
+          SG_LOG( SG_IO, SG_INFO, "FGCom: change comm source to comm[0]" );
+          _comm0Changed = true;
+          _selectedComm = 0;
+      }
+      return;
+    }
     if( _ptt0_node->getBoolValue() ) {
       iaxc_output_level_set( 0.0 );
       iaxc_input_level_set( _micLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max
@@ -481,7 +487,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
       _comm0Changed = true;
     }
   }
-/*
+
   if (prop == _comm1_node) {
     if( _currentComm1 != prop->getDoubleValue() ) {
       _currentComm1 = prop->getDoubleValue();
@@ -489,21 +495,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
       _comm1Changed = true;
     }
   }
-
-  if (prop == _nav0_node) {
-    if( _currentNav0 != prop->getDoubleValue() ) {
-      _currentNav0 = prop->getDoubleValue();
-      _nav0Changed = true;
-    }
-  }
-
-  if (prop == _nav1_node) {
-    if( _currentNav1 != prop->getDoubleValue() ) {
-      _currentNav1 = prop->getDoubleValue();
-      _nav1Changed = true;
-    }
-  }
-*/
 
   _listener_active--;
 }
@@ -514,8 +505,8 @@ void FGCom::testMode(bool testMode)
 {
   if(testMode && _initialized) {
     _enabled = false;
-    iaxc_dump_call_number(_callComm0);
-    iaxc_input_level_set( _micLevel_node->getFloatValue() );
+    iaxc_dump_all_calls();
+    iaxc_input_level_set( 1.0 );
     iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
     std::string num = computePhoneNumber(TEST_FREQ, NULL_ICAO);
     if( num.size() > 0 ) {
@@ -526,9 +517,13 @@ void FGCom::testMode(bool testMode)
       SG_LOG( SG_IO, SG_DEBUG, "FGCom: cannot call " << num.c_str() );
   } else {
     if( _initialized ) {
-      iaxc_dump_call_number(_callComm0);
+      iaxc_dump_all_calls();
       iaxc_millisleep(IAX_DELAY);
+      iaxc_input_level_set( 0.0 );
+      iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
       _callComm0 = -1;
+      _call0Changed = true;
+      _call1Changed = true;
       _enabled = true;
     }
   }
@@ -571,26 +566,6 @@ std::string FGCom::getAirportCode(const double& freq)
   return apt->airport()->ident();
 }
 
-
-
-/*
-  \param freq The requested frequency e.g 112.7
-  \return The ICAO code as string e.g ITS
-*/
-/*
-std::string FGCom::getVorCode(const double& freq) const
-{
-  SGGeod aircraftPos = globals->get_aircraft_position();
-  FGNavList::TypeFilter filter(FGPositioned::VOR);
-
-  FGNavRecord* vor = FGNavList::findByFreq( freq, aircraftPos, &filter);
-  if( !vor ) {
-    return std::string();
-  }
-
-  return vor->get_ident();
-}
-*/
 
 
 /*
