@@ -522,8 +522,6 @@ void FGCom::testMode(bool testMode)
       iaxc_input_level_set( 0.0 );
       iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
       _callComm0 = -1;
-      _call0Changed = true;
-      _call1Changed = true;
       _enabled = true;
     }
   }
