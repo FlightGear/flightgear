@@ -63,13 +63,19 @@ static const char *map[] = {
   "busy", "transfer", NULL
 };
 
-static const char *radio_map[] = {
-  "COM1", "NAV1", "COM2", "NAV2"
-};
+static const char *radio_map[] = {"COM1", "COM2"};
 
 char icao[5];
-double special_frq[] =
-  { 999.999, 910.0, 123.45, 122.75, 123.5, 121.5, 732.34, -1.0 };
+double special_frq[] = {
+    999.999,
+    911.000,
+    910.000,
+    123.450,
+    122.750,
+    123.500,
+    121.500,
+    732.340,
+     -1.0 };
 double *special_frequencies;
 
 double previous_com_frequency = 0.0;
@@ -153,12 +159,8 @@ process_packet (char *buf)
   /* get the selected frequency */
   if (com_select == 0 && data.COM1_SRV == 1)
     selected_frequency = data.COM1_FRQ;
-  else if (com_select == 1 && data.NAV1_SRV == 1)
-    selected_frequency = data.NAV1_FRQ;
-  else if (com_select == 2 && data.COM2_SRV == 1)
+  else if (com_select == 1 && data.COM2_SRV == 1)
     selected_frequency = data.COM2_FRQ;
-  else if (com_select == 3 && data.NAV2_SRV == 1)
-    selected_frequency = data.NAV2_FRQ;
 
   /* Check for com frequency changes */
   if (previous_com_frequency != selected_frequency)
@@ -193,7 +195,7 @@ process_packet (char *buf)
       if (data.PTT == 2)
 	{
 	  /* select the next com equipment */
-	  com_select = (com_select + 1) % 4;
+	  com_select = (com_select + 1) % 2;
           SG_LOG( SG_GENERAL, SG_ALERT, "Radio selected is " << radio_map[com_select] );
 	}
       else if (connected == 1)
@@ -770,29 +772,29 @@ ptt (int mode)
     {
       /* mic is muted so unmute and mute speaker */
       iaxc_input_level_set (level_in);
-      if (!check_special_frq (selected_frequency))
-	{
+      /*if (!check_special_frq (selected_frequency))
+	{*/
 	  iaxc_output_level_set (0.0);
           SG_LOG( SG_GENERAL, SG_ALERT, "[SPEAK] unmute mic, mute speaker" );
-	}
+	/*}
       else
 	{
           SG_LOG( SG_GENERAL, SG_ALERT, "[SPEAK] unmute mic" );
-	}
+	}*/
     }
   else
     {
       /* mic is unmuted so mute and unmute speaker */
       iaxc_input_level_set (0.0);
-      if (!check_special_frq (selected_frequency))
-	{
+      /*if (!check_special_frq (selected_frequency))
+	{*/
 	  iaxc_output_level_set (level_out);
           SG_LOG( SG_GENERAL, SG_ALERT, "[LISTEN] mute mic, unmute speaker" );
-	}
+	/*}
       else
 	{
           SG_LOG( SG_GENERAL, SG_ALERT, "[LISTEN] mute mic" );
-	}
+	}*/
     }
 }
 
