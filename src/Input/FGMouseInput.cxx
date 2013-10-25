@@ -164,12 +164,14 @@ public:
     {
         tooltipTimeoutDone = false;
         hoverPickScheduled = false;
-      
+        tooltipsEnabled = false;
+        
         fgGetNode("/sim/mouse/hide-cursor", true )->addChangeListener(this, true);
         fgGetNode("/sim/mouse/cursor-timeout-sec", true )->addChangeListener(this, true);
         fgGetNode("/sim/mouse/right-button-mode-cycle-enabled", true)->addChangeListener(this, true);
         fgGetNode("/sim/mouse/tooltip-delay-msec", true)->addChangeListener(this, true);
         fgGetNode("/sim/mouse/click-shows-tooltip", true)->addChangeListener(this, true);
+        fgGetNode("/sim/mouse/tooltips-enabled", true)->addChangeListener(this, true);
         fgGetNode("/sim/mouse/drag-sensitivity", true)->addChangeListener(this, true);
         fgGetNode("/sim/mouse/invert-mouse-wheel", true)->addChangeListener(this, true);
     }
@@ -313,7 +315,8 @@ public:
             rightClickModeCycle = node->getBoolValue();
         } else if (node->getNameString() == "click-shows-tooltip") {
             clickTriggersTooltip = node->getBoolValue();
-
+        } else if (node->getNameString() == "tooltips-enabled") {
+            tooltipsEnabled = node->getBoolValue();
         }
     }
     
@@ -327,6 +330,7 @@ public:
     bool clickTriggersTooltip;
     int tooltipDelayMsec, cursorTimeoutMsec;
     bool rightClickModeCycle;
+    bool tooltipsEnabled;
     
     SGPropertyNode_ptr xSizeNode;
     SGPropertyNode_ptr ySizeNode;
@@ -478,9 +482,8 @@ void FGMouseInput::update ( double dt )
     d->hoverPickScheduled = false;
   }
   
-  // if delay is <= 0, disable tooltips
   if ( !d->tooltipTimeoutDone &&
-      (d->tooltipDelayMsec > 0) &&
+      d->tooltipsEnabled &&
       (m.timeSinceLastMove.elapsedMSec() > d->tooltipDelayMsec))
   {
       d->tooltipTimeoutDone = true;
