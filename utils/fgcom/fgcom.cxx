@@ -772,29 +772,15 @@ ptt (int mode)
     {
       /* mic is muted so unmute and mute speaker */
       iaxc_input_level_set (level_in);
-      /*if (!check_special_frq (selected_frequency))
-	{*/
-	  iaxc_output_level_set (0.0);
-          SG_LOG( SG_GENERAL, SG_ALERT, "[SPEAK] unmute mic, mute speaker" );
-	/*}
-      else
-	{
-          SG_LOG( SG_GENERAL, SG_ALERT, "[SPEAK] unmute mic" );
-	}*/
+      iaxc_output_level_set (0.0);
+      SG_LOG( SG_GENERAL, SG_ALERT, "[SPEAK] unmute mic, mute speaker" );
     }
   else
     {
       /* mic is unmuted so mute and unmute speaker */
       iaxc_input_level_set (0.0);
-      /*if (!check_special_frq (selected_frequency))
-	{*/
-	  iaxc_output_level_set (level_out);
-          SG_LOG( SG_GENERAL, SG_ALERT, "[LISTEN] mute mic, unmute speaker" );
-	/*}
-      else
-	{
-          SG_LOG( SG_GENERAL, SG_ALERT, "[LISTEN] mute mic" );
-	}*/
+      iaxc_output_level_set (level_out);
+      SG_LOG( SG_GENERAL, SG_ALERT, "[LISTEN] mute mic, unmute speaker" );
     }
 }
 
