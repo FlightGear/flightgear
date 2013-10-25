@@ -140,9 +140,9 @@ if File.exist?("FlightGearOSX")
   end
 end
 
-if File.exist?("#{$prefixDir}/bin/fgcom-data")
+if File.exist?("#{$prefixDir}/share/flightgear")
   puts "Copying FGCom data files"
-  `ditto #{$prefixDir}/bin/fgcom-data #{resourcesDir}/fgcom-data`
+  `ditto #{$prefixDir}/share/flightgear #{resourcesDir}`
 end
 
 # code sign all executables in MacOS dir. Do this last since reource
