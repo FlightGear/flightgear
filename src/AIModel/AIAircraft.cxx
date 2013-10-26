@@ -238,7 +238,8 @@ double FGAIAircraft::sign(double x) {
 void FGAIAircraft::setFlightPlan(const std::string& flightplan, bool repeat)
 {
     if (flightplan.empty()) {
-        SG_LOG(SG_AI, SG_WARN, "setFlightPlan: empty flight plan");
+        // this is the case for Nasal-scripted aircraft
+        return;
     }
     
     FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
@@ -252,7 +253,8 @@ void FGAIAircraft::setFlightPlan(const std::string& flightplan, bool repeat)
 }
 
 
-void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f) {
+void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f)
+{
     delete fp;
     fp = f;
 }
