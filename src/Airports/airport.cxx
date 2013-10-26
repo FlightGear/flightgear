@@ -889,6 +889,46 @@ FGAirport::commStationsOfType(FGPositioned::Type aTy) const
   return result;
 }
 
+class AirportWithSize
+{
+public:
+    AirportWithSize(FGPositionedRef pos) :
+        _pos(pos),
+        _sizeMetric(0)
+    {
+        assert(pos->type() == FGPositioned::AIRPORT);
+        FGAirport* apt = static_cast<FGAirport*>(pos.get());
+        BOOST_FOREACH(FGRunway* rwy, apt->getRunwaysWithoutReciprocals()) {
+            _sizeMetric += static_cast<int>(rwy->lengthFt());
+        }
+    }
+    
+    bool operator<(const AirportWithSize& other) const
+    {
+        return _sizeMetric < other._sizeMetric;
+    }
+    
+    FGPositionedRef pos() const
+    { return _pos; }
+private:
+    FGPositionedRef _pos;
+    unsigned int _sizeMetric;
+    
+};
+
+void FGAirport::sortBySize(FGPositionedList& airportList)
+{
+    std::vector<AirportWithSize> annotated;
+    BOOST_FOREACH(FGPositionedRef p, airportList) {
+        annotated.push_back(AirportWithSize(p));
+    }
+    std::sort(annotated.begin(), annotated.end());
+    
+    for (unsigned int i=0; i<annotated.size(); ++i) {
+        airportList[i] = annotated[i].pos();
+    }
+}
+
 // get airport elevation
 double fgGetAirportElev( const std::string& id )
 {
