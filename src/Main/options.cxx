@@ -1206,6 +1206,14 @@ fgOptCallSign(const char * arg)
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptIgnoreAutosave(const char* arg)
+{
+    fgSetBool("/sim/startup/ignore-autosave", true);
+    // don't overwrite autosave on exit
+    fgSetBool("/sim/startup/save-on-exit", false);
+    return FG_OPTIONS_OK;
+}
 
 // Set a property for the --prop: option. Syntax: --prop:[<type>:]<name>=<value>
 // <type> can be "double" etc. but also only the first letter "d".
@@ -1403,6 +1411,7 @@ struct OptionDesc {
     {"enable-fullscreen",            false, OPTION_BOOL,   "/sim/startup/fullscreen", true, "", 0 },
     {"disable-save-on-exit",         false, OPTION_BOOL,   "/sim/startup/save-on-exit", false, "", 0 },
     {"enable-save-on-exit",          false, OPTION_BOOL,   "/sim/startup/save-on-exit", true, "", 0 },
+    {"ignore-autosave",              false, OPTION_FUNC,   "", false, "", fgOptIgnoreAutosave },
     {"restore-defaults",             false, OPTION_BOOL,   "/sim/startup/restore-defaults", true, "", 0 },
     {"shading-flat",                 false, OPTION_BOOL,   "/sim/rendering/shading", false, "", 0 },
     {"shading-smooth",               false, OPTION_BOOL,   "/sim/rendering/shading", true, "", 0 },

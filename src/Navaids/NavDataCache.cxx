@@ -58,6 +58,7 @@
 #include <simgear/threads/SGGuard.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/options.hxx>
 #include "markerbeacon.hxx"
 #include "navrecord.hxx"
 #include <Airports/airport.hxx>
@@ -1096,6 +1097,11 @@ NavDataCache* NavDataCache::instance()
   
 bool NavDataCache::isRebuildRequired()
 {
+    if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
+        SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: restore-defaults requested, will rebuild cache");
+        return true;
+    }
+    
   if (isCachedFileModified(d->aptDatPath) ||
       isCachedFileModified(d->metarDatPath) ||
       isCachedFileModified(d->navDatPath) ||

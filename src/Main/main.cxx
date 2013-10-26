@@ -131,6 +131,16 @@ static void fgIdleFunction ( void ) {
         // and airports data in parallel with a nav-cache rebuild.
         SGPath tsyncCache(globals->get_fg_home());
         tsyncCache.append("terrasync-cache.xml");
+        
+        // wipe the cache file if requested
+        if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
+            SG_LOG(SG_GENERAL, SG_INFO, "restore-defaults requested, wiping terrasync update cache at " <<
+                   tsyncCache);
+            if (tsyncCache.exists()) {
+                tsyncCache.remove();
+            }
+        }
+        
         fgSetString("/sim/terrasync/cache-path", tsyncCache.c_str());
         
         simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync(globals->get_props());

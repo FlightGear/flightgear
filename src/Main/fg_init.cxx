@@ -434,9 +434,10 @@ int fgInitConfig ( int argc, char **argv )
       SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
       fgLoadProps("preferences.xml", globals->get_props());
       SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
-
-      // do not load user settings when reset to default is requested
-      if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults"))
+        
+      // do not load user settings when reset to default is requested, or if
+      // told to explicitly ignore
+      if (options->isOptionSet("restore-defaults") || options->isOptionSet("ignore-autosave"))
       {
           SG_LOG(SG_ALL, SG_ALERT, "Ignoring user settings. Restoring defaults.");
       }
