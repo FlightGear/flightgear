@@ -67,7 +67,11 @@ endforeach()
 
 source_group("Main\\Headers" FILES ${HEADERS})
 source_group("Main\\Sources" FILES ${SOURCES})
-add_executable(fgfs ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
+
+# important we pass WIN32 here so the console is optional. Other
+# platforms ignore this option. If a console is needed we allocate
+# it manually via AllocConsole()
+add_executable(fgfs WIN32 ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
 
 get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
 #message(STATUS "fg libs ${FG_LIBS}")

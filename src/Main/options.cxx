@@ -1305,6 +1305,7 @@ struct OptionDesc {
     } fgOptionArray[] = {
 
     {"language",                     true,  OPTION_IGNORE, "", false, "", 0 },
+	{"console",                      false, OPTION_IGNORE,   "", false, "", 0 },
     {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", false, "", 0 },
     {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", true, "", 0 },
     {"renderer",                     true,  OPTION_STRING, "/sim/rendering/rembrandt/renderer", false, "", 0 },
@@ -1896,6 +1897,9 @@ int Options::parseOption(const string& s)
   } else if ( (s == "--verbose") || (s == "-v") ) {
     // verbose help/usage request
     return FG_OPTIONS_VERBOSE_HELP;
+  } else if ((s == "--console") || (s == "-c")) {
+	  simgear::requestConsole();
+	  return FG_OPTIONS_OK;
   } else if (s.find("-psn") == 0) {
     // on Mac, when launched from the GUI, we are passed the ProcessSerialNumber
     // as an argument (and no others). Silently ignore the argument here.
@@ -2096,7 +2100,7 @@ void Options::showUsage() const
   FGLocale *locale = globals->get_locale();
   SGPropertyNode options_root;
   
-  SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on Windows
+  simgear::requestConsole(); // ensure console is shown on Windows
   cout << endl;
 
   try {
@@ -2288,7 +2292,8 @@ void Options::setupRoot()
   if ( !(base_version == required_version) ) {
     // tell the operator how to use this application
     
-    SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on windows
+    simgear::requestConsole(); // ensure console is shown on Windows
+
     cerr << endl << "Base package check failed:" << endl \
     << "  Version " << base_version << " found at: " \
     << globals->get_fg_root() << endl \

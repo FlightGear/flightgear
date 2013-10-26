@@ -919,8 +919,9 @@ public:
   {
     fgFindAircraftInDir(path, this, &ShowAircraft::processAircraft);
   
+	simgear::requestConsole(); // ensure console is shown on Windows
+
     std::sort(_aircraft.begin(), _aircraft.end(), ciLessLibC());
-    SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on Windows
     cout << "Available aircraft:" << endl;
     for ( unsigned int i = 0; i < _aircraft.size(); i++ ) {
         cout << _aircraft[i] << endl;
