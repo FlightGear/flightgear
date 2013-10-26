@@ -131,10 +131,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 static void fg_terminate() {
     cerr << endl <<
-            "Uncaught Exception: you should see a meaningful error message\n"
-            "here, but your GLUT (or SDL) library was apparently compiled\n"
-            "and/or linked without exception support. Please complain to\n"
-            "its provider!"
+            "Uncaught Exception: missing exception handler on some thread"
             << endl << endl;
     abort();
 }
