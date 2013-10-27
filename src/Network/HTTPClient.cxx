@@ -49,9 +49,8 @@ void FGHTTPClient::shutdown()
   _http.reset();
 }
 
-void FGHTTPClient::update(double dt)
+void FGHTTPClient::update(double)
 {
-  SG_UNUSED(dt);
   _http->update();
 }
 

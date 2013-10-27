@@ -30,58 +30,16 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <simgear/debug/logstream.hxx>
 #include <simgear/environment/metar.hxx>
 #include <simgear/structure/exception.hxx>
 
 #include <simgear/io/HTTPClient.hxx>
-#include <simgear/io/HTTPRequest.hxx>
+#include <simgear/io/HTTPMemoryRequest.hxx>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 using namespace std;
 using namespace simgear;
-
-class MetarRequest : public HTTP::Request
-{
-public:
-    bool complete;
-    bool failed;
-    string metarData;
-    bool fromProxy;
-    
-    MetarRequest(const std::string& stationId) : 
-        HTTP::Request("http://weather.noaa.gov/pub/data/observations/metar/stations/" + boost::to_upper_copy(stationId) + ".TXT"),
-        complete(false),
-        failed(false)
-    {
-        fromProxy = false;
-    }
-    
-protected:
-    
-    virtual void responseHeader(const string& key, const string& value)
-    {
-        if (key == "x-metarproxy") {
-            fromProxy = true;
-        }
-    }
-
-    virtual void gotBodyData(const char* s, int n)
-    {
-        metarData += string(s, n);
-    }
-
-    virtual void responseComplete()
-    {
-        if (responseCode() == 200) {
-            complete = true;
-        } else {
-            SG_LOG(SG_ENVIRONMENT, SG_WARN, "metar download failed:" << url() << ": reason:" << responseReason());
-            failed = true;
-        }
-    }
-};
 
 // text color
 #if defined(__linux__) || defined(__sun) || defined(__CYGWIN__) \
@@ -579,8 +537,15 @@ int main(int argc, char *argv[])
 				shown = true;
 			}
 
-			try {
-                MetarRequest* mr = new MetarRequest(argv[i]);
+			try
+			{
+              static const std::string NOAA_BASE_URL =
+                "http://weather.noaa.gov/pub/data/observations/metar/stations/";
+                HTTP::MemoryRequest* mr = new HTTP::MemoryRequest
+                (
+                    NOAA_BASE_URL
+                  + boost::to_upper_copy<std::string>(argv[i]) + ".TXT"
+                );
                 HTTP::Request_ptr own(mr);
                 http.makeRequest(mr);
                 
@@ -588,16 +553,24 @@ int main(int argc, char *argv[])
                 SGTimeStamp start(SGTimeStamp::now());
                 while (start.elapsedMSec() <  8000) {
                     http.update();
-                    if (mr->complete || mr->failed) {
+                    if( mr->isComplete() )
                         break;
-                    }
                     SGTimeStamp::sleepForMSec(1);
                 }
                 
-                if (!mr->complete) {
-                    throw sg_io_exception("metar download failed (or timed out)");
+                if( !mr->isComplete() )
+                  throw sg_io_exception("metar download timed out");
+                if( mr->responseCode() != 200 )
+                {
+                  std::cerr << "metar download failed: "
+                            << mr->url()
+                            << " (" << mr->responseCode()
+                            << " " << mr->responseReason() << ")"
+                            << std::endl;
+                  throw sg_io_exception("metar download failed");
                 }
-				SGMetar *m = new SGMetar(mr->metarData);
+
+				SGMetar *m = new SGMetar(mr->responseBody());
 				
 				//SGMetar *m = new SGMetar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
 

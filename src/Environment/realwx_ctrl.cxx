@@ -33,7 +33,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
-#include <simgear/io/HTTPRequest.hxx>
+#include <simgear/io/HTTPMemoryRequest.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/structure/commands.hxx>
@@ -391,80 +391,69 @@ NoaaMetarRealWxController::NoaaMetarRealWxController( SGPropertyNode_ptr rootNod
 {
 }
 
-void NoaaMetarRealWxController::requestMetar( MetarDataHandler * metarDataHandler, const std::string & id )
+void NoaaMetarRealWxController::requestMetar
+(
+  MetarDataHandler* metarDataHandler,
+  const std::string& id
+)
 {
-    class NoaaMetarGetRequest : public simgear::HTTP::Request
-    {
+  static const std::string NOAA_BASE_URL =
+    "http://weather.noaa.gov/pub/data/observations/metar/stations/";
+  class NoaaMetarGetRequest:
+    public simgear::HTTP::MemoryRequest
+  {
     public:
-        NoaaMetarGetRequest(MetarDataHandler* metarDataHandler, const string& stationId ) :
-              Request("http://weather.noaa.gov/pub/data/observations/metar/stations/" + stationId + ".TXT"),
-              _fromProxy(false),
-              _metarDataHandler(metarDataHandler)
-          {
-          }
+      NoaaMetarGetRequest( MetarDataHandler* metarDataHandler,
+                           const std::string& stationId ):
+        MemoryRequest(NOAA_BASE_URL + stationId + ".TXT"),
+        _metarDataHandler(metarDataHandler)
+      {
+        std::ostringstream buf;
+        buf <<  globals->get_time_params()->get_cur_time();
+        requestHeader("X-TIME") = buf.str();
+      }
 
-          virtual string_list requestHeaders() const
-          {
-              string_list reply;
-              reply.push_back("X-TIME");
-              return reply;
-          }
-
-          virtual std::string header(const std::string& name) const
-          {
-              string reply;
-
-              if( name == "X-TIME" ) {
-                  std::ostringstream buf;
-                  buf <<  globals->get_time_params()->get_cur_time();
-                  reply = buf.str();
-              }
-
-              return reply;
-          }
-
-          virtual void responseHeader(const string& key, const string& value)
-          {
-              if (key == "x-metarproxy") {
-                  _fromProxy = true;
-              }
-          }
-
-          virtual void gotBodyData(const char* s, int n)
-          {
-              _metar += string(s, n);
-          }
-
-          virtual void responseComplete()
-          {
-              if (responseCode() == 200) {
-                  _metarDataHandler->handleMetarData( simgear::strutils::simplify(_metar) );
-              } else {
-                  SG_LOG(SG_ENVIRONMENT, SG_WARN, "metar download failed:" << url() << ": reason:" << responseReason());
-              }
-          }
-        
-        virtual void failed()
+      virtual void onDone()
+      {
+        if( responseCode() != 200 )
         {
-            SG_LOG(SG_ENVIRONMENT, SG_INFO, "metar download failure");
+          SG_LOG
+          (
+            SG_ENVIRONMENT,
+            SG_WARN,
+            "metar download failed:" << url() << ": reason:" << responseReason()
+          );
+          return;
         }
 
-//          bool fromMetarProxy() const
-//          { return _fromProxy; }
-    private:  
-        string _metar;
-        bool _fromProxy;
-        MetarDataHandler * _metarDataHandler;
-    };
+        _metarDataHandler->handleMetarData
+        (
+          simgear::strutils::simplify(responseBody())
+        );
+      }
 
-    string upperId = boost::to_upper_copy(id);
+      virtual void onFail()
+      {
+        SG_LOG(SG_ENVIRONMENT, SG_INFO, "metar download failure");
+      }
 
-    SG_LOG(SG_ENVIRONMENT, SG_INFO,
-        "NoaaMetarRealWxController::update(): spawning load request for station-id '" << upperId << "'" );
-    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
-    if (http) {
-        http->makeRequest(new NoaaMetarGetRequest(metarDataHandler, upperId));
-    }
+    private:
+      MetarDataHandler * _metarDataHandler;
+  };
+
+  string upperId = boost::to_upper_copy(id);
+
+  SG_LOG
+  (
+    SG_ENVIRONMENT,
+    SG_INFO,
+    "NoaaMetarRealWxController::update(): "
+    "spawning load request for station-id '" << upperId << "'"
+  );
+  FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+  if (http) {
+      http->makeRequest(new NoaaMetarGetRequest(metarDataHandler, upperId));
+  }
 }
 
 /* -------------------------------------------------------------------------------- */

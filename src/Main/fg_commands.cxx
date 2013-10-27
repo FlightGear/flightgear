@@ -23,7 +23,7 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/io/HTTPRequest.hxx>
+#include <simgear/io/HTTPMemoryRequest.hxx>
 
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
@@ -1292,23 +1292,18 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
     return true;
 }
 
-class RemoteXMLRequest : public simgear::HTTP::Request
+class RemoteXMLRequest:
+  public simgear::HTTP::MemoryRequest
 {
 public:
     SGPropertyNode_ptr _complete;
     SGPropertyNode_ptr _status;
     SGPropertyNode_ptr _failed;
     SGPropertyNode_ptr _target;
-    string propsData;
-    mutable string _requestBody;
-    int _requestBodyLength;
-    string _method;
-    
+
     RemoteXMLRequest(const std::string& url, SGPropertyNode* targetNode) :
-        simgear::HTTP::Request(url),
-        _target(targetNode),
-        _requestBodyLength(-1),
-        _method("GET")
+      simgear::HTTP::MemoryRequest(url),
+      _target(targetNode)
     {
     }
     
@@ -1326,45 +1321,10 @@ public:
     {
         _failed = p;
     }
-  
-    void setRequestData(const SGPropertyNode* body)
-    {
-        _method = "POST";
-        std::stringstream buf;
-        writeProperties(buf, body, true);
-        _requestBody = buf.str();
-        _requestBodyLength = _requestBody.size();
-    }
     
-    virtual std::string method() const
-    {
-        return _method;
-    }
 protected:
-    virtual int requestBodyLength() const
-    {
-        return _requestBodyLength;
-    }
     
-    virtual void getBodyData(char* s, int& count) const
-    {
-        int toRead = std::min(count, (int) _requestBody.size());
-        memcpy(s, _requestBody.c_str(), toRead);
-        count = toRead;
-        _requestBody = _requestBody.substr(count);
-    }
-    
-    virtual std::string requestBodyType() const
-    {
-        return "application/xml";
-    }
-    
-    virtual void gotBodyData(const char* s, int n)
-    {
-        propsData += string(s, n);
-    }
-    
-    virtual void failed()
+    virtual void onFail()
     {
         SG_LOG(SG_IO, SG_INFO, "network level failure in RemoteXMLRequest");
         if (_failed) {
@@ -1372,16 +1332,14 @@ protected:
         }
     }
     
-    virtual void responseComplete()
+    virtual void onDone()
     {
-        simgear::HTTP::Request::responseComplete();
-        
         int response = responseCode();
         bool failed = false;
         if (response == 200) {
             try {
-                const char* buffer = propsData.c_str();
-                readProperties(buffer, propsData.size(), _target, true);
+                const char* buffer = responseBody().c_str();
+                readProperties(buffer, responseBody().size(), _target, true);
             } catch (const sg_exception &e) {
                 SG_LOG(SG_IO, SG_WARN, "parsing XML from remote, failed: " << e.getFormattedMessage());
                 failed = true;
@@ -1420,7 +1378,7 @@ do_load_xml_from_url(const SGPropertyNode * arg)
     RemoteXMLRequest* req = new RemoteXMLRequest(url, targetnode);
     
     if (arg->hasChild("body"))
-        req->setRequestData(arg->getChild("body"));
+        req->setBodyData(arg->getChild("body"));
     
 // connect up optional reporting properties
     if (arg->hasValue("complete")) 

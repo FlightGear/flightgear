@@ -32,11 +32,14 @@ public:
     virtual ~FGHTTPClient();
     
     void makeRequest(const simgear::HTTP::Request_ptr& req);
+
+    simgear::HTTP::Client* client() { return _http.get(); }
+    simgear::HTTP::Client const* client() const { return _http.get(); }
     
     virtual void init();
     virtual void shutdown();
-    virtual void update(double dt);
-  
+    virtual void update(double);
+
 private:
     std::auto_ptr<simgear::HTTP::Client> _http;
 };
