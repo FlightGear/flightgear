@@ -73,7 +73,7 @@ public:
     void set_V_calibrated_kts(double vc);
     void set_Mach_number(double mach);
     void set_Velocities_Local( double north, double east, double down );
-    void set_Velocities_Wind_Body( double u, double v, double w);
+    void set_Velocities_Body( double u, double v, double w);
     
     // Euler angles 
     void set_Euler_Angles( double phi, double theta, double psi );
