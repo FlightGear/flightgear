@@ -80,7 +80,10 @@ void FGAIMultiplayer::bind() {
 
     tie("controls/invisible",
         SGRawValuePointer<bool>(&invisible));
-
+	_uBodyNode = props->getNode("velocities/ubody-fps", true);
+	_vBodyNode = props->getNode("velocities/vbody-fps", true);
+	_wBodyNode = props->getNode("velocities/wbody-fps", true);
+	
 #define AIMPROProp(type, name) \
 SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
 
@@ -181,6 +184,7 @@ void FGAIMultiplayer::update(double dt)
 
   SGVec3d ecPos;
   SGQuatf ecOrient;
+  SGVec3f ecLinearVel;
 
   if (tInterp <= curentPkgTime) {
     // Ok, we need a time prevous to the last available packet,
@@ -194,7 +198,8 @@ void FGAIMultiplayer::update(double dt)
       MotionInfo::iterator firstIt = mMotionInfo.begin();
       ecPos = firstIt->second.position;
       ecOrient = firstIt->second.orientation;
-      speed = norm(firstIt->second.linearVel) * SG_METER_TO_NM * 3600.0;
+      ecLinearVel = firstIt->second.linearVel;
+      speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
 
       std::vector<FGPropertyData*>::const_iterator firstPropIt;
       std::vector<FGPropertyData*>::const_iterator firstPropItEnd;
@@ -257,8 +262,8 @@ void FGAIMultiplayer::update(double dt)
       ecPos = ((1-tau)*prevIt->second.position + tau*nextIt->second.position);
       ecOrient = interpolate((float)tau, prevIt->second.orientation,
                              nextIt->second.orientation);
-      speed = norm((1-tau)*prevIt->second.linearVel
-                   + tau*nextIt->second.linearVel) * SG_METER_TO_NM * 3600.0;
+      ecLinearVel = ((1-tau)*prevIt->second.linearVel + tau*nextIt->second.linearVel);
+      speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
 
       if (prevIt->second.properties.size()
           == nextIt->second.properties.size()) {
@@ -343,18 +348,18 @@ void FGAIMultiplayer::update(double dt)
     // This must be sufficient ...
     ecPos = motionInfo.position;
     ecOrient = motionInfo.orientation;
-    SGVec3f linearVel = motionInfo.linearVel;
+    ecLinearVel = motionInfo.linearVel;
     SGVec3f angularVel = motionInfo.angularVel;
     while (0 < t) {
       double h = 1e-1;
       if (t < h)
         h = t;
 
-      SGVec3d ecVel = toVec3d(ecOrient.backTransform(linearVel));
+      SGVec3d ecVel = toVec3d(ecOrient.backTransform(ecLinearVel));
       ecPos += h*ecVel;
       ecOrient += h*ecOrient.derivative(angularVel);
 
-      linearVel += h*(cross(linearVel, angularVel) + motionInfo.linearAccel);
+      ecLinearVel += h*(cross(ecLinearVel, angularVel) + motionInfo.linearAccel);
       angularVel += h*motionInfo.angularAccel;
       
       t -= h;
@@ -362,7 +367,7 @@ void FGAIMultiplayer::update(double dt)
 
     std::vector<FGPropertyData*>::const_iterator firstPropIt;
     std::vector<FGPropertyData*>::const_iterator firstPropItEnd;
-    speed = norm(linearVel) * SG_METER_TO_NM * 3600.0;
+    speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
     firstPropIt = it->second.properties.begin();
     firstPropItEnd = it->second.properties.end();
     while (firstPropIt != firstPropItEnd) {
@@ -432,6 +437,11 @@ void FGAIMultiplayer::update(double dt)
   hdg = hDeg;
   roll = rDeg;
   pitch = pDeg;
+
+  // expose velocities/u,v,wbody-fps in the mp tree
+  _uBodyNode->setValue(ecLinearVel[0] * SG_METER_TO_FEET);
+  _vBodyNode->setValue(ecLinearVel[1] * SG_METER_TO_FEET);
+  _wBodyNode->setValue(ecLinearVel[2] * SG_METER_TO_FEET);
 
   SG_LOG(SG_AI, SG_DEBUG, "Multiplayer position and orientation: "
          << ecPos << ", " << hlOr);

@@ -89,6 +89,11 @@ private:
   SGPropertyNode_ptr refuel_node;
   bool isTanker;
   bool contact;          // set if this tanker is within fuelling range
+  
+  // velocities/u,v,wbody-fps 
+  SGPropertyNode_ptr _uBodyNode;
+  SGPropertyNode_ptr _vBodyNode;
+  SGPropertyNode_ptr _wBodyNode;
 };
 
 #endif  // _FG_AIMultiplayer_HXX
