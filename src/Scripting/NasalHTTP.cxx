@@ -48,10 +48,12 @@ FGHTTPClient& requireHTTPClient(naContext c)
 }
 
 /**
- * urlretrieve(url, filename)
+ * http.save(url, filename)
  */
-static naRef f_urlretrieve(const nasal::CallContext& ctx)
+static naRef f_http_save(const nasal::CallContext& ctx)
 {
+  const std::string url = ctx.requireArg<std::string>(0);
+
   // Check for write access to target file
   const std::string filename = ctx.requireArg<std::string>(1);
   const std::string validated_path = fgValidatePath(filename, true);
@@ -63,30 +65,20 @@ static naRef f_urlretrieve(const nasal::CallContext& ctx)
 
   return ctx.to_nasal
   (
-    requireHTTPClient(ctx.c).client()
-    ->urlretrieve
-    (
-      ctx.requireArg<std::string>(0), // url
-      validated_path                  // filename
-    )
+    requireHTTPClient(ctx.c).client()->save(url, validated_path)
   );
 }
 
 /**
- * urlload(url)
+ * http.load(url)
  */
-static naRef f_urlload(const nasal::CallContext& ctx)
+static naRef f_http_load(const nasal::CallContext& ctx)
 {
-  return ctx.to_nasal
-  (
-    requireHTTPClient(ctx.c).client()
-    ->urlload
-    (
-      ctx.requireArg<std::string>(0) // url
-    )
-  );
+  const std::string url = ctx.requireArg<std::string>(0);
+  return ctx.to_nasal( requireHTTPClient(ctx.c).client()->load(url) );
 }
 
+//------------------------------------------------------------------------------
 naRef initNasalHTTP(naRef globals, naContext c)
 {
   using simgear::HTTP::Request;
@@ -118,8 +110,8 @@ naRef initNasalHTTP(naRef globals, naContext c)
   nasal::Hash globals_module(globals, c),
               http = globals_module.createHash("http");
 
-  http.set("urlretrieve", f_urlretrieve);
-  http.set("urlload", f_urlload);
+  http.set("save", f_http_save);
+  http.set("load", f_http_load);
 
   return naNil();
 }
