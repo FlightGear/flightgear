@@ -198,9 +198,9 @@ fgSetDefaults ()
     fgSetBool("/sim/rendering/distance-attenuation", false);
     fgSetBool("/sim/rendering/specular-highlight", true);
     fgSetString("/sim/rendering/materials-file", "materials.xml");
-    fgSetInt("/sim/startup/xsize", 800);
-    fgSetInt("/sim/startup/ysize", 600);
-    fgSetInt("/sim/rendering/bits-per-pixel", 16);
+    fgSetInt("/sim/startup/xsize", 1024);
+    fgSetInt("/sim/startup/ysize", 768);
+    fgSetInt("/sim/rendering/bits-per-pixel", 32);
     fgSetString("/sim/view-mode", "pilot");
     fgSetDouble("/sim/current-view/heading-offset-deg", 0);
 
