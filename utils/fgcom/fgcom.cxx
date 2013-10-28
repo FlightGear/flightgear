@@ -448,7 +448,7 @@ main (int argc, char *argv[])
     callsign = DEFAULT_USER;
 
   iaxc_set_callerid ( callsign, app.c_str() );
-  iaxc_set_formats (IAXC_FORMAT_SPEEX, IAXC_FORMAT_SPEEX);
+  iaxc_set_formats (IAXC_FORMAT_SPEEX, IAXC_FORMAT_ULAW|IAXC_FORMAT_SPEEX);
   iaxc_set_speex_settings(1, 5, 0, 1, 0, 3);
   iaxc_set_filters(IAXC_FILTER_AGC | IAXC_FILTER_DENOISE);
   iaxc_set_silence_threshold(-20.0);
