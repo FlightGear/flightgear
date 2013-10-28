@@ -785,7 +785,7 @@ bool FGJSBsim::copy_from_JSBsim()
                       Auxiliary->GetEulerRates(FGJSBBase::eTht),
                       Auxiliary->GetEulerRates(FGJSBBase::ePsi) );
 
-    _set_Mach_number( Auxiliary->GetMach() );
+    _set_Mach_number( Auxiliary->GetMachU() );
 
     // Positions of Visual Reference Point
     FGLocation l = Auxiliary->GetLocationVRP();
