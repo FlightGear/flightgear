@@ -346,6 +346,16 @@ bool FGGeneric::gen_message_binary() {
             break;
         }
 
+        case FG_WORD:
+        {
+            val = _out_message[i].offset +
+                  _out_message[i].prop->getIntValue() * _out_message[i].factor;
+            int16_t wordVal = val;
+            memcpy(&buf[length], &wordVal, sizeof(int16_t));
+            length += sizeof(int16_t);
+            break;
+        }
+
         default: // SG_STRING
             const char *strdata = _out_message[i].prop->getStringValue();
             int32_t strlength = strlen(strdata);
@@ -413,6 +423,7 @@ bool FGGeneric::gen_message_ascii() {
 
         switch (_out_message[i].type) {
         case FG_BYTE:
+        case FG_WORD:
         case FG_INT:
             val = _out_message[i].offset +
                   _out_message[i].prop->getIntValue() * _out_message[i].factor;
@@ -531,6 +542,16 @@ bool FGGeneric::parse_message_binary(int length) {
             p1 += sizeof(int8_t);
             break;
 
+        case FG_WORD:
+            if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
+                tmp32 = sg_bswap_16(*(int16_t *)p1);
+            } else {
+                tmp32 = *(int16_t *)p1;
+            }
+            updateValue(_in_message[i], (int)tmp32);
+            p1 += sizeof(int16_t);
+            break;
+
         default: // SG_STRING
             SG_LOG( SG_IO, SG_ALERT, "Generic protocol: "
                     "Ignoring unsupported binary input chunk type.");
@@ -571,6 +592,7 @@ bool FGGeneric::parse_message_ascii(int length) {
 
         switch (_in_message[i].type) {
         case FG_BYTE:
+        case FG_WORD:
         case FG_INT:
             updateValue(_in_message[i], atoi(p1));
             break;
@@ -931,6 +953,9 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         } else if (type == "byte") {
             chunk.type = FG_BYTE;
             record_length += sizeof(int8_t);
+        } else if (type == "word") {
+            chunk.type = FG_WORD;
+            record_length += sizeof(int16_t);
         } else {
             chunk.type = FG_INT;
             record_length += sizeof(int32_t);

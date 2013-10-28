@@ -59,7 +59,7 @@ public:
     bool getInitOk(void) { return initOk; }
 protected:
 
-    enum e_type { FG_BOOL=0, FG_INT, FG_FLOAT, FG_DOUBLE, FG_STRING, FG_FIXED, FG_BYTE };
+    enum e_type { FG_BOOL=0, FG_INT, FG_FLOAT, FG_DOUBLE, FG_STRING, FG_FIXED, FG_BYTE, FG_WORD };
 
     typedef struct {
      // string name;
