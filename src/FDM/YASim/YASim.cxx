@@ -489,7 +489,7 @@ void YASim::copyFromYASim()
         *SLUG2KG * M2FT*M2FT*M2FT;
     _set_V_equiv_kts(Atmosphere::calcVEAS(v[0], P, T, D)*MPS2KTS);
     _set_V_calibrated_kts(Atmosphere::calcVCAS(v[0], P, T)*MPS2KTS);
-    _set_Mach_number(Atmosphere::calcMach(v[0], T));
+    _set_Mach_number(Atmosphere::calcMach(Math::mag3(v), T));
 
     // acceleration
     Math::vmul33(xyz2ned, s->acc, v);
