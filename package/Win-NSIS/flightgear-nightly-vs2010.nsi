@@ -26,6 +26,7 @@ AutoCloseWindow true
 		
 !define UninstallKey "Software\Microsoft\Windows\CurrentVersion\Uninstall\FlightGear-nightly-2010"
 !define FGBinDir "install\msvc100\FlightGear\bin"
+!define FGShareDir "install\msvc100\FlightGear\share"
 !define FGRunDir "install\msvc100\fgrun"
 !define OSGInstallDir "install\msvc100\OpenSceneGraph"
 !define OSGPluginsDir "${OSGInstallDir}\bin\osgPlugins-${OSGVersion}"
@@ -50,7 +51,7 @@ AutoCloseWindow true
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 
-!define MUI_FINISHPAGE_RUN $INSTDIR\fgrun.exe
+!define MUI_FINISHPAGE_RUN $INSTDIR\bin\fgrun.exe
 !define MUI_FINISHPAGE_RUN_TEXT "Run FlightGear now"
 !insertmacro MUI_PAGE_FINISH
 
@@ -65,13 +66,17 @@ Section "" ;No components page, name is not important
         
   SetShellVarContext all
   ; Set output path to the installation directory.
-  SetOutPath $INSTDIR
+  SetOutPath $INSTDIR\share\flightgear
+  File ${FGShareDir}\flightgear\positions.txt
+  File ${FGShareDir}\flightgear\special_frequencies.txt
   
+  SetOutPath $INSTDIR\bin
   File ${FGBinDir}\fgfs.exe
   File ${FGBinDir}\fgjs.exe
   File ${FGBinDir}\terrasync.exe
   File ${FGRunDir}\bin\fgrun.exe
-  
+  File ${FGBinDir}\fgcom.exe
+
   File ${OSGInstallDir}\bin\osg${OSGSoNumber}-osg.dll
   File ${OSGInstallDir}\bin\osg${OSGSoNumber}-osgDB.dll
   File ${OSGInstallDir}\bin\osg${OSGSoNumber}-osgGA.dll
@@ -91,7 +96,7 @@ Section "" ;No components page, name is not important
   
   File /r ${FGRunDir}\share\locale
   
-  SetOutPath $INSTDIR\osgPlugins-${OSGVersion}
+  SetOutPath $INSTDIR\bin\osgPlugins-${OSGVersion}
   File ${OSGPluginsDir}\osgdb_ac.dll
   File ${OSGPluginsDir}\osgdb_osg.dll
   File ${OSGPluginsDir}\osgdb_osga.dll
@@ -117,18 +122,20 @@ Section "" ;No components page, name is not important
   File ${OSGPluginsDir}\osgdb_deprecated_osgparticle.dll
   
   
-  Exec '"$INSTDIR\fgrun.exe"  --silent --fg-exe="$INSTDIR\fgfs.exe" --ts-exe="$INSTDIR\terrasync.exe" '
+  Exec '"$INSTDIR\bin\fgrun.exe"  --silent --fg-exe="$INSTDIR\bin\fgfs.exe" --ts-exe="$INSTDIR\bin\terrasync.exe" '
   
   CreateDirectory "$SMPROGRAMS\FlightGear"
-  CreateShortCut "$SMPROGRAMS\FlightGear\FlightGear-nightly-2010.lnk" "$INSTDIR\fgrun.exe" 
+  CreateShortCut "$SMPROGRAMS\FlightGear\FlightGear-nightly-2010.lnk" "$INSTDIR\bin\fgrun.exe"
+  CreateShortCut "$SMPROGRAMS\FlightGear\FGCom-nightly-2010.lnk" "$INSTDIR\bin\fgcom.exe"
+  CreateShortCut "$SMPROGRAMS\FlightGear\FGCom-testing-nightly-2010.lnk" "$INSTDIR\bin\fgcom.exe -f910"
   
   
-  WriteUninstaller "$INSTDIR\FlightGear_Uninstall.exe"
+  WriteUninstaller "$INSTDIR\bin\FlightGear_Uninstall.exe"
   
   WriteRegStr HKLM ${UninstallKey} "DisplayName" "FlightGear Nightly (vs2010 build)"
   WriteRegStr HKLM ${UninstallKey} "DisplayVersion" "${FGVersion}"
-  WriteRegStr HKLM ${UninstallKey} "UninstallString" "$INSTDIR\FlightGear_Uninstall.exe"
-  WriteRegStr HKLM ${UninstallKey} "UninstallPath" "$INSTDIR\FlightGear_Uninstall.exe"
+  WriteRegStr HKLM ${UninstallKey} "UninstallString" "$INSTDIR\bin\FlightGear_Uninstall.exe"
+  WriteRegStr HKLM ${UninstallKey} "UninstallPath" "$INSTDIR\bin\FlightGear_Uninstall.exe"
   WriteRegDWORD HKLM ${UninstallKey} "NoModify" 1
   WriteRegDWORD HKLM ${UninstallKey} "NoRepair" 1
   WriteRegStr HKLM ${UninstallKey} "URLInfoAbout" "http://www.flightgear.org/"
@@ -143,6 +150,8 @@ Section "Uninstall"
   
   
   Delete "$SMPROGRAMS\FlightGear\FlightGear-nightly-2010.lnk"
+  Delete "$SMPROGRAMS\FlightGear\FGCom-nightly-2010.lnk"
+  Delete "$SMPROGRAMS\FlightGear\FGCom-testing-nightly-2010.lnk"
   ; only delete the FlightGear group if it's empty
   RMDir "$SMPROGRAMS\FlightGear"
   
