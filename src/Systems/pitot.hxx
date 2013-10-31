@@ -60,8 +60,6 @@ private:
     SGPropertyNode_ptr _mach_node;
     SGPropertyNode_ptr _total_pressure_node;
     SGPropertyNode_ptr _measured_total_pressure_node;
-    SGPropertyNode_ptr _alpha_deg_node;
-    SGPropertyNode_ptr _beta_deg_node;
 };
 
 #endif // __SYSTEMS_PITOT_HXX
