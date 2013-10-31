@@ -28,6 +28,7 @@ AutoCloseWindow true
 !define FGBinDir "install\msvc100\FlightGear\bin"
 !define FGShareDir "install\msvc100\FlightGear\share"
 !define FGRunDir "install\msvc100\fgrun"
+!define RTIInstallDir "install\msvc100\OpenRTI"
 !define OSGInstallDir "install\msvc100\OpenSceneGraph"
 !define OSGPluginsDir "${OSGInstallDir}\bin\osgPlugins-${OSGVersion}"
 
@@ -90,6 +91,10 @@ Section "" ;No components page, name is not important
   File ${OSGInstallDir}\bin\ot13-OpenThreads.dll
   
   File ${ThirdPartyBinDir}\*.dll
+
+  File ${RTIInstallDir}\bin\FedTime.dll
+  File ${RTIInstallDir}\bin\RTI-NG.dll
+  File ${RTIInstallDir}\bin\OpenRTI.dll
   
   ; VC runtime redistributables
   File "$%VCINSTALLDIR%\redist\x86\Microsoft.VC100.CRT\*.dll"
