@@ -2,6 +2,10 @@
     # set data installed location
     set(PKGDATAPATH "${CMAKE_INSTALL_PREFIX}/share/flightgear")
 
+    if (MSVC)
+      set( RESOURCE_FILE fgcom.rc )
+    endif (MSVC)
+
     # then to define the files themselves, in their 'installed' 
     # location, not their source location...
     if (NOT DEFAULT_POSITIONS_FILE)

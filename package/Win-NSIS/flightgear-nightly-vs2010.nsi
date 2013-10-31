@@ -127,7 +127,7 @@ Section "" ;No components page, name is not important
   CreateDirectory "$SMPROGRAMS\FlightGear"
   CreateShortCut "$SMPROGRAMS\FlightGear\FlightGear-nightly-2010.lnk" "$INSTDIR\bin\fgrun.exe"
   CreateShortCut "$SMPROGRAMS\FlightGear\FGCom-nightly-2010.lnk" "$INSTDIR\bin\fgcom.exe"
-  CreateShortCut "$SMPROGRAMS\FlightGear\FGCom-testing-nightly-2010.lnk" "$INSTDIR\bin\fgcom.exe -f910"
+  CreateShortCut "$SMPROGRAMS\FlightGear\FGCom-testing-nightly-2010.lnk" "$INSTDIR\bin\fgcom.exe" "-f910"
   
   
   WriteUninstaller "$INSTDIR\bin\FlightGear_Uninstall.exe"
