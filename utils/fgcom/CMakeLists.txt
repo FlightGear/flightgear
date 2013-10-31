@@ -20,7 +20,7 @@
 
     # Project fgcom, type Console Application
     set(name fgcom)
-    set( ${name}_SOURCES fgcom.cxx fgcom_init.cxx position.cxx utils.cxx )
+    set( ${name}_SOURCES fgcom.cxx fgcom_init.cxx position.cxx utils.cxx ${RESOURCE_FILE} )
     set( ${name}_HEADERS fgcom.hxx fgcom_init.hxx position.hxx utils.hxx )
     if(WIN32)
         list(APPEND ${name}_SOURCES fgcom_getopt.c)
