@@ -135,12 +135,12 @@ Section "" ;No components page, name is not important
   CreateShortCut "$SMPROGRAMS\FlightGear\FGCom-testing-nightly-2010.lnk" "$INSTDIR\bin\fgcom.exe" "-f910"
   
   
-  WriteUninstaller "$INSTDIR\bin\FlightGear_Uninstall.exe"
+  WriteUninstaller "$INSTDIR\FlightGear_Uninstall.exe"
   
   WriteRegStr HKLM ${UninstallKey} "DisplayName" "FlightGear Nightly (vs2010 build)"
   WriteRegStr HKLM ${UninstallKey} "DisplayVersion" "${FGVersion}"
-  WriteRegStr HKLM ${UninstallKey} "UninstallString" "$INSTDIR\bin\FlightGear_Uninstall.exe"
-  WriteRegStr HKLM ${UninstallKey} "UninstallPath" "$INSTDIR\bin\FlightGear_Uninstall.exe"
+  WriteRegStr HKLM ${UninstallKey} "UninstallString" "$INSTDIR\FlightGear_Uninstall.exe"
+  WriteRegStr HKLM ${UninstallKey} "UninstallPath" "$INSTDIR\FlightGear_Uninstall.exe"
   WriteRegDWORD HKLM ${UninstallKey} "NoModify" 1
   WriteRegDWORD HKLM ${UninstallKey} "NoRepair" 1
   WriteRegStr HKLM ${UninstallKey} "URLInfoAbout" "http://www.flightgear.org/"
