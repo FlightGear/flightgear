@@ -67,7 +67,7 @@ private:
     std::string _module, _path;
     SGPropertyNode_ptr _root, _prop;
     SGConstPropertyNode_ptr _load, _unload;
-    osg::Node *_branch;
+    osg::ref_ptr<osg::Node> _branch;
     unsigned int _module_id;
 };
 

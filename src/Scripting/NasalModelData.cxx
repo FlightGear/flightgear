@@ -100,7 +100,7 @@ FGNasalModelData::~FGNasalModelData()
   (
     SG_NASAL,
     SG_INFO,
-    "Removed model with script(s) (branch = " << _branch << ")"
+    "Removed model with script(s) (branch = " << _branch.get() << ")"
   );
 }
 
@@ -127,7 +127,7 @@ void FGNasalModelData::load()
       .method("getPose", &f_node_getPose);
   }
 
-  module.set("_model", NodeRef(_branch));
+  module.set("_model", _branch);
 
   naRef arg[2];
   arg[0] = nasalSys->propNodeGhost(_root);
@@ -163,7 +163,7 @@ void FGNasalModelData::unload()
 //------------------------------------------------------------------------------
 osg::Node* FGNasalModelData::getNode()
 {
-  return _branch;
+  return _branch.get();
 }
 
 //------------------------------------------------------------------------------
