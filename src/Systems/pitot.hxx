@@ -1,7 +1,7 @@
 // pitot.hxx - the pitot air system.
 // Written by David Megginson, started 2002.
 //
-// Last modified by Eric van den Berg, 24 Nov 2012
+// Last modified by Eric van den Berg, 01 Nov 2013
 // This file is in the Public Domain and comes with no warranty.
 
 
@@ -55,6 +55,7 @@ private:
 
     std::string _name;
     int _num;
+    double _stall_factor;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _mach_node;
