@@ -238,9 +238,16 @@ FGRouteMgr::~FGRouteMgr()
 		_plan->removeDelegate(this);
 	}
 
-  //SGCommandMgr* cmdMgr = SGCommandMgr::instance();
-  //cmdMgr->removeCommand("define-user-waypoint");
-    
+    SGCommandMgr* cmdMgr = SGCommandMgr::instance();
+    cmdMgr->removeCommand("define-user-waypoint");
+    cmdMgr->removeCommand("delete-user-waypoint");
+    cmdMgr->removeCommand("load-flightplan");
+    cmdMgr->removeCommand("save-flightplan");
+    cmdMgr->removeCommand("activate-flightplan");
+    cmdMgr->removeCommand("clear-flightplan");
+    cmdMgr->removeCommand("set-active-waypt");
+    cmdMgr->removeCommand("insert-waypt");
+    cmdMgr->removeCommand("delete-waypt");
 }
 
 

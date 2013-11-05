@@ -57,6 +57,10 @@ FGClouds::FGClouds() :
 
 FGClouds::~FGClouds()
 {
+    globals->get_commands()->removeCommand("add-cloud");
+	globals->get_commands()->removeCommand("del-cloud");
+	globals->get_commands()->removeCommand("move-cloud");
+
 }
 
 int FGClouds::get_update_event(void) const {

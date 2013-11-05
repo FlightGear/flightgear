@@ -181,6 +181,9 @@ FGAIManager::shutdown()
     }
     
     ai_list.clear();
+    
+    globals->get_commands()->removeCommand("load-scenario");
+    globals->get_commands()->removeCommand("unload-scenario");
 }
 
 void

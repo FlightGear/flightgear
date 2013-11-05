@@ -232,30 +232,32 @@ BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode, Metar
   _wasEnabled(false),
   _requester(metarRequester)
 {
-    // at least instantiate MetarProperties for /environment/metar
-    _metarProperties.push_back( new LiveMetarProperties( 
-            fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ),
-            metarRequester,
-            getMetarMaxAgeMin()));
-
-    BOOST_FOREACH( SGPropertyNode_ptr n, rootNode->getChildren("metar") ) {
-        SGPropertyNode_ptr metarNode = fgGetNode( n->getStringValue(), true );
-        addMetarAtPath(metarNode->getPath(), "");
-    }
-  
+    
     SGCommandMgr::instance()->addCommand("request-metar", commandRequestMetar);
     SGCommandMgr::instance()->addCommand("clear-metar", commandClearMetar);
 }
 
 BasicRealWxController::~BasicRealWxController()
 {
-  //SGCommandMgr::instance()->removeCommand("request-metar");
+    SGCommandMgr::instance()->removeCommand("request-metar");
+    SGCommandMgr::instance()->removeCommand("clear-metar");
 }
 
 void BasicRealWxController::init()
 {
     _wasEnabled = false;
     
+    // at least instantiate MetarProperties for /environment/metar
+    SGPropertyNode_ptr metarNode = fgGetNode( _rootNode->getStringValue("metar", "/environment/metar"), true );
+    _metarProperties.push_back( new LiveMetarProperties(metarNode,
+                                                        _requester,
+                                                        getMetarMaxAgeMin()));
+    
+    BOOST_FOREACH( SGPropertyNode_ptr n, _rootNode->getChildren("metar") ) {
+        SGPropertyNode_ptr metarNode = fgGetNode( n->getStringValue(), true );
+        addMetarAtPath(metarNode->getPath(), "");
+    }
+
     checkNearbyMetar();
     update(0); // fetch data ASAP
     
