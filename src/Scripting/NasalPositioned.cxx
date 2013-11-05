@@ -2192,7 +2192,15 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
   }
   
   RouteRestriction rr = routeRestrictionFromString(naStr_data(args[1]));
-  leg->setSpeed(rr, args[0].num);
+    if (naIsNum(args[0])) {
+        leg->setSpeed(rr, args[0].num);
+    } else if (naIsString(args[0])) {
+        leg->setSpeed(rr, simgear::strutils::to_int(naStr_data(args[0])));
+    } else {
+        naRuntimeError(c, "bad speed value for leg.setSpeed");
+    }
+    
+  
   return naNil();
 }
 
@@ -2208,7 +2216,14 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
   }
   
   RouteRestriction rr = routeRestrictionFromString(naStr_data(args[1]));
-  leg->setAltitude(rr, args[0].num);
+    if (naIsNum(args[0])) {
+        leg->setAltitude(rr, args[0].num);
+    } else if (naIsString(args[0])) {
+        leg->setAltitude(rr, simgear::strutils::to_int(naStr_data(args[0])));
+    } else {
+        naRuntimeError(c, "bad value for setAltitude");
+    }
+
   return naNil();
 }
 
