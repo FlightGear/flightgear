@@ -13,6 +13,7 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/interpolater.hxx>
 
 
 /**
@@ -21,6 +22,9 @@
  * Input properties:
  *
  * /instrumentation/"name"/serviceable
+ * /instrumentation/"name"/pitch-offset-deg
+ * /instrumentation/"name"/max-pitch-deg
+ * /instrumentation/"name"/max-roll-deg
  * /orientation/roll-deg
  * /orientation/pitch-deg
  * /orientation/heading-magnetic-deg
@@ -49,13 +53,15 @@ public:
 
 private:
 
-    double _error_deg;
     double _rate_degps;
 
     std::string _name;
     int _num;
+    SGSharedPtr<SGInterpTable> _deviation_table;
+    SGPropertyNode_ptr _deviation_node;
 
     SGPropertyNode_ptr _serviceable_node;
+    SGPropertyNode_ptr _pitch_offset_node;
     SGPropertyNode_ptr _roll_node;
     SGPropertyNode_ptr _pitch_node;
     SGPropertyNode_ptr _heading_node;

@@ -18,13 +18,22 @@
 
 #include "mag_compass.hxx"
 
-
 MagCompass::MagCompass ( SGPropertyNode *node )
-    : _error_deg(0.0),
-      _rate_degps(0.0),
+    : _rate_degps(0.0),
       _name(node->getStringValue("name", "magnetic-compass")),
       _num(node->getIntValue("number", 0))
 {
+    SGPropertyNode_ptr n = node->getNode( "deviation", false );
+    if( n ) {
+      SGPropertyNode_ptr deviation_table_node = n->getNode( "table", false );
+      if( NULL != deviation_table_node ) {
+        _deviation_table = new SGInterpTable( deviation_table_node );
+      } else {
+        std::string deviation_node_name = n->getStringValue();
+        if( false == deviation_node_name.empty() )
+          _deviation_node = fgGetNode( deviation_node_name, true );
+      }
+    }
 }
 
 MagCompass::~MagCompass ()
@@ -39,6 +48,7 @@ MagCompass::init ()
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
+    _pitch_offset_node = node->getChild("pitch-offset-deg", 0, true);
     _roll_node = fgGetNode("/orientation/roll-deg", true);
     _pitch_node = fgGetNode("/orientation/pitch-deg", true);
     _heading_node = fgGetNode("/orientation/heading-magnetic-deg", true);
@@ -55,7 +65,6 @@ MagCompass::init ()
 void
 MagCompass::reinit ()
 {
-    _error_deg = 0.0;
     _rate_degps = 0.0;
 }
 
@@ -110,7 +119,8 @@ MagCompass::update (double delta_time_sec)
     double phi = _roll_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
 
                                 // pitch angle (radians)
-    double theta = _pitch_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double theta = _pitch_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS
+                   + _pitch_offset_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
 
                                 // magnetic heading (radians)
     double psi = _heading_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
@@ -160,6 +170,13 @@ MagCompass::update (double delta_time_sec)
                                 // This is the value that the compass
                                 // is *trying* to display.
     double target_deg = atan2(a, b) * SGD_RADIANS_TO_DEGREES;
+
+    if( _deviation_node ) {
+      target_deg -= _deviation_node->getDoubleValue();
+    } else if( _deviation_table ) { 
+       target_deg -= _deviation_table->interpolate( SGMiscd::normalizePeriodic( 0.0, 360.0, target_deg ) );  
+    }
+
     double old_deg = _out_node->getDoubleValue();
 
     while ((target_deg - old_deg) > 180.0)
