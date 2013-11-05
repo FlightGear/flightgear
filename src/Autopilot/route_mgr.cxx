@@ -802,6 +802,10 @@ const char* FGRouteMgr::getDepartureRunway() const
 
 void FGRouteMgr::setDepartureRunway(const char* aIdent)
 {
+    if (!_plan) {
+        return;
+    }
+    
   FGAirport* apt = _plan->departureAirport();
   if (!apt || (aIdent == NULL)) {
     _plan->setDeparture(apt);
@@ -812,6 +816,10 @@ void FGRouteMgr::setDepartureRunway(const char* aIdent)
 
 void FGRouteMgr::setDepartureICAO(const char* aIdent)
 {
+    if (!_plan) {
+        return;
+    }
+    
   if ((aIdent == NULL) || (strlen(aIdent) < 4)) {
     _plan->setDeparture((FGAirport*) NULL);
   } else {
@@ -893,6 +901,10 @@ flightgear::SID* createDefaultSID(FGRunway* aRunway, double enrouteCourse)
 
 void FGRouteMgr::setSID(const char* aIdent)
 {
+    if (!_plan) {
+        return;
+    }
+    
   FGAirport* apt = _plan->departureAirport();
   if (!apt || (aIdent == NULL)) {
     _plan->setSID((flightgear::SID*) NULL);
@@ -943,6 +955,10 @@ const char* FGRouteMgr::getDestinationName() const
 
 void FGRouteMgr::setDestinationICAO(const char* aIdent)
 {
+    if (!_plan) {
+        return;
+    }
+    
   if ((aIdent == NULL) || (strlen(aIdent) < 4)) {
     _plan->setDestination((FGAirport*) NULL);
   } else {
@@ -961,6 +977,10 @@ const char* FGRouteMgr::getDestinationRunway() const
 
 void FGRouteMgr::setDestinationRunway(const char* aIdent)
 {
+    if (!_plan) {
+        return;
+    }
+    
   FGAirport* apt = _plan->destinationAirport();
   if (!apt || (aIdent == NULL)) {
     _plan->setDestination(apt);
@@ -1040,6 +1060,10 @@ flightgear::Approach* createDefaultApproach(FGRunway* aRunway, double aEnrouteCo
 
 void FGRouteMgr::setApproach(const char* aIdent)
 {
+    if (!_plan) {
+        return;
+    }
+    
   FGAirport* apt = _plan->destinationAirport();
   if (!strcmp(aIdent, "DEFAULT")) {
     double enrouteCourse = -1.0;
@@ -1069,6 +1093,10 @@ const char* FGRouteMgr::getSTAR() const
 
 void FGRouteMgr::setSTAR(const char* aIdent)
 {
+    if (!_plan) {
+        return;
+    }
+    
   FGAirport* apt = _plan->destinationAirport();
   if (!apt || (aIdent == NULL)) {
     _plan->setSTAR((STAR*) NULL);
