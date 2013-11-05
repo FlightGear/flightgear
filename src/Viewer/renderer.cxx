@@ -221,9 +221,12 @@ public:
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushClientAttrib(~0u);
       
-    HUD *hud = static_cast<HUD*>(globals->get_subsystem("hud"));
-    hud->draw(state);
-
+    // HUD can be NULL
+      HUD *hud = static_cast<HUD*>(globals->get_subsystem("hud"));
+      if (hud) {
+          hud->draw(state);
+      }
+      
     glPopClientAttrib();
     glPopAttrib();
   }
@@ -255,6 +258,11 @@ public:
     osg::Light* light = lightSource->getLight();
     
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+      if (!l) {
+          // lighting is down during re-init
+          return;
+      }
+      
     if (_isSun) {
       light->setAmbient(Vec4(0.0f, 0.0f, 0.0f, 0.0f));
       light->setDiffuse(Vec4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -492,7 +500,8 @@ public:
 void
 FGRenderer::init( void )
 {
-    eventHandler = new FGEventHandler();
+    if (!eventHandler)
+        eventHandler = new FGEventHandler();
 
     sgUserDataInit( globals->get_props() );
 
