@@ -17,6 +17,10 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/sound/soundmgr_openal.hxx>
 
 #include "soundmanager.hxx"
@@ -50,8 +54,6 @@ FGSoundManager::FGSoundManager()
     _enabled(false),
     _listener(new Listener(this))
 {
-    SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
-    scenery_loaded->addChangeListener(_listener);
 }
 
 FGSoundManager::~FGSoundManager()
@@ -78,7 +80,18 @@ void FGSoundManager::init()
     _viewYoffset      = _currentView->getNode("y-offset-m", true);
     _viewZoffset      = _currentView->getNode("z-offset-m", true);
 
+    SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
+    scenery_loaded->addChangeListener(_listener.get());
+
     reinit();
+}
+
+void FGSoundManager::shutdown()
+{
+    SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
+    scenery_loaded->removeChangeListener(_listener.get());
+    
+    SGSoundMgr::shutdown();
 }
 
 void FGSoundManager::reinit()

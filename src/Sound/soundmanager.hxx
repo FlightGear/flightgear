@@ -20,10 +20,7 @@
 #ifndef __FG_SOUNDMGR_HXX
 #define __FG_SOUNDMGR_HXX 1
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
+#include <memory>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
@@ -36,9 +33,10 @@ class FGSoundManager : public SGSoundMgr
 {
 public:
     FGSoundManager();
-    ~FGSoundManager();
+    virtual ~FGSoundManager();
 
     void init(void);
+    virtual void shutdown();
     void update(double dt);
     void reinit(void);
 
@@ -54,7 +52,7 @@ private:
     SGPropertyNode_ptr _viewPosLon, _viewPosLat, _viewPosElev;
     SGPropertyNode_ptr _velocityNorthFPS, _velocityEastFPS, _velocityDownFPS;
     SGPropertyNode_ptr _viewXoffset, _viewYoffset, _viewZoffset;
-    Listener* _listener;
+    std::auto_ptr<Listener> _listener;
 };
 #else
 #include "Main/fg_props.hxx"
