@@ -189,6 +189,11 @@ void FGLight::bind () {
 
 void FGLight::unbind () {
     _tiedProperties.Untie();
+    
+    for (int i = 0; i < 4; ++i)
+        _chromeProps[i] = SGPropertyNode_ptr();
+    _sunAngleRad = SGPropertyNode_ptr();
+    _humidity = SGPropertyNode_ptr();
 }
 
 
