@@ -57,11 +57,15 @@ using std::endl;
 
 #include <Viewer/fgviewer.hxx>
 #include "main.hxx"
-#include "globals.hxx"
-#include "fg_props.hxx"
-
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
+#include <GUI/MessageBox.hxx>
 
 #include "fg_os.hxx"
+
+#if defined(SG_MAC)
+#include <Carbon/Carbon.h> 
+#endif
 
 std::string homedir;
 std::string hostname;
@@ -120,7 +124,7 @@ static void initFPE()
 }
 #endif
 
-#if defined(_MSC_VER) || defined(_WIN32)
+#if defined(SG_WINDOWS)
 int main ( int argc, char **argv );
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                              LPSTR lpCmdLine, int nCmdShow) {
@@ -141,7 +145,7 @@ int _bootstrap_OSInit;
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv )
 {
-#if defined(_MSC_VER) || defined(_WIN32) 
+#if defined(SG_WINDOWS)
   // Don't show blocking "no disk in drive" error messages on Windows 7,
   // silently return errors to application instead.
   // See Microsoft MSDN #ms680621: "GUI apps should specify SEM_NOOPENFILEERRORBOX"
@@ -157,6 +161,14 @@ int main ( int argc, char **argv )
   signal(SIGPIPE, SIG_IGN);
 #endif
 
+#if defined(SG_MAC)
+    // required so native messages boxes work prior to osgViewer init
+    // (only needed when not running as a bundled app)
+    ProcessSerialNumber sn = { 0, kCurrentProcess };
+    TransformProcessType(&sn,kProcessTransformToForegroundApplication);
+    SetFrontProcess(&sn);
+#endif
+    
 #ifdef PTW32_STATIC_LIB
     // Initialise static pthread win32 lib
     pthread_win32_process_attach_np ();
@@ -208,19 +220,15 @@ int main ( int argc, char **argv )
             
         
     } catch (const sg_throwable &t) {
-                            // We must use cerr rather than
-                            // logging, since logging may be
-                            // disabled.
-        cerr << "Fatal error: " << t.getFormattedMessage() << endl;
+        std::string info;
         if (std::strlen(t.getOrigin()) != 0)
-            cerr << " (received from " << t.getOrigin() << ')' << endl;
+            info = std::string("received from ") + t.getOrigin();
+        flightgear::fatalMessageBox("Fatal exception", t.getFormattedMessage(), info);
 
     } catch (const std::exception &e ) {
-        cerr << "Fatal error (std::exception): " << e.what() << endl;
-
+        flightgear::fatalMessageBox("Fatal exception", e.what());
     } catch (const std::string &s) {
-        cerr << "Fatal error (std::string): " << s << endl;
-
+        flightgear::fatalMessageBox("Fatal exception", s);
     } catch (const char *s) {
         cerr << "Fatal error (const char*): " << s << endl;
 

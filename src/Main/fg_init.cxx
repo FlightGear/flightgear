@@ -76,6 +76,7 @@
 #include <Canvas/canvas_mgr.hxx>
 #include <Canvas/gui_mgr.hxx>
 #include <GUI/new_gui.hxx>
+#include <GUI/MessageBox.hxx>
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Model/acmodel.hxx>
@@ -127,17 +128,13 @@ using namespace boost::algorithm;
 string fgBasePackageVersion() {
     SGPath base_path( globals->get_fg_root() );
     base_path.append("version");
-
+    if (!base_path.exists()) {
+        return string();
+    }
+    
     sg_gzifstream in( base_path.str() );
-    if ( !in.is_open() ) {
-        SGPath old_path( globals->get_fg_root() );
-        old_path.append( "Thanks" );
-        sg_gzifstream old( old_path.str() );
-        if ( !old.is_open() ) {
-            return "[none]";
-        } else {
-            return "[old version]";
-        }
+    if (!in.is_open()) {
+        return string();
     }
 
     string version;
@@ -219,6 +216,7 @@ public:
   {
     std::string aircraft = fgGetString( "/sim/aircraft", "");
     if (aircraft.empty()) {
+        flightgear::fatalMessageBox("No aircraft", "No aircraft was specified");
       SG_LOG(SG_GENERAL, SG_ALERT, "no aircraft specified");
       return false;
     }
@@ -236,6 +234,9 @@ public:
           readProperties(setFile.str(), globals->get_props());
         } catch ( const sg_exception &e ) {
           SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
+            flightgear::fatalMessageBox("Error reading aircraft",
+                                        "An error occured reading the requested aircraft (" + aircraft + ")",
+                                        e.getFormattedMessage());
           return false;
         }
         
@@ -243,6 +244,9 @@ public:
       } else {
         SG_LOG(SG_GENERAL, SG_ALERT, "aircraft '" << _searchAircraft << 
                "' not found in specified dir:" << aircraftDir);
+          flightgear::fatalMessageBox("Aircraft not found",
+                                      "The requested aircraft '" + aircraft + "' could not be found in the specified location.",
+                                      aircraftDir);
         return false;
       }
     }
@@ -262,6 +266,9 @@ public:
     
     if (_foundPath.str().empty()) {
       SG_LOG(SG_GENERAL, SG_ALERT, "Cannot find specified aircraft: " << aircraft );
+        flightgear::fatalMessageBox("Aircraft not found",
+                                    "The requested aircraft '" + aircraft + "' could not be found in any of the search paths");
+
       return false;
     }
     
@@ -276,6 +283,9 @@ public:
       readProperties(_foundPath.str(), globals->get_props());
     } catch ( const sg_exception &e ) {
       SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
+        flightgear::fatalMessageBox("Error reading aircraft",
+                                    "An error occured reading the requested aircraft (" + aircraft + ")",
+                                    e.getFormattedMessage());
       return false;
     }
     

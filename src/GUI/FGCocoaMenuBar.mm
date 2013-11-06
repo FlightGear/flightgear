@@ -11,6 +11,7 @@
 #include <simgear/misc/strutils.hxx>
 
 #include <Main/fg_props.hxx>
+#include <GUI/CocoaAutoreleasePool.hxx>
 
 #include <iostream>
 
@@ -69,18 +70,29 @@ static NSString* stdStringToCocoa(const string& s)
   return [NSString stringWithUTF8String:s.c_str()];
 }
 
-static void setFunctionKeyShortcut(NSMenuItem* item, unichar shortcut)
+static void setFunctionKeyShortcut(const std::string& shortcut, NSMenuItem* item)
 {
+    unichar shortcutChar = NSF1FunctionKey;
+    if (shortcut == "F11") {
+        shortcutChar = NSF11FunctionKey;
+    } else if (shortcut == "F12") {
+        shortcutChar = NSF12FunctionKey;
+    } else {
+        SG_LOG(SG_GENERAL, SG_WARN, "CocoaMenu:setFunctionKeyShortcut: unsupported:" << shortcut);
+    }
+    
   unichar ch[1];
-  ch[0] = shortcut;
+  ch[0] = shortcutChar;
   [item setKeyEquivalentModifierMask:NSFunctionKeyMask];
   [item setKeyEquivalent:[NSString stringWithCharacters:ch length:1]];
   
 }
 
+
+
 static void setItemShortcutFromString(NSMenuItem* item, const string& s)
 {
-  const char* shortcut = "";
+    std::string shortcut;
   
   bool hasCtrl = strutils::starts_with(s, "Ctrl-"); 
   bool hasShift = strutils::starts_with(s, "Shift-");
@@ -91,21 +103,17 @@ static void setItemShortcutFromString(NSMenuItem* item, const string& s)
   if (hasCtrl) offset += 5;
   if (hasAlt) offset += 4;
   
-  shortcut = s.c_str() + offset;
-  if (!strcmp(shortcut, "Esc"))
+  shortcut = s.substr(offset);
+  if (shortcut == "Esc")
     shortcut = "\e";    
   
-  if (!strcmp(shortcut, "F11")) {
-    setFunctionKeyShortcut(item, NSF11FunctionKey);
-    return;
-  }
-  
-  if (!strcmp(shortcut, "F12")) {
-    setFunctionKeyShortcut(item, NSF12FunctionKey);
-    return;
-  }
-  
-  [item setKeyEquivalent:[NSString stringWithCString:shortcut encoding:NSUTF8StringEncoding]];
+    if ((shortcut.length() >= 2) && (shortcut[0] == 'F') && isdigit(shortcut[1])) {
+        setFunctionKeyShortcut(shortcut, item);
+        return;
+    }
+
+    simgear::strutils::lowercase(shortcut);
+  [item setKeyEquivalent:[NSString stringWithCString:shortcut.c_str() encoding:NSUTF8StringEncoding]];
   NSUInteger modifiers = 0;
   if (hasCtrl) modifiers |= NSControlKeyMask;
   if (hasShift) modifiers |= NSShiftKeyMask;
@@ -115,23 +123,7 @@ static void setItemShortcutFromString(NSMenuItem* item, const string& s)
 }
 
 namespace {
-  class CocoaAutoreleasePool
-  {
-  public:
-    CocoaAutoreleasePool()
-    {
-      pool = [[NSAutoreleasePool alloc] init];
-    }
-    
-    ~CocoaAutoreleasePool()
-    {
-      [pool release];
-    }
-    
-  private:
-    NSAutoreleasePool* pool;
-  };
-  
+
   class CocoaEnabledListener : public SGPropertyChangeListener
   {
   public:

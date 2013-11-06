@@ -21,6 +21,7 @@ set(SOURCES
     FileDialog.cxx
     PUIFileDialog.cxx
     MouseCursor.cxx
+    MessageBox.cxx
 	)
 
 set(HEADERS
@@ -41,6 +42,7 @@ set(HEADERS
     FileDialog.hxx
     PUIFileDialog.hxx
     MouseCursor.hxx
+    MessageBox.hxx
 	)
 
 if(WIN32)
@@ -51,8 +53,14 @@ if(WIN32)
 endif()
 		
 if (APPLE)
-    list(APPEND HEADERS FGCocoaMenuBar.hxx CocoaFileDialog.hxx CocoaMouseCursor.hxx)
-    list(APPEND SOURCES FGCocoaMenuBar.mm CocoaFileDialog.mm CocoaMouseCursor.mm)
+    list(APPEND HEADERS FGCocoaMenuBar.hxx 
+        CocoaFileDialog.hxx 
+        CocoaMouseCursor.hxx
+        CocoaAutoreleasePool.hxx)
+    list(APPEND SOURCES FGCocoaMenuBar.mm 
+        CocoaFileDialog.mm
+        CocoaMouseCursor.mm
+        CocoaMessageBox.mm)
 endif()
     		
 flightgear_component(GUI "${SOURCES}" "${HEADERS}")

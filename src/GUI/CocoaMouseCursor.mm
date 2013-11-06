@@ -23,6 +23,7 @@
 #include <map>
 
 #include <Main/globals.hxx>
+#include <GUI/CocoaAutoreleasePool.hxx>
 
 class CocoaMouseCursor::CocoaMouseCursorPrivate
 {
@@ -84,7 +85,8 @@ void CocoaMouseCursor::setCursor(Cursor aCursor)
     if (aCursor == d->activeCursorKey) {
         return;
     }
-    
+ 
+    CocoaAutoreleasePool pool;   
     d->activeCursorKey = aCursor;
     if (d->cursors.find(aCursor) == d->cursors.end()) {
         d->cursors[aCursor] = cocoaCursorForKey(aCursor);
@@ -96,6 +98,7 @@ void CocoaMouseCursor::setCursor(Cursor aCursor)
 
 void CocoaMouseCursor::setCursorVisible(bool aVis)
 {
+    CocoaAutoreleasePool pool;
     if (aVis) {
         [NSCursor unhide];
     } else {

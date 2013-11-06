@@ -50,8 +50,11 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <Autopilot/route_mgr.hxx>
-#include <GUI/gui.h>
 
+#include <GUI/gui.h>
+#include <GUI/MessageBox.hxx>
+
+#include <Main/locale.hxx>
 #include "globals.hxx"
 #include "fg_init.hxx"
 #include "fg_props.hxx"
@@ -2289,21 +2292,23 @@ void Options::setupRoot()
 // validate it
   static char required_version[] = FLIGHTGEAR_VERSION;
   string base_version = fgBasePackageVersion();
-  if ( !(base_version == required_version) ) {
-    // tell the operator how to use this application
-    
-    simgear::requestConsole(); // ensure console is shown on Windows
+    if (base_version.empty()) {
+        flightgear::fatalMessageBox("Base package not found",
+                                    "Required data files not found, check your installation.",
+                                    "Looking for base-package files at: '" + root + "'");
 
-    cerr << endl << "Base package check failed:" << endl \
-    << "  Version " << base_version << " found at: " \
-    << globals->get_fg_root() << endl \
-    << "  Version " << required_version << " is required." << endl \
-    << "Please upgrade/downgrade base package and set the path to your fgdata" << endl \
-    << "with --fg-root=path_to_your_fgdata" << endl;
-#ifdef _MSC_VER
-    cerr << "Hit a key to continue..." << endl;
-    cin.get();
-#endif
+        exit(-1);
+    }
+    
+ if (base_version != required_version) {
+    // tell the operator how to use this application
+   
+      flightgear::fatalMessageBox("Base package version mismatch",
+                                  "Version check failed: please check your installation.",
+                                  "Found data files for version '" + base_version +
+                                  "' at '" + globals->get_fg_root() + "', version '"
+                                  + required_version + "' is required.");
+
     exit(-1);
   }
 }
