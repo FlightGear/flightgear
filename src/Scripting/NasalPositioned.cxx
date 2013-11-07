@@ -2187,19 +2187,12 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "leg.setSpeed called on non-flightplan-leg object");
   }
   
-  if (argc < 2) {
+  if ((argc < 2) || !naIsNum(args[0])) {
     naRuntimeError(c, "bad arguments to leg.setSpeed");
   }
   
   RouteRestriction rr = routeRestrictionFromString(naStr_data(args[1]));
-    if (naIsNum(args[0])) {
-        leg->setSpeed(rr, args[0].num);
-    } else if (naIsString(args[0])) {
-        leg->setSpeed(rr, simgear::strutils::to_int(naStr_data(args[0])));
-    } else {
-        naRuntimeError(c, "bad speed value for leg.setSpeed");
-    }
-    
+  leg->setSpeed(rr, naNumValue(args[0]).num);
   
   return naNil();
 }
@@ -2211,18 +2204,12 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "leg.setAltitude called on non-flightplan-leg object");
   }
   
-  if (argc < 2) {
+  if ((argc < 2) || !naIsNum(args[0])) {
     naRuntimeError(c, "bad arguments to leg.setAltitude");
   }
   
   RouteRestriction rr = routeRestrictionFromString(naStr_data(args[1]));
-    if (naIsNum(args[0])) {
-        leg->setAltitude(rr, args[0].num);
-    } else if (naIsString(args[0])) {
-        leg->setAltitude(rr, simgear::strutils::to_int(naStr_data(args[0])));
-    } else {
-        naRuntimeError(c, "bad value for setAltitude");
-    }
+    leg->setAltitude(rr, naNumValue(args[0]).num);
 
   return naNil();
 }
