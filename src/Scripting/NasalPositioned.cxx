@@ -124,6 +124,17 @@ static naRef stringToNasal(naContext c, const std::string& s)
                    s.length());
 }
 
+static bool convertToNum(naRef v, double& result)
+{
+    naRef n = naNumValue(v);
+    if (naIsNil(n)) {
+        return false; // couldn't convert
+    }
+    
+    result = n.num;
+    return true;
+}
+
 static WayptFlag wayptFlagFromString(const char* s)
 {
   if (!strcmp(s, "sid")) return WPT_DEPARTURE;
@@ -2186,13 +2197,13 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
   if (!leg) {
     naRuntimeError(c, "leg.setSpeed called on non-flightplan-leg object");
   }
-  
-  if ((argc < 2) || !naIsNum(args[0])) {
-    naRuntimeError(c, "bad arguments to leg.setSpeed");
-  }
-  
+
+    double speed = 0.0;
+    if ((argc < 2) || !convertToNum(args[0], speed))
+        naRuntimeError(c, "bad arguments to setSpeed");
+    
   RouteRestriction rr = routeRestrictionFromString(naStr_data(args[1]));
-  leg->setSpeed(rr, naNumValue(args[0]).num);
+  leg->setSpeed(rr, speed);
   
   return naNil();
 }
@@ -2204,12 +2215,12 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "leg.setAltitude called on non-flightplan-leg object");
   }
   
-  if ((argc < 2) || !naIsNum(args[0])) {
-    naRuntimeError(c, "bad arguments to leg.setAltitude");
-  }
-  
+    double alt = 0.0;
+    if ((argc < 2) || !convertToNum(args[0], alt))
+        naRuntimeError(c, "bad arguments to leg.setAltitude");
+    
   RouteRestriction rr = routeRestrictionFromString(naStr_data(args[1]));
-    leg->setAltitude(rr, naNumValue(args[0]).num);
+    leg->setAltitude(rr, alt);
 
   return naNil();
 }
