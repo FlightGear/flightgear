@@ -275,6 +275,7 @@ main (int argc, char *argv[])
   int numbytes;
   static char pkt_buf[MAXBUFLEN+2];
 
+  simgear::requestConsole();
   sglog().setLogLevels( SG_ALL, SG_ALERT );
 
   prog = strdup( base_name(argv[0]) );
