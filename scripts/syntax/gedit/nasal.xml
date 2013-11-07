@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ gedit snippet-addon support for the Nasal scripting language.
+
+ http://wiki.flightgear.org/Howto:Syntax_highlighting_for_Nasal#gedit
+
+ Moved into /usr/share/gedit/plugins/snippets/ folder or install using the
+ gedit "import" feature.
+
+ Copyright (C) 2013 Philosopher
+ Author: Philosopher (Flightgear forums)
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Library General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Library General Public License for more details.
+
+ You should have received a copy of the GNU Library General Public
+ License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ Boston, MA 02111-1307, USA.
+
+-->
+<snippets language="Nasal">
+  <snippet id="else">
+    <text><![CDATA[else {
+   ${0:# body...}
+}]]></text>
+    <description>else statement</description>
+    <tag>else</tag>
+  </snippet>
+  <snippet id="elsif">
+    <text><![CDATA[elsif (${0:condition}) {
+   ${0:# body...}
+}]]></text>
+    <description>conditional elsif statement</description>
+    <tag>elsif</tag>
+  </snippet>
+  <snippet id="}">
+    <text><![CDATA[} elsif (${1:variable} == ${2:constant}) {
+   ${0:# body...}
+}]]></text>
+    <description>equality elsif statement</description>
+    <tag>}</tag>
+  </snippet>
+  <snippet id="if">
+    <text><![CDATA[if (${0:condition}) {
+   ${0:# body...}
+}]]></text>
+    <description>conditional if statement</description>
+    <tag>if</tag>
+  </snippet>
+  <snippet id="=">
+    <text><![CDATA[if (${1:variable} == ${2:constant}) {
+   ${0:# body...}
+}]]></text>
+    <description>equality if statement</description>
+    <tag>=</tag>
+  </snippet>
+  <snippet id="typeif">
+      <text><![CDATA[if (typeof(${1:variable}) == "${2:type}") {
+   ${0:# body...}
+}]]></text>
+      <description>typeof if statement</description>
+      <tag>typeif</tag>
+    </snippet>
+</snippets>

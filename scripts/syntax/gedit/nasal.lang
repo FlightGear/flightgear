@@ -1,0 +1,870 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ gedit syntax highlighter for the Nasal scripting language.
+
+ Just drop it in the gtksourceview-X.X/lanugage-specs folder:
+ Linux: /usr/share/gtksourceview-X.X/language-specs/
+ Mac: Applications/gedit/Contents/Resources/share/gtksourceview-X.X/language specs
+
+ Copyright (C) 2013 Philosopher
+ Author: Philosopher (Flightgear forums)
+ http://forum.flightgear.org/viewtopic.php?f=30&t=17265#p164133
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Library General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Library General Public License for more details.
+
+ You should have received a copy of the GNU Library General Public
+ License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ Boston, MA 02111-1307, USA.
+
+-->
+<language id="nasal" _name="Nasal" version="2.0" _section="Scripts">
+  <metadata>
+    <property name="globs">*.nas</property>
+    <property name="line-comment-start">#</property>
+  </metadata>
+
+  <styles>
+    <style id="module-handler"    _name="Module Handler"        map-to="def:preprocessor"/>
+    <style id="keyword"           _name="Keyword"               map-to="def:keyword"/>
+    <style id="blockoid"          _name="Blockoid"              map-to="def:keyword"/>
+    <style id="operator"          _name="Operator"              map-to="def:operator"/>
+
+    <style id="builtin-constant"  _name="Builtin Constant"      map-to="def:special-constant"/>
+    <style id="builtin-object"    _name="Builtin Object"        map-to="def:type"/>
+    <style id="node-object"       _name="Flightgear Node"       map-to="def:type"/>
+    <style id="builtin-function"  _name="Builtin Function"      map-to="def:builtin"/>
+
+    <style id="boolean"           _name="Boolean"               map-to="def:boolean"/>
+    <style id="floating-point"    _name="Floating point number" map-to="def:floating-point"/>
+    <style id="decimal"           _name="Decimal number"        map-to="def:decimal"/>
+    <style id="base-n-integer"    _name="Base-N number"         map-to="def:base-n-integer"/>
+    <style id="special-variable"  _name="Special Variable"      map-to="def:preprocessor"/><!-- def:identifier -->
+    <style id="string-conversion" _name="String conversion numeric"/>
+
+    <style id="string"            _name="String"                map-to="def:string"/>
+    <style id="escaped-char"      _name="Escaped Character"     map-to="def:special-char"/>
+    <style id="format"            _name="Format"                map-to="def:special-char"/>
+    <style id="path"              _name="Path"                  map-to="def:type"/>
+    <style id="types"             _name="Type Object"           map-to="def:type"/>
+  </styles>
+
+  <definitions>
+    <!-- Basic lexing constructs: -->
+    <define-regex id="identifier">[_a-zA-Z][_a-zA-Z0-9]*</define-regex>
+    <define-regex id="number">[1-9][0-9]*</define-regex>
+    <context id="number" style-ref="decimal">
+      <match>(?&lt;![0-9a-zA-Z])(0x[0-9a-fA-F]+|([0-9]*\.)?[0-9]+([eE][-+]?[0-9]+)?)</match>
+    </context>
+
+    <!-- Builtin Nasal keyword-operators -->
+    <context id="keyword" style-ref="keyword">
+      <keyword>and</keyword>
+      <keyword>or</keyword>
+      <keyword>var</keyword>
+      <keyword>return</keyword>
+      <keyword>break(\s+[_a-zA-Z]\w*)?</keyword>
+      <keyword>continue(\s+[_a-zA-Z]\w*)?</keyword>
+    </context>
+
+    <!-- Builtin Nasal blockoids -->
+    <context id="blockoid" style-ref="blockoid">
+      <keyword>while</keyword>
+      <keyword>for</keyword>
+      <keyword>foreach</keyword>
+      <keyword>forindex</keyword>
+      <keyword>if</keyword>
+      <keyword>elsif</keyword>
+      <keyword>else</keyword>
+      <keyword>func</keyword>
+    </context>
+
+    <context id="builtin-constants" style-ref="builtin-constant">
+      <prefix>(?&lt;![\w\.])</prefix> <!-- look behind for anything but a word or period as a prefix, e.g. a space or tab -->
+      <keyword>nil</keyword>
+      <keyword>math\.e</keyword>
+      <keyword>math\.pi</keyword>
+      <!-- Flightgear global constants from globals.nas -->
+      <keyword>D2R</keyword>
+      <keyword>R2D</keyword>
+      <keyword>FT2M</keyword>
+      <keyword>M2FT</keyword>
+      <keyword>IN2M</keyword>
+      <keyword>M2IN</keyword>
+      <keyword>NM2M</keyword>
+      <keyword>M2NM</keyword>
+      <keyword>KT2MPS</keyword>
+      <keyword>MPS2KT</keyword>
+      <keyword>LB2KG</keyword>
+      <keyword>KG2LB</keyword>
+      <keyword>GAL2L</keyword>
+      <keyword>L2GAL</keyword>
+      <!-- Non-official -->
+      <keyword>FG_ROOT</keyword>
+      <keyword>FG_HOME</keyword>
+      <keyword>MODEL_PATH</keyword>
+    </context>
+
+    <!-- Other operators -->
+    <context id="operators" style-ref="operator" extend-parent="false">
+      <match>[-~+*/!=?&lt;&gt;]</match>
+    </context>
+
+
+    <!-- Strings: -->
+
+    <context id="format" style-ref="format" extend-parent="false">
+      <match extended="true">
+        %                       # leading % sign
+        [#0\-\ \+]*             # conversion flags
+        (\-?\%{number})?        # minimum field width
+        (\.(\-?\%{number}))?    # precision
+        [%sdicouxXeEfFgG]       # conversion type
+      </match>
+    </context>
+    <context id="escaped-char" style-ref="escaped-char" extend-parent="true">
+      <match extended="true">
+        \\(                 # leading backslash
+        [\\"abfnrtv]      | # single escaped char
+        N\{[A-Z\ ]+\}     | # named unicode character
+        u[0-9A-Fa-f]{4}   | # xxxx - character with 16-bit hex value xxxx
+        U[0-9A-Fa-f]{8}   | # xxxxxxxx - character with 32-bit hex value xxxxxxxx
+        x[0-9A-Fa-f]{1,2} | # \xhh - character with hex value hh
+        [0-7]{1,3}          # \ooo - character with octal value ooo
+        )
+      </match>
+    </context>
+    <context id="double-escaped-char" style-ref="escaped-char" extend-parent="true">
+      <match extended="true">
+        \\\\(               # double leading backslash
+        \\"               | # escaped quote (needs an extra backslash)
+        [\\abfnrtv]       | # single escaped char
+        N\{[A-Z\ ]+\}     | # named unicode character
+        u[0-9A-Fa-f]{4}   | # xxxx - character with 16-bit hex value xxxx
+        U[0-9A-Fa-f]{8}   | # xxxxxxxx - character with 32-bit hex value xxxxxxxx
+        x[0-9A-Fa-f]{1,2} | # \xhh - character with hex value hh
+        [0-7]{1,3}          # \ooo - character with octal value ooo
+        )
+      </match>
+    </context>
+
+    <context id="object-types" style-ref="builtin-object">
+      <prefix>(?&lt;=['"])</prefix> <!-- look behind for ' or " as a prefix -->
+      <suffix>(?=['"])</suffix> <!-- look ahead for ' or " as a suffix -->
+      <keyword>func</keyword>
+      <keyword>code</keyword><!-- not official -->
+      <keyword>hash</keyword>
+      <keyword>scalar</keyword>
+      <keyword>vector</keyword>
+      <keyword>nil</keyword>
+      <keyword>ghost</keyword>
+      <!-- GitHub/AndyRoss/Nasal or Gitorious/nasal-standalone -->
+      <keyword>iofile</keyword>
+      <keyword>cairo</keyword>
+      <keyword>cairo_surface</keyword>
+      <keyword>GObject</keyword>
+      <keyword>regex</keyword>
+      <keyword>sqlite_db</keyword>
+      <keyword>sqlite_statement</keyword>
+      <keyword>dir</keyword>
+      <!-- SimGear -->
+      <keyword>prop</keyword>
+      <!-- FlightGear -->
+      <keyword>positioned</keyword>
+      <keyword>airport</keyword>
+      <keyword>aircraft</keyword>
+      <keyword>helipad</keyword>
+    </context>
+
+    <define-regex id="property-path" extended="true">
+      ( # optional first (root) node
+        [a-zA-Z] # first character has to be an alpha
+        [-a-zA-Z0-9_]* # now it can be alpha, hyphen, or number, repeat this
+        (?:\[ # optional index specifier like this: [90]
+            (?:[0-9]+)
+         \])?
+      )?
+      / # require a slash
+      ( # middle node(s)
+        [a-zA-Z] # first character has to be an alpha
+        [-a-zA-Z0-9_]* # now it can be alpha, hyphen, or number, repeat this
+        (?:\[ # optional index specifier like this: [90]
+            (?:[0-9]+)
+         \])?
+         / # slash to separate nodes
+      )* # repeat or none
+      ( # last element, doesn't require a slash at the end
+        [a-zA-Z] # first character has to be an alpha
+        [-a-zA-Z0-9_]* # now it can be alpha, hyphen, or number, repeat this
+        (?:\[ # optional index specifier like this: [90]
+            (?:[0-9]+)
+         \])?
+        /?
+      )
+    </define-regex>
+    <define-regex id="system-path" extended="true">
+      [-a-zA-Z0-9_]* # valid characters, repeat this
+      / # require a slash
+      [-a-zA-Z0-9/_]+ # more valid characters, repeat this once or more
+      (.[a-zA-Z0-9]+)? # optional extension
+    </define-regex>
+
+    <context id="string-path" style-ref="path" once-only="true">
+      <match extended="true">
+        (?&lt;=")
+        (?:
+          (\]/)?\%{property-path}\[? # a recognizeable property path
+          |((?:\]/)? # or a "simple" path that isn't covered by above
+            [a-zA-Z] # first character has to be an alpha
+            [-a-zA-Z0-9_]* # now it can be alpha, hyphen, or number, repeat this
+            (\[ # optional index specifier like this: [90]
+               (?:[0-9]+\]/?)? # this is the rest after the opening; optional, "node/foo[" is valid
+            |/ # or a slash if no opening: sim/
+            )
+           )
+          |\[|\]/? # or a single bracket (closing can have slash): "]", "[", or "]/"
+          |(?&lt;=prop\(")            [-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[? # or a word like in setprop("foo-bar");
+          |(?&lt;=\.getNode\(")       [-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[? # or a word like in props.globals.getNode("foo-bar["~index~"]");
+          |(?&lt;=\.alias\(")         [-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[? # etc.
+          |(?&lt;=\.initNode\(")      [-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[?
+          |(?&lt;=\.getValue\(")      [-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[?
+          |(?&lt;=\.getBoolValue\(")  [-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[?
+          |(?&lt;=\.setValue\(")      [-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[?
+          |(?&lt;=\.setBoolValue\(")  [-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[?
+          |(?&lt;=\.setIntValue\(")   [-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[?
+          |(?&lt;=\.setDoubleValue\(")[-a-zA-Z0-9_]+(?:\[([0-9]+)\])?\[?
+          |(?&lt;=\.getChild\(")      [-a-zA-Z0-9_]+    # while these are simple names
+          |(?&lt;=\.getChildren\(")   [-a-zA-Z0-9_]+
+          |(?&lt;=\.removeChild\(")   [-a-zA-Z0-9_]+
+          |(?&lt;=\.removeChildren\(")[-a-zA-Z0-9_]+
+        )
+        (?=")
+      </match>
+    </context>
+
+    <context id="double-quoted-string" style-ref="string" class="string" class-disabled="no-spell-check">
+      <start>"</start>
+      <end>"</end>
+      <include>
+        <context ref="format"/>
+        <context ref="escaped-char"/>
+        <context ref="string-path"/>
+      </include>
+    </context>
+
+    <context id="single-quoted-string" style-ref="string" class="string" class-disabled="no-spell-check">
+      <start>'</start>
+      <end>'</end>
+      <include>
+        <context ref="format"/>
+        <context id="escaped-single-quote" style-ref="escaped-char" extend-parent="true">
+          <match>\\'</match>
+        </context>
+        <context ref="object-types"/>
+      </include>
+    </context>
+
+    <context id="escaped-double-quoted-string" style-ref="string" class="string" class-disabled="no-spell-check">
+      <start>\\"</start>
+      <end>\\"</end>
+      <include>
+        <context ref="format"/>
+        <context ref="double-escaped-char"/>
+        <context ref="string-path"/>
+      </include>
+    </context>
+
+    <context id="escaped-single-quoted-string" style-ref="string" class="string" class-disabled="no-spell-check">
+      <start>\\'</start>
+      <end>\\'</end>
+      <include>
+        <context ref="format"/>
+        <context id="double-escaped-single-quote" style-ref="escaped-char" extend-parent="true">
+          <match>\\\\'</match>
+        </context>
+        <context ref="object-types"/>
+      </include>
+    </context>
+
+    <context id="string-conversion" style-ref="string-conversion">
+      <match extended="true">
+        `
+        (
+          [^`\\] # any single character except for backqote or backslash
+        | # or:
+          \\(                 # leading backslash
+            [\\`abfnrtv]      | # single escaped char
+            N\{[A-Z\ ]+\}     | # named unicode character
+            u[0-9A-Fa-f]{4}   | # xxxx - character with 16-bit hex value xxxx
+            U[0-9A-Fa-f]{8}   | # xxxxxxxx - character with 32-bit hex value xxxxxxxx
+            x[0-9A-Fa-f]{1,2} | # \xhh - character with hex value hh
+            [0-7]{1,3}          # \ooo - character with octal value ooo
+          )
+        )
+        `
+      </match>
+    </context>
+
+    <!-- Variables (special, chosen between FlightGear/Nasal-Standalone) -->
+
+    <context id="special-variables" style-ref="special-variable">
+      <prefix>(?&lt;![\w\.])</prefix>
+      <keyword>_?cmdarg</keyword>
+      <keyword>arg</keyword>
+      <keyword>me</keyword>
+      <keyword>parents</keyword>
+      <keyword>globals</keyword>
+    </context>
+    <context id="module-handler" style-ref="module-handler">
+      <prefix>(?&lt;![\w\.])</prefix>
+      <!-- Nasal-standalone/lib/driver.nas -->
+      <keyword>import</keyword>
+      <!-- $FG_ROOT/nasal_boostrap.nas -->
+      <keyword>require</keyword>
+    </context>
+
+    <context id="builtin-function" style-ref="builtin-function">
+      <prefix>((?&lt;![\w\.])|(?&lt;=globals\.))</prefix> <!-- look behind for anything but a word or period as a prefix, e.g. a space or tab, or lookbehind for globals. (since it will result in the same path) -->
+
+      <!-- Builtin to Nasal -->
+      <keyword>append</keyword>
+      <keyword>setsize</keyword>
+      <keyword>subvec</keyword>
+      <keyword>contains</keyword>
+      <keyword>delete</keyword>
+      <keyword>num</keyword>
+      <keyword>keys</keyword>
+      <keyword>pop</keyword>
+      <keyword>size</keyword>
+      <keyword>streq</keyword>
+      <keyword>cmp</keyword>
+      <keyword>abs</keyword>
+      <keyword>chr</keyword>
+      <keyword>sort</keyword>
+      <keyword>substr</keyword>
+      <keyword>sprintf</keyword>
+      <keyword>find</keyword>
+      <keyword>split</keyword>
+      <keyword>rand</keyword>
+      <keyword>typeof</keyword>
+      <keyword>die</keyword>
+      <keyword>call</keyword>
+      <keyword>compile</keyword>
+      <keyword>closure</keyword>
+      <keyword>caller</keyword>
+      <keyword>bind</keyword>
+      <keyword>print</keyword>
+      <keyword>bits\.fld</keyword>
+      <keyword>bits\.sfld</keyword>
+      <keyword>bits\.setfld</keyword>
+      <keyword>bits\.buf</keyword>
+      <keyword>math\.sin</keyword>
+      <keyword>math\.cos</keyword>
+      <keyword>math\.exp</keyword>
+      <keyword>math\.ln</keyword>
+      <keyword>math\.sqrt</keyword>
+      <keyword>math\.atan2</keyword>
+      <keyword>io\.open</keyword>
+      <keyword>io\.close</keyword>
+      <keyword>io\.read</keyword>
+      <keyword>io\.write</keyword>
+      <keyword>io\.seek</keyword>
+      <keyword>io\.tell</keyword>
+      <keyword>io\.readln</keyword>
+      <keyword>io\.stat</keyword>
+      <keyword>utf8\.chstr</keyword>
+      <keyword>utf8\.strc</keyword>
+      <keyword>utf8\.substr</keyword>
+      <keyword>utf8\.size</keyword>
+      <keyword>utf8\.validate</keyword>
+      <keyword>thread\.newthread</keyword>
+      <keyword>thread\.newlock</keyword>
+      <keyword>thread\.lock</keyword>
+      <keyword>thread\.unlock</keyword>
+      <keyword>thread\.newsem</keyword>
+      <keyword>thread\.semdown</keyword>
+      <keyword>thread\.semup</keyword>
+      <keyword>unix\.pipe</keyword>
+      <keyword>unix\.fork</keyword>
+      <keyword>unix\.dup2</keyword>
+      <keyword>unix\.exec</keyword>
+      <keyword>unix\.waitpid</keyword>
+      <keyword>unix\.opendir</keyword>
+      <keyword>unix\.readdir</keyword>
+      <keyword>unix\.closedir</keyword>
+      <keyword>unix\.time</keyword>
+      <keyword>unix\.chdir</keyword>
+      <keyword>unix\.environ</keyword>
+      <keyword>regex\.comp</keyword>
+      <keyword>regex\.exec</keyword>
+      <keyword>sqlite\.open</keyword>
+      <keyword>sqlite\.close</keyword>
+      <keyword>sqlite\.prepare</keyword>
+      <keyword>sqlite\.finalize</keyword>
+      <keyword>readline</keyword>
+
+      <!-- Flightgear-specific -->
+      <!-- $FG_SRC/NasalSys.cxx -->
+      <keyword>getprop</keyword>
+      <keyword>setprop</keyword>
+      <keyword>print</keyword>
+      <keyword>logprint</keyword>
+      <keyword>_fgcommand</keyword>
+      <keyword>settimer</keyword>
+      <keyword>maketimer</keyword>
+      <keyword>_setlistener</keyword>
+      <keyword>removelistener</keyword>
+      <keyword>addcommand</keyword>
+      <keyword>removecommand</keyword>
+      <keyword>_interpolate</keyword>
+      <keyword>rand</keyword>
+      <keyword>srand</keyword>
+      <keyword>abort</keyword>
+      <keyword>directory</keyword>
+      <keyword>resolvepath</keyword>
+      <keyword>parsexml</keyword>
+      <keyword>systime</keyword>
+      <!-- globals.nas -->
+      <keyword>setlistener</keyword>
+      <keyword>fgcommand</keyword>
+      <keyword>interpolate</keyword>
+      <keyword>isa</keyword>
+      <keyword>abs</keyword>
+      <keyword>defined</keyword>
+      <keyword>thisfunc</keyword>
+      <keyword>printf</keyword>
+      <keyword>sprintf</keyword>
+      <keyword>values</keyword>
+      <keyword>printlog</keyword>
+      <!-- io.nas -->
+      <keyword>io\.readfile</keyword>
+      <keyword>io\.load_nasal</keyword>
+      <keyword>io\.read_properties</keyword>
+      <keyword>io\.read_airport_properties</keyword>
+      <keyword>io\.write_properties</keyword>
+      <keyword>io\.readxml</keyword>
+      <keyword>io\.writexml</keyword>
+      <!-- string.nas -->
+      <keyword>string\.match</keyword>
+      <keyword>string\.normpath</keyword>
+      <keyword>string\.join</keyword>
+      <keyword>string\.replace</keyword>
+      <keyword>string\.iscntrl</keyword>
+      <keyword>string\.isascii</keyword>
+      <keyword>string\.isupper</keyword>
+      <keyword>string\.islower</keyword>
+      <keyword>string\.isdigit</keyword>
+      <keyword>string\.isblank</keyword>
+      <keyword>string\.ispunct</keyword>
+      <keyword>string\.isxdigit</keyword>
+      <keyword>string\.isspace</keyword>
+      <keyword>string\.isalpha</keyword>
+      <keyword>string\.isalnum</keyword>
+      <keyword>string\.isgraph</keyword>
+      <keyword>string\.isprint</keyword>
+      <keyword>string\.toupper</keyword>
+      <keyword>string\.tolower</keyword>
+      <keyword>string\.isxspace</keyword>
+      <keyword>string\.trim</keyword>
+      <keyword>string\.uc</keyword>
+      <keyword>string\.lc</keyword>
+      <keyword>string\.icmp</keyword>
+      <keyword>string\.imatch</keyword>
+      <keyword>string\.scanf</keyword>
+      <keyword>string\.setcolors</keyword>
+      <keyword>string\.color</keyword>
+      <!-- gui.nas -->
+      <keyword>gui\.Dialog\.new</keyword>
+      <keyword>gui\.OverlaySelector\.new</keyword>
+      <keyword>gui\.FileSelector\.new</keyword>
+      <keyword>gui\.DirSelector\.new</keyword>
+      <keyword>gui\.findElementByName</keyword>
+      <keyword>gui\.popupTip</keyword>
+      <keyword>gui\.showDialog</keyword>
+      <keyword>gui\.showHelpDialog</keyword>
+      <keyword>gui\.menuEnable</keyword>
+      <keyword>gui\.menuBind</keyword>
+      <keyword>gui\.setCursor</keyword>
+      <keyword>gui\.save_flight</keyword>
+      <keyword>gui\.load_flight</keyword>
+      <keyword>gui\.set_screenshotdir</keyword>
+      <keyword>gui\.property_browser</keyword>
+      <keyword>gui\.dialog_apply</keyword>
+      <keyword>gui\.dialog_update</keyword>
+      <keyword>gui\.enable_widgets</keyword>
+      <!-- props.nas -->
+      <keyword>props\.Node\.new</keyword>
+      <keyword>props\.Node</keyword>
+      <keyword>props\.globals</keyword>
+      <keyword>props\.setAll</keyword>
+      <keyword>props\.wrap</keyword>
+      <keyword>props\.wrapNode</keyword>
+      <keyword>props\.copy</keyword>
+      <keyword>props\.dump</keyword>
+      <keyword>props\.nodeList</keyword>
+      <keyword>props\.condition</keyword>
+      <keyword>props\.runBinding</keyword>
+      <!-- nasal-props.cxx -->
+      <keyword>props\._new</keyword>
+      <keyword>props\._globals</keyword>
+      <keyword>props\._getNode</keyword>
+      <keyword>props\._getParent</keyword>
+      <keyword>props\._getChild</keyword>
+      <keyword>props\._getChildren</keyword>
+      <keyword>props\._removeChild</keyword>
+      <keyword>props\._removeChildren</keyword>
+      <keyword>props\._getAliasTarget</keyword>
+      <keyword>props\._getName</keyword>
+      <keyword>props\._getIndex</keyword>
+      <keyword>props\._getType</keyword>
+      <keyword>props\._getAttribute</keyword>
+      <keyword>props\._setAttribute</keyword>
+      <keyword>props\._getValue</keyword>
+      <keyword>props\._setValue</keyword>
+      <keyword>props\._setIntValue</keyword>
+      <keyword>props\._setBoolValue</keyword>
+      <keyword>props\._setDoubleValue</keyword>
+      <keyword>props\._unalias</keyword>
+      <keyword>props\._alias</keyword>
+      <!-- debug.nas -->
+      <keyword>debug\.dump</keyword>
+      <keyword>debug\.local</keyword>
+      <keyword>debug\.backtrace</keyword>
+      <keyword>debug\.bt</keyword>
+      <keyword>debug\.proptrace</keyword>
+      <keyword>debug\.tree</keyword>
+      <keyword>debug\.string</keyword>
+      <keyword>debug\.attributes</keyword>
+      <keyword>debug\.isnan</keyword>
+      <keyword>debug\.benchmark</keyword>
+      <keyword>debug\.printerror</keyword>
+      <keyword>debug\.warn</keyword>
+      <keyword>debug\.propify</keyword>
+      <!-- math.nas -->
+      <keyword>math\.abs</keyword>
+      <keyword>math\.sgn</keyword>
+      <keyword>math\.max</keyword>
+      <keyword>math\.min</keyword>
+      <keyword>math\.avg</keyword>
+      <keyword>math\.pow</keyword>
+      <keyword>math\.mod</keyword>
+      <keyword>math\.asin</keyword>
+      <keyword>math\.acos</keyword>
+      <keyword>math\.tan</keyword>
+      <keyword>math\.log10</keyword>
+      <keyword>math\.to_base</keyword>
+      <keyword>math\.print_base</keyword>
+      <!-- view.nas -->
+      <keyword>view\.panViewDir</keyword>
+      <keyword>view\.panViewPitch</keyword>
+      <keyword>view\.resetView</keyword>
+      <keyword>view\.manager\.register</keyword>
+      <!-- screen.nas -->
+      <keyword>screen\.log\.write</keyword>
+      <!-- controls.nas -->
+      <keyword>controls\.startEngine</keyword>
+      <keyword>controls\.selectEngine</keyword>
+      <keyword>controls\.stepMagnetos</keyword>
+      <keyword>controls\.centerFlightControls</keyword>
+      <keyword>controls\.throttleAxis</keyword>
+      <keyword>controls\.propellerAxis</keyword>
+      <keyword>controls\.mixtureAxis</keyword>
+      <keyword>controls\.carbHeatAxis</keyword>
+      <keyword>controls\.flapsDown</keyword>
+      <keyword>controls\.wingSweep</keyword>
+      <keyword>controls\.wingsDown</keyword>
+      <keyword>controls\.stepSpoilers</keyword>
+      <keyword>controls\.stepSlats</keyword>
+      <keyword>controls\.elevatorTrim</keyword>
+      <keyword>controls\.aileronTrim</keyword>
+      <keyword>controls\.rudderTrim</keyword>
+      <keyword>controls\.adjThrottle</keyword>
+      <keyword>controls\.adjMixture</keyword>
+      <keyword>controls\.adjCondition</keyword>
+      <keyword>controls\.adjPropeller</keyword>
+      <keyword>controls\.incThrottle</keyword>
+      <keyword>controls\.incAileron</keyword>
+      <keyword>controls\.incElevator</keyword>
+      <keyword>controls\.elevatorTrimAxis</keyword>
+      <keyword>controls\.aileronTrimAxis</keyword>
+      <keyword>controls\.rudderTrimAxis</keyword>
+      <keyword>controls\.gearDown</keyword>
+      <keyword>controls\.gearToggle</keyword>
+      <keyword>controls\.applyBrakes</keyword>
+      <keyword>controls\.applyParkingBrake</keyword>
+      <keyword>controls\.deployChute</keyword>
+      <keyword>controls\.trigger</keyword>
+      <keyword>controls\.ptt</keyword>
+      <keyword>controls\.toggleLights</keyword>
+      <!-- aircraft.nas -->
+      <keyword>aircraft\.door\.new</keyword>
+      <keyword>aircraft\.light\.new</keyword>
+      <keyword>aircraft\.lowpass\.new</keyword>
+      <keyword>aircraft\.angular_lowpass\.new</keyword>
+      <keyword>aircraft\.data\.init</keyword>
+      <keyword>aircraft\.data\.load</keyword>
+      <keyword>aircraft\.data\.save</keyword>
+      <keyword>aircraft\.data\.add</keyword>
+      <keyword>aircraft\.timer\.new</keyword>
+      <keyword>aircraft\.livery\.new</keyword>
+      <keyword>aircraft\.livery_update\.new</keyword>
+      <keyword>aircraft\.overlay_update\.new</keyword>
+      <keyword>aircraft\.steering\.init</keyword>
+      <keyword>aircraft\.steering\.setbrakes</keyword>
+      <keyword>aircraft\.autotrim\.init</keyword>
+      <keyword>aircraft\.autotrim\.start</keyword>
+      <keyword>aircraft\.autotrim\.stop</keyword>
+      <keyword>aircraft\.tyresmoke\.new</keyword>
+      <keyword>aircraft\.tyresmoke_system\.new</keyword>
+      <keyword>aircraft\.rain\.init</keyword>
+      <keyword>aircraft\.rain\.update</keyword>
+      <keyword>aircraft\.teleport</keyword>
+      <keyword>aircraft\.wind_speed_from</keyword>
+      <keyword>aircraft\.kias_to_ktas</keyword>
+      <keyword>aircraft\.HUD\.init</keyword>
+      <keyword>aircraft\.HUD\.cycle_color</keyword>
+      <keyword>aircraft\.HUD\.cycle_brightness</keyword>
+      <keyword>aircraft\.HUD\.normal_type</keyword>
+      <keyword>aircraft\.HUD\.cycle_type</keyword>
+      <keyword>aircraft\.HUD\.is_active</keyword>
+      <keyword>aircraft\.crossfeed_valve\.new</keyword>
+      <!-- screen.nas -->
+      <keyword>screen\.window\.new</keyword>
+      <keyword>screen\.display\.new</keyword>
+      <keyword>screen\.msg_repeat</keyword>
+      <!-- geo.nas -->
+      <keyword>geo\.Coord\.new</keyword>
+      <keyword>geo\.normdeg</keyword>
+      <keyword>geo\.tile_index</keyword>
+      <keyword>geo\.format</keyword>
+      <keyword>geo\.tile_path</keyword>
+      <keyword>geo\.put_model</keyword>
+      <keyword>geo\.click_position</keyword>
+      <keyword>geo\.aircraft_position</keyword>
+      <keyword>geo\.viewer_position</keyword>
+
+      <!-- Mine (ignore) -->
+      <keyword>setlocalprop</keyword>
+      <keyword>getlocalprop</keyword>
+    </context>
+
+    <!-- Flightgear props.Node methods -->
+    <context id="node-object" style-ref="builtin-function">
+      <prefix>(?&lt;=\.)</prefix> <!-- look behind for . as a prefix-->
+      <keyword>initNode</keyword>
+      <keyword>getNode</keyword>
+      <keyword>getType</keyword>
+      <keyword>getName</keyword>
+      <keyword>getPath</keyword>
+      <keyword>getIndex</keyword>
+      <keyword>getValue</keyword>
+      <keyword>getBoolValue</keyword>
+      <keyword>getValues</keyword>
+      <keyword>getParent</keyword>
+      <keyword>getChildren</keyword>
+      <keyword>getChild</keyword>
+      <keyword>getAttribute</keyword>
+      <keyword>setIntValue</keyword>
+      <keyword>setBoolValue</keyword>
+      <keyword>setDoubleValue</keyword>
+      <keyword>setValues</keyword>
+      <keyword>setValue</keyword>
+      <keyword>setAttribute</keyword>
+      <keyword>addChildren</keyword>
+      <keyword>addChild</keyword>
+      <keyword>removeAllChildren</keyword>
+      <keyword>removeChildren</keyword>
+      <keyword>removeChild</keyword>
+      <keyword>remove</keyword>
+      <keyword>clearValue</keyword>
+      <keyword>unalias</keyword>
+      <keyword>alias</keyword>
+    </context>
+
+    <context id="nasal" class="no-spell-check">
+      <include>
+        <context ref="def:shebang"/>
+        <context ref="def:shell-like-comment"/>
+        <context ref="nasal-code-string-double"/>
+        <context ref="nasal-code-string-single"/>
+        <context ref="double-quoted-string"/>
+        <context ref="single-quoted-string"/>
+        <context ref="string-conversion"/>
+        <context ref="number"/>
+        <context ref="operators"/>
+        <context ref="keyword"/>
+        <context ref="blockoid"/>
+        <context ref="builtin-constants"/>
+        <context ref="builtin-function"/>
+        <context ref="node-object"/>
+        <context ref="special-variables"/>
+        <context ref="module-handler"/>
+        <context ref="escaped-char"/>
+      </include>
+    </context>
+    <context id="nasal-noextend" class="no-spell-check" extend-parent="false">
+      <start>.</start>
+      <end>.</end>
+      <include>
+        <context ref="def:shebang"/>
+        <context ref="def:shell-like-comment"/>
+        <context ref="nasal-code-string-double"/>
+        <context ref="nasal-code-string-single"/>
+        <context ref="double-quoted-string"/>
+        <context ref="single-quoted-string"/>
+        <context ref="string-conversion"/>
+        <context ref="number"/>
+        <context ref="operators"/>
+        <context ref="keyword"/>
+        <context ref="blockoid"/>
+        <context ref="builtin-constants"/>
+        <context ref="builtin-function"/>
+        <context ref="node-object"/>
+        <context ref="special-variables"/>
+        <context ref="module-handler"/>
+        <context ref="escaped-char"/>
+      </include>
+    </context>
+
+    <context id="nasal-code-string-double">
+      <start>"""</start>
+      <end>"""</end>
+      <include>
+        <!-- Highlight our delimiters -->
+        <context sub-pattern="0" where="start" style-ref="string"/>
+        <context sub-pattern="0" where="end" style-ref="string"/>
+        <context ref="def:shebang"/>
+        <context ref="def:shell-like-comment"/>
+        <context ref="escaped-double-quoted-string"/>
+        <context ref="single-quoted-string"/>
+        <context id="double-quote-error" style-ref="def:error">
+          <match>"(?! *~|"")</match>
+        </context>
+        <context id="non-string-double" extend-parent="false">
+          <start>"</start>
+          <end>"</end>
+          <include><context ref="nasal-noextend"/></include>
+        </context>
+        <context ref="string-conversion"/>
+        <context ref="number"/>
+        <context ref="operators"/>
+        <context ref="keyword"/>
+        <context ref="blockoid"/>
+        <context ref="builtin-constants"/>
+        <context ref="builtin-function"/>
+        <context ref="node-object"/>
+        <context ref="special-variables"/>
+        <context ref="module-handler"/>
+      </include>
+    </context>
+    <context id="nasal-code-string-single">
+      <start>'''</start>
+      <end>'''</end>
+      <include>
+        <!-- Highlight our delimiters -->
+        <context sub-pattern="0" where="start" style-ref="string"/>
+        <context sub-pattern="0" where="end" style-ref="string"/>
+        <context ref="def:shebang"/>
+        <context ref="def:shell-like-comment"/>
+        <context ref="double-quoted-string"/>
+        <context ref="escaped-single-quoted-string"/>
+        <context id="single-quote-error" style-ref="def:error">
+          <match>'(?! *~|'')</match>
+        </context>
+        <context id="non-string-single" extend-parent="false">
+          <start>'</start>
+          <end>'</end>
+          <include><context ref="nasal-noextend"/></include>
+        </context>
+        <context ref="string-conversion"/>
+        <context ref="number"/>
+        <context ref="operators"/>
+        <context ref="keyword"/>
+        <context ref="blockoid"/>
+        <context ref="builtin-constants"/>
+        <context ref="builtin-function"/>
+        <context ref="node-object"/>
+        <context ref="special-variables"/>
+        <context ref="module-handler"/>
+      </include>
+    </context>
+
+    <context id="xml-extras">
+        <include>
+            <context ref="xml:comment"/>
+            <context id="cdata">
+                <start>&lt;!\[CDATA\[</start>
+                <end>\]\]&gt;</end>
+                <include>
+                    <!-- Highlight our delimiters -->
+                    <context sub-pattern="0" where="start" style-ref="xml:cdata-delim" class="no-spell-check"/>
+                    <context sub-pattern="0" where="end" style-ref="xml:cdata-delim"/>
+                    <!-- And include regular Nasal (no XML extensions) -->
+                    <context ref="nasal"/>
+                </include>
+            </context>
+            <context id="character-reference" style-ref="xml:entity">
+                <match>&amp;(#([0-9]+|x[a-fA-F0-9]+)|lt|gt|amp|quot|apos);</match>
+            </context>
+            <context id="unallowed-chars" style-ref="xml:error" extend-parent="false">
+                <match>[&amp;&lt;&gt;]</match>
+            </context>
+        </include>
+    </context>
+
+    <!-- For use when embedded in XML, e.g. in a <script> tag. -->
+    <context id="xml">
+        <include>
+            <context id="script">
+                <start>(?&lt;=&lt;script&gt;)</start><!-- look behind for <script> as a start -->
+                <end>(?=&lt;/script&gt;)</end><!-- look ahead for </script> as an end -->
+                <include>
+                    <context ref="xml-extras"/>
+                    <context ref="nasal"/>
+                </include>
+            </context>
+            <context id="dialog-open">
+                <start>(?&lt;=&lt;open&gt;)</start><!-- look behind for <open> as a start -->
+                <end>(?=&lt;/open&gt;)</end><!-- look ahead for </open> as an end -->
+                <include>
+                    <context ref="xml-extras"/>
+                    <context ref="nasal"/>
+                </include>
+            </context>
+            <context id="dialog-close">
+                <start>(?&lt;=&lt;close&gt;)</start><!-- look behind for <close> as a start -->
+                <end>(?=&lt;/close&gt;)</end><!-- look ahead for </close> as an end -->
+                <include>
+                    <context ref="xml-extras"/>
+                    <context ref="nasal"/>
+                </include>
+            </context>
+            <context id="model-load">
+                <start>(?&lt;=&lt;load&gt;)</start><!-- look behind for <load> as a start -->
+                <end>(?=&lt;/load&gt;)</end><!-- look ahead for </load> as an end -->
+                <include>
+                    <context ref="xml-extras"/>
+                    <context ref="nasal"/>
+                </include>
+            </context>
+            <context id="model-unload">
+                <start>(?&lt;=&lt;unload&gt;)</start><!-- look behind for <unload> as a start -->
+                <end>(?=&lt;/unload&gt;)</end><!-- look ahead for </unload> as an end -->
+                <include>
+                    <context ref="xml-extras"/>
+                    <context ref="nasal"/>
+                </include>
+            </context>
+        </include>
+    </context>
+  </definitions>
+</language>
