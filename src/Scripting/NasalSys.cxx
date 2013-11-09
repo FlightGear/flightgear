@@ -126,7 +126,8 @@ public:
     if (_singleShot) {
       globals->get_event_mgr()->addEvent(_name, this, &TimerObj::invoke, _interval);
     } else {
-      globals->get_event_mgr()->addTask(_name, this, &TimerObj::invoke, _interval);
+      globals->get_event_mgr()->addTask(_name, this, &TimerObj::invoke,
+                                        _interval, _interval /* delay */);
     }
   }
   
