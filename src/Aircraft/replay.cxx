@@ -907,7 +907,7 @@ FGReplay::saveTape(const SGPropertyNode* ConfigData)
     struct tm *local_tm;
     local_tm = localtime( &calendar_time );
     char time_str[256];
-    strftime( time_str, 256, "%Y%02m%02d-%02H%02M%02S", local_tm);
+    strftime( time_str, 256, "%Y%m%d-%H%M%S", local_tm);
     p.concat(time_str);
     p.concat(".fgtape");
 
