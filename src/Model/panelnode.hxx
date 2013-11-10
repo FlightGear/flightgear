@@ -5,6 +5,7 @@
 #include <osg/Matrix>
 #include <osg/Drawable>
 
+#include <memory>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/props/props.hxx>
 
@@ -15,9 +16,7 @@ class SGPropertyNode;
 
 class FGPanelNode : public osg::Drawable
 {
-public:
-    FGPanelNode();
-  
+public:  
     FGPanelNode(SGPropertyNode* props);
     virtual ~FGPanelNode();
 
@@ -51,9 +50,14 @@ public:
       */
     bool isVisible2d() const;
 private:
+    FGPanelNode(); // for 2D panels
+    
     void commonInit();
     void initWithPanel();
     
+    bool panelMouseClickCommand(const SGPropertyNode * arg);
+    
+    const bool _is2d;
     SGSharedPtr<FGPanel> _panel;
     std::string _panelPath;
   
@@ -69,6 +73,9 @@ private:
     // coordinates into 3D coordinates of the panel quadrilateral.
     osg::Matrix _xform;  
   
+    SGPropertyChangeListener* _listener;
+    std::auto_ptr<SGPropertyChangeListener> _pathListener;
+    
     /// should the 2D panel auto-hide when the view orientation changes
     mutable SGPropertyNode_ptr _autoHide2d;
     

@@ -43,30 +43,18 @@ private:
     FGPanelNode* _panelNode;
 };
 
-static FGPanelNode* global_panel = NULL;
-
-/**
- * Built-in command: pass a mouse click to the panel.
- *
- * button: the mouse button number, zero-based.
- * is-down: true if the button is down, false if it is up.
- * x-pos: the x position of the mouse click.
- * y-pos: the y position of the mouse click.
- */
-static bool
-do_panel_mouse_click (const SGPropertyNode * arg)
+class PanelPathListener : public SGPropertyChangeListener
 {
-  if (global_panel)
-    return global_panel->getPanel()
-    ->doMouseAction(arg->getIntValue("button"),
-                    arg->getBoolValue("is-down") ? PU_DOWN : PU_UP,
-                    arg->getIntValue("x-pos"),
-                    arg->getIntValue("y-pos"));
-  else
-    return false;
-  
-  return false;
-}
+public:
+    PanelPathListener(FGPanelNode* pn) : _panelNode(pn) {}
+    
+    virtual void valueChanged (SGPropertyNode * node)
+    {
+        _panelNode->setPanelPath(node->getStringValue());
+    }
+private:
+    FGPanelNode* _panelNode;
+};
 
 class FGPanelPickCallback : public SGPickCallback {
 public:
@@ -138,12 +126,14 @@ public:
   
 private:
   FGPanelNode* panel;
-  SGPropertyNode* visProp;
+  SGPropertyNode_ptr visProp;
 };
 
 
 FGPanelNode::FGPanelNode(SGPropertyNode* props) :
-  _resizeToViewport(false)
+    _is2d(false),
+    _resizeToViewport(false),
+    _listener(NULL)
 {  
   commonInit();
   _panelPath = props->getStringValue("path");
@@ -168,20 +158,45 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props) :
 }
 
 FGPanelNode::FGPanelNode() :
+    _is2d(true),
   _resizeToViewport(true),
   _depthTest(false)
 {
+    SGCommandMgr::instance()->addCommand("panel-mouse-click", this, &FGPanelNode::panelMouseClickCommand);
+
+    SGPropertyNode* pathNode = fgGetNode("/sim/panel/path");
+    _pathListener.reset(new PanelPathListener(this));
+    pathNode->addChangeListener(_pathListener.get());
+    setPanelPath(pathNode->getStringValue());
+    
     // for a 2D panel, various options adjust the transformation
     // matrix. We need to pass this data on to OSG or its bounding box
     // will be stale, and picking will break.
     // http://code.google.com/p/flightgear-bugs/issues/detail?id=864
-    PanelTransformListener* ptl = new PanelTransformListener(this);
-    fgGetNode("/sim/panel/x-offset", true)->addChangeListener(ptl);
-    fgGetNode("/sim/panel/y-offset", true)->addChangeListener(ptl);
-    fgGetNode("/sim/startup/xsize", true)->addChangeListener(ptl);
-    fgGetNode("/sim/startup/ysize", true)->addChangeListener(ptl);
+    _listener = new PanelTransformListener(this);
+    fgGetNode("/sim/panel/x-offset", true)->addChangeListener(_listener);
+    fgGetNode("/sim/panel/y-offset", true)->addChangeListener(_listener);
+    fgGetNode("/sim/startup/xsize", true)->addChangeListener(_listener);
+    fgGetNode("/sim/startup/ysize", true)->addChangeListener(_listener);
     
     commonInit();
+}
+
+FGPanelNode::~FGPanelNode()
+{
+    if (_is2d) {
+        SGCommandMgr::instance()->removeCommand("panel-mouse-click");
+        SGPropertyNode* pathNode = fgGetNode("/sim/panel/path");
+        pathNode->removeChangeListener(_pathListener.get());
+    }
+    
+    if (_listener) {
+        fgGetNode("/sim/panel/x-offset", true)->removeChangeListener(_listener);
+        fgGetNode("/sim/panel/y-offset", true)->removeChangeListener(_listener);
+        fgGetNode("/sim/startup/xsize", true)->removeChangeListener(_listener);
+        fgGetNode("/sim/startup/ysize", true)->removeChangeListener(_listener);
+        delete _listener;
+    }
 }
 
 void FGPanelNode::setPanelPath(const std::string& panel)
@@ -262,10 +277,6 @@ void FGPanelNode::initWithPanel()
   }
 
   dirtyBound();
-}
-
-FGPanelNode::~FGPanelNode()
-{
 }
 
 osg::Matrix FGPanelNode::transformMatrix() const
@@ -374,33 +385,9 @@ static osg::Node* createGeode(FGPanelNode* panel)
     return geode;
 }
 
-class PanelPathListener : public SGPropertyChangeListener
-{
-public:
-  PanelPathListener(FGPanelNode* pn) : _panelNode(pn) {}
-  
-  virtual void valueChanged (SGPropertyNode * node)
-  {
-    _panelNode->setPanelPath(node->getStringValue());
-  }
-private:
-  FGPanelNode* _panelNode;
-};
-
-
 osg::Node* FGPanelNode::create2DPanelNode()
 {
-  SGCommandMgr::instance()->addCommand("panel-mouse-click", do_panel_mouse_click);
-  
-  SGPropertyNode* pathNode = fgGetNode("/sim/panel/path");
-  
-  FGPanelNode* drawable = new FGPanelNode();
-// need a global to keep the panel_mouse_click command working, sadly
-  global_panel = drawable;
-  
-  PanelPathListener* ppo = new PanelPathListener(drawable);
-  pathNode->addChangeListener(ppo);
-  drawable->setPanelPath(pathNode->getStringValue());
+  FGPanelNode* drawable = new FGPanelNode;
     
   osg::Switch* ps = new osg::Switch;
   osg::StateSet* stateSet = ps->getOrCreateStateSet();
@@ -423,4 +410,21 @@ osg::Node* FGPanelNode::load(SGPropertyNode *n)
   FGPanelNode* drawable = new FGPanelNode(n);
   drawable->lazyLoad(); // force load now for 2.5D panels
   return createGeode(drawable);
+}
+
+/**
+ * Built-in command: pass a mouse click to the panel.
+ *
+ * button: the mouse button number, zero-based.
+ * is-down: true if the button is down, false if it is up.
+ * x-pos: the x position of the mouse click.
+ * y-pos: the y position of the mouse click.
+ */
+bool
+FGPanelNode::panelMouseClickCommand(const SGPropertyNode * arg)
+{
+    return _panel->doMouseAction(arg->getIntValue("button"),
+                         arg->getBoolValue("is-down") ? PU_DOWN : PU_UP,
+                         arg->getIntValue("x-pos"),
+                         arg->getIntValue("y-pos"));
 }
