@@ -1,6 +1,7 @@
 
 #include "NasalModelData.hxx"
 #include "NasalSys.hxx"
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include <simgear/math/SGMath.hxx>
@@ -197,6 +198,9 @@ void FGNasalModelDataProxy::modelLoaded( const std::string& path,
                                          SGPropertyNode *prop,
                                          osg::Node *branch )
 {
+    if( fgGetBool("/sim/disable-embedded-nasal") )
+        return;
+
     if(!prop)
         return;
     
