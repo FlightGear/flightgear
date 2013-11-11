@@ -256,8 +256,8 @@ public:
       @return the thrust in pounds */
   double Calculate(double EnginePower);
   FGColumnVector3 GetPFactor(void) const;
-  string GetThrusterLabels(int id, const string& delimeter);
-  string GetThrusterValues(int id, const string& delimeter);
+  std::string GetThrusterLabels(int id, const std::string& delimeter);
+  std::string GetThrusterValues(int id, const std::string& delimeter);
 
   void   SetReverseCoef (double c) { Reverse_coef = c; }
   double GetReverseCoef (void) const { return Reverse_coef; }

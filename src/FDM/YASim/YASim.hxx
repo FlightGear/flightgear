@@ -57,7 +57,7 @@ public:
     SGPropertyNode_ptr _catapult_launch_cmd, _tailhook_position_norm;
     SGPropertyNode_ptr _launchbar_position_norm, _launchbar_holdback_pos_norm;
     SGPropertyNode_ptr _launchbar_state, _launchbar_strop;
-    vector<GearProps> _gearProps;
+    std::vector<GearProps> _gearProps;
 };
 
 #endif // _YASIM_HXX

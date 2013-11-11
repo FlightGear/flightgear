@@ -83,7 +83,7 @@ public:
 
 private:
   bool first_element_read;
-  mutable string working_string;
+  mutable std::string working_string;
   Element *document;
   Element *current_element;
 };

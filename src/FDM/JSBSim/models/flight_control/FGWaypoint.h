@@ -121,7 +121,7 @@ private:
   double source_latitude_unit;
   double source_longitude_unit;
   double radius;
-  string unit;
+  std::string unit;
   enum {eNone=0, eDeg, eRad, eFeet, eMeters} eUnit;
   enum {eNoType=0, eHeading, eDistance} WaypointType;
 

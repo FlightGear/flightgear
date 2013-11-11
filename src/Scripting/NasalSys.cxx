@@ -48,6 +48,8 @@
 #include <Main/fg_props.hxx>
 
 using std::map;
+using std::string;
+using std::vector;
 
 void postinitNasalGUI(naRef globals, naContext c);
 

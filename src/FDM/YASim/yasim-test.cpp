@@ -11,6 +11,7 @@
 #include "Airplane.hpp"
 
 using namespace yasim;
+using std::string;
 
 // Stubs.  Not needed by a batch program, but required to link.
 bool fgSetFloat (const char * name, float val) { return false; }

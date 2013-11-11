@@ -164,18 +164,18 @@ public:
   /** Gets the strings for the current set of gas cells.
       @param delimeter either a tab or comma string depending on output type
       @return a string containing the descriptive names for all parameters */
-  string GetBuoyancyStrings(const string& delimeter);
+  std::string GetBuoyancyStrings(const std::string& delimeter);
 
   /** Gets the coefficient values.
       @param delimeter either a tab or comma string depending on output type
       @return a string containing the numeric values for the current set of
       parameters */
-  string GetBuoyancyValues(const string& delimeter);
+  std::string GetBuoyancyValues(const std::string& delimeter);
 
   FGGasCell::Inputs in;
 
 private:
-  vector <FGGasCell*> Cells;
+  std::vector <FGGasCell*> Cells;
   // Buoyant forces and moments. Excluding the gas weight.
   FGColumnVector3 vTotalForces;  // [lbs]
   FGColumnVector3 vTotalMoments; // [lbs ft]

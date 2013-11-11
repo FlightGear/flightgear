@@ -83,7 +83,7 @@ public:
 
     Element* axis_element = element->FindElement("axis");
     if (axis_element) {
-      string sAxis = element->FindElementValue("axis");
+      std::string sAxis = element->FindElementValue("axis");
       if (sAxis == "X" || sAxis == "x") {
         axis = 1;
       } else if (sAxis == "Y" || sAxis == "y") {

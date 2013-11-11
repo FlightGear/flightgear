@@ -171,7 +171,7 @@ private:
       sign       = 1.0;
     }
 
-    void setTestValue(string value, string Name, FGPropertyManager* propMan) {
+    void setTestValue(std::string value, std::string Name, FGPropertyManager* propMan) {
       if (value.empty()) {
         std::cerr << "No VALUE supplied for switch component: " << Name << std::endl;
       } else {
@@ -197,7 +197,7 @@ private:
 
   };
 
-  vector <test*> tests;
+  std::vector <test*> tests;
 
   void Debug(int from);
 };

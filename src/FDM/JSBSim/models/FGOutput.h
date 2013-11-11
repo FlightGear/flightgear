@@ -221,10 +221,10 @@ public:
       @param idx ID of the output instance from which the name identifier must
                  be obtained
       @result the name identifier.*/
-  string GetOutputName(unsigned int idx) const;
+  std::string GetOutputName(unsigned int idx) const;
 
 private:
-  vector<FGOutputType*> OutputTypes;
+  std::vector<FGOutputType*> OutputTypes;
 
   void Debug(int from);
 };

@@ -166,8 +166,8 @@ public:
   
 private:
 
-  string Frame;
-  string Name;
+  std::string Frame;
+  std::string Name;
   FGFunction* Magnitude_Function;
   FGColumnVector3 vDirection;
   double magnitude;

@@ -41,7 +41,7 @@ private:
     void startArc(const XMLAttributes &atts);
   
     FGAirportDynamics* _dynamics;
-    string value;
+    std::string value;
   
     // map from local (groundnet.xml) to global (nav-cache) IDs for nodes
     std::map<int, PositionedID> _idMap;

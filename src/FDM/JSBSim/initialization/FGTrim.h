@@ -131,7 +131,7 @@ class FGTrim : public FGJSBBase
 {
 private:
 
-  vector<FGTrimAxis*> TrimAxes;
+  std::vector<FGTrimAxis*> TrimAxes;
   unsigned int current_axis;
   int N, Nsub;
   TrimMode mode;

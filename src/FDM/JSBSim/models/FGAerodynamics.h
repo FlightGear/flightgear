@@ -232,7 +232,7 @@ private:
   typedef std::map<std::string,int> AxisIndex;
   AxisIndex AxisIdx;
   FGFunction* AeroRPShift;
-  typedef vector <FGFunction*> AeroFunctionArray;
+  typedef std::vector <FGFunction*> AeroFunctionArray;
   AeroFunctionArray* AeroFunctions;
   FGColumnVector3 vFnative;
   FGColumnVector3 vFw;

@@ -58,16 +58,16 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-const string StateNames[] =   { "all","udot","vdot","wdot","qdot","pdot","rdot",
-                                "hmgt","nlf" 
-                              };
-const string ControlNames[] =  { "Throttle","Sideslip","Angle of Attack",
-                                 "Elevator","Ailerons","Rudder",
-                                 "Altitude AGL", "Pitch Angle",
-                                 "Roll Angle", "Flight Path Angle", 
-                                 "Pitch Trim", "Roll Trim", "Yaw Trim",
-                                 "Heading"
-                               };
+const std::string StateNames[] =   { "all","udot","vdot","wdot","qdot","pdot",
+                                     "rdot","hmgt","nlf" 
+                                   };
+const std::string ControlNames[] =  { "Throttle","Sideslip","Angle of Attack",
+                                      "Elevator","Ailerons","Rudder",
+                                      "Altitude AGL", "Pitch Angle",
+                                      "Roll Angle", "Flight Path Angle", 
+                                      "Pitch Trim", "Roll Trim", "Yaw Trim",
+                                      "Heading"
+                                    };
 
 class FGInitialCondition;
 
@@ -113,8 +113,8 @@ public:
   inline State GetStateType(void) { return state; }
   inline Control GetControlType(void) { return control; }
 
-  inline string GetStateName(void) { return StateNames[state]; }
-  inline string GetControlName(void) { return ControlNames[control]; }
+  inline std::string GetStateName(void) { return StateNames[state]; }
+  inline std::string GetControlName(void) { return ControlNames[control]; }
 
   inline double GetControlMin(void) { return control_min; }
   inline double GetControlMax(void) { return control_max; }

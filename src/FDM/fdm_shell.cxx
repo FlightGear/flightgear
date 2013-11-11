@@ -59,6 +59,8 @@
 #include <FDM/YASim/YASim.hxx>
 #endif
 
+using std::string;
+
 FDMShell::FDMShell() :
   _tankProperties( fgGetNode("/consumables/fuel", true) ),
   _impl(NULL),

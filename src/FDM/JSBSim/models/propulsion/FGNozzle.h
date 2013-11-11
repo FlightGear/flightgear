@@ -90,8 +90,8 @@ public:
   ~FGNozzle();
 
   double Calculate(double vacThrust);
-  string GetThrusterLabels(int id, const string& delimeter);
-  string GetThrusterValues(int id, const string& delimeter);
+  std::string GetThrusterLabels(int id, const std::string& delimeter);
+  std::string GetThrusterValues(int id, const std::string& delimeter);
 
 private:
 //  double PE;

@@ -66,6 +66,7 @@
 
 #include "SchedFlight.hxx"
 
+using std::string;
 
 /******************************************************************************
  * FGScheduledFlight stuff

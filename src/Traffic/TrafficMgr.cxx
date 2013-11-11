@@ -75,6 +75,8 @@
 using std::sort;
 using std::strcmp;
 using std::endl;
+using std::string;
+using std::vector;
 
 /**
  * Thread encapsulating parsing the traffic schedules. 

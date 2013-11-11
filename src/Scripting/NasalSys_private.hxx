@@ -46,7 +46,7 @@ private:
     bool _dead;
     long _last_int;
     double _last_float;
-    string _last_string;
+    std::string _last_string;
 };
 
 

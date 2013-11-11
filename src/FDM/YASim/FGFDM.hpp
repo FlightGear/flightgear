@@ -103,9 +103,9 @@ private:
 
     SGPropertyNode_ptr _turb_magnitude_norm, _turb_rate_hz;
     SGPropertyNode_ptr _gross_weight_lbs;
-    vector<SGPropertyNode_ptr> _tank_level_lbs;
-    vector<ThrusterProps> _thrust_props;
-    vector<FuelProps> _fuel_props;
+    std::vector<SGPropertyNode_ptr> _tank_level_lbs;
+    std::vector<ThrusterProps> _thrust_props;
+    std::vector<FuelProps> _fuel_props;
 };
 
 }; // namespace yasim

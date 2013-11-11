@@ -143,12 +143,12 @@ public:
     FGColumnVector3 AeroUVW;
     FGColumnVector3 AeroPQR;
     FGColumnVector3 PQR;
-    vector <double> ThrottleCmd;
-    vector <double> MixtureCmd;
-    vector <double> ThrottlePos;
-    vector <double> MixturePos;
-    vector <double> PropAdvance;
-    vector <bool> PropFeather;
+    std::vector <double> ThrottleCmd;
+    std::vector <double> MixtureCmd;
+    std::vector <double> ThrottlePos;
+    std::vector <double> MixturePos;
+    std::vector <double> PropAdvance;
+    std::vector <bool> PropFeather;
     double TotalDeltaT;
   };
 
@@ -158,7 +158,7 @@ public:
   enum EngineType {etUnknown, etRocket, etPiston, etTurbine, etTurboprop, etElectric};
 
   EngineType             GetType(void) const { return Type; }
-  virtual const string&  GetName(void) const { return Name; }
+  virtual const std::string&  GetName(void) const { return Name; }
 
   // Engine controls
   virtual double  GetThrottleMin(void) const { return MinThrottle; }
@@ -178,7 +178,7 @@ public:
   virtual void SetStarved(void)    { Starved = true; }
 
   virtual void SetRunning(bool bb) { Running=bb; }
-  virtual void SetName(const string& name) { Name = name; }
+  virtual void SetName(const std::string& name) { Name = name; }
   virtual void SetFuelFreeze(bool f) { FuelFreeze = f; }
 
   virtual void SetStarter(bool s) { Starter = s; }

@@ -55,6 +55,8 @@
 #include "SchedFlight.hxx"
 #include "TrafficMgr.hxx"
 
+using std::string;
+
 /******************************************************************************
  * the FGAISchedule class contains data members and code to maintain a
  * schedule of Flights for an artificially controlled aircraft.

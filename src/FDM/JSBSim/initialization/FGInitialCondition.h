@@ -650,7 +650,7 @@ public:
       @param rstname The name of an initial conditions file
       @param useStoredPath true if the stored path to the IC file should be used
       @return true if successful */
-  bool Load(string rstname, bool useStoredPath = true );
+  bool Load(std::string rstname, bool useStoredPath = true );
 
   /** Get the number of engines running
    */
@@ -676,7 +676,7 @@ private:
 
   speedset lastSpeedSet;
   altitudeset lastAltitudeSet;
-  vector<int> enginesRunning;
+  std::vector<int> enginesRunning;
 
   FGFDMExec *fdmex;
   FGPropertyManager *PropertyManager;

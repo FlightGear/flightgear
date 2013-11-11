@@ -98,7 +98,7 @@ private:
   double target_angle_unit;
   double source_angle_unit;
   double output_unit;
-  string unit;
+  std::string unit;
 
   void Debug(int from);
 };

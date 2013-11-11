@@ -32,6 +32,7 @@
 #include "YASim.hxx"
 
 using namespace yasim;
+using std::string;
 
 static const float YASIM_PI = 3.14159265358979323846;
 static const float RAD2DEG = 180/YASIM_PI;

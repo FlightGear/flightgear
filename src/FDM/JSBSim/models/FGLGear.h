@@ -252,7 +252,7 @@ public:
   double GetLocalGear(int idx) const { return vLocalGear(idx); }
 
   /// Gets the name of the gear
-  const string& GetName(void) const {return name; }
+  const std::string& GetName(void) const {return name; }
   /// Gets the Weight On Wheels flag value
   bool    GetWOW(void) const {return WOW; }
   /// Gets the current compressed length of the gear in feet

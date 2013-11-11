@@ -27,6 +27,8 @@
 #include <Airports/dynamics.hxx>
 #include <Airports/airport.hxx>
 
+using std::string;
+
 /*****************************************************************************
  * Helper function for parsing position string
  ****************************************************************************/
