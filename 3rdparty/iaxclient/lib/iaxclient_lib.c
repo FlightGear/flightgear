@@ -699,7 +699,7 @@ EXPORT void iaxc_shutdown()
 	}
 	put_iaxc_lock();
 #ifdef WIN32
-	closesocket(iax_get_fd()); //fd:
+	//closesocket(iax_get_fd()); //fd:
 #endif
 
 	free(calls);
@@ -1797,7 +1797,7 @@ static void service_network()
 					e->etype);
 		} else
 		{
-			iaxci_usermsg(IAXC_STATUS,
+			iaxci_usermsg(IAXC_ERROR,
 					"Event (type %d) for a non-existant session. Dropping",
 					e->etype);
 		}
