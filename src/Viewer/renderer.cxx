@@ -430,6 +430,7 @@ FGRenderer::FGRenderer() :
 
 FGRenderer::~FGRenderer()
 {
+    DeletionManager::uninstall(mRealRoot.get());
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = NULL;
 #endif
