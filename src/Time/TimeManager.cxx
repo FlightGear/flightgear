@@ -54,11 +54,7 @@ static bool do_timeofday (const SGPropertyNode * arg)
 
 TimeManager::TimeManager() :
   _inited(false),
-  _impl(NULL),
-  _sceneryLoaded("sim/sceneryloaded"),
-  _modelHz("sim/model-hz"),
-  _timeDelta("sim/time/delta-realtime-sec"),
-  _simTimeDelta("sim/time/delta-sec")
+  _impl(NULL)
 {
   SGCommandMgr::instance()->addCommand("timeofday", do_timeofday);
 }
@@ -106,6 +102,11 @@ void TimeManager::init()
   _lastFrameTime = 0;
   _frameLatencyMax = 0.0;
   _frameCount = 0;
+    
+    _sceneryLoaded = fgGetNode("sim/sceneryloaded", true);
+    _modelHz = fgGetNode("sim/model-hz", true);
+    _timeDelta = fgGetNode("sim/time/delta-realtime-sec", true);
+    _simTimeDelta = fgGetNode("sim/time/delta-sec", true);
 }
 
 void TimeManager::unbind()
@@ -119,7 +120,10 @@ void TimeManager::unbind()
     _frameLatency.clear();
     _frameRateWorst.clear();
     
-    // and the property objects too
+    _sceneryLoaded.clear();
+    _modelHz.clear();
+    _timeDelta.clear();
+    _simTimeDelta.clear();
 }
 
 void TimeManager::postinit()
@@ -203,15 +207,16 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
     
   SGSubsystemGroup* fdmGroup = 
     globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::FDM);
-  fdmGroup->set_fixed_update_time(1.0 / _modelHz);
+  double modelHz = _modelHz->getDoubleValue();
+  fdmGroup->set_fixed_update_time(1.0 / modelHz);
   
 // round the real time down to a multiple of 1/model-hz.
 // this way all systems are updated the _same_ amount of dt.
   dt += _dtRemainder;
-  int multiLoop = long(floor(dt * _modelHz));
+  int multiLoop = long(floor(dt * modelHz));
   multiLoop = SGMisc<long>::max(0, multiLoop);
-  _dtRemainder = dt - double(multiLoop)/double(_modelHz);
-  dt = double(multiLoop)/double(_modelHz);
+  _dtRemainder = dt - double(multiLoop)/modelHz;
+  dt = double(multiLoop)/modelHz;
 
   realDt = dt;
   if (_clockFreeze->getBoolValue() || wait_for_scenery) {
@@ -224,8 +229,8 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   globals->inc_sim_time_sec(simDt);
 
 // These are useful, especially for Nasal scripts.
-  _timeDelta = realDt;
-  _simTimeDelta = simDt;
+  _timeDelta->setDoubleValue(realDt);
+  _simTimeDelta->setDoubleValue(simDt);
 }
 
 void TimeManager::update(double dt)

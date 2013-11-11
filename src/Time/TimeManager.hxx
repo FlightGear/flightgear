@@ -23,7 +23,6 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
-#include <simgear/props/propertyObject.hxx>
 
 // forward decls
 class SGTime;
@@ -88,9 +87,9 @@ private:
   double _frameLatencyMax;
   int _frameCount;
   
-  SGPropObjBool _sceneryLoaded;
-  SGPropObjInt _modelHz;
-  SGPropObjDouble _timeDelta, _simTimeDelta;
+  SGPropertyNode_ptr _sceneryLoaded;
+  SGPropertyNode_ptr _modelHz;
+  SGPropertyNode_ptr _timeDelta, _simTimeDelta;
 };
 
 #endif // of FG_TIME_TIMEMANAGER_HXX
