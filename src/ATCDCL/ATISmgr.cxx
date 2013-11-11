@@ -47,10 +47,8 @@ FGATISMgr::~FGATISMgr()
 {
     globals->set_ATIS_mgr(NULL);
 
-    for (unsigned int unit = 0;unit < _maxCommRadios; ++unit)
-    {
+    for (unsigned int unit = 0;unit < radios.size(); ++unit) {
         delete radios[unit];
-        radios[unit] = NULL;
     }
 
 #ifdef ENABLE_AUDIO_SUPPORT
