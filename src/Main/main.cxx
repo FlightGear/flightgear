@@ -391,6 +391,7 @@ int fgMainInit( int argc, char **argv ) {
     
     // pass control off to the master event handler
     int result = fgOSMainLoop();
+    fgOSCloseWindow();
     
     // clean up here; ensure we null globals to avoid
     // confusing the atexit() handler

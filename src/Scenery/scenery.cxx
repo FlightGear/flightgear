@@ -379,9 +379,17 @@ bool FGScenery::scenery_available(const SGGeod& position, double range_m)
   return false;
 }
 
+static osg::ref_ptr<SceneryPager> pager;
+
 SceneryPager* FGScenery::getPagerSingleton()
 {
-    static osg::ref_ptr<SceneryPager> pager = new SceneryPager;
+    if (!pager)
+        pager = new SceneryPager;
     return pager.get();
+}
+
+void FGScenery::resetPagerSingleton()
+{
+    pager = NULL;
 }
 

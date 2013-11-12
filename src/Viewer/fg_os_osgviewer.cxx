@@ -386,6 +386,15 @@ void fgOSInit(int* argc, char** argv)
     WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
 
+void fgOSCloseWindow()
+{
+    FGScenery::resetPagerSingleton();
+    mainCamera = NULL;
+    flightgear::CameraGroup::setDefault(NULL);
+    WindowSystemAdapter::setWSA(NULL);
+    viewer = NULL;
+}
+
 void fgOSFullScreen()
 {
     std::vector<osgViewer::GraphicsWindow*> windows;
@@ -521,7 +530,9 @@ static int _cursor = -1;
 void fgSetMouseCursor(int cursor)
 {
     _cursor = cursor;
-  
+    if (!viewer)
+        return;
+    
     std::vector<osgViewer::GraphicsWindow*> windows;
     viewer->getWindows(windows);
     BOOST_FOREACH(osgViewer::GraphicsWindow* gw, windows) {

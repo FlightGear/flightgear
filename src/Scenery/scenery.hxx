@@ -119,6 +119,8 @@ public:
     // Static because access to the pager is needed before the rest of
     // the scenery is initialized.
     static flightgear::SceneryPager* getPagerSingleton();
+    static void resetPagerSingleton();
+    
     flightgear::SceneryPager* getPager() { return _pager.get(); }
 };
 
