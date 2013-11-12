@@ -281,7 +281,7 @@ if ($fh->open($FG_AIRPORTS, "r")) {
             $hadlines = 0;
             next;
         }
-        elsif ($z=~/^1\s+\d+\s+[01]\s+[01]\s+([A-Z0-9]+)\s+(.+)\s*$/)
+        elsif ($z=~/^1\s+-?\d+\s+[01]\s+[01]\s+([A-Z0-9]+)\s+(.+)\s*$/)
         {
             # Airport Header
             $icao = $1;
