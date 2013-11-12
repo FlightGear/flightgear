@@ -143,7 +143,8 @@ static void fgIdleFunction ( void ) {
         
         fgSetString("/sim/terrasync/cache-path", tsyncCache.c_str());
         
-        simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync(globals->get_props());
+        simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync();
+        terra_sync->setRoot(globals->get_props());
         globals->add_subsystem("terrasync", terra_sync);
         
         
