@@ -100,31 +100,12 @@ FGEnvironmentMgr::FGEnvironmentMgr () :
 
 FGEnvironmentMgr::~FGEnvironmentMgr ()
 {
-  SGSubsystem * subsys;
-
-  subsys = get_subsystem( "ridgelift" );
   remove_subsystem( "ridgelift" );
-  delete subsys;
-
-  subsys = get_subsystem( "terrainsampler" );
   remove_subsystem( "terrainsampler" );
-  delete subsys;
-
-  subsys = get_subsystem( "precipitation" );
   remove_subsystem("precipitation");
-  delete subsys;
-
-  subsys = get_subsystem("realwx");
   remove_subsystem("realwx");
-  delete subsys;
-
-  subsys = get_subsystem("controller");
   remove_subsystem("controller");
-  delete subsys;
-
-  subsys = get_subsystem("magvar");
   remove_subsystem("magvar");
-  delete subsys;
   
   delete fgClouds;
   delete _environment;

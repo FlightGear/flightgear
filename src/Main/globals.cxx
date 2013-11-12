@@ -185,13 +185,17 @@ FGGlobals::~FGGlobals()
     // deallocation of AIModel objects. To ensure we can safely
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
-    SGSubsystem* ai = subsystem_mgr->remove("ai-model");
+    SGSubsystem* ai = globals->get_subsystem("ai-model");
     if (ai) {
         ai->unbind();
-        delete ai;
+        subsystem_mgr->remove("ai-model");
     }
-    SGSubsystem* sound = subsystem_mgr->remove("sound");
-
+    
+    subsystem_mgr->remove("fx");
+    subsystem_mgr->remove("sound");
+    subsystem_mgr->remove("tile-manager");
+    subsystem_mgr->remove("model-manager");
+    
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
     delete subsystem_mgr;
@@ -211,7 +215,6 @@ FGGlobals::~FGGlobals()
     delete fontcache;
 
     delete channellist;
-    delete sound;
 
     delete locale;
     locale = NULL;
