@@ -1,10 +1,6 @@
 
 if (MSVC)
-	if (CMAKE_CL_64)
-		set( RESOURCE_FILE flightgear64.rc )
-	else (CMAKE_CL_64)
-		set( RESOURCE_FILE flightgear.rc )
-	endif (CMAKE_CL_64)
+	set( RESOURCE_FILE flightgear.rc )
 endif (MSVC)
 
 set(SOURCES
