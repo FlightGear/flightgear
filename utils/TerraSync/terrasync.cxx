@@ -374,7 +374,8 @@ int main( int argc, char **argv )
     }
 
     {
-        pTerraSync = new simgear::SGTerraSync(root);
+        pTerraSync = new simgear::SGTerraSync;
+        pTerraSync->setRoot(root);
         pTerraSync->bind();
         pTerraSync->init();
 
