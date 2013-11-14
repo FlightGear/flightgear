@@ -29,9 +29,6 @@
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/MouseEvent.hxx>
 
-SGPropertyNode_ptr CanvasWidget::_time,
-                   CanvasWidget::_view_height;
-
 //------------------------------------------------------------------------------
 CanvasWidget::CanvasWidget( int x, int y,
                             int width, int height,

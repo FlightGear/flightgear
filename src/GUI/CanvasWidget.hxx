@@ -55,7 +55,7 @@ class CanvasWidget:
                           //   automatically resized if the size of the widget
                           //   changes.
 
-    static SGPropertyNode_ptr _time,
+    SGPropertyNode_ptr _time,
                               _view_height;
 };
 
