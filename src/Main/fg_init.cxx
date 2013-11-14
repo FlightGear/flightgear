@@ -25,16 +25,18 @@
 #  include <config.h>
 #endif
 
+#include <simgear/compiler.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>             // strcmp()
 
-#ifdef _WIN32
+#if defined(SG_WINDOWS)
 #  include <io.h>               // isatty()
+#  include <process.h>          // _getpid()
+#  include <Windows.h>
 #  define isatty _isatty
 #endif
-
-#include <simgear/compiler.h>
 
 #include <string>
 #include <boost/algorithm/string/compare.hpp>
@@ -407,7 +409,7 @@ static SGPath platformDefaultDataPath()
 }
 #endif
 
-void fgInitHome()
+bool fgInitHome()
 {
   SGPath dataPath = SGPath::fromEnv("FG_HOME", platformDefaultDataPath());
   globals->set_fg_home(dataPath.c_str());
@@ -416,6 +418,66 @@ void fgInitHome()
     if (!fgHome.exists()) {
         fgHome.create(0755);
     }
+    
+    if (!fgHome.exists()) {
+        flightgear::fatalMessageBox("Problem setting up user data",
+                                    "Unable to create the user-data storage folder at: '"
+                                    + dataPath.str() + "'");
+        return false;
+    }
+    
+    if (fgGetBool("/sim/fghome-readonly", false)) {
+        // user / config forced us into readonly mode, fine
+        SG_LOG(SG_GENERAL, SG_INFO, "Running with FG_HOME readonly");
+        return true;
+    }
+    
+// write our PID, and check writeability
+    SGPath pidPath(dataPath, "fgfs.pid");
+    if (pidPath.exists()) {
+        SG_LOG(SG_GENERAL, SG_INFO, "flightgear instance already running, switching to FG_HOME read-only.");
+        // set a marker property so terrasync/navcache don't try to write
+        // from secondary instances
+        fgSetBool("/sim/fghome-readonly", true);
+        return true;
+    }
+    
+    char buf[16];
+    bool result = false;
+#if defined(SG_WINDOWS)
+    size_t len = snprintf(buf, 16, "%d", _getpid());
+
+    HANDLE f = CreateFileA(pidPath.c_str(), GENERIC_READ | GENERIC_WRITE, 
+						   FILE_SHARE_READ, /* sharing */
+                           NULL, /* security attributes */
+                           CREATE_NEW, /* error if already exists */
+                           FILE_FLAG_DELETE_ON_CLOSE,
+						   NULL /* template */);
+    
+    result = (f != INVALID_HANDLE_VALUE);
+    if (result) {
+		DWORD written;
+        WriteFile(f, buf, len, &written, NULL /* overlapped */);
+    }
+#else
+    // POSIX, do open+unlink trick to the file is deleted on exit, even if we
+    // crash or exit(-1)
+    size_t len = snprintf(buf, 16, "%d", getpid());
+    int fd = ::open(pidPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0644);
+    if (fd >= 0) {
+        ::write(fd, buf, len);
+        ::unlink(pidPath.c_str()); // delete file when app quits
+        result = true;
+    }
+    
+    fgSetBool("/sim/fghome-readonly", false);
+#endif
+    if (!result) {
+        flightgear::fatalMessageBox("File permissions problem",
+                                    "Can't write to user-data storage folder, check file permissions and FG_HOME.",
+                                    "User-data at:" + dataPath.str());
+    }
+    return result;
 }
 
 // Read in configuration (file and command line)

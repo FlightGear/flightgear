@@ -267,6 +267,8 @@ public:
         NavDataCache* _instance;
         bool _committed;
     };
+    
+    bool isReadOnly() const;
 private:
   NavDataCache();
   

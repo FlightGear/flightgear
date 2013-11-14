@@ -556,6 +556,10 @@ void FGAirport::loadProcedures() const
 void FGAirport::loadSceneryDefinitions() const
 {
   NavDataCache* cache = NavDataCache::instance();
+    if (cache->isReadOnly()) {
+        return;
+    }
+    
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "threshold", path)) {
     return; // no XML threshold data
@@ -636,6 +640,10 @@ void FGAirport::validateTowerData() const
 
   mTowerDataLoaded = true;
   NavDataCache* cache = NavDataCache::instance();
+    if (cache->isReadOnly()) {
+        return;
+    }
+    
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "twr", path)) {
     return; // no XML tower data
@@ -684,6 +692,10 @@ bool FGAirport::validateILSData()
   
   mILSDataLoaded = true;
   NavDataCache* cache = NavDataCache::instance();
+    if (cache->isReadOnly()) {
+        return false;
+    }
+    
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "ils", path)) {
     return false; // no XML tower data

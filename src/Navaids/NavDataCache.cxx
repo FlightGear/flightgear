@@ -58,6 +58,7 @@
 #include <simgear/threads/SGGuard.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/options.hxx>
 #include "markerbeacon.hxx"
 #include "navrecord.hxx"
@@ -209,6 +210,7 @@ public:
     outer(o),
     db(NULL),
     path(p),
+    readOnly(false),
     cacheHits(0),
     cacheMisses(0),
     transactionLevel(0),
@@ -225,12 +227,14 @@ public:
   {
     SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache at:" << path);
 	
-	// see http://code.google.com/p/flightgear-bugs/issues/detail?id=1055
-	// for the logic here. Sigh.
+      readOnly = fgGetBool("/sim/fghome-readonly", false);
+
+      int openFlags = readOnly ? SQLITE_OPEN_READONLY :
+        SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+      // see http://code.google.com/p/flightgear-bugs/issues/detail?id=1055
+      // for the UTF8 / path logic here
 	std::string pathUtf8 = simgear::strutils::convertWindowsLocal8BitToUtf8(path.str());
-    sqlite3_open_v2(pathUtf8.c_str(), &db,
-                    SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-    
+    sqlite3_open_v2(pathUtf8.c_str(), &db, openFlags, NULL);
     
     sqlite3_stmt_ptr checkTables =
       prepare("SELECT count(*) FROM sqlite_master WHERE name='properties'");
@@ -240,7 +244,7 @@ public:
     
     execSelect(checkTables);
     bool didCreate = false;
-    if (sqlite3_column_int(checkTables, 0) == 0) {
+    if (!readOnly && (sqlite3_column_int(checkTables, 0) == 0)) {
       SG_LOG(SG_NAVCACHE, SG_INFO, "will create tables");
       initTables();
       didCreate = true;
@@ -858,7 +862,8 @@ public:
   NavDataCache* outer;
   sqlite3* db;
   SGPath path;
-  
+    bool readOnly;
+    
   /// the actual cache of ID -> instances. This holds an owning reference,
   /// so once items are in the cache they will never be deleted until
   /// the cache drops its reference
@@ -1048,7 +1053,11 @@ NavDataCache::NavDataCache()
       SG_LOG(SG_NAVCACHE, t == 0 ? SG_WARN : SG_ALERT, "NavCache: init failed:" << e.what()
              << " (attempt " << t << ")");
       d.reset();
-      homePath.remove();
+        
+        // only wipe the existing if not readonly
+        if (!fgGetBool("/sim/fghome-readonly", false)) {
+            homePath.remove();
+        }
     }
   } // of retry loop
     
@@ -1097,6 +1106,10 @@ NavDataCache* NavDataCache::instance()
   
 bool NavDataCache::isRebuildRequired()
 {
+    if (d->readOnly) {
+        return false;
+    }
+    
     if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
         SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: restore-defaults requested, will rebuild cache");
         return true;
@@ -2146,6 +2159,11 @@ void NavDataCache::dropGroundnetFor(PositionedID aAirport)
   q = d->prepare("DELETE FROM groundnet_edge WHERE airport=?1");
   sqlite3_bind_int64(q, 1, aAirport);
   d->execUpdate(q);
+}
+
+bool NavDataCache::isReadOnly() const
+{
+    return d->readOnly;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

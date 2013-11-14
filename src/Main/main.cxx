@@ -96,6 +96,39 @@ static void fgMainLoop( void )
     simgear::AtomicChangeListener::fireChangeListeners();
 }
 
+static void initTerrasync()
+{
+    if (fgGetBool("/sim/fghome-readonly", false)) {
+        return;
+    }
+    
+    // start TerraSync up now, so it can be synchronizing shared models
+    // and airports data in parallel with a nav-cache rebuild.
+    SGPath tsyncCache(globals->get_fg_home());
+    tsyncCache.append("terrasync-cache.xml");
+    
+    // wipe the cache file if requested
+    if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
+        SG_LOG(SG_GENERAL, SG_INFO, "restore-defaults requested, wiping terrasync update cache at " <<
+               tsyncCache);
+        if (tsyncCache.exists()) {
+            tsyncCache.remove();
+        }
+    }
+    
+    fgSetString("/sim/terrasync/cache-path", tsyncCache.c_str());
+    
+    simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync();
+    terra_sync->setRoot(globals->get_props());
+    globals->add_subsystem("terrasync", terra_sync);
+    
+    terra_sync->bind();
+    terra_sync->init();
+    
+    // add the terrasync root as a data path so data can be retrieved from it
+    std::string terraSyncDir(fgGetString("/sim/terrasync/scenery-dir"));
+    globals->append_data_path(terraSyncDir);
+}
 
 static void registerMainLoop()
 {
@@ -126,36 +159,8 @@ static void fgIdleFunction ( void ) {
         }
 
     } else if ( idle_state == 2 ) {
-        
-        // start TerraSync up now, so it can be synchronizing shared models
-        // and airports data in parallel with a nav-cache rebuild.
-        SGPath tsyncCache(globals->get_fg_home());
-        tsyncCache.append("terrasync-cache.xml");
-        
-        // wipe the cache file if requested
-        if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
-            SG_LOG(SG_GENERAL, SG_INFO, "restore-defaults requested, wiping terrasync update cache at " <<
-                   tsyncCache);
-            if (tsyncCache.exists()) {
-                tsyncCache.remove();
-            }
-        }
-        
-        fgSetString("/sim/terrasync/cache-path", tsyncCache.c_str());
-        
-        simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync();
-        terra_sync->setRoot(globals->get_props());
-        globals->add_subsystem("terrasync", terra_sync);
-        
-        
-        
-        terra_sync->bind();
-        terra_sync->init();
-        
-        // add the terrasync root as a data path so data can be retrieved from it
-        std::string terraSyncDir(fgGetString("/sim/terrasync/scenery-dir"));
-        globals->append_data_path(terraSyncDir);
-        
+
+        initTerrasync();
         idle_state++;
         fgSplashProgress("loading-nav-dat");
 
@@ -325,10 +330,14 @@ int fgMainInit( int argc, char **argv ) {
     sglog().setLogLevels( SG_ALL, SG_ALERT );
 
     globals = new FGGlobals;
-    fgInitHome();
+    if (!fgInitHome()) {
+        return EXIT_FAILURE;
+    }
     
-    // now home is initialised, we can log to a file inside it
-    logToFile();
+    if (!fgGetBool("/sim/fghome-readonly")) {
+        // now home is initialised, we can log to a file inside it
+        logToFile();
+    }
     
     std::string version;
 #ifdef FLIGHTGEAR_VERSION

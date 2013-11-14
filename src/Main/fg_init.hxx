@@ -34,7 +34,7 @@ class SGPropertyNode;
 // Return the current base package version
 std::string fgBasePackageVersion();
 
-void fgInitHome();
+bool fgInitHome();
 
 // Read in configuration (file and command line)
 int fgInitConfig ( int argc, char **argv );
