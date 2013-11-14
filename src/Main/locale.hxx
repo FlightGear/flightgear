@@ -68,6 +68,14 @@ public:
     const char* getDefaultFont      (const char* fallbackFont);
 
     /**
+     * Obtain a message string, from a localized resource ID, and use it as
+     * a printf format string.
+     */
+    std::string localizedPrintf(const char* id, const char* resource, ... );
+    
+    std::string vlocalizedPrintf(const char* id, const char* resource, va_list args);
+    
+    /**
      * Simple UTF8 to Latin1 encoder.
      */
     static void utf8toLatin1        (std::string& s);
@@ -104,5 +112,11 @@ protected:
     SGPropertyNode_ptr _currentLocale;
     SGPropertyNode_ptr _defaultLocale;
 };
+
+// global translation wrappers
+
+const char* fgTrMsg(const char* key);
+std::string fgTrPrintfMsg(const char* key, ...);
+
 
 #endif // __FGLOCALE_HXX

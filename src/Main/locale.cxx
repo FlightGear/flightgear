@@ -348,6 +348,24 @@ FGLocale::getDefaultFont(const char* fallbackFont)
     return fallbackFont;
 }
 
+std::string FGLocale::localizedPrintf(const char* id, const char* resource, ... )
+{
+    va_list args;
+    va_start(args, resource);
+    string r = vlocalizedPrintf(id, resource, args);
+    va_end(args);
+    return r;
+}
+
+std::string FGLocale::vlocalizedPrintf(const char* id, const char* resource, va_list args)
+{
+    const char* format = getLocalizedString(id, resource);
+    int len = ::vsprintf(NULL, format, args);
+    char* buf = (char*) alloca(len);
+    ::vsprintf(buf, format, args);
+    return std::string(buf);
+}
+
 // Simple UTF8 to Latin1 encoder.
 void FGLocale::utf8toLatin1(string& s)
 {
@@ -396,4 +414,19 @@ void FGLocale::utf8toLatin1(string& s)
         s.replace(pos, 2, v);
         pos++;
     }
+}
+
+const char* fgTrMsg(const char* key)
+{
+    return globals->get_locale()->getLocalizedString(key, "message");
+}
+
+std::string fgTrPrintfMsg(const char* key, ...)
+{
+    va_list args;
+    va_start(args, key);
+    string r = globals->get_locale()->vlocalizedPrintf(key, "message", args);
+    va_end(args);
+    return r;
+    
 }
