@@ -22,6 +22,7 @@
 #define __FGLOCALE_HXX
 
 #include <string>
+#include <cstdarg> // for va_start/_end
 
 #include <simgear/props/props.hxx>
 

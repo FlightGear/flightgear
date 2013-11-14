@@ -26,7 +26,7 @@
 #include <windows.h>
 #endif
 
-#include <cstdarg> // for va_start/_end
+#include <cstdio>
 #include <boost/foreach.hpp>
 
 #include <simgear/props/props_io.hxx>
