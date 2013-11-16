@@ -23,7 +23,7 @@
 #include <map>
 
 #include <Main/globals.hxx>
-#include <GUI/CocoaAutoreleasePool.hxx>
+#include <GUI/CocoaHelpers_private.h>
 
 class CocoaMouseCursor::CocoaMouseCursorPrivate
 {

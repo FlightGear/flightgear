@@ -64,8 +64,8 @@
 #  include <shellapi.h>
 #endif
 
-#ifdef SG_MAC
-# include "FGCocoaMenuBar.hxx" // for cocoaOpenUrl
+#if defined(SG_MAC)
+# include <GUI/CocoaHelpers.h> // for cocoaOpenUrl
 #endif
 
 #include "gui.h"

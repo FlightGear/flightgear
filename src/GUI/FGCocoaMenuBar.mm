@@ -11,7 +11,7 @@
 #include <simgear/misc/strutils.hxx>
 
 #include <Main/fg_props.hxx>
-#include <GUI/CocoaAutoreleasePool.hxx>
+#include <GUI/CocoaHelpers_private.h>
 
 #include <iostream>
 
@@ -64,11 +64,6 @@ public:
 }
 
 @end
-
-static NSString* stdStringToCocoa(const string& s)
-{
-  return [NSString stringWithUTF8String:s.c_str()];
-}
 
 static void setFunctionKeyShortcut(const std::string& shortcut, NSMenuItem* item)
 {
@@ -295,9 +290,3 @@ void FGCocoaMenuBar::hide()
   // no-op
 }
 
-void cocoaOpenUrl(const std::string& url)
-{
-  CocoaAutoreleasePool pool;
-  NSURL* nsu = [NSURL URLWithString:stdStringToCocoa(url)];
-  [[NSWorkspace sharedWorkspace] openURL:nsu];
-}

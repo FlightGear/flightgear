@@ -56,11 +56,12 @@ if (APPLE)
     list(APPEND HEADERS FGCocoaMenuBar.hxx 
         CocoaFileDialog.hxx 
         CocoaMouseCursor.hxx
-        CocoaAutoreleasePool.hxx)
+        CocoaHelpers.h
+        CocoaHelpers_private.h)
     list(APPEND SOURCES FGCocoaMenuBar.mm 
         CocoaFileDialog.mm
         CocoaMouseCursor.mm
-        CocoaMessageBox.mm)
+        CocoaHelpers.mm)
 endif()
     		
 flightgear_component(GUI "${SOURCES}" "${HEADERS}")

@@ -1,4 +1,4 @@
-// CocoaFileDialog.h - Cocoa implementation of file-dialog interface
+// CocoaHelpers.h - C++ interface to Cocoa/AppKit helpers
 
 // Copyright (C) 2013 James Turner <zakalawe@mac.com>
 //
@@ -17,24 +17,21 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+#ifndef FG_GUI_COCOA_HELPERS_H
+#define FG_GUI_COCOA_HELPERS_H
 
-#ifndef FG_COCOA_FILE_DIALOG_HXX
-#define FG_COCOA_FILE_DIALOG_HXX 1
+#include <string>
 
-#include <GUI/FileDialog.hxx>
+#include <simgear/misc/sg_path.hxx>
 
-class CocoaFileDialog : public FGFileDialog
-{
-public:
-    CocoaFileDialog(FGFileDialog::Usage use);
-    
-    virtual ~CocoaFileDialog();
-    
-    virtual void exec();
-    virtual void close();
-private:
-    class CocoaFileDialogPrivate;
-    std::auto_ptr<CocoaFileDialogPrivate> d;
-};
+/**
+ * open a URL using the system's web-browser
+ */
+void cocoaOpenUrl(const std::string& url);
 
-#endif // FG_COCOA_FILE_DIALOG_HXX
+/**
+ * Cocoa implementation so we can use NSURL
+ */
+SGPath platformDefaultDataPath();
+
+#endif // of FG_GUI_COCOA_HELPERS_H

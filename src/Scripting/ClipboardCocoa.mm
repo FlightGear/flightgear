@@ -24,34 +24,7 @@
 
 #include <Cocoa/Cocoa.h>
 
-namespace {
-  class CocoaAutoreleasePool
-  {
-  public:
-    CocoaAutoreleasePool()
-    {
-      pool = [[NSAutoreleasePool alloc] init];
-    }
-    
-    ~CocoaAutoreleasePool()
-    {
-      [pool release];
-    }
-    
-  private:
-    NSAutoreleasePool* pool;
-  };
-}
-
-static NSString* stdStringToCocoa(const std::string& s)
-{
-  return [NSString stringWithUTF8String:s.c_str()];
-}
-
-static std::string stdStringFromCocoa(NSString* s)
-{
-  return std::string([s UTF8String]);
-}
+#include <GUI/CocoaHelpers_private.h>
 
 /**
  */

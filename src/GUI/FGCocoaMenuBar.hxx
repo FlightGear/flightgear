@@ -62,9 +62,4 @@ private:
   
 };
 
-/**
- * open a URL using the system's web-browser
- */
-void cocoaOpenUrl(const std::string& url);
-
 #endif // __MENUBAR_HXX

@@ -1,4 +1,4 @@
-// CocoaFileDialog.h - Cocoa implementation of file-dialog interface
+// CocoaHelpers_private.h - common Objective-C/Cocoa helper functions
 
 // Copyright (C) 2013 James Turner <zakalawe@mac.com>
 //
@@ -18,23 +18,32 @@
 //
 
 
-#ifndef FG_COCOA_FILE_DIALOG_HXX
-#define FG_COCOA_FILE_DIALOG_HXX 1
+#ifndef FG_GUI_COCOA_HELPERS_PRIVATE_H
+#define FG_GUI_COCOA_HELPERS_PRIVATE_H
 
-#include <GUI/FileDialog.hxx>
+#include <string>
 
-class CocoaFileDialog : public FGFileDialog
+// forward decls
+class SGPath;
+
+@class NSString;
+@class NSURL;
+@class NSAutoreleasePool;
+
+NSString* stdStringToCocoa(const std::string& s);
+NSURL* pathToNSURL(const SGPath& aPath);
+SGPath URLToPath(NSURL* url);
+std::string stdStringFromCocoa(NSString* s);
+
+class CocoaAutoreleasePool
 {
 public:
-    CocoaFileDialog(FGFileDialog::Usage use);
-    
-    virtual ~CocoaFileDialog();
-    
-    virtual void exec();
-    virtual void close();
-private:
-    class CocoaFileDialogPrivate;
-    std::auto_ptr<CocoaFileDialogPrivate> d;
-};
+    CocoaAutoreleasePool();
 
-#endif // FG_COCOA_FILE_DIALOG_HXX
+    ~CocoaAutoreleasePool();
+
+private:
+    NSAutoreleasePool* pool;
+};
+  
+#endif

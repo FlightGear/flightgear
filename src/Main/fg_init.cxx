@@ -124,6 +124,10 @@
 #include "positioninit.hxx"
 #include "util.hxx"
 
+#if defined(SG_MAC)
+#include <GUI/CocoaHelpers.h> // for Mac impl of platformDefaultDataPath()
+#endif
+
 using std::string;
 using std::endl;
 using std::cerr;
@@ -386,27 +390,10 @@ static SGPath platformDefaultDataPath()
   return config;
 }
 
-#elif __APPLE__
-#include <CoreServices/CoreServices.h>
+#elif defined(SG_MAC)
 
-static SGPath platformDefaultDataPath()
-{
-  FSRef ref;
-  OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &ref);
-  if (err) {
-    return SGPath();
-  }
+// platformDefaultDataPath defined in GUI/CocoaHelpers.h
 
-  unsigned char path[1024];
-  if (FSRefMakePath(&ref, path, 1024) != noErr) {
-    return SGPath();
-  }
-
-  SGPath appData;
-  appData.set((const char*) path);
-  appData.append("FlightGear");
-  return appData;
-}
 #else
 static SGPath platformDefaultDataPath()
 {
