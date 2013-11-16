@@ -114,8 +114,7 @@ static int fgSetupProxy( const char *arg );
  * in case, we provide some initial sane values here. This method
  * should be invoked *before* reading any init files.
  */
-static void
-fgSetDefaults ()
+void fgSetDefaults ()
 {
 
 				// Position (deliberately out of range)
@@ -1704,8 +1703,6 @@ Options::~Options()
   
 void Options::init(int argc, char **argv, const SGPath& appDataPath)
 {
-  fgSetDefaults();
-  
 // first, process the command line
   bool inOptions = true;
   for (int i=1; i<argc; ++i) {

@@ -130,4 +130,6 @@ private:
   
 } // of namespace flightgear
 
+void fgSetDefaults();
+
 #endif /* _OPTIONS_HXX */

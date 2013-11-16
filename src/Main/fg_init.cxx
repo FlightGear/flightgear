@@ -490,6 +490,7 @@ int fgInitConfig ( int argc, char **argv )
     home->setStringValue(dataPath.c_str());
     home->setAttribute(SGPropertyNode::WRITE, false);
   
+    fgSetDefaults();
     flightgear::Options* options = flightgear::Options::sharedInstance();
     options->init(argc, argv, dataPath);
     bool loadDefaults = flightgear::Options::sharedInstance()->shouldLoadDefaultConfig();
