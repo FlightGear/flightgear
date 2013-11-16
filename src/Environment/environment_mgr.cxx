@@ -82,9 +82,6 @@ FGEnvironmentMgr::FGEnvironmentMgr () :
   _environment(new FGEnvironment()),
   fgClouds(new FGClouds()),
   _cloudLayersDirty(true),
-  _altitude_n(fgGetNode("/position/altitude-ft", true)),
-  _longitude_n(fgGetNode( "/position/longitude-deg", true )),
-  _latitude_n( fgGetNode( "/position/latitude-deg", true )),
   _3dCloudsEnableListener(new FG3DCloudsListener(fgClouds) ),
   _sky(globals->get_renderer()->getSky())
 {
@@ -119,15 +116,6 @@ SGSubsystem::InitStatus FGEnvironmentMgr::incrementalInit()
   InitStatus r = SGSubsystemGroup::incrementalInit();
   if (r == INIT_DONE) {
     fgClouds->Init();
-    
-    // FIXME: is this really part of the environment_mgr?
-    // Initialize the longitude, latitude and altitude to the initial position
-    // of the aircraft so that the atmospheric properties (pressure, temperature
-    // and density) can be initialized accordingly.
-    _altitude_n->setDoubleValue(fgGetDouble("/sim/presets/altitude-ft"));
-    _longitude_n->setDoubleValue(fgGetDouble("/sim/presets/longitude-deg"));
-    _latitude_n->setDoubleValue(fgGetDouble("/sim/presets/latitude-deg"));
-    
     globals->get_event_mgr()->addTask("updateClosestAirport", this,
                                       &FGEnvironmentMgr::updateClosestAirport, 30 );
   }
@@ -257,7 +245,8 @@ FGEnvironmentMgr::update (double dt)
 {
   SGSubsystemGroup::update(dt);
 
-  _environment->set_elevation_ft( _altitude_n->getDoubleValue() );
+    SGGeod aircraftPos(globals->get_aircraft_position());
+  _environment->set_elevation_ft( aircraftPos.getElevationFt() );
 
   simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
                                    _environment->get_wind_speed_kt() );
@@ -268,11 +257,7 @@ FGEnvironmentMgr::update (double dt)
 
 
   fgSetDouble( "/environment/gravitational-acceleration-mps2", 
-    Environment::Gravity::instance()->getGravity(SGGeod::fromDegFt(
-      _longitude_n->getDoubleValue(),
-      _latitude_n->getDoubleValue(),
-      _altitude_n->getDoubleValue()
-  )));
+    Environment::Gravity::instance()->getGravity(aircraftPos));
 }
 
 void

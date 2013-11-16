@@ -566,6 +566,11 @@ bool initPosition()
   }
   
   fgSetBool("/sim/position-finalized", false);
+
+// Initialize the longitude, latitude and altitude to the initial position
+    fgSetDouble("/position/altitude-ft", fgGetDouble("/sim/presets/altitude-ft"));
+    fgSetDouble("/position/longitude-deg", fgGetDouble("/sim/presets/longitude-deg"));
+    fgSetDouble("/position/latitude-deg", fgGetDouble("/sim/presets/latitude-deg"));
     
   return true;
 }

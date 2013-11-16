@@ -95,9 +95,6 @@ private:
   FGEnvironment * _environment;	// always the same, for now
   FGClouds *fgClouds;
   bool _cloudLayersDirty;
-  SGPropertyNode_ptr _altitude_n;
-  SGPropertyNode_ptr _longitude_n;
-  SGPropertyNode_ptr _latitude_n;
   simgear::TiedPropertyList _tiedProperties;
   SGPropertyChangeListener * _3dCloudsEnableListener;
   SGSky* _sky;
