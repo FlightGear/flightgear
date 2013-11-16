@@ -262,7 +262,6 @@ public:
 	LegWayptCtl(RNAV* aRNAV, const WayptRef& aWpt) :
     WayptController(aRNAV, aWpt),
     _waypointOrigin(),
-    _distanceOriginTargetMeter(0.0),
     _distanceOriginAircraftMeter(0.0),
     _distanceAircraftTargetMeter(0.0),
     _courseOriginToAircraft(0.0),
@@ -366,7 +365,6 @@ private:
    * A(from), B(to), D(position) perhaps off course
    */
   SGGeod _waypointOrigin;
-  double _distanceOriginTargetMeter;
   double _distanceOriginAircraftMeter;
   double _distanceAircraftTargetMeter;
   double _courseOriginToAircraft;

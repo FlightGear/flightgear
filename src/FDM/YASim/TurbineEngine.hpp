@@ -43,8 +43,8 @@ private:
 
     float _n2Min;
     float _n2Target;
-    float _torqueTarget;
-    float _fuelFlowTarget;
+    //float _torqueTarget;
+    //float _fuelFlowTarget;
 
     float _n2;
     float _rho;

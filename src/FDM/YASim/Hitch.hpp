@@ -77,12 +77,12 @@ private:
     float _forceMagnitude;
     double _global_ground[4];
     float _global_vel[3];
-    char _name[256];
+    //char _name[256];
     State* _state;
     float _dist;
     float _timeLagCorrectedDist;
     SGPropertyNode_ptr _towEndNode;
-    const char *_towEndPropertyName;
+    //const char *_towEndPropertyName;
     bool _towEndIsConnectedToProperty;
     bool _nodeIsMultiplayer;
     bool _nodeIsAiAircraft;

@@ -104,14 +104,11 @@ private:
     double dist;            // the distance of the eyepoint from the flols
     double angle;
     int source;             // the flols light which is visible at the moment
-    bool wave_off_lights;
     bool in_to_wind;
 
     // these are for maneuvering the carrier
     SGGeod mOpBoxPos;
 
-    double wind_speed_from_north_kts ;
-    double wind_speed_from_east_kts  ;
     double wind_speed_kts;  //true wind speed
     double wind_from_deg;   //true wind direction
     double rel_wind;

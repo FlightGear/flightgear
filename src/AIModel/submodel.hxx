@@ -115,10 +115,6 @@ private:
     submodel_vector_type       subsubmodels;
     submodel_vector_iterator   submodel_iterator, subsubmodel_iterator;
 
-    float trans[3][3];
-    float in[3];
-    float out[3];
-
     //double Rx, Ry, Rz;
     //double Sx, Sy, Sz;
     //double Tx, Ty, Tz;
@@ -142,7 +138,7 @@ private:
     double _parent_pitch;
     double _parent_roll;
     double _parent_speed;
-    double _parent_ID;
+    //double _parent_ID;
 
     double _x_offset;
     double _y_offset;

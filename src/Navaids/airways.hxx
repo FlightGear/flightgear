@@ -44,6 +44,12 @@ public:
   
   static void load(const SGPath& path);
   
+    double topAltitudeFt() const
+    { return _topAltitudeFt; }
+    
+    double bottomAltitudeFt() const
+    { return _bottomAltitudeFt; }
+    
   /**
    * Track a network of airways
    *
