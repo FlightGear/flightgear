@@ -191,15 +191,15 @@ FGGlobals::~FGGlobals()
         ai->unbind();
         subsystem_mgr->remove("ai-model");
     }
-    
-    subsystem_mgr->remove("fx");
-    subsystem_mgr->remove("sound");
+
+    subsystem_mgr->remove("aircraft-model");
     subsystem_mgr->remove("tile-manager");
     subsystem_mgr->remove("model-manager");
     
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
     delete subsystem_mgr;
+    subsystem_mgr = NULL; // important so ::get_subsystem returns NULL 
     
     delete renderer;
     renderer = NULL;
@@ -421,6 +421,10 @@ FGGlobals::get_subsystem_mgr () const
 SGSubsystem *
 FGGlobals::get_subsystem (const char * name)
 {
+    if (!subsystem_mgr) {
+        return NULL;
+    }
+    
     return subsystem_mgr->get_subsystem(name);
 }
 
