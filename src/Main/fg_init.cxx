@@ -36,6 +36,11 @@
 #  include <process.h>          // _getpid()
 #  include <Windows.h>
 #  define isatty _isatty
+#else
+// for open() and options
+#  include <sys/types.h>        
+#  include <sys/stat.h>
+#  include <fcntl.h>
 #endif
 
 #include <string>
