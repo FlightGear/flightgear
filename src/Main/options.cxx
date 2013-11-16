@@ -65,6 +65,7 @@
 #include <Viewer/viewer.hxx>
 #include <Viewer/viewmgr.hxx>
 #include <Environment/presets.hxx>
+#include "AircraftDirVisitorBase.hxx"
 
 #include <osg/Version>
 
@@ -240,6 +241,129 @@ void fgSetDefaults ()
     if( envp != NULL )
       fgSetupProxy( envp );
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// helper object to implement the --show-aircraft command.
+// resides here so we can share the fgFindAircraftInDir template above,
+// and hence ensure this command lists exectly the same aircraft as the normal
+// loading path.
+class ShowAircraft : public AircraftDirVistorBase
+{
+public:
+    ShowAircraft()
+    {
+        _minStatus = getNumMaturity(fgGetString("/sim/aircraft-min-status", "all"));
+    }
+    
+    
+    void show(const SGPath& path)
+    {
+        visitDir(path, 0);
+        
+        simgear::requestConsole(); // ensure console is shown on Windows
+        
+        std::sort(_aircraft.begin(), _aircraft.end(), ciLessLibC());
+        cout << "Available aircraft:" << endl;
+        for ( unsigned int i = 0; i < _aircraft.size(); i++ ) {
+            cout << _aircraft[i] << endl;
+        }
+    }
+    
+private:
+    virtual VisitResult visit(const SGPath& path)
+    {
+        SGPropertyNode root;
+        try {
+            readProperties(path.str(), &root);
+        } catch (sg_exception& ) {
+            return VISIT_CONTINUE;
+        }
+        
+        int maturity = 0;
+        string descStr("   ");
+        descStr += path.file();
+        // trim common suffix from file names
+        int nPos = descStr.rfind("-set.xml");
+        if (nPos == (int)(descStr.size() - 8)) {
+            descStr.resize(nPos);
+        }
+        
+        SGPropertyNode *node = root.getNode("sim");
+        if (node) {
+            SGPropertyNode* desc = node->getNode("description");
+            // if a status tag is found, read it in
+            if (node->hasValue("status")) {
+                maturity = getNumMaturity(node->getStringValue("status"));
+            }
+            
+            if (desc) {
+                if (descStr.size() <= 27+3) {
+                    descStr.append(29+3-descStr.size(), ' ');
+                } else {
+                    descStr += '\n';
+                    descStr.append( 32, ' ');
+                }
+                descStr += desc->getStringValue();
+            }
+        } // of have 'sim' node
+        
+        if (maturity >= _minStatus) {
+            _aircraft.push_back(descStr);
+        }
+        
+        return VISIT_CONTINUE;
+    }
+    
+    
+    int getNumMaturity(const char * str)
+    {
+        // changes should also be reflected in $FG_ROOT/data/options.xml &
+        // $FG_ROOT/data/Translations/string-default.xml
+        const char* levels[] = {"alpha","beta","early-production","production"};
+        
+        if (!strcmp(str, "all")) {
+            return 0;
+        }
+        
+        for (size_t i=0; i<(sizeof(levels)/sizeof(levels[0]));i++)
+            if (strcmp(str,levels[i])==0)
+                return i;
+        
+        return 0;
+    }
+    
+    // recommended in Meyers, Effective STL when internationalization and embedded
+    // NULLs aren't an issue.  Much faster than the STL or Boost lex versions.
+    struct ciLessLibC : public std::binary_function<string, string, bool>
+    {
+        bool operator()(const std::string &lhs, const std::string &rhs) const
+        {
+            return strcasecmp(lhs.c_str(), rhs.c_str()) < 0 ? 1 : 0;
+        }
+    };
+    
+    int _minStatus;
+    string_list _aircraft;
+};
+
+/*
+ * Search in the current directory, and in on directory deeper
+ * for <aircraft>-set.xml configuration files and show the aircaft name
+ * and the contents of the<description> tag in a sorted manner.
+ *
+ * @parampath the directory to search for configuration files
+ */
+void fgShowAircraft(const SGPath &path)
+{
+    ShowAircraft s;
+    s.show(path);
+    
+#ifdef _MSC_VER
+    cout << "Hit a key to continue..." << endl;
+    std::cin.get();
+#endif
+}
+
 
 static bool
 parse_wind (const string &wind, double * min_hdg, double * max_hdg,

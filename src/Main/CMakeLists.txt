@@ -36,6 +36,7 @@ set(HEADERS
 	util.hxx
     positioninit.hxx
     subsystemFactory.hxx
+    AircraftDirVisitorBase.hxx
 	)
 
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)

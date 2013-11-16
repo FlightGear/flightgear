@@ -64,15 +64,6 @@ void fgPostInitSubsystems();
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems();
 
-/*
- * Search in the current directory, and in on directory deeper
- * for <aircraft>-set.xml configuration files and show the aircaft name
- * and the contents of the<description> tag in a sorted manner.
- *
- * @parampath the directory to search for configuration files
- */
-void fgShowAircraft(const SGPath &path);
-
 #endif // _FG_INIT_HXX
 
 

@@ -123,6 +123,7 @@
 #include "main.hxx"
 #include "positioninit.hxx"
 #include "util.hxx"
+#include "AircraftDirVisitorBase.hxx"
 
 #if defined(SG_MAC)
 #include <GUI/CocoaHelpers.h> // for Mac impl of platformDefaultDataPath()
@@ -154,68 +155,7 @@ string fgBasePackageVersion() {
     return version;
 }
 
-
-template <class T>
-bool fgFindAircraftInDir(const SGPath& dirPath, T* obj, bool (T::*pred)(const SGPath& p))
-{
-  if (!dirPath.exists()) {
-    SG_LOG(SG_GENERAL, SG_WARN, "fgFindAircraftInDir: no such path:" << dirPath.str());
-    return false;
-  }
-    
-  bool recurse = true;
-  simgear::Dir dir(dirPath);
-  simgear::PathList setFiles(dir.children(simgear::Dir::TYPE_FILE, "-set.xml"));
-  simgear::PathList::iterator p;
-  for (p = setFiles.begin(); p != setFiles.end(); ++p) {
-    // check file name ends with -set.xml
-    
-    // if we found a -set.xml at this level, don't recurse any deeper
-    recurse = false;
-    
-    bool done = (obj->*pred)(*p);
-    if (done) {
-      return true;
-    }
-  } // of -set.xml iteration
-  
-  if (!recurse) {
-    return false;
-  }
-  
-  simgear::PathList subdirs(dir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT));
-  for (p = subdirs.begin(); p != subdirs.end(); ++p) {
-    if (p->file() == "CVS") {
-      continue;
-    }
-    
-    if (fgFindAircraftInDir(*p, obj, pred)) {
-      return true;
-    }
-  } // of subdirs iteration
-  
-  return false;
-}
-
-template <class T>
-void fgFindAircraft(T* obj, bool (T::*pred)(const SGPath& p))
-{
-  const string_list& paths(globals->get_aircraft_paths());
-  string_list::const_iterator it = paths.begin();
-  for (; it != paths.end(); ++it) {
-    bool done = fgFindAircraftInDir(SGPath(*it), obj, pred);
-    if (done) {
-      return;
-    }
-  } // of aircraft paths iteration
-  
-  // if we reach this point, search the default location (always last)
-  SGPath rootAircraft(globals->get_fg_root());
-  rootAircraft.append("Aircraft");
-  fgFindAircraftInDir(rootAircraft, obj, pred);
-}
-
-class FindAndCacheAircraft
+class FindAndCacheAircraft : public AircraftDirVistorBase
 {
 public:
   FindAndCacheAircraft(SGPropertyNode* autoSave)
@@ -272,7 +212,7 @@ public:
       n->setAttribute(SGPropertyNode::USERARCHIVE, true);
       _cache->removeChildren("aircraft");
   
-      fgFindAircraft(this, &FindAndCacheAircraft::checkAircraft);
+        visitAircraftPaths();
     }
     
     if (_foundPath.str().empty()) {
@@ -348,7 +288,7 @@ private:
     return false;
   }
   
-  bool checkAircraft(const SGPath& p)
+  virtual VisitResult visit(const SGPath& p)
   {
     // create cache node
     int i = 0;
@@ -370,10 +310,10 @@ private:
 
     if ( boost::equals(fileName, _searchAircraft.c_str(), is_iequal()) ) {
         _foundPath = p;
-        return true;
+        return VISIT_DONE;
     }
 
-    return false;
+    return VISIT_CONTINUE;
   }
   
   std::string _searchAircraft;
@@ -963,123 +903,6 @@ void fgReInitSubsystems()
         master_freeze->setBoolValue(false);
     }
     fgSetBool("/sim/sceneryloaded",false);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// helper object to implement the --show-aircraft command.
-// resides here so we can share the fgFindAircraftInDir template above,
-// and hence ensure this command lists exectly the same aircraft as the normal
-// loading path.
-class ShowAircraft 
-{
-public:
-  ShowAircraft()
-  {
-    _minStatus = getNumMaturity(fgGetString("/sim/aircraft-min-status", "all"));
-  }
-  
-  
-  void show(const SGPath& path)
-  {
-    fgFindAircraftInDir(path, this, &ShowAircraft::processAircraft);
-  
-	simgear::requestConsole(); // ensure console is shown on Windows
-
-    std::sort(_aircraft.begin(), _aircraft.end(), ciLessLibC());
-    cout << "Available aircraft:" << endl;
-    for ( unsigned int i = 0; i < _aircraft.size(); i++ ) {
-        cout << _aircraft[i] << endl;
-    }
-  }
-  
-private:
-  bool processAircraft(const SGPath& path)
-  {
-    SGPropertyNode root;
-    try {
-       readProperties(path.str(), &root);
-    } catch (sg_exception& ) {
-       return false;
-    }
-  
-    int maturity = 0;
-    string descStr("   ");
-    descStr += path.file();
-  // trim common suffix from file names
-    int nPos = descStr.rfind("-set.xml");
-    if (nPos == (int)(descStr.size() - 8)) {
-      descStr.resize(nPos);
-    }
-    
-    SGPropertyNode *node = root.getNode("sim");
-    if (node) {
-      SGPropertyNode* desc = node->getNode("description");
-      // if a status tag is found, read it in
-      if (node->hasValue("status")) {
-        maturity = getNumMaturity(node->getStringValue("status"));
-      }
-      
-      if (desc) {
-        if (descStr.size() <= 27+3) {
-          descStr.append(29+3-descStr.size(), ' ');
-        } else {
-          descStr += '\n';
-          descStr.append( 32, ' ');
-        }
-        descStr += desc->getStringValue();
-      }
-    } // of have 'sim' node
-    
-    if (maturity < _minStatus) {
-      return false;
-    }
-
-    _aircraft.push_back(descStr);
-    return false;
-  }
-
-
-  int getNumMaturity(const char * str) 
-  {
-    // changes should also be reflected in $FG_ROOT/data/options.xml & 
-    // $FG_ROOT/data/Translations/string-default.xml
-    const char* levels[] = {"alpha","beta","early-production","production"}; 
-
-    if (!strcmp(str, "all")) {
-      return 0;
-    }
-
-    for (size_t i=0; i<(sizeof(levels)/sizeof(levels[0]));i++) 
-      if (strcmp(str,levels[i])==0)
-        return i;
-
-    return 0;
-  }
-
-  // recommended in Meyers, Effective STL when internationalization and embedded
-  // NULLs aren't an issue.  Much faster than the STL or Boost lex versions.
-  struct ciLessLibC : public std::binary_function<string, string, bool>
-  {
-    bool operator()(const std::string &lhs, const std::string &rhs) const
-    {
-      return strcasecmp(lhs.c_str(), rhs.c_str()) < 0 ? 1 : 0;
-    }
-  };
-
-  int _minStatus;
-  string_list _aircraft;
-};
-
-void fgShowAircraft(const SGPath &path)
-{
-    ShowAircraft s;
-    s.show(path);
-        
-#ifdef _MSC_VER
-    cout << "Hit a key to continue..." << endl;
-    std::cin.get();
-#endif
 }
 
 
