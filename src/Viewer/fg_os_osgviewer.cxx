@@ -101,7 +101,7 @@ using namespace std;
 using namespace flightgear;
 using namespace osg;
 
-static osg::ref_ptr<osgViewer::Viewer> viewer;
+osg::ref_ptr<osgViewer::Viewer> viewer;
 static osg::ref_ptr<osg::Camera> mainCamera;
 
 static void setStereoMode( const char * mode )
@@ -251,12 +251,9 @@ void fgOSOpenWindow(bool stencil)
 {
     osg::setNotifyHandler(new NotifyLogger);
     
-    SGPropertyNode* osgLevel = fgGetNode("/sim/rendering/osg-notify-level", true);
-    osgLevel->addChangeListener(new NotifyLevelListener, true);
-    
     viewer = new osgViewer::Viewer;
     viewer->setDatabasePager(FGScenery::getPagerSingleton());
-    CameraGroup* cameraGroup = 0;
+
     std::string mode;
     mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
     if (mode == "AutomaticSelection")
@@ -270,49 +267,8 @@ void fgOSOpenWindow(bool stencil)
     else
       viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
     WindowBuilder::initWindowBuilder(stencil);
-    WindowBuilder *windowBuilder = WindowBuilder::getWindowBuilder();
-
-    // Look for windows, camera groups, and the old syntax of
-    // top-level cameras
-    SGPropertyNode* renderingNode = fgGetNode("/sim/rendering");
-    SGPropertyNode* cgroupNode = renderingNode->getNode("camera-group", true);
-    bool oldSyntax = !cgroupNode->hasChild("camera");
-    if (oldSyntax) {
-        for (int i = 0; i < renderingNode->nChildren(); ++i) {
-            SGPropertyNode* propNode = renderingNode->getChild(i);
-            const char* propName = propNode->getName();
-            if (!strcmp(propName, "window") || !strcmp(propName, "camera")) {
-                SGPropertyNode* copiedNode
-                    = cgroupNode->getNode(propName, propNode->getIndex(), true);
-                copyProperties(propNode, copiedNode);
-            }
-        }
-        vector<SGPropertyNode_ptr> cameras = cgroupNode->getChildren("camera");
-        SGPropertyNode* masterCamera = 0;
-        BOOST_FOREACH(SGPropertyNode_ptr& camera, cameras) {
-            if (camera->getDoubleValue("shear-x", 0.0) == 0.0
-                && camera->getDoubleValue("shear-y", 0.0) == 0.0) {
-                masterCamera = camera.ptr();
-                break;
-            }
-        }
-        if (!masterCamera) {
-            masterCamera = cgroupNode->getChild("camera", cameras.size(), true);
-            setValue(masterCamera->getNode("window/name", true),
-                     windowBuilder->getDefaultWindowName());
-        }
-        SGPropertyNode* nameNode = masterCamera->getNode("window/name");
-        if (nameNode)
-            setValue(cgroupNode->getNode("gui/window/name", true),
-                     nameNode->getStringValue());
-    }
-    cameraGroup = CameraGroup::buildCameraGroup(viewer.get(), cgroupNode);
-    Camera* guiCamera = getGUICamera(cameraGroup);
-    if (guiCamera) {
-        Viewport* guiViewport = guiCamera->getViewport();
-        fgSetInt("/sim/startup/xsize", guiViewport->width());
-        fgSetInt("/sim/startup/ysize", guiViewport->height());
-    }
+    CameraGroup::buildDefaultGroup(viewer.get());
+    
     FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
     WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
     if (wsa->windows.size() != 1) {
@@ -325,8 +281,20 @@ void fgOSOpenWindow(bool stencil)
     // The viewer won't start without some root.
     viewer->setSceneData(new osg::Group);
     globals->get_renderer()->setViewer(viewer.get());
-    CameraGroup::setDefault(cameraGroup);
+}
 
+void fgOSResetProperties()
+{
+    SGPropertyNode* osgLevel = fgGetNode("/sim/rendering/osg-notify-level", true);
+    osgLevel->addChangeListener(new NotifyLevelListener, true);
+    
+    osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+    if (guiCamera) {
+        Viewport* guiViewport = guiCamera->getViewport();
+        fgSetInt("/sim/startup/xsize", guiViewport->width());
+        fgSetInt("/sim/startup/ysize", guiViewport->height());
+    }
+    
     DisplaySettings * displaySettings = DisplaySettings::instance();
     fgTie("/sim/rendering/osg-displaysettings/eye-separation", displaySettings, &DisplaySettings::getEyeSeparation, &DisplaySettings::setEyeSeparation );
     fgTie("/sim/rendering/osg-displaysettings/screen-distance", displaySettings, &DisplaySettings::getScreenDistance, &DisplaySettings::setScreenDistance );
@@ -350,13 +318,11 @@ void fgOSExit(int code)
 
 int fgOSMainLoop()
 {
-    ref_ptr<FGEventHandler> manipulator
-        = globals->get_renderer()->getEventHandler();
     viewer->setReleaseContextAtEndOfFrameHint(false);
     if (!viewer->isRealized())
         viewer->realize();
     while (!viewer->done()) {
-        fgIdleHandler idleFunc = manipulator->getIdleHandler();
+        fgIdleHandler idleFunc = globals->get_renderer()->getEventHandler()->getIdleHandler();
         if (idleFunc)
             (*idleFunc)();
         globals->get_renderer()->update();

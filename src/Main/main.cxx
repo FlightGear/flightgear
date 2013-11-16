@@ -387,7 +387,8 @@ int fgMainInit( int argc, char **argv ) {
 
     // Clouds3D requires an alpha channel
     fgOSOpenWindow(true /* request stencil buffer */);
-
+    fgOSResetProperties();
+    
     // Initialize the splash screen right away
     fntInit();
     fgSplashInit();

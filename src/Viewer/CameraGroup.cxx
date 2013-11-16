@@ -30,6 +30,7 @@
 
 #include <simgear/math/SGRect.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx> // for copyProperties
 #include <simgear/structure/OSGUtils.hxx>
 #include <simgear/structure/OSGVersion.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
@@ -57,79 +58,116 @@
 #include <osgViewer/GraphicsWindow>
 #include <osgViewer/Renderer>
 
-namespace flightgear {
-const char* MAIN_CAMERA = "main";
-const char* FAR_CAMERA = "far";
-const char* GEOMETRY_CAMERA = "geometry";
-const char* SHADOW_CAMERA = "shadow";
-const char* LIGHTING_CAMERA = "lighting";
-const char* DISPLAY_CAMERA = "display";
-}
+using namespace osg;
 
-static osg::Matrix
-invert(const osg::Matrix& matrix)
+namespace
 {
-    return osg::Matrix::inverse(matrix);
-}
+    
+    // Given a projection matrix, return a new one with the same frustum
+    // sides and new near / far values.
+    
+    void makeNewProjMat(Matrixd& oldProj, double znear,
+                        double zfar, Matrixd& projection)
+    {
+        projection = oldProj;
+        // Slightly inflate the near & far planes to avoid objects at the
+        // extremes being clipped out.
+        znear *= 0.999;
+        zfar *= 1.001;
+        
+        // Clamp the projection matrix z values to the range (near, far)
+        double epsilon = 1.0e-6;
+        if (fabs(projection(0,3)) < epsilon &&
+            fabs(projection(1,3)) < epsilon &&
+            fabs(projection(2,3)) < epsilon) {
+            // Projection is Orthographic
+            epsilon = -1.0/(zfar - znear); // Used as a temp variable
+            projection(2,2) = 2.0*epsilon;
+            projection(3,2) = (zfar + znear)*epsilon;
+        } else {
+            // Projection is Perspective
+            double trans_near = (-znear*projection(2,2) + projection(3,2)) /
+            (-znear*projection(2,3) + projection(3,3));
+            double trans_far = (-zfar*projection(2,2) + projection(3,2)) /
+            (-zfar*projection(2,3) + projection(3,3));
+            double ratio = fabs(2.0/(trans_near - trans_far));
+            double center = -0.5*(trans_near + trans_far);
+            
+            projection.postMult(osg::Matrixd(1.0, 0.0, 0.0, 0.0,
+                                             0.0, 1.0, 0.0, 0.0,
+                                             0.0, 0.0, ratio, 0.0,
+                                             0.0, 0.0, center*ratio, 1.0));
+        }
+    }
+    
+    osg::Matrix
+    invert(const osg::Matrix& matrix)
+    {
+        return osg::Matrix::inverse(matrix);
+    }
+    
+    /// Returns the zoom factor of the master camera.
+    /// The reference fov is the historic 55 deg
+    double
+    zoomFactor()
+    {
+        double fov = fgGetDouble("/sim/current-view/field-of-view", 55);
+        if (fov < 1)
+            fov = 1;
+        return tan(55*0.5*SG_DEGREES_TO_RADIANS)/tan(fov*0.5*SG_DEGREES_TO_RADIANS);
+    }
+    
+    osg::Vec2d
+    preMult(const osg::Vec2d& v, const osg::Matrix& m)
+    {
+        osg::Vec3d tmp = m.preMult(osg::Vec3(v, 0));
+        return osg::Vec2d(tmp[0], tmp[1]);
+    }
+    
+    osg::Matrix
+    relativeProjection(const osg::Matrix& P0, const osg::Matrix& R, const osg::Vec2d ref[2],
+                       const osg::Matrix& pP, const osg::Matrix& pR, const osg::Vec2d pRef[2])
+    {
+        // Track the way from one projection space to the other:
+        // We want
+        //  P = T*S*P0
+        // where P0 is the projection template sensible for the given window size,
+        // T is a translation matrix and S a scale matrix.
+        // We need to determine T and S so that the reference points in the parents
+        // projection space match the two reference points in this cameras projection space.
+        
+        // Starting from the parents camera projection space, we get into this cameras
+        // projection space by the transform matrix:
+        //  P*R*inv(pP*pR) = T*S*P0*R*inv(pP*pR)
+        // So, at first compute that matrix without T*S and determine S and T from that
+        
+        // Ok, now osg uses the inverse matrix multiplication order, thus:
+        osg::Matrix PtoPwithoutTS = invert(pR*pP)*R*P0;
+        // Compute the parents reference points in the current projection space
+        // without the yet unknown T and S
+        osg::Vec2d pRefInThis[2] = {
+            preMult(pRef[0], PtoPwithoutTS),
+            preMult(pRef[1], PtoPwithoutTS)
+        };
+        
+        // To get the same zoom, rescale to match the parents size
+        double s = (ref[0] - ref[1]).length()/(pRefInThis[0] - pRefInThis[1]).length();
+        osg::Matrix S = osg::Matrix::scale(s, s, 1);
+        
+        // For the translation offset, incorporate the now known scale
+        // and recompute the position ot the first reference point in the
+        // currents projection space without the yet unknown T.
+        pRefInThis[0] = preMult(pRef[0], PtoPwithoutTS*S);
+        // The translation is then the difference of the reference points
+        osg::Matrix T = osg::Matrix::translate(osg::Vec3d(ref[0] - pRefInThis[0], 0));
+        
+        // Compose and return the desired final projection matrix
+        return P0*S*T;
+    }
 
-/// Returns the zoom factor of the master camera.
-/// The reference fov is the historic 55 deg
-static double
-zoomFactor()
-{
-    double fov = fgGetDouble("/sim/current-view/field-of-view", 55);
-    if (fov < 1)
-        fov = 1;
-    return tan(55*0.5*SG_DEGREES_TO_RADIANS)/tan(fov*0.5*SG_DEGREES_TO_RADIANS);
-}
+} // of anonymous namespace
 
-static osg::Vec2d
-preMult(const osg::Vec2d& v, const osg::Matrix& m)
-{
-  osg::Vec3d tmp = m.preMult(osg::Vec3(v, 0));
-  return osg::Vec2d(tmp[0], tmp[1]);
-}
-
-static osg::Matrix
-relativeProjection(const osg::Matrix& P0, const osg::Matrix& R, const osg::Vec2d ref[2],
-                   const osg::Matrix& pP, const osg::Matrix& pR, const osg::Vec2d pRef[2])
-{
-  // Track the way from one projection space to the other:
-  // We want
-  //  P = T*S*P0
-  // where P0 is the projection template sensible for the given window size,
-  // T is a translation matrix and S a scale matrix.
-  // We need to determine T and S so that the reference points in the parents
-  // projection space match the two reference points in this cameras projection space.
-
-  // Starting from the parents camera projection space, we get into this cameras
-  // projection space by the transform matrix:
-  //  P*R*inv(pP*pR) = T*S*P0*R*inv(pP*pR)
-  // So, at first compute that matrix without T*S and determine S and T from that
-
-  // Ok, now osg uses the inverse matrix multiplication order, thus:
-  osg::Matrix PtoPwithoutTS = invert(pR*pP)*R*P0;
-  // Compute the parents reference points in the current projection space
-  // without the yet unknown T and S
-  osg::Vec2d pRefInThis[2] = {
-    preMult(pRef[0], PtoPwithoutTS),
-    preMult(pRef[1], PtoPwithoutTS)
-  };
-
-  // To get the same zoom, rescale to match the parents size
-  double s = (ref[0] - ref[1]).length()/(pRefInThis[0] - pRefInThis[1]).length();
-  osg::Matrix S = osg::Matrix::scale(s, s, 1);
-
-  // For the translation offset, incorporate the now known scale
-  // and recompute the position ot the first reference point in the
-  // currents projection space without the yet unknown T.
-  pRefInThis[0] = preMult(pRef[0], PtoPwithoutTS*S);
-  // The translation is then the difference of the reference points
-  osg::Matrix T = osg::Matrix::translate(osg::Vec3d(ref[0] - pRefInThis[0], 0));
-
-  // Compose and return the desired final projection matrix
-  return P0*S*T;
-}
+typedef std::vector<SGPropertyNode_ptr> SGPropertyNodeVec;
 
 namespace flightgear
 {
@@ -138,59 +176,121 @@ using namespace osg;
 using std::strcmp;
 using std::string;
 
-ref_ptr<CameraGroup> CameraGroup::_defaultGroup;
+    class CameraGroupListener : public SGPropertyChangeListener
+    {
+    public:
+        CameraGroupListener(CameraGroup* cg, SGPropertyNode* gnode) :
+        _groupNode(gnode),
+        _cameraGroup(cg)
+        {
+            listenToNode("znear", 0.1f);
+            listenToNode("zfar", 120000.0f);
+            listenToNode("near-field", 100.0f);
+        }
+        
+        virtual ~CameraGroupListener()
+        {
+            unlisten("znear");
+            unlisten("zfar");
+            unlisten("near-field");
+        }
+        
+        virtual void valueChanged(SGPropertyNode* prop)
+        {
+            if (!strcmp(prop->getName(), "znear")) {
+                _cameraGroup->setZNear(prop->getFloatValue());
+            } else if (!strcmp(prop->getName(), "zfar")) {
+                _cameraGroup->setZFar(prop->getFloatValue());
+            } else if (!strcmp(prop->getName(), "near-field")) {
+                _cameraGroup->setNearField(prop->getFloatValue());
+            }
+        }
+    private:
+        void listenToNode(const std::string& name, double val)
+        {
+            SGPropertyNode* n = _groupNode->getChild(name);
+            if (!n) {
+                n = _groupNode->getChild(name, 0 /* index */, true);
+                n->setDoubleValue(val);
+            }
+            n->addChangeListener(this);
+            valueChanged(n); // propogate initial state through
+        }
+        
+        void unlisten(const std::string& name)
+        {
+            _groupNode->getChild(name)->removeChangeListener(this);
+        }
+        
+        SGPropertyNode_ptr _groupNode;
+        CameraGroup* _cameraGroup; // non-owning reference
+        
+    };
+    
+    class CameraViewportListener : public SGPropertyChangeListener
+    {
+    public:
+        CameraViewportListener(CameraInfo* info,
+                               SGPropertyNode* vnode,
+                               const osg::GraphicsContext::Traits *traits) :
+        _viewportNode(vnode),
+        _camera(info)
+        {
+            listenToNode("x", 0.0f);
+            listenToNode("y", 0.0f);
+            listenToNode("width", traits->width);
+            listenToNode("height", traits->height);
+        }
+        
+        virtual ~CameraViewportListener()
+        {
+            unlisten("x");
+            unlisten("y");
+            unlisten("width");
+            unlisten("height");
+        }
+        
+        virtual void valueChanged(SGPropertyNode* prop)
+        {
+            if (!strcmp(prop->getName(), "x")) {
+                _camera->x = prop->getDoubleValue();
+            } else if (!strcmp(prop->getName(), "y")) {
+                _camera->y = prop->getDoubleValue();
+            } else if (!strcmp(prop->getName(), "width")) {
+                _camera->width = prop->getDoubleValue();
+            } else if (!strcmp(prop->getName(), "height")) {
+                _camera->height = prop->getDoubleValue();
+            }
+        }
+    private:
+        void listenToNode(const std::string& name, double val)
+        {
+            SGPropertyNode* n = _viewportNode->getChild(name);
+            if (!n) {
+                n = _viewportNode->getChild(name, 0 /* index */, true);
+                n->setDoubleValue(val);
+            }
+            n->addChangeListener(this);
+            valueChanged(n); // propogate initial state through
+        }
+        
+        void unlisten(const std::string& name)
+        {
+            _viewportNode->getChild(name)->removeChangeListener(this);
+        }
+        
+        SGPropertyNode_ptr _viewportNode;
+        CameraInfo* _camera;
+        
+    };
+    
+    const char* MAIN_CAMERA = "main";
+    const char* FAR_CAMERA = "far";
+    const char* GEOMETRY_CAMERA = "geometry";
+    const char* SHADOW_CAMERA = "shadow";
+    const char* LIGHTING_CAMERA = "lighting";
+    const char* DISPLAY_CAMERA = "display";
 
-CameraGroup::CameraGroup(osgViewer::Viewer* viewer) :
-    _viewer(viewer)
-{
-}
-
-}
-
-namespace
-{
-using namespace osg;
-
-// Given a projection matrix, return a new one with the same frustum
-// sides and new near / far values.
-
-void makeNewProjMat(Matrixd& oldProj, double znear,
-                                       double zfar, Matrixd& projection)
-{
-    projection = oldProj;
-    // Slightly inflate the near & far planes to avoid objects at the
-    // extremes being clipped out.
-    znear *= 0.999;
-    zfar *= 1.001;
-
-    // Clamp the projection matrix z values to the range (near, far)
-    double epsilon = 1.0e-6;
-    if (fabs(projection(0,3)) < epsilon &&
-        fabs(projection(1,3)) < epsilon &&
-        fabs(projection(2,3)) < epsilon) {
-        // Projection is Orthographic
-        epsilon = -1.0/(zfar - znear); // Used as a temp variable
-        projection(2,2) = 2.0*epsilon;
-        projection(3,2) = (zfar + znear)*epsilon;
-    } else {
-        // Projection is Perspective
-        double trans_near = (-znear*projection(2,2) + projection(3,2)) /
-            (-znear*projection(2,3) + projection(3,3));
-        double trans_far = (-zfar*projection(2,2) + projection(3,2)) /
-            (-zfar*projection(2,3) + projection(3,3));
-        double ratio = fabs(2.0/(trans_near - trans_far));
-        double center = -0.5*(trans_near + trans_far);
-
-        projection.postMult(osg::Matrixd(1.0, 0.0, 0.0, 0.0,
-                                         0.0, 1.0, 0.0, 0.0,
-                                         0.0, 0.0, ratio, 0.0,
-                                         0.0, 0.0, center*ratio, 1.0));
-    }
-}
-}
-
-namespace flightgear
-{
 void CameraInfo::updateCameras()
 {
     bufferSize->set( osg::Vec2f( width, height ) );
@@ -259,6 +359,11 @@ void CameraInfo::resized(double w, double h)
     }
 }
 
+CameraInfo::~CameraInfo()
+{
+    
+}
+    
 osg::Camera* CameraInfo::getCamera(const std::string& k) const
 {
     CameraMap::const_iterator ii = cameras.find( k );
@@ -292,6 +397,21 @@ void CameraInfo::setMatrices(osg::Camera* c)
     worldPosGeod->set( osg::Vec3f( pos2.getLongitudeRad(), pos2.getLatitudeRad(), pos2.getElevationM() ) );
 }
 
+CameraGroup::~CameraGroup()
+{
+    
+    for (CameraList::iterator i = _cameras.begin(); i != _cameras.end(); ++i) {
+        CameraInfo* info = *i;
+        for (CameraMap::iterator ii = info->cameras.begin(); ii != info->cameras.end(); ++ii) {
+            RenderStageInfo& rsi = ii->second;
+            unsigned int slaveIndex = _viewer->findSlaveIndexForCamera(rsi.camera);
+            _viewer->removeSlave(slaveIndex);
+        }
+    }
+    
+    _cameras.clear();
+}
+    
 void CameraGroup::update(const osg::Vec3d& position,
                          const osg::Quat& orientation)
 {
@@ -447,6 +567,13 @@ void CameraGroup::update(const osg::Vec3d& position,
     globals->get_renderer()->setPlanes( _zNear, _zFar );
 }
 
+ref_ptr<CameraGroup> CameraGroup::_defaultGroup;
+
+CameraGroup::CameraGroup(osgViewer::Viewer* viewer) :
+_viewer(viewer)
+{
+}
+    
 void CameraGroup::setCameraParameters(float vfov, float aspectRatio)
 {
     if (vfov != 0.0f && aspectRatio != 0.0f)
@@ -473,74 +600,6 @@ double CameraGroup::getMasterAspectRatio() const
     
     return static_cast<double>(viewport->height()) / viewport->width();
 }
-    
-}
-
-namespace
-{
-// A raw value for property nodes that references a class member via
-// an osg::ref_ptr.
-template<class C, class T>
-class RefMember : public SGRawValue<T>
-{
-public:
-    RefMember (C *obj, T C::*ptr)
-        : _obj(obj), _ptr(ptr) {}
-    virtual ~RefMember () {}
-    virtual T getValue () const
-    {
-        return _obj.get()->*_ptr;
-    }
-    virtual bool setValue (T value)
-    {
-        _obj.get()->*_ptr = value;
-        return true;
-    }
-    virtual SGRawValue<T> * clone () const
-    {
-        return new RefMember(_obj.get(), _ptr);
-    }
-private:
-    ref_ptr<C> _obj;
-    T C::* const _ptr;
-};
-
-template<typename C, typename T>
-RefMember<C, T> makeRefMember(C *obj, T C::*ptr)
-{
-    return RefMember<C, T>(obj, ptr);
-}
-
-template<typename C, typename T>
-void bindMemberToNode(SGPropertyNode* parent, const char* childName,
-                      C* obj, T C::*ptr, T value)
-{
-    SGPropertyNode* valNode = parent->getNode(childName);
-    RefMember<C, T> refMember = makeRefMember(obj, ptr);
-    if (!valNode) {
-        valNode = parent->getNode(childName, true);
-        valNode->tie(refMember, false);
-        setValue(valNode, value);
-    } else {
-        valNode->tie(refMember, true);
-    }
-}
-
-void buildViewport(flightgear::CameraInfo* info, SGPropertyNode* viewportNode,
-                   const osg::GraphicsContext::Traits *traits)
-{
-    using namespace flightgear;
-    bindMemberToNode(viewportNode, "x", info, &CameraInfo::x, 0.0);
-    bindMemberToNode(viewportNode, "y", info, &CameraInfo::y, 0.0);
-    bindMemberToNode(viewportNode, "width", info, &CameraInfo::width,
-                     static_cast<double>(traits->width));
-    bindMemberToNode(viewportNode, "height", info, &CameraInfo::height,
-                     static_cast<double>(traits->height));
-}
-}
-
-namespace flightgear
-{
 
 // Mostly copied from osg's osgViewer/View.cpp
 
@@ -958,6 +1017,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     bool useMasterSceneGraph = !psNode;
     CameraInfo* info = globals->get_renderer()->buildRenderingPipeline(this, cameraFlags, camera, vOff, pOff,
                                                                         window->gc.get(), useMasterSceneGraph);
+    
     info->name = cameraNode->getStringValue("name");
     info->physicalWidth = physicalWidth;
     info->physicalHeight = physicalHeight;
@@ -970,10 +1030,13 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     info->parentReference[1] = parentReference[1];
     info->thisReference[0] = thisReference[0];
     info->thisReference[1] = thisReference[1];
+    
     // If a viewport isn't set on the camera, then it's hard to dig it
     // out of the SceneView objects in the viewer, and the coordinates
     // of mouse events are somewhat bizzare.
-    buildViewport(info, viewportNode, window->gc->getTraits());
+    
+    info->viewportListener.reset(new CameraViewportListener(info, viewportNode, window->gc->getTraits()));
+    
     info->updateCameras();
     // Distortion camera needs the viewport which is created by addCamera().
     if (psNode) {
@@ -1033,7 +1096,9 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     // should be assigned by a camera manager.
     camera->setRenderOrder(osg::Camera::POST_RENDER, 10000);
     SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
-    buildViewport(result, viewportNode, window->gc->getTraits());
+
+    result->viewportListener.reset(new CameraViewportListener(result, viewportNode,
+                                                              window->gc->getTraits()));
 
     // Disable statistics for the GUI camera.
     camera->setStats(0);
@@ -1045,6 +1110,8 @@ CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
                                            SGPropertyNode* gnode)
 {
     CameraGroup* cgroup = new CameraGroup(viewer);
+    cgroup->_listener.reset(new CameraGroupListener(cgroup, gnode));
+    
     for (int i = 0; i < gnode->nChildren(); ++i) {
         SGPropertyNode* pNode = gnode->getChild(i);
         const char* name = pNode->getName();
@@ -1056,10 +1123,7 @@ CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
             cgroup->buildGUICamera(pNode);
         }
     }
-    bindMemberToNode(gnode, "znear", cgroup, &CameraGroup::_zNear, .1f);
-    bindMemberToNode(gnode, "zfar", cgroup, &CameraGroup::_zFar, 120000.0f);
-    bindMemberToNode(gnode, "near-field", cgroup, &CameraGroup::_nearField,
-                     100.0f);
+
     return cgroup;
 }
 
@@ -1266,4 +1330,50 @@ void warpGUIPointer(CameraGroup* cgroup, int x, int y)
               * (eventState->getYmax() - eventState->getYmin())));
     cgroup->getViewer()->getEventQueue()->mouseWarped(viewerX, viewerY);
 }
+
+void CameraGroup::buildDefaultGroup(osgViewer::Viewer* viewer)
+{
+    // Look for windows, camera groups, and the old syntax of
+    // top-level cameras
+    SGPropertyNode* renderingNode = fgGetNode("/sim/rendering");
+    SGPropertyNode* cgroupNode = renderingNode->getNode("camera-group", true);
+    bool oldSyntax = !cgroupNode->hasChild("camera");
+    if (oldSyntax) {
+        for (int i = 0; i < renderingNode->nChildren(); ++i) {
+            SGPropertyNode* propNode = renderingNode->getChild(i);
+            const char* propName = propNode->getName();
+            if (!strcmp(propName, "window") || !strcmp(propName, "camera")) {
+                SGPropertyNode* copiedNode
+                    = cgroupNode->getNode(propName, propNode->getIndex(), true);
+                copyProperties(propNode, copiedNode);
+            }
+        }
+        
+        SGPropertyNodeVec cameras(cgroupNode->getChildren("camera"));
+        SGPropertyNode* masterCamera = 0;
+        SGPropertyNodeVec::const_iterator it;
+        for (it = cameras.begin(); it != cameras.end(); ++it) {
+            if ((*it)->getDoubleValue("shear-x", 0.0) == 0.0
+                && (*it)->getDoubleValue("shear-y", 0.0) == 0.0) {
+                masterCamera = it->ptr();
+                break;
+            }
+        }
+        if (!masterCamera) {
+            WindowBuilder *windowBuilder = WindowBuilder::getWindowBuilder();
+            masterCamera = cgroupNode->getChild("camera", cameras.size(), true);
+            setValue(masterCamera->getNode("window/name", true),
+                     windowBuilder->getDefaultWindowName());
+        }
+        SGPropertyNode* nameNode = masterCamera->getNode("window/name");
+        if (nameNode)
+            setValue(cgroupNode->getNode("gui/window/name", true),
+                     nameNode->getStringValue());
+    }
+    
+    CameraGroup* cgroup = buildCameraGroup(viewer, cgroupNode);
+    setDefault(cgroup);
 }
+    
+} // of namespace flightgear
+

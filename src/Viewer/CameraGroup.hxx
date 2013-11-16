@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <osg/Matrix>
 #include <osg/ref_ptr>
@@ -48,7 +49,9 @@ namespace flightgear
 {
 
 class GraphicsWindow;
-
+class CameraViewportListener;
+class CameraGroupListener;
+    
 struct RenderBufferInfo {
     RenderBufferInfo(osg::Texture2D* t = 0, float s = 1.0 ) : texture(t), scaleFactor(s) {}
     osg::ref_ptr<osg::Texture2D> texture;
@@ -106,10 +109,13 @@ struct CameraInfo : public osg::Referenced
         shadowMatrix[3] = new osg::Uniform("fg_ShadowMatrix_3", osg::Matrixf());
     }
 
+    ~CameraInfo();
+    
     /** Update and resize cameras
      */
     void updateCameras();
     void resized(double w, double h);
+        
     /** The name as given in the config file.
      */
     std::string name;
@@ -161,6 +167,8 @@ struct CameraInfo : public osg::Referenced
     osg::ref_ptr<osg::Uniform> dv;
     osg::ref_ptr<osg::Uniform> shadowMatrix[4];
 
+    std::auto_ptr<CameraViewportListener> viewportListener;
+    
     void setMatrices( osg::Camera* c );
 
     osgUtil::RenderBin::RenderBinList savedTransparentBins;
@@ -171,10 +179,6 @@ struct CameraInfo : public osg::Referenced
      */
     osg::Vec2d thisReference[2];
 };
-
-/** Update the OSG cameras from the camera info.
- */
-void updateCameras(const CameraInfo* info);
 
 class CameraGroup : public osg::Referenced
 {
@@ -198,6 +202,9 @@ public:
      * @param viewer the viewer
      */
     CameraGroup(osgViewer::Viewer* viewer);
+    
+    ~CameraGroup();
+    
     /** Get the camera group's Viewer.
      * @return the viewer
      */
@@ -236,11 +243,15 @@ public:
      * matters at this time.
      * @param group the group to set.
      */
+   
+    static void buildDefaultGroup(osgViewer::Viewer* viewer);
+    
     static void setDefault(CameraGroup* group) { _defaultGroup = group; }
     /** Get the default CameraGroup.
      * @return the default camera group.
      */
     static CameraGroup* getDefault() { return _defaultGroup.get(); }
+    
     typedef std::vector<osg::ref_ptr<CameraInfo> > CameraList;
     typedef CameraList::iterator CameraIterator;
     typedef CameraList::const_iterator ConstCameraIterator;
@@ -253,12 +264,6 @@ public:
     ConstCameraIterator camerasBegin() const { return _cameras.begin(); }
     ConstCameraIterator camerasEnd() const { return _cameras.end(); }
     void addCamera(CameraInfo* info) { _cameras.push_back(info); }
-    /** Build a complete CameraGroup from a property node.
-     * @param viewer the viewer associated with this camera group.
-     * @param the camera group property node.
-     */
-    static CameraGroup* buildCameraGroup(osgViewer::Viewer* viewer,
-                                         SGPropertyNode* node);
     /** Set the cull mask on all non-GUI cameras
      */
     void setCameraCullMasks(osg::Node::NodeMask nm);
@@ -278,16 +283,30 @@ public:
      * find the GUI camera if one is defined 
      */
     const CameraInfo* getGUICamera() const;
+    
+    void setZNear(float f) { _zNear = f; }
+    void setZFar(float f) { _zFar = f; }
+    void setNearField(float f) { _nearField = f; }
 protected:
     CameraList _cameras;
     osg::ref_ptr<osgViewer::Viewer> _viewer;
     static osg::ref_ptr<CameraGroup> _defaultGroup;
+    std::auto_ptr<CameraGroupListener> _listener;
+    
     // Near, far for the master camera if used.
     float _zNear;
     float _zFar;
     float _nearField;
+    
     typedef std::map<std::string, osg::ref_ptr<osg::TextureRectangle> > TextureMap;
     TextureMap _textureTargets;
+    
+    /** Build a complete CameraGroup from a property node.
+     * @param viewer the viewer associated with this camera group.
+     * @param the camera group property node.
+     */
+    static CameraGroup* buildCameraGroup(osgViewer::Viewer* viewer,
+                                         SGPropertyNode* node);
 };
 
 }

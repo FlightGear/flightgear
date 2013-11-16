@@ -63,6 +63,7 @@ void fgOSCloseWindow();
 void fgOSFullScreen();
 int fgOSMainLoop();
 void fgOSExit(int code);
+void fgOSResetProperties();
 
 void fgSetMouseCursor(int cursor);
 int  fgGetMouseCursor();
