@@ -39,6 +39,7 @@
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/scene/model/modellib.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
@@ -216,8 +217,13 @@ FGGlobals::~FGGlobals()
 
     delete channellist;
 
+    simgear::PropertyObjectBase::setDefaultRoot(NULL);
+    simgear::SGModelLib::resetPropertyRoot();
+    
     delete locale;
     locale = NULL;
+    
+    delete props;
 }
 
 // set the fg_root path
