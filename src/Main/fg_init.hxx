@@ -37,7 +37,7 @@ std::string fgBasePackageVersion();
 bool fgInitHome();
 
 // Read in configuration (file and command line)
-int fgInitConfig ( int argc, char **argv );
+int fgInitConfig ( int argc, char **argv, bool reinit );
 
 
 // log various settings / configuration state
@@ -55,7 +55,7 @@ bool fgInitGeneral ();
 
 
 // Create all the subsystems needed by the sim
-void fgCreateSubsystems();
+void fgCreateSubsystems(bool duringReset);
 
 // called after the subsystems have been bound and initialised,
 // to peform final init
@@ -63,6 +63,9 @@ void fgPostInitSubsystems();
  
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems();
+
+
+void fgStartNewReset();
 
 #endif // _FG_INIT_HXX
 

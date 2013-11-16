@@ -145,12 +145,13 @@ static void registerMainLoop()
 // per pass) and once everything has been initialized fgMainLoop from
 // then on.
 
+static int idle_state = 0;
+
 static void fgIdleFunction ( void ) {
     // Specify our current idle function state.  This is used to run all
     // our initializations out of the idle callback so that we can get a
     // splash screen up and running right away.
-    static int idle_state = 0;
-  
+    
     if ( idle_state == 0 ) {
         if (guiInit())
         {
@@ -159,7 +160,6 @@ static void fgIdleFunction ( void ) {
         }
 
     } else if ( idle_state == 2 ) {
-
         initTerrasync();
         idle_state++;
         fgSplashProgress("loading-nav-dat");
@@ -175,15 +175,10 @@ static void fgIdleFunction ( void ) {
         }
       
     } else if ( idle_state == 4 ) {
-        idle_state+=2;
-        // based on the requested presets, calculate the true starting
-        // lon, lat
-        flightgear::initPosition();
-        flightgear::initTowerLocationListener();
+        idle_state++;
 
         TimeManager* t = new TimeManager;
         globals->add_subsystem("time", t, SGSubsystemMgr::INIT);
-        t->init(); // need to init now, not during initSubsystems
         
         // Do some quick general initializations
         if( !fgInitGeneral()) {
@@ -201,29 +196,34 @@ static void fgIdleFunction ( void ) {
         // Initialize the material manager
         ////////////////////////////////////////////////////////////////////
         globals->set_matlib( new SGMaterialLib );
-        simgear::SGModelLib::init(globals->get_fg_root(), globals->get_props());
         simgear::SGModelLib::setPanelFunc(FGPanelNode::load);
-
+ 
+    } else if (( idle_state == 5 ) || (idle_state == 2005)) {
+        idle_state+=2;
+        flightgear::initPosition();
+        flightgear::initTowerLocationListener();
+        
+        simgear::SGModelLib::init(globals->get_fg_root(), globals->get_props());
+        
+        TimeManager* timeManager = (TimeManager*) globals->get_subsystem("time");
+        timeManager->init();
+        
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.
         ////////////////////////////////////////////////////////////////////
-
+        
         globals->set_scenery( new FGScenery );
         globals->get_scenery()->init();
         globals->get_scenery()->bind();
         globals->set_tile_mgr( new FGTileMgr );
-
-        fgSplashProgress("loading-aircraft");
-
-    } else if ( idle_state == 6 ) {
-        idle_state++;
+        
         fgSplashProgress("creating-subsystems");
-
-    } else if ( idle_state == 7 ) {
-        idle_state++;
+    } else if (( idle_state == 7 ) || (idle_state == 2007)) {
+        bool isReset = (idle_state == 2007);
+        idle_state = 8; // from the next state on, reset & startup are identical
         SGTimeStamp st;
         st.stamp();
-        fgCreateSubsystems();
+        fgCreateSubsystems(isReset);
         SG_LOG(SG_GENERAL, SG_INFO, "Creating subsystems took:" << st.elapsedMSec());
         fgSplashProgress("binding-subsystems");
       
@@ -271,7 +271,19 @@ static void fgIdleFunction ( void ) {
         fgSetBool("sim/sceneryloaded", false);
         registerMainLoop();
     }
+    
+    if ( idle_state == 2000 ) {
+        fgStartNewReset();
+        idle_state = 2005;
+    }
 }
+
+void fgResetIdleState()
+{
+    idle_state = 2000;
+    fgRegisterIdleHandler( &fgIdleFunction );
+}
+
 
 static void upper_case_property(const char *name)
 {
@@ -369,7 +381,7 @@ int fgMainInit( int argc, char **argv ) {
     // Load the configuration parameters.  (Command line options
     // override config file options.  Config file options override
     // defaults.)
-    int configResult = fgInitConfig(argc, argv);
+    int configResult = fgInitConfig(argc, argv, false);
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
         return EXIT_FAILURE;
     } else if (configResult == flightgear::FG_OPTIONS_EXIT) {

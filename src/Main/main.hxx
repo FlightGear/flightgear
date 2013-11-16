@@ -23,6 +23,8 @@
 
 int fgMainInit( int argc, char **argv );
 
+void fgResetIdleState();
+
 extern std::string hostname;
 
 #endif

@@ -44,8 +44,11 @@
 #endif
 
 #include <string>
+
 #include <boost/algorithm/string/compare.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+
+#include <osgViewer/Viewer>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -57,7 +60,9 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/scene/tsync/terrasync.hxx>
 
+#include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
@@ -99,6 +104,8 @@
 #include <Sound/soundmanager.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
+#include <Time/TimeManager.hxx>
+
 #include <Traffic/TrafficMgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 #include <FDM/fdm_shell.hxx>
@@ -106,11 +113,14 @@
 #include <Environment/environment_mgr.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/viewmgr.hxx>
+#include <Viewer/FGEventHandler.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Cockpit/cockpitDisplayManager.hxx>
 #include <Network/HTTPClient.hxx>
 #include <Network/fgcom.hxx>
+
+#include <Viewer/CameraGroup.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -129,12 +139,15 @@
 #include <GUI/CocoaHelpers.h> // for Mac impl of platformDefaultDataPath()
 #endif
 
+//#define NEW_RESET 1
+
 using std::string;
 using std::endl;
 using std::cerr;
 using std::cout;
 using namespace boost::algorithm;
 
+extern osg::ref_ptr<osgViewer::Viewer> viewer;
 
 // Return the current base package version
 string fgBasePackageVersion() {
@@ -413,7 +426,7 @@ bool fgInitHome()
 }
 
 // Read in configuration (file and command line)
-int fgInitConfig ( int argc, char **argv )
+int fgInitConfig ( int argc, char **argv, bool reinit )
 {
     SGPath dataPath = globals->get_fg_home();
     
@@ -432,7 +445,10 @@ int fgInitConfig ( int argc, char **argv )
   
     fgSetDefaults();
     flightgear::Options* options = flightgear::Options::sharedInstance();
-    options->init(argc, argv, dataPath);
+    if (!reinit) {
+        options->init(argc, argv, dataPath);
+    }
+    
     bool loadDefaults = flightgear::Options::sharedInstance()->shouldLoadDefaultConfig();
     if (loadDefaults) {
       // Read global preferences from $FG_ROOT/preferences.xml
@@ -552,7 +568,7 @@ void fgOutputSettings()
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
-void fgCreateSubsystems() {
+void fgCreateSubsystems(bool duringReset) {
 
     SG_LOG( SG_GENERAL, SG_INFO, "Creating Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
@@ -599,13 +615,15 @@ void fgCreateSubsystems() {
     // Initialize the material property subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    SGPath mpath( globals->get_fg_root() );
-    mpath.append( fgGetString("/sim/rendering/materials-file") );
-    if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
-            globals->get_props()) ) {
-        throw sg_io_exception("Error loading materials file", mpath);
+    if (!duringReset) {
+        SGPath mpath( globals->get_fg_root() );
+        mpath.append( fgGetString("/sim/rendering/materials-file") );
+        if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
+                globals->get_props()) ) {
+           throw sg_io_exception("Error loading materials file", mpath);
+        }
     }
-
+    
     globals->add_subsystem( "http", new FGHTTPClient );
     
     ////////////////////////////////////////////////////////////////////
@@ -756,10 +774,11 @@ void fgCreateSubsystems() {
     // Initialize the lighting subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
-    
     // ordering here is important : Nasal (via events), then models, then views
-    globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
+    if (!duringReset) {
+        globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
+        globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
+    }
 
     globals->add_subsystem("aircraft-model", new FGAircraftModel, SGSubsystemMgr::DISPLAY);
     globals->add_subsystem("model-manager", new FGModelMgr, SGSubsystemMgr::DISPLAY);
@@ -829,6 +848,11 @@ void fgPostInitSubsystems()
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems()
 {
+#ifdef NEW_RESET
+    fgResetIdleState();
+    return;
+#endif
+    
     SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
 
     SG_LOG( SG_GENERAL, SG_INFO, "fgReInitSubsystems()");
@@ -905,4 +929,87 @@ void fgReInitSubsystems()
     fgSetBool("/sim/sceneryloaded",false);
 }
 
+void fgStartNewReset()
+{
+    globals->saveInitialState();
+    
+    fgSetBool("/sim/signals/reinit", true);
+    fgSetBool("/sim/freeze/master", true);
+    
+    SGSubsystemMgr* subsystemManger = globals->get_subsystem_mgr();
+    subsystemManger->shutdown();
+    subsystemManger->unbind();
+    
+    // remove them all (with some exceptions?)
+    for (int g=0; g<SGSubsystemMgr::MAX_GROUPS; ++g) {
+        SGSubsystemGroup* grp = subsystemManger->get_group(static_cast<SGSubsystemMgr::GroupType>(g));
+        const string_list& names(grp->member_names());
+        string_list::const_iterator it;
+        for (it = names.begin(); it != names.end(); ++it) {
+            if ((*it == "time") || (*it == "terrasync") || (*it == "events")
+                || (*it == "lighting"))
+            {
+                continue;
+            }
+            
+            try {
+                subsystemManger->remove(it->c_str());
+            } catch (std::exception& e) {
+                SG_LOG(SG_GENERAL, SG_INFO, "caught std::exception shutting down:" << *it);
+            } catch (...) {
+                SG_LOG(SG_GENERAL, SG_INFO, "caught generic exception shutting down:" << *it);
+            }
+            
+            // don't delete here, dropping the ref should be sufficient
+        }
+    } // of top-level groups iteration
+    
+    // order is important here since tile-manager shutdown needs to
+    // access the scenery object
+    globals->set_tile_mgr(NULL);
+    globals->set_scenery(NULL);
+    flightgear::CameraGroup::setDefault(NULL);
+    
+    FGRenderer* render = globals->get_renderer();
+    // don't cancel the pager until after shutdown, since AIModels (and
+    // potentially others) can queue delete requests on the pager.
+    render->getViewer()->getDatabasePager()->cancel();
+    
+    // preserve the event handler; re-creating it would entail fixing the
+    // idle handler
+    osg::ref_ptr<flightgear::FGEventHandler> eventHandler = render->getEventHandler();
+    
+    globals->set_renderer(NULL);
+    simgear::SGModelLib::resetPropertyRoot();
+    
+    globals->resetPropertyRoot();
+    globals->restoreInitialState();
+    
+    render = new FGRenderer;
+    render->setEventHandler(eventHandler);
+    globals->set_renderer(render);
+    render->init();
+    render->setViewer(viewer.get());
+    viewer->getDatabasePager()->setUpThreads(1, 1);
+    render->splashinit();
+    
+    flightgear::CameraGroup::buildDefaultGroup(viewer.get());
+
+    fgOSResetProperties();
+    fgInitConfig(0, NULL, true);
+    
+// init some things manually
+// which do not follow the regular init pattern
+    
+    globals->get_event_mgr()->init();
+    globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
+    
+// terra-sync needs the property tree root, pass it back in
+    simgear::SGTerraSync* terra_sync = static_cast<simgear::SGTerraSync*>(subsystemManger->get_subsystem("terrasync"));
+    terra_sync->setRoot(globals->get_props());
+
+    fgSetBool("/sim/signals/reinit", false);
+    fgSetBool("/sim/freeze/master", false);
+    fgSetBool("/sim/sceneryloaded",false);
+}
 

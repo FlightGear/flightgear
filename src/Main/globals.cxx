@@ -127,14 +127,12 @@ public:
 ////////////////////////////////////////////////////////////////////////
 
 // global global :-)
-FGGlobals *globals;
+FGGlobals *globals = NULL;
 
 
 // Constructor
 FGGlobals::FGGlobals() :
-    props( new SGPropertyNode ),
     initial_state( NULL ),
-    locale( new FGLocale(props) ),
     renderer( new FGRenderer ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
@@ -151,27 +149,35 @@ FGGlobals::FGGlobals() :
     commands( SGCommandMgr::instance() ),
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
-    scenery( NULL ),
-    tile_mgr( NULL ),
     fontcache ( new FGFontCache ),
     channellist( NULL ),
     haveUserSettings(false)
 {
-  simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider);
-  simgear::ResourceManager::instance()->addProvider(new CurrentAircraftDirProvider);
-  simgear::PropertyObjectBase::setDefaultRoot(props);
-  
-  positionLon = props->getNode("position/longitude-deg", true);
-  positionLat = props->getNode("position/latitude-deg", true);
-  positionAlt = props->getNode("position/altitude-ft", true);
-  
-  viewLon = props->getNode("sim/current-view/viewer-lon-deg", true);
-  viewLat = props->getNode("sim/current-view/viewer-lat-deg", true);
-  viewAlt = props->getNode("sim/current-view/viewer-elev-ft", true);
-  
-  orientPitch = props->getNode("orientation/pitch-deg", true);
-  orientHeading = props->getNode("orientation/heading-deg", true);
-  orientRoll = props->getNode("orientation/roll-deg", true);
+    SGPropertyNode* root = new SGPropertyNode;
+    props = SGPropertyNode_ptr(root);
+    locale = new FGLocale(props);
+    
+    simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider);
+    simgear::ResourceManager::instance()->addProvider(new CurrentAircraftDirProvider);
+    initProperties();
+}
+
+void FGGlobals::initProperties()
+{
+    simgear::PropertyObjectBase::setDefaultRoot(props);
+    
+    positionLon = props->getNode("position/longitude-deg", true);
+    positionLat = props->getNode("position/latitude-deg", true);
+    positionAlt = props->getNode("position/altitude-ft", true);
+    
+    viewLon = props->getNode("sim/current-view/viewer-lon-deg", true);
+    viewLat = props->getNode("sim/current-view/viewer-lat-deg", true);
+    viewAlt = props->getNode("sim/current-view/viewer-elev-ft", true);
+    
+    orientPitch = props->getNode("orientation/pitch-deg", true);
+    orientHeading = props->getNode("orientation/heading-deg", true);
+    orientRoll = props->getNode("orientation/roll-deg", true);
+
 }
 
 // Destructor
@@ -186,35 +192,35 @@ FGGlobals::~FGGlobals()
     // deallocation of AIModel objects. To ensure we can safely
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
-    SGSubsystem* ai = globals->get_subsystem("ai-model");
+    SGSubsystemRef ai = subsystem_mgr->get_subsystem("ai-model");
     if (ai) {
-        ai->unbind();
         subsystem_mgr->remove("ai-model");
+        ai->unbind();
+        ai.clear(); // ensure AI is deleted now, not at end of this method
     }
+    
+    subsystem_mgr->shutdown();
+    subsystem_mgr->unbind();    
 
     subsystem_mgr->remove("aircraft-model");
     subsystem_mgr->remove("tile-manager");
     subsystem_mgr->remove("model-manager");
-    
-    subsystem_mgr->shutdown();
-    subsystem_mgr->unbind();
+    _tile_mgr.clear();
+
+    // renderer touches subsystems during its destruction
+    set_renderer(NULL);
+    _scenery.clear();
+
     delete subsystem_mgr;
     subsystem_mgr = NULL; // important so ::get_subsystem returns NULL 
-    
-    delete renderer;
-    renderer = NULL;
-    
+
     delete time_params;
     delete matlib;
     delete route_mgr;
-
     delete ATIS_mgr;
-
     delete channel_options_list;
     delete initial_waypoints;
-    delete scenery;
     delete fontcache;
-
     delete channellist;
 
     simgear::PropertyObjectBase::setDefaultRoot(NULL);
@@ -223,7 +229,7 @@ FGGlobals::~FGGlobals()
     delete locale;
     locale = NULL;
     
-    delete props;
+    props.clear();
 }
 
 // set the fg_root path
@@ -412,6 +418,16 @@ FGGlobals::get_renderer () const
    return renderer;
 }
 
+void FGGlobals::set_renderer(FGRenderer *render)
+{
+    if (render == renderer) {
+        return;
+    }
+    
+    delete renderer;
+    renderer = render;
+}
+
 SGSubsystemMgr *
 FGGlobals::get_subsystem_mgr () const
 {
@@ -485,6 +501,39 @@ SGVec3d
 FGGlobals::get_view_position_cart() const
 {
   return SGVec3d::fromGeod(get_view_position());
+}
+
+static void treeDumpRefCounts(int depth, SGPropertyNode* nd)
+{
+    for (int i=0; i<nd->nChildren(); ++i) {
+        SGPropertyNode* cp = nd->getChild(i);
+        if (SGReferenced::count(cp) > 1) {
+            SG_LOG(SG_GENERAL, SG_INFO, "\t" << cp->getPath() << " refcount:" << SGReferenced::count(cp));
+        }
+        
+        treeDumpRefCounts(depth + 1, cp);
+    }
+}
+
+void
+FGGlobals::resetPropertyRoot()
+{
+    delete locale;
+    
+#if DEBUG_RESET
+    SG_LOG(SG_GENERAL, SG_INFO, "root props refcount:" << props.getNumRefs());
+    treeDumpRefCounts(0, props);
+#endif
+    props = new SGPropertyNode;
+    initProperties();
+    locale = new FGLocale(props);
+    
+    // remove /sim/fg-root before writing to prevent hijacking
+    SGPropertyNode *n = props->getNode("/sim", true);
+    n->removeChild("fg-root", 0, false);
+    n = n->getChild("fg-root", 0, true);
+    n->setStringValue(fg_root.c_str());
+    n->setAttribute(SGPropertyNode::WRITE, false);
 }
 
 // Save the current state as the initial state.
@@ -617,6 +666,26 @@ long int FGGlobals::get_warp_delta() const
 void FGGlobals::set_warp_delta( long int d )
 {
   fgSetInt("/sim/time/warp-delta", d);
+}
+
+FGScenery* FGGlobals::get_scenery () const
+{
+    return _scenery.get();
+}
+
+void FGGlobals::set_scenery ( FGScenery *s )
+{
+    _scenery = s;
+}
+
+FGTileMgr* FGGlobals::get_tile_mgr () const
+{
+    return _tile_mgr.get();
+}
+
+void FGGlobals::set_tile_mgr ( FGTileMgr *t )
+{
+    _tile_mgr = t;
 }
 
 // end of globals.cxx

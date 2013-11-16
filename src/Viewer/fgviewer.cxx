@@ -171,7 +171,7 @@ fgviewerMain(int argc, char** argv)
 
     globals = new FGGlobals;
 
-    int configResult = fgInitConfig(arguments.argc(), arguments.argv());
+    int configResult = fgInitConfig(arguments.argc(), arguments.argv(), false);
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
         return EXIT_FAILURE;
     } else if (configResult == flightgear::FG_OPTIONS_EXIT) {

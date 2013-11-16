@@ -138,10 +138,10 @@ private:
     string_list *initial_waypoints;
 
     // FlightGear scenery manager
-    FGScenery *scenery;
+    SGSharedPtr<FGScenery> _scenery;
 
     // Tile manager
-    FGTileMgr *tile_mgr;
+    SGSharedPtr<FGTileMgr> _tile_mgr;
 
     FGFontCache *fontcache;
 
@@ -156,13 +156,19 @@ private:
     SGPropertyNode_ptr positionLon, positionLat, positionAlt;
     SGPropertyNode_ptr viewLon, viewLat, viewAlt;
     SGPropertyNode_ptr orientHeading, orientPitch, orientRoll;
+    
+    /**
+     * helper to initialise standard properties on a new property tree
+     */
+    void initProperties();
 public:
 
     FGGlobals();
     virtual ~FGGlobals();
 
     virtual FGRenderer *get_renderer () const;
-
+    void set_renderer(FGRenderer* render);
+    
     virtual SGSubsystemMgr *get_subsystem_mgr () const;
 
     virtual SGSubsystem *get_subsystem (const char * name);
@@ -268,8 +274,13 @@ public:
     FGViewer *get_current_view() const;
 
     inline SGPropertyNode *get_props () { return props; }
-    inline void set_props( SGPropertyNode *n ) { props = n; }
 
+    /**
+     * @brief reset the property tree to new, empty tree. Ensure all
+     * subsystems are shutdown and unbound before call this.
+     */
+    void resetPropertyRoot();
+    
     inline FGLocale* get_locale () { return locale; }
 
     inline SGCommandMgr *get_commands () { return commands; }
@@ -299,11 +310,11 @@ public:
         initial_waypoints = list;
     }
 
-    inline FGScenery * get_scenery () const { return scenery; }
-    inline void set_scenery ( FGScenery *s ) { scenery = s; }
+    FGScenery * get_scenery () const;
+    void set_scenery ( FGScenery *s );
 
-    inline FGTileMgr * get_tile_mgr () const { return tile_mgr; }
-    inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
+    FGTileMgr * get_tile_mgr () const;
+    void set_tile_mgr ( FGTileMgr *t );
 
     inline FGFontCache *get_fontcache() const { return fontcache; }
   
