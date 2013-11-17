@@ -93,7 +93,7 @@ StaticSystem::update (double dt)
             proj_factor = sqrt( 1.0 - cos(beta)*cos(beta) * cos(alpha)*cos(alpha) );
         }
 
-        if ( (_type ==1) or  (_type == 2) ) {
+        if ( (_type ==1) || (_type == 2) ) {
             mach = _mach_node->getDoubleValue();
             pt = p_new * pow(1 + 0.2 * mach*mach*proj_factor*proj_factor, 3.5 );    //total pressure perpendicular to static port (=perpendicular to body x-axis)
             qc_part = (pt - p_new) * _error_factor ;                            //part of impact pressure to be added to static pressure (due to sideslip)
