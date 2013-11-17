@@ -472,7 +472,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     float speakerLevel = prop->getFloatValue();
     SG_CLAMP_RANGE<float>( speakerLevel, 0.0, 1.0 );
     _speakerLevel_node->setFloatValue(speakerLevel);
-    //iaxc_output_level_set(speakerLevel);
+    iaxc_output_level_set(speakerLevel);
   }
 
   if (prop == _micLevel_node && _enabled) {
