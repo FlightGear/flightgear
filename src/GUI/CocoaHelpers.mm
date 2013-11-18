@@ -32,6 +32,7 @@
 
 // flightgear
 #include <GUI/MessageBox.hxx>
+#include <Main/options.hxx>
 
 NSString* stdStringToCocoa(const std::string& s)
 {
@@ -122,3 +123,18 @@ SGPath platformDefaultDataPath()
     appData.append("FlightGear");
     return appData;
 }
+
+namespace flightgear
+{
+    
+std::string Options::platformDefaultRoot() const
+{
+    CocoaAutoreleasePool ap;
+    
+    NSURL* url = [[NSBundle mainBundle] resourceURL];
+    SGPath dataDir(URLToPath(url));
+    dataDir.append("data");
+    return dataDir.str();
+}
+    
+} // of namespace flightgear

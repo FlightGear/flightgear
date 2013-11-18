@@ -76,10 +76,6 @@
 #  include <Include/no_version.h>
 #endif
 
-#ifdef __APPLE__
-#  include <CoreFoundation/CoreFoundation.h>
-#endif
-
 using std::string;
 using std::sort;
 using std::cout;
@@ -2356,30 +2352,7 @@ string Options::platformDefaultRoot() const
   return "..\\data";
 }
 #elif defined(__APPLE__)
-string Options::platformDefaultRoot() const
-{
-  /*
-   The following code looks for the base package inside the application 
-   bundle, in the standard Contents/Resources location. 
-   */
-  CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
-  
-  // look for a 'data' subdir
-  CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
-  
-  CFURLRef absoluteDataUrl = CFURLCopyAbsoluteURL(dataDir);
-  
-  // now convert down to a path, and the a c-string
-  CFStringRef path = CFURLCopyFileSystemPath(absoluteDataUrl, kCFURLPOSIXPathStyle);  
-  string root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
-  
-  CFRelease(absoluteDataUrl);
-  CFRelease(resourcesUrl);
-  CFRelease(dataDir);
-  CFRelease(path);
-  
-  return root;
-}
+// platformDefaultRoot defined in CocoaHelpers.mm
 #else
 string Options::platformDefaultRoot() const
 {
