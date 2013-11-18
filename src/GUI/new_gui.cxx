@@ -339,8 +339,10 @@ NewGUI::readDir (const SGPath& path)
       string name = nameprop->getStringValue();
       _dialog_names[name] = xmlPath;
     // update cached values
-      cache->stampCacheFile(xmlPath);
-      cache->writeStringProperty(xmlPath.str(), name);
+        if (!cache->isReadOnly()) {
+            cache->stampCacheFile(xmlPath);
+            cache->writeStringProperty(xmlPath.str(), name);
+        }
     } // of directory children iteration
   
     txn.commit();

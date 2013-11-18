@@ -50,7 +50,7 @@ void XMLLoader::load(FGAirportDynamics* d)
   }
 
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
-  if (!cache->isCachedFileModified(path)) {
+  if (!cache->isCachedFileModified(path) || cache->isReadOnly()) {
     return;
   }
   
