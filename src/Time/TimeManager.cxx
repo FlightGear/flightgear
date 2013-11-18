@@ -174,7 +174,7 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
     _lastClockFreeze = _clockFreeze->getBoolValue();
   }
 
-  bool wait_for_scenery = !_sceneryLoaded;
+  bool wait_for_scenery = !_sceneryLoaded->getBoolValue();
   if (!wait_for_scenery) {
     throttleUpdateRate();
   }
