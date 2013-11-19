@@ -90,27 +90,7 @@ FGLocale::getUserLanguage()
     return result;
 }
 #elif __APPLE__
-
-// determine locale / langauge on Mac
-#include <CoreFoundation/CoreFoundation.h>
-
-string_list
-FGLocale::getUserLanguage()
-{
-    string_list result;
-    CFArrayRef langs = CFLocaleCopyPreferredLanguages();
-    
-    char buffer[64];
-    for (int i=0; i<CFArrayGetCount(langs); ++i) {
-        CFStringRef s = (CFStringRef) CFArrayGetValueAtIndex(langs, i);
-        CFStringGetCString(s, buffer, 64, kCFStringEncodingASCII);
-        result.push_back(buffer);
-    }
-    
-    CFRelease(langs);
-    return result;
-}
-
+//  implemented in CocoaHelpers.mm
 #else
 /**
  * Determine locale/language settings on Linux/Unix.

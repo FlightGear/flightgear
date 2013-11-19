@@ -33,6 +33,7 @@
 // flightgear
 #include <GUI/MessageBox.hxx>
 #include <Main/options.hxx>
+#include <Main/locale.hxx>
 
 NSString* stdStringToCocoa(const std::string& s)
 {
@@ -138,3 +139,15 @@ std::string Options::platformDefaultRoot() const
 }
     
 } // of namespace flightgear
+
+string_list FGLocale::getUserLanguage()
+{
+    CocoaAutoreleasePool ap;
+    string_list result;
+    
+    for (NSString* lang in [NSLocale preferredLanguages]) {
+        result.push_back(stdStringFromCocoa(lang));
+    }
+    
+    return result;
+}

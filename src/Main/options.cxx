@@ -2346,12 +2346,12 @@ string Options::platformDefaultRoot() const
   return "../data";
 }
 
-#elif defined(_WIN32)
+#elif defined(SG_WINDOWS)
 string Options::platformDefaultRoot() const
 {
   return "..\\data";
 }
-#elif defined(__APPLE__)
+#elif defined(SG_MAC)
 // platformDefaultRoot defined in CocoaHelpers.mm
 #else
 string Options::platformDefaultRoot() const
