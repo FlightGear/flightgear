@@ -117,6 +117,10 @@ public:
     flightgear::ProcedureType type = flightgear::PROCEDURE_INVALID
   ) const;
   
+  void updateThreshold(const SGGeod& newThreshold,
+                       double newHeading,
+                       double newDisplacedThreshold,
+                       double newStopway);
 };
 
 class FGHelipad : public FGRunwayBase

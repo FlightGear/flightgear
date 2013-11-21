@@ -49,7 +49,6 @@ class FGNavRecord : public FGPositioned
     PositionedID mColocated;     // Colocated DME at a navaid (ILS, VOR, TACAN, NDB)
     bool serviceable;		// for failure modeling
 
-  void processSceneryILS(SGPropertyNode* aILSNode);
 public:
   FGNavRecord(PositionedID aGuid, Type type, const std::string& ident,
               const std::string& name,
@@ -90,6 +89,8 @@ public:
 
   void setColocatedDME(PositionedID other);
   bool hasDME();
+    
+    void updateFromXML(const SGGeod& geod, double heading);
 };
 
 class FGTACANRecord : public SGReferenced {

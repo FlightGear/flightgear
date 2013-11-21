@@ -204,6 +204,16 @@ FGRunway::getApproaches(flightgear::ProcedureType type) const
   return result;
 }
 
+void FGRunway::updateThreshold(const SGGeod& newThreshold, double newHeading,
+                     double newDisplacedThreshold,
+                     double newStopway)
+{
+    modifyPosition(newThreshold);
+    _heading = newHeading;
+    _stopway = newStopway;
+    _displ_thresh = newDisplacedThreshold;
+}
+
 FGHelipad::FGHelipad(PositionedID aGuid,
                         PositionedID aAirport, const string& aIdent,
                         const SGGeod& aGeod,

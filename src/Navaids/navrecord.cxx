@@ -103,6 +103,12 @@ void FGNavRecord::setColocatedDME(PositionedID other)
   mColocated = other;
 }
 
+void FGNavRecord::updateFromXML(const SGGeod& geod, double heading)
+{
+    modifyPosition(geod);
+    multiuse = heading;
+}
+
 FGTACANRecord::FGTACANRecord(void) :
     channel(""),
     freq(0)
