@@ -261,7 +261,7 @@ public:
     inline void set_ephem( SGEphemeris *e ) { ephem = e; }
 
     inline SGMaterialLib *get_matlib() const { return matlib; }
-    inline void set_matlib( SGMaterialLib *m ) { matlib = m; }
+    void set_matlib( SGMaterialLib *m );
 
     inline FGATISMgr *get_ATIS_mgr() const { return ATIS_mgr; }
     inline void set_ATIS_mgr( FGATISMgr *a ) {ATIS_mgr = a; }

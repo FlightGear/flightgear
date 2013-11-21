@@ -615,13 +615,11 @@ void fgCreateSubsystems(bool duringReset) {
     // Initialize the material property subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    if (!duringReset) {
-        SGPath mpath( globals->get_fg_root() );
-        mpath.append( fgGetString("/sim/rendering/materials-file") );
-        if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
-                globals->get_props()) ) {
-           throw sg_io_exception("Error loading materials file", mpath);
-        }
+    SGPath mpath( globals->get_fg_root() );
+    mpath.append( fgGetString("/sim/rendering/materials-file") );
+    if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
+            globals->get_props()) ) {
+       throw sg_io_exception("Error loading materials file", mpath);
     }
     
     globals->add_subsystem( "http", new FGHTTPClient );
@@ -980,6 +978,7 @@ void fgStartNewReset()
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler = render->getEventHandler();
     
     globals->set_renderer(NULL);
+    globals->set_matlib(NULL);
     simgear::SGModelLib::resetPropertyRoot();
     
     globals->resetPropertyRoot();
@@ -1003,6 +1002,8 @@ void fgStartNewReset()
     
     globals->get_event_mgr()->init();
     globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
+    
+    globals->set_matlib( new SGMaterialLib );
     
 // terra-sync needs the property tree root, pass it back in
     simgear::SGTerraSync* terra_sync = static_cast<simgear::SGTerraSync*>(subsystemManger->get_subsystem("terrasync"));

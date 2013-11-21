@@ -215,7 +215,7 @@ FGGlobals::~FGGlobals()
     subsystem_mgr = NULL; // important so ::get_subsystem returns NULL 
 
     delete time_params;
-    delete matlib;
+    set_matlib(NULL);
     delete route_mgr;
     delete ATIS_mgr;
     delete channel_options_list;
@@ -686,6 +686,13 @@ FGTileMgr* FGGlobals::get_tile_mgr () const
 void FGGlobals::set_tile_mgr ( FGTileMgr *t )
 {
     _tile_mgr = t;
+}
+
+void FGGlobals::set_matlib( SGMaterialLib *m )
+{
+    if (matlib)
+        delete matlib;
+    matlib = m;
 }
 
 // end of globals.cxx
