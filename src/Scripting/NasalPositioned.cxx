@@ -1798,13 +1798,15 @@ private:
   void callDelegateMethod(const char* method)
   {
     naRef f;
-    if (naMember_cget(_nasal->context(), _instance, method, &f) == 0) {
-      return; // no method on the delegate
+    naContext ctx = naNewContext();
+      
+    if (naMember_cget(ctx, _instance, method, &f) != 0) {
+        naRef arg[1];
+        arg[0] = ghostForFlightPlan(ctx, _plan);
+        _nasal->callMethod(f, _instance, 1, arg, naNil());
     }
     
-    naRef arg[1];
-    arg[0] = ghostForFlightPlan(_nasal->context(), _plan);
-    _nasal->callMethod(f, _instance, 1, arg, naNil());
+    naFreeContext(ctx);
   }
   
   FGNasalSys* _nasal;
@@ -1832,13 +1834,18 @@ public:
   virtual FlightPlan::Delegate* createFlightPlanDelegate(FlightPlan* fp)
   {
     naRef args[1];
-    args[0] = ghostForFlightPlan(_nasal->context(), fp);
+    naContext ctx = naNewContext();
+    args[0] = ghostForFlightPlan(ctx, fp);
     naRef instance = _nasal->call(_func, 1, args, naNil());
-    if (naIsNil(instance)) {
-      return NULL;
-    }
     
-    return new NasalFPDelegate(fp, _nasal, instance);
+      FlightPlan::Delegate* result = NULL;
+      if (!naIsNil(instance)) {
+          // will GC-save instance
+          result = new NasalFPDelegate(fp, _nasal, instance);
+      }
+      
+      naFreeContext(ctx);
+      return result;
   }
 private:
   FGNasalSys* _nasal;

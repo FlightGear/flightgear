@@ -101,12 +101,13 @@ public:
     virtual void onFileDialogDone(FGFileDialog* instance, const SGPath& aPath)
     {
         FGNasalSys* sys = static_cast<FGNasalSys*>(globals->get_subsystem("nasal"));
-        naContext ctx = sys->context();
         
+        naContext ctx = naNewContext();
         naRef args[1];
         args[0] = nasal::to_nasal(ctx, aPath);
         
         sys->callMethod(func, object, 1, args, naNil() /* locals */);
+        naFreeContext(ctx);
     }
     
     ~NasalCallback()

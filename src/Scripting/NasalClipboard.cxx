@@ -113,8 +113,10 @@ NasalClipboard::~NasalClipboard()
 //------------------------------------------------------------------------------
 void NasalClipboard::init(FGNasalSys *nasal)
 {
+    naContext ctx = naNewContext();
+    
   _clipboard = create();
-  _clipboard_hash = naNewHash(nasal->context());
+  _clipboard_hash = naNewHash(ctx);
 
   nasal->globalsSet("clipboard", _clipboard_hash);
 
@@ -124,7 +126,7 @@ void NasalClipboard::init(FGNasalSys *nasal)
     (
       _clipboard_hash,
       funcs[i].name,
-      naNewFunc(nasal->context(), naNewCCode(nasal->context(), funcs[i].func))
+      naNewFunc(ctx, naNewCCode(ctx, funcs[i].func))
     );
 
     SG_LOG(SG_NASAL, SG_DEBUG, "Adding clipboard function: " << funcs[i].name);
@@ -136,6 +138,8 @@ void NasalClipboard::init(FGNasalSys *nasal)
 
     SG_LOG(SG_NASAL, SG_DEBUG, "Adding clipboard symbol: " << symbols[i].name);
   }
+    
+    naFreeContext(ctx);
 }
 
 //------------------------------------------------------------------------------

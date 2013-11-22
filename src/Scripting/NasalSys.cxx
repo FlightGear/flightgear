@@ -206,6 +206,7 @@ FGNasalSys::FGNasalSys()
     _context = 0;
     _globals = naNil();
     _string = naNil();
+    _wrappedNodeFunc = naNil();
     
     _log = new simgear::BufferedLogCallback(SG_NASAL, SG_INFO);
     _log->truncateAt(255);
@@ -844,15 +845,17 @@ void FGNasalSys::shutdown()
 
 naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
 {
-    static naRef wrapNodeFunc = naNil();
-    if (naIsNil(wrapNodeFunc)) {
+    if (naIsNil(_wrappedNodeFunc)) {
         nasal::Hash props = getGlobals().get<nasal::Hash>("props");
-        wrapNodeFunc = props.get("wrapNode");
+        _wrappedNodeFunc = props.get("wrapNode");
     }
     
     naRef args[1];
     args[0] = propNodeGhost(aProps);
-    return naCall(_context, wrapNodeFunc, 1, args, naNil(), naNil());
+    naContext ctx = naNewContext();
+    naRef wrapped = naCall(ctx, _wrappedNodeFunc, 1, args, naNil(), naNil());
+    naFreeContext(ctx);
+    return wrapped;
 }
 
 void FGNasalSys::update(double)
@@ -1062,44 +1065,54 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
     if(naIsNil(code))
         return false;
 
+    naContext ctx = naNewContext();
+    
     // See if we already have a module hash to use.  This allows the
     // user to, for example, add functions to the built-in math
     // module.  Make a new one if necessary.
     naRef locals;
-    naRef modname = naNewString(_context);
+    naRef modname = naNewString(ctx);
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
     if(!naHash_get(_globals, modname, &locals))
-        locals = naNewHash(_context);
+        locals = naNewHash(ctx);
 
     _cmdArg = (SGPropertyNode*)cmdarg;
 
     call(code, argc, args, locals);
     hashset(_globals, moduleName, locals);
+    
+    naFreeContext(ctx);
     return true;
 }
 
 void FGNasalSys::deleteModule(const char* moduleName)
 {
-    naRef modname = naNewString(_context);
+    naContext ctx = naNewContext();
+    naRef modname = naNewString(ctx);
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
     naHash_delete(_globals, modname);
+    naFreeContext(ctx);
 }
 
 naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
 {
     int errLine = -1;
-    naRef srcfile = naNewString(_context);
+    naContext ctx = naNewContext();
+    naRef srcfile = naNewString(ctx);
     naStr_fromdata(srcfile, (char*)filename, strlen(filename));
-    naRef code = naParseCode(_context, srcfile, 1, (char*)buf, len, &errLine);
+    naRef code = naParseCode(ctx, srcfile, 1, (char*)buf, len, &errLine);
     if(naIsNil(code)) {
         SG_LOG(SG_NASAL, SG_ALERT,
-               "Nasal parse error: " << naGetError(_context) <<
+               "Nasal parse error: " << naGetError(ctx) <<
                " in "<< filename <<", line " << errLine);
+        naFreeContext(ctx);
         return naNil();
     }
 
     // Bind to the global namespace before returning
-    return naBindFunction(_context, code, _globals);
+    naRef bound = naBindFunction(ctx, code, _globals);
+    naFreeContext(ctx);
+    return bound;
 }
 
 bool FGNasalSys::handleCommand( const char* moduleName,
@@ -1115,12 +1128,14 @@ bool FGNasalSys::handleCommand( const char* moduleName,
     // command.
     naRef locals = naNil();
     if(moduleName[0]) {
-        naRef modname = naNewString(_context);
+        naContext ctx = naNewContext();
+        naRef modname = naNewString(ctx);
         naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
         if(!naHash_get(_globals, modname, &locals)) {
-            locals = naNewHash(_context);
+            locals = naNewHash(ctx);
             naHash_set(_globals, modname, locals);
         }
+        naFreeContext(ctx);
     }
 
     // Cache this command's argument for inspection via cmdarg().  For

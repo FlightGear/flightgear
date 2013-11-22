@@ -112,9 +112,6 @@ public:
     // can't call this 'globals' due to naming clash
     naRef nasalGlobals() const
     { return _globals; }
-  
-    naContext context() const
-    { return _context; }
 
     nasal::Hash getGlobals() const
     { return nasal::Hash(_globals, _context); }
@@ -182,6 +179,8 @@ private:
     
     typedef std::map<std::string, NasalCommand*> NasalCommandDict;
     NasalCommandDict _commands;
+    
+    naRef _wrappedNodeFunc;
 public:
     void handleTimer(NasalTimer* t);
 };
