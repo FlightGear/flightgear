@@ -520,10 +520,9 @@ FGGlobals::resetPropertyRoot()
 {
     delete locale;
     
-#if DEBUG_RESET
     SG_LOG(SG_GENERAL, SG_INFO, "root props refcount:" << props.getNumRefs());
     treeDumpRefCounts(0, props);
-#endif
+
     props = new SGPropertyNode;
     initProperties();
     locale = new FGLocale(props);

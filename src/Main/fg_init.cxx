@@ -984,6 +984,9 @@ void fgStartNewReset()
     globals->resetPropertyRoot();
     globals->restoreInitialState();
     
+    fgInitConfig(0, NULL, true);
+    fgInitGeneral(); // all of this?
+    
     render = new FGRenderer;
     render->setEventHandler(eventHandler);
     globals->set_renderer(render);
@@ -995,7 +998,6 @@ void fgStartNewReset()
     flightgear::CameraGroup::buildDefaultGroup(viewer.get());
 
     fgOSResetProperties();
-    fgInitConfig(0, NULL, true);
     
 // init some things manually
 // which do not follow the regular init pattern
