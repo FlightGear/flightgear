@@ -38,6 +38,7 @@ public:
   CocoaMenuDelegate* delegate;
   
   MenuItemBindings itemBindings;
+    std::vector<SGPropertyChangeListener*> listeners;
 };
 
 // prior to the 10.6 SDK, NSMenuDelegate was an informal protocol
@@ -124,7 +125,14 @@ namespace {
   public:
     CocoaEnabledListener(NSMenuItem* i) :
       item(i)
-    {}
+    {
+    
+    }
+      
+      ~CocoaEnabledListener()
+      {
+          
+      }
     
     
     virtual void valueChanged(SGPropertyNode *node) 
@@ -179,7 +187,9 @@ void FGCocoaMenuBar::CocoaMenuBarPrivate::menuFromProps(NSMenu* menu, SGProperty
           setItemShortcutFromString(item, shortcut);
         }
         
-        n->getNode("enabled")->addChangeListener(new CocoaEnabledListener(item));
+        SGPropertyChangeListener* enableListener = new CocoaEnabledListener(item);
+        listeners.push_back(enableListener);
+        n->getNode("enabled")->addChangeListener(enableListener);
         [item setTarget:delegate];
         [item setAction:@selector(itemAction:)];
       }
@@ -191,16 +201,8 @@ void FGCocoaMenuBar::CocoaMenuBarPrivate::menuFromProps(NSMenu* menu, SGProperty
     BOOL enabled = n->getBoolValue("enabled");
     [item setEnabled:enabled];
     
-    SGBindingList bl;
-    BOOST_FOREACH(SGPropertyNode_ptr binding, n->getChildren("binding")) {
-    // have to clone the bindings, since SGBinding takes ownership of the
-    // passed in node. Seems like something is wrong here, but following the
-    // PUI code for the moment.
-      SGPropertyNode* cloned(new SGPropertyNode);
-      copyProperties(binding, cloned);
-      bl.push_back(new SGBinding(cloned, globals->get_props()));
-    }
-    
+    SGBindingList bl = readBindingList(n->getChildren("binding"), globals->get_props());
+      
     itemBindings[item] = bl;    
     ++index;
   } // of item iteration
@@ -212,10 +214,8 @@ void FGCocoaMenuBar::CocoaMenuBarPrivate::fireBindingsForItem(NSMenuItem *item)
   if (it == itemBindings.end()) {
     return;
   }
-
-  BOOST_FOREACH(SGSharedPtr<SGBinding> b, it->second) {
-    b->fire();
-  }
+    
+  fireBindingList(it->second);
 }
 
 FGCocoaMenuBar::FGCocoaMenuBar() :
@@ -226,7 +226,19 @@ FGCocoaMenuBar::FGCocoaMenuBar() :
 
 FGCocoaMenuBar::~FGCocoaMenuBar()
 {
-  
+    CocoaAutoreleasePool ap;
+    NSMenu* mainBar = [[NSApplication sharedApplication] mainMenu];
+
+    int num = [mainBar numberOfItems];
+    for (int index=1; index < num; ++index) {
+        NSMenuItem* topLevelItem = [mainBar itemAtIndex:index];
+        [topLevelItem.submenu removeAllItems];
+    }
+    
+    std::vector<SGPropertyChangeListener*>::iterator it;
+    for (it = p->listeners.begin(); it != p->listeners.end(); ++it) {
+        delete *it;
+    }    
 }
 
 void FGCocoaMenuBar::init()
@@ -271,7 +283,9 @@ void FGCocoaMenuBar::init()
       n->setBoolValue("enabled", true);
     }
     
-    n->getNode("enabled")->addChangeListener(new CocoaEnabledListener(item));
+    SGPropertyChangeListener* l = new CocoaEnabledListener(item);
+    p->listeners.push_back(l);
+    n->getNode("enabled")->addChangeListener(l);
   }
 }
 
