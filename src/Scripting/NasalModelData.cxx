@@ -122,12 +122,8 @@ void FGNasalModelData::load()
   nasal::Hash module = nasalSys->getGlobals().createHash(_module);
   module.set("_module_id", _module_id);
 
-  if( !NasalNode::isInit() )
-  {
-    NasalNode::init("osg.Node")
+  NasalNode::init("osg.Node")
       .method("getPose", &f_node_getPose);
-  }
-
   module.set("_model", _branch);
 
   naRef arg[2];

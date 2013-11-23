@@ -777,15 +777,13 @@ void FGNasalSys::init()
     initNasalCondition(_globals, _context);
     initNasalHTTP(_globals, _context);
   
-    if (!NasalTimerObj::isInit()) {
-        NasalTimerObj::init("Timer")
-          .method("start", &TimerObj::start)
-          .method("stop", &TimerObj::stop)
-          .method("restart", &TimerObj::restart)
-          .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot)
-          .member("isRunning", &TimerObj::isRunning);
-    }
-    
+    NasalTimerObj::init("Timer")
+      .method("start", &TimerObj::start)
+      .method("stop", &TimerObj::stop)
+      .method("restart", &TimerObj::restart)
+      .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot)
+      .member("isRunning", &TimerObj::isRunning);
+
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
     loadScriptDirectory(nasalDir);

@@ -459,8 +459,6 @@ static naRef f_sortByRange(nasal::CallContext ctx)
 //------------------------------------------------------------------------------
 naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c)
 {
-    if (!NasalPositioned::isInit()) {
-    
   NasalPositioned::init("Positioned")
     .member("id", &FGPositioned::ident)
     .member("ident", &FGPositioned::ident) // TODO to we really need id and ident?
@@ -504,7 +502,6 @@ naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c)
     .method("getStar", &FGAirport::findSTARWithIdent)
     .method("getIAP", &FGAirport::findApproachWithIdent)
     .method("tostring", &FGAirport::toString);
-  }
     
   nasal::Hash globals(globalsRef, c),
               positioned( globals.createHash("positioned") );

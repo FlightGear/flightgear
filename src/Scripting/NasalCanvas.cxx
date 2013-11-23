@@ -204,8 +204,6 @@ naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
 
 naRef initNasalCanvas(naRef globals, naContext c)
 {
-    if (!NasalEvent::isInit()) {
-    
         NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)
     .member("target", &sc::Event::getTarget)
@@ -247,7 +245,6 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .bases<NasalElement>()
     .member("_node_ghost", &elementGetNode<canvas::Window>)
     .method("_getCanvasDecoration", &canvas::Window::getCanvasDecoration);
-    }
     
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
