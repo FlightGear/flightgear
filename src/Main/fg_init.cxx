@@ -449,7 +449,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
         options->init(argc, argv, dataPath);
     }
     
-    bool loadDefaults = flightgear::Options::sharedInstance()->shouldLoadDefaultConfig();
+    bool loadDefaults = options->shouldLoadDefaultConfig();
     if (loadDefaults) {
       // Read global preferences from $FG_ROOT/preferences.xml
       SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
@@ -469,21 +469,24 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     } else {
       SG_LOG(SG_GENERAL, SG_INFO, "not reading default configuration files");
     }// of no-default-config selected
-  
-    // Scan user config files and command line for a specified aircraft.
-    options->initAircraft();
-
-    FindAndCacheAircraft f(globals->get_props());
-    if (!f.loadAircraft()) {
-      return flightgear::FG_OPTIONS_ERROR;
-    }
-
-    // parse options after loading aircraft to ensure any user
-    // overrides of defaults are honored.
-    return options->processOptions();
+    
+    return flightgear::FG_OPTIONS_OK;
 }
 
-
+int fgInitAircraft(bool reinit)
+{
+    // Scan user config files and command line for a specified aircraft.
+    if (!reinit) {
+        flightgear::Options::sharedInstance()->initAircraft();
+    }
+    
+    FindAndCacheAircraft f(globals->get_props());
+    if (!f.loadAircraft()) {
+        return flightgear::FG_OPTIONS_ERROR;
+    }
+    
+    return flightgear::FG_OPTIONS_OK;
+}
 
 /**
  * Initialize vor/ndb/ils/fix list management and query systems (as
@@ -987,6 +990,10 @@ void fgStartNewReset()
     fgInitConfig(0, NULL, true);
     fgInitGeneral(); // all of this?
     
+    fgGetNode("/sim")->removeChild("aircraft-dir");    
+    fgInitAircraft(true);
+    flightgear::Options::sharedInstance()->processOptions();
+    
     render = new FGRenderer;
     render->setEventHandler(eventHandler);
     globals->set_renderer(render);
@@ -998,6 +1005,7 @@ void fgStartNewReset()
     flightgear::CameraGroup::buildDefaultGroup(viewer.get());
 
     fgOSResetProperties();
+
     
 // init some things manually
 // which do not follow the regular init pattern

@@ -388,6 +388,20 @@ int fgMainInit( int argc, char **argv ) {
         return EXIT_SUCCESS;
     }
     
+    configResult = fgInitAircraft(false);
+    if (configResult == flightgear::FG_OPTIONS_ERROR) {
+        return EXIT_FAILURE;
+    } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
+        return EXIT_SUCCESS;
+    }
+    
+    configResult = flightgear::Options::sharedInstance()->processOptions();
+    if (configResult == flightgear::FG_OPTIONS_ERROR) {
+        return EXIT_FAILURE;
+    } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
+        return EXIT_SUCCESS;
+    }
+    
     // Initialize the Window/Graphics environment.
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;

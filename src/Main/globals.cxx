@@ -146,7 +146,7 @@ FGGlobals::FGGlobals() :
     ATIS_mgr( NULL ),
     controls( NULL ),
     viewmgr( NULL ),
-    commands( SGCommandMgr::instance() ),
+    commands( new SGCommandMgr ),
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
     fontcache ( new FGFontCache ),
@@ -230,6 +230,8 @@ FGGlobals::~FGGlobals()
     locale = NULL;
     
     props.clear();
+    
+    delete commands;
 }
 
 // set the fg_root path
