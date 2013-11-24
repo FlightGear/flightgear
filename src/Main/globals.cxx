@@ -146,7 +146,7 @@ FGGlobals::FGGlobals() :
     ATIS_mgr( NULL ),
     controls( NULL ),
     viewmgr( NULL ),
-    commands( new SGCommandMgr ),
+    commands( SGCommandMgr::instance() ),
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
     fontcache ( new FGFontCache ),
