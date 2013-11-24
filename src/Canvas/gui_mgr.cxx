@@ -136,27 +136,6 @@ class DesktopGroup:
 
       return Group::getChildFactory(type);
     }
-
-    /**
-     *
-     */
-    simgear::canvas::Placements
-    addPlacement(SGPropertyNode* node, simgear::canvas::CanvasPtr canvas)
-    {
-      const std::string& id = node->getStringValue("id");
-
-      simgear::canvas::Placements placements;
-      canvas::WindowPtr window = getChild<canvas::Window>(id);
-      if( window )
-      {
-        window->setCanvasContent(canvas);
-        placements.push_back(
-          simgear::canvas::PlacementPtr(
-            new WindowPlacement(node, window, canvas)
-        ));
-      }
-      return placements;
-    }
 };
 
 //------------------------------------------------------------------------------
@@ -198,13 +177,6 @@ DesktopGroup::DesktopGroup():
     flightgear::getGUICamera( flightgear::CameraGroup::getDefault() );
   assert(camera);
   camera->addChild( getMatrixTransform() );
-
-  simgear::canvas::Canvas::addPlacementFactory
-  (
-    "window",
-    boost::bind(&DesktopGroup::addPlacement, this, _1, _2)
-  );
-
 
   osg::StateSet* stateSet = _transform->getOrCreateStateSet();
   stateSet->setDataVariance(osg::Object::STATIC);
@@ -548,6 +520,12 @@ void GUIMgr::init()
          // GUI is on top of everything so lets install as first event handler
          .push_front( _event_handler );
 
+
+  simgear::canvas::Canvas::addPlacementFactory
+  (
+    "window",
+    boost::bind(&GUIMgr::addWindowPlacement, this, _1, _2)
+  );
   _desktop->getProps()->addChangeListener(_desktop.get());
   _desktop->getProps()->fireCreatedRecursive();
 }
@@ -556,6 +534,7 @@ void GUIMgr::init()
 void GUIMgr::shutdown()
 {
   _desktop->getProps()->removeChangeListener(_desktop.get());
+  simgear::canvas::Canvas::removePlacementFactory("window");
 
   globals->get_renderer()
          ->getViewer()
@@ -572,4 +551,24 @@ void GUIMgr::update(double dt)
 simgear::canvas::GroupPtr GUIMgr::getDesktop()
 {
   return _desktop;
+}
+
+//------------------------------------------------------------------------------
+simgear::canvas::Placements
+GUIMgr::addWindowPlacement( SGPropertyNode* placement,
+                            simgear::canvas::CanvasPtr canvas )
+{
+  const std::string& id = placement->getStringValue("id");
+
+  simgear::canvas::Placements placements;
+  canvas::WindowPtr window = _desktop->getChild<canvas::Window>(id);
+  if( window )
+  {
+    window->setCanvasContent(canvas);
+    placements.push_back(
+      simgear::canvas::PlacementPtr(
+        new WindowPlacement(placement, window, canvas)
+    ));
+  }
+  return placements;
 }

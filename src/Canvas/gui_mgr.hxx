@@ -58,6 +58,10 @@ class GUIMgr:
 
     simgear::canvas::GroupPtr           _desktop;
     osg::ref_ptr<GUIEventHandler>       _event_handler;
+
+    simgear::canvas::Placements
+    addWindowPlacement( SGPropertyNode* placement,
+                        simgear::canvas::CanvasPtr canvas );
 };
 
 #endif /* CANVAS_GUI_MGR_HXX_ */

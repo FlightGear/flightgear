@@ -69,6 +69,12 @@ CanvasMgr::CanvasMgr():
     fgGetNode("/sim/signals/model-reinit", true)
   )
 {
+
+}
+
+//----------------------------------------------------------------------------
+void CanvasMgr::init()
+{
   sc::Canvas::addPlacementFactory
   (
     "object",
@@ -81,8 +87,18 @@ CanvasMgr::CanvasMgr():
       _2
     )
   );
-
   sc::Canvas::addPlacementFactory("scenery-object", &addSceneObjectPlacement);
+
+  simgear::canvas::CanvasMgr::init();
+}
+
+//----------------------------------------------------------------------------
+void CanvasMgr::shutdown()
+{
+  simgear::canvas::CanvasMgr::shutdown();
+
+  sc::Canvas::removePlacementFactory("object");
+  sc::Canvas::removePlacementFactory("scenery-object");
 }
 
 //------------------------------------------------------------------------------

@@ -28,6 +28,9 @@ class CanvasMgr:
   public:
     CanvasMgr();
 
+    virtual void init();
+    virtual void shutdown();
+
     /**
      * Get OpenGL texture name for given canvas
      *
