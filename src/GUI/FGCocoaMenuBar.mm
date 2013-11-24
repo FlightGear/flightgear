@@ -69,7 +69,15 @@ public:
 static void setFunctionKeyShortcut(const std::string& shortcut, NSMenuItem* item)
 {
     unichar shortcutChar = NSF1FunctionKey;
-    if (shortcut == "F11") {
+    if (shortcut == "F1") {
+        shortcutChar = NSF1FunctionKey;
+    } else if (shortcut == "F2") {
+        shortcutChar = NSF2FunctionKey;
+    } else if (shortcut == "F3") {
+        shortcutChar = NSF3FunctionKey;
+    } else if (shortcut == "F10") {
+        shortcutChar = NSF10FunctionKey;
+    } else if (shortcut == "F11") {
         shortcutChar = NSF11FunctionKey;
     } else if (shortcut == "F12") {
         shortcutChar = NSF12FunctionKey;
