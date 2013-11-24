@@ -31,6 +31,7 @@ INCLUDES
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 
 #include "FGXMLElement.h"
 #include "string_utilities.h"
@@ -43,7 +44,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGXMLElement.cpp,v 1.39 2013/06/20 04:37:27 jberndt Exp $";
+static const char *IdSrc = "$Id: FGXMLElement.cpp,v 1.41 2013/11/16 14:51:20 bcoconni Exp $";
 static const char *IdHdr = ID_XMLELEMENT;
 
 bool Element::converterIsInitialized = false;
@@ -58,6 +59,7 @@ Element::Element(const string& nm)
   name   = nm;
   parent = 0L;
   element_index = 0;
+  line_number = -1;
 
   if (!converterIsInitialized) {
     converterIsInitialized = true;
@@ -279,8 +281,11 @@ double Element::GetAttributeValueAsNumber(const string& attr)
     double number=0;
     if (is_number(trim(attribute)))
       number = atof(attribute.c_str());
-    else
-      throw("Expecting numeric attribute value, but got: " + attribute);
+    else {
+      cerr << ReadFrom() << "Expecting numeric attribute value, but got: "
+           << attribute << endl;
+      exit(-1);
+    }
     
     return (number);
   }
@@ -329,14 +334,18 @@ double Element::GetDataAsNumber(void)
     double number=0;
     if (is_number(trim(data_lines[0])))
       number = atof(data_lines[0].c_str());
-    else
-      throw("Expected numeric value, but got: " + data_lines[0]);
+    else {
+      cerr << ReadFrom() << "Expected numeric value, but got: " << data_lines[0]
+           << endl;
+      exit(-1);
+    }
 
     return number;
   } else if (data_lines.size() == 0) {
     return HUGE_VAL;
   } else {
-    cerr << "Attempting to get single data value from multiple lines in element " << name << endl;
+    cerr << ReadFrom() << "Attempting to get single data value from multiple lines in element "
+         << name << endl;
     return HUGE_VAL;
   }
 }
@@ -404,8 +413,9 @@ double Element::FindElementValueAsNumber(const string& el)
     value = DisperseValue(element, value);
     return value;
   } else {
-    cerr << "Attempting to get single data value from multiple lines" << endl;
-    return 0;
+    cerr << ReadFrom() << "Attempting to get non-existent element " << el
+         << endl;
+    exit(-1);
   }
 }
 
@@ -428,27 +438,24 @@ double Element::FindElementValueAsNumberConvertTo(const string& el, const string
   Element* element = FindElement(el);
 
   if (!element) {
-    throw("Attempting to get the value of a non-existent element "+el);
-//    cerr << "Attempting to get non-existent element " << el << endl;
-//    exit(0);
+    cerr << ReadFrom() << "Attempting to get non-existent element " << el
+         << endl;
+    exit(-1);
   }
 
   string supplied_units = element->GetAttributeValue("unit");
 
   if (!supplied_units.empty()) {
     if (convert.find(supplied_units) == convert.end()) {
-      throw("Supplied unit: \"" + supplied_units + "\" does not exist (typo?). Add new unit"
-           + " conversion in FGXMLElement.cpp.");
-//      cerr << endl << "Supplied unit: \"" << supplied_units << "\" does not exist (typo?). Add new unit"
-//           << " conversion in FGXMLElement.cpp." << endl;
-//      exit(-1);
+      cerr << element->ReadFrom() << "Supplied unit: \""
+           << supplied_units << "\" does not exist (typo?)." << endl;
+      exit(-1);
     }
     if (convert[supplied_units].find(target_units) == convert[supplied_units].end()) {
-      throw("Supplied unit: \"" + supplied_units + "\" cannot be converted to "
-                   + target_units + ". Add new unit conversion in FGXMLElement.cpp or fix typo");
-//      cerr << endl << "Supplied unit: \"" << supplied_units << "\" cannot be converted to "
-//                   << target_units << ". Add new unit conversion in FGXMLElement.cpp or fix typo" << endl;
-//      exit(-1);
+      cerr << element->ReadFrom() << "Supplied unit: \""
+           << supplied_units << "\" cannot be converted to " << target_units
+           << endl;
+      exit(-1);
     }
   }
 
@@ -472,18 +479,19 @@ double Element::FindElementValueAsNumberConvertFromTo( const string& el,
 
   if (!element) {
     cerr << "Attempting to get non-existent element " << el << endl;
-    exit(0);
+    exit(-1);
   }
 
   if (!supplied_units.empty()) {
     if (convert.find(supplied_units) == convert.end()) {
-      cerr << endl << "Supplied unit: \"" << supplied_units << "\" does not exist (typo?). Add new unit"
-           << " conversion in FGXMLElement.cpp." << endl;
+      cerr << element->ReadFrom() << "Supplied unit: \""
+           << supplied_units << "\" does not exist (typo?)." << endl;
       exit(-1);
     }
     if (convert[supplied_units].find(target_units) == convert[supplied_units].end()) {
-      cerr << endl << "Supplied unit: \"" << supplied_units << "\" cannot be converted to "
-                   << target_units << ". Add new unit conversion in FGXMLElement.cpp or fix typo" << endl;
+      cerr << element->ReadFrom() << "Supplied unit: \""
+           << supplied_units << "\" cannot be converted to " << target_units
+           << endl;
       exit(-1);
     }
   }
@@ -509,13 +517,14 @@ FGColumnVector3 Element::FindElementTripletConvertTo( const string& target_units
 
   if (!supplied_units.empty()) {
     if (convert.find(supplied_units) == convert.end()) {
-      cerr << endl << "Supplied unit: \"" << supplied_units << "\" does not exist (typo?). Add new unit"
-           << " conversion in FGXMLElement.cpp." << endl;
+      cerr << ReadFrom() << "Supplied unit: \""
+           << supplied_units << "\" does not exist (typo?)." << endl;
       exit(-1);
     }
     if (convert[supplied_units].find(target_units) == convert[supplied_units].end()) {
-      cerr << endl << "Supplied unit: \"" << supplied_units << "\" cannot be converted to "
-                   << target_units << ". Add new unit conversion in FGXMLElement.cpp or fix typo" << endl;
+      cerr << ReadFrom() << "Supplied unit: \""
+           << supplied_units << "\" cannot be converted to " << target_units
+           << endl;
       exit(-1);
     }
   }
@@ -565,12 +574,22 @@ double Element::DisperseValue(Element *e, double val, const std::string supplied
     if (!supplied_units.empty()) disp *= convert[supplied_units][target_units];
     string attType = e->GetAttributeValue("type");
     if (attType == "gaussian") {
-      value = val + disp*GaussianRandomNumber();
+      double grn = GaussianRandomNumber();
+      value = val + disp*grn;
+/*      std::cout << "DISPERSION GAUSSIAN: Initial: " << val
+                << "  Dispersion: " << disp
+                << "  Gaussian Rand Num: " << grn
+                << "  Total Dispersed Value: " << value << endl; */
     } else if (attType == "uniform") {
-      value = val + disp * ((((double)rand()/RAND_MAX)-0.5)*2.0);
+      double urn = ((((double)rand()/RAND_MAX)-0.5)*2.0);
+      value = val + disp * urn;
+/*      std::cout << "DISPERSION UNIFORM: Initial: " << val
+                << "  Dispersion: " << disp
+                << "  Uniform Rand Num: " << urn
+                << "  Total Dispersed Value: " << value << endl; */
     } else {
-      std::cerr << "Unknown dispersion type" << endl;
-      throw("Unknown dispersion type");
+      cerr << ReadFrom() << "Unknown dispersion type" << attType << endl;
+      exit(-1);
     }
 
   }
@@ -648,5 +667,16 @@ void Element::AddData(string d)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string Element::ReadFrom(void) const
+{
+  ostringstream message;
+
+  message << endl
+          << "In file " << GetFileName() << ": line " << GetLineNumber()
+          << endl;
+
+  return message.str();
+}
 
 } // end namespace JSBSim

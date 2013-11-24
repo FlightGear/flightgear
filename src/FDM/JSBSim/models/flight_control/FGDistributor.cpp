@@ -1,11 +1,10 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Module:       FGElectric.cpp
- Author:       David Culp
- Date started: 04/07/2004
- Purpose:      This module models an electric motor
+ Module:       FGDistributor.cpp
+ Author:       Jon S. Berndt
+ Date started: 9/2013
 
- --------- Copyright (C) 2004  David Culp (davidculp2@comcast.net) -------------
+ ------------- Copyright (C) 2013 -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -27,117 +26,104 @@
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 
-This class descends from the FGEngine class and models an electric motor based on
-parameters given in the engine config file for this class
-
 HISTORY
 --------------------------------------------------------------------------------
-04/07/2004  DPC  Created
-01/06/2005  DPC  Converted to new XML format
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES,  and NOTES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Also, see the header file (FGDistributor.h) for further details.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <iostream>
-#include <sstream>
-
-#include "FGElectric.h"
-#include "FGPropeller.h"
+ 
+#include "FGDistributor.h"
 #include "input_output/FGXMLElement.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGElectric.cpp,v 1.14 2013/11/24 11:40:57 bcoconni Exp $";
-static const char *IdHdr = ID_ELECTRIC;
+static const char *IdSrc = "$Id: FGDistributor.cpp,v 1.3 2013/11/24 11:40:56 bcoconni Exp $";
+static const char *IdHdr = ID_DISTRIBUTOR;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGElectric::FGElectric(FGFDMExec* exec, Element *el, int engine_number, struct FGEngine::Inputs& input)
-  : FGEngine(exec, el, engine_number, input)
+FGDistributor::FGDistributor(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
-  string token;
+  Element *case_element=0;
+  Element* test_element=0;
+  Element* prop_val_element=0;
+  string type_string;
+  Case* current_case=0;
 
-  Type = etElectric;
-  PowerWatts = 745.7;
-  hptowatts = 745.7;
+  FGFCSComponent::bind(); // Bind() this component here in case it is used
+                          // in its own definition for a sample-and-hold
 
-  if (el->FindElement("power"))
-    PowerWatts = el->FindElementValueAsNumberConvertTo("power","WATTS");
+  type_string = element->GetAttributeValue("type");
+  if (type_string == "inclusive") Type = eInclusive;
+  else if (type_string == "exclusive") Type = eExclusive;
+  else {
+    throw("Not a known Distributor type, "+type_string);
+  }
 
-  string property_name, base_property_name;
-  base_property_name = CreateIndexedPropertyName("propulsion/engine", EngineNumber);
-  property_name = base_property_name + "/power-hp";
-  PropertyManager->Tie(property_name, &HP);
+  case_element = element->FindElement("case");
+  while (case_element) {
+    current_case = new struct Case;
+    test_element = case_element->FindElement("test");
+    if (test_element) current_case->SetTest(new FGCondition(test_element, PropertyManager));
+    prop_val_element = case_element->FindElement("property");
+    while (prop_val_element) {
+      string value_string = prop_val_element->GetAttributeValue("value");
+      string property_string = prop_val_element->GetDataLine();
+      current_case->AddPropValPair(new PropValPair(property_string, value_string, PropertyManager));
+      prop_val_element = case_element->FindNextElement("property");
+    }
+    Cases.push_back(current_case);
+    case_element = element->FindNextElement("case");
+  }
 
-  Debug(0); // Call Debug() routine from constructor if needed
+  Debug(0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGElectric::~FGElectric()
+FGDistributor::~FGDistributor()
 {
-  Debug(1); // Call Debug() routine from constructor if needed
+
+  Debug(1);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGElectric::Calculate(void)
+bool FGDistributor::Run(void )
 {
-  RunPreFunctions();
+  bool completed = false;
+  for (unsigned int ctr=0; ctr<Cases.size(); ctr++) { // Loop through all Cases
+    if (Cases[ctr]->HasTest()) {                      
+      if (Cases[ctr]->GetTestResult() && !((Type == eExclusive) && completed)) {
+        Cases[ctr]->SetPropValPairs();
+        completed = true;
+      }
+    } else {                                          // If no test present, execute always
+      Cases[ctr]->SetPropValPairs();
+    }
+  }
 
-  if (Thruster->GetType() == FGThruster::ttPropeller) {
-    ((FGPropeller*)Thruster)->SetAdvance(in.PropAdvance[EngineNumber]);
-    ((FGPropeller*)Thruster)->SetFeather(in.PropFeather[EngineNumber]);
-  } 
+//  if (delay != 0) Delay();
+//  Clip();
+//  if (IsOutput) SetOutput();
 
-  RPM = Thruster->GetRPM() * Thruster->GetGearRatio();
-
-  HP = PowerWatts * in.ThrottlePos[EngineNumber] / hptowatts;
-  
-  LoadThrusterInputs();
-  Thruster->Calculate(HP * hptoftlbssec);
-
-  RunPostFunctions();
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-double FGElectric::CalcFuelNeed(void)
-{
-  return 0;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-string FGElectric::GetEngineLabels(const string& delimiter)
-{
-  std::ostringstream buf;
-
-  buf << Name << " HP (engine " << EngineNumber << ")" << delimiter
-      << Thruster->GetThrusterLabels(EngineNumber, delimiter);
-
-  return buf.str();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-string FGElectric::GetEngineValues(const string& delimiter)
-{
-  std::ostringstream buf;
-
-  buf << HP << delimiter
-     << Thruster->GetThrusterValues(EngineNumber, delimiter);
-
-  return buf.str();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-//
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print
 //       out the normally expected messages, essentially echoing
@@ -156,21 +142,22 @@ string FGElectric::GetEngineValues(const string& delimiter)
 //    16: When set various parameters are sanity checked and
 //       a message is printed out when they go out of bounds
 
-void FGElectric::Debug(int from)
+void FGDistributor::Debug(int from)
 {
+  string comp, scratch;
+  string indent = "        ";
+  //bool first = false;
+
   if (debug_lvl <= 0) return;
 
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
 
-      cout << "\n    Engine Name: "         << Name << endl;
-      cout << "      Power Watts: "         << PowerWatts << endl;
-
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification
-    if (from == 0) cout << "Instantiated: FGElectric" << endl;
-    if (from == 1) cout << "Destroyed:    FGElectric" << endl;
+    if (from == 0) cout << "Instantiated: FGDistributor" << endl;
+    if (from == 1) cout << "Destroyed:    FGDistributor" << endl;
   }
   if (debug_lvl & 4 ) { // Run() method entry print for FGModel-derived objects
   }
@@ -186,4 +173,5 @@ void FGElectric::Debug(int from)
   }
 }
 
-} // namespace JSBSim
+} //namespace JSBSim
+

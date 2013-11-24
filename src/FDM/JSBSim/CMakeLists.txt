@@ -79,6 +79,7 @@ set(HEADERS
     models/flight_control/FGSummer.h
     models/flight_control/FGSwitch.h
     models/flight_control/FGWaypoint.h
+    models/flight_control/FGDistributor.h
     models/propulsion/FGElectric.h
     models/propulsion/FGEngine.h
     models/propulsion/FGForce.h
@@ -168,6 +169,7 @@ set(SOURCES
     models/flight_control/FGSummer.cpp
     models/flight_control/FGSwitch.cpp
     models/flight_control/FGWaypoint.cpp
+    models/flight_control/FGDistributor.cpp
     models/propulsion/FGElectric.cpp
     models/propulsion/FGEngine.cpp
     models/propulsion/FGForce.cpp

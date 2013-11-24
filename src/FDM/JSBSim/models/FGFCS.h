@@ -45,13 +45,12 @@ INCLUDES
 #include "models/flight_control/FGFCSComponent.h"
 #include "models/FGModel.h"
 #include "models/FGLGear.h"
-#include "input_output/FGXMLFileRead.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCS "$Id: FGFCS.h,v 1.42 2013/06/20 04:37:27 jberndt Exp $"
+#define ID_FCS "$Id: FGFCS.h,v 1.45 2013/11/24 11:40:56 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -169,7 +168,7 @@ CLASS DOCUMENTATION
     @property gear/tailhook-pos-norm
 
     @author Jon S. Berndt
-    @version $Revision: 1.42 $
+    @version $Revision: 1.45 $
     @see FGActuator
     @see FGDeadBand
     @see FGFCSFunction
@@ -184,13 +183,14 @@ CLASS DOCUMENTATION
     @see FGAngles
     @see FGFCSComponent
     @see Element
+    @see FGDistributor
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFCS : public FGModel, public FGXMLFileRead
+class FGFCS : public FGModel
 {
 
 public:

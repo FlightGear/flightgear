@@ -47,7 +47,6 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "input_output/FGXMLFileRead.h"
 #include "math/FGLocation.h"
 #include "math/FGQuaternion.h"
 
@@ -55,7 +54,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_INITIALCONDITION "$Id: FGInitialCondition.h,v 1.36 2013/01/19 14:19:43 bcoconni Exp $"
+#define ID_INITIALCONDITION "$Id: FGInitialCondition.h,v 1.39 2013/11/24 11:40:55 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -67,6 +66,8 @@ class FGFDMExec;
 class FGMatrix33;
 class FGColumnVector3;
 class FGAtmosphere;
+class FGPropertyManager;
+class Element;
 
 typedef enum { setvt, setvc, setve, setmach, setuvw, setned, setvg } speedset;
 typedef enum { setasl, setagl} altitudeset;
@@ -216,14 +217,14 @@ CLASS DOCUMENTATION
    @property ic/r-rad_sec (read/write) Yaw rate initial condition in radians/second
 
    @author Tony Peden
-   @version "$Id: FGInitialCondition.h,v 1.36 2013/01/19 14:19:43 bcoconni Exp $"
+   @version "$Id: FGInitialCondition.h,v 1.39 2013/11/24 11:40:55 bcoconni Exp $"
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGInitialCondition : public FGJSBBase, public FGXMLFileRead
+class FGInitialCondition : public FGJSBBase
 {
 public:
   /// Constructor
@@ -682,8 +683,8 @@ private:
   FGPropertyManager *PropertyManager;
   FGAtmosphere* Atmosphere;
 
-  bool Load_v1(void);
-  bool Load_v2(void);
+  bool Load_v1(Element* document);
+  bool Load_v2(Element* document);
 
   void InitializeIC(void);
   void SetEulerAngleRadIC(int idx, double angle);

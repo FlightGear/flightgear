@@ -58,12 +58,14 @@ INCLUDES
 #include "models/FGFCS.h"
 #include "input_output/FGPropertyManager.h"
 #include "input_output/string_utilities.h"
+#include "input_output/FGXMLFileRead.h"
+#include "input_output/FGXMLElement.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.87 2013/01/19 14:19:43 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.89 2013/11/24 11:40:55 bcoconni Exp $";
 static const char *IdHdr = ID_INITIALCONDITION;
 
 //******************************************************************************
@@ -109,7 +111,7 @@ void FGInitialCondition::ResetIC(double u0, double v0, double w0,
 
   position.SetLongitude(lonRad0);
   position.SetLatitude(latRad0);
-  position.SetAltitudeAGL(altAGLFt0, fdmex->GetSimTime());
+  position.SetAltitudeAGL(altAGLFt0, 0.0);
 
   orientation = FGQuaternion(phi0, theta0, psi0);
   const FGMatrix33& Tb2l = orientation.GetTInv();
@@ -665,22 +667,22 @@ void FGInitialCondition::SetTerrainElevationFtIC(double elev)
 
 double FGInitialCondition::GetAltitudeAGLFtIC(void) const
 {
-  return position.GetAltitudeAGL(fdmex->GetSimTime());
+  return position.GetAltitudeAGL(0.0);
 }
 
 //******************************************************************************
 
 double FGInitialCondition::GetTerrainElevationFtIC(void) const
 {
-  return position.GetTerrainRadius(fdmex->GetSimTime())
-       - position.GetSeaLevelRadius();
+  return position.GetTerrainRadius(0.0) - position.GetSeaLevelRadius();
 }
 
 //******************************************************************************
 
 void FGInitialCondition::SetAltitudeAGLFtIC(double agl)
 {
-  double terrainElevation = position.GetTerrainRadius(fdmex->GetSimTime()) - position.GetSeaLevelRadius();
+  double terrainElevation = position.GetTerrainRadius(0.0)
+    - position.GetSeaLevelRadius();
   SetAltitudeASLFtIC(agl + terrainElevation);
   lastAltitudeSet = setagl;
 }
@@ -870,7 +872,8 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     init_file_name = rstfile;
   }
 
-  document = LoadXMLDocument(init_file_name);
+  FGXMLFileRead XMLFileRead;
+  Element* document = XMLFileRead.LoadXMLDocument(init_file_name);
 
   // Make sure that the document is valid
   if (!document) {
@@ -887,14 +890,14 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
   bool result = false;
 
   if (version == HUGE_VAL) {
-    result = Load_v1(); // Default to the old version
+    result = Load_v1(document); // Default to the old version
   } else if (version >= 3.0) {
     cerr << "Only initialization file formats 1 and 2 are currently supported" << endl;
     exit (-1);
   } else if (version >= 2.0) {
-    result = Load_v2();
+    result = Load_v2(document);
   } else if (version >= 1.0) {
-    result = Load_v1();
+    result = Load_v1(document);
   }
 
   // Check to see if any engines are specified to be initialized in a running state
@@ -909,7 +912,7 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
 
 //******************************************************************************
 
-bool FGInitialCondition::Load_v1(void)
+bool FGInitialCondition::Load_v1(Element* document)
 {
   bool result = true;
 
@@ -995,7 +998,7 @@ bool FGInitialCondition::Load_v1(void)
 
 //******************************************************************************
 
-bool FGInitialCondition::Load_v2(void)
+bool FGInitialCondition::Load_v2(Element* document)
 {
   FGColumnVector3 vOrient;
   bool result = true;
@@ -1026,7 +1029,7 @@ bool FGInitialCondition::Load_v2(void)
           position.SetRadius(position_el->FindElementValueAsNumberConvertTo("radius", "FT"));
         } else if (position_el->FindElement("altitudeAGL")) {
           position.SetAltitudeAGL(position_el->FindElementValueAsNumberConvertTo("altitudeAGL", "FT"),
-                                  fdmex->GetSimTime());
+                                  0.0);
         } else if (position_el->FindElement("altitudeMSL")) {
           position.SetAltitudeASL(position_el->FindElementValueAsNumberConvertTo("altitudeMSL", "FT"));
         } else {
@@ -1042,7 +1045,7 @@ bool FGInitialCondition::Load_v2(void)
               double longitude = position.GetLongitude();
               double altitude = position.GetAltitudeASL();                 // SetPositionGeodetic() assumes altitude 
               position.SetPositionGeodetic(longitude, latitude, altitude); // is geodetic, but it's close enough for now.
-              position.SetAltitudeAGL(altitude, fdmex->GetSimTime());
+              position.SetAltitudeAGL(altitude, 0.0);
           } else {
             position.SetLatitude(latitude);
           }

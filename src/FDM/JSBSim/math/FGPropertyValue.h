@@ -42,7 +42,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPERTYVALUE "$Id: FGPropertyValue.h,v 1.10 2013/01/26 17:06:49 bcoconni Exp $"
+#define ID_PROPERTYVALUE "$Id: FGPropertyValue.h,v 1.11 2013/09/27 19:43:01 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -79,6 +79,7 @@ private:
   FGPropertyManager* PropertyManager; // Property root used to do late binding.
   FGPropertyNode_ptr PropertyNode;
   std::string PropertyName;
+  int Sign;
 };
 
 } // namespace JSBSim
