@@ -1164,10 +1164,11 @@ do_play_audio_sample (const SGPropertyNode * arg)
     float volume = arg->getFloatValue("volume");
     // cout << "playing " << path << " / " << file << endl;
     try {
-        static FGSampleQueue *queue = 0;
+        FGSampleQueue *queue = globals->get_chatter_queue();
         if ( !queue ) {
-           queue = new FGSampleQueue(smgr, "chatter");
-           queue->tie_to_listener();
+            queue = new FGSampleQueue(smgr, "chatter");
+            queue->tie_to_listener();
+            globals->set_chatter_queue(queue);
         }
 
         SGSoundSample *msg = new SGSoundSample(file.c_str(), path);

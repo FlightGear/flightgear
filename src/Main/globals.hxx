@@ -66,7 +66,7 @@ class FGViewMgr;
 class FGViewer;
 class FGRenderer;
 class FGFontCache;
-
+class FGSampleQueue;
 
 /**
  * Bucket for subsystem pointers representing the sim's state.
@@ -161,6 +161,8 @@ private:
      * helper to initialise standard properties on a new property tree
      */
     void initProperties();
+    
+    SGSharedPtr<FGSampleQueue> _chatter_queue;
 public:
 
     FGGlobals();
@@ -341,6 +343,9 @@ public:
      * Save user settings in autosave.xml
      */
     void saveUserSettings();
+    
+    FGSampleQueue* get_chatter_queue() const;
+    void set_chatter_queue(FGSampleQueue* queue);
 };
 
 

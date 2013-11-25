@@ -91,6 +91,8 @@ void FGSoundManager::shutdown()
     SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
     scenery_loaded->removeChangeListener(_listener.get());
     
+    stop();
+    
     SGSoundMgr::shutdown();
 }
 

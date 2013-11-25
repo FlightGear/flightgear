@@ -50,10 +50,6 @@ FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const std::string &refname ) :
 
 FGSampleQueue::~FGSampleQueue ()
 {
-    while ( ! _messages.empty() ) {
-        delete _messages.front();
-        _messages.pop();
-    }
 }
 
 

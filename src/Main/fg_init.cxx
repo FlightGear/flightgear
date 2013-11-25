@@ -982,8 +982,10 @@ void fgStartNewReset()
     
     globals->set_renderer(NULL);
     globals->set_matlib(NULL);
-    simgear::SGModelLib::resetPropertyRoot();
+    globals->set_chatter_queue(NULL);
     
+    simgear::SGModelLib::resetPropertyRoot();
+        
     globals->resetPropertyRoot();
     globals->restoreInitialState();
     
