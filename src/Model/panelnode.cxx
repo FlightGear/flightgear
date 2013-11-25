@@ -162,7 +162,7 @@ FGPanelNode::FGPanelNode() :
   _resizeToViewport(true),
   _depthTest(false)
 {
-    SGCommandMgr::instance()->addCommand("panel-mouse-click", this, &FGPanelNode::panelMouseClickCommand);
+    globals->get_commands()->addCommand("panel-mouse-click", this, &FGPanelNode::panelMouseClickCommand);
 
     SGPropertyNode* pathNode = fgGetNode("/sim/panel/path");
     _pathListener.reset(new PanelPathListener(this));
@@ -185,7 +185,7 @@ FGPanelNode::FGPanelNode() :
 FGPanelNode::~FGPanelNode()
 {
     if (_is2d) {
-        SGCommandMgr::instance()->removeCommand("panel-mouse-click");
+        globals->get_commands()->removeCommand("panel-mouse-click");
         SGPropertyNode* pathNode = fgGetNode("/sim/panel/path");
         pathNode->removeChangeListener(_pathListener.get());
     }

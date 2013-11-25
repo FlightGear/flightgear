@@ -215,7 +215,7 @@ FGRouteMgr::FGRouteMgr() :
   input->setStringValue("");
   input->addChangeListener(listener);
   
-  SGCommandMgr* cmdMgr = SGCommandMgr::instance();
+  SGCommandMgr* cmdMgr = globals->get_commands();
   cmdMgr->addCommand("define-user-waypoint", this, &FGRouteMgr::commandDefineUserWaypoint);
   cmdMgr->addCommand("delete-user-waypoint", this, &FGRouteMgr::commandDeleteUserWaypoint);
     
@@ -238,7 +238,7 @@ FGRouteMgr::~FGRouteMgr()
 		_plan->removeDelegate(this);
 	}
 
-    SGCommandMgr* cmdMgr = SGCommandMgr::instance();
+    SGCommandMgr* cmdMgr = globals->get_commands();
     cmdMgr->removeCommand("define-user-waypoint");
     cmdMgr->removeCommand("delete-user-waypoint");
     cmdMgr->removeCommand("load-flightplan");

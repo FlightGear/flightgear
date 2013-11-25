@@ -233,14 +233,14 @@ BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode, Metar
   _requester(metarRequester)
 {
     
-    SGCommandMgr::instance()->addCommand("request-metar", commandRequestMetar);
-    SGCommandMgr::instance()->addCommand("clear-metar", commandClearMetar);
+    globals->get_commands()->addCommand("request-metar", commandRequestMetar);
+    globals->get_commands()->addCommand("clear-metar", commandClearMetar);
 }
 
 BasicRealWxController::~BasicRealWxController()
 {
-    SGCommandMgr::instance()->removeCommand("request-metar");
-    SGCommandMgr::instance()->removeCommand("clear-metar");
+    globals->get_commands()->removeCommand("request-metar");
+    globals->get_commands()->removeCommand("clear-metar");
 }
 
 void BasicRealWxController::init()

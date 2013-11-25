@@ -56,7 +56,12 @@ TimeManager::TimeManager() :
   _inited(false),
   _impl(NULL)
 {
-  SGCommandMgr::instance()->addCommand("timeofday", do_timeofday);
+  globals->get_commands()->addCommand("timeofday", do_timeofday);
+}
+
+TimeManager::~TimeManager()
+{
+   globals->get_commands()->removeCommand("timeofday");
 }
 
 void TimeManager::init()

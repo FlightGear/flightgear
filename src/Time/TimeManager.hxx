@@ -31,7 +31,8 @@ class TimeManager : public SGSubsystem, public SGPropertyChangeListener
 {
 public:
   TimeManager();
-  
+  virtual ~TimeManager();
+    
   void computeTimeDeltas(double& simDt, double& realDt);
   
   virtual void init();
