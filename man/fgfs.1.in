@@ -43,7 +43,7 @@ Specify aircraft to load.
 Specify the aircraft model directory relative to the path of the
 executable.  This is used for UIUC aircraft only.
 .TP
-.BI "--airport-id=" "id"
+.BI "--airport=" "id"
 Specify starting postion by airport ID.
 .TP
 .BI "--altitude=" "value"
@@ -130,9 +130,6 @@ Disable introduction music.
 .B "--disable-mouse-pointer"
 Disable extra mouse pointer.
 .TP
-.B "--disable-network-olk"
-Disable Multi-pilot mode.
-.TP
 .B "--disable-panel"
 Disable instrument panel.
 .TP
@@ -202,9 +199,6 @@ Enable introduction music.
 .B "--enable-mouse-pointer"
 Enable extra mouse pointer (i.e. for full screen voodoo/voodoo-II
 based cards.)
-.TP
-.B "--enable-network-olk"
-Enable Multi-pilot mode.
 .TP
 .B "--enable-panel"
 Enable instrument panel.
@@ -333,12 +327,6 @@ radial value.
 .TP
 .BI "--ndb=" "ID"
 Specify starting position relative to an NDB.
-.TP
-.B "--net-hud"
-Enable network information in the HUD.
-.TP
-.BI "--net-id=" "name"
-Specify your callsign.
 .TP
 .BI "--nmea=" "medium" "," "direction" "," "hz" "," "options" "," "..."
 Open an IO connection using the NMEA protocol.
