@@ -1,19 +1,28 @@
 # 20130904 - build of fgcom standalone - geoff
-    # set data installed location
-    set(PKGDATAPATH "${CMAKE_INSTALL_PREFIX}/share/flightgear")
 
     if (MSVC)
       set( RESOURCE_FILE fgcom.rc )
     endif (MSVC)
 
-    # then to define the files themselves, in their 'installed' 
-    # location, not their source location...
-    if (NOT DEFAULT_POSITIONS_FILE)
-      set(DEFAULT_POSITIONS_FILE "../share/flightgear/positions.txt")
-    endif ()
-    if (NOT SPECIAL_FREQUENCIES_FILE)
-      set(SPECIAL_FREQUENCIES_FILE "../share/flightgear/special_frequencies.txt")
-    endif ()
+    if (NOT FGCOM_DATA_PATH)
+        # use relative paths (for standalone and custom installation)
+        set(FGCOM_DATA_PATH "${CMAKE_INSTALL_PREFIX}/share/flightgear")
+        if (APPLE)
+            # on Mac "share" directory doesn't exist
+            # .txt files are moved in the Resources directory because of Mac convention
+            # This movement is handled by the fgmeta.git/hudson_mac_package_release.rb line 139
+            set(DEFAULT_POSITIONS_FILE "../Resources/positions.txt")
+            set(SPECIAL_FREQUENCIES_FILE "../Resources/special_frequencies.txt")
+        else (APPLE)
+            set(DEFAULT_POSITIONS_FILE "../share/flightgear/positions.txt")
+            set(SPECIAL_FREQUENCIES_FILE "../share/flightgear/special_frequencies.txt")
+        endif (APPLE)
+    else()
+        # use absolute paths, useful for package creation (e.g -DFGCOM_DATA_PATH=/usr/share/fgcom)
+        set(DEFAULT_POSITIONS_FILE "${FGCOM_DATA_PATH}/positions.txt")
+        set(SPECIAL_FREQUENCIES_FILE "${FGCOM_DATA_PATH}/special_frequencies.txt")
+    endif()
+
     # pass these to the compiler
     add_definitions( -DDEFAULT_POSITIONS_FILE="${DEFAULT_POSITIONS_FILE}" )
     add_definitions( -DSPECIAL_FREQUENCIES_FILE="${SPECIAL_FREQUENCIES_FILE}" )
@@ -43,5 +52,5 @@
     # then install, from their source to install destination
     set( inst_FILES utils/positions.txt
         utils/special_frequencies.txt )
-    install(FILES ${inst_FILES} DESTINATION ${PKGDATAPATH})
+    install(FILES ${inst_FILES} DESTINATION ${FGCOM_DATA_PATH})
 # eof
