@@ -1,189 +1,26 @@
-I.  GENERAL LINUX INSTRUCTIONS
+Installing FlightGear on Linux
 ==============================
 
-This is a short description of the things that need to be done to get
-FlightGear up and running under Linux.
-
-1. Prerequisites:
-
-- You need to understand the concepts of 3D acceleration under Linux
-  and the needed libraries.  You will need to install and configure
-  accelerated drivers for your specific video card.  It is beyond the
-  scope of this document to describe the process for your specific
-  video card.
-
-  More and more distributions are coming out with pre-packaged drivers
-  so look around (just in case) before you go out and build software
-  yourself.
-
-  Here are some potentially useful sites, but be careful and find the
-  specific instructions for your specific video card and distribution:
-
-    http://www.thedukeofurl.org/reviews/misc/3dlinux/
-    http://www.linux3d.net/
-    http://dri.sourceforge.net/
-    http://www.nvidia.com
-    http://glide.xxedgexx.com/
-
-  Without accelerated 3d rendering, FlightGear could never run at
-  decent frame rates, even on the fastest CPU's.
-
-- You will need the GLUT library version 3.7 (or greater, aka
-  GameGLUT) installed.
-
-  Grab it at:
-
-	http://reality.sgi.com/opengl/glut3/glut3.html
-
-  Note: glut-3.7 is included with Mesa 3.x so if you've already
-  grabbed the latest version of mesa, you should have everything you
-  need.
-
-  Alternatively, you can use the 3D-stuff that came along with your
-  Linux distribution. At least RedHat (5.3 and later) and S.u.S.E. 6.0
-  (or later) may contain all the things you need depending again on
-  your video card.
-
-- Steve Baker's plib library.  Get it from:
-
-    http://plib.sf.net
-
-  ... and follow the instructions there to install it.
-
-- SimGear.  Get it from:
-
-    http://www.simgear.org
-
-  ... and follow the instructions there to install it.
-
-
-2. Build FlightGear:
-
-   You will need the following files:
-
-     FlightGear-x.xx.tar.gz (source code)
-
-   which can be found under:
-
-     ftp://flightgear.sourceforge.net/pub/flightgear/Source
-
-   and the base package located at:
-
-     ftp://flightgear.sourceforge.net/pub/flightgear/Shared/
-
-   the file is called 
-
-	fgfs-base-x.xx.tar.gz       (data files)
-
-   Ok, now that you got all the stuff, let's proceed towards installation.
-
-   Unpack FlightGear-x.xx.tar.gz using :
-
-	tar xvfz FlightGear-x.xx.tar.gz
-
-   and cd info FlightGear-x.xx. Run:
-
-	./configure
-
-   and wait a few minutes. configure knows about a lot of
-   options. Have a look at the file INSTALL in the FlightGear source
-   directory to learn about them. If run without options, configure
-   assumes that you will install the data files under
-   /usr/local/share/FlightGear. Assuming configure finished
-   successfully, simply run
-
-	make
-
-   and wait for the make process to finish. Now become root (for
-   example by using the su command) and type
-
-	make install
-
-   This will install the binaries in /usr/local/bin. Notice that the
-   name of the FlightGear binary is "fgfs".
-
-
-3. Install the data files
-
-   Change to /usr/local/lib
-
-	tar xvfz WHERE_YOU_DOWNLOADED_THE_FILES/fgfs-base-x.xx.tar.gz 
-
-   That's it...
-
-
-4. Fly!
-
-   If everything went ok, simply type
-
-	runfgfs
-
-   at the prompt. You should see the FlightGear splash-screen and a
-   few seconds later you'll find youself somewhere in the desert,
-   ready for take-off.
-
-5. Strange things happen...
-
-   We have mailing lists set up for specific FlightGear problems,
-   bugs, and questions.  Please see the flightgear web page for
-   details.
-
-
-6. Conclusion
-
-    I hope this document provides some help. If it does, send
-    virtual/real beer to me, if not flame me!
-
-    Bernhard H. Buckel
-    <buckel@wmad95.mathematik.uni-wuerzburg.de>
-
-    Updated by Curtis Olson <http://www.flightgear.org/~curt> 6/26/2001
-
-
-II.  RedHat Linux Notes
-=======================
-
-Summary: There are known problems with the versions of libstdc++ that
-ships with both RedHat-5.1 and RedHat-5.2.  You need to upgrade your
-libstdc++ before attempting to build flight gear on a RedHat system.
-
-Raymond de Vries <vries@per.nl> writes: I ran into [this] problem on
-my RedHat 5.2 system (brand new). After some searching I found out
-that it's got to do with a 'bug' in the stdlibc++ libraries. I picked
-up libstdc++-2.9.0-2.i386.rpm, installed it and FGFS compiled just
-fine. However, some other packages must have the libstdc++-2.8
-libraries....
-
-BTW I also solved it with the 2.8 libraries by including
-/usr/include/g++/std/bastring.cc into the example programs. I believe
-this can be done since it's a template, correct me if I'm wrong.
-
-
-III.  Linux/AXP Notes
-====================
-
-As of 2/19/99 I'm not aware of any glide port to Linux/AXP so it's
-software rendering only for now.  :-(
-
-This following information is contributed by "Daniel J. Frasnelli"
-<dfrasnel@csee.wvu.edu>
-
-1) Mesa was not built correctly by default.  I had to add the "-mieee"
-flag to the Make-config for Mesa-3.1beta1 to fix the problem.  After
-building and installation, all of the problems I had previously with
-GL programs under AlphaLinux disappeared.
-
-2) I also had to set the '-mieee' flag in $CFLAGS before configuring
-and building FGFS.  The -mieee switch fixes floating point exception
-handling.
-
-I heavily optimized both Mesa and FGFS, using the libffm "fast math
-library for Alpha" in preference over the default libm, sticking all
-sorts of strange flags in $CFLAGS, etc.  These flags should be
-adjusted for your specific architecture:
-
-    export CFLAGS="-mieee -mcpu=ev56 -Wa,-m21164a -pipe -g"
-    export CXXFLAGS="-mieee -mcpu=ev56 -Wa,-m21164a -pipe -g"
-    ./configure
-
-
+Binary packages
+---------------
+Several major Linux distributions offer FlightGear binary packages in their
+official repositories; this is usually the quickest and easiest way to
+install FlightGear, but may not be the latest version.
+
+There are also a number of unofficial repositories offering more frequently
+updated binary packages (some including development versions, which have
+the very latest features but are also more likely to have major bugs);
+see http://www.flightgear.org/download/main-program/ for details.
+
+Compiling from source
+---------------------
+See the general instructions (README.cmake in the directory above this).
+You will need the -dev version of all the prerequisites,
+e.g. libopenscenegraph-dev, libplib-dev.
+
+Graphics drivers
+----------------
+If you experience unusably low frame rates (~1/sec), this may mean that your
+graphics drivers do not support 3D acceleration, or that it is not enabled.  
+To check for this problem run:
+    glxinfo | grep render
