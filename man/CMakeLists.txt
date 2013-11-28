@@ -12,7 +12,6 @@ endif(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
 
 set(MANPAGES
     fgfs.1
-    gl-info.1
 )
 
 if(WITH_FGPANEL)
