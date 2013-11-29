@@ -242,6 +242,7 @@ bool FGTrim::DoTrim(void) {
 
   fdmex->DisableOutput();
 
+  fdmex->RunIC();
   fdmex->SetTrimStatus(true);
   fdmex->SuspendIntegration();
 
@@ -380,13 +381,15 @@ bool FGTrim::DoTrim(void) {
         cout << endl << "  Trim failed" << endl;
   }
 
+  fdmex->SetTrimStatus(false);
+  fdmex->ResumeIntegration();
+  fdmex->RunIC();
+  fdmex->EnableOutput();
+
   for(i=0;i < fdmex->GetGroundReactions()->GetNumGearUnits();i++){
     fdmex->GetGroundReactions()->GetGearUnit(i)->SetReport(true);
   }
 
-  fdmex->SetTrimStatus(false);
-  fdmex->ResumeIntegration();
-  fdmex->EnableOutput();
   return !trim_failed;
 }
 

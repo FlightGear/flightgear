@@ -1261,8 +1261,6 @@ void FGJSBsim::do_trim(void)
     fgtrim = new FGTrim(fdmex,tFull);
   }
 
-  fdmex->RunIC();
-
   if ( !fgtrim->DoTrim() ) {
     fgtrim->Report();
     fgtrim->TrimStats();
