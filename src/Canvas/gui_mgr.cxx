@@ -198,6 +198,10 @@ DesktopGroup::DesktopGroup():
   // Do not change values on reinit
   _width.node()->setAttribute(SGPropertyNode::PRESERVE, true);
   _height.node()->setAttribute(SGPropertyNode::PRESERVE, true);
+
+  // Do not restore windows on reinit (all windows will need to be recreated,
+  // but hey it's a reset ;-))
+  _node->setAttribute(SGPropertyNode::PRESERVE, true);
 }
 
 //------------------------------------------------------------------------------
@@ -480,14 +484,9 @@ void DesktopGroup::handleMouseMode(SGPropertyNode* node)
 }
 
 //------------------------------------------------------------------------------
-GUIMgr::GUIMgr():
-  _desktop( new DesktopGroup ),
-  _event_handler( new GUIEventHandler(
-    boost::static_pointer_cast<DesktopGroup>(_desktop)
-  ))
+GUIMgr::GUIMgr()
 {
-  // We handle the property listener manually within ::init and ::shutdown.
-  _desktop->removeListener();
+
 }
 
 //------------------------------------------------------------------------------
@@ -506,39 +505,43 @@ canvas::WindowPtr GUIMgr::createWindow(const std::string& name)
 //------------------------------------------------------------------------------
 void GUIMgr::init()
 {
-  boost::static_pointer_cast<DesktopGroup>(_desktop)->handleResize
+  DesktopPtr desktop( new DesktopGroup );
+  desktop->handleResize
   (
     0,
     0,
     fgGetInt("/sim/startup/xsize"),
     fgGetInt("/sim/startup/ysize")
   );
+  _desktop = desktop;
 
+  _event_handler = new GUIEventHandler(desktop);
   globals->get_renderer()
          ->getViewer()
          ->getEventHandlers()
          // GUI is on top of everything so lets install as first event handler
          .push_front( _event_handler );
 
-
   simgear::canvas::Canvas::addPlacementFactory
   (
     "window",
     boost::bind(&GUIMgr::addWindowPlacement, this, _1, _2)
   );
-  _desktop->getProps()->addChangeListener(_desktop.get());
+
   _desktop->getProps()->fireCreatedRecursive();
 }
 
 //------------------------------------------------------------------------------
 void GUIMgr::shutdown()
 {
-  _desktop->getProps()->removeChangeListener(_desktop.get());
+  _desktop->destroy();
+  _desktop.reset();
   simgear::canvas::Canvas::removePlacementFactory("window");
 
   globals->get_renderer()
          ->getViewer()
          ->removeEventHandler( _event_handler );
+  _event_handler = 0;
 }
 
 //------------------------------------------------------------------------------
