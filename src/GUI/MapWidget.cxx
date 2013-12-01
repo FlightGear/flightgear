@@ -199,6 +199,11 @@ public:
       _width, _height);
   }
 
+  void drawStringUtf8(std::string& utf8Str, double x, double y, puFont fnt)
+  {
+    fnt.drawString(simgear::strutils::utf8ToLatin1(utf8Str).c_str(), x, y);
+  }
+
   void draw()
   {
     validate();
@@ -218,12 +223,12 @@ public:
       glColor3f(0.8, 0.8, 0.8);
 
       for (unsigned int ln=0; ln<_lines.size(); ++ln) {
-        _font.drawString(_lines[ln].c_str(), xPos, yPos);
+        drawStringUtf8(_lines[ln], xPos, yPos, _font);
         yPos -= lineHeight + LINE_LEADING;
       }
     } else {
       glColor3f(0.8, 0.8, 0.8);
-      _font.drawString(_label.c_str(), xx, yy + _fontDescender);
+      drawStringUtf8(_label, xx, yy + _fontDescender, _font);
     }
   }
 
