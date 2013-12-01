@@ -44,6 +44,7 @@ class CanvasMgr:
 
   protected:
 
+    osg::observer_ptr<osg::Camera>      _gui_camera;
     SGPropertyChangeCallback<CanvasMgr> _cb_model_reinit;
 
     void handleModelReinit(SGPropertyNode*);

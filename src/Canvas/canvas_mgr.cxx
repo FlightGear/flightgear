@@ -75,6 +75,9 @@ CanvasMgr::CanvasMgr():
 //----------------------------------------------------------------------------
 void CanvasMgr::init()
 {
+  _gui_camera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
+  assert(_gui_camera.valid());
+
   sc::Canvas::addPlacementFactory
   (
     "object",
@@ -99,12 +102,17 @@ void CanvasMgr::shutdown()
 
   sc::Canvas::removePlacementFactory("object");
   sc::Canvas::removePlacementFactory("scenery-object");
+
+  _gui_camera = 0;
 }
 
 //------------------------------------------------------------------------------
 unsigned int
 CanvasMgr::getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const
 {
+  if( !canvas )
+    return 0;
+
   osg::Texture2D* tex = canvas->getTexture();
   if( !tex )
     return 0;
@@ -115,8 +123,9 @@ CanvasMgr::getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const
 //  if( contexts.empty() )
 //    return 0;
 
-  static osg::Camera* guiCamera =
-    flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
+  osg::ref_ptr<osg::Camera> guiCamera;
+  if( !_gui_camera.lock(guiCamera) )
+    return 0;
 
   osg::State* state = guiCamera->getGraphicsContext()->getState(); //contexts[0]->getState();
   if( !state )
