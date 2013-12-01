@@ -269,7 +269,7 @@ void FGRouteMgr::init() {
   departure->tie("name", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
     &FGRouteMgr::getDepartureName, NULL));
   departure->tie("field-elevation-ft", SGRawValueMethods<FGRouteMgr, double>(*this, 
-                                                                               &FGRouteMgr::getDestinationFieldElevation, NULL));
+                                                                               &FGRouteMgr::getDepartureFieldElevation, NULL));
   departure->getChild("etd", 0, true);
   departure->getChild("takeoff-time", 0, true);
 
