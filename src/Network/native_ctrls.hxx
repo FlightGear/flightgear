@@ -29,7 +29,6 @@
 
 #include <string>
 
-#include <Aircraft/controls.hxx>
 #include "protocol.hxx"
 #include "net_ctrls.hxx"
 
@@ -38,8 +37,6 @@ using std::string;
 class FGNativeCtrls : public FGProtocol {
 
     FGNetCtrls net_ctrls;
-    FGControls ctrls;
-
 public:
 
     FGNativeCtrls();
