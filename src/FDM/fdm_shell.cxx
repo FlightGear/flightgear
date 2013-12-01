@@ -63,14 +63,13 @@ using std::string;
 
 FDMShell::FDMShell() :
   _tankProperties( fgGetNode("/consumables/fuel", true) ),
-  _impl(NULL),
   _dataLogging(false)
 {
 }
 
 FDMShell::~FDMShell()
 {
-  delete _impl;
+    SG_LOG(SG_GENERAL, SG_INFO, "destorying FDM shell");
 }
 
 void FDMShell::init()
@@ -91,15 +90,29 @@ void FDMShell::init()
   createImplementation();
 }
 
+void FDMShell::shutdown()
+{
+    if (_impl) {
+        fgSetBool("/sim/fdm-initialized", false);
+        _impl->unbind();
+        _impl.clear();
+    }
+    
+    _props.clear();
+    _wind_north.clear();
+    _wind_east.clear();
+    _wind_down.clear();
+    _control_fdm_atmo.clear();
+    _temp_degc.clear();
+    _pressure_inhg.clear();
+    _density_slugft .clear();
+    _data_logging.clear();
+    _replay_master.clear();
+}
+
 void FDMShell::reinit()
 {
-  if (_impl) {
-    fgSetBool("/sim/fdm-initialized", false);
-    _impl->unbind();
-    delete _impl;
-    _impl = NULL;
-  }
-  
+  shutdown();
   init();
 }
 

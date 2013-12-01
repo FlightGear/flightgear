@@ -44,6 +44,7 @@ public:
   virtual ~FDMShell();
   
   virtual void init();
+  virtual void shutdown();
   virtual void reinit();
   
   virtual void bind();
@@ -57,7 +58,7 @@ private:
   void createImplementation();
   
   TankPropertiesList _tankProperties;
-  FGInterface* _impl;
+  SGSharedPtr<FGInterface> _impl;
   SGPropertyNode_ptr _props; // root property tree for this FDM instance
   bool _dataLogging;
   
