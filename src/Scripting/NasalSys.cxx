@@ -826,6 +826,11 @@ void FGNasalSys::shutdown()
     }
     _commands.clear();
     
+    std::vector<FGNasalModuleListener*>::iterator k = _moduleListeners.begin();
+    for(; k!= _moduleListeners.end(); ++k)
+        delete *k;
+    _moduleListeners.clear();
+    
     naClearSaved();
     
     _string = naNil(); // will be freed by _context
@@ -1007,6 +1012,7 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
         if (enable)
         {
             FGNasalModuleListener* listener = new FGNasalModuleListener(n);
+            _moduleListeners.push_back(listener);
             enable->addChangeListener(listener, false);
         }
     }

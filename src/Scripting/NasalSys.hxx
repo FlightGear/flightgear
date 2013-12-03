@@ -22,6 +22,7 @@ class FGNasalListener;
 class SGCondition;
 class FGNasalModelData;
 class NasalCommand;
+class FGNasalModuleListener;
 
 namespace simgear { class BufferedLogCallback; }
 
@@ -158,6 +159,8 @@ private:
     // Listener
     std::map<int, FGNasalListener *> _listener;
     std::vector<FGNasalListener *> _dead_listener;
+    
+    std::vector<FGNasalModuleListener*> _moduleListeners;
     
     static int _listenerId;
 
