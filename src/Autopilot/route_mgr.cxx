@@ -294,6 +294,7 @@ void FGRouteMgr::init() {
                                                                       &FGRouteMgr::getDestinationFieldElevation, NULL));
   
   destination->getChild("eta", 0, true);
+  destination->getChild("eta-seconds", 0, true);
   destination->getChild("touchdown-time", 0, true);
 
   alternate = fgGetNode(RM "alternate", true);
@@ -335,16 +336,19 @@ void FGRouteMgr::init() {
   wp0->getChild("id", 0, true);
   wp0->getChild("dist", 0, true);
   wp0->getChild("eta", 0, true);
+  wp0->getChild("eta-seconds", 0, true);
   wp0->getChild("bearing-deg", 0, true);
   
   wp1 = fgGetNode(RM "wp", 1, true);
   wp1->getChild("id", 0, true);
   wp1->getChild("dist", 0, true);
   wp1->getChild("eta", 0, true);
+  wp1->getChild("eta-seconds", 0, true);
   
   wpn = fgGetNode(RM "wp-last", 0, true);
   wpn->getChild("dist", 0, true);
   wpn->getChild("eta", 0, true);
+  wpn->getChild("eta-seconds", 0, true);
   
   _pathNode = fgGetNode(RM "file-path", 0, true);
 }
@@ -487,7 +491,7 @@ void FGRouteMgr::update( double dt )
   wp0->setDoubleValue("true-bearing-deg", courseDeg);
   courseDeg -= magvar->getDoubleValue(); // expose magnetic bearing
   wp0->setDoubleValue("bearing-deg", courseDeg);
-  setETAPropertyFromDistance(wp0->getChild("eta"), distanceM);
+  setETAPropertyFromDistance(wp0, distanceM);
   
   double totalPathDistanceNm = _plan->totalDistanceNm();
   double totalDistanceRemaining = distanceM * SG_METER_TO_NM; // distance to current waypoint
@@ -509,7 +513,7 @@ void FGRouteMgr::update( double dt )
     wp1->setDoubleValue("true-bearing-deg", courseDeg);
     courseDeg -= magvar->getDoubleValue(); // expose magnetic bearing
     wp1->setDoubleValue("bearing-deg", courseDeg);
-    setETAPropertyFromDistance(wp1->getChild("eta"), distanceM);    
+    setETAPropertyFromDistance(wp1, distanceM);    
     wp1->setDoubleValue("distance-along-route-nm", 
                         nextLeg->distanceAlongRoute());
     wp1->setDoubleValue("remaining-distance-nm", 
@@ -519,7 +523,7 @@ void FGRouteMgr::update( double dt )
   distanceToGo->setDoubleValue(totalDistanceRemaining);
   wpn->setDoubleValue("dist", totalDistanceRemaining);
   ete->setDoubleValue(totalDistanceRemaining / gs * 3600.0);
-  setETAPropertyFromDistance(wpn->getChild("eta"), totalDistanceRemaining);
+  setETAPropertyFromDistance(wpn, totalDistanceRemaining);
 }
 
 void FGRouteMgr::clearRoute()
@@ -575,6 +579,7 @@ void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDi
 
   char eta_str[64];
   double eta = aDistance * SG_METER_TO_NM / speed;
+  aProp->getChild("eta-seconds")->setIntValue( eta * 3600 );
   if ( eta >= 100.0 ) { 
       eta = 99.999; // clamp
   }
@@ -586,7 +591,7 @@ void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDi
   int major = (int)eta, 
       minor = (int)((eta - (int)eta) * 60.0);
   snprintf( eta_str, 64, "%d:%02d", major, minor );
-  aProp->setStringValue( eta_str );
+  aProp->getChild("eta")->setStringValue( eta_str );
 }
 
 void FGRouteMgr::removeLegAtIndex(int aIndex)
