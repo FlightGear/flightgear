@@ -80,9 +80,9 @@ void FGAIMultiplayer::bind() {
 
     tie("controls/invisible",
         SGRawValuePointer<bool>(&invisible));
-	_uBodyNode = props->getNode("velocities/ubody-fps", true);
-	_vBodyNode = props->getNode("velocities/vbody-fps", true);
-	_wBodyNode = props->getNode("velocities/wbody-fps", true);
+	_uBodyNode = props->getNode("velocities/uBody-fps", true);
+	_vBodyNode = props->getNode("velocities/vBody-fps", true);
+	_wBodyNode = props->getNode("velocities/wBody-fps", true);
 	
 #define AIMPROProp(type, name) \
 SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
