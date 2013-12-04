@@ -286,7 +286,9 @@ void fgOSOpenWindow(bool stencil)
 void fgOSResetProperties()
 {
     SGPropertyNode* osgLevel = fgGetNode("/sim/rendering/osg-notify-level", true);
-    osgLevel->addChangeListener(new NotifyLevelListener, true);
+    NotifyLevelListener* l = new NotifyLevelListener;
+    globals->addListenerToCleanup(l);
+    osgLevel->addChangeListener(l, true);
     
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (guiCamera) {

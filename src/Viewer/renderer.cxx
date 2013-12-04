@@ -430,6 +430,11 @@ FGRenderer::FGRenderer() :
 
 FGRenderer::~FGRenderer()
 {
+    SGPropertyChangeListenerVec::iterator i = _listeners.begin();
+    for (; i != _listeners.end(); ++i) {
+        delete *i;
+    }
+    
     DeletionManager::uninstall(mRealRoot.get());
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = NULL;
@@ -499,6 +504,13 @@ public:
 };
 
 void
+FGRenderer::addChangeListener(SGPropertyChangeListener* l, const char* path)
+{
+    _listeners.push_back(l);
+    fgAddChangeListener(l, path);
+}
+                                    
+void
 FGRenderer::init( void )
 {
     if (!eventHandler)
@@ -508,14 +520,14 @@ FGRenderer::init( void )
 
     _classicalRenderer = !fgGetBool("/sim/rendering/rembrandt/enabled", false);
     _shadowMapSize    = fgGetInt( "/sim/rendering/shadows/map-size", 4096 );
-    fgAddChangeListener( new ShadowMapSizeListener, "/sim/rendering/shadows/map-size" );
-    fgAddChangeListener( new ShadowEnabledListener, "/sim/rendering/shadows/enabled" );
+    addChangeListener( new ShadowMapSizeListener, "/sim/rendering/shadows/map-size" );
+    addChangeListener( new ShadowEnabledListener, "/sim/rendering/shadows/enabled" );
     ShadowRangeListener* srl = new ShadowRangeListener;
-    fgAddChangeListener(srl, "/sim/rendering/shadows/cascade-far-m[0]");
+    addChangeListener(srl, "/sim/rendering/shadows/cascade-far-m[0]");
     fgAddChangeListener(srl, "/sim/rendering/shadows/cascade-far-m[1]");
     fgAddChangeListener(srl, "/sim/rendering/shadows/cascade-far-m[2]");
     fgAddChangeListener(srl, "/sim/rendering/shadows/cascade-far-m[3]");
-    fgAddChangeListener(new ShadowNumListener, "/sim/rendering/shadows/num-cascades");
+    addChangeListener(new ShadowNumListener, "/sim/rendering/shadows/num-cascades");
     _numCascades = fgGetInt("/sim/rendering/shadows/num-cascades", 4);
     _cascadeFar[0] = fgGetFloat("/sim/rendering/shadows/cascade-far-m[0]", 5.0f);
     _cascadeFar[1] = fgGetFloat("/sim/rendering/shadows/cascade-far-m[1]", 50.0f);

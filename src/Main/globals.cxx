@@ -232,6 +232,8 @@ FGGlobals::~FGGlobals()
     delete locale;
     locale = NULL;
     
+    cleanupListeners();
+    
     props.clear();
     
     delete commands;
@@ -525,9 +527,26 @@ FGGlobals::resetPropertyRoot()
 {
     delete locale;
     
+    cleanupListeners();
+    
+    // we don't strictly need to clear these (they will be reset when we
+    // initProperties again), but trying to reduce false-positives when dumping
+    // ref-counts.
+    positionLon.clear();
+    positionLat.clear();
+    positionAlt.clear();
+    viewLon.clear();
+    viewLat.clear();
+    viewAlt.clear();
+    orientPitch.clear();
+    orientHeading.clear();
+    orientRoll.clear();
+    
     SG_LOG(SG_GENERAL, SG_INFO, "root props refcount:" << props.getNumRefs());
     treeDumpRefCounts(0, props);
 
+    //BaseStackSnapshot::dumpAll(std::cout);
+    
     props = new SGPropertyNode;
     initProperties();
     locale = new FGLocale(props);
@@ -707,6 +726,20 @@ FGSampleQueue* FGGlobals::get_chatter_queue() const
 void FGGlobals::set_chatter_queue(FGSampleQueue* queue)
 {
     _chatter_queue = queue;
+}
+
+void FGGlobals::addListenerToCleanup(SGPropertyChangeListener* l)
+{
+    _listeners_to_cleanup.push_back(l);
+}
+
+void FGGlobals::cleanupListeners()
+{
+    SGPropertyChangeListenerVec::iterator i = _listeners_to_cleanup.begin();
+    for (; i != _listeners_to_cleanup.end(); ++i) {
+        delete *i;
+    }
+    _listeners_to_cleanup.clear();
 }
 
 // end of globals.cxx

@@ -163,6 +163,12 @@ private:
     void initProperties();
     
     SGSharedPtr<FGSampleQueue> _chatter_queue;
+    
+    void cleanupListeners();
+    
+    typedef std::vector<SGPropertyChangeListener*> SGPropertyChangeListenerVec;
+    SGPropertyChangeListenerVec _listeners_to_cleanup;
+    
 public:
 
     FGGlobals();
@@ -346,6 +352,8 @@ public:
     
     FGSampleQueue* get_chatter_queue() const;
     void set_chatter_queue(FGSampleQueue* queue);
+    
+    void addListenerToCleanup(SGPropertyChangeListener* l);
 };
 
 

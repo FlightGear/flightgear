@@ -299,7 +299,9 @@ static void upper_case_property(const char *name)
         else
             assert(t == props::STRING);
     }
-    p->addChangeListener(new FGMakeUpperCase);
+    SGPropertyChangeListener* muc = new FGMakeUpperCase;
+    globals->addListenerToCleanup(muc);
+    p->addChangeListener(muc);
 }
 
 // see http://code.google.com/p/flightgear-bugs/issues/detail?id=385

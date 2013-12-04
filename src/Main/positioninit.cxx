@@ -65,7 +65,8 @@ static bool fgSetTowerPosFromAirportID( const string& id) {
   
 }
 
-struct FGTowerLocationListener : SGPropertyChangeListener {
+class FGTowerLocationListener : public SGPropertyChangeListener {
+    
   void valueChanged(SGPropertyNode* node) {
     string id(node->getStringValue());
     if (fgGetBool("/sim/tower/auto-position",true))
@@ -82,7 +83,7 @@ struct FGTowerLocationListener : SGPropertyChangeListener {
   }
 };
 
-struct FGClosestTowerLocationListener : SGPropertyChangeListener
+class FGClosestTowerLocationListener : public SGPropertyChangeListener
 {
   void valueChanged(SGPropertyNode* )
   {
@@ -98,9 +99,14 @@ struct FGClosestTowerLocationListener : SGPropertyChangeListener
 };
 
 void initTowerLocationListener() {
+    
+  SGPropertyChangeListener* tll = new FGTowerLocationListener();
+  globals->addListenerToCleanup(tll);
   fgGetNode("/sim/tower/airport-id",  true)
-  ->addChangeListener( new FGTowerLocationListener(), true );
+  ->addChangeListener( tll, true );
+    
   FGClosestTowerLocationListener* ntcl = new FGClosestTowerLocationListener();
+  globals->addListenerToCleanup(ntcl);
   fgGetNode("/sim/airport/closest-airport-id", true)
   ->addChangeListener(ntcl , true );
   fgGetNode("/sim/tower/auto-position", true)

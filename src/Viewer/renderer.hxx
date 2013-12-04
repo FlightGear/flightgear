@@ -138,6 +138,9 @@ protected:
     float _cascadeFar[4];
     bool _useColorForDepth;
 
+    typedef std::vector<SGPropertyChangeListener*> SGPropertyChangeListenerVec;
+    SGPropertyChangeListenerVec _listeners;
+    
     flightgear::CameraInfo* buildCameraFromRenderingPipeline(FGRenderingPipeline* rpipe, flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
                                         const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
 
@@ -168,6 +171,8 @@ protected:
     osg::ref_ptr<osg::Uniform> _depthInColor;
 
     osg::ref_ptr<FGRenderingPipeline> _pipeline;
+    
+    void addChangeListener(SGPropertyChangeListener* l, const char* path);
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);
