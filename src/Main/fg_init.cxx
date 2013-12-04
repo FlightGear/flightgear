@@ -64,6 +64,7 @@
 
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/material/Effect.hxx>
 #include <simgear/scene/model/particles.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 
@@ -984,6 +985,7 @@ void fgStartNewReset()
     globals->set_matlib(NULL);
     globals->set_chatter_queue(NULL);
     
+    simgear::clearEffectCache();
     simgear::SGModelLib::resetPropertyRoot();
         
     globals->resetPropertyRoot();
