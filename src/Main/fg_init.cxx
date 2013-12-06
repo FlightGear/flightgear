@@ -977,6 +977,8 @@ void fgStartNewReset()
     // potentially others) can queue delete requests on the pager.
     render->getViewer()->getDatabasePager()->cancel();
     
+    osgDB::Registry::instance()->clearObjectCache();
+    
     // preserve the event handler; re-creating it would entail fixing the
     // idle handler
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler = render->getEventHandler();
