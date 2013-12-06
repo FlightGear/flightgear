@@ -44,6 +44,8 @@ public:
     virtual ~wxRadarBg();
 
     virtual void init();
+    virtual void shutdown();
+    
     virtual void update(double dt);
     virtual void valueChanged(SGPropertyNode *);
 

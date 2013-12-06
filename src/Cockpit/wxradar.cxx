@@ -118,7 +118,6 @@ wxRadarBg::wxRadarBg(SGPropertyNode *node) :
 wxRadarBg::~wxRadarBg ()
 {
     _font_node->removeChangeListener(this);
-    delete _odg;
 }
 
 
@@ -249,6 +248,11 @@ wxRadarBg::init ()
     _time = 0.0;
 }
 
+void wxRadarBg::shutdown()
+{
+    delete _odg;
+    _odg = NULL;
+}
 
 // Local coordinates for each echo
 const osg::Vec3f echoCoords[4] = {
