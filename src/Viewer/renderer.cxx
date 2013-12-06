@@ -385,15 +385,7 @@ public:
 };
 
 bool FGScenerySwitchCallback::scenery_enabled = false;
-
-static osg::ref_ptr<osg::FrameStamp> mFrameStamp = new osg::FrameStamp;
-static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
-
-static osg::ref_ptr<osg::Group> mRealRoot = new osg::Group;
-static osg::ref_ptr<osg::Group> mDeferredRealRoot = new osg::Group;
-
-static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
-
+                                    
 #ifdef FG_JPEG_SERVER
 static void updateRenderer()
 {
@@ -419,8 +411,13 @@ FGRenderer::FGRenderer() :
 #endif
     
     // it's not the real root, whatever that means
-    mRoot->setName("fakeRoot"); 
+    _root = new osg::Group;
+    _root->setName("fakeRoot");
 
+    _updateVisitor = new SGUpdateVisitor;
+    _root = new osg::Group;
+    _deferredRealRoot = new osg::Group;
+    
    _numCascades = 4;
    _cascadeFar[0] = 5.f;
    _cascadeFar[1] = 50.f;
@@ -435,7 +432,6 @@ FGRenderer::~FGRenderer()
         delete *i;
     }
     
-    DeletionManager::uninstall(mRealRoot.get());
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = NULL;
 #endif
@@ -446,15 +442,16 @@ FGRenderer::~FGRenderer()
 // XXX This should be called "preinit" or something, as it initializes
 // critical parts of the scene graph in addition to the splash screen.
 void
-FGRenderer::splashinit( void ) {
+FGRenderer::splashinit( void )
+      {
     osgViewer::Viewer* viewer = getViewer();
     viewer->setName("osgViewer");
-    mRealRoot = dynamic_cast<osg::Group*>(viewer->getSceneData());
-    mRealRoot->setName("realRoot");
+    _viewerSceneRoot = dynamic_cast<osg::Group*>(viewer->getSceneData());
+    _viewerSceneRoot->setName("viewerSceneRoot");
     
     ref_ptr<Node> splashNode = fgCreateSplashNode();
     if (_classicalRenderer) {
-        mRealRoot->addChild(splashNode.get());
+        _viewerSceneRoot->addChild(splashNode.get());
     } else {
         for (   CameraGroup::CameraIterator ii = CameraGroup::getDefault()->camerasBegin();
                 ii != CameraGroup::getDefault()->camerasEnd();
@@ -467,11 +464,12 @@ FGRenderer::splashinit( void ) {
             camera->addChild(splashNode.get());
         }
     }
-    mFrameStamp = viewer->getFrameStamp();
+    
+    _frameStamp = viewer->getFrameStamp();
     // Scene doesn't seem to pass the frame stamp to the update
     // visitor automatically.
-    mUpdateVisitor->setFrameStamp(mFrameStamp.get());
-    viewer->setUpdateVisitor(mUpdateVisitor.get());
+    _updateVisitor->setFrameStamp(_frameStamp.get());
+    viewer->setUpdateVisitor(_updateVisitor.get());
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
 }
 
@@ -828,7 +826,7 @@ osg::Camera* FGRenderer::buildDeferredGeometryCamera( CameraInfo* info, osg::Gra
     osg::StateSet* ss = camera->getOrCreateStateSet();
     ss->addUniform( _depthInColor );
 
-    camera->addChild( mDeferredRealRoot.get() );
+    camera->addChild( _deferredRealRoot.get() );
 
     return camera;
 }
@@ -897,7 +895,7 @@ osg::Camera* FGRenderer::buildDeferredShadowCamera( CameraInfo* info, osg::Graph
 
     for (int i = 0; i < 4; ++i ) {
         osg::Camera* cascadeCam = createShadowCascadeCamera( i, _shadowMapSize/2 );
-        cascadeCam->addChild( mDeferredRealRoot.get() );
+        cascadeCam->addChild( _deferredRealRoot.get() );
         shadowSwitch->addChild( cascadeCam );
     }
     if (fgGetBool("/sim/rendering/shadows/enabled", true))
@@ -1342,7 +1340,7 @@ FGRenderer::buildLightingLightsPass(CameraInfo* info, FGRenderingPipeline::Pass*
     lightCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     lightCam->setCullMask( simgear::MODELLIGHT_BIT | simgear::PANEL2D_BIT | simgear::PERMANENTLIGHT_BIT);
     lightCam->setInheritanceMask( osg::CullSettings::ALL_VARIABLES & ~osg::CullSettings::CULL_MASK );
-    lightCam->addChild( mDeferredRealRoot.get() );
+    lightCam->addChild( _deferredRealRoot.get() );
 
     return lightCam;
 }
@@ -1432,7 +1430,7 @@ FGRenderer::setupView( void )
     viewer->getCamera()
         ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     
-    osg::StateSet* stateSet = mRoot->getOrCreateStateSet();
+    osg::StateSet* stateSet = _root->getOrCreateStateSet();
 
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     
@@ -1498,7 +1496,8 @@ FGRenderer::setupView( void )
     lightSource->setReferenceFrame(osg::LightSource::RELATIVE_RF);
     lightSource->setLocalStateSetModes(osg::StateAttribute::ON);
     lightSource->setUpdateCallback(new FGLightSourceUpdateCallback);
-    mRealRoot->addChild(lightSource);
+    _viewerSceneRoot->addChild(lightSource);
+    
     // we need a white diffuse light for the phase of the moon
     osg::LightSource* sunLight = new osg::LightSource;
     sunLight->setName("sunLightSource");
@@ -1516,9 +1515,10 @@ FGRenderer::setupView( void )
     skySS->setMode(GL_LIGHT0, StateAttribute::OFF);
     skyGroup->addChild(_sky->getPreRoot());
     sunLight->addChild(skyGroup);
-    mRoot->addChild(sceneGroup);
+    
+    _root->addChild(sceneGroup);
     if ( _classicalRenderer )
-        mRoot->addChild(sunLight);
+        _root->addChild(sunLight);
     
     // Clouds are added to the scene graph later
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
@@ -1559,23 +1559,23 @@ FGRenderer::setupView( void )
     osg::Switch* sw = new osg::Switch;
     sw->setName("scenerySwitch");
     sw->setUpdateCallback(new FGScenerySwitchCallback);
-    sw->addChild(mRoot.get());
-    mRealRoot->addChild(sw);
+    sw->addChild(_root.get());
+    _viewerSceneRoot->addChild(sw);
     // The clouds are attached directly to the scene graph root
     // because, in theory, they don't want the same default state set
     // as the rest of the scene. This may not be true in practice.
 	if ( _classicalRenderer ) {
-		mRealRoot->addChild(_sky->getCloudRoot());
-		mRealRoot->addChild(FGCreateRedoutNode());
+		_viewerSceneRoot->addChild(_sky->getCloudRoot());
+		_viewerSceneRoot->addChild(FGCreateRedoutNode());
 	}
     // Attach empty program to the scene root so that shader programs
     // don't leak into state sets (effects) that shouldn't have one.
-    stateSet = mRealRoot->getOrCreateStateSet();
+    stateSet = _viewerSceneRoot->getOrCreateStateSet();
     stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
 
-    mDeferredRealRoot->addChild( mRealRoot.get() );
-
-    DeletionManager::install(mRealRoot.get());
+    if ( !_classicalRenderer ) {
+        _deferredRealRoot->addChild( _viewerSceneRoot.get() );
+    }
 }
 
 // Update all Visuals (redraws anything graphics related)
@@ -1724,25 +1724,25 @@ FGRenderer::update( ) {
 //         shadows->endOfFrame();
 
     // need to call the update visitor once
-    mFrameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
-    mUpdateVisitor->setViewData(current__view->getViewPosition(),
+    _frameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
+    _updateVisitor->setViewData(current__view->getViewPosition(),
                                 current__view->getViewOrientation());
     SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
-    mUpdateVisitor->setLight(direction, l->scene_ambient(),
+    _updateVisitor->setLight(direction, l->scene_ambient(),
                              l->scene_diffuse(), l->scene_specular(),
                              l->adj_fog_color(),
                              l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
-    mUpdateVisitor->setVisibility(actual_visibility);
-    simgear::GroundLightManager::instance()->update(mUpdateVisitor.get());
+    _updateVisitor->setVisibility(actual_visibility);
+    simgear::GroundLightManager::instance()->update(_updateVisitor.get());
     osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
     cullMask |= simgear::GroundLightManager::instance()
-        ->getLightNodeMask(mUpdateVisitor.get());
+        ->getLightNodeMask(_updateVisitor.get());
     if (_panel_hotspots->getBoolValue())
         cullMask |= simgear::PICK_BIT;
     CameraGroup::getDefault()->setCameraCullMasks(cullMask);
 	if ( !_classicalRenderer ) {
 		_fogColor->set( toOsg( l->adj_fog_color() ) );
-		_fogDensity->set( float( mUpdateVisitor->getFogExp2Density() ) );
+		_fogDensity->set( float( _updateVisitor->getFogExp2Density() ) );
 	}
 }
 
@@ -1872,13 +1872,13 @@ FGRenderer::setEventHandler(FGEventHandler* eventHandler_)
 void
 FGRenderer::addCamera(osg::Camera* camera, bool useSceneData)
 {
-    mRealRoot->addChild(camera);
+    _viewerSceneRoot->addChild(camera);
 }
 
 void
 FGRenderer::removeCamera(osg::Camera* camera)
 {
-    mRealRoot->removeChild(camera);
+    _viewerSceneRoot->removeChild(camera);
 }
                                     
 void
@@ -1890,7 +1890,8 @@ FGRenderer::setPlanes( double zNear, double zFar )
 bool
 fgDumpSceneGraphToFile(const char* filename)
 {
-    return osgDB::writeNodeFile(*mRealRoot.get(), filename);
+    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+    return osgDB::writeNodeFile(*viewer->getSceneData(), filename);
 }
 
 bool

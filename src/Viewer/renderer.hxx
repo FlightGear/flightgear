@@ -42,6 +42,7 @@ class CameraGroup;
 }
 
 class SGSky;
+class SGUpdateVisitor;
 
 class FGRenderer {
 
@@ -120,7 +121,15 @@ public:
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
+    
+    osg::ref_ptr<osg::FrameStamp> _frameStamp;
+    osg::ref_ptr<SGUpdateVisitor> _updateVisitor;
+    osg::ref_ptr<osg::Group> _viewerSceneRoot;
+    osg::ref_ptr<osg::Group> _deferredRealRoot;
+    osg::ref_ptr<osg::Group> _root;
+    
     SGPropertyNode_ptr _scenery_loaded, _position_finalized;
+    
     
     SGPropertyNode_ptr _skyblend, _splash_alpha;
     SGPropertyNode_ptr _point_sprites, _enhanced_lighting, _distance_attenuation;
