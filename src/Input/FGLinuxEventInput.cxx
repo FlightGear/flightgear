@@ -414,9 +414,18 @@ void FGLinuxInputDevice::Send( const char * eventName, double value )
   evt.value = (long)value;
   evt.time.tv_sec = 0;
   evt.time.tv_usec = 0;
-  write( fd, &evt, sizeof(evt) );
-  SG_LOG( SG_INPUT, SG_DEBUG, "Written event " << eventName 
-          << " as type=" << evt.type << ", code=" << evt.code << " value=" << evt.value );
+  size_t bytes_written = write(fd, &evt, sizeof(evt));
+
+  if( bytes_written == sizeof(evt) )
+    SG_LOG( SG_INPUT,
+            SG_DEBUG,
+            "Written event " << eventName << " as type=" << evt.type
+                        << ", code=" << evt.code
+                        << " value=" << evt.value );
+  else
+    SG_LOG( SG_INPUT,
+            SG_WARN,
+            "Failed to write event: written = " << bytes_written );
 }
 
 static char ugly_buffer[128];
