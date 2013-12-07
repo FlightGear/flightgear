@@ -575,6 +575,15 @@ static naRef f_removeChildren(naContext c, naRef me, int argc, naRef* args)
     return result;
 }
 
+// Remove all children of a property node.
+// Forms:
+//    props.Node.removeAllChildren();
+static naRef f_removeAllChildren(naContext c, naRef me, int argc, naRef* args)
+{
+  NODENOARG();
+  node->removeAllChildren();
+  return propNodeGhostCreate(c, node);
+}
 
 // Alias this property to another one; returns 1 on success or 0 on failure
 // (only applicable to tied properties).
@@ -665,30 +674,31 @@ static struct {
     naCFunction func;
     const char* name;
 } propfuncs[] = {
-    { f_getType,        "_getType"        },
-    { f_getAttribute,   "_getAttribute"   },
-    { f_setAttribute,   "_setAttribute"   },
-    { f_getName,        "_getName"        },
-    { f_getIndex,       "_getIndex"       },
-    { f_equals,         "_equals"         },
-    { f_getValue,       "_getValue"       },
-    { f_setValue,       "_setValue"       },
-    { f_setIntValue,    "_setIntValue"    },
-    { f_setBoolValue,   "_setBoolValue"   },
-    { f_setDoubleValue, "_setDoubleValue" },
-    { f_getParent,      "_getParent"      },
-    { f_getChild,       "_getChild"       },
-    { f_getChildren,    "_getChildren"    },
-    { f_addChild,       "_addChild"       },
-    { f_addChildren,    "_addChildren"    },
-    { f_removeChild,    "_removeChild"    },
-    { f_removeChildren, "_removeChildren" },
-    { f_alias,          "_alias"          },
-    { f_unalias,        "_unalias"        },
-    { f_getAliasTarget, "_getAliasTarget" },
-    { f_getNode,        "_getNode"        },
-    { f_new,            "_new"            },
-    { f_globals,        "_globals"        },
+    { f_getType,            "_getType"            },
+    { f_getAttribute,       "_getAttribute"       },
+    { f_setAttribute,       "_setAttribute"       },
+    { f_getName,            "_getName"            },
+    { f_getIndex,           "_getIndex"           },
+    { f_equals,             "_equals"             },
+    { f_getValue,           "_getValue"           },
+    { f_setValue,           "_setValue"           },
+    { f_setIntValue,        "_setIntValue"        },
+    { f_setBoolValue,       "_setBoolValue"       },
+    { f_setDoubleValue,     "_setDoubleValue"     },
+    { f_getParent,          "_getParent"          },
+    { f_getChild,           "_getChild"           },
+    { f_getChildren,        "_getChildren"        },
+    { f_addChild,           "_addChild"           },
+    { f_addChildren,        "_addChildren"        },
+    { f_removeChild,        "_removeChild"        },
+    { f_removeChildren,     "_removeChildren"     },
+    { f_removeAllChildren,  "_removeAllChildren"  },
+    { f_alias,              "_alias"              },
+    { f_unalias,            "_unalias"            },
+    { f_getAliasTarget,     "_getAliasTarget"     },
+    { f_getNode,            "_getNode"            },
+    { f_new,                "_new"                },
+    { f_globals,            "_globals"            },
     { 0, 0 }
 };
 
