@@ -432,6 +432,10 @@ FGRenderer::~FGRenderer()
         delete *i;
     }
     
+    // replace the viewer's scene completely
+    getViewer()->setSceneData(new osg::Group);
+    
+    
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = NULL;
 #endif
