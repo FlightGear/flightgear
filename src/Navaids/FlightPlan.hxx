@@ -245,7 +245,9 @@ private:
     _waypointsChanged, 
     _currentWaypointChanged;
   
-  bool loadPlainTextRoute(const SGPath& path);
+  bool loadXmlFormat(const SGPath& path);
+  bool loadGpxFormat(const SGPath& path);
+  bool loadPlainTextFormat(const SGPath& path);
   
   void loadVersion1XMLRoute(SGPropertyNode_ptr routeData);
   void loadVersion2XMLRoute(SGPropertyNode_ptr routeData);

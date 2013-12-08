@@ -42,6 +42,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/xml/easyxml.hxx>
 
 // FlightGear
 #include <Main/globals.hxx>
@@ -605,7 +606,7 @@ bool FlightPlan::save(const SGPath& path)
     return false;
   }
 }
-  
+
 bool FlightPlan::load(const SGPath& path)
 {
   if (!path.exists())
@@ -614,21 +615,133 @@ bool FlightPlan::load(const SGPath& path)
            << "'. The file does not exist.");
     return false;
   }
-  
-  SGPropertyNode_ptr routeData(new SGPropertyNode);
+
   SG_LOG(SG_NAVAID, SG_INFO, "going to read flight-plan from:" << path.str());
   
   bool Status = false;
   lockDelegate();
+
+  // try different file formats
+  if (loadGpxFormat(path)) // GPX format
+      Status = true;
+  else
+  if (loadXmlFormat(path)) // XML property data
+      Status = true;
+  else
+  if (loadPlainTextFormat(path)) // simple textual list of waypoints
+      Status = true;
+
+  _waypointsChanged = true;
+  unlockDelegate();
+
+  return Status;
+}
+
+/** XML loader for GPX file format */
+class GpxXmlVisitor : public XMLVisitor
+{
+public:
+    GpxXmlVisitor(FlightPlan* fp) : _fp(fp), _lat(-9999), _lon(-9999) {}
+
+    virtual void startElement (const char * name, const XMLAttributes &atts);
+    virtual void endElement (const char * name);
+    virtual void data (const char * s, int length);
+
+private:
+    FlightPlan* _fp;
+    double      _lat, _lon;
+    string      _element;
+    string      _waypoint;
+};
+
+void GpxXmlVisitor::startElement(const char * name, const XMLAttributes &atts)
+{
+    _element = name;
+    if (strcmp(name, "rtept")==0)
+    {
+        _waypoint = "";
+        _lat = _lon = -9999;
+
+        const char* slat = atts.getValue("lat");
+        const char* slon = atts.getValue("lon");
+        if (slat && slon)
+        {
+            _lat = atof(slat);
+            _lon = atof(slon);
+        }
+    }
+}
+
+void GpxXmlVisitor::data(const char * s, int length)
+{
+    // use "name" when given, otherwise use "cmt" (comment) as ID
+    if ((_element == "name")||
+        ((_waypoint == "")&&(_element == "cmt")))
+    {
+        char* buf = (char*) malloc(length+1);
+        memcpy(buf, s, length);
+        buf[length] = 0;
+        _waypoint = buf;
+        free(buf);
+    }
+}
+
+void GpxXmlVisitor::endElement(const char * name)
+{
+    _element = "";
+    if (strcmp(name, "rtept") == 0)
+    {
+        if (_lon > -9990.0)
+        {
+            _fp->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(_lon, _lat), _waypoint.c_str(), NULL), -1);
+        }
+    }
+}
+
+/** Load a flightplan in GPX format */
+bool FlightPlan::loadGpxFormat(const SGPath& path)
+{
+    if (path.lower_extension() != "gpx")
+    {
+        // not a valid GPX file
+        return false;
+    }
+
+    _legs.clear();
+    GpxXmlVisitor gpxVistor(this);
+    try
+    {
+        readXML(path.str(), gpxVistor);
+    } catch (sg_exception& e)
+    {
+        // XML parsing fails => not a GPX XML file
+        SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan in GPX format: '" << e.getOrigin()
+                     << "'. " << e.getMessage());
+        return false;
+    }
+
+    if (numLegs() == 0)
+    {
+        SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan in GPX format. No route found.");
+        return false;
+    }
+
+    return true;
+}
+
+/** Load a flightplan in FlightGear XML property format */
+bool FlightPlan::loadXmlFormat(const SGPath& path)
+{
+  SGPropertyNode_ptr routeData(new SGPropertyNode);
   try {
     readProperties(path.str(), routeData);
-  } catch (sg_exception& ) {
-    // if XML parsing fails, the file might be simple textual list of waypoints
-    Status = loadPlainTextRoute(path);
-    routeData = 0;
-    _waypointsChanged = true;
+  } catch (sg_exception& e) {
+     SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
+             << "'. " << e.getMessage());
+    // XML parsing fails => not a property XML file
+    return false;
   }
-  
+
   if (routeData.valid())
   {
     try {
@@ -640,16 +753,14 @@ bool FlightPlan::load(const SGPath& path)
       } else {
         throw sg_io_exception("unsupported XML route version");
       }
-      Status = true;
+      return true;
     } catch (sg_exception& e) {
       SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
              << "'. " << e.getMessage());
-      Status = false;
     }
   }
-  
-  unlockDelegate();  
-  return Status;
+
+  return false;
 }
 
 void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
@@ -789,7 +900,8 @@ WayptRef FlightPlan::parseVersion1XMLWaypt(SGPropertyNode* aWP)
   return w;
 }
 
-bool FlightPlan::loadPlainTextRoute(const SGPath& path)
+/** Load a flightplan in FlightGear plain-text format */
+bool FlightPlan::loadPlainTextFormat(const SGPath& path)
 {
   try {
     sg_gzifstream in(path.str().c_str());
