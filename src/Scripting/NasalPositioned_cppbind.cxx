@@ -31,6 +31,7 @@
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
+#include <simgear/misc/ListDiff.hxx>
 #include <simgear/nasal/cppbind/from_nasal.hxx>
 #include <simgear/nasal/cppbind/to_nasal.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
@@ -398,7 +399,7 @@ static naRef f_findWithinRange(nasal::CallContext ctx)
 
     std::string typeSpec = ctx.getArg<std::string>(1);
     FGPositioned::TypeFilter filter(FGPositioned::TypeFilter::fromString(typeSpec));
-    
+
   FGPositionedList items = FGPositioned::findWithinRange(pos, range_nm, &filter);
   FGPositioned::sortByRange(items, pos);
   return ctx.to_nasal(items);
@@ -454,6 +455,39 @@ static naRef f_sortByRange(nasal::CallContext ctx)
   ctx.popFront();
   FGPositioned::sortByRange(items, getPosition(ctx));
   return ctx.to_nasal(items);
+}
+
+//------------------------------------------------------------------------------
+// Get difference between two lists of positioned objects.
+//
+// For every element in old_list not in new_list the callback cb_remove is
+// called with the removed element as single argument. For every element in
+// new_list not in old_list cb_add is called.
+//
+// diff(old_list, new_list, cb_add[, cb_remove])
+//
+// example:
+//   # Print all fixes within a distance of 320 to 640 miles
+//   diff( findWithinRange(320, "fix"),
+//         findWithinRange(640, "fix"),
+//         func(p) print('found fix: ', p.id) );
+static naRef f_diff(nasal::CallContext ctx)
+{
+  typedef simgear::ListDiff<FGPositionedRef> Diff;
+  Diff::List old_list = ctx.requireArg<FGPositionedList>(0),
+             new_list = ctx.requireArg<FGPositionedList>(1);
+  Diff::Callback cb_add = ctx.requireArg<Diff::Callback>(2),
+                 cb_rm  = ctx.getArg<Diff::Callback>(3);
+
+  // Note that FGPositionedRef instances are only compared for pointer equality.
+  // As the NavCache caches every queried positioned instance it is guaranteed
+  // that only one instance of every positioned object can exist. Therefore we
+  // can make the comparison faster by just comparing pointers and not also the
+  // guid.
+  // (On my machine the difference is 0.27s vs 0.17s)
+  Diff::inplace(old_list, new_list, cb_add, cb_rm);
+
+  return naNil();
 }
 
 //------------------------------------------------------------------------------
@@ -517,5 +551,7 @@ naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c)
   positioned.set("courseAndDistance", &f_courseAndDistance);
   positioned.set("sortByRange", &f_sortByRange);
   
+  positioned.set("diff", &f_diff);
+
   return naNil();
 }
