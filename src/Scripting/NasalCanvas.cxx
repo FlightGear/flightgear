@@ -204,7 +204,7 @@ naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
 
 naRef initNasalCanvas(naRef globals, naContext c)
 {
-        NasalEvent::init("canvas.Event")
+  NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)
     .member("target", &sc::Event::getTarget)
     .member("currentTarget", &sc::Event::getCurrentTarget)

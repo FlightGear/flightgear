@@ -60,7 +60,6 @@ class NasalClipboard
   protected:
 
     static Ptr      _clipboard;
-    static naRef    _clipboard_hash;
 
     /**
      * Implementation supplied by actual platform implementation
