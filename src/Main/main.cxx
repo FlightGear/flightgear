@@ -37,6 +37,7 @@
 #include <simgear/canvas/VGInitOperation.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/material/Effect.hxx>
 #include <simgear/props/AtomicChangeListener.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
@@ -432,6 +433,8 @@ int fgMainInit( int argc, char **argv ) {
     int result = fgOSMainLoop();
     frame_signal.clear();
     fgOSCloseWindow();
+    
+    simgear::clearEffectCache();
     
     // clean up here; ensure we null globals to avoid
     // confusing the atexit() handler
