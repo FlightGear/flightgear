@@ -410,12 +410,12 @@ bool fgInitHome()
 #else
     // POSIX, do open+unlink trick to the file is deleted on exit, even if we
     // crash or exit(-1)
-    size_t len = snprintf(buf, 16, "%d", getpid());
+    ssize_t len = snprintf(buf, 16, "%d", getpid());
     int fd = ::open(pidPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0644);
     if (fd >= 0) {
-        ::write(fd, buf, len);
-        ::unlink(pidPath.c_str()); // delete file when app quits
-        result = true;
+        result = ::write(fd, buf, len) == len;
+        if( ::unlink(pidPath.c_str()) != 0 ) // delete file when app quits
+          result = false;
     }
     
     fgSetBool("/sim/fghome-readonly", false);
