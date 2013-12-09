@@ -71,7 +71,8 @@ namespace canvas
   //----------------------------------------------------------------------------
   void FGCanvasSystemAdapter::removeCamera(osg::Camera* camera) const
   {
-    globals->get_renderer()->removeCamera(camera);
+    if( globals->get_renderer() )
+      globals->get_renderer()->removeCamera(camera);
   }
 
   //----------------------------------------------------------------------------

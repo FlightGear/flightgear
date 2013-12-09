@@ -50,6 +50,7 @@
 
 #include <osgViewer/Viewer>
 
+#include <simgear/canvas/Canvas.hxx>
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
@@ -88,6 +89,7 @@
 
 #include <Canvas/canvas_mgr.hxx>
 #include <Canvas/gui_mgr.hxx>
+#include <Canvas/FGCanvasSystemAdapter.hxx>
 #include <GUI/new_gui.hxx>
 #include <GUI/MessageBox.hxx>
 #include <Input/input.hxx>
@@ -693,6 +695,9 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
     // Initialize the canvas 2d drawing subsystem.
     ////////////////////////////////////////////////////////////////////
+    simgear::canvas::Canvas::setSystemAdapter(
+      simgear::canvas::SystemAdapterPtr(new canvas::FGCanvasSystemAdapter)
+    );
     globals->add_subsystem("Canvas", new CanvasMgr, SGSubsystemMgr::DISPLAY);
     globals->add_subsystem("CanvasGUI", new GUIMgr, SGSubsystemMgr::DISPLAY);
 

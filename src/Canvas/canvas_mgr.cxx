@@ -18,7 +18,6 @@
 
 #include "canvas_mgr.hxx"
 
-#include <Canvas/FGCanvasSystemAdapter.hxx>
 #include <Cockpit/od_gauge.hxx>
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalModelData.hxx>
@@ -57,11 +56,7 @@ static sc::Placements addSceneObjectPlacement( SGPropertyNode* placement,
 
 //------------------------------------------------------------------------------
 CanvasMgr::CanvasMgr():
-  simgear::canvas::CanvasMgr
-  (
-   fgGetNode("/canvas/by-index", true),
-   sc::SystemAdapterPtr( new canvas::FGCanvasSystemAdapter )
-  ),
+  simgear::canvas::CanvasMgr( fgGetNode("/canvas/by-index", true) ),
   _cb_model_reinit
   (
     this,

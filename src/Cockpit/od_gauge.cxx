@@ -48,21 +48,16 @@
 #include <simgear/scene/material/EffectGeode.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 
-#include <Canvas/FGCanvasSystemAdapter.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include "od_gauge.hxx"
 
 #include <cassert>
 
-static simgear::canvas::SystemAdapterPtr system_adapter(
-  new canvas::FGCanvasSystemAdapter
-);
-
 //------------------------------------------------------------------------------
 FGODGauge::FGODGauge()
 {
-  setSystemAdapter(system_adapter);
+
 }
 
 //------------------------------------------------------------------------------
