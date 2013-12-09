@@ -65,8 +65,10 @@
 #include "fg_os.hxx"
 #include "fg_props.hxx"
 #include "positioninit.hxx"
+#include "screensaver_control.hxx"
 #include "subsystemFactory.hxx"
 #include "options.hxx"
+
 
 using namespace flightgear;
 
@@ -428,6 +430,9 @@ int fgMainInit( int argc, char **argv ) {
     }
     
     fgOutputSettings();
+    
+    //try to disable the screensaver
+    fgOSDisableScreensaver();
     
     // pass control off to the master event handler
     int result = fgOSMainLoop();

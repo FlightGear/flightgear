@@ -19,6 +19,7 @@ set(SOURCES
 	util.cxx
     positioninit.cxx
     subsystemFactory.cxx
+    screensaver_control.cxx
 	${RESOURCE_FILE}
 	)
 
@@ -37,6 +38,7 @@ set(HEADERS
     positioninit.hxx
     subsystemFactory.hxx
     AircraftDirVisitorBase.hxx
+    screensaver_control.hxx
 	)
 
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
@@ -89,6 +91,9 @@ if(ENABLE_JSBSIM)
 endif()
 if(ENABLE_IAX)
     target_link_libraries(fgfs iaxclient_lib ${OPENAL_LIBRARY})
+endif()
+if(USE_DBUS)
+    target_link_libraries(fgfs ${DBUS_LIBRARIES})
 endif()
 if(FG_HAVE_GPERFTOOLS)
     include_directories(${GooglePerfTools_INCLUDE_DIR})

@@ -40,3 +40,5 @@
 #cmakedefine SYSTEM_SQLITE
 
 #cmakedefine ENABLE_IAX
+
+#cmakedefine HAVE_DBUS

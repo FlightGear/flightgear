@@ -110,6 +110,7 @@ IF(APPLE)
     list(APPEND PLATFORM_LIBS ${COCOA_LIBRARY} ${CORESERVICES_LIBRARY})
 
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    set(USE_DBUS_DEFAULT 1)
     find_package(UDev)
 
     if(UDEV_FOUND)
@@ -141,6 +142,7 @@ option(ENABLE_PROFILE    "Set to ON to build FlightGear with gperftools profilin
 option(JPEG_FACTORY      "Set to ON to build FlightGear with JPEG-factory support" OFF)
 option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
 option(ENABLE_IAX        "Set to ON to build FlightGear with IAXClient/fgcom built-in (default)" ON)
+option(USE_DBUS          "Set to ON to build FlightGear with DBus screensaver interaction (default on Linux)" ${USE_DBUS_DEFAULT})
 
 # additional utilities
 option(ENABLE_FGADMIN    "Set to ON to build the FGADMIN application (default)" ON)
@@ -235,6 +237,27 @@ else()
     # this target is defined in src/Navaids/CMakeLists.txt
     list(APPEND SQLITE3_LIBRARY fgsqlite3)
 endif (SYSTEM_SQLITE)
+
+# Sqlite always depends on the threading lib
+list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
+
+##############################################################################
+## DBus setup
+
+if (USE_DBUS)
+    include(FindPkgConfig)
+    if (PKG_CONFIG_FOUND)
+        pkg_check_modules(DBUS dbus-1)
+    endif (PKG_CONFIG_FOUND) #if we don't have pkg-config, assume we don't have libdbus-1-dev either http://packages.debian.org/sid/libdbus-1-dev
+    if (DBUS_FOUND)
+        set(HAVE_DBUS 1)
+        message(STATUS "Using DBus")
+        include_directories( ${DBUS_INCLUDE_DIRS})
+    else()
+        message(STATUS "DBus not found, screensaver control disabled")
+    endif (DBUS_FOUND)
+else()
+endif (USE_DBUS)
 
 # Sqlite always depends on the threading lib
 list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
