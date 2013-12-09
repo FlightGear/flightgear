@@ -80,7 +80,6 @@ void FGXMLAutopilotGroupImplementation::removeAutopilot( const std::string & nam
     FGXMLAutopilot::Autopilot * ap = (FGXMLAutopilot::Autopilot*)get_subsystem( name );
     if( ap == NULL ) return; // ?
     remove_subsystem( name );
-    delete ap;
 }
 
 

@@ -32,6 +32,7 @@ class FGXMLAutopilotGroup : public SGSubsystemGroup
 {
 public:
     static FGXMLAutopilotGroup * createInstance(const std::string& nodeName);
+    
     void addAutopilotFromFile( const std::string & name, SGPropertyNode_ptr apNode, const char * path );
     virtual void addAutopilot( const std::string & name, SGPropertyNode_ptr apNode, SGPropertyNode_ptr config ) = 0;
     virtual void removeAutopilot( const std::string & name ) = 0;
