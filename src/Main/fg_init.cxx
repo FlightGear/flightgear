@@ -417,9 +417,10 @@ bool fgInitHome()
         if( ::unlink(pidPath.c_str()) != 0 ) // delete file when app quits
           result = false;
     }
-    
-    fgSetBool("/sim/fghome-readonly", false);
 #endif
+
+    fgSetBool("/sim/fghome-readonly", false);
+
     if (!result) {
         flightgear::fatalMessageBox("File permissions problem",
                                     "Can't write to user-data storage folder, check file permissions and FG_HOME.",
