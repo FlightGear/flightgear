@@ -939,7 +939,12 @@ void fgReInitSubsystems()
 
 void fgStartNewReset()
 {
-    globals->saveInitialState();
+    SGPropertyNode_ptr preserved(new SGPropertyNode);
+    
+    // copy properties which are USERARCHIVEd or PRESERVEd
+    int checked = SGPropertyNode::USERARCHIVE+SGPropertyNode::PRESERVE;
+    if (!copyProperties(globals->get_props(), preserved, checked, checked))
+        SG_LOG(SG_GENERAL, SG_ALERT, "Error saving preserved state");
     
     fgSetBool("/sim/signals/reinit", true);
     fgSetBool("/sim/freeze/master", true);
@@ -982,6 +987,7 @@ void fgStartNewReset()
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
     render->getViewer()->getDatabasePager()->cancel();
+    render->getViewer()->getDatabasePager()->clear();
     
     osgDB::Registry::instance()->clearObjectCache();
     
@@ -997,12 +1003,18 @@ void fgStartNewReset()
     simgear::SGModelLib::resetPropertyRoot();
         
     globals->resetPropertyRoot();
-    globals->restoreInitialState();
     
     fgInitConfig(0, NULL, true);
     fgInitGeneral(); // all of this?
     
-    fgGetNode("/sim")->removeChild("aircraft-dir");    
+    if ( copyProperties(preserved, globals->get_props(), checked, checked)) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Preserved state restored successfully" );
+    } else {
+        SG_LOG( SG_GENERAL, SG_INFO,
+               "Some errors restoring preserved state (read-only props?)" );
+    }
+
+    fgGetNode("/sim")->removeChild("aircraft-dir");
     fgInitAircraft(true);
     flightgear::Options::sharedInstance()->processOptions();
     
