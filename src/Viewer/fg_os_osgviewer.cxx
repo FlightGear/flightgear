@@ -102,7 +102,6 @@ using namespace flightgear;
 using namespace osg;
 
 osg::ref_ptr<osgViewer::Viewer> viewer;
-static osg::ref_ptr<osg::Camera> mainCamera;
 
 static void setStereoMode( const char * mode )
 {
@@ -357,7 +356,6 @@ void fgOSInit(int* argc, char** argv)
 void fgOSCloseWindow()
 {
     FGScenery::resetPagerSingleton();
-    mainCamera = NULL;
     flightgear::CameraGroup::setDefault(NULL);
     WindowSystemAdapter::setWSA(NULL);
     viewer = NULL;
