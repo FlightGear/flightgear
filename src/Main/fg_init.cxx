@@ -941,9 +941,7 @@ void fgStartNewReset()
 {
     SGPropertyNode_ptr preserved(new SGPropertyNode);
     
-    // copy properties which are USERARCHIVEd or PRESERVEd
-    int checked = SGPropertyNode::USERARCHIVE+SGPropertyNode::PRESERVE;
-    if (!copyProperties(globals->get_props(), preserved, checked, checked))
+    if (!copyPropertiesWithAttribute(globals->get_props(), preserved, SGPropertyNode::PRESERVE))
         SG_LOG(SG_GENERAL, SG_ALERT, "Error saving preserved state");
     
     fgSetBool("/sim/signals/reinit", true);
@@ -953,7 +951,7 @@ void fgStartNewReset()
     subsystemManger->shutdown();
     subsystemManger->unbind();
     
-    // remove them all (with some exceptions?)
+    // remove most subsystems, with a few exceptions.
     for (int g=0; g<SGSubsystemMgr::MAX_GROUPS; ++g) {
         SGSubsystemGroup* grp = subsystemManger->get_group(static_cast<SGSubsystemMgr::GroupType>(g));
         const string_list& names(grp->member_names());
@@ -1002,12 +1000,13 @@ void fgStartNewReset()
     simgear::clearEffectCache();
     simgear::SGModelLib::resetPropertyRoot();
         
-    globals->resetPropertyRoot();
+    simgear::GlobalParticleCallback::setSwitch(NULL);
     
+    globals->resetPropertyRoot();
     fgInitConfig(0, NULL, true);
     fgInitGeneral(); // all of this?
     
-    if ( copyProperties(preserved, globals->get_props(), checked, checked)) {
+    if ( copyProperties(preserved, globals->get_props()) ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Preserved state restored successfully" );
     } else {
         SG_LOG( SG_GENERAL, SG_INFO,
