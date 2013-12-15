@@ -231,9 +231,7 @@ void FGKeyboardInput::doKey (int k, int modifiers, int x, int y)
     SG_LOG( SG_INPUT, SG_DEBUG, "User pressed key " << k << " with modifiers " << modifiers );
     if (!b.last_state || b.is_repeatable) {
       const binding_list_t &bindings = _find_key_bindings(k, modifiers);
-
-      for (unsigned int i = 0; i < bindings.size(); i++)
-        bindings[i]->fire();
+      fireBindingList(bindings);
       b.last_state = 1;
     }
   }
@@ -242,8 +240,7 @@ void FGKeyboardInput::doKey (int k, int modifiers, int x, int y)
     SG_LOG(SG_INPUT, SG_DEBUG, "User released key " << k << " with modifiers " << modifiers);
     if (b.last_state) {
       const binding_list_t &bindings = _find_key_bindings(k, modifiers);
-      for (unsigned int i = 0; i < bindings.size(); i++)
-        bindings[i]->fire();
+      fireBindingList(bindings);
       b.last_state = 0;
     }
   }
