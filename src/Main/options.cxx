@@ -2167,31 +2167,30 @@ OptionResult Options::processOptions()
   }
     
 // terrasync directory fixup
+  string terrasyncDir = fgGetString("/sim/terrasync/scenery-dir");
+  if (terrasyncDir.empty()) {
+    SGPath p(globals->get_fg_home());
+    p.append("TerraSync");
+    terrasyncDir = p.str();
+    SG_LOG(SG_GENERAL, SG_INFO,
+           "Using default TerraSync dir: " << terrasyncDir);
+    fgSetString("/sim/terrasync/scenery-dir", terrasyncDir);
+  }
+  
+  SGPath p(terrasyncDir);
+  // following is necessary to ensure NavDataCache sees stable scenery paths from
+  // terrasync. Ensure the Terrain and Objects subdirs exist immediately, rather
+  // than waiting for the first tiles to be scheduled.
+  simgear::Dir terrainDir(SGPath(p, "Terrain")),
+    objectsDir(SGPath(p, "Objects"));
+  if (!terrainDir.exists()) {
+      terrainDir.create(0755);
+  }
+  
+  if (!objectsDir.exists()) {
+      objectsDir.create(0755);
+  }
   if (fgGetBool("/sim/terrasync/enabled")) {
-    string terrasyncDir = fgGetString("/sim/terrasync/scenery-dir");
-    if (terrasyncDir.empty()) {
-      SGPath p(globals->get_fg_home());
-      p.append("TerraSync");
-      terrasyncDir = p.str();
-      SG_LOG(SG_GENERAL, SG_INFO,
-             "Using default TerraSync dir: " << terrasyncDir);
-      fgSetString("/sim/terrasync/scenery-dir", terrasyncDir);
-    }
-      
-      SGPath p(terrasyncDir);
-      // following is necessary to ensure NavDataCache sees stable scenery paths from
-      // terrasync. Ensure the Terrain and Objects subdirs exist immediately, rather
-      // than waiting for the first tiles to be scheduled.
-      simgear::Dir terrainDir(SGPath(p, "Terrain")),
-        objectsDir(SGPath(p, "Objects"));
-      if (!terrainDir.exists()) {
-          terrainDir.create(0755);
-      }
-      
-      if (!objectsDir.exists()) {
-          objectsDir.create(0755);
-      }
-      
     const string_list& scenery_paths(globals->get_fg_scenery());
     if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
       // terrasync dir is not in the scenery paths, add it
@@ -2206,7 +2205,7 @@ OptionResult Options::processOptions()
     globals->append_fg_scenery(root.str());
   }
     
-    return FG_OPTIONS_OK;
+  return FG_OPTIONS_OK;
 }
   
 void Options::showUsage() const
