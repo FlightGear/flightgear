@@ -1109,7 +1109,6 @@ FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::Grap
     buildAttachments(info, camera, stage->name, stage->attachments);
     camera->setDrawBuffer(GL_FRONT);
     camera->setReadBuffer(GL_FRONT);
-    camera->setClearColor( osg::Vec4( 0.5, 0.5, 0.5, 1. ) );
     camera->setClearMask( GL_COLOR_BUFFER_BIT );
     osg::StateSet* ss = camera->getOrCreateStateSet();
     ss->setAttribute( new osg::Depth(osg::Depth::LESS, 0.0, 1.0, false) );
