@@ -6,6 +6,10 @@
 // Copyright (C) 2004  Curtis L. Olson  - http://www.flightgear.org/~curt
 // Copyright (C) 2010  Torsten Dreyer - Torsten (at) t3r (dot) de
 //
+// Washout/high-pass filter, lead-lag filter and integrator added.
+// low-pass and lag aliases added to Exponential filter, 
+// rate-limit added.   A J Teeder 2013
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -83,7 +87,7 @@ protected:
   InputValueList _TfInput;
   bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
   bool _isSecondOrder;
-  double output_1, output_2;
+  double _output_1, _output_2;
 public:
   ExponentialFilterImplementation();
   double compute(  double dt, double input );
@@ -113,6 +117,55 @@ public:
   virtual void initialize( double initvalue );
 };
 
+class RateLimitFilterImplementation : public DigitalFilterImplementation {
+protected:
+  double _output_1;
+  InputValueList _rateOfChangeMax;
+  InputValueList _rateOfChangeMin ;
+  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+public:
+  RateLimitFilterImplementation();
+  double compute(  double dt, double input );
+  virtual void initialize( double initvalue );
+};
+
+class IntegratorFilterImplementation : public GainFilterImplementation {
+protected:
+  InputValueList _TfInput;
+  InputValueList _minInput;
+  InputValueList _maxInput;
+  double _input_1;
+  double _output_1;
+  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+public:
+  IntegratorFilterImplementation();
+  double compute(  double dt, double input );
+  virtual void initialize( double initvalue );
+};
+
+class HighPassFilterImplementation : public GainFilterImplementation {
+protected:
+  InputValueList _TfInput;
+  double _input_1;
+  double _output_1;
+  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+public:
+  HighPassFilterImplementation();
+  double compute(  double dt, double input );
+  virtual void initialize( double initvalue );
+};
+class LeadLagFilterImplementation : public GainFilterImplementation {
+protected:
+  InputValueList _TfaInput;
+  InputValueList _TfbInput;
+  double _input_1;
+  double _output_1;
+  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+public:
+  LeadLagFilterImplementation();
+  double compute(  double dt, double input );
+  virtual void initialize( double initvalue );
+};
 /* --------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------- */
 
@@ -295,18 +348,64 @@ bool NoiseSpikeFilterImplementation::configure( const std::string & nodeName, SG
 }
 
 /* --------------------------------------------------------------------------------- */
+
+RateLimitFilterImplementation::RateLimitFilterImplementation() :
+  _output_1(0.0)
+{
+}
+
+void RateLimitFilterImplementation::initialize( double initvalue )
+{
+  _output_1 = initvalue;
+}
+
+double RateLimitFilterImplementation::compute(  double dt, double input )
+{
+  double delta = input - _output_1;
+  double output;
+
+  if( fabs(delta) <= SGLimitsd::min() ) return input; // trivial
+
+  double maxChange = _rateOfChangeMax.get_value() * dt;
+  double minChange = _rateOfChangeMin.get_value() * dt;
+//  const PeriodicalValue * periodical = _digitalFilter->getPeriodicalValue();
+//  if( periodical ) delta = periodical->normalizeSymmetric( delta );
+
+  output = input;
+  if(delta >= maxChange ) output = _output_1 + maxChange;
+  if(delta <= minChange ) output = _output_1 + minChange;
+  _output_1 = output;
+
+  return (output);
+}
+
+bool RateLimitFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+{
+  if (nodeName == "max-rate-of-change" ) {
+    _rateOfChangeMax.push_back( new InputValue( configNode, 1 ) );
+    return true;
+  }
+  if (nodeName == "min-rate-of-change" ) {
+    _rateOfChangeMin.push_back( new InputValue( configNode, 1 ) );
+    return true;
+  }
+
+  return false;
+}
+
+/* --------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------- */
 
 ExponentialFilterImplementation::ExponentialFilterImplementation()
   : _isSecondOrder(false),
-    output_1(0.0),
-    output_2(0.0)
+    _output_1(0.0),
+    _output_2(0.0)
 {
 }
 
 void ExponentialFilterImplementation::initialize( double initvalue )
 {
-  output_1 = output_2 = initvalue;
+  _output_1 = _output_2 = initvalue;
 }
 
 double ExponentialFilterImplementation::compute(  double dt, double input )
@@ -323,13 +422,13 @@ double ExponentialFilterImplementation::compute(  double dt, double input )
  
   if(_isSecondOrder) {
     output_0 = alpha * alpha * input + 
-               2 * (1 - alpha) * output_1 -
-              (1 - alpha) * (1 - alpha) * output_2;
+               2 * (1 - alpha) * _output_1 -
+              (1 - alpha) * (1 - alpha) * _output_2;
   } else {
-    output_0 = alpha * input + (1 - alpha) * output_1;
+    output_0 = alpha * input + (1 - alpha) * _output_1;
   }
-  output_2 = output_1;
-  return (output_1 = output_0);
+  _output_2 = _output_1;
+  return (_output_1 = output_0);
 }
 
 bool ExponentialFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
@@ -350,6 +449,142 @@ bool ExponentialFilterImplementation::configure( const std::string & nodeName, S
   return false;
 }
 
+/* --------------------------------------------------------------------------------- */
+
+IntegratorFilterImplementation::IntegratorFilterImplementation() :
+  _input_1(0.0),
+  _output_1(0.0)
+{
+}
+
+void IntegratorFilterImplementation::initialize( double initvalue )
+{
+  _input_1 = _output_1 = initvalue;
+}
+
+
+bool IntegratorFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+{
+  if( GainFilterImplementation::configure( nodeName, configNode ) )
+    return true;
+  if (nodeName == "u_min" ) {
+    _minInput.push_back( new InputValue( configNode, 1 ) );
+    return true;
+  }
+  if (nodeName == "u_max" ) {
+    _maxInput.push_back( new InputValue( configNode, 1 ) );
+    return true;
+  }
+  return false;
+}
+
+double IntegratorFilterImplementation::compute(  double dt, double input )
+{
+  double output = _output_1 + input *  _gainInput.get_value() * dt;
+  double u_min = _minInput.get_value();
+  double u_max = _maxInput.get_value();
+  if (output >= u_max) output = u_max; // clamping inside "::compute" prevents integrator wind-up
+  if (output <= u_min) output = u_min;
+  _input_1 = input;
+  _output_1 = output;
+  return output;
+
+}
+
+/* --------------------------------------------------------------------------------- */
+
+HighPassFilterImplementation::HighPassFilterImplementation() :
+  _input_1(0.0),
+  _output_1(0.0)
+
+{
+}
+
+void HighPassFilterImplementation::initialize( double initvalue )
+{
+  _input_1 = initvalue;
+  _output_1 = initvalue;
+}
+
+double HighPassFilterImplementation::compute(  double dt, double input )
+{
+  input = GainFilterImplementation::compute( dt, input );
+  double tf = _TfInput.get_value();
+
+  double output;
+
+  // avoid negative filter times 
+  // and div by zero if -tf == dt
+
+  double alpha = tf > 0.0 ? 1 / ((tf/dt) + 1) : 1.0;
+  output = (1 - alpha) * (input - _input_1 +  _output_1);
+  _input_1 = input;
+  _output_1 = output;
+  return output;
+}
+
+bool HighPassFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+{
+  if( GainFilterImplementation::configure( nodeName, configNode ) )
+    return true;
+
+  if (nodeName == "filter-time" ) {
+    _TfInput.push_back( new InputValue( configNode, 1 ) );
+    return true;
+  }
+ 
+  return false;
+}
+
+/* --------------------------------------------------------------------------------- */
+
+LeadLagFilterImplementation::LeadLagFilterImplementation() :
+  _input_1(0.0),
+  _output_1(0.0)
+
+{
+}
+
+void LeadLagFilterImplementation::initialize( double initvalue )
+{
+  _input_1 = initvalue;
+  _output_1 = initvalue;
+}
+
+double LeadLagFilterImplementation::compute(  double dt, double input )
+{
+  input = GainFilterImplementation::compute( dt, input );
+  double tfa = _TfaInput.get_value();
+  double tfb = _TfbInput.get_value();
+
+  double output;
+
+  // avoid negative filter times 
+  // and div by zero if -tf == dt
+
+  double alpha = tfa > 0.0 ? 1 / ((tfa/dt) + 1) : 1.0;
+  double beta = tfb > 0.0 ? 1 / ((tfb/dt) + 1) : 1.0;
+  output = (1 - beta) * (input / (1 - alpha) - _input_1 + _output_1);
+  _input_1 = input;
+  _output_1 = output;
+  return output;
+}
+
+bool LeadLagFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+{
+  if( GainFilterImplementation::configure( nodeName, configNode ) )
+    return true;
+
+  if (nodeName == "filter-time-a" ) {
+    _TfaInput.push_back( new InputValue( configNode, 1 ) );
+    return true;
+  }
+  if (nodeName == "filter-time-b" ) {
+    _TfbInput.push_back( new InputValue( configNode, 1 ) );
+    return true;
+  }
+  return false;
+}
 /* --------------------------------------------------------------------------------- */
 /* Digital Filter Component Implementation                                           */
 /* --------------------------------------------------------------------------------- */
@@ -377,6 +612,9 @@ bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configN
     componentForge["noise-spike"] = new CreateAndConfigureFunctor<NoiseSpikeFilterImplementation,DigitalFilterImplementation>();
     componentForge["reciprocal"] = new CreateAndConfigureFunctor<ReciprocalFilterImplementation,DigitalFilterImplementation>();
     componentForge["derivative"] = new CreateAndConfigureFunctor<DerivativeFilterImplementation,DigitalFilterImplementation>();
+    componentForge["high-pass"] = new CreateAndConfigureFunctor<HighPassFilterImplementation,DigitalFilterImplementation>();
+    componentForge["lead-lag"] = new CreateAndConfigureFunctor<LeadLagFilterImplementation,DigitalFilterImplementation>();
+    componentForge["integrator"] = new CreateAndConfigureFunctor<IntegratorFilterImplementation,DigitalFilterImplementation>();
   }
 
   SG_LOG( SG_AUTOPILOT, SG_BULK, "DigitalFilter::configure(" << nodeName << ")" << endl );
