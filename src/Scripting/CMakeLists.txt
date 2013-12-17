@@ -11,6 +11,7 @@ set(SOURCES
   NasalHTTP.cxx
   NasalString.cxx
   NasalModelData.cxx
+  NasalSGPath.cxx
 )
 
 set(HEADERS
@@ -23,6 +24,7 @@ set(HEADERS
   NasalHTTP.hxx
   NasalString.hxx
   NasalModelData.hxx
+  NasalSGPath.hxx
 )
 
 if(WIN32)

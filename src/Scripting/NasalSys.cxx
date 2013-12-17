@@ -33,6 +33,7 @@
 #include <simgear/nasal/cppbind/Ghost.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 
+#include "NasalSGPath.hxx"
 #include "NasalSys.hxx"
 #include "NasalSys_private.hxx"
 #include "NasalModelData.hxx"
@@ -776,6 +777,7 @@ void FGNasalSys::init()
     initNasalCanvas(_globals, _context);
     initNasalCondition(_globals, _context);
     initNasalHTTP(_globals, _context);
+    initNasalSGPath(_globals, _context);
   
     NasalTimerObj::init("Timer")
       .method("start", &TimerObj::start)
