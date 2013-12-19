@@ -114,9 +114,6 @@
     <div class="indent">5.5 -
       <a href="#5.5">Why is FlightGear so slow?</a>
     </div>
-    <div class="indent">5.6 -
-      <a href="#5.6">Why is my SGI machine so slow?</a>
-    </div>
     <div class="indent">5.7 -
       <a href="#5.7">How do I see the frame rate?</a>
     </div>
@@ -571,47 +568,6 @@
           running an OpenGL application (other than FlightGear) to see how it
           performs.  You can try the <i>gears</i> demo from Mesa or something
           like <i>Quake3</i>.</p>
-        </div>
-      
-        <b>
-      <a name="5.6">5.6 -
-    <u>Why is my SGI machine so slow?</u>
-      </a>
-    </b>
-        <div class="indent">
-          <p>First of all, one of the most common mistakes on SGI hardware is to
-          forget to specify --fog-fastest. On most SGI machines the EXP2 shading
-          model isn't hardware supported resulting in frame rates below 1 frame
-          per second (fps).</p>
-          <p>FlightGear makes extensive use of the OpenGL z-buffer feature,which
-          on most older SGI hardware is only supported in software. This means
-          that the CPU has to do all the z-buffer calculations in addition to the
-          other tasks FlightGear involves (flight dynamics, scenery tracking,
-          pushing commands into the graphics queue, etc).  The following features
-          are software rendered on low-end SGI machines (like Indy and
-          Indigo):</p>
-          <ul>
-            <li>stencil and accumulation buffer</li>
-            <li>depth queuing and depth buffering</li>
-            <li>fogging, lighting, clipping and transforms</li>
-            <li>texturing</li>
-          </ul>
-          <p>This means that running FlightGear with the following options may not
-          even get the desired result:</p>
-          <p>
-        <code>./runfgfs --fog-disable --shading-flat --disable-skyblend \</code>
-        <br>
-          <code>--disable-textures --disable-clouds --disable-sound \</code>
-        <br>
-          <code>--disable-panel --enable-hud --disable-anti-alias-hud</code>
-      </p>
-          <p>I could even imagine that adding --enable-wireframe doesn't work on
-          these machines (I would be happy to be proven wrong though).</p>
-          <p>On a machine like O2 the following options give an acceptable
-          result:</p>
-          <code>./runfgfs --fog-fastest --disable-sound</code>
-          <p>Since I don't have access to other SGI hardware I can't tell which
-          options would be appropriate for your situation.</p>
         </div>
       
         <b>

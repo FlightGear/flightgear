@@ -136,9 +136,6 @@ Disable instrument panel.
 .B "--disable-random-objects"
 Disable random scenery objects (buildings, trees, etc).
 .TP
-.B "--disable-skyblend"
-Disable sky blending.
-.TP
 .B "--disable-sound"
 Disable sound effects.
 .TP
@@ -205,9 +202,6 @@ Enable instrument panel.
 .TP
 .B "--enable-random-objects"
 Enable random scenery objects (buildings, trees, etc).
-.TP
-.B "--enable-skyblend"
-Enable sky blending.
 .TP
 .B "--enable-sound"
 Enable sound effects.

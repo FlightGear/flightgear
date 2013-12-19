@@ -558,7 +558,6 @@ FGRenderer::init( void )
     _ysize         = fgGetNode("/sim/startup/ysize", true);
     _splash_alpha  = fgGetNode("/sim/startup/splash-alpha", true);
 
-    _skyblend             = fgGetNode("/sim/rendering/skyblend", true);
     _point_sprites        = fgGetNode("/sim/rendering/point-sprites", true);
     _enhanced_lighting    = fgGetNode("/sim/rendering/enhanced-lighting", true);
     _distance_attenuation = fgGetNode("/sim/rendering/distance-attenuation", true);
@@ -1631,101 +1630,13 @@ FGRenderer::update( ) {
   
     osg::Camera *camera = viewer->getCamera();
 
-    bool skyblend = _skyblend->getBoolValue();
-    if ( skyblend ) {
-	
-        if ( _textures->getBoolValue() ) {
-            SGVec4f clearColor(l->adj_fog_color());
-            camera->setClearColor(toOsg(clearColor));
-        }
-    } else {
-        SGVec4f clearColor(l->sky_color());
+    if ( _textures->getBoolValue() ) {
+        SGVec4f clearColor(l->adj_fog_color());
         camera->setClearColor(toOsg(clearColor));
     }
 
-    // update fog params if visibility has changed
-    double visibility_meters = _visibility_m->getDoubleValue();
-    _sky->set_visibility(visibility_meters);
-
-    double altitude_m = _altitude_ft->getDoubleValue() * SG_FEET_TO_METER;
-    _sky->modify_vis( altitude_m, 0.0 /* time factor, now unused */);
-
-    // update the sky dome
-    if ( skyblend ) {
-
-        // The sun and moon distances are scaled down versions
-        // of the actual distance to get both the moon and the sun
-        // within the range of the far clip plane.
-        // Moon distance:    384,467 kilometers
-        // Sun distance: 150,000,000 kilometers
-
-        double sun_horiz_eff, moon_horiz_eff;
-        if (_horizon_effect->getBoolValue()) {
-            sun_horiz_eff
-                = 0.67 + pow(osg::clampAbove(0.5 + cos(l->get_sun_angle()),
-                                             0.0),
-                             0.33) / 3.0;
-            moon_horiz_eff
-                = 0.67 + pow(osg::clampAbove(0.5 + cos(l->get_moon_angle()),
-                                             0.0),
-                             0.33)/3.0;
-        } else {
-           sun_horiz_eff = moon_horiz_eff = 1.0;
-        }
-
-        SGSkyState sstate;
-        sstate.pos       = current__view->getViewPosition();
-        sstate.pos_geod  = current__view->getPosition();
-        sstate.ori       = current__view->getViewOrientation();
-        sstate.spin      = l->get_sun_rotation();
-        sstate.gst       = globals->get_time_params()->getGst();
-        sstate.sun_dist  = 50000.0 * sun_horiz_eff;
-        sstate.moon_dist = 40000.0 * moon_horiz_eff;
-        sstate.sun_angle = l->get_sun_angle();
-
-        SGSkyColor scolor;
-        scolor.sky_color   = SGVec3f(l->sky_color().data());
-        scolor.adj_sky_color = SGVec3f(l->adj_sky_color().data());
-        scolor.fog_color   = SGVec3f(l->adj_fog_color().data());
-        scolor.cloud_color = SGVec3f(l->cloud_color().data());
-        scolor.sun_angle   = l->get_sun_angle();
-        scolor.moon_angle  = l->get_moon_angle();
-  
-        double delta_time_sec = _sim_delta_sec->getDoubleValue();
-        _sky->reposition( sstate, *globals->get_ephem(), delta_time_sec );
-        _sky->repaint( scolor, *globals->get_ephem() );
-
-            //OSGFIXME
-//         shadows->setupShadows(
-//           current__view->getLongitude_deg(),
-//           current__view->getLatitude_deg(),
-//           globals->get_time_params()->getGst(),
-//           globals->get_ephem()->getSunRightAscension(),
-//           globals->get_ephem()->getSunDeclination(),
-//           l->get_sun_angle());
-
-    }
-
-//     sgEnviro.setLight(l->adj_fog_color());
-//     sgEnviro.startOfFrame(current__view->get_view_pos(), 
-//         current__view->get_world_up(),
-//         current__view->getLongitude_deg(),
-//         current__view->getLatitude_deg(),
-//         current__view->getAltitudeASL_ft() * SG_FEET_TO_METER,
-//         delta_time_sec);
-
-    // OSGFIXME
-//     sgEnviro.drawLightning();
-
-//        double current_view_origin_airspeed_horiz_kt =
-//         fgGetDouble("/velocities/airspeed-kt", 0.0)
-//                        * cos( fgGetDouble("/orientation/pitch-deg", 0.0)
-//                                * SGD_DEGREES_TO_RADIANS);
-
-    // OSGFIXME
-//     if( is_internal )
-//         shadows->endOfFrame();
-
+    updateSky();
+    
     // need to call the update visitor once
     _frameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
     _updateVisitor->setViewData(current__view->getViewPosition(),
@@ -1749,6 +1660,61 @@ FGRenderer::update( ) {
 	}
 }
 
+void
+FGRenderer::updateSky()
+{
+    // update fog params if visibility has changed
+    double visibility_meters = _visibility_m->getDoubleValue();
+    _sky->set_visibility(visibility_meters);
+    
+    double altitude_m = _altitude_ft->getDoubleValue() * SG_FEET_TO_METER;
+    _sky->modify_vis( altitude_m, 0.0 /* time factor, now unused */);
+
+    FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+    
+    // The sun and moon distances are scaled down versions
+    // of the actual distance to get both the moon and the sun
+    // within the range of the far clip plane.
+    // Moon distance:    384,467 kilometers
+    // Sun distance: 150,000,000 kilometers
+    
+    double sun_horiz_eff, moon_horiz_eff;
+    if (_horizon_effect->getBoolValue()) {
+        sun_horiz_eff
+        = 0.67 + pow(osg::clampAbove(0.5 + cos(l->get_sun_angle()),
+                                     0.0),
+                     0.33) / 3.0;
+        moon_horiz_eff
+        = 0.67 + pow(osg::clampAbove(0.5 + cos(l->get_moon_angle()),
+                                     0.0),
+                     0.33)/3.0;
+    } else {
+        sun_horiz_eff = moon_horiz_eff = 1.0;
+    }
+    
+    SGSkyState sstate;
+    sstate.pos       = globals->get_current_view()->getViewPosition();
+    sstate.pos_geod  = globals->get_current_view()->getPosition();
+    sstate.ori       = globals->get_current_view()->getViewOrientation();
+    sstate.spin      = l->get_sun_rotation();
+    sstate.gst       = globals->get_time_params()->getGst();
+    sstate.sun_dist  = 50000.0 * sun_horiz_eff;
+    sstate.moon_dist = 40000.0 * moon_horiz_eff;
+    sstate.sun_angle = l->get_sun_angle();
+    
+    SGSkyColor scolor;
+    scolor.sky_color   = SGVec3f(l->sky_color().data());
+    scolor.adj_sky_color = SGVec3f(l->adj_sky_color().data());
+    scolor.fog_color   = SGVec3f(l->adj_fog_color().data());
+    scolor.cloud_color = SGVec3f(l->cloud_color().data());
+    scolor.sun_angle   = l->get_sun_angle();
+    scolor.moon_angle  = l->get_moon_angle();
+    
+    double delta_time_sec = _sim_delta_sec->getDoubleValue();
+    _sky->reposition( sstate, *globals->get_ephem(), delta_time_sec );
+    _sky->repaint( scolor, *globals->get_ephem() );
+}
+                                    
 void
 FGRenderer::resize( int width, int height )
 {

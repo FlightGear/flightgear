@@ -131,7 +131,7 @@ protected:
     SGPropertyNode_ptr _scenery_loaded, _position_finalized;
     
     
-    SGPropertyNode_ptr _skyblend, _splash_alpha;
+    SGPropertyNode_ptr _splash_alpha;
     SGPropertyNode_ptr _point_sprites, _enhanced_lighting, _distance_attenuation;
     SGPropertyNode_ptr _textures;
     SGPropertyNode_ptr _cloud_status, _visibility_m; 
@@ -182,6 +182,8 @@ protected:
     osg::ref_ptr<FGRenderingPipeline> _pipeline;
     
     void addChangeListener(SGPropertyChangeListener* l, const char* path);
+    
+    void updateSky();
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);
