@@ -610,6 +610,7 @@ bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configN
     componentForge["double-exponential"] = new CreateAndConfigureFunctor<ExponentialFilterImplementation,DigitalFilterImplementation>();
     componentForge["moving-average"] = new CreateAndConfigureFunctor<MovingAverageFilterImplementation,DigitalFilterImplementation>();
     componentForge["noise-spike"] = new CreateAndConfigureFunctor<NoiseSpikeFilterImplementation,DigitalFilterImplementation>();
+    componentForge["rate-limit"] = new CreateAndConfigureFunctor<RateLimitFilterImplementation,DigitalFilterImplementation>();
     componentForge["reciprocal"] = new CreateAndConfigureFunctor<ReciprocalFilterImplementation,DigitalFilterImplementation>();
     componentForge["derivative"] = new CreateAndConfigureFunctor<DerivativeFilterImplementation,DigitalFilterImplementation>();
     componentForge["high-pass"] = new CreateAndConfigureFunctor<HighPassFilterImplementation,DigitalFilterImplementation>();
