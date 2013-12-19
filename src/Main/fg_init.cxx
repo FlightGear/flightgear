@@ -436,7 +436,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     
     simgear::Dir exportDir(simgear::Dir(dataPath).file("Export"));
     if (!exportDir.exists()) {
-      exportDir.create(0777);
+      exportDir.create(0755);
     }
     
     // Set /sim/fg-home and don't allow malign code to override it until

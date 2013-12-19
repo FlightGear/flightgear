@@ -455,7 +455,7 @@ void FGTrafficManager::shutdown()
                        airport[0], airport[1], airport[2]);
             cacheData.append(buffer);
             if (!cacheData.exists()) {
-                cacheData.create_dir(0777);
+                cacheData.create_dir(0755);
             }
             cacheData.append(airport + "-cache.txt");
             //cerr << "Saving AI traffic heuristics" << endl;

@@ -212,7 +212,7 @@ void FGGroundNetwork::saveElevationCache()
                        airport[0], airport[1], airport[2]);
             cacheData.append(buffer);
             if (!cacheData.exists()) {
-                cacheData.create_dir(0777);
+                cacheData.create_dir(0755);
             }
             cacheData.append(airport + "-groundnet-cache.txt");
             cachefile.open(cacheData.str().c_str());
@@ -300,7 +300,7 @@ void FGGroundNetwork::parseCache()
              airport[0], airport[1], airport[2]);
   cacheData.append(buffer);
   if (!cacheData.exists()) {
-    cacheData.create_dir(0777);
+    cacheData.create_dir(0755);
   }
   int index;
   double elev;
