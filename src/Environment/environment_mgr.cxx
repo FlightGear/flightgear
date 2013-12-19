@@ -222,14 +222,6 @@ FGEnvironmentMgr::bind ()
           &SGSky::get_3dCloudUseImpostors,
           &SGSky::set_3dCloudUseImpostors);
 
-  _tiedProperties.Tie("minimum-sky-visibility", _sky,
-          &SGSky::get_minimum_sky_visibility,
-          &SGSky::set_minimum_sky_visibility);
-
-//  _tiedProperties.Tie("lightning-enable", &sgEnviro,
-//          &SGEnviro::get_lightning_enable_state,
-//          &SGEnviro::set_lightning_enable_state);
-
 }
 
 void

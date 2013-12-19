@@ -610,7 +610,6 @@ FGRenderer::init( void )
 
     if (!_classicalRenderer) {
         eventHandler->setChangeStatsCameraRenderOrder( true );
-        _sky->set_minimum_sky_visibility( 0.0 ); // A black sky appears for below that
     }
 }
 
