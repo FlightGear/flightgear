@@ -23,9 +23,9 @@
 
 #ifdef _MSC_VER
 #  include <float.h>
-#  define finite _finite
-#elif defined(__sun) || defined(sgi)
-#  include <ieeefp.h>
+#  define isfinite(x) _finite(x)
+#else
+#  define isfinite(x) std::isfinite(x)
 #endif
 
 #include <math.h>
@@ -792,7 +792,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
     //   now revise the required course for the next way point
     _course = getCourse(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->getLatitude(), curr->getLongitude());
 
-    if (std::isfinite(_course))
+    if (isfinite(_course))
         TurnTo(_course);
     else
         SG_LOG(SG_AI, SG_ALERT, "AIShip: Bearing or Range is not a finite number");

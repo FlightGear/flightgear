@@ -38,9 +38,9 @@
 
 #ifdef _MSC_VER
 #  include <float.h>
-#  define finite _finite
-#elif defined(__sun) || defined(sgi)
-#  include <ieeefp.h>
+#  define isfinite(x) _finite(x)
+#else
+#  define isfinite(x) std::isfinite(x)
 #endif
 
 
@@ -945,7 +945,7 @@ void FGAIAircraft::controlHeading(FGAIWaypoint* curr) {
         SG_NORMALIZE_RANGE(calc_bearing, 0.0, 360.0);
     }
 
-    if (std::isfinite(calc_bearing)) {
+    if (isfinite(calc_bearing)) {
         double hdg_error = calc_bearing - tgt_heading;
         if (fabs(hdg_error) > 0.01) {
             TurnTo( calc_bearing );
