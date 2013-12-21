@@ -151,3 +151,12 @@ string_list FGLocale::getUserLanguage()
     
     return result;
 }
+
+void transformToForegroundApp()
+{
+    ProcessSerialNumber sn = { 0, kCurrentProcess };
+    TransformProcessType(&sn,kProcessTransformToForegroundApplication);
+
+    
+    [[NSApplication sharedApplication] activateIgnoringOtherApps: YES];
+}

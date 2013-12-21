@@ -34,4 +34,11 @@ void cocoaOpenUrl(const std::string& url);
  */
 SGPath platformDefaultDataPath();
 
+/**
+ * When we run non-bundled, we need to transform to a GUI (foreground) app
+ * osgViewer does this for us normally, but we need to do it ourselves
+ * to show a message box before OSG is initialized.
+ */
+void transformToForegroundApp();
+
 #endif // of FG_GUI_COCOA_HELPERS_H

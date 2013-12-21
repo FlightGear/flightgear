@@ -64,7 +64,7 @@ using std::endl;
 #include "fg_os.hxx"
 
 #if defined(SG_MAC)
-#include <Carbon/Carbon.h> 
+    #include <GUI/CocoaHelpers.h> // for transformToForegroundApp
 #endif
 
 std::string homedir;
@@ -164,9 +164,7 @@ int main ( int argc, char **argv )
 #if defined(SG_MAC)
     // required so native messages boxes work prior to osgViewer init
     // (only needed when not running as a bundled app)
-    ProcessSerialNumber sn = { 0, kCurrentProcess };
-    TransformProcessType(&sn,kProcessTransformToForegroundApplication);
-    SetFrontProcess(&sn);
+    transformToForegroundApp();
 #endif
     
 #ifdef PTW32_STATIC_LIB
