@@ -1248,12 +1248,6 @@ do_iaxc_call (const char *username, const char *password,
   char dest[256];
   size_t len = strlen(number);
 
-  if( strcmp(voipserver, "delta384.server4you.de") == 0 ) {
-    if( number[len-1] == '5' ) {
-      number[len-1] = '0';
-    }
-  }
-
   if( strcmp(number, "9990909090910000") == 0)
     number = (char *)"0190909090910000";
 
