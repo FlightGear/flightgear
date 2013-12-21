@@ -433,7 +433,8 @@ FGRenderer::~FGRenderer()
     }
     
     // replace the viewer's scene completely
-    getViewer()->setSceneData(new osg::Group);
+    if (getViewer())
+        getViewer()->setSceneData(new osg::Group);
     
     
 #ifdef FG_JPEG_SERVER
