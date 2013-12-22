@@ -411,6 +411,10 @@ foreach $airport (sort(keys(%APT))) {
         if ($trim_to_20 && (length($type) > 20)) {
             $type = substr($type,0,20);
         }
+        if ($ssf == 30 || $ssf == 80) {
+           next;
+           printf("Found a 8.33KHz freq !!! $airport\n");
+        }
 
         $icao_number = icao2number($airport);
 
