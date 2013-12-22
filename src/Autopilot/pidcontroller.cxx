@@ -95,8 +95,13 @@ PIDController::PIDController():
 
 void PIDController::update( bool firstTime, double dt ) 
 {
-    double edf_n = 0.0;
-    double u_n = 0.0;       // absolute output
+    if( firstTime ) {
+      ep_n_1 = 0.0;
+      edf_n_2 = edf_n_1 = 0.0;
+
+      // first time being enabled, seed with current property tree value
+      u_n_1 = get_output_value();
+    }
 
     double u_min = _minInput.get_value();
     double u_max = _maxInput.get_value();
@@ -109,15 +114,6 @@ void PIDController::update( bool firstTime, double dt )
     }
     double Ts = elapsedTime; // sampling interval (sec)
     elapsedTime = 0.0;
-
-    if( firstTime ) {
-      // first time being enabled, seed u_n with current
-      // property tree value
-      ep_n_1 = 0.0;
-      edf_n_2 = edf_n_1 = edf_n = 0.0;
-      u_n = get_output_value();
-      u_n_1 = u_n;
-    }
 
     if( Ts > SGLimitsd::min()) {
         if( _debug ) cout <<  "Updating " << get_name()
@@ -137,6 +133,7 @@ void PIDController::update( bool firstTime, double dt )
         double e_n = r_n - y_n;
         if ( _debug ) cout << " e_n = " << e_n;
 
+        double edf_n = 0.0;
         double td = Td.get_value();
         if ( td > 0.0 ) { // do we need to calcluate derivative error?
 
@@ -183,7 +180,7 @@ void PIDController::update( bool firstTime, double dt )
         }
 
         // Calculates absolute output:
-        u_n = u_n_1 + delta_u_n;
+        double u_n = u_n_1 + delta_u_n;
         if ( _debug ) cout << "  output = " << u_n << endl;
 
         // Updates indexed values;
