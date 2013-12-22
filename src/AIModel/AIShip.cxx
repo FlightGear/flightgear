@@ -21,14 +21,14 @@
 #  include <config.h>
 #endif
 
+#include <cmath>
+
 #ifdef _MSC_VER
 #  include <float.h>
-#  define isfinite(x) _finite(x)
+    double fgIsFinite(double x) { return _finite(x); }
 #else
-#  define isfinite(x) std::isfinite(x)
+    double fgIsFinite(double x) { return std::isfinite(x); }
 #endif
-
-#include <math.h>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
@@ -792,7 +792,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
     //   now revise the required course for the next way point
     _course = getCourse(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->getLatitude(), curr->getLongitude());
 
-    if (isfinite(_course))
+    if (fgIsFinite(_course))
         TurnTo(_course);
     else
         SG_LOG(SG_AI, SG_ALERT, "AIShip: Bearing or Range is not a finite number");

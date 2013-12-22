@@ -33,16 +33,11 @@
 #include <simgear/structure/exception.hxx>
 
 #include <string>
-#include <math.h>
-#include <time.h>
+#include <cmath>
+#include <ctime>
 
-#ifdef _MSC_VER
-#  include <float.h>
-#  define isfinite(x) _finite(x)
-#else
-#  define isfinite(x) std::isfinite(x)
-#endif
-
+// defined in AIShip.cxx
+extern double fgIsFinite(double x);
 
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"
@@ -945,7 +940,7 @@ void FGAIAircraft::controlHeading(FGAIWaypoint* curr) {
         SG_NORMALIZE_RANGE(calc_bearing, 0.0, 360.0);
     }
 
-    if (isfinite(calc_bearing)) {
+    if (fgIsFinite(calc_bearing)) {
         double hdg_error = calc_bearing - tgt_heading;
         if (fabs(hdg_error) > 0.01) {
             TurnTo( calc_bearing );
