@@ -1246,7 +1246,6 @@ do_iaxc_call (const char *username, const char *password,
 	      const char *voipserver, char *number)
 {
   char dest[256];
-  size_t len = strlen(number);
 
   if( strcmp(number, "9990909090910000") == 0)
     number = (char *)"0190909090910000";
