@@ -169,7 +169,7 @@ else(SIMGEAR_SHARED)
     endif(NOT MSVC)
 endif(SIMGEAR_SHARED)
 
-if((NOT SIMGEAR_CORE_LIBRARIES)OR(NOT SIMGEAR_LIBRARIES))
+if((NOT SIMGEAR_CORE_LIBRARIES) OR (NOT SIMGEAR_LIBRARIES))
     message(FATAL_ERROR "Cannot find SimGear libraries! (Forgot 'make install' for SimGear?) "
             "Compile & INSTALL SimGear before configuring FlightGear. "
             "When using non-standard locations, use 'SIMGEAR_DIR' to configure the SimGear location.")
