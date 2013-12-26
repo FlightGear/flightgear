@@ -388,7 +388,7 @@ PaError PaUnixThread_Terminate( PaUnixThread* self, int wait, PaError* exitResul
 
 error:
     PA_ASSERT_CALL( PaUnixMutex_Terminate( &self->mtx ), paNoError );
-    PA_ASSERT_CALL( pthread_cond_destroy( &self->cond ), 0 );
+    //PA_ASSERT_CALL( pthread_cond_destroy( &self->cond ), 0 );
 
     return result;
 }

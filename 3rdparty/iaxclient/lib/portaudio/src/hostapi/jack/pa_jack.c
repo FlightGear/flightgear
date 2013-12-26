@@ -799,7 +799,7 @@ static void Terminate( struct PaUtilHostApiRepresentation *hostApi )
     ASSERT_CALL( jack_deactivate( jackHostApi->jack_client ), 0 );
 
     ASSERT_CALL( pthread_mutex_destroy( &jackHostApi->mtx ), 0 );
-    ASSERT_CALL( pthread_cond_destroy( &jackHostApi->cond ), 0 );
+    //ASSERT_CALL( pthread_cond_destroy( &jackHostApi->cond ), 0 );
 
     ASSERT_CALL( jack_client_close( jackHostApi->jack_client ), 0 );
 
