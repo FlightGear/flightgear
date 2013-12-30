@@ -27,6 +27,9 @@
 #include <boost/foreach.hpp>
 #include <algorithm>
 
+#include <osgViewer/Viewer>
+#include <osgDB/Registry>
+
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
@@ -209,6 +212,12 @@ FGGlobals::~FGGlobals()
     subsystem_mgr->remove("model-manager");
     _tile_mgr.clear();
 
+    // don't cancel the pager until after shutdown, since AIModels (and
+    // potentially others) can queue delete requests on the pager.
+    renderer->getViewer()->getDatabasePager()->cancel();
+    renderer->getViewer()->getDatabasePager()->clear();
+    osgDB::Registry::instance()->clearObjectCache();
+    
     // renderer touches subsystems during its destruction
     set_renderer(NULL);
     _scenery.clear();
