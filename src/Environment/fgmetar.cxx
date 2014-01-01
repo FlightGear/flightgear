@@ -38,6 +38,8 @@
 
 #include <simgear/math/sg_random.h>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/timing/lowleveltime.h>
+
 #include <Main/fg_props.hxx>
 
 #include "fgmetar.hxx"
@@ -158,7 +160,7 @@ FGMetar::FGMetar(const string& icao) :
 
 long FGMetar::getAge_min() const
 {
-	time_t now = _x_proxy ? _rq_time : time(0);
+	time_t now = _x_proxy ? _rq_time : sgGMTime();
 	return (now - _time) / 60;
 }
 
