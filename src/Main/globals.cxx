@@ -212,12 +212,22 @@ FGGlobals::~FGGlobals()
     subsystem_mgr->remove("model-manager");
     _tile_mgr.clear();
 
+    osg::ref_ptr<osgViewer::Viewer> vw(renderer->getViewer());
+    if (vw) {
+        // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
+        // explicitly stop trheading before we delete the renderer or
+        // viewMgr (which ultimately holds refs to the CameraGroup, and
+        // GraphicsContext)
+        vw->stopThreading();
+    }
+    
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
-    if (renderer->getViewer() && renderer->getViewer()->getDatabasePager()) {
-        renderer->getViewer()->getDatabasePager()->cancel();
-        renderer->getViewer()->getDatabasePager()->clear();
+    if (vw && vw->getDatabasePager()) {
+        vw->getDatabasePager()->cancel();
+        vw->getDatabasePager()->clear();
     }
+    
     osgDB::Registry::instance()->clearObjectCache();
     
     // renderer touches subsystems during its destruction
@@ -226,7 +236,8 @@ FGGlobals::~FGGlobals()
     _chatter_queue.clear();
     
     delete subsystem_mgr;
-    subsystem_mgr = NULL; // important so ::get_subsystem returns NULL 
+    subsystem_mgr = NULL; // important so ::get_subsystem returns NULL
+    vw = 0; // don't delete the viewer until now
 
     delete time_params;
     set_matlib(NULL);
