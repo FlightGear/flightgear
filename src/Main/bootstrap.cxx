@@ -50,6 +50,9 @@
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 
+#include <osg/Texture>
+#include <osg/BufferObject>
+
 #include <cstring>
 #include <iostream>
 using std::cerr;
@@ -209,6 +212,12 @@ int main ( int argc, char **argv )
         // is possible inside fgExitCleanup
         sglog();
         
+        // similar to above, ensure some static maps inside OSG exist before
+        // we register our at-exit handler, otherwise the statics are gone
+        // when fg_terminate runs, which causes crashes.
+        osg::Texture::getTextureObjectManager(0);
+        osg::GLBufferObjectManager::getGLBufferObjectManager(0);
+        
         std::set_terminate(fg_terminate);
         atexit(fgExitCleanup);
         if (fgviewer)
@@ -243,9 +252,12 @@ int main ( int argc, char **argv )
 // so OpenAL device and context are released cleanly
 void fgExitCleanup() {
 
-    if (_bootstrap_OSInit != 0)
+    if (_bootstrap_OSInit != 0) {
         fgSetMouseCursor(MOUSE_CURSOR_POINTER);
 
+        fgOSCloseWindow();
+    }
+    
     // on the common exit path globals is already deleted, and NULL,
     // so this only happens on error paths.
     delete globals;
