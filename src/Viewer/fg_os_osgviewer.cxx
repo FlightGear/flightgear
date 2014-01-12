@@ -315,6 +315,11 @@ void fgOSExit(int code)
     viewer->setDone(true);
     viewer->getDatabasePager()->cancel();
     status = code;
+    
+    // otherwise we crash if OSG does logging during static destruction, eg
+    // GraphicsWindowX11, since OSG statics may have been created before the
+    // sglog static, despite our best efforts in boostrap.cxx
+    osg::setNotifyHandler(new osg::StandardNotifyHandler);
 }
 
 int fgOSMainLoop()
