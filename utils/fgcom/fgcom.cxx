@@ -67,15 +67,14 @@ static const char *radio_map[] = {"COM1", "COM2"};
 
 char icao[5];
 double special_frq[] = {
-    999.999,
-    911.000,
-    910.000,
-    123.450,
-    122.750,
-    123.500,
-    121.500,
-    732.340,
-     -1.0 };
+	910.000,
+	911.000,
+	700.000,
+	123.450,
+	122.750,
+	121.500,
+	123.500,
+	 -1.0 };
 double *special_frequencies;
 
 double previous_com_frequency = 0.0;

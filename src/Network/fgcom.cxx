@@ -60,9 +60,7 @@ const int special_freq[] = { // Define some freq who need to be used with NULL_I
 	123450,
 	122750,
 	121500,
-	123500,
-	121000,
-	723340 };
+	123500 };
 
 static FGCom* static_instance = NULL;
 
