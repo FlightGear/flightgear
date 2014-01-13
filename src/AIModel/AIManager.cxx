@@ -85,6 +85,9 @@ public:
         }
         
         FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
+        if (!nasalSys)
+            return;
+        
         std::string moduleName = "scenario_" + _internalName;
         if (!_unloadScript.empty()) {
             nasalSys->createModule(moduleName.c_str(), moduleName.c_str(),

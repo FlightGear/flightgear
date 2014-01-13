@@ -544,6 +544,18 @@ static void treeDumpRefCounts(int depth, SGPropertyNode* nd)
     }
 }
 
+static void treeClearAliases(SGPropertyNode* nd)
+{
+    if (nd->isAlias()) {
+        nd->unalias();
+    }
+    
+    for (int i=0; i<nd->nChildren(); ++i) {
+        SGPropertyNode* cp = nd->getChild(i);
+        treeClearAliases(cp);
+    }
+}
+
 void
 FGGlobals::resetPropertyRoot()
 {
@@ -563,6 +575,9 @@ FGGlobals::resetPropertyRoot()
     orientPitch.clear();
     orientHeading.clear();
     orientRoll.clear();
+    
+    // clear aliases so ref-counts are accurate when dumped
+    treeClearAliases(props);
     
     SG_LOG(SG_GENERAL, SG_INFO, "root props refcount:" << props.getNumRefs());
     treeDumpRefCounts(0, props);
