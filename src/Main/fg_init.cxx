@@ -1022,14 +1022,15 @@ void fgStartNewReset()
     globals->set_renderer(render);
     render->init();
     render->setViewer(viewer.get());
+
     viewer->getDatabasePager()->setUpThreads(1, 1);
+    
+    // must do this before splashinit for Rembrandt
+    flightgear::CameraGroup::buildDefaultGroup(viewer.get());
     render->splashinit();
     
-    flightgear::CameraGroup::buildDefaultGroup(viewer.get());
-
     fgOSResetProperties();
 
-    
 // init some things manually
 // which do not follow the regular init pattern
     

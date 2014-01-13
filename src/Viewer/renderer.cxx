@@ -433,9 +433,9 @@ FGRenderer::~FGRenderer()
     }
     
     // replace the viewer's scene completely
-    if (getViewer())
+    if (getViewer()) {
         getViewer()->setSceneData(new osg::Group);
-    
+    }
     
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = NULL;
@@ -448,11 +448,15 @@ FGRenderer::~FGRenderer()
 // critical parts of the scene graph in addition to the splash screen.
 void
 FGRenderer::splashinit( void )
-      {
+{
+    // important that we reset the viewer sceneData here, to ensure the reference
+    // time for everything is in sync; otherwise on reset the Viewer and
+    // GraphicsWindow clocks are out of sync.
     osgViewer::Viewer* viewer = getViewer();
     viewer->setName("osgViewer");
-    _viewerSceneRoot = dynamic_cast<osg::Group*>(viewer->getSceneData());
+    _viewerSceneRoot = new osg::Group;
     _viewerSceneRoot->setName("viewerSceneRoot");
+    viewer->setSceneData(_viewerSceneRoot);
     
     ref_ptr<Node> splashNode = fgCreateSplashNode();
     if (_classicalRenderer) {
@@ -470,7 +474,8 @@ FGRenderer::splashinit( void )
         }
     }
     
-    _frameStamp = viewer->getFrameStamp();
+    _frameStamp = new osg::FrameStamp;
+    viewer->setFrameStamp(_frameStamp.get());
     // Scene doesn't seem to pass the frame stamp to the update
     // visitor automatically.
     _updateVisitor->setFrameStamp(_frameStamp.get());
