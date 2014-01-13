@@ -251,6 +251,18 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
                 button = 4;
             else
                 button = -1;
+            
+#if defined(SG_MAC)
+            // bug https://code.google.com/p/flightgear-bugs/issues/detail?id=1286
+            // Mac (Cocoa) interprets shuft+wheel as horizontal scroll
+            if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_SHIFT) {
+                if (ea.getScrollingDeltaX() > 0)
+                    button = 3;
+                else if (ea.getScrollingDeltaX() < 0)
+                    button = 4;
+            }
+#endif
+            
         } else if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_UP)
             button = 3;
         else
