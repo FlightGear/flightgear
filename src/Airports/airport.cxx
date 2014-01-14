@@ -570,12 +570,16 @@ void FGAirport::loadSceneryDefinitions() const
     return;
   }
   
-    flightgear::NavDataCache::Transaction txn(cache);
-    SGPropertyNode_ptr rootNode = new SGPropertyNode;
-    readProperties(path.str(), rootNode);
-    const_cast<FGAirport*>(this)->readThresholdData(rootNode);
-    cache->stampCacheFile(path);
-    txn.commit();
+    try {
+        flightgear::NavDataCache::Transaction txn(cache);
+        SGPropertyNode_ptr rootNode = new SGPropertyNode;
+        readProperties(path.str(), rootNode);
+        const_cast<FGAirport*>(this)->readThresholdData(rootNode);
+        cache->stampCacheFile(path);
+        txn.commit();
+    } catch (sg_exception& e) {
+        SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading threshold XML failed:" << e.getFormattedMessage());
+    }
 }
 
 void FGAirport::readThresholdData(SGPropertyNode* aRoot)
@@ -653,13 +657,17 @@ void FGAirport::validateTowerData() const
   // cached values are correct, we're all done
     return;
   }
-   
-  flightgear::NavDataCache::Transaction txn(cache);
-  SGPropertyNode_ptr rootNode = new SGPropertyNode;
-  readProperties(path.str(), rootNode);
-  const_cast<FGAirport*>(this)->readTowerData(rootNode);
-  cache->stampCacheFile(path);
-  txn.commit();
+
+    try {
+        flightgear::NavDataCache::Transaction txn(cache);
+        SGPropertyNode_ptr rootNode = new SGPropertyNode;
+        readProperties(path.str(), rootNode);
+        const_cast<FGAirport*>(this)->readTowerData(rootNode);
+        cache->stampCacheFile(path);
+        txn.commit();
+    } catch (sg_exception& e){
+        SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading twr XML failed:" << e.getFormattedMessage());
+    }
 }
 
 void FGAirport::readTowerData(SGPropertyNode* aRoot)
@@ -706,16 +714,21 @@ bool FGAirport::validateILSData()
     return false;
   }
   
-  SGPropertyNode_ptr rootNode = new SGPropertyNode;
-  readProperties(path.str(), rootNode);
+    try {
+        SGPropertyNode_ptr rootNode = new SGPropertyNode;
+        readProperties(path.str(), rootNode);
 
-  flightgear::NavDataCache::Transaction txn(cache);
-  readILSData(rootNode);
-  cache->stampCacheFile(path);
-  txn.commit();
-    
+        flightgear::NavDataCache::Transaction txn(cache);
+        readILSData(rootNode);
+        cache->stampCacheFile(path);
+        txn.commit();
 // we loaded data, tell the caller it might need to reload things
-  return true;
+        return true;
+    } catch (sg_exception& e){
+        SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading ils XML failed:" << e.getFormattedMessage());
+    }
+    
+    return false;
 }
 
 void FGAirport::readILSData(SGPropertyNode* aRoot)
