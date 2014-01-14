@@ -268,6 +268,7 @@ private:
     const char* getWP0Ident() const;
     const char* getWP0Name() const;
 
+    bool getWP1IValid() const;
     const char* getWP1Ident() const;
     const char* getWP1Name() const;
 

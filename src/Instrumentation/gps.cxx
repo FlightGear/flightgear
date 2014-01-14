@@ -164,7 +164,8 @@ GPS::init ()
 // autopilot drive properties
   _apDrivingFlag = fgGetNode("/autopilot/settings/gps-driving-true-heading", true);
   _apTrueHeading = fgGetNode("/autopilot/settings/true-heading-deg",true);
-    
+
+  clearScratch();
   clearOutput();
 }
 
@@ -222,6 +223,9 @@ GPS::bind()
   tie(wp0_node, "ID", SGRawValueMethods<GPS, const char*>
       (*this, &GPS::getWP0Ident, NULL));
     
+
+  tie(_currentWayptNode, "valid", SGRawValueMethods<GPS, bool>
+       (*this, &GPS::getWP1IValid, NULL));
     
   tie(_currentWayptNode, "ID", SGRawValueMethods<GPS, const char*>
     (*this, &GPS::getWP1Ident, NULL));
@@ -925,6 +929,11 @@ const char* GPS::getWP0Ident() const
 const char* GPS::getWP0Name() const
 {
   return "";
+}
+
+bool GPS::getWP1IValid() const
+{
+    return _dataValid && _currentWaypt.get();
 }
 
 const char* GPS::getWP1Ident() const
