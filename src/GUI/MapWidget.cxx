@@ -69,7 +69,7 @@ static bool puBoxIntersect(const puBox& a, const puBox& b)
 
   return (x0 <= x1) && (y0 <= y1);
 }
-
+    
 class MapData;
 typedef std::vector<MapData*> MapDataVec;
 
@@ -380,6 +380,76 @@ int MapData::_fontDescender = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 
+// anonymous namespace
+namespace
+{
+    
+class MapAirportFilter : public FGAirport::AirportFilter
+{
+public:
+    MapAirportFilter(SGPropertyNode_ptr nd)
+    {
+        _heliports = nd->getBoolValue("show-heliports", false);
+        _hardRunwaysOnly = nd->getBoolValue("hard-surfaced-airports", true);
+        _minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
+    }
+    
+    virtual FGPositioned::Type maxType() const {
+        return _heliports ? FGPositioned::HELIPORT : FGPositioned::AIRPORT;
+    }
+    
+    virtual bool passAirport(FGAirport* aApt) const {
+        if (_hardRunwaysOnly) {
+            return aApt->hasHardRunwayOfLengthFt(_minLengthFt);
+        }
+        
+        return true;
+    }
+    
+    void showAll()
+    {
+        _hardRunwaysOnly = false;
+    }
+    
+private:
+    bool _heliports;
+    bool _hardRunwaysOnly;
+    double _minLengthFt;
+};
+
+class NavaidFilter : public FGPositioned::Filter
+{
+public:
+    NavaidFilter(bool fixesEnabled, bool navaidsEnabled) :
+    _fixes(fixesEnabled),
+    _navaids(navaidsEnabled)
+    {}
+    
+    virtual bool pass(FGPositioned* aPos) const {
+        if (_fixes && (aPos->type() == FGPositioned::FIX)) {
+            // ignore fixes which end in digits - expirmental
+            if (aPos->ident().length() > 4 && isdigit(aPos->ident()[3]) && isdigit(aPos->ident()[4])) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    virtual FGPositioned::Type minType() const {
+        return _fixes ? FGPositioned::FIX : FGPositioned::NDB;
+    }
+    
+    virtual FGPositioned::Type maxType() const {
+        return _navaids ? FGPositioned::VOR : FGPositioned::FIX;
+    }
+    
+private:
+    bool _fixes, _navaids;
+};
+    
+} // of anonymous namespace
+
 const int MAX_ZOOM = 12;
 const int SHOW_DETAIL_ZOOM = 8;
 const int SHOW_DETAIL2_ZOOM = 5;
@@ -544,41 +614,127 @@ void MapWidget::zoomOut()
   _root->setIntValue("zoom", zoom() - 1);
 }
 
+void MapWidget::update()
+{
+    _aircraft = globals->get_aircraft_position();
+    
+    bool mag = _root->getBoolValue("magnetic-headings");
+    if (mag != _magneticHeadings) {
+        clearData(); // flush cached data text, since it often includes heading
+        _magneticHeadings =  mag;
+    }
+    
+    if (_hasPanned) {
+        _root->setBoolValue("centre-on-aircraft", false);
+        _hasPanned = false;
+    }
+    else if (_root->getBoolValue("centre-on-aircraft")) {
+        _projectionCenter = _aircraft;
+    }
+    
+    double julianDate = globals->get_time_params()->getJD();
+    _magVar->update(_projectionCenter, julianDate);
+    
+    _aircraftUp = _root->getBoolValue("aircraft-heading-up");
+    if (_aircraftUp) {
+        _upHeading = fgGetDouble("/orientation/heading-deg");
+    } else {
+        _upHeading = 0.0;
+    }
+    
+    if (_magneticHeadings) {
+        _displayHeading = (int) fgGetDouble("/orientation/heading-magnetic-deg");
+    } else {
+        _displayHeading = (int) _upHeading;
+    }
+    
+    _cachedZoom = MAX_ZOOM - zoom();
+    SGGeod topLeft = unproject(SGVec2d(_width/2, _height/2));
+    // compute draw range, including a fudge factor for ILSs and other 'long'
+    // symbols
+    _drawRangeNm = SGGeodesy::distanceNm(_projectionCenter, topLeft) + 10.0;
+    
+    
+    FGFlightHistory* history = (FGFlightHistory*) globals->get_subsystem("history");
+    if (history && _root->getBoolValue("draw-flight-history")) {
+        _flightHistoryPath = history->pathForHistory();
+    } else {
+        _flightHistoryPath.clear();
+    }
+
+// make spatial queries. This can trigger loading of XML files, etc, so we do
+// not want to do it in draw(), which can be called from an arbitrary OSG
+// rendering thread.
+    
+    MapAirportFilter af(_root);
+    if (_cachedZoom <= SHOW_DETAIL2_ZOOM) {
+        // show all airports when zoomed in sufficently
+        af.showAll();
+    }
+    
+    bool partial = false;
+    FGPositionedList newItemsToDraw =
+        FGPositioned::findWithinRangePartial(_projectionCenter, _drawRangeNm, &af, partial);
+    
+    bool fixes = _root->getBoolValue("draw-fixes");
+    NavaidFilter f(fixes, _root->getBoolValue("draw-navaids"));
+    if (f.minType() <= f.maxType()) {
+        FGPositionedList navs = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &f);
+        newItemsToDraw.insert(newItemsToDraw.end(), navs.begin(), navs.end());
+    }
+
+    FGPositioned::TypeFilter tf(FGPositioned::COUNTRY);
+    if (_cachedZoom <= SHOW_DETAIL_ZOOM) {
+        tf.addType(FGPositioned::CITY);
+    }
+    
+    if (_cachedZoom <= SHOW_DETAIL2_ZOOM) {
+        tf.addType(FGPositioned::TOWN);
+    }
+    
+    FGPositionedList poi = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &tf);
+    newItemsToDraw.insert(newItemsToDraw.end(), poi.begin(), poi.end());
+    
+    _itemsToDraw.swap(newItemsToDraw);
+    
+    updateAIObjects();
+}
+
+void MapWidget::updateAIObjects()
+{
+    if (!_root->getBoolValue("draw-traffic") || (_cachedZoom > SHOW_DETAIL_ZOOM)) {
+        _aiDrawVec.clear();
+        return;
+    }
+    
+    AIDrawVec newDrawVec;
+    
+    const SGPropertyNode* ai = fgGetNode("/ai/models", true);
+    for (int i = 0; i < ai->nChildren(); ++i) {
+        const SGPropertyNode *model = ai->getChild(i);
+        // skip bad or dead entries
+        if (!model || model->getIntValue("id", -1) == -1) {
+            continue;
+        }
+        
+        SGGeod pos = SGGeod::fromDegFt(
+                                       model->getDoubleValue("position/longitude-deg"),
+                                       model->getDoubleValue("position/latitude-deg"),
+                                       model->getDoubleValue("position/altitude-ft"));
+        
+        double dist = SGGeodesy::distanceNm(_projectionCenter, pos);
+        if (dist > _drawRangeNm) {
+            continue;
+        }
+    
+        newDrawVec.push_back(DrawAIObject((SGPropertyNode*) model, pos));
+    } // of ai/models iteration
+
+    _aiDrawVec.swap(newDrawVec);
+}
+
 void MapWidget::draw(int dx, int dy)
 {
-  _aircraft = globals->get_aircraft_position();
-    
-  bool mag = _root->getBoolValue("magnetic-headings");
-  if (mag != _magneticHeadings) {
-    clearData(); // flush cached data text, since it often includes heading
-    _magneticHeadings =  mag;
-  }
-  
-  if (_hasPanned) {
-      _root->setBoolValue("centre-on-aircraft", false);
-      _hasPanned = false;
-  }
-  else if (_root->getBoolValue("centre-on-aircraft")) {
-    _projectionCenter = _aircraft;
-  }
-
-  double julianDate = globals->get_time_params()->getJD();
-  _magVar->update(_projectionCenter, julianDate);
-
-  bool aircraftUp = _root->getBoolValue("aircraft-heading-up");
-  if (aircraftUp) {
-    _upHeading = fgGetDouble("/orientation/heading-deg");
-  } else {
-    _upHeading = 0.0;
-  }
-
-  _cachedZoom = MAX_ZOOM - zoom();
-  SGGeod topLeft = unproject(SGVec2d(_width/2, _height/2));
-  // compute draw range, including a fudge factor for ILSs and other 'long'
-  // symbols
-  _drawRangeNm = SGGeodesy::distanceNm(_projectionCenter, topLeft) + 10.0;
-
-// drawing operations
   GLint sx = (int) abox.min[0],
     sy = (int) abox.min[1];
   glScissor(dx + sx, dy + sy, _width, _height);
@@ -592,7 +748,7 @@ void MapWidget::draw(int dx, int dy)
 
   drawLatLonGrid();
 
-  if (aircraftUp) {
+  if (_aircraftUp) {
     int textHeight = legendFont.getStringHeight() + 5;
 
     // draw heading line
@@ -600,23 +756,14 @@ void MapWidget::draw(int dx, int dy)
     glColor3f(1.0, 1.0, 1.0);
     drawLine(loc, SGVec2d(loc.x(), (_height / 2) - textHeight));
 
-    int displayHdg;
-    if (_magneticHeadings) {
-      displayHdg = (int) fgGetDouble("/orientation/heading-magnetic-deg");
-    } else {
-      displayHdg = (int) _upHeading;
-    }
-
     double y = (_height / 2) - textHeight;
     char buf[16];
-    ::snprintf(buf, 16, "%d", displayHdg);
+    ::snprintf(buf, 16, "%d", _displayHeading);
     int sw = legendFont.getStringWidth(buf);
     legendFont.drawString(buf, loc.x() - sw/2, y);
   }
 
-  drawAirports();
-  drawNavaids();
-  drawPOIs();
+  drawPositioned();
   drawTraffic();
   drawGPSData();
   drawNavRadio(fgGetNode("/instrumentation/nav[0]", false));
@@ -657,8 +804,6 @@ void MapWidget::paintRuler()
   d->setAnchor(clickPos);
   d->setOffset(MapData::VALIGN_TOP | MapData::HALIGN_CENTER, 15);
   d->setPriority(20000);
-
-
 }
 
 void MapWidget::paintAircraftLocation(const SGGeod& aircraftPos)
@@ -762,20 +907,17 @@ void MapWidget::paintRoute()
 
 void MapWidget::drawFlightHistory()
 {
-  FGFlightHistory* history = (FGFlightHistory*) globals->get_subsystem("history");
-  if (!history || !_root->getBoolValue("draw-flight-history")) {
+  if (_flightHistoryPath.empty())
     return;
-  }
-  
+    
   // first pass, draw the actual lines
   glLineWidth(2.0);
   
-  SGGeodVec gv(history->pathForHistory());
   glColor4f(0.0, 0.0, 1.0, 0.7);
 
   glBegin(GL_LINE_STRIP);
-  for (unsigned int i=0; i<gv.size(); ++i) {
-    SGVec2d p = project(gv[i]);
+  for (unsigned int i=0; i<_flightHistoryPath.size(); ++i) {
+    SGVec2d p = project(_flightHistoryPath[i]);
     glVertex2d(p.x(), p.y());
   }
   
@@ -914,125 +1056,33 @@ void MapWidget::drawGPSData()
   }
 }
 
-class MapAirportFilter : public FGAirport::AirportFilter
+void MapWidget::drawPositioned()
 {
-public:
-  MapAirportFilter(SGPropertyNode_ptr nd)
-  {
-    _heliports = nd->getBoolValue("show-heliports", false);
-    _hardRunwaysOnly = nd->getBoolValue("hard-surfaced-airports", true);
-    _minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
-  }
-
-  virtual FGPositioned::Type maxType() const {
-    return _heliports ? FGPositioned::HELIPORT : FGPositioned::AIRPORT;
-  }
-
-  virtual bool passAirport(FGAirport* aApt) const {
-    if (_hardRunwaysOnly) {
-      return aApt->hasHardRunwayOfLengthFt(_minLengthFt);
-    }
-
-    return true;
-  }
-    
-    void showAll()
-    {
-        _hardRunwaysOnly = false;
-    }
-
-private:
-  bool _heliports;
-  bool _hardRunwaysOnly;
-  double _minLengthFt;
-};
-
-void MapWidget::drawAirports()
-{
-  MapAirportFilter af(_root);
-    if (_cachedZoom <= SHOW_DETAIL2_ZOOM) {
-        // show all airports when zoomed in sufficently
-        af.showAll();
-    }
-    
-  bool partial = false;
-  FGPositionedList apts = FGPositioned::findWithinRangePartial(_projectionCenter, _drawRangeNm, &af, partial);
-  for (unsigned int i=0; i<apts.size(); ++i) {
-    drawAirport((FGAirport*) apts[i].get());
-  }
-}
-
-class NavaidFilter : public FGPositioned::Filter
-{
-public:
-  NavaidFilter(bool fixesEnabled, bool navaidsEnabled) :
-    _fixes(fixesEnabled),
-    _navaids(navaidsEnabled)
-  {}
-
-  virtual bool pass(FGPositioned* aPos) const {
-    if (_fixes && (aPos->type() == FGPositioned::FIX)) {
-      // ignore fixes which end in digits - expirmental
-      if (aPos->ident().length() > 4 && isdigit(aPos->ident()[3]) && isdigit(aPos->ident()[4])) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  virtual FGPositioned::Type minType() const {
-    return _fixes ? FGPositioned::FIX : FGPositioned::NDB;
-  }
-
-  virtual FGPositioned::Type maxType() const {
-    return _navaids ? FGPositioned::VOR : FGPositioned::FIX;
-  }
-
-private:
-  bool _fixes, _navaids;
-};
-
-void MapWidget::drawNavaids()
-{
-  bool fixes = _root->getBoolValue("draw-fixes");
-  NavaidFilter f(fixes, _root->getBoolValue("draw-navaids"));
-
-  if (f.minType() <= f.maxType()) {
-    FGPositionedList navs = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &f);
-
-    glLineWidth(1.0);
-    for (unsigned int i=0; i<navs.size(); ++i) {
-      FGPositioned::Type ty = navs[i]->type();
-      if (ty == FGPositioned::NDB) {
-        drawNDB(false, (FGNavRecord*) navs[i].get());
-      } else if (ty == FGPositioned::VOR) {
-        drawVOR(false, (FGNavRecord*) navs[i].get());
-      } else if (ty == FGPositioned::FIX) {
-        drawFix((FGFix*) navs[i].get());
-      }
-    } // of navaid iteration
-  } // of navaids || fixes are drawn test
-}
-
-void MapWidget::drawPOIs()
-{
-  FGPositioned::TypeFilter f(FGPositioned::COUNTRY);
-  f.addType(FGPositioned::CITY);
-  f.addType(FGPositioned::TOWN);
-  FGPositionedList poi = FGPositioned::findWithinRange(_projectionCenter, _drawRangeNm, &f);
-
-    glLineWidth(1.0);
-    for (unsigned int i=0; i<poi.size(); ++i) {
-      FGPositioned::Type ty = poi[i]->type();
-      if (ty == FGPositioned::COUNTRY) {
-        drawCountries((FGNavRecord*) poi[i].get());
-      } else if (ty == FGPositioned::CITY) {
-        drawCities((FGNavRecord*) poi[i].get());
-      } else if (ty == FGPositioned::TOWN) {
-        drawTowns((FGNavRecord*) poi[i].get());
-      }
-    } // of navaid iteration
+  for (unsigned int i=0; i<_itemsToDraw.size(); ++i) {
+      FGPositionedRef p = _itemsToDraw[i];
+      switch (p->type()) {
+          case FGPositioned::AIRPORT:
+              drawAirport((FGAirport*) p.get());
+              break;
+          case FGPositioned::NDB:
+              drawNDB(false, (FGNavRecord*) p.get());
+              break;
+          case FGPositioned::VOR:
+              drawVOR(false, (FGNavRecord*) p.get());
+              break;
+          case FGPositioned::FIX:
+              drawFix((FGFix*) p.get());
+              break;
+         case FGPositioned::TOWN:
+          case FGPositioned::CITY:
+          case FGPositioned::COUNTRY:
+              drawPOI(p);
+              break;
+              
+          default:
+              SG_LOG(SG_GENERAL, SG_WARN, "unhandled type in MapWidget::drawPositioned");
+      } // of positioned type switch
+  } // of items to draw iteration
 }
 
 void MapWidget::drawNDB(bool tuned, FGNavRecord* ndb)
@@ -1193,91 +1243,38 @@ void MapWidget::drawTunedLocalizer(SGPropertyNode_ptr radio)
   }
 }
 
-void MapWidget::drawCountries(FGNavRecord* rec)
+void MapWidget::drawPOI(FGPositioned* poi)
 {
-  if (_cachedZoom < 9) {
-    return; // hide labels beyond a certain zoom level
-  }
-
-  SGVec2d pos = project(rec->geod());
+  SGVec2d pos = project(poi->geod());
   glColor3f(1.0, 1.0, 0.0);
+  glLineWidth(1.0);
 
-  circleAt(pos, 4, 10);
+    int radius = 10;
+    if (poi->type() == FGPositioned::CITY) {
+        radius = 8;
+        glColor3f(0.0, 1.0, 0.0);
+    } else if (poi->type() == FGPositioned::TOWN) {
+        radius =  5;
+        glColor3f(0.2, 1.0, 0.0);
+    }
+    
+  circleAt(pos, 4, radius);
 
-  if (validDataForKey(rec)) {
-    setAnchorForKey(rec, pos);
+  if (validDataForKey(poi)) {
+    setAnchorForKey(poi, pos);
     return;
   }
 
   char buffer[1024];
         ::snprintf(buffer, 1024, "%s",
-                rec->name().c_str());
+                poi->name().c_str());
 
-  MapData* d = createDataForKey(rec);
+  MapData* d = createDataForKey(poi);
   d->setPriority(200);
-  d->setLabel(rec->ident());
+  d->setLabel(poi->ident());
   d->setText(buffer);
   d->setOffset(MapData::HALIGN_CENTER | MapData::VALIGN_BOTTOM, 10);
   d->setAnchor(pos);
-
-}
-
-void MapWidget::drawCities(FGNavRecord* rec)
-{
-  if (_cachedZoom > SHOW_DETAIL_ZOOM) {
-    return; // hide labels beyond a certain zoom level
-  }
-
-  SGVec2d pos = project(rec->geod());
-  glColor3f(0.0, 1.0, 0.0);
-
-  circleAt(pos, 4, 8);
-
-  if (validDataForKey(rec)) {
-    setAnchorForKey(rec, pos);
-    return;
-  }
-
-  char buffer[1024];
-        ::snprintf(buffer, 1024, "%s",
-                rec->name().c_str());
-
-  MapData* d = createDataForKey(rec);
-  d->setPriority(40);
-  d->setLabel(rec->ident());
-  d->setText(buffer);
-  d->setOffset(MapData::HALIGN_CENTER | MapData::VALIGN_BOTTOM, 10);
-  d->setAnchor(pos);
-
-}
-
-void MapWidget::drawTowns(FGNavRecord* rec)
-{
-  if (_cachedZoom > SHOW_DETAIL2_ZOOM) {
-    return; // hide labels beyond a certain zoom level
-  }
-
-  SGVec2d pos = project(rec->geod());
-  glColor3f(0.2, 1.0, 0.0);
-
-  circleAt(pos, 4, 5);
-
-  if (validDataForKey(rec)) {
-    setAnchorForKey(rec, pos);
-    return;
-  }
-
-  char buffer[1024];
-        ::snprintf(buffer, 1024, "%s",
-                rec->name().c_str());
-
-  MapData* d = createDataForKey(rec);
-  d->setPriority(40);
-  d->setLabel(rec->ident());
-  d->setText(buffer);
-  d->setOffset(MapData::HALIGN_CENTER | MapData::VALIGN_BOTTOM, 10);
-  d->setAnchor(pos);
-
 }
 
 /*
@@ -1491,42 +1488,10 @@ void MapWidget::drawILS(bool tuned, FGRunway* rwy)
 
 void MapWidget::drawTraffic()
 {
-  if (!_root->getBoolValue("draw-traffic")) {
-    return;
-  }
-
-  if (_cachedZoom > SHOW_DETAIL_ZOOM) {
-    return;
-  }
-
-  const SGPropertyNode* ai = fgGetNode("/ai/models", true);
-
-  for (int i = 0; i < ai->nChildren(); ++i) {
-    const SGPropertyNode *model = ai->getChild(i);
-    // skip bad or dead entries
-    if (!model || model->getIntValue("id", -1) == -1) {
-      continue;
+    AIDrawVec::const_iterator it;
+    for (it = _aiDrawVec.begin(); it != _aiDrawVec.end(); ++it) {
+        drawAI(*it);
     }
-
-    const std::string& name(model->getName());
-    SGGeod pos = SGGeod::fromDegFt(
-      model->getDoubleValue("position/longitude-deg"),
-      model->getDoubleValue("position/latitude-deg"),
-      model->getDoubleValue("position/altitude-ft"));
-
-    double dist = SGGeodesy::distanceNm(_projectionCenter, pos);
-    if (dist > _drawRangeNm) {
-      continue;
-    }
-
-    double heading = model->getDoubleValue("orientation/true-heading-deg");
-    if ((name == "aircraft") || (name == "multiplayer") ||
-        (name == "wingman") || (name == "tanker")) {
-      drawAIAircraft(model, pos, heading);
-    } else if ((name == "ship") || (name == "carrier") || (name == "escort")) {
-      drawAIShip(model, pos, heading);
-    }
-  } // of ai/models iteration
 }
 
 void MapWidget::drawHelipad(FGHelipad* hp)
@@ -1555,103 +1520,34 @@ void MapWidget::drawHelipad(FGHelipad* hp)
   d->setAnchor(pos);
 }
 
-void MapWidget::drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, double hdg)
+void MapWidget::drawAI(const DrawAIObject& dai)
 {
+  SGVec2d p = project(dai.pos);
 
-  SGVec2d p = project(pos);
+    if (dai.boat) {
+        glColor3f(0.0, 0.0, 0.5);
 
-  glColor3f(0.0, 0.0, 0.0);
+    } else {
+        glColor3f(0.0, 0.0, 0.0);
+    }
   glLineWidth(2.0);
   circleAt(p, 4, 6.0); // black diamond
 
 // draw heading vector
-  int speedKts = static_cast<int>(model->getDoubleValue("velocities/true-airspeed-kt"));
-  if (speedKts > 1) {
+  if (dai.speedKts > 1) {
     glLineWidth(1.0);
-
     const double dt = 15.0 / (3600.0); // 15 seconds look-ahead
-    double distanceM = speedKts * SG_NM_TO_METER * dt;
-
-    SGGeod advance;
-    double az2;
-    SGGeodesy::direct(pos, hdg, distanceM, advance, az2);
-
+    double distanceM = dai.speedKts * SG_NM_TO_METER * dt;
+    SGGeod advance = SGGeodesy::direct(dai.pos, dai.heading, distanceM);
     drawLine(p, project(advance));
   }
    
-    // try to access the flight-plan of the aircraft. There are several layers
-    // of potential NULL-ness here, so we have to be defensive at each stage.
-    std::string originICAO, destinationICAO;
-    FGAIManager* aiManager = static_cast<FGAIManager*>(globals->get_subsystem("ai-model"));
-    FGAIBasePtr aircraft = aiManager ? aiManager->getObjectFromProperty(model) : NULL;
-    if (aircraft) {
-        FGAIAircraft* p = static_cast<FGAIAircraft*>(aircraft.get());
-        if (p->GetFlightPlan()) {
-            if (p->GetFlightPlan()->departureAirport()) {
-                originICAO = p->GetFlightPlan()->departureAirport()->ident();
-            }
-            
-            if (p->GetFlightPlan()->arrivalAirport()) {
-                destinationICAO = p->GetFlightPlan()->arrivalAirport()->ident();
-            }
-        } // of flight-plan exists
-    } // of check for AIBase-derived instance
-
-  // draw callsign / altitude / speed
-    int altFt50 = static_cast<int>(pos.getElevationFt() / 50.0) * 50;
-    std::ostringstream ss;
-    ss << model->getStringValue("callsign", "<>");
-    if (speedKts > 1) {
-        ss << "\n" << altFt50 << "' " << speedKts << "kts";
-    }
-    
-    if (!originICAO.empty() || ! destinationICAO.empty()) {
-        ss << "\n" << originICAO << " -> " << destinationICAO;
-    }
-    
-    MapData* d = getOrCreateDataForKey((void*) model);
-    d->setText(ss.str().c_str());
-    d->setLabel(model->getStringValue("callsign", "<>"));
-    d->setPriority(speedKts > 5 ? 60 : 10); // low priority for parked aircraft
+    MapData* d = getOrCreateDataForKey((void*) dai.model);
+    d->setText(dai.legend);
+    d->setLabel(dai.label);
+    d->setPriority(dai.speedKts > 5 ? 60 : 10); // low priority for parked aircraft
     d->setOffset(MapData::VALIGN_CENTER | MapData::HALIGN_LEFT, 10);
     d->setAnchor(p);
-}
-
-void MapWidget::drawAIShip(const SGPropertyNode* model, const SGGeod& pos, double hdg)
-{
-  SGVec2d p = project(pos);
-
-  glColor3f(0.0, 0.0, 0.5);
-  glLineWidth(2.0);
-  circleAt(p, 4, 6.0); // blue diamond (to differentiate from aircraft.
-
-// draw heading vector
-  int speedKts = static_cast<int>(model->getDoubleValue("velocities/speed-kts"));
-  if (speedKts > 1) {
-    glLineWidth(1.0);
-
-    const double dt = 15.0 / (3600.0); // 15 seconds look-ahead
-    double distanceM = speedKts * SG_NM_TO_METER * dt;
-
-    SGGeod advance;
-    double az2;
-    SGGeodesy::direct(pos, hdg, distanceM, advance, az2);
-
-    drawLine(p, project(advance));
-  }
-
-  // draw callsign / speed
-  char buffer[1024];
-	::snprintf(buffer, 1024, "%s\n%dkts",
-		model->getStringValue("name", "<>"),
-    speedKts);
-
-  MapData* d = getOrCreateDataForKey((void*) model);
-  d->setText(buffer);
-  d->setLabel(model->getStringValue("name", "<>"));
-  d->setPriority(speedKts > 2 ? 30 : 10); // low priority for slow moving ships
-  d->setOffset(MapData::VALIGN_CENTER | MapData::HALIGN_LEFT, 10);
-  d->setAnchor(p);
 }
 
 SGVec2d MapWidget::project(const SGGeod& geod) const
@@ -1979,3 +1875,63 @@ int MapWidget::displayHeading(double h) const
   SG_NORMALIZE_RANGE(h, 0.0, 360.0);
   return SGMiscd::roundToInt(h);
 }
+
+MapWidget::DrawAIObject::DrawAIObject(SGPropertyNode* m, const SGGeod& g) :
+    model(m),
+    boat(false),
+    pos(g),
+    speedKts(0)
+{
+    std::string name(model->getNameString());
+    heading = model->getDoubleValue("orientation/true-heading-deg");
+    
+    if ((name == "aircraft") || (name == "multiplayer") ||
+        (name == "wingman") || (name == "tanker"))
+    {
+        speedKts = static_cast<int>(model->getDoubleValue("velocities/true-airspeed-kt"));
+        label = model->getStringValue("callsign", "<>");
+    
+        // try to access the flight-plan of the aircraft. There are several layers
+        // of potential NULL-ness here, so we have to be defensive at each stage.
+        std::string originICAO, destinationICAO;
+        FGAIManager* aiManager = static_cast<FGAIManager*>(globals->get_subsystem("ai-model"));
+        FGAIBasePtr aircraft = aiManager ? aiManager->getObjectFromProperty(model) : NULL;
+        if (aircraft) {
+            FGAIAircraft* p = static_cast<FGAIAircraft*>(aircraft.get());
+            if (p->GetFlightPlan()) {
+                if (p->GetFlightPlan()->departureAirport()) {
+                    originICAO = p->GetFlightPlan()->departureAirport()->ident();
+                }
+                
+                if (p->GetFlightPlan()->arrivalAirport()) {
+                    destinationICAO = p->GetFlightPlan()->arrivalAirport()->ident();
+                }
+            } // of flight-plan exists
+        } // of check for AIBase-derived instance
+        
+        // draw callsign / altitude / speed
+        int altFt50 = static_cast<int>(pos.getElevationFt() / 50.0) * 50;
+        std::ostringstream ss;
+        ss << model->getStringValue("callsign", "<>");
+        if (speedKts > 1) {
+            ss << "\n" << altFt50 << "' " << speedKts << "kts";
+        }
+        
+        if (!originICAO.empty() || ! destinationICAO.empty()) {
+            ss << "\n" << originICAO << " -> " << destinationICAO;
+        }
+
+        legend = ss.str();
+    } else if ((name == "ship") || (name == "carrier") || (name == "escort")) {
+        boat = true;
+        speedKts = static_cast<int>(model->getDoubleValue("velocities/speed-kts"));
+        label = model->getStringValue("name", "<>");
+        
+        char buffer[1024];
+        ::snprintf(buffer, 1024, "%s\n%dkts",
+                   model->getStringValue("name", "<>"),
+                   speedKts);
+        legend = buffer;
+    }
+}
+

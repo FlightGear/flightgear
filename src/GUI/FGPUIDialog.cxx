@@ -977,6 +977,7 @@ FGPUIDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeigh
     } else if (type == "map") {
         MapWidget* mapWidget = new MapWidget(x, y, x + width, y + height);
         setupObject(mapWidget, props);
+        _activeWidgets.push_back(mapWidget);
         return mapWidget;
     } else if (type == "canvas") {
         CanvasWidget* canvasWidget = new CanvasWidget( x, y,

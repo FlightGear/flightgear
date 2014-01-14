@@ -6,9 +6,10 @@
 #include <simgear/math/SGMath.hxx>
 #include <simgear/props/props.hxx>
 
+#include <Navaids/positioned.hxx>
 #include <plib/pu.h>
 
-#include "dialog.hxx" // for GUI_ID
+#include "FGPUIDialog.hxx"
 
 // forward decls
 class FGRouteMgr;
@@ -20,18 +21,25 @@ class FGFix;
 class MapData;
 class SGMagVar;
 
-class MapWidget : public puObject
+typedef std::vector<SGGeod> SGGeodVec;
+
+class MapWidget : public puObject, public FGPUIDialog::ActiveWidget
 {
 public:
   MapWidget(int x, int y, int width, int height);
   virtual ~MapWidget();
   
+    // puObject over-rides
   virtual void setSize(int width, int height);
   virtual void doHit( int button, int updown, int x, int y ) ;
   virtual void draw( int dx, int dy ) ;
   virtual int checkKey(int key, int updown);
     
   void setProperty(SGPropertyNode_ptr prop);
+    
+    // PUIDialog::ActiveWidget over-rides
+    virtual void update();
+    
 private:
     enum Projection {
         PROJECTION_SAMSON_FLAMSTEED,
@@ -60,7 +68,6 @@ private:
   SGVec2d gridPoint(int ix, int iy);
   bool drawLineClipped(const SGVec2d& a, const SGVec2d& b);
   
-  void drawAirports();
   void drawAirport(FGAirport* apt);
   int scoreAirportRunways(FGAirport* apt);
   void drawRunwayPre(FGRunway* rwy);
@@ -68,19 +75,34 @@ private:
   void drawHelipad(FGHelipad* hp);
   void drawILS(bool tuned, FGRunway* rwy);
   
-  void drawNavaids();
-  void drawPOIs();
+  void drawPositioned();
   void drawNDB(bool tuned, FGNavRecord* nav);
   void drawVOR(bool tuned, FGNavRecord* nav);
   void drawFix(FGFix* fix);
 
-  void drawCountries(FGNavRecord* rec);
-  void drawCities(FGNavRecord* rec);
-  void drawTowns(FGNavRecord* rec);
-  
+  void drawPOI(FGPositioned* rec);
+    
   void drawTraffic();
-  void drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, double hdg);
-  void drawAIShip(const SGPropertyNode* model, const SGGeod& pos, double hdg);
+    
+    class DrawAIObject
+    {
+    public:
+        DrawAIObject(SGPropertyNode* model, const SGGeod& g);
+        
+        SGPropertyNode* model;
+        bool boat;
+        SGGeod pos;
+        double heading;
+        int speedKts;
+        std::string label;
+        std::string legend;
+    };
+    
+    typedef std::vector<DrawAIObject> AIDrawVec;
+    AIDrawVec _aiDrawVec;
+    
+    void updateAIObjects();
+    void drawAI(const DrawAIObject& dai);
   
   void drawData();
   bool validDataForKey(void* key);
@@ -107,7 +129,9 @@ private:
   double _upHeading; // true heading corresponding to +ve y-axis
   bool _magneticHeadings;
   bool _hasPanned;
-  
+  bool _aircraftUp;
+  int _displayHeading;
+    
   SGGeod _projectionCenter;
   Projection _projection;
   SGGeod _aircraft;
@@ -116,7 +140,10 @@ private:
   FGRouteMgr* _route;
   SGPropertyNode_ptr _root;
   SGPropertyNode_ptr _gps;
-  
+  SGGeodVec _flightHistoryPath;
+    
+  FGPositionedList _itemsToDraw;
+    
   typedef std::map<void*, MapData*> KeyDataMap;
   KeyDataMap _mapData;
   std::vector<MapData*> _dataQueue;
