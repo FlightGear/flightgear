@@ -401,9 +401,23 @@ void FGGlobals::append_aircraft_path(const std::string& path)
 {
   SGPath dirPath(path);
   if (!dirPath.exists()) {
-    SG_LOG(SG_GENERAL, SG_WARN, "aircraft path not found:" << path);
+    SG_LOG(SG_GENERAL, SG_ALERT, "aircraft path not found:" << path);
     return;
   }
+    
+  SGPath acSubdir(dirPath);
+  acSubdir.append("Aircraft");
+  if (!acSubdir.exists()) {
+      if (dirPath.file() == "Aircraft") {
+          dirPath = dirPath.dir();
+          SG_LOG(SG_GENERAL, SG_WARN, "Specified an aircraft-dir path ending in 'Aircraft':" << path
+                 << ", will instead use parent directory:" << dirPath);
+      } else {
+          SG_LOG(SG_GENERAL, SG_ALERT, "Aircraft-dir path '" << path <<
+             "' does not contain an 'Aircraft' subdirectory, cross-aircraft paths will not resolve correctly.");
+      }
+  }
+    
   std::string abspath = dirPath.realpath();
   
   unsigned int index = fg_aircraft_dirs.size();  

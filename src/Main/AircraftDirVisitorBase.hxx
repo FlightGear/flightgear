@@ -46,7 +46,16 @@ protected:
         const string_list& paths(globals->get_aircraft_paths());
         string_list::const_iterator it = paths.begin();
         for (; it != paths.end(); ++it) {
-            VisitResult vr = visitDir(simgear::Dir(*it), 0);
+            SGPath p(*it);
+        // additional aircraft-paths are supposed to specify the directory
+        // containing the 'Aircraft' dir (same structure as fg-root, so cross-
+        // aircraft resource paths can be resolved correctly). Some users omit
+        // this, so check for both.
+            p.append("Aircraft");
+            if (!p.exists())
+                p = SGPath(*it);
+            
+            VisitResult vr = visitDir(p, 0);
             if (vr != VISIT_CONTINUE) {
                 return vr;
             }
