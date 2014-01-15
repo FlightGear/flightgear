@@ -101,6 +101,11 @@ static void fgMainLoop( void )
 
 static void initTerrasync()
 {
+    // add the terrasync root as a data path so data can be retrieved from it
+    // (even if we are in read-only mode)
+    std::string terraSyncDir(fgGetString("/sim/terrasync/scenery-dir"));
+    globals->append_data_path(terraSyncDir);
+    
     if (fgGetBool("/sim/fghome-readonly", false)) {
         return;
     }
@@ -127,10 +132,6 @@ static void initTerrasync()
     
     terra_sync->bind();
     terra_sync->init();
-    
-    // add the terrasync root as a data path so data can be retrieved from it
-    std::string terraSyncDir(fgGetString("/sim/terrasync/scenery-dir"));
-    globals->append_data_path(terraSyncDir);
 }
 
 static void registerMainLoop()

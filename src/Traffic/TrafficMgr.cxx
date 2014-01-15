@@ -494,9 +494,10 @@ void FGTrafficManager::init()
 
     assert(!doingInit);
     simgear::SGTerraSync* terraSync = static_cast<simgear::SGTerraSync*>(globals->get_subsystem("terrasync"));
-    
-    if (terraSync) {
+    bool doDataSync = fgGetBool("/sim/terrasync/ai-data-enabled");
+    if (doDataSync && terraSync) {
         if (!trafficSyncRequested) {
+            SG_LOG(SG_AI, SG_INFO, "Sync of AI traffic via TerraSync enabled");
             terraSync->scheduleDataDir("AI/Traffic");
             trafficSyncRequested = true;
         }
