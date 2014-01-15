@@ -24,6 +24,41 @@ typedef std::map<NSMenuItem*, SGBindingList> MenuItemBindings;
 
 @class CocoaMenuDelegate;
 
+namespace {
+    
+    class CocoaEnabledListener : public SGPropertyChangeListener
+    {
+    public:
+        CocoaEnabledListener(SGPropertyNode_ptr prop, NSMenuItem* i) :
+            property(prop->getNode("enabled")),
+            item(i)
+        {
+            if (property.get()) {
+                property->addChangeListener(this);
+            }
+        }
+        
+        ~CocoaEnabledListener()
+        {
+            if (property.get()) {
+                property->removeChangeListener(this);
+            }
+        }
+        
+        
+        virtual void valueChanged(SGPropertyNode *node)
+        {
+            CocoaAutoreleasePool pool;
+            BOOL b = node->getBoolValue();
+            [item setEnabled:b];
+        }
+        
+    private:
+        SGPropertyNode_ptr property;
+        NSMenuItem* item;
+    };
+} // of anonymous namespace
+
 class FGCocoaMenuBar::CocoaMenuBarPrivate
 {
 public:
@@ -38,7 +73,7 @@ public:
   CocoaMenuDelegate* delegate;
   
   MenuItemBindings itemBindings;
-    std::vector<SGPropertyChangeListener*> listeners;
+    std::vector<CocoaEnabledListener*> listeners;
 };
 
 // prior to the 10.6 SDK, NSMenuDelegate was an informal protocol
@@ -126,35 +161,6 @@ static void setItemShortcutFromString(NSMenuItem* item, const string& s)
   [item setKeyEquivalentModifierMask:modifiers];
 }
 
-namespace {
-
-  class CocoaEnabledListener : public SGPropertyChangeListener
-  {
-  public:
-    CocoaEnabledListener(NSMenuItem* i) :
-      item(i)
-    {
-    
-    }
-      
-      ~CocoaEnabledListener()
-      {
-          
-      }
-    
-    
-    virtual void valueChanged(SGPropertyNode *node) 
-    {
-      CocoaAutoreleasePool pool;
-      BOOL b = node->getBoolValue();
-      [item setEnabled:b];
-    }
-    
-  private:
-    NSMenuItem* item;
-  };
-} // of anonymous namespace
-
 FGCocoaMenuBar::CocoaMenuBarPrivate::CocoaMenuBarPrivate()
 {
   delegate = [[CocoaMenuDelegate alloc] init];
@@ -195,9 +201,9 @@ void FGCocoaMenuBar::CocoaMenuBarPrivate::menuFromProps(NSMenu* menu, SGProperty
           setItemShortcutFromString(item, shortcut);
         }
         
-        SGPropertyChangeListener* enableListener = new CocoaEnabledListener(item);
-        listeners.push_back(enableListener);
-        n->getNode("enabled")->addChangeListener(enableListener);
+        CocoaEnabledListener* cl = new CocoaEnabledListener(n, item);
+        listeners.push_back(cl);
+          
         [item setTarget:delegate];
         [item setAction:@selector(itemAction:)];
       }
@@ -243,10 +249,18 @@ FGCocoaMenuBar::~FGCocoaMenuBar()
         [topLevelItem.submenu removeAllItems];
     }
     
-    std::vector<SGPropertyChangeListener*>::iterator it;
+    std::vector<CocoaEnabledListener*>::iterator it;
     for (it = p->listeners.begin(); it != p->listeners.end(); ++it) {
         delete *it;
-    }    
+    }
+    
+    // owing to the bizarre destructor behaviour of SGBinding, we need
+    // to explicitly clear these bindings. (PUIMenuBar takes a different
+    // approach, and copies each binding into /sim/bindings)
+    MenuItemBindings::iterator j;
+    for (j = p->itemBindings.begin(); j != p->itemBindings.end(); ++j) {
+        clearBindingList(j->second);
+    }
 }
 
 void FGCocoaMenuBar::init()
@@ -291,9 +305,8 @@ void FGCocoaMenuBar::init()
       n->setBoolValue("enabled", true);
     }
     
-    SGPropertyChangeListener* l = new CocoaEnabledListener(item);
+    CocoaEnabledListener* l = new CocoaEnabledListener( n, item);
     p->listeners.push_back(l);
-    n->getNode("enabled")->addChangeListener(l);
   }
 }
 

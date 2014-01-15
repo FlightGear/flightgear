@@ -201,6 +201,8 @@ protected:
     virtual void reset (bool reload);
 
 private:
+    void createMenuBarImplementation();
+    
     struct ltstr
     {
         bool operator()(const char* s1, const char* s2) const {

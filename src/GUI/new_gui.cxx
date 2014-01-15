@@ -63,23 +63,18 @@ NewGUI::~NewGUI ()
 void
 NewGUI::init ()
 {
-#if defined(SG_MAC)
-    if (fgGetBool("/sim/menubar/native", true)) {
-        _menubar.reset(new FGCocoaMenuBar);
-    }
-#endif
-    if (!_menubar.get()) {
-        _menubar.reset(new FGPUIMenuBar);
-    }
-    
+    createMenuBarImplementation();
     fgTie("/sim/menubar/visibility", this,
           &NewGUI::getMenuBarVisible, &NewGUI::setMenuBarVisible);
     
     setStyle();
     SGPath p(globals->get_fg_root(), "gui/dialogs");
     readDir(p);
-    const std::string aircraft_dir(fgGetString("/sim/aircraft-dir"));
-    readDir( SGPath(aircraft_dir, "gui/dialogs") );
+    
+    SGPath aircraftDialogDir(string(fgGetString("/sim/aircraft-dir")), "gui/dialogs");
+    if (aircraftDialogDir.exists()) {
+        readDir(aircraftDialogDir);
+    }
     
     // Fix for http://code.google.com/p/flightgear-bugs/issues/detail?id=947
     fgGetNode("sim/menubar")->setAttribute(SGPropertyNode::PRESERVE, true);
@@ -108,6 +103,19 @@ NewGUI::redraw ()
 }
 
 void
+NewGUI::createMenuBarImplementation()
+{
+#if defined(SG_MAC)
+    if (fgGetBool("/sim/menubar/native", true)) {
+        _menubar.reset(new FGCocoaMenuBar);
+    }
+#endif
+    if (!_menubar.get()) {
+        _menubar.reset(new FGPUIMenuBar);
+    }
+}
+
+void
 NewGUI::reset (bool reload)
 {
     map<string,FGDialog *>::iterator iter;
@@ -122,15 +130,13 @@ NewGUI::reset (bool reload)
     setStyle();
 
     unbind();
-#if !defined(SG_MAC)
-    _menubar.reset(new FGPUIMenuBar);
-#endif
 
     if (reload) {
         _dialog_props.clear();
         _dialog_names.clear();
         init();
     } else {
+        createMenuBarImplementation();
         _menubar->init();
     }
 
