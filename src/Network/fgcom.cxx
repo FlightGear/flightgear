@@ -546,7 +546,10 @@ std::string FGCom::getAirportCode(const double& freq)
 
   flightgear::CommStation* apt = flightgear::CommStation::findByFreq(_currentFreqKhz, aircraftPos);
   if( !apt ) {
-    return std::string();
+    apt = flightgear::CommStation::findByFreq(_currentFreqKhz-10, aircraftPos); // Check for 8.33KHz
+    if( !apt ) {
+      return std::string();
+    }
   }
 
   if( apt->type() == FGPositioned::FREQ_TOWER ) {
