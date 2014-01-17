@@ -68,6 +68,7 @@ FlightPlan::FlightPlan() :
   _sid(NULL),
   _star(NULL),
   _approach(NULL),
+  _totalDistance(0.0),
   _delegate(NULL)
 {
   _departureChanged = _arrivalChanged = _waypointsChanged = _currentWaypointChanged = false;
