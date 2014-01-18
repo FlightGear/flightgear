@@ -153,11 +153,9 @@ class TCAS : public SGSubsystem
 
     class PropertiesHandler : public FGVoicePlayer::PropertiesHandler
     {
-      TCAS *tcas;
-
     public:
-      PropertiesHandler (TCAS *device) :
-        FGVoicePlayer::PropertiesHandler(), tcas(device) {}
+      PropertiesHandler (TCAS *) :
+        FGVoicePlayer::PropertiesHandler() {}
 
       PropertiesHandler (void) : FGVoicePlayer::PropertiesHandler() {}
     };
@@ -272,7 +270,6 @@ class TCAS : public SGSubsystem
         int  getThreatLevel  (std::string callsign);
 
     private:
-        TCAS*  tcas;
         double currentTime;
         bool   haveTargets;
         bool   newTargets;

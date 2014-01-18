@@ -1389,8 +1389,7 @@ TCAS::selfTest(void)
 // TCAS::Tracker //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-TCAS::Tracker::Tracker(TCAS* _tcas) :
-    tcas(_tcas),
+TCAS::Tracker::Tracker(TCAS*) :
     currentTime(0),
     haveTargets(false),
     newTargets(false)
