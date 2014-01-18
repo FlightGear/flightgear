@@ -203,6 +203,15 @@ find_package(OpenGL  REQUIRED)
 find_package(OpenAL  REQUIRED)
 find_package(OpenSceneGraph 3.0.0 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
 
+if (MSVC)
+	find_package(CrashRpt)
+	if (CRASHRPT_FOUND)
+		set(HAVE_CRASHRPT 1)
+		message(STATUS "Using CrashRpt")
+        include_directories( ${CRASHRPT_INCLUDE_DIR})
+	endif()
+endif()
+
 if(ENABLE_FGADMIN)
     find_package(FLTK)
 

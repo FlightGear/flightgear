@@ -60,6 +60,7 @@ using std::endl;
 
 #include <Viewer/fgviewer.hxx>
 #include "main.hxx"
+#include <Include/version.h>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <GUI/MessageBox.hxx>
@@ -68,6 +69,10 @@ using std::endl;
 
 #if defined(SG_MAC)
     #include <GUI/CocoaHelpers.h> // for transformToForegroundApp
+#endif
+
+#if defined(HAVE_CRASHRPT)
+	#include <CrashRpt.h>
 #endif
 
 std::string homedir;
@@ -176,6 +181,41 @@ int main ( int argc, char **argv )
 #endif
     _bootstrap_OSInit = 0;
 
+#if defined(HAVE_CRASHRPT)
+	// Define CrashRpt configuration parameters
+	CR_INSTALL_INFO info;  
+	memset(&info, 0, sizeof(CR_INSTALL_INFO));  
+	info.cb = sizeof(CR_INSTALL_INFO);    
+	info.pszAppName = "FlightGear";
+	info.pszAppVersion = FLIGHTGEAR_VERSION;
+	info.pszEmailSubject = "FlightGear " FLIGHTGEAR_VERSION " crash report";
+	info.pszEmailTo = "fgcrash@goneabitbursar.com";
+	info.pszUrl = "http://fgfs.goneabitbursar.com/crashreporter/crashrpt.php";
+	info.uPriorities[CR_HTTP] = 3; 
+	info.uPriorities[CR_SMTP] = 2;  
+	info.uPriorities[CR_SMAPI] = 1;
+
+	// Install all available exception handlers
+	info.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS;
+  
+	// Restart the app on crash 
+	info.dwFlags |= CR_INST_SEND_QUEUED_REPORTS; 
+
+	// autoamticallty install handlers for all threads
+	info.dwFlags |= CR_INST_AUTO_THREAD_HANDLERS;
+
+	// Define the Privacy Policy URL 
+	info.pszPrivacyPolicyURL = "http://flightgear.org/crash-privacypolicy.html"; 
+  
+	// Install crash reporting
+	int nResult = crInstall(&info);    
+	if(nResult!=0) {
+		std::cerr << "failed to install crash reporting engine" << std::endl;
+	} else {
+		crAddProperty("hudson-build-id", HUDSON_BUILD_ID); 
+	}
+#endif
+
 #if defined(__FreeBSD__)
     // Ignore floating-point exceptions on FreeBSD
     signal(SIGFPE, SIG_IGN); 
@@ -224,8 +264,7 @@ int main ( int argc, char **argv )
             fgviewerMain(argc, argv);
         else
             fgMainInit(argc, argv);
-            
-        
+           
     } catch (const sg_throwable &t) {
         std::string info;
         if (std::strlen(t.getOrigin()) != 0)
@@ -244,6 +283,10 @@ int main ( int argc, char **argv )
         if (errno)
             perror("Possible cause");
     }
+
+#if defined(HAVE_CRASHRPT)
+	crUninstall();
+#endif
 
     return 0;
 }

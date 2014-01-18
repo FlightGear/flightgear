@@ -42,3 +42,6 @@
 #cmakedefine ENABLE_IAX
 
 #cmakedefine HAVE_DBUS
+
+#cmakedefine HAVE_CRASHRPT
+
