@@ -100,6 +100,10 @@ if(FG_HAVE_GPERFTOOLS)
     target_link_libraries(fgfs ${GooglePerfTools_LIBRARIES})
 endif()
 
+if (CRASHRPT_FOUND)
+	target_link_libraries(fgfs ${CRASHRPT_LIBRARY})
+endif()
+
 target_link_libraries(fgfs
 	${SQLITE3_LIBRARY}
 	${SIMGEAR_LIBRARIES}
@@ -109,7 +113,6 @@ target_link_libraries(fgfs
 	${JPEG_LIBRARY}
 	${HLA_LIBRARIES}
 	${EVENT_INPUT_LIBRARIES}
-	${CRASHRPT_LIBRARY}
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 	${SIMGEAR_SCENE_LIBRARY_DEPENDENCIES}
 	${PLATFORM_LIBS}
