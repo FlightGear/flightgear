@@ -33,6 +33,10 @@
 #include <osg/GraphicsContext>
 #include <osgDB/Registry>
 
+#if defined(HAVE_CRASHRPT)
+	#include <CrashRpt.h>
+#endif
+
 // Class references
 #include <simgear/canvas/VGInitOperation.hxx>
 #include <simgear/scene/model/modellib.hxx>
@@ -339,6 +343,10 @@ static void logToFile()
         logPath.append("fgfs.log");
     }
     sglog().logToFile(logPath, SG_ALL, SG_INFO);
+
+#if defined(HAVE_CRASHRPT)
+	crAddFile2(logPath.c_str(), NULL, "FlightGear Log File", CR_AF_MAKE_FILE_COPY);
+#endif
 }
 
 // Main top level initialization
