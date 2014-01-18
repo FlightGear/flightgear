@@ -34,22 +34,28 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGJSBBase.h"
 #include <vector>
-#include "math/FGFunction.h"
-#include "input_output/FGPropertyManager.h"
+#include <map>
+#include <list>
+
+#include "FGJSBBase.h"
+#include "input_output/FGPropertyReader.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MODELFUNCTIONS "$Id: FGModelFunctions.h,v 1.6 2013/11/24 11:40:55 bcoconni Exp $"
+#define ID_MODELFUNCTIONS "$Id: FGModelFunctions.h,v 1.9 2014/01/02 22:37:48 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 namespace JSBSim {
+
+class FGFunction;
+class Element;
+class FGPropertyManager;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -72,7 +78,7 @@ CLASS DOCUMENTATION
 DECLARATION: FGModelFunctions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGModelFunctions : public FGJSBBase
+class FGModelFunctions : public FGPropertyReader, public FGJSBBase
 {
 public:
   virtual ~FGModelFunctions();
@@ -96,7 +102,8 @@ public:
 protected:
   std::vector <FGFunction*> PreFunctions;
   std::vector <FGFunction*> PostFunctions;
-  std::vector <double*> interface_properties;
+
+  virtual bool InitModel(void);
 };
 
 } // namespace JSBSim

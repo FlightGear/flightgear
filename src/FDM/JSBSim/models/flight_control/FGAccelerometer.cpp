@@ -51,8 +51,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAccelerometer.cpp,v 1.12 2013/11/24 11:40:56 bcoconni Exp $";
-static const char *IdHdr = ID_ACCELEROMETER;
+IDENT(IdSrc,"$Id: FGAccelerometer.cpp,v 1.15 2014/01/13 10:46:07 ehofman Exp $");
+IDENT(IdHdr,ID_ACCELEROMETER);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -65,7 +65,6 @@ FGAccelerometer::FGAccelerometer(FGFCS* fcs, Element* element)
   Propagate = fcs->GetExec()->GetPropagate();
   Accelerations = fcs->GetExec()->GetAccelerations();
   MassBalance = fcs->GetExec()->GetMassBalance();
-  Inertial = fcs->GetExec()->GetInertial();
   
   Element* location_element = element->FindElement("location");
   if (location_element) vLocation = location_element->FindElementTripletConvertTo("IN");

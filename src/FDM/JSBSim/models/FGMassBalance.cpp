@@ -41,6 +41,7 @@ INCLUDES
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
+
 #include "FGMassBalance.h"
 #include "FGFDMExec.h"
 #include "input_output/FGPropertyManager.h"
@@ -51,8 +52,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGMassBalance.cpp,v 1.43 2013/11/24 11:40:56 bcoconni Exp $";
-static const char *IdHdr = ID_MASSBALANCE;
+IDENT(IdSrc,"$Id: FGMassBalance.cpp,v 1.47 2014/01/13 10:46:07 ehofman Exp $");
+IDENT(IdHdr,ID_MASSBALANCE);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -92,6 +93,8 @@ FGMassBalance::~FGMassBalance()
 
 bool FGMassBalance::InitModel(void)
 {
+  if (!FGModel::InitModel()) return false;
+
   vLastXYZcg.InitMatrix(0.0);
   vDeltaXYZcg.InitMatrix(0.0);
 

@@ -64,8 +64,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGOutputTextFile.cpp,v 1.7 2013/11/24 11:40:55 bcoconni Exp $";
-static const char *IdHdr = ID_OUTPUTTEXTFILE;
+IDENT(IdSrc,"$Id: FGOutputTextFile.cpp,v 1.10 2014/01/13 10:46:00 ehofman Exp $");
+IDENT(IdHdr,ID_OUTPUTTEXTFILE);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -76,7 +76,7 @@ bool FGOutputTextFile::Load(Element* el)
   if(!FGOutputFile::Load(el))
     return false;
 
-  PreLoad(el, PropertyManager);
+//  PreLoad(el, PropertyManager);
 
   string type = el->GetAttributeValue("type");
   string delim;

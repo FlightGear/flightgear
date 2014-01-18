@@ -62,8 +62,8 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-static const char *IdSrc = "$Id: FGLGear.cpp,v 1.106 2013/11/24 11:40:56 bcoconni Exp $";
-static const char *IdHdr = ID_LGEAR;
+IDENT(IdSrc,"$Id: FGLGear.cpp,v 1.111 2014/01/16 14:00:30 ehofman Exp $");
+IDENT(IdHdr,ID_LGEAR);
 
 // Body To Structural (body frame is rotated 180 deg about Y and lengths are given in
 // ft instead of inches)
@@ -210,28 +210,12 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number, const struct Inputs&
          << sBrakeGroup << " is undefined." << endl;
   }
 
-  GearPos  = 1.0;
-  useFCSGearPos = false;
-
 // Add some AI here to determine if gear is located properly according to its
 // brake group type ??
 
-  WOW = lastWOW = false;
+  useFCSGearPos = false;
   ReportEnable = true;
-  FirstContact = false;
-  StartedGroundRun = false;
   TakeoffReported = LandingReported = false;
-  LandingDistanceTraveled = TakeoffDistanceTraveled = TakeoffDistanceTraveled50ft = 0.0;
-  MaximumStrutForce = MaximumStrutTravel = 0.0;
-  SinkRate = GroundSpeed = 0.0;
-
-  vWhlVelVec.InitMatrix();
-
-  compressLength  = 0.0;
-  compressSpeed   = 0.0;
-  maxCompLen      = 0.0;
-
-  WheelSlip = 0.0;
 
   // Set Pacejka terms
 
@@ -240,8 +224,7 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number, const struct Inputs&
   Peak = staticFCoeff;
   Curvature = 1.03;
 
-  // Initialize Lagrange multipliers
-  memset(LMultiplier, 0, sizeof(LMultiplier));
+  ResetToIC();
 
   Debug(0);
 }
@@ -257,7 +240,32 @@ FGLGear::~FGLGear()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-const FGColumnVector3& FGLGear::GetBodyForces(void)
+void FGLGear::ResetToIC(void)
+{
+  GearPos  = 1.0;
+
+  WOW = lastWOW = false;
+  FirstContact = false;
+  StartedGroundRun = false;
+  LandingDistanceTraveled = TakeoffDistanceTraveled = TakeoffDistanceTraveled50ft = 0.0;
+  MaximumStrutForce = MaximumStrutTravel = 0.0;
+  SinkRate = GroundSpeed = 0.0;
+
+  vWhlVelVec.InitMatrix();
+
+  compressLength  = 0.0;
+  compressSpeed   = 0.0;
+  maxCompLen      = 0.0;
+
+  WheelSlip = 0.0;
+
+  // Initialize Lagrange multipliers
+  memset(LMultiplier, 0, sizeof(LMultiplier));
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
 {
   double gearPos = 1.0;
   double t = fdmex->GetSimTime();
@@ -278,8 +286,17 @@ const FGColumnVector3& FGLGear::GetBodyForces(void)
     // not compressed) with respect to the ground level
     double height = gearLoc.GetContactPoint(t, contact, normal, terrainVel, dummy);
 
+    double maxForce = DBL_MAX;
+    bool isSolid = true;
+    if (surface) {
+      height -= (*surface).GetBumpHeight();
+      frictionFactor = (*surface).GetFrictionFactor();
+      maxForce = (*surface).GetMaximumForce();
+      isSolid =  (*surface).GetSolid();
+    }
+
     if (height < 0.0) {
-      WOW = true;
+      WOW = isSolid;
       vGroundNormal = in.Tec2b * normal;
 
       // The height returned by GetGroundCallback() is the AGL and is expressed
@@ -294,8 +311,14 @@ const FGColumnVector3& FGLGear::GetBodyForces(void)
       // including the strut compression.
       switch(eContactType) {
       case ctBOGEY:
-        compressLength = LGearProj > 0.0 ? height * normalZ / LGearProj : 0.0;
-        vWhlDisplVec = mTGear * FGColumnVector3(0., 0., -compressLength);
+        if (isSolid) {
+          compressLength = LGearProj > 0.0 ? height * normalZ / LGearProj : 0.0;
+          vWhlDisplVec = mTGear * FGColumnVector3(0., 0., -compressLength);
+        } else {
+          // Gears don't (or hardly) compress is liquids
+          compressLength = 0.0;
+          vWhlDisplVec = 0.0 * vGroundNormal;
+        }
         break;
       case ctSTRUCTURE:
         compressLength = height * normalZ / DotProduct(normal, normal);
@@ -308,7 +331,13 @@ const FGColumnVector3& FGLGear::GetBodyForces(void)
       FGColumnVector3 vBodyWhlVel = in.PQR * vWhlContactVec;
       vBodyWhlVel += in.UVW - in.Tec2b * terrainVel;
 
-      vWhlVelVec = mTGear.Transposed() * vBodyWhlVel;
+      if (isSolid) {
+        vWhlVelVec = mTGear.Transposed() * vBodyWhlVel;
+      } else {
+        // wheels don't spin up in liquids: let wheel spin down slowly
+        vWhlVelVec(eX) -= 13.0 * in.TotalDeltaT;
+        if (vWhlVelVec(eX) < 0.0) vWhlVelVec(eX) = 0.0;
+      }
 
       InitializeReporting();
       ComputeSteeringAngle();
@@ -324,7 +353,7 @@ const FGColumnVector3& FGLGear::GetBodyForces(void)
           compressSpeed /= LGearProj;
       }
 
-      ComputeVerticalStrutForce();
+      ComputeVerticalStrutForce(maxForce);
 
       // Compute the friction coefficients in the wheel ground plane.
       if (eContactType == ctBOGEY) {
@@ -546,10 +575,10 @@ void FGLGear::CrashDetect(void)
 
 void FGLGear::ComputeBrakeForceCoefficient(void)
 {
-  BrakeFCoeff = rollingFCoeff;
+  BrakeFCoeff = frictionFactor * rollingFCoeff;
 
   if (eBrakeGrp != bgNone)
-    BrakeFCoeff += in.BrakePos[eBrakeGrp] * (staticFCoeff - rollingFCoeff);
+    BrakeFCoeff += in.BrakePos[eBrakeGrp] * frictionFactor * (staticFCoeff - rollingFCoeff);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -570,6 +599,7 @@ void FGLGear::ComputeSideForceCoefficient(void)
     double StiffSlip = Stiffness*WheelSlip;
     FCoeff = Peak * sin(Shape*atan(StiffSlip - Curvature*(StiffSlip - atan(StiffSlip))));
   }
+  FCoeff *= frictionFactor;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -579,7 +609,7 @@ void FGLGear::ComputeSideForceCoefficient(void)
 // possibly give a "rebound damping factor" that differs from the compression
 // case.
 
-void FGLGear::ComputeVerticalStrutForce(void)
+void FGLGear::ComputeVerticalStrutForce(double maxForce)
 {
   double springForce = 0;
   double dampForce = 0;
@@ -606,6 +636,10 @@ void FGLGear::ComputeVerticalStrutForce(void)
     }
 
     StrutForce = min(springForce + dampForce, (double)0.0);
+    if (StrutForce > maxForce) {
+      StrutForce = maxForce;
+      compressLength = -StrutForce / kSpring;
+    }
   }
 
   // The reaction force of the wheel is always normal to the ground
@@ -657,7 +691,7 @@ void FGLGear::ComputeJacobian(const FGColumnVector3& vWhlContactVec)
     LMultiplier[ftDynamic].ForceJacobian = mT * velocityDirection;
     LMultiplier[ftDynamic].MomentJacobian = vWhlContactVec * LMultiplier[ftDynamic].ForceJacobian;
     LMultiplier[ftDynamic].Max = 0.;
-    LMultiplier[ftDynamic].Min = -fabs(dynamicFCoeff * vFn(eZ));
+    LMultiplier[ftDynamic].Min = -fabs(frictionFactor * dynamicFCoeff * vFn(eZ));
 
     // The Lagrange multiplier value obtained from the previous iteration is kept
     // This is supposed to accelerate the convergence of the projected Gauss-Seidel

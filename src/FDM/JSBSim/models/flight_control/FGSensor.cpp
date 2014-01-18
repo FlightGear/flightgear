@@ -46,8 +46,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGSensor.cpp,v 1.24 2012/11/17 18:03:19 jberndt Exp $";
-static const char *IdHdr = ID_SENSOR;
+IDENT(IdSrc,"$Id: FGSensor.cpp,v 1.27 2014/01/13 10:46:10 ehofman Exp $");
+IDENT(IdHdr,ID_SENSOR);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -133,6 +133,15 @@ FGSensor::FGSensor(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 FGSensor::~FGSensor()
 {
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGSensor::ResetPastStates(void)
+{
+  FGFCSComponent::ResetPastStates();
+
+  PreviousOutput = PreviousInput = Output = 0.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

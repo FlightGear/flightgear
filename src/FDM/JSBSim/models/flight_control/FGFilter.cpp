@@ -48,8 +48,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFilter.cpp,v 1.15 2009/10/24 22:59:30 jberndt Exp $";
-static const char *IdHdr = ID_FILTER;
+IDENT(IdSrc,"$Id: FGFilter.cpp,v 1.20 2014/01/13 10:46:09 ehofman Exp $");
+IDENT(IdHdr,ID_FILTER);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -92,6 +92,15 @@ FGFilter::FGFilter(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 FGFilter::~FGFilter()
 {
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFilter::ResetPastStates(void)
+{
+  FGFCSComponent::ResetPastStates();
+
+  Input = 0.0; Initialize = true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -67,8 +67,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPropulsion.cpp,v 1.71 2013/11/24 11:40:56 bcoconni Exp $";
-static const char *IdHdr = ID_PROPULSION;
+IDENT(IdSrc,"$Id: FGPropulsion.cpp,v 1.76 2014/01/13 10:46:07 ehofman Exp $");
+IDENT(IdHdr,ID_PROPULSION);
 
 extern short debug_lvl;
 
@@ -119,12 +119,17 @@ bool FGPropulsion::InitModel(void)
 {
   bool result = true;
 
+  if (!FGModel::InitModel()) return false;
+
+  vForces.InitMatrix();
+  vMoments.InitMatrix();
+
   for (unsigned int i=0; i<numTanks; i++) Tanks[i]->ResetToIC();
 
   for (unsigned int i=0; i<numEngines; i++) {
     switch (Engines[i]->GetType()) {
       case FGEngine::etPiston:
-        ((FGPiston*)Engines[i])->ResetToIC();
+        Engines[i]->ResetToIC();
         try {
           if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
         } catch (string str) {
@@ -133,7 +138,7 @@ bool FGPropulsion::InitModel(void)
         }
         break;
       case FGEngine::etTurbine:
-        ((FGTurbine*)Engines[i])->ResetToIC();
+        Engines[i]->ResetToIC();
         try {
           if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
         } catch (string str) {

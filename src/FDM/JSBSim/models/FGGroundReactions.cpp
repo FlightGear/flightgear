@@ -49,8 +49,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGGroundReactions.cpp,v 1.43 2013/11/24 11:40:56 bcoconni Exp $";
-static const char *IdHdr = ID_GROUNDREACTIONS;
+IDENT(IdSrc,"$Id: FGGroundReactions.cpp,v 1.47 2014/01/13 10:46:07 ehofman Exp $");
+IDENT(IdHdr,ID_GROUNDREACTIONS);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -79,6 +79,16 @@ FGGroundReactions::~FGGroundReactions(void)
 
 bool FGGroundReactions::InitModel(void)
 {
+  if (!FGModel::InitModel()) return false;
+
+  vForces.InitMatrix();
+  vMoments.InitMatrix();
+
+  multipliers.clear();
+
+  for (unsigned int i=0; i<lGear.size(); i++)
+    lGear[i]->ResetToIC();
+
   return true;
 }
 
@@ -102,7 +112,7 @@ bool FGGroundReactions::Run(bool Holding)
   // Perhaps there is some commonality for things which only need to be
   // calculated once.
   for (unsigned int i=0; i<lGear.size(); i++) {
-    vForces  += lGear[i]->GetBodyForces();
+    vForces  += lGear[i]->GetBodyForces(this);
     vMoments += lGear[i]->GetMoments();
   }
 
@@ -251,7 +261,6 @@ string FGGroundReactions::GetGroundReactionValues(string delimeter) const
 
 void FGGroundReactions::bind(void)
 {
-  typedef double (FGGroundReactions::*PMF)(int) const;
   PropertyManager->Tie("gear/num-units", this, &FGGroundReactions::GetNumGearUnits);
   PropertyManager->Tie("gear/wow", this, &FGGroundReactions::GetWOW);
 }

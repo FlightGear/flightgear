@@ -48,8 +48,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGBuoyantForces.cpp,v 1.22 2013/11/24 11:40:55 bcoconni Exp $";
-static const char *IdHdr = ID_BUOYANTFORCES;
+IDENT(IdSrc,"$Id: FGBuoyantForces.cpp,v 1.26 2014/01/13 10:46:06 ehofman Exp $");
+IDENT(IdHdr,ID_BUOYANTFORCES);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -83,6 +83,11 @@ FGBuoyantForces::~FGBuoyantForces()
 
 bool FGBuoyantForces::InitModel(void)
 {
+  if (!FGModel::InitModel()) return false;
+
+  vTotalForces.InitMatrix();
+  vTotalMoments.InitMatrix();
+
   return true;
 }
 
@@ -140,7 +145,7 @@ bool FGBuoyantForces::Load(Element *element)
     gas_cell_element = document->FindNextElement("gas_cell");
   }
   
-  PostLoad(element, PropertyManager);
+  PostLoad(document, PropertyManager);
 
   if (!NoneDefined) {
     bind();

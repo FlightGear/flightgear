@@ -36,6 +36,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/commands.hxx>
+#include <simgear/bvh/BVHMaterial.hxx>
 
 #include <FDM/flight.hxx>
 
@@ -1335,9 +1336,30 @@ FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
    if (!FGInterface::get_agl_ft(t, pt, alt_off, contact, normal, vel,
                                 angularVel, material, id))
        return false;
+
    SGGeod geodPt = SGGeod::fromCart(SG_FEET_TO_METER*SGVec3d(pt));
    SGQuatd hlToEc = SGQuatd::fromLonLat(geodPt);
    *agl = dot(hlToEc.rotate(SGVec3d(0, 0, 1)), SGVec3d(contact) - SGVec3d(pt));
+
+   static SGPropertyNode_ptr terrain_nas = fgGetNode("/fdm/jsbsim/environment/terrain-hight", false);
+   if (!terrain_nas && material) {
+      double frictionFactor = (*material).get_friction_factor();
+      double rollingFriction = (*material).get_rolling_friction();
+      
+      if ((rollingFriction != 1.0) && (rollingFriction > 0.001)) {
+        frictionFactor = rollingFriction/0.02;
+      }
+      GroundReactions->SetFrictionFactor(frictionFactor);
+
+      // 1 Pascal = 0.00014503773800721815 lbs/in^2
+      double pressure = (*material).get_load_resistance(); // N/m^2 (or Pascal)
+      GroundReactions->SetMaximumForce(pressure*0.00014503773800721815);
+
+      GroundReactions->SetBumpiness((*material).get_bumpiness());
+      GroundReactions->SetSolid((*material).get_solid());
+      GroundReactions->SetPosition(pt);
+   }
+
    return true;
 }
 

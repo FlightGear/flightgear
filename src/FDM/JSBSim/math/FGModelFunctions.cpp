@@ -41,14 +41,15 @@ INCLUDES
 #include <sstream>
 #include <string>
 #include "FGModelFunctions.h"
+#include "FGFunction.h"
 #include "input_output/FGXMLElement.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGModelFunctions.cpp,v 1.7 2013/11/24 11:40:55 bcoconni Exp $";
-static const char *IdHdr = ID_MODELFUNCTIONS;
+IDENT(IdSrc,"$Id: FGModelFunctions.cpp,v 1.12 2014/01/13 10:46:03 ehofman Exp $");
+IDENT(IdHdr,ID_MODELFUNCTIONS);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -56,9 +57,6 @@ CLASS IMPLEMENTATION
 
 FGModelFunctions::~FGModelFunctions()
 {
-  for (unsigned int i=0; i<interface_properties.size(); i++) delete interface_properties[i];
-  interface_properties.clear();
-
   for (unsigned int i=0; i<PreFunctions.size(); i++) delete PreFunctions[i];
   for (unsigned int i=0; i<PostFunctions.size(); i++) delete PostFunctions[i];
 
@@ -67,34 +65,18 @@ FGModelFunctions::~FGModelFunctions()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+bool FGModelFunctions::InitModel(void)
+{
+  ResetToIC();
+
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 bool FGModelFunctions::Load(Element* el, FGPropertyManager* PM, string prefix)
 {
-  // Interface properties are all stored in the interface properties array.
-  string interface_property_string = "";
-
-  Element *property_element = el->FindElement("property");
-  if (property_element && debug_lvl > 0) cout << endl << "    Declared properties" 
-                                              << endl << endl;
-  while (property_element) {
-    interface_property_string = property_element->GetDataLine();
-    if (PM->HasNode(interface_property_string)) {
-      cerr << "      Property " << interface_property_string 
-           << " is already defined." << endl;
-    } else {
-      double value=0.0;
-      if ( ! property_element->GetAttributeValue("value").empty())
-        value = property_element->GetAttributeValueAsNumber("value");
-      interface_properties.push_back(new double(value));
-      PM->Tie(interface_property_string, interface_properties.back());
-      if (debug_lvl > 0)
-        cout << "      " << interface_property_string << " (initial value: " 
-             << value << ")" << endl << endl;
-    }
-    property_element = el->FindNextElement("property");
-  }
-  
-  // End of interface property loading logic
-
+  LoadProperties(el, PM, false);
   PreLoad(el, PM, prefix);
 
   return true; // TODO: Need to make this value mean something.

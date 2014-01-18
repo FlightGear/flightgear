@@ -44,8 +44,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPID.cpp,v 1.21 2013/02/02 06:05:26 jberndt Exp $";
-static const char *IdHdr = ID_PID;
+IDENT(IdSrc,"$Id: FGPID.cpp,v 1.24 2014/01/13 10:46:09 ehofman Exp $");
+IDENT(IdHdr,ID_PID);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -152,6 +152,15 @@ FGPID::FGPID(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 FGPID::~FGPID()
 {
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPID::ResetPastStates(void)
+{
+  FGFCSComponent::ResetPastStates();
+
+  Input_prev = Input_prev2 = Output = I_out_total = 0.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

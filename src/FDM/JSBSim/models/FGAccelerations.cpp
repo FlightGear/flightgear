@@ -60,8 +60,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAccelerations.cpp,v 1.14 2012/09/15 17:00:56 bcoconni Exp $";
-static const char *IdHdr = ID_ACCELERATIONS;
+IDENT(IdSrc,"$Id: FGAccelerations.cpp,v 1.19 2014/01/13 10:46:03 ehofman Exp $");
+IDENT(IdHdr,ID_ACCELERATIONS);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -97,6 +97,8 @@ FGAccelerations::~FGAccelerations(void)
 
 bool FGAccelerations::InitModel(void)
 {
+  if (!FGModel::InitModel()) return false;
+
   vPQRidot.InitMatrix();
   vUVWidot.InitMatrix();
   vGravAccel.InitMatrix();
@@ -364,6 +366,7 @@ void FGAccelerations::bind(void)
   PropertyManager->Tie("accelerations/vdot-ft_sec2", this, eV, (PMF)&FGAccelerations::GetUVWdot);
   PropertyManager->Tie("accelerations/wdot-ft_sec2", this, eW, (PMF)&FGAccelerations::GetUVWdot);
 
+  PropertyManager->Tie("accelerations/gravity-ft_sec2", this, &FGAccelerations::GetGravAccelMagnitude);
   PropertyManager->Tie("simulation/gravity-model", &gravType);
   PropertyManager->Tie("simulation/gravitational-torque", &gravTorque);
 

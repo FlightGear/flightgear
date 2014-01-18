@@ -55,8 +55,8 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-static const char *IdSrc = "$Id: FGExternalReactions.cpp,v 1.13 2013/11/24 11:40:56 bcoconni Exp $";
-static const char *IdHdr = ID_EXTERNALREACTIONS;
+IDENT(IdSrc,"$Id: FGExternalReactions.cpp,v 1.17 2014/01/13 10:46:07 ehofman Exp $");
+IDENT(IdHdr,ID_EXTERNALREACTIONS);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -119,6 +119,11 @@ FGExternalReactions::~FGExternalReactions()
 
 bool FGExternalReactions::InitModel(void)
 {
+  if (!FGModel::InitModel()) return false;
+
+  vTotalForces.InitMatrix();
+  vTotalMoments.InitMatrix();
+
   return true;
 }
 

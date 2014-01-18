@@ -1,11 +1,10 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Module:       FGXMLFileRead.h
- Author:       Jon S. Berndt
- Date started: 02/04/07
- Purpose:      Shared base class that wraps the XML file reading logic
+ Header:       FGPropertyReader.h
+ Author:       Bertrand Coconnier
+ Date started: 12/30/13
 
- ------------- Copyright (C) 2007  Jon S. Berndt (jon@jsbsim.org) -------------
+ ------------- Copyright (C) 2013 Bertrand Coconnier -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -24,26 +23,31 @@
  Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
+HISTORY
+--------------------------------------------------------------------------------
+12/30/13   BC    Created
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef FGXMLFILEREAD_HEADER_H
-#define FGXMLFILEREAD_HEADER_H
+#ifndef FGPROPERTYREADER_H
+#define FGPROPERTYREADER_H
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "input_output/FGXMLParse.h"
-#include <iostream>
-#include <fstream>
+#include <list>
+#include <map>
+
+#include "simgear/structure/SGSharedPtr.hxx"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_XMLFILEREAD "$Id: FGXMLFileRead.h,v 1.9 2013/12/01 14:33:51 bcoconni Exp $"
+#define ID_PROPERTYREADER "$Id: FGPropertyReader.h,v 1.1 2014/01/02 22:37:47 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -51,43 +55,28 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-class FGXMLFileRead {
+class Element;
+class FGPropertyManager;
+class FGPropertyNode;
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DECLARATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+class FGPropertyReader
+{
 public:
-  FGXMLFileRead(void) {}
-  ~FGXMLFileRead(void) {}
+  void LoadProperties(Element* el, FGPropertyManager* PropertyManager, bool override);
+  bool ResetToIC(void);
 
-  Element* LoadXMLDocument(std::string XML_filename, bool verbose=true)
-  {
-    return LoadXMLDocument(XML_filename, file_parser, verbose);
-  }
-
-  Element* LoadXMLDocument(std::string XML_filename, FGXMLParse& fparse, bool verbose=true)
-  {
-    std::ifstream infile;
-
-    if ( !XML_filename.empty() ) {
-      if (XML_filename.find(".xml") == std::string::npos) XML_filename += ".xml";
-      infile.open(XML_filename.c_str());
-      if ( !infile.is_open()) {
-        if (verbose) std::cerr << "Could not open file: " << XML_filename << std::endl;
-        return 0L;
-      }
-    } else {
-      std::cerr << "No filename given." << std::endl;
-      return 0L;
-    }
-
-    readXML(infile, fparse, XML_filename);
-    Element* document = fparse.GetDocument();
-    infile.close();
-
-    return document;
-  }
-
-  void ResetParser(void) {file_parser.reset();}
-
-private:
-  FGXMLParse file_parser;
+protected:
+  std::list<double> interface_properties;
+  std::map<SGSharedPtr<FGPropertyNode>, double> interface_prop_initial_value;
 };
 }
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

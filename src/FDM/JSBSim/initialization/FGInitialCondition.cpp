@@ -55,6 +55,7 @@ INCLUDES
 #include "models/FGAtmosphere.h"
 #include "models/FGPropagate.h"
 #include "models/FGPropulsion.h"
+#include "models/FGAccelerations.h"
 #include "models/FGFCS.h"
 #include "input_output/FGPropertyManager.h"
 #include "input_output/string_utilities.h"
@@ -65,8 +66,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.89 2013/11/24 11:40:55 bcoconni Exp $";
-static const char *IdHdr = ID_INITIALCONDITION;
+IDENT(IdSrc,"$Id: FGInitialCondition.cpp,v 1.93 2014/01/13 10:46:00 ehofman Exp $");
+IDENT(IdHdr,ID_INITIALCONDITION);
 
 //******************************************************************************
 
@@ -886,8 +887,11 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     exit(-1);
   }
 
-  double version = document->GetAttributeValueAsNumber("version");
+  double version = HUGE_VAL;
   bool result = false;
+
+  if (document->HasAttribute("version"))
+    version = document->GetAttributeValueAsNumber("version");
 
   if (version == HUGE_VAL) {
     result = Load_v1(document); // Default to the old version
@@ -1002,10 +1006,19 @@ bool FGInitialCondition::Load_v2(Element* document)
 {
   FGColumnVector3 vOrient;
   bool result = true;
-  FGColumnVector3 vOmegaEarth = fdmex->GetInertial()->GetOmegaPlanet();
 
+  // support both earth_position_angle and planet_position_angle, for now.
   if (document->FindElement("earth_position_angle"))
     position.SetEarthPositionAngle(document->FindElementValueAsNumberConvertTo("earth_position_angle", "RAD"));
+  if (document->FindElement("planet_position_angle"))
+    position.SetEarthPositionAngle(document->FindElementValueAsNumberConvertTo("planet_position_angle", "RAD"));
+
+  if (document->FindElement("planet_rotation_rate")) {
+    fdmex->GetInertial()->SetOmegaPlanet(document->FindElementValueAsNumberConvertTo("planet_rotation_rate", "RAD"));
+    fdmex->GetPropagate()->in.vOmegaPlanet     = fdmex->GetInertial()->GetOmegaPlanet();
+    fdmex->GetAccelerations()->in.vOmegaPlanet = fdmex->GetInertial()->GetOmegaPlanet();
+  }
+  FGColumnVector3 vOmegaEarth = fdmex->GetInertial()->GetOmegaPlanet();
 
   // Initialize vehicle position
   //

@@ -46,8 +46,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGModel.cpp,v 1.21 2013/01/14 22:44:52 bcoconni Exp $";
-static const char *IdHdr = ID_MODEL;
+IDENT(IdSrc,"$Id: FGModel.cpp,v 1.24 2014/01/13 10:46:07 ehofman Exp $");
+IDENT(IdHdr,ID_MODEL);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 GLOBAL DECLARATIONS
@@ -84,7 +84,7 @@ FGModel::~FGModel()
 bool FGModel::InitModel(void)
 {
   exe_ctr = 1;
-  return true;
+  return FGModelFunctions::InitModel();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

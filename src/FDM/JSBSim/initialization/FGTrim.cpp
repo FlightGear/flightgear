@@ -57,8 +57,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGTrim.cpp,v 1.18 2013/11/24 16:53:15 bcoconni Exp $";
-static const char *IdHdr = ID_TRIM;
+IDENT(IdSrc,"$Id: FGTrim.cpp,v 1.22 2014/01/13 10:46:00 ehofman Exp $");
+IDENT(IdHdr,ID_TRIM);
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -242,8 +242,8 @@ bool FGTrim::DoTrim(void) {
 
   fdmex->DisableOutput();
 
-  fdmex->RunIC();
   fdmex->SetTrimStatus(true);
+  fdmex->RunIC();
   fdmex->SuspendIntegration();
 
   fgic->SetPRadpsIC(0.0);
@@ -381,9 +381,9 @@ bool FGTrim::DoTrim(void) {
         cout << endl << "  Trim failed" << endl;
   }
 
-  fdmex->SetTrimStatus(false);
   fdmex->ResumeIntegration();
   fdmex->RunIC();
+  fdmex->SetTrimStatus(false);
   fdmex->EnableOutput();
 
   for(i=0;i < fdmex->GetGroundReactions()->GetNumGearUnits();i++){

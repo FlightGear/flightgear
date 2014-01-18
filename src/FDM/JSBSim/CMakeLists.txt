@@ -12,6 +12,7 @@ set(HEADERS
     initialization/FGLinearization.h
     input_output/FGXMLParse.h
     input_output/FGXMLFileRead.h
+    input_output/FGPropertyReader.h
     input_output/FGPropertyManager.h
     input_output/FGScript.h
     input_output/FGfdmSocket.h
@@ -49,6 +50,7 @@ set(HEADERS
     models/FGExternalReactions.h
     models/FGFCS.h
     models/FGGasCell.h
+    models/FGSurface.h
     models/FGGroundReactions.h
     models/FGInertial.h
     models/FGInput.h
@@ -106,6 +108,7 @@ set(SOURCES
     initialization/FGTrimmer.cpp
     initialization/FGLinearization.cpp
     input_output/FGGroundCallback.cpp
+    input_output/FGPropertyReader.cpp
     input_output/FGPropertyManager.cpp
     input_output/FGScript.cpp
     input_output/FGXMLElement.cpp
@@ -139,6 +142,7 @@ set(SOURCES
     models/FGExternalReactions.cpp
     models/FGFCS.cpp
     models/FGGasCell.cpp
+    models/FGSurface.cpp
     models/FGGroundReactions.cpp
     models/FGInertial.cpp
     models/FGInput.cpp
