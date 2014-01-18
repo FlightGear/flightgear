@@ -361,7 +361,7 @@ void CameraInfo::resized(double w, double h)
 
 CameraInfo::~CameraInfo()
 {
-    
+    delete viewportListener;
 }
     
 osg::Camera* CameraInfo::getCamera(const std::string& k) const
@@ -1035,7 +1035,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     // out of the SceneView objects in the viewer, and the coordinates
     // of mouse events are somewhat bizzare.
     
-    info->viewportListener.reset(new CameraViewportListener(info, viewportNode, window->gc->getTraits()));
+    info->viewportListener = new CameraViewportListener(info, viewportNode, window->gc->getTraits());
     
     info->updateCameras();
     // Distortion camera needs the viewport which is created by addCamera().
@@ -1097,8 +1097,8 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     camera->setRenderOrder(osg::Camera::POST_RENDER, 10000);
     SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
 
-    result->viewportListener.reset(new CameraViewportListener(result, viewportNode,
-                                                              window->gc->getTraits()));
+    result->viewportListener = new CameraViewportListener(result, viewportNode,
+                                                              window->gc->getTraits());
 
     // Disable statistics for the GUI camera.
     camera->setStats(0);

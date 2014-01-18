@@ -101,7 +101,8 @@ struct CameraInfo : public osg::Referenced
           worldPosCart( new osg::Uniform( "fg_CameraPositionCart", osg::Vec3f() ) ),
           worldPosGeod( new osg::Uniform( "fg_CameraPositionGeod", osg::Vec3f() ) ),
           du( new osg::Uniform( "fg_du",osg::Vec4() ) ),
-          dv( new osg::Uniform( "fg_dv",osg::Vec4() ) )
+          dv( new osg::Uniform( "fg_dv",osg::Vec4() ) ),
+          viewportListener(NULL)
     {
         shadowMatrix[0] = new osg::Uniform("fg_ShadowMatrix_0", osg::Matrixf());
         shadowMatrix[1] = new osg::Uniform("fg_ShadowMatrix_1", osg::Matrixf());
@@ -167,7 +168,7 @@ struct CameraInfo : public osg::Referenced
     osg::ref_ptr<osg::Uniform> dv;
     osg::ref_ptr<osg::Uniform> shadowMatrix[4];
 
-    std::auto_ptr<CameraViewportListener> viewportListener;
+    CameraViewportListener* viewportListener;
     
     void setMatrices( osg::Camera* c );
 
