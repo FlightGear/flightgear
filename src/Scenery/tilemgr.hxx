@@ -110,6 +110,10 @@ public:
 
     // Returns true if tiles around current view position have been loaded
     bool isSceneryLoaded();
+    
+    // notify the tile manahger the material library was reloaded,
+    // so it can pass this through to its options object
+    void materialLibChanged();
 };
 
 

@@ -179,7 +179,7 @@ main(int argc, char** argv)
     // FIXME Ok, replace this by querying the root of the property tree
     sgUserDataInit(props.get());
     SGSceneFeatures::instance()->setTextureCompression(SGSceneFeatures::DoNotUseCompression);
-    SGMaterialLib* ml = new SGMaterialLib;
+    SGMaterialLibPtr ml = new SGMaterialLib;
     SGPath mpath(fg_root);
     mpath.append("Materials/default/materials.xml");
     try {

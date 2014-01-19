@@ -132,7 +132,7 @@ main(int argc, char** argv)
     simgear::ModelRegistry::instance();
 
     sgUserDataInit(props.get());
-    SGMaterialLib* ml = new SGMaterialLib;
+    SGMaterialLibPtr ml = new SGMaterialLib;
     SGPath mpath(fg_root);
     mpath.append("Materials/default/materials.xml");
     try {

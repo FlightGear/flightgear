@@ -145,7 +145,6 @@ FGGlobals::FGGlobals() :
     fg_home( "" ),
     time_params( NULL ),
     ephem( NULL ),
-    matlib( NULL ),
     route_mgr( NULL ),
     ATIS_mgr( NULL ),
     controls( NULL ),
@@ -764,8 +763,6 @@ void FGGlobals::set_tile_mgr ( FGTileMgr *t )
 
 void FGGlobals::set_matlib( SGMaterialLib *m )
 {
-    if (matlib)
-        delete matlib;
     matlib = m;
 }
 
