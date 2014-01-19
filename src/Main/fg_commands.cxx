@@ -31,6 +31,7 @@
 #include <GUI/dialog.hxx>
 #include <Aircraft/replay.hxx>
 #include <Scenery/scenery.hxx>
+#include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/sample_queue.hxx>
 #include <Airports/xmlloader.hxx>
@@ -500,26 +501,29 @@ do_tile_cache_reload (const SGPropertyNode * arg)
 /**
  * Reload the materials definition
  */
- static bool
- do_materials_reload (const SGPropertyNode * arg)
- {
-   SG_LOG(SG_INPUT, SG_INFO, "Reloading Materials");
-   SGMaterialLib* new_matlib =  new SGMaterialLib;
-   SGPath mpath( globals->get_fg_root() );
-   mpath.append( fgGetString("/sim/rendering/materials-file") );
-   bool loaded = new_matlib->load(globals->get_fg_root(), 
+static bool
+do_materials_reload (const SGPropertyNode * arg)
+{
+    SG_LOG(SG_INPUT, SG_INFO, "Reloading Materials");
+    SGMaterialLib* new_matlib =  new SGMaterialLib;
+    SGPath mpath( globals->get_fg_root() );
+    mpath.append( fgGetString("/sim/rendering/materials-file") );
+    bool loaded = new_matlib->load(globals->get_fg_root(), 
                                   mpath.str(), 
                                   globals->get_props());
-   
-   if ( ! loaded ) {
+
+    if ( ! loaded ) {
        SG_LOG( SG_GENERAL, SG_ALERT,
                "Error loading materials file " << mpath.str() );
        return false;
-   }  
-   
-   globals->set_matlib(new_matlib);    
-   return true;   
- }
+    }  
+
+    globals->set_matlib(new_matlib);    
+    FGTileMgr* tileManager = static_cast<FGTileMgr*>(globals->get_subsystem("tile-manager"));
+    tileManager->materialLibChanged();
+    
+    return true;
+}
 
 
 #if 0

@@ -86,7 +86,8 @@ void FGTileMgr::init() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
 
     _options = new simgear::SGReaderWriterOptions;
-    _options->setMaterialLib(globals->get_matlib());
+    
+    materialLibChanged();
     _options->setPropertyNode(globals->get_props());
 
     osgDB::FilePathList &fp = _options->getDatabasePathList();
@@ -116,8 +117,7 @@ void FGTileMgr::reinit()
     fgSetBool("/sim/sceneryloaded",false);
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
     
-    // Reload the materials definitions
-    _options->setMaterialLib(globals->get_matlib());
+    materialLibChanged();
 
     // remove all old scenery nodes from scenegraph and clear cache
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
@@ -139,6 +139,12 @@ void FGTileMgr::reinit()
 
     // force an update now
     update(0.0);
+}
+
+void FGTileMgr::materialLibChanged()
+{
+    _options->setMaterialLib(globals->get_matlib());
+    _options->getMaterialLib()->refreshActiveMaterials();
 }
 
 /* schedule a tile for loading, keep request for given amount of time.

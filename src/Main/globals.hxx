@@ -114,7 +114,7 @@ private:
     SGEphemeris *ephem;
 
     // Material properties library
-    SGMaterialLib *matlib;
+    SGSharedPtr<SGMaterialLib> matlib;
 
     // Global autopilot "route"
     FGRouteMgr *route_mgr;
