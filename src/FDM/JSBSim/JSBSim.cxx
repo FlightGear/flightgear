@@ -1341,8 +1341,9 @@ FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
    SGQuatd hlToEc = SGQuatd::fromLonLat(geodPt);
    *agl = dot(hlToEc.rotate(SGVec3d(0, 0, 1)), SGVec3d(contact) - SGVec3d(pt));
 
-   static SGPropertyNode_ptr terrain_nas = fgGetNode("/fdm/jsbsim/environment/terrain-hight", false);
-   if (!terrain_nas && material) {
+#ifdef JSBSIM_USE_GROUNDREACTIONS
+   static SGPropertyNode_ptr terrain_nas = fgGetNode("/fdm/jsbsim/systems/fg-terrain", false);
+   if (material && !terrain_nas) {
       double frictionFactor = (*material).get_friction_factor();
       double rollingFriction = (*material).get_rolling_friction();
       
@@ -1359,6 +1360,7 @@ FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
       GroundReactions->SetSolid((*material).get_solid());
       GroundReactions->SetPosition(pt);
    }
+#endif
 
    return true;
 }
