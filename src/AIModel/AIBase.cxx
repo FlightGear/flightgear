@@ -358,6 +358,14 @@ bool FGAIBase::init(bool search_in_AI_path)
         BOOST_FOREACH(SGPath p, globals->get_data_paths("AI")) {
             paths.push_back(p.str());
         }
+
+        // search models in --fg-aircraft paths;
+        // when a copy of an aircraft is in --fg-aircraft paths
+        // we want to load this one instead of the default one from fgdata/Aircraft
+        BOOST_FOREACH(SGPath p, globals->get_aircraft_paths()) {
+            paths.push_back(p.str());
+        }
+
         f = osgDB::findDataFile(model_path, opt.get());
     }
 
