@@ -91,7 +91,9 @@ Section "" ;No components page, name is not important
   File ${OSGInstallDir}\bin\ot13-OpenThreads.dll
   
   File ${ThirdPartyBinDir}\*.dll
-
+  File ${ThirdPartyBinDir}\CrashSender1402.exe
+  File ${ThirdPartyBinDir}\crashrpt_lang.ini
+    
   File ${RTIInstallDir}\bin\FedTime.dll
   File ${RTIInstallDir}\bin\RTI-NG.dll
   File ${RTIInstallDir}\bin\OpenRTI.dll
@@ -127,7 +129,7 @@ Section "" ;No components page, name is not important
   File ${OSGPluginsDir}\osgdb_deprecated_osgparticle.dll
   
   
-  Exec '"$INSTDIR\bin\fgrun.exe"  --silent --fg-exe="$INSTDIR\bin\fgfs.exe" --ts-exe="$INSTDIR\bin\terrasync.exe" '
+  Exec '"$INSTDIR\bin\fgrun.exe"  --silent --fg-exe="$INSTDIR\bin\fgfs.exe" '
   
   CreateDirectory "$SMPROGRAMS\FlightGear"
   CreateShortCut "$SMPROGRAMS\FlightGear\FlightGear-nightly-2010.lnk" "$INSTDIR\bin\fgrun.exe"
