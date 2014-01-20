@@ -201,7 +201,7 @@ int main ( int argc, char **argv )
 	// Restart the app on crash 
 	info.dwFlags |= CR_INST_SEND_QUEUED_REPORTS; 
 
-	// autoamticallty install handlers for all threads
+	// automatically install handlers for all threads
 	info.dwFlags |= CR_INST_AUTO_THREAD_HANDLERS;
 
 	// Define the Privacy Policy URL 
@@ -212,7 +212,10 @@ int main ( int argc, char **argv )
 	if(nResult!=0) {
 		std::cerr << "failed to install crash reporting engine" << std::endl;
 	} else {
-		crAddProperty("hudson-build-id", HUDSON_BUILD_ID); 
+		crAddProperty("hudson-build-id", HUDSON_BUILD_ID);
+		char buf[16];
+		::snprintf(buf, 16, "%d", HUDSON_BUILD_NUMBER);
+		crAddProperty("hudson-build-number", buf);
 	}
 #endif
 
