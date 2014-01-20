@@ -60,6 +60,7 @@
 #include <Viewer/renderer.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
 #include <Navaids/NavDataCache.hxx>
+#include <Include/version.h>
 
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
@@ -346,6 +347,7 @@ static void logToFile()
 
 #if defined(HAVE_CRASHRPT)
 	crAddFile2(logPath.c_str(), NULL, "FlightGear Log File", CR_AF_MAKE_FILE_COPY);
+	SG_LOG( SG_GENERAL, SG_INFO, "CrashRpt enabled");
 #endif
 }
 
@@ -373,7 +375,9 @@ int fgMainInit( int argc, char **argv ) {
 #endif
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
             << version );
-    SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR << std::endl );
+    SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR);
+	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << HUDSON_BUILD_NUMBER << ":"
+			<< HUDSON_BUILD_ID);
 
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
