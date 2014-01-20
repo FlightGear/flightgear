@@ -33,6 +33,10 @@
 #include "FGCocoaMenuBar.hxx"
 #endif
 
+#if defined(SG_WINDOWS)
+#include "FGWindowsMenuBar.hxx"
+#endif
+
 #include "FGPUIDialog.hxx"
 #include "FGFontCache.hxx"
 #include "FGColor.hxx"
@@ -108,6 +112,13 @@ NewGUI::createMenuBarImplementation()
 #if defined(SG_MAC)
     if (fgGetBool("/sim/menubar/native", true)) {
         _menubar.reset(new FGCocoaMenuBar);
+    }
+#endif
+#if defined(SG_WINDOWS)
+	if (fgGetBool("/sim/menubar/native", true)) {
+	// Windows-native menubar disabled for the moment, fall-through
+	// to PUI version
+   //     _menubar.reset(new FGWindowsMenuBar);
     }
 #endif
     if (!_menubar.get()) {

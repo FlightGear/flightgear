@@ -46,10 +46,12 @@ set(HEADERS
 	)
 
 if(WIN32)
-	message(STATUS "on Windows")
-
-	list(APPEND HEADERS WindowsMouseCursor.hxx)
-	list(APPEND SOURCES WindowsMouseCursor.cxx)
+	list(APPEND HEADERS WindowsMouseCursor.hxx
+						FGWindowsMenuBar.hxx
+						WindowsFileDialog.hxx)
+	list(APPEND SOURCES WindowsMouseCursor.cxx
+						FGWindowsMenuBar.cxx
+						WindowsFileDialog.cxx)
 endif()
 		
 if (APPLE)

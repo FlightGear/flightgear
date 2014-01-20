@@ -35,8 +35,12 @@
 #include <Scripting/NasalSys.hxx>
 #include "PUIFileDialog.hxx"
 
-#ifdef SG_MAC
+#if defined(SG_MAC)
     #include "CocoaFileDialog.hxx"
+#endif
+
+#if defined(SG_WINDOWS)
+    #include "WindowsFileDialog.hxx"
 #endif
 
 FGFileDialog::FGFileDialog(Usage use) :
@@ -142,8 +146,10 @@ static naRef f_createFileDialog(naContext c, naRef me, int argc, naRef* args)
     nasal::CallContext ctx(c, argc, args);
     FGFileDialog::Usage usage = (FGFileDialog::Usage) ctx.requireArg<int>(0);
   
-#ifdef SG_MAC
+#if defined(SG_MAC)
     FileDialogPtr fd(new CocoaFileDialog(usage));
+#elif defined(SG_WINDOWS)
+	FileDialogPtr fd(new WindowsFileDialog(usage));
 #else
     FileDialogPtr fd(new PUIFileDialog(usage));
 #endif
