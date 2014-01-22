@@ -35,6 +35,10 @@
 
 #if defined(HAVE_CRASHRPT)
 	#include <CrashRpt.h>
+
+// defined in bootstrap.cxx
+extern bool global_crashRptEnabled;
+
 #endif
 
 // Class references
@@ -346,8 +350,12 @@ static void logToFile()
     sglog().logToFile(logPath, SG_ALL, SG_INFO);
 
 #if defined(HAVE_CRASHRPT)
-	crAddFile2(logPath.c_str(), NULL, "FlightGear Log File", CR_AF_MAKE_FILE_COPY);
-	SG_LOG( SG_GENERAL, SG_INFO, "CrashRpt enabled");
+	if (global_crashRptEnabled) {
+		crAddFile2(logPath.c_str(), NULL, "FlightGear Log File", CR_AF_MAKE_FILE_COPY);
+		SG_LOG( SG_GENERAL, SG_INFO, "CrashRpt enabled");
+	} else {
+		SG_LOG(SG_GENERAL, SG_WARN, "CrashRpt enabled at compile time but failed to install");
+	}
 #endif
 }
 

@@ -73,6 +73,9 @@ using std::endl;
 
 #if defined(HAVE_CRASHRPT)
 	#include <CrashRpt.h>
+
+bool global_crashRptEnabled = false;
+
 #endif
 
 std::string homedir;
@@ -210,8 +213,14 @@ int main ( int argc, char **argv )
 	// Install crash reporting
 	int nResult = crInstall(&info);    
 	if(nResult!=0) {
-		std::cerr << "failed to install crash reporting engine" << std::endl;
+		char buf[1024];
+		crGetLastErrorMsg(buf, 1024);
+		flightgear::modalMessageBox("CrashRpt setup failed", 
+			"Failed to setup crash-reporting engine, check the installation is not damaged.",
+			buf);
 	} else {
+		global_crashRptEnabled = true;
+
 		crAddProperty("hudson-build-id", HUDSON_BUILD_ID);
 		char buf[16];
 		::snprintf(buf, 16, "%d", HUDSON_BUILD_NUMBER);
