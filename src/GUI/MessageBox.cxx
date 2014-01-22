@@ -37,6 +37,10 @@ namespace {
 
 bool isCanvasImplementationRegistered()
 {
+	if (!globals) {
+		return false;
+	}
+
     SGCommandMgr* cmd = globals->get_commands();
     return (cmd->getCommand("canvas-message-box") != NULL);
 }
@@ -46,7 +50,7 @@ bool isCanvasImplementationRegistered()
 HWND getMainViewerHWND()
 {
 	osgViewer::Viewer::Windows windows;
-	if (!globals->get_renderer() || !globals->get_renderer()->getViewer()) {
+	if (!globals || !globals->get_renderer() || !globals->get_renderer()->getViewer()) {
 		return 0;
 	}
 
