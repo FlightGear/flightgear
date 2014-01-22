@@ -346,23 +346,17 @@ bool FGAIBase::init(bool search_in_AI_path)
     string f;
     if(search_in_AI_path)
     {
-    // setup a modified Options structure, with only the $fg-root/AI defined;
-    // we'll check that first, then give the normal search logic a chance.
-    // this ensures that models in AI/ are preferred to normal models, where
-    // both exist.
-        osg::ref_ptr<osgDB::ReaderWriter::Options> 
-          opt(osg::clone(osgDB::Registry::instance()->getOptions(), osg::CopyOp::SHALLOW_COPY));
-
-        osgDB::FilePathList& paths(opt->getDatabasePathList());
-        paths.clear();
         BOOST_FOREACH(SGPath p, globals->get_data_paths("AI")) {
-            paths.push_back(p.str());
-        }
-        f = osgDB::findDataFile(model_path, opt.get());
-    }
+            p.append(model_path);
+            if (p.exists()) {
+                f = p.str();
+                break;
+            }
+        } // of AI data paths iteration
+    } // of search in AI path
 
     if (f.empty()) {
-      f = simgear::SGModelLib::findDataFile(model_path);
+        f = simgear::SGModelLib::findDataFile(model_path);
     }
     
     if(f.empty())
