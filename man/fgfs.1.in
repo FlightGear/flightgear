@@ -40,8 +40,8 @@ Specify aerodynamics model to load.
 Specify aircraft to load.
 .TP
 .BI "--aircraft-dir=" "path"
-Specify the aircraft model directory relative to the path of the
-executable.  This is used for UIUC aircraft only.
+Specify the exact directory to use for the aircraft (normally not required,
+but may be useful for testing).
 .TP
 .BI "--airport=" "id"
 Specify starting postion by airport ID.
@@ -225,6 +225,9 @@ or electrical.  Multiple instances allowed.
 .BI "--fdm=" "name"
 Specify the flight dynamics model to use.  Name may be one of jsb, larcsim,
 yasim, magic, balloon, ada, external, or null.
+.TP
+.BI "--fg-aircraft=" "path"
+Specify an additional path to search for aircraft directories. (can be repeated)
 .TP
 .BI "--fg-root=" "path"
 Specify the root path for data files.
