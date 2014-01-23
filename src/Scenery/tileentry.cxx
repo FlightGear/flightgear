@@ -101,8 +101,6 @@ TileEntry::addToSceneGraph(osg::Group *terrain_branch)
 void
 TileEntry::removeFromSceneGraph()
 {
-    SG_LOG( SG_TERRAIN, SG_DEBUG, "disconnecting TileEntry nodes" );
-
     if (! is_loaded()) {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "removing a not-fully loaded tile!" );
     } else {

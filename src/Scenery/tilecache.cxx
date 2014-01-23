@@ -154,7 +154,6 @@ void TileCache::clear_cache() {
 
     for ( ; current != end; ++current ) {
         long index = current->first;
-        SG_LOG( SG_TERRAIN, SG_DEBUG, "clearing " << index );
         TileEntry *e = current->second;
         if ( e->is_loaded() ) {
             e->tile_bucket.make_bad();

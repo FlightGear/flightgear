@@ -212,8 +212,6 @@ void FGLight::update_sky_color () {
     const SGVec4f base_sky_color( 0.31, 0.43, 0.69, 1.0 );
     const SGVec4f base_fog_color( 0.63, 0.72, 0.88, 1.0 );
 
-    SG_LOG( SG_EVENT, SG_DEBUG, "Updating light parameters." );
-
     // calculate lighting parameters based on sun's relative angle to
     // local up
     float av = _humidity->getFloatValue() * 45;
@@ -221,7 +219,6 @@ void FGLight::update_sky_color () {
     float visibility_inv = (45000.0 - av)/45000.0;
 
     float deg = _sun_angle * SGD_RADIANS_TO_DEGREES;
-    SG_LOG( SG_EVENT, SG_DEBUG, "  Sun angle = " << deg );
 
     if (_saturation < 0.0) _saturation = 0.0;
     else if (_saturation > 1.0) _saturation = 1.0;
@@ -239,10 +236,6 @@ void FGLight::update_sky_color () {
     diffuse *= _saturation;
     specular *= _saturation;
     sky_brightness *= _saturation;
-
-    SG_LOG( SG_EVENT, SG_DEBUG,
-            "  ambient = " << ambient << "  diffuse = " << diffuse
-            << "  specular = " << specular << "  sky = " << sky_brightness );
 
     // sky_brightness = 0.15;  // used to force a dark sky (when testing)
 
@@ -393,8 +386,6 @@ void FGLight::update_adj_fog_color () {
 void FGLight::updateSunPos()
 {
     SGTime *t = globals->get_time_params();
-    SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
-    SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t->getGst() );
 
     fgSunPositionGST(t->getGst(), &_sun_lon, &_sun_lat);
 
@@ -405,11 +396,6 @@ void FGLight::updateSunPos()
     // latitude is defined as 90 - angle of up vector from Z!
     SGVec3d sunpos = SGVec3d::fromGeoc(SGGeoc::fromRadM(_sun_lon, _sun_lat,
                                                           SGGeodesy::EQURAD));
-
-    SG_LOG( SG_EVENT, SG_DEBUG, "    t->cur_time = " << t->get_cur_time() );
-    SG_LOG( SG_EVENT, SG_DEBUG,
-            "    Sun Geocentric lat = " << _sun_lat
-            << " Geodcentric lat = " << _sun_lat );
 
     // update the sun light vector
     _sun_vec = SGVec4f(toVec3f(normalize(sunpos)), 0);
@@ -429,9 +415,6 @@ void FGLight::updateSunPos()
 
     double signedPI = (_sun_angle < 0.0) ? -SGD_PI : SGD_PI;
     _sun_angle = fmod(_sun_angle+signedPI, SGD_2PI) - signedPI;
-
-    SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
-            << get_sun_angle() );
 
     // Get direction to the sun in the local frame.
     SGVec3d local_sun_vec = hlOr.transform(nsun);

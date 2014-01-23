@@ -1025,14 +1025,6 @@ bool FGATIS::search(double dt)
     RangeFilter rangeFilter(aircraftPos );
     CommStation* sta = CommStation::findByFreq(freqKhz, aircraftPos, &rangeFilter );
     SetStation(sta);
-    if (sta && sta->airport())
-    {
-        SG_LOG(SG_ATC, SG_DEBUG, "FGATIS " << _name << ": " << sta->airport()->name());
-    }
-    else
-    {
-        SG_LOG(SG_ATC, SG_DEBUG, "FGATIS " << _name << ": no station.");
-    }
 
     return true;
 }

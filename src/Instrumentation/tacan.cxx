@@ -40,7 +40,6 @@ adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
     else if (range_nm < 20.0)
         range_nm = 20.0;
     double rand = sg_random();
-    SG_LOG( SG_INSTR, SG_DEBUG, " tacan range " << range_nm << " max range " << max_range_nm);
     return range_nm + (range_nm * rand * rand);
 }
 
@@ -136,7 +135,6 @@ TACAN::update (double delta_time_sec)
         _distance_node->setDoubleValue(0);
         _speed_node->setDoubleValue(0);
         _time_node->setDoubleValue(0);
-        SG_LOG( SG_INSTR, SG_DEBUG, "skip tacan" );
         return;
     }
 
@@ -153,8 +151,6 @@ TACAN::update (double delta_time_sec)
     double mobile_bearing = 0;
     double mobile_distance = 0;
 
-    SG_LOG( SG_INSTR, SG_DEBUG, "mobile_name " << _mobile_name);
-    SG_LOG( SG_INSTR, SG_DEBUG, "mobile_valid " << _mobile_valid);
     geo_inverse_wgs_84(pos, _mobilePos,
                        &mobile_bearing, &mobile_az2, &mobile_distance);
 
@@ -170,8 +166,6 @@ TACAN::update (double delta_time_sec)
 
     //select the nearer
     if ( mobile_distance <= distance && _mobile_valid) {
-        SG_LOG( SG_INSTR, SG_DEBUG, "mobile_distance_m " << mobile_distance);
-        SG_LOG( SG_INSTR, SG_DEBUG, "distance_m " << distance);
         bearing = mobile_bearing;
         distance = mobile_distance;
         _transmitter_pos.setElevationFt(_mobilePos.getElevationFt());
@@ -200,14 +194,9 @@ TACAN::update (double delta_time_sec)
 
     double horiz_offset = bearing;
 
-    SG_LOG( SG_INSTR, SG_DEBUG, "distance_nm " << distance_nm << " bearing "
-            << bearing << " horiz_offset " << horiz_offset);
-
     // calculate values for radar display
     double y_shift = distance_nm * cos( horiz_offset * SG_DEGREES_TO_RADIANS);
     double x_shift = distance_nm * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
-
-    SG_LOG( SG_INSTR, SG_DEBUG, "y_shift " << y_shift  << " x_shift " << x_shift);
 
     double rotation = 0;
 
@@ -269,15 +258,12 @@ TACAN::search (double frequency_mhz,const SGGeod& pos)
     int number, i;
     _mobile_valid = false;
 
-    SG_LOG( SG_INSTR, SG_DEBUG, "tacan freq " << frequency_mhz );
-
     // reset search time
     _time_before_search_sec = 1.0;
 
     //try any carriers first
     FGNavRecord *mobile_tacan = FGNavList::findByFreq( frequency_mhz, FGNavList::carrierFilter() );
     bool freq_valid = (mobile_tacan != NULL);
-    SG_LOG( SG_INSTR, SG_DEBUG, "mobile freqency valid " << freq_valid );
 
     if ( freq_valid ) {
 
@@ -288,15 +274,11 @@ TACAN::search (double frequency_mhz,const SGGeod& pos)
 
         number = carrier.size();
 
-        SG_LOG( SG_INSTR, SG_DEBUG, "carrier " << number );
         for ( i = 0; i < number; ++i ) {
             string str2 ( carrier[i]->getStringValue("name", ""));
-            SG_LOG( SG_INSTR, SG_DEBUG, "carrier name " << str2 );
 
-            SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 2 " << str2 );
             string::size_type loc1= str1.find( str2, 0 );
             if ( loc1 != string::npos && str2 != "" ) {
-                SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
                 _mobilePos = SGGeod::fromDegFt(
                              carrier[i]->getDoubleValue("position/longitude-deg"),
                              carrier[i]->getDoubleValue("position/latitude-deg"),
@@ -306,34 +288,23 @@ TACAN::search (double frequency_mhz,const SGGeod& pos)
                 _mobile_name = mobile_tacan->name();
                 _mobile_ident = mobile_tacan->get_trans_ident();
                 _mobile_valid = true;
-                SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter valid " << _mobile_valid );
                 break;
             } else {
                 _mobile_valid = false;
-                SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter invalid " << _mobile_valid );
             }
         }
 
         //try any AI tankers second
-
         if ( !_mobile_valid) {
-            SG_LOG( SG_INSTR, SG_DEBUG, "tanker transmitter valid start " << _mobile_valid );
-
         SGPropertyNode * branch = fgGetNode("ai/models", true);
         vector<SGPropertyNode_ptr> tanker = branch->getChildren("tanker");
 
         number = tanker.size();
 
-        SG_LOG( SG_INSTR, SG_DEBUG, "tanker number " << number );
-
         for ( i = 0; i < number; ++i ) {
             string str4 ( tanker[i]->getStringValue("callsign", ""));
-            SG_LOG( SG_INSTR, SG_DEBUG, "tanker callsign " << str4 );
-
-            SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 4 " << str4 );
             string::size_type loc1= str1.find( str4, 0 );
             if ( loc1 != string::npos && str4 != "" ) {
-                SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
                 _mobilePos = SGGeod::fromDegFt(
                                              tanker[i]->getDoubleValue("position/longitude-deg"),
                                              tanker[i]->getDoubleValue("position/latitude-deg"),
@@ -345,11 +316,9 @@ TACAN::search (double frequency_mhz,const SGGeod& pos)
                 _mobile_name = mobile_tacan->name();
                 _mobile_ident = mobile_tacan->get_trans_ident();
                 _mobile_valid = true;
-                SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter valid " << _mobile_valid );
                 break;
             } else {
                 _mobile_valid = false;
-                SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter invalid " << _mobile_valid );
             }
         }
     }
@@ -357,24 +326,16 @@ TACAN::search (double frequency_mhz,const SGGeod& pos)
     //try any mp tankers third, if we haven't found the tanker in the ai aircraft
 
     if ( !_mobile_valid ) {
-        SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter valid start " << _mobile_valid );
-
         SGPropertyNode * branch = fgGetNode("ai/models", true);
         vector<SGPropertyNode_ptr> mp_tanker = branch->getChildren("multiplayer");
 
         number = mp_tanker.size();
 
-        SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker number " << number );
-
         if ( number > 0 ) {	  // don't do this if there are no MP aircraft
             for ( i = 0; i < number; ++i ) {
                 string str6 ( mp_tanker[i]->getStringValue("callsign", ""));
-                SG_LOG( SG_INSTR, SG_DEBUG, "mp tanker callsign " << str6 );
-
-                SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 5 " << str6 );
                 string::size_type loc1= str1.find( str6, 0 );
                 if ( loc1 != string::npos && str6 != "" ) {
-                    SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
                   _mobilePos = SGGeod::fromDegFt(
                                                  mp_tanker[i]->getDoubleValue("position/longitude-deg"),
                                                  mp_tanker[i]->getDoubleValue("position/latitude-deg"),
@@ -386,21 +347,15 @@ TACAN::search (double frequency_mhz,const SGGeod& pos)
                     _mobile_name = mobile_tacan->name();
                     _mobile_ident = mobile_tacan->get_trans_ident();
                     _mobile_valid = true;
-
-                    SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter valid " << _mobile_valid );
-                    SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker name " << _mobile_name);
-                    SG_LOG( SG_INSTR, SG_DEBUG, " mp range " << _mobile_range_nm);
                     break;
                 } else {
                     _mobile_valid = false;
-                    SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter invalid " << _mobile_valid );
-                    }
+                }
                 }
             }
         }
     } else {
         _mobile_valid = false;
-        SG_LOG( SG_INSTR, SG_DEBUG, " mobile transmitter invalid " << _mobile_valid );
     }
 
     // try the TACAN/VORTAC list next
@@ -409,7 +364,6 @@ TACAN::search (double frequency_mhz,const SGGeod& pos)
     _transmitter_valid = (tacan != NULL);
 
     if ( _transmitter_valid ) {
-        SG_LOG( SG_INSTR, SG_DEBUG, "transmitter valid " << _transmitter_valid );
 
         _transmitter_pos = tacan->geod();
         _transmitter_range_nm = tacan->get_range();
@@ -418,12 +372,6 @@ TACAN::search (double frequency_mhz,const SGGeod& pos)
         _name_node->setStringValue(_transmitter_name.c_str());
         _transmitter_ident = tacan->get_trans_ident();
         _ident_node->setStringValue(_transmitter_ident.c_str());
-
-        SG_LOG( SG_INSTR, SG_DEBUG, "name " << _transmitter_name);
-        SG_LOG( SG_INSTR, SG_DEBUG, _transmitter_pos);
-
-    } else {
-        SG_LOG( SG_INSTR, SG_DEBUG, "transmitter invalid " << _transmitter_valid );
     }
 }
 
