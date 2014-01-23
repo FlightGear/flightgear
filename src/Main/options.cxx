@@ -1558,9 +1558,7 @@ struct OptionDesc {
     {"atcsim",                       true,  OPTION_CHANNEL, "", false, "dummy", 0 },
     {"atlas",                        true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"httpd",                        true,  OPTION_CHANNEL, "", false, "", 0 },
-#ifdef FG_JPEG_SERVER
     {"jpg-httpd",                    true,  OPTION_CHANNEL, "", false, "", 0 },
-#endif
     {"native",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"native-ctrls",                 true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"native-fdm",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },

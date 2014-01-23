@@ -35,7 +35,6 @@
 // Ensure FG_HAVE_xxx always have a value
 #define FG_HAVE_HLA (@FG_HAVE_HLA@ + 0)
 #define FG_HAVE_GPERFTOOLS (@FG_HAVE_GPERFTOOLS@ + 0)
-#cmakedefine FG_JPEG_SERVER
 
 #cmakedefine SYSTEM_SQLITE
 

@@ -86,9 +86,6 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/math/sg_random.h>
-#ifdef FG_JPEG_SERVER
-#include <simgear/screen/jpgfactory.hxx>
-#endif
 
 #include <Time/light.hxx>
 #include <Time/light.hxx>
@@ -385,13 +382,6 @@ public:
 };
 
 bool FGScenerySwitchCallback::scenery_enabled = false;
-                                    
-#ifdef FG_JPEG_SERVER
-static void updateRenderer()
-{
-    globals->get_renderer()->update();
-}
-#endif
 
 FGRenderer::FGRenderer() :
     _sky(NULL),
@@ -406,10 +396,6 @@ FGRenderer::FGRenderer() :
     _shadowDistances( new osg::Uniform( "fg_ShadowDistances", osg::Vec4f(5.0, 50.0, 500.0, 5000.0 ) ) ),
     _depthInColor( new osg::Uniform( "fg_DepthInColor", false ) )
 {
-#ifdef FG_JPEG_SERVER
-   jpgRenderFrame = updateRenderer;
-#endif
-    
     // it's not the real root, whatever that means
     _root = new osg::Group;
     _root->setName("fakeRoot");
@@ -437,9 +423,6 @@ FGRenderer::~FGRenderer()
         getViewer()->setSceneData(new osg::Group);
     }
     
-#ifdef FG_JPEG_SERVER
-   jpgRenderFrame = NULL;
-#endif
     delete _sky;
 }
 

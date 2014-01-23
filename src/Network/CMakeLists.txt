@@ -27,6 +27,7 @@ set(SOURCES
 	pve.cxx
 	ray.cxx
 	rul.cxx
+    jpg-httpd.cxx
 	)
 
 set(HEADERS
@@ -56,16 +57,12 @@ set(HEADERS
 	pve.hxx
 	ray.hxx
 	rul.hxx
+    jpg-httpd.hxx
 	)
 
 if(ENABLE_IAX)
     list(APPEND SOURCES fgcom.cxx)
     list(APPEND HEADERS fgcom.hxx)
-endif()
-	
-if(FG_JPEG_SERVER)
-    list(APPEND SOURCES jpg-httpd.cxx)
-    list(APPEND HEADERS jpg-httpd.hxx)
 endif()
    	
 flightgear_component(Network "${SOURCES}" "${HEADERS}")

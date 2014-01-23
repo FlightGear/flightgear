@@ -26,17 +26,20 @@
 #ifndef _FG_JPEG_HTTPD_HXX
 #define _FG_JPEG_HTTPD_HXX
 
+#include <memory> // for auto_ptr
+#include <string>
+
 #include "protocol.hxx"
 
-class HttpdImageServer;
+// forward decls
+class HttpdThread;
 
 class FGJpegHttpd : public FGProtocol
 {
-    int port;
-    HttpdImageServer *imageServer;
+    std::auto_ptr<HttpdThread> _imageServer;
 
 public:
-    FGJpegHttpd( int p );
+    FGJpegHttpd( int p, int hz, const std::string& type );
     ~FGJpegHttpd();
 
     bool open();

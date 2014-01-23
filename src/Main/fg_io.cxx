@@ -50,9 +50,7 @@
 #include <Network/garmin.hxx>
 #include <Network/httpd.hxx>
 #include <Network/igc.hxx>
-#ifdef FG_JPEG_SERVER
-#  include <Network/jpg-httpd.hxx>
-#endif
+#include <Network/jpg-httpd.hxx>
 #include <Network/joyclient.hxx>
 #include <Network/jsclient.hxx>
 #include <Network/native.hxx>
@@ -155,12 +153,21 @@ FGIO::parse_port_config( const string& config )
             // determine port
             string port = tokens[1];
             return new FGHttpd( atoi(port.c_str()) );
-#ifdef FG_JPEG_SERVER
         } else if ( protocol == "jpg-httpd" ) {
             // determine port
-            string port = tokens[1];
-            return new FGJpegHttpd( atoi(port.c_str()) );
-#endif
+            int port = simgear::strutils::to_int(tokens[1]);
+            int frameHz = 8; // maximum frame rate
+            string type = "jpeg";
+            
+            if (tokens.size() > 2) {
+                frameHz = simgear::strutils::to_int(tokens[2]);
+            }
+            
+            if (tokens.size() > 3) {
+                type = tokens[3];
+            }
+                
+            return new FGJpegHttpd(port, frameHz, type);
         } else if ( protocol == "joyclient" ) {
             FGJoyClient *joyclient = new FGJoyClient;
             io = joyclient;

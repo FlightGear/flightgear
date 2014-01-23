@@ -150,7 +150,6 @@ option(ENABLE_JSBSIM     "Set to ON to build FlightGear with JSBSim FDM (default
 option(EVENT_INPUT       "Set to ON to build FlightGear with event-based Input support" ${EVENT_INPUT_DEFAULT})
 option(ENABLE_RTI        "Set to ON to build FlightGear with RTI support" OFF)
 option(ENABLE_PROFILE    "Set to ON to build FlightGear with gperftools profiling support" OFF)
-option(JPEG_FACTORY      "Set to ON to build FlightGear with JPEG-factory support" OFF)
 option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
 option(ENABLE_IAX        "Set to ON to build FlightGear with IAXClient/fgcom built-in (default)" ON)
 option(USE_DBUS          "Set to ON to build FlightGear with DBus screensaver interaction (default on Linux)" ${USE_DBUS_DEFAULT})
@@ -292,26 +291,6 @@ find_package(PLIB REQUIRED puaux pu js fnt)
 find_package(SimGear ${FLIGHTGEAR_VERSION} REQUIRED)
 
 ##############################################################################
-
-if (JPEG_FACTORY)
-    # check simgear was built with JPEG-factory support
-    find_package(JPEG REQUIRED)
-    include_directories(${JPEG_INCLUDE_DIR})
-
-    set(CMAKE_REQUIRED_INCLUDES
-        ${SIMGEAR_INCLUDE_DIR}
-        ${JPEG_INCLUDE_DIR}
-        ${OPENSCENEGRAPH_INCLUDE_DIRS})
-
-    check_cxx_source_compiles(
-        "#include <simgear/screen/jpgfactory.hxx>
-        int main()    { return 0; } "
-        FG_JPEG_SERVER)
-
-    if (NOT FG_JPEG_SERVER)
-        message(STATUS "JPEG server support requested, but SimGear was built without JPEG support")
-    endif()
-endif()
 
 check_include_file(unistd.h   HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)

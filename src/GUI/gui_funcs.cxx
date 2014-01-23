@@ -548,79 +548,16 @@ namespace
         SGPath _path;
     };
 
-}
+} // of anonymous namespace
 
 osg::ref_ptr<GUISnapShotOperation> GUISnapShotOperation::_snapShotOp;
 
 // do a screen snap shot
 bool fgDumpSnapShot ()
 {
-#if 1
     // start snap shot operation, while needs to be executed in
     // graphics context
     return GUISnapShotOperation::start();
-#else
-    // obsolete code => remove when new code is stable
-    SGPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master");
-
-    bool freeze = master_freeze->getBoolValue();
-    if ( !freeze ) {
-        master_freeze->setBoolValue(true);
-    }
-
-    int mouse = fgGetMouseCursor();
-    fgSetMouseCursor(MOUSE_CURSOR_NONE);
-
-    fgSetBool("/sim/signals/screenshot", true);
-
-    FGRenderer *renderer = globals->get_renderer();
-    renderer->resize( fgGetInt("/sim/startup/xsize"),
-                      fgGetInt("/sim/startup/ysize") );
-
-    // we need two render frames here to clear the menu and cursor
-    // ... not sure why but doing an extra fgRenderFrame() shouldn't
-    // hurt anything
-    renderer->update( true );
-    renderer->update( true );
-
-    string dir = fgGetString("/sim/paths/screenshot-dir");
-    if (dir.empty())
-        dir = fgGetString("/sim/fg-current");
-
-    SGPath path(dir + '/');
-    if (path.create_dir( 0755 )) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Cannot create screenshot directory '"
-                << dir << "'. Trying home directory.");
-        dir = globals->get_fg_home();
-    }
-
-    char filename[24];
-    static int count = 1;
-    while (count < 1000) {
-        snprintf(filename, 24, "fgfs-screen-%03d.png", count++);
-
-        SGPath p(dir);
-        p.append(filename);
-        if (!p.exists()) {
-            path.set(p.str());
-            break;
-        }
-    }
-
-    bool result = sg_glDumpWindow(path.c_str(),
-                                 fgGetInt("/sim/startup/xsize"),
-                                 fgGetInt("/sim/startup/ysize"));
-
-    fgSetString("/sim/paths/screenshot-last", path.c_str());
-    fgSetBool("/sim/signals/screenshot", false);
-
-    fgSetMouseCursor(mouse);
-
-    if ( !freeze ) {
-        master_freeze->setBoolValue(false);
-    }
-    return result;
-#endif
 }
 
 // do an entire scenegraph dump
