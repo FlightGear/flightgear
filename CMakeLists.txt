@@ -116,6 +116,17 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     if(UDEV_FOUND)
         set(EVENT_INPUT_DEFAULT 1)
     endif(UDEV_FOUND)
+
+    find_package(Speex)
+    find_package(Speexdsp)
+    if(SPEEX_FOUND AND SPEEXDSP_FOUND)
+        set(SYSTEM_SPEEX_DEFAULT 1)
+    endif(SPEEX_FOUND AND SPEEXDSP_FOUND)
+
+    find_package(Gsm)
+    if(GSM_FOUND)
+        set(SYSTEM_GSM_DEFAULT 1)
+    endif(GSM_FOUND)
 endif()
 
 find_package(Git)
@@ -143,6 +154,8 @@ option(JPEG_FACTORY      "Set to ON to build FlightGear with JPEG-factory suppor
 option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
 option(ENABLE_IAX        "Set to ON to build FlightGear with IAXClient/fgcom built-in (default)" ON)
 option(USE_DBUS          "Set to ON to build FlightGear with DBus screensaver interaction (default on Linux)" ${USE_DBUS_DEFAULT})
+option(SYSTEM_SPEEX      "Set to ON to build IAXClient with the system's speex and speexdsp library" ${SYSTEM_SPEEX_DEFAULT})
+option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM library" ${SYSTEM_GSM_DEFAULT})
 
 # additional utilities
 option(ENABLE_FGADMIN    "Set to ON to build the FGADMIN application (default)" ON)

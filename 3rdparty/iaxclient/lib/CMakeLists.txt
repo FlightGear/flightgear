@@ -19,26 +19,37 @@ set(LIBIAX2_SOURCES
     libiax2/src/md5.c
 )
 
-set(GSM_SOURCES
-    gsm/src/add.c
-    gsm/src/code.c
-    gsm/src/debug.c
-    gsm/src/decode.c
-    gsm/src/gsm_create.c
-    gsm/src/gsm_decode.c
-    gsm/src/gsm_destroy.c
-    gsm/src/gsm_encode.c
-    gsm/src/gsm_explode.c
-    gsm/src/gsm_implode.c
-    gsm/src/gsm_option.c
-    gsm/src/gsm_print.c
-    gsm/src/long_term.c
-    gsm/src/lpc.c
-    gsm/src/preprocess.c
-    gsm/src/rpe.c
-    gsm/src/short_term.c
-    gsm/src/table.c
-)
+if (SYSTEM_GSM)
+    set(Gsm_FIND_REQUIRED TRUE)
+    find_package(Gsm)
+endif(SYSTEM_GSM)
+
+if (GSM_FOUND)
+    include_directories(${GSM_INCLUDE_DIR})
+    message(STATUS "Using GSM includes at: ${GSM_INCLUDE_DIR}")
+    message(STATUS "Using GSM libraries: ${GSM_LIBRARIES}")
+else(GSM_FOUND)
+    set(GSM_SOURCES
+        gsm/src/add.c
+        gsm/src/code.c
+        gsm/src/debug.c
+        gsm/src/decode.c
+        gsm/src/gsm_create.c
+        gsm/src/gsm_decode.c
+        gsm/src/gsm_destroy.c
+        gsm/src/gsm_encode.c
+        gsm/src/gsm_explode.c
+        gsm/src/gsm_implode.c
+        gsm/src/gsm_option.c
+        gsm/src/gsm_print.c
+        gsm/src/long_term.c
+        gsm/src/lpc.c
+        gsm/src/preprocess.c
+        gsm/src/rpe.c
+        gsm/src/short_term.c
+        gsm/src/table.c
+    )
+endif(GSM_FOUND)
 
 if (WIN32)
     list(APPEND IAXCLIENT_BASE_SOURCES winfuncs.c)
@@ -48,47 +59,62 @@ endif(WIN32)
 
 if (ENABLE_SPEXX)
     list(APPEND IAXCLIENT_BASE_SOURCES codec_speex.c)
+
+    if (SYSTEM_SPEEX)
+        set(Speex_FIND_REQUIRED TRUE)
+        set(Speexdsp_FIND_REQUIRED TRUE)
+        find_package(Speex)
+        find_package(Speexdsp)
+    endif(SYSTEM_SPEEX)
+
+    if (SPEEX_FOUND AND SPEEXDSP_FOUND)
+        include_directories(${SPEEX_INCLUDE_DIR} ${SPEEXDSP_INCLUDE_DIR})
+        message(STATUS "Using speex includes at: ${SPEEX_INCLUDE_DIR}")
+        message(STATUS "Using speex libraries: ${SPEEX_LIBRARIES}")
+        message(STATUS "Using speex extended library includes at: ${SPEEXDSP_INCLUDE_DIR}")
+        message(STATUS "Using speex extended library libraries: ${SPEEXDSP_LIBRARIES}")
+    else(SPEEX_FOUND AND SPEEXDSP_FOUND)
+        set(SPEEX_SOURCES
+            libspeex/bits.c
+            libspeex/cb_search.c
+            libspeex/exc_10_16_table.c
+            libspeex/exc_10_32_table.c
+            libspeex/exc_20_32_table.c
+            libspeex/exc_5_256_table.c
+            libspeex/exc_5_64_table.c
+            libspeex/exc_8_128_table.c
+            libspeex/filters.c
+            libspeex/gain_table.c
+            libspeex/gain_table_lbr.c
+            libspeex/hexc_10_32_table.c
+            libspeex/hexc_table.c
+            libspeex/high_lsp_tables.c
+            libspeex/jitter.c
+            libspeex/lbr_48k_tables.c
+            libspeex/lpc.c
+            libspeex/lsp.c
+            libspeex/lsp_tables_nb.c
+            libspeex/ltp.c
+            libspeex/math_approx.c
+            libspeex/mdf.c
+            libspeex/medfilter.c
+            libspeex/misc.c
+            libspeex/modes.c
+            libspeex/nb_celp.c
+            libspeex/preprocess.c
+            libspeex/quant_lsp.c
+            libspeex/sb_celp.c
+            libspeex/smallft.c
+            libspeex/speex.c
+            libspeex/speex_callbacks.c
+            libspeex/speex_header.c
+            libspeex/stereo.c
+            libspeex/vbr.c
+            libspeex/vq.c
+            )
     
-    set(SPEEX_SOURCES 
-        libspeex/bits.c
-        libspeex/cb_search.c
-        libspeex/exc_10_16_table.c
-        libspeex/exc_10_32_table.c
-        libspeex/exc_20_32_table.c
-        libspeex/exc_5_256_table.c
-        libspeex/exc_5_64_table.c
-        libspeex/exc_8_128_table.c
-        libspeex/filters.c
-        libspeex/gain_table.c
-        libspeex/gain_table_lbr.c
-        libspeex/hexc_10_32_table.c
-        libspeex/hexc_table.c
-        libspeex/high_lsp_tables.c
-        libspeex/jitter.c
-        libspeex/lbr_48k_tables.c
-        libspeex/lpc.c
-        libspeex/lsp.c
-        libspeex/lsp_tables_nb.c
-        libspeex/ltp.c
-        libspeex/math_approx.c
-        libspeex/mdf.c
-        libspeex/medfilter.c
-        libspeex/misc.c
-        libspeex/modes.c
-        libspeex/nb_celp.c
-        libspeex/preprocess.c
-        libspeex/quant_lsp.c
-        libspeex/sb_celp.c
-        libspeex/smallft.c
-        libspeex/speex.c
-        libspeex/speex_callbacks.c
-        libspeex/speex_header.c
-        libspeex/stereo.c
-        libspeex/vbr.c
-        libspeex/vq.c
-        )
-    
-    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/libspeex/include)
+        include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/libspeex/include)
+    endif(SPEEX_FOUND AND SPEEXDSP_FOUND)
 endif(ENABLE_SPEXX)
 
 if (ENABLE_ALSA)
@@ -134,6 +160,6 @@ add_library(iaxclient_lib STATIC
     ${SPEEX_SOURCES}
     ${LIBIAX2_SOURCES})
 
-target_link_libraries(iaxclient_lib ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(iaxclient_lib ${CMAKE_THREAD_LIBS_INIT} ${SPEEX_LIBRARIES} ${SPEEXDSP_LIBRARIES} ${GSM_LIBRARIES})
 
 # eof
