@@ -69,13 +69,14 @@ FGModelMgr::add_model (SGPropertyNode * node)
   SG_LOG(SG_AIRCRAFT, SG_INFO,
          "Adding model " << node->getStringValue("name", "[unnamed]"));
 
-  const char *path = node->getStringValue("path", "Models/Geometry/glider.ac");
+  const char *model_path = node->getStringValue("path", "Models/Geometry/glider.ac");
   osg::Node *object;
 
   try {
-      object = SGModelLib::loadDeferredModel(path, globals->get_props());
+      std::string fullPath = simgear::SGModelLib::findDataFile(model_path);
+      object = SGModelLib::loadDeferredModel(fullPath, globals->get_props());
   } catch (const sg_throwable& t) {
-    SG_LOG(SG_AIRCRAFT, SG_ALERT, "Error loading " << path << ":\n  "
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "Error loading " << model_path << ":\n  "
         << t.getFormattedMessage() << t.getOrigin());
     return;
   }
