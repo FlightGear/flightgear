@@ -942,6 +942,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
   assert(rowid == sqlite3_column_int64(loadPositioned, 0));
   FGPositioned::Type ty = (FGPositioned::Type) sqlite3_column_int(loadPositioned, 1);
   
+  PositionedID prowid = static_cast<PositionedID>(rowid);
   string ident = (char*) sqlite3_column_text(loadPositioned, 2);
   string name = (char*) sqlite3_column_text(loadPositioned, 3);
   sqlite3_int64 aptId = sqlite3_column_int64(loadPositioned, 4);
@@ -959,7 +960,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
       return loadAirport(rowid, ty, ident, name, pos);
       
     case FGPositioned::TOWER:
-      return new AirportTower(rowid, aptId, ident, pos);
+      return new AirportTower(prowid, aptId, ident, pos);
       
     case FGPositioned::RUNWAY:
     case FGPositioned::HELIPAD:
