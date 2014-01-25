@@ -64,7 +64,7 @@ FGSurface::FGSurface()
   isSolid = true;
 }
 
-FGSurface::FGSurface(FGFDMExec* fdmex = NULL)
+FGSurface::FGSurface(FGFDMExec* fdmex)
 {
   frictionFactor = 1.0;
   rollingFCoeff = 0.02;
