@@ -2048,7 +2048,7 @@ int Options::parseOption(const string& s)
     
     return addOption(key, value);
   } else {
-    SG_LOG(SG_GENERAL, SG_ALERT, "unknown option:" << s);
+      flightgear::modalMessageBox("Unknown option", "Unknown command-line option: " + s);
     return FG_OPTIONS_ERROR;
   }
 }
@@ -2057,14 +2057,14 @@ int Options::addOption(const string &key, const string &value)
 {
   OptionDesc* desc = p->findOption(key);
   if (!desc) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "unknown option:" << key);
+    flightgear::modalMessageBox("Unknown option", "Unknown command-line option: " + key);
     return FG_OPTIONS_ERROR;
   }
   
   if (!(desc->type & OPTION_MULTI)) {
     OptionValueVec::const_iterator it = p->findValue(key);
     if (it != p->values.end()) {
-      SG_LOG(SG_GENERAL, SG_INFO, "multiple values forbidden for option:" << key << ", ignoring:" << value);
+      SG_LOG(SG_GENERAL, SG_WARN, "multiple values forbidden for option:" << key << ", ignoring:" << value);
       return FG_OPTIONS_OK;
     }
   }
