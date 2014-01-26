@@ -55,6 +55,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr _username_node;                        // sim/fgcom/register/username
     SGPropertyNode_ptr _password_node;                        // sim/fgcom/register/password
     SGPropertyNode_ptr _micLevel_node;                        // sim/fgcom/mic-level
+    SGPropertyNode_ptr _silenceThd_node;                      // sim/fgcom/silence-threshold
     SGPropertyNode_ptr _speakerLevel_node;                    // sim/fgcom/speaker-level
     SGPropertyNode_ptr _deviceID_node[4];                     // sim/fgcom/device[n]/id
     SGPropertyNode_ptr _deviceName_node[4];                   // sim/fgcom/device[n]/name

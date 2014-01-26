@@ -80,6 +80,7 @@ double *special_frequencies;
 double previous_com_frequency = 0.0;
 int previous_ptt = 0;
 float previous_vol = 0.0;
+float previous_thd = 0.0;
 int com_select = 0;
 int max_com_instruments = 2;
 struct airport *airportlist;
@@ -97,6 +98,7 @@ static const char *audio_in;
 static const char *audio_out;
 static double level_in = 0.7;
 static double level_out = 0.7;
+static double silence_thd = -20.0;
 static bool mic_boost;
 static char codec_option;
 static const char *callsign;
@@ -129,6 +131,8 @@ static const OptionEntry fgcomOptionArray[] = {
   {"speaker", 'o', true, OPTION_DOUBLE, &level_out, 0,
    "speaker output level (0.0 - 1.0)", 0},
   {"mic-boost", 'b', false, OPTION_BOOL, &mic_boost, 0, "enable mic boost",
+   0},
+  {"silence-threshold", 't', false, OPTION_DOUBLE, &silence_thd, 0, "set silence threshold (-60.0 - 0.0)",
    0},
   {"list-audio", 'l', false, OPTION_BOOL, &list_audio, 0,
    "list audio devices", 0},
@@ -211,6 +215,15 @@ process_packet (char *buf)
 
       iaxc_output_level_set( data.OUTPUT_VOL );
       previous_vol = data.OUTPUT_VOL;
+    }
+
+  /* Check for silence threshold change */
+  if (previous_thd != data.SILENCE_THD)
+    {
+      SG_LOG( SG_GENERAL, SG_ALERT, "Set silent threshold to " << data.SILENCE_THD );
+
+      iaxc_set_silence_threshold( data.SILENCE_THD );
+      previous_thd = data.SILENCE_THD;
     }
 
   /* Check for callsign change */
@@ -451,7 +464,7 @@ main (int argc, char *argv[])
   iaxc_set_formats (IAXC_FORMAT_SPEEX, IAXC_FORMAT_ULAW|IAXC_FORMAT_SPEEX);
   iaxc_set_speex_settings(1, 5, 0, 1, 0, 3);
   iaxc_set_filters(IAXC_FILTER_AGC | IAXC_FILTER_DENOISE);
-  iaxc_set_silence_threshold(-20.0);
+  iaxc_set_silence_threshold(silence_thd);
   iaxc_set_event_callback (iaxc_callback);
 
   iaxc_start_processing_thread ();
@@ -1197,6 +1210,11 @@ parse_fgdata (struct fgdata *data, char *buf)
 	{
 	  data->OUTPUT_VOL = atof (fields[1]);
           SG_LOG( SG_GENERAL, SG_DEBUG, "OUTPUT_VOL=" << data->OUTPUT_VOL );
+	}
+      else if (strcmp (fields[0], "SILENCE_THD") == 0)
+	{
+	  data->SILENCE_THD = atof (fields[1]);
+          SG_LOG( SG_GENERAL, SG_DEBUG, "SILENCE_THD=" << data->SILENCE_THD );
 	}
       else if (strcmp (fields[0], "CALLSIGN") == 0)
 	{

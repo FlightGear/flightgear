@@ -117,6 +117,7 @@ void FGCom::bind()
   _enabled_node            = node->getChild( "enabled", 0, true );
   _micBoost_node           = node->getChild( "mic-boost", 0, true );
   _micLevel_node           = node->getChild( "mic-level", 0, true );
+  _silenceThd_node         = node->getChild( "silence-threshold", 0, true );
   _speakerLevel_node       = node->getChild( "speaker-level", 0, true );
   _selectedInput_node      = node->getChild( "device-input", 0, true );
   _selectedOutput_node     = node->getChild( "device-output", 0, true );
@@ -153,6 +154,9 @@ void FGCom::bind()
   if ( !_micLevel_node->hasValue() )
       _micLevel_node->setFloatValue(1.0);
 
+  if ( !_silenceThd_node->hasValue() )
+      _silenceThd_node->setFloatValue(-20.0);
+
   if ( !_register_node->hasValue() )
       _register_node->setBoolValue(false);
 
@@ -168,6 +172,7 @@ void FGCom::bind()
   _selectedOutput_node->addChangeListener(this);
   _selectedInput_node->addChangeListener(this);
   _speakerLevel_node->addChangeListener(this);
+  _silenceThd_node->addChangeListener(this);
   _micBoost_node->addChangeListener(this);
   _micLevel_node->addChangeListener(this);
   _enabled_node->addChangeListener(this);
@@ -232,7 +237,7 @@ void FGCom::postinit()
     iaxc_set_formats (IAXC_FORMAT_SPEEX, IAXC_FORMAT_ULAW|IAXC_FORMAT_SPEEX);
     iaxc_set_speex_settings(1, 5, 0, 1, 0, 3);
     iaxc_set_filters(IAXC_FILTER_AGC | IAXC_FILTER_DENOISE);
-    iaxc_set_silence_threshold(-20.0);
+    iaxc_set_silence_threshold(_silenceThd_node->getFloatValue());
     iaxc_start_processing_thread ();
 
     // Now IAXClient is initialized
@@ -442,6 +447,13 @@ void FGCom::valueChanged(SGPropertyNode *prop)
 
   if (prop == _test_node) {
     testMode( prop->getBoolValue() );
+    return;
+  }
+
+  if (prop == _silenceThd_node && _initialized) {
+    float silenceThd = prop->getFloatValue();
+    SG_CLAMP_RANGE<float>( silenceThd, -60, 0 );
+    iaxc_set_silence_threshold( silenceThd );
     return;
   }
 

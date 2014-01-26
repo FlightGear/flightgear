@@ -124,6 +124,7 @@ struct fgdata
   int ALT;
   float HEAD;
   float OUTPUT_VOL;
+  float SILENCE_THD;
   char* CALLSIGN;
 };
 
