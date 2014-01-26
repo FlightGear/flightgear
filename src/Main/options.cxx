@@ -2106,6 +2106,20 @@ string_list Options::valuesForOption(const std::string& key) const
   return result;
 }
 
+
+static string defaultTerrasyncDir()
+{
+#if defined(SG_WINDOWS)
+	SGPath p(SGPath::documents());
+	p.append("FlightGear");
+#else
+    SGPath p(globals->get_fg_home());
+#endif
+	p.append("TerraSync");
+	return p.str();
+}
+
+
 OptionResult Options::processOptions()
 {
   // establish locale before showing help (this selects the default locale,
@@ -2169,15 +2183,16 @@ OptionResult Options::processOptions()
 // terrasync directory fixup
   string terrasyncDir = fgGetString("/sim/terrasync/scenery-dir");
   if (terrasyncDir.empty()) {
-    SGPath p(globals->get_fg_home());
-    p.append("TerraSync");
-    terrasyncDir = p.str();
-    SG_LOG(SG_GENERAL, SG_INFO,
-           "Using default TerraSync dir: " << terrasyncDir);
-    fgSetString("/sim/terrasync/scenery-dir", terrasyncDir);
+	  terrasyncDir = defaultTerrasyncDir();
+	  // auto-save it for next time
+	  
+	  SG_LOG(SG_GENERAL, SG_INFO,
+		  "Using default TerraSync: " << terrasyncDir);
+      fgSetString("/sim/terrasync/scenery-dir", terrasyncDir);
   }
-  
+
   SGPath p(terrasyncDir);
+
   // following is necessary to ensure NavDataCache sees stable scenery paths from
   // terrasync. Ensure the Terrain and Objects subdirs exist immediately, rather
   // than waiting for the first tiles to be scheduled.
