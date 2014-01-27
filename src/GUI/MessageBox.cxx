@@ -121,7 +121,7 @@ MessageBoxResult modalMessageBox(const std::string& caption,
 #if defined(SG_WINDOWS)
     return win32MessageBox(caption, msg, moreText);
 #elif defined(SG_MAC)
-    return cocoaFatalMessage(msg, moreText);
+    return cocoaMessageBox(msg, moreText);
 #else
     SG_LOG(SG_GENERAL, SG_ALERT, caption << ":" << msg);
     if (!moreText.empty()) {

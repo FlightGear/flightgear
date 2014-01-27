@@ -53,6 +53,7 @@ extern bool global_crashRptEnabled;
 #include <simgear/scene/tsync/terrasync.hxx>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/misc/strutils.hxx>
 
 #include <Model/panelnode.hxx>
 #include <Scenery/scenery.hxx>
@@ -60,6 +61,7 @@ extern bool global_crashRptEnabled;
 #include <Sound/soundmanager.hxx>
 #include <Time/TimeManager.hxx>
 #include <GUI/gui.h>
+#include <GUI/MessageBox.hxx>
 #include <Viewer/splash.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
@@ -143,6 +145,37 @@ static void initTerrasync()
     terra_sync->init();
 }
 
+static void checkOpenGLVersion()
+{
+#if defined(SG_MAC)
+    // Mac users can't upgrade their drivers, so complaining about
+    // versions doesn't help them much
+    return;
+#endif
+    
+    // format of these strings is not standardised, so be careful about
+    // parsing them.
+    std::string versionString(fgGetString("/sim/rendering/gl-version"));
+    string_list parts = simgear::strutils::split(versionString);
+    if (parts.size() == 3) {
+        if (parts[1].find("NVIDIA") != std::string::npos) {
+            // driver version number, dot-seperared
+            string_list driverVersion = simgear::strutils::split(parts[2], ".");
+            if (!driverVersion.empty()) {
+                int majorDriverVersion = simgear::strutils::to_int(driverVersion[0]);
+                if (majorDriverVersion < 300) {
+                    std::ostringstream ss;
+                    ss << "Please upgrade to at least version 300 of the nVidia drivers (installed version is " << parts[2] << ")";
+
+                    flightgear::modalMessageBox("Outdated graphics drivers",
+                                                "FlightGear has detected outdated drivers for your graphics card.",
+                                                ss.str());
+                }
+            }
+        } // of NVIDIA-style version string
+    } // of three parts
+}
+
 static void registerMainLoop()
 {
     // stash current frame signal property
@@ -168,6 +201,7 @@ static void fgIdleFunction ( void ) {
     if ( idle_state == 0 ) {
         if (guiInit())
         {
+            checkOpenGLVersion();
             idle_state+=2;
             fgSplashProgress("loading-aircraft-list");
         }
