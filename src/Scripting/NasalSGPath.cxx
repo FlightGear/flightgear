@@ -45,15 +45,18 @@ SGPath::Permissions checkIORules(const SGPath& path)
 }
 
 // TODO make exposing such function easier...
+static naRef validatedPathToNasal( const nasal::CallContext& ctx,
+                                   const SGPath& p )
+{
+  return ctx.to_nasal( SGPathRef(new SGPath(p.str(), &checkIORules)) );
+}
+
 /**
  * os.path.new()
  */
 static naRef f_new_path(const nasal::CallContext& ctx)
 {
-  return ctx.to_nasal
-  (
-    SGPathRef(new SGPath(ctx.getArg<std::string>(0), &checkIORules))
-  );
+  return validatedPathToNasal(ctx, SGPath(ctx.getArg<std::string>(0)));
 }
 
 /**
@@ -61,10 +64,32 @@ static naRef f_new_path(const nasal::CallContext& ctx)
  */
 static naRef f_desktop(const nasal::CallContext& ctx)
 {
-  return ctx.to_nasal
-  (
-    SGPathRef(new SGPath(SGPath::desktop(SGPath(&checkIORules))))
-  );
+  return validatedPathToNasal(ctx, SGPath::desktop(SGPath(&checkIORules)));
+}
+
+/**
+ * os.path.standardLocation(type)
+ */
+static naRef f_standardLocation(const nasal::CallContext& ctx)
+{
+  const std::string type_str = ctx.requireArg<std::string>(0);
+  SGPath::StandardLocation type = SGPath::HOME;
+  if(      type_str == "DESKTOP" )
+    type = SGPath::DESKTOP;
+  else if( type_str == "DOWNLOADS" )
+    type = SGPath::DOWNLOADS;
+  else if( type_str == "DOCUMENTS" )
+    type = SGPath::DOCUMENTS;
+  else if( type_str == "PICTURES" )
+    type = SGPath::PICTURES;
+  else if( type_str != "HOME" )
+    naRuntimeError
+    (
+      ctx.c,
+      "os.path.standardLocation: unknown type %s", type_str.c_str()
+    );
+
+  return validatedPathToNasal(ctx, SGPath::standardLocation(type));
 }
 
 //------------------------------------------------------------------------------
@@ -110,6 +135,7 @@ naRef initNasalSGPath(naRef globals, naContext c)
 
   path.set("new", f_new_path);
   path.set("desktop", &f_desktop);
+  path.set("standardLocation", &f_standardLocation);
 
   return naNil();
 }
