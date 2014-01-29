@@ -152,8 +152,8 @@ else(SIMGEAR_SHARED)
         ${OPENAL_LIBRARY})
 
     if(APPLE)
-        find_library(CORESERVICES_LIBRARY CoreServices)
-        list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES ${CORESERVICES_LIBRARY})
+        find_library(COCOA_LIBRARY Cocoa)
+        list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES ${COCOA_LIBRARY})
     endif()
 
     if(WIN32)
