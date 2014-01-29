@@ -226,5 +226,11 @@ fgviewerMain(int argc, char** argv)
     // pass the loaded scene graph to the viewer.
     viewer.setSceneData(loadedModel.get());
 
-    return viewer.run();
+    int result = viewer.run();
+    
+    // clear cache now, since it contains SimGear objects. Otherwise SG_LOG
+    // calls during shutdown will cause crashes.
+    osgDB::Registry::instance()->clearObjectCache();
+    
+    return result;
 }
