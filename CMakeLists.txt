@@ -142,6 +142,7 @@ endif()
 # FlightGear build options
 option(SIMGEAR_SHARED    "Set to ON when SimGear was built as a shared library" OFF)
 option(LOGGING           "Set to ON to build FlightGear with logging support (default)" ON)
+option(JSBSIM_TERRAIN    "Set to ON to build FlightGear with JSBSim terrain handling code" OFF)
 option(SP_FDMS           "Set to ON to build FlightGear with special-purpose FDMs" OFF)
 option(ENABLE_UIUC_MODEL "Set to ON to build FlightGear with UIUCModel FDM" OFF)
 option(ENABLE_LARCSIM    "Set to ON to build FlightGear with LaRCsim FDM" OFF)
@@ -173,6 +174,10 @@ if(LOGGING)
     # nothing
 else()
     set(FG_NDEBUG 1)
+endif()
+
+if(JSBSIM_TERRAIN)
+   set(JSBSIM_USE_GROUNDREACTIONS 1)
 endif()
 
 if(SP_FDMS)
