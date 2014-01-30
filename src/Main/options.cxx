@@ -2349,7 +2349,9 @@ string Options::platformDefaultRoot() const
 #elif defined(SG_WINDOWS)
 string Options::platformDefaultRoot() const
 {
-  return "..\\data";
+	// for 3.0 release, adjusting this to allow for the
+	// bin\Win32 and bin\Win64 structure we install
+	return "..\\..\\data";
 }
 #elif defined(SG_MAC)
 // platformDefaultRoot defined in CocoaHelpers.mm
