@@ -1647,6 +1647,9 @@ SGGeod MapWidget::unproject(const SGVec2d& p) const
         SGVec3d cartPt = orient.rotate(SGVec3d(unscaled.x(), unscaled.y(), 0.0));
         return SGGeod::fromCart(cartPt + cartCenter);
     }
+
+    default:
+      throw sg_exception("MapWidget::unproject(): requested unknown projection");
     } // of projection mode switch
 }
 
