@@ -155,7 +155,7 @@ void FGCom::bind()
       _micLevel_node->setFloatValue(1.0);
 
   if ( !_silenceThd_node->hasValue() )
-      _silenceThd_node->setFloatValue(-20.0);
+      _silenceThd_node->setFloatValue(-35.0);
 
   if ( !_register_node->hasValue() )
       _register_node->setBoolValue(false);

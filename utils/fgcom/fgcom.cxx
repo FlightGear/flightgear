@@ -98,7 +98,7 @@ static const char *audio_in;
 static const char *audio_out;
 static double level_in = 0.7;
 static double level_out = 0.7;
-static double silence_thd = -20.0;
+static double silence_thd = -35.0;
 static bool mic_boost;
 static char codec_option;
 static const char *callsign;
