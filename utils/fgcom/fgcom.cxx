@@ -451,7 +451,7 @@ main (int argc, char *argv[])
   iaxc_set_formats (IAXC_FORMAT_SPEEX, IAXC_FORMAT_ULAW|IAXC_FORMAT_SPEEX);
   iaxc_set_speex_settings(1, 5, 0, 1, 0, 3);
   iaxc_set_filters(IAXC_FILTER_AGC | IAXC_FILTER_DENOISE);
-  iaxc_set_silence_threshold(-20.0);
+  iaxc_set_silence_threshold(-35.0);
   iaxc_set_event_callback (iaxc_callback);
 
   iaxc_start_processing_thread ();
