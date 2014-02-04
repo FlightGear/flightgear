@@ -344,7 +344,11 @@ GPS::update (double delta_time_sec)
       FGPositionedRef apt = FGPositioned::findClosest(_indicated_pos, 20.0, f.get());
       if (apt) {
         selectOBSMode(new flightgear::NavaidWaypoint(apt, NULL));
+      } else {
+          selectOBSMode(NULL);
       }
+        
+        
     }
 
     if (_mode != "init")
@@ -481,17 +485,16 @@ GPS::updateBasicData(double dt)
   
   SGGeod g = _indicated_pos;
   g.setLongitudeDeg(_last_pos.getLongitudeDeg());
-  double northSouthM = SGGeodesy::distanceM(_last_pos, g);
+  double northSouthM = dist(SGVec3d::fromGeod(_last_pos), SGVec3d::fromGeod(g));
   northSouthM = copysign(northSouthM, _indicated_pos.getLatitudeDeg() - _last_pos.getLatitudeDeg());
   
   double nsMSec = fgGetLowPass(_lastNSVelocity, northSouthM / dt, dt/2.0);
   _lastNSVelocity = nsMSec;
   _northSouthVelocity->setDoubleValue(nsMSec);
 
-
   g = _indicated_pos;
   g.setLatitudeDeg(_last_pos.getLatitudeDeg());
-  double eastWestM = SGGeodesy::distanceM(_last_pos, g);
+  double eastWestM = dist(SGVec3d::fromGeod(_last_pos), SGVec3d::fromGeod(g));
   eastWestM = copysign(eastWestM, _indicated_pos.getLongitudeDeg() - _last_pos.getLongitudeDeg());
   
   double ewMSec = fgGetLowPass(_lastEWVelocity, eastWestM / dt, dt/2.0);
@@ -1172,17 +1175,14 @@ void GPS::selectOBSMode(flightgear::Waypt* waypt)
 {
   if (!waypt) {
     // initialise from scratch
-    if (!isScratchPositionValid()) {
-      return;
+    if (isScratchPositionValid()) {
+        waypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
     }
-    
-    waypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
   }
   
   _mode = "obs";
-
-  _currentWaypt = waypt;
   _wp0_position = _indicated_pos;
+  _currentWaypt = waypt;
   wp1Changed();
 }
 
