@@ -139,7 +139,7 @@ TACAN::update (double delta_time_sec)
         return;
     }
 
-  SGGeod pos(globals->get_aircraft_position());
+    SGGeod pos(globals->get_aircraft_position());
                                 // On timeout, scan again
     _time_before_search_sec -= delta_time_sec;
     if ((_time_before_search_sec < 0 || _new_frequency) && _frequency_mhz >= 0)
@@ -154,9 +154,11 @@ TACAN::update (double delta_time_sec)
 
     SG_LOG( SG_INSTR, SG_DEBUG, "mobile_name " << _mobile_name);
     SG_LOG( SG_INSTR, SG_DEBUG, "mobile_valid " << _mobile_valid);
-    geo_inverse_wgs_84(pos, _mobilePos,
-                       &mobile_bearing, &mobile_az2, &mobile_distance);
 
+    if (_mobile_valid) {
+        geo_inverse_wgs_84(pos, _mobilePos,
+                       &mobile_bearing, &mobile_az2, &mobile_distance);
+    }
 
     //calculate the bearing and range of the station from the aircraft
     double az2 = 0;
