@@ -177,7 +177,7 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
     traitsSet |= setFromProperty(traits->screenNum, winNode, "screen");
 
     const SGPropertyNode* fullscreenNode = winNode->getNode("fullscreen");
-    const SGPropertyNode* ordNode = winNode->getNode("overrideRedirect");
+    const SGPropertyNode* orrNode = winNode->getNode("overrideRedirect");
 
     if (fullscreenNode && fullscreenNode->getBoolValue()) {
         // fullscreen mode
@@ -188,7 +188,7 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
         traits->width = width;
         traits->height = height;
         traits->supportsResize = false;
-	bool overrideRedirect = ordNode && ordNode->getBoolValue();
+	bool overrideRedirect = orrNode && orrNode->getBoolValue();
 	traits->overrideRedirect = overrideRedirect;
         traits->x = 0;
         traits->y = 0;
