@@ -77,6 +77,7 @@ public:
         SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
     FGAIBasePtr addObject(const SGPropertyNode* definition);
+    bool isVisible(const SGGeod& pos) const;
     
     /**
      * @brief given a reference to an /ai/models/<foo>[n] node, return the
@@ -117,6 +118,7 @@ private:
     SGPropertyNode_ptr user_speed_node;
     SGPropertyNode_ptr wind_from_east_node;
     SGPropertyNode_ptr wind_from_north_node;
+    SGPropertyNode_ptr _environmentVisiblity;
 
 
     ai_list_type ai_list;
