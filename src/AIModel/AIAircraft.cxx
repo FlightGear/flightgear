@@ -172,17 +172,11 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
     // AI manager. In this particular case, the AIAircraft is used to shadow the user's aircraft's behavior in the AI world.
     // Since we perhaps don't want a radar entry of our own aircraft, the following conditional should probably be adequate
     // enough
-     if (manager)
+     if (manager){
         UpdateRadar(manager);
-     checkVisibility();
+	invisible = !manager->isVisible(pos);
+     }
   }
-
-void FGAIAircraft::checkVisibility() 
-{
-  double visibility_meters = fgGetDouble("/environment/visibility-m");
-  invisible = (SGGeodesy::distanceM(globals->get_view_position(), pos) > visibility_meters);
-}
-
 
 
 void FGAIAircraft::AccelTo(double speed) {

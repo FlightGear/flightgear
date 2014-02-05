@@ -134,6 +134,7 @@ FGAIManager::init() {
     
     globals->get_commands()->addCommand("load-scenario", this, &FGAIManager::loadScenarioCommand);
     globals->get_commands()->addCommand("unload-scenario", this, &FGAIManager::unloadScenarioCommand);
+    _environmentVisiblity = fgGetNode("/environment/visibility-m");
 }
 
 void
@@ -184,6 +185,7 @@ FGAIManager::shutdown()
     }
     
     ai_list.clear();
+    _environmentVisiblity.clear();
     
     globals->get_commands()->removeCommand("load-scenario");
     globals->get_commands()->removeCommand("unload-scenario");
@@ -296,6 +298,12 @@ FGAIManager::attach(FGAIBase *model)
         || model->getType()==FGAIBase::otStatic);
     model->bind();
     p->setBoolValue("valid", true);
+}
+
+bool FGAIManager::isVisible(const SGGeod& pos) const
+{
+  double visibility_meters = _environmentVisiblity->getDoubleValue();
+  return ( dist(globals->get_view_position_cart(), SGVec3d::fromGeod(pos)) ) <= visibility_meters;
 }
 
 int

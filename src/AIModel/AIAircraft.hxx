@@ -155,7 +155,6 @@ private:
     void updateActualState();
     void updateModelProperties(double dt);
     void handleATCRequests();
-    void checkVisibility();
     inline bool isStationary() { return ((fabs(speed)<=0.0001)&&(fabs(tgt_speed)<=0.0001));}
     inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
    
