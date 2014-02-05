@@ -177,9 +177,8 @@ DME::update (double delta_time_sec)
     }
 
     // Calculate the distance to the transmitter
-    SGVec3d location = SGVec3d::fromGeod(globals->get_aircraft_position());
-    
-    double distance_nm = dist(_navrecord->cart(), location) * SG_METER_TO_NM;
+    double distance_nm = dist(_navrecord->cart(),
+			      globals->get_aircraft_position_cart()) * SG_METER_TO_NM;
 
     double range_nm = adjust_range(_navrecord->get_elev_ft(),
                                    globals->get_aircraft_position().getElevationFt(),

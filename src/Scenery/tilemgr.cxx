@@ -185,7 +185,7 @@ bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_vie
 void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
 {
     // sanity check (unfortunately needed!)
-    if ( longitude < -180.0 || longitude > 180.0 
+    if ( longitude < -180.0 || longitude > 180.0
          || latitude < -90.0 || latitude > 90.0 )
     {
         SG_LOG( SG_TERRAIN, SG_ALERT,
@@ -422,16 +422,12 @@ void FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
  */
 bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double duration)
 {
-    const float priority = 0.0;
-    double current_longitude = position.getLongitudeDeg();
-    double current_latitude = position.getLatitudeDeg();
-    bool available = true;
-    
     // sanity check (unfortunately needed!)
-    if (current_longitude < -180 || current_longitude > 180 ||
-        current_latitude < -90 || current_latitude > 90)
+    if (!position.isValid())
         return false;
-  
+    const float priority = 0.0;
+    bool available = true;
+
     SGBucket bucket(position);
     available = sched_tile( bucket, priority, false, duration );
   
@@ -457,8 +453,8 @@ bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double 
             // We have already checked for the center tile.
             if ( x != 0 || y != 0 )
             {
-                SGBucket b = sgBucketOffset( current_longitude,
-                                             current_latitude, x, y );
+                SGBucket b = sgBucketOffset( position.getLongitudeDeg(),
+                                             position.getLatitudeDeg(), x, y );
                 double distance2 = distSqr(cartPos, SGVec3d::fromGeod(b.get_center()));
                 // Do not ask if it is just the next tile but way out of range.
                 if (distance2 <= max_dist2)
