@@ -69,8 +69,7 @@ TACAN::~TACAN ()
 void
 TACAN::init ()
 {
-    string branch;
-    branch = "/instrumentation/" + _name;
+    string branch = "/instrumentation/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
 
@@ -163,10 +162,10 @@ TACAN::update (double delta_time_sec)
     double az2 = 0;
     double bearing = 0;
     double distance = 0;
-
-    geo_inverse_wgs_84(pos, _transmitter_pos,
-                       &bearing, &az2, &distance);
-
+    if (_transmitter_valid) {
+        geo_inverse_wgs_84(pos, _transmitter_pos,
+                           &bearing, &az2, &distance);
+    }
 
     //select the nearer
     if ( mobile_distance <= distance && _mobile_valid) {
