@@ -158,7 +158,7 @@ naRef f_getDesktop(naContext c, naRef me, int argc, naRef* args)
 
 naRef f_elementGetTransformedBounds(sc::Element& el, const nasal::CallContext& ctx)
 {
-  osg::BoundingBox bb = el.getTransformedBounds( osg::Matrix::identity() );
+  osg::BoundingBox bb = el.getTransformedBounds(el.getMatrix());
 
   std::vector<float> bb_vec(4);
   bb_vec[0] = bb._min.x();
