@@ -47,9 +47,10 @@ private:
 
 protected:
 
-    virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+    virtual bool configure( SGPropertyNode& cfg_node,
+                            const std::string& cfg_name,
+                            SGPropertyNode& prop_root );
 
-    
    /**
     * @brief the implementation of the update() method of the SGSubsystem
     */
@@ -97,11 +98,15 @@ public:
     virtual ~Component();
 
     /**
-     * @brief configure this component from a property node. Iterates through all nodes found
-     *        as childs under configNode and calls configure of the derived class for each child.
-     * @param configNode the property node containing the configuration 
+     * @brief configure this component from a property node. Iterates through
+     *        all nodes found as children under configNode and calls configure
+     *        of the derived class for each child.
+     *
+     * @param prop_root Property root for all relative paths
+     * @param cfg       Property node containing the configuration
      */
-    bool configure( SGPropertyNode_ptr configNode );
+    bool configure( SGPropertyNode& prop_root,
+                    SGPropertyNode& cfg );
 
     /**
      * @brief getter for the name property

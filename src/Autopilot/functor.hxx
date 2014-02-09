@@ -32,15 +32,18 @@ namespace FGXMLAutopilot {
 template <class TBase> class FunctorBase {
 public:
   virtual ~FunctorBase() {}
-  virtual TBase * operator()( SGPropertyNode_ptr configNode ) = 0;
+  virtual TBase * operator()( SGPropertyNode& prop_root,
+                              SGPropertyNode& cfg ) = 0;
 };
 
 template <class TClass,class TBase> class CreateAndConfigureFunctor : 
   public FunctorBase<TBase> {
 public:
-  virtual TBase * operator()( SGPropertyNode_ptr configNode ) { 
+  virtual TBase * operator()( SGPropertyNode& prop_root,
+                              SGPropertyNode& cfg )
+  {
     TBase * base = new TClass();
-    base->configure( configNode );
+    base->configure(prop_root, cfg);
     return base;
   }
 };

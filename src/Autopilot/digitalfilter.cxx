@@ -42,13 +42,16 @@ namespace FGXMLAutopilot {
  */
 class DigitalFilterImplementation : public SGReferenced {
 protected:
-  virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode) = 0;
+  virtual bool configure( SGPropertyNode& cfg_node,
+                          const std::string& cfg_name,
+                          SGPropertyNode& prop_root ) = 0;
 public:
   virtual ~DigitalFilterImplementation() {}
   DigitalFilterImplementation();
   virtual void   initialize( double initvalue ) {}
   virtual double compute( double dt, double input ) = 0;
-  bool configure( SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg,
+                  SGPropertyNode& prop_root );
 
   void setDigitalFilter( DigitalFilter * digitalFilter ) { _digitalFilter = digitalFilter; }
 
@@ -61,7 +64,9 @@ protected:
 class GainFilterImplementation : public DigitalFilterImplementation {
 protected:
   InputValueList _gainInput;
-  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
 public:
   GainFilterImplementation() : _gainInput(1.0) {}
   double compute(  double dt, double input );
@@ -75,7 +80,9 @@ public:
 class DerivativeFilterImplementation : public GainFilterImplementation {
   InputValueList _TfInput;
   double _input_1;
-  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
 public:
   DerivativeFilterImplementation();
   double compute(  double dt, double input );
@@ -85,7 +92,9 @@ public:
 class ExponentialFilterImplementation : public GainFilterImplementation {
 protected:
   InputValueList _TfInput;
-  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
   bool _isSecondOrder;
   double _output_1, _output_2;
 public:
@@ -99,7 +108,9 @@ protected:
   InputValueList _samplesInput;
   double _output_1;
   std::deque <double> _inputQueue;
-  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
 public:
   MovingAverageFilterImplementation();
   double compute(  double dt, double input );
@@ -110,7 +121,9 @@ class NoiseSpikeFilterImplementation : public DigitalFilterImplementation {
 protected:
   double _output_1;
   InputValueList _rateOfChangeInput;
-  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
 public:
   NoiseSpikeFilterImplementation();
   double compute(  double dt, double input );
@@ -122,7 +135,9 @@ protected:
   double _output_1;
   InputValueList _rateOfChangeMax;
   InputValueList _rateOfChangeMin ;
-  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
 public:
   RateLimitFilterImplementation();
   double compute(  double dt, double input );
@@ -136,7 +151,9 @@ protected:
   InputValueList _maxInput;
   double _input_1;
   double _output_1;
-  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
 public:
   IntegratorFilterImplementation();
   double compute(  double dt, double input );
@@ -148,7 +165,9 @@ protected:
   InputValueList _TfInput;
   double _input_1;
   double _output_1;
-  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
 public:
   HighPassFilterImplementation();
   double compute(  double dt, double input );
@@ -160,7 +179,9 @@ protected:
   InputValueList _TfbInput;
   double _input_1;
   double _output_1;
-  bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
 public:
   LeadLagFilterImplementation();
   double compute(  double dt, double input );
@@ -180,18 +201,17 @@ DigitalFilterImplementation::DigitalFilterImplementation() :
 {
 }
 
-bool DigitalFilterImplementation::configure( SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool DigitalFilterImplementation::configure( SGPropertyNode& cfg,
+                                             SGPropertyNode& prop_root )
 {
-  for (int i = 0; i < configNode->nChildren(); ++i ) {
-    SGPropertyNode_ptr prop;
+  for (int i = 0; i < cfg.nChildren(); ++i )
+  {
+    SGPropertyNode_ptr child = cfg.getChild(i);
 
-    SGPropertyNode_ptr child = configNode->getChild(i);
-    string cname(child->getName());
-
-    if( configure( cname, child ) )
+    if( configure(*child, child->getNameString(), prop_root) )
       continue;
-
-  } // for configNode->nChildren()
+  }
 
   return true;
 }
@@ -204,10 +224,12 @@ double GainFilterImplementation::compute(  double dt, double input )
   return _gainInput.get_value() * input;
 }
 
-bool GainFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+bool GainFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                          const std::string& cfg_name,
+                                          SGPropertyNode& prop_root )
 {
-  if (nodeName == "gain" ) {
-    _gainInput.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "gain" ) {
+    _gainInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
 
@@ -239,14 +261,16 @@ void DerivativeFilterImplementation::initialize( double initvalue )
   _input_1 = initvalue;
 }
 
-
-bool DerivativeFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool DerivativeFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                                const std::string& cfg_name,
+                                                SGPropertyNode& prop_root )
 {
-  if( GainFilterImplementation::configure( nodeName, configNode ) )
+  if( GainFilterImplementation::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if (nodeName == "filter-time" ) {
-    _TfInput.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "filter-time" ) {
+    _TfInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
 
@@ -299,10 +323,12 @@ double MovingAverageFilterImplementation::compute(  double dt, double input )
   return output_0;
 }
 
-bool MovingAverageFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+bool MovingAverageFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                                   const std::string& cfg_name,
+                                                   SGPropertyNode& prop_root )
 {
-  if (nodeName == "samples" ) {
-    _samplesInput.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "samples" ) {
+    _samplesInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
 
@@ -337,10 +363,13 @@ double NoiseSpikeFilterImplementation::compute(  double dt, double input )
     return (_output_1 = _output_1 + copysign( maxChange, delta ));
 }
 
-bool NoiseSpikeFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool NoiseSpikeFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                                const std::string& cfg_name,
+                                                SGPropertyNode& prop_root )
 {
-  if (nodeName == "max-rate-of-change" ) {
-    _rateOfChangeInput.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "max-rate-of-change" ) {
+    _rateOfChangeInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
 
@@ -379,14 +408,16 @@ double RateLimitFilterImplementation::compute(  double dt, double input )
   return (output);
 }
 
-bool RateLimitFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+bool RateLimitFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                               const std::string& cfg_name,
+                                               SGPropertyNode& prop_root )
 {
-  if (nodeName == "max-rate-of-change" ) {
-    _rateOfChangeMax.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "max-rate-of-change" ) {
+    _rateOfChangeMax.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
-  if (nodeName == "min-rate-of-change" ) {
-    _rateOfChangeMin.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "min-rate-of-change" ) {
+    _rateOfChangeMin.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
 
@@ -431,18 +462,21 @@ double ExponentialFilterImplementation::compute(  double dt, double input )
   return (_output_1 = output_0);
 }
 
-bool ExponentialFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool ExponentialFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                                 const std::string& cfg_name,
+                                                 SGPropertyNode& prop_root )
 {
-  if( GainFilterImplementation::configure( nodeName, configNode ) )
+  if( GainFilterImplementation::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if (nodeName == "filter-time" ) {
-    _TfInput.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "filter-time" ) {
+    _TfInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
 
-  if (nodeName == "type" ) {
-    string type(configNode->getStringValue());
+  if (cfg_name == "type" ) {
+    string type(cfg_node.getStringValue());
     _isSecondOrder = type == "double-exponential";
   }
 
@@ -462,17 +496,20 @@ void IntegratorFilterImplementation::initialize( double initvalue )
   _input_1 = _output_1 = initvalue;
 }
 
-
-bool IntegratorFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool IntegratorFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                                const std::string& cfg_name,
+                                                SGPropertyNode& prop_root )
 {
-  if( GainFilterImplementation::configure( nodeName, configNode ) )
+  if( GainFilterImplementation::configure(cfg_node, cfg_name, prop_root) )
     return true;
-  if (nodeName == "u_min" ) {
-    _minInput.push_back( new InputValue( configNode, 1 ) );
+
+  if (cfg_name == "u_min" ) {
+    _minInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
-  if (nodeName == "u_max" ) {
-    _maxInput.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "u_max" ) {
+    _maxInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
   return false;
@@ -523,13 +560,16 @@ double HighPassFilterImplementation::compute(  double dt, double input )
   return output;
 }
 
-bool HighPassFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool HighPassFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                              const std::string& cfg_name,
+                                              SGPropertyNode& prop_root )
 {
-  if( GainFilterImplementation::configure( nodeName, configNode ) )
+  if( GainFilterImplementation::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if (nodeName == "filter-time" ) {
-    _TfInput.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "filter-time" ) {
+    _TfInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
  
@@ -570,24 +610,27 @@ double LeadLagFilterImplementation::compute(  double dt, double input )
   return output;
 }
 
-bool LeadLagFilterImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool LeadLagFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                             const std::string& cfg_name,
+                                             SGPropertyNode& prop_root )
 {
-  if( GainFilterImplementation::configure( nodeName, configNode ) )
+  if( GainFilterImplementation::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if (nodeName == "filter-time-a" ) {
-    _TfaInput.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "filter-time-a" ) {
+    _TfaInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
-  if (nodeName == "filter-time-b" ) {
-    _TfbInput.push_back( new InputValue( configNode, 1 ) );
+  if (cfg_name == "filter-time-b" ) {
+    _TfbInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
   return false;
 }
-/* --------------------------------------------------------------------------------- */
-/* Digital Filter Component Implementation                                           */
-/* --------------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* Digital Filter Component Implementation                                    */
+/* -------------------------------------------------------------------------- */
 
 DigitalFilter::DigitalFilter() :
     AnalogComponent(),
@@ -602,7 +645,10 @@ DigitalFilter::~DigitalFilter()
 
 static map<string,FunctorBase<DigitalFilterImplementation> *> componentForge;
 
-bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configNode)
+//------------------------------------------------------------------------------
+bool DigitalFilter::configure( SGPropertyNode& cfg_node,
+                               const std::string& cfg_name,
+                               SGPropertyNode& prop_root )
 {
   if( componentForge.empty() ) {
     componentForge["gain"] = new CreateAndConfigureFunctor<GainFilterImplementation,DigitalFilterImplementation>();
@@ -618,23 +664,24 @@ bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configN
     componentForge["integrator"] = new CreateAndConfigureFunctor<IntegratorFilterImplementation,DigitalFilterImplementation>();
   }
 
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "DigitalFilter::configure(" << nodeName << ")" << endl );
-  if( AnalogComponent::configure( nodeName, configNode ) )
+  SG_LOG(SG_AUTOPILOT, SG_BULK, "DigitalFilter::configure(" << cfg_name << ")");
+
+  if( AnalogComponent::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if (nodeName == "type" ) {
-    string type( configNode->getStringValue() );
+  if (cfg_name == "type" ) {
+    string type( cfg_node.getStringValue() );
     if( componentForge.count(type) == 0 ) {
       SG_LOG( SG_AUTOPILOT, SG_BULK, "unhandled filter type <" << type << ">" << endl );
       return true;
     }
-    _implementation = (*componentForge[type])( configNode->getParent() );
+    _implementation = (*componentForge[type])(*cfg_node.getParent(), prop_root);
     _implementation->setDigitalFilter( this );
     return true;
   }
 
-  if( nodeName == "initialize-to" ) {
-    string s( configNode->getStringValue() );
+  if( cfg_name == "initialize-to" ) {
+    string s( cfg_node.getStringValue() );
     if( s == "input" ) {
       _initializeTo = INITIALIZE_INPUT;
     } else if( s == "output" ) {
@@ -647,7 +694,12 @@ bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configN
     return true;
   }
 
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "DigitalFilter::configure(" << nodeName << ") [unhandled]" << endl );
+  SG_LOG
+  (
+    SG_AUTOPILOT,
+    SG_BULK,
+    "DigitalFilter::configure(" << cfg_name << ") [unhandled]"
+  );
   return false; // not handled by us, let the base class try
 }
 

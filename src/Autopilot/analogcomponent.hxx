@@ -83,14 +83,17 @@ protected:
     AnalogComponent();
 
     /**
-     * @brief This method configures this analog component from a property node. Gets
-     *        called multiple times from the base class configure method for every 
-              config node.
-     * @param nodeName the name of the configuration node provided in configNode
-     * @param configNode the configuration node itself
+     * @brief This method configures this analog component from a property node.
+     *        Gets called multiple times from the base class configure method
+     *        for every configuration node.
+     * @param cfg_name  Name of the configuration node provided in cfg_node
+     * @param cfg_node  Configuration node itself
+     * @param prop_root Property root for all relative paths
      * @return true if the node was handled, false otherwise.
      */
-    virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+    virtual bool configure( SGPropertyNode& cfg_node,
+                            const std::string& cfg_name,
+                            SGPropertyNode& prop_root );
 
     /**
      * @brief clamp the given value if &lt;min&gt; and/or &lt;max&gt; inputs were given

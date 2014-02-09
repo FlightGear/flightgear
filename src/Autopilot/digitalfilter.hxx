@@ -47,8 +47,10 @@ private:
     };
 
 protected:
-    bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode);
-    void update( bool firstTime, double dt);
+    virtual bool configure( SGPropertyNode& cfg_node,
+                            const std::string& cfg_name,
+                            SGPropertyNode& prop_root );
+    virtual void update( bool firstTime, double dt);
 
     InputValueList _Tf;
     InputValueList _samples;

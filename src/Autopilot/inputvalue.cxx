@@ -25,23 +25,37 @@
 
 using namespace FGXMLAutopilot;
 
-PeriodicalValue::PeriodicalValue( SGPropertyNode_ptr root )
+//------------------------------------------------------------------------------
+PeriodicalValue::PeriodicalValue( SGPropertyNode& prop_root,
+                                  SGPropertyNode& cfg )
 {
-  SGPropertyNode_ptr minNode = root->getChild( "min" );
-  SGPropertyNode_ptr maxNode = root->getChild( "max" );
-  if( minNode == NULL || maxNode == NULL ) {
-    SG_LOG(SG_AUTOPILOT, SG_ALERT, "periodical defined, but no <min> and/or <max> tag. Period ignored." );
-  } else {
-    minPeriod = new InputValue( minNode );
-    maxPeriod = new InputValue( maxNode );
+  SGPropertyNode_ptr minNode = cfg.getChild( "min" );
+  SGPropertyNode_ptr maxNode = cfg.getChild( "max" );
+  if( !minNode || !maxNode )
+  {
+    SG_LOG
+    (
+      SG_AUTOPILOT,
+      SG_ALERT,
+      "periodical defined, but no <min> and/or <max> tag. Period ignored."
+    );
+  }
+  else
+  {
+    minPeriod = new InputValue(prop_root, *minNode);
+    maxPeriod = new InputValue(prop_root, *maxNode);
   }
 }
 
+//------------------------------------------------------------------------------
 double PeriodicalValue::normalize( double value ) const
 {
-  return SGMiscd::normalizePeriodic( minPeriod->get_value(), maxPeriod->get_value(), value );
+  return SGMiscd::normalizePeriodic( minPeriod->get_value(),
+                                     maxPeriod->get_value(),
+                                     value );
 }
 
+//------------------------------------------------------------------------------
 double PeriodicalValue::normalizeSymmetric( double value ) const
 {
   double minValue = minPeriod->get_value();
@@ -52,101 +66,100 @@ double PeriodicalValue::normalizeSymmetric( double value ) const
   return value > width_2 ? width_2 - value : value;
 }
 
-InputValue::InputValue( SGPropertyNode_ptr node, double value, double offset, double scale) :
+//------------------------------------------------------------------------------
+InputValue::InputValue( SGPropertyNode& prop_root,
+                        SGPropertyNode& cfg,
+                        double value,
+                        double offset,
+                        double scale ):
   _value(0.0),
   _abs(false)
 {
-  parse( node, value, offset, scale );
+  parse(prop_root, cfg, value, offset, scale);
 }
 
-
-void InputValue::parse( SGPropertyNode_ptr node, double aValue, double aOffset, double aScale )
+//------------------------------------------------------------------------------
+void InputValue::parse( SGPropertyNode& prop_root,
+                        SGPropertyNode& cfg,
+                        double aValue,
+                        double aOffset,
+                        double aScale )
 {
-    _value = aValue;
-    _property = NULL; 
-    _offset = NULL;
-    _scale = NULL;
-    _min = NULL;
-    _max = NULL;
-    _periodical = NULL;
+  _value = aValue;
+  _property = NULL;
+  _offset = NULL;
+  _scale = NULL;
+  _min = NULL;
+  _max = NULL;
+  _periodical = NULL;
 
-    if( node == NULL )
-        return;
+  SGPropertyNode * n;
 
-    SGPropertyNode * n;
+  if( (n = cfg.getChild("condition")) != NULL )
+    _condition = sgReadCondition(&prop_root, n);
 
-    if( (n = node->getChild("condition")) != NULL ) {
-        _condition = sgReadCondition(fgGetNode("/"), n);
+  if( (n = cfg.getChild( "scale" )) != NULL )
+    _scale = new InputValue(prop_root, *n, aScale);
+
+  if( (n = cfg.getChild( "offset" )) != NULL )
+    _offset = new InputValue(prop_root, *n, aOffset);
+
+  if( (n = cfg.getChild( "max" )) != NULL )
+    _max = new InputValue(prop_root, *n);
+
+  if( (n = cfg.getChild( "min" )) != NULL )
+    _min = new InputValue(prop_root, *n);
+
+  if( (n = cfg.getChild( "abs" )) != NULL )
+    _abs = n->getBoolValue();
+
+  if( (n = cfg.getChild( "period" )) != NULL )
+    _periodical = new PeriodicalValue(prop_root, *n);
+
+
+  SGPropertyNode *valueNode = cfg.getChild("value");
+  if( valueNode != NULL )
+    _value = valueNode->getDoubleValue();
+
+  if( (n = cfg.getChild("expression")) != NULL )
+  {
+    _expression = SGReadDoubleExpression(&prop_root, n->getChild(0));
+    return;
+  }
+
+  // if no <property> element, check for <prop> element for backwards
+  // compatibility
+  if(    (n = cfg.getChild("property"))
+      || (n = cfg.getChild("prop"    )) )
+  {
+    _property = prop_root.getNode(n->getStringValue(), true);
+    if( valueNode )
+    {
+      // initialize property with given value
+      // if both <prop> and <value> exist
+      double s = get_scale();
+      if( s != 0 )
+        _property->setDoubleValue( (_value - get_offset())/s );
+      else
+        _property->setDoubleValue(0); // if scale is zero, value*scale is zero
     }
 
-    if( (n = node->getChild( "scale" )) != NULL ) {
-        _scale = new InputValue( n, aScale );
-    }
+    return;
+  } // of have a <property> or <prop>
 
-    if( (n = node->getChild( "offset" )) != NULL ) {
-        _offset = new InputValue( n, aOffset );
-    }
 
-    if( (n = node->getChild( "max" )) != NULL ) {
-        _max = new InputValue( n );
-    }
-
-    if( (n = node->getChild( "min" )) != NULL ) {
-        _min = new InputValue( n );
-    }
-
-    if( (n = node->getChild( "abs" )) != NULL ) {
-      _abs = n->getBoolValue();
-    }
-
-    if( (n = node->getChild( "period" )) != NULL ) {
-      _periodical = new PeriodicalValue( n );
-    }
-
-    SGPropertyNode *valueNode = node->getChild( "value" );
-    if ( valueNode != NULL ) {
-        _value = valueNode->getDoubleValue();
-    }
-
-    if ((n = node->getChild("expression")) != NULL) {
-      _expression = SGReadDoubleExpression(fgGetNode("/"), n->getChild(0));
-      return;
-    }
-    
-    n = node->getChild( "property" );
-    // if no <property> element, check for <prop> element for backwards
-    // compatibility
-    if(  n == NULL )
-        n = node->getChild( "prop" );
-
-    if (  n != NULL ) {
-        _property = fgGetNode(  n->getStringValue(), true );
-        if ( valueNode != NULL ) {
-            // initialize property with given value 
-            // if both <prop> and <value> exist
-            double s = get_scale();
-            if( s != 0 )
-              _property->setDoubleValue( (_value - get_offset())/s );
-            else
-              _property->setDoubleValue( 0 ); // if scale is zero, value*scale is zero
-        }
-        
-        return;
-    } // of have a <property> or <prop>
-
-    
-    if (valueNode == NULL) {
-        // no <value>, <prop> or <expression> element, use text node 
-        const char * textnode = node->getStringValue();
-        char * endp = NULL;
-        // try to convert to a double value. If the textnode does not start with a number
-        // endp will point to the beginning of the string. We assume this should be
-        // a property name
-        _value = strtod( textnode, &endp );
-        if( endp == textnode ) {
-          _property = fgGetNode( textnode, true );
-        }
-    }
+  if( !valueNode )
+  {
+    // no <value>, <prop> or <expression> element, use text node
+    const char * textnode = cfg.getStringValue();
+    char * endp = NULL;
+    // try to convert to a double value. If the textnode does not start with a number
+    // endp will point to the beginning of the string. We assume this should be
+    // a property name
+    _value = strtod( textnode, &endp );
+    if( endp == textnode )
+      _property = prop_root.getNode(textnode, true);
+  }
 }
 
 void InputValue::set_value( double aValue ) 

@@ -40,64 +40,82 @@ Component::~Component()
   delete _enable_value;
 }
 
-bool Component::configure( SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool Component::configure( SGPropertyNode& prop_root,
+                           SGPropertyNode& cfg )
 {
-  for (int i = 0; i < configNode->nChildren(); ++i ) {
-    SGPropertyNode_ptr prop;
-
-    SGPropertyNode_ptr child = configNode->getChild(i);
+  for( int i = 0; i < cfg.nChildren(); ++i )
+  {
+    SGPropertyNode_ptr child = cfg.getChild(i);
     std::string cname(child->getName());
 
-    if( configure( cname, child ) )
-      continue;
-
-  } // for configNode->nChildren()
+    if( !configure(*child, cname, prop_root) )
+      SG_LOG
+      (
+        SG_AUTOPILOT,
+        SG_INFO,
+        "Component::configure: unknown node: " << cname
+      );
+  }
 
   return true;
 }
 
-bool Component::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool Component::configure( SGPropertyNode& cfg_node,
+                           const std::string& cfg_name,
+                           SGPropertyNode& prop_root )
 {
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ")" << std::endl );
+  SG_LOG
+  (
+    SG_AUTOPILOT,
+    SG_BULK,
+    "Component::configure(" << cfg_name << ")"
+  );
 
-  if ( nodeName == "name" ) {
-    _name = configNode->getStringValue();
+  if ( cfg_name == "name" ) {
+    _name = cfg_node.getStringValue();
     return true;
   } 
 
-  if ( nodeName == "debug" ) {
-    _debug = configNode->getBoolValue();
+  if ( cfg_name == "debug" ) {
+    _debug = cfg_node.getBoolValue();
     return true;
   }
 
-  if ( nodeName == "enable" ) {
+  if ( cfg_name == "enable" ) {
     SGPropertyNode_ptr prop;
 
-    if( (prop = configNode->getChild("condition")) != NULL ) {
+    if( (prop = cfg_node.getChild("condition")) != NULL ) {
       _condition = sgReadCondition(fgGetNode("/"), prop);
       return true;
     } 
-    if ( (prop = configNode->getChild( "property" )) != NULL ) {
+    if ( (prop = cfg_node.getChild( "property" )) != NULL ) {
       _enable_prop = fgGetNode( prop->getStringValue(), true );
     }
        
-    if ( (prop = configNode->getChild( "prop" )) != NULL ) {
+    if ( (prop = cfg_node.getChild( "prop" )) != NULL ) {
       _enable_prop = fgGetNode( prop->getStringValue(), true );
     }
 
-    if ( (prop = configNode->getChild( "value" )) != NULL ) {
+    if ( (prop = cfg_node.getChild( "value" )) != NULL ) {
       delete _enable_value;
       _enable_value = new std::string(prop->getStringValue());
     }
 
-    if ( (prop = configNode->getChild( "honor-passive" )) != NULL ) {
+    if ( (prop = cfg_node.getChild( "honor-passive" )) != NULL ) {
       _honor_passive = prop->getBoolValue();
     }
 
     return true;
   } // enable
 
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ") [unhandled]" << std::endl );
+  SG_LOG
+  (
+    SG_AUTOPILOT,
+    SG_BULK,
+    "Component::configure(" << cfg_name << ") [unhandled]"
+  );
   return false;
 }
 

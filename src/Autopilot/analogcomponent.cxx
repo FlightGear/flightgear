@@ -49,65 +49,88 @@ double AnalogComponent::clamp( double value ) const
     return value;
 }
 
-bool AnalogComponent::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+bool AnalogComponent::configure( SGPropertyNode& cfg_node,
+                                 const std::string& cfg_name,
+                                 SGPropertyNode& prop_root )
 {
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "AnalogComponent::configure(" << nodeName << ")" );
-  if( Component::configure( nodeName, configNode ) )
+  SG_LOG
+  (
+    SG_AUTOPILOT,
+    SG_BULK,
+    "AnalogComponent::configure(" << cfg_name << ")"
+  );
+
+  if( Component::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if ( nodeName == "feedback-if-disabled" ) {
-    _feedback_if_disabled = configNode->getBoolValue();
+  if( cfg_name == "feedback-if-disabled" )
+  {
+    _feedback_if_disabled = cfg_node.getBoolValue();
     return true;
   } 
 
-  if ( nodeName == "output" ) {
-    // grab all <prop> and <property> childs
-    int found = 0;
-    // backwards compatibility: allow <prop> elements
-    SGPropertyNode_ptr prop;
-    for( int i = 0; (prop = configNode->getChild("prop", i)) != NULL; i++ ) { 
-      SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
-      _output_list.push_back( tmp );
-      found++;
-    }
-    for( int i = 0; (prop = configNode->getChild("property", i)) != NULL; i++ ) { 
-      SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
-      _output_list.push_back( tmp );
-      found++;
+  if( cfg_name == "output" )
+  {
+    // grab all <prop> and <property> childs.
+    bool found = false;
+    for( int i = 0; i < cfg_node.nChildren(); ++i )
+    {
+      SGPropertyNode& child = *cfg_node.getChild(i);
+      const std::string& name = child.getNameString();
+
+      // Allow "prop" for backwards compatiblity
+      if( name != "property" && name != "prop" )
+        continue;
+
+      _output_list.push_back( prop_root.getNode(child.getStringValue(), true) );
+      found = true;
     }
 
     // no <prop> elements, text node of <output> is property name
-    if( found == 0 )
-      _output_list.push_back( fgGetNode(configNode->getStringValue(), true ) );
+    if( !found )
+      _output_list.push_back
+      (
+        prop_root.getNode(cfg_node.getStringValue(), true)
+      );
 
     return true;
   }
 
-  if( nodeName == "input" ) {
-    _valueInput.push_back( new InputValue( configNode ) );
+  if( cfg_name == "input" )
+  {
+    _valueInput.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   }
 
-  if( nodeName == "reference" ) {
-    _referenceInput.push_back( new InputValue( configNode ) );
+  if( cfg_name == "reference" )
+  {
+    _referenceInput.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   }
 
-  if( nodeName == "min" || nodeName == "u_min" ) {
-    _minInput.push_back( new InputValue( configNode ) );
+  if( cfg_name == "min" || cfg_name == "u_min" )
+  {
+    _minInput.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   }
 
-  if( nodeName == "max" || nodeName == "u_max" ) {
-    _maxInput.push_back( new InputValue( configNode ) );
+  if( cfg_name == "max" || cfg_name == "u_max" )
+  {
+    _maxInput.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   }
 
-  if( nodeName == "period" ) {
-    _periodical = new PeriodicalValue( configNode );
+  if( cfg_name == "period" )
+  {
+    _periodical = new PeriodicalValue(prop_root, cfg_node);
     return true;
   }
 
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "AnalogComponent::configure(" << nodeName << ") [unhandled]" );
+  SG_LOG
+  (
+    SG_AUTOPILOT,
+    SG_BULK,
+    "AnalogComponent::configure(" << cfg_name << ") [unhandled]"
+  );
   return false;
 }

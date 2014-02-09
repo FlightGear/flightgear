@@ -25,41 +25,49 @@
 
 using namespace FGXMLAutopilot;
 
-using std::endl;
-using std::cout;
-
+//------------------------------------------------------------------------------
 Predictor::Predictor () :
-    AnalogComponent(),
-    _average(0.0)
+  AnalogComponent(),
+  _last_value(0),
+  _average(0)
 {
 }
 
-bool Predictor::configure(const std::string& nodeName, SGPropertyNode_ptr configNode)
+//------------------------------------------------------------------------------
+bool Predictor::configure( SGPropertyNode& cfg_node,
+                           const std::string& cfg_name,
+                           SGPropertyNode& prop_root )
 {
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "Predictor::configure(" << nodeName << ")" << endl );
+  SG_LOG( SG_AUTOPILOT, SG_BULK, "Predictor::configure(" << cfg_name << ")");
 
-  if( AnalogComponent::configure( nodeName, configNode ) )
+  if( AnalogComponent::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if( nodeName == "config" ) {
-    Component::configure( configNode );
+  if( cfg_name == "config" ) {
+    Component::configure(prop_root, cfg_node);
     return true;
   }
   
-  if (nodeName == "seconds") {
-    _seconds.push_back( new InputValue( configNode, 0 ) );
+  if (cfg_name == "seconds") {
+    _seconds.push_back( new InputValue(prop_root, cfg_node, 0) );
     return true;
   } 
 
-  if (nodeName == "filter-gain") {
-    _filter_gain.push_back( new InputValue( configNode, 0 ) );
+  if (cfg_name == "filter-gain") {
+    _filter_gain.push_back( new InputValue(prop_root, cfg_node, 0) );
     return true;
   }
 
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "Predictor::configure(" << nodeName << ") [unhandled]" << endl );
+  SG_LOG
+  (
+    SG_AUTOPILOT,
+    SG_BULK,
+    "Predictor::configure(" << cfg_name << ") [unhandled]"
+  );
   return false;
 }
 
+//------------------------------------------------------------------------------
 void Predictor::update( bool firstTime, double dt ) 
 {
     double ivalue = _valueInput.get_value();
@@ -80,5 +88,3 @@ void Predictor::update( bool firstTime, double dt )
 
     _last_value = ivalue;
 }
-
-

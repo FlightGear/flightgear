@@ -25,32 +25,33 @@
 
 using namespace FGXMLAutopilot;
 
-using std::endl;
-using std::cout;
-
+//------------------------------------------------------------------------------
 PISimpleController::PISimpleController() :
     AnalogComponent(),
     _int_sum( 0.0 )
 {
 }
 
-bool PISimpleController::configure( const std::string& nodeName, SGPropertyNode_ptr configNode)
+//------------------------------------------------------------------------------
+bool PISimpleController::configure( SGPropertyNode& cfg_node,
+                                    const std::string& cfg_name,
+                                    SGPropertyNode& prop_root )
 {
-  if( AnalogComponent::configure( nodeName, configNode ) )
+  if( AnalogComponent::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if( nodeName == "config" ) {
-    Component::configure( configNode );
+  if( cfg_name == "config" ) {
+    Component::configure(prop_root, cfg_node);
     return true;
   }
 
-  if (nodeName == "Kp") {
-    _Kp.push_back( new InputValue(configNode) );
+  if (cfg_name == "Kp") {
+    _Kp.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   } 
 
-  if (nodeName == "Ki") {
-    _Ki.push_back( new InputValue(configNode) );
+  if (cfg_name == "Ki") {
+    _Ki.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   }
 
@@ -64,15 +65,15 @@ void PISimpleController::update( bool firstTime, double dt )
         _int_sum = 0.0;
     }
 
-    if ( _debug ) cout << "Updating " << get_name() << endl;
+    if ( _debug ) std::cout << "Updating " << get_name() << std::endl;
     double y_n = _valueInput.get_value();
     double r_n = _referenceInput.get_value();
                   
     double error = r_n - y_n;
-    if ( _debug ) cout << "input = " << y_n
+    if ( _debug ) std::cout << "input = " << y_n
                       << " reference = " << r_n
                       << " error = " << error
-                      << endl;
+                      << std::endl;
 
     double prop_comp = clamp(error * _Kp.get_value());
     _int_sum += error * _Ki.get_value() * dt;
@@ -83,9 +84,9 @@ void PISimpleController::update( bool firstTime, double dt )
     if( output != clamped_output ) // anti-windup
       _int_sum = clamped_output - prop_comp;
 
-    if ( _debug ) cout << "prop_comp = " << prop_comp
-                      << " int_sum = " << _int_sum << endl;
+    if ( _debug ) std::cout << "prop_comp = " << prop_comp
+                      << " int_sum = " << _int_sum << std::endl;
 
     set_output_value( clamped_output );
-    if ( _debug ) cout << "output = " << clamped_output << endl;
+    if ( _debug ) std::cout << "output = " << clamped_output << std::endl;
 }

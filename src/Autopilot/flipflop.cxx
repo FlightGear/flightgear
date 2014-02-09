@@ -264,7 +264,9 @@ public:
  */
 class MonoFlopImplementation : public JKFlipFlopImplementation {
 protected:
-  virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+  virtual bool configure( SGPropertyNode& cfg_node,
+                          const std::string& cfg_name,
+                          SGPropertyNode& prop_root );
   InputValueList _time;
   double _t;
 public:
@@ -288,13 +290,16 @@ public:
 
 using namespace FGXMLAutopilot;
 
-bool MonoFlopImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool MonoFlopImplementation::configure( SGPropertyNode& cfg_node,
+                                        const std::string& cfg_name,
+                                        SGPropertyNode& prop_root )
 {
-  if( JKFlipFlopImplementation::configure( nodeName, configNode ) )
+  if( JKFlipFlopImplementation::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if (nodeName == "time") {
-    _time.push_back( new InputValue( configNode ) );
+  if (cfg_name == "time") {
+    _time.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   } 
 
@@ -371,18 +376,18 @@ bool JKFlipFlopImplementation::onRaisingEdge( DigitalComponent::InputMap input, 
   return false; // signal no change
 }
 
-bool FlipFlopImplementation::configure( SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool FlipFlopImplementation::configure( SGPropertyNode& prop_root,
+                                        SGPropertyNode& cfg )
 {
-  for (int i = 0; i < configNode->nChildren(); ++i ) {
-    SGPropertyNode_ptr prop;
-
-    SGPropertyNode_ptr child = configNode->getChild(i);
+  for( int i = 0; i < cfg.nChildren(); ++i )
+  {
+    SGPropertyNode_ptr child = cfg.getChild(i);
     string cname(child->getName());
 
-    if( configure( cname, child ) )
+    if( configure(*child, cname, prop_root) )
       continue;
-
-  } // for configNode->nChildren()
+  }
 
   return true;
 }
@@ -390,7 +395,10 @@ bool FlipFlopImplementation::configure( SGPropertyNode_ptr configNode )
 
 static map<string,FunctorBase<FlipFlopImplementation> *> componentForge;
 
-bool FlipFlop::configure( const std::string & nodeName, SGPropertyNode_ptr configNode ) 
+//------------------------------------------------------------------------------
+bool FlipFlop::configure( SGPropertyNode& cfg_node,
+                          const std::string& cfg_name,
+                          SGPropertyNode& prop_root )
 { 
   if( componentForge.empty() ) {
     componentForge["RS"] = new CreateAndConfigureFunctor<RSFlipFlopImplementation,FlipFlopImplementation>();
@@ -401,46 +409,51 @@ bool FlipFlop::configure( const std::string & nodeName, SGPropertyNode_ptr confi
     componentForge["monostable"]  = new CreateAndConfigureFunctor<MonoFlopImplementation, FlipFlopImplementation>();
   }
 
-  if( DigitalComponent::configure( nodeName, configNode ) )
+  if( DigitalComponent::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if( nodeName == "type" ) {
-    string type(configNode->getStringValue());
+  if( cfg_name == "type" ) {
+    string type(cfg_node.getStringValue());
     if( componentForge.count(type) == 0 ) {
-      SG_LOG( SG_AUTOPILOT, SG_BULK, "unhandled flip-flop type <" << type << ">" << endl );
+      SG_LOG
+      (
+        SG_AUTOPILOT,
+        SG_BULK,
+        "unhandled flip-flop type <" << type << ">"
+      );
       return true;
     }
-    _implementation = (*componentForge[type])( configNode->getParent() );
+    _implementation = (*componentForge[type])(prop_root, *cfg_node.getParent());
     return true;
   }
 
-  if (nodeName == "set"||nodeName == "S") {
-    _input["S"] = sgReadCondition( fgGetNode("/"), configNode );
+  if (cfg_name == "set"||cfg_name == "S") {
+    _input["S"] = sgReadCondition(&prop_root, &cfg_node);
     return true;
   }
 
-  if (nodeName == "reset" || nodeName == "R" ) {
-    _input["R"] = sgReadCondition( fgGetNode("/"), configNode );
+  if (cfg_name == "reset" || cfg_name == "R" ) {
+    _input["R"] = sgReadCondition(&prop_root, &cfg_node);
     return true;
   } 
 
-  if (nodeName == "J") {
-    _input["J"] = sgReadCondition( fgGetNode("/"), configNode );
+  if (cfg_name == "J") {
+    _input["J"] = sgReadCondition(&prop_root, &cfg_node);
     return true;
   } 
 
-  if (nodeName == "K") {
-    _input["K"] = sgReadCondition( fgGetNode("/"), configNode );
+  if (cfg_name == "K") {
+    _input["K"] = sgReadCondition(&prop_root, &cfg_node);
     return true;
   } 
 
-  if (nodeName == "D") {
-    _input["D"] = sgReadCondition( fgGetNode("/"), configNode );
+  if (cfg_name == "D") {
+    _input["D"] = sgReadCondition(&prop_root, &cfg_node);
     return true;
   } 
 
-  if (nodeName == "clock") {
-    _input["clock"] = sgReadCondition( fgGetNode("/"), configNode );
+  if (cfg_name == "clock") {
+    _input["clock"] = sgReadCondition(&prop_root, &cfg_node);
     return true;
   }
 

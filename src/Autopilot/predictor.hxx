@@ -53,7 +53,9 @@ private:
     InputValueList _filter_gain;
 
 protected:
-  bool configure(const std::string& nodeName, SGPropertyNode_ptr configNode );
+  virtual bool configure( SGPropertyNode& cfg_node,
+                          const std::string& cfg_name,
+                          SGPropertyNode& prop_root );
 
 public:
     Predictor();

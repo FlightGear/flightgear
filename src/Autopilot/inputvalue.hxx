@@ -44,7 +44,8 @@ private:
      InputValue_ptr minPeriod; // The minimum value of the period
      InputValue_ptr maxPeriod; // The maximum value of the period
 public:
-     PeriodicalValue( SGPropertyNode_ptr node );
+     PeriodicalValue( SGPropertyNode& prop_root,
+                      SGPropertyNode& cfg );
      double normalize( double value ) const;
      double normalizeSymmetric( double value ) const;
 };
@@ -70,9 +71,25 @@ private:
      SGSharedPtr<SGExpressiond> _expression;  ///< expression to generate the value
      
 public:
-    InputValue( SGPropertyNode_ptr node = NULL, double value = 0.0, double offset = 0.0, double scale = 1.0 );
-    
-    void parse( SGPropertyNode_ptr, double value = 0.0, double offset = 0.0, double scale = 1.0 );
+    InputValue( SGPropertyNode& prop_root,
+                SGPropertyNode& node,
+                double value = 0.0,
+                double offset = 0.0,
+                double scale = 1.0 );
+
+    /**
+     *
+     * @param prop_root Root node for all properties with relative path
+     * @param cfg       Configuration node
+     * @param value     Default initial value
+     * @param offset    Default initial offset
+     * @param scale     Default initial scale
+     */
+    void parse( SGPropertyNode& prop_root,
+                SGPropertyNode& cfg,
+                double value = 0.0,
+                double offset = 0.0,
+                double scale = 1.0 );
 
     /* get the value of this input, apply scale and offset and clipping */
     double get_value() const;

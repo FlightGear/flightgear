@@ -56,13 +56,15 @@ bool DigitalComponent::InputMap::get_value( const std::string & name ) const
   </output>
   <output>/some/property</output>
 */
-bool DigitalComponent::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+bool DigitalComponent::configure( SGPropertyNode& cfg_node,
+                                  const std::string& cfg_name,
+                                  SGPropertyNode& prop_root )
 {
-  if( Component::configure( nodeName, configNode ) )
+  if( Component::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if (nodeName == "input") {
-    SGPropertyNode_ptr nameNode = configNode->getNode("name");
+  if (cfg_name == "input") {
+    SGPropertyNode_ptr nameNode = cfg_node.getNode("name");
     string name;
     if( nameNode != NULL ) {
       name = nameNode->getStringValue();
@@ -71,12 +73,12 @@ bool DigitalComponent::configure( const std::string & nodeName, SGPropertyNode_p
       buf << "Input" << _input.size();
       name = buf.str();
     }
-    _input[name] = sgReadCondition( fgGetNode("/"), configNode );
+    _input[name] = sgReadCondition(&prop_root, &cfg_node);
     return true;
   } 
 
-  if (nodeName == "output") {
-    SGPropertyNode_ptr n = configNode->getNode("name");
+  if (cfg_name == "output") {
+    SGPropertyNode_ptr n = cfg_node.getNode("name");
     string name;
     if( n != NULL ) {
       name = n->getStringValue();
@@ -89,20 +91,20 @@ bool DigitalComponent::configure( const std::string & nodeName, SGPropertyNode_p
     DigitalOutput_ptr o = new DigitalOutput();
     _output[name] = o;
 
-    if( (n = configNode->getNode("inverted")) != NULL )
+    if( (n = cfg_node.getNode("inverted")) != NULL )
       o->setInverted( n->getBoolValue() );
 
-    if( (n = configNode->getNode("property")) != NULL )
-      o->setProperty( fgGetNode( n->getStringValue(), true ) );
+    if( (n = cfg_node.getNode("property")) != NULL )
+      o->setProperty( prop_root.getNode(n->getStringValue(), true) );
 
-    if( configNode->nChildren() == 0 )
-      o->setProperty( fgGetNode( configNode->getStringValue(), true ) );
+    if( cfg_node.nChildren() == 0 )
+      o->setProperty( prop_root.getNode(cfg_node.getStringValue(), true) );
 
     return true;
   } 
 
-  if (nodeName == "inverted") {
-    _inverted = configNode->getBoolValue();
+  if (cfg_name == "inverted") {
+    _inverted = cfg_node.getBoolValue();
     return true;
   }
   

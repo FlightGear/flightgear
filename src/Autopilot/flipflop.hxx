@@ -36,7 +36,10 @@ protected:
   *        as childs under configNode and calls configure of the derived class for each child.
   * @param configNode the property node containing the configuration 
   */
-  virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode ) { return false; }
+  virtual bool configure( SGPropertyNode& cfg_node,
+                          const std::string& cfg_name,
+                          SGPropertyNode& prop_root )
+  { return false; }
 public:
   virtual ~FlipFlopImplementation() {}
   /**
@@ -53,7 +56,8 @@ public:
   *        as childs under configNode and calls configure of the derived class for each child.
   * @param configNode the property node containing the configuration 
   */
-  bool configure( SGPropertyNode_ptr configNode );
+  bool configure( SGPropertyNode& prop_root,
+                  SGPropertyNode& cfg );
 };
 
 /**
@@ -69,7 +73,9 @@ protected:
      * @param aNode
      * @return true if the node was handled, false otherwise.
      */
-    virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+    virtual bool configure( SGPropertyNode& cfg_node,
+                            const std::string& cfg_name,
+                            SGPropertyNode& prop_root );
 
    /** 
     * @brief Implementation of the pure virtual function of the Component class. Gets called from

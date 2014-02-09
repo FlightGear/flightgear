@@ -193,54 +193,62 @@ void PIDController::update( bool firstTime, double dt )
     }
 }
 
-bool PIDController::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
+//------------------------------------------------------------------------------
+bool PIDController::configure( SGPropertyNode& cfg_node,
+                               const std::string& cfg_name,
+                               SGPropertyNode& prop_root )
 {
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "PIDController::configure(" << nodeName << ")" << endl );
+  SG_LOG(SG_AUTOPILOT, SG_BULK, "PIDController::configure(" << cfg_name << ")");
 
-  if( AnalogComponent::configure( nodeName, configNode ) )
+  if( AnalogComponent::configure(cfg_node, cfg_name, prop_root) )
     return true;
 
-  if( nodeName == "config" ) {
-    Component::configure( configNode );
+  if( cfg_name == "config" ) {
+    Component::configure(prop_root, cfg_node);
     return true;
   }
 
-  if (nodeName == "Ts") {
-    desiredTs = configNode->getDoubleValue();
+  if (cfg_name == "Ts") {
+    desiredTs = cfg_node.getDoubleValue();
     return true;
   } 
 
-  if (nodeName == "Kp") {
-    Kp.push_back( new InputValue(configNode) );
+  if (cfg_name == "Kp") {
+    Kp.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   } 
 
-  if (nodeName == "Ti") {
-    Ti.push_back( new InputValue(configNode) );
+  if (cfg_name == "Ti") {
+    Ti.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   } 
 
-  if (nodeName == "Td") {
-    Td.push_back( new InputValue(configNode) );
+  if (cfg_name == "Td") {
+    Td.push_back( new InputValue(prop_root, cfg_node) );
     return true;
   } 
 
-  if (nodeName == "beta") {
-    beta = configNode->getDoubleValue();
+  if (cfg_name == "beta") {
+    beta = cfg_node.getDoubleValue();
     return true;
   } 
 
-  if (nodeName == "alpha") {
-    alpha = configNode->getDoubleValue();
+  if (cfg_name == "alpha") {
+    alpha = cfg_node.getDoubleValue();
     return true;
   } 
 
-  if (nodeName == "gamma") {
-    gamma = configNode->getDoubleValue();
+  if (cfg_name == "gamma") {
+    gamma = cfg_node.getDoubleValue();
     return true;
   } 
 
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "PIDController::configure(" << nodeName << ") [unhandled]" << endl );
+  SG_LOG
+  (
+    SG_AUTOPILOT,
+    SG_BULK,
+    "PIDController::configure(" << cfg_name << ") [unhandled]"
+  );
   return false;
 }
 

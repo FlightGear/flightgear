@@ -49,9 +49,10 @@ using namespace FGXMLAutopilot;
 class StateMachineComponent : public Component
 {
 public:
-  StateMachineComponent(SGPropertyNode_ptr config)
+  StateMachineComponent( SGPropertyNode& cfg,
+                         SGPropertyNode& props_root )
   {
-    inner = simgear::StateMachine::createFromPlist(config, globals->get_props());
+    inner = simgear::StateMachine::createFromPlist(&cfg, &props_root);
   }
   
   virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr config)
@@ -73,9 +74,10 @@ class StateMachineFunctor : public FunctorBase<Component>
 {
 public:
   virtual ~StateMachineFunctor() {}
-  virtual Component* operator()( SGPropertyNode_ptr configNode )
+  virtual Component* operator()( SGPropertyNode& cfg,
+                                 SGPropertyNode& prop_root )
   {
-    return new StateMachineComponent(configNode);
+    return new StateMachineComponent(cfg, prop_root);
   }
 };
 
@@ -89,6 +91,28 @@ ComponentForge::~ComponentForge()
 {
     for( iterator it = begin(); it != end(); ++it )
         delete it->second;
+}
+
+void readInterfaceProperties( SGPropertyNode_ptr prop_root,
+                              SGPropertyNode_ptr cfg )
+{
+  simgear::PropertyList cfg_props = cfg->getChildren("property");
+  for( simgear::PropertyList::iterator it = cfg_props.begin();
+                                       it != cfg_props.end();
+                                     ++it )
+  {
+    SGPropertyNode_ptr prop = prop_root->getNode((*it)->getStringValue(), true);
+    SGPropertyNode* val = (*it)->getNode("_attr_/value");
+
+    if( val )
+    {
+      prop->setDoubleValue( val->getDoubleValue() );
+
+      // TODO should we keep the _attr_ node, as soon as the property browser is
+      //      able to cope with it?
+      (*it)->removeChild("_attr_", 0, false);
+    }
+  }
 }
 
 static ComponentForge componentForge;
@@ -109,18 +133,44 @@ Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode
       componentForge["state-machine"]        = new StateMachineFunctor();
   }
 
-  if( configNode == NULL ) configNode = rootNode;
+  if( !configNode )
+    configNode = rootNode;
+
+  // property-root can be set in config file and overridden in the local system
+  // node. This allows using the same autopilot multiple times but with
+  // different paths (with all relative property paths being relative to the
+  // node specified with property-root)
+  SGPropertyNode_ptr prop_root_node = rootNode->getChild("property-root");
+  if( !prop_root_node )
+    prop_root_node = configNode->getChild("property-root");
+
+  SGPropertyNode_ptr prop_root =
+    fgGetNode(prop_root_node ? prop_root_node->getStringValue() : "/", true);
+
+  // Just like the JSBSim interface properties for systems, create properties
+  // given in the autopilot file and set to given (default) values.
+  readInterfaceProperties(prop_root, configNode);
+
+  // Afterwards read the properties specified in local system node to allow
+  // overriding initial or default values. This allows reusing components with
+  // just different "parameter" values.
+  readInterfaceProperties(prop_root, rootNode);
 
   int count = configNode->nChildren();
-  for ( int i = 0; i < count; ++i ) {
+  for( int i = 0; i < count; ++i )
+  {
     SGPropertyNode_ptr node = configNode->getChild(i);
     string childName = node->getName();
-    if( componentForge.count(childName) == 0 ) {
-      SG_LOG( SG_AUTOPILOT, SG_BULK, "unhandled element <" << childName << ">" << std::endl );
+    if(    childName == "property"
+        || childName == "property-root" )
+      continue;
+    if( componentForge.count(childName) == 0 )
+    {
+      SG_LOG(SG_AUTOPILOT, SG_BULK, "unhandled element <" << childName << ">");
       continue;
     }
 
-    Component * component = (*componentForge[childName])(node);
+    Component * component = (*componentForge[childName])(*prop_root, *node);
     if( component->get_name().length() == 0 ) {
       std::ostringstream buf;
       buf <<  "unnamed_component_" << i;

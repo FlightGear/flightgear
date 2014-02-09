@@ -122,11 +122,14 @@ protected:
     /**
      * @brief Over-rideable hook method to allow derived classes to refine top-level
      * node parsing. 
-     * @param aName
-     * @param aNode
+     * @param cfg_node
+     * @param cfg_name
+     * @param prop_root
      * @return true if the node was handled, false otherwise.
      */
-    virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+    virtual bool configure( SGPropertyNode& cfg_node,
+                            const std::string& cfg_name,
+                            SGPropertyNode& prop_root );
 };
 
 }
