@@ -142,7 +142,7 @@ endif()
 # FlightGear build options
 option(SIMGEAR_SHARED    "Set to ON when SimGear was built as a shared library" OFF)
 option(LOGGING           "Set to ON to build FlightGear with logging support (default)" ON)
-option(JSBSIM_TERRAIN    "Set to ON to build FlightGear with JSBSim terrain handling code" OFF)
+option(JSBSIM_TERRAIN    "Set to ON to build FlightGear with JSBSim terrain handling code" ON)
 option(SP_FDMS           "Set to ON to build FlightGear with special-purpose FDMs" OFF)
 option(ENABLE_UIUC_MODEL "Set to ON to build FlightGear with UIUCModel FDM" OFF)
 option(ENABLE_LARCSIM    "Set to ON to build FlightGear with LaRCsim FDM" OFF)
