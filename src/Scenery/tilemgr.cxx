@@ -57,8 +57,6 @@ using flightgear::SceneryPager;
 FGTileMgr::FGTileMgr():
     state( Start ),
     last_state( Running ),
-    longitude(-1000.0),
-    latitude(-1000.0),
     scheduled_visibility(100.0),
     _terra_sync(NULL),
     _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
@@ -134,7 +132,6 @@ void FGTileMgr::reinit()
     
     previous_bucket.make_bad();
     current_bucket.make_bad();
-    longitude = latitude = -1000.0;
     scheduled_visibility = 100.0;
 
     // force an update now
@@ -185,21 +182,20 @@ bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_vie
 void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
 {
     // sanity check (unfortunately needed!)
-    if ( longitude < -180.0 || longitude > 180.0
-         || latitude < -90.0 || latitude > 90.0 )
+    if (!curr_bucket.isValid() )
     {
         SG_LOG( SG_TERRAIN, SG_ALERT,
-                "Attempting to schedule tiles for bogus lon and lat  = ("
-                << longitude << "," << latitude << ")" );
+                "Attempting to schedule tiles for invalid bucket" );
         return;
     }
 
-    SG_LOG( SG_TERRAIN, SG_INFO,
-            "scheduling needed tiles for " << longitude << " " << latitude << ", curr_bucket:"
-           <<  curr_bucket.gen_base_path() << "/" << curr_bucket.gen_index_str());
-
     double tile_width = curr_bucket.get_width_m();
     double tile_height = curr_bucket.get_height_m();
+    SG_LOG( SG_TERRAIN, SG_INFO,
+            "scheduling needed tiles for " << curr_bucket
+           << ", tile-width-m:" << tile_width << ", tile-height-m:" << tile_height);
+
+    
     // cout << "tile width = " << tile_width << "  tile_height = "
     //      << tile_height << endl;
 
@@ -234,7 +230,11 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     {
         for ( y = -yrange; y <= yrange; ++y )
         {
-            SGBucket b = sgBucketOffset( longitude, latitude, x, y );
+            SGBucket b = curr_bucket.sibling(x, y);
+            if (!b.isValid()) {
+                continue;
+            }
+            
             float priority = (-1.0) * (x*x+y*y);
             sched_tile( b, priority, true, 0.0 );
             
@@ -372,9 +372,6 @@ void FGTileMgr::update(double)
 // (FDM/AI/groundcache/... should use "schedule_scenery" instead)
 void FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
 {
-    longitude = location.getLongitudeDeg();
-    latitude = location.getLatitudeDeg();
-
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
     //         << longitude << " " << latitude );
 
@@ -399,7 +396,8 @@ void FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
         if (current_bucket != previous_bucket) {
             // We've moved to a new bucket, we need to schedule any
             // needed tiles for loading.
-            SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
+            SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr: at " << location << ", scheduling needed for:" << current_bucket
+                   << ", visbility=" << range_m);
             scheduled_visibility = range_m;
             schedule_needed(current_bucket, range_m);
         }
@@ -453,8 +451,11 @@ bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double 
             // We have already checked for the center tile.
             if ( x != 0 || y != 0 )
             {
-                SGBucket b = sgBucketOffset( position.getLongitudeDeg(),
-                                             position.getLatitudeDeg(), x, y );
+                SGBucket b = bucket.sibling(x, y );
+                if (!b.isValid()) {
+                    continue;
+                }
+                
                 double distance2 = distSqr(cartPos, SGVec3d::fromGeod(b.get_center()));
                 // Do not ask if it is just the next tile but way out of range.
                 if (distance2 <= max_dist2)
@@ -477,7 +478,7 @@ bool FGTileMgr::isSceneryLoaded()
     if (scheduled_visibility < range_m)
         range_m = scheduled_visibility;
 
-    return schedule_scenery(SGGeod::fromDeg(longitude, latitude), range_m, 0.0);
+    return schedule_scenery(globals->get_view_position(), range_m, 0.0);
 }
 
 bool FGTileMgr::isTileDirSyncing(const std::string& tileFileName) const

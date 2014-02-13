@@ -69,9 +69,6 @@ private:
     SGBucket pending;
     osg::ref_ptr<simgear::SGReaderWriterOptions> _options;
 
-    // current longitude latitude
-    double longitude;
-    double latitude;
     double scheduled_visibility;
 
     /**
