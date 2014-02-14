@@ -35,6 +35,8 @@
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
 #include <AIModel/AIManager.hxx>
+#include <GUI/MessageBox.hxx>
+
 
 using std::endl;
 using std::string;
@@ -269,19 +271,29 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport:" << id);
     return false;
   }
-  
-  if (!apt->hasRunwayWithIdent(rwy)) {
-    SG_LOG( SG_GENERAL, rwy_req ? SG_ALERT : SG_INFO,
-           "Failed to find runway " << rwy <<
-           " at airport " << id << ". Using default runway." );
-    return false;
+
+  if (apt->hasRunwayWithIdent(rwy)) {
+      FGRunway* r(apt->getRunwayByIdent(rwy));
+      fgSetString("/sim/atc/runway", r->ident().c_str());
+      SGGeod startPos = r->pointOnCenterline( fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
+      fgApplyStartOffset(startPos, r->headingDeg());
+      return true;
+  } else if (apt->hasHelipadWithIdent(rwy)) {
+      FGHelipad* h(apt->getHelipadByIdent(rwy));
+      fgApplyStartOffset(h->geod(), h->headingDeg());
+      return true;
   }
-  
-  FGRunway* r(apt->getRunwayByIdent(rwy));
-  fgSetString("/sim/atc/runway", r->ident().c_str());
-  SGGeod startPos = r->pointOnCenterline( fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
-  fgApplyStartOffset(startPos, r->headingDeg());
-  return true;
+
+  if (rwy_req) {
+      flightgear::modalMessageBox("Runway not available", "Runway/helipad "
+                                   + rwy + " not found at airport " + apt->getId()
+                                   + " - " + apt->getName() );
+  } else {
+    SG_LOG( SG_GENERAL, SG_INFO,
+           "Failed to find runway/helipad " << rwy <<
+           " at airport " << id << ". Using default runway." );
+  }
+  return false;
 }
 
 
