@@ -73,12 +73,6 @@ endif()
 # Configure library search paths
 #####################################################################################
 
-if(APPLE)
-    # Custom library directories for Mac, which should have precedence over any other
-    list(APPEND ADDITIONAL_LIBRARY_PATHS
-         ~/Library/Frameworks
-         /Library/Frameworks)
-endif(APPLE)
 
 if(NOT "${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "")
     # Workaround for Ubuntu/Debian which introduced the "multiarch" library
@@ -93,13 +87,6 @@ if(NOT "${CMAKE_LIBRARY_ARCHITECTURE}" STREQUAL "")
     message(STATUS "additional library directories: ${ADDITIONAL_LIBRARY_PATHS}")
 endif()
 
-if(NOT MSVC)
-    # TBD: are these really necessary? Aren't they considered by cmake automatically?
-    list(APPEND ADDITIONAL_LIBRARY_PATHS
-         /opt/local
-         /usr/local
-         /usr)
-endif()
 #####################################################################################
 
 IF(APPLE)
