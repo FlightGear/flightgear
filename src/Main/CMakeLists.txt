@@ -70,7 +70,34 @@ source_group("Main\\Sources" FILES ${SOURCES})
 # important we pass WIN32 here so the console is optional. Other
 # platforms ignore this option. If a console is needed we allocate
 # it manually via AllocConsole()
-add_executable(fgfs WIN32 ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
+# similarly pass MACOSX_BUNDLE so we generate a .app on Mac
+add_executable(fgfs WIN32 MACOSX_BUNDLE
+                ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
+
+#-----------------------------------------------------------------------------
+# MacOSX bundle packagaing
+
+if(APPLE)
+    execute_process(COMMAND date +%Y
+        OUTPUT_VARIABLE CURRENT_YEAR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+        
+    # in our local CMakeModules dir
+    set_target_properties(fgfs PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST FlightGearBundleInfo.plist.in
+        MACOSX_BUNDLE_GUI_IDENTIFIER "org.flightgear.FlightGear"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${FLIGHTGEAR_VERSION}
+        MACOSX_BUNDLE_LONG_VERSION_STRING "FlightGear ${FLIGHTGEAR_VERSION} Nightly"
+        MACOSX_BUNDLE_BUNDLE_VERSION ${FLIGHTGEAR_VERSION}
+        MACOSX_BUNDLE_COPYRIGHT "FlightGear ${FLIGHTGEAR_VERSION} © 1997-${CURRENT_YEAR}, The FlightGear Project. Licensed under the GNU Public License version 2."
+        MACOSX_BUNDLE_INFO_STRING "Nightly build of FlightGear ${FLIGHTGEAR_VERSION} for testing and development"
+        MACOSX_BUNDLE_BUNDLE_NAME "FlightGear"
+        MACOSX_BUNDLE_ICON_FILE "FlightGear.icns"
+    )
+endif()
+
+#-----------------------------------------------------------------------------
 
 get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
 #message(STATUS "fg libs ${FG_LIBS}")
@@ -110,7 +137,6 @@ target_link_libraries(fgfs
 	${OPENSCENEGRAPH_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${PLIB_LIBRARIES}
-	${JPEG_LIBRARY}
 	${HLA_LIBRARIES}
 	${EVENT_INPUT_LIBRARIES}
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
@@ -118,7 +144,11 @@ target_link_libraries(fgfs
 	${PLATFORM_LIBS}
 )
 
-install(TARGETS fgfs RUNTIME DESTINATION bin)
+if (APPLE)  
+    install(TARGETS fgfs BUNDLE DESTINATION .)
+else()
+    install(TARGETS fgfs RUNTIME DESTINATION bin)
+endif()
 
 if(ENABLE_METAR)
     add_executable(metar metar_main.cxx)
