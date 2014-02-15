@@ -65,7 +65,11 @@ public:
   virtual bool buttonPressed( int b,
                               const osgGA::GUIEventAdapter&,
                               const Info& info )
-  {    
+  {
+      if (!panel->getPanel()) {
+          return false;
+      }
+      
     button = b;
   // convert to panel coordinates
     osg::Matrixd m = osg::Matrixd::inverse(panel->transformMatrix());
