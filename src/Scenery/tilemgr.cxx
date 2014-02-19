@@ -375,7 +375,7 @@ void FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
     //         << longitude << " " << latitude );
 
-    current_bucket.set_bucket( location );
+    current_bucket = SGBucket( location );
 
     // schedule more tiles when visibility increased considerably
     // TODO Calculate tile size - instead of using fixed value (5000m)
