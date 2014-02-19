@@ -55,7 +55,6 @@ class SGSubsystemMgr;
 class SGSubsystem;
 class SGSoundMgr;
 
-class FGATISMgr;
 class FGControls;
 class FGTACANList;
 class FGLocale;
@@ -118,9 +117,6 @@ private:
 
     // Global autopilot "route"
     FGRouteMgr *route_mgr;
-
-    // ATC manager
-    FGATISMgr *ATIS_mgr;
 
     // control input state
     FGControls *controls;
@@ -270,9 +266,6 @@ public:
 
     inline SGMaterialLib *get_matlib() const { return matlib; }
     void set_matlib( SGMaterialLib *m );
-
-    inline FGATISMgr *get_ATIS_mgr() const { return ATIS_mgr; }
-    inline void set_ATIS_mgr( FGATISMgr *a ) {ATIS_mgr = a; }
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }

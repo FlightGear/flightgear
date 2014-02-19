@@ -94,7 +94,22 @@ class FGAirport : public FGPositioned
     bool hasHelipadWithIdent(const std::string& aIdent) const;
     FGRunwayRef getRunwayByIdent(const std::string& aIdent) const;
     FGHelipadRef getHelipadByIdent(const std::string& aIdent) const;
-    FGRunwayRef findBestRunwayForHeading(double aHeading) const;
+
+    struct FindBestRunwayForHeadingParams {
+      FindBestRunwayForHeadingParams() {
+        lengthWeight =  0.01;
+        widthWeight =  0.01;
+        surfaceWeight =  10;
+        deviationWeight =  1;
+        ilsWeight = 0;
+      }
+      double lengthWeight;
+      double widthWeight;
+      double surfaceWeight;
+      double deviationWeight;
+      double ilsWeight;
+    };
+    FGRunwayRef findBestRunwayForHeading(double aHeading, struct FindBestRunwayForHeadingParams * parms = NULL ) const;
     
     /**
      * return the most likely target runway based on a position.

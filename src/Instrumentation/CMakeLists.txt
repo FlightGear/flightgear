@@ -23,6 +23,7 @@ set(SOURCES
     mrg.cxx
     navradio.cxx
     newnavradio.cxx
+    commradio.cxx
     rad_alt.cxx
     rnav_waypt_controller.cxx
     slip_skid_ball.cxx
@@ -83,6 +84,7 @@ set(HEADERS
     mrg.hxx
     navradio.hxx
     newnavradio.hxx
+    commradio.hxx
     rad_alt.hxx
     rnav_waypt_controller.hxx
     slip_skid_ball.hxx

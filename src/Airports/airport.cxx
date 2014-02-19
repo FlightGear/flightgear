@@ -236,18 +236,24 @@ FGHelipadRef FGAirport::getHelipadByIdent(const std::string& aIdent) const
 }
 
 //------------------------------------------------------------------------------
-FGRunwayRef FGAirport::findBestRunwayForHeading(double aHeading) const
+FGRunwayRef FGAirport::findBestRunwayForHeading(double aHeading, struct FindBestRunwayForHeadingParams * parms ) const
 {
   loadRunways();
   
   FGRunway* result = NULL;
   double currentBestQuality = 0.0;
   
-  SGPropertyNode *param = fgGetNode("/sim/airport/runways/search", true);
-  double lengthWeight = param->getDoubleValue("length-weight", 0.01);
-  double widthWeight = param->getDoubleValue("width-weight", 0.01);
-  double surfaceWeight = param->getDoubleValue("surface-weight", 10);
-  double deviationWeight = param->getDoubleValue("deviation-weight", 1);
+  struct FindBestRunwayForHeadingParams fbrfhp;
+  if( NULL != parms ) fbrfhp = *parms;
+
+  SGPropertyNode_ptr searchNode = fgGetNode("/sim/airport/runways/search");
+  if( searchNode.valid() ) {
+    fbrfhp.lengthWeight = searchNode->getDoubleValue("length-weight", fbrfhp.lengthWeight );
+    fbrfhp.widthWeight = searchNode->getDoubleValue("width-weight", fbrfhp.widthWeight );
+    fbrfhp.surfaceWeight = searchNode->getDoubleValue("surface-weight", fbrfhp.surfaceWeight );
+    fbrfhp.deviationWeight = searchNode->getDoubleValue("deviation-weight", fbrfhp.deviationWeight );
+    fbrfhp.ilsWeight = searchNode->getDoubleValue("ils-weight", fbrfhp.ilsWeight );
+  }
     
   BOOST_FOREACH(PositionedID id, mRunways) {
     FGRunway* rwy = loadById<FGRunway>(id);
@@ -257,10 +263,10 @@ FGRunwayRef FGAirport::findBestRunwayForHeading(double aHeading) const
       continue;
     }
       
-    double good = rwy->score(lengthWeight, widthWeight, surfaceWeight);
+    double good = rwy->score( fbrfhp.lengthWeight,  fbrfhp.widthWeight,  fbrfhp.surfaceWeight,  fbrfhp.ilsWeight );
     double dev = aHeading - rwy->headingDeg();
     SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
-    double bad = fabs(deviationWeight * dev) + 1e-20;
+    double bad = fabs( fbrfhp.deviationWeight * dev) + 1e-20;
     double quality = good / bad;
     
     if (quality > currentBestQuality) {

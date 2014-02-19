@@ -58,7 +58,7 @@ public:
    * score this runway according to the specified weights. Used by
    * FGAirport::findBestRunwayForHeading
    */
-  double score(double aLengthWt, double aWidthWt, double aSurfaceWt) const;
+  double score(double aLengthWt, double aWidthWt, double aSurfaceWt, double aIlsWt) const;
 
   /**
    * Get the runway beginning point - this is syntatic sugar, equivalent to

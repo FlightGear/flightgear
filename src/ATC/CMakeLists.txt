@@ -5,6 +5,8 @@ set(SOURCES
 	atcdialog.cxx
 	trafficcontrol.cxx
 	CommStation.cxx
+        ATISEncoder.cxx
+        MetarPropertiesATISInformationProvider.cxx
 	)
 
 set(HEADERS
@@ -12,6 +14,8 @@ set(HEADERS
 	atcdialog.hxx
 	trafficcontrol.hxx
 	CommStation.hxx
+        ATISEncoder.hxx
+        MetarPropertiesATISInformationProvider.hxx
 	)
     	
 flightgear_component(ATC "${SOURCES}" "${HEADERS}")

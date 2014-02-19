@@ -191,6 +191,9 @@ FGLocale::selectLanguage(const char *language)
     // load resource for system messages (translations for fgfs internal messages)
     loadResource("sys");
 
+    // load resource for atc messages
+    loadResource("atc");
+
     return true;
 }
 

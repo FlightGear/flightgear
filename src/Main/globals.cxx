@@ -46,7 +46,6 @@
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
-#include <ATCDCL/ATISmgr.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <GUI/FGFontCache.hxx>
 #include <GUI/gui.h>
@@ -146,7 +145,6 @@ FGGlobals::FGGlobals() :
     time_params( NULL ),
     ephem( NULL ),
     route_mgr( NULL ),
-    ATIS_mgr( NULL ),
     controls( NULL ),
     viewmgr( NULL ),
     commands( SGCommandMgr::instance() ),
@@ -241,7 +239,6 @@ FGGlobals::~FGGlobals()
     delete time_params;
     set_matlib(NULL);
     delete route_mgr;
-    delete ATIS_mgr;
     delete channel_options_list;
     delete initial_waypoints;
     delete fontcache;

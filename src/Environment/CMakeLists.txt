@@ -17,7 +17,7 @@ set(SOURCES
 	terrainsampler.cxx
 	presets.cxx
 	gravity.cxx
-    magvarmanager.cxx
+        magvarmanager.cxx
 	)
 
 set(HEADERS
@@ -37,7 +37,7 @@ set(HEADERS
 	terrainsampler.hxx
 	presets.hxx
 	gravity.hxx
-    magvarmanager.hxx
+        magvarmanager.hxx
 	)
     		
 flightgear_component(Environment "${SOURCES}" "${HEADERS}")

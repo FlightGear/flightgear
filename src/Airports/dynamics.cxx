@@ -38,8 +38,8 @@
 #include <simgear/debug/logstream.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/locale.hxx>
 #include <Airports/runways.hxx>
-#include <ATCDCL/ATCutils.hxx>
 #include <Navaids/NavDataCache.hxx>
 
 #include "airport.hxx"
@@ -530,8 +530,12 @@ const std::string FGAirportDynamics::getAtisSequence()
    if (atisSequenceIndex == -1) {
        updateAtisSequence(1, false);
    }
+
+   char atisSequenceString[2];
+   atisSequenceString[0] = 'a' + atisSequenceIndex;
+   atisSequenceString[1] = 0;
    
-   return GetPhoneticLetter(atisSequenceIndex);
+   return globals->get_locale()->getLocalizedString(atisSequenceString, "atc", "unknown");
 }
 
 int FGAirportDynamics::updateAtisSequence(int interval, bool forceUpdate)
@@ -540,7 +544,7 @@ int FGAirportDynamics::updateAtisSequence(int interval, bool forceUpdate)
     if (atisSequenceIndex == -1) {
         // first computation
         atisSequenceTimeStamp = now;
-        atisSequenceIndex = rand() % LTRS; // random initial sequence letters
+        atisSequenceIndex = rand() % 26; // random initial sequence letters
         return atisSequenceIndex;
     }
 
@@ -550,7 +554,7 @@ int FGAirportDynamics::updateAtisSequence(int interval, bool forceUpdate)
         ++steps; // a "special" ATIS update is required
     } 
     
-    atisSequenceIndex = (atisSequenceIndex + steps) % LTRS;
+    atisSequenceIndex = (atisSequenceIndex + steps) % 26;
     // return a huge value if no update occurred
-    return (atisSequenceIndex + (steps ? 0 : LTRS*1000));
+    return (atisSequenceIndex + (steps ? 0 : 26*1000));
 }

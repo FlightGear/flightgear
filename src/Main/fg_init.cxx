@@ -78,7 +78,6 @@
 
 #include <AIModel/AIManager.hxx>
 
-#include <ATCDCL/ATISmgr.hxx>
 #include <ATC/atc_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
@@ -703,16 +702,6 @@ void fgCreateSubsystems(bool duringReset) {
     globals->add_subsystem("CanvasGUI", new GUIMgr, SGSubsystemMgr::DISPLAY);
 
     ////////////////////////////////////////////////////////////////////
-    // Initialise the ATIS Manager
-    // Note that this is old stuff, but is necessary for the
-    // current ATIS implementation. Therefore, leave it in here
-    // until the ATIS system is ported over to make use of the ATIS 
-    // sub system infrastructure.
-    ////////////////////////////////////////////////////////////////////
-
-    globals->add_subsystem("ATIS", new FGATISMgr, SGSubsystemMgr::INIT, 0.4);
-
-    ////////////////////////////////////////////////////////////////////
    // Initialize the ATC subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("ATC", new FGATCManager, SGSubsystemMgr::POST_FDM);
@@ -926,8 +915,6 @@ void fgReInitSubsystems()
     // need to reset aircraft (systems/instruments) so they can adapt to current environment
     globals->get_subsystem("systems")->reinit();
     globals->get_subsystem("instrumentation")->reinit();
-
-    globals->get_subsystem("ATIS")->reinit();
 
 // setup state to end re-init
     fgSetBool("/sim/signals/reinit", false);

@@ -49,7 +49,6 @@
 #include <Cockpit/cockpitDisplayManager.hxx>
 #include <GUI/new_gui.hxx>
 #include <Main/logger.hxx>
-#include <ATCDCL/ATISmgr.hxx>
 #include <ATC/atc_mgr.hxx>
 #include <AIModel/AIManager.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
@@ -90,7 +89,6 @@ SGSubsystem* createSubsystemByName(const std::string& name)
     MAKE_SUB(FGRouteMgr, "route-manager");
     MAKE_SUB(FGLogger, "logger");
     MAKE_SUB(NewGUI, "gui");
-    MAKE_SUB(FGATISMgr, "atis");
     MAKE_SUB(FGATCManager, "atc");
     MAKE_SUB(FGMultiplayMgr, "mp");
     MAKE_SUB(FGTrafficManager, "traffic-manager");

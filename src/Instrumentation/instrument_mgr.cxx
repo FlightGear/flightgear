@@ -36,6 +36,7 @@
 #include "mag_compass.hxx"
 #include "marker_beacon.hxx"
 #include "newnavradio.hxx"
+#include "commradio.hxx"
 #include "slip_skid_ball.hxx"
 #include "transponder.hxx"
 #include "turn_indicator.hxx"
@@ -168,6 +169,9 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 
         } else if ( name == "marker-beacon" ) {
             set_subsystem( id, new FGMarkerBeacon( node ), 0.2 );
+
+        } else if ( name == "comm-radio" ) {
+            set_subsystem( id, Instrumentation::CommRadio::createInstance( node ) );
 
         } else if ( name == "nav-radio" ) {
             set_subsystem( id, Instrumentation::NavRadio::createInstance( node ) );

@@ -96,15 +96,17 @@ string FGRunway::reverseIdent(const string& aRunwayIdent)
   return buf;
 }
 
-double FGRunway::score(double aLengthWt, double aWidthWt, double aSurfaceWt) const
+double FGRunway::score(double aLengthWt, double aWidthWt, double aSurfaceWt, double aIlsWt) const
 {
   int surface = 1;
   if (_surface_code == 12 || _surface_code == 5) // dry lakebed & gravel
     surface = 2;
   else if (_surface_code == 1 || _surface_code == 2) // asphalt & concrete
     surface = 3;
+
+  int ils = (_ils != 0);
     
-  return _length * aLengthWt + _width * aWidthWt + surface * aSurfaceWt + 1e-20;
+  return _length * aLengthWt + _width * aWidthWt + surface * aSurfaceWt + ils * aIlsWt + 1e-20;
 }
 
 SGGeod FGRunway::begin() const
