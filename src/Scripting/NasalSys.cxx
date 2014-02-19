@@ -291,21 +291,26 @@ FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
 // This allows a Nasal object to hold onto a property path and use it
 // like a node object, e.g. setprop(ObjRoot, "size-parsecs", 2.02).  This
 // is the utility function that walks the property tree.
-// Future enhancement: support integer arguments to specify array
-// elements.
-static SGPropertyNode* findnode(naContext c, naRef* vec, int len)
+static SGPropertyNode* findnode(naContext c, naRef* vec, int len, bool create=false)
 {
     SGPropertyNode* p = globals->get_props();
     try {
         for(int i=0; i<len; i++) {
             naRef a = vec[i];
-            if(!naIsString(a)) return 0;
-            p = p->getNode(naStr_data(a));
+            if(!naIsString(a)) {
+                naRuntimeError(c, "bad argument to setprop/getprop path: expected a string");
+            }
+            naRef b = i < len-1 ? naNumValue(vec[i+1]) : naNil();
+            if (!naIsNil(b)) {
+                p = p->getNode(naStr_data(a), (int)b.num, create);
+                i++;
+            } else {
+                p = p->getNode(naStr_data(a), create);
+            }
             if(p == 0) return 0;
         }
     } catch (const string& err) {
         naRuntimeError(c, (char *)err.c_str());
-        return 0;
     }
     return p;
 }
@@ -316,7 +321,10 @@ static SGPropertyNode* findnode(naContext c, naRef* vec, int len)
 static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
 {
     using namespace simgear;
-    const SGPropertyNode* p = findnode(c, args, argc);
+    if (argc < 1) {
+        naRuntimeError(c, "getprop() expects at least 1 argument");
+    }
+    const SGPropertyNode* p = findnode(c, args, argc, false);
     if(!p) return naNil();
 
     switch(p->getType()) {
@@ -352,45 +360,29 @@ static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
 // final argument.
 static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
 {
-#define BUFLEN 1024
-    char buf[BUFLEN + 1];
-    buf[BUFLEN] = 0;
-    char* p = buf;
-    int buflen = BUFLEN;
-    if(argc < 2) naRuntimeError(c, "setprop() expects at least 2 arguments");
-    for(int i=0; i<argc-1; i++) {
-        naRef s = naStringValue(c, args[i]);
-        if(naIsNil(s)) return naNil();
-        strncpy(p, naStr_data(s), buflen);
-        p += naStr_len(s);
-        buflen = BUFLEN - (p - buf);
-        if(i < (argc-2) && buflen > 0) {
-            *p++ = '/';
-            buflen--;
-        }
+    if (argc < 2) {
+        naRuntimeError(c, "setprop() expects at least 2 arguments");
     }
+    naRef val = args[argc - 1];
+    SGPropertyNode* p = findnode(c, args, argc-1, true);
 
-    SGPropertyNode* props = globals->get_props();
-    naRef val = args[argc-1];
     bool result = false;
     try {
-        if(naIsString(val)) result = props->setStringValue(buf, naStr_data(val));
+        if(naIsString(val)) result = p->setStringValue(naStr_data(val));
         else {
-            naRef n = naNumValue(val);
-            if(naIsNil(n))
+            if(!naIsNum(val))
                 naRuntimeError(c, "setprop() value is not string or number");
                 
-            if (SGMisc<double>::isNaN(n.num)) {
+            if (SGMisc<double>::isNaN(val.num)) {
                 naRuntimeError(c, "setprop() passed a NaN");
             }
             
-            result = props->setDoubleValue(buf, n.num);
+            result = p->setDoubleValue(val.num);
         }
     } catch (const string& err) {
         naRuntimeError(c, (char *)err.c_str());
     }
     return naNum(result);
-#undef BUFLEN
 }
 
 // print() extension function.  Concatenates and prints its arguments
