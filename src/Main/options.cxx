@@ -2419,6 +2419,22 @@ bool Options::shouldLoadDefaultConfig() const
 {
   return p->shouldLoadDefaultConfig;
 }
-  
+
+bool Options::checkForArg(int argc, char* argv[], const char* checkArg)
+{
+    for (int i = 0; i < argc; ++i) {
+        char* arg = argv[i];
+        if (!strncmp("--", arg, 2) && !strcmp(arg + 2, checkArg)) {
+            return true;
+        }
+        
+        if ((arg[0] == '-') && !strcmp(arg + 1, checkArg)) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+    
 } // of namespace flightgear
 

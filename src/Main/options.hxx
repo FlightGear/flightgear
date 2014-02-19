@@ -113,6 +113,13 @@ public:
    * the value of the option here.
    */
   bool shouldLoadDefaultConfig() const;
+
+  /**
+   * check if the arguments array contains a particular string (with a '--' or
+   * '-' prefix).
+   * Used by early startup code before Options object is created
+   */
+  static bool checkForArg(int argc, char* argv[], const char* arg);
 private:
   void showUsage() const;
   

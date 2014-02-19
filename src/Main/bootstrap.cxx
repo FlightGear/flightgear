@@ -29,13 +29,15 @@
 #include <windows.h>
 #endif
 
-#if defined(HAVE_FEENABLEEXCEPT)
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#include <fenv.h>
-#elif defined(__linux__) && defined(__i386__)
-#  include <fpu_control.h>
+#if defined(__linux__)
+// set link for setting _GNU_SOURCE before including fenv.h
+// http://man7.org/linux/man-pages/man3/fenv.3.html
+
+  #ifndef _GNU_SOURCE
+    #define _GNU_SOURCE
+  #endif
+
+  #include <fenv.h>
 #endif
 
 #ifndef _WIN32
@@ -46,6 +48,8 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <cstring>
+#include <iostream>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
@@ -53,15 +57,11 @@
 #include <osg/Texture>
 #include <osg/BufferObject>
 
-#include <cstring>
-#include <iostream>
-using std::cerr;
-using std::endl;
-
 #include <Viewer/fgviewer.hxx>
 #include "main.hxx"
 #include <Include/version.h>
 #include <Main/globals.hxx>
+#include <Main/options.hxx>
 #include <Main/fg_props.hxx>
 #include <GUI/MessageBox.hxx>
 
@@ -78,19 +78,22 @@ bool global_crashRptEnabled = false;
 
 #endif
 
+using std::cerr;
+using std::endl;
+
 std::string homedir;
 std::string hostname;
 
 // forward declaration.
 void fgExitCleanup();
 
-static bool fpeAbort = false;
-static void initFPE();
+static void initFPE(bool enableExceptions);
 
-#if defined(HAVE_FEENABLEEXCEPT)
+#if defined(__linux__)
+
 static void handleFPE(int);
 static void
-initFPE ()
+initFPE (bool fpeAbort)
 {
     if (fpeAbort) {
         int except = fegetexcept();
@@ -103,35 +106,27 @@ initFPE ()
 static void handleFPE(int)
 {
     feclearexcept(FE_ALL_EXCEPT);
+    SG_LOG(SG_GENERAL, SG_ALERT, "Floating point interrupt (SIGFPE)");
     signal(SIGFPE, handleFPE);
 }
-#elif defined(__linux__) && defined(__i386__)
+#elif defined (SG_WINDOWS)
 
-static void handleFPE(int);
-static void
-initFPE ()
+static void initFPE(bool fpeAbort)
 {
-    fpu_control_t fpe_flags = 0;
-    _FPU_GETCW(fpe_flags);
-//     fpe_flags &= ~_FPU_MASK_IM;	// invalid operation
-//     fpe_flags &= ~_FPU_MASK_DM;	// denormalized operand
-//     fpe_flags &= ~_FPU_MASK_ZM;	// zero-divide
-//     fpe_flags &= ~_FPU_MASK_OM;	// overflow
-//     fpe_flags &= ~_FPU_MASK_UM;	// underflow
-//     fpe_flags &= ~_FPU_MASK_PM;	// precision (inexact result)
-    _FPU_SETCW(fpe_flags);
-    signal(SIGFPE, handleFPE);
+// Enable floating-point exceptions for Windows
+    if (fpeAbort) {
+        // set following link for what this does (note it does set SSE
+        // flags too, it's not just for the x87 FPU)
+        // http://msdn.microsoft.com/en-us/library/e9b52ceh.aspx
+        _control87( _EM_INEXACT, _MCW_EM );
+    }
 }
 
-static void
-handleFPE (int num)
-{
-  initFPE();
-  SG_LOG(SG_GENERAL, SG_ALERT, "Floating point interrupt (SIGFPE)");
-}
 #else
-static void initFPE()
+static void initFPE(bool)
 {
+    // Ignore floating-point exceptions on FreeBSD, OS-X, other Unices
+    signal(SIGFPE, SIG_IGN);
 }
 #endif
 
@@ -144,11 +139,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 }
 #endif
 
-static void fg_terminate() {
-    cerr << endl <<
-            "Uncaught Exception: missing exception handler on some thread"
-            << endl << endl;
-    abort();
+static void fg_terminate()
+{
+    flightgear::fatalMessageBox("Fatal exception", "Uncaught exception on some thread");
 }
 
 int _bootstrap_OSInit;
@@ -172,16 +165,6 @@ int main ( int argc, char **argv )
   signal(SIGPIPE, SIG_IGN);
 #endif
 
-#if defined(SG_MAC)
-    // required so native messages boxes work prior to osgViewer init
-    // (only needed when not running as a bundled app)
-    transformToForegroundApp();
-#endif
-    
-#ifdef PTW32_STATIC_LIB
-    // Initialise static pthread win32 lib
-    pthread_win32_process_attach_np ();
-#endif
     _bootstrap_OSInit = 0;
 
 #if defined(HAVE_CRASHRPT)
@@ -228,36 +211,9 @@ int main ( int argc, char **argv )
 	}
 #endif
 
-#if defined(__FreeBSD__)
-    // Ignore floating-point exceptions on FreeBSD
-    signal(SIGFPE, SIG_IGN); 
-#else
-    // Maybe Enable floating-point exceptions on Linux
-    for (int i = 0; i < argc; ++i) {
-        if (!strcmp("--enable-fpe", argv[i])) {
-            fpeAbort = true;
-            break;
-        }
-    }
-    initFPE();
-#endif
+    initFPE(flightgear::Options::checkForArg(argc, argv, "enable-fpe"));
 
-    // Enable floating-point exceptions for Windows
-#if defined( _MSC_VER ) && defined( DEBUG )
-    // Christian, we should document what this does
-    _control87( _EM_INEXACT, _MCW_EM );
-#endif
-
-    bool fgviewer = false;
-    for (int i = 0; i < argc; ++i) {
-        if (!strcmp("--fgviewer", argv[i])) {
-            fgviewer = true;
-            break;
-        }
-    }
-
-    // FIXME: add other, more specific
-    // exceptions.
+    bool fgviewer = flightgear::Options::checkForArg(argc, argv, "fgviewer");
     try {
         // http://code.google.com/p/flightgear-bugs/issues/detail?id=1231
         // ensure sglog is inited before atexit() is registered, so logging
@@ -288,10 +244,10 @@ int main ( int argc, char **argv )
     } catch (const std::string &s) {
         flightgear::fatalMessageBox("Fatal exception", s);
     } catch (const char *s) {
-        cerr << "Fatal error (const char*): " << s << endl;
+        std::cerr << "Fatal error (const char*): " << s << std::endl;
 
     } catch (...) {
-        cerr << "Unknown exception in the main loop. Aborting..." << endl;
+        std::cerr << "Unknown exception in the main loop. Aborting..." << std::endl;
         if (errno)
             perror("Possible cause");
     }
