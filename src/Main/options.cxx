@@ -185,7 +185,6 @@ void fgSetDefaults ()
     fgSetBool("/environment/clouds/status", true);
     fgSetBool("/sim/startup/fullscreen", false);
     fgSetBool("/sim/rendering/shading", true);
-    fgSetBool("/sim/rendering/textures", true);
     fgTie( "/sim/rendering/filtering", SGGetTextureFilter, SGSetTextureFilter, false);
     fgSetInt("/sim/rendering/filtering", 1);
     fgSetBool("/sim/rendering/wireframe", false);
@@ -1532,8 +1531,6 @@ struct OptionDesc {
     {"restore-defaults",             false, OPTION_BOOL,   "/sim/startup/restore-defaults", true, "", 0 },
     {"shading-flat",                 false, OPTION_BOOL,   "/sim/rendering/shading", false, "", 0 },
     {"shading-smooth",               false, OPTION_BOOL,   "/sim/rendering/shading", true, "", 0 },
-    {"disable-textures",             false, OPTION_BOOL,   "/sim/rendering/textures", false, "", 0 },
-    {"enable-textures",              false, OPTION_BOOL,   "/sim/rendering/textures", true, "", 0 },
     {"texture-filtering",            false, OPTION_INT,    "/sim/rendering/filtering", 1, "", 0 },
     {"disable-wireframe",            false, OPTION_BOOL,   "/sim/rendering/wireframe", false, "", 0 },
     {"enable-wireframe",             false, OPTION_BOOL,   "/sim/rendering/wireframe", true, "", 0 },

@@ -112,9 +112,6 @@ Disable fuel freeze (enabling fuel consumption).
 .B "--disable-fullscreen"
 Disable fullscreen mode.
 .TP
-.B "--disable-game-mode"
-Disable fullscreen game mode.
-.TP
 .B "--disable-horizon-effect"
 Disable celestial body growth illusion near the horizon..
 .TP
@@ -123,9 +120,6 @@ Disable 2D HUD.
 .TP
 .B "--disable-hud-3d"
 Disable 3D HUD.
-.TP
-.B "--disable-intro-music"
-Disable introduction music.
 .TP
 .B "--disable-mouse-pointer"
 Disable extra mouse pointer.
@@ -144,9 +138,6 @@ Disable specular reflections on textured objects.
 .TP
 .B "--disable-splash-screen"
 Disable splash screen.
-.TP
-.B "--disable-textures"
-Disable textures.
 .TP
 .B "--disable-wireframe"
 Disable wireframe drawing mode.
@@ -178,9 +169,6 @@ Enable fuel freeze (disabling fuel consumption).
 .B "--enable-fullscreen"
 Enable fullscreen mode.
 .TP
-.B "--enable-game-mode"
-Enable fullscreen game mode.
-.TP
 .B "--enable-horizon-effect"
 Enable celestial body growth illusion near the horizon.
 .TP
@@ -189,9 +177,6 @@ Enable 2D HUD.
 .TP
 .B "--enable-hud-3d"
 Enable 3D HUD.
-.TP
-.B "--enable-intro-music"
-Enable introduction music.
 .TP
 .B "--enable-mouse-pointer"
 Enable extra mouse pointer (i.e. for full screen voodoo/voodoo-II
@@ -211,9 +196,6 @@ Enable specular reflections on textured objects.
 .TP
 .B "--enable-splash-screen"
 Enable splash screen.
-.TP
-.B "--enable-textures"
-Enable textures.
 .TP
 .B "--enable-wireframe"
 Enable wireframe drawing mode.

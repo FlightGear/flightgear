@@ -551,7 +551,6 @@ FGRenderer::init( void )
     _enhanced_lighting    = fgGetNode("/sim/rendering/enhanced-lighting", true);
     _distance_attenuation = fgGetNode("/sim/rendering/distance-attenuation", true);
     _horizon_effect       = fgGetNode("/sim/rendering/horizon-effect", true);
-    _textures             = fgGetNode("/sim/rendering/textures", true);
 
     _altitude_ft = fgGetNode("/position/altitude-ft", true);
 
@@ -1618,10 +1617,8 @@ FGRenderer::update( ) {
   
     osg::Camera *camera = viewer->getCamera();
 
-    if ( _textures->getBoolValue() ) {
-        SGVec4f clearColor(l->adj_fog_color());
-        camera->setClearColor(toOsg(clearColor));
-    }
+    SGVec4f clearColor(l->adj_fog_color());
+    camera->setClearColor(toOsg(clearColor));
 
     updateSky();
     
