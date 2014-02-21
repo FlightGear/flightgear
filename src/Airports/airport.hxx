@@ -288,7 +288,9 @@ private:
      * Helper to parse property data loaded from an ICAO.twr.xml file
      */
     void readTowerData(SGPropertyNode* aRoot);
-    
+  
+    PositionedIDVec itemsOfType(FGPositioned::Type ty) const;
+  
     std::string _name;
     bool _has_metar;
     FGAirportDynamics *_dynamics;
@@ -306,8 +308,9 @@ private:
     mutable bool mTaxiwaysLoaded;
     mutable bool mProceduresLoaded;
     bool mILSDataLoaded;
+
+    mutable std::vector<FGRunwayRef> mRunways;
   
-    mutable PositionedIDVec mRunways;
     mutable PositionedIDVec mHelipads;
     mutable PositionedIDVec mTaxiways;
     PositionedIDVec mPavements;
