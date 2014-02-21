@@ -53,12 +53,37 @@
 
 using flightgear::SceneryPager;
 
+class FGTileMgr::TileManagerListener : public SGPropertyChangeListener
+{
+public:
+    TileManagerListener(FGTileMgr* manager) :
+        _manager(manager)
+    {
+        fgGetNode("/sim/rendering/use-vbos", true)->addChangeListener(this, true);
+    }
+    
+    ~TileManagerListener()
+    {
+        fgGetNode("/sim/rendering/use-vbos")->removeChangeListener(this);
+    }
+    
+    virtual void valueChanged(SGPropertyNode* prop)
+    {
+        bool useVBOs = prop->getBoolValue();
+        _manager->_options->setPluginStringData("SimGear::USE_VBOS",
+                                                useVBOs ? "ON" : "OFF");
+    }
+    
+private:
+    FGTileMgr* _manager;
+};
 
 FGTileMgr::FGTileMgr():
     state( Start ),
     last_state( Running ),
     scheduled_visibility(100.0),
     _terra_sync(NULL),
+    _listener(NULL),
     _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
     _maxTileRangeM(fgGetNode("/sim/rendering/static-lod/bare", true)),
     _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true)),
@@ -71,6 +96,8 @@ FGTileMgr::FGTileMgr():
 
 FGTileMgr::~FGTileMgr()
 {
+    delete _listener;
+    
     // remove all nodes we might have left behind
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
@@ -84,6 +111,7 @@ void FGTileMgr::init() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
 
     _options = new simgear::SGReaderWriterOptions;
+    _listener = new TileManagerListener(this);
     
     materialLibChanged();
     _options->setPropertyNode(globals->get_props());

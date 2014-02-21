@@ -29,7 +29,6 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/bucket/newbucket.hxx>
 #include "SceneryPager.hxx"
-#include "tileentry.hxx"
 #include "tilecache.hxx"
 
 namespace osg
@@ -76,7 +75,11 @@ private:
      */
     TileCache tile_cache;
     simgear::SGTerraSync* _terra_sync;
-
+    
+    class TileManagerListener;
+    friend class TileManagerListener;
+    TileManagerListener* _listener;
+    
     // update various queues internal queues
     void update_queues(bool& isDownloadingScenery);
 
