@@ -1118,13 +1118,13 @@ bool NavDataCache::isRebuildRequired()
     SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: main cache rebuild required");
     return true;
   }
-
-  string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");  
+  
+  string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");
   if (readStringProperty("scenery_paths") != sceneryPaths) {
-    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: scenery paths changed, main cache rebuild required");
-    return true;
+    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: scenery paths changed,dropping ground net");
+    dropAllGroundnets();
   }
-    
+  
   SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: no main cache rebuild required");
   return false;
 }
