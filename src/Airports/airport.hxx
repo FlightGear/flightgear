@@ -299,6 +299,8 @@ private:
     void loadProcedures() const;
     
     mutable bool mTowerDataLoaded;
+    mutable SGGeod mTowerPosition;
+  
     mutable bool mRunwaysLoaded;
     mutable bool mHelipadsLoaded;
     mutable bool mTaxiwaysLoaded;
