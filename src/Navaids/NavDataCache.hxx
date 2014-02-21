@@ -102,10 +102,6 @@ public:
   void setRunwayReciprocal(PositionedID runway, PositionedID recip);
   void setRunwayILS(PositionedID runway, PositionedID ils);
   
-  void updateRunwayThreshold(PositionedID runwayID, const SGGeod &aThreshold,
-                    double aHeading, double aDisplacedThreshold,
-                    double aStopway);
-  
   PositionedID insertNavaid(FGPositioned::Type ty, const std::string& ident,
                             const std::string& name, const SGGeod& pos, int freq, int range, double multiuse,
                             PositionedID apt, PositionedID runway);

@@ -474,7 +474,6 @@ public:
     setRunwayReciprocal = prepare("UPDATE runway SET reciprocal=?2 WHERE rowid=?1");
     setRunwayILS = prepare("UPDATE runway SET ils=?2 WHERE rowid=?1");
     setNavaidColocated = prepare("UPDATE navaid SET colocated=?2 WHERE rowid=?1");
-    updateRunwayThreshold = prepare("UPDATE runway SET heading=?2, displaced_threshold=?3, stopway=?4 WHERE rowid=?1");
     
     insertPositionedQuery = prepare("INSERT INTO positioned "
                                     "(type, ident, name, airport, lon, lat, elev_m, octree_node, "
@@ -899,7 +898,7 @@ public:
   sqlite3_stmt_ptr insertPositionedQuery, insertAirport, insertTower, insertRunway,
   insertCommStation, insertNavaid;
   sqlite3_stmt_ptr setAirportMetar, setRunwayReciprocal, setRunwayILS, setNavaidColocated,
-    setAirportPos, updateRunwayThreshold, updateILS;
+    setAirportPos, updateILS;
   sqlite3_stmt_ptr removePOIQuery;
   
   sqlite3_stmt_ptr findClosestWithIdent;
@@ -1564,21 +1563,6 @@ void NavDataCache::setRunwayILS(PositionedID runway, PositionedID ils)
     FGRunway* instance = (FGRunway*) d->cache[runway].ptr();
     instance->setILS(ils);
   }
-}
-  
-void NavDataCache::updateRunwayThreshold(PositionedID runwayID, const SGGeod &aThreshold,
-                                  double aHeading, double aDisplacedThreshold,
-                                  double aStopway)
-{
-// update the runway information
-  sqlite3_bind_int64(d->updateRunwayThreshold, 1, runwayID);
-  sqlite3_bind_double(d->updateRunwayThreshold, 2, aHeading);
-  sqlite3_bind_double(d->updateRunwayThreshold, 3, aDisplacedThreshold);
-  sqlite3_bind_double(d->updateRunwayThreshold, 4, aStopway);
-  d->execUpdate(d->updateRunwayThreshold);
-
-  // now update the positional data
-  updatePosition(runwayID, aThreshold);
 }
   
 PositionedID

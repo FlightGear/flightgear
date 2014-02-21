@@ -148,7 +148,7 @@ unsigned int FGAirport::numHelipads() const
 FGRunwayRef FGAirport::getRunwayByIndex(unsigned int aIndex) const
 {
   loadRunways();
-  return loadById<FGRunway>(mRunways, aIndex);
+  return mRunways.at(aIndex);
 }
 
 //------------------------------------------------------------------------------
@@ -166,10 +166,8 @@ FGRunwayMap FGAirport::getRunwayMap() const
 
   double minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft");
 
-  BOOST_FOREACH(PositionedID id, mRunways)
+  BOOST_FOREACH(FGRunwayRef rwy, mRunways)
   {
-    FGRunway* rwy = loadById<FGRunway>(id);
-
     // ignore unusably short runways
     // TODO other methods don't check this...
     if( rwy->lengthFt() >= minLengthFt )
@@ -197,8 +195,14 @@ FGHelipadMap FGAirport::getHelipadMap() const
 //------------------------------------------------------------------------------
 bool FGAirport::hasRunwayWithIdent(const std::string& aIdent) const
 {
-  return flightgear::NavDataCache::instance()
-    ->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent) != 0;
+  loadRunways();
+  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+    if (rwy->ident() == aIdent) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 //------------------------------------------------------------------------------
@@ -211,16 +215,15 @@ bool FGAirport::hasHelipadWithIdent(const std::string& aIdent) const
 //------------------------------------------------------------------------------
 FGRunwayRef FGAirport::getRunwayByIdent(const std::string& aIdent) const
 {
-  PositionedID id =
-    flightgear::NavDataCache::instance()
-      ->airportItemWithIdent(guid(), FGPositioned::RUNWAY, aIdent);
-
-  if (id == 0) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << ident());
-    throw sg_range_exception("unknown runway " + aIdent + " at airport:" + ident(), "FGAirport::getRunwayByIdent");
+  loadRunways();
+  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+    if (rwy->ident() == aIdent) {
+      return rwy;
+    }
   }
   
-  return loadById<FGRunway>(id);
+  SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << ident());
+  throw sg_range_exception("unknown runway " + aIdent + " at airport:" + ident(), "FGAirport::getRunwayByIdent");
 }
 
 //------------------------------------------------------------------------------
@@ -255,14 +258,7 @@ FGRunwayRef FGAirport::findBestRunwayForHeading(double aHeading, struct FindBest
     fbrfhp.ilsWeight = searchNode->getDoubleValue("ils-weight", fbrfhp.ilsWeight );
   }
     
-  BOOST_FOREACH(PositionedID id, mRunways) {
-    FGRunway* rwy = loadById<FGRunway>(id);
-    // bug http://code.google.com/p/flightgear-bugs/issues/detail?id=1149
-    // (and probably some other issues besides). 
-    if (rwy->type() == FGPositioned::HELIPAD) {
-      continue;
-    }
-      
+  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
     double good = rwy->score( fbrfhp.lengthWeight,  fbrfhp.widthWeight,  fbrfhp.surfaceWeight,  fbrfhp.ilsWeight );
     double dev = aHeading - rwy->headingDeg();
     SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
@@ -286,9 +282,7 @@ FGRunwayRef FGAirport::findBestRunwayForPos(const SGGeod& aPos) const
   FGRunway* result = NULL;
   double currentLowestDev = 180.0;
   
-  BOOST_FOREACH(PositionedID id, mRunways) {
-    FGRunway* rwy = loadById<FGRunway>(id);
-
+  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
     double inboundCourse = SGGeodesy::courseDeg(aPos, rwy->end());
     double dev = inboundCourse - rwy->headingDeg();
     SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
@@ -309,8 +303,7 @@ bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
 {
   loadRunways();
   
-  BOOST_FOREACH(PositionedID id, mRunways) {
-    FGRunway* rwy = loadById<FGRunway>(id);
+  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
     if (rwy->isHardSurface() && (rwy->lengthFt() >= aLengthFt)) {
       return true; // we're done!
     }
@@ -326,8 +319,7 @@ FGRunwayList FGAirport::getRunwaysWithoutReciprocals() const
   
   FGRunwayList r;
   
-  BOOST_FOREACH(PositionedID id, mRunways) {
-    FGRunway* rwy = loadById<FGRunway>(id);
+  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
     FGRunway* recip = rwy->reciprocalRunway();
     if (recip) {
       FGRunwayList::iterator it = std::find(r.begin(), r.end(), recip);
@@ -508,6 +500,12 @@ const FGAirport *fgFindAirportID( const std::string& id)
     return FGAirport::findByIdent(id);
 }
 
+PositionedIDVec FGAirport::itemsOfType(FGPositioned::Type ty) const
+{
+  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  return cache->airportItemsOfType(guid(), ty);
+}
+
 void FGAirport::loadRunways() const
 {
   if (mRunwaysLoaded) {
@@ -517,7 +515,10 @@ void FGAirport::loadRunways() const
   loadSceneryDefinitions();
   
   mRunwaysLoaded = true;
-  mRunways = flightgear::NavDataCache::instance()->airportItemsOfType(guid(), FGPositioned::RUNWAY);
+  PositionedIDVec rwys(itemsOfType(FGPositioned::RUNWAY));
+  BOOST_FOREACH(PositionedID id, rwys) {
+    mRunways.push_back(loadById<FGRunway>(id));
+  }
 }
 
 void FGAirport::loadHelipads() const
@@ -529,7 +530,7 @@ void FGAirport::loadHelipads() const
   loadSceneryDefinitions();
 
   mHelipadsLoaded = true;
-  mHelipads = flightgear::NavDataCache::instance()->airportItemsOfType(guid(), FGPositioned::HELIPAD);
+  mHelipads = itemsOfType(FGPositioned::HELIPAD);
 }
 
 void FGAirport::loadTaxiways() const
@@ -539,7 +540,7 @@ void FGAirport::loadTaxiways() const
   }
   
   mTaxiwaysLoaded =  true;
-  mTaxiways = flightgear::NavDataCache::instance()->airportItemsOfType(guid(), FGPositioned::TAXIWAY);
+  mTaxiways = itemsOfType(FGPositioned::TAXIWAY);
 }
 
 void FGAirport::loadProcedures() const
@@ -561,31 +562,18 @@ void FGAirport::loadProcedures() const
 
 void FGAirport::loadSceneryDefinitions() const
 {
-  NavDataCache* cache = NavDataCache::instance();
-    if (cache->isReadOnly()) {
-        return;
-    }
-    
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "threshold", path)) {
     return; // no XML threshold data
   }
   
-  if (!cache->isCachedFileModified(path)) {
-    // cached values are correct, we're all done
-    return;
+  try {
+    SGPropertyNode_ptr rootNode = new SGPropertyNode;
+    readProperties(path.str(), rootNode);
+    const_cast<FGAirport*>(this)->readThresholdData(rootNode);
+  } catch (sg_exception& e) {
+    SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading threshold XML failed:" << e.getFormattedMessage());
   }
-  
-    try {
-        flightgear::NavDataCache::Transaction txn(cache);
-        SGPropertyNode_ptr rootNode = new SGPropertyNode;
-        readProperties(path.str(), rootNode);
-        const_cast<FGAirport*>(this)->readThresholdData(rootNode);
-        cache->stampCacheFile(path);
-        txn.commit();
-    } catch (sg_exception& e) {
-        SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading threshold XML failed:" << e.getFormattedMessage());
-    }
 }
 
 void FGAirport::readThresholdData(SGPropertyNode* aRoot)
@@ -609,11 +597,6 @@ void FGAirport::processThreshold(SGPropertyNode* aThreshold)
   std::string rwyIdent(aThreshold->getStringValue("rwy"));
   NavDataCache* cache = NavDataCache::instance(); 
   PositionedID id = cache->airportItemWithIdent(guid(), FGPositioned::RUNWAY, rwyIdent);
-  if (id == 0) {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "FGAirport::processThreshold: "
-           "found runway not defined in the global data:" << ident() << "/" << rwyIdent);
-    return;
-  }
   
   double lon = aThreshold->getDoubleValue("lon"),
   lat = aThreshold->getDoubleValue("lat");
@@ -623,8 +606,29 @@ void FGAirport::processThreshold(SGPropertyNode* aThreshold)
   double newDisplacedThreshold = aThreshold->getDoubleValue("displ-m");
   double newStopway = aThreshold->getDoubleValue("stopw-m");
   
-  cache->updateRunwayThreshold(id, newThreshold,
-                               newHeading, newDisplacedThreshold, newStopway);
+  if (id == 0) {
+    SG_LOG(SG_GENERAL, SG_DEBUG, "FGAirport::processThreshold: "
+           "found runway not defined in the global data:" << ident() << "/" << rwyIdent);
+    // enable this code when threshold.xml contains sufficient data to
+    // fully specify a new runway, *and* we figure out how to assign runtime
+    // Positioned IDs and insert temporary items into the spatial map.
+#if 0
+    double newLength = 0.0, newWidth = 0.0;
+    int surfaceCode = 0;
+    FGRunway* rwy = new FGRunway(id, guid(), rwyIdent, newThreshold,
+                       newHeading,
+                       newLength, newWidth,
+                       newDisplacedThreshold, newStopway,
+                       surfaceCode);
+    // insert into the spatial map too
+    mRunways.push_back(rwy);
+#endif
+  } else {
+    FGRunway* rwy = loadById<FGRunway>(id);
+    rwy->updateThreshold(newThreshold, newHeading,
+                         newDisplacedThreshold, newStopway);
+
+  }
 }
 
 SGGeod FGAirport::getTowerLocation() const
