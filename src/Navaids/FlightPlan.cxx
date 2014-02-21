@@ -828,12 +828,14 @@ void FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
   
   // route nodes
   _legs.clear();
-  SGPropertyNode_ptr routeNode = routeData->getChild("route", 0);    
-  for (int i=0; i<routeNode->nChildren(); ++i) {
-    SGPropertyNode_ptr wpNode = routeNode->getChild("wp", i);
-    Leg* l = new Leg(this, Waypt::createFromProperties(NULL, wpNode));
-    _legs.push_back(l);
-  } // of route iteration
+  SGPropertyNode_ptr routeNode = routeData->getChild("route", 0);
+  if (routeNode.valid()) {
+    for (int i=0; i<routeNode->nChildren(); ++i) {
+      SGPropertyNode_ptr wpNode = routeNode->getChild("wp", i);
+      Leg* l = new Leg(this, Waypt::createFromProperties(NULL, wpNode));
+      _legs.push_back(l);
+    } // of route iteration
+  }
   _waypointsChanged = true;
 }
 
