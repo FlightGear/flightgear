@@ -134,6 +134,9 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _hail(0.0),
   _snow(0.0),
   _snow_cover(false),
+  _day(0),
+  _hour(0),
+  _minute(0),
   _magneticVariation(new MagneticVariation())
 {
   // Hack to avoid static initialization order problems on OSX
@@ -174,6 +177,9 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _tiedProperties.Tie("hail-norm", &_hail );
   _tiedProperties.Tie("snow-norm", &_snow);
   _tiedProperties.Tie("snow-cover", &_snow_cover );
+  _tiedProperties.Tie("day", &_day );
+  _tiedProperties.Tie("hour", &_hour );
+  _tiedProperties.Tie("minute", &_minute );
   _tiedProperties.Tie("decoded", this, &MetarProperties::get_decoded );
 }
 
@@ -404,6 +410,9 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
     _hail = m->getHail();
     _snow = m->getSnow();
     _snow_cover = m->getSnowCover();
+    _day = m->getDay();
+    _hour = m->getHour();
+    _minute = m->getMinute();
     _metarValidNode->setBoolValue(true);
 }
 

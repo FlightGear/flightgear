@@ -92,6 +92,9 @@ private:
     double _snow;
     bool _snow_cover;
     std::string _decoded;
+    int _day;
+    int _hour;
+    int _minute;
 protected:
     simgear::TiedPropertyList _tiedProperties;
     MagneticVariation * _magneticVariation;
