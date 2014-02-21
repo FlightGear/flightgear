@@ -300,6 +300,8 @@ public:
     SG_LOG(SG_NAVCACHE, SG_INFO, "NavDataCache integrity check took:" << st.elapsedMSec());
     finalize(stmt);
   }
+
+  bool isCachedFileModified(const SGPath& path, bool verbose);
   
   void callSqlite(int result, const string& sql)
   {
@@ -939,7 +941,7 @@ public:
   std::auto_ptr<RebuildThread> rebuilder;
 };
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
   
 FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
                                                           sqlite3_int64& aptId)
@@ -1022,7 +1024,37 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
       return NULL;
   }
 }
-
+  
+bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path, bool verbose)
+{
+  if (!path.exists()) {
+    throw sg_io_exception("isCachedFileModified: Missing file:" + path.str());
+  }
+  
+  sqlite_bind_temp_stdstring(statCacheCheck, 1, path.str());
+  bool isModified = true;
+  sgDebugPriority logLevel = verbose ? SG_WARN : SG_DEBUG;
+  if (execSelect(statCacheCheck)) {
+    time_t modtime = sqlite3_column_int64(statCacheCheck, 0);
+    time_t delta = std::labs(modtime - path.modTime());
+    if (delta != 0)
+    {
+      SG_LOG(SG_NAVCACHE, logLevel, "NavCache: rebuild required for " << path <<
+             ". Timestamps: " << modtime << " != " << path.modTime());
+    }
+    else
+    {
+      SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: no rebuild required for " << path);
+    }
+    
+    isModified = (delta != 0);
+  } else {
+    SG_LOG(SG_NAVCACHE, logLevel, "NavCache: initial build required for " << path);
+  }
+  
+  reset(statCacheCheck);
+  return isModified;
+}
   
 static NavDataCache* static_instance = NULL;
         
@@ -1114,28 +1146,29 @@ bool NavDataCache::isRebuildRequired()
         return true;
     }
     
-  if (isCachedFileModified(d->aptDatPath) ||
-      isCachedFileModified(d->metarDatPath) ||
-      isCachedFileModified(d->navDatPath) ||
-      isCachedFileModified(d->carrierDatPath) ||
-      isCachedFileModified(d->fixDatPath) ||
+  if (d->isCachedFileModified(d->aptDatPath, true) ||
+      d->isCachedFileModified(d->metarDatPath, true) ||
+      d->isCachedFileModified(d->navDatPath, true) ||
+      d->isCachedFileModified(d->fixDatPath, true) ||
+      d->isCachedFileModified(d->carrierDatPath, true) ||
 // since POI loading is disabled on Windows, don't check for it
 // this caused: https://code.google.com/p/flightgear-bugs/issues/detail?id=1227
 #ifndef SG_WINDOWS
-      isCachedFileModified(d->poiDatPath) ||
+      d->isCachedFileModified(d->poiDatPath, true) ||
 #endif
-      isCachedFileModified(d->airwayDatPath))
+      d->isCachedFileModified(d->airwayDatPath, true))
   {
     SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: main cache rebuild required");
     return true;
   }
-
-  string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");  
+  
+  string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");
   if (readStringProperty("scenery_paths") != sceneryPaths) {
-    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: scenery paths changed, main cache rebuild required");
-    return true;
+    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: scenery paths changed,dropping ground net");
+    dropAllGroundnets();
+    writeStringProperty("scenery_paths", sceneryPaths);
   }
-    
+  
   SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: no main cache rebuild required");
   return false;
 }
@@ -1329,32 +1362,7 @@ void NavDataCache::writeStringListProperty(const string& key, const string_list&
   
 bool NavDataCache::isCachedFileModified(const SGPath& path) const
 {
-  if (!path.exists()) {
-    throw sg_io_exception("isCachedFileModified: Missing file:" + path.str());
-  }
-  
-  sqlite_bind_temp_stdstring(d->statCacheCheck, 1, path.str());
-  bool isModified = true;
-  
-  if (d->execSelect(d->statCacheCheck)) {
-    time_t modtime = sqlite3_column_int64(d->statCacheCheck, 0);
-    time_t delta = std::labs(modtime - path.modTime());
-    if (delta != 0)
-    {
-      SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: rebuild required for " << path << ". Timestamps: " << modtime << " != " << path.modTime());
-    }
-    else
-    {
-      SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: no rebuild required for " << path);
-    }
-    
-    isModified = (delta != 0);
-  } else {
-    SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: initial build required for " << path);
-  }
-  
-  d->reset(d->statCacheCheck);
-  return isModified;
+  return d->isCachedFileModified(path, false);
 }
 
 void NavDataCache::stampCacheFile(const SGPath& path)
@@ -2150,6 +2158,21 @@ void NavDataCache::dropGroundnetFor(PositionedID aAirport)
   q = d->prepare("DELETE FROM groundnet_edge WHERE airport=?1");
   sqlite3_bind_int64(q, 1, aAirport);
   d->execUpdate(q);
+}
+  
+void NavDataCache::dropAllGroundnets()
+{
+    SG_LOG(SG_NAVCACHE, SG_INFO, "dropping ground-net data");
+  beginTransaction();
+  d->runSQL("DELETE FROM groundnet_edge");
+  d->runSQL("DELETE FROM parking");
+  d->runSQL("DELETE FROM taxi_node");
+    
+  sqlite3_stmt_ptr q = d->prepare("DELETE FROM positioned WHERE (type=?1 OR type=?2)");
+  sqlite3_bind_int(q, 1, FGPositioned::TAXI_NODE);
+  sqlite3_bind_int(q, 2, FGPositioned::PARKING);
+  d->execUpdate(q);
+  commitTransaction();
 }
 
 bool NavDataCache::isReadOnly() const
