@@ -2161,6 +2161,17 @@ void NavDataCache::dropGroundnetFor(PositionedID aAirport)
   sqlite3_bind_int64(q, 1, aAirport);
   d->execUpdate(q);
 }
+  
+void NavDataCache::dropAllGroundnets()
+{
+  beginTransaction();
+  d->runSQL("DELETE * FROM parking; DELETE * FROM groundnet_edge; DELETE * FROM taxi_node");
+  sqlite3_stmt_ptr q = d->prepare("DELETE FROM positioned WHERE (type=?1 OR type=?2)");
+  sqlite3_bind_int(q, 1, FGPositioned::TAXI_NODE);
+  sqlite3_bind_int(q, 2, FGPositioned::PARKING);
+  d->execUpdate(q);
+  commitTransaction();
+}
 
 bool NavDataCache::isReadOnly() const
 {

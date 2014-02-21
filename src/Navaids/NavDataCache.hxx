@@ -126,6 +126,14 @@ public:
     
   void dropGroundnetFor(PositionedID aAirport);
   
+  /**
+   * Remove all ground-nets globally from the cache.
+   * This includes parking and taxi-nodes and edges between them. It's useful
+   * when scenery paths change, since the ground-nets depend on the scenery.
+   * Using this we can avoid havind to rebuild the entire cache.
+   */
+  void dropAllGroundnets();
+  
   PositionedID insertParking(const std::string& name, const SGGeod& aPos,
                              PositionedID aAirport,
                              double aHeading, int aRadius, const std::string& aAircraftType,
