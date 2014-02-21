@@ -630,16 +630,7 @@ void FGAirport::processThreshold(SGPropertyNode* aThreshold)
 SGGeod FGAirport::getTowerLocation() const
 {
   validateTowerData();
-  
-  NavDataCache* cache = NavDataCache::instance();
-  PositionedIDVec towers = cache->airportItemsOfType(guid(), FGPositioned::TOWER);
-  if (towers.empty()) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "No towers defined for:" <<ident());
-    return SGGeod();
-  }
-  
-  FGPositionedRef tower = cache->loadById(towers.front());
-  return tower->geod();
+  return mTowerPosition;
 }
 
 void FGAirport::validateTowerData() const
@@ -647,33 +638,34 @@ void FGAirport::validateTowerData() const
   if (mTowerDataLoaded) {
     return;
   }
-
+  
   mTowerDataLoaded = true;
+
+// first, load data from the cache (apt.dat)
   NavDataCache* cache = NavDataCache::instance();
-    if (cache->isReadOnly()) {
-        return;
-    }
-    
-  SGPath path;
-  if (!XMLLoader::findAirportData(ident(), "twr", path)) {
-    return; // no XML tower data
+  PositionedIDVec towers = cache->airportItemsOfType(guid(), FGPositioned::TOWER);
+  if (towers.empty()) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "No towers defined for:" <<ident());
+    mTowerPosition = geod(); // use airport position
+    // increase tower elevation by 20 metres above the field elevation
+    mTowerPosition.setElevationM(geod().getElevationM() + 20.0);
+  } else {
+    FGPositionedRef tower = cache->loadById(towers.front());
+    mTowerPosition = tower->geod();
   }
   
-  if (!cache->isCachedFileModified(path)) {
-  // cached values are correct, we're all done
-    return;
+  SGPath path;
+  if (!XMLLoader::findAirportData(ident(), "twr", path)) {
+    return; // no XML tower data, base position is fine
   }
-
-    try {
-        flightgear::NavDataCache::Transaction txn(cache);
-        SGPropertyNode_ptr rootNode = new SGPropertyNode;
-        readProperties(path.str(), rootNode);
-        const_cast<FGAirport*>(this)->readTowerData(rootNode);
-        cache->stampCacheFile(path);
-        txn.commit();
-    } catch (sg_exception& e){
-        SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading twr XML failed:" << e.getFormattedMessage());
-    }
+  
+  try {
+    SGPropertyNode_ptr rootNode = new SGPropertyNode;
+    readProperties(path.str(), rootNode);
+    const_cast<FGAirport*>(this)->readTowerData(rootNode);
+  } catch (sg_exception& e){
+    SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading twr XML failed:" << e.getFormattedMessage());
+  }
 }
 
 void FGAirport::readTowerData(SGPropertyNode* aRoot)
@@ -685,17 +677,8 @@ void FGAirport::readTowerData(SGPropertyNode* aRoot)
 // tower elevation is AGL, not AMSL. Since we don't want to depend on the
 // scenery for a precise terrain elevation, we use the field elevation
 // (this is also what the apt.dat code does)
-  double fieldElevationM = elevationM();
-  SGGeod towerLocation(SGGeod::fromDegM(lon, lat, fieldElevationM + elevM));
-  
-  NavDataCache* cache = NavDataCache::instance();
-  PositionedIDVec towers = cache->airportItemsOfType(guid(), FGPositioned::TOWER);
-  if (towers.empty()) {
-    cache->insertTower(guid(), towerLocation);
-  } else {
-    // update the position
-    cache->updatePosition(towers.front(), towerLocation);
-  }
+  double fieldElevationM = geod().getElevationM();
+  mTowerPosition = SGGeod::fromDegM(lon, lat, fieldElevationM + elevM);
 }
 
 bool FGAirport::validateILSData()
