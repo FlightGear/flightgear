@@ -52,6 +52,7 @@
 #include <Navaids/waypoint.hxx>
 #include <ATC/CommStation.hxx>
 #include <Navaids/NavDataCache.hxx>
+#include <Navaids/navrecord.hxx>
 
 using std::vector;
 using std::pair;
@@ -79,6 +80,7 @@ FGAirport::FGAirport( PositionedID aGuid,
     mHelipadsLoaded(false),
     mTaxiwaysLoaded(false),
     mProceduresLoaded(false),
+    mThresholdDataLoaded(false),
     mILSDataLoaded(false)
 {
 }
@@ -527,8 +529,6 @@ void FGAirport::loadHelipads() const
     return; // already loaded, great
   }
 
-  loadSceneryDefinitions();
-
   mHelipadsLoaded = true;
   mHelipads = itemsOfType(FGPositioned::HELIPAD);
 }
@@ -562,6 +562,12 @@ void FGAirport::loadProcedures() const
 
 void FGAirport::loadSceneryDefinitions() const
 {
+  if (mThresholdDataLoaded) {
+    return;
+  }
+  
+  mThresholdDataLoaded = true;
+  
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "threshold", path)) {
     return; // no XML threshold data
@@ -685,49 +691,33 @@ void FGAirport::readTowerData(SGPropertyNode* aRoot)
   mTowerPosition = SGGeod::fromDegM(lon, lat, fieldElevationM + elevM);
 }
 
-bool FGAirport::validateILSData()
+void FGAirport::validateILSData()
 {
   if (mILSDataLoaded) {
-    return false;
+    return;
   }
   
+  // to avoid re-entrancy on this code-path, ensure we set loaded
+  // immediately.
   mILSDataLoaded = true;
-  NavDataCache* cache = NavDataCache::instance();
-    if (cache->isReadOnly()) {
-        return false;
-    }
     
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "ils", path)) {
-    return false; // no XML tower data
+    return; // no XML tower data
   }
   
-  if (!cache->isCachedFileModified(path)) {
-    // cached values are correct, we're all done
-    return false;
+  try {
+      SGPropertyNode_ptr rootNode = new SGPropertyNode;
+      readProperties(path.str(), rootNode);
+      readILSData(rootNode);
+  } catch (sg_exception& e){
+      SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading ils XML failed:" << e.getFormattedMessage());
   }
-  
-    try {
-        SGPropertyNode_ptr rootNode = new SGPropertyNode;
-        readProperties(path.str(), rootNode);
-
-        flightgear::NavDataCache::Transaction txn(cache);
-        readILSData(rootNode);
-        cache->stampCacheFile(path);
-        txn.commit();
-// we loaded data, tell the caller it might need to reload things
-        return true;
-    } catch (sg_exception& e){
-        SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading ils XML failed:" << e.getFormattedMessage());
-    }
-    
-    return false;
 }
 
 void FGAirport::readILSData(SGPropertyNode* aRoot)
-{
+{  
   NavDataCache* cache = NavDataCache::instance();
-  
   // find the entry matching the runway
   SGPropertyNode* runwayNode, *ilsNode;
   for (int i=0; (runwayNode = aRoot->getChild("runway", i)) != NULL; ++i) {
@@ -739,7 +729,7 @@ void FGAirport::readILSData(SGPropertyNode* aRoot)
                                         ilsNode->getStringValue("nav-id"));
       if (ils == 0) {
         SG_LOG(SG_GENERAL, SG_INFO, "reading ILS data for " << ident() <<
-               ", couldn;t find runway/navaid for:" <<
+               ", couldn't find runway/navaid for:" <<
                ilsNode->getStringValue("rwy") << "/" <<
                ilsNode->getStringValue("nav-id"));
         continue;
@@ -750,7 +740,9 @@ void FGAirport::readILSData(SGPropertyNode* aRoot)
         lat = ilsNode->getDoubleValue("lat"),
         elevM = ilsNode->getDoubleValue("elev-m");
  
-      cache->updateILS(ils, SGGeod::fromDegM(lon, lat, elevM), hdgDeg);
+      FGNavRecordRef nav(FGPositioned::loadById<FGNavRecord>(ils));
+      assert(nav.valid());
+      nav->updateFromXML(SGGeod::fromDegM(lon, lat, elevM), hdgDeg);
     } // of ILS iteration
   } // of runway iteration
 }

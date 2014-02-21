@@ -44,13 +44,6 @@ bool loadCarrierNav(const SGPath& path);
   
 bool loadTacan(const SGPath& path, FGTACANList *channellist);
 
-/**
- * Return the property node corresponding to the runway ILS installation,
- * from the Airports/I/C/A/ICAO.ils.xml file (loading it if necessary)
- * returns NULL is no ILS data is defined for the runway.
- */
-SGPropertyNode* ilsDataForRunwayAndNavaid(FGRunway* aRunway, const std::string& aNavIdent);
-
 } // of namespace flightgear
   
 #endif // _FG_NAVDB_HXX

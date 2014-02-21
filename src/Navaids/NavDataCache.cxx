@@ -485,7 +485,6 @@ public:
     insertAirport = prepare("INSERT INTO airport (rowid, has_metar) VALUES (?, ?)");
     insertNavaid = prepare("INSERT INTO navaid (rowid, freq, range_nm, multiuse, runway, colocated)"
                            " VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
-    updateILS = prepare("UPDATE navaid SET multiuse=?2 WHERE rowid=?1");
     
     insertCommStation = prepare("INSERT INTO comm (rowid, freq_khz, range_nm)"
                                 " VALUES (?, ?, ?)");
@@ -624,7 +623,7 @@ public:
   }
 
   
-  FGPositioned* loadById(sqlite_int64 rowId);
+  FGPositioned* loadById(sqlite_int64 rowId, sqlite3_int64& aptId);
   
   FGAirport* loadAirport(sqlite_int64 rowId,
                          FGPositioned::Type ty,
@@ -898,7 +897,7 @@ public:
   sqlite3_stmt_ptr insertPositionedQuery, insertAirport, insertTower, insertRunway,
   insertCommStation, insertNavaid;
   sqlite3_stmt_ptr setAirportMetar, setRunwayReciprocal, setRunwayILS, setNavaidColocated,
-    setAirportPos, updateILS;
+    setAirportPos;
   sqlite3_stmt_ptr removePOIQuery;
   
   sqlite3_stmt_ptr findClosestWithIdent;
@@ -942,7 +941,8 @@ public:
 
   //////////////////////////////////////////////////////////////////////
   
-FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
+FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
+                                                          sqlite3_int64& aptId)
 {
   
   sqlite3_bind_int64(loadPositioned, 1, rowid);
@@ -954,7 +954,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
   PositionedID prowid = static_cast<PositionedID>(rowid);
   string ident = (char*) sqlite3_column_text(loadPositioned, 2);
   string name = (char*) sqlite3_column_text(loadPositioned, 3);
-  sqlite3_int64 aptId = sqlite3_column_int64(loadPositioned, 4);
+  aptId = sqlite3_column_int64(loadPositioned, 4);
   double lon = sqlite3_column_double(loadPositioned, 5);
   double lat = sqlite3_column_double(loadPositioned, 6);
   double elev = sqlite3_column_double(loadPositioned, 7);
@@ -987,18 +987,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid)
     case FGPositioned::DME:
     case FGPositioned::TACAN:
     case FGPositioned::MOBILE_TACAN:
-    {
-      if (aptId > 0) {
-        FGAirport* apt = FGPositioned::loadById<FGAirport>(aptId);
-        if (apt->validateILSData()) {
-          // queried data above is probably invalid, force us to go around again
-          // (the next time through, validateILSData will return false)
-          return outer->loadById(rowid);
-        }
-      }
-      
       return loadNav(rowid, ty, ident, name, pos);
-    }
       
     case FGPositioned::FIX:
       return new FGFix(rowid, ident, pos);
@@ -1456,9 +1445,17 @@ FGPositionedRef NavDataCache::loadById(PositionedID rowid)
     return it->second; // cache it
   }
   
-  FGPositioned* pos = d->loadById(rowid);
+  PositionedID aptId;
+  FGPositioned* pos = d->loadById(rowid, aptId);
   d->cache.insert(it, PositionedCache::value_type(rowid, pos));
-  d->cacheMisses++;  
+  d->cacheMisses++;
+
+  // when we loaded an ILS, we must apply per-airport changes
+  if ((pos->type() == FGPositioned::ILS) && (aptId > 0)) {
+    FGAirport* apt = FGPositioned::loadById<FGAirport>(aptId);
+    apt->validateILSData();
+  }
+  
   return pos;
 }
 
@@ -1599,14 +1596,6 @@ void NavDataCache::setNavaidColocated(PositionedID navaid, PositionedID colocate
     FGNavRecord* rec = (FGNavRecord*) d->cache[navaid].get();
     rec->setColocatedDME(colocatedDME);
   }
-}
-
-void NavDataCache::updateILS(PositionedID ils, const SGGeod& newPos, double aHdg)
-{
-  sqlite3_bind_int64(d->updateILS, 1, ils);
-  sqlite3_bind_double(d->updateILS, 2, aHdg);
-  d->execUpdate(d->updateILS);
-  updatePosition(ils, newPos);
 }
   
 PositionedID NavDataCache::insertCommStation(FGPositioned::Type ty,

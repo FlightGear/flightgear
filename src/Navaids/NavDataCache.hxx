@@ -105,8 +105,6 @@ public:
   PositionedID insertNavaid(FGPositioned::Type ty, const std::string& ident,
                             const std::string& name, const SGGeod& pos, int freq, int range, double multiuse,
                             PositionedID apt, PositionedID runway);
-  void updateILS(PositionedID ils, const SGGeod& newPos, double aHdg);
-
 
   // Assign colocated DME to a navaid
   void setNavaidColocated(PositionedID navaid, PositionedID colocatedDME);

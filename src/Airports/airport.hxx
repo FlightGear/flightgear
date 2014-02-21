@@ -70,10 +70,8 @@ class FGAirport : public FGPositioned
 
     /**
      * reload the ILS data from XML if required.
-     * @result true if the data was refreshed, false if no data was loaded
-     * or previously cached data is still correct.
      */
-    bool validateILSData();
+    void validateILSData();
 
     SGGeod getTowerLocation() const;
 
@@ -322,6 +320,8 @@ private:
     mutable bool mHelipadsLoaded;
     mutable bool mTaxiwaysLoaded;
     mutable bool mProceduresLoaded;
+  
+    mutable bool mThresholdDataLoaded;
     bool mILSDataLoaded;
 
     mutable std::vector<FGRunwayRef> mRunways;
