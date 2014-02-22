@@ -224,6 +224,8 @@ public:
     inline const string_list &get_fg_scenery () const { return fg_scenery; }
     void append_fg_scenery (const std::string &scenery);
 
+    void clear_fg_scenery();
+  
     const string_list& get_aircraft_paths() const { return fg_aircraft_dirs; }
     void append_aircraft_path(const std::string& path);
     void append_aircraft_paths(const std::string& path);

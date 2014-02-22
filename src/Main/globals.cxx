@@ -343,7 +343,6 @@ SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
 
 void FGGlobals::append_fg_scenery (const std::string &paths)
 {
-//    fg_scenery.clear();
     SGPropertyNode* sim = fgGetNode("/sim", true);
 
   // find first unused fg-scenery property in /sim
@@ -394,6 +393,11 @@ void FGGlobals::append_fg_scenery (const std::string &paths)
         n->setStringValue(abspath.str());
         n->setAttribute(SGPropertyNode::WRITE, false);
     } // of path list iteration
+}
+
+void FGGlobals::clear_fg_scenery()
+{
+  fg_scenery.clear();
 }
 
 void FGGlobals::append_aircraft_path(const std::string& path)
