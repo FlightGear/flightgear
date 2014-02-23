@@ -401,7 +401,10 @@ FGRenderer::FGRenderer() :
     _root->setName("fakeRoot");
 
     _updateVisitor = new SGUpdateVisitor;
-    _root = new osg::Group;
+  
+  // when Rembrandt is enabled, we use this group to access the whole
+  // scene. Since the only child is the _viewerSceneRoot, we could
+  // simply copy the reference, we don't need the additional group.
     _deferredRealRoot = new osg::Group;
     
    _numCascades = 4;
@@ -1389,6 +1392,46 @@ CameraInfo* FGRenderer::buildCameraFromRenderingPipeline(FGRenderingPipeline* rp
     return info;
 }
 
+void FGRenderer::setupRoot()
+{
+    osg::StateSet* stateSet = _root->getOrCreateStateSet();
+    
+    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    
+    stateSet->setAttribute(new osg::Depth(osg::Depth::LESS));
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+    
+    stateSet->setAttribute(new osg::BlendFunc);
+    stateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
+    
+    stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
+    
+    // this will be set below
+    stateSet->setMode(GL_NORMALIZE, osg::StateAttribute::OFF);
+    
+    osg::Material* material = new osg::Material;
+    stateSet->setAttribute(material);
+    
+    stateSet->setTextureAttribute(0, new osg::TexEnv);
+    stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
+    
+    osg::Hint* hint = new osg::Hint(GL_FOG_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/fog"));
+    stateSet->setAttribute(hint);
+    hint = new osg::Hint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/polygon-smooth"));
+    stateSet->setAttribute(hint);
+    hint = new osg::Hint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/line-smooth"));
+    stateSet->setAttribute(hint);
+    hint = new osg::Hint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/point-smooth"));
+    stateSet->setAttribute(hint);
+    hint = new osg::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/perspective-correction"));
+    stateSet->setAttribute(hint);
+}
+                                    
 void
 FGRenderer::setupView( void )
 {
@@ -1401,6 +1444,8 @@ FGRenderer::setupView( void )
     osg::PolygonOffset::setUnitsMultiplier(1);
     osg::PolygonOffset::setFactorMultiplier(1);
 
+    setupRoot();
+  
 // build the sky    
     // The sun and moon diameters are scaled down numbers of the
     // actual diameters. This was needed to fit both the sun and the
@@ -1419,55 +1464,7 @@ FGRenderer::setupView( void )
     viewer->getCamera()
         ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     
-    osg::StateSet* stateSet = _root->getOrCreateStateSet();
-
-    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-    
-    stateSet->setAttribute(new osg::Depth(osg::Depth::LESS));
-    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-
-    stateSet->setAttribute(new osg::AlphaFunc(osg::AlphaFunc::GREATER, 0.01));
-    stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::OFF);
-    stateSet->setAttribute(new osg::BlendFunc);
-    stateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
-
-    stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
-    
-    // this will be set below
-    stateSet->setMode(GL_NORMALIZE, osg::StateAttribute::OFF);
-
-    osg::Material* material = new osg::Material;
-    stateSet->setAttribute(material);
-    
-    stateSet->setTextureAttribute(0, new osg::TexEnv);
-    stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
-
-    osg::Hint* hint = new osg::Hint(GL_FOG_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/fog"));
-    stateSet->setAttribute(hint);
-    hint = new osg::Hint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/polygon-smooth"));
-    stateSet->setAttribute(hint);
-    hint = new osg::Hint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/line-smooth"));
-    stateSet->setAttribute(hint);
-    hint = new osg::Hint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/point-smooth"));
-    stateSet->setAttribute(hint);
-    hint = new osg::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_DONT_CARE);
-    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/perspective-correction"));
-    stateSet->setAttribute(hint);
-
-    osg::Group* sceneGroup = new osg::Group;
-    sceneGroup->setName("rendererScene");
-    sceneGroup->addChild(globals->get_scenery()->get_scene_graph());
-    sceneGroup->setNodeMask(~simgear::BACKGROUND_BIT);
-
-    //sceneGroup->addChild(thesky->getCloudRoot());
-
-    stateSet = sceneGroup->getOrCreateStateSet();
-    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
-
+  
     // need to update the light on every frame
     // OSG LightSource objects are rather confusing. OSG only supports
     // the 10 lights specified by OpenGL itself; if more than one
@@ -1478,7 +1475,7 @@ FGRenderer::setupView( void )
     // has the corresponding OpenGL light enabled: a LightSource will
     // affect geometry anywhere in the scene graph that has its light
     // number enabled in a state set. 
-    LightSource* lightSource = new LightSource;
+    osg::ref_ptr<LightSource> lightSource = new LightSource;
     lightSource->setName("FGLightSource");
     lightSource->getLight()->setDataVariance(Object::DYNAMIC);
     // relative because of CameraView being just a clever transform node
@@ -1488,7 +1485,7 @@ FGRenderer::setupView( void )
     _viewerSceneRoot->addChild(lightSource);
     
     // we need a white diffuse light for the phase of the moon
-    osg::LightSource* sunLight = new osg::LightSource;
+    osg::ref_ptr<LightSource> sunLight = new osg::LightSource;
     sunLight->setName("sunLightSource");
     sunLight->getLight()->setDataVariance(Object::DYNAMIC);
     sunLight->getLight()->setLightNum(1);
@@ -1498,20 +1495,22 @@ FGRenderer::setupView( void )
     
     // Hang a StateSet above the sky subgraph in order to turn off
     // light 0
-    Group* skyGroup = new Group;
-    skyGroup->setName("rendererSkyParent");
+    Group* skyGroup = _sky->getPreRoot();
     StateSet* skySS = skyGroup->getOrCreateStateSet();
     skySS->setMode(GL_LIGHT0, StateAttribute::OFF);
-    skyGroup->addChild(_sky->getPreRoot());
     sunLight->addChild(skyGroup);
     
-    _root->addChild(sceneGroup);
-    if ( _classicalRenderer )
+    if ( _classicalRenderer ) {
         _root->addChild(sunLight);
-    
-    // Clouds are added to the scene graph later
-    stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
-    stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
+    }
+  
+    osg::Group* sceneGroup = globals->get_scenery()->get_scene_graph();
+    sceneGroup->setName("rendererScene");
+    sceneGroup->setNodeMask(~simgear::BACKGROUND_BIT);
+    _root->addChild(sceneGroup);
+  
+    // setup state-set for main scenery (including models and aircraft)
+    osg::StateSet* stateSet = sceneGroup->getOrCreateStateSet();
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::ON);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
 
@@ -1553,10 +1552,11 @@ FGRenderer::setupView( void )
     // The clouds are attached directly to the scene graph root
     // because, in theory, they don't want the same default state set
     // as the rest of the scene. This may not be true in practice.
-	if ( _classicalRenderer ) {
-		_viewerSceneRoot->addChild(_sky->getCloudRoot());
-		_viewerSceneRoot->addChild(FGCreateRedoutNode());
-	}
+    if ( _classicalRenderer ) {
+      _viewerSceneRoot->addChild(_sky->getCloudRoot());
+      _viewerSceneRoot->addChild(FGCreateRedoutNode());
+    }
+  
     // Attach empty program to the scene root so that shader programs
     // don't leak into state sets (effects) that shouldn't have one.
     stateSet = _viewerSceneRoot->getOrCreateStateSet();

@@ -65,13 +65,10 @@ WindowBuilder::makeDefaultTraits(bool stencil)
         traits->screenNum = 0;
 
     int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
-    bool alpha = fgGetBool("/sim/rendering/clouds3d-enable");
     int cbits = (bpp <= 16) ?  5 :  8;
     int zbits = (bpp <= 16) ? 16 : 24;
     traits->red = traits->green = traits->blue = cbits;
     traits->depth = zbits;
-    if (alpha)
-        traits->alpha = 8;
 
     if (stencil)
         traits->stencil = 8;

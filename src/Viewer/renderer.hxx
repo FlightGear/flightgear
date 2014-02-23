@@ -184,6 +184,8 @@ protected:
     void addChangeListener(SGPropertyChangeListener* l, const char* path);
     
     void updateSky();
+  
+    void setupRoot();
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);
