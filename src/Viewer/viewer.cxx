@@ -659,10 +659,9 @@ FGViewer::update (double dt)
     }
   }
   recalc();
-  if( fgGetBool( "/sim/rendering/draw-otw", true ) ) {
-    _cameraGroup->update(toOsg(_absolute_view_pos), toOsg(mViewOrientation));
-    _cameraGroup->setCameraParameters(get_v_fov(), get_aspect_ratio());
-  }
+  
+  _cameraGroup->update(toOsg(_absolute_view_pos), toOsg(mViewOrientation));
+  _cameraGroup->setCameraParameters(get_v_fov(), get_aspect_ratio());
 }
 
 double FGViewer::get_aspect_ratio() const
