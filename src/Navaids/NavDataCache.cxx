@@ -536,6 +536,11 @@ public:
     sqlite3_bind_int(searchAirports, 2, FGPositioned::AIRPORT);
     sqlite3_bind_int(searchAirports, 3, FGPositioned::SEAPORT);
     
+    getAllAirports = prepare("SELECT ident, name FROM positioned WHERE type>=?1 AND type <=?2");
+    sqlite3_bind_int(getAllAirports, 1, FGPositioned::AIRPORT);
+    sqlite3_bind_int(getAllAirports, 2, FGPositioned::SEAPORT);
+
+    
     getAirportItemByIdent = prepare("SELECT rowid FROM positioned WHERE airport=?1 AND ident=?2 AND type=?3");
     
     findAirportRunway = prepare("SELECT airport, rowid FROM positioned WHERE ident=?2 AND type=?3 AND airport="
@@ -897,7 +902,7 @@ public:
   sqlite3_stmt_ptr getOctreeChildren, insertOctree, updateOctreeChildren,
     getOctreeLeafChildren;
 
-  sqlite3_stmt_ptr searchAirports;
+  sqlite3_stmt_ptr searchAirports, getAllAirports;
   sqlite3_stmt_ptr findCommByFreq, findNavsByFreq,
   findNavsByFreqNoPos, findNavaidForRunway;
   sqlite3_stmt_ptr getAirportItems, getAirportItemByIdent;
@@ -1756,13 +1761,19 @@ NavDataCache::getOctreeLeafChildren(int64_t octreeNodeId)
  */
 char** NavDataCache::searchAirportNamesAndIdents(const std::string& aFilter)
 {
-  string s = "%" + aFilter + "%";
-  sqlite_bind_stdstring(d->searchAirports, 1, s);
-  
+  sqlite3_stmt_ptr stmt;
   unsigned int numMatches = 0, numAllocated = 16;
-  char** result = (char**) malloc(sizeof(char*) * numAllocated);
+  if (aFilter.empty()) {
+    stmt = d->getAllAirports;
+    numAllocated = 4096; // start much larger for all airports
+  } else {
+    stmt = d->searchAirports;
+    string s = "%" + aFilter + "%";
+    sqlite_bind_stdstring(stmt, 1, s);
+  }
   
-  while (d->stepSelect(d->searchAirports)) {
+  char** result = (char**) malloc(sizeof(char*) * numAllocated);
+  while (d->stepSelect(stmt)) {
     if ((numMatches + 1) >= numAllocated) {
       numAllocated <<= 1; // double in size!
     // reallocate results array
@@ -1780,18 +1791,18 @@ char** NavDataCache::searchAirportNamesAndIdents(const std::string& aFilter)
     // which gives a grand total of 7 + name-length + icao-length.
     // note the ident can be three letters (non-ICAO local strip), four
     // (default ICAO) or more (extended format ICAO)
-    int nameLength = sqlite3_column_bytes(d->searchAirports, 1);
-    int icaoLength = sqlite3_column_bytes(d->searchAirports, 0);
+    int nameLength = sqlite3_column_bytes(stmt, 1);
+    int icaoLength = sqlite3_column_bytes(stmt, 0);
     char* entry = (char*) malloc(7 + nameLength + icaoLength);
     char* dst = entry;
     *dst++ = ' ';
-    memcpy(dst, sqlite3_column_text(d->searchAirports, 1), nameLength);
+    memcpy(dst, sqlite3_column_text(stmt, 1), nameLength);
     dst += nameLength;
     *dst++ = ' ';
     *dst++ = ' ';
     *dst++ = ' ';
     *dst++ = '(';
-    memcpy(dst, sqlite3_column_text(d->searchAirports, 0), icaoLength);
+    memcpy(dst, sqlite3_column_text(stmt, 0), icaoLength);
     dst += icaoLength;
     *dst++ = ')';
     *dst++ = 0;
@@ -1800,7 +1811,7 @@ char** NavDataCache::searchAirportNamesAndIdents(const std::string& aFilter)
   }
   
   result[numMatches] = NULL; // end of list marker
-  d->reset(d->searchAirports);
+  d->reset(stmt);
   return result;
 }
   
