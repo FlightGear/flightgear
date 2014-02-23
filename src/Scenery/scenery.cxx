@@ -220,22 +220,83 @@ private:
     bool _haveHit;
 };
 
+class FGScenery::ScenerySwitchListener : public SGPropertyChangeListener
+{
+public:
+  ScenerySwitchListener(FGScenery* scenery) :
+    _scenery(scenery)
+  {
+    SGPropertyNode_ptr maskNode = fgGetNode("/sim/rendering/draw-mask", true);
+    maskNode->getChild("terrain", 0, true)->addChangeListener(this, true);
+    maskNode->getChild("models", 0, true)->addChangeListener(this, true);
+    maskNode->getChild("aircraft", 0, true)->addChangeListener(this, true);
+    maskNode->getChild("clouds", 0, true)->addChangeListener(this, true);
+    
+    // legacy compatability option
+    fgGetNode("/sim/rendering/draw-otw")->addChangeListener(this);
+    
+    // badly named property, this is what is set by --enable/disable-clouds
+    fgGetNode("/environment/clouds/status")->addChangeListener(this);
+  }
+  
+  ~ScenerySwitchListener()
+  {
+    SGPropertyNode_ptr maskNode = fgGetNode("/sim/rendering/draw-mask");
+    for (int i=0; i < maskNode->nChildren(); ++i) {
+      maskNode->getChild(i)->removeChangeListener(this);
+    }
+    
+    fgGetNode("/sim/rendering/draw-otw")->removeChangeListener(this);
+    fgGetNode("/environment/clouds/status")->removeChangeListener(this);
+  }
+  
+  virtual void valueChanged (SGPropertyNode * node)
+  {
+    bool b = node->getBoolValue();
+    std::string name(node->getNameString());
+  
+    if (name == "terrain") {
+      _scenery->scene_graph->setChildValue(_scenery->terrain_branch, b);
+    } else if (name == "models") {
+      _scenery->scene_graph->setChildValue(_scenery->models_branch, b);
+    } else if (name == "aircraft") {
+      _scenery->scene_graph->setChildValue(_scenery->aircraft_branch, b);
+    } else if (name == "clouds") {
+      // clouds live elsewhere in the scene, bounce this to the correct
+      // place in FGRenderer
+    } else if (name == "draw-otw") {
+      // legacy setting but let's keep it working
+      fgGetNode("/sim/rendering/draw-mask")->setBoolValue("terrain", b);
+      fgGetNode("/sim/rendering/draw-mask")->setBoolValue("models", b);
+    } else if (name == "status") {
+      fgGetNode("/sim/rendering/draw-mask")->setBoolValue("clouds", b);
+    }
+  }
+private:
+  FGScenery* _scenery;
+};
+
+////////////////////////////////////////////////////////////////////////////
+
 // Scenery Management system
-FGScenery::FGScenery()
+FGScenery::FGScenery() :
+    _listener(NULL)
 {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing scenery subsystem" );
     // keep reference to pager singleton, so it cannot be destroyed while FGScenery lives
     _pager = FGScenery::getPagerSingleton();
 }
 
-FGScenery::~FGScenery() {
+FGScenery::~FGScenery()
+{
+    delete _listener;
 }
 
 
 // Initialize the Scenery Management system
 void FGScenery::init() {
     // Scene graph root
-    scene_graph = new osg::Group;
+    scene_graph = new osg::Switch;
     scene_graph->setName( "FGScenery" );
 
     // Terrain branch
@@ -267,6 +328,8 @@ void FGScenery::init() {
     
     // Initials values needed by the draw-time object loader
     sgUserDataInit( globals->get_props() );
+  
+    _listener = new ScenerySwitchListener(this);
 }
 
 void FGScenery::shutdown()
@@ -319,7 +382,7 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
 
   FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  get_scene_graph()->accept(intersectVisitor);
+  terrain_branch->accept(intersectVisitor);
 
   if (!intersectVisitor.getHaveHit())
       return false;
@@ -348,7 +411,7 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
 
   FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  get_scene_graph()->accept(intersectVisitor);
+  terrain_branch->accept(intersectVisitor);
 
   if (!intersectVisitor.getHaveHit())
       return false;
@@ -371,7 +434,7 @@ bool FGScenery::scenery_available(const SGGeod& position, double range_m)
     // currently the PagedLODs will not be loaded by the DatabasePager
     // while the splashscreen is there, so CheckSceneryVisitor force-loads
     // missing objects in the main thread
-    get_scene_graph()->accept(csnv);
+    terrain_branch->accept(csnv);
     if(!csnv.isLoaded())
         return false;
     return true;

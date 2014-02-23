@@ -30,7 +30,7 @@
 #endif                                   
 
 #include <osg/ref_ptr>
-#include <osg/Group>
+#include <osg/Switch>
 
 #include <simgear/compiler.h>
 #include <simgear/math/SGMath.hxx>
@@ -43,17 +43,21 @@ class BVHMaterial;
 }
 
 // Define a structure containing global scenery parameters
-class FGScenery : public SGSubsystem {
+class FGScenery : public SGSubsystem
+{
+    class ScenerySwitchListener;
+    friend class ScenerySwitchListener;
+  
 
     // scene graph
-    osg::ref_ptr<osg::Group> scene_graph;
+    osg::ref_ptr<osg::Switch> scene_graph;
     osg::ref_ptr<osg::Group> terrain_branch;
     osg::ref_ptr<osg::Group> models_branch;
     osg::ref_ptr<osg::Group> aircraft_branch;
     osg::ref_ptr<osg::Group> interior_branch;
     
     osg::ref_ptr<flightgear::SceneryPager> _pager;
-
+    ScenerySwitchListener* _listener;
 public:
 
     FGScenery();
