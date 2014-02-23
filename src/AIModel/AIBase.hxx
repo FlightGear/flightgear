@@ -21,8 +21,7 @@
 #define _FG_AIBASE_HXX
 
 #include <string>
-
-#include <osg/LOD>
+#include <osg/ref_ptr>
 
 #include <simgear/constants.h>
 #include <simgear/scene/model/placement.hxx>
@@ -35,6 +34,8 @@
 #include <simgear/math/sg_geodesy.hxx>
 
 #include <Main/fg_props.hxx>
+
+namespace osg { class PagedLOD; }
 
 namespace simgear {
 class BVHMaterial;
@@ -59,7 +60,7 @@ public:
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
     virtual bool init(bool search_in_AI_path=false);
-    virtual void initModel(osg::Node *node);
+    virtual void initModel();
     virtual void update(double dt);
     virtual void bind();
     virtual void unbind();
@@ -233,7 +234,7 @@ private:
     int _refID;
     object_type _otype;
     bool _initialized;
-    osg::ref_ptr<osg::LOD> _model; //The 3D model LOD object
+    osg::ref_ptr<osg::PagedLOD> _model;
 
     osg::ref_ptr<FGAIModelData> _modeldata;
 

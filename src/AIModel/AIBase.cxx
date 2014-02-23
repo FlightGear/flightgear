@@ -207,7 +207,7 @@ FGAIBase::removeModel()
     if (pSceneryManager)
     {
         osg::ref_ptr<osg::Object> temp = _model.get();
-        pSceneryManager->get_scene_graph()->removeChild(aip.getSceneGraph());
+        pSceneryManager->get_models_branch()->removeChild(aip.getSceneGraph());
         // withdraw from SGModelPlacement and drop own reference (unref)
         aip.clear();
         _modeldata = 0;
@@ -365,26 +365,25 @@ bool FGAIBase::init(bool search_in_AI_path)
         _installed = true;
 
     _modeldata = new FGAIModelData(props);
-    osg::Node * mdl = SGModelLib::loadDeferredModel(f, props, _modeldata);
+    _model= SGModelLib::loadPagedModel(f, props, _modeldata);
 
-    _model = new osg::LOD;
     _model->setName("AI-model range animation node");
 
-    _model->addChild( mdl, 0, FLT_MAX );
-    _model->setCenterMode(osg::LOD::USE_BOUNDING_SPHERE_CENTER);
-    _model->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
+  //  _model->setCenterMode(osg::LOD::USE_BOUNDING_SPHERE_CENTER);
+  //  _model->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
+  
 //    We really need low-resolution versions of AI/MP aircraft.
 //    Or at least dummy "stubs" with some default silhouette.
 //        _model->addChild( SGModelLib::loadPagedModel(fgGetString("/sim/multiplay/default-model", default_model),
 //                                                    props, new FGNasalModelData(props)), FLT_MAX, FLT_MAX);
     updateLOD();
-
-    initModel(mdl);
+    initModel();
+  
     if (_model.valid() && _initialized == false) {
         aip.init( _model.get() );
         aip.setVisible(true);
         invisible = false;
-        globals->get_scenery()->get_scene_graph()->addChild(aip.getSceneGraph());
+        globals->get_scenery()->get_models_branch()->addChild(aip.getSceneGraph());
         _initialized = true;
 
         SG_LOG(SG_AI, SG_DEBUG, "AIBase: Loaded model " << model_path);
@@ -399,7 +398,7 @@ bool FGAIBase::init(bool search_in_AI_path)
     return true;
 }
 
-void FGAIBase::initModel(osg::Node *node)
+void FGAIBase::initModel()
 {
     if (_model.valid()) { 
 
