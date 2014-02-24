@@ -60,9 +60,6 @@ bool DigitalComponent::configure( SGPropertyNode& cfg_node,
                                   const std::string& cfg_name,
                                   SGPropertyNode& prop_root )
 {
-  if( Component::configure(cfg_node, cfg_name, prop_root) )
-    return true;
-
   if (cfg_name == "input") {
     SGPropertyNode_ptr nameNode = cfg_node.getNode("name");
     string name;
@@ -108,5 +105,5 @@ bool DigitalComponent::configure( SGPropertyNode& cfg_node,
     return true;
   }
   
-  return false;
+  return Component::configure(cfg_node, cfg_name, prop_root);
 }

@@ -37,9 +37,6 @@ bool PISimpleController::configure( SGPropertyNode& cfg_node,
                                     const std::string& cfg_name,
                                     SGPropertyNode& prop_root )
 {
-  if( AnalogComponent::configure(cfg_node, cfg_name, prop_root) )
-    return true;
-
   if( cfg_name == "config" ) {
     Component::configure(prop_root, cfg_node);
     return true;
@@ -55,7 +52,7 @@ bool PISimpleController::configure( SGPropertyNode& cfg_node,
     return true;
   }
 
-  return false;
+  return AnalogComponent::configure(cfg_node, cfg_name, prop_root);
 }
 
 void PISimpleController::update( bool firstTime, double dt )

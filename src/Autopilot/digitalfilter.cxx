@@ -26,37 +26,31 @@
 //
 
 #include "digitalfilter.hxx"
-#include "functor.hxx"
 #include <deque>
 
-using std::map;
-using std::string;
-using std::endl;
-using std::cout;
-
-namespace FGXMLAutopilot {
+namespace FGXMLAutopilot
+{
 
 /**
  *
  *
  */
-class DigitalFilterImplementation : public SGReferenced {
-protected:
-  virtual bool configure( SGPropertyNode& cfg_node,
-                          const std::string& cfg_name,
-                          SGPropertyNode& prop_root ) = 0;
-public:
-  virtual ~DigitalFilterImplementation() {}
-  DigitalFilterImplementation();
-  virtual void   initialize( double initvalue ) {}
-  virtual double compute( double dt, double input ) = 0;
-  bool configure( SGPropertyNode& cfg,
-                  SGPropertyNode& prop_root );
+class DigitalFilterImplementation:
+  public SGReferenced
+{
+  public:
+    virtual ~DigitalFilterImplementation() {}
+    DigitalFilterImplementation();
+    virtual void   initialize( double initvalue ) {}
+    virtual double compute( double dt, double input ) = 0;
+    virtual bool configure( SGPropertyNode& cfg_node,
+                            const std::string& cfg_name,
+                            SGPropertyNode& prop_root ) = 0;
 
-  void setDigitalFilter( DigitalFilter * digitalFilter ) { _digitalFilter = digitalFilter; }
+    void setDigitalFilter( DigitalFilter * digitalFilter ) { _digitalFilter = digitalFilter; }
 
-protected:
-  DigitalFilter * _digitalFilter;
+  protected:
+    DigitalFilter * _digitalFilter;
 };
 
 /* --------------------------------------------------------------------------------- */
@@ -194,31 +188,14 @@ public:
 
 using namespace FGXMLAutopilot;
 
-/* --------------------------------------------------------------------------------- */
-/* --------------------------------------------------------------------------------- */
+//------------------------------------------------------------------------------
 DigitalFilterImplementation::DigitalFilterImplementation() :
   _digitalFilter(NULL)
 {
+
 }
 
 //------------------------------------------------------------------------------
-bool DigitalFilterImplementation::configure( SGPropertyNode& cfg,
-                                             SGPropertyNode& prop_root )
-{
-  for (int i = 0; i < cfg.nChildren(); ++i )
-  {
-    SGPropertyNode_ptr child = cfg.getChild(i);
-
-    if( configure(*child, child->getNameString(), prop_root) )
-      continue;
-  }
-
-  return true;
-}
-
-/* --------------------------------------------------------------------------------- */
-/* --------------------------------------------------------------------------------- */
-
 double GainFilterImplementation::compute(  double dt, double input )
 {
   return _gainInput.get_value() * input;
@@ -412,6 +389,7 @@ bool RateLimitFilterImplementation::configure( SGPropertyNode& cfg_node,
                                                const std::string& cfg_name,
                                                SGPropertyNode& prop_root )
 {
+  std::cout << "RateLimitFilterImplementation " << cfg_name << std::endl;
   if (cfg_name == "max-rate-of-change" ) {
     _rateOfChangeMax.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
@@ -476,7 +454,7 @@ bool ExponentialFilterImplementation::configure( SGPropertyNode& cfg_node,
   }
 
   if (cfg_name == "type" ) {
-    string type(cfg_node.getStringValue());
+    std::string type(cfg_node.getStringValue());
     _isSecondOrder = type == "double-exponential";
   }
 
@@ -642,67 +620,96 @@ DigitalFilter::~DigitalFilter()
 {
 }
 
+//------------------------------------------------------------------------------
+template<class DigitalFilterType>
+DigitalFilterImplementation* digitalFilterFactory()
+{
+  return new DigitalFilterType();
+}
 
-static map<string,FunctorBase<DigitalFilterImplementation> *> componentForge;
+typedef std::map<std::string, DigitalFilterImplementation*(*)()>
+DigitalFilterMap;
+static DigitalFilterMap componentForge;
+
+//------------------------------------------------------------------------------
+bool DigitalFilter::configure( SGPropertyNode& prop_root,
+                               SGPropertyNode& cfg )
+{
+  if( componentForge.empty() )
+  {
+    componentForge["gain"               ] = digitalFilterFactory<GainFilterImplementation>;
+    componentForge["exponential"        ] = digitalFilterFactory<ExponentialFilterImplementation>;
+    componentForge["double-exponential" ] = digitalFilterFactory<ExponentialFilterImplementation>;
+    componentForge["moving-average"     ] = digitalFilterFactory<MovingAverageFilterImplementation>;
+    componentForge["noise-spike"        ] = digitalFilterFactory<NoiseSpikeFilterImplementation>;
+    componentForge["rate-limit"         ] = digitalFilterFactory<RateLimitFilterImplementation>;
+    componentForge["reciprocal"         ] = digitalFilterFactory<ReciprocalFilterImplementation>;
+    componentForge["derivative"         ] = digitalFilterFactory<DerivativeFilterImplementation>;
+    componentForge["high-pass"          ] = digitalFilterFactory<HighPassFilterImplementation>;
+    componentForge["lead-lag"           ] = digitalFilterFactory<LeadLagFilterImplementation>;
+    componentForge["integrator"         ] = digitalFilterFactory<IntegratorFilterImplementation>;
+  }
+
+  const std::string type = cfg.getStringValue("type");
+  DigitalFilterMap::iterator component_factory = componentForge.find(type);
+  if( component_factory == componentForge.end() )
+  {
+    SG_LOG(SG_AUTOPILOT, SG_WARN, "unhandled filter type '" << type << "'");
+    return false;
+  }
+
+  _implementation = (*component_factory->second)();
+  _implementation->setDigitalFilter( this );
+
+  for( int i = 0; i < cfg.nChildren(); ++i )
+  {
+    SGPropertyNode_ptr child = cfg.getChild(i);
+    std::string cname(child->getName());
+
+    if(    !_implementation->configure(*child, cname, prop_root)
+        && !configure(*child, cname, prop_root)
+        && cname != "type"
+        && cname != "params" ) // 'params' is usually used to specify parameters
+                               // in PropertList files.
+      SG_LOG
+      (
+        SG_AUTOPILOT,
+        SG_WARN,
+        "DigitalFilter: unknown config node: " << cname
+      );
+  }
+
+  return true;
+}
 
 //------------------------------------------------------------------------------
 bool DigitalFilter::configure( SGPropertyNode& cfg_node,
                                const std::string& cfg_name,
                                SGPropertyNode& prop_root )
 {
-  if( componentForge.empty() ) {
-    componentForge["gain"] = new CreateAndConfigureFunctor<GainFilterImplementation,DigitalFilterImplementation>();
-    componentForge["exponential"] = new CreateAndConfigureFunctor<ExponentialFilterImplementation,DigitalFilterImplementation>();
-    componentForge["double-exponential"] = new CreateAndConfigureFunctor<ExponentialFilterImplementation,DigitalFilterImplementation>();
-    componentForge["moving-average"] = new CreateAndConfigureFunctor<MovingAverageFilterImplementation,DigitalFilterImplementation>();
-    componentForge["noise-spike"] = new CreateAndConfigureFunctor<NoiseSpikeFilterImplementation,DigitalFilterImplementation>();
-    componentForge["rate-limit"] = new CreateAndConfigureFunctor<RateLimitFilterImplementation,DigitalFilterImplementation>();
-    componentForge["reciprocal"] = new CreateAndConfigureFunctor<ReciprocalFilterImplementation,DigitalFilterImplementation>();
-    componentForge["derivative"] = new CreateAndConfigureFunctor<DerivativeFilterImplementation,DigitalFilterImplementation>();
-    componentForge["high-pass"] = new CreateAndConfigureFunctor<HighPassFilterImplementation,DigitalFilterImplementation>();
-    componentForge["lead-lag"] = new CreateAndConfigureFunctor<LeadLagFilterImplementation,DigitalFilterImplementation>();
-    componentForge["integrator"] = new CreateAndConfigureFunctor<IntegratorFilterImplementation,DigitalFilterImplementation>();
-  }
-
-  SG_LOG(SG_AUTOPILOT, SG_BULK, "DigitalFilter::configure(" << cfg_name << ")");
-
-  if( AnalogComponent::configure(cfg_node, cfg_name, prop_root) )
-    return true;
-
-  if (cfg_name == "type" ) {
-    string type( cfg_node.getStringValue() );
-    if( componentForge.count(type) == 0 ) {
-      SG_LOG( SG_AUTOPILOT, SG_BULK, "unhandled filter type <" << type << ">" << endl );
-      return true;
-    }
-    _implementation = (*componentForge[type])(*cfg_node.getParent(), prop_root);
-    _implementation->setDigitalFilter( this );
-    return true;
-  }
-
-  if( cfg_name == "initialize-to" ) {
-    string s( cfg_node.getStringValue() );
-    if( s == "input" ) {
+  if( cfg_name == "initialize-to" )
+  {
+    std::string s( cfg_node.getStringValue() );
+    if( s == "input" )
       _initializeTo = INITIALIZE_INPUT;
-    } else if( s == "output" ) {
+    else if( s == "output" )
       _initializeTo = INITIALIZE_OUTPUT;
-    } else if( s == "none" ) {
+    else if( s == "none" )
       _initializeTo = INITIALIZE_NONE;
-    } else {
-      SG_LOG( SG_AUTOPILOT, SG_WARN, "unhandled initialize-to value '" << s << "' ignored" );
-    }
+    else
+      SG_LOG
+      (
+        SG_AUTOPILOT,
+        SG_WARN, "DigitalFilter: initialize-to (" << s << ") ignored"
+      );
+
     return true;
   }
 
-  SG_LOG
-  (
-    SG_AUTOPILOT,
-    SG_BULK,
-    "DigitalFilter::configure(" << cfg_name << ") [unhandled]"
-  );
-  return false; // not handled by us, let the base class try
+  return AnalogComponent::configure(cfg_node, cfg_name, prop_root);
 }
 
+//------------------------------------------------------------------------------
 void DigitalFilter::update( bool firstTime, double dt)
 {
   if( _implementation == NULL ) return;
@@ -732,7 +739,7 @@ void DigitalFilter::update( bool firstTime, double dt)
   set_output_value( output );
 
   if(_debug) {
-    cout << "input:" << input
-         << "\toutput:" << output << endl;
+    std::cout << "input:" << input
+              << "\toutput:" << output << std::endl;
   }
 }

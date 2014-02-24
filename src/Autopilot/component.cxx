@@ -49,7 +49,9 @@ bool Component::configure( SGPropertyNode& prop_root,
     SGPropertyNode_ptr child = cfg.getChild(i);
     std::string cname(child->getName());
 
-    if( !configure(*child, cname, prop_root) )
+    if(    !configure(*child, cname, prop_root)
+        && cname != "params" ) // 'params' is usually used to specify parameters
+                               // in PropertList files.
       SG_LOG
       (
         SG_AUTOPILOT,
@@ -66,24 +68,20 @@ bool Component::configure( SGPropertyNode& cfg_node,
                            const std::string& cfg_name,
                            SGPropertyNode& prop_root )
 {
-  SG_LOG
-  (
-    SG_AUTOPILOT,
-    SG_BULK,
-    "Component::configure(" << cfg_name << ")"
-  );
-
-  if ( cfg_name == "name" ) {
+  if ( cfg_name == "name" )
+  {
     _name = cfg_node.getStringValue();
     return true;
   } 
 
-  if ( cfg_name == "debug" ) {
+  if ( cfg_name == "debug" )
+  {
     _debug = cfg_node.getBoolValue();
     return true;
   }
 
-  if ( cfg_name == "enable" ) {
+  if ( cfg_name == "enable" )
+  {
     SGPropertyNode_ptr prop;
 
     if( (prop = cfg_node.getChild("condition")) != NULL ) {
@@ -108,17 +106,12 @@ bool Component::configure( SGPropertyNode& cfg_node,
     }
 
     return true;
-  } // enable
+  }
 
-  SG_LOG
-  (
-    SG_AUTOPILOT,
-    SG_BULK,
-    "Component::configure(" << cfg_name << ") [unhandled]"
-  );
   return false;
 }
 
+//------------------------------------------------------------------------------
 bool Component::isPropertyEnabled()
 {
     if( _condition )

@@ -105,8 +105,8 @@ public:
      * @param prop_root Property root for all relative paths
      * @param cfg       Property node containing the configuration
      */
-    bool configure( SGPropertyNode& prop_root,
-                    SGPropertyNode& cfg );
+    virtual bool configure( SGPropertyNode& prop_root,
+                            SGPropertyNode& cfg );
 
     /**
      * @brief getter for the name property

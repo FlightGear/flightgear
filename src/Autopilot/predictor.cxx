@@ -38,11 +38,6 @@ bool Predictor::configure( SGPropertyNode& cfg_node,
                            const std::string& cfg_name,
                            SGPropertyNode& prop_root )
 {
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "Predictor::configure(" << cfg_name << ")");
-
-  if( AnalogComponent::configure(cfg_node, cfg_name, prop_root) )
-    return true;
-
   if( cfg_name == "config" ) {
     Component::configure(prop_root, cfg_node);
     return true;
@@ -58,13 +53,7 @@ bool Predictor::configure( SGPropertyNode& cfg_node,
     return true;
   }
 
-  SG_LOG
-  (
-    SG_AUTOPILOT,
-    SG_BULK,
-    "Predictor::configure(" << cfg_name << ") [unhandled]"
-  );
-  return false;
+  return AnalogComponent::configure(cfg_node, cfg_name, prop_root);
 }
 
 //------------------------------------------------------------------------------

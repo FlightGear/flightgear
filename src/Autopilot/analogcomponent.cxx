@@ -53,16 +53,6 @@ bool AnalogComponent::configure( SGPropertyNode& cfg_node,
                                  const std::string& cfg_name,
                                  SGPropertyNode& prop_root )
 {
-  SG_LOG
-  (
-    SG_AUTOPILOT,
-    SG_BULK,
-    "AnalogComponent::configure(" << cfg_name << ")"
-  );
-
-  if( Component::configure(cfg_node, cfg_name, prop_root) )
-    return true;
-
   if( cfg_name == "feedback-if-disabled" )
   {
     _feedback_if_disabled = cfg_node.getBoolValue();
@@ -126,11 +116,5 @@ bool AnalogComponent::configure( SGPropertyNode& cfg_node,
     return true;
   }
 
-  SG_LOG
-  (
-    SG_AUTOPILOT,
-    SG_BULK,
-    "AnalogComponent::configure(" << cfg_name << ") [unhandled]"
-  );
-  return false;
+  return Component::configure(cfg_node, cfg_name, prop_root);
 }
