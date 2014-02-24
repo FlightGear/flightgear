@@ -52,6 +52,7 @@ namespace Environment {
 class MetarDataHandler {
 public:
     virtual void handleMetarData( const std::string & data ) = 0;
+    virtual void handleMetarFailure() = 0;
 };
 
 class MetarRequester {
@@ -73,7 +74,8 @@ public:
 
     // implementation of MetarDataHandler
     virtual void handleMetarData( const std::string & data );
-
+    virtual void handleMetarFailure();
+  
     static const unsigned MAX_POLLING_INTERVAL_SECONDS = 10;
     static const unsigned DEFAULT_TIME_TO_LIVE_SECONDS = 900;
 
@@ -82,6 +84,7 @@ private:
     double _pollingTimer;
     MetarRequester * _metarRequester;
     int _maxAge;
+    bool _failure;
 };
 
 typedef SGSharedPtr<LiveMetarProperties> LiveMetarProperties_ptr;
@@ -91,9 +94,11 @@ LiveMetarProperties::LiveMetarProperties( SGPropertyNode_ptr rootNode, MetarRequ
     _timeToLive(0.0),
     _pollingTimer(0.0),
     _metarRequester(metarRequester),
-    _maxAge(maxAge)
+    _maxAge(maxAge),
+    _failure(false)
 {
     _tiedProperties.Tie("time-to-live", &_timeToLive );
+    _tiedProperties.Tie("failure", &_failure);
 }
 
 LiveMetarProperties::~LiveMetarProperties()
@@ -126,6 +131,7 @@ void LiveMetarProperties::handleMetarData( const std::string & data )
     }
     catch( sg_io_exception ) {
         SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << data );
+        _failure = true;
         return;
     }
 
@@ -134,10 +140,16 @@ void LiveMetarProperties::handleMetarData( const std::string & data )
         SG_LOG( SG_ENVIRONMENT, SG_DEBUG, "Ignoring outdated METAR for " << getStationId());
         return;
     }
-    
+  
+    _failure = false;
     setMetar( m );
 }
 
+void LiveMetarProperties::handleMetarFailure()
+{
+  _failure = true;
+}
+  
 /* -------------------------------------------------------------------------------- */
 
 class BasicRealWxController : public RealWxController
@@ -440,6 +452,7 @@ void NoaaMetarRealWxController::requestMetar
       virtual void onFail()
       {
         SG_LOG(SG_ENVIRONMENT, SG_INFO, "metar download failure");
+        _metarDataHandler->handleMetarFailure();
       }
 
     private:

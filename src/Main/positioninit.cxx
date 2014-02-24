@@ -595,6 +595,10 @@ bool initPosition()
   
 bool finalizeMetar()
 {
+  if (!fgGetBool("/environment/realwx/enabled")) {
+    return true;
+  }
+  
   double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
   string apt = fgGetString("/sim/presets/airport-id");
   string rwy = fgGetString("/sim/presets/runway");
@@ -607,11 +611,16 @@ bool finalizeMetar()
   
   if (needMetar) {
     // timeout so we don't spin forever if the network is down
-    if (global_finalizeTime.elapsedMSec() > fgGetInt("/sim/startup/metar-fetch-timeout-msec", 10000)) {
+    if (global_finalizeTime.elapsedMSec() > fgGetInt("/sim/startup/metar-fetch-timeout-msec", 6000)) {
       SG_LOG(SG_GENERAL, SG_WARN, "finalizePosition: timed out waiting for METAR fetch");
       return true;
     }
     
+    if (fgGetBool( "/environment/metar/failure" )) {
+      SG_LOG(SG_ENVIRONMENT, SG_INFO, "metar download failed, not waiting");
+      return true;
+    }
+
     if (!fgGetBool( "/environment/metar/valid" )) {
       return false;
     }
