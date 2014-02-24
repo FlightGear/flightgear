@@ -65,6 +65,9 @@ void fgPostInitSubsystems();
 // Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems();
 
+// Re-position: when only location is changing, we can do considerably
+// less work than a full re-init.
+void fgStartReposition();
 
 void fgStartNewReset();
 

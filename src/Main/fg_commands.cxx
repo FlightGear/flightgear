@@ -210,6 +210,15 @@ do_reset (const SGPropertyNode * arg)
 }
 
 /**
+ */
+static bool
+do_reposition (const SGPropertyNode * arg)
+{
+  fgStartReposition();
+  return true;
+}
+
+/**
  * Built-in command: replay the FDR buffer
  */
 static bool
@@ -1549,6 +1558,7 @@ static struct {
     { "nasal", do_nasal },
     { "exit", do_exit },
     { "reset", do_reset },
+    { "reposition", do_reposition },
     { "pause", do_pause },
     { "load", do_load },
     { "save", do_save },

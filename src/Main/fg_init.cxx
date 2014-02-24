@@ -937,10 +937,81 @@ void fgReInitSubsystems()
     fgSetBool("/sim/sceneryloaded",false);
 }
 
+
+// re-position is a simplified version of the traditional (legacy)
+// reset procedure. We only need to poke systems which will be upset by
+// a sudden change in aircraft position. Since this potentially includes
+// Nasal, we trigger the 'reinit' signal.
+void fgStartReposition()
+{
+  SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
+  SG_LOG( SG_GENERAL, SG_INFO, "fgStartReposition()");
+  
+  // ensure we are frozen
+  bool freeze = master_freeze->getBoolValue();
+  if ( !freeze ) {
+    master_freeze->setBoolValue(true);
+  }
+  
+  // set this signal so Nasal scripts can take action.
+  fgSetBool("/sim/signals/reinit", true);
+  fgSetBool("/sim/crashed", false);
+  
+  globals->get_subsystem("flight")->unbind();
+  
+  // update our position based on current presets
+  // this will mark position as needed finalized which we'll do in the
+  // main-loop
+  flightgear::initPosition();
+  
+  simgear::SGTerraSync* terraSync =
+  static_cast<simgear::SGTerraSync*>(globals->get_subsystem("terrasync"));
+  if (terraSync) {
+    terraSync->reposition();
+  }
+  
+  // Force reupdating the positions of the ai 3d models. They are used for
+  // initializing ground level for the FDM.
+  //globals->get_subsystem("ai-model")->reinit();
+  
+  // Initialize the FDM
+  globals->get_subsystem("flight")->reinit();
+  
+  // reset replay buffers
+  globals->get_subsystem("replay")->reinit();
+  
+  // ugly: finalizePosition waits for METAR to arrive for the new airport.
+  // we don't re-init the environment manager here, since historically we did
+  // not, and doing so seems to have other issues. All that's needed is to
+  // schedule METAR fetch immediately, so it's available for finalizePosition.
+  // So we manually extract the METAR-fetching component inside the environment
+  // manager, and re-init that.
+  SGSubsystemGroup* envMgr = static_cast<SGSubsystemGroup*>(globals->get_subsystem("environment"));
+  if (envMgr) {
+    envMgr->get_subsystem("realwx")->reinit();
+  }
+  
+  // need to bind FDMshell again, since we manually unbound it above...
+  globals->get_subsystem("flight")->bind();
+  
+  // need to reset aircraft (systems/instruments) so they can adapt to current environment
+  globals->get_subsystem("systems")->reinit();
+  globals->get_subsystem("instrumentation")->reinit();
+  
+  globals->get_subsystem("ATIS")->reinit();
+  
+  // setup state to end re-init
+  fgSetBool("/sim/signals/reinit", false);
+  if ( !freeze ) {
+    master_freeze->setBoolValue(false);
+  }
+  fgSetBool("/sim/sceneryloaded",false);
+}
+
 void fgStartNewReset()
 {
     SGPropertyNode_ptr preserved(new SGPropertyNode);
-    
+  
     if (!copyPropertiesWithAttribute(globals->get_props(), preserved, SGPropertyNode::PRESERVE))
         SG_LOG(SG_GENERAL, SG_ALERT, "Error saving preserved state");
     
