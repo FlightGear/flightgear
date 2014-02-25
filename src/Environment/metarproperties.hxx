@@ -95,6 +95,7 @@ private:
     int _day;
     int _hour;
     int _minute;
+    bool _cavok;
 protected:
     simgear::TiedPropertyList _tiedProperties;
     MagneticVariation * _magneticVariation;

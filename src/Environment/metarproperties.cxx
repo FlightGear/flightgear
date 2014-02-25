@@ -137,6 +137,7 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _day(0),
   _hour(0),
   _minute(0),
+  _cavok(false),
   _magneticVariation(new MagneticVariation())
 {
   // Hack to avoid static initialization order problems on OSX
@@ -181,6 +182,7 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _tiedProperties.Tie("hour", &_hour );
   _tiedProperties.Tie("minute", &_minute );
   _tiedProperties.Tie("decoded", this, &MetarProperties::get_decoded );
+  _tiedProperties.Tie("cavok", &_cavok );
 }
 
 MetarProperties::~MetarProperties()
@@ -413,6 +415,7 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
     _day = m->getDay();
     _hour = m->getHour();
     _minute = m->getMinute();
+    _cavok = m->getCAVOK();
     _metarValidNode->setBoolValue(true);
 }
 
