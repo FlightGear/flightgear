@@ -238,6 +238,130 @@ parse_message( int verbose, const string &msg, int *lat, int *lon )
     }
 }
 
+void
+syncArea( int lat, int lon )
+{
+    if ( lat < -90 || lat > 90 || lon < -180 || lon > 180 )
+        return;
+    char NS, EW;
+    int baselat, baselon;
+
+    if ( lat < 0 ) {
+        int base = (int)(lat / 10);
+        if ( lat == base * 10 ) {
+            baselat = base * 10;
+        } else {
+            baselat = (base - 1) * 10;
+        }
+        NS = 's';
+    } else {
+        baselat = (int)(lat / 10) * 10;
+        NS = 'n';
+    }
+    if ( lon < 0 ) {
+        int base = (int)(lon / 10);
+        if ( lon == base * 10 ) {
+            baselon = base * 10;
+        } else {
+            baselon = (base - 1) * 10;
+        }
+        EW = 'w';
+    } else {
+        baselon = (int)(lon / 10) * 10;
+        EW = 'e';
+    }
+
+    ostringstream dir;
+    dir << setfill('0')
+    << EW << setw(3) << abs(baselon) << NS << setw(2) << abs(baselat) << "/"
+    << EW << setw(3) << abs(lon)     << NS << setw(2) << abs(lat);
+    
+    pTerraSync->syncAreaByPath(dir.str());
+}
+
+void 
+syncAreas( int lat, int lon, int lat_dir, int lon_dir )
+{
+    if ( lat_dir == 0 && lon_dir == 0 ) {
+        
+        // do surrounding 8 1x1 degree areas.
+        for ( int i = lat - 1; i <= lat + 1; ++i ) {
+            for ( int j = lon - 1; j <= lon + 1; ++j ) {
+                if ( i != lat || j != lon ) {
+                    syncArea( i, j );
+                }
+            }
+        }
+    } else {
+        if ( lat_dir != 0 ) {
+            syncArea( lat + lat_dir, lon - 1 );
+            syncArea( lat + lat_dir, lon + 1 );
+            syncArea( lat + lat_dir, lon );
+        }
+        if ( lon_dir != 0 ) {
+            syncArea( lat - 1, lon + lon_dir );
+            syncArea( lat + 1, lon + lon_dir );
+            syncArea( lat, lon + lon_dir );
+        }
+    }
+
+    // do current 1x1 degree area first
+    syncArea( lat, lon );
+}
+
+bool 
+schedulePosition(int lat, int lon)
+{
+    bool Ok = false;
+    if ((lat == simgear::NOWHERE) || (lon == simgear::NOWHERE)) {
+        return Ok;
+    }
+    
+    static int last_lat = simgear::NOWHERE;
+    static int last_lon = simgear::NOWHERE;
+    if ((lat == last_lat) && (lon == last_lon)) {
+        Ok = true;
+        return Ok;
+    }
+
+    int lat_dir=0;
+    int lon_dir=0;
+    
+    if ( last_lat != simgear::NOWHERE && last_lon != simgear::NOWHERE )
+    {
+        int dist = lat - last_lat;
+        if ( dist != 0 )
+        {
+            lat_dir = dist / abs(dist);
+        }
+        else
+        {
+            lat_dir = 0;
+        }
+        dist = lon - last_lon;
+        if ( dist != 0 )
+        {
+            lon_dir = dist / abs(dist);
+        } else
+        {
+            lon_dir = 0;
+        }
+    }
+
+    cout << "Scenery update for " <<
+           "lat = " << lat << ", lon = " << lon <<
+           ", lat_dir = " << lat_dir << ",  " <<
+           "lon_dir = " << lon_dir << endl;
+
+    syncAreas( lat, lon, lat_dir, lon_dir );
+    Ok = true;
+
+    last_lat = lat;
+    last_lon = lon;
+
+    return Ok;
+}
+    
 /** Monitor UDP socket and process NMEA position updates. */
 int
 processRequests(SGPropertyNode_ptr config, bool testing, int verbose, int port)
@@ -305,7 +429,7 @@ processRequests(SGPropertyNode_ptr config, bool testing, int verbose, int port)
 
         if ( recv_msg )
         {
-            pTerraSync->schedulePosition(lat, lon);
+            schedulePosition(lat, lon);
         }
 
         if ( testing )
