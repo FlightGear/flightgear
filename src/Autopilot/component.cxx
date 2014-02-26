@@ -72,7 +72,11 @@ bool Component::configure( SGPropertyNode& cfg_node,
   {
     _name = cfg_node.getStringValue();
     return true;
-  } 
+  }
+
+  if( cfg_name == "update-interval-secs" )
+    // This is handled in autopilot.cxx
+    return true;
 
   if ( cfg_name == "debug" )
   {
