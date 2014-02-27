@@ -40,6 +40,7 @@
 #include <simgear/math/sg_types.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -188,6 +189,25 @@ public:
     }
 };
 
+static string makeLinksForPath( const string & request )
+{
+  using namespace simgear::strutils;
+  string reply = "<A HREF=\"/\">/</A>";
+  string path = "/";
+
+  string_list sl = split( request, "/" );
+  for( string_list::iterator it = sl.begin(); it != sl.end(); ++it ) {
+    if( (*it).empty() ) continue;
+    path.append( *it ).append( "/" );
+    reply.append("<A HREF=\"")
+         .append(path)
+         .append("\">")
+         .append(*it)
+         .append("</A>/");
+    
+  }
+  return reply;
+}
 
 // Handle http GET requests
 void HttpdChannel::foundTerminator (void) {
@@ -295,7 +315,7 @@ void HttpdChannel::foundTerminator (void) {
 	} else if ( node->nChildren() > 0 ) {
             // request is a path with children
             response += "<H3>Contents of \"";
-            response += request;
+            response += makeLinksForPath( request );
             response += "\"</H3>";
             response += getTerminator();
 
@@ -346,7 +366,7 @@ void HttpdChannel::foundTerminator (void) {
             response += urlEncode(request);
             response += "\">";
             response += "<B>";
-            response += request;
+            response += makeLinksForPath(request);
             response += "</B> = ";
             response += "<input type=text name=value size=\"15\" value=\"";
             response += value;
