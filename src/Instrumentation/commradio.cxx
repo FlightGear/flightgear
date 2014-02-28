@@ -243,6 +243,7 @@ public:
   void unbind();
 
 private:
+  int                _num;
   MetarBridgeRef     _metarBridge;
   FrequencyFormatter _useFrequencyFormatter;
   FrequencyFormatter _stbyFrequencyFormatter;
@@ -263,8 +264,9 @@ private:
 
 CommRadioImpl::CommRadioImpl( SGPropertyNode_ptr node ) :
     OutputProperties( fgGetNode("/instrumentation",true)->getNode(
-                        node->getStringValue("name", "nav"),
+                        node->getStringValue("name", "comm"),
                         node->getIntValue("number", 0), true)),
+    _num( node->getIntValue("number",0)),
     _metarBridge( new MetarBridge() ),
     _useFrequencyFormatter( _rootNode->getNode("frequencies/selected-mhz",true), 
                             _rootNode->getNode("frequencies/selected-mhz-fmt",true), 0.025 ),
@@ -291,7 +293,9 @@ CommRadioImpl::~CommRadioImpl()
 void CommRadioImpl::bind()
 {
   _metarBridge->setAtisNode( _atis.node() );
-  _metarBridge->setMetarPropertiesRoot( fgGetNode( "/environment/metar[3]", true ) );
+   // link the metar node. /environment/metar[3] is comm1 and /environment[4] is comm2.
+   // see FGDATA/Environment/environment.xml
+  _metarBridge->setMetarPropertiesRoot( fgGetNode( "/environment",true)->getNode("metar", _num+3, true ) );
   _metarBridge->bind();
 }
 
