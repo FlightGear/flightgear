@@ -148,7 +148,7 @@ TACAN::update (double delta_time_sec)
     //calculate the bearing and range of the mobile from the aircraft
     double mobile_az2 = 0;
     double mobile_bearing = 0;
-    double mobile_distance = 0;
+    double mobile_distance = SGLimitsd::max();
     if (_mobile_valid) {
         geo_inverse_wgs_84(pos, _mobilePos,
                        &mobile_bearing, &mobile_az2, &mobile_distance);
@@ -157,7 +157,7 @@ TACAN::update (double delta_time_sec)
     //calculate the bearing and range of the station from the aircraft
     double az2 = 0;
     double bearing = 0;
-    double distance = 0;
+    double distance = SGLimitsd::max();
     if (_transmitter_valid) {
         geo_inverse_wgs_84(pos, _transmitter_pos,
                            &bearing, &az2, &distance);
