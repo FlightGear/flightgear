@@ -3,9 +3,7 @@
 #ifndef __DIALOG_HXX
 #define __DIALOG_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
+#include <string>
 
 // forward decls
 class SGPropertyNode;
@@ -32,28 +30,28 @@ public:
 
     /**
      * Update the values of all GUI objects with a specific name,
-     * or all if name is 0 (default).
+     * or all if an empty name is given (default).
      *
      * This method copies values from the FlightGear property tree to
      * the GUI object(s).
      *
      * @param objectName The name of the GUI object(s) to update.
-     *        Use the empty name for all unnamed objects.
+     *        Use the empty name for all objects.
      */
-    virtual void updateValues (const char * objectName = 0) = 0;
+    virtual void updateValues(const std::string& objectName = "") = 0;
 
 
     /**
      * Apply the values of all GUI objects with a specific name,
-     * or all if name is 0 (default)
+     * or all if an empty name is given (default)
      *
      * This method copies values from the GUI object(s) to the
      * FlightGear property tree.
      *
      * @param objectName The name of the GUI object(s) to update.
-     *        Use the empty name for all unnamed objects.
+     *        Use the empty name for all objects.
      */
-    virtual void applyValues (const char * objectName = 0) = 0;
+    virtual void applyValues(const std::string& objectName = "") = 0;
 
 
     /**

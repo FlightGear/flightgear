@@ -711,17 +711,14 @@ FGPUIDialog::~FGPUIDialog ()
 }
 
 void
-FGPUIDialog::updateValues (const char *objectName)
+FGPUIDialog::updateValues(const std::string& objectName)
 {
-    if (objectName && !objectName[0])
-        objectName = 0;
-
   for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
     const string &name = _propertyObjects[i]->name;
-    if (objectName && name != objectName) {
+
+    if( !objectName.empty() && name != objectName )
       continue;
-    }
-    
+
     puObject *widget = _propertyObjects[i]->object;
     int widgetType = widget->getType();
     if (widgetType & PUCLASS_LIST) {
@@ -742,15 +739,12 @@ FGPUIDialog::updateValues (const char *objectName)
 }
 
 void
-FGPUIDialog::applyValues (const char *objectName)
+FGPUIDialog::applyValues(const std::string& objectName)
 {
-    if (objectName && !objectName[0])
-        objectName = 0;
-
     for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
         const string &name = _propertyObjects[i]->name;
-        if (objectName && name != objectName)
-            continue;
+        if( !objectName.empty() && name != objectName )
+          continue;
 
         copy_from_pui(_propertyObjects[i]->object,
                       _propertyObjects[i]->node);
