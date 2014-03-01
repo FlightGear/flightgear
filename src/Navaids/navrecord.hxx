@@ -30,6 +30,8 @@
 #include "positioned.hxx"
 #include <Airports/airports_fwd.hxx>
 
+#include <simgear/timing/timestamp.hxx>
+
 const double FG_NAV_DEFAULT_RANGE = 50; // nm
 const double FG_LOC_DEFAULT_RANGE = 18; // nm
 const double FG_DME_DEFAULT_RANGE = 50; // nm
@@ -44,18 +46,24 @@ class FGNavRecord : public FGPositioned
                                 // (degrees) or localizer heading
                                 // (degrees) or dme bias (nm)
 
-    std::string mName;                // verbose name in nav database
-    PositionedID mRunway;        // associated runway, if there is one
-    PositionedID mColocated;     // Colocated DME at a navaid (ILS, VOR, TACAN, NDB)
-    bool serviceable;		// for failure modeling
+    std::string mName;          // verbose name in nav database
+    PositionedID mRunway;       // associated runway, if there is one
+    PositionedID mColocated;    // Colocated DME at a navaid (ILS, VOR, TACAN, NDB)
 
-public:
-  FGNavRecord(PositionedID aGuid, Type type, const std::string& ident,
-              const std::string& name,
-              const SGGeod& aPos,
-              int freq, int range, double multiuse,
-              PositionedID aRunway);
-    
+  protected:
+    mutable bool serviceable;   // for failure modeling
+
+  public:
+    FGNavRecord( PositionedID aGuid,
+                 Type type,
+                 const std::string& ident,
+                 const std::string& name,
+                 const SGGeod& aPos,
+                 int freq,
+                 int range,
+                 double multiuse,
+                 PositionedID aRunway );
+
     inline double get_lon() const { return longitude(); } // degrees
     inline double get_lat() const { return latitude(); } // degrees
     inline double get_elev_ft() const { return elevation(); }
@@ -91,6 +99,33 @@ public:
   bool hasDME();
     
     void updateFromXML(const SGGeod& geod, double heading);
+};
+
+/**
+ * A mobile navaid, aka. a navaid which can change its position (eg. a mobile
+ * TACAN)
+ */
+class FGMobileNavRecord:
+  public FGNavRecord
+{
+  public:
+    FGMobileNavRecord( PositionedID aGuid,
+                       Type type,
+                       const std::string& ident,
+                       const std::string& name,
+                       const SGGeod& aPos,
+                       int freq,
+                       int range,
+                       double multiuse,
+                       PositionedID aRunway );
+
+    virtual const SGGeod& geod() const;
+    virtual const SGVec3d& cart() const;
+
+    void updatePos();
+
+  protected:
+    SGTimeStamp _last_position_update;
 };
 
 class FGTACANRecord : public SGReferenced {

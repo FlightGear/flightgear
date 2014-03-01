@@ -17,9 +17,6 @@
 
 #include "tacan.hxx"
 
-using std::vector;
-using std::string;
-
 /**
  * Adjust the range.
  *
@@ -31,7 +28,7 @@ static double
 adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
               double max_range_nm)
 {
-    max_range_nm = 150;
+    max_range_nm = 150; // TODO why a fixed range?
     double delta_elevation_ft =
         fabs(aircraft_altitude_ft - transmitter_elevation_ft);
     double range_nm = 1.23 * sqrt(delta_elevation_ft);
@@ -43,32 +40,31 @@ adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
     return range_nm + (range_nm * rand * rand);
 }
 
-
-TACAN::TACAN ( SGPropertyNode *node ) :
-    _name(node->getStringValue("name", "tacan")),
-    _num(node->getIntValue("number", 0)),
-    _new_frequency(false),
-    _channel("0000"),
-    _last_distance_nm(0),
-    _frequency_mhz(-1),
-    _time_before_search_sec(0),
-    _mobile_valid(false),
-    _transmitter_valid(false),
-    _transmitter_pos(SGGeod::fromDeg(0, 0)),
-    _transmitter_range_nm(0),
-    _transmitter_bias(0.0),
-    _listener_active(0)
+//------------------------------------------------------------------------------
+TACAN::TACAN( SGPropertyNode *node ):
+  _name(node->getStringValue("name", "tacan")),
+  _num(node->getIntValue("number", 0)),
+  _was_disabled(true),
+  _new_frequency(false),
+  _channel("0000"),
+  _last_distance_nm(0),
+  _frequency_mhz(-1),
+  _time_before_search_sec(0),
+  _listener_active(0)
 {
+
 }
 
-TACAN::~TACAN ()
+//------------------------------------------------------------------------------
+TACAN::~TACAN()
 {
+
 }
 
-void
-TACAN::init ()
+//------------------------------------------------------------------------------
+void TACAN::init()
 {
-    string branch = "/instrumentation/" + _name;
+    std::string branch = "/instrumentation/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
 
@@ -84,12 +80,6 @@ TACAN::init ()
     _channel_in3_node = fnode->getChild("selected-channel", 3, true);
     _channel_in4_node = fnode->getChild("selected-channel", 4, true);
 
-    _channel_in0_node->addChangeListener(this);
-    _channel_in1_node->addChangeListener(this);
-    _channel_in2_node->addChangeListener(this);
-    _channel_in3_node->addChangeListener(this);
-    _channel_in4_node->addChangeListener(this, true);
-
     _in_range_node = node->getChild("in-range", 0, true);
     _distance_node = node->getChild("indicated-distance-nm", 0, true);
     _speed_node = node->getChild("indicated-ground-speed-kt", 0, true);
@@ -100,298 +90,176 @@ TACAN::init ()
     SGPropertyNode *dnode = node->getChild("display", 0, true);
     _x_shift_node = dnode->getChild("x-shift", 0, true);
     _y_shift_node = dnode->getChild("y-shift", 0, true);
-    _rotation_node = dnode->getChild("rotation", 0, true);
     _channel_node = dnode->getChild("channel", 0, true);
-
-    SGPropertyNode *cnode = fgGetNode("/ai/models/carrier", _num, false );
-    _carrier_name_node = cnode ? cnode->getChild("name", 0, false) : 0;
-
-    SGPropertyNode *tnode = fgGetNode("/ai/models/aircraft", _num, false);
-    _tanker_callsign_node = tnode ? tnode->getChild("callsign", 0, false) : 0;
-
-    SGPropertyNode *mnode = fgGetNode("/ai/models/multiplayer", _num, false);
-    _mp_callsign_node = mnode ? mnode->getChild("callsign", 0, false) : 0;
 
     _heading_node = fgGetNode("/orientation/heading-deg", true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/tacan", true);
+
+    // Add/trigger change listener after creating all nodes
+    _channel_in0_node->addChangeListener(this);
+    _channel_in1_node->addChangeListener(this);
+    _channel_in2_node->addChangeListener(this);
+    _channel_in3_node->addChangeListener(this);
+    _channel_in4_node->addChangeListener(this, true);
 }
 
-void
-TACAN::reinit ()
+//------------------------------------------------------------------------------
+void TACAN::reinit()
 {
-    _time_before_search_sec = 0;
+  _time_before_search_sec = 0;
 }
 
-void
-TACAN::update (double delta_time_sec)
+//------------------------------------------------------------------------------
+void TACAN::update(double delta_time_sec)
 {
-    // don't do anything when paused
-    if (delta_time_sec == 0) return;
+  // don't do anything when paused
+  if( delta_time_sec == 0 )
+    return;
 
-    if (!_serviceable_node->getBoolValue() || !_electrical_node->getBoolValue()) {
-        _last_distance_nm = 0;
-        _in_range_node->setBoolValue(false);
-        _distance_node->setDoubleValue(0);
-        _speed_node->setDoubleValue(0);
-        _time_node->setDoubleValue(0);
-        return;
-    }
+  if(   !_serviceable_node->getBoolValue()
+     || !_electrical_node->getBoolValue() )
+    return disabled();
 
-    SGGeod pos(globals->get_aircraft_position());
-                                // On timeout, scan again
-    _time_before_search_sec -= delta_time_sec;
-    if ((_time_before_search_sec < 0 || _new_frequency) && _frequency_mhz >= 0)
-        search(_frequency_mhz, pos);
+  SGGeod pos(globals->get_aircraft_position());
 
-                                 // Calculate the distance to the transmitter
+  // On timeout, scan again
+  _time_before_search_sec -= delta_time_sec;
+  if ((_time_before_search_sec < 0 || _new_frequency) && _frequency_mhz >= 0)
+      search(_frequency_mhz, pos);
 
-    //calculate the bearing and range of the mobile from the aircraft
-    double mobile_az2 = 0;
-    double mobile_bearing = 0;
-    double mobile_distance = SGLimitsd::max();
-    if (_mobile_valid) {
-        geo_inverse_wgs_84(pos, _mobilePos,
-                       &mobile_bearing, &mobile_az2, &mobile_distance);
-    }
+  if( !_active_station || !_active_station->get_serviceable() )
+    return disabled();
 
-    //calculate the bearing and range of the station from the aircraft
-    double az2 = 0;
-    double bearing = 0;
-    double distance = SGLimitsd::max();
-    if (_transmitter_valid) {
-        geo_inverse_wgs_84(pos, _transmitter_pos,
-                           &bearing, &az2, &distance);
-    }
+  // Calculate the bearing and range of the station from the aircraft
+  double az = 0;
+  double bearing = 0;
+  double distance = SGLimitsd::max();
+  if( !SGGeodesy::inverse(pos, _active_station->geod(), bearing, az, distance) )
+    return disabled();
 
-    //select the nearer
-    if ( mobile_distance <= distance && _mobile_valid) {
-        bearing = mobile_bearing;
-        distance = mobile_distance;
-        _transmitter_pos.setElevationFt(_mobilePos.getElevationFt());
-        _transmitter_range_nm = _mobile_range_nm;
-        _transmitter_bias = _mobile_bias;
-        _transmitter_name = _mobile_name;
-        _name_node->setStringValue(_transmitter_name.c_str());
-        _transmitter_ident = _mobile_ident;
-        _ident_node->setStringValue(_transmitter_ident.c_str());
-        _channel_node->setStringValue(_channel.c_str());
-    }
-
-    //// calculate some values for boresight display
-    double distance_nm = distance * SG_METER_TO_NM;
-
-    //// calculate look left/right to target, without yaw correction
-    // double horiz_offset = bearing - heading;
-    //
-    // if (horiz_offset > 180.0) horiz_offset -= 360.0;
-    // if (horiz_offset < -180.0) horiz_offset += 360.0;
-
-    //// now correct look left/right for yaw
-    // horiz_offset += yaw;
-
-    // use the bearing for a plan position indicator display
-
-    double horiz_offset = bearing;
-
-    // calculate values for radar display
-    double y_shift = distance_nm * cos( horiz_offset * SG_DEGREES_TO_RADIANS);
-    double x_shift = distance_nm * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
-
-    double rotation = 0;
-
-    double range_nm = adjust_range(_transmitter_pos.getElevationFt(),
+  double range_nm = adjust_range( _active_station->get_elev_ft(),
                                   pos.getElevationFt(),
-                                   _transmitter_range_nm);
+                                  _active_station->get_range() );
 
-    if (distance_nm <= range_nm) {
-        double speed_kt = (fabs(distance_nm - _last_distance_nm) *
-                           ((1 / delta_time_sec) * 3600.0));
-        _last_distance_nm = distance_nm;
+  double distance_nm = distance * SG_METER_TO_NM;
 
-        _in_range_node->setBoolValue(true);
-        double tmp_dist = distance_nm - _transmitter_bias;
-        if ( tmp_dist < 0.0 ) {
-            tmp_dist = 0.0;
-        }
-        _distance_node->setDoubleValue( tmp_dist );
-        _speed_node->setDoubleValue(speed_kt);
-        _time_node->setDoubleValue(speed_kt > 0 ? (distance_nm/speed_kt*60.0) : 0);
-        _bearing_node->setDoubleValue(bearing);
-        _x_shift_node->setDoubleValue(x_shift);
-        _y_shift_node->setDoubleValue(y_shift);
-        _rotation_node->setDoubleValue(rotation);
-    } else {
-        _last_distance_nm = 0;
-        _in_range_node->setBoolValue(false);
-        _distance_node->setDoubleValue(0);
-        _speed_node->setDoubleValue(0);
-        _time_node->setDoubleValue(0);
-        _bearing_node->setDoubleValue(0);
-        _x_shift_node->setDoubleValue(0);
-        _y_shift_node->setDoubleValue(0);
-        _rotation_node->setDoubleValue(0);
-    }
+  if( distance_nm > range_nm )
+    return disabled();
 
-                                // If we can't find a valid station set everything to zero
-    if (!_transmitter_valid && !_mobile_valid ) {
-        _in_range_node->setBoolValue(false);
-        _distance_node->setDoubleValue(0);
-        _speed_node->setDoubleValue(0);
-        _time_node->setDoubleValue(0);
-        _bearing_node->setDoubleValue(0);
-        _x_shift_node->setDoubleValue(0);
-        _y_shift_node->setDoubleValue(0);
-        _rotation_node->setDoubleValue(0);
-        _transmitter_name = "";
-        _name_node->setStringValue(_transmitter_name.c_str());
-        _transmitter_ident = "";
-        _ident_node->setStringValue(_transmitter_ident.c_str());
-        _channel_node->setStringValue(_channel.c_str());
-        return;
-    }
-} // end function update
+  //// calculate look left/right to target, without yaw correction
+  // double horiz_offset = bearing - heading;
+  //
+  // if (horiz_offset > 180.0) horiz_offset -= 360.0;
+  // if (horiz_offset < -180.0) horiz_offset += 360.0;
 
-void
-TACAN::search (double frequency_mhz,const SGGeod& pos)
-{
-    int number, i;
-    _mobile_valid = false;
+  //// now correct look left/right for yaw
+  // horiz_offset += yaw;
 
-    // reset search time
-    _time_before_search_sec = 1.0;
+  // use the bearing for a plan position indicator display
+  double horiz_offset = bearing;
 
-    //try any carriers first
-    FGNavRecord *mobile_tacan = FGNavList::findByFreq( frequency_mhz, FGNavList::carrierFilter() );
-    bool freq_valid = (mobile_tacan != NULL);
+  // calculate values for radar display
+  double y_shift = distance_nm * cos(horiz_offset * SG_DEGREES_TO_RADIANS);
+  double x_shift = distance_nm * sin(horiz_offset * SG_DEGREES_TO_RADIANS);
 
-    if ( freq_valid ) {
+  // TODO probably not the best way to do this (especially with mobile stations)
+  double speed_kt = fabs(distance_nm - _last_distance_nm)
+                  * (3600 / delta_time_sec);
+  _speed_node->setDoubleValue(speed_kt);
+  _last_distance_nm = distance_nm;
 
-        string str1( mobile_tacan->name() );
+  double bias = _active_station->get_multiuse();
+  _distance_node->setDoubleValue( SGMiscd::max(0.0, distance_nm - bias) );
 
-        SGPropertyNode * branch = fgGetNode("ai/models", true);
-        vector<SGPropertyNode_ptr> carrier = branch->getChildren("carrier");
+  _time_node->setDoubleValue(speed_kt > 0 ? (distance_nm/speed_kt*60.0) : 0);
+  _bearing_node->setDoubleValue(bearing);
+  _x_shift_node->setDoubleValue(x_shift);
+  _y_shift_node->setDoubleValue(y_shift);
 
-        number = carrier.size();
+  _name_node->setStringValue(_active_station->name());
+  _ident_node->setStringValue(_active_station->ident());
+  _in_range_node->setBoolValue(true);
 
-        for ( i = 0; i < number; ++i ) {
-            string str2 ( carrier[i]->getStringValue("name", ""));
-
-            string::size_type loc1= str1.find( str2, 0 );
-            if ( loc1 != string::npos && str2 != "" ) {
-                _mobilePos = SGGeod::fromDegFt(
-                             carrier[i]->getDoubleValue("position/longitude-deg"),
-                             carrier[i]->getDoubleValue("position/latitude-deg"),
-                             mobile_tacan->get_elev_ft());
-                _mobile_range_nm = mobile_tacan->get_range();
-                _mobile_bias = mobile_tacan->get_multiuse();
-                _mobile_name = mobile_tacan->name();
-                _mobile_ident = mobile_tacan->get_trans_ident();
-                _mobile_valid = true;
-                break;
-            } else {
-                _mobile_valid = false;
-            }
-        }
-
-        //try any AI tankers second
-        if ( !_mobile_valid) {
-        SGPropertyNode * branch = fgGetNode("ai/models", true);
-        vector<SGPropertyNode_ptr> tanker = branch->getChildren("tanker");
-
-        number = tanker.size();
-
-        for ( i = 0; i < number; ++i ) {
-            string str4 ( tanker[i]->getStringValue("callsign", ""));
-            string::size_type loc1= str1.find( str4, 0 );
-            if ( loc1 != string::npos && str4 != "" ) {
-                _mobilePos = SGGeod::fromDegFt(
-                                             tanker[i]->getDoubleValue("position/longitude-deg"),
-                                             tanker[i]->getDoubleValue("position/latitude-deg"),
-                                             tanker[i]->getDoubleValue("position/altitude-ft"));
-
-              
-                _mobile_range_nm = mobile_tacan->get_range();
-                _mobile_bias = mobile_tacan->get_multiuse();
-                _mobile_name = mobile_tacan->name();
-                _mobile_ident = mobile_tacan->get_trans_ident();
-                _mobile_valid = true;
-                break;
-            } else {
-                _mobile_valid = false;
-            }
-        }
-    }
-
-    //try any mp tankers third, if we haven't found the tanker in the ai aircraft
-
-    if ( !_mobile_valid ) {
-        SGPropertyNode * branch = fgGetNode("ai/models", true);
-        vector<SGPropertyNode_ptr> mp_tanker = branch->getChildren("multiplayer");
-
-        number = mp_tanker.size();
-
-        if ( number > 0 ) {	  // don't do this if there are no MP aircraft
-            for ( i = 0; i < number; ++i ) {
-                string str6 ( mp_tanker[i]->getStringValue("callsign", ""));
-                string::size_type loc1= str1.find( str6, 0 );
-                if ( loc1 != string::npos && str6 != "" ) {
-                  _mobilePos = SGGeod::fromDegFt(
-                                                 mp_tanker[i]->getDoubleValue("position/longitude-deg"),
-                                                 mp_tanker[i]->getDoubleValue("position/latitude-deg"),
-                                                 mp_tanker[i]->getDoubleValue("position/altitude-ft"));
-
-                  
-                    _mobile_range_nm = mobile_tacan->get_range();
-                    _mobile_bias = mobile_tacan->get_multiuse();
-                    _mobile_name = mobile_tacan->name();
-                    _mobile_ident = mobile_tacan->get_trans_ident();
-                    _mobile_valid = true;
-                    break;
-                } else {
-                    _mobile_valid = false;
-                }
-                }
-            }
-        }
-    } else {
-        _mobile_valid = false;
-    }
-
-    // try the TACAN/VORTAC list next
-    FGNavRecord *tacan = FGNavList::findByFreq( frequency_mhz, pos, FGNavList::tacanFilter() );
-
-    _transmitter_valid = (tacan != NULL);
-
-    if ( _transmitter_valid ) {
-
-        _transmitter_pos = tacan->geod();
-        _transmitter_range_nm = tacan->get_range();
-        _transmitter_bias = tacan->get_multiuse();
-        _transmitter_name = tacan->name();
-        _name_node->setStringValue(_transmitter_name.c_str());
-        _transmitter_ident = tacan->get_trans_ident();
-        _ident_node->setStringValue(_transmitter_ident.c_str());
-    }
+  _was_disabled = false;
 }
 
-double
-TACAN::searchChannel (const string& channel)
+//------------------------------------------------------------------------------
+void TACAN::disabled()
 {
-    double frequency_khz = 0;
+  if( _was_disabled )
+    return;
 
-    FGTACANRecord *freq
-        = globals->get_channellist()->findByChannel( channel );
-    bool _freq_valid = (freq != NULL);
-    SG_LOG( SG_INSTR, SG_DEBUG, "freq valid " << _freq_valid );
-    if ( _freq_valid ) {
-        frequency_khz = freq->get_freq();
-        SG_LOG( SG_INSTR, SG_DEBUG, "freq output " << frequency_khz );
-        //check sanity
-        if (frequency_khz >= 9620 && frequency_khz <= 121300)
-            return frequency_khz/100;
-    }
-    return frequency_khz = 0;
-} // end TACAN::searchChannel
+  _last_distance_nm = 0;
+
+  _in_range_node->setBoolValue(false);
+  _distance_node->setDoubleValue(0);
+  _speed_node->setDoubleValue(0);
+  _time_node->setDoubleValue(0);
+  _bearing_node->setDoubleValue(0);
+  _x_shift_node->setDoubleValue(0);
+  _y_shift_node->setDoubleValue(0);
+  _name_node->setStringValue("");
+  _ident_node->setStringValue("");
+
+  _was_disabled = true;
+}
+
+//------------------------------------------------------------------------------
+void TACAN::search (double frequency_mhz,const SGGeod& pos)
+{
+  // reset search time
+  _time_before_search_sec = 1.0;
+
+  // Get first matching mobile station (carriers/tankers/etc.)
+  // TODO do we need to check for mobile stations with same frequency? Currently
+  //      the distance is not taken into account.
+  FGNavRecordRef mobile_tacan =
+    FGNavList::findByFreq(frequency_mhz, FGNavList::mobileTacanFilter());
+
+  double mobile_dist = (mobile_tacan && mobile_tacan->get_serviceable())
+                     ? SGGeodesy::distanceM(pos, mobile_tacan->geod())
+                     : SGLimitsd::max();
+
+  // No get nearest TACAN/VORTAC
+  FGNavRecordRef tacan =
+    FGNavList::findByFreq(frequency_mhz, pos, FGNavList::tacanFilter());
+
+  double tacan_dist = tacan
+                    ? SGGeodesy::distanceM(pos, tacan->geod())
+                    : SGLimitsd::max();
+
+  // Select nearer station as active
+  // TODO do we need to take more care of stations with same frequency?
+  _active_station = mobile_dist < tacan_dist
+                  ? mobile_tacan
+                  : tacan;
+}
+
+//------------------------------------------------------------------------------
+double TACAN::searchChannel(const std::string& channel)
+{
+  FGTACANRecord *freq = globals->get_channellist()->findByChannel(channel);
+  if( !freq )
+  {
+    SG_LOG(SG_INSTR, SG_DEBUG, "Invalid TACAN channel: " << channel);
+    return 0;
+  }
+
+  double frequency_khz = freq->get_freq();
+  if(frequency_khz < 9620 || frequency_khz > 121300)
+  {
+    SG_LOG
+    (
+      SG_INSTR,
+      SG_DEBUG,
+      "TACAN frequency out of range: " << channel
+                               << ": " << frequency_khz << "kHz"
+    );
+    return 0;
+  }
+
+  return frequency_khz/100;
+}
 
 /*
  * Listener callback. Maintains channel input properties,
@@ -406,7 +274,7 @@ TACAN::valueChanged(SGPropertyNode *prop)
     _listener_active++;
 
     int index = prop->getIndex();
-    string channel = _channel;
+    std::string channel = _channel;
 
     if (index) {  // channel digit or X/Y input
         int c;
@@ -451,6 +319,7 @@ TACAN::valueChanged(SGPropertyNode *prop)
         }
 
         _channel = channel;
+        _channel_node->setStringValue(_channel);
         _time_before_search_sec = 0;
     }
 

@@ -716,10 +716,15 @@ public:
     PositionedID colocated = sqlite3_column_int64(loadNavaid, 4);
     reset(loadNavaid);
 
-    FGNavRecord* n = new FGNavRecord(rowId, ty, id, name, pos, freq, rangeNm, mulituse, runway);
-    if (colocated) {
-        n->setColocatedDME(colocated);
-    }
+    FGNavRecord* n =
+      (ty == FGPositioned::MOBILE_TACAN)
+      ? new FGMobileNavRecord
+            (rowId, ty, id, name, pos, freq, rangeNm, mulituse, runway)
+      : new FGNavRecord
+            (rowId, ty, id, name, pos, freq, rangeNm, mulituse, runway);
+
+    if (colocated)
+      n->setColocatedDME(colocated);
 
     return n;
   }

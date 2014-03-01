@@ -179,7 +179,7 @@ FGNavList::TypeFilter* FGNavList::tacanFilter()
   return &tf;
 }
 
-FGNavList::TypeFilter* FGNavList::carrierFilter()
+FGNavList::TypeFilter* FGNavList::mobileTacanFilter()
 {
   static TypeFilter tf(FGPositioned::MOBILE_TACAN);
   return &tf;

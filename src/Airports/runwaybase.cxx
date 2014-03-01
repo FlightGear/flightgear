@@ -61,8 +61,8 @@ FGRunwayBase::FGRunwayBase(PositionedID aGuid, Type aTy, const string& aIdent,
 
 SGGeod FGRunwayBase::pointOnCenterline(double aOffset) const
 {
-  SGGeod result = SGGeodesy::direct(mPosition, _heading, aOffset);
-  result.setElevationM(mPosition.getElevationM());
+  SGGeod result = SGGeodesy::direct(geod(), _heading, aOffset);
+  result.setElevationM(geod().getElevationM());
     
   return result;
 }
@@ -73,8 +73,7 @@ SGGeod FGRunwayBase::pointOffCenterline(double aOffset, double lateralOffset) co
   SGGeod temp;
   double dummyAz2;
 
-  SGGeodesy::direct(mPosition, _heading, 
-    aOffset, temp, dummyAz2);
+  SGGeodesy::direct(geod(), _heading, aOffset, temp, dummyAz2);
 
   SGGeodesy::direct(temp, SGMiscd::normalizePeriodic(0, 360,_heading+90.0),
     lateralOffset,

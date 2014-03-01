@@ -86,7 +86,7 @@ public:
   static TypeFilter* tacanFilter();
   
   
-  static TypeFilter* carrierFilter();
+  static TypeFilter* mobileTacanFilter();
   
     /** Query the database for the specified station.  It is assumed
       * that there will be multiple stations with matching frequencies

@@ -111,7 +111,7 @@ public:
   virtual const std::string& name() const
   { return mIdent; }
 
-  const SGGeod& geod() const
+  virtual const SGGeod& geod() const
   { return mPosition; }
   
   PositionedID guid() const
@@ -120,19 +120,19 @@ public:
   /**
    *  The cartesian position associated with this object
    */
-  const SGVec3d& cart() const;
+  virtual const SGVec3d& cart() const;
 
   double latitude() const
-  { return mPosition.getLatitudeDeg(); }
+  { return geod().getLatitudeDeg(); }
   
   double longitude() const
-  { return mPosition.getLongitudeDeg(); }
+  { return geod().getLongitudeDeg(); }
   
   double elevation() const
-  { return mPosition.getElevationFt(); }
+  { return geod().getElevationFt(); }
   
   double elevationM() const
-  { return mPosition.getElevationM(); }
+  { return geod().getElevationM(); }
 
   /**
    * Predicate class to support custom filtering of FGPositioned queries
@@ -280,13 +280,14 @@ protected:
   static FGPositionedRef loadByIdImpl(PositionedID id);
 
   const PositionedID mGuid;
-  const SGGeod mPosition;
-  const SGVec3d mCart;
   const Type mType;
   const std::string mIdent;
   
 private:
   SG_DISABLE_COPY(FGPositioned);
+
+  const SGGeod mPosition;
+  const SGVec3d mCart;
 };
 
 #endif // of FG_POSITIONED_HXX

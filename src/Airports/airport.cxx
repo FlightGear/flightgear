@@ -394,7 +394,7 @@ FGRunwayRef FGAirport::getActiveRunwayForUsage() const
   double hdg = 270;
   
   if (envMgr) {
-    FGEnvironment stationWeather(envMgr->getEnvironment(mPosition));
+    FGEnvironment stationWeather(envMgr->getEnvironment(geod()));
   
     double windSpeed = stationWeather.get_wind_speed_kt();
     if (windSpeed > 0.0) {
@@ -617,7 +617,7 @@ void FGAirport::processThreshold(SGPropertyNode* aThreshold)
   
   double lon = aThreshold->getDoubleValue("lon"),
   lat = aThreshold->getDoubleValue("lat");
-  SGGeod newThreshold(SGGeod::fromDegM(lon, lat, mPosition.getElevationM()));
+  SGGeod newThreshold(SGGeod::fromDegM(lon, lat, elevationM()));
   
   double newHeading = aThreshold->getDoubleValue("hdg-deg");
   double newDisplacedThreshold = aThreshold->getDoubleValue("displ-m");
@@ -685,7 +685,7 @@ void FGAirport::readTowerData(SGPropertyNode* aRoot)
 // tower elevation is AGL, not AMSL. Since we don't want to depend on the
 // scenery for a precise terrain elevation, we use the field elevation
 // (this is also what the apt.dat code does)
-  double fieldElevationM = geod().getElevationM();
+  double fieldElevationM = elevationM();
   SGGeod towerLocation(SGGeod::fromDegM(lon, lat, fieldElevationM + elevM));
   
   NavDataCache* cache = NavDataCache::instance();

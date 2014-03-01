@@ -109,6 +109,108 @@ void FGNavRecord::updateFromXML(const SGGeod& geod, double heading)
     multiuse = heading;
 }
 
+//------------------------------------------------------------------------------
+FGMobileNavRecord::FGMobileNavRecord( PositionedID aGuid,
+                                      Type type,
+                                      const std::string& ident,
+                                      const std::string& name,
+                                      const SGGeod& aPos,
+                                      int freq,
+                                      int range,
+                                      double multiuse,
+                                      PositionedID aRunway ):
+  FGNavRecord(aGuid, type, ident, name, aPos, freq, range, multiuse, aRunway)
+{
+
+}
+
+//------------------------------------------------------------------------------
+const SGGeod& FGMobileNavRecord::geod() const
+{
+  const_cast<FGMobileNavRecord*>(this)->updatePos();
+  return FGNavRecord::geod();
+}
+
+//------------------------------------------------------------------------------
+const SGVec3d& FGMobileNavRecord::cart() const
+{
+  const_cast<FGMobileNavRecord*>(this)->updatePos();
+  return FGNavRecord::cart();
+}
+
+//------------------------------------------------------------------------------
+void FGMobileNavRecord::updatePos()
+{
+  SGTimeStamp now = SGTimeStamp::now();
+  if( (now - _last_position_update).toSecs() < 1 )
+    return;
+  _last_position_update = now;
+
+  SGPropertyNode* ai_branch = fgGetNode("ai/models");
+  if( !ai_branch )
+  {
+    SG_LOG( SG_NAVAID,
+            SG_INFO,
+            "Can not update mobile navaid position (no ai/models branch)" );
+    return;
+  }
+
+  serviceable = true;
+  const std::string& nav_name = name();
+
+  // Try any aircraft carriers first
+  simgear::PropertyList carrier = ai_branch->getChildren("carrier");
+  for(size_t i = 0; i < carrier.size(); ++i)
+  {
+    const std::string carrier_name = carrier[i]->getStringValue("name");
+
+    if(    carrier_name.empty()
+        || nav_name.find(carrier_name) == std::string::npos )
+      continue;
+
+    modifyPosition(SGGeod::fromDegFt(
+      carrier[i]->getDoubleValue("position/longitude-deg"),
+      carrier[i]->getDoubleValue("position/latitude-deg"),
+      get_elev_ft()
+    ));
+    return;
+  }
+
+  // Now the tankers
+  const std::string tanker_branches[] = {
+    // AI tankers
+    "tanker",
+    // And finally mp tankers
+    "multiplayer"
+  };
+
+  for(size_t i = 0; i < sizeof(tanker_branches)/sizeof(tanker_branches[0]); ++i)
+  {
+    simgear::PropertyList tanker = ai_branch->getChildren(tanker_branches[i]);
+    for(size_t j = 0; j < tanker.size(); ++j)
+    {
+      const std::string callsign = tanker[j]->getStringValue("callsign");
+
+      if(    callsign.empty()
+          || nav_name.find(callsign) == std::string::npos )
+        continue;
+
+      modifyPosition(SGGeod::fromDegFt(
+        tanker[j]->getDoubleValue("position/longitude-deg"),
+        tanker[j]->getDoubleValue("position/latitude-deg"),
+        tanker[j]->getDoubleValue("position/altitude-ft")
+      ));
+      return;
+    }
+  }
+
+  // If no match was found set 'invalid' position (lat = lon = alt = 0)
+  modifyPosition(SGGeod());
+
+  // It's mobile but we do not know where it is...
+  serviceable = false;
+}
+
 FGTACANRecord::FGTACANRecord(void) :
     channel(""),
     freq(0)
