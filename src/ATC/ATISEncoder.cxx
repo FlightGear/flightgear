@@ -383,7 +383,7 @@ string ATISEncoder::getTransitionLevel( SGPropertyNode_ptr )
 
 string ATISEncoder::getWindDirection( SGPropertyNode_ptr )
 {
-  return getSpokenNumber( _atis->getWindDeg() );
+  return getSpokenNumber( _atis->getWindDeg(), true, 3 );
 }
 
 string ATISEncoder::getWindspeedKnots( SGPropertyNode_ptr )
