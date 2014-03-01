@@ -17,21 +17,19 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef __METARPROPERTIES_ATIS_ENCODER_HXX
-#define __METARPROPERTIES_ATIS_ENCODER_HXX
+#ifndef __CURRENTWEATHER_ATIS_ENCODER_HXX
+#define __CURRENTWEATHER_ATIS_ENCODER_HXX
 
-/* ATIS encoder from metarproperties */
-
-#include <simgear/props/props.hxx>
+/* ATIS encoder from current weather */
 
 #include <string>
 #include "ATISEncoder.hxx"
 
-class MetarPropertiesATISInformationProvider : public ATISInformationProvider
+class CurrentWeatherATISInformationProvider : public ATISInformationProvider
 {
 public:
-    MetarPropertiesATISInformationProvider( SGPropertyNode_ptr metar );
-    virtual ~MetarPropertiesATISInformationProvider();
+    CurrentWeatherATISInformationProvider( const std::string & airportId );
+    virtual ~CurrentWeatherATISInformationProvider();
 
 protected:
     virtual bool isValid();
@@ -49,7 +47,9 @@ protected:
     virtual int getDewpointDeg();
     virtual std::string getTrend();
 private:
-    SGPropertyNode_ptr _metar;
+    std::string _airportId;
+    SGPropertyNode_ptr _environment;
+    
 };
 
 #endif

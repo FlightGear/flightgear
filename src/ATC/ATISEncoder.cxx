@@ -407,14 +407,14 @@ string ATISEncoder::getCavok( SGPropertyNode_ptr )
 string ATISEncoder::getVisibilityMetric( SGPropertyNode_ptr )
 {
   string m = globals->get_locale()->getLocalizedString("meters", "atc", "meters" );
-  string km = globals->get_locale()->getLocalizedString("kilometersmeters", "atc", "kilometersmeters" );
+  string km = globals->get_locale()->getLocalizedString("kilometers", "atc", "kilometers" );
   string or_more = globals->get_locale()->getLocalizedString("ormore", "atc", "or more" );
 
   int v = _atis->getVisibilityMeters();
   string reply;
   if( v < 5000 ) return reply.append( getSpokenAltitude( v ) ).SPACE.append( m );
-  if( v >= 10000 ) return reply.append( getSpokenNumber(10) ).SPACE.append( km ).SPACE.append(or_more);
-  return reply.append( getSpokenNumber( v/1000 ).append( km ) );
+  if( v >= 9999 ) return reply.append( getSpokenNumber(10) ).SPACE.append( km ).SPACE.append(or_more);
+  return reply.append( getSpokenNumber( v/1000 ).SPACE.append( km ) );
 }
 
 string ATISEncoder::getPhenomena( SGPropertyNode_ptr )
@@ -461,7 +461,7 @@ string ATISEncoder::getInhg( SGPropertyNode_ptr )
 
   string reply;
   reply.append( getSpokenNumber( (int)intpart ) )
-       .append( DECIMAL ).SPACE
+       .SPACE.append( DECIMAL ).SPACE
        .append( getSpokenNumber( fractpart ) );
   return reply;
 }

@@ -34,6 +34,7 @@
 
 #include <ATC/CommStation.hxx>
 #include <ATC/MetarPropertiesATISInformationProvider.hxx>
+#include <ATC/CurrentWeatherATISInformationProvider.hxx>
 #include <Airports/airport.hxx>
 #include <Main/fg_props.hxx>
 #include <Navaids/navlist.hxx>
@@ -169,6 +170,7 @@ protected:
 
 private:
   std::string _requestedId;
+  SGPropertyNode_ptr _realWxEnabledNode;
   SGPropertyNode_ptr _metarPropertiesNode;
   SGPropertyNode * _atisNode;
   ATISEncoder _atisEncoder;
@@ -186,6 +188,7 @@ MetarBridge::~MetarBridge()
 
 void MetarBridge::bind()
 {
+  _realWxEnabledNode = fgGetNode( "/environment/realwx/enabled", true );
   _metarPropertiesNode->getNode( "valid", true )->addChangeListener( this );
 }
 
@@ -199,9 +202,19 @@ void MetarBridge::requestMetarForId( std::string & id )
   std::string uppercaseId = simgear::strutils::uppercase( id );
   if( _requestedId == uppercaseId ) return;
   _requestedId = uppercaseId;
-  _metarPropertiesNode->getNode( "station-id", true )->setStringValue( uppercaseId );
-  _metarPropertiesNode->getNode( "valid", true )->setBoolValue( false );
-  _metarPropertiesNode->getNode( "time-to-live", true )->setDoubleValue( 0.0 );
+
+  if( _realWxEnabledNode->getBoolValue() ) {
+    //  trigger a METAR request for the associated metarproperties
+    _metarPropertiesNode->getNode( "station-id", true )->setStringValue( uppercaseId );
+    _metarPropertiesNode->getNode( "valid", true )->setBoolValue( false );
+    _metarPropertiesNode->getNode( "time-to-live", true )->setDoubleValue( 0.0 );
+  } else  {
+    // use the present weather to generate the ATIS. 
+    if( NULL != _atisNode && false == _requestedId.empty() ) {
+      CurrentWeatherATISInformationProvider provider( _requestedId );
+      _atisNode->setStringValue( _atisEncoder.encodeATIS( &provider ) );
+    }
+  }
 }
 
 void MetarBridge::clearMetar()
@@ -213,7 +226,7 @@ void MetarBridge::clearMetar()
 void MetarBridge::valueChanged(SGPropertyNode * node )
 {
   // check for raising edge of valid flag
-  if( NULL == node || false == node->getBoolValue() )
+  if( NULL == node || false == node->getBoolValue() || false == _realWxEnabledNode->getBoolValue() )
     return;
 
   std::string responseId = simgear::strutils::uppercase(
