@@ -276,6 +276,7 @@ protected:
   FGPositioned(PositionedID aGuid, Type ty, const std::string& aIdent, const SGGeod& aPos);
 
   void modifyPosition(const SGGeod& newPos);
+  void invalidatePosition();
 
   static FGPositionedRef loadByIdImpl(PositionedID id);
 

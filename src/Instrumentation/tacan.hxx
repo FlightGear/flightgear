@@ -45,7 +45,7 @@ class TACAN : public SGSubsystem, public SGPropertyChangeListener
 
   private:
 
-    void disabled();
+    void disabled(bool force = false);
 
     void search (double frequency, const SGGeod& pos);
     double searchChannel (const std::string& channel);

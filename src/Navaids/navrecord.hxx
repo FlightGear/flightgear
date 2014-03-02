@@ -36,6 +36,7 @@
 const double FG_NAV_DEFAULT_RANGE = 50; // nm
 const double FG_LOC_DEFAULT_RANGE = 18; // nm
 const double FG_DME_DEFAULT_RANGE = 50; // nm
+const double FG_TACAN_DEFAULT_RANGE = 250; // nm
 const double FG_NAV_MAX_RANGE = 300;    // nm
 
 class FGNavRecord : public FGPositioned 

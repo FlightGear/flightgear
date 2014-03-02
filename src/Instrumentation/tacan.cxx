@@ -25,19 +25,22 @@
  * borderline reception.
  */
 static double
-adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
-              double max_range_nm)
+adjust_range( double station_elevation_ft,
+              double aircraft_altitude_ft,
+              double max_range_nm )
 {
-    max_range_nm = 150; // TODO why a fixed range?
-    double delta_elevation_ft =
-        fabs(aircraft_altitude_ft - transmitter_elevation_ft);
-    double range_nm = 1.23 * sqrt(delta_elevation_ft);
-    if (range_nm > max_range_nm)
-        range_nm = max_range_nm;
-    else if (range_nm < 20.0)
-        range_nm = 20.0;
-    double rand = sg_random();
-    return range_nm + (range_nm * rand * rand);
+  // See http://en.wikipedia.org/wiki/Line-of-sight_propagation for approximate
+  // line-of-sight distance to the horizon
+
+  double range_nm = 0;
+  if( station_elevation_ft > 5 )
+    range_nm += 1.23 * sqrt(station_elevation_ft);
+
+  if( aircraft_altitude_ft > 5 )
+    range_nm += 1.23 * sqrt(aircraft_altitude_ft);
+
+  return std::max(20., std::min(range_nm, max_range_nm))
+       * (1 + SGMiscd::pow<2>(0.3 * sg_random()));
 }
 
 //------------------------------------------------------------------------------
@@ -101,6 +104,8 @@ void TACAN::init()
     _channel_in2_node->addChangeListener(this);
     _channel_in3_node->addChangeListener(this);
     _channel_in4_node->addChangeListener(this, true);
+
+    disabled(true);
 }
 
 //------------------------------------------------------------------------------
@@ -130,18 +135,24 @@ void TACAN::update(double delta_time_sec)
   if( !_active_station || !_active_station->get_serviceable() )
     return disabled();
 
+  const SGGeod& nav_pos = _active_station->geod();
+
   // Calculate the bearing and range of the station from the aircraft
   double az = 0;
   double bearing = 0;
   double distance = SGLimitsd::max();
-  if( !SGGeodesy::inverse(pos, _active_station->geod(), bearing, az, distance) )
+  if( !SGGeodesy::inverse(pos, nav_pos, bearing, az, distance) )
     return disabled();
 
-  double range_nm = adjust_range( _active_station->get_elev_ft(),
+  // Increase distance due to difference in altitude
+  distance =
+    sqrt( SGMiscd::pow<2>(distance)
+        + SGMiscd::pow<2>(pos.getElevationM() - nav_pos.getElevationM()) );
+  double distance_nm = distance * SG_METER_TO_NM;
+
+  double range_nm = adjust_range( nav_pos.getElevationFt(),
                                   pos.getElevationFt(),
                                   _active_station->get_range() );
-
-  double distance_nm = distance * SG_METER_TO_NM;
 
   if( distance_nm > range_nm )
     return disabled();
@@ -184,9 +195,9 @@ void TACAN::update(double delta_time_sec)
 }
 
 //------------------------------------------------------------------------------
-void TACAN::disabled()
+void TACAN::disabled(bool force)
 {
-  if( _was_disabled )
+  if( _was_disabled && !force )
     return;
 
   _last_distance_nm = 0;

@@ -1129,6 +1129,7 @@ bool NavDataCache::isRebuildRequired()
   if (isCachedFileModified(d->aptDatPath) ||
       isCachedFileModified(d->metarDatPath) ||
       isCachedFileModified(d->navDatPath) ||
+      isCachedFileModified(d->carrierDatPath) ||
       isCachedFileModified(d->fixDatPath) ||
 // since POI loading is disabled on Windows, don't check for it
 // this caused: https://code.google.com/p/flightgear-bugs/issues/detail?id=1227

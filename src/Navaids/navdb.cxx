@@ -118,8 +118,15 @@ static double defaultNavRange(const string& ident, FGPositioned::Type type)
     case FGPositioned::GS:
       return FG_LOC_DEFAULT_RANGE;
       
-    case FGPositioned::DME: return FG_DME_DEFAULT_RANGE;
-    default: return FG_LOC_DEFAULT_RANGE;
+    case FGPositioned::DME:
+      return FG_DME_DEFAULT_RANGE;
+
+    case FGPositioned::TACAN:
+    case FGPositioned::MOBILE_TACAN:
+      return FG_TACAN_DEFAULT_RANGE;
+
+    default:
+      return FG_LOC_DEFAULT_RANGE;
   }
 }
 
@@ -134,9 +141,8 @@ static PositionedID readNavFromStream(std::istream& aStream,
   
   int rawType;
   aStream >> rawType;
-  if (aStream.eof() || (rawType == 99)) {
+  if( aStream.eof() || (rawType == 99) || (rawType == 0) )
     return 0; // happens with, eg, carrier_nav.dat
-  }
   
   double lat, lon, elev_ft, multiuse;
   int freq, range;
@@ -146,7 +152,7 @@ static PositionedID readNavFromStream(std::istream& aStream,
   
   SGGeod pos(SGGeod::fromDegFt(lon, lat, elev_ft));
   name = simgear::strutils::strip(name);
-  
+
 // the type can be forced by our caller, but normally we use th value
 // supplied in the .dat file
   if (type == FGPositioned::INVALID) {
@@ -282,9 +288,10 @@ bool loadCarrierNav(const SGPath& path)
     }
     
     while ( ! incarrier.eof() ) {
+      incarrier >> skipcomment;
       // force the type to be MOBILE_TACAN
       readNavFromStream(incarrier, FGPositioned::MOBILE_TACAN);
-    } // end while
+    }
 
   return true;
 }

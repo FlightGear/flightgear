@@ -213,8 +213,7 @@ void FGMobileNavRecord::updatePos()
       : _vehicle_node->getDoubleValue("position/altitude-ft")
     ));
   else
-    // If no match was found set 'invalid' position (lat = lon = 0)
-    modifyPosition(SGGeod());
+    invalidatePosition();
 
   serviceable = _vehicle_node.valid();
 }

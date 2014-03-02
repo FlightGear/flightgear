@@ -67,13 +67,17 @@ static bool validateFilter(FGPositioned::Filter* filter)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-FGPositioned::FGPositioned(PositionedID aGuid, Type ty, const std::string& aIdent, const SGGeod& aPos) :
+FGPositioned::FGPositioned( PositionedID aGuid,
+                            Type ty,
+                            const std::string& aIdent,
+                            const SGGeod& aPos ):
   mGuid(aGuid),
-  mPosition(aPos),
-  mCart(SGVec3d::fromGeod(mPosition)),
   mType(ty),
-  mIdent(aIdent)
-{  
+  mIdent(aIdent),
+  mPosition(aPos),
+  mCart(SGVec3d::fromGeod(mPosition))
+{
+
 }
 
 FGPositioned::~FGPositioned()
@@ -353,10 +357,18 @@ FGPositioned::sortByRange(FGPositionedList& aResult, const SGGeod& aPos)
   }
 }
 
+//------------------------------------------------------------------------------
 void FGPositioned::modifyPosition(const SGGeod& newPos)
 {
   const_cast<SGGeod&>(mPosition) = newPos;
   const_cast<SGVec3d&>(mCart) = SGVec3d::fromGeod(newPos);
+}
+
+//------------------------------------------------------------------------------
+void FGPositioned::invalidatePosition()
+{
+  const_cast<SGGeod&>(mPosition) = SGGeod::fromDeg(999,999);
+  const_cast<SGVec3d&>(mCart) = SGVec3d::zeros();
 }
 
 //------------------------------------------------------------------------------
