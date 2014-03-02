@@ -208,7 +208,7 @@ void TACAN::disabled()
 void TACAN::search (double frequency_mhz,const SGGeod& pos)
 {
   // reset search time
-  _time_before_search_sec = 1.0;
+  _time_before_search_sec = 5;
 
   // Get first matching mobile station (carriers/tankers/etc.)
   // TODO do we need to check for mobile stations with same frequency? Currently

@@ -119,7 +119,8 @@ FGMobileNavRecord::FGMobileNavRecord( PositionedID aGuid,
                                       int range,
                                       double multiuse,
                                       PositionedID aRunway ):
-  FGNavRecord(aGuid, type, ident, name, aPos, freq, range, multiuse, aRunway)
+  FGNavRecord(aGuid, type, ident, name, aPos, freq, range, multiuse, aRunway),
+  _initial_elevation_ft(aPos.getElevationFt())
 {
 
 }
@@ -139,12 +140,9 @@ const SGVec3d& FGMobileNavRecord::cart() const
 }
 
 //------------------------------------------------------------------------------
-void FGMobileNavRecord::updatePos()
+void FGMobileNavRecord::updateVehicle()
 {
-  SGTimeStamp now = SGTimeStamp::now();
-  if( (now - _last_position_update).toSecs() < 1 )
-    return;
-  _last_position_update = now;
+  _vehicle_node.clear();
 
   SGPropertyNode* ai_branch = fgGetNode("ai/models");
   if( !ai_branch )
@@ -155,7 +153,6 @@ void FGMobileNavRecord::updatePos()
     return;
   }
 
-  serviceable = true;
   const std::string& nav_name = name();
 
   // Try any aircraft carriers first
@@ -168,11 +165,7 @@ void FGMobileNavRecord::updatePos()
         || nav_name.find(carrier_name) == std::string::npos )
       continue;
 
-    modifyPosition(SGGeod::fromDegFt(
-      carrier[i]->getDoubleValue("position/longitude-deg"),
-      carrier[i]->getDoubleValue("position/latitude-deg"),
-      get_elev_ft()
-    ));
+    _vehicle_node = carrier[i];
     return;
   }
 
@@ -195,22 +188,38 @@ void FGMobileNavRecord::updatePos()
           || nav_name.find(callsign) == std::string::npos )
         continue;
 
-      modifyPosition(SGGeod::fromDegFt(
-        tanker[j]->getDoubleValue("position/longitude-deg"),
-        tanker[j]->getDoubleValue("position/latitude-deg"),
-        tanker[j]->getDoubleValue("position/altitude-ft")
-      ));
+      _vehicle_node = tanker[j];
       return;
     }
   }
-
-  // If no match was found set 'invalid' position (lat = lon = alt = 0)
-  modifyPosition(SGGeod());
-
-  // It's mobile but we do not know where it is...
-  serviceable = false;
 }
 
+//------------------------------------------------------------------------------
+void FGMobileNavRecord::updatePos()
+{
+  SGTimeStamp now = SGTimeStamp::now();
+  if( (now - _last_vehicle_update).toSecs() > (_vehicle_node.valid() ? 5 : 2) )
+  {
+    updateVehicle();
+    _last_vehicle_update = now;
+  }
+
+  if( _vehicle_node.valid() )
+    modifyPosition(SGGeod::fromDegFt(
+      _vehicle_node->getDoubleValue("position/longitude-deg"),
+      _vehicle_node->getDoubleValue("position/latitude-deg"),
+      _vehicle_node->getNameString() == "carrier"
+      ? _initial_elevation_ft
+      : _vehicle_node->getDoubleValue("position/altitude-ft")
+    ));
+  else
+    // If no match was found set 'invalid' position (lat = lon = 0)
+    modifyPosition(SGGeod());
+
+  serviceable = _vehicle_node.valid();
+}
+
+//------------------------------------------------------------------------------
 FGTACANRecord::FGTACANRecord(void) :
     channel(""),
     freq(0)

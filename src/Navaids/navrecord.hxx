@@ -30,6 +30,7 @@
 #include "positioned.hxx"
 #include <Airports/airports_fwd.hxx>
 
+#include <simgear/props/propsfwd.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 const double FG_NAV_DEFAULT_RANGE = 50; // nm
@@ -122,10 +123,13 @@ class FGMobileNavRecord:
     virtual const SGGeod& geod() const;
     virtual const SGVec3d& cart() const;
 
+    void updateVehicle();
     void updatePos();
 
   protected:
-    SGTimeStamp _last_position_update;
+    SGTimeStamp _last_vehicle_update;
+    SGPropertyNode_ptr _vehicle_node;
+    double _initial_elevation_ft; // Elevation as given in the config file
 };
 
 class FGTACANRecord : public SGReferenced {
