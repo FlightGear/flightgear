@@ -6,3 +6,6 @@ endif()
 if (ENABLE_IAX)
     add_subdirectory(iaxclient/lib)
 endif()
+
+add_subdirectory(mongoose)
+add_subdirectory(cjson)

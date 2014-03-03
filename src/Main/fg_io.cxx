@@ -48,7 +48,7 @@
 #include <Network/AV400Sim.hxx>
 #include <Network/AV400WSim.hxx>
 #include <Network/garmin.hxx>
-#include <Network/httpd.hxx>
+#include <Network/http/httpd.hxx>
 #include <Network/igc.hxx>
 #include <Network/jpg-httpd.hxx>
 #include <Network/joyclient.hxx>
@@ -149,10 +149,6 @@ FGIO::parse_port_config( const string& config )
         } else if ( protocol == "igc" ) {
             IGCProtocol *igc = new IGCProtocol;
             io = igc;
-        } else if ( protocol == "httpd" ) {
-            // determine port
-            string port = tokens[1];
-            return new FGHttpd( atoi(port.c_str()) );
         } else if ( protocol == "jpg-httpd" ) {
             // determine port
             int port = simgear::strutils::to_int(tokens[1]);

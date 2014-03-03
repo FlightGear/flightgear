@@ -1,9 +1,8 @@
-// httpd.hxx -- FGFS http property manager interface / external script
-//              and control class
+// RunUriHandler.hxx -- Provide screenshots via http
 //
-// Written by Curtis Olson, started June 2001.
+// Written by Torsten Dreyer, started April 2014.
 //
-// Copyright (C) 2001  Curtis L. Olson - http://www.flightgear.org/~curt
+// Copyright (C) 2014  Torsten Dreyer
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -18,33 +17,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-// $Id$
 
+#ifndef __FG_RUN_URI_HANDLER_HXX
+#define __FG_RUN_URI_HANDLER_HXX
 
-#ifndef _FG_HTTPD_HXX
-#define _FG_HTTPD_HXX
+#include "urihandler.hxx"
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+namespace flightgear {
+namespace http {
 
-#include "protocol.hxx"
-
-class HttpdServer;
-
-class FGHttpd : public FGProtocol
-{
-    int port;
-    HttpdServer *server;
-
+class RunUriHandler : public URIHandler {
 public:
-    FGHttpd( int p );
-    ~FGHttpd();
-
-    bool open();
-    bool process();
-    bool close();
+  RunUriHandler( const char * uri = "/run.cgi" ) : URIHandler( uri  ) {}
+  virtual bool handleRequest( const HTTPRequest & request, HTTPResponse & response );
 };
 
-#endif // _FG_HTTPD_HXX
+} // namespace http
+} // namespace flightgear
+
+#endif //#define __FG_RUN_URI_HANDLER_HXX

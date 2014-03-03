@@ -121,6 +121,7 @@
 #include <Cockpit/cockpitDisplayManager.hxx>
 #include <Network/HTTPClient.hxx>
 #include <Network/fgcom.hxx>
+#include <Network/http/httpd.hxx>
 
 #include <Viewer/CameraGroup.hxx>
 
@@ -766,6 +767,12 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("fgcom", new FGCom);
 #endif
+
+    {
+      SGSubsystem * httpd = flightgear::http::FGHttpd::createInstance( fgGetNode(flightgear::http::PROPERTY_ROOT) );
+      if( NULL != httpd ) 
+        globals->add_subsystem("httpd", httpd  );
+    }
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the lighting subsystem.

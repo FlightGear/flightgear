@@ -65,6 +65,7 @@
 #include <Viewer/viewer.hxx>
 #include <Viewer/viewmgr.hxx>
 #include <Environment/presets.hxx>
+#include <Network/http/httpd.hxx>
 #include "AircraftDirVisitorBase.hxx"
 
 #include <osg/Version>
@@ -950,6 +951,16 @@ fgOptStartDateGmt( const char *arg )
 }
 
 static int
+fgOptHttpd( const char * arg )
+{
+    int port = atoi(arg);
+    if( port > 0 ) {
+        fgSetInt( string(flightgear::http::PROPERTY_ROOT).append("/listening-port").c_str(), port );
+    }
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgSetupProxy( const char *arg )
 {
     string options = simgear::strutils::strip( arg );
@@ -1554,7 +1565,7 @@ struct OptionDesc {
     {"hud-culled",                   false, OPTION_STRING, "/sim/hud/frame-stat-type", false, "culled", 0 },
     {"atcsim",                       true,  OPTION_CHANNEL, "", false, "dummy", 0 },
     {"atlas",                        true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
-    {"httpd",                        true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"httpd",                        true,  OPTION_FUNC   , "", false, "", fgOptHttpd },
     {"jpg-httpd",                    true,  OPTION_CHANNEL, "", false, "", 0 },
     {"native",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"native-ctrls",                 true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },

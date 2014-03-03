@@ -10,7 +10,6 @@ set(SOURCES
 	atlas.cxx
 	garmin.cxx
 	generic.cxx
-	httpd.cxx
 	HTTPClient.cxx
 	igc.cxx
 	joyclient.cxx
@@ -27,7 +26,7 @@ set(SOURCES
 	pve.cxx
 	ray.cxx
 	rul.cxx
-    jpg-httpd.cxx
+    	jpg-httpd.cxx
 	)
 
 set(HEADERS
@@ -40,7 +39,6 @@ set(HEADERS
 	atlas.hxx
 	garmin.hxx
 	generic.hxx
-	httpd.hxx
 	HTTPClient.hxx
 	igc.hxx
 	joyclient.hxx
@@ -57,7 +55,7 @@ set(HEADERS
 	pve.hxx
 	ray.hxx
 	rul.hxx
-    jpg-httpd.hxx
+	jpg-httpd.hxx
 	)
 
 if(ENABLE_IAX)
@@ -70,4 +68,6 @@ flightgear_component(Network "${SOURCES}" "${HEADERS}")
 if(RTI_FOUND)
   add_subdirectory(HLA)
 endif()
+
+add_subdirectory(http)
 
