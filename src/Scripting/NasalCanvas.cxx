@@ -197,6 +197,12 @@ naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
   );
 }
 
+template<int Mask>
+naRef f_eventGetModifier(naContext, sc::MouseEvent& event)
+{
+  return naNum((event.getButtonMask() & Mask) != 0);
+}
+
 naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
 {
   return NasalElement::create(c, el.lock());
@@ -204,6 +210,7 @@ naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
 
 naRef initNasalCanvas(naRef globals, naContext c)
 {
+  using osgGA::GUIEventAdapter;
   NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)
     .member("target", &sc::Event::getTarget)
@@ -219,6 +226,13 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("localY", &sc::MouseEvent::getLocalY)
     .member("deltaX", &sc::MouseEvent::getDeltaX)
     .member("deltaY", &sc::MouseEvent::getDeltaY)
+    .member("button", &sc::MouseEvent::getButton)
+    .member("buttons", &sc::MouseEvent::getButtonMask)
+    .member("modifiers", &sc::MouseEvent::getModifiers)
+    .member("ctrlKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_CTRL>)
+    .member("shiftKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_SHIFT>)
+    .member("altKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_ALT>)
+    .member("metaKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_META>)
     .member("click_count", &sc::MouseEvent::getCurrentClickCount);
   NasalCanvas::init("Canvas")
     .member("_node_ghost", &elementGetNode<sc::Canvas>)
