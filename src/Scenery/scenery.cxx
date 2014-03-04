@@ -47,6 +47,8 @@
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/model/CheckSceneryVisitor.hxx>
+#include <simgear/scene/sky/sky.hxx>
+
 #include <simgear/bvh/BVHNode.hxx>
 #include <simgear/bvh/BVHLineSegmentVisitor.hxx>
 #include <simgear/structure/commands.hxx>
@@ -262,8 +264,8 @@ public:
     } else if (name == "aircraft") {
       _scenery->scene_graph->setChildValue(_scenery->aircraft_branch, b);
     } else if (name == "clouds") {
-      // clouds live elsewhere in the scene, bounce this to the correct
-      // place in FGRenderer
+      // clouds live elsewhere in the scene, but we handle them here
+      globals->get_renderer()->getSky()->set_clouds_enabled(b);
     } else if (name == "draw-otw") {
       // legacy setting but let's keep it working
       fgGetNode("/sim/rendering/draw-mask")->setBoolValue("terrain", b);
