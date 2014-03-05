@@ -54,6 +54,14 @@ int MetarPropertiesATISInformationProvider::getWindDeg()
    return _metar->getIntValue( "base-wind-dir-deg" );
 }
 
+int MetarPropertiesATISInformationProvider::getWindMinDeg()
+{
+   return _metar->getIntValue( "base-wind-range-from" );
+}
+int MetarPropertiesATISInformationProvider::getWindMaxDeg()
+{
+   return _metar->getIntValue( "base-wind-range-to" );
+}
 int MetarPropertiesATISInformationProvider::getWindSpeedKt()
 {
   return _metar->getIntValue( "base-wind-speed-kt" );

@@ -38,6 +38,8 @@ protected:
     virtual std::string airportId();
     virtual long getTime();
     virtual int getWindDeg();
+    virtual int getWindMinDeg();
+    virtual int getWindMaxDeg();
     virtual int getWindSpeedKt();
     virtual int getGustsKt();
     virtual int getQnh();

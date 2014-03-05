@@ -48,6 +48,8 @@ public:
     virtual long getTime() = 0; // see makeAtisTime
 
     virtual int getWindDeg() = 0;
+    virtual int getWindMinDeg() = 0;
+    virtual int getWindMaxDeg() = 0;
     virtual int getWindSpeedKt() = 0;
     virtual int getGustsKt() = 0;
     virtual int getQnh() = 0;
@@ -77,6 +79,8 @@ protected:
   virtual std::string getTakeoffRunway( SGPropertyNode_ptr );
   virtual std::string getTransitionLevel( SGPropertyNode_ptr );
   virtual std::string getWindDirection( SGPropertyNode_ptr );
+  virtual std::string getWindMinDirection( SGPropertyNode_ptr );
+  virtual std::string getWindMaxDirection( SGPropertyNode_ptr );
   virtual std::string getWindspeedKnots( SGPropertyNode_ptr );
   virtual std::string getGustsKnots( SGPropertyNode_ptr );
   virtual std::string getCavok( SGPropertyNode_ptr );

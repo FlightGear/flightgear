@@ -113,6 +113,8 @@ ATISEncoder::ATISEncoder()
   handlerMap.insert( std::make_pair( "rwy-to", &ATISEncoder::getTakeoffRunway ));
   handlerMap.insert( std::make_pair( "transition-level", &ATISEncoder::getTransitionLevel ));
   handlerMap.insert( std::make_pair( "wind-dir", &ATISEncoder::getWindDirection ));
+  handlerMap.insert( std::make_pair( "wind-from", &ATISEncoder::getWindMinDirection ));
+  handlerMap.insert( std::make_pair( "wind-to", &ATISEncoder::getWindMaxDirection ));
   handlerMap.insert( std::make_pair( "wind-speed-kn", &ATISEncoder::getWindspeedKnots ));
   handlerMap.insert( std::make_pair( "gusts", &ATISEncoder::getGustsKnots ));
   handlerMap.insert( std::make_pair( "visibility-metric", &ATISEncoder::getVisibilityMetric ));
@@ -384,6 +386,16 @@ string ATISEncoder::getTransitionLevel( SGPropertyNode_ptr )
 string ATISEncoder::getWindDirection( SGPropertyNode_ptr )
 {
   return getSpokenNumber( _atis->getWindDeg(), true, 3 );
+}
+
+string ATISEncoder::getWindMinDirection( SGPropertyNode_ptr )
+{
+  return getSpokenNumber( _atis->getWindMinDeg(), true, 3 );
+}
+
+string ATISEncoder::getWindMaxDirection( SGPropertyNode_ptr )
+{
+  return getSpokenNumber( _atis->getWindMaxDeg(), true, 3 );
 }
 
 string ATISEncoder::getWindspeedKnots( SGPropertyNode_ptr )
