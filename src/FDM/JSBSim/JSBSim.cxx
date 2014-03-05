@@ -215,11 +215,11 @@ FGJSBsim::FGJSBsim( double dt )
 
     SGPath aircraft_path( fgGetString("/sim/aircraft-dir") );
 
-    SGPath engine_path( fgGetString("/sim/aircraft-dir") );
-    engine_path.append( "Engine" );
+    SGPath engine_path( fgGetString("/sim/fg-root") );
+    engine_path.append( "Aircraft/Generic/JSBSim/Engines" );
 
-    SGPath systems_path( fgGetString("/sim/aircraft-dir") );
-    systems_path.append( "Systems" );
+    SGPath systems_path( fgGetString("/sim/fg-root") );
+    systems_path.append( "Aircraft/Generic/JSBSim/Systems" );
 
 // deprecate sim-time-sec for simulation/sim-time-sec
 // remove alias with increased configuration file version number (2.1 or later)
