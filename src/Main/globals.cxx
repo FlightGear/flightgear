@@ -275,7 +275,7 @@ void FGGlobals::set_fg_root (const std::string &root) {
 
     // remove /sim/fg-root before writing to prevent hijacking
     SGPropertyNode *n = fgGetNode("/sim", true);
-    n->removeChild("fg-root", 0, false);
+    n->removeChild("fg-root", 0);
     n = n->getChild("fg-root", 0, true);
     n->setStringValue(fg_root.c_str());
     n->setAttribute(SGPropertyNode::WRITE, false);
@@ -415,7 +415,7 @@ void FGGlobals::append_aircraft_path(const std::string& path)
   
 // make aircraft dirs available to Nasal
   SGPropertyNode* sim = fgGetNode("/sim", true);
-  sim->removeChild("fg-aircraft", index, false);
+  sim->removeChild("fg-aircraft", index);
   SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
   n->setStringValue(abspath);
   n->setAttribute(SGPropertyNode::WRITE, false);
@@ -594,7 +594,7 @@ FGGlobals::resetPropertyRoot()
     
     // remove /sim/fg-root before writing to prevent hijacking
     SGPropertyNode *n = props->getNode("/sim", true);
-    n->removeChild("fg-root", 0, false);
+    n->removeChild("fg-root", 0);
     n = n->getChild("fg-root", 0, true);
     n->setStringValue(fg_root.c_str());
     n->setAttribute(SGPropertyNode::WRITE, false);

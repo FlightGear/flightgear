@@ -386,6 +386,6 @@ void FGEventInput::RemoveDevice( unsigned index )
     delete inputDevice;
     
   }
-  deviceNode = baseNode->removeChild("device", index, false);
+  deviceNode = baseNode->removeChild("device", index);
 }
 

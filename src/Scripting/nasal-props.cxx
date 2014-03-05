@@ -537,7 +537,7 @@ static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
     if(!naIsString(child) || !naIsNum(index)) return naNil();
     SGPropertyNode_ptr n = 0;
     try {
-        n = node->removeChild(naStr_data(child), (int)index.num, false);
+        n = node->removeChild(naStr_data(child), (int)index.num);
     } catch (const string& err) {
         naRuntimeError(c, (char *)err.c_str());
     }
@@ -557,14 +557,14 @@ static naRef f_removeChildren(naContext c, naRef me, int argc, naRef* args)
     if(naIsNil(argv) || naVec_size(argv) == 0) {
         // Remove all children
         for(int i = node->nChildren() - 1; i >=0; i--)
-            naVec_append(result, propNodeGhostCreate(c, node->removeChild(i, false)));
+            naVec_append(result, propNodeGhostCreate(c, node->removeChild(i)));
     } else {
         // Remove all children of a specified name
         naRef name = naVec_get(argv, 0);
         if(!naIsString(name)) return naNil();
         try {
             vector<SGPropertyNode_ptr> children
-                = node->removeChildren(naStr_data(name), false);
+                = node->removeChildren(naStr_data(name));
             for(unsigned int i=0; i<children.size(); i++)
                 naVec_append(result, propNodeGhostCreate(c, children[i]));
         } catch (const string& err) {

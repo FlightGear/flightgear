@@ -129,7 +129,7 @@ FGReplay::clear()
     }
 
     // clear messages belonging to old replay session
-    fgGetNode("/sim/replay/messages", 0, true)->removeChildren("msg", false);
+    fgGetNode("/sim/replay/messages", 0, true)->removeChildren("msg");
 }
 
 /** 
@@ -1101,7 +1101,7 @@ FGReplay::listTapes(bool SameAircraftFilter, const SGPath& tapeDirectory)
     simgear::PathList list =  dir.children(simgear::Dir::TYPE_FILE, ".fgtape");
 
     SGPropertyNode* TapeList = fgGetNode("/sim/replay/tape-list", true);
-    TapeList->removeChildren("tape", false);
+    TapeList->removeChildren("tape");
     int Index = 0;
     size_t l = aircraftType.size();
     for (simgear::PathList::iterator it = list.begin(); it!=list.end(); ++it)

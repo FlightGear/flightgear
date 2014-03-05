@@ -97,7 +97,7 @@ void FGJoystickInput::_remove(bool all)
         joystick* joy = &joysticks[i];
         // do not remove predefined joysticks info on reinit
         if (all || (!joy->predefined))
-            js_nodes->removeChild("js", i, false);
+            js_nodes->removeChild("js", i);
         
         joy->plibJS.reset();
         joy->clearAxesAndButtons();

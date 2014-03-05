@@ -89,7 +89,7 @@ void FGATCDialogNew::frequencySearch()
   
 	SGPropertyNode_ptr button_group = getNamedNode(dlg, "quick-buttons");
 	// remove all dynamic airport/ATC buttons
-	button_group->removeChildren("button", false);
+	button_group->removeChildren("button");
   
   AirportsWithATC filt;
   FGPositionedList results = FGPositioned::findWithinRange(globals->get_aircraft_position(), 50.0, &filt);
@@ -98,7 +98,7 @@ void FGATCDialogNew::frequencySearch()
     
     SGPropertyNode *entry = button_group->getNode("button", r, true);
 		copyProperties(button_group->getNode("button-template", true), entry);
-		entry->removeChildren("enabled", true);
+		entry->removeChildren("enabled");
 		entry->setStringValue("legend", results[r]->ident());
 		entry->setStringValue("binding[0]/icao", results[r]->ident());
   }
@@ -121,7 +121,7 @@ void FGATCDialogNew::frequencyDisplay(const std::string& ident)
   
 	SGPropertyNode_ptr freq_group = getNamedNode(dlg, "frequency-list");
 	// remove all frequency entries
-	freq_group->removeChildren("group", false);
+	freq_group->removeChildren("group");
   
   std::string uident(ident);
 	atcUppercase(uident);
@@ -151,7 +151,7 @@ void FGATCDialogNew::frequencyDisplay(const std::string& ident)
     // add frequency line (modified copy of <group-template>)
 		SGPropertyNode *entry = freq_group->getNode("group", c, true);
 		copyProperties(freq_group->getNode("group-template", true), entry);
-		entry->removeChildren("enabled", true);
+		entry->removeChildren("enabled");
     
     entry->setStringValue("text[0]/label", comm->ident());
 
@@ -257,7 +257,7 @@ void FGATCDialogNew::update(double dt) {
 
     _gui->closeDialog(dialog_name);
     SGPropertyNode_ptr button_group = getNamedNode(dlg, "transmission-choice");
-    button_group->removeChildren("button", false);
+    button_group->removeChildren("button");
 
     const int bufsize = 32;
     char buf[bufsize];
@@ -268,7 +268,7 @@ void FGATCDialogNew::update(double dt) {
             fgSetBool(buf, false);
         SGPropertyNode *entry = button_group->getNode("button", commandNr, true);
         copyProperties(button_group->getNode("button-template", true), entry);
-	entry->removeChildren("enabled", true);
+	entry->removeChildren("enabled");
 	entry->setStringValue("property", buf);
 	entry->setIntValue("keynum", '1' + commandNr);
 	if (commandNr == 0)

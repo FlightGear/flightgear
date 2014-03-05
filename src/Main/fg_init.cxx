@@ -441,7 +441,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     // Set /sim/fg-home and don't allow malign code to override it until
     // Nasal security is set up.  Use FG_HOME if necessary.
     SGPropertyNode *home = fgGetNode("/sim", true);
-    home->removeChild("fg-home", 0, false);
+    home->removeChild("fg-home", 0);
     home = home->getChild("fg-home", 0, true);
     home->setStringValue(dataPath.c_str());
     home->setAttribute(SGPropertyNode::WRITE, false);
@@ -546,7 +546,7 @@ bool fgInitGeneral() {
 
     simgear::Dir cwd(simgear::Dir::current());
     SGPropertyNode *curr = fgGetNode("/sim", true);
-    curr->removeChild("fg-current", 0, false);
+    curr->removeChild("fg-current", 0);
     curr = curr->getChild("fg-current", 0, true);
     curr->setStringValue(cwd.path().str());
     curr->setAttribute(SGPropertyNode::WRITE, false);
