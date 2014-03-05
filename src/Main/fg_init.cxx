@@ -984,9 +984,7 @@ void fgStartReposition()
   // need to reset aircraft (systems/instruments) so they can adapt to current environment
   globals->get_subsystem("systems")->reinit();
   globals->get_subsystem("instrumentation")->reinit();
-  
-  globals->get_subsystem("ATIS")->reinit();
-  
+    
   // setup state to end re-init
   fgSetBool("/sim/signals/reinit", false);
   if ( !freeze ) {
