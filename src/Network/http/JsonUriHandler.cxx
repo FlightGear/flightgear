@@ -51,8 +51,8 @@ static const char * getPropertyTypeString( simgear::props::Type type )
 static cJSON * PropToJson( SGPropertyNode_ptr n )
 {
   cJSON * jsonProp = cJSON_CreateObject();
-  cJSON_AddItemToObject(jsonProp, "path", cJSON_CreateString(n->getPath().c_str()));
-  cJSON_AddItemToObject(jsonProp, "name", cJSON_CreateString(n->getDisplayName().c_str()));
+  cJSON_AddItemToObject(jsonProp, "path", cJSON_CreateString(n->getPath(true).c_str()));
+  cJSON_AddItemToObject(jsonProp, "name", cJSON_CreateString(n->getName()));
   cJSON_AddItemToObject(jsonProp, "value", cJSON_CreateString(n->getStringValue()));
   cJSON_AddItemToObject(jsonProp, "type", cJSON_CreateString(getPropertyTypeString(n->getType())));
   return jsonProp;
