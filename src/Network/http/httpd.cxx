@@ -237,7 +237,11 @@ int MongooseHttpd::staticRequestHandler( struct mg_connection * connection )
 
 FGHttpd * FGHttpd::createInstance( SGPropertyNode_ptr configNode )
 {
-  return configNode.valid() ? new MongooseHttpd( configNode ) : NULL;
+  // only create a server if a port has been configured
+  if( false == configNode.valid() ) return NULL;
+  string port = configNode->getStringValue( "options/listening-port", "" );
+  if( port.empty() ) return NULL;
+  return new MongooseHttpd( configNode );
 }
 
 } // namespace http
