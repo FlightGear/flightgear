@@ -384,7 +384,7 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
 
   FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  terrain_branch->accept(intersectVisitor);
+  get_scene_graph()->accept(intersectVisitor);
 
   if (!intersectVisitor.getHaveHit())
       return false;
@@ -413,7 +413,7 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
 
   FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  terrain_branch->accept(intersectVisitor);
+  get_scene_graph()->accept(intersectVisitor);
 
   if (!intersectVisitor.getHaveHit())
       return false;
@@ -436,7 +436,7 @@ bool FGScenery::scenery_available(const SGGeod& position, double range_m)
     // currently the PagedLODs will not be loaded by the DatabasePager
     // while the splashscreen is there, so CheckSceneryVisitor force-loads
     // missing objects in the main thread
-    terrain_branch->accept(csnv);
+    get_scene_graph()->accept(csnv);
     if(!csnv.isLoaded())
         return false;
     return true;
