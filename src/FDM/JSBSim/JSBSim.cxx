@@ -389,9 +389,7 @@ void FGJSBsim::init()
       Winds->SetProbabilityOfExceedence(0.0);
     }
 
-    fgic->SetWindNEDFpsIC( -wind_from_north->getDoubleValue(),
-                           -wind_from_east->getDoubleValue(),
-                           -wind_from_down->getDoubleValue() );
+    fgic->SetWindNEDFpsIC(0.0, 0.0, 0.0);
 
     SG_LOG(SG_FLIGHT,SG_INFO,"T,p,rho: " << Atmosphere->GetTemperature()
      << ", " << Atmosphere->GetPressure()
