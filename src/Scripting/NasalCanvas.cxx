@@ -200,7 +200,7 @@ naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
 template<int Mask>
 naRef f_eventGetModifier(naContext, sc::MouseEvent& event)
 {
-  return naNum((event.getButtonMask() & Mask) != 0);
+  return naNum((event.getModifiers() & Mask) != 0);
 }
 
 naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
