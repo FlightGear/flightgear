@@ -48,19 +48,26 @@ static const char * getPropertyTypeString( simgear::props::Type type )
   }
 }
 
-static cJSON * PropToJson( SGPropertyNode_ptr n )
+static cJSON * PropToJson( SGPropertyNode_ptr n, int depth )
 {
-  cJSON * jsonProp = cJSON_CreateObject();
-  cJSON_AddItemToObject(jsonProp, "path", cJSON_CreateString(n->getPath(true).c_str()));
-  cJSON_AddItemToObject(jsonProp, "name", cJSON_CreateString(n->getName()));
-  cJSON_AddItemToObject(jsonProp, "value", cJSON_CreateString(n->getStringValue()));
-  cJSON_AddItemToObject(jsonProp, "type", cJSON_CreateString(getPropertyTypeString(n->getType())));
-  return jsonProp;
+  cJSON * json = cJSON_CreateObject();
+  cJSON_AddItemToObject(json, "path", cJSON_CreateString(n->getPath(true).c_str()));
+  cJSON_AddItemToObject(json, "name", cJSON_CreateString(n->getName()));
+  cJSON_AddItemToObject(json, "value", cJSON_CreateString(n->getStringValue()));
+  cJSON_AddItemToObject(json, "type", cJSON_CreateString(getPropertyTypeString(n->getType())));
+
+  if( depth > 0 && n->nChildren() > 0 ) {
+    cJSON * jsonArray = cJSON_CreateArray();
+    for( int i = 0; i < n->nChildren(); i++ )
+      cJSON_AddItemToArray( jsonArray, PropToJson( n->getChild(i), depth-1 ) );
+    cJSON_AddItemToObject( json, "children", jsonArray );
+  }
+  return json;
 }
 
 bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse & response )
 {
-  response.Header["Content-Type"] = "application/json; charset=ISO-8859-1";
+  response.Header["Content-Type"] = "application/json; charset=UTF-8";
 
   string propertyPath = request.Uri;
 
@@ -77,6 +84,13 @@ bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse
   while( false == propertyPath.empty() && propertyPath[ propertyPath.length()-1 ] == '/' )
     propertyPath = propertyPath.substr(0,propertyPath.length()-1);
 
+  // max recursion depth
+  int  depth = atoi(request.RequestVariables.get("d").c_str());
+  if( depth < 1 ) depth = 1; // at least one level 
+
+  // pretty print (y) or compact print (default)
+  bool indent = request.RequestVariables.get("i") == "y";
+
   SGPropertyNode_ptr node = fgGetNode( string("/") + propertyPath );
   if( false == node.valid() ) {
     response.StatusCode = 400;
@@ -86,15 +100,9 @@ bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse
 
   } 
 
-  cJSON * json = PropToJson( node );
-  if( node->nChildren() > 0 ) {
-    cJSON * jsonArray = cJSON_CreateArray();
-    for( int i = 0; i < node->nChildren(); i++ )
-      cJSON_AddItemToArray( jsonArray, PropToJson( node->getChild(i) ) );
-    cJSON_AddItemToObject( json, "children", jsonArray );
-  }
+  cJSON * json = PropToJson( node, depth );
 
-  char * jsonString = cJSON_Print( json );
+  char * jsonString = indent ? cJSON_Print( json ) : cJSON_PrintUnformatted( json );
   response.Content = jsonString;
   free( jsonString );
   cJSON_Delete( json );
