@@ -194,14 +194,6 @@ DesktopGroup::DesktopGroup():
   stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 
   _width = _height = -1;
-
-  // Do not change values on reinit
-  _width.node()->setAttribute(SGPropertyNode::PRESERVE, true);
-  _height.node()->setAttribute(SGPropertyNode::PRESERVE, true);
-
-  // Do not restore windows on reinit (all windows will need to be recreated,
-  // but hey it's a reset ;-))
-  _node->setAttribute(SGPropertyNode::PRESERVE, true);
 }
 
 //------------------------------------------------------------------------------
