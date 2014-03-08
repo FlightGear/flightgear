@@ -400,7 +400,7 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
   response.Content = "<!DOCTYPE html>";
   response.Content.append( html->render() );
   delete html;
-  response.Header["Content-Type"] = "text/html; charset=ISO-8859-1";
+  response.Header["Content-Type"] = "text/html; charset=UTF-8";
 
   return true;
 

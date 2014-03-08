@@ -55,6 +55,7 @@ static cJSON * PropToJson( SGPropertyNode_ptr n, int depth )
   cJSON_AddItemToObject(json, "name", cJSON_CreateString(n->getName()));
   cJSON_AddItemToObject(json, "value", cJSON_CreateString(n->getStringValue()));
   cJSON_AddItemToObject(json, "type", cJSON_CreateString(getPropertyTypeString(n->getType())));
+  cJSON_AddItemToObject(json, "index", cJSON_CreateNumber(n->getIndex()));
 
   if( depth > 0 && n->nChildren() > 0 ) {
     cJSON * jsonArray = cJSON_CreateArray();
