@@ -951,9 +951,8 @@ void fgStartReposition()
   fgSetBool("/sim/signals/reinit", true);
   fgSetBool("/sim/crashed", false);
   
-  globals->get_subsystem("flight")->unbind();
-    
-  globals->get_props()->removeChild("fdm");
+  FDMShell* fdm = static_cast<FDMShell*>(globals->get_subsystem("flight"));
+  fdm->unbind();
   
   // update our position based on current presets
   // this will mark position as needed finalized which we'll do in the

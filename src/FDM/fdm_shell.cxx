@@ -26,6 +26,7 @@
 
 #include <cassert>
 #include <simgear/structure/exception.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <FDM/fdm_shell.hxx>
 #include <FDM/flight.hxx>
@@ -90,6 +91,17 @@ void FDMShell::init()
   createImplementation();
 }
 
+void FDMShell::postinit()
+{
+    _initialFdmProperties = new SGPropertyNode;
+    
+    if (!copyProperties(_props->getNode("fdm"),
+                                     _initialFdmProperties))
+    {
+        SG_LOG(SG_FLIGHT, SG_ALERT, "Failed to save initial FDM property state");
+    }
+}
+
 void FDMShell::shutdown()
 {
     if (_impl) {
@@ -113,6 +125,15 @@ void FDMShell::shutdown()
 void FDMShell::reinit()
 {
   shutdown();
+  
+    if ( copyProperties(_initialFdmProperties, fgGetNode("/fdm", true)) ) {
+        SG_LOG( SG_FLIGHT, SG_INFO, "Preserved state restored successfully" );
+    } else {
+        SG_LOG( SG_FLIGHT, SG_WARN,
+               "FDM: Some errors restoring preserved state" );
+    }
+
+    
   init();
 }
 

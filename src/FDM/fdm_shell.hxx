@@ -46,7 +46,8 @@ public:
   virtual void init();
   virtual void shutdown();
   virtual void reinit();
-  
+  virtual void postinit();
+    
   virtual void bind();
   virtual void unbind();
   
@@ -65,6 +66,8 @@ private:
   SGPropertyNode_ptr _wind_north, _wind_east,_wind_down;
   SGPropertyNode_ptr _control_fdm_atmo,_temp_degc,_pressure_inhg;
   SGPropertyNode_ptr _density_slugft, _data_logging, _replay_master;
+    
+  SGPropertyNode_ptr _initialFdmProperties;
 };
 
 #endif // of FG_FDM_SHELL_HXX
