@@ -205,7 +205,7 @@ do_exit (const SGPropertyNode * arg)
 static bool
 do_reset (const SGPropertyNode * arg)
 {
-    fgReInitSubsystems();
+    fgResetIdleState();
     return true;
 }
 
@@ -1072,7 +1072,7 @@ static bool
 do_presets_commit (const SGPropertyNode * arg)
 {
     if (fgGetBool("/sim/initialized", false)) {
-      fgReInitSubsystems();
+      fgResetIdleState();
     } else {
       // Nasal can trigger this during initial init, which confuses
       // the logic in ReInitSubsystems, since initial state has not been
