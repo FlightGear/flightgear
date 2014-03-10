@@ -1,0 +1,12 @@
+The Flite+hts_engine is an English TTS System. This software is released under
+the Modified BSD license. See the COPYING file in the same directory as this
+file for the license.
+
+The flite+hts_engine has been developed by several members of HTS working group
+and some graduate students in Nagoya Institute of Technology:
+
+ Keiichi Tokuda      http://www.sp.nitech.ac.jp/~tokuda/
+ (Produce and Design)
+ Keiichiro Oura      http://www.sp.nitech.ac.jp/~uratec/
+ (Design and Development, Main Maintainer)
+ Tomoki Toda         http://spalab.naist.jp/~tomoki/index_e.html

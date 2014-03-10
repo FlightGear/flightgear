@@ -156,6 +156,7 @@ option(ENABLE_JS_DEMO    "Set to ON to build the js_demo application (default)" 
 option(ENABLE_METAR      "Set to ON to build the metar application (default)" ON)
 option(ENABLE_TESTS      "Set to ON to build test applications (default)" ON)
 option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON)
+option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" OFF)
 
 if(LOGGING)
     # nothing
@@ -353,6 +354,11 @@ include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib ) # for iaxclie
 # version.h is included as <Include/version.h> - this should be cleaned up
 include_directories(${PROJECT_BINARY_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src/Include)
+
+if (ENABLE_FLITE)
+    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/hts_engine_API/include )
+    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/include )
+endif()
 
 add_definitions(-DHAVE_CONFIG_H)
 

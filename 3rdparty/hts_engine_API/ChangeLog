@@ -1,0 +1,500 @@
+2013-12-24 12:34  uratec
+
+	* lib/: HTS_audio.c, HTS_misc.c: Remove gcc warning message.
+
+2013-12-11 23:58  uratec
+
+	* lib/HTS_misc.c: Make android gcc happy.
+
+2013-12-11 18:29  uratec
+
+	* lib/HTS_misc.c: Make cygwin gcc happy.
+
+2013-12-10 19:35  uratec
+
+	* COPYING, NEWS, README, configure.ac, bin/hts_engine.c,
+	  include/HTS_engine.h, lib/HTS_hidden.h, lib/HTS_label.c,
+	  lib/HTS_misc.c, lib/HTS_vocoder.c: Update documents to version
+	  1.08.
+
+2013-12-10 19:32  uratec
+
+	* include/HTS_engine.h: Change HTS_Boolean from int to char.
+
+2013-12-10 19:31  uratec
+
+	* include/HTS_engine.h, lib/HTS_engine.c: Add some functions for
+	  separating synthesis step.
+
+2013-12-10 19:29  uratec
+
+	* lib/: HTS_gstream.c, HTS_pstream.c: Check memory allocation in
+	  end of parameter generation.
+
+2013-12-10 19:26  uratec
+
+	* lib/HTS_sstream.c: Fix a small bug: When model duration specified
+	  by label is zero, shortest duration should be used.
+
+2013-12-10 19:21  uratec
+
+	* lib/HTS_model.c: When the model interpolation weights are zero,
+	  don't search the nodes.
+
+2013-12-10 19:18  uratec
+
+	* lib/HTS_audio.c: Change return value of audio output function.
+
+2013-05-07 12:51  uratec
+
+	* lib/: HTS_gstream.c, HTS_hidden.h, HTS_vocoder.c: Re-write
+	  excitation function.
+
+2013-04-23 09:46  uratec
+
+	* lib/HTS_vocoder.c: Fix a bug in postfilter calculation.
+
+2013-02-08 13:13  uratec
+
+	* include/HTS_engine.h, lib/HTS_engine.c, lib/HTS_hidden.h,
+	  lib/HTS_misc.c, lib/HTS_pstream.c, lib/HTS_vocoder.c: Add some
+	  functions to get number of frames and generated parameters. Fix
+	  tiny bugs.
+
+2013-01-04 17:11  uratec
+
+	* lib/: HTS_engine.c, HTS_model.c: Support 64-bit machine.
+
+2012-12-20 17:35  uratec
+
+	* bin/hts_engine.c: Revice help message.
+
+2012-12-20 16:54  uratec
+
+	* include/HTS_engine.h: Revice comments in header.
+
+2012-12-20 12:38  uratec
+
+	* COPYING, NEWS, README, configure.ac, include/HTS_engine.h: Update
+	  documents.
+
+2012-12-20 12:36  uratec
+
+	* lib/HTS_engine.c: Fix DB calculation bug and lower limit of
+	  speech speed.
+
+2012-12-17 15:38  uratec
+
+	* lib/: HTS_hidden.h, HTS_vocoder.c: Fix LSP expanding for
+	  stability.
+
+2012-12-15 20:08  uratec
+
+	* bin/hts_engine.c, lib/HTS_engine.c, lib/HTS_hidden.h,
+	  lib/HTS_vocoder.c: Add LSP postfilter.
+
+2012-12-15 16:42  uratec
+
+	* ChangeLog: Remove ChangeLog file from CVS.
+
+2012-12-15 16:40  uratec
+
+	* bin/hts_engine.c, include/HTS_engine.h, lib/HTS_audio.c,
+	  lib/HTS_engine.c, lib/HTS_gstream.c, lib/HTS_hidden.h,
+	  lib/HTS_label.c, lib/HTS_misc.c, lib/HTS_model.c,
+	  lib/HTS_pstream.c, lib/HTS_sstream.c, lib/HTS_vocoder.c:
+	  Re-construction to support new HTS voice format.
+
+2012-12-06 17:06  uratec
+
+	* include/HTS_engine.h, lib/HTS_engine.c: Change volume unit to DB.
+
+2012-06-26 22:39  uratec
+
+	* lib/HTS_sstream.c: Fix check function for the interpolation
+	  weight.
+
+2012-06-11 22:48  uratec
+
+	* include/HTS_engine.h, lib/HTS_engine.c, lib/HTS_gstream.c,
+	  lib/HTS_vocoder.c: add HTS_Engine_get_nsample() and
+	  HTS_Engine_get_speech().
+
+2012-05-29 09:28  uratec
+
+	* lib/HTS_sstream.c: optimize the functions which check the
+	  interpolation weight
+
+2012-05-29 09:26  uratec
+
+	* bin/hts_engine.c: fix stream index for GV
+
+2012-01-02 13:49  uratec
+
+	* ChangeLog, lib/HTS_sstream.c: Fix a bug in -vp option.
+
+2011-12-20 23:46  uratec
+
+	* AUTHORS, ChangeLog, README: Fix documents.
+
+2011-12-20 13:18  uratec
+
+	* ChangeLog, include/HTS_engine.h: Fix macro
+
+2011-12-20 11:24  uratec
+
+	* ChangeLog, NEWS, README, configure.ac, include/HTS_engine.h:
+	  Update documents to version 1.06
+
+2011-12-20 11:21  uratec
+
+	* lib/HTS_misc.c: Fix a tiny bug of file loading
+
+2011-12-12 13:02  uratec
+
+	* ChangeLog, include/HTS_engine.h, lib/HTS_engine.c,
+	  lib/HTS_gstream.c, lib/HTS_hidden.h, lib/HTS_label.c,
+	  lib/HTS_misc.c, lib/HTS_model.c, lib/HTS_pstream.c,
+	  lib/HTS_sstream.c, lib/HTS_vocoder.c: Change many function from
+	  void to boolean.
+
+2011-12-12 11:21  uratec
+
+	* ChangeLog, bin/hts_engine.c, include/HTS_engine.h,
+	  lib/HTS_audio.c, lib/HTS_engine.c, lib/HTS_gstream.c,
+	  lib/HTS_hidden.h, lib/HTS_label.c, lib/HTS_misc.c,
+	  lib/HTS_model.c, lib/HTS_pstream.c, lib/HTS_sstream.c,
+	  lib/HTS_vocoder.c: Change source format.
+
+2011-12-12 11:15  uratec
+
+	* ChangeLog, bin/hts_engine.c, include/HTS_engine.h,
+	  lib/HTS_engine.c, lib/HTS_hidden.h, lib/HTS_label.c,
+	  lib/HTS_misc.c, lib/HTS_model.c, lib/HTS_sstream.c: Add FILE
+	  wrapper. Modify state duration calculation.
+
+2011-08-10 21:16  uratec
+
+	* ChangeLog, configure.ac, lib/HTS_label.c: fix a small bug in
+	  label loader.
+
+2011-08-10 21:14  uratec
+
+	* lib/HTS_audio.c: remove warning message of PortAudio.
+
+2011-07-07 08:05  uratec
+
+	* ChangeLog, NEWS, README, configure.ac, include/HTS_engine.h,
+	  lib/HTS_engine.c: fix a tiny bug.  update all documents to 1.05.
+
+2011-06-16 13:31  uratec
+
+	* COPYING, ChangeLog, README, configure.ac, bin/hts_engine.c,
+	  include/HTS_engine.h, lib/HTS_audio.c, lib/HTS_engine.c,
+	  lib/HTS_gstream.c, lib/HTS_hidden.h, lib/HTS_label.c,
+	  lib/HTS_misc.c, lib/HTS_model.c, lib/HTS_pstream.c,
+	  lib/HTS_sstream.c, lib/HTS_vocoder.c: Add PortAudio functions for
+	  audio output.
+
+2010-12-27 12:37  uratec
+
+	* ChangeLog, bin/hts_engine.c, include/HTS_engine.h,
+	  lib/HTS_gstream.c, lib/HTS_vocoder.c: Avoid alloc and free for
+	  MLSA filter: suggested by Nicholas Volk.
+
+2010-12-18 15:57  uratec
+
+	* ChangeLog, README: modify spaces in readme.
+
+2010-12-13 23:21  uratec
+
+	* ChangeLog, README: Update README.
+
+2010-12-12 21:50  uratec
+
+	* ChangeLog, README, bin/hts_engine.c, include/HTS_engine.h,
+	  lib/HTS_audio.c, lib/HTS_engine.c, lib/HTS_gstream.c,
+	  lib/HTS_hidden.h, lib/HTS_label.c, lib/HTS_misc.c,
+	  lib/HTS_model.c, lib/HTS_pstream.c, lib/HTS_sstream.c,
+	  lib/HTS_vocoder.c: Update all documents.
+
+2010-12-12 17:36  uratec
+
+	* AUTHORS, COPYING, ChangeLog, README: Update documents.
+
+2010-12-12 17:09  uratec
+
+	* ChangeLog, README: Fix a typo.
+
+2010-12-09 20:45  uratec
+
+	* ChangeLog, include/HTS_engine.h, lib/HTS_engine.c: Add
+	  HTS_Engine_get_nstream function.
+
+2010-12-09 19:52  uratec
+
+	* ChangeLog, NEWS, bin/hts_engine.c, include/HTS_engine.h,
+	  lib/HTS_engine.c, lib/HTS_gstream.c, lib/HTS_hidden.h,
+	  lib/HTS_vocoder.c: Add low-pass filter stream.
+
+2010-10-25 16:36  uratec
+
+	* ChangeLog, include/HTS_engine.h, lib/HTS_label.c,
+	  lib/HTS_model.c: Remove warning for cygwin compiler.
+
+2010-10-15 14:15  uratec
+
+	* ChangeLog, NEWS, README, configure.ac, include/HTS_engine.h:
+	  update all documents for version 1.04.
+
+2010-10-15 14:02  uratec
+
+	* ChangeLog, bin/hts_engine.c, include/HTS_engine.h,
+	  lib/HTS_engine.c, lib/HTS_hidden.h, lib/HTS_pstream.c: Change
+	  definition of GV weights.
+
+2010-10-14 00:28  uratec
+
+	* ChangeLog, bin/hts_engine.c, include/HTS_engine.h,
+	  lib/HTS_audio.c, lib/HTS_engine.c, lib/HTS_gstream.c,
+	  lib/HTS_hidden.h, lib/HTS_label.c, lib/HTS_misc.c,
+	  lib/HTS_model.c, lib/HTS_pstream.c, lib/HTS_sstream.c,
+	  lib/HTS_vocoder.c: Accept C++ compiler.
+
+2010-10-13 23:21  uratec
+
+	* ChangeLog, include/HTS_engine.h, lib/HTS_engine.c: Add functions:
+	  HTS_Engine_get_sampling_rate, HTS_Engine_get_fperiod,
+	  HTS_Engine_get_total_state, HTS_Engine_set_state_mean,
+	  HTS_Engine_get_state_mean, HTS_Engine_get_state_duration, and
+	  HTS_Engine_get_nstate.
+
+2010-10-12 23:09  uratec
+
+	* ChangeLog, lib/HTS_gstream.c: Fix a tiny bug.
+
+2010-10-12 22:54  uratec
+
+	* ChangeLog, include/HTS_engine.h, lib/HTS_engine.c,
+	  lib/HTS_gstream.c, lib/HTS_vocoder.c: add barge-in function and
+	  volume controller.
+
+2010-09-13 18:51  uratec
+
+	* ChangeLog, bin/Makefile.mak, bin/hts_engine.c,
+	  include/HTS_engine.h, lib/HTS_engine.c, lib/HTS_sstream.c,
+	  lib/Makefile.mak: Fix a tiny bug: unify type of 'stage' value.
+
+2010-04-28 13:30  uratec
+
+	* ChangeLog, lib/HTS_pstream.c: Fix a bug suggested by Yu Sansuo:
+	  change step in parameter generation using gv.
+
+2010-04-20 00:38  uratec
+
+	* ChangeLog, lib/HTS_engine.c: Fix a small typo suggested by oaomly
+	  voooo.
+
+2010-04-19 10:18  uratec
+
+	* ChangeLog, README: Update README for version 1.03.
+
+2010-04-08 14:20  uratec
+
+	* ChangeLog, NEWS: Update 'NEWS' for version 1.03.
+
+2010-04-08 14:15  uratec
+
+	* COPYING, ChangeLog, README, configure.ac, bin/hts_engine.c,
+	  include/HTS_engine.h, lib/HTS_audio.c, lib/HTS_engine.c,
+	  lib/HTS_gstream.c, lib/HTS_hidden.h, lib/HTS_label.c,
+	  lib/HTS_misc.c, lib/HTS_model.c, lib/HTS_pstream.c,
+	  lib/HTS_sstream.c, lib/HTS_vocoder.c: Add '-z' option to control
+	  audio buffer size.  Update all description for verion 1.03.
+
+2010-02-17 22:13  uratec
+
+	* ChangeLog, lib/HTS_model.c: Fix a small bug for new format of PDF
+	  files.
+
+2010-01-26 10:32  uratec
+
+	* ChangeLog, lib/HTS_model.c: Change *.pdf file format in CM
+	  command
+
+2009-12-17 00:17  uratec
+
+	* ChangeLog, INSTALL, NEWS, README, configure.ac,
+	  include/HTS_engine.h, lib/HTS_label.c, lib/HTS_sstream.c: update
+	  all documents to version 1.02.  bug fix : misalignment for
+	  singing voice synthesis.
+
+2009-12-02 01:21  uratec
+
+	* ChangeLog, bin/hts_engine.c: small simplification of help
+	  message.
+
+2009-12-01 21:32  uratec
+
+	* ChangeLog, include/HTS_engine.h, lib/HTS_engine.c,
+	  lib/HTS_model.c: Add information of type of GV to log file.
+
+2009-12-01 21:00  uratec
+
+	* ChangeLog, bin/hts_engine.c, include/HTS_engine.h,
+	  lib/HTS_engine.c, lib/HTS_model.c, lib/HTS_pstream.c,
+	  lib/HTS_sstream.c: Add function of context-dependent GV without
+	  silent and pause phoneme.
+
+2009-12-01 19:06  uratec
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, README, configure.ac,
+	  bin/hts_engine.c, include/HTS_engine.h, lib/HTS_audio.c,
+	  lib/HTS_engine.c, lib/HTS_gstream.c, lib/HTS_hidden.h,
+	  lib/HTS_label.c, lib/HTS_misc.c, lib/HTS_model.c,
+	  lib/HTS_pstream.c, lib/HTS_sstream.c, lib/HTS_vocoder.c: Revice
+	  all documents and copyrights.  Change F0 modification to
+	  half-tone.  Fix a bug about speaker interpolation weight=0.0.
+
+2009-11-03 18:07  uratec
+
+	* bin/hts_engine.c, include/HTS_engine.h, lib/HTS_label.c,
+	  lib/HTS_model.c, lib/HTS_pstream.c, lib/HTS_sstream.c,
+	  lib/HTS_vocoder.c: Fix bug:  First and final delta calculation in
+	  parameter generation step.  Add func.:  Advanced label reader for
+	  singing voice synthesis.  Fix typo:  In help message.
+
+2009-09-04 02:20  uratec
+
+	* include/HTS_engine.h, lib/HTS_model.c: If there is not tree,
+	  engine stop with error output.
+
+2009-06-01 13:57  uratec
+
+	* bin/hts_engine.c, include/HTS_engine.h, lib/HTS_engine.c,
+	  lib/HTS_model.c: Add many information to
+	  HTS_Enging_save_information().
+
+2009-02-26 20:19  uratec
+
+	* Makefile.mak: Remove description of version from Makefile.mak.
+
+2009-02-26 20:15  uratec
+
+	* configure.ac: Fix small bug for autoconf in cygwin.
+
+2009-02-03 17:56  uratec
+
+	* Makefile.am, configure.ac, bin/Makefile.am, bin/hts_engine.c,
+	  lib/HTS_audio.c, lib/Makefile.am, include/HTS_engine.h: Remove
+	  '--enable-audio-win32' and '--enable-audio-wince' options.  Add
+	  compiler checker (WIN32/WINCE/CYGWIN/MIGW) for using audio device
+	  in win32/wince.
+
+2009-02-03 17:45  uratec
+
+	* Makefile.mak, bin/Makefile.mak, lib/Makefile.mak: ***
+	  Keywords were replaced. ***
+
+2009-02-03 17:44  uratec
+
+	* Makefile.mak, bin/Makefile.mak, lib/Makefile.mak: Add
+	  Makefile.mak for 'nmake' in Visual C++.
+
+2009-01-07 20:38  uratec
+
+	* lib/HTS_model.c: A bug in HTS_model.c. This bug causes
+	  segmentation fault when a tree have only one leaf.
+
+2008-11-20 16:13  uratec
+
+	* lib/HTS_sstream.c: use variance to determine frame length.
+
+2008-09-29 13:19  uratec
+
+	* lib/HTS_engine.c, include/HTS_engine.h, ChangeLog: add
+	  HTS_Engine_get_audio_buff_size().
+
+2008-09-29 13:02  uratec
+
+	* ChangeLog: Fix suggested by Nicholas Volk: fix an overflow
+	  problem (-32768 <= short <= 32767).
+
+2008-09-29 12:58  uratec
+
+	* lib/HTS_vocoder.c: Fix suggested by Nicholas Volk: fix an
+	  overflow problem (-32768 <= short <= 32767).
+
+2008-09-29 11:51  uratec
+
+	* ChangeLog: [no log message]
+
+2008-09-29 11:46  uratec
+
+	* lib/HTS_pstream.c: Fix suggested by Nicholas Volk: fix a minor
+	  bug.
+
+2008-08-29 15:07  uratec
+
+	* .cvsignore, ChangeLog: Fix suggested by Nicholas Volk: fix a bug
+	  in HTS_Vocoder_synthesize().
+
+2008-08-29 14:57  uratec
+
+	* lib/HTS_vocoder.c: Fix suggested by Nicholas Volk: fix a bug in
+	  HTS_Vocoder_synthesize().
+
+2008-08-29 14:49  uratec
+
+	* lib/HTS_vocoder.c: Fix suggested by Nicholas Volk: speed up
+	  mc2b().
+
+2008-07-30 13:34  uratec
+
+	* INSTALL, Makefile.am, NEWS, README: update 1.00 -> 1.01.
+
+2008-07-29 14:22  uratec
+
+	* README, configure.ac, lib/HTS_gstream.c, lib/HTS_vocoder.c,
+	  lib/HTS_audio.c, lib/HTS_hidden.h, lib/HTS_engine.c,
+	  lib/HTS_misc.c, lib/HTS_pstream.c, lib/HTS_sstream.c,
+	  bin/hts_engine.c, include/HTS_engine.h, lib/HTS_label.c,
+	  lib/HTS_model.c: update 1.00 -> 1.01.  remove /* $Id: XXX.c,v
+	  1.25 200X/XX/XX XX:XX:XX uratec Exp $ */.
+
+2008-07-23 18:44  uratec
+
+	* README, bin/hts_engine.c, lib/HTS_audio.c, lib/HTS_engine.c,
+	  lib/HTS_gstream.c, lib/HTS_hidden.h, lib/HTS_label.c,
+	  lib/HTS_misc.c, lib/HTS_model.c, lib/HTS_pstream.c,
+	  lib/HTS_sstream.c, lib/HTS_vocoder.c, include/HTS_engine.h:
+	  change address from http://hts.sp.nitech.ac.jp/ to
+	  http://hts-engine.sourceforge.net/.  remove hts_engine_API.pdf.
+	  Fix suggested by Alexis Moinet: change frame type from "int" to
+	  "double".
+
+2008-07-15 20:05  uratec
+
+	* bin/hts_engine.c, include/HTS_engine.h, lib/HTS_audio.c,
+	  lib/HTS_engine.c, lib/HTS_gstream.c, lib/HTS_hidden.h,
+	  lib/HTS_label.c, lib/HTS_misc.c, lib/HTS_model.c,
+	  lib/HTS_pstream.c, lib/HTS_sstream.c, lib/HTS_vocoder.c: change
+	  address from http://hts.sp.nitech.ac.jp/ to
+	  http://hts-engine.sourceforge.net/.
+
+2008-07-15 20:04  uratec
+
+	* INSTALL, README, AUTHORS, COPYING, Makefile.am, NEWS,
+	  bin/Makefile.am, lib/Makefile.am: *** Keywords were replaced. ***
+
+2008-07-08 19:13  uratec
+
+	* INSTALL, README, .cvsignore, NEWS, configure.ac, AUTHORS,
+	  COPYING, Makefile.am, lib/HTS_vocoder.c, lib/.cvsignore,
+	  lib/HTS_engine.c, lib/HTS_sstream.c, lib/Makefile.am,
+	  lib/HTS_gstream.c, lib/HTS_hidden.h, lib/HTS_model.c,
+	  lib/HTS_audio.c, lib/HTS_label.c, lib/HTS_misc.c,
+	  lib/HTS_pstream.c, bin/.cvsignore, bin/Makefile.am,
+	  bin/hts_engine.c, config/.cvsignore, include/HTS_engine.h:
+	  initialize hts_engine_API.
+

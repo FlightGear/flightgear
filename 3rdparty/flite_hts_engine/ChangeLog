@@ -1,0 +1,474 @@
+2013-12-23 17:01  uratec
+
+	* configure.ac: Modify comments
+
+2013-12-11 12:15  uratec
+
+	* COPYING, NEWS, README, configure.ac, bin/flite_hts_engine.c,
+	  flite/COPYING, flite/include/cst_file.h, flite/include/flite.h,
+	  flite/lang/usenglish/us_ffeatures.c,
+	  flite/lang/usenglish/usenglish.c,
+	  flite/lang/usenglish/usenglish.h,
+	  flite/src/lexicon/cst_lexicon.c, flite/src/lexicon/cst_lts.c,
+	  flite/src/regex/cst_regex.c, flite/src/stats/cst_cart.c,
+	  flite/src/synth/cst_ffeatures.c, flite/src/synth/cst_phoneset.c,
+	  flite/src/synth/cst_synth.c, flite/src/synth/cst_utt_utils.c,
+	  flite/src/synth/flite.c, flite/src/utils/cst_features.c,
+	  flite/src/utils/cst_tokenstream.c, flite/src/utils/cst_val.c,
+	  flite/src/utils/cst_val_user.c, include/flite_hts_engine.h:
+	  update documents for version 1.05.
+
+2013-12-11 12:00  uratec
+
+	* configure.ac, flite/include/cst_val.h,
+	  flite/include/cst_val_const.h: support 64-bit machine.
+
+2013-12-11 11:55  uratec
+
+	* flite/lang/cmu_us_kal/cmu_us_kal.c: Remove fix_ah().
+
+2013-12-11 11:50  uratec
+
+	* lib/flite_hts_engine.c: Fix memory leak in text analysis.
+
+2012-12-23 21:21  uratec
+
+	* bin/flite_hts_engine.c: Fix a small bug: engine was not
+	  initialized.
+
+2012-12-20 17:52  uratec
+
+	* NEWS: Update documents for 1.04
+
+2012-12-20 17:36  uratec
+
+	* bin/flite_hts_engine.c, include/flite_hts_engine.h,
+	  lib/flite_hts_engine.c: Add options for changing speed option and
+	  audio buffer size.
+
+2012-12-20 17:21  uratec
+
+	* COPYING, NEWS, README, configure.ac, flite/COPYING,
+	  flite/include/cst_file.h, flite/include/flite.h,
+	  flite/lang/cmu_us_kal/cmu_us_kal.c,
+	  flite/lang/usenglish/us_ffeatures.c,
+	  flite/lang/usenglish/usenglish.c,
+	  flite/lang/usenglish/usenglish.h,
+	  flite/src/lexicon/cst_lexicon.c, flite/src/lexicon/cst_lts.c,
+	  flite/src/regex/cst_regex.c, flite/src/stats/cst_cart.c,
+	  flite/src/synth/cst_ffeatures.c, flite/src/synth/cst_phoneset.c,
+	  flite/src/synth/cst_synth.c, flite/src/synth/cst_utt_utils.c,
+	  flite/src/synth/flite.c, flite/src/utils/cst_features.c,
+	  flite/src/utils/cst_tokenstream.c, flite/src/utils/cst_val.c,
+	  flite/src/utils/cst_val_user.c: Update all documents for 1.04
+
+2012-12-20 17:18  uratec
+
+	* bin/flite_hts_engine.c, include/flite_hts_engine.h,
+	  lib/flite_hts_engine.c: Support new HTS voice format.
+
+2012-12-20 17:17  uratec
+
+	* ChangeLog: Remove ChangeLog from CVS.
+
+2011-12-20 23:55  uratec
+
+	* AUTHORS, ChangeLog, NEWS, README, configure.ac: Update documents
+
+2011-12-20 23:53  uratec
+
+	* bin/flite_hts_engine.c, include/flite_hts_engine.h,
+	  lib/flite_hts_engine.c: Modify source format. Add functions for
+	  front-end use.
+
+2011-12-20 23:52  uratec
+
+	* flite/include/cst_file.h, flite/src/utils/cst_file_stdio.c,
+	  lib/Makefile.am, lib/Makefile.mak: Remove cst_file_stdio.c.
+
+2011-07-07 09:37  uratec
+
+	* ChangeLog, include/flite_hts_engine.h: update documents.
+
+2011-07-07 08:58  uratec
+
+	* ChangeLog, flite/COPYING: update documents.
+
+2011-07-07 08:50  uratec
+
+	* COPYING, ChangeLog, NEWS, README, configure.ac,
+	  bin/flite_hts_engine.c, flite/COPYING, flite/include/flite.h,
+	  flite/lang/cmu_us_kal/cmu_us_kal.c,
+	  flite/lang/usenglish/us_ffeatures.c,
+	  flite/lang/usenglish/usenglish.c,
+	  flite/lang/usenglish/usenglish.h,
+	  flite/src/lexicon/cst_lexicon.c, flite/src/lexicon/cst_lts.c,
+	  flite/src/regex/cst_regex.c, flite/src/stats/cst_cart.c,
+	  flite/src/synth/cst_ffeatures.c, flite/src/synth/cst_phoneset.c,
+	  flite/src/synth/cst_synth.c, flite/src/synth/cst_utt_utils.c,
+	  flite/src/synth/flite.c, flite/src/utils/cst_features.c,
+	  flite/src/utils/cst_file_stdio.c,
+	  flite/src/utils/cst_tokenstream.c, flite/src/utils/cst_val.c,
+	  flite/src/utils/cst_val_user.c, lib/flite_hts_engine.c: Update
+	  all documents to 1.02
+
+2011-04-18 12:14  uratec
+
+	* ChangeLog, lib/flite_hts_engine.c: Fix a bug: wrong context is
+	  generated when endtone cannot be estimated.
+
+2011-01-24 19:13  uratec
+
+	* ChangeLog, lib/flite_hts_engine.c: update
+
+2010-12-18 16:30  uratec
+
+	* ChangeLog, README: add spaces in readme.
+
+2010-12-13 23:22  uratec
+
+	* ChangeLog, README: Update README.
+
+2010-12-12 21:51  uratec
+
+	* AUTHORS, COPYING, ChangeLog, README, bin/flite_hts_engine.c,
+	  flite/include/flite.h, flite/lang/cmu_us_kal/cmu_us_kal.c,
+	  flite/lang/usenglish/us_ffeatures.c,
+	  flite/lang/usenglish/usenglish.c,
+	  flite/lang/usenglish/usenglish.h,
+	  flite/src/lexicon/cst_lexicon.c, flite/src/lexicon/cst_lts.c,
+	  flite/src/regex/cst_regex.c, flite/src/stats/cst_cart.c,
+	  flite/src/synth/cst_ffeatures.c, flite/src/synth/cst_phoneset.c,
+	  flite/src/synth/cst_synth.c, flite/src/synth/cst_utt_utils.c,
+	  flite/src/synth/flite.c, flite/src/utils/cst_features.c,
+	  flite/src/utils/cst_file_stdio.c,
+	  flite/src/utils/cst_tokenstream.c, flite/src/utils/cst_val.c,
+	  flite/src/utils/cst_val_user.c, include/flite_hts_engine.h,
+	  lib/flite_hts_engine.c: Update all documents.
+
+2010-12-12 17:41  uratec
+
+	* AUTHORS, COPYING, ChangeLog, README: update
+
+2010-12-12 17:13  uratec
+
+	* COPYING, ChangeLog: Update year from 2009 to 2010 in COPYRIGHT.
+
+2010-12-09 21:13  uratec
+
+	* ChangeLog, NEWS, bin/flite_hts_engine.c,
+	  include/flite_hts_engine.h, lib/flite_hts_engine.c: Add low-pass
+	  filter stream.
+
+2010-11-02 12:32  uratec
+
+	* .cvsignore, ChangeLog, config/.cvsignore, lib/.cvsignore: update
+	  cvsignore list.
+
+2010-11-02 11:24  uratec
+
+	* ChangeLog, NEWS, README, configure.ac, bin/flite_hts_engine.c,
+	  flite/COPYING, flite/include/cst_alloc.h,
+	  flite/include/cst_audio.h, flite/include/cst_error.h,
+	  flite/include/cst_ffeatures.h, flite/include/cst_file.h,
+	  flite/include/cst_lexicon.h, flite/include/cst_lts.h,
+	  flite/include/cst_math.h, flite/include/cst_regex.h,
+	  flite/include/cst_string.h, flite/include/cst_sts.h,
+	  flite/include/cst_synth.h, flite/include/cst_tokenstream.h,
+	  flite/include/cst_track.h, flite/include/cst_utt_utils.h,
+	  flite/include/cst_val.h, flite/include/cst_val_defs.h,
+	  flite/include/cst_voice.h, flite/include/cst_wave.h,
+	  flite/include/flite.h, flite/include/flite_version.h,
+	  flite/lang/cmu_us_kal/cmu_us_kal.c, flite/lang/cmulex/cmu_lex.c,
+	  flite/lang/cmulex/cmu_lex.h,
+	  flite/lang/cmulex/cmu_lex_data_raw.c,
+	  flite/lang/cmulex/cmu_lex_entries.c,
+	  flite/lang/cmulex/cmu_lex_entries_huff_table.c,
+	  flite/lang/cmulex/cmu_lex_num_bytes.c,
+	  flite/lang/cmulex/cmu_lex_phones_huff_table.c,
+	  flite/lang/cmulex/cmu_lts_model.c,
+	  flite/lang/cmulex/cmu_lts_model.h,
+	  flite/lang/cmulex/cmu_lts_rules.c,
+	  flite/lang/cmulex/cmu_postlex.c, flite/lang/cmulex/cmulex.h,
+	  flite/lang/usenglish/us_aswd.c, flite/lang/usenglish/us_expand.c,
+	  flite/lang/usenglish/us_ffeatures.c,
+	  flite/lang/usenglish/us_pos_cart.c,
+	  flite/lang/usenglish/us_pos_cart.h,
+	  flite/lang/usenglish/us_postlex.c,
+	  flite/lang/usenglish/us_regexes.h,
+	  flite/lang/usenglish/us_text.c, flite/lang/usenglish/us_text.h,
+	  flite/lang/usenglish/usenglish.c,
+	  flite/lang/usenglish/usenglish.h, flite/src/hrg/cst_ffeature.c,
+	  flite/src/hrg/cst_item.c, flite/src/lexicon/cst_lexicon.c,
+	  flite/src/lexicon/cst_lts.c, flite/src/regex/cst_regex.c,
+	  flite/src/regex/cst_regex_defs.h, flite/src/regex/regexp.c,
+	  flite/src/stats/cst_cart.c, flite/src/synth/cst_ffeatures.c,
+	  flite/src/synth/cst_phoneset.c, flite/src/synth/cst_synth.c,
+	  flite/src/synth/cst_utt_utils.c, flite/src/synth/cst_voice.c,
+	  flite/src/synth/flite.c, flite/src/utils/cst_error.c,
+	  flite/src/utils/cst_features.c, flite/src/utils/cst_file_stdio.c,
+	  flite/src/utils/cst_string.c, flite/src/utils/cst_tokenstream.c,
+	  flite/src/utils/cst_val.c, flite/src/utils/cst_val_const.c,
+	  flite/src/utils/cst_val_user.c, include/flite_hts_engine.h,
+	  lib/Makefile.am, lib/flite_hts_engine.c: Based on flite-1.4.
+
+2009-12-17 00:23  uratec
+
+	* ChangeLog, NEWS, README, configure.ac, bin/flite_hts_engine.c:
+	  update all documents to 1.00.  fix a typo in help message.
+
+2009-12-02 01:37  uratec
+
+	* ChangeLog, bin/flite_hts_engine.c: Fix a typo.
+
+2009-12-02 01:29  uratec
+
+	* ChangeLog, bin/flite_hts_engine.c, include/flite_hts_engine.h,
+	  lib/flite_hts_engine.c: Add function of context-dependent GV
+	  without silent and pause phoneme.
+
+2009-12-01 22:45  uratec
+
+	* ACKNOWLEDGEMENTS, AUTHORS, COPYING, ChangeLog, INSTALL,
+	  Makefile.am, NEWS, README, configure.ac, bin/Makefile.mak,
+	  bin/flite_hts_engine.c, flite/COPYING, flite/include/cst_file.h,
+	  flite/include/flite.h, flite/lang/cmu_us_kal/cmu_us_kal.c,
+	  flite/lang/usenglish/us_ffeatures.c,
+	  flite/lang/usenglish/usenglish.c,
+	  flite/lang/usenglish/usenglish.h,
+	  flite/src/lexicon/cst_lexicon.c, flite/src/lexicon/cst_lts.c,
+	  flite/src/regex/cst_regex.c, flite/src/regex/regexp.c,
+	  flite/src/stats/cst_cart.c, flite/src/synth/cst_phoneset.c,
+	  flite/src/synth/cst_synth.c, flite/src/synth/cst_utt_utils.c,
+	  flite/src/synth/flite.c, flite/src/utils/cst_features.c,
+	  flite/src/utils/cst_file_stdio.c,
+	  flite/src/utils/cst_tokenstream.c, flite/src/utils/cst_val.c,
+	  flite/src/utils/cst_val_user.c, include/flite_hts_engine.h,
+	  lib/Makefile.mak, lib/flite_hts_engine.c: Update all
+	  documentations and copyrights.  Add coopyrights to source files.
+
+2009-02-26 20:20  uratec
+
+	* Makefile.mak: Remove description of version from Makefile.mak.
+
+2009-02-04 19:58  uratec
+
+	* configure.ac: Fix a small bug.
+
+2009-02-04 19:41  uratec
+
+	* Makefile.am, bin/flite_hts_engine.c, include/flite_hts_engine.h,
+	  lib/Makefile.am, lib/flite_hts_engine.c: Remove cst_*.h from
+	  install dir.
+
+2009-02-03 18:23  uratec
+
+	* Makefile.am, configure.ac, bin/Makefile.am,
+	  bin/flite_hts_engine.c, flite/include/cst_file.h,
+	  include/flite_hts_engine.h, lib/Makefile.am,
+	  lib/flite_hts_engine.c: Add feature function for making label.
+	  Remove '--enable-audio-win32' and '--enable-audio-wince' options.
+	  Add compiler checker (WIN32/WINCE/CYGWIN/MIGW) for using audio
+	  device in win32/wince.
+
+2009-02-03 18:22  uratec
+
+	* Makefile.mak, bin/Makefile.mak, lib/Makefile.mak: ***
+	  キーワード置換変更 ***
+
+2009-02-03 18:21  uratec
+
+	* Makefile.mak, bin/Makefile.mak, lib/Makefile.mak: Add
+	  Makefile.mak for 'nmake' in Visual C++.
+
+2008-11-21 20:03  uratec
+
+	* flite/lang/usenglish/us_ffeatures.c, include/flite_hts_engine.h,
+	  lib/flite_hts_engine.c: Add functions for flite's features used
+	  in hts_engine. (Codes are wrote by Tomoki Toda.)
+
+2008-10-06 13:27  uratec
+
+	* ChangeLog: reduce waste.
+
+2008-10-06 13:18  uratec
+
+	* configure.ac, bin/flite_hts_engine.c,
+	  flite/lang/cmu_us_kal/cmu_us_kal.c,
+	  flite/src/lexicon/cst_lexicon.c, flite/src/lexicon/cst_lts.c,
+	  flite/src/regex/cst_regex.c, flite/src/regex/regexp.c,
+	  flite/src/regex/regsub.c, flite/src/speech/cst_lpcres.c,
+	  flite/src/speech/cst_track.c, flite/src/speech/rateconv.c,
+	  flite/src/stats/cst_cart.c, flite/src/stats/cst_ss.c,
+	  flite/src/stats/cst_viterbi.c, flite/src/synth/cst_phoneset.c,
+	  flite/src/synth/cst_synth.c, flite/src/synth/flite.c,
+	  flite/src/utils/cst_args.c, flite/src/utils/cst_endian.c,
+	  flite/src/utils/cst_socket.c, flite/src/utils/cst_tokenstream.c,
+	  flite/src/utils/cst_val_user.c, lib/Makefile.am: reduce waste.
+
+2008-09-26 16:52  uratec
+
+	* flite/src/lexicon/cst_lts_rewrites.c,
+	  flite/src/utils/cst_mmap_none.c,
+	  flite/src/utils/cst_tokenstream.c, include/flite_hts_engine.h,
+	  lib/Makefile.am, lib/flite_hts_engine.c, ChangeLog: reduce waste.
+
+2008-09-26 16:49  uratec
+
+	* ChangeLog: bug fix.
+
+2008-09-26 16:32  uratec
+
+	* bin/flite_hts_engine.c: bug fix.
+
+2008-08-29 14:28  uratec
+
+	* .cvsignore, ChangeLog: Fix suggested by Pieter Scholtz: replace
+	  `pos_in_syl' by `R:SylStructure.pos_in_syl'.
+
+2008-08-29 14:19  uratec
+
+	* lib/flite_hts_engine.c: Fix suggested by Pieter Scholtz: replace
+	  `pos_in_syl' by `R:SylStructure.pos_in_syl'.
+
+2008-07-30 16:45  uratec
+
+	* INSTALL, Makefile.am, flite/lang/cmu_us_kal/voxdefs.h,
+	  lib/Makefile.am, include/flite_hts_engine.h: bug fix.
+
+2008-07-25 14:38  uratec
+
+	* flite/src/wavesynth/.cvsignore: [no log message]
+
+2008-07-25 14:27  uratec
+
+	* flite/src/utils/cst_file_palmos.c,
+	  flite/src/utils/cst_file_wince.c,
+	  flite/src/utils/cst_mmap_posix.c,
+	  flite/src/utils/cst_mmap_win32.c, flite/src/utils/cst_val_user.c,
+	  flite/src/wavesynth/cst_reflpc.c, bin/flite_hts_engine.c,
+	  flite/include/cst_clunits.h, flite/include/cst_diphone.h,
+	  flite/lang/cmu_us_kal/cmu_us_kal.c,
+	  flite/lang/usenglish/us_dur_stats.c,
+	  flite/lang/usenglish/us_durz_cart.c,
+	  flite/lang/usenglish/us_durz_cart.h,
+	  flite/lang/usenglish/us_f0.h, flite/lang/usenglish/us_f0_model.c,
+	  flite/lang/usenglish/us_f0lr.c, flite/lang/usenglish/usenglish.c,
+	  flite/lang/usenglish/usenglish.h,
+	  flite/src/speech/cst_track_io.c, flite/src/speech/cst_wave.c,
+	  flite/src/speech/cst_wave_io.c,
+	  flite/src/speech/cst_wave_utils.c, flite/src/synth/cst_synth.c,
+	  flite/src/synth/cst_utt_utils.c,
+	  flite/src/wavesynth/cst_clunits.c,
+	  flite/src/wavesynth/cst_diphone.c,
+	  flite/src/wavesynth/cst_sigpr.c,
+	  flite/src/wavesynth/cst_sigprFP.c, flite/src/wavesynth/cst_sts.c,
+	  lib/Makefile.am, lib/flite_hts_engine.c, Makefile.am,
+	  flite/src/hrg/cst_rel_io.c: remove lang/usenglish/us_dur_stats.c
+	  lang/usenglish/us_durz_cart.c lang/usenglish/us_f0_models.c
+	  lang/usenglish/us_f0.h lang/usenglish/us_f0lr.c
+	  src/hrg/cst_rel_io.c src/speech/cst_wave_utils.c
+	  src/speech/cst_track_io.c src/speech/cst_wave_io.c
+	  src/speech/cst_wave_utils.c src/speech/cst_wave.c
+	  src/utils/cst_file_palmos.c src/utils/cst_file_wince.c
+	  src/utils/cst_mmap_posix.c src/utils/cst_mmap_win32.c
+	  src/wavesynth/cst_clunits.c src/wavesynth/cst_diphone.c
+	  src/wavesynth/cst_reflpc.c src/wavesynth/cst_sigpr.c
+	  src/wavesynth/cst_sigprFP.c src/wavesynth/cst_sts.c
+	  include/cst_clunits.h include/cst_diphone.h
+
+2008-07-24 13:56  uratec
+
+	* ACKNOWLEDGEMENTS, AUTHORS, COPYING, INSTALL, Makefile.am, NEWS,
+	  README, bin/Makefile.am, lib/Makefile.am: *** キーワード置換変更
+	  ***
+
+2008-07-24 13:55  uratec
+
+	* flite/src/utils/cst_args.c, flite/src/utils/cst_file_palmos.c,
+	  flite/src/utils/cst_file_stdio.c,
+	  flite/src/utils/cst_file_wince.c,
+	  flite/src/utils/cst_mmap_none.c,
+	  flite/src/utils/cst_mmap_win32.c, flite/src/utils/cst_socket.c,
+	  flite/src/utils/cst_string.c, flite/src/utils/cst_val.c,
+	  flite/src/utils/cst_val_const.c, flite/src/utils/cst_val_user.c,
+	  flite/include/cst_audio.h, flite/include/cst_cart.h,
+	  flite/include/cst_diphone.h, flite/include/cst_endian.h,
+	  flite/include/cst_file.h, flite/include/cst_hrg.h,
+	  flite/include/cst_item.h, flite/include/cst_socket.h,
+	  flite/include/cst_ss.h, flite/include/cst_utterance.h,
+	  flite/include/cst_val_const.h, flite/include/cst_wave.h,
+	  flite/include/flite.h, flite/src/utils/cst_alloc.c,
+	  flite/src/utils/cst_endian.c, flite/src/utils/cst_error.c,
+	  flite/src/utils/cst_features.c, flite/src/utils/cst_mmap_posix.c,
+	  flite/src/utils/cst_tokenstream.c, flite/include/cst_alloc.h,
+	  flite/include/cst_args.h, flite/include/cst_clunits.h,
+	  flite/include/cst_error.h, flite/include/cst_features.h,
+	  flite/include/cst_lexicon.h, flite/include/cst_lts_rewrites.h,
+	  flite/include/cst_math.h, flite/include/cst_phoneset.h,
+	  flite/include/cst_regex.h, flite/include/cst_relation.h,
+	  flite/include/cst_sigpr.h, flite/include/cst_string.h,
+	  flite/include/cst_synth.h, flite/include/cst_tokenstream.h,
+	  flite/include/cst_track.h, flite/include/cst_utt_utils.h,
+	  flite/include/cst_val.h, flite/include/cst_val_defs.h,
+	  flite/include/cst_voice.h, flite/include/flite_version.h,
+	  flite/include/cst_lts.h, flite/include/cst_sts.h,
+	  flite/include/cst_viterbi.h, flite/lang/cmulex/cmu_lex.c,
+	  flite/lang/cmulex/cmu_lex_data.c,
+	  flite/lang/cmulex/cmu_lex_data_raw.c,
+	  flite/lang/cmulex/cmu_lex_entries.c,
+	  flite/lang/cmulex/cmu_lex_entries_huff_table.c,
+	  flite/lang/cmulex/cmu_lex_num_bytes.c,
+	  flite/lang/cmulex/cmu_lex_phones_huff_table.c,
+	  flite/lang/cmulex/cmu_lts_model.c,
+	  flite/lang/cmulex/cmu_lts_model.h,
+	  flite/lang/cmulex/cmu_lts_rules.c, flite/lang/cmulex/cmulex.h,
+	  flite/lang/usenglish/us_dur_stats.c,
+	  flite/lang/usenglish/us_expand.c, flite/lang/usenglish/us_f0.h,
+	  flite/lang/usenglish/us_f0_model.c,
+	  flite/lang/usenglish/us_f0lr.c,
+	  flite/lang/usenglish/us_int_tone_cart.c,
+	  flite/lang/usenglish/us_int_tone_cart.h,
+	  flite/lang/usenglish/us_phoneset.c,
+	  flite/lang/usenglish/us_text.c, flite/lang/usenglish/us_text.h,
+	  flite/lang/usenglish/us_aswd.c,
+	  flite/lang/usenglish/us_durz_cart.c,
+	  flite/lang/usenglish/us_durz_cart.h,
+	  flite/lang/usenglish/us_ffeatures.c,
+	  flite/lang/usenglish/us_ffeatures.h,
+	  flite/lang/usenglish/us_gpos.c,
+	  flite/lang/usenglish/us_int_accent_cart.c,
+	  flite/lang/usenglish/us_int_accent_cart.h,
+	  flite/lang/usenglish/us_nums_cart.c,
+	  flite/lang/usenglish/us_nums_cart.h,
+	  flite/lang/usenglish/us_phrasing_cart.c,
+	  flite/lang/usenglish/us_phrasing_cart.h,
+	  flite/lang/usenglish/us_postlex.c,
+	  flite/lang/usenglish/usenglish.c,
+	  flite/lang/usenglish/usenglish.h, flite/src/speech/cst_lpcres.c,
+	  flite/src/speech/cst_track.c, flite/src/speech/cst_track_io.c,
+	  flite/src/speech/cst_wave_io.c, config/.cvsignore,
+	  flite/lang/cmu_us_kal/cmu_us_kal.c,
+	  flite/lang/cmu_us_kal/voxdefs.h, flite/src/regex/cst_regex.c,
+	  flite/src/regex/regexp.c, flite/src/regex/regsub.c,
+	  flite/src/speech/cst_wave.c, flite/src/speech/cst_wave_utils.c,
+	  flite/src/speech/rateconv.c, flite/src/stats/cst_viterbi.c,
+	  flite/src/wavesynth/cst_clunits.c,
+	  flite/src/wavesynth/cst_diphone.c,
+	  flite/src/wavesynth/cst_reflpc.c,
+	  flite/src/wavesynth/cst_sigpr.c,
+	  flite/src/wavesynth/cst_sigprFP.c, flite/src/wavesynth/cst_sts.c,
+	  .cvsignore, ACKNOWLEDGEMENTS, AUTHORS, COPYING, INSTALL,
+	  Makefile.am, NEWS, README, configure.ac,
+	  flite/src/stats/cst_cart.c, flite/src/stats/cst_ss.c,
+	  flite/src/synth/cst_phoneset.c, flite/src/synth/cst_synth.c,
+	  flite/src/synth/cst_utt_utils.c, flite/src/synth/cst_voice.c,
+	  flite/src/synth/flite.c, flite/src/hrg/cst_ffeature.c,
+	  flite/src/hrg/cst_item.c, flite/src/hrg/cst_rel_io.c,
+	  flite/src/hrg/cst_relation.c, flite/src/hrg/cst_utterance.c,
+	  flite/src/lexicon/cst_lexicon.c, flite/src/lexicon/cst_lts.c,
+	  flite/src/lexicon/cst_lts_rewrites.c, lib/.cvsignore,
+	  lib/Makefile.am, lib/flite_hts_engine.c, bin/.cvsignore,
+	  bin/Makefile.am, bin/flite_hts_engine.c,
+	  include/flite_hts_engine.h: initialize flite+hts_engine
+

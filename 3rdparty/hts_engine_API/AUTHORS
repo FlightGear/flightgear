@@ -1,0 +1,14 @@
+The hts_engine API is software to synthesize speech waveform from HMMs trained
+by the HMM-based speech synthesis system (HTS). This software is released
+under the Modified BSD license. See the COPYING file in the same directory as
+this file for the license.
+
+The hts_engine_API has been developed by several members of HTS working group
+and some graduate students in Nagoya Institute of Technology:
+
+ Keiichi Tokuda      http://www.sp.nitech.ac.jp/~tokuda/
+ (Produce and Design)
+ Keiichiro Oura      http://www.sp.nitech.ac.jp/~uratec/
+ (Design and Development, Main Maintainer)
+ Heiga Zen
+ Shinji Sako         http://www.mmsp.nitech.ac.jp/~sako/

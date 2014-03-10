@@ -1,0 +1,68 @@
+Version 1.08:
+ * support 64-bit machine.
+ * re-write excitation function.
+ * add some functions to get generated parameters and number of frames.
+ * add some functions for separating synthesis step.
+ * bug fixes.
+
+Version 1.07:
+ * support new HTS voice format.
+ * add LSP postfilter.
+ * change volume unit to DB.
+ * add function to get generated speech.
+ * bug fixes.
+
+Version 1.06:
+ * modify state duration calculation algorithm.
+ * change many function from void to boolean.
+ * change source format.
+ * bug fixes.
+
+Version 1.05:
+ * support PortAudio for audio output.
+
+Version 1.04:
+ * support C++ compiler.
+ * add low-pass filter stream.
+ * change definition of GV weights.
+ * add stop switch.
+ * add volume controller.
+ * bug fixes.
+
+Version 1.03:
+ * add '-z' option to control audio buffer size.
+ * change PDF file format.
+ * bug fixes.
+
+Version 1.02:
+ * context-dependent GV without silent and pause phoneme.
+ * buffer size control of audio output for Windows.
+ * makefiles for nmake of VC.
+ * save detail information.
+ * support singing voice synthesis.
+ * bug fixes.
+
+Version 1.01:
+ * bug fixes.
+ * transfer site to SourceForge.
+
+Version 1.00:
+ * bug fixes and performance improvements.
+ * support linear gain in addition to log gain for LSP-type parameters.
+ * first stable release.
+
+Version 0.99:
+ * bug fixes.
+ * switch license to the New and Simplified BSD license.
+
+Version 0.96:
+ * bug fixes.
+ * support flexible model structure.
+ * support LSP-type parameters.
+
+Version 0.95:
+ * support GV.
+
+Version 0.9:
+ * implement API-style hts_engine.
+ * support speaker-interpolation.

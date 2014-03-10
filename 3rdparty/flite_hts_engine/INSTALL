@@ -1,0 +1,22 @@
+Installation Instructions
+*************************
+
+1. After unpacking the tar.gz file, cd to the flite+hts_engine directory.
+
+2. Run configure script with appropriate options.
+
+   % ./configure \
+     --with-hts-engine-header-path=/usr/local/hts_engine_API/include \
+     --with-hts-engine-library-path=/usr/local/hts_engine_API/lib
+
+   For detail, please see.
+
+   % ./configure --help
+
+3. Run make.
+
+   % make
+
+4. Install library and binary.
+
+   % make install

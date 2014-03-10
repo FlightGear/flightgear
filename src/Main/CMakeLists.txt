@@ -144,6 +144,10 @@ target_link_libraries(fgfs
 	${PLATFORM_LIBS}
 )
 
+if(ENABLE_FLITE)
+target_link_libraries(fgfs hts_engine flite_hts)
+endif()
+
 if (APPLE)  
     install(TARGETS fgfs BUNDLE DESTINATION .)
 else()

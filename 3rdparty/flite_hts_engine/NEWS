@@ -1,0 +1,29 @@
+Version 1.05:
+ * support 64-bit machine.
+ * bug fixes.
+
+Version 1.04:
+ * support new HTS voice format.
+ * add options for changing speech speed and audio buffer size.
+
+Version 1.03:
+ * make sources simple.
+ * add functions for front-end use.
+ * change source format.
+
+Verison 1.02:
+ * fix a serious bug.
+
+Version 1.01:
+ * based on flite-1.4.
+ * add low-pass filter stream.
+
+Version 1.00:
+ * first stable-version release.
+ * context-dependent GV without silent and pause phoneme.
+ * makefiles for nmake of VC.
+ * save detail information.
+ * bug fixes.
+
+Version 0.91:
+ * first beta-version release.

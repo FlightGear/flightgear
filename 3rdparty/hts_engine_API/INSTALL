@@ -1,0 +1,20 @@
+Installation Instructions
+*************************
+
+1. After unpacking the tar.gz file, cd to the hts_engine API directory.
+
+2. Run configure script with appropriate options.
+
+   % ./configure
+
+   For detail, please see.
+
+   % ./configure --help
+
+3. Run make.
+
+   % make
+
+4. Install library and binary.
+
+   % make install
