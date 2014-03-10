@@ -390,6 +390,9 @@ void FGGlobals::append_fg_scenery (const std::string &paths)
         SGPropertyNode* n = sim->getChild("fg-scenery", propIndex++, true);
         n->setStringValue(abspath.str());
         n->setAttribute(SGPropertyNode::WRITE, false);
+        
+        // temporary fix so these values survive reset
+        n->setAttribute(SGPropertyNode::PRESERVE, true);
     } // of path list iteration
 }
 

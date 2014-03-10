@@ -480,7 +480,21 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
 int fgInitAircraft(bool reinit)
 {
     // Scan user config files and command line for a specified aircraft.
-    if (!reinit) {
+    if (reinit) {
+        SGPropertyNode* sim = fgGetNode("/sim", true);
+        sim->removeChildren("fg-aircraft");
+        // after reset, add aircraft dirs to props, neede for Nasal IO rules
+        string_list::const_iterator it;
+        int index = 0;
+        for (it = globals->get_aircraft_paths().begin();
+             it != globals->get_aircraft_paths().end(); ++it, ++index)
+        {
+            SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
+            n->setStringValue(*it);
+            n->setAttribute(SGPropertyNode::WRITE, false);
+
+        }
+    } else {
         flightgear::Options::sharedInstance()->initAircraft();
     }
     
