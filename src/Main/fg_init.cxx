@@ -965,10 +965,6 @@ void fgStartReposition()
     terraSync->reposition();
   }
   
-  // Force reupdating the positions of the ai 3d models. They are used for
-  // initializing ground level for the FDM.
-  //globals->get_subsystem("ai-model")->reinit();
-  
   // Initialize the FDM
   globals->get_subsystem("flight")->reinit();
   
@@ -987,11 +983,13 @@ void fgStartReposition()
   }
   
   // need to bind FDMshell again, since we manually unbound it above...
-  globals->get_subsystem("flight")->bind();
+  fdm->bind();
   
-  // need to reset aircraft (systems/instruments) so they can adapt to current environment
+  // need to reset aircraft (systems/instruments/autopilot)
+  // so they can adapt to current environment
   globals->get_subsystem("systems")->reinit();
   globals->get_subsystem("instrumentation")->reinit();
+  globals->get_subsystem("xml-autopilot")->reinit();
     
   // setup state to end re-init
   fgSetBool("/sim/signals/reinit", false);
