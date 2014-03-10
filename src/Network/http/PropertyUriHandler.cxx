@@ -240,7 +240,12 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
     // update leaf
     string value = request.RequestVariables.get("value");
     SG_LOG(SG_NETWORK,SG_INFO, "httpd: setting " << propertyPath << " to '" << value << "'" );
-    fgSetString( propertyPath.c_str(), value );
+    try {
+      fgSetString( propertyPath.c_str(), value );
+    }
+    catch( string & s ) { 
+      SG_LOG(SG_NETWORK,SG_ALERT, "httpd: setting " << propertyPath << " to '" << value << "' failed: " << s );
+    }
   }
 
   if( request.RequestVariables.get("submit") == "set" ) {
@@ -248,7 +253,12 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
       if( it->first == "submit" ) continue;
       string pp = propertyPath + "/" + it->first;
       SG_LOG(SG_NETWORK,SG_INFO, "httpd: setting " << pp << " to '" << it->second << "'" );
-      fgSetString( pp, it->second );
+      try {
+        fgSetString( pp, it->second );
+      }
+      catch( string & s ) { 
+        SG_LOG(SG_NETWORK,SG_ALERT, "httpd: setting " << pp << " to '" << it->second << "' failed: " << s );
+      }
     }
   }
   
@@ -273,7 +283,13 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
   DOMNode * body = new DOMNode( "body" );
   html->addChild( body );
 
-  SGPropertyNode_ptr node = fgGetNode( string("/") + propertyPath );
+  SGPropertyNode_ptr node;
+  try {
+    node = fgGetNode( string("/") + propertyPath );
+  }
+  catch( string & s ) { 
+    SG_LOG(SG_NETWORK,SG_ALERT, "httpd: reading '" << propertyPath  << "' failed: " << s );
+  }
   if( false == node.valid() ) {
     DOMNode * headline = new DOMNode( "h3" );
     body->addChild( headline );
