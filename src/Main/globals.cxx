@@ -135,7 +135,6 @@ FGGlobals *globals = NULL;
 
 // Constructor
 FGGlobals::FGGlobals() :
-    initial_state( NULL ),
     renderer( new FGRenderer ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
@@ -603,31 +602,6 @@ FGGlobals::resetPropertyRoot()
     n->setAttribute(SGPropertyNode::WRITE, false);
 }
 
-// Save the current state as the initial state.
-void
-FGGlobals::saveInitialState ()
-{
-  initial_state = new SGPropertyNode();
-
-  // copy properties which are READ/WRITEable - but not USERARCHIVEd or PRESERVEd
-  int checked  = SGPropertyNode::READ+SGPropertyNode::WRITE+
-                 SGPropertyNode::USERARCHIVE+SGPropertyNode::PRESERVE;
-  int expected = SGPropertyNode::READ+SGPropertyNode::WRITE;
-  if (!copyProperties(props, initial_state, expected, checked))
-    SG_LOG(SG_GENERAL, SG_ALERT, "Error saving initial state");
-    
-  // delete various properties from the initial state, since we want to
-  // preserve their values even if doing a restore
-  // => Properties should now use the PRESERVE flag to protect their values
-  // on sim-reset. Remove some specific properties for backward compatibility.
-  SGPropertyNode* sim = initial_state->getChild("sim");
-  SGPropertyNode* cameraGroupNode = sim->getNode("rendering/camera-group");
-  if (cameraGroupNode) {
-    cameraGroupNode->removeChild("camera");
-    cameraGroupNode->removeChild("gui");
-  }
-}
-
 static std::string autosaveName()
 {
     std::ostringstream os;
@@ -638,28 +612,6 @@ static std::string autosaveName()
     
     os << "autosave_" << versionParts[0] << "_" << versionParts[1] << ".xml";
     return os.str();
-}
-
-// Restore the saved initial state, if any
-void
-FGGlobals::restoreInitialState ()
-{
-    if ( initial_state == 0 ) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
-               "No initial state available to restore!!!");
-        return;
-    }
-    // copy properties which are READ/WRITEable - but not USERARCHIVEd or PRESERVEd
-    int checked  = SGPropertyNode::READ+SGPropertyNode::WRITE+
-                   SGPropertyNode::USERARCHIVE+SGPropertyNode::PRESERVE;
-    int expected = SGPropertyNode::READ+SGPropertyNode::WRITE;
-    if ( copyProperties(initial_state, props, expected, checked)) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Initial state restored successfully" );
-    } else {
-        SG_LOG( SG_GENERAL, SG_INFO,
-                "Some errors restoring initial state (read-only props?)" );
-    }
-
 }
 
 // Load user settings from autosave.xml

@@ -602,9 +602,7 @@ fgLoadFlight (std::istream &input)
   fgSetString("/sim/presets/speed-set", "UVW");
 
   copyProperties(&props, globals->get_props());
-  // When loading a flight, make it the
-  // new initial state.
-  globals->saveInitialState();
+
   return true;
 }
 

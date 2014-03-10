@@ -857,10 +857,6 @@ void fgPostInitSubsystems()
     fgSetBool("/sim/initialized", true);
 
     SG_LOG( SG_GENERAL, SG_INFO, endl);
-
-                                // Save the initial state for future
-                                // reference.
-    globals->saveInitialState();
 }
 
 // re-position is a simplified version of the traditional (legacy)

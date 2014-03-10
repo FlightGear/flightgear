@@ -78,7 +78,6 @@ private:
 
     // properties, destroy last
     SGPropertyNode_ptr props;
-    SGPropertyNode_ptr initial_state;
 
     // localization
     FGLocale* locale;
@@ -321,17 +320,6 @@ public:
   
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
-  
-   /**
-     * Save the current state as the initial state.
-     */
-    void saveInitialState ();
-
-
-    /**
-     * Restore the saved initial state, if any.
-     */
-    void restoreInitialState ();
 
     /**
      * Load user settings from autosave.xml
