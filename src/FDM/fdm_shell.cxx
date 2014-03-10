@@ -95,7 +95,7 @@ void FDMShell::postinit()
 {
     _initialFdmProperties = new SGPropertyNode;
     
-    if (!copyProperties(_props->getNode("fdm"),
+    if (!copyProperties(_props->getNode("fdm", true),
                                      _initialFdmProperties))
     {
         SG_LOG(SG_FLIGHT, SG_ALERT, "Failed to save initial FDM property state");
