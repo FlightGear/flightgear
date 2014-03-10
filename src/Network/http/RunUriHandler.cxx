@@ -23,11 +23,51 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
 #include <Main/globals.hxx>
+#include <3rdparty/cjson/cJSON.h>
+
 
 using std::string;
 
 namespace flightgear {
 namespace http {
+
+static void JsonToProp( cJSON * json, SGPropertyNode_ptr base )
+{
+  if( NULL == json ) return;
+
+  cJSON * cj = cJSON_GetObjectItem( json, "name" );
+  if( NULL == cj ) return; // a node with no name?
+  char * name = cj->valuestring;
+  if( NULL == name ) return; // still no name?
+
+  //TODO: check valid name
+
+  int index = 0;
+  cj = cJSON_GetObjectItem( json, "index" );
+  if( NULL != cj ) index = cj->valueint;
+  if( index < 0 ) return;
+
+  SGPropertyNode_ptr n = base->getNode( name, index, true );
+  cJSON * children = cJSON_GetObjectItem( json, "children" );
+  if( NULL != children ) {
+    for( int i = 0; i < cJSON_GetArraySize( children ); i++ ) {
+      JsonToProp( cJSON_GetArrayItem( children, i ), n );
+    }
+  } else {
+    //TODO: set correct type
+/*
+    char * type = "";
+    cj = cJSON_GetObjectItem( json, "type" );
+    if( NULL != cj ) type = cj->valuestring;
+*/
+    char * value = NULL;
+    cj = cJSON_GetObjectItem( json, "value" );
+    if( NULL != cj ) value = cj->valuestring;
+
+    if( NULL != value )
+      n->setUnspecifiedValue( value );
+  }
+}
 
 bool RunUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & response )
 {
@@ -39,8 +79,12 @@ bool RunUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & r
     return true;
   }
 
-  SGPropertyNode args;
-  if ( globals->get_commands()->execute(command.c_str(), &args) ) {
+  SGPropertyNode_ptr args = new SGPropertyNode();
+  cJSON * json = cJSON_Parse( request.Content.c_str() );
+  JsonToProp( json, args );
+
+  cJSON_Delete( json );
+  if ( globals->get_commands()->execute(command.c_str(), args) ) {
     response.Content = "ok.";
     return true;
   } 
