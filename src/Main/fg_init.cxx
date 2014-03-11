@@ -1018,6 +1018,7 @@ void fgStartNewReset()
     
     render = new FGRenderer;
     render->setEventHandler(eventHandler);
+    eventHandler->reset();
     globals->set_renderer(render);
     render->init();
     render->setViewer(viewer.get());

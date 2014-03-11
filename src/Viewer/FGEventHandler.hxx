@@ -98,6 +98,7 @@ public:
     bool getResizable() { return resizable; }
     void setResizable(bool _resizable) { resizable = _resizable; }
 
+    void reset();
 protected:
     osg::ref_ptr<osg::Node> _node;
     fgIdleHandler idleHandler;

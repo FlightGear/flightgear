@@ -103,6 +103,13 @@ FGEventHandler::FGEventHandler() :
     _print = fgGetNode("/sim/rendering/print-statistics", true);
 }
 
+void FGEventHandler::reset()
+{
+    _display = fgGetNode("/sim/rendering/on-screen-statistics", true);
+    _print = fgGetNode("/sim/rendering/print-statistics", true);
+    statsHandler->reset();
+}
+    
 namespace
 {
 // Translate OSG modifier mask to FG modifier mask.
