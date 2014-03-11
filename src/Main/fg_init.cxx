@@ -971,13 +971,16 @@ void fgStartNewReset()
         }
     } // of top-level groups iteration
     
+    FGRenderer* render = globals->get_renderer();
+    // needed or we crash in multi-threaded OSG mode
+    render->getViewer()->stopThreading();
+    
     // order is important here since tile-manager shutdown needs to
     // access the scenery object
     globals->set_tile_mgr(NULL);
     globals->set_scenery(NULL);
     flightgear::CameraGroup::setDefault(NULL);
     
-    FGRenderer* render = globals->get_renderer();
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
     render->getViewer()->getDatabasePager()->cancel();
@@ -1024,6 +1027,7 @@ void fgStartNewReset()
     // must do this before splashinit for Rembrandt
     flightgear::CameraGroup::buildDefaultGroup(viewer.get());
     render->splashinit();
+    viewer->startThreading();
     
     fgOSResetProperties();
 
