@@ -53,11 +53,6 @@ using namespace std;
 #define MAX_PACKET_SIZE 1200
 #define MAX_TEXT_SIZE 128
 
-// These constants are provided so that the ident 
-// command can list file versions
-const char sMULTIPLAYMGR_BID[] = "$Id$";
-const char sMULTIPLAYMGR_HID[] = MULTIPLAYTXMGR_HID;
-
 struct IdPropertyList {
   unsigned id;
   const char* name;
