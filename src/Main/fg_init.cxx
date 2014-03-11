@@ -494,6 +494,9 @@ int fgInitAircraft(bool reinit)
             n->setAttribute(SGPropertyNode::WRITE, false);
 
         }
+        
+        SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
+        aircraftProp->setAttribute(SGPropertyNode::PRESERVE, true);
     } else {
         flightgear::Options::sharedInstance()->initAircraft();
     }
@@ -1005,6 +1008,9 @@ void fgStartNewReset()
     fgInitConfig(0, NULL, true);
     fgInitGeneral(); // all of this?
     
+    flightgear::Options::sharedInstance()->processOptions();
+    
+    // PRESERVED properties over-write state from options, intentionally
     if ( copyProperties(preserved, globals->get_props()) ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Preserved state restored successfully" );
     } else {
@@ -1014,7 +1020,6 @@ void fgStartNewReset()
 
     fgGetNode("/sim")->removeChild("aircraft-dir");
     fgInitAircraft(true);
-    flightgear::Options::sharedInstance()->processOptions();
     
     render = new FGRenderer;
     render->setEventHandler(eventHandler);
