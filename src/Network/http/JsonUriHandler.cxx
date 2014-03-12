@@ -20,51 +20,14 @@
 
 
 #include "JsonUriHandler.hxx"
+#include "jsonprops.hxx"
 #include <Main/fg_props.hxx>
 #include <simgear/props/props.hxx>
-#include <3rdparty/cjson/cJSON.h>
 
 using std::string;
 
 namespace flightgear {
 namespace http {
-
-static const char * getPropertyTypeString( simgear::props::Type type )
-{
-  switch( type ) {
-    case simgear::props::NONE: return "-";
-    case simgear::props::ALIAS: return "alias";
-    case simgear::props::BOOL: return "bool";
-    case simgear::props::INT: return "int";
-    case simgear::props::LONG: return "long";
-    case simgear::props::FLOAT: return "float";
-    case simgear::props::DOUBLE: return "double";
-    case simgear::props::STRING: return "string";
-    case simgear::props::UNSPECIFIED: return "unspecified";
-    case simgear::props::EXTENDED: return "extended";
-    case simgear::props::VEC3D: return "vec3d";
-    case simgear::props::VEC4D: return "vec4d";
-    default: return "?";
-  }
-}
-
-static cJSON * PropToJson( SGPropertyNode_ptr n, int depth )
-{
-  cJSON * json = cJSON_CreateObject();
-  cJSON_AddItemToObject(json, "path", cJSON_CreateString(n->getPath(true).c_str()));
-  cJSON_AddItemToObject(json, "name", cJSON_CreateString(n->getName()));
-  cJSON_AddItemToObject(json, "value", cJSON_CreateString(n->getStringValue()));
-  cJSON_AddItemToObject(json, "type", cJSON_CreateString(getPropertyTypeString(n->getType())));
-  cJSON_AddItemToObject(json, "index", cJSON_CreateNumber(n->getIndex()));
-
-  if( depth > 0 && n->nChildren() > 0 ) {
-    cJSON * jsonArray = cJSON_CreateArray();
-    for( int i = 0; i < n->nChildren(); i++ )
-      cJSON_AddItemToArray( jsonArray, PropToJson( n->getChild(i), depth-1 ) );
-    cJSON_AddItemToObject( json, "children", jsonArray );
-  }
-  return json;
-}
 
 bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse & response )
 {
@@ -101,13 +64,7 @@ bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse
 
   } 
 
-  cJSON * json = PropToJson( node, depth );
-
-  char * jsonString = indent ? cJSON_Print( json ) : cJSON_PrintUnformatted( json );
-  response.Content = jsonString;
-  free( jsonString );
-  cJSON_Delete( json );
-
+  response.Content = JSON::toJsonString( indent, node, depth );
 
   return true;
 

@@ -6,6 +6,9 @@ set(SOURCES
 	PropertyUriHandler.cxx
 	JsonUriHandler.cxx
 	RunUriHandler.cxx
+	PropertyChangeWebsocket.cxx
+	PropertyChangeObserver.cxx
+	jsonprops.cxx
 	)
 
 set(HEADERS
@@ -16,6 +19,10 @@ set(HEADERS
 	JsonUriHandler.hxx
 	RunUriHandler.hxx
 	HTTPRequest.hxx
+	Websocket.hxx
+	PropertyChangeWebsocket.hxx
+	PropertyChangeObserver.hxx
+	jsonprops.hxx
 	)
 
 flightgear_component(Http "${SOURCES}" "${HEADERS}")
