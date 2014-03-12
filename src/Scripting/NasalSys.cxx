@@ -1151,7 +1151,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
   const char* moduleName = arg->getStringValue("module");
 
   return handleCommand( moduleName,
-                        arg ? arg->getPath(true).c_str() : moduleName,
+                        arg->getPath(true).c_str(),
                         src,
                         arg );
 }
