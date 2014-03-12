@@ -482,7 +482,7 @@ void DCLGPS::update(double dt) {
 							// TODO - avoid the hardwiring on nav[0]
 							s = "Adj Nav Crs to ";
 						} else {
-							string s = "GPS Course is ";
+							s = "GPS Course is ";
 						}
 						double d = GetMagHeadingFromTo(_fromWaypoint.lat, _fromWaypoint.lon, _activeWaypoint.lat, _activeWaypoint.lon);
 						while(d < 0.0) d += 360.0;

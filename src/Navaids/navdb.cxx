@@ -175,7 +175,7 @@ static PositionedID readNavFromStream(std::istream& aStream,
                                arp.first, arp.second);
   }
   
-  if (range < 0.01) {
+  if (range < 1) {
     range = defaultNavRange(ident, type);
   }
   

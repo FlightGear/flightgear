@@ -1713,7 +1713,7 @@ FGControls::set_ejection_seat( int which_seat, bool val )
             eject[i] = val;
         }
     } else {
-        if ( (which_seat >= 0) && (which_seat <= MAX_EJECTION_SEATS) ) {
+        if ( (which_seat >= 0) && (which_seat < MAX_EJECTION_SEATS) ) {
             if ( eseat_status[which_seat] == SEAT_SAFED ||
                 eseat_status[which_seat] == SEAT_FAIL )
             {
@@ -1734,7 +1734,7 @@ FGControls::set_eseat_status( int which_seat, int val )
             eseat_status[i] = val;
         }
     } else {
-        if ( (which_seat >=0) && (which_seat <= MAX_EJECTION_SEATS) ) {
+        if ( (which_seat >=0) && (which_seat < MAX_EJECTION_SEATS) ) {
             eseat_status[which_seat] = val;
         }
     }
