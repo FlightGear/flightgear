@@ -1453,7 +1453,7 @@ FGPositionedRef NavDataCache::loadById(PositionedID rowid)
     return it->second; // cache it
   }
   
-  PositionedID aptId;
+  sqlite3_int64 aptId;
   FGPositioned* pos = d->loadById(rowid, aptId);
   d->cache.insert(it, PositionedCache::value_type(rowid, pos));
   d->cacheMisses++;
