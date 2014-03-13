@@ -38,8 +38,14 @@ TileCache::TileCache( void ) :
 }
 
 
-TileCache::~TileCache( void ) {
-    clear_cache();
+TileCache::~TileCache( void )
+{
+    tile_map_iterator it = tile_cache.begin();
+    for (; it != tile_cache.end(); ++it) {
+        TileEntry* tile = it->second;
+        tile->removeFromSceneGraph();
+        delete tile;
+    }
 }
 
 

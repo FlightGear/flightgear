@@ -42,6 +42,12 @@ SceneryPager::~SceneryPager()
 {
 }
 
+void SceneryPager::clearRequests()
+{
+    _pagerRequests.clear();
+    _deleteRequests.clear();
+}
+
 void SceneryPager::queueRequest(const std::string& fileName, Group* group,
                                 float priority, FrameStamp* frameStamp,
                                 ref_ptr<Referenced>& databaseRequest,

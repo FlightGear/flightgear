@@ -100,6 +100,7 @@
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
+#include <Scenery/SceneryPager.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/voice.hxx>
@@ -982,6 +983,7 @@ void fgStartNewReset()
     // access the scenery object
     globals->set_tile_mgr(NULL);
     globals->set_scenery(NULL);
+    FGScenery::getPagerSingleton()->clearRequests();
     flightgear::CameraGroup::setDefault(NULL);
     
     // don't cancel the pager until after shutdown, since AIModels (and

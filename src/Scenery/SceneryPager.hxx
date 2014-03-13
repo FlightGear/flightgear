@@ -47,6 +47,8 @@ public:
     // lock on the delete list.
     void queueDeleteRequest(osg::ref_ptr<osg::Object>& objptr);
     virtual void signalEndFrame();
+    
+    void clearRequests();
 protected:
     // Queue up file requests until the end of the frame
     struct PagerRequest
