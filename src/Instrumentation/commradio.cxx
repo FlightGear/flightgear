@@ -81,6 +81,7 @@ double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality( double d
 class OnExitHandler {
   public:
     virtual void onExit() = 0;
+    virtual ~OnExitHandler() {}
 };
 
 class OnExit {
@@ -113,6 +114,7 @@ class OutputProperties : public OnExitHandler {
       _PO_trackDistance_m( rootNode->getNode("track-distance-m",true) ),
       _PO_heightAboveStation_ft( rootNode->getNode("height-above-station-ft",true) )
       {}
+    virtual ~OutputProperties() {}
 
 protected:
     SGPropertyNode_ptr _rootNode;
@@ -282,9 +284,9 @@ CommRadioImpl::CommRadioImpl( SGPropertyNode_ptr node ) :
     _num( node->getIntValue("number",0)),
     _metarBridge( new MetarBridge() ),
     _useFrequencyFormatter( _rootNode->getNode("frequencies/selected-mhz",true), 
-                            _rootNode->getNode("frequencies/selected-mhz-fmt",true), 0.025 ),
+                            _rootNode->getNode("frequencies/selected-mhz-fmt",true), 0.025, 118.0, 136.0 ),
     _stbyFrequencyFormatter( _rootNode->getNode("frequencies/standby-mhz",true), 
-                            _rootNode->getNode("frequencies/standby-mhz-fmt",true), 0.025 ),
+                            _rootNode->getNode("frequencies/standby-mhz-fmt",true), 0.025, 118.0, 136.0 ),
     _signalQualityComputer( new SimpleDistanceSquareSignalQualityComputer(10*SG_NM_TO_METER) ),
 
     _stationTTL(0.0),

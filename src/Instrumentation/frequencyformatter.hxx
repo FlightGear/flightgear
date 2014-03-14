@@ -5,10 +5,12 @@
 
 class FrequencyFormatter : public SGPropertyChangeListener {
 public:
-  FrequencyFormatter( SGPropertyNode_ptr freqNode, SGPropertyNode_ptr fmtFreqNode, double channelSpacing ) :
+  FrequencyFormatter( SGPropertyNode_ptr freqNode, SGPropertyNode_ptr fmtFreqNode, double channelSpacing, double min, double max ) :
     _freqNode( freqNode ),
     _fmtFreqNode( fmtFreqNode ),
-    _channelSpacing(channelSpacing)
+    _channelSpacing(channelSpacing),
+    _min(min),
+    _max(max)
   {
     _freqNode->addChangeListener( this );
     valueChanged(_freqNode);
@@ -34,13 +36,18 @@ public:
   {
     double d = SGMiscd::roundToInt(_freqNode->getDoubleValue() / _channelSpacing) * _channelSpacing;
     // strip last digit, do not round
-    return ((int)(d*100))/100.0;
+    double f = ((int)(d*100))/100.0;
+    if( f < _min ) return _min;
+    if( f >= _max ) return _max;
+    return f;
   }
 
 private:
   SGPropertyNode_ptr _freqNode;
   SGPropertyNode_ptr _fmtFreqNode;
   double _channelSpacing;
+  double _min;
+  double _max;
 };
 
 
