@@ -113,16 +113,42 @@ void MongooseHttpd::init()
   n = _configNode->getNode("options");
   if (n.valid()) {
 
-    string docRoot = n->getStringValue("document-root", fgGetString("/sim/fg-root"));
-    if (docRoot[0] != '/') docRoot.insert(0, "/").insert(0, fgGetString("/sim/fg-root"));
+    const string fgRoot = fgGetString("/sim/fg-root");
+    string docRoot = n->getStringValue("document-root", fgRoot.c_str() );
+    if (docRoot[0] != '/') docRoot.insert(0, "/").insert(0, fgRoot );
 
     mg_set_option(_server, "document_root", docRoot.c_str());
 
     mg_set_option(_server, "listening_port", n->getStringValue("listening-port", "8080"));
-//    mg_set_option(_server, "url_rewrites", n->getStringValue( "url-rewrites", "" ) );
+    {
+      // build url rewrites relative to fg-root
+      string rewrites = n->getStringValue( "url-rewrites", "" );
+      string_list rwl = simgear::strutils::split( rewrites, "," );
+      rewrites.clear();
+      for( string_list::iterator it = rwl.begin(); it != rwl.end(); ++it ) {
+        string_list rw_entries = simgear::strutils::split( *it, "=" );
+        if( rw_entries.size() != 2 ) {
+          SG_LOG( SG_NETWORK,SG_WARN, "invalid entry '" << *it << "' in url-rewrites ignored." );
+          continue;
+        }
+        string & lhs = rw_entries[0];
+        string & rhs = rw_entries[1];
+        if( false == rewrites.empty()) rewrites.append(1,',');
+        rewrites.append( lhs ).append(1,'=');
+        if( rhs[0] == '/' ) {
+          rewrites.append( rhs );
+        } else {
+          rewrites.append( fgRoot ).append( 1, '/' ).append( rhs );
+        }
+      }
+      SG_LOG(SG_NETWORK,SG_ALERT,"url-rewrites='" << rewrites << "'" );
+      if( false == rewrites.empty() )
+        mg_set_option(_server, "url_rewrites", rewrites.c_str() );
+    }
     mg_set_option(_server, "enable_directory_listing", n->getStringValue("enable-directory-listing", "yes"));
     mg_set_option(_server, "idle_timeout_ms", n->getStringValue("idle-timeout-ms", "30000"));
     mg_set_option(_server, "index_files", n->getStringValue("index-files", "index.html"));
+
   }
 
 }
