@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-require 'ERB'
+require 'plist'
 
 $osgLibs = ['osgFX', 'osgParticle', 'osg', 'osgGA', 'osgText', 'osgUtil', 'osgSim', 'osgViewer', 'osgDB']
 $osgPlugins = ['ac', 'osg', 'freetype', 'imageio', 'rgb', 'txf', 'mdl', '3ds', 'dds']
@@ -21,11 +21,11 @@ puts "Code signing identity is #{$codeSignIdentity}"
 puts "osgVersion=#{osgVersion}, so-number=#{$osgSoVersion}"
 
 def fix_install_names(object)
-  #puts "fixing install names for #{object}"
+  puts "fixing install names for #{object}"
   
   $osgLibs.each do |l|
     oldName = "lib#{l}.#{$osgSoVersion}.dylib"
-    newName = "@executable_path/../Frameworks/#{oldName}"
+    newName = "@executable_path/../Frameworks/#{oldName}"    
     `install_name_tool -change #{oldName} #{newName} #{object}`
   end
   
@@ -68,8 +68,11 @@ puts "Creating directory structure"
 `mkdir -p #{resourcesDir}`
 `mkdir -p #{osgPluginsDir}`
 
-puts "Copying binaries"
-bins = ['fgfs', 'fgjs', 'fgcom']
+# fix install names on the primary executable
+fix_install_names("#{macosDir}/fgfs")
+
+puts "Copying auxilliary binaries"
+bins = ['fgjs', 'fgcom']
 bins.each do |b|
   if !File.exist?("#{$prefixDir}/bin/#{b}")
     next
@@ -108,6 +111,12 @@ if File.exist?("FlightGearOSX")
     `cp FlightGear #{macosDir}`
     `rsync -a *.rb *.lproj *.sh *.tiff #{resourcesDir}`
   end
+  
+  # change CFBundleExecutable in to the Info.plist
+  puts "Adjusting CFBundle executable - needs Ruby plist gem installed"
+  plist = Plist::parse_xml("#{contents}/Info.plist")
+  plist["CFBundleExecutable"] = "FlightGear"
+  plist.save_plist("#{contents}/Info.plist")
 end
 
 if File.exist?("#{$prefixDir}/share/flightgear")
