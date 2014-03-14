@@ -95,8 +95,8 @@ void PropertyChangeWebsocket::update(WebsocketWriter & writer)
     SGPropertyNode_ptr node = *it;
 
     string newValue;
-    if (_propertyChangeObserver->getChangedValue(node, newValue)) {
-      SG_LOG(SG_NETWORK, SG_ALERT, "httpd: new Value for " << node->getPath(true) << " '" << newValue << "' #" << id);
+    if (_propertyChangeObserver->isChangedValue(node)) {
+      SG_LOG(SG_NETWORK, SG_ALERT, "httpd: new Value for " << node->getPath(true) << " '" << node->getStringValue() << "' #" << id);
       writer.writeText( JSON::toJsonString( false, node, 0 ) );
     }
   }

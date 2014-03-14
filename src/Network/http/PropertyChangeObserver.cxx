@@ -50,6 +50,14 @@ void PropertyChangeObserver::check()
     if ((*it)->_changed) (*it)->_prevValue = (*it)->_node->getStringValue();
   }
 }
+
+void PropertyChangeObserver::uncheck()
+{
+  for (Entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it) {
+    (*it)->_changed = false;
+  }
+}
+
 const SGPropertyNode_ptr PropertyChangeObserver::addObservation( const string propertyName)
 {
   for (Entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it) {
@@ -72,14 +80,12 @@ const SGPropertyNode_ptr PropertyChangeObserver::addObservation( const string pr
   return empty;
 }
 
-bool PropertyChangeObserver::getChangedValue(const SGPropertyNode_ptr node, string & out)
+bool PropertyChangeObserver::isChangedValue(const SGPropertyNode_ptr node)
 {
   for (Entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it) {
     PropertyChangeObserverEntryRef entry = *it;
 
     if( entry->_node == node && entry->_changed ) {
-      out = entry->_node->getStringValue();
-      entry->_changed = false;
       return true;
     }
   }

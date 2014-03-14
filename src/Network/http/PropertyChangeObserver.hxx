@@ -46,9 +46,10 @@ public:
   virtual ~PropertyChangeObserver();
 
   const SGPropertyNode_ptr addObservation( const std::string propertyName);
-  bool getChangedValue(const SGPropertyNode_ptr node, std::string & out);
+  bool isChangedValue(const SGPropertyNode_ptr node);
 
   void check();
+  void uncheck();
 
 private:
   typedef std::vector<PropertyChangeObserverEntryRef> Entries_t;

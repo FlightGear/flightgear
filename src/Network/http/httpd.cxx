@@ -172,6 +172,7 @@ void MongooseHttpd::update(double dt)
   _propertyChangeObserver.check();
   mg_poll_server(_server, 0);
   mg_iterate_over_connections(_server, &MongooseHttpd::staticIterateCallback);
+  _propertyChangeObserver.uncheck();
 }
 
 class MongooseHTTPRequest: public HTTPRequest {
