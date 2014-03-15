@@ -133,13 +133,9 @@ void CanvasWidget::doHit(int button, int updown, int x, int y)
   switch( button )
   {
     case PU_LEFT_BUTTON:
-      event->button = osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON;
-      break;
     case PU_MIDDLE_BUTTON:
-      event->button = osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON;
-      break;
     case PU_RIGHT_BUTTON:
-      event->button = osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON;
+      event->button = button;
       break;
     case PU_SCROLL_UP_BUTTON:
     case PU_SCROLL_DOWN_BUTTON:
