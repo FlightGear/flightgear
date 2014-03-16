@@ -206,7 +206,8 @@ private:
     /** Predicate, determine if the lon/lat position in the scratch is
      * valid or not. */
     bool isScratchPositionValid() const;
-
+    FGPositionedRef positionedFromScratch() const;
+    
 #if FG_210_COMPAT
     void setScratchFromPositioned(FGPositioned* aPos, int aIndex);
     void setScratchFromCachedSearchResult();
@@ -350,7 +351,7 @@ private:
      * the instrument manager creates a default instance of us,
      * if no explicit GPS is specific in the aircraft's instruments.xml file.
      * This allows default route-following to work with the generic autopilot.
-     * This flat is set in that case, to inform us we're a 'fake' installation,
+     * This flag is set in that case, to inform us we're a 'fake' installation,
      * and not to worry about electrical power or similar.
      */
     bool _defaultGPSMode;

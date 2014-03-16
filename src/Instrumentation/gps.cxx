@@ -222,14 +222,17 @@ GPS::bind()
   tieSGGeodReadOnly(wp0_node, _wp0_position, "longitude-deg", "latitude-deg", "altitude-ft");
   tie(wp0_node, "ID", SGRawValueMethods<GPS, const char*>
       (*this, &GPS::getWP0Ident, NULL));
-    
+  tie(wp0_node, "name", SGRawValueMethods<GPS, const char*>
+      (*this, &GPS::getWP0Name, NULL));
 
   tie(_currentWayptNode, "valid", SGRawValueMethods<GPS, bool>
        (*this, &GPS::getWP1IValid, NULL));
     
   tie(_currentWayptNode, "ID", SGRawValueMethods<GPS, const char*>
     (*this, &GPS::getWP1Ident, NULL));
-  
+  tie(_currentWayptNode, "name", SGRawValueMethods<GPS, const char*>
+    (*this, &GPS::getWP1Name, NULL));
+    
   tie(_currentWayptNode, "distance-nm", SGRawValueMethods<GPS, double>
     (*this, &GPS::getWP1Distance, NULL));
   tie(_currentWayptNode, "bearing-true-deg", SGRawValueMethods<GPS, double>
@@ -922,16 +925,25 @@ double GPS::getCDIDeflection() const
 
 const char* GPS::getWP0Ident() const
 {
-  if (!_dataValid || (_mode != "leg") || (!_prevWaypt)) {
+  if (!_dataValid || (_mode != "leg") || !_prevWaypt) {
     return "";
   }
   
-  return _prevWaypt->ident().c_str();
+// work around std::string::c_str() storage lifetime with libc++
+// real fix is to allow tie-ing with std::string instead of char*
+  static char identBuf[8];
+  strncpy(identBuf, _prevWaypt->ident().c_str(), 8);
+
+  return identBuf;
 }
 
 const char* GPS::getWP0Name() const
 {
-  return "";
+    if (!_dataValid || !_prevWaypt || !_prevWaypt->source()) {
+        return "";
+    }
+    
+    return _prevWaypt->source()->name().c_str();
 }
 
 bool GPS::getWP1IValid() const
@@ -941,16 +953,25 @@ bool GPS::getWP1IValid() const
 
 const char* GPS::getWP1Ident() const
 {
-  if ((!_dataValid)||(!_currentWaypt)) {
+  if (!_dataValid || !_currentWaypt) {
     return "";
   }
   
-  return _currentWaypt->ident().c_str();
+// work around std::string::c_str() storage lifetime with libc++
+// real fix is to allow tie-ing with std::string instead of char*
+  static char identBuf[8];
+  strncpy(identBuf, _currentWaypt->ident().c_str(), 8);
+    
+  return identBuf;
 }
 
 const char* GPS::getWP1Name() const
 {
-  return "";
+    if (!_dataValid || !_currentWaypt || !_currentWaypt->source()) {
+        return "";
+    }
+    
+    return _currentWaypt->source()->name().c_str();
 }
 
 double GPS::getWP1Distance() const
@@ -1157,6 +1178,16 @@ bool GPS::isScratchPositionValid() const
   return true;
 }
 
+FGPositionedRef GPS::positionedFromScratch() const
+{
+    if (!isScratchPositionValid()) {
+        return NULL;
+    }
+    
+    std::string ident(_scratchNode->getStringValue("ident"));
+    return FGPositioned::findClosestWithIdent(ident, _scratchPos);
+}
+
 void GPS::directTo()
 {  
   if (!isScratchPositionValid()) {
@@ -1165,22 +1196,31 @@ void GPS::directTo()
   
   _prevWaypt = NULL;
   _wp0_position = _indicated_pos;
-  _currentWaypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
-  _mode = "dto";
-  clearScratch();
+    
+    FGPositionedRef pos = positionedFromScratch();
+    if (pos) {
+        _currentWaypt = new NavaidWaypoint(pos, NULL);
+    } else {
+        _currentWaypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
+    }
+    
+    _mode = "dto";
   wp1Changed();
 }
 
 void GPS::selectOBSMode(flightgear::Waypt* waypt)
 {
-  if (!waypt) {
-    // initialise from scratch
-    if (isScratchPositionValid()) {
+  if (!waypt && isScratchPositionValid()) {
+    FGPositionedRef pos = positionedFromScratch();
+    if (pos) {
+        waypt = new NavaidWaypoint(pos, NULL);
+    } else {
         waypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
     }
   }
   
   _mode = "obs";
+  _prevWaypt = NULL;
   _wp0_position = _indicated_pos;
   _currentWaypt = waypt;
   wp1Changed();
