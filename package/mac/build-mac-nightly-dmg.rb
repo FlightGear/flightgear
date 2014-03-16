@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+require 'rubygems' # needed for Ruby 1.8
 require 'plist'
 
 $osgLibs = ['osgFX', 'osgParticle', 'osg', 'osgGA', 'osgText', 'osgUtil', 'osgSim', 'osgViewer', 'osgDB']
@@ -137,5 +138,5 @@ puts "Creating DMG"
 
 createArgs = "-format UDBZ -imagekey bzip2-level=9 -quiet -volname #{volName}"
 
-`rm #{dmgPath}`
+`rm -f #{dmgPath}`
 `hdiutil create -srcfolder #{dmgDir} #{createArgs} #{dmgPath}`
