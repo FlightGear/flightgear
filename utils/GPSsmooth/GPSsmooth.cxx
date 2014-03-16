@@ -10,7 +10,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
 
-#include "gps.hxx"
+#include "GPSsmooth.hxx"
 
 using std::cout;
 using std::endl;

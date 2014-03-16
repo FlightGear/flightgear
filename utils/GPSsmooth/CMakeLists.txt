@@ -1,6 +1,6 @@
 
 add_executable(GPSsmooth
-    gps.cxx gps.hxx
+    GPSsmooth.cxx GPSsmooth.hxx
     gps_main.cxx
 )
 
