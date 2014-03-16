@@ -88,6 +88,12 @@ NewGUI::init ()
 void
 NewGUI::shutdown()
 {
+    DialogDict::iterator it = _active_dialogs.begin();
+    for (; it != _active_dialogs.end(); ++it) {
+        delete it->second;
+    }
+    _active_dialogs.clear();
+    
     fgUntie("/sim/menubar/visibility");
     _menubar.reset();
     _dialog_props.clear();
@@ -129,7 +135,7 @@ NewGUI::createMenuBarImplementation()
 void
 NewGUI::reset (bool reload)
 {
-    map<string,FGDialog *>::iterator iter;
+    DialogDict::iterator iter;
     string_list openDialogs;
     // close all open dialogs and remember them ...
     for (iter = _active_dialogs.begin(); iter != _active_dialogs.end(); ++iter)

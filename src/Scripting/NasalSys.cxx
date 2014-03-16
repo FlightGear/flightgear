@@ -201,7 +201,8 @@ static char* readfile(const char* file, int* lenOut)
     return buf;
 }
 
-FGNasalSys::FGNasalSys()
+FGNasalSys::FGNasalSys() :
+    _inited(false)
 {
     nasalSys = this;
     _context = 0;
@@ -249,6 +250,9 @@ naRef FGNasalSys::callMethod(naRef code, naRef self, int argc, naRef* args, naRe
 
 FGNasalSys::~FGNasalSys()
 {
+    if (_inited) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Nasal was not shutdown");
+    }
     nasalSys = 0;
 }
 
@@ -732,6 +736,9 @@ void FGNasalSys::setCmdArg(SGPropertyNode* aNode)
 
 void FGNasalSys::init()
 {
+    if (_inited) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "duplicate init of Nasal");
+    }
     int i;
 
     _context = naNewContext();
@@ -803,10 +810,16 @@ void FGNasalSys::init()
     // now Nasal modules are loaded, we can do some delayed work
     postinitNasalPositioned(_globals, _context);
     postinitNasalGUI(_globals, _context);
+    
+    _inited = true;
 }
 
 void FGNasalSys::shutdown()
 {
+    if (!_inited) {
+        return;
+    }
+    
     shutdownNasalPositioned();
     
     map<int, FGNasalListener *>::iterator it, end = _listener.end();
@@ -837,7 +850,7 @@ void FGNasalSys::shutdown()
     _globals = naNil();    
     
     naGC();
-    
+    _inited = false;
 }
 
 naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
@@ -1085,6 +1098,12 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
 
 void FGNasalSys::deleteModule(const char* moduleName)
 {
+    if (!_inited) {
+        // can occur on shutdown due to us being shutdown first, but other
+        // subsystems having Nasal objects.
+        return;
+    }
+    
     naContext ctx = naNewContext();
     naRef modname = naNewString(ctx);
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));

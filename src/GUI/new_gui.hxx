@@ -223,7 +223,8 @@ private:
 
     std::auto_ptr<FGMenuBar> _menubar;
     FGDialog * _active_dialog;
-    std::map<std::string,FGDialog *> _active_dialogs;
+    typedef std::map<std::string,FGDialog *> DialogDict;
+    DialogDict _active_dialogs;
   
     typedef std::map<std::string, SGPath> NamePathDict;
     // mapping from dialog names to the corresponding XML property list

@@ -172,6 +172,7 @@ private:
     naRef parse(const char* filename, const char* buf, int len);
     naRef genPropsModule();
 
+    bool _inited;
     naContext _context;
     naRef _globals,
           _string;
