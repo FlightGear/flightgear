@@ -46,8 +46,12 @@ void PropertyChangeObserver::check()
       continue;
     }
 
-    (*it)->_changed = (*it)->_prevValue != (*it)->_node->getStringValue();
-    if ((*it)->_changed) (*it)->_prevValue = (*it)->_node->getStringValue();
+    if( false == (*it)->_changed ) {
+      (*it)->_changed = (*it)->_prevValue != (*it)->_node->getStringValue();
+      if ((*it)->_changed)
+        (*it)->_prevValue = (*it)->_node->getStringValue();
+
+    }
   }
 }
 
@@ -62,6 +66,10 @@ const SGPropertyNode_ptr PropertyChangeObserver::addObservation( const string pr
 {
   for (Entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it) {
     if (propertyName == (*it)->_node->getPath(true) ) {
+      // if a new observer is added to a property, mark it as changed to ensure the observer
+      // gets notified on initial call. This also causes a notification for all other observers of this
+      // property.
+      (*it)->_changed = true;
       return (*it)->_node;
     }
   }

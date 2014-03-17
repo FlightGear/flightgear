@@ -51,6 +51,8 @@ public:
   void check();
   void uncheck();
 
+  void clear() { _entries.clear(); }
+
 private:
   typedef std::vector<PropertyChangeObserverEntryRef> Entries_t;
   Entries_t _entries;

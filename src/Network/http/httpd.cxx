@@ -161,6 +161,7 @@ void MongooseHttpd::unbind()
 {
   mg_destroy_server(&_server);
   _uriHandlers.clear();
+  _propertyChangeObserver.clear();
 }
 
 void MongooseHttpd::shutdown()
