@@ -59,7 +59,7 @@ bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse
   if( false == node.valid() ) {
     response.StatusCode = 400;
     response.Content = "Node not found: " + propertyPath;
-    SG_LOG(SG_NETWORK,SG_ALERT, response.Content );
+    SG_LOG(SG_NETWORK,SG_WARN, "Node not found: '" << response.Content << "'");
     return true;
 
   } 

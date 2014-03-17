@@ -54,7 +54,7 @@ bool RunUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & r
   } 
 
   response.Content = "command '" + command + "' failed.";
-  SG_LOG( SG_NETWORK, SG_ALERT, response.Content );
+  SG_LOG( SG_NETWORK, SG_WARN, response.Content );
   return true;
 }
 

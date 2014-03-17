@@ -43,7 +43,7 @@ PropertyChangeWebsocket::~PropertyChangeWebsocket()
 
 void PropertyChangeWebsocket::close()
 {
-  SG_LOG(SG_NETWORK, SG_ALERT, "closing PropertyChangeWebsocket #" << id);
+  SG_LOG(SG_NETWORK, SG_INFO, "closing PropertyChangeWebsocket #" << id);
   _watchedNodes.clear();
 }
 
@@ -96,7 +96,7 @@ void PropertyChangeWebsocket::update(WebsocketWriter & writer)
 
     string newValue;
     if (_propertyChangeObserver->isChangedValue(node)) {
-      SG_LOG(SG_NETWORK, SG_ALERT, "httpd: new Value for " << node->getPath(true) << " '" << node->getStringValue() << "' #" << id);
+      SG_LOG(SG_NETWORK, SG_DEBUG, "httpd: new Value for " << node->getPath(true) << " '" << node->getStringValue() << "' #" << id);
       writer.writeText( JSON::toJsonString( false, node, 0 ) );
     }
   }
@@ -108,22 +108,20 @@ void PropertyChangeWebsocket::WatchedNodesList::handleCommand(const string & com
   if (command == "addListener") {
     for (iterator it = begin(); it != end(); ++it) {
       if (node == (*it)->getPath(true)) {
-        SG_LOG(SG_NETWORK, SG_ALERT, "httpd: " << command << " '" << node << "' ignored (duplicate)");
+        SG_LOG(SG_NETWORK, SG_WARN, "httpd: " << command << " '" << node << "' ignored (duplicate)");
         return; // dupliate
       }
     }
     SGPropertyNode_ptr n = propertyChangeObserver->addObservation(node);
     if (n.valid()) push_back(n);
-    SG_LOG(SG_NETWORK, SG_ALERT, "httpd: " << command << " '" << node << "'");
 
   } else if (command == "removeListener") {
     for (iterator it = begin(); it != end(); ++it) {
       if (node == (*it)->getPath(true)) {
         this->erase(it);
-        SG_LOG(SG_NETWORK, SG_ALERT, "httpd: " << command << " '" << node << "'");
         return;
       }
-      SG_LOG(SG_NETWORK, SG_ALERT, "httpd: " << command << " '" << node << "' ignored (not found)");
+      SG_LOG(SG_NETWORK, SG_WARN, "httpd: " << command << " '" << node << "' ignored (not found)");
     }
   }
 }

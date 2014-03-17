@@ -141,7 +141,6 @@ void MongooseHttpd::init()
           rewrites.append( fgRoot ).append( 1, '/' ).append( rhs );
         }
       }
-      SG_LOG(SG_NETWORK,SG_ALERT,"url-rewrites='" << rewrites << "'" );
       if( false == rewrites.empty() )
         mg_set_option(_server, "url_rewrites", rewrites.c_str() );
     }
@@ -266,7 +265,7 @@ int MongooseHttpd::websocketHandler(struct mg_connection * connection)
   Websocket * websocket = static_cast<Websocket*>(connection->connection_param);
   if ( NULL == websocket) {
     if (request.Uri.find("/PropertyListener") == 0) {
-      SG_LOG(SG_ALL, SG_ALERT, "new PropertyChangeWebsocket for: " << request.Uri);
+      SG_LOG(SG_ALL, SG_INFO, "new PropertyChangeWebsocket for: " << request.Uri);
       websocket = new PropertyChangeWebsocket(&_propertyChangeObserver);
       connection->connection_param = websocket;
     } else {

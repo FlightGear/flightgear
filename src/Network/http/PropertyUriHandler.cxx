@@ -244,7 +244,7 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
       fgSetString( propertyPath.c_str(), value );
     }
     catch( string & s ) { 
-      SG_LOG(SG_NETWORK,SG_ALERT, "httpd: setting " << propertyPath << " to '" << value << "' failed: " << s );
+      SG_LOG(SG_NETWORK,SG_WARN, "httpd: setting " << propertyPath << " to '" << value << "' failed: " << s );
     }
   }
 
@@ -257,7 +257,7 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
         fgSetString( pp, it->second );
       }
       catch( string & s ) { 
-        SG_LOG(SG_NETWORK,SG_ALERT, "httpd: setting " << pp << " to '" << it->second << "' failed: " << s );
+        SG_LOG(SG_NETWORK,SG_WARN, "httpd: setting " << pp << " to '" << it->second << "' failed: " << s );
       }
     }
   }
@@ -288,7 +288,7 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
     node = fgGetNode( string("/") + propertyPath );
   }
   catch( string & s ) { 
-    SG_LOG(SG_NETWORK,SG_ALERT, "httpd: reading '" << propertyPath  << "' failed: " << s );
+    SG_LOG(SG_NETWORK,SG_WARN, "httpd: reading '" << propertyPath  << "' failed: " << s );
   }
   if( false == node.valid() ) {
     DOMNode * headline = new DOMNode( "h3" );
