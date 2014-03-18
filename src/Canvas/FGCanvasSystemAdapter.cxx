@@ -20,6 +20,7 @@
 
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
+#include <Network/HTTPClient.hxx>
 #include <Viewer/renderer.hxx>
 
 #include <osgDB/ReadFile>
@@ -95,6 +96,21 @@ namespace canvas
       SG_LOG(SG_IO, SG_ALERT, "canvas::Image: No such image: '" << path << "'");
     }
 
+    return 0;
+  }
+
+  //----------------------------------------------------------------------------
+  simgear::HTTP::Client* FGCanvasSystemAdapter::getHTTPClient() const
+  {
+    FGHTTPClient* http =
+      static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+
+    if( http )
+      return http->client();
+
+    SG_LOG( SG_IO,
+            SG_ALERT,
+            "FGCanvasSystemAdapter: Failed to get HTTP subsystem" );
     return 0;
   }
 

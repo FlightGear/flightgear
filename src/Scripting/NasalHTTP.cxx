@@ -82,6 +82,7 @@ static naRef f_http_load(const nasal::CallContext& ctx)
 naRef initNasalHTTP(naRef globals, naContext c)
 {
   using simgear::HTTP::Request;
+  typedef Request* (Request::*HTTPCallback)(const Request::Callback&);
   NasalRequest::init("http.Request")
     .member("url", &Request::url)
     .member("method", &Request::method)
@@ -94,9 +95,9 @@ naRef initNasalHTTP(naRef globals, naContext c)
     .member("reason", &Request::responseReason)
     .member("readyState", &Request::readyState)
     .method("abort", static_cast<void (Request::*)()>(&Request::abort))
-    .method("done", &Request::done)
-    .method("fail", &Request::fail)
-    .method("always", &Request::always);
+    .method("done", static_cast<HTTPCallback>(&Request::done))
+    .method("fail", static_cast<HTTPCallback>(&Request::fail))
+    .method("always", static_cast<HTTPCallback>(&Request::always));
 
   using simgear::HTTP::FileRequest;
   NasalFileRequest::init("http.FileRequest")
