@@ -181,13 +181,13 @@ public:
     Type mMinType, mMaxType;
   };
   
-  static FGPositionedList findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter = NULL);
+  static FGPositionedList findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter);
   
   static FGPositionedList findWithinRangePartial(const SGGeod& aPos, double aRangeNm, Filter* aFilter, bool& aPartial);
         
   static FGPositionedRef findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter = NULL);
 
-  static FGPositionedRef findFirstWithIdent(const std::string& aIdent, Filter* aFilter = NULL);
+  static FGPositionedRef findFirstWithIdent(const std::string& aIdent, Filter* aFilter);
 
   /**
    * Find all items with the specified ident
