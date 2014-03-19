@@ -6,6 +6,7 @@ set(SOURCES
 	PropertyUriHandler.cxx
 	JsonUriHandler.cxx
 	RunUriHandler.cxx
+	NavdbUriHandler.cxx
 	PropertyChangeWebsocket.cxx
 	PropertyChangeObserver.cxx
 	jsonprops.cxx
@@ -18,6 +19,7 @@ set(HEADERS
 	PropertyUriHandler.hxx
 	JsonUriHandler.hxx
 	RunUriHandler.hxx
+	NavdbUriHandler.hxx
 	HTTPRequest.hxx
 	Websocket.hxx
 	PropertyChangeWebsocket.hxx

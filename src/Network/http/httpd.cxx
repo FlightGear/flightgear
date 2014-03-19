@@ -25,6 +25,7 @@
 #include "PropertyUriHandler.hxx"
 #include "JsonUriHandler.hxx"
 #include "RunUriHandler.hxx"
+#include "NavdbUriHandler.hxx"
 #include "PropertyChangeObserver.hxx"
 #include <Main/fg_props.hxx>
 #include <Include/version.h>
@@ -105,6 +106,11 @@ void MongooseHttpd::init()
     if ((uri = n->getStringValue("run"))[0] != 0) {
       SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding run handler at " << uri);
       _uriHandlers.push_back(new flightgear::http::RunUriHandler(uri));
+    }
+
+    if ((uri = n->getStringValue("navdb"))[0] != 0) {
+      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding navdb handler at " << uri);
+      _uriHandlers.push_back(new flightgear::http::NavdbUriHandler(uri));
     }
   }
 
