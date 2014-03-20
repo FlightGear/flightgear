@@ -297,7 +297,7 @@ namespace canvas
 
     _image_shadow = _canvas_decoration->getRootGroup()
                                       ->getOrCreateChild<sc::Image>("shadow");
-    _image_shadow->set<std::string>("file", "gui/images/shadow.png");
+    _image_shadow->set<std::string>("src", "gui/images/shadow.png");
     _image_shadow->set<float>("slice", 7);
     _image_shadow->set<std::string>("fill", "#000000");
     _image_shadow->set<float>("slice-width", slice_width);
