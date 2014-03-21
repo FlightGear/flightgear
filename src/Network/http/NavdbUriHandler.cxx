@@ -20,7 +20,7 @@
 
 #include "NavdbUriHandler.hxx"
 #include <simgear/debug/logstream.hxx>
-#include <Navaids/positioned.hxx>
+#include <Navaids/navrecord.hxx>
 #include <3rdparty/cjson/cJSON.h>
 #include <boost/lexical_cast.hpp>
 
@@ -31,11 +31,64 @@ namespace http {
 
 //Ref: http://geojson.org/
 
+static cJSON * createPosition(double x, double y)
+{
+  cJSON * p = cJSON_CreateArray();
+  cJSON_AddItemToArray(p, cJSON_CreateNumber(x));
+  cJSON_AddItemToArray(p, cJSON_CreateNumber(y));
+  return p;
+}
+
+static cJSON * createGeometryFor(FGNavRecord * navRecord)
+{
+  if ( NULL == navRecord) return NULL;
+  cJSON * geometry = cJSON_CreateObject();
+
+  if (navRecord->type() == FGPositioned::LOC || navRecord->type() == FGPositioned::ILS) {
+    int range = navRecord->get_range();
+
+    double width = navRecord->localizerWidth();
+    double course = navRecord->get_multiuse();
+
+    double px[4];
+    double py[4];
+
+    px[0] = navRecord->longitude();
+    py[0] = navRecord->latitude();
+
+    for (int i = -1; i <= +1; i++) {
+      double c = SGMiscd::normalizeAngle((course + 180 + i*width/2 ) * SG_DEGREES_TO_RADIANS);
+      SGGeoc geoc = SGGeoc::fromGeod(navRecord->geod());
+      SGGeod p2 = SGGeod::fromGeoc(geoc.advanceRadM(c, range * SG_NM_TO_METER));
+      px[i+2] = p2.getLongitudeDeg();
+      py[i+2] = p2.getLatitudeDeg();
+    }
+    // Add three lines: centerline, left and right edge
+    cJSON_AddItemToObject(geometry, "type", cJSON_CreateString("MultiLineString"));
+    cJSON * coordinates = cJSON_CreateArray();
+    cJSON_AddItemToObject(geometry, "coordinates", coordinates);
+    for (int i = 1; i < 4; i++) {
+      cJSON * line = cJSON_CreateArray();
+      cJSON_AddItemToArray(coordinates, line);
+      cJSON_AddItemToArray(line, createPosition(px[0], py[0]));
+      cJSON_AddItemToArray(line, createPosition(px[i], py[i]));
+    }
+
+  } else {
+
+    cJSON_AddItemToObject(geometry, "type", cJSON_CreateString("Point"));
+    cJSON_AddItemToObject(geometry, "coordinates", createPosition(navRecord->longitude(), navRecord->latitude()));
+  }
+
+  return geometry;
+}
+
 static cJSON * createGeometryFor(FGPositionedRef positioned)
 {
-  // for now, we are lazy - everything is just a point.
+  cJSON * geometry = createGeometryFor(dynamic_cast<FGNavRecord*>(positioned.get()));
+  if ( NULL != geometry) return geometry;
 
-  cJSON * geometry = cJSON_CreateObject();
+  geometry = cJSON_CreateObject();
   cJSON_AddItemToObject(geometry, "type", cJSON_CreateString("Point"));
 
   cJSON * coordinates = cJSON_CreateArray();
@@ -54,6 +107,24 @@ static cJSON * createPropertiesFor(FGPositionedRef positioned)
   cJSON_AddItemToObject(properties, "name", cJSON_CreateString(positioned->name().c_str()));
   cJSON_AddItemToObject(properties, "type", cJSON_CreateString(positioned->typeString()));
   cJSON_AddItemToObject(properties, "elevation-m", cJSON_CreateNumber(positioned->elevationM()));
+  FGNavRecord * navRecord = dynamic_cast<FGNavRecord*>(positioned.get());
+  if ( NULL != navRecord) {
+    cJSON_AddItemToObject(properties, "range-nm", cJSON_CreateNumber(navRecord->get_range()));
+    cJSON_AddItemToObject(properties, "frequency", cJSON_CreateNumber((double) navRecord->get_freq() / 100.0));
+    switch (navRecord->type()) {
+      case FGPositioned::ILS:
+        cJSON_AddItemToObject(properties, "localizer-course", cJSON_CreateNumber(navRecord->get_multiuse()));
+        break;
+
+      case FGPositioned::VOR:
+        cJSON_AddItemToObject(properties, "variation", cJSON_CreateNumber(navRecord->get_multiuse()));
+        break;
+
+      default:
+        break;
+    }
+
+  }
   return properties;
 }
 
@@ -81,6 +152,7 @@ static cJSON * createFeatureFor(FGPositionedRef positioned)
 
 bool NavdbUriHandler::handleRequest(const HTTPRequest & request, HTTPResponse & response)
 {
+
   response.Header["Content-Type"] = "application/json; charset=UTF-8";
 
   bool indent = request.RequestVariables.get("i") == "y";
