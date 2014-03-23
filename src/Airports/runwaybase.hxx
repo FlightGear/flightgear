@@ -82,6 +82,12 @@ public:
    */
   int surface() const 
   { return _surface_code; }
+
+  /**
+   * Retrieve runway surface name, as define in Robin Peel's data
+   */
+  static const char * surfaceName( int surface_code );
+  const char * surfaceName() { return surfaceName( _surface_code ); }
   
 protected:
     

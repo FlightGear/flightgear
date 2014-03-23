@@ -45,6 +45,22 @@ using std::string;
  * 9 - dirt helipad
  * 12 -  lakebed
  */
+const char * FGRunwayBase::surfaceName( int surface_code )
+{
+  switch( surface_code ) {
+    case 1: return "asphalt";
+    case 2: return "concrete";
+    case 3: return "turf";
+    case 4: return "dirt";
+    case 5: return "gravel";
+    case 6: return "asphalt helipad";
+    case 7: return "concrete helipad";
+    case 8: return "turf helipad";
+    case 9: return "dirt helipad";
+    case 12: return "lakebed";
+    default: return "unknown";
+  }
+}
 
 FGRunwayBase::FGRunwayBase(PositionedID aGuid, Type aTy, const string& aIdent,
                         const SGGeod& aGeod,
