@@ -1916,7 +1916,7 @@ NavDataCache::findAirportRunway(const std::string& aName)
 
   AirportRunwayPair result;
   sqlite_bind_stdstring(d->findAirportRunway, 1, parts[0]);
-  sqlite_bind_stdstring(d->findAirportRunway, 2, parts[1]);
+  sqlite_bind_stdstring(d->findAirportRunway, 2, cleanRunwayNo(parts[1]));
   
   if (d->execSelect(d->findAirportRunway)) {
     result = AirportRunwayPair(sqlite3_column_int64(d->findAirportRunway, 0),
@@ -1931,8 +1931,10 @@ NavDataCache::findAirportRunway(const std::string& aName)
 }
   
 PositionedID
-NavDataCache::findILS(PositionedID airport, const string& runway, const string& navIdent)
+NavDataCache::findILS(PositionedID airport, const string& aRunway, const string& navIdent)
 {
+  string runway(cleanRunwayNo(aRunway));
+    
   sqlite_bind_stdstring(d->findILS, 1, navIdent);
   sqlite3_bind_int64(d->findILS, 2, airport);
   sqlite_bind_stdstring(d->findILS, 3, runway);
