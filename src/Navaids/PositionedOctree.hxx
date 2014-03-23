@@ -153,6 +153,7 @@ namespace Octree
     virtual void visitForLines(const SGVec3d& aPos, double aCutoff,
                          PolyLineList& aLines,
                          FindLinesDeque& aQ) const = 0;
+    virtual ~Node() {}
   protected:
     Node(const SGBoxd &aBox, int64_t aIdent) :
     _ident(aIdent),
