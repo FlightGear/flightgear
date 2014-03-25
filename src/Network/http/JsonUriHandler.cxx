@@ -58,8 +58,8 @@ bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse
   SGPropertyNode_ptr node = fgGetNode( string("/") + propertyPath );
   if( false == node.valid() ) {
     response.StatusCode = 400;
-    response.Content = "Node not found: " + propertyPath;
-    SG_LOG(SG_NETWORK,SG_WARN, "Node not found: '" << response.Content << "'");
+    response.Content = "{}";
+    SG_LOG(SG_NETWORK,SG_WARN, "Node not found: '" << propertyPath << "'");
     return true;
 
   } 
