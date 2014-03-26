@@ -74,12 +74,13 @@ cJSON * JSON::toJson(SGPropertyNode_ptr n, int depth, double timestamp )
   cJSON * json = cJSON_CreateObject();
   cJSON_AddItemToObject(json, "path", cJSON_CreateString(n->getPath(true).c_str()));
   cJSON_AddItemToObject(json, "name", cJSON_CreateString(n->getName()));
-  cJSON_AddItemToObject(json, "value", cJSON_CreateString(n->getStringValue()));
+  if( n->hasValue() )
+    cJSON_AddItemToObject(json, "value", cJSON_CreateString(n->getStringValue()));
   cJSON_AddItemToObject(json, "type", cJSON_CreateString(getPropertyTypeString(n->getType())));
   cJSON_AddItemToObject(json, "index", cJSON_CreateNumber(n->getIndex()));
   if( timestamp >= 0.0 )
     cJSON_AddItemToObject(json, "ts", cJSON_CreateNumber(timestamp));
-
+  cJSON_AddItemToObject(json, "nChildren", cJSON_CreateNumber(n->nChildren()));
 
   if (depth > 0 && n->nChildren() > 0) {
     cJSON * jsonArray = cJSON_CreateArray();
