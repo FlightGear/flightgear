@@ -1007,6 +1007,9 @@ void fgStartNewReset()
     simgear::GlobalParticleCallback::setSwitch(NULL);
     
     globals->resetPropertyRoot();
+    // otherwise channels are duplicated
+    globals->get_channel_options_list()->clear();
+  
     fgInitConfig(0, NULL, true);
     fgInitGeneral(); // all of this?
     
