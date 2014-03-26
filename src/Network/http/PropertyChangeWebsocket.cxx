@@ -22,6 +22,7 @@
 #include "PropertyChangeObserver.hxx"
 #include "jsonprops.hxx"
 #include <simgear/debug/logstream.hxx>
+#include <Main/fg_props.hxx>
 
 #include <3rdparty/cjson/cJSON.h>
 
@@ -97,7 +98,7 @@ void PropertyChangeWebsocket::update(WebsocketWriter & writer)
     string newValue;
     if (_propertyChangeObserver->isChangedValue(node)) {
       SG_LOG(SG_NETWORK, SG_DEBUG, "httpd: new Value for " << node->getPath(true) << " '" << node->getStringValue() << "' #" << id);
-      writer.writeText( JSON::toJsonString( false, node, 0 ) );
+      writer.writeText( JSON::toJsonString( false, node, 0, fgGetDouble("/sim/time/elapsed-sec") ) );
     }
   }
 }

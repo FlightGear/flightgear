@@ -69,7 +69,7 @@ static const char * getPropertyTypeString(simgear::props::Type type)
   }
 }
 
-cJSON * JSON::toJson(SGPropertyNode_ptr n, int depth)
+cJSON * JSON::toJson(SGPropertyNode_ptr n, int depth, double timestamp )
 {
   cJSON * json = cJSON_CreateObject();
   cJSON_AddItemToObject(json, "path", cJSON_CreateString(n->getPath(true).c_str()));
@@ -77,11 +77,14 @@ cJSON * JSON::toJson(SGPropertyNode_ptr n, int depth)
   cJSON_AddItemToObject(json, "value", cJSON_CreateString(n->getStringValue()));
   cJSON_AddItemToObject(json, "type", cJSON_CreateString(getPropertyTypeString(n->getType())));
   cJSON_AddItemToObject(json, "index", cJSON_CreateNumber(n->getIndex()));
+  if( timestamp >= 0.0 )
+    cJSON_AddItemToObject(json, "ts", cJSON_CreateNumber(timestamp));
+
 
   if (depth > 0 && n->nChildren() > 0) {
     cJSON * jsonArray = cJSON_CreateArray();
     for (int i = 0; i < n->nChildren(); i++)
-      cJSON_AddItemToArray(jsonArray, toJson(n->getChild(i), depth - 1));
+      cJSON_AddItemToArray(jsonArray, toJson(n->getChild(i), depth - 1, timestamp ));
     cJSON_AddItemToObject(json, "children", jsonArray);
   }
   return json;
@@ -124,9 +127,9 @@ void JSON::toProp(cJSON * json, SGPropertyNode_ptr base)
   }
 }
 
-string JSON::toJsonString(bool indent, SGPropertyNode_ptr n, int depth)
+string JSON::toJsonString(bool indent, SGPropertyNode_ptr n, int depth, double timestamp )
 {
-  cJSON * json = toJson( n, depth );
+  cJSON * json = toJson( n, depth, timestamp );
   char * jsonString = indent ? cJSON_Print( json ) : cJSON_PrintUnformatted( json );
   string reply(jsonString);
   free( jsonString );

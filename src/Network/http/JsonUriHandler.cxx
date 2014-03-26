@@ -54,6 +54,7 @@ bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse
 
   // pretty print (y) or compact print (default)
   bool indent = request.RequestVariables.get("i") == "y";
+  bool timestamp = request.RequestVariables.get("t") == "y";
 
   SGPropertyNode_ptr node = fgGetNode( string("/") + propertyPath );
   if( false == node.valid() ) {
@@ -64,7 +65,7 @@ bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse
 
   } 
 
-  response.Content = JSON::toJsonString( indent, node, depth );
+  response.Content = JSON::toJsonString( indent, node, depth, timestamp ? fgGetDouble("/sim/time/elapsed-sec") : -1.0 );
 
   return true;
 
