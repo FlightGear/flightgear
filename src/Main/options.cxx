@@ -1842,10 +1842,9 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
       SGPath f(argv[i]);
       if (!f.exists()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f.str());
-        return;
+      } else {
+        p->propertyFiles.push_back(f);
       }
-      
-      p->propertyFiles.push_back(f);
     }
   } // of arguments iteration
   p->insertGroupMarker(); // command line is one group
@@ -2170,11 +2169,6 @@ OptionResult Options::processOptions()
   }
 
   BOOST_FOREACH(const SGPath& file, p->propertyFiles) {
-    if (!file.exists()) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << file.str());
-      continue;
-    }
-    
     SG_LOG(SG_GENERAL, SG_INFO,
            "Reading command-line property file " << file.str());
 	  readProperties(file.str(), globals->get_props());
