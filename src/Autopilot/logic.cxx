@@ -57,6 +57,17 @@ bool Logic::get_output() const
 
 void Logic::update( bool firstTime, double dt )
 {
+  if(_debug) {
+    bool q = get_output();
+    bool a = get_input();
+    if( a != q ) {
+      using std::endl;
+      using std::cout;
+      cout << "updating logic \"" << get_name() << "\"" << endl;
+      cout << "prev. Output:" << q << endl;
+      cout << "new   Output:" << a << endl;
+    }
+  }
   set_output( get_input() );
 }
 
