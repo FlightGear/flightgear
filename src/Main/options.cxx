@@ -953,10 +953,12 @@ fgOptStartDateGmt( const char *arg )
 static int
 fgOptHttpd( const char * arg )
 {
-    int port = atoi(arg);
-    if( port > 0 ) {
-        fgSetInt( string(flightgear::http::PROPERTY_ROOT).append("/options/listening-port").c_str(), port );
-    }
+    // port may be any valid address:port notation
+    // like 127.0.0.1:8080
+    // or just the port 8080
+    string port = simgear::strutils::strip(string(arg));
+    if( port.empty() ) return FG_OPTIONS_ERROR;
+    fgSetString( string(flightgear::http::PROPERTY_ROOT).append("/options/listening-port").c_str(), port );
     return FG_OPTIONS_OK;
 }
 
