@@ -267,7 +267,7 @@ public:
 void WindowCaptureCallback::ContextData::readPixels()
 {
     osg::Timer_t n = osg::Timer::instance()->tick();
-    double dt = osg::Timer::instance()->delta_s(n, _previousFrameTick);
+    double dt = osg::Timer::instance()->delta_s(_previousFrameTick,n);
     double frameInterval = 1.0 / _httpd->getFrameHz();
     if (dt < frameInterval)
         return;
