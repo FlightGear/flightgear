@@ -61,6 +61,17 @@ typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
 typedef nasal::Ghost<sc::TextPtr> NasalText;
 typedef nasal::Ghost<canvas::WindowWeakPtr> NasalWindow;
 
+naRef to_nasal_helper(naContext c, const osg::BoundingBox& bb)
+{
+  std::vector<float> bb_vec(4);
+  bb_vec[0] = bb._min.x();
+  bb_vec[1] = bb._min.y();
+  bb_vec[2] = bb._max.x();
+  bb_vec[3] = bb._max.y();
+
+  return nasal::to_nasal(c, bb_vec);
+}
+
 SGPropertyNode* from_nasal_helper(naContext c, naRef ref, SGPropertyNode**)
 {
   SGPropertyNode* props = ghostToPropNode(ref);
@@ -156,19 +167,6 @@ naRef f_getDesktop(naContext c, naRef me, int argc, naRef* args)
   return NasalGroup::create(c, requireGUIMgr(c).getDesktop());
 }
 
-naRef f_elementGetTransformedBounds(sc::Element& el, const nasal::CallContext& ctx)
-{
-  osg::BoundingBox bb = el.getTransformedBounds(el.getMatrix());
-
-  std::vector<float> bb_vec(4);
-  bb_vec[0] = bb._min.x();
-  bb_vec[1] = bb._min.y();
-  bb_vec[2] = bb._max.x();
-  bb_vec[3] = bb._max.y();
-
-  return nasal::to_nasal(ctx.c, bb_vec);
-}
-
 naRef f_groupCreateChild(sc::Group& group, const nasal::CallContext& ctx)
 {
   return NasalElement::create
@@ -245,7 +243,8 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("_node_ghost", &elementGetNode<sc::Element>)
     .method("_getParent", &sc::Element::getParent)
     .method("addEventListener", &sc::Element::addEventListener)
-    .method("getTransformedBounds", &f_elementGetTransformedBounds);
+    .method("getBoundingBox", &sc::Element::getBoundingBox)
+    .method("getTightBoundingBox", &sc::Element::getTightBoundingBox);
   NasalGroup::init("canvas.Group")
     .bases<NasalElement>()
     .method("_createChild", &f_groupCreateChild)
