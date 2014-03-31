@@ -29,7 +29,7 @@ namespace http {
 class NavdbUriHandler : public URIHandler {
 public:
   NavdbUriHandler( const char * uri = "/navdb" ) : URIHandler( uri  ) {}
-  virtual bool handleRequest( const HTTPRequest & request, HTTPResponse & response );
+  virtual bool handleRequest( const HTTPRequest & request, HTTPResponse & response, Connection * connection );
 };
 
 } // namespace http

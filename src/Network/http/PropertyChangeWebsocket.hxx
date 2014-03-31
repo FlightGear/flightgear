@@ -37,7 +37,7 @@ public:
   virtual ~PropertyChangeWebsocket();
   virtual void close();
   virtual void handleRequest(const HTTPRequest & request, WebsocketWriter & writer);
-  virtual void update(WebsocketWriter & writer);
+  virtual void poll(WebsocketWriter & writer);
 
 private:
   unsigned id;

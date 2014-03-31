@@ -81,7 +81,7 @@ const SGPropertyNode_ptr PropertyChangeObserver::addObservation( const string pr
     return entry->_node;
   }
   catch( string & s ) {
-    SG_LOG(SG_NETWORK,SG_ALERT,"httpd: can't observer '" << propertyName << "'. Invalid name." );
+    SG_LOG(SG_NETWORK,SG_WARN,"httpd: can't observer '" << propertyName << "'. Invalid name." );
   }
 
   SGPropertyNode_ptr empty;

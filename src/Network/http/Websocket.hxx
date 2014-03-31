@@ -70,7 +70,7 @@ public:
   }
   virtual void close() = 0;
   virtual void handleRequest(const HTTPRequest & request, WebsocketWriter & writer) = 0;
-  virtual void update(WebsocketWriter & writer) = 0;
+  virtual void poll(WebsocketWriter & writer) = 0;
 
 };
 

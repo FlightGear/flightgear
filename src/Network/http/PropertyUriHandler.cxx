@@ -218,7 +218,7 @@ static DOMElement * renderPropertyValueElement( SGPropertyNode_ptr node )
     return root;
 }
 
-bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse & response )
+bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse & response, Connection * connection )
 {
 
   string propertyPath = request.Uri;
@@ -298,6 +298,7 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
     e->addChild( new DOMTextElement( propertyPath ) );
     // does not exist
     body->addChild( e );
+    response.StatusCode = 404;
 
   } else if( node->nChildren() > 0 ) {
     // Render the list of children

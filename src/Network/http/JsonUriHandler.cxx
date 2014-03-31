@@ -29,9 +29,23 @@ using std::string;
 namespace flightgear {
 namespace http {
 
-bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse & response )
+bool JsonUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & response, Connection * connection )
 {
   response.Header["Content-Type"] = "application/json; charset=UTF-8";
+  response.Header["Access-Control-Allow-Origin"] = "*";
+  response.Header["Access-Control-Allow-Methods"] = "OPTIONS, GET";
+  response.Header["Access-Control-Allow-Headers"] = "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token";
+
+  if( request.Method == "OPTIONS" ){
+      return true; // OPTIONS only needs the headers
+  }
+
+  if( request.Method != "GET" ){
+    response.Header["Allow"] = "OPTIONS, GET";
+    response.StatusCode = 405;
+    response.Content = "{}";
+    return true; 
+  }
 
   string propertyPath = request.Uri;
 
@@ -58,7 +72,7 @@ bool JsonUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResponse
 
   SGPropertyNode_ptr node = fgGetNode( string("/") + propertyPath );
   if( false == node.valid() ) {
-    response.StatusCode = 400;
+    response.StatusCode = 404;
     response.Content = "{}";
     SG_LOG(SG_NETWORK,SG_WARN, "Node not found: '" << propertyPath << "'");
     return true;

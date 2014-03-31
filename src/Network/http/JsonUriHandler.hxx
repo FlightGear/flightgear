@@ -29,7 +29,7 @@ namespace http {
 class JsonUriHandler : public URIHandler {
 public:
   JsonUriHandler( const char * uri = "/json/" ) : URIHandler( uri  ) {}
-  virtual bool handleGetRequest( const HTTPRequest & request, HTTPResponse & response );
+  virtual bool handleRequest( const HTTPRequest & request, HTTPResponse & response, Connection * connection );
 };
 
 } // namespace http

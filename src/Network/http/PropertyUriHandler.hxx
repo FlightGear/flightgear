@@ -29,7 +29,7 @@ namespace http {
 class PropertyUriHandler : public URIHandler {
 public:
   PropertyUriHandler( const char * uri = "/prop/" ) : URIHandler( uri ) {}
-  virtual bool handleGetRequest( const HTTPRequest & request, HTTPResponse & response );
+  virtual bool handleGetRequest( const HTTPRequest & request, HTTPResponse & response, Connection * connection );
 };
 
 } // namespace http

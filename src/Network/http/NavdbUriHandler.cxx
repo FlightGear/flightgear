@@ -218,10 +218,24 @@ static cJSON * createFeatureFor(FGPositionedRef positioned)
   return feature;
 }
 
-bool NavdbUriHandler::handleRequest(const HTTPRequest & request, HTTPResponse & response)
+bool NavdbUriHandler::handleRequest(const HTTPRequest & request, HTTPResponse & response, Connection * connection)
 {
 
   response.Header["Content-Type"] = "application/json; charset=UTF-8";
+  response.Header["Access-Control-Allow-Origin"] = "*";
+  response.Header["Access-Control-Allow-Methods"] = "OPTIONS, GET";
+  response.Header["Access-Control-Allow-Headers"] = "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token";
+
+  if( request.Method == "OPTIONS" ){
+      return true; // OPTIONS only needs the headers
+  }
+
+  if( request.Method != "GET" ){
+    response.Header["Allow"] = "OPTIONS, GET";
+    response.StatusCode = 405;
+    response.Content = "{}";
+    return true; 
+  }
 
   bool indent = request.RequestVariables.get("i") == "y";
 

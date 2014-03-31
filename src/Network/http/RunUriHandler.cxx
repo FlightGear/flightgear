@@ -33,7 +33,7 @@ namespace flightgear {
 namespace http {
 
 
-bool RunUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & response )
+bool RunUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & response, Connection * connection )
 {
   response.Header["Content-Type"] = "text/plain";
   string command = request.RequestVariables.get("value");
@@ -54,6 +54,7 @@ bool RunUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & r
   } 
 
   response.Content = "command '" + command + "' failed.";
+  response.StatusCode = 501; // Not implemented probably suits best
   SG_LOG( SG_NETWORK, SG_WARN, response.Content );
   return true;
 }

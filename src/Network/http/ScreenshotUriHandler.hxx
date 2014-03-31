@@ -28,8 +28,10 @@ namespace http {
 
 class ScreenshotUriHandler : public URIHandler {
 public:
-  ScreenshotUriHandler( const char * uri = "/screenshot/" ) : URIHandler( uri  ) {}
-  virtual bool handleRequest( const HTTPRequest & request, HTTPResponse & response );
+  ScreenshotUriHandler( const char * uri = "/screenshot/" );
+  ~ScreenshotUriHandler();
+  virtual bool handleGetRequest( const HTTPRequest & request, HTTPResponse & response, Connection * connection );
+  virtual bool poll( Connection * connection );
 };
 
 } // namespace http
