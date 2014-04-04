@@ -547,9 +547,10 @@ float Airplane::compileFuselage(Fuselage* f)
         Surface* s = new Surface();
         s->setPosition(pos);
 	float sideDrag = len/wid;
+        s->setXDrag(f->_cx);
         s->setYDrag(sideDrag*f->_cy);
         s->setZDrag(sideDrag*f->_cz);
-        s->setTotalDrag(scale*segWgt*f->_cx);
+        s->setTotalDrag(scale*segWgt);
         s->setInducedDrag(f->_idrag);
 
         // FIXME: fails for fuselages aligned along the Y axis
