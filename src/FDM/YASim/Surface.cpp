@@ -225,8 +225,10 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     Math::add3(lwind, out, out);
 
     // Reverse the incidence rotation to get back to surface
-    // coordinates.
-    out[2] -= incidence * out[0];
+    // coordinates. Since out[] is now the force vector and is
+    // roughly parallel with Z, the small-angle approximation
+    // must change its X component.
+    out[0] -= incidence * out[2];
 
     // Convert back to external coordinates
     Math::tmul33(_orient, out, out);
