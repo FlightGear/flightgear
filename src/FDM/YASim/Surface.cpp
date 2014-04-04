@@ -281,7 +281,7 @@ float Surface::stallFunc(float* v)
         return 1;
 
     if(i == 0)
-	stallAlpha += _slatAlpha;
+	stallAlpha += _slatPos * _slatAlpha;
 
     // Beyond the stall
     if(alpha > stallAlpha+_widths[i])
