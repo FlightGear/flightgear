@@ -145,7 +145,7 @@ target_link_libraries(fgfs
 )
 
 if(ENABLE_FLITE)
-target_link_libraries(fgfs hts_engine flite_hts)
+    target_link_libraries(fgfs flite_hts hts_engine)
 endif()
 
 if (APPLE)  
