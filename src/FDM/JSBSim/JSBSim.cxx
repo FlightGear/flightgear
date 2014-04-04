@@ -28,7 +28,7 @@
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
 
-#include <stdio.h>    //    size_t
+#include <cstdlib>    //    size_t
 #include <string>
 
 #include <simgear/constants.h>

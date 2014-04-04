@@ -72,7 +72,8 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-#if !defined(MACOSX) && !defined(__OpenBSD__)
+// FlightGear: Modified to include FreeBSD
+#if !defined(MACOSX) && !defined(__OpenBSD__) && !defined(__FreeBSD__)
 #include <malloc.h>
 #if !defined(SOLARIS)
 #include <error.h>

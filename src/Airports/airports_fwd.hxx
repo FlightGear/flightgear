@@ -25,6 +25,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <ctime> // for time_t
 
 // forward decls
 class FGAirport;

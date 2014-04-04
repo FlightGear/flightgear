@@ -45,6 +45,9 @@ typedef int socklen_t;
 #include <sys/socket.h>
 #endif
 
+// FlightGear modification: for FreeBSD compat
+#include <sys/time.h> // for struct timeval
+
 #ifdef BUILDING_DLL
 # if defined(WIN32) ||  defined(_WIN32_WCE)
 #  ifdef _MSC_VER
