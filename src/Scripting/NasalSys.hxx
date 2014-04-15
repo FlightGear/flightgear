@@ -102,8 +102,10 @@ public:
     void globalsSet(const char* key, naRef val);
 
     naRef call(naRef code, int argc, naRef* args, naRef locals);
+    naRef callWithContext(naContext ctx, naRef code, int argc, naRef* args, naRef locals);
   
     naRef callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals);
+    naRef callMethodWithContext(naContext ctx, naRef code, naRef self, int argc, naRef* args, naRef locals);
   
     naRef propNodeGhost(SGPropertyNode* handle);
   
@@ -169,7 +171,7 @@ private:
     void loadScriptDirectory(simgear::Dir nasalDir);
     void addModule(std::string moduleName, simgear::PathList scripts);
     static void logError(naContext);
-    naRef parse(const char* filename, const char* buf, int len);
+    naRef parse(naContext ctx, const char* filename, const char* buf, int len);
     naRef genPropsModule();
 
     bool _inited;

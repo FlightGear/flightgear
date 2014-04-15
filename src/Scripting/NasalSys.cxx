@@ -236,6 +236,11 @@ naRef FGNasalSys::call(naRef code, int argc, naRef* args, naRef locals)
   return callMethod(code, naNil(), argc, args, locals);
 }
 
+naRef FGNasalSys::callWithContext(naContext ctx, naRef code, int argc, naRef* args, naRef locals)
+{
+  return callMethodWithContext(ctx, code, naNil(), argc, args, locals);
+}
+
 // Does a naCall() in a new context.  Wrapped here to make lock
 // tracking easier.  Extension functions are called with the lock, but
 // we have to release it before making a new naCall().  So rather than
@@ -248,6 +253,11 @@ naRef FGNasalSys::callMethod(naRef code, naRef self, int argc, naRef* args, naRe
   return naCallMethod(code, self, argc, args, locals);
 }
 
+naRef FGNasalSys::callMethodWithContext(naContext ctx, naRef code, naRef self, int argc, naRef* args, naRef locals)
+{
+  return naCallMethodCtx(ctx, code, self, argc, args, locals);
+}
+
 FGNasalSys::~FGNasalSys()
 {
     if (_inited) {
@@ -258,11 +268,15 @@ FGNasalSys::~FGNasalSys()
 
 bool FGNasalSys::parseAndRun(const char* sourceCode)
 {
-    naRef code = parse("FGNasalSys::parseAndRun()", sourceCode,
+    naContext ctx = naNewContext();
+    naRef code = parse(ctx, "FGNasalSys::parseAndRun()", sourceCode,
                        strlen(sourceCode));
-    if(naIsNil(code))
+    if(naIsNil(code)) {
+        naFreeContext(ctx);
         return false;
-    call(code, 0, 0, naNil());
+    }
+    callWithContext(ctx, code, 0, 0, naNil());
+    naFreeContext(ctx);
     return true;
 }
 
@@ -1072,11 +1086,13 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
                               const SGPropertyNode* cmdarg,
                               int argc, naRef* args)
 {
-    naRef code = parse(fileName, src, len);
-    if(naIsNil(code))
-        return false;
-
     naContext ctx = naNewContext();
+    naRef code = parse(ctx, fileName, src, len);
+    if(naIsNil(code)) {
+        naFreeContext(ctx);
+        return false;
+    }
+
     
     // See if we already have a module hash to use.  This allows the
     // user to, for example, add functions to the built-in math
@@ -1089,7 +1105,7 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
 
     _cmdArg = (SGPropertyNode*)cmdarg;
 
-    call(code, argc, args, locals);
+    callWithContext(ctx, code, argc, args, locals);
     hashset(_globals, moduleName, locals);
     
     naFreeContext(ctx);
@@ -1111,10 +1127,9 @@ void FGNasalSys::deleteModule(const char* moduleName)
     naFreeContext(ctx);
 }
 
-naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
+naRef FGNasalSys::parse(naContext ctx, const char* filename, const char* buf, int len)
 {
     int errLine = -1;
-    naContext ctx = naNewContext();
     naRef srcfile = naNewString(ctx);
     naStr_fromdata(srcfile, (char*)filename, strlen(filename));
     naRef code = naParseCode(ctx, srcfile, 1, (char*)buf, len, &errLine);
@@ -1122,14 +1137,11 @@ naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
         SG_LOG(SG_NASAL, SG_ALERT,
                "Nasal parse error: " << naGetError(ctx) <<
                " in "<< filename <<", line " << errLine);
-        naFreeContext(ctx);
         return naNil();
     }
 
     // Bind to the global namespace before returning
-    naRef bound = naBindFunction(ctx, code, _globals);
-    naFreeContext(ctx);
-    return bound;
+    return naBindFunction(ctx, code, _globals);
 }
 
 bool FGNasalSys::handleCommand( const char* moduleName,
@@ -1137,22 +1149,24 @@ bool FGNasalSys::handleCommand( const char* moduleName,
                                 const char* src,
                                 const SGPropertyNode* arg )
 {
-    naRef code = parse(fileName, src, strlen(src));
-    if(naIsNil(code)) return false;
+    naContext ctx = naNewContext();
+    naRef code = parse(ctx, fileName, src, strlen(src));
+    if(naIsNil(code)) {
+        naFreeContext(ctx);
+        return false;
+    }
 
     // Commands can be run "in" a module.  Make sure that module
     // exists, and set it up as the local variables hash for the
     // command.
     naRef locals = naNil();
     if(moduleName[0]) {
-        naContext ctx = naNewContext();
         naRef modname = naNewString(ctx);
         naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
         if(!naHash_get(_globals, modname, &locals)) {
             locals = naNewHash(ctx);
             naHash_set(_globals, modname, locals);
         }
-        naFreeContext(ctx);
     }
 
     // Cache this command's argument for inspection via cmdarg().  For
@@ -1160,7 +1174,8 @@ bool FGNasalSys::handleCommand( const char* moduleName,
     // code doesn't need it.
     _cmdArg = (SGPropertyNode*)arg;
 
-    call(code, 0, 0, locals);
+    callWithContext(ctx, code, 0, 0, locals);
+    naFreeContext(ctx);
     return true;
 }
 
