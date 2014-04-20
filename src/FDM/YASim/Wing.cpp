@@ -4,7 +4,8 @@
 
 namespace yasim {
 
-Wing::Wing()
+Wing::Wing( Version * version ) :
+  _version(version)
 {
     _mirror = false;
     _base[0] = _base[1] = _base[2] = 0;
@@ -426,7 +427,7 @@ float Wing::getLiftRatio()
 Surface* Wing::newSurface(float* pos, float* orient, float chord,
                           bool flap0, bool flap1, bool slat, bool spoiler)
 {
-    Surface* s = new Surface();
+    Surface* s = new Surface(_version);
 
     s->setPosition(pos);
     s->setOrientation(orient);

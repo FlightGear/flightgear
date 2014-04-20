@@ -368,7 +368,7 @@ int Airplane::addWeight(float* pos, float size)
     WeightRec* wr = new WeightRec();
     wr->handle = _model.getBody()->addMass(0, pos);
 
-    wr->surf = new Surface();
+    wr->surf = new Surface(this);
     wr->surf->setPosition(pos);
     wr->surf->setTotalDrag(size*size);
     _model.addSurface(wr->surf);
@@ -544,13 +544,19 @@ float Airplane::compileFuselage(Fuselage* f)
         wgt += mass;
 
         // Make a Surface too
-        Surface* s = new Surface();
+        Surface* s = new Surface(this);
         s->setPosition(pos);
 	float sideDrag = len/wid;
-        s->setXDrag(f->_cx);
+	if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+        	s->setXDrag(f->_cx);
+	}
         s->setYDrag(sideDrag*f->_cy);
         s->setZDrag(sideDrag*f->_cz);
-        s->setTotalDrag(scale*segWgt);
+	if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+        	s->setTotalDrag(scale*segWgt);
+	} else {
+		s->setTotalDrag(scale*segWgt*f->_cx);
+	}
         s->setInducedDrag(f->_idrag);
 
         // FIXME: fails for fuselages aligned along the Y axis
@@ -575,7 +581,7 @@ void Airplane::compileGear(GearRec* gr)
     Gear* g = gr->gear;
 
     // Make a Surface object for the aerodynamic behavior
-    Surface* s = new Surface();
+    Surface* s = new Surface(this);
     gr->surf = s;
 
     // Put the surface at the half-way point on the gear strut, give

@@ -26,6 +26,7 @@ set(COMMON
 	TurbineEngine.cpp
 	Turbulence.cpp
 	Wing.cpp
+	Version.cpp
 	)
 
 set(SOURCES

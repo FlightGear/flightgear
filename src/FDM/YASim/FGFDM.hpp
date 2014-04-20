@@ -10,6 +10,7 @@
 namespace yasim {
 
 class Wing;
+class Version;
 
 // This class forms the "glue" to the FlightGear codebase.  It handles
 // parsing of XML airplane files, interfacing to the properties
@@ -39,7 +40,7 @@ private:
     void setOutputProperties(float dt);
 
     Rotor* parseRotor(XMLAttributes* a, const char* name);
-    Wing* parseWing(XMLAttributes* a, const char* name);
+    Wing* parseWing(XMLAttributes* a, const char* name, Version * version);
     int parseAxis(const char* name);
     int parseOutput(const char* name);
     void parseWeight(XMLAttributes* a);

@@ -2,6 +2,7 @@
 #define _WING_HPP
 
 #include "Vector.hpp"
+#include "Version.hpp"
 
 namespace yasim {
 
@@ -10,7 +11,7 @@ class Surface;
 // FIXME: need to handle "inverted" controls for mirrored wings.
 class Wing {
 public:
-    Wing();
+    Wing( Version * version );
     ~Wing();
 
     // Do we mirror ourselves about the XZ plane?
@@ -122,6 +123,8 @@ private:
     float _slatEnd;
     float _slatAoA;
     float _slatDrag;
+
+    Version * _version;
 };
 
 }; // namespace yasim

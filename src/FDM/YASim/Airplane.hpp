@@ -6,6 +6,7 @@
 #include "Wing.hpp"
 #include "Rotor.hpp"
 #include "Vector.hpp"
+#include "Version.hpp"
 
 namespace yasim {
 
@@ -15,7 +16,7 @@ class Launchbar;
 class Thruster;
 class Hitch;
 
-class Airplane {
+class Airplane : public Version {
 public:
     Airplane();
     ~Airplane();

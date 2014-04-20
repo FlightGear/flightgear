@@ -1,6 +1,8 @@
 #ifndef _SURFACE_HPP
 #define _SURFACE_HPP
 
+#include "Version.hpp"
+
 namespace yasim {
 
 // FIXME: need a "chord" member for calculating moments.  Generic
@@ -9,7 +11,7 @@ namespace yasim {
 class Surface
 {
 public:
-    Surface();
+    Surface( Version * version );
 
     // Position of this surface in local coords
     void setPosition(float* p);
@@ -102,6 +104,8 @@ private:
     float _incidence;
     float _twist;
     float _inducedDrag;
+
+    Version * _version;
 };
 
 }; // namespace yasim

@@ -2,7 +2,8 @@
 #include "Surface.hpp"
 namespace yasim {
 
-Surface::Surface()
+Surface::Surface( Version * version ) :
+    _version(version)
 {
     // Start in a "sane" mode, so unset stuff doesn't freak us out
     _c0 = 1;
@@ -228,7 +229,11 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     // coordinates. Since out[] is now the force vector and is
     // roughly parallel with Z, the small-angle approximation
     // must change its X component.
-    out[0] += incidence * out[2];
+    if( _version->isVersionOrNewer( Version::YASIM_VERSION_32 )) {
+	out[0] += incidence * out[2];
+    } else {
+	out[2] -= incidence * out[0];
+    }
 
     // Convert back to external coordinates
     Math::tmul33(_orient, out, out);
@@ -282,8 +287,13 @@ float Surface::stallFunc(float* v)
     if(stallAlpha == 0)
         return 1;
 
-    if(i == 0)
-	stallAlpha += _slatPos * _slatAlpha;
+    if(i == 0) {
+	if( _version->isVersionOrNewer( Version::YASIM_VERSION_32 )) {
+	    stallAlpha += _slatPos * _slatAlpha;
+	} else {
+	    stallAlpha += _slatAlpha;
+	}
+    }
 
     // Beyond the stall
     if(alpha > stallAlpha+_widths[i])

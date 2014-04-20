@@ -219,6 +219,12 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 
     if(eq(name, "airplane")) {
 	_airplane.setWeight(attrf(a, "mass") * LBS2KG);
+        if(a->hasAttribute("version")) {
+          _airplane.setVersion( a->getValue("version") );
+        }
+        if( !_airplane.isVersionOrNewer( Version::YASIM_VERSION_CURRENT ) ) {
+          SG_LOG(SG_FLIGHT,SG_ALERT, "This aircraft does not use the latest yasim configuration version.");
+        }
     } else if(eq(name, "approach")) {
 	float spd = attrf(a, "speed") * KTS2MPS;
 	float alt = attrf(a, "alt", 0) * FT2M;
@@ -259,11 +265,11 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         #undef p2
         r->setInUse();
     } else if(eq(name, "wing")) {
-	_airplane.setWing(parseWing(a, name));
+	_airplane.setWing(parseWing(a, name, &_airplane));
     } else if(eq(name, "hstab")) {
-	_airplane.setTail(parseWing(a, name));
+	_airplane.setTail(parseWing(a, name, &_airplane));
     } else if(eq(name, "vstab") || eq(name, "mstab")) {
-	_airplane.addVStab(parseWing(a, name));
+	_airplane.addVStab(parseWing(a, name, &_airplane));
     } else if(eq(name, "piston-engine")) {
         parsePistonEngine(a);
     } else if(eq(name, "turbine-engine")) {
@@ -691,9 +697,9 @@ void FGFDM::setOutputProperties(float dt)
     }
 }
 
-Wing* FGFDM::parseWing(XMLAttributes* a, const char* type)
+Wing* FGFDM::parseWing(XMLAttributes* a, const char* type, Version * version)
 {
-    Wing* w = new Wing();
+    Wing* w = new Wing(version);
 
     float defDihed = 0;
     if(eq(type, "vstab"))
