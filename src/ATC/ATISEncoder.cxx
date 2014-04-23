@@ -46,7 +46,9 @@ string ATCSpeech::getSpokenNumber( string number )
 {
   string result;
   for( string::iterator it = number.begin(); it != number.end(); ++it ) {
-    result.append( getSpokenDigit( (*it) - '0' )).SPACE;
+    if( false == result.empty() )
+      result.SPACE;
+    result.append( getSpokenDigit( (*it) - '0' ));
   }
   return result;
 }
