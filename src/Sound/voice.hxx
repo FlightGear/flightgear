@@ -55,11 +55,13 @@ public:
 	FGVoiceMgr();
 	~FGVoiceMgr();
 	void init(void);
+	void shutdown();
 	void update(double dt);
 
-private:
-	class FGVoice;
 
+  class FGVoice;
+protected:
+  friend class FGFestivalVoice;
 #if defined(ENABLE_THREADS)
 	class FGVoiceThread;
 	FGVoiceThread *_thread;
@@ -86,53 +88,33 @@ private:
 	void wait_for_jobs() { OpenThreads::ScopedLock<OpenThreads::Mutex> g(_mutex); _jobs.wait(&_mutex); }
 	OpenThreads::Condition _jobs;
 	OpenThreads::Mutex _mutex;
+protected:
 	FGVoiceMgr *_mgr;
 };
 #endif
 
 
-
-class FGVoiceMgr::FGVoice {
+class FGVoiceMgr::FGVoice : public SGPropertyChangeListener {
 public:
-	FGVoice(FGVoiceMgr *, const SGPropertyNode_ptr);
-	~FGVoice();
-	bool speak();
-	void update();
-	void setVolume(double);
-	void setPitch(double);
-	void setSpeed(double);
-	void pushMessage(std::string);
+  FGVoice(FGVoiceMgr * mgr ) : _mgr(mgr) {}
+  virtual ~FGVoice() {}
+  virtual void speak( const std::string & msg ) = 0;
+  virtual void update() = 0;
+  void pushMessage( const std::string & m);
+  bool speak();
 
-private:
-	class FGVoiceListener;
-	SGSocket *_sock;
-	double _volume;
-	double _pitch;
-	double _speed;
-	SGPropertyNode_ptr _volumeNode;
-	SGPropertyNode_ptr _pitchNode;
-	SGPropertyNode_ptr _speedNode;
-	bool _festival;
-	FGVoiceMgr *_mgr;
+protected:
+  void valueChanged(SGPropertyNode *node);
 
-#if defined(ENABLE_THREADS)
-	SGLockedQueue<std::string> _msg;
+  FGVoiceMgr *_mgr;
+
+  #if defined(ENABLE_THREADS)
+  SGLockedQueue<std::string> _msg;
 #else
   std::queue<std::string> _msg;
 #endif
 
+
 };
-
-
-
-class FGVoiceMgr::FGVoice::FGVoiceListener : public SGPropertyChangeListener {
-public:
-	FGVoiceListener(FGVoice *voice) : _voice(voice) {}
-	void valueChanged(SGPropertyNode *node);
-
-private:
-	FGVoice *_voice;
-};
-
 
 #endif // _VOICE_HXX

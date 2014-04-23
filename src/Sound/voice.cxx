@@ -30,35 +30,51 @@
 #include <Main/fg_props.hxx>
 #include "voice.hxx"
 
+#if defined(ENABLE_FLITE)
+#include "flitevoice.hxx"
+#endif
+
 #define VOICE "/sim/sound/voices"
 
 using std::string;
 
+class FGFestivalVoice : public FGVoiceMgr::FGVoice {
+public:
+  FGFestivalVoice(FGVoiceMgr *, const SGPropertyNode_ptr);
+  virtual ~FGFestivalVoice();
+  virtual void speak( const string & msg );
+  virtual void update();
+  void setVolume(double);
+  void setPitch(double);
+  void setSpeed(double);
+
+private:
+  SGSocket *_sock;
+  double _volume;
+  double _pitch;
+  double _speed;
+  SGPropertyNode_ptr _volumeNode;
+  SGPropertyNode_ptr _pitchNode;
+  SGPropertyNode_ptr _speedNode;
+};
+
 /// MANAGER ///
 
 FGVoiceMgr::FGVoiceMgr() :
+#if defined(ENABLE_THREADS)
+  _thread(NULL),
+#endif
 	_host(fgGetString(VOICE "/host", "localhost")),
 	_port(fgGetString(VOICE "/port", "1314")),
 	_enabled(fgGetBool(VOICE "/enabled", false)),
-	_pausedNode(fgGetNode("/sim/sound/working", true))
+	_pausedNode(fgGetNode("/sim/sound/working", true)),
+	_paused(false)
 {
-#if defined(ENABLE_THREADS)
-	if (!_enabled)
-		return;
-	_thread = new FGVoiceThread(this);
-#endif
 }
 
 
 FGVoiceMgr::~FGVoiceMgr()
 {
-#if defined(ENABLE_THREADS)
-	if (!_enabled)
-		return;
-	_thread->cancel();
-	_thread->join();
-	delete _thread;
-#endif
 }
 
 
@@ -67,19 +83,48 @@ void FGVoiceMgr::init()
 	if (!_enabled)
 		return;
 
+#if defined(ENABLE_THREADS)
+  _thread = new FGVoiceThread(this);
+#endif
+
 	SGPropertyNode *base = fgGetNode(VOICE, true);
 	vector<SGPropertyNode_ptr> voices = base->getChildren("voice");
-	try {
-		for (unsigned int i = 0; i < voices.size(); i++)
-			_voices.push_back(new FGVoice(this, voices[i]));
-	} catch (const std::string& s) {
-		SG_LOG(SG_SOUND, SG_ALERT, "VOICE: " << s);
-	}
+  for (unsigned int i = 0; i < voices.size(); i++) {
+    SGPropertyNode_ptr voice = voices[i];
+    if( voice->getBoolValue("festival", false ) ) {
+      try {
+        SG_LOG(SG_ALL,SG_ALERT,"creating festival voice" );
+        _voices.push_back(new FGFestivalVoice(this, voice));
+      } catch (const std::string& s) {
+        SG_LOG(SG_SOUND, SG_ALERT, "VOICE: " << s);
+      }
+    } else {
+#if defined(ENABLE_FLITE)
+      SG_LOG(SG_ALL,SG_ALERT,"creating flite voice" );
+      _voices.push_back(new FGFLITEVoice(this, voice));
+#else
+      SG_LOG(SG_ALL,SG_ALERT,"non festival voice not supported." );
+#endif
+    }
+  }
 
 #if defined(ENABLE_THREADS)
 	_thread->setProcessorAffinity(1);
 	_thread->start();
 #endif
+}
+
+void FGVoiceMgr::shutdown()
+{
+#if defined(ENABLE_THREADS)
+  _thread->cancel();
+  _thread->join();
+  delete _thread;
+  _thread = NULL;
+#endif
+
+  for( std::vector<FGVoice*>::iterator it = _voices.begin(); it != _voices.end(); ++it )
+    delete *it;
 }
 
 
@@ -95,7 +140,6 @@ void FGVoiceMgr::update(double)
 		_voices[i]->speak();
 #endif
 	}
-
 }
 
 
@@ -103,12 +147,11 @@ void FGVoiceMgr::update(double)
 
 /// VOICE ///
 
-FGVoiceMgr::FGVoice::FGVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node) :
+FGFestivalVoice::FGFestivalVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node) :
+  FGVoice(mgr),
 	_volumeNode(node->getNode("volume", true)),
 	_pitchNode(node->getNode("pitch", true)),
-	_speedNode(node->getNode("speed", true)),
-	_festival(node->getBoolValue("festival", true)),
-	_mgr(mgr)
+	_speedNode(node->getNode("speed", true))
 {
 	SG_LOG(SG_SOUND, SG_INFO, "VOICE: adding `" << node->getStringValue("desc", "<unnamed>")
 			<< "' voice");
@@ -120,7 +163,7 @@ FGVoiceMgr::FGVoice::FGVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node) :
 	if (!_sock->open(SG_IO_OUT))
 		throw string("no connection to `") + host + ':' + port + '\'';
 
-	if (_festival) {
+	{
 		_sock->writestring("(SayText \"\")\015\012");
 		char buf[4];
 		int len = _sock->read(buf, 3);
@@ -140,42 +183,59 @@ FGVoiceMgr::FGVoice::FGVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node) :
 	string preamble = node->getStringValue("preamble", "");
 	if (!preamble.empty())
 		pushMessage(preamble);
-
-	node->getNode("text", true)->addChangeListener(new FGVoiceListener(this));
+  node->getNode("text", true)->addChangeListener(this);
 }
 
 
-FGVoiceMgr::FGVoice::~FGVoice()
+FGFestivalVoice::~FGFestivalVoice()
 {
 	_sock->close();
 	delete _sock;
 }
 
 
-void FGVoiceMgr::FGVoice::pushMessage(string m)
+void FGVoiceMgr::FGVoice::pushMessage( const string & m)
 {
-	_msg.push(m + "\015\012");
+	_msg.push(m);
 #if defined(ENABLE_THREADS)
 	_mgr->_thread->wake_up();
 #endif
 }
 
-
 bool FGVoiceMgr::FGVoice::speak(void)
 {
-	if (_msg.empty())
-		return false;
+  if (_msg.empty())
+    return false;
 
-	const string s = _msg.front();
-	_msg.pop();
+  const string s = _msg.front();
+  _msg.pop();
+
+  speak(s);
+
+  return !_msg.empty();
+}
+
+void FGFestivalVoice::speak( const string & msg )
+{
+  if( msg.empty() )
+    return;
+
+  string s;
+
+  if( msg[0] == '(' ) {
+    s = msg;
+  } else {
+    s.append("(SayText \"");
+    s.append(msg).append("\")");
+  }
+
+  s.append("\015\012");
 	_sock->writestring(s.c_str());
-	return !_msg.empty();
 }
 
 
-void FGVoiceMgr::FGVoice::update(void)
+void FGFestivalVoice::update(void)
 {
-	if (_festival) {
 		double d;
 		d = _volumeNode->getDoubleValue();
 		if (d != _volume)
@@ -186,11 +246,10 @@ void FGVoiceMgr::FGVoice::update(void)
 		d = _speedNode->getDoubleValue();
 		if (d != _speed)
 			setSpeed(_speed = d);
-	}
 }
 
 
-void FGVoiceMgr::FGVoice::setVolume(double d)
+void FGFestivalVoice::setVolume(double d)
 {
 	std::ostringstream s;
 	s << "(set! default_after_synth_hooks (list (lambda (utt)"
@@ -199,7 +258,7 @@ void FGVoiceMgr::FGVoice::setVolume(double d)
 }
 
 
-void FGVoiceMgr::FGVoice::setPitch(double d)
+void FGFestivalVoice::setPitch(double d)
 {
 	std::ostringstream s;
 	s << "(set! int_lr_params '((target_f0_mean " << d <<
@@ -209,15 +268,12 @@ void FGVoiceMgr::FGVoice::setPitch(double d)
 }
 
 
-void FGVoiceMgr::FGVoice::setSpeed(double d)
+void FGFestivalVoice::setSpeed(double d)
 {
 	std::ostringstream s;
 	s << "(Parameter.set 'Duration_Stretch " << d << ')';
 	pushMessage(s.str());
 }
-
-
-
 
 /// THREAD ///
 
@@ -240,9 +296,9 @@ void FGVoiceMgr::FGVoiceThread::run(void)
 
 /// LISTENER ///
 
-void FGVoiceMgr::FGVoice::FGVoiceListener::valueChanged(SGPropertyNode *node)
+void FGVoiceMgr::FGVoice::valueChanged(SGPropertyNode *node)
 {
-	if (_voice->_mgr->_paused)
+	if (_mgr->_paused)
 		return;
 
 	const string s = node->getStringValue();
@@ -273,10 +329,8 @@ void FGVoiceMgr::FGVoice::FGVoiceListener::valueChanged(SGPropertyNode *node)
 			m += c;
 	}
 	//cerr << "\033[31;1mAFTER [" << m << "]\033[m" << endl;
-	if (_voice->_festival)
-		m = string("(SayText \"") + m + "\")";
 
-	_voice->pushMessage(m);
+	pushMessage(m);
 }
 
 
