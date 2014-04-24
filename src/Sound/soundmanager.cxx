@@ -23,6 +23,9 @@
 
 #include <simgear/sound/soundmgr_openal.hxx>
 
+#if defined(ENABLE_FLITE)
+#include "VoiceSynthesizer.hxx"
+#endif
 #include "soundmanager.hxx"
 #include "Main/globals.hxx"
 #include "Main/fg_props.hxx"
@@ -198,4 +201,16 @@ void FGSoundManager::update(double dt)
     }
 }
 
+#if defined(ENABLE_FLITE)
+VoiceSynthesizer * FGSoundManager::getSynthesizer( const std::string & voice )
+{
+  std::map<std::string,VoiceSynthesizer*>::iterator it = _synthesizers.find(voice);
+  if( it == _synthesizers.end() ) {
+    VoiceSynthesizer * synthesizer = new FLITEVoiceSynthesizer( voice );
+    _synthesizers[voice] = synthesizer;
+    return synthesizer;
+  }
+  return it->second;
+}
+#endif
 #endif // ENABLE_AUDIO_SUPPORT

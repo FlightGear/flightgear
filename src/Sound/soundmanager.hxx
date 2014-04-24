@@ -21,12 +21,16 @@
 #define __FG_SOUNDMGR_HXX 1
 
 #include <memory>
+#include <map>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 
 class SGSoundMgr;
 class Listener;
+#if defined(ENABLE_FLITE)
+class VoiceSynthesizer;
+#endif
 
 #ifdef ENABLE_AUDIO_SUPPORT
 class FGSoundManager : public SGSoundMgr
@@ -42,7 +46,9 @@ public:
 
     void activate(bool State);
     void update_device_list();
-
+#if defined(ENABLE_FLITE)
+    VoiceSynthesizer * getSynthesizer( const std::string & voice );
+#endif
 private:
     bool stationaryView() const;
   
@@ -53,6 +59,9 @@ private:
     SGPropertyNode_ptr _velocityNorthFPS, _velocityEastFPS, _velocityDownFPS;
     SGPropertyNode_ptr _viewXoffset, _viewYoffset, _viewZoffset;
     std::auto_ptr<Listener> _listener;
+#if defined(ENABLE_FLITE)
+    std::map<std::string,VoiceSynthesizer*> _synthesizers;
+#endif
 };
 #else
 #include "Main/fg_props.hxx"

@@ -39,6 +39,12 @@
 #include <Main/fg_props.hxx>
 #include <Navaids/navlist.hxx>
 
+#if defined(ENABLE_FLITE)
+#include <Sound/soundmanager.hxx>
+#include <simgear/sound/sample_group.hxx>
+#include <Sound/VoiceSynthesizer.hxx>
+#endif
+
 #include "frequencyformatter.hxx"
 
 namespace Instrumentation {
@@ -46,129 +52,185 @@ namespace Instrumentation {
 using simgear::PropertyObject;
 using std::string;
 
+#if defined(ENABLE_FLITE)
+class MetarSpeaker: public SGPropertyChangeListener, SoundSampleReadyListener {
+public:
+  MetarSpeaker();
+  virtual ~MetarSpeaker();
+  virtual void valueChanged(SGPropertyNode * node);
+  virtual void SoundSampleReady(SGSharedPtr<SGSoundSample>);
+
+  bool hasSpokenMetar() { return _spokenMetar.empty() == false; }
+  SGSharedPtr<SGSoundSample> getSpokenMetar() { return _spokenMetar.pop(); }
+private:
+  SynthesizeRequest _synthesizeRequest;
+  SGLockedQueue<SGSharedPtr<SGSoundSample> > _spokenMetar;
+};
+
+MetarSpeaker::MetarSpeaker()
+{
+  _synthesizeRequest.listener = this;
+}
+
+MetarSpeaker::~MetarSpeaker()
+{
+
+}
+void MetarSpeaker::valueChanged(SGPropertyNode * node)
+{
+  string newText = node->getStringValue();
+  if (_synthesizeRequest.text == newText) return;
+
+  _synthesizeRequest.text = newText;
+
+  FGSoundManager * smgr = dynamic_cast<FGSoundManager*>(globals->get_soundmgr());
+  assert(smgr != NULL);
+
+  string voice = globals->get_fg_root() + "/ATC/cmu_us_arctic_slt.htsvoice";
+  FLITEVoiceSynthesizer * synthesizer = dynamic_cast<FLITEVoiceSynthesizer*>(smgr->getSynthesizer(voice));
+
+  synthesizer->synthesize(_synthesizeRequest);
+}
+
+void MetarSpeaker::SoundSampleReady(SGSharedPtr<SGSoundSample> sample)
+{
+  // we are now in the synthesizers worker thread!
+  _spokenMetar.push(sample);
+}
+#endif
 
 SignalQualityComputer::~SignalQualityComputer()
 {
 }
 
-class SimpleDistanceSquareSignalQualityComputer : public SignalQualityComputer
-{
+class SimpleDistanceSquareSignalQualityComputer: public SignalQualityComputer {
 public:
-  SimpleDistanceSquareSignalQualityComputer( double range ) : _rangeM(range), _rangeM2(range*range) {}
-  virtual double computeSignalQuality( const SGGeod & sender, const SGGeod & receiver ) const;
-  virtual double computeSignalQuality( const SGVec3d & sender, const SGVec3d & receiver ) const;
-  virtual double computeSignalQuality( double slantDistanceM ) const;
+  SimpleDistanceSquareSignalQualityComputer(double range)
+      : _rangeM(range), _rangeM2(range * range)
+  {
+  }
+  virtual double computeSignalQuality(const SGGeod & sender, const SGGeod & receiver) const;
+  virtual double computeSignalQuality(const SGVec3d & sender, const SGVec3d & receiver) const;
+  virtual double computeSignalQuality(double slantDistanceM) const;
 private:
   double _rangeM;
   double _rangeM2;
 };
 
-double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality( const SGVec3d & sender, const SGVec3d & receiver ) const
+double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality(const SGVec3d & sender, const SGVec3d & receiver) const
 {
-    return computeSignalQuality( dist( sender, receiver ) );
+  return computeSignalQuality(dist(sender, receiver));
 }
 
-double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality( const SGGeod & sender, const SGGeod & receiver ) const
+double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality(const SGGeod & sender, const SGGeod & receiver) const
 {
-    return computeSignalQuality( SGGeodesy::distanceM( sender, receiver ) );
+  return computeSignalQuality(SGGeodesy::distanceM(sender, receiver));
 }
 
-double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality( double distanceM ) const
+double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality(double distanceM) const
 {
-    return distanceM < _rangeM ? 1.0 : ( _rangeM2 / (distanceM*distanceM) );
+  return distanceM < _rangeM ? 1.0 : (_rangeM2 / (distanceM * distanceM));
 }
 
 class OnExitHandler {
-  public:
-    virtual void onExit() = 0;
-    virtual ~OnExitHandler() {}
+public:
+  virtual void onExit() = 0;
+  virtual ~OnExitHandler()
+  {
+  }
 };
 
 class OnExit {
-  public:
-    OnExit( OnExitHandler * onExitHandler ) : _onExitHandler( onExitHandler ) {}
-    ~OnExit() { _onExitHandler->onExit(); }
-  private:
-    OnExitHandler * _onExitHandler;
+public:
+  OnExit(OnExitHandler * onExitHandler)
+      : _onExitHandler(onExitHandler)
+  {
+  }
+  ~OnExit()
+  {
+    _onExitHandler->onExit();
+  }
+private:
+  OnExitHandler * _onExitHandler;
 };
 
+class OutputProperties: public OnExitHandler {
+public:
+  OutputProperties(SGPropertyNode_ptr rootNode)
+      : _rootNode(rootNode), _signalQuality_norm(0.0), _slantDistance_m(0.0), _trueBearingTo_deg(0.0), _trueBearingFrom_deg(0.0), _trackDistance_m(
+          0.0), _heightAboveStation_ft(0.0),
 
-class OutputProperties : public OnExitHandler {
-  public:
-    OutputProperties( SGPropertyNode_ptr rootNode ) : 
-      _rootNode(rootNode),
-      _signalQuality_norm(0.0),
-      _slantDistance_m(0.0),
-      _trueBearingTo_deg(0.0),
-      _trueBearingFrom_deg(0.0),
-      _trackDistance_m(0.0),
-      _heightAboveStation_ft(0.0),
-
-      _PO_stationType( rootNode->getNode("station-type", true ) ),
-      _PO_stationName( rootNode->getNode("station-name", true ) ),
-      _PO_airportId( rootNode->getNode("airport-id", true ) ),
-      _PO_signalQuality_norm( rootNode->getNode("signal-quality-norm",true) ),
-      _PO_slantDistance_m( rootNode->getNode("slant-distance-m",true) ),
-      _PO_trueBearingTo_deg( rootNode->getNode("true-bearing-to-deg",true) ),
-      _PO_trueBearingFrom_deg( rootNode->getNode("true-bearing-from-deg",true) ),
-      _PO_trackDistance_m( rootNode->getNode("track-distance-m",true) ),
-      _PO_heightAboveStation_ft( rootNode->getNode("height-above-station-ft",true) )
-      {}
-    virtual ~OutputProperties() {}
+      _PO_stationType(rootNode->getNode("station-type", true)), _PO_stationName(rootNode->getNode("station-name", true)), _PO_airportId(
+          rootNode->getNode("airport-id", true)), _PO_signalQuality_norm(rootNode->getNode("signal-quality-norm", true)), _PO_slantDistance_m(
+          rootNode->getNode("slant-distance-m", true)), _PO_trueBearingTo_deg(rootNode->getNode("true-bearing-to-deg", true)), _PO_trueBearingFrom_deg(
+          rootNode->getNode("true-bearing-from-deg", true)), _PO_trackDistance_m(rootNode->getNode("track-distance-m", true)), _PO_heightAboveStation_ft(
+          rootNode->getNode("height-above-station-ft", true))
+  {
+  }
+  virtual ~OutputProperties()
+  {
+  }
 
 protected:
-    SGPropertyNode_ptr _rootNode;
+  SGPropertyNode_ptr _rootNode;
 
-    std::string  _stationType;
-    std::string  _stationName;
-    std::string  _airportId;
-    double       _signalQuality_norm;
-    double       _slantDistance_m;
-    double       _trueBearingTo_deg;
-    double       _trueBearingFrom_deg;
-    double       _trackDistance_m;
-    double       _heightAboveStation_ft;
+  std::string _stationType;
+  std::string _stationName;
+  std::string _airportId;
+  double _signalQuality_norm;
+  double _slantDistance_m;
+  double _trueBearingTo_deg;
+  double _trueBearingFrom_deg;
+  double _trackDistance_m;
+  double _heightAboveStation_ft;
 
 private:
-    PropertyObject<string> _PO_stationType;
-    PropertyObject<string> _PO_stationName;
-    PropertyObject<string> _PO_airportId;
-    PropertyObject<double> _PO_signalQuality_norm;
-    PropertyObject<double> _PO_slantDistance_m;
-    PropertyObject<double> _PO_trueBearingTo_deg;
-    PropertyObject<double> _PO_trueBearingFrom_deg;
-    PropertyObject<double> _PO_trackDistance_m;
-    PropertyObject<double> _PO_heightAboveStation_ft;
+  PropertyObject<string> _PO_stationType;
+  PropertyObject<string> _PO_stationName;
+  PropertyObject<string> _PO_airportId;
+  PropertyObject<double> _PO_signalQuality_norm;
+  PropertyObject<double> _PO_slantDistance_m;
+  PropertyObject<double> _PO_trueBearingTo_deg;
+  PropertyObject<double> _PO_trueBearingFrom_deg;
+  PropertyObject<double> _PO_trackDistance_m;
+  PropertyObject<double> _PO_heightAboveStation_ft;
 
-    virtual void onExit() {
-        _PO_stationType = _stationType;
-        _PO_stationName = _stationName;
-        _PO_airportId = _airportId;
-        _PO_signalQuality_norm = _signalQuality_norm;
-        _PO_slantDistance_m = _slantDistance_m;
-        _PO_trueBearingTo_deg = _trueBearingTo_deg;
-        _PO_trueBearingFrom_deg = _trueBearingFrom_deg;
-        _PO_trackDistance_m = _trackDistance_m;
-        _PO_heightAboveStation_ft = _heightAboveStation_ft;
-    }
+  virtual void onExit()
+  {
+    _PO_stationType = _stationType;
+    _PO_stationName = _stationName;
+    _PO_airportId = _airportId;
+    _PO_signalQuality_norm = _signalQuality_norm;
+    _PO_slantDistance_m = _slantDistance_m;
+    _PO_trueBearingTo_deg = _trueBearingTo_deg;
+    _PO_trueBearingFrom_deg = _trueBearingFrom_deg;
+    _PO_trackDistance_m = _trackDistance_m;
+    _PO_heightAboveStation_ft = _heightAboveStation_ft;
+  }
 };
 
 /* ------------- The CommRadio implementation ---------------------- */
 
-class MetarBridge : public SGReferenced, public SGPropertyChangeListener {
+class MetarBridge: public SGReferenced, public SGPropertyChangeListener {
 public:
   MetarBridge();
   ~MetarBridge();
 
   void bind();
   void unbind();
-  void requestMetarForId( std::string & id );
+  void requestMetarForId(std::string & id);
   void clearMetar();
-  void setMetarPropertiesRoot( SGPropertyNode_ptr n ) { _metarPropertiesNode = n; }
-  void setAtisNode( SGPropertyNode * n ) { _atisNode = n; }
+  void setMetarPropertiesRoot(SGPropertyNode_ptr n)
+  {
+    _metarPropertiesNode = n;
+  }
+  void setAtisNode(SGPropertyNode * n)
+  {
+    _atisNode = n;
+  }
 
 protected:
-  virtual void valueChanged(SGPropertyNode * );
+  virtual void valueChanged(SGPropertyNode *);
 
 private:
   std::string _requestedId;
@@ -179,8 +241,8 @@ private:
 };
 typedef SGSharedPtr<MetarBridge> MetarBridgeRef;
 
-MetarBridge::MetarBridge() :
-  _atisNode(0)
+MetarBridge::MetarBridge()
+    : _atisNode(0)
 {
 }
 
@@ -190,31 +252,31 @@ MetarBridge::~MetarBridge()
 
 void MetarBridge::bind()
 {
-  _realWxEnabledNode = fgGetNode( "/environment/realwx/enabled", true );
-  _metarPropertiesNode->getNode( "valid", true )->addChangeListener( this );
+  _realWxEnabledNode = fgGetNode("/environment/realwx/enabled", true);
+  _metarPropertiesNode->getNode("valid", true)->addChangeListener(this);
 }
 
 void MetarBridge::unbind()
 {
-  _metarPropertiesNode->getNode( "valid", true )->removeChangeListener( this );
+  _metarPropertiesNode->getNode("valid", true)->removeChangeListener(this);
 }
 
-void MetarBridge::requestMetarForId( std::string & id )
+void MetarBridge::requestMetarForId(std::string & id)
 {
-  std::string uppercaseId = simgear::strutils::uppercase( id );
-  if( _requestedId == uppercaseId ) return;
+  std::string uppercaseId = simgear::strutils::uppercase(id);
+  if (_requestedId == uppercaseId) return;
   _requestedId = uppercaseId;
 
-  if( _realWxEnabledNode->getBoolValue() ) {
+  if (_realWxEnabledNode->getBoolValue()) {
     //  trigger a METAR request for the associated metarproperties
-    _metarPropertiesNode->getNode( "station-id", true )->setStringValue( uppercaseId );
-    _metarPropertiesNode->getNode( "valid", true )->setBoolValue( false );
-    _metarPropertiesNode->getNode( "time-to-live", true )->setDoubleValue( 0.0 );
-  } else  {
+    _metarPropertiesNode->getNode("station-id", true)->setStringValue(uppercaseId);
+    _metarPropertiesNode->getNode("valid", true)->setBoolValue(false);
+    _metarPropertiesNode->getNode("time-to-live", true)->setDoubleValue(0.0);
+  } else {
     // use the present weather to generate the ATIS. 
-    if( NULL != _atisNode && false == _requestedId.empty() ) {
-      CurrentWeatherATISInformationProvider provider( _requestedId );
-      _atisNode->setStringValue( _atisEncoder.encodeATIS( &provider ) );
+    if ( NULL != _atisNode && false == _requestedId.empty()) {
+      CurrentWeatherATISInformationProvider provider(_requestedId);
+      _atisNode->setStringValue(_atisEncoder.encodeATIS(&provider));
     }
   }
 }
@@ -222,82 +284,74 @@ void MetarBridge::requestMetarForId( std::string & id )
 void MetarBridge::clearMetar()
 {
   string empty;
-  requestMetarForId( empty );
+  requestMetarForId(empty);
 }
 
-void MetarBridge::valueChanged(SGPropertyNode * node )
+void MetarBridge::valueChanged(SGPropertyNode * node)
 {
   // check for raising edge of valid flag
-  if( NULL == node || false == node->getBoolValue() || false == _realWxEnabledNode->getBoolValue() )
-    return;
+  if ( NULL == node || false == node->getBoolValue() || false == _realWxEnabledNode->getBoolValue()) return;
 
-  std::string responseId = simgear::strutils::uppercase(
-     _metarPropertiesNode->getNode( "station-id", true )->getStringValue() );
+  std::string responseId = simgear::strutils::uppercase(_metarPropertiesNode->getNode("station-id", true)->getStringValue());
 
   // unrequested metar!?
-  if( responseId != _requestedId )
-    return;
+  if (responseId != _requestedId) return;
 
-  if( NULL != _atisNode ) {
-    MetarPropertiesATISInformationProvider provider( _metarPropertiesNode );
-    _atisNode->setStringValue( _atisEncoder.encodeATIS( &provider ) );
+  if ( NULL != _atisNode) {
+    MetarPropertiesATISInformationProvider provider(_metarPropertiesNode);
+    _atisNode->setStringValue(_atisEncoder.encodeATIS(&provider));
   }
 }
 
 /* ------------- The CommRadio implementation ---------------------- */
 
-class CommRadioImpl : public CommRadio, OutputProperties {
+class CommRadioImpl: public CommRadio, OutputProperties {
 
 public:
-  CommRadioImpl( SGPropertyNode_ptr node );
+  CommRadioImpl(SGPropertyNode_ptr node);
   virtual ~CommRadioImpl();
 
-  virtual void update( double dt );
+  virtual void update(double dt);
   virtual void init();
   void bind();
   void unbind();
 
 private:
-  int                _num;
-  MetarBridgeRef     _metarBridge;
+  int _num;
+  MetarBridgeRef _metarBridge;
+#if defined(ENABLE_FLITE)
+  MetarSpeaker _metarSpeaker;
+#endif
   FrequencyFormatter _useFrequencyFormatter;
   FrequencyFormatter _stbyFrequencyFormatter;
-  const SignalQualityComputerRef _signalQualityComputer; 
+  const SignalQualityComputerRef _signalQualityComputer;
 
   double _stationTTL;
   double _frequency;
   flightgear::CommStationRef _commStationForFrequency;
 
-  PropertyObject<bool>   _serviceable;
-  PropertyObject<bool>   _power_btn;
-  PropertyObject<bool>   _power_good;
+  PropertyObject<bool> _serviceable;
+  PropertyObject<bool> _power_btn;
+  PropertyObject<bool> _power_good;
   PropertyObject<double> _volume_norm;
   PropertyObject<string> _atis;
 
-
 };
 
-CommRadioImpl::CommRadioImpl( SGPropertyNode_ptr node ) :
-    OutputProperties( fgGetNode("/instrumentation",true)->getNode(
-                        node->getStringValue("name", "comm"),
-                        node->getIntValue("number", 0), true)),
-    _num( node->getIntValue("number",0)),
-    _metarBridge( new MetarBridge() ),
-    _useFrequencyFormatter( _rootNode->getNode("frequencies/selected-mhz",true), 
-                            _rootNode->getNode("frequencies/selected-mhz-fmt",true), 0.025, 118.0, 136.0 ),
-    _stbyFrequencyFormatter( _rootNode->getNode("frequencies/standby-mhz",true), 
-                            _rootNode->getNode("frequencies/standby-mhz-fmt",true), 0.025, 118.0, 136.0 ),
-    _signalQualityComputer( new SimpleDistanceSquareSignalQualityComputer(10*SG_NM_TO_METER) ),
+CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
+    : OutputProperties(
+        fgGetNode("/instrumentation", true)->getNode(node->getStringValue("name", "comm"), node->getIntValue("number", 0), true)), _num(
+        node->getIntValue("number", 0)), _metarBridge(new MetarBridge()), _useFrequencyFormatter(
+        _rootNode->getNode("frequencies/selected-mhz", true), _rootNode->getNode("frequencies/selected-mhz-fmt", true), 0.025,
+        118.0, 136.0), _stbyFrequencyFormatter(_rootNode->getNode("frequencies/standby-mhz", true),
+        _rootNode->getNode("frequencies/standby-mhz-fmt", true), 0.025, 118.0, 136.0), _signalQualityComputer(
+        new SimpleDistanceSquareSignalQualityComputer(10 * SG_NM_TO_METER)),
 
-    _stationTTL(0.0),
-    _frequency(-1.0),
-    _commStationForFrequency(NULL),
+    _stationTTL(0.0), _frequency(-1.0), _commStationForFrequency(NULL),
 
-    _serviceable( _rootNode->getNode("serviceable",true) ),
-    _power_btn( _rootNode->getNode("power-btn",true) ),
-    _power_good( _rootNode->getNode("power-good",true) ),
-    _volume_norm( _rootNode->getNode("volume",true) ),
-    _atis( _rootNode->getNode("atis",true) )
+    _serviceable(_rootNode->getNode("serviceable", true)), _power_btn(_rootNode->getNode("power-btn", true)), _power_good(
+        _rootNode->getNode("power-good", true)), _volume_norm(_rootNode->getNode("volume", true)), _atis(
+        _rootNode->getNode("atis", true))
 {
 }
 
@@ -307,15 +361,21 @@ CommRadioImpl::~CommRadioImpl()
 
 void CommRadioImpl::bind()
 {
-  _metarBridge->setAtisNode( _atis.node() );
-   // link the metar node. /environment/metar[3] is comm1 and /environment[4] is comm2.
-   // see FGDATA/Environment/environment.xml
-  _metarBridge->setMetarPropertiesRoot( fgGetNode( "/environment",true)->getNode("metar", _num+3, true ) );
+  _metarBridge->setAtisNode(_atis.node());
+#if defined(ENABLE_FLITE)
+  _atis.node()->addChangeListener( &_metarSpeaker );
+#endif
+  // link the metar node. /environment/metar[3] is comm1 and /environment[4] is comm2.
+  // see FGDATA/Environment/environment.xml
+  _metarBridge->setMetarPropertiesRoot(fgGetNode("/environment", true)->getNode("metar", _num + 3, true));
   _metarBridge->bind();
 }
 
 void CommRadioImpl::unbind()
 {
+#if defined(ENABLE_FLITE)
+  _atis.node()->removeChangeListener( &_metarSpeaker );
+#endif
   _metarBridge->unbind();
 }
 
@@ -323,80 +383,88 @@ void CommRadioImpl::init()
 {
 }
 
-void CommRadioImpl::update( double dt )
+void CommRadioImpl::update(double dt)
 {
-    if( dt < SGLimitsd::min() ) return;
-    _stationTTL -= dt;
+  if (dt < SGLimitsd::min()) return;
+  _stationTTL -= dt;
 
-    // Ensure all output properties get written on exit of this method
-    OnExit onExit(this);
+  // Ensure all output properties get written on exit of this method
+  OnExit onExit(this);
 
-    SGGeod position;
-    try { position = globals->get_aircraft_position(); }
-    catch( std::exception & ) { return; }
+  SGGeod position;
+  try {
+    position = globals->get_aircraft_position();
+  }
+  catch (std::exception &) {
+    return;
+  }
 
-    if( false == (_power_btn )) {
-        _stationTTL = 0.0;
-        return;
-    }
+  if (false == (_power_btn)) {
+    _stationTTL = 0.0;
+    return;
+  }
 
+  if (_frequency != _useFrequencyFormatter.getFrequency()) {
+    _frequency = _useFrequencyFormatter.getFrequency();
+    _stationTTL = 0.0;
+  }
 
-    if( _frequency != _useFrequencyFormatter.getFrequency() ) {
-        _frequency = _useFrequencyFormatter.getFrequency();
-        _stationTTL = 0.0;
-    }
+  if (_stationTTL <= 0.0) {
+    _stationTTL = 30.0;
 
-    if( _stationTTL <= 0.0 ) {
-        _stationTTL = 30.0;
+    // Note:  122.375 must be rounded DOWN to 122370
+    // in order to be consistent with apt.dat et cetera.
+    int freqKhz = 10 * static_cast<int>(_frequency * 100 + 0.25);
+    _commStationForFrequency = flightgear::CommStation::findByFreq(freqKhz, position, NULL);
 
-        // Note:  122.375 must be rounded DOWN to 122370
-        // in order to be consistent with apt.dat et cetera.
-        int freqKhz = 10 * static_cast<int>(_frequency * 100 + 0.25);
-        _commStationForFrequency = flightgear::CommStation::findByFreq( freqKhz, position, NULL );
+  }
 
-    }
+  if (false == _commStationForFrequency.valid()) return;
 
-    if( false == _commStationForFrequency.valid() ) return;
+  _slantDistance_m = dist(_commStationForFrequency->cart(), SGVec3d::fromGeod(position));
 
-    _slantDistance_m = dist(_commStationForFrequency->cart(), SGVec3d::fromGeod(position));
+  SGGeodesy::inverse(position, _commStationForFrequency->geod(), _trueBearingTo_deg, _trueBearingFrom_deg, _trackDistance_m);
 
-    SGGeodesy::inverse(position, _commStationForFrequency->geod(), 
-        _trueBearingTo_deg,
-        _trueBearingFrom_deg,
-        _trackDistance_m );
+  _heightAboveStation_ft = SGMiscd::max(0.0, position.getElevationFt() - _commStationForFrequency->airport()->elevation());
 
-    _heightAboveStation_ft = 
-         SGMiscd::max(0.0, position.getElevationFt() 
-           - _commStationForFrequency->airport()->elevation());
-    
-    _signalQuality_norm = _signalQualityComputer->computeSignalQuality( _slantDistance_m );
-    _stationType = _commStationForFrequency->nameForType( _commStationForFrequency->type() );
-    _stationName = _commStationForFrequency->ident();
-    _airportId = _commStationForFrequency->airport()->getId();
+  _signalQuality_norm = _signalQualityComputer->computeSignalQuality(_slantDistance_m);
+  _stationType = _commStationForFrequency->nameForType(_commStationForFrequency->type());
+  _stationName = _commStationForFrequency->ident();
+  _airportId = _commStationForFrequency->airport()->getId();
 
-    switch( _commStationForFrequency->type() ) {
-      case FGPositioned::FREQ_ATIS:
-      case FGPositioned::FREQ_AWOS: {
-        if( _signalQuality_norm > 0.01 ) {
-          _metarBridge->requestMetarForId( _airportId );
-        } else {
-          _metarBridge->clearMetar();
-          _atis = "";
-        }
-      }
-      break;
-
-      default:
+  switch (_commStationForFrequency->type()) {
+    case FGPositioned::FREQ_ATIS:
+    case FGPositioned::FREQ_AWOS: {
+      if (_signalQuality_norm > 0.01) {
+        _metarBridge->requestMetarForId(_airportId);
+      } else {
         _metarBridge->clearMetar();
         _atis = "";
-        break;
+      }
     }
+      break;
 
+    default:
+      _metarBridge->clearMetar();
+      _atis = "";
+      break;
+  }
+#if defined(ENABLE_FLITE)
+  if( _metarSpeaker.hasSpokenMetar() ) {
+    SGSharedPtr<SGSoundSample> sample = _metarSpeaker.getSpokenMetar();
+    SGSoundMgr * _smgr = globals->get_soundmgr();
+    SGSampleGroup * _sgr = _smgr->find("comm", true );
+    _sgr->tie_to_listener();
+    _sgr->remove("metar");
+    _sgr->add(sample,"metar");
+    _sgr->play_looped( "metar" );
+  }
+#endif
 }
 
-SGSubsystem * CommRadio::createInstance( SGPropertyNode_ptr rootNode )
+SGSubsystem * CommRadio::createInstance(SGPropertyNode_ptr rootNode)
 {
-    return new CommRadioImpl( rootNode );
+  return new CommRadioImpl(rootNode);
 }
 
 } // namespace Instrumentation

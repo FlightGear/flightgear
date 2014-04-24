@@ -24,4 +24,19 @@ set(HEADERS
 	soundmanager.hxx
 	)
 
+if (ENABLE_FLITE)
+
+	set(SOURCES
+		"${SOURCES}"
+		VoiceSynthesizer.cxx
+		flitevoice.cxx
+	)
+
+	set(HEADERS
+		"${HEADERS}"
+		VoiceSynthesizer.hxx
+		flitevoice.hxx
+	)
+endif()
+
 flightgear_component(Sound "${SOURCES}" "${HEADERS}")
