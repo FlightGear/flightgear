@@ -117,10 +117,13 @@ void FGVoiceMgr::init()
 void FGVoiceMgr::shutdown()
 {
 #if defined(ENABLE_THREADS)
-  _thread->cancel();
-  _thread->join();
-  delete _thread;
-  _thread = NULL;
+  SG_LOG(SG_ALL,SG_ALERT,"FGVoiceMgr::shutdown");
+  if( _thread ) {
+    _thread->cancel();
+    _thread->join();
+    delete _thread;
+    _thread = NULL;
+  }
 #endif
 
   for( std::vector<FGVoice*>::iterator it = _voices.begin(); it != _voices.end(); ++it )
