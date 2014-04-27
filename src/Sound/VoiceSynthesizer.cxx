@@ -7,6 +7,7 @@
 
 #include "VoiceSynthesizer.hxx"
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sound/readwav.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -15,14 +16,14 @@
 
 class ScopedTempfile {
 public:
-  ScopedTempfile()
+  ScopedTempfile( bool keep = false ) : _keep(keep)
   {
     _name = ::tempnam(globals->get_fg_home().c_str(), "fgvox");
 
   }
   ~ScopedTempfile()
   {
-    if (_name) ::unlink(_name);
+    if (_name && !_keep) ::unlink(_name);
     ::free(_name);
   }
 
@@ -36,6 +37,7 @@ public:
   }
 private:
   char * _name;
+  bool _keep;
 };
 
 class FLITEVoiceSynthesizer::WorkerThread: public OpenThreads::Thread {
@@ -66,8 +68,10 @@ void FLITEVoiceSynthesizer::synthesize( SynthesizeRequest & request)
 }
 
 FLITEVoiceSynthesizer::FLITEVoiceSynthesizer(const std::string & voice)
-    : _engine(new Flite_HTS_Engine), _worker(new FLITEVoiceSynthesizer::WorkerThread(this))
+    : _engine(new Flite_HTS_Engine), _worker(new FLITEVoiceSynthesizer::WorkerThread(this)), _volume(6.0), _keepScratchFile(false)
 {
+  _volume = fgGetDouble("/sim/sound/voice-synthesizer/volume", _volume );
+  _keepScratchFile = fgGetBool("/sim/sound/voice-synthesizer/keep-scratch-file", _keepScratchFile);
   Flite_HTS_Engine_initialize(_engine);
   Flite_HTS_Engine_load(_engine, voice.c_str());
   _worker->start();
@@ -82,7 +86,9 @@ FLITEVoiceSynthesizer::~FLITEVoiceSynthesizer()
 
 SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text)
 {
-  ScopedTempfile scratch;
+  ScopedTempfile scratch(_keepScratchFile);
+  HTS_Engine_set_volume( &_engine->engine, _volume );
+
   if ( FALSE == Flite_HTS_Engine_synthesize(_engine, text.c_str(), scratch.getName())) return NULL;
 
   SG_LOG(SG_SOUND, SG_ALERT, "created wav at " << scratch.getPath());

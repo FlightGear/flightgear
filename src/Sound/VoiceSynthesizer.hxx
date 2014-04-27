@@ -76,6 +76,9 @@ private:
 
   typedef SGBlockingQueue<SynthesizeRequest> SynthesizeRequestList;
   SynthesizeRequestList _requests;
+
+  double _volume;
+  bool   _keepScratchFile;
 };
 
 #endif /* VOICESYNTHESIZER_HXX_ */
