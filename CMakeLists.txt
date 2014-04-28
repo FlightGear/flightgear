@@ -114,6 +114,16 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     if(GSM_FOUND)
         set(SYSTEM_GSM_DEFAULT 1)
     endif(GSM_FOUND)
+
+    find_package(Flite)
+    if(FLITE_FOUND)
+        set(SYSTEM_FLITE_DEFAULT 1)
+    endif()
+
+    find_package(HtsEngine)
+    if(FLITE_FOUND)
+        set(SYSTEM_HTS_ENGINE_DEFAULT 1)
+    endif()
 endif()
 
 find_package(Git)
@@ -143,6 +153,8 @@ option(ENABLE_IAX        "Set to ON to build FlightGear with IAXClient/fgcom bui
 option(USE_DBUS          "Set to ON to build FlightGear with DBus screensaver interaction (default on Linux)" ${USE_DBUS_DEFAULT})
 option(SYSTEM_SPEEX      "Set to ON to build IAXClient with the system's speex and speexdsp library" ${SYSTEM_SPEEX_DEFAULT})
 option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM library" ${SYSTEM_GSM_DEFAULT})
+option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
+option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
 
 # additional utilities
 option(ENABLE_FGADMIN    "Set to ON to build the FGADMIN application (default)" ON)
