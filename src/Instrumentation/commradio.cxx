@@ -53,30 +53,30 @@ using simgear::PropertyObject;
 using std::string;
 
 #if defined(ENABLE_FLITE)
-class MetarSpeaker: public SGPropertyChangeListener, SoundSampleReadyListener {
+class AtisSpeaker: public SGPropertyChangeListener, SoundSampleReadyListener {
 public:
-  MetarSpeaker();
-  virtual ~MetarSpeaker();
+  AtisSpeaker();
+  virtual ~AtisSpeaker();
   virtual void valueChanged(SGPropertyNode * node);
   virtual void SoundSampleReady(SGSharedPtr<SGSoundSample>);
 
-  bool hasSpokenMetar() { return _spokenMetar.empty() == false; }
-  SGSharedPtr<SGSoundSample> getSpokenMetar() { return _spokenMetar.pop(); }
+  bool hasSpokenAtis() { return _spokenAtis.empty() == false; }
+  SGSharedPtr<SGSoundSample> getSpokenAtis() { return _spokenAtis.pop(); }
 private:
   SynthesizeRequest _synthesizeRequest;
-  SGLockedQueue<SGSharedPtr<SGSoundSample> > _spokenMetar;
+  SGLockedQueue<SGSharedPtr<SGSoundSample> > _spokenAtis;
 };
 
-MetarSpeaker::MetarSpeaker()
+AtisSpeaker::AtisSpeaker()
 {
   _synthesizeRequest.listener = this;
 }
 
-MetarSpeaker::~MetarSpeaker()
+AtisSpeaker::~AtisSpeaker()
 {
 
 }
-void MetarSpeaker::valueChanged(SGPropertyNode * node)
+void AtisSpeaker::valueChanged(SGPropertyNode * node)
 {
   string newText = node->getStringValue();
   if (_synthesizeRequest.text == newText) return;
@@ -92,10 +92,10 @@ void MetarSpeaker::valueChanged(SGPropertyNode * node)
   synthesizer->synthesize(_synthesizeRequest);
 }
 
-void MetarSpeaker::SoundSampleReady(SGSharedPtr<SGSoundSample> sample)
+void AtisSpeaker::SoundSampleReady(SGSharedPtr<SGSoundSample> sample)
 {
   // we are now in the synthesizers worker thread!
-  _spokenMetar.push(sample);
+  _spokenAtis.push(sample);
 }
 #endif
 
@@ -320,7 +320,7 @@ private:
   int _num;
   MetarBridgeRef _metarBridge;
 #if defined(ENABLE_FLITE)
-  MetarSpeaker _metarSpeaker;
+  AtisSpeaker _atisSpeaker;
 #endif
   FrequencyFormatter _useFrequencyFormatter;
   FrequencyFormatter _stbyFrequencyFormatter;
@@ -363,7 +363,7 @@ void CommRadioImpl::bind()
 {
   _metarBridge->setAtisNode(_atis.node());
 #if defined(ENABLE_FLITE)
-  _atis.node()->addChangeListener( &_metarSpeaker );
+  _atis.node()->addChangeListener( &_atisSpeaker );
 #endif
   // link the metar node. /environment/metar[3] is comm1 and /environment[4] is comm2.
   // see FGDATA/Environment/environment.xml
@@ -374,7 +374,7 @@ void CommRadioImpl::bind()
 void CommRadioImpl::unbind()
 {
 #if defined(ENABLE_FLITE)
-  _atis.node()->removeChangeListener( &_metarSpeaker );
+  _atis.node()->removeChangeListener( &_atisSpeaker );
 #endif
   _metarBridge->unbind();
 }
@@ -450,8 +450,8 @@ void CommRadioImpl::update(double dt)
       break;
   }
 #if defined(ENABLE_FLITE)
-  if( _metarSpeaker.hasSpokenMetar() ) {
-    SGSharedPtr<SGSoundSample> sample = _metarSpeaker.getSpokenMetar();
+  if( _atisSpeaker.hasSpokenAtis() ) {
+    SGSharedPtr<SGSoundSample> sample = _atisSpeaker.getSpokenAtis();
     SGSoundMgr * _smgr = globals->get_soundmgr();
     SGSampleGroup * _sgr = _smgr->find("comm", true );
     _sgr->tie_to_listener();
