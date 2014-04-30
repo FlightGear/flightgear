@@ -64,6 +64,10 @@ else()
         flite/lang/usenglish/us_text.c
         flite/lang/usenglish/usenglish.c
     )
+
+    if (MSVC)
+        add_definitions( -DNO_UNION_INITIALIZATION )
+    endif ()
 endif()
 
 if (SYSTEM_HTS_ENGINE)
