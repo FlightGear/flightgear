@@ -36,7 +36,7 @@
 #include <Environment/environment_mgr.hxx>
 #include <Viewer/viewer.hxx>
 #include <Viewer/viewmgr.hxx>
-#include <ATCDCL/ATCutils.hxx>
+#include <Airports/airport.hxx>
 
 #include "HUD.hxx"
 #include "HUD_private.hxx"
