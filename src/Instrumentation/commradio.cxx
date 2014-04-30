@@ -64,6 +64,7 @@ public:
   {
     return _spokenAtis.empty() == false;
   }
+
   SGSharedPtr<SGSoundSample> getSpokenAtis()
   {
     return _spokenAtis.pop();
@@ -84,6 +85,9 @@ AtisSpeaker::~AtisSpeaker()
 }
 void AtisSpeaker::valueChanged(SGPropertyNode * node)
 {
+  if( !fgGetBool("/sim/sound/working", false ) )
+    return;
+
   string newText = node->getStringValue();
   if (_synthesizeRequest.text == newText) return;
 
