@@ -121,7 +121,7 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     endif()
 
     find_package(HtsEngine)
-    if(FLITE_FOUND)
+    if(HTS_ENGINE_FOUND)
         set(SYSTEM_HTS_ENGINE_DEFAULT 1)
     endif()
 endif()
