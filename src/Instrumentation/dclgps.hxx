@@ -166,6 +166,30 @@ private:
     int _min;
 };
 
+// AlignedProjection - a class to project an area local to a runway onto an orthogonal co-ordinate system
+// with the origin at the threshold and the runway aligned with the y axis.
+class AlignedProjection {
+
+public:
+    AlignedProjection();
+    AlignedProjection(const SGGeod& centre, double heading);
+    ~AlignedProjection();
+
+    void Init(const SGGeod& centre, double heading);
+
+    // Convert a lat/lon co-ordinate (degrees) to the local projection (meters)
+    SGVec3d ConvertToLocal(const SGGeod& pt);
+
+    // Convert a local projection co-ordinate (meters) to lat/lon (degrees)
+    SGGeod ConvertFromLocal(const SGVec3d& pt);
+
+private:
+    SGGeod _origin;	// lat/lon of local area origin (the threshold)
+    double _theta;	// the rotation angle for alignment in radians
+    double _correction_factor;	// Reduction in surface distance per degree of longitude due to latitude.  Saves having to do a cos() every call.
+
+};
+
 // ------------------------------------------------------------------------------
 
 // TODO - merge generic GPS functions instead and split out KLN specific stuff.

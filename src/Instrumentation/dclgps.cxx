@@ -1564,3 +1564,54 @@ double DCLGPS::CalcCrossTrackDeviation(const GPSWaypoint& wp1, const GPSWaypoint
 	                  * sin(GetGreatCircleCourse(wp1.lat, wp1.lon, _gpsLat, _gpsLon) - GetGreatCircleCourse(wp1.lat, wp1.lon, wp2.lat, wp2.lon)));
 	return(Rad2Nm(xtd));
 }
+
+AlignedProjection::AlignedProjection() 
+{
+    SGGeod g; // ctor initializes to zero
+    Init( g, 0.0 );
+}
+
+AlignedProjection::AlignedProjection(const SGGeod& centre, double heading) 
+{
+    Init( centre, heading );
+}
+
+AlignedProjection::~AlignedProjection() {
+}
+
+void AlignedProjection::Init(const SGGeod& centre, double heading) {
+    _origin = centre;
+    _theta = heading * SG_DEGREES_TO_RADIANS;
+    _correction_factor = cos(_origin.getLatitudeRad());
+}
+
+SGVec3d AlignedProjection::ConvertToLocal(const SGGeod& pt) {
+    // convert from lat/lon to orthogonal
+    double delta_lat = pt.getLatitudeRad() - _origin.getLatitudeRad();
+    double delta_lon = pt.getLongitudeRad() - _origin.getLongitudeRad();
+    double y = sin(delta_lat) * SG_EQUATORIAL_RADIUS_M;
+    double x = sin(delta_lon) * SG_EQUATORIAL_RADIUS_M * _correction_factor;
+
+    // Align
+    if(_theta != 0.0) {
+        double xbar = x;
+        x = x*cos(_theta) - y*sin(_theta);
+        y = (xbar*sin(_theta)) + (y*cos(_theta));
+    }
+
+    return SGVec3d(x, y, pt.getElevationM());
+}
+
+SGGeod AlignedProjection::ConvertFromLocal(const SGVec3d& pt) {
+    // de-align
+    double thi = _theta * -1.0;
+    double x = pt.x()*cos(thi) - pt.y()*sin(thi);
+    double y = (pt.x()*sin(thi)) + (pt.y()*cos(thi));
+
+    // convert from orthogonal to lat/lon
+    double delta_lat = asin(y / SG_EQUATORIAL_RADIUS_M);
+    double delta_lon = asin(x / SG_EQUATORIAL_RADIUS_M) / _correction_factor;
+
+    return SGGeod::fromRadM(_origin.getLongitudeRad()+delta_lon, _origin.getLatitudeRad()+delta_lat, pt.z());
+}
+

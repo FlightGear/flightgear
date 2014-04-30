@@ -7,7 +7,6 @@ foreach( mylibfolder
 		Airports
 		Aircraft
 		ATC
-		ATCDCL
 		Canvas
 		Radio
 		Autopilot
