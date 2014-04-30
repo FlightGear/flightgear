@@ -1331,9 +1331,11 @@ FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
 {
   const simgear::BVHMaterial* material;
   simgear::BVHNode::Id id;
-  if (!FGInterface::get_agl_ft(t, pt, alt_off, contact, normal, vel,
-                               angularVel, material, id))
-    return false;
+
+  // don't check the return value and continue above scenery discontinuity
+  // see http://osdir.com/ml/flightgear-sim/2014-04/msg00145.html
+  FGInterface::get_agl_ft(t, pt, alt_off, contact, normal, vel,
+                               angularVel, material, id);
 
   SGGeod geodPt = SGGeod::fromCart(SG_FEET_TO_METER*SGVec3d(pt));
   SGQuatd hlToEc = SGQuatd::fromLonLat(geodPt);
