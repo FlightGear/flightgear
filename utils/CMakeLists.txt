@@ -1,14 +1,10 @@
-if(FLTK_FOUND)
-    if (EXISTS ${FLTK_FLUID_EXECUTABLE})
-        add_subdirectory(fgadmin)
-    else ()
-        message(STATUS "fluid executable not found, disabling fgadmin")
-    endif ()
+if(ENABLE_FGADMIN)
+    add_subdirectory(fgadmin)
 endif()
 
 # win32 is just excluded because of not having argument parsing there ...
 if(RTI_FOUND AND NOT WIN32)
-      add_subdirectory(fgai)
+    add_subdirectory(fgai)
 endif()
 
 if(ENABLE_FGELEV)
@@ -16,7 +12,7 @@ if(ENABLE_FGELEV)
 endif()
 
 if(WITH_FGPANEL)
-      add_subdirectory(fgpanel)
+    add_subdirectory(fgpanel)
 endif()
 
 if(ENABLE_FGVIEWER)

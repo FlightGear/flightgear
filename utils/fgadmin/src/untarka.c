@@ -1,5 +1,5 @@
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "config_fgadmin.h"
 #endif
 
 #define DUMMY \
@@ -156,7 +156,7 @@ static char const* xZ_Error(struct Readable* self, int *errnum_ret) {
   return "lzw error";
 }
 
-#if HAVE_ZLIB
+#ifdef HAVE_ZLIB
 #include "zlib.h"
 /* #define xFILE gzFile */
 static int xGZ_Open4Read(struct Readable* self, char const* filename) { total_read=0; return NULL==(self->f=gzopen(filename,"rb")); }
@@ -165,7 +165,7 @@ static unsigned xGZ_Read(struct Readable* self, void* buf, unsigned len) { unsig
 static char const* xGZ_Error(struct Readable* self, int *errnum_ret) { return gzerror((gzFile)self->f, errnum_ret); }
 #endif
 
-#if HAVE_BZ2LIB
+#ifdef HAVE_BZ2LIB
 #include "bzlib.h"
 /* #define xFILE BZFILE* */
 static int xBZ2_Open4Read(struct Readable* self, char const* filename) { return NULL==(self->f=BZ2_bzopen(filename,"rb")); }
@@ -315,7 +315,7 @@ static int xOpen4Read(struct Readable *self, char const* filename) {
   if (5>fread(buf, 1, sizeof(buf), f)) return 2;
   if (0) {
   } else if (buf[0]==0102 && buf[1]==0132 && buf[2]==0150) {
-#if HAVE_BZ2LIB
+#ifdef HAVE_BZ2LIB
     fclose(f);
     self->xOpen4Read=xBZ2_Open4Read;
     self->xClose=xBZ2_Close;
@@ -326,7 +326,7 @@ static int xOpen4Read(struct Readable *self, char const* filename) {
     error("bzip2 compression not compiled in");
 #endif
   } else if (buf[0]==0037 && (buf[1]&255)==0213 && (buf[2]&255)<=8) {
-#if HAVE_ZLIB
+#ifdef HAVE_ZLIB
     fclose(f);
     self->xOpen4Read=xGZ_Open4Read;
     self->xClose=xGZ_Close;

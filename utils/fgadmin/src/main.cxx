@@ -20,21 +20,13 @@
 //
 // $Id$
 
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <string>
 #include <FL/Fl.H>
 #include <FL/filename.H>
-#include <string.h>
 #include "fgadmin.h"
 
-using std::string;
-
-string def_install_source;
-string def_scenery_dest;
+std::string def_install_source;
+std::string def_scenery_dest;
 bool silent = false;
 
 /**
