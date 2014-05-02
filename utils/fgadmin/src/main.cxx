@@ -21,6 +21,7 @@
 // $Id$
 
 #include <string>
+#include <cstring>
 #include <FL/Fl.H>
 #include <FL/filename.H>
 #include "fgadmin.h"
