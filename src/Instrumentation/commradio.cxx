@@ -380,7 +380,7 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
         _volume_norm(_rootNode->getNode("volume", true)),
         _atis(_rootNode->getNode("atis", true)),
         _addNoise(_rootNode->getNode("add-noise", true)),
-        _cutoffSignalQuality(_rootNode->getNode("cuttoff-signal-quality", true))
+        _cutoffSignalQuality(_rootNode->getNode("cutoff-signal-quality", true))
 {
 }
 
