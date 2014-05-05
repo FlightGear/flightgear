@@ -210,7 +210,7 @@ FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
     if (!path_str)
     {
         SG_LOG(SG_GENERAL, SG_WARN, "No path in " << stringNode->getPath() << "/" << resource << ".");
-        return NULL;
+        return false;
     }
 
     path.append(path_str);
