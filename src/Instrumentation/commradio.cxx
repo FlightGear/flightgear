@@ -85,7 +85,7 @@ AtisSpeaker::~AtisSpeaker()
 }
 void AtisSpeaker::valueChanged(SGPropertyNode * node)
 {
-  if( !fgGetBool("/sim/sound/working", false ) )
+  if (!fgGetBool("/sim/sound/working", false))
     return;
 
   string newText = node->getStringValue();
@@ -327,6 +327,11 @@ public:
   void unbind();
 
 private:
+  string getSampleGroupRefname() const
+  {
+    return _rootNode->getPath();
+  }
+
   int _num;
   MetarBridgeRef _metarBridge;
   #if defined(ENABLE_FLITE)
@@ -335,8 +340,6 @@ private:
   FrequencyFormatter _useFrequencyFormatter;
   FrequencyFormatter _stbyFrequencyFormatter;
   const SignalQualityComputerRef _signalQualityComputer;
-
-  string _sampleGroupRefName;
 
   double _stationTTL;
   double _frequency;
@@ -351,6 +354,7 @@ private:
   PropertyObject<double> _volume_norm;
   PropertyObject<string> _atis;
   PropertyObject<bool> _addNoise;
+  PropertyObject<double> _cutoffSignalQuality;
 };
 
 CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
@@ -365,7 +369,6 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
             _rootNode->getNode("frequencies/standby-mhz-fmt", true), 0.025, 118.0, 136.0),
 
         _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer(50 * SG_NM_TO_METER)),
-        _sampleGroupRefName(_rootNode->getPath()),
 
         _stationTTL(0.0),
         _frequency(-1.0),
@@ -376,7 +379,8 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
         _power_good(_rootNode->getNode("power-good", true)),
         _volume_norm(_rootNode->getNode("volume", true)),
         _atis(_rootNode->getNode("atis", true)),
-        _addNoise(_rootNode->getNode("add-noise", true))
+        _addNoise(_rootNode->getNode("add-noise", true)),
+        _cutoffSignalQuality(_rootNode->getNode("cuttoff-signal-quality", true))
 {
 }
 
@@ -401,8 +405,7 @@ void CommRadioImpl::unbind()
 #if defined(ENABLE_FLITE)
   _atis.node()->removeChangeListener(&_atisSpeaker);
   if (_sampleGroup.valid()) {
-    SG_LOG(SG_ALL, SG_ALERT, "Removing SampleGroup" <<_sampleGroupRefName);
-    globals->get_soundmgr()->remove(_sampleGroupRefName);
+    globals->get_soundmgr()->remove(getSampleGroupRefname());
   }
 #endif
   _metarBridge->unbind();
@@ -410,6 +413,13 @@ void CommRadioImpl::unbind()
 
 void CommRadioImpl::init()
 {
+  // initialize power_btn to true if unset
+  string s = _power_btn.node()->getStringValue();
+  if (s.empty()) _power_btn = true;
+
+  // initialize squelch to a sane value if unset
+  s = _cutoffSignalQuality.node()->getStringValue();
+  if (s.empty()) _cutoffSignalQuality = 0.4;
 }
 
 void CommRadioImpl::update(double dt)
@@ -430,34 +440,43 @@ void CommRadioImpl::update(double dt)
 
 #if defined(ENABLE_FLITE)
   {
-    const char * atisSampleRefName = "atis";
-    const char * noiseSampleRefName = "noise";
+    static const char * atisSampleRefName = "atis";
+    static const char * noiseSampleRefName = "noise";
 
     if (_atisSpeaker.hasSpokenAtis()) {
+      // the speaker has created a new atis sample
       if (!_sampleGroup.valid()) {
-        SG_LOG(SG_ALL, SG_ALERT, "Adding SampleGroup" <<_sampleGroupRefName);
-        _sampleGroup = globals->get_soundmgr()->find(_sampleGroupRefName, true);
+        // create a sample group for our instrument on the fly
+        _sampleGroup = globals->get_soundmgr()->find(getSampleGroupRefname(), true );
         _sampleGroup->tie_to_listener();
         if (_addNoise) {
-          SGSharedPtr<SGSoundSample> noise = new SGSoundSample("Sounds/rednoise.wav", globals->get_fg_root());
+          SGSharedPtr<SGSoundSample> noise = new SGSoundSample("Sounds/radionoise.wav", globals->get_fg_root());
           _sampleGroup->add(noise, noiseSampleRefName);
           _sampleGroup->play_looped(noiseSampleRefName);
         }
 
       }
+      // remove previous atis sample
       _sampleGroup->remove(atisSampleRefName);
+      // add and play the new atis sample
       SGSharedPtr<SGSoundSample> sample = _atisSpeaker.getSpokenAtis();
       _sampleGroup->add(sample, atisSampleRefName);
       _sampleGroup->play_looped(atisSampleRefName);
     }
+
     if (_sampleGroup.valid()) {
       if (_addNoise) {
-        SGSoundSample * s = _sampleGroup->find(atisSampleRefName);
-        s->set_volume(_signalQuality_norm);
-        s = _sampleGroup->find(noiseSampleRefName);
-        s->set_volume(1.0 - _signalQuality_norm);
+        // if noise is configured and there is a noise sample
+        // scale noise and signal volume by signalQuality.
+        SGSoundSample * s = _sampleGroup->find(noiseSampleRefName);
+        if ( NULL != s) {
+          s->set_volume(1.0 - _signalQuality_norm);
+          s = _sampleGroup->find(atisSampleRefName);
+          s->set_volume(_signalQuality_norm);
+        }
       }
-      _sampleGroup->set_volume(_volume_norm);
+      // master volume for radio, mute on bad signal quality
+      _sampleGroup->set_volume(_signalQuality_norm >= _cutoffSignalQuality ? _volume_norm : 0.0);
     }
   }
 #endif
