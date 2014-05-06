@@ -91,13 +91,10 @@ SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text)
 
   if ( FALSE == Flite_HTS_Engine_synthesize(_engine, text.c_str(), scratch.getName())) return NULL;
 
-  SG_LOG(SG_SOUND, SG_ALERT, "created wav at " << scratch.getPath());
-
   ALenum format;
   ALsizei size;
   ALfloat freqf;
   ALvoid * data = simgear::loadWAVFromFile(scratch.getPath(), format, size, freqf);
-  SG_LOG(SG_ALL, SG_ALERT, "loaded wav at " << freqf << "Hz size=" << size << " format=" << format);
 
   if (data == NULL) {
     SG_LOG(SG_SOUND, SG_ALERT, "Failed to load wav file " << scratch.getPath());

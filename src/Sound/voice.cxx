@@ -117,7 +117,6 @@ void FGVoiceMgr::init()
 void FGVoiceMgr::shutdown()
 {
 #if defined(ENABLE_THREADS)
-  SG_LOG(SG_ALL,SG_ALERT,"FGVoiceMgr::shutdown");
   if( _thread ) {
     _thread->cancel();
     _thread->join();

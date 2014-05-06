@@ -31,9 +31,7 @@ namespace Instrumentation {
 class SignalQualityComputer : public SGReferenced {
 public:
   virtual ~SignalQualityComputer();
-  virtual double computeSignalQuality( const SGGeod & sender, const SGGeod & receiver ) const = 0;
-  virtual double computeSignalQuality( const SGVec3d & sender, const SGVec3d & receiver ) const = 0;
-  virtual double computeSignalQuality( double slantDistanceM ) const = 0;
+  virtual double computeSignalQuality( double distance_nm ) const = 0;
 };
 
 typedef SGSharedPtr<SignalQualityComputer> SignalQualityComputerRef;

@@ -86,7 +86,7 @@ AtisSpeaker::~AtisSpeaker()
 void AtisSpeaker::valueChanged(SGPropertyNode * node)
 {
   if (!fgGetBool("/sim/sound/working", false))
-    return;
+  return;
 
   string newText = node->getStringValue();
   if (_synthesizeRequest.text == newText) return;
@@ -115,32 +115,27 @@ SignalQualityComputer::~SignalQualityComputer()
 
 class SimpleDistanceSquareSignalQualityComputer: public SignalQualityComputer {
 public:
-  SimpleDistanceSquareSignalQualityComputer(double range)
-      : _rangeM(range), _rangeM2(range * range)
+  SimpleDistanceSquareSignalQualityComputer()
+      : _altitudeAgl_ft(fgGetNode("/position/altitude-agl-ft", true))
   {
   }
-  virtual double computeSignalQuality(const SGGeod & sender, const SGGeod & receiver) const;
-  virtual double computeSignalQuality(const SGVec3d & sender, const SGVec3d & receiver) const;
-  virtual double computeSignalQuality(double slantDistanceM) const;
-  private:
-  double _rangeM;
-  double _rangeM2;
+
+  ~SimpleDistanceSquareSignalQualityComputer()
+  {
+  }
+
+  double computeSignalQuality(double distance_nm) const
+  {
+    // Very simple line of sight propagation model. It's cheap but it does the trick for now.
+    // assume transmitter and receiver antennas are at some elevation above ground
+    // so we have at least a range of 5NM. Add the approx. distance to the horizon.
+    double range_nm = 5.0 + 1.23 * ::sqrt(SGMiscd::max(.0, _altitudeAgl_ft));
+    return distance_nm < range_nm ? 1.0 : (range_nm * range_nm / distance_nm / distance_nm);
+  }
+
+private:
+  PropertyObject<double> _altitudeAgl_ft;
 };
-
-double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality(const SGVec3d & sender, const SGVec3d & receiver) const
-    {
-  return computeSignalQuality(dist(sender, receiver));
-}
-
-double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality(const SGGeod & sender, const SGGeod & receiver) const
-    {
-  return computeSignalQuality(SGGeodesy::distanceM(sender, receiver));
-}
-
-double SimpleDistanceSquareSignalQualityComputer::computeSignalQuality(double distanceM) const
-    {
-  return distanceM < _rangeM ? 1.0 : (_rangeM2 / (distanceM * distanceM));
-}
 
 class OnExitHandler {
 public:
@@ -368,7 +363,7 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
         _stbyFrequencyFormatter(_rootNode->getNode("frequencies/standby-mhz", true),
             _rootNode->getNode("frequencies/standby-mhz-fmt", true), 0.025, 118.0, 136.0),
 
-        _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer(50 * SG_NM_TO_METER)),
+        _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer()),
 
         _stationTTL(0.0),
         _frequency(-1.0),
@@ -420,6 +415,10 @@ void CommRadioImpl::init()
   // initialize squelch to a sane value if unset
   s = _cutoffSignalQuality.node()->getStringValue();
   if (s.empty()) _cutoffSignalQuality = 0.4;
+
+  // initialize add-noize to true if unset
+  s = _addNoise.node()->getStringValue();
+  if (s.empty()) _addNoise = true;
 }
 
 void CommRadioImpl::update(double dt)
@@ -447,7 +446,7 @@ void CommRadioImpl::update(double dt)
       // the speaker has created a new atis sample
       if (!_sampleGroup.valid()) {
         // create a sample group for our instrument on the fly
-        _sampleGroup = globals->get_soundmgr()->find(getSampleGroupRefname(), true );
+        _sampleGroup = globals->get_soundmgr()->find(getSampleGroupRefname(), true);
         _sampleGroup->tie_to_listener();
         if (_addNoise) {
           SGSharedPtr<SGSoundSample> noise = new SGSoundSample("Sounds/radionoise.wav", globals->get_fg_root());
@@ -509,7 +508,7 @@ void CommRadioImpl::update(double dt)
 
   _heightAboveStation_ft = SGMiscd::max(0.0, position.getElevationFt() - _commStationForFrequency->airport()->elevation());
 
-  _signalQuality_norm = _signalQualityComputer->computeSignalQuality(_slantDistance_m);
+  _signalQuality_norm = _signalQualityComputer->computeSignalQuality(_slantDistance_m * SG_METER_TO_NM );
   _stationType = _commStationForFrequency->nameForType(_commStationForFrequency->type());
   _stationName = _commStationForFrequency->ident();
   _airportId = _commStationForFrequency->airport()->getId();
