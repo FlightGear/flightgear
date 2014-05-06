@@ -37,8 +37,8 @@
 #include <boost/lexical_cast.hpp>
 
 class DesktopGroup;
-typedef boost::shared_ptr<DesktopGroup> DesktopPtr;
-typedef boost::weak_ptr<DesktopGroup> DesktopWeakPtr;
+typedef SGSharedPtr<DesktopGroup> DesktopPtr;
+typedef SGWeakPtr<DesktopGroup> DesktopWeakPtr;
 
 /**
  * Event handler
@@ -288,9 +288,11 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     assert(element->getUserData());
 
     canvas::WindowPtr window =
-      boost::dynamic_pointer_cast<canvas::Window>
+      dynamic_cast<canvas::Window*>
       (
-        static_cast<sc::Element::OSGUserData*>(element->getUserData())->element
+        static_cast<sc::Element::OSGUserData*>(
+          element->getUserData()
+        )->element.get()
       );
 
     if( !window || !window->isCapturingEvents() || !window->isVisible() )

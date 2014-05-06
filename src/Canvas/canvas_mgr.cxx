@@ -138,6 +138,5 @@ CanvasMgr::getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const
 void CanvasMgr::handleModelReinit(SGPropertyNode*)
 {
   for(size_t i = 0; i < _elements.size(); ++i)
-    boost::static_pointer_cast<sc::Canvas>(_elements[i])
-      ->reloadPlacements("object");
+    static_cast<sc::Canvas*>(_elements[i].get())->reloadPlacements("object");
 }

@@ -19,14 +19,13 @@
 #ifndef CANVAS_FWD_HPP_
 #define CANVAS_FWD_HPP_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
+#include <simgear/structure/SGSharedPtr.hxx>
 
 namespace canvas
 {
   class Window;
-  typedef boost::shared_ptr<Window> WindowPtr;
-  typedef boost::weak_ptr<Window> WindowWeakPtr;
+  typedef SGSharedPtr<Window> WindowPtr;
+  typedef SGWeakPtr<Window> WindowWeakPtr;
 }
 
 #endif /* CANVAS_FWD_HPP_ */
