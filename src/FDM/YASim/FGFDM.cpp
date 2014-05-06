@@ -436,6 +436,15 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	b[2] = attrf(a, "bz");
         float taper = attrf(a, "taper", 1);
         float mid = attrf(a, "midpoint", 0.5);
+	if (_airplane.isVersionOrNewer(Version::YASIM_VERSION_32)) {
+	    // A fuselage's "midpoint" XML attribute is defined from the
+            // fuselage's front end, but the Fuselage object's internal
+            // "mid" attribute is actually defined from the rear end.
+	    // Thus YASim's original interpretation of "midpoint" was wrong.
+            // Complement the "midpoint" value to ensure the fuselage
+            // points the right way.
+	    mid = 1 - mid;
+	}
         float cx = attrf(a, "cx", 1);
         float cy = attrf(a, "cy", 1);
         float cz = attrf(a, "cz", 1);

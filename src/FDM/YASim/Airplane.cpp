@@ -530,8 +530,15 @@ float Airplane::compileFuselage(Fuselage* f)
         float scale = 1;
         if(frac < f->mid)
             scale = f->taper+(1-f->taper) * (frac / f->mid);
-        else
-            scale = f->taper+(1-f->taper) * (frac - f->mid) / (1 - f->mid);
+        else {
+	    if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+		// Correct calculation of width for fuselage taper.
+		scale = 1 - (1-f->taper) * (frac - f->mid) / (1 - f->mid);
+	    } else {
+		// Original, incorrect calculation of width for fuselage taper.
+		scale = f->taper+(1-f->taper) * (frac - f->mid) / (1 - f->mid);
+	    }
+	}
 
         // Where are we?
         float pos[3];
