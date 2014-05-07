@@ -91,7 +91,6 @@ private:
   SynthesizeRequestList _requests;
 
   double _volume;
-  bool   _keepScratchFile;
 };
 
 #endif /* VOICESYNTHESIZER_HXX_ */

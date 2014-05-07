@@ -63,6 +63,12 @@
 
 #include "flite_hts_engine.h"
 
+/* HTS_GStreamSet_get_total_nsamples: get total number of sample */
+size_t HTS_GStreamSet_get_total_nsamples(HTS_GStreamSet * gss);
+
+/* HTS_GStreamSet_get_speech: get synthesized speech parameter */
+double HTS_GStreamSet_get_speech(HTS_GStreamSet * gss, size_t sample_index);
+
 #define REGISTER_VOX register_cmu_us_kal
 #define UNREGISTER_VOX unregister_cmu_us_kal
 
@@ -242,6 +248,65 @@ HTS_Boolean Flite_HTS_Engine_synthesize(Flite_HTS_Engine * f, const char *txt, c
 
    return TRUE;
 }
+
+/* Flite_HTS_Engine_synthesize: synthesize speech */
+HTS_Boolean Flite_HTS_Engine_synthesize_samples_mono16(Flite_HTS_Engine * f, const char *txt,
+                                                void** samples, int* sampleCount, int* sampleRate)
+{
+    int i;
+    cst_voice *v = NULL;
+    cst_utterance *u = NULL;
+    cst_item *s = NULL;
+    char **label_data = NULL;
+    int label_size = 0;
+    short* samplePtr = NULL;
+    HTS_GStreamSet *gss;
+    
+    if (txt == NULL)
+        return FALSE;
+    
+    /* text analysis part */
+    v = REGISTER_VOX(NULL);
+    if (v == NULL)
+        return FALSE;
+    u = flite_synth_text(txt, v);
+    if (u == NULL)
+        return FALSE;
+    for (s = relation_head(utt_relation(u, "Segment")); s; s = item_next(s))
+        label_size++;
+    if (label_size <= 0)
+        return FALSE;
+    label_data = (char **) calloc(label_size, sizeof(char *));
+    for (i = 0, s = relation_head(utt_relation(u, "Segment")); s; s = item_next(s), i++) {
+        label_data[i] = (char *) calloc(MAXBUFLEN, sizeof(char));
+        Flite_HTS_Engine_create_label(f, s, label_data[i]);
+    }
+    
+    /* speech synthesis part */
+    HTS_Engine_synthesize_from_strings(&f->engine, label_data, label_size);
+    
+    gss = &f->engine.gss;
+    *sampleRate = f->engine.condition.sampling_frequency;
+    *sampleCount = HTS_GStreamSet_get_total_nsamples(gss);
+    *samples = malloc(sizeof(short) * *sampleCount);
+    samplePtr = *samples;
+    
+    for (i=0; i < *sampleCount; ++i) {
+        *samplePtr++ = (short) HTS_GStreamSet_get_speech(gss, i);
+    }
+    
+    HTS_Engine_refresh(&f->engine);
+    
+    for (i = 0; i < label_size; i++)
+        free(label_data[i]);
+    free(label_data);
+    
+    delete_utterance(u);
+    UNREGISTER_VOX(v);
+    
+    return TRUE;
+}
+
 
 /* Flite_HTS_Engine_clear: free system */
 void Flite_HTS_Engine_clear(Flite_HTS_Engine * f)

@@ -97,6 +97,9 @@ void Flite_HTS_Engine_set_speed(Flite_HTS_Engine * engine, double f);
 /* Flite_HTS_Engine_synthesize: synthesize speech */
 HTS_Boolean Flite_HTS_Engine_synthesize(Flite_HTS_Engine * f, const char *txt, const char *wav);
 
+HTS_Boolean Flite_HTS_Engine_synthesize_samples_mono16(Flite_HTS_Engine * f, const char *txt,
+                                                       void** samples, int* sampleCount, int* sampleRate);
+
 /* Flite_HTS_Engine_clear: free system */
 void Flite_HTS_Engine_clear(Flite_HTS_Engine * f);
 

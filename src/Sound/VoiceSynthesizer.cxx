@@ -26,32 +26,6 @@
 #include <OpenThreads/Thread>
 #include <flite_hts_engine.h>
 
-class ScopedTempfile {
-public:
-  ScopedTempfile( bool keep = false ) : _keep(keep)
-  {
-    _name = ::tempnam(globals->get_fg_home().c_str(), "fgvox");
-
-  }
-  ~ScopedTempfile()
-  {
-    if (_name && !_keep) ::unlink(_name);
-    ::free(_name);
-  }
-
-  const char * getName() const
-  {
-    return _name;
-  }
-  SGPath getPath()
-  {
-    return SGPath(_name);
-  }
-private:
-  char * _name;
-  bool _keep;
-};
-
 class FLITEVoiceSynthesizer::WorkerThread: public OpenThreads::Thread {
 public:
   WorkerThread(FLITEVoiceSynthesizer * synthesizer)
@@ -80,10 +54,9 @@ void FLITEVoiceSynthesizer::synthesize( SynthesizeRequest & request)
 }
 
 FLITEVoiceSynthesizer::FLITEVoiceSynthesizer(const std::string & voice)
-    : _engine(new Flite_HTS_Engine), _worker(new FLITEVoiceSynthesizer::WorkerThread(this)), _volume(6.0), _keepScratchFile(false)
+    : _engine(new Flite_HTS_Engine), _worker(new FLITEVoiceSynthesizer::WorkerThread(this)), _volume(6.0)
 {
   _volume = fgGetDouble("/sim/sound/voice-synthesizer/volume", _volume );
-  _keepScratchFile = fgGetBool("/sim/sound/voice-synthesizer/keep-scratch-file", _keepScratchFile);
   Flite_HTS_Engine_initialize(_engine);
   Flite_HTS_Engine_load(_engine, voice.c_str());
   _worker->start();
@@ -98,8 +71,6 @@ FLITEVoiceSynthesizer::~FLITEVoiceSynthesizer()
 
 SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text, double volume, double speed, double pitch )
 {
-  ScopedTempfile scratch(_keepScratchFile);
-
   SG_CLAMP_RANGE( volume, 0.0, 1.0 );
   SG_CLAMP_RANGE( speed, 0.0, 1.0 );
   SG_CLAMP_RANGE( pitch, 0.0, 1.0 );
@@ -107,22 +78,14 @@ SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text, doub
   HTS_Engine_set_speed( &_engine->engine, 0.8 + 0.4 * speed );
   HTS_Engine_add_half_tone(&_engine->engine, -4.0 + 8.0 * pitch );
 
-  if ( FALSE == Flite_HTS_Engine_synthesize(_engine, text.c_str(), scratch.getName())) return NULL;
+    
+  ALvoid* data;
+  ALsizei rate, count;
+  if ( FALSE == Flite_HTS_Engine_synthesize_samples_mono16(_engine, text.c_str(), &data, &count, &rate)) return NULL;
 
-  ALenum format;
-  ALsizei size;
-  ALfloat freqf;
-  ALvoid * data = simgear::loadWAVFromFile(scratch.getPath(), format, size, freqf);
-
-  if (data == NULL) {
-    SG_LOG(SG_SOUND, SG_ALERT, "Failed to load wav file " << scratch.getPath());
-  }
-
-  if (format == AL_FORMAT_STEREO8 || format == AL_FORMAT_STEREO16) {
-    free(data);
-    SG_LOG(SG_SOUND, SG_ALERT, "Warning: STEREO files are not supported for 3D audio effects: " << scratch.getPath());
-  }
-
-  return new SGSoundSample(&data, size, (ALsizei) freqf, format);
+  return new SGSoundSample(&data,
+                           count * sizeof(short),
+                           rate,
+                           AL_FORMAT_MONO16);
 }
 
