@@ -93,19 +93,18 @@ void FGVoiceMgr::init()
     SGPropertyNode_ptr voice = voices[i];
     if( voice->getBoolValue("festival", false ) ) {
       try {
-        SG_LOG(SG_ALL,SG_ALERT,"creating festival voice" );
         _voices.push_back(new FGFestivalVoice(this, voice));
+        continue;
       } catch (const std::string& s) {
-        SG_LOG(SG_SOUND, SG_ALERT, "VOICE: " << s);
+        SG_LOG(SG_SOUND, SG_WARN, "failed to create festival voice, falling back to flite voice" );
       }
-    } else {
-#if defined(ENABLE_FLITE)
-      SG_LOG(SG_ALL,SG_ALERT,"creating flite voice" );
-      _voices.push_back(new FGFLITEVoice(this, voice));
-#else
-      SG_LOG(SG_ALL,SG_ALERT,"non festival voice not supported." );
-#endif
     }
+#if defined(ENABLE_FLITE)
+    SG_LOG(SG_ALL,SG_INFO,"creating flite voice" );
+    _voices.push_back(new FGFLITEVoice(this, voice));
+#else
+    SG_LOG(SG_ALL,SG_ALERT,"non festival voice not supported." );
+#endif
   }
 
 #if defined(ENABLE_THREADS)

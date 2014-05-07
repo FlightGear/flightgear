@@ -25,21 +25,25 @@
 
 #include "voice.hxx"
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/threads/SGQueue.hxx>
 
 class VoiceSynthesizer;
 
 class FGFLITEVoice: public FGVoiceMgr::FGVoice {
 public:
-  FGFLITEVoice(FGVoiceMgr *, const SGPropertyNode_ptr);
+  FGFLITEVoice(FGVoiceMgr *, const SGPropertyNode_ptr, const char * sampleGroupRefName = "flite-voice");
   virtual ~FGFLITEVoice();
   virtual void speak(const std::string & msg);
   virtual void update();
+
 private:
   FGFLITEVoice(const FGFLITEVoice & other);
   FGFLITEVoice & operator =(const FGFLITEVoice & other);
 
   SGSharedPtr<SGSampleGroup> _sgr;
   VoiceSynthesizer * _synthesizer;
+  SGLockedQueue<SGSharedPtr<SGSoundSample> > _sampleQueue;
+  std::string _sampleName;
 };
 
 #endif // _FLITEVOICE_HXX
