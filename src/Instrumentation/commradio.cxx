@@ -75,13 +75,27 @@ public:
     _stationId = stationId;
   }
 
+  void setVoice(const string & voice)
+  {
+    _voice = voice;
+  }
+
+  const string & getVoice() const
+  {
+    return _voice;
+  }
+
 private:
   SynthesizeRequest _synthesizeRequest;
   SGLockedQueue<SGSharedPtr<SGSoundSample> > _spokenAtis;
   string _stationId;
+  string _voice;
 };
 
 AtisSpeaker::AtisSpeaker()
+ :
+    _voice("/ATC/cmu_us_arctic_slt.htsvoice")
+//    _voice("/ATC/cstr_uk_female-1.0.htsvoice")
 {
   _synthesizeRequest.listener = this;
 }
@@ -115,7 +129,7 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
   FGSoundManager * smgr = dynamic_cast<FGSoundManager*>(globals->get_soundmgr());
   assert(smgr != NULL);
 
-  string voice = globals->get_fg_root() + "/ATC/cmu_us_arctic_slt.htsvoice";
+  string voice = globals->get_fg_root() + _voice;
   FLITEVoiceSynthesizer * synthesizer = dynamic_cast<FLITEVoiceSynthesizer*>(smgr->getSynthesizer(voice));
 
   synthesizer->synthesize(_synthesizeRequest);
