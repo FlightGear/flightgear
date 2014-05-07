@@ -546,7 +546,9 @@ void CommRadioImpl::update(double dt)
   _stationName = _commStationForFrequency->ident();
   _airportId = _commStationForFrequency->airport()->getId();
 
+#if defined(ENABLE_FLITE)
   _atisSpeaker.setStationId(_airportId);
+#endif
   switch (_commStationForFrequency->type()) {
     case FGPositioned::FREQ_ATIS:
       case FGPositioned::FREQ_AWOS: {
