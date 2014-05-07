@@ -19,6 +19,7 @@
 #include "VoiceSynthesizer.hxx"
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sound/readwav.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -67,7 +68,7 @@ void FLITEVoiceSynthesizer::WorkerThread::run()
   for (;;) {
     SynthesizeRequest request = _synthesizer->_requests.pop();
     if ( NULL != request.listener) {
-      SGSharedPtr<SGSoundSample> sample = _synthesizer->synthesize(request.text);
+      SGSharedPtr<SGSoundSample> sample = _synthesizer->synthesize(request.text, request.volume, request.speed, request.pitch);
       request.listener->SoundSampleReady( sample );
     }
   }
@@ -95,10 +96,16 @@ FLITEVoiceSynthesizer::~FLITEVoiceSynthesizer()
   Flite_HTS_Engine_clear(_engine);
 }
 
-SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text)
+SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text, double volume, double speed, double pitch )
 {
   ScopedTempfile scratch(_keepScratchFile);
+
+  SG_CLAMP_RANGE( volume, 0.0, 1.0 );
+  SG_CLAMP_RANGE( speed, 0.0, 1.0 );
+  SG_CLAMP_RANGE( pitch, 0.0, 1.0 );
   HTS_Engine_set_volume( &_engine->engine, _volume );
+  HTS_Engine_set_speed( &_engine->engine, 0.8 + 0.4 * speed );
+  HTS_Engine_add_half_tone(&_engine->engine, -4.0 + 8.0 * pitch );
 
   if ( FALSE == Flite_HTS_Engine_synthesize(_engine, text.c_str(), scratch.getName())) return NULL;
 

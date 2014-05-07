@@ -61,7 +61,7 @@ void FGFLITEVoice::speak(const string & msg)
 
   string s = simgear::strutils::strip( msg );
   if( false == s.empty() ) {
-    SGSoundSample * sample = _synthesizer->synthesize( msg );
+    SGSoundSample * sample = _synthesizer->synthesize( msg, 1.0, 0.5, 0.5 );
     _sgr->add(sample, "flite");
     _sgr->set_volume(1.0);
     _sgr->resume();

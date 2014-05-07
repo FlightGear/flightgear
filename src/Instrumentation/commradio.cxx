@@ -69,9 +69,16 @@ public:
   {
     return _spokenAtis.pop();
   }
+
+  void setStationId(const string & stationId)
+  {
+    _stationId = stationId;
+  }
+
 private:
   SynthesizeRequest _synthesizeRequest;
   SGLockedQueue<SGSharedPtr<SGSoundSample> > _spokenAtis;
+  string _stationId;
 };
 
 AtisSpeaker::AtisSpeaker()
@@ -92,6 +99,18 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
   if (_synthesizeRequest.text == newText) return;
 
   _synthesizeRequest.text = newText;
+
+  if (!_stationId.empty()) {
+    // lets play a bit with the voice so not every airports atis sounds alike
+    // but every atis of an airport has the same voice
+
+    string::iterator i = _stationId.end() - 1;
+    if( i != _stationId.begin() )
+      --i;
+
+    _synthesizeRequest.speed = ((*i) % 16) / 16.0;
+    _synthesizeRequest.pitch = ((*i) % 16) / 16.0;
+  }
 
   FGSoundManager * smgr = dynamic_cast<FGSoundManager*>(globals->get_soundmgr());
   assert(smgr != NULL);
@@ -508,11 +527,12 @@ void CommRadioImpl::update(double dt)
 
   _heightAboveStation_ft = SGMiscd::max(0.0, position.getElevationFt() - _commStationForFrequency->airport()->elevation());
 
-  _signalQuality_norm = _signalQualityComputer->computeSignalQuality(_slantDistance_m * SG_METER_TO_NM );
+  _signalQuality_norm = _signalQualityComputer->computeSignalQuality(_slantDistance_m * SG_METER_TO_NM);
   _stationType = _commStationForFrequency->nameForType(_commStationForFrequency->type());
   _stationName = _commStationForFrequency->ident();
   _airportId = _commStationForFrequency->airport()->getId();
 
+  _atisSpeaker.setStationId(_airportId);
   switch (_commStationForFrequency->type()) {
     case FGPositioned::FREQ_ATIS:
       case FGPositioned::FREQ_AWOS: {

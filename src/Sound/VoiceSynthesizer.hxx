@@ -31,7 +31,7 @@ struct _Flite_HTS_Engine;
 class VoiceSynthesizer {
 public:
   virtual ~VoiceSynthesizer() {};
-  virtual SGSoundSample * synthesize( const std::string & text ) = 0;
+  virtual SGSoundSample * synthesize( const std::string & text, double volume, double speed, double pitch ) = 0;
 };
 
 class SoundSampleReadyListener {
@@ -42,7 +42,9 @@ public:
 
 struct SynthesizeRequest {
   SynthesizeRequest() {
-    speed = volume = pitch = 1.0;
+    speed = 0.5;
+    volume = 1.0;
+    pitch = 0.5;
     listener = NULL;
   }
   SynthesizeRequest( const SynthesizeRequest & other ) {
@@ -76,7 +78,7 @@ class FLITEVoiceSynthesizer : public VoiceSynthesizer {
 public:
   FLITEVoiceSynthesizer( const std::string & voice );
   ~FLITEVoiceSynthesizer();
-  virtual SGSoundSample * synthesize( const std::string & text );
+  virtual SGSoundSample * synthesize( const std::string & text, double volume, double speed, double pitch  );
 
   virtual void synthesize( SynthesizeRequest & request );
 private:
