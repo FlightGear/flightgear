@@ -1118,8 +1118,8 @@ parse_fgdata (struct fgdata *data, char *buf)
 {
   char *data_pair = NULL;
   char *fields[2];
-  fields[0] = '\0';
-  fields[1] = '\0';
+  fields[0] = NULL;
+  fields[1] = NULL;
   SG_LOG( SG_GENERAL, SG_DEBUG, "Parsing data: [" << buf << "]" );
   /* Parse data from FG */
   data_pair = strtok (buf, ",");
