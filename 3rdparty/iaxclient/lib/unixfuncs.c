@@ -20,15 +20,15 @@
 #include <time.h>
 #include "iaxclient_lib.h"
 
-//#if (!defined(_MSC_VER) && !defined(HAVE_SYS_TIME_H))
-#define HAVE_SYS_TIME_H 1
-//#endif 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
 #else
-# if HAVE_SYS_TIME_H
+# ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
 # else
 #  include <time.h>
