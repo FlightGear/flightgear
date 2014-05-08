@@ -577,6 +577,7 @@ float Airplane::compileFuselage(Fuselage* f)
         s->setOrientation(o);
 
         _model.addSurface(s);
+        f->surfs.add(s);
         _surfs.add(s);
     }
     return wgt;
@@ -914,9 +915,21 @@ void Airplane::applyDragFactor(float factor)
 	Wing* w = (Wing*)_vstabs.get(i);
 	w->setDragScale(w->getDragScale() * applied);
     }
-    for(i=0; i<_surfs.size(); i++) {
-	Surface* s = (Surface*)_surfs.get(i);
-	s->setTotalDrag(s->getTotalDrag() * applied);
+    for(i=0; i<_fuselages.size(); i++) {
+	Fuselage* f = (Fuselage*)_fuselages.get(i);
+	int j;
+	for(j=0; j<f->surfs.size(); j++) {
+	    Surface* s = (Surface*)f->surfs.get(j);
+	    s->setTotalDrag(s->getTotalDrag() * applied);
+	}
+    }
+    for(i=0; i<_weights.size(); i++) {
+	WeightRec* wr = (WeightRec*)_weights.get(i);
+	wr->surf->setTotalDrag(wr->surf->getTotalDrag() * applied);
+    }
+    for(i=0; i<_gears.size(); i++) {
+	GearRec* gr = (GearRec*)_gears.get(i);
+	gr->surf->setTotalDrag(gr->surf->getTotalDrag() * applied);
     }
 }
 

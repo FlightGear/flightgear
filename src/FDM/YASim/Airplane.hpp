@@ -98,7 +98,8 @@ public:
 private:
     struct Tank { float pos[3]; float cap; float fill;
 	          float density; int handle; };
-    struct Fuselage { float front[3], back[3], width, taper, mid, _cx, _cy, _cz, _idrag; };
+    struct Fuselage { float front[3], back[3], width, taper, mid, _cx, _cy, _cz, _idrag;
+		      Vector surfs; };
     struct GearRec { Gear* gear; Surface* surf; float wgt; };
     struct ThrustRec { Thruster* thruster;
 	               int handle; float cg[3]; float mass; };
