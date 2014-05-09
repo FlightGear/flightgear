@@ -19,8 +19,6 @@
 #ifndef CANVAS_GUI_MGR_HXX_
 #define CANVAS_GUI_MGR_HXX_
 
-#include "canvas_fwd.hpp"
-
 #include <simgear/canvas/canvas_fwd.hxx>
 #include <simgear/canvas/elements/CanvasGroup.hxx>
 #include <simgear/props/PropertyBasedMgr.hxx>
@@ -42,7 +40,7 @@ class GUIMgr:
   public:
     GUIMgr();
 
-    canvas::WindowPtr createWindow(const std::string& name = "");
+    simgear::canvas::WindowPtr createWindow(const std::string& name = "");
 
     virtual void init();
     virtual void shutdown();

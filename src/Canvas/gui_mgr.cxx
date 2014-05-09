@@ -17,7 +17,6 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "gui_mgr.hxx"
-#include <Canvas/window.hxx>
 
 #include <Main/fg_os.hxx>
 #include <Main/fg_props.hxx>
@@ -27,6 +26,7 @@
 
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/CanvasPlacement.hxx>
+#include <simgear/canvas/CanvasWindow.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 
 #include <osg/BlendFunc>
@@ -39,6 +39,8 @@
 class DesktopGroup;
 typedef SGSharedPtr<DesktopGroup> DesktopPtr;
 typedef SGWeakPtr<DesktopGroup> DesktopWeakPtr;
+
+namespace sc = simgear::canvas;
 
 /**
  * Event handler
@@ -62,12 +64,12 @@ class GUIEventHandler:
  * Track a canvas placement on a window
  */
 class WindowPlacement:
-  public simgear::canvas::Placement
+  public sc::Placement
 {
   public:
     WindowPlacement( SGPropertyNode* node,
-                     canvas::WindowPtr window,
-                     simgear::canvas::CanvasPtr canvas ):
+                     sc::WindowPtr window,
+                     sc::CanvasPtr canvas ):
       Placement(node),
       _window(window),
       _canvas(canvas)
@@ -78,23 +80,23 @@ class WindowPlacement:
      */
     virtual ~WindowPlacement()
     {
-      canvas::WindowPtr window = _window.lock();
-      simgear::canvas::CanvasPtr canvas = _canvas.lock();
+      sc::WindowPtr window = _window.lock();
+      sc::CanvasPtr canvas = _canvas.lock();
 
       if( window && canvas && canvas == window->getCanvasContent().lock() )
-        window->setCanvasContent( simgear::canvas::CanvasPtr() );
+        window->setCanvasContent( sc::CanvasPtr() );
     }
 
   private:
-    canvas::WindowWeakPtr _window;
-    simgear::canvas::CanvasWeakPtr _canvas;
+    sc::WindowWeakPtr _window;
+    sc::CanvasWeakPtr _canvas;
 };
 
 /**
  * Desktop root group
  */
 class DesktopGroup:
-  public simgear::canvas::Group
+  public sc::Group
 {
   public:
     DesktopGroup();
@@ -110,9 +112,9 @@ class DesktopGroup:
     simgear::PropertyObject<int>        _width,
                                         _height;
 
-    canvas::WindowWeakPtr _last_push,
-                          _last_mouse_over,
-                          _resize_window;
+    sc::WindowWeakPtr _last_push,
+                      _last_mouse_over,
+                      _resize_window;
     uint8_t _resize;
     int     _last_cursor;
 
@@ -128,11 +130,11 @@ class DesktopGroup:
     /**
      *
      */
-    simgear::canvas::ElementFactory
+    sc::ElementFactory
     getChildFactory(const std::string& type) const
     {
       if( type == "window" )
-        return &Element::create<canvas::Window>;
+        return &Element::create<sc::Window>;
 
       return Group::getChildFactory(type);
     }
@@ -160,14 +162,14 @@ bool GUIEventHandler::handle( const osgGA::GUIEventAdapter& ea,
 
 //------------------------------------------------------------------------------
 DesktopGroup::DesktopGroup():
-  Group(simgear::canvas::CanvasPtr(), fgGetNode("/sim/gui/canvas", true)),
+  Group(sc::CanvasPtr(), fgGetNode("/sim/gui/canvas", true)),
   _cb_mouse_mode( this,
                   &DesktopGroup::handleMouseMode,
                   fgGetNode("/devices/status/mice/mouse[0]/mode") ),
   _handle_events(true),
   _width(_node, "size[0]"),
   _height(_node, "size[1]"),
-  _resize(canvas::Window::NONE),
+  _resize(sc::Window::NONE),
   _last_cursor(MOUSE_CURSOR_NONE),
   _last_x(-1),
   _last_y(-1),
@@ -267,7 +269,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     switch( ea.getEventType() )
     {
       case osgGA::GUIEventAdapter::RELEASE:
-        _resize_window.lock()->handleResize(canvas::Window::NONE);
+        _resize_window.lock()->handleResize(sc::Window::NONE);
         _resize_window.reset();
         break;
       case osgGA::GUIEventAdapter::DRAG:
@@ -279,7 +281,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     }
   }
 
-  canvas::WindowPtr window_at_cursor;
+  sc::WindowPtr window_at_cursor;
   for( int i = _transform->getNumChildren() - 1; i >= 0; --i )
   {
     osg::Group *element = _transform->getChild(i)->asGroup();
@@ -287,8 +289,8 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     assert(element);
     assert(element->getUserData());
 
-    canvas::WindowPtr window =
-      dynamic_cast<canvas::Window*>
+    sc::WindowPtr window =
+      dynamic_cast<sc::Window*>
       (
         static_cast<sc::Element::OSGUserData*>(
           element->getUserData()
@@ -327,14 +329,14 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
       _resize = 0;
 
       if( event->getScreenX() <= reg.l() + resize_corner )
-        _resize |= canvas::Window::LEFT;
+        _resize |= sc::Window::LEFT;
       else if( event->getScreenX() >= reg.r() - resize_corner )
-        _resize |= canvas::Window::RIGHT;
+        _resize |= sc::Window::RIGHT;
 
       if( event->getScreenY() <= reg.t() + resize_corner )
-        _resize |= canvas::Window::TOP;
+        _resize |= sc::Window::TOP;
       else if( event->getScreenY() >= reg.b() - resize_corner )
-        _resize |= canvas::Window::BOTTOM;
+        _resize |= sc::Window::BOTTOM;
 
       static const int cursor_mapping[] =
       {
@@ -354,7 +356,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
         _drag_start = event->screen_pos;
 
         window_at_cursor->raise();
-        window_at_cursor->handleResize(_resize | canvas::Window::INIT);
+        window_at_cursor->handleResize(_resize | sc::Window::INIT);
       }
 
       return true;
@@ -368,7 +370,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     return true;
   }
 
-  canvas::WindowPtr target_window = window_at_cursor;
+  sc::WindowPtr target_window = window_at_cursor;
   switch( ea.getEventType() )
   {
     case osgGA::GUIEventAdapter::PUSH:
@@ -399,7 +401,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
       break;
     case osgGA::GUIEventAdapter::MOVE:
     {
-      canvas::WindowPtr last_mouse_over = _last_mouse_over.lock();
+      sc::WindowPtr last_mouse_over = _last_mouse_over.lock();
       if( last_mouse_over != window_at_cursor && last_mouse_over )
       {
         sc::MouseEventPtr move_event( new sc::MouseEvent(*event) );
@@ -417,7 +419,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     {
       event->type = sc::Event::MOUSE_UP;
 
-      canvas::WindowPtr last_push = _last_push.lock();
+      sc::WindowPtr last_push = _last_push.lock();
       _last_push.reset();
 
       if( last_push && last_push != target_window )
@@ -484,9 +486,9 @@ GUIMgr::GUIMgr()
 }
 
 //------------------------------------------------------------------------------
-canvas::WindowPtr GUIMgr::createWindow(const std::string& name)
+sc::WindowPtr GUIMgr::createWindow(const std::string& name)
 {
-  canvas::WindowPtr window = _desktop->createChild<canvas::Window>(name);
+  sc::WindowPtr window = _desktop->createChild<sc::Window>(name);
   if( name.empty() )
     window->set<std::string>
     (
@@ -516,7 +518,7 @@ void GUIMgr::init()
          // GUI is on top of everything so lets install as first event handler
          .push_front( _event_handler );
 
-  simgear::canvas::Canvas::addPlacementFactory
+  sc::Canvas::addPlacementFactory
   (
     "window",
     boost::bind(&GUIMgr::addWindowPlacement, this, _1, _2)
@@ -530,7 +532,7 @@ void GUIMgr::shutdown()
 {
   _desktop->destroy();
   _desktop.reset();
-  simgear::canvas::Canvas::removePlacementFactory("window");
+  sc::Canvas::removePlacementFactory("window");
 
   globals->get_renderer()
          ->getViewer()
@@ -545,25 +547,25 @@ void GUIMgr::update(double dt)
 }
 
 //------------------------------------------------------------------------------
-simgear::canvas::GroupPtr GUIMgr::getDesktop()
+sc::GroupPtr GUIMgr::getDesktop()
 {
   return _desktop;
 }
 
 //------------------------------------------------------------------------------
-simgear::canvas::Placements
+sc::Placements
 GUIMgr::addWindowPlacement( SGPropertyNode* placement,
-                            simgear::canvas::CanvasPtr canvas )
+                            sc::CanvasPtr canvas )
 {
   const std::string& id = placement->getStringValue("id");
 
-  simgear::canvas::Placements placements;
-  canvas::WindowPtr window = _desktop->getChild<canvas::Window>(id);
+  sc::Placements placements;
+  sc::WindowPtr window = _desktop->getChild<sc::Window>(id);
   if( window )
   {
     window->setCanvasContent(canvas);
     placements.push_back(
-      simgear::canvas::PlacementPtr(
+      sc::PlacementPtr(
         new WindowPlacement(placement, window, canvas)
     ));
   }

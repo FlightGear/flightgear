@@ -21,8 +21,6 @@
 #ifndef _OD_GAUGE_HXX
 #define _OD_GAUGE_HXX
 
-#include <Canvas/canvas_fwd.hpp>
-
 #include <simgear/canvas/ODGauge.hxx>
 #include <simgear/canvas/CanvasPlacement.hxx>
 

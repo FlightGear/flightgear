@@ -25,7 +25,6 @@
 #include "NasalCanvas.hxx"
 #include <Canvas/canvas_mgr.hxx>
 #include <Canvas/gui_mgr.hxx>
-#include <Canvas/window.hxx>
 #include <Main/globals.hxx>
 #include <Scripting/NasalSys.hxx>
 
@@ -34,6 +33,7 @@
 #include <simgear/sg_inlines.h>
 
 #include <simgear/canvas/Canvas.hxx>
+#include <simgear/canvas/CanvasWindow.hxx>
 #include <simgear/canvas/elements/CanvasElement.hxx>
 #include <simgear/canvas/elements/CanvasText.hxx>
 #include <simgear/canvas/MouseEvent.hxx>
@@ -59,7 +59,7 @@ typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
 typedef nasal::Ghost<sc::TextPtr> NasalText;
-typedef nasal::Ghost<canvas::WindowWeakPtr> NasalWindow;
+typedef nasal::Ghost<sc::WindowWeakPtr> NasalWindow;
 
 naRef to_nasal_helper(naContext c, const osg::BoundingBox& bb)
 {
@@ -256,8 +256,8 @@ naRef initNasalCanvas(naRef globals, naContext c)
 
   NasalWindow::init("canvas.Window")
     .bases<NasalElement>()
-    .member("_node_ghost", &elementGetNode<canvas::Window>)
-    .method("_getCanvasDecoration", &canvas::Window::getCanvasDecoration);
+    .member("_node_ghost", &elementGetNode<sc::Window>)
+    .method("_getCanvasDecoration", &sc::Window::getCanvasDecoration);
     
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
