@@ -95,7 +95,7 @@ void FGVoiceMgr::init()
       try {
         _voices.push_back(new FGFestivalVoice(this, voice));
         continue;
-      } catch (const std::string& s) {
+      } catch (const std::string& ) {
         SG_LOG(SG_SOUND, SG_WARN, "failed to create festival voice, falling back to flite voice" );
       }
     }
