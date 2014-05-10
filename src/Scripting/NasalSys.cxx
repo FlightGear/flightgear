@@ -36,6 +36,7 @@
 #include "NasalSGPath.hxx"
 #include "NasalSys.hxx"
 #include "NasalSys_private.hxx"
+#include "NasalAircraft.hxx"
 #include "NasalModelData.hxx"
 #include "NasalPositioned.hxx"
 #include "NasalCanvas.hxx"
@@ -786,6 +787,7 @@ void FGNasalSys::init()
 
     initNasalPositioned(_globals, _context);
     initNasalPositioned_cppbind(_globals, _context);
+    initNasalAircraft(_globals, _context);
     NasalClipboard::init(this);
     initNasalCanvas(_globals, _context);
     initNasalCondition(_globals, _context);

@@ -1,13 +1,15 @@
 #ifndef __NASALSYS_HXX
 #define __NASALSYS_HXX
 
-#include <simgear/misc/sg_path.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/SGMath.hxx> // keep before any cppbind include to enable
+                                   // SGVec2<T> conversion.
 #include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/nasal.h>
-#include <simgear/threads/SGQueue.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/threads/SGQueue.hxx>
 
 // Required only for MSVC
 #ifdef _MSC_VER

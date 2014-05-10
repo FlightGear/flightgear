@@ -3,6 +3,7 @@ include(FlightGearComponent)
 set(SOURCES
   NasalSys.cxx
   nasal-props.cxx
+  NasalAircraft.cxx
   NasalPositioned.cxx
   NasalPositioned_cppbind.cxx
   NasalCanvas.cxx
@@ -17,6 +18,7 @@ set(SOURCES
 set(HEADERS
   NasalSys.hxx
   NasalSys_private.hxx
+  NasalAircraft.hxx
   NasalPositioned.hxx
   NasalCanvas.hxx
   NasalClipboard.hxx
