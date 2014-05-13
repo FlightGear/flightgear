@@ -76,6 +76,17 @@ struct SynthesizeRequest {
  */
 class FLITEVoiceSynthesizer : public VoiceSynthesizer {
 public:
+
+  typedef enum {
+    CMU_US_ARCTIC_SLT = 0,
+    CSTR_UK_FEMALE,
+
+    VOICE_UNKNOWN // keep this at the end
+  } voice_t;
+
+  static std::string getVoicePath( voice_t voice );
+  static std::string getVoicePath( const std::string & voice );
+
   FLITEVoiceSynthesizer( const std::string & voice );
   ~FLITEVoiceSynthesizer();
   virtual SGSoundSample * synthesize( const std::string & text, double volume, double speed, double pitch  );

@@ -75,27 +75,14 @@ public:
     _stationId = stationId;
   }
 
-  void setVoice(const string & voice)
-  {
-    _voice = voice;
-  }
-
-  const string & getVoice() const
-  {
-    return _voice;
-  }
 
 private:
   SynthesizeRequest _synthesizeRequest;
   SGLockedQueue<SGSharedPtr<SGSoundSample> > _spokenAtis;
   string _stationId;
-  string _voice;
 };
 
 AtisSpeaker::AtisSpeaker()
- :
-    _voice("/ATC/cmu_us_arctic_slt.htsvoice")
-//    _voice("/ATC/cstr_uk_female-1.0.htsvoice")
 {
   _synthesizeRequest.listener = this;
 }
@@ -107,29 +94,42 @@ AtisSpeaker::~AtisSpeaker()
 void AtisSpeaker::valueChanged(SGPropertyNode * node)
 {
   if (!fgGetBool("/sim/sound/working", false))
-  return;
+    return;
 
   string newText = node->getStringValue();
   if (_synthesizeRequest.text == newText) return;
 
   _synthesizeRequest.text = newText;
 
+  string voice = "cmu_us_arctic_slt";
+
   if (!_stationId.empty()) {
     // lets play a bit with the voice so not every airports atis sounds alike
     // but every atis of an airport has the same voice
 
+    // create a simple hash from the last two letters of the airport's id
+    unsigned char hash = 0;
     string::iterator i = _stationId.end() - 1;
-    if( i != _stationId.begin() )
-      --i;
+    hash += *i;
 
-    _synthesizeRequest.speed = ((*i) % 16) / 16.0;
-    _synthesizeRequest.pitch = ((*i) % 16) / 16.0;
+    if( i != _stationId.begin() ) {
+      --i;
+      hash += *i;
+    }
+
+    _synthesizeRequest.speed = (hash % 16) / 16.0;
+    _synthesizeRequest.pitch = (hash % 16) / 16.0;
+
+    // pick a voice
+    voice = FLITEVoiceSynthesizer::getVoicePath(
+        static_cast<FLITEVoiceSynthesizer::voice_t>(hash % FLITEVoiceSynthesizer::VOICE_UNKNOWN) );
   }
+
 
   FGSoundManager * smgr = dynamic_cast<FGSoundManager*>(globals->get_soundmgr());
   assert(smgr != NULL);
 
-  string voice = globals->get_fg_root() + _voice;
+  SG_LOG(SG_INSTR,SG_INFO,"AtisSpeaker voice is " << voice );
   FLITEVoiceSynthesizer * synthesizer = dynamic_cast<FLITEVoiceSynthesizer*>(smgr->getSynthesizer(voice));
 
   synthesizer->synthesize(_synthesizeRequest);

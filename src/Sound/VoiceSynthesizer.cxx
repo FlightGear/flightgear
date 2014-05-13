@@ -26,6 +26,13 @@
 #include <OpenThreads/Thread>
 #include <flite_hts_engine.h>
 
+using std::string;
+
+static const char * VOICE_FILES[] = {
+  "cmu_us_arctic_slt.htsvoice",
+  "cstr_uk_female-1.0.htsvoice"
+};
+
 class FLITEVoiceSynthesizer::WorkerThread: public OpenThreads::Thread {
 public:
   WorkerThread(FLITEVoiceSynthesizer * synthesizer)
@@ -47,6 +54,21 @@ void FLITEVoiceSynthesizer::WorkerThread::run()
     }
   }
 }
+
+string FLITEVoiceSynthesizer::getVoicePath( voice_t voice )
+{
+  if( voice < 0 || voice >= VOICE_UNKNOWN ) return string("");
+  string voicePath = globals->get_fg_root() + "/ATC/" + VOICE_FILES[voice];
+  return voicePath;
+}
+
+string FLITEVoiceSynthesizer::getVoicePath( const string & voice )
+{
+  if( voice == "cmu_us_arctic_slt" ) return getVoicePath(CMU_US_ARCTIC_SLT);
+  if( voice == "cstr_uk_female" ) return getVoicePath(CSTR_UK_FEMALE);
+  return getVoicePath(VOICE_UNKNOWN);
+}
+
 
 void FLITEVoiceSynthesizer::synthesize( SynthesizeRequest & request)
 {
