@@ -57,6 +57,7 @@ public:
     void setXDrag(float cx);
     void setYDrag(float cy);
     void setZDrag(float cz);
+    float getXDrag();
 
     // zero-alpha Z drag ("camber") specified as a fraction of cz
     void setBaseZDrag(float cz0);

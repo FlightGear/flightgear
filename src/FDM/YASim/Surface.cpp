@@ -74,6 +74,11 @@ void Surface::setZDrag(float cz)
     _cz = cz;
 }
 
+float Surface::getXDrag()
+{
+    return _cx;
+}
+
 void Surface::setBaseZDrag(float cz0)
 {
     _cz0 = cz0;
