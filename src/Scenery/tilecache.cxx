@@ -127,6 +127,22 @@ long TileCache::get_drop_tile() {
     return min_index;
 }
 
+long TileCache::get_first_invisible_tile() const
+{
+  const_tile_map_iterator current = tile_cache.begin();
+  const_tile_map_iterator end = tile_cache.end();
+  
+  for ( ; current != end; ++current ) {
+    TileEntry *e = current->second;
+    if (!e->is_current_view())
+    {
+      return current->first;
+    }
+  }
+  
+  return -1; // no expired tile found
+}
+
 
 // Clear all flags indicating tiles belonging to the current view
 void TileCache::clear_current_view()

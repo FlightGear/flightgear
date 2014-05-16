@@ -73,7 +73,9 @@ public:
     // Return the index of a tile to be dropped from the cache, return -1 if
     // nothing available to be removed.
     long get_drop_tile();
-    
+  
+    long get_first_invisible_tile() const;
+  
     // Clear all flags indicating tiles belonging to the current view
     void clear_current_view();
 

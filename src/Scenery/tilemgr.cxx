@@ -57,25 +57,35 @@ class FGTileMgr::TileManagerListener : public SGPropertyChangeListener
 {
 public:
     TileManagerListener(FGTileMgr* manager) :
-        _manager(manager)
+        _manager(manager),
+        _useVBOsProp(fgGetNode("/sim/rendering/use-vbos", true)),
+        _enableCacheProp(fgGetNode("/sim/tile-cache/enable", true))
     {
-        fgGetNode("/sim/rendering/use-vbos", true)->addChangeListener(this, true);
+        _useVBOsProp->addChangeListener(this, true);
+        _enableCacheProp->addChangeListener(this, true);
     }
     
     ~TileManagerListener()
     {
-        fgGetNode("/sim/rendering/use-vbos")->removeChangeListener(this);
+        _useVBOsProp->removeChangeListener(this);
+        _enableCacheProp->removeChangeListener(this);
     }
     
     virtual void valueChanged(SGPropertyNode* prop)
     {
-        bool useVBOs = prop->getBoolValue();
-        _manager->_options->setPluginStringData("SimGear::USE_VBOS",
+        if (prop == _useVBOsProp) {
+            bool useVBOs = prop->getBoolValue();
+            _manager->_options->setPluginStringData("SimGear::USE_VBOS",
                                                 useVBOs ? "ON" : "OFF");
+        } else if (prop == _enableCacheProp) {
+            _manager->_enableCache = prop->getBoolValue();
+        }
     }
     
 private:
     FGTileMgr* _manager;
+    SGPropertyNode_ptr _useVBOsProp,
+      _enableCacheProp;
 };
 
 FGTileMgr::FGTileMgr():
@@ -89,7 +99,8 @@ FGTileMgr::FGTileMgr():
     _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true)),
     _scenery_loaded(fgGetNode("/sim/sceneryloaded", true)),
     _scenery_override(fgGetNode("/sim/sceneryloaded-override", true)),
-    _pager(FGScenery::getPagerSingleton())
+    _pager(FGScenery::getPagerSingleton()),
+    _enableCache(true)
 {
 }
 
@@ -329,14 +340,24 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
     }
 
     int drop_count = sz - tile_cache.get_max_cache_size();
-    if (( drop_count > 0 )&&
-         ((loading==0)||(drop_count > 10)))
+    bool dropTiles = false;
+    if (_enableCache) {
+      dropTiles = ( drop_count > 0 ) && ((loading==0)||(drop_count > 10));
+    } else {
+      dropTiles = true;
+      drop_count = sz; // no limit on tiles to drop
+    }
+  
+    if (dropTiles)
     {
-        long drop_index = tile_cache.get_drop_tile();
+        long drop_index = _enableCache ? tile_cache.get_drop_tile() :
+                                         tile_cache.get_first_invisible_tile();
         while ( drop_index > -1 )
         {
             // schedule tile for deletion with osg pager
             TileEntry* old = tile_cache.get_tile(drop_index);
+            SG_LOG(SG_TERRAIN, SG_ALERT, "Dropping:" << old->get_tile_bucket());
+
             tile_cache.clear_entry(drop_index);
             
             osg::ref_ptr<osg::Object> subgraph = old->getNode();
@@ -345,13 +366,16 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
             // zeros out subgraph ref_ptr, so subgraph is owned by
             // the pager and will be deleted in the pager thread.
             _pager->queueDeleteRequest(subgraph);
-            
-            if (--drop_count > 0)
+          
+            if (!_enableCache)
+                drop_index = tile_cache.get_first_invisible_tile();
+            // limit tiles dropped to drop_count
+            else if (--drop_count > 0)
                 drop_index = tile_cache.get_drop_tile();
             else
-                drop_index = -1;
+               drop_index = -1;
         }
-    }
+    } // of dropping tiles loop
 }
 
 // given the current lon/lat (in degrees), fill in the array of local
