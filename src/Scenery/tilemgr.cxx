@@ -59,16 +59,30 @@ public:
     TileManagerListener(FGTileMgr* manager) :
         _manager(manager),
         _useVBOsProp(fgGetNode("/sim/rendering/use-vbos", true)),
-        _enableCacheProp(fgGetNode("/sim/tile-cache/enable", true))
+        _enableCacheProp(fgGetNode("/sim/tile-cache/enable", true)),
+        _pagedLODMaximumProp(fgGetNode("/sim/rendering/max-paged-lod", true))
     {
         _useVBOsProp->addChangeListener(this, true);
+      
         _enableCacheProp->addChangeListener(this, true);
+        if (_enableCacheProp->getType() == simgear::props::NONE) {
+            _enableCacheProp->setBoolValue(true);
+        }
+      
+        if (_pagedLODMaximumProp->getType() == simgear::props::NONE) {
+            // not set, use OSG default / environment value variable
+            osg::ref_ptr<osgViewer::Viewer> viewer(globals->get_renderer()->getViewer());
+            int current = viewer->getDatabasePager()->getTargetMaximumNumberOfPageLOD();
+            _pagedLODMaximumProp->setIntValue(current);
+        }
+        _pagedLODMaximumProp->addChangeListener(this, true);
     }
     
     ~TileManagerListener()
     {
         _useVBOsProp->removeChangeListener(this);
         _enableCacheProp->removeChangeListener(this);
+        _pagedLODMaximumProp->removeChangeListener(this);
     }
     
     virtual void valueChanged(SGPropertyNode* prop)
@@ -79,13 +93,18 @@ public:
                                                 useVBOs ? "ON" : "OFF");
         } else if (prop == _enableCacheProp) {
             _manager->_enableCache = prop->getBoolValue();
+        } else if (prop == _pagedLODMaximumProp) {
+          int v = prop->getIntValue();
+          osg::ref_ptr<osgViewer::Viewer> viewer(globals->get_renderer()->getViewer());
+          viewer->getDatabasePager()->setTargetMaximumNumberOfPageLOD(v);
         }
     }
     
 private:
     FGTileMgr* _manager;
     SGPropertyNode_ptr _useVBOsProp,
-      _enableCacheProp;
+      _enableCacheProp,
+      _pagedLODMaximumProp;
 };
 
 FGTileMgr::FGTileMgr():
@@ -356,7 +375,7 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
         {
             // schedule tile for deletion with osg pager
             TileEntry* old = tile_cache.get_tile(drop_index);
-            SG_LOG(SG_TERRAIN, SG_ALERT, "Dropping:" << old->get_tile_bucket());
+            SG_LOG(SG_TERRAIN, SG_DEBUG, "Dropping:" << old->get_tile_bucket());
 
             tile_cache.clear_entry(drop_index);
             
