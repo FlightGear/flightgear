@@ -43,6 +43,8 @@ private:
   unsigned id;
   PropertyChangeObserver * _propertyChangeObserver;
 
+  void handleGetCommand(const string_list& nodes, WebsocketWriter &writer);
+  
   class WatchedNodesList: public std::vector<SGPropertyNode_ptr> {
   public:
     void handleCommand(const std::string & command, const std::string & node, PropertyChangeObserver * propertyChangeObserver);

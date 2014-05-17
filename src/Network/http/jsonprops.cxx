@@ -128,6 +128,19 @@ void JSON::toProp(cJSON * json, SGPropertyNode_ptr base)
   }
 }
 
+void JSON::addChildrenToProp(cJSON * json, SGPropertyNode_ptr n)
+{
+  if (NULL == json) return;
+  if (!n) return;
+  
+  cJSON * children = cJSON_GetObjectItem(json, "children");
+  if (NULL != children) {
+    for (int i = 0; i < cJSON_GetArraySize(children); i++) {
+      toProp(cJSON_GetArrayItem(children, i), n);
+    }
+  }
+}
+
 string JSON::toJsonString(bool indent, SGPropertyNode_ptr n, int depth, double timestamp )
 {
   cJSON * json = toJson( n, depth, timestamp );
