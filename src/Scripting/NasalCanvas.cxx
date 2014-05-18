@@ -48,7 +48,7 @@ extern naRef propNodeGhostCreate(naContext c, SGPropertyNode* n);
 namespace sc = simgear::canvas;
 
 template<class Element>
-naRef elementGetNode(naContext c, Element& element)
+naRef elementGetNode(Element& element, naContext c)
 {
   return propNodeGhostCreate(c, element.getProps());
 }
@@ -196,7 +196,7 @@ naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
 }
 
 template<int Mask>
-naRef f_eventGetModifier(naContext, sc::MouseEvent& event)
+naRef f_eventGetModifier(sc::MouseEvent& event, naContext)
 {
   return naNum((event.getModifiers() & Mask) != 0);
 }
