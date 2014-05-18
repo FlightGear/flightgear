@@ -78,7 +78,7 @@ naRef to_nasal_helper(naContext c, flightgear::Approach* iap)
 }
 
 //------------------------------------------------------------------------------
-static naRef f_navaid_course(naContext, FGNavRecord& nav)
+static naRef f_navaid_course(FGNavRecord& nav, naContext)
 {
   if( !(  nav.type() == FGPositioned::ILS
        || nav.type() == FGPositioned::LOC
