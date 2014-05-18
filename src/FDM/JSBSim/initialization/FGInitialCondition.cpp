@@ -66,7 +66,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGInitialCondition.cpp,v 1.93 2014/01/13 10:46:00 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGInitialCondition.cpp,v 1.95 2014/05/01 18:32:54 bcoconni Exp $");
 IDENT(IdHdr,ID_INITIALCONDITION);
 
 //******************************************************************************
@@ -76,9 +76,7 @@ FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec) : fdmex(FDMExec)
   InitializeIC();
 
   if(FDMExec != NULL ) {
-    PropertyManager=fdmex->GetPropertyManager();
     Atmosphere=fdmex->GetAtmosphere();
-    bind();
   } else {
     cout << "FGInitialCondition: This class requires a pointer to a valid FGFDMExec object" << endl;
   }
@@ -152,7 +150,7 @@ void FGInitialCondition::InitializeIC(void)
 
   lastSpeedSet = setvt;
   lastAltitudeSet = setasl;
-  enginesRunning.clear();
+  enginesRunning = 0;
 }
 
 //******************************************************************************
@@ -907,7 +905,7 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
   // Check to see if any engines are specified to be initialized in a running state
   Element* running_elements = document->FindElement("running");
   while (running_elements) {
-    enginesRunning.push_back(int(running_elements->GetDataAsNumber()));
+    enginesRunning &= 1 << int(running_elements->GetDataAsNumber());
     running_elements = document->FindNextElement("running");
   }
 
@@ -1257,7 +1255,7 @@ bool FGInitialCondition::Load_v2(Element* document)
 
 //******************************************************************************
 
-void FGInitialCondition::bind(void)
+void FGInitialCondition::bind(FGPropertyManager* PropertyManager)
 {
   PropertyManager->Tie("ic/vc-kts", this,
                        &FGInitialCondition::GetVcalibratedKtsIC,

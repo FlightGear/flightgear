@@ -64,6 +64,7 @@ INCLUDES
 #include "models/FGInput.h"
 #include "models/FGOutput.h"
 #include "initialization/FGInitialCondition.h"
+#include "initialization/FGTrim.h"
 #include "initialization/FGSimplexTrim.h"
 #include "initialization/FGLinearization.h"
 #include "input_output/FGPropertyManager.h"
@@ -75,7 +76,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.154 2014/01/13 10:45:59 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.161 2014/05/17 15:35:53 jberndt Exp $");
 IDENT(IdHdr,ID_FDMEXEC);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,10 +90,11 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
 {
   Frame           = 0;
   Error           = 0;
-  SetGroundCallback(new FGDefaultGroundCallback());
+  //SetGroundCallback(new FGDefaultGroundCallback());
   IC              = 0;
   Trim            = 0;
   Script          = 0;
+  disperse        = 0;
 
   RootDir = "";
 
@@ -139,6 +141,17 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
 
   FGPropertyNode* instanceRoot = Root->GetNode("/fdm/jsbsim",IdFDM,true);
   instance = new FGPropertyManager(instanceRoot);
+
+  try {
+    char* num = getenv("JSBSIM_DISPERSE");
+    if (num) {
+      if (atoi(num) != 0) disperse = 1;  // set dispersions on
+    }
+  } catch (...) {                        // if error set to false
+    disperse = 0;
+    std::cerr << "Could not process JSBSIM_DISPERSIONS environment variable: Assumed NO dispersions." << endl;
+  }
+
   Debug(0);
   // this is to catch errors in binding member functions to the property tree.
   try {
@@ -153,13 +166,12 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
 
   Constructing = true;
   typedef int (FGFDMExec::*iPMF)(void) const;
-//  typedef double (FGFDMExec::*dPMF)(void) const;
-//  typedef unsigned int (FGFDMExec::*uiPMF)(void) const;
 //  instance->Tie("simulation/do_trim_analysis", this, (iPMF)0, &FGFDMExec::DoTrimAnalysis, false);
   instance->Tie("simulation/do_simple_trim", this, (iPMF)0, &FGFDMExec::DoTrim, false);
   instance->Tie("simulation/do_simplex_trim", this, (iPMF)0, &FGFDMExec::DoSimplexTrim);
   instance->Tie("simulation/do_linearization", this, (iPMF)0, &FGFDMExec::DoLinearization);
-  instance->Tie("simulation/reset", (int*)&ResetMode);
+  instance->Tie("simulation/reset", this, (iPMF)0, &FGFDMExec::ResetToInitialConditions, false);
+  instance->Tie("simulation/disperse", this, &FGFDMExec::GetDisperse);
   instance->Tie("simulation/randomseed", this, (iPMF)0, &FGFDMExec::SRand, false);
   instance->Tie("simulation/terminate", (int *)&Terminate);
   instance->Tie("simulation/sim-time-sec", this, &FGFDMExec::GetSimTime);
@@ -294,7 +306,8 @@ bool FGFDMExec::Allocate(void)
 
   // Initialize planet (environment) constants
   LoadPlanetConstants();
-  GetGroundCallback()->SetSeaLevelRadius(Inertial->GetRefRadius());
+  //GetGroundCallback()->SetSeaLevelRadius(Inertial->GetRefRadius());
+  SetGroundCallback(new FGDefaultGroundCallback(Inertial->GetRefRadius()));
 
   // Initialize models
   for (unsigned int i = 0; i < Models.size(); i++) {
@@ -306,6 +319,7 @@ bool FGFDMExec::Allocate(void)
   }
 
   IC = new FGInitialCondition(this);
+  IC->bind(instance);
 
   modelLoaded = false;
 
@@ -362,10 +376,10 @@ bool FGFDMExec::Run(void)
   }
 
   if (ResetMode) {
-    if (ResetMode == 1) Output->SetStartNewOutput();
+    unsigned int mode = ResetMode;
 
     ResetMode = 0;
-    ResetToInitialConditions();
+    ResetToInitialConditions(mode);
   }
 
   if (Terminate) success = false;
@@ -591,16 +605,23 @@ bool FGFDMExec::RunIC(void)
 {
   FGPropulsion* propulsion = (FGPropulsion*)Models[ePropulsion];
 
-  if (!trim_status)
-    Models[eOutput]->InitModel();
+  Models[eOutput]->InitModel();
 
   SuspendIntegration(); // saves the integration rate, dt, then sets it to 0.0.
   Initialize(IC);
   Run();
   ResumeIntegration(); // Restores the integration rate to what it was.
 
-  for (unsigned int i=0; i<IC->GetNumEnginesRunning(); i++)
-    propulsion->InitRunning(IC->GetEngineRunning(i));
+  for (unsigned int n=0; n < propulsion->GetNumEngines(); ++n) {
+    if (IC->IsEngineRunning(n)) {
+      try {
+        propulsion->InitRunning(n);
+      } catch (string str) {
+        cerr << str << endl;
+        return false;
+      }
+    }
+  }
 
   return true;
 }
@@ -625,9 +646,11 @@ void FGFDMExec::Initialize(FGInitialCondition *FGIC)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFDMExec::ResetToInitialConditions(void)
+void FGFDMExec::ResetToInitialConditions(int mode)
 {
   if (Constructing) return;
+
+  if (mode == 1) Output->SetStartNewOutput();
 
   for (unsigned int i = 0; i < Models.size(); i++) {
     // The Output model will be initialized during the RunIC() execution
@@ -898,7 +921,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
       Models[ePropulsion]->Run(false);  // Update propulsion properties for the report.
       LoadInputs(eMassBalance); // Update all (one more time) input mass properties for the report.
       Models[eMassBalance]->Run(false);  // Update all (one more time) mass properties for the report.
-      ((FGMassBalance*)Models[eMassBalance])->GetMassPropertiesReport();
+      ((FGMassBalance*)Models[eMassBalance])->GetMassPropertiesReport(0);
 
       cout << endl << fgblue << highint
            << "End of vehicle configuration loading." << endl
@@ -984,6 +1007,17 @@ void FGFDMExec::PrintPropertyCatalog(void)
   for (unsigned i=0; i<PropertyCatalog.size(); i++) {
     cout << "    " << PropertyCatalog[i] << endl;
   }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFDMExec::PrintSimulationConfiguration(void) const
+{
+  cout << endl << "Simulation Configuration" << endl << "------------------------" << endl;
+  cout << MassBalance->Name << endl;
+  cout << GroundReactions->Name << endl;
+  cout << Aerodynamics->Name << endl;
+  cout << Propulsion->Name << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1244,6 +1278,7 @@ void FGFDMExec::Debug(int from)
            << "JSBSim Flight Dynamics Model v" << JSBSim_version << endl;
       cout << "            [JSBSim-ML v" << needed_cfg_version << "]\n\n";
       cout << "JSBSim startup beginning ...\n\n";
+      if (disperse == 1) cout << "Dispersions are ON." << endl << endl;
     } else if (from == 3) {
       cout << "\n\nJSBSim startup complete\n\n";
     }

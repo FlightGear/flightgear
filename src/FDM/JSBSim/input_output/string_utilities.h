@@ -49,7 +49,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_STRINGUTILS "$Id: string_utilities.h,v 1.18 2014/01/13 10:46:03 ehofman Exp $"
+#define ID_STRINGUTILS "$Id: string_utilities.h,v 1.19 2014/01/29 13:30:11 ehofman Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -74,7 +74,7 @@ CLASS DECLARATION
   extern bool is_number(const std::string& str);
   std::vector <std::string> split(std::string str, char d);
 
-// libc++ has these as built-ins for all C++ language versions
+  // libc++ has these as built-ins for all C++ language versions
 #if !defined(_LIBCPP_VERSION)
   extern std::string to_string(int);
   extern std::string to_string(double);

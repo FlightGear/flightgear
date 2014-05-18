@@ -44,7 +44,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGXMLElement.cpp,v 1.45 2014/01/13 10:46:02 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGXMLElement.cpp,v 1.48 2014/05/17 15:31:17 jberndt Exp $");
 IDENT(IdHdr,ID_XMLELEMENT);
 
 bool Element::converterIsInitialized = false;
@@ -155,6 +155,8 @@ Element::Element(const string& nm)
     convert["PA"]["LBS/FT2"] = 1.0/convert["LBS/FT2"]["PA"];
     // Mass flow
     convert["KG/MIN"]["LBS/MIN"] = convert["KG"]["LBS"];
+    convert ["N/SEC"]["LBS/SEC"] = 0.224808943;
+    convert ["LBS/SEC"]["N/SEC"] = 1.0/convert ["N/SEC"]["LBS/SEC"];
     // Fuel Consumption
     convert["LBS/HP*HR"]["KG/KW*HR"] = 0.6083;
     convert["KG/KW*HR"]["LBS/HP*HR"] = 1.0/convert["LBS/HP*HR"]["KG/KW*HR"];
@@ -226,6 +228,7 @@ Element::Element(const string& nm)
     convert["LBS/SEC"]["LBS/SEC"] = 1.00;
     convert["KG/MIN"]["KG/MIN"] = 1.0;
     convert["LBS/MIN"]["LBS/MIN"] = 1.0;
+    convert["N/SEC"]["N/SEC"] = 1.0;
     // Fuel Consumption
     convert["LBS/HP*HR"]["LBS/HP*HR"] = 1.0;
     convert["KG/KW*HR"]["KG/KW*HR"] = 1.0;
@@ -568,24 +571,36 @@ double Element::DisperseValue(Element *e, double val, const std::string supplied
 {
   double value=val;
   double disp=0.0;
-  if (e->HasAttribute("dispersion")) {
+
+  bool disperse = false;
+  try {
+    char* num = getenv("JSBSIM_DISPERSE");
+    if (num) {
+      disperse = (atoi(num) == 1);  // set dispersions
+    }
+  } catch (...) {                   // if error set to false
+    disperse = false;
+    std::cerr << "Could not process JSBSIM_DISPERSE environment variable: Assumed NO dispersions." << endl;
+  }
+
+  if (e->HasAttribute("dispersion") && disperse) {
     disp = e->GetAttributeValueAsNumber("dispersion");
     if (!supplied_units.empty()) disp *= convert[supplied_units][target_units];
     string attType = e->GetAttributeValue("type");
-    if (attType == "gaussian") {
+    if (attType == "gaussian" || attType == "gaussiansigned") {
       double grn = GaussianRandomNumber();
+    if (attType == "gaussian") {
       value = val + disp*grn;
-/*      std::cout << "DISPERSION GAUSSIAN: Initial: " << val
-                << "  Dispersion: " << disp
-                << "  Gaussian Rand Num: " << grn
-                << "  Total Dispersed Value: " << value << endl; */
-    } else if (attType == "uniform") {
+      } else { // Assume gaussiansigned
+        value = (val + disp*grn)*(fabs(grn)/grn);
+      }
+    } else if (attType == "uniform" || attType == "uniformsigned") {
       double urn = ((((double)rand()/RAND_MAX)-0.5)*2.0);
+      if (attType == "uniform") {
       value = val + disp * urn;
-/*      std::cout << "DISPERSION UNIFORM: Initial: " << val
-                << "  Dispersion: " << disp
-                << "  Uniform Rand Num: " << urn
-                << "  Total Dispersed Value: " << value << endl; */
+      } else { // Assume uniformsigned
+        value = (val + disp * urn)*(fabs(urn)/urn);
+      }
     } else {
       cerr << ReadFrom() << "Unknown dispersion type" << attType << endl;
       exit(-1);

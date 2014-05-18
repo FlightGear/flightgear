@@ -48,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.29 2013/11/24 11:40:56 bcoconni Exp $"
+#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.31 2014/05/17 15:17:13 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONSS
@@ -176,7 +176,7 @@ public:
   const FGMatrix33& GetJ(void) const {return mJ;}
   const FGMatrix33& GetJinv(void) const {return mJinv;}
   void SetAircraftBaseInertias(const FGMatrix33& BaseJ) {baseJ = BaseJ;}
-  void GetMassPropertiesReport(void) const;
+  void GetMassPropertiesReport(int i);
   
   struct Inputs {
     double GasMass;
@@ -259,7 +259,10 @@ private:
     const string& GetName(void) {return Name;}
 
     void SetPointMassLocation(int axis, double value) {Location(axis) = value;}
-    void SetPointMassWeight(double wt) {Weight = wt;}
+    void SetPointMassWeight(double wt) {
+      Weight = wt;
+      CalculateShapeInertia();
+    }
     void SetPointMassShapeType(esShape st) {eShapeType = st;}
     void SetRadius(double r) {Radius = r;}
     void SetLength(double l) {Length = l;}

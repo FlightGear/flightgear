@@ -44,7 +44,6 @@ INCLUDES
 #include <vector>
 #include <string>
 
-#include "initialization/FGTrim.h"
 #include "FGJSBBase.h"
 #include "input_output/FGPropertyManager.h"
 #include "models/FGPropagate.h"
@@ -55,7 +54,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.86 2014/01/02 21:37:14 bcoconni Exp $"
+#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.91 2014/05/17 15:35:53 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -79,6 +78,7 @@ class FGInertial;
 class FGInput;
 class FGPropulsion;
 class FGMassBalance;
+class FGTrim;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -178,7 +178,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision: 1.86 $
+    @version $Revision: 1.91 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -405,13 +405,7 @@ public:
 
   /// Returns the model name.
   const std::string& GetModelName(void) const { return modelName; }
-/*
-  /// Returns the current time.
-  double GetSimTime(void);
 
-  /// Returns the current frame time (delta T).
-  double GetDeltaT(void);
-*/  
   /// Returns a pointer to the property manager object.
   FGPropertyManager* GetPropertyManager(void);
   /// Returns a vector of strings representing the names of all loaded models (future)
@@ -448,6 +442,7 @@ public:
   void SetLoggingRate(double rate) { Output->SetRate(rate); }
 
   /** Sets (or overrides) the output filename
+      @param n index of file
       @param fname the name of the file to output data to
       @return true if successful, false if there is no output specified for the flight model */
   bool SetOutputFileName(const int n, const std::string& fname) { return Output->SetOutputName(n, fname); }
@@ -489,8 +484,12 @@ public:
   void Resume(void) {holding = false;}
   /// Returns true if the simulation is Holding (i.e. simulation time is not moving).
   bool Holding(void) {return holding;}
-  /// Resets the initial conditions object and prepares the simulation to run again.
-  void ResetToInitialConditions(void);
+  /** Resets the initial conditions object and prepares the simulation to run
+      again. If mode is set to 1 the output instances will take special actions
+      such as closing the current output file and open a new one with a
+      different name.
+      @param mode Sets the reset mode.*/
+  void ResetToInitialConditions(int mode);
   /// Sets the debug level.
   void SetDebugLevel(int level) {debug_lvl = level;}
 
@@ -517,6 +516,9 @@ public:
 
   // Print the contents of the property catalog for the loaded aircraft.
   void PrintPropertyCatalog(void);
+
+  // Print the simulation configuration
+  void PrintSimulationConfiguration(void) const;
 
   std::vector<std::string>& GetPropertyCatalog(void) {return PropertyCatalog;}
 
@@ -583,6 +585,7 @@ private:
   int Error;
   unsigned int Frame;
   unsigned int IdFDM;
+  int disperse;
   unsigned short Terminate;
   double dT;
   double saved_dT;
@@ -647,6 +650,7 @@ private:
   void LoadModelConstants(void);
   bool Allocate(void);
   bool DeAllocate(void);
+  int GetDisperse(void) const {return disperse;}
 
   void Debug(int from);
 };
