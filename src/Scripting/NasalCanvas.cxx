@@ -36,7 +36,8 @@
 #include <simgear/canvas/CanvasWindow.hxx>
 #include <simgear/canvas/elements/CanvasElement.hxx>
 #include <simgear/canvas/elements/CanvasText.hxx>
-#include <simgear/canvas/MouseEvent.hxx>
+#include <simgear/canvas/events/CustomEvent.hxx>
+#include <simgear/canvas/events/MouseEvent.hxx>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
 #include <simgear/nasal/cppbind/to_nasal.hxx>
@@ -54,7 +55,13 @@ naRef elementGetNode(Element& element, naContext c)
 }
 
 typedef nasal::Ghost<sc::EventPtr> NasalEvent;
+typedef nasal::Ghost<sc::CustomEventPtr> NasalCustomEvent;
 typedef nasal::Ghost<sc::MouseEventPtr> NasalMouseEvent;
+
+struct CustomEventDetailWrapper;
+typedef SGSharedPtr<CustomEventDetailWrapper> CustomEventDetailPtr;
+typedef nasal::Ghost<CustomEventDetailPtr> NasalCustomEventDetail;
+
 typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
@@ -201,6 +208,64 @@ naRef f_eventGetModifier(sc::MouseEvent& event, naContext)
   return naNum((event.getModifiers() & Mask) != 0);
 }
 
+static naRef f_createCustomEvent(const nasal::CallContext& ctx)
+{
+  std::string const& type = ctx.requireArg<std::string>(0);
+  if( type.empty() )
+    return naNil();
+
+  simgear::StringMap data = ctx.getArg<simgear::StringMap>(1);
+  return NasalCustomEvent::create(
+    ctx.c,
+    sc::CustomEventPtr(new sc::CustomEvent(type, data))
+  );
+}
+
+struct CustomEventDetailWrapper:
+  public SGReferenced
+{
+  sc::CustomEventPtr _event;
+
+  CustomEventDetailWrapper(const sc::CustomEventPtr& event):
+    _event(event)
+  {
+
+  }
+
+  bool _get( const std::string& key,
+             std::string& value_out ) const
+  {
+    if( !_event )
+      return false;
+
+    simgear::StringMap::const_iterator it = _event->detail.find(key);
+    if( it == _event->detail.end() )
+      return false;
+
+    value_out = it->second;
+    return true;
+  }
+
+  bool _set( const std::string& key,
+             const std::string& value )
+  {
+    if( !_event )
+      return false;
+
+    _event->detail[ key ] = value;
+    return true;
+  }
+};
+
+static naRef f_customEventGetDetail( sc::CustomEvent& event,
+                                     naContext c )
+{
+  return nasal::to_nasal(
+    c,
+    CustomEventDetailPtr(new CustomEventDetailWrapper(&event))
+  );
+}
+
 naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
 {
   return NasalElement::create(c, el.lock());
@@ -214,6 +279,14 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("target", &sc::Event::getTarget)
     .member("currentTarget", &sc::Event::getCurrentTarget)
     .method("stopPropagation", &sc::Event::stopPropagation);
+
+  NasalCustomEvent::init("canvas.CustomEvent")
+    .bases<NasalEvent>()
+    .member("detail", &f_customEventGetDetail, &sc::CustomEvent::setDetail);
+  NasalCustomEventDetail::init("canvas.CustomEventDetail")
+    ._get(&CustomEventDetailWrapper::_get)
+    ._set(&CustomEventDetailWrapper::_set);
+
   NasalMouseEvent::init("canvas.MouseEvent")
     .bases<NasalEvent>()
     .member("screenX", &sc::MouseEvent::getScreenX)
@@ -232,6 +305,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("altKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_ALT>)
     .member("metaKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_META>)
     .member("click_count", &sc::MouseEvent::getCurrentClickCount);
+
   NasalCanvas::init("Canvas")
     .member("_node_ghost", &elementGetNode<sc::Canvas>)
     .member("size_x", &sc::Canvas::getSizeX)
@@ -243,6 +317,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("_node_ghost", &elementGetNode<sc::Element>)
     .method("_getParent", &sc::Element::getParent)
     .method("addEventListener", &sc::Element::addEventListener)
+    .method("dispatchEvent", &sc::Element::dispatchEvent)
     .method("getBoundingBox", &sc::Element::getBoundingBox)
     .method("getTightBoundingBox", &sc::Element::getTightBoundingBox);
   NasalGroup::init("canvas.Group")
@@ -267,5 +342,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
   canvas_module.set("_getCanvasGhost", f_getCanvas);
   canvas_module.set("_getDesktopGhost", f_getDesktop);
 
+  canvas_module.createHash("CustomEvent")
+               .set("new", &f_createCustomEvent);
   return naNil();
 }

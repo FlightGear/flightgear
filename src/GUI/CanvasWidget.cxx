@@ -27,7 +27,7 @@
 #include <Scripting/NasalSys.hxx>
 
 #include <simgear/canvas/Canvas.hxx>
-#include <simgear/canvas/MouseEvent.hxx>
+#include <simgear/canvas/events/MouseEvent.hxx>
 
 //------------------------------------------------------------------------------
 CanvasWidget::CanvasWidget( int x, int y,
