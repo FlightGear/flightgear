@@ -465,7 +465,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
       // told to explicitly ignore
       if (options->isOptionSet("restore-defaults") || options->isOptionSet("ignore-autosave"))
       {
-          SG_LOG(SG_ALL, SG_ALERT, "Ignoring user settings. Restoring defaults.");
+          SG_LOG(SG_GENERAL, SG_ALERT, "Ignoring user settings. Restoring defaults.");
       }
       else
       {

@@ -222,7 +222,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new TCAS( node ), 0.2);
             
         } else {
-            SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: "
+            SG_LOG( SG_INSTR, SG_ALERT, "Unknown top level section: "
                     << name );
             return false;
         }
