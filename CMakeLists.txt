@@ -168,7 +168,7 @@ option(ENABLE_JS_DEMO    "Set to ON to build the js_demo application (default)" 
 option(ENABLE_METAR      "Set to ON to build the metar application (default)" ON)
 option(ENABLE_TESTS      "Set to ON to build test applications (default)" ON)
 option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON)
-option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" OFF)
+option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON)
 
 if(LOGGING)
     # nothing
