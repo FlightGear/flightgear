@@ -100,10 +100,10 @@ void FGVoiceMgr::init()
       }
     }
 #if defined(ENABLE_FLITE)
-    SG_LOG(SG_ALL,SG_INFO,"creating flite voice" );
+    SG_LOG(SG_SOUND,SG_INFO,"creating flite voice" );
     _voices.push_back(new FGFLITEVoice(this, voice));
 #else
-    SG_LOG(SG_ALL,SG_ALERT,"non festival voice not supported." );
+    SG_LOG(SG_SOUND,SG_ALERT,"non festival voice not supported." );
 #endif
   }
 
