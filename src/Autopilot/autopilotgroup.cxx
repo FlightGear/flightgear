@@ -71,7 +71,7 @@ void FGXMLAutopilotGroupImplementation::addAutopilot( const std::string& name,
 {
   if( has_subsystem(name) )
   {
-    SG_LOG( SG_ALL,
+    SG_LOG( SG_AUTOPILOT,
             SG_ALERT,
             "NOT adding duplicate " << _nodeName << " name '" << name << "'");
     return;
@@ -90,7 +90,7 @@ void FGXMLAutopilotGroupImplementation::removeAutopilot(const std::string& name)
   Autopilot* ap = static_cast<Autopilot*>(get_subsystem(name));
   if( !ap )
   {
-    SG_LOG( SG_ALL,
+    SG_LOG( SG_AUTOPILOT,
             SG_ALERT,
             "CAN NOT remove unknown " << _nodeName << " '" << name << "'");
     return;
@@ -139,7 +139,7 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode,
     {
       SG_LOG
       (
-        SG_ALL,
+        SG_AUTOPILOT,
         SG_WARN,
         "No configuration file specified for this " << childName << "!"
       );
@@ -167,7 +167,7 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode,
       if( apName != name )
         SG_LOG
         (
-          SG_ALL,
+          SG_AUTOPILOT,
           SG_WARN,
           "Duplicate " << childName << " configuration name " << name
                                     << ", renamed to " << apName
@@ -187,7 +187,7 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
   {
     SG_LOG
     (
-      SG_ALL,
+      SG_AUTOPILOT,
       SG_ALERT,
       "Cannot find property-rule configuration file '" << path << "'."
     );
@@ -195,7 +195,7 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
   }
   SG_LOG
   (
-    SG_ALL,
+    SG_AUTOPILOT,
     SG_INFO,
     "Reading property-rule configuration from " << config.str()
   );

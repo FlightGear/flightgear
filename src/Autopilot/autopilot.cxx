@@ -211,7 +211,7 @@ void Autopilot::add_component( Component * component, double updateInterval )
       name = buf.str();
   }
   if( name != component->get_name() )
-    SG_LOG( SG_ALL, SG_WARN, "Duplicate autopilot component " << component->get_name() << ", renamed to " << name );
+    SG_LOG( SG_AUTOPILOT, SG_WARN, "Duplicate autopilot component " << component->get_name() << ", renamed to " << name );
 
   set_subsystem( name.c_str(), component, updateInterval );
 }
