@@ -370,7 +370,7 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
     if (dropTiles)
     {
         long drop_index = _enableCache ? tile_cache.get_drop_tile() :
-                                         tile_cache.get_first_invisible_tile();
+                                         tile_cache.get_first_expired_tile();
         while ( drop_index > -1 )
         {
             // schedule tile for deletion with osg pager
@@ -387,7 +387,7 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
             _pager->queueDeleteRequest(subgraph);
           
             if (!_enableCache)
-                drop_index = tile_cache.get_first_invisible_tile();
+                drop_index = tile_cache.get_first_expired_tile();
             // limit tiles dropped to drop_count
             else if (--drop_count > 0)
                 drop_index = tile_cache.get_drop_tile();

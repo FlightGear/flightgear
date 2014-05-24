@@ -127,14 +127,14 @@ long TileCache::get_drop_tile() {
     return min_index;
 }
 
-long TileCache::get_first_invisible_tile() const
+long TileCache::get_first_expired_tile() const
 {
   const_tile_map_iterator current = tile_cache.begin();
   const_tile_map_iterator end = tile_cache.end();
   
   for ( ; current != end; ++current ) {
     TileEntry *e = current->second;
-    if (!e->is_current_view())
+    if (!e->is_current_view() && e->is_expired(current_time))
     {
       return current->first;
     }

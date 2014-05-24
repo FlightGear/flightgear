@@ -74,7 +74,7 @@ public:
     // nothing available to be removed.
     long get_drop_tile();
   
-    long get_first_invisible_tile() const;
+    long get_first_expired_tile() const;
   
     // Clear all flags indicating tiles belonging to the current view
     void clear_current_view();
