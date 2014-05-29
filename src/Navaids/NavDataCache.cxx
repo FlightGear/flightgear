@@ -1750,13 +1750,13 @@ char** NavDataCache::searchAirportNamesAndIdents(const std::string& aFilter)
 {
   sqlite3_stmt_ptr stmt;
   unsigned int numMatches = 0, numAllocated = 16;
+  string searchTerm("%" + aFilter + "%");
   if (aFilter.empty()) {
     stmt = d->getAllAirports;
     numAllocated = 4096; // start much larger for all airports
   } else {
     stmt = d->searchAirports;
-    string s = "%" + aFilter + "%";
-    sqlite_bind_stdstring(stmt, 1, s);
+    sqlite_bind_stdstring(stmt, 1, searchTerm);
   }
   
   char** result = (char**) malloc(sizeof(char*) * numAllocated);
