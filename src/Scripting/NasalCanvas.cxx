@@ -62,6 +62,7 @@ struct CustomEventDetailWrapper;
 typedef SGSharedPtr<CustomEventDetailWrapper> CustomEventDetailPtr;
 typedef nasal::Ghost<CustomEventDetailPtr> NasalCustomEventDetail;
 
+typedef nasal::Ghost<simgear::PropertyBasedElementPtr> NasalPropertyBasedElement;
 typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
@@ -86,6 +87,11 @@ SGPropertyNode* from_nasal_helper(naContext c, naRef ref, SGPropertyNode**)
     naRuntimeError(c, "Not a SGPropertyNode ghost.");
 
   return props;
+}
+
+sc::CanvasWeakPtr from_nasal_helper(naContext c, naRef ref, sc::CanvasWeakPtr const*)
+{
+  return nasal::from_nasal<sc::CanvasPtr>(c, ref);
 }
 
 CanvasMgr& requireCanvasMgr(naContext c)
@@ -202,6 +208,90 @@ naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
   );
 }
 
+static void propElementSetData( simgear::PropertyBasedElement& el,
+                                const std::string& name,
+                                naContext c,
+                                naRef ref )
+{
+  if( naIsNil(ref) )
+    return el.removeDataProp(name);
+
+  std::string val = nasal::from_nasal<std::string>(c, ref);
+
+  char* end = NULL;
+
+  long val_long = strtol(val.c_str(), &end, 10);
+  if( !*end )
+    return el.setDataProp(name, val_long);
+
+  double val_double = strtod(val.c_str(), &end);
+  if( !*end )
+    return el.setDataProp(name, val_double);
+
+  el.setDataProp(name, val);
+}
+
+/**
+ * Accessor for HTML5 data properties.
+ *
+ * # set single property:
+ * el.data("myKey", 5);
+ *
+ * # set multiple properties
+ * el.data({myProp1: 12, myProp2: "test"});
+ *
+ * # get value of properties
+ * el.data("myKey");   # 5
+ * el.data("myProp2"); # "test"
+ *
+ * # remove a single property
+ * el.data("myKey", nil);
+ *
+ * # remove multiple properties
+ * el.data({myProp1: nil, myProp2: nil});
+ *
+ * # set and remove multiple properties
+ * el.data({newProp: "some text...", removeProp: nil});
+ *
+ *
+ * @see http://api.jquery.com/data/
+ */
+static naRef f_propElementData( simgear::PropertyBasedElement& el,
+                                const nasal::CallContext& ctx )
+{
+  if( ctx.isHash(0) )
+  {
+    // Add/delete properties given as hash
+    nasal::Hash obj = ctx.requireArg<nasal::Hash>(0);
+    for(nasal::Hash::iterator it = obj.begin(); it != obj.end(); ++it)
+      propElementSetData(el, it->getKey(), ctx.c, it->getValue<naRef>());
+
+    return ctx.to_nasal(&el);
+  }
+
+  std::string name = ctx.getArg<std::string>(0);
+  if( !name.empty() )
+  {
+    if( ctx.argc == 1 )
+    {
+      // name + additional argument -> add/delete property
+      SGPropertyNode* node = el.getDataProp<SGPropertyNode*>(name);
+      if( !node )
+        return naNil();
+
+      return ctx.to_nasal( node->getStringValue() );
+    }
+    else
+    {
+      // only name -> get property
+      propElementSetData(el, name, ctx.c, ctx.requireArg<naRef>(1));
+      return ctx.to_nasal(&el);
+    }
+  }
+
+  return naNil();
+}
+
 template<int Mask>
 naRef f_eventGetModifier(sc::MouseEvent& event, naContext)
 {
@@ -214,10 +304,18 @@ static naRef f_createCustomEvent(const nasal::CallContext& ctx)
   if( type.empty() )
     return naNil();
 
-  simgear::StringMap data = ctx.getArg<simgear::StringMap>(1);
+  simgear::StringMap detail;
+  if( ctx.isHash(1) )
+  {
+    nasal::Hash const& cfg = ctx.requireArg<nasal::Hash>(1);
+    naRef na_detail = cfg.get("detail");
+    if( naIsHash(na_detail) )
+      detail = ctx.from_nasal<simgear::StringMap>(na_detail);
+  }
+
   return NasalCustomEvent::create(
     ctx.c,
-    sc::CustomEventPtr(new sc::CustomEvent(type, data))
+    sc::CustomEventPtr(new sc::CustomEvent(type, detail))
   );
 }
 
@@ -271,6 +369,11 @@ naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
   return NasalElement::create(c, el.lock());
 }
 
+naRef to_nasal_helper(naContext c, const sc::CanvasWeakPtr& canvas)
+{
+  return NasalCanvas::create(c, canvas.lock());
+}
+
 naRef initNasalCanvas(naRef globals, naContext c)
 {
   using osgGA::GUIEventAdapter;
@@ -306,16 +409,22 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("metaKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_META>)
     .member("click_count", &sc::MouseEvent::getCurrentClickCount);
 
+  NasalPropertyBasedElement::init("PropertyBasedElement")
+    .method("data", &f_propElementData);
   NasalCanvas::init("Canvas")
+    .bases<NasalPropertyBasedElement>()
     .member("_node_ghost", &elementGetNode<sc::Canvas>)
     .member("size_x", &sc::Canvas::getSizeX)
     .member("size_y", &sc::Canvas::getSizeY)
     .method("_createGroup", &f_canvasCreateGroup)
     .method("_getGroup", &sc::Canvas::getGroup)
-    .method("addEventListener", &sc::Canvas::addEventListener);
+    .method("addEventListener", &sc::Canvas::addEventListener)
+    .method("dispatchEvent", &sc::Canvas::dispatchEvent);
   NasalElement::init("canvas.Element")
+    .bases<NasalPropertyBasedElement>()
     .member("_node_ghost", &elementGetNode<sc::Element>)
     .method("_getParent", &sc::Element::getParent)
+    .method("_getCanvas", &sc::Element::getCanvas)
     .method("addEventListener", &sc::Element::addEventListener)
     .method("dispatchEvent", &sc::Element::dispatchEvent)
     .method("getBoundingBox", &sc::Element::getBoundingBox)
