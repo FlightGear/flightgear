@@ -186,6 +186,7 @@ endif()
 
 if(ENABLE_FGCOM)
   set(ENABLE_IAX 1)
+  include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib ) # for iaxclient.h
 endif()
 
 # Setup MSVC 3rd party directories
@@ -339,7 +340,6 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib ) # for iaxclient.h
 # following is needed, because config.h is include 'bare', whereas
 # version.h is included as <Include/version.h> - this should be cleaned up
 include_directories(${PROJECT_BINARY_DIR}/src)
