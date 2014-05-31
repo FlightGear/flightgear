@@ -36,6 +36,8 @@
 #include <simgear/canvas/CanvasWindow.hxx>
 #include <simgear/canvas/elements/CanvasElement.hxx>
 #include <simgear/canvas/elements/CanvasText.hxx>
+#include <simgear/canvas/layout/BoxLayout.hxx>
+#include <simgear/canvas/layout/NasalWidget.hxx>
 #include <simgear/canvas/events/CustomEvent.hxx>
 #include <simgear/canvas/events/MouseEvent.hxx>
 
@@ -67,6 +69,10 @@ typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
 typedef nasal::Ghost<sc::TextPtr> NasalText;
+
+typedef nasal::Ghost<sc::LayoutItemRef> NasalLayoutItem;
+typedef nasal::Ghost<sc::LayoutRef> NasalLayout;
+
 typedef nasal::Ghost<sc::WindowWeakPtr> NasalWindow;
 
 naRef to_nasal_helper(naContext c, const osg::BoundingBox& bb)
@@ -374,8 +380,20 @@ naRef to_nasal_helper(naContext c, const sc::CanvasWeakPtr& canvas)
   return NasalCanvas::create(c, canvas.lock());
 }
 
+template<class Type, class Base>
+static naRef f_newAsBase(const nasal::CallContext& ctx)
+{
+  return ctx.to_nasal<Base*>(new Type());
+}
+
 naRef initNasalCanvas(naRef globals, naContext c)
 {
+  nasal::Hash globals_module(globals, c),
+              canvas_module = globals_module.createHash("canvas");
+
+  //----------------------------------------------------------------------------
+  // Events
+
   using osgGA::GUIEventAdapter;
   NasalEvent::init("canvas.Event")
     .member("type", &sc::Event::getTypeString)
@@ -389,6 +407,9 @@ naRef initNasalCanvas(naRef globals, naContext c)
   NasalCustomEventDetail::init("canvas.CustomEventDetail")
     ._get(&CustomEventDetailWrapper::_get)
     ._set(&CustomEventDetailWrapper::_set);
+
+  canvas_module.createHash("CustomEvent")
+               .set("new", &f_createCustomEvent);
 
   NasalMouseEvent::init("canvas.MouseEvent")
     .bases<NasalEvent>()
@@ -409,6 +430,9 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("metaKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_META>)
     .member("click_count", &sc::MouseEvent::getCurrentClickCount);
 
+  //----------------------------------------------------------------------------
+  // Canvas & elements
+
   NasalPropertyBasedElement::init("PropertyBasedElement")
     .method("data", &f_propElementData);
   NasalCanvas::init("Canvas")
@@ -420,6 +444,10 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("_getGroup", &sc::Canvas::getGroup)
     .method("addEventListener", &sc::Canvas::addEventListener)
     .method("dispatchEvent", &sc::Canvas::dispatchEvent);
+
+  canvas_module.set("_newCanvasGhost", f_createCanvas);
+  canvas_module.set("_getCanvasGhost", f_getCanvas);
+
   NasalElement::init("canvas.Element")
     .bases<NasalPropertyBasedElement>()
     .member("_node_ghost", &elementGetNode<sc::Element>)
@@ -438,20 +466,31 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .bases<NasalElement>()
     .method("getNearestCursor", &sc::Text::getNearestCursor);
 
+  //----------------------------------------------------------------------------
+  // Layouting
+
+  NasalLayoutItem::init("canvas.LayoutItem")
+    .method("setCanvas", &sc::LayoutItem::setCanvas);
+  sc::NasalWidget::setupGhost(canvas_module);
+
+  NasalLayout::init("canvas.Layout")
+    .bases<NasalLayoutItem>()
+    .method("addItem", &sc::Layout::addItem);
+
+  canvas_module.createHash("HBoxLayout")
+               .set("new", &f_newAsBase<sc::HBoxLayout, sc::Layout>);
+
+  //----------------------------------------------------------------------------
+  // Window
+
   NasalWindow::init("canvas.Window")
     .bases<NasalElement>()
     .member("_node_ghost", &elementGetNode<sc::Window>)
-    .method("_getCanvasDecoration", &sc::Window::getCanvasDecoration);
-    
-  nasal::Hash globals_module(globals, c),
-              canvas_module = globals_module.createHash("canvas");
+    .method("_getCanvasDecoration", &sc::Window::getCanvasDecoration)
+    .method("setLayout", &sc::Window::setLayout);
 
-  canvas_module.set("_newCanvasGhost", f_createCanvas);
   canvas_module.set("_newWindowGhost", f_createWindow);
-  canvas_module.set("_getCanvasGhost", f_getCanvas);
   canvas_module.set("_getDesktopGhost", f_getDesktop);
 
-  canvas_module.createHash("CustomEvent")
-               .set("new", &f_createCustomEvent);
   return naNil();
 }

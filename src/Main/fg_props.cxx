@@ -44,7 +44,6 @@ static bool winding_ccw = true; // FIXME: temporary
 static bool frozen = false;	// FIXME: temporary
 
 using std::string;
-
 ////////////////////////////////////////////////////////////////////////
 // Default property bindings (not yet handled by any module).
 ////////////////////////////////////////////////////////////////////////
@@ -80,6 +79,7 @@ LogClassMapping log_class_mappings [] = {
   LogClassMapping(SG_ENVIRONMENT, "environment"),
   LogClassMapping(SG_SOUND, "sound"),
   LogClassMapping(SG_NAVAID, "navaid"),
+  LogClassMapping(SG_GUI, "gui"),
   LogClassMapping(SG_UNDEFD, "")
 };
 
