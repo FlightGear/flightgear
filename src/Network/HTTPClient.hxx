@@ -37,6 +37,7 @@ public:
     simgear::HTTP::Client const* client() const { return _http.get(); }
     
     virtual void init();
+    virtual void postinit();
     virtual void shutdown();
     virtual void update(double);
 

@@ -69,6 +69,8 @@
 #include <simgear/scene/model/particles.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 
+#include <simgear/package/Root.hxx>
+
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
 #include <Aircraft/FlightHistory.hxx>
@@ -123,6 +125,7 @@
 #include <Network/HTTPClient.hxx>
 #include <Network/fgcom.hxx>
 #include <Network/http/httpd.hxx>
+#include <Include/version.h>
 
 #include <Viewer/CameraGroup.hxx>
 
@@ -149,7 +152,9 @@ using std::string;
 using std::endl;
 using std::cerr;
 using std::cout;
+
 using namespace boost::algorithm;
+using namespace simgear::pkg;
 
 extern osg::ref_ptr<osgViewer::Viewer> viewer;
 
@@ -480,11 +485,19 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
 
 int fgInitAircraft(bool reinit)
 {
+    // FIXME - use Documents/FlightGear/Aircraft
+    SGPath userAircraftDir = globals->get_fg_home();
+    userAircraftDir.append("Aircraft");
+  
+    SGSharedPtr<Root> pkgRoot(new Root(userAircraftDir, FLIGHTGEAR_VERSION));
+    // set the http client later (too early in startup right now)
+    globals->setPackageRoot(pkgRoot);
+  
     // Scan user config files and command line for a specified aircraft.
     if (reinit) {
         SGPropertyNode* sim = fgGetNode("/sim", true);
         sim->removeChildren("fg-aircraft");
-        // after reset, add aircraft dirs to props, neede for Nasal IO rules
+        // after reset, add aircraft dirs to props, needed for Nasal IO rules
         string_list::const_iterator it;
         int index = 0;
         for (it = globals->get_aircraft_paths().begin();
@@ -493,7 +506,6 @@ int fgInitAircraft(bool reinit)
             SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
             n->setStringValue(*it);
             n->setAttribute(SGPropertyNode::WRITE, false);
-
         }
         
         SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);

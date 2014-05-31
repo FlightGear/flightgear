@@ -31,6 +31,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 typedef std::vector<std::string> string_list;
 typedef std::vector<SGPath> PathList;
@@ -66,6 +67,10 @@ class FGViewer;
 class FGRenderer;
 class FGFontCache;
 class FGSampleQueue;
+
+namespace simgear { namespace pkg {
+  class Root;
+}}
 
 /**
  * Bucket for subsystem pointers representing the sim's state.
@@ -163,7 +168,8 @@ private:
     
     typedef std::vector<SGPropertyChangeListener*> SGPropertyChangeListenerVec;
     SGPropertyChangeListenerVec _listeners_to_cleanup;
-    
+  
+    SGSharedPtr<simgear::pkg::Root> _packageRoot;
 public:
 
     FGGlobals();
@@ -337,6 +343,9 @@ public:
     void set_chatter_queue(FGSampleQueue* queue);
     
     void addListenerToCleanup(SGPropertyChangeListener* l);
+  
+    simgear::pkg::Root* packageRoot();
+    void setPackageRoot(const SGSharedPtr<simgear::pkg::Root>& p);
 };
 
 

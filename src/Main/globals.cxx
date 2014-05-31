@@ -43,6 +43,7 @@
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/scene/model/modellib.hxx>
+#include <simgear/package/Root.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
@@ -738,6 +739,16 @@ void FGGlobals::cleanupListeners()
         delete *i;
     }
     _listeners_to_cleanup.clear();
+}
+
+simgear::pkg::Root* FGGlobals::packageRoot()
+{
+  return _packageRoot.get();
+}
+
+void FGGlobals::setPackageRoot(const SGSharedPtr<simgear::pkg::Root>& p)
+{
+  _packageRoot = p;
 }
 
 // end of globals.cxx

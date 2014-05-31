@@ -20,8 +20,97 @@
 
 #include "HTTPClient.hxx"
 
+#include <cassert>
+
 #include <Main/fg_props.hxx>
+#include <Include/version.h>
+
 #include <simgear/sg_inlines.h>
+
+#include <simgear/package/Root.hxx>
+#include <simgear/package/Catalog.hxx>
+#include <simgear/package/Delegate.hxx>
+#include <simgear/package/Install.hxx>
+#include <simgear/package/Package.hxx>
+
+#include <simgear/nasal/cppbind/from_nasal.hxx>
+#include <simgear/nasal/cppbind/to_nasal.hxx>
+#include <simgear/nasal/cppbind/NasalHash.hxx>
+#include <simgear/nasal/cppbind/Ghost.hxx>
+
+#include <Scripting/NasalSys.hxx>
+
+using namespace simgear;
+
+typedef nasal::Ghost<pkg::RootRef> NasalPackageRoot;
+typedef nasal::Ghost<pkg::PackageRef> NasalPackage;
+typedef nasal::Ghost<pkg::CatalogRef> NasalCatalog;
+typedef nasal::Ghost<pkg::InstallRef> NasalInstall;
+
+// #define ENABLE_PACKAGE_SYSTEM 1
+
+namespace {
+  
+  class FGDelegate : public pkg::Delegate
+{
+public:
+  virtual void refreshComplete()
+  {
+    SG_LOG(SG_IO, SG_INFO, "all Catalogs refreshed");
+    
+    // auto-update; make this controlled by a property
+    pkg::Root* r = globals->packageRoot();
+    
+    pkg::PackageList toBeUpdated(r->packagesNeedingUpdate());
+    pkg::PackageList::const_iterator it;
+    for (it = toBeUpdated.begin(); it != toBeUpdated.end(); ++it) {
+      assert((*it)->isInstalled());
+      SG_LOG(SG_IO, SG_INFO, "updating:" << (*it)->id());
+      r->scheduleToUpdate((*it)->install());
+    }
+  }
+
+  virtual void failedRefresh(pkg::Catalog* aCat, FailureCode aReason)
+  {
+    switch (aReason) {
+    case pkg::Delegate::FAIL_SUCCESS:
+        SG_LOG(SG_IO, SG_WARN, "refresh of Catalog done");
+        break;
+        
+    default:
+        SG_LOG(SG_IO, SG_WARN, "refresh of Catalog " << aCat->url() << " failed:" << aReason);
+    }
+  }
+  
+  virtual void startInstall(pkg::Install* aInstall)
+  {
+    SG_LOG(SG_IO, SG_INFO, "begining install of:" << aInstall->package()->id()
+           << " to local path:" << aInstall->path());
+
+  }
+  
+  virtual void installProgress(pkg::Install* aInstall, unsigned int aBytes, unsigned int aTotal)
+  {
+    SG_LOG(SG_IO, SG_INFO, "installing:" << aInstall->package()->id() << ":"
+           << aBytes << " of " << aTotal);
+  }
+  
+  virtual void finishInstall(pkg::Install* aInstall)
+  {
+    SG_LOG(SG_IO, SG_INFO, "finished install of:" << aInstall->package()->id()
+           << " to local path:" << aInstall->path());
+
+  }
+  
+  virtual void failedInstall(pkg::Install* aInstall, FailureCode aReason)
+  {
+    SG_LOG(SG_IO, SG_WARN, "install failed of:" << aInstall->package()->id()
+           << " to local path:" << aInstall->path());
+  }
+
+};
+
+} // of anonymous namespace
 
 FGHTTPClient::FGHTTPClient()
 {
@@ -42,6 +131,77 @@ void FGHTTPClient::init()
   if (!proxyHost.empty()) {
     _http->setProxy(proxyHost, proxyPort, proxyAuth);
   }
+  
+#ifdef ENABLE_PACKAGE_SYSTEM
+  pkg::Root* packageRoot = globals->packageRoot();
+  if (packageRoot) {
+    // package system needs access to the HTTP engine too
+    packageRoot->setHTTPClient(_http.get());
+    
+    packageRoot->setDelegate(new FGDelegate);
+    
+    // setup default catalog if not present
+    pkg::Catalog* defaultCatalog = packageRoot->getCatalogById("org.flightgear.default");
+    if (!defaultCatalog) {
+      // always show this message
+      SG_LOG(SG_GENERAL, SG_ALERT, "default catalog not found, installing...");
+      pkg::Catalog::createFromUrl(packageRoot,
+          "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/default-catalog.xml");
+    }
+    
+    // start a refresh now
+    packageRoot->refresh();
+  }
+#endif // of ENABLE_PACKAGE_SYSTEM
+}
+
+void FGHTTPClient::postinit()
+{
+#ifdef ENABLE_PACKAGE_SYSTEM
+  NasalPackageRoot::init("PackageRoot")
+  .member("path", &pkg::Root::path)
+  .member("version", &pkg::Root::catalogVersion)
+  .method("refresh", &pkg::Root::refresh)
+  .method("packageById", &pkg::Root::getPackageById)
+  .method("catalogById", &pkg::Root::getCatalogById);
+  
+  NasalCatalog::init("Catalog")
+  .member("installRoot", &pkg::Catalog::installRoot)
+  .member("id", &pkg::Catalog::id)
+  .member("url", &pkg::Catalog::url)
+  .member("description", &pkg::Catalog::description)
+  .method("packageById", &pkg::Catalog::getPackageById)
+  .method("refresh", &pkg::Catalog::refresh)
+  .method("needingUpdate", &pkg::Catalog::packagesNeedingUpdate)
+  .member("installed", &pkg::Catalog::installedPackages);
+  
+  NasalPackage::init("Package")
+  .member("id", &pkg::Package::id)
+  .member("name", &pkg::Package::name)
+  .member("description", &pkg::Package::description)
+  .member("installed", &pkg::Package::isInstalled)
+  .member("thumbnails", &pkg::Package::thumbnailUrls)
+  .member("revision", &pkg::Package::revision)
+  .member("catalog", &pkg::Package::catalog)
+  .method("install", &pkg::Package::install)
+  .method("lprop", &pkg::Package::getLocalisedProp);
+  
+  NasalInstall::init("Install")
+  .member("revision", &pkg::Install::revsion)
+  .member("pkg", &pkg::Install::package)
+  .member("path", &pkg::Install::path)
+  .member("hasUpdate", &pkg::Install::hasUpdate)
+  .method("startUpdate", & pkg::Install::startUpdate)
+  .method("uninstall", &pkg::Install::uninstall);
+  
+  pkg::Root* packageRoot = globals->packageRoot();
+  if (packageRoot) {
+    FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
+    nasal::Hash nasalGlobals = nasalSys->getGlobals();
+    nasal::Hash nasalPkg = nasalGlobals.createHash("pkg"); // module
+    nasalPkg.set("root", packageRoot);
+  }
+#endif // of ENABLE_PACKAGE_SYSTEM
 }
 
 void FGHTTPClient::shutdown()
