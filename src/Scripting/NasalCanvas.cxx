@@ -391,6 +391,8 @@ naRef initNasalCanvas(naRef globals, naContext c)
   nasal::Hash globals_module(globals, c),
               canvas_module = globals_module.createHash("canvas");
 
+  nasal::Object::setupGhost();
+
   //----------------------------------------------------------------------------
   // Events
 
@@ -437,6 +439,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("data", &f_propElementData);
   NasalCanvas::init("Canvas")
     .bases<NasalPropertyBasedElement>()
+    .bases<nasal::ObjectRef>()
     .member("_node_ghost", &elementGetNode<sc::Canvas>)
     .member("size_x", &sc::Canvas::getSizeX)
     .member("size_y", &sc::Canvas::getSizeY)
@@ -470,7 +473,9 @@ naRef initNasalCanvas(naRef globals, naContext c)
   // Layouting
 
   NasalLayoutItem::init("canvas.LayoutItem")
-    .method("setCanvas", &sc::LayoutItem::setCanvas);
+    .method("getCanvas", &sc::LayoutItem::getCanvas)
+    .method("setCanvas", &sc::LayoutItem::setCanvas)
+    .method("getParent", &sc::LayoutItem::getParent);
   sc::NasalWidget::setupGhost(canvas_module);
 
   NasalLayout::init("canvas.Layout")
