@@ -154,7 +154,7 @@ static naRef f_createFileDialog(naContext c, naRef me, int argc, naRef* args)
     FileDialogPtr fd(new PUIFileDialog(usage));
 #endif
     
-    return NasalFileDialog::create(c, fd);
+    return nasal::to_nasal(c, fd);
 }
 
 void postinitNasalGUI(naRef globals, naContext c)

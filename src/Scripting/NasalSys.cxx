@@ -487,7 +487,7 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
   }
   
   TimerObj* timerObj = new TimerObj(nasalSys, func, self, args[0].num);
-  return NasalTimerObj::create(c, timerObj);
+  return nasal::to_nasal(c, timerObj);
 }
 
 // setlistener(func, property, bool) extension function.  Falls through to

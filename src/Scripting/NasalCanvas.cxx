@@ -73,7 +73,7 @@ typedef nasal::Ghost<sc::TextPtr> NasalText;
 typedef nasal::Ghost<sc::LayoutItemRef> NasalLayoutItem;
 typedef nasal::Ghost<sc::LayoutRef> NasalLayout;
 
-typedef nasal::Ghost<sc::WindowWeakPtr> NasalWindow;
+typedef nasal::Ghost<sc::WindowPtr> NasalWindow;
 
 naRef to_nasal_helper(naContext c, const osg::BoundingBox& bb)
 {
@@ -93,11 +93,6 @@ SGPropertyNode* from_nasal_helper(naContext c, naRef ref, SGPropertyNode**)
     naRuntimeError(c, "Not a SGPropertyNode ghost.");
 
   return props;
-}
-
-sc::CanvasWeakPtr from_nasal_helper(naContext c, naRef ref, sc::CanvasWeakPtr const*)
-{
-  return nasal::from_nasal<sc::CanvasPtr>(c, ref);
 }
 
 CanvasMgr& requireCanvasMgr(naContext c)
@@ -125,7 +120,7 @@ GUIMgr& requireGUIMgr(naContext c)
  */
 static naRef f_createCanvas(const nasal::CallContext& ctx)
 {
-  return NasalCanvas::create(ctx.c, requireCanvasMgr(ctx.c).createCanvas());
+  return ctx.to_nasal(requireCanvasMgr(ctx.c).createCanvas());
 }
 
 /**
@@ -133,7 +128,7 @@ static naRef f_createCanvas(const nasal::CallContext& ctx)
  */
 static naRef f_createWindow(const nasal::CallContext& ctx)
 {
-  return NasalWindow::create
+  return nasal::to_nasal<sc::WindowWeakPtr>
   (
     ctx.c,
     requireGUIMgr(ctx.c).createWindow( ctx.getArg<std::string>(0) )
@@ -166,16 +161,12 @@ static naRef f_getCanvas(naContext c, naRef me, int argc, naRef* args)
       canvas = canvas_mgr.getCanvas( props.getIntValue("index") );
   }
 
-  return NasalCanvas::create(c, canvas);
+  return nasal::to_nasal(c, canvas);
 }
 
 naRef f_canvasCreateGroup(sc::Canvas& canvas, const nasal::CallContext& ctx)
 {
-  return NasalGroup::create
-  (
-    ctx.c,
-    canvas.createGroup( ctx.getArg<std::string>(0) )
-  );
+  return ctx.to_nasal( canvas.createGroup(ctx.getArg<std::string>(0)) );
 }
 
 /**
@@ -183,35 +174,18 @@ naRef f_canvasCreateGroup(sc::Canvas& canvas, const nasal::CallContext& ctx)
  */
 naRef f_getDesktop(naContext c, naRef me, int argc, naRef* args)
 {
-  return NasalGroup::create(c, requireGUIMgr(c).getDesktop());
+  return nasal::to_nasal(c, requireGUIMgr(c).getDesktop());
 }
 
-naRef f_groupCreateChild(sc::Group& group, const nasal::CallContext& ctx)
+static naRef f_groupCreateChild(sc::Group& group, const nasal::CallContext& ctx)
 {
-  return NasalElement::create
-  (
-    ctx.c,
-    group.createChild( ctx.requireArg<std::string>(0),
-                       ctx.getArg<std::string>(1) )
-  );
+  return ctx.to_nasal( group.createChild( ctx.requireArg<std::string>(0),
+                                          ctx.getArg<std::string>(1) ) );
 }
 
-naRef f_groupGetChild(sc::Group& group, const nasal::CallContext& ctx)
+static sc::ElementPtr f_groupGetChild(sc::Group& group, SGPropertyNode* node)
 {
-  return NasalElement::create
-  (
-    ctx.c,
-    group.getChild( ctx.requireArg<SGPropertyNode*>(0) )
-  );
-}
-
-naRef f_groupGetElementById(sc::Group& group, const nasal::CallContext& ctx)
-{
-  return NasalElement::create
-  (
-    ctx.c,
-    group.getElementById( ctx.requireArg<std::string>(0) )
-  );
+  return group.getChild(node);
 }
 
 static void propElementSetData( simgear::PropertyBasedElement& el,
@@ -319,10 +293,7 @@ static naRef f_createCustomEvent(const nasal::CallContext& ctx)
       detail = ctx.from_nasal<simgear::StringMap>(na_detail);
   }
 
-  return NasalCustomEvent::create(
-    ctx.c,
-    sc::CustomEventPtr(new sc::CustomEvent(type, detail))
-  );
+  return ctx.to_nasal( sc::CustomEventPtr(new sc::CustomEvent(type, detail)) );
 }
 
 struct CustomEventDetailWrapper:
@@ -368,16 +339,6 @@ static naRef f_customEventGetDetail( sc::CustomEvent& event,
     c,
     CustomEventDetailPtr(new CustomEventDetailWrapper(&event))
   );
-}
-
-naRef to_nasal_helper(naContext c, const sc::ElementWeakPtr& el)
-{
-  return NasalElement::create(c, el.lock());
-}
-
-naRef to_nasal_helper(naContext c, const sc::CanvasWeakPtr& canvas)
-{
-  return NasalCanvas::create(c, canvas.lock());
 }
 
 template<class Type, class Base>
@@ -445,7 +406,10 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("size_y", &sc::Canvas::getSizeY)
     .method("_createGroup", &f_canvasCreateGroup)
     .method("_getGroup", &sc::Canvas::getGroup)
-    .method("addEventListener", &sc::Canvas::addEventListener)
+    .method( "addEventListener",
+             static_cast<bool (sc::Canvas::*)( const std::string&,
+                                               const sc::EventListener& )>
+             (&sc::Canvas::addEventListener) )
     .method("dispatchEvent", &sc::Canvas::dispatchEvent);
 
   canvas_module.set("_newCanvasGhost", f_createCanvas);
@@ -460,11 +424,12 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("dispatchEvent", &sc::Element::dispatchEvent)
     .method("getBoundingBox", &sc::Element::getBoundingBox)
     .method("getTightBoundingBox", &sc::Element::getTightBoundingBox);
+
   NasalGroup::init("canvas.Group")
     .bases<NasalElement>()
     .method("_createChild", &f_groupCreateChild)
-    .method("_getChild", &f_groupGetChild)
-    .method("_getElementById", &f_groupGetElementById);
+    .method( "_getChild", &f_groupGetChild)
+    .method("_getElementById", &sc::Group::getElementById);
   NasalText::init("canvas.Text")
     .bases<NasalElement>()
     .method("getNearestCursor", &sc::Text::getNearestCursor);

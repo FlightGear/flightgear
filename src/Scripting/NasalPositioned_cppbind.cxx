@@ -131,12 +131,12 @@ static naRef f_airport_comms(FGAirport& apt, const nasal::CallContext& ctx)
 }
 
 //------------------------------------------------------------------------------
-FGRunway* runwayFromNasalArg( const FGAirport& apt,
+FGRunwayRef runwayFromNasalArg( const FGAirport& apt,
                               const nasal::CallContext& ctx,
                               size_t index = 0 )
 {
   if( index >= ctx.argc )
-    return NULL;
+    return FGRunwayRef();
 
   try
   {
@@ -145,7 +145,7 @@ FGRunway* runwayFromNasalArg( const FGAirport& apt,
     {
       if( !apt.hasRunwayWithIdent(ident) )
         // TODO warning/exception?
-        return NULL;
+        return FGRunwayRef();
 
       return apt.getRunwayByIdent(ident);
     }
@@ -154,7 +154,7 @@ FGRunway* runwayFromNasalArg( const FGAirport& apt,
   {}
 
   // TODO warn/error if no runway?
-  return NasalRunway::fromNasal(ctx.c, ctx.args[index]);
+  return ctx.from_nasal<FGRunwayRef>(ctx.args[index]);
 }
 
 //------------------------------------------------------------------------------
@@ -245,8 +245,8 @@ static bool extractGeod(nasal::CallContext& ctx, SGGeod& result)
 
   if( ctx.isGhost(0) )
   {
-    FGPositioned* pos =
-      NasalPositioned::fromNasal(ctx.c, ctx.requireArg<naRef>(0));
+    FGPositionedRef pos =
+      ctx.from_nasal<FGPositionedRef>(ctx.requireArg<naRef>(0));
 
     if( pos )
     {
