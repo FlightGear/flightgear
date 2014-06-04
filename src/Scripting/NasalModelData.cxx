@@ -4,13 +4,14 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
+#include <osg/Transform>
+#include <osg/observer_ptr>
+
 #include <simgear/math/SGMath.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 #include <simgear/scene/util/OsgDebug.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/debug/logstream.hxx>
-
-#include <osg/Transform>
 
 #include <boost/bind.hpp>
 

@@ -25,8 +25,9 @@
 #include <Main/util.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#include <simgear/nasal/cppbind/from_nasal.hxx>
-#include <simgear/nasal/cppbind/to_nasal.hxx>
+#include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
+
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 

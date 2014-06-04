@@ -8,7 +8,7 @@
 #include <simgear/misc/strutils.hxx> // for string_list
 #include <simgear/misc/sg_path.hxx>
 
-#include <simgear/nasal/cppbind/Ghost.hxx>
+#include <simgear/nasal/cppbind/NasalCallContext.hxx>
 
 // forward decls
 class SGPropertyNode;

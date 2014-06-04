@@ -26,10 +26,9 @@
 #include "FileDialog.hxx"
 
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
-#include <simgear/nasal/cppbind/from_nasal.hxx>
-#include <simgear/nasal/cppbind/to_nasal.hxx>
-#include <simgear/nasal/cppbind/NasalHash.hxx>
+#include <simgear/nasal/cppbind/Ghost.hxx>
 
 #include <Main/globals.hxx>
 #include <Scripting/NasalSys.hxx>
