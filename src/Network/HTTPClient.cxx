@@ -162,6 +162,7 @@ void FGHTTPClient::postinit()
   .member("path", &pkg::Root::path)
   .member("version", &pkg::Root::catalogVersion)
   .method("refresh", &pkg::Root::refresh)
+  .method("catalogs", &pkg::Root::catalogs)
   .method("packageById", &pkg::Root::getPackageById)
   .method("catalogById", &pkg::Root::getCatalogById);
   
@@ -170,6 +171,7 @@ void FGHTTPClient::postinit()
   .member("id", &pkg::Catalog::id)
   .member("url", &pkg::Catalog::url)
   .member("description", &pkg::Catalog::description)
+  .method("packages", &pkg::Catalog::packages)
   .method("packageById", &pkg::Catalog::getPackageById)
   .method("refresh", &pkg::Catalog::refresh)
   .method("needingUpdate", &pkg::Catalog::packagesNeedingUpdate)
@@ -191,7 +193,7 @@ void FGHTTPClient::postinit()
   .member("pkg", &pkg::Install::package)
   .member("path", &pkg::Install::path)
   .member("hasUpdate", &pkg::Install::hasUpdate)
-  .method("startUpdate", & pkg::Install::startUpdate)
+  .method("startUpdate", &pkg::Install::startUpdate)
   .method("uninstall", &pkg::Install::uninstall);
   
   pkg::Root* packageRoot = globals->packageRoot();
