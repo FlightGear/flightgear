@@ -72,6 +72,7 @@ typedef nasal::Ghost<sc::TextPtr> NasalText;
 
 typedef nasal::Ghost<sc::LayoutItemRef> NasalLayoutItem;
 typedef nasal::Ghost<sc::LayoutRef> NasalLayout;
+typedef nasal::Ghost<sc::BoxLayoutRef> NasalBoxLayout;
 
 typedef nasal::Ghost<sc::WindowPtr> NasalWindow;
 
@@ -341,6 +342,14 @@ static naRef f_customEventGetDetail( sc::CustomEvent& event,
   );
 }
 
+static naRef f_boxLayoutAddItem( sc::BoxLayout& box,
+                                 const nasal::CallContext& ctx )
+{
+  box.addItem( ctx.requireArg<sc::LayoutItemRef>(0),
+               ctx.getArg<int>(1) );
+  return naNil();
+}
+
 template<class Type, class Base>
 static naRef f_newAsBase(const nasal::CallContext& ctx)
 {
@@ -447,8 +456,14 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .bases<NasalLayoutItem>()
     .method("addItem", &sc::Layout::addItem);
 
+  NasalBoxLayout::init("canvas.BoxLayout")
+    .bases<NasalLayout>()
+    .method("addItem", &f_boxLayoutAddItem);
+
   canvas_module.createHash("HBoxLayout")
-               .set("new", &f_newAsBase<sc::HBoxLayout, sc::Layout>);
+               .set("new", &f_newAsBase<sc::HBoxLayout, sc::BoxLayout>);
+  canvas_module.createHash("VBoxLayout")
+               .set("new", &f_newAsBase<sc::VBoxLayout, sc::BoxLayout>);
 
   //----------------------------------------------------------------------------
   // Window
