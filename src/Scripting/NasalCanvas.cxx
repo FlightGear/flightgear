@@ -349,6 +349,28 @@ static naRef f_boxLayoutAddItem( sc::BoxLayout& box,
                ctx.getArg<int>(1) );
   return naNil();
 }
+static naRef f_boxLayoutInsertItem( sc::BoxLayout& box,
+                                    const nasal::CallContext& ctx )
+{
+  box.insertItem( ctx.requireArg<int>(0),
+                  ctx.requireArg<sc::LayoutItemRef>(1),
+                  ctx.getArg<int>(2) );
+  return naNil();
+}
+
+static naRef f_boxLayoutAddStretch( sc::BoxLayout& box,
+                                    const nasal::CallContext& ctx )
+{
+  box.addStretch( ctx.getArg<int>(0) );
+  return naNil();
+}
+static naRef f_boxLayoutInsertStretch( sc::BoxLayout& box,
+                                       const nasal::CallContext& ctx )
+{
+  box.insertStretch( ctx.requireArg<int>(0),
+                     ctx.getArg<int>(1) );
+  return naNil();
+}
 
 template<class Type, class Base>
 static naRef f_newAsBase(const nasal::CallContext& ctx)
@@ -458,7 +480,12 @@ naRef initNasalCanvas(naRef globals, naContext c)
 
   NasalBoxLayout::init("canvas.BoxLayout")
     .bases<NasalLayout>()
-    .method("addItem", &f_boxLayoutAddItem);
+    .method("addItem", &f_boxLayoutAddItem)
+    .method("addSpacing", &sc::BoxLayout::addSpacing)
+    .method("addStretch", &f_boxLayoutAddStretch)
+    .method("insertItem", &f_boxLayoutInsertItem)
+    .method("insertSpacing", &sc::BoxLayout::insertSpacing)
+    .method("insertStretch", &f_boxLayoutInsertStretch);
 
   canvas_module.createHash("HBoxLayout")
                .set("new", &f_newAsBase<sc::HBoxLayout, sc::BoxLayout>);
