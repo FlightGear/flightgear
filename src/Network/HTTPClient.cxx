@@ -236,13 +236,21 @@ void FGHTTPClient::postinit()
   .method("uninstall", &f_package_uninstall)
   .method("lprop", &pkg::Package::getLocalisedProp);
   
+  typedef pkg::Install* (pkg::Install::*InstallCallback)
+                        (const pkg::Install::Callback&);
+  typedef pkg::Install* (pkg::Install::*ProgressCallback)
+                        (const pkg::Install::ProgressCallback&);
   NasalInstall::init("Install")
   .member("revision", &pkg::Install::revsion)
   .member("pkg", &pkg::Install::package)
   .member("path", &pkg::Install::path)
   .member("hasUpdate", &pkg::Install::hasUpdate)
   .method("startUpdate", &pkg::Install::startUpdate)
-  .method("uninstall", &pkg::Install::uninstall);
+  .method("uninstall", &pkg::Install::uninstall)
+  .method("done", static_cast<InstallCallback>(&pkg::Install::done))
+  .method("fail", static_cast<InstallCallback>(&pkg::Install::fail))
+  .method("always", static_cast<InstallCallback>(&pkg::Install::always))
+  .method("progress", static_cast<ProgressCallback>(&pkg::Install::progress));
   
   pkg::Root* packageRoot = globals->packageRoot();
   if (packageRoot) {
