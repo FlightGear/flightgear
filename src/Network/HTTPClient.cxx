@@ -155,6 +155,51 @@ void FGHTTPClient::init()
 #endif // of ENABLE_PACKAGE_SYSTEM
 }
 
+static naRef f_package_uninstall(pkg::Package& pkg, const nasal::CallContext& ctx)
+{
+    pkg::InstallRef ins = pkg.existingInstall();
+    if (ins) {
+        ins->uninstall();
+    }
+
+    return naNil();
+}
+
+static SGPropertyNode_ptr queryPropsFromHash(const nasal::Hash& h)
+{
+    SGPropertyNode_ptr props(new SGPropertyNode);
+    string_list keys(h.keys());
+    string_list::const_iterator it;
+    int tagCount = 0;
+
+    for (it = keys.begin(); it != keys.end(); ++it) {
+        if ((*it == "name") || (*it == "description")) {
+            props->setStringValue(*it, h.get<std::string>(*it));
+        } else if (strutils::starts_with(*it, "rating-")) {
+            props->setIntValue(*it, h.get<int>(*it));
+        } else if (strutils::starts_with(*it, "tag-")) {
+            SGPropertyNode_ptr tag = props->getChild("tag", tagCount++, true);
+            tag->setStringValue(it->substr(4));
+        }
+    }
+
+    return props;
+}
+
+static naRef f_root_search(pkg::Root& root, const nasal::CallContext& ctx)
+{
+    SGPropertyNode_ptr query = queryPropsFromHash(ctx.requireArg<nasal::Hash>(0));
+    pkg::PackageList result = root.packagesMatching(query);
+    return ctx.to_nasal(result);
+}
+
+static naRef f_catalog_search(pkg::Catalog& cat, const nasal::CallContext& ctx)
+{
+    SGPropertyNode_ptr query = queryPropsFromHash(ctx.requireArg<nasal::Hash>(0));
+    pkg::PackageList result = cat.packagesMatching(query);
+    return ctx.to_nasal(result);
+}
+
 void FGHTTPClient::postinit()
 {
 #ifdef ENABLE_PACKAGE_SYSTEM
@@ -164,8 +209,9 @@ void FGHTTPClient::postinit()
   .method("refresh", &pkg::Root::refresh)
   .method("catalogs", &pkg::Root::catalogs)
   .method("packageById", &pkg::Root::getPackageById)
-  .method("catalogById", &pkg::Root::getCatalogById);
-  
+  .method("catalogById", &pkg::Root::getCatalogById)
+  .method("search", &f_root_search);
+
   NasalCatalog::init("Catalog")
   .member("installRoot", &pkg::Catalog::installRoot)
   .member("id", &pkg::Catalog::id)
@@ -175,7 +221,8 @@ void FGHTTPClient::postinit()
   .method("packageById", &pkg::Catalog::getPackageById)
   .method("refresh", &pkg::Catalog::refresh)
   .method("needingUpdate", &pkg::Catalog::packagesNeedingUpdate)
-  .member("installed", &pkg::Catalog::installedPackages);
+  .member("installed", &pkg::Catalog::installedPackages)
+  .method("search", &f_catalog_search);
   
   NasalPackage::init("Package")
   .member("id", &pkg::Package::id)
@@ -186,6 +233,7 @@ void FGHTTPClient::postinit()
   .member("revision", &pkg::Package::revision)
   .member("catalog", &pkg::Package::catalog)
   .method("install", &pkg::Package::install)
+  .method("uninstall", &f_package_uninstall)
   .method("lprop", &pkg::Package::getLocalisedProp);
   
   NasalInstall::init("Install")
