@@ -471,7 +471,13 @@ naRef initNasalCanvas(naRef globals, naContext c)
   NasalLayoutItem::init("canvas.LayoutItem")
     .method("getCanvas", &sc::LayoutItem::getCanvas)
     .method("setCanvas", &sc::LayoutItem::setCanvas)
-    .method("getParent", &sc::LayoutItem::getParent);
+    .method("getParent", &sc::LayoutItem::getParent)
+    .method("setParent", &sc::LayoutItem::setParent)
+    .method("sizeHint", &sc::LayoutItem::sizeHint)
+    .method("minimumSize", &sc::LayoutItem::minimumSize)
+    .method("maximumSize", &sc::LayoutItem::maximumSize)
+    .method("setGeometry", &sc::LayoutItem::setGeometry)
+    .method("geometry", &sc::LayoutItem::geometry);
   sc::NasalWidget::setupGhost(canvas_module);
 
   NasalLayout::init("canvas.Layout")
@@ -480,6 +486,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
 
   NasalBoxLayout::init("canvas.BoxLayout")
     .bases<NasalLayout>()
+    .method("setSpacing", &sc::BoxLayout::setSpacing)
     .method("addItem", &f_boxLayoutAddItem)
     .method("addSpacing", &sc::BoxLayout::addSpacing)
     .method("addStretch", &f_boxLayoutAddStretch)
