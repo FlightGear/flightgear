@@ -168,18 +168,19 @@ static naRef f_package_uninstall(pkg::Package& pkg, const nasal::CallContext& ct
 static SGPropertyNode_ptr queryPropsFromHash(const nasal::Hash& h)
 {
     SGPropertyNode_ptr props(new SGPropertyNode);
-    string_list keys(h.keys());
-    string_list::const_iterator it;
     int tagCount = 0;
 
-    for (it = keys.begin(); it != keys.end(); ++it) {
-        if ((*it == "name") || (*it == "description")) {
-            props->setStringValue(*it, h.get<std::string>(*it));
-        } else if (strutils::starts_with(*it, "rating-")) {
-            props->setIntValue(*it, h.get<int>(*it));
-        } else if (strutils::starts_with(*it, "tag-")) {
+    for (nasal::Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
+        std::string const key = it->getKey();
+        if ((key == "name") || (key == "description")) {
+            props->setStringValue(key, it->getValue<std::string>());
+        } else if (strutils::starts_with(key, "rating-")) {
+            props->setIntValue(key, it->getValue<int>());
+        } else if (strutils::starts_with(key, "tag-")) {
             SGPropertyNode_ptr tag = props->getChild("tag", tagCount++, true);
-            tag->setStringValue(it->substr(4));
+            tag->setStringValue(key.substr(4));
+        } else {
+            SG_LOG(SG_GENERAL, SG_WARN, "unknown filter term in hash:" << key);
         }
     }
 
