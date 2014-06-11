@@ -70,6 +70,9 @@
 #include <simgear/scene/tsync/terrasync.hxx>
 
 #include <simgear/package/Root.hxx>
+#include <simgear/package/Package.hxx>
+#include <simgear/package/Install.hxx>
+#include <simgear/package/Catalog.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
@@ -483,37 +486,71 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     return flightgear::FG_OPTIONS_OK;
 }
 
+static void initAircraftDirsNasalSecurity()
+{
+    SGPropertyNode* sim = fgGetNode("/sim", true);
+    sim->removeChildren("fg-aircraft");
+    string_list::const_iterator it;
+    int index = 0;
+    for (it = globals->get_aircraft_paths().begin();
+         it != globals->get_aircraft_paths().end(); ++it, ++index)
+    {
+        SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
+        n->setStringValue(*it);
+        n->setAttribute(SGPropertyNode::WRITE, false);
+    }
+}
+
 int fgInitAircraft(bool reinit)
 {
-    // FIXME - use Documents/FlightGear/Aircraft
-    SGPath userAircraftDir = globals->get_fg_home();
-    userAircraftDir.append("Aircraft");
-  
-    SGSharedPtr<Root> pkgRoot(new Root(userAircraftDir, FLIGHTGEAR_VERSION));
-    // set the http client later (too early in startup right now)
-    globals->setPackageRoot(pkgRoot);
-  
-    // Scan user config files and command line for a specified aircraft.
-    if (reinit) {
-        SGPropertyNode* sim = fgGetNode("/sim", true);
-        sim->removeChildren("fg-aircraft");
-        // after reset, add aircraft dirs to props, needed for Nasal IO rules
-        string_list::const_iterator it;
-        int index = 0;
-        for (it = globals->get_aircraft_paths().begin();
-             it != globals->get_aircraft_paths().end(); ++it, ++index)
-        {
-            SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
-            n->setStringValue(*it);
-            n->setAttribute(SGPropertyNode::WRITE, false);
-        }
-        
-        SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
-        aircraftProp->setAttribute(SGPropertyNode::PRESERVE, true);
-    } else {
+    if (!reinit) {
+        // FIXME - use Documents/FlightGear/Aircraft
+        SGPath userAircraftDir = globals->get_fg_home();
+        userAircraftDir.append("Aircraft");
+
+        SGSharedPtr<Root> pkgRoot(new Root(userAircraftDir, FLIGHTGEAR_VERSION));
+        // set the http client later (too early in startup right now)
+        globals->setPackageRoot(pkgRoot);
+    }
+
+    SGSharedPtr<Root> pkgRoot(globals->packageRoot());
+    SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
+    aircraftProp->setAttribute(SGPropertyNode::PRESERVE, true);
+
+    if (!reinit) {
         flightgear::Options::sharedInstance()->initAircraft();
     }
-    
+
+    PackageRef acftPackage = pkgRoot->getPackageById(aircraftProp->getStringValue());
+    if (acftPackage) {
+        if (!acftPackage->isInstalled()) {
+            // naturally the better option would be to on-demand install it!
+            flightgear::fatalMessageBox("Aircraft not installed",
+                                        "Requested aircraft is not currently installed.",
+                                        aircraftProp->getStringValue());
+
+            return flightgear::FG_OPTIONS_ERROR;
+        }
+
+        SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft from " << acftPackage->id());
+
+        // set catalog path so intra-package dependencies within the catalog
+        // are resolved correctly.
+        globals->set_catalog_aircraft_path(acftPackage->catalog()->installRoot());
+
+        // set aircraft-dir to short circuit the search process
+        InstallRef acftInstall = acftPackage->install();
+        fgSetString("/sim/aircraft-dir", acftInstall->path().c_str());
+
+        // overwrite the fully qualified ID with the aircraft one, so the
+        // code in FindAndCacheAircraft works as normal
+
+        aircraftProp->setStringValue(acftPackage->id());
+        // run the traditional-code path below
+    }
+
+    initAircraftDirsNasalSecurity();
+
     FindAndCacheAircraft f(globals->get_props());
     if (!f.loadAircraft()) {
         return flightgear::FG_OPTIONS_ERROR;

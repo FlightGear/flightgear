@@ -1931,10 +1931,6 @@ void Options::initAircraft()
   } else {
     SG_LOG(SG_INPUT, SG_INFO, "No user specified aircraft, using default" );
   }
-  
-// persist across reset
-  SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
-  aircraftProp->setAttribute(SGPropertyNode::PRESERVE, true);
     
   if (p->showAircraft) {
     fgOptLogLevel( "alert" );

@@ -150,6 +150,7 @@ private:
 
     /// roots of Aircraft trees
     string_list fg_aircraft_dirs;
+    SGPath catalog_aircraft_dir;
 
     bool haveUserSettings;
 
@@ -226,8 +227,16 @@ public:
     void append_fg_scenery (const std::string &scenery);
 
     void clear_fg_scenery();
-  
-    const string_list& get_aircraft_paths() const { return fg_aircraft_dirs; }
+
+    /**
+     * specify a path we'll prepend to the aircraft paths list if non-empty.
+     * This is used with packaged aircraft, to ensure their catalog (and hence,
+     * dependency packages) are found correctly.
+     */
+    void set_catalog_aircraft_path(const SGPath& path);
+
+    string_list get_aircraft_paths() const;
+
     void append_aircraft_path(const std::string& path);
     void append_aircraft_paths(const std::string& path);
     

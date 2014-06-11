@@ -400,6 +400,22 @@ void FGGlobals::clear_fg_scenery()
   fg_scenery.clear();
 }
 
+void FGGlobals::set_catalog_aircraft_path(const SGPath& path)
+{
+    catalog_aircraft_dir = path;
+}
+
+string_list FGGlobals::get_aircraft_paths() const
+{
+    string_list r;
+    if (!catalog_aircraft_dir.isNull()) {
+        r.push_back(catalog_aircraft_dir.str());
+    }
+
+    r.insert(r.end(), fg_aircraft_dirs.begin(), fg_aircraft_dirs.end());
+    return r;
+}
+
 void FGGlobals::append_aircraft_path(const std::string& path)
 {
   SGPath dirPath(path);
@@ -419,13 +435,6 @@ void FGGlobals::append_aircraft_path(const std::string& path)
   std::string abspath = dirPath.realpath();
   unsigned int index = fg_aircraft_dirs.size();  
   fg_aircraft_dirs.push_back(abspath);
-  
-// make aircraft dirs available to Nasal
-  SGPropertyNode* sim = fgGetNode("/sim", true);
-  sim->removeChild("fg-aircraft", index);
-  SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
-  n->setStringValue(abspath);
-  n->setAttribute(SGPropertyNode::WRITE, false);
 }
 
 void FGGlobals::append_aircraft_paths(const std::string& path)

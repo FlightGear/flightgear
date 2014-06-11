@@ -209,6 +209,19 @@ do_reset (const SGPropertyNode * arg)
     return true;
 }
 
+
+/**
+ * Change aircraft
+ */
+static bool
+do_switch_aircraft (const SGPropertyNode * arg)
+{
+    fgSetString("/sim/aircraft", arg->getStringValue("aircraft"));
+    // start a reset
+    fgResetIdleState();
+    return true;
+}
+
 /**
  */
 static bool
@@ -1462,6 +1475,7 @@ static struct {
     { "exit", do_exit },
     { "reset", do_reset },
     { "reposition", do_reposition },
+    { "switch-aircraft", do_switch_aircraft },
     { "pause", do_pause },
     { "load", do_load },
     { "save", do_save },
