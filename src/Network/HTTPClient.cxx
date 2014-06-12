@@ -239,7 +239,8 @@ void FGHTTPClient::postinit()
   .member("catalog", &pkg::Package::catalog)
   .method("install", &pkg::Package::install)
   .method("uninstall", &f_package_uninstall)
-  .method("lprop", &pkg::Package::getLocalisedProp);
+  .method("lprop", &pkg::Package::getLocalisedProp)
+  .member("fileSize", &pkg::Package::fileSizeBytes);
   
   typedef pkg::Install* (pkg::Install::*InstallCallback)
                         (const pkg::Install::Callback&);
