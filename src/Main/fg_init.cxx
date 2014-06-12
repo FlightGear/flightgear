@@ -490,10 +490,12 @@ static void initAircraftDirsNasalSecurity()
 {
     SGPropertyNode* sim = fgGetNode("/sim", true);
     sim->removeChildren("fg-aircraft");
-    string_list::const_iterator it;
+
     int index = 0;
-    for (it = globals->get_aircraft_paths().begin();
-         it != globals->get_aircraft_paths().end(); ++it, ++index)
+    string_list const aircraft_paths = globals->get_aircraft_paths();
+    for( string_list::const_iterator it = aircraft_paths.begin();
+                                     it != aircraft_paths.end();
+                                   ++it, ++index )
     {
         SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
         n->setStringValue(*it);
