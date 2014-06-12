@@ -463,6 +463,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("_getElementById", &sc::Group::getElementById);
   NasalText::init("canvas.Text")
     .bases<NasalElement>()
+    .method("heightForWidth", &sc::Text::heightForWidth)
     .method("getNearestCursor", &sc::Text::getNearestCursor);
 
   //----------------------------------------------------------------------------
@@ -476,6 +477,9 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("sizeHint", &sc::LayoutItem::sizeHint)
     .method("minimumSize", &sc::LayoutItem::minimumSize)
     .method("maximumSize", &sc::LayoutItem::maximumSize)
+    .method("hasHeightForWidth", &sc::LayoutItem::hasHeightForWidth)
+    .method("heightForWidth", &sc::LayoutItem::heightForWidth)
+    .method("minimumHeightForWidth", &sc::LayoutItem::minimumHeightForWidth)
     .method("setGeometry", &sc::LayoutItem::setGeometry)
     .method("geometry", &sc::LayoutItem::geometry);
   sc::NasalWidget::setupGhost(canvas_module);
