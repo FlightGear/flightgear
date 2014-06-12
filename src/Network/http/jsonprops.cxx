@@ -114,18 +114,30 @@ void JSON::toProp(cJSON * json, SGPropertyNode_ptr base)
       toProp(cJSON_GetArrayItem(children, i), n);
     }
   } else {
-    //TODO: set correct type
-    /*
-     char * type = "";
-     cj = cJSON_GetObjectItem( json, "type" );
-     if( NULL != cj ) type = cj->valuestring;
-     */
-    char * value = NULL;
     cj = cJSON_GetObjectItem(json, "value");
-    if (NULL != cj) value = cj->valuestring;
-
-    if (NULL != value) n->setUnspecifiedValue(value);
-  }
+    if (NULL != cj) {
+      switch ( cj->type ) {
+      case cJSON_String:
+        n->setStringValue(cj->valuestring);
+        break;
+        
+      case cJSON_Number:
+        n->setDoubleValue(cj->valuedouble);
+        break;
+        
+      case cJSON_True:
+        n->setBoolValue(true);
+        break;
+        
+      case cJSON_False:
+        n->setBoolValue(false);
+        break;
+          
+      default:
+        break;
+      }
+    } // of have value
+  } // of no children
 }
 
 void JSON::addChildrenToProp(cJSON * json, SGPropertyNode_ptr n)
