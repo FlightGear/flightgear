@@ -523,30 +523,32 @@ int fgInitAircraft(bool reinit)
 
     PackageRef acftPackage = pkgRoot->getPackageById(aircraftProp->getStringValue());
     if (acftPackage) {
-        if (!acftPackage->isInstalled()) {
+        if (acftPackage->isInstalled()) {
+            SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft from package:" << acftPackage->qualifiedId());
+
+            // set catalog path so intra-package dependencies within the catalog
+            // are resolved correctly.
+            globals->set_catalog_aircraft_path(acftPackage->catalog()->installRoot());
+
+            // set aircraft-dir to short circuit the search process
+            InstallRef acftInstall = acftPackage->install();
+            fgSetString("/sim/aircraft-dir", acftInstall->path().c_str());
+
+            // overwrite the fully qualified ID with the aircraft one, so the
+            // code in FindAndCacheAircraft works as normal
+
+            aircraftProp->setStringValue(acftPackage->id());
+            // run the traditional-code path below
+        } else {
+#if 0
             // naturally the better option would be to on-demand install it!
             flightgear::fatalMessageBox("Aircraft not installed",
                                         "Requested aircraft is not currently installed.",
                                         aircraftProp->getStringValue());
 
             return flightgear::FG_OPTIONS_ERROR;
+#endif
         }
-
-        SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft from " << acftPackage->id());
-
-        // set catalog path so intra-package dependencies within the catalog
-        // are resolved correctly.
-        globals->set_catalog_aircraft_path(acftPackage->catalog()->installRoot());
-
-        // set aircraft-dir to short circuit the search process
-        InstallRef acftInstall = acftPackage->install();
-        fgSetString("/sim/aircraft-dir", acftInstall->path().c_str());
-
-        // overwrite the fully qualified ID with the aircraft one, so the
-        // code in FindAndCacheAircraft works as normal
-
-        aircraftProp->setStringValue(acftPackage->id());
-        // run the traditional-code path below
     }
 
     initAircraftDirsNasalSecurity();
