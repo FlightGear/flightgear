@@ -47,7 +47,7 @@ typedef nasal::Ghost<pkg::PackageRef> NasalPackage;
 typedef nasal::Ghost<pkg::CatalogRef> NasalCatalog;
 typedef nasal::Ghost<pkg::InstallRef> NasalInstall;
 
-// #define ENABLE_PACKAGE_SYSTEM 1
+#define ENABLE_PACKAGE_SYSTEM 1
 
 namespace {
   
