@@ -23,6 +23,7 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/SimpleMarkdown.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/event_mgr.hxx>
@@ -697,6 +698,19 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
     return naStr_fromdata(naNewString(c), const_cast<char*>(file), strlen(file));
 }
 
+/**
+ * Parse very simple and small subset of markdown
+ *
+ * parse_markdown(src)
+ */
+static naRef f_parse_markdown(naContext c, naRef me, int argc, naRef* args)
+{
+  nasal::CallContext ctx(c, argc, args);
+  return ctx.to_nasal(
+    simgear::SimpleMarkdown::parse(ctx.requireArg<std::string>(0))
+  );
+}
+
 // Return UNIX epoch time in seconds.
 static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
 {
@@ -735,6 +749,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "resolvepath", f_resolveDataPath },
     { "finddata", f_findDataDir },
     { "parsexml", f_parsexml },
+    { "parse_markdown", f_parse_markdown },
     { "systime", f_systime },
     { 0, 0 }
 };
