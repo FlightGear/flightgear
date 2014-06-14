@@ -490,7 +490,8 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("count", &sc::Layout::count)
     .method("itemAt", &sc::Layout::itemAt)
     .method("takeAt", &sc::Layout::takeAt)
-    .method("removeItem", &sc::Layout::removeItem);
+    .method("removeItem", &sc::Layout::removeItem)
+    .method("clear", &sc::Layout::clear);
 
   NasalBoxLayout::init("canvas.BoxLayout")
     .bases<NasalLayout>()
