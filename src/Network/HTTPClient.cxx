@@ -183,6 +183,8 @@ static SGPropertyNode_ptr queryPropsFromHash(const nasal::Hash& h)
                 SGPropertyNode_ptr tag = props->getChild("tag", tagCount++, true);
                 tag->setStringValue(*tagIt);
             }
+        } else if (key == "installed") {
+            props->setBoolValue(key, it->getValue<bool>());
         } else {
             SG_LOG(SG_GENERAL, SG_WARN, "unknown filter term in hash:" << key);
         }
