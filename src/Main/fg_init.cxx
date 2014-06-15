@@ -523,7 +523,8 @@ int fgInitAircraft(bool reinit)
         flightgear::Options::sharedInstance()->initAircraft();
     }
 
-    PackageRef acftPackage = pkgRoot->getPackageById(aircraftProp->getStringValue());
+    string aircraftId(aircraftProp->getStringValue());
+    PackageRef acftPackage = pkgRoot->getPackageById(aircraftId);
     if (acftPackage) {
         if (acftPackage->isInstalled()) {
             SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft from package:" << acftPackage->qualifiedId());
@@ -538,15 +539,20 @@ int fgInitAircraft(bool reinit)
 
             // overwrite the fully qualified ID with the aircraft one, so the
             // code in FindAndCacheAircraft works as normal
+            // note since we may be using a variant, we can't use the package ID
+            size_t lastDot = aircraftId.rfind('.');
+            if (lastDot != std::string::npos) {
+                aircraftId = aircraftId.substr(lastDot + 1);
+                aircraftProp->setStringValue(aircraftId);
 
-            aircraftProp->setStringValue(acftPackage->id());
+            }
             // run the traditional-code path below
         } else {
 #if 0
             // naturally the better option would be to on-demand install it!
             flightgear::fatalMessageBox("Aircraft not installed",
                                         "Requested aircraft is not currently installed.",
-                                        aircraftProp->getStringValue());
+                                        aircraftId);
 
             return flightgear::FG_OPTIONS_ERROR;
 #endif

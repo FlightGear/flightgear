@@ -207,6 +207,17 @@ static naRef f_catalog_search(pkg::Catalog& cat, const nasal::CallContext& ctx)
     return ctx.to_nasal(result);
 }
 
+static naRef f_package_variants(pkg::Package& pack, naContext c)
+{
+    nasal::Hash h(c);
+    string_list vars(pack.variants());
+    for (string_list_iterator it  = vars.begin(); it != vars.end(); ++it) {
+        h.set(*it, pack.nameForVariant(*it));
+    }
+
+    return h.get_naRef();
+}
+
 void FGHTTPClient::postinit()
 {
 #ifdef ENABLE_PACKAGE_SYSTEM
@@ -237,6 +248,7 @@ void FGHTTPClient::postinit()
   .member("description", &pkg::Package::description)
   .member("installed", &pkg::Package::isInstalled)
   .member("thumbnails", &pkg::Package::thumbnailUrls)
+  .member("variants", &f_package_variants)
   .member("revision", &pkg::Package::revision)
   .member("catalog", &pkg::Package::catalog)
   .method("install", &pkg::Package::install)
