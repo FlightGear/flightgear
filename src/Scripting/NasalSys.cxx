@@ -926,6 +926,9 @@ void FGNasalSys::update(double)
         _unloadList.pop()->unload();
     }
 
+    // Destroy all queued ghosts
+    nasal::ghostProcessDestroyList();
+
     // The global context is a legacy thing.  We use dynamically
     // created contexts for naCall() now, so that we can call them
     // recursively.  But there are still spots that want to use it for
