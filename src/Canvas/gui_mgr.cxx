@@ -501,6 +501,12 @@ sc::WindowPtr GUIMgr::createWindow(const std::string& name)
 //------------------------------------------------------------------------------
 void GUIMgr::init()
 {
+  if( _desktop && _event_handler )
+  {
+    SG_LOG(SG_GUI, SG_WARN, "GUIMgr::init() already initialized.");
+    return;
+  }
+
   DesktopPtr desktop( new DesktopGroup );
   desktop->handleResize
   (
@@ -530,14 +536,27 @@ void GUIMgr::init()
 //------------------------------------------------------------------------------
 void GUIMgr::shutdown()
 {
-  _desktop->destroy();
-  _desktop.reset();
+  if( !_desktop && !_event_handler )
+  {
+    SG_LOG(SG_GUI, SG_WARN, "GUIMgr::shutdown() not running.");
+    return;
+  }
+
   sc::Canvas::removePlacementFactory("window");
 
-  globals->get_renderer()
-         ->getViewer()
-         ->removeEventHandler( _event_handler );
-  _event_handler = 0;
+  if( _desktop )
+  {
+    _desktop->destroy();
+    _desktop.reset();
+  }
+
+  if( _event_handler )
+  {
+    globals->get_renderer()
+           ->getViewer()
+           ->removeEventHandler( _event_handler );
+    _event_handler = 0;
+  }
 }
 
 //------------------------------------------------------------------------------
