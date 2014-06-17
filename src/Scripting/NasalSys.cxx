@@ -28,6 +28,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/debug/BufferedLogCallback.hxx>
+#include <simgear/package/md5.h>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
 #include <simgear/nasal/cppbind/to_nasal.hxx>
@@ -711,6 +712,35 @@ static naRef f_parse_markdown(naContext c, naRef me, int argc, naRef* args)
   );
 }
 
+/**
+ * Create md5 hash from given string
+ *
+ * md5(str)
+ */
+static naRef f_md5(naContext c, naRef me, int argc, naRef* args)
+{
+  nasal::CallContext ctx(c, argc, args);
+  std::string const str = ctx.requireArg<std::string>(0);
+
+  SG_MD5_CTX md5_ctx;
+  SG_MD5Init(&md5_ctx);
+  SG_MD5Update(&md5_ctx, (unsigned char*)str.c_str(), str.size());
+
+  unsigned char digest[MD5_DIGEST_LENGTH];
+  SG_MD5Final(digest, &md5_ctx);
+
+  // TODO make something more generic
+  // convert final sum to hex
+  const char hexChar[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+  std::stringstream hexMd5;
+  for (int i=0; i<MD5_DIGEST_LENGTH;++i) {
+      hexMd5 << hexChar[digest[i] >> 4];
+      hexMd5 << hexChar[digest[i] & 0x0f];
+  }
+
+  return ctx.to_nasal(hexMd5.str());
+}
+
 // Return UNIX epoch time in seconds.
 static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
 {
@@ -750,6 +780,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "finddata", f_findDataDir },
     { "parsexml", f_parsexml },
     { "parse_markdown", f_parse_markdown },
+    { "md5", f_md5 },
     { "systime", f_systime },
     { 0, 0 }
 };
