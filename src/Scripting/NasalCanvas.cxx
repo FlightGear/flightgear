@@ -464,6 +464,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
   NasalText::init("canvas.Text")
     .bases<NasalElement>()
     .method("heightForWidth", &sc::Text::heightForWidth)
+    .method("maxWidth", &sc::Text::maxWidth)
     .method("getNearestCursor", &sc::Text::getNearestCursor);
 
   //----------------------------------------------------------------------------
