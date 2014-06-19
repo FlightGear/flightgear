@@ -87,7 +87,6 @@ _fgfs_options=(
 	'--fg-root=[Specify the root data path]:Directories:_directories' \
 	'--fg-scenery=[Specify the base scenery path]:Directories:_directories' \
 	'--language=[Select the language for this session]:Language:->language' \
-	'--control=[Primary control mode]:Primary control mode:(joystick keyboard mouse)' \
 	'--browser-app=[Specify path to your web browser]:Directories:_directories' \
 	'--config=[Load additional properties from path]' \
 	'--failure=[Fail the pitot, static, vacuum, or electrical system]:Failure system:(pitot static vaccum electical)'

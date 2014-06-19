@@ -98,7 +98,6 @@ __fgfs_options="
 	--fg-root=
 	--fg-scenery=
 	--language=
-	--control=
 	--browser-app=
 	--config=
 	--failure=
@@ -251,9 +250,6 @@ __fgfs() {
 		;;
 	--carrier=*)
 		alt=$(__fgfs_offer Nimitz Eisenhower Foch)
-		;;
-	--control=*)
-		alt=$(__fgfs_offer joystick keyboard mouse)
 		;;
 	--failure=*)
 		alt=$(__fgfs_offer pitot static vacuum electrical)

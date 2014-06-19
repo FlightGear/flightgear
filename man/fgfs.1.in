@@ -78,9 +78,6 @@ Set the initial COM2 radio frequency.
 Load additional properties from path.  Multiple instances of this
 option are recognized.
 .TP
-.BI "--control=" "mode"
-Primary control mode (joystick, keyboard, mouse).
-.TP
 .BI "--dme=" "{nav1|nav2|frequency}"
 Specify the NAV radio from which to slave the ADF or set its internal
 frequency.

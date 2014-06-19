@@ -162,7 +162,6 @@ void fgSetDefaults ()
     // we want mouse-pointer to have an undefined value if nothing is
     // specified so we can do the right thing for voodoo-1/2 cards.
     // fgSetString("/sim/startup/mouse-pointer", "disabled");
-    fgSetString("/sim/control-mode", "joystick");
     fgSetBool("/controls/flight/auto-coordination", false);
     fgSetString("/sim/logging/priority", "alert");
 
@@ -1467,7 +1466,6 @@ struct OptionDesc {
     {"enable-hud-3d",                false, OPTION_BOOL,   "/sim/hud/enable3d[1]", true, "", 0 },
     {"disable-anti-alias-hud",       false, OPTION_BOOL,   "/sim/hud/color/antialiased", false, "", 0 },
     {"enable-anti-alias-hud",        false, OPTION_BOOL,   "/sim/hud/color/antialiased", true, "", 0 },
-    {"control",                      true,  OPTION_STRING, "/sim/control-mode", false, "", 0 },
     {"disable-auto-coordination",    false, OPTION_BOOL,   "/controls/flight/auto-coordination", false, "", 0 },
     {"enable-auto-coordination",     false, OPTION_BOOL,   "/controls/flight/auto-coordination", true, "", 0 },
     {"browser-app",                  true,  OPTION_STRING, "/sim/startup/browser-app", false, "", 0 },
