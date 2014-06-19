@@ -285,6 +285,7 @@ static naRef f_createCustomEvent(const nasal::CallContext& ctx)
   if( type.empty() )
     return naNil();
 
+  bool bubbles = false;
   simgear::StringMap detail;
   if( ctx.isHash(1) )
   {
@@ -292,9 +293,12 @@ static naRef f_createCustomEvent(const nasal::CallContext& ctx)
     naRef na_detail = cfg.get("detail");
     if( naIsHash(na_detail) )
       detail = ctx.from_nasal<simgear::StringMap>(na_detail);
+    bubbles = cfg.get<bool>("bubbles");
   }
 
-  return ctx.to_nasal( sc::CustomEventPtr(new sc::CustomEvent(type, detail)) );
+  return ctx.to_nasal(
+    sc::CustomEventPtr(new sc::CustomEvent(type, bubbles, detail))
+  );
 }
 
 struct CustomEventDetailWrapper:
