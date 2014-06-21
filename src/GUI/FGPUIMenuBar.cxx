@@ -95,12 +95,17 @@ FGPUIMenuBar::~FGPUIMenuBar ()
 void
 FGPUIMenuBar::init ()
 {
+    bool visible = _visible;
     destroy_menubar();
-  
+
     make_menubar();
                                 // FIXME: temporary commands to get at
                                 // old, hard-coded dialogs.
     add_deprecated_dialogs();
+
+    // Keep menu visible during gui-redraw
+    if( visible )
+      show();
 }
 
 void
