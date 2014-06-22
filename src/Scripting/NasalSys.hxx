@@ -29,7 +29,6 @@ class FGNasalModuleListener;
 namespace simgear { class BufferedLogCallback; }
 
 SGPropertyNode* ghostToPropNode(naRef ref);
-SGCondition* conditionGhost(naRef r);
 
 class FGNasalSys : public SGSubsystem
 {
