@@ -53,6 +53,8 @@ static naRef f_createCondition(naContext c, naRef me, int argc, naRef* args)
   {
     naRuntimeError(c, "createCondition: %s", ex.what());
   }
+
+  return naNil();
 }
 
 //------------------------------------------------------------------------------
