@@ -1085,6 +1085,12 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     // The camera group will always update the camera
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
 
+    // Draw all nodes in the order they are added to the GUI camera
+    camera->getOrCreateStateSet()
+          ->setRenderBinDetails( 0,
+                                 "PreOrderBin",
+                                 osg::StateSet::OVERRIDE_RENDERBIN_DETAILS );
+
     getViewer()->addSlave(camera, Matrixd::identity(), Matrixd::identity(), false);
     //installCullVisitor(camera);
     int slaveIndex = getViewer()->getNumSlaves() - 1;

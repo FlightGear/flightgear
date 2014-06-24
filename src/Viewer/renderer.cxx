@@ -1534,14 +1534,13 @@ FGRenderer::setupView( void )
     // plug in the GUI
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (guiCamera) {
-        
-        osg::Geode* geode = new osg::Geode;
-        geode->addDrawable(new SGPuDrawable);
-        geode->addDrawable(new SGHUDDrawable);
-        guiCamera->addChild(geode);
-      
-        
-      guiCamera->addChild(FGPanelNode::create2DPanelNode());
+      osg::Geode* geode = new osg::Geode;
+      geode->addDrawable(new SGHUDDrawable);
+      geode->addDrawable(new SGPuDrawable);
+
+      // Draw first (eg. before Canvas GUI)
+      guiCamera->insertChild(0, geode);
+      guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
     }
     
     osg::Switch* sw = new osg::Switch;
