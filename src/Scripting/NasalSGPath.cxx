@@ -60,6 +60,12 @@ static naRef f_new_path(const nasal::CallContext& ctx)
   return validatedPathToNasal(ctx, SGPath(ctx.getArg<std::string>(0)));
 }
 
+static int f_path_create_dir(SGPath& p, const nasal::CallContext& ctx)
+{
+  // limit setable access rights for Nasal
+  return p.create_dir(ctx.getArg<mode_t>(0, 0755) & 0775);
+}
+
 /**
  * os.path.desktop()
  */
@@ -126,10 +132,10 @@ naRef initNasalSGPath(naRef globals, naContext c)
     .method("isAbsolute", &SGPath::isAbsolute)
     .method("isNull", &SGPath::isNull)
 
-    .method("create_dir", &SGPath::create_dir)
+    .method("create_dir", &f_path_create_dir)
     .method("remove", &SGPath::remove)
     .method("rename", &SGPath::rename);
- 
+
   nasal::Hash globals_module(globals, c),
               path = globals_module.createHash("os")
                                    .createHash("path");
