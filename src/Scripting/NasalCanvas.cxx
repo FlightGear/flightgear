@@ -445,7 +445,8 @@ naRef initNasalCanvas(naRef globals, naContext c)
              static_cast<bool (sc::Canvas::*)( const std::string&,
                                                const sc::EventListener& )>
              (&sc::Canvas::addEventListener) )
-    .method("dispatchEvent", &sc::Canvas::dispatchEvent);
+    .method("dispatchEvent", &sc::Canvas::dispatchEvent)
+    .method("setLayout", &sc::Canvas::setLayout);
 
   canvas_module.set("_newCanvasGhost", f_createCanvas);
   canvas_module.set("_getCanvasGhost", f_getCanvas);
