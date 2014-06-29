@@ -43,6 +43,7 @@ public:
 private:
     enum Projection {
         PROJECTION_SAMSON_FLAMSTEED,
+        PROJECTION_AZIMUTHAL_EQUIDISTANT,
         PROJECTION_ORTHO_AZIMUTH,
         PROJECTION_SPHERICAL
     };

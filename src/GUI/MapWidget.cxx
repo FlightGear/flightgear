@@ -464,7 +464,7 @@ MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
   _width = maxX - x;
   _height = maxY - y;
   _hasPanned = false;
-  _projection = PROJECTION_SAMSON_FLAMSTEED;
+  _projection = PROJECTION_AZIMUTHAL_EQUIDISTANT;
   _magneticHeadings = false;
   
   MapData::setFont(legendFont);
@@ -651,10 +651,9 @@ void MapWidget::update()
     _cachedZoom = MAX_ZOOM - zoom();
     SGGeod topLeft = unproject(SGVec2d(_width/2, _height/2));
     // compute draw range, including a fudge factor for ILSs and other 'long'
-    // symbols
+    // symbols.
     _drawRangeNm = SGGeodesy::distanceNm(_projectionCenter, topLeft) + 10.0;
-    
-    
+  
     FGFlightHistory* history = (FGFlightHistory*) globals->get_subsystem("history");
     if (history && _root->getBoolValue("draw-flight-history")) {
         _flightHistoryPath = history->pathForHistory();
@@ -742,7 +741,7 @@ void MapWidget::draw(int dx, int dy)
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
-  // cetere drawing about the widget center (which is also the
+  // center drawing about the widget center (which is also the
   // projection centre)
   glTranslated(dx + sx + (_width/2), dy + sy + (_height/2), 0.0);
 
@@ -975,7 +974,13 @@ SGVec2d MapWidget::gridPoint(int ix, int iy)
 
 void MapWidget::drawLatLonGrid()
 {
-  _gridSpacing = 1.0;
+  // Larger grid spacing when zoomed out, to prevent clutter
+  if (_cachedZoom < SHOW_DETAIL_ZOOM) {
+    _gridSpacing = 1.0;
+  } else {
+    _gridSpacing = 5.0;
+  }
+  
   _gridCenter = roundGeod(_gridSpacing, _projectionCenter);
   _gridCache.clear();
 
@@ -995,7 +1000,6 @@ void MapWidget::drawLatLonGrid()
       didDraw |= drawLineClipped(gridPoint(x, iy), gridPoint(x+1, iy));
       didDraw |= drawLineClipped(gridPoint(x, -iy), gridPoint(x, -iy + 1));
       didDraw |= drawLineClipped(gridPoint(x, iy), gridPoint(x, iy - 1));
-
     }
 
     for (int y = -iy; y < iy; ++y) {
@@ -1005,7 +1009,7 @@ void MapWidget::drawLatLonGrid()
       didDraw |= drawLineClipped(gridPoint(ix, y), gridPoint(ix - 1, y));
     }
 
-    if (ix > 30) {
+    if (ix > (90/_gridSpacing)-1) {
       break;
     }
   } while (didDraw);
@@ -1565,7 +1569,46 @@ SGVec2d MapWidget::project(const SGGeod& geod) const
         p = SGVec2d(cos(geod.getLatitudeRad()) * lonDiff, latDiff) * r * currentScale();
         break;
     }
-            
+	
+    case PROJECTION_AZIMUTHAL_EQUIDISTANT:
+    {
+        // Azimuthal Equidistant projection, relative to the projection center
+      // http://www.globmaritime.com/martech/marine-navigation/general-concepts/626-azimuthal-equidistant-projection
+        double ref_lat = _projectionCenter.getLatitudeRad(),
+               ref_lon = _projectionCenter.getLongitudeRad(),
+               lat = geod.getLatitudeRad(),
+               lon = geod.getLongitudeRad(),
+               lonDiff = lon - ref_lon;
+      
+        double c = acos( sin(ref_lat) * sin(lat) + cos(ref_lat) * cos(lat) * cos(lonDiff) );
+        if (c == 0.0){
+            // angular distance from center is 0
+            p= SGVec2d(0.0, 0.0);
+            break;
+        }
+      
+        double k = c / sin(c);
+        double x, y;
+        if (ref_lat == (90 * SG_DEGREES_TO_RADIANS))
+        {
+            x = (SGD_PI / 2 - lat) * sin(lonDiff);
+            y = -(SGD_PI / 2 - lat) * cos(lonDiff);
+        }
+        else if (ref_lat == -(90 * SG_DEGREES_TO_RADIANS))
+        {
+            x = (SGD_PI / 2 + lat) * sin(lonDiff);
+            y = (SGD_PI / 2 + lat) * cos(lonDiff);
+        }
+        else
+        {
+            x = k * cos(lat) * sin(lonDiff);
+            y = k * ( cos(ref_lat) * sin(lat) - sin(ref_lat) * cos(lat) * cos(lonDiff) );
+        }
+        p = SGVec2d(x, y) * r * currentScale();
+      
+        break;
+    }
+    
     case PROJECTION_ORTHO_AZIMUTH:
     {
         // http://mathworld.wolfram.com/OrthographicProjection.html
@@ -1620,6 +1663,43 @@ SGGeod MapWidget::unproject(const SGVec2d& p) const
         SGVec2d unscaled = ur * (1.0 / (currentScale() * r));
         double lat = unscaled.y() + _projectionCenter.getLatitudeRad();
         double lon = (unscaled.x() / cos(lat)) + _projectionCenter.getLongitudeRad();
+        return SGGeod::fromRad(lon, lat);
+    }
+	
+    case PROJECTION_AZIMUTHAL_EQUIDISTANT:
+    {
+        double r = earth_radius_lat(_projectionCenter.getLatitudeRad());
+        SGVec2d unscaled = ur * (1.0 / currentScale());
+        double lat = 0,
+               lon = 0,
+               ref_lat = _projectionCenter.getLatitudeRad(),
+               ref_lon = _projectionCenter.getLongitudeRad(),
+               rho = sqrt(unscaled.x() * unscaled.x() + unscaled.y() * unscaled.y()),
+               c = rho/r;
+        
+        if (rho == 0)
+        {
+            lat = ref_lat;
+            lon = ref_lon;
+        } 
+        else
+        {
+            lat = asin( cos(c) * sin(ref_lat) + (unscaled.y()  * sin(c) * cos(ref_lat)) / rho);
+
+            if (ref_lat == (90 * SG_DEGREES_TO_RADIANS))
+            {
+                lon = ref_lon + atan(-unscaled.x()/unscaled.y());
+            }
+            else if (ref_lat == -(90 * SG_DEGREES_TO_RADIANS))
+            {
+                lon = ref_lon + atan(unscaled.x()/unscaled.y());
+            }
+            else
+            {
+                lon = ref_lon + atan(unscaled.x() * sin(c) / (rho * cos(ref_lat) * cos(c) - unscaled.y() * sin(ref_lat) * sin(c)));
+            }
+         }
+
         return SGGeod::fromRad(lon, lat);
     }
         
