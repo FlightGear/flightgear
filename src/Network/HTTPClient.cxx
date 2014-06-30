@@ -155,6 +155,14 @@ void FGHTTPClient::init()
 #endif // of ENABLE_PACKAGE_SYSTEM
 }
 
+static naRef f_package_existingInstall( pkg::Package& pkg,
+                                        const nasal::CallContext& ctx )
+{
+  return ctx.to_nasal(
+    pkg.existingInstall( ctx.getArg<pkg::Package::InstallCallback>(0) )
+  );
+}
+
 static naRef f_package_uninstall(pkg::Package& pkg, const nasal::CallContext& ctx)
 {
     pkg::InstallRef ins = pkg.existingInstall();
@@ -253,6 +261,7 @@ void FGHTTPClient::postinit()
   .member("catalog", &pkg::Package::catalog)
   .method("install", &pkg::Package::install)
   .method("uninstall", &f_package_uninstall)
+  .method("existingInstall", &f_package_existingInstall)
   .method("lprop", &pkg::Package::getLocalisedProp)
   .member("fileSize", &pkg::Package::fileSizeBytes);
   
