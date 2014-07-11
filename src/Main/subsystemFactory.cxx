@@ -77,7 +77,7 @@ SGSubsystem* createSubsystemByName(const std::string& name)
     MAKE_SUB(FGSoundManager, "sound");
     MAKE_SUB(FGInterpolator, "prop-interpolator")
     MAKE_SUB(FGProperties, "properties");
-    MAKE_SUB(FDMShell, "fdm");
+    MAKE_SUB(FDMShell, "flight");
     MAKE_SUB(FGEnvironmentMgr, "environment");
     MAKE_SUB(Ephemeris, "ephemeris");
     MAKE_SUB(FGSystemMgr, "aircraft-systems");
