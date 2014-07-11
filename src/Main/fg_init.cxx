@@ -677,10 +677,8 @@ void fgCreateSubsystems(bool duringReset) {
     // Initialize the property interpolator subsystem. Put into the INIT
     // group because the "nasal" subsystem may need it at GENERAL take-down.
     ////////////////////////////////////////////////////////////////////
-    FGInterpolator* interp = new FGInterpolator;
-    interp->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
-    globals->add_subsystem("prop-interpolator", interp, SGSubsystemMgr::INIT);
-    SGPropertyNode::setInterpolationMgr(interp);
+    globals->add_subsystem("prop-interpolator", new FGInterpolator, SGSubsystemMgr::INIT);
+
 
     ////////////////////////////////////////////////////////////////////
     // Add the FlightGear property utilities.

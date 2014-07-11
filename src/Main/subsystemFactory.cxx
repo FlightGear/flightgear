@@ -33,6 +33,7 @@
 
 // subsystem includes
 #include <Aircraft/controls.hxx>
+#include <Aircraft/FlightHistory.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/FGInterpolator.hxx>
 #include <Main/fg_io.hxx>
@@ -45,6 +46,7 @@
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/autopilotgroup.hxx>
 #include <Traffic/TrafficMgr.hxx>
+#include <Network/fgcom.hxx>
 #include <Network/HTTPClient.hxx>
 #include <Cockpit/cockpitDisplayManager.hxx>
 #include <GUI/new_gui.hxx>
@@ -61,6 +63,7 @@
 #include <Canvas/gui_mgr.hxx>
 #include <Time/light.hxx>
 #include <Viewer/viewmgr.hxx>
+#include <Model/acmodel.hxx>
 #include <Model/modelmgr.hxx>
 
 using std::vector;
@@ -72,39 +75,45 @@ SGSubsystem* createSubsystemByName(const std::string& name)
 {
 #define MAKE_SUB(cl, n) \
     if (name == n) return new cl;
-    
-    MAKE_SUB(FGControls, "controls");  
+
     MAKE_SUB(FGSoundManager, "sound");
     MAKE_SUB(FGInterpolator, "prop-interpolator")
     MAKE_SUB(FGProperties, "properties");
+    MAKE_SUB(FGHTTPClient, "http");
     MAKE_SUB(FDMShell, "flight");
     MAKE_SUB(FGEnvironmentMgr, "environment");
     MAKE_SUB(Ephemeris, "ephemeris");
-    MAKE_SUB(FGSystemMgr, "aircraft-systems");
-    MAKE_SUB(FGInstrumentMgr, "instruments");
+    MAKE_SUB(FGSystemMgr, "systems");
+    MAKE_SUB(FGInstrumentMgr, "instrumentation");
     MAKE_SUB(HUD, "hud");
     MAKE_SUB(flightgear::CockpitDisplayManager, "cockpit-displays");
-    MAKE_SUB(FGIO, "io");
-    MAKE_SUB(FGHTTPClient, "http");
     MAKE_SUB(FGRouteMgr, "route-manager");
+    MAKE_SUB(FGIO, "io");
     MAKE_SUB(FGLogger, "logger");
     MAKE_SUB(NewGUI, "gui");
-    MAKE_SUB(FGATCManager, "atc");
+    MAKE_SUB(CanvasMgr, "Canvas");
+    MAKE_SUB(GUIMgr, "CanvasGUI");
+    MAKE_SUB(FGATCManager, "ATC");
     MAKE_SUB(FGMultiplayMgr, "mp");
+    MAKE_SUB(FGAIManager, "ai-model");
+    MAKE_SUB(FGSubmodelMgr, "submodel-mgr");
     MAKE_SUB(FGTrafficManager, "traffic-manager");
-    MAKE_SUB(FGAIManager, "ai-manager");
-    MAKE_SUB(FGSubmodelMgr, "submodel-manager");
     MAKE_SUB(FGControls, "controls");
     MAKE_SUB(FGInput, "input");
     MAKE_SUB(FGReplay, "replay");
+    MAKE_SUB(FGFlightHistory, "history");
+#ifdef ENABLE_AUDIO_SUPPORT
     MAKE_SUB(FGVoiceMgr, "voice");
+#endif
+#ifdef ENABLE_IAX
+    MAKE_SUB(FGCom, "fgcom");
+#endif
     MAKE_SUB(FGLight, "lighting");
-    MAKE_SUB(CanvasMgr, "canvas");
-    MAKE_SUB(GUIMgr, "canvas-gui");
-    MAKE_SUB(FGViewMgr, "view-manager");
+    MAKE_SUB(FGAircraftModel, "aircraft-model");
     MAKE_SUB(FGModelMgr, "model-manager");
+    MAKE_SUB(FGViewMgr, "view-manager");
 #undef MAKE_SUB
-    
+
     throw sg_range_exception("unknown subsystem:" + name);
 }
 
@@ -121,55 +130,73 @@ SGSubsystemMgr::GroupType mapGroupNameToType(const std::string& s)
     return SGSubsystemMgr::GENERAL;
 }
 
+static SGSubsystem* getSubsystem(const SGPropertyNode* arg, bool create)
+{
+  std::string subsystem(arg->getStringValue("subsystem"));
+  std::string name = arg->getStringValue("name");
+
+  if (name.empty()) {
+    // default name is simply the subsytem's name
+    name = subsystem;
+  }
+
+  SGSubsystem* sys = globals->get_subsystem_mgr()->get_subsystem(name);
+  if (!create)
+    return sys;
+
+  if( subsystem.empty() ) {
+    SG_LOG( SG_GENERAL,
+            SG_ALERT,
+            "do_add_subsystem: no subsystem/name supplied" );
+    return 0;
+  }
+
+  if (sys) {
+    SG_LOG( SG_GENERAL,
+            SG_ALERT,
+            "do_add_subsystem: duplicate subsystem name:" << name );
+    return 0;
+  }
+
+  std::string groupname = arg->getStringValue("group");
+  SGSubsystemMgr::GroupType group = SGSubsystemMgr::GENERAL;
+  if (!groupname.empty()) {
+    group = mapGroupNameToType(groupname);
+  }
+
+  try {
+    sys = createSubsystemByName(subsystem);
+  } catch (sg_exception& e) {
+    SG_LOG( SG_GENERAL,
+            SG_ALERT,
+            "subsystem creation failed:" << name
+                                  << ":" << e.getFormattedMessage() );
+    return 0;
+  }
+
+  bool doInit = arg->getBoolValue("do-bind-init", false);
+  if (doInit) {
+    sys->bind();
+    sys->init();
+  }
+
+  double minTime = arg->getDoubleValue("min-time-sec", 0.0);
+  globals->get_subsystem_mgr()
+         ->add(name.c_str(), sys, group, minTime);
+
+  return sys;
+}
+
+static bool
+do_check_subsystem_running(const SGPropertyNode* arg)
+{
+  return getSubsystem(arg, false) != 0;
+}
+
 static bool
 do_add_subsystem (const SGPropertyNode * arg)
 {
-    std::string subsystem(arg->getStringValue("subsystem"));
-    std::string name = arg->getStringValue("name");
-    if (subsystem.empty()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "do_add_subsystem:" 
-            << "no subsystem/name supplied");
-        return false;
-    }
-    
-  
-    if (name.empty()) {
-        // default name is simply the subsytem's name
-        name =  subsystem;
-    }
-  
-    if (globals->get_subsystem_mgr()->get_subsystem(name)) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "do_add_subsystem:" 
-            << "duplicate subsystem name:" << name);
-      return false;
-    }
-    
-    std::string groupname = arg->getStringValue("group");
-    SGSubsystemMgr::GroupType group = SGSubsystemMgr::GENERAL;
-    if (!groupname.empty()) {
-        group = mapGroupNameToType(groupname);
-    }
-    
-    SGSubsystem* instance = NULL;
-    try {
-        instance = createSubsystemByName(subsystem);
-    } catch (sg_exception& e) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "subsystem creation failed:" <<
-            name << ":" << e.getFormattedMessage());
-        return false;
-    }
-    
-    bool doInit = arg->getBoolValue("do-bind-init", false);
-    if (doInit) {
-        instance->bind();
-        instance->init();
-    }
-    
-    double minTime = arg->getDoubleValue("min-time-sec", 0.0);
-    globals->get_subsystem_mgr()->add(name.c_str(), instance,
-        group, minTime);
-    
-    return true;
+  return getSubsystem(arg, true) != 0;
 }
 
 static bool do_remove_subsystem(const SGPropertyNode * arg)
@@ -282,6 +309,7 @@ static struct {
 } built_ins [] = {
     { "add-subsystem", do_add_subsystem },
     { "remove-subsystem", do_remove_subsystem },
+    { "subsystem-running", do_check_subsystem_running },
     { "reinit", do_reinit },
     { "suspend", do_suspend },
     { "resume", do_resume },
