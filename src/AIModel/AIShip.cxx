@@ -155,8 +155,6 @@ void FGAIShip::bind() {
         SGRawValuePointer<double>(&tgt_speed));
     tie("controls/tgt-heading-degs",
         SGRawValuePointer<double>(&tgt_heading));
-    tie("controls/constants/rudder",
-        SGRawValuePointer<double>(&_rudder_constant));
     tie("controls/constants/roll-factor",
         SGRawValuePointer<double>(&_roll_factor));
     tie("controls/constants/roll",
