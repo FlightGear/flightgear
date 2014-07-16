@@ -493,6 +493,8 @@ naRef initNasalCanvas(naRef globals, naContext c)
   NasalLayout::init("canvas.Layout")
     .bases<NasalLayoutItem>()
     .method("addItem", &sc::Layout::addItem)
+    .method("setSpacing", &sc::Layout::setSpacing)
+    .method("spacing", &sc::Layout::spacing)
     .method("count", &sc::Layout::count)
     .method("itemAt", &sc::Layout::itemAt)
     .method("takeAt", &sc::Layout::takeAt)
@@ -501,13 +503,15 @@ naRef initNasalCanvas(naRef globals, naContext c)
 
   NasalBoxLayout::init("canvas.BoxLayout")
     .bases<NasalLayout>()
-    .method("setSpacing", &sc::BoxLayout::setSpacing)
     .method("addItem", &f_boxLayoutAddItem)
     .method("addSpacing", &sc::BoxLayout::addSpacing)
     .method("addStretch", &f_boxLayoutAddStretch)
     .method("insertItem", &f_boxLayoutInsertItem)
     .method("insertSpacing", &sc::BoxLayout::insertSpacing)
-    .method("insertStretch", &f_boxLayoutInsertStretch);
+    .method("insertStretch", &f_boxLayoutInsertStretch)
+    .method("setStretch", &sc::BoxLayout::setStretch)
+    .method("setStretchFactor", &sc::BoxLayout::setStretchFactor)
+    .method("stretch", &sc::BoxLayout::stretch);
 
   canvas_module.createHash("HBoxLayout")
                .set("new", &f_newAsBase<sc::HBoxLayout, sc::BoxLayout>);
