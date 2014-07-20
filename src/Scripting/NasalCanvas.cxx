@@ -139,11 +139,10 @@ static naRef f_createWindow(const nasal::CallContext& ctx)
 /**
  * Get ghost for existing Canvas.
  */
-static naRef f_getCanvas(naContext c, naRef me, int argc, naRef* args)
+static naRef f_getCanvas(const nasal::CallContext& ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
   SGPropertyNode& props = *ctx.requireArg<SGPropertyNode*>(0);
-  CanvasMgr& canvas_mgr = requireCanvasMgr(c);
+  CanvasMgr& canvas_mgr = requireCanvasMgr(ctx.c);
 
   sc::CanvasPtr canvas;
   if( canvas_mgr.getPropertyRoot() == props.getParent() )
@@ -162,7 +161,7 @@ static naRef f_getCanvas(naContext c, naRef me, int argc, naRef* args)
       canvas = canvas_mgr.getCanvas( props.getIntValue("index") );
   }
 
-  return nasal::to_nasal(c, canvas);
+  return ctx.to_nasal(canvas);
 }
 
 naRef f_canvasCreateGroup(sc::Canvas& canvas, const nasal::CallContext& ctx)

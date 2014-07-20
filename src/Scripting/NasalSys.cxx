@@ -705,7 +705,7 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
  */
 static naRef f_parse_markdown(naContext c, naRef me, int argc, naRef* args)
 {
-  nasal::CallContext ctx(c, argc, args);
+  nasal::CallContext ctx(c, me, argc, args);
   return ctx.to_nasal(
     simgear::SimpleMarkdown::parse(ctx.requireArg<std::string>(0))
   );

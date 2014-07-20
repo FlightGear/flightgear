@@ -140,9 +140,8 @@ typedef nasal::Ghost<FileDialogPtr> NasalFileDialog;
 /**
  * Create new FGFileDialog and get ghost for it.
  */
-static naRef f_createFileDialog(naContext c, naRef me, int argc, naRef* args)
+static naRef f_createFileDialog(const nasal::CallContext& ctx)
 {
-    nasal::CallContext ctx(c, argc, args);
     FGFileDialog::Usage usage = (FGFileDialog::Usage) ctx.requireArg<int>(0);
   
 #if defined(SG_MAC)
@@ -153,7 +152,7 @@ static naRef f_createFileDialog(naContext c, naRef me, int argc, naRef* args)
     FileDialogPtr fd(new PUIFileDialog(usage));
 #endif
     
-    return nasal::to_nasal(c, fd);
+    return ctx.to_nasal(fd);
 }
 
 void postinitNasalGUI(naRef globals, naContext c)

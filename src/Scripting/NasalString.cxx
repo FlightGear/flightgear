@@ -33,13 +33,12 @@
  *  compare(s)
  *  compare(pos, len, s)
  */
-static naRef f_compare(naContext c, naRef me, int argc, naRef* args)
+static naRef f_compare(const nasal::CallContext& ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-  nasal::String str = nasal::from_nasal<nasal::String>(c, me),
-                rhs = ctx.requireArg<nasal::String>(argc > 1 ? 2 : 0);
-  size_t pos = argc > 1 ? ctx.requireArg<int>(1) : 0;
-  size_t len = argc > 1 ? ctx.requireArg<int>(2) : 0;
+  nasal::String str = ctx.from_nasal<nasal::String>(ctx.me),
+                rhs = ctx.requireArg<nasal::String>(ctx.argc > 1 ? 2 : 0);
+  size_t pos = ctx.argc > 1 ? ctx.requireArg<int>(1) : 0;
+  size_t len = ctx.argc > 1 ? ctx.requireArg<int>(2) : 0;
 
   if( len == 0 )
     len = nasal::String::npos;
@@ -50,10 +49,9 @@ static naRef f_compare(naContext c, naRef me, int argc, naRef* args)
 /**
  *  Check whether string starts with other string
  */
-static naRef f_starts_with(naContext c, naRef me, int argc, naRef* args)
+static naRef f_starts_with(const nasal::CallContext& ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-  nasal::String str = nasal::from_nasal<nasal::String>(c, me),
+  nasal::String str = ctx.from_nasal<nasal::String>(ctx.me),
                 rhs = ctx.requireArg<nasal::String>(0);
 
   return naNum( str.starts_with(rhs) );
@@ -62,10 +60,9 @@ static naRef f_starts_with(naContext c, naRef me, int argc, naRef* args)
 /**
  *  Check whether string ends with other string
  */
-static naRef f_ends_with(naContext c, naRef me, int argc, naRef* args)
+static naRef f_ends_with(const nasal::CallContext& ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-  nasal::String str = nasal::from_nasal<nasal::String>(c, me),
+  nasal::String str = ctx.from_nasal<nasal::String>(ctx.me),
                 rhs = ctx.requireArg<nasal::String>(0);
 
   return naNum( str.ends_with(rhs) );
@@ -87,15 +84,14 @@ naRef pos_to_nasal(size_t pos)
  *
  *  find(c, pos = 0)
  */
-static naRef f_find(naContext c, naRef me, int argc, naRef* args)
+static naRef f_find(const nasal::CallContext& ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-  nasal::String str = nasal::from_nasal<nasal::String>(c, me),
+  nasal::String str = ctx.from_nasal<nasal::String>(ctx.me),
                 find = ctx.requireArg<nasal::String>(0);
   size_t pos = ctx.getArg<int>(1, 0);
 
   if( find.size() != 1 )
-    naRuntimeError(c, "string::find: single character expected");
+    naRuntimeError(ctx.c, "string::find: single character expected");
 
   return pos_to_nasal( str.find(*find.c_str(), pos) );
 }
@@ -105,10 +101,9 @@ static naRef f_find(naContext c, naRef me, int argc, naRef* args)
  *
  * find_first_of(search, pos = 0)
  */
-static naRef f_find_first_of(naContext c, naRef me, int argc, naRef* args)
+static naRef f_find_first_of(const nasal::CallContext& ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-  nasal::String str = nasal::from_nasal<nasal::String>(c, me),
+  nasal::String str = ctx.from_nasal<nasal::String>(ctx.me),
                 find = ctx.requireArg<nasal::String>(0);
   size_t pos = ctx.getArg<int>(1, 0);
 
@@ -120,10 +115,9 @@ static naRef f_find_first_of(naContext c, naRef me, int argc, naRef* args)
  *
  * find_first_not_of(search, pos = 0)
  */
-static naRef f_find_first_not_of(naContext c, naRef me, int argc, naRef* args)
+static naRef f_find_first_not_of(const nasal::CallContext& ctx)
 {
-  nasal::CallContext ctx(c, argc, args);
-  nasal::String str = nasal::from_nasal<nasal::String>(c, me),
+  nasal::String str = ctx.from_nasal<nasal::String>(ctx.me),
                 find = ctx.requireArg<nasal::String>(0);
   size_t pos = ctx.getArg<int>(1, 0);
 
