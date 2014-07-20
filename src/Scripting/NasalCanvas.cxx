@@ -485,6 +485,11 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("hasHeightForWidth", &sc::LayoutItem::hasHeightForWidth)
     .method("heightForWidth", &sc::LayoutItem::heightForWidth)
     .method("minimumHeightForWidth", &sc::LayoutItem::minimumHeightForWidth)
+    .method("setVisible", &sc::LayoutItem::setVisible)
+    .method("isVisible", &sc::LayoutItem::isVisible)
+    .method("isExplicitlyHidden", &sc::LayoutItem::isExplicitlyHidden)
+    .method("show", &sc::LayoutItem::show)
+    .method("hide", &sc::LayoutItem::hide)
     .method("setGeometry", &sc::LayoutItem::setGeometry)
     .method("geometry", &sc::LayoutItem::geometry);
   sc::NasalWidget::setupGhost(canvas_module);
@@ -522,6 +527,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
 
   NasalWindow::init("canvas.Window")
     .bases<NasalElement>()
+    .bases<NasalLayoutItem>()
     .member("_node_ghost", &elementGetNode<sc::Window>)
     .method("_getCanvasDecoration", &sc::Window::getCanvasDecoration)
     .method("setLayout", &sc::Window::setLayout);
