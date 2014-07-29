@@ -52,6 +52,11 @@ class GUIMgr:
      */
     simgear::canvas::GroupPtr getDesktop();
 
+    /**
+     * Set the input (keyboard) focus to the given window.
+     */
+    void setInputFocus(const simgear::canvas::WindowPtr& window);
+
   protected:
 
     simgear::canvas::GroupPtr           _desktop;

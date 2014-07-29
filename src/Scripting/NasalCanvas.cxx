@@ -39,6 +39,7 @@
 #include <simgear/canvas/layout/BoxLayout.hxx>
 #include <simgear/canvas/layout/NasalWidget.hxx>
 #include <simgear/canvas/events/CustomEvent.hxx>
+#include <simgear/canvas/events/KeyboardEvent.hxx>
 #include <simgear/canvas/events/MouseEvent.hxx>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
@@ -58,6 +59,8 @@ naRef elementGetNode(Element& element, naContext c)
 
 typedef nasal::Ghost<sc::EventPtr> NasalEvent;
 typedef nasal::Ghost<sc::CustomEventPtr> NasalCustomEvent;
+typedef nasal::Ghost<sc::DeviceEventPtr> NasalDeviceEvent;
+typedef nasal::Ghost<sc::KeyboardEventPtr> NasalKeyboardEvent;
 typedef nasal::Ghost<sc::MouseEventPtr> NasalMouseEvent;
 
 struct CustomEventDetailWrapper;
@@ -177,6 +180,12 @@ naRef f_getDesktop(naContext c, naRef me, int argc, naRef* args)
   return nasal::to_nasal(c, requireGUIMgr(c).getDesktop());
 }
 
+naRef f_setInputFocus(const nasal::CallContext& ctx)
+{
+  requireGUIMgr(ctx.c).setInputFocus(ctx.requireArg<sc::WindowPtr>(0));
+  return naNil();
+}
+
 static naRef f_groupCreateChild(sc::Group& group, const nasal::CallContext& ctx)
 {
   return ctx.to_nasal( group.createChild( ctx.requireArg<std::string>(0),
@@ -270,12 +279,6 @@ static naRef f_propElementData( simgear::PropertyBasedElement& el,
   }
 
   return naNil();
-}
-
-template<int Mask>
-naRef f_eventGetModifier(sc::MouseEvent& event, naContext)
-{
-  return naNum((event.getModifiers() & Mask) != 0);
 }
 
 static naRef f_createCustomEvent(const nasal::CallContext& ctx)
@@ -408,8 +411,24 @@ naRef initNasalCanvas(naRef globals, naContext c)
   canvas_module.createHash("CustomEvent")
                .set("new", &f_createCustomEvent);
 
-  NasalMouseEvent::init("canvas.MouseEvent")
+  NasalDeviceEvent::init("canvas.DeviceEvent")
     .bases<NasalEvent>()
+    .member("modifiers", &sc::DeviceEvent::getModifiers)
+    .member("ctrlKey", &sc::DeviceEvent::ctrlKey)
+    .member("shiftKey", &sc::DeviceEvent::shiftKey)
+    .member("altKey",  &sc::DeviceEvent::altKey)
+    .member("metaKey",  &sc::DeviceEvent::metaKey);
+
+  NasalKeyboardEvent::init("canvas.KeyboardEvent")
+    .bases<NasalDeviceEvent>()
+    .member("key", &sc::KeyboardEvent::key)
+    .member("location", &sc::KeyboardEvent::location)
+    .member("repeat", &sc::KeyboardEvent::repeat)
+    .member("charCode", &sc::KeyboardEvent::charCode)
+    .member("keyCode", &sc::KeyboardEvent::keyCode);
+
+  NasalMouseEvent::init("canvas.MouseEvent")
+    .bases<NasalDeviceEvent>()
     .member("screenX", &sc::MouseEvent::getScreenX)
     .member("screenY", &sc::MouseEvent::getScreenY)
     .member("clientX", &sc::MouseEvent::getClientX)
@@ -420,11 +439,6 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("deltaY", &sc::MouseEvent::getDeltaY)
     .member("button", &sc::MouseEvent::getButton)
     .member("buttons", &sc::MouseEvent::getButtonMask)
-    .member("modifiers", &sc::MouseEvent::getModifiers)
-    .member("ctrlKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_CTRL>)
-    .member("shiftKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_SHIFT>)
-    .member("altKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_ALT>)
-    .member("metaKey", &f_eventGetModifier<GUIEventAdapter::MODKEY_META>)
     .member("click_count", &sc::MouseEvent::getCurrentClickCount);
 
   //----------------------------------------------------------------------------
@@ -534,6 +548,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
 
   canvas_module.set("_newWindowGhost", f_createWindow);
   canvas_module.set("_getDesktopGhost", f_getDesktop);
+  canvas_module.set("setInputFocus", f_setInputFocus);
 
   return naNil();
 }

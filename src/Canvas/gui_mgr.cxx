@@ -27,6 +27,7 @@
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/CanvasPlacement.hxx>
 #include <simgear/canvas/CanvasWindow.hxx>
+#include <simgear/canvas/events/KeyboardEvent.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 
 #include <osg/BlendFunc>
@@ -100,6 +101,8 @@ class DesktopGroup:
 {
   public:
     DesktopGroup();
+
+    void setFocusWindow(const sc::WindowPtr& window);
     bool handleEvent(const osgGA::GUIEventAdapter& ea);
 
   protected:
@@ -114,7 +117,9 @@ class DesktopGroup:
 
     sc::WindowWeakPtr _last_push,
                       _last_mouse_over,
-                      _resize_window;
+                      _resize_window,
+                      _focus_window;
+
     uint8_t _resize;
     int     _last_cursor;
 
@@ -123,7 +128,10 @@ class DesktopGroup:
           _last_y;
     double _last_scroll_time;
 
+    uint32_t _last_key_down_no_mod; // Key repeat for non modifier keys
+
     bool handleMouse(const osgGA::GUIEventAdapter& ea);
+    bool handleKeyboard(const osgGA::GUIEventAdapter& ea);
     void handleResize(int x, int y, int width, int height);
     void handleMouseMode(SGPropertyNode* node);
 
@@ -173,7 +181,8 @@ DesktopGroup::DesktopGroup():
   _last_cursor(MOUSE_CURSOR_NONE),
   _last_x(-1),
   _last_y(-1),
-  _last_scroll_time(0)
+  _last_scroll_time(0),
+  _last_key_down_no_mod(-1)
 {
   osg::Camera* camera =
     flightgear::getGUICamera( flightgear::CameraGroup::getDefault() );
@@ -211,6 +220,9 @@ bool DesktopGroup::handleEvent(const osgGA::GUIEventAdapter& ea)
     case osgGA::GUIEventAdapter::MOVE:
     case osgGA::GUIEventAdapter::SCROLL:
       return handleMouse(ea);
+    case osgGA::GUIEventAdapter::KEYDOWN:
+    case osgGA::GUIEventAdapter::KEYUP:
+      return handleKeyboard(ea);
     case osgGA::GUIEventAdapter::RESIZE:
       handleResize( ea.getWindowX(),
                     ea.getWindowY(),
@@ -220,6 +232,12 @@ bool DesktopGroup::handleEvent(const osgGA::GUIEventAdapter& ea)
     default:
       return false;
   }
+}
+
+//------------------------------------------------------------------------------
+void DesktopGroup::setFocusWindow(const sc::WindowPtr& window)
+{
+  _focus_window = window;
 }
 
 /*
@@ -247,7 +265,6 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
   if( !_transform->getNumChildren() || !_handle_events )
     return false;
 
-  namespace sc = simgear::canvas;
   sc::MouseEventPtr event(new sc::MouseEvent(ea));
 
   event->screen_pos.x() = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
@@ -450,7 +467,54 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     return target_window->handleEvent(event);
   }
   else
+  {
+    // TODO somehow return if event has been consumed
+    sc::Element::handleEvent(event);
     return false;
+  }
+}
+
+//------------------------------------------------------------------------------
+bool DesktopGroup::handleKeyboard(const osgGA::GUIEventAdapter& ea)
+{
+  if( !_transform->getNumChildren() || !_handle_events )
+    return false;
+
+  sc::WindowPtr active_window = _focus_window.lock();
+  if( !active_window )
+  {
+    int type = (ea.getEventType() == osgGA::GUIEventAdapter::KEYDOWN)
+             ? sc::Event::KEY_DOWN
+             : sc::Event::KEY_UP;
+
+    if( !numEventHandler(type) )
+      // TODO handle global shortcuts/grabs/etc.
+      return false;
+  }
+
+  sc::KeyboardEventPtr event(new sc::KeyboardEvent(ea));
+
+  // Detect key repeat (of non modifier keys)
+  if( !event->isModifier() )
+  {
+    if( event->type == sc::Event::KEY_DOWN )
+    {
+      if( event->keyCode() == _last_key_down_no_mod )
+        event->setRepeat(true);
+      _last_key_down_no_mod = event->keyCode();
+    }
+    else
+    {
+      if( event->keyCode() == _last_key_down_no_mod )
+      _last_key_down_no_mod = -1;
+    }
+  }
+
+  if( active_window )
+    return active_window->handleEvent(event);
+
+  sc::Element::handleEvent(event);
+  return false;
 }
 
 //------------------------------------------------------------------------------
@@ -569,6 +633,12 @@ void GUIMgr::update(double dt)
 sc::GroupPtr GUIMgr::getDesktop()
 {
   return _desktop;
+}
+
+//------------------------------------------------------------------------------
+void GUIMgr::setInputFocus(const simgear::canvas::WindowPtr& window)
+{
+  static_cast<DesktopGroup*>(_desktop.get())->setFocusWindow(window);
 }
 
 //------------------------------------------------------------------------------
