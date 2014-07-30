@@ -132,6 +132,9 @@ class DesktopGroup:
 
     bool handleMouse(const osgGA::GUIEventAdapter& ea);
     bool handleKeyboard(const osgGA::GUIEventAdapter& ea);
+
+    bool handleRootEvent(const sc::EventPtr& event);
+
     void handleResize(int x, int y, int width, int height);
     void handleMouseMode(SGPropertyNode* node);
 
@@ -467,11 +470,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     return target_window->handleEvent(event);
   }
   else
-  {
-    // TODO somehow return if event has been consumed
-    sc::Element::handleEvent(event);
-    return false;
-  }
+    return handleRootEvent(event);
 }
 
 //------------------------------------------------------------------------------
@@ -512,9 +511,19 @@ bool DesktopGroup::handleKeyboard(const osgGA::GUIEventAdapter& ea)
 
   if( active_window )
     return active_window->handleEvent(event);
+  else
+    return handleRootEvent(event);
+}
 
+//------------------------------------------------------------------------------
+bool DesktopGroup::handleRootEvent(const sc::EventPtr& event)
+{
+  event->default_prevented = false;
   sc::Element::handleEvent(event);
-  return false;
+
+  // preventDefault() on DesktopGroup stops propagation to internal event
+  // handling.
+  return event->default_prevented;
 }
 
 //------------------------------------------------------------------------------

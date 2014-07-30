@@ -399,7 +399,9 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .member("type", &sc::Event::getTypeString)
     .member("target", &sc::Event::getTarget)
     .member("currentTarget", &sc::Event::getCurrentTarget)
-    .method("stopPropagation", &sc::Event::stopPropagation);
+    .member("defaultPrevented", &sc::Event::defaultPrevented)
+    .method("stopPropagation", &sc::Event::stopPropagation)
+    .method("preventDefault", &sc::Event::preventDefault);
 
   NasalCustomEvent::init("canvas.CustomEvent")
     .bases<NasalEvent>()
