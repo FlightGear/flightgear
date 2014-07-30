@@ -395,12 +395,14 @@ void fgSplashProgress( const char *identifier ) {
 
   fgSetString("/sim/startup/splash-progress-spinner", spin_status);
 
-  const char* text = "";
+  std::string text;
   if (identifier[0] != 0)
   {
-      std::string id = std::string("splash/") + identifier;
-      text = globals->get_locale()->getLocalizedString(id.c_str(),
-                                                       "sys", "<incomplete language resource>");
+    std::string id = std::string("splash/") + identifier;
+    text = globals->get_locale()->getLocalizedString(id.c_str(), "sys", "");
+
+    if( text.empty() )
+      text = "<incomplete language resource>: " + id;
   }
     
     if (!strcmp(identifier,"downloading-scenery")) {
@@ -414,9 +416,8 @@ void fgSplashProgress( const char *identifier ) {
         return;
     }
     
-    if (!strcmp(fgGetString("/sim/startup/splash-progress-text"), text)) {
-        return;
-    }
+    if( fgGetString("/sim/startup/splash-progress-text") == text )
+      return;
     
     SG_LOG( SG_VIEW, SG_INFO, "Splash screen progress " << identifier );
     fgSetString("/sim/startup/splash-progress-text", text);

@@ -26,8 +26,8 @@ FGMenuBar::getLocalizedLabel(SGPropertyNode* node)
     if (translated)
         return translated;
 
-    // return default
-    return node->getStringValue("label");
+    // return default with fallback to name
+    return node->getStringValue("label", name);
 }
 
 // end of menubar.cxx
