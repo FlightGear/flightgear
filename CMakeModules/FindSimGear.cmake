@@ -4,7 +4,7 @@
 # SIMGEAR_CORE_LIBRARIES, a list of the core static libraries
 # SIMGEAR_LIBRARIES, a list of all the static libraries (core + scene)
 # SIMGEAR_FOUND, if false, do not try to link to SimGear
-# SIMGEAR_INCLUDE_DIR, where to find the headers
+# SIMGEAR_INCLUDE_DIRS, where to find the headers
 #
 # $SIMGEAR_DIR is an environment variable that would
 # correspond to the ./configure --prefix=$SIMGEAR_DIR
@@ -180,7 +180,11 @@ endif()
 # now we've found SimGear, try test-compiling using its includes
 include(CheckCXXSourceRuns)
 
-SET(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIR})
+set(SIMGEAR_INCLUDE_DIRS
+  ${SIMGEAR_INCLUDE_DIR}
+  ${SIMGEAR_INCLUDE_DIR}/simgear/3rdparty/utf8
+)
+SET(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIRS})
 
 # clear cache, run a fresh compile test every time
 unset(SIMGEAR_COMPILE_TEST CACHE)
@@ -226,5 +230,5 @@ unset(CMAKE_REQUIRED_DEFINITIONS)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG
-     SIMGEAR_LIBRARIES SIMGEAR_CORE_LIBRARIES SIMGEAR_INCLUDE_DIR SIMGEAR_COMPILE_TEST)
+     SIMGEAR_LIBRARIES SIMGEAR_CORE_LIBRARIES SIMGEAR_INCLUDE_DIRS SIMGEAR_COMPILE_TEST)
 
