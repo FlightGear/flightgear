@@ -641,7 +641,7 @@ void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
   mouse &m = d->mice[0];
   int modeIndex = m.current_mode;
   // are we in spring-loaded look mode?
-  if (!d->rightClickModeCycle) {
+  if (!d->rightClickModeCycle && m.nModes > 3) {
     if (m.mouse_button_nodes[2]->getBoolValue()) {
       // right mouse is down, force look mode
       modeIndex = 3;
