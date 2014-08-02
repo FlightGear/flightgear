@@ -129,7 +129,7 @@ Section "" ;No components page, name is not important
   File ${OSGPluginsDir}\osgdb_deprecated_osgparticle.dll
   
   
-  Exec '"$INSTDIR\bin\fgrun.exe"  --silent --fg-exe="$INSTDIR\bin\fgfs.exe" '
+  Exec '"$INSTDIR\bin\fgrun.exe"  --silent --fg-exe="$INSTDIR\bin\fgfs.exe" --fg-root="$INSTDIR\data"'
   
   CreateDirectory "$SMPROGRAMS\FlightGear"
   CreateShortCut "$SMPROGRAMS\FlightGear\FlightGear-nightly-2010.lnk" "$INSTDIR\bin\fgrun.exe"
