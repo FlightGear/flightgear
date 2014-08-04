@@ -352,7 +352,8 @@ static naRef f_boxLayoutAddItem( sc::BoxLayout& box,
                                  const nasal::CallContext& ctx )
 {
   box.addItem( ctx.requireArg<sc::LayoutItemRef>(0),
-               ctx.getArg<int>(1) );
+               ctx.getArg<int>(1),
+               ctx.getArg<int>(2, sc::AlignFill) );
   return naNil();
 }
 static naRef f_boxLayoutInsertItem( sc::BoxLayout& box,
@@ -360,7 +361,8 @@ static naRef f_boxLayoutInsertItem( sc::BoxLayout& box,
 {
   box.insertItem( ctx.requireArg<int>(0),
                   ctx.requireArg<sc::LayoutItemRef>(1),
-                  ctx.getArg<int>(2) );
+                  ctx.getArg<int>(2),
+                  ctx.getArg<int>(3, sc::AlignFill) );
   return naNil();
 }
 
@@ -490,17 +492,28 @@ naRef initNasalCanvas(naRef globals, naContext c)
   //----------------------------------------------------------------------------
   // Layouting
 
+#define ALIGN_ENUM_MAPPING(key, val, comment) canvas_module.set(#key, sc::key);
+#  include <simgear/canvas/layout/AlignFlag_values.hxx>
+#undef ALIGN_ENUM_MAPPING
+
+  void (sc::LayoutItem::*f_layoutItemSetContentsMargins)(int, int, int, int)
+    = &sc::LayoutItem::setContentsMargins;
+
   NasalLayoutItem::init("canvas.LayoutItem")
     .method("getCanvas", &sc::LayoutItem::getCanvas)
     .method("setCanvas", &sc::LayoutItem::setCanvas)
     .method("getParent", &sc::LayoutItem::getParent)
     .method("setParent", &sc::LayoutItem::setParent)
+    .method("setContentsMargins", f_layoutItemSetContentsMargins)
+    .method("setContentsMargin", &sc::LayoutItem::setContentsMargin)
     .method("sizeHint", &sc::LayoutItem::sizeHint)
     .method("minimumSize", &sc::LayoutItem::minimumSize)
     .method("maximumSize", &sc::LayoutItem::maximumSize)
     .method("hasHeightForWidth", &sc::LayoutItem::hasHeightForWidth)
     .method("heightForWidth", &sc::LayoutItem::heightForWidth)
     .method("minimumHeightForWidth", &sc::LayoutItem::minimumHeightForWidth)
+    .method("setAlignment", &sc::LayoutItem::setAlignment)
+    .method("alignment", &sc::LayoutItem::alignment)
     .method("setVisible", &sc::LayoutItem::setVisible)
     .method("isVisible", &sc::LayoutItem::isVisible)
     .method("isExplicitlyHidden", &sc::LayoutItem::isExplicitlyHidden)
