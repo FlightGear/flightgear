@@ -219,7 +219,16 @@ find_package(ZLIB    REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenGL  REQUIRED)
 find_package(OpenAL  REQUIRED)
-find_package(OpenSceneGraph 3.2.0 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
+find_package(OpenSceneGraph 3.2.0 REQUIRED
+  osgText
+  osgSim
+  osgDB
+  osgParticle
+  osgFX
+  osgUtil
+  osgViewer
+  osgGA
+)
 
 if (MSVC)
 	find_package(CrashRpt)

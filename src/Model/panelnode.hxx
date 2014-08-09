@@ -4,6 +4,7 @@
 #include <osg/Vec3>
 #include <osg/Matrix>
 #include <osg/Drawable>
+#include <osg/Version>
 
 #include <memory>
 #include <simgear/structure/SGSharedPtr.hxx>
@@ -30,7 +31,15 @@ public:
     { drawImplementation(*renderInfo.getState()); }
   
     void drawImplementation(osg::State& state) const;
-    virtual osg::BoundingBox computeBound() const;
+
+    virtual osg::BoundingBox
+#if OSG_VERSION_LESS_THAN(3,3,2)
+    computeBound()
+#else
+    computeBoundingBox()
+#endif
+    const;
+
 
     /** Return true, FGPanelNode does support accept(PrimitiveFunctor&). */
     virtual bool supports(const osg::PrimitiveFunctor&) const { return true; }
