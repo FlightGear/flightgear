@@ -1230,9 +1230,9 @@ void FGGroundNetwork::render(bool visible)
                 //osg::Node *custom_obj;
                 SGMaterial *mat;
                 if (segments[pos]->hasBlock(now)) {
-                    mat = matlib->find("UnidirectionalTaperRed");
+                    mat = matlib->find("UnidirectionalTaperRed", center);
                 } else {
-                    mat = matlib->find("UnidirectionalTaperGreen");
+                    mat = matlib->find("UnidirectionalTaperGreen", center);
                 }
                 if (mat)
                     geode->setEffect(mat->get_effect());
@@ -1304,9 +1304,9 @@ void FGGroundNetwork::render(bool visible)
                     //osg::Node *custom_obj;
                     SGMaterial *mat;
                     if (segments[k]->hasBlock(now)) {
-                        mat = matlib->find("UnidirectionalTaperRed");
+                        mat = matlib->find("UnidirectionalTaperRed", segCenter);
                     } else {
-                        mat = matlib->find("UnidirectionalTaperGreen");
+                        mat = matlib->find("UnidirectionalTaperGreen", segCenter);
                     }
                     if (mat)
                         geode->setEffect(mat->get_effect());

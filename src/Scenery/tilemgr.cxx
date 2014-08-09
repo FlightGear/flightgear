@@ -199,7 +199,6 @@ void FGTileMgr::reinit()
 void FGTileMgr::materialLibChanged()
 {
     _options->setMaterialLib(globals->get_matlib());
-    _options->getMaterialLib()->refreshActiveMaterials();
 }
 
 /* schedule a tile for loading, keep request for given amount of time.
@@ -304,7 +303,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
 }
 
 /**
- * Update the various queues maintained by the tilemagr (private
+ * Update the various queues maintained by the tilemgr (private
  * internal function, do not call directly.)
  */
 void FGTileMgr::update_queues(bool& isDownloadingScenery)
@@ -316,7 +315,6 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
     TileEntry *e;
     int loading=0;
     int sz=0;
-    bool didRefreshMaterialCache = false;
     
     tile_cache.set_current_time( current_time );
     tile_cache.reset_traversal();
@@ -332,11 +330,6 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
             e->prep_ssg_node(vis);
             
             if (!e->is_loaded()) {
-                if (!didRefreshMaterialCache) {
-                    didRefreshMaterialCache = true;
-                    globals->get_matlib()->refreshActiveMaterials();
-                }
-                
                 bool nonExpiredOrCurrent = !e->is_expired(current_time) || e->is_current_view();
                 bool downloading = isTileDirSyncing(e->tileFileName);
                 isDownloadingScenery |= downloading;

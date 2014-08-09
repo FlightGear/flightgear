@@ -188,7 +188,6 @@ main(int argc, char** argv)
         SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading FlightGear materials.\n"
                << "Probably FG_ROOT is not properly set.");
     }
-    ml->refreshActiveMaterials();
     simgear::SGModelLib::init(fg_root, props);
 
     // Set up the reader/writer options
