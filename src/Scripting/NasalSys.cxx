@@ -146,11 +146,14 @@ public:
   
   void invoke()
   {
+    if( _singleShot )
+      // Callback may restart the timer, so update status before callback is
+      // called (Prevent warnings of deleting not existing tasks from the
+      // event manager).
+      _isRunning = false;
+
     naRef *args = NULL;
     _sys->callMethod(_func, _self, 0, args, naNil() /* locals */);
-    if (_singleShot) {
-      _isRunning = false;
-    }
   }
   
   void setSingleShot(bool aSingleShot)
