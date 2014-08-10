@@ -138,6 +138,8 @@ class DesktopGroup:
     bool handleMouse(const osgGA::GUIEventAdapter& ea);
     bool handleKeyboard(const osgGA::GUIEventAdapter& ea);
 
+    bool handleEvent( const sc::EventPtr& event,
+                      const sc::WindowPtr& active_window );
     bool handleRootEvent(const sc::EventPtr& event);
 
     void handleResize(int x, int y, int width, int height);
@@ -510,24 +512,12 @@ bool DesktopGroup::handleKeyboard(const osgGA::GUIEventAdapter& ea)
   if( !_transform->getNumChildren() || !_handle_events )
     return false;
 
-  sc::WindowPtr active_window = _focus_window.lock();
-  if( !active_window )
-  {
-    int type = (ea.getEventType() == osgGA::GUIEventAdapter::KEYDOWN)
-             ? sc::Event::KEY_DOWN
-             : sc::Event::KEY_UP;
-
-    if( !numEventHandler(type) )
-      // TODO handle global shortcuts/grabs/etc.
-      return false;
-  }
-
   sc::KeyboardEventPtr event(new sc::KeyboardEvent(ea));
 
   // Detect key repeat (of non modifier keys)
   if( !event->isModifier() )
   {
-    if( event->type == sc::Event::KEY_DOWN )
+    if( event->getType() == sc::Event::KEY_DOWN )
     {
       if( event->keyCode() == _last_key_down_no_mod )
         event->setRepeat(true);
@@ -540,21 +530,39 @@ bool DesktopGroup::handleKeyboard(const osgGA::GUIEventAdapter& ea)
     }
   }
 
-  if( active_window )
-    return active_window->handleEvent(event);
-  else
-    return handleRootEvent(event);
+  sc::WindowPtr active_window = _focus_window.lock();
+  bool handled = handleEvent(event, active_window);
+
+  if(    event->getType() == sc::Event::KEY_DOWN
+      && !event->defaultPrevented()
+      && event->isPrint() )
+  {
+    sc::KeyboardEventPtr keypress( new sc::KeyboardEvent(*event) );
+    keypress->type = sc::Event::KEY_PRESS;
+
+    handled |= handleEvent(keypress, active_window);
+  }
+
+  return handled;
+}
+
+//------------------------------------------------------------------------------
+bool DesktopGroup::handleEvent( const sc::EventPtr& event,
+                                const sc::WindowPtr& active_window )
+{
+  return active_window
+       ? active_window->handleEvent(event)
+       : handleRootEvent(event);
 }
 
 //------------------------------------------------------------------------------
 bool DesktopGroup::handleRootEvent(const sc::EventPtr& event)
 {
-  event->default_prevented = false;
   sc::Element::handleEvent(event);
 
-  // preventDefault() on DesktopGroup stops propagation to internal event
+  // stopPropagation() on DesktopGroup stops propagation to internal event
   // handling.
-  return event->default_prevented;
+  return event->propagation_stopped;
 }
 
 //------------------------------------------------------------------------------
