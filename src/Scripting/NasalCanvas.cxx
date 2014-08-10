@@ -186,6 +186,19 @@ naRef f_setInputFocus(const nasal::CallContext& ctx)
   return naNil();
 }
 
+naRef f_grabPointer(const nasal::CallContext& ctx)
+{
+  return ctx.to_nasal(
+    requireGUIMgr(ctx.c).grabPointer(ctx.requireArg<sc::WindowPtr>(0))
+  );
+}
+
+naRef f_ungrabPointer(const nasal::CallContext& ctx)
+{
+  requireGUIMgr(ctx.c).ungrabPointer(ctx.requireArg<sc::WindowPtr>(0));
+  return naNil();
+}
+
 static naRef f_groupCreateChild(sc::Group& group, const nasal::CallContext& ctx)
 {
   return ctx.to_nasal( group.createChild( ctx.requireArg<std::string>(0),
@@ -564,6 +577,8 @@ naRef initNasalCanvas(naRef globals, naContext c)
   canvas_module.set("_newWindowGhost", f_createWindow);
   canvas_module.set("_getDesktopGhost", f_getDesktop);
   canvas_module.set("setInputFocus", f_setInputFocus);
+  canvas_module.set("grabPointer", f_grabPointer);
+  canvas_module.set("ungrabPointer", f_ungrabPointer);
 
   return naNil();
 }

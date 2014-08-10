@@ -57,6 +57,17 @@ class GUIMgr:
      */
     void setInputFocus(const simgear::canvas::WindowPtr& window);
 
+    /**
+     * Grabs the pointer so that all events are passed to this @a window until
+     * the pointer is ungrabbed with ungrabPointer().
+     */
+    bool grabPointer(const simgear::canvas::WindowPtr& window);
+
+    /**
+     * Releases the grab acquired for this @a window with grabPointer().
+     */
+    void ungrabPointer(const simgear::canvas::WindowPtr& window);
+
   protected:
 
     simgear::canvas::GroupPtr           _desktop;

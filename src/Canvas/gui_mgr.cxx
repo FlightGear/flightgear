@@ -103,6 +103,10 @@ class DesktopGroup:
     DesktopGroup();
 
     void setFocusWindow(const sc::WindowPtr& window);
+
+    bool grabPointer(const sc::WindowPtr& window);
+    void ungrabPointer(const sc::WindowPtr& window);
+
     bool handleEvent(const osgGA::GUIEventAdapter& ea);
 
   protected:
@@ -118,7 +122,8 @@ class DesktopGroup:
     sc::WindowWeakPtr _last_push,
                       _last_mouse_over,
                       _resize_window,
-                      _focus_window;
+                      _focus_window,
+                      _pointer_grab_window;
 
     uint8_t _resize;
     int     _last_cursor;
@@ -211,6 +216,35 @@ DesktopGroup::DesktopGroup():
 }
 
 //------------------------------------------------------------------------------
+void DesktopGroup::setFocusWindow(const sc::WindowPtr& window)
+{
+  _focus_window = window;
+}
+
+//------------------------------------------------------------------------------
+bool DesktopGroup::grabPointer(const sc::WindowPtr& window)
+{
+  sc::WindowPtr resize = _resize_window.lock();
+  if( (resize && resize != window) || !_pointer_grab_window.expired() )
+    // Already grabbed (resize -> implicit grab)
+    return false;
+
+  _pointer_grab_window = window;
+  return true;
+}
+
+//------------------------------------------------------------------------------
+void DesktopGroup::ungrabPointer(const sc::WindowPtr& window)
+{
+  if( _pointer_grab_window.expired() )
+    SG_LOG(SG_GUI, SG_WARN, "ungrabPointer: no active grab.");
+  else if( window != _pointer_grab_window.lock() )
+    SG_LOG(SG_GUI, SG_WARN, "ungrabPointer: window is not owner of the grab.");
+  else
+    _pointer_grab_window.reset();
+}
+
+//------------------------------------------------------------------------------
 bool DesktopGroup::handleEvent(const osgGA::GUIEventAdapter& ea)
 {
   switch( ea.getEventType() )
@@ -235,12 +269,6 @@ bool DesktopGroup::handleEvent(const osgGA::GUIEventAdapter& ea)
     default:
       return false;
   }
-}
-
-//------------------------------------------------------------------------------
-void DesktopGroup::setFocusWindow(const sc::WindowPtr& window)
-{
-  _focus_window = window;
 }
 
 /*
@@ -301,32 +329,35 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     }
   }
 
-  sc::WindowPtr window_at_cursor;
-  for( int i = _transform->getNumChildren() - 1; i >= 0; --i )
+  sc::WindowPtr window_at_cursor = _pointer_grab_window.lock();
+  if( !window_at_cursor )
   {
-    osg::Group *element = _transform->getChild(i)->asGroup();
-
-    assert(element);
-    assert(element->getUserData());
-
-    sc::WindowPtr window =
-      dynamic_cast<sc::Window*>
-      (
-        static_cast<sc::Element::OSGUserData*>(
-          element->getUserData()
-        )->element.get()
-      );
-
-    if( !window || !window->isCapturingEvents() || !window->isVisible() )
-      continue;
-
-    float margin = window->isResizable() ? resize_margin_pos : 0;
-    if( window->getScreenRegion().contains( event->getScreenX(),
-                                            event->getScreenY(),
-                                            margin ) )
+    for( int i = _transform->getNumChildren() - 1; i >= 0; --i )
     {
-      window_at_cursor = window;
-      break;
+      osg::Group *element = _transform->getChild(i)->asGroup();
+
+      assert(element);
+      assert(element->getUserData());
+
+      sc::WindowPtr window =
+        dynamic_cast<sc::Window*>
+        (
+          static_cast<sc::Element::OSGUserData*>(
+            element->getUserData()
+          )->element.get()
+        );
+
+      if( !window || !window->isCapturingEvents() || !window->isVisible() )
+        continue;
+
+      float margin = window->isResizable() ? resize_margin_pos : 0;
+      if( window->getScreenRegion().contains( event->getScreenX(),
+                                              event->getScreenY(),
+                                              margin ) )
+      {
+        window_at_cursor = window;
+        break;
+      }
     }
   }
 
@@ -648,6 +679,18 @@ sc::GroupPtr GUIMgr::getDesktop()
 void GUIMgr::setInputFocus(const simgear::canvas::WindowPtr& window)
 {
   static_cast<DesktopGroup*>(_desktop.get())->setFocusWindow(window);
+}
+
+//------------------------------------------------------------------------------
+bool GUIMgr::grabPointer(const sc::WindowPtr& window)
+{
+  return static_cast<DesktopGroup*>(_desktop.get())->grabPointer(window);
+}
+
+//------------------------------------------------------------------------------
+void GUIMgr::ungrabPointer(const sc::WindowPtr& window)
+{
+  static_cast<DesktopGroup*>(_desktop.get())->ungrabPointer(window);
 }
 
 //------------------------------------------------------------------------------
