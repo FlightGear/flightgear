@@ -487,6 +487,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("_getParent", &sc::Element::getParent)
     .method("_getCanvas", &sc::Element::getCanvas)
     .method("addEventListener", &sc::Element::addEventListener)
+    .method("setFocus", &sc::Element::setFocus)
     .method("dispatchEvent", &sc::Element::dispatchEvent)
     .method("getBoundingBox", &sc::Element::getBoundingBox)
     .method("getTightBoundingBox", &sc::Element::getTightBoundingBox);
