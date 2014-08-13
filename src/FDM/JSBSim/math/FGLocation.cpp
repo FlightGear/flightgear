@@ -419,7 +419,15 @@ void FGLocation::ComputeDerivedUnconditional(void) const
         z  = signz0*sqrt_q*(w+sqrt(z_term));
       }
       Ne = a*sqrt(1+eps2*z*z/b2);
-      mGeodLat = asin((eps2+1.0)*(z/Ne));
+      double tmp = (eps2+1.0)*(z/Ne);
+      // Ugly hack to work around the round-off errors when the simulation is
+      // started at a latitude of 90deg.
+      if (tmp > 1.0)
+        tmp = 1.0;
+      else if (tmp < -1.0)
+        tmp = -1.0;
+      // End of ugly hack
+      mGeodLat = asin(tmp);
       r0 = rxy;
       GeodeticAltitude = r0*cos(mGeodLat) + mECLoc(eZ)*sin(mGeodLat) - a2/Ne;
     }
