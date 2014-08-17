@@ -18,6 +18,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <osg/Referenced>
 
 #include "AIBVHPager.hxx"
 
