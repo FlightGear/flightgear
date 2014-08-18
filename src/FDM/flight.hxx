@@ -99,18 +99,26 @@ class SGIOChannel;
  */
 class TrackComputer {
 public:
-  inline TrackComputer( double & track, const SGGeod & position ) : 
+  inline TrackComputer( double & track, double & path, const SGGeod & position ) : 
     _track( track ),
+    _path( path ),
     _position( position ),
     _prevPosition( position ) {
   }
 
   inline ~TrackComputer() {
     if( _prevPosition == _position ) return;
-    _track = SGGeodesy::courseDeg( _prevPosition, _position );
+//    _track = SGGeodesy::courseDeg( _prevPosition, _position );
+    double d = .0;
+    double distance = .0;
+    if( SGGeodesy::inverse( _prevPosition, _position, _track, d, distance ) ) {
+      d = _position.getElevationM() - _prevPosition.getElevationM();
+      _path = atan2( d, distance ) * SGD_RADIANS_TO_DEGREES;
+    }
   }
 private:
   double & _track;
+  double & _path;
   const SGGeod & _position;
   const SGGeod _prevPosition;
 };
@@ -194,6 +202,7 @@ private:
         double climb_rate;                // in feet per second
         double altitude_agl;
         double track;
+        double path;
     };
     
     FlightState _state;
@@ -306,17 +315,17 @@ public:
     
     void set_Phi_dot_degps(double x)
     {
-      _state.euler_rates_v[0] = x * SG_DEGREES_TO_RADIANS;
+      _state.euler_rates_v[0] = x * SGD_DEGREES_TO_RADIANS;
     }
     
     void set_Theta_dot_degps(double x)
     {
-      _state.euler_rates_v[1] = x * SG_DEGREES_TO_RADIANS;
+      _state.euler_rates_v[1] = x * SGD_DEGREES_TO_RADIANS;
     }
     
     void set_Psi_dot_degps(double x)
     {
-      _state.euler_rates_v[2] = x * SG_DEGREES_TO_RADIANS;
+      _state.euler_rates_v[2] = x * SGD_DEGREES_TO_RADIANS;
     }
     
     inline void _set_Geocentric_Rates( double lat, double lon, double rad ) {
@@ -349,7 +358,7 @@ public:
         _set_Geodetic_Position( lat, lon, _state.geodetic_position_v.getElevationFt());
     }
     inline void _set_Geodetic_Position( double lat, double lon, double alt ) {
-        TrackComputer tracker( _state.track, _state.geodetic_position_v );
+        TrackComputer tracker( _state.track, _state.path, _state.geodetic_position_v );
         _state.geodetic_position_v.setLatitudeRad(lat);
         _state.geodetic_position_v.setLongitudeRad(lon);
         _state.geodetic_position_v.setElevationFt(alt);
@@ -364,7 +373,7 @@ public:
     inline void _set_Alpha( double a ) { _state.alpha = a; }
     inline void _set_Beta( double b ) { _state.beta = b; }
     
-    inline void set_Alpha_deg( double a ) { _state.alpha = a * SG_DEGREES_TO_RADIANS; }
+    inline void set_Alpha_deg( double a ) { _state.alpha = a * SGD_DEGREES_TO_RADIANS; }
     
     inline void _set_Gamma_vert_rad( double gv ) { _state.gamma_vert_rad = gv; }
     inline void _set_Density( double d ) { _state.density = d; }
@@ -617,6 +626,7 @@ public:
     }
     inline double get_Altitude_AGL(void) const { return _state.altitude_agl; }
     inline double get_Track(void) const { return _state.track; }
+    inline double get_Path(void) const { return _state.path; }
 
     inline double get_Latitude_deg () const {
       return _state.geodetic_position_v.getLatitudeDeg();

@@ -297,6 +297,8 @@ FGInterface::bind ()
   fgSetArchivable("/orientation/heading-deg");
   _tiedProperties.Tie("/orientation/track-deg", this,
                       &FGInterface::get_Track); // read-only
+  _tiedProperties.Tie("/orientation/path-deg", this,
+                      &FGInterface::get_Path); // read-only
 
   // Body-axis "euler rates" (rotation speed, but in a funny
   // representation).
@@ -481,7 +483,7 @@ bool FGInterface::writeState(SGIOChannel* io)
 
 void FGInterface::_updatePositionM(const SGVec3d& cartPos)
 {
-    TrackComputer tracker( _state.track, _state.geodetic_position_v );
+    TrackComputer tracker( _state.track, _state.path, _state.geodetic_position_v );
     _state.cartesian_position_v = cartPos;
     _state.geodetic_position_v = SGGeod::fromCart(_state.cartesian_position_v);
     _state.geocentric_position_v = SGGeoc::fromCart(_state.cartesian_position_v);
@@ -492,7 +494,7 @@ void FGInterface::_updatePositionM(const SGVec3d& cartPos)
 
 void FGInterface::_updatePosition(const SGGeod& geod)
 {
-    TrackComputer tracker( _state.track, _state.geodetic_position_v );
+    TrackComputer tracker( _state.track, _state.path, _state.geodetic_position_v );
     _state.geodetic_position_v = geod;
     _state.cartesian_position_v = SGVec3d::fromGeod(_state.geodetic_position_v);
     _state.geocentric_position_v = SGGeoc::fromCart(_state.cartesian_position_v);
@@ -504,7 +506,7 @@ void FGInterface::_updatePosition(const SGGeod& geod)
 
 void FGInterface::_updatePosition(const SGGeoc& geoc)
 {
-    TrackComputer tracker( _state.track, _state.geodetic_position_v );
+    TrackComputer tracker( _state.track, _state.path, _state.geodetic_position_v );
     _state.geocentric_position_v = geoc;
     _state.cartesian_position_v = SGVec3d::fromGeoc(_state.geocentric_position_v);
     _state.geodetic_position_v = SGGeod::fromCart(_state.cartesian_position_v);
