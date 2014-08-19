@@ -5,9 +5,8 @@
  * on flight data which is send from FlightGear with an external
  * protocol to this application.
  *
- * For more information read: http://squonk.abacab.org/dokuwiki/fgcom
- *
- * (c) H. Wirtz <dcoredump@gmail.com>
+ * Clement de l'Hamaide - Jan 2014
+ * Re-writting of FGCom standalone
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -30,1247 +29,616 @@
 #include "config.h"
 #endif
 
-#include <simgear/debug/logstream.hxx>
+#include <simgear/sg_inlines.h>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/io/raw_socket.hxx>
+#include <simgear/misc/strutils.hxx>
+#include <simgear/debug/logstream.hxx>
 #include <simgear/timing/timestamp.hxx>
 
+#include <3rdparty/iaxclient/lib/iaxclient.h>
+
 #include "fgcom.hxx"
-#include "fgcom_init.hxx"
-#include "utils.hxx"
-#include "version.h"
+#include "positions.hxx" // provides _positionsData[];
 
-/* Global variables */
-int exitcode = 0;
-int initialized = 0;
-int connected = 0;
-int reg_id;
-const char* dialstring;
-char airport[5];
-int codec = DEFAULT_IAX_CODEC;
-simgear::Socket sgSocket;
+int         _port           = 16661;
+int         _callId         = -1;
+int         _currentFreqKhz = -1;
+int         _maxRange       = 100;
+int         _minRange       = 10;
+int         _registrationId = -1;
+bool        _libInitialized = false;
+bool        _running        = true;
+bool        _debug          = false;
+bool        _connected      = false;
+double      _frequency      = -1;
+double      _atis           = -1;
+double      _silenceThd     = -35.0;
+std::string _app            = "FGCOM-";
+std::string _host           = "127.0.0.1";
+std::string _server         = "fgcom.flightgear.org";
+std::string _airport        = "ZZZZ";
+std::string _callsign       = "guest";
+std::string _username       = "guest";
+std::string _password       = "guest";
 
-/* Variables declared as static */
-static double selected_frequency = 0.0;
-static char mode = 0;
-static char rep_buf[MX_REPORT_BUF+2]; /* report output buffer - used on iax callback thread - note +2 to ensure null termination */
-static char num_buf[1024];            /* number generation buffer - used on main thread */
-static char states[256];	      /* buffer to hold ascii states */
-static char delim = '\t';	      /* output field delimiter */
-static int last_state = 0;	      /* previous state of the channel */
+SGGeod      _airportPos;
+SGTimeStamp _p;
+std::multimap<int, Airport> _airportsData;
 
-static const char *map[] = {
-  "unknown", "active", "outgoing", "ringing", "complete", "selected",
-  "busy", "transfer", NULL
-};
+const int special_freq[] = { // Define some freq who need to be used with icao = ZZZZ
+	910000,
+	911000,
+	700000,
+	123450,
+	122750,
+	121500,
+	123500 };
 
-static const char *radio_map[] = {"COM1", "COM2"};
+//
+// Main loop
+//
 
-char icao[5];
-double special_frq[] = {
-	910.000,
-	911.000,
-	700.000,
-	123.450,
-	122.750,
-	121.500,
-	123.500,
-	 -1.0 };
-double *special_frequencies;
-
-double previous_com_frequency = 0.0;
-int previous_ptt = 0;
-float previous_vol = 0.0;
-float previous_thd = 0.0;
-int com_select = 0;
-int max_com_instruments = 2;
-struct airport *airportlist;
-struct fgdata data;
-char *prog; //program name
-
-/* configuration values */
-static bool debug = false;
-static int port;
-static const char *voipserver;
-static const char *fgserver;
-static const char *airport_option;
-static double frequency = -1.0;
-static const char *audio_in;
-static const char *audio_out;
-static double level_in = 0.7;
-static double level_out = 0.7;
-static double silence_thd = -35.0;
-static bool mic_boost;
-static char codec_option;
-static const char *callsign;
-static const char *username;
-static const char *password;
-static bool list_audio;
-static char *positions_file;
-static char *frequency_file;
-
-static const OptionEntry fgcomOptionArray[] = {
-  {"debug", 'd', false, OPTION_NONE, &debug, 0, "show debugging information",
-   0},
-  {"voipserver", 'S', true, OPTION_STRING, &voipserver, 0,
-   "voip server to connect to", &DEFAULT_VOIP_SERVER},
-  {"fgserver", 's', true, OPTION_STRING, &fgserver, 0, "fg to connect to ",
-   &DEFAULT_FG_SERVER},
-  {"port", 'p', true, OPTION_INT, &port, 0, "where we should listen to FG", &port},	// hm, good idea? don't think so...
-  {"airport", 'a', true, OPTION_STRING, &airport_option, 0,
-   "airport-id (ICAO) for ATC-mode", 0},
-  {"frequency", 'f', true, OPTION_DOUBLE, &frequency, 0,
-   "frequency for ATC-mode", 0},
-  {"callsign", 'C', true, OPTION_STRING, &callsign, 0,
-   "callsign to use", &DEFAULT_USER},
-  {"user", 'U', true, OPTION_STRING, &username, 0,
-   "username for VoIP account", &DEFAULT_USER},
-  {"password", 'P', true, OPTION_STRING, &password, 0,
-   "password for VoIP account", &DEFAULT_PASSWORD},
-  {"mic", 'i', true, OPTION_DOUBLE, &level_in, 0,
-   "mic input level (0.0 - 1.0)", 0},
-  {"speaker", 'o', true, OPTION_DOUBLE, &level_out, 0,
-   "speaker output level (0.0 - 1.0)", 0},
-  {"mic-boost", 'b', false, OPTION_BOOL, &mic_boost, 0, "enable mic boost",
-   0},
-  {"silence-threshold", 't', false, OPTION_DOUBLE, &silence_thd, 0, "set silence threshold (-60.0 - 0.0)",
-   0},
-  {"list-audio", 'l', false, OPTION_BOOL, &list_audio, 0,
-   "list audio devices", 0},
-  {"set-audio-in", 'r', true, OPTION_STRING, &audio_in, 0,
-   "use <devicename> as audio input", 0},
-  {"set-audio-out", 'k', true, OPTION_STRING, &audio_out, 0,
-   "use <devicename> as audio output", 0},
-  {"codec", 'c', true, OPTION_CHAR, &codec_option, 0,
-   "use codec <codec> as transfer codec", &codec_option},
-  {"positions", 'T', true, OPTION_STRING, &positions_file, 0,
-   "location positions file", &DEFAULT_POSITIONS_FILE},
-  {"special", 'Q', true, OPTION_STRING, &frequency_file, 0,
-   "location spl. frequency file (opt)", &SPECIAL_FREQUENCIES_FILE},
-  {NULL}
-};
-
-void
-process_packet (char *buf)
+int main(int argc, char** argv)
 {
+    signal(SIGINT,  quit);
+    signal(SIGTERM, quit);
 
-  /* cut off ending \n */
-  buf[strlen (buf) - 1] = '\0';
+    simgear::requestConsole();
+    sglog().setLogLevels(SG_ALL, SG_INFO);
+    _app += FGCOM_VERSION;
+    Modes mode          = PILOT;
+    std::string num     = "";
 
-  /* parse the data into a struct */
-  parse_fgdata (&data, buf);
-
-  /* get the selected frequency */
-  if (com_select == 0 && data.COM1_SRV == 1)
-    selected_frequency = data.COM1_FRQ;
-  else if (com_select == 1 && data.COM2_SRV == 1)
-    selected_frequency = data.COM2_FRQ;
-
-  /* Check for com frequency changes */
-  if (previous_com_frequency != selected_frequency)
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Selected frequency: " << selected_frequency );
-
-      /* remark the new frequency */
-      previous_com_frequency = selected_frequency;
-
-      if (connected == 1)
-	{
-	  /* hangup call, if connected */
-	  iaxc_dump_call ();
-	  iaxc_millisleep (5 * DEFAULT_MILLISLEEP);
-	  connected = 0;
-	}
-
-      strcpy (icao,
-	      icaobypos (airportlist, selected_frequency, data.LAT,
-			 data.LON, DEFAULT_RANGE));
-      icao2number (icao, selected_frequency, num_buf);
-
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Dialing " << icao << " " << selected_frequency << " MHz: " << num_buf );
-      do_iaxc_call (username, password, voipserver, num_buf);
-
-      connected = 1;
+    for(int count = 1; count < argc; count++) {
+        std::string item = argv[count];
+        std::string option = item.substr(2, item.find("=")-2);
+        std::string value = item.substr(item.find("=")+1, item.size());
+        if(option == "server")             _server        = value;
+        if(option == "host")               _host          = value;
+        if(option == "port")               _port          = atoi(value.c_str());
+        if(option == "callsign")           _callsign      = value;
+        if(option == "frequency")          _frequency     = atof(value.c_str());
+        if(option == "atis")               _atis          = atof(value.c_str());
+        if(option == "airport")            _airport       = simgear::strutils::uppercase(value);
+        if(option == "username")           _username      = value;
+        if(option == "password")           _password      = value;
+        if(option == "silence-threshold")  _silenceThd    = atof(value.c_str());
+        if(option == "debug")               sglog().setLogLevels(SG_ALL, SG_DEBUG);
+        if(option == "help")                return usage();
+        if(option == "version")             return version();
     }
 
-  /* Check for pressed PTT key */
-  if (previous_ptt != data.PTT)
-    {
-      if (data.PTT == 2)
-	{
-	  /* select the next com equipment */
-	  com_select = (com_select + 1) % 2;
-          SG_LOG( SG_GENERAL, SG_ALERT, "Radio selected is " << radio_map[com_select] );
-	}
-      else if (connected == 1)
-	{
-	  ptt (data.PTT);
-	}
-      previous_ptt = data.PTT;
-    }
+    if(_frequency == 910.000)
+        mode = TEST;
+    if(_frequency <= 136.975 && _frequency >= 118.000)
+        mode = OBS;
+    if(_atis <= 136.975 && _atis >= 118.000 && _airport != "ZZZZ")
+        mode = ATC;
 
-  /* Check for output volume change */
-  if (previous_vol != data.OUTPUT_VOL)
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Set speaker volume to " << data.OUTPUT_VOL );
+    SG_LOG(SG_GENERAL, SG_INFO, "FGCom " << FGCOM_VERSION << " compiled " << __DATE__
+                                << ", at " << __TIME__ );
+    SG_LOG(SG_GENERAL, SG_INFO, "For help usage, use --help");
+    SG_LOG(SG_GENERAL, SG_INFO, "Starting FGCom session as " << _username << ":xxxxxxxxx@" << _server);
+    
+    if( !(_libInitialized = lib_init()) )
+        return EXIT_FAILURE;
 
-      iaxc_output_level_set( data.OUTPUT_VOL );
-      previous_vol = data.OUTPUT_VOL;
-    }
-
-  /* Check for silence threshold change */
-  if (previous_thd != data.SILENCE_THD)
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Set silent threshold to " << data.SILENCE_THD );
-
-      iaxc_set_silence_threshold( data.SILENCE_THD );
-      previous_thd = data.SILENCE_THD;
-    }
-
-  /* Check for callsign change */
-  if (strcmp(callsign, data.CALLSIGN) != 0)
-    {
-      iaxc_dump_call ();
-      callsign = data.CALLSIGN;
-      SG_LOG( SG_GENERAL, SG_ALERT, "FGCom will restart now with callsign " << callsign );
-      std::string app = "FGCOM-";
-      app += FGCOM_VERSION;
-      iaxc_set_callerid ( callsign, app.c_str() );
-    }
-}
-
-static char *base_name( char *name )
-{
-    char *bn = name;
-    size_t len = strlen(name);
-    size_t i;
-    int c;
-    for ( i = 0; i < len; i++ ) {
-        c = name[i];
-        if (( c == '/' ) || ( c == '\\'))
-            bn = &name[i+1];
-    }
-    return bn;
-}
-
-// if default FAILS, for OSX and WIN try EXE path
-int fix_input_files()
-{
-    int iret = 0;
-    char *def_freq = (char *) SPECIAL_FREQUENCIES_FILE;
-    char *def_pos  = (char *) DEFAULT_POSITIONS_FILE;
-    char exepath[MX_PATH_SIZE+2];
-    exepath[0] = 0;
-    if (strcmp( frequency_file,def_freq) == 0) {
-        /* ok is default value - do some fixes */
-        if (is_file_or_directory( frequency_file ) != 1) {
-            exepath[0] = 0;
-            iret |= get_data_path_per_os( exepath, MX_PATH_SIZE );
-            strcat(exepath,def_freq);
-            frequency_file = strdup(exepath);
-        }
-    }
-    if (strcmp( positions_file,def_pos) == 0) {
-        // if default FAILS, for OSX and WIN try EXE path
-        if (is_file_or_directory( positions_file ) != 1) {
-            exepath[0] = 0;
-            iret |= get_data_path_per_os( exepath, MX_PATH_SIZE );
-            strcat(exepath,def_pos);
-            positions_file = strdup(exepath);
-        }
-    }
-    return iret;
-}
-
-int
-main (int argc, char *argv[])
-{
-  int numbytes;
-  static char pkt_buf[MAXBUFLEN+2];
-
-  simgear::requestConsole();
-  sglog().setLogLevels( SG_ALL, SG_ALERT );
-
-  prog = strdup( base_name(argv[0]) );
+    if (_username != "guest" && _password != "guest")
+        _registrationId = lib_registration();
   
-  /* program header */
-  SG_LOG( SG_GENERAL, SG_ALERT, prog << " - a communication radio based on VoIP with IAX/Asterisk" );
-  SG_LOG( SG_GENERAL, SG_ALERT, "Original (c) 2007-2011 by H. Wirtz <wirtz@dfn.de>" );
-  SG_LOG( SG_GENERAL, SG_ALERT, "OSX and Windows ports 2012-2013 by Yves Sablonier and Geoff R. McLane, resp." );
-  SG_LOG( SG_GENERAL, SG_ALERT, "Version " << FGCOM_VERSION << " compiled " << __DATE__ << ", at " << __TIME__ );
-  SG_LOG( SG_GENERAL, SG_ALERT, "Using iaxclient library Version " << iaxc_version (pkt_buf) );
-  SG_LOG( SG_GENERAL, SG_ALERT, "" );
-
-  /* init values */
-  voipserver = DEFAULT_VOIP_SERVER;
-  fgserver = DEFAULT_FG_SERVER;
-  port = DEFAULT_FG_PORT;
-  username = DEFAULT_USER;
-  password = DEFAULT_PASSWORD;
-  codec_option = DEFAULT_CODEC;
-  mode = 0; // 0 = ATC mode, 1 = FG mode
-  positions_file = (char *) DEFAULT_POSITIONS_FILE;
-  frequency_file = (char *) SPECIAL_FREQUENCIES_FILE;
-
-#ifndef _WIN32
-  /* catch signals */
-  signal (SIGINT, quit);
-  signal (SIGQUIT, quit);
-  signal (SIGTERM, quit);
-#endif
-
-  /* setup iax */
-#ifdef _MSC_VER
-  /* MSVC only - In certain circumstances the addresses placed in iaxc_sendto and iaxc_recvfrom 
-     can be an offset to a jump table, making a compare of the current address to the address of 
-     the actual imported function fail. So here ensure they are the same. */
-  iaxc_set_networking( (iaxc_sendto_t)sendto, (iaxc_recvfrom_t)recvfrom );
-#endif // _MSC_VER
-
-  if (iaxc_initialize (DEFAULT_MAX_CALLS))
-    fatal_error ("cannot initialize iaxclient!\nHINT: Have you checked the mic and speakers?");
-
-  initialized = 1;
-
-  // option parser
-  fgcomInitOptions (fgcomOptionArray, argc, argv);
-
-  if( debug )
-    sglog().setLogLevels( SG_ALL, SG_DEBUG );
-
-  // codec
-  if (codec_option)
-    {
-      switch (codec_option)
-	{
-	case 'u':
-	  codec = IAXC_FORMAT_ULAW;
-	  break;
-	case 'a':
-	  codec = IAXC_FORMAT_ALAW;
-	  break;
-	case 'g':
-	  codec = IAXC_FORMAT_GSM;
-	  break;
-	case '7':
-	  codec = IAXC_FORMAT_G726;
-	  break;
-	case 's':
-	  codec = IAXC_FORMAT_SPEEX;
-	  break;
-	}
-    }
-
-  // airport
-  if (airport_option)
-    {
-      strtoupper (airport_option, airport, sizeof (airport));
-    }
-
-  // input level
-  if (level_in > 1.0)
-    {
-      level_in = 1.0;
-    }
-  if (level_in < 0.0)
-    {
-      level_in = 0.0;
-    }
-
-  // output level
-  if (level_out > 1.0)
-    {
-      level_out = 1.0;
-    }
-  if (level_out < 0.0)
-    {
-      level_out = 0.0;
-    }
-
-  // microphone boost
-  if (mic_boost)
-    {
-      iaxc_mic_boost_set (1);
-    }
-
-  if (list_audio)
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Input audio devices:" );
-      SG_LOG( SG_GENERAL, SG_ALERT, report_devices(IAXC_AD_INPUT) );
-
-      SG_LOG( SG_GENERAL, SG_ALERT, "Output audio devices:" );
-      SG_LOG( SG_GENERAL, SG_ALERT, report_devices(IAXC_AD_OUTPUT) );
-
-      iaxc_shutdown ();
-      exit (1);
-    }
-
-
-  if (audio_in)
-    {
-      set_device (audio_in, 0);
-    }
-
-  if (audio_out)
-    {
-      set_device (audio_out, 1);
-    }
-
-  /* checking consistency of arguments */
-  if (frequency > 0.0 && frequency < 1000.0)
-    {
-      if (strlen (airport) == 0 || strlen (airport) > 4)
-	{
-	  strcpy (airport, "ZZZZ");
-	}
-      /* airport and frequency are given => ATC mode */
-      mode = 0;
-    }
-  else
-    {
-      /* no airport => FG mode */
-      mode = 1;
-    }
-
-	/* Read special frequencies file (if exists).
-	 * If no file $(INSTALL_DIR)/special_frequencies.txt exists, then default frequencies
-	 * are used and are hard coded.
-	 */
-
-    if (fix_input_files()) { /* adjust default input per OS */
-        fatal_error ("cannot adjust default input files per OS!\nHINT: Maybe recompile with larger buffer.");
-    }
-
-	if((special_frequencies = read_special_frequencies(frequency_file)) == 0) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to load file [" << frequency_file << "] !" );
-        SG_LOG( SG_GENERAL, SG_ALERT, "Using internal defaults" );
-        special_frequencies = special_frq;
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Loaded file [" << frequency_file << "]." );
-    }
-
-	/* read airport frequencies and positions */
-	airportlist = read_airports (positions_file);   /* never returns if fail! */
-
-  /* preconfigure iax */
-  SG_LOG( SG_GENERAL, SG_ALERT, "Initializing IAX client as " << username << ":" << "xxxxxxxxxxx@" << voipserver );
-
-  std::string app = "FGCOM-";
-  app += FGCOM_VERSION;
-
-  if( !callsign )
-    callsign = DEFAULT_USER;
-
-  iaxc_set_callerid ( callsign, app.c_str() );
-  iaxc_set_formats (IAXC_FORMAT_SPEEX, IAXC_FORMAT_ULAW|IAXC_FORMAT_SPEEX);
-  iaxc_set_speex_settings(1, 5, 0, 1, 0, 3);
-  iaxc_set_filters(IAXC_FILTER_AGC | IAXC_FILTER_DENOISE);
-  iaxc_set_silence_threshold(silence_thd);
-  iaxc_set_event_callback (iaxc_callback);
-
-  iaxc_start_processing_thread ();
-
-  if (username && password && voipserver)
-    {
-      reg_id =
-	iaxc_register (const_cast < char *>(username),
-		       const_cast < char *>(password),
-		       const_cast < char *>(voipserver));
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Registered as '" << username << "' at '" << voipserver );
-    }
-  else
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Failed iaxc_register !" );
-      SG_LOG( SG_GENERAL, SG_ALERT, "HINT: Check username, passwordd and address of server" );
-      exitcode = 130;
-      quit (0);
-    }
-
-  iaxc_millisleep (DEFAULT_MILLISLEEP);
-
-  /* main loop */
-  if (mode == 1)
-    {
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Entering main loop in mode FGFS" );
-      /* only in FG mode */
-      simgear::Socket::initSockets();
-      sgSocket.open (false);
-      sgSocket.bind (fgserver, port);
-
-      /* mute mic, speaker on */
-      iaxc_input_level_set (0);
-      iaxc_output_level_set (level_out);
-
-      SGTimeStamp sg_clock;
-      sg_clock.stamp();
-
-      double sg_next_update = sg_clock.toSecs() + DEFAULT_ALARM_TIMER;
-      /* get data from flightgear */
-      while (1)
-	{
-          sg_clock.stamp();
-	  double sg_wait = sg_next_update - sg_clock.toSecs();
-	  if (sg_wait > 0.001)
-	    {
-             simgear::Socket *readSockets[2] = { &sgSocket, 0 };
-             if (sgSocket.select (readSockets, readSockets + 1,
-				   (int) (sg_wait * 1000)) == 1)
-		{
-                  simgear::IPAddress their_addr;
-                  numbytes = sgSocket.recvfrom(pkt_buf, MAXBUFLEN - 1, 0, &their_addr);
-                  if (numbytes == -1)
-		    {
-		      perror ("recvfrom");
-		      exit (1);
-		    }
-		  pkt_buf[numbytes] = '\0';
-                  SG_LOG( SG_GENERAL, SG_DEBUG, "Got packet from " << their_addr.getHost () << ":" << their_addr.getPort () );
-                  SG_LOG( SG_GENERAL, SG_DEBUG, "Packet is " << numbytes << " bytes long" );
-                  SG_LOG( SG_GENERAL, SG_DEBUG, "Packet contains \"" << pkt_buf << "\"" );
-		  process_packet (pkt_buf);
-		}
-	    }
-	  else
-	    {
-	      alarm_handler (0);
-              sg_clock.stamp();
-	      sg_next_update = sg_clock.toSecs() + DEFAULT_ALARM_TIMER;
-	    }
-	}
-    }
-  else
-    {
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Entering main loop in mode ATC" );
-      /* mic on, speaker on */
-      iaxc_input_level_set (1.0);
-      iaxc_output_level_set (1.0);
-
-      icao2atisnumber (airport, frequency, num_buf);
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Dialing " << airport << " " << frequency << " MHz: " << num_buf );
-      do_iaxc_call (username, password, voipserver, num_buf);
-
-      while (1)
-	{
-	  /* sleep endless */
-          SGTimeStamp::sleepForMSec(3600000);
-	}
-    }
-
-  /* should never be reached */
-  exitcode = 999;
-  quit (0);
-}
-
-void
-quit (int signal)
-{
-  SG_LOG( SG_GENERAL, SG_ALERT, "Stopping service" );
-
-  if (initialized)
-    iaxc_shutdown ();
-  if (reg_id)
-    iaxc_unregister (reg_id);
-
-  exit (exitcode);
-}
-
-void
-alarm_handler (int signal)
-{
-  /* Check every DEFAULT_ALARM_TIMER seconds if position related things should happen */
-  if (check_special_frq (selected_frequency))
-    {
-      strcpy (icao, "ZZZZ");
-    }
-  else
-    {
-      strcpy (icao,
-	      icaobypos (airportlist, selected_frequency, data.LAT, data.LON,
-			 DEFAULT_RANGE));
-    }
-
-  /* Check if we are out of range */
-  if (strlen (icao) == 0 && connected == 1)
-    {
-      /* Yes, we are out of range so hangup */
-      iaxc_dump_call ();
-      iaxc_millisleep (5 * DEFAULT_MILLISLEEP);
-      connected = 0;
-    }
-
-  /* Check if we are now in range */
-  else if (strlen (icao) != 0 && connected == 0)
-    {
-      icao2number (icao, selected_frequency, num_buf);
-      SG_LOG( SG_GENERAL, SG_DEBUG, "Dialing " << icao << " " << selected_frequency << " MHz: " << num_buf );
-      do_iaxc_call (username, password, voipserver, num_buf);
-      connected = 1;
-    }
-}
-
-void
-strtoupper (const char *str, char *buf, size_t len)
-{
-  unsigned int i;
-  for (i = 0; str[i] && i < len - 1; i++)
-    {
-      buf[i] = toupper (str[i]);
-    }
-
-  buf[i++] = '\0';
-}
-
-void
-fatal_error (const char *err)
-{
-  SG_LOG( SG_GENERAL, SG_ALERT, "FATAL ERROR: " << err );
-  if (initialized)
-    iaxc_shutdown ();
-  exit (1);
-}
-
-int
-iaxc_callback (iaxc_event e)
-{
-  switch (e.type)
-    {
-    case IAXC_EVENT_LEVELS:
-      event_level (e.ev.levels.input, e.ev.levels.output);
-      break;
-    case IAXC_EVENT_TEXT:
-      event_text (e.ev.text.type, e.ev.text.message);
-      break;
-    case IAXC_EVENT_STATE:
-      event_state (e.ev.call.state, e.ev.call.remote, e.ev.call.remote_name,
-		   e.ev.call.local, e.ev.call.local_context);
-      break;
-    case IAXC_EVENT_NETSTAT:
-      event_netstats (e.ev.netstats);
-    case IAXC_EVENT_REGISTRATION:
-      event_register (e.ev.reg.id, e.ev.reg.reply, e.ev.reg.msgcount);
-      break;
-    default:
-      event_unknown (e.type);
-      break;
-    }
-  return 1;
-}
-
-void
-event_state (int state, char *remote, char *remote_name,
-	     char *local, char *local_context)
-{
-  last_state = state;
-  /* This is needed for auto-reconnect */
-  if (state == 0)
-    {
-      connected = 0;
-      /* FIXME: we should wake up the main thread somehow */
-      /* in fg mode the next incoming packet will do that anyway */
-    }
-
-  snprintf (rep_buf, MX_REPORT_BUF,
-	    "S%c0x%x%c%s%c%.50s%c%.50s%c%.50s%c%.50s", delim, state,
-	    delim, map_state (state), delim, remote, delim, remote_name,
-	    delim, local, delim, local_context);
-  rep_buf[MX_REPORT_BUF] = 0; /* ensure null termination */
-  report (rep_buf);
-}
-
-void
-event_text (int type, char *message)
-{
-  snprintf (rep_buf, MX_REPORT_BUF, "T%c%d%c%.200s", delim, type, delim, message);
-  SG_LOG( SG_GENERAL, SG_ALERT, message );
-  rep_buf[MX_REPORT_BUF] = 0; /* ensure null termination */
-  report (rep_buf);
-}
-
-void
-event_register (int id, int reply, int count)
-{
-  const char *reason;
-  switch (reply)
-    {
-    case IAXC_REGISTRATION_REPLY_ACK:
-      reason = "accepted";
-      break;
-    case IAXC_REGISTRATION_REPLY_REJ:
-      reason = "denied";
-      if (strcmp (username, "guest") != 0)
-	{
-          SG_LOG( SG_GENERAL, SG_ALERT, "Registering denied" );
-	}
-      break;
-    case IAXC_REGISTRATION_REPLY_TIMEOUT:
-      reason = "timeout";
-      break;
-    default:
-      reason = "unknown";
-    }
-  snprintf (rep_buf, MX_REPORT_BUF, "R%c%d%c%s%c%d", delim, id, delim,
-	    reason, delim, count);
-  rep_buf[MX_REPORT_BUF] = 0; /* ensure null termination */
-  report (rep_buf);
-}
-
-void
-event_netstats (struct iaxc_ev_netstats stat)
-{
-  struct iaxc_netstat local = stat.local;
-  struct iaxc_netstat remote = stat.remote;
-  snprintf (rep_buf, MX_REPORT_BUF,
-	    "N%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d%c%d",
-	    delim, stat.callNo, delim, stat.rtt,
-	    delim, local.jitter, delim, local.losspct, delim,
-	    local.losscnt, delim, local.packets, delim, local.delay,
-	    delim, local.dropped, delim, local.ooo, delim,
-	    remote.jitter, delim, remote.losspct, delim, remote.losscnt,
-	    delim, remote.packets, delim, remote.delay, delim,
-	    remote.dropped, delim, remote.ooo);
-  rep_buf[MX_REPORT_BUF] = 0; /* ensure null termination */
-  report (rep_buf);
-}
-
-void
-event_level (double in, double out)
-{
-  snprintf (rep_buf, MX_REPORT_BUF, "L%c%.1f%c%.1f", delim, in, delim, out);
-  rep_buf[MX_REPORT_BUF] = 0; /* ensure null termination */
-  report (rep_buf);
-}
-
-const char *
-map_state (int state)
-{
-  int i, j;
-  int next = 0;
-  *states = '\0';
-  if (state == 0)
-    {
-      return "free";
-    }
-  for (i = 0, j = 1; map[i] != NULL; i++, j <<= 1)
-    {
-      if (state & j)
-	{
-	  if (next)
-	    strcat (states, ",");
-	  strcat (states, map[i]);
-	  next = 1;
-	}
-    }
-  return states;
-}
-
-void
-event_unknown (int type)
-{
-  snprintf (rep_buf, MX_REPORT_BUF, "U%c%d", delim, type);
-  rep_buf[MX_REPORT_BUF] = 0; /* ensure null termination */
-  report (rep_buf);
-}
-
-void
-report (char *text)
-{
-  if (debug)
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, text );
-      fflush (stdout);
-    }
-}
-
-void
-ptt (int mode)
-{
-  if (mode == 1)
-    {
-      /* mic is muted so unmute and mute speaker */
-      iaxc_input_level_set (level_in);
-      iaxc_output_level_set (0.0);
-      SG_LOG( SG_GENERAL, SG_ALERT, "[SPEAK] unmute mic, mute speaker" );
-    }
-  else
-    {
-      /* mic is unmuted so mute and unmute speaker */
-      iaxc_input_level_set (0.0);
-      iaxc_output_level_set (level_out);
-      SG_LOG( SG_GENERAL, SG_ALERT, "[LISTEN] mute mic, unmute speaker" );
-    }
-}
-
-int
-split (char *string, char *fields[], int nfields, const char *sep)
-{
-  register char *p = string;
-  register char c;		/* latest character */
-  register char sepc = sep[0];
-  register char sepc2;
-  register int fn;
-  register char **fp = fields;
-  register const char *sepp;
-  register int trimtrail;
-  /* white space */
-  if (sepc == '\0')
-    {
-      while ((c = *p++) == ' ' || c == '\t')
-	continue;
-      p--;
-      trimtrail = 1;
-      sep = " \t";		/* note, code below knows this is 2 long */
-      sepc = ' ';
-    }
-  else
-    trimtrail = 0;
-  sepc2 = sep[1];		/* now we can safely pick this up */
-  /* catch empties */
-  if (*p == '\0')
-    return (0);
-  /* single separator */
-  if (sepc2 == '\0')
-    {
-      fn = nfields;
-      for (;;)
-	{
-	  *fp++ = p;
-	  fn--;
-	  if (fn == 0)
-	    break;
-	  while ((c = *p++) != sepc)
-	    if (c == '\0')
-	      return (nfields - fn);
-	  *(p - 1) = '\0';
-	}
-      /* we have overflowed the fields vector -- just count them */
-      fn = nfields;
-      for (;;)
-	{
-	  while ((c = *p++) != sepc)
-	    if (c == '\0')
-	      return (fn);
-	  fn++;
-	}
-      /* not reached */
-    }
-
-  /* two separators */
-  if (sep[2] == '\0')
-    {
-      fn = nfields;
-      for (;;)
-	{
-	  *fp++ = p;
-	  fn--;
-	  while ((c = *p++) != sepc && c != sepc2)
-	    if (c == '\0')
-	      {
-		if (trimtrail && **(fp - 1) == '\0')
-		  fn++;
-		return (nfields - fn);
-	      }
-	  if (fn == 0)
-	    break;
-	  *(p - 1) = '\0';
-	  while ((c = *p++) == sepc || c == sepc2)
-	    continue;
-	  p--;
-	}
-      /* we have overflowed the fields vector -- just count them */
-      fn = nfields;
-      while (c != '\0')
-	{
-	  while ((c = *p++) == sepc || c == sepc2)
-	    continue;
-	  p--;
-	  fn++;
-	  while ((c = *p++) != '\0' && c != sepc && c != sepc2)
-	    continue;
-	}
-      /* might have to trim trailing white space */
-      if (trimtrail)
-	{
-	  p--;
-	  while ((c = *--p) == sepc || c == sepc2)
-	    continue;
-	  p++;
-	  if (*p != '\0')
-	    {
-	      if (fn == nfields + 1)
-		*p = '\0';
-	      fn--;
-	    }
-	}
-      return (fn);
-    }
-
-  /* n separators */
-  fn = 0;
-  for (;;)
-    {
-      if (fn < nfields)
-	*fp++ = p;
-      fn++;
-      for (;;)
-	{
-	  c = *p++;
-	  if (c == '\0')
-	    return (fn);
-	  sepp = sep;
-	  while ((sepc = *sepp++) != '\0' && sepc != c)
-	    continue;
-	  if (sepc != '\0')	/* it was a separator */
-	    break;
-	}
-      if (fn < nfields)
-	*(p - 1) = '\0';
-      for (;;)
-	{
-	  c = *p++;
-	  sepp = sep;
-	  while ((sepc = *sepp++) != '\0' && sepc != c)
-	    continue;
-	  if (sepc == '\0')	/* it wasn't a separator */
-	    break;
-	}
-      p--;
-    }
-
-  /* not reached */
-}
-
-/**
- *
- * \fn double *read_special_frequencies(const char *file)
- *
- * \brief Reads the file "special_frequencies.txt" if it exists.
- * If no file exists, then no special frequencies are useable.
- *
- * \param file	pointer on the filename.
- *
- * \return Returns the pointer on an array containing doubles if file
- * has been successfully opened and read, otherwise returns NULL.
- *
- */
-double *read_special_frequencies(const char *file)
-{
-	double *l_pfrq = NULL;
-	double l_value;
-	int l_count;
-	int l_allocated = 0;
-	int l_new_size;
-
-	if((l_pfrq = (double *)malloc(ALLOC_CHUNK_SIZE * sizeof(double))) != NULL)
-	{
-		l_allocated += ALLOC_CHUNK_SIZE;
-
-		if(FGC_SUCCESS(parser_init(file)))
-		{
-			l_count = 0;
-
-			while(FGC_SUCCESS(parser_get_next_value(&l_value)))
-			{
-				if(l_count >= l_allocated)
-				{
-					l_new_size = ALLOC_CHUNK_SIZE * (l_count / ALLOC_CHUNK_SIZE + 1);
-					l_pfrq = (double *)realloc(l_pfrq, l_new_size * sizeof(double));
-					l_allocated += ALLOC_CHUNK_SIZE;
-				}
-
-				l_pfrq[l_count] = l_value;
-
-				l_count++;
-			}
-
-			/* Last value of the array must be -1.0 which is the terminator. */
-			if(l_count == l_allocated)
-				l_pfrq = (double *)realloc(l_pfrq, (l_count + 1) * sizeof(double));
-			l_pfrq[l_count] = -1.0;
-		} else {
-            // failed to open file
-            parser_exit();
-            free(l_pfrq);
-            return 0;
+    if(mode == PILOT) {
+        SG_LOG( SG_GENERAL, SG_DEBUG, "Entering main loop in mode PILOT" );
+
+        simgear::Socket::initSockets();
+        simgear::Socket sgSocket;
+        sgSocket.open(false);
+        sgSocket.bind(_host.c_str(), _port);
+        sgSocket.setBlocking(false);
+        lib_setVolume(0.0, 1.0);
+        static char currentPacket[MAXBUFLEN+2], previousPacket[MAXBUFLEN+2];
+        struct Data currentData, previousData, previousPosData;
+        double currentFreq = -1, previousFreq = -1;
+        std::string currentIcao = "";
+        ActiveComm activeComm = COM1;
+
+        _airportsData = getAirportsData();
+        SG_LOG(SG_GENERAL, SG_INFO, "");
+
+        while(_running) {
+            int bytes = sgSocket.recv(currentPacket, sizeof(currentPacket)-1, 0);
+            if (bytes == -1)
+                continue;
+
+            currentPacket[bytes] = '\0';
+            if( strcmp(currentPacket, previousPacket) != 0 ) {
+                std::string packet(currentPacket);
+                std::vector<std::string> properties = simgear::strutils::split(packet, ",");
+                for(size_t i=0; i < properties.size(); i++) {
+                    std::vector<std::string> prop = simgear::strutils::split(properties[i], "=");
+                    if(prop[0] == "PTT")         currentData.ptt         = atoi(prop[1].c_str());
+                    if(prop[0] == "LAT")         currentData.lat         = atof(prop[1].c_str());
+                    if(prop[0] == "LON")         currentData.lon         = atof(prop[1].c_str());
+                    if(prop[0] == "ALT")         currentData.alt         = atof(prop[1].c_str());
+                    if(prop[0] == "COM1_FRQ")    currentData.com1        = atof(prop[1].c_str());
+                    if(prop[0] == "COM2_FRQ")    currentData.com2        = atof(prop[1].c_str());
+                    if(prop[0] == "OUTPUT_VOL")  currentData.outputVol   = atof(prop[1].c_str());
+                    if(prop[0] == "SILENCE_THD") currentData.silenceThd  = atof(prop[1].c_str());
+                    if(prop[0] == "CALLSIGN")    currentData.callsign    = prop[1];
+                }
+
+                if(currentData.ptt != previousData.ptt) {
+                    if(currentData.ptt == 2) {
+                        if(activeComm == COM1) {
+                            activeComm = COM2;
+                            currentFreq = currentData.com2;
+                        } else {
+                            activeComm = COM1;
+                            currentFreq = currentData.com1;
+                        }
+                        SG_LOG( SG_GENERAL, SG_INFO, "Select radio " << activeComm << " on " << currentFreq << " MHz" );
+                    } else if(currentData.ptt) {
+                        SG_LOG( SG_GENERAL, SG_INFO, "[SPEAK] unmute mic, mute speaker" );
+                        lib_setVolume(1.0, 0.0);
+                    } else {
+                        SG_LOG( SG_GENERAL, SG_INFO, "[LISTEN] mute mic, unmute speaker" );
+                        lib_setVolume(0.0, currentData.outputVol);
+                    }
+                }
+
+                if(currentData.outputVol != previousData.outputVol)
+                    lib_setVolume(0.0, currentData.outputVol);
+
+                if(currentData.silenceThd != previousData.silenceThd)
+                    lib_setSilenceThreshold(currentData.silenceThd);
+
+                if(currentData.callsign != previousData.callsign)
+                    lib_setCallerId(currentData.callsign);
+
+                if(currentData.com1 != previousData.com1 && activeComm == COM1) {
+                    currentFreq = currentData.com1;
+                    SG_LOG( SG_GENERAL, SG_INFO, "Select frequency " << currentFreq << " MHz on radio " << activeComm );
+                }
+
+                if(currentData.com2 != previousData.com2 && activeComm == COM2) {
+                    currentFreq = currentData.com2;
+                    SG_LOG( SG_GENERAL, SG_INFO, "Select frequency " << currentFreq << " MHz on radio " << activeComm );
+                }
+
+                if(previousFreq != currentFreq || currentData.callsign != previousData.callsign) {
+                    _currentFreqKhz = 10 * static_cast<int>(currentFreq * 100 + 0.25);
+                    currentIcao = getClosestAirportForFreq(currentFreq, currentData.lat, currentData.lon, currentData.alt);
+
+                    if(isInRange(currentIcao, currentData.lat, currentData.lon, currentData.alt)) {
+                        _connected = lib_call(currentIcao, currentFreq);
+                        SG_LOG( SG_GENERAL, SG_INFO, "Connecting " << currentIcao << " on " << currentFreq << " MHz" );
+                    } else {
+                        if(_connected) {
+                            _connected = lib_hangup();
+                            SG_LOG( SG_GENERAL, SG_INFO, "Disconnecting " << currentIcao << " on " << currentFreq << " MHz (out of range)" );
+                        }
+                    }
+                }
+
+                if( currentData.lat <= previousPosData.lat - 0.05  ||
+                    currentData.lon <= previousPosData.lon - 0.05  ||
+                    currentData.alt <= previousPosData.alt - 50.0  ||
+                    currentData.lat >= previousPosData.lat + 0.05  ||
+                    currentData.lon >= previousPosData.lon + 0.05  ||
+                    currentData.alt >= previousPosData.alt + 50.0) {
+
+                    currentIcao = getClosestAirportForFreq(currentFreq, currentData.lat, currentData.lon, currentData.alt);
+                    if(_connected) {
+                        if(!isInRange(currentIcao, currentData.lat, currentData.lon, currentData.alt)) {
+                            _connected = lib_hangup();
+                            SG_LOG( SG_GENERAL, SG_INFO, "Disconnecting " << currentIcao << " on " << currentFreq << " MHz (out of range)" );
+                        }
+                    } else {
+                        if(isInRange(currentIcao, currentData.lat, currentData.lon, currentData.alt)) {
+                            _connected = lib_call(currentIcao, currentFreq);
+                            SG_LOG( SG_GENERAL, SG_INFO, "Connecting " << currentIcao << " on " << currentFreq << " MHz" );
+                        }
+                    }
+                    previousPosData = currentData;
+                }
+                previousFreq = currentFreq;
+                previousData = currentData;
+            }
+            strcpy(previousPacket, currentPacket);
+        } // while()
+        sgSocket.close();
+    } else { // if(mode == PILOT)
+        int sessionDuration = 1000;
+        _p.stamp();
+        if(mode == OBS) {
+            SG_LOG( SG_GENERAL, SG_DEBUG, "Entering main loop in mode OBS (max duration: 6 hours)" );
+            sessionDuration *= 2160; // 6 hours for OBS mode
+            lib_setVolume(0.0, 1.0);
+            lib_setCallerId("::OBS::");
+            num = computePhoneNumber(_frequency, _airport);
+        } else {
+            lib_setVolume(1.0, 1.0);
+            if(mode == TEST) {
+                sessionDuration *= 65; // 65 seconds for TEST mode
+                SG_LOG( SG_GENERAL, SG_DEBUG, "Entering main loop in mode TEST (max duration: 65 seconds)" );
+                _airport = "ZZZZ";
+                num = computePhoneNumber(_frequency, _airport);
+            } else if(mode == ATC) {
+                sessionDuration *= 45; // 45 seconds for ATC mode
+                SG_LOG( SG_GENERAL, SG_DEBUG, "Entering main loop in mode ATC (max duration: 45 seconds)" );
+                num = computePhoneNumber(_atis, _airport, true);
+            }
         }
-	}
+        _connected = lib_directCall(_airport, _frequency, num);
 
-	parser_exit();
+        while (_p.elapsedMSec() <= sessionDuration && _running){
+            SGTimeStamp::sleepForMSec(2000);
+        }
+    }
 
-	return(l_pfrq);
+    if(!lib_shutdown())
+        return EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }
 
+// function: getAirportsData
+// action: parse positionsData.hxx then build multimap
 
-struct airport *
-read_airports (const char *file)
+std::multimap<int, Airport> getAirportsData()
 {
-  FILE *fp;
-  int ret;
-  struct airport airport_tmp;
-  struct airport *first = NULL;
-  struct airport *my_airport = NULL;
-  struct airport *previous_airport = NULL;
-  size_t counter = 0;
+    std::vector<std::string> lines;
+    std::multimap<int, Airport> aptData;
+    SG_LOG(SG_GENERAL, SG_INFO, "Loading aiports informations...");
 
-  SG_LOG( SG_GENERAL, SG_ALERT, "Reading airports [" << file << "]" );
+    for(size_t i=0; i < sizeof(_positionsData)/sizeof(*_positionsData); i++) { // _positionsData is provided by positions.hxx
+        std::vector<std::string> entries = simgear::strutils::split(_positionsData[i], ",");
+        if(entries.size() == 6) {
+            // [0]=ICAO, [1]=Frequency, [2]=Latitude, [3]=Longitude, [4]=ID/Type, [5]=Name
+            std::string entryIcao  = entries[0];
+            double      entryFreq  = atof(entries[1].c_str());
+            double      entryLat   = atof(entries[2].c_str());
+            double      entryLon   = atof(entries[3].c_str());
+            std::string entryType  = entries[4];
+            std::string entryName  = entries[5];
 
-  if ((fp = fopen (file, "rt")) == NULL)
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, "ERROR: open failed!" );
-      perror ("fopen");
-      exitcode = 120;
-      quit (0);
+            int aptFreqKhz = 10 * static_cast<int>(entryFreq * 100 + 0.25);
+            Airport apt;
+                    apt.icao       = entryIcao;
+                    apt.frequency  = entryFreq;
+                    apt.latitude   = entryLat;
+                    apt.longitude  = entryLon;
+                    apt.type       = entryType;
+                    apt.name       = entryName;
+            aptData.insert( std::pair<int, Airport>(aptFreqKhz, apt) );
+        }
     }
-
-  airport_tmp.next = NULL;
-  while ((ret = fscanf (fp, " %4[^,],%f,%lf,%lf,%128[^,],%128[^\r\n]",
-			airport_tmp.icao, &airport_tmp.frequency,
-			&airport_tmp.lat, &airport_tmp.lon,
-			airport_tmp.type, airport_tmp.text)) == 6)
-    {
-        counter++;
-      if ((my_airport =
-	   (struct airport *) malloc (sizeof (struct airport))) == NULL)
-	{
-          SG_LOG( SG_GENERAL, SG_ALERT, "Error allocating memory for airport data" );
-	  exitcode = 900;
-	  quit (0);
-	}
-
-      if (first == NULL)
-	first = my_airport;
-      memcpy (my_airport, &airport_tmp, sizeof (airport_tmp));
-      if (previous_airport != NULL)
-	{
-	  previous_airport->next = my_airport;
-	}
-      previous_airport = my_airport;
-    }
-
-  fclose (fp);
-  if (ret != EOF)
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, "ERROR during reading airports!" );
-      exitcode = 900;
-      quit (0);
-    }
-
-  SG_LOG( SG_GENERAL, SG_ALERT, "loaded " << counter << " entries" );
-  return (first);
+    return aptData;
 }
 
-char *
-report_devices (int in)
+// function: orderByDistanceNm
+// action: sort airportsInRange vector by distanceNm ASC in getClosestAirportForFreq()
+
+bool orderByDistanceNm(Airport a, Airport b)
 {
-  struct iaxc_audio_device *devs;  //audio devices
-  int ndevs;			   //audio dedvice count
-  int input, output, ring;	   //audio device id's
-  int current, i;
-  int flag = in ? IAXC_AD_INPUT : IAXC_AD_OUTPUT;
-  iaxc_audio_devices_get (&devs, &ndevs, &input, &output, &ring);
-  current = in ? input : output;
-  snprintf (rep_buf, MX_REPORT_BUF, "%s\n", devs[current].name);
-  for (i = 0; i < ndevs; i++)
-    {
-      if (devs[i].capabilities & flag && i != current)
-	{
-	  snprintf (rep_buf + strlen (rep_buf), MX_REPORT_BUF - strlen (rep_buf), "%s\n",
-		    devs[i].name);
-	}
-        rep_buf[MX_REPORT_BUF] = 0; /* ensure null termination */
-        if (strlen(rep_buf) >= MX_REPORT_BUF)
+    return a.distanceNm < b.distanceNm;
+}
+
+// function: gestClosestAircraftForFreq
+// action: return ICAO of closest airport with given frequency and define his position
+
+std::string getClosestAirportForFreq(double freq, double acftLat, double acftLon, double acftAlt)
+{
+    for(size_t i=0; i<sizeof(special_freq)/sizeof(special_freq[0]); i++) { // Check if it's a special freq
+      if( special_freq[i] == _currentFreqKhz )
+        return std::string("ZZZZ");
+    }
+
+    std::string icao = "";
+    double aptLon    = 0;
+    double aptLat    = 0;
+    int freqKhz      = 10 * static_cast<int>(freq * 100 + 0.25);
+    SGGeod acftPos   = SGGeod::fromDegFt(acftLon, acftLat, acftAlt);
+    std::vector<Airport> airportsInRange;
+
+    std::pair <std::multimap<int, Airport>::iterator, std::multimap<int, Airport>::iterator> ret;
+    ret = _airportsData.equal_range(freqKhz);
+    for (std::multimap<int, Airport>::iterator it=ret.first; it!=ret.second; ++it) {
+        SGGeod aptPos = SGGeod::fromDeg(it->second.longitude, it->second.latitude);
+        double distNm = SGGeodesy::distanceNm(aptPos, acftPos);
+        if(distNm <= _maxRange){
+            it->second.distanceNm = distNm;
+            airportsInRange.push_back(it->second);
+        }
+    }
+
+    if(!airportsInRange.size())
+        return icao;
+
+    std::sort(airportsInRange.begin(), airportsInRange.end(), orderByDistanceNm);
+
+    aptLon      = airportsInRange[0].longitude;
+    aptLat      = airportsInRange[0].latitude;
+    icao        = airportsInRange[0].icao;
+    _airportPos = SGGeod::fromDeg(aptLon, aptLat);
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Airport " << airportsInRange[0].icao << " " << airportsInRange[0].name << " - "
+                                << airportsInRange[0].type << " on " << airportsInRange[0].frequency
+                                << " - is in range " << airportsInRange[0].distanceNm << "nm ("
+                                << (SG_NM_TO_METER*airportsInRange[0].distanceNm)/1000 <<"km)");
+    return icao;
+}
+
+// function: isInRange
+// action: return TRUE if airport/freq is in range, else return FALSE
+
+bool isInRange(std::string icao, double acftLat, double acftLon, double acftAlt)
+{
+    for(size_t i=0; i<sizeof(special_freq)/sizeof(special_freq[0]); i++) { // Check if it's a special freq
+      if( special_freq[i] == _currentFreqKhz )
+        return true;
+    }
+
+    if(icao.empty())
+        return false;
+
+    SGGeod acftPos = SGGeod::fromDegFt(acftLon, acftLat, acftAlt);
+    double distNm = SGGeodesy::distanceNm(_airportPos, acftPos);
+    double delta_elevation_ft = fabs(acftPos.getElevationFt() - _airportPos.getElevationFt());
+    double rangeNm = 1.23 * sqrt(delta_elevation_ft);
+
+    if (rangeNm > _maxRange) rangeNm = _maxRange;
+    if (rangeNm < _minRange) rangeNm = _minRange;
+    if( distNm > rangeNm )   return false;
+    return true;
+}
+
+// function: quit
+// action: set _running flag to false
+
+void quit(int state)
+{
+    SG_LOG( SG_GENERAL, SG_INFO, "Exiting FGCom" );
+    _running = false;
+#ifdef _WIN32
+    lib_shutdown();
+    SG_LOG(SG_GENERAL, SG_INFO, "You can close the terminal now");
+#endif
+}
+
+// function: usage
+// action: display FGCom usage then quit
+
+int usage()
+{
+    std::cout << "FGCom " << FGCOM_VERSION << " usage:" << std::endl;
+    std::cout << "        --server=fgcom.flightgear.org   -  Server to connect" << std::endl;
+    std::cout << "        --host=127.0.0.1                -  Host to listen i.e where FG is running" << std::endl;
+    std::cout << "        --port=16661                    -  Port to use" << std::endl;
+    std::cout << "        --callsign=guest                -  Callsign during session e.g F-ELYD" << std::endl;
+    std::cout << "        --frequency=xxx.xxx             -  Frequency e.g 120.500" << std::endl;
+    std::cout << "        --airport=YYYY                  -  ICAO of airport e.g KSFO" << std::endl;
+    std::cout << "        --username=guest                -  Username for registration" << std::endl;
+    std::cout << "        --password=guest                -  Password for registration" << std::endl;
+    std::cout << "        --silence-threshold=-35         -  Silence threshold in dB (-60 < range < 0 )" << std::endl;
+    std::cout << "        --debug                         -  Enable debug output" << std::endl;
+    std::cout << "        --help                          -  Show this message" << std::endl;
+    std::cout << "        --version                       -  Show version" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "  None of these options are required, you can simply start FGCom without option at all: it works" << std::endl;
+    std::cout << "  For further informations, please visit: http://wiki.flightgear.org/FGCom_3.0" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "  About silence-threshold:" << std::endl;
+    std::cout << "    This is the limit, in dB, when FGCom consider no voice in your microphone." << std::endl;
+    std::cout << "    --silence-threshold=-60 is similar to micro always ON" << std::endl;
+    std::cout << "    --silence-threshold=0 is similar to micro always OFF" << std::endl;
+    std::cout << "    Default value is -35.0 dB" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "  In order to make an echo-test, you have to start FGCom like:" << std::endl;
+    std::cout << "    fgcom --frequency=910" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "  In order to listen a frequency, you have to start FGCom like:" << std::endl;
+    std::cout << "    fgcom --frequency=xxx.xxx --airport=YYYY" << std::endl;
+    std::cout << "    where xxx.xxx is the frequency of the ICAO airport YYYY that you want to listen to" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "  In order to record an ATIS message, you have to start FGCom like:" << std::endl;
+    std::cout << "    fgcom --atis=xxx.xxx --airport=YYYY" << std::endl;
+    std::cout << "    where xxx.xxx is the ATIS frequency of the ICAO airport YYYY" << std::endl;
+    std::cout << "" << std::endl;
+    return EXIT_SUCCESS;
+}
+
+// function: version
+// action: display FGCom version then quit
+
+int version()
+{
+    SG_LOG(SG_GENERAL, SG_INFO, "FGCom " << FGCOM_VERSION << " compiled " << __DATE__
+                                << ", at " << __TIME__ );
+    std::cout << "" << std::endl;
+    return EXIT_SUCCESS;
+}
+
+// function: computePhoneNumber
+// action: return phone number
+
+std::string computePhoneNumber(double freq, std::string icao, bool atis)
+{
+    if(icao.empty())
+        return std::string(); 
+
+    char phoneNumber[256];
+    char exten[32];
+    char tmp[5];
+    int  prefix = atis ? 99 : 01;
+
+    sprintf( tmp, "%4s", icao.c_str() );
+
+    sprintf( exten,
+             "%02d%02d%02d%02d%02d%06d",
+             prefix,
+             tmp[0],
+             tmp[1],
+             tmp[2],
+             tmp[3],
+             (int) (freq * 1000 + 0.5) );
+    exten[16] = '\0';
+
+    snprintf( phoneNumber,
+              sizeof(phoneNumber),
+              "%s:%s@%s/%s",
+              _username.c_str(),
+              _password.c_str(),
+              _server.c_str(),
+              exten);
+    return phoneNumber;
+}
+
+// function: lib_setVolume
+// action: set input/output volume
+
+void lib_setVolume(double input, double output)
+{
+    SG_CLAMP_RANGE<double>(input, 0.0, 1.0);
+    SG_CLAMP_RANGE<double>(output, 0.0, 1.0);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Set volume input=" << input << " , output=" << output);
+    iaxc_input_level_set(input);
+    iaxc_output_level_set(output);
+}
+
+// function: lib_setSilenceThreshold
+// action: set silence threshold
+
+void lib_setSilenceThreshold(double thd)
+{
+    SG_CLAMP_RANGE<double>(thd, -60, 0);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Set silence threshold=" << thd);
+    iaxc_set_silence_threshold(thd);
+}
+
+// function: lib_setCallerId
+// action: set caller id for the session
+
+void lib_setCallerId(std::string callsign)
+{
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Set caller ID=" << callsign);
+    iaxc_set_callerid (callsign.c_str(), _app.c_str());
+}
+
+// function: lib_init
+// action: init the library
+
+bool lib_init()
+{
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Initializing IAX library");
+#ifdef _MSC_VER
+    iaxc_set_networking( (iaxc_sendto_t)sendto, (iaxc_recvfrom_t)recvfrom );
+#endif
+    if (iaxc_initialize(4)) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Error: cannot initialize IAXClient !\nHINT: Have you checked the mic and speakers ?" );
+        return false;
+    }
+
+    iaxc_set_callerid( _callsign.c_str(), _app.c_str() );
+    iaxc_set_formats(IAXC_FORMAT_SPEEX, IAXC_FORMAT_ULAW|IAXC_FORMAT_SPEEX);
+    iaxc_set_speex_settings(1, 5, 0, 1, 0, 3);
+    iaxc_set_filters(IAXC_FILTER_AGC | IAXC_FILTER_DENOISE);
+    iaxc_set_event_callback(iaxc_callback);
+    iaxc_start_processing_thread ();
+    lib_setSilenceThreshold(_silenceThd);
+    return true;
+}
+
+// function: lib_shutdown
+// action: stop the library
+
+bool lib_shutdown()
+{
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Shutdown IAX library");
+    lib_hangup();
+    if(_registrationId != -1)
+        iaxc_unregister(_registrationId);
+    return true;
+}
+
+// function: lib_call
+// action: register a user on remote server then return the registration ID
+
+int lib_registration()
+{
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Request registration");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "           username: " << _username);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "           password: xxxxxxxx");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "           server:   " << _server);
+    int regId = iaxc_register( _username.c_str(), _password.c_str(), _server.c_str());
+    if(regId == -1) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Warning: cannot register '" << _username << "' at '" << _server );
+    }
+    return regId;
+}
+
+// function: lib_call
+// action: kill current call then do a new call
+
+bool lib_call(std::string icao, double freq)
+{
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Request new call");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "           icao: " << icao);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "           freq: " << freq);
+    lib_hangup();
+    iaxc_millisleep(300);
+    std::string num = computePhoneNumber(freq, icao);
+    if(num.empty())
+        return false;
+    _callId = iaxc_call(num.c_str());
+    if(_callId == -1) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Warning: cannot call: " << num );
+        return false;
+    }
+    return true;
+}
+
+bool lib_directCall(std::string icao, double freq, std::string num)
+{
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Request new call");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "           icao: " << icao);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "           freq: " << freq);
+    lib_hangup();
+    iaxc_millisleep(300);
+    if(num.empty())
+        return false;
+    _callId = iaxc_call(num.c_str());
+    if(_callId == -1) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Warning: cannot call: " << num );
+        return false;
+    }
+    return true;
+}
+
+// function: lib_hangup
+// action: kill current call
+
+bool lib_hangup()
+{
+    if(!_connected)
+        return false;
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Request hangup");
+    iaxc_dump_all_calls();
+    _callId = -1;
+    return false;
+}
+
+// function: iaxc_callback
+// action: parse IAX event then call event handler
+
+int iaxc_callback(iaxc_event e)
+{
+    switch (e.type) {
+        case IAXC_EVENT_TEXT:
+            if(e.ev.text.type == IAXC_TEXT_TYPE_STATUS ||
+               e.ev.text.type == IAXC_TEXT_TYPE_IAX)
+                   SG_LOG( SG_GENERAL, SG_INFO, "Message: " << e.ev.text.message );
             break;
     }
-  rep_buf[MX_REPORT_BUF] = 0; /* ensure null termination */
-  return rep_buf;
+    return 1;
 }
-
-int
-set_device (const char *name, int out)
-{
-  struct iaxc_audio_device *devs;	/* audio devices */
-  int ndevs;			/* audio dedvice count */
-  int input, output, ring;	/* audio device id's */
-  int i;
-  iaxc_audio_devices_get (&devs, &ndevs, &input, &output, &ring);
-  for (i = 0; i < ndevs; i++)
-    {
-      if (devs[i].capabilities & (out ? IAXC_AD_OUTPUT : IAXC_AD_INPUT) &&
-	  strcmp (name, devs[i].name) == 0)
-	{
-	  if (out)
-	    {
-	      output = devs[i].devID;
-	    }
-	  else
-	    {
-	      input = devs[i].devID;
-	    }
-	  fprintf (stderr, "device %s = %s (%d)\n", out ? "out" : "in", name,
-		   devs[i].devID);
-	  iaxc_audio_devices_set (input, output, ring);
-	  return 1;
-	}
-    }
-  return 0;
-}
-
-void
-parse_fgdata (struct fgdata *data, char *buf)
-{
-  char *data_pair = NULL;
-  char *fields[2];
-  fields[0] = NULL;
-  fields[1] = NULL;
-  SG_LOG( SG_GENERAL, SG_DEBUG, "Parsing data: [" << buf << "]" );
-  /* Parse data from FG */
-  data_pair = strtok (buf, ",");
-  while (data_pair != NULL)
-    {
-      split (data_pair, fields, 2, "=");
-      if (strcmp (fields[0], "COM1_FRQ") == 0)
-	{
-	  data->COM1_FRQ = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "COM1_FRQ=" << data->COM1_FRQ );
-	}
-      else if (strcmp (fields[0], "COM2_FRQ") == 0)
-	{
-	  data->COM2_FRQ = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "COM2_FRQ=" << data->COM2_FRQ );
-	}
-      else if (strcmp (fields[0], "NAV1_FRQ") == 0)
-	{
-	  data->NAV1_FRQ = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "NAV1_FRQ=" << data->NAV1_FRQ );
-	}
-      else if (strcmp (fields[0], "NAV2_FRQ") == 0)
-	{
-	  data->NAV2_FRQ = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "NAV2_FRQ=" << data->NAV2_FRQ );
-	}
-      else if (strcmp (fields[0], "PTT") == 0)
-	{
-	  data->PTT = atoi (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "PTT=" << data->PTT );
-	}
-      else if (strcmp (fields[0], "TRANSPONDER") == 0)
-	{
-	  data->TRANSPONDER = atoi (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "TRANSPONDER=" << data->TRANSPONDER );
-	}
-      else if (strcmp (fields[0], "IAS") == 0)
-	{
-	  data->IAS = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "IAS=" << data->IAS );
-	}
-      else if (strcmp (fields[0], "GS") == 0)
-	{
-	  data->GS = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "GS=" << data->GS );
-	}
-      else if (strcmp (fields[0], "LON") == 0)
-	{
-	  data->LON = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "LON=" << data->LON );
-	}
-      else if (strcmp (fields[0], "LAT") == 0)
-	{
-	  data->LAT = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "LAT=" << data->LAT );
-	}
-      else if (strcmp (fields[0], "ALT") == 0)
-	{
-	  data->ALT = atoi (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "ALT=" << data->ALT );
-	}
-      else if (strcmp (fields[0], "HEAD") == 0)
-	{
-	  data->HEAD = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "HEAD=" << data->HEAD );
-	}
-      else if (strcmp (fields[0], "COM1_SRV") == 0)
-	{
-	  data->COM1_SRV = atoi (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "COM1_SRV" << data->COM1_SRV );
-	}
-      else if (strcmp (fields[0], "COM2_SRV") == 0)
-	{
-	  data->COM2_SRV = atoi (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "COM2_SRV=" << data->COM2_SRV );
-	}
-      else if (strcmp (fields[0], "NAV1_SRV") == 0)
-	{
-	  data->NAV1_SRV = atoi (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "NAV1_SRV=" << data->NAV1_SRV );
-	}
-      else if (strcmp (fields[0], "NAV2_SRV") == 0)
-	{
-	  data->NAV2_SRV = atoi (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "NAV2_SRV=" << data->NAV2_SRV );
-	}
-      else if (strcmp (fields[0], "OUTPUT_VOL") == 0)
-	{
-	  data->OUTPUT_VOL = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "OUTPUT_VOL=" << data->OUTPUT_VOL );
-	}
-      else if (strcmp (fields[0], "SILENCE_THD") == 0)
-	{
-	  data->SILENCE_THD = atof (fields[1]);
-          SG_LOG( SG_GENERAL, SG_DEBUG, "SILENCE_THD=" << data->SILENCE_THD );
-	}
-      else if (strcmp (fields[0], "CALLSIGN") == 0)
-	{
-	  data->CALLSIGN = fields[1];
-          SG_LOG( SG_GENERAL, SG_DEBUG, "CALLSIGN=" << data->CALLSIGN );
-	}
-      else
-	{
-          SG_LOG( SG_GENERAL, SG_DEBUG, "Unknown field " << fields[0] << "=" << fields[1] );
-	}
-
-      data_pair = strtok (NULL, ",");
-    }
-  SG_LOG( SG_GENERAL, SG_DEBUG, "" );
-}
-
-/**
- *
- * \fn int check_special_frq (double frq)
- *
- * \brief Check to see if specified frequency is a special frequency.
- *
- * \param frq	frequency to check against special frequencies
- *
- * \return Returns 1 if successful, otherwise returns 0.
- *
- */
-int check_special_frq (double frq)
-{
-	int i = 0;
-    frq = ceilf(frq*1000.0)/1000.0; // 20130602: By Clement de l'Hamaide, to 'Make 123.450Mhz usable'
-	while (special_frequencies[i] >= 0.0)
-	{
-		if (frq == special_frequencies[i])
-		{
-                        SG_LOG( SG_GENERAL, SG_ALERT, "Special frequency: " << frq );
-			return (1);
-		}
-		i++;
-	}
-	return (0);
-}
-
-void
-do_iaxc_call (const char *username, const char *password,
-	      const char *voipserver, char *number)
-{
-  char dest[256];
-
-  if( strcmp(number, "9990909090910000") == 0)
-    number = (char *)"0190909090910000";
-
-  snprintf (dest, sizeof (dest), "%s:%s@%s/%s", username, password,
-	    voipserver, number);
-  iaxc_call (dest);
-  iaxc_millisleep (DEFAULT_MILLISLEEP);
-}
-
-/* eof - fgcom.cpp */
+// eof

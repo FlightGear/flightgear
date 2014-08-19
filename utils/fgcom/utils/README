@@ -5,31 +5,6 @@
 
 
 ============================================
-====          positions.txt            =====
-============================================
-
-This file is used by fgcom binary, it's a dictionary of
-available frequency. You can set a specific path with:
-
-  ./fgcom --positions=/path/to/positions.txt
-
-THIS FILE IS REQUIRED TO RUN FGCOM !
-
-
-============================================
-====      special_frequencies.txt      =====
-============================================
-
-This file is used by fgcom binary, it's a dictionary of
-specific frequency who require to be not associated with
-and ICAO but use "ZZZZ" instead. You can set a specific path with:
-
-  ./fgcom --special=/path/to/special_frequencies.txt
-
-This file is not required to run FGCom
-
-
-============================================
 ====            fgcom.conf             =====
 ============================================
 
