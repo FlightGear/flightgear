@@ -114,8 +114,6 @@ Source: "{#VCInstallDir}\redist\x64\Microsoft.VC100.CRT\*.dll"; DestDir: "{app}\
 ; 32/64 bits install
 ;NOTE: FGPanel has no 64 bits equivalent, so we are using the 32 bits binary for 32&64 bits OS
 Source: "X:\install\msvc100\FlightGear\bin\fgpanel.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "X:\install\msvc100\FlightGear\share\flightgear\positions.txt"; DestDir: "{app}\share\flightgear"
-Source: "X:\install\msvc100\FlightGear\share\flightgear\special_frequencies.txt"; DestDir: "{app}\share\flightgear"
 Source: "X:\3rdParty\bin\oalinst.exe"; DestDir: "{app}\bin"; Flags: ignoreversion skipifsourcedoesntexist
 
 ; 32 bits install
@@ -203,7 +201,7 @@ Name: "{userdocs}\FlightGear\Custom Scenery"; Permissions: everyone-modify; Chec
 [Icons]
 Name: "{userdesktop}\FlightGear {#FGVersion}"; Filename: "{app}\bin\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon;
 Name: "{group}\Tools\FGCom"; Filename: "{app}\bin\fgcom.exe"; WorkingDir: "{app}\bin"
-Name: "{group}\Tools\FGCom-testing"; Filename: "{app}\bin\fgcom.exe"; Parameters: "-f910"; WorkingDir: "{app}\bin"
+Name: "{group}\Tools\FGCom-testing"; Filename: "{app}\bin\fgcom.exe"; Parameters: "--frequency=910"; WorkingDir: "{app}\bin"
 
 [Run]
 filename: "cmd.exe"; WorkingDir: "{app}\bin"; Parameters: "/C del msvc*.dll"; Check: FileExists(ExpandConstant('{app}\bin\vcredist_x86.exe'))
