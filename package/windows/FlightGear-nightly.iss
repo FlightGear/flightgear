@@ -79,6 +79,9 @@ Source: "X:\install\msvc100\FlightGear\bin\yasim.exe"; DestDir: "{app}\bin"; Fla
 Source: "X:\install\msvc100\FlightGear\bin\fgcom.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "X:\install\msvc100\FGRun\bin\fgrun.exe"; DestDir: "{app}\bin"; Flags: ignoreversion ; Check: not Is64BitInstallMode
 Source: "X:\install\msvc100\FGRun\share\locale\*"; DestDir: "{app}\bin\locale"; Flags: ignoreversion recursesubdirs; Check: not Is64BitInstallMode
+Source: "X:\install\msvc100\OpenRTI\bin\FedTime.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "X:\install\msvc100\OpenRTI\bin\OpenRTI.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "X:\install\msvc100\OpenRTI\bin\RTI-NG.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "X:\3rdParty\bin\zlib.dll"; DestDir: "{app}\bin"; Check: not Is64BitInstallMode
 Source: "X:\3rdParty\bin\OpenAL32.dll"; DestDir: "{app}\bin"; Check: not Is64BitInstallMode
 Source: "X:\3rdParty\bin\libpng16.dll"; DestDir: "{app}\bin"; Check: not Is64BitInstallMode
@@ -102,6 +105,9 @@ Source: "X:\install\msvc100-64\FlightGear\bin\yasim.exe"; DestDir: "{app}\bin"; 
 Source: "X:\install\msvc100-64\FlightGear\bin\fgcom.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "X:\install\msvc100-64\FGRun\bin\fgrun.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "X:\install\msvc100-64\FGRun\share\locale\*"; DestDir: "{app}\bin\locale"; Flags: ignoreversion recursesubdirs; Check: Is64BitInstallMode
+Source: "X:\install\msvc100-64\OpenRTI\bin\FedTime.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "X:\install\msvc100-64\OpenRTI\bin\OpenRTI.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "X:\install\msvc100-64\OpenRTI\bin\RTI-NG.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "X:\3rdParty.x64\bin\zlib.dll"; DestDir: "{app}\bin"; Check: Is64BitInstallMode
 Source: "X:\3rdParty.x64\bin\OpenAL32.dll"; DestDir: "{app}\bin"; Check: Is64BitInstallMode
 Source: "X:\3rdParty.x64\bin\vcredist_x64.exe"; DestDir: "{app}\bin"; Flags: skipifsourcedoesntexist; Check: Is64BitInstallMode
