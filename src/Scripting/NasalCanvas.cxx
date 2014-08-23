@@ -501,7 +501,10 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .bases<NasalElement>()
     .method("heightForWidth", &sc::Text::heightForWidth)
     .method("maxWidth", &sc::Text::maxWidth)
-    .method("getNearestCursor", &sc::Text::getNearestCursor);
+    .method("lineCount", &sc::Text::lineCount)
+    .method("lineLength", &sc::Text::lineLength)
+    .method("getNearestCursor", &sc::Text::getNearestCursor)
+    .method("getCursorPos", &sc::Text::getCursorPos);
 
   //----------------------------------------------------------------------------
   // Layouting
