@@ -476,7 +476,9 @@ naRef initNasalCanvas(naRef globals, naContext c)
                                                const sc::EventListener& )>
              (&sc::Canvas::addEventListener) )
     .method("dispatchEvent", &sc::Canvas::dispatchEvent)
-    .method("setLayout", &sc::Canvas::setLayout);
+    .method("setLayout", &sc::Canvas::setLayout)
+    .method("setFocusElement", &sc::Canvas::setFocusElement)
+    .method("clearFocusElement", &sc::Canvas::clearFocusElement);
 
   canvas_module.set("_newCanvasGhost", f_createCanvas);
   canvas_module.set("_getCanvasGhost", f_getCanvas);
