@@ -291,6 +291,7 @@ double TankPropertiesList::getTotalContent_norm() const
 
 void TankPropertiesList::bind()
 {
+    _tiedProperties.Tie("total-fuel-m3", this, &TankPropertiesList::getTotalContent_m3 );
     _tiedProperties.Tie("total-fuel-kg", this, &TankPropertiesList::getTotalContent_kg );
     _tiedProperties.Tie("total-fuel-lbs", this, &TankPropertiesList::getTotalContent_lbs );
     _tiedProperties.Tie("total-fuel-gal_us", this, &TankPropertiesList::getTotalContent_gal_us );
