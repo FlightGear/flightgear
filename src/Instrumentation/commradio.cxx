@@ -391,10 +391,10 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
         _num(node->getIntValue("number", 0)),
         _metarBridge(new MetarBridge()),
         _useFrequencyFormatter(_rootNode->getNode("frequencies/selected-mhz", true),
-            _rootNode->getNode("frequencies/selected-mhz-fmt", true), 0.025, 118.0, 136.0),
+            _rootNode->getNode("frequencies/selected-mhz-fmt", true), 0.025, 118.0, 137.0),
 
         _stbyFrequencyFormatter(_rootNode->getNode("frequencies/standby-mhz", true),
-            _rootNode->getNode("frequencies/standby-mhz-fmt", true), 0.025, 118.0, 136.0),
+            _rootNode->getNode("frequencies/standby-mhz-fmt", true), 0.025, 118.0, 137.0),
 
         _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer()),
 
