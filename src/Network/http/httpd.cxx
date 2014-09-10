@@ -478,6 +478,7 @@ void MongooseHttpd::init()
       // build url rewrites relative to fg-root
       string rewrites = n->getStringValue("url-rewrites", "");
       string_list rwl = simgear::strutils::split(rewrites, ",");
+      rwl.push_back(string("/aircraft-dir/=") + fgGetString("/sim/aircraft-dir") + "/" );
       rewrites.clear();
       for (string_list::iterator it = rwl.begin(); it != rwl.end(); ++it) {
         string_list rw_entries = simgear::strutils::split(*it, "=");
