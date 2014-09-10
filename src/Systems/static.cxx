@@ -15,6 +15,9 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 #include <simgear/constants.h>
+#include <simgear/math/SGMisc.hxx>
+#include <simgear/math/SGLimits.hxx>
+#include <simgear/math/SGMathFwd.hxx>
 #include <simgear/sg_inlines.h>
 
 
@@ -22,7 +25,7 @@ StaticSystem::StaticSystem ( SGPropertyNode *node )
     :
     _name(node->getStringValue("name", "static")),
     _num(node->getIntValue("number", 0)),
-    _tau(node->getDoubleValue("tau", 1)),
+    _tau(SGMiscd::max(.0,node->getDoubleValue("tau", 1))),
     _error_factor(node->getDoubleValue("error-factor", 0)),
     _type(node->getIntValue("type", 0))
 {
@@ -76,7 +79,7 @@ StaticSystem::update (double dt)
         double beta;
         double alpha;
         double mach;
-        double trat = _tau ? dt/_tau : 100;
+        double trat = _tau ? dt/_tau : SGLimitsd::max();
 
         double proj_factor = 0;
         double pt;
@@ -100,7 +103,9 @@ StaticSystem::update (double dt)
             p_new = p_new + qc_part;
         }
 
-        _pressure_out_node->setDoubleValue(fgGetLowPass(p, p_new, trat));           //setting new pressure in static system
+        _pressure_out_node->setDoubleValue(
+            _tau > .0 ? fgGetLowPass(p, p_new, trat) : p_new
+        );           //setting new pressure in static system
 
     }
 }
