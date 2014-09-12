@@ -504,6 +504,8 @@ void MongooseHttpd::init()
 
   }
 
+  _configNode->setBoolValue("running",true);
+
 }
 
 void MongooseHttpd::bind()
@@ -512,6 +514,7 @@ void MongooseHttpd::bind()
 
 void MongooseHttpd::unbind()
 {
+  _configNode->setBoolValue("running",false);
   mg_destroy_server(&_server);
   _uriHandler.clear();
   _propertyChangeObserver.clear();
