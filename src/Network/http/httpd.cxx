@@ -361,7 +361,7 @@ int RegularConnection::request(struct mg_connection * connection)
     mg_send_header(connection, name.c_str(), value.c_str());
   }
   if (done || false == response.Content.empty()) {
-    SG_LOG(SG_NETWORK, SG_ALERT,
+    SG_LOG(SG_NETWORK, SG_INFO,
         "RegularConnection::request() responding " << response.Content.length() << " Bytes, done=" << done);
     mg_send_data(connection, response.Content.c_str(), response.Content.length());
   }
