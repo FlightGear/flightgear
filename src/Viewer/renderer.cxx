@@ -1615,9 +1615,7 @@ FGRenderer::update( ) {
     current__view->set_dirty();
   
     osg::Camera *camera = viewer->getCamera();
-
-    SGVec4f clearColor(l->adj_fog_color());
-    camera->setClearColor(toOsg(clearColor));
+    camera->setClearColor(osg::Vec4(0, 0, 0, 0));
 
     updateSky();
     
