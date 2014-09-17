@@ -50,6 +50,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <Autopilot/route_mgr.hxx>
+#include <Aircraft/replay.hxx>
 
 #include <GUI/gui.h>
 #include <GUI/MessageBox.hxx>
@@ -1392,6 +1393,43 @@ fgOptSetProperty(const char* raw)
   return ret ? FG_OPTIONS_OK : FG_OPTIONS_ERROR;
 }
 
+static int
+fgOptLoadTape(const char* arg)
+{
+  // load a flight recorder tape but wait until the fdm is initialized
+  class DelayedTapeLoader : SGPropertyChangeListener {
+  public:
+    DelayedTapeLoader( const char * tape ) :
+      _tape(tape)
+    {
+      SGPropertyNode_ptr n = fgGetNode("/sim/signals/fdm-initialized", true);
+      n->addChangeListener( this );
+    }
+
+    virtual ~ DelayedTapeLoader() {}
+
+    virtual void valueChanged(SGPropertyNode * node) 
+    {
+      node->removeChangeListener( this );
+
+      // tell the replay subsystem to load the tape
+      FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
+      SGPropertyNode_ptr arg = new SGPropertyNode();
+      arg->setStringValue("tape", _tape );
+      arg->setBoolValue( "same-aircraft", 0 );
+      replay->loadTape(arg);
+
+      delete this; // commence suicide
+    }
+  private:
+    std::string _tape;
+
+  };
+
+  new DelayedTapeLoader(arg);
+  return FG_OPTIONS_OK;
+}
+
 
 
 /*
@@ -1632,6 +1670,7 @@ struct OptionDesc {
     {"fgviewer",                     false, OPTION_IGNORE,   "", false, "", 0},
     {"no-default-config",            false, OPTION_IGNORE, "", false, "", 0},
     {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
+    {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
     {0}
 };
 
