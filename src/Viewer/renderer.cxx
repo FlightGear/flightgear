@@ -1616,10 +1616,11 @@ FGRenderer::update( ) {
   
     osg::Camera *camera = viewer->getCamera();
 
-    osg::Vec4 clear_color = _altitude_ft->getDoubleValue() < 300000
+    osg::Vec4 clear_color = _altitude_ft->getDoubleValue() < 250000
                           ? toOsg(l->adj_fog_color())
-                          // skydome ends at ~328000 ft and would produce a
-                          // strange looking grey space -> black looks much
+                          // skydome ends at ~262000ft (default rendering)
+                          // ~328000 ft (ALS) and would produce a strange
+                          // looking greyish space -> black looks much
                           // better :-)
                           : osg::Vec4(0, 0, 0, 1);
     camera->setClearColor(clear_color);
