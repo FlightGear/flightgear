@@ -128,7 +128,21 @@ public:
     // when done.
     int gcSave(naRef r);
     void gcRelease(int key);
-    
+
+    /**
+     * Check if IOrules correctly work to limit access from Nasal scripts to the
+     * file system.
+     *
+     * @note Just a simple test is performed to check if access to a path is
+     *       possible which should never be possible (The actual path refers to
+     *       a file/folder named 'do-not-access' in the file system root).
+     *
+     * @see http://wiki.flightgear.org/IOrules
+     *
+     * @return Whether the check was successful.
+     */
+    bool checkIOrules();
+
     /// retrive the associated log object, for displaying log
     /// output somewhere (a UI, presumably)
     simgear::BufferedLogCallback* log() const
