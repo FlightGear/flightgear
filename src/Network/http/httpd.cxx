@@ -501,6 +501,7 @@ void MongooseHttpd::init()
     mg_set_option(_server, "enable_directory_listing", n->getStringValue("enable-directory-listing", "yes"));
     mg_set_option(_server, "idle_timeout_ms", n->getStringValue("idle-timeout-ms", "30000"));
     mg_set_option(_server, "index_files", n->getStringValue("index-files", "index.html"));
+    mg_set_option(_server, "extra_mime_types", n->getStringValue("extra-mime-types", ""));
 
   }
 
