@@ -62,7 +62,9 @@ public:
     FGAIModelData(SGPropertyNode *root = NULL)
         : _nasal( new FGNasalModelDataProxy(root) ),
         _ready(false),
-        _initialized(false)
+        _initialized(false),
+        _hasInteriorPath(false),
+        _interiorLoaded(false)
     {
     }
 
@@ -80,6 +82,11 @@ public:
         if (_ready)
             return;
         
+        if(prop->hasChild("interior-path")){
+            _interiorPath = prop->getStringValue("interior-path");
+            _hasInteriorPath = true;
+        }
+
         _fxpath = prop->getStringValue("sound/path");
         _nasal->modelLoaded(path, prop, n);
         
@@ -94,12 +101,21 @@ public:
     bool needInitilization(void) { return _ready && !_initialized;}
     bool isInitialized(void) { return _initialized;}
     inline std::string& get_sound_path() { return _fxpath;}
+
+    void setInteriorLoaded(const bool state) { _interiorLoaded = state;}
+    bool getInteriorLoaded(void) { return _interiorLoaded;}
+    bool hasInteriorPath(void) { return _hasInteriorPath;}
+    inline std::string& getInteriorPath() { return _interiorPath; }
     
 private:
     std::auto_ptr<FGNasalModelDataProxy> _nasal;
     std::string _fxpath;
     bool _ready;
     bool _initialized;
+
+    std::string _interiorPath;
+    bool _hasInteriorPath;
+    bool _interiorLoaded;
 };
 
 FGAIBase::FGAIBase(object_type ot, bool enableHot) :
@@ -293,6 +309,27 @@ void FGAIBase::update(double dt) {
             }
         }
     }
+
+    updateInterior();
+}
+
+void FGAIBase::updateInterior()
+{
+    if(!_modeldata || !_modeldata->hasInteriorPath())
+        return;
+
+    if(!_modeldata->getInteriorLoaded()){ // interior is not yet load
+        double d2 = dist(SGVec3d::fromGeod(pos), globals->get_aircraft_position_cart());
+        if(d2 <= _maxRangeInterior){ // if the AI is in-range we load the interior
+            _interior = SGModelLib::loadPagedModel(_modeldata->getInteriorPath(), props, _modeldata);
+            if(_interior.valid()){
+                _interior->setRange(0, 0.0, _maxRangeInterior);
+                aip.add(_interior.get());
+                _modeldata->setInteriorLoaded(true);
+                SG_LOG(SG_AI, SG_INFO, "AIBase: Loaded interior model " << _interior->getName());
+            }
+        }
+    }
 }
 
 /** update LOD properties of the model */
@@ -300,6 +337,7 @@ void FGAIBase::updateLOD()
 {
     double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/ai-detailed", 10000.0);
     double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/ai-bare", 20000.0);
+    _maxRangeInterior     = fgGetDouble("/sim/rendering/static-lod/ai-interior", 50.0);
     if (_model.valid())
     {
         if( maxRangeDetail == 0.0 )
@@ -364,6 +402,7 @@ bool FGAIBase::init(bool search_in_AI_path)
     else
         _installed = true;
 
+    props->addChild("type")->setStringValue("AI");
     _modeldata = new FGAIModelData(props);
     _model= SGModelLib::loadPagedModel(f, props, _modeldata);
 

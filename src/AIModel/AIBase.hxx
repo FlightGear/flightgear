@@ -67,6 +67,7 @@ public:
     virtual void reinit() {}
 
     void updateLOD();
+    void updateInterior();
     void setManager(FGAIManager* mgr, SGPropertyNode* p);
     void setPath( const char* model );
     void setSMPath( const std::string& p );
@@ -124,6 +125,7 @@ public:
 protected:
     double _elevation_m;
     
+    double _maxRangeInterior;
 
     double _x_offset;
     double _y_offset;
@@ -235,6 +237,7 @@ private:
     object_type _otype;
     bool _initialized;
     osg::ref_ptr<osg::PagedLOD> _model;
+    osg::ref_ptr<osg::PagedLOD> _interior;
 
     osg::ref_ptr<FGAIModelData> _modeldata;
 
