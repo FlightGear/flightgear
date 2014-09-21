@@ -442,22 +442,22 @@ void MongooseHttpd::init()
     }
 
     if ((uri = n->getStringValue("property"))[0] != 0) {
-      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding screenshot property handler at " << uri);
+      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding property uri handler at " << uri);
       _uriHandler.push_back(new flightgear::http::PropertyUriHandler(uri));
     }
 
     if ((uri = n->getStringValue("json"))[0] != 0) {
-      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding json property handler at " << uri);
+      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding json uri handler at " << uri);
       _uriHandler.push_back(new flightgear::http::JsonUriHandler(uri));
     }
 
     if ((uri = n->getStringValue("run"))[0] != 0) {
-      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding run handler at " << uri);
+      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding run uri handler at " << uri);
       _uriHandler.push_back(new flightgear::http::RunUriHandler(uri));
     }
 
     if ((uri = n->getStringValue("navdb"))[0] != 0) {
-      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding navdb handler at " << uri);
+      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding navdb uri handler at " << uri);
       _uriHandler.push_back(new flightgear::http::NavdbUriHandler(uri));
     }
   }
