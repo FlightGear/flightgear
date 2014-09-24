@@ -490,9 +490,11 @@ void MongooseHttpd::init()
         string & rhs = rw_entries[1];
         if (false == rewrites.empty()) rewrites.append(1, ',');
         rewrites.append(lhs).append(1, '=');
-        if (rhs[0] == '/') {
+        SGPath targetPath(rhs);
+        if (targetPath.isAbsolute() ) {
           rewrites.append(rhs);
         } else {
+          // don't use targetPath here because SGPath strips trailing '/'
           rewrites.append(fgRoot).append(1, '/').append(rhs);
         }
       }
