@@ -502,6 +502,16 @@ void MongooseHttpd::init()
     mg_set_option(_server, "idle_timeout_ms", n->getStringValue("idle-timeout-ms", "30000"));
     mg_set_option(_server, "index_files", n->getStringValue("index-files", "index.html"));
     mg_set_option(_server, "extra_mime_types", n->getStringValue("extra-mime-types", ""));
+    mg_set_option(_server, "access_log_file", n->getStringValue("access-log-file", ""));
+
+    if( sglog().would_log(SG_NETWORK,SG_INFO) ) {
+      SG_LOG(SG_NETWORK,SG_INFO,"starting mongoose with these options: ");
+      const char ** optionNames = mg_get_valid_option_names();
+      for( int i = 0; optionNames[i] != NULL; i+= 2 ) {
+        SG_LOG(SG_NETWORK,SG_INFO, "  > " << optionNames[i] << ": '" << mg_get_option(_server, optionNames[i]) << "'" );
+      }
+      SG_LOG(SG_NETWORK,SG_INFO,"end of mongoose options.");
+    }
 
   }
 
