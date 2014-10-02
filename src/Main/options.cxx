@@ -951,6 +951,15 @@ fgOptStartDateGmt( const char *arg )
 }
 
 static int
+fgOptJpgHttpd( const char * arg )
+{
+  SG_LOG(SG_ALL,SG_ALERT,
+   "the option --jpg-httpd is no longer supported! Please use --httpd instead."
+   " URL for the screenshot within the new httpd is http://YourFgServer:xxxx/screenshot");
+  return FG_OPTIONS_EXIT;
+}
+
+static int
 fgOptHttpd( const char * arg )
 {
     // port may be any valid address:port notation
@@ -1604,7 +1613,7 @@ struct OptionDesc {
     {"atcsim",                       true,  OPTION_CHANNEL, "", false, "dummy", 0 },
     {"atlas",                        true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"httpd",                        true,  OPTION_FUNC   , "", false, "", fgOptHttpd },
-    {"jpg-httpd",                    true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"jpg-httpd",                    true,  OPTION_FUNC,    "", false, "", fgOptJpgHttpd },
     {"native",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"native-ctrls",                 true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"native-fdm",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
