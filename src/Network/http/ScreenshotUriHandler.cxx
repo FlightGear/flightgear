@@ -405,7 +405,7 @@ bool ScreenshotUriHandler::poll(Connection * connection)
   SG_LOG(SG_NETWORK, SG_DEBUG, "Screenshot is ready, size=" << screenshot.size());
 
   if (screenshotRequest->isStream()) {
-    string s("\r\n" BOUNDARY "\r\nContent-Type: image/");
+    string s( BOUNDARY "\r\nContent-Type: image/");
     s.append(screenshotRequest->getType()).append("\r\nContent-Length:");
     s += boost::lexical_cast<string>(screenshot.size());
     s += "\r\n\r\n";
