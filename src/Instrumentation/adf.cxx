@@ -180,6 +180,7 @@ ADF::update (double delta_time_sec)
         geo_inverse_wgs_84(acPos, _transmitter_pos,
                            &bearing, &az2, &s);
         _in_range_node->setBoolValue(true);
+        _ident_node->setStringValue(_last_ident);
 
         bearing -= heading;
         if (bearing < 0)
