@@ -93,6 +93,10 @@ main(int argc, char** argv)
     // use an ArgumentParser object to manage the program arguments.
     osg::ArgumentParser arguments(&argc, argv);
 
+    unsigned expire;
+    if (arguments.read("--expire", expire)) {
+    } else expire = 10;
+    
     std::string fg_root;
     if (arguments.read("--fg-root", fg_root)) {
     } else if (const char *fg_root_env = std::getenv("FG_ROOT")) {
@@ -184,7 +188,7 @@ main(int argc, char** argv)
         // Increment the paging relevant number
         pager.setUseStamp(1 + pager.getUseStamp());
         // and expire everything not accessed for the past 30 requests
-        pager.update(10);
+        pager.update(expire);
 
         std::string id;
         std::cin >> id;
