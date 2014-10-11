@@ -30,6 +30,7 @@
 
 #include <simgear/compiler.h>
 
+#include <Main/fg_props.hxx>
 #include "FGMouseInput.hxx"
 #include "FGKeyboardInput.hxx"
 #include "FGJoystickInput.hxx"
@@ -56,11 +57,29 @@
 
 FGInput::FGInput ()
 {
-  set_subsystem( "input-mouse", new FGMouseInput() );
-  set_subsystem( "input-keyboard", new FGKeyboardInput() );
-  set_subsystem( "input-joystick", new FGJoystickInput() );
+  if( fgGetBool("/sim/input/no-mouse-input",false) ) {
+    SG_LOG(SG_INPUT,SG_ALERT,"Mouse input disabled!");
+  } else {
+    set_subsystem( "input-mouse", new FGMouseInput() );
+  }
+
+  if( fgGetBool("/sim/input/no-keyboard-input",false) ) {
+    SG_LOG(SG_INPUT,SG_ALERT,"Keyboard input disabled!");
+  } else {
+    set_subsystem( "input-keyboard", new FGKeyboardInput() );
+  }
+
+  if( fgGetBool("/sim/input/no-joystick-input",false) ) {
+    SG_LOG(SG_INPUT,SG_ALERT,"Joystick input disabled!");
+  } else {
+    set_subsystem( "input-joystick", new FGJoystickInput() );
+  }
 #ifdef INPUTEVENT_CLASS
-  set_subsystem( "input-event", new INPUTEVENT_CLASS() );
+  if( fgGetBool("/sim/input/no-event-input",false) ) {
+    SG_LOG(SG_INPUT,SG_ALERT,"Event input disabled!");
+  } else {
+    set_subsystem( "input-event", new INPUTEVENT_CLASS() );
+  }
 #endif
 }
 
