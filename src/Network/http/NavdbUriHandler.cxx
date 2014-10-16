@@ -189,6 +189,8 @@ static cJSON * createPropertiesFor(FGPositionedRef positioned)
   cJSON * properties = cJSON_CreateObject();
 
   cJSON_AddItemToObject(properties, "name", cJSON_CreateString(positioned->name().c_str()));
+  // also add id to properties
+  cJSON_AddItemToObject(properties, "id", cJSON_CreateString(positioned->ident().c_str()));
   cJSON_AddItemToObject(properties, "type", cJSON_CreateString(positioned->typeString()));
   cJSON_AddItemToObject(properties, "elevation-m", cJSON_CreateNumber(positioned->elevationM()));
   addNAVProperties( properties, dynamic_cast<FGNavRecord*>(positioned.get()) );
