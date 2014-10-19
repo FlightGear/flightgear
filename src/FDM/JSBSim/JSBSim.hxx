@@ -300,7 +300,7 @@ private:
 
     void do_trim(void);
 
-    bool update_ground_cache(JSBSim::FGLocation cart, double* cart_pos, double dt);
+    bool update_ground_cache(const JSBSim::FGLocation& cart, double* cart_pos, double dt);
     void init_gear(void);
     void update_gear(void);
 

@@ -414,18 +414,17 @@ void FGJSBsim::init()
     }
 
     if ( needTrim ) {
-      FGLocation cart(fgic->GetLongitudeRadIC(), fgic->GetLatitudeRadIC(),
-                      get_Sea_level_radius() + fgic->GetAltitudeASLFtIC());
+      const FGLocation& cart = fgic->GetPosition();
       double cart_pos[3], contact[3], d[3], vel[3], agl;
       update_ground_cache(cart, cart_pos, 0.01);
 
       get_agl_ft(fdmex->GetSimTime(), cart_pos, SG_METER_TO_FEET*2, contact,
                  d, vel, d, &agl);
       double terrain_alt = sqrt(contact[0]*contact[0] + contact[1]*contact[1]
-           + contact[2]*contact[2]) - get_Sea_level_radius();
+                                + contact[2]*contact[2]) - cart.GetSeaLevelRadius();
 
       SG_LOG(SG_FLIGHT, SG_INFO, "Ready to trim, terrain elevation is: "
-                                 << terrain_alt * SG_METER_TO_FEET );
+                                 << terrain_alt );
 
       if (fgGetBool("/sim/presets/onground")) {
         FGColumnVector3 gndVelNED = cart.GetTec2l()
@@ -434,7 +433,6 @@ void FGJSBsim::init()
         fgic->SetVEastFpsIC(gndVelNED(2));
         fgic->SetVDownFpsIC(gndVelNED(3));
       }
-      fgic->SetTerrainElevationFtIC( terrain_alt );
       do_trim();
       needTrim = false;
     }
@@ -1022,10 +1020,8 @@ void FGJSBsim::set_Latitude(double lat)
   double sea_level_radius_ft = sea_level_radius_meters * SG_METER_TO_FEET;
   _set_Sea_level_radius( sea_level_radius_ft );
 
-  if (needTrim) {
-    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_ft );
+  if (needTrim)
     fgic->SetLatitudeRadIC( lat_geoc );
-  }
   else
     Propagate->SetLatitude(lat_geoc);
 
@@ -1050,8 +1046,13 @@ void FGJSBsim::set_Altitude(double alt)
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Altitude: " << alt );
 
-  if (needTrim)
-    fgic->SetAltitudeASLFtIC(alt);
+  if (needTrim) {
+    FGLocation position = fgic->GetPosition();
+
+    position.SetPositionGeodetic(0.0, position.GetGeodLatitudeRad(), alt);
+    fgic->SetAltitudeASLFtIC(position.GetAltitudeASL());
+    fgic->SetLatitudeRadIC(position.GetLatitude());
+  }
   else
     Propagate->SetAltitudeASL(alt);
 
@@ -1284,7 +1285,8 @@ void FGJSBsim::do_trim(void)
   SG_LOG( SG_FLIGHT, SG_INFO, "  Trim complete" );
 }
 
-bool FGJSBsim::update_ground_cache(FGLocation cart, double* cart_pos, double dt)
+bool FGJSBsim::update_ground_cache(const FGLocation& cart, double* cart_pos,
+                                   double dt)
 {
   // Compute the radius of the aircraft. That is the radius of a ball
   // where all gear units are in. At the moment it is at least 10ft ...
