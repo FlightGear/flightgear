@@ -59,6 +59,9 @@ FGPrecipitationMgr::FGPrecipitationMgr()
     // By default, no precipitation
     precipitation->setRainIntensity(0);
     precipitation->setSnowIntensity(0);
+
+    // set the clip distance from the config
+    precipitation->setClipDistance(fgGetFloat("/environment/precipitation-control/clip-distance",5.0));
     transform->addChild(precipitation->build());
     group->addChild(transform.get());
 }
@@ -139,6 +142,7 @@ float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
         return fgGetFloat("/environment/params/external-precipitation-level-m", 0.0);    
     }
 
+
     // By default (not cloud layer)
     max = SGCloudLayer::SG_MAX_CLOUD_COVERAGES;
     result = 0;
@@ -217,9 +221,14 @@ void FGPrecipitationMgr::update(double dt)
 
     float altitudeAircraft;
     float altitudeCloudLayer;
+    float rainDropletSize;
+    float snowFlakeSize;
+    float illumination;
 
     altitudeCloudLayer = this->getPrecipitationAtAltitudeMax() * SG_METER_TO_FEET;
     setPrecipitationLevel(altitudeCloudLayer);
+
+
 
     // Does the user enable the precipitation ?
     if (!precipitation->getEnabled() ) {
@@ -233,6 +242,17 @@ void FGPrecipitationMgr::update(double dt)
         // Exit
         return;
     }
+
+   // See if external droplet size and illumination are used
+   if (fgGetBool("/environment/precipitation-control/detailed-precipitation", false)) {
+	precipitation->setDropletExternal(true);
+	rainDropletSize = fgGetFloat("/environment/precipitation-control/rain-droplet-size", 0.015);
+	snowFlakeSize = fgGetFloat("/environment/precipitation-control/snow-flake-size", 0.03);
+	illumination = fgGetFloat("/environment/precipitation-control/illumination", 1.0);
+	precipitation->setRainDropletSize(rainDropletSize);
+	precipitation->setSnowFlakeSize(snowFlakeSize);
+	precipitation->setIllumination(illumination);
+   }
 
     // Get the elevation of aicraft and of the cloud layer
     altitudeAircraft = fgGetDouble("/position/altitude-ft", 0.0);
