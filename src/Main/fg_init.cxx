@@ -149,8 +149,6 @@
 #include <GUI/CocoaHelpers.h> // for Mac impl of platformDefaultDataPath()
 #endif
 
-#define NEW_RESET 1
-
 using std::string;
 using std::endl;
 using std::cerr;
