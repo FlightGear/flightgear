@@ -137,35 +137,37 @@ FGTileMgr::~FGTileMgr()
 
 
 // Initialize the Tile Manager subsystem
-void FGTileMgr::init() {
-    SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
+void FGTileMgr::init()
+{
+    reinit();
+}
 
+void FGTileMgr::reinit()
+{
+    SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
+    _terra_sync = static_cast<simgear::SGTerraSync*> (globals->get_subsystem("terrasync"));
+
+  // drops the previous options reference
     _options = new simgear::SGReaderWriterOptions;
     _listener = new TileManagerListener(this);
     
     materialLibChanged();
     _options->setPropertyNode(globals->get_props());
-
+    
     osgDB::FilePathList &fp = _options->getDatabasePathList();
     const string_list &sc = globals->get_fg_scenery();
     fp.clear();
     std::copy(sc.begin(), sc.end(), back_inserter(fp));
     _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root());
     
-    if (globals->get_subsystem("terrasync")) {
-        _options->setPluginStringData("SimGear::TERRASYNC_ROOT", fgGetString("/sim/terrasync/scenery-dir"));
+    if (_terra_sync) {
+      _options->setPluginStringData("SimGear::TERRASYNC_ROOT", fgGetString("/sim/terrasync/scenery-dir"));
     }
     
     if (!_disableNasalHooks->getBoolValue())
-        _options->setModelData(new FGNasalModelDataProxy);
-
-    reinit();
-}
-
-void FGTileMgr::reinit()
-{
-    _terra_sync = static_cast<simgear::SGTerraSync*> (globals->get_subsystem("terrasync"));
-    
+      _options->setModelData(new FGNasalModelDataProxy);
+  
+  
     // protect against multiple scenery reloads and properly reset flags,
     // otherwise aircraft fall through the ground while reloading scenery
     if (!fgGetBool("/sim/sceneryloaded",true))
