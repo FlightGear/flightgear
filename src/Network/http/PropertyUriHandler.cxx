@@ -37,6 +37,32 @@ using std::vector;
 namespace flightgear {
 namespace http {
 
+// copied from http://stackoverflow.com/a/24315631
+static void ReplaceAll(std::string & str, const std::string & from, const std::string & to) 
+{
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+}
+
+static const std::string specialChars[][2] = {
+  { "&",  "&amp;" },
+  { "\"", "&quot;" },
+  { "'", "&#039;" },
+  { "<", "&lt;" },
+  { ">", "&gt;" },
+};
+
+static inline std::string htmlSpecialChars( const std::string & s )
+{
+  string reply = s;
+  for( size_t i = 0; i < sizeof(specialChars)/sizeof(specialChars[0]); ++i )
+    ReplaceAll( reply, specialChars[i][0], specialChars[i][1] );
+  return reply;
+}
+
 class DOMElement {
 public:
   virtual ~DOMElement() {}
@@ -201,7 +227,7 @@ static DOMElement * renderPropertyValueElement( SGPropertyNode_ptr node )
         root = new DOMNode( "input" );
         root->setAttribute( "type", "text" );
         root->setAttribute( "name", node->getDisplayName() );
-        root->setAttribute( "value", value );
+        root->setAttribute( "value", htmlSpecialChars(value) );
         root->setAttribute( "size", boost::lexical_cast<std::string>( len ) );
         root->setAttribute( "maxlength", "2047" );
     } else {
@@ -212,7 +238,7 @@ static DOMElement * renderPropertyValueElement( SGPropertyNode_ptr node )
         root->setAttribute( "cols", boost::lexical_cast<std::string>( cols ) );
         root->setAttribute( "rows", boost::lexical_cast<std::string>( rows ) );
         root->setAttribute( "maxlength", "2047" );
-        root->addChild( new DOMTextElement( value ) );
+        root->addChild( new DOMTextElement( htmlSpecialChars(value) ) );
     }
 
     return root;
@@ -397,7 +423,7 @@ bool PropertyUriHandler::handleGetRequest( const HTTPRequest & request, HTTPResp
 
     e->setAttribute( "id", "currentvalue" );
     e->addChild( new DOMTextElement( "Current Value: " ) );
-    e->addChild( new DOMTextElement( node->getStringValue() ) );
+    e->addChild( new DOMTextElement( htmlSpecialChars(node->getStringValue()) ) );
 
     DOMNode * form = new DOMNode("form");
     body->addChild( form );

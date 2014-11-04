@@ -105,7 +105,7 @@ public:
     Method = NotNull(connection->request_method);
     Uri = urlDecode(NotNull(connection->uri));
     HttpVersion = NotNull(connection->http_version);
-    QueryString = urlDecode(NotNull(connection->query_string));
+    QueryString = NotNull(connection->query_string);
 
     remoteAddress = NotNull(connection->remote_ip);
     remotePort = connection->remote_port;
@@ -117,7 +117,7 @@ public:
     for (string_list::iterator it = pairs.begin(); it != pairs.end(); ++it) {
       string_list nvp = split(*it, "=");
       if (nvp.size() != 2) continue;
-      RequestVariables.insert(make_pair(nvp[0], nvp[1]));
+      RequestVariables.insert(make_pair(urlDecode(nvp[0]), urlDecode(nvp[1])));
     }
 
     for (int i = 0; i < connection->num_headers; i++)
