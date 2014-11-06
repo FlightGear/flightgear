@@ -596,8 +596,6 @@ int MongooseHttpd::staticRequestHandler(struct mg_connection * connection, mg_ev
     case MG_HTTP_ERROR:  // If callback returns MG_FALSE, Mongoose continues with err 
       return MG_FALSE;   // we don't handle errors - let mongoose do the work
 
-      // LUA not implemented - and will go away anyway
-    case MG_LUA:         // Called before LSP page invoked   
       // client services not used/implemented. Signal 'close connection' to be sure
     case MG_CONNECT:     // If callback returns MG_FALSE, connect fails
     case MG_REPLY:       // If callback returns MG_FALSE, Mongoose closes connection
