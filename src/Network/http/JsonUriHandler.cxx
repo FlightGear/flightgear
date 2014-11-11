@@ -22,7 +22,6 @@
 #include "JsonUriHandler.hxx"
 #include "jsonprops.hxx"
 #include <Main/fg_props.hxx>
-#include <simgear/props/props.hxx>
 
 using std::string;
 
@@ -41,20 +40,6 @@ bool JsonUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & 
   }
 
   if( request.Method == "GET" ){
-    string propertyPath = request.Uri;
-
-    // strip the uri prefix of our handler
-    propertyPath = propertyPath.substr( getUri().size() );
-
-    // strip the querystring
-    size_t pos = propertyPath.find( '?' );
-    if( pos != string::npos ) {
-      propertyPath = propertyPath.substr( 0, pos-1 );
-    }
-
-    // skip trailing '/' - not very efficient but shouldn't happen too often
-    while( false == propertyPath.empty() && propertyPath[ propertyPath.length()-1 ] == '/' )
-      propertyPath = propertyPath.substr(0,propertyPath.length()-1);
 
     // max recursion depth
     int  depth = atoi(request.RequestVariables.get("d").c_str());
@@ -64,13 +49,11 @@ bool JsonUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & 
     bool indent = request.RequestVariables.get("i") == "y";
     bool timestamp = request.RequestVariables.get("t") == "y";
 
-    SGPropertyNode_ptr node = fgGetNode( string("/") + propertyPath );
+    SGPropertyNode_ptr node = getRequestedNode(request );
     if( false == node.valid() ) {
       response.StatusCode = 404;
       response.Content = "{}";
-      SG_LOG(SG_NETWORK,SG_WARN, "Node not found: '" << propertyPath << "'");
       return true;
-
     } 
 
     response.Content = JSON::toJsonString( indent, node, depth, timestamp ? fgGetDouble("/sim/time/elapsed-sec") : -1.0 );
@@ -79,28 +62,14 @@ bool JsonUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & 
   }
 
   if( request.Method == "POST" ) {
-    SG_LOG(SG_NETWORK,SG_INFO, "Setting properties from JSON: " << request.Content );
-    string propertyPath = request.Uri;
-    propertyPath = propertyPath.substr( getUri().size() );
-
-    // strip the querystring
-    size_t pos = propertyPath.find( '?' );
-    if( pos != string::npos ) {
-      propertyPath = propertyPath.substr( 0, pos-1 );
-    }
-
-    // skip trailing '/' - not very efficient but shouldn't happen too often
-    while( false == propertyPath.empty() && propertyPath[ propertyPath.length()-1 ] == '/' )
-      propertyPath = propertyPath.substr(0,propertyPath.length()-1);
-
-    SGPropertyNode_ptr node = fgGetNode( string("/") + propertyPath );
+    SGPropertyNode_ptr node = getRequestedNode(request );
     if( false == node.valid() ) {
       response.StatusCode = 404;
       response.Content = "{}";
-      SG_LOG(SG_NETWORK,SG_WARN, "Node not found: '" << propertyPath << "'");
       return true;
     } 
 
+    SG_LOG(SG_NETWORK,SG_INFO, "JsonUriHandler: setting property from'" << request.Content << "'" );
     cJSON * json = cJSON_Parse( request.Content.c_str() );
     if( NULL != json ) {
       JSON::toProp( json, node );
@@ -111,12 +80,31 @@ bool JsonUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & 
     return true;
   }
 
-  response.Header["Allow"] = "OPTIONS, GET";
+  SG_LOG(SG_NETWORK,SG_INFO, "JsonUriHandler: invalid request method '" << request.Method << "'" );
+  response.Header["Allow"] = "OPTIONS, GET, POST";
   response.StatusCode = 405;
   response.Content = "{}";
   return true; 
 
 }
+
+SGPropertyNode_ptr JsonUriHandler::getRequestedNode(const HTTPRequest & request)
+{
+  SG_LOG(SG_NETWORK,SG_INFO, "JsonUriHandler: request is '" << request.Uri << "'" );
+  string propertyPath = request.Uri;
+  propertyPath = propertyPath.substr( getUri().size() );
+
+  // skip trailing '/' - not very efficient but shouldn't happen too often
+  while( false == propertyPath.empty() && propertyPath[ propertyPath.length()-1 ] == '/' )
+    propertyPath = propertyPath.substr(0,propertyPath.length()-1);
+
+  SGPropertyNode_ptr reply = fgGetNode( string("/") + propertyPath );
+  if( false == reply.valid() ) {
+    SG_LOG(SG_NETWORK,SG_WARN, "JsonUriHandler: requested node not found: '" << propertyPath << "'");
+  }
+  return reply;
+}
+
 
 } // namespace http
 } // namespace flightgear
