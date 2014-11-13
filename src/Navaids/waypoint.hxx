@@ -312,7 +312,55 @@ private:
    * suffices until we have a proper facility representation
    */
   FGAirportRef _facility;
-};  
+};
+
+/**
+ * Represent a route discontinuity. These can occur while editing
+ * plans via certain interfaces (such as CDUs)
+ */
+class Discontinuity : public Waypt
+{
+public:
+    virtual ~Discontinuity();
+    Discontinuity(RouteBase* aOwner);
+
+    virtual void initFromProperties(SGPropertyNode_ptr aProp);
+    virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
+
+    virtual std::string type() const
+    { return "discontinuity"; }
+
+    virtual SGGeod position() const;
+
+    virtual std::string ident() const;
+
+    virtual double magvarDeg() const
+    { return 0.0; }
+private:
+};
+
+class Via : public Waypt
+{
+public:
+    Via(RouteBase* aOwner);
+    Via(RouteBase* aOwner, const std::string& airwayName, FGPositioned* to);
+    virtual ~Via();
+
+    virtual void initFromProperties(SGPropertyNode_ptr aProp);
+    virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
+
+    virtual std::string type() const
+    { return "via"; }
+
+    virtual SGGeod position() const;
+
+    virtual std::string ident() const;
+
+    WayptVec expandToWaypoints(WayptRef aPreceeding) const;
+private:
+    std::string _airway;
+    FGPositionedRef _to;
+};
   
 } // of namespace flighgear
 

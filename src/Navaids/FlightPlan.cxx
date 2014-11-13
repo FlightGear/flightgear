@@ -1068,6 +1068,42 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
   }
   return wpt;
 }
+
+void FlightPlan::activate()
+{
+    lockDelegate();
+
+    for (unsigned int i=0; i < _legs.size(); ) {
+        if (_legs[i]->waypoint()->type() == "via") {
+            WayptRef preceeding = _legs[i - 1]->waypoint();
+            Via* via = static_cast<Via*>(_legs[i]->waypoint());
+            WayptVec wps = via->expandToWaypoints(preceeding);
+
+            // delete the VIA leg
+            LegVec::iterator it = _legs.begin();
+            it += i;
+            Leg* l = *it;
+            _legs.erase(it);
+            delete l;
+
+            // create new lefs and insert
+            it = _legs.begin();
+            it += i;
+
+            LegVec newLegs;
+            BOOST_FOREACH(WayptRef wp, wps) {
+                newLegs.push_back(new Leg(this, wp));
+            }
+
+            _waypointsChanged = true;
+            _legs.insert(it, newLegs.begin(), newLegs.end());
+        } else {
+            ++i; // normal case, no expansion
+        }
+    }
+
+    unlockDelegate();
+}
   
 FlightPlan::Leg::Leg(FlightPlan* owner, WayptRef wpt) :
   _parent(owner),

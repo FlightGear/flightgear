@@ -138,7 +138,8 @@ public:
   { return _currentIndex; }
   
   void setCurrentIndex(int index);
-  
+
+  void activate();
   void finish();
     
   Leg* currentLeg() const;

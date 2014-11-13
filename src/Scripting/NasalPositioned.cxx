@@ -2215,6 +2215,18 @@ static naRef f_flightplan_finish(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
+static naRef f_flightplan_activate(naContext c, naRef me, int argc, naRef* args)
+{
+    FlightPlan* fp = flightplanGhost(me);
+    if (!fp) {
+        naRuntimeError(c, "activate called on non-flightplan object");
+    }
+
+    fp->activate();
+    return naNil();
+}
+
+
 static naRef f_flightplan_indexOfWp(naContext c, naRef me, int argc, naRef* args)
 {
   FlightPlan* fp = flightplanGhost(me);
@@ -2503,6 +2515,7 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, flightplanPrototype, "clone", naNewFunc(c, naNewCCode(c, f_flightplan_clone))); 
     hashset(c, flightplanPrototype, "pathGeod", naNewFunc(c, naNewCCode(c, f_flightplan_pathGeod)));
     hashset(c, flightplanPrototype, "finish", naNewFunc(c, naNewCCode(c, f_flightplan_finish)));
+    hashset(c, flightplanPrototype, "activate", naNewFunc(c, naNewCCode(c, f_flightplan_activate)));
     hashset(c, flightplanPrototype, "indexOfWP", naNewFunc(c, naNewCCode(c, f_flightplan_indexOfWp)));
     
     waypointPrototype = naNewHash(c);

@@ -270,7 +270,7 @@ void WaypointList::handleDrag(int x, int y)
     
     _dragSourceRow = rowForY(y - abox.min[1]);
     Waypt* wp = _model->waypointAt(_dragSourceRow);
-    if (!wp || wp->flag(WPT_GENERATED)) {
+    if (!wp || wp->flag(WPT_GENERATED) || (wp->type() == "discontinuity")) {
       return; // don't allow generated points to be dragged
     }
     
@@ -409,7 +409,8 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y,
   bool isSelected = (rowIndex == getSelected());
   bool isCurrent = (rowIndex == _model->currentWaypoint());
   bool isDragSource = (_dragging && (rowIndex == _dragSourceRow));
-  
+  bool isDiscontinuity = (wp->type() == "discontinuity");
+
   puBox bkgBox = abox;
   bkgBox.min[1] = abox.max[1] - y;
   bkgBox.max[1] = bkgBox.min[1] + rowHeightPx();
@@ -467,56 +468,58 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y,
 
   drawClippedString(legendFont, buffer, x, yy, 300);
   x += 300 + PUSTR_LGAP;
-  
-  if (_showLatLon) {
-    // only show for non-dynamic waypoints
-    if (!wp->flag(WPT_DYNAMIC)) {
-      SGGeod p(wp->position());
-      char ns = (p.getLatitudeDeg() > 0.0) ? 'N' : 'S';
-      char ew = (p.getLongitudeDeg() > 0.0) ? 'E' : 'W';
-      
-      ::snprintf(buffer, 128 - count, "%4.2f%c %4.2f%c",
-        fabs(p.getLongitudeDeg()), ew, fabs(p.getLatitudeDeg()), ns);
-    } else {
-      buffer[0] = 0;
-    }
-  } else if (rowIndex > 0) {
-    double courseDeg = path.trackForIndex(rowIndex);
-    double distanceM = path.distanceForIndex(rowIndex);
-    ::snprintf(buffer, 128 - count, "%03.0f %5.1fnm",
-      courseDeg, distanceM * SG_METER_TO_NM);
-  }
 
-  f->drawString(buffer, x, yy);
-  x += 100 + PUSTR_LGAP;
-  
-  if (wp->altitudeRestriction() != RESTRICT_NONE) {
-    char aboveAtBelow = ' ';
-    if (wp->altitudeRestriction() == RESTRICT_ABOVE) {
-      aboveAtBelow = 'A';
-    } else if (wp->altitudeRestriction() == RESTRICT_BELOW) {
-      aboveAtBelow = 'B';
-    }
+    if (!isDiscontinuity) {
+        if (_showLatLon) {
+          // only show for non-dynamic waypoints
+          if (!wp->flag(WPT_DYNAMIC)) {
+            SGGeod p(wp->position());
+            char ns = (p.getLatitudeDeg() > 0.0) ? 'N' : 'S';
+            char ew = (p.getLongitudeDeg() > 0.0) ? 'E' : 'W';
+      
+            ::snprintf(buffer, 128 - count, "%4.2f%c %4.2f%c",
+              fabs(p.getLongitudeDeg()), ew, fabs(p.getLatitudeDeg()), ns);
+          } else {
+            buffer[0] = 0;
+          }
+        } else if (rowIndex > 0) {
+          double courseDeg = path.trackForIndex(rowIndex);
+          double distanceM = path.distanceForIndex(rowIndex);
+          ::snprintf(buffer, 128 - count, "%03.0f %5.1fnm",
+            courseDeg, distanceM * SG_METER_TO_NM);
+        }
+
+      f->drawString(buffer, x, yy);
+      x += 100 + PUSTR_LGAP;
+      
+      if (wp->altitudeRestriction() != RESTRICT_NONE) {
+        char aboveAtBelow = ' ';
+        if (wp->altitudeRestriction() == RESTRICT_ABOVE) {
+          aboveAtBelow = 'A';
+        } else if (wp->altitudeRestriction() == RESTRICT_BELOW) {
+          aboveAtBelow = 'B';
+        }
     
-    int altHundredFt = (wp->altitudeFt() + 50) / 100; // round to nearest 100ft
-    if (altHundredFt < 100) {
-      count = ::snprintf(buffer, 128, "%d'%c", altHundredFt * 100, aboveAtBelow);
-    } else { // display as a flight-level
-      count = ::snprintf(buffer, 128, "FL%d%c", altHundredFt, aboveAtBelow);
-    }
+        int altHundredFt = (wp->altitudeFt() + 50) / 100; // round to nearest 100ft
+        if (altHundredFt < 100) {
+          count = ::snprintf(buffer, 128, "%d'%c", altHundredFt * 100, aboveAtBelow);
+        } else { // display as a flight-level
+          count = ::snprintf(buffer, 128, "FL%d%c", altHundredFt, aboveAtBelow);
+        }
     
-    f->drawString(buffer, x, yy);
-  } // of valid wp altitude
-  x += 60 + PUSTR_LGAP;
-  
-  if (wp->speedRestriction() == SPEED_RESTRICT_MACH) {
-    count = ::snprintf(buffer, 126, "%03.2fM", wp->speedMach());
-    f->drawString(buffer, x, yy);
-  } else if (wp->speedRestriction() != RESTRICT_NONE) {
-    count = ::snprintf(buffer, 126, "%dKts", (int) wp->speedKts());
-    f->drawString(buffer, x, yy);
-  }
-  
+        f->drawString(buffer, x, yy);
+      } // of valid wp altitude
+      x += 60 + PUSTR_LGAP;
+      
+      if (wp->speedRestriction() == SPEED_RESTRICT_MACH) {
+        count = ::snprintf(buffer, 126, "%03.2fM", wp->speedMach());
+        f->drawString(buffer, x, yy);
+      } else if (wp->speedRestriction() != RESTRICT_NONE) {
+        count = ::snprintf(buffer, 126, "%dKts", (int) wp->speedKts());
+        f->drawString(buffer, x, yy);
+      }
+    } // of is not a discontinuity
+
   if (isDragSource) {
     puSetColor(col, 1.0, 0.5, 0.0, 0.5);
     bkgBox.draw(dx, dy, PUSTYLE_PLAIN, &col, false, 0);

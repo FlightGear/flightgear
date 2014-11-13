@@ -571,7 +571,8 @@ public:
     isPosInAirway = prepare("SELECT rowid FROM airway_edge WHERE network=?1 AND a=?2");
     
     airwayEdgesFrom = prepare("SELECT airway, b FROM airway_edge WHERE network=?1 AND a=?2");
-    
+    airwayEdges = prepare("SELECT a, b FROM airway_edge WHERE airway=?1");
+
   // parking / taxi-node graph
     insertTaxiNode = prepare("INSERT INTO taxi_node (rowid, hold_type, on_runway, pushback) VALUES(?1, ?2, ?3, 0)");
     insertParkingPos = prepare("INSERT INTO parking (rowid, heading, radius, gate_type, airlines) "
@@ -917,8 +918,9 @@ public:
   sqlite3_stmt_ptr runwayLengthFtQuery;
   
 // airways
-  sqlite3_stmt_ptr findAirway, insertAirwayEdge, isPosInAirway, airwayEdgesFrom,
-  insertAirway;
+  sqlite3_stmt_ptr findAirway, insertAirwayEdge,
+    isPosInAirway, airwayEdgesFrom,
+    insertAirway, airwayEdges;
   
 // groundnet (parking, taxi node graph)
   sqlite3_stmt_ptr loadTaxiNodeStmt, loadParkingPos, insertTaxiNode, insertParkingPos;
@@ -2013,6 +2015,75 @@ AirwayEdgeVec NavDataCache::airwayEdgesFrom(int network, PositionedID pos)
   
   d->reset(d->airwayEdgesFrom);
   return result;
+}
+
+PositionedIDVec NavDataCache::airwayWaypts(int id)
+{
+    sqlite3_bind_int(d->airwayEdges, 1, id);
+
+    typedef std::pair<PositionedID, PositionedID> Edge;
+    typedef std::deque<Edge> EdgeVec;
+    typedef std::deque<PositionedID> PositionedIDDeque;
+
+// build up the EdgeVec, order is arbitrary
+    EdgeVec rawEdges;
+    while (d->stepSelect(d->airwayEdges)) {
+        rawEdges.push_back(Edge(sqlite3_column_int64(d->airwayEdges, 0),
+                                sqlite3_column_int64(d->airwayEdges, 1)
+                                ));
+    }
+
+    d->reset(d->airwayEdges);
+    if (rawEdges.empty()) {
+        return PositionedIDVec();
+    }
+
+// linearize
+    PositionedIDDeque linearAirway;
+    PositionedID firstId = rawEdges.front().first,
+        lastId = rawEdges.front().second;
+    std::set<PositionedID> seen;
+
+    // first edge is trivial
+    linearAirway.push_back(firstId);
+    linearAirway.push_back(lastId);
+    seen.insert(firstId);
+    seen.insert(lastId);
+    rawEdges.pop_front();
+
+    while (!rawEdges.empty()) {
+        Edge e = rawEdges.front();
+        rawEdges.pop_front();
+
+    // look for new segments
+        if (e.first == firstId) {
+            linearAirway.push_front(e.second);
+            seen.insert(e.second);
+            firstId = e.second;
+            continue;
+        }
+
+        if (e.first == lastId) {
+            linearAirway.push_back(e.second);
+            seen.insert(e.second);
+            lastId = e.second;
+            continue;
+        }
+
+    // look for seen segments - presumed to be reversed internal edges
+        if (seen.find(e.first) != seen.end()) {
+            // if it's the inverse of interior edge, both ends must have been
+            // seen. Otherwise it should have been an exterior edge and
+            // handled by the case above.
+            assert(seen.find(e.second) != seen.end());
+            continue;
+        }
+
+    // push back to try later on
+        rawEdges.push_back(e);
+    }
+
+    return PositionedIDVec(linearAirway.begin(), linearAirway.end());
 }
 
 PositionedID NavDataCache::findNavaidForRunway(PositionedID runway, FGPositioned::Type ty)

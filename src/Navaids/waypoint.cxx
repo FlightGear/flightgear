@@ -27,6 +27,7 @@
 
 #include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
+#include <Navaids/airways.hxx>
 
 using std::string;
 
@@ -463,6 +464,99 @@ void ATCVectors::writeToProperties(SGPropertyNode_ptr aProp) const
 {
   Waypt::writeToProperties(aProp);
   aProp->setStringValue("icao", _facility->ident());
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+Discontinuity::Discontinuity(RouteBase* aOwner) :
+    Waypt(aOwner)
+{
+    setFlag(WPT_DYNAMIC);
+    setFlag(WPT_GENERATED); // prevent drag, delete, etc
+}
+
+Discontinuity::~Discontinuity()
+{
+}
+
+SGGeod Discontinuity::position() const
+{
+    return SGGeod(); // deliberately invalid of course
+}
+
+string Discontinuity::ident() const
+{
+    return "DISCONTINUITY";
+}
+
+void Discontinuity::initFromProperties(SGPropertyNode_ptr aProp)
+{
+}
+
+void Discontinuity::writeToProperties(SGPropertyNode_ptr aProp) const
+{
+    Waypt::writeToProperties(aProp);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+SGGeod Via::position() const
+{
+    return _to->geod();
+}
+
+string Via::ident() const
+{
+    return "VIA " + _airway + " TO " + _to->ident();
+}
+
+void Via::initFromProperties(SGPropertyNode_ptr aProp)
+{
+    if (!aProp->hasChild("airway") || !aProp->hasChild("to")) {
+        throw sg_io_exception("missing airway/to propertie",
+                              "Via::initFromProperties");
+    }
+
+    Waypt::initFromProperties(aProp);
+
+    _airway = aProp->getStringValue("airway");
+    std::string idn(aProp->getStringValue("to"));
+    SGGeod p;
+    if (aProp->hasChild("lon")) {
+        p = SGGeod::fromDeg(aProp->getDoubleValue("lon"), aProp->getDoubleValue("lat"));
+    }
+
+    FGPositionedRef nav = FGPositioned::findClosestWithIdent(idn, p, NULL);
+    if (!nav) {
+        throw sg_io_exception("unknown navaid ident:" + idn,
+                              "Via::initFromProperties");
+    }
+
+    _to = nav;
+}
+
+void Via::writeToProperties(SGPropertyNode_ptr aProp) const
+{
+    Waypt::writeToProperties(aProp);
+    aProp->setStringValue("airway", _airway);
+    aProp->setStringValue("to", _to->ident());
+    // write lon/lat to disambiguate
+    aProp->setDoubleValue("lon", _to->geod().getLongitudeDeg());
+    aProp->setDoubleValue("lat", _to->geod().getLatitudeDeg());
+}
+
+WayptVec Via::expandToWaypoints(WayptRef aPreceeding) const
+{
+    if (!aPreceeding) {
+        throw sg_exception("invalid preceeding waypoint");
+    }
+
+    Airway* way = Airway::findByIdent(_airway);
+    if (!way) {
+        throw sg_exception("invalid airway");
+    }
+
+    return way->via(aPreceeding, new NavaidWaypoint(_to, owner()));
 }
 
 } // of namespace

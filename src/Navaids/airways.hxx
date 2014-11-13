@@ -49,7 +49,15 @@ public:
     
     double bottomAltitudeFt() const
     { return _bottomAltitudeFt; }
-    
+
+    static Airway* findByIdent(const std::string& aIdent);
+
+    WayptVec::const_iterator find(WayptRef wpt) const;
+
+    bool canVia(const WayptRef& from, const WayptRef& to) const;
+
+    WayptVec via(const WayptRef& from, const WayptRef& to) const;
+
   /**
    * Track a network of airways
    *
@@ -70,6 +78,8 @@ public:
      * Returns true if a route could be found, or false otherwise.
      */
     bool route(WayptRef aFrom, WayptRef aTo, WayptVec& aPath);
+
+
   private:    
     void addEdge(int aWay, const SGGeod& aStartPos,
                 const std::string& aStartIdent, 

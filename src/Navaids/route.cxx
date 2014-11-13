@@ -212,7 +212,9 @@ Waypt* Waypt::createInstance(RouteBase* aOwner, const std::string& aTypeName)
     r = new RadialIntercept(aOwner);
   } else if (aTypeName == "vectors") {
     r = new ATCVectors(aOwner);
-  } 
+  } else if (aTypeName == "discontinuity") {
+    r = new Discontinuity(aOwner);
+  }
 
   if (!r || (r->type() != aTypeName)) {
     throw sg_exception("broken factory method for type:" + aTypeName,

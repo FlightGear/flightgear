@@ -251,7 +251,12 @@ public:
    * in an airway
    */
   AirwayEdgeVec airwayEdgesFrom(int network, PositionedID pos);
-  
+
+    /**
+     * Waypoints on the airway
+     */
+  PositionedIDVec airwayWaypts(int id);
+
 // ground-network
   PositionedIDVec groundNetNodes(PositionedID aAirport, bool onlyPushback);
   void markGroundnetAsPushback(PositionedID nodeId);
