@@ -161,9 +161,104 @@ void Airway::load(const SGPath& path)
   } // of file line iteration
 }
 
+WayptVec::const_iterator Airway::find(WayptRef wpt) const
+{
+    WayptVec::const_iterator it;
+    for (it = _elements.begin(); it != _elements.end(); ++it) {
+        if (wpt->matches(*it)) {
+            return it;
+        }
+    }
+
+    return it;
+}
+
+bool Airway::canVia(const WayptRef& from, const WayptRef& to) const
+{
+    WayptVec::const_iterator fit = find(from);
+    WayptVec::const_iterator tit = find(to);
+
+    if ((fit == _elements.end()) || (tit == _elements.end())) {
+        return false;
+    }
+
+    return true;
+}
+
+WayptVec Airway::via(const WayptRef& from, const WayptRef& to) const
+{
+    WayptVec v;
+    WayptVec::const_iterator fit = find(from);
+    WayptVec::const_iterator tit = find(to);
+
+    if ((fit == _elements.end()) || (tit == _elements.end())) {
+        throw sg_exception("bad VIA transition points");
+    }
+
+    if (fit == tit) {
+        // will cause duplicate point but that seems better than
+        // return an empty
+        v.push_back(*tit);
+        return v;
+    }
+
+    // establish the ordering of the transitions, i.e are we moving forward or
+    // backard along the airway.
+    if (fit < tit) {
+        // forward progression
+        for (++fit; fit != tit; ++fit) {
+            v.push_back(*fit);
+        }
+    } else {
+        // reverse progression
+        for (--fit; fit != tit; --fit) {
+            v.push_back(*fit);
+        }
+    }
+
+    v.push_back(*tit);
+    return v;
+}
+
+bool Airway::containsNavaid(const FGPositionedRef &navaid) const
+{
+    return find(new NavaidWaypoint(navaid, NULL)) != _elements.end();
+}
+
 int Airway::Network::findAirway(const std::string& aName, double aTop, double aBase)
 {
   return NavDataCache::instance()->findAirway(_networkID, aName);
+}
+
+Airway* Airway::findByIdent(const std::string& aIdent)
+{
+    NavDataCache* ndc = NavDataCache::instance();
+
+    int id = ndc->findAirway(0, aIdent);
+
+    PositionedIDVec pts = ndc->airwayWaypts(id);
+    Airway* awy = new Airway(aIdent, 0, 0);
+
+    PositionedIDVec::const_iterator it;
+    for (it = pts.begin(); it != pts.end(); ++it) {
+        FGPositionedRef pos = ndc->loadById(*it);
+        WayptRef w = new NavaidWaypoint(pos, NULL);
+        awy->_elements.push_back(w);
+    }
+
+    return awy;
+}
+
+WayptRef Airway::findEnroute(const std::string &aIdent) const
+{
+    WayptVec::const_iterator it;
+    for (it = _elements.begin(); it != _elements.end(); ++it) {
+        if ((*it)->ident() == aIdent) {
+            return *it;
+        }
+    }
+
+    return WayptRef();
 }
 
 void Airway::Network::addEdge(int aWay, const SGGeod& aStartPos,

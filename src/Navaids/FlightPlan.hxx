@@ -2,7 +2,7 @@
  * FlightPlan.hxx - defines a full flight-plan object, including
  * departure, cruise, arrival information and waypoints
  */
- 
+
 // Written by James Turner, started 2012.
 //
 // Copyright (C) 2012 James Turner
@@ -32,7 +32,7 @@ namespace flightgear
 
 class Transition;
 class FlightPlan;
-    
+
 typedef SGSharedPtr<FlightPlan> FlightPlanRef;
 
 const char ICAO_AIRCRAFT_CATEGORY_A = 'A';
@@ -46,7 +46,7 @@ class FlightPlan : public RouteBase
 public:
   FlightPlan();
   virtual ~FlightPlan();
-  
+
   virtual std::string ident() const;
   void setIdent(const std::string& s);
 
@@ -60,7 +60,7 @@ public:
     void setIcaoAircraftCategory(const std::string& cat);
 
   FlightPlan* clone(const std::string& newIdent = std::string()) const;
-  
+
   /**
    * flight-plan leg encapsulation
    */
@@ -69,37 +69,37 @@ public:
   public:
     FlightPlan* owner() const
     { return _parent; }
-    
+
     Waypt* waypoint() const
     { return _waypt; }
-    
+
     // reutrn the next leg after this one
     Leg* nextLeg() const;
-    
+
     unsigned int index() const;
-    
-    int altitudeFt() const;		
+
+    int altitudeFt() const;
     int speed() const;
-    
+
     int speedKts() const;
     double speedMach() const;
-    
-    RouteRestriction altitudeRestriction() const;    
+
+    RouteRestriction altitudeRestriction() const;
     RouteRestriction speedRestriction() const;
-    
+
     void setSpeed(RouteRestriction ty, double speed);
     void setAltitude(RouteRestriction ty, int altFt);
-    
+
     double courseDeg() const;
     double distanceNm() const;
     double distanceAlongRoute() const;
   private:
     friend class FlightPlan;
-    
+
     Leg(FlightPlan* owner, WayptRef wpt);
-    
+
     Leg* cloneFor(FlightPlan* owner) const;
-    
+
     FlightPlan* _parent;
     RouteRestriction _speedRestrict, _altRestrict;
     int _speed;
@@ -109,14 +109,14 @@ public:
     mutable double _pathDistance;
     mutable double _courseDeg;
     /// total distance of this leg from departure point
-    mutable double _distanceAlongPath; 
+    mutable double _distanceAlongPath;
   };
-  
+
   class Delegate
   {
   public:
     virtual ~Delegate();
-        
+
     virtual void departureChanged() { }
     virtual void arrivalChanged() { }
     virtual void waypointsChanged() { }
@@ -126,10 +126,10 @@ public:
     virtual void endOfFlightPlan() { }
   protected:
     Delegate();
-    
+
   private:
     void removeInner(Delegate* d);
-    
+
     void runDepartureChanged();
     void runArrivalChanged();
     void runWaypointsChanged();
@@ -139,98 +139,98 @@ public:
     void runActivated();
 
     friend class FlightPlan;
-    
+
     bool _deleteWithPlan;
     Delegate* _inner;
   };
-  
+
   Leg* insertWayptAtIndex(Waypt* aWpt, int aIndex);
   void insertWayptsAtIndex(const WayptVec& wps, int aIndex);
-  
+
   void deleteIndex(int index);
   void clear();
   int clearWayptsWithFlag(WayptFlag flag);
-  
+
   int currentIndex() const
   { return _currentIndex; }
-  
+
   void setCurrentIndex(int index);
 
   void activate();
 
   void finish();
-    
+
   Leg* currentLeg() const;
   Leg* nextLeg() const;
   Leg* previousLeg() const;
-  
+
   int numLegs() const
   { return _legs.size(); }
-  
+
   Leg* legAtIndex(int index) const;
   int findLegIndex(const Leg* l) const;
-  
+
   int findWayptIndex(const SGGeod& aPos) const;
   int findWayptIndex(const FGPositionedRef aPos) const;
-  
+
   bool load(const SGPath& p);
   bool save(const SGPath& p);
-  
+
   FGAirportRef departureAirport() const
   { return _departure; }
-  
+
   FGAirportRef destinationAirport() const
   { return _destination; }
-  
+
   FGRunway* departureRunway() const
   { return _departureRunway; }
-  
+
   FGRunway* destinationRunway() const
   { return _destinationRunway; }
-  
+
   Approach* approach() const
   { return _approach; }
-  
+
   void setDeparture(FGAirport* apt);
   void setDeparture(FGRunway* rwy);
-  
+
   SID* sid() const
   { return _sid; }
-  
+
   Transition* sidTransition() const;
-  
+
   void setSID(SID* sid, const std::string& transition = std::string());
-  
+
   void setSID(Transition* sidWithTrans);
-  
+
   void setDestination(FGAirport* apt);
   void setDestination(FGRunway* rwy);
-  
+
   /**
     * note setting an approach will implicitly update the destination
     * airport and runway to match
     */
   void setApproach(Approach* app);
-  
+
   STAR* star() const
   { return _star; }
-  
+
   Transition* starTransition() const;
-  
+
   void setSTAR(STAR* star, const std::string& transition = std::string());
-  
+
   void setSTAR(Transition* starWithTrans);
-  
+
   double totalDistanceNm() const
   { return _totalDistance; }
-  
+
   /**
    * given a waypoint index, and an offset in NM, find the geodetic
    * position on the route path. I.e the point 10nm before or after
    * a particular waypoint.
    */
   SGGeod pointAlongRoute(int aIndex, double aOffsetNm) const;
-    
+
   /**
    * Create a WayPoint from a string in the following format:
    *  - simple identifier
@@ -239,7 +239,7 @@ public:
    *  - navaid/radial-deg/offset-nm
    */
   WayptRef waypointFromString(const std::string& target);
-  
+
   /**
    * abstract interface for creating delegates automatically when a
    * flight-plan is created or loaded
@@ -249,33 +249,33 @@ public:
   public:
     virtual Delegate* createFlightPlanDelegate(FlightPlan* fp) = 0;
   };
-  
+
   static void registerDelegateFactory(DelegateFactory* df);
   static void unregisterDelegateFactory(DelegateFactory* df);
-  
+
   void addDelegate(Delegate* d);
   void removeDelegate(Delegate* d);
 private:
   void lockDelegate();
   void unlockDelegate();
-  
+
   int _delegateLock;
-  bool _arrivalChanged, 
-    _departureChanged, 
-    _waypointsChanged, 
+  bool _arrivalChanged,
+    _departureChanged,
+    _waypointsChanged,
     _currentWaypointChanged;
-  
+
   bool loadXmlFormat(const SGPath& path);
   bool loadGpxFormat(const SGPath& path);
   bool loadPlainTextFormat(const SGPath& path);
-  
+
   void loadVersion1XMLRoute(SGPropertyNode_ptr routeData);
   void loadVersion2XMLRoute(SGPropertyNode_ptr routeData);
   void loadXMLRouteHeader(SGPropertyNode_ptr routeData);
   WayptRef parseVersion1XMLWaypt(SGPropertyNode* aWP);
-  
+
   double magvarDegAt(const SGGeod& pos) const;
-  
+
   std::string _ident;
   int _currentIndex;
     bool _followLegTrackToFix;
@@ -287,16 +287,16 @@ private:
   SGSharedPtr<STAR> _star;
   SGSharedPtr<Approach> _approach;
   std::string _sidTransition, _starTransition;
-  
+
   double _totalDistance;
   void rebuildLegData();
-  
+
   typedef std::vector<Leg*> LegVec;
   LegVec _legs;
-  
+
   Delegate* _delegate;
 };
-  
+
 } // of namespace flightgear
 
 #endif // of FG_FLIGHTPLAN_HXX

@@ -84,9 +84,9 @@ using std::string;
 namespace {
 
 const int MAX_RETRIES = 10;
-    
+
 const int CACHE_SIZE_KBYTES= 32 * 1024;
-    
+
 // bind a std::string to a sqlite statement. The std::string must live the
 // entire duration of the statement execution - do not pass a temporary
 // std::string, or the compiler may delete it, freeing the C-string storage,
@@ -102,7 +102,7 @@ void sqlite_bind_temp_stdstring(sqlite3_stmt* stmt, int value, const std::string
 {
   sqlite3_bind_text(stmt, value, s.c_str(), s.length(), SQLITE_TRANSIENT);
 }
-  
+
 typedef sqlite3_stmt* sqlite3_stmt_ptr;
 
 void f_distanceCartSqrFunction(sqlite3_context* ctx, int argc, sqlite3_value* argv[])
@@ -110,30 +110,30 @@ void f_distanceCartSqrFunction(sqlite3_context* ctx, int argc, sqlite3_value* ar
   if (argc != 6) {
     return;
   }
-  
+
   SGVec3d posA(sqlite3_value_double(argv[0]),
                sqlite3_value_double(argv[1]),
                sqlite3_value_double(argv[2]));
-  
+
   SGVec3d posB(sqlite3_value_double(argv[3]),
                sqlite3_value_double(argv[4]),
                sqlite3_value_double(argv[5]));
   sqlite3_result_double(ctx, distSqr(posA, posB));
 }
-  
-  
+
+
 static string cleanRunwayNo(const string& aRwyNo)
 {
   if (aRwyNo[0] == 'x') {
     return string(); // no ident for taxiways
   }
-  
+
   string result(aRwyNo);
   // canonicalise runway ident
   if ((aRwyNo.size() == 1) || !isdigit(aRwyNo[1])) {
     result = "0" + aRwyNo;
   }
-  
+
   // trim off trailing garbage
   if (result.size() > 2) {
     char suffix = toupper(result[2]);
@@ -141,10 +141,10 @@ static string cleanRunwayNo(const string& aRwyNo)
       result = result.substr(0, 2);
     }
   }
-  
+
   return result;
 }
-  
+
 } // anonymous namespace
 
 namespace flightgear
@@ -166,22 +166,22 @@ public:
     _completionPercent(0),
   _isFinished(false)
   {
-    
+
   }
-  
+
   bool isFinished() const
   {
     SGGuard<SGMutex> g(_lock);
     return _isFinished;
   }
-  
+
   virtual void run()
   {
     SGTimeStamp st;
     st.stamp();
     _cache->doRebuild();
     SG_LOG(SG_NAVCACHE, SG_INFO, "cache rebuild took:" << st.elapsedMSec() << "msec");
-    
+
     SGGuard<SGMutex> g(_lock);
     _isFinished = true;
     _phase = NavDataCache::REBUILD_DONE;
@@ -219,9 +219,9 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////
-  
+
 typedef std::map<PositionedID, FGPositionedRef> PositionedCache;
-  
+
 class AirportTower : public FGPositioned
 {
 public:
@@ -246,16 +246,16 @@ public:
     transactionAborted(false)
   {
   }
-  
+
   ~NavDataCachePrivate()
   {
     close();
   }
-  
+
   void init()
   {
     SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache at:" << path);
-	
+
       readOnly = fgGetBool("/sim/fghome-readonly", false);
 
       int openFlags = readOnly ? SQLITE_OPEN_READONLY :
@@ -264,13 +264,13 @@ public:
       // for the UTF8 / path logic here
 	std::string pathUtf8 = simgear::strutils::convertWindowsLocal8BitToUtf8(path.str());
     sqlite3_open_v2(pathUtf8.c_str(), &db, openFlags, NULL);
-    
+
     sqlite3_stmt_ptr checkTables =
       prepare("SELECT count(*) FROM sqlite_master WHERE name='properties'");
-    
+
     sqlite3_create_function(db, "distanceCartSqr", 6, SQLITE_ANY, NULL,
                             f_distanceCartSqrFunction, NULL, NULL);
-    
+
     execSelect(checkTables);
     bool didCreate = false;
     if (!readOnly && (sqlite3_column_int(checkTables, 0) == 0)) {
@@ -278,11 +278,11 @@ public:
       initTables();
       didCreate = true;
     }
-    
+
     readPropertyQuery = prepare("SELECT value FROM properties WHERE key=?");
     writePropertyQuery = prepare("INSERT INTO properties (key, value) VALUES (?,?)");
     clearProperty = prepare("DELETE FROM properties WHERE key=?1");
-    
+
     if (didCreate) {
       writeIntProperty("schema-version", SCHEMA_VERSION);
     } else {
@@ -292,7 +292,7 @@ public:
         throw sg_exception("Navcache schema has changed");
       }
     }
-    
+
     // see http://www.sqlite.org/pragma.html#pragma_cache_size
     // for the details, small cache would cause thrashing.
     std::ostringstream q;
@@ -300,7 +300,7 @@ public:
     runSQL(q.str());
     prepareQueries();
   }
-  
+
   void close()
   {
     BOOST_FOREACH(sqlite3_stmt_ptr stmt, prepared) {
@@ -309,34 +309,34 @@ public:
     prepared.clear();
     sqlite3_close(db);
   }
-  
+
   void checkCacheFile()
   {
     SG_LOG(SG_NAVCACHE, SG_INFO, "running DB integrity check");
     SGTimeStamp st;
     st.stamp();
-    
+
     sqlite3_stmt_ptr stmt = prepare("PRAGMA quick_check(1)");
     if (!execSelect(stmt)) {
       throw sg_exception("DB integrity check failed to run");
     }
-    
+
     string v = (char*) sqlite3_column_text(stmt, 0);
     if (v != "ok") {
       throw sg_exception("DB integrity check returned:" + v);
     }
-    
+
     SG_LOG(SG_NAVCACHE, SG_INFO, "NavDataCache integrity check took:" << st.elapsedMSec());
     finalize(stmt);
   }
 
   bool isCachedFileModified(const SGPath& path, bool verbose);
-  
+
   void callSqlite(int result, const string& sql)
   {
     if (result == SQLITE_OK)
       return; // all good
-    
+
     string errMsg;
     if (result == SQLITE_MISUSE) {
       errMsg = "Sqlite API abuse";
@@ -345,25 +345,25 @@ public:
       errMsg = sqlite3_errmsg(db);
       SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite error:" << errMsg << " running:\n\t" << sql);
     }
-    
+
     throw sg_exception("Sqlite error:" + errMsg, sql);
   }
-  
+
   void runSQL(const string& sql)
   {
     sqlite3_stmt_ptr stmt;
     callSqlite(sqlite3_prepare_v2(db, sql.c_str(), sql.length(), &stmt, NULL), sql);
-    
+
     try {
       execSelect(stmt);
     } catch (sg_exception&) {
       sqlite3_finalize(stmt);
       throw; // re-throw
     }
-    
+
     sqlite3_finalize(stmt);
   }
-  
+
   sqlite3_stmt_ptr prepare(const string& sql)
   {
     sqlite3_stmt_ptr stmt;
@@ -371,18 +371,18 @@ public:
     prepared.push_back(stmt);
     return stmt;
   }
-  
+
   void finalize(sqlite3_stmt_ptr s)
   {
     StmtVec::iterator it = std::find(prepared.begin(), prepared.end(), s);
     if (it == prepared.end()) {
       throw sg_exception("Finalising statement that was not prepared");
     }
-    
+
     prepared.erase(it);
     sqlite3_finalize(s);
   }
-  
+
   void reset(sqlite3_stmt_ptr stmt)
   {
     assert(stmt);
@@ -392,12 +392,12 @@ public:
       throw sg_exception("Sqlite error resetting:" + errMsg, sqlite3_sql(stmt));
     }
   }
-  
+
   bool execSelect(sqlite3_stmt_ptr stmt)
   {
     return stepSelect(stmt);
   }
-  
+
   bool stepSelect(sqlite3_stmt_ptr stmt)
   {
     int retries = 0;
@@ -407,24 +407,24 @@ public:
       if (result == SQLITE_ROW) {
         return true; // at least one result row
       }
-      
+
       if (result == SQLITE_DONE) {
         return false; // no result rows
       }
-      
+
       if (result != SQLITE_BUSY) {
         break;
       }
-      
+
       SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache contention on select, will retry:" << retries);
       SGTimeStamp::sleepForMSec(++retries * 10);
     } // of retry loop for DB locked
-    
+
     if (retries >= MAX_RETRIES) {
       SG_LOG(SG_NAVCACHE, SG_ALERT, "exceeded maximum number of SQLITE_BUSY retries");
       return false;
     }
-    
+
     string errMsg;
     if (result == SQLITE_MISUSE) {
       errMsg = "Sqlite API abuse";
@@ -434,10 +434,10 @@ public:
       SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite error:" << errMsg << " (" << result
              << ") while running:\n\t" << sqlite3_sql(stmt));
     }
-    
+
     throw sg_exception("Sqlite error:" + errMsg, sqlite3_sql(stmt));
   }
-  
+
   void execSelect1(sqlite3_stmt_ptr stmt)
   {
     if (!execSelect(stmt)) {
@@ -445,7 +445,7 @@ public:
       throw sg_exception("no results returned for select", sqlite3_sql(stmt));
     }
   }
-  
+
   sqlite3_int64 execInsert(sqlite3_stmt_ptr stmt)
   {
     execSelect(stmt);
@@ -453,13 +453,13 @@ public:
     reset(stmt);
     return rowid;
   }
-  
+
   void execUpdate(sqlite3_stmt_ptr stmt)
   {
     execSelect(stmt);
     reset(stmt);
   }
-    
+
   void initTables()
   {
       string_list commands = simgear::strutils::split(SCHEMA_SQL, ";");
@@ -467,116 +467,116 @@ public:
           if (sql.empty()) {
               continue;
           }
-          
+
           runSQL(sql);
       } // of commands in scheme loop
   }
-  
+
   void prepareQueries()
   {
     writePropertyMulti = prepare("INSERT INTO properties (key, value) VALUES(?1,?2)");
-    
+
     beginTransactionStmt = prepare("BEGIN");
     commitTransactionStmt = prepare("COMMIT");
     rollbackTransactionStmt = prepare("ROLLBACK");
 
-    
+
 #define POSITIONED_COLS "rowid, type, ident, name, airport, lon, lat, elev_m, octree_node"
 #define AND_TYPED "AND type>=?2 AND type <=?3"
     statCacheCheck = prepare("SELECT stamp FROM stat_cache WHERE path=?");
     stampFileCache = prepare("INSERT OR REPLACE INTO stat_cache "
                              "(path, stamp) VALUES (?,?)");
-    
+
     loadPositioned = prepare("SELECT " POSITIONED_COLS " FROM positioned WHERE rowid=?");
     loadAirportStmt = prepare("SELECT has_metar FROM airport WHERE rowid=?");
     loadNavaid = prepare("SELECT range_nm, freq, multiuse, runway, colocated FROM navaid WHERE rowid=?");
     loadCommStation = prepare("SELECT freq_khz, range_nm FROM comm WHERE rowid=?");
     loadRunwayStmt = prepare("SELECT heading, length_ft, width_m, surface, displaced_threshold,"
                              "stopway, reciprocal, ils FROM runway WHERE rowid=?1");
-    
+
     getAirportItems = prepare("SELECT rowid FROM positioned WHERE airport=?1 " AND_TYPED);
 
-    
+
     setAirportMetar = prepare("UPDATE airport SET has_metar=?2 WHERE rowid="
                               "(SELECT rowid FROM positioned WHERE ident=?1 AND type>=?3 AND type <=?4)");
     sqlite3_bind_int(setAirportMetar, 3, FGPositioned::AIRPORT);
     sqlite3_bind_int(setAirportMetar, 4, FGPositioned::SEAPORT);
-    
+
     setRunwayReciprocal = prepare("UPDATE runway SET reciprocal=?2 WHERE rowid=?1");
     setRunwayILS = prepare("UPDATE runway SET ils=?2 WHERE rowid=?1");
     setNavaidColocated = prepare("UPDATE navaid SET colocated=?2 WHERE rowid=?1");
-    
+
     insertPositionedQuery = prepare("INSERT INTO positioned "
                                     "(type, ident, name, airport, lon, lat, elev_m, octree_node, "
                                     "cart_x, cart_y, cart_z)"
                                     " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)");
-    
+
     setAirportPos = prepare("UPDATE positioned SET lon=?2, lat=?3, elev_m=?4, octree_node=?5, "
                             "cart_x=?6, cart_y=?7, cart_z=?8 WHERE rowid=?1");
     insertAirport = prepare("INSERT INTO airport (rowid, has_metar) VALUES (?, ?)");
     insertNavaid = prepare("INSERT INTO navaid (rowid, freq, range_nm, multiuse, runway, colocated)"
                            " VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
-    
+
     insertCommStation = prepare("INSERT INTO comm (rowid, freq_khz, range_nm)"
                                 " VALUES (?, ?, ?)");
     insertRunway = prepare("INSERT INTO runway "
                            "(rowid, heading, length_ft, width_m, surface, displaced_threshold, stopway, reciprocal)"
                            " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)");
     runwayLengthFtQuery = prepare("SELECT length_ft FROM runway WHERE rowid=?1");
-    
+
     removePOIQuery = prepare("DELETE FROM positioned WHERE type=?1 AND ident=?2");
-    
-  // query statement    
+
+  // query statement
     findClosestWithIdent = prepare("SELECT rowid FROM positioned WHERE ident=?1 "
                                    AND_TYPED " ORDER BY distanceCartSqr(cart_x, cart_y, cart_z, ?4, ?5, ?6)");
-    
+
     findCommByFreq = prepare("SELECT positioned.rowid FROM positioned, comm WHERE "
                              "positioned.rowid=comm.rowid AND freq_khz=?1 "
                              AND_TYPED " ORDER BY distanceCartSqr(cart_x, cart_y, cart_z, ?4, ?5, ?6)");
-    
+
     findNavsByFreq = prepare("SELECT positioned.rowid FROM positioned, navaid WHERE "
                              "positioned.rowid=navaid.rowid "
                              "AND navaid.freq=?1 " AND_TYPED
                              " ORDER BY distanceCartSqr(cart_x, cart_y, cart_z, ?4, ?5, ?6)");
-    
+
     findNavsByFreqNoPos = prepare("SELECT positioned.rowid FROM positioned, navaid WHERE "
                                   "positioned.rowid=navaid.rowid AND freq=?1 " AND_TYPED);
-    
+
     findNavaidForRunway = prepare("SELECT positioned.rowid FROM positioned, navaid WHERE "
                                   "positioned.rowid=navaid.rowid AND runway=?1 AND type=?2");
-    
+
   // for an octree branch, return the child octree nodes which exist,
   // described as a bit-mask
     getOctreeChildren = prepare("SELECT children FROM octree WHERE rowid=?1");
-    
+
 #ifdef LAZY_OCTREE_UPDATES
     updateOctreeChildren = prepare("UPDATE octree SET children=?2 WHERE rowid=?1");
 #else
   // mask the new child value into the existing one
     updateOctreeChildren = prepare("UPDATE octree SET children=(?2 | children) WHERE rowid=?1");
 #endif
-    
+
   // define a new octree node (with no children)
     insertOctree = prepare("INSERT INTO octree (rowid, children) VALUES (?1, 0)");
-    
+
     getOctreeLeafChildren = prepare("SELECT rowid, type FROM positioned WHERE octree_node=?1");
-    
+
     searchAirports = prepare("SELECT ident, name FROM positioned WHERE (name LIKE ?1 OR ident LIKE ?1) " AND_TYPED);
     sqlite3_bind_int(searchAirports, 2, FGPositioned::AIRPORT);
     sqlite3_bind_int(searchAirports, 3, FGPositioned::SEAPORT);
-    
+
     getAllAirports = prepare("SELECT ident, name FROM positioned WHERE type>=?1 AND type <=?2");
     sqlite3_bind_int(getAllAirports, 1, FGPositioned::AIRPORT);
     sqlite3_bind_int(getAllAirports, 2, FGPositioned::SEAPORT);
 
-    
+
     getAirportItemByIdent = prepare("SELECT rowid FROM positioned WHERE airport=?1 AND ident=?2 AND type=?3");
-    
+
     findAirportRunway = prepare("SELECT airport, rowid FROM positioned WHERE ident=?2 AND type=?3 AND airport="
                                 "(SELECT rowid FROM positioned WHERE type=?4 AND ident=?1)");
     sqlite3_bind_int(findAirportRunway, 3, FGPositioned::RUNWAY);
     sqlite3_bind_int(findAirportRunway, 4, FGPositioned::AIRPORT);
-    
+
     // three-way join to get the navaid ident and runway ident in a single select.
     // we're joining positioned to itself by the navaid runway, with the complication
     // that we need to join the navaids table to get the runway ID.
@@ -588,33 +588,35 @@ public:
 
     sqlite3_bind_int(findILS, 4, FGPositioned::ILS);
     sqlite3_bind_int(findILS, 5, FGPositioned::LOC);
-    
-  // airways 
+
+  // airways
     findAirway = prepare("SELECT rowid FROM airway WHERE network=?1 AND ident=?2");
     insertAirway = prepare("INSERT INTO airway (ident, network) "
                            "VALUES (?1, ?2)");
-    
+
     insertAirwayEdge = prepare("INSERT INTO airway_edge (network, airway, a, b) "
                                "VALUES (?1, ?2, ?3, ?4)");
-    
+
     isPosInAirway = prepare("SELECT rowid FROM airway_edge WHERE network=?1 AND a=?2");
-    
+
     airwayEdgesFrom = prepare("SELECT airway, b FROM airway_edge WHERE network=?1 AND a=?2");
+
+    airwayEdges = prepare("SELECT a, b FROM airway_edge WHERE airway=?1");
   }
-  
+
   void writeIntProperty(const string& key, int value)
   {
     sqlite_bind_stdstring(clearProperty, 1, key);
     execUpdate(clearProperty);
-    
+
     sqlite_bind_stdstring(writePropertyQuery, 1, key);
     sqlite3_bind_int(writePropertyQuery, 2, value);
     execUpdate(writePropertyQuery);
   }
 
-  
+
   FGPositioned* loadById(sqlite_int64 rowId, sqlite3_int64& aptId);
-  
+
   FGAirport* loadAirport(sqlite_int64 rowId,
                          FGPositioned::Type ty,
                          const string& id, const string& name, const SGGeod& pos)
@@ -623,21 +625,21 @@ public:
     execSelect1(loadAirportStmt);
     bool hasMetar = (sqlite3_column_int(loadAirportStmt, 0) > 0);
     reset(loadAirportStmt);
-    
+
     return new FGAirport(rowId, id, pos, name, hasMetar, ty);
   }
-  
+
   FGRunwayBase* loadRunway(sqlite3_int64 rowId, FGPositioned::Type ty,
                            const string& id, const SGGeod& pos, PositionedID apt)
   {
     sqlite3_bind_int(loadRunwayStmt, 1, rowId);
     execSelect1(loadRunwayStmt);
-    
+
     double heading = sqlite3_column_double(loadRunwayStmt, 0);
     double lengthM = sqlite3_column_int(loadRunwayStmt, 1);
     double widthM = sqlite3_column_double(loadRunwayStmt, 2);
     int surface = sqlite3_column_int(loadRunwayStmt, 3);
-  
+
     if (ty == FGPositioned::TAXIWAY) {
       reset(loadRunwayStmt);
       return new FGTaxiway(rowId, id, pos, heading, lengthM, widthM, surface);
@@ -651,20 +653,20 @@ public:
       PositionedID ils = sqlite3_column_int64(loadRunwayStmt, 7);
       FGRunway* r = new FGRunway(rowId, apt, id, pos, heading, lengthM, widthM,
                           displacedThreshold, stopway, surface);
-      
+
       if (reciprocal > 0) {
         r->setReciprocalRunway(reciprocal);
       }
-      
+
       if (ils > 0) {
         r->setILS(ils);
       }
-      
+
       reset(loadRunwayStmt);
       return r;
     }
   }
-  
+
   CommStation* loadComm(sqlite3_int64 rowId, FGPositioned::Type ty,
                         const string& id, const string& name,
                         const SGGeod& pos,
@@ -672,23 +674,23 @@ public:
   {
     sqlite3_bind_int64(loadCommStation, 1, rowId);
     execSelect1(loadCommStation);
-    
+
     int range = sqlite3_column_int(loadCommStation, 0);
     int freqKhz = sqlite3_column_int(loadCommStation, 1);
     reset(loadCommStation);
-    
+
     CommStation* c = new CommStation(rowId, name, ty, pos, freqKhz, range);
     c->setAirport(airport);
     return c;
   }
-  
+
   FGPositioned* loadNav(sqlite3_int64 rowId,
                        FGPositioned::Type ty, const string& id,
                        const string& name, const SGGeod& pos)
   {
     sqlite3_bind_int64(loadNavaid, 1, rowId);
     execSelect1(loadNavaid);
-    
+
     PositionedID runway = sqlite3_column_int64(loadNavaid, 3);
     // marker beacons are light-weight
     if ((ty == FGPositioned::OM) || (ty == FGPositioned::IM) ||
@@ -697,7 +699,7 @@ public:
       reset(loadNavaid);
       return new FGMarkerBeaconRecord(rowId, ty, runway, pos);
     }
-    
+
     int rangeNm = sqlite3_column_int(loadNavaid, 0),
     freq = sqlite3_column_int(loadNavaid, 1);
     double mulituse = sqlite3_column_double(loadNavaid, 2);
@@ -716,13 +718,13 @@ public:
 
     return n;
   }
-  
+
   PositionedID insertPositioned(FGPositioned::Type ty, const string& ident,
                                 const string& name, const SGGeod& pos, PositionedID apt,
                                 bool spatialIndex)
   {
     SGVec3d cartPos(SGVec3d::fromGeod(pos));
-    
+
     sqlite3_bind_int(insertPositionedQuery, 1, ty);
     sqlite_bind_stdstring(insertPositionedQuery, 2, ident);
     sqlite_bind_stdstring(insertPositionedQuery, 3, name);
@@ -730,7 +732,7 @@ public:
     sqlite3_bind_double(insertPositionedQuery, 5, pos.getLongitudeDeg());
     sqlite3_bind_double(insertPositionedQuery, 6, pos.getLatitudeDeg());
     sqlite3_bind_double(insertPositionedQuery, 7, pos.getElevationM());
-    
+
     if (spatialIndex) {
       Octree::Leaf* octreeLeaf = Octree::global_spatialOctree->findLeafForPos(cartPos);
       assert(intersects(octreeLeaf->bbox(), cartPos));
@@ -738,21 +740,21 @@ public:
     } else {
       sqlite3_bind_null(insertPositionedQuery, 8);
     }
-    
+
     sqlite3_bind_double(insertPositionedQuery, 9, cartPos.x());
     sqlite3_bind_double(insertPositionedQuery, 10, cartPos.y());
     sqlite3_bind_double(insertPositionedQuery, 11, cartPos.z());
-    
-    PositionedID r = execInsert(insertPositionedQuery);    
+
+    PositionedID r = execInsert(insertPositionedQuery);
     return r;
   }
-  
+
   FGPositionedList findAllByString(const string& s, const string& column,
                                      FGPositioned::Filter* filter, bool exact)
   {
     string query = s;
     if (!exact) query += "%";
-    
+
   // build up SQL query text
     string matchTerm = exact ? "=?1" : " LIKE ?1";
     string sql = "SELECT rowid FROM positioned WHERE " + column + matchTerm;
@@ -772,7 +774,7 @@ public:
       sqlite3_bind_int(stmt, 2, filter->minType());
       sqlite3_bind_int(stmt, 3, filter->maxType());
     }
-    
+
     FGPositionedList result;
   // run the prepared SQL
     while (stepSelect(stmt))
@@ -781,14 +783,14 @@ public:
       if (filter && !filter->pass(pos)) {
         continue;
       }
-      
+
       result.push_back(pos);
     }
-    
+
     reset(stmt);
     return result;
   }
-  
+
   PositionedIDVec selectIds(sqlite3_stmt_ptr query)
   {
     PositionedIDVec result;
@@ -798,7 +800,7 @@ public:
     reset(query);
     return result;
   }
-  
+
   double runwayLengthFt(PositionedID rwy)
   {
     sqlite3_bind_int64(runwayLengthFtQuery, 1, rwy);
@@ -807,7 +809,7 @@ public:
     reset(runwayLengthFtQuery);
     return length;
   }
-  
+
   void flushDeferredOctreeUpdates()
   {
     BOOST_FOREACH(Octree::Branch* nd, deferredOctreeUpdates) {
@@ -815,10 +817,10 @@ public:
       sqlite3_bind_int(updateOctreeChildren, 2, nd->childMask());
       execUpdate(updateOctreeChildren);
     }
-    
+
     deferredOctreeUpdates.clear();
   }
-    
+
   void removePositionedWithIdent(FGPositioned::Type ty, const std::string& aIdent)
   {
     sqlite3_bind_int(removePOIQuery, 1, ty);
@@ -826,12 +828,12 @@ public:
     execUpdate(removePOIQuery);
     reset(removePOIQuery);
   }
-  
+
   NavDataCache* outer;
   sqlite3* db;
   SGPath path;
     bool readOnly;
-    
+
   /// the actual cache of ID -> instances. This holds an owning reference,
   /// so once items are in the cache they will never be deleted until
   /// the cache drops its reference
@@ -844,22 +846,22 @@ public:
   unsigned int transactionLevel;
   bool transactionAborted;
   sqlite3_stmt_ptr beginTransactionStmt, commitTransactionStmt, rollbackTransactionStmt;
-  
+
   SGPath aptDatPath, metarDatPath, navDatPath, fixDatPath, poiDatPath,
   carrierDatPath, airwayDatPath;
-  
+
   sqlite3_stmt_ptr readPropertyQuery, writePropertyQuery,
     stampFileCache, statCacheCheck,
     loadAirportStmt, loadCommStation, loadPositioned, loadNavaid,
     loadRunwayStmt;
   sqlite3_stmt_ptr writePropertyMulti, clearProperty;
-  
+
   sqlite3_stmt_ptr insertPositionedQuery, insertAirport, insertTower, insertRunway,
   insertCommStation, insertNavaid;
   sqlite3_stmt_ptr setAirportMetar, setRunwayReciprocal, setRunwayILS, setNavaidColocated,
     setAirportPos;
   sqlite3_stmt_ptr removePOIQuery;
-  
+
   sqlite3_stmt_ptr findClosestWithIdent;
 // octree (spatial index) related queries
   sqlite3_stmt_ptr getOctreeChildren, insertOctree, updateOctreeChildren,
@@ -871,40 +873,41 @@ public:
   sqlite3_stmt_ptr getAirportItems, getAirportItemByIdent;
   sqlite3_stmt_ptr findAirportRunway,
     findILS;
-  
+
   sqlite3_stmt_ptr runwayLengthFtQuery;
-  
+
 // airways
-  sqlite3_stmt_ptr findAirway, insertAirwayEdge, isPosInAirway, airwayEdgesFrom,
-  insertAirway;
-  
+  sqlite3_stmt_ptr findAirway, insertAirwayEdge,
+    isPosInAirway, airwayEdgesFrom,
+    insertAirway, airwayEdges;
+
 // since there's many permutations of ident/name queries, we create
 // them programtically, but cache the exact query by its raw SQL once
 // used.
   std::map<string, sqlite3_stmt_ptr> findByStringDict;
-  
+
   typedef std::vector<sqlite3_stmt_ptr> StmtVec;
   StmtVec prepared;
-  
+
   std::set<Octree::Branch*> deferredOctreeUpdates;
-  
+
   // if we're performing a rebuild, the thread that is doing the work.
   // otherwise, NULL
   std::auto_ptr<RebuildThread> rebuilder;
 };
 
 //////////////////////////////////////////////////////////////////////
-  
+
 FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
                                                           sqlite3_int64& aptId)
 {
-  
+
   sqlite3_bind_int64(loadPositioned, 1, rowid);
   execSelect1(loadPositioned);
-  
+
   assert(rowid == sqlite3_column_int64(loadPositioned, 0));
   FGPositioned::Type ty = (FGPositioned::Type) sqlite3_column_int(loadPositioned, 1);
-  
+
   PositionedID prowid = static_cast<PositionedID>(rowid);
   string ident = (char*) sqlite3_column_text(loadPositioned, 2);
   string name = (char*) sqlite3_column_text(loadPositioned, 3);
@@ -913,23 +916,23 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
   double lat = sqlite3_column_double(loadPositioned, 6);
   double elev = sqlite3_column_double(loadPositioned, 7);
   SGGeod pos = SGGeod::fromDegM(lon, lat, elev);
-      
+
   reset(loadPositioned);
-  
+
   switch (ty) {
     case FGPositioned::AIRPORT:
     case FGPositioned::SEAPORT:
     case FGPositioned::HELIPORT:
       return loadAirport(rowid, ty, ident, name, pos);
-      
+
     case FGPositioned::TOWER:
       return new AirportTower(prowid, aptId, ident, pos);
-      
+
     case FGPositioned::RUNWAY:
     case FGPositioned::HELIPAD:
     case FGPositioned::TAXIWAY:
       return loadRunway(rowid, ty, ident, pos, aptId);
-      
+
     case FGPositioned::LOC:
     case FGPositioned::VOR:
     case FGPositioned::GS:
@@ -942,10 +945,10 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
     case FGPositioned::TACAN:
     case FGPositioned::MOBILE_TACAN:
       return loadNav(rowid, ty, ident, name, pos);
-      
+
     case FGPositioned::FIX:
       return new FGFix(rowid, ident, pos);
-      
+
     case FGPositioned::WAYPOINT:
     case FGPositioned::COUNTRY:
     case FGPositioned::CITY:
@@ -955,7 +958,7 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
         FGPositioned* wpt = new FGPositioned(rowid, ty, ident, pos);
       return wpt;
     }
-      
+
     case FGPositioned::FREQ_GROUND:
     case FGPositioned::FREQ_TOWER:
     case FGPositioned::FREQ_ATIS:
@@ -965,18 +968,18 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
     case FGPositioned::FREQ_CLEARANCE:
     case FGPositioned::FREQ_UNICOM:
       return loadComm(rowid, ty, ident, name, pos, aptId);
-      
+
     default:
       return NULL;
   }
 }
-  
+
 bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path, bool verbose)
 {
   if (!path.exists()) {
     throw sg_io_exception("isCachedFileModified: Missing file:" + path.str());
   }
-  
+
   sqlite_bind_temp_stdstring(statCacheCheck, 1, path.str());
   bool isModified = true;
   sgDebugPriority logLevel = verbose ? SG_WARN : SG_DEBUG;
@@ -992,23 +995,23 @@ bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path,
     {
       SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: no rebuild required for " << path);
     }
-    
+
     isModified = (delta != 0);
   } else {
     SG_LOG(SG_NAVCACHE, logLevel, "NavCache: initial build required for " << path);
   }
-  
+
   reset(statCacheCheck);
   return isModified;
 }
-  
+
 static NavDataCache* static_instance = NULL;
-        
+
 NavDataCache::NavDataCache()
 {
   const int MAX_TRIES = 3;
   SGPath homePath(globals->get_fg_home());
-  
+
   std::ostringstream os;
   string_list versionParts = simgear::strutils::split(VERSION, ".");
   if (versionParts.size() < 2) {
@@ -1016,7 +1019,7 @@ NavDataCache::NavDataCache()
   } else {
     os << "navdata_" << versionParts[0] << "_" << versionParts[1] << ".cache";
   }
-    
+
   homePath.append(os.str());
 
     // permit additional DB connections from the same process
@@ -1033,26 +1036,26 @@ NavDataCache::NavDataCache()
       SG_LOG(SG_NAVCACHE, t == 0 ? SG_WARN : SG_ALERT, "NavCache: init failed:" << e.what()
              << " (attempt " << t << ")");
       d.reset();
-        
+
         // only wipe the existing if not readonly
         if (!fgGetBool("/sim/fghome-readonly", false)) {
             homePath.remove();
         }
     }
   } // of retry loop
-    
+
   double RADIUS_EARTH_M = 7000 * 1000.0; // 7000km is plenty
   SGVec3d earthExtent(RADIUS_EARTH_M, RADIUS_EARTH_M, RADIUS_EARTH_M);
   Octree::global_spatialOctree =
     new Octree::Branch(SGBox<double>(-earthExtent, earthExtent), 1);
-  
+
   d->aptDatPath = SGPath(globals->get_fg_root());
   d->aptDatPath.append("Airports/apt.dat.gz");
-  
+
   d->metarDatPath = SGPath(globals->get_fg_root());
   d->metarDatPath.append("Airports/metar.dat.gz");
 
-  d->navDatPath = SGPath(globals->get_fg_root());  
+  d->navDatPath = SGPath(globals->get_fg_root());
   d->navDatPath.append("Navaids/nav.dat.gz");
 
   d->fixDatPath = SGPath(globals->get_fg_root());
@@ -1060,10 +1063,10 @@ NavDataCache::NavDataCache()
 
   d->poiDatPath = SGPath(globals->get_fg_root());
   d->poiDatPath.append("Navaids/poi.dat.gz");
-  
+
   d->carrierDatPath = SGPath(globals->get_fg_root());
   d->carrierDatPath.append("Navaids/carrier_nav.dat.gz");
-  
+
   d->airwayDatPath = SGPath(globals->get_fg_root());
   d->airwayDatPath.append("Navaids/awy.dat.gz");
 }
@@ -1080,23 +1083,23 @@ NavDataCache* NavDataCache::createInstance()
     static_instance = new NavDataCache;
     return static_instance;
 }
-    
+
 NavDataCache* NavDataCache::instance()
 {
   return static_instance;
 }
-  
+
 bool NavDataCache::isRebuildRequired()
 {
     if (d->readOnly) {
         return false;
     }
-    
+
     if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
         SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: restore-defaults requested, will rebuild cache");
         return true;
     }
-    
+
   if (d->isCachedFileModified(d->aptDatPath, true) ||
       d->isCachedFileModified(d->metarDatPath, true) ||
       d->isCachedFileModified(d->navDatPath, true) ||
@@ -1156,14 +1159,14 @@ void NavDataCache::doRebuild()
     d->close(); // completely close the sqlite object
     d->path.remove(); // remove the file on disk
     d->init(); // start again from scratch
-    
+
     // initialise the root octree node
     d->runSQL("INSERT INTO octree (rowid, children) VALUES (1, 0)");
-      
+
     SGTimeStamp st;
     {
         Transaction txn(this);
-      
+
         st.stamp();
         airportDBLoad(d->aptDatPath);
         SG_LOG(SG_NAVCACHE, SG_INFO, "apt.dat load took:" << st.elapsedMSec());
@@ -1172,12 +1175,12 @@ void NavDataCache::doRebuild()
         metarDataLoad(d->metarDatPath);
         stampCacheFile(d->aptDatPath);
         stampCacheFile(d->metarDatPath);
-        
+
         st.stamp();
         loadFixes(d->fixDatPath);
         stampCacheFile(d->fixDatPath);
         SG_LOG(SG_NAVCACHE, SG_INFO, "fix.dat load took:" << st.elapsedMSec());
-        
+
         st.stamp();
         navDBInit(d->navDatPath);
         stampCacheFile(d->navDatPath);
@@ -1188,13 +1191,13 @@ void NavDataCache::doRebuild()
         txn.commit();
         SG_LOG(SG_NAVCACHE, SG_INFO, "stage 1 commit took:" << st.elapsedMSec());
     }
-      
+
 #ifdef SG_WINDOWS
       SG_LOG(SG_NAVCACHE, SG_ALERT, "SKIPPING POI load on Windows");
 #else
       {
           Transaction txn(this);
-          
+
           st.stamp();
           poiDBInit(d->poiDatPath);
           stampCacheFile(d->poiDatPath);
@@ -1206,22 +1209,22 @@ void NavDataCache::doRebuild()
           SG_LOG(SG_NAVCACHE, SG_INFO, "POI commit took:" << st.elapsedMSec());
       }
 #endif
-      
+
       {
           Transaction txn(this);
           loadCarrierNav(d->carrierDatPath);
           stampCacheFile(d->carrierDatPath);
-          
+
           st.stamp();
           Airway::load(d->airwayDatPath);
           stampCacheFile(d->airwayDatPath);
           SG_LOG(SG_NAVCACHE, SG_INFO, "awy.dat load took:" << st.elapsedMSec());
-          
+
           d->flushDeferredOctreeUpdates();
-          
+
           string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");
           writeStringProperty("scenery_paths", sceneryPaths);
-          
+
           st.stamp();
           txn.commit();
           SG_LOG(SG_NAVCACHE, SG_INFO, "final commit took:" << st.elapsedMSec());
@@ -1232,18 +1235,18 @@ void NavDataCache::doRebuild()
     SG_LOG(SG_NAVCACHE, SG_ALERT, "caught exception rebuilding navCache:" << e.what());
   }
 }
-  
+
 int NavDataCache::readIntProperty(const string& key)
 {
   sqlite_bind_stdstring(d->readPropertyQuery, 1, key);
   int result = 0;
-  
+
   if (d->execSelect(d->readPropertyQuery)) {
     result = sqlite3_column_int(d->readPropertyQuery, 0);
   } else {
     SG_LOG(SG_NAVCACHE, SG_WARN, "readIntProperty: unknown:" << key);
   }
-  
+
   d->reset(d->readPropertyQuery);
   return result;
 }
@@ -1257,11 +1260,11 @@ double NavDataCache::readDoubleProperty(const string& key)
   } else {
     SG_LOG(SG_NAVCACHE, SG_WARN, "readDoubleProperty: unknown:" << key);
   }
-  
+
   d->reset(d->readPropertyQuery);
   return result;
 }
-  
+
 string NavDataCache::readStringProperty(const string& key)
 {
   sqlite_bind_stdstring(d->readPropertyQuery, 1, key);
@@ -1271,7 +1274,7 @@ string NavDataCache::readStringProperty(const string& key)
   } else {
     SG_LOG(SG_NAVCACHE, SG_WARN, "readStringProperty: unknown:" << key);
   }
-  
+
   d->reset(d->readPropertyQuery);
   return result;
 }
@@ -1295,7 +1298,7 @@ void NavDataCache::writeDoubleProperty(const string& key, const double& value)
 {
   sqlite_bind_stdstring(d->clearProperty, 1, key);
   d->execUpdate(d->clearProperty);
-  
+
   sqlite_bind_stdstring(d->writePropertyQuery, 1, key);
   sqlite3_bind_double(d->writePropertyQuery, 2, value);
   d->execUpdate(d->writePropertyQuery);
@@ -1309,22 +1312,22 @@ string_list NavDataCache::readStringListProperty(const string& key)
     result.push_back((char*) sqlite3_column_text(d->readPropertyQuery, 0));
   }
   d->reset(d->readPropertyQuery);
-  
+
   return result;
 }
-  
+
 void NavDataCache::writeStringListProperty(const string& key, const string_list& values)
 {
   sqlite_bind_stdstring(d->clearProperty, 1, key);
   d->execUpdate(d->clearProperty);
-  
+
   BOOST_FOREACH(string value, values) {
     sqlite_bind_stdstring(d->writePropertyMulti, 1, key);
     sqlite_bind_stdstring(d->writePropertyMulti, 2, value);
     d->execInsert(d->writePropertyMulti);
   }
 }
-  
+
 bool NavDataCache::isCachedFileModified(const SGPath& path) const
 {
   return d->isCachedFileModified(path, false);
@@ -1344,10 +1347,10 @@ void NavDataCache::beginTransaction()
     d->stepSelect(d->beginTransactionStmt);
     sqlite3_reset(d->beginTransactionStmt);
   }
-  
+
   ++d->transactionLevel;
 }
-  
+
 void NavDataCache::commitTransaction()
 {
   assert(d->transactionLevel > 0);
@@ -1356,7 +1359,7 @@ void NavDataCache::commitTransaction()
     // still abort the entire transaction. That's bad, but safer than
     // committing.
     sqlite3_stmt_ptr q = d->transactionAborted ? d->rollbackTransactionStmt : d->commitTransactionStmt;
-    
+
     int retries = 0;
     int result;
     while (retries < MAX_RETRIES) {
@@ -1364,7 +1367,7 @@ void NavDataCache::commitTransaction()
       if (result == SQLITE_DONE) {
         break;
       }
-      
+
       // see http://www.sqlite.org/c3ref/get_autocommit.html for a hint
       // what's going on here: autocommit in inactive inside BEGIN, so if
       // it's active, the DB was rolled-back
@@ -1373,36 +1376,36 @@ void NavDataCache::commitTransaction()
         d->transactionAborted = true;
         break;
       }
-      
+
       if (result != SQLITE_BUSY) {
         break;
       }
-      
+
       SGTimeStamp::sleepForMSec(++retries * 10);
       SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache contention on commit, will retry:" << retries);
     } // of retry loop for DB busy
-    
+
     string errMsg;
     if (result != SQLITE_DONE) {
       errMsg = sqlite3_errmsg(d->db);
       SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite error:" << errMsg << " for  " << result
              << " while running:\n\t" << sqlite3_sql(q));
     }
-    
+
     sqlite3_reset(q);
   }
 }
-  
+
 void NavDataCache::abortTransaction()
 {
   SG_LOG(SG_NAVCACHE, SG_WARN, "NavCache: aborting transaction");
-  
+
   assert(d->transactionLevel > 0);
   if (--d->transactionLevel == 0) {
     d->stepSelect(d->rollbackTransactionStmt);
     sqlite3_reset(d->rollbackTransactionStmt);
   }
-  
+
   d->transactionAborted = true;
 }
 
@@ -1411,13 +1414,13 @@ FGPositionedRef NavDataCache::loadById(PositionedID rowid)
   if (rowid == 0) {
     return NULL;
   }
- 
+
   PositionedCache::iterator it = d->cache.find(rowid);
   if (it != d->cache.end()) {
     d->cacheHits++;
     return it->second; // cache it
   }
-  
+
   sqlite3_int64 aptId;
   FGPositioned* pos = d->loadById(rowid, aptId);
   d->cache.insert(it, PositionedCache::value_type(rowid, pos));
@@ -1428,7 +1431,7 @@ FGPositionedRef NavDataCache::loadById(PositionedID rowid)
     FGAirport* apt = FGPositioned::loadById<FGAirport>(aptId);
     apt->validateILSData();
   }
-  
+
   return pos;
 }
 
@@ -1441,27 +1444,27 @@ PositionedID NavDataCache::insertAirport(FGPositioned::Type ty, const string& id
   sqlite3_int64 rowId = d->insertPositioned(ty, ident, name, SGGeod(),
                                             0 /* airport */,
                                             false /* spatial index */);
-  
+
   sqlite3_bind_int64(d->insertAirport, 1, rowId);
   d->execInsert(d->insertAirport);
-  
+
   return rowId;
 }
-  
+
 void NavDataCache::updatePosition(PositionedID item, const SGGeod &pos)
 {
   if (d->cache.find(item) != d->cache.end()) {
     SG_LOG(SG_NAVCACHE, SG_DEBUG, "updating position of an item in the cache");
     d->cache[item]->modifyPosition(pos);
   }
-  
+
   SGVec3d cartPos(SGVec3d::fromGeod(pos));
-  
+
   sqlite3_bind_int(d->setAirportPos, 1, item);
   sqlite3_bind_double(d->setAirportPos, 2, pos.getLongitudeDeg());
   sqlite3_bind_double(d->setAirportPos, 3, pos.getLatitudeDeg());
   sqlite3_bind_double(d->setAirportPos, 4, pos.getElevationM());
-  
+
 // bug 905; the octree leaf may change here, but the leaf may already be
 // loaded, and caching its children. (Either the old or new leaf!). Worse,
 // we may be called here as a result of loading one of those leaf's children.
@@ -1472,12 +1475,12 @@ void NavDataCache::updatePosition(PositionedID item, const SGGeod &pos)
 // which was updated above.
   Octree::Leaf* octreeLeaf = Octree::global_spatialOctree->findLeafForPos(cartPos);
   sqlite3_bind_int64(d->setAirportPos, 5, octreeLeaf->guid());
-  
+
   sqlite3_bind_double(d->setAirportPos, 6, cartPos.x());
   sqlite3_bind_double(d->setAirportPos, 7, cartPos.y());
   sqlite3_bind_double(d->setAirportPos, 8, cartPos.z());
 
-  
+
   d->execUpdate(d->setAirportPos);
 }
 
@@ -1496,7 +1499,7 @@ NavDataCache::insertRunway(FGPositioned::Type ty, const string& ident,
   // only runways are spatially indexed; don't bother indexing taxiways
   // or pavements
   bool spatialIndex = ( ty == FGPositioned::RUNWAY || ty == FGPositioned::HELIPAD);
-  
+
   sqlite3_int64 rowId = d->insertPositioned(ty, cleanRunwayNo(ident), "", pos, apt,
                                             spatialIndex);
   sqlite3_bind_int64(d->insertRunway, 1, rowId);
@@ -1506,8 +1509,8 @@ NavDataCache::insertRunway(FGPositioned::Type ty, const string& ident,
   sqlite3_bind_int(d->insertRunway, 5, surfaceCode);
   sqlite3_bind_double(d->insertRunway, 6, displacedThreshold);
   sqlite3_bind_double(d->insertRunway, 7, stopway);
-  
-  return d->execInsert(d->insertRunway);  
+
+  return d->execInsert(d->insertRunway);
 }
 
 void NavDataCache::setRunwayReciprocal(PositionedID runway, PositionedID recip)
@@ -1515,7 +1518,7 @@ void NavDataCache::setRunwayReciprocal(PositionedID runway, PositionedID recip)
   sqlite3_bind_int64(d->setRunwayReciprocal, 1, runway);
   sqlite3_bind_int64(d->setRunwayReciprocal, 2, recip);
   d->execUpdate(d->setRunwayReciprocal);
-  
+
 // and the opposite direction too!
   sqlite3_bind_int64(d->setRunwayReciprocal, 2, runway);
   sqlite3_bind_int64(d->setRunwayReciprocal, 1, recip);
@@ -1527,14 +1530,14 @@ void NavDataCache::setRunwayILS(PositionedID runway, PositionedID ils)
   sqlite3_bind_int64(d->setRunwayILS, 1, runway);
   sqlite3_bind_int64(d->setRunwayILS, 2, ils);
   d->execUpdate(d->setRunwayILS);
-    
+
   // and the in-memory one
   if (d->cache.find(runway) != d->cache.end()) {
     FGRunway* instance = (FGRunway*) d->cache[runway].ptr();
     instance->setILS(ils);
   }
 }
-  
+
 PositionedID
 NavDataCache::insertNavaid(FGPositioned::Type ty, const string& ident,
                           const string& name, const SGGeod& pos,
@@ -1545,7 +1548,7 @@ NavDataCache::insertNavaid(FGPositioned::Type ty, const string& ident,
   if (ty == FGPositioned::MOBILE_TACAN) {
     spatialIndex = false;
   }
-  
+
   sqlite3_int64 rowId = d->insertPositioned(ty, ident, name, pos, apt,
                                             spatialIndex);
   sqlite3_bind_int64(d->insertNavaid, 1, rowId);
@@ -1570,7 +1573,7 @@ void NavDataCache::setNavaidColocated(PositionedID navaid, PositionedID colocate
     rec->setColocatedDME(colocatedDME);
   }
 }
-  
+
 PositionedID NavDataCache::insertCommStation(FGPositioned::Type ty,
                                              const string& name, const SGGeod& pos, int freq, int range,
                                              PositionedID apt)
@@ -1581,7 +1584,7 @@ PositionedID NavDataCache::insertCommStation(FGPositioned::Type ty,
   sqlite3_bind_int(d->insertCommStation, 3, range);
   return d->execInsert(d->insertCommStation);
 }
-  
+
 PositionedID NavDataCache::insertFix(const std::string& ident, const SGGeod& aPos)
 {
   return d->insertPositioned(FGPositioned::FIX, ident, string(), aPos, 0, true);
@@ -1592,15 +1595,15 @@ PositionedID NavDataCache::createPOI(FGPositioned::Type ty, const std::string& i
   return d->insertPositioned(ty, ident, string(), aPos, 0,
                              true /* spatial index */);
 }
-    
+
 bool NavDataCache::removePOI(FGPositioned::Type ty, const std::string& aIdent)
 {
   d->removePositionedWithIdent(ty, aIdent);
   // should remove from the live cache too?
-    
+
     return true;
 }
-  
+
 void NavDataCache::setAirportMetar(const string& icao, bool hasMetar)
 {
   sqlite_bind_stdstring(d->setAirportMetar, 1, icao);
@@ -1637,29 +1640,29 @@ FGPositionedRef NavDataCache::findClosestWithIdent( const string& aIdent,
     sqlite3_bind_int(d->findClosestWithIdent, 2, FGPositioned::INVALID);
     sqlite3_bind_int(d->findClosestWithIdent, 3, FGPositioned::LAST_TYPE);
   }
-  
+
   SGVec3d cartPos(SGVec3d::fromGeod(aPos));
   sqlite3_bind_double(d->findClosestWithIdent, 4, cartPos.x());
   sqlite3_bind_double(d->findClosestWithIdent, 5, cartPos.y());
   sqlite3_bind_double(d->findClosestWithIdent, 6, cartPos.z());
-  
+
   FGPositionedRef result;
-  
+
   while (d->stepSelect(d->findClosestWithIdent)) {
     FGPositioned* pos = loadById(sqlite3_column_int64(d->findClosestWithIdent, 0));
     if (aFilter && !aFilter->pass(pos)) {
       continue;
     }
-    
+
     result = pos;
     break;
   }
-  
+
   d->reset(d->findClosestWithIdent);
   return result;
 }
 
-  
+
 int NavDataCache::getOctreeBranchChildren(int64_t octreeNodeId)
 {
   sqlite3_bind_int64(d->getOctreeChildren, 1, octreeNodeId);
@@ -1673,13 +1676,13 @@ void NavDataCache::defineOctreeNode(Octree::Branch* pr, Octree::Node* nd)
 {
   sqlite3_bind_int64(d->insertOctree, 1, nd->guid());
   d->execInsert(d->insertOctree);
-  
+
 #ifdef LAZY_OCTREE_UPDATES
   d->deferredOctreeUpdates.insert(pr);
 #else
   // lowest three bits of node ID are 0..7 index of the child in the parent
   int childIndex = nd->guid() & 0x07;
-  
+
   sqlite3_bind_int64(d->updateOctreeChildren, 1, pr->guid());
 // mask has bit N set where child N exists
   int childMask = 1 << childIndex;
@@ -1687,12 +1690,12 @@ void NavDataCache::defineOctreeNode(Octree::Branch* pr, Octree::Node* nd)
   d->execUpdate(d->updateOctreeChildren);
 #endif
 }
-  
+
 TypedPositionedVec
 NavDataCache::getOctreeLeafChildren(int64_t octreeNodeId)
 {
   sqlite3_bind_int64(d->getOctreeLeafChildren, 1, octreeNodeId);
-  
+
   TypedPositionedVec r;
   while (d->stepSelect(d->getOctreeLeafChildren)) {
     FGPositioned::Type ty = static_cast<FGPositioned::Type>
@@ -1705,7 +1708,7 @@ NavDataCache::getOctreeLeafChildren(int64_t octreeNodeId)
   return r;
 }
 
-  
+
 /**
  * A special purpose helper (used by FGAirport::searchNamesAndIdents) to
  * implement the AirportList dialog. It's unfortunate that it needs to reside
@@ -1723,7 +1726,7 @@ char** NavDataCache::searchAirportNamesAndIdents(const std::string& aFilter)
     stmt = d->searchAirports;
     sqlite_bind_stdstring(stmt, 1, searchTerm);
   }
-  
+
   char** result = (char**) malloc(sizeof(char*) * numAllocated);
   while (d->stepSelect(stmt)) {
     if ((numMatches + 1) >= numAllocated) {
@@ -1734,7 +1737,7 @@ char** NavDataCache::searchAirportNamesAndIdents(const std::string& aFilter)
       free(result);
       result = nresult;
     }
-    
+
     // nasty code to avoid excessive string copying and allocations.
     // We format results as follows (note whitespace!):
     //   ' name-of-airport-chars   (ident)'
@@ -1761,12 +1764,12 @@ char** NavDataCache::searchAirportNamesAndIdents(const std::string& aFilter)
 
     result[numMatches++] = entry;
   }
-  
+
   result[numMatches] = NULL; // end of list marker
   d->reset(stmt);
   return result;
 }
-  
+
 FGPositionedRef
 NavDataCache::findCommByFreq(int freqKhz, const SGGeod& aPos, FGPositioned::Filter* aFilter)
 {
@@ -1778,27 +1781,27 @@ NavDataCache::findCommByFreq(int freqKhz, const SGGeod& aPos, FGPositioned::Filt
     sqlite3_bind_int(d->findCommByFreq, 2, FGPositioned::FREQ_GROUND);
     sqlite3_bind_int(d->findCommByFreq, 3, FGPositioned::FREQ_UNICOM);
   }
-  
+
   SGVec3d cartPos(SGVec3d::fromGeod(aPos));
   sqlite3_bind_double(d->findCommByFreq, 4, cartPos.x());
   sqlite3_bind_double(d->findCommByFreq, 5, cartPos.y());
   sqlite3_bind_double(d->findCommByFreq, 6, cartPos.z());
   FGPositionedRef result;
-  
+
   while (d->execSelect(d->findCommByFreq)) {
     FGPositioned* p = loadById(sqlite3_column_int64(d->findCommByFreq, 0));
     if (aFilter && !aFilter->pass(p)) {
       continue;
     }
-    
+
     result = p;
     break;
   }
-  
+
   d->reset(d->findCommByFreq);
   return result;
 }
-  
+
 PositionedIDVec
 NavDataCache::findNavaidsByFreq(int freqKhz, const SGGeod& aPos, FGPositioned::Filter* aFilter)
 {
@@ -1810,12 +1813,12 @@ NavDataCache::findNavaidsByFreq(int freqKhz, const SGGeod& aPos, FGPositioned::F
     sqlite3_bind_int(d->findNavsByFreq, 2, FGPositioned::NDB);
     sqlite3_bind_int(d->findNavsByFreq, 3, FGPositioned::GS);
   }
-  
+
   SGVec3d cartPos(SGVec3d::fromGeod(aPos));
   sqlite3_bind_double(d->findNavsByFreq, 4, cartPos.x());
   sqlite3_bind_double(d->findNavsByFreq, 5, cartPos.y());
   sqlite3_bind_double(d->findNavsByFreq, 6, cartPos.z());
-  
+
   return d->selectIds(d->findNavsByFreq);
 }
 
@@ -1830,10 +1833,10 @@ NavDataCache::findNavaidsByFreq(int freqKhz, FGPositioned::Filter* aFilter)
     sqlite3_bind_int(d->findNavsByFreqNoPos, 2, FGPositioned::NDB);
     sqlite3_bind_int(d->findNavsByFreqNoPos, 3, FGPositioned::GS);
   }
-  
+
   return d->selectIds(d->findNavsByFreqNoPos);
 }
-  
+
 PositionedIDVec
 NavDataCache::airportItemsOfType(PositionedID apt,FGPositioned::Type ty,
                                  FGPositioned::Type maxTy)
@@ -1841,11 +1844,11 @@ NavDataCache::airportItemsOfType(PositionedID apt,FGPositioned::Type ty,
   if (maxTy == FGPositioned::INVALID) {
     maxTy = ty; // single-type range
   }
-  
+
   sqlite3_bind_int64(d->getAirportItems, 1, apt);
   sqlite3_bind_int(d->getAirportItems, 2, ty);
   sqlite3_bind_int(d->getAirportItems, 3, maxTy);
-  
+
   return d->selectIds(d->getAirportItems);
 }
 
@@ -1857,22 +1860,22 @@ NavDataCache::airportItemWithIdent(PositionedID apt, FGPositioned::Type ty,
   sqlite_bind_stdstring(d->getAirportItemByIdent, 2, ident);
   sqlite3_bind_int(d->getAirportItemByIdent, 3, ty);
   PositionedID result = 0;
-  
+
   if (d->execSelect(d->getAirportItemByIdent)) {
     result = sqlite3_column_int64(d->getAirportItemByIdent, 0);
   }
-  
+
   d->reset(d->getAirportItemByIdent);
   return result;
 }
-  
+
 AirportRunwayPair
 NavDataCache::findAirportRunway(const std::string& aName)
 {
   if (aName.empty()) {
     return AirportRunwayPair();
   }
-  
+
   string_list parts = simgear::strutils::split(aName);
   if (parts.size() < 2) {
     SG_LOG(SG_NAVCACHE, SG_WARN, "findAirportRunway: malformed name:" << aName);
@@ -1882,7 +1885,7 @@ NavDataCache::findAirportRunway(const std::string& aName)
   AirportRunwayPair result;
   sqlite_bind_stdstring(d->findAirportRunway, 1, parts[0]);
   sqlite_bind_stdstring(d->findAirportRunway, 2, cleanRunwayNo(parts[1]));
-  
+
   if (d->execSelect(d->findAirportRunway)) {
     result = AirportRunwayPair(sqlite3_column_int64(d->findAirportRunway, 0),
                       sqlite3_column_int64(d->findAirportRunway, 1));
@@ -1894,12 +1897,12 @@ NavDataCache::findAirportRunway(const std::string& aName)
   d->reset(d->findAirportRunway);
   return result;
 }
-  
+
 PositionedID
 NavDataCache::findILS(PositionedID airport, const string& aRunway, const string& navIdent)
 {
   string runway(cleanRunwayNo(aRunway));
-    
+
   sqlite_bind_stdstring(d->findILS, 1, navIdent);
   sqlite3_bind_int64(d->findILS, 2, airport);
   sqlite_bind_stdstring(d->findILS, 3, runway);
@@ -1907,16 +1910,16 @@ NavDataCache::findILS(PositionedID airport, const string& aRunway, const string&
   if (d->execSelect(d->findILS)) {
     result = sqlite3_column_int64(d->findILS, 0);
   }
-  
+
   d->reset(d->findILS);
   return result;
 }
-  
+
 int NavDataCache::findAirway(int network, const string& aName)
 {
   sqlite3_bind_int(d->findAirway, 1, network);
   sqlite_bind_stdstring(d->findAirway, 2, aName);
-  
+
   int airway = 0;
   if (d->execSelect(d->findAirway)) {
     // already exists
@@ -1926,7 +1929,7 @@ int NavDataCache::findAirway(int network, const string& aName)
     sqlite3_bind_int(d->insertAirway, 2, network);
     airway = d->execInsert(d->insertAirway);
   }
-  
+
   d->reset(d->findAirway);
   return airway;
 }
@@ -1940,18 +1943,18 @@ void NavDataCache::insertEdge(int network, int airwayID, PositionedID from, Posi
     sqlite3_bind_int64(d->insertAirwayEdge, 3, from);
     sqlite3_bind_int64(d->insertAirwayEdge, 4, to);
     d->execInsert(d->insertAirwayEdge);
-    
+
     std::swap(from, to);
   }
 }
-  
+
 bool NavDataCache::isInAirwayNetwork(int network, PositionedID pos)
 {
   sqlite3_bind_int(d->isPosInAirway, 1, network);
   sqlite3_bind_int64(d->isPosInAirway, 2, pos);
   bool ok = d->execSelect(d->isPosInAirway);
   d->reset(d->isPosInAirway);
-  
+
   return ok;
 }
 
@@ -1959,7 +1962,7 @@ AirwayEdgeVec NavDataCache::airwayEdgesFrom(int network, PositionedID pos)
 {
   sqlite3_bind_int(d->airwayEdgesFrom, 1, network);
   sqlite3_bind_int64(d->airwayEdgesFrom, 2, pos);
-  
+
   AirwayEdgeVec result;
   while (d->stepSelect(d->airwayEdgesFrom)) {
     result.push_back(AirwayEdge(
@@ -1967,21 +1970,90 @@ AirwayEdgeVec NavDataCache::airwayEdgesFrom(int network, PositionedID pos)
                      sqlite3_column_int64(d->airwayEdgesFrom, 1)
                      ));
   }
-  
+
   d->reset(d->airwayEdgesFrom);
   return result;
+}
+
+PositionedIDVec NavDataCache::airwayWaypts(int id)
+{
+    sqlite3_bind_int(d->airwayEdges, 1, id);
+
+    typedef std::pair<PositionedID, PositionedID> Edge;
+    typedef std::deque<Edge> EdgeVec;
+    typedef std::deque<PositionedID> PositionedIDDeque;
+
+// build up the EdgeVec, order is arbitrary
+    EdgeVec rawEdges;
+    while (d->stepSelect(d->airwayEdges)) {
+        rawEdges.push_back(Edge(sqlite3_column_int64(d->airwayEdges, 0),
+                                sqlite3_column_int64(d->airwayEdges, 1)
+                                ));
+    }
+
+    d->reset(d->airwayEdges);
+    if (rawEdges.empty()) {
+        return PositionedIDVec();
+    }
+
+// linearize
+    PositionedIDDeque linearAirway;
+    PositionedID firstId = rawEdges.front().first,
+        lastId = rawEdges.front().second;
+    std::set<PositionedID> seen;
+
+    // first edge is trivial
+    linearAirway.push_back(firstId);
+    linearAirway.push_back(lastId);
+    seen.insert(firstId);
+    seen.insert(lastId);
+    rawEdges.pop_front();
+
+    while (!rawEdges.empty()) {
+        Edge e = rawEdges.front();
+        rawEdges.pop_front();
+
+    // look for new segments
+        if (e.first == firstId) {
+            linearAirway.push_front(e.second);
+            seen.insert(e.second);
+            firstId = e.second;
+            continue;
+        }
+
+        if (e.first == lastId) {
+            linearAirway.push_back(e.second);
+            seen.insert(e.second);
+            lastId = e.second;
+            continue;
+        }
+
+    // look for seen segments - presumed to be reversed internal edges
+        if (seen.find(e.first) != seen.end()) {
+            // if it's the inverse of interior edge, both ends must have been
+            // seen. Otherwise it should have been an exterior edge and
+            // handled by the case above.
+            assert(seen.find(e.second) != seen.end());
+            continue;
+        }
+
+    // push back to try later on
+        rawEdges.push_back(e);
+    }
+
+    return PositionedIDVec(linearAirway.begin(), linearAirway.end());
 }
 
 PositionedID NavDataCache::findNavaidForRunway(PositionedID runway, FGPositioned::Type ty)
 {
   sqlite3_bind_int64(d->findNavaidForRunway, 1, runway);
   sqlite3_bind_int(d->findNavaidForRunway, 2, ty);
-  
+
   PositionedID result = 0;
   if (d->execSelect(d->findNavaidForRunway)) {
     result = sqlite3_column_int64(d->findNavaidForRunway, 0);
   }
-  
+
   d->reset(d->findNavaidForRunway);
   return result;
 }
@@ -1998,7 +2070,7 @@ SGPath NavDataCache::path() const
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Transaction RAII object
-    
+
 NavDataCache::Transaction::Transaction(NavDataCache* cache) :
     _instance(cache),
     _committed(false)
@@ -2106,6 +2178,5 @@ bool NavDataCache::ThreadedGUISearch::isComplete() const
     SGGuard<SGMutex> g(d->lock);
     return d->isComplete;
 }
-    
-} // of namespace flightgear
 
+} // of namespace flightgear
