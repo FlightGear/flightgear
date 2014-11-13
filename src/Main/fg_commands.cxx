@@ -39,6 +39,7 @@
 #include <Viewer/viewmgr.hxx>
 #include <Viewer/viewer.hxx>
 #include <Environment/presets.hxx>
+#include <Navaids/NavDataCache.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -1451,6 +1452,12 @@ do_set_scenery_paths(const SGPropertyNode* arg)
     root.append("Scenery");
     globals->append_fg_scenery(root.str());
   }
+
+    // might need to drop ground-nets from the DB. Also need to drop
+    // them from memory, but this is tricky since FGAirportDynamics holds
+    // an instance directly, and AI code may have pointers to ground-net
+    // nodes. For now we'll leave-in memory versions untouched.
+    flightgear::NavDataCache::instance()->dropGroundnetsIfRequired();
   
   return true;
 }

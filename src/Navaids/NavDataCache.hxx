@@ -64,7 +64,13 @@ public:
    ** global input files is changed.
    */
   bool isRebuildRequired();
-  
+
+    /**
+     * check if cached scenery paths have changed, and if so, drop scenery-
+     * dependant data such as ground-nets.
+     */
+  bool dropGroundnetsIfRequired();
+
   /**
    * run the cache rebuild - returns true if rebuild is complete,
    * otherwise keep going.
