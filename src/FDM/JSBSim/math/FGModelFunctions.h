@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MODELFUNCTIONS "$Id: FGModelFunctions.h,v 1.9 2014/01/02 22:37:48 bcoconni Exp $"
+#define ID_MODELFUNCTIONS "$Id: FGModelFunctions.h,v 1.11 2014/05/30 17:26:42 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -78,7 +78,7 @@ CLASS DOCUMENTATION
 DECLARATION: FGModelFunctions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGModelFunctions : public FGPropertyReader, public FGJSBBase
+class FGModelFunctions : public FGJSBBase
 {
 public:
   virtual ~FGModelFunctions();
@@ -99,9 +99,16 @@ public:
       functions */
   std::string GetFunctionValues(const std::string& delimeter) const;
 
+  /** Get one of the "pre" function
+      @param name the name of the requested function.
+      @return a pointer to the function (NULL if not found)
+   */
+  FGFunction* GetPreFunction(const std::string& name);
+
 protected:
   std::vector <FGFunction*> PreFunctions;
   std::vector <FGFunction*> PostFunctions;
+  FGPropertyReader LocalProperties;
 
   virtual bool InitModel(void);
 };

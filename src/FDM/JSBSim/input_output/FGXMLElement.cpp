@@ -35,6 +35,7 @@ INCLUDES
 
 #include "FGXMLElement.h"
 #include "string_utilities.h"
+#include "FGJSBBase.h"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGXMLElement.cpp,v 1.48 2014/05/17 15:31:17 jberndt Exp $");
+IDENT(IdSrc,"$Id: FGXMLElement.cpp,v 1.52 2014/06/29 10:13:18 bcoconni Exp $");
 IDENT(IdHdr,ID_XMLELEMENT);
 
 bool Element::converterIsInitialized = false;
@@ -242,9 +243,8 @@ Element::Element(const string& nm)
 
 Element::~Element(void)
 {
-  for (unsigned int i=0; i<children.size(); i++) delete children[i];
-  data_lines.clear();
-  attributes.clear();
+  for (unsigned int i = 0; i < children.size(); ++i)
+    children[i]->SetParent(0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -257,11 +257,13 @@ string Element::GetAttributeValue(const string& attr)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool Element::HasAttribute(const string& attr)
+bool Element::SetAttributeValue(const std::string& key, const std::string& value)
 {
-  map<string, string>::iterator found = attributes.find(attr);
+  bool ret = HasAttribute(key);
+  if (ret)
+    attributes[key] = value;
 
-  return found != attributes.end();
+  return ret;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -588,7 +590,7 @@ double Element::DisperseValue(Element *e, double val, const std::string supplied
     if (!supplied_units.empty()) disp *= convert[supplied_units][target_units];
     string attType = e->GetAttributeValue("type");
     if (attType == "gaussian" || attType == "gaussiansigned") {
-      double grn = GaussianRandomNumber();
+      double grn = FGJSBBase::GaussianRandomNumber();
     if (attType == "gaussian") {
       value = val + disp*grn;
       } else { // Assume gaussiansigned
@@ -608,35 +610,6 @@ double Element::DisperseValue(Element *e, double val, const std::string supplied
 
   }
   return value;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-double Element::GaussianRandomNumber(void)
-{
-  static double V1, V2, S;
-  static int phase = 0;
-  double X;
-
-  if (phase == 0) {
-    V1 = V2 = S = X = 0.0;
-
-    do {
-      double U1 = (double)rand() / RAND_MAX;
-      double U2 = (double)rand() / RAND_MAX;
-
-      V1 = 2 * U1 - 1;
-      V2 = 2 * U2 - 1;
-      S = V1 * V1 + V2 * V2;
-    } while(S >= 1 || S == 0);
-
-    X = V1 * sqrt(-2 * log(S) / S);
-  } else
-    X = V2 * sqrt(-2 * log(S) / S);
-
-  phase = 1 - phase;
-
-  return X;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -692,6 +665,25 @@ string Element::ReadFrom(void) const
           << endl;
 
   return message.str();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void Element::MergeAttributes(Element* el)
+{
+  map<string, string>::iterator it;
+
+  for (it=el->attributes.begin(); it != el->attributes.end(); ++it) {
+    if (attributes.find(it->first) == attributes.end())
+      attributes[it->first] = it->second;
+    else {
+      if (FGJSBBase::debug_lvl > 0)
+        cout << el->ReadFrom() << " Attribute '" << it->first << "' is overridden in file "
+             << GetFileName() << ": line " << GetLineNumber() << endl
+             << " The value '" << attributes[it->first] << "' will be used instead of '"
+             << it->second << "'." << endl;
+    }
+  }
 }
 
 } // end namespace JSBSim

@@ -25,6 +25,7 @@ set(HEADERS
     input_output/FGOutputSocket.h
     input_output/FGOutputTextFile.h
     input_output/FGOutputType.h
+    input_output/FGModelLoader.h
     math/FGParameter.h
     math/LagrangeMultiplier.h
     math/FGColumnVector3.h
@@ -119,6 +120,7 @@ set(SOURCES
     input_output/FGOutputSocket.cpp
     input_output/FGOutputTextFile.cpp
     input_output/FGOutputType.cpp
+    input_output/FGModelLoader.cpp
     math/FGColumnVector3.cpp
     math/FGCondition.cpp
     math/FGFunction.cpp

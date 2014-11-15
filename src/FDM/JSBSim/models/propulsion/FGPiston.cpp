@@ -51,7 +51,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGPiston.cpp,v 1.74 2014/01/13 10:46:10 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGPiston.cpp,v 1.77 2014/06/08 12:00:35 bcoconni Exp $");
 IDENT(IdHdr,ID_PISTON);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -59,7 +59,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Inputs& input)
-  : FGEngine(exec, el, engine_number, input),
+  : FGEngine(exec, engine_number, input),
   R_air(287.3),                  // Gas constant for air J/Kg/K
   rho_fuel(800),                 // estimate
   calorific_value_fuel(47.3e6),  // J/Kg
@@ -67,6 +67,8 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
   Cp_fuel(1700),
   standard_pressure(101320.73)
 {
+  Load(exec, el);
+
   Element *table_element;
   string token;
   string name="";
@@ -245,6 +247,10 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
         cerr << "Unknown table type: " << name << " in piston engine definition." << endl;
       }
     } catch (std::string str) {
+      // Make sure allocated resources are freed before rethrowing.
+      // (C++ standard guarantees that a null pointer deletion is no-op).
+      delete Lookup_Combustion_Efficiency;
+      delete Mixture_Efficiency_Correlation;
       throw("Error loading piston engine table:" + name + ". " + str);
     }
   }

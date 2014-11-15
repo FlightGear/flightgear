@@ -50,7 +50,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGElectric.cpp,v 1.16 2014/01/13 10:46:10 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGElectric.cpp,v 1.18 2014/06/08 12:00:35 bcoconni Exp $");
 IDENT(IdHdr,ID_ELECTRIC);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -58,9 +58,11 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FGElectric::FGElectric(FGFDMExec* exec, Element *el, int engine_number, struct FGEngine::Inputs& input)
-  : FGEngine(exec, el, engine_number, input)
+  : FGEngine(exec, engine_number, input)
 {
   string token;
+
+  Load(exec,el);
 
   Type = etElectric;
   PowerWatts = 745.7;

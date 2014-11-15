@@ -57,7 +57,7 @@ using std::max;
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_JSBBASE "$Id: FGJSBBase.h,v 1.39 2014/01/13 10:45:59 ehofman Exp $"
+#define ID_JSBBASE "$Id: FGJSBBase.h,v 1.41 2014/09/03 17:35:04 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -73,7 +73,7 @@ CLASS DOCUMENTATION
 *   This class provides universal constants, utility functions, messaging
 *   functions, and enumerated constants to JSBSim.
     @author Jon S. Berndt
-    @version $Id: FGJSBBase.h,v 1.39 2014/01/13 10:45:59 ehofman Exp $
+    @version $Id: FGJSBBase.h,v 1.41 2014/09/03 17:35:04 bcoconni Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -329,6 +329,8 @@ public:
   
   static double sign(double num) {return num>=0.0?1.0:-1.0;}
 
+  static double GaussianRandomNumber(void);
+
 protected:
   static Message localMsg;
 
@@ -363,7 +365,7 @@ protected:
 
   static std::string CreateIndexedPropertyName(const std::string& Property, int index);
 
-  static double GaussianRandomNumber(void);
+  static int gaussian_random_number_phase;
 
 public:
 /// Moments L, M, N

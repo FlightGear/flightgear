@@ -38,14 +38,14 @@ INCLUDES
 #include <map>
 #include <vector>
 
-#include "FGJSBBase.h"
+#include "simgear/structure/SGSharedPtr.hxx"
 #include "math/FGColumnVector3.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_XMLELEMENT "$Id: FGXMLElement.h,v 1.20 2014/01/13 10:46:02 ehofman Exp $"
+#define ID_XMLELEMENT "$Id: FGXMLElement.h,v 1.24 2014/06/29 10:13:18 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -137,14 +137,17 @@ CLASS DOCUMENTATION
     - GAL = gallon (U.S. liquid) 
 
     @author Jon S. Berndt
-    @version $Id: FGXMLElement.h,v 1.20 2014/01/13 10:46:02 ehofman Exp $
+    @version $Id: FGXMLElement.h,v 1.24 2014/06/29 10:13:18 bcoconni Exp $
 */
+
+class Element;
+typedef SGSharedPtr<Element> Element_ptr;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class Element {
+class Element : public SGReferenced {
 public:
   /** Constructor
       @param nm the name of this element (if given)
@@ -156,13 +159,21 @@ public:
   /** Determines if an element has the supplied attribute.
       @param key specifies the attribute key to retrieve the value of.
       @return true or false. */
-  bool HasAttribute(const std::string& key);
+  bool HasAttribute(const std::string& key) {return attributes.find(key) != attributes.end();}
 
   /** Retrieves an attribute.
       @param key specifies the attribute key to retrieve the value of.
       @return the key value (as a string), or the empty string if no such
               attribute exists. */
   std::string GetAttributeValue(const std::string& key);
+
+  /** Modifies an attribute.
+      @param key specifies the attribute key to modify the value of.
+      @param value new key value (as a string).
+      @return false if it did not find any attribute with the requested key,
+              true otherwise.
+   */
+  bool SetAttributeValue(const std::string& key, const std::string& value);
 
   /** Retrieves an attribute value as a double precision real number.
       @param key specifies the attribute key to retrieve the value of.
@@ -359,11 +370,20 @@ public:
    */
   std::string ReadFrom(void) const;
 
+  /** Merges the attributes of the current element with another element. The
+   *  attributes from the current element override the element that is passed
+   *  as a parameter. In other words if the two elements have an attribute with
+   *  the same name, the attribute from the current element is kept and the
+   *  corresponding attribute of the other element is ignored.
+   *  @param el element with which the current element will merge its attributes.
+   */
+  void MergeAttributes(Element* el);
+
 private:
   std::string name;
   std::map <std::string, std::string> attributes;
   std::vector <std::string> data_lines;
-  std::vector <Element*> children;
+  std::vector <Element_ptr> children;
   Element *parent;
   unsigned int element_index;
   std::string file_name;
@@ -371,7 +391,6 @@ private:
   typedef std::map <std::string, std::map <std::string, double> > tMapConvert;
   static tMapConvert convert;
   static bool converterIsInitialized;
-  double GaussianRandomNumber(void);
 };
 
 } // namespace JSBSim

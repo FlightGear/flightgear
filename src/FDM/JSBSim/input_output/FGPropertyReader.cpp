@@ -45,18 +45,20 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGPropertyReader.cpp,v 1.3 2014/01/13 10:46:00 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGPropertyReader.cpp,v 1.5 2014/06/14 11:58:31 bcoconni Exp $");
 IDENT(IdHdr,ID_PROPERTYREADER);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 bool FGPropertyReader::ResetToIC(void)
 {
-  map<FGPropertyNode_ptr, double>::iterator it = interface_prop_initial_value.begin();
+  map<SGPropertyNode_ptr, double>::iterator it = interface_prop_initial_value.begin();
   for (;it != interface_prop_initial_value.end(); ++it) {
-    FGPropertyNode* node = it->first;
+    SGPropertyNode* node = it->first;
     if (!node->getAttribute(SGPropertyNode::PRESERVE))
       node->setDoubleValue(it->second);
   }
@@ -66,8 +68,7 @@ bool FGPropertyReader::ResetToIC(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropertyReader::LoadProperties(Element* el, FGPropertyManager* PM,
-				      bool override)
+void FGPropertyReader::Load(Element* el, FGPropertyManager* PM, bool override)
 {
   // Interface properties are all stored in the interface properties array.
   string interface_property_string = "";
@@ -83,7 +84,7 @@ void FGPropertyReader::LoadProperties(Element* el, FGPropertyManager* PM,
   }
 
   while (property_element) {
-    FGPropertyNode* node = 0;
+    SGPropertyNode* node = 0;
     double value=0.0;
     if ( ! property_element->GetAttributeValue("value").empty())
       value = property_element->GetAttributeValueAsNumber("value");
@@ -115,12 +116,20 @@ void FGPropertyReader::LoadProperties(Element* el, FGPropertyManager* PM,
 	continue;
       }
     } else {
-      interface_properties.push_back(value);
-      PM->Tie(interface_property_string, &interface_properties.back());
-      if (FGJSBBase::debug_lvl > 0)
-        cout << "      " << interface_property_string << " (initial value: " 
-             << value << ")" << endl << endl;
-      node = PM->GetNode(interface_property_string);
+      node = PM->GetNode(interface_property_string, true);
+      if (node) {
+        node->setDoubleValue(value);
+
+        if (FGJSBBase::debug_lvl > 0)
+          cout << "      " << interface_property_string << " (initial value: " 
+               << value << ")" << endl << endl;
+      }
+      else {
+        cerr << "Could not create property " << interface_property_string
+             << endl;
+        property_element = el->FindNextElement("property");
+        continue;
+      }
     }
     interface_prop_initial_value[node] = value;
     if (property_element->GetAttributeValue("persistent") == string("true"))

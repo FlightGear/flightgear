@@ -38,16 +38,17 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <list>
+#include <vector>
 #include <map>
 
-#include "simgear/structure/SGSharedPtr.hxx"
+#include "simgear/props/props.hxx"
+#include "input_output/FGPropertyManager.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPERTYREADER "$Id: FGPropertyReader.h,v 1.1 2014/01/02 22:37:47 bcoconni Exp $"
+#define ID_PROPERTYREADER "$Id: FGPropertyReader.h,v 1.3 2014/06/14 11:58:31 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -56,8 +57,6 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 class Element;
-class FGPropertyManager;
-class FGPropertyNode;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -70,12 +69,32 @@ CLASS DECLARATION
 class FGPropertyReader
 {
 public:
-  void LoadProperties(Element* el, FGPropertyManager* PropertyManager, bool override);
+  FGPropertyReader() {}; // Needed because the copy constructor is private
+  void Load(Element* el, FGPropertyManager* PropertyManager, bool override);
   bool ResetToIC(void);
 
-protected:
-  std::list<double> interface_properties;
-  std::map<SGSharedPtr<FGPropertyNode>, double> interface_prop_initial_value;
+  class const_iterator
+  {
+  public:
+    const_iterator(void) {}
+    const_iterator(const std::map<SGPropertyNode_ptr, double>::const_iterator &it) : prop_it(it) {}
+    const_iterator& operator++() { ++prop_it; return *this; }
+    bool operator!=(const const_iterator& it) const { return prop_it != it.prop_it; }
+    FGPropertyNode* operator*() {
+      SGPropertyNode* node = prop_it->first;
+      return static_cast<FGPropertyNode*>(node);
+    }
+
+  private:
+    std::map<SGPropertyNode_ptr, double>::const_iterator prop_it;
+  };
+
+  const_iterator begin(void) const { return const_iterator(interface_prop_initial_value.begin()); }
+  const_iterator end(void) const { return const_iterator(interface_prop_initial_value.end()); }
+  bool empty(void) const { return interface_prop_initial_value.empty(); }
+
+private:
+  std::map<SGPropertyNode_ptr, double> interface_prop_initial_value;
 };
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

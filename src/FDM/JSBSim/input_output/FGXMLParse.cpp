@@ -29,25 +29,25 @@
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGXMLParse.h"
-#include "FGXMLElement.h"
 #include <string>
 #include <iostream>
 #include <cstdlib>
+
+#include "FGJSBBase.h"
+#include "FGXMLParse.h"
+#include "FGXMLElement.h"
 #include "input_output/string_utilities.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGXMLParse.cpp,v 1.14 2014/01/13 10:46:03 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGXMLParse.cpp,v 1.16 2014/06/09 11:52:06 bcoconni Exp $");
 IDENT(IdHdr,ID_XMLPARSE);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-#include "FGXMLParse.h"
 
 using namespace std;
 
@@ -55,13 +55,6 @@ FGXMLParse::FGXMLParse(void)
 {
   first_element_read = false;
   current_element = document = 0L;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FGXMLParse::~FGXMLParse(void)
-{
-  delete document;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,7 +67,6 @@ void FGXMLParse::startXML(void)
 
 void FGXMLParse::reset(void)
 {
-  delete document;
   first_element_read = false;
   current_element = document = 0L;
 }

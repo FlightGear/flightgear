@@ -51,7 +51,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGWinds.cpp,v 1.12 2014/02/17 05:02:38 jberndt Exp $");
+IDENT(IdSrc,"$Id: FGWinds.cpp,v 1.14 2014/09/03 17:40:59 bcoconni Exp $");
 IDENT(IdHdr,ID_WINDS);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -87,6 +87,7 @@ FGWinds::FGWinds(FGFDMExec* fdmex) : FGModel(fdmex)
 
   vGustNED.InitMatrix();
   vTurbulenceNED.InitMatrix();
+  vCosineGust.InitMatrix();
 
   // Milspec turbulence model
   windspeed_at_20ft = 0.;
@@ -120,7 +121,18 @@ FGWinds::~FGWinds()
 
 bool FGWinds::InitModel(void)
 {
-  return FGModel::InitModel();
+  if (!FGModel::InitModel()) return false;
+
+  psiw = 0.0;
+
+  vGustNED.InitMatrix();
+  vTurbulenceNED.InitMatrix();
+  vCosineGust.InitMatrix();
+
+  oneMinusCosineGust.gustProfile.Running = false;
+  oneMinusCosineGust.gustProfile.elapsedTime = 0.0;
+
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
