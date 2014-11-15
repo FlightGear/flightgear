@@ -168,11 +168,15 @@ void FGTileMgr::reinit()
       _options->setModelData(new FGNasalModelDataProxy);
   
   
-    // protect against multiple scenery reloads and properly reset flags,
-    // otherwise aircraft fall through the ground while reloading scenery
-    if (!fgGetBool("/sim/sceneryloaded",true))
-        return;
-    fgSetBool("/sim/sceneryloaded",false);
+    if (state != Start)
+    {
+      // protect against multiple scenery reloads and properly reset flags,
+      // otherwise aircraft fall through the ground while reloading scenery
+      if (_scenery_loaded->getBoolValue() == false)
+          return;
+    }
+  
+    _scenery_loaded->setBoolValue(false);
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
     
     materialLibChanged();
