@@ -445,6 +445,7 @@ void fgOSFullScreen()
         // set xsize/ysize properties to adapt GUI planes
         fgSetInt("/sim/startup/xsize", width);
         fgSetInt("/sim/startup/ysize", height);
+        fgSetBool("/sim/startup/fullscreen", !isFullScreen);
 
         // reconfigure window
         window->setWindowDecoration(isFullScreen);
