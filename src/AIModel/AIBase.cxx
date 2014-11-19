@@ -336,7 +336,8 @@ void FGAIBase::updateInterior()
 void FGAIBase::updateLOD()
 {
     double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/ai-detailed", 10000.0);
-    double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/ai-bare", 20000.0);
+//    double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/ai-bare", 20000.0);
+
     _maxRangeInterior     = fgGetDouble("/sim/rendering/static-lod/ai-interior", 50.0);
     if (_model.valid())
     {
@@ -348,8 +349,14 @@ void FGAIBase::updateLOD()
         }
         else
         {
-            _model->setRange(0, 0.0, maxRangeDetail);
-            _model->setRange(1, maxRangeDetail,maxRangeBare);
+            if( fgGetBool("/sim/rendering/static-lod/ai-range-mode-pixel", false ) ) 
+            {
+                _model->setRangeMode( osg::LOD::PIXEL_SIZE_ON_SCREEN );
+                _model->setRange(0, maxRangeDetail, 100000 );
+            } else {
+                _model->setRangeMode( osg::LOD:: DISTANCE_FROM_EYE_POINT);
+                _model->setRange(0, 0.0, maxRangeDetail);
+            }
         }
     }
 }
