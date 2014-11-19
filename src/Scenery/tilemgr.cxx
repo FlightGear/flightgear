@@ -172,8 +172,10 @@ void FGTileMgr::reinit()
     {
       // protect against multiple scenery reloads and properly reset flags,
       // otherwise aircraft fall through the ground while reloading scenery
-      if (_scenery_loaded->getBoolValue() == false)
-          return;
+      if (_scenery_loaded->getBoolValue() == false) {
+        SG_LOG( SG_TERRAIN, SG_INFO, "/sim/sceneryloaded already false, avoiding duplicate re-init of tile manager" );
+        return;
+      }
     }
   
     _scenery_loaded->setBoolValue(false);
