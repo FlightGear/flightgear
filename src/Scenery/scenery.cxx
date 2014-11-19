@@ -437,9 +437,13 @@ bool FGScenery::scenery_available(const SGGeod& position, double range_m)
     // while the splashscreen is there, so CheckSceneryVisitor force-loads
     // missing objects in the main thread
     get_scene_graph()->accept(csnv);
-    if(!csnv.isLoaded())
+    if(!csnv.isLoaded()) {
+        SG_LOG(SG_TERRAIN, SG_DEBUG, "FGScenery::scenery_available: waiting on CheckSceneryVisitor");
         return false;
+    }
     return true;
+  } else {
+    SG_LOG(SG_TERRAIN, SG_DEBUG, "FGScenery::scenery_available: waiting on tile manager");
   }
   return false;
 }

@@ -501,8 +501,10 @@ bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double 
     SGBucket bucket(position);
     available = sched_tile( bucket, priority, false, duration );
   
-    if ((!available)&&(duration==0.0))
+    if ((!available)&&(duration==0.0)) {
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "schedule_scenery: Scheduling tile at bucket:" << bucket << " return false" );
         return false;
+    }
 
     SGVec3d cartPos = SGVec3d::fromGeod(position);
 
