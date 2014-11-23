@@ -26,17 +26,17 @@ using namespace std;
 
 static void propNodeGhostDestroy(void* ghost)
 {
-    SGPropertyNode_ptr* prop = (SGPropertyNode_ptr*)ghost;
-    delete prop;
+  SGPropertyNode* prop = static_cast<SGPropertyNode*>(ghost);
+  if (!SGPropertyNode::put(prop)) delete prop;
 }
 
 naGhostType PropNodeGhostType = { propNodeGhostDestroy, "prop" };
 
-naRef propNodeGhostCreate(naContext c, SGPropertyNode* n)
+naRef propNodeGhostCreate(naContext c, SGPropertyNode* ghost)
 {
-    if(!n) return naNil();
-    SGPropertyNode_ptr* ghost = new SGPropertyNode_ptr(n);
-    return naNewGhost(c, &PropNodeGhostType, ghost);
+  if(!ghost) return naNil();
+  SGPropertyNode::get(ghost);
+  return naNewGhost(c, &PropNodeGhostType, ghost);
 }
 
 naRef FGNasalSys::propNodeGhost(SGPropertyNode* handle)
@@ -49,15 +49,14 @@ SGPropertyNode* ghostToPropNode(naRef ref)
   if (!naIsGhost(ref) || (naGhost_type(ref) != &PropNodeGhostType))
     return NULL;
 
-  SGPropertyNode_ptr* pp = (SGPropertyNode_ptr*) naGhost_ptr(ref);
-  return pp->ptr();
+  return static_cast<SGPropertyNode*>(naGhost_ptr(ref));
 }
 
 #define NASTR(s) s ? naStr_fromdata(naNewString(c),(char*)(s),strlen(s)) : naNil()
 
 //
 // Standard header for the extension functions.  It turns the "ghost"
-// found in arg[0] into a SGPropertyNode_ptr*, and then "unwraps" the
+// found in arg[0] into a SGPropertyNode_ptr, and then "unwraps" the
 // vector found in the second argument into a normal-looking args
 // array.  This allows the Nasal handlers to do things like:
 //   Node.getChild = func { _getChild(me.ghost, arg) }
@@ -66,7 +65,7 @@ SGPropertyNode* ghostToPropNode(naRef ref)
     if(argc < 2 || !naIsGhost(args[0]) ||                                      \
         naGhost_type(args[0]) != &PropNodeGhostType)                           \
         naRuntimeError(c, "bad argument to props function");                   \
-    SGPropertyNode_ptr node = *(SGPropertyNode_ptr*)naGhost_ptr(args[0]);
+    SGPropertyNode_ptr node = static_cast<SGPropertyNode*>(naGhost_ptr(args[0]));
 
 #define NODEARG()                                                              \
     NODENOARG();                                                               \
@@ -231,8 +230,8 @@ static naRef f_equals(naContext c, naRef me, int argc, naRef* args)
     if( !naIsGhost(rhs) || naGhost_type(rhs) != &PropNodeGhostType )
       return naNum(false);
 
-    SGPropertyNode_ptr node_rhs = *(SGPropertyNode_ptr*)naGhost_ptr(rhs);
-    return naNum(node == node_rhs);
+    SGPropertyNode* node_rhs = static_cast<SGPropertyNode*>(naGhost_ptr(rhs));
+    return naNum(node.ptr() == node_rhs);
 }
 
 template<typename T>
@@ -535,7 +534,7 @@ static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
     naRef child = naVec_get(argv, 0);
     naRef index = naVec_get(argv, 1);
     if(!naIsString(child) || !naIsNum(index)) return naNil();
-    SGPropertyNode_ptr n = 0;
+    SGPropertyNode_ptr n;
     try {
         n = node->removeChild(naStr_data(child), (int)index.num);
     } catch (const string& err) {
@@ -598,7 +597,7 @@ static naRef f_alias(naContext c, naRef me, int argc, naRef* args)
     naRef prop = naVec_get(argv, 0);
     try {
         if(naIsString(prop)) al = globals->get_props()->getNode(naStr_data(prop), true);
-        else if(naIsGhost(prop)) al = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
+        else if(naIsGhost(prop)) al = static_cast<SGPropertyNode*>(naGhost_ptr(prop));
         else throw string("props.alias() with bad argument");
     } catch (const string& err) {
         naRuntimeError(c, (char *)err.c_str());

@@ -458,14 +458,13 @@ static naRef f_fgcommand(naContext c, naRef me, int argc, naRef* args)
     naRef props = argc > 1 ? args[1] : naNil();
     if(!naIsString(cmd) || (!naIsNil(props) && !naIsGhost(props)))
         naRuntimeError(c, "bad arguments to fgcommand()");
-    SGPropertyNode_ptr tmp, *node;
+    SGPropertyNode_ptr node;
     if(!naIsNil(props))
-        node = (SGPropertyNode_ptr*)naGhost_ptr(props);
-    else {
-        tmp = new SGPropertyNode();
-        node = &tmp;
-    }
-    return naNum(globals->get_commands()->execute(naStr_data(cmd), *node));
+        node = static_cast<SGPropertyNode*>(naGhost_ptr(props));
+    else
+        node = new SGPropertyNode;
+
+    return naNum(globals->get_commands()->execute(naStr_data(cmd), node));
 }
 
 // settimer(func, dt, simtime) extension function.  Falls through to
@@ -516,7 +515,7 @@ static naRef f_cmdarg(naContext c, naRef me, int argc, naRef* args)
 }
 
 // Sets up a property interpolation.  The first argument is either a
-// ghost (SGPropertyNode_ptr*) or a string (global property path) to
+// ghost (SGPropertyNode*) or a string (global property path) to
 // interpolate.  The second argument is a vector of pairs of
 // value/delta numbers.
 static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
@@ -524,7 +523,7 @@ static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
   SGPropertyNode* node;
   naRef prop = argc > 0 ? args[0] : naNil();
   if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
-  else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
+  else if(naIsGhost(prop)) node = static_cast<SGPropertyNode*>(naGhost_ptr(prop));
   else return naNil();
 
   naRef curve = argc > 1 ? args[1] : naNil();
@@ -1341,7 +1340,7 @@ int FGNasalSys::_listenerId = 0;
 
 // setlistener(<property>, <func> [, <initial=0> [, <persistent=1>]])
 // Attaches a callback function to a property (specified as a global
-// property path string or a SGPropertyNode_ptr* ghost). If the third,
+// property path string or a SGPropertyNode* ghost). If the third,
 // optional argument (default=0) is set to 1, then the function is also
 // called initially. If the fourth, optional argument is set to 0, then the
 // function is only called when the property node value actually changes.
@@ -1354,7 +1353,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
     SGPropertyNode_ptr node;
     naRef prop = argc > 0 ? args[0] : naNil();
     if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
-    else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
+    else if(naIsGhost(prop)) node = static_cast<SGPropertyNode*>(naGhost_ptr(prop));
     else {
         naRuntimeError(c, "setlistener() with invalid property argument");
         return naNil();
