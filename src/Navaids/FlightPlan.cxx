@@ -358,6 +358,17 @@ int FlightPlan::findWayptIndex(const SGGeod& aPos) const
   
   return -1;
 }
+  
+int FlightPlan::findWayptIndex(const FGPositionedRef aPos) const
+{
+  for (int i=0; i<numLegs(); ++i) {
+    if (_legs[i]->waypoint()->source() == aPos) {
+      return i;
+    }
+  }
+  
+  return -1;
+}
 
 FlightPlan::Leg* FlightPlan::currentLeg() const
 {

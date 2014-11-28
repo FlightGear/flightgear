@@ -2213,6 +2213,27 @@ static naRef f_flightplan_finish(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
+static naRef f_flightplan_indexOfWp(naContext c, naRef me, int argc, naRef* args)
+{
+  FlightPlan* fp = flightplanGhost(me);
+  if (!fp) {
+    naRuntimeError(c, "flightplan.indexOfWP called on non-flightplan object");
+  }
+  
+  FGPositioned* positioned = positionedGhost(args[0]);
+  if (positioned) {
+    return naNum(fp->findWayptIndex(positioned));
+  }
+  
+  SGGeod pos;
+  int argOffset = geodFromArgs(args, 0, argc, pos);
+  if (argOffset > 0) {
+    return naNum(fp->findWayptIndex(pos));
+  }
+
+  return naNum(-1);
+}
+
 static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
 {
   FlightPlan::Leg* leg = fpLegGhost(me);
@@ -2479,6 +2500,7 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, flightplanPrototype, "clone", naNewFunc(c, naNewCCode(c, f_flightplan_clone))); 
     hashset(c, flightplanPrototype, "pathGeod", naNewFunc(c, naNewCCode(c, f_flightplan_pathGeod)));
     hashset(c, flightplanPrototype, "finish", naNewFunc(c, naNewCCode(c, f_flightplan_finish)));
+    hashset(c, flightplanPrototype, "indexOfWP", naNewFunc(c, naNewCCode(c, f_flightplan_indexOfWp)));
     
     waypointPrototype = naNewHash(c);
     naSave(c, waypointPrototype);

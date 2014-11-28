@@ -152,6 +152,7 @@ public:
   int findLegIndex(const Leg* l) const;
   
   int findWayptIndex(const SGGeod& aPos) const;
+  int findWayptIndex(const FGPositionedRef aPos) const;
   
   bool load(const SGPath& p);
   bool save(const SGPath& p);
