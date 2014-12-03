@@ -492,6 +492,12 @@ void FGTrafficManager::init()
       return;
     }
 
+    // TorstenD: don't start the traffic manager before the FDM is initialized
+    // The FDM needs the scenery loaded and will wait for our spawned AIModels PagedLOD Nodes 
+    // to appear if they are close (less than 1000m) to our position
+    if( !fgGetBool("/sim/signals/fdm-initialized") )
+      return;
+
     assert(!doingInit);
     simgear::SGTerraSync* terraSync = static_cast<simgear::SGTerraSync*>(globals->get_subsystem("terrasync"));
     bool doDataSync = fgGetBool("/sim/terrasync/ai-data-enabled");
