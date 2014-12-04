@@ -171,28 +171,28 @@ FGLocale::selectLanguage(const char *language)
     }
 
     
-    SGPropertyNode *locale = NULL;
+    _currentLocale = NULL;
     BOOST_FOREACH(string lang, languages) {
-        locale = findLocaleNode(lang);
-        if (locale) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "trying to find locale for " << lang );
+        _currentLocale = findLocaleNode(lang);
+        if (_currentLocale) {
+            SG_LOG(SG_GENERAL, SG_DEBUG, "found locale for " << lang << " at " << _currentLocale->getPath() );
             break;
         }
     }
     
-    if (!locale)
-    {
-       SG_LOG(SG_GENERAL, SG_ALERT,
-              "No internationalization settings specified in preferences.xml" );
-       return false;
-    }
-
-    _currentLocale = locale;
-
     // load resource for system messages (translations for fgfs internal messages)
     loadResource("sys");
 
     // load resource for atc messages
     loadResource("atc");
+
+    if (!_currentLocale)
+    {
+       SG_LOG(SG_GENERAL, SG_ALERT,
+              "System locale not found or no internationalization settings specified in preferences.xml. Using default (en)." );
+       return false;
+    }
 
     return true;
 }
