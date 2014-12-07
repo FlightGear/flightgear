@@ -52,6 +52,7 @@ private:
   std::string _transIdent;
   double _longitude, _latitude, _altitude, _speed;
   RouteRestriction _altRestrict;
+  bool _overflightWaypt;
   
   double _holdRadial; // inbound hold radial, or -1 if radial is 'inbound'
   double _holdTD; ///< hold time (seconds) or distance (nm), based on flag below

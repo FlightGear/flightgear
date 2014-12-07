@@ -69,6 +69,7 @@ void NavdataVisitor::startElement(const char* name, const XMLAttributes &atts)
     _speed = 0.0;
     _altRestrict = RESTRICT_NONE;
     _altitude = 0.0;
+    _overflightWaypt = false; // default to Fly-by
   } else if (tag == "Approach") {
     _ident = atts.getValue("Name");
     _waypoints.clear();
@@ -86,7 +87,7 @@ void NavdataVisitor::startElement(const char* name, const XMLAttributes &atts)
     _transition = new Transition(_transIdent, PROCEDURE_RUNWAY_TRANSITION, _procedure);
     _transWaypts.clear();
   } else {
-    
+    // nothing here, we warn on unrecognized in endElement
   }
 }
 
@@ -199,8 +200,11 @@ void NavdataVisitor::endElement(const char* name)
     _dmeDistance = atof(_text.c_str());
   } else if (tag == "RadialtoIntercept") {
     _radial = atof(_text.c_str());
+  } else if (tag == "Flytype") {
+    // values are 'Fly-by' and 'Fly-over'
+    _overflightWaypt = (_text == "Fly-over");
   } else {
-    
+    SG_LOG(SG_IO, SG_INFO, "unrecognized Level-D XML element:" << tag);
   }
 }
 
@@ -261,6 +265,10 @@ Waypt* NavdataVisitor::buildWaypoint(RouteBase* owner)
   
   if (_speed > 0.0) {
     wp->setSpeed(_speed, RESTRICT_AT); // or _BELOW?
+  }
+  
+  if (_overflightWaypt) {
+    wp->setFlag(WPT_OVERFLIGHT);
   }
   
   return wp;
