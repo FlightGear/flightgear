@@ -139,18 +139,6 @@ double Waypt::speedMach() const
   assert(_speedRestrict == SPEED_RESTRICT_MACH);
   return speed();
 }
-  
-std::pair<double, double>
-Waypt::courseAndDistanceFrom(const SGGeod& aPos) const
-{
-  if (flag(WPT_DYNAMIC)) {
-    return std::make_pair(0.0, 0.0);
-  }
-  
-  double course, az2, distance;
-  SGGeodesy::inverse(aPos, position(), course, az2, distance);
-  return std::make_pair(course, distance);
-}
 
 double Waypt::magvarDeg() const
 {

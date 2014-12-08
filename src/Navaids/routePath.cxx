@@ -210,18 +210,6 @@ SGGeodVec RoutePath::pathForHold(Hold* hold) const
   return r;
 }
 
-/**
- * the path context holds the state of of an imaginary aircraft traversing
- * the route, and limits the rate at which heading / altitude / position can
- * change
- */
-class RoutePath::PathCtx
-{
-public:
-  SGGeod pos;
-  double heading;
-};
-
 bool RoutePath::computedPositionForIndex(int index, SGGeod& r) const
 {
   if ((index < 0) || (index >= (int) _waypts.size())) {
@@ -300,7 +288,21 @@ bool RoutePath::computedPositionForIndex(int index, SGGeod& r) const
     SGGeodesy::direct(prevPos, hdg, d * SG_NM_TO_METER, r, az2);
     return true;
   } else if (w->type() == "vectors"){
-    return false;
+    // return position of next point (which is presumably static fix/wpt)
+    // however, a missed approach might end with VECTORS, so tolerate that case
+    if (index + 1 >= _waypts.size()) {
+      SG_LOG(SG_NAVAID, SG_INFO, "route ends with VECTORS, no position");
+      return false;
+    }
+    
+    WayptRef nextWp = _waypts[index+1];
+    if (nextWp->flag(WPT_DYNAMIC)) {
+      SG_LOG(SG_NAVAID, SG_INFO, "dynamic WP following VECTORS, no position");
+      return false;
+    }
+    
+    r = nextWp->position();
+    return true;
   } else if (w->type() == "hold") {
     r = w->position();
     return true;
@@ -308,6 +310,39 @@ bool RoutePath::computedPositionForIndex(int index, SGGeod& r) const
   
   SG_LOG(SG_NAVAID, SG_INFO, "RoutePath::computedPositionForIndex: unhandled type:" << w->type());
   return false;
+}
+
+double RoutePath::computeDistanceForIndex(int index) const
+{
+  if ((index < 0) || (index >= (int) _waypts.size())) {
+    throw sg_range_exception("waypt index out of range",
+                             "RoutePath::computeDistanceForIndex");
+  }
+  
+  if (index + 1 >= (int) _waypts.size()) {
+    // final waypoint, distance is 0
+    return 0.0;
+  }
+  
+  WayptRef w = _waypts[index],
+    nextWp = _waypts[index+1];
+  
+  // common case, both waypoints are static
+  if (!w->flag(WPT_DYNAMIC) && !nextWp->flag(WPT_DYNAMIC)) {
+    return SGGeodesy::distanceM(w->position(), nextWp->position());
+  }
+  
+  
+  SGGeod wPos, nextPos;
+  bool ok = computedPositionForIndex(index, wPos),
+    nextOk = computedPositionForIndex(index + 1, nextPos);
+  if (ok && nextOk) {
+    return SGGeodesy::distanceM(wPos, nextPos);
+  }
+  
+  SG_LOG(SG_NAVAID, SG_INFO, "RoutePath::computeDistanceForIndex: unhandled arrangement:"
+         << w->type() << " followed by " << nextWp->type());
+  return 0.0;
 }
 
 double RoutePath::computeAltitudeForIndex(int index) const
@@ -382,17 +417,21 @@ double RoutePath::computeTrackForIndex(int index) const
     return rwy->headingDeg();
   }
   
-// course based upon previous and current pos
-  SGGeod pos, prevPos;
+// final waypoint, use inbound course
+  if (index + 1 >= _waypts.size()) {
+    return computeTrackForIndex(index - 1);
+  }
   
+// course based upon current and next pos
+  SGGeod pos, nextPos;
   if (!computedPositionForIndex(index, pos) ||
-      !computedPositionForIndex(index - 1, prevPos))
+      !computedPositionForIndex(index + 1, nextPos))
   {
     SG_LOG(SG_NAVAID, SG_WARN, "unable to compute position for waypoints");
     throw sg_range_exception("unable to compute position for waypoints");
   }
 
-  return SGGeodesy::courseDeg(prevPos, pos);
+  return SGGeodesy::courseDeg(pos, nextPos);
 }
 
 double RoutePath::distanceForClimb(double climbFt) const
@@ -412,4 +451,3 @@ double RoutePath::magVarFor(const SGGeod& geod) const
   double jd = globals->get_time_params()->getJD();
   return sgGetMagVar(geod, jd) * SG_RADIANS_TO_DEGREES;
 }
-

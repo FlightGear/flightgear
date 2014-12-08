@@ -2299,11 +2299,12 @@ static naRef f_leg_courseAndDistanceFrom(naContext c, naRef me, int argc, naRef*
     
     SGGeod pos;
     geodFromArgs(args, 0, argc, pos);
-    
-    double courseDeg;
-    double distanceM;
-    boost::tie(courseDeg, distanceM) = leg->waypoint()->courseAndDistanceFrom(pos);
-    
+  
+    RoutePath path(leg->owner());
+    SGGeod wpPos = path.positionForIndex(leg->index());
+    double courseDeg, az2, distanceM;
+    SGGeodesy::inverse(pos, wpPos, courseDeg, az2, distanceM);
+  
     naRef result = naNewVector(c);
     naVec_append(result, naNum(courseDeg));
     naVec_append(result, naNum(distanceM * SG_METER_TO_NM));

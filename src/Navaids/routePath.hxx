@@ -44,6 +44,9 @@ public:
   
   SGGeod positionForIndex(int index) const;
   
+  double computeDistanceForIndex(int index) const;
+  double computeTrackForIndex(int index) const;
+
 private:
   void commonInit();
   
@@ -53,7 +56,6 @@ private:
   
   bool computedPositionForIndex(int index, SGGeod& pos) const;
   double computeAltitudeForIndex(int index) const;
-  double computeTrackForIndex(int index) const;
   
   void interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, SGGeodVec& r) const;
   

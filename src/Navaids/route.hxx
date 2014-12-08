@@ -98,13 +98,7 @@ public:
   
 	RouteBase* owner() const 
 		{ return _owner; }
-  
-  /**
-   * Return true course (in degrees) and distance (in metres) from the provided
-   * position to this waypoint
-   */
-  virtual std::pair<double, double> courseAndDistanceFrom(const SGGeod& aPos) const;
-                  	
+         	
 	virtual SGGeod position() const = 0;
 	
 	/**

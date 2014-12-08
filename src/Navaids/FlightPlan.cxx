@@ -49,6 +49,7 @@
 #include "Main/fg_props.hxx"
 #include <Navaids/procedure.hxx>
 #include <Navaids/waypoint.hxx>
+#include <Navaids/routePath.hxx>
 
 using std::string;
 using std::vector;
@@ -1186,17 +1187,21 @@ double FlightPlan::Leg::distanceAlongRoute() const
 void FlightPlan::rebuildLegData()
 {
   _totalDistance = 0.0;
+  double totalDistanceIncludingMissed = 0.0;
+  RoutePath path(this);
+  
   int lastLeg = static_cast<int>(_legs.size()) - 1;
   for (int l=0; l<lastLeg; ++l) {
-    Leg* cur = _legs[l];
-    Leg* next = _legs[l + 1];
+    _legs[l]->_courseDeg = path.computeTrackForIndex(l);
+    _legs[l]->_pathDistance = path.computeDistanceForIndex(l) * SG_METER_TO_NM;
+    _legs[l]->_distanceAlongPath = totalDistanceIncludingMissed;
     
-    std::pair<double, double> crsDist =
-      next->waypoint()->courseAndDistanceFrom(cur->waypoint()->position());
-    _legs[l]->_courseDeg = crsDist.first;
-    _legs[l]->_pathDistance = crsDist.second * SG_METER_TO_NM;
-    _legs[l]->_distanceAlongPath = _totalDistance;
-    _totalDistance += crsDist.second * SG_METER_TO_NM;
+    // omit misseed-approach waypoints from total distance calculation
+    if (!_legs[l]->waypoint()->flag(WPT_MISS)) {
+      _totalDistance += _legs[l]->_pathDistance;
+    }
+    
+    totalDistanceIncludingMissed += _legs[l]->_pathDistance;
   } // of legs iteration
   
 // set some data on the final leg
@@ -1205,7 +1210,7 @@ void FlightPlan::rebuildLegData()
     // waypoint
     _legs[lastLeg]->_courseDeg = _legs[lastLeg - 1]->_courseDeg;
     _legs[lastLeg]->_pathDistance = 0.0;
-    _legs[lastLeg]->_distanceAlongPath = _totalDistance;
+    _legs[lastLeg]->_distanceAlongPath = totalDistanceIncludingMissed;
   }
 }
   

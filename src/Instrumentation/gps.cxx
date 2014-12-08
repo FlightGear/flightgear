@@ -23,6 +23,8 @@
 #include <Navaids/waypoint.hxx>
 #include "Navaids/navrecord.hxx"
 #include "Navaids/FlightPlan.hxx"
+#include <Navaids/routePath.hxx>
+
 #include "Airports/airport.hxx"
 #include "Airports/runways.hxx"
 #include "Autopilot/route_mgr.hxx"
@@ -723,16 +725,18 @@ void GPS::computeTurnData()
   }
   
   WayptRef next = _route->nextLeg()->waypoint();
-  if (next->flag(WPT_DYNAMIC) || !_config.turnAnticipationEnabled()) {
+  if (next->flag(WPT_DYNAMIC) ||
+      !_config.turnAnticipationEnabled() ||
+      next->flag(WPT_OVERFLIGHT))
+  {
     _anticipateTurn = false;
     return;
   }
   
   _turnStartBearing = _desiredCourse;
 // compute next leg course
-  double crs, dist;
-  boost::tie(crs, dist) = next->courseAndDistanceFrom(_currentWaypt->position());
-    
+  RoutePath path(_route);
+  double crs = path.computeTrackForIndex(_route->currentIndex() + 1);
 
 // compute offset bearing
   _turnAngle = crs - _turnStartBearing;
@@ -795,9 +799,14 @@ void GPS::updateRouteData()
 {
   double totalDistance = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
   // walk all waypoints from wp2 to route end, and sum
- // for (int i=_routeMgr->currentIndex()+1; i<_routeMgr->numWaypts(); ++i) {
-    //totalDistance += _routeMgr->get_waypoint(i).get_distance();
-  //}
+  for (int i=_route->currentIndex()+1; i<_route->numLegs(); ++i) {
+    FlightPlan::Leg* leg = _route->legAtIndex(i);
+    // omit missed-approach waypoints in distance calculation
+    if (leg->waypoint()->flag(WPT_MISS))
+      continue;
+      
+    totalDistance += leg->distanceAlongRoute();
+  }
   
   _routeDistanceNm->setDoubleValue(totalDistance * SG_METER_TO_NM);
   if (_last_speed_kts > 1.0) {

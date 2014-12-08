@@ -15,9 +15,11 @@
 // forward decls
 class puaScrollBar;
 class SGCallback;
+class RoutePath;
 
 namespace flightgear {
   class Waypt;
+  class FlightPlan;
 }
 
 class WaypointList : public puFrame, public GUI_ID
@@ -76,6 +78,8 @@ public:
     virtual int currentWaypoint() const = 0;
     virtual flightgear::Waypt* waypointAt(unsigned int index) const = 0;
   
+    virtual flightgear::FlightPlan* flightplan() const = 0;
+    
   // update notifications
     virtual void setUpdateCallback(SGCallback* cb) = 0;
   
@@ -90,7 +94,7 @@ public:
 protected:
 
 private:
-  void drawRow(int dx, int dy, int rowIndex, int yOrigin);
+  void drawRow(int dx, int dy, int rowIndex, int yOrigin, const RoutePath& path);
 
   void handleDrag(int x, int y);
   void doDrop(int x, int y);

@@ -51,6 +51,8 @@
 #include "Navaids/positioned.hxx"
 #include <Navaids/waypoint.hxx>
 #include <Navaids/procedure.hxx>
+#include <Navaids/routePath.hxx>
+
 #include "Airports/airport.hxx"
 #include "Airports/runways.hxx"
 #include <GUI/new_gui.hxx>
@@ -482,11 +484,13 @@ void FGRouteMgr::update( double dt )
     return;
   }
   
-  double courseDeg;
-  double distanceM;
-  boost::tie(courseDeg, distanceM) = leg->waypoint()->courseAndDistanceFrom(currentPos);
-  
-// update wp0 / wp1 / wp-last
+  // use RoutePath to compute location of active WP
+  RoutePath path(_plan);
+  SGGeod wpPos = path.positionForIndex(_plan->currentIndex());
+  double courseDeg, az2, distanceM;
+  SGGeodesy::inverse(currentPos, wpPos, courseDeg, az2, distanceM);
+
+  // update wp0 / wp1 / wp-last
   wp0->setDoubleValue("dist", distanceM * SG_METER_TO_NM);
   wp0->setDoubleValue("true-bearing-deg", courseDeg);
   courseDeg -= magvar->getDoubleValue(); // expose magnetic bearing
@@ -507,8 +511,9 @@ void FGRouteMgr::update( double dt )
   
   FlightPlan::Leg* nextLeg = _plan->nextLeg();
   if (nextLeg) {
-    boost::tie(courseDeg, distanceM) = nextLeg->waypoint()->courseAndDistanceFrom(currentPos);
-     
+    wpPos = path.positionForIndex(_plan->currentIndex() + 1);
+    SGGeodesy::inverse(currentPos, wpPos, courseDeg, az2, distanceM);
+
     wp1->setDoubleValue("dist", distanceM * SG_METER_TO_NM);
     wp1->setDoubleValue("true-bearing-deg", courseDeg);
     courseDeg -= magvar->getDoubleValue(); // expose magnetic bearing

@@ -18,6 +18,7 @@
 #include <Main/fg_props.hxx>
 
 #include <Navaids/positioned.hxx>
+#include <Navaids/routePath.hxx>
 #include <Autopilot/route_mgr.hxx>
 
 // select if the widget grabs keys necessary to fly aircraft from the keyboard,
@@ -78,6 +79,11 @@ public:
     return _fp->legAtIndex(index)->waypoint();
   }
 
+  virtual flightgear::FlightPlan* flightplan() const
+  {
+    return _fp;
+  }
+  
   virtual void deleteAt(unsigned int index)
   {
     _fp->deleteIndex(index);
@@ -372,8 +378,11 @@ void WaypointList::draw( int dx, int dy )
   y -= (_scrollPx % rowHeight); // partially draw the first row
   
   _arrowWidth = legendFont.getStringWidth(">");
+  
+  RoutePath path(_model->flightplan());
+  
   for ( ; row <= final; ++row, y += rowHeight) {
-    drawRow(dx, dy, row, y);
+    drawRow(dx, dy, row, y, path);
   } // of row drawing iteration
   
   glDisable(GL_SCISSOR_TEST);
@@ -392,7 +401,8 @@ void WaypointList::draw( int dx, int dy )
   }
 }
 
-void WaypointList::drawRow(int dx, int dy, int rowIndex, int y)
+void WaypointList::drawRow(int dx, int dy, int rowIndex, int y,
+                           const RoutePath& path)
 {
   flightgear::Waypt* wp(_model->waypointAt(rowIndex));
     
@@ -459,18 +469,20 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y)
   x += 300 + PUSTR_LGAP;
   
   if (_showLatLon) {
-    SGGeod p(wp->position());
-    char ns = (p.getLatitudeDeg() > 0.0) ? 'N' : 'S';
-    char ew = (p.getLongitudeDeg() > 0.0) ? 'E' : 'W';
-    
-    ::snprintf(buffer, 128 - count, "%4.2f%c %4.2f%c",
-      fabs(p.getLongitudeDeg()), ew, fabs(p.getLatitudeDeg()), ns);
+    // only show for non-dynamic waypoints
+    if (!wp->flag(WPT_DYNAMIC)) {
+      SGGeod p(wp->position());
+      char ns = (p.getLatitudeDeg() > 0.0) ? 'N' : 'S';
+      char ew = (p.getLongitudeDeg() > 0.0) ? 'E' : 'W';
+      
+      ::snprintf(buffer, 128 - count, "%4.2f%c %4.2f%c",
+        fabs(p.getLongitudeDeg()), ew, fabs(p.getLatitudeDeg()), ns);
+    } else {
+      buffer[0] = 0;
+    }
   } else if (rowIndex > 0) {
-    double courseDeg;
-    double distanceM;
-    Waypt* prev = _model->waypointAt(rowIndex - 1);
-    boost::tie(courseDeg, distanceM) = wp->courseAndDistanceFrom(prev->position());
-  
+    double courseDeg = path.computeTrackForIndex(rowIndex);
+    double distanceM = path.computeDistanceForIndex(rowIndex);
     ::snprintf(buffer, 128 - count, "%03.0f %5.1fnm",
       courseDeg, distanceM * SG_METER_TO_NM);
   }
