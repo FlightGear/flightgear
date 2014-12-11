@@ -261,11 +261,11 @@ void NavRadioComponent::search( double frequency, const SGGeod & aircraftPositio
 {
   _navRecord = FGNavList::findByFreq(frequency, aircraftPosition, getNavaidFilter() );
   if( NULL == _navRecord ) {
-    SG_LOG(SG_INSTR,SG_ALERT, "No " << _name << " available at " << frequency );
+    SG_LOG(SG_INSTR,SG_DEBUG, "No " << _name << " available at " << frequency );
     _ident = "";
     return;
   }
-  SG_LOG(SG_INSTR,SG_ALERT, "Using " << _name << "'" << _navRecord->get_ident() << "' for " << frequency );
+  SG_LOG(SG_INSTR,SG_INFO, "Using " << _name << "'" << _navRecord->get_ident() << "' for " << frequency );
   _ident = _navRecord->ident();
 }
 
