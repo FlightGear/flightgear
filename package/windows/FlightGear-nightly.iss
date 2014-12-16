@@ -225,6 +225,20 @@ Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\fgrun.e
 Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\fgfs.exe"; ValueType: string; ValueName: ""; ValueData: "{app}\bin\fgfs.exe"; Flags: uninsdeletekey
 
 [Code]
+const
+  NET_FW_SCOPE_ALL = 0;
+  NET_FW_IP_VERSION_ANY = 2;
+  NET_FW_ACTION_ALLOW = 1;
+  NET_FW_RULE_DIR_ALL = 0;
+  NET_FW_RULE_DIR_IN = 1;
+  NET_FW_RULE_DIR_OUT = 2;
+  NET_FW_IP_PROTOCOL_ALL = 0;
+  NET_FW_IP_PROTOCOL_TCP = 6;
+  NET_FW_IP_PROTOCOL_UDP = 17;
+  NET_FW_PROFILE2_DOMAIN = 1;
+  NET_FW_PROFILE2_PRIVATE = 2;
+  NET_FW_PROFILE2_PUBLIC = 4;
+
 procedure URLLabelOnClick(Sender: TObject);
 var
   ErrorCode: Integer;
@@ -260,3 +274,109 @@ begin
   Result := S;
 end;
 
+procedure AddBasicFirewallException(AppName, FileName: String);
+var
+  FirewallObject: variant;
+  RuleObject: variant;
+begin
+  try
+    FirewallObject := CreateOleObject('HNetCfg.FwMgr');
+    RuleObject := CreateOleObject('HNetCfg.FwAuthorizedApplication');
+    RuleObject.ProcessImageFileName := FileName;
+    RuleObject.Name := AppName;
+    RuleObject.Scope := NET_FW_SCOPE_ALL;
+    RuleObject.IpVersion := NET_FW_IP_VERSION_ANY;
+    RuleObject.Enabled := true;
+    FirewallObject.LocalPolicy.CurrentProfile.AuthorizedApplications.Add(RuleObject);
+  except
+  end;
+end;
+
+procedure AddAdvancedFirewallException(AppName, AppDescription, FileName: String; Protocol: Integer; LocalPorts, RemotePorts: String; Direction: Integer);
+var
+  FirewallObject: variant;
+  RuleObject: variant;
+begin
+  try
+    FirewallObject := CreateOleObject('HNetCfg.FwPolicy2');
+    RuleObject := CreateOleObject('HNetCfg.FWRule');
+    RuleObject.Name := AppName;
+    RuleObject.Description := AppDescription;
+    RuleObject.ApplicationName := FileName;
+    if (Protocol <> NET_FW_IP_PROTOCOL_ALL) then
+      RuleObject.Protocol := Protocol;
+    if (LocalPorts <> '') then
+      RuleObject.LocalPorts := LocalPorts;
+    if (RemotePorts <> '') then
+      RuleObject.RemotePorts := RemotePorts;
+    if (Direction <> NET_FW_RULE_DIR_ALL) then
+      RuleObject.Direction := Direction;
+    RuleObject.Enabled := true;
+    RuleObject.Grouping := 'FlightGear';
+    RuleObject.Profiles := NET_FW_PROFILE2_DOMAIN + NET_FW_PROFILE2_PRIVATE + NET_FW_PROFILE2_PUBLIC;
+    RuleObject.Action := NET_FW_ACTION_ALLOW;
+    RuleObject.RemoteAddresses := '*';
+    FirewallObject.Rules.Add(RuleObject);
+  except
+  end;
+end;
+
+procedure RemoveFirewallException(AppName, FileName: String);
+var
+  FirewallObject: variant;
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  try
+    if (Version.Major >= 6) then
+      begin
+        FirewallObject := CreateOleObject('HNetCfg.FwPolicy2');
+        FirewallObject.Rules.Remove(AppName);
+      end
+    else if (Version.Major = 5) and (((Version.Minor = 1) and (Version.ServicePackMajor >= 2)) or ((Version.Minor = 2) and (Version.ServicePackMajor >= 1))) then
+      begin
+        FirewallObject := CreateOleObject('HNetCfg.FwMgr');
+        FirewallObject.LocalPolicy.CurrentProfile.AuthorizedApplications.Remove(FileName);
+      end;
+  except
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  Version: TWindowsVersion;
+begin
+  if CurStep = ssPostInstall then
+    begin
+      GetWindowsVersionEx(Version);
+      if (Version.Major >= 6) then
+        begin
+          { IN and OUT rules must be specified separately, otherwise the firewall will create only the IN rule }
+          AddAdvancedFirewallException('FlightGear', 'Allows FlightGear to send and receive data over the multiplayer network and to get METARs.', ExpandConstant('{app}') + '\bin\fgfs.exe', NET_FW_IP_PROTOCOL_ALL, '', '', NET_FW_RULE_DIR_IN);
+          AddAdvancedFirewallException('FlightGear', 'Allows FlightGear to send and receive data over the multiplayer network and to get METARs.', ExpandConstant('{app}') + '\bin\fgfs.exe', NET_FW_IP_PROTOCOL_ALL, '', '', NET_FW_RULE_DIR_OUT);
+          AddAdvancedFirewallException('FlightGear METAR Utility', 'Allows the FlightGear METAR utility to receive METARs.', ExpandConstant('{app}') + '\bin\metar.exe', NET_FW_IP_PROTOCOL_TCP, '', '80', NET_FW_RULE_DIR_OUT);
+          AddAdvancedFirewallException('FlightGear TerraSync', 'Allows TerraSync to download additional scenery while FlightGear is running.', ExpandConstant('{app}') + '\bin\terrasync.exe', NET_FW_IP_PROTOCOL_ALL, '', '', NET_FW_RULE_DIR_IN);
+          AddAdvancedFirewallException('FlightGear TerraSync', 'Allows TerraSync to download additional scenery while FlightGear is running.', ExpandConstant('{app}') + '\bin\terrasync.exe', NET_FW_IP_PROTOCOL_ALL, '', '', NET_FW_RULE_DIR_OUT);
+          AddAdvancedFirewallException('FlightGear FGCom', 'Allows FGCom to establish a connection to FlightGear and the VoIP server for voice ATC communication.', ExpandConstant('{app}') + '\bin\fgcom.exe', NET_FW_IP_PROTOCOL_ALL, '', '', NET_FW_RULE_DIR_IN);
+          AddAdvancedFirewallException('FlightGear FGCom', 'Allows FGCom to establish a connection to FlightGear and the VoIP server for voice ATC communication.', ExpandConstant('{app}') + '\bin\fgcom.exe', NET_FW_IP_PROTOCOL_ALL, '', '', NET_FW_RULE_DIR_OUT);
+        end
+      else if (Version.Major = 5) and (((Version.Minor = 1) and (Version.ServicePackMajor >= 2)) or ((Version.Minor = 2) and (Version.ServicePackMajor >= 1))) then
+        begin
+          { The Windows XP/Server 2003 firewall does not block outgoing connections at all, so only listening processes should be added }
+          AddBasicFirewallException('FlightGear', ExpandConstant('{app}') + '\bin\fgfs.exe');
+          AddBasicFirewallException('FlightGear TerraSync', ExpandConstant('{app}') + '\bin\terrasync.exe');
+          AddBasicFirewallException('FlightGear FGCom', ExpandConstant('{app}') + '\bin\fgcom.exe');
+        end;
+    end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usPostUninstall then
+    begin
+      RemoveFirewallException('FlightGear', ExpandConstant('{app}') + '\bin\fgfs.exe');
+      RemoveFirewallException('FlightGear METAR Utility', ExpandConstant('{app}') + '\bin\metar.exe');
+      RemoveFirewallException('FlightGear TerraSync', ExpandConstant('{app}') + '\bin\terrasync.exe');
+      RemoveFirewallException('FlightGear FGCom', ExpandConstant('{app}') + '\bin\fgcom.exe');
+    end;
+end;
