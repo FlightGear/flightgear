@@ -372,7 +372,15 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
      warp = 0;
   }
   
-  _warp->setIntValue( orig_warp + warp );
+  if( fgGetBool("/sim/time/warp-easing", false) ) {
+    double duration = fgGetDouble("/sim/time/warp-easing-duration-secs", 5.0 );
+    const string easing = fgGetString("/sim/time/warp-easing-method", "swing" );
+    SGPropertyNode n;
+    n.setDoubleValue( orig_warp + warp );
+    _warp->interpolate( "numeric", n, duration, easing );
+  } else {
+    _warp->setIntValue( orig_warp + warp );
+  }
 
   SG_LOG( SG_GENERAL, SG_INFO, "After TimeManager::setTimeOffset(): warp = " 
             << _warp->getIntValue() );
