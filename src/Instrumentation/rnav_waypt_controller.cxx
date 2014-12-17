@@ -82,8 +82,9 @@ bool geocRadialIntersection(const SGGeoc& a, double r1, const SGGeoc& b, double 
   }
   */
   
-  double ang1 = SGMiscd::normalizeAngle2(crs13-crs12);
-  double ang2 = SGMiscd::normalizeAngle2(crs21-crs23);
+  // normalise to -pi .. pi range
+  double ang1 = SGMiscd::normalizeAngle(crs13-crs12);
+  double ang2 = SGMiscd::normalizeAngle(crs21-crs23);
     
   if ((sin(ang1) == 0.0) && (sin(ang2) == 0.0)) {
     SG_LOG(SG_INSTR, SG_WARN, "geocRadialIntersection: infinity of intersections");
@@ -91,7 +92,14 @@ bool geocRadialIntersection(const SGGeoc& a, double r1, const SGGeoc& b, double 
   }
   
   if ((sin(ang1)*sin(ang2))<0.0) {
-    SG_LOG(SG_INSTR, SG_WARN, "geocRadialIntersection: intersection ambiguous");
+    SG_LOG(SG_INSTR, SG_INFO, "deg crs12:" << crs12 * SG_RADIANS_TO_DEGREES);
+    SG_LOG(SG_INSTR, SG_INFO, "deg crs21:" << crs21 * SG_RADIANS_TO_DEGREES);
+    
+    SG_LOG(SG_INSTR, SG_INFO, "crs13 - crs12 in deg:" << (crs13 - crs12) * SG_RADIANS_TO_DEGREES);
+    SG_LOG(SG_INSTR, SG_INFO, "crs21 - crs23 in deg:" << (crs21 - crs23) * SG_RADIANS_TO_DEGREES);
+    
+    SG_LOG(SG_INSTR, SG_WARN, "geocRadialIntersection: intersection ambiguous:"
+           << ang1 << " " << ang2 << " sin1 " << sin(ang1) << " sin2 " << sin(ang2));
     return false;
   }
   

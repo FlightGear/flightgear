@@ -44,33 +44,27 @@ public:
   
   SGGeod positionForIndex(int index) const;
   
-  double computeDistanceForIndex(int index) const;
-  double computeTrackForIndex(int index) const;
-
+  double trackForIndex(int index) const;
+  
+  double distanceForIndex(int index) const;
+  
+  double distanceBetweenIndices(int from, int to) const;
 private:
+  class RoutePathPrivate;
+  
   void commonInit();
   
-  class PathCtx;
-  
+  double computeDistanceForIndex(int index) const;
+    
   SGGeodVec pathForHold(flightgear::Hold* hold) const;
   
-  bool computedPositionForIndex(int index, SGGeod& pos) const;
-  double computeAltitudeForIndex(int index) const;
   
   void interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, SGGeodVec& r) const;
   
-  /**
-   * Find the distance (in Nm) to climb/descend a height in feet
-   */
-  double distanceForClimb(double climbFt) const;
   
-  double magVarFor(const SGGeod& gd) const; 
+  RoutePathPrivate* d;
   
-  flightgear::WayptVec _waypts;
-
-  int _pathClimbFPM; ///< climb-rate to use for pathing
-  int _pathDescentFPM; ///< descent rate to use (feet-per-minute)
-  int _pathIAS; ///< IAS (knots) to use for pathing
+  
   double _pathTurnRate; ///< degrees-per-second, defaults to 3, i.e 180 in a minute
 };
 

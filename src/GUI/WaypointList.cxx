@@ -481,8 +481,8 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y,
       buffer[0] = 0;
     }
   } else if (rowIndex > 0) {
-    double courseDeg = path.computeTrackForIndex(rowIndex);
-    double distanceM = path.computeDistanceForIndex(rowIndex);
+    double courseDeg = path.trackForIndex(rowIndex);
+    double distanceM = path.distanceForIndex(rowIndex);
     ::snprintf(buffer, 128 - count, "%03.0f %5.1fnm",
       courseDeg, distanceM * SG_METER_TO_NM);
   }
@@ -491,11 +491,18 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y,
   x += 100 + PUSTR_LGAP;
   
   if (wp->altitudeRestriction() != RESTRICT_NONE) {
+    char aboveAtBelow = ' ';
+    if (wp->altitudeRestriction() == RESTRICT_ABOVE) {
+      aboveAtBelow = 'A';
+    } else if (wp->altitudeRestriction() == RESTRICT_BELOW) {
+      aboveAtBelow = 'B';
+    }
+    
     int altHundredFt = (wp->altitudeFt() + 50) / 100; // round to nearest 100ft
     if (altHundredFt < 100) {
-      count = ::snprintf(buffer, 128, "%d'", altHundredFt * 100);
+      count = ::snprintf(buffer, 128, "%d'%c", altHundredFt * 100, aboveAtBelow);
     } else { // display as a flight-level
-      count = ::snprintf(buffer, 128, "FL%d", altHundredFt);
+      count = ::snprintf(buffer, 128, "FL%d%c", altHundredFt, aboveAtBelow);
     }
     
     f->drawString(buffer, x, yy);

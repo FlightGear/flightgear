@@ -70,6 +70,7 @@ void NavdataVisitor::startElement(const char* name, const XMLAttributes &atts)
     _altRestrict = RESTRICT_NONE;
     _altitude = 0.0;
     _overflightWaypt = false; // default to Fly-by
+    _courseFlag = false; // default to heading
   } else if (tag == "Approach") {
     _ident = atts.getValue("Name");
     _waypoints.clear();
@@ -194,8 +195,10 @@ void NavdataVisitor::endElement(const char* name)
     _holdRighthanded = (_text == "Right");
   } else if (tag == "Hld_td_value") {
     _holdTD = atof(_text.c_str());
+  } else if (tag == "Hdg_Crs") {
+    _courseFlag = atoi(_text.c_str());
   } else if (tag == "Hdg_Crs_value") {
-    _course = atof(_text.c_str());
+    _courseOrHeading = atof(_text.c_str());
   } else if (tag == "DMEtoIntercept") {
     _dmeDistance = atof(_text.c_str());
   } else if (tag == "RadialtoIntercept") {
@@ -203,6 +206,11 @@ void NavdataVisitor::endElement(const char* name)
   } else if (tag == "Flytype") {
     // values are 'Fly-by' and 'Fly-over'
     _overflightWaypt = (_text == "Fly-over");
+  } else if ((tag == "AltitudeCons") ||
+             (tag == "BankLimit") ||
+             (tag == "Sp_Turn"))
+  {
+    // ignored but don't warn
   } else {
     SG_LOG(SG_IO, SG_INFO, "unrecognized Level-D XML element:" << tag);
   }
@@ -242,16 +250,16 @@ Waypt* NavdataVisitor::buildWaypoint(RouteBase* owner)
     wp = new ATCVectors(owner, _airport);
   } else if ((_wayptType == "Intc") || (_wayptType == "VorRadialIntc")) {
     SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
-    wp = new RadialIntercept(owner, _wayptName, pos, _course, _radial);
+    wp = new RadialIntercept(owner, _wayptName, pos, _courseOrHeading, _radial);
   } else if (_wayptType == "DmeIntc") {
     SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
-    wp = new DMEIntercept(owner, _wayptName, pos, _course, _dmeDistance);
+    wp = new DMEIntercept(owner, _wayptName, pos, _courseOrHeading, _dmeDistance);
   } else if (_wayptType == "ConstHdgtoAlt") {
-    wp = new HeadingToAltitude(owner, _wayptName, _course);
+    wp = new HeadingToAltitude(owner, _wayptName, _courseOrHeading);
   } else if (_wayptType == "PBD") {
     SGGeod pos(SGGeod::fromDeg(_longitude, _latitude)), pos2;
     double az2;
-    SGGeodesy::direct(pos, _course, _dmeDistance, pos2, az2);
+    SGGeodesy::direct(pos, _courseOrHeading, _dmeDistance, pos2, az2);
     wp = new BasicWaypt(pos2, _wayptName, owner);
   } else {
     SG_LOG(SG_NAVAID, SG_ALERT, "implement waypoint type:" << _wayptType);

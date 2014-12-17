@@ -736,7 +736,7 @@ void GPS::computeTurnData()
   _turnStartBearing = _desiredCourse;
 // compute next leg course
   RoutePath path(_route);
-  double crs = path.computeTrackForIndex(_route->currentIndex() + 1);
+  double crs = path.trackForIndex(_route->currentIndex() + 1);
 
 // compute offset bearing
   _turnAngle = crs - _turnStartBearing;
@@ -805,7 +805,7 @@ void GPS::updateRouteData()
     if (leg->waypoint()->flag(WPT_MISS))
       continue;
       
-    totalDistance += leg->distanceAlongRoute();
+    totalDistance += leg->distanceNm();
   }
   
   _routeDistanceNm->setDoubleValue(totalDistance * SG_METER_TO_NM);

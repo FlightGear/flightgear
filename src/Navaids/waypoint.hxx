@@ -272,7 +272,9 @@ public:
     
   double radialDegMagnetic() const
     { return _radial; }
-    
+
+  virtual double headingRadialDeg() const
+  { return courseDegMagnetic(); }
 private:
   std::string _ident;
   SGGeod _pos;

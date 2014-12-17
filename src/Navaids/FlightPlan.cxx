@@ -1190,10 +1190,9 @@ void FlightPlan::rebuildLegData()
   double totalDistanceIncludingMissed = 0.0;
   RoutePath path(this);
   
-  int lastLeg = static_cast<int>(_legs.size()) - 1;
-  for (int l=0; l<lastLeg; ++l) {
-    _legs[l]->_courseDeg = path.computeTrackForIndex(l);
-    _legs[l]->_pathDistance = path.computeDistanceForIndex(l) * SG_METER_TO_NM;
+  for (unsigned int l=0; l<_legs.size(); ++l) {
+    _legs[l]->_courseDeg = path.trackForIndex(l);
+    _legs[l]->_pathDistance = path.distanceForIndex(l) * SG_METER_TO_NM;
     _legs[l]->_distanceAlongPath = totalDistanceIncludingMissed;
     
     // omit misseed-approach waypoints from total distance calculation
@@ -1204,14 +1203,6 @@ void FlightPlan::rebuildLegData()
     totalDistanceIncludingMissed += _legs[l]->_pathDistance;
   } // of legs iteration
   
-// set some data on the final leg
-  if (lastLeg > 0) {
-    // keep the same course as the final leg, when passing the final
-    // waypoint
-    _legs[lastLeg]->_courseDeg = _legs[lastLeg - 1]->_courseDeg;
-    _legs[lastLeg]->_pathDistance = 0.0;
-    _legs[lastLeg]->_distanceAlongPath = totalDistanceIncludingMissed;
-  }
 }
   
 SGGeod FlightPlan::pointAlongRoute(int aIndex, double aOffsetNm) const

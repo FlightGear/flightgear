@@ -59,7 +59,8 @@ private:
   bool _holdRighthanded;
   bool _holdDistance; // true, TD is distance in nm; false, TD is time in seconds
   
-  double _course, _radial, _dmeDistance;
+  double _courseOrHeading, _radial, _dmeDistance;
+  bool _courseFlag;
 };
 
 }
