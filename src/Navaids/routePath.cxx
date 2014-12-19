@@ -89,6 +89,7 @@ public:
     turnAngle(0.0),
     turnRadius(0.0),
     pathDistanceM(0.0),
+    turnPathDistanceM(0.0),
     overflightCompensationAngle(0.0),
     flyOver(w->flag(WPT_OVERFLIGHT))
   {
@@ -122,7 +123,16 @@ public:
       }
     } // of static waypt
   }
-  
+
+  /**
+   * test if course of this leg can be adjusted or is contrained to an exact value
+   */
+  bool isCourseConstrained() const
+  {
+    const std::string& ty(wpt->type());
+    return (ty == "hdgToAlt") || (ty == "radialIntercept") || (ty == "dmeIntercept");
+  }
+
   // compute leg courses for all static legs (both ends are fixed)
   void initPass1(const WayptData& previous, WayptData* next)
   {
@@ -141,7 +151,7 @@ public:
     }
   }
   
-  void computeTurn(double radiusM, const WayptData& previous, const WayptData& next)
+  void computeTurn(double radiusM, const WayptData& previous, WayptData& next)
   {
     assert(legCourseValid && next.legCourseValid);
     
@@ -161,17 +171,39 @@ public:
         // distance perpendicular to next leg course, after turning
         // through turnAngle
         double xtk = turnRadius * (1 - cos(turnAngle * SG_DEGREES_TO_RADIANS));
+
+        if (next.isCourseConstrained()) {
+          // next leg course is constrained. We need to swing back onto the
+          // desired course, using a compensation turn
+          
+          // compensation angle to turn back on course
+          double theta = acos((turnRadius - (xtk * 0.5)) / turnRadius) * SG_RADIANS_TO_DEGREES;
+          theta = copysign(theta, turnAngle);
+          turnAngle += theta;
         
-        // compensation angle to turn back on course
-        double theta = acos((turnRadius - (xtk * 0.5)) / turnRadius) * SG_RADIANS_TO_DEGREES;
-        theta = copysign(theta, turnAngle);
-        turnAngle += theta;
-      
-        // move by the distance to compensate
-        double d = turnRadius * 2.0 * sin(theta * SG_DEGREES_TO_RADIANS);
-        turnExitPos = SGGeodesy::direct(turnExitPos, next.legCourse, d);
-        
-        overflightCompensationAngle = -theta;
+          // move by the distance to compensate
+          double d = turnRadius * 2.0 * sin(theta * SG_DEGREES_TO_RADIANS);
+          turnExitPos = SGGeodesy::direct(turnExitPos, next.legCourse, d);
+          overflightCompensationAngle = -theta;
+          turnPathDistanceM = turnRadius + d;
+        } else {
+          // next leg course can be adjusted. increase the turn angle
+          // and modify the next leg's course accordingly.
+
+          // hypotenuse of triangle, opposite edge has length turnRadius
+          turnPathDistanceM = std::min(1.0, sin(fabs(turnAngle) * SG_DEGREES_TO_RADIANS)) * turnRadius;
+          double nextLegDistance = SGGeodesy::distanceM(pos, next.pos) - turnPathDistanceM;
+          double increaseAngle = atan2(xtk, nextLegDistance) * SG_RADIANS_TO_DEGREES;
+          increaseAngle = copysign(increaseAngle, turnAngle);
+
+          turnAngle += increaseAngle;
+          turnExitPos = SGGeodesy::direct(turnCenter, legCourse + turnAngle - p, turnRadius);
+
+          // modify next leg course
+          next.legCourse = SGGeodesy::courseDeg(turnExitPos, next.pos);
+
+          turnPathDistanceM = turnRadius;
+        }
       }
     } else {
       hasEntry = true;
@@ -181,10 +213,10 @@ public:
       double turnCenterOffset = turnRadius / cos(halfAngle * SG_DEGREES_TO_RADIANS);
       turnCenter = SGGeodesy::direct(pos, legCourse + halfAngle + p, turnCenterOffset);
       
-      double entryExitDistanceAlongPath = turnRadius * tan(fabs(halfAngle) * SG_DEGREES_TO_RADIANS);
+      turnPathDistanceM = turnRadius * tan(fabs(halfAngle) * SG_DEGREES_TO_RADIANS);
       
-      turnEntryPos = SGGeodesy::direct(pos, legCourse, -entryExitDistanceAlongPath);
-      turnExitPos = SGGeodesy::direct(pos, next.legCourse, entryExitDistanceAlongPath);
+      turnEntryPos = SGGeodesy::direct(pos, legCourse, -turnPathDistanceM);
+      turnExitPos = SGGeodesy::direct(pos, next.legCourse, turnPathDistanceM);
     }
   }
   
@@ -241,8 +273,13 @@ public:
       p = SGGeodesy::direct(p, h, stepDist);
       h += stepIncrement;
     }
-    
-    if (flyOver) {
+
+    // we can use an exact check on the compensation angle, becayse we
+    // initialise it directly. Depending on the next element we might be
+    // doing compensation or adjusting the next leg's course; if we did
+    // adjust the course ecerything 'just works' above.
+
+    if (flyOver && (overflightCompensationAngle != 0.0)) {
       // skew by compensation angle back
       steps = std::max(SGMiscd::roundToInt(fabs(overflightCompensationAngle) / 3.0), 1);
       
@@ -265,6 +302,7 @@ public:
   SGGeod pos, turnEntryPos, turnExitPos, turnCenter;
   double turnAngle, turnRadius, legCourse;
   double pathDistanceM;
+  double turnPathDistanceM; // for flyBy, this is half the distance; for flyOver it's the completel distance
   double overflightCompensationAngle;
   bool flyOver;
 };
@@ -359,10 +397,22 @@ public:
       double track = i->courseDegMagnetic() + magVar;
       bool ok = geocRadialIntersection(prevGc, track, navid, radial, rGc);
       if (!ok) {
-        SG_LOG(SG_NAVAID, SG_WARN, "couldn't compute interception for radial:"
+        SGGeoc navidAdjusted;
+        // try pulling backward along the radial in case we're too close.
+        // suggests bad procedure construction if this is happening!
+        SGGeodesy::advanceRadM(navid, radial, SG_NM_TO_METER * -10, navidAdjusted);
+
+        // try again
+        ok = geocRadialIntersection(prevGc, track, navidAdjusted, radial, rGc);
+        if (!ok) {
+          SG_LOG(SG_NAVAID, SG_WARN, "couldn't compute interception for radial:"
                << previous.turnExitPos << " / " << track << "/" << wpt->position()
                << "/" << radial);
-        waypoints[index].pos = wpt->position(); // horrible fallback
+          waypoints[index].pos = wpt->position(); // horrible fallback
+
+        } else {
+          waypoints[index].pos = SGGeod::fromGeoc(rGc);
+        }
       } else {
         waypoints[index].pos = SGGeod::fromGeoc(rGc);
       }

@@ -55,50 +55,27 @@ bool geocRadialIntersection(const SGGeoc& a, double r1, const SGGeoc& b, double 
   // crs12=2.*pi-acos((sin(lat2)-sin(lat1)*cos(dst12))/(sin(dst12)*cos(lat1)))
   // crs21=acos((sin(lat1)-sin(lat2)*cos(dst12))/(sin(dst12)*cos(lat2)))
   // ENDIF
-  
-  
- // double diffLon = b.getLongitudeRad() - a.getLongitudeRad();
-  
+
   double sinLat1 = sin(a.getLatitudeRad());
   double cosLat1 = cos(a.getLatitudeRad());
- // double sinLat2 = sin(b.getLatitudeRad());
-  //double cosLat2 = cos(b.getLatitudeRad());
   double sinDst12 = sin(dst12);
   double cosDst12 = cos(dst12);
   
   double crs12 = SGGeodesy::courseRad(a, b),
     crs21 = SGGeodesy::courseRad(b, a);
     
-  //double degCrs12 = crs12 * SG_RADIANS_TO_DEGREES;
-  //double degCrs21 = crs21 * SG_RADIANS_TO_DEGREES;
-    
- /* 
-  if (sin(diffLon) < 0.0) {
-    crs12 = acos((sinLat2 - sinLat1 * cosDst12) / (sinDst12 * cosLat1));
-    crs21 = SGMiscd::twopi() - acos((sinLat1 - sinLat2*cosDst12)/(sinDst12*cosLat2));
-  } else {
-    crs12 = SGMiscd::twopi() - acos((sinLat2 - sinLat1 * cosDst12)/(sinDst12 * cosLat1));
-    crs21 = acos((sinLat1 - sinLat2 * cosDst12)/(sinDst12 * cosLat2));
-  }
-  */
-  
+
   // normalise to -pi .. pi range
   double ang1 = SGMiscd::normalizeAngle(crs13-crs12);
   double ang2 = SGMiscd::normalizeAngle(crs21-crs23);
     
   if ((sin(ang1) == 0.0) && (sin(ang2) == 0.0)) {
-    SG_LOG(SG_INSTR, SG_WARN, "geocRadialIntersection: infinity of intersections");
+    SG_LOG(SG_INSTR, SG_INFO, "geocRadialIntersection: infinity of intersections");
     return false;
   }
   
   if ((sin(ang1)*sin(ang2))<0.0) {
-    SG_LOG(SG_INSTR, SG_INFO, "deg crs12:" << crs12 * SG_RADIANS_TO_DEGREES);
-    SG_LOG(SG_INSTR, SG_INFO, "deg crs21:" << crs21 * SG_RADIANS_TO_DEGREES);
-    
-    SG_LOG(SG_INSTR, SG_INFO, "crs13 - crs12 in deg:" << (crs13 - crs12) * SG_RADIANS_TO_DEGREES);
-    SG_LOG(SG_INSTR, SG_INFO, "crs21 - crs23 in deg:" << (crs21 - crs23) * SG_RADIANS_TO_DEGREES);
-    
-    SG_LOG(SG_INSTR, SG_WARN, "geocRadialIntersection: intersection ambiguous:"
+    SG_LOG(SG_INSTR, SG_INFO, "geocRadialIntersection: intersection ambiguous:"
            << ang1 << " " << ang2 << " sin1 " << sin(ang1) << " sin2 " << sin(ang2));
     return false;
   }
