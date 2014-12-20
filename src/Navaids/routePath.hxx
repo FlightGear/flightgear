@@ -43,12 +43,15 @@ public:
   SGGeodVec pathForIndex(int index) const;
   
   SGGeod positionForIndex(int index) const;
-  
+
+  SGGeod positionForDistanceFrom(int index, double distanceM) const;
+
   double trackForIndex(int index) const;
   
   double distanceForIndex(int index) const;
   
   double distanceBetweenIndices(int from, int to) const;
+
 private:
   class RoutePathPrivate;
   

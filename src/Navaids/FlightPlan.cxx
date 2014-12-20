@@ -1207,35 +1207,8 @@ void FlightPlan::rebuildLegData()
   
 SGGeod FlightPlan::pointAlongRoute(int aIndex, double aOffsetNm) const
 {
-  if (aIndex >= (int) _legs.size()) {
-    throw sg_range_exception();
-  }
-  
-  const int lastLeg = static_cast<int>(_legs.size()) - 1;
-// convert the relative offset and leg index into an absolute, positive
-// distance in nm from the route origin. This means we can simply walk
-// forwards to find the actual leg.
-  Leg* leg = _legs[(aIndex >= 0) ? aIndex : lastLeg];
-  double absolutePathDistance = leg->_distanceAlongPath + aOffsetNm;
-  if (absolutePathDistance < 0.0) {
-    return _legs[0]->waypoint()->position(); // begining of route
-  }
-  
-  if (absolutePathDistance > _totalDistance) {
-    return _legs[lastLeg]->waypoint()->position(); // end of route
-  }
-  
-// find the leg containing the absolute distance
-  for (int l=0; l<lastLeg; ++l) {
-    leg = _legs[l];
-    if (absolutePathDistance < leg->_pathDistance) {
-      break; // found our matching leg
-    }
-    absolutePathDistance -= leg->_pathDistance;
-  } // of forwards walk along route to find leg
-  
-  return SGGeodesy::direct(leg->waypoint()->position(),
-                               leg->_courseDeg, absolutePathDistance * SG_NM_TO_METER);
+    RoutePath rp(this);
+    return rp.positionForDistanceFrom(aIndex, aOffsetNm * SG_NM_TO_METER);
 }
     
 void FlightPlan::lockDelegate()
