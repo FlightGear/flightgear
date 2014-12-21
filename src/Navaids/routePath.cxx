@@ -742,25 +742,33 @@ void RoutePath::commonInit()
 
 SGGeodVec RoutePath::pathForIndex(int index) const
 {
+  const WayptData& w(d->waypoints[index]);
+  const std::string& ty(w.wpt->type());
+  SGGeodVec r;
   if (index == 0) {
-    return SGGeodVec(); // no path for first waypoint
+    // common case where we do want to show something for first waypoint
+    if (ty == "runway") {
+      FGRunway* rwy = static_cast<RunwayWaypt*>(w.wpt.get())->runway();
+      r.push_back(rwy->geod());
+      r.push_back(rwy->end());
+    }
+
+    return r;
   }
 
     if (d->waypoints[index].skipped) {
         return SGGeodVec();
     }
 
-  const WayptData& w(d->waypoints[index]);
-  const std::string& ty(w.wpt->type());
   if (ty == "vectors") {
-    return SGGeodVec(); // empty
+      // ideally we'd show a stippled line to connect the route?
+    return SGGeodVec();
   }
   
   if (ty== "hold") {
     return pathForHold((Hold*) d->waypoints[index].wpt.get());
   }
   
-  SGGeodVec r;
   const WayptData& prev(d->previousValidWaypoint(index));
   prev.turnExitPath(r);
   
