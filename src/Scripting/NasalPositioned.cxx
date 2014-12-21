@@ -443,6 +443,8 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
     } else {
       *out = stringToNasal(c, wpt->flag(WPT_OVERFLIGHT) ? "flyOver" : "flyBy");
     }
+  } else if (!strcmp(fieldName, "heading_course")) {
+      *out = naNum(wpt->headingRadialDeg());
   } else {
     return NULL; // member not found
   }
