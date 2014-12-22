@@ -175,8 +175,14 @@ public:
     turnAngle = next.legCourseTrue - legCourseTrue;
     SG_NORMALIZE_RANGE(turnAngle, -180.0, 180.0);
     turnRadius = radiusM;
-    
     double p = copysign(90.0, turnAngle);
+
+    if (fabs(turnAngle) > 120.0) {
+        // flyBy logic blows up for sharp turns - due to the tan() term
+        // heading towards infinity. By converting to flyOver we do something
+        // closer to what was requested.
+        flyOver = true;
+    }
 
     if (flyOver) {
       turnEntryPos = pos;
@@ -222,10 +228,10 @@ public:
           next.legCourseTrue = SGGeodesy::courseDeg(turnExitPos, next.pos);
 
           turnPathDistanceM = turnRadius * (fabs(turnAngle) * SG_DEGREES_TO_RADIANS);
-        }
+        } // of next leg isn't course constrained
       } else {
           // next point is dynamic
-          // no compentsation needed
+          // no compensation needed
           turnPathDistanceM = turnRadius * (fabs(turnAngle) * SG_DEGREES_TO_RADIANS);
       }
     } else {
