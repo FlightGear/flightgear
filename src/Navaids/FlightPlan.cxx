@@ -1193,15 +1193,16 @@ void FlightPlan::rebuildLegData()
   for (unsigned int l=0; l<_legs.size(); ++l) {
     _legs[l]->_courseDeg = path.trackForIndex(l);
     _legs[l]->_pathDistance = path.distanceForIndex(l) * SG_METER_TO_NM;
+
+    totalDistanceIncludingMissed += _legs[l]->_pathDistance;
+    // distance along path includes our own leg distance
     _legs[l]->_distanceAlongPath = totalDistanceIncludingMissed;
     
-    // omit misseed-approach waypoints from total distance calculation
+    // omit missed-approach waypoints from total distance calculation
     if (!_legs[l]->waypoint()->flag(WPT_MISS)) {
       _totalDistance += _legs[l]->_pathDistance;
     }
-    
-    totalDistanceIncludingMissed += _legs[l]->_pathDistance;
-  } // of legs iteration
+} // of legs iteration
   
 }
   
