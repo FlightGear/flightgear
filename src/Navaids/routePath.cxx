@@ -108,7 +108,7 @@ public:
       pos = wpt->position();
       posValid = true;
       
-      if ((ty == "runway") || (ty == "hold")) {
+      if (ty == "hold") {
         legCourseTrue = wpt->headingRadialDeg() + magVarFor(pos);
         legCourseValid = true;
       }
