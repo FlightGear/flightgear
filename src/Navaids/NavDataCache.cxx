@@ -540,7 +540,14 @@ public:
     sqlite3_bind_int(getAllAirports, 1, FGPositioned::AIRPORT);
     sqlite3_bind_int(getAllAirports, 2, FGPositioned::SEAPORT);
 
-    
+      searchAirports2 = prepare("SELECT rowid FROM positioned WHERE (name LIKE ?1 OR ident LIKE ?1) " AND_TYPED " LIMIT 20");
+      sqlite3_bind_int(searchAirports2, 2, FGPositioned::AIRPORT);
+      sqlite3_bind_int(searchAirports2, 3, FGPositioned::SEAPORT);
+
+      allAirportCodes = prepare("SELECT ident FROM positioned WHERE type>=?1 AND type <=?2");
+      sqlite3_bind_int(allAirportCodes, 1, FGPositioned::AIRPORT);
+      sqlite3_bind_int(allAirportCodes, 2, FGPositioned::SEAPORT);
+
     getAirportItemByIdent = prepare("SELECT rowid FROM positioned WHERE airport=?1 AND ident=?2 AND type=?3");
     
     findAirportRunway = prepare("SELECT airport, rowid FROM positioned WHERE ident=?2 AND type=?3 AND airport="
@@ -907,7 +914,8 @@ public:
   sqlite3_stmt_ptr getOctreeChildren, insertOctree, updateOctreeChildren,
     getOctreeLeafChildren;
 
-  sqlite3_stmt_ptr searchAirports, getAllAirports;
+  sqlite3_stmt_ptr searchAirports, getAllAirports, searchAirports2,
+    allAirportCodes;
   sqlite3_stmt_ptr findCommByFreq, findNavsByFreq,
   findNavsByFreqNoPos, findNavaidForRunway;
   sqlite3_stmt_ptr getAirportItems, getAirportItemByIdent;
@@ -1809,7 +1817,37 @@ char** NavDataCache::searchAirportNamesAndIdents(const std::string& aFilter)
   d->reset(stmt);
   return result;
 }
-  
+
+PositionedIDVec
+NavDataCache::searchAirportNamesAndIdents2(const std::string& aFilter)
+{
+    sqlite3_stmt_ptr stmt = d->searchAirports2;
+    string searchTerm("%" + aFilter + "%");
+    sqlite_bind_stdstring(stmt, 1, searchTerm);
+    PositionedIDVec result;
+
+    while (d->stepSelect(stmt)) {
+        result.push_back(sqlite3_column_int64(stmt, 0));
+    }
+    
+    d->reset(stmt);
+    return result;
+}
+
+string_list
+NavDataCache::getAllAirportCodes() const
+{
+    string_list result;
+    while (d->stepSelect(d->allAirportCodes)) {
+        string s = (char*) sqlite3_column_text(d->allAirportCodes, 0);
+        result.push_back(s);
+    }
+
+    d->reset(d->allAirportCodes);
+    return result;
+
+}
+
 FGPositionedRef
 NavDataCache::findCommByFreq(int freqKhz, const SGGeod& aPos, FGPositioned::Filter* aFilter)
 {

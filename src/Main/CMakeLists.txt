@@ -21,7 +21,7 @@ set(SOURCES
     subsystemFactory.cxx
     screensaver_control.cxx
 	${RESOURCE_FILE}
-	)
+)
 
 set(HEADERS
 	fg_commands.hxx
@@ -72,7 +72,7 @@ source_group("Main\\Sources" FILES ${SOURCES})
 # it manually via AllocConsole()
 # similarly pass MACOSX_BUNDLE so we generate a .app on Mac
 add_executable(fgfs WIN32 MACOSX_BUNDLE
-                ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
+                ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS} ${uic_sources})
 
 #-----------------------------------------------------------------------------
 # MacOSX bundle packagaing
@@ -150,6 +150,10 @@ if(ENABLE_FLITE)
     else()
         target_link_libraries(fgfs flite_hts hts_engine)
     endif()
+endif()
+
+if (Qt5Core_FOUND)
+    target_link_libraries(fgfs Qt5::Widgets fglauncher)
 endif()
 
 if (APPLE)  

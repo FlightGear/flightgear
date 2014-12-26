@@ -46,3 +46,5 @@
 #cmakedefine HAVE_CRASHRPT
 
 #cmakedefine ENABLE_FLITE
+
+#cmakedefine HAVE_QT

@@ -80,6 +80,10 @@ extern bool global_crashRptEnabled;
 #include "subsystemFactory.hxx"
 #include "options.hxx"
 
+#if defined(HAVE_QT)
+#include <QApplication>
+#include <GUI/QtLauncher.hxx>
+#endif
 
 using namespace flightgear;
 
@@ -394,7 +398,11 @@ static void logToFile()
 }
 
 // Main top level initialization
-int fgMainInit( int argc, char **argv ) {
+int fgMainInit( int argc, char **argv )
+{
+#if defined(HAVE_QT)
+    QApplication app(argc, argv);
+#endif
 
     // set default log levels
     sglog().setLogLevels( SG_ALL, SG_ALERT );
@@ -421,11 +429,6 @@ int fgMainInit( int argc, char **argv ) {
 	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << HUDSON_BUILD_NUMBER << ":"
 			<< HUDSON_BUILD_ID);
 
-    // Allocate global data structures.  This needs to happen before
-    // we parse command line options
-
-    
-    
     // seed the random number generator
     sg_srandom_time();
 
@@ -447,7 +450,13 @@ int fgMainInit( int argc, char **argv ) {
     } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
         return EXIT_SUCCESS;
     }
-    
+
+#if defined(HAVE_QT)
+    if (!QtLauncher::runLauncherDialog()) {
+        return EXIT_SUCCESS;
+    }
+#endif
+
     configResult = fgInitAircraft(false);
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
         return EXIT_FAILURE;
