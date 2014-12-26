@@ -98,7 +98,12 @@ public:
    * (set properties, etc). 
    */
   OptionResult processOptions();
-  
+
+    /**
+     * process command line options relating to scenery / aircraft / data paths
+     */
+    void initPaths();
+
   /**
    * init the aircraft options
    */

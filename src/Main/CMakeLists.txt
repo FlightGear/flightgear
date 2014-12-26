@@ -152,6 +152,10 @@ if(ENABLE_FLITE)
     endif()
 endif()
 
+if (Qt5Core_FOUND)
+    target_link_libraries(fgfs Qt5::Widgets fglauncher)
+endif()
+
 if (APPLE)  
     install(TARGETS fgfs BUNDLE DESTINATION .)
 else()

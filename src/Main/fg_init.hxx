@@ -39,6 +39,8 @@ bool fgInitHome();
 // Read in configuration (file and command line)
 int fgInitConfig ( int argc, char **argv, bool reinit );
 
+void fgInitAircraftPaths(bool reinit);
+
 int fgInitAircraft(bool reinit);
 
 // log various settings / configuration state

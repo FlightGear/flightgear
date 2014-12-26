@@ -53,17 +53,41 @@ if(WIN32)
 						FGWindowsMenuBar.cxx
 						WindowsFileDialog.cxx)
 endif()
-		
+
 if (APPLE)
-    list(APPEND HEADERS FGCocoaMenuBar.hxx 
-        CocoaFileDialog.hxx 
+    list(APPEND HEADERS FGCocoaMenuBar.hxx
+        CocoaFileDialog.hxx
         CocoaMouseCursor.hxx
         CocoaHelpers.h
         CocoaHelpers_private.h)
-    list(APPEND SOURCES FGCocoaMenuBar.mm 
+    list(APPEND SOURCES FGCocoaMenuBar.mm
         CocoaFileDialog.mm
         CocoaMouseCursor.mm
         CocoaHelpers.mm)
 endif()
-    		
+
+
+
+
+if (HAVE_QT)
+    qt5_wrap_ui(uic_sources Launcher.ui EditRatingsFilterDialog.ui)
+    qt5_add_resources(qrc_sources resources.qrc)
+
+    include_directories(${PROJECT_BINARY_DIR}/src/GUI)
+
+    add_library(fglauncher QtLauncher.cxx
+                            QtLauncher.hxx
+                            AirportDiagram.cxx
+                            AirportDiagram.hxx
+                            EditRatingsFilterDialog.cxx
+                            EditRatingsFilterDialog.hxx
+                            ${uic_sources}
+                            ${qrc_sources})
+
+    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets )
+
+
+endif()
+
+
 flightgear_component(GUI "${SOURCES}" "${HEADERS}")

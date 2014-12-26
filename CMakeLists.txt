@@ -278,6 +278,16 @@ endif (USE_DBUS)
 list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
 
 ##############################################################################
+## Qt5 setup setup
+
+find_package(Qt5 5.1 COMPONENTS Widgets)
+if (Qt5Widgets_FOUND)
+    message(STATUS "Will enable Qt launcher GUI")
+    set(HAVE_QT 1)
+    set(CMAKE_AUTOMOC ON)
+endif()
+
+##############################################################################
 
 find_package(PLIB REQUIRED puaux pu js fnt)
 

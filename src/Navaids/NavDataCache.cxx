@@ -1072,7 +1072,10 @@ NavDataCache::NavDataCache()
   }
     
   homePath.append(os.str());
-  
+
+    // permit additional DB connections from the same process
+    sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
+
   for (int t=0; t < MAX_TRIES; ++t) {
     try {
       d.reset(new NavDataCachePrivate(homePath, this));
@@ -1162,8 +1165,6 @@ bool NavDataCache::isRebuildRequired()
     return true;
   }
 
-  dropGroundnetsIfRequired();
-  
   SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: no main cache rebuild required");
   return false;
 }
@@ -2190,6 +2191,11 @@ bool NavDataCache::isReadOnly() const
     return d->readOnly;
 }
 
+SGPath NavDataCache::path() const
+{
+    return d->path;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 // Transaction RAII object
     
@@ -2214,6 +2220,91 @@ void NavDataCache::Transaction::commit()
     assert(!_committed);
     _committed = true;
     _instance->commitTransaction();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+class NavDataCache::ThreadedAirportSearch::ThreadedAirportSearchPrivate : public SGThread
+{
+public:
+    ThreadedAirportSearchPrivate() :
+        db(NULL),
+        isComplete(false),
+        quit(false)
+    {}
+
+    virtual void run()
+    {
+        while (!quit) {
+            int err = sqlite3_step(query);
+            if (err == SQLITE_DONE) {
+                break;
+            } else if (err == SQLITE_ROW) {
+                PositionedID r = sqlite3_column_int64(query, 0);
+                SGGuard<SGMutex> g(lock);
+                results.push_back(r);
+            } else if (err == SQLITE_BUSY) {
+                // sleep a tiny amount
+                SGTimeStamp::sleepForMSec(1);
+            } else {
+                std::string errMsg = sqlite3_errmsg(db);
+                SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite error:" << errMsg << " running threaded airport query");
+            }
+        }
+
+        SGGuard<SGMutex> g(lock);
+        isComplete = true;
+    }
+
+    SGMutex lock;
+    sqlite3* db;
+    sqlite3_stmt_ptr query;
+    PositionedIDVec results;
+    bool isComplete;
+    bool quit;
+};
+
+NavDataCache::ThreadedAirportSearch::ThreadedAirportSearch(const std::string& term) :
+    d(new ThreadedAirportSearchPrivate)
+{
+    SGPath p = NavDataCache::instance()->path();
+    int openFlags = SQLITE_OPEN_READONLY;
+    std::string pathUtf8 = simgear::strutils::convertWindowsLocal8BitToUtf8(p.str());
+    sqlite3_open_v2(pathUtf8.c_str(), &d->db, openFlags, NULL);
+
+    std::string sql = "SELECT rowid FROM positioned WHERE name LIKE '%" + term
+        + "%' AND type >= 1 AND type <= 3";
+    sqlite3_prepare_v2(d->db, sql.c_str(), sql.length(), &d->query, NULL);
+
+    d->start();
+}
+
+NavDataCache::ThreadedAirportSearch::~ThreadedAirportSearch()
+{
+    {
+        SGGuard<SGMutex> g(d->lock);
+        d->quit = true;
+    }
+
+    d->join();
+    sqlite3_finalize(d->query);
+    sqlite3_close_v2(d->db);
+}
+
+PositionedIDVec NavDataCache::ThreadedAirportSearch::results() const
+{
+    PositionedIDVec r;
+    {
+        SGGuard<SGMutex> g(d->lock);
+        r = d->results;
+    }
+    return r;
+}
+
+bool NavDataCache::ThreadedAirportSearch::isComplete() const
+{
+    SGGuard<SGMutex> g(d->lock);
+    return d->isComplete;
 }
     
 } // of namespace flightgear

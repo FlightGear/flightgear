@@ -1484,6 +1484,7 @@ struct OptionDesc {
 
     {"language",                     true,  OPTION_IGNORE, "", false, "", 0 },
 	{"console",                      false, OPTION_IGNORE,   "", false, "", 0 },
+    {"launcher",                     false, OPTION_IGNORE,   "", false, "", 0 },
     {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", false, "", 0 },
     {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", true, "", 0 },
     {"renderer",                     true,  OPTION_STRING, "/sim/rendering/rembrandt/renderer", false, "", 0 },
@@ -1953,18 +1954,22 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   config.append( "system.fgfsrc" );
   readConfig(config);
 }
-  
+
+void Options::initPaths()
+{
+    BOOST_FOREACH(const string& paths, valuesForOption("fg-aircraft")) {
+        globals->append_aircraft_paths(paths);
+    }
+
+    const char* envp = ::getenv("FG_AIRCRAFT");
+    if (envp) {
+        globals->append_aircraft_paths(envp);
+    }
+
+}
+
 void Options::initAircraft()
 {
-  BOOST_FOREACH(const string& paths, valuesForOption("fg-aircraft")) {
-    globals->append_aircraft_paths(paths);
-  }
-  
-  const char* envp = ::getenv("FG_AIRCRAFT");
-  if (envp) {
-    globals->append_aircraft_paths(envp);
-  }
-
   string aircraft;
   if (isOptionSet("aircraft")) {
     aircraft = valueForOption("aircraft");

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="history-icon">history-icon.png</file>
+        <file alias="search-icon">large-search-icon.png</file>
+    </qresource>
+</RCC>

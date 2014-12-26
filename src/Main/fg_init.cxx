@@ -501,25 +501,37 @@ static void initAircraftDirsNasalSecurity()
     }
 }
 
+void fgInitAircraftPaths(bool reinit)
+{
+  if (!reinit) {
+    SGPath userAircraftDir = SGPath::documents(globals->get_fg_home());
+    if (userAircraftDir != globals->get_fg_home()) {
+      userAircraftDir.append("FlightGear");
+    }
+    userAircraftDir.append("Aircraft");
+
+    SGSharedPtr<Root> pkgRoot(new Root(userAircraftDir, FLIGHTGEAR_VERSION));
+    // set the http client later (too early in startup right now)
+    globals->setPackageRoot(pkgRoot);
+  }
+
+  SGSharedPtr<Root> pkgRoot(globals->packageRoot());
+  SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
+  aircraftProp->setAttribute(SGPropertyNode::PRESERVE, true);
+
+  if (!reinit) {
+      flightgear::Options::sharedInstance()->initPaths();
+  }
+}
+
 int fgInitAircraft(bool reinit)
 {
     if (!reinit) {
-        // FIXME - use Documents/FlightGear/Aircraft
-        SGPath userAircraftDir = globals->get_fg_home();
-        userAircraftDir.append("Aircraft");
-
-        SGSharedPtr<Root> pkgRoot(new Root(userAircraftDir, FLIGHTGEAR_VERSION));
-        // set the http client later (too early in startup right now)
-        globals->setPackageRoot(pkgRoot);
-    }
-
-    SGSharedPtr<Root> pkgRoot(globals->packageRoot());
-    SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
-    aircraftProp->setAttribute(SGPropertyNode::PRESERVE, true);
-
-    if (!reinit) {
         flightgear::Options::sharedInstance()->initAircraft();
     }
+    
+    SGSharedPtr<Root> pkgRoot(globals->packageRoot());
+    SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
 
     string aircraftId(aircraftProp->getStringValue());
     PackageRef acftPackage = pkgRoot->getPackageById(aircraftId);
@@ -588,7 +600,12 @@ fgInitNav ()
       return false;
     }
   }
-  
+
+    // depend on when the NavCache was initialised, scenery paths may not
+    // have been setup. This is a safe place to consistently check the value,
+    // and drop the ground-nets if something has changed
+    cache->dropGroundnetsIfRequired();
+
   FGTACANList *channellist = new FGTACANList;
   globals->set_channellist( channellist );
   
@@ -1056,6 +1073,7 @@ void fgStartNewReset()
     }
 
     fgGetNode("/sim")->removeChild("aircraft-dir");
+    fgInitAircraftPaths(true);
     fgInitAircraft(true);
     
     render = new FGRenderer;

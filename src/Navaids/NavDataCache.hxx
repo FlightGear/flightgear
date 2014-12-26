@@ -57,7 +57,9 @@ public:
     
 // singleton accessor
     static NavDataCache* instance();
-          
+
+    SGPath path() const;
+    
   /**
    * predicate - check if the cache needs to be rebuilt.
    * This can happen is the cache file is missing or damaged, or one of the
@@ -277,6 +279,20 @@ public:
     };
     
     bool isReadOnly() const;
+
+    class ThreadedAirportSearch
+    {
+    public:
+        ThreadedAirportSearch(const std::string& term);
+        ~ThreadedAirportSearch();
+        
+        PositionedIDVec results() const;
+
+        bool isComplete() const;
+    private:
+        class ThreadedAirportSearchPrivate;
+        std::auto_ptr<ThreadedAirportSearchPrivate> d;
+    };
 private:
   NavDataCache();
   
