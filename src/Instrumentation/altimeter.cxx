@@ -52,7 +52,7 @@ Altimeter::~Altimeter ()
 double
 Altimeter::getSettingInHg() const
 {
-    return int(_settingInHg*100.0)/100.0; /* return only 2 decimals: xx.xx */
+    return _settingInHg;
 }
 
 void
@@ -61,14 +61,14 @@ Altimeter::setSettingInHg( double value )
     _settingInHg = value;
 }
 
-int
+double
 Altimeter::getSettingHPa() const
 {
-    return int(_settingInHg * SG_INHG_TO_PA / 100.0); /* return an INT: xxxx */
+    return _settingInHg * SG_INHG_TO_PA / 100;
 }
 
 void
-Altimeter::setSettingHPa( int value )
+Altimeter::setSettingHPa( double value )
 {
     _settingInHg = value * SG_PA_TO_INHG * 100;
 }
