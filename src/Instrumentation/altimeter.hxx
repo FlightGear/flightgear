@@ -43,8 +43,8 @@ public:
 
     double getSettingInHg() const;
     void setSettingInHg( double value );
-    double getSettingHPa() const;
-    void setSettingHPa( double value );
+    int getSettingHPa() const;
+    void setSettingHPa( int value );
 
 private:
     std::string _name;
