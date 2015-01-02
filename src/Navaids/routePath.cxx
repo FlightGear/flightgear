@@ -147,7 +147,13 @@ public:
       }
 
       // we can compute leg course now
-      legCourseTrue = SGGeodesy::courseDeg(previous.pos, pos);
+        if (previous.wpt->type() == "runway") {
+            // use the runway departure end pos
+            legCourseTrue = SGGeodesy::courseDeg(previous.turnExitPos, pos);
+        } else {
+            legCourseTrue = SGGeodesy::courseDeg(previous.pos, pos);
+
+        }
       legCourseValid = true;
     }
   }
@@ -947,8 +953,12 @@ SGGeod RoutePath::positionForDistanceFrom(int index, double distanceM) const
     if (distanceM < 0.0) {
         // scan backwards
         while ((index > 0) && (distanceM < 0.0)) {
-            --index;
+            // we are looking at index n, say 4, but with a negative distance.
+            // we want to look at index n-1 (so, 3), and see if this makes
+            // distance positive. We need to offset by distance from 3 -> 4,
+            // which is waypoint 4's path distance.
             distanceM += d->waypoints[index].pathDistanceM;
+            --index;
         }
 
         if (distanceM < 0.0) {
