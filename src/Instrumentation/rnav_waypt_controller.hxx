@@ -86,7 +86,7 @@ public:
   
   virtual void init();
 
-  virtual void update() = 0;
+  virtual void update(double dt) = 0;
 
   /**
    * Compute time until the waypoint is done
@@ -170,7 +170,7 @@ public:
   DirectToController(RNAV* aRNAV, const WayptRef& aWpt, const SGGeod& aOrigin);
   
   virtual void init();
-  virtual void update();
+  virtual void update(double dt);
   virtual double distanceToWayptM() const;  
   virtual double xtrackErrorNm() const;  
   virtual double courseDeviationDeg() const;  
@@ -192,7 +192,7 @@ public:
   OBSController(RNAV* aRNAV, const WayptRef& aWpt);
   
   virtual void init();
-  virtual void update();
+  virtual void update(double dt);
   virtual double distanceToWayptM() const;  
   virtual double xtrackErrorNm() const;  
   virtual double courseDeviationDeg() const;  

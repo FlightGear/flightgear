@@ -25,20 +25,12 @@
 #include <simgear/structure/exception.hxx>
 
 #include <Airports/runways.hxx>
+#include "Main/util.hxx" // for fgLowPass
+
+extern double pointsKnownDistanceFromGC(const SGGeoc& a, const SGGeoc&b, const SGGeoc& d, double dist);
 
 namespace flightgear
 {
-
-const double KNOTS_TO_METRES_PER_SECOND = SG_NM_TO_METER / 3600.0;
-
-double pmod(double x, double y)
-{
-  if (x < 0.0) {
-    return -fmod(x, y);
-  } else {
-    return fmod(x,y);
-  }
-}
 
 // implementation of
 // http://williams.best.vwh.net/avform.htm#Intersection
@@ -106,7 +98,6 @@ bool geocRadialIntersection(const SGGeoc& a, double r1, const SGGeoc& b, double 
   return true;
 }
 
-
 /**
  * Helper function Cross track error:
  * http://williams.best.vwh.net/avform.htm#XTE
@@ -160,7 +151,7 @@ double WayptController::timeToWaypt() const
     return -1.0; // stationary
   }
   
-  gs*= KNOTS_TO_METRES_PER_SECOND;
+    gs*= SG_KT_TO_MPS;
   return (distanceToWayptM() / gs);
 }
 
@@ -184,7 +175,7 @@ public:
     _targetTrack = SGGeodesy::courseDeg(_rnav->position(), _waypt->position());
   }
 
-  virtual void update()
+  virtual void update(double)
   {
     double bearingAircraftToTarget;
 
@@ -284,7 +275,7 @@ public:
 
   }
 
-  virtual void update()
+  virtual void update(double)
   {
     _courseOriginToAircraft			= SGGeodesy::courseDeg(_waypointOrigin,_rnav->position());
     _distanceOriginAircraftMeter 	= SGGeodesy::distanceM(_waypointOrigin,_rnav->position());
@@ -381,7 +372,7 @@ public:
     _targetTrack = _runway->headingDeg();
   }
 
-  virtual void update()
+  virtual void update(double)
   {
     double bearingAircraftRunwayEnd;
     // use the far end of the runway for course deviation calculations. 
@@ -453,12 +444,19 @@ public:
   {
     HeadingToAltitude* w = (HeadingToAltitude*) _waypt.get();
     _targetTrack = w->headingDegMagnetic() + _rnav->magvarDeg();
+      _filteredFPM = _lastFPM = _rnav->vspeedFPM();
   }
   
-  virtual void update()
+  virtual void update(double dt)
   {
     double curAlt = _rnav->position().getElevationFt();
-    
+      // adjust to get a stable FPM value; bigger values mean slower
+      // response but more stable.
+      const double RESPONSIVENESS = 1.0;
+
+      _filteredFPM = fgGetLowPass(_lastFPM, _rnav->vspeedFPM(), dt * RESPONSIVENESS);
+      _lastFPM = _rnav->vspeedFPM();
+
     switch (_waypt->altitudeRestriction()) {
     case RESTRICT_AT: 
     case RESTRICT_COMPUTED:  
@@ -492,12 +490,14 @@ public:
   virtual double timeToWaypt() const
   {
     double d = fabs(_rnav->position().getElevationFt() - _waypt->altitudeFt());
-    return (d / _rnav->vspeedFPM()) * 60.0; // low pass filter here, probably
+    return (d / _filteredFPM) * 60.0;
   }
   
   virtual double distanceToWayptM() const
   {
-    double gsMsec = _rnav->groundSpeedKts() * KNOTS_TO_METRES_PER_SECOND;
+      // we could filter ground speed here, but it's likely stable enough,
+      // and timeToWaypt already filters the FPM value
+    double gsMsec = _rnav->groundSpeedKts() * SG_KT_TO_MPS;
     return timeToWaypt() * gsMsec;
   }
   
@@ -508,6 +508,9 @@ public:
     SGGeodesy::direct(_rnav->position(), _targetTrack, distanceToWayptM(), p, az2);
     return p;
   }
+
+private:
+    double _lastFPM, _filteredFPM;
 };
 
 class InterceptCtl : public WayptController
@@ -529,14 +532,12 @@ public:
     _targetTrack = w->courseDegMagnetic() + _rnav->magvarDeg();
   }
   
-  virtual void update()
+  virtual void update(double)
   {
     // note we want the outbound radial from the waypt, hence the ordering
     // of arguments to courseDeg
     double r = SGGeodesy::courseDeg(_waypt->position(), _rnav->position());
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "current radial=" << r);
     if (fabs(r - _trueRadial) < 0.5) {
-      SG_LOG(SG_INSTR, SG_INFO, "InterceptCtl, intercepted radial " << _trueRadial);
       setDone();
     }
   }
@@ -546,13 +547,31 @@ public:
     return SGGeodesy::distanceM(_rnav->position(), position());
   }
 
-  virtual SGGeod position() const
-  {
-    SGGeoc c;
-    geocRadialIntersection(SGGeoc::fromGeod(_rnav->position()), _rnav->trackDeg(), 
-      SGGeoc::fromGeod(_waypt->position()), _trueRadial, c);
-    return SGGeod::fromGeoc(c);
-  }
+    virtual SGGeod position() const
+    {
+        SGGeoc c,
+        geocPos = SGGeoc::fromGeod(_rnav->position()),
+        geocWayptPos = SGGeoc::fromGeod(_waypt->position());
+
+        bool ok = geocRadialIntersection(geocPos, _rnav->trackDeg(),
+                                         geocWayptPos, _trueRadial, c);
+        if (!ok) {
+            // try with a backwards offset from the waypt pos, in case the
+            // procedure waypt location is too close. (eg, KSFO OCEAN SID)
+
+            SGGeoc navidAdjusted;
+            SGGeodesy::advanceRadM(geocWayptPos, _trueRadial, SG_NM_TO_METER * -10, navidAdjusted);
+
+            ok = geocRadialIntersection(geocPos, _rnav->trackDeg(),
+                                        navidAdjusted, _trueRadial, c);
+            if (!ok) {
+                // fallback for the broken case
+                return _waypt->position();
+            }
+        }
+        
+        return SGGeod::fromGeoc(c);
+    }
 private:
   double _trueRadial;
 };
@@ -576,12 +595,11 @@ public:
     _targetTrack = _dme->courseDegMagnetic() + _rnav->magvarDeg();
   }
   
-  virtual void update()
+  virtual void update(double)
   {
     _distanceNm = SGGeodesy::distanceNm(_rnav->position(), _dme->position());
     double d = fabs(_distanceNm - _dme->dmeDistanceNm());
     if (d < 0.1) {
-      SG_LOG(SG_INSTR, SG_INFO, "DMEInterceptCtl, intercepted DME " << _dme->dmeDistanceNm());
       setDone();
     }
   }
@@ -591,13 +609,24 @@ public:
     return fabs(_distanceNm - _dme->dmeDistanceNm()) * SG_NM_TO_METER;
   }
   
-  virtual SGGeod position() const
-  {
-    SGGeod p;
-    double az2;
-    SGGeodesy::direct(_rnav->position(), _targetTrack, distanceToWayptM(), p, az2);
-    return p;
-  }
+    virtual SGGeod position() const
+    {
+        SGGeoc geocPos = SGGeoc::fromGeod(_rnav->position());
+        SGGeoc navid = SGGeoc::fromGeod(_dme->position());
+        double distRad = _dme->dmeDistanceNm() * SG_NM_TO_RAD;
+
+        // compute radial GC course
+        SGGeoc bPt;
+        SGGeodesy::advanceRadM(geocPos, _targetTrack, 100 * SG_NM_TO_RAD, bPt);
+
+        double dNm = pointsKnownDistanceFromGC(geocPos, bPt, navid, distRad);
+        if (dNm < 0.0) {
+            SG_LOG(SG_AUTOPILOT, SG_WARN, "DMEInterceptCtl::position failed");
+            return _dme->position(); // horrible fallback
+        }
+
+        return SGGeodesy::direct(_rnav->position(), _targetTrack, dNm * SG_NM_TO_METER);
+    }
 
 private:
   DMEIntercept* _dme;
@@ -618,7 +647,7 @@ public:
   {
   }
   
-  virtual void update()
+  virtual void update(double)
   {
     // fly inbound / outbound sides, or execute the turn
   #if 0
@@ -674,7 +703,7 @@ public:
  
   }
   
-  virtual void update()
+  virtual void update(double)
   {
     setDone();
   }
@@ -712,7 +741,7 @@ void DirectToController::init()
   _targetTrack = SGGeodesy::courseDeg(_origin, _waypt->position());
 }
 
-void DirectToController::update()
+void DirectToController::update(double)
 {
   double courseOriginToAircraft;
 
@@ -782,7 +811,7 @@ void OBSController::init()
   _targetTrack = _rnav->selectedMagCourse() + _rnav->magvarDeg();
 }
 
-void OBSController::update()
+void OBSController::update(double)
 {
   _targetTrack = _rnav->selectedMagCourse() + _rnav->magvarDeg();
 

@@ -320,7 +320,7 @@ GPS::update (double delta_time_sec)
 
   if (_dataValid) {
     if (_wayptController.get()) {
-      _wayptController->update();
+      _wayptController->update(delta_time_sec);
       SGGeod p(_wayptController->position());
       _currentWayptNode->setDoubleValue("longitude-deg", p.getLongitudeDeg());
       _currentWayptNode->setDoubleValue("latitude-deg", p.getLatitudeDeg());
@@ -851,7 +851,7 @@ void GPS::wp1Changed()
   if (_mode == "obs") {
     _legDistanceNm = -1.0;
   } else {
-    _wayptController->update();
+    _wayptController->update(0.0);
     _legDistanceNm = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
   }
 }
