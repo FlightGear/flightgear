@@ -365,7 +365,7 @@ public:
     double theta = (distanceM / turnRadius) * SG_RADIANS_TO_DEGREES;
     theta = copysign(theta, turnAngle);
     double p = copysign(90, turnAngle);
-    double course = legCourseTrue - turnAngle + theta;
+    double course = legCourseTrue + theta;
     return SGGeodesy::direct(turnCenter, course - p, turnRadius);
   }
   
