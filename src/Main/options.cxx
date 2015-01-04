@@ -41,6 +41,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include <simgear/math/sg_random.h>
 #include <simgear/props/props_io.hxx>
@@ -2225,7 +2226,7 @@ OptionResult Options::processOptions()
   }
     
 // terrasync directory fixup
-  string terrasyncDir = fgGetString("/sim/terrasync/scenery-dir");
+    string terrasyncDir = simgear::strutils::strip(fgGetString("/sim/terrasync/scenery-dir"));
   if (terrasyncDir.empty()) {
 	  terrasyncDir = defaultTerrasyncDir();
 	  // auto-save it for next time
@@ -2249,6 +2250,17 @@ OptionResult Options::processOptions()
   if (!objectsDir.exists()) {
       objectsDir.create(0755);
   }
+
+    // check the above actuall worked
+    if (!objectsDir.exists() || !terrainDir.exists()) {
+        std::stringstream ss;
+        ss << "Scenery download will be disabled. The configured location is '" << terrasyncDir << "'.";
+        flightgear::modalMessageBox("Invalid scenery download location",
+                                    "Automatic scenery download is configured to use a location (path) which invalid.",
+                                    ss.str());
+        fgSetBool("/sim/terrasync/enabled", false);
+    }
+
   if (fgGetBool("/sim/terrasync/enabled")) {
     const string_list& scenery_paths(globals->get_fg_scenery());
     if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
