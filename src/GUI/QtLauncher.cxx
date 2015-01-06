@@ -798,8 +798,6 @@ void QtLauncher::onRun()
         m_recentAircraft.prepend(m_selectedAircraft);
         if (m_recentAircraft.size() > MAX_RECENT_AIRCRAFT)
           m_recentAircraft.pop_back();
-
-        qDebug() << Q_FUNC_INFO << "recent aircraft is now" << m_recentAircraft;
     }
 
     // airport / location
@@ -820,7 +818,7 @@ void QtLauncher::onRun()
         }
     } else if (m_ui->parkingRadio->isChecked()) {
         // parking selection
-
+        opt->addOption("parkpos", m_ui->parkingCombo->currentText().toStdString());
     }
 
     // time of day
