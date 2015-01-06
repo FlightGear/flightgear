@@ -295,7 +295,7 @@ private:
 class AircraftItemDelegate : public QStyledItemDelegate
 {
 public:
-    const int MARGIN = 4;
+    static const int MARGIN = 4;
 
     virtual void paint(QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index) const
     {
@@ -460,7 +460,7 @@ public:
         }
 
         if (role == Qt::UserRole) {
-            return m_ids[index.row()];
+            return static_cast<qlonglong>(m_ids[index.row()]);
         }
 
         return QVariant();
@@ -487,7 +487,7 @@ private slots:
         PositionedIDVec newIds = m_search->results();
         
         beginInsertRows(QModelIndex(), m_ids.size(), newIds.size() - 1);
-        for (int i=m_ids.size(); i < newIds.size(); ++i) {
+        for (unsigned int i=m_ids.size(); i < newIds.size(); ++i) {
             m_ids.push_back(newIds[i]);
             m_airports.push_back(FGAirportRef()); // null ref
         }
@@ -912,7 +912,8 @@ void QtLauncher::onAirportChanged()
         m_ui->parkingRadio->setEnabled(true);
         Q_FOREACH(PositionedID parking, parkings) {
             FGParking* park = dynamics->getParking(parking);
-            m_ui->parkingCombo->addItem(QString::fromStdString(park->getName()), parking);
+            m_ui->parkingCombo->addItem(QString::fromStdString(park->getName()),
+                                        static_cast<qlonglong>(parking));
 
             m_ui->airportDiagram->addParking(park);
         }
