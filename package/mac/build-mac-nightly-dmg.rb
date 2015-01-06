@@ -23,13 +23,13 @@ puts "osgVersion=#{osgVersion}, so-number=#{$osgSoVersion}"
 
 def fix_install_names(object)
   puts "fixing install names for #{object}"
-  
+
   $osgLibs.each do |l|
     oldName = "lib#{l}.#{$osgSoVersion}.dylib"
-    newName = "@executable_path/../Frameworks/#{oldName}"    
+    newName = "@executable_path/../Frameworks/#{oldName}"
     `install_name_tool -change #{oldName} #{newName} #{object}`
   end
-  
+
   oldName = "libOpenThreads.#{$openThreadsSoVersion}.dylib"
   newName= "@executable_path/../Frameworks/#{oldName}"
   `install_name_tool -change #{oldName} #{newName} #{object}`
@@ -43,6 +43,11 @@ puts "Erasing previous image dir"
 `rm -rf #{dmgDir}`
 
 bundle=dmgDir + "/FlightGear.app"
+
+# run macdeployt before we rename the bundle, otherwise it
+# can't find the bundle executable
+puts "Running macdeployqt on the bundle to copy Qt libraries"
+`macdeployqt #{$prefixDir}/fgfs.app`
 
 puts "Moving & renaming app bundle"
 `mkdir -p #{dmgDir}`
@@ -78,7 +83,7 @@ bins.each do |b|
   if !File.exist?("#{$prefixDir}/bin/#{b}")
     next
   end
-  
+
   outPath = "#{macosDir}/#{b}"
   `cp #{$prefixDir}/bin/#{b} #{outPath}`
   fix_install_names(outPath)
@@ -105,27 +110,12 @@ end
 `cp #{srcDir}/package/mac/FlightGear.icns #{resourcesDir}/FlightGear.icns`
 `cp #{srcDir}/COPYING #{dmgDir}`
 
-# Macflightgear launcher
-if File.exist?("FlightGearOSX")
-  puts "Copying Macflightgear launcher files"
-  Dir.chdir "FlightGearOSX" do
-    `cp FlightGear #{macosDir}`
-    `rsync -a *.rb *.lproj *.sh *.tiff #{resourcesDir}`
-  end
-  
-  # change CFBundleExecutable in to the Info.plist
-  puts "Adjusting CFBundle executable - needs Ruby plist gem installed"
-  plist = Plist::parse_xml("#{contents}/Info.plist")
-  plist["CFBundleExecutable"] = "FlightGear"
-  plist.save_plist("#{contents}/Info.plist")
-end
-
 if File.exist?("#{$prefixDir}/share/flightgear")
   puts "Copying FGCom data files"
   `ditto #{$prefixDir}/share/flightgear #{resourcesDir}`
 end
 
-# code sign all executables in MacOS dir. Do this last since reource
+# code sign all executables in MacOS dir. Do this last since resource
 # changes will invalidate the signature!
 Dir.foreach(macosDir) do |b|
     if b == '.' or b == '..' then

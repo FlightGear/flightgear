@@ -26,17 +26,24 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
-	
+
     <key>LSMinimumSystemVersion</key>
     <string>10.6.0</string>
-	
+
     <key>NSHumanReadableCopyright</key>
 	<string>${MACOSX_BUNDLE_COPYRIGHT}</string>
-    
+
     <!-- needed for FlightGear launch to function -->
     <key>NSMainNibFile</key>
     <string>MainMenu</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+
+    <!-- when launched via LaunchServices, run the launcher GUI -->
+    <key>LSEnvironment</key>
+    <dict>
+        <key>FG_LAUNCHER</key>
+        <string>1</string>
+    </dict>
 </dict>
 </plist>
