@@ -84,6 +84,7 @@ if (HAVE_QT)
                             ${uic_sources}
                             ${qrc_sources})
 
+    set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
     target_link_libraries(fglauncher Qt5::Core Qt5::Widgets )
 
 

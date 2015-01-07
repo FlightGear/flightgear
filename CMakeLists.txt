@@ -245,7 +245,7 @@ endif()
 
 if (SYSTEM_SQLITE)
     find_package(SQLite3 REQUIRED)
-    
+
     message(STATUS "Using system SQLite3 library")
 else()
     set(SQLITE3_INCLUDED_DIR "${CMAKE_SOURCE_DIR}/3rdparty/sqlite3")
@@ -284,7 +284,6 @@ find_package(Qt5 5.1 COMPONENTS Widgets)
 if (Qt5Widgets_FOUND)
     message(STATUS "Will enable Qt launcher GUI")
     set(HAVE_QT 1)
-    set(CMAKE_AUTOMOC ON)
 endif()
 
 ##############################################################################
@@ -321,10 +320,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS_C   "-Wall")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
    set (WARNING_FLAGS_CXX "-Wall -Wno-overloaded-virtual")
    set (WARNING_FLAGS_C   "-Wall")
-endif() 
+endif()
 
 if(WIN32)
 
