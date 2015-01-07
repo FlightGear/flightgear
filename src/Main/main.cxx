@@ -67,6 +67,7 @@ extern bool global_crashRptEnabled;
 #include <Viewer/WindowSystemAdapter.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Include/version.h>
+#include <Viewer/WindowBuilder.hxx>
 
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
@@ -464,6 +465,10 @@ int fgMainInit( int argc, char **argv )
     showLauncher |= (::getenv("FG_LAUNCHER") != 0);
 
     if (showLauncher) {
+        // avoid double Apple menu and other weirdness if both Qt and OSG
+        // try to initialise various Cocoa structures.
+        flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
+
         if (!QtLauncher::runLauncherDialog()) {
             return EXIT_SUCCESS;
         }

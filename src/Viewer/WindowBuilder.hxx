@@ -57,6 +57,8 @@ public:
     /** Get the name used to look up the default window.
      */
     const std::string& getDefaultWindowName() { return defaultWindowName; }
+
+    static void setPoseAsStandaloneApp(bool b);
 protected:
     WindowBuilder(bool stencil);
     static osg::GraphicsContext::Traits* makeDefaultTraits(bool stencil);
@@ -64,6 +66,7 @@ protected:
     int defaultCounter;
     static osg::ref_ptr<WindowBuilder> windowBuilder;
     static const std::string defaultWindowName;
+    static bool poseAsStandaloneApp;
 };
 
 /** Silly function for making the default window and camera

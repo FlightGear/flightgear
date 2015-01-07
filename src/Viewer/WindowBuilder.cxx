@@ -45,6 +45,10 @@ ref_ptr<WindowBuilder> WindowBuilder::windowBuilder;
 
 const string WindowBuilder::defaultWindowName("FlightGear");
 
+// default to true (historical behaviour), we will clear the flag if
+// we run another GUI.
+bool WindowBuilder::poseAsStandaloneApp = true;
+
 void WindowBuilder::initWindowBuilder(bool stencil)
 {
     windowBuilder = new WindowBuilder(stencil);
@@ -250,9 +254,13 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
     traits->windowName = "FlightGear";
 
 #if defined(HAVE_QT) && defined(SG_MAC)
+    int flags = osgViewer::GraphicsWindowCocoa::WindowData::CheckForEvents;
+
     // avoid both QApplication and OSG::CocoaViewer doing single-application
     // init (Apple menu, making front process, etc)
-    int flags = osgViewer::GraphicsWindowCocoa::WindowData::CheckForEvents;
+    if (poseAsStandaloneApp) {
+        flags |= osgViewer::GraphicsWindowCocoa::WindowData::PoseAsStandaloneApp;
+    }
     traits->inheritedWindowData = new osgViewer::GraphicsWindowCocoa::WindowData(flags);
 #endif
 
@@ -266,4 +274,10 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
         return 0;
     }
 }
+
+void WindowBuilder::setPoseAsStandaloneApp(bool b)
+{
+    poseAsStandaloneApp = b;
 }
+
+} // of namespace flightgear
