@@ -661,6 +661,11 @@ QtLauncher::QtLauncher() :
             this, SLOT(updateSettingsSummary()));
     connect(m_ui->startPausedCheck, SIGNAL(toggled(bool)),
             this, SLOT(updateSettingsSummary()));
+    connect(m_ui->msaaCheckbox, SIGNAL(toggled(bool)),
+            this, SLOT(updateSettingsSummary()));
+
+    connect(m_ui->rembrandtCheckbox, SIGNAL(toggled(bool)),
+            this, SLOT(onRembrandtToggled(bool)));
 
     updateSettingsSummary();
 
@@ -782,6 +787,16 @@ void QtLauncher::onRun()
     setEnableDisableOptionFromCheckbox(m_ui->rembrandtCheckbox, "rembrandt");
     setEnableDisableOptionFromCheckbox(m_ui->fullScreenCheckbox, "fullscreen");
     setEnableDisableOptionFromCheckbox(m_ui->startPausedCheck, "freeze");
+
+    // MSAA is more complex
+    if (!m_ui->rembrandtCheckbox->isChecked()) {
+        if (m_ui->msaaCheckbox->isChecked()) {
+            globals->get_props()->setIntValue("/sim/rendering/multi-sample-buffers", 1);
+            globals->get_props()->setIntValue("/sim/rendering/multi-samples", 4);
+        } else {
+            globals->get_props()->setIntValue("/sim/rendering/multi-sample-buffers", 0);
+        }
+    }
 
     // aircraft
     if (!m_selectedAircraft.isEmpty()) {
@@ -1097,6 +1112,8 @@ void QtLauncher::updateSettingsSummary()
 
     if (m_ui->rembrandtCheckbox->isChecked()) {
         summary.append("Rembrandt enabled");
+    } else if (m_ui->msaaCheckbox->isChecked()) {
+        summary.append("anti-aliasing");
     }
 
     if (m_ui->fetchRealWxrCheckbox->isChecked()) {
@@ -1131,6 +1148,12 @@ void QtLauncher::onRemoveSceneryPath()
         delete m_ui->sceneryPathsList->currentItem();
         saveSettings();
     }
+}
+
+void QtLauncher::onRembrandtToggled(bool b)
+{
+    // Rembrandt and multi-sample are exclusive
+    m_ui->msaaCheckbox->setEnabled(!b);
 }
 
 #include "QtLauncher.moc"

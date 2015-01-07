@@ -50,6 +50,8 @@ private slots:
 
     void onAddSceneryPath();
     void onRemoveSceneryPath();
+
+    void onRembrandtToggled(bool b);
 private:
     void setAirport(FGAirportRef ref);
     void updateSelectedAircraft();
