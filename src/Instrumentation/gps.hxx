@@ -139,6 +139,15 @@ private:
 
       bool courseSelectable() const        { return _courseSelectable; }
 
+        /**
+         * Select whether we fly the leg track between waypoints, or
+         * use a direct course from the turn end. Since this is likely confusing,
+         * look at: http://fgfs.goneabitbursar.com//screenshots/FlyByType-LegType.svg
+         * For fly-by waypoints, there is no difference. For fly-over waypoints,
+         * this selects if we fly TF or DF mode.
+         */
+        bool followLegTrackToFix() const      { return _followLegTrackToFix; }
+
     private:
       bool _enableTurnAnticipation;
 
@@ -168,6 +177,9 @@ private:
 
       // is selected-course-deg read to set desired-course or not?
       bool _courseSelectable;
+
+        // do we fly direct to fixes, or follow the leg track closely?
+        bool _followLegTrackToFix;
     };
 
     class SearchFilter : public FGPositioned::Filter

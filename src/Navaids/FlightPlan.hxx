@@ -34,7 +34,13 @@ class Transition;
 class FlightPlan;
     
 typedef SGSharedPtr<FlightPlan> FlightPlanRef;
-    
+
+const char ICAO_AIRCRAFT_CATEGORY_A = 'A';
+const char ICAO_AIRCRAFT_CATEGORY_B = 'B';
+const char ICAO_AIRCRAFT_CATEGORY_C = 'C';
+const char ICAO_AIRCRAFT_CATEGORY_D = 'D';
+const char ICAO_AIRCRAFT_CATEGORY_E = 'E';
+
 class FlightPlan : public RouteBase
 {
 public:
@@ -43,7 +49,16 @@ public:
   
   virtual std::string ident() const;
   void setIdent(const std::string& s);
-  
+
+    // propogate the GPS/FMS setting for this through to the RoutePath
+    void setFollowLegTrackToFixes(bool tf);
+    bool followLegTrackToFixes() const;
+
+    // aircraft approach category as per CFR 97.3, etc
+    // http://www.flightsimaviation.com/data/FARS/part_97-3.html
+    std::string icaoAircraftCategory() const;
+    void setIcaoAircraftCategory(const std::string& cat);
+
   FlightPlan* clone(const std::string& newIdent = std::string()) const;
   
   /**
@@ -259,7 +274,9 @@ private:
   
   std::string _ident;
   int _currentIndex;
-  
+    bool _followLegTrackToFix;
+    char _aircraftCategory;
+
   FGAirportRef _departure, _destination;
   FGRunway* _departureRunway, *_destinationRunway;
   SGSharedPtr<SID> _sid;

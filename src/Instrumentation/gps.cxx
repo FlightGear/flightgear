@@ -70,7 +70,8 @@ GPS::Config::Config() :
   _requireHardSurface(true),
   _cdiMaxDeflectionNm(3.0), // linear mode, 3nm at the peg
   _driveAutopilot(true),
-  _courseSelectable(false)
+  _courseSelectable(false),
+  _followLegTrackToFix(true)
 {
   _enableTurnAnticipation = false;
 }
@@ -84,6 +85,7 @@ void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
   aOwner->tie(aCfg, "cdi-max-deflection-nm", SGRawValuePointer<double>(&_cdiMaxDeflectionNm));
   aOwner->tie(aCfg, "drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
   aOwner->tie(aCfg, "course-selectable", SGRawValuePointer<bool>(&_courseSelectable));
+  aOwner->tie(aCfg, "follow-leg-track-to-fix", SGRawValuePointer<bool>(&_followLegTrackToFix));
   aOwner->tie(aCfg, "over-flight-distance-nm", SGRawValuePointer<double>(&_overflightDistance));
   aOwner->tie(aCfg, "over-flight-arm-distance-nm", SGRawValuePointer<double>(&_overflightArmDistance));
   aOwner->tie(aCfg, "over-flight-arm-angle-deg", SGRawValuePointer<double>(&_overflightArmAngle));

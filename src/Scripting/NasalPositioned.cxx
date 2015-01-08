@@ -463,6 +463,10 @@ static void waypointCommonSetMember(naContext c, Waypt* wpt, const char* fieldNa
     }
     
     wpt->setFlag(f, true);
+  } else if (!strcmp(fieldName, "fly_type")) {
+      if (!naIsString(value)) naRuntimeError(c, "fly_type must be a string");
+      bool flyOver = (strcmp(naStr_data(value), "flyOver") == 0);
+      wpt->setFlag(WPT_OVERFLIGHT, flyOver);
   }
 }
 
@@ -569,6 +573,8 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
   else if (!strcmp(fieldName, "star_trans")) *out = ghostForProcedure(c, fp->starTransition());
   else if (!strcmp(fieldName, "approach")) *out = ghostForProcedure(c, fp->approach());
   else if (!strcmp(fieldName, "current")) *out = naNum(fp->currentIndex());
+    else if (!strcmp(fieldName, "aircraftCategory")) *out = stringToNasal(c, fp->icaoAircraftCategory());
+    else if (!strcmp(fieldName, "followLegTrackToFix")) *out = naNum(fp->followLegTrackToFixes());
   else {
     return 0;
   }
@@ -691,6 +697,12 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     }
     
     naRuntimeError(c, "bad argument type setting approach");
+  } else if (!strcmp(fieldName, "aircraftCategory")) {
+      if (!naIsString(value)) naRuntimeError(c, "aircraftCategory must be a string");
+      fp->setIcaoAircraftCategory(naStr_data(value));
+  } else if (!strcmp(fieldName, "followLegTrackToFix")) {
+      int b = (int) value.num;
+      fp->setFollowLegTrackToFixes(b);
   }
 }
 

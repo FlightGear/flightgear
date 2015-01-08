@@ -173,7 +173,7 @@ public:
       }
   }
 
-  void computeTurn(double radiusM, const WayptData& previous, WayptData& next)
+  void computeTurn(double radiusM, bool constrainLegCourse, const WayptData& previous, WayptData& next)
   {
     assert(!skipped);
     assert(legCourseValid && next.legCourseValid);
@@ -201,7 +201,7 @@ public:
         // through turnAngle
         double xtk = turnRadius * (1 - cos(turnAngle * SG_DEGREES_TO_RADIANS));
 
-        if (next.isCourseConstrained()) {
+        if (constrainLegCourse || next.isCourseConstrained()) {
           // next leg course is constrained. We need to swing back onto the
           // desired course, using a compensation turn
           
@@ -409,9 +409,12 @@ bool isDescentWaypoint(const WayptRef& wpt)
 class RoutePath::RoutePathPrivate
 {
 public:
-  WayptDataVec waypoints;
-  PerformanceBracketVec perf;
-  
+    WayptDataVec waypoints;
+
+    char aircraftCategory;
+    PerformanceBracketVec perf;
+    double pathTurnRate;
+    bool constrainLegCourses;
   
   PerformanceBracketVec::const_iterator
   findPerformanceBracket(double altFt) const
@@ -621,10 +624,16 @@ public:
   
   double groundSpeedForAltitude(double altitude) const
   {
-    // FIXME
+      PerformanceBracketVec::const_iterator it = findPerformanceBracket(altitude);
+      if (it->speedIsMach) {
+          return 300.0;
+      } else {
+          // FIXME - convert IAS to ground-speed, using standard atmosphere / temperature model
+          return it->speedIASOrMach;
+      }
+
 #if 0
     if (0) {
-      PerformanceBracketVec::const_iterator it = findPerformanceBracket(altitude);
       double mach;
       
       if (it->speedIsMach) {
@@ -652,8 +661,6 @@ public:
 #endif
     }
 #endif
-    
-    return 250.0;
   }
 
   double distanceBetweenIndices(int from, int to) const
@@ -669,11 +676,36 @@ public:
   
   void initPerfData()
   {
-    // assume category C/D aircraft for now
-    perf.push_back(PerformanceBracket(4000, 1800, 1800, 180));
-    perf.push_back(PerformanceBracket(10000, 1800, 1800, 230));
-    perf.push_back(PerformanceBracket(18000, 1200, 1800, 270));
-    perf.push_back(PerformanceBracket(60000, 800, 1200, 0.85, true /* is Mach */));
+      pathTurnRate = 3.0; // 3 deg/sec = 180deg/min = standard rate turn
+      switch (aircraftCategory) {
+      case ICAO_AIRCRAFT_CATEGORY_A:
+          perf.push_back(PerformanceBracket(4000, 600, 1200, 75));
+          perf.push_back(PerformanceBracket(10000, 600, 1200, 140));
+          break;
+
+      case ICAO_AIRCRAFT_CATEGORY_B:
+          perf.push_back(PerformanceBracket(4000, 100, 1200, 100));
+          perf.push_back(PerformanceBracket(10000, 800, 1200, 160));
+          perf.push_back(PerformanceBracket(18000, 600, 1800, 200));
+          break;
+
+      case ICAO_AIRCRAFT_CATEGORY_C:
+          perf.push_back(PerformanceBracket(4000, 1800, 1800, 150));
+          perf.push_back(PerformanceBracket(10000, 1800, 1800, 200));
+          perf.push_back(PerformanceBracket(18000, 1200, 1800, 270));
+          perf.push_back(PerformanceBracket(60000, 800, 1200, 0.80, true /* is Mach */));
+          break;
+
+      case ICAO_AIRCRAFT_CATEGORY_D:
+      case ICAO_AIRCRAFT_CATEGORY_E:
+      default:
+
+          perf.push_back(PerformanceBracket(4000, 1800, 1800, 180));
+          perf.push_back(PerformanceBracket(10000, 1800, 1800, 230));
+          perf.push_back(PerformanceBracket(18000, 1200, 1800, 270));
+          perf.push_back(PerformanceBracket(60000, 800, 1200, 0.87, true /* is Mach */));
+          break;
+      }
   }
 
     const WayptData& previousValidWaypoint(int index) const
@@ -688,29 +720,20 @@ public:
 
 }; // of RoutePathPrivate class
 
-RoutePath::RoutePath(const flightgear::WayptVec& wpts) :
-  d(new RoutePathPrivate)
-{
-  WayptVec::const_iterator it;
-  for (it = wpts.begin(); it != wpts.end(); ++it) {
-    d->waypoints.push_back(WayptData(*it));
-  }
-  commonInit();
-}
-
 RoutePath::RoutePath(const flightgear::FlightPlan* fp) :
   d(new RoutePathPrivate)
 {
   for (int l=0; l<fp->numLegs(); ++l) {
      d->waypoints.push_back(WayptData(fp->legAtIndex(l)->waypoint()));
   }
+
+    d->aircraftCategory = fp->icaoAircraftCategory()[0];
+    d->constrainLegCourses = fp->followLegTrackToFixes();
   commonInit();
 }
 
 void RoutePath::commonInit()
 {
-  _pathTurnRate = 3.0; // 3 deg/sec = 180deg/min = standard rate turn
- 
   d->initPerfData();
   
   WayptDataVec::iterator it;
@@ -734,7 +757,7 @@ void RoutePath::commonInit()
 
     double alt = 0.0; // FIXME
     double gs = d->groundSpeedForAltitude(alt);
-    double radiusM = ((360.0 / _pathTurnRate) * gs * SG_KT_TO_MPS) / SGMiscd::twopi();
+    double radiusM = ((360.0 / d->pathTurnRate) * gs * SG_KT_TO_MPS) / SGMiscd::twopi();
     
     if (i < (d->waypoints.size() - 1)) {
         int nextIndex = i + 1;
@@ -745,7 +768,7 @@ void RoutePath::commonInit()
         next.computeLegCourse(d->waypoints[i]);
 
       if (next.legCourseValid) {
-        d->waypoints[i].computeTurn(radiusM, prev, next);
+        d->waypoints[i].computeTurn(radiusM, d->constrainLegCourses, prev, next);
       } else {
         // next waypoint has indeterminate course. Let's create a sharp turn
         // this can happen when the following point is ATC vectors, for example.
@@ -861,7 +884,7 @@ SGGeodVec RoutePath::pathForHold(Hold* hold) const
   
   SGGeodVec r;
   double az2;
-  double stepTime = turnDelta / _pathTurnRate; // in seconds
+  double stepTime = turnDelta / d->pathTurnRate; // in seconds
   double stepDist = gsKts * (stepTime / 3600.0) * SG_NM_TO_METER;
   double legDist = hold->isDistance() ? 
     hold->timeOrDistance() 

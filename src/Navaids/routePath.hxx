@@ -37,7 +37,6 @@ typedef std::vector<SGGeod> SGGeodVec;
 class RoutePath
 {
 public:
-  RoutePath(const flightgear::WayptVec& wpts);
   RoutePath(const flightgear::FlightPlan* fp);
   
   SGGeodVec pathForIndex(int index) const;
@@ -66,9 +65,6 @@ private:
   
   
   RoutePathPrivate* d;
-  
-  
-  double _pathTurnRate; ///< degrees-per-second, defaults to 3, i.e 180 in a minute
 };
 
 #endif

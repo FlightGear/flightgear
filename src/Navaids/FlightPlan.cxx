@@ -64,6 +64,8 @@ static FPDelegateFactoryVec static_delegateFactories;
 FlightPlan::FlightPlan() :
   _delegateLock(0),
   _currentIndex(-1),
+    _followLegTrackToFix(true),
+    _aircraftCategory(ICAO_AIRCRAFT_CATEGORY_C),
   _departureRunway(NULL),
   _destinationRunway(NULL),
   _sid(NULL),
@@ -1359,5 +1361,36 @@ void FlightPlan::Delegate::runFinished()
     if (_inner) _inner->runFinished();
     endOfFlightPlan();
 }
+
+void FlightPlan::setFollowLegTrackToFixes(bool tf)
+{
+    _followLegTrackToFix = tf;
+}
+
+bool FlightPlan::followLegTrackToFixes() const
+{
+    return _followLegTrackToFix;
+}
+
+std::string FlightPlan::icaoAircraftCategory() const
+{
+    std::string r;
+    r.push_back(_aircraftCategory);
+    return r;
+}
+
+void FlightPlan::setIcaoAircraftCategory(const std::string& cat)
+{
+    if (cat.empty()) {
+        throw sg_range_exception("Invalid ICAO aircraft category:", cat);
+    }
+
+    if ((cat[0] < ICAO_AIRCRAFT_CATEGORY_A) || (cat[0] > ICAO_AIRCRAFT_CATEGORY_E)) {
+        throw sg_range_exception("Invalid ICAO aircraft category:", cat);
+    }
+
+    _aircraftCategory = cat[0];
+}
+
     
 } // of namespace flightgear
