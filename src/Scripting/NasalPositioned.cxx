@@ -2420,7 +2420,6 @@ static naRef f_procedure_route(naContext c, naRef me, int argc, naRef* args)
     WayptVec r;
     Approach* app = (Approach*) proc;
     if (!app->route(iaf, r)) {
-      SG_LOG(SG_NASAL, SG_WARN, "procedure.route failed for Approach somehow");
       return naNil();
     }
     
