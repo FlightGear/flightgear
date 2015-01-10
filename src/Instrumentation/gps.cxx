@@ -462,13 +462,20 @@ SGGeod GPS::previousLegWaypointPosition(bool& isValid)
 	FlightPlan::Leg* leg = _route->previousLeg();
 	if (leg){
 		Waypt* waypt = leg->waypoint();
-		if(waypt){
-			isValid = true;
+		if (waypt) {
+            isValid = true;
+            // ensure computations use runway end, not threshold
+            if (waypt->type() == "runway") {
+                RunwayWaypt* rwpt = static_cast<RunwayWaypt*>(waypt);
+                return rwpt->runway()->end();
+            }
+
 			return waypt->position();
 		}
 	}
+
 	isValid = false;
-  return SGGeod();
+    return SGGeod();
 }
 ///////////////////////////////////////////////////////////////////////////
 
