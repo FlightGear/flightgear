@@ -504,15 +504,16 @@ static void initAircraftDirsNasalSecurity()
 void fgInitAircraftPaths(bool reinit)
 {
   if (!reinit) {
-    SGPath userAircraftDir = SGPath::documents(globals->get_fg_home());
-    if (userAircraftDir != globals->get_fg_home()) {
-      userAircraftDir.append("FlightGear");
-    }
-    userAircraftDir.append("Aircraft");
+      // there is some debate if we should be using FG_HOME here (hidden
+      // location) vs a user-visible location inside Documents (especially on
+      // Windows and Mac). Really this location should be managed by FG, not
+      // the user, but it can potentially grow large.
+      SGPath packageAircraftDir = globals->get_fg_home();
+      packageAircraftDir.append("Aircraft");
 
-    SGSharedPtr<Root> pkgRoot(new Root(userAircraftDir, FLIGHTGEAR_VERSION));
-    // set the http client later (too early in startup right now)
-    globals->setPackageRoot(pkgRoot);
+      SGSharedPtr<Root> pkgRoot(new Root(packageAircraftDir, FLIGHTGEAR_VERSION));
+      // set the http client later (too early in startup right now)
+      globals->setPackageRoot(pkgRoot);
   }
 
   SGSharedPtr<Root> pkgRoot(globals->packageRoot());
