@@ -238,8 +238,8 @@ public:
 	LegWayptCtl(RNAV* aRNAV, const WayptRef& aWpt) :
     WayptController(aRNAV, aWpt),
     _waypointOrigin(),
-    _distanceOriginAircraftMeter(0.0),
-    _distanceAircraftTargetMeter(0.0),
+    _distanceOriginAircraftMetre(0.0),
+    _distanceAircraftTargetMetre(0.0),
     _courseOriginToAircraft(0.0),
     _courseAircraftToTarget(0.0),
     _courseDev(0.0),
@@ -260,7 +260,7 @@ public:
 	courseOriginTarget 				= SGGeodesy::courseDeg(_waypointOrigin,_waypt->position());
 
 	_courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
-	_distanceAircraftTargetMeter 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
+	_distanceAircraftTargetMetre 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
 
 	// check reach the leg in 45Deg or going direct
@@ -278,15 +278,15 @@ public:
   virtual void update(double)
   {
     _courseOriginToAircraft			= SGGeodesy::courseDeg(_waypointOrigin,_rnav->position());
-    _distanceOriginAircraftMeter 	= SGGeodesy::distanceM(_waypointOrigin,_rnav->position());
+    _distanceOriginAircraftMetre 	= SGGeodesy::distanceM(_waypointOrigin,_rnav->position());
 
     _courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
-    _distanceAircraftTargetMeter 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
+    _distanceAircraftTargetMetre 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
     _courseDev = -(_courseOriginToAircraft - _targetTrack);
 
-    bool isMinimumOverFlightDistanceReached = _distanceAircraftTargetMeter < _rnav->overflightDistanceM();
-    bool isOverFlightConeArmed 				= _distanceAircraftTargetMeter < ( _rnav->overflightArmDistanceM() + _rnav->overflightDistanceM() );
+    bool isMinimumOverFlightDistanceReached = _distanceAircraftTargetMetre < _rnav->overflightDistanceM();
+    bool isOverFlightConeArmed 				= _distanceAircraftTargetMetre < ( _rnav->overflightArmDistanceM() + _rnav->overflightDistanceM() );
     bool leavingOverFlightCone 				= (fabs(_courseAircraftToTarget - _targetTrack) > _rnav->overflightArmAngleDeg());
 
     if( isMinimumOverFlightDistanceReached ){
@@ -306,12 +306,12 @@ public:
 
   virtual double distanceToWayptM() const
   {
-    return _distanceAircraftTargetMeter;
+    return _distanceAircraftTargetMetre;
   }
 
   virtual double xtrackErrorNm() const
   {
-	  return greatCircleCrossTrackError(_distanceOriginAircraftMeter * SG_METER_TO_NM, _courseDev);
+	  return greatCircleCrossTrackError(_distanceOriginAircraftMetre * SG_METER_TO_NM, _courseDev);
   }
 
   virtual bool toFlag() const
@@ -341,8 +341,8 @@ private:
    * A(from), B(to), D(position) perhaps off course
    */
   SGGeod _waypointOrigin;
-  double _distanceOriginAircraftMeter;
-  double _distanceAircraftTargetMeter;
+  double _distanceOriginAircraftMetre;
+  double _distanceAircraftTargetMetre;
   double _courseOriginToAircraft;
   double _courseAircraftToTarget;
   double _courseDev;
