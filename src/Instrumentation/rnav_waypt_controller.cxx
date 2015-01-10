@@ -67,8 +67,8 @@ bool geocRadialIntersection(const SGGeoc& a, double r1, const SGGeoc& b, double 
   }
   
   if ((sin(ang1)*sin(ang2))<0.0) {
-    SG_LOG(SG_INSTR, SG_INFO, "geocRadialIntersection: intersection ambiguous:"
-           << ang1 << " " << ang2 << " sin1 " << sin(ang1) << " sin2 " << sin(ang2));
+   // SG_LOG(SG_INSTR, SG_INFO, "geocRadialIntersection: intersection ambiguous:"
+    //       << ang1 << " " << ang2 << " sin1 " << sin(ang1) << " sin2 " << sin(ang2));
     return false;
   }
   
@@ -398,7 +398,7 @@ public:
   
   virtual double xtrackErrorNm() const
   {
-    double x = sin(_courseDev * SG_RADIANS_TO_DEGREES) * _distanceAircraftRunwayEnd;
+    double x = sin(_courseDev * SG_DEGREES_TO_RADIANS) * _distanceAircraftRunwayEnd;
     return x * SG_METER_TO_NM;
   }
 
