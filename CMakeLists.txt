@@ -170,6 +170,7 @@ option(ENABLE_METAR      "Set to ON to build the metar application (default)" ON
 option(ENABLE_TESTS      "Set to ON to build test applications (default)" ON)
 option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON)
 option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON)
+option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
 
 if(LOGGING)
     # nothing
@@ -279,13 +280,14 @@ list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
 
 ##############################################################################
 ## Qt5 setup setup
-
-find_package(Qt5 5.1 COMPONENTS Widgets)
-if (Qt5Widgets_FOUND)
-    message(STATUS "Will enable Qt launcher GUI")
-    set(HAVE_QT 1)
-endif()
-
+if (ENABLE_QT)
+	message(STATUS "Qt launcher enabled, checking for Qt 5.1 / qmake")
+	find_package(Qt5 5.1 COMPONENTS Widgets)
+	if (Qt5Widgets_FOUND)
+		message(STATUS "Will enable Qt launcher GUI")
+		set(HAVE_QT 1)
+	endif()
+endif (ENABLE_QT)
 ##############################################################################
 
 find_package(PLIB REQUIRED puaux pu js fnt)

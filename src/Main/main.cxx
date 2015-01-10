@@ -401,13 +401,6 @@ static void logToFile()
 // Main top level initialization
 int fgMainInit( int argc, char **argv )
 {
-#if defined(HAVE_QT)
-    QApplication app(argc, argv);
-    app.setOrganizationName("FlightGear");
-    app.setApplicationName("FlightGear");
-    app.setOrganizationDomain("flightgear.org");
-#endif
-
     // set default log levels
     sglog().setLogLevels( SG_ALL, SG_ALERT );
 
@@ -464,7 +457,12 @@ int fgMainInit( int argc, char **argv )
     // environment variables. This avoids needed a wrapper shell-script on OS-X.
     showLauncher |= (::getenv("FG_LAUNCHER") != 0);
 
-    if (showLauncher) {
+    if (showLauncher) {        
+        QApplication app(argc, argv);
+        app.setOrganizationName("FlightGear");
+        app.setApplicationName("FlightGear");
+        app.setOrganizationDomain("flightgear.org");
+    
         // avoid double Apple menu and other weirdness if both Qt and OSG
         // try to initialise various Cocoa structures.
         flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
