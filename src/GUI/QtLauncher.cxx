@@ -24,6 +24,7 @@
 #include <QStyledItemDelegate>
 #include <QLinearGradient>
 #include <QFileDialog>
+#include <QMessageBox>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -1080,6 +1081,20 @@ void QtLauncher::setAirport(FGAirportRef ref)
 
 void QtLauncher::onOpenCustomAircraftDir()
 {
+    QFileInfo info(m_customAircraftDir);
+    if (!info.exists()) {
+        int result = QMessageBox::question(this, "Create folder?",
+                                           "The custom aircraft folder does not exist, create it now?",
+                                           QMessageBox::Yes | QMessageBox::No,
+                                           QMessageBox::Yes);
+        if (result == QMessageBox::No) {
+            return;
+        }
+
+        QDir d(m_customAircraftDir);
+        d.mkpath(m_customAircraftDir);
+    }
+
   QUrl u = QUrl::fromLocalFile(m_customAircraftDir);
   QDesktopServices::openUrl(u);
 }
