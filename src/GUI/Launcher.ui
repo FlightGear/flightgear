@@ -433,6 +433,31 @@
         </layout>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Season:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="seasonCombo">
+           <item>
+            <property name="text">
+             <string>Summer</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Winter</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QCheckBox" name="msaaCheckbox">
          <property name="text">
           <string>Enable Multi-sample anti-aliasing</string>

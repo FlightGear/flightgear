@@ -654,6 +654,8 @@ QtLauncher::QtLauncher() :
 
     connect(m_ui->timeOfDayCombo, SIGNAL(currentIndexChanged(int)),
             this, SLOT(updateSettingsSummary()));
+    connect(m_ui->seasonCombo, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(updateSettingsSummary()));
     connect(m_ui->fetchRealWxrCheckbox, SIGNAL(toggled(bool)),
             this, SLOT(updateSettingsSummary()));
     connect(m_ui->rembrandtCheckbox, SIGNAL(toggled(bool)),
@@ -712,6 +714,7 @@ void QtLauncher::restoreSettings()
     m_ui->fetchRealWxrCheckbox->setChecked(settings.value("enable-realwx", true).toBool());
     m_ui->startPausedCheck->setChecked(settings.value("start-paused", false).toBool());
     m_ui->timeOfDayCombo->setCurrentIndex(settings.value("timeofday", 0).toInt());
+    m_ui->seasonCombo->setCurrentIndex(settings.value("season", 0).toInt());
 
     // full paths to -set.xml files
     m_recentAircraft = settings.value("recent-aircraft").toStringList();
@@ -758,6 +761,7 @@ void QtLauncher::saveSettings()
     settings.setValue("recent-aircraft", m_recentAircraft);
     settings.setValue("recent-airports", m_recentAirports);
     settings.setValue("timeofday", m_ui->timeOfDayCombo->currentIndex());
+    settings.setValue("season", m_ui->seasonCombo->currentIndex());
 
     QStringList paths;
     for (int i=0; i<m_ui->sceneryPathsList->count(); ++i) {
@@ -841,6 +845,11 @@ void QtLauncher::onRun()
     if (m_ui->timeOfDayCombo->currentIndex() != 0) {
         QString dayval = m_ui->timeOfDayCombo->currentText().toLower();
         opt->addOption("timeofday", dayval.toStdString());
+    }
+
+    if (m_ui->seasonCombo->currentIndex() != 0) {
+        QString dayval = m_ui->timeOfDayCombo->currentText().toLower();
+        opt->addOption("season", dayval.toStdString());
     }
 
     // scenery paths
@@ -1123,6 +1132,10 @@ void QtLauncher::updateSettingsSummary()
     QStringList summary;
     if (m_ui->timeOfDayCombo->currentIndex() > 0) {
         summary.append(QString(m_ui->timeOfDayCombo->currentText().toLower()));
+    }
+
+    if (m_ui->seasonCombo->currentIndex() > 0) {
+        summary.append(QString(m_ui->seasonCombo->currentText().toLower()));
     }
 
     if (m_ui->rembrandtCheckbox->isChecked()) {
