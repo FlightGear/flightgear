@@ -563,9 +563,9 @@ void GPS::currentWaypointChanged()
   }
   
   _currentWaypt = _route->currentLeg()->waypoint();
+    wp1Changed(); // rebuild the active controller
   _desiredCourse = getLegMagCourse();
   _desiredCourseNode->fireValueChanged();
-  wp1Changed();
 }
 
 

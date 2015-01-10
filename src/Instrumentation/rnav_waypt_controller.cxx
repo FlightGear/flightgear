@@ -528,16 +528,43 @@ public:
   virtual void init()
   {
     RadialIntercept* w = (RadialIntercept*) _waypt.get();
-    _trueRadial = w->radialDegMagnetic() + _rnav->magvarDeg();
+      _trueRadial = w->radialDegMagnetic() + _rnav->magvarDeg();
     _targetTrack = w->courseDegMagnetic() + _rnav->magvarDeg();
   }
   
   virtual void update(double)
   {
+      SGGeoc c,
+        geocPos = SGGeoc::fromGeod(_rnav->position()),
+        geocWayptPos = SGGeoc::fromGeod(_waypt->position());
+
+      bool ok = geocRadialIntersection(geocPos, _targetTrack,
+                                       geocWayptPos, _trueRadial, c);
+      if (!ok) {
+          // try with a backwards offset from the waypt pos, in case the
+          // procedure waypt location is too close. (eg, KSFO OCEAN SID)
+
+          SGGeoc navidAdjusted;
+          SGGeodesy::advanceRadM(geocWayptPos, _trueRadial, SG_NM_TO_METER * -10, navidAdjusted);
+
+          ok = geocRadialIntersection(geocPos, _targetTrack,
+                                      navidAdjusted, _trueRadial, c);
+          if (!ok) {
+              SG_LOG(SG_INSTR, SG_WARN, "InterceptCtl, bad intersection, skipping waypt");
+              setDone();
+              return;
+          }
+      }
+
+      _projectedPosition = SGGeod::fromGeoc(c);
+
+
     // note we want the outbound radial from the waypt, hence the ordering
     // of arguments to courseDeg
     double r = SGGeodesy::courseDeg(_waypt->position(), _rnav->position());
-    if (fabs(r - _trueRadial) < 0.5) {
+      double bearingDiff = r - _trueRadial;
+      SG_NORMALIZE_RANGE(bearingDiff, -180.0, 180.0);
+    if (fabs(bearingDiff) < 0.5) {
       setDone();
     }
   }
@@ -549,31 +576,11 @@ public:
 
     virtual SGGeod position() const
     {
-        SGGeoc c,
-        geocPos = SGGeoc::fromGeod(_rnav->position()),
-        geocWayptPos = SGGeoc::fromGeod(_waypt->position());
-
-        bool ok = geocRadialIntersection(geocPos, _rnav->trackDeg(),
-                                         geocWayptPos, _trueRadial, c);
-        if (!ok) {
-            // try with a backwards offset from the waypt pos, in case the
-            // procedure waypt location is too close. (eg, KSFO OCEAN SID)
-
-            SGGeoc navidAdjusted;
-            SGGeodesy::advanceRadM(geocWayptPos, _trueRadial, SG_NM_TO_METER * -10, navidAdjusted);
-
-            ok = geocRadialIntersection(geocPos, _rnav->trackDeg(),
-                                        navidAdjusted, _trueRadial, c);
-            if (!ok) {
-                // fallback for the broken case
-                return _waypt->position();
-            }
-        }
-        
-        return SGGeod::fromGeoc(c);
+        return _projectedPosition;
     }
 private:
   double _trueRadial;
+    SGGeod _projectedPosition;
 };
 
 class DMEInterceptCtl : public WayptController
