@@ -78,6 +78,30 @@ static double magVarFor(const SGGeod& geod)
   return sgGetMagVar(geod, jd) * SG_RADIANS_TO_DEGREES;
 }
 
+SGGeod turnCenterOverflight(const SGGeod& pt, double inHeadingDeg,
+                           double turnAngleDeg, double turnRadiusM)
+{
+    double p = copysign(90.0, turnAngleDeg);
+    return SGGeodesy::direct(pt, inHeadingDeg + p, turnRadiusM);
+}
+
+SGGeod turnCenterFlyBy(const SGGeod& pt, double inHeadingDeg,
+                           double turnAngleDeg, double turnRadiusM)
+{
+    double halfAngle = turnAngleDeg * 0.5;
+    double turnCenterOffset = turnRadiusM / cos(halfAngle * SG_DEGREES_TO_RADIANS);
+    double p = copysign(90.0, turnAngleDeg);
+    return SGGeodesy::direct(pt, inHeadingDeg + halfAngle + p, turnCenterOffset);
+
+}
+
+SGGeod turnCenterFromExit(const SGGeod& pt, double outHeadingDeg,
+                       double turnAngleDeg, double turnRadiusM)
+{
+    double p = copysign(90.0, turnAngleDeg);
+    return SGGeodesy::direct(pt, outHeadingDeg + p, turnRadiusM);
+}
+
 class WayptData
 {
 public:
@@ -173,6 +197,17 @@ public:
       }
   }
 
+    SGGeod pointOnTurnFromHeading(double headingDeg) const
+    {
+        double p = copysign(90.0, turnAngle);
+        return SGGeodesy::direct(turnCenter, headingDeg - p, turnRadius);
+    }
+
+    double pathDistanceForTurnAngle(double angleDeg) const
+    {
+        return turnRadius * fabs(angleDeg) * SG_DEGREES_TO_RADIANS;
+    }
+
   void computeTurn(double radiusM, bool constrainLegCourse, const WayptData& previous, WayptData& next)
   {
     assert(!skipped);
@@ -181,7 +216,6 @@ public:
     turnAngle = next.legCourseTrue - legCourseTrue;
     SG_NORMALIZE_RANGE(turnAngle, -180.0, 180.0);
     turnRadius = radiusM;
-    double p = copysign(90.0, turnAngle);
 
     if (fabs(turnAngle) > 120.0) {
         // flyBy logic blows up for sharp turns - due to the tan() term
@@ -192,9 +226,8 @@ public:
 
     if (flyOver) {
       turnEntryPos = pos;
-      turnCenter = SGGeodesy::direct(pos, legCourseTrue + p, turnRadius);
-      // use the leg course
-      turnExitPos = SGGeodesy::direct(turnCenter, next.legCourseTrue - p, turnRadius);
+      turnCenter = turnCenterOverflight(pos, legCourseTrue, turnAngle, turnRadius);
+      turnExitPos = pointOnTurnFromHeading(next.legCourseTrue);
       
       if (!next.wpt->flag(WPT_DYNAMIC)) {
         // distance perpendicular to next leg course, after turning
@@ -215,8 +248,9 @@ public:
           turnExitPos = SGGeodesy::direct(turnExitPos, next.legCourseTrue, d);
           overflightCompensationAngle = -theta;
 
-          turnPathDistanceM = turnRadius * (fabs(turnAngle) +
-                                            fabs(overflightCompensationAngle)) * SG_DEGREES_TO_RADIANS;
+            // sign of angles will differ, so compute distances seperately
+            turnPathDistanceM = pathDistanceForTurnAngle(turnAngle) +
+                pathDistanceForTurnAngle(overflightCompensationAngle);
         } else {
           // next leg course can be adjusted. increase the turn angle
           // and modify the next leg's course accordingly.
@@ -228,32 +262,23 @@ public:
           increaseAngle = copysign(increaseAngle, turnAngle);
 
           turnAngle += increaseAngle;
-          turnExitPos = SGGeodesy::direct(turnCenter, legCourseTrue + turnAngle - p, turnRadius);
-
+          turnExitPos = pointOnTurnFromHeading(legCourseTrue + turnAngle);
           // modify next leg course
           next.legCourseTrue = SGGeodesy::courseDeg(turnExitPos, next.pos);
-
-          turnPathDistanceM = turnRadius * (fabs(turnAngle) * SG_DEGREES_TO_RADIANS);
+          turnPathDistanceM = pathDistanceForTurnAngle(turnAngle);
         } // of next leg isn't course constrained
       } else {
           // next point is dynamic
           // no compensation needed
-          turnPathDistanceM = turnRadius * (fabs(turnAngle) * SG_DEGREES_TO_RADIANS);
+          turnPathDistanceM = pathDistanceForTurnAngle(turnAngle);
       }
     } else {
       hasEntry = true;
-
       double halfAngle = turnAngle * 0.5;
-      
-      double turnCenterOffset = turnRadius / cos(halfAngle * SG_DEGREES_TO_RADIANS);
-      turnCenter = SGGeodesy::direct(pos, legCourseTrue + halfAngle + p, turnCenterOffset);
-      
-      double distAlongPath = turnRadius * tan(fabs(halfAngle) * SG_DEGREES_TO_RADIANS);
-      
-      turnEntryPos = SGGeodesy::direct(pos, legCourseTrue, -distAlongPath);
-      turnExitPos = SGGeodesy::direct(pos, next.legCourseTrue, distAlongPath);
-
-      turnPathDistanceM = turnRadius * (fabs(halfAngle) * SG_DEGREES_TO_RADIANS);
+      turnCenter = turnCenterFlyBy(pos, legCourseTrue, turnAngle, turnRadius);
+      turnEntryPos = pointOnTurnFromHeading(legCourseTrue);
+      turnExitPos = pointOnTurnFromHeading(next.legCourseTrue);
+      turnPathDistanceM = pathDistanceForTurnAngle(halfAngle);
     }
   }
   
@@ -356,17 +381,15 @@ public:
       theta = copysign(theta, turnAngle);
       double halfAngle = turnAngle * 0.5;
       double inboundCourse = legCourseTrue + (flyOver ? 0.0 : halfAngle);
-      return SGGeodesy::direct(turnCenter, inboundCourse + theta - p, turnRadius);
+      return pointOnTurnFromHeading(inboundCourse + theta);
   }
 
   SGGeod pointAlongEntryPath(double distanceM) const
   {
     assert(hasEntry);
     double theta = (distanceM / turnRadius) * SG_RADIANS_TO_DEGREES;
-    theta = copysign(theta, turnAngle);
-    double p = copysign(90, turnAngle);
-    double course = legCourseTrue + theta;
-    return SGGeodesy::direct(turnCenter, course - p, turnRadius);
+      theta = copysign(theta, turnAngle);
+      return pointOnTurnFromHeading(legCourseTrue + theta);
   }
   
   WayptRef wpt;
