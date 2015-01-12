@@ -56,6 +56,12 @@ string ATCSpeech::getSpokenNumber( string number )
 string ATCSpeech::getSpokenNumber( int number, bool leadingZero, int digits )
 {
   vector<const char *> spokenDigits;
+  bool negative = false;
+  if( number < 0 ) {
+    negative = true;
+    number = -number;
+  }
+
   int n = 0;
   while( number > 0 ) {
     spokenDigits.push_back( getSpokenDigit(number%10) );
@@ -70,8 +76,12 @@ string ATCSpeech::getSpokenNumber( int number, bool leadingZero, int digits )
   }
 
   string result;
+  if( negative ) {
+    result.append( globals->get_locale()->getLocalizedString("minus", "atc", "minus" ) );
+  }
+
   while( false == spokenDigits.empty() ) {
-    if( false == spokenDigits.empty() )
+    if( false == result.empty() )
       result.SPACE;
 
     result.append( spokenDigits.back() );
