@@ -92,7 +92,6 @@ SGGeod turnCenterFlyBy(const SGGeod& pt, double inHeadingDeg,
     double turnCenterOffset = turnRadiusM / cos(halfAngle * SG_DEGREES_TO_RADIANS);
     double p = copysign(90.0, turnAngleDeg);
     return SGGeodesy::direct(pt, inHeadingDeg + halfAngle + p, turnCenterOffset);
-
 }
 
 SGGeod turnCenterFromExit(const SGGeod& pt, double outHeadingDeg,
@@ -100,6 +99,66 @@ SGGeod turnCenterFromExit(const SGGeod& pt, double outHeadingDeg,
 {
     double p = copysign(90.0, turnAngleDeg);
     return SGGeodesy::direct(pt, outHeadingDeg + p, turnRadiusM);
+}
+
+struct TurnInfo
+{
+    TurnInfo() : valid(false),
+    inboundCourseDeg(0.0),
+    turnAngleDeg(0.0) { }
+
+    bool valid;
+    SGGeod turnCenter;
+    double inboundCourseDeg;
+    double turnAngleDeg;
+};
+
+/**
+ * given a turn exit position and heading, and an arbitrary origin postion, 
+ * compute the turn center / angle the matches. Certain configurations may
+ * fail, especially if the origin is less than two turn radii from the exit pos.
+ */
+TurnInfo turnCenterAndAngleFromExit(const SGGeod& pt, double outHeadingDeg,
+                                double turnRadiusM, const SGGeod&origin)
+{
+    double bearingToExit = SGGeodesy::courseDeg(origin, pt);
+    // not the final turn angle, but we need to know which side of the
+    // exit course we're on, to decide if it's a left-hand or right-hand turn
+    double turnAngle = outHeadingDeg - bearingToExit;
+    SG_NORMALIZE_RANGE(turnAngle, -180.0, 180.0);
+    double p = copysign(90.0, turnAngle);
+
+    TurnInfo r;
+    r.turnCenter = SGGeodesy::direct(pt, outHeadingDeg + p, turnRadiusM);
+
+    double courseToTC, distanceToTC, az2;
+    SGGeodesy::inverse(origin, r.turnCenter, courseToTC, az2, distanceToTC);
+    if (distanceToTC < turnRadiusM) {
+        SG_LOG(SG_NAVAID, SG_WARN, "turnCenterAndAngleFromExit: origin point to close to turn center");
+        return r;
+    }
+
+    // find additional course angle away from the exit pos to intersect
+    // the turn circle.
+    double theta = asin(turnRadiusM / distanceToTC) * SG_RADIANS_TO_DEGREES;
+    // invert angle sign so we increase the turn angle
+    theta = -copysign(theta, turnAngle);
+
+    r.inboundCourseDeg = courseToTC + theta;
+    SG_NORMALIZE_RANGE(r.inboundCourseDeg, 0.0, 360.0);
+
+    // turn angle must have same direction (sign) as turnAngle above, even if
+    // the turn radius means the sign would cross over (happens if origin point
+    // is close by
+    r.turnAngleDeg = outHeadingDeg - r.inboundCourseDeg;
+    if (r.turnAngleDeg > 0.0) {
+        if (turnAngle < 0.0) r.turnAngleDeg -= 360.0;
+    } else {
+        if (turnAngle > 0.0) r.turnAngleDeg += 360.0;
+    }
+
+    r.valid = true;
+    return r;
 }
 
 class WayptData
@@ -111,7 +170,8 @@ public:
     posValid(false),
     legCourseValid(false),
     skipped(false),
-    turnAngle(0.0),
+    turnEntryAngle(0.0),
+    turnExitAngle(0.0),
     turnRadius(0.0),
     pathDistanceM(0.0),
     turnPathDistanceM(0.0),
@@ -135,11 +195,6 @@ public:
       if (ty == "hold") {
         legCourseTrue = wpt->headingRadialDeg() + magVarFor(pos);
         legCourseValid = true;
-      }
-      
-      if (ty == "runway") {
-        FGRunway* rwy = static_cast<RunwayWaypt*>(wpt.get())->runway();
-        turnExitPos = rwy->end();
       }
     } // of static waypt
   }
@@ -173,18 +228,44 @@ public:
       // we can compute leg course now
         if (previous.wpt->type() == "runway") {
             // use the runway departure end pos
-            legCourseTrue = SGGeodesy::courseDeg(previous.turnExitPos, pos);
-        } else {
+            FGRunway* rwy = static_cast<RunwayWaypt*>(previous.wpt.get())->runway();
+            legCourseTrue = SGGeodesy::courseDeg(rwy->end(), pos);
+        } else if (wpt->type() != "runway") {
+            // need to wait to compute runway leg course
             legCourseTrue = SGGeodesy::courseDeg(previous.pos, pos);
-
+            legCourseValid = true;
         }
-      legCourseValid = true;
     }
   }
 
-  void computeLegCourse(const WayptData& previous)
+  void computeLegCourse(const WayptData& previous, double radiusM)
   {
-      if (!legCourseValid) {
+      if (legCourseValid) {
+          return;
+      }
+
+      if (wpt->type() == "hold") {
+
+      } else if (wpt->type() == "runway") {
+          FGRunway* rwy = static_cast<RunwayWaypt*>(wpt.get())->runway();
+          flyOver = true;
+
+          TurnInfo ti = turnCenterAndAngleFromExit(rwy->threshold(),
+                                                   rwy->headingDeg(),
+                                                   radiusM, previous.pos);
+          if (ti.valid) {
+              legCourseTrue = ti.inboundCourseDeg;
+              turnEntryAngle = ti.turnAngleDeg;
+              turnEntryCenter = ti.turnCenter;
+              turnRadius = radiusM;
+              hasEntry = true;
+              turnEntryPos = pointOnEntryTurnFromHeading(ti.inboundCourseDeg);
+          } else {
+              // couldn't compute entry, never mind
+              legCourseTrue = SGGeodesy::courseDeg(previous.pos, rwy->threshold());
+          }
+          legCourseValid = true;
+      } else {
           if (posValid) {
               legCourseTrue = SGGeodesy::courseDeg(previous.pos, pos);
               legCourseValid = true;
@@ -192,15 +273,21 @@ public:
               double magVar = magVarFor(previous.pos);
               legCourseTrue = wpt->headingRadialDeg() + magVar;
               legCourseValid = true;
-
-          }
-      }
+          } // of pos not valid
+      } // of neither hold nor runway
   }
 
-    SGGeod pointOnTurnFromHeading(double headingDeg) const
+    SGGeod pointOnEntryTurnFromHeading(double headingDeg) const
     {
-        double p = copysign(90.0, turnAngle);
-        return SGGeodesy::direct(turnCenter, headingDeg - p, turnRadius);
+        assert(hasEntry);
+        double p = copysign(90.0, turnEntryAngle);
+        return SGGeodesy::direct(turnEntryCenter, headingDeg - p, turnRadius);
+    }
+
+    SGGeod pointOnExitTurnFromHeading(double headingDeg) const
+    {
+        double p = copysign(90.0, turnExitAngle);
+        return SGGeodesy::direct(turnExitCenter, headingDeg - p, turnRadius);
     }
 
     double pathDistanceForTurnAngle(double angleDeg) const
@@ -208,16 +295,36 @@ public:
         return turnRadius * fabs(angleDeg) * SG_DEGREES_TO_RADIANS;
     }
 
-  void computeTurn(double radiusM, bool constrainLegCourse, const WayptData& previous, WayptData& next)
+  void computeTurn(double radiusM, bool constrainLegCourse, WayptData& next)
   {
     assert(!skipped);
-    assert(legCourseValid && next.legCourseValid);
-    
-    turnAngle = next.legCourseTrue - legCourseTrue;
-    SG_NORMALIZE_RANGE(turnAngle, -180.0, 180.0);
+    assert(next.legCourseValid);
+      bool isRunway = (wpt->type() == "runway");
+
+      if (legCourseValid) {
+          if (isRunway) {
+              FGRunway* rwy = static_cast<RunwayWaypt*>(wpt.get())->runway();
+              turnExitAngle = next.legCourseTrue - rwy->headingDeg();
+          } else {
+              turnExitAngle = next.legCourseTrue - legCourseTrue;
+          }
+      } else {
+          // happens for first leg
+          legCourseValid = true;
+          if (isRunway) {
+              FGRunway* rwy = static_cast<RunwayWaypt*>(wpt.get())->runway();
+              turnExitAngle = next.legCourseTrue - rwy->headingDeg();
+              legCourseTrue = rwy->headingDeg();
+              flyOver = true;
+          } else {
+              turnExitAngle = 0.0;
+          }
+      }
+
+    SG_NORMALIZE_RANGE(turnExitAngle, -180.0, 180.0);
     turnRadius = radiusM;
 
-    if (fabs(turnAngle) > 120.0) {
+    if (!flyOver && fabs(turnExitAngle) > 120.0) {
         // flyBy logic blows up for sharp turns - due to the tan() term
         // heading towards infinity. By converting to flyOver we do something
         // closer to what was requested.
@@ -225,14 +332,20 @@ public:
     }
 
     if (flyOver) {
-      turnEntryPos = pos;
-      turnCenter = turnCenterOverflight(pos, legCourseTrue, turnAngle, turnRadius);
-      turnExitPos = pointOnTurnFromHeading(next.legCourseTrue);
+        if (isRunway) {
+            FGRunway* rwy = static_cast<RunwayWaypt*>(wpt.get())->runway();
+            turnExitCenter = turnCenterOverflight(rwy->end(), rwy->headingDeg(), turnExitAngle, turnRadius);
+        } else {
+            turnEntryPos = pos;
+            turnExitCenter = turnCenterOverflight(pos, legCourseTrue, turnExitAngle, turnRadius);
+
+        }
+      turnExitPos = pointOnExitTurnFromHeading(next.legCourseTrue);
       
       if (!next.wpt->flag(WPT_DYNAMIC)) {
         // distance perpendicular to next leg course, after turning
         // through turnAngle
-        double xtk = turnRadius * (1 - cos(turnAngle * SG_DEGREES_TO_RADIANS));
+        double xtk = turnRadius * (1 - cos(turnExitAngle * SG_DEGREES_TO_RADIANS));
 
         if (constrainLegCourse || next.isCourseConstrained()) {
           // next leg course is constrained. We need to swing back onto the
@@ -240,8 +353,8 @@ public:
           
           // compensation angle to turn back on course
           double theta = acos((turnRadius - (xtk * 0.5)) / turnRadius) * SG_RADIANS_TO_DEGREES;
-          theta = copysign(theta, turnAngle);
-          turnAngle += theta;
+          theta = copysign(theta, turnExitAngle);
+          turnExitAngle += theta;
         
           // move by the distance to compensate
           double d = turnRadius * 2.0 * sin(theta * SG_DEGREES_TO_RADIANS);
@@ -249,36 +362,40 @@ public:
           overflightCompensationAngle = -theta;
 
             // sign of angles will differ, so compute distances seperately
-            turnPathDistanceM = pathDistanceForTurnAngle(turnAngle) +
+            turnPathDistanceM = pathDistanceForTurnAngle(turnExitAngle) +
                 pathDistanceForTurnAngle(overflightCompensationAngle);
         } else {
           // next leg course can be adjusted. increase the turn angle
           // and modify the next leg's course accordingly.
 
           // hypotenuse of triangle, opposite edge has length turnRadius
-          double distAlongPath = std::min(1.0, sin(fabs(turnAngle) * SG_DEGREES_TO_RADIANS)) * turnRadius;
+          double distAlongPath = std::min(1.0, sin(fabs(turnExitAngle) * SG_DEGREES_TO_RADIANS)) * turnRadius;
           double nextLegDistance = SGGeodesy::distanceM(pos, next.pos) - distAlongPath;
           double increaseAngle = atan2(xtk, nextLegDistance) * SG_RADIANS_TO_DEGREES;
-          increaseAngle = copysign(increaseAngle, turnAngle);
+          increaseAngle = copysign(increaseAngle, turnExitAngle);
 
-          turnAngle += increaseAngle;
-          turnExitPos = pointOnTurnFromHeading(legCourseTrue + turnAngle);
+          turnExitAngle += increaseAngle;
+          turnExitPos = pointOnExitTurnFromHeading(legCourseTrue + turnExitAngle);
           // modify next leg course
           next.legCourseTrue = SGGeodesy::courseDeg(turnExitPos, next.pos);
-          turnPathDistanceM = pathDistanceForTurnAngle(turnAngle);
+          turnPathDistanceM = pathDistanceForTurnAngle(turnExitAngle);
         } // of next leg isn't course constrained
       } else {
           // next point is dynamic
           // no compensation needed
-          turnPathDistanceM = pathDistanceForTurnAngle(turnAngle);
+          turnPathDistanceM = pathDistanceForTurnAngle(turnExitAngle);
       }
     } else {
       hasEntry = true;
-      double halfAngle = turnAngle * 0.5;
-      turnCenter = turnCenterFlyBy(pos, legCourseTrue, turnAngle, turnRadius);
-      turnEntryPos = pointOnTurnFromHeading(legCourseTrue);
-      turnExitPos = pointOnTurnFromHeading(next.legCourseTrue);
-      turnPathDistanceM = pathDistanceForTurnAngle(halfAngle);
+        turnEntryCenter = turnCenterFlyBy(pos, legCourseTrue, turnExitAngle, turnRadius);
+
+        turnExitAngle = turnExitAngle * 0.5;
+        turnEntryAngle = turnExitAngle;
+        turnExitCenter = turnEntryCenter; // important that these match
+
+      turnEntryPos = pointOnEntryTurnFromHeading(legCourseTrue);
+      turnExitPos = pointOnExitTurnFromHeading(next.legCourseTrue);
+      turnPathDistanceM = pathDistanceForTurnAngle(turnEntryAngle);
     }
   }
   
@@ -289,57 +406,46 @@ public:
   
   void turnEntryPath(SGGeodVec& path) const
   {
-    assert(!flyOver);
-    if (fabs(turnAngle) < 0.5 ) {
+    if (!hasEntry || fabs(turnEntryAngle) < 0.5 ) {
       path.push_back(pos);
       return;
     }
 
-    double halfAngle = turnAngle * 0.5;
-    int steps = std::max(SGMiscd::roundToInt(fabs(halfAngle) / 3.0), 1);
-    double stepIncrement = halfAngle / steps;
+    int steps = std::max(SGMiscd::roundToInt(fabs(turnEntryAngle) / 3.0), 1);
+    double stepIncrement = turnEntryAngle / steps;
     double h = legCourseTrue;
-    SGGeod p = turnEntryPos;
-    double stepDist = (fabs(stepIncrement) / 360.0) * SGMiscd::twopi() * turnRadius;
-    
     for (int s=0; s<steps; ++s) {
-      path.push_back(p);
-      p = SGGeodesy::direct(p, h, stepDist);
-      h += stepIncrement;
+        path.push_back(pointOnEntryTurnFromHeading(h));
+        h += stepIncrement;
     }
-    
-    path.push_back(p);
   }
   
   void turnExitPath(SGGeodVec& path) const
   {
-    if (fabs(turnAngle) < 0.5) {
+    if (fabs(turnExitAngle) < 0.5) {
       path.push_back(turnExitPos);
       return;
     }
 
-    double t = flyOver ? turnAngle : turnAngle * 0.5;
-    int steps = std::max(SGMiscd::roundToInt(fabs(t) / 3.0), 1);
-    double stepIncrement = t / steps;
+    int steps = std::max(SGMiscd::roundToInt(fabs(turnExitAngle) / 3.0), 1);
+    double stepIncrement = turnExitAngle / steps;
     
     // initial exit heading
-    double h = legCourseTrue + (flyOver ? 0.0 : (turnAngle * 0.5));
-    double turnDirOffset = copysign(90.0, turnAngle);
-    
-    // compute the first point on the exit path. Depends on fly-over vs fly-by
-    SGGeod p = flyOver ? pos : SGGeodesy::direct(turnCenter, h + turnDirOffset, -turnRadius);
-    double stepDist = (fabs(stepIncrement) / 360.0) * SGMiscd::twopi() * turnRadius;
-    
+      double h = legCourseTrue + (flyOver ? 0.0 : turnEntryAngle);
+      if (wpt->type() == "runway") {
+          FGRunway* rwy = static_cast<RunwayWaypt*>(wpt.get())->runway();
+          h = rwy->headingDeg();
+      }
+
     for (int s=0; s<steps; ++s) {
-      path.push_back(p);
-      p = SGGeodesy::direct(p, h, stepDist);
-      h += stepIncrement;
+        path.push_back(pointOnExitTurnFromHeading(h));
+        h += stepIncrement;
     }
 
-    // we can use an exact check on the compensation angle, becayse we
+    // we can use an exact check on the compensation angle, because we
     // initialise it directly. Depending on the next element we might be
     // doing compensation or adjusting the next leg's course; if we did
-    // adjust the course ecerything 'just works' above.
+    // adjust the course everything 'just works' above.
 
     if (flyOver && (overflightCompensationAngle != 0.0)) {
       // skew by compensation angle back
@@ -348,56 +454,57 @@ public:
       // step in opposite direction to the turn angle to swing back onto
       // the next leg course
       stepIncrement = overflightCompensationAngle / steps;
-      
+
+        SGGeod p = path.back();
+        double stepDist = (fabs(stepIncrement) / 360.0) * SGMiscd::twopi() * turnRadius;
+
       for (int s=0; s<steps; ++s) {
-        path.push_back(p);
+          h += stepIncrement;
         p = SGGeodesy::direct(p, h, stepDist);
-        h += stepIncrement;
+          path.push_back(p);
+
       }
-    }
-    
-    path.push_back(p);
+    } // of overflight compensation turn
   }
 
   SGGeod pointAlongExitPath(double distanceM) const
   {
       double theta = (distanceM / turnRadius) * SG_RADIANS_TO_DEGREES;
-      double p = copysign(90, turnAngle);
+      double p = copysign(90, turnExitAngle);
 
       if (flyOver && (overflightCompensationAngle != 0.0)) {
           // figure out if we're in the compensation section
-          if (theta > turnAngle) {
+          if (theta > turnExitAngle) {
               // compute the compensation turn center - twice the turn radius
               // from turnCenter
-              SGGeod tc2 = SGGeodesy::direct(turnCenter,
+              SGGeod tc2 = SGGeodesy::direct(turnExitCenter,
                                              legCourseTrue - overflightCompensationAngle - p,
                                              turnRadius * 2.0);
-              theta = copysign(theta - turnAngle, overflightCompensationAngle);
+              theta = copysign(theta - turnExitAngle, overflightCompensationAngle);
               return SGGeodesy::direct(tc2,
                                        legCourseTrue - overflightCompensationAngle + theta + p, turnRadius);
           }
       }
 
-      theta = copysign(theta, turnAngle);
-      double halfAngle = turnAngle * 0.5;
-      double inboundCourse = legCourseTrue + (flyOver ? 0.0 : halfAngle);
-      return pointOnTurnFromHeading(inboundCourse + theta);
+      theta = copysign(theta, turnExitAngle);
+      double inboundCourse = legCourseTrue + (flyOver ? 0.0 : turnExitAngle);
+      return pointOnExitTurnFromHeading(inboundCourse + theta);
   }
 
   SGGeod pointAlongEntryPath(double distanceM) const
   {
     assert(hasEntry);
     double theta = (distanceM / turnRadius) * SG_RADIANS_TO_DEGREES;
-      theta = copysign(theta, turnAngle);
-      return pointOnTurnFromHeading(legCourseTrue + theta);
+      theta = copysign(theta, turnEntryAngle);
+      return pointOnEntryTurnFromHeading(legCourseTrue + theta);
   }
   
   WayptRef wpt;
   bool hasEntry, posValid, legCourseValid, skipped;
-  SGGeod pos, turnEntryPos, turnExitPos, turnCenter;
-  double turnAngle, turnRadius, legCourseTrue;
+  SGGeod pos, turnEntryPos, turnExitPos, turnEntryCenter, turnExitCenter;
+  double turnEntryAngle, turnExitAngle, turnRadius, legCourseTrue;
   double pathDistanceM;
-  double turnPathDistanceM; // for flyBy, this is half the distance; for flyOver it's the completel distance
+  double turnPathDistanceM; // for flyBy, this is half the distance; for flyOver it's the complete distance
   double overflightCompensationAngle;
   bool flyOver;
 };
@@ -746,13 +853,13 @@ public:
 RoutePath::RoutePath(const flightgear::FlightPlan* fp) :
   d(new RoutePathPrivate)
 {
-  for (int l=0; l<fp->numLegs(); ++l) {
-     d->waypoints.push_back(WayptData(fp->legAtIndex(l)->waypoint()));
-  }
+    for (int l=0; l<fp->numLegs(); ++l) {
+        d->waypoints.push_back(WayptData(fp->legAtIndex(l)->waypoint()));
+    }
 
     d->aircraftCategory = fp->icaoAircraftCategory()[0];
     d->constrainLegCourses = fp->followLegTrackToFixes();
-  commonInit();
+    commonInit();
 }
 
 void RoutePath::commonInit()
@@ -769,29 +876,31 @@ void RoutePath::commonInit()
     d->waypoints[i].initPass1(d->waypoints[i-1], nextPtr);
   }
 
-  for (unsigned int i=1; i<d->waypoints.size(); ++i) {
+  for (unsigned int i=0; i<d->waypoints.size(); ++i) {
       if (d->waypoints[i].skipped) {
           continue;
       }
 
-    const WayptData& prev(d->previousValidWaypoint(i));
-    d->waypoints[i].computeLegCourse(prev);
-    d->computeDynamicPosition(i);
+      double alt = 0.0; // FIXME
+      double gs = d->groundSpeedForAltitude(alt);
+      double radiusM = ((360.0 / d->pathTurnRate) * gs * SG_KT_TO_MPS) / SGMiscd::twopi();
 
-    double alt = 0.0; // FIXME
-    double gs = d->groundSpeedForAltitude(alt);
-    double radiusM = ((360.0 / d->pathTurnRate) * gs * SG_KT_TO_MPS) / SGMiscd::twopi();
-    
+      if (i > 0) {
+          const WayptData& prev(d->previousValidWaypoint(i));
+          d->waypoints[i].computeLegCourse(prev, radiusM);
+          d->computeDynamicPosition(i);
+      }
+
     if (i < (d->waypoints.size() - 1)) {
         int nextIndex = i + 1;
         if (d->waypoints[nextIndex].skipped) {
             nextIndex++;
         }
         WayptData& next(d->waypoints[nextIndex]);
-        next.computeLegCourse(d->waypoints[i]);
+        next.computeLegCourse(d->waypoints[i], radiusM);
 
       if (next.legCourseValid) {
-        d->waypoints[i].computeTurn(radiusM, d->constrainLegCourses, prev, next);
+        d->waypoints[i].computeTurn(radiusM, d->constrainLegCourses, next);
       } else {
         // next waypoint has indeterminate course. Let's create a sharp turn
         // this can happen when the following point is ATC vectors, for example.
@@ -800,7 +909,6 @@ void RoutePath::commonInit()
       }
     } else {
       // final waypt, fix up some data
-      d->waypoints[i].turnEntryPos = d->waypoints[i].pos;
       d->waypoints[i].turnExitPos = d->waypoints[i].pos;
     }
     
@@ -814,16 +922,6 @@ SGGeodVec RoutePath::pathForIndex(int index) const
   const WayptData& w(d->waypoints[index]);
   const std::string& ty(w.wpt->type());
   SGGeodVec r;
-  if (index == 0) {
-    // common case where we do want to show something for first waypoint
-    if (ty == "runway") {
-      FGRunway* rwy = static_cast<RunwayWaypt*>(w.wpt.get())->runway();
-      r.push_back(rwy->geod());
-      r.push_back(rwy->end());
-    }
-
-    return r;
-  }
 
     if (d->waypoints[index].skipped) {
         return SGGeodVec();
@@ -837,26 +935,23 @@ SGGeodVec RoutePath::pathForIndex(int index) const
   if (ty== "hold") {
     return pathForHold((Hold*) d->waypoints[index].wpt.get());
   }
-  
-  const WayptData& prev(d->previousValidWaypoint(index));
-  prev.turnExitPath(r);
-  
-  SGGeod from = prev.turnExitPos,
-    to = w.turnEntryPos;
-  
-  // compute rounding offset, we want to round towards the direction of travel
-  // which depends on the east/west sign of the longitude change
-  double lonDelta = to.getLongitudeDeg() - from.getLongitudeDeg();
-  if (fabs(lonDelta) > 0.5) {
-    interpolateGreatCircle(from, to, r);
-  }
-  
-  if (w.flyOver) {
-    r.push_back(w.pos);
-  } else {
-    // flyBy
+
+    if (index > 0) {
+      const WayptData& prev(d->previousValidWaypoint(index));
+      prev.turnExitPath(r);
+      
+      SGGeod from = prev.turnExitPos,
+        to = w.turnEntryPos;
+      
+      // compute rounding offset, we want to round towards the direction of travel
+      // which depends on the east/west sign of the longitude change
+      double lonDelta = to.getLongitudeDeg() - from.getLongitudeDeg();
+      if (fabs(lonDelta) > 0.5) {
+        interpolateGreatCircle(from, to, r);
+      }
+    } // of have previous waypoint
+
     w.turnEntryPath(r);
-  }
   
   if (ty == "runway") {
     // runways get an extra point, at the end. this is particularly
