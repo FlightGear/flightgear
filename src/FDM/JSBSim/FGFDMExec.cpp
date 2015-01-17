@@ -90,7 +90,6 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
 {
   Frame           = 0;
   Error           = 0;
-  //SetGroundCallback(new FGDefaultGroundCallback());
   IC              = 0;
   Trim            = 0;
   Script          = 0;
@@ -233,6 +232,7 @@ FGFDMExec::~FGFDMExec()
     DeAllocate();
 
     delete instance;
+    SetGroundCallback(0);
 
     if (IdFDM == 0) { // Meaning this is no child FDM
       if(Root != 0) {
@@ -267,12 +267,15 @@ bool FGFDMExec::Allocate(void)
 
   Models.resize(eNumStandardModels);
 
-  // See the eModels enum specification in the header file. The order of the enums
-  // specifies the order of execution. The Models[] vector is the primary
+  // See the eModels enum specification in the header file. The order of the
+  // enums specifies the order of execution. The Models[] vector is the primary
   // storage array for the list of models.
+  // The model FGInertial is constructed first because some other models are
+  // using its input during their construction
+  Models[eInertial]          = new FGInertial(this);
+  SetGroundCallback(new FGDefaultGroundCallback(static_cast<FGInertial*>(Models[eInertial])->GetRefRadius()));
   Models[ePropagate]         = new FGPropagate(this);
   Models[eInput]             = new FGInput(this);
-  Models[eInertial]          = new FGInertial(this);
   Models[eAtmosphere]        = new FGStandardAtmosphere(this);
   Models[eWinds]             = new FGWinds(this);
   Models[eAuxiliary]         = new FGAuxiliary(this);
@@ -306,8 +309,6 @@ bool FGFDMExec::Allocate(void)
 
   // Initialize planet (environment) constants
   LoadPlanetConstants();
-  //GetGroundCallback()->SetSeaLevelRadius(Inertial->GetRefRadius());
-  SetGroundCallback(new FGDefaultGroundCallback(Inertial->GetRefRadius()));
 
   // Initialize models
   for (unsigned int i = 0; i < Models.size(); i++) {
