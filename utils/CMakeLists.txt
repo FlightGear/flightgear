@@ -30,3 +30,7 @@ endif()
 if(ENABLE_FGCOM)
     add_subdirectory(fgcom)
 endif()
+
+if(ENABLE_STGMERGE)
+    add_subdirectory(stgmerge)
+endif()
