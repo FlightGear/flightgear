@@ -919,7 +919,7 @@ naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
     naRef args[1];
     args[0] = propNodeGhost(aProps);
     naContext ctx = naNewContext();
-    naRef wrapped = naCall(ctx, _wrappedNodeFunc, 1, args, naNil(), naNil());
+    naRef wrapped = naCallMethodCtx(ctx, _wrappedNodeFunc, naNil(), 1, args, naNil());
     naFreeContext(ctx);
     return wrapped;
 }
