@@ -84,7 +84,7 @@ public:
   
   virtual void startInstall(pkg::Install* aInstall)
   {
-    SG_LOG(SG_IO, SG_INFO, "begining install of:" << aInstall->package()->id()
+    SG_LOG(SG_IO, SG_INFO, "beginning install of:" << aInstall->package()->id()
            << " to local path:" << aInstall->path());
 
   }
