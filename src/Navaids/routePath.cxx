@@ -709,7 +709,7 @@ public:
     return findPreceedingKnownAltitude(index - 1);
   }
   
-  int findNextKnownAltitude(int index) const
+  int findNextKnownAltitude(unsigned int index) const
   {
     if (index >= waypoints.size()) {
       SG_LOG(SG_NAVAID, SG_WARN, "findNextKnownAltitude: no next altitude value found");
@@ -780,7 +780,7 @@ public:
       
       double tas = mach * Cs;
       
-#if 0
+/*
       P_0= 29.92126 "Hg = 1013.25 mB = 2116.2166 lbs/ft^2
       P= P_0*(1-6.8755856*10^-6*PA)^5.2558797, pressure altitude, PA<36,089.24ft
       CS= 38.967854*sqrt(T+273.15)  where T is the (static/true) OAT in Celsius.
@@ -788,7 +788,7 @@ public:
       DP=P_0*((1 + 0.2*(IAS/CS_0)^2)^3.5 -1)
       M=(5*( (DP/P + 1)^(2/7) -1) )^0.5   (*)
       TAS= M*CS
-#endif
+*/
     }
 #endif
   }
