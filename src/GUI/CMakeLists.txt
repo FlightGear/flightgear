@@ -43,7 +43,7 @@ set(HEADERS
     PUIFileDialog.hxx
     MouseCursor.hxx
     MessageBox.hxx
-	)
+)
 
 if(WIN32)
 	list(APPEND HEADERS WindowsMouseCursor.hxx
@@ -97,6 +97,8 @@ if (HAVE_QT)
                             AddCatalogDialog.hxx
                             PathsDialog.cxx
                             PathsDialog.hxx
+                            GraphicsWindowQt5.hxx
+                            GraphicsWindowQt5.cxx
                             ${uic_sources}
                             ${qrc_sources})
 

@@ -292,7 +292,8 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
             (*mouseMotionHandler)(x, y, &ea);
         return true;
     case osgGA::GUIEventAdapter::RESIZE:
-        SG_LOG(SG_VIEW, SG_DEBUG, "FGEventHandler::handle: RESIZE event " << ea.getWindowHeight() << " x " << ea.getWindowWidth() << ", resizable: " << resizable);
+        SG_LOG(SG_VIEW, SG_ALERT, "FGEventHandler::handle: RESIZE event "
+               << ea.getWindowHeight() << " x " << ea.getWindowWidth() << ", resizable: " << resizable);
         CameraGroup::getDefault()->resized();
         if (resizable)
           globals->get_renderer()->resize(ea.getWindowWidth(), ea.getWindowHeight());

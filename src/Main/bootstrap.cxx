@@ -74,6 +74,13 @@ bool global_crashRptEnabled = false;
 
 #endif
 
+#if defined(HAVE_QT)
+    #include <QGuiApplication>
+    #include <GUI/GraphicsWindowQt5.hxx>
+
+    void graphicswindow_Qt5();
+#endif
+
 using std::cerr;
 using std::endl;
 
@@ -212,6 +219,11 @@ int main ( int argc, char **argv )
 #endif
 
     initFPE(flightgear::Options::checkForArg(argc, argv, "enable-fpe"));
+
+#if defined(HAVE_QT)
+    QGuiApplication qtApp(argc, argv);
+    graphicswindow_Qt5(); // setup the Qt OSG WindowSystemInterface
+#endif
 
     bool fgviewer = flightgear::Options::checkForArg(argc, argv, "fgviewer");
     try {

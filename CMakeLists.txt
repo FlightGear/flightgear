@@ -299,9 +299,10 @@ endif (USE_DBUS)
 
 ##############################################################################
 ## Qt5 setup setup
+
 if (ENABLE_QT)
 	message(STATUS "Qt launcher enabled, checking for Qt 5.1 / qmake")
-	find_package(Qt5 5.1 COMPONENTS Widgets)
+	find_package(Qt5 5.2 COMPONENTS Gui Network Qml Quick Widgets)
 	if (Qt5Widgets_FOUND)
 		message(STATUS "Will enable Qt launcher GUI")
 		message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
@@ -309,6 +310,7 @@ if (ENABLE_QT)
 		set(HAVE_QT 1)
 	endif()
 endif (ENABLE_QT)
+
 ##############################################################################
 
 find_package(PLIB REQUIRED puaux pu js fnt)
