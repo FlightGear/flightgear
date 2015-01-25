@@ -121,6 +121,7 @@ public:
     virtual void arrivalChanged() { }
     virtual void waypointsChanged() { }
     virtual void cleared() { }
+    virtual void activated() { }
     virtual void currentWaypointChanged() { }
     virtual void endOfFlightPlan() { }
   protected:
@@ -135,7 +136,8 @@ public:
     void runCurrentWaypointChanged();
     void runCleared();
     void runFinished();
-      
+    void runActivated();
+
     friend class FlightPlan;
     
     bool _deleteWithPlan;
@@ -153,7 +155,9 @@ public:
   { return _currentIndex; }
   
   void setCurrentIndex(int index);
-  
+
+  void activate();
+
   void finish();
     
   Leg* currentLeg() const;

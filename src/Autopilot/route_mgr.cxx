@@ -746,7 +746,7 @@ bool FGRouteMgr::activate()
     return false;
   }
  
-  _plan->setCurrentIndex(0);
+  _plan->activate();
   active->setBoolValue(true);
   SG_LOG(SG_AUTOPILOT, SG_INFO, "route-manager, activate route ok");
   return true;

@@ -333,7 +333,21 @@ void FlightPlan::setCurrentIndex(int index)
   _currentWaypointChanged = true;
   unlockDelegate();
 }
-    
+
+void FlightPlan::activate()
+{
+    lockDelegate();
+
+    _currentIndex = 0;
+    _currentWaypointChanged = true;
+
+    if (_delegate) {
+        _delegate->runActivated();
+    }
+
+    unlockDelegate();
+}
+
 void FlightPlan::finish()
 {
     if (_currentIndex == -1) {
@@ -1360,6 +1374,12 @@ void FlightPlan::Delegate::runFinished()
 {
     if (_inner) _inner->runFinished();
     endOfFlightPlan();
+}
+
+void FlightPlan::Delegate::runActivated()
+{
+    if (_inner) _inner->runActivated();
+    activated();
 }
 
 void FlightPlan::setFollowLegTrackToFixes(bool tf)

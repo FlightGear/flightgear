@@ -1807,6 +1807,11 @@ public:
   {
     callDelegateMethod("endOfFlightPlan");
   }
+
+  virtual void activated()
+  {
+    callDelegateMethod("activated");
+  }
 private:
   
   void callDelegateMethod(const char* method)
