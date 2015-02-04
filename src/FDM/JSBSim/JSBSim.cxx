@@ -956,6 +956,8 @@ bool FGJSBsim::copy_from_JSBsim()
         node->setDoubleValue("density-ppg" , fuelDensity);
         node->setDoubleValue("level-lbs", contents);
         if (temp != -9999.0) node->setDoubleValue("temperature_degC", temp);
+
+        node->setDoubleValue("arm-in", tank->GetXYZ(FGJSBBase::eX ) );
       }
     }
 
