@@ -6,8 +6,10 @@ include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
 
 if(COMMAND cmake_policy)
-    cmake_policy(SET CMP0054 NEW)
-    cmake_policy(SET CMP0042 NEW)
+    if(${CMAKE_MAJOR_VERSION} GREATER 2) # version 3 or higher
+        cmake_policy(SET CMP0054 NEW)
+        cmake_policy(SET CMP0042 NEW)
+    endif()
 endif()
 
 # set this before project()
