@@ -74,8 +74,22 @@ cJSON * JSON::toJson(SGPropertyNode_ptr n, int depth, double timestamp )
   cJSON * json = cJSON_CreateObject();
   cJSON_AddItemToObject(json, "path", cJSON_CreateString(n->getPath(true).c_str()));
   cJSON_AddItemToObject(json, "name", cJSON_CreateString(n->getName()));
-  if( n->hasValue() )
-    cJSON_AddItemToObject(json, "value", cJSON_CreateString(n->getStringValue()));
+  if( n->hasValue() ) {
+    switch( n->getType() ) {
+      case simgear::props::BOOL:
+        cJSON_AddItemToObject(json, "value", cJSON_CreateBool(n->getBoolValue()));
+        break;
+      case simgear::props::INT:
+      case simgear::props::LONG:
+      case simgear::props::FLOAT:
+      case simgear::props::DOUBLE:
+        cJSON_AddItemToObject(json, "value", cJSON_CreateNumber(n->getDoubleValue()));
+        break;
+      default:
+        cJSON_AddItemToObject(json, "value", cJSON_CreateString(n->getStringValue()));
+        break;
+    }
+  }
   cJSON_AddItemToObject(json, "type", cJSON_CreateString(getPropertyTypeString(n->getType())));
   cJSON_AddItemToObject(json, "index", cJSON_CreateNumber(n->getIndex()));
   if( timestamp >= 0.0 )
