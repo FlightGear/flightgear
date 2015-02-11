@@ -59,6 +59,10 @@ private:
     SGPropertyNode_ptr _ident_btn_node;
     SGPropertyNode_ptr _volume_node;
 
+    SGPropertyNode_ptr _distance_string;
+    SGPropertyNode_ptr _speed_string;
+    SGPropertyNode_ptr _time_string;
+
     double _last_distance_nm;
     double _last_frequency_mhz;
     double _time_before_search_sec;
@@ -66,6 +70,7 @@ private:
     FGNavRecord * _navrecord;
 
     std::string _name;
+
     int _num;
 
     class AudioIdent * _audioIdent;

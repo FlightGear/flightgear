@@ -19,6 +19,9 @@
 
 #include "dme.hxx"
 
+#include <cstdio>
+
+
 /**
  * Adjust the range.
  *
@@ -114,6 +117,15 @@ DME::init ()
     _ident_btn_node = node->getChild("ident", 0, true);
     _ident_btn_node->setBoolValue( b );
 
+    SGPropertyNode *subnode = node->getChild("KDI572-574", 0, true);
+
+    _distance_string = subnode->getChild("nm",0, true);
+    _distance_string->setStringValue("---");
+    _speed_string = subnode->getChild("kt", 0, true);
+    _speed_string->setStringValue("---");
+    _time_string = subnode->getChild("min",0, true);
+    _time_string->setStringValue("--");
+
     std::ostringstream temp;
     temp << _name << "-ident-" << _num;
     if( NULL == _audioIdent ) 
@@ -134,7 +146,7 @@ DME::update (double delta_time_sec)
 {
     if( delta_time_sec < SGLimitsd::min() )
         return;  //paused
-
+    char tmp[16];
                                 // Figure out the source
     const char * source = _source_node->getStringValue();
     if (source[0] == '\0') {
@@ -163,22 +175,31 @@ DME::update (double delta_time_sec)
       _navrecord = FGNavList::findByFreq(frequency_mhz, pos, &filter);
     }
 
+
     // If it's off, don't bother.
     if (!_serviceable_node->getBoolValue() ||
-        !_electrical_node->getBoolValue() ||
-        NULL == _navrecord ) {
+        !_electrical_node->getBoolValue()){
         _last_distance_nm = 0;
         _in_range_node->setBoolValue(false);
         _distance_node->setDoubleValue(0);
         _speed_node->setDoubleValue(0);
         _time_node->setDoubleValue(0);
         _audioIdent->setIdent("", 0.0 );
+        _distance_string->setStringValue("");
+        _speed_string->setStringValue("");
+        _time_string->setStringValue("");
         return;
     }
-
+    // If it's on, but invalid source,don't bother.
+if (NULL == _navrecord ){
+        _distance_string->setStringValue("---");
+        _speed_string->setStringValue("---");
+        _time_string->setStringValue("--");
+        return;
+    }
     // Calculate the distance to the transmitter
     double distance_nm = dist(_navrecord->cart(),
-			      globals->get_aircraft_position_cart()) * SG_METER_TO_NM;
+                  globals->get_aircraft_position_cart()) * SG_METER_TO_NM;
 
     double range_nm = adjust_range(_navrecord->get_elev_ft(),
                                    globals->get_aircraft_position().getElevationFt(),
@@ -201,19 +222,40 @@ DME::update (double delta_time_sec)
             tmp_dist = 0.0;
         }
         _distance_node->setDoubleValue( tmp_dist );
+        if ( tmp_dist >389 ) tmp_dist = 389;
+        if ( tmp_dist >= 100.0) {
+            snprintf ( tmp,16,"%3.0f",tmp_dist);
+        } else {
+            snprintf ( tmp,16,"%2.1f",tmp_dist);
+        }
+        _distance_string->setStringValue(tmp);
+
         _speed_node->setDoubleValue(speed_kt);
-        if (SGLimitsd::min() < fabs(speed_kt))
-          _time_node->setDoubleValue(distance_nm/speed_kt*60.0);
+        double spd = speed_kt;
+        if(spd>999) spd=999;
+        snprintf ( tmp,16,"%3.0f",spd);
+        _speed_string->setStringValue(tmp);
+
+
+        if (SGLimitsd::min() < fabs(speed_kt)){
+            double tm = distance_nm/speed_kt*60.0;
+            _time_node->setDoubleValue(tm);
+            if (tm >99) tm= 99;
+            snprintf ( tmp,16,"%2.0f",tm);
+            _time_string->setStringValue(tmp);
+        }
         
     } else {
         _last_distance_nm = 0;
         _in_range_node->setBoolValue(false);
         _distance_node->setDoubleValue(0);
+        _distance_string->setStringValue("---");
         _speed_node->setDoubleValue(0);
+        _speed_string->setStringValue("---");
         _time_node->setDoubleValue(0);
+        _time_string->setStringValue("--");
         _audioIdent->setIdent("", 0.0 );
     }
-    
     _audioIdent->update( delta_time_sec );
 }
 
