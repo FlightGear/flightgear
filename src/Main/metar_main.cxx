@@ -42,8 +42,7 @@ using namespace std;
 using namespace simgear;
 
 // text color
-#if defined(__linux__) || defined(__sun) || defined(__CYGWIN__) \
-    || defined( __FreeBSD__ ) || defined ( sgi )
+#if defined(__linux__) || defined(__sun) || defined(__CYGWIN__) || defined( __FreeBSD__ ) || defined ( sgi )
 #	define R "\033[31;1m"		// red
 #	define G "\033[32;1m"		// green
 #	define Y "\033[33;1m"		// yellow
@@ -188,7 +187,7 @@ void printReport(SGMetar *m)
 		if ((i = m->getWindDir()) == -1)
 			cout << "from variable directions";
 		else
-			cout << "from the " << azimuthName(i) << " (" << i << "°)";
+			cout << "from the " << azimuthName(i) << " (" << i << "Â°)";
 		cout << " at " << rnd(d, -1) << " km/h";
 
 		cout << "\t\t" << rnd(m->getWindSpeed_kt(), -1) << " kt";
@@ -209,19 +208,19 @@ void printReport(SGMetar *m)
 		if (from != to) {
 			cout << "\t\t\tvariable from " << azimuthName(from);
 			cout << " to " << azimuthName(to);
-			cout << " (" << from << "°--" << to << "°)" << endl;
+			cout << " (" << from << "Â°--" << to << "Â°)" << endl;
 		}
 	}
 
 
 	// temperature/humidity/air pressure
 	if ((d = m->getTemperature_C()) != NaN) {
-		cout << "Temperature:\t\t" << d << "°C\t\t\t\t\t";
-		cout << rnd(m->getTemperature_F(), -1) << "°F" << endl;
+		cout << "Temperature:\t\t" << d << "Â°C\t\t\t\t\t";
+		cout << rnd(m->getTemperature_F(), -1) << "Â°F" << endl;
 
 		if ((d = m->getDewpoint_C()) != NaN) {
-			cout << "Dewpoint:\t\t" << d << "°C\t\t\t\t\t";
-			cout << rnd(m->getDewpoint_F(), -1) << "°F"  << endl;
+			cout << "Dewpoint:\t\t" << d << "Â°C\t\t\t\t\t";
+			cout << rnd(m->getDewpoint_F(), -1) << "Â°F"  << endl;
 			cout << "Rel. Humidity:\t\t" << rnd(m->getRelHumidity()) << "%" << endl;
 		}
 	}
@@ -424,7 +423,7 @@ void printArgs(SGMetar *m, double airport_elevation)
 			sprintf(&buf[strlen(buf)], ":%.0lf", gust_speed);
 		args.push_back(buf);
 	}
-	
+
 
 	// output everything
 	//cout << "fgfs" << endl;
@@ -510,10 +509,10 @@ int main(int argc, char *argv[])
 	getproxy(proxy_host, proxy_port);
 
   Socket::initSockets();
-  
+
     HTTP::Client http;
     http.setProxy(proxy_host, atoi(proxy_port.c_str()));
-    
+
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help"))
 			usage();
@@ -548,7 +547,7 @@ int main(int argc, char *argv[])
                 );
                 HTTP::Request_ptr own(mr);
                 http.makeRequest(mr);
-                
+
             // spin until the request completes, fails or times out
                 SGTimeStamp start(SGTimeStamp::now());
                 while (start.elapsedMSec() <  8000) {
@@ -557,7 +556,7 @@ int main(int argc, char *argv[])
                         break;
                     SGTimeStamp::sleepForMSec(1);
                 }
-                
+
                 if( !mr->isComplete() )
                   throw sg_io_exception("metar download timed out");
                 if( mr->responseCode() != 200 )
@@ -571,15 +570,15 @@ int main(int argc, char *argv[])
                 }
 
 				SGMetar *m = new SGMetar(mr->responseBody());
-				
+
 				//SGMetar *m = new SGMetar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
 
 				if (verbose) {
-					cerr << G"INPUT: " << m->getData() << ""N << endl;
+					cerr << G "INPUT: " << m->getData() << "" N << endl;
 
 					const char *unused = m->getUnusedData();
 					if (*unused)
-						cerr << R"UNUSED: " << unused << ""N << endl;
+						cerr << R "UNUSED: " << unused << "" N << endl;
 				}
 
 				if (report)
@@ -589,7 +588,7 @@ int main(int argc, char *argv[])
 
 				delete m;
 			} catch (const sg_io_exception& e) {
-				cerr << R"ERROR: " << e.getFormattedMessage().c_str() << ""N << endl << endl;
+				cerr << R "ERROR: " << e.getFormattedMessage().c_str() << "" N << endl << endl;
 			}
 		}
 	}
