@@ -251,6 +251,11 @@ bool FGAIFlightPlan::parseProperties(const std::string& filename)
     wpt->setFinished   ((wpt->getName() == "END"));
     pushBackWaypoint( wpt );
   }
+  if( getLastWaypoint()->getName().compare("END") != 0  ) {
+	SG_LOG(SG_AI, SG_ALERT, "FGAIFlightPlan::Flightplan missing END node" );
+	return false;
+  }
+
   
   wpt_iterator = waypoints.begin();
   return true;

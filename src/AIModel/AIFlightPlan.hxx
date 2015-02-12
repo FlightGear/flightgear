@@ -244,7 +244,7 @@ private:
  public:
   wpt_vector_iterator getFirstWayPoint() { return waypoints.begin(); };
   wpt_vector_iterator getLastWayPoint()  { return waypoints.end(); };
-    bool isValidPlan() { return isValid; };
+  bool isValidPlan() { return isValid; };
 };
 
 #endif  // _FG_AIFLIGHTPLAN_HXX

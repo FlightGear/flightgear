@@ -408,7 +408,14 @@ FGAIBasePtr FGAIManager::addObject(const SGPropertyNode* definition)
     }
 
     ai->readFromScenario(const_cast<SGPropertyNode*>(definition));
-    attach(ai);
+	if((ai->isValid())){
+		attach(ai);
+        SG_LOG(SG_AI, SG_DEBUG, "attached scenario " << ai->_getName());
+	}
+	else{
+		ai->setDie(true);
+		SG_LOG(SG_AI, SG_ALERT, "killed invalid scenario "  << ai->_getName());
+	}
     return ai;
 }
 
