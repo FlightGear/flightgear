@@ -57,13 +57,10 @@ contents=bundle + "/Contents"
 macosDir=contents + "/MacOS"
 $frameworksDir=contents +"/Frameworks"
 resourcesDir=contents+"/Resources"
-osgPluginsDir=contents+"/PlugIns/osgPlugins-#{osgVersion}"
-volName="\"FlightGear Nightly Build\""
 
-def code_sign(path)
-  puts "Signing #{path}"
-  `codesign -s "#{$codeSignIdentity}" #{path}`
-end
+# changed this for customised OSG
+osgPluginsDir=contents+"/PlugIns/osgPlugins"
+volName="\"FlightGear Nightly Build\""
 
 fgVersion = File.read("#{srcDir}/version").strip
 
@@ -101,8 +98,8 @@ libFile = "libOpenThreads.#{$openThreadsSoVersion}.dylib"
 `cp #{$prefixDir}/lib/#{libFile} #{$frameworksDir}`
 
 $osgPlugins.each do |p|
-  pluginFile = "osgdb_#{p}.so"
-  `cp #{$prefixDir}/lib/osgPlugins-#{osgVersion}/#{pluginFile} #{osgPluginsDir}`
+  pluginFile = "osgdb_#{p}.dylib"
+  `cp #{$prefixDir}/lib/osgPlugins/#{pluginFile} #{osgPluginsDir}`
   fix_install_names("#{osgPluginsDir}/#{pluginFile}")
 end
 
@@ -115,14 +112,9 @@ if File.exist?("#{$prefixDir}/share/flightgear")
   `ditto #{$prefixDir}/share/flightgear #{resourcesDir}`
 end
 
-# code sign all executables in MacOS dir. Do this last since resource
-# changes will invalidate the signature!
-Dir.foreach(macosDir) do |b|
-    if b == '.' or b == '..' then
-        next
-    end
-  code_sign("#{macosDir}/#{b}")
-end
+# code sign the entire bundle once complete - v2 code-signing
+puts "Signing #{bundle}"
+`codesign --deep -s "#{$codeSignIdentity}" #{bundle}`
 
 puts "Creating DMG"
 
