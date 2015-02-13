@@ -85,8 +85,8 @@ public:
   virtual ~DOMNode();
 
   virtual std::string render() const;
-  virtual void addChild( DOMElement * child );
-  virtual void setAttribute( const string & name, const string & value );
+  virtual DOMNode * addChild( DOMElement * child );
+  virtual DOMNode * setAttribute( const string & name, const string & value );
 protected:
   string _name;
   typedef vector<const DOMElement*> Children_t;
@@ -129,14 +129,16 @@ string DOMNode::render() const
   return reply;
 }
 
-void DOMNode::addChild( DOMElement * child )
+DOMNode * DOMNode::addChild( DOMElement * child )
 {
   _children.push_back( child );
+  return dynamic_cast<DOMNode*>(child);
 }
 
-void DOMNode::setAttribute( const string & name, const string & value )
+DOMNode * DOMNode::setAttribute( const string & name, const string & value )
 {
   _attributes[name] = value;
+  return this;
 }
 
 class SortedChilds : public simgear::PropertyList {
@@ -187,6 +189,16 @@ DOMElement * createHeader( const string & prefix, const string & propertyPath )
   DOMNode * headline = new DOMNode( "h3" );
   root->addChild( headline );
   headline->addChild( new DOMTextElement("FlightGear Property Browser") );
+
+  {
+    DOMNode * div = new DOMNode("div");
+    root->addChild(div);
+    div->addChild( new DOMNode("span"))->addChild( new DOMTextElement("Path:"));
+    div->addChild( new DOMNode("span"))->addChild( new DOMTextElement( propertyPath ) );
+    div->addChild( new DOMNode("a"))->
+         setAttribute("href",string("/json/")+propertyPath+"?i=y")->
+         addChild( new DOMTextElement( "As JSON" ) );
+  }
 
   DOMNode * breadcrumb = new DOMNode("ul");
   root->addChild( breadcrumb );
