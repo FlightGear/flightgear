@@ -53,7 +53,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_TANK "$Id: FGTank.h,v 1.28 2014/05/17 15:09:42 jberndt Exp $"
+#define ID_TANK "$Id: FGTank.h,v 1.30 2015/02/02 20:49:11 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -331,17 +331,15 @@ private:
   double InertiaFactor;
   double PctFull;
   double Contents, InitialContents;
-  double PreviousUsed;
   double Area;
   double Temperature, InitialTemperature;
   double Standpipe, InitialStandpipe;
   double ExternalFlow;
   bool  Selected;
   int Priority, InitialPriority;
-  FGFDMExec* Exec;
-  FGPropertyManager* PropertyManager;
 
   void CalculateInertias(void);
+  void bind(FGPropertyManager* PropertyManager);
   void Debug(int from);
 };
 }
