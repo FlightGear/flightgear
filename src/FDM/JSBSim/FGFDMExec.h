@@ -54,7 +54,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.93 2014/11/30 13:06:05 bcoconni Exp $"
+#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.95 2015/02/07 17:52:36 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -178,7 +178,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision: 1.93 $
+    @version $Revision: 1.95 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -221,21 +221,28 @@ public:
   /// Default destructor
   ~FGFDMExec();
 
-  // This list of enums is very important! The order in which models are listed here
-  // determines the order of execution of the models.
+  // This list of enums is very important! The order in which models are listed
+  // here determines the order of execution of the models.
+  //
+  // There are some conditions that need to be met :
+  // 1. FCS can request mass geometry changes via the inertia/pointmass-*
+  //    properties so it must be executed before MassBalance
+  // 2. MassBalance must be executed before Propulsion, Aerodynamics,
+  //    GroundReactions, ExternalReactions and BuoyantForces to ensure that
+  //    their moments are computed with the updated CG position.
   enum eModels { ePropagate=0,
                  eInput,
                  eInertial,
                  eAtmosphere,
                  eWinds,
-                 eAuxiliary,
                  eSystems,
+                 eMassBalance,
+                 eAuxiliary,
                  ePropulsion,
                  eAerodynamics,
                  eGroundReactions,
                  eExternalReactions,
                  eBuoyantForces,
-                 eMassBalance,
                  eAircraft,
                  eAccelerations,
                  eOutput,
@@ -243,19 +250,6 @@ public:
 
   /** Unbind all tied JSBSim properties. */
   void Unbind(void) {instance->Unbind();}
-
-  /** This routine places a model into the runlist at the specified rate. The
-      "rate" is not really a clock rate. It represents how many calls to the
-      FGFDMExec::Run() method must be made before the model is executed. A
-      value of 1 means that the model will be executed for each call to the
-      exec's Run() method. A value of 5 means that the model will only be
-      executed every 5th call to the exec's Run() method. Use of a rate other than
-      one is at this time not recommended.
-      @param model A pointer to the model being scheduled.
-      @param rate The rate at which to execute the model as described above.
-                  Default is every frame (rate=1).
-      @return Currently returns 0 always. */
-  void Schedule(FGModel* model, int rate=1);
 
   /** This function executes each scheduled model in succession.
       @return true if successful, false if sim should be ended  */

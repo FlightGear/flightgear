@@ -76,7 +76,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.164 2014/11/30 12:35:32 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.170 2015/02/07 17:52:36 bcoconni Exp $");
 IDENT(IdHdr,ID_FDMEXEC);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -267,25 +267,28 @@ bool FGFDMExec::Allocate(void)
 
   Models.resize(eNumStandardModels);
 
+  // First build the inertial model since some other models are relying on
+  // the inertial model and the ground callback to build themselves.
+  // Note that this does not affect the order in which the models will be
+  // executed later.
+  Models[eInertial]          = new FGInertial(this);
+  SetGroundCallback(new FGDefaultGroundCallback(static_cast<FGInertial*>(Models[eInertial])->GetRefRadius()));
+
   // See the eModels enum specification in the header file. The order of the
   // enums specifies the order of execution. The Models[] vector is the primary
   // storage array for the list of models.
-  // The model FGInertial is constructed first because some other models are
-  // using its input during their construction
-  Models[eInertial]          = new FGInertial(this);
-  SetGroundCallback(new FGDefaultGroundCallback(static_cast<FGInertial*>(Models[eInertial])->GetRefRadius()));
   Models[ePropagate]         = new FGPropagate(this);
   Models[eInput]             = new FGInput(this);
   Models[eAtmosphere]        = new FGStandardAtmosphere(this);
   Models[eWinds]             = new FGWinds(this);
-  Models[eAuxiliary]         = new FGAuxiliary(this);
   Models[eSystems]           = new FGFCS(this);
+  Models[eMassBalance]       = new FGMassBalance(this);
+  Models[eAuxiliary]         = new FGAuxiliary(this);
   Models[ePropulsion]        = new FGPropulsion(this);
   Models[eAerodynamics]      = new FGAerodynamics (this);
   Models[eGroundReactions]   = new FGGroundReactions(this);
   Models[eExternalReactions] = new FGExternalReactions(this);
   Models[eBuoyantForces]     = new FGBuoyantForces(this);
-  Models[eMassBalance]       = new FGMassBalance(this);
   Models[eAircraft]          = new FGAircraft(this);
   Models[eAccelerations]     = new FGAccelerations(this);
   Models[eOutput]            = new FGOutput(this);
@@ -295,14 +298,14 @@ bool FGFDMExec::Allocate(void)
   Inertial = (FGInertial*)Models[eInertial];
   Atmosphere = (FGAtmosphere*)Models[eAtmosphere];
   Winds = (FGWinds*)Models[eWinds];
-  Auxiliary = (FGAuxiliary*)Models[eAuxiliary];
   FCS = (FGFCS*)Models[eSystems];
+  MassBalance = (FGMassBalance*)Models[eMassBalance];
+  Auxiliary = (FGAuxiliary*)Models[eAuxiliary];
   Propulsion = (FGPropulsion*)Models[ePropulsion];
   Aerodynamics = (FGAerodynamics*)Models[eAerodynamics];
   GroundReactions = (FGGroundReactions*)Models[eGroundReactions];
   ExternalReactions = (FGExternalReactions*)Models[eExternalReactions];
   BuoyantForces = (FGBuoyantForces*)Models[eBuoyantForces];
-  MassBalance = (FGMassBalance*)Models[eMassBalance];
   Aircraft = (FGAircraft*)Models[eAircraft];
   Accelerations = (FGAccelerations*)Models[eAccelerations];
   Output = (FGOutput*)Models[eOutput];
@@ -343,14 +346,6 @@ bool FGFDMExec::DeAllocate(void)
 
   modelLoaded = false;
   return modelLoaded;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGFDMExec::Schedule(FGModel* model, int rate)
-{
-  model->SetRate(rate);
-  Models.push_back(model);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
