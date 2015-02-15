@@ -48,7 +48,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGTank.cpp,v 1.40 2014/05/17 15:09:42 jberndt Exp $");
+IDENT(IdSrc,"$Id: FGTank.cpp,v 1.43 2015/02/02 20:49:11 bcoconni Exp $");
 IDENT(IdHdr,ID_TANK);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -56,26 +56,26 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
-                  : TankNumber(tank_number), Exec(exec)
+                  : TankNumber(tank_number)
 {
   string token, strFuelName;
   Element* element;
   Element* element_Grain;
+  FGPropertyManager *PropertyManager = exec->GetPropertyManager();
   Area = 1.0;
   Density = 6.6;
   InitialTemperature = Temperature = -9999.0;
   Ixx = Iyy = Izz = 0.0;
   InertiaFactor = 1.0;
   Radius = Contents = Standpipe = Length = InnerRadius = 0.0;
-  PreviousUsed = 0.0;
   ExternalFlow = 0.0;
   InitialStandpipe = 0.0;
   Capacity = 0.00001;
   Priority = InitialPriority = 1;
-  PropertyManager = Exec->GetPropertyManager();
   vXYZ.InitMatrix();
   vXYZ_drain.InitMatrix();
   ixx_unit = iyy_unit = izz_unit = 1.0;
+  grainType = gtUNKNOWN; // This is the default
 
   type = el->GetAttributeValue("type");
   if      (type == "FUEL")     Type = ttFUEL;
@@ -129,31 +129,8 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
 
   PctFull = 100.0*Contents/Capacity;            // percent full; 0 to 100.0
 
-  string property_name, base_property_name;
-  base_property_name = CreateIndexedPropertyName("propulsion/tank", TankNumber);
-  property_name = base_property_name + "/contents-lbs";
-  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetContents,
-                                       &FGTank::SetContents );
-  property_name = base_property_name + "/pct-full";
-  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetPctFull);
-
-  property_name = base_property_name + "/priority";
-  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetPriority,
-                                       &FGTank::SetPriority );
-  property_name = base_property_name + "/external-flow-rate-pps";
-  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetExternalFlow,
-                                       &FGTank::SetExternalFlow );
-  property_name = base_property_name + "/local-ixx-slug_ft2";
-  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetIxx);
-  property_name = base_property_name + "/local-iyy-slug_ft2";
-  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetIyy);
-  property_name = base_property_name + "/local-izz-slug_ft2";
-  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetIzz);
-
   // Check whether this is a solid propellant "tank". Initialize it if true.
 
-  grainType = gtUNKNOWN; // This is the default
-  
   element_Grain = el->FindElement("grain_config");
   if (element_Grain) {
 
@@ -222,13 +199,15 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
     Density = (Contents*lbtoslug)/Volume; // slugs/in^3
   }
 
-    CalculateInertias();
+  CalculateInertias();
 
   if (Temperature != -9999.0)  InitialTemperature = Temperature = FahrenheitToCelsius(Temperature);
   Area = 40.0 * pow(Capacity/1975, 0.666666667);
 
   // A named fuel type will override a previous density value
   if (!strFuelName.empty()) Density = ProcessFuelName(strFuelName); 
+
+  bind(PropertyManager);
 
   Debug(0);
 }
@@ -249,7 +228,7 @@ void FGTank::ResetToIC(void)
   SetContents ( InitialContents );
   PctFull = 100.0*Contents/Capacity;
   SetPriority( InitialPriority );
-  PreviousUsed = 0.0;
+  CalculateInertias();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -270,7 +249,6 @@ double FGTank::GetXYZ(int idx) const
 
 double FGTank::Drain(double used)
 {
-//  double AmountToDrain = 2.0*used - PreviousUsed;
   double remaining = Contents - used;
 
   if (remaining >= 0) { // Reduce contents by amount used.
@@ -283,8 +261,8 @@ double FGTank::Drain(double used)
     Contents = 0.0;
     PctFull = 0.0;
   }
-//  PreviousUsed = AmountToDrain;
-  if (grainType != gtUNKNOWN) CalculateInertias();
+
+  CalculateInertias();
 
   return remaining;
 }
@@ -304,6 +282,9 @@ double FGTank::Fill(double amount)
   } else {
     PctFull = Contents/Capacity*100.0;
   }
+
+  CalculateInertias();
+
   return overage;
 }
 
@@ -318,6 +299,8 @@ void FGTank::SetContents(double amount)
   } else {
     PctFull = Contents/Capacity*100.0;
   }
+
+  CalculateInertias();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -372,39 +355,39 @@ void FGTank::CalculateInertias(void)
 
   if (grainType != gtUNKNOWN) { // assume solid propellant
 
-  if (Density > 0.0) {
-    Volume = (Contents*lbtoslug)/Density; // in^3
-  } else if (Contents <= 0.0) {
-    Volume = 0;
-  } else {
-    cerr << endl << "  Solid propellant grain density is zero!" << endl << endl;
-    exit(-1);
-  }
+    if (Density > 0.0) {
+      Volume = (Contents*lbtoslug)/Density; // in^3
+    } else if (Contents <= 0.0) {
+      Volume = 0;
+    } else {
+      cerr << endl << "  Solid propellant grain density is zero!" << endl << endl;
+      exit(-1);
+    }
 
-  switch (grainType) {
+    switch (grainType) {
     case gtCYLINDRICAL:
       InnerRadius = sqrt(Rad2 - Volume/(M_PI * Length));
       RadSumSqr = (Rad2 + InnerRadius*InnerRadius)/144.0;
       Ixx = 0.5*Mass*RadSumSqr;
       Iyy = Mass*(3.0*RadSumSqr + Length*Length/144.0)/12.0;
-        Izz  = Iyy;
+      Izz  = Iyy;
       break;
     case gtENDBURNING:
       Length = Volume/(M_PI*Rad2);
       Ixx = 0.5*Mass*Rad2/144.0;
       Iyy = Mass*(3.0*Rad2 + Length*Length)/(144.0*12.0);
-        Izz  = Iyy;
+      Izz  = Iyy;
       break;
-      case gtFUNCTION:
-        Ixx = function_ixx->GetValue()*ixx_unit;
-        Iyy = function_iyy->GetValue()*iyy_unit;
-        Izz = function_izz->GetValue()*izz_unit;
-        break;
-    case gtUNKNOWN:
+    case gtFUNCTION:
+      Ixx = function_ixx->GetValue()*ixx_unit;
+      Iyy = function_iyy->GetValue()*iyy_unit;
+      Izz = function_izz->GetValue()*izz_unit;
+      break;
+    default:
       cerr << "Unknown grain type found." << endl;
       exit(-1);
       break;
-  }
+    }
 
   } else { // assume liquid propellant: shrinking snowball
 
@@ -449,6 +432,31 @@ double FGTank::ProcessFuelName(const std::string& name)
    return 6.6;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTank::bind(FGPropertyManager* PropertyManager)
+{
+  string property_name, base_property_name;
+  base_property_name = CreateIndexedPropertyName("propulsion/tank", TankNumber);
+  property_name = base_property_name + "/contents-lbs";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetContents,
+                                       &FGTank::SetContents );
+  property_name = base_property_name + "/pct-full";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetPctFull);
+
+  property_name = base_property_name + "/priority";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetPriority,
+                                       &FGTank::SetPriority );
+  property_name = base_property_name + "/external-flow-rate-pps";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetExternalFlow,
+                                       &FGTank::SetExternalFlow );
+  property_name = base_property_name + "/local-ixx-slug_ft2";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetIxx);
+  property_name = base_property_name + "/local-iyy-slug_ft2";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetIyy);
+  property_name = base_property_name + "/local-izz-slug_ft2";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetIzz);
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
