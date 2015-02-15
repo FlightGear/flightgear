@@ -403,7 +403,8 @@ void FGMassBalance::bind(void)
   PropertyManager->Tie("inertia/cg-z-in", this,3,
                        (PMF)&FGMassBalance::GetXYZcg);
   typedef int (FGMassBalance::*iOPV)() const;
-  PropertyManager->Tie("inertia/print-mass-properties", this, (iOPV)0, &FGMassBalance::GetMassPropertiesReport);
+  PropertyManager->Tie("inertia/print-mass-properties", this, (iOPV)0,
+                       &FGMassBalance::GetMassPropertiesReport, false);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
