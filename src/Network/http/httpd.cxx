@@ -24,6 +24,7 @@
 #include "ScreenshotUriHandler.hxx"
 #include "PropertyUriHandler.hxx"
 #include "JsonUriHandler.hxx"
+#include "PkgUriHandler.hxx"
 #include "RunUriHandler.hxx"
 #include "NavdbUriHandler.hxx"
 #include "PropertyChangeObserver.hxx"
@@ -450,6 +451,13 @@ void MongooseHttpd::init()
       SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding json uri handler at " << uri);
       _uriHandler.push_back(new flightgear::http::JsonUriHandler(uri));
     }
+
+//#ifdef ENABLE_PACKAGE_SYSTEM
+    if ((uri = n->getStringValue("pkg"))[0] != 0) {
+      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding pkg uri handler at " << uri);
+      _uriHandler.push_back(new flightgear::http::PkgUriHandler(uri));
+    }
+//#endif
 
     if ((uri = n->getStringValue("run"))[0] != 0) {
       SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding run uri handler at " << uri);

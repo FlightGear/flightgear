@@ -5,6 +5,7 @@ set(SOURCES
 	ScreenshotUriHandler.cxx
 	PropertyUriHandler.cxx
 	JsonUriHandler.cxx
+	PkgUriHandler.cxx
 	RunUriHandler.cxx
 	NavdbUriHandler.cxx
 	PropertyChangeWebsocket.cxx
@@ -18,6 +19,7 @@ set(HEADERS
 	ScreenshotUriHandler.hxx
 	PropertyUriHandler.hxx
 	JsonUriHandler.hxx
+	PkgUriHandler.hxx
 	RunUriHandler.hxx
 	NavdbUriHandler.hxx
 	HTTPRequest.hxx

@@ -146,7 +146,7 @@ void FGHTTPClient::init()
       // always show this message
       SG_LOG(SG_GENERAL, SG_ALERT, "default catalog not found, installing...");
       pkg::Catalog::createFromUrl(packageRoot,
-          "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/default-catalog.xml");
+          "http://localhost:8080/default-catalog.xml");
     }
     
     // start a refresh now
