@@ -139,14 +139,17 @@ void FGHTTPClient::init()
     packageRoot->setHTTPClient(_http.get());
     
     packageRoot->setDelegate(new FGDelegate);
-    
+
+    const char * defaultCatalogId = fgGetString("/sim/package-system/default-catalog/id", "org.flightgear.default" );
+    const char * defaultCatalogUrl = fgGetString("/sim/package-system/default-catalog/url",
+            "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/default-catalog.xml");
     // setup default catalog if not present
-    pkg::Catalog* defaultCatalog = packageRoot->getCatalogById("org.flightgear.default");
+    pkg::Catalog* defaultCatalog = packageRoot->getCatalogById( defaultCatalogId );
     if (!defaultCatalog) {
       // always show this message
-      SG_LOG(SG_GENERAL, SG_ALERT, "default catalog not found, installing...");
-      pkg::Catalog::createFromUrl(packageRoot,
-          "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/default-catalog.xml");
+      SG_LOG(SG_GENERAL, SG_ALERT, "default catalog not found, installing '"
+        << defaultCatalogId << "' from '" << defaultCatalogUrl << "'.");
+      pkg::Catalog::createFromUrl(packageRoot,defaultCatalogUrl);
     }
     
     // start a refresh now
