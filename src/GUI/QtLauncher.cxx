@@ -827,7 +827,7 @@ void QtLauncher::onRun()
 
     if (m_ui->runwayRadio->isChecked()) {
         int index = m_ui->runwayCombo->currentData().toInt();
-        if (index >= 0) {
+        if ((index >= 0) && m_selectedAirport) {
             // explicit runway choice
             opt->addOption("runway", m_selectedAirport->getRunwayByIndex(index)->ident());
         }
