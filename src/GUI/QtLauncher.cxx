@@ -50,7 +50,10 @@ namespace { // anonymous namespace
 
 const int AircraftPathRole = Qt::UserRole + 1;
 const int AircraftAuthorsRole = Qt::UserRole + 2;
+const int AircraftVariantRole = Qt::UserRole + 3;
+const int AircraftVariantCountRole = Qt::UserRole + 4;
 const int AircraftRatingRole = Qt::UserRole + 100;
+const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
 
 void initNavCache()
 {
@@ -73,7 +76,8 @@ void initNavCache()
 
 struct AircraftItem
 {
-    AircraftItem() {
+    AircraftItem()
+    {
         // oh for C++11 initialisers
         for (int i=0; i<4; ++i) ratings[i] = 0;
     }
@@ -99,6 +103,10 @@ struct AircraftItem
             parseRatings(sim->getNode("rating"));
         }
 
+        if (sim->hasChild("variant-of")) {
+            variantOf = sim->getStringValue("variant-of");
+        }
+
         if (dir.exists("thumbnail.jpg")) {
             thumbnail.load(dir.filePath("thumbnail.jpg"));
             // resize to the standard size
@@ -109,12 +117,22 @@ struct AircraftItem
 
     }
 
+    // the file-name without -set.xml suffix
+    QString baseName() const
+    {
+        QString fn = QFileInfo(path).fileName();
+        fn.truncate(fn.count() - 8);
+        return fn;
+    }
+
     QString path;
     QPixmap thumbnail;
     QString description;
     QString authors;
     int ratings[4];
+    QString variantOf;
 
+    QList<AircraftItem*> variants;
 private:
     void parseRatings(SGPropertyNode_ptr ratingsNode)
     {
@@ -137,9 +155,9 @@ public:
     }
 
     /** thread-safe access to items already scanned */
-    QList<AircraftItem> items()
+    QList<AircraftItem*> items()
     {
-        QList<AircraftItem> result;
+        QList<AircraftItem*> result;
         QMutexLocker g(&m_lock);
         result.swap(m_items);
         g.unlock();
@@ -171,13 +189,16 @@ private:
         filters << "*-set.xml";
         Q_FOREACH(QFileInfo child, path.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
             QDir childDir(child.absoluteFilePath());
+            QMap<QString, AircraftItem*> baseAircraft;
+            QList<AircraftItem*> variants;
+
             Q_FOREACH(QFileInfo xmlChild, childDir.entryInfoList(filters, QDir::Files)) {
                 try {
-                    AircraftItem item(childDir, xmlChild.absoluteFilePath());
-                    // lock mutex whil we modify the items array
-                    {
-                        QMutexLocker g(&m_lock);
-                        m_items.append(item);
+                    AircraftItem* item = new AircraftItem(childDir, xmlChild.absoluteFilePath());
+                    if (item->variantOf.isNull()) {
+                        baseAircraft.insert(item->baseName(), item);
+                    } else {
+                        variants.append(item);
                     }
                 } catch (sg_exception& e) {
                     continue;
@@ -188,13 +209,30 @@ private:
                 }
             } // of set.xml iteration
 
+            // bind variants to their principals
+            Q_FOREACH(AircraftItem* item, variants) {
+                if (!baseAircraft.contains(item->variantOf)) {
+                    qWarning() << "can't find principal aircraft " << item->variantOf << " for variant:" << item->path;
+                    delete item;
+                    continue;
+                }
+
+                baseAircraft.value(item->variantOf)->variants.append(item);
+            }
+
+            // lock mutex whil we modify the items array
+            {
+                QMutexLocker g(&m_lock);
+                m_items.append(baseAircraft.values());
+            }
+
             emit addedItems();
         } // of subdir iteration
     }
 
     QMutex m_lock;
     QStringList m_dirs;
-    QList<AircraftItem> m_items;
+    QList<AircraftItem*> m_items;
     bool m_done;
 };
 
@@ -238,29 +276,62 @@ public:
 
     virtual QVariant data(const QModelIndex& index, int role) const
     {
-        const AircraftItem& item(m_items.at(index.row()));
+        if (role == AircraftVariantRole) {
+            return m_activeVariant.at(index.row());
+        }
+
+        const AircraftItem* item(m_items.at(index.row()));
+
+        if (role == AircraftVariantCountRole) {
+            return item->variants.count();
+        }
+
+        if (role >= AircraftVariantDescriptionRole) {
+            int variantIndex = role - AircraftVariantDescriptionRole;
+            return item->variants.at(variantIndex)->description;
+        }
+
+        quint32 variantIndex = m_activeVariant.at(index.row());
+        if (variantIndex) {
+            if (variantIndex < item->variants.count()) {
+                // show the selected variant
+                item = item->variants.at(variantIndex);
+            }
+        }
+
         if (role == Qt::DisplayRole) {
-            return item.description;
+            return item->description;
         } else if (role == Qt::DecorationRole) {
-            return item.thumbnail;
+            return item->thumbnail;
         } else if (role == AircraftPathRole) {
-            return item.path;
+            return item->path;
         } else if (role == AircraftAuthorsRole) {
-            return item.authors;
-        } else if (role >= AircraftRatingRole) {
-            return item.ratings[role - AircraftRatingRole];
+            return item->authors;
+        } else if ((role >= AircraftRatingRole) && (role < AircraftVariantDescriptionRole)) {
+            return item->ratings[role - AircraftRatingRole];
         } else if (role == Qt::ToolTipRole) {
-            return item.path;
+            return item->path;
         }
 
         return QVariant();
     }
 
+    virtual bool setData(const QModelIndex &index, const QVariant &value, int role)
+    {
+        if (role == AircraftVariantRole) {
+            m_activeVariant[index.row()] = value.toInt();
+            emit dataChanged(index, index);
+            return true;
+        }
+
+        return false;
+    }
+
   QModelIndex indexOfAircraftPath(QString path) const
   {
       for (int row=0; row <m_items.size(); ++row) {
-          const AircraftItem& item(m_items.at(row));
-          if (item.path == path) {
+          const AircraftItem* item(m_items.at(row));
+          if (item->path == path) {
               return index(row);
           }
       }
@@ -271,7 +342,7 @@ public:
 private slots:
     void onScanResults()
     {
-        QList<AircraftItem> newItems = m_scanThread->items();
+        QList<AircraftItem*> newItems = m_scanThread->items();
         if (newItems.isEmpty())
             return;
 
@@ -279,6 +350,11 @@ private slots:
         int lastRow = firstRow + newItems.count() - 1;
         beginInsertRows(QModelIndex(), firstRow, lastRow);
         m_items.append(newItems);
+
+        // default variants in all cases
+        for (int i=0; i< newItems.count(); ++i) {
+            m_activeVariant.append(0);
+        }
         endInsertRows();
     }
 
@@ -290,13 +366,22 @@ private slots:
 
 private:
     AircraftScanThread* m_scanThread;
-    QList<AircraftItem> m_items;
+    QList<AircraftItem*> m_items;
+    QList<quint32> m_activeVariant;
 };
 
 class AircraftItemDelegate : public QStyledItemDelegate
 {
+    Q_OBJECT
 public:
     static const int MARGIN = 4;
+    static const int ARROW_SIZE = 20;
+
+    AircraftItemDelegate(QListView* view) :
+        m_view(view)
+    {
+        view->viewport()->installEventFilter(this);
+    }
 
     virtual void paint(QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index) const
     {
@@ -324,6 +409,8 @@ public:
         painter->setBrush(Qt::NoBrush);
         painter->drawRect(contentRect.left(), contentRect.top(), thumbnail.width(), thumbnail.height());
 
+        int variantCount = index.data(AircraftVariantCountRole).toInt();
+        int currentVariant =index.data(AircraftVariantRole).toInt();
         QString description = index.data(Qt::DisplayRole).toString();
         contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
 
@@ -332,15 +419,28 @@ public:
         f.setPointSize(18);
         painter->setFont(f);
 
-        QRect actualBounds;
-        painter->drawText(contentRect, Qt::TextWordWrap, description, &actualBounds);
+        QRect descriptionRect = contentRect.adjusted(ARROW_SIZE, 0, -ARROW_SIZE, 0),
+            actualBounds;
+
+        if (variantCount > 0) {
+            bool canLeft = (currentVariant > 0);
+            bool canRight =  (currentVariant < (variantCount - 1));
+
+            QRect leftArrowRect = leftCycleArrowRect(option.rect, index);
+            painter->fillRect(leftArrowRect, canLeft ? Qt::black : Qt::gray);
+
+            QRect rightArrowRect = rightCycleArrowRect(option.rect, index);
+            painter->fillRect(rightArrowRect, canRight ? Qt::black : Qt::gray);
+        }
+
+        painter->drawText(descriptionRect, Qt::TextWordWrap, description, &actualBounds);
 
         QString authors = index.data(AircraftAuthorsRole).toString();
 
         f.setPointSize(12);
         painter->setFont(f);
 
-        QRect authorsRect = contentRect;
+        QRect authorsRect = descriptionRect;
         authorsRect.moveTop(actualBounds.bottom() + MARGIN);
         painter->drawText(authorsRect, Qt::TextWordWrap,
                           QString("by: %1").arg(authors),
@@ -360,8 +460,6 @@ public:
         drawRating(painter, "Cockpit:", r, index.data(AircraftRatingRole + 2).toInt());
         r.moveTop(r.bottom());
         drawRating(painter, "Exterior model:", r, index.data(AircraftRatingRole + 3).toInt());
-
-
     }
 
     virtual QSize sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const
@@ -369,7 +467,66 @@ public:
         return QSize(500, 128 + (MARGIN * 2));
     }
 
+    virtual bool eventFilter( QObject*, QEvent* event )
+    {
+        if ( event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease )
+        {
+            QMouseEvent* me = static_cast< QMouseEvent* >( event );
+            QModelIndex index = m_view->indexAt( me->pos() );
+            int variantCount = index.data(AircraftVariantCountRole).toInt();
+            int variantIndex = index.data(AircraftVariantRole).toInt();
+
+            if ( (event->type() == QEvent::MouseButtonRelease) && (variantCount > 0) )
+            {
+                QRect vr = m_view->visualRect(index);
+                QRect leftCycleRect = leftCycleArrowRect(vr, index),
+                    rightCycleRect = rightCycleArrowRect(vr, index);
+
+                if ((variantIndex > 0) && leftCycleRect.contains(me->pos())) {
+                    m_view->model()->setData(index, variantIndex - 1, AircraftVariantRole);
+                    emit variantChanged(index);
+                    return true;
+                } else if ((variantIndex < (variantCount - 1)) && rightCycleRect.contains(me->pos())) {
+                    m_view->model()->setData(index, variantIndex + 1, AircraftVariantRole);
+                    emit variantChanged(index);
+                    return true;
+                }
+            }
+        } // of mouse button press or release
+        
+        return false;
+    }
+
+Q_SIGNALS:
+    void variantChanged(const QModelIndex& index);
+
 private:
+    QRect leftCycleArrowRect(const QRect& visualRect, const QModelIndex& index) const
+    {
+        QRect contentRect = visualRect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
+        QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
+        contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
+
+        QRect r = contentRect;
+        r.setRight(r.left() + ARROW_SIZE);
+        r.setBottom(r.top() + ARROW_SIZE);
+        return r;
+
+    }
+
+    QRect rightCycleArrowRect(const QRect& visualRect, const QModelIndex& index) const
+    {
+        QRect contentRect = visualRect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
+        QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
+        contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
+
+        QRect r = contentRect;
+        r.setLeft(r.right() - ARROW_SIZE);
+        r.setBottom(r.top() + ARROW_SIZE);
+        return r;
+
+    }
+
     void drawRating(QPainter* painter, QString label, const QRect& box, int value) const
     {
         const int DOT_SIZE = 10;
@@ -394,6 +551,8 @@ private:
             dot.moveLeft(dot.right() + DOT_MARGIN);
         }
     }
+
+    QListView* m_view;
 };
 
 class ArgumentsTokenizer
@@ -710,9 +869,12 @@ QtLauncher::QtLauncher() :
 
     m_ui->aircraftList->setModel(m_aircraftProxy);
     m_ui->aircraftList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_ui->aircraftList->setItemDelegate(new AircraftItemDelegate);
+    AircraftItemDelegate* delegate = new AircraftItemDelegate(m_ui->aircraftList);
+    m_ui->aircraftList->setItemDelegate(delegate);
     m_ui->aircraftList->setSelectionMode(QAbstractItemView::SingleSelection);
     connect(m_ui->aircraftList, &QListView::clicked,
+            this, &QtLauncher::onAircraftSelected);
+    connect(delegate, &AircraftItemDelegate::variantChanged,
             this, &QtLauncher::onAircraftSelected);
 
     connect(m_ui->runwayCombo, SIGNAL(currentIndexChanged(int)),
