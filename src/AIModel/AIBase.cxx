@@ -106,7 +106,6 @@ public:
     bool getInteriorLoaded(void) { return _interiorLoaded;}
     bool hasInteriorPath(void) { return _hasInteriorPath;}
     inline std::string& getInteriorPath() { return _interiorPath; }
-    
 private:
     std::auto_ptr<FGNasalModelDataProxy> _nasal;
     std::string _fxpath;
@@ -932,5 +931,7 @@ int FGAIBase::_newAIModelID() {
     return id;
 }
 
-
-
+bool FGAIBase::isValid() { 
+	//Either no flightplan or it is valid
+	return !fp || fp->isValidPlan(); 
+}

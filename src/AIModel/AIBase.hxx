@@ -110,6 +110,7 @@ public:
     int _getSubID() const;
 
     bool getDie();
+	bool isValid();
 
     SGVec3d getCartPosAt(const SGVec3d& off) const;
     SGVec3d getCartPos() const;
