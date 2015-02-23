@@ -20,6 +20,7 @@
 
 
 #include "PropertyUriHandler.hxx"
+#include "SimpleDOM.hxx"
 #include <Main/fg_props.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -61,84 +62,6 @@ static inline std::string htmlSpecialChars( const std::string & s )
   for( size_t i = 0; i < sizeof(specialChars)/sizeof(specialChars[0]); ++i )
     ReplaceAll( reply, specialChars[i][0], specialChars[i][1] );
   return reply;
-}
-
-class DOMElement {
-public:
-  virtual ~DOMElement() {}
-  virtual std::string render() const = 0;
-};
-
-class DOMTextElement : public DOMElement {
-public:
-  DOMTextElement( const string & text ) : _text(text) {}
-  virtual std::string render() const { return _text; }
-
-private:
-  string _text;
-};
-
-
-class DOMNode : public DOMElement {
-public:
-  DOMNode( const string & name ) : _name(name) {}
-  virtual ~DOMNode();
-
-  virtual std::string render() const;
-  virtual DOMNode * addChild( DOMElement * child );
-  virtual DOMNode * setAttribute( const string & name, const string & value );
-protected:
-  string _name;
-  typedef vector<const DOMElement*> Children_t;
-  typedef map<string,string> Attributes_t;
-  Children_t   _children;
-  Attributes_t _attributes;
-};
-
-DOMNode::~DOMNode()
-{
-  for( Children_t::const_iterator it = _children.begin(); it != _children.end(); ++it ) 
-    delete *it;
-}
-
-string DOMNode::render() const
-{
-  string reply;
-  reply.append( "<" ).append( _name );
-  for( Attributes_t::const_iterator it = _attributes.begin(); it != _attributes.end(); ++it ) {
-    reply.append( " " );
-    reply.append( it->first );
-    reply.append( "=\"" );
-    reply.append( it->second );
-    reply.append( "\"" );
-  }
-
-  if( _children.empty() ) {
-    reply.append( " />\r" );
-    return reply;
-  } else {
-    reply.append( ">" );
-  }
-
-  for( Children_t::const_iterator it = _children.begin(); it != _children.end(); ++it ) {
-    reply.append( (*it)->render() );
-  }
-
-  reply.append( "</" ).append( _name ).append( ">\r" );
-
-  return reply;
-}
-
-DOMNode * DOMNode::addChild( DOMElement * child )
-{
-  _children.push_back( child );
-  return dynamic_cast<DOMNode*>(child);
-}
-
-DOMNode * DOMNode::setAttribute( const string & name, const string & value )
-{
-  _attributes[name] = value;
-  return this;
 }
 
 class SortedChilds : public simgear::PropertyList {

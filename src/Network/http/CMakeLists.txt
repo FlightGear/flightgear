@@ -5,12 +5,14 @@ set(SOURCES
 	ScreenshotUriHandler.cxx
 	PropertyUriHandler.cxx
 	JsonUriHandler.cxx
+    FlightHistoryUriHandler.cxx
 	PkgUriHandler.cxx
 	RunUriHandler.cxx
 	NavdbUriHandler.cxx
 	PropertyChangeWebsocket.cxx
 	PropertyChangeObserver.cxx
 	jsonprops.cxx
+	SimpleDOM.cxx
 	)
 
 set(HEADERS
@@ -19,6 +21,7 @@ set(HEADERS
 	ScreenshotUriHandler.hxx
 	PropertyUriHandler.hxx
 	JsonUriHandler.hxx
+    FlightHistoryUriHandler.hxx
 	PkgUriHandler.hxx
 	RunUriHandler.hxx
 	NavdbUriHandler.hxx
@@ -27,6 +30,7 @@ set(HEADERS
 	PropertyChangeWebsocket.hxx
 	PropertyChangeObserver.hxx
 	jsonprops.hxx
+    SimpleDOM.hxx
 	)
 
 flightgear_component(Http "${SOURCES}" "${HEADERS}")

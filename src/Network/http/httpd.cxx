@@ -24,6 +24,7 @@
 #include "ScreenshotUriHandler.hxx"
 #include "PropertyUriHandler.hxx"
 #include "JsonUriHandler.hxx"
+#include "FlightHistoryUriHandler.hxx"
 #include "PkgUriHandler.hxx"
 #include "RunUriHandler.hxx"
 #include "NavdbUriHandler.hxx"
@@ -458,6 +459,11 @@ void MongooseHttpd::init()
       _uriHandler.push_back(new flightgear::http::PkgUriHandler(uri));
     }
 //#endif
+
+    if ((uri = n->getStringValue("flighthistory"))[0] != 0) {
+      SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding flighthistory uri handler at " << uri);
+      _uriHandler.push_back(new flightgear::http::FlightHistoryUriHandler(uri));
+    }
 
     if ((uri = n->getStringValue("run"))[0] != 0) {
       SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding run uri handler at " << uri);
