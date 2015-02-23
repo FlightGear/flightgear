@@ -113,7 +113,7 @@ double FGEngine::CalcFuelNeed(void)
 
 unsigned int FGEngine::GetSourceTank(unsigned int i) const
 {
-  if (i >= 0 && i < SourceTanks.size()) {
+  if (i < SourceTanks.size()) {
     return SourceTanks[i];
   } else {
     throw("No such source tank is available for this engine");

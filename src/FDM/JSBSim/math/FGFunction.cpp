@@ -545,7 +545,7 @@ double FGFunction::GetValue(void) const
     {
       unsigned int n = Parameters.size()-1;
       i = int(temp+0.5);
-      if (i >= 0u && i < n) {
+      if (i < n) {
         temp = Parameters[i+1]->GetValue();
       } else {
         throw(string("The switch function index selected a value above the range of supplied values"
