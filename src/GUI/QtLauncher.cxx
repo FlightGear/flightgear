@@ -396,6 +396,106 @@ private:
     }
 };
 
+class ArgumentsTokenizer
+{
+public:
+    class Arg
+    {
+    public:
+        explicit Arg(QString k, QString v = QString()) : arg(k), value(v) {}
+
+        QString arg;
+        QString value;
+    };
+
+    QList<Arg> tokenize(QString in) const
+    {
+        int index = 0;
+        const int len = in.count();
+        QChar c, nc;
+        State state = Start;
+        QString key, value;
+        QList<Arg> result;
+
+        for (; index < len; ++index) {
+            c = in.at(index);
+            nc = index < (len - 1) ? in.at(index + 1) : QChar();
+
+            switch (state) {
+            case Start:
+                if (c == QChar('-')) {
+                    if (nc == QChar('-')) {
+                        state = Key;
+                        key.clear();
+                        ++index;
+                    } else {
+                        // should we pemit single hyphen arguments?
+                        // choosing to fail for now
+                        return QList<Arg>();
+                    }
+                } else if (c.isSpace()) {
+                    break;
+                }
+                break;
+
+            case Key:
+                if (c == QChar('=')) {
+                    state = Value;
+                    value.clear();
+                } else if (c.isSpace()) {
+                    state = Start;
+                    result.append(Arg(key));
+                } else {
+                    // could check for illegal charatcers here
+                    key.append(c);
+                }
+                break;
+
+            case Value:
+                if (c == QChar('"')) {
+                    state = Quoted;
+                } else if (c.isSpace()) {
+                    state = Start;
+                    result.append(Arg(key, value));
+                } else {
+                    value.append(c);
+                }
+                break;
+
+            case Quoted:
+                if (c == QChar('\\')) {
+                    // check for escaped double-quote inside quoted value
+                    if (nc == QChar('"')) {
+                        ++index;
+                    }
+                } else if (c == QChar('"')) {
+                    state = Value;
+                } else {
+                    value.append(c);
+                }
+                break;
+            } // of state switch
+        } // of character loop
+
+        // ensure last argument isn't lost
+        if (state == Key) {
+            result.append(Arg(key));
+        } else if (state == Value) {
+            result.append(Arg(key, value));
+        }
+
+        return result;
+    }
+
+private:
+    enum State {
+        Start = 0,
+        Key,
+        Value,
+        Quoted
+    };
+};
+
 } // of anonymous namespace
 
 class AirportSearchModel : public QAbstractListModel
@@ -746,6 +846,8 @@ void QtLauncher::restoreSettings()
 
     QStringList sceneryPaths = settings.value("scenery-paths").toStringList();
     m_ui->sceneryPathsList->addItems(sceneryPaths);
+
+    m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
 }
 
 void QtLauncher::saveSettings()
@@ -769,6 +871,7 @@ void QtLauncher::saveSettings()
     }
 
     settings.setValue("scenery-paths", paths);
+    settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
 }
 
 void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const
@@ -856,6 +959,17 @@ void QtLauncher::onRun()
     for (int i=0; i<m_ui->sceneryPathsList->count(); ++i) {
         QString path = m_ui->sceneryPathsList->item(i)->text();
         opt->addOption("fg-scenery", path.toStdString());
+    }
+
+    // additional arguments
+    ArgumentsTokenizer tk;
+    Q_FOREACH(ArgumentsTokenizer::Arg a, tk.tokenize(m_ui->commandLineArgs->toPlainText())) {
+        if (a.arg.startsWith("prop:")) {
+            QString v = a.arg.mid(5) + "=" + a.value;
+            opt->addOption("prop", v.toStdString());
+        } else {
+            opt->addOption(a.arg.toStdString(), a.value.toStdString());
+        }
     }
 
     saveSettings();
