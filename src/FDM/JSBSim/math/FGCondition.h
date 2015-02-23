@@ -83,7 +83,7 @@ private:
   std::map <std::string, eComparison> mComparison;
   eLogic Logic;
 
-  FGPropertyManager *PropertyManager;
+  //FGPropertyManager *PropertyManager;
   FGPropertyValue *TestParam1, *TestParam2;
   double TestValue;
   eComparison Comparison;

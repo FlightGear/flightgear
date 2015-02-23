@@ -238,9 +238,9 @@ private:
     JSBSim::FGAccelerations*   Accelerations;
     JSBSim::FGPropertyManager* PropertyManager;
 
-    int runcount;
-    double trim_elev;
-    double trim_throttle;
+    //int runcount;
+    //double trim_elev;
+    //double trim_throttle;
 
     SGPropertyNode_ptr startup_trim;
     SGPropertyNode_ptr trimmed;

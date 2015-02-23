@@ -252,12 +252,12 @@ private:
   int crank_counter;
 
   double IndicatedHorsePower;
-  double IndicatedPower;
+  //double IndicatedPower;
   double PMEP;
   double FMEP;
   double FMEPDynamic;
   double FMEPStatic;
-  double T_Intake;
+  //double T_Intake;
 
   void doEngineStartup(void);
   void doBoostControl(void);
@@ -278,7 +278,7 @@ private:
   //
 
   const double R_air;
-  const double rho_fuel;    // kg/m^3
+  //const double rho_fuel;    // kg/m^3
   const double calorific_value_fuel;  // J/Kg (approximate)
   const double Cp_air;      // J/KgK
   const double Cp_fuel;     // J/KgK
@@ -293,7 +293,7 @@ private:
   //
   double MinManifoldPressure_inHg; // Inches Hg
   double MaxManifoldPressure_inHg; // Inches Hg
-  double MaxManifoldPressure_Percent; // MaxManifoldPressure / 29.92
+  //double MaxManifoldPressure_Percent; // MaxManifoldPressure / 29.92
   double ManifoldPressureLag;      // Manifold Pressure delay in seconds.
   double Displacement;             // cubic inches
   double displacement_SI;          // cubic meters
@@ -368,7 +368,7 @@ private:
   double rho_air;
   double volumetric_efficiency;
   double volumetric_efficiency_reduced;
-  double map_coefficient;
+  //double map_coefficient;
   double m_dot_air;
   double v_dot_air;
   double equivalence_ratio;

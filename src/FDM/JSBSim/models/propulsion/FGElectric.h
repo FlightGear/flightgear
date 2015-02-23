@@ -89,7 +89,7 @@ private:
 
   double CalcFuelNeed(void);
 
-  double BrakeHorsePower;
+  //double BrakeHorsePower;
 
   // constants
   double hptowatts;

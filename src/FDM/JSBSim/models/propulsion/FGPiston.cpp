@@ -61,7 +61,6 @@ CLASS IMPLEMENTATION
 FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Inputs& input)
   : FGEngine(exec, engine_number, input),
   R_air(287.3),                  // Gas constant for air J/Kg/K
-  rho_fuel(800),                 // estimate
   calorific_value_fuel(47.3e6),  // J/Kg
   Cp_air(1005),                  // Specific heat (constant pressure) J/Kg/K
   Cp_fuel(1700),

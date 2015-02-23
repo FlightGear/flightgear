@@ -163,7 +163,7 @@ public:
 private:
 
   std::vector <FGExternalForce*> Forces;
-  unsigned int numForces;
+  //unsigned int numForces;
   FGColumnVector3 vTotalForces;
   FGColumnVector3 vTotalMoments;
 

@@ -319,7 +319,7 @@ public:
 private:
 
   double MagnitudedAccelDt, MagnitudeAccel, Magnitude, TurbDirection;
-  double h;
+  //double h;
   double TurbGain;
   double TurbRate;
   double Rhythmicity;

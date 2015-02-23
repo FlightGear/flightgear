@@ -154,7 +154,7 @@ public:
   bool IsSaturated(void) const {return saturated;}
   
 private:
-  double span;
+  //double span;
   double bias;
   FGParameter* rate_limit_incr;
   FGParameter* rate_limit_decr;

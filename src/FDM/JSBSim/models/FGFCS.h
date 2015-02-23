@@ -583,7 +583,7 @@ private:
   std::vector <bool> PropFeatherCmd;
   std::vector <bool> PropFeather;
   std::vector <double> SteerPosDeg;
-  double LeftBrake, RightBrake, CenterBrake; // Brake settings
+  //double LeftBrake, RightBrake, CenterBrake; // Brake settings
   std::vector <double> BrakePos; // left, center, right - defined by FGLGear:: enum
   double GearCmd,GearPos;
   double TailhookPos, WingFoldPos;

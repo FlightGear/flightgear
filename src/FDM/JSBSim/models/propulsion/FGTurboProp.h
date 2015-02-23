@@ -190,8 +190,8 @@ private:
   double StarterN1;            // rotates of generator maked by starter [%]
   double MaxStartingTime;      // maximal time for start [s] (-1 means not used)
   double RPM;                  // shaft RPM
-  double Velocity;
-  double rho;
+  //double Velocity;
+  //double rho;
   double PSFC;                 // Power specific fuel comsumption [lb/(HP*hr)] at best efficiency
   double CombustionEfficiency;
 
