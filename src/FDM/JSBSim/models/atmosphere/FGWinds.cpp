@@ -61,6 +61,7 @@ CLASS IMPLEMENTATION
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // square a value, but preserve the original sign
 
+/*
 static inline double square_signed (double value)
 {
     if (value < 0)
@@ -68,6 +69,7 @@ static inline double square_signed (double value)
     else
         return value * value;
 }
+*/
 
 /// simply square a value
 static inline double sqr(double x) { return x*x; }
