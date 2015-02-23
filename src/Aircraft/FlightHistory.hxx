@@ -57,6 +57,13 @@ public:
      * the specified minimum length
      */
     SGGeodVec pathForHistory(double minEdgeLengthM = 50.0) const;
+
+    /**
+     * clear the history
+     */
+
+    void clear();
+
 private:
     /**
      * @class A single data sample in the history system.
@@ -103,7 +110,6 @@ private:
   
     void allocateNewBucket();
     
-    void clear();
     void capture();
   
     size_t currentMemoryUseBytes() const;
