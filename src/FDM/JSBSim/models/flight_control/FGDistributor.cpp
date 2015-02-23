@@ -75,7 +75,7 @@ FGDistributor::FGDistributor(FGFCS* fcs, Element* element) : FGFCSComponent(fcs,
 
   case_element = element->FindElement("case");
   while (case_element) {
-    current_case = new struct Case;
+    current_case = new Case;
     test_element = case_element->FindElement("test");
     if (test_element) current_case->SetTest(new FGCondition(test_element, PropertyManager));
     prop_val_element = case_element->FindElement("property");
