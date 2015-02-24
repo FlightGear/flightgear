@@ -14,11 +14,10 @@ if(COMMAND cmake_policy)
    endif()
 endif()
 
-# set this before project()
+project(FlightGear)
+
 # using 10.7 because boost requires libc++ and 10.6 doesn't include it
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
-
-project(FlightGear)
 
 # We have some custom .cmake scripts not in the official distribution.
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
