@@ -671,6 +671,10 @@ QtLauncher::QtLauncher() :
     m_ui.reset(new Ui::Launcher);
     m_ui->setupUi(this);
 
+#if QT_VERSION >= 0x050300
+    // don't require Qt 5.3
+    m_ui->commandLineArgs->setPlaceholderText("--option=value --prop:/sim/name=value");
+#endif
     for (int i=0; i<4; ++i) {
         m_ratingFilters[i] = 3;
     }

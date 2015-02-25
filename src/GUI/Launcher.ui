@@ -666,9 +666,6 @@
           </property>
           <item>
            <widget class="QPlainTextEdit" name="commandLineArgs">
-            <property name="placeholderText">
-             <string>--option=value --prop:/sim/name=value</string>
-            </property>
            </widget>
           </item>
          </layout>
