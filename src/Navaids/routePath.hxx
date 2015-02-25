@@ -24,6 +24,7 @@
 #ifndef FG_ROUTE_PATH_HXX
 #define FG_ROUTE_PATH_HXX
 
+#include <memory>
 #include <Navaids/route.hxx>
 
 namespace flightgear
