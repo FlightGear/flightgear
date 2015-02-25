@@ -862,6 +862,10 @@ RoutePath::RoutePath(const flightgear::FlightPlan* fp) :
     commonInit();
 }
 
+RoutePath::~RoutePath()
+{
+}
+
 void RoutePath::commonInit()
 {
   d->initPerfData();

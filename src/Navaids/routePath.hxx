@@ -38,7 +38,8 @@ class RoutePath
 {
 public:
   RoutePath(const flightgear::FlightPlan* fp);
-  
+  ~RoutePath();
+
   SGGeodVec pathForIndex(int index) const;
   
   SGGeod positionForIndex(int index) const;
@@ -64,7 +65,7 @@ private:
   void interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, SGGeodVec& r) const;
   
   
-  RoutePathPrivate* d;
+  std::auto_ptr<RoutePathPrivate> d;
 };
 
 #endif
