@@ -32,33 +32,27 @@ using std::stringstream;
 namespace flightgear {
 namespace http {
 
-static cJSON * GeodToJson(const SGGeod & geod) {
-	cJSON * json = cJSON_CreateObject();
-
-	cJSON_AddItemToObject(json, "latitude",
-			cJSON_CreateNumber(geod.getLatitudeDeg()));
-	cJSON_AddItemToObject(json, "longitude",
-			cJSON_CreateNumber(geod.getLongitudeDeg()));
-	cJSON_AddItemToObject(json, "altitude",
-			cJSON_CreateNumber(geod.getElevationFt()));
-
-	return json;
-}
-
 static string FlightHistoryToJson(const SGGeodVec & history) {
-	cJSON * json = cJSON_CreateObject();
+	cJSON * lineString = cJSON_CreateObject();
+	cJSON_AddItemToObject(lineString, "type", cJSON_CreateString("LineString"));
 
-	cJSON * jsonArray = cJSON_CreateArray();
+	cJSON * coordinates = cJSON_CreateArray();
+	cJSON_AddItemToObject(lineString, "coordinates", coordinates);
 	for (SGGeodVec::const_iterator it = history.begin(); it != history.end();
 			++it) {
-		cJSON_AddItemToArray(jsonArray, GeodToJson(*it));
-	}
-	cJSON_AddItemToObject(json, "flightHistory", jsonArray);
+		cJSON * coordinate = cJSON_CreateArray();
+		cJSON_AddItemToArray(coordinates, coordinate);
 
-	char * jsonString = cJSON_PrintUnformatted(json);
+		cJSON_AddItemToArray(coordinate, cJSON_CreateNumber(it->getLongitudeDeg()));
+		cJSON_AddItemToArray(coordinate, cJSON_CreateNumber(it->getLatitudeDeg()));
+		cJSON_AddItemToArray(coordinate, cJSON_CreateNumber(it->getElevationM()));
+
+	}
+
+	char * jsonString = cJSON_PrintUnformatted(lineString);
 	string reply(jsonString);
 	free(jsonString);
-	cJSON_Delete(json);
+	cJSON_Delete(lineString);
 	return reply;
 }
 
@@ -263,8 +257,9 @@ bool FlightHistoryUriHandler::handleRequest(const HTTPRequest & request,
 				history->pathForHistory(minEdgeLengthM));
 
 	} else {
+		response.Header["Content-Type"] = "text/html";
 		response.StatusCode = 404;
-		response.Content = "{}";
+		response.Content = "<html><head><title>Not found!</title></head><body>404</body></html>";
 	}
 
 	return true;
