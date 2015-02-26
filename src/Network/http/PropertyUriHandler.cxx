@@ -158,7 +158,26 @@ static DOMElement * renderPropertyValueElement( SGPropertyNode_ptr node )
 
     DOMNode * root;
 
-    if( len < 60 ) {
+    if( node->getType() == simgear::props::BOOL ) {
+        root = new DOMNode( "span" );
+
+        root->addChild( new DOMNode("span"))->addChild( new DOMTextElement("true") );
+        DOMNode * radio = root->addChild(new DOMNode( "input" ))
+          ->setAttribute( "type", "radio" )
+          ->setAttribute( "name", node->getDisplayName() )
+          ->setAttribute( "value", "true" );
+        if( node->getBoolValue() )
+          radio->setAttribute( "checked", "checked" );
+
+        root->addChild( new DOMNode("span"))->addChild( new DOMTextElement("false") );
+        radio = root->addChild(new DOMNode( "input" ))
+          ->setAttribute( "type", "radio" )
+          ->setAttribute( "name", node->getDisplayName() )
+          ->setAttribute( "value", "false" );
+        if( !node->getBoolValue() )
+          radio->setAttribute( "checked", "checked" );
+
+    } else if( len < 60 ) {
         root = new DOMNode( "input" );
         root->setAttribute( "type", "text" );
         root->setAttribute( "name", node->getDisplayName() );
