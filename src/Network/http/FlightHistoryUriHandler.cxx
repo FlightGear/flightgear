@@ -32,10 +32,30 @@ using std::stringstream;
 namespace flightgear {
 namespace http {
 
-static string FlightHistoryToJson(const SGGeodVec & history) {
-	cJSON * lineString = cJSON_CreateObject();
-	cJSON_AddItemToObject(lineString, "type", cJSON_CreateString("LineString"));
+/*
+{
+  type: "Feature",
+  geometry: {
+    type: "LineString",
+    coordinates: [lon,lat,alt],..]
+  },
+  properties: {
+    type: "FlightHistory"
+  },
+}
+*/
 
+static string FlightHistoryToJson(const SGGeodVec & history) {
+	cJSON * feature = cJSON_CreateObject();
+	cJSON_AddItemToObject(feature, "type", cJSON_CreateString("Feature"));
+
+	cJSON * lineString = cJSON_CreateObject();
+	cJSON_AddItemToObject(feature, "geometry", lineString );
+
+	cJSON * properties = cJSON_CreateObject();
+	cJSON_AddItemToObject(feature, "properties", properties );
+
+	cJSON_AddItemToObject(lineString, "type", cJSON_CreateString("LineString"));
 	cJSON * coordinates = cJSON_CreateArray();
 	cJSON_AddItemToObject(lineString, "coordinates", coordinates);
 	for (SGGeodVec::const_iterator it = history.begin(); it != history.end();
@@ -49,7 +69,7 @@ static string FlightHistoryToJson(const SGGeodVec & history) {
 
 	}
 
-	char * jsonString = cJSON_PrintUnformatted(lineString);
+	char * jsonString = cJSON_PrintUnformatted(feature);
 	string reply(jsonString);
 	free(jsonString);
 	cJSON_Delete(lineString);
