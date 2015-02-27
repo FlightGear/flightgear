@@ -19,7 +19,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "jsonprops.hxx"
-
+#include <simgear/misc/strutils.hxx>
 namespace flightgear {
 namespace http {
 
@@ -109,19 +109,29 @@ void JSON::toProp(cJSON * json, SGPropertyNode_ptr base)
 {
   if (NULL == json) return;
 
+  SGPropertyNode_ptr n = base;
+
+  // check if name is set. If so, update child with given name
+  // else update base
   cJSON * cj = cJSON_GetObjectItem(json, "name");
-  if (NULL == cj) return; // a node with no name?
-  char * name = cj->valuestring;
-  if (NULL == name) return; // still no name?
+  if ( cj ) {
+	char * name = cj->valuestring;
+    if (NULL == name) return; // no name?
 
-  //TODO: check valid name
+    string namestr = simgear::strutils::strip(string(name));
+    if( namestr.empty() )
+    	return;
 
-  int index = 0;
-  cj = cJSON_GetObjectItem(json, "index");
-  if (NULL != cj) index = cj->valueint;
-  if (index < 0) return;
+    //TODO: better check for valid name
 
-  SGPropertyNode_ptr n = base->getNode(name, index, true);
+    int index = 0;
+    cj = cJSON_GetObjectItem(json, "index");
+    if (NULL != cj) index = cj->valueint;
+    if (index < 0) return;
+
+    n = base->getNode(namestr, index, true);
+  }
+
   cJSON * children = cJSON_GetObjectItem(json, "children");
   if (NULL != children) {
     for (int i = 0; i < cJSON_GetArraySize(children); i++) {
