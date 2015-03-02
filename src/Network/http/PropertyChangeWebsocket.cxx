@@ -239,8 +239,8 @@ void PropertyChangeWebsocket::WatchedNodesList::handleCommand(const string & com
         SG_LOG(SG_NETWORK, SG_INFO, "httpd: " << command << " '" << node << "' success");
         return;
       }
-      SG_LOG(SG_NETWORK, SG_WARN, "httpd: " << command << " '" << node << "' ignored (not found)");
     }
+    SG_LOG(SG_NETWORK, SG_WARN, "httpd: " << command << " '" << node << "' ignored (not found)");
   }
 }
 
