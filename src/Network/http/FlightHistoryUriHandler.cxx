@@ -25,6 +25,7 @@
 #include <Aircraft/FlightHistory.hxx>
 #include <Main/fg_props.hxx>
 #include <sstream>
+#include <boost/lexical_cast.hpp>
 
 using std::string;
 using std::stringstream;
@@ -45,7 +46,17 @@ namespace http {
 }
 */
 
-static string FlightHistoryToJson(const SGGeodVec & history) {
+static const char * errorPage =
+		"<html><head><title>Flight History</title></head><body>"
+		"<h1>Flight History</h1>"
+		"Supported formats:"
+		"<ul>"
+		"<li><a href='track.json'>JSON</a></li>"
+		"<li><a href='track.kml'>KML</a></li>"
+		"</ul>"
+		"</body></html>";
+
+static string FlightHistoryToJson(const SGGeodVec & history, size_t last_seen ) {
 	cJSON * feature = cJSON_CreateObject();
 	cJSON_AddItemToObject(feature, "type", cJSON_CreateString("Feature"));
 
@@ -54,6 +65,8 @@ static string FlightHistoryToJson(const SGGeodVec & history) {
 
 	cJSON * properties = cJSON_CreateObject();
 	cJSON_AddItemToObject(feature, "properties", properties );
+	cJSON_AddItemToObject(properties, "type", cJSON_CreateString("FlightHistory"));
+	cJSON_AddItemToObject(properties, "last", cJSON_CreateNumber(last_seen));
 
 	cJSON_AddItemToObject(lineString, "type", cJSON_CreateString("LineString"));
 	cJSON * coordinates = cJSON_CreateArray();
@@ -272,14 +285,26 @@ bool FlightHistoryUriHandler::handleRequest(const HTTPRequest & request,
 				history->pathForHistory(minEdgeLengthM), request);
 
 	} else if (requestPath == "track.json") {
+		size_t count = -1;
+		try {
+		  count = boost::lexical_cast<size_t>(request.RequestVariables.get("count"));
+		}
+		catch( ... ) {
+		}
+		size_t last = 0;
+		try {
+			last = boost::lexical_cast<size_t>(request.RequestVariables.get("last"));
+		}
+		catch( ... ) {
+		}
+
 		response.Header["Content-Type"] = "application/json; charset=UTF-8";
-		response.Content = FlightHistoryToJson(
-				history->pathForHistory(minEdgeLengthM));
+		PagedPathForHistory_ptr h = history->pagedPathForHistory( count, last );
+		response.Content = FlightHistoryToJson( h->path, h->last_seen );
 
 	} else {
 		response.Header["Content-Type"] = "text/html";
-		response.StatusCode = 404;
-		response.Content = "<html><head><title>Not found!</title></head><body>404</body></html>";
+		response.Content = errorPage;
 	}
 
 	return true;
