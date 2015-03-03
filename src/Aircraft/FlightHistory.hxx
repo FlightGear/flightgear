@@ -32,6 +32,15 @@
 
 typedef std::vector<SGGeod> SGGeodVec;
 
+class PagedPathForHistory : public SGReferenced {
+public:
+	PagedPathForHistory() : last_seen(0) {}
+	virtual ~PagedPathForHistory() {}
+	SGGeodVec path;
+	time_t last_seen;
+};
+typedef SGSharedPtr<PagedPathForHistory> PagedPathForHistory_ptr;
+
 const unsigned int SAMPLE_BUCKET_WIDTH = 1024;
 
 /**
@@ -52,6 +61,7 @@ public:
     virtual void reinit();
     virtual void update(double dt);
     
+    PagedPathForHistory_ptr pagedPathForHistory(size_t max_entries, size_t newerThan = 0) const;
     /**
      * retrieve the path, collapsing segments shorter than
      * the specified minimum length
@@ -75,7 +85,7 @@ private:
         /// heading, pitch and roll can be recorded at lower precision
         /// than a double - actually 16 bits might be sufficient
         float heading, pitch, roll;
-        int simTimeMSec;
+        size_t simTimeMSec;
     };
     
     

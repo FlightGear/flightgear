@@ -137,7 +137,7 @@ void FGFlightHistory::capture()
     m_lastCaptureTime = globals->get_sim_time_sec();
     Sample* sample = m_buckets.back()->samples + m_validSampleCount;
     
-    sample->simTimeMSec = static_cast<int>(m_lastCaptureTime * 1000.0);
+    sample->simTimeMSec = static_cast<size_t>(m_lastCaptureTime * 1000.0);
     sample->position = globals->get_aircraft_position();
     
     double heading, pitch, roll;
@@ -148,6 +148,40 @@ void FGFlightHistory::capture()
     
     ++m_validSampleCount;
 }
+
+PagedPathForHistory_ptr FGFlightHistory::pagedPathForHistory(size_t max_entries, size_t newerThan ) const
+{
+    PagedPathForHistory_ptr result = new PagedPathForHistory();
+    if (m_buckets.empty()) {
+        return result;
+    }
+
+    BOOST_FOREACH(SampleBucket* bucket, m_buckets) {
+        unsigned int count = (bucket == m_buckets.back() ? m_validSampleCount : SAMPLE_BUCKET_WIDTH);
+
+        // iterate over all the valid samples in the bucket
+        for (unsigned int index = 0; index < count; ++index) {
+            // skip older entries
+            // TODO: bisect!
+            if( bucket->samples[index].simTimeMSec <= newerThan )
+            continue;
+
+            if( max_entries ) {
+                max_entries--;
+                SGGeod g = bucket->samples[index].position;
+                result->path.push_back(g);
+                result->last_seen = bucket->samples[index].simTimeMSec;
+            } else {
+                goto exit;
+            }
+
+        } // of samples iteration
+    } // of buckets iteration
+
+exit:
+    return result;
+}
+
 
 SGGeodVec FGFlightHistory::pathForHistory(double minEdgeLengthM) const
 {
