@@ -25,6 +25,8 @@
 #include <QLinearGradient>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QDataStream>
+#include <QDateTime>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -96,6 +98,8 @@ struct AircraftItem
         SGPropertyNode_ptr sim = root.getNode("sim");
 
         path = filePath;
+        pathModTime = QFileInfo(path).lastModified();
+
         description = sim->getStringValue("description");
         authors =  sim->getStringValue("author");
 
@@ -106,15 +110,6 @@ struct AircraftItem
         if (sim->hasChild("variant-of")) {
             variantOf = sim->getStringValue("variant-of");
         }
-
-        if (dir.exists("thumbnail.jpg")) {
-            thumbnail.load(dir.filePath("thumbnail.jpg"));
-            // resize to the standard size
-            if (thumbnail.height() > 128) {
-                thumbnail = thumbnail.scaledToHeight(128);
-            }
-        }
-
     }
 
     // the file-name without -set.xml suffix
@@ -125,15 +120,49 @@ struct AircraftItem
         return fn;
     }
 
+    void fromDataStream(QDataStream& ds)
+    {
+        ds >> path >> description >> authors >> variantOf;
+        for (int i=0; i<4; ++i) ds >> ratings[i];
+        ds >> pathModTime;
+    }
+
+    void toDataStream(QDataStream& ds) const
+    {
+        ds << path << description << authors << variantOf;
+        for (int i=0; i<4; ++i) ds << ratings[i];
+        ds << pathModTime;
+    }
+
+    QPixmap thumbnail() const
+    {
+        if (m_thumbnail.isNull()) {
+            QFileInfo info(path);
+            QDir dir = info.dir();
+            if (dir.exists("thumbnail.jpg")) {
+                m_thumbnail.load(dir.filePath("thumbnail.jpg"));
+                // resize to the standard size
+                if (m_thumbnail.height() > 128) {
+                    m_thumbnail = m_thumbnail.scaledToHeight(128);
+                }
+            }
+        }
+
+        return m_thumbnail;
+    }
+
     QString path;
-    QPixmap thumbnail;
     QString description;
     QString authors;
     int ratings[4];
     QString variantOf;
+    QDateTime pathModTime;
 
     QList<AircraftItem*> variants;
 private:
+    mutable QPixmap m_thumbnail;
+
+
     void parseRatings(SGPropertyNode_ptr ratingsNode)
     {
         ratings[0] = ratingsNode->getIntValue("FDM");
@@ -143,6 +172,8 @@ private:
     }
 };
 
+static int CACHE_VERSION = 2;
+
 class AircraftScanThread : public QThread
 {
     Q_OBJECT
@@ -151,7 +182,10 @@ public:
         m_dirs(dirsToScan),
         m_done(false)
     {
+    }
 
+    ~AircraftScanThread()
+    {
     }
 
     /** thread-safe access to items already scanned */
@@ -174,17 +208,70 @@ Q_SIGNALS:
 protected:
     virtual void run()
     {
+        readCache();
+
         Q_FOREACH(QString d, m_dirs) {
             scanAircraftDir(QDir(d));
             if (m_done) {
                 return;
             }
         }
+
+        writeCache();
     }
 
 private:
+    void readCache()
+    {
+        QSettings settings;
+        QByteArray cacheData = settings.value("aircraft-cache").toByteArray();
+        if (!cacheData.isEmpty()) {
+            QDataStream ds(cacheData);
+            quint32 count, cacheVersion;
+            ds >> cacheVersion >> count;
+
+            if (cacheVersion != CACHE_VERSION) {
+                return; // mis-matched cache, version, drop
+            }
+
+             for (int i=0; i<count; ++i) {
+                AircraftItem* item = new AircraftItem;
+                item->fromDataStream(ds);
+
+                QFileInfo finfo(item->path);
+                if (!finfo.exists() || (finfo.lastModified() != item->pathModTime)) {
+                    delete item;
+                } else {
+                    // corresponding -set.xml file still exists and is
+                    // unmodified
+                    m_cachedItems[item->path] = item;
+                }
+            } // of cached item iteration
+        }
+    }
+
+    void writeCache()
+    {
+        QSettings settings;
+        QByteArray cacheData;
+        {
+            QDataStream ds(&cacheData, QIODevice::WriteOnly);
+            quint32 count = m_nextCache.count();
+            ds << CACHE_VERSION << count;
+
+            Q_FOREACH(AircraftItem* item, m_nextCache.values()) {
+                item->toDataStream(ds);
+            }
+        }
+
+        settings.setValue("aircraft-cache", cacheData);
+    }
+
     void scanAircraftDir(QDir path)
     {
+        QTime t;
+        t.start();
+
         QStringList filters;
         filters << "*-set.xml";
         Q_FOREACH(QFileInfo child, path.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
@@ -194,7 +281,17 @@ private:
 
             Q_FOREACH(QFileInfo xmlChild, childDir.entryInfoList(filters, QDir::Files)) {
                 try {
-                    AircraftItem* item = new AircraftItem(childDir, xmlChild.absoluteFilePath());
+                    QString absolutePath = xmlChild.absoluteFilePath();
+                    AircraftItem* item = NULL;
+
+                    if (m_cachedItems.contains(absolutePath)) {
+                        item = m_cachedItems.value(absolutePath);
+                    } else {
+                        item = new AircraftItem(childDir, absolutePath);
+                    }
+
+                    m_nextCache[absolutePath] = item;
+
                     if (item->variantOf.isNull()) {
                         baseAircraft.insert(item->baseName(), item);
                     } else {
@@ -220,7 +317,7 @@ private:
                 baseAircraft.value(item->variantOf)->variants.append(item);
             }
 
-            // lock mutex whil we modify the items array
+            // lock mutex while we modify the items array
             {
                 QMutexLocker g(&m_lock);
                 m_items.append(baseAircraft.values());
@@ -228,11 +325,17 @@ private:
 
             emit addedItems();
         } // of subdir iteration
+
+        qDebug() << "scan of" << path << "took" << t.elapsed();
     }
 
     QMutex m_lock;
     QStringList m_dirs;
     QList<AircraftItem*> m_items;
+
+    QMap<QString, AircraftItem* > m_cachedItems;
+    QMap<QString, AircraftItem* > m_nextCache;
+
     bool m_done;
 };
 
@@ -302,7 +405,7 @@ public:
         if (role == Qt::DisplayRole) {
             return item->description;
         } else if (role == Qt::DecorationRole) {
-            return item->thumbnail;
+            return item->thumbnail();
         } else if (role == AircraftPathRole) {
             return item->path;
         } else if (role == AircraftAuthorsRole) {
@@ -1282,7 +1385,7 @@ void QtLauncher::updateSelectedAircraft()
     try {
         QFileInfo info(m_selectedAircraft);
         AircraftItem item(info.dir(), m_selectedAircraft);
-        m_ui->thumbnail->setPixmap(item.thumbnail);
+        m_ui->thumbnail->setPixmap(item.thumbnail());
         m_ui->aircraftDescription->setText(item.description);
     } catch (sg_exception& e) {
         m_ui->thumbnail->setPixmap(QPixmap());
