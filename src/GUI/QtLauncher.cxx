@@ -293,9 +293,9 @@ public:
 
         quint32 variantIndex = m_activeVariant.at(index.row());
         if (variantIndex) {
-            if (variantIndex < item->variants.count()) {
+            if (variantIndex <= item->variants.count()) {
                 // show the selected variant
-                item = item->variants.at(variantIndex);
+                item = item->variants.at(variantIndex - 1);
             }
         }
 
@@ -424,7 +424,7 @@ public:
 
         if (variantCount > 0) {
             bool canLeft = (currentVariant > 0);
-            bool canRight =  (currentVariant < (variantCount - 1));
+            bool canRight =  (currentVariant < variantCount );
 
             QRect leftArrowRect = leftCycleArrowRect(option.rect, index);
             painter->fillRect(leftArrowRect, canLeft ? Qt::black : Qt::gray);
@@ -486,7 +486,7 @@ public:
                     m_view->model()->setData(index, variantIndex - 1, AircraftVariantRole);
                     emit variantChanged(index);
                     return true;
-                } else if ((variantIndex < (variantCount - 1)) && rightCycleRect.contains(me->pos())) {
+                } else if ((variantIndex < variantCount) && rightCycleRect.contains(me->pos())) {
                     m_view->model()->setData(index, variantIndex + 1, AircraftVariantRole);
                     emit variantChanged(index);
                     return true;
