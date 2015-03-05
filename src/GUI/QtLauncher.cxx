@@ -381,6 +381,9 @@ public:
         m_view(view)
     {
         view->viewport()->installEventFilter(this);
+
+        m_leftArrowIcon.load(":/left-arrow-icon");
+        m_rightArrowIcon.load(":/right-arrow-icon");
     }
 
     virtual void paint(QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index) const
@@ -427,10 +430,14 @@ public:
             bool canRight =  (currentVariant < variantCount );
 
             QRect leftArrowRect = leftCycleArrowRect(option.rect, index);
-            painter->fillRect(leftArrowRect, canLeft ? Qt::black : Qt::gray);
+            if (canLeft) {
+                painter->drawPixmap(leftArrowRect.topLeft() + QPoint(2, 2), m_leftArrowIcon);
+            }
 
             QRect rightArrowRect = rightCycleArrowRect(option.rect, index);
-            painter->fillRect(rightArrowRect, canRight ? Qt::black : Qt::gray);
+            if (canRight) {
+                painter->drawPixmap(rightArrowRect.topLeft() + QPoint(2, 2), m_rightArrowIcon);
+            }
         }
 
         painter->drawText(descriptionRect, Qt::TextWordWrap, description, &actualBounds);
@@ -553,6 +560,8 @@ private:
     }
 
     QListView* m_view;
+    QPixmap m_leftArrowIcon,
+        m_rightArrowIcon;
 };
 
 class ArgumentsTokenizer

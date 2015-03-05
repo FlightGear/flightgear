@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file alias="history-icon">history-icon.png</file>
         <file alias="search-icon">large-search-icon.png</file>
+        <file alias="right-arrow-icon">arrow-right-icon.png</file>
+        <file alias="left-arrow-icon">arrow-left-icon.png</file>
     </qresource>
 </RCC>
