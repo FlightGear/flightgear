@@ -82,13 +82,7 @@ using std::string;
 
 #include <Airports/runways.hxx>
 #include <Airports/airport.hxx>
-
-#if defined( HAVE_VERSION_H ) && HAVE_VERSION_H
-#  include <Include/version.h>
-#else
-#  include <Include/no_version.h>
-#endif
-
+#include <Include/version.h>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include "instrument_mgr.hxx"

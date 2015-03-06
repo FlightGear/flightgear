@@ -28,11 +28,7 @@
 #  include "config.h"
 #endif
 
-#if defined( HAVE_VERSION_H ) && HAVE_VERSION_H
-#  include <Include/version.h>
-#else
-#  include <Include/no_version.h>
-#endif
+#include <Include/version.h>
 
 #include <stdio.h>  // sprintf
 #include <simgear/debug/logstream.hxx>
