@@ -168,6 +168,7 @@ option(SYSTEM_SPEEX      "Set to ON to build IAXClient with the system's speex a
 option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM library" ${SYSTEM_GSM_DEFAULT})
 option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
+option(FG_NIGHTLY        "Set to ON to mark this as a nightly build" OFF)
 
 # additional utilities
 option(ENABLE_FGADMIN    "Set to ON to build the FGADMIN application (default)" ON)
@@ -286,9 +287,6 @@ if (USE_DBUS)
     endif (DBUS_FOUND)
 else()
 endif (USE_DBUS)
-
-# Sqlite always depends on the threading lib
-list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
 
 ##############################################################################
 ## Qt5 setup setup

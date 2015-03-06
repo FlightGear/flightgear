@@ -68,7 +68,6 @@ extern bool global_crashRptEnabled;
 #include <Viewer/WindowSystemAdapter.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Include/version.h>
-#include <Viewer/WindowBuilder.hxx>
 
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
@@ -83,7 +82,6 @@ extern bool global_crashRptEnabled;
 #include "options.hxx"
 
 #if defined(HAVE_QT)
-#include <QApplication>
 #include <GUI/QtLauncher.hxx>
 #endif
 
@@ -458,16 +456,8 @@ int fgMainInit( int argc, char **argv )
     // environment variables. This avoids needed a wrapper shell-script on OS-X.
     showLauncher |= (::getenv("FG_LAUNCHER") != 0);
 
-    if (showLauncher) {        
-        QApplication app(argc, argv);
-        app.setOrganizationName("FlightGear");
-        app.setApplicationName("FlightGear");
-        app.setOrganizationDomain("flightgear.org");
-    
-        // avoid double Apple menu and other weirdness if both Qt and OSG
-        // try to initialise various Cocoa structures.
-        flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
-
+    if (showLauncher) {
+        QtLauncher::initApp(argc, argv);
         if (!QtLauncher::runLauncherDialog()) {
             return EXIT_SUCCESS;
         }

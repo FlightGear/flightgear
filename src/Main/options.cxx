@@ -55,6 +55,8 @@
 
 #include <GUI/gui.h>
 #include <GUI/MessageBox.hxx>
+#include <GUI/QtLauncher.hxx>
+#include <GUI/SetupRootDialog.hxx>
 
 #include <Main/locale.hxx>
 #include "globals.hxx"
@@ -71,13 +73,8 @@
 #include "AircraftDirVisitorBase.hxx"
 
 #include <osg/Version>
-
-#if defined( HAVE_VERSION_H ) && HAVE_VERSION_H
-#  include <Include/version.h>
-#  include <simgear/version.h>
-#else
-#  include <Include/no_version.h>
-#endif
+#include <Include/version.h>
+#include <simgear/version.h>
 
 using std::string;
 using std::sort;
@@ -1904,7 +1901,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   fgOptLogLevel(valueForOption("log-level", "alert").c_str());
 
   if (!p->shouldLoadDefaultConfig) {
-    setupRoot();
+    setupRoot(argc, argv);
     return;
   }
   
@@ -1939,7 +1936,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
   
 // setup FG_ROOT
-  setupRoot();
+  setupRoot(argc, argv);
   
 // system.fgfsrc handling
   if( ! hostname.empty() ) {
@@ -2436,9 +2433,11 @@ string Options::platformDefaultRoot() const
 }
 #endif
   
-void Options::setupRoot()
+void Options::setupRoot(int argc, char **argv)
 {
   string root;
+    bool usingDefaultRoot = false;
+
   if (isOptionSet("fg-root")) {
     root = valueForOption("fg-root"); // easy!
   } else {
@@ -2447,16 +2446,32 @@ void Options::setupRoot()
     if ( envp != NULL ) {
       root = envp;
     } else {
+        usingDefaultRoot = true;
       root = platformDefaultRoot();
     }
   } 
   
-  SG_LOG(SG_INPUT, SG_INFO, "fg_root = " << root );
+  SG_LOG(SG_GENERAL, SG_INFO, "fg_root = " << root );
   globals->set_fg_root(root);
-  
-// validate it
-  static char required_version[] = FLIGHTGEAR_VERSION;
-  string base_version = fgBasePackageVersion();
+    static char required_version[] = FLIGHTGEAR_VERSION;
+    string base_version = fgBasePackageVersion(root);
+
+#if defined(HAVE_QT)
+    if (base_version != required_version) {
+        QtLauncher::initApp(argc, argv);
+        if (SetupRootDialog::restoreUserSelectedRoot()) {
+            SG_LOG(SG_GENERAL, SG_INFO, "restored user selected fg_root = " << globals->get_fg_root() );
+            return;
+        }
+
+        SetupRootDialog dlg(usingDefaultRoot);
+        dlg.exec();
+        if (dlg.result() != QDialog::Accepted) {
+            exit(-1);
+        }
+    }
+#else
+    // validate it
     if (base_version.empty()) {
         flightgear::fatalMessageBox("Base package not found",
                                     "Required data files not found, check your installation.",
@@ -2465,9 +2480,7 @@ void Options::setupRoot()
         exit(-1);
     }
     
- if (base_version != required_version) {
-    // tell the operator how to use this application
-   
+    if (base_version != required_version) {
       flightgear::fatalMessageBox("Base package version mismatch",
                                   "Version check failed: please check your installation.",
                                   "Found data files for version '" + base_version +
@@ -2476,6 +2489,7 @@ void Options::setupRoot()
 
     exit(-1);
   }
+#endif
 }
   
 bool Options::shouldLoadDefaultConfig() const

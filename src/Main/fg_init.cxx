@@ -160,14 +160,14 @@ using namespace simgear::pkg;
 extern osg::ref_ptr<osgViewer::Viewer> viewer;
 
 // Return the current base package version
-string fgBasePackageVersion() {
-    SGPath base_path( globals->get_fg_root() );
-    base_path.append("version");
-    if (!base_path.exists()) {
+string fgBasePackageVersion(const SGPath& base_path) {
+    SGPath p(base_path);
+    p.append("version");
+    if (!p.exists()) {
         return string();
     }
     
-    sg_gzifstream in( base_path.str() );
+    sg_gzifstream in( p.str() );
     if (!in.is_open()) {
         return string();
     }

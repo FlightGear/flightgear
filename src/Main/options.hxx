@@ -131,8 +131,14 @@ private:
   int parseOption(const std::string& s);
   
   void processArgResult(int result);
-  
-  void setupRoot();
+
+    /**
+     * Setup the root base, and check it's valid. Bails out with exit(-1) if
+     * the root package was not found or is the incorrect version. Argv/argv
+     * are passed since we might potentially show a GUI dialog at this point
+     * to help the user our (finding a base package), and hence need to init Qt.
+     */
+  void setupRoot(int argc, char **argv);
   
   std::string platformDefaultRoot() const;
   

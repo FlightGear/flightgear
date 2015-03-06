@@ -27,6 +27,7 @@
 #include <QMessageBox>
 #include <QDataStream>
 #include <QDateTime>
+#include <QApplication>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -42,6 +43,7 @@
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx> // for parking
 #include <Main/options.hxx>
+#include <Viewer/WindowBuilder.hxx>
 
 using namespace flightgear;
 
@@ -1066,9 +1068,26 @@ QtLauncher::~QtLauncher()
     
 }
 
+void QtLauncher::initApp(int argc, char** argv)
+{
+    static bool qtInitDone = false;
+    if (!qtInitDone) {
+        qtInitDone = true;
+
+        QApplication* app = new QApplication(argc, argv);
+        app->setOrganizationName("FlightGear");
+        app->setApplicationName("FlightGear");
+        app->setOrganizationDomain("flightgear.org");
+
+        // avoid double Apple menu and other weirdness if both Qt and OSG
+        // try to initialise various Cocoa structures.
+        flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
+    }
+}
+
 bool QtLauncher::runLauncherDialog()
 {
-     Q_INIT_RESOURCE(resources);
+    Q_INIT_RESOURCE(resources);
 
     // startup the nav-cache now. This pre-empts normal startup of
     // the cache, but no harm done. (Providing scenery paths are consistent)

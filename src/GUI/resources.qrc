@@ -4,5 +4,6 @@
         <file alias="search-icon">large-search-icon.png</file>
         <file alias="right-arrow-icon">arrow-right-icon.png</file>
         <file alias="left-arrow-icon">arrow-left-icon.png</file>
+        <file alias="app-icon-large">../../icons/128x128/apps/flightgear.png</file>
     </qresource>
 </RCC>

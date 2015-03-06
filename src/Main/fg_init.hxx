@@ -30,9 +30,10 @@
 
 // forward decls
 class SGPropertyNode;
+class SGPath;
 
 // Return the current base package version
-std::string fgBasePackageVersion();
+std::string fgBasePackageVersion(const SGPath& path);
 
 bool fgInitHome();
 

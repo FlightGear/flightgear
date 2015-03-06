@@ -22,7 +22,9 @@ class QtLauncher : public QDialog
 public:
     QtLauncher();
     virtual ~QtLauncher();
-    
+
+    static void initApp(int argc, char** argv);
+
     static bool runLauncherDialog();
 
 private slots:

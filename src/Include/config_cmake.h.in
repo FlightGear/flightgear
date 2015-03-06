@@ -1,6 +1,8 @@
 
 
 #cmakedefine FG_NDEBUG
+#cmakedefine FG_NIGHTLY
+
 #cmakedefine ENABLE_SP_FDM
 #cmakedefine JSBSIM_USE_GROUNDREACTIONS
 
