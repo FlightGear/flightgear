@@ -58,6 +58,9 @@ public:
 // singleton accessor
     static NavDataCache* instance();
 
+// static creator
+    static NavDataCache* createInstance();
+
     SGPath path() const;
     
   /**

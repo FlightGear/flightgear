@@ -81,7 +81,7 @@ const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
 
 void initNavCache()
 {
-    NavDataCache* cache = NavDataCache::instance();
+    NavDataCache* cache = NavDataCache::createInstance();
     if (cache->isRebuildRequired()) {
         QProgressDialog rebuildProgress("Initialising navigation data, this may take several minutes",
                                        QString() /* cancel text */,
@@ -1102,6 +1102,18 @@ void QtLauncher::initApp(int argc, char** argv)
         // avoid double Apple menu and other weirdness if both Qt and OSG
         // try to initialise various Cocoa structures.
         flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
+
+        Qt::KeyboardModifiers mods = app->queryKeyboardModifiers();
+        if (mods & Qt::AltModifier) {
+            qWarning() << "Alt pressed during launch";
+
+            // wipe out our settings
+            QSettings settings;
+            settings.clear();
+
+
+            Options::sharedInstance()->addOption("restore-defaults", "");
+        }
     }
 }
 

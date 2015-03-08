@@ -590,17 +590,22 @@ int fgInitAircraft(bool reinit)
 bool
 fgInitNav ()
 {
-  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
-  static bool doingRebuild = false;
-  if (doingRebuild || cache->isRebuildRequired()) {
-    doingRebuild = true;
-    bool finished = cache->rebuild();
-    if (!finished) {
-      // sleep to give the rebuild thread more time
-      SGTimeStamp::sleepForMSec(50);
-      return false;
+    flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+    static bool doingRebuild = false;
+
+    if (!cache) {
+        cache = flightgear::NavDataCache::createInstance();
+        doingRebuild = cache->isRebuildRequired();
     }
-  }
+
+    if (doingRebuild) {
+        bool finished = cache->rebuild();
+        if (!finished) {
+            // sleep to give the rebuild thread more time
+            SGTimeStamp::sleepForMSec(50);
+            return false;
+        }
+    }
 
     // depend on when the NavCache was initialised, scenery paths may not
     // have been setup. This is a safe place to consistently check the value,

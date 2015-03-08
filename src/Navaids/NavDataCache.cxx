@@ -1121,20 +1121,22 @@ NavDataCache::NavDataCache()
   d->airwayDatPath = SGPath(globals->get_fg_root());
   d->airwayDatPath.append("Navaids/awy.dat.gz");
 }
-    
+
 NavDataCache::~NavDataCache()
 {
   assert(static_instance == this);
   static_instance = NULL;
   d.reset();
 }
+
+NavDataCache* NavDataCache::createInstance()
+{
+    static_instance = new NavDataCache;
+    return static_instance;
+}
     
 NavDataCache* NavDataCache::instance()
 {
-  if (!static_instance) {
-    static_instance = new NavDataCache;
-  }
-  
   return static_instance;
 }
   
