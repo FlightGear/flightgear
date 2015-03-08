@@ -55,8 +55,10 @@
 
 #include <GUI/gui.h>
 #include <GUI/MessageBox.hxx>
+#if defined(HAVE_QT)
 #include <GUI/QtLauncher.hxx>
 #include <GUI/SetupRootDialog.hxx>
+#endif
 
 #include <Main/locale.hxx>
 #include "globals.hxx"
