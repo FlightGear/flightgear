@@ -219,6 +219,9 @@ bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_vie
     {
         // create a new entry
         t = new TileEntry( b );
+        SG_LOG( SG_TERRAIN, SG_INFO, "sched_tile: new tile entry for:" << b );
+
+
         // insert the tile into the cache, update will generate load request
         if ( tile_cache.insert_tile( t ) )
         {
