@@ -112,6 +112,7 @@ void LiveMetarProperties::update( double dt )
     _pollingTimer -= dt;
     if( _timeToLive <= 0.0 ) {
         _timeToLive = 0.0;
+        invalidate();
         std::string stationId = getStationId();
         if( stationId.empty() ) return;
         if( _pollingTimer > 0.0 ) return;

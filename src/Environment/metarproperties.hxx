@@ -44,6 +44,7 @@ public:
     virtual const std::string & getStationId() const { return _station_id; }
     virtual void setStationId( const std::string & value );
     virtual void setMetar(SGSharedPtr<FGMetar> m);
+    virtual void invalidate();
 
 private:
     const char * get_metar() const;

@@ -190,6 +190,10 @@ MetarProperties::~MetarProperties()
   delete _magneticVariation;
 }
 
+void MetarProperties::invalidate()
+{
+  _metarValidNode->setBoolValue(false);
+}
 
 static const double thickness_value[] = { 0, 65, 600, 750, 1000 };
 
