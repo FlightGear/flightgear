@@ -162,6 +162,9 @@ static void addAirportProperties(cJSON * json, FGAirport * airport )
   cJSON_AddItemToObject(json, "longestRwyLength_m", cJSON_CreateNumber(longestRunwayLength));
   cJSON_AddItemToObject(json, "longestRwyHeading_deg", cJSON_CreateNumber(longestRunwayHeading));
   cJSON_AddItemToObject(json, "longestRwySurface", cJSON_CreateString(longestRunwaySurface));
+  if( airport->getMetar() ) {
+    cJSON_AddItemToObject(json, "metar", cJSON_CreateTrue());
+  }
 }
 
 static void addNAVProperties(cJSON * json, FGNavRecord * navRecord )
