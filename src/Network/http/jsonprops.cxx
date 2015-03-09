@@ -20,6 +20,7 @@
 
 #include "jsonprops.hxx"
 #include <simgear/misc/strutils.hxx>
+#include <simgear/math/SGMath.hxx>
 namespace flightgear {
 namespace http {
 
@@ -82,9 +83,11 @@ cJSON * JSON::toJson(SGPropertyNode_ptr n, int depth, double timestamp )
       case simgear::props::INT:
       case simgear::props::LONG:
       case simgear::props::FLOAT:
-      case simgear::props::DOUBLE:
-        cJSON_AddItemToObject(json, "value", cJSON_CreateNumber(n->getDoubleValue()));
+      case simgear::props::DOUBLE: {
+        double val = n->getDoubleValue();
+	cJSON_AddItemToObject(json, "value", SGMiscd::isNaN(val) ? cJSON_CreateNull() : cJSON_CreateNumber(val));
         break;
+      }
       default:
         cJSON_AddItemToObject(json, "value", cJSON_CreateString(n->getStringValue()));
         break;
