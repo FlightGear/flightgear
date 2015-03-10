@@ -453,12 +453,10 @@ void MongooseHttpd::init()
       _uriHandler.push_back(new flightgear::http::JsonUriHandler(uri));
     }
 
-//#ifdef ENABLE_PACKAGE_SYSTEM
     if ((uri = n->getStringValue("pkg"))[0] != 0) {
       SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding pkg uri handler at " << uri);
       _uriHandler.push_back(new flightgear::http::PkgUriHandler(uri));
     }
-//#endif
 
     if ((uri = n->getStringValue("flighthistory"))[0] != 0) {
       SG_LOG(SG_NETWORK, SG_INFO, "httpd: adding flighthistory uri handler at " << uri);

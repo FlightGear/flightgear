@@ -47,8 +47,6 @@ typedef nasal::Ghost<pkg::PackageRef> NasalPackage;
 typedef nasal::Ghost<pkg::CatalogRef> NasalCatalog;
 typedef nasal::Ghost<pkg::InstallRef> NasalInstall;
 
-#define ENABLE_PACKAGE_SYSTEM 1
-
 namespace {
   
   class FGDelegate : public pkg::Delegate
@@ -132,7 +130,6 @@ void FGHTTPClient::init()
     _http->setProxy(proxyHost, proxyPort, proxyAuth);
   }
   
-#ifdef ENABLE_PACKAGE_SYSTEM
   pkg::Root* packageRoot = globals->packageRoot();
   if (packageRoot) {
     // package system needs access to the HTTP engine too
@@ -155,7 +152,6 @@ void FGHTTPClient::init()
     // start a refresh now
     packageRoot->refresh();
   }
-#endif // of ENABLE_PACKAGE_SYSTEM
 }
 
 static naRef f_package_existingInstall( pkg::Package& pkg,
@@ -231,7 +227,6 @@ static naRef f_package_variants(pkg::Package& pack, naContext c)
 
 void FGHTTPClient::postinit()
 {
-#ifdef ENABLE_PACKAGE_SYSTEM
   NasalPackageRoot::init("PackageRoot")
   .member("path", &pkg::Root::path)
   .member("version", &pkg::Root::catalogVersion)
@@ -291,7 +286,6 @@ void FGHTTPClient::postinit()
     nasal::Hash nasalPkg = nasalGlobals.createHash("pkg"); // module
     nasalPkg.set("root", packageRoot);
   }
-#endif // of ENABLE_PACKAGE_SYSTEM
 }
 
 void FGHTTPClient::shutdown()
