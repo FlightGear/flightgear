@@ -503,17 +503,8 @@ static void initAircraftDirsNasalSecurity()
 
 void fgInitAircraftPaths(bool reinit)
 {
-  if (!reinit) {
-      // there is some debate if we should be using FG_HOME here (hidden
-      // location) vs a user-visible location inside Documents (especially on
-      // Windows and Mac). Really this location should be managed by FG, not
-      // the user, but it can potentially grow large.
-      SGPath packageAircraftDir = globals->get_fg_home();
-      packageAircraftDir.append("Aircraft");
-
-      SGSharedPtr<Root> pkgRoot(new Root(packageAircraftDir, FLIGHTGEAR_VERSION));
-      // set the http client later (too early in startup right now)
-      globals->setPackageRoot(pkgRoot);
+  if (!globals->packageRoot()) {
+      fgInitPackageRoot();
   }
 
   SGSharedPtr<Root> pkgRoot(globals->packageRoot());
@@ -724,9 +715,12 @@ void fgCreateSubsystems(bool duringReset) {
             globals->get_props()) ) {
        throw sg_io_exception("Error loading materials file", mpath);
     }
-    
-    globals->add_subsystem( "http", new FGHTTPClient );
-    
+
+    // may exist already due to GUI startup
+    if (!globals->get_subsystem("http")) {
+        globals->add_subsystem( "http", new FGHTTPClient );
+    }
+
     ////////////////////////////////////////////////////////////////////
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
@@ -1115,3 +1109,21 @@ void fgStartNewReset()
     fgSetBool("/sim/sceneryloaded",false);
 }
 
+void fgInitPackageRoot()
+{
+    if (globals->packageRoot()) {
+        return;
+    }
+    
+    // there is some debate if we should be using FG_HOME here (hidden
+    // location) vs a user-visible location inside Documents (especially on
+    // Windows and Mac). Really this location should be managed by FG, not
+    // the user, but it can potentially grow large.
+    SGPath packageAircraftDir = globals->get_fg_home();
+    packageAircraftDir.append("Aircraft");
+
+    SGSharedPtr<Root> pkgRoot(new Root(packageAircraftDir, FLIGHTGEAR_VERSION));
+    // set the http client later (too early in startup right now)
+    globals->setPackageRoot(pkgRoot);
+
+}

@@ -110,7 +110,8 @@ public:
 
 } // of anonymous namespace
 
-FGHTTPClient::FGHTTPClient()
+FGHTTPClient::FGHTTPClient() :
+    _inited(false)
 {
 }
 
@@ -120,6 +121,12 @@ FGHTTPClient::~FGHTTPClient()
 
 void FGHTTPClient::init()
 {
+    // launcher may need to setup HTTP access abnormally early, so
+    // guard against duplicate inits
+    if (_inited) {
+        return;
+    }
+
   _http.reset(new simgear::HTTP::Client);
   
   std::string proxyHost(fgGetString("/sim/presets/proxy/host"));
@@ -152,6 +159,8 @@ void FGHTTPClient::init()
     // start a refresh now
     packageRoot->refresh();
   }
+
+    _inited = true;
 }
 
 static naRef f_package_existingInstall( pkg::Package& pkg,

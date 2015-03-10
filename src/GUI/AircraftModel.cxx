@@ -281,8 +281,9 @@ private:
     bool m_done;
 };
 
-AircraftItemModel::AircraftItemModel(QObject* pr) :
-    QAbstractListModel(pr)
+AircraftItemModel::AircraftItemModel(QObject* pr, simgear::pkg::RootRef& rootRef) :
+    QAbstractListModel(pr),
+    m_packageRoot(rootRef)
 {
     QStringList dirs;
     Q_FOREACH(std::string ap, globals->get_aircraft_paths()) {

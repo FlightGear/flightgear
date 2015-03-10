@@ -25,6 +25,7 @@
 #include <QScopedPointer>
 #include <QStringList>
 #include <QModelIndex>
+#include <QTimer>
 
 #include <Airports/airport.hxx>
 
@@ -76,6 +77,8 @@ private slots:
     void onRemoveSceneryPath();
 
     void onRembrandtToggled(bool b);
+
+    void onSubsytemIdleTimeout();
 private:
     void setAirport(FGAirportRef ref);
     void updateSelectedAircraft();
@@ -98,6 +101,7 @@ private:
     QStringList m_recentAircraft,
         m_recentAirports;
     QString m_customAircraftDir;
+    QTimer* m_subsystemIdleTimer;
 
     int m_ratingFilters[4];
 };

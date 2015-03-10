@@ -46,6 +46,7 @@
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #include "ui_Launcher.h"
@@ -58,7 +59,9 @@
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx> // for parking
 #include <Main/options.hxx>
+#include <Main/fg_init.hxx>
 #include <Viewer/WindowBuilder.hxx>
+#include <Network/HTTPClient.hxx>
 
 using namespace flightgear;
 
@@ -374,6 +377,12 @@ QtLauncher::QtLauncher() :
         m_ratingFilters[i] = 3;
     }
 
+    m_subsystemIdleTimer = new QTimer(this);
+    m_subsystemIdleTimer->setInterval(0);
+    connect(m_subsystemIdleTimer, &QTimer::timeout,
+            this, &QtLauncher::onSubsytemIdleTimeout);
+    m_subsystemIdleTimer->start();
+
     m_airportsModel = new AirportSearchModel;
     m_ui->searchList->setModel(m_airportsModel);
     connect(m_ui->searchList, &QListView::clicked,
@@ -391,7 +400,18 @@ QtLauncher::QtLauncher() :
 
     // create and configure the proxy model
     m_aircraftProxy = new AircraftProxyModel(this);
-    m_aircraftProxy->setSourceModel(new AircraftItemModel(this));
+
+    fgInitPackageRoot();
+    simgear::pkg::RootRef r(globals->packageRoot());
+
+    FGHTTPClient* http = new FGHTTPClient;
+    globals->add_subsystem("http", http);
+
+    // we guard against re-init in the global phase; bind and postinit
+    // will happen as normal
+    http->init();
+
+    m_aircraftProxy->setSourceModel(new AircraftItemModel(this, r));
 
     m_aircraftProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
     m_aircraftProxy->setSortCaseSensitivity(Qt::CaseInsensitive);
@@ -1027,6 +1047,11 @@ void QtLauncher::onRembrandtToggled(bool b)
 {
     // Rembrandt and multi-sample are exclusive
     m_ui->msaaCheckbox->setEnabled(!b);
+}
+
+void QtLauncher::onSubsytemIdleTimeout()
+{
+    globals->get_subsystem_mgr()->update(0.0);
 }
 
 #include "QtLauncher.moc"

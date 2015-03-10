@@ -21,11 +21,12 @@
 #ifndef FG_GUI_AIRCRAFT_MODEL
 #define FG_GUI_AIRCRAFT_MODEL
 
-#include <QThread>
 #include <QAbstractListModel>
 #include <QDateTime>
 #include <QDir>
 #include <QPixmap>
+
+#include <simgear/package/Root.hxx>
 
 const int AircraftPathRole = Qt::UserRole + 1;
 const int AircraftAuthorsRole = Qt::UserRole + 2;
@@ -68,7 +69,7 @@ class AircraftItemModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    AircraftItemModel(QObject* pr);
+    AircraftItemModel(QObject* pr, simgear::pkg::RootRef& root);
 
     ~AircraftItemModel();
 
@@ -92,6 +93,7 @@ private:
     AircraftScanThread* m_scanThread;
     QList<AircraftItem*> m_items;
     QList<quint32> m_activeVariant;
+    simgear::pkg::RootRef m_packageRoot;
 };
 
 #endif // of FG_GUI_AIRCRAFT_MODEL

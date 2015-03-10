@@ -71,6 +71,9 @@ void fgStartReposition();
 
 void fgStartNewReset();
 
+// setup the package system including the global root
+void fgInitPackageRoot();
+
 #endif // _FG_INIT_HXX
 
 

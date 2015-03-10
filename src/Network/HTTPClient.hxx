@@ -42,6 +42,7 @@ public:
     virtual void update(double);
 
 private:
+    bool _inited;
     std::auto_ptr<simgear::HTTP::Client> _http;
 };
 
