@@ -83,6 +83,10 @@ if (HAVE_QT)
                             EditRatingsFilterDialog.hxx
                             SetupRootDialog.cxx
                             SetupRootDialog.hxx
+                            AircraftItemDelegate.hxx
+                            AircraftItemDelegate.cxx
+                            AircraftModel.hxx
+                            AircraftModel.cxx
                             ${uic_sources}
                             ${qrc_sources})
 
