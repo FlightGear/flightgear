@@ -47,6 +47,8 @@ bool RunUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & r
   cJSON * json = cJSON_Parse( request.Content.c_str() );
   JSON::toProp( json, args );
 
+  SG_LOG( SG_NETWORK, SG_INFO, "RunUriHandler("<< request.Content << "): command='" << command << "', arg='" << JSON::toJsonString(false,args,5) << "'");
+
   cJSON_Delete( json );
   if ( globals->get_commands()->execute(command.c_str(), args) ) {
     response.Content = "ok.";
