@@ -118,21 +118,19 @@ void JSON::toProp(cJSON * json, SGPropertyNode_ptr base)
   // else update base
   cJSON * cj = cJSON_GetObjectItem(json, "name");
   if ( cj ) {
-	char * name = cj->valuestring;
-    if (NULL == name) return; // no name?
-
-    string namestr = simgear::strutils::strip(string(name));
-    if( namestr.empty() )
-    	return;
+    const char * name = cj->valuestring;
+    if (NULL == name) name = "";
 
     //TODO: better check for valid name
+    string namestr = simgear::strutils::strip(string(name));
+    if( false == namestr.empty() ) {
+      int index = 0;
+      cj = cJSON_GetObjectItem(json, "index");
+      if (NULL != cj) index = cj->valueint;
+      if (index < 0) return;
 
-    int index = 0;
-    cj = cJSON_GetObjectItem(json, "index");
-    if (NULL != cj) index = cj->valueint;
-    if (index < 0) return;
-
-    n = base->getNode(namestr, index, true);
+      n = base->getNode(namestr, index, true);
+    }
   }
 
   cJSON * children = cJSON_GetObjectItem(json, "children");
