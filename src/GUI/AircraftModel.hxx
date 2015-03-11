@@ -25,6 +25,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QPixmap>
+#include <QStringList>
 
 #include <simgear/package/Root.hxx>
 
@@ -73,6 +74,10 @@ public:
 
     ~AircraftItemModel();
 
+    void setPaths(QStringList paths);
+
+    void scanDirs();
+
     virtual int rowCount(const QModelIndex& parent) const
     {
         return m_items.size();
@@ -90,6 +95,9 @@ private slots:
     void onScanFinished();
 
 private:
+    void abandonCurrentScan();
+
+    QStringList m_paths;
     AircraftScanThread* m_scanThread;
     QList<AircraftItem*> m_items;
     QList<quint32> m_activeVariant;

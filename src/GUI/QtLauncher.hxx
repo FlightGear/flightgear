@@ -37,6 +37,7 @@ namespace Ui
 class AirportSearchModel;
 class QModelIndex;
 class AircraftProxyModel;
+class AircraftItemModel;
 class QCheckBox;
 
 class QtLauncher : public QDialog
@@ -76,6 +77,10 @@ private slots:
     void onAddSceneryPath();
     void onRemoveSceneryPath();
 
+    void onAddAircraftPath();
+    void onRemoveAircraftPath();
+
+
     void onRembrandtToggled(bool b);
 
     void onSubsytemIdleTimeout();
@@ -94,7 +99,8 @@ private:
     QScopedPointer<Ui::Launcher> m_ui;
     AirportSearchModel* m_airportsModel;
     AircraftProxyModel* m_aircraftProxy;
-
+    AircraftItemModel* m_aircraftModel;
+    
     FGAirportRef m_selectedAirport;
 
     QString m_selectedAircraft;

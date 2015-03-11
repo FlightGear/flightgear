@@ -411,7 +411,8 @@ QtLauncher::QtLauncher() :
     // will happen as normal
     http->init();
 
-    m_aircraftProxy->setSourceModel(new AircraftItemModel(this, r));
+    m_aircraftModel = new AircraftItemModel(this, r);
+    m_aircraftProxy->setSourceModel(m_aircraftModel);
 
     m_aircraftProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
     m_aircraftProxy->setSortCaseSensitivity(Qt::CaseInsensitive);
@@ -498,6 +499,15 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onAddSceneryPath);
     connect(m_ui->removeSceneryPath, &QToolButton::clicked,
             this, &QtLauncher::onRemoveSceneryPath);
+
+    connect(m_ui->addAircraftPath, &QToolButton::clicked,
+            this, &QtLauncher::onAddAircraftPath);
+    connect(m_ui->removeAircraftPath, &QToolButton::clicked,
+            this, &QtLauncher::onRemoveAircraftPath);
+
+    QSettings settings;
+    m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
+    m_aircraftModel->scanDirs();
 }
 
 QtLauncher::~QtLauncher()
@@ -598,6 +608,9 @@ void QtLauncher::restoreSettings()
     QStringList sceneryPaths = settings.value("scenery-paths").toStringList();
     m_ui->sceneryPathsList->addItems(sceneryPaths);
 
+    QStringList aircraftPaths = settings.value("aircraft-paths").toStringList();
+    m_ui->aircraftPathsList->addItems(aircraftPaths);
+
     m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
 }
 
@@ -622,6 +635,13 @@ void QtLauncher::saveSettings()
     }
 
     settings.setValue("scenery-paths", paths);
+    paths.clear();
+
+    for (int i=0; i<m_ui->aircraftPathsList->count(); ++i) {
+        paths.append(m_ui->aircraftPathsList->item(i)->text());
+    }
+
+    settings.setValue("aircraft-paths", paths);
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
 }
 
@@ -710,6 +730,12 @@ void QtLauncher::onRun()
     for (int i=0; i<m_ui->sceneryPathsList->count(); ++i) {
         QString path = m_ui->sceneryPathsList->item(i)->text();
         opt->addOption("fg-scenery", path.toStdString());
+    }
+
+    // aircraft paths
+    for (int i=0; i<m_ui->aircraftPathsList->count(); ++i) {
+        QString path = m_ui->aircraftPathsList->item(i)->text();
+        opt->addOption("fg-aircraft", path.toStdString());
     }
 
     // additional arguments
@@ -1039,6 +1065,28 @@ void QtLauncher::onRemoveSceneryPath()
 {
     if (m_ui->sceneryPathsList->currentItem()) {
         delete m_ui->sceneryPathsList->currentItem();
+        saveSettings();
+    }
+}
+
+void QtLauncher::onAddAircraftPath()
+{
+    QString path = QFileDialog::getExistingDirectory(this, tr("Choose aircraft folder"));
+    if (!path.isEmpty()) {
+        m_ui->aircraftPathsList->addItem(path);
+        saveSettings();
+
+        // re-scan the aircraft list
+        QSettings settings;
+        m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
+        m_aircraftModel->scanDirs();
+    }
+}
+
+void QtLauncher::onRemoveAircraftPath()
+{
+    if (m_ui->aircraftPathsList->currentItem()) {
+        delete m_ui->aircraftPathsList->currentItem();
         saveSettings();
     }
 }

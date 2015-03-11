@@ -283,9 +283,33 @@ private:
 
 AircraftItemModel::AircraftItemModel(QObject* pr, simgear::pkg::RootRef& rootRef) :
     QAbstractListModel(pr),
+    m_scanThread(NULL),
     m_packageRoot(rootRef)
 {
-    QStringList dirs;
+}
+
+AircraftItemModel::~AircraftItemModel()
+{
+    abandonCurrentScan();
+}
+
+void AircraftItemModel::setPaths(QStringList paths)
+{
+    m_paths = paths;
+}
+
+void AircraftItemModel::scanDirs()
+{
+    abandonCurrentScan();
+
+    beginResetModel();
+    qDeleteAll(m_items);
+    m_items.clear();
+    m_activeVariant.clear();
+    endResetModel();
+
+    QStringList dirs = m_paths;
+
     Q_FOREACH(std::string ap, globals->get_aircraft_paths()) {
         dirs << QString::fromStdString(ap);
     }
@@ -300,14 +324,16 @@ AircraftItemModel::AircraftItemModel(QObject* pr, simgear::pkg::RootRef& rootRef
     connect(m_scanThread, &AircraftScanThread::addedItems,
             this, &AircraftItemModel::onScanResults);
     m_scanThread->start();
+
 }
 
-AircraftItemModel::~AircraftItemModel()
+void AircraftItemModel::abandonCurrentScan()
 {
     if (m_scanThread) {
         m_scanThread->setDone();
         m_scanThread->wait(1000);
         delete m_scanThread;
+        m_scanThread = NULL;
     }
 }
 
