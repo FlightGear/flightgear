@@ -192,7 +192,8 @@ MetarProperties::~MetarProperties()
 
 void MetarProperties::invalidate()
 {
-  _metarValidNode->setBoolValue(false);
+  if( _metarValidNode->getBoolValue() )
+    _metarValidNode->setBoolValue(false);
 }
 
 static const double thickness_value[] = { 0, 65, 600, 750, 1000 };
