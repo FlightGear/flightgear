@@ -368,83 +368,100 @@ private:
 
 //////////////////////////////////////////////////////////////////////
 //
-//  handle command "multiplayer"
-//  command: connect|disconnect|refreshserverlist
-//
-//  connect args:
+//  handle command "multiplayer-connect"
+//  args:
 //  server: servername to connect (mandatory)
 //  txport: outgoing port number (default: 5000)
 //  rxport: incoming port number (default: 5000)
+//////////////////////////////////////////////////////////////////////
+static bool do_multiplayer_connect(const SGPropertyNode * arg) {
+	FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem("mp");
+	if (!self) {
+		SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
+		return false;
+	}
+
+	string servername = arg->getStringValue("servername", "");
+	if (servername.empty()) {
+		SG_LOG(SG_NETWORK, SG_WARN,
+				"do_multiplayer.connect: no server name given, command ignored.");
+		return false;
+	}
+	int port = arg->getIntValue("rxport", -1);
+	if (port > 0 && port <= 0xffff) {
+		fgSetInt("/sim/multiplay/rxport", port);
+	}
+
+	port = arg->getIntValue("txport", -1);
+	if (port > 0 && port <= 0xffff) {
+		fgSetInt("/sim/multiplay/txport", port);
+	}
+
+	servername = servername.substr(0, servername.find_first_of(' '));
+	fgSetString("/sim/multiplay/txhost", servername);
+	self->reinit();
+	return true;
+}
+
+//////////////////////////////////////////////////////////////////////
 //
+//  handle command "multiplayer-disconnect"
 //  disconnect args:
 //  none
+//////////////////////////////////////////////////////////////////////
+static bool do_multiplayer_disconnect(const SGPropertyNode * arg) {
+	FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem("mp");
+	if (!self) {
+		SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
+		return false;
+	}
+
+	fgSetString("/sim/multiplay/txhost", "");
+	self->reinit();
+	return true;
+}
+
+//////////////////////////////////////////////////////////////////////
 //
+//  handle command "multiplayer-refreshserverlist"
 //  refreshserverlist args:
 //  none
 //
 //////////////////////////////////////////////////////////////////////
-static bool do_multiplayer (const SGPropertyNode * arg)
-{
-    FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem("mp");
+static bool do_multiplayer_refreshserverlist(const SGPropertyNode * arg) {
+	FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem("mp");
+	if (!self) {
+		SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
+		return false;
+	}
 
-    const string &command = arg->getStringValue("command", "");
-    SG_LOG(SG_NETWORK, SG_WARN, "do_multiplayer: " << command );
-    if( command == "connect" ) {
-        string servername = arg->getStringValue("servername", "");
-        if( servername.empty() ) {
-          SG_LOG(SG_NETWORK, SG_WARN, "do_multiplayer.connect: no server name given, command ignored." );
-          return false;
-        }
-        int port = arg->getIntValue("rxport", -1 );
-        if( port > 0 && port <= 0xffff ) {
-            fgSetInt( "/sim/multiplay/rxport", port );
-        }
+	FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+	if (!http) {
+		SG_LOG(SG_IO, SG_ALERT,
+				"do_multiplayer.refreshserverlist: HTTP client not running");
+		return false;
+	}
 
-        port = arg->getIntValue("txport", -1 );
-        if( port > 0 && port <= 0xffff ) {
-            fgSetInt( "/sim/multiplay/txport", port );
-        }
+	string url(
+			fgGetString("/sim/multiplay/serverlist-url",
+					"http://liveries.flightgear.org/mpstatus/mpservers.xml"));
 
-        servername = servername.substr( 0, servername.find_first_of(' '));
-        fgSetString("/sim/multiplay/txhost", servername );
-        self->reinit();
-        return true;
+	if (url.empty()) {
+		SG_LOG(SG_IO, SG_ALERT,
+				"do_multiplayer.refreshserverlist: no URL given");
+		return false;
+	}
 
-    } else if( command == "disconnect" ) {
-        fgSetString("/sim/multiplay/txhost", "");
-        self->reinit();
-        return true;
-
-    } else if( command == "refreshserverlist" ) {
-        string url(fgGetString("/sim/multiplay/serverlist-url",
-                               "http://liveries.flightgear.org/mpstatus/mpservers.xml" ));
-
-        if (url.empty()) {
-            SG_LOG(SG_IO, SG_ALERT, "do_multiplayer.refreshserverlist: no URL given");
-            return false;
-        }
-
-        FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
-        if (!http) {
-            SG_LOG(SG_IO, SG_ALERT, "do_multiplayer.refreshserverlist: HTTP client not running");
-            return false;
-        }
-
-        SGPropertyNode *targetnode = fgGetNode("/sim/multiplay/server-list", true );
-        SGPropertyNode *completeNode = fgGetNode("/sim/multiplay/got-servers", true);
-        SGPropertyNode *failureNode = fgGetNode("/sim/multiplay/get-servers-failure", true);
-        RemoteXMLRequest* req = new RemoteXMLRequest(url, targetnode);
-        req->setCompletionProp( completeNode );
-        req->setFailedProp( failureNode );
-        completeNode->setBoolValue(false);
-        failureNode->setBoolValue(false);
-        http->makeRequest(req);
-        return true;
-
-    } else {
-        SG_LOG(SG_NETWORK, SG_WARN, "FGMultiplayMgr do_multiplayer: command" << command << " unknown. ignored.");
-    }
-    return true;
+	SGPropertyNode *targetnode = fgGetNode("/sim/multiplay/server-list", true);
+	SGPropertyNode *completeNode = fgGetNode("/sim/multiplay/got-servers", true);
+	SGPropertyNode *failureNode = fgGetNode("/sim/multiplay/get-servers-failure", true);
+	RemoteXMLRequest* req = new RemoteXMLRequest(url, targetnode);
+	req->setCompletionProp(completeNode);
+	req->setFailedProp(failureNode);
+	completeNode->setBoolValue(false);
+	failureNode->setBoolValue(false);
+	http->makeRequest(req);
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -457,7 +474,9 @@ FGMultiplayMgr::FGMultiplayMgr()
   mInitialised   = false;
   mHaveServer    = false;
   mListener = NULL;
-  globals->get_commands()->addCommand("multiplayer", do_multiplayer);
+  globals->get_commands()->addCommand("multiplayer-connect", do_multiplayer_connect);
+  globals->get_commands()->addCommand("multiplayer-disconnect", do_multiplayer_disconnect);
+  globals->get_commands()->addCommand("multiplayer-refreshserverlist", do_multiplayer_refreshserverlist);
 } // FGMultiplayMgr::FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
@@ -468,7 +487,9 @@ FGMultiplayMgr::FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 FGMultiplayMgr::~FGMultiplayMgr() 
 {
-   globals->get_commands()->removeCommand("multiplayer");
+   globals->get_commands()->removeCommand("multiplayer-connect");
+   globals->get_commands()->removeCommand("multiplayer-disconnect");
+   globals->get_commands()->removeCommand("multiplayer-refreshserverlist");
 } // FGMultiplayMgr::~FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
