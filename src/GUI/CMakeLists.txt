@@ -87,6 +87,8 @@ if (HAVE_QT)
                             AircraftItemDelegate.cxx
                             AircraftModel.hxx
                             AircraftModel.cxx
+                            CatalogListModel.cxx
+                            CatalogListModel.hxx
                             ${uic_sources}
                             ${qrc_sources})
 

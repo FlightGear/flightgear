@@ -39,6 +39,7 @@ class QModelIndex;
 class AircraftProxyModel;
 class AircraftItemModel;
 class QCheckBox;
+class CatalogListModel;
 
 class QtLauncher : public QDialog
 {
@@ -80,6 +81,8 @@ private slots:
     void onAddAircraftPath();
     void onRemoveAircraftPath();
 
+    void onAddCatalog();
+    void onRemoveCatalog();
 
     void onRembrandtToggled(bool b);
 
@@ -100,7 +103,8 @@ private:
     AirportSearchModel* m_airportsModel;
     AircraftProxyModel* m_aircraftProxy;
     AircraftItemModel* m_aircraftModel;
-    
+    CatalogListModel* m_catalogsModel;
+
     FGAirportRef m_selectedAirport;
 
     QString m_selectedAircraft;

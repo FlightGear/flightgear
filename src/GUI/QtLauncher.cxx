@@ -53,6 +53,7 @@
 #include "EditRatingsFilterDialog.hxx"
 #include "AircraftItemDelegate.hxx"
 #include "AircraftModel.hxx"
+#include "CatalogListModel.hxx"
 
 #include <Main/globals.hxx>
 #include <Navaids/NavDataCache.hxx>
@@ -538,6 +539,9 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onAddAircraftPath);
     connect(m_ui->removeAircraftPath, &QToolButton::clicked,
             this, &QtLauncher::onRemoveAircraftPath);
+
+    m_catalogsModel = new CatalogListModel(this, r);
+    m_ui->catalogsList->setModel(m_catalogsModel);
 
     QSettings settings;
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
@@ -1135,6 +1139,16 @@ void QtLauncher::onRembrandtToggled(bool b)
 void QtLauncher::onSubsytemIdleTimeout()
 {
     globals->get_subsystem_mgr()->update(0.0);
+}
+
+void QtLauncher::onAddCatalog()
+{
+
+}
+
+void QtLauncher::onRemoveCatalog()
+{
+    
 }
 
 #include "QtLauncher.moc"
