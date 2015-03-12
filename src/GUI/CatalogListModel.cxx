@@ -28,6 +28,8 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include <simgear/package/Package.hxx>
+
 // FlightGear
 #include <Main/globals.hxx>
 
@@ -39,6 +41,12 @@ CatalogListModel::CatalogListModel(QObject* pr, simgear::pkg::RootRef& rootRef) 
 
 CatalogListModel::~CatalogListModel()
 {
+}
+
+void CatalogListModel::refresh()
+{
+    beginResetModel();
+    endResetModel();
 }
 
 int CatalogListModel::rowCount(const QModelIndex& parent) const
@@ -58,6 +66,10 @@ QVariant CatalogListModel::data(const QModelIndex& index, int role) const
         return QUrl(QString::fromStdString(cat->url()));
     } else if (role == CatalogIdRole) {
         return QString::fromStdString(cat->id());
+    } else if (role == CatalogPackageCountRole) {
+        return static_cast<quint32>(cat->packages().size());
+    } else if (role == CatalogInstallCountRole) {
+        return static_cast<quint32>(cat->installedPackages().size());
     }
 
     return QVariant();

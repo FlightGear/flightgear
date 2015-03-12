@@ -54,6 +54,7 @@
 #include "AircraftItemDelegate.hxx"
 #include "AircraftModel.hxx"
 #include "CatalogListModel.hxx"
+#include "AddCatalogDialog.hxx"
 
 #include <Main/globals.hxx>
 #include <Navaids/NavDataCache.hxx>
@@ -542,6 +543,11 @@ QtLauncher::QtLauncher() :
 
     m_catalogsModel = new CatalogListModel(this, r);
     m_ui->catalogsList->setModel(m_catalogsModel);
+
+    connect(m_ui->addCatalog, &QToolButton::clicked,
+            this, &QtLauncher::onAddCatalog);
+    connect(m_ui->removeCatalog, &QToolButton::clicked,
+            this, &QtLauncher::onRemoveCatalog);
 
     QSettings settings;
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
@@ -1143,7 +1149,11 @@ void QtLauncher::onSubsytemIdleTimeout()
 
 void QtLauncher::onAddCatalog()
 {
-
+    AddCatalogDialog* dlg = new AddCatalogDialog(this, globals->packageRoot());
+    dlg->exec();
+    if (dlg->result() == QDialog::Accepted) {
+        m_catalogsModel->refresh();
+    }
 }
 
 void QtLauncher::onRemoveCatalog()

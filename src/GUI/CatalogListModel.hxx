@@ -32,6 +32,8 @@
 
 const int CatalogUrlRole = Qt::UserRole + 1;
 const int CatalogIdRole = Qt::UserRole + 2;
+const int CatalogPackageCountRole = Qt::UserRole + 3;
+const int CatalogInstallCountRole = Qt::UserRole + 4;
 
 class CatalogListModel : public QAbstractListModel
 {
@@ -40,6 +42,8 @@ public:
     CatalogListModel(QObject* pr, simgear::pkg::RootRef& root);
 
     ~CatalogListModel();
+
+    void refresh();
 
     virtual int rowCount(const QModelIndex& parent) const;
 

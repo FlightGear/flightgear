@@ -70,7 +70,10 @@ endif()
 
 
 if (HAVE_QT)
-    qt5_wrap_ui(uic_sources Launcher.ui EditRatingsFilterDialog.ui SetupRootDialog.ui)
+    qt5_wrap_ui(uic_sources Launcher.ui 
+                            EditRatingsFilterDialog.ui
+                            SetupRootDialog.ui
+                            AddCatalogDialog.ui)
     qt5_add_resources(qrc_sources resources.qrc)
 
     include_directories(${PROJECT_BINARY_DIR}/src/GUI)
@@ -89,6 +92,8 @@ if (HAVE_QT)
                             AircraftModel.cxx
                             CatalogListModel.cxx
                             CatalogListModel.hxx
+                            AddCatalogDialog.cxx
+                            AddCatalogDialog.hxx
                             ${uic_sources}
                             ${qrc_sources})
 
