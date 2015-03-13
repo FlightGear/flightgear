@@ -12,6 +12,7 @@
 #endif
 
 #include <string.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,6 +20,7 @@
 #include <sstream>
 
 #include <simgear/nasal/nasal.h>
+#include <simgear/nasal/iolib.h>
 #include <simgear/props/props.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
@@ -662,6 +664,25 @@ static naRef f_removeCommand(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
+static naRef f_open(naContext c, naRef me, int argc, naRef* args)
+{
+    FILE* f;
+    naRef file = argc > 0 ? naStringValue(c, args[0]) : naNil();
+    naRef mode = argc > 1 ? naStringValue(c, args[1]) : naNil();
+    if(!naStr_data(file)) naRuntimeError(c, "bad argument to open()");
+    const char* modestr = naStr_data(mode) ? naStr_data(mode) : "rb";
+    std::string filename = fgValidatePath(naStr_data(file),
+        strcmp(modestr, "rb") && strcmp(modestr, "r"));
+    if(filename.empty()) {
+        naRuntimeError(c, "open(): reading/writing '%s' denied "
+                "(unauthorized access)", naStr_data(file));
+        return naNil();
+    }
+    f = fopen(filename.c_str(), modestr);
+    if(!f) naRuntimeError(c, strerror(errno));
+    return naIOGhost(c, f);
+}
+
 // Parse XML file.
 //     parsexml(<path> [, <start-tag> [, <end-tag> [, <data> [, <pi>]]]]);
 //
@@ -810,7 +831,9 @@ void FGNasalSys::init()
     for(i=0; funcs[i].name; i++)
         hashset(_globals, funcs[i].name,
                 naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
-
+    nasal::Hash io_module = nasal::Hash(_globals, _context).get<nasal::Hash>("io");
+    io_module.set("open", f_open);
+    
     // And our SGPropertyNode wrapper
     hashset(_globals, "props", genPropsModule());
 
