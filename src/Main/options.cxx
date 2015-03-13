@@ -1940,18 +1940,27 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 // setup FG_ROOT
   setupRoot(argc, argv);
   
-// system.fgfsrc handling
+// system.fgfsrc is disabled, as we no longer allow anything in fgdata to set
+// fg-root/fg-home/fg-aircraft and hence control what files Nasal can access
   if( ! hostname.empty() ) {
     config.set(globals->get_fg_root());
     config.append( "system.fgfsrc" );
     config.concat( "." );
     config.concat( hostname );
-    readConfig(config);
+    if (config.exists()) {
+      flightgear::fatalMessageBox("Unsupported configuration",
+        "You have a system.fgfsrc." + hostname +" file, which is no longer processed for security reasons",
+        "If you created this file intentionally, please move it to ~/.fgfsrc" );
+    }
   }
 
   config.set(globals->get_fg_root());
   config.append( "system.fgfsrc" );
-  readConfig(config);
+  if (config.exists()) {
+    flightgear::fatalMessageBox("Unsupported configuration",
+      "You have a system.fgfsrc file, which is no longer processed for security reasons",
+      "If you created this file intentionally, please move it to ~/.fgfsrc" );
+  }
 }
 
 void Options::initPaths()
