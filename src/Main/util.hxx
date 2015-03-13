@@ -36,12 +36,17 @@
 double fgGetLowPass (double current, double target, double timeratio);
 
 /**
- * Validation listener interface for io.nas, used by fgcommands.
+ * File access control, used by Nasal and fgcommands.
  * @param path Path to be validated
  * @param write True for write operations and false for read operations.
  * @return The validated path on success or 0 if access denied.
  */
 const char *fgValidatePath (const char *path, bool write);
 std::string fgValidatePath(const std::string& path, bool write);
+
+/**
+ * Set allowed paths for fgValidatePath
+ */
+void fgInitAllowedPaths();
 
 #endif // __UTIL_HXX
