@@ -32,6 +32,7 @@
 #include <QSettings>
 #include <QDebug>
 #include <QSettings>
+#include <QUrl>
 
 #include "ui_SetupRootDialog.h"
 
