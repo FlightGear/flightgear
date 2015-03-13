@@ -880,12 +880,6 @@ void FGNasalSys::init()
     signal->setBoolValue(s, true);
     signal->removeChildren(s);
 
-    if( !checkIOrules() )
-    {
-      SG_LOG(SG_NASAL, SG_ALERT, "Required IOrules check failed.");
-      exit(-1);
-    }
-
     // Pull scripts out of the property tree, too
     loadPropertyScripts();
   
@@ -1315,45 +1309,6 @@ void FGNasalSys::gcRelease(int key)
     naGCRelease(key);
 }
 
-//------------------------------------------------------------------------------
-bool FGNasalSys::checkIOrules()
-{
-  // Ensure IOrules and path validation are working properly by trying to
-  // access a folder/file which should never be accessible.
-  const char* no_access_path =
-#ifdef _WIN32
-    "Z:"
-#endif
-    "/do-not-access";
-
-  bool success = true;
-
-  // write access
-  if( fgValidatePath(no_access_path, true) )
-  {
-    success = false;
-    SG_LOG
-    (
-      SG_GENERAL,
-      SG_ALERT,
-      "Check your IOrules! (write to '" << no_access_path << "' is allowed)"
-    );
-  }
-
-  // read access
-  if( fgValidatePath(no_access_path, false) )
-  {
-    success = false;
-    SG_LOG
-    (
-      SG_GENERAL,
-      SG_ALERT,
-      "Check your IOrules! (read from '" << no_access_path << "' is allowed)"
-    );
-  }
-
-  return success;
-}
 
 //------------------------------------------------------------------------------
 void FGNasalSys::NasalTimer::timerExpired()
