@@ -116,14 +116,15 @@ void fgInitAllowedPaths()
     write_allowed_paths.push_back(globals->get_fg_home() + "/runtime-jetways/*.xml");
     write_allowed_paths.push_back(globals->get_fg_home() + "/Input/Joysticks/*.xml");
     
+    // Check that it works
     if(!fgValidatePath(globals->get_fg_home() + "/../no.log",true).empty() ||
         !fgValidatePath(globals->get_fg_home() + "/no.lot",true).empty() ||
-        fgValidatePath((globals->get_fg_home() + "/nolog").c_str(),true) ||
+        !fgValidatePath(globals->get_fg_home() + "/nolog",true).empty() ||
         !fgValidatePath(globals->get_fg_home() + "no.log",true).empty() ||
         !fgValidatePath("..\\" + globals->get_fg_home() + "/no.log",false).empty() ||
-        fgValidatePath("/tmp/no.xml",false) ||
+        !fgValidatePath(std::string("/tmp/no.xml"),false).empty() ||
         fgValidatePath(globals->get_fg_home() + "/./ff/../Export\\yes..gg",true).empty() ||
-        !fgValidatePath((globals->get_fg_home() + "/aircraft-data/yes..xml").c_str(),true) ||
+        fgValidatePath(globals->get_fg_home() + "/aircraft-data/yes..xml",true).empty() ||
         fgValidatePath(globals->get_fg_root() + "/./\\yes.bmp",false).empty()) {
             flightgear::fatalMessageBox("Nasal initialization error",
                                     "fgInitAllowedPaths() does not work",
@@ -199,15 +200,6 @@ std::string fgValidatePath (const std::string& path, bool write)
     // no match found
     return "";
 }
-// s.c_str() becomes invalid when s is destroyed, so need a static s
-std::string validate_path_temp;
-const char* fgValidatePath(const char* path, bool write)
-{
-  validate_path_temp = fgValidatePath(std::string(path), write);
-  if(validate_path_temp.empty()){
-      return 0;
-  }
-  return validate_path_temp.c_str();
-}
+std::string fgValidatePath(const SGPath& path, bool write) { return fgValidatePath(path.str(),write); }
 // end of util.cxx
 

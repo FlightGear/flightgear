@@ -21,6 +21,7 @@
 #define __UTIL_HXX 1
 
 #include <string>
+#include <simgear/misc/sg_path.hxx>
 
 /**
  * Move a value towards a target.
@@ -41,7 +42,7 @@ double fgGetLowPass (double current, double target, double timeratio);
  * @param write True for write operations and false for read operations.
  * @return The validated path on success or 0 if access denied.
  */
-const char *fgValidatePath (const char *path, bool write);
+std::string fgValidatePath(const SGPath& path, bool write);
 std::string fgValidatePath(const std::string& path, bool write);
 
 /**

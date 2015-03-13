@@ -284,7 +284,7 @@ do_load (const SGPropertyNode * arg)
     if (file.size() < 4 || file.substr(file.size() - 4) != ".sav")
         file += ".sav";
 
-    if (!fgValidatePath(file.c_str(), false)) {
+    if (fgValidatePath(file, false).empty()) {
         SG_LOG(SG_IO, SG_ALERT, "load: reading '" << file << "' denied "
                 "(unauthorized access)");
         return false;
@@ -315,7 +315,7 @@ do_save (const SGPropertyNode * arg)
     if (file.size() < 4 || file.substr(file.size() - 4) != ".sav")
         file += ".sav";
 
-    if (!fgValidatePath(file.c_str(), false)) {
+    if (fgValidatePath(file, false).empty()) {
         SG_LOG(SG_IO, SG_ALERT, "save: writing '" << file << "' denied "
                 "(unauthorized access)");
         return false;
@@ -1166,7 +1166,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
         }
     }
     
-    if (!fgValidatePath(file.c_str(), false)) {
+    if (fgValidatePath(file, false).empty()) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file.str() << "' denied "
                 "(unauthorized access)");
         return false;
@@ -1248,7 +1248,7 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
     if (file.extension() != "xml")
         file.concat(".xml");
 
-    if (!fgValidatePath(file.c_str(), true)) {
+    if (fgValidatePath(file, true).empty()) {
         SG_LOG(SG_IO, SG_ALERT, "savexml: writing to '" << file.str() << "' denied "
                 "(unauthorized access)");
         return false;

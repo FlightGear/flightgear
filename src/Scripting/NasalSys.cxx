@@ -703,22 +703,22 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
         if(!(naIsNil(args[i]) || naIsFunc(args[i])))
             naRuntimeError(c, "parsexml(): callback argument not a function");
 
-    const char* file = fgValidatePath(naStr_data(args[0]), false);
-    if(!file) {
+    std::string file = fgValidatePath(naStr_data(args[0]), false);
+    if(file.empty()) {
         naRuntimeError(c, "parsexml(): reading '%s' denied "
                 "(unauthorized access)", naStr_data(args[0]));
         return naNil();
     }
-    std::ifstream input(file);
+    std::ifstream input(file.c_str());
     NasalXMLVisitor visitor(c, argc, args);
     try {
         readXML(input, visitor);
     } catch (const sg_exception& e) {
         naRuntimeError(c, "parsexml(): file '%s' %s",
-                file, e.getFormattedMessage().c_str());
+                file.c_str(), e.getFormattedMessage().c_str());
         return naNil();
     }
-    return naStr_fromdata(naNewString(c), const_cast<char*>(file), strlen(file));
+    return naStr_fromdata(naNewString(c), file.c_str(), file.length());
 }
 
 /**

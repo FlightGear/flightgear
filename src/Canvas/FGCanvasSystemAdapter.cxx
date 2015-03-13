@@ -81,9 +81,9 @@ namespace canvas
   {
     if( SGPath(path).isAbsolute() )
     {
-      const char* valid_path = fgValidatePath(path.c_str(), false);
-      if( valid_path )
-        return osgDB::readImageFile(valid_path);
+      std::string valid_path = fgValidatePath(path, false);
+      if( !valid_path.empty() )
+        return osgDB::readImageFile(valid_path.c_str());
 
       SG_LOG(SG_IO, SG_ALERT, "canvas::Image: reading '" << path << "' denied");
     }
