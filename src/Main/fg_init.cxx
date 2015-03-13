@@ -446,8 +446,9 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
       exportDir.create(0755);
     }
     
-    // Set /sim/fg-home and don't allow malign code to override it until
-    // Nasal security is set up.  Use FG_HOME if necessary.
+    // Set /sim/fg-home.  Use FG_HOME if necessary.
+    // deliberately not a tied property, for fgValidatePath security
+    // write-protect to avoid accidents
     SGPropertyNode *home = fgGetNode("/sim", true);
     home->removeChild("fg-home", 0);
     home = home->getChild("fg-home", 0, true);
@@ -486,6 +487,8 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
 
 static void initAircraftDirsNasalSecurity()
 {
+    // deliberately not a tied property, for fgValidatePath security
+    // write-protect to avoid accidents
     SGPropertyNode* sim = fgGetNode("/sim", true);
     sim->removeChildren("fg-aircraft");
 

@@ -273,7 +273,8 @@ void FGGlobals::set_fg_root (const std::string &root) {
                 << fg_root << "'\n***\n***");
     }
 
-    // remove /sim/fg-root before writing to prevent hijacking
+    // deliberately not a tied property, for fgValidatePath security
+    // write-protect to avoid accidents
     SGPropertyNode *n = fgGetNode("/sim", true);
     n->removeChild("fg-root", 0);
     n = n->getChild("fg-root", 0, true);
