@@ -2,7 +2,7 @@
 //
 // Written by James Turner, started March 2015.
 //
-// Copyright (C) 2014 James Turner <zakalawe@mac.com>
+// Copyright (C) 2015 James Turner <zakalawe@mac.com>
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -33,8 +33,14 @@ const int AircraftPathRole = Qt::UserRole + 1;
 const int AircraftAuthorsRole = Qt::UserRole + 2;
 const int AircraftVariantRole = Qt::UserRole + 3;
 const int AircraftVariantCountRole = Qt::UserRole + 4;
+const int AircraftThumbnailCountRole = Qt::UserRole + 5;
+const int AircraftPackageIdRole = Qt::UserRole + 6;
+const int AircraftPackageStatusRole = Qt::UserRole + 7;
+const int AircraftPackageProgressRole = Qt::UserRole + 8;
+
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
+const int AircraftThumbnailRole = Qt::UserRole + 300;
 
 class AircraftScanThread;
 class QDataStream;
@@ -87,14 +93,29 @@ public:
     
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
 
-  QModelIndex indexOfAircraftPath(QString path) const;
+    /**
+     * given a -set.xml path, return the corresponding model index, if one
+     * exists.
+     */
+    QModelIndex indexOfAircraftPath(QString path) const;
 
+    enum {
+        PackageNotInstalled,
+        PackageInstalled,
+        PackageUpdateAvailable,
+        PackageDownloading
+    };
 private slots:
     void onScanResults();
     
     void onScanFinished();
 
 private:
+    QVariant dataFromItem(const AircraftItem* item, quint32 variantIndex, int role) const;
+
+    QVariant dataFromPackage(const simgear::pkg::PackageRef& item,
+                             quint32 variantIndex, int role) const;
+
     void abandonCurrentScan();
 
     QStringList m_paths;

@@ -2,7 +2,7 @@
 //
 // Written by James Turner, started March 2015.
 //
-// Copyright (C) 2014 James Turner <zakalawe@mac.com>
+// Copyright (C) 2015 James Turner <zakalawe@mac.com>
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -32,9 +32,14 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/package/Package.hxx>
+#include <simgear/package/Catalog.hxx>
+#include <simgear/package/Install.hxx>
 
 // FlightGear
 #include <Main/globals.hxx>
+
+using namespace simgear::pkg;
 
 AircraftItem::AircraftItem()
 {
@@ -338,46 +343,89 @@ void AircraftItemModel::abandonCurrentScan()
 }
 
 QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
-  {
-      if (role == AircraftVariantRole) {
-          return m_activeVariant.at(index.row());
-      }
+{
+    if (role == AircraftVariantRole) {
+        return m_activeVariant.at(index.row());
+    }
 
-      const AircraftItem* item(m_items.at(index.row()));
+    const AircraftItem* item(m_items.at(index.row()));
+    quint32 variantIndex = m_activeVariant.at(index.row());
+    return dataFromItem(item, variantIndex, role);
+}
 
-      if (role == AircraftVariantCountRole) {
-          return item->variants.count();
-      }
+QVariant AircraftItemModel::dataFromItem(const AircraftItem* item, quint32 variantIndex, int role) const
+{
+    if (role == AircraftVariantCountRole) {
+        return item->variants.count();
+    }
 
-      if (role >= AircraftVariantDescriptionRole) {
-          int variantIndex = role - AircraftVariantDescriptionRole;
-          return item->variants.at(variantIndex)->description;
-      }
+    if (role == AircraftThumbnailCountRole) {
+        QPixmap p = item->thumbnail();
+        return p.isNull() ? 0 : 1;
+    }
 
-      quint32 variantIndex = m_activeVariant.at(index.row());
-      if (variantIndex) {
-          if (variantIndex <= item->variants.count()) {
-              // show the selected variant
-              item = item->variants.at(variantIndex - 1);
-          }
-      }
+    if ((role >= AircraftVariantDescriptionRole) && (role < AircraftThumbnailRole)) {
+        int variantIndex = role - AircraftVariantDescriptionRole;
+        return item->variants.at(variantIndex)->description;
+    }
 
-      if (role == Qt::DisplayRole) {
-          return item->description;
-      } else if (role == Qt::DecorationRole) {
-          return item->thumbnail();
-      } else if (role == AircraftPathRole) {
-          return item->path;
-      } else if (role == AircraftAuthorsRole) {
-          return item->authors;
-      } else if ((role >= AircraftRatingRole) && (role < AircraftVariantDescriptionRole)) {
-          return item->ratings[role - AircraftRatingRole];
-      } else if (role == Qt::ToolTipRole) {
-          return item->path;
-      }
+    if (variantIndex) {
+        if (variantIndex <= item->variants.count()) {
+            // show the selected variant
+            item = item->variants.at(variantIndex - 1);
+        }
+    }
 
-      return QVariant();
-  }
+    if (role == Qt::DisplayRole) {
+        return item->description;
+    } else if (role == Qt::DecorationRole) {
+        return item->thumbnail();
+    } else if (role == AircraftPathRole) {
+        return item->path;
+    } else if (role == AircraftAuthorsRole) {
+        return item->authors;
+    } else if ((role >= AircraftRatingRole) && (role < AircraftVariantDescriptionRole)) {
+        return item->ratings[role - AircraftRatingRole];
+    } else if (role >= AircraftThumbnailRole) {
+        return item->thumbnail();
+    } else if (role == AircraftPackageIdRole) {
+        // can we fake an ID? otherwise fall through to a null variant
+    } else if (role == AircraftPackageStatusRole) {
+        return PackageInstalled; // always the case
+    } else if (role == Qt::ToolTipRole) {
+        return item->path;
+    }
+
+    return QVariant();
+}
+
+QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 variantIndex, int role) const
+{
+    if (role == Qt::DisplayRole) {
+        return QString::fromStdString(item->description());
+    } else if (role == AircraftPathRole) {
+        // can we return the theoretical path?
+    } else if (role == AircraftPackageIdRole) {
+        return QString::fromStdString(item->id());
+    } else if (role == AircraftPackageStatusRole) {
+        bool installed = item->isInstalled();
+        if (installed) {
+            InstallRef i = item->existingInstall();
+            if (i->isDownloading()) {
+                return PackageDownloading;
+            }
+            if (i->hasUpdate()) {
+                return PackageUpdateAvailable;
+            }
+
+            return PackageInstalled;
+        } else {
+            return PackageNotInstalled;
+        }
+    }
+
+    return QVariant();
+}
 
 bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
   {
