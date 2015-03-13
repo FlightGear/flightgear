@@ -171,7 +171,7 @@ static std::string fgNormalizePath (const std::string& path)
 std::string fgValidatePath (const std::string& path, bool write)
 {
     const string_list& allowed_paths(write ? write_allowed_paths : read_allowed_paths);
-    int star_pos;
+    size_t star_pos;
     
     // Normalize the path (prevents ../../.. trickery)
     std::string normed_path = fgNormalizePath(path);
