@@ -248,7 +248,14 @@ do_replay (const SGPropertyNode * arg)
 static bool
 do_pause (const SGPropertyNode * arg)
 {
+    bool forcePause = arg->getBoolValue("force-pause", false );
+    bool forcePlay = arg->getBoolValue("force-play", false );
+
     bool paused = fgGetBool("/sim/freeze/master",true) || fgGetBool("/sim/freeze/clock",true);
+
+    if(forcePause) paused = false;
+    if(forcePlay) paused = true;
+
     if (paused && (fgGetInt("/sim/freeze/replay-state",0)>0))
     {
         do_replay(NULL);
