@@ -41,13 +41,15 @@
 
 using namespace simgear::pkg;
 
-AircraftItem::AircraftItem()
+AircraftItem::AircraftItem() :
+    excluded(false)
 {
     // oh for C++11 initialisers
     for (int i=0; i<4; ++i) ratings[i] = 0;
 }
 
-AircraftItem::AircraftItem(QDir dir, QString filePath)
+AircraftItem::AircraftItem(QDir dir, QString filePath) :
+    excluded(false)
 {
     for (int i=0; i<4; ++i) ratings[i] = 0;
 
@@ -62,6 +64,10 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
 
     path = filePath;
     pathModTime = QFileInfo(path).lastModified();
+    if (sim->getBoolValue("exclude-from-gui", false)) {
+        excluded = true;
+        return;
+    }
 
     description = sim->getStringValue("description");
     authors =  sim->getStringValue("author");
@@ -89,16 +95,24 @@ QString AircraftItem::baseName() const
 
 void AircraftItem::fromDataStream(QDataStream& ds)
 {
-    ds >> path >> description >> authors >> variantOf;
+    ds >> path >> pathModTime >> excluded;
+    if (excluded) {
+        return;
+    }
+
+    ds >> description >> authors >> variantOf;
     for (int i=0; i<4; ++i) ds >> ratings[i];
-    ds >> pathModTime;
 }
 
 void AircraftItem::toDataStream(QDataStream& ds) const
 {
-    ds << path << description << authors << variantOf;
+    ds << path << pathModTime << excluded;
+    if (excluded) {
+        return;
+    }
+
+    ds << description << authors << variantOf;
     for (int i=0; i<4; ++i) ds << ratings[i];
-    ds << pathModTime;
 }
 
 QPixmap AircraftItem::thumbnail() const
@@ -119,7 +133,7 @@ QPixmap AircraftItem::thumbnail() const
 }
 
 
-static int CACHE_VERSION = 2;
+static int CACHE_VERSION = 3;
 
 class AircraftScanThread : public QThread
 {
@@ -238,6 +252,10 @@ private:
                     }
 
                     m_nextCache[absolutePath] = item;
+
+                    if (item->excluded) {
+                        continue;
+                    }
 
                     if (item->variantOf.isNull()) {
                         baseAircraft.insert(item->baseName(), item);
@@ -394,6 +412,12 @@ QVariant AircraftItemModel::dataFromItem(const AircraftItem* item, quint32 varia
         return PackageInstalled; // always the case
     } else if (role == Qt::ToolTipRole) {
         return item->path;
+    } else if (role == AircraftHasRatingsRole) {
+        bool have = false;
+        for (int i=0; i<4; ++i) {
+            have |= (item->ratings[i] > 0);
+        }
+        return have;
     } else if (role == AircraftLongDescriptionRole) {
         return "Lorum Ipsum, etc. Is this the real life? Is this just fantasy? Caught in a land-slide, "
             "no escape from reality. Open your eyes, like up to the skies and see. "

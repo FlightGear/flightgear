@@ -68,6 +68,10 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     painter->setBrush(Qt::NoBrush);
     painter->drawRect(contentRect.left(), yPos, thumbnail.width(), thumbnail.height());
 
+    // draw bottom dividing line
+    painter->drawLine(contentRect.left(), contentRect.bottom() + MARGIN,
+                      contentRect.right(), contentRect.bottom() + MARGIN);
+
     int variantCount = index.data(AircraftVariantCountRole).toInt();
     int currentVariant =index.data(AircraftVariantRole).toInt();
     QString description = index.data(Qt::DisplayRole).toString();
@@ -125,15 +129,17 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     r.moveLeft(r.right());
     r.setHeight(24);
 
-    drawRating(painter, "Flight model:", r, index.data(AircraftRatingRole).toInt());
-    r.moveTop(r.bottom());
-    drawRating(painter, "Systems:", r, index.data(AircraftRatingRole + 1).toInt());
+    if (index.data(AircraftHasRatingsRole).toBool()) {
+        drawRating(painter, "Flight model:", r, index.data(AircraftRatingRole).toInt());
+        r.moveTop(r.bottom());
+        drawRating(painter, "Systems:", r, index.data(AircraftRatingRole + 1).toInt());
 
-    r.moveTop(actualBounds.bottom() + MARGIN);
-    r.moveLeft(r.right());
-    drawRating(painter, "Cockpit:", r, index.data(AircraftRatingRole + 2).toInt());
-    r.moveTop(r.bottom());
-    drawRating(painter, "Exterior model:", r, index.data(AircraftRatingRole + 3).toInt());
+        r.moveTop(actualBounds.bottom() + MARGIN);
+        r.moveLeft(r.right());
+        drawRating(painter, "Cockpit:", r, index.data(AircraftRatingRole + 2).toInt());
+        r.moveTop(r.bottom());
+        drawRating(painter, "Exterior model:", r, index.data(AircraftRatingRole + 3).toInt());
+    }
 
     QVariant v = index.data(AircraftPackageStatusRole);
     AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
@@ -182,8 +188,13 @@ QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const 
         textHeight += smallMetrics.boundingRect(contentRect, Qt::TextWordWrap, desc).height();
     }
 
-    // ratings
-    textHeight += 48; // (24px per rating box)
+    if (index.data(AircraftHasRatingsRole).toBool()) {
+        // ratings
+        textHeight += 48; // (24px per rating box)
+    } else {
+        // just the button height
+        textHeight += BUTTON_HEIGHT;
+    }
 
     textHeight = qMax(textHeight, 128);
 
@@ -262,13 +273,13 @@ QRect AircraftItemDelegate::packageButtonRect(const QRect& visualRect, const QMo
     QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
     contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
 
-    return QRect(contentRect.left() + ARROW_SIZE, contentRect.bottom() - 24, 60, 24);
+    return QRect(contentRect.left() + ARROW_SIZE, contentRect.bottom() - 24, 60, BUTTON_HEIGHT);
 }
 
 void AircraftItemDelegate::drawRating(QPainter* painter, QString label, const QRect& box, int value) const
 {
     const int DOT_SIZE = 10;
-    const int DOT_MARGIN = 4;
+    const int DOT_MARGIN = 2;
 
     QRect dotBox = box;
     dotBox.setLeft(box.right() - (DOT_MARGIN * 6 + DOT_SIZE * 5));

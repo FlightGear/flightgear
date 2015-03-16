@@ -31,6 +31,7 @@ class AircraftItemDelegate : public QStyledItemDelegate
 public:
     static const int MARGIN = 4;
     static const int ARROW_SIZE = 20;
+    static const int BUTTON_HEIGHT = 24;
 
     AircraftItemDelegate(QListView* view);
     

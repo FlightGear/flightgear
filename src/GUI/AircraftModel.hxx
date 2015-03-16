@@ -38,6 +38,7 @@ const int AircraftPackageIdRole = Qt::UserRole + 6;
 const int AircraftPackageStatusRole = Qt::UserRole + 7;
 const int AircraftPackageProgressRole = Qt::UserRole + 8;
 const int AircraftLongDescriptionRole = Qt::UserRole + 9;
+const int AircraftHasRatingsRole = Qt::UserRole + 10;
 
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
@@ -61,6 +62,7 @@ struct AircraftItem
 
     QPixmap thumbnail() const;
 
+    bool excluded;
     QString path;
     QString description;
     QString authors;
