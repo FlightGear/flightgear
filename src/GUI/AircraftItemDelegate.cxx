@@ -26,6 +26,7 @@
 #include <QLinearGradient>
 #include <QListView>
 #include <QMouseEvent>
+#include <QFontMetrics>
 
 #include "AircraftModel.hxx"
 
@@ -33,6 +34,7 @@ AircraftItemDelegate::AircraftItemDelegate(QListView* view) :
     m_view(view)
 {
     view->viewport()->installEventFilter(this);
+    view->viewport()->setMouseTracking(true);
 
     m_leftArrowIcon.load(":/left-arrow-icon");
     m_rightArrowIcon.load(":/right-arrow-icon");
@@ -41,6 +43,7 @@ AircraftItemDelegate::AircraftItemDelegate(QListView* view) :
 void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem & option,
     const QModelIndex & index) const
 {
+    painter->setRenderHint(QPainter::Antialiasing);
     // selection feedback rendering
     if (option.state & QStyle::State_Selected) {
         QLinearGradient grad(option.rect.topLeft(), option.rect.bottomLeft());
@@ -52,18 +55,18 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
 
         painter->setPen(QColor(90, 107, 131));
         painter->drawLine(option.rect.topLeft(), option.rect.topRight());
-
     }
 
     QRect contentRect = option.rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
 
     QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
-    painter->drawPixmap(contentRect.topLeft(), thumbnail);
+    quint32 yPos = contentRect.center().y() - (thumbnail.height() / 2);
+    painter->drawPixmap(contentRect.left(), yPos, thumbnail);
 
     // draw 1px frame
     painter->setPen(QColor(0x7f, 0x7f, 0x7f));
     painter->setBrush(Qt::NoBrush);
-    painter->drawRect(contentRect.left(), contentRect.top(), thumbnail.width(), thumbnail.height());
+    painter->drawRect(contentRect.left(), yPos, thumbnail.width(), thumbnail.height());
 
     int variantCount = index.data(AircraftVariantCountRole).toInt();
     int currentVariant =index.data(AircraftVariantRole).toInt();
@@ -100,15 +103,26 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     f.setPointSize(12);
     painter->setFont(f);
 
-    QRect authorsRect = descriptionRect;
-    authorsRect.moveTop(actualBounds.bottom() + MARGIN);
-    painter->drawText(authorsRect, Qt::TextWordWrap,
-                      QString("by: %1").arg(authors),
-                      &actualBounds);
+    if (!authors.isEmpty()) {
+        QRect authorsRect = descriptionRect;
+        authorsRect.moveTop(actualBounds.bottom() + MARGIN);
+        painter->drawText(authorsRect, Qt::TextWordWrap,
+                          QString("by: %1").arg(authors),
+                          &actualBounds);
+    }
+
+    QString longDescription = index.data(AircraftLongDescriptionRole).toString();
+    if (!longDescription.isEmpty()) {
+        QRect longDescriptionRect = descriptionRect;
+        longDescriptionRect.moveTop(actualBounds.bottom() + MARGIN);
+        painter->drawText(longDescriptionRect, Qt::TextWordWrap,
+                          longDescription, &actualBounds);
+    }
 
     QRect r = contentRect;
-    r.setWidth(contentRect.width() / 2);
+    r.setWidth(contentRect.width() / 3);
     r.moveTop(actualBounds.bottom() + MARGIN);
+    r.moveLeft(r.right());
     r.setHeight(24);
 
     drawRating(painter, "Flight model:", r, index.data(AircraftRatingRole).toInt());
@@ -120,11 +134,60 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     drawRating(painter, "Cockpit:", r, index.data(AircraftRatingRole + 2).toInt());
     r.moveTop(r.bottom());
     drawRating(painter, "Exterior model:", r, index.data(AircraftRatingRole + 3).toInt());
+
+    QVariant v = index.data(AircraftPackageStatusRole);
+    AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
+    status = PackageNotInstalled;
+    if (status != PackageInstalled) {
+        painter->setBrush(Qt::NoBrush);
+        QRect buttonRect = packageButtonRect(option.rect, index);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(27, 122, 211));
+        painter->drawRoundedRect(buttonRect, 5, 5);
+        painter->setPen(Qt::white);
+
+        if (status == PackageNotInstalled) {
+            painter->drawText(buttonRect, Qt::AlignCenter, "Install");
+        } else if (status == PackageUpdateAvailable) {
+            painter->drawText(buttonRect, Qt::AlignCenter, "Update");
+        }
+    }
 }
 
 QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const
 {
-    return QSize(500, 128 + (MARGIN * 2));
+    QRect contentRect = option.rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
+    QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
+    contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
+
+    QFont f;
+    f.setPointSize(18);
+    QFontMetrics metrics(f);
+
+    int textHeight = metrics.boundingRect(contentRect, Qt::TextWordWrap,
+                                          index.data().toString()).height();
+
+    f.setPointSize(12);
+    QFontMetrics smallMetrics(f);
+
+    QString authors = index.data(AircraftAuthorsRole).toString();
+    if (!authors.isEmpty()) {
+        textHeight += MARGIN;
+        textHeight += smallMetrics.boundingRect(contentRect, Qt::TextWordWrap, authors).height();
+    }
+
+    QString desc = index.data(AircraftLongDescriptionRole).toString();
+    if (!desc.isEmpty()) {
+        textHeight += MARGIN;
+        textHeight += smallMetrics.boundingRect(contentRect, Qt::TextWordWrap, desc).height();
+    }
+
+    // ratings
+    textHeight += 48; // (24px per rating box)
+
+    textHeight = qMax(textHeight, 128);
+
+    return QSize(option.rect.width(), textHeight + (MARGIN * 2));
 }
 
 bool AircraftItemDelegate::eventFilter( QObject*, QEvent* event )
@@ -152,7 +215,16 @@ bool AircraftItemDelegate::eventFilter( QObject*, QEvent* event )
                 return true;
             }
         }
-    } // of mouse button press or release
+    } else if ( event->type() == QEvent::MouseMove ) {
+        QMouseEvent* me = static_cast< QMouseEvent* >( event );
+        QModelIndex index = m_view->indexAt( me->pos() );
+        QRect vr = m_view->visualRect(index);
+
+        if (packageButtonRect(vr, index).contains(me->pos())) {
+            qDebug() << "mouse inside button";
+        }
+
+    }
     
     return false;
 }
@@ -182,6 +254,15 @@ QRect AircraftItemDelegate::rightCycleArrowRect(const QRect& visualRect, const Q
     r.setBottom(r.top() + ARROW_SIZE);
     return r;
 
+}
+
+QRect AircraftItemDelegate::packageButtonRect(const QRect& visualRect, const QModelIndex& index) const
+{
+    QRect contentRect = visualRect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
+    QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
+    contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
+
+    return QRect(contentRect.left() + ARROW_SIZE, contentRect.bottom() - 24, 60, 24);
 }
 
 void AircraftItemDelegate::drawRating(QPainter* painter, QString label, const QRect& box, int value) const

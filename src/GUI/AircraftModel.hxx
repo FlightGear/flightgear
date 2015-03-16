@@ -37,6 +37,7 @@ const int AircraftThumbnailCountRole = Qt::UserRole + 5;
 const int AircraftPackageIdRole = Qt::UserRole + 6;
 const int AircraftPackageStatusRole = Qt::UserRole + 7;
 const int AircraftPackageProgressRole = Qt::UserRole + 8;
+const int AircraftLongDescriptionRole = Qt::UserRole + 9;
 
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
@@ -72,6 +73,14 @@ private:
     mutable QPixmap m_thumbnail;
 };
 
+
+enum AircraftItemStatus {
+    PackageNotInstalled,
+    PackageInstalled,
+    PackageUpdateAvailable,
+    PackageDownloading
+};
+
 class AircraftItemModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -99,12 +108,6 @@ public:
      */
     QModelIndex indexOfAircraftPath(QString path) const;
 
-    enum {
-        PackageNotInstalled,
-        PackageInstalled,
-        PackageUpdateAvailable,
-        PackageDownloading
-    };
 private slots:
     void onScanResults();
     

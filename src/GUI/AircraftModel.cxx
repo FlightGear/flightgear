@@ -394,6 +394,11 @@ QVariant AircraftItemModel::dataFromItem(const AircraftItem* item, quint32 varia
         return PackageInstalled; // always the case
     } else if (role == Qt::ToolTipRole) {
         return item->path;
+    } else if (role == AircraftLongDescriptionRole) {
+        return "Lorum Ipsum, etc. Is this the real life? Is this just fantasy? Caught in a land-slide, "
+            "no escape from reality. Open your eyes, like up to the skies and see. "
+            "I'm just a poor boy, I need no sympathy because I'm easy come, easy go."
+            "Litte high, little low. Anywhere the wind blows.";
     }
 
     return QVariant();
@@ -402,7 +407,7 @@ QVariant AircraftItemModel::dataFromItem(const AircraftItem* item, quint32 varia
 QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 variantIndex, int role) const
 {
     if (role == Qt::DisplayRole) {
-        return QString::fromStdString(item->description());
+        return QString::fromStdString(item->name());
     } else if (role == AircraftPathRole) {
         // can we return the theoretical path?
     } else if (role == AircraftPackageIdRole) {
@@ -422,6 +427,8 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
         } else {
             return PackageNotInstalled;
         }
+    } else if (role == AircraftLongDescriptionRole) {
+        return QString::fromStdString(item->description());
     }
 
     return QVariant();

@@ -47,6 +47,8 @@ private:
     QRect leftCycleArrowRect(const QRect& visualRect, const QModelIndex& index) const;
     QRect rightCycleArrowRect(const QRect& visualRect, const QModelIndex& index) const;
 
+    QRect packageButtonRect(const QRect& visualRect, const QModelIndex& index) const;
+
     void drawRating(QPainter* painter, QString label, const QRect& box, int value) const;
 
     QListView* m_view;
