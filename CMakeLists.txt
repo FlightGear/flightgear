@@ -109,6 +109,8 @@ IF(APPLE)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.7")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
 	${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+    find_package(Threads REQUIRED)
+    
     set(USE_DBUS_DEFAULT 1)
 
     find_package(UDev)
@@ -230,7 +232,6 @@ endif(EVENT_INPUT)
 # check required dependencies
 find_package(Boost   REQUIRED)
 find_package(ZLIB    REQUIRED)
-find_package(Threads REQUIRED)
 find_package(OpenGL  REQUIRED)
 find_package(OpenAL  REQUIRED)
 find_package(OpenSceneGraph 3.2.0 REQUIRED
