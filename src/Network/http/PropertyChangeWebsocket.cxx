@@ -174,7 +174,7 @@ void PropertyChangeWebsocket::handleRequest(const HTTPRequest & request, Websock
     string_list nodeNames;
     j = cJSON_GetObjectItem(json, "node");
     if ( NULL != j && NULL != j->valuestring) {
-      nodeNames.push_back(j->valuestring);
+        nodeNames.push_back(simgear::strutils::strip(string(j->valuestring)));
     }
 
     cJSON * nodes = cJSON_GetObjectItem(json, "nodes");
@@ -183,7 +183,7 @@ void PropertyChangeWebsocket::handleRequest(const HTTPRequest & request, Websock
         cJSON * node = cJSON_GetArrayItem(nodes, i);
         if ( NULL == node) continue;
         if ( NULL == node->valuestring) continue;
-        nodeNames.push_back(node->valuestring);
+        nodeNames.push_back(simgear::strutils::strip(string(node->valuestring)));
       }
     }
     
