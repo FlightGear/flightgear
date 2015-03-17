@@ -17,7 +17,7 @@ endif()
 project(FlightGear)
 
 # using 10.7 because boost requires libc++ and 10.6 doesn't include it
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.7")
 
 # We have some custom .cmake scripts not in the official distribution.
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
