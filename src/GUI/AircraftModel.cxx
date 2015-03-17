@@ -290,8 +290,6 @@ private:
 
             emit addedItems();
         } // of subdir iteration
-
-        qDebug() << "scan of" << path << "took" << t.elapsed();
     }
 
     QMutex m_lock;

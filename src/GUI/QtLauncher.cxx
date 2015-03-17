@@ -426,16 +426,84 @@ QtLauncher::QtLauncher() :
     connect(m_airportsModel, &AirportSearchModel::searchComplete,
             this, &QtLauncher::onAirportSearchComplete);
 
-    SGPath p = SGPath::documents();
-    p.append("FlightGear");
-    p.append("Aircraft");
-    m_customAircraftDir = QString::fromStdString(p.str());
-    m_ui->customAircraftDirLabel->setText(QString("Custom aircraft folder: %1").arg(m_customAircraftDir));
-
-    globals->append_aircraft_path(m_customAircraftDir.toStdString());
+    // default value, restoreSettings() will override
+    m_downloadDir = QString();
 
     // create and configure the proxy model
     m_aircraftProxy = new AircraftProxyModel(this);
+    connect(m_ui->ratingsFilterCheck, &QAbstractButton::toggled,
+            m_aircraftProxy, &AircraftProxyModel::setRatingFilterEnabled);
+    connect(m_ui->aircraftFilter, &QLineEdit::textChanged,
+            m_aircraftProxy, &QSortFilterProxyModel::setFilterFixedString);
+
+    connect(m_ui->runwayCombo, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(updateAirportDescription()));
+    connect(m_ui->parkingCombo, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(updateAirportDescription()));
+    connect(m_ui->runwayRadio, SIGNAL(toggled(bool)),
+            this, SLOT(updateAirportDescription()));
+    connect(m_ui->parkingRadio, SIGNAL(toggled(bool)),
+            this, SLOT(updateAirportDescription()));
+    connect(m_ui->onFinalCheckbox, SIGNAL(toggled(bool)),
+            this, SLOT(updateAirportDescription()));
+
+
+    connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
+    connect(m_ui->quitButton, SIGNAL(clicked()), this, SLOT(onQuit()));
+    connect(m_ui->airportEdit, SIGNAL(returnPressed()),
+            this, SLOT(onSearchAirports()));
+
+    connect(m_ui->airportHistory, &QPushButton::clicked,
+            this, &QtLauncher::onPopupAirportHistory);
+    connect(m_ui->aircraftHistory, &QPushButton::clicked,
+          this, &QtLauncher::onPopupAircraftHistory);
+
+    restoreSettings();
+
+    QAction* qa = new QAction(this);
+    qa->setShortcut(QKeySequence("Ctrl+Q"));
+    connect(qa, &QAction::triggered, this, &QtLauncher::onQuit);
+    addAction(qa);
+
+    connect(m_ui->editRatingFilter, &QPushButton::clicked,
+            this, &QtLauncher::onEditRatingsFilter);
+
+    QIcon historyIcon(":/history-icon");
+    m_ui->aircraftHistory->setIcon(historyIcon);
+    m_ui->airportHistory->setIcon(historyIcon);
+
+    m_ui->searchIcon->setPixmap(QPixmap(":/search-icon"));
+
+    connect(m_ui->timeOfDayCombo, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(updateSettingsSummary()));
+    connect(m_ui->seasonCombo, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(updateSettingsSummary()));
+    connect(m_ui->fetchRealWxrCheckbox, SIGNAL(toggled(bool)),
+            this, SLOT(updateSettingsSummary()));
+    connect(m_ui->rembrandtCheckbox, SIGNAL(toggled(bool)),
+            this, SLOT(updateSettingsSummary()));
+    connect(m_ui->terrasyncCheck, SIGNAL(toggled(bool)),
+            this, SLOT(updateSettingsSummary()));
+    connect(m_ui->startPausedCheck, SIGNAL(toggled(bool)),
+            this, SLOT(updateSettingsSummary()));
+    connect(m_ui->msaaCheckbox, SIGNAL(toggled(bool)),
+            this, SLOT(updateSettingsSummary()));
+
+    connect(m_ui->rembrandtCheckbox, SIGNAL(toggled(bool)),
+            this, SLOT(onRembrandtToggled(bool)));
+    connect(m_ui->terrasyncCheck, &QCheckBox::toggled,
+            this, &QtLauncher::onToggleTerrasync);
+    updateSettingsSummary();
+
+    connect(m_ui->addSceneryPath, &QToolButton::clicked,
+            this, &QtLauncher::onAddSceneryPath);
+    connect(m_ui->removeSceneryPath, &QToolButton::clicked,
+            this, &QtLauncher::onRemoveSceneryPath);
+
+    connect(m_ui->addAircraftPath, &QToolButton::clicked,
+            this, &QtLauncher::onAddAircraftPath);
+    connect(m_ui->removeAircraftPath, &QToolButton::clicked,
+            this, &QtLauncher::onRemoveAircraftPath);
 
     fgInitPackageRoot();
     simgear::pkg::RootRef r(globals->packageRoot());
@@ -465,81 +533,6 @@ QtLauncher::QtLauncher() :
     connect(delegate, &AircraftItemDelegate::variantChanged,
             this, &QtLauncher::onAircraftSelected);
 
-    connect(m_ui->runwayCombo, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(updateAirportDescription()));
-    connect(m_ui->parkingCombo, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(updateAirportDescription()));
-    connect(m_ui->runwayRadio, SIGNAL(toggled(bool)),
-            this, SLOT(updateAirportDescription()));
-    connect(m_ui->parkingRadio, SIGNAL(toggled(bool)),
-            this, SLOT(updateAirportDescription()));
-    connect(m_ui->onFinalCheckbox, SIGNAL(toggled(bool)),
-            this, SLOT(updateAirportDescription()));
-
-
-    connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
-    connect(m_ui->quitButton, SIGNAL(clicked()), this, SLOT(onQuit()));
-    connect(m_ui->airportEdit, SIGNAL(returnPressed()),
-            this, SLOT(onSearchAirports()));
-
-    connect(m_ui->aircraftFilter, &QLineEdit::textChanged,
-            m_aircraftProxy, &QSortFilterProxyModel::setFilterFixedString);
-
-    connect(m_ui->airportHistory, &QPushButton::clicked,
-            this, &QtLauncher::onPopupAirportHistory);
-    connect(m_ui->aircraftHistory, &QPushButton::clicked,
-          this, &QtLauncher::onPopupAircraftHistory);
-
-    restoreSettings();
-
-    connect(m_ui->openAircraftDirButton, &QPushButton::clicked,
-          this, &QtLauncher::onOpenCustomAircraftDir);
-
-    QAction* qa = new QAction(this);
-    qa->setShortcut(QKeySequence("Ctrl+Q"));
-    connect(qa, &QAction::triggered, this, &QtLauncher::onQuit);
-    addAction(qa);
-
-    connect(m_ui->editRatingFilter, &QPushButton::clicked,
-            this, &QtLauncher::onEditRatingsFilter);
-    connect(m_ui->ratingsFilterCheck, &QAbstractButton::toggled,
-            m_aircraftProxy, &AircraftProxyModel::setRatingFilterEnabled);
-
-    QIcon historyIcon(":/history-icon");
-    m_ui->aircraftHistory->setIcon(historyIcon);
-    m_ui->airportHistory->setIcon(historyIcon);
-
-    m_ui->searchIcon->setPixmap(QPixmap(":/search-icon"));
-
-    connect(m_ui->timeOfDayCombo, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(updateSettingsSummary()));
-    connect(m_ui->seasonCombo, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(updateSettingsSummary()));
-    connect(m_ui->fetchRealWxrCheckbox, SIGNAL(toggled(bool)),
-            this, SLOT(updateSettingsSummary()));
-    connect(m_ui->rembrandtCheckbox, SIGNAL(toggled(bool)),
-            this, SLOT(updateSettingsSummary()));
-    connect(m_ui->terrasyncCheck, SIGNAL(toggled(bool)),
-            this, SLOT(updateSettingsSummary()));
-    connect(m_ui->startPausedCheck, SIGNAL(toggled(bool)),
-            this, SLOT(updateSettingsSummary()));
-    connect(m_ui->msaaCheckbox, SIGNAL(toggled(bool)),
-            this, SLOT(updateSettingsSummary()));
-
-    connect(m_ui->rembrandtCheckbox, SIGNAL(toggled(bool)),
-            this, SLOT(onRembrandtToggled(bool)));
-
-    updateSettingsSummary();
-
-    connect(m_ui->addSceneryPath, &QToolButton::clicked,
-            this, &QtLauncher::onAddSceneryPath);
-    connect(m_ui->removeSceneryPath, &QToolButton::clicked,
-            this, &QtLauncher::onRemoveSceneryPath);
-
-    connect(m_ui->addAircraftPath, &QToolButton::clicked,
-            this, &QtLauncher::onAddAircraftPath);
-    connect(m_ui->removeAircraftPath, &QToolButton::clicked,
-            this, &QtLauncher::onRemoveAircraftPath);
 
     m_catalogsModel = new CatalogListModel(this, r);
     m_ui->catalogsList->setModel(m_catalogsModel);
@@ -630,6 +623,11 @@ void QtLauncher::restoreSettings()
         // select the default C172p
     }
 
+    QVariant downloadDir = settings.value("download-dir");
+    if (downloadDir.isValid()) {
+        m_downloadDir = downloadDir.toString();
+    }
+
     updateSelectedAircraft();
 
     // ICAO identifiers
@@ -687,6 +685,12 @@ void QtLauncher::saveSettings()
 
     settings.setValue("aircraft-paths", paths);
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
+
+    if (m_downloadDir.isEmpty()) {
+        settings.remove("download-dir");
+    } else {
+        settings.setValue("download-dir", m_downloadDir);
+    }
 }
 
 void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const
@@ -768,6 +772,25 @@ void QtLauncher::onRun()
     if (m_ui->seasonCombo->currentIndex() != 0) {
         QString dayval = m_ui->timeOfDayCombo->currentText().toLower();
         opt->addOption("season", dayval.toStdString());
+    }
+
+    if (!m_downloadDir.isEmpty()) {
+        QDir d(m_downloadDir);
+        if (!d.exists()) {
+            int result = QMessageBox::question(this, tr("Create download folder?"),
+                                  tr("The selected location for downloads does not exist. Create it?"),
+                                               QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+            if (result == QMessageBox::Cancel) {
+                return;
+            }
+
+            if (result == QMessageBox::Yes) {
+                d.mkpath(m_downloadDir);
+            }
+        }
+
+        qDebug() << "Download dir is:" << downloadDir;
+        opt->addOption("download-dir", downloadDir.toStdString());
     }
 
     // scenery paths
@@ -876,6 +899,39 @@ void QtLauncher::onAirportChanged()
 
             m_ui->airportDiagram->addParking(park);
         }
+    }
+}
+
+void QtLauncher::onToggleTerrasync(bool enabled)
+{
+    if (enabled) {
+        QFileInfo info(m_downloadDir);
+        if (!info.exists()) {
+            QMessageBox msg;
+            msg.setWindowTitle(tr("Create download folder?"));
+            msg.setText(tr("The current download folder '%1' does not exist, create it now? "
+                           "Click 'change location' to choose another folder "
+                           "to store downloaded files").arg(m_downloadDir));
+            msg.addButton(QMessageBox::Yes);
+            msg.addButton(QMessageBox::Cancel);
+            msg.addButton(tr("Change location"), QMessageBox::ActionRole);
+            int result = msg.exec();
+  
+            if (result == QMessageBox::Cancel) {
+                m_ui->terrasyncCheck->setChecked(false);
+                return;
+            }
+
+            if (result == QMessageBox::ActionRole) {
+                qDebug() << "Change location!";
+                // open the prefrences dialog?
+                return;
+            }
+
+            QDir d(m_downloadDir);
+            d.mkpath(m_downloadDir);
+        }
+
     }
 }
 
@@ -1024,6 +1080,7 @@ void QtLauncher::setAirport(FGAirportRef ref)
     updateAirportDescription();
 }
 
+#if 0
 void QtLauncher::onOpenCustomAircraftDir()
 {
     QFileInfo info(m_customAircraftDir);
@@ -1043,6 +1100,7 @@ void QtLauncher::onOpenCustomAircraftDir()
   QUrl u = QUrl::fromLocalFile(m_customAircraftDir);
   QDesktopServices::openUrl(u);
 }
+#endif
 
 void QtLauncher::onEditRatingsFilter()
 {
@@ -1134,6 +1192,22 @@ void QtLauncher::onRemoveAircraftPath()
         delete m_ui->aircraftPathsList->currentItem();
         saveSettings();
     }
+}
+
+void QtLauncher::onChangeDownloadDir()
+{
+    QString path = QFileDialog::getExistingDirectory(this, tr("Choose downloads folder"));
+    if (!path.isEmpty()) {
+        m_downloadDir = path;
+        saveSettings();
+    }
+}
+
+void QtLauncher::onClearDownloadDir()
+{
+    // does this need an 'are you sure'?
+    m_downloadDir.clear();
+    saveSettings();
 }
 
 void QtLauncher::onRembrandtToggled(bool b)

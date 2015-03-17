@@ -231,7 +231,12 @@ void fgSetDefaults ()
     v->setValueReadOnly("build-number", HUDSON_BUILD_NUMBER);
     v->setValueReadOnly("build-id", HUDSON_BUILD_ID);
     v->setValueReadOnly("hla-support", bool(FG_HAVE_HLA));
-
+#if defined(FG_NIGHTLY)
+    v->setValueReadOnly("nightly-build", true);
+#else
+    v->setValueReadOnly("nightly-build", false);
+#endif
+    
     char* envp = ::getenv( "http_proxy" );
     if( envp != NULL )
       fgSetupProxy( envp );
@@ -1599,6 +1604,7 @@ struct OptionDesc {
     {"disable-terrasync",            false, OPTION_BOOL,   "/sim/terrasync/enabled", false, "", 0 },
     {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
     {"terrasync-dir",                true,  OPTION_STRING, "/sim/terrasync/scenery-dir", false, "", 0 },
+    {"download-dir",                 true,  OPTION_STRING, "/sim/paths/download-dir", false, "", 0 },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
     {"bpp",                          true,  OPTION_FUNC,   "", false, "", fgOptBpp },
     {"units-feet",                   false, OPTION_STRING, "/sim/startup/units", false, "feet", 0 },
@@ -2186,19 +2192,16 @@ string_list Options::valuesForOption(const std::string& key) const
   return result;
 }
 
-
-static string defaultTerrasyncDir()
+string defaultDownloadDir()
 {
 #if defined(SG_WINDOWS)
-	SGPath p(SGPath::documents());
-	p.append("FlightGear");
+    SGPath p(SGPath::documents());
+    p.append("FlightGear");
 #else
     SGPath p(globals->get_fg_home());
 #endif
-	p.append("TerraSync");
-	return p.str();
+    return p.str();
 }
-
 
 OptionResult Options::processOptions()
 {
@@ -2254,58 +2257,58 @@ OptionResult Options::processOptions()
   if (envp) {
     globals->append_fg_scenery(envp);
   }
-    
+
+// download dir fix-up
+    string downloadDir = simgear::strutils::strip(fgGetString("/sim/paths/download-dir"));
+    if (downloadDir.empty()) {
+        downloadDir = defaultDownloadDir();
+        SG_LOG(SG_GENERAL, SG_INFO, "Using default download dir: " << downloadDir);
+    } else {
+        simgear::Dir d(downloadDir);
+        if (!d.exists()) {
+            SG_LOG(SG_GENERAL, SG_INFO, "Creating requested download dir: " << downloadDir);
+            d.create(0755);
+        }
+    }
+
 // terrasync directory fixup
     string terrasyncDir = simgear::strutils::strip(fgGetString("/sim/terrasync/scenery-dir"));
   if (terrasyncDir.empty()) {
-	  terrasyncDir = defaultTerrasyncDir();
-	  // auto-save it for next time
-	  
-	  SG_LOG(SG_GENERAL, SG_INFO,
-		  "Using default TerraSync: " << terrasyncDir);
-      fgSetString("/sim/terrasync/scenery-dir", terrasyncDir);
+      SGPath p(downloadDir);
+      p.append("TerraSync");
+      terrasyncDir = p.str();
+
+      simgear::Dir d(terrasyncDir);
+      if (!d.exists()) {
+          d.create(0755);
+      }
+
+	  SG_LOG(SG_GENERAL, SG_INFO, "Using default TerraSync: " << terrasyncDir);
+      fgSetString("/sim/terrasync/scenery-dir", p.str());
+  } else {
+      SG_LOG(SG_GENERAL, SG_INFO, "Using explicit TerraSync dir: " << terrasyncDir);
   }
 
-  SGPath p(terrasyncDir);
+    // check if we setup a scenery path so far
+    bool addFGDataScenery = globals->get_fg_scenery().empty();
 
-  // following is necessary to ensure NavDataCache sees stable scenery paths from
-  // terrasync. Ensure the Terrain and Objects subdirs exist immediately, rather
-  // than waiting for the first tiles to be scheduled.
-  simgear::Dir terrainDir(SGPath(p, "Terrain")),
-    objectsDir(SGPath(p, "Objects"));
-  if (!terrainDir.exists()) {
-      terrainDir.create(0755);
-  }
-  
-  if (!objectsDir.exists()) {
-      objectsDir.create(0755);
-  }
-
-    // check the above actuall worked
-    if (!objectsDir.exists() || !terrainDir.exists()) {
-        std::stringstream ss;
-        ss << "Scenery download will be disabled. The configured location is '" << terrasyncDir << "'.";
-        flightgear::modalMessageBox("Invalid scenery download location",
-                                    "Automatic scenery download is configured to use a location (path) which invalid.",
-                                    ss.str());
-        fgSetBool("/sim/terrasync/enabled", false);
-    }
-
-  if (fgGetBool("/sim/terrasync/enabled")) {
+    // always add the terrasync location, regardless of whether terrasync
+    // is enabled or not. This allows us to toggle terrasync on/off at
+    // runtime and have things work as expected
     const string_list& scenery_paths(globals->get_fg_scenery());
     if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
-      // terrasync dir is not in the scenery paths, add it
-      globals->append_fg_scenery(terrasyncDir);
+        // terrasync dir is not in the scenery paths, add it
+        globals->append_fg_scenery(terrasyncDir);
     }
-  }
-  
-  if (globals->get_fg_scenery().empty()) {
-    // no scenery paths set *at all*, use the data in FG_ROOT
-    SGPath root(globals->get_fg_root());
-    root.append("Scenery");
-    globals->append_fg_scenery(root.str());
-  }
-    
+
+    if (addFGDataScenery) {
+        // no scenery paths set at all, use the data in FG_ROOT
+        // ensure this path is added last
+        SGPath root(globals->get_fg_root());
+        root.append("Scenery");
+        globals->append_fg_scenery(root.str());
+    }
+
   return FG_OPTIONS_OK;
 }
   

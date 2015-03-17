@@ -35,6 +35,15 @@ class SGPath;
 namespace flightgear
 {
 
+    /**
+     * return the default platform dependant download directory.
+     * This must be a user-writeable location, the question is if it should
+     * be a user visible location. On Windows we default to a subdir of
+     * Documents (FlightGear), on Unixes we default to FG_HOME, which is
+     * typically invisible.
+     */
+    std::string defaultDownloadDir();
+
 /// option processing can have various result values
 /// depending on what the user requested. Note processOptions only
 /// returns a subset of these.

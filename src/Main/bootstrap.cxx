@@ -67,10 +67,6 @@
 
 #include "fg_os.hxx"
 
-#if defined(SG_MAC)
-    #include <GUI/CocoaHelpers.h> // for transformToForegroundApp
-#endif
-
 #if defined(HAVE_CRASHRPT)
 	#include <CrashRpt.h>
 
@@ -208,6 +204,10 @@ int main ( int argc, char **argv )
 		char buf[16];
 		::snprintf(buf, 16, "%d", HUDSON_BUILD_NUMBER);
 		crAddProperty("hudson-build-number", buf);
+        crAddProperty("git-revision", REVISION);
+#if defined(FG_NIGHTLY)
+        crAddProperty("nightly-build", "true");
+#endif
 	}
 #endif
 

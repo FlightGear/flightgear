@@ -127,7 +127,7 @@ static void initTerrasync()
     
     // start TerraSync up now, so it can be synchronizing shared models
     // and airports data in parallel with a nav-cache rebuild.
-    SGPath tsyncCache(globals->get_fg_home());
+    SGPath tsyncCache(terraSyncDir);
     tsyncCache.append("terrasync-cache.xml");
     
     // wipe the cache file if requested

@@ -671,8 +671,9 @@ void fgOutputSettings()
     
     SG_LOG( SG_GENERAL, SG_INFO, "aircraft-dir = " << '"' << fgGetString("/sim/aircraft-dir") << '"' );
     SG_LOG( SG_GENERAL, SG_INFO, "fghome-dir = " << '"' << globals->get_fg_home() << '"');
-    SG_LOG( SG_GENERAL, SG_INFO, "aircraft-dir = " << '"' << fgGetString("/sim/aircraft-dir") << '"');
-    
+    SG_LOG( SG_GENERAL, SG_INFO, "download-dir = " << '"' << fgGetString("/sim/paths/download-dir") << '"' );
+    SG_LOG( SG_GENERAL, SG_INFO, "terrasync-dir = " << '"' << fgGetString("/sim/terrasync/scenery-dir") << '"' );
+
     SG_LOG( SG_GENERAL, SG_INFO, "aircraft-search-paths = \n\t" << simgear::strutils::join(globals->get_aircraft_paths(), "\n\t") );
     SG_LOG( SG_GENERAL, SG_INFO, "scenery-search-paths = \n\t" << simgear::strutils::join(globals->get_fg_scenery(), "\n\t") );
 }
@@ -1132,11 +1133,7 @@ void fgInitPackageRoot()
         return;
     }
     
-    // there is some debate if we should be using FG_HOME here (hidden
-    // location) vs a user-visible location inside Documents (especially on
-    // Windows and Mac). Really this location should be managed by FG, not
-    // the user, but it can potentially grow large.
-    SGPath packageAircraftDir = globals->get_fg_home();
+    SGPath packageAircraftDir = flightgear::defaultDownloadDir();
     packageAircraftDir.append("Aircraft");
 
     SGSharedPtr<Root> pkgRoot(new Root(packageAircraftDir, FLIGHTGEAR_VERSION));

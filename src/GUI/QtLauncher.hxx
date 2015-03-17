@@ -66,8 +66,6 @@ private slots:
     void onPopupAirportHistory();
     void onPopupAircraftHistory();
 
-    void onOpenCustomAircraftDir();
-
     void onEditRatingsFilter();
 
     void updateAirportDescription();
@@ -85,8 +83,12 @@ private slots:
     void onRemoveCatalog();
 
     void onRembrandtToggled(bool b);
+    void onToggleTerrasync(bool enabled);
 
     void onSubsytemIdleTimeout();
+
+    void onChangeDownloadDir();
+    void onClearDownloadDir();
 private:
     void setAirport(FGAirportRef ref);
     void updateSelectedAircraft();
@@ -110,7 +112,7 @@ private:
     QString m_selectedAircraft;
     QStringList m_recentAircraft,
         m_recentAirports;
-    QString m_customAircraftDir;
+    QString m_downloadDir;
     QTimer* m_subsystemIdleTimer;
 
     int m_ratingFilters[4];
