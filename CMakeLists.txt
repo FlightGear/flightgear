@@ -16,9 +16,6 @@ endif()
 
 project(FlightGear)
 
-# using 10.7 because boost requires libc++ and 10.6 doesn't include it
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.7")
-
 # We have some custom .cmake scripts not in the official distribution.
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 
@@ -108,6 +105,8 @@ IF(APPLE)
     find_library(COCOA_LIBRARY Cocoa)
     list(APPEND PLATFORM_LIBS ${COCOA_LIBRARY} ${CORESERVICES_LIBRARY})
 
+    # using 10.7 because boost requires libc++ and 10.6 doesn't include it
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.7")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
 	${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
     set(USE_DBUS_DEFAULT 1)
