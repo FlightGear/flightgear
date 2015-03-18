@@ -12,8 +12,6 @@
 // Note, property names with leading double-underscores (__bx, etc...)
 // are debugging information, and can be safely removed.
 
-const int DEFAULT_PADDING = 2;
-
 int LayoutWidget::UNIT = 5;
 
 bool LayoutWidget::eq(const char* a, const char* b)
