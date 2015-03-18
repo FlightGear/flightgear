@@ -97,6 +97,7 @@ void AirportDiagram::addParking(FGParking* park)
 void AirportDiagram::paintEvent(QPaintEvent* pe)
 {
     QPainter p(this);
+    p.setRenderHints(QPainter::Antialiasing);
     p.fillRect(rect(), QColor(0x3f, 0x3f, 0x3f));
 
     // fit bounds within our available space, allowing for a margin
