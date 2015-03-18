@@ -23,8 +23,6 @@ ISA_layer(7,  80000,  262467,  0.88628, 0.000261718, 196.65, -76.50,  0.0,      
 ISA_layer(8,  1.0e9,  3.28e9,  0.00001, 3.0e-9,        2.73, -270.4,  0.0,      0.0),
 };
 
-const int ISA_def_size(sizeof(ISA_def) / sizeof(ISA_layer));
-
 // Pressure within a layer, as a function of height.
 // Physics model:  standard or nonstandard atmosphere,
 //    depending on what parameters you pass in.
