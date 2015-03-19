@@ -45,6 +45,8 @@ FGFix::FGFix(PositionedID aGuid, const std::string& aIdent, const SGGeod& aPos) 
 
 namespace flightgear
 {
+
+const unsigned int LINES_IN_FIX_DAT = 119724;
   
 void loadFixes(const SGPath& path)
 {
@@ -58,7 +60,8 @@ void loadFixes(const SGPath& path)
   in >> skipeol;
   
   NavDataCache* cache = NavDataCache::instance();
-  
+  unsigned int lineNumber = 2;
+
   // read in each remaining line of the file
   while ( ! in.eof() ) {
     double lat, lon;
@@ -68,8 +71,15 @@ void loadFixes(const SGPath& path)
     
     cache->insertFix(ident, SGGeod::fromDeg(lon, lat));
     in >> skipcomment;
+
+      ++lineNumber;
+      if ((lineNumber % 100) == 0) {
+          // every 100 lines
+          unsigned int percent = (lineNumber * 100) / LINES_IN_FIX_DAT;
+          cache->setRebuildPhaseProgress(NavDataCache::REBUILD_FIXES, percent);
+      }
   }
 
 }
-  
+
 } // of namespace flightgear;

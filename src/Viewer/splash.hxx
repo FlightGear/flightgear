@@ -36,7 +36,7 @@ void fgSplashInit ();
 
 /** Set progress information.
  * "identifier" references an element of the language resource. */
-void fgSplashProgress ( const char *identifier );
+void fgSplashProgress ( const char *identifier, unsigned int percent = 0 );
 
 /** Retrieve the splash screen node */
 osg::Node* fgCreateSplashNode();

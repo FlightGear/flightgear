@@ -162,6 +162,8 @@ class RebuildThread : public SGThread
 public:
   RebuildThread(NavDataCache* cache) :
   _cache(cache),
+    _phase(NavDataCache::REBUILD_UNKNOWN),
+    _completionPercent(0),
   _isFinished(false)
   {
     
@@ -182,9 +184,36 @@ public:
     
     SGGuard<SGMutex> g(_lock);
     _isFinished = true;
+    _phase = NavDataCache::REBUILD_DONE;
   }
+
+    NavDataCache::RebuildPhase currentPhase() const
+    {
+        NavDataCache::RebuildPhase ph;
+        SGGuard<SGMutex> g(_lock);
+        ph = _phase;
+        return ph;
+    }
+
+    unsigned int completionPercent() const
+    {
+        unsigned int perc = 0;
+        SGGuard<SGMutex> g(_lock);
+        perc = _completionPercent;
+        return perc;
+    }
+
+    void setProgress(NavDataCache::RebuildPhase ph, unsigned int percent)
+    {
+        SGGuard<SGMutex> g(_lock);
+        _phase = ph;
+        _completionPercent = percent;
+    }
+
 private:
   NavDataCache* _cache;
+    NavDataCache::RebuildPhase _phase;
+    unsigned int _completionPercent;
   mutable SGMutex _lock;
   bool _isFinished;
 };
@@ -1184,21 +1213,39 @@ bool NavDataCache::dropGroundnetsIfRequired()
     return false;
 }
   
-bool NavDataCache::rebuild()
+NavDataCache::RebuildPhase NavDataCache::rebuild()
 {
-  if (!d->rebuilder.get()) {
-    d->rebuilder.reset(new RebuildThread(this));
-    d->rebuilder->start();
-  }
-  
-// poll the rebuild thread
-  bool fin = d->rebuilder->isFinished();
-  if (fin) {
-    d->rebuilder.reset(); // all done!
-  }
-  return fin;
+    if (!d->rebuilder.get()) {
+        d->rebuilder.reset(new RebuildThread(this));
+        d->rebuilder->start();
+    }
+
+    // poll the rebuild thread
+    RebuildPhase phase = d->rebuilder->currentPhase();
+    if (phase == REBUILD_DONE) {
+        d->rebuilder.reset(); // all done!
+    }
+    return phase;
 }
-  
+
+unsigned int NavDataCache::rebuildPhaseCompletionPercentage() const
+{
+    if (!d->rebuilder.get()) {
+        return 0;
+    }
+
+    return d->rebuilder->completionPercent();
+}
+
+void NavDataCache::setRebuildPhaseProgress(RebuildPhase ph, unsigned int percent)
+{
+    if (!d->rebuilder.get()) {
+        return;
+    }
+
+    d->rebuilder->setProgress(ph, percent);
+}
+
 void NavDataCache::doRebuild()
 {
   try {
@@ -1216,7 +1263,8 @@ void NavDataCache::doRebuild()
         st.stamp();
         airportDBLoad(d->aptDatPath);
         SG_LOG(SG_NAVCACHE, SG_INFO, "apt.dat load took:" << st.elapsedMSec());
-        
+
+        setRebuildPhaseProgress(REBUILD_UNKNOWN);
         metarDataLoad(d->metarDatPath);
         stampCacheFile(d->aptDatPath);
         stampCacheFile(d->metarDatPath);
@@ -1230,7 +1278,8 @@ void NavDataCache::doRebuild()
         navDBInit(d->navDatPath);
         stampCacheFile(d->navDatPath);
         SG_LOG(SG_NAVCACHE, SG_INFO, "nav.dat load took:" << st.elapsedMSec());
-        
+
+        setRebuildPhaseProgress(REBUILD_UNKNOWN);
         st.stamp();
         txn.commit();
         SG_LOG(SG_NAVCACHE, SG_INFO, "stage 1 commit took:" << st.elapsedMSec());
@@ -1246,7 +1295,8 @@ void NavDataCache::doRebuild()
           poiDBInit(d->poiDatPath);
           stampCacheFile(d->poiDatPath);
           SG_LOG(SG_NAVCACHE, SG_INFO, "poi.dat load took:" << st.elapsedMSec());
-          
+
+          setRebuildPhaseProgress(REBUILD_UNKNOWN);
           st.stamp();
           txn.commit();
           SG_LOG(SG_NAVCACHE, SG_INFO, "POI commit took:" << st.elapsedMSec());

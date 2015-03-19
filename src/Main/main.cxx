@@ -221,10 +221,7 @@ static void fgIdleFunction ( void ) {
         if (done) {
           ++idle_state;
           fgSplashProgress("init-scenery");
-        } else {
-          fgSplashProgress("loading-nav-dat");
         }
-      
     } else if ( idle_state == 4 ) {
         idle_state++;
 

@@ -76,12 +76,24 @@ public:
      */
   bool dropGroundnetsIfRequired();
 
+    enum RebuildPhase
+    {
+        REBUILD_UNKNOWN = 0,
+        REBUILD_AIRPORTS,
+        REBUILD_NAVAIDS,
+        REBUILD_FIXES,
+        REBUILD_POIS,
+        REBUILD_DONE
+    };
+
   /**
-   * run the cache rebuild - returns true if rebuild is complete,
-   * otherwise keep going.
+   * run the cache rebuild - returns the current phase or 'done'
    */
-  bool rebuild();
-  
+  RebuildPhase rebuild();
+
+    unsigned int rebuildPhaseCompletionPercentage() const;
+    void setRebuildPhaseProgress(RebuildPhase ph, unsigned int percent = 0);
+
   bool isCachedFileModified(const SGPath& path) const;
   void stampCacheFile(const SGPath& path);
   

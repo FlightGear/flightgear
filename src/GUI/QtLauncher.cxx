@@ -72,18 +72,52 @@ namespace { // anonymous namespace
 
 void initNavCache()
 {
+    QString baseLabel = QT_TR_NOOP("Initialising navigation data, this may take several minutes");
     NavDataCache* cache = NavDataCache::createInstance();
     if (cache->isRebuildRequired()) {
-        QProgressDialog rebuildProgress("Initialising navigation data, this may take several minutes",
+        QProgressDialog rebuildProgress(baseLabel,
                                        QString() /* cancel text */,
-                                       0, 0);
+                                       0, 100);
         rebuildProgress.setWindowModality(Qt::WindowModal);
         rebuildProgress.show();
 
-        while (!cache->rebuild()) {
+        NavDataCache::RebuildPhase phase = cache->rebuild();
+
+        while (phase != NavDataCache::REBUILD_DONE) {
             // sleep to give the rebuild thread more time
             SGTimeStamp::sleepForMSec(50);
-            rebuildProgress.setValue(0);
+            phase = cache->rebuild();
+            
+            switch (phase) {
+            case NavDataCache::REBUILD_AIRPORTS:
+                rebuildProgress.setLabelText(QT_TR_NOOP("Loading airport data"));
+                break;
+
+            case NavDataCache::REBUILD_FIXES:
+                rebuildProgress.setLabelText(QT_TR_NOOP("Loading waypoint data"));
+                break;
+
+            case NavDataCache::REBUILD_NAVAIDS:
+                rebuildProgress.setLabelText(QT_TR_NOOP("Loading navigation data"));
+                break;
+
+
+            case NavDataCache::REBUILD_POIS:
+                rebuildProgress.setLabelText(QT_TR_NOOP("Loading point-of-interest data"));
+                break;
+
+            default:
+                rebuildProgress.setLabelText(baseLabel);
+            }
+
+            if (phase == NavDataCache::REBUILD_UNKNOWN) {
+                rebuildProgress.setValue(0);
+                rebuildProgress.setMaximum(0);
+            } else {
+                rebuildProgress.setValue(cache->rebuildPhaseCompletionPercentage());
+                rebuildProgress.setMaximum(100);
+            }
+
             QCoreApplication::processEvents();
         }
     }

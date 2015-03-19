@@ -385,7 +385,7 @@ void fgSplashInit () {
   globals->get_renderer()->splashinit();
 }
 
-void fgSplashProgress( const char *identifier ) {
+void fgSplashProgress( const char *identifier, unsigned int percent ) {
   const char* spinChars = "-\\|/";
   static int spin_count = 0;
   std::string spin_status = std::string("");
@@ -414,6 +414,13 @@ void fgSplashProgress( const char *identifier ) {
         }
         fgSetString("/sim/startup/splash-progress-text", oss.str());
         return;
+    }
+
+    // over-write the spinner
+    if (!strncmp(identifier, "navdata-", 8)) {
+        std::ostringstream oss;
+        oss << percent << "% complete";
+        fgSetString("/sim/startup/splash-progress-spinner", oss.str());
     }
     
     if( fgGetString("/sim/startup/splash-progress-text") == text )

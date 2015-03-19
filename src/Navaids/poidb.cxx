@@ -52,6 +52,8 @@ mapPOITypeToFGPType(int aTy)
 namespace flightgear
 {
 
+    const int LINES_IN_POI_DAT = 769019;
+
 static PositionedID readPOIFromStream(std::istream& aStream, NavDataCache* cache,
                                         FGPositioned::Type type = FGPositioned::INVALID)
 {
@@ -96,9 +98,17 @@ bool poiDBInit(const SGPath& path)
       return false;
     }
 
+    unsigned int lineNumber = 0;
     NavDataCache* cache = NavDataCache::instance();
     while (!in.eof()) {
       readPOIFromStream(in, cache);
+
+        ++lineNumber;
+        if ((lineNumber % 100) == 0) {
+            // every 100 lines
+            unsigned int percent = (lineNumber * 100) / LINES_IN_POI_DAT;
+            cache->setRebuildPhaseProgress(NavDataCache::REBUILD_POIS, percent);
+        }
     } // of stream data loop
 
     return true;

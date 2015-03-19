@@ -129,7 +129,7 @@
 #include <Network/fgcom.hxx>
 #include <Network/http/httpd.hxx>
 #include <Include/version.h>
-
+#include <Viewer/splash.hxx>
 #include <Viewer/CameraGroup.hxx>
 
 #include "fg_init.hxx"
@@ -592,9 +592,23 @@ fgInitNav ()
         doingRebuild = cache->isRebuildRequired();
     }
 
+    static const char* splashIdentsByRebuildPhase[] = {
+        "loading-nav-dat",
+        "navdata-airports",
+        "navdata-navaids",
+        "navdata-fixes",
+        "navdata-pois"
+    };
+
     if (doingRebuild) {
-        bool finished = cache->rebuild();
-        if (!finished) {
+        flightgear::NavDataCache::RebuildPhase phase;
+        phase = cache->rebuild();
+        if (phase != flightgear::NavDataCache::REBUILD_DONE) {
+            // update the splash text based on percentage, phase
+
+            fgSplashProgress(splashIdentsByRebuildPhase[phase],
+                             cache->rebuildPhaseCompletionPercentage());
+
             // sleep to give the rebuild thread more time
             SGTimeStamp::sleepForMSec(50);
             return false;
