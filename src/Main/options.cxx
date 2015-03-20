@@ -1942,6 +1942,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   
 // system.fgfsrc is disabled, as we no longer allow anything in fgdata to set
 // fg-root/fg-home/fg-aircraft and hence control what files Nasal can access
+  std::string name_for_error = homedir.empty() ? appDataConfig.str() : config.str();
   if( ! hostname.empty() ) {
     config.set(globals->get_fg_root());
     config.append( "system.fgfsrc" );
@@ -1949,8 +1950,8 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
     config.concat( hostname );
     if (config.exists()) {
       flightgear::fatalMessageBox("Unsupported configuration",
-        "You have a system.fgfsrc." + hostname +" file, which is no longer processed for security reasons",
-        "If you created this file intentionally, please move it to ~/.fgfsrc" );
+        "You have a " + config.str() + " file, which is no longer processed for security reasons",
+        "If you created this file intentionally, please move it to " + name_for_error);
     }
   }
 
@@ -1958,8 +1959,8 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   config.append( "system.fgfsrc" );
   if (config.exists()) {
     flightgear::fatalMessageBox("Unsupported configuration",
-      "You have a system.fgfsrc file, which is no longer processed for security reasons",
-      "If you created this file intentionally, please move it to ~/.fgfsrc" );
+      "You have a " + config.str() + " file, which is no longer processed for security reasons",
+      "If you created this file intentionally, please move it to " + name_for_error);
   }
 }
 
