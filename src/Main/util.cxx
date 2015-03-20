@@ -140,7 +140,6 @@ void fgInitAllowedPaths()
             exit(-1);
         }
     }
-    write_allowed_paths.push_back("/tmp/*.xml");
     write_allowed_paths.push_back(fg_home + "/*.sav");
     write_allowed_paths.push_back(fg_home + "/*.log");
     write_allowed_paths.push_back(fg_home + "/cache/*");
