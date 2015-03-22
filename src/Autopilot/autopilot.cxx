@@ -49,8 +49,8 @@ using namespace FGXMLAutopilot;
 class StateMachineComponent : public Component
 {
 public:
-  StateMachineComponent( SGPropertyNode& cfg,
-                         SGPropertyNode& props_root )
+  StateMachineComponent( SGPropertyNode& props_root,
+                         SGPropertyNode& cfg )
   {
     inner = simgear::StateMachine::createFromPlist(&cfg, &props_root);
   }
