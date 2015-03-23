@@ -72,7 +72,7 @@ bool check_float( const string &token)
 {
   float value;
   istringstream stream(token.c_str()); 
-  return (stream >> value);
+  return (stream >> value).good();
 }
 
 void d_2_to_3( double array2D[100][100], double array3D[][100][100], int index3D)
