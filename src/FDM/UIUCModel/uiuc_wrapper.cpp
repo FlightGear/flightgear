@@ -319,8 +319,7 @@ void uiuc_init_aeromodel ()
 {
   // Initializes the UIUC aircraft model.
   // Called once from uiuc_init_2_wrapper
-  SGPath path(globals->get_fg_root());
-  path.append(fgGetString("/sim/aircraft-dir"));
+  SGPath path(fgGetString("/sim/aircraft-dir"));
   path.append("aircraft.dat");
   std::cout << "We are using "<< path.str() << std::endl;
   uiuc_initializemaps(); // Initialize the <string,int> maps
