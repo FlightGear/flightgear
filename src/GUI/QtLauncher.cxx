@@ -671,6 +671,15 @@ QtLauncher::QtLauncher() :
     m_ui.reset(new Ui::Launcher);
     m_ui->setupUi(this);
 
+#if QT_VERSION >= 0x050300
+    // don't require Qt 5.3
+    m_ui->commandLineArgs->setPlaceholderText("--option=value --prop:/sim/name=value");
+#endif
+
+#if QT_VERSION >= 0x050200
+    m_ui->aircraftFilter->setClearButtonEnabled(true);
+#endif
+
     for (int i=0; i<4; ++i) {
         m_ratingFilters[i] = 3;
     }
@@ -929,7 +938,7 @@ void QtLauncher::onRun()
     }
 
     if (m_ui->runwayRadio->isChecked()) {
-        int index = m_ui->runwayCombo->currentData().toInt();
+        int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
         if ((index >= 0) && m_selectedAirport) {
             // explicit runway choice
             opt->addOption("runway", m_selectedAirport->getRunwayByIndex(index)->ident());
