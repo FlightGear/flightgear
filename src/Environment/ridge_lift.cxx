@@ -35,7 +35,7 @@
 #include <Main/util.hxx>
 #include <Scenery/scenery.hxx>
 #include <string>
-#include <math.h>
+#include <cmath>
 #include <simgear/sg_inlines.h>
 
 using std::string;

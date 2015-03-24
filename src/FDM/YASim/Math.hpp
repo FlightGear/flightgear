@@ -1,7 +1,7 @@
 #ifndef _MATH_HPP
 #define _MATH_HPP
 
-#include <math.h>
+#include <cmath>
 
 namespace yasim {
 

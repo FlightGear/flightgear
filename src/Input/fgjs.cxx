@@ -32,7 +32,7 @@
 #  include <winsock2.h>
 #endif
 
-#include <math.h>
+#include <cmath>
 
 #include <iostream>
 #include <fstream>

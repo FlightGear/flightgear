@@ -26,11 +26,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <cmath>
-#else
-#  include <math.h>
-#endif
+#include <cmath>
 
 class FGEnvironment;
 class FGClouds;

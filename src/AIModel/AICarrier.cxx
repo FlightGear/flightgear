@@ -28,7 +28,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 
-#include <math.h>
+#include <cmath>
 #include <Main/util.hxx>
 
 #include "AICarrier.hxx"

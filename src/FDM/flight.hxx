@@ -73,7 +73,7 @@
  */
 
 
-#include <math.h>
+#include <cmath>
 
 #include <simgear/compiler.h>
 #include <simgear/constants.h>

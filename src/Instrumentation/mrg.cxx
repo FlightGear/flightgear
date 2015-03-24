@@ -17,7 +17,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <math.h>	// fabs()
+#include <cmath>    // fabs()
 
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>

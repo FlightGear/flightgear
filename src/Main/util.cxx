@@ -23,7 +23,7 @@
 
 #include <simgear/compiler.h>
 
-#include <math.h>
+#include <cmath>
 
 #include <cstdlib>
 

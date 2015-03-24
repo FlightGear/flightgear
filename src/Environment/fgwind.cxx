@@ -20,7 +20,7 @@
 //
 // $Id$
 #include "fgwind.hxx"
-#include <math.h>
+#include <cmath>
 #include <stdio.h>
 
 FGWindModulator::FGWindModulator() : 

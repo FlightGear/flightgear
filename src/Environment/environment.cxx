@@ -23,7 +23,7 @@
 #  include <config.h>
 #endif
 
-#include <math.h>
+#include <cmath>
 
 #include <boost/tuple/tuple.hpp>
 

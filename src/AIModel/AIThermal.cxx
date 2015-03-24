@@ -28,7 +28,7 @@
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <string>
-#include <math.h>
+#include <cmath>
 
 using std::string;
 

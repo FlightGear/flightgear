@@ -38,7 +38,7 @@
 #endif
 
 #include <errno.h>
-#include <math.h>
+#include <cmath>
 
 #include <string>
 #include <cstdio>

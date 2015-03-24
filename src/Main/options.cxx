@@ -33,10 +33,10 @@
 
 #include <boost/foreach.hpp>
 
-#include <math.h>		// rint()
+#include <cmath>        // rint()
 #include <stdio.h>
-#include <stdlib.h>		// atof(), atoi()
-#include <string.h>		// strcmp()
+#include <stdlib.h>     // atof(), atoi()
+#include <string.h>     // strcmp()
 #include <algorithm>
 
 #include <iostream>

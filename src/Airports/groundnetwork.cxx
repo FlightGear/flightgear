@@ -24,7 +24,7 @@
 #  include <config.h>
 #endif
 
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include <fstream>
 #include <map>

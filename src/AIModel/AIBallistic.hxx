@@ -22,7 +22,7 @@
 #ifndef _FG_AIBALLISTIC_HXX
 #define _FG_AIBALLISTIC_HXX
 
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/scene/material/mat.hxx>

@@ -16,7 +16,7 @@
 #include <string>
 #include <sstream>
 
-#include <math.h>	// fabs()
+#include <cmath>    // fabs()
 
 #include "attitude_indicator.hxx"
 #include <Main/fg_props.hxx>

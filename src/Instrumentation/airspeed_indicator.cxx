@@ -8,7 +8,7 @@
 #  include "config.h"
 #endif
 
-#include <math.h>
+#include <cmath>
 
 #include <simgear/constants.h>
 #include <simgear/math/interpolater.hxx>

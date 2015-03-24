@@ -21,7 +21,7 @@
 #ifndef _FG_AIGROUNDVEHICLE_HXX
 #define _FG_AIGROUNDVEHICLE_HXX
 
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/scene/material/mat.hxx>

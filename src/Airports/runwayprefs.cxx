@@ -25,7 +25,7 @@
 #  include <config.h>
 #endif
 
-#include <math.h>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 

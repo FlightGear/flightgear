@@ -22,7 +22,7 @@
 #  include <config.h>
 #endif
 
-#include <math.h>
+#include <cmath>
 
 #include <stdlib.h>
 #include <deque>
