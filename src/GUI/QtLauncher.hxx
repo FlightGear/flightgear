@@ -73,22 +73,12 @@ private slots:
 
     void onAirportSearchComplete();
 
-    void onAddSceneryPath();
-    void onRemoveSceneryPath();
-
-    void onAddAircraftPath();
-    void onRemoveAircraftPath();
-
-    void onAddCatalog();
-    void onRemoveCatalog();
-
     void onRembrandtToggled(bool b);
     void onToggleTerrasync(bool enabled);
 
     void onSubsytemIdleTimeout();
 
-    void onChangeDownloadDir();
-    void onClearDownloadDir();
+    void onEditPaths();
 private:
     void setAirport(FGAirportRef ref);
     void updateSelectedAircraft();
@@ -105,14 +95,11 @@ private:
     AirportSearchModel* m_airportsModel;
     AircraftProxyModel* m_aircraftProxy;
     AircraftItemModel* m_aircraftModel;
-    CatalogListModel* m_catalogsModel;
-
     FGAirportRef m_selectedAirport;
 
     QString m_selectedAircraft;
     QStringList m_recentAircraft,
         m_recentAirports;
-    QString m_downloadDir;
     QTimer* m_subsystemIdleTimer;
 
     int m_ratingFilters[4];

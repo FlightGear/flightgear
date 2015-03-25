@@ -53,8 +53,7 @@
 #include "EditRatingsFilterDialog.hxx"
 #include "AircraftItemDelegate.hxx"
 #include "AircraftModel.hxx"
-#include "CatalogListModel.hxx"
-#include "AddCatalogDialog.hxx"
+#include "PathsDialog.hxx"
 
 #include <Main/globals.hxx>
 #include <Navaids/NavDataCache.hxx>
@@ -426,9 +425,6 @@ QtLauncher::QtLauncher() :
     connect(m_airportsModel, &AirportSearchModel::searchComplete,
             this, &QtLauncher::onAirportSearchComplete);
 
-    // default value, restoreSettings() will override
-    m_downloadDir = QString();
-
     // create and configure the proxy model
     m_aircraftProxy = new AircraftProxyModel(this);
     connect(m_ui->ratingsFilterCheck, &QAbstractButton::toggled,
@@ -495,16 +491,6 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onToggleTerrasync);
     updateSettingsSummary();
 
-    connect(m_ui->addSceneryPath, &QToolButton::clicked,
-            this, &QtLauncher::onAddSceneryPath);
-    connect(m_ui->removeSceneryPath, &QToolButton::clicked,
-            this, &QtLauncher::onRemoveSceneryPath);
-
-    connect(m_ui->addAircraftPath, &QToolButton::clicked,
-            this, &QtLauncher::onAddAircraftPath);
-    connect(m_ui->removeAircraftPath, &QToolButton::clicked,
-            this, &QtLauncher::onRemoveAircraftPath);
-
     fgInitPackageRoot();
     simgear::pkg::RootRef r(globals->packageRoot());
 
@@ -533,14 +519,8 @@ QtLauncher::QtLauncher() :
     connect(delegate, &AircraftItemDelegate::variantChanged,
             this, &QtLauncher::onAircraftSelected);
 
-
-    m_catalogsModel = new CatalogListModel(this, r);
-    m_ui->catalogsList->setModel(m_catalogsModel);
-
-    connect(m_ui->addCatalog, &QToolButton::clicked,
-            this, &QtLauncher::onAddCatalog);
-    connect(m_ui->removeCatalog, &QToolButton::clicked,
-            this, &QtLauncher::onRemoveCatalog);
+    connect(m_ui->pathsButton, &QPushButton::clicked,
+            this, &QtLauncher::onEditPaths);
 
     QSettings settings;
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
@@ -623,11 +603,6 @@ void QtLauncher::restoreSettings()
         // select the default C172p
     }
 
-    QVariant downloadDir = settings.value("download-dir");
-    if (downloadDir.isValid()) {
-        m_downloadDir = downloadDir.toString();
-    }
-
     updateSelectedAircraft();
 
     // ICAO identifiers
@@ -647,12 +622,6 @@ void QtLauncher::restoreSettings()
     m_aircraftProxy->setRatingFilterEnabled(m_ui->ratingsFilterCheck->isChecked());
     m_aircraftProxy->setRatings(m_ratingFilters);
 
-    QStringList sceneryPaths = settings.value("scenery-paths").toStringList();
-    m_ui->sceneryPathsList->addItems(sceneryPaths);
-
-    QStringList aircraftPaths = settings.value("aircraft-paths").toStringList();
-    m_ui->aircraftPathsList->addItems(aircraftPaths);
-
     m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
 }
 
@@ -670,27 +639,7 @@ void QtLauncher::saveSettings()
     settings.setValue("recent-airports", m_recentAirports);
     settings.setValue("timeofday", m_ui->timeOfDayCombo->currentIndex());
     settings.setValue("season", m_ui->seasonCombo->currentIndex());
-
-    QStringList paths;
-    for (int i=0; i<m_ui->sceneryPathsList->count(); ++i) {
-        paths.append(m_ui->sceneryPathsList->item(i)->text());
-    }
-
-    settings.setValue("scenery-paths", paths);
-    paths.clear();
-
-    for (int i=0; i<m_ui->aircraftPathsList->count(); ++i) {
-        paths.append(m_ui->aircraftPathsList->item(i)->text());
-    }
-
-    settings.setValue("aircraft-paths", paths);
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
-
-    if (m_downloadDir.isEmpty()) {
-        settings.remove("download-dir");
-    } else {
-        settings.setValue("download-dir", m_downloadDir);
-    }
 }
 
 void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const
@@ -774,8 +723,10 @@ void QtLauncher::onRun()
         opt->addOption("season", dayval.toStdString());
     }
 
-    if (!m_downloadDir.isEmpty()) {
-        QDir d(m_downloadDir);
+    QSettings settings;
+    QString downloadDir = settings.value("download-dir").toString();
+    if (!downloadDir.isEmpty()) {
+        QDir d(downloadDir);
         if (!d.exists()) {
             int result = QMessageBox::question(this, tr("Create download folder?"),
                                   tr("The selected location for downloads does not exist. Create it?"),
@@ -785,7 +736,7 @@ void QtLauncher::onRun()
             }
 
             if (result == QMessageBox::Yes) {
-                d.mkpath(m_downloadDir);
+                d.mkpath(downloadDir);
             }
         }
 
@@ -794,14 +745,12 @@ void QtLauncher::onRun()
     }
 
     // scenery paths
-    for (int i=0; i<m_ui->sceneryPathsList->count(); ++i) {
-        QString path = m_ui->sceneryPathsList->item(i)->text();
+    Q_FOREACH(QString path, settings.value("scenery-paths").toStringList()) {
         opt->addOption("fg-scenery", path.toStdString());
     }
 
     // aircraft paths
-    for (int i=0; i<m_ui->aircraftPathsList->count(); ++i) {
-        QString path = m_ui->aircraftPathsList->item(i)->text();
+    Q_FOREACH(QString path, settings.value("aircraft-paths").toStringList()) {
         // can't use fg-aircraft for this, as it is processed before the launcher is run
         globals->append_aircraft_path(path.toStdString());
     }
@@ -905,13 +854,19 @@ void QtLauncher::onAirportChanged()
 void QtLauncher::onToggleTerrasync(bool enabled)
 {
     if (enabled) {
-        QFileInfo info(m_downloadDir);
+        QSettings settings;
+        QString downloadDir = settings.value("download-dir").toString();
+        if (downloadDir.isEmpty()) {
+            downloadDir = QString::fromStdString(flightgear::defaultDownloadDir());
+        }
+
+        QFileInfo info(downloadDir);
         if (!info.exists()) {
             QMessageBox msg;
             msg.setWindowTitle(tr("Create download folder?"));
-            msg.setText(tr("The current download folder '%1' does not exist, create it now? "
+            msg.setText(tr("The download folder '%1' does not exist, create it now? "
                            "Click 'change location' to choose another folder "
-                           "to store downloaded files").arg(m_downloadDir));
+                           "to store downloaded files").arg(downloadDir));
             msg.addButton(QMessageBox::Yes);
             msg.addButton(QMessageBox::Cancel);
             msg.addButton(tr("Change location"), QMessageBox::ActionRole);
@@ -923,16 +878,14 @@ void QtLauncher::onToggleTerrasync(bool enabled)
             }
 
             if (result == QMessageBox::ActionRole) {
-                qDebug() << "Change location!";
-                // open the prefrences dialog?
+                onEditPaths();
                 return;
             }
 
-            QDir d(m_downloadDir);
-            d.mkpath(m_downloadDir);
+            QDir d(downloadDir);
+            d.mkpath(downloadDir);
         }
-
-    }
+    } // of is enabled
 }
 
 void QtLauncher::updateAirportDescription()
@@ -1080,28 +1033,6 @@ void QtLauncher::setAirport(FGAirportRef ref)
     updateAirportDescription();
 }
 
-#if 0
-void QtLauncher::onOpenCustomAircraftDir()
-{
-    QFileInfo info(m_customAircraftDir);
-    if (!info.exists()) {
-        int result = QMessageBox::question(this, "Create folder?",
-                                           "The custom aircraft folder does not exist, create it now?",
-                                           QMessageBox::Yes | QMessageBox::No,
-                                           QMessageBox::Yes);
-        if (result == QMessageBox::No) {
-            return;
-        }
-
-        QDir d(m_customAircraftDir);
-        d.mkpath(m_customAircraftDir);
-    }
-
-  QUrl u = QUrl::fromLocalFile(m_customAircraftDir);
-  QDesktopServices::openUrl(u);
-}
-#endif
-
 void QtLauncher::onEditRatingsFilter()
 {
     EditRatingsFilterDialog dialog(this);
@@ -1155,61 +1086,6 @@ void QtLauncher::updateSettingsSummary()
     m_ui->settingsDescription->setText(s);
 }
 
-void QtLauncher::onAddSceneryPath()
-{
-    QString path = QFileDialog::getExistingDirectory(this, tr("Choose scenery folder"));
-    if (!path.isEmpty()) {
-        m_ui->sceneryPathsList->addItem(path);
-        saveSettings();
-    }
-}
-
-void QtLauncher::onRemoveSceneryPath()
-{
-    if (m_ui->sceneryPathsList->currentItem()) {
-        delete m_ui->sceneryPathsList->currentItem();
-        saveSettings();
-    }
-}
-
-void QtLauncher::onAddAircraftPath()
-{
-    QString path = QFileDialog::getExistingDirectory(this, tr("Choose aircraft folder"));
-    if (!path.isEmpty()) {
-        m_ui->aircraftPathsList->addItem(path);
-        saveSettings();
-
-        // re-scan the aircraft list
-        QSettings settings;
-        m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
-        m_aircraftModel->scanDirs();
-    }
-}
-
-void QtLauncher::onRemoveAircraftPath()
-{
-    if (m_ui->aircraftPathsList->currentItem()) {
-        delete m_ui->aircraftPathsList->currentItem();
-        saveSettings();
-    }
-}
-
-void QtLauncher::onChangeDownloadDir()
-{
-    QString path = QFileDialog::getExistingDirectory(this, tr("Choose downloads folder"));
-    if (!path.isEmpty()) {
-        m_downloadDir = path;
-        saveSettings();
-    }
-}
-
-void QtLauncher::onClearDownloadDir()
-{
-    // does this need an 'are you sure'?
-    m_downloadDir.clear();
-    saveSettings();
-}
-
 void QtLauncher::onRembrandtToggled(bool b)
 {
     // Rembrandt and multi-sample are exclusive
@@ -1221,18 +1097,16 @@ void QtLauncher::onSubsytemIdleTimeout()
     globals->get_subsystem_mgr()->update(0.0);
 }
 
-void QtLauncher::onAddCatalog()
+void QtLauncher::onEditPaths()
 {
-    AddCatalogDialog* dlg = new AddCatalogDialog(this, globals->packageRoot());
-    dlg->exec();
-    if (dlg->result() == QDialog::Accepted) {
-        m_catalogsModel->refresh();
+    PathsDialog dlg(this, globals->packageRoot());
+    dlg.exec();
+    if (dlg.result() == QDialog::Accepted) {
+        // re-scan the aircraft list
+        QSettings settings;
+        m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
+        m_aircraftModel->scanDirs();
     }
-}
-
-void QtLauncher::onRemoveCatalog()
-{
-    
 }
 
 #include "QtLauncher.moc"

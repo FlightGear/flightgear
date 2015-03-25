@@ -73,7 +73,8 @@ if (HAVE_QT)
     qt5_wrap_ui(uic_sources Launcher.ui 
                             EditRatingsFilterDialog.ui
                             SetupRootDialog.ui
-                            AddCatalogDialog.ui)
+                            AddCatalogDialog.ui
+                            PathsDialog.ui)
     qt5_add_resources(qrc_sources resources.qrc)
 
     include_directories(${PROJECT_BINARY_DIR}/src/GUI)
@@ -94,6 +95,8 @@ if (HAVE_QT)
                             CatalogListModel.hxx
                             AddCatalogDialog.cxx
                             AddCatalogDialog.hxx
+                            PathsDialog.cxx
+                            PathsDialog.hxx
                             ${uic_sources}
                             ${qrc_sources})
 
