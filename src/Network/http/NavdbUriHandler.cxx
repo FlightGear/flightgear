@@ -22,6 +22,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Airports/airport.hxx>
+#include <ATC/CommStation.hxx>
 #include <3rdparty/cjson/cJSON.h>
 #include <boost/lexical_cast.hpp>
 
@@ -29,6 +30,15 @@ using std::string;
 
 namespace flightgear {
 namespace http {
+
+static cJSON * createPositionArray(double x, double y, double z)
+{
+  cJSON * p = cJSON_CreateArray();
+  cJSON_AddItemToArray(p, cJSON_CreateNumber(x));
+  cJSON_AddItemToArray(p, cJSON_CreateNumber(y));
+  cJSON_AddItemToArray(p, cJSON_CreateNumber(z));
+  return p;
+}
 
 static cJSON * createPositionArray(double x, double y)
 {
@@ -75,12 +85,36 @@ static cJSON * createLOCGeometry(FGNavRecord * navRecord)
   return geometry;
 }
 
-static cJSON * createPointGeometry(FGPositionedRef positioned )
+static cJSON * createPointGeometry(FGPositioned * positioned )
 {
   cJSON * geometry = cJSON_CreateObject();
   cJSON_AddItemToObject(geometry, "type", cJSON_CreateString("Point"));
-  cJSON_AddItemToObject(geometry, "coordinates", createPositionArray(positioned ->longitude(), positioned->latitude()));
+  cJSON_AddItemToObject(geometry, "coordinates", 
+    createPositionArray(positioned ->longitude(), positioned->latitude(), positioned->elevationM()));
   return geometry;
+}
+
+static cJSON * createRunwayPolygon( FGRunwayBase * rwy )
+{
+  cJSON * polygon = cJSON_CreateObject(); 
+  cJSON_AddItemToObject(polygon, "type", cJSON_CreateString("Polygon"));
+  cJSON * coordinates = cJSON_CreateArray();
+  cJSON_AddItemToObject(polygon, "coordinates", coordinates );
+  cJSON * linearRing = cJSON_CreateArray();
+  cJSON_AddItemToArray( coordinates, linearRing );
+
+  // compute the four corners of the runway
+  SGGeod p1 = rwy->pointOffCenterline( 0.0, rwy->widthM()/2 );
+  SGGeod p2 = rwy->pointOffCenterline( 0.0, -rwy->widthM()/2 );
+  SGGeod p3 = rwy->pointOffCenterline( rwy->lengthM(), -rwy->widthM()/2 );
+  SGGeod p4 = rwy->pointOffCenterline( rwy->lengthM(), rwy->widthM()/2 );
+  cJSON_AddItemToArray( linearRing, createPositionArray(p1.getLongitudeDeg(), p1.getLatitudeDeg()) );
+  cJSON_AddItemToArray( linearRing, createPositionArray(p2.getLongitudeDeg(), p2.getLatitudeDeg()) );
+  cJSON_AddItemToArray( linearRing, createPositionArray(p3.getLongitudeDeg(), p3.getLatitudeDeg()) );
+  cJSON_AddItemToArray( linearRing, createPositionArray(p4.getLongitudeDeg(), p4.getLatitudeDeg()) );
+  // close the ring
+  cJSON_AddItemToArray( linearRing, createPositionArray(p1.getLongitudeDeg(), p1.getLatitudeDeg()) );
+  return polygon;
 }
 
 static cJSON * createAirportGeometry(FGAirport * airport )
@@ -105,39 +139,27 @@ static cJSON * createAirportGeometry(FGAirport * airport )
 
   // followed by the runway polygons
   for( FGRunwayList::iterator it = runways.begin(); it != runways.end(); ++it ) {
-    cJSON * polygon = cJSON_CreateObject(); 
-    cJSON_AddItemToArray( geometryCollection, polygon );
-    cJSON_AddItemToObject(polygon, "type", cJSON_CreateString("Polygon"));
-    cJSON * coordinates = cJSON_CreateArray();
-    cJSON_AddItemToObject(polygon, "coordinates", coordinates );
-    cJSON * linearRing = cJSON_CreateArray();
-    cJSON_AddItemToArray( coordinates, linearRing );
+    cJSON_AddItemToArray( geometryCollection, createRunwayPolygon(*it) );
+  }
 
-    // compute the four corners of the runway
-    SGGeod p1 = (*it)->pointOffCenterline( 0.0, (*it)->widthM()/2 );
-    SGGeod p2 = (*it)->pointOffCenterline( 0.0, -(*it)->widthM()/2 );
-    SGGeod p3 = (*it)->pointOffCenterline( (*it)->lengthM(), -(*it)->widthM()/2 );
-    SGGeod p4 = (*it)->pointOffCenterline( (*it)->lengthM(), (*it)->widthM()/2 );
-    cJSON_AddItemToArray( linearRing, createPositionArray(p1.getLongitudeDeg(), p1.getLatitudeDeg()) );
-    cJSON_AddItemToArray( linearRing, createPositionArray(p2.getLongitudeDeg(), p2.getLatitudeDeg()) );
-    cJSON_AddItemToArray( linearRing, createPositionArray(p3.getLongitudeDeg(), p3.getLatitudeDeg()) );
-    cJSON_AddItemToArray( linearRing, createPositionArray(p4.getLongitudeDeg(), p4.getLatitudeDeg()) );
-    // close the ring
-    cJSON_AddItemToArray( linearRing, createPositionArray(p1.getLongitudeDeg(), p1.getLatitudeDeg()) );
+  FGTaxiwayList taxiways = airport->getTaxiways();
+  // followed by the taxiway polygons
+  for( FGTaxiwayList::iterator it = taxiways.begin(); it != taxiways.end(); ++it ) {
+    cJSON_AddItemToArray( geometryCollection, createRunwayPolygon(*it) );
   }
 
   return geometry;
 }
 
-static cJSON * createGeometryFor(FGPositionedRef positioned)
+static cJSON * createGeometryFor(FGPositioned * positioned)
 {
   switch( positioned->type() ) {
     case FGPositioned::LOC:
     case FGPositioned::ILS:
-      return createLOCGeometry( dynamic_cast<FGNavRecord*>(positioned.get()) );
+      return createLOCGeometry( dynamic_cast<FGNavRecord*>(positioned) );
 
     case FGPositioned::AIRPORT:
-      return createAirportGeometry( dynamic_cast<FGAirport*>(positioned.get()) );
+      return createAirportGeometry( dynamic_cast<FGAirport*>(positioned) );
 
     default:
       return createPointGeometry( positioned );
@@ -147,12 +169,32 @@ static cJSON * createGeometryFor(FGPositionedRef positioned)
 static void addAirportProperties(cJSON * json, FGAirport * airport )
 {
   if( NULL == airport ) return;
-  FGRunwayList runways = airport->getRunwaysWithoutReciprocals();
   double longestRunwayLength = 0.0;
   double longestRunwayHeading = 0.0;
   const char * longestRunwaySurface = "";
+
+  cJSON_AddItemToObject(json, "name", cJSON_CreateString(airport->getName().c_str()));
+  cJSON * runwaysJson = cJSON_CreateArray();
+  cJSON_AddItemToObject(json, "runways", runwaysJson);
+
+  FGRunwayList runways = airport->getRunways();
   for( FGRunwayList::iterator it = runways.begin(); it != runways.end(); ++it ) {
-    FGRunwayRef runway = *it;
+    FGRunway * runway = *it;
+    cJSON * runwayJson = cJSON_CreateObject();
+    cJSON_AddItemToArray( runwaysJson, runwayJson );
+    cJSON_AddItemToObject(runwayJson, "id", cJSON_CreateString(runway->ident().c_str()));
+    cJSON_AddItemToObject(runwayJson, "length_m", cJSON_CreateNumber(runway->lengthM()));
+    cJSON_AddItemToObject(runwayJson, "width_m", cJSON_CreateNumber(runway->widthM()));
+    cJSON_AddItemToObject(runwayJson, "surface", cJSON_CreateString(runway->surfaceName()));
+    cJSON_AddItemToObject(runwayJson, "heading_deg", cJSON_CreateNumber(runway->headingDeg()));
+    double d = runway->displacedThresholdM();
+    if( d > .0 )
+      cJSON_AddItemToObject(runwayJson, "dispacedThreshold_m", cJSON_CreateNumber(d));
+
+    d = runway->stopwayM();
+    if( d > .0 )
+      cJSON_AddItemToObject(runwayJson, "stopway_m", cJSON_CreateNumber(d));
+
     if( runway->lengthM() > longestRunwayLength ) {
       longestRunwayLength = runway->lengthM();
       longestRunwayHeading = runway->headingDeg();
@@ -164,6 +206,17 @@ static void addAirportProperties(cJSON * json, FGAirport * airport )
   cJSON_AddItemToObject(json, "longestRwySurface", cJSON_CreateString(longestRunwaySurface));
   if( airport->getMetar() ) {
     cJSON_AddItemToObject(json, "metar", cJSON_CreateTrue());
+  }
+
+  cJSON * commsJson = cJSON_CreateArray();
+  cJSON_AddItemToObject(json, "comm", commsJson);
+  flightgear::CommStationList comms = airport->commStations();
+  for( flightgear::CommStationList::iterator it = comms.begin(); it != comms.end(); ++it ) {
+    flightgear::CommStation * comm = *it;
+    cJSON * commJson = cJSON_CreateObject();
+    cJSON_AddItemToArray( commsJson, commJson );
+    cJSON_AddItemToObject(commJson, "id", cJSON_CreateString(comm->ident().c_str()));
+    cJSON_AddItemToObject(commJson, "mhz", cJSON_CreateNumber(comm->freqMHz()));
   }
 }
 
@@ -187,7 +240,7 @@ static void addNAVProperties(cJSON * json, FGNavRecord * navRecord )
   }
 }
 
-static cJSON * createPropertiesFor(FGPositionedRef positioned)
+static cJSON * createPropertiesFor(FGPositioned * positioned)
 {
   cJSON * properties = cJSON_CreateObject();
 
@@ -196,12 +249,12 @@ static cJSON * createPropertiesFor(FGPositionedRef positioned)
   cJSON_AddItemToObject(properties, "id", cJSON_CreateString(positioned->ident().c_str()));
   cJSON_AddItemToObject(properties, "type", cJSON_CreateString(positioned->typeString()));
   cJSON_AddItemToObject(properties, "elevation-m", cJSON_CreateNumber(positioned->elevationM()));
-  addNAVProperties( properties, dynamic_cast<FGNavRecord*>(positioned.get()) );
-  addAirportProperties( properties, dynamic_cast<FGAirport*>(positioned.get()) );
+  addNAVProperties( properties, dynamic_cast<FGNavRecord*>(positioned) );
+  addAirportProperties( properties, dynamic_cast<FGAirport*>(positioned) );
   return properties;
 }
 
-static cJSON * createFeatureFor(FGPositionedRef positioned)
+static cJSON * createFeatureFor(FGPositioned * positioned)
 {
   cJSON * feature = cJSON_CreateObject();
 
@@ -273,6 +326,21 @@ bool NavdbUriHandler::handleRequest(const HTTPRequest & request, HTTPResponse & 
     }
 
     result = FGPositioned::findWithinRange(pos, range, &filter);
+  } else if (query == "airports") {
+    cJSON * json = cJSON_CreateArray();
+    for( char ** airports = FGAirport::searchNamesAndIdents(""); *airports; airports++ ) {
+      cJSON_AddItemToArray(json, cJSON_CreateString(*airports));
+    }
+    char * jsonString = indent ? cJSON_Print(json) : cJSON_PrintUnformatted(json);
+    cJSON_Delete(json);
+    response.Content = jsonString;
+    free(jsonString);
+    return true;
+
+  } else if (query == "airport") {
+    FGAirportRef airport = FGAirport::findByIdent(request.RequestVariables.get("id"));
+    if( airport.valid() )
+      result.push_back( airport );
   } else {
     goto fail;
   }
