@@ -315,6 +315,14 @@ bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
 }
 
 //------------------------------------------------------------------------------
+FGRunwayList FGAirport::getRunways() const
+{
+  loadRunways();
+
+  return mRunways;
+}
+
+//------------------------------------------------------------------------------
 FGRunwayList FGAirport::getRunwaysWithoutReciprocals() const
 {
   loadRunways();

@@ -130,6 +130,11 @@ class FGAirport : public FGPositioned
      * an airport *once*, not *twice* - eg mapping and nav-display code.
      */
     FGRunwayList getRunwaysWithoutReciprocals() const;
+
+    /**
+     * Retrieve all runways at the airport
+     */
+    FGRunwayList getRunways() const;
     
      /**
      * Useful predicate for FMS/GPS/NAV displays and similar - check if this
