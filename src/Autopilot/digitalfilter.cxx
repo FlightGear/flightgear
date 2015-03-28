@@ -7,7 +7,7 @@
 // Copyright (C) 2010  Torsten Dreyer - Torsten (at) t3r (dot) de
 //
 // Washout/high-pass filter, lead-lag filter and integrator added.
-// low-pass and lag aliases added to Exponential filter, 
+// low-pass and lag aliases added to Exponential filter,
 // rate-limit added.   A J Teeder 2013
 //
 // This program is free software; you can redistribute it and/or
@@ -150,6 +150,24 @@ protected:
                   SGPropertyNode& prop_root );
 public:
   IntegratorFilterImplementation();
+  double compute(  double dt, double input );
+  virtual void initialize( double initvalue );
+};
+
+// integrates x" + ax' + bx + c = 0
+class DampedOsciFilterImplementation : public GainFilterImplementation {
+protected:
+  InputValueList _aInput;
+  InputValueList _bInput;
+  InputValueList _cInput;
+  double _x2;
+  double _x1;
+  double _x0;
+  bool configure( SGPropertyNode& cfg_node,
+                  const std::string& cfg_name,
+                  SGPropertyNode& prop_root );
+public:
+  DampedOsciFilterImplementation();
   double compute(  double dt, double input );
   virtual void initialize( double initvalue );
 };
@@ -424,13 +442,13 @@ double ExponentialFilterImplementation::compute(  double dt, double input )
 
   double output_0;
 
-  // avoid negative filter times 
+  // avoid negative filter times
   // and div by zero if -tf == dt
 
   double alpha = tf > 0.0 ? 1 / ((tf/dt) + 1) : 1.0;
- 
+
   if(_isSecondOrder) {
-    output_0 = alpha * alpha * input + 
+    output_0 = alpha * alpha * input +
                2 * (1 - alpha) * _output_1 -
               (1 - alpha) * (1 - alpha) * _output_2;
   } else {
@@ -507,6 +525,56 @@ double IntegratorFilterImplementation::compute(  double dt, double input )
 }
 
 /* --------------------------------------------------------------------------------- */
+DampedOsciFilterImplementation::DampedOsciFilterImplementation() :
+  _x0(0.0)
+{
+}
+
+void DampedOsciFilterImplementation::initialize( double initvalue )
+{
+  _x2 = _x1 = _x0 = initvalue;
+}
+
+bool DampedOsciFilterImplementation::configure( SGPropertyNode& cfg_node,
+                                                const std::string& cfg_name,
+                                                SGPropertyNode& prop_root )
+{
+  if( GainFilterImplementation::configure(cfg_node, cfg_name, prop_root) )
+    return true;
+
+  if (cfg_name == "a" ) {
+    _aInput.push_back( new InputValue(prop_root, cfg_node, 1) );
+    return true;
+  }
+  if (cfg_name == "b" ) {
+    _bInput.push_back( new InputValue(prop_root, cfg_node, 1) );
+    return true;
+  }
+  if (cfg_name == "c" ) {
+    _cInput.push_back( new InputValue(prop_root, cfg_node, 1) );
+    return true;
+  }
+  return false;
+}
+
+double DampedOsciFilterImplementation::compute( double dt, double input )
+{
+  if (fabs(input) > 1e-15) {
+    double dz = dt * input;
+    _x0 = _x1 - dz;
+    _x2 = _x1 + dz;
+  } else {
+    double a = _aInput.get_value();
+    double b = _bInput.get_value();
+    double c = _cInput.get_value();
+    _x0 = (_x1 * (2. + dt * (a - b * dt)) - _x2 - c * dt * dt) / (1. + a * dt);
+    _x2 = _x1;
+    _x1 = _x0;
+  }
+  return _x0;
+}
+
+/* --------------------------------------------------------------------------------- */
 
 HighPassFilterImplementation::HighPassFilterImplementation() :
   _input_1(0.0),
@@ -528,7 +596,7 @@ double HighPassFilterImplementation::compute(  double dt, double input )
 
   double output;
 
-  // avoid negative filter times 
+  // avoid negative filter times
   // and div by zero if -tf == dt
 
   double alpha = tf > 0.0 ? 1 / ((tf/dt) + 1) : 1.0;
@@ -550,7 +618,7 @@ bool HighPassFilterImplementation::configure( SGPropertyNode& cfg_node,
     _TfInput.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
   }
- 
+
   return false;
 }
 
@@ -577,7 +645,7 @@ double LeadLagFilterImplementation::compute(  double dt, double input )
 
   double output;
 
-  // avoid negative filter times 
+  // avoid negative filter times
   // and div by zero if -tf == dt
 
   double alpha = tfa > 0.0 ? 1 / ((tfa/dt) + 1) : 1.0;
@@ -648,6 +716,7 @@ bool DigitalFilter::configure( SGPropertyNode& prop_root,
     componentForge["high-pass"          ] = digitalFilterFactory<HighPassFilterImplementation>;
     componentForge["lead-lag"           ] = digitalFilterFactory<LeadLagFilterImplementation>;
     componentForge["integrator"         ] = digitalFilterFactory<IntegratorFilterImplementation>;
+    componentForge["damped-osci"        ] = digitalFilterFactory<DampedOsciFilterImplementation>;
   }
 
   const std::string type = cfg.getStringValue("type");
