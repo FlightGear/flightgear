@@ -172,6 +172,9 @@ public:
     void addMetarAtPath(const string& propPath, const string& icao);
   
     void removeMetarAtPath(const string& propPath);
+
+    typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
+    MetarPropertiesList::iterator findMetarAtPath(const string &propPath);
 protected:
     void bind();
     void unbind();
@@ -188,7 +191,6 @@ protected:
     bool _enabled;
     bool _wasEnabled;
     simgear::TiedPropertyList _tiedProperties;
-    typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
     MetarPropertiesList _metarProperties;
     MetarRequester* _requester;
 
@@ -321,20 +323,19 @@ void BasicRealWxController::update( double dt )
 void BasicRealWxController::addMetarAtPath(const string& propPath, const string& icao)
 {
   // check for duplicate entries
-  BOOST_FOREACH( LiveMetarProperties_ptr p, _metarProperties ) {
-    if( p->get_root_node()->getPath() == propPath ) {
-      // already exists
-      if (p->getStationId() != icao) {
-        p->setStationId(icao);
-        p->resetTimeToLive();
-      }
-      
-      return;
+  MetarPropertiesList::iterator it = findMetarAtPath(propPath);
+  if( it != _metarProperties.end() ) {
+    SG_LOG( SG_ENVIRONMENT, SG_INFO, "Reusing metar properties at " << propPath << " for " << icao);
+    // already exists
+    if ((*it)->getStationId() != icao) {
+      (*it)->setStationId(icao);
+      (*it)->resetTimeToLive();
     }
-  } // of exitsing metar properties iteration
+    return;
+  }
 
   SGPropertyNode_ptr metarNode = fgGetNode(propPath, true);
-  SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << propPath );
+  SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << propPath << " for " << icao);
   LiveMetarProperties_ptr p(new LiveMetarProperties( metarNode, _requester, getMetarMaxAgeMin() ));
   _metarProperties.push_back(p);
   p->setStationId(icao);
@@ -342,20 +343,31 @@ void BasicRealWxController::addMetarAtPath(const string& propPath, const string&
 
 void BasicRealWxController::removeMetarAtPath(const string &propPath)
 {
-  SGPropertyNode_ptr n = fgGetNode(propPath,false);
-  MetarPropertiesList::iterator it = _metarProperties.begin();
-  for (; it != _metarProperties.end(); ++it) {
+  MetarPropertiesList::iterator it = findMetarAtPath( propPath );
+  if( it != _metarProperties.end() ) {
+    SG_LOG(SG_ENVIRONMENT, SG_INFO, "removing metar properties at " << propPath);
     LiveMetarProperties_ptr p(*it);
-    // don not compare unprocessed property path
-    // /foo/bar[0]/baz equals /foo/bar/baz
-    if( p->get_root_node()->getPath() == n->getPath() ) {
-      _metarProperties.erase(it);
-      // final ref will drop, and delete the MetarProperties, when we return
-      return;
-    }
+    _metarProperties.erase(it);
+    // final ref will drop, and delete the MetarProperties, when we return
+  } else {
+    SG_LOG(SG_ENVIRONMENT, SG_WARN, "no metar properties at " << propPath);
   }
-  
-  SG_LOG(SG_ENVIRONMENT, SG_WARN, "no metar properties at " << propPath);
+}
+
+BasicRealWxController::MetarPropertiesList::iterator BasicRealWxController::findMetarAtPath(const string &propPath)
+{
+  // don not compare unprocessed property path
+  // /foo/bar[0]/baz equals /foo/bar/baz
+  SGPropertyNode_ptr n = fgGetNode(propPath,false);
+  if( false == n.valid() ) // trivial: node does not exist
+    return _metarProperties.end();
+
+  MetarPropertiesList::iterator it = _metarProperties.begin();
+  while( it != _metarProperties.end() &&
+         (*it)->get_root_node()->getPath() != n->getPath() )
+    ++it;
+
+  return it;
 }
   
 void BasicRealWxController::checkNearbyMetar()
