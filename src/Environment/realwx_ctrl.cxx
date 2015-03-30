@@ -342,10 +342,13 @@ void BasicRealWxController::addMetarAtPath(const string& propPath, const string&
 
 void BasicRealWxController::removeMetarAtPath(const string &propPath)
 {
+  SGPropertyNode_ptr n = fgGetNode(propPath,false);
   MetarPropertiesList::iterator it = _metarProperties.begin();
   for (; it != _metarProperties.end(); ++it) {
     LiveMetarProperties_ptr p(*it);
-    if( p->get_root_node()->getPath() == propPath ) {
+    // don not compare unprocessed property path
+    // /foo/bar[0]/baz equals /foo/bar/baz
+    if( p->get_root_node()->getPath() == n->getPath() ) {
       _metarProperties.erase(it);
       // final ref will drop, and delete the MetarProperties, when we return
       return;
