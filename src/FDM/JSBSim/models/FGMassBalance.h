@@ -48,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.32 2014/11/29 13:47:19 bcoconni Exp $"
+#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.35 2015/03/28 14:49:02 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONSS
@@ -270,7 +270,7 @@ private:
     void SetPointMassMoI(const FGMatrix33& MoI) { mPMInertia = MoI; }
     double GetPointMassMoI(int r, int c) {return mPMInertia(r,c);}
 
-    void bind(FGPropertyManager* PropertyManager, int num);
+    void bind(FGPropertyManager* PropertyManager, unsigned int num);
   };
 
   std::vector <struct PointMass*> PointMasses;

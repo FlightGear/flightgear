@@ -20,9 +20,13 @@ set(HEADERS
     input_output/FGXMLElement.h
     input_output/net_fdm.hxx
     input_output/FGGroundCallback.h
+    input_output/FGInputType.h
+    input_output/FGInputSocket.h
+    input_output/FGUDPInputSocket.h
     input_output/FGOutputFG.h
     input_output/FGOutputFile.h
     input_output/FGOutputSocket.h
+    input_output/FGUDPOutputSocket.h
     input_output/FGOutputTextFile.h
     input_output/FGOutputType.h
     input_output/FGModelLoader.h
@@ -115,9 +119,13 @@ set(SOURCES
     input_output/FGXMLElement.cpp
     input_output/FGXMLParse.cpp
     input_output/FGfdmSocket.cpp
+    input_output/FGInputType.cpp
+    input_output/FGInputSocket.cpp
+    input_output/FGUDPInputSocket.cpp
     input_output/FGOutputFG.cpp
     input_output/FGOutputFile.cpp
     input_output/FGOutputSocket.cpp
+    input_output/FGUDPOutputSocket.cpp
     input_output/FGOutputTextFile.cpp
     input_output/FGOutputType.cpp
     input_output/FGModelLoader.cpp

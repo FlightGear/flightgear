@@ -38,6 +38,11 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#include <WS2tcpip.h>
+#else
+#include <fcntl.h>
+#endif
 #include <iostream>
 #include <iomanip>
 #include <cstring>
@@ -52,24 +57,35 @@ using std::string;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGfdmSocket.cpp,v 1.29 2014/01/13 10:46:03 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGfdmSocket.cpp,v 1.31 2015/03/22 12:19:31 bcoconni Exp $");
 IDENT(IdHdr,ID_FDMSOCKET);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
+static bool LoadWinSockDLL(void)
+{
+  WSADATA wsaData;
+  if (WSAStartup(MAKEWORD(1, 1), &wsaData)) {
+	cout << "Winsock DLL not initialized ..." << endl;
+	return false;
+  }
+
+  cout << "Winsock DLL loaded ..." << endl;
+  return true;
+}
+#endif
+
 FGfdmSocket::FGfdmSocket(const string& address, int port, int protocol)
 {
   sckt = sckt_in = 0;
+  Protocol = (ProtocolType)protocol;
   connected = false;
 
   #if defined(_MSC_VER) || defined(__MINGW32__)
-    WSADATA wsaData;
-    int wsaReturnCode;
-    wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);
-    if (wsaReturnCode == 0) cout << "Winsock DLL loaded ..." << endl;
-    else cout << "Winsock DLL not initialized ..." << endl;
+  if (!LoadWinSockDLL()) return;
   #endif
 
   if (!is_number(address)) {
@@ -109,23 +125,65 @@ FGfdmSocket::FGfdmSocket(const string& address, int port, int protocol)
     } else {          // unsuccessful
       cout << "Could not create socket for FDM output, error = " << errno << endl;
     }
+
   }
   Debug(0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// assumes UDP socket on localhost, for inbound datagrams
+FGfdmSocket::FGfdmSocket(int port, int protocol, int direction) // assumes UDP
+{
+  sckt = -1;
+  connected = false;
+  Protocol = (ProtocolType)protocol;
+  Direction = (DirectionType) direction;
+ 
+#if defined(_MSC_VER) || defined(__MINGW32__)
+  if (!LoadWinSockDLL()) return;
+#endif
 
-FGfdmSocket::FGfdmSocket(const string& address, int port)
+  if (Protocol == ptUDP) {  //use udp protocol
+    sckt = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+#if defined(_MSC_VER) || defined(__MINGW32__)
+	u_long NonBlock = 1; // True
+	ioctlsocket(sckt, FIONBIO, &NonBlock);
+#else
+	fcntl(sckt, F_SETFL, O_NONBLOCK);
+#endif
+    cout << "Creating UDP input socket on port " << port << endl;
+  }
+  
+    if (sckt != -1) { 
+      memset(&scktName, 0, sizeof(struct sockaddr_in));
+      scktName.sin_family = AF_INET;
+      scktName.sin_port = htons(port);
+      scktName.sin_addr.s_addr = htonl(INADDR_ANY);
+      int len = sizeof(struct sockaddr_in);
+      if (bind(sckt, (struct sockaddr*)&scktName, len) != -1) { 
+        cout << "Successfully bound to UDP input socket on port " << port << endl <<endl;
+        connected = true;
+      } else {                // unsuccessful
+        cout << "Could not bind to UDP input socket, error = " << errno << endl;
+      }
+    } else {          // unsuccessful
+      cout << "Could not create socket for UDP input, error = " << errno << endl;
+    }
+    
+  
+  Debug(0);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGfdmSocket::FGfdmSocket(const string& address, int port) // assumes TCP
 {
   sckt = sckt_in = 0;
   connected = false;
+  Protocol = ptTCP;
 
   #if defined(_MSC_VER) || defined(__MINGW32__)
-    WSADATA wsaData;
-    int wsaReturnCode;
-    wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);
-    if (wsaReturnCode == 0) cout << "Winsock DLL loaded ..." << endl;
-    else cout << "Winsock DLL not initialized ..." << endl;
+  if (!LoadWinSockDLL()) return;
   #endif
 
   cout << "... Socket Configuration Sanity Check ..." << endl;
@@ -167,17 +225,14 @@ FGfdmSocket::FGfdmSocket(const string& address, int port)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGfdmSocket::FGfdmSocket(int port)
+FGfdmSocket::FGfdmSocket(int port) // assumes TCP
 {
   connected = false;
   unsigned long NoBlock = true;
+  Protocol = ptTCP;
 
   #if defined(_MSC_VER) || defined(__MINGW32__)
-    WSADATA wsaData;
-    int wsaReturnCode;
-    wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);
-    if (wsaReturnCode == 0) cout << "Winsock DLL loaded ..." << endl;
-    else cerr << "Winsock DLL not initialized ..." << endl;
+  if (!LoadWinSockDLL()) return;
   #endif
 
   sckt = socket(AF_INET, SOCK_STREAM, 0);
@@ -231,7 +286,7 @@ string FGfdmSocket::Receive(void)
   string data;      // todo: should allocate this with a standard size as a
                     // class attribute and pass as a reference?
 
-  if (sckt_in <= 0) {
+  if (sckt_in <= 0 && Protocol == ptTCP) {
     #if defined(_MSC_VER) || defined(__MINGW32__)
       sckt_in = accept(sckt, (struct sockaddr*)&scktName, &len);
     #else
@@ -265,7 +320,15 @@ string FGfdmSocket::Receive(void)
     }
 #endif
   }
-
+  
+  // this is for FGUDPInputSocket
+  if (sckt >= 0 && Protocol == ptUDP) {
+    struct sockaddr addr;
+    socklen_t fromlen = sizeof addr;
+    num_chars = recvfrom(sckt, buf, sizeof buf, 0, (struct sockaddr*)&addr, &fromlen);
+    if (num_chars != -1) data.append(buf, num_chars); 
+  }
+  
   return data;
 }
 

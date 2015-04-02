@@ -44,6 +44,7 @@ INCLUDES
 #include "input_output/FGOutputSocket.h"
 #include "input_output/FGOutputTextFile.h"
 #include "input_output/FGOutputFG.h"
+#include "input_output/FGUDPOutputSocket.h"
 #include "input_output/FGXMLFileRead.h"
 #include "input_output/FGXMLElement.h"
 #include "input_output/FGModelLoader.h"
@@ -52,7 +53,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGOutput.cpp,v 1.80 2014/09/12 20:10:05 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGOutput.cpp,v 1.82 2015/04/02 02:20:50 dpculp Exp $");
 IDENT(IdHdr,ID_OUTPUT);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -213,7 +214,7 @@ bool FGOutput::Load(int subSystems, std::string protocol, std::string type,
                     std::string port, std::string name, double outRate,
                     std::vector<FGPropertyNode_ptr> & outputProperties)
 {
-  unsigned int idx = OutputTypes.size();
+  size_t idx = OutputTypes.size();
   FGOutputType* Output = 0;
 
   if (debug_lvl > 0) cout << endl << "  Output data set: " << idx << endl;
@@ -233,6 +234,9 @@ bool FGOutput::Load(int subSystems, std::string protocol, std::string type,
     name += ":" + port + "/" + protocol;
   } else if (type == "FLIGHTGEAR") {
     Output = new FGOutputFG(FDMExec);
+    name += ":" + port + "/" + protocol;
+  } else if (type == "QTJSBSIM") {
+    Output = new FGUDPOutputSocket(FDMExec);
     name += ":" + port + "/" + protocol;
   } else if (type == "TERMINAL") {
     // Not done yet
@@ -270,7 +274,7 @@ bool FGOutput::Load(Element* el)
 
   FGModel::PreLoad(element, PropertyManager);
 
-  unsigned int idx = OutputTypes.size();
+  size_t idx = OutputTypes.size();
   string type = element->GetAttributeValue("type");
   FGOutputType* Output = 0;
 
@@ -286,6 +290,8 @@ bool FGOutput::Load(Element* el)
     Output = new FGOutputSocket(FDMExec);
   } else if (type == "FLIGHTGEAR") {
     Output = new FGOutputFG(FDMExec);
+  } else if (type == "QTJSBSIM") {
+    Output = new FGUDPOutputSocket(FDMExec);
   } else if (type == "TERMINAL") {
     // Not done yet
   } else if (type != string("NONE")) {

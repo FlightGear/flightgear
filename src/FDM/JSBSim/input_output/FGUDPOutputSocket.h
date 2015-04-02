@@ -1,10 +1,10 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Header:       FGfdmSocket.h
- Author:       Jon S. Berndt
- Date started: 11/08/99
+ Header:       FGOutputSocket.h
+ Author:       David Culp
+ Date started: 03/31/15
 
- ------------- Copyright (C) 1999  Jon S. Berndt (jon@jsbsim.org) -------------
+ ------------- Copyright (C) 2015 David Culp ---------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -25,47 +25,28 @@
 
 HISTORY
 --------------------------------------------------------------------------------
-11/08/99   JSB   Created
-11/08/07   HDW   Added Generic Socket Send
+03/31/15   DC    Created
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef FGfdmSocket_H
-#define FGfdmSocket_H
+#ifndef FGUDPOUTPUTSOCKET_H
+#define FGUDPOUTPUTSOCKET_H
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <string>
-#include <sstream>
-#include <sys/types.h>
-#include "FGJSBBase.h"
-
-#if defined(_MSC_VER) || defined(__MINGW32__)
-  #include <winsock.h>
-  #include <io.h>
-#else
-  #include <unistd.h>
-  #include <sys/socket.h>
-  #include <netinet/in.h>
-  #include <arpa/inet.h>
-  #include <netdb.h>
-  #include <errno.h>
-  #include <sys/ioctl.h>
-#endif
-
-#ifdef _MSC_VER
-#  pragma comment (lib,"WSock32.lib")
-#endif
+#include "FGOutputType.h"
+#include "input_output/FGPropertyManager.h"
+#include "input_output/FGfdmSocket.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMSOCKET "$Id: FGfdmSocket.h,v 1.23 2015/03/28 15:03:44 bcoconni Exp $"
+#define ID_UDPOUTPUTSOCKET "$Id: FGUDPOutputSocket.h,v 1.1 2015/04/02 02:23:33 dpculp Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -77,51 +58,49 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Encapsulates an object that enables JSBSim to communicate via socket (input
-    and/or output).
-    
-  */
+/** Implements the output to a UDP socket. This class outputs data to a socket
+    in a comma-separated strings format. The first string represents a time
+    stamp, and each string thereafter is the value of a property.  If a
+    specified property does not exist, then a zero is sent, so that the
+    number of values sent will always equal the number of properties requested. 
+ */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGfdmSocket : public FGJSBBase
+class FGUDPOutputSocket : public FGOutputType
 {
 public:
-  FGfdmSocket(const std::string&, int);
-  FGfdmSocket(const std::string&, int, int);
-  FGfdmSocket(int, int, int);  
-  FGfdmSocket(int);
-  ~FGfdmSocket();
-  void Send(void);
-  void Send(const char *data, int length);
+  /** Constructor. */
+  FGUDPOutputSocket(FGFDMExec* fdmex);
 
-  std::string Receive(void);
-  int Reply(const std::string& text);
-  void Append(const std::string& s) {Append(s.c_str());}
-  void Append(const char*);
-  void Append(double);
-  void Append(long);
-  void Clear(void);
-  void Clear(const std::string& s);
-  void Close(void);
-  bool GetConnectStatus(void) {return connected;}
+  /** Destructor. */
+  ~FGUDPOutputSocket();
 
-  enum ProtocolType {ptUDP, ptTCP};
-  enum DirectionType {dIN, dOUT};
- 
-private:
-  int sckt;
-  int sckt_in;
-  int udpsckt;
-  DirectionType Direction;
-  ProtocolType Protocol;
-  struct sockaddr_in scktName;
-  struct hostent *host;
-  std::ostringstream buffer;
-  bool connected;
-  void Debug(int from);
+  /** Init the output directives from an XML file.
+      @param element XML Element that is pointing to the output directives
+  */
+  virtual bool Load(Element* el);
+
+  /** Initializes the instance. This method opens the ouput socket.
+      @result true if the execution succeeded.
+   */
+  bool InitModel(void);
+  
+  /// Generates and sends the output datagram.
+  void Print(void);
+
+protected:
+
+  std::string SockName;
+  unsigned int SockPort;
+  FGfdmSocket* socket;
+  FGPropertyManager* PropertyManager;
+  FGPropertyNode* root;
+  FGFDMExec* FDMExec;
 };
 }
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+
