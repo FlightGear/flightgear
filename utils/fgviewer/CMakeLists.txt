@@ -42,6 +42,10 @@ else()
 endif()
 
 add_executable(fgviewer ${FGVIEWER_SOURCES} ${FGVIEWER_RTI_SOURCES})
+if(X11_FOUND)
+    target_link_libraries(fgviewer ${X11_LIBRARIES})
+endif()
+
 target_link_libraries(fgviewer
 	${SIMGEAR_LIBRARIES}
 	${OPENSCENEGRAPH_LIBRARIES}

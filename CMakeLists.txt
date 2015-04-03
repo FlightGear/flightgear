@@ -110,6 +110,7 @@ IF(APPLE)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
 	${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
     find_package(Threads REQUIRED)
+    find_package(X11 REQUIRED)
     
     set(USE_DBUS_DEFAULT 1)
 

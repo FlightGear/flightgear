@@ -130,7 +130,9 @@ endif()
 if (CRASHRPT_FOUND)
 	target_link_libraries(fgfs ${CRASHRPT_LIBRARY})
 endif()
-
+if(X11_FOUND)
+    target_link_libraries(fgfs ${X11_LIBRARIES})
+endif()
 target_link_libraries(fgfs
 	${SQLITE3_LIBRARY}
 	${SIMGEAR_LIBRARIES}
