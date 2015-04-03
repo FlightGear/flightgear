@@ -769,7 +769,8 @@ void QtLauncher::onRun()
     // aircraft paths
     for (int i=0; i<m_ui->aircraftPathsList->count(); ++i) {
         QString path = m_ui->aircraftPathsList->item(i)->text();
-        opt->addOption("fg-aircraft", path.toStdString());
+        // can't use fg-aircraft for this, as it is processed before the launcher is run
+        globals->append_aircraft_path(path.toStdString());
     }
 
     // additional arguments
