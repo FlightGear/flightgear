@@ -346,9 +346,10 @@ void BasicRealWxController::removeMetarAtPath(const string &propPath)
   MetarPropertiesList::iterator it = findMetarAtPath( propPath );
   if( it != _metarProperties.end() ) {
     SG_LOG(SG_ENVIRONMENT, SG_INFO, "removing metar properties at " << propPath);
-    LiveMetarProperties_ptr p(*it);
-    _metarProperties.erase(it);
-    // final ref will drop, and delete the MetarProperties, when we return
+    LiveMetarProperties_ptr p(*it); // delay deletion until this goes out of scope when we return; no longer needed?
+    // TODO: this doesn't actually delete it, because doing so invalidates the
+    // BasicRealWxController::update iterator, causing a crash on Go To Airport
+    // _metarProperties.erase(it);
   } else {
     SG_LOG(SG_ENVIRONMENT, SG_WARN, "no metar properties at " << propPath);
   }
