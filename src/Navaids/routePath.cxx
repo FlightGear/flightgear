@@ -701,7 +701,7 @@ public:
     }
     
     if (index == 0) {
-      SG_LOG(SG_NAVAID, SG_WARN, "findPreceedingKnownAltitude: no preceeding altitude value found");
+      SG_LOG(SG_NAVAID, SG_WARN, "findPreceedingKnownAltitude: no preceding altitude value found");
       return -1;
     }
     

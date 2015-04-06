@@ -1820,7 +1820,7 @@ public:
   }
   
   /**
-   * given a current iterator into the values, find the preceeding group marker,
+   * given a current iterator into the values, find the preceding group marker,
    * or return the beginning of the value vector.
    */
   OptionValueVec::const_iterator rfindGroup(OptionValueVec::const_iterator pos) const

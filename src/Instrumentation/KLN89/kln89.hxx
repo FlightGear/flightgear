@@ -226,7 +226,7 @@ private:
 	// Apt, VOR and SUA drawing can be suspended by setting draw_avs to false, without affecting the stored drawing preference state.
 	void DrawMap(bool draw_avs = true);
 	
-	// Set whether the display should be draw pixelated (more primatives, but might be closer to real-life)
+	// Set whether the display should be drawn pixelated (more primitives, but might be closer to real-life)
 	// or not (in which case it is assumed that pixels are square and can be merged into quads).
 	bool _pixelated;
 	
@@ -251,7 +251,7 @@ private:
 	
 	// The currently active page
 	KLN89Page* _activePage;
-	// And a facility to save the immediately preceeding active page
+	// And a facility to save the immediately preceding active page
 	KLN89Page* _lastActivePage;
 	
 	// Ugly hack.  Housekeeping to allow us to temporarily display one page, while remembering which

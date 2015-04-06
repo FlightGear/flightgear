@@ -288,7 +288,7 @@ std::multimap<int, Airport> getAirportsData()
 {
     std::vector<std::string> lines;
     std::multimap<int, Airport> aptData;
-    SG_LOG(SG_GENERAL, SG_INFO, "Loading aiports informations...");
+    SG_LOG(SG_GENERAL, SG_INFO, "Loading airports information...");
 
     for(size_t i=0; i < sizeof(_positionsData)/sizeof(*_positionsData); i++) { // _positionsData is provided by positions.hxx
         std::vector<std::string> entries = simgear::strutils::split(_positionsData[i], ",");
@@ -425,7 +425,7 @@ int usage()
     std::cout << "        --version                       -  Show version" << std::endl;
     std::cout << "" << std::endl;
     std::cout << "  None of these options are required, you can simply start FGCom without option at all: it works" << std::endl;
-    std::cout << "  For further informations, please visit: http://wiki.flightgear.org/FGCom_3.0" << std::endl;
+    std::cout << "  For further information, please visit: http://wiki.flightgear.org/FGCom_3.0" << std::endl;
     std::cout << "" << std::endl;
     std::cout << "  About silence-threshold:" << std::endl;
     std::cout << "    This is the limit, in dB, when FGCom consider no voice in your microphone." << std::endl;
