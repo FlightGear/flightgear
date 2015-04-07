@@ -49,20 +49,11 @@ namespace Environment {
 
 /* -------------------------------------------------------------------------------- */
 
-class MetarDataHandler {
-public:
-    virtual void handleMetarData( const std::string & data ) = 0;
-    virtual void handleMetarFailure() = 0;
-};
-
-class MetarRequester {
-public:
-    virtual void requestMetar( MetarDataHandler * metarDataHandler, const std::string & id ) = 0;
-};
+class MetarRequester;
 
 /* -------------------------------------------------------------------------------- */
 
-class LiveMetarProperties : public MetarProperties, MetarDataHandler {
+class LiveMetarProperties : public MetarProperties {
 public:
     LiveMetarProperties( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester, int maxAge );
     virtual ~LiveMetarProperties();
@@ -88,6 +79,12 @@ private:
 };
 
 typedef SGSharedPtr<LiveMetarProperties> LiveMetarProperties_ptr;
+
+class MetarRequester {
+public:
+    virtual void requestMetar( LiveMetarProperties_ptr metarDataHandler, const std::string & id ) = 0;
+};
+
 
 LiveMetarProperties::LiveMetarProperties( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester, int maxAge ) :
     MetarProperties( rootNode ),
@@ -346,10 +343,10 @@ void BasicRealWxController::removeMetarAtPath(const string &propPath)
   MetarPropertiesList::iterator it = findMetarAtPath( propPath );
   if( it != _metarProperties.end() ) {
     SG_LOG(SG_ENVIRONMENT, SG_INFO, "removing metar properties at " << propPath);
-    LiveMetarProperties_ptr p(*it); // delay deletion until this goes out of scope when we return; no longer needed?
+//    LiveMetarProperties_ptr p(*it); // delay deletion until this goes out of scope when we return; no longer needed?
     // TODO: this doesn't actually delete it, because doing so invalidates the
     // BasicRealWxController::update iterator, causing a crash on Go To Airport
-    // _metarProperties.erase(it);
+    _metarProperties.erase(it);
   } else {
     SG_LOG(SG_ENVIRONMENT, SG_WARN, "no metar properties at " << propPath);
   }
@@ -411,7 +408,7 @@ public:
     NoaaMetarRealWxController( SGPropertyNode_ptr rootNode );
 
     // implementation of MetarRequester
-    virtual void requestMetar( MetarDataHandler * metarDataHandler, const std::string & id );
+    virtual void requestMetar( LiveMetarProperties_ptr metarDataHandler, const std::string & id );
 
     virtual ~NoaaMetarRealWxController()
     {
@@ -427,7 +424,7 @@ NoaaMetarRealWxController::NoaaMetarRealWxController( SGPropertyNode_ptr rootNod
 
 void NoaaMetarRealWxController::requestMetar
 (
-  MetarDataHandler* metarDataHandler,
+  LiveMetarProperties_ptr metarDataHandler,
   const std::string& id
 )
 {
@@ -437,7 +434,7 @@ void NoaaMetarRealWxController::requestMetar
     public simgear::HTTP::MemoryRequest
   {
     public:
-      NoaaMetarGetRequest( MetarDataHandler* metarDataHandler,
+      NoaaMetarGetRequest( LiveMetarProperties_ptr metarDataHandler,
                            const std::string& stationId ):
         MemoryRequest(NOAA_BASE_URL + stationId + ".TXT"),
         _metarDataHandler(metarDataHandler)
@@ -473,7 +470,7 @@ void NoaaMetarRealWxController::requestMetar
       }
 
     private:
-      MetarDataHandler * _metarDataHandler;
+      LiveMetarProperties_ptr _metarDataHandler;
   };
 
   string upperId = boost::to_upper_copy(id);
