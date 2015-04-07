@@ -407,7 +407,7 @@ bool RateLimitFilterImplementation::configure( SGPropertyNode& cfg_node,
                                                const std::string& cfg_name,
                                                SGPropertyNode& prop_root )
 {
-  std::cout << "RateLimitFilterImplementation " << cfg_name << std::endl;
+//  std::cout << "RateLimitFilterImplementation " << cfg_name << std::endl;
   if (cfg_name == "max-rate-of-change" ) {
     _rateOfChangeMax.push_back( new InputValue(prop_root, cfg_node, 1) );
     return true;
