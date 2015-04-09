@@ -251,9 +251,11 @@ public:
     }
     
     
-    void show(const SGPath& path)
+    void show(const vector<SGPath> & path_list)
     {
-        visitDir(path, 0);
+		for (vector<SGPath>::const_iterator p = path_list.begin();
+			 p != path_list.end(); ++p)
+			visitDir(*p, 0);
         
         simgear::requestConsole(); // ensure console is shown on Windows
         
@@ -348,10 +350,10 @@ private:
  *
  * @parampath the directory to search for configuration files
  */
-void fgShowAircraft(const SGPath &path)
+void fgShowAircraft(const vector<SGPath> &path_list)
 {
     ShowAircraft s;
-    s.show(path);
+    s.show(path_list);
     
 #ifdef _MSC_VER
     cout << "Hit a key to continue..." << endl;
@@ -1994,10 +1996,24 @@ void Options::initAircraft()
   }
     
   if (p->showAircraft) {
+	vector<SGPath> path_list;
+
     fgOptLogLevel( "alert" );
-    SGPath path( globals->get_fg_root() );
-    path.append("Aircraft");
-    fgShowAircraft(path);
+
+    // First place to check is the 'Aircraft' sub-directory in $FG_ROOT
+
+	path_list.push_back( SGPath( globals->get_fg_root() ) );
+	path_list.back().append("Aircraft");
+
+    // Additionally, aircraft may also be found in user-defined places
+	// (via $FG_AIRCRAFT or with the '--fg-aircraft' option)
+
+	string_list aircraft_paths = globals->get_aircraft_paths();
+	for (string_list::iterator it = aircraft_paths.begin();
+		 it != aircraft_paths.end(); ++it)
+	  path_list.push_back( SGPath(*it));
+
+    fgShowAircraft(path_list);
     exit(0);
   }
   
