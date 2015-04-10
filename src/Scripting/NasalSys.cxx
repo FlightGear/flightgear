@@ -1165,7 +1165,9 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
     naRef locals;
     naRef modname = naNewString(ctx);
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
-    if(!naHash_get(_globals, modname, &locals))
+	if (!((_globals).ref).ptr.obj)
+		return false;
+	if (!naHash_get(_globals, modname, &locals))
         locals = naNewHash(ctx);
 
     _cmdArg = (SGPropertyNode*)cmdarg;

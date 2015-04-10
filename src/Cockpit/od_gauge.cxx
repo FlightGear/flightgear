@@ -127,8 +127,10 @@ class ReplaceStaticTextureVisitor:
       simgear::EffectGeode* eg = dynamic_cast<simgear::EffectGeode*>(&node);
       if( !eg )
         return;
-
-      osg::StateSet* ss = eg->getEffect()->getDefaultStateSet();
+	  simgear::Effect* eff = eg->getEffect();
+	  if (!eff)
+		  return;
+      osg::StateSet* ss = eff->getDefaultStateSet();
       if( !ss )
         return;
 
