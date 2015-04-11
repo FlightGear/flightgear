@@ -298,7 +298,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
     RunwayGroup *currRunwayGroup = 0;
     int nrActiveRunways = 0;
     time_t dayStart = fgGetLong("/sim/time/utc/day-seconds");
-    if ((abs((long) (dayStart - lastUpdate)) > 600)
+    if ((std::abs((long) (dayStart - lastUpdate)) > 600)
         || trafficType != prevTrafficType) {
         landing.clear();
         takeoff.clear();
