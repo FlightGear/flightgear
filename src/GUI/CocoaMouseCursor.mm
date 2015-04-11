@@ -19,7 +19,9 @@
 
 #include "CocoaMouseCursor.hxx"
 
-#include <Cocoa/Cocoa.h>
+#include <AppKit/NSImage.h>
+#include <AppKit/NSCursor.h>
+
 #include <map>
 
 #include <Main/globals.hxx>

@@ -20,8 +20,8 @@
 
 #include "CocoaFileDialog.hxx"
 
-// bring it all in!
-#include <Cocoa/Cocoa.h>
+#include <AppKit/NSSavePanel.h>
+#include <AppKit/NSOpenPanel.h>
 
 #include <boost/foreach.hpp>
 

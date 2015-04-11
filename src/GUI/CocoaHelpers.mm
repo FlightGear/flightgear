@@ -24,8 +24,11 @@
 #include <string>
 
 // OS
-#include <Cocoa/Cocoa.h>
+
 #include <Foundation/NSAutoreleasePool.h>
+#include <Foundation/NSURL.h>
+#include <Foundation/NSFileManager.h>
+#include <AppKit/NSAlert.h>
 
 // simgear
 #include <simgear/misc/sg_path.hxx>

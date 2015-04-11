@@ -22,7 +22,8 @@
 
 #include <simgear/debug/logstream.hxx>
 
-#include <Cocoa/Cocoa.h>
+#include <AppKit/NSPasteboard.h>
+#include <Foundation/NSArray.h>
 
 #include <GUI/CocoaHelpers_private.h>
 

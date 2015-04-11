@@ -1,6 +1,6 @@
 #include "FGCocoaMenuBar.hxx"
 
-#include <Cocoa/Cocoa.h>
+#include <AppKit/NSMenu.h>
 
 #include <boost/foreach.hpp>
 
