@@ -353,7 +353,7 @@ AxisElement::AxisElement(CFDictionaryRef element, long page, long usage) :
 
   name = ((isRelative == true) ? "rel-" : "abs-") + name;
 
-  center = min + (max - abs(min)) * 0.5;
+  center = min + (max - std::abs(min)) * 0.5;
   SG_LOG(SG_INPUT, SG_DEBUG, "HID Axis Element; " << name << " min: " << min << " max:" << max << " center: " << center);
   SG_LOG(SG_INPUT, SG_DEBUG, "isRelative=" << isRelative << ", isWrapping=" << isWrapping << ", isNonLinear=" << isNonLinear);
 }
