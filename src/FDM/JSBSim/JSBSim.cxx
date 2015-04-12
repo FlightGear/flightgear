@@ -523,7 +523,12 @@ void FGJSBsim::update( double dt )
     trimmed->setBoolValue(false);
 
     for ( int i=0; i < multiloop; i++ ) {
-      fdmex->Run();
+      if (!fdmex->Run()) {
+        // The property fdm/jsbsim/simulation/terminate has been set to true
+        // by the user. The sim is considered crashed.
+        crashed = true;
+        break;
+      }
       update_external_forces(fdmex->GetSimTime() + i * fdmex->GetDeltaT());
     }
 
