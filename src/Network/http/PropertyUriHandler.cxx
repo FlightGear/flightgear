@@ -149,6 +149,23 @@ DOMElement * createHeader( const string & prefix, const string & propertyPath )
   return root;
 }
 
+static DOMNode * createLabeledRadioButton( const char * label, const std::string & name, bool checked )
+{
+    DOMNode * root =  new DOMNode("span");
+    root->setAttribute( "class", "radiobutton-container" );
+
+    root->addChild( new DOMNode("span"))->addChild( new DOMTextElement(label) );
+    DOMNode * radio = root->addChild(new DOMNode( "input" ))
+      ->setAttribute( "type", "radio" )
+      ->setAttribute( "name", name )
+      ->setAttribute( "value", label );
+
+    if( checked )
+      radio->setAttribute( "checked", "checked" );
+
+    return root;
+}
+
 static DOMElement * renderPropertyValueElement( SGPropertyNode_ptr node )
 {
     string value = node->getStringValue();
@@ -161,21 +178,8 @@ static DOMElement * renderPropertyValueElement( SGPropertyNode_ptr node )
     if( node->getType() == simgear::props::BOOL ) {
         root = new DOMNode( "span" );
 
-        root->addChild( new DOMNode("span"))->addChild( new DOMTextElement("true") );
-        DOMNode * radio = root->addChild(new DOMNode( "input" ))
-          ->setAttribute( "type", "radio" )
-          ->setAttribute( "name", node->getDisplayName() )
-          ->setAttribute( "value", "true" );
-        if( node->getBoolValue() )
-          radio->setAttribute( "checked", "checked" );
-
-        root->addChild( new DOMNode("span"))->addChild( new DOMTextElement("false") );
-        radio = root->addChild(new DOMNode( "input" ))
-          ->setAttribute( "type", "radio" )
-          ->setAttribute( "name", node->getDisplayName() )
-          ->setAttribute( "value", "false" );
-        if( !node->getBoolValue() )
-          radio->setAttribute( "checked", "checked" );
+        root->addChild( createLabeledRadioButton( "true", node->getDisplayName(), node->getBoolValue() ));
+        root->addChild( createLabeledRadioButton( "false", node->getDisplayName(), !node->getBoolValue() ));
 
     } else if( len < 60 ) {
         root = new DOMNode( "input" );
