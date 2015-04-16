@@ -34,7 +34,7 @@ using std::string;
 // #define SG_DEBUG SG_ALERT
 
 FGAIMultiplayer::FGAIMultiplayer() :
-   FGAIBase(otMultiplayer, false)
+   FGAIBase(otMultiplayer, fgGetBool("/sim/multiplay/hot", false))
 {
    no_roll = false;
 
