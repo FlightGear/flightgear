@@ -19,6 +19,7 @@
 
 #include "CocoaMouseCursor.hxx"
 
+#include <Foundation/NSPathUtilities.h>
 #include <AppKit/NSImage.h>
 #include <AppKit/NSCursor.h>
 
