@@ -28,6 +28,7 @@
 #include <Foundation/NSAutoreleasePool.h>
 #include <Foundation/NSURL.h>
 #include <Foundation/NSFileManager.h>
+#include <Foundation/NSBundle.h>
 #include <AppKit/NSAlert.h>
 
 // simgear
