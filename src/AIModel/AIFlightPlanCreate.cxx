@@ -247,7 +247,6 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         return true;
     }
 
-    intVec ids;
     PositionedID runwayId = 0;
     if (gn->getVersion() > 0) {
         runwayId = gn->findNearestNodeOnRunway(runwayTakeoff);
@@ -280,8 +279,9 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         }
     }
     
-    FGTaxiRoute taxiRoute = gn->findShortestRoute(node, runwayId);
-    intVecIterator i;
+	FGTaxiRoute taxiRoute;
+	if ( runwayId != 0 )
+		taxiRoute = gn->findShortestRoute(node, runwayId);
 
     if (taxiRoute.empty()) {
         createDefaultTakeoffTaxi(ac, apt, rwy);
@@ -383,7 +383,6 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
         return true;
     }
 
-    intVec ids;
     PositionedID runwayId = 0;
     if (gn->getVersion() == 1) {
         runwayId = gn->findNearestNodeOnRunway(lastWptPos);
@@ -393,16 +392,10 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
     //cerr << "Using network node " << runwayId << endl;
     // A negative gateId indicates an overflow parking, use a
     // fallback mechanism for this. 
-    // Starting from gate 0 is a bit of a hack...
-    //FGTaxiRoute route;
-  //  delete taxiRoute;
-   // taxiRoute = new FGTaxiRoute;
+    // Starting from gate 0 doesn't work, so don't try it
     FGTaxiRoute taxiRoute;
     if (gate.isValid())
         taxiRoute = gn->findShortestRoute(runwayId, gate.parking()->guid());
-    else
-        taxiRoute = gn->findShortestRoute(runwayId, 0);
-    intVecIterator i;
 
     if (taxiRoute.empty()) {
         createDefaultLandingTaxi(ac, apt);
