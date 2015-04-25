@@ -28,6 +28,8 @@ using std::endl;
 using std::string;
 using std::vector;
 
+using FGXMLAutopilot::InputValue;
+
 const double FGSubmodelMgr::lbs_to_slugs = 0.031080950172;
 
 FGSubmodelMgr::FGSubmodelMgr()
@@ -264,6 +266,14 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
         sm->first_time = false;
     }
 
+    double yaw_offset   = 0.0;
+    double pitch_offset = 0.0;
+
+    if (sm->yaw_node != 0)
+        yaw_offset = sm->yaw_node->get_value();
+    if (sm->pitch_node != 0)
+        pitch_offset = sm->pitch_node->get_value();
+
     transform(sm);  // calculate submodel's initial conditions in world-coordinates
 
     FGAIBallistic* ballist = new FGAIBallistic;
@@ -302,8 +312,8 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setXoffset(sm->x_offset);
     ballist->setYoffset(sm->y_offset);
     ballist->setZoffset(sm->z_offset);
-    ballist->setPitchoffset(sm->pitch_offset);
-    ballist->setYawoffset(sm->yaw_offset);
+    ballist->setPitchoffset(pitch_offset);
+    ballist->setYawoffset(yaw_offset);
     ballist->setParentNodes(_selected_ac);
     ballist->setContentsNode(sm->contents_node);
     ballist->setWeight(sm->weight);
@@ -353,6 +363,13 @@ void FGSubmodelMgr::transform(submodel *sm)
     if (sm->speed_node != 0)
         sm->speed = sm->speed_node->getDoubleValue();
 
+    double yaw_offset   = 0.0;
+    double pitch_offset = 0.0;
+
+    if (sm->yaw_node != 0)
+        yaw_offset = sm->yaw_node->get_value();
+    if (sm->pitch_node != 0)
+        pitch_offset = sm->pitch_node->get_value();
 
     //cout << " name " << name << " id " << id << " sub id" << sub_id << endl;
 
@@ -434,8 +451,8 @@ void FGSubmodelMgr::transform(submodel *sm)
 
     // Get submodel initial velocity vector angles in XZ and XY planes.
     // This vector should be added to aircraft's vector.
-    IC.elevation += (sm->yaw_offset * sinRx) + (sm->pitch_offset * cosRx);
-    IC.azimuth   += (sm->yaw_offset * cosRx) - (sm->pitch_offset * sinRx);
+    IC.elevation += (yaw_offset * sinRx) + (pitch_offset * cosRx);
+    IC.azimuth   += (yaw_offset * cosRx) - (pitch_offset * sinRx);
 
     // calculate the total speed north
     IC.total_speed_north = sm->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
@@ -547,8 +564,6 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable)
         sm->x_offset        = entry_node->getDoubleValue("x-offset", 0.0);
         sm->y_offset        = entry_node->getDoubleValue("y-offset", 0.0);
         sm->z_offset        = entry_node->getDoubleValue("z-offset", 0.0);
-        sm->yaw_offset      = entry_node->getDoubleValue("yaw-offset", 0.0);
-        sm->pitch_offset    = entry_node->getDoubleValue("pitch-offset", 0.0);
         sm->drag_area       = entry_node->getDoubleValue("eda", 0.034);
         sm->life            = entry_node->getDoubleValue("life", 900.0);
         sm->buoyancy        = entry_node->getDoubleValue("buoyancy", 0);
@@ -570,6 +585,16 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable)
         sm->force_path      = entry_node->getStringValue("force-path", "");
         sm->random			= entry_node->getBoolValue("random", false);
         sm->randomness		= entry_node->getDoubleValue("randomness", 0.5);
+
+        SGPropertyNode_ptr a = entry_node->getNode("yaw-offset");
+        SGPropertyNode_ptr b = entry_node->getNode("pitch-offset");
+        SGPropertyNode_ptr prop_root = fgGetNode("/", true);
+        sm->yaw_node        = 0;
+        sm->pitch_node      = 0;
+        if (a != 0)
+            sm->yaw_node    = new InputValue(*prop_root, *a);
+        if (b != 0)
+            sm->pitch_node  = new InputValue(*prop_root, *b);
 
         if (sm->contents_node != 0)
             sm->contents = sm->contents_node->getDoubleValue();
@@ -652,8 +677,6 @@ void FGSubmodelMgr::setSubData(int id, const string& path, bool serviceable)
         sm->x_offset        = entry_node->getDoubleValue("x-offset", 0.0);
         sm->y_offset        = entry_node->getDoubleValue("y-offset", 0.0);
         sm->z_offset        = entry_node->getDoubleValue("z-offset", 0.0);
-        sm->yaw_offset      = entry_node->getDoubleValue("yaw-offset", 0.0);
-        sm->pitch_offset    = entry_node->getDoubleValue("pitch-offset", 0.0);
         sm->drag_area       = entry_node->getDoubleValue("eda", 0.034);
         sm->life            = entry_node->getDoubleValue("life", 900.0);
         sm->buoyancy        = entry_node->getDoubleValue("buoyancy", 0);
@@ -675,6 +698,16 @@ void FGSubmodelMgr::setSubData(int id, const string& path, bool serviceable)
         sm->force_path      = entry_node->getStringValue("force-path", "");
         sm->random          = entry_node->getBoolValue("random", false);
         sm->randomness      = entry_node->getDoubleValue("randomness", 0.5);
+
+        SGPropertyNode_ptr a = entry_node->getNode("yaw-offset");
+        SGPropertyNode_ptr b = entry_node->getNode("pitch-offset");
+        SGPropertyNode_ptr prop_root = fgGetNode("/", true);
+        sm->yaw_node        = 0;
+        sm->pitch_node      = 0;
+        if (a != 0)
+            sm->yaw_node    = new InputValue(*prop_root, *a);
+        if (b != 0)
+            sm->pitch_node  = new InputValue(*prop_root, *b);
 
         if (sm->contents_node != 0)
             sm->contents = sm->contents_node->getDoubleValue();

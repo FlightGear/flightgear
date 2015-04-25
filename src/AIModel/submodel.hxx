@@ -15,8 +15,12 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
 
+#include <Autopilot/inputvalue.hxx>
+
 #include <vector>
 #include <string>
+
+using FGXMLAutopilot::InputValue_ptr;
 
 class FGAIBase;
 class FGAIManager;
@@ -32,6 +36,8 @@ public:
         SGPropertyNode_ptr contents_node;
         SGPropertyNode_ptr submodel_node;
         SGPropertyNode_ptr speed_node;
+        InputValue_ptr yaw_node;
+        InputValue_ptr pitch_node;
 
         std::string        name;
         std::string        model;
@@ -44,8 +50,6 @@ public:
         double             x_offset;
         double             y_offset;
         double             z_offset;
-        double             yaw_offset;
-        double             pitch_offset;
         double             drag_area;
         double             life;
         double             buoyancy;
