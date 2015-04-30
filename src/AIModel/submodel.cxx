@@ -28,8 +28,6 @@ using std::endl;
 using std::string;
 using std::vector;
 
-using FGXMLAutopilot::InputValue;
-
 const double FGSubmodelMgr::lbs_to_slugs = 0.031080950172;
 
 FGSubmodelMgr::FGSubmodelMgr()
@@ -269,10 +267,8 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     double yaw_offset   = 0.0;
     double pitch_offset = 0.0;
 
-    if (sm->yaw_node != 0)
-        yaw_offset = sm->yaw_node->get_value();
-    if (sm->pitch_node != 0)
-        pitch_offset = sm->pitch_node->get_value();
+    yaw_offset = sm->yaw_offset->get_value();
+    pitch_offset = sm->pitch_offset->get_value();
 
     transform(sm);  // calculate submodel's initial conditions in world-coordinates
 
@@ -366,10 +362,8 @@ void FGSubmodelMgr::transform(submodel *sm)
     double yaw_offset   = 0.0;
     double pitch_offset = 0.0;
 
-    if (sm->yaw_node != 0)
-        yaw_offset = sm->yaw_node->get_value();
-    if (sm->pitch_node != 0)
-        pitch_offset = sm->pitch_node->get_value();
+    yaw_offset = sm->yaw_offset->get_value();
+    pitch_offset = sm->pitch_offset->get_value();
 
     //cout << " name " << name << " id " << id << " sub id" << sub_id << endl;
 
@@ -586,15 +580,14 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable)
         sm->random			= entry_node->getBoolValue("random", false);
         sm->randomness		= entry_node->getDoubleValue("randomness", 0.5);
 
-        SGPropertyNode_ptr a = entry_node->getNode("yaw-offset");
-        SGPropertyNode_ptr b = entry_node->getNode("pitch-offset");
         SGPropertyNode_ptr prop_root = fgGetNode("/", true);
-        sm->yaw_node        = 0;
-        sm->pitch_node      = 0;
-        if (a != 0)
-            sm->yaw_node    = new InputValue(*prop_root, *a);
-        if (b != 0)
-            sm->pitch_node  = new InputValue(*prop_root, *b);
+        SGPropertyNode n;
+
+        SGPropertyNode_ptr a = entry_node->getNode("yaw-offset");
+        sm->yaw_offset    = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n );
+
+        a = entry_node->getNode("pitch-offset");
+        sm->pitch_offset  = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n );
 
         if (sm->contents_node != 0)
             sm->contents = sm->contents_node->getDoubleValue();
@@ -699,15 +692,14 @@ void FGSubmodelMgr::setSubData(int id, const string& path, bool serviceable)
         sm->random          = entry_node->getBoolValue("random", false);
         sm->randomness      = entry_node->getDoubleValue("randomness", 0.5);
 
-        SGPropertyNode_ptr a = entry_node->getNode("yaw-offset");
-        SGPropertyNode_ptr b = entry_node->getNode("pitch-offset");
         SGPropertyNode_ptr prop_root = fgGetNode("/", true);
-        sm->yaw_node        = 0;
-        sm->pitch_node      = 0;
-        if (a != 0)
-            sm->yaw_node    = new InputValue(*prop_root, *a);
-        if (b != 0)
-            sm->pitch_node  = new InputValue(*prop_root, *b);
+        SGPropertyNode n;
+
+        SGPropertyNode_ptr a = entry_node->getNode("yaw-offset");
+        sm->yaw_offset    = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n );
+
+        a = entry_node->getNode("pitch-offset");
+        sm->pitch_offset  = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n );
 
         if (sm->contents_node != 0)
             sm->contents = sm->contents_node->getDoubleValue();
