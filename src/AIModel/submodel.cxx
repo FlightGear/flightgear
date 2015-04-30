@@ -264,12 +264,6 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
         sm->first_time = false;
     }
 
-    double yaw_offset   = 0.0;
-    double pitch_offset = 0.0;
-
-    yaw_offset = sm->yaw_offset->get_value();
-    pitch_offset = sm->pitch_offset->get_value();
-
     transform(sm);  // calculate submodel's initial conditions in world-coordinates
 
     FGAIBallistic* ballist = new FGAIBallistic;
@@ -308,8 +302,8 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setXoffset(sm->x_offset);
     ballist->setYoffset(sm->y_offset);
     ballist->setZoffset(sm->z_offset);
-    ballist->setPitchoffset(pitch_offset);
-    ballist->setYawoffset(yaw_offset);
+    ballist->setPitchoffset(sm->pitch_offset->get_value());
+    ballist->setYawoffset(sm->yaw_offset->get_value());
     ballist->setParentNodes(_selected_ac);
     ballist->setContentsNode(sm->contents_node);
     ballist->setWeight(sm->weight);
@@ -359,11 +353,8 @@ void FGSubmodelMgr::transform(submodel *sm)
     if (sm->speed_node != 0)
         sm->speed = sm->speed_node->getDoubleValue();
 
-    double yaw_offset   = 0.0;
-    double pitch_offset = 0.0;
-
-    yaw_offset = sm->yaw_offset->get_value();
-    pitch_offset = sm->pitch_offset->get_value();
+    double yaw_offset = sm->yaw_offset->get_value();
+    double pitch_offset = sm->pitch_offset->get_value();
 
     //cout << " name " << name << " id " << id << " sub id" << sub_id << endl;
 
