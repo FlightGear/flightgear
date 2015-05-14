@@ -270,7 +270,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         if (node == -1) {
             node = park->guid();
         } else if (node == 0) {
-            // HAndle case where parking doens't have a node
+            // Handle case where parking doesn't have a node
             if (firstFlight) {
                 node = park->guid();
             } else {
@@ -311,6 +311,10 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     // push each node on the taxi route as a waypoint
   //  int route;
     //cerr << "Building taxi route" << endl;
+    
+    // Note that the line wpt->setRouteIndex was commented out by revision [afcdbd] 2012-01-01,
+    // which breaks the rendering functions. 
+    // These can probably be generated on the fly however. 
     while (taxiRoute.next(&node)) {
         char buffer[10];
         snprintf(buffer, 10, "%lld", (long long int) node);
@@ -319,7 +323,8 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         FGAIWaypoint *wpt =
             createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
-       // wpt->setRouteIndex(route);
+        // TODO: find an alternative way to pass route information to the waypoint.
+        //wpt->setRouteIndex(route);
         //cerr << "Nodes left " << taxiRoute->nodesLeft() << " ";
         if (taxiRoute.nodesLeft() == 1) {
             // Note that we actually have hold points in the ground network, but this is just an initial test.
@@ -416,7 +421,8 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
         FGAIWaypoint *wpt =
             createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
-       // wpt->setRouteIndex(route);
+        //TODO: find an alternative way to pass route information to the waypoint.
+        //wpt->setRouteIndex(route);
         pushBackWaypoint(wpt);
     }
     return true;

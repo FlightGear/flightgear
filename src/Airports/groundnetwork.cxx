@@ -1140,7 +1140,6 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
 
 void FGGroundNetwork::render(bool visible)
 {
-
     SGMaterialLib *matlib = globals->get_matlib();
     if (group) {
         //int nr = ;
@@ -1163,7 +1162,8 @@ void FGGroundNetwork::render(bool visible)
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         //double dx = 0;
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
-            // Handle start point
+            // Handle start point i.e. the segment that is connected to the aircraft itself on the starting end
+            // and to the the first "real" taxi segment on the other end. 
             int pos = i->getCurrentPosition() - 1;
             if (pos >= 0) {
 
@@ -1178,7 +1178,7 @@ void FGGroundNetwork::render(bool visible)
                 double coveredDistance = length * 0.5;
                 SGGeod center;
                 SGGeodesy::direct(start, heading, coveredDistance, center, az2);
-                //cerr << "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
+                //std::cerr << "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << std::endl;
                 ///////////////////////////////////////////////////////////////////////////////
                 // Make a helper function out of this
                 osg::Matrix obj_pos;
@@ -1242,8 +1242,9 @@ void FGGroundNetwork::render(bool visible)
                 group->addChild( obj_trans );
                 /////////////////////////////////////////////////////////////////////
             } else {
-                //cerr << "BIG FAT WARNING: current position is here : " << pos << endl;
+                //std::cerr << "BIG FAT WARNING: current position is here : " << pos << std::endl;
             }
+            // Next: Draw the other taxi segments. 
             for (intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
                 osg::Matrix obj_pos;
                 int k = (*j)-1;

@@ -1048,7 +1048,7 @@ FGATCInstruction FGTowerController::getInstruction(int id)
 }
 
 void FGTowerController::render(bool visible) {
-    //cerr << "FGTowerController::render function not yet implemented" << endl;
+    //std::cerr << "FGTowerController::render function not yet implemented" << std::endl;
 }
 
 string FGTowerController::getName() {
@@ -1315,7 +1315,7 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
 
 void FGStartupController::render(bool visible)
 {
-
+    //std::cerr << "Rendering startup controller" << std::endl;
     SGMaterialLib *matlib = globals->get_matlib();
     if (group) {
         //int nr = ;
@@ -1716,7 +1716,7 @@ ActiveRunway *FGApproachController::getRunway(const string& name)
 }
 
 void FGApproachController::render(bool visible) {
-    //cerr << "FGApproachController::render function not yet implemented" << endl;
+    std::cerr << "FGApproachController::render function not yet implemented" << std::endl;
 }
 
 
