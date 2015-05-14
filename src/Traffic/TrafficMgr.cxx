@@ -454,14 +454,21 @@ void FGTrafficManager::shutdown()
             ::snprintf(buffer, 128, "%c/%c/%c/",
                        airport[0], airport[1], airport[2]);
             cacheData.append(buffer);
+            cacheData.append(airport + "-cache.txt");
+            
+            // Note: Intuitively, this doesn't make sense, but I do need to create the full file path first
+            // before creating the directories. The SimGear fgpath code has changed so that it first chops off
+            // the trailing dir separator and then determines the directory part of the file path by searching
+            // for the last dir separator. Effecively, this causes a full element of the directory tree to be
+            // skipped. 
+            SG_LOG(SG_GENERAL, SG_DEBUG, "Trying to create dir for : " << cacheData.c_str());
             if (!cacheData.exists()) {
                 cacheData.create_dir(0755);
             }
-            cacheData.append(airport + "-cache.txt");
-            //cerr << "Saving AI traffic heuristics" << endl;
             saveData = true;
             cachefile.open(cacheData.str().c_str());
             cachefile << "[TrafficManagerCachedata:ref:2011:09:04]" << endl;
+            
         }
     }
   
