@@ -183,6 +183,10 @@ static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 // Set current_options lon/lat given an airport id and parkig position name
 static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& parkpos )
 {
+  string fltType;
+  string acOperator;
+  string acType; // Currently not used by findAvailable parking, so safe to leave empty.
+  SGPath acData;
   if ( id.empty() )
     return false;
   
@@ -202,9 +206,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
   ParkingAssignment pka;
   double radius = fgGetDouble("/sim/dimensions/radius-m");
   if ((parkpos == string("AVAILABLE")) && (radius > 0)) {
-    string fltType;
-    string acOperator;
-    SGPath acData;
+    
     try {
       acData = globals->get_fg_home();
       acData.append("aircraft-data");
@@ -232,9 +234,10 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
       acOperator = fgGetString("/sim/aircraft-operator"   );
     }
     
-    string acType; // Currently not used by findAvailable parking, so safe to leave empty.
+    
     pka = dcs->getAvailableParking(radius, fltType, acType, acOperator);
     if (pka.isValid()) {
+        // why is the following line necessary?
       fgGetString("/sim/presets/parkpos");
       fgSetString("/sim/presets/parkpos", pka.parking()->getName());
     } else {
@@ -243,6 +246,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
       return false;
     }
   } else {
+      
     pka = dcs->getParkingByName(parkpos);
     if (!pka.isValid()) {
       SG_LOG( SG_GENERAL, SG_ALERT,
@@ -250,7 +254,14 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
       return false;
     }
   }
-  
+  // Why is the following line necessary?
+  fgGetString("/sim/presets/parkpos");
+  fgSetString("/sim/presets/parkpos", pka.parking()->getName());
+  // The problem is, this line doesn't work because the ParkingAssignment's refcounting mechanism:
+  // The parking will be released after this function returns. 
+  // As a temporary measure, I'll try to reserve the parking via the atc_manager, which should work, because it uses the same 
+  // mechanism as the AI traffic code. 
+  dcs->setParkingAvailable(pka.parking()->guid(), false);
   fgApplyStartOffset(pka.parking()->geod(), pka.parking()->getHeading());
   return true;
 }

@@ -42,7 +42,7 @@ FGATCManager::FGATCManager() {
 }
 
 FGATCManager::~FGATCManager() {
-
+    delete pk;
 }
 
 void FGATCManager::init() {
@@ -105,10 +105,11 @@ void FGATCManager::init() {
     FGAirport *apt = FGAirport::findByIdent(airport); 
     if (apt && onGround) {// && !runway.empty()) {
         FGAirportDynamics* dcs = apt->getDynamics();
-        ParkingAssignment pk(dcs->getParkingByName(parking));
+         pk = new ParkingAssignment(dcs->getParkingByName(parking));
       
         // No valid parking location, so either at the runway or at a random location.
-        if (pk.isValid()) {
+        if (pk->isValid()) {
+            dcs->setParkingAvailable(pk->parking()->guid(), false);
             fp = new FGAIFlightPlan;
             controller = apt->getDynamics()->getStartupController();
             int stationFreq = apt->getDynamics()->getGroundFrequency(1);
@@ -120,11 +121,11 @@ void FGATCManager::init() {
             leg = 1;
             //double, lat, lon, head; // Unused variables;
             //int getId = apt->getDynamics()->getParking(gateId, &lat, &lon, &head);
-            aircraftRadius = pk.parking()->getRadius();
-            string fltType = pk.parking()->getType(); // gate / ramp, ga, etc etc.
+            aircraftRadius = pk->parking()->getRadius();
+            string fltType = pk->parking()->getType(); // gate / ramp, ga, etc etc.
             string aircraftType; // Unused.
             string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
-            fp->setGate(pk);
+            fp->setGate(*pk);
             if (!(fp->createPushBack(&ai_ac,
                                      false,
                                      apt,
@@ -208,16 +209,17 @@ void FGATCManager::update ( double time ) {
             //cerr << "Shutting down the atc_mgr" << endl;
             return;
         }
-        //cerr << "Size of waypoint cue " << size << " ";
-        //for (int i = 0; i < size; i++) {
-        //    int val = fp->getRouteIndex(i);
-            //cerr << fp->getWayPoint(i)->getName() << " ";
+        // Test code: Print how far we're progressing along the taxi route. 
+        //std::cerr << "Size of waypoint cue " << size << " ";
+        for (int i = 0; i < size; i++) {
+            int val = fp->getRouteIndex(i);
+            //std::cerr << fp->getWayPoint(i)->getName() << " ";
             //if ((val) && (val != pos)) {
-                //intentions.push_back(val);
-                //cerr << "[done ] " << endl;
+            //    intentions.push_back(val);
+            //    std::cerr << "[done ] " << std::endl;
             //}
-        //}
-        //cerr << "[done ] " << endl;
+        }
+        //std::cerr << "[done ] " << std::endl;
     }
     if (fp) {
         //cerr << "Currently at leg : " << fp->getLeg() << endl;
