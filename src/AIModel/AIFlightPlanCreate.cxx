@@ -211,7 +211,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
                                        const string & acType,
                                        const string & airline)
 {
-
+    int route;
     // If this function is called during initialization,
     // make sure we obtain a valid gate ID first
     // and place the model at the location of the gate.
@@ -298,24 +298,24 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         // but make sure we always keep two active waypoints
         // to prevent a segmentation fault
         for (int i = 0; i < nrWaypointsToSkip - 3; i++) {
-            taxiRoute.next(&node);
+            taxiRoute.next(&node, &route);
         }
         
         gate.release(); // free up our gate as required
     } else {
         if (taxiRoute.size() > 1) {
-            taxiRoute.next(&node);     // chop off the first waypoint, because that is already the last of the pushback route
+            taxiRoute.next(&node, &route);     // chop off the first waypoint, because that is already the last of the pushback route
         }
     }
 
     // push each node on the taxi route as a waypoint
-  //  int route;
+    
     //cerr << "Building taxi route" << endl;
     
     // Note that the line wpt->setRouteIndex was commented out by revision [afcdbd] 2012-01-01,
     // which breaks the rendering functions. 
     // These can probably be generated on the fly however. 
-    while (taxiRoute.next(&node)) {
+    while (taxiRoute.next(&node, &route)) {
         char buffer[10];
         snprintf(buffer, 10, "%lld", (long long int) node);
         FGTaxiNode *tn =
@@ -323,8 +323,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         FGAIWaypoint *wpt =
             createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
-        // TODO: find an alternative way to pass route information to the waypoint.
-        //wpt->setRouteIndex(route);
+        wpt->setRouteIndex(route);
         //cerr << "Nodes left " << taxiRoute->nodesLeft() << " ";
         if (taxiRoute.nodesLeft() == 1) {
             // Note that we actually have hold points in the ground network, but this is just an initial test.
@@ -376,6 +375,7 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
                                        const string & acType,
                                        const string & airline)
 {
+    int route;
     gate = apt->getDynamics()->getAvailableParking(radius, fltType,
                                             acType, airline);
 
@@ -414,15 +414,15 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
     // those are created by createParking()
    // int route;
     for (int i = 0; i < size - 2; i++) {
-        taxiRoute.next(&node);
+        taxiRoute.next(&node, &route);
         char buffer[10];
         snprintf(buffer, 10, "%lld",  (long long int) node);
         FGTaxiNode *tn = gn->findNode(node);
         FGAIWaypoint *wpt =
             createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
-        //TODO: find an alternative way to pass route information to the waypoint.
-        //wpt->setRouteIndex(route);
+        
+        wpt->setRouteIndex(route);
         pushBackWaypoint(wpt);
     }
     return true;

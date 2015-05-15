@@ -145,13 +145,22 @@ void FGTaxiSegment::unblock(time_t now)
 /***************************************************************************
  * FGTaxiRoute
  **************************************************************************/
-bool FGTaxiRoute::next(PositionedID *nde)
+bool FGTaxiRoute::next(PositionedID *nde, int *rte)
 {
+    if (nodes.size() != (routes.size()) + 1) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "ALERT: Misconfigured TaxiRoute : " << nodes.size() << " " << routes.size());
+        throw sg_range_exception("Misconfigured taxi route");
+    }
     if (currNode == nodes.end())
         return false;
-  
     *nde = *(currNode);
-
+    if (currNode != nodes.begin()) {
+        *rte = *(currRoute);
+        currRoute++;
+    } else {
+        // Handle special case for the first node. 
+        *rte = -1 * *(currRoute);
+    }
     currNode++;
     return true;
 };
@@ -255,7 +264,7 @@ void FGGroundNetwork::init(FGAirport* pr)
       segment->setIndex(index++);
       
       if (segment->oppositeDirection) {
-        continue; // already establish
+        continue; // already established
       }
       
       FGTaxiSegment* opp = findSegment(segment->endNode, segment->startNode);
@@ -469,14 +478,21 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(PositionedID start, PositionedID 
   
     // assemble route from backtrace information
     PositionedIDVec nodes;
+    intVec routes;
     FGTaxiNode *bt = lastNode;
+    
     while (searchData[bt].previousNode != 0) {
         nodes.push_back(bt->guid());
+        FGTaxiSegment *segment = findSegment(searchData[bt].previousNode->guid(), bt->guid());
+        int idx = segment->getIndex();
+        routes.push_back(idx);
         bt = searchData[bt].previousNode;
+        
     }
     nodes.push_back(start);
     reverse(nodes.begin(), nodes.end());
-    return FGTaxiRoute(nodes, searchData[lastNode].score, 0);
+    reverse(routes.begin(), routes.end());
+    return FGTaxiRoute(nodes, routes, searchData[lastNode].score, 0);
 }
 
 /* ATC Related Functions */

@@ -51,6 +51,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     double vTaxi = ac->getPerformance()->vTaxi();
     double vTaxiBackward = vTaxi * (-2.0/3.0);
     double vTaxiReduced  = vTaxi * (2.0/3.0);
+    
     // Active runway can be conditionally set by ATC, so at the start of a new flight, this
     // must be reset.
     activeRunway.clear();
@@ -95,15 +96,17 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         }
         
         route.first();
-        PositionedID node, previous= 0;
+        PositionedID node;
+        int rte;
       
-        while (route.next(&node))
+        while (route.next(&node, &rte))
         {
             char buffer[10];
             snprintf (buffer, 10, "%lld",  (long long int) node);
             FGTaxiNode *tn = groundNet->findNode(node);
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), tn->geod(), dep->getElevation(), vTaxiBackward);
-          
+            
+            /*
             if (previous) {
               FGTaxiSegment* segment = groundNet->findSegment(previous, node);
               wpt->setRouteIndex(segment->getIndex());
@@ -111,10 +114,11 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
               // not on the route yet, make up a unique segment ID
               int x = (int) tn->guid();
               wpt->setRouteIndex(x);
-            }
-          
+            }*/
+            
+            wpt->setRouteIndex(rte);          
             pushBackWaypoint(wpt);
-            previous = node;
+            //previous = node;
         }
         // some special considerations for the last point:
         waypoints.back()->setName(string("PushBackPoint"));

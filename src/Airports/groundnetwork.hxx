@@ -108,32 +108,41 @@ class FGTaxiRoute
 {
 private:
     PositionedIDVec nodes;
+    intVec routes;
     double distance;
     PositionedIDVec::iterator currNode;
+    intVec::iterator currRoute;
 
 public:
     FGTaxiRoute() {
         distance = 0;
         currNode = nodes.begin();
+        currRoute = routes.begin();
     };
   
-    FGTaxiRoute(const PositionedIDVec& nds, double dist, int dpth) {
+    FGTaxiRoute(const PositionedIDVec& nds, intVec rts,  double dist, int dpth) {
         nodes = nds;
+        routes = rts;
         distance = dist;
         currNode = nodes.begin();
+        currRoute = routes.begin();
     };
 
     FGTaxiRoute& operator= (const FGTaxiRoute &other) {
         nodes = other.nodes;
+        routes = other.routes;
         distance = other.distance;
         currNode = nodes.begin();
+        currRoute = routes.begin();
         return *this;
     };
 
     FGTaxiRoute(const FGTaxiRoute& copy) :
             nodes(copy.nodes),
+            routes(copy.routes),
             distance(copy.distance),
-            currNode(nodes.begin())
+            currNode(nodes.begin()),
+            currRoute(routes.begin())
     {};
 
     bool operator< (const FGTaxiRoute &other) const {
@@ -142,10 +151,11 @@ public:
     bool empty () {
         return nodes.empty();
     };
-    bool next(PositionedID *nde);
+    bool next(PositionedID *nde, int *rte);
   
     void first() {
         currNode = nodes.begin();
+        currRoute = routes.begin();
     };
     int size() {
         return nodes.size();
