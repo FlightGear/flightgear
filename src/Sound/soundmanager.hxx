@@ -55,7 +55,7 @@ private:
     bool _is_initialized, _enabled;
     SGPropertyNode_ptr _sound_working, _sound_enabled, _volume, _device_name;
     SGPropertyNode_ptr _currentView;
-    SGPropertyNode_ptr _viewPosLon, _viewPosLat, _viewPosElev;
+    SGPropertyNode_ptr _viewX, _viewY, _viewZ;
     SGPropertyNode_ptr _velocityNorthFPS, _velocityEastFPS, _velocityDownFPS;
     SGPropertyNode_ptr _viewXoffset, _viewYoffset, _viewZoffset;
     std::auto_ptr<Listener> _listener;

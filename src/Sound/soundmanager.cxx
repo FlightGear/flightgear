@@ -71,9 +71,10 @@ void FGSoundManager::init()
     _device_name   = fgGetNode("/sim/sound/device-name");
 
     _currentView   = fgGetNode("sim/current-view");
-    _viewPosLon    = fgGetNode("sim/current-view/viewer-lon-deg");
-    _viewPosLat    = fgGetNode("sim/current-view/viewer-lat-deg");
-    _viewPosElev   = fgGetNode("sim/current-view/viewer-elev-ft");
+
+    _viewX = _currentView->getNode("viewer-x-m", true);
+    _viewY = _currentView->getNode("viewer-y-m", true);
+    _viewZ = _currentView->getNode("viewer-z-m", true);
   
     _velocityNorthFPS = fgGetNode("velocities/speed-north-fps", true);
     _velocityEastFPS  = fgGetNode("velocities/speed-east-fps", true);
@@ -172,12 +173,12 @@ void FGSoundManager::update(double dt)
         }
         if (enabled)
         {
-            SGGeod viewPosGeod(SGGeod::fromDegFt(_viewPosLon->getDoubleValue(),
-                                                 _viewPosLat->getDoubleValue(),
-                                                 _viewPosElev->getDoubleValue()));
-            SGVec3d cartPos = SGVec3d::fromGeod(viewPosGeod);
+            SGVec3d cartPos(_viewX->getDoubleValue(),
+                            _viewY->getDoubleValue(),
+                            _viewZ->getDoubleValue());
+            SGGeod geodPos = SGGeod::fromCart(cartPos);
 
-            set_position(cartPos, viewPosGeod);
+            set_position(cartPos, geodPos);
 
             SGQuatd viewOrientation;
             for (int i=0; i<4; ++i) {
