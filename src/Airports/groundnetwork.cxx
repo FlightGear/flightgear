@@ -505,7 +505,9 @@ void FGGroundNetwork::announcePosition(int id,
                                        double radius, int leg,
                                        FGAIAircraft * aircraft)
 {
+    
     assert(parent);
+    init(parent);
   
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id alread has an entry
