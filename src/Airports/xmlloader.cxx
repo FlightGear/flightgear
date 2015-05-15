@@ -50,9 +50,9 @@ void XMLLoader::load(FGAirportDynamics* d)
   }
 
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
-  if (!cache->isCachedFileModified(path) || cache->isReadOnly()) {
-    return;
-  }
+  //if (!cache->isCachedFileModified(path) || cache->isReadOnly()) {
+  //  return;
+  //}
   
   SG_LOG(SG_NAVAID, SG_INFO, "reading groundnet data from " << path);
   SGTimeStamp t;
