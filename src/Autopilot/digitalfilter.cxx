@@ -155,7 +155,7 @@ public:
 };
 
 // integrates x" + ax' + bx + c = 0
-class DampedOsciFilterImplementation : public GainFilterImplementation {
+class DampedOscillationFilterImplementation : public GainFilterImplementation {
 protected:
   InputValueList _aInput;
   InputValueList _bInput;
@@ -167,7 +167,7 @@ protected:
                   const std::string& cfg_name,
                   SGPropertyNode& prop_root );
 public:
-  DampedOsciFilterImplementation();
+  DampedOscillationFilterImplementation();
   double compute(  double dt, double input );
   virtual void initialize( double initvalue );
 };
@@ -525,17 +525,17 @@ double IntegratorFilterImplementation::compute(  double dt, double input )
 }
 
 /* --------------------------------------------------------------------------------- */
-DampedOsciFilterImplementation::DampedOsciFilterImplementation() :
+DampedOscillationFilterImplementation::DampedOscillationFilterImplementation() :
   _x0(0.0)
 {
 }
 
-void DampedOsciFilterImplementation::initialize( double initvalue )
+void DampedOscillationFilterImplementation::initialize( double initvalue )
 {
   _x2 = _x1 = _x0 = initvalue;
 }
 
-bool DampedOsciFilterImplementation::configure( SGPropertyNode& cfg_node,
+bool DampedOscillationFilterImplementation::configure( SGPropertyNode& cfg_node,
                                                 const std::string& cfg_name,
                                                 SGPropertyNode& prop_root )
 {
@@ -557,7 +557,7 @@ bool DampedOsciFilterImplementation::configure( SGPropertyNode& cfg_node,
   return false;
 }
 
-double DampedOsciFilterImplementation::compute( double dt, double input )
+double DampedOscillationFilterImplementation::compute( double dt, double input )
 {
   if (fabs(input) > 1e-15) {
     double dz = dt * input;
@@ -716,7 +716,7 @@ bool DigitalFilter::configure( SGPropertyNode& prop_root,
     componentForge["high-pass"          ] = digitalFilterFactory<HighPassFilterImplementation>;
     componentForge["lead-lag"           ] = digitalFilterFactory<LeadLagFilterImplementation>;
     componentForge["integrator"         ] = digitalFilterFactory<IntegratorFilterImplementation>;
-    componentForge["damped-osci"        ] = digitalFilterFactory<DampedOsciFilterImplementation>;
+    componentForge["damped-oscillation" ] = digitalFilterFactory<DampedOscillationFilterImplementation>;
   }
 
   const std::string type = cfg.getStringValue("type");
