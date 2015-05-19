@@ -310,11 +310,15 @@ FGViewer::setGoalPitchOffset_deg (double goal_pitch_offset_deg)
 {
   _dirty = true;
   _goal_pitch_offset_deg = goal_pitch_offset_deg;
-  if ( _goal_pitch_offset_deg < -90 ) {
-    _goal_pitch_offset_deg = -90.0;
+  /* The angle is set to 1/1000th of a degree from the poles to avoid the
+   * singularity where the azimuthal angle becomes undefined, inducing optical
+   * artefacts.  The arbitrary angle offset is visually unnoticeable while
+   * avoiding any possible floating point truncation artefacts. */
+  if ( _goal_pitch_offset_deg < -89.999 ) {
+    _goal_pitch_offset_deg = -89.999;
   }
-  if ( _goal_pitch_offset_deg > 90.0 ) {
-    _goal_pitch_offset_deg = 90.0;
+  if ( _goal_pitch_offset_deg > 89.999 ) {
+    _goal_pitch_offset_deg = 89.999;
   }
 
 }
