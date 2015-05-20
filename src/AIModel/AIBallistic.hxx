@@ -59,13 +59,13 @@ public:
     void setWind_from_east( double fps );
     void setWind_from_north( double fps );
     void setWind( bool val );
-    void setCd( double c );
+    void setCd(double cd);
+    void setCdRandomness(double randomness);
     void setMass( double m );
     void setWeight( double w );
     void setNoRoll( bool nr );
     void setRandom( bool r );
-    void setRandomness( double r );
-//    void setName(const string&);
+    void setLifeRandomness(double randomness);
     void setCollision(bool c);
     void setExpiry(bool e);
     void setImpact(bool i);
@@ -107,7 +107,6 @@ public:
 
     bool getHtAGL(double start);
     bool getSlaved() const;
-//    bool getFormate() const;
     bool getSlavedLoad() const;
 
     FGAIBallistic *ballistic;
@@ -119,8 +118,11 @@ public:
     SGPropertyNode_ptr _force_azimuth_node;
     SGPropertyNode_ptr _force_elevation_node;
 
-    SGPropertyNode_ptr _pnode; // node for parent model
-    SGPropertyNode_ptr _p_pos_node; // nodes for parent parameters
+    // Node for parent model
+    SGPropertyNode_ptr _pnode;
+
+    // Nodes for parent parameters
+    SGPropertyNode_ptr _p_pos_node;
     SGPropertyNode_ptr _p_lat_node;
     SGPropertyNode_ptr _p_lon_node;
     SGPropertyNode_ptr _p_alt_node;
@@ -169,13 +171,14 @@ private:
 
     bool   _aero_stabilised; // if true, object will align with trajectory
     double _drag_area;       // equivalent drag area in ft2
-    double _life_timer;      // seconds
     double _buoyancy;        // fps^2
     bool   _wind;            // if true, local wind will be applied to object
-    double _Cd;              // drag coefficient
+    double _cd;              // drag coefficient
+    double _cd_randomness;   // randomness of Cd. 1.0 means +- 100%, 0.0 means no randomness
+    double _life_timer;      // seconds
     double _mass;            // slugs
     bool   _random;          // modifier for Cd, life, az
-    double _randomness;		 // dimension for _random, only applies to life at present
+    double _life_randomness; // dimension for _random, only applies to life at present
     double _load_resistance; // ground load resistanc N/m^2
     double _frictionFactor;  // dimensionless modifier for Coefficient of Friction
     bool   _solid;           // if true ground is solid for FDMs
@@ -194,18 +197,6 @@ private:
 
     SGPropertyNode_ptr _impact_report_node;  // report node for impact and collision
     SGPropertyNode_ptr _contents_node;  // node for droptank etc. contents
-    //SGPropertyNode_ptr _pnode; // node for parent model
-    //SGPropertyNode_ptr _p_pos_node; // nodes for parent parameters
-    //SGPropertyNode_ptr _p_lat_node;
-    //SGPropertyNode_ptr _p_lon_node;
-    //SGPropertyNode_ptr _p_alt_node;
-    //SGPropertyNode_ptr _p_agl_node;
-    //SGPropertyNode_ptr _p_ori_node;
-    //SGPropertyNode_ptr _p_pch_node;
-    //SGPropertyNode_ptr _p_rll_node;
-    //SGPropertyNode_ptr _p_hdg_node;
-    //SGPropertyNode_ptr _p_vel_node;
-    //SGPropertyNode_ptr _p_spd_node;
 
     double _fuse_range;
 
@@ -213,6 +204,7 @@ private:
     std::string _force_path;
     std::string _contents_path;
 
+    void handleEndOfLife(double);
     void handle_collision();
     void handle_expiry();
     void handle_impact();
@@ -221,14 +213,9 @@ private:
     void setContents(double c);
     void calcVSHS();
     void calcNE();
-    //void setOffsetPos(SGGeod pos, double heading, double pitch, double roll);
-    //void setOffsetVelocity(double dt, SGGeod pos);
 
     SGVec3d getCartOffsetPos(SGGeod pos, double heading, double pitch, double roll) const;
 
-    //double getDistanceLoadToHitch() const;
-    //double getElevLoadToHitch() const;
-    //double getBearingLoadToHitch() const;
     double getRecip(double az);
     double getMass() const;
 
@@ -237,12 +224,6 @@ private:
 
     SGVec3d _oldcartoffsetPos;
     SGVec3d _oldcartPos;
-
-    //SGGeod _parentpos;
-    //SGGeod _oldpos;
-    //SGGeod _offsetpos;
-    //SGGeod _oldoffsetpos;
-
 };
 
 #endif  // _FG_AIBALLISTIC_HXX

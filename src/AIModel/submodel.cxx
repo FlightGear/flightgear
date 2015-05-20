@@ -259,7 +259,7 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setName(sm->name);
     ballist->setSlaved(sm->slaved);
     ballist->setRandom(sm->random);
-    ballist->setRandomness(sm->randomness);
+    ballist->setLifeRandomness(sm->randomness);
     ballist->setLatitude(offsetpos.getLatitudeDeg());
     ballist->setLongitude(offsetpos.getLongitudeDeg());
     ballist->setAltitude(offsetpos.getElevationFt());
