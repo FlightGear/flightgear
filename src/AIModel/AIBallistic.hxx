@@ -51,6 +51,8 @@ public:
 
     void setAzimuth( double az );
     void setElevation( double el );
+    void setAzimuthRandomError(double error);
+    void setElevationRandomError(double error);
     void setRoll( double rl );
     void setStabilisation( bool val );
     void setDragArea( double a );
@@ -169,11 +171,14 @@ public:
 
 private:
 
+    double _az_random_error; // maximum azimuth error in degrees
+    double _el_random_error; // maximum elevation error in degrees
     bool   _aero_stabilised; // if true, object will align with trajectory
     double _drag_area;       // equivalent drag area in ft2
     double _buoyancy;        // fps^2
     bool   _wind;            // if true, local wind will be applied to object
-    double _cd;              // drag coefficient
+    double _cd;              // current drag coefficient
+    double _init_cd;         // initial drag coefficient
     double _cd_randomness;   // randomness of Cd. 1.0 means +- 100%, 0.0 means no randomness
     double _life_timer;      // seconds
     double _mass;            // slugs

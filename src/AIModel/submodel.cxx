@@ -259,11 +259,13 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setName(sm->name);
     ballist->setSlaved(sm->slaved);
     ballist->setRandom(sm->random);
-    ballist->setLifeRandomness(sm->randomness);
+    ballist->setLifeRandomness(sm->life_randomness->get_value());
     ballist->setLatitude(offsetpos.getLatitudeDeg());
     ballist->setLongitude(offsetpos.getLongitudeDeg());
     ballist->setAltitude(offsetpos.getElevationFt());
+    ballist->setAzimuthRandomError(sm->azimuth_error->get_value());
     ballist->setAzimuth(IC.azimuth);
+    ballist->setElevationRandomError(sm->elevation_error->get_value());
     ballist->setElevation(IC.elevation);
     ballist->setRoll(IC.roll);
     ballist->setSpeed(IC.speed / SG_KT_TO_FPS);
@@ -274,6 +276,7 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setLife(sm->life);
     ballist->setBuoyancy(sm->buoyancy);
     ballist->setWind(sm->wind);
+    ballist->setCdRandomness(sm->cd_randomness->get_value());
     ballist->setCd(sm->cd);
     ballist->setStabilisation(sm->aero_stabilised);
     ballist->setNoRoll(sm->no_roll);
@@ -415,7 +418,6 @@ void FGSubmodelMgr::transform(submodel *sm)
     cosRz = cos(IC.azimuth * SG_DEGREES_TO_RADIANS);
     sinRz = sin(IC.azimuth * SG_DEGREES_TO_RADIANS);
 
-
     // Get submodel initial velocity vector angles in XZ and XY planes.
     // This vector should be added to aircraft's vector.
     IC.elevation += (yaw_offset * sinRx) + (pitch_offset * cosRx);
@@ -550,16 +552,43 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
         sm->ext_force        = entry_node->getBoolValue("external-force", false);
         sm->force_path       = entry_node->getStringValue("force-path", "");
         sm->random           = entry_node->getBoolValue("random", false);
-        sm->randomness       = entry_node->getDoubleValue("randomness", 0.5);
 
         SGPropertyNode_ptr prop_root = fgGetNode("/", true);
         SGPropertyNode n;
 
         SGPropertyNode_ptr a = entry_node->getNode("yaw-offset");
-        sm->yaw_offset   = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n );
+        sm->yaw_offset   = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n);
 
         a = entry_node->getNode("pitch-offset");
-        sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n );
+        sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n);
+
+        // Randomness
+        a = entry_node->getNode("randomness", true);
+        SGPropertyNode_ptr b;
+
+        // Maximum azimuth randomness error in degrees
+        b = a->getNode("azimuth");
+        sm->azimuth_error   = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+        // Maximum elevation randomness error in degrees
+        b = a->getNode("elevation");
+        sm->elevation_error = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+        // Randomness of Cd (plus or minus)
+        b = a->getNode("cd");
+        if (!b) {
+            b = a->getNode("cd", true);
+            b->setDoubleValue(0.1);
+        }
+        sm->cd_randomness   = new FGXMLAutopilot::InputValue(*prop_root, *b);
+
+        // Randomness of life (plus or minus)
+        b = a->getNode("life");
+        if (!b) {
+            b = a->getNode("life", true);
+            b->setDoubleValue(0.5);
+        }
+        sm->life_randomness = new FGXMLAutopilot::InputValue(*prop_root, *b);
 
         if (sm->contents_node != 0)
             sm->contents = sm->contents_node->getDoubleValue();

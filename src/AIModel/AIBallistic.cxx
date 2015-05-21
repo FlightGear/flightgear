@@ -48,14 +48,17 @@ _ht_agl_ft(0.0),
 _azimuth(0.0),
 _elevation(0.0),
 _rotation(0.0),
+_az_random_error(0.0),
+_el_random_error(0.0),
 hs(0),
 _elapsed_time(0),
 _aero_stabilised(false),
 _drag_area(0.007),
 _cd(0.029),
+_init_cd(0.029),
 _cd_randomness(0.0),
-_life_timer(0.0),
 _buoyancy(0),
+_life_timer(0.0),
 _wind(true),
 _mass(0),
 _random(false),
@@ -274,13 +277,24 @@ void FGAIBallistic::update(double dt)
 
 void FGAIBallistic::setAzimuth(double az) {
     if (_random)
-        hdg = _azimuth = (az - 5 ) + (10 * sg_random());
+        hdg = _azimuth = az - _az_random_error + 2 * _az_random_error * sg_random();
     else 
         hdg = _azimuth = az;
 }
 
+void FGAIBallistic::setAzimuthRandomError(double error) {
+    _az_random_error = error;
+}
+
+void FGAIBallistic::setElevationRandomError(double error) {
+    _el_random_error = error;
+}
+
 void FGAIBallistic::setElevation(double el) {
-    pitch = _elevation = el;
+    if (_random)
+        pitch = _elevation = el - _el_random_error + 2 * _el_random_error * sg_random();
+    else
+        pitch = _elevation = el;
 }
 
 void FGAIBallistic::setRoll(double rl) {
@@ -328,6 +342,7 @@ void FGAIBallistic::setWind(bool val) {
 
 void FGAIBallistic::setCd(double cd) {
     _cd = cd;
+    _init_cd = cd;
 }
 
 void FGAIBallistic::setCdRandomness(double randomness) {
@@ -664,23 +679,28 @@ void FGAIBallistic::Run(double dt) {
     // Set the contents in the appropriate tank or other property in the parent to zero
     setContents(0);
 
-    // Randomize Cd by +- a certain percentage of the ideal Cd
-    double Cd;
-    if (_random)
-        Cd = _cd * (1 - _cd_randomness + 2 * _cd_randomness * sg_random());
-    else
-        Cd = _cd;
+    if (_random) {
+        // Keep the new Cd within +- 10% of the current Cd to avoid a fluctuating value
+        double cd_min = _cd * 0.9;
+        double cd_max = _cd * 1.1;
+
+        // Randomize Cd by +- a certain percentage of the initial Cd
+        _cd = _init_cd * (1 - _cd_randomness + 2 * _cd_randomness * sg_random());
+
+        if (_cd < cd_min) _cd = cd_min;
+        if (_cd > cd_max) _cd = cd_max;
+    }
 
     // Adjust Cd by Mach number. The equations are based on curves
     // for a conventional shell/bullet (no boat-tail).
     double Cdm;
 
     if (Mach < 0.7)
-        Cdm = 0.0125 * Mach + Cd;
+        Cdm = 0.0125 * Mach + _cd;
     else if (Mach < 1.2)
-        Cdm = 0.3742 * pow(Mach, 2) - 0.252 * Mach + 0.0021 + Cd;
+        Cdm = 0.3742 * pow(Mach, 2) - 0.252 * Mach + 0.0021 + _cd;
     else
-        Cdm = 0.2965 * pow(Mach, -1.1506) + Cd;
+        Cdm = 0.2965 * pow(Mach, -1.1506) + _cd;
 
     //cout <<_name << " Mach " << Mach << " Cdm " << Cdm 
     //    << " ballistic speed kts "<< speed <<  endl;

@@ -51,7 +51,10 @@ public:
         double             drag_area;
         double             life;
         double             buoyancy;
-        double             randomness;
+        FGXMLAutopilot::InputValue_ptr azimuth_error;
+        FGXMLAutopilot::InputValue_ptr elevation_error;
+        FGXMLAutopilot::InputValue_ptr cd_randomness;
+        FGXMLAutopilot::InputValue_ptr life_randomness;
         bool               wind;
         bool               first_time;
         double             cd;
