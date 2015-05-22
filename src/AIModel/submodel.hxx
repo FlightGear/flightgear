@@ -120,14 +120,6 @@ private:
     submodel_vector_type       subsubmodels;
     submodel_vector_iterator   submodel_iterator, subsubmodel_iterator;
 
-    //double Rx, Ry, Rz;
-    //double Sx, Sy, Sz;
-    //double Tx, Ty, Tz;
-
-    float cosRx, sinRx;
-    float cosRy, sinRy;
-    float cosRz, sinRz;
-
     int index;
 
     double ft_per_deg_longitude;
@@ -143,14 +135,13 @@ private:
     double _parent_pitch;
     double _parent_roll;
     double _parent_speed;
-    //double _parent_ID;
 
     double _x_offset;
     double _y_offset;
     double _z_offset;
 
-
-    static const double lbs_to_slugs; //conversion factor
+    // Conversion factor
+    static const double lbs_to_slugs;
 
     double contrail_altitude;
 
@@ -184,21 +175,17 @@ private:
     SGPropertyNode_ptr _selected_ac;
 
     IC_struct  IC;
-    
-    /**
-     * Helper to retrieve the AI manager, if it currently exists
-     */
+
+    // Helper to retrieve the AI manager, if it currently exists
     FGAIManager* aiManager();
-    
+
     void loadAI();
     void loadSubmodels();
     void setData(int id, const std::string& path, bool serviceable, const std::string& property_path, submodel_vector_type& models);
     void valueChanged (SGPropertyNode *);
     void transform(submodel *);
     void setParentNode(int parent_id);
-
     bool release(submodel *, double dt);
-
 
     int _count;
 

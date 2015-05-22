@@ -345,11 +345,6 @@ void FGSubmodelMgr::transform(submodel *sm)
     if (sm->speed_node != 0)
         sm->speed = sm->speed_node->getDoubleValue();
 
-    double yaw_offset = sm->yaw_offset->get_value();
-    double pitch_offset = sm->pitch_offset->get_value();
-
-    //cout << " name " << name << " id " << id << " sub id" << sub_id << endl;
-
     // set the Initial Conditions for the types of submodel parent 
 
     if (_impact || _hit || _expiry) {
@@ -385,20 +380,9 @@ void FGSubmodelMgr::transform(submodel *sm)
         setParentNode(id);
     }
 
-    //cout << "Submodel: setting IC "<< name << endl;
-    //cout << "heading " << IC.azimuth << endl ;
-    //cout << "speed down " << IC.speed_down_fps << endl ;
-    //cout << "speed east " << IC.speed_east_fps << endl ;
-    //cout << "speed north " << IC.speed_north_fps << endl ;
-    //cout << "parent speed fps in " << IC.speed << "sm speed in " << sm->speed << endl ;
-    //cout << "lat " << IC.lat;
-    //cout << "alt " << IC.alt <<  endl ;
-
     // Set the Initial Conditions that are common to all types of parent
     IC.wind_from_east =  _user_wind_from_east_node->getDoubleValue();
     IC.wind_from_north = _user_wind_from_north_node->getDoubleValue();
-
-    //cout << "wind e " << IC.wind_from_east << " n " << IC.wind_from_north << endl;
 
     userpos.setLatitudeDeg(IC.lat);
     userpos.setLongitudeDeg(IC.lon);
@@ -410,18 +394,15 @@ void FGSubmodelMgr::transform(submodel *sm)
 
     setOffsetPos();
 
-    // Pre-process the trig functions
-    cosRx = cos(-IC.roll * SG_DEGREES_TO_RADIANS);
-    sinRx = sin(-IC.roll * SG_DEGREES_TO_RADIANS);
-    cosRy = cos(-IC.elevation * SG_DEGREES_TO_RADIANS);
-    sinRy = sin(-IC.elevation * SG_DEGREES_TO_RADIANS);
-    cosRz = cos(IC.azimuth * SG_DEGREES_TO_RADIANS);
-    sinRz = sin(IC.azimuth * SG_DEGREES_TO_RADIANS);
+    double yaw_offset = sm->yaw_offset->get_value();
+    double pitch_offset = sm->pitch_offset->get_value();
 
-    // Get submodel initial velocity vector angles in XZ and XY planes.
-    // This vector should be added to aircraft's vector.
-    IC.elevation += (yaw_offset * sinRx) + (pitch_offset * cosRx);
-    IC.azimuth   += (yaw_offset * cosRx) - (pitch_offset * sinRx);
+    // Compute azimuth and elevation given the yaw and pitch offsets
+    SGQuatd ic_quat = SGQuatd::fromYawPitchRollDeg(IC.azimuth, IC.elevation, IC.roll);
+    ic_quat *= SGQuatd::fromYawPitchRollDeg(yaw_offset, pitch_offset, 0.0);
+
+    double ic_roll;
+    ic_quat.getEulerDeg(IC.azimuth, IC.elevation, ic_roll);
 
     // Calculate the total speed north
     IC.total_speed_north = sm->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
@@ -440,23 +421,25 @@ void FGSubmodelMgr::transform(submodel *sm)
             + IC.total_speed_east * IC.total_speed_east
             + IC.total_speed_down * IC.total_speed_down);
 
+    cout << "sm speed: " << sm->speed << " IC speed: " << IC.speed << endl;
+    cout << "az1: " << IC.azimuth << " el1: " << IC.elevation << endl;
+
     // If speeds are low this calculation can become unreliable
     if (IC.speed > 1) {
         IC.azimuth = atan2(IC.total_speed_east, IC.total_speed_north) * SG_RADIANS_TO_DEGREES;
-        //        cout << "azimuth1 " << IC.azimuth<<endl;
 
         // Rationalize the output
         if (IC.azimuth < 0)
             IC.azimuth += 360;
         else if (IC.azimuth >= 360)
             IC.azimuth -= 360;
-        // cout << "azimuth2 " << IC.azimuth<<endl;
 
         IC.elevation = -atan(IC.total_speed_down / sqrt(IC.total_speed_north
             * IC.total_speed_north + IC.total_speed_east * IC.total_speed_east))
             * SG_RADIANS_TO_DEGREES;
     }
-    //cout << "IC.speed " << IC.speed / SG_KT_TO_FPS << endl;
+
+    cout << "az2: " << IC.azimuth << " el2: " << IC.elevation << endl;
 }
 
 void FGSubmodelMgr::updatelat(double lat)
