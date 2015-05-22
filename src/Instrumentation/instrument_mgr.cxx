@@ -222,9 +222,8 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new TCAS( node ), 0.2);
             
         } else {
-            SG_LOG( SG_INSTR, SG_ALERT, "Unknown top level section: "
-                    << name );
-            return false;
+            SG_LOG( SG_INSTR, SG_ALERT,
+                     "Unknown top level section in instrumentation: " << name );
         }
       
       // only push to our array if we actually built an insturment
