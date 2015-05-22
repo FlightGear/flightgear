@@ -224,6 +224,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         } else {
             SG_LOG( SG_INSTR, SG_ALERT,
                      "Unknown top level section in instrumentation: " << name );
+            continue;
         }
       
       // only push to our array if we actually built an insturment
