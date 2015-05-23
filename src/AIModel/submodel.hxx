@@ -91,9 +91,6 @@ public:
         double     speed_down_fps;
         double     speed_east_fps;
         double     speed_north_fps;
-        double     total_speed_down;
-        double     total_speed_east;
-        double     total_speed_north;
         double     mass;
         int        id;
         bool       no_roll;

@@ -394,39 +394,26 @@ void FGSubmodelMgr::transform(submodel *sm)
 
     setOffsetPos();
 
-    double yaw_offset = sm->yaw_offset->get_value();
-    double pitch_offset = sm->pitch_offset->get_value();
+    // Compute initial orientation using yaw and pitch offsets and parent's orientation
+    const double yaw_offset = sm->yaw_offset->get_value();
+    const double pitch_offset = sm->pitch_offset->get_value();
 
-    // Compute azimuth and elevation given the yaw and pitch offsets
     SGQuatd ic_quat = SGQuatd::fromYawPitchRollDeg(IC.azimuth, IC.elevation, IC.roll);
     ic_quat *= SGQuatd::fromYawPitchRollDeg(yaw_offset, pitch_offset, 0.0);
 
-    double ic_roll;
-    ic_quat.getEulerDeg(IC.azimuth, IC.elevation, ic_roll);
+    // Calculate total speed using speeds of submodel and parent
+    SGVec3d total_speed = SGVec3d(IC.speed_north_fps, IC.speed_east_fps, IC.speed_down_fps);
+    total_speed += ic_quat.rotate(SGVec3d(sm->speed, 0, 0));
 
-    // Calculate the total speed north
-    IC.total_speed_north = sm->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
-            * cos(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_north_fps;
-
-    // Calculate the total speed east
-    IC.total_speed_east = sm->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
-            * sin(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_east_fps;
-
-    // Calculate the total speed down
-    IC.total_speed_down = sm->speed * -sin(IC.elevation * SG_DEGREES_TO_RADIANS)
-            + IC.speed_down_fps;
-
-    // Re-calculate speed, elevation and azimuth
-    IC.speed = sqrt(IC.total_speed_north * IC.total_speed_north
-            + IC.total_speed_east * IC.total_speed_east
-            + IC.total_speed_down * IC.total_speed_down);
-
-    cout << "sm speed: " << sm->speed << " IC speed: " << IC.speed << endl;
-    cout << "az1: " << IC.azimuth << " el1: " << IC.elevation << endl;
+    IC.speed = length(total_speed);
 
     // If speeds are low this calculation can become unreliable
     if (IC.speed > 1) {
-        IC.azimuth = atan2(IC.total_speed_east, IC.total_speed_north) * SG_RADIANS_TO_DEGREES;
+        const double total_speed_north = total_speed.x();
+        const double total_speed_east  = total_speed.y();
+        const double total_speed_down  = total_speed.z();
+
+        IC.azimuth = atan2(total_speed_east, total_speed_north) * SG_RADIANS_TO_DEGREES;
 
         // Rationalize the output
         if (IC.azimuth < 0)
@@ -434,12 +421,14 @@ void FGSubmodelMgr::transform(submodel *sm)
         else if (IC.azimuth >= 360)
             IC.azimuth -= 360;
 
-        IC.elevation = -atan(IC.total_speed_down / sqrt(IC.total_speed_north
-            * IC.total_speed_north + IC.total_speed_east * IC.total_speed_east))
+        IC.elevation = -atan(total_speed_down / sqrt(total_speed_north
+            * total_speed_north + total_speed_east * total_speed_east))
             * SG_RADIANS_TO_DEGREES;
     }
-
-    cout << "az2: " << IC.azimuth << " el2: " << IC.elevation << endl;
+    else {
+        double ic_roll;
+        ic_quat.getEulerDeg(IC.azimuth, IC.elevation, ic_roll);
+    }
 }
 
 void FGSubmodelMgr::updatelat(double lat)
