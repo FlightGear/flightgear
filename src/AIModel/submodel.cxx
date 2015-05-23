@@ -290,9 +290,9 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setForceStabilisation(sm->force_stabilised);
     ballist->setExternalForce(sm->ext_force);
     ballist->setForcePath(sm->force_path.c_str());
-    ballist->setXoffset(sm->x_offset);
-    ballist->setYoffset(sm->y_offset);
-    ballist->setZoffset(sm->z_offset);
+    ballist->setXoffset(_x_offset);
+    ballist->setYoffset(_y_offset);
+    ballist->setZoffset(_z_offset);
     ballist->setPitchoffset(sm->pitch_offset->get_value());
     ballist->setYawoffset(sm->yaw_offset->get_value());
     ballist->setParentNodes(_selected_ac);
@@ -388,9 +388,16 @@ void FGSubmodelMgr::transform(submodel *sm)
     userpos.setLongitudeDeg(IC.lon);
     userpos.setElevationFt(IC.alt);
 
-    _x_offset = sm->x_offset;
-    _y_offset = sm->y_offset;
-    _z_offset = sm->z_offset;
+    if (sm->offsets_in_meter) {
+        _x_offset = -sm->x_offset->get_value() * SG_METER_TO_FEET;
+        _y_offset =  sm->y_offset->get_value() * SG_METER_TO_FEET;
+        _z_offset =  sm->z_offset->get_value() * SG_METER_TO_FEET;
+    }
+    else {
+        _x_offset = sm->x_offset->get_value();
+        _y_offset = sm->y_offset->get_value();
+        _z_offset = sm->z_offset->get_value();
+    }
 
     setOffsetPos();
 
@@ -501,9 +508,6 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
         sm->delay            = entry_node->getDoubleValue("delay", 0.25);
         sm->count            = entry_node->getIntValue("count", 1);
         sm->slaved           = entry_node->getBoolValue("slaved", false);
-        sm->x_offset         = entry_node->getDoubleValue("x-offset", 0.0);
-        sm->y_offset         = entry_node->getDoubleValue("y-offset", 0.0);
-        sm->z_offset         = entry_node->getDoubleValue("z-offset", 0.0);
         sm->drag_area        = entry_node->getDoubleValue("eda", 0.034);
         sm->life             = entry_node->getDoubleValue("life", 900.0);
         sm->buoyancy         = entry_node->getDoubleValue("buoyancy", 0);
@@ -527,16 +531,41 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
 
         SGPropertyNode_ptr prop_root = fgGetNode("/", true);
         SGPropertyNode n;
+        SGPropertyNode_ptr a, b;
 
-        SGPropertyNode_ptr a = entry_node->getNode("yaw-offset");
+        a = entry_node->getNode("yaw-offset");
         sm->yaw_offset   = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n);
 
         a = entry_node->getNode("pitch-offset");
         sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n);
 
+        // Offsets
+        a = entry_node->getNode("offsets", false);
+        sm->offsets_in_meter = (a != 0);
+
+        if (a) {
+            b = a->getNode("x-m");
+            sm->x_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+            b = a->getNode("y-m");
+            sm->y_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+            b = a->getNode("z-m");
+            sm->z_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+        }
+        else {
+            b = entry_node->getNode("x-offset");
+            sm->x_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+            b = entry_node->getNode("y-offset");
+            sm->y_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+            b = entry_node->getNode("z-offset");
+            sm->z_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+        }
+
         // Randomness
         a = entry_node->getNode("randomness", true);
-        SGPropertyNode_ptr b;
 
         // Maximum azimuth randomness error in degrees
         b = a->getNode("azimuth");

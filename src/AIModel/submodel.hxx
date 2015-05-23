@@ -43,9 +43,10 @@ public:
         double             delay;
         double             timer;
         int                count;
-        double             x_offset;
-        double             y_offset;
-        double             z_offset;
+        bool               offsets_in_meter;
+        FGXMLAutopilot::InputValue_ptr x_offset;
+        FGXMLAutopilot::InputValue_ptr y_offset;
+        FGXMLAutopilot::InputValue_ptr z_offset;
         FGXMLAutopilot::InputValue_ptr yaw_offset;
         FGXMLAutopilot::InputValue_ptr pitch_offset;
         double             drag_area;
