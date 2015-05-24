@@ -533,12 +533,6 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
         SGPropertyNode n;
         SGPropertyNode_ptr a, b;
 
-        a = entry_node->getNode("yaw-offset");
-        sm->yaw_offset   = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n);
-
-        a = entry_node->getNode("pitch-offset");
-        sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, a ? *a : n);
-
         // Offsets
         a = entry_node->getNode("offsets", false);
         sm->offsets_in_meter = (a != 0);
@@ -552,8 +546,16 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
 
             b = a->getNode("z-m");
             sm->z_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+            b = a->getNode("yaw");
+            sm->yaw_offset   = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+            b = a->getNode("pitch");
+            sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
         }
         else {
+            SG_LOG(SG_AI, SG_WARN, "Submodels: <*-offset> is deprecated. Use <offsets> instead");
+
             b = entry_node->getNode("x-offset");
             sm->x_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
 
@@ -562,6 +564,12 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
 
             b = entry_node->getNode("z-offset");
             sm->z_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+            b = entry_node->getNode("yaw-offset");
+            sm->yaw_offset   = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+
+            b = entry_node->getNode("pitch-offset");
+            sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
         }
 
         // Randomness
