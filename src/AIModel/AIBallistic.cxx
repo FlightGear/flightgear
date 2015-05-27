@@ -319,7 +319,7 @@ void FGAIBallistic::setDragArea(double a) {
 
 void FGAIBallistic::setLife(double seconds) {
     if (_random)
-        life = seconds * (1 - _life_randomness + 2 * _life_randomness * sg_random());
+        life = seconds * _life_randomness + (seconds * (1 -_life_randomness) * sg_random());
     else
         life = seconds;
 }
