@@ -341,6 +341,119 @@ void MetarBridge::valueChanged(SGPropertyNode * node)
   }
 }
 
+/* ------------- 8.3kHz Channel implementation ---------------------- */
+
+class EightPointThreeFrequencyFormatter :
+		public FrequencyFormatterBase,
+		public SGPropertyChangeListener {
+public:
+	EightPointThreeFrequencyFormatter( SGPropertyNode_ptr root,
+			const char * channel,
+			const char * fmt,
+			const char * width,
+			const char * frq,
+			const char * cnum ) :
+		_channel( root, channel ),
+		_frequency( root, frq ),
+		_channelSpacing( root, width ),
+		_formattedChannel( root, fmt ),
+		_channelNum( root, cnum )
+	{
+		// ensure properties exist.
+		_channel.node(true);
+		_frequency.node(true);
+		_channelSpacing.node(true);
+		_channelNum.node(true);
+		_formattedChannel.node(true);
+
+		_channel.node()->addChangeListener( this, true );
+		_channelNum.node()->addChangeListener( this, true );
+	}
+
+	virtual ~EightPointThreeFrequencyFormatter()
+	{
+		  _channel.node()->removeChangeListener( this );
+		  _channelNum.node()->removeChangeListener( this );
+	}
+
+private:
+	EightPointThreeFrequencyFormatter( const EightPointThreeFrequencyFormatter & );
+	EightPointThreeFrequencyFormatter & operator = ( const EightPointThreeFrequencyFormatter & );
+
+	void valueChanged (SGPropertyNode * prop) {
+		if( prop == _channel.node() )
+			setFrequency(prop->getDoubleValue());
+		else if( prop == _channelNum.node() )
+			setChannel(prop->getIntValue());
+	}
+
+	void setChannel( int channel ) {
+		channel %= 3040;
+		if( channel < 0 ) channel += 3040;
+		double f = 118.000 + 0.025*(channel/4) + 0.005*(channel%4);
+		if( f != _channel )	_channel = f;
+	}
+
+	void setFrequency( double channel ) {
+		// format as fixed decimal "nnn.nnn"
+		std::ostringstream buf;
+		buf << std::fixed
+		    << std::setw(6)
+		    << std::setfill('0')
+		    << std::setprecision(3)
+		    << _channel;
+		_formattedChannel = buf.str();
+
+		// sanitize range and round to nearest kHz.
+		unsigned c = static_cast<int>(SGMiscd::round(SGMiscd::clip( channel, 118.0, 136.99 ) * 1000));
+
+		if ( (c % 25)  == 0 ) {
+			// legacy 25kHz channels continue to be just that.
+			_channelSpacing = 25.0;
+			_frequency = c / 1000.0;
+
+			int channelNum = (c-118000)/25*4;
+			if( channelNum != _channelNum ) _channelNum = channelNum;
+
+			if( _frequency != channel ) {
+				_channel = _frequency; //triggers recursion
+			}
+		} else {
+			_channelSpacing = 8.33;
+
+			// 25kHz base frequency: xxx.000, xxx.025, xxx.050, xxx.075
+			unsigned base25 = (c/25) * 25;
+
+			// add n*8.33 to the 25kHz frequency
+			unsigned subChannel = SGMisc<unsigned>::clip((c - base25)/5-1, 0, 2 );
+
+			_frequency = (base25 + 8.33 * subChannel)/1000.0;
+
+			int channelNum = (base25-118000)/25*4 + subChannel+1;
+			if( channelNum != _channelNum ) _channelNum = channelNum;
+
+			// set to correct channel on bogous input
+			double sanitizedChannel = (base25 + 5*(subChannel+1))/1000.0;
+			if( sanitizedChannel != channel ) {
+				_channel = sanitizedChannel; // triggers recursion
+			}
+		}
+	}
+
+	double getFrequency() const {
+		return _channel;
+	}
+
+
+    PropertyObject<double> _channel;
+    PropertyObject<double> _frequency;
+    PropertyObject<double> _channelSpacing;
+    PropertyObject<string> _formattedChannel;
+    PropertyObject<int>   _channelNum;
+
+};
+
+
 /* ------------- The CommRadio implementation ---------------------- */
 
 class CommRadioImpl: public CommRadio, OutputProperties {
@@ -365,8 +478,8 @@ private:
   #if defined(ENABLE_FLITE)
   AtisSpeaker _atisSpeaker;
   #endif
-  FrequencyFormatter _useFrequencyFormatter;
-  FrequencyFormatter _stbyFrequencyFormatter;
+  SGSharedPtr<FrequencyFormatterBase> _useFrequencyFormatter;
+  SGSharedPtr<FrequencyFormatterBase> _stbyFrequencyFormatter;
   const SignalQualityComputerRef _signalQualityComputer;
 
   double _stationTTL;
@@ -383,6 +496,7 @@ private:
   PropertyObject<string> _atis;
   PropertyObject<bool> _addNoise;
   PropertyObject<double> _cutoffSignalQuality;
+
 };
 
 CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
@@ -390,12 +504,6 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
         fgGetNode("/instrumentation", true)->getNode(node->getStringValue("name", "comm"), node->getIntValue("number", 0), true)),
         _num(node->getIntValue("number", 0)),
         _metarBridge(new MetarBridge()),
-        _useFrequencyFormatter(_rootNode->getNode("frequencies/selected-mhz", true),
-            _rootNode->getNode("frequencies/selected-mhz-fmt", true), 0.025, 118.0, 137.0),
-
-        _stbyFrequencyFormatter(_rootNode->getNode("frequencies/standby-mhz", true),
-            _rootNode->getNode("frequencies/standby-mhz-fmt", true), 0.025, 118.0, 137.0),
-
         _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer()),
 
         _stationTTL(0.0),
@@ -410,6 +518,36 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
         _addNoise(_rootNode->getNode("add-noise", true)),
         _cutoffSignalQuality(_rootNode->getNode("cutoff-signal-quality", true))
 {
+  if( node->getBoolValue("eight-point-three", false ) ) {
+	  _useFrequencyFormatter = new EightPointThreeFrequencyFormatter(
+		  _rootNode->getNode("frequencies", true),
+		  "selected-mhz",
+		  "selected-mhz-fmt",
+		  "selected-channel-width-khz",
+		  "selected-real-frequency-mhz",
+		  "selected-channel"
+		  );
+	  _stbyFrequencyFormatter = new EightPointThreeFrequencyFormatter(
+		  _rootNode->getNode("frequencies", true),
+		  "standby-mhz",
+		  "standby-mhz-fmt",
+		  "standby-channel-width-khz",
+		  "standby-real-frequency-mhz",
+		  "standby-channel"
+		  );
+  } else {
+      _useFrequencyFormatter = new FrequencyFormatter(
+    	  _rootNode->getNode("frequencies/selected-mhz", true),
+          _rootNode->getNode("frequencies/selected-mhz-fmt", true),
+		  0.025, 118.0, 137.0);
+
+      _stbyFrequencyFormatter = new FrequencyFormatter(
+    	  _rootNode->getNode("frequencies/standby-mhz", true),
+          _rootNode->getNode("frequencies/standby-mhz-fmt", true),
+		  0.025, 118.0, 137.0);
+
+
+  }
 }
 
 CommRadioImpl::~CommRadioImpl()
@@ -520,8 +658,8 @@ void CommRadioImpl::update(double dt)
     return;
   }
 
-  if (_frequency != _useFrequencyFormatter.getFrequency()) {
-    _frequency = _useFrequencyFormatter.getFrequency();
+  if (_frequency != _useFrequencyFormatter->getFrequency()) {
+    _frequency = _useFrequencyFormatter->getFrequency();
     _stationTTL = 0.0;
   }
 
