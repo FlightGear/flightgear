@@ -1716,7 +1716,7 @@ ActiveRunway *FGApproachController::getRunway(const string& name)
 }
 
 void FGApproachController::render(bool visible) {
-    std::cerr << "FGApproachController::render function not yet implemented" << std::endl;
+    //std::cerr << "FGApproachController::render function not yet implemented" << std::endl;
 }
 
 
