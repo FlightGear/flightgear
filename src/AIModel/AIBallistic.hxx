@@ -175,10 +175,10 @@ private:
     double _el_random_error; // maximum elevation error in degrees
     bool   _aero_stabilised; // if true, object will align with trajectory
     double _drag_area;       // equivalent drag area in ft2
-    double _buoyancy;        // fps^2
     double _cd;              // current drag coefficient
     double _init_cd;         // initial drag coefficient
     double _cd_randomness;   // randomness of Cd. 1.0 means +- 100%, 0.0 means no randomness
+    double _buoyancy;        // fps^2
     double _life_timer;      // seconds
     bool   _wind;            // if true, local wind will be applied to object
     double _mass;            // slugs
