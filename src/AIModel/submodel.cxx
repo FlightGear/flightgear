@@ -554,22 +554,30 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
             sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
         }
         else {
-            SG_LOG(SG_AI, SG_WARN, "Submodels: <*-offset> is deprecated. Use <offsets> instead");
+            bool old = false;
 
             b = entry_node->getNode("x-offset");
             sm->x_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+            if (b) old = true;
 
             b = entry_node->getNode("y-offset");
             sm->y_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+            if (b) old = true;
 
             b = entry_node->getNode("z-offset");
             sm->z_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+            if (b) old = true;
 
             b = entry_node->getNode("yaw-offset");
             sm->yaw_offset   = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+            if (b) old = true;
 
             b = entry_node->getNode("pitch-offset");
             sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
+            if (b) old = true;
+
+            if (old)
+                SG_LOG(SG_AI, SG_WARN, "Submodels: <*-offset> is deprecated. Use <offsets> instead");
         }
 
         // Randomness
