@@ -547,10 +547,10 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
             b = a->getNode("z-m");
             sm->z_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
 
-            b = a->getNode("yaw");
+            b = a->getNode("heading-deg");
             sm->yaw_offset   = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
 
-            b = a->getNode("pitch");
+            b = a->getNode("pitch-deg");
             sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
         }
         else {
