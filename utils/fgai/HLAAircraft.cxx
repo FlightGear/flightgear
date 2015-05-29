@@ -40,7 +40,7 @@ HLAAircraft::createAttributeDataElements()
     HLAAirVehicle::createAttributeDataElements();
 
     assert(dynamic_cast<HLAAircraftClass*>(getObjectClass().get()));
-    HLAAircraftClass& objectClass = static_cast<HLAAircraftClass&>(*getObjectClass());
+    //HLAAircraftClass& objectClass = static_cast<HLAAircraftClass&>(*getObjectClass());
 
     // setAttributeDataElement(objectClass.getModelPathIndex(), _modelPath.getDataElement());
     // setAttributeDataElement(objectClass.getModelLiveryIndex(), _modelLivery.getDataElement());

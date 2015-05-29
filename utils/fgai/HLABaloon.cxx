@@ -40,7 +40,7 @@ HLABaloon::createAttributeDataElements()
     HLAAirVehicle::createAttributeDataElements();
 
     assert(dynamic_cast<HLABaloonClass*>(getObjectClass().get()));
-    HLABaloonClass& objectClass = static_cast<HLABaloonClass&>(*getObjectClass());
+    //HLABaloonClass& objectClass = static_cast<HLABaloonClass&>(*getObjectClass());
 
     // setAttributeDataElement(objectClass.getModelPathIndex(), _modelPath.getDataElement());
     // setAttributeDataElement(objectClass.getModelLiveryIndex(), _modelLivery.getDataElement());

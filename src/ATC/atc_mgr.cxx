@@ -209,6 +209,7 @@ void FGATCManager::update ( double time ) {
             //cerr << "Shutting down the atc_mgr" << endl;
             return;
         }
+#if 0
         // Test code: Print how far we're progressing along the taxi route. 
         //std::cerr << "Size of waypoint cue " << size << " ";
         for (int i = 0; i < size; i++) {
@@ -220,6 +221,7 @@ void FGATCManager::update ( double time ) {
             //}
         }
         //std::cerr << "[done ] " << std::endl;
+#endif
     }
     if (fp) {
         //cerr << "Currently at leg : " << fp->getLeg() << endl;
