@@ -184,22 +184,36 @@ char *genNameString()
 
 static osg::Node* fgCreateSplashCamera()
 {
-  const char* splash_texture = fgGetString("/sim/startup/splash-texture");
-  SGSharedPtr<SGPropertyNode> style = fgGetNode("/sim/gui/style[0]", true);
-
   char *namestring = genNameString();
   fgSetString("/sim/startup/program-name", namestring);
   delete[] namestring;
 
-  SGPath tpath;
-  if (splash_texture  && strcmp(splash_texture, "")) {
-      tpath = globals->resolve_maybe_aircraft_path(splash_texture);
-      if (tpath.isNull())
-      {
-          SG_LOG( SG_VIEW, SG_ALERT, "Cannot find splash screen file '" << splash_texture
-                  << "'. Using default." );
-      }
-  }
+    simgear::PropertyList textures = fgGetNode("/sim/startup", true)->getChildren("splash-texture");
+    std::vector<SGPath> useable_textures;
+    SGPath tpath;
+
+    // Build a list of textures that are usable; those whose path can be resolved
+    for (simgear::PropertyList::iterator it = textures.begin(); it != textures.end(); it++) {
+        std::string value = (*it)->getStringValue();
+        if (!value.empty()) {
+            tpath = globals->resolve_maybe_aircraft_path(value);
+            if (!tpath.isNull()) {
+                useable_textures.push_back(tpath);
+            }
+            else {
+                SG_LOG(SG_VIEW, SG_ALERT, "Cannot find splash screen file '" << value << "'");
+            }
+        }
+    }
+
+    // Seed the RNG in order to get randomness
+    sg_srandom_time();
+
+    if (!useable_textures.empty()) {
+        // Select a random useable texture
+        const int index = (int)(sg_random() * useable_textures.size());
+        tpath = useable_textures[index];
+    }
 
   if (tpath.isNull()) {
     // no splash screen specified - select random image
@@ -213,6 +227,8 @@ static osg::Node* fgCreateSplashCamera()
     tpath.concat( num_str );
     tpath.concat( ".png" );
   }
+
+  SGSharedPtr<SGPropertyNode> style = fgGetNode("/sim/gui/style[0]", true);
 
   osg::Texture2D* splashTexture = new osg::Texture2D;
   splashTexture->setImage(osgDB::readImageFile(tpath.c_str()));
