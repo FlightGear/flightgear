@@ -20,8 +20,12 @@
 
 #include "AirportDiagram.hxx"
 
+#include <limits>
+
 #include <QPainter>
 #include <QDebug>
+#include <QVector2D>
+#include <QMouseEvent>
 
 #include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
@@ -40,6 +44,49 @@ static float earth_radius_lat( float lat )
     return 1.0f / sqrt( a * a + b * b );
 }
 
+static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
+                                    const QVector2D& b, double* outT = NULL)
+{
+    QVector2D ab(b - a);
+    QVector2D ac(p - a);
+    
+    // Squared length, to avoid a sqrt
+    const qreal len2 = ab.lengthSquared();
+    
+    // Line null, the projection can't exist, we return the first point
+    if (qIsNull(len2)) {
+        if (outT) {
+            *outT = 0.0;
+        }
+        return (p - a).length();
+    }
+    
+    // Parametric value of the projection on the line
+    const qreal t = (ac.x() * ab.x() + ac.y() * ab.y()) / len2;
+    
+    if (t < 0.0) {
+        // Point is before the first point
+        if (outT) {
+            *outT = 0.0;
+        }
+        return (p - a).length();
+    } else if (t > 1.0) {
+        // Point is after the second point
+        if (outT) {
+            *outT = 1.0;
+        }
+        return (p - b).length();
+    } else {
+        if (outT) {
+            *outT = t;
+        }
+        
+        const QVector2D proj = a + t * ab;
+        return (proj - p).length();
+    }
+    
+    return 0.0;
+}
 
 AirportDiagram::AirportDiagram(QWidget* pr) :
 QWidget(pr)
@@ -62,6 +109,21 @@ void AirportDiagram::setAirport(FGAirportRef apt)
         buildPavements();
     }
 
+    update();
+}
+
+FGRunwayRef AirportDiagram::selectedRunway() const
+{
+    return m_selectedRunway;
+}
+
+void AirportDiagram::setSelectedRunway(FGRunwayRef r)
+{
+    if (r == m_selectedRunway) {
+        return;
+    }
+    
+    m_selectedRunway = r;
     update();
 }
 
@@ -94,6 +156,22 @@ void AirportDiagram::addParking(FGParking* park)
     update();
 }
 
+QTransform AirportDiagram::transform() const
+{
+    // fit bounds within our available space, allowing for a margin
+    const int MARGIN = 32; // pixels
+    double ratioInX = (width() - MARGIN * 2) / m_bounds.width();
+    double ratioInY = (height() - MARGIN * 2) / m_bounds.height();
+    double scale = std::min(ratioInX, ratioInY);
+    
+    QTransform t;
+    t.translate(width() / 2, height() / 2); // center projection origin in the widget
+    t.scale(scale, scale);
+    // center the bounding box (may not be at the origin)
+    t.translate(-m_bounds.center().x(), -m_bounds.center().y());
+    return t;
+}
+
 void AirportDiagram::paintEvent(QPaintEvent* pe)
 {
     QPainter p(this);
@@ -106,11 +184,7 @@ void AirportDiagram::paintEvent(QPaintEvent* pe)
     double ratioInY = (height() - MARGIN * 2) / m_bounds.height();
     double scale = std::min(ratioInX, ratioInY);
 
-    QTransform t;
-    t.translate(width() / 2, height() / 2); // center projection origin in the widget
-    t.scale(scale, scale);
-    // center the bounding box (may not be at the origin)
-    t.translate(-m_bounds.center().x(), -m_bounds.center().y());
+    QTransform t(transform());
     p.setTransform(t);
 
 // pavements
@@ -128,16 +202,22 @@ void AirportDiagram::paintEvent(QPaintEvent* pe)
     }
 
 // runways
-    QPen pen(Qt::magenta);
     QFont f;
     f.setPixelSize(14);
     p.setFont(f);
 
     Q_FOREACH(const RunwayData& r, m_runways) {
+        QColor color(Qt::magenta);
+        if ((r.runway == m_selectedRunway) || (r.runway->reciprocalRunway() == m_selectedRunway)) {
+            color = Qt::yellow;
+        }
+        
         p.setTransform(t);
 
+        QPen pen(color);
         pen.setWidth(r.widthM);
         p.setPen(pen);
+        
         p.drawLine(r.p1, r.p2);
 
     // draw idents
@@ -147,7 +227,8 @@ void AirportDiagram::paintEvent(QPaintEvent* pe)
         p.rotate(r.runway->headingDeg());
         // invert scaling factor so we can use screen pixel sizes here
         p.scale(1.0 / scale, 1.0/ scale);
-
+        
+        p.setPen((r.runway == m_selectedRunway) ? Qt::yellow : Qt::magenta);
         p.drawText(QRect(-100, 5, 200, 200), ident, Qt::AlignHCenter | Qt::AlignTop);
 
         FGRunway* recip = r.runway->reciprocalRunway();
@@ -158,10 +239,37 @@ void AirportDiagram::paintEvent(QPaintEvent* pe)
         p.rotate(recip->headingDeg());
         p.scale(1.0 / scale, 1.0/ scale);
 
+        p.setPen((r.runway->reciprocalRunway() == m_selectedRunway) ? Qt::yellow : Qt::magenta);
         p.drawText(QRect(-100, 5, 200, 200), recipIdent, Qt::AlignHCenter | Qt::AlignTop);
     }
 }
 
+void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
+{
+    QTransform t(transform());
+    double minDist = std::numeric_limits<double>::max();
+    FGRunwayRef bestRunway;
+    
+    Q_FOREACH(const RunwayData& r, m_runways) {
+        QPointF p1(t.map(r.p1)), p2(t.map(r.p2));
+        double t;
+        double d = distanceToLineSegment(QVector2D(me->pos()),
+                                         QVector2D(p1),
+                                         QVector2D(p2), &t);
+        if (d < minDist) {
+            if (t > 0.5) {
+                bestRunway = r.runway->reciprocalRunway();
+            } else {
+                bestRunway = r.runway;
+            }
+            minDist = d;
+        }
+    }
+    
+    if (minDist < 16.0) {
+        emit clickedRunway(bestRunway);
+    }
+}
 
 void AirportDiagram::extendBounds(const QPointF& p)
 {

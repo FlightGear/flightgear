@@ -26,6 +26,7 @@
 
 class AirportDiagram : public QWidget
 {
+    Q_OBJECT
 public:
     AirportDiagram(QWidget* pr);
 
@@ -33,17 +34,26 @@ public:
 
     void addRunway(FGRunwayRef rwy);
     void addParking(FGParking* park);
+    
+    FGRunwayRef selectedRunway() const;
+    void setSelectedRunway(FGRunwayRef r);
+Q_SIGNALS:
+    void clickedRunway(FGRunwayRef rwy);
+    
 protected:
     virtual void paintEvent(QPaintEvent* pe);
     // wheel event for zoom
 
     // mouse drag for pan
+    
+    virtual void mouseReleaseEvent(QMouseEvent* me);
 
 
 private:
     void extendBounds(const QPointF& p);
     QPointF project(const SGGeod& geod) const;
-
+    QTransform transform() const;
+    
     void buildTaxiways();
     void buildPavements();
 
@@ -72,4 +82,6 @@ private:
 
     QList<TaxiwayData> m_taxiways;
     QList<QPainterPath> m_pavements;
+    
+    FGRunwayRef m_selectedRunway;
 };

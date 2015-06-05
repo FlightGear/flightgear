@@ -443,6 +443,9 @@ QtLauncher::QtLauncher() :
     connect(m_ui->onFinalCheckbox, SIGNAL(toggled(bool)),
             this, SLOT(updateAirportDescription()));
 
+    
+    connect(m_ui->airportDiagram, &AirportDiagram::clickedRunway,
+            this, &QtLauncher::onAirportDiagramClicked);
 
     connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
     connect(m_ui->quitButton, SIGNAL(clicked()), this, SLOT(onQuit()));
@@ -851,6 +854,17 @@ void QtLauncher::onAirportChanged()
     }
 }
 
+void QtLauncher::onAirportDiagramClicked(FGRunwayRef rwy)
+{
+    if (rwy) {
+        m_ui->runwayRadio->setChecked(true);
+        int rwyIndex = m_ui->runwayCombo->findText(QString::fromStdString(rwy->ident()));
+        m_ui->runwayCombo->setCurrentIndex(rwyIndex);
+    }
+    
+    updateAirportDescription();
+}
+
 void QtLauncher::onToggleTerrasync(bool enabled)
 {
     if (enabled) {
@@ -900,7 +914,8 @@ void QtLauncher::updateAirportDescription()
     QString locationOnAirport;
     if (m_ui->runwayRadio->isChecked()) {
         bool onFinal = m_ui->onFinalCheckbox->isChecked();
-        QString runwayName = (m_ui->runwayCombo->currentIndex() == 0) ?
+        int comboIndex = m_ui->runwayCombo->currentIndex();
+        QString runwayName = (comboIndex == 0) ?
             "active runway" :
             QString("runway %1").arg(m_ui->runwayCombo->currentText());
 
@@ -909,6 +924,11 @@ void QtLauncher::updateAirportDescription()
         } else {
             locationOnAirport = QString("on %1").arg(runwayName);
         }
+        
+        int runwayIndex = m_ui->runwayCombo->itemData(comboIndex).toInt();
+        FGRunwayRef rwy = (runwayIndex >= 0) ?
+            m_selectedAirport->getRunwayByIndex(runwayIndex) : FGRunwayRef();
+        m_ui->airportDiagram->setSelectedRunway(rwy);
     } else if (m_ui->parkingRadio->isChecked()) {
         locationOnAirport =  QString("at parking position %1").arg(m_ui->parkingCombo->currentText());
     }

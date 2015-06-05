@@ -79,6 +79,8 @@ private slots:
     void onSubsytemIdleTimeout();
 
     void onEditPaths();
+    
+    void onAirportDiagramClicked(FGRunwayRef rwy);
 private:
     void setAirport(FGAirportRef ref);
     void updateSelectedAircraft();
