@@ -143,7 +143,7 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
 
     QVariant v = index.data(AircraftPackageStatusRole);
     AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
-    status = PackageNotInstalled;
+   // status = PackageNotInstalled;
     if (status != PackageInstalled) {
         painter->setBrush(Qt::NoBrush);
         QRect buttonRect = packageButtonRect(option.rect, index);

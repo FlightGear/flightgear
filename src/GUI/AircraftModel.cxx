@@ -417,10 +417,12 @@ QVariant AircraftItemModel::dataFromItem(const AircraftItem* item, quint32 varia
         }
         return have;
     } else if (role == AircraftLongDescriptionRole) {
+#if 0
         return "Lorum Ipsum, etc. Is this the real life? Is this just fantasy? Caught in a land-slide, "
             "no escape from reality. Open your eyes, like up to the skies and see. "
             "I'm just a poor boy, I need no sympathy because I'm easy come, easy go."
             "Litte high, little low. Anywhere the wind blows.";
+#endif
     }
 
     return QVariant();
