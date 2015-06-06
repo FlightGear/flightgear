@@ -58,6 +58,18 @@ public:
   void addPropertyId(unsigned id, const char* name)
   { mPropertyMap[id] = props->getNode(name, true); }
 
+  double getplayerLag(void) const
+  { return playerLag; }
+
+  void setplayerLag(double mplayerLag)
+  {playerLag = mplayerLag; }
+
+  int getcompensateLag(void) const
+  { return compensateLag; }
+
+  void setcompensateLag(int mcompensateLag)
+  {compensateLag = mcompensateLag; }
+
   SGPropertyNode* getPropertyRoot()
   { return props; }
 
@@ -76,7 +88,8 @@ private:
 
   double mTimeOffset;
   bool mTimeOffsetSet;
-
+  double playerLag;
+  int compensateLag;
   double lastUpdateTime;
 
   /// Properties which are for now exposed for testing

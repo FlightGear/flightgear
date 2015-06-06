@@ -26,6 +26,7 @@
 #endif
 
 #include <string>
+#include <stdio.h>
 
 #include "AIMultiplayer.hxx"
 
@@ -43,6 +44,8 @@ FGAIMultiplayer::FGAIMultiplayer() :
    mLagAdjustSystemSpeed = 10;
    mLastTimestamp = 0;
    lastUpdateTime = 0;
+   playerLag = 0.03;
+   compensateLag = 1;
 
 } 
 
@@ -97,7 +100,10 @@ SGRawValueMethods<FGAIMultiplayer, type>(*this, \
         AIMPRWProp(bool, AllowExtrapolation));
     tie("controls/lag-adjust-system-speed",
         AIMPRWProp(double, LagAdjustSystemSpeed));
-
+    tie("controls/player-lag",
+        AIMPRWProp(double, playerLag));
+    tie("controls/compensate-lag",
+        AIMPRWProp(int, compensateLag));
 
 #undef AIMPROProp
 #undef AIMPRWProp
@@ -139,7 +145,17 @@ void FGAIMultiplayer::update(double dt)
     mTimeOffsetSet = true;
     mTimeOffset = curentPkgTime - curtime - lag;
   } else {
-    double offset = curentPkgTime - curtime - lag;
+	  double offset = 0.0;
+
+		//spectator mode, more late to be in the interpolation zone
+    if (compensateLag == 3) { offset = curentPkgTime -curtime -lag + playerLag;
+
+		  // old behaviour
+    } else if (compensateLag == 1) { offset = curentPkgTime - curtime - lag;
+
+    // using the prediction mode to display the mpaircraft in the futur/past with given playerlag value
+    } else { offset = curentPkgTime - curtime + 0.48*lag + playerLag;
+    }
     if ((!mAllowExtrapolation && offset + lag < mTimeOffset)
         || (offset - 10 > mTimeOffset)) {
       mTimeOffset = offset;
@@ -153,14 +169,27 @@ void FGAIMultiplayer::update(double dt)
       // arriving packets will pessimize the overall lag much more than
       // early packets will shorten the overall lag
       double sysSpeed;
-      if (err < 0) {
-        // Ok, we have some very late packets and nothing newer increase the
-        // lag by the given speedadjust
-        sysSpeed = mLagAdjustSystemSpeed*err;
-      } else {
-        // We have a too pessimistic display delay shorten that a small bit
-        sysSpeed = SGMiscd::min(0.1*err*err, 0.5);
-      }
+
+  //trying to slow the rudderlag phenomenon thus using more the prediction system
+  //if we are off by less than 1.5s, do a little correction, and bigger step above 1.5s
+	  if (fabs(err) < 1.5) {
+		if (err < 0) {
+		  sysSpeed = mLagAdjustSystemSpeed*err*0.01;
+	    } else {
+		sysSpeed = SGMiscd::min(0.5*err*err, 0.05);
+		}
+	  } else {
+		if (err < 0) {
+
+			// Ok, we have some very late packets and nothing newer increase the
+			// lag by the given speedadjust
+			sysSpeed = mLagAdjustSystemSpeed*err;
+		} else {
+			// We have a too pessimistic display delay shorten that a small bit
+			sysSpeed = SGMiscd::min(0.1*err*err, 0.5);
+	   }
+	  }
+
 
       // simple euler integration for that first order system including some
       // overshooting guard to prevent to aggressive system speeds
@@ -337,35 +366,38 @@ void FGAIMultiplayer::update(double dt)
     // and do some eom computation to guess that for now.
     FGExternalMotionData& motionInfo = it->second;
 
-    // The time to predict, limit to 5 seconds
+    // The time to predict, limit to 3 seconds
     double t = tInterp - motionInfo.time;
-    t = SGMisc<double>::min(t, 5);
+    t = SGMisc<double>::min(t, 3);
 
     SG_LOG(SG_AI, SG_DEBUG, "Multiplayer vehicle extrapolation: "
            "extrapolation time = " << t);
 
-    // Do a few explicit euler steps with the constant acceleration's
-    // This must be sufficient ...
+    // using velocity and acceleration to guess a parabolic position...
     ecPos = motionInfo.position;
     ecOrient = motionInfo.orientation;
     ecLinearVel = motionInfo.linearVel;
+    SGVec3d ecVel = toVec3d(ecOrient.backTransform(ecLinearVel));
     SGVec3f angularVel = motionInfo.angularVel;
-    while (0 < t) {
-      double h = 1e-1;
-      if (t < h)
-        h = t;
+    SGVec3d ecAcc = toVec3d(ecOrient.backTransform(motionInfo.linearAccel));
 
-      SGVec3d ecVel = toVec3d(ecOrient.backTransform(ecLinearVel));
-      ecPos += h*ecVel;
-      ecOrient += h*ecOrient.derivative(angularVel);
+	double normVel = norm(ecVel);
 
-      ecLinearVel += h*(cross(ecLinearVel, angularVel) + motionInfo.linearAccel);
-      angularVel += h*motionInfo.angularAccel;
-      
-      t -= h;
-    }
+	// not doing rotationnal prediction for small speed or rotation rate,
+	// to avoid agitated parked plane
+    if (( norm(angularVel) > 0.05 ) or ( normVel > 1.0 )) {
+		ecOrient += t*ecOrient.derivative(angularVel);
+	}
 
-    std::vector<FGPropertyData*>::const_iterator firstPropIt;
+	// not using acceleration for small speed, to have better parked planes
+	// note that anyway acceleration is not transmit yet by mp
+	if ( normVel > 1.0 ) {
+		ecPos += t*(ecVel + 0.5*t*ecAcc);
+	} else {
+		ecPos += t*(ecVel);
+	}
+
+	std::vector<FGPropertyData*>::const_iterator firstPropIt;
     std::vector<FGPropertyData*>::const_iterator firstPropItEnd;
     speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
     firstPropIt = it->second.properties.begin();
