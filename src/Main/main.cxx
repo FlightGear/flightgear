@@ -410,12 +410,7 @@ int fgMainInit( int argc, char **argv )
         logToFile();
     }
     
-    std::string version;
-#ifdef FLIGHTGEAR_VERSION
-    version = FLIGHTGEAR_VERSION;
-#else
-    version = "unknown version";
-#endif
+    std::string version(FLIGHTGEAR_VERSION);
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
             << version );
     SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR);
