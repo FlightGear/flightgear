@@ -70,7 +70,6 @@ bool SetupRootDialog::restoreUserSelectedRoot()
     QSettings settings;
     QString path = settings.value("fg-root").toString();
     if (validatePath(path) && validateVersion(path)) {
-        qDebug() << "Restoring FG-root:" << path;
         globals->set_fg_root(path.toStdString());
         return true;
     } else {
