@@ -29,6 +29,7 @@
 #include <Foundation/NSURL.h>
 #include <Foundation/NSFileManager.h>
 #include <Foundation/NSBundle.h>
+#include <Foundation/NSLocale.h>
 #include <AppKit/NSAlert.h>
 
 // simgear
