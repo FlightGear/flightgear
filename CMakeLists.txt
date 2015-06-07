@@ -14,9 +14,16 @@ if(COMMAND cmake_policy)
    endif()
 endif()
 
-# using 10.7 because boost requires libc++ and 10.6 doesn't include it
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
-set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk)
+if(APPLE)
+	# using 10.7 because boost requires libc++ and 10.6 doesn't include it
+	set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
+	set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk)
+
+	set(CMAKE_INSTALL_RPATH "@loader_path/../Frameworks")
+	# when building, don't use the install RPATH already
+	# (but later on when installing)
+	SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+endif()
 
 project(FlightGear)
 
