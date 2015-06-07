@@ -284,7 +284,6 @@ private:
 FGScenery::FGScenery() :
     _listener(NULL)
 {
-    SG_LOG( SG_TERRAIN, SG_INFO, "Initializing scenery subsystem" );
     // keep reference to pager singleton, so it cannot be destroyed while FGScenery lives
     _pager = FGScenery::getPagerSingleton();
 }

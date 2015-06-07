@@ -70,7 +70,6 @@ FDMShell::FDMShell() :
 
 FDMShell::~FDMShell()
 {
-    SG_LOG(SG_GENERAL, SG_INFO, "destorying FDM shell");
 }
 
 void FDMShell::init()

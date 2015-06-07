@@ -292,7 +292,7 @@ bool navDBInit(const SGPath& path)
   
 bool loadCarrierNav(const SGPath& path)
 {    
-    SG_LOG( SG_NAVAID, SG_INFO, "opening file: " << path.str() );    
+    SG_LOG( SG_NAVAID, SG_DEBUG, "opening file: " << path.str() );
     sg_gzifstream incarrier( path.str() );
     
     if ( !incarrier.is_open() ) {
@@ -311,7 +311,7 @@ bool loadCarrierNav(const SGPath& path)
   
 bool loadTacan(const SGPath& path, FGTACANList *channellist)
 {
-    SG_LOG( SG_NAVAID, SG_INFO, "opening file: " << path.str() );
+    SG_LOG( SG_NAVAID, SG_DEBUG, "opening file: " << path.str() );
     sg_gzifstream inchannel( path.str() );
     
     if ( !inchannel.is_open() ) {

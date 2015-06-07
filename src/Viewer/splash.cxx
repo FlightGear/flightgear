@@ -396,8 +396,8 @@ osg::Node* fgCreateSplashNode() {
 }
 
 // Initialize the splash screen
-void fgSplashInit () {
-  SG_LOG( SG_VIEW, SG_INFO, "Initializing splash screen" );
+void fgSplashInit ()
+{
   globals->get_renderer()->splashinit();
 }
 
