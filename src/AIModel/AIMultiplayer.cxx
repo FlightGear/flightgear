@@ -385,7 +385,7 @@ void FGAIMultiplayer::update(double dt)
 
 	// not doing rotationnal prediction for small speed or rotation rate,
 	// to avoid agitated parked plane
-    if (( norm(angularVel) > 0.05 ) or ( normVel > 1.0 )) {
+    if (( norm(angularVel) > 0.05 ) || ( normVel > 1.0 )) {
 		ecOrient += t*ecOrient.derivative(angularVel);
 	}
 
