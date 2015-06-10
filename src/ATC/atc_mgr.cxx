@@ -34,15 +34,15 @@
 
 using std::string;
 
-FGATCManager::FGATCManager() {
-    controller = 0;
-    prevController = 0;
-    networkVisible = false;
-    initSucceeded  = false;
+FGATCManager::FGATCManager() :
+    controller(NULL),
+    prevController(NULL),
+    networkVisible(false),
+    initSucceeded(false)
+{
 }
 
 FGATCManager::~FGATCManager() {
-    delete pk;
 }
 
 void FGATCManager::init() {
@@ -105,11 +105,11 @@ void FGATCManager::init() {
     FGAirport *apt = FGAirport::findByIdent(airport); 
     if (apt && onGround) {// && !runway.empty()) {
         FGAirportDynamics* dcs = apt->getDynamics();
-         pk = new ParkingAssignment(dcs->getParkingByName(parking));
+        ParkingAssignment pk(dcs->getParkingByName(parking));
       
         // No valid parking location, so either at the runway or at a random location.
-        if (pk->isValid()) {
-            dcs->setParkingAvailable(pk->parking()->guid(), false);
+        if (pk.isValid()) {
+            dcs->setParkingAvailable(pk.parking()->guid(), false);
             fp = new FGAIFlightPlan;
             controller = apt->getDynamics()->getStartupController();
             int stationFreq = apt->getDynamics()->getGroundFrequency(1);
@@ -121,11 +121,11 @@ void FGATCManager::init() {
             leg = 1;
             //double, lat, lon, head; // Unused variables;
             //int getId = apt->getDynamics()->getParking(gateId, &lat, &lon, &head);
-            aircraftRadius = pk->parking()->getRadius();
-            string fltType = pk->parking()->getType(); // gate / ramp, ga, etc etc.
+            aircraftRadius = pk.parking()->getRadius();
+            string fltType = pk.parking()->getType(); // gate / ramp, ga, etc etc.
             string aircraftType; // Unused.
             string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
-            fp->setGate(*pk);
+            fp->setGate(pk);
             if (!(fp->createPushBack(&ai_ac,
                                      false,
                                      apt,
