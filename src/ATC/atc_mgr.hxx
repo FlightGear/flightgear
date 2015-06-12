@@ -53,7 +53,6 @@ private:
   bool networkVisible;
   bool initSucceeded;
   SGPropertyNode_ptr trans_num;
-  ParkingAssignment *pk;
 
 public:
   FGATCManager();

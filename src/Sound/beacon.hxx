@@ -82,10 +82,10 @@ private:
     static const int MIDDLE_SIZE = (int)(BYTES_PER_SECOND * 60 / 95 );
     static const int OUTER_SIZE = BYTES_PER_SECOND;
 
-    static const int INNER_DIT_LEN = (int)(BYTES_PER_SECOND / 6.0);
-    static const int MIDDLE_DIT_LEN = (int)(MIDDLE_SIZE / 3.0);
-    static const int MIDDLE_DAH_LEN = (int)(MIDDLE_SIZE * 2 / 3.0);
-    static const int OUTER_DAH_LEN = (int)(BYTES_PER_SECOND / 2.0);
+    static const int INNER_DIT_LEN = (int)(BYTES_PER_SECOND / 6);
+    static const int MIDDLE_DIT_LEN = (int)(MIDDLE_SIZE / 3);
+    static const int MIDDLE_DAH_LEN = (int)(MIDDLE_SIZE * 2 / 3);
+    static const int OUTER_DAH_LEN = (int)(BYTES_PER_SECOND / 2);
 
     SGSharedPtr<SGSoundSample> inner;
     SGSharedPtr<SGSoundSample> middle;

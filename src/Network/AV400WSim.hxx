@@ -94,7 +94,7 @@ class FGAV400WSimB : public FGProtocol {
     FlightProperties* fdm;
     
     static const int SOM_SIZE = 2;
-    static const int DEG_TO_MILLIARCSECS = ( 60.0 * 60.0 * 1000 );
+    static const int DEG_TO_MILLIARCSECS = ( 60 * 60 * 1000 );
     
     // Flight Phases
     static const int PHASE_OCEANIC  =   4;

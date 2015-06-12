@@ -33,7 +33,7 @@ public:
     static const int BYTES_PER_SECOND = 22050;
     // static const int BEAT_LENGTH = 240; // milleseconds (5 wpm)
     static const int BEAT_LENGTH = 92;  // milleseconds (13 wpm)
-    static const int TRANSITION_BYTES = (int)(0.005 * BYTES_PER_SECOND);
+    static const int TRANSITION_BYTES = BYTES_PER_SECOND/200; // aka (int)(0.005 * BYTES_PER_SECOND);
     static const int COUNT_SIZE = BYTES_PER_SECOND * BEAT_LENGTH / 1000;
     static const int DIT_SIZE = 2 * COUNT_SIZE;   // 2 counts
     static const int DAH_SIZE = 4 * COUNT_SIZE;   // 4 counts
