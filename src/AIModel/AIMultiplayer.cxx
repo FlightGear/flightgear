@@ -154,6 +154,7 @@ void FGAIMultiplayer::update(double dt)
     } else if (compensateLag == 1) { offset = curentPkgTime - curtime - lag;
 
     // using the prediction mode to display the mpaircraft in the futur/past with given playerlag value
+    //currently compensatelag = 2
     } else { offset = curentPkgTime - curtime + 0.48*lag + playerLag;
     }
     if ((!mAllowExtrapolation && offset + lag < mTimeOffset)

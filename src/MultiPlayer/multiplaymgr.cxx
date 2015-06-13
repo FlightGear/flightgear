@@ -783,15 +783,30 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
       motionInfo.orientation.getAngleAxis(angleAxis);
       for (unsigned i = 0 ; i < 3; ++i)
         PosMsg->orientation[i] = XDR_encode_float (angleAxis(i));
-      for (unsigned i = 0 ; i < 3; ++i)
-        PosMsg->linearVel[i] = XDR_encode_float (motionInfo.linearVel(i));
-      for (unsigned i = 0 ; i < 3; ++i)
-        PosMsg->angularVel[i] = XDR_encode_float (motionInfo.angularVel(i));
-      for (unsigned i = 0 ; i < 3; ++i)
-        PosMsg->linearAccel[i] = XDR_encode_float (motionInfo.linearAccel(i));
-      for (unsigned i = 0 ; i < 3; ++i)
-        PosMsg->angularAccel[i] = XDR_encode_float (motionInfo.angularAccel(i));
-
+      if (fgGetBool("/sim/crashed",true))
+      {
+        for (unsigned i = 0 ; i < 3; ++i)
+        {
+          // no speed or acceleration sent when crashed, for better mp patch
+          PosMsg->linearVel[i] = XDR_encode_float (0.0);
+          PosMsg->angularVel[i] = XDR_encode_float (0.0);
+          PosMsg->linearAccel[i] = XDR_encode_float (0.0);
+          PosMsg->angularAccel[i] = XDR_encode_float (0.0);
+        }
+      }
+      else
+      {
+        //including speed up time in velocity and acceleration
+        double timeAccel = fgGetDouble("/sim/speed-up");
+        for (unsigned i = 0 ; i < 3; ++i)
+          PosMsg->linearVel[i] = XDR_encode_float (motionInfo.linearVel(i) * timeAccel);
+        for (unsigned i = 0 ; i < 3; ++i)
+          PosMsg->angularVel[i] = XDR_encode_float (motionInfo.angularVel(i) * timeAccel);
+        for (unsigned i = 0 ; i < 3; ++i)
+          PosMsg->linearAccel[i] = XDR_encode_float (motionInfo.linearAccel(i) * timeAccel * timeAccel);
+        for (unsigned i = 0 ; i < 3; ++i)
+          PosMsg->angularAccel[i] = XDR_encode_float (motionInfo.angularAccel(i) * timeAccel * timeAccel);
+      }
       xdr_data_t* ptr = msgBuf.properties();
       std::vector<FGPropertyData*>::const_iterator it;
       it = motionInfo.properties.begin();
