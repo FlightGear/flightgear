@@ -1,4 +1,4 @@
-
+A very special thanks is due to the following people and groups.
 
 Note: as hard as we've tried, it is impossible to perfectly maintain
 this file.  If you are aware of someone who you think should be
@@ -10,7 +10,6 @@ credit everyone who has contributed to this project.
 A1 Free Sounds <techie@mail.ev1.net> http://www.a1freesoundeffects.com
   Granted permission for the flightgear project to use some of the
   sound effects from their site.
-
 
 Syd Adams:
   Added clipping to 2d instruments.  Added volume control to ATC-chatter.
@@ -40,8 +39,7 @@ Michele America <nomimarketing@mail.telepac.pt>
 Emmanuel Baranger <>
   Many, many very nice aircraft models.
 
-
-Andrei Barbu <andrei@0xab.com>
+Andrei Barbu "T"Eval" teval@myrealbox.com
   Designed and implemented the current version of the FlightGear website.
 
 
@@ -77,7 +75,7 @@ Paul Bleisch <pbleisch@acm.org>
   system.
 
 
-Matthias Boerner <> 
+Matthias Boerner <>
   Coorganizer of the FlightGear booth at the annual LinuxTag event in
   Germany.
 
@@ -99,7 +97,6 @@ Bernie Bright <bbright@bigpond.net.au>
   Many C++ style, usage, and implementation improvements.
   STL portability, tons o' stuff. :-)
   Threading support and threaded tile pager.
-  Initiate the fgrun project
 
 
 Francesco Brisa <>
@@ -142,7 +139,7 @@ John Check <j4strngs@rockfish.net>
 
 Bertrand Coconnier
   Contributed several bugfixes and improvements for the integration of
-  the JSBSim flight dynamics model.
+  the JSBSim flight dynamics model
 
 
 Dave Cornish <dmc@halcyon.com>
@@ -161,14 +158,12 @@ John Denker
   Contributed bugfixes and improvements to the navigation and ATIS code.
 
 
-Jean-Francois Doue
-  Vector 2D, 3D, 4D and Matrix 3D and 4D inlined C++ classes.  (Based on
-  Graphics Gems IV ed. Paul S. Heckbert)
-  http://www.animats.com/simpleppp/ftp/public_html/topics/developers.html
+Martin Eschen <>
+ Helped enourmously toward finishing the full scale traffic demo at EHAM.
 
 
 Torsten Dreyer
-  Contributed the very nice Piper Seneca, closely modelled after the 
+  Contributed the very nice Piper Seneca, closely modelled after the
   real thing. Also added many other nice aircraft (such as the ogeL, also
   closely modelled after the real thing), buildings, etc.
   Creator of fgpanel. Code maintainer of weather, environment, autopilot
@@ -182,8 +177,10 @@ Dave Eberly <eberly@magic-software.com>
   http://www.magic-software.com
 
 
-Martin Eschen <>
- Helped enourmously toward finishing the full scale traffic demo at EHAM.
+Jean-Francois Doue
+  Vector 2D, 3D, 4D and Matrix 3D and 4D inlined C++ classes.  (Based on
+  Graphics Gems IV ed. Paul S. Heckbert)
+  http://www.animats.com/simpleppp/ftp/public_html/topics/developers.html
 
 
 Francine Evans <evans@cs.sunysb.edu>
@@ -214,16 +211,16 @@ Bruce Finney <bfinney@gte.net>
   MSVC5 compatibility.
 
 
-Thomas Förster <>
+Thomas Forster <>
    Updates to the AI system, including the Dykstra route finding algorithm,
    adding a performance class, and many code clean-ups.
    Co-organizer of the annual LinuxTag booth.
 
 
 Melchior Franz <mfranz@aon.at>
-  Reworked the joystick driver detection code, added high/low support for
-  "hats".  Nasal-ified the Saitek Cyborg Gold 3D (USB) joystick which now
-  forms the basis of a lot of programmable joysticks.
+  Reworked the joystick driver detection code, added high/low support for "hats".
+  Nasal-ified the Saitek Cyborg Gold 3D (USB) joystick which now forms
+  the basis of a lot of programmable joysticks.
   Ruthlessly hunted down memory leaks in FlightGear, SimGear, and JSBSim.
   Maintains the only fully working helicopter model in FlightGear (Bolkow 105).
   Made the GUI code fully XML configurable and added support for themes,
@@ -243,7 +240,7 @@ Thomas Gellekum <tg@ihf.rwth-aachen.de>
 
 
 Ralf Gerlich <>
-  Technical Genius behind the Custom Scenery Project. 
+  Technical Genius behind the Custom Scenery Project.
   Current maintainer of TaxiDraw
 
 
@@ -273,7 +270,7 @@ Habibie <habibie@MailandNews.com>
   RedHat package building changes for SimGear.
 
 
-Csaba Halász <>
+Csaba Halï¿½sz <>
   Many bugfixes and code checking.
 
 
@@ -328,6 +325,8 @@ Maik Justus <fg@mjustus.de>
   Implemented aerotowing, water plane and anchor support for YASim, and
   made its gear aware of the surface material.
   Wrote the Bo105 helicopter FDM configuration file.
+  Developed gear/ground interactions and added aerotow/winch
+  support to the YASim FDM
 
 
 Ove Kaaven
@@ -416,14 +415,14 @@ Cameron Moore <cameron@unbeatenpath.net>
   Reigning list admin.
   Provided man pages.
   Self-proclaimed code janitor.
-   Has been maintaining FAQ for some years.
+  Has been maintaining FAQ for some years.
 
 
 Tim Moore <>
   Many innovations to the OpenSceneGraph based graphics system.
   Counseling of other developers toward learning OSG
   Maintaing a GIT repository containing a mirror of FlightGear's
-  source code, speficially for bugfix releases. 
+  source code, speficially for bugfix releases.
 
 
 Anders Morken <amrken@online.no>
@@ -446,7 +445,7 @@ Phil Nelson  <phil@cs.wwu.edu>
 
 
 Tatsuhiro Nishioka
-  Maintainer of the Mac port. 
+  Maintainer of the Mac port.
   Contributed some very nice Japanese aircraft models.
 
 
@@ -498,17 +497,16 @@ Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
   Contributed beginnings of a textured instrument panel.
 
 
-Frederic Bouvier <fredfgfs01@free.fr>
+Frederic Bouvier <frbouvi@wanadoo.fr>
+  Added French language support
   Keeps FlightGear MSVC compatible.
   Did a number of code changes to improve the animation code.
   Added a number of animations that improves the visual system quite a lot.
+  For a long time built the FlightGear binary windows distributions.
   Did a nice job populating the San Francisco bay area by adding a lot
   of static scenery.
-  Builds the FlightGear binary windows distributions.
   Maintainer of fgrun, the defacto launcher on windows and many other platforms.
-  Author of fgsd, a standalone scenery designer. 
-  Provides regular binary snapshots of flightgear and it's related projects for
-  the windows community.
+  Author of fgsd, a standalone scenery designer.
 
 
 Petter Reinholdtsen <pere@games.no>
@@ -516,11 +514,6 @@ Petter Reinholdtsen <pere@games.no>
   This should streamline and standardize the build process for all
   Unix-like platforms.  It should have little effect on IDE type 
   environments since the don't use the Unix make system.
-
-
-Thorsten Renk
-  Created the local weather system, providing beautiful cloudscapes
-  and an accurate meteorological simulation.
 
 
 William Riley <riley@technologist.com>
@@ -584,7 +577,7 @@ Heiko Schulz <>
   Contributed AI traffic for EDDF
   EDDF Night lights
   ground networks
-
+ 
 
 Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
   Author of the Triangle program.  Triangle is used to calculate the
@@ -608,7 +601,7 @@ Martin Spott <Martin.Spott@uni-duisburg.de>
   Coorganizer of the FlightGear booth at the annual LinuxTag event in
   Germany.
   Manages the "World Scenery" releases.
-  Maintains world's biggest repository and toolchain for free and 
+  Maintains world's biggest repository and toolchain for free and
   open map and scenery data at http://mapserver.flightgear.org/
 
 
@@ -632,10 +625,9 @@ Durk Talsma <d.talsma@chello.nl>
   Moon has correct phase and blends well into the sky.
   Planets are correctly positioned and have proper magnitude.
   Help with time functions, gui, and other misc stuff.
-  2D Cloud layers (nifty).
   Added the AirTraffic module for scheduled AI airliners and other aircraft.
-  Full scale AI traffic demo for EHAM.
-  Current FlightGear release manager.
+  2D Cloud layers (nifty).
+  http://people.a2000.nl/dtals
 
 
 Gabor Toth <>
@@ -646,7 +638,7 @@ Gabor Toth <>
 
 James Turner <>
   Many code cleanups of the internal structure of the airport database,
-  runway parsing, route management. 
+  runway parsing, route management.
   Is currently working on adding flightmanagement support.
 
 
@@ -716,7 +708,7 @@ Darrell Walisser <dwaliss1@purdue.edu>
   Provides MacOS-specific info in the docs.
 
 
-David Culp <davidculp2@attbi.com>
+Davud Culp <davidculp2@attbi.com>
   Changed the layout of the conbtrolls section and added a great number
   of extra controls which will prove to be usefull no and for the future.
   Contributed a number of aircraft configuration files, including a T-38 and
@@ -752,7 +744,7 @@ Jean-Claude Wippler <jcw@equi4.com>
 
 
 Holger Wirtz <>
-  Author of FGCom, a voice communication program intented for FlightGear 
+  Author of FGCom, a voice communication program intented for FlightGear
   multiplayer/ATC.
 
 
@@ -792,7 +784,7 @@ David Culp <davidculp2@comcast.net>
   model that creates an updraft around it's center.
 
 
-Mathias Fröhlich <Mathias.Froehlich@gmx.net>
+Mathias FrÃ¶hlich <Mathias.Froehlich@gmx.net>
   Implemented the groundcache code which made it possible for aircraft
   to follow the ground precisely and, as a result, made it possible to
   land on aircraft carriers.
@@ -831,13 +823,19 @@ Stuart Buchanan <stuart_d_buchanan@yahoo.co.uk>
 Stefan Seifert <nine@detonation.org>
   Added the save-on-exit option to save the user preferences at program exit.
 
+Thorsten Renk <thorsten.i.renk@jyu.fi>
+  Created the local weather system with Thermals, Ridge lift and Wave lift
+  which creates an accurate meteorological simulation.
+  Added the Atmospheric light scattering (ALS) framework
+   (http://wiki.flightgear.org/Atmospheric_light_scattering)
+  Worked a quite a number of aircraft shaders like the interior shader,
+   rain shader and exhaust flume shader
+
 
 Space Imaging, Inc  http://www.spaceimaging.com/
   Space Imaging has allowed us to use the images in their archive for
   commercial and non-commercial use, provided the original image can't be
   extracted  from the textures.
-  Some (if not all) of the best textures in use by FlightGear wouldn't be
-  possible without the satellite images provided by them.
 
 
 Airservices Australia
@@ -850,11 +848,15 @@ SkyscraperPage.com  http://skyscraperpage.com
   SkyscraperPage.com has allowed us to use their building diagrams to
   make textures and 3d models of their buildings.
 
+http://sky.aw.net.ua/
+  The owner of this site has kindly allowed us to use potographs from this
+  site for cloud texturing.
+
 
 WoodSoup Project  http://www.woodsoup.org
   [ FlightGear no longer uses woodsoup services, but we appreciate
   the support provided to our project during the time they hosted us. ]
-  Provided computing resources and services so that the FlightGear 
+  Provided computing resources and services so that the Flight Gear 
   project could have real home.  This includes, web services, 
   ftp services, shell accounts, email lists, dns services, etc.
 
@@ -865,17 +867,56 @@ Robert Allan Zeh <raz@cmg.FCNBD.COM>
   version of FG would have been impossible.
 
 
+The following individuals have contributed to the scenery object database:
+  Martin Spott, Dave Martin, Thomas Foerster, Chris Metzler, Frederic
+  Bouvier, Melchior Franz, Roberto Inzerillo, Erik Hofman, Mike Round,
+  Innis Cunningham, David Megginson, Stuart Buchanan, Josh Babcock,
+  Esa Hyytia, Mircea Lutic, Jens Thoms Toerring, Mark Akermann,
+  Torsten Dreyer, Martin C. Doege, Alexis Bory, Sebastian Bechtold,
+  Julien Pierru, Bertrand Augras, Gerard Robin, Jakub Skibinski,
+  Morten Oesterlund Joergensen, Carsten Vogel, Dominique Lemesre,
+  Daniel Leygnat, Bertrand Gilot, Morten Skyt Eriksen, Alex
+  Bamesreiter, Oliver Predelli, Georg Vollnhals, and Paul Richter.
+
+For regional texturing, support by the following people and organization is
+gratefully acknowledged:
+
+ - Instituto Brasileiro de Geografia e Estatistica (IBGE) for the 
+   satellite images of the Brazilian cerrado: 
+   http://downloads.ibge.gov.br/downloads_geociencias.htm
+
+ - Diogo Sergio for the image of the caatinga trees: 
+   http://commons.wikimedia.org/wiki/File:Caatinga_Xiquexique_pedras_01.JPG
+
+ - Maria Hsu for the image of a caatinga tree: 
+   https://www.flickr.com/photos/14323530@N05/2150992479/
+
+ - Leonardo "Leguas" Carvalho for the image of the Ipe-Amarelo tree: 
+   http://pt.wikipedia.org/wiki/Ficheiro:Ipe_detail.jpg
+
+ - Spoladore for the image of the Lixeira tree: 
+   http://pt.wikipedia.org/wiki/Cajueiro-bravo-do-campo#/media/File:Lixeira_do_cerrado_de_Mato_Grosso.JPG
+
+ - OtÃ¡vio Nogueira for the image of a cerrado tree: 
+   https://www.flickr.com/photos/55953988@N00/3896942038
+
+ - P199 for the image of Las PiÃ±as City, the Philippines: 
+   http://commons.wikimedia.org/wiki/File:Las_Pinas_City.jpg
+
 
 NOTE:
 ----
 
-THIS DOCUMENT WAS INITIALLY WRITTEN BY 
+THIS DOCUMENT WAS INITIALLY WRITTEN BY:
+  Curt L. Olson  <http://baron.flightgear.org/~curt>
 
-Curt L. Olson  <http://www.flightgear.org/~curt>
+THE CONTENTS WERE RESEARCHED AND UPDATED MARCH, 8 2000:
+  Oliver Delise  <delise@mail.isis.de>
 
-Updated 2000-03-08 by Oliver Delise, delise@mail.isis.de
+
 Updated 2001-12-11 by David Megginson, david@megginson.com
 Updated 2003-04-17,
 Updated 2004-06-01,
 Updated 2005-04-02 by Erik Hofman, erik@ehofman.com
-Updated 2009-02-02 by Durk Talsma
+Updated 2007-05-16 for 0.9.11 release
+Updates 2015-06-15 by Thorsten Renk
