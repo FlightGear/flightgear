@@ -176,6 +176,11 @@ void FGLight::bind () {
     tie(prop,"/rendering/dome/fog/green",       SGRawValuePointer<float>(&_fog_color[1]));
     tie(prop,"/rendering/dome/fog/blue",        SGRawValuePointer<float>(&_fog_color[2]));
 
+    // Sun vector
+    tie(prop,"/ephemeris/sun/local/x", SGRawValuePointer<float>(&_sun_vec[0]));
+    tie(prop,"/ephemeris/sun/local/y", SGRawValuePointer<float>(&_sun_vec[1]));
+    tie(prop,"/ephemeris/sun/local/z", SGRawValuePointer<float>(&_sun_vec[2]));
+
     // Properties used directly by effects
     _chromeProps[0] = prop->getNode("/rendering/scene/chrome-light/red", true);
     _chromeProps[1] = prop->getNode("/rendering/scene/chrome-light/green",
