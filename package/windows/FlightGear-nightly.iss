@@ -42,6 +42,7 @@ AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
 DefaultDirName={pf}\FlightGear-nightly {#FGVersion}
+UsePreviousAppDir=no
 DefaultGroupName=FlightGear-nightly {#FGVersion}
 LicenseFile=X:\flightgear\COPYING
 Uninstallable=yes
@@ -82,6 +83,7 @@ Source: "X:\install\msvc100\FGRun\share\locale\*"; DestDir: "{app}\bin\locale"; 
 Source: "X:\install\msvc100\OpenRTI\bin\FedTime.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "X:\install\msvc100\OpenRTI\bin\OpenRTI.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "X:\install\msvc100\OpenRTI\bin\RTI-NG.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "X:\3rdParty\bin\libintl-8.dll"; DestDir: "{app}\bin"; Check: not Is64BitInstallMode
 Source: "X:\3rdParty\bin\zlib.dll"; DestDir: "{app}\bin"; Check: not Is64BitInstallMode
 Source: "X:\3rdParty\bin\OpenAL32.dll"; DestDir: "{app}\bin"; Check: not Is64BitInstallMode
 Source: "X:\3rdParty\bin\libpng16.dll"; DestDir: "{app}\bin"; Check: not Is64BitInstallMode
@@ -108,6 +110,7 @@ Source: "X:\install\msvc100-64\FGRun\share\locale\*"; DestDir: "{app}\bin\locale
 Source: "X:\install\msvc100-64\OpenRTI\bin\FedTime.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "X:\install\msvc100-64\OpenRTI\bin\OpenRTI.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "X:\install\msvc100-64\OpenRTI\bin\RTI-NG.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "X:\3rdParty.x64\bin\libintl-8.dll"; DestDir: "{app}\bin"; Check: Is64BitInstallMode
 Source: "X:\3rdParty.x64\bin\zlib.dll"; DestDir: "{app}\bin"; Check: Is64BitInstallMode
 Source: "X:\3rdParty.x64\bin\OpenAL32.dll"; DestDir: "{app}\bin"; Check: Is64BitInstallMode
 Source: "X:\3rdParty.x64\bin\vcredist_x64.exe"; DestDir: "{app}\bin"; Flags: skipifsourcedoesntexist; Check: Is64BitInstallMode
