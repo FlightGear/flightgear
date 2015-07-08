@@ -81,7 +81,7 @@ void FGMagicCarpet::update( double dt ) {
 
     // update euler angles
     _set_Euler_Angles( get_Phi(), get_Theta(),
-                       fmod(get_Psi() + turn, SGD_2PI) );
+                       SGMiscd::normalizePeriodic(0, SGD_2PI, get_Psi() + turn) );
     _set_Euler_Rates(0,0,0);
 
     // update (lon/lat) position

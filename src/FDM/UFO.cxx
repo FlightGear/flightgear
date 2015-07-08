@@ -173,7 +173,7 @@ void FGUFO::update( double dt ) {
     sgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
 
     // update euler angles
-    double heading = fmod(get_Psi() + turn + yaw, SGD_2PI);
+    double heading = SGMiscd::normalizePeriodic(0, SGD_2PI, get_Psi() + turn + yaw );
     _set_Euler_Angles(roll, pitch, heading);
     _set_Euler_Rates(0,0,0);
 
