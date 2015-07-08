@@ -48,9 +48,7 @@
 #include <Network/AV400Sim.hxx>
 #include <Network/AV400WSim.hxx>
 #include <Network/garmin.hxx>
-#include <Network/http/httpd.hxx>
 #include <Network/igc.hxx>
-#include <Network/jpg-httpd.hxx>
 #include <Network/joyclient.hxx>
 #include <Network/jsclient.hxx>
 #include <Network/native.hxx>
@@ -149,21 +147,6 @@ FGIO::parse_port_config( const string& config )
         } else if ( protocol == "igc" ) {
             IGCProtocol *igc = new IGCProtocol;
             io = igc;
-        } else if ( protocol == "jpg-httpd" ) {
-            // determine port
-            int port = simgear::strutils::to_int(tokens[1]);
-            int frameHz = 8; // maximum frame rate
-            string type = "jpeg";
-            
-            if (tokens.size() > 2) {
-                frameHz = simgear::strutils::to_int(tokens[2]);
-            }
-            
-            if (tokens.size() > 3) {
-                type = tokens[3];
-            }
-                
-            return new FGJpegHttpd(port, frameHz, type);
         } else if ( protocol == "joyclient" ) {
             FGJoyClient *joyclient = new FGJoyClient;
             io = joyclient;

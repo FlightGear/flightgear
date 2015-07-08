@@ -21,7 +21,6 @@
 #include <cstdlib>
 
 #include "inputvalue.hxx"
-#include <Main/fg_props.hxx>
 
 using namespace FGXMLAutopilot;
 
