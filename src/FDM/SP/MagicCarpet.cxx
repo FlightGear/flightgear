@@ -73,7 +73,7 @@ void FGMagicCarpet::update( double dt ) {
     double kts = speed * SG_METER_TO_NM * 3600.0;
     _set_V_equiv_kts( kts );
     _set_V_calibrated_kts( kts );
-    _set_V_ground_speed( kts );
+    set_V_ground_speed_kt( kts );
 
     // angle of turn
     double turn_rate = globals->get_controls()->get_aileron() * SGD_PI_4; // radians/sec

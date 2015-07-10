@@ -146,7 +146,7 @@ void FGUFO::update( double dt ) {
     double kts = velocity * SG_METER_TO_NM * 3600.0;
     _set_V_equiv_kts( kts );
     _set_V_calibrated_kts( kts );
-    _set_V_ground_speed( kts );
+    set_V_ground_speed_kt( kts );
 
     // angle of turn
     double turn_rate = sin(roll) * SGD_PI_4; // radians/sec
