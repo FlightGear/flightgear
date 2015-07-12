@@ -157,7 +157,7 @@ void fgInitAllowedPaths()
         !fgValidatePath(globals->get_fg_home() + "no.log",true).empty() ||
         !fgValidatePath("..\\" + globals->get_fg_home() + "/no.log",false).empty() ||
         !fgValidatePath(std::string("/tmp/no.xml"),false).empty() ||
-        fgValidatePath(globals->get_fg_home() + "/./ff/../Export\\yes..gg",true).empty() ||
+        fgValidatePath(globals->get_fg_home() + "/./TerraSync/../Export\\yes..gg",true).empty() ||
         fgValidatePath(globals->get_fg_home() + "/aircraft-data/yes..xml",true).empty() ||
         fgValidatePath(globals->get_fg_root() + "/./\\yes.bmp",false).empty()) {
             flightgear::fatalMessageBox("Nasal initialization error",
@@ -167,15 +167,12 @@ void fgInitAllowedPaths()
     }
 }
 
-// Check whether Nasal is allowed to access a path
-std::string fgValidatePath (const std::string& path, bool write)
+// Check whether Nasal is allowed to access a path (assumed already normalized)
+static std::string fgValidatePath_internal (const std::string& normed_path, bool write)
 {
     const string_list& allowed_paths(write ? write_allowed_paths : read_allowed_paths);
     size_t star_pos;
     
-    // Normalize the path (prevents ../../.. trickery)
-    std::string normed_path = fgNormalizePath(path);
-
     // Check against each allowed pattern
     for( string_list::const_iterator it = allowed_paths.begin();
                                      it != allowed_paths.end();
@@ -199,6 +196,34 @@ std::string fgValidatePath (const std::string& path, bool write)
     }
     // no match found
     return "";
+}
+// Check whether Nasal is allowed to access a path
+// Warning: because this always (not just on Windows) converts \ to /,
+// if passing a std::string, use the returned path not the original one
+// (This warning does not apply to the SGPath variant, as these are
+// so converted on creation.)
+std::string fgValidatePath (const std::string& path, bool write)
+{
+    // Normalize the path (prevents ../../.. trickery)
+    // method 1 allows following symlinks to anywhere
+    // (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=780867);
+    // method 2 doesn't, and is intended to eventually replace it
+    std::string normed_path1 = fgNormalizePath(path);
+    SGPath path2 = SGPath(path);
+    std::string normed_path2;
+    if (path2.exists()) {
+        normed_path2 = path2.realpath();
+    } else { // realpath can't check non-existent files
+        normed_path2 = SGPath(path2.dir()).realpath()
+            + "/" + path2.file();
+    }
+
+    // Check
+    if (fgValidatePath_internal(normed_path1, write).empty() ||
+        fgValidatePath_internal(normed_path2, write).empty()) {
+        return "";
+    }
+    return normed_path1;
 }
 std::string fgValidatePath(const SGPath& path, bool write) { return fgValidatePath(path.str(),write); }
 // end of util.cxx
