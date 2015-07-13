@@ -391,6 +391,7 @@ FGProperties::getLongitudeString ()
   double d = _longDeg->getDoubleValue();
   int format = _lonLatformat->getIntValue();
   char c = d < 0.0 ? 'W' : 'E';
+  d = fabs(d);
 
   if (format == 0) {
     snprintf(buf, 32, "%3.6f%c", d, c);
@@ -399,18 +400,18 @@ FGProperties::getLongitudeString ()
     // dd mm.mmm' (DMM-Format) -- uses a round-off factor tailored to the
     // required precision of the minutes field (three decimal places),
     // preventing minute values of 60.
-    double deg = fabs(d) + 5.0E-4 / 60.0;
-    double min = fabs(deg - int(deg)) * 60.0 - 4.999E-4;
-    snprintf(buf, 32, "%d*%06.3f%c", int(d < 0.0 ? -deg : deg), min, c);
+    double deg = d + 5.0E-4 / 60.0;
+    double min = (deg - int(deg)) * 60.0 - 4.999E-4;
+    snprintf(buf, 32, "%d*%06.3f%c", int(deg), min, c);
 
   } else {
     // mm'ss.s'' (DMS-Format) -- uses a round-off factor tailored to the
     // required precision of the seconds field (one decimal place),
     // preventing second values of 60.
-    double deg = fabs(d) + 0.05 / 3600.0;
+    double deg = d + 0.05 / 3600.0;
     double min = (deg - int(deg)) * 60.0;
     double sec = (min - int(min)) * 60.0 - 0.049;
-    snprintf(buf, 32, "%d*%02d %04.1f%c", int(d < 0.0 ? -deg : deg),
+    snprintf(buf, 32, "%d*%02d %04.1f%c", int(deg),
         int(min), fabs(sec), c);
   }
   buf[31] = '\0';
@@ -424,20 +425,21 @@ FGProperties::getLatitudeString ()
   double d = _latDeg->getDoubleValue();
   int format = _lonLatformat->getIntValue();
   char c = d < 0.0 ? 'S' : 'N';
+  d = fabs(d);
 
   if (format == 0) {
     snprintf(buf, 32, "%3.6f%c", d, c);
 
   } else if (format == 1) {
-    double deg = fabs(d) + 5.0E-4 / 60.0;
-    double min = fabs(deg - int(deg)) * 60.0 - 4.999E-4;
-    snprintf(buf, 32, "%d*%06.3f%c", int(d < 0.0 ? -deg : deg), min, c);
+    double deg = d + 5.0E-4 / 60.0;
+    double min = (deg - int(deg)) * 60.0 - 4.999E-4;
+    snprintf(buf, 32, "%d*%06.3f%c", int(deg), min, c);
 
   } else {
-    double deg = fabs(d) + 0.05 / 3600.0;
+    double deg = d + 0.05 / 3600.0;
     double min = (deg - int(deg)) * 60.0;
     double sec = (min - int(min)) * 60.0 - 0.049;
-    snprintf(buf, 32, "%d*%02d %04.1f%c", int(d < 0.0 ? -deg : deg),
+    snprintf(buf, 32, "%d*%02d %04.1f%c", int(deg),
         int(min), fabs(sec), c);
   }
   buf[31] = '\0';
