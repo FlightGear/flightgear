@@ -152,14 +152,13 @@ void fgInitAllowedPaths()
     
     // Check that it works
     if(!fgValidatePath(globals->get_fg_home() + "/../no.log",true).empty() ||
-        !fgValidatePath(globals->get_fg_home() + "/no.lot",true).empty() ||
+        !fgValidatePath(globals->get_fg_home() + "/no.logt",true).empty() ||
         !fgValidatePath(globals->get_fg_home() + "/nolog",true).empty() ||
         !fgValidatePath(globals->get_fg_home() + "no.log",true).empty() ||
-        !fgValidatePath("..\\" + globals->get_fg_home() + "/no.log",false).empty() ||
-        !fgValidatePath(std::string("/tmp/no.xml"),false).empty() ||
+        !fgValidatePath(globals->get_fg_home() + "\\..\\no.log",false).empty() ||
         fgValidatePath(globals->get_fg_home() + "/./TerraSync/../Export\\yes..gg",true).empty() ||
         fgValidatePath(globals->get_fg_home() + "/aircraft-data/yes..xml",true).empty() ||
-        fgValidatePath(globals->get_fg_root() + "/./\\yes.bmp",false).empty()) {
+        fgValidatePath(globals->get_fg_root() + "/.\\yes.bmp",false).empty()) {
             flightgear::fatalMessageBox("Nasal initialization error",
                                     "fgInitAllowedPaths() does not work",
                                     "");
