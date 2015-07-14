@@ -46,7 +46,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc, "$Id: FGModelLoader.cpp,v 1.1 2014/06/09 11:52:06 bcoconni Exp $");
+IDENT(IdSrc, "$Id: FGModelLoader.cpp,v 1.3 2015/07/12 12:41:55 bcoconni Exp $");
 IDENT(IdHdr, ID_MODELLOADER);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,10 +64,11 @@ Element_ptr FGModelLoader::Open(Element *el)
 
     try {
       file = model->FindFullPathName(fname);
+      if (file.empty()) throw string("File does not exist.");
     }
     catch(string& e) {
       cerr << endl << el->ReadFrom()
-           << "Could not open file: " << e << endl;
+           << "Could not open file: " << fname << endl << e << endl;
       return NULL;
     }
 
