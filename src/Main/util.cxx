@@ -156,7 +156,6 @@ void fgInitAllowedPaths()
         !fgValidatePath(globals->get_fg_home() + "/nolog",true).empty() ||
         !fgValidatePath(globals->get_fg_home() + "no.log",true).empty() ||
         !fgValidatePath(globals->get_fg_home() + "\\..\\no.log",false).empty() ||
-        fgValidatePath(globals->get_fg_home() + "/./TerraSync/../Export\\yes..gg",true).empty() ||
         fgValidatePath(globals->get_fg_home() + "/aircraft-data/yes..xml",true).empty() ||
         fgValidatePath(globals->get_fg_root() + "/.\\yes.bmp",false).empty()) {
             flightgear::fatalMessageBox("Nasal initialization error",
