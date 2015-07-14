@@ -366,47 +366,148 @@ SGConstPropertyNode_ptr FGProperties::_longDeg;
 SGConstPropertyNode_ptr FGProperties::_latDeg;
 SGConstPropertyNode_ptr FGProperties::_lonLatformat;
 
+/*
+ * Format the latitude and longitude floats into a character array using a variety of coordinate formats.
+ */
+static void
+formatLatLongString (double deg, int format, char *buf, char c) {
+  double min, sec;
+  int sign = deg < 0.0 ? -1 : 1;
+  deg = fabs(deg);
+
+  if (format == 0) {
+    // d.dddddd' (DDD format).
+    snprintf(buf, 32, "%3.6f%c", deg, c);
+
+  } else if (format == 1) {
+    // d mm.mmm' (DMM format) -- uses a round-off factor tailored to the
+    // required precision of the minutes field (three decimal places),
+    // preventing minute values of 60.
+    min = (deg - int(deg)) * 60.0;
+    if (min >= 59.9995) {
+        min -= 60.0;
+        deg += 1.0;
+    }
+    snprintf(buf, 32, "%d*%06.3f'%c", int(deg), fabs(min), c);
+
+  } else if (format == 2) {
+    // d mm'ss.s" (DMS format) -- uses a round-off factor tailored to the
+    // required precision of the seconds field (one decimal place),
+    // preventing second values of 60.
+    min = (deg - int(deg)) * 60.0;
+    sec = (min - int(min)) * 60.0;
+    if (sec >= 59.95) {
+        sec -= 60.0;
+        min += 1.0;
+        if (min >= 60.0) {
+            min -= 60.0;
+            deg += 1.0;
+        }
+    }
+    snprintf(buf, 32, "%d*%02d'%04.1f\"%c", int(deg), int(min), fabs(sec), c);
+
+  } else if (format == 3) {
+    // d.dddddd' (signed DDD format).
+    snprintf(buf, 32, "%3.6f", sign*deg);
+
+  } else if (format == 4) {
+    // d mm.mmm' (signed DMM format).
+    min = (deg - int(deg)) * 60.0;
+    if (min >= 59.9995) {
+        min -= 60.0;
+        deg += 1.0;
+    }
+    if (sign == 1) {
+        snprintf(buf, 32, "%d*%06.3f'", int(deg), fabs(min));
+    } else {
+        snprintf(buf, 32, "-%d*%06.3f'", int(deg), fabs(min));
+    }
+
+  } else if (format == 5) {
+    // d mm'ss.s" (signed DMS format).
+    min = (deg - int(deg)) * 60.0;
+    sec = (min - int(min)) * 60.0;
+    if (sec >= 59.95) {
+        sec -= 60.0;
+        min += 1.0;
+        if (min >= 60.0) {
+            min -= 60.0;
+            deg += 1.0;
+        }
+    }
+    if (sign == 1) {
+        snprintf(buf, 32, "%d*%02d'%04.1f\"", int(deg), int(min), fabs(sec));
+    } else {
+        snprintf(buf, 32, "-%d*%02d'%04.1f\"", int(deg), int(min), fabs(sec));
+    }
+
+  } else if (format == 6) {
+    // dd.dddddd X, ddd.dddddd X (zero padded DDD format).
+    if (c == 'N' || c == 'S') {
+      snprintf(buf, 32, "%09.6f%c", deg, c);
+    } else {
+      snprintf(buf, 32, "%010.6f%c", deg, c);
+    }
+
+  } else if (format == 7) {
+    // dd mm.mmm' X, ddd mm.mmm' X (zero padded DMM format).
+    min = (deg - int(deg)) * 60.0;
+    if (min >= 59.9995) {
+        min -= 60.0;
+        deg += 1.0;
+    }
+    if (c == 'N' || c == 'S') {
+      snprintf(buf, 32, "%02d*%06.3f'%c", int(deg), fabs(min), c);
+    } else {
+      snprintf(buf, 32, "%03d*%06.3f'%c", int(deg), fabs(min), c);
+    }
+
+  } else if (format == 8) {
+    // dd mm'ss.s" X, dd mm'ss.s" X (zero padded DMS format).
+    min = (deg - int(deg)) * 60.0;
+    sec = (min - int(min)) * 60.0;
+    if (sec >= 59.95) {
+        sec -= 60.0;
+        min += 1.0;
+        if (min >= 60.0) {
+            min -= 60.0;
+            deg += 1.0;
+        }
+    }
+    if (c == 'N' || c == 'S') {
+      snprintf(buf, 32, "%02d*%02d'%04.1f\"%c", int(deg), int(min), fabs(sec), c);
+    } else {
+      snprintf(buf, 32, "%03d*%02d'%04.1f\"%c", int(deg), int(min), fabs(sec), c);
+    }
+
+  } else if (format == 9) {
+    // dd* mm'.mmm X, ddd* mm'.mmm X (Trinity House Navigation standard).
+    min = (deg - int(deg)) * 60.0;
+    if (min >= 59.9995) {
+        min -= 60.0;
+        deg += 1.0;
+    }
+    if (c == 'N' || c == 'S') {
+        snprintf(buf, 32, "%02d* %02d'.%03d%c", int(deg), int(min), int(round((min-int(min))*1000)), c);
+    } else {
+        snprintf(buf, 32, "%03d* %02d'.%03d%c", int(deg), int(min), int(round((min-int(min))*1000)), c);
+    }
+
+  } else {
+    // Empty the buffer for all invalid formats.
+    buf[0] = '\0';
+  }
+}
+
 const char *
 FGProperties::getLongitudeString ()
 {
   static char buf[32];
   double d = _longDeg->getDoubleValue();
   int format = _lonLatformat->getIntValue();
+
   char c = d < 0.0 ? 'W' : 'E';
-  d = fabs(d);
-
-  if (format == 0) {
-    snprintf(buf, 32, "%3.6f%c", d, c);
-
-  } else if (format == 1) {
-    // dd mm.mmm' (DMM-Format) -- uses a round-off factor tailored to the
-    // required precision of the minutes field (three decimal places),
-    // preventing minute values of 60.
-    double min = (d - int(d)) * 60.0;
-    if (min >= 59.9995) {
-        min -= 60.0;
-        d += 1.0;
-    }
-    snprintf(buf, 32, "%d*%06.3f%c", int(d), fabs(min), c);
-
-  } else {
-    // mm'ss.s'' (DMS-Format) -- uses a round-off factor tailored to the
-    // required precision of the seconds field (one decimal place),
-    // preventing second values of 60.
-    double min = (d - int(d)) * 60.0;
-    double sec = (min - int(min)) * 60.0;
-    if (sec >= 59.95) {
-        sec -= 60.0;
-        min += 1.0;
-        if (min >= 60.0) {
-            min -= 60.0;
-            d += 1.0;
-        }
-    }
-    snprintf(buf, 32, "%d*%02d %04.1f%c", int(d),
-        int(min), fabs(sec), c);
-  }
-  buf[31] = '\0';
+  formatLatLongString(d, format, buf, c);
   return buf;
 }
 
@@ -416,35 +517,9 @@ FGProperties::getLatitudeString ()
   static char buf[32];
   double d = _latDeg->getDoubleValue();
   int format = _lonLatformat->getIntValue();
+
   char c = d < 0.0 ? 'S' : 'N';
-  d = fabs(d);
-
-  if (format == 0) {
-    snprintf(buf, 32, "%3.6f%c", d, c);
-
-  } else if (format == 1) {
-    double min = (d - int(d)) * 60.0;
-    if (min >= 59.9995) {
-        min -= 60.0;
-        d += 1.0;
-    }
-    snprintf(buf, 32, "%d*%06.3f%c", int(d), fabs(min), c);
-
-  } else {
-    double min = (d - int(d)) * 60.0;
-    double sec = (min - int(min)) * 60.0;
-    if (sec >= 59.95) {
-        sec -= 60.0;
-        min += 1.0;
-        if (min >= 60.0) {
-            min -= 60.0;
-            d += 1.0;
-        }
-    }
-    snprintf(buf, 32, "%d*%02d %04.1f%c", int(d),
-        int(min), fabs(sec), c);
-  }
-  buf[31] = '\0';
+  formatLatLongString(d, format, buf, c);
   return buf;
 }
 
