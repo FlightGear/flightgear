@@ -216,6 +216,9 @@ std::string fgValidatePath (const std::string& path, bool write)
         normed_path2 = SGPath(path2.dir()).realpath()
             + "/" + path2.file();
     }
+#if defined(_MSC_VER) /*for MS compilers */ || defined(_WIN32) /*needed for non MS windows compilers like MingW*/
+     normed_path2 = SGPath(normed_path2).str(); // convert \ to /
+#endif
 
     // Check
     if (fgValidatePath_internal(normed_path1, write).empty() ||
