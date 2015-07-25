@@ -1177,7 +1177,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
     
     if (fgValidatePath(file, false).empty()) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file.str() << "' denied "
-                "(unauthorized access)");
+                "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, add them to --fg-aircraft)");
         return false;
     }
 
@@ -1259,7 +1259,7 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
 
     if (fgValidatePath(file, true).empty()) {
         SG_LOG(SG_IO, SG_ALERT, "savexml: writing to '" << file.str() << "' denied "
-                "(unauthorized access)");
+                "(unauthorized directory - authorization no longer follows symlinks)");
         return false;
     }
 

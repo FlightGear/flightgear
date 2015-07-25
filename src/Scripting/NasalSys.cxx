@@ -675,7 +675,7 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
         strcmp(modestr, "rb") && strcmp(modestr, "r"));
     if(filename.empty()) {
         naRuntimeError(c, "open(): reading/writing '%s' denied "
-                "(unauthorized access)", naStr_data(file));
+                "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, add them to --fg-aircraft)", naStr_data(file));
         return naNil();
     }
     f = fopen(filename.c_str(), modestr);
@@ -706,7 +706,7 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
     std::string file = fgValidatePath(naStr_data(args[0]), false);
     if(file.empty()) {
         naRuntimeError(c, "parsexml(): reading '%s' denied "
-                "(unauthorized access)", naStr_data(args[0]));
+                "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, add them to --fg-aircraft)", naStr_data(args[0]));
         return naNil();
     }
     std::ifstream input(file.c_str());
