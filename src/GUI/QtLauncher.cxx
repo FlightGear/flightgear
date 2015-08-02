@@ -535,7 +535,7 @@ QtLauncher::~QtLauncher()
     
 }
 
-void QtLauncher::initApp(int argc, char** argv)
+void QtLauncher::initApp(int& argc, char** argv)
 {
     static bool qtInitDone = false;
     if (!qtInitDone) {
