@@ -48,6 +48,9 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/package/Catalog.hxx>
+#include <simgear/package/Package.hxx>
+#include <simgear/package/Install.hxx>
 
 #include "ui_Launcher.h"
 #include "EditRatingsFilterDialog.hxx"
@@ -65,6 +68,7 @@
 #include <Network/HTTPClient.hxx>
 
 using namespace flightgear;
+using namespace simgear::pkg;
 
 const int MAX_RECENT_AIRPORTS = 32;
 const int MAX_RECENT_AIRCRAFT = 20;
@@ -457,8 +461,6 @@ QtLauncher::QtLauncher() :
     connect(m_ui->aircraftHistory, &QPushButton::clicked,
           this, &QtLauncher::onPopupAircraftHistory);
 
-    restoreSettings();
-
     QAction* qa = new QAction(this);
     qa->setShortcut(QKeySequence("Ctrl+Q"));
     connect(qa, &QAction::triggered, this, &QtLauncher::onQuit);
@@ -495,7 +497,7 @@ QtLauncher::QtLauncher() :
     updateSettingsSummary();
 
     fgInitPackageRoot();
-    simgear::pkg::RootRef r(globals->packageRoot());
+    RootRef r(globals->packageRoot());
 
     FGHTTPClient* http = new FGHTTPClient;
     globals->add_subsystem("http", http);
@@ -521,9 +523,20 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onAircraftSelected);
     connect(delegate, &AircraftItemDelegate::variantChanged,
             this, &QtLauncher::onAircraftSelected);
+    connect(delegate, &AircraftItemDelegate::requestInstall,
+            this, &QtLauncher::onRequestPackageInstall);
+    connect(delegate, &AircraftItemDelegate::cancelDownload,
+            this, &QtLauncher::onCancelDownload);
 
+    connect(m_aircraftModel, &AircraftItemModel::aircraftInstallCompleted,
+            this, &QtLauncher::onAircraftInstalledCompleted);
+    connect(m_aircraftModel, &AircraftItemModel::aircraftInstallFailed,
+            this, &QtLauncher::onAircraftInstallFailed);
+    
     connect(m_ui->pathsButton, &QPushButton::clicked,
             this, &QtLauncher::onEditPaths);
+
+    restoreSettings();
 
     QSettings settings;
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
@@ -566,6 +579,7 @@ void QtLauncher::initApp(int& argc, char** argv)
 
 bool QtLauncher::runLauncherDialog()
 {
+    sglog().setLogLevels( SG_ALL, SG_INFO );
     Q_INIT_RESOURCE(resources);
 
     // startup the nav-cache now. This pre-empts normal startup of
@@ -598,7 +612,7 @@ void QtLauncher::restoreSettings()
     m_ui->seasonCombo->setCurrentIndex(settings.value("season", 0).toInt());
 
     // full paths to -set.xml files
-    m_recentAircraft = settings.value("recent-aircraft").toStringList();
+    m_recentAircraft = QUrl::fromStringList(settings.value("recent-aircraft").toStringList());
 
     if (!m_recentAircraft.empty()) {
         m_selectedAircraft = m_recentAircraft.front();
@@ -638,7 +652,7 @@ void QtLauncher::saveSettings()
     settings.setValue("enable-realwx", m_ui->fetchRealWxrCheckbox->isChecked());
     settings.setValue("start-paused", m_ui->startPausedCheck->isChecked());
     settings.setValue("ratings-filter", m_ui->ratingsFilterCheck->isChecked());
-    settings.setValue("recent-aircraft", m_recentAircraft);
+    settings.setValue("recent-aircraft", QUrl::toStringList(m_recentAircraft));
     settings.setValue("recent-airports", m_recentAirports);
     settings.setValue("timeofday", m_ui->timeOfDayCombo->currentIndex());
     settings.setValue("season", m_ui->seasonCombo->currentIndex());
@@ -679,13 +693,22 @@ void QtLauncher::onRun()
 
     // aircraft
     if (!m_selectedAircraft.isEmpty()) {
-        QFileInfo setFileInfo(m_selectedAircraft);
-        opt->addOption("aircraft-dir", setFileInfo.dir().absolutePath().toStdString());
-        QString setFile = setFileInfo.fileName();
-        Q_ASSERT(setFile.endsWith("-set.xml"));
-        setFile.truncate(setFile.count() - 8); // drop the '-set.xml' portion
-        opt->addOption("aircraft", setFile.toStdString());
-
+        if (m_selectedAircraft.isLocalFile()) {
+            QFileInfo setFileInfo(m_selectedAircraft.toLocalFile());
+            opt->addOption("aircraft-dir", setFileInfo.dir().absolutePath().toStdString());
+            QString setFile = setFileInfo.fileName();
+            Q_ASSERT(setFile.endsWith("-set.xml"));
+            setFile.truncate(setFile.count() - 8); // drop the '-set.xml' portion
+            opt->addOption("aircraft", setFile.toStdString());
+        } else if (m_selectedAircraft.scheme() == "package") {
+            PackageRef pkg = packageForAircraftURI(m_selectedAircraft);
+            // no need to set aircraft-dir, handled by the corresponding code
+            // in fgInitAircraft
+            opt->addOption("aircraft", pkg->qualifiedId());
+        } else {
+            qWarning() << "unsupported aircraft launch URL" << m_selectedAircraft;
+        }
+        
       // manage aircraft history
         if (m_recentAircraft.contains(m_selectedAircraft))
           m_recentAircraft.removeOne(m_selectedAircraft);
@@ -902,6 +925,29 @@ void QtLauncher::onToggleTerrasync(bool enabled)
     } // of is enabled
 }
 
+void QtLauncher::onAircraftInstalledCompleted(QModelIndex index)
+{
+    qDebug() << Q_FUNC_INFO;
+    QUrl u = index.data(AircraftURIRole).toUrl();
+    if (u == m_selectedAircraft) {
+        // potentially enable the run button now!
+        updateSelectedAircraft();
+        qDebug() << "updating selected aircraft" << index.data();
+    }
+}
+
+void QtLauncher::onAircraftInstallFailed(QModelIndex index, QString errorMessage)
+{
+    qWarning() << Q_FUNC_INFO << index.data(AircraftURIRole) << errorMessage;
+    
+    QMessageBox msg;
+    msg.setWindowTitle(tr("Aircraft insallation failed"));
+    msg.setText(tr("An error occurred installing the aircraft %1: %2").
+                arg(index.data(Qt::DisplayRole).toString()).arg(errorMessage));
+    msg.addButton(QMessageBox::Ok);
+    msg.exec();
+}
+
 void QtLauncher::updateAirportDescription()
 {
     if (!m_selectedAirport) {
@@ -944,20 +990,42 @@ void QtLauncher::onAirportChoiceSelected(const QModelIndex& index)
 
 void QtLauncher::onAircraftSelected(const QModelIndex& index)
 {
-    m_selectedAircraft = index.data(AircraftPathRole).toString();
+    m_selectedAircraft = index.data(AircraftURIRole).toUrl();
     updateSelectedAircraft();
+}
+
+void QtLauncher::onRequestPackageInstall(const QModelIndex& index)
+{
+    QString pkg = index.data(AircraftPackageIdRole).toString();
+    qDebug() << "request install of" << pkg;
+    simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
+    pref->install();
+}
+
+void QtLauncher::onCancelDownload(const QModelIndex& index)
+{
+    QString pkg = index.data(AircraftPackageIdRole).toString();
+    qDebug() << "cancel download of" << pkg;
+    simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
+    simgear::pkg::InstallRef i = pref->existingInstall();
+    i->cancelDownload();
 }
 
 void QtLauncher::updateSelectedAircraft()
 {
-    try {
-        QFileInfo info(m_selectedAircraft);
-        AircraftItem item(info.dir(), m_selectedAircraft);
-        m_ui->thumbnail->setPixmap(item.thumbnail());
-        m_ui->aircraftDescription->setText(item.description);
-    } catch (sg_exception& e) {
+    QModelIndex index = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
+    if (index.isValid()) {
+        QPixmap pm = index.data(Qt::DecorationRole).value<QPixmap>();
+        m_ui->thumbnail->setPixmap(pm);
+        m_ui->aircraftDescription->setText(index.data(Qt::DisplayRole).toString());
+        
+        int status = index.data(AircraftPackageStatusRole).toInt();
+        bool canRun = (status == PackageInstalled);
+        m_ui->runButton->setEnabled(canRun);
+    } else {
         m_ui->thumbnail->setPixmap(QPixmap());
         m_ui->aircraftDescription->setText("");
+        m_ui->runButton->setEnabled(false);
     }
 }
 
@@ -985,16 +1053,16 @@ void QtLauncher::onPopupAirportHistory()
     }
 }
 
-QModelIndex QtLauncher::proxyIndexForAircraftPath(QString path) const
+QModelIndex QtLauncher::proxyIndexForAircraftURI(QUrl uri) const
 {
-  return m_aircraftProxy->mapFromSource(sourceIndexForAircraftPath(path));
+  return m_aircraftProxy->mapFromSource(sourceIndexForAircraftURI(uri));
 }
 
-QModelIndex QtLauncher::sourceIndexForAircraftPath(QString path) const
+QModelIndex QtLauncher::sourceIndexForAircraftURI(QUrl uri) const
 {
     AircraftItemModel* sourceModel = qobject_cast<AircraftItemModel*>(m_aircraftProxy->sourceModel());
     Q_ASSERT(sourceModel);
-    return sourceModel->indexOfAircraftPath(path);
+    return sourceModel->indexOfAircraftURI(uri);
 }
 
 void QtLauncher::onPopupAircraftHistory()
@@ -1004,21 +1072,21 @@ void QtLauncher::onPopupAircraftHistory()
     }
 
     QMenu m;
-    Q_FOREACH(QString path, m_recentAircraft) {
-        QModelIndex index = sourceIndexForAircraftPath(path);
+    Q_FOREACH(QUrl uri, m_recentAircraft) {
+        QModelIndex index = sourceIndexForAircraftURI(uri);
         if (!index.isValid()) {
             // not scanned yet
             continue;
         }
         QAction* act = m.addAction(index.data(Qt::DisplayRole).toString());
-        act->setData(path);
+        act->setData(uri);
     }
 
     QPoint popupPos = m_ui->aircraftHistory->mapToGlobal(m_ui->aircraftHistory->rect().bottomLeft());
     QAction* triggered = m.exec(popupPos);
     if (triggered) {
-        m_selectedAircraft = triggered->data().toString();
-        QModelIndex index = proxyIndexForAircraftPath(m_selectedAircraft);
+        m_selectedAircraft = triggered->data().toUrl();
+        QModelIndex index = proxyIndexForAircraftURI(m_selectedAircraft);
         m_ui->aircraftList->selectionModel()->setCurrentIndex(index,
                                                               QItemSelectionModel::ClearAndSelect);
         m_ui->aircraftFilter->clear();
@@ -1127,6 +1195,18 @@ void QtLauncher::onEditPaths()
         m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
         m_aircraftModel->scanDirs();
     }
+}
+
+simgear::pkg::PackageRef QtLauncher::packageForAircraftURI(QUrl uri) const
+{
+    if (uri.scheme() != "package") {
+        qWarning() << "invalid URL scheme:" << uri;
+        return simgear::pkg::PackageRef();
+    }
+    
+    QString ident = uri.path();
+    qDebug() << Q_FUNC_INFO << uri << ident;
+    return globals->packageRoot()->getPackageById(ident.toStdString());
 }
 
 #include "QtLauncher.moc"

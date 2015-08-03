@@ -546,11 +546,9 @@ int fgInitAircraft(bool reinit)
             // code in FindAndCacheAircraft works as normal
             // note since we may be using a variant, we can't use the package ID
             size_t lastDot = aircraftId.rfind('.');
-            if (lastDot != std::string::npos) {
-                aircraftId = aircraftId.substr(lastDot + 1);
-                aircraftProp->setStringValue(aircraftId);
-
-            }
+            assert(lastDot != std::string::npos);
+            aircraftId = aircraftId.substr(lastDot + 1);
+            aircraftProp->setStringValue(aircraftId);
             // run the traditional-code path below
         } else {
 #if 0

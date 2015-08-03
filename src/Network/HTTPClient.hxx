@@ -42,8 +42,11 @@ public:
     virtual void update(double);
 
 private:
+    class FGDelegate;
+    
     bool _inited;
     std::auto_ptr<simgear::HTTP::Client> _http;
+    std::auto_ptr<FGDelegate> _packageDelegate;
 };
 
 #endif // FG_HTTP_CLIENT_HXX

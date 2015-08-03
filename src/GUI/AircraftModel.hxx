@@ -26,6 +26,8 @@
 #include <QDir>
 #include <QPixmap>
 #include <QStringList>
+#include <QSharedPointer>
+#include <QUrl>
 
 #include <simgear/package/Root.hxx>
 
@@ -39,6 +41,10 @@ const int AircraftPackageStatusRole = Qt::UserRole + 7;
 const int AircraftPackageProgressRole = Qt::UserRole + 8;
 const int AircraftLongDescriptionRole = Qt::UserRole + 9;
 const int AircraftHasRatingsRole = Qt::UserRole + 10;
+const int AircraftInstallPercentRole = Qt::UserRole + 11;
+const int AircraftPackageSizeRole = Qt::UserRole + 12;
+const int AircraftInstallDownloadedSizeRole = Qt::UserRole + 13;
+const int AircraftURIRole = Qt::UserRole + 14;
 
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
@@ -46,6 +52,9 @@ const int AircraftThumbnailRole = Qt::UserRole + 300;
 
 class AircraftScanThread;
 class QDataStream;
+
+struct AircraftItem;
+typedef QSharedPointer<AircraftItem> AircraftItemPtr;
 
 struct AircraftItem
 {
@@ -70,7 +79,7 @@ struct AircraftItem
     QString variantOf;
     QDateTime pathModTime;
 
-    QList<AircraftItem*> variants;
+    QList<AircraftItemPtr> variants;
 private:
     mutable QPixmap m_thumbnail;
 };
@@ -80,6 +89,7 @@ enum AircraftItemStatus {
     PackageNotInstalled,
     PackageInstalled,
     PackageUpdateAvailable,
+    PackageQueued,
     PackageDownloading
 };
 
@@ -95,11 +105,8 @@ public:
 
     void scanDirs();
 
-    virtual int rowCount(const QModelIndex& parent) const
-    {
-        return m_items.size();
-    }
-
+    virtual int rowCount(const QModelIndex& parent) const;
+    
     virtual QVariant data(const QModelIndex& index, int role) const;
     
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
@@ -108,26 +115,53 @@ public:
      * given a -set.xml path, return the corresponding model index, if one
      * exists.
      */
-    QModelIndex indexOfAircraftPath(QString path) const;
+  //  QModelIndex indexOfAircraftPath(QString path) const;
 
+    QModelIndex indexOfAircraftURI(QUrl uri) const;
+    
+    /**
+     * return if a given aircraft is ready to be run, or not. Aircraft which
+     * are not installed, or are downloading, are not runnable.
+     */
+    bool isIndexRunnable(const QModelIndex& index) const;
+    
+signals:
+    void aircraftInstallFailed(QModelIndex index, QString errorMessage);
+    
+    void aircraftInstallCompleted(QModelIndex index);
+    
 private slots:
     void onScanResults();
     
     void onScanFinished();
 
 private:
-    QVariant dataFromItem(const AircraftItem* item, quint32 variantIndex, int role) const;
+    friend class PackageDelegate;
+    
+    QVariant dataFromItem(AircraftItemPtr item, quint32 variantIndex, int role) const;
 
     QVariant dataFromPackage(const simgear::pkg::PackageRef& item,
                              quint32 variantIndex, int role) const;
 
+    QVariant packageThumbnail(simgear::pkg::PackageRef p, int index) const;
+    
     void abandonCurrentScan();
-
+    void refreshPackages();
+    
+    void installSucceeded(QModelIndex index);
+    void installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason);
+    
     QStringList m_paths;
     AircraftScanThread* m_scanThread;
-    QList<AircraftItem*> m_items;
-    QList<quint32> m_activeVariant;
+    QVector<AircraftItemPtr> m_items;
+    
+    QVector<quint32> m_activeVariant;
+    QVector<quint32> m_packageVariant;
+    
     simgear::pkg::RootRef m_packageRoot;
+    simgear::pkg::PackageList m_packages;
+        
+    mutable QHash<QString, QPixmap> m_thumbnailPixmapCache;
 };
 
 #endif // of FG_GUI_AIRCRAFT_MODEL

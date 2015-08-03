@@ -88,7 +88,7 @@ void AddCatalogDialog::updateUi()
                        "%2 aircraft are included in this hangar.").arg(catDesc).arg(m_result->packages().size());
         ui->resultsSummaryLabel->setText(s);
     } else if (m_state == STATE_DOWNLOAD_FAILED) {
-        Delegate::FailureCode code = m_result->status();
+        Delegate::StatusCode code = m_result->status();
         qWarning() << Q_FUNC_INFO << "failed with code" << code;
         QString s;
         switch (code) {
@@ -98,7 +98,7 @@ void AddCatalogDialog::updateUi()
             break;
 
         case Delegate::FAIL_VERSION:
-            s = tr("The provided hangar is for a different version of FLightGear. "
+            s = tr("The provided hangar is for a different version of FlightGear. "
                    "(This is version %1)").arg(QString::fromUtf8(FLIGHTGEAR_VERSION));
             break;
 
@@ -152,14 +152,14 @@ void AddCatalogDialog::reject()
 
 void AddCatalogDialog::onCatalogStatusChanged(Catalog* cat)
 {
-    Delegate::FailureCode s = cat->status();
+    Delegate::StatusCode s = cat->status();
     qDebug() << Q_FUNC_INFO << "cat status:" << s;
     switch (s) {
-    case Delegate::CATALOG_REFRESHED:
+    case Delegate::STATUS_REFRESHED:
         m_state = STATE_FINISHED;
         break;
 
-    case Delegate::FAIL_IN_PROGRESS:
+    case Delegate::STATUS_IN_PROGRESS:
         // don't jump to STATE_FINISHED
         return;
 

@@ -3,6 +3,7 @@
 
 #include <QSettings>
 #include <QFileDialog>
+#include <QMessageBox>
 
 #include "CatalogListModel.hxx"
 #include "AddCatalogDialog.hxx"
@@ -128,7 +129,17 @@ void PathsDialog::onAddCatalog()
 
 void PathsDialog::onRemoveCatalog()
 {
-    
+    QModelIndex mi = m_ui->catalogsList->currentIndex();
+    if (mi.isValid()) {
+        QMessageBox mb;
+        mb.setText(QStringLiteral("Remove aircraft hangar '%1'?").arg(mi.data(Qt::DisplayRole).toString()));
+        mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        mb.setDefaultButton(QMessageBox::No);
+        mb.exec();
+        
+        QString pkgId = mi.data(CatalogIdRole).toString();
+        m_packageRoot->removeCatalogById(pkgId.toStdString());
+    }
 }
 
 void PathsDialog::onChangeDownloadDir()

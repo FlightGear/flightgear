@@ -143,29 +143,79 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
 
     QVariant v = index.data(AircraftPackageStatusRole);
     AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
-   // status = PackageNotInstalled;
+    double downloadFraction = 0.0;
+    
     if (status != PackageInstalled) {
+        QString buttonText, infoText;
+        QColor buttonColor(27, 122, 211);
+        
+        double sizeInMBytes = index.data(AircraftPackageSizeRole).toInt();
+        sizeInMBytes /= 0x100000;
+        
+        if (status == PackageDownloading) {
+            buttonText = tr("Cancel");
+            double downloadedMB = index.data(AircraftInstallDownloadedSizeRole).toInt();
+            downloadedMB /= 0x100000;
+            infoText = QStringLiteral("%1 MB of %2 MB").arg(downloadedMB, 0, 'f', 1).arg(sizeInMBytes, 0, 'f', 1);
+            buttonColor = QColor(0xcf, 0xcf, 0xcf);
+            downloadFraction = downloadedMB / sizeInMBytes;
+        } else if (status == PackageQueued) {
+            buttonText = tr("Cancel");
+            infoText = tr("Waiting to download %1 MB").arg(sizeInMBytes, 0, 'f', 1);
+            buttonColor = QColor(0xcf, 0xcf, 0xcf);
+        } else {
+            infoText = QStringLiteral("%1MB").arg(sizeInMBytes, 0, 'f', 1);
+            if (status == PackageNotInstalled) {
+                buttonText = "Install";
+            } else if (status == PackageUpdateAvailable) {
+                buttonText = "Update";
+            }
+        }
+        
         painter->setBrush(Qt::NoBrush);
         QRect buttonRect = packageButtonRect(option.rect, index);
         painter->setPen(Qt::NoPen);
-        painter->setBrush(QColor(27, 122, 211));
+        painter->setBrush(buttonColor);
         painter->drawRoundedRect(buttonRect, 5, 5);
         painter->setPen(Qt::white);
+        painter->drawText(buttonRect, Qt::AlignCenter, buttonText);
+        
+        QRect infoTextRect = buttonRect;
+        infoTextRect.setLeft(buttonRect.right() + MARGIN);
+        infoTextRect.setWidth(200);
+        
+        if (status == PackageDownloading) {
+            QRect progressRect = infoTextRect;
+            progressRect.setHeight(6);
+            painter->setPen(QPen(QColor(0xcf, 0xcf, 0xcf), 0));
+            painter->setBrush(Qt::NoBrush);
+            painter->drawRoundedRect(progressRect, 3, 3);
+            infoTextRect.setTop(progressRect.bottom() + 1);
 
-        if (status == PackageNotInstalled) {
-            painter->drawText(buttonRect, Qt::AlignCenter, "Install");
-        } else if (status == PackageUpdateAvailable) {
-            painter->drawText(buttonRect, Qt::AlignCenter, "Update");
+            QRect progressBarRect = progressRect.marginsRemoved(QMargins(2, 2, 2, 2));
+            
+            progressBarRect.setWidth(static_cast<int>(progressBarRect.width() * downloadFraction));
+            
+            painter->setBrush(QColor(27, 122, 211));
+            painter->setPen(Qt::NoPen);
+            painter->drawRoundedRect(progressBarRect, 2, 2);
         }
-    }
+        
+        painter->setPen(Qt::black);
+        painter->drawText(infoTextRect, Qt::AlignLeft | Qt::AlignVCenter, infoText);
+    } // of update / install / download status
 }
 
 QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const
 {
     QRect contentRect = option.rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
-    QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
-    contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
 
+    const int THUMBNAIL_WIDTH = 172;
+    // don't request the thumbnail here for remote sources. Assume the default
+    //QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
+    //contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
+    contentRect.setLeft(contentRect.left() + MARGIN + THUMBNAIL_WIDTH);
+    
     QFont f;
     f.setPointSize(18);
     QFontMetrics metrics(f);
@@ -209,10 +259,10 @@ bool AircraftItemDelegate::eventFilter( QObject*, QEvent* event )
         QModelIndex index = m_view->indexAt( me->pos() );
         int variantCount = index.data(AircraftVariantCountRole).toInt();
         int variantIndex = index.data(AircraftVariantRole).toInt();
+        QRect vr = m_view->visualRect(index);
 
         if ( (event->type() == QEvent::MouseButtonRelease) && (variantCount > 0) )
         {
-            QRect vr = m_view->visualRect(index);
             QRect leftCycleRect = leftCycleArrowRect(vr, index),
                 rightCycleRect = rightCycleArrowRect(vr, index);
 
@@ -225,6 +275,22 @@ bool AircraftItemDelegate::eventFilter( QObject*, QEvent* event )
                 emit variantChanged(index);
                 return true;
             }
+        }
+        
+        if ((event->type() == QEvent::MouseButtonRelease) &&
+            packageButtonRect(vr, index).contains(me->pos()))
+        {
+            QVariant v = index.data(AircraftPackageStatusRole);
+            AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
+            if (status == PackageNotInstalled) {
+                emit requestInstall(index);
+            } else if ((status == PackageDownloading) || (status == PackageQueued)) {
+                emit cancelDownload(index);
+            } else if (status == PackageUpdateAvailable) {
+                emit requestInstall(index);
+            }
+            
+            return true;
         }
     } else if ( event->type() == QEvent::MouseMove ) {
         QMouseEvent* me = static_cast< QMouseEvent* >( event );
@@ -273,7 +339,8 @@ QRect AircraftItemDelegate::packageButtonRect(const QRect& visualRect, const QMo
     QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
     contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
 
-    return QRect(contentRect.left() + ARROW_SIZE, contentRect.bottom() - 24, 60, BUTTON_HEIGHT);
+    return QRect(contentRect.left() + ARROW_SIZE, contentRect.bottom() - 24,
+                 BUTTON_WIDTH, BUTTON_HEIGHT);
 }
 
 void AircraftItemDelegate::drawRating(QPainter* painter, QString label, const QRect& box, int value) const

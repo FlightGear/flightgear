@@ -47,9 +47,8 @@ typedef nasal::Ghost<pkg::PackageRef> NasalPackage;
 typedef nasal::Ghost<pkg::CatalogRef> NasalCatalog;
 typedef nasal::Ghost<pkg::InstallRef> NasalInstall;
 
-namespace {
-  
-  class FGDelegate : public pkg::Delegate
+
+class FGHTTPClient::FGDelegate : public pkg::Delegate
 {
 public:
   virtual void refreshComplete()
@@ -67,48 +66,52 @@ public:
       r->scheduleToUpdate((*it)->install());
     }
   }
-
-  virtual void failedRefresh(pkg::Catalog* aCat, FailureCode aReason)
+    
+  virtual void catalogRefreshed(pkg::CatalogRef aCat, StatusCode aReason)
   {
+      if (aCat.ptr() == NULL) {
+          SG_LOG(SG_IO, SG_INFO, "refresh of all catalogs done");
+          return;
+      }
+      
     switch (aReason) {
-    case pkg::Delegate::FAIL_SUCCESS:
-        SG_LOG(SG_IO, SG_WARN, "refresh of Catalog done");
+    case pkg::Delegate::STATUS_SUCCESS:
+    case pkg::Delegate::STATUS_REFRESHED:
+        SG_LOG(SG_IO, SG_INFO, "refresh of Catalog done:" << aCat->url());
         break;
-        
+            
+    case pkg::Delegate::STATUS_IN_PROGRESS:
+        SG_LOG(SG_IO, SG_INFO, "refresh of Catalog started:" << aCat->url());
+        break;
+            
     default:
         SG_LOG(SG_IO, SG_WARN, "refresh of Catalog " << aCat->url() << " failed:" << aReason);
     }
   }
   
-  virtual void startInstall(pkg::Install* aInstall)
+  virtual void startInstall(pkg::InstallRef aInstall)
   {
     SG_LOG(SG_IO, SG_INFO, "beginning install of:" << aInstall->package()->id()
            << " to local path:" << aInstall->path());
 
   }
   
-  virtual void installProgress(pkg::Install* aInstall, unsigned int aBytes, unsigned int aTotal)
+  virtual void installProgress(pkg::InstallRef aInstall, unsigned int aBytes, unsigned int aTotal)
   {
-    SG_LOG(SG_IO, SG_INFO, "installing:" << aInstall->package()->id() << ":"
-           << aBytes << " of " << aTotal);
   }
   
-  virtual void finishInstall(pkg::Install* aInstall)
+  virtual void finishInstall(pkg::InstallRef aInstall, StatusCode aReason)
   {
+      if (aReason == STATUS_SUCCESS) {
     SG_LOG(SG_IO, SG_INFO, "finished install of:" << aInstall->package()->id()
            << " to local path:" << aInstall->path());
+      } else {
+          SG_LOG(SG_IO, SG_WARN, "install failed of:" << aInstall->package()->id()
+                 << " to local path:" << aInstall->path());
+      }
 
   }
-  
-  virtual void failedInstall(pkg::Install* aInstall, FailureCode aReason)
-  {
-    SG_LOG(SG_IO, SG_WARN, "install failed of:" << aInstall->package()->id()
-           << " to local path:" << aInstall->path());
-  }
-
-};
-
-} // of anonymous namespace
+}; // of FGHTTPClient::FGDelegate
 
 FGHTTPClient::FGHTTPClient() :
     _inited(false)
@@ -142,11 +145,12 @@ void FGHTTPClient::init()
     // package system needs access to the HTTP engine too
     packageRoot->setHTTPClient(_http.get());
     
-    packageRoot->setDelegate(new FGDelegate);
+    _packageDelegate.reset(new FGDelegate);
+    packageRoot->addDelegate(_packageDelegate.get());
 
-    const char * defaultCatalogId = fgGetString("/sim/package-system/default-catalog/id", "org.flightgear.default" );
+    const char * defaultCatalogId = fgGetString("/sim/package-system/default-catalog/id", "org.flightgear.official" );
     const char * defaultCatalogUrl = fgGetString("/sim/package-system/default-catalog/url",
-            "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/default-catalog.xml");
+            "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/catalog.xml");
     // setup default catalog if not present
     pkg::Catalog* defaultCatalog = packageRoot->getCatalogById( defaultCatalogId );
     if (!defaultCatalog) {
@@ -299,7 +303,13 @@ void FGHTTPClient::postinit()
 
 void FGHTTPClient::shutdown()
 {
-  _http.reset();
+    pkg::Root* packageRoot = globals->packageRoot();
+    if (packageRoot && _packageDelegate.get()) {
+        packageRoot->removeDelegate(_packageDelegate.get());
+    }
+
+    _packageDelegate.reset();
+    _http.reset();
 }
 
 void FGHTTPClient::update(double)

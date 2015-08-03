@@ -32,7 +32,8 @@ public:
     static const int MARGIN = 4;
     static const int ARROW_SIZE = 20;
     static const int BUTTON_HEIGHT = 24;
-
+    static const int BUTTON_WIDTH = 80;
+    
     AircraftItemDelegate(QListView* view);
     
     virtual void paint(QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index) const;
@@ -44,6 +45,9 @@ public:
 Q_SIGNALS:
     void variantChanged(const QModelIndex& index);
 
+    void requestInstall(const QModelIndex& index);
+    
+    void cancelDownload(const QModelIndex& index);
 private:
     QRect leftCycleArrowRect(const QRect& visualRect, const QModelIndex& index) const;
     QRect rightCycleArrowRect(const QRect& visualRect, const QModelIndex& index) const;
