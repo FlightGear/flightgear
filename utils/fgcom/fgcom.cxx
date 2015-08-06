@@ -147,8 +147,10 @@ int main(int argc, char** argv)
 
         while(_running) {
             int bytes = sgSocket.recv(currentPacket, sizeof(currentPacket)-1, 0);
-            if (bytes == -1)
+            if (bytes == -1) {
+                SGTimeStamp::sleepForMSec(1);  // Prevent full CPU usage (loop)
                 continue;
+            }
 
             currentPacket[bytes] = '\0';
             if( strcmp(currentPacket, previousPacket) != 0 ) {
