@@ -425,7 +425,8 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Auxiliary->in.Tl2b         = Propagate->GetTl2b();
     Auxiliary->in.Tb2l         = Propagate->GetTb2l();
     Auxiliary->in.vPQR         = Propagate->GetPQR();
-    Auxiliary->in.vPQRdot      = Accelerations->GetPQRdot();
+    Auxiliary->in.vPQRi        = Propagate->GetPQRi();
+    Auxiliary->in.vPQRidot     = Accelerations->GetPQRidot();
     Auxiliary->in.vUVW         = Propagate->GetUVW();
     Auxiliary->in.vUVWdot      = Accelerations->GetUVWdot();
     Auxiliary->in.vVel         = Propagate->GetVel();

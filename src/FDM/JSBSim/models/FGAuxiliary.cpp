@@ -242,8 +242,8 @@ bool FGAuxiliary::Run(bool Holding)
   // Nz is Acceleration in "g's", along normal axis (-Z body axis)
   Nz = -vNcg(eZ);
   Ny =  vNcg(eY);
-  vPilotAccel = in.vBodyAccel + in.vPQRdot * in.ToEyePt;
-  vPilotAccel += in.vPQR * (in.vPQR * in.ToEyePt);
+  vPilotAccel = in.vBodyAccel + in.vPQRidot * in.ToEyePt;
+  vPilotAccel += in.vPQRi * (in.vPQRi * in.ToEyePt);
 
   vNwcg = mTb2w * vNcg;
   vNwcg(eZ) = 1.0 - vNwcg(eZ);
