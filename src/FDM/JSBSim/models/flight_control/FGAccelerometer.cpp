@@ -92,9 +92,8 @@ bool FGAccelerometer::Run(void )
     
   //aircraft forces
   vAccel = (Accelerations->GetBodyAccel()
-              + Propagate->GetTi2b() * Accelerations->GetGravAccel()
-              + Accelerations->GetPQRdot() * vRadius
-              + Propagate->GetPQR() * (Propagate->GetPQR() * vRadius));
+              + Accelerations->GetPQRidot() * vRadius
+              + Propagate->GetPQRi() * (Propagate->GetPQRi() * vRadius));
 
   // transform to the specified orientation
   vAccel = mT * vAccel;
