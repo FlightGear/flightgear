@@ -269,7 +269,8 @@ public:
     FGMatrix33 Tl2b;
     FGMatrix33 Tb2l;
     FGColumnVector3 vPQR;
-    FGColumnVector3 vPQRdot;
+    FGColumnVector3 vPQRi;
+    FGColumnVector3 vPQRidot;
     FGColumnVector3 vUVW;
     FGColumnVector3 vUVWdot;
     FGColumnVector3 vVel;
