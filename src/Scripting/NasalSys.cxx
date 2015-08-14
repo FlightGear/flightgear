@@ -674,8 +674,11 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
     std::string filename = fgValidatePath(naStr_data(file),
         strcmp(modestr, "rb") && strcmp(modestr, "r"));
     if(filename.empty()) {
-        naRuntimeError(c, "open(): reading/writing '%s' denied "
-                "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, add them to --fg-aircraft)", naStr_data(file));
+        SG_LOG(SG_NASAL, SG_ALERT, "open(): reading/writing '" <<
+        naStr_data(file) << "' denied (unauthorized directory - authorization"
+        " no longer follows symlinks; to authorize reading additional "
+        "directories, add them to --fg-aircraft)");
+        naRuntimeError(c, "open(): access denied (unauthorized directory)");
         return naNil();
     }
     f = fopen(filename.c_str(), modestr);
@@ -705,8 +708,11 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
 
     std::string file = fgValidatePath(naStr_data(args[0]), false);
     if(file.empty()) {
-        naRuntimeError(c, "parsexml(): reading '%s' denied "
-                "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, add them to --fg-aircraft)", naStr_data(args[0]));
+        SG_LOG(SG_NASAL, SG_ALERT, "parsexml(): reading '" <<
+        naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
+        " no longer follows symlinks; to authorize reading additional "
+        "directories, add them to --fg-aircraft)");
+        naRuntimeError(c, "parsexml(): access denied (unauthorized directory)");
         return naNil();
     }
     std::ifstream input(file.c_str());
