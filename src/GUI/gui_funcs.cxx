@@ -437,7 +437,24 @@ namespace
 {
     using namespace flightgear;
 
-    class GUISnapShotOperation : 
+    SGPath nextScreenshotPath(const std::string& screenshotDir)
+    {
+        char filename[32];
+        static int count = 1;
+        while (count < 1000) {
+            snprintf(filename, 32, "fgfs-screen-%03d.png", count++);
+            
+            SGPath p(screenshotDir);
+            p.append(filename);
+            if (!p.exists()) {
+                return p;
+            }
+        }
+        
+        return SGPath();
+    }
+    
+    class GUISnapShotOperation :
         public GraphicsContextOperation
     {
     public:
@@ -489,19 +506,7 @@ namespace
                 dir = globals->get_fg_home();
             }
 
-            char filename[24];
-            static int count = 1;
-            while (count < 1000) {
-                snprintf(filename, 24, "fgfs-screen-%03d.png", count++);
-
-                SGPath p(dir);
-                p.append(filename);
-                if (!p.exists()) {
-                    _path.set(p.str());
-                    break;
-                }
-            }
-
+            _path = nextScreenshotPath(dir);
             _xsize = fgGetInt("/sim/startup/xsize");
             _ysize = fgGetInt("/sim/startup/ysize");
 
