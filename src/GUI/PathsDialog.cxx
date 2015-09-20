@@ -15,7 +15,7 @@ PathsDialog::PathsDialog(QWidget *parent, simgear::pkg::RootRef root) :
     m_packageRoot(root)
 {
     m_ui->setupUi(this);
-    
+#if defined(CATALOG_SUPPORT)
     m_catalogsModel = new CatalogListModel(this, m_packageRoot);
     m_ui->catalogsList->setModel(m_catalogsModel);
 
@@ -23,7 +23,7 @@ PathsDialog::PathsDialog(QWidget *parent, simgear::pkg::RootRef root) :
             this, &PathsDialog::onAddCatalog);
     connect(m_ui->removeCatalog, &QToolButton::clicked,
             this, &PathsDialog::onRemoveCatalog);
-            
+#endif
     connect(m_ui->addSceneryPath, &QToolButton::clicked,
             this, &PathsDialog::onAddSceneryPath);
     connect(m_ui->removeSceneryPath, &QToolButton::clicked,
@@ -119,11 +119,13 @@ void PathsDialog::onRemoveAircraftPath()
 
 void PathsDialog::onAddCatalog()
 {
+#if defined(CATALOG_SUPPORT)
     AddCatalogDialog* dlg = new AddCatalogDialog(this, m_packageRoot);
     dlg->exec();
     if (dlg->result() == QDialog::Accepted) {
         m_catalogsModel->refresh();
     }
+#endif
 }
 
 void PathsDialog::onRemoveCatalog()

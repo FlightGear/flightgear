@@ -430,6 +430,7 @@ QVariant AircraftItemModel::dataFromItem(const AircraftItem* item, quint32 varia
 
 QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 variantIndex, int role) const
 {
+#if defined(CATALOG_SUPPORT)
     if (role == Qt::DisplayRole) {
         return QString::fromStdString(item->name());
     } else if (role == AircraftPathRole) {
@@ -454,7 +455,7 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
     } else if (role == AircraftLongDescriptionRole) {
         return QString::fromStdString(item->description());
     }
-
+#endif
     return QVariant();
 }
 

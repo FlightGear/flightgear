@@ -136,13 +136,14 @@ void FGHTTPClient::init()
   if (!proxyHost.empty()) {
     _http->setProxy(proxyHost, proxyPort, proxyAuth);
   }
-  
+
   pkg::Root* packageRoot = globals->packageRoot();
   if (packageRoot) {
     // package system needs access to the HTTP engine too
     packageRoot->setHTTPClient(_http.get());
     
     packageRoot->setDelegate(new FGDelegate);
+#if defined(CATALOG_SUPPORT)
 
     const char * defaultCatalogId = fgGetString("/sim/package-system/default-catalog/id", "org.flightgear.default" );
     const char * defaultCatalogUrl = fgGetString("/sim/package-system/default-catalog/url",
@@ -158,6 +159,7 @@ void FGHTTPClient::init()
     
     // start a refresh now
     packageRoot->refresh();
+#endif
   }
 
     _inited = true;

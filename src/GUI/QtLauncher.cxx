@@ -494,8 +494,10 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onToggleTerrasync);
     updateSettingsSummary();
 
+    simgear::pkg::RootRef r;
+#if defined(CATALOG_SUPPORT)
     fgInitPackageRoot();
-    simgear::pkg::RootRef r(globals->packageRoot());
+    r = globals->packageRoot();
 
     FGHTTPClient* http = new FGHTTPClient;
     globals->add_subsystem("http", http);
@@ -503,7 +505,8 @@ QtLauncher::QtLauncher() :
     // we guard against re-init in the global phase; bind and postinit
     // will happen as normal
     http->init();
-
+#endif
+    
     m_aircraftModel = new AircraftItemModel(this, r);
     m_aircraftProxy->setSourceModel(m_aircraftModel);
 
