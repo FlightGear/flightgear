@@ -285,7 +285,7 @@ private:
             // lock mutex while we modify the items array
             {
                 QMutexLocker g(&m_lock);
-                m_items.append(baseAircraft.values().toVector());
+                m_items+=(baseAircraft.values().toVector());
             }
 
             emit addedItems();
@@ -709,7 +709,7 @@ void AircraftItemModel::onScanResults()
     int firstRow = m_items.count();
     int lastRow = firstRow + newItems.count() - 1;
     beginInsertRows(QModelIndex(), firstRow, lastRow);
-    m_items.append(newItems);
+    m_items+=newItems;
 
     // default variants in all cases
     for (int i=0; i< newItems.count(); ++i) {
