@@ -91,6 +91,11 @@ public:
         
         if (r.exists()) {
           return r;
+        } else {
+          // Stop here, otherwise we could end up returning a resource that
+          // belongs to an unrelated version of the same aircraft (from a
+          // different aircraft directory).
+          return SGPath();
         }
     }
   
