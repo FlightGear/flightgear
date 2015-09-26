@@ -393,6 +393,10 @@ QVariant AircraftItemModel::dataFromItem(const AircraftItem* item, quint32 varia
     }
 
     if (role == Qt::DisplayRole) {
+        if (item->description.isEmpty()) {
+            return tr("Missing description for: %1").arg(item->baseName());
+        }
+
         return item->description;
     } else if (role == Qt::DecorationRole) {
         return item->thumbnail();
