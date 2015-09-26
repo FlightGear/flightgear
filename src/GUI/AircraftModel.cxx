@@ -528,6 +528,10 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, quint32 variantIn
     }
 
     if (role == Qt::DisplayRole) {
+        if (item->description.isEmpty()) {
+            return tr("Missing description for: %1").arg(item->baseName());
+        }
+
         return item->description;
     } else if (role == Qt::DecorationRole) {
         return item->thumbnail();
