@@ -117,7 +117,7 @@ static string PackageRootCommand( simgear::pkg::Root* packageRoot, const string 
 
   } else if( command == "version" ) {
 
-    cJSON_AddItemToObject(json, "version", cJSON_CreateString( packageRoot->catalogVersion().c_str() ));
+    cJSON_AddItemToObject(json, "version", cJSON_CreateString( packageRoot->applicationVersion().c_str() ));
 
   } else if( command == "refresh" ) {
     packageRoot->refresh(true);
