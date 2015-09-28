@@ -751,7 +751,6 @@ void AircraftItemModel::installFailed(QModelIndex index, simgear::pkg::Delegate:
 
 void AircraftItemModel::installSucceeded(QModelIndex index)
 {
-    qDebug() << Q_FUNC_INFO << index;
     emit aircraftInstallCompleted(index);
 }
 

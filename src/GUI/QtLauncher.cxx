@@ -1216,7 +1216,6 @@ simgear::pkg::PackageRef QtLauncher::packageForAircraftURI(QUrl uri) const
     }
     
     QString ident = uri.path();
-    qDebug() << Q_FUNC_INFO << uri << ident;
     return globals->packageRoot()->getPackageById(ident.toStdString());
 }
 
