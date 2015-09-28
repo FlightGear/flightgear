@@ -9,6 +9,7 @@ if(COMMAND cmake_policy)
    if(POLICY CMP0054)
        cmake_policy(SET CMP0054 NEW)
    endif()
+   # Mac RPATH policy
    if(POLICY CMP0042)
        cmake_policy(SET CMP0042 NEW)
    endif()
@@ -171,6 +172,7 @@ option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM lib
 option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
 option(FG_NIGHTLY        "Set to ON to mark this as a nightly build" OFF)
+option(ENABLE_DEV_WARNINGS "Set to ON to include developer-warnings" OFF)
 
 # additional utilities
 option(ENABLE_FGADMIN    "Set to ON to build the FGADMIN application (default)" ON)

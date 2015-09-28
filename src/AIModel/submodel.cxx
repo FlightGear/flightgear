@@ -576,8 +576,11 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
             sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
             if (b) old = true;
 
-            if (old)
+#if defined(ENABLE_DEV_WARNINGS)
+            if (old) {
                 SG_LOG(SG_AI, SG_WARN, "Submodels: <*-offset> is deprecated. Use <offsets> instead");
+            }
+#endif
         }
 
         // Randomness

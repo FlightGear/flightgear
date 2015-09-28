@@ -375,11 +375,12 @@ void FGElectricalSystem::init () {
 
     if ( path.length() ) {
         SGPath config = globals->resolve_aircraft_path(path);
-        
+#if defined(ENABLE_DEV_WARNINGS)
         // load an obsolete xml configuration
         SG_LOG( SG_SYSTEMS, SG_WARN,
                 "Reading deprecated xml electrical system model from\n    "
                 << config.str() );
+#endif
         try {
             readProperties( config.str(), config_props );
 

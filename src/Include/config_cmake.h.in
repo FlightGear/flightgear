@@ -50,3 +50,5 @@
 #cmakedefine ENABLE_FLITE
 
 #cmakedefine HAVE_QT
+
+#cmakedefine ENABLE_DEV_WARNINGS

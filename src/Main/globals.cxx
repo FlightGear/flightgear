@@ -71,24 +71,34 @@ public:
     simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_HIGH)
   {
   }
-  
+
   virtual SGPath resolve(const std::string& aResource, SGPath&) const
   {
     string_list pieces(sgPathBranchSplit(aResource));
     if ((pieces.size() < 3) || (pieces.front() != "Aircraft")) {
       return SGPath(); // not an Aircraft path
     }
-    
+
   // test against the aircraft-dir property
     const char* aircraftDir = fgGetString("/sim/aircraft-dir");
     string_list aircraftDirPieces(sgPathBranchSplit(aircraftDir));
     if (!aircraftDirPieces.empty() && (aircraftDirPieces.back() == pieces[1])) {
+        // disable this warning for release builds
+#if defined(ENABLE_DEV_WARNINGS)
+        SGPath betterPath;
+        for (unsigned int i=2; i<pieces.size(); ++i) {
+            betterPath.append(pieces[i]);
+        }
+        SG_LOG(SG_AIRCRAFT, SG_WARN, "resolved path:" << aResource << " using /sim/aircraft-dir.\n"
+               "This is legacy behaviour, change to an aircraft relative path:" << betterPath);
+#endif
+
         // current aircraft-dir matches resource aircraft
         SGPath r(aircraftDir);
         for (unsigned int i=2; i<pieces.size(); ++i) {
           r.append(pieces[i]);
         }
-        
+
         if (r.exists()) {
           return r;
         } else {
@@ -98,7 +108,7 @@ public:
           return SGPath();
         }
     }
-  
+
   // try each aircraft dir in turn
     std::string res(aResource, 9); // resource path with 'Aircraft/' removed
     const string_list& dirs(globals->get_aircraft_paths());
@@ -109,7 +119,7 @@ public:
         return p;
       }
     } // of aircraft path iteration
-    
+
     return SGPath(); // not found
   }
 };
@@ -121,7 +131,7 @@ public:
     simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_HIGH)
   {
   }
-  
+
   virtual SGPath resolve(const std::string& aResource, SGPath&) const
   {
     const char* aircraftDir = fgGetString("/sim/aircraft-dir");
@@ -163,7 +173,7 @@ FGGlobals::FGGlobals() :
     SGPropertyNode* root = new SGPropertyNode;
     props = SGPropertyNode_ptr(root);
     locale = new FGLocale(props);
-    
+
     simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider);
     simgear::ResourceManager::instance()->addProvider(new CurrentAircraftDirProvider);
     initProperties();
@@ -172,15 +182,15 @@ FGGlobals::FGGlobals() :
 void FGGlobals::initProperties()
 {
     simgear::PropertyObjectBase::setDefaultRoot(props);
-    
+
     positionLon = props->getNode("position/longitude-deg", true);
     positionLat = props->getNode("position/latitude-deg", true);
     positionAlt = props->getNode("position/altitude-ft", true);
-    
+
     viewLon = props->getNode("sim/current-view/viewer-lon-deg", true);
     viewLat = props->getNode("sim/current-view/viewer-lat-deg", true);
     viewAlt = props->getNode("sim/current-view/viewer-elev-ft", true);
-    
+
     orientPitch = props->getNode("orientation/pitch-deg", true);
     orientHeading = props->getNode("orientation/heading-deg", true);
     orientRoll = props->getNode("orientation/roll-deg", true);
@@ -188,7 +198,7 @@ void FGGlobals::initProperties()
 }
 
 // Destructor
-FGGlobals::~FGGlobals() 
+FGGlobals::~FGGlobals()
 {
     // save user settings (unless already saved)
     saveUserSettings();
@@ -197,7 +207,7 @@ FGGlobals::~FGGlobals()
     // Shutdown that implicitly assume that other subsystems
     // are still operational (Due to the dynamic allocation and
     // deallocation of AIModel objects. To ensure we can safely
-    // shut down all subsystems, make sure we take down the 
+    // shut down all subsystems, make sure we take down the
     // AIModels system first.
     SGSubsystemRef ai = subsystem_mgr->get_subsystem("ai-model");
     if (ai) {
@@ -205,9 +215,9 @@ FGGlobals::~FGGlobals()
         ai->unbind();
         ai.clear(); // ensure AI is deleted now, not at end of this method
     }
-    
+
     subsystem_mgr->shutdown();
-    subsystem_mgr->unbind();    
+    subsystem_mgr->unbind();
 
     subsystem_mgr->remove("aircraft-model");
     subsystem_mgr->remove("tile-manager");
@@ -222,21 +232,21 @@ FGGlobals::~FGGlobals()
         // GraphicsContext)
         vw->stopThreading();
     }
-    
+
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
     if (vw && vw->getDatabasePager()) {
         vw->getDatabasePager()->cancel();
         vw->getDatabasePager()->clear();
     }
-    
+
     osgDB::Registry::instance()->clearObjectCache();
-    
+
     // renderer touches subsystems during its destruction
     set_renderer(NULL);
     _scenery.clear();
     _chatter_queue.clear();
-    
+
     delete subsystem_mgr;
     subsystem_mgr = NULL; // important so ::get_subsystem returns NULL
     vw = 0; // don't delete the viewer until now
@@ -251,14 +261,14 @@ FGGlobals::~FGGlobals()
 
     simgear::PropertyObjectBase::setDefaultRoot(NULL);
     simgear::SGModelLib::resetPropertyRoot();
-    
+
     delete locale;
     locale = NULL;
-    
+
     cleanupListeners();
-    
+
     props.clear();
-    
+
     delete commands;
 }
 
@@ -285,8 +295,8 @@ void FGGlobals::set_fg_root (const std::string &root) {
     n = n->getChild("fg-root", 0, true);
     n->setStringValue(fg_root.c_str());
     n->setAttribute(SGPropertyNode::WRITE, false);
-    
-    simgear::ResourceManager::instance()->addBasePath(fg_root, 
+
+    simgear::ResourceManager::instance()->addBasePath(fg_root,
       simgear::ResourceManager::PRIORITY_DEFAULT);
 }
 
@@ -321,7 +331,7 @@ void FGGlobals::append_data_path(const SGPath& path)
     if (!path.exists()) {
         SG_LOG(SG_GENERAL, SG_WARN, "adding non-existant data path:" << path);
     }
-    
+
     additional_data_paths.push_back(path);
 }
 
@@ -333,13 +343,13 @@ SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
             return p;
         }
     }
-    
+
     SGPath rootPath(fg_root);
     rootPath.append(pathSuffix);
     if (rootPath.exists()) {
         return rootPath;
     }
-    
+
     SG_LOG(SG_GENERAL, SG_WARN, "dir not found in any data path:" << pathSuffix);
     return SGPath();
 }
@@ -351,9 +361,9 @@ void FGGlobals::append_fg_scenery (const std::string &paths)
   // find first unused fg-scenery property in /sim
     int propIndex = 0;
     while (sim->getChild("fg-scenery", propIndex) != NULL) {
-      ++propIndex; 
+      ++propIndex;
     }
-  
+
     BOOST_FOREACH(const SGPath& path, sgPathSplit( paths )) {
         SGPath abspath(path.realpath());
         if (!abspath.exists()) {
@@ -367,35 +377,35 @@ void FGGlobals::append_fg_scenery (const std::string &paths)
         SG_LOG(SG_GENERAL, SG_INFO, "skipping duplicate add of scenery path:" << abspath.str());
         continue;
       }
-      
+
         simgear::Dir dir(abspath);
         SGPath terrainDir(dir.file("Terrain"));
         SGPath objectsDir(dir.file("Objects"));
-        
-      // this code used to add *either* the base dir, OR add the 
+
+      // this code used to add *either* the base dir, OR add the
       // Terrain and Objects subdirs, but the conditional logic was commented
       // out, such that all three dirs are added. Unfortunately there's
       // no information as to why the change was made.
         fg_scenery.push_back(abspath.str());
-        
+
         if (terrainDir.exists()) {
           fg_scenery.push_back(terrainDir.str());
         }
-        
+
         if (objectsDir.exists()) {
           fg_scenery.push_back(objectsDir.str());
         }
-        
+
         // insert a marker for FGTileEntry::load(), so that
         // FG_SCENERY=A:B becomes list ["A/Terrain", "A/Objects", "",
         // "B/Terrain", "B/Objects", ""]
         fg_scenery.push_back("");
-        
+
       // make scenery dirs available to Nasal
         SGPropertyNode* n = sim->getChild("fg-scenery", propIndex++, true);
         n->setStringValue(abspath.str());
         n->setAttribute(SGPropertyNode::WRITE, false);
-        
+
         // temporary fix so these values survive reset
         n->setAttribute(SGPropertyNode::PRESERVE, true);
     } // of path list iteration
@@ -481,7 +491,7 @@ void FGGlobals::set_renderer(FGRenderer *render)
     if (render == renderer) {
         return;
     }
-    
+
     delete renderer;
     renderer = render;
 }
@@ -498,7 +508,7 @@ FGGlobals::get_subsystem (const char * name)
     if (!subsystem_mgr) {
         return NULL;
     }
-    
+
     return subsystem_mgr->get_subsystem(name);
 }
 
@@ -568,7 +578,7 @@ static void treeDumpRefCounts(int depth, SGPropertyNode* nd)
         if (SGReferenced::count(cp) > 1) {
             SG_LOG(SG_GENERAL, SG_INFO, "\t" << cp->getPath() << " refcount:" << SGReferenced::count(cp));
         }
-        
+
         treeDumpRefCounts(depth + 1, cp);
     }
 }
@@ -578,7 +588,7 @@ static void treeClearAliases(SGPropertyNode* nd)
     if (nd->isAlias()) {
         nd->unalias();
     }
-    
+
     for (int i=0; i<nd->nChildren(); ++i) {
         SGPropertyNode* cp = nd->getChild(i);
         treeClearAliases(cp);
@@ -589,9 +599,9 @@ void
 FGGlobals::resetPropertyRoot()
 {
     delete locale;
-    
+
     cleanupListeners();
-    
+
     // we don't strictly need to clear these (they will be reset when we
     // initProperties again), but trying to reduce false-positives when dumping
     // ref-counts.
@@ -604,19 +614,19 @@ FGGlobals::resetPropertyRoot()
     orientPitch.clear();
     orientHeading.clear();
     orientRoll.clear();
-    
+
     // clear aliases so ref-counts are accurate when dumped
     treeClearAliases(props);
-    
+
     SG_LOG(SG_GENERAL, SG_INFO, "root props refcount:" << props.getNumRefs());
     treeDumpRefCounts(0, props);
 
     //BaseStackSnapshot::dumpAll(std::cout);
-    
+
     props = new SGPropertyNode;
     initProperties();
     locale = new FGLocale(props);
-    
+
     // remove /sim/fg-root before writing to prevent hijacking
     SGPropertyNode *n = props->getNode("/sim", true);
     n->removeChild("fg-root", 0);
@@ -632,7 +642,7 @@ static std::string autosaveName()
     if (versionParts.size() < 2) {
         return "autosave.xml";
     }
-    
+
     os << "autosave_" << versionParts[0] << "_" << versionParts[1] << ".xml";
     return os.str();
 }

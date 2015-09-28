@@ -222,9 +222,11 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         if(a->hasAttribute("version")) {
           _airplane.setVersion( a->getValue("version") );
         }
+#if defined(ENABLE_DEV_WARNINGS)
         if( !_airplane.isVersionOrNewer( Version::YASIM_VERSION_CURRENT ) ) {
           SG_LOG(SG_FLIGHT,SG_ALERT, "This aircraft does not use the latest yasim configuration version.");
         }
+#endif
     } else if(eq(name, "approach")) {
 	float spd = attrf(a, "speed") * KTS2MPS;
 	float alt = attrf(a, "alt", 0) * FT2M;
