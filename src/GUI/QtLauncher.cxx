@@ -927,13 +927,7 @@ void QtLauncher::onToggleTerrasync(bool enabled)
 
 void QtLauncher::onAircraftInstalledCompleted(QModelIndex index)
 {
-    qDebug() << Q_FUNC_INFO;
-    QUrl u = index.data(AircraftURIRole).toUrl();
-    if (u == m_selectedAircraft) {
-        // potentially enable the run button now!
-        updateSelectedAircraft();
-        qDebug() << "updating selected aircraft" << index.data();
-    }
+    maybeUpdateSelectedAircraft(index);
 }
 
 void QtLauncher::onAircraftInstallFailed(QModelIndex index, QString errorMessage)
@@ -941,11 +935,13 @@ void QtLauncher::onAircraftInstallFailed(QModelIndex index, QString errorMessage
     qWarning() << Q_FUNC_INFO << index.data(AircraftURIRole) << errorMessage;
     
     QMessageBox msg;
-    msg.setWindowTitle(tr("Aircraft insallation failed"));
+    msg.setWindowTitle(tr("Aircraft installation failed"));
     msg.setText(tr("An error occurred installing the aircraft %1: %2").
                 arg(index.data(Qt::DisplayRole).toString()).arg(errorMessage));
     msg.addButton(QMessageBox::Ok);
     msg.exec();
+
+    maybeUpdateSelectedAircraft(index);
 }
 
 void QtLauncher::updateAirportDescription()
@@ -997,9 +993,15 @@ void QtLauncher::onAircraftSelected(const QModelIndex& index)
 void QtLauncher::onRequestPackageInstall(const QModelIndex& index)
 {
     QString pkg = index.data(AircraftPackageIdRole).toString();
-    qDebug() << "request install of" << pkg;
     simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
-    pref->install();
+    if (pref->isInstalled()) {
+        InstallRef install = pref->existingInstall();
+        if (install && install->hasUpdate()) {
+            globals->packageRoot()->scheduleToUpdate(install);
+        }
+    } else {
+        pref->install();
+    }
 }
 
 void QtLauncher::onCancelDownload(const QModelIndex& index)
@@ -1009,6 +1011,15 @@ void QtLauncher::onCancelDownload(const QModelIndex& index)
     simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
     simgear::pkg::InstallRef i = pref->existingInstall();
     i->cancelDownload();
+}
+
+void QtLauncher::maybeUpdateSelectedAircraft(QModelIndex index)
+{
+    QUrl u = index.data(AircraftURIRole).toUrl();
+    if (u == m_selectedAircraft) {
+        // potentially enable the run button now!
+        updateSelectedAircraft();
+    }
 }
 
 void QtLauncher::updateSelectedAircraft()

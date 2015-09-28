@@ -407,7 +407,7 @@ AircraftItemModel::AircraftItemModel(QObject* pr, simgear::pkg::RootRef& rootRef
     m_scanThread(NULL),
     m_packageRoot(rootRef)
 {
-    new PackageDelegate(this);
+    m_delegate = new PackageDelegate(this);
     // packages may already be refreshed, so pull now
     refreshPackages();
 }
@@ -415,6 +415,7 @@ AircraftItemModel::AircraftItemModel(QObject* pr, simgear::pkg::RootRef& rootRef
 AircraftItemModel::~AircraftItemModel()
 {
     abandonCurrentScan();
+    delete m_delegate;
 }
 
 void AircraftItemModel::setPaths(QStringList paths)
@@ -738,15 +739,14 @@ void AircraftItemModel::installFailed(QModelIndex index, simgear::pkg::Delegate:
             msg = tr("Package could not be extracted"); break;
         case Delegate::FAIL_FILESYSTEM:
             msg = tr("A local file-system error occurred"); break;
+        case Delegate::FAIL_NOT_FOUND:
+            msg = tr("Package file missing from download server"); break;
         case Delegate::FAIL_UNKNOWN:
         default:
             msg = tr("Unknown reason");
     }
-    
-    quint32 packageIndex = index.row() - m_items.size();
-    const PackageRef& pkg(m_packages[packageIndex]);
-    QString packageName = QString::fromStdString(pkg->description());
-    emit aircraftInstallFailed(index, tr("Failed installation of package '%1': %2").arg(packageName).arg(msg));
+
+    emit aircraftInstallFailed(index, msg);
 }
 
 void AircraftItemModel::installSucceeded(QModelIndex index)

@@ -92,6 +92,12 @@ private slots:
     void onAircraftInstallFailed(QModelIndex index, QString errorMessage);
 private:
     void setAirport(FGAirportRef ref);
+
+    /**
+     * Check if the passed index is the selected aircraft, and if so, refresh
+     * the associated UI data
+     */
+    void maybeUpdateSelectedAircraft(QModelIndex index);
     void updateSelectedAircraft();
 
     void restoreSettings();

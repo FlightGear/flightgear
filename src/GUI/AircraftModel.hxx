@@ -52,7 +52,7 @@ const int AircraftThumbnailRole = Qt::UserRole + 300;
 
 class AircraftScanThread;
 class QDataStream;
-
+class PackageDelegate;
 struct AircraftItem;
 typedef QSharedPointer<AircraftItem> AircraftItemPtr;
 
@@ -86,7 +86,7 @@ private:
 
 
 enum AircraftItemStatus {
-    PackageNotInstalled,
+    PackageNotInstalled = 0,
     PackageInstalled,
     PackageUpdateAvailable,
     PackageQueued,
@@ -137,7 +137,7 @@ private slots:
 
 private:
     friend class PackageDelegate;
-    
+
     QVariant dataFromItem(AircraftItemPtr item, quint32 variantIndex, int role) const;
 
     QVariant dataFromPackage(const simgear::pkg::PackageRef& item,
@@ -154,6 +154,7 @@ private:
     QStringList m_paths;
     AircraftScanThread* m_scanThread;
     QVector<AircraftItemPtr> m_items;
+    PackageDelegate* m_delegate;
     
     QVector<quint32> m_activeVariant;
     QVector<quint32> m_packageVariant;
