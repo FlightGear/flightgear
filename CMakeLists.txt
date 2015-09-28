@@ -29,14 +29,6 @@ project(FlightGear)
 # We have some custom .cmake scripts not in the official distribution.
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 
-if(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
-    # use official include provided by latest CMake
-    include(GNUInstallDirs)
-else(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
-    # backward compatibility: use our own module for older cmake versions
-    include(OldGNUInstallDirs)
-endif(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
-
 # Warning when build is not an out-of-source build.
 string(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" InSourceBuild)
 if(InSourceBuild)
@@ -45,6 +37,7 @@ if(InSourceBuild)
     message(WARNING  "  mkdir ../fgbuild && cd ../fgbuild && cmake ${CMAKE_SOURCE_DIR}")
 endif(InSourceBuild)
 
+include(GNUInstallDirs)
 # System detection/default settings
 include( DetectDistro )
 include( DetectBrowser )
