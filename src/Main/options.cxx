@@ -2024,8 +2024,15 @@ void Options::initAircraft()
   }
   
   if (isOptionSet("aircraft-dir")) {
-    // set this now, so it's available in FindAndCacheAircraft
-    fgSetString("/sim/aircraft-dir", valueForOption("aircraft-dir"));
+    SGPath aircraftDirPath(valueForOption("aircraft-dir"));
+
+    // Set this now, so it's available in FindAndCacheAircraft. Use realpath()
+    // as in FGGlobals::append_aircraft_path(), otherwise fgValidatePath()
+    // will deny access to resources under this path if one of its components
+    // is a symlink (which is not a problem, since it was given as is by the
+    // user---this is very different from a symlink *under* the aircraft dir
+    // or a scenery dir).
+    fgSetString("/sim/aircraft-dir", aircraftDirPath.realpath().c_str());
   }
 }
   
