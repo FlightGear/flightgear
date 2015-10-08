@@ -484,6 +484,7 @@ private:
       SGInterpTable _elevationTable;
   } _serviceVolume;
   PropertyObject<double> _localizerOffset_norm;
+  PropertyObject<double> _localizerOffset_m;
   PropertyObject<double> _localizerWidth_deg;
 };
 
@@ -529,6 +530,7 @@ LOC::LOC( SGPropertyNode_ptr rootNode) :
                                                                                  rootNode->getIndex()))),
   _serviceVolume(),
   _localizerOffset_norm( rootNode->getNode(_name,true)->getNode("offset-norm",true) ),
+  _localizerOffset_m( rootNode->getNode(_name,true)->getNode("offset-m",true) ),
   _localizerWidth_deg( rootNode->getNode(_name,true)->getNode("width-deg",true) )
 {
 }
@@ -585,20 +587,24 @@ void LOC::update( double dt, const SGGeod & aircraftPosition )
 
   if( false == valid() ) {
     _localizerOffset_norm = 0.0;
+    _localizerOffset_m = 0.0;
     return;
   }
 
-  double offset = SGMiscd::normalizePeriodic( -180.0, 180.0, _trueBearingFrom_deg + 180.0 - _navRecord->get_multiuse() );
+  double offsetDeg = SGMiscd::normalizePeriodic( -180.0, 180.0, _trueBearingFrom_deg + 180.0 - _navRecord->get_multiuse() );
+
+  // cross-track error (in meters)
+  _localizerOffset_m = _trackDistance_m * sin(offsetDeg * SGD_DEGREES_TO_RADIANS);
 
   // The factor of 30.0 gives a period of 120 which gives us 3 cycles and six 
   // zeros i.e. six courses: one front course, one back course, and four 
   // false courses. Three of the six are reverse sensing.
-  offset = 30.0 * sawtooth(offset / 30.0);
+  offsetDeg = 30.0 * sawtooth(offsetDeg / 30.0);
 
-  // normalize offset to the localizer width, scale and clip to [-1..1]
-  offset = SGMiscd::clip( 2.0 * offset / _localizerWidth_deg, -1.0, 1.0 );
+  // normalize offsetDeg to the localizer width, scale and clip to [-1..1]
+  offsetDeg = SGMiscd::clip( 2.0 * offsetDeg / _localizerWidth_deg, -1.0, 1.0 );
   
-  _localizerOffset_norm = offset;
+  _localizerOffset_norm = offsetDeg;
 }
 
 void LOC::display( NavIndicator & navIndicator )
