@@ -58,6 +58,10 @@
 # include <google/profiler.h>
 #endif
 
+#if defined(HAVE_QT)
+#include <GUI/QtLauncher.hxx>
+#endif
+
 using std::string;
 using std::ifstream;
 using std::ofstream;
@@ -990,6 +994,21 @@ do_open_browser (const SGPropertyNode * arg)
     return openBrowser(path);
 }
 
+static bool
+do_open_launcher(const SGPropertyNode *)
+{
+#if defined(HAVE_QT)
+    bool ok = flightgear::runInAppLauncherDialog();
+    if (ok) {
+        // start a full reset
+        fgResetIdleState();
+    }
+    return ok;
+#else
+    return false;
+#endif
+}
+
 /**
  * Apply a value in the active XML-configured dialog.
  *
@@ -1468,6 +1487,7 @@ static struct {
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
+    { "open-launcher", do_open_launcher },
     /*
     { "decrease-visibility", do_decrease_visibility },
     { "increase-visibility", do_increase_visibility },

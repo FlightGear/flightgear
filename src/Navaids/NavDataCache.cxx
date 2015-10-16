@@ -2276,10 +2276,10 @@ void NavDataCache::Transaction::commit()
 
 /////////////////////////////////////////////////////////////////////////////
 
-class NavDataCache::ThreadedAirportSearch::ThreadedAirportSearchPrivate : public SGThread
+class NavDataCache::ThreadedGUISearch::ThreadedGUISearchPrivate : public SGThread
 {
 public:
-    ThreadedAirportSearchPrivate() :
+    ThreadedGUISearchPrivate() :
         db(NULL),
         isComplete(false),
         quit(false)
@@ -2300,7 +2300,7 @@ public:
                 SGTimeStamp::sleepForMSec(1);
             } else {
                 std::string errMsg = sqlite3_errmsg(db);
-                SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite error:" << errMsg << " running threaded airport query");
+                SG_LOG(SG_NAVCACHE, SG_ALERT, "Sqlite error:" << errMsg << " running threaded search query");
             }
         }
 
@@ -2316,8 +2316,8 @@ public:
     bool quit;
 };
 
-NavDataCache::ThreadedAirportSearch::ThreadedAirportSearch(const std::string& term) :
-    d(new ThreadedAirportSearchPrivate)
+NavDataCache::ThreadedGUISearch::ThreadedGUISearch(const std::string& term) :
+    d(new ThreadedGUISearchPrivate)
 {
     SGPath p = NavDataCache::instance()->path();
     int openFlags = SQLITE_OPEN_READONLY;
@@ -2331,7 +2331,7 @@ NavDataCache::ThreadedAirportSearch::ThreadedAirportSearch(const std::string& te
     d->start();
 }
 
-NavDataCache::ThreadedAirportSearch::~ThreadedAirportSearch()
+NavDataCache::ThreadedGUISearch::~ThreadedGUISearch()
 {
     {
         SGGuard<SGMutex> g(d->lock);
@@ -2343,7 +2343,7 @@ NavDataCache::ThreadedAirportSearch::~ThreadedAirportSearch()
     sqlite3_close_v2(d->db);
 }
 
-PositionedIDVec NavDataCache::ThreadedAirportSearch::results() const
+PositionedIDVec NavDataCache::ThreadedGUISearch::results() const
 {
     PositionedIDVec r;
     {
@@ -2353,7 +2353,7 @@ PositionedIDVec NavDataCache::ThreadedAirportSearch::results() const
     return r;
 }
 
-bool NavDataCache::ThreadedAirportSearch::isComplete() const
+bool NavDataCache::ThreadedGUISearch::isComplete() const
 {
     SGGuard<SGMutex> g(d->lock);
     return d->isComplete;

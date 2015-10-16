@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>700</width>
-    <height>700</height>
+    <width>800</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -128,9 +128,9 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="aircraftTab">
       <attribute name="title">
        <string>Aircraft</string>
       </attribute>
@@ -216,7 +216,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_2">
+     <widget class="QWidget" name="locationTab">
       <attribute name="title">
        <string>Location</string>
       </attribute>
@@ -242,7 +242,7 @@
          <item>
           <widget class="QLineEdit" name="airportEdit">
            <property name="placeholderText">
-            <string>Enter an ICAO code or search by name</string>
+            <string>Enter an ICAO code, navaid or search by name</string>
            </property>
           </widget>
          </item>
@@ -270,7 +270,7 @@
           <number>0</number>
          </property>
          <widget class="QWidget" name="diagramPage">
-          <layout class="QGridLayout" name="gridLayout">
+          <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,1,0">
            <property name="leftMargin">
             <number>0</number>
            </property>
@@ -283,27 +283,7 @@
            <property name="bottomMargin">
             <number>0</number>
            </property>
-           <item row="0" column="0" colspan="2">
-            <widget class="AirportDiagram" name="airportDiagram" native="true">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QRadioButton" name="runwayRadio">
-             <property name="text">
-              <string>Runway:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QComboBox" name="runwayCombo"/>
-           </item>
-           <item row="2" column="0" rowspan="2">
+           <item row="3" column="0">
             <widget class="QRadioButton" name="parkingRadio">
              <property name="text">
               <string>Parking:</string>
@@ -317,8 +297,94 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="1">
+           <item row="1" column="0">
+            <widget class="QRadioButton" name="runwayRadio">
+             <property name="text">
+              <string>Runway:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="2">
+            <widget class="QSpinBox" name="offsetBearingSpinbox">
+             <property name="wrapping">
+              <bool>true</bool>
+             </property>
+             <property name="maximum">
+              <number>359</number>
+             </property>
+             <property name="singleStep">
+              <number>5</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1" colspan="3">
             <widget class="QComboBox" name="parkingCombo"/>
+           </item>
+           <item row="1" column="1" colspan="3">
+            <widget class="QComboBox" name="runwayCombo"/>
+           </item>
+           <item row="6" column="3">
+            <widget class="QCheckBox" name="trueBearing">
+             <property name="text">
+              <string>True</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QLabel" name="offsetBearingLabel">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Bearing:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QRadioButton" name="offsetRadioButton">
+             <property name="text">
+              <string>Bearing and distance offset:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLabel" name="offsetDistanceLabel">
+             <property name="text">
+              <string>Distance:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="2">
+            <widget class="QDoubleSpinBox" name="offsetNmSpinbox">
+             <property name="suffix">
+              <string>nm</string>
+             </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <double>10000.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>10.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="4">
+            <widget class="AirportDiagram" name="airportDiagram" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -369,7 +435,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_3">
+     <widget class="QWidget" name="settingsTab">
       <attribute name="title">
        <string>Settings</string>
       </attribute>
@@ -446,12 +512,18 @@
          <property name="text">
           <string>Enable deferred rendering (Rembrandt)</string>
          </property>
+         <property name="startupOnly" stdset="0">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item row="4" column="1">
         <widget class="QCheckBox" name="fullScreenCheckbox">
          <property name="text">
           <string>Start full-screen</string>
+         </property>
+         <property name="startupOnly" stdset="0">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -467,12 +539,18 @@
          <property name="text">
           <string>Enable Multi-sample anti-aliasing</string>
          </property>
+         <property name="startupOnly" stdset="0">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item row="5" column="0">
         <widget class="QCheckBox" name="startPausedCheck">
          <property name="text">
           <string>Start paused</string>
+         </property>
+         <property name="startupOnly" stdset="0">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -549,6 +627,9 @@
          <property name="title">
           <string>Additional options</string>
          </property>
+         <property name="startupOnly" stdset="0">
+          <bool>true</bool>
+         </property>
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <item>
            <widget class="QPlainTextEdit" name="commandLineArgs"/>
@@ -586,6 +667,9 @@
         <widget class="QPushButton" name="pathsButton">
          <property name="text">
           <string>Configure add-on aircraft and scenery</string>
+         </property>
+         <property name="startupOnly" stdset="0">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
