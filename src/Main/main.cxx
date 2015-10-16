@@ -449,8 +449,8 @@ int fgMainInit( int argc, char **argv )
     showLauncher |= (::getenv("FG_LAUNCHER") != 0);
 
     if (showLauncher) {
-        QtLauncher::initApp(argc, argv);
-        if (!QtLauncher::runLauncherDialog()) {
+        flightgear::initApp(argc, argv);
+        if (!flightgear::runLauncherDialog()) {
             return EXIT_SUCCESS;
         }
     }

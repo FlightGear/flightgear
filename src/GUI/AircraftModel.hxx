@@ -97,7 +97,7 @@ class AircraftItemModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    AircraftItemModel(QObject* pr, simgear::pkg::RootRef& root);
+    AircraftItemModel(QObject* pr, const simgear::pkg::RootRef& root);
 
     ~AircraftItemModel();
 

@@ -21,107 +21,13 @@
 #ifndef FG_QTLAUNCHER_HXX
 #define FG_QTLAUNCHER_HXX
 
-#include <QDialog>
-#include <QScopedPointer>
-#include <QStringList>
-#include <QModelIndex>
-#include <QTimer>
-#include <QUrl>
-
-
-#include <Airports/airport.hxx>
-#include <simgear/package/Package.hxx>
-#include <simgear/package/Catalog.hxx>
-
-namespace Ui
+namespace flightgear
 {
-    class Launcher;
+  void initApp(int& argc, char** argv);
+
+  bool runLauncherDialog();
+
+  bool runInAppLauncherDialog();
 }
-
-class AirportSearchModel;
-class QModelIndex;
-class AircraftProxyModel;
-class AircraftItemModel;
-class QCheckBox;
-class CatalogListModel;
-
-class QtLauncher : public QDialog
-{
-    Q_OBJECT
-public:
-    QtLauncher();
-    virtual ~QtLauncher();
-
-    static void initApp(int& argc, char** argv);
-
-    static bool runLauncherDialog();
-
-private slots:
-    void onRun();
-    void onQuit();
-
-    void onSearchAirports();
-
-    void onAirportChanged();
-
-    void onAirportChoiceSelected(const QModelIndex& index);
-    void onAircraftSelected(const QModelIndex& index);
-    void onRequestPackageInstall(const QModelIndex& index);
-    void onCancelDownload(const QModelIndex& index);
-    
-    void onPopupAirportHistory();
-    void onPopupAircraftHistory();
-
-    void onEditRatingsFilter();
-
-    void updateAirportDescription();
-    void updateSettingsSummary();
-
-    void onAirportSearchComplete();
-
-    void onRembrandtToggled(bool b);
-    void onToggleTerrasync(bool enabled);
-
-    void onSubsytemIdleTimeout();
-
-    void onEditPaths();
-    
-    void onAirportDiagramClicked(FGRunwayRef rwy);
-
-    void onAircraftInstalledCompleted(QModelIndex index);
-    void onAircraftInstallFailed(QModelIndex index, QString errorMessage);
-private:
-    void setAirport(FGAirportRef ref);
-
-    /**
-     * Check if the passed index is the selected aircraft, and if so, refresh
-     * the associated UI data
-     */
-    void maybeUpdateSelectedAircraft(QModelIndex index);
-    void updateSelectedAircraft();
-
-    void restoreSettings();
-    void saveSettings();
-    
-    QModelIndex proxyIndexForAircraftURI(QUrl uri) const;
-    QModelIndex sourceIndexForAircraftURI(QUrl uri) const;
-
-    void setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const;
-
-    simgear::pkg::PackageRef packageForAircraftURI(QUrl uri) const;
-    
-    QScopedPointer<Ui::Launcher> m_ui;
-    AirportSearchModel* m_airportsModel;
-    AircraftProxyModel* m_aircraftProxy;
-    AircraftItemModel* m_aircraftModel;
-    FGAirportRef m_selectedAirport;
-
-    QUrl m_selectedAircraft;
-    QList<QUrl> m_recentAircraft;
-    QStringList m_recentAirports;
-    QTimer* m_subsystemIdleTimer;
-
-    int m_ratingFilters[4];
-};
 
 #endif // of FG_QTLAUNCHER_HXX

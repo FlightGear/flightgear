@@ -295,18 +295,18 @@ public:
     
     bool isReadOnly() const;
 
-    class ThreadedAirportSearch
+    class ThreadedGUISearch
     {
     public:
-        ThreadedAirportSearch(const std::string& term);
-        ~ThreadedAirportSearch();
+        ThreadedGUISearch(const std::string& term);
+        ~ThreadedGUISearch();
         
         PositionedIDVec results() const;
 
         bool isComplete() const;
     private:
-        class ThreadedAirportSearchPrivate;
-        std::auto_ptr<ThreadedAirportSearchPrivate> d;
+        class ThreadedGUISearchPrivate;
+        std::auto_ptr<ThreadedGUISearchPrivate> d;
     };
 private:
   NavDataCache();

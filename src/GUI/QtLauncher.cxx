@@ -19,6 +19,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "QtLauncher.hxx"
+#include "QtLauncher_private.hxx"
 
 // Qt
 #include <QProgressDialog>
@@ -41,6 +42,8 @@
 #include <QMessageBox>
 #include <QDateTime>
 #include <QApplication>
+#include <QSpinBox>
+#include <QDoubleSpinBox>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -62,6 +65,8 @@
 #include <Navaids/NavDataCache.hxx>
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx> // for parking
+#include <Navaids/navrecord.hxx>
+
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
 #include <Viewer/WindowBuilder.hxx>
@@ -92,7 +97,7 @@ void initNavCache()
             // sleep to give the rebuild thread more time
             SGTimeStamp::sleepForMSec(50);
             phase = cache->rebuild();
-            
+
             switch (phase) {
             case NavDataCache::REBUILD_AIRPORTS:
                 rebuildProgress.setLabelText(QT_TR_NOOP("Loading airport data"));
@@ -249,16 +254,17 @@ public:
         std::string term(t.toUpper().toStdString());
         // try ICAO lookup first
         FGAirportRef ref = FGAirport::findByIdent(term);
+
         if (ref) {
             m_ids.push_back(ref->guid());
             m_airports.push_back(ref);
-        } else {
-            m_search.reset(new NavDataCache::ThreadedAirportSearch(term));
-            QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
-            m_searchActive = true;
+            endResetModel();
+            return;
         }
 
-        endResetModel();
+        m_search.reset(new NavDataCache::ThreadedGUISearch(term));
+        QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
+        m_searchActive = true;
     }
 
     bool isSearchActive() const
@@ -276,7 +282,7 @@ public:
     {
         if (!index.isValid())
             return QVariant();
-        
+
         FGAirportRef apt = m_airports[index.row()];
         if (!apt.valid()) {
             apt = FGPositioned::loadById<FGAirport>(m_ids[index.row()]);
@@ -318,7 +324,7 @@ private slots:
     void onSearchResultsPoll()
     {
         PositionedIDVec newIds = m_search->results();
-        
+
         beginInsertRows(QModelIndex(), m_ids.size(), newIds.size() - 1);
         for (unsigned int i=m_ids.size(); i < newIds.size(); ++i) {
             m_ids.push_back(newIds[i]);
@@ -339,7 +345,7 @@ private:
     PositionedIDVec m_ids;
     mutable std::vector<FGAirportRef> m_airports;
     bool m_searchActive;
-    QScopedPointer<NavDataCache::ThreadedAirportSearch> m_search;
+    QScopedPointer<NavDataCache::ThreadedGUISearch> m_search;
 };
 
 class AircraftProxyModel : public QSortFilterProxyModel
@@ -396,9 +402,97 @@ private:
     int m_ratings[4];
 };
 
+static void initQtResources()
+{
+    Q_INIT_RESOURCE(resources);
+}
+
+namespace flightgear
+{
+
+void initApp(int& argc, char** argv)
+{
+    static bool qtInitDone = false;
+    if (!qtInitDone) {
+        qtInitDone = true;
+
+        QApplication* app = new QApplication(argc, argv);
+        app->setOrganizationName("FlightGear");
+        app->setApplicationName("FlightGear");
+        app->setOrganizationDomain("flightgear.org");
+
+        // avoid double Apple menu and other weirdness if both Qt and OSG
+        // try to initialise various Cocoa structures.
+        flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
+
+        Qt::KeyboardModifiers mods = app->queryKeyboardModifiers();
+        if (mods & Qt::AltModifier) {
+            qWarning() << "Alt pressed during launch";
+
+            // wipe out our settings
+            QSettings settings;
+            settings.clear();
+
+
+            Options::sharedInstance()->addOption("restore-defaults", "");
+        }
+    }
+}
+
+bool runLauncherDialog()
+{
+    sglog().setLogLevels( SG_ALL, SG_INFO );
+
+
+    initQtResources(); // can't be called inside a namespaceb
+
+    // startup the nav-cache now. This pre-empts normal startup of
+    // the cache, but no harm done. (Providing scenery paths are consistent)
+
+    initNavCache();
+
+
+    fgInitPackageRoot();
+
+    // startup the HTTP system now since packages needs it
+    FGHTTPClient* http = new FGHTTPClient;
+    globals->add_subsystem("http", http);
+    // we guard against re-init in the global phase; bind and postinit
+    // will happen as normal
+    http->init();
+
+
+    // setup scenery paths now, especially TerraSync path for airport
+    // parking locations (after they're downloaded)
+
+    QtLauncher dlg;
+    dlg.exec();
+    if (dlg.result() != QDialog::Accepted) {
+        return false;
+    }
+
+    return true;
+}
+
+bool runInAppLauncherDialog()
+{
+    QtLauncher dlg;
+    dlg.setInAppMode();
+    dlg.exec();
+    if (dlg.result() != QDialog::Accepted) {
+        return false;
+    }
+
+    return true;
+}
+
+} // of namespace flightgear
+
 QtLauncher::QtLauncher() :
     QDialog(),
-    m_ui(NULL)
+    m_ui(NULL),
+    m_subsystemIdleTimer(NULL),
+    m_inAppMode(false)
 {
     m_ui.reset(new Ui::Launcher);
     m_ui->setupUi(this);
@@ -447,7 +541,7 @@ QtLauncher::QtLauncher() :
     connect(m_ui->onFinalCheckbox, SIGNAL(toggled(bool)),
             this, SLOT(updateAirportDescription()));
 
-    
+
     connect(m_ui->airportDiagram, &AirportDiagram::clickedRunway,
             this, &QtLauncher::onAirportDiagramClicked);
 
@@ -496,17 +590,7 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onToggleTerrasync);
     updateSettingsSummary();
 
-    fgInitPackageRoot();
-    RootRef r(globals->packageRoot());
-
-    FGHTTPClient* http = new FGHTTPClient;
-    globals->add_subsystem("http", http);
-
-    // we guard against re-init in the global phase; bind and postinit
-    // will happen as normal
-    http->init();
-
-    m_aircraftModel = new AircraftItemModel(this, r);
+    m_aircraftModel = new AircraftItemModel(this, RootRef(globals->packageRoot()));
     m_aircraftProxy->setSourceModel(m_aircraftModel);
 
     m_aircraftProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -532,9 +616,18 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onAircraftInstalledCompleted);
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallFailed,
             this, &QtLauncher::onAircraftInstallFailed);
-    
+
     connect(m_ui->pathsButton, &QPushButton::clicked,
             this, &QtLauncher::onEditPaths);
+
+
+    connect(m_ui->trueBearing, &QCheckBox::toggled, this, &QtLauncher::onOffsetBearingTrueChanged);
+    connect(m_ui->offsetRadioButton, &QRadioButton::toggled,
+            this, &QtLauncher::onOffsetRadioToggled);
+    connect(m_ui->trueBearing, &QCheckBox::toggled, this, &QtLauncher::onOffsetDataChanged);
+    connect(m_ui->offsetBearingSpinbox, SIGNAL(valueChanged(int)), this, SLOT(onOffsetDataChanged()));
+    connect(m_ui->offsetNmSpinbox, SIGNAL(valueChanged(double)),
+            this, SLOT(onOffsetDataChanged()));
 
     restoreSettings();
 
@@ -545,11 +638,25 @@ QtLauncher::QtLauncher() :
 
 QtLauncher::~QtLauncher()
 {
-    
+
 }
 
-void QtLauncher::initApp(int& argc, char** argv)
+void QtLauncher::setInAppMode()
 {
+  m_inAppMode = true;
+  m_ui->tabWidget->removeTab(2);
+  m_ui->runButton->setText(tr("Apply"));
+  m_ui->quitButton->setText(tr("Cancel"));
+
+  disconnect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
+  connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onApply()));
+}
+
+bool QtLauncher::runLauncherDialog()
+{
+    sglog().setLogLevels( SG_ALL, SG_INFO );
+    Q_INIT_RESOURCE(resources);
+
     static bool qtInitDone = false;
     static int s_argc;
     if (!qtInitDone) {
@@ -575,18 +682,11 @@ void QtLauncher::initApp(int& argc, char** argv)
             QSettings settings;
             settings.clear();
 
-
             Options::sharedInstance()->addOption("restore-defaults", "");
         }
     }
-}
 
-bool QtLauncher::runLauncherDialog()
-{
-    sglog().setLogLevels( SG_ALL, SG_INFO );
-    Q_INIT_RESOURCE(resources);
-
-    // startup the nav-cache now. This pre-empts normal startup of
+    // startup the nav-cache now. This preempts normal startup of
     // the cache, but no harm done. (Providing scenery paths are consistent)
 
     initNavCache();
@@ -599,8 +699,6 @@ bool QtLauncher::runLauncherDialog()
     if (dlg.result() != QDialog::Accepted) {
         return false;
     }
-
-    return true;
 }
 
 void QtLauncher::restoreSettings()
@@ -712,7 +810,7 @@ void QtLauncher::onRun()
         } else {
             qWarning() << "unsupported aircraft launch URL" << m_selectedAircraft;
         }
-        
+
       // manage aircraft history
         if (m_recentAircraft.contains(m_selectedAircraft))
           m_recentAircraft.removeOne(m_selectedAircraft);
@@ -799,6 +897,46 @@ void QtLauncher::onRun()
     saveSettings();
 }
 
+void QtLauncher::onApply()
+{
+    accept();
+
+    // aircraft
+    if (!m_selectedAircraft.isEmpty()) {
+        std::string aircraftPropValue,
+            aircraftDir;
+
+        if (m_selectedAircraft.isLocalFile()) {
+            QFileInfo setFileInfo(m_selectedAircraft.toLocalFile());
+            QString setFile = setFileInfo.fileName();
+            Q_ASSERT(setFile.endsWith("-set.xml"));
+            setFile.truncate(setFile.count() - 8); // drop the '-set.xml' portion
+            aircraftDir = setFileInfo.dir().absolutePath().toStdString();
+            aircraftPropValue = setFile.toStdString();
+        } else if (m_selectedAircraft.scheme() == "package") {
+            PackageRef pkg = packageForAircraftURI(m_selectedAircraft);
+            // no need to set aircraft-dir, handled by the corresponding code
+            // in fgInitAircraft
+            aircraftPropValue = pkg->qualifiedId();
+        } else {
+            qWarning() << "unsupported aircraft launch URL" << m_selectedAircraft;
+        }
+
+        // manage aircraft history
+        if (m_recentAircraft.contains(m_selectedAircraft))
+            m_recentAircraft.removeOne(m_selectedAircraft);
+        m_recentAircraft.prepend(m_selectedAircraft);
+        if (m_recentAircraft.size() > MAX_RECENT_AIRCRAFT)
+            m_recentAircraft.pop_back();
+
+        globals->get_props()->setStringValue("/sim/aircraft", aircraftPropValue);
+        globals->get_props()->setStringValue("/sim/aircraft-dir", aircraftDir);
+    }
+
+
+    saveSettings();
+}
+
 void QtLauncher::onQuit()
 {
     reject();
@@ -881,6 +1019,15 @@ void QtLauncher::onAirportChanged()
     }
 }
 
+void QtLauncher::onOffsetRadioToggled(bool on)
+{
+    m_ui->offsetNmSpinbox->setEnabled(on);
+    m_ui->offsetBearingSpinbox->setEnabled(on);
+    m_ui->trueBearing->setEnabled(on);
+    m_ui->offsetBearingLabel->setEnabled(on);
+    m_ui->offsetDistanceLabel->setEnabled(on);
+}
+
 void QtLauncher::onAirportDiagramClicked(FGRunwayRef rwy)
 {
     if (rwy) {
@@ -888,7 +1035,7 @@ void QtLauncher::onAirportDiagramClicked(FGRunwayRef rwy)
         int rwyIndex = m_ui->runwayCombo->findText(QString::fromStdString(rwy->ident()));
         m_ui->runwayCombo->setCurrentIndex(rwyIndex);
     }
-    
+
     updateAirportDescription();
 }
 
@@ -912,7 +1059,7 @@ void QtLauncher::onToggleTerrasync(bool enabled)
             msg.addButton(QMessageBox::Cancel);
             msg.addButton(tr("Change location"), QMessageBox::ActionRole);
             int result = msg.exec();
-  
+
             if (result == QMessageBox::Cancel) {
                 m_ui->terrasyncCheck->setChecked(false);
                 return;
@@ -937,7 +1084,7 @@ void QtLauncher::onAircraftInstalledCompleted(QModelIndex index)
 void QtLauncher::onAircraftInstallFailed(QModelIndex index, QString errorMessage)
 {
     qWarning() << Q_FUNC_INFO << index.data(AircraftURIRole) << errorMessage;
-    
+
     QMessageBox msg;
     msg.setWindowTitle(tr("Aircraft installation failed"));
     msg.setText(tr("An error occurred installing the aircraft %1: %2").
@@ -970,7 +1117,7 @@ void QtLauncher::updateAirportDescription()
         } else {
             locationOnAirport = QString("on %1").arg(runwayName);
         }
-        
+
         int runwayIndex = m_ui->runwayCombo->itemData(comboIndex).toInt();
         FGRunwayRef rwy = (runwayIndex >= 0) ?
             m_selectedAirport->getRunwayByIndex(runwayIndex) : FGRunwayRef();
@@ -986,6 +1133,12 @@ void QtLauncher::onAirportChoiceSelected(const QModelIndex& index)
 {
     m_ui->locationStack->setCurrentIndex(0);
     setAirport(FGPositioned::loadById<FGAirport>(index.data(Qt::UserRole).toULongLong()));
+}
+
+void QtLauncher::onOffsetBearingTrueChanged(bool on)
+{
+    m_ui->offsetBearingLabel->setText(on ? tr("True bearing:") :
+                                      tr("Magnetic bearing:"));
 }
 
 void QtLauncher::onAircraftSelected(const QModelIndex& index)
@@ -1011,7 +1164,6 @@ void QtLauncher::onRequestPackageInstall(const QModelIndex& index)
 void QtLauncher::onCancelDownload(const QModelIndex& index)
 {
     QString pkg = index.data(AircraftPackageIdRole).toString();
-    qDebug() << "cancel download of" << pkg;
     simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
     simgear::pkg::InstallRef i = pref->existingInstall();
     i->cancelDownload();
@@ -1033,7 +1185,7 @@ void QtLauncher::updateSelectedAircraft()
         QPixmap pm = index.data(Qt::DecorationRole).value<QPixmap>();
         m_ui->thumbnail->setPixmap(pm);
         m_ui->aircraftDescription->setText(index.data(Qt::DisplayRole).toString());
-        
+
         int status = index.data(AircraftPackageStatusRole).toInt();
         bool canRun = (status == PackageInstalled);
         m_ui->runButton->setEnabled(canRun);
@@ -1218,10 +1370,14 @@ simgear::pkg::PackageRef QtLauncher::packageForAircraftURI(QUrl uri) const
         qWarning() << "invalid URL scheme:" << uri;
         return simgear::pkg::PackageRef();
     }
-    
+
     QString ident = uri.path();
     return globals->packageRoot()->getPackageById(ident.toStdString());
 }
 
-#include "QtLauncher.moc"
+void QtLauncher::onOffsetDataChanged()
+{
+    qDebug() << "implement me";
+}
 
+#include "QtLauncher.moc"

@@ -402,7 +402,7 @@ private:
     AircraftItemModel* m_model;
 };
 
-AircraftItemModel::AircraftItemModel(QObject* pr, simgear::pkg::RootRef& rootRef) :
+AircraftItemModel::AircraftItemModel(QObject* pr, const simgear::pkg::RootRef& rootRef) :
     QAbstractListModel(pr),
     m_scanThread(NULL),
     m_packageRoot(rootRef)

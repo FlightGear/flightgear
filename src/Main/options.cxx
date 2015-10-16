@@ -2512,7 +2512,7 @@ void Options::setupRoot(int argc, char **argv)
 
 #if defined(HAVE_QT)
     if (base_version != required_version) {
-        QtLauncher::initApp(argc, argv);
+        flightgear::initApp(argc, argv);
         if (SetupRootDialog::restoreUserSelectedRoot()) {
             SG_LOG(SG_GENERAL, SG_INFO, "restored user selected fg_root = " << globals->get_fg_root() );
             return;
