@@ -546,9 +546,11 @@ int fgInitAircraft(bool reinit)
             // code in FindAndCacheAircraft works as normal
             // note since we may be using a variant, we can't use the package ID
             size_t lastDot = aircraftId.rfind('.');
-            assert(lastDot != std::string::npos);
-            aircraftId = aircraftId.substr(lastDot + 1);
+            if (lastDot == std::string::npos) {
+                aircraftId = aircraftId.substr(lastDot + 1);
+            }
             aircraftProp->setStringValue(aircraftId);
+
             // run the traditional-code path below
         } else {
 #if 0
@@ -559,6 +561,7 @@ int fgInitAircraft(bool reinit)
 
             return flightgear::FG_OPTIONS_ERROR;
 #endif
+            // fall back the default aircraft instead
         }
     }
 
