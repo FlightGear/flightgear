@@ -2325,7 +2325,7 @@ NavDataCache::ThreadedGUISearch::ThreadedGUISearch(const std::string& term) :
     sqlite3_open_v2(pathUtf8.c_str(), &d->db, openFlags, NULL);
 
     std::string sql = "SELECT rowid FROM positioned WHERE name LIKE '%" + term
-        + "%' AND type >= 1 AND type <= 3";
+        + "%' AND ((type >= 1 AND type <= 3) OR ((type >= 9 AND type <= 11))) ";
     sqlite3_prepare_v2(d->db, sql.c_str(), sql.length(), &d->query, NULL);
 
     d->start();

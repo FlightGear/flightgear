@@ -430,10 +430,16 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
 }
 
 // Set current_options lon/lat given an airport id and heading (degrees)
-static bool fgSetPosFromFix( const string& id )
+static bool fgSetPosFromFix( const string& id, PositionedID guid )
 {
-  FGPositioned::TypeFilter fixFilter(FGPositioned::FIX);
-  FGPositioned* fix = FGPositioned::findFirstWithIdent(id, &fixFilter);
+    FGPositioned* fix = NULL;
+    if (guid != 0) {
+        fix = FGPositioned::loadById<FGPositioned>(guid);
+    } else {
+        FGPositioned::TypeFilter fixFilter(FGPositioned::FIX);
+        fix = FGPositioned::findFirstWithIdent(id, &fixFilter);
+    }
+
   if (!fix) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate fix = " << id );
     return false;
@@ -491,6 +497,10 @@ bool initPosition()
   string carrier = fgGetString("/sim/presets/carrier");
   string parkpos = fgGetString("/sim/presets/parkpos");
   string fix = fgGetString("/sim/presets/fix");
+
+  // the launcher sets this to precisely identify a navaid
+    PositionedID navaidId = fgGetInt("/sim/presets/navaid-id");
+
   SGPropertyNode *hdg_preset = fgGetNode("/sim/presets/heading-deg", true);
   double hdg = hdg_preset->getDoubleValue();
   
@@ -569,7 +579,7 @@ bool initPosition()
   
   if ( !set_pos && !fix.empty() ) {
     // a Fix is requested
-    if ( fgSetPosFromFix( fix ) ) {
+    if ( fgSetPosFromFix( fix, navaidId ) ) {
       set_pos = true;
     }
   }

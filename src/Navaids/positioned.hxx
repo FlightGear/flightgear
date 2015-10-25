@@ -1,4 +1,4 @@
-// positioned.hxx - base class for objects which are positioned 
+// positioned.hxx - base class for objects which are positioned
 //
 // Copyright (C) 2008 James Turner
 //

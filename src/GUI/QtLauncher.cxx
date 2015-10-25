@@ -235,6 +235,20 @@ private:
 
 } // of anonymous namespace
 
+class IdentSearchFilter : public FGPositioned::TypeFilter
+{
+public:
+    IdentSearchFilter()
+    {
+        addType(FGPositioned::AIRPORT);
+        addType(FGPositioned::SEAPORT);
+        addType(FGPositioned::HELIPAD);
+        addType(FGPositioned::VOR);
+        addType(FGPositioned::FIX);
+        addType(FGPositioned::NDB);
+    }
+};
+
 class AirportSearchModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -248,23 +262,25 @@ public:
     {
         beginResetModel();
 
-        m_airports.clear();
+        m_items.clear();
         m_ids.clear();
 
         std::string term(t.toUpper().toStdString());
-        // try ICAO lookup first
-        FGAirportRef ref = FGAirport::findByIdent(term);
 
-        if (ref) {
-            m_ids.push_back(ref->guid());
-            m_airports.push_back(ref);
-            endResetModel();
-            return;
+        IdentSearchFilter filter;
+        FGPositionedList exactMatches = NavDataCache::instance()->findAllWithIdent(term, &filter, true);
+
+        for (unsigned int i=0; i<exactMatches.size(); ++i) {
+            m_ids.push_back(exactMatches[i]->guid());
+            m_items.push_back(exactMatches[i]);
         }
+        endResetModel();
+
 
         m_search.reset(new NavDataCache::ThreadedGUISearch(term));
         QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
         m_searchActive = true;
+        endResetModel();
     }
 
     bool isSearchActive() const
@@ -283,19 +299,14 @@ public:
         if (!index.isValid())
             return QVariant();
 
-        FGAirportRef apt = m_airports[index.row()];
-        if (!apt.valid()) {
-            apt = FGPositioned::loadById<FGAirport>(m_ids[index.row()]);
-            m_airports[index.row()] = apt;
-        }
-
+        FGPositionedRef pos = itemAtRow(index.row());
         if (role == Qt::DisplayRole) {
-            QString name = QString::fromStdString(apt->name());
-            return QString("%1: %2").arg(QString::fromStdString(apt->ident())).arg(name);
+            QString name = QString::fromStdString(pos->name());
+            return QString("%1: %2").arg(QString::fromStdString(pos->ident())).arg(name);
         }
 
         if (role == Qt::EditRole) {
-            return QString::fromStdString(apt->ident());
+            return QString::fromStdString(pos->ident());
         }
 
         if (role == Qt::UserRole) {
@@ -305,18 +316,16 @@ public:
         return QVariant();
     }
 
-    QString firstIdent() const
+    FGPositionedRef itemAtRow(unsigned int row) const
     {
-        if (m_ids.empty())
-            return QString();
-
-        if (!m_airports.front().valid()) {
-            m_airports[0] = FGPositioned::loadById<FGAirport>(m_ids.front());
+        FGPositionedRef pos = m_items[row];
+        if (!pos.valid()) {
+            pos = NavDataCache::instance()->loadById(m_ids[row]);
+            m_items[row] = pos;
         }
 
-        return QString::fromStdString(m_airports.front()->ident());
+        return pos;
     }
-
 Q_SIGNALS:
     void searchComplete();
 
@@ -328,7 +337,7 @@ private slots:
         beginInsertRows(QModelIndex(), m_ids.size(), newIds.size() - 1);
         for (unsigned int i=m_ids.size(); i < newIds.size(); ++i) {
             m_ids.push_back(newIds[i]);
-            m_airports.push_back(FGAirportRef()); // null ref
+            m_items.push_back(FGPositionedRef()); // null ref
         }
         endInsertRows();
 
@@ -343,7 +352,7 @@ private slots:
 
 private:
     PositionedIDVec m_ids;
-    mutable std::vector<FGAirportRef> m_airports;
+    mutable FGPositionedList m_items;
     bool m_searchActive;
     QScopedPointer<NavDataCache::ThreadedGUISearch> m_search;
 };
@@ -531,15 +540,15 @@ QtLauncher::QtLauncher() :
             m_aircraftProxy, &QSortFilterProxyModel::setFilterFixedString);
 
     connect(m_ui->runwayCombo, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(updateAirportDescription()));
+            this, SLOT(updateLocationDescription()));
     connect(m_ui->parkingCombo, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(updateAirportDescription()));
+            this, SLOT(updateLocationDescription()));
     connect(m_ui->runwayRadio, SIGNAL(toggled(bool)),
-            this, SLOT(updateAirportDescription()));
+            this, SLOT(updateLocationDescription()));
     connect(m_ui->parkingRadio, SIGNAL(toggled(bool)),
-            this, SLOT(updateAirportDescription()));
+            this, SLOT(updateLocationDescription()));
     connect(m_ui->onFinalCheckbox, SIGNAL(toggled(bool)),
-            this, SLOT(updateAirportDescription()));
+            this, SLOT(updateLocationDescription()));
 
 
     connect(m_ui->airportDiagram, &AirportDiagram::clickedRunway,
@@ -724,12 +733,14 @@ void QtLauncher::restoreSettings()
 
     updateSelectedAircraft();
 
-    // ICAO identifiers
-    m_recentAirports = settings.value("recent-airports").toStringList();
-    if (!m_recentAirports.empty()) {
-        setAirport(FGAirport::findByIdent(m_recentAirports.front().toStdString()));
+    Q_FOREACH(QVariant v, settings.value("recent-locations").toList()) {
+        m_recentAirports.push_back(v.toLongLong());
     }
-    updateAirportDescription();
+
+    if (!m_recentAirports.empty()) {
+        setBaseLocation(NavDataCache::instance()->loadById(m_recentAirports.front()));
+    }
+    updateLocationDescription();
 
     // rating filters
     m_ui->ratingsFilterCheck->setChecked(settings.value("ratings-filter", true).toBool());
@@ -755,7 +766,13 @@ void QtLauncher::saveSettings()
     settings.setValue("start-paused", m_ui->startPausedCheck->isChecked());
     settings.setValue("ratings-filter", m_ui->ratingsFilterCheck->isChecked());
     settings.setValue("recent-aircraft", QUrl::toStringList(m_recentAircraft));
-    settings.setValue("recent-airports", m_recentAirports);
+
+    QVariantList locations;
+    Q_FOREACH(PositionedID v, m_recentAirports) {
+        locations.push_back(v);
+    }
+
+    settings.setValue("recent-airports", locations);
     settings.setValue("timeofday", m_ui->timeOfDayCombo->currentIndex());
     settings.setValue("season", m_ui->seasonCombo->currentIndex());
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
@@ -819,26 +836,7 @@ void QtLauncher::onRun()
           m_recentAircraft.pop_back();
     }
 
-    // airport / location
-    if (m_selectedAirport) {
-        opt->addOption("airport", m_selectedAirport->ident());
-    }
-
-    if (m_ui->runwayRadio->isChecked()) {
-        int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
-        if ((index >= 0) && m_selectedAirport) {
-            // explicit runway choice
-            opt->addOption("runway", m_selectedAirport->getRunwayByIndex(index)->ident());
-        }
-
-        if (m_ui->onFinalCheckbox->isChecked()) {
-            opt->addOption("glideslope", "3.0");
-            opt->addOption("offset-distance", "10.0"); // in nautical miles
-        }
-    } else if (m_ui->parkingRadio->isChecked()) {
-        // parking selection
-        opt->addOption("parkpos", m_ui->parkingCombo->currentText().toStdString());
-    }
+    setLocationOptions();
 
     // time of day
     if (m_ui->timeOfDayCombo->currentIndex() != 0) {
@@ -897,6 +895,54 @@ void QtLauncher::onRun()
     saveSettings();
 }
 
+void QtLauncher::setLocationOptions()
+{
+    flightgear::Options* opt = flightgear::Options::sharedInstance();
+
+    if (!m_location) {
+        return;
+    }
+
+    if (FGAirport::isAirportType(m_location.ptr())) {
+        FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
+        opt->addOption("airport", apt->ident());
+
+        if (m_ui->runwayRadio->isChecked()) {
+            int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
+            if (index >= 0) {
+                // explicit runway choice
+                opt->addOption("runway", apt->getRunwayByIndex(index)->ident());
+            }
+
+            if (m_ui->onFinalCheckbox->isChecked()) {
+                opt->addOption("glideslope", "3.0");
+                opt->addOption("offset-distance", "10.0"); // in nautical miles
+            }
+        } else if (m_ui->parkingRadio->isChecked()) {
+            // parking selection
+            opt->addOption("parkpos", m_ui->parkingCombo->currentText().toStdString());
+        }
+        // of location is an airport
+    }
+
+    FGPositioned::Type ty = m_location->type();
+    switch (ty) {
+    case FGPositioned::VOR:
+    case FGPositioned::NDB:
+    case FGPositioned::FIX:
+        // set disambiguation property
+        globals->get_props()->setIntValue("/sim/presets/navaid-id",
+                                          static_cast<int>(m_location->guid()));
+
+        // we always set 'fix', but really this is just to force positionInit
+        // code to check for the navaid-id value above.
+        opt->addOption("fix", m_location->ident());
+        break;
+    default:
+        break;
+    }
+}
+
 void QtLauncher::onApply()
 {
     accept();
@@ -951,8 +997,7 @@ void QtLauncher::onSearchAirports()
         m_ui->searchStatusText->setText(QString("Searching for '%1'").arg(search));
         m_ui->locationStack->setCurrentIndex(2);
     } else if (m_airportsModel->rowCount(QModelIndex()) == 1) {
-        QString ident = m_airportsModel->firstIdent();
-        setAirport(FGAirport::findByIdent(ident.toStdString()));
+        setBaseLocation(m_airportsModel->itemAtRow(0));
         m_ui->locationStack->setCurrentIndex(0);
     }
 }
@@ -963,60 +1008,62 @@ void QtLauncher::onAirportSearchComplete()
     if (numResults == 0) {
         m_ui->searchStatusText->setText(QString("No matching airports for '%1'").arg(m_ui->airportEdit->text()));
     } else if (numResults == 1) {
-        QString ident = m_airportsModel->firstIdent();
-        setAirport(FGAirport::findByIdent(ident.toStdString()));
+        setBaseLocation(m_airportsModel->itemAtRow(0));
         m_ui->locationStack->setCurrentIndex(0);
     } else {
         m_ui->locationStack->setCurrentIndex(1);
     }
 }
 
-void QtLauncher::onAirportChanged()
+void QtLauncher::onLocationChanged()
 {
-    m_ui->runwayCombo->setEnabled(m_selectedAirport);
-    m_ui->parkingCombo->setEnabled(m_selectedAirport);
-    m_ui->airportDiagram->setAirport(m_selectedAirport);
+    bool locIsAirport = FGAirport::isAirportType(m_location.ptr());
 
-    m_ui->runwayRadio->setChecked(true); // default back to runway mode
-    // unelss multiplayer is enabled ?
+    m_ui->runwayCombo->setEnabled(locIsAirport);
+    m_ui->parkingCombo->setEnabled(locIsAirport);
+    if (locIsAirport) {
+        FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
+        m_ui->airportDiagram->setAirport(apt);
 
-    if (!m_selectedAirport) {
-        m_ui->airportDescription->setText(QString());
-        m_ui->airportDiagram->setEnabled(false);
-        return;
-    }
+        m_ui->runwayRadio->setChecked(true); // default back to runway mode
+        // unless multiplayer is enabled ?
+        m_ui->airportDiagram->setEnabled(true);
 
-    m_ui->airportDiagram->setEnabled(true);
+        m_ui->runwayCombo->clear();
+        m_ui->runwayCombo->addItem("Automatic", -1);
+        for (unsigned int r=0; r<apt->numRunways(); ++r) {
+            FGRunwayRef rwy = apt->getRunwayByIndex(r);
+            // add runway with index as data role
+            m_ui->runwayCombo->addItem(QString::fromStdString(rwy->ident()), r);
 
-    m_ui->runwayCombo->clear();
-    m_ui->runwayCombo->addItem("Automatic", -1);
-    for (unsigned int r=0; r<m_selectedAirport->numRunways(); ++r) {
-        FGRunwayRef rwy = m_selectedAirport->getRunwayByIndex(r);
-        // add runway with index as data role
-        m_ui->runwayCombo->addItem(QString::fromStdString(rwy->ident()), r);
-
-        m_ui->airportDiagram->addRunway(rwy);
-    }
-
-    m_ui->parkingCombo->clear();
-    FGAirportDynamics* dynamics = m_selectedAirport->getDynamics();
-    PositionedIDVec parkings = NavDataCache::instance()->airportItemsOfType(
-                                                                            m_selectedAirport->guid(),
-                                                                            FGPositioned::PARKING);
-    if (parkings.empty()) {
-        m_ui->parkingCombo->setEnabled(false);
-        m_ui->parkingRadio->setEnabled(false);
-    } else {
-        m_ui->parkingCombo->setEnabled(true);
-        m_ui->parkingRadio->setEnabled(true);
-        Q_FOREACH(PositionedID parking, parkings) {
-            FGParking* park = dynamics->getParking(parking);
-            m_ui->parkingCombo->addItem(QString::fromStdString(park->getName()),
-                                        static_cast<qlonglong>(parking));
-
-            m_ui->airportDiagram->addParking(park);
+            m_ui->airportDiagram->addRunway(rwy);
         }
-    }
+
+        m_ui->parkingCombo->clear();
+        FGAirportDynamics* dynamics = apt->getDynamics();
+        PositionedIDVec parkings = NavDataCache::instance()->airportItemsOfType(m_location->guid(),
+                                                                                FGPositioned::PARKING);
+        if (parkings.empty()) {
+            m_ui->parkingCombo->setEnabled(false);
+            m_ui->parkingRadio->setEnabled(false);
+        } else {
+            m_ui->parkingCombo->setEnabled(true);
+            m_ui->parkingRadio->setEnabled(true);
+            Q_FOREACH(PositionedID parking, parkings) {
+                FGParking* park = dynamics->getParking(parking);
+                m_ui->parkingCombo->addItem(QString::fromStdString(park->getName()),
+                                            static_cast<qlonglong>(parking));
+
+                m_ui->airportDiagram->addParking(park);
+            }
+        }
+
+
+    } // of location is aiport
+
+
+
+
 }
 
 void QtLauncher::onOffsetRadioToggled(bool on)
@@ -1036,7 +1083,7 @@ void QtLauncher::onAirportDiagramClicked(FGRunwayRef rwy)
         m_ui->runwayCombo->setCurrentIndex(rwyIndex);
     }
 
-    updateAirportDescription();
+    updateLocationDescription();
 }
 
 void QtLauncher::onToggleTerrasync(bool enabled)
@@ -1095,17 +1142,18 @@ void QtLauncher::onAircraftInstallFailed(QModelIndex index, QString errorMessage
     maybeUpdateSelectedAircraft(index);
 }
 
-void QtLauncher::updateAirportDescription()
+void QtLauncher::updateLocationDescription()
 {
-    if (!m_selectedAirport) {
-        m_ui->airportDescription->setText(QString("No airport selected"));
+    if (!m_location) {
+        m_ui->airportDescription->setText(QString("No location selected"));
         return;
     }
 
-    QString ident = QString::fromStdString(m_selectedAirport->ident()),
-        name = QString::fromStdString(m_selectedAirport->name());
+    QString ident = QString::fromStdString(m_location->ident()),
+        name = QString::fromStdString(m_location->name());
     QString locationOnAirport;
     if (m_ui->runwayRadio->isChecked()) {
+        FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
         bool onFinal = m_ui->onFinalCheckbox->isChecked();
         int comboIndex = m_ui->runwayCombo->currentIndex();
         QString runwayName = (comboIndex == 0) ?
@@ -1120,7 +1168,7 @@ void QtLauncher::updateAirportDescription()
 
         int runwayIndex = m_ui->runwayCombo->itemData(comboIndex).toInt();
         FGRunwayRef rwy = (runwayIndex >= 0) ?
-            m_selectedAirport->getRunwayByIndex(runwayIndex) : FGRunwayRef();
+            apt->getRunwayByIndex(runwayIndex) : FGRunwayRef();
         m_ui->airportDiagram->setSelectedRunway(rwy);
     } else if (m_ui->parkingRadio->isChecked()) {
         locationOnAirport =  QString("at parking position %1").arg(m_ui->parkingCombo->currentText());
@@ -1132,7 +1180,7 @@ void QtLauncher::updateAirportDescription()
 void QtLauncher::onAirportChoiceSelected(const QModelIndex& index)
 {
     m_ui->locationStack->setCurrentIndex(0);
-    setAirport(FGPositioned::loadById<FGAirport>(index.data(Qt::UserRole).toULongLong()));
+    setBaseLocation(m_airportsModel->itemAtRow(index.row()));
 }
 
 void QtLauncher::onOffsetBearingTrueChanged(bool on)
@@ -1202,6 +1250,7 @@ void QtLauncher::onPopupAirportHistory()
         return;
     }
 
+#if 0
     QMenu m;
     Q_FOREACH(QString aptCode, m_recentAirports) {
         FGAirportRef apt = FGAirport::findByIdent(aptCode.toStdString());
@@ -1218,6 +1267,7 @@ void QtLauncher::onPopupAirportHistory()
         m_ui->airportEdit->clear();
         m_ui->locationStack->setCurrentIndex(0);
     }
+#endif
 }
 
 QModelIndex QtLauncher::proxyIndexForAircraftURI(QUrl uri) const
@@ -1261,14 +1311,15 @@ void QtLauncher::onPopupAircraftHistory()
     }
 }
 
-void QtLauncher::setAirport(FGAirportRef ref)
+void QtLauncher::setBaseLocation(FGPositionedRef ref)
 {
-    if (m_selectedAirport == ref)
+    if (m_location == ref)
         return;
 
-    m_selectedAirport = ref;
-    onAirportChanged();
+    m_location = ref;
+    onLocationChanged();
 
+#if 0
     if (ref.valid()) {
         // maintain the recent airport list
         QString icao = QString::fromStdString(ref->ident());
@@ -1284,8 +1335,9 @@ void QtLauncher::setAirport(FGAirportRef ref)
             }
         }
     }
+#endif
 
-    updateAirportDescription();
+    updateLocationDescription();
 }
 
 void QtLauncher::onEditRatingsFilter()

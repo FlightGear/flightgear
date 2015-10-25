@@ -66,7 +66,7 @@ private slots:
 
     void onSearchAirports();
 
-    void onAirportChanged();
+    void onLocationChanged();
 
     void onAirportChoiceSelected(const QModelIndex& index);
     void onAircraftSelected(const QModelIndex& index);
@@ -78,7 +78,7 @@ private slots:
 
     void onEditRatingsFilter();
 
-    void updateAirportDescription();
+    void updateLocationDescription();
     void updateSettingsSummary();
 
     void onAirportSearchComplete();
@@ -99,7 +99,8 @@ private slots:
     void onAircraftInstalledCompleted(QModelIndex index);
     void onAircraftInstallFailed(QModelIndex index, QString errorMessage);
 private:
-    void setAirport(FGAirportRef ref);
+    void setLocationOptions();
+    void setBaseLocation(FGPositionedRef ref);
 
     /**
      * Check if the passed index is the selected aircraft, and if so, refresh
@@ -122,11 +123,11 @@ private:
     AirportSearchModel* m_airportsModel;
     AircraftProxyModel* m_aircraftProxy;
     AircraftItemModel* m_aircraftModel;
-    FGAirportRef m_selectedAirport;
+    FGPositionedRef m_location;
 
     QUrl m_selectedAircraft;
     QList<QUrl> m_recentAircraft;
-    QStringList m_recentAirports;
+    QVector<PositionedID> m_recentAirports;
     QTimer* m_subsystemIdleTimer;
     bool m_inAppMode;
 
