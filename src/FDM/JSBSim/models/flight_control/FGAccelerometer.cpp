@@ -44,14 +44,14 @@ INCLUDES
 #include "models/FGPropagate.h"
 #include "models/FGAccelerations.h"
 #include "models/FGMassBalance.h"
-#include "models/FGInertial.h"
 #include "input_output/FGXMLElement.h"
+#include "models/FGFCS.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGAccelerometer.cpp,v 1.15 2014/01/13 10:46:07 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGAccelerometer.cpp,v 1.17 2015/08/09 17:29:48 bcoconni Exp $");
 IDENT(IdHdr,ID_ACCELEROMETER);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,8 +92,8 @@ bool FGAccelerometer::Run(void )
     
   //aircraft forces
   vAccel = (Accelerations->GetBodyAccel()
-              + Accelerations->GetPQRidot() * vRadius
-              + Propagate->GetPQRi() * (Propagate->GetPQRi() * vRadius));
+            + Accelerations->GetPQRidot() * vRadius
+            + Propagate->GetPQRi() * (Propagate->GetPQRi() * vRadius));
 
   // transform to the specified orientation
   vAccel = mT * vAccel;

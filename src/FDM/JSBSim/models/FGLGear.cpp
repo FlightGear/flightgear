@@ -42,11 +42,9 @@ INCLUDES
 
 #include <cstdlib>
 #include <cstring>
-#include <sstream>
 
 #include "math/FGFunction.h"
 #include "FGLGear.h"
-#include "input_output/FGPropertyManager.h"
 #include "models/FGGroundReactions.h"
 #include "math/FGTable.h"
 #include "input_output/FGXMLElement.h"
@@ -63,7 +61,7 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-IDENT(IdSrc,"$Id: FGLGear.cpp,v 1.118 2014/11/30 12:35:32 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGLGear.cpp,v 1.120 2015/08/16 16:13:31 bcoconni Exp $");
 IDENT(IdHdr,ID_LGEAR);
 
 // Body To Structural (body frame is rotated 180 deg about Y and lengths are given in
@@ -166,6 +164,23 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number, const struct Inputs&
   else
     eSteerType = stSteer;
 
+  Element* castering = el->FindElement("castered");
+  if (castering) {
+    if (castering->GetDataAsNumber() != 0.0) {
+      eSteerType = stCaster;
+      Castered = true;
+    }
+    else {
+      if (maxSteerAngle == 0.0) {
+        eSteerType = stFixed;
+      }
+      else {
+        eSteerType = stSteer;
+      }
+      Castered = false;
+    }
+  }
+
   GroundReactions = fdmex->GetGroundReactions();
 
   ForceY_Table = 0;
@@ -262,7 +277,13 @@ void FGLGear::ResetToIC(void)
   WheelSlip = 0.0;
 
   // Initialize Lagrange multipliers
-  memset(LMultiplier, 0, sizeof(LMultiplier));
+  for (int i=0; i < 3; i++) {
+    LMultiplier[i].ForceJacobian.InitMatrix();
+    LMultiplier[i].MomentJacobian.InitMatrix();
+    LMultiplier[i].Min = 0.0;
+    LMultiplier[i].Max = 0.0;
+    LMultiplier[i].value = 0.0;
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

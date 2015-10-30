@@ -56,7 +56,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGTrimAxis.cpp,v 1.17 2014/01/13 10:46:00 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGTrimAxis.cpp,v 1.19 2015/09/28 20:50:41 bcoconni Exp $");
 IDENT(IdHdr,ID_TRIMAXIS);
 
 /*****************************************************************************/

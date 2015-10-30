@@ -45,7 +45,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGXMLElement.cpp,v 1.52 2014/06/29 10:13:18 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGXMLElement.cpp,v 1.54 2015/09/27 15:39:45 bcoconni Exp $");
 IDENT(IdHdr,ID_XMLELEMENT);
 
 bool Element::converterIsInitialized = false;
@@ -464,8 +464,29 @@ double Element::FindElementValueAsNumberConvertTo(const string& el, const string
   }
 
   double value = element->GetDataAsNumber();
+
+  // Sanity check for angular values
+  if ((supplied_units == "RAD") && (fabs(value) > 2 * M_PI)) {
+      cerr << element->ReadFrom() << "The value " << value
+           << " RAD is outside the range [ -2*M_PI RAD ; +2*M_PI RAD ]" << endl;
+  }
+  if ((supplied_units == "DEG") && (fabs(value) > 360.0)) {
+      cerr << element->ReadFrom() << "The value " << value
+           << " DEG is outside the range [ -360 DEG ; +360 DEG ]" << endl;
+  }
+  
+  
   if (!supplied_units.empty()) {
     value *= convert[supplied_units][target_units];
+  }
+
+  if ((target_units == "RAD") && (fabs(value) > 2 * M_PI)) {
+      cerr << element->ReadFrom() << "The value " << value
+           << " RAD is outside the range [ -2*M_PI RAD ; +2*M_PI RAD ]" << endl;
+  }
+  if ((target_units == "DEG") && (fabs(value) > 360.0)) {
+      cerr << element->ReadFrom() << "The value " << value
+           << " DEG is outside the range [ -360 DEG ; +360 DEG ]" << endl;
   }
 
   value = DisperseValue(element, value, supplied_units, target_units);
@@ -569,10 +590,10 @@ FGColumnVector3 Element::FindElementTripletConvertTo( const string& target_units
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double Element::DisperseValue(Element *e, double val, const std::string supplied_units, const std::string target_units)
+double Element::DisperseValue(Element *e, double val, const std::string& supplied_units,
+                              const std::string& target_units)
 {
   double value=val;
-  double disp=0.0;
 
   bool disperse = false;
   try {
@@ -586,7 +607,7 @@ double Element::DisperseValue(Element *e, double val, const std::string supplied
   }
 
   if (e->HasAttribute("dispersion") && disperse) {
-    disp = e->GetAttributeValueAsNumber("dispersion");
+    double disp = e->GetAttributeValueAsNumber("dispersion");
     if (!supplied_units.empty()) disp *= convert[supplied_units][target_units];
     string attType = e->GetAttributeValue("type");
     if (attType == "gaussian" || attType == "gaussiansigned") {

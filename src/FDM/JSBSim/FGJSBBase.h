@@ -43,9 +43,6 @@ INCLUDES
 #include <string>
 #include <cmath>
 
-using std::min;
-using std::max;
-
 #include "input_output/string_utilities.h"
 
 #ifndef M_PI
@@ -57,7 +54,7 @@ using std::max;
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_JSBBASE "$Id: FGJSBBase.h,v 1.41 2014/09/03 17:35:04 bcoconni Exp $"
+#define ID_JSBBASE "$Id: FGJSBBase.h,v 1.44 2015/09/17 19:44:13 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -73,7 +70,7 @@ CLASS DOCUMENTATION
 *   This class provides universal constants, utility functions, messaging
 *   functions, and enumerated constants to JSBSim.
     @author Jon S. Berndt
-    @version $Id: FGJSBBase.h,v 1.41 2014/09/03 17:35:04 bcoconni Exp $
+    @version $Id: FGJSBBase.h,v 1.44 2015/09/17 19:44:13 bcoconni Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -175,7 +172,7 @@ public:
   void PutMessage(const std::string& text, double dVal);
   /** Reads the message on the queue (but does not delete it).
       @return 1 if some messages */
-  int SomeMessages(void);
+  int SomeMessages(void) { return !Messages.empty(); }
   /** Reads the message on the queue and removes it from the queue.
       This function also prints out the message.*/
   void ProcessMessage(void);
@@ -293,7 +290,7 @@ public:
       @return if the two values can be considered equal up to roundoff */
   static bool EqualToRoundoff(double a, double b) {
     double eps = 2.0*DBL_EPSILON;
-    return std::fabs(a - b) <= eps * max(std::fabs(a), std::fabs(b));
+    return std::fabs(a - b) <= eps * std::max<double>(std::fabs(a), std::fabs(b));
   }
 
   /** Finite precision comparison.
@@ -302,7 +299,7 @@ public:
       @return if the two values can be considered equal up to roundoff */
   static bool EqualToRoundoff(float a, float b) {
     float eps = 2.0*FLT_EPSILON;
-    return std::fabs(a - b) <= eps * max(std::fabs(a), std::fabs(b));
+    return std::fabs(a - b) <= eps * std::max<double>(std::fabs(a), std::fabs(b));
   }
 
   /** Finite precision comparison.

@@ -46,7 +46,7 @@ INCLUDES
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGOutputType.cpp,v 1.12 2015/03/28 14:49:01 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGOutputType.cpp,v 1.17 2015/08/23 09:43:31 bcoconni Exp $");
 IDENT(IdHdr,ID_OUTPUTTYPE);
 
 using namespace std;
@@ -89,10 +89,10 @@ FGOutputType::~FGOutputType()
 
 void FGOutputType::SetIdx(unsigned int idx)
 {
-  typedef double (FGOutputType::*iOPMF)(void) const;
-  string outputProp = CreateIndexedPropertyName("simulation/output", idx) + "/log_rate_hz";
+  string outputProp = CreateIndexedPropertyName("simulation/output", idx);
 
-  PropertyManager->Tie(outputProp, this, (iOPMF)0, &FGOutputType::SetRate, false);
+  PropertyManager->Tie(outputProp + "/log_rate_hz", this, &FGOutputType::GetRateHz, &FGOutputType::SetRateHz, false);
+  PropertyManager->Tie(outputProp + "/enabled", &enabled);
   OutputIdx = idx;
 }
 
@@ -130,7 +130,6 @@ bool FGOutputType::Load(Element* element)
   Element *property_element = element->FindElement("property");
 
   while (property_element) {
-    string caption="";
     string property_str = property_element->GetDataLine();
     FGPropertyNode* node = PropertyManager->GetNode(property_str);
     if (!node) {
@@ -153,7 +152,7 @@ bool FGOutputType::Load(Element* element)
   if (!element->GetAttributeValue("rate").empty()) {
     outRate = element->GetAttributeValueAsNumber("rate");
   }
-  SetRate(outRate);
+  SetRateHz(outRate);
 
   return true;
 }
@@ -170,11 +169,10 @@ bool FGOutputType::InitModel(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGOutputType::Run(bool Holding)
+bool FGOutputType::Run(void)
 {
+  if (FGModel::Run(false)) return true;
   if (!enabled) return true;
-  if (FGModel::Run(Holding)) return true;
-  if (Holding) return false;
 
   RunPreFunctions();
   Print();
@@ -187,16 +185,23 @@ bool FGOutputType::Run(bool Holding)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGOutputType::SetRate(double rtHz)
+void FGOutputType::SetRateHz(double rtHz)
 {
   rtHz = rtHz>1000?1000:(rtHz<0?0:rtHz);
   if (rtHz > 0) {
-    FGModel::SetRate(0.5 + 1.0/(FDMExec->GetDeltaT()*rtHz));
+    SetRate(0.5 + 1.0/(FDMExec->GetDeltaT()*rtHz));
     Enable();
   } else {
-    FGModel::SetRate(1);
+    SetRate(1);
     Disable();
   }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGOutputType::GetRateHz(void) const
+{
+  return 1.0 / (rate * FDMExec->GetDeltaT());
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -220,8 +225,6 @@ void FGOutputType::SetRate(double rtHz)
 
 void FGOutputType::Debug(int from)
 {
-  string scratch="";
-
   if (debug_lvl <= 0) return;
 
   if (debug_lvl & 1) { // Standard console startup message output

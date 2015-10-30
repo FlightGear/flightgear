@@ -54,7 +54,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.95 2015/02/07 17:52:36 bcoconni Exp $"
+#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.102 2015/10/25 21:18:29 dpculp Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -178,7 +178,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision: 1.95 $
+    @version $Revision: 1.102 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -361,6 +361,8 @@ public:
   FGAuxiliary* GetAuxiliary(void)      {return (FGAuxiliary*)Models[eAuxiliary];}
   /// Returns the FGInput pointer.
   FGInput* GetInput(void)              {return (FGInput*)Models[eInput];}
+  /// Returns the FGOutput pointer.
+  FGOutput* GetOutput(void)            {return (FGOutput*)Models[eOutput];}
   /** Get a pointer to the ground callback currently used. It is recommanded
       to store the returned pointer in a 'smart pointer' FGGroundCallback_ptr.
       @return A pointer to the current ground callback object.
@@ -432,8 +434,8 @@ public:
   /** Forces the specified output object to print its items once */
   void ForceOutput(int idx=0) { Output->ForceOutput(idx); }
 
-  /** Sets the logging rate for all output objects (if any). */
-  void SetLoggingRate(double rate) { Output->SetRate(rate); }
+  /** Sets the logging rate in Hz for all output objects (if any). */
+  void SetLoggingRate(double rate) { Output->SetRateHz(rate); }
 
   /** Sets (or overrides) the output filename
       @param n index of file
@@ -564,11 +566,16 @@ public:
       is also incremented.
       @return the new simulation time.     */
   double IncrTime(void) {
-    if (!holding) sim_time += dT;
-    GetGroundCallback()->SetTime(sim_time);
-    Frame++;
+    if (!holding && !IntegrationSuspended()) {
+      sim_time += dT;
+      GetGroundCallback()->SetTime(sim_time);
+      Frame++;
+    }
     return sim_time;
   }
+
+  /** Retrieves the current frame count. */
+  unsigned int GetFrame(void) const {return Frame;}
 
   /** Retrieves the current debug level setting. */
   int GetDebugLevel(void) const {return debug_lvl;};
@@ -621,6 +628,7 @@ private:
   bool trim_status;
   int ta_mode;
   unsigned int ResetMode;
+  int trim_completed;
 
   FGScript*           Script;
   FGInitialCondition* IC;

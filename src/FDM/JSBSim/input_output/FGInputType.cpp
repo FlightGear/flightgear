@@ -46,7 +46,7 @@ INCLUDES
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGInputType.cpp,v 1.2 2015/03/28 14:49:01 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGInputType.cpp,v 1.4 2015/08/23 09:43:31 bcoconni Exp $");
 IDENT(IdHdr,ID_INPUTTYPE);
 
 using namespace std;
@@ -106,9 +106,8 @@ bool FGInputType::InitModel(void)
 
 bool FGInputType::Run(bool Holding)
 {
-  if (!enabled) return true;
   if (FGModel::Run(Holding)) return true;
-  // if (Holding) return false;
+  if (!enabled) return true;
 
   RunPreFunctions();
   Read(Holding);
@@ -140,8 +139,6 @@ bool FGInputType::Run(bool Holding)
 
 void FGInputType::Debug(int from)
 {
-  string scratch="";
-
   if (debug_lvl <= 0) return;
 
   if (debug_lvl & 1) { // Standard console startup message input

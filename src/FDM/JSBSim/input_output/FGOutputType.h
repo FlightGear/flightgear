@@ -44,7 +44,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_OUTPUTTYPE "$Id: FGOutputType.h,v 1.6 2015/03/28 14:49:01 bcoconni Exp $"
+#define ID_OUTPUTTYPE "$Id: FGOutputType.h,v 1.11 2015/08/23 09:43:31 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -110,7 +110,10 @@ public:
 
   /** Set the output rate for this output instances.
       @param rtHz new output rate in Hz */
-  void SetRate(double rtHz);
+  void SetRateHz(double rtHz);
+
+  /// Get the output rate in Hz for this output.
+  double GetRateHz(void) const;
 
   /** Set the activated subsystems for this output instance.
       @param subSystems bitfield that describes the activated subsystems
@@ -151,7 +154,7 @@ public:
       generation and finally the "post" functions.
       @result false if no error.
    */
-  bool Run(bool Holding);
+  bool Run(void);
 
   /** Generate the output. This is a pure method so it must be implemented by
       the classes that inherits from FGOutputType. The Print name may not be
