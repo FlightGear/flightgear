@@ -96,6 +96,7 @@ bool FGDeviceConfigurationMap::hasConfiguration(const std::string& name) const
 
 void FGDeviceConfigurationMap::scan_dir(const SGPath & path)
 {
+  SG_LOG(SG_INPUT, SG_DEBUG, "Scanning " << path << " for input devices");
   if (!path.exists())
     return;
   
@@ -138,12 +139,12 @@ void FGDeviceConfigurationMap::readCachedData(const SGPath& path)
 
 void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
 {
-  SG_LOG(SG_INPUT, SG_DEBUG, "Reading joystick file " << path.str());
+  SG_LOG(SG_INPUT, SG_DEBUG, "Reading device file " << path.str());
   SGPropertyNode_ptr n(new SGPropertyNode);
   try {
     readProperties(path.str(), n);
   } catch (sg_exception&) {
-    SG_LOG(SG_INPUT, SG_WARN, "parse failure reading:" << path);
+    SG_LOG(SG_INPUT, SG_ALERT, "parse failure reading:" << path);
     return;
   }
   
