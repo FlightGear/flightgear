@@ -592,7 +592,13 @@ void QtLauncher::onRun()
     setEnableDisableOptionFromCheckbox(m_ui->fetchRealWxrCheckbox, "real-weather-fetch");
     setEnableDisableOptionFromCheckbox(m_ui->rembrandtCheckbox, "rembrandt");
     setEnableDisableOptionFromCheckbox(m_ui->fullScreenCheckbox, "fullscreen");
-    setEnableDisableOptionFromCheckbox(m_ui->startPausedCheck, "freeze");
+//    setEnableDisableOptionFromCheckbox(m_ui->startPausedCheck, "freeze");
+
+    bool startPaused = m_ui->startPausedCheck->isChecked() ||
+            m_ui->location->shouldStartPaused();
+    if (startPaused) {
+        opt->addOption("enable-freeze", "");
+    }
 
     // MSAA is more complex
     if (!m_ui->rembrandtCheckbox->isChecked()) {
