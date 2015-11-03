@@ -299,6 +299,7 @@ LocationWidget::LocationWidget(QWidget *parent) :
 
 // force various pieces of UI into sync
     onOffsetEnabledToggled(m_ui->offsetGroup->isChecked());
+    onOffsetBearingTrueChanged(m_ui->trueBearing->isChecked());
     onBackToSearch();
 }
 
@@ -323,7 +324,17 @@ void LocationWidget::restoreSettings()
 
 bool LocationWidget::shouldStartPaused() const
 {
-    qWarning() << Q_FUNC_INFO << "implement me";
+    if (!m_location) {
+        return false; // defaults to on-ground at KSFO
+    }
+
+    if (FGAirport::isAirportType(m_location.ptr())) {
+        return m_ui->onFinalCheckbox->isChecked();
+    } else {
+        // navaid, start paused
+        return true;
+    }
+
     return false;
 }
 
@@ -468,11 +479,6 @@ void LocationWidget::onLocationChanged()
 void LocationWidget::onOffsetEnabledToggled(bool on)
 {
     m_ui->offsetDistanceLabel->setEnabled(on);
-//    m_ui->offsetNmSpinbox->setEnabled(on);
-//    m_ui->offsetBearingSpinbox->setEnabled(on);
-//    m_ui->trueBearing->setEnabled(on);
-//    m_ui->offsetBearingLabel->setEnabled(on);
-//    m_ui->offsetDistanceLabel->setEnabled(on);
 }
 
 void LocationWidget::onAirportDiagramClicked(FGRunwayRef rwy)
@@ -495,6 +501,8 @@ QString LocationWidget::locationDescription() const
     bool locIsAirport = FGAirport::isAirportType(m_location.ptr());
     QString ident = QString::fromStdString(m_location->ident()),
         name = QString::fromStdString(m_location->name());
+
+    name = fixNavaidName(name);
 
     if (locIsAirport) {
         FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
@@ -532,7 +540,7 @@ QString LocationWidget::locationDescription() const
             break;
         }
 
-        return QString("at %1 %2 (%3").arg(navaidType).arg(ident).arg(name);
+        return QString("at %1 %2 (%3)").arg(navaidType).arg(ident).arg(name);
     }
 
     return QString("Implement Me");
