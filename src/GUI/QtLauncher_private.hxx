@@ -28,8 +28,6 @@
 #include <QTimer>
 #include <QUrl>
 
-
-#include <Airports/airport.hxx>
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Catalog.hxx>
 
@@ -38,7 +36,6 @@ namespace Ui
     class Launcher;
 }
 
-class AirportSearchModel;
 class QModelIndex;
 class AircraftProxyModel;
 class AircraftItemModel;
@@ -64,24 +61,17 @@ private slots:
     
     void onQuit();
 
-    void onSearchAirports();
 
-    void onLocationChanged();
-
-    void onAirportChoiceSelected(const QModelIndex& index);
     void onAircraftSelected(const QModelIndex& index);
     void onRequestPackageInstall(const QModelIndex& index);
     void onCancelDownload(const QModelIndex& index);
 
-    void onPopupAirportHistory();
     void onPopupAircraftHistory();
 
     void onEditRatingsFilter();
 
-    void updateLocationDescription();
     void updateSettingsSummary();
 
-    void onAirportSearchComplete();
 
     void onRembrandtToggled(bool b);
     void onToggleTerrasync(bool enabled);
@@ -90,17 +80,10 @@ private slots:
 
     void onEditPaths();
 
-    void onAirportDiagramClicked(FGRunwayRef rwy);
-    void onOffsetBearingTrueChanged(bool on);
-
-    void onOffsetDataChanged();
-    void onOffsetRadioToggled(bool on);
 
     void onAircraftInstalledCompleted(QModelIndex index);
     void onAircraftInstallFailed(QModelIndex index, QString errorMessage);
 private:
-    void setLocationOptions();
-    void setBaseLocation(FGPositionedRef ref);
 
     /**
      * Check if the passed index is the selected aircraft, and if so, refresh
@@ -120,14 +103,11 @@ private:
     simgear::pkg::PackageRef packageForAircraftURI(QUrl uri) const;
 
     QScopedPointer<Ui::Launcher> m_ui;
-    AirportSearchModel* m_airportsModel;
     AircraftProxyModel* m_aircraftProxy;
     AircraftItemModel* m_aircraftModel;
-    FGPositionedRef m_location;
 
     QUrl m_selectedAircraft;
     QList<QUrl> m_recentAircraft;
-    QVector<PositionedID> m_recentAirports;
     QTimer* m_subsystemIdleTimer;
     bool m_inAppMode;
 
