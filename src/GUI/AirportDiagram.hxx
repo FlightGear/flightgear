@@ -92,6 +92,8 @@ private:
 
     double m_approachDistanceNm;
     FGRunwayRef m_selectedRunway;
+
+    void drawILS(QPainter *painter, FGRunwayRef runway) const;
 };
 
 #endif // of GUI_AIRPORT_DIAGRAM_HXX

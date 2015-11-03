@@ -22,6 +22,8 @@
 
 #include <limits>
 
+#include <simgear/sg_inlines.h>
+
 #include <QPainter>
 #include <QDebug>
 #include <QVector2D>
@@ -31,6 +33,8 @@
 #include <Airports/runways.hxx>
 #include <Airports/parking.hxx>
 #include <Airports/pavement.hxx>
+
+#include <Navaids/navrecord.hxx>
 
 static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
                                     const QVector2D& b, double* outT = NULL)
@@ -206,7 +210,19 @@ void AirportDiagram::paintContents(QPainter* p)
     f.setPixelSize(14);
     p->setFont(f);
 
+    // draw ILS first so underneath all runways
+    QPen pen(Qt::magenta);
+    pen.setWidth(1.0 / m_scale);
+    p->setPen(pen);
+
     Q_FOREACH(const RunwayData& r, m_runways) {
+        drawILS(p, r.runway);
+        drawILS(p, r.runway->reciprocalRunway());
+    }
+
+    // now draw the runways for real
+    Q_FOREACH(const RunwayData& r, m_runways) {
+
         QColor color(Qt::magenta);
         if ((r.runway == m_selectedRunway) || (r.runway->reciprocalRunway() == m_selectedRunway)) {
             color = Qt::yellow;
@@ -249,10 +265,38 @@ void AirportDiagram::paintContents(QPainter* p)
         double d = SG_NM_TO_METER * m_approachDistanceNm;
         QPointF pt = project(m_selectedRunway->pointOnCenterline(-d));
         QPointF pt2 = project(m_selectedRunway->geod());
-        QPen pen(Qt::yellow, 10);
+        QPen pen(Qt::yellow);
+        pen.setWidth(2.0 / m_scale);
         p->setPen(pen);
         p->drawLine(pt, pt2);
     }
+}
+
+void AirportDiagram::drawILS(QPainter* painter, FGRunwayRef runway) const
+{
+    if (!runway)
+        return;
+
+    FGNavRecord* loc = runway->ILS();
+    if (!loc)
+        return;
+
+    double halfBeamWidth = loc->localizerWidth() * 0.5;
+    QPointF threshold = project(runway->threshold());
+    double rangeM = loc->get_range() * SG_NM_TO_METER;
+    double radial = loc->get_multiuse();
+    SG_NORMALIZE_RANGE(radial, 0.0, 360.0);
+
+// compute the three end points at the wide end of the arrow
+    QPointF endCentre = project(SGGeodesy::direct(loc->geod(), radial, -rangeM));
+    QPointF endR = project(SGGeodesy::direct(loc->geod(), radial + halfBeamWidth, -rangeM * 1.1));
+    QPointF endL = project(SGGeodesy::direct(loc->geod(), radial - halfBeamWidth, -rangeM * 1.1));
+
+    painter->drawLine(threshold, endCentre);
+    painter->drawLine(threshold, endL);
+    painter->drawLine(threshold, endR);
+    painter->drawLine(endL, endCentre);
+    painter->drawLine(endR, endCentre);
 }
 
 void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
