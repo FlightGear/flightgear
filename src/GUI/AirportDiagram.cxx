@@ -32,18 +32,6 @@
 #include <Airports/parking.hxx>
 #include <Airports/pavement.hxx>
 
-/* equatorial and polar earth radius */
-const float rec  = 6378137;          // earth radius, equator (?)
-const float rpol = 6356752.314f;      // earth radius, polar   (?)
-
-//Returns Earth radius at a given latitude (Ellipsoide equation with two equal axis)
-static float earth_radius_lat( float lat )
-{
-    double a = cos(lat)/rec;
-    double b = sin(lat)/rpol;
-    return 1.0f / sqrt( a * a + b * b );
-}
-
 static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
                                     const QVector2D& b, double* outT = NULL)
 {
@@ -89,26 +77,29 @@ static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
 }
 
 AirportDiagram::AirportDiagram(QWidget* pr) :
-QWidget(pr)
+    BaseDiagram(pr),
+    m_approachDistanceNm(-1.0)
 {
-    setSizePolicy(QSizePolicy::MinimumExpanding,
-                  QSizePolicy::MinimumExpanding);
-    setMinimumSize(100, 100);
+}
+
+AirportDiagram::~AirportDiagram()
+{
+
 }
 
 void AirportDiagram::setAirport(FGAirportRef apt)
 {
     m_airport = apt;
     m_projectionCenter = apt ? apt->geod() : SGGeod();
-    m_scale = 1.0;
-    m_bounds = QRectF(); // clear
     m_runways.clear();
+    m_approachDistanceNm = -1.0;
 
     if (apt) {
         buildTaxiways();
         buildPavements();
     }
 
+    recomputeBounds(true);
     update();
 }
 
@@ -127,6 +118,13 @@ void AirportDiagram::setSelectedRunway(FGRunwayRef r)
     update();
 }
 
+void AirportDiagram::setApproachExtensionDistance(double distanceNm)
+{
+    m_approachDistanceNm = distanceNm;
+    recomputeBounds(true);
+    update();
+}
+
 void AirportDiagram::addRunway(FGRunwayRef rwy)
 {
     Q_FOREACH(RunwayData rd, m_runways) {
@@ -135,76 +133,78 @@ void AirportDiagram::addRunway(FGRunwayRef rwy)
         }
     }
 
-    QPointF p1 = project(rwy->geod()),
-    p2 = project(rwy->end());
-    extendBounds(p1);
-    extendBounds(p2);
-
     RunwayData r;
-    r.p1 = p1;
-    r.p2 = p2;
+    r.p1 = project(rwy->geod());
+    r.p2 = project(rwy->end());
     r.widthM = qRound(rwy->widthM());
     r.runway = rwy;
     m_runways.append(r);
+
+    recomputeBounds(false);
     update();
 }
 
-void AirportDiagram::addParking(FGParking* park)
+void AirportDiagram::doComputeBounds()
 {
-    QPointF p = project(park->geod());
-    extendBounds(p);
+    Q_FOREACH(const RunwayData& r, m_runways) {
+        extendBounds(r.p1);
+        extendBounds(r.p2);
+    }
+
+    Q_FOREACH(const TaxiwayData& t, m_taxiways) {
+        extendBounds(t.p1);
+        extendBounds(t.p2);
+    }
+
+    Q_FOREACH(const ParkingData& p, m_parking) {
+        extendBounds(p.pt);
+    }
+
+    if (m_selectedRunway && (m_approachDistanceNm > 0.0)) {
+        double d = SG_NM_TO_METER * m_approachDistanceNm;
+        QPointF pt = project(m_selectedRunway->pointOnCenterline(-d));
+        extendBounds(pt);
+    }
+}
+
+void AirportDiagram::addParking(FGParkingRef park)
+{
+    ParkingData pd = { project(park->geod()), park };
+    m_parking.push_back(pd);
+    recomputeBounds(false);
     update();
 }
 
-QTransform AirportDiagram::transform() const
-{
-    // fit bounds within our available space, allowing for a margin
-    const int MARGIN = 32; // pixels
-    double ratioInX = (width() - MARGIN * 2) / m_bounds.width();
-    double ratioInY = (height() - MARGIN * 2) / m_bounds.height();
-    double scale = std::min(ratioInX, ratioInY);
-    
-    QTransform t;
-    t.translate(width() / 2, height() / 2); // center projection origin in the widget
-    t.scale(scale, scale);
-    // center the bounding box (may not be at the origin)
-    t.translate(-m_bounds.center().x(), -m_bounds.center().y());
-    return t;
-}
 
-void AirportDiagram::paintEvent(QPaintEvent* pe)
+void AirportDiagram::paintContents(QPainter* p)
 {
-    QPainter p(this);
-    p.setRenderHints(QPainter::Antialiasing);
-    p.fillRect(rect(), QColor(0x3f, 0x3f, 0x3f));
-
-    // fit bounds within our available space, allowing for a margin
-    const int MARGIN = 32; // pixels
-    double ratioInX = (width() - MARGIN * 2) / m_bounds.width();
-    double ratioInY = (height() - MARGIN * 2) / m_bounds.height();
-    double scale = std::min(ratioInX, ratioInY);
+      // fit bounds within our available space, allowing for a margin
+//    const int MARGIN = 32; // pixels
+ //   double ratioInX = (width() - MARGIN * 2) / m_bounds.width();
+ //   double ratioInY = (height() - MARGIN * 2) / m_bounds.height();
+  //  double scale = std::min(ratioInX, ratioInY);
 
     QTransform t(transform());
-    p.setTransform(t);
+    p->setTransform(t);
 
 // pavements
     QBrush brush(QColor(0x9f, 0x9f, 0x9f));
     Q_FOREACH(const QPainterPath& path, m_pavements) {
-        p.drawPath(path);
+        p->drawPath(path);
     }
 
 // taxiways
     Q_FOREACH(const TaxiwayData& t, m_taxiways) {
         QPen pen(QColor(0x9f, 0x9f, 0x9f));
         pen.setWidth(t.widthM);
-        p.setPen(pen);
-        p.drawLine(t.p1, t.p2);
+        p->setPen(pen);
+        p->drawLine(t.p1, t.p2);
     }
 
 // runways
     QFont f;
     f.setPixelSize(14);
-    p.setFont(f);
+    p->setFont(f);
 
     Q_FOREACH(const RunwayData& r, m_runways) {
         QColor color(Qt::magenta);
@@ -212,40 +212,54 @@ void AirportDiagram::paintEvent(QPaintEvent* pe)
             color = Qt::yellow;
         }
         
-        p.setTransform(t);
+        p->setTransform(t);
 
         QPen pen(color);
         pen.setWidth(r.widthM);
-        p.setPen(pen);
+        p->setPen(pen);
         
-        p.drawLine(r.p1, r.p2);
+        p->drawLine(r.p1, r.p2);
 
     // draw idents
         QString ident = QString::fromStdString(r.runway->ident());
 
-        p.translate(r.p1);
-        p.rotate(r.runway->headingDeg());
+        p->translate(r.p1);
+        p->rotate(r.runway->headingDeg());
         // invert scaling factor so we can use screen pixel sizes here
-        p.scale(1.0 / scale, 1.0/ scale);
+        p->scale(1.0 / m_scale, 1.0/ m_scale);
         
-        p.setPen((r.runway == m_selectedRunway) ? Qt::yellow : Qt::magenta);
-        p.drawText(QRect(-100, 5, 200, 200), ident, Qt::AlignHCenter | Qt::AlignTop);
+        p->setPen((r.runway == m_selectedRunway) ? Qt::yellow : Qt::magenta);
+        p->drawText(QRect(-100, 5, 200, 200), ident, Qt::AlignHCenter | Qt::AlignTop);
 
         FGRunway* recip = r.runway->reciprocalRunway();
         QString recipIdent = QString::fromStdString(recip->ident());
 
-        p.setTransform(t);
-        p.translate(r.p2);
-        p.rotate(recip->headingDeg());
-        p.scale(1.0 / scale, 1.0/ scale);
+        p->setTransform(t);
+        p->translate(r.p2);
+        p->rotate(recip->headingDeg());
+        p->scale(1.0 / m_scale, 1.0/ m_scale);
 
-        p.setPen((r.runway->reciprocalRunway() == m_selectedRunway) ? Qt::yellow : Qt::magenta);
-        p.drawText(QRect(-100, 5, 200, 200), recipIdent, Qt::AlignHCenter | Qt::AlignTop);
+        p->setPen((r.runway->reciprocalRunway() == m_selectedRunway) ? Qt::yellow : Qt::magenta);
+        p->drawText(QRect(-100, 5, 200, 200), recipIdent, Qt::AlignHCenter | Qt::AlignTop);
+    }
+
+    if (m_selectedRunway && (m_approachDistanceNm > 0.0)) {
+        p->setTransform(t);
+        // draw approach extension point
+        double d = SG_NM_TO_METER * m_approachDistanceNm;
+        QPointF pt = project(m_selectedRunway->pointOnCenterline(-d));
+        QPointF pt2 = project(m_selectedRunway->geod());
+        QPen pen(Qt::yellow, 10);
+        p->setPen(pen);
+        p->drawLine(pt, pt2);
     }
 }
 
 void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
 {
+    if (m_didPan)
+        return; // ignore panning drag+release ops here
+
     QTransform t(transform());
     double minDist = std::numeric_limits<double>::max();
     FGRunwayRef bestRunway;
@@ -271,57 +285,6 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
     }
 }
 
-void AirportDiagram::extendBounds(const QPointF& p)
-{
-    if (p.x() < m_bounds.left()) {
-        m_bounds.setLeft(p.x());
-    } else if (p.x() > m_bounds.right()) {
-        m_bounds.setRight(p.x());
-    }
-
-    if (p.y() < m_bounds.top()) {
-        m_bounds.setTop(p.y());
-    } else if (p.y() > m_bounds.bottom()) {
-        m_bounds.setBottom(p.y());
-    }
-}
-
-QPointF AirportDiagram::project(const SGGeod& geod) const
-{
-    double r = earth_radius_lat(geod.getLatitudeRad());
-    double ref_lat = m_projectionCenter.getLatitudeRad(),
-    ref_lon = m_projectionCenter.getLongitudeRad(),
-    lat = geod.getLatitudeRad(),
-    lon = geod.getLongitudeRad(),
-    lonDiff = lon - ref_lon;
-
-    double c = acos( sin(ref_lat) * sin(lat) + cos(ref_lat) * cos(lat) * cos(lonDiff) );
-    if (c == 0.0) {
-        // angular distance from center is 0
-        return QPointF(0.0, 0.0);
-    }
-
-    double k = c / sin(c);
-    double x, y;
-    if (ref_lat == (90 * SG_DEGREES_TO_RADIANS))
-    {
-        x = (SGD_PI / 2 - lat) * sin(lonDiff);
-        y = -(SGD_PI / 2 - lat) * cos(lonDiff);
-    }
-    else if (ref_lat == -(90 * SG_DEGREES_TO_RADIANS))
-    {
-        x = (SGD_PI / 2 + lat) * sin(lonDiff);
-        y = (SGD_PI / 2 + lat) * cos(lonDiff);
-    }
-    else
-    {
-        x = k * cos(lat) * sin(lonDiff);
-        y = k * ( cos(ref_lat) * sin(lat) - sin(ref_lat) * cos(lat) * cos(lonDiff) );
-    }
-
-    return QPointF(x, -y) * r * m_scale;
-}
-
 void AirportDiagram::buildTaxiways()
 {
     m_taxiways.clear();
@@ -331,8 +294,7 @@ void AirportDiagram::buildTaxiways()
         TaxiwayData td;
         td.p1 = project(tx->geod());
         td.p2 = project(tx->pointOnCenterline(tx->lengthM()));
-        extendBounds(td.p1);
-        extendBounds(td.p2);
+
         td.widthM = tx->widthM();
         m_taxiways.append(td);
     }

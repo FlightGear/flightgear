@@ -18,49 +18,48 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include <QWidget>
-#include <QPainterPath>
+#ifndef GUI_AIRPORT_DIAGRAM_HXX
+#define GUI_AIRPORT_DIAGRAM_HXX
 
-#include <Airports/airports_fwd.hxx>
+#include "BaseDiagram.hxx"
+
+#include <Airports/parking.hxx>
+#include <Airports/runways.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
-class AirportDiagram : public QWidget
+class AirportDiagram : public BaseDiagram
 {
     Q_OBJECT
 public:
     AirportDiagram(QWidget* pr);
+    virtual ~AirportDiagram();
 
     void setAirport(FGAirportRef apt);
 
     void addRunway(FGRunwayRef rwy);
-    void addParking(FGParking* park);
+    void addParking(FGParkingRef park);
     
     FGRunwayRef selectedRunway() const;
     void setSelectedRunway(FGRunwayRef r);
+
+    void setApproachExtensionDistance(double distanceNm);
 Q_SIGNALS:
     void clickedRunway(FGRunwayRef rwy);
     
+    void clickedParking(FGParkingRef park);
 protected:
-    virtual void paintEvent(QPaintEvent* pe);
-    // wheel event for zoom
-
-    // mouse drag for pan
     
     virtual void mouseReleaseEvent(QMouseEvent* me);
 
+    void paintContents(QPainter*) Q_DECL_OVERRIDE;
 
+    void doComputeBounds() Q_DECL_OVERRIDE;
 private:
-    void extendBounds(const QPointF& p);
-    QPointF project(const SGGeod& geod) const;
-    QTransform transform() const;
-    
+
     void buildTaxiways();
     void buildPavements();
 
     FGAirportRef m_airport;
-    SGGeod m_projectionCenter;
-    double m_scale;
-    QRectF m_bounds;
 
     struct RunwayData {
         QPointF p1, p2;
@@ -68,7 +67,7 @@ private:
         FGRunwayRef runway;
     };
 
-    QList<RunwayData> m_runways;
+    QVector<RunwayData> m_runways;
 
     struct TaxiwayData {
         QPointF p1, p2;
@@ -80,8 +79,19 @@ private:
         }
     };
 
-    QList<TaxiwayData> m_taxiways;
-    QList<QPainterPath> m_pavements;
-    
+    QVector<TaxiwayData> m_taxiways;
+    QVector<QPainterPath> m_pavements;
+
+    struct ParkingData
+    {
+        QPointF pt;
+        FGParkingRef parking;
+    };
+
+    QVector<ParkingData> m_parking;
+
+    double m_approachDistanceNm;
     FGRunwayRef m_selectedRunway;
 };
+
+#endif // of GUI_AIRPORT_DIAGRAM_HXX

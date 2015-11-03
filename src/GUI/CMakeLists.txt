@@ -74,7 +74,8 @@ if (HAVE_QT)
                             EditRatingsFilterDialog.ui
                             SetupRootDialog.ui
                             AddCatalogDialog.ui
-                            PathsDialog.ui)
+                            PathsDialog.ui
+                            LocationWidget.ui)
     qt5_add_resources(qrc_sources resources.qrc)
 
     include_directories(${PROJECT_BINARY_DIR}/src/GUI)
@@ -82,8 +83,12 @@ if (HAVE_QT)
     add_library(fglauncher QtLauncher.cxx
                             QtLauncher.hxx
                             QtLauncher_private.hxx
+                            BaseDiagram.cxx
+                            BaseDiagram.hxx
                             AirportDiagram.cxx
                             AirportDiagram.hxx
+                            NavaidDiagram.cxx
+                            NavaidDiagram.hxx
                             EditRatingsFilterDialog.cxx
                             EditRatingsFilterDialog.hxx
                             SetupRootDialog.cxx
@@ -98,6 +103,8 @@ if (HAVE_QT)
                             AddCatalogDialog.hxx
                             PathsDialog.cxx
                             PathsDialog.hxx
+                            LocationWidget.cxx
+                            LocationWidget.hxx
                             ${uic_sources}
                             ${qrc_sources})
 
