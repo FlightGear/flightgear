@@ -1,4 +1,4 @@
-// fg_fx.hxx -- Sound effect management class
+// fg_environmentfx.hxx -- Sound effect management class
 //
 // Started by David Megginson, October 2001
 // (Reuses some code from main.cxx, probably by Curtis Olson)
@@ -21,8 +21,8 @@
 //
 // $Id$
 
-#ifndef __FGFX_HXX
-#define __FGFX_HXX 1
+#ifndef __FGENVIRONMENTFX_HXX
+#define __FGENVIRONMENTFX_HXX 1
 
 #include <simgear/compiler.h>
 
@@ -34,45 +34,35 @@
 
 class SGXmlSound;
 
+
 /**
- * Generator for FlightGear model sound effects.
- *
- * This module uses a FGSampleGroup class to generate sound effects based
- * on current flight conditions. The sound manager must be initialized
- * before this object is.
- *
- *    This module will load and play a set of sound effects defined in an
- *    xml file and tie them to various property states.
+ * Container for FlightGear envirnonmetal sound effects.
  */
-class FGFX : public SGSampleGroup
+class FGEnvironmentFX : public SGSampleGroup
 {
 
 public:
 
-    FGFX ( const std::string &refname, SGPropertyNode *props = 0 );
-    virtual ~FGFX ();
+    FGEnvironmentFX();
+    ~FGEnvironmentFX();
 
-    virtual void init ();
-    virtual void reinit ();
-    virtual void update (double dt);
-            void unbind();
+    void init ();
+    void reinit();
+    void update (double dt);
+    void unbind();
+
+    void add(std::string& path_str, const std::string& refname);
+    void position(const std::string& refname, const SGVec3d& pos);
+    void pitch(const std::string& refname, float pitch);
+    void volume(const std::string& refname, float volume);
+    void properties(const std::string& refname, float reference_dist, float max_dist = -1 );
 
 private:
-
-    bool _is_aimodel;
-    SGSharedPtr<SGSampleGroup> _avionics;
-    std::vector<SGXmlSound *> _sound;
-
-    SGPropertyNode_ptr _props;
     SGPropertyNode_ptr _enabled;
     SGPropertyNode_ptr _volume;
-    SGPropertyNode_ptr _avionics_enabled;
-    SGPropertyNode_ptr _avionics_volume;
-    SGPropertyNode_ptr _avionics_ext;
-    SGPropertyNode_ptr _internal;
 };
 
 
 #endif
 
-// end of fg_fx.hxx
+// end of fg_environmentfx.hxx
