@@ -219,13 +219,15 @@ int main ( int argc, char **argv )
         // ensure sglog is inited before atexit() is registered, so logging
         // is possible inside fgExitCleanup
         sglog();
-        
+
+
+#if (OPENSCENEGRAPH_MAJOR_VERSION == 3) && (OPENSCENEGRAPH_MINOR_VERSION < 5)
         // similar to above, ensure some static maps inside OSG exist before
         // we register our at-exit handler, otherwise the statics are gone
         // when fg_terminate runs, which causes crashes.
         osg::Texture::getTextureObjectManager(0);
         osg::GLBufferObjectManager::getGLBufferObjectManager(0);
-        
+#endif
         std::set_terminate(fg_terminate);
         atexit(fgExitCleanup);
         if (fgviewer)
