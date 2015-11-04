@@ -26,13 +26,11 @@
 
 #include <simgear/compiler.h>
 
-#include <vector>
-
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/sound/sample_group.hxx>
+#include <simgear/math/SGMathFwd.hxx>
 
-class SGXmlSound;
 
 
 /**
@@ -44,18 +42,20 @@ class FGEnvironmentFX : public SGSampleGroup
 public:
 
     FGEnvironmentFX();
-    ~FGEnvironmentFX();
+    virtual ~FGEnvironmentFX();
 
     void init ();
     void reinit();
     void update (double dt);
     void unbind();
 
-    void add(std::string& path_str, const std::string& refname);
-    void position(const std::string& refname, const SGVec3d& pos);
+    bool add(const std::string& path_str, const std::string& refname);
+    void position(const std::string& refname, double lon, double lat, double elevation = 0.0);
     void pitch(const std::string& refname, float pitch);
     void volume(const std::string& refname, float volume);
     void properties(const std::string& refname, float reference_dist, float max_dist = -1 );
+    void play(const std::string& refname, bool looping = false);
+    void stop(const std::string& refname);
 
 private:
     SGPropertyNode_ptr _enabled;

@@ -29,18 +29,22 @@
 #  include <config.h>
 #endif
 
-#include "fg_environmentfx.hxx"
+#include "environment_fx.hxx"
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
-// #include <simgear/props/props.hxx>
-// #include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/nasal/cppbind/Ghost.hxx>
+
+#include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 
 static std::string _refname = "EnvironmentFX";
+typedef boost::shared_ptr<SGSampleGroup> SGSampleGroupRef;
+typedef boost::shared_ptr<FGEnvironmentFX> FGEnvironmentFXRef;
 
 
 FGEnvironmentFX::FGEnvironmentFX()
@@ -48,6 +52,16 @@ FGEnvironmentFX::FGEnvironmentFX()
     _enabled = fgGetNode("/sim/sound/environment/enabled", true);
     _volume = fgGetNode("/sim/sound/environment/volume", true);
     _smgr->add(this, _refname);
+
+    nasal::Ghost<FGEnvironmentFXRef>::init("sound")
+      .bases<SGSampleGroupRef>()
+      .method("add", &FGEnvironmentFX::add)
+      .method("position", &FGEnvironmentFX::position)
+      .method("pitch", &FGEnvironmentFX::pitch)
+      .method("volume", &FGEnvironmentFX::volume)
+      .method("properties", &FGEnvironmentFX::properties)
+      .method("play", &FGEnvironmentFX::play)
+      .method("stop", &FGEnvironmentFX::stop);
 }
 
 FGEnvironmentFX::~FGEnvironmentFX()
@@ -90,17 +104,17 @@ void FGEnvironmentFX::update (double dt)
     }
 }
 
-void FGEnvironmentFX::add(std::string& path_str, const std::string& refname)
+bool FGEnvironmentFX::add(const std::string& path_str, const std::string& refname)
 {
     if (!_smgr) {
-        return;
+        return false;
     }
 
     SGPath path = globals->resolve_resource_path(path_str);
     if (path.isNull())
     {
         SG_LOG(SG_SOUND, SG_ALERT, "File not found: '" << path_str);
-        return;
+        return false;
     }
     SG_LOG(SG_SOUND, SG_INFO, "Reading sound from " << path.str());
 
@@ -113,15 +127,18 @@ void FGEnvironmentFX::add(std::string& path_str, const std::string& refname)
     {
         throw sg_io_exception("Environment FX: couldn't find file: '" + path.str() + "'");
         delete sample;
+        return false;
     }
+    return true;
 }
 
-void FGEnvironmentFX::position(const std::string& refname, const SGVec3d& pos)
+void FGEnvironmentFX::position(const std::string& refname, double lon, double lat, double elevation)
 {
     SGSoundSample* sample = SGSampleGroup::find(refname);
     if (sample)
     {
-        sample->set_position( pos );
+        SGGeod pos = SGGeod::fromDegFt(lon, lat, elevation);
+        sample->set_position( SGVec3d::fromGeod(pos) );
     }
 }
 
@@ -153,6 +170,16 @@ void FGEnvironmentFX::properties(const std::string& refname, float reference_dis
             sample->set_max_dist( max_dist );
         }
     }
+}
+
+void FGEnvironmentFX::play(const std::string& refname, bool looping)
+{
+    SGSampleGroup::play( refname, looping );
+}
+
+void FGEnvironmentFX::stop(const std::string& refname)
+{
+    SGSampleGroup::stop( refname );
 }
 
 // end of fg_environmentfx.cxx
