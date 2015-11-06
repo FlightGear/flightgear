@@ -182,14 +182,7 @@ void AirportDiagram::addParking(FGParkingRef park)
 
 void AirportDiagram::paintContents(QPainter* p)
 {
-      // fit bounds within our available space, allowing for a margin
-//    const int MARGIN = 32; // pixels
- //   double ratioInX = (width() - MARGIN * 2) / m_bounds.width();
- //   double ratioInY = (height() - MARGIN * 2) / m_bounds.height();
-  //  double scale = std::min(ratioInX, ratioInY);
-
-    QTransform t(transform());
-    p->setTransform(t);
+    QTransform t = p->transform();
 
 // pavements
     QBrush brush(QColor(0x9f, 0x9f, 0x9f));

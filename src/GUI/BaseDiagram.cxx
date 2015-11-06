@@ -113,6 +113,9 @@ void BaseDiagram::wheelEvent(QWheelEvent *we)
     m_autoScalePan = false;
 
     int delta = we->angleDelta().y();
+    if (delta == 0)
+        return;
+
     if (intSign(m_wheelAngleDeltaAccumulator) != intSign(delta)) {
         m_wheelAngleDeltaAccumulator = 0;
     }
@@ -121,7 +124,7 @@ void BaseDiagram::wheelEvent(QWheelEvent *we)
     if (m_wheelAngleDeltaAccumulator > 120) {
         m_wheelAngleDeltaAccumulator = 0;
         m_scale *= 2.0;
-    } else if (m_wheelAngleDeltaAccumulator < 120) {
+    } else if (m_wheelAngleDeltaAccumulator < -120) {
         m_wheelAngleDeltaAccumulator = 0;
         m_scale *= 0.5;
     }
