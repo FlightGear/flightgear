@@ -37,6 +37,7 @@
 #include <Navaids/navrecord.hxx>
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/fg_props.hxx> // for fgSetDouble
 
 const int MAX_RECENT_AIRPORTS = 32;
 
@@ -104,6 +105,25 @@ QString formatGeodAsString(const SGGeod& geod)
 
     return QString::number(fabs(geod.getLongitudeDeg()), 'f',2 ) + ew + " " +
             QString::number(fabs(geod.getLatitudeDeg()), 'f',2 ) + ns;
+}
+
+bool parseStringAsGeod(const QString& s, SGGeod& result)
+{
+    int commaPos = s.indexOf(QChar(','));
+    if (commaPos < 0)
+        return false;
+
+    bool ok;
+    double lon = s.leftRef(commaPos).toDouble(&ok);
+    if (!ok)
+        return false;
+
+    double lat = s.midRef(commaPos+1).toDouble(&ok);
+    if (!ok)
+        return false;
+
+    result = SGGeod::fromDeg(lon, lat);
+    return true;
 }
 
 class IdentSearchFilter : public FGPositioned::TypeFilter
@@ -354,6 +374,16 @@ void LocationWidget::setLocationOptions()
 {
     flightgear::Options* opt = flightgear::Options::sharedInstance();
 
+    if (m_locationIsLatLon) {
+        // bypass the options mechanism because converting to deg:min:sec notation
+        // just to parse back again is nasty.
+        fgSetDouble("/sim/presets/latitude-deg", m_geodLocation.getLatitudeDeg());
+        fgSetDouble("/position/latitude-deg", m_geodLocation.getLatitudeDeg());
+        fgSetDouble("/sim/presets/longitude-deg", m_geodLocation.getLongitudeDeg());
+        fgSetDouble("/position/longitude-deg", m_geodLocation.getLongitudeDeg());
+        return;
+    }
+
     if (!m_location) {
         return;
     }
@@ -401,6 +431,17 @@ void LocationWidget::setLocationOptions()
 void LocationWidget::onSearch()
 {
     QString search = m_ui->locationSearchEdit->text();
+
+    m_locationIsLatLon = parseStringAsGeod(search, m_geodLocation);
+    if (m_locationIsLatLon) {
+        m_ui->searchIcon->setVisible(false);
+        m_ui->searchStatusText->setText(QString("Position '%1'").arg(formatGeodAsString(m_geodLocation)));
+        m_location.clear();
+        onLocationChanged();
+        updateDescription();
+        return;
+    }
+
     m_searchModel->setSearch(search);
 
     if (m_searchModel->isSearchActive()) {
@@ -468,8 +509,10 @@ void LocationWidget::onLocationChanged()
             }
         }
 
-
-    } else {// of location is airport
+    } else if (m_locationIsLatLon) {
+        m_ui->stack->setCurrentIndex(1);
+        m_ui->navaidDiagram->setGeod(m_geodLocation);
+    } else {
         // navaid
         m_ui->stack->setCurrentIndex(1);
         m_ui->navaidDiagram->setNavaid(m_location);
@@ -478,7 +521,7 @@ void LocationWidget::onLocationChanged()
 
 void LocationWidget::onOffsetEnabledToggled(bool on)
 {
-    m_ui->offsetDistanceLabel->setEnabled(on);
+    m_ui->navaidDiagram->setOffsetEnabled(on);
 }
 
 void LocationWidget::onAirportDiagramClicked(FGRunwayRef rwy)
@@ -495,8 +538,13 @@ void LocationWidget::onAirportDiagramClicked(FGRunwayRef rwy)
 
 QString LocationWidget::locationDescription() const
 {
-    if (!m_location)
+    if (!m_location) {
+        if (m_locationIsLatLon) {
+            return QString("at position %1").arg(formatGeodAsString(m_geodLocation));
+        }
+
         return QString("No location selected");
+    }
 
     bool locIsAirport = FGAirport::isAirportType(m_location.ptr());
     QString ident = QString::fromStdString(m_location->ident()),
@@ -505,7 +553,7 @@ QString LocationWidget::locationDescription() const
     name = fixNavaidName(name);
 
     if (locIsAirport) {
-        FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
+        //FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
         QString locationOnAirport;
 
         if (m_ui->runwayRadio->isChecked()) {
@@ -543,7 +591,7 @@ QString LocationWidget::locationDescription() const
         return QString("at %1 %2 (%3)").arg(navaidType).arg(ident).arg(name);
     }
 
-    return QString("Implement Me");
+    return QString("No location selected");
 }
 
 
@@ -566,7 +614,7 @@ void LocationWidget::updateDescription()
             m_ui->airportDiagram->setApproachExtensionDistance(m_ui->approachDistanceSpin->value());
         } else {
             m_ui->airportDiagram->setApproachExtensionDistance(0.0);
-        }
+        }        
     } else {
 
     }
@@ -589,7 +637,6 @@ void LocationWidget::updateDescription()
 
 void LocationWidget::onSearchResultSelected(const QModelIndex& index)
 {
-    qDebug() << "selected result:" << index.data();
     setBaseLocation(m_searchModel->itemAtRow(index.row()));
 }
 
@@ -656,7 +703,9 @@ void LocationWidget::setBaseLocation(FGPositionedRef ref)
 
 void LocationWidget::onOffsetDataChanged()
 {
-    qDebug() << "implement me";
+    m_ui->navaidDiagram->setOffsetEnabled(m_ui->offsetGroup->isChecked());
+    m_ui->navaidDiagram->setOffsetBearingDeg(m_ui->offsetBearingSpinbox->value());
+    m_ui->navaidDiagram->setOffsetDistanceNm(m_ui->offsetNmSpinbox->value());
 }
 
 void LocationWidget::onBackToSearch()
