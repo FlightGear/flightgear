@@ -35,8 +35,10 @@ public:
 
     void setNavaid(FGPositionedRef nav);
 
+    void setGeod(const SGGeod& geod);
+
     bool isOffsetEnabled() const;
-    void setOffsetEnabled(bool m_offset);
+    void setOffsetEnabled(bool offset);
 
     void setOffsetDistanceNm(double distanceNm);
     double offsetDistanceNm() const;
@@ -49,8 +51,10 @@ public:
 protected:
     void paintContents(QPainter *) Q_DECL_OVERRIDE;
 
+    void doComputeBounds() Q_DECL_OVERRIDE;
 private:
     FGPositionedRef m_navaid;
+    SGGeod m_geod;
 
     bool m_offsetEnabled;
     double m_offsetDistanceNm;
