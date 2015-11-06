@@ -79,6 +79,9 @@ private:
     NavSearchModel* m_searchModel;
 
     FGPositionedRef m_location;
+    bool m_locationIsLatLon;
+    SGGeod m_geodLocation;
+
     QVector<PositionedID> m_recentAirports;
 
     QToolButton* m_backButton;
