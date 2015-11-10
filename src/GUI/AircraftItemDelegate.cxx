@@ -73,7 +73,7 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
                       contentRect.right(), contentRect.bottom() + MARGIN);
 
     int variantCount = index.data(AircraftVariantCountRole).toInt();
-    int currentVariant =index.data(AircraftVariantRole).toInt();
+    int currentVariant = index.data(AircraftVariantRole).toInt();
     QString description = index.data(Qt::DisplayRole).toString();
     contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
 
@@ -210,11 +210,8 @@ QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const 
 {
     QRect contentRect = option.rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
 
-    const int THUMBNAIL_WIDTH = 172;
-    // don't request the thumbnail here for remote sources. Assume the default
-    //QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
-    //contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
-    contentRect.setLeft(contentRect.left() + MARGIN + THUMBNAIL_WIDTH);
+    QSize thumbnailSize = index.data(AircraftThumbnailSizeRole).toSize();
+    contentRect.setLeft(contentRect.left() + MARGIN + thumbnailSize.width());
     
     QFont f;
     f.setPointSize(18);
@@ -246,7 +243,7 @@ QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const 
         textHeight += BUTTON_HEIGHT;
     }
 
-    textHeight = qMax(textHeight, 128);
+    textHeight = qMax(textHeight, thumbnailSize.height());
 
     return QSize(option.rect.width(), textHeight + (MARGIN * 2));
 }

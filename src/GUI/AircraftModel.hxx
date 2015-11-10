@@ -45,6 +45,7 @@ const int AircraftInstallPercentRole = Qt::UserRole + 11;
 const int AircraftPackageSizeRole = Qt::UserRole + 12;
 const int AircraftInstallDownloadedSizeRole = Qt::UserRole + 13;
 const int AircraftURIRole = Qt::UserRole + 14;
+const int AircraftThumbnailSizeRole = Qt::UserRole + 15;
 
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
@@ -143,7 +144,7 @@ private:
     QVariant dataFromPackage(const simgear::pkg::PackageRef& item,
                              quint32 variantIndex, int role) const;
 
-    QVariant packageThumbnail(simgear::pkg::PackageRef p, int index) const;
+    QVariant packageThumbnail(simgear::pkg::PackageRef p, int index, bool download = true) const;
     
     void abandonCurrentScan();
     void refreshPackages();
