@@ -82,8 +82,6 @@ void NavaidDiagram::paintContents(QPainter *painter)
         SGGeod offsetGeod = SGGeodesy::direct(m_geod, m_offsetBearingDeg, d);
         QPointF offset = project(offsetGeod);
 
-        qDebug() << base << offset;
-
         QPen pen(Qt::green);
         pen.setCosmetic(true);
         painter->setPen(pen);

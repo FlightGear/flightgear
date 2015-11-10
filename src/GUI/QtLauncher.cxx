@@ -787,6 +787,7 @@ void QtLauncher::onRun()
     bool startPaused = m_ui->startPausedCheck->isChecked() ||
             m_ui->location->shouldStartPaused();
     if (startPaused) {
+        qDebug() << "will start paused";
         opt->addOption("enable-freeze", "");
     }
 

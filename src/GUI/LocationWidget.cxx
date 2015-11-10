@@ -26,6 +26,8 @@
 #include <QTimer>
 #include <QDebug>
 #include <QToolButton>
+#include <QMovie>
+#include <QPainter>
 
 #include "AirportDiagram.hxx"
 #include "NavaidDiagram.hxx"
@@ -202,6 +204,10 @@ public:
             }
         }
 
+        if (role == Qt::DecorationRole) {
+            return AirportDiagram::iconForPositioned(pos);
+        }
+
         if (role == Qt::EditRole) {
             return QString::fromStdString(pos->ident());
         }
@@ -227,7 +233,6 @@ Q_SIGNALS:
     void searchComplete();
 
 private:
-
 
     void onSearchResultsPoll()
     {
@@ -267,7 +272,8 @@ LocationWidget::LocationWidget(QWidget *parent) :
     QIcon historyIcon(":/history-icon");
     m_ui->searchHistory->setIcon(historyIcon);
 
-    m_ui->searchIcon->setPixmap(QPixmap(":/search-icon"));
+    QByteArray format;
+    m_ui->searchIcon->setMovie(new QMovie(":/spinner", format, this));
 
     m_searchModel = new NavSearchModel;
     m_ui->searchResultsList->setModel(m_searchModel);
@@ -310,8 +316,9 @@ LocationWidget::LocationWidget(QWidget *parent) :
             this, SLOT(onOffsetDataChanged()));
 
     m_backButton = new QToolButton(this);
-    m_backButton->setGeometry(0, 0, 32, 32);
-    m_backButton->setIcon(QIcon(":/search-icon"));
+    m_backButton->setGeometry(0, 0, 64, 32);
+    m_backButton->setText("<< Back");
+    //m_backButton->setIcon(QIcon(":/search-icon"));
     m_backButton->raise();
 
     connect(m_backButton, &QAbstractButton::clicked,
@@ -374,6 +381,9 @@ void LocationWidget::setLocationOptions()
 {
     flightgear::Options* opt = flightgear::Options::sharedInstance();
 
+    std::string altStr = QString::number(m_ui->altitudeSpinbox->value()).toStdString();
+    std::string vcStr = QString::number(m_ui->airspeedSpinbox->value()).toStdString();
+
     if (m_locationIsLatLon) {
         // bypass the options mechanism because converting to deg:min:sec notation
         // just to parse back again is nasty.
@@ -381,6 +391,9 @@ void LocationWidget::setLocationOptions()
         fgSetDouble("/position/latitude-deg", m_geodLocation.getLatitudeDeg());
         fgSetDouble("/sim/presets/longitude-deg", m_geodLocation.getLongitudeDeg());
         fgSetDouble("/position/longitude-deg", m_geodLocation.getLongitudeDeg());
+
+        opt->addOption("altitude", altStr);
+        opt->addOption("vc", vcStr);
         return;
     }
 
@@ -396,35 +409,79 @@ void LocationWidget::setLocationOptions()
             int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
             if (index >= 0) {
                 // explicit runway choice
-                opt->addOption("runway", apt->getRunwayByIndex(index)->ident());
+                FGRunwayRef runway = apt->getRunwayByIndex(index);
+                opt->addOption("runway", runway->ident());
+
+                // set nav-radio 1 based on selected runway
+                if (runway->ILS()) {
+                    double mhz = runway->ILS()->get_freq() / 100.0;
+                    QString navOpt = QString("%1:%2").arg(runway->headingDeg()).arg(mhz);
+                    opt->addOption("nav1", navOpt.toStdString());
+                }
             }
 
             if (m_ui->onFinalCheckbox->isChecked()) {
                 opt->addOption("glideslope", "3.0");
-                opt->addOption("offset-distance", "10.0"); // in nautical miles
+                double offsetNm = m_ui->approachDistanceSpin->value();
+                opt->addOption("offset-distance", QString::number(offsetNm).toStdString());
             }
+
         } else if (m_ui->parkingRadio->isChecked()) {
             // parking selection
             opt->addOption("parkpos", m_ui->parkingCombo->currentText().toStdString());
         }
         // of location is an airport
-    }
+    } else {
+        // location is a navaid
+        // note setting the ident here is ambigious, we really only need and
+        // want the 'navaid-id' property. However setting the 'real' option
+        // gives a better UI experience (eg existing Position in Air dialog)
+        FGPositioned::Type ty = m_location->type();
+        switch (ty) {
+        case FGPositioned::VOR:
+            opt->addOption("vor", m_location->ident());
+            setNavRadioOption();
+            break;
 
-    FGPositioned::Type ty = m_location->type();
-    switch (ty) {
-    case FGPositioned::VOR:
-    case FGPositioned::NDB:
-    case FGPositioned::FIX:
+        case FGPositioned::NDB:
+            opt->addOption("ndb", m_location->ident());
+            setNavRadioOption();
+            break;
+
+        case FGPositioned::FIX:
+            opt->addOption("fix", m_location->ident());
+            break;
+        default:
+            break;
+        }
+
+        opt->addOption("altitude", altStr);
+        opt->addOption("vc", vcStr);
+
         // set disambiguation property
         globals->get_props()->setIntValue("/sim/presets/navaid-id",
                                           static_cast<int>(m_location->guid()));
+    }
 
-        // we always set 'fix', but really this is just to force positionInit
-        // code to check for the navaid-id value above.
-        opt->addOption("fix", m_location->ident());
-        break;
-    default:
-        break;
+}
+
+void LocationWidget::setNavRadioOption()
+{
+    flightgear::Options* opt = flightgear::Options::sharedInstance();
+
+    if (m_location->type() == FGPositioned::VOR) {
+        FGNavRecordRef nav(static_cast<FGNavRecord*>(m_location.ptr()));
+        double mhz = nav->get_freq() / 100.0;
+        int heading = 0; // add heading support
+        QString navOpt = QString("%1:%2").arg(heading).arg(mhz);
+        opt->addOption("nav1", navOpt.toStdString());
+    } else {
+        FGNavRecordRef nav(static_cast<FGNavRecord*>(m_location.ptr()));
+        int khz = nav->get_freq() / 100;
+        int heading = 0;
+        QString adfOpt = QString("%1:%2").arg(heading).arg(khz);
+        qDebug() << "ADF opt is:" << adfOpt;
+        opt->addOption("adf1", adfOpt.toStdString());
     }
 }
 
@@ -446,7 +503,9 @@ void LocationWidget::onSearch()
 
     if (m_searchModel->isSearchActive()) {
         m_ui->searchStatusText->setText(QString("Searching for '%1'").arg(search));
+        qDebug() << "setting icon visible";
         m_ui->searchIcon->setVisible(true);
+        m_ui->searchIcon->movie()->start();
     } else if (m_searchModel->rowCount(QModelIndex()) == 1) {
         setBaseLocation(m_searchModel->itemAtRow(0));
     }

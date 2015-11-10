@@ -88,6 +88,7 @@ private:
 
     void onOffsetEnabledToggled(bool on);
     void onBackToSearch();
+    void setNavRadioOption();
 };
 
 #endif // LOCATIONWIDGET_H

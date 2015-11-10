@@ -73,6 +73,8 @@ class FGAirport : public FGPositioned
      */
     void validateILSData();
 
+    bool hasTower() const;
+
     SGGeod getTowerLocation() const;
 
     void setMetar(bool value) { _has_metar = value; }
@@ -141,6 +143,8 @@ class FGAirport : public FGPositioned
      * aiport has a hard-surfaced runway of at least the specified length.
      */
     bool hasHardRunwayOfLengthFt(double aLengthFt) const;
+
+    FGRunwayRef longestRunway() const;
 
     unsigned int numTaxiways() const;
     FGTaxiwayRef getTaxiwayByIndex(unsigned int aIndex) const;
@@ -319,6 +323,7 @@ private:
     void loadProcedures() const;
     
     mutable bool mTowerDataLoaded;
+    mutable bool mHasTower;
     mutable SGGeod mTowerPosition;
   
     mutable bool mRunwaysLoaded;
