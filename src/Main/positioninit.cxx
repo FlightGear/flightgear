@@ -353,37 +353,51 @@ static void fgSetDistOrAltFromGlideSlope() {
 
 
 // Set current_options lon/lat given an airport id and heading (degrees)
-static bool fgSetPosFromNAV( const string& id, const double& freq, FGPositioned::Type type )
+static bool fgSetPosFromNAV( const string& id,
+                             const double& freq,
+                             FGPositioned::Type type,
+                             PositionedID guid)
 {
-  FGNavList::TypeFilter filter(type);
-  const nav_list_type navlist = FGNavList::findByIdentAndFreq( id.c_str(), freq, &filter );
-  
-  if (navlist.empty()) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
-           << id << ":" << freq );
-    return false;
-  }
-  
-  if( navlist.size() > 1 ) {
-    std::ostringstream buf;
-    buf << "Ambigous NAV-ID: '" << id << "'. Specify id and frequency. Available stations:" << endl;
-    for( nav_list_type::const_iterator it = navlist.begin(); it != navlist.end(); ++it ) {
-      // NDB stored in kHz, VOR stored in MHz * 100 :-P
-      double factor = (*it)->type() == FGPositioned::NDB ? 1.0 : 1/100.0;
-      string unit = (*it)->type() == FGPositioned::NDB ? "kHz" : "MHz";
-      buf << (*it)->ident() << " "
-      << std::setprecision(5) << (double)((*it)->get_freq() * factor) << " "
-      << (*it)->get_lat() << "/" << (*it)->get_lon()
-      << endl;
+    FGNavRecord* nav = 0;
+
+
+    if (guid != 0) {
+        nav = FGPositioned::loadById<FGNavRecord>(guid);
+        if (!nav)
+            return false;
+    } else {
+        FGNavList::TypeFilter filter(type);
+        const nav_list_type navlist = FGNavList::findByIdentAndFreq( id.c_str(), freq, &filter );
+
+        if (navlist.empty()) {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
+                 << id << ":" << freq );
+          return false;
+        }
+
+        if( navlist.size() > 1 ) {
+          std::ostringstream buf;
+          buf << "Ambigous NAV-ID: '" << id << "'. Specify id and frequency. Available stations:" << endl;
+          for( nav_list_type::const_iterator it = navlist.begin(); it != navlist.end(); ++it ) {
+            // NDB stored in kHz, VOR stored in MHz * 100 :-P
+            double factor = (*it)->type() == FGPositioned::NDB ? 1.0 : 1/100.0;
+            string unit = (*it)->type() == FGPositioned::NDB ? "kHz" : "MHz";
+            buf << (*it)->ident() << " "
+            << std::setprecision(5) << (double)((*it)->get_freq() * factor) << " "
+            << (*it)->get_lat() << "/" << (*it)->get_lon()
+            << endl;
+          }
+
+          SG_LOG( SG_GENERAL, SG_ALERT, buf.str() );
+          return false;
+        }
+
+        // nav list must be of length 1
+        nav = navlist[0];
     }
-    
-    SG_LOG( SG_GENERAL, SG_ALERT, buf.str() );
-    return false;
-  }
-  
-  FGNavRecord *nav = navlist[0];
-  fgApplyStartOffset(nav->geod(), fgGetDouble("/sim/presets/heading-deg"));
-  return true;
+
+    fgApplyStartOffset(nav->geod(), fgGetDouble("/sim/presets/heading-deg"));
+    return true;
 }
 
 // Set current_options lon/lat given an aircraft carrier id
@@ -429,7 +443,7 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
   }
 }
 
-// Set current_options lon/lat given an airport id and heading (degrees)
+// Set current_options lon/lat given a fix ident and GUID
 static bool fgSetPosFromFix( const string& id, PositionedID guid )
 {
     FGPositioned* fix = NULL;
@@ -558,14 +572,14 @@ bool initPosition()
   
   if ( !set_pos && !vor.empty() ) {
     // a VOR is requested
-    if ( fgSetPosFromNAV( vor, vor_freq, FGPositioned::VOR ) ) {
+    if ( fgSetPosFromNAV( vor, vor_freq, FGPositioned::VOR, navaidId ) ) {
       set_pos = true;
     }
   }
   
   if ( !set_pos && !ndb.empty() ) {
     // an NDB is requested
-    if ( fgSetPosFromNAV( ndb, ndb_freq, FGPositioned::NDB ) ) {
+    if ( fgSetPosFromNAV( ndb, ndb_freq, FGPositioned::NDB, navaidId ) ) {
       set_pos = true;
     }
   }

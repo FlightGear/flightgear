@@ -1,9 +1,19 @@
 <RCC>
     <qresource prefix="/">
         <file alias="history-icon">history-icon.png</file>
-        <file alias="search-icon">large-search-icon.png</file>
         <file alias="right-arrow-icon">arrow-right-icon.png</file>
         <file alias="left-arrow-icon">arrow-left-icon.png</file>
         <file alias="app-icon-large">../../icons/128x128/apps/flightgear.png</file>
+        <file alias="spinner">spinner.gif</file>
+        <file alias="heliport-icon">heliport-icon.png</file>
+        <file alias="seaport-icon">seaport-icon.png</file>
+        <file alias="vor-icon">vor-icon.png</file>
+        <file alias="vortac-icon">vortac-icon.png</file>
+        <file alias="waypoint-icon">waypoint-icon.png</file>
+        <file alias="ndb-icon">ndb-icon.png</file>
+        <file alias="airport-icon">airport-icon.png</file>
+        <file alias="airport-tower-icon">airport-tower-icon.png</file>
+        <file alias="vor-dme-icon">vor-dme-icon.png</file>
+        <file alias="seaport-tower-icon">seaport-tower-icon.png</file>
     </qresource>
 </RCC>

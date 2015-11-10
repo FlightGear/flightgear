@@ -26,14 +26,20 @@
 
 #include <simgear/math/sg_geodesy.hxx>
 
+#include <Navaids/positioned.hxx>
+#include <Airports/airport.hxx>
+
 class BaseDiagram : public QWidget
 {
     Q_OBJECT
 public:
     BaseDiagram(QWidget* pr);
 
+    static QPixmap iconForPositioned(const FGPositionedRef &pos);
+    static QPixmap iconForAirport(FGAirport *apt);
 
-    
+    static QVector<QLineF> projectAirportRuwaysIntoRect(FGAirportRef apt, const QRectF& bounds);
+    static QVector<QLineF> projectAirportRuwaysWithCenter(FGAirportRef apt, const SGGeod &c);
 protected:
     virtual void paintEvent(QPaintEvent* pe);
 
@@ -60,6 +66,15 @@ protected:
     QPointF m_panOffset, m_lastMousePos;
     int m_wheelAngleDeltaAccumulator;
     bool m_didPan;
+
+    static void extendRect(QRectF& r, const QPointF& p);
+
+    static QPointF project(const SGGeod &geod, const SGGeod &center);
+
+    static SGGeod unproject(const QPointF &xy, const SGGeod &center);
+private:
+    void paintNavaids(QPainter *p);
+
 };
 
 #endif // of GUI_BASEDIAGRAM_HXX

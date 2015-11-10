@@ -26,7 +26,7 @@
    <item>
     <widget class="QStackedWidget" name="stack">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="airportPage">
       <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,0,0">
@@ -292,6 +292,9 @@
      </widget>
      <widget class="QWidget" name="searchPage">
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>2</number>
+       </property>
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -342,7 +345,7 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
+        <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
          <item>
           <widget class="QLabel" name="searchStatusText">
            <property name="text">
@@ -355,6 +358,12 @@
          </item>
          <item>
           <widget class="QLabel" name="searchIcon">
+           <property name="minimumSize">
+            <size>
+             <width>16</width>
+             <height>16</height>
+            </size>
+           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>

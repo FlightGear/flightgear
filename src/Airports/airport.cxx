@@ -76,6 +76,7 @@ FGAirport::FGAirport( PositionedID aGuid,
     _has_metar(has_metar),
     _dynamics(0),
     mTowerDataLoaded(false),
+    mHasTower(false),
     mRunwaysLoaded(false),
     mHelipadsLoaded(false),
     mTaxiwaysLoaded(false),
@@ -312,6 +313,20 @@ bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
   } // of runways iteration
 
   return false;
+}
+
+FGRunwayRef FGAirport::longestRunway() const
+{
+    FGRunwayRef r;
+    loadRunways();
+
+    BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+        if (!r || (r->lengthFt() < rwy->lengthFt())) {
+             r = rwy;
+        }
+    } // of runways iteration
+
+    return r;
 }
 
 //------------------------------------------------------------------------------
@@ -663,13 +678,14 @@ void FGAirport::validateTowerData() const
   NavDataCache* cache = NavDataCache::instance();
   PositionedIDVec towers = cache->airportItemsOfType(guid(), FGPositioned::TOWER);
   if (towers.empty()) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "No towers defined for:" <<ident());
+    mHasTower = false;
     mTowerPosition = geod(); // use airport position
     // increase tower elevation by 20 metres above the field elevation
     mTowerPosition.setElevationM(geod().getElevationM() + 20.0);
   } else {
     FGPositionedRef tower = cache->loadById(towers.front());
     mTowerPosition = tower->geod();
+    mHasTower = true;
   }
   
   SGPath path;
@@ -681,6 +697,7 @@ void FGAirport::validateTowerData() const
     SGPropertyNode_ptr rootNode = new SGPropertyNode;
     readProperties(path.str(), rootNode);
     const_cast<FGAirport*>(this)->readTowerData(rootNode);
+    mHasTower = true;
   } catch (sg_exception& e){
     SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading twr XML failed:" << e.getFormattedMessage());
   }
@@ -721,6 +738,12 @@ void FGAirport::validateILSData()
   } catch (sg_exception& e){
       SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading ils XML failed:" << e.getFormattedMessage());
   }
+}
+
+bool FGAirport::hasTower() const
+{
+    validateTowerData();
+    return mHasTower;
 }
 
 void FGAirport::readILSData(SGPropertyNode* aRoot)
