@@ -40,7 +40,9 @@
 // FlightGear
 #include <Main/globals.hxx>
 
+
 const int STANDARD_THUMBNAIL_HEIGHT = 128;
+const int STANDARD_THUMBNAIL_WIDTH = 172;
 
 using namespace simgear::pkg;
 
@@ -367,8 +369,12 @@ protected:
             return;
         }
         
+        QPixmap pix = QPixmap::fromImage(img);
+        if (pix.height() > STANDARD_THUMBNAIL_HEIGHT) {
+            pix = pix.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT);
+        }
         m_model->m_thumbnailPixmapCache.insert(QString::fromStdString(aThumbnailUrl),
-                                               QPixmap::fromImage(img));
+                                               pix);
         
         // notify any affected items. Linear scan here avoids another map/dict
         // structure.
@@ -515,6 +521,10 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, quint32 variantIn
         return p.isNull() ? 0 : 1;
     }
 
+    if (role == AircraftThumbnailSizeRole) {
+        return item->thumbnail().size();
+    }
+
     if ((role >= AircraftVariantDescriptionRole) && (role < AircraftThumbnailRole)) {
         int variantIndex = role - AircraftVariantDescriptionRole;
         return item->variants.at(variantIndex)->description;
@@ -601,6 +611,11 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
         } else {
             return PackageNotInstalled;
         }
+    } else if (role == AircraftThumbnailSizeRole) {
+        QPixmap pm = packageThumbnail(item, 0, false).value<QPixmap>();
+        if (pm.isNull())
+            return QSize(STANDARD_THUMBNAIL_WIDTH, STANDARD_THUMBNAIL_HEIGHT);
+        return pm.size();
     } else if (role >= AircraftThumbnailRole) {
         return packageThumbnail(item , role - AircraftThumbnailRole);
     } else if (role == AircraftAuthorsRole) {
@@ -628,7 +643,7 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
     return QVariant();
 }
 
-QVariant AircraftItemModel::packageThumbnail(PackageRef p, int index) const
+QVariant AircraftItemModel::packageThumbnail(PackageRef p, int index, bool download) const
 {
     const string_list& thumbnails(p->thumbnailUrls());
     if (index >= thumbnails.size()) {
@@ -663,7 +678,9 @@ QVariant AircraftItemModel::packageThumbnail(PackageRef p, int index) const
         } // of have thumbnail file names
     } // of have existing install
     
-    m_packageRoot->requestThumbnailData(thumbnailUrl);
+    if (download) {
+        m_packageRoot->requestThumbnailData(thumbnailUrl);
+    }
     return QVariant();
 }
 
