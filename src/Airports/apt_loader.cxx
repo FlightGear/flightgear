@@ -159,9 +159,7 @@ public:
         double lat = atof( token[1].c_str() );
         double lon = atof( token[2].c_str() );
         double elev = atof( token[3].c_str() );
-        tower = SGGeod::fromDegFt(lon, lat, elev + last_apt_elev);
-        got_tower = true;
-        
+        tower = SGGeod::fromDegFt(lon, lat, elev + last_apt_elev);        
         cache->insertTower(currentAirportID, tower);
       } else if ( line_id == 19 ) {
           // windsock entry (ignore)
@@ -207,7 +205,6 @@ private:
   double rwy_lon_accum;
   double last_rwy_heading;
   int rwy_count;
-  bool got_tower;
   string last_apt_id;
   double last_apt_elev;
   SGGeod tower;
@@ -238,17 +235,6 @@ private:
     double lat = rwy_lat_accum / (double)rwy_count;
     double lon = rwy_lon_accum / (double)rwy_count;
 
-    if (!got_tower) {
-      // tower height hard coded for now...
-      const float tower_height = 50.0f;
-      // make a little off the heading for 1 runway airports...
-      float fudge_lon = fabs(sin(last_rwy_heading * SGD_DEGREES_TO_RADIANS)) * .003f;
-      float fudge_lat = .003f - fudge_lon;
-      tower = SGGeod::fromDegFt(lon + fudge_lon, lat + fudge_lat, last_apt_elev + tower_height);
-      
-      cache->insertTower(currentAirportID, tower);
-    }
-
     SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
     cache->updatePosition(currentAirportID, pos);
     
@@ -264,7 +250,6 @@ private:
     finishAirport();
             
     last_apt_elev = elev;
-    got_tower = false;
 
     string name;
     // build the name
