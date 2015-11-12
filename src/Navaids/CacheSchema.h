@@ -1,7 +1,7 @@
 #ifndef FG_NAVCACHE_SCHEMA_HXX
 #define FG_NAVCACHE_SCHEMA_HXX
 
-const int SCHEMA_VERSION = 10;
+const int SCHEMA_VERSION = 14;
 
 #define SCHEMA_SQL \
 "CREATE TABLE properties (key VARCHAR, value VARCHAR);" \

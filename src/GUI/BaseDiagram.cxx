@@ -66,6 +66,18 @@ QTransform BaseDiagram::transform() const
     return t;
 }
 
+void BaseDiagram::clearIgnoredNavaids()
+{
+    m_ignored.clear();
+}
+
+void BaseDiagram::addIgnoredNavaid(FGPositionedRef pos)
+{
+    if (isNavaidIgnored(pos))
+        return;
+    m_ignored.push_back(pos);
+}
+
 void BaseDiagram::extendRect(QRectF &r, const QPointF &p)
 {
     if (p.x() < r.left()) {
@@ -148,10 +160,14 @@ void BaseDiagram::paintNavaids(QPainter* painter)
 
     FGPositionedList::const_iterator it;
     for (it = items.begin(); it != items.end(); ++it) {
+        FGPositionedRef pos(*it);
         bool drawAsIcon = true;
+        if (isNavaidIgnored(pos))
+            continue;
 
-        if ((*it)->type() == FGPositioned::AIRPORT) {
-            FGAirport* apt = static_cast<FGAirport*>(it->ptr());
+        FGPositioned::Type ty(pos->type());
+        if (ty == FGPositioned::AIRPORT) {
+            FGAirport* apt = static_cast<FGAirport*>(pos.ptr());
             if (apt->hasHardRunwayOfLengthFt(minRunwayLengthFt)) {
 
                 drawAsIcon = false;
@@ -173,15 +189,42 @@ void BaseDiagram::paintNavaids(QPainter* painter)
         }
 
         if (drawAsIcon) {
-            QPixmap pm = iconForPositioned(*it);
-            QPointF loc = xf.map(project((*it)->geod()));
-            loc -= QPointF(pm.width() >> 1, pm.height() >> 1);
-            painter->drawPixmap(loc, pm);
+            QPixmap pm = iconForPositioned(pos, false);
+            QPointF loc = xf.map(project(pos->geod()));
+
+            QPointF iconLoc = loc - QPointF(pm.width() >> 1, pm.height() >> 1);
+            painter->drawPixmap(iconLoc, pm);
+
+            painter->setPen(QColor(0x03, 0x83, 0xbf));
+
+            QString label;
+            if (FGAirport::isAirportType(pos.ptr())) {
+                label = QString::fromStdString((*it)->name());
+            } else {
+                label = QString::fromStdString((*it)->ident());
+            }
+
+            if (ty == FGPositioned::NDB) {
+                FGNavRecord* nav = static_cast<FGNavRecord*>(pos.ptr());
+                label.append("\n").append(QString::number(nav->get_freq() / 100));
+            } else if (ty == FGPositioned::VOR) {
+                FGNavRecord* nav = static_cast<FGNavRecord*>(pos.ptr());
+                label.append("\n").append(QString::number(nav->get_freq() / 100.0, 'f', 1));
+            }
+
+            QRect labelBox(loc.x() + (pm.width()/2) + 4, loc.y() - 50, 100, 100);
+            painter->drawText(labelBox, Qt::AlignVCenter | Qt::AlignLeft | Qt::TextWordWrap,
+                              label);
         }
     }
 
     // restore transform
     painter->setTransform(xf);
+}
+
+bool BaseDiagram::isNavaidIgnored(const FGPositionedRef &pos) const
+{
+    return m_ignored.contains(pos);
 }
 
 void BaseDiagram::mousePressEvent(QMouseEvent *me)
@@ -336,7 +379,7 @@ QPointF BaseDiagram::project(const SGGeod& geod) const
     return project(geod, m_projectionCenter);
 }
 
-QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos)
+QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos, bool small)
 {
     // if airport type, check towered or untowered
 
@@ -348,7 +391,8 @@ QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos)
 
     switch (pos->type()) {
     case FGPositioned::VOR:
-        // check for VORTAC
+        if (static_cast<FGNavRecord*>(pos.ptr())->isVORTAC())
+            return QPixmap(":/vortac-icon");
 
         if (static_cast<FGNavRecord*>(pos.ptr())->hasDME())
             return QPixmap(":/vor-dme-icon");
@@ -363,7 +407,7 @@ QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos)
     case FGPositioned::SEAPORT:
         return QPixmap(isTowered ? ":/seaport-tower-icon" : ":/seaport-icon");
     case FGPositioned::NDB:
-        return QPixmap(":/ndb-icon");
+        return QPixmap(small ? ":/ndb-small-icon" : ":/ndb-icon");
     case FGPositioned::FIX:
         return QPixmap(":/waypoint-icon");
 

@@ -77,6 +77,8 @@ void NavaidDiagram::paintContents(QPainter *painter)
 {
     QPointF base = project(m_geod);
 
+    QPointF airplaneIconPos = base;
+
     if (m_offsetEnabled) {
         double d = m_offsetDistanceNm * SG_NM_TO_METER;
         SGGeod offsetGeod = SGGeodesy::direct(m_geod, m_offsetBearingDeg, d);
@@ -86,7 +88,16 @@ void NavaidDiagram::paintContents(QPainter *painter)
         pen.setCosmetic(true);
         painter->setPen(pen);
         painter->drawLine(base, offset);
+
+        airplaneIconPos = offset;
     }
+
+    QPixmap pix(":/airplane-icon");
+    airplaneIconPos = painter->transform().map(airplaneIconPos);
+    painter->resetTransform();
+    QRect airplaneIconRect = pix.rect();
+    airplaneIconRect.moveCenter(airplaneIconPos.toPoint());
+    painter->drawPixmap(airplaneIconRect, pix);
 }
 
 void NavaidDiagram::doComputeBounds()

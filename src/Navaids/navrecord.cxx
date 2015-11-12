@@ -98,6 +98,16 @@ bool FGNavRecord::hasDME()
   return (mColocated > 0);
 }
 
+
+
+bool FGNavRecord::isVORTAC() const
+{
+    if (mType != VOR)
+        return false;
+
+    return mName.find(" VORTAC") != std::string::npos;
+}
+
 void FGNavRecord::setColocatedDME(PositionedID other)
 {
   mColocated = other;

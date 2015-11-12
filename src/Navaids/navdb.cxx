@@ -184,6 +184,10 @@ static PositionedID readNavFromStream(std::istream& aStream,
   PositionedID navaid_dme = 0;
 
   if (type == FGPositioned::DME) {
+      // complication here: the database doesn't record TACAN sites at all,
+      // we simply infer their existence from DMEs whose name includes 'VORTAC'
+      // or 'TACAN' (since all TACAN stations include DME)
+      // hence the cache never actually includes entries of type TACAN
     FGPositioned::TypeFilter f(FGPositioned::INVALID);
     if ( name.find("VOR-DME") != std::string::npos ) {
       f.addType(FGPositioned::VOR);
@@ -194,8 +198,6 @@ static PositionedID readNavFromStream(std::istream& aStream,
       f.addType(FGPositioned::VOR);
     } else if ( name.find("NDB-DME") != std::string::npos ) {
       f.addType(FGPositioned::NDB);
-    } else if ( name.find("TACAN") != std::string::npos ) {
-      f.addType(FGPositioned::VOR);
     }
 
     if (f.maxType() > 0) {
@@ -206,9 +208,14 @@ static PositionedID readNavFromStream(std::istream& aStream,
 
         if ( simgear::strutils::uppercase(navaid_part[0]) == simgear::strutils::uppercase(dme_part[0]) ) {
           navaid_dme = ref.get()->guid();
+        } else {
+            SG_LOG(SG_NAVAID, SG_WARN, "DME " << ident << " (" << name << "), closest match has wrong name:"
+                   << ref->ident() << " (" << ref->name() << ")");
         }
+      } else {
+          SG_LOG(SG_NAVAID, SG_WARN, "Couldn't find navaid for DME:" << ident << " (" << name << ")");
       }
-    }
+    } // of have a co-located navaid to locate
   }
 
   if ((type >= FGPositioned::ILS) && (type <= FGPositioned::GS)) {

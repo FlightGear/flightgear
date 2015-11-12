@@ -103,6 +103,9 @@ void AirportDiagram::setAirport(FGAirportRef apt)
         buildPavements();
     }
 
+    clearIgnoredNavaids();
+    addIgnoredNavaid(apt);
+
     recomputeBounds(true);
     update();
 }
@@ -204,8 +207,9 @@ void AirportDiagram::paintContents(QPainter* p)
     p->setFont(f);
 
     // draw ILS first so underneath all runways
-    QPen pen(Qt::magenta);
-    pen.setWidth(1.0 / m_scale);
+    QPen pen(QColor(0x5f, 0x5f, 0x5f));
+    pen.setWidth(1);
+    pen.setCosmetic(true);
     p->setPen(pen);
 
     Q_FOREACH(const RunwayData& r, m_runways) {
