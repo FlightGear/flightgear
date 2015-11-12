@@ -684,7 +684,8 @@ void FGAirport::validateTowerData() const
     // offset the tower position away from the runway centerline, if
     // airport has a single runway. Offset by eight times the runway width,
     // an entirely guessed figure.
-    if (numRunways() <= 2) {
+    int runwayCount = numRunways();
+    if ((runwayCount > 0) && (runwayCount <= 2)) {
         FGRunway* runway = getRunwayByIndex(0);
         double hdg = runway->headingDeg() + 90;
         mTowerPosition = SGGeodesy::direct(geod(), hdg, runway->widthM() * 8);
