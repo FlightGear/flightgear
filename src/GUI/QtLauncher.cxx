@@ -341,14 +341,12 @@ bool runLauncherDialog()
 {
     sglog().setLogLevels( SG_ALL, SG_INFO );
 
-
     initQtResources(); // can't be called inside a namespaceb
 
     // startup the nav-cache now. This pre-empts normal startup of
     // the cache, but no harm done. (Providing scenery paths are consistent)
 
     initNavCache();
-
 
     fgInitPackageRoot();
 
@@ -358,7 +356,6 @@ bool runLauncherDialog()
     // we guard against re-init in the global phase; bind and postinit
     // will happen as normal
     http->init();
-
 
     // setup scenery paths now, especially TerraSync path for airport
     // parking locations (after they're downloaded)
@@ -489,7 +486,8 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onAircraftInstalledCompleted);
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallFailed,
             this, &QtLauncher::onAircraftInstallFailed);
-    
+    connect(m_aircraftModel, &AircraftItemModel::scanCompleted,
+            this, &QtLauncher::updateSelectedAircraft);
     connect(m_ui->pathsButton, &QPushButton::clicked,
             this, &QtLauncher::onEditPaths);
 
@@ -533,7 +531,9 @@ void QtLauncher::restoreSettings()
 
     if (!m_recentAircraft.empty()) {
         m_selectedAircraft = m_recentAircraft.front();
+        qDebug() << "restoring aircraft" << m_selectedAircraft;
     } else {
+        qDebug() << "recent aircraft is empty";
         // select the default C172p
     }
 
@@ -551,6 +551,8 @@ void QtLauncher::restoreSettings()
     m_aircraftProxy->setRatings(m_ratingFilters);
 
     m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
+
+    qDebug() << "restoring settings";
 }
 
 void QtLauncher::saveSettings()
@@ -570,6 +572,7 @@ void QtLauncher::saveSettings()
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
 
     m_ui->location->saveSettings();
+    qDebug() << "saving settings";
 }
 
 void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const
@@ -635,6 +638,8 @@ void QtLauncher::onRun()
         m_recentAircraft.prepend(m_selectedAircraft);
         if (m_recentAircraft.size() > MAX_RECENT_AIRCRAFT)
           m_recentAircraft.pop_back();
+
+        qDebug() << "recent aircraft is now" << m_recentAircraft;
     }
 
     m_ui->location->setLocationOptions();
@@ -804,6 +809,7 @@ void QtLauncher::onAircraftInstallFailed(QModelIndex index, QString errorMessage
 void QtLauncher::onAircraftSelected(const QModelIndex& index)
 {
     m_selectedAircraft = index.data(AircraftURIRole).toUrl();
+    qDebug() << "selected aircraft is now" << m_selectedAircraft;
     updateSelectedAircraft();
 }
 

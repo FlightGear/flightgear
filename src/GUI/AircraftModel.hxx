@@ -116,7 +116,6 @@ public:
      * given a -set.xml path, return the corresponding model index, if one
      * exists.
      */
-  //  QModelIndex indexOfAircraftPath(QString path) const;
 
     QModelIndex indexOfAircraftURI(QUrl uri) const;
     
@@ -131,6 +130,8 @@ signals:
     
     void aircraftInstallCompleted(QModelIndex index);
     
+    void scanCompleted();
+
 private slots:
     void onScanResults();
     

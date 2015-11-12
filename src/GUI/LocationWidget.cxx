@@ -41,8 +41,6 @@
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx> // for fgSetDouble
 
-const int MAX_RECENT_AIRPORTS = 32;
-
 using namespace flightgear;
 
 QString fixNavaidName(QString s)
@@ -205,7 +203,7 @@ public:
         }
 
         if (role == Qt::DecorationRole) {
-            return AirportDiagram::iconForPositioned(pos);
+            return AirportDiagram::iconForPositioned(pos, true);
         }
 
         if (role == Qt::EditRole) {
@@ -301,6 +299,8 @@ LocationWidget::LocationWidget(QWidget *parent) :
     connect(m_ui->locationSearchEdit, &QLineEdit::returnPressed,
             this, &LocationWidget::onSearch);
 
+    // disabled for now
+    m_ui->searchHistory->hide();
     connect(m_ui->searchHistory, &QPushButton::clicked,
             this, &LocationWidget::onPopupHistory);
 
@@ -338,14 +338,22 @@ LocationWidget::~LocationWidget()
 void LocationWidget::restoreSettings()
 {
     QSettings settings;
-    Q_FOREACH(QVariant v, settings.value("recent-locations").toList()) {
-        m_recentAirports.push_back(v.toLongLong());
+
+    if (settings.contains("location-lat")) {
+        m_locationIsLatLon = true;
+        m_geodLocation = SGGeod::fromDeg(settings.value("location-lon").toDouble(),
+                                         settings.value("location-lat").toDouble());
+    } else if (settings.contains("location-id")) {
+        m_location = NavDataCache::instance()->loadById(settings.value("location-id").toULongLong());
     }
 
-    if (!m_recentAirports.empty()) {
-        setBaseLocation(NavDataCache::instance()->loadById(m_recentAirports.front()));
-    }
+    m_ui->altitudeSpinbox->setValue(settings.value("altitude").toInt());
+    m_ui->airspeedSpinbox->setValue(settings.value("speed").toInt());
+    m_ui->offsetGroup->setChecked(settings.value("offset-enabled").toBool());
+    m_ui->offsetBearingSpinbox->setValue(settings.value("offset-bearing").toInt());
+    m_ui->offsetNmSpinbox->setValue(settings.value("offset-distance").toInt());
 
+    onLocationChanged();
     updateDescription();
 }
 
@@ -369,12 +377,21 @@ void LocationWidget::saveSettings()
 {
     QSettings settings;
 
-    QVariantList locations;
-    Q_FOREACH(PositionedID v, m_recentAirports) {
-        locations.push_back(v);
+    settings.remove("location-id");
+    if (m_locationIsLatLon) {
+        settings.setValue("location-lat", m_geodLocation.getLatitudeDeg());
+        settings.setValue("location-lon", m_geodLocation.getLongitudeDeg());
+
+    } else if (m_location) {
+        settings.setValue("location-id", m_location->guid());
     }
 
-    settings.setValue("recent-airports", locations);
+    settings.setValue("altitude", m_ui->altitudeSpinbox->value());
+    settings.setValue("speed", m_ui->airspeedSpinbox->value());
+
+    settings.setValue("offset-enabled", m_ui->offsetGroup->isChecked());
+    settings.setValue("offset-bearing", m_ui->offsetBearingSpinbox->value());
+    settings.setValue("offset-distance", m_ui->offsetNmSpinbox->value());
 }
 
 void LocationWidget::setLocationOptions()
@@ -571,7 +588,7 @@ void LocationWidget::onLocationChanged()
     } else if (m_locationIsLatLon) {
         m_ui->stack->setCurrentIndex(1);
         m_ui->navaidDiagram->setGeod(m_geodLocation);
-    } else {
+    } else if (m_location) {
         // navaid
         m_ui->stack->setCurrentIndex(1);
         m_ui->navaidDiagram->setNavaid(m_location);
@@ -708,28 +725,6 @@ void LocationWidget::onOffsetBearingTrueChanged(bool on)
 
 void LocationWidget::onPopupHistory()
 {
-    if (m_recentAirports.isEmpty()) {
-        return;
-    }
-
-#if 0
-    QMenu m;
-    Q_FOREACH(QString aptCode, m_recentAirports) {
-        FGAirportRef apt = FGAirport::findByIdent(aptCode.toStdString());
-        QString name = QString::fromStdString(apt->name());
-        QAction* act = m.addAction(QString("%1 - %2").arg(aptCode).arg(name));
-        act->setData(aptCode);
-    }
-
-    QPoint popupPos = m_ui->airportHistory->mapToGlobal(m_ui->airportHistory->rect().bottomLeft());
-    QAction* triggered = m.exec(popupPos);
-    if (triggered) {
-        FGAirportRef apt = FGAirport::findByIdent(triggered->data().toString().toStdString());
-        setAirport(apt);
-        m_ui->airportEdit->clear();
-        m_ui->locationStack->setCurrentIndex(0);
-    }
-#endif
 }
 
 void LocationWidget::setBaseLocation(FGPositionedRef ref)
@@ -740,23 +735,6 @@ void LocationWidget::setBaseLocation(FGPositionedRef ref)
     m_location = ref;
     onLocationChanged();
 
-#if 0
-    if (ref.valid()) {
-        // maintain the recent airport list
-        QString icao = QString::fromStdString(ref->ident());
-        if (m_recentAirports.contains(icao)) {
-            // move to front
-            m_recentAirports.removeOne(icao);
-            m_recentAirports.push_front(icao);
-        } else {
-            // insert and trim list if necessary
-            m_recentAirports.push_front(icao);
-            if (m_recentAirports.size() > MAX_RECENT_AIRPORTS) {
-                m_recentAirports.pop_back();
-            }
-        }
-    }
-#endif
     updateDescription();
 }
 
