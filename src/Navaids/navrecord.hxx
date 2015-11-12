@@ -79,27 +79,29 @@ class FGNavRecord : public FGPositioned
     inline bool get_serviceable() const { return serviceable; }
     inline const char *get_trans_ident() const { return get_ident(); }
 
-  virtual const std::string& name() const
-  { return mName; }
-  
-  /**
-   * Retrieve the runway this navaid is associated with (for ILS/LOC/GS)
-   */
-  FGRunwayRef runway() const;
-  
-  /**
-   * return the localizer width, in degrees
-   * computation is based up ICAO stdandard width at the runway threshold
-   * see implementation for further details.
-   */
-  double localizerWidth() const;
-  
-  void bindToNode(SGPropertyNode* nd) const;
-  void unbindFromNode(SGPropertyNode* nd) const;
+    virtual const std::string& name() const
+    { return mName; }
 
-  void setColocatedDME(PositionedID other);
-  bool hasDME();
-    
+    /**
+    * Retrieve the runway this navaid is associated with (for ILS/LOC/GS)
+    */
+    FGRunwayRef runway() const;
+
+    /**
+    * return the localizer width, in degrees
+    * computation is based up ICAO stdandard width at the runway threshold
+    * see implementation for further details.
+    */
+    double localizerWidth() const;
+
+    void bindToNode(SGPropertyNode* nd) const;
+    void unbindFromNode(SGPropertyNode* nd) const;
+
+    void setColocatedDME(PositionedID other);
+    bool hasDME();
+
+    bool isVORTAC() const;
+
     void updateFromXML(const SGGeod& geod, double heading);
 };
 

@@ -35,7 +35,7 @@ class BaseDiagram : public QWidget
 public:
     BaseDiagram(QWidget* pr);
 
-    static QPixmap iconForPositioned(const FGPositionedRef &pos);
+    static QPixmap iconForPositioned(const FGPositionedRef &pos, bool small);
     static QPixmap iconForAirport(FGAirport *apt);
 
     static QVector<QLineF> projectAirportRuwaysIntoRect(FGAirportRef apt, const QRectF& bounds);
@@ -50,6 +50,7 @@ protected:
 
     virtual void paintContents(QPainter*);
 
+
 protected:
     void recomputeBounds(bool resetZoom);
 
@@ -59,6 +60,9 @@ protected:
     QPointF project(const SGGeod& geod) const;
     QTransform transform() const;
     
+    void clearIgnoredNavaids();
+    void addIgnoredNavaid(FGPositionedRef pos);
+
     SGGeod m_projectionCenter;
     double m_scale;
     QRectF m_bounds;
@@ -75,6 +79,9 @@ protected:
 private:
     void paintNavaids(QPainter *p);
 
+    bool isNavaidIgnored(const FGPositionedRef& pos) const;
+
+    QVector<FGPositionedRef> m_ignored;
 };
 
 #endif // of GUI_BASEDIAGRAM_HXX
