@@ -744,6 +744,7 @@ void AircraftItemModel::onScanFinished()
 {
     delete m_scanThread;
     m_scanThread = NULL;
+    emit scanCompleted();
 }
 
 void AircraftItemModel::installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason)

@@ -260,116 +260,6 @@ public:
     }
 };
 
-class AirportSearchModel : public QAbstractListModel
-{
-    Q_OBJECT
-public:
-    AirportSearchModel() :
-        m_searchActive(false)
-    {
-    }
-
-    void setSearch(QString t)
-    {
-        beginResetModel();
-
-        m_items.clear();
-        m_ids.clear();
-
-        std::string term(t.toUpper().toStdString());
-
-        IdentSearchFilter filter;
-        FGPositionedList exactMatches = NavDataCache::instance()->findAllWithIdent(term, &filter, true);
-
-        for (unsigned int i=0; i<exactMatches.size(); ++i) {
-            m_ids.push_back(exactMatches[i]->guid());
-            m_items.push_back(exactMatches[i]);
-        }
-        endResetModel();
-
-
-        m_search.reset(new NavDataCache::ThreadedGUISearch(term));
-        QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
-        m_searchActive = true;
-        endResetModel();
-    }
-
-    bool isSearchActive() const
-    {
-        return m_searchActive;
-    }
-
-    virtual int rowCount(const QModelIndex&) const
-    {
-        // if empty, return 1 for special 'no matches'?
-        return m_ids.size();
-    }
-
-    virtual QVariant data(const QModelIndex& index, int role) const
-    {
-        if (!index.isValid())
-            return QVariant();
-
-        FGPositionedRef pos = itemAtRow(index.row());
-        if (role == Qt::DisplayRole) {
-            QString name = QString::fromStdString(pos->name());
-            return QString("%1: %2").arg(QString::fromStdString(pos->ident())).arg(name);
-        }
-
-        if (role == Qt::EditRole) {
-            return QString::fromStdString(pos->ident());
-        }
-
-        if (role == Qt::UserRole) {
-            return static_cast<qlonglong>(m_ids[index.row()]);
-        }
-
-        return QVariant();
-    }
-
-    FGPositionedRef itemAtRow(unsigned int row) const
-    {
-        FGPositionedRef pos = m_items[row];
-        if (!pos.valid()) {
-            pos = NavDataCache::instance()->loadById(m_ids[row]);
-            m_items[row] = pos;
-        }
-
-        return pos;
-    }
-Q_SIGNALS:
-    void searchComplete();
-
-private slots:
-    void onSearchResultsPoll()
-    {
-        PositionedIDVec newIds = m_search->results();
-
-        beginInsertRows(QModelIndex(), m_ids.size(), newIds.size() - 1);
-        for (unsigned int i=m_ids.size(); i < newIds.size(); ++i) {
-            m_ids.push_back(newIds[i]);
-            m_items.push_back(FGPositionedRef()); // null ref
-        }
-        endInsertRows();
-
-        if (m_search->isComplete()) {
-            m_searchActive = false;
-            m_search.reset();
-            emit searchComplete();
-        } else {
-            QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
-        }
-    }
-
-private:
-    PositionedIDVec m_ids;
-    mutable FGPositionedList m_items;
-    bool m_searchActive;
-    QScopedPointer<NavDataCache::ThreadedGUISearch> m_search;
-};
-=======
->>>>>>> Work on LocationWidget for Qt launcher
-
 class AircraftProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
@@ -465,14 +355,12 @@ bool runLauncherDialog()
 {
     sglog().setLogLevels( SG_ALL, SG_INFO );
 
-
     initQtResources(); // can't be called inside a namespaceb
 
     // startup the nav-cache now. This pre-empts normal startup of
     // the cache, but no harm done. (Providing scenery paths are consistent)
 
     initNavCache();
-
 
     fgInitPackageRoot();
 
@@ -482,7 +370,6 @@ bool runLauncherDialog()
     // we guard against re-init in the global phase; bind and postinit
     // will happen as normal
     http->init();
-
 
     // setup scenery paths now, especially TerraSync path for airport
     // parking locations (after they're downloaded)
@@ -544,24 +431,6 @@ QtLauncher::QtLauncher() :
             m_aircraftProxy, &AircraftProxyModel::setRatingFilterEnabled);
     connect(m_ui->aircraftFilter, &QLineEdit::textChanged,
             m_aircraftProxy, &QSortFilterProxyModel::setFilterFixedString);
-
-<<<<<<< 56d7d049bc0b7361d1799298c38e61084f5d5e3f
-    connect(m_ui->runwayCombo, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(updateLocationDescription()));
-    connect(m_ui->parkingCombo, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(updateLocationDescription()));
-    connect(m_ui->runwayRadio, SIGNAL(toggled(bool)),
-            this, SLOT(updateLocationDescription()));
-    connect(m_ui->parkingRadio, SIGNAL(toggled(bool)),
-            this, SLOT(updateLocationDescription()));
-    connect(m_ui->onFinalCheckbox, SIGNAL(toggled(bool)),
-            this, SLOT(updateLocationDescription()));
-
-
-    connect(m_ui->airportDiagram, &AirportDiagram::clickedRunway,
-            this, &QtLauncher::onAirportDiagramClicked);
-=======
->>>>>>> Work on LocationWidget for Qt launcher
 
     connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
     connect(m_ui->quitButton, SIGNAL(clicked()), this, SLOT(onQuit()));
@@ -630,7 +499,8 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onAircraftInstalledCompleted);
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallFailed,
             this, &QtLauncher::onAircraftInstallFailed);
-
+    connect(m_aircraftModel, &AircraftItemModel::scanCompleted,
+            this, &QtLauncher::updateSelectedAircraft);
     connect(m_ui->pathsButton, &QPushButton::clicked,
             this, &QtLauncher::onEditPaths);
 
@@ -723,7 +593,9 @@ void QtLauncher::restoreSettings()
 
     if (!m_recentAircraft.empty()) {
         m_selectedAircraft = m_recentAircraft.front();
+        qDebug() << "restoring aircraft" << m_selectedAircraft;
     } else {
+        qDebug() << "recent aircraft is empty";
         // select the default C172p
     }
 
@@ -741,6 +613,8 @@ void QtLauncher::restoreSettings()
     m_aircraftProxy->setRatings(m_ratingFilters);
 
     m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
+
+    qDebug() << "restoring settings";
 }
 
 void QtLauncher::saveSettings()
@@ -760,6 +634,7 @@ void QtLauncher::saveSettings()
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
 
     m_ui->location->saveSettings();
+    qDebug() << "saving settings";
 }
 
 void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const
@@ -825,6 +700,8 @@ void QtLauncher::onRun()
         m_recentAircraft.prepend(m_selectedAircraft);
         if (m_recentAircraft.size() > MAX_RECENT_AIRCRAFT)
           m_recentAircraft.pop_back();
+
+        qDebug() << "recent aircraft is now" << m_recentAircraft;
     }
 
     m_ui->location->setLocationOptions();
@@ -932,107 +809,6 @@ void QtLauncher::onQuit()
     reject();
 }
 
-<<<<<<< 56d7d049bc0b7361d1799298c38e61084f5d5e3f
-void QtLauncher::onSearchAirports()
-{
-    QString search = m_ui->airportEdit->text();
-    m_airportsModel->setSearch(search);
-
-    if (m_airportsModel->isSearchActive()) {
-        m_ui->searchStatusText->setText(QString("Searching for '%1'").arg(search));
-        m_ui->locationStack->setCurrentIndex(2);
-    } else if (m_airportsModel->rowCount(QModelIndex()) == 1) {
-        setBaseLocation(m_airportsModel->itemAtRow(0));
-        m_ui->locationStack->setCurrentIndex(0);
-    }
-}
-
-void QtLauncher::onAirportSearchComplete()
-{
-    int numResults = m_airportsModel->rowCount(QModelIndex());
-    if (numResults == 0) {
-        m_ui->searchStatusText->setText(QString("No matching airports for '%1'").arg(m_ui->airportEdit->text()));
-    } else if (numResults == 1) {
-        setBaseLocation(m_airportsModel->itemAtRow(0));
-        m_ui->locationStack->setCurrentIndex(0);
-    } else {
-        m_ui->locationStack->setCurrentIndex(1);
-    }
-}
-
-void QtLauncher::onLocationChanged()
-{
-    bool locIsAirport = FGAirport::isAirportType(m_location.ptr());
-
-    m_ui->runwayCombo->setEnabled(locIsAirport);
-    m_ui->parkingCombo->setEnabled(locIsAirport);
-    if (locIsAirport) {
-        FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
-        m_ui->airportDiagram->setAirport(apt);
-
-        m_ui->runwayRadio->setChecked(true); // default back to runway mode
-        // unless multiplayer is enabled ?
-        m_ui->airportDiagram->setEnabled(true);
-
-        m_ui->runwayCombo->clear();
-        m_ui->runwayCombo->addItem("Automatic", -1);
-        for (unsigned int r=0; r<apt->numRunways(); ++r) {
-            FGRunwayRef rwy = apt->getRunwayByIndex(r);
-            // add runway with index as data role
-            m_ui->runwayCombo->addItem(QString::fromStdString(rwy->ident()), r);
-
-            m_ui->airportDiagram->addRunway(rwy);
-        }
-
-        m_ui->parkingCombo->clear();
-        FGAirportDynamics* dynamics = apt->getDynamics();
-        PositionedIDVec parkings = NavDataCache::instance()->airportItemsOfType(m_location->guid(),
-                                                                                FGPositioned::PARKING);
-        if (parkings.empty()) {
-            m_ui->parkingCombo->setEnabled(false);
-            m_ui->parkingRadio->setEnabled(false);
-        } else {
-            m_ui->parkingCombo->setEnabled(true);
-            m_ui->parkingRadio->setEnabled(true);
-            Q_FOREACH(PositionedID parking, parkings) {
-                FGParking* park = dynamics->getParking(parking);
-                m_ui->parkingCombo->addItem(QString::fromStdString(park->getName()),
-                                            static_cast<qlonglong>(parking));
-
-                m_ui->airportDiagram->addParking(park);
-            }
-        }
-
-
-    } // of location is aiport
-
-
-
-
-}
-
-void QtLauncher::onOffsetRadioToggled(bool on)
-{
-    m_ui->offsetNmSpinbox->setEnabled(on);
-    m_ui->offsetBearingSpinbox->setEnabled(on);
-    m_ui->trueBearing->setEnabled(on);
-    m_ui->offsetBearingLabel->setEnabled(on);
-    m_ui->offsetDistanceLabel->setEnabled(on);
-}
-
-void QtLauncher::onAirportDiagramClicked(FGRunwayRef rwy)
-{
-    if (rwy) {
-        m_ui->runwayRadio->setChecked(true);
-        int rwyIndex = m_ui->runwayCombo->findText(QString::fromStdString(rwy->ident()));
-        m_ui->runwayCombo->setCurrentIndex(rwyIndex);
-    }
-
-    updateLocationDescription();
-}
-=======
->>>>>>> Work on LocationWidget for Qt launcher
-
 void QtLauncher::onToggleTerrasync(bool enabled)
 {
     if (enabled) {
@@ -1092,6 +868,7 @@ void QtLauncher::onAircraftInstallFailed(QModelIndex index, QString errorMessage
 void QtLauncher::onAircraftSelected(const QModelIndex& index)
 {
     m_selectedAircraft = index.data(AircraftURIRole).toUrl();
+    qDebug() << "selected aircraft is now" << m_selectedAircraft;
     updateSelectedAircraft();
 }
 
