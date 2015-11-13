@@ -73,6 +73,12 @@ void NavaidDiagram::setOffsetBearingDeg(int bearingDeg)
     update();
 }
 
+void NavaidDiagram::setHeadingDeg(int headingDeg)
+{
+    m_headingDeg = headingDeg;
+    update();
+}
+
 void NavaidDiagram::paintContents(QPainter *painter)
 {
     QPointF base = project(m_geod);
@@ -95,8 +101,12 @@ void NavaidDiagram::paintContents(QPainter *painter)
     QPixmap pix(":/airplane-icon");
     airplaneIconPos = painter->transform().map(airplaneIconPos);
     painter->resetTransform();
+    painter->translate(airplaneIconPos.x(), airplaneIconPos.y());
+    painter->rotate(m_headingDeg);
+
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
     QRect airplaneIconRect = pix.rect();
-    airplaneIconRect.moveCenter(airplaneIconPos.toPoint());
+    airplaneIconRect.moveCenter(QPoint(0,0));
     painter->drawPixmap(airplaneIconRect, pix);
 }
 
