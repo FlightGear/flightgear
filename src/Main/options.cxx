@@ -1362,6 +1362,22 @@ fgOptIgnoreAutosave(const char* arg)
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptEnableFreeze(const char* arg)
+{
+    fgSetBool("/sim/freeze/master", true);
+    fgSetBool("/sim/freeze/clock", true);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptDisableFreeze(const char* arg)
+{
+    fgSetBool("/sim/freeze/master", false);
+    fgSetBool("/sim/freeze/clock", false);
+    return FG_OPTIONS_OK;
+}
+
 // Set a property for the --prop: option. Syntax: --prop:[<type>:]<name>=<value>
 // <type> can be "double" etc. but also only the first letter "d".
 // Examples:  --prop:alpha=1  --prop:bool:beta=true  --prop:d:gamma=0.123
@@ -1424,7 +1440,7 @@ fgOptLoadTape(const char* arg)
 
     virtual ~ DelayedTapeLoader() {}
 
-    virtual void valueChanged(SGPropertyNode * node) 
+    virtual void valueChanged(SGPropertyNode * node)
     {
       node->removeChangeListener( this );
 
@@ -1511,8 +1527,8 @@ struct OptionDesc {
     {"enable-ai-models",             false, OPTION_BOOL,   "/sim/ai/enabled", true, "", 0 },
     {"disable-ai-traffic",           false, OPTION_BOOL,   "/sim/traffic-manager/enabled", false, "", 0 },
     {"enable-ai-traffic",            false, OPTION_BOOL,   "/sim/traffic-manager/enabled", true,  "", 0 },
-    {"disable-freeze",               false, OPTION_BOOL,   "/sim/freeze/master", false, "", 0 },
-    {"enable-freeze",                false, OPTION_BOOL,   "/sim/freeze/master", true, "", 0 },
+    {"disable-freeze",               false, OPTION_FUNC,   "", false, "", fgOptDisableFreeze },
+    {"enable-freeze",                false, OPTION_FUNC,   "", true, "", fgOptEnableFreeze },
     {"disable-fuel-freeze",          false, OPTION_BOOL,   "/sim/freeze/fuel", false, "", 0 },
     {"enable-fuel-freeze",           false, OPTION_BOOL,   "/sim/freeze/fuel", true, "", 0 },
     {"disable-clock-freeze",         false, OPTION_BOOL,   "/sim/freeze/clock", false, "", 0 },
