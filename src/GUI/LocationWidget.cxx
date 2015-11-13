@@ -43,6 +43,8 @@
 
 using namespace flightgear;
 
+const unsigned int MAX_RECENT_LOCATIONS = 64;
+
 QString fixNavaidName(QString s)
 {
     // split into words
@@ -126,6 +128,46 @@ bool parseStringAsGeod(const QString& s, SGGeod& result)
     return true;
 }
 
+QVariant savePositionList(const FGPositionedList& posList)
+{
+    QVariantList vl;
+    FGPositionedList::const_iterator it;
+    for (it = posList.begin(); it != posList.end(); ++it) {
+        QVariantMap vm;
+        FGPositionedRef pos = *it;
+        vm.insert("ident", QString::fromStdString(pos->ident()));
+        vm.insert("type", pos->type());
+        vm.insert("lat", pos->geod().getLatitudeDeg());
+        vm.insert("lon", pos->geod().getLongitudeDeg());
+        vl.append(vm);
+    }
+    return vl;
+}
+
+FGPositionedList loadPositionedList(QVariant v)
+{
+    QVariantList vl = v.toList();
+    FGPositionedList result;
+    result.reserve(vl.size());
+    NavDataCache* cache = NavDataCache::instance();
+
+    Q_FOREACH(QVariant v, vl) {
+        QVariantMap vm = v.toMap();
+        std::string ident(vm.value("ident").toString().toStdString());
+        double lat = vm.value("lat").toDouble();
+        double lon = vm.value("lon").toDouble();
+        FGPositioned::Type ty(static_cast<FGPositioned::Type>(vm.value("type").toInt()));
+        FGPositioned::TypeFilter filter(ty);
+        FGPositionedRef pos = cache->findClosestWithIdent(ident,
+                                                          SGGeod::fromDeg(lon, lat),
+                                                          &filter);
+        if (pos)
+            result.push_back(pos);
+    }
+
+    return result;
+}
+
 class IdentSearchFilter : public FGPositioned::TypeFilter
 {
 public:
@@ -167,11 +209,9 @@ public:
         }
         endResetModel();
 
-
         m_search.reset(new NavDataCache::ThreadedGUISearch(term));
         QTimer::singleShot(100, this, &NavSearchModel::onSearchResultsPoll);
         m_searchActive = true;
-        endResetModel();
     }
 
     bool isSearchActive() const
@@ -227,6 +267,21 @@ public:
 
         return pos;
     }
+
+    void setItems(const FGPositionedList& items)
+    {
+        beginResetModel();
+        m_searchActive = false;
+        m_items = items;
+
+        m_ids.clear();
+        for (unsigned int i=0; i < items.size(); ++i) {
+            m_ids.push_back(m_items[i]->guid());
+        }
+
+        endResetModel();
+    }
+
 Q_SIGNALS:
     void searchComplete();
 
@@ -299,10 +354,8 @@ LocationWidget::LocationWidget(QWidget *parent) :
     connect(m_ui->locationSearchEdit, &QLineEdit::returnPressed,
             this, &LocationWidget::onSearch);
 
-    // disabled for now
-    m_ui->searchHistory->hide();
     connect(m_ui->searchHistory, &QPushButton::clicked,
-            this, &LocationWidget::onPopupHistory);
+            this, &LocationWidget::onShowHistory);
 
     connect(m_ui->trueBearing, &QCheckBox::toggled,
             this, &LocationWidget::onOffsetBearingTrueChanged);
@@ -314,11 +367,12 @@ LocationWidget::LocationWidget(QWidget *parent) :
             this, SLOT(onOffsetDataChanged()));
     connect(m_ui->offsetNmSpinbox, SIGNAL(valueChanged(double)),
             this, SLOT(onOffsetDataChanged()));
+    connect(m_ui->headingSpinbox, SIGNAL(valueChanged(int)),
+            this, SLOT(onHeadingChanged()));
 
     m_backButton = new QToolButton(this);
     m_backButton->setGeometry(0, 0, 64, 32);
     m_backButton->setText("<< Back");
-    //m_backButton->setIcon(QIcon(":/search-icon"));
     m_backButton->raise();
 
     connect(m_backButton, &QAbstractButton::clicked,
@@ -347,11 +401,15 @@ void LocationWidget::restoreSettings()
         m_location = NavDataCache::instance()->loadById(settings.value("location-id").toULongLong());
     }
 
-    m_ui->altitudeSpinbox->setValue(settings.value("altitude").toInt());
-    m_ui->airspeedSpinbox->setValue(settings.value("speed").toInt());
+    m_ui->altitudeSpinbox->setValue(settings.value("altitude", 6000).toInt());
+    m_ui->airspeedSpinbox->setValue(settings.value("speed", 120).toInt());
+    m_ui->headingSpinbox->setValue(settings.value("heading").toInt());
     m_ui->offsetGroup->setChecked(settings.value("offset-enabled").toBool());
     m_ui->offsetBearingSpinbox->setValue(settings.value("offset-bearing").toInt());
-    m_ui->offsetNmSpinbox->setValue(settings.value("offset-distance").toInt());
+    m_ui->offsetNmSpinbox->setValue(settings.value("offset-distance", 10).toInt());
+
+    m_recentLocations = loadPositionedList(settings.value("recent-locations"));
+    m_searchModel->setItems(m_recentLocations);
 
     onLocationChanged();
     updateDescription();
@@ -392,6 +450,8 @@ void LocationWidget::saveSettings()
     settings.setValue("offset-enabled", m_ui->offsetGroup->isChecked());
     settings.setValue("offset-bearing", m_ui->offsetBearingSpinbox->value());
     settings.setValue("offset-distance", m_ui->offsetNmSpinbox->value());
+
+    // recent locations is saved on modification
 }
 
 void LocationWidget::setLocationOptions()
@@ -400,6 +460,14 @@ void LocationWidget::setLocationOptions()
 
     std::string altStr = QString::number(m_ui->altitudeSpinbox->value()).toStdString();
     std::string vcStr = QString::number(m_ui->airspeedSpinbox->value()).toStdString();
+    std::string headingStr = QString::number(m_ui->headingSpinbox->value()).toStdString();
+
+    // flip direction of azimuth to balance the flip done in fgApplyStartOffset
+    // I don't know why that flip exists but changing it there will break
+    // command-line compatability so compensating here instead
+    int offsetAzimuth = m_ui->offsetBearingSpinbox->value() - 180;
+    std::string azimuthStr = QString::number(offsetAzimuth).toStdString();
+    std::string distanceStr = QString::number(m_ui->offsetNmSpinbox->value()).toStdString();
 
     if (m_locationIsLatLon) {
         // bypass the options mechanism because converting to deg:min:sec notation
@@ -411,6 +479,12 @@ void LocationWidget::setLocationOptions()
 
         opt->addOption("altitude", altStr);
         opt->addOption("vc", vcStr);
+        opt->addOption("heading", headingStr);
+
+        if (m_ui->offsetGroup->isChecked()) {
+            opt->addOption("offset-azimuth", azimuthStr);
+            opt->addOption("offset-distance", distanceStr);
+        }
         return;
     }
 
@@ -474,12 +548,17 @@ void LocationWidget::setLocationOptions()
 
         opt->addOption("altitude", altStr);
         opt->addOption("vc", vcStr);
+        opt->addOption("heading", headingStr);
 
         // set disambiguation property
         globals->get_props()->setIntValue("/sim/presets/navaid-id",
                                           static_cast<int>(m_location->guid()));
-    }
 
+        if (m_ui->offsetGroup->isChecked()) {
+            opt->addOption("offset-azimuth", azimuthStr);
+            opt->addOption("offset-distance", distanceStr);
+        }
+    } // of navaid location
 }
 
 void LocationWidget::setNavRadioOption()
@@ -538,6 +617,7 @@ void LocationWidget::onSearchComplete()
     if (numResults == 0) {
         m_ui->searchStatusText->setText(QString("No matches for '%1'").arg(search));
     } else if (numResults == 1) {
+        addToRecent(m_searchModel->itemAtRow(0));
         setBaseLocation(m_searchModel->itemAtRow(0));
     }
 }
@@ -598,6 +678,7 @@ void LocationWidget::onLocationChanged()
 void LocationWidget::onOffsetEnabledToggled(bool on)
 {
     m_ui->navaidDiagram->setOffsetEnabled(on);
+    updateDescription();
 }
 
 void LocationWidget::onAirportDiagramClicked(FGRunwayRef rwy)
@@ -610,6 +691,26 @@ void LocationWidget::onAirportDiagramClicked(FGRunwayRef rwy)
     }
 
     updateDescription();
+}
+
+QString compassPointFromHeading(int heading)
+{
+    const int labelArc = 360 / 8;
+    heading += (labelArc >> 1);
+    SG_NORMALIZE_RANGE(heading, 0, 359);
+
+    switch (heading / labelArc) {
+    case 0: return "N";
+    case 1: return "NE";
+    case 2: return "E";
+    case 3: return "SE";
+    case 4: return "S";
+    case 5: return "SW";
+    case 6: return "W";
+    case 7: return "NW";
+    }
+
+    return QString();
 }
 
 QString LocationWidget::locationDescription() const
@@ -651,6 +752,13 @@ QString LocationWidget::locationDescription() const
 
         return QString("%2 (%1): %3").arg(ident).arg(name).arg(locationOnAirport);
     } else {
+        QString offsetDesc = tr("at");
+        if (m_ui->offsetGroup->isChecked()) {
+            offsetDesc = QString("%1nm %2 of").
+                    arg(m_ui->offsetNmSpinbox->value(), 0, 'f', 1).
+                    arg(compassPointFromHeading(m_ui->offsetBearingSpinbox->value()));
+        }
+
         QString navaidType;
         switch (m_location->type()) {
         case FGPositioned::VOR:
@@ -658,16 +766,16 @@ QString LocationWidget::locationDescription() const
         case FGPositioned::NDB:
             navaidType = QString("NDB"); break;
         case FGPositioned::FIX:
-            return QString("at waypoint %1").arg(ident);
+            return QString("%2 waypoint %1").arg(ident).arg(offsetDesc);
         default:
             // unsupported type
             break;
         }
 
-        return QString("at %1 %2 (%3)").arg(navaidType).arg(ident).arg(name);
+        return QString("%4 %1 %2 (%3)").arg(navaidType).arg(ident).arg(name).arg(offsetDesc);
     }
 
-    return QString("No location selected");
+    return tr("No location selected");
 }
 
 
@@ -713,18 +821,40 @@ void LocationWidget::updateDescription()
 
 void LocationWidget::onSearchResultSelected(const QModelIndex& index)
 {
-    setBaseLocation(m_searchModel->itemAtRow(index.row()));
+    FGPositionedRef pos = m_searchModel->itemAtRow(index.row());
+    addToRecent(pos);
+    setBaseLocation(pos);
 }
 
 void LocationWidget::onOffsetBearingTrueChanged(bool on)
 {
     m_ui->offsetBearingLabel->setText(on ? tr("True bearing:") :
-                                      tr("Magnetic bearing:"));
+                                           tr("Magnetic bearing:"));
+}
+
+void LocationWidget::addToRecent(FGPositionedRef pos)
+{
+    FGPositionedList::iterator it = std::find(m_recentLocations.begin(),
+                                              m_recentLocations.end(),
+                                              pos);
+    if (it != m_recentLocations.end()) {
+        m_recentLocations.erase(it);
+    }
+
+    if (m_recentLocations.size() >= MAX_RECENT_LOCATIONS) {
+        m_recentLocations.pop_back();
+    }
+
+    m_recentLocations.insert(m_recentLocations.begin(), pos);
+    QSettings settings;
+    settings.setValue("recent-locations", savePositionList(m_recentLocations));
 }
 
 
-void LocationWidget::onPopupHistory()
+void LocationWidget::onShowHistory()
 {
+    qDebug() << Q_FUNC_INFO;
+    m_searchModel->setItems(m_recentLocations);
 }
 
 void LocationWidget::setBaseLocation(FGPositionedRef ref)
@@ -743,6 +873,13 @@ void LocationWidget::onOffsetDataChanged()
     m_ui->navaidDiagram->setOffsetEnabled(m_ui->offsetGroup->isChecked());
     m_ui->navaidDiagram->setOffsetBearingDeg(m_ui->offsetBearingSpinbox->value());
     m_ui->navaidDiagram->setOffsetDistanceNm(m_ui->offsetNmSpinbox->value());
+
+    updateDescription();
+}
+
+void LocationWidget::onHeadingChanged()
+{
+    m_ui->navaidDiagram->setHeadingDeg(m_ui->headingSpinbox->value());
 }
 
 void LocationWidget::onBackToSearch()

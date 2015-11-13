@@ -26,7 +26,7 @@
    <item>
     <widget class="QStackedWidget" name="stack">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="airportPage">
       <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,0,0">
@@ -105,7 +105,7 @@
       </layout>
      </widget>
      <widget class="QWidget" name="navaidPage">
-      <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0">
+      <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0" columnstretch="1,0,0,1,0,1,0,0,0,0">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -131,7 +131,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="4" colspan="2">
+       <item row="2" column="6" colspan="2">
         <widget class="QSpinBox" name="altitudeSpinbox">
          <property name="suffix">
           <string>ft</string>
@@ -150,7 +150,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="3">
+       <item row="2" column="5">
         <widget class="QLabel" name="altitudeLabel">
          <property name="text">
           <string>Altitude:</string>
@@ -160,7 +160,7 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0" rowspan="2" colspan="8">
+       <item row="0" column="0" rowspan="2" colspan="10">
         <widget class="NavaidDiagram" name="navaidDiagram" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -176,7 +176,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="6" colspan="2">
+       <item row="2" column="8" colspan="2">
         <widget class="QComboBox" name="altitudeModeCombo">
          <item>
           <property name="text">
@@ -205,7 +205,7 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="8">
+       <item row="3" column="0" colspan="10">
         <widget class="QGroupBox" name="offsetGroup">
          <property name="title">
           <string>Offset</string>
@@ -216,7 +216,7 @@
          <property name="checked">
           <bool>false</bool>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0,0,1,0">
           <property name="leftMargin">
            <number>4</number>
           </property>
@@ -286,6 +286,26 @@
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Heading:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="4">
+        <widget class="QSpinBox" name="headingSpinbox">
+         <property name="wrapping">
+          <bool>true</bool>
+         </property>
+         <property name="maximum">
+          <number>359</number>
+         </property>
         </widget>
        </item>
       </layout>

@@ -24,6 +24,7 @@
 #include <QWidget>
 
 #include <QToolButton>
+
 #include <Navaids/positioned.hxx>
 #include <Airports/airports_fwd.hxx>
 
@@ -56,23 +57,24 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void updateDescription();
-
     void onLocationChanged();
-
     void onOffsetDataChanged();
-
+    void onHeadingChanged();
 private:
 
     void onSearch();
-
-
     void onSearchResultSelected(const QModelIndex& index);
-    void onPopupHistory();
     void onSearchComplete();
 
     void onAirportDiagramClicked(FGRunwayRef rwy);
     void onOffsetBearingTrueChanged(bool on);
 
+    void addToRecent(FGPositionedRef pos);
+
+    void onOffsetEnabledToggled(bool on);
+    void onBackToSearch();
+    void setNavRadioOption();
+    void onShowHistory();
 
     Ui::LocationWidget *m_ui;
 
@@ -82,13 +84,11 @@ private:
     bool m_locationIsLatLon;
     SGGeod m_geodLocation;
 
-    QVector<PositionedID> m_recentAirports;
-
     QToolButton* m_backButton;
 
-    void onOffsetEnabledToggled(bool on);
-    void onBackToSearch();
-    void setNavRadioOption();
+    FGPositionedList m_recentLocations;
+
+
 };
 
 #endif // LOCATIONWIDGET_H
