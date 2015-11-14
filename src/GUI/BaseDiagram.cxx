@@ -115,6 +115,21 @@ void BaseDiagram::paintEvent(QPaintEvent* pe)
     paintContents(&p);
 }
 
+void BaseDiagram::paintAirplaneIcon(QPainter* painter, const SGGeod& geod, int headingDeg)
+{
+    QPointF pos = project(geod);
+    QPixmap pix(":/airplane-icon");
+    pos = painter->transform().map(pos);
+    painter->resetTransform();
+    painter->translate(pos.x(), pos.y());
+    painter->rotate(headingDeg);
+
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+    QRect airplaneIconRect = pix.rect();
+    airplaneIconRect.moveCenter(QPoint(0,0));
+    painter->drawPixmap(airplaneIconRect, pix);
+}
+
 class MapFilter : public FGPositioned::TypeFilter
 {
 public:

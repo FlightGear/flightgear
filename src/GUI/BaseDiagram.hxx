@@ -76,6 +76,8 @@ protected:
     static QPointF project(const SGGeod &geod, const SGGeod &center);
 
     static SGGeod unproject(const QPointF &xy, const SGGeod &center);
+
+    void paintAirplaneIcon(QPainter *painter, const SGGeod &geod, int headingDeg);
 private:
     void paintNavaids(QPainter *p);
 

@@ -267,6 +267,10 @@ void AirportDiagram::paintContents(QPainter* p)
         p->setPen(pen);
         p->drawLine(pt, pt2);
     }
+
+
+  // aircraft pos and heading...
+ //   paintAirplaneIcon(painter, );
 }
 
 void AirportDiagram::drawILS(QPainter* painter, FGRunwayRef runway) const
