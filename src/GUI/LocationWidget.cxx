@@ -441,7 +441,7 @@ void LocationWidget::saveSettings()
         settings.setValue("location-lon", m_geodLocation.getLongitudeDeg());
 
     } else if (m_location) {
-        settings.setValue("location-id", m_location->guid());
+        settings.setValue("location-id", static_cast<qlonglong>(m_location->guid()));
     }
 
     settings.setValue("altitude", m_ui->altitudeSpinbox->value());
@@ -798,7 +798,7 @@ void LocationWidget::updateDescription()
             m_ui->airportDiagram->setApproachExtensionDistance(m_ui->approachDistanceSpin->value());
         } else {
             m_ui->airportDiagram->setApproachExtensionDistance(0.0);
-        }        
+        }
     } else {
 
     }
