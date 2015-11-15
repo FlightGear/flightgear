@@ -168,10 +168,12 @@ void BaseDiagram::paintNavaids(QPainter* painter)
     double drawRangeNm = SGGeodesy::distanceNm(m_projectionCenter, topLeft) + 10.0;
     //qDebug() << "draw range computed as:" << drawRangeNm;
 
+
     MapFilter f;
     FGPositionedList items = FGPositioned::findWithinRange(m_projectionCenter, drawRangeNm, &f);
 
-    // pass 0 - icons
+    m_labelRects.clear();
+    m_labelRects.reserve(items.size());
 
     FGPositionedList::const_iterator it;
     for (it = items.begin(); it != items.end(); ++it) {
@@ -204,14 +206,13 @@ void BaseDiagram::paintNavaids(QPainter* painter)
         }
 
         if (drawAsIcon) {
-            QPixmap pm = iconForPositioned(pos, false);
+            QPixmap pm = iconForPositioned(pos);
             QPointF loc = xf.map(project(pos->geod()));
+            QRect iconRect = pm.rect();
+            iconRect.moveCenter(loc.toPoint());
+            painter->drawPixmap(iconRect, pm);
 
-            QPointF iconLoc = loc - QPointF(pm.width() >> 1, pm.height() >> 1);
-            painter->drawPixmap(iconLoc, pm);
-
-            painter->setPen(QColor(0x03, 0x83, 0xbf));
-
+       // compute label text so we can measure it
             QString label;
             if (FGAirport::isAirportType(pos.ptr())) {
                 label = QString::fromStdString((*it)->name());
@@ -227,9 +228,15 @@ void BaseDiagram::paintNavaids(QPainter* painter)
                 label.append("\n").append(QString::number(nav->get_freq() / 100.0, 'f', 1));
             }
 
-            QRect labelBox(loc.x() + (pm.width()/2) + 4, loc.y() - 50, 100, 100);
-            painter->drawText(labelBox, Qt::AlignVCenter | Qt::AlignLeft | Qt::TextWordWrap,
-                              label);
+            QRect textBounds = painter->boundingRect(QRect(0, 0, 100, 100),
+                                                     Qt::TextWordWrap, label);
+            int textFlags;
+            textBounds = rectAndFlagsForLabel(pos->guid(), iconRect,
+                                              textBounds.size(),
+                                              textFlags);
+
+            painter->setPen(QColor(0x03, 0x83, 0xbf));
+            painter->drawText(textBounds, textFlags, label);
         }
     }
 
@@ -240,6 +247,102 @@ void BaseDiagram::paintNavaids(QPainter* painter)
 bool BaseDiagram::isNavaidIgnored(const FGPositionedRef &pos) const
 {
     return m_ignored.contains(pos);
+}
+
+bool BaseDiagram::isLabelRectAvailable(const QRect &r) const
+{
+    Q_FOREACH(const QRect& lr, m_labelRects) {
+        if (lr.intersects(r))
+            return false;
+    }
+
+    return true;
+}
+
+int BaseDiagram::textFlagsForLabelPosition(LabelPosition pos)
+{
+#if 0
+    switch (pos) {
+    case LABEL_RIGHT:       return Qt::AlignLeft | Qt::AlignVCenter;
+    case LABEL_ABOVE:       return Qt::AlignHCenter | Qt::A
+    }
+#endif
+    return 0;
+}
+
+QRect BaseDiagram::rectAndFlagsForLabel(PositionedID guid, const QRect& item,
+                                        const QSize &bounds,
+                                        int& flags) const
+{
+    m_labelRects.append(item);
+    int pos = m_labelPositions.value(guid, LABEL_RIGHT);
+    bool firstAttempt = true;
+    flags = Qt::TextWordWrap;
+
+    while (pos < LAST_POSITION) {
+        QRect r = labelPositioned(item, bounds, static_cast<LabelPosition>(pos));
+        if (isLabelRectAvailable(r)) {
+            m_labelRects.append(r);
+            m_labelPositions[guid] = static_cast<LabelPosition>(pos);
+            flags |= textFlagsForLabelPosition(static_cast<LabelPosition>(pos));
+            return r;
+        } else if (firstAttempt && (pos != LABEL_RIGHT)) {
+            pos = LABEL_RIGHT;
+        } else {
+            ++pos;
+        }
+
+        firstAttempt = false;
+    }
+
+    return QRect(item.x(), item.y(), bounds.width(), bounds.height());
+}
+
+QRect BaseDiagram::labelPositioned(const QRect& itemRect,
+                                   const QSize& bounds,
+                                   LabelPosition lp) const
+{
+    const int SHORT_MARGIN = 4;
+    const int DIAGONAL_MARGIN = 20;
+
+    switch (lp) {
+    // cardinal compass points are short (close in)
+    case LABEL_RIGHT:
+        return QRect(itemRect.right() + SHORT_MARGIN,
+                     itemRect.center().y() - bounds.height() / 2,
+                     bounds.width(),
+                     bounds.height());
+    case LABEL_ABOVE:
+        return QRect(itemRect.center().x() - (bounds.width() / 2),
+                     itemRect.top() - (SHORT_MARGIN + bounds.height()),
+                     bounds.width(),
+                     bounds.height());
+    case LABEL_BELOW:
+        return QRect(itemRect.center().x() - (bounds.width() / 2),
+                     itemRect.bottom() + SHORT_MARGIN,
+                     bounds.width(),
+                     bounds.height());
+    case LABEL_LEFT:
+        return QRect(itemRect.left() - (SHORT_MARGIN + bounds.width()),
+                     itemRect.center().y() - bounds.height() / 2,
+                     bounds.width(),
+                     bounds.height());
+
+    // first diagonals are further out (to hopefully have a better chance
+    // of finding clear space
+
+    case LABEL_NE:
+        return QRect(itemRect.right() + DIAGONAL_MARGIN,
+                     itemRect.top() - (DIAGONAL_MARGIN + bounds.height()),
+                     bounds.width(),
+                     bounds.height());
+
+    default:
+        qWarning() << Q_FUNC_INFO << "Implement me";
+
+    }
+
+    return QRect(itemRect.x(), itemRect.y(), bounds.width(), bounds.height());
 }
 
 void BaseDiagram::mousePressEvent(QMouseEvent *me)
@@ -394,9 +497,11 @@ QPointF BaseDiagram::project(const SGGeod& geod) const
     return project(geod, m_projectionCenter);
 }
 
-QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos, bool small)
+QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos,
+                                       const IconOptions& options)
 {
     // if airport type, check towered or untowered
+    bool small = options.testFlag(SmallIcons);
 
     bool isTowered = false;
     if (FGAirport::isAirportType(pos)) {
@@ -415,7 +520,7 @@ QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos, bool small)
         return QPixmap(":/vor-icon");
 
     case FGPositioned::AIRPORT:
-        return iconForAirport(static_cast<FGAirport*>(pos.ptr()));
+        return iconForAirport(static_cast<FGAirport*>(pos.ptr()), options);
 
     case FGPositioned::HELIPORT:
         return QPixmap(":/heliport-icon");
@@ -433,13 +538,13 @@ QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos, bool small)
     return QPixmap();
 }
 
-QPixmap BaseDiagram::iconForAirport(FGAirport* apt)
+QPixmap BaseDiagram::iconForAirport(FGAirport* apt, const IconOptions& options)
 {
     if (!apt->hasHardRunwayOfLengthFt(1500)) {
         return QPixmap(apt->hasTower() ? ":/airport-tower-icon" : ":/airport-icon");
     }
 
-    if (apt->hasHardRunwayOfLengthFt(8500)) {
+    if (options.testFlag(LargeAirportPlans) && apt->hasHardRunwayOfLengthFt(8500)) {
         QPixmap result(32, 32);
         result.fill(Qt::transparent);
         {

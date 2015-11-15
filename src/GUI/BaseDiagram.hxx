@@ -23,6 +23,7 @@
 
 #include <QWidget>
 #include <QPainterPath>
+#include <QHash>
 
 #include <simgear/math/sg_geodesy.hxx>
 
@@ -35,8 +36,17 @@ class BaseDiagram : public QWidget
 public:
     BaseDiagram(QWidget* pr);
 
-    static QPixmap iconForPositioned(const FGPositionedRef &pos, bool small);
-    static QPixmap iconForAirport(FGAirport *apt);
+    enum IconOption
+    {
+        NoOptions = 0,
+        SmallIcons = 0x1,
+        LargeAirportPlans = 0x2
+    };
+
+    Q_DECLARE_FLAGS(IconOptions, IconOption)
+
+    static QPixmap iconForPositioned(const FGPositionedRef &pos, const IconOptions& options = NoOptions);
+    static QPixmap iconForAirport(FGAirport *apt, const IconOptions& options = NoOptions);
 
     static QVector<QLineF> projectAirportRuwaysIntoRect(FGAirportRef apt, const QRectF& bounds);
     static QVector<QLineF> projectAirportRuwaysWithCenter(FGAirportRef apt, const SGGeod &c);
@@ -79,11 +89,37 @@ protected:
 
     void paintAirplaneIcon(QPainter *painter, const SGGeod &geod, int headingDeg);
 private:
+    enum LabelPosition
+    {
+        LABEL_RIGHT = 0,
+        LABEL_ABOVE,
+        LABEL_BELOW,
+        LABEL_LEFT,
+        LABEL_NE,
+        LABEL_SE,
+        LABEL_SW,
+        LABEL_NW,
+        LAST_POSITION // marker value
+    };
+
     void paintNavaids(QPainter *p);
 
     bool isNavaidIgnored(const FGPositionedRef& pos) const;
 
+    bool isLabelRectAvailable(const QRect& r) const;
+    QRect rectAndFlagsForLabel(PositionedID guid, const QRect &item,
+                               const QSize &bounds,
+                               int & flags /* out parameter */) const;
+    QRect labelPositioned(const QRect &itemRect, const QSize &bounds, LabelPosition lp) const;
+
     QVector<FGPositionedRef> m_ignored;
+
+    mutable QHash<PositionedID, LabelPosition> m_labelPositions;
+    mutable QVector<QRect> m_labelRects;
+
+    static int textFlagsForLabelPosition(LabelPosition pos);
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(BaseDiagram::IconOptions)
 
 #endif // of GUI_BASEDIAGRAM_HXX
