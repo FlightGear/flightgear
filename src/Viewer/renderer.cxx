@@ -97,6 +97,8 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/redout.hxx>
 #include <GUI/new_gui.hxx>
+#include <GUI/gui.h>
+
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Environment/precipitation_mgr.hxx>
 #include <Environment/environment_mgr.hxx>
@@ -1588,6 +1590,8 @@ FGRenderer::update( ) {
         sAlpha -= SGMiscd::max(0.0,delay_time/fade_time);
         FGScenerySwitchCallback::scenery_enabled = (sAlpha<1.0);
         _splash_alpha->setDoubleValue((sAlpha < 0) ? 0.0 : sAlpha);
+
+        syncPausePopupState();
     }
 
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));

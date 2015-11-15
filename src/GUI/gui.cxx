@@ -33,6 +33,8 @@
 #include <string>
 
 #include <simgear/structure/exception.hxx>
+#include <simgear/structure/commands.hxx>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
@@ -182,4 +184,18 @@ bool guiInit()
         // we're done
         return true;
     }
+}
+
+void syncPausePopupState()
+{
+    bool paused = fgGetBool("/sim/freeze/master",true) | fgGetBool("/sim/freeze/clock",true);
+    SGPropertyNode_ptr args(new SGPropertyNode);
+    args->setStringValue("id", "sim-pause");
+    if (paused && fgGetBool("/sim/view-name-popup")) {
+      args->setStringValue("label", "Simulation is paused");
+      globals->get_commands()->execute("show-message", args);
+    } else {
+      globals->get_commands()->execute("clear-message", args);
+    }
+
 }

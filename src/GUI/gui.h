@@ -64,6 +64,10 @@ extern void fgHiResDump();
 
 extern void helpCb();
 
+/// synchronize /sim/freeze properties with visiblity
+/// of the popup-dialog which informs the user
+void syncPausePopupState();
+
 typedef struct {
         const char *name;
         void (*fn)();
