@@ -217,6 +217,10 @@ void AirportDiagram::paintContents(QPainter* p)
         drawILS(p, r.runway->reciprocalRunway());
     }
 
+    bool drawAircraft = false;
+    SGGeod aircraftPos;
+    int headingDeg;
+
     // now draw the runways for real
     Q_FOREACH(const RunwayData& r, m_runways) {
 
@@ -256,6 +260,12 @@ void AirportDiagram::paintContents(QPainter* p)
         p->drawText(QRect(-100, 5, 200, 200), recipIdent, Qt::AlignHCenter | Qt::AlignTop);
     }
 
+    if (m_selectedRunway) {
+        drawAircraft = true;
+        aircraftPos = m_selectedRunway->geod();
+        headingDeg = m_selectedRunway->headingDeg();
+    }
+
     if (m_selectedRunway && (m_approachDistanceNm > 0.0)) {
         p->setTransform(t);
         // draw approach extension point
@@ -266,11 +276,14 @@ void AirportDiagram::paintContents(QPainter* p)
         pen.setWidth(2.0 / m_scale);
         p->setPen(pen);
         p->drawLine(pt, pt2);
+
+        aircraftPos = m_selectedRunway->pointOnCenterline(-d);
     }
 
-
-  // aircraft pos and heading...
- //   paintAirplaneIcon(painter, );
+    if (drawAircraft) {
+        p->setTransform(t);
+        paintAirplaneIcon(p, aircraftPos, headingDeg);
+    }
 }
 
 void AirportDiagram::drawILS(QPainter* painter, FGRunwayRef runway) const
