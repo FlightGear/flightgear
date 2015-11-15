@@ -63,6 +63,14 @@ class FGAirport : public FGPositioned
     bool   isSeaport()    const;
     bool   isHeliport()   const;
 
+    /// is the airport closed (disused)?
+    /// note at rpesent we look for an [x] in the name, ideally the database
+    /// would explicitly include this
+    bool isClosed() const
+    {
+        return mIsClosed;
+    }
+
     static bool isAirportType(FGPositioned* pos);
     
     virtual const std::string& name() const
@@ -330,7 +338,7 @@ private:
     mutable bool mHelipadsLoaded;
     mutable bool mTaxiwaysLoaded;
     mutable bool mProceduresLoaded;
-  
+    bool mIsClosed;
     mutable bool mThresholdDataLoaded;
     bool mILSDataLoaded;
 

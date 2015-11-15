@@ -137,6 +137,8 @@ public:
     {
       //  addType(FGPositioned::FIX);
         addType(FGPositioned::AIRPORT);
+        addType(FGPositioned::HELIPORT);
+        addType(FGPositioned::SEAPORT);
         addType(FGPositioned::NDB);
         addType(FGPositioned::VOR);
     }
@@ -211,6 +213,7 @@ void BaseDiagram::paintNavaids(QPainter* painter)
             QRect iconRect = pm.rect();
             iconRect.moveCenter(loc.toPoint());
             painter->drawPixmap(iconRect, pm);
+            bool isNDB = (ty == FGPositioned::NDB);
 
        // compute label text so we can measure it
             QString label;
@@ -235,7 +238,7 @@ void BaseDiagram::paintNavaids(QPainter* painter)
                                               textBounds.size(),
                                               textFlags);
 
-            painter->setPen(QColor(0x03, 0x83, 0xbf));
+            painter->setPen(isNDB ? QColor(0x9b, 0x5d, 0xa2) : QColor(0x03, 0x83, 0xbf));
             painter->drawText(textBounds, textFlags, label);
         }
     }
@@ -303,46 +306,57 @@ QRect BaseDiagram::labelPositioned(const QRect& itemRect,
                                    LabelPosition lp) const
 {
     const int SHORT_MARGIN = 4;
-    const int DIAGONAL_MARGIN = 20;
+    const int DIAGONAL_MARGIN = 12;
+
+    QPoint topLeft = itemRect.topLeft();
 
     switch (lp) {
     // cardinal compass points are short (close in)
     case LABEL_RIGHT:
-        return QRect(itemRect.right() + SHORT_MARGIN,
-                     itemRect.center().y() - bounds.height() / 2,
-                     bounds.width(),
-                     bounds.height());
+        topLeft = QPoint(itemRect.right() + SHORT_MARGIN,
+                     itemRect.center().y() - bounds.height() / 2);
+        break;
     case LABEL_ABOVE:
-        return QRect(itemRect.center().x() - (bounds.width() / 2),
-                     itemRect.top() - (SHORT_MARGIN + bounds.height()),
-                     bounds.width(),
-                     bounds.height());
+        topLeft = QPoint(itemRect.center().x() - (bounds.width() / 2),
+                     itemRect.top() - (SHORT_MARGIN + bounds.height()));
+        break;
     case LABEL_BELOW:
-        return QRect(itemRect.center().x() - (bounds.width() / 2),
-                     itemRect.bottom() + SHORT_MARGIN,
-                     bounds.width(),
-                     bounds.height());
+        topLeft = QPoint(itemRect.center().x() - (bounds.width() / 2),
+                     itemRect.bottom() + SHORT_MARGIN);
+        break;
     case LABEL_LEFT:
-        return QRect(itemRect.left() - (SHORT_MARGIN + bounds.width()),
-                     itemRect.center().y() - bounds.height() / 2,
-                     bounds.width(),
-                     bounds.height());
+        topLeft = QPoint(itemRect.left() - (SHORT_MARGIN + bounds.width()),
+                     itemRect.center().y() - bounds.height() / 2);
+        break;
 
     // first diagonals are further out (to hopefully have a better chance
     // of finding clear space
 
     case LABEL_NE:
-        return QRect(itemRect.right() + DIAGONAL_MARGIN,
-                     itemRect.top() - (DIAGONAL_MARGIN + bounds.height()),
-                     bounds.width(),
-                     bounds.height());
+        topLeft = QPoint(itemRect.right() + DIAGONAL_MARGIN,
+                     itemRect.top() - (DIAGONAL_MARGIN + bounds.height()));
+        break;
 
+    case LABEL_NW:
+        topLeft = QPoint(itemRect.left() - (DIAGONAL_MARGIN + bounds.width()),
+                     itemRect.top() - (DIAGONAL_MARGIN + bounds.height()));
+        break;
+
+    case LABEL_SE:
+        topLeft = QPoint(itemRect.right() + DIAGONAL_MARGIN,
+                     itemRect.bottom() + DIAGONAL_MARGIN);
+        break;
+
+    case LABEL_SW:
+        topLeft = QPoint(itemRect.left() - (DIAGONAL_MARGIN + bounds.width()),
+                     itemRect.bottom() + DIAGONAL_MARGIN);
+        break;
     default:
         qWarning() << Q_FUNC_INFO << "Implement me";
 
     }
 
-    return QRect(itemRect.x(), itemRect.y(), bounds.width(), bounds.height());
+    return QRect(topLeft, bounds);
 }
 
 void BaseDiagram::mousePressEvent(QMouseEvent *me)
@@ -540,6 +554,10 @@ QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos,
 
 QPixmap BaseDiagram::iconForAirport(FGAirport* apt, const IconOptions& options)
 {
+    if (apt->isClosed()) {
+        return QPixmap(":/airport-closed-icon");
+    }
+
     if (!apt->hasHardRunwayOfLengthFt(1500)) {
         return QPixmap(apt->hasTower() ? ":/airport-tower-icon" : ":/airport-icon");
     }
