@@ -243,7 +243,8 @@ public:
         }
 
         if (role == Qt::DecorationRole) {
-            return AirportDiagram::iconForPositioned(pos, true);
+            return AirportDiagram::iconForPositioned(pos,
+                                                     AirportDiagram::SmallIcons | AirportDiagram::LargeAirportPlans);
         }
 
         if (role == Qt::EditRole) {
