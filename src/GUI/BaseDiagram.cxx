@@ -163,16 +163,19 @@ void BaseDiagram::paintNavaids(QPainter* painter)
     QTransform xf = painter->transform();
     painter->setTransform(QTransform()); // reset to identity
     QTransform invT = xf.inverted();
-    SGGeod topLeft = unproject(invT.map(QPointF(0,0)), m_projectionCenter);
+
+
+    SGGeod topLeft = unproject(invT.map(rect().topLeft()), m_projectionCenter);
+    SGGeod viewCenter = unproject(invT.map(rect().center()), m_projectionCenter);
+    SGGeod bottomRight = unproject(invT.map(rect().bottomRight()), m_projectionCenter);
 
     double minRunwayLengthFt = (16 / m_scale) * SG_METER_TO_FEET;
-    // add 10nm fudge factor
-    double drawRangeNm = SGGeodesy::distanceNm(m_projectionCenter, topLeft) + 10.0;
-    //qDebug() << "draw range computed as:" << drawRangeNm;
 
+    double drawRangeNm = std::max(SGGeodesy::distanceNm(viewCenter, topLeft),
+                                  SGGeodesy::distanceNm(viewCenter, bottomRight));
 
     MapFilter f;
-    FGPositionedList items = FGPositioned::findWithinRange(m_projectionCenter, drawRangeNm, &f);
+    FGPositionedList items = FGPositioned::findWithinRange(viewCenter, drawRangeNm, &f);
 
     m_labelRects.clear();
     m_labelRects.reserve(items.size());
@@ -470,6 +473,7 @@ QPointF BaseDiagram::project(const SGGeod& geod, const SGGeod& center)
         y = k * ( cos(ref_lat) * sin(lat) - sin(ref_lat) * cos(lat) * cos(lonDiff) );
     }
 
+    // flip for top-left origin
     return QPointF(x, -y) * r;
 }
 
@@ -487,7 +491,9 @@ SGGeod BaseDiagram::unproject(const QPointF& xy, const SGGeod& center)
         return center;
     }
 
-    double x = xy.x(), y = xy.y();
+    // invert y to balance the equivalent in project()
+    double x = xy.x(),
+            y = -xy.y();
     lat = asin( cos(c) * sin(ref_lat) + (y * sin(c) * cos(ref_lat)) / rho);
 
     if (ref_lat == (90 * SG_DEGREES_TO_RADIANS)) // north pole
