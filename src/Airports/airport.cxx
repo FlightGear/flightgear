@@ -84,6 +84,7 @@ FGAirport::FGAirport( PositionedID aGuid,
     mThresholdDataLoaded(false),
     mILSDataLoaded(false)
 {
+    mIsClosed = (name.find("[x]") != std::string::npos);
 }
 
 

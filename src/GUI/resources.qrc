@@ -18,5 +18,6 @@
         <file alias="ndb-small-icon">ndb-small-icon .png</file>
         <file alias="ndb-large-icon">ndb-large-icon.png</file>
         <file alias="airplane-icon">airplane-icon.png</file>
+        <file alias="airport-closed-icon">airport-closed-icon.png</file>
     </qresource>
 </RCC>
