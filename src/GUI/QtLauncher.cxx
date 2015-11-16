@@ -593,9 +593,7 @@ void QtLauncher::restoreSettings()
 
     if (!m_recentAircraft.empty()) {
         m_selectedAircraft = m_recentAircraft.front();
-        qDebug() << "restoring aircraft" << m_selectedAircraft;
     } else {
-        qDebug() << "recent aircraft is empty";
         // select the default C172p
     }
 
@@ -613,8 +611,6 @@ void QtLauncher::restoreSettings()
     m_aircraftProxy->setRatings(m_ratingFilters);
 
     m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
-
-    qDebug() << "restoring settings";
 }
 
 void QtLauncher::saveSettings()

@@ -600,7 +600,6 @@ void LocationWidget::onSearch()
 
     if (m_searchModel->isSearchActive()) {
         m_ui->searchStatusText->setText(QString("Searching for '%1'").arg(search));
-        qDebug() << "setting icon visible";
         m_ui->searchIcon->setVisible(true);
         m_ui->searchIcon->movie()->start();
     } else if (m_searchModel->rowCount(QModelIndex()) == 1) {
