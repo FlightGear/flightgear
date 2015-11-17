@@ -30,6 +30,8 @@
 #include <Navaids/positioned.hxx>
 #include <Airports/airport.hxx>
 
+#include "QtLauncher_fwd.hxx"
+
 class BaseDiagram : public QWidget
 {
     Q_OBJECT
@@ -50,6 +52,8 @@ public:
 
     static QVector<QLineF> projectAirportRuwaysIntoRect(FGAirportRef apt, const QRectF& bounds);
     static QVector<QLineF> projectAirportRuwaysWithCenter(FGAirportRef apt, const SGGeod &c);
+
+    void setAircraftType(LauncherAircraftType type);
 protected:
     virtual void paintEvent(QPaintEvent* pe);
 
@@ -80,6 +84,7 @@ protected:
     QPointF m_panOffset, m_lastMousePos;
     int m_wheelAngleDeltaAccumulator;
     bool m_didPan;
+    LauncherAircraftType m_aircraftType;
 
     static void extendRect(QRectF& r, const QPointF& p);
 
@@ -118,6 +123,11 @@ private:
     mutable QVector<QRect> m_labelRects;
 
     static int textFlagsForLabelPosition(LabelPosition pos);
+
+    void splitItems(const FGPositionedList &in, FGPositionedList &navaids, FGPositionedList &ports);
+    void paintNavaid(QPainter *painter,
+                     const QTransform& t,
+                     const FGPositionedRef &pos);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(BaseDiagram::IconOptions)

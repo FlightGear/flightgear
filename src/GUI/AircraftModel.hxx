@@ -46,6 +46,8 @@ const int AircraftPackageSizeRole = Qt::UserRole + 12;
 const int AircraftInstallDownloadedSizeRole = Qt::UserRole + 13;
 const int AircraftURIRole = Qt::UserRole + 14;
 const int AircraftThumbnailSizeRole = Qt::UserRole + 15;
+const int AircraftIsHelicopterRole = Qt::UserRole + 16;
+const int AircraftIsSeaplaneRole = Qt::UserRole + 17;
 
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
@@ -79,8 +81,9 @@ struct AircraftItem
     int ratings[4];
     QString variantOf;
     QDateTime pathModTime;
-
     QList<AircraftItemPtr> variants;
+    bool usesHeliports;
+    bool usesSeaports;
 private:
     mutable QPixmap m_thumbnail;
 };

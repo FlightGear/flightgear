@@ -864,7 +864,6 @@ void QtLauncher::onAircraftInstallFailed(QModelIndex index, QString errorMessage
 void QtLauncher::onAircraftSelected(const QModelIndex& index)
 {
     m_selectedAircraft = index.data(AircraftURIRole).toUrl();
-    qDebug() << "selected aircraft is now" << m_selectedAircraft;
     updateSelectedAircraft();
 }
 
@@ -910,6 +909,15 @@ void QtLauncher::updateSelectedAircraft()
         int status = index.data(AircraftPackageStatusRole).toInt();
         bool canRun = (status == PackageInstalled);
         m_ui->runButton->setEnabled(canRun);
+
+        LauncherAircraftType aircraftType = Airplane;
+        if (index.data(AircraftIsHelicopterRole).toBool()) {
+            aircraftType = Helicopter;
+        } else if (index.data(AircraftIsSeaplaneRole).toBool()) {
+            aircraftType = Seaplane;
+        }
+
+        m_ui->location->setAircraftType(aircraftType);
     } else {
         m_ui->thumbnail->setPixmap(QPixmap());
         m_ui->aircraftDescription->setText("");

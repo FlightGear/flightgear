@@ -59,8 +59,18 @@ QString fixNavaidName(QString s)
             continue;
         }
 
-        if (up == "MUNI") {
+        if (up == "CO") {
+            changedWords.append("County");
+            continue;
+        }
+
+        if ((up == "MUNI") || (up == "MUN")) {
             changedWords.append("Municipal");
+            continue;
+        }
+
+        if (up == "MEM") {
+            changedWords.append("Memorial");
             continue;
         }
 
@@ -85,9 +95,17 @@ QString fixNavaidName(QString s)
             continue;
         }
 
-        if ((up == "VOR") || (up == "NDB") || (up == "VOR-DME") || (up == "VORTAC") || (up == "NDB-DME")) {
+        if ((up == "VOR") || (up == "NDB")
+                || (up == "VOR-DME") || (up == "VORTAC")
+                || (up == "NDB-DME")
+                || (up == "AFB") || (up == "RAF"))
+        {
             changedWords.append(w);
             continue;
+        }
+
+        if ((up =="[X]") || (up == "[H]") || (up == "[S]")) {
+            continue; // consume
         }
 
         QChar firstChar = w.at(0).toUpper();
@@ -171,14 +189,21 @@ FGPositionedList loadPositionedList(QVariant v)
 class IdentSearchFilter : public FGPositioned::TypeFilter
 {
 public:
-    IdentSearchFilter()
+    IdentSearchFilter(LauncherAircraftType aircraft)
     {
-        addType(FGPositioned::AIRPORT);
-        addType(FGPositioned::SEAPORT);
-        addType(FGPositioned::HELIPAD);
         addType(FGPositioned::VOR);
         addType(FGPositioned::FIX);
         addType(FGPositioned::NDB);
+
+        if (aircraft == Helicopter) {
+            addType(FGPositioned::HELIPAD);
+        }
+
+        if (aircraft == Seaplane) {
+            addType(FGPositioned::SEAPORT);
+        } else {
+            addType(FGPositioned::AIRPORT);
+        }
     }
 };
 
@@ -191,7 +216,7 @@ public:
     {
     }
 
-    void setSearch(QString t)
+    void setSearch(QString t, LauncherAircraftType aircraft)
     {
         beginResetModel();
 
@@ -200,7 +225,7 @@ public:
 
         std::string term(t.toUpper().toStdString());
 
-        IdentSearchFilter filter;
+        IdentSearchFilter filter(aircraft);
         FGPositionedList exactMatches = NavDataCache::instance()->findAllWithIdent(term, &filter, true);
 
         for (unsigned int i=0; i<exactMatches.size(); ++i) {
@@ -318,7 +343,8 @@ private:
 
 LocationWidget::LocationWidget(QWidget *parent) :
     QWidget(parent),
-    m_ui(new Ui::LocationWidget)
+    m_ui(new Ui::LocationWidget),
+    m_aircraftType(Airplane)
 {
     m_ui->setupUi(this);
 
@@ -596,7 +622,7 @@ void LocationWidget::onSearch()
         return;
     }
 
-    m_searchModel->setSearch(search);
+    m_searchModel->setSearch(search, m_aircraftType);
 
     if (m_searchModel->isSearchActive()) {
         m_ui->searchStatusText->setText(QString("Searching for '%1'").arg(search));
@@ -866,6 +892,14 @@ void LocationWidget::setBaseLocation(FGPositionedRef ref)
     onLocationChanged();
 
     updateDescription();
+}
+
+void LocationWidget::setAircraftType(LauncherAircraftType ty)
+{
+    m_aircraftType = ty;
+    // nothing happens until next search
+    m_ui->navaidDiagram->setAircraftType(ty);
+    m_ui->airportDiagram->setAircraftType(ty);
 }
 
 void LocationWidget::onOffsetDataChanged()

@@ -47,14 +47,18 @@ const int STANDARD_THUMBNAIL_WIDTH = 172;
 using namespace simgear::pkg;
 
 AircraftItem::AircraftItem() :
-    excluded(false)
+    excluded(false),
+    usesHeliports(false),
+    usesSeaports(false)
 {
     // oh for C++11 initialisers
     for (int i=0; i<4; ++i) ratings[i] = 0;
 }
 
 AircraftItem::AircraftItem(QDir dir, QString filePath) :
-    excluded(false)
+    excluded(false),
+    usesHeliports(false),
+    usesSeaports(false)
 {
     for (int i=0; i<4; ++i) ratings[i] = 0;
 
@@ -89,6 +93,21 @@ AircraftItem::AircraftItem(QDir dir, QString filePath) :
     if (sim->hasChild("variant-of")) {
         variantOf = sim->getStringValue("variant-of");
     }
+
+    if (sim->hasChild("tags")) {
+        SGPropertyNode_ptr tagsNode = sim->getChild("tags");
+        int nChildren = tagsNode->nChildren();
+        for (int i = 0; i < nChildren; i++) {
+            const SGPropertyNode* c = tagsNode->getChild(i);
+            if (strcmp(c->getName(), "tag") == 0) {
+                const char* tagName = c->getStringValue();
+                usesHeliports |= (strcmp(tagName, "helicopter") == 0);
+                // could also consider vtol tag?
+                usesSeaports |= (strcmp(tagName, "seaplane") == 0);
+                usesSeaports |= (strcmp(tagName, "floats") == 0);
+            }
+        } // of tags iteration
+    } // of set-xml has tags
 }
 
 QString AircraftItem::baseName() const
@@ -574,6 +593,10 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, quint32 variantIn
             "I'm just a poor boy, I need no sympathy because I'm easy come, easy go."
             "Litte high, little low. Anywhere the wind blows.";
 #endif
+    } else if (role == AircraftIsHelicopterRole) {
+        return item->usesHeliports;
+    } else if (role == AircraftIsSeaplaneRole) {
+        return item->usesSeaports;
     }
 
     return QVariant();

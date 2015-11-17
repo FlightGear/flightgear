@@ -28,6 +28,8 @@
 #include <Navaids/positioned.hxx>
 #include <Airports/airports_fwd.hxx>
 
+#include "QtLauncher_fwd.hxx"
+
 namespace Ui {
     class LocationWidget;
 }
@@ -48,6 +50,8 @@ public:
     QString locationDescription() const;
 
     void setBaseLocation(FGPositionedRef ref);
+
+    void setAircraftType(LauncherAircraftType ty);
 
     bool shouldStartPaused() const;
 
@@ -87,8 +91,7 @@ private:
     QToolButton* m_backButton;
 
     FGPositionedList m_recentLocations;
-
-
+    LauncherAircraftType m_aircraftType;
 };
 
 #endif // LOCATIONWIDGET_H
