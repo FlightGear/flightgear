@@ -202,23 +202,20 @@ do_add_subsystem (const SGPropertyNode * arg)
 static bool do_remove_subsystem(const SGPropertyNode * arg)
 {
   std::string name = arg->getStringValue("subsystem");
-  
+
   SGSubsystem* instance = globals->get_subsystem_mgr()->get_subsystem(name);
   if (!instance) {
     SG_LOG(SG_GENERAL, SG_ALERT, "do_remove_subsystem: unknown subsytem:" << name);
     return false;
   }
-  
+
   // is it safe to always call these? let's assume so!
   instance->shutdown();
   instance->unbind();
 
-  // unplug from the manager
+  // unplug from the manager (this also deletes the instance!)
   globals->get_subsystem_mgr()->remove(name.c_str());
-  
-  // and finally kill off the instance.
-  delete instance;
-  
+
   return true;
 }
   
