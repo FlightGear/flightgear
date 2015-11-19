@@ -235,14 +235,27 @@ void BaseDiagram::paintNavaids(QPainter* painter)
     painter->setTransform(xf);
 }
 
+QRect boundsOfLines(const QVector<QLineF>& lines)
+{
+    QRect r;
+    Q_FOREACH(const QLineF& l, lines) {
+        r = r.united(QRectF(l.p1(), l.p2()).toRect());
+    }
+
+    return r;
+}
+
 void BaseDiagram::paintNavaid(QPainter* painter, const QTransform& t, const FGPositionedRef &pos)
 {
-    bool drawAsIcon = true;
     if (isNavaidIgnored(pos))
         return;
 
+    bool drawAsIcon = true;
     const double minRunwayLengthFt = (16 / m_scale) * SG_METER_TO_FEET;
-    FGPositioned::Type ty(pos->type());
+    const FGPositioned::Type ty(pos->type());
+    const bool isNDB = (ty == FGPositioned::NDB);
+    QRect iconRect;
+
     if (ty == FGPositioned::AIRPORT) {
         FGAirport* apt = static_cast<FGAirport*>(pos.ptr());
         if (apt->hasHardRunwayOfLengthFt(minRunwayLengthFt)) {
@@ -262,44 +275,45 @@ void BaseDiagram::paintNavaid(QPainter* painter, const QTransform& t, const FGPo
             painter->drawLines(lines);
 
             painter->resetTransform();
+
+            iconRect = t.mapRect(boundsOfLines(lines));
         }
     }
 
     if (drawAsIcon) {
         QPixmap pm = iconForPositioned(pos);
         QPointF loc = t.map(project(pos->geod()));
-        QRect iconRect = pm.rect();
+        iconRect = pm.rect();
         iconRect.moveCenter(loc.toPoint());
         painter->drawPixmap(iconRect, pm);
-        bool isNDB = (ty == FGPositioned::NDB);
+    }
 
    // compute label text so we can measure it
-        QString label;
-        if (FGAirport::isAirportType(pos.ptr())) {
-            label = QString::fromStdString(pos->name());
-            label = fixNavaidName(label);
-        } else {
-            label = QString::fromStdString(pos->ident());
-        }
-
-        if (ty == FGPositioned::NDB) {
-            FGNavRecord* nav = static_cast<FGNavRecord*>(pos.ptr());
-            label.append("\n").append(QString::number(nav->get_freq() / 100));
-        } else if (ty == FGPositioned::VOR) {
-            FGNavRecord* nav = static_cast<FGNavRecord*>(pos.ptr());
-            label.append("\n").append(QString::number(nav->get_freq() / 100.0, 'f', 1));
-        }
-
-        QRect textBounds = painter->boundingRect(QRect(0, 0, 100, 100),
-                                                 Qt::TextWordWrap, label);
-        int textFlags;
-        textBounds = rectAndFlagsForLabel(pos->guid(), iconRect,
-                                          textBounds.size(),
-                                          textFlags);
-
-        painter->setPen(isNDB ? QColor(0x9b, 0x5d, 0xa2) : QColor(0x03, 0x83, 0xbf));
-        painter->drawText(textBounds, textFlags, label);
+    QString label;
+    if (FGAirport::isAirportType(pos.ptr())) {
+        label = QString::fromStdString(pos->name());
+        label = fixNavaidName(label);
+    } else {
+        label = QString::fromStdString(pos->ident());
     }
+
+    if (ty == FGPositioned::NDB) {
+        FGNavRecord* nav = static_cast<FGNavRecord*>(pos.ptr());
+        label.append("\n").append(QString::number(nav->get_freq() / 100));
+    } else if (ty == FGPositioned::VOR) {
+        FGNavRecord* nav = static_cast<FGNavRecord*>(pos.ptr());
+        label.append("\n").append(QString::number(nav->get_freq() / 100.0, 'f', 1));
+    }
+
+    QRect textBounds = painter->boundingRect(QRect(0, 0, 100, 100),
+                                             Qt::TextWordWrap, label);
+    int textFlags;
+    textBounds = rectAndFlagsForLabel(pos->guid(), iconRect,
+                                      textBounds.size(),
+                                      textFlags);
+
+    painter->setPen(isNDB ? QColor(0x9b, 0x5d, 0xa2) : QColor(0x03, 0x83, 0xbf));
+    painter->drawText(textBounds, textFlags, label);
 }
 
 bool BaseDiagram::isNavaidIgnored(const FGPositionedRef &pos) const
