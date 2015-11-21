@@ -344,10 +344,10 @@ private:
 LocationWidget::LocationWidget(QWidget *parent) :
     QWidget(parent),
     m_ui(new Ui::LocationWidget),
+    m_locationIsLatLon(false),
     m_aircraftType(Airplane)
 {
     m_ui->setupUi(this);
-
 
     QIcon historyIcon(":/history-icon");
     m_ui->searchHistory->setIcon(historyIcon);
@@ -426,6 +426,7 @@ void LocationWidget::restoreSettings()
                                          settings.value("location-lat").toDouble());
     } else if (settings.contains("location-id")) {
         m_location = NavDataCache::instance()->loadById(settings.value("location-id").toULongLong());
+        m_locationIsLatLon = false;
     }
 
     m_ui->altitudeSpinbox->setValue(settings.value("altitude", 6000).toInt());
@@ -463,6 +464,8 @@ void LocationWidget::saveSettings()
     QSettings settings;
 
     settings.remove("location-id");
+    settings.remove("location-lon");
+    settings.remove("location-lat");
     if (m_locationIsLatLon) {
         settings.setValue("location-lat", m_geodLocation.getLatitudeDeg());
         settings.setValue("location-lon", m_geodLocation.getLongitudeDeg());
@@ -885,6 +888,7 @@ void LocationWidget::onShowHistory()
 
 void LocationWidget::setBaseLocation(FGPositionedRef ref)
 {
+    m_locationIsLatLon = false;
     if (m_location == ref)
         return;
 
