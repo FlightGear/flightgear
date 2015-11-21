@@ -38,9 +38,16 @@ typedef nasal::Ghost<SGPathRef> NasalSGPath;
 SGPath::Permissions checkIORules(const SGPath& path)
 {
   SGPath::Permissions perm;
+  if (!path.isAbsolute()) {
+    // SGPath caches permissions, which breaks for relative paths
+    // if the current directory changes
+    SG_LOG(SG_NASAL, SG_ALERT, "os.path: file operation on '" <<
+        path.str() << "' access denied (relative paths not accepted; use "
+        "realpath() to make a path absolute)");
+  }
 
-  perm.read  = !fgValidatePath(path.str(), false).empty();
-  perm.write = !fgValidatePath(path.str(), true ).empty();
+  perm.read  = path.isAbsolute() && !fgValidatePath(path.str(), false).empty();
+  perm.write = path.isAbsolute() && !fgValidatePath(path.str(), true ).empty();
 
   return perm;
 }

@@ -72,39 +72,6 @@ fgGetLowPass (double current, double target, double timeratio)
     return current;
 }
 
-// Normalize a path
-// Unlike SGPath::realpath, does not require that the file already exists,
-// but does require that it be below the starting point
-static std::string fgNormalizePath (const std::string& path)
-{
-    string_list path_parts;
-    char c;
-    std::string normed_path = "", this_part = "";
-    
-    for (int pos = 0; ; pos++) {
-        c = path[pos];
-        if (c == '\\') { c = '/'; }
-        if ((c == '/') || (c == 0)) {
-            if ((this_part == "/..") || (this_part == "..")) {
-                if (path_parts.empty()) { return ""; }
-                path_parts.pop_back();
-            } else if ((this_part != "/.") && (this_part != "/")) {
-                path_parts.push_back(this_part);
-            }
-            this_part = "";
-        }
-        if (c == 0) { break; }
-        this_part = this_part + c;
-    }
-    for( string_list::const_iterator it = path_parts.begin();
-                                     it != path_parts.end();
-                                   ++it )
-    {
-        normed_path.append(*it);
-    }
-    return normed_path;
- }
-
 static string_list read_allowed_paths;
 static string_list write_allowed_paths;
 
@@ -114,41 +81,51 @@ static string_list write_allowed_paths;
 // /sim/terrasync/scenery-dir a security hole
 void fgInitAllowedPaths()
 {
+    if(SGPath("ygjmyfvhhnvdoesnotexist").realpath() == "ygjmyfvhhnvdoesnotexist"){
+        // Forbid using this version of fgValidatePath() with older
+        // (not normalizing non-existent files) versions of realpath(),
+        // as that would be a security hole
+        flightgear::fatalMessageBox("Nasal initialization error",
+                                    "Version mismatch - please update simgear",
+                                    "");
+        exit(-1);
+    }
     read_allowed_paths.clear();
     write_allowed_paths.clear();
-    std::string fg_root = fgNormalizePath(globals->get_fg_root());
-    std::string fg_home = fgNormalizePath(globals->get_fg_home());
-    read_allowed_paths.push_back(fg_root + "/*");
-    read_allowed_paths.push_back(fg_home + "/*");
+    std::string fg_root = SGPath(globals->get_fg_root()).realpath();
+    std::string fg_home = SGPath(globals->get_fg_home()).realpath();
+#if defined(_MSC_VER) /*for MS compilers */ || defined(_WIN32) /*needed for non MS windows compilers like MingW*/
+     std::string sep = "\\";
+#else
+     std::string sep = "/";
+#endif
+    read_allowed_paths.push_back(fg_root + sep + "*");
+    read_allowed_paths.push_back(fg_home + sep + "*");
     string_list const aircraft_paths = globals->get_aircraft_paths();
     for( string_list::const_iterator it = aircraft_paths.begin();
                                      it != aircraft_paths.end();
                                    ++it )
     {
-        read_allowed_paths.push_back(fgNormalizePath(*it) + "/*");
-    }
-
-    for( string_list::const_iterator it = read_allowed_paths.begin();
-                                     it != read_allowed_paths.end();
-                                   ++it )
-    { // if we get the initialization order wrong, better to have an
+      // if we get the initialization order wrong, better to have an
       // obvious error than a can-read-everything security hole...
-        if (!(it->compare("/*"))){
+        if (it->empty() || fg_root.empty() || fg_home.empty()){
             flightgear::fatalMessageBox("Nasal initialization error",
                                     "Empty string in FG_ROOT, FG_HOME or FG_AIRCRAFT",
                                     "or fgInitAllowedPaths() called too early");
             exit(-1);
         }
+        read_allowed_paths.push_back(SGPath(*it).realpath() + sep + "*");
     }
-    write_allowed_paths.push_back(fg_home + "/*.sav");
-    write_allowed_paths.push_back(fg_home + "/*.log");
-    write_allowed_paths.push_back(fg_home + "/cache/*");
-    write_allowed_paths.push_back(fg_home + "/Export/*");
-    write_allowed_paths.push_back(fg_home + "/state/*.xml");
-    write_allowed_paths.push_back(fg_home + "/aircraft-data/*.xml");
-    write_allowed_paths.push_back(fg_home + "/Wildfire/*.xml");
-    write_allowed_paths.push_back(fg_home + "/runtime-jetways/*.xml");
-    write_allowed_paths.push_back(fg_home + "/Input/Joysticks/*.xml");
+
+    write_allowed_paths.push_back(fg_home + sep + "*.sav");
+    write_allowed_paths.push_back(fg_home + sep + "*.log");
+    write_allowed_paths.push_back(fg_home + sep + "cache" + sep + "*");
+    write_allowed_paths.push_back(fg_home + sep + "Export" + sep + "*");
+    write_allowed_paths.push_back(fg_home + sep + "state" + sep + "*.xml");
+    write_allowed_paths.push_back(fg_home + sep + "aircraft-data" + sep + "*.xml");
+    write_allowed_paths.push_back(fg_home + sep + "Wildfire" + sep + "*.xml");
+    write_allowed_paths.push_back(fg_home + sep + "runtime-jetways" + sep + "*.xml");
+    write_allowed_paths.push_back(fg_home + sep + "Input" + sep + "Joysticks" + sep + "*.xml");
     
     // Check that it works
     if(!fgValidatePath(globals->get_fg_home() + "/../no.log",true).empty() ||
@@ -165,9 +142,15 @@ void fgInitAllowedPaths()
     }
 }
 
-// Check whether Nasal is allowed to access a path (assumed already normalized)
-static std::string fgValidatePath_internal (const std::string& normed_path, bool write)
+// Check whether Nasal is allowed to access a path
+// Warning: because this always (not just on Windows) converts \ to /,
+// and accepts relative paths (check-to-use race if the current directory
+// changes), always use the returned path not the original one
+std::string fgValidatePath (const std::string& path, bool write)
 {
+    // Normalize the path (prevents ../../.. or symlink trickery)
+    std::string normed_path = SGPath(path).realpath();
+    
     const string_list& allowed_paths(write ? write_allowed_paths : read_allowed_paths);
     size_t star_pos;
     
@@ -194,37 +177,6 @@ static std::string fgValidatePath_internal (const std::string& normed_path, bool
     }
     // no match found
     return "";
-}
-// Check whether Nasal is allowed to access a path
-// Warning: because this always (not just on Windows) converts \ to /,
-// if passing a std::string, use the returned path not the original one
-// (This warning does not apply to the SGPath variant, as these are
-// so converted on creation.)
-std::string fgValidatePath (const std::string& path, bool write)
-{
-    // Normalize the path (prevents ../../.. trickery)
-    // method 1 allows following symlinks to anywhere
-    // (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=780867);
-    // method 2 doesn't, and is intended to eventually replace it
-    std::string normed_path1 = fgNormalizePath(path);
-    SGPath path2 = SGPath(path);
-    std::string normed_path2;
-    if (path2.exists()) {
-        normed_path2 = path2.realpath();
-    } else { // realpath can't check non-existent files
-        normed_path2 = SGPath(path2.dir()).realpath()
-            + "/" + path2.file();
-    }
-#if defined(_MSC_VER) /*for MS compilers */ || defined(_WIN32) /*needed for non MS windows compilers like MingW*/
-     normed_path2 = SGPath(normed_path2).str(); // convert \ to /
-#endif
-
-    // Check
-    if (fgValidatePath_internal(normed_path1, write).empty() ||
-        fgValidatePath_internal(normed_path2, write).empty()) {
-        return "";
-    }
-    return normed_path1;
 }
 std::string fgValidatePath(const SGPath& path, bool write) { return fgValidatePath(path.str(),write); }
 // end of util.cxx

@@ -292,13 +292,14 @@ do_load (const SGPropertyNode * arg)
     if (file.extension() != "sav")
         file.concat(".sav");
 
-    if (fgValidatePath(file, false).empty()) {
+    std::string validated_path = fgValidatePath(file, false);
+    if (validated_path.empty()) {
         SG_LOG(SG_IO, SG_ALERT, "load: reading '" << file << "' denied "
                 "(unauthorized access)");
         return false;
     }
 
-    ifstream input(file.c_str());
+    ifstream input(validated_path.c_str());
     if (input.good() && fgLoadFlight(input)) {
         input.close();
         SG_LOG(SG_INPUT, SG_INFO, "Restored flight from " << file);
@@ -324,7 +325,8 @@ do_save (const SGPropertyNode * arg)
     if (file.extension() != "sav")
         file.concat(".sav");
 
-    if (fgValidatePath(file, false).empty()) {
+    std::string validated_path = fgValidatePath(file, true);
+    if (validated_path.empty()) {
         SG_LOG(SG_IO, SG_ALERT, "save: writing '" << file << "' denied "
                 "(unauthorized access)");
         return false;
@@ -332,7 +334,7 @@ do_save (const SGPropertyNode * arg)
 
     bool write_all = arg->getBoolValue("write-all", false);
     SG_LOG(SG_INPUT, SG_INFO, "Saving flight");
-    ofstream output(file.c_str());
+    ofstream output(validated_path.c_str());
     if (output.good() && fgSaveFlight(output, write_all)) {
         output.close();
         SG_LOG(SG_INPUT, SG_INFO, "Saved flight to " << file);
@@ -1175,7 +1177,8 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
         }
     }
     
-    if (fgValidatePath(file, false).empty()) {
+    std::string validated_path = fgValidatePath(file, false);
+    if (validated_path.empty()) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file.str() << "' denied "
                 "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, add them to --fg-aircraft)");
         return false;
@@ -1188,7 +1191,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
         targetnode = const_cast<SGPropertyNode *>(arg)->getNode("data", true);
 
     try {
-        readProperties(file.c_str(), targetnode, true);
+        readProperties(validated_path.c_str(), targetnode, true);
     } catch (const sg_exception &e) {
         SG_LOG(SG_IO, SG_WARN, "loadxml: " << e.getFormattedMessage());
         return false;
@@ -1257,7 +1260,8 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
     if (file.extension() != "xml")
         file.concat(".xml");
 
-    if (fgValidatePath(file, true).empty()) {
+    std::string validated_path = fgValidatePath(file, true);
+    if (validated_path.empty()) {
         SG_LOG(SG_IO, SG_ALERT, "savexml: writing to '" << file.str() << "' denied "
                 "(unauthorized directory - authorization no longer follows symlinks)");
         return false;
@@ -1272,7 +1276,7 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
         return false;
 
     try {
-        writeProperties (file.c_str(), sourcenode, true);
+        writeProperties (validated_path.c_str(), sourcenode, true);
     } catch (const sg_exception &e) {
         SG_LOG(SG_IO, SG_WARN, "savexml: " << e.getFormattedMessage());
         return false;
