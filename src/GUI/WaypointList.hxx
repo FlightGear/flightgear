@@ -95,6 +95,7 @@ protected:
 
 private:
   void drawRow(int dx, int dy, int rowIndex, int yOrigin, const RoutePath& path);
+  void drawRowText(int x, int baseline, int rowIndex, const RoutePath &path);
 
   void handleDrag(int x, int y);
   void doDrop(int x, int y);
