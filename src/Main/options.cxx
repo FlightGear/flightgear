@@ -851,7 +851,7 @@ fgOptRoc( const char *arg )
 static int
 fgOptFgScenery( const char *arg )
 {
-    globals->append_fg_scenery(arg);
+    globals->append_fg_scenery(arg, true);
     return FG_OPTIONS_OK;
 }
 
@@ -2278,7 +2278,7 @@ OptionResult Options::processOptions()
 // now options are process, do supplemental fixup
   const char *envp = ::getenv( "FG_SCENERY" );
   if (envp) {
-    globals->append_fg_scenery(envp);
+    globals->append_fg_scenery(envp, true);
   }
 
 // download dir fix-up

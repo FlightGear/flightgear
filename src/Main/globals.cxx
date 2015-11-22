@@ -354,7 +354,7 @@ SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
     return SGPath();
 }
 
-void FGGlobals::append_fg_scenery (const std::string &paths)
+void FGGlobals::append_fg_scenery (const std::string &paths, bool secure)
 {
     SGPropertyNode* sim = fgGetNode("/sim", true);
 
@@ -387,6 +387,9 @@ void FGGlobals::append_fg_scenery (const std::string &paths)
       // out, such that all three dirs are added. Unfortunately there's
       // no information as to why the change was made.
         fg_scenery.push_back(abspath.str());
+        if (secure) {
+          secure_fg_scenery.push_back(abspath.str());
+        }
 
         if (terrainDir.exists()) {
           fg_scenery.push_back(terrainDir.str());
@@ -414,6 +417,7 @@ void FGGlobals::append_fg_scenery (const std::string &paths)
 void FGGlobals::clear_fg_scenery()
 {
   fg_scenery.clear();
+  secure_fg_scenery.clear();
 }
 
 void FGGlobals::set_catalog_aircraft_path(const SGPath& path)
