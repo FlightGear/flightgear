@@ -1984,7 +1984,7 @@ static naRef f_createWPFrom(naContext c, naRef me, int argc, naRef* args)
   
   FGPositioned* positioned = positionedGhost(args[0]);
   if (!positioned) {
-    naRuntimeError(c, "createWPFrom: couldn;t convert arg[0] to FGPositioned");
+    naRuntimeError(c, "createWPFrom: couldn't convert arg[0] to FGPositioned");
   }
   
   WayptRef wpt;
@@ -2004,6 +2004,47 @@ static naRef f_createWPFrom(naContext c, naRef me, int argc, naRef* args)
   }
   
   return ghostForWaypt(c, wpt);
+}
+
+static naRef f_createViaTo(naContext c, naRef me, int argc, naRef* args)
+{
+    if (argc != 2) {
+        naRuntimeError(c, "createViaTo: needs exactly two arguments");
+    }
+
+    std::string airwayName = naStr_data(args[0]);
+    Airway* airway = Airway::findByIdent(airwayName);
+    if (!airway) {
+        naRuntimeError(c, "createViaTo: couldn't find airway with provided name");
+    }
+
+    FGPositionedRef nav;
+    if (naIsString(args[1])) {
+        WayptRef enroute = airway->findEnroute(naStr_data(args[1]));
+        if (!enroute) {
+            naRuntimeError(c, "unknown waypoint on airway %s: %s",
+                           naStr_data(args[0]), naStr_data(args[1]));
+        }
+
+        nav = enroute->source();
+    } else {
+        nav = positionedGhost(args[1]);
+        if (!nav) {
+            naRuntimeError(c, "createViaTo: arg[1] is not a navaid");
+        }
+    }
+
+    if (!airway->containsNavaid(nav)) {
+        naRuntimeError(c, "createViaTo: navaid not on airway");
+    }
+
+    Via* via = new Via(NULL, airwayName, nav);
+    return ghostForWaypt(c, via);
+}
+
+static naRef f_createDiscontinuity(naContext c, naRef me, int argc, naRef* args)
+{
+    return ghostForWaypt(c, new Discontinuity(NULL));
 }
 
 static naRef f_flightplan_getWP(naContext c, naRef me, int argc, naRef* args)
@@ -2221,6 +2262,18 @@ static naRef f_flightplan_finish(naContext c, naRef me, int argc, naRef* args)
     fp->finish();
     return naNil();
 }
+
+static naRef f_flightplan_activate(naContext c, naRef me, int argc, naRef* args)
+{
+    FlightPlan* fp = flightplanGhost(me);
+    if (!fp) {
+        naRuntimeError(c, "activate called on non-flightplan object");
+    }
+
+    fp->activate();
+    return naNil();
+}
+
 
 static naRef f_flightplan_indexOfWp(naContext c, naRef me, int argc, naRef* args)
 {
@@ -2462,6 +2515,8 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "registerFlightPlanDelegate", f_registerFPDelegate },
   { "createWP", f_createWP },
   { "createWPFrom", f_createWPFrom },
+  { "createViaTo", f_createViaTo },
+  { "createDiscontinuity", f_createDiscontinuity },
   { "airwaysRoute", f_airwaySearch },
   { "magvar", f_magvar },
   { "courseAndDistance", f_courseAndDistance },
@@ -2509,6 +2564,7 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, flightplanPrototype, "clone", naNewFunc(c, naNewCCode(c, f_flightplan_clone))); 
     hashset(c, flightplanPrototype, "pathGeod", naNewFunc(c, naNewCCode(c, f_flightplan_pathGeod)));
     hashset(c, flightplanPrototype, "finish", naNewFunc(c, naNewCCode(c, f_flightplan_finish)));
+    hashset(c, flightplanPrototype, "activate", naNewFunc(c, naNewCCode(c, f_flightplan_activate)));
     hashset(c, flightplanPrototype, "indexOfWP", naNewFunc(c, naNewCCode(c, f_flightplan_indexOfWp)));
     
     waypointPrototype = naNewHash(c);
