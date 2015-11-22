@@ -29,6 +29,10 @@ FGLogger::FGLogger ()
 
 FGLogger::~FGLogger ()
 {
+    for (unsigned int i = 0; i < _logs.size(); i++) {
+        delete _logs[i];
+    }
+    _logs.clear();
 }
 
 void
@@ -46,8 +50,8 @@ FGLogger::init ()
     if (!child->getBoolValue("enabled", false))
         continue;
 
-    _logs.push_back(Log());
-    Log &log = _logs[_logs.size()-1];
+    _logs.push_back(new Log());
+    Log &log = *_logs[_logs.size()-1];
     
     string filename = child->getStringValue("filename");
     if (filename.empty()) {
@@ -102,6 +106,9 @@ FGLogger::init ()
 void
 FGLogger::reinit ()
 {
+    for (unsigned int i = 0; i < _logs.size(); i++) {
+        delete _logs[i];
+    }
     _logs.clear();
     init();
 }
@@ -122,14 +129,14 @@ FGLogger::update (double dt)
     double sim_time_sec = globals->get_sim_time_sec();
     double sim_time_ms = sim_time_sec * 1000;
     for (unsigned int i = 0; i < _logs.size(); i++) {
-        while ((sim_time_ms - _logs[i].last_time_ms) >= _logs[i].interval_ms) {
-            _logs[i].last_time_ms += _logs[i].interval_ms;
-            (*_logs[i].output) << sim_time_sec;
-            for (unsigned int j = 0; j < _logs[i].nodes.size(); j++) {
-                (*_logs[i].output) << _logs[i].delimiter
-			   << _logs[i].nodes[j]->getStringValue();
+        while ((sim_time_ms - _logs[i]->last_time_ms) >= _logs[i]->interval_ms) {
+            _logs[i]->last_time_ms += _logs[i]->interval_ms;
+            (*_logs[i]->output) << sim_time_sec;
+            for (unsigned int j = 0; j < _logs[i]->nodes.size(); j++) {
+                (*_logs[i]->output) << _logs[i]->delimiter
+                                    << _logs[i]->nodes[j]->getStringValue();
             }
-            (*_logs[i].output) << endl;
+            (*_logs[i]->output) << endl;
         }
     }
 }

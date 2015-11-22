@@ -45,7 +45,7 @@ private:
     char delimiter;
   };
 
-  std::vector<Log> _logs;
+  std::vector<Log *> _logs;
 
 };
 
