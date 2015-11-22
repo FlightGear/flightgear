@@ -465,42 +465,52 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y,
 void WaypointList::drawRowText(int x, int baseline, int rowIndex, const RoutePath& path)
 {
     flightgear::Waypt* wp(_model->waypointAt(rowIndex));
-    bool isDiscontinuity = (wp->type() == "discontinuity");
+    const bool isDiscontinuity = (wp->type() == "discontinuity");
+    const bool isVia = (wp->type() == "via");
 
     char buffer[128];
-    int count = ::snprintf(buffer, 128, "%03d   %-5s", rowIndex, wp->ident().c_str());
+    int count;
 
-    FGPositioned* src = wp->source();
-    if (src && !src->name().empty() && (src->name() != wp->ident())) {
-      // append name if present, and different to id
-      ::snprintf(buffer + count, 128 - count, " (%s)", src->name().c_str());
-    }
+    if (isVia) {
+        // VIA has long ident but no name
+        count = ::snprintf(buffer, 128, "%03d   %s", rowIndex, wp->ident().c_str());
+        drawClippedString(legendFont, buffer, x, baseline, 300);
+        x += 300 + PUSTR_LGAP;
+    } else {
+        count = ::snprintf(buffer, 128, "%03d   %-5s", rowIndex, wp->ident().c_str());
 
-    drawClippedString(legendFont, buffer, x, baseline, 300);
-    x += 300 + PUSTR_LGAP;
+        FGPositioned* src = wp->source();
+        if (src && !src->name().empty() && (src->name() != wp->ident())) {
+          // append name if present, and different to id
+          ::snprintf(buffer + count, 128 - count, " (%s)", src->name().c_str());
+        }
 
-    if (isDiscontinuity) {
-        return;
-    }
+        drawClippedString(legendFont, buffer, x, baseline, 300);
+        x += 300 + PUSTR_LGAP;
 
-    if (_showLatLon) {
-      // only show for non-dynamic waypoints
-      if (!wp->flag(WPT_DYNAMIC)) {
-        SGGeod p(wp->position());
-        char ns = (p.getLatitudeDeg() > 0.0) ? 'N' : 'S';
-        char ew = (p.getLongitudeDeg() > 0.0) ? 'E' : 'W';
+        if (isDiscontinuity) {
+            return;
+        }
 
-        ::snprintf(buffer, 128 - count, "%4.2f%c %4.2f%c",
-          fabs(p.getLongitudeDeg()), ew, fabs(p.getLatitudeDeg()), ns);
-      } else {
-        buffer[0] = 0;
-      }
-    } else if (rowIndex > 0) {
-      double courseDeg = path.trackForIndex(rowIndex);
-      double distanceM = path.distanceForIndex(rowIndex);
-      ::snprintf(buffer, 128 - count, "%03.0f %5.1fnm",
-        courseDeg, distanceM * SG_METER_TO_NM);
-    }
+        if (_showLatLon) {
+          // only show for non-dynamic waypoints
+          if (!wp->flag(WPT_DYNAMIC)) {
+            SGGeod p(wp->position());
+            char ns = (p.getLatitudeDeg() > 0.0) ? 'N' : 'S';
+            char ew = (p.getLongitudeDeg() > 0.0) ? 'E' : 'W';
+
+            ::snprintf(buffer, 128 - count, "%4.2f%c %4.2f%c",
+              fabs(p.getLongitudeDeg()), ew, fabs(p.getLatitudeDeg()), ns);
+          } else {
+            buffer[0] = 0;
+          }
+        } else if (rowIndex > 0) {
+          double courseDeg = path.trackForIndex(rowIndex);
+          double distanceM = path.distanceForIndex(rowIndex);
+          ::snprintf(buffer, 128 - count, "%03.0f %5.1fnm",
+            courseDeg, distanceM * SG_METER_TO_NM);
+        }
+    } // of is not a VIA waypoint
 
     puFont* f = &legendFont;
   f->drawString(buffer, x, baseline);

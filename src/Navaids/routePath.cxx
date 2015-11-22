@@ -179,8 +179,8 @@ struct TurnInfo
 };
 
 /**
- * given a turn exit position and heading, and an arbitrary origin postion, 
- * compute the turn center / angle the matches. Certain configurations may
+ * given a turn exit position and heading, and an arbitrary origin position,
+ * compute the turn center / angle that matches. Certain configurations may
  * fail, especially if the origin is less than two turn radii from the exit pos.
  */
 TurnInfo turnCenterAndAngleFromExit(const SGGeod& pt, double outHeadingDeg,
@@ -199,7 +199,7 @@ TurnInfo turnCenterAndAngleFromExit(const SGGeod& pt, double outHeadingDeg,
     double courseToTC, distanceToTC, az2;
     SGGeodesy::inverse(origin, r.turnCenter, courseToTC, az2, distanceToTC);
     if (distanceToTC < turnRadiusM) {
-        SG_LOG(SG_NAVAID, SG_WARN, "turnCenterAndAngleFromExit: origin point to close to turn center");
+        SG_LOG(SG_NAVAID, SG_WARN, "turnCenterAndAngleFromExit: origin point too close to turn center");
         return r;
     }
 
@@ -253,6 +253,8 @@ public:
       if (ty == "hdgToAlt") {
         flyOver = true;
       }
+    } else if (ty == "discontinuity") {
+
     } else {
       pos = wpt->position();
       posValid = true;
@@ -284,8 +286,11 @@ public:
       }
     }
 
-    if (posValid && !legCourseValid && previous.posValid) {
-    // check for duplicate points now
+    if (wpt->type() == "via") {
+        // even though both ends may be known, we don't
+        // want to compute a leg course for a VIA
+    } else if (posValid && !legCourseValid && previous.posValid) {
+        // check for duplicate points now
       if (previous.wpt->matches(wpt)) {
           skipped = true;
       }
@@ -300,7 +305,7 @@ public:
             legCourseTrue = SGGeodesy::courseDeg(previous.pos, pos);
             legCourseValid = true;
         }
-    }
+    } // of not a VIA
   }
 
   void computeLegCourse(const WayptData& previous, double radiusM)
@@ -309,8 +314,12 @@ public:
           return;
       }
 
-      if (wpt->type() == "hold") {
-
+      if ((wpt->type() == "hold") ||
+              (wpt->type() == "discontinuity") ||
+              (wpt->type()  == "via"))
+      {
+          // do nothing, we can't compute a valid leg course for these types
+          // we'll generate shrap turns in the path but that's no problem.
       } else if (wpt->type() == "runway") {
           FGRunway* rwy = static_cast<RunwayWaypt*>(wpt.get())->runway();
           flyOver = true;
@@ -339,7 +348,7 @@ public:
               legCourseTrue = wpt->headingRadialDeg() + magVar;
               legCourseValid = true;
           } // of pos not valid
-      } // of neither hold nor runway
+      } // of general case
   }
 
     SGGeod pointOnEntryTurnFromHeading(double headingDeg) const
@@ -1000,6 +1009,14 @@ SGGeodVec RoutePath::pathForIndex(int index) const
       // ideally we'd show a stippled line to connect the route?
     return SGGeodVec();
   }
+
+  if (ty == "discontinuity") {
+    return SGGeodVec(); // no points for a discontinuity of course
+  }
+
+  if (ty == "via") {
+      return pathForVia(static_cast<Via*>(d->waypoints[index].wpt.get()), index);
+  }
   
   if (ty== "hold") {
     return pathForHold((Hold*) d->waypoints[index].wpt.get());
@@ -1061,6 +1078,28 @@ SGGeod RoutePath::positionForIndex(int index) const
   return d->waypoints[index].pos;
 }
 
+SGGeodVec RoutePath::pathForVia(Via* via, int index) const
+{
+    // previous waypoint must be valid for a VIA
+    if ((index == 0) || !d->waypoints[index-1].posValid) {
+        return SGGeodVec();
+    }
+
+    const WayptData& prev(d->waypoints[index-1]);
+    WayptVec enrouteWaypoints = via->expandToWaypoints(prev.wpt);
+    SGGeodVec r;
+
+    WayptVec::const_iterator it;
+    SGGeod legStart = prev.wpt->position();
+    for (it = enrouteWaypoints.begin(); it != enrouteWaypoints.end(); ++it) {
+        // interpolate directly into the result vector
+        interpolateGreatCircle(legStart, (*it)->position(), r);
+        legStart = (*it)->position();
+    }
+
+    return r;
+}
+
 SGGeodVec RoutePath::pathForHold(Hold* hold) const
 {
   int turnSteps = 16;
@@ -1117,6 +1156,11 @@ double RoutePath::computeDistanceForIndex(int index) const
         return 0.0;
     }
 
+
+    if (d->waypoints[index].wpt->type() == "via") {
+        return distanceForVia(static_cast<Via*>(d->waypoints[index].wpt.get()), index);
+    }
+
     const WayptData& prev(d->previousValidWaypoint(index));
   double dist = SGGeodesy::distanceM(prev.turnExitPos,
                               d->waypoints[index].turnEntryPos);
@@ -1128,6 +1172,27 @@ double RoutePath::computeDistanceForIndex(int index) const
   }
   
   return dist;
+}
+
+double RoutePath::distanceForVia(Via* via, int index) const
+{
+    // previous waypoint must be valid for a VIA
+    if ((index == 0) || !d->waypoints[index-1].posValid) {
+        return 0.0;
+    }
+
+    const WayptData& prev(d->waypoints[index-1]);
+    WayptVec enrouteWaypoints = via->expandToWaypoints(prev.wpt);
+    double dist = 0.0;
+
+    WayptVec::const_iterator it;
+    SGGeod legStart = prev.wpt->position();
+    for (it = enrouteWaypoints.begin(); it != enrouteWaypoints.end(); ++it) {
+        dist += SGGeodesy::distanceM(legStart, (*it)->position());
+        legStart = (*it)->position();
+    }
+
+    return dist;
 }
 
 double RoutePath::trackForIndex(int index) const
@@ -1190,8 +1255,12 @@ SGGeod RoutePath::positionForDistanceFrom(int index, double distanceM) const
         return d->waypoints[sz - 1].pos;
     }
 
+
     const WayptData& wpt(d->waypoints[index]);
     const WayptData& next(d->waypoints[index+1]);
+    if (next.wpt->type() == "via") {
+        return positionAlongVia(static_cast<Via*>(next.wpt.get()), index, distanceM);
+    }
 
     if (wpt.turnPathDistanceM > distanceM) {
         // on the exit path of current wpt
@@ -1208,4 +1277,9 @@ SGGeod RoutePath::positionForDistanceFrom(int index, double distanceM) const
 
     // linear between turn exit and turn entry points
     return SGGeodesy::direct(wpt.turnExitPos, next.legCourseTrue, distanceM);
+}
+
+SGGeod RoutePath::positionAlongVia(Via* via, int previousIndex, double distanceM) const
+{
+
 }

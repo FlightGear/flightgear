@@ -31,6 +31,7 @@ namespace flightgear
 {
   class Hold;
   class FlightPlan;
+  class Via;
 }
 
 typedef std::vector<SGGeod> SGGeodVec;
@@ -59,9 +60,13 @@ private:
   void commonInit();
   
   double computeDistanceForIndex(int index) const;
-    
+
+  double distanceForVia(flightgear::Via *via, int index) const;
+
+
   SGGeodVec pathForHold(flightgear::Hold* hold) const;
-  
+  SGGeodVec pathForVia(flightgear::Via* via, int index) const;
+  SGGeod positionAlongVia(flightgear::Via* via, int previousIndex, double distanceM) const;
   
   void interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, SGGeodVec& r) const;
   
