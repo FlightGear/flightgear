@@ -551,10 +551,14 @@ QtLauncher::~QtLauncher()
 void QtLauncher::initApp(int& argc, char** argv)
 {
     static bool qtInitDone = false;
+    static int s_argc;
     if (!qtInitDone) {
         qtInitDone = true;
+        s_argc = argc; // QApplication only stores a reference to argc,
+        // and may crash if it is freed
+        // http://doc.qt.io/qt-5/qguiapplication.html#QGuiApplication
 
-        QApplication* app = new QApplication(argc, argv);
+        QApplication* app = new QApplication(s_argc, argv);
         app->setOrganizationName("FlightGear");
         app->setApplicationName("FlightGear");
         app->setOrganizationDomain("flightgear.org");
