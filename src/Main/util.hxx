@@ -40,7 +40,12 @@ double fgGetLowPass (double current, double target, double timeratio);
  * File access control, used by Nasal and fgcommands.
  * @param path Path to be validated
  * @param write True for write operations and false for read operations.
- * @return The validated path on success or 0 if access denied.
+ * @return The validated path on success or empty if access denied.
+ *
+ * Warning: because this always (not just on Windows) treats both \ and /
+ * as path separators, and accepts relative paths (check-to-use race if
+ * the current directory changes),
+ * always use the returned path not the original one
  */
 std::string fgValidatePath(const SGPath& path, bool write);
 std::string fgValidatePath(const std::string& path, bool write);

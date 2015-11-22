@@ -75,10 +75,12 @@ fgGetLowPass (double current, double target, double timeratio)
 static string_list read_allowed_paths;
 static string_list write_allowed_paths;
 
-// Allowed paths here are absolute, and may contain _one_ *,
-// which matches any string
-// FG_SCENERY is deliberately not allowed, as it would make
-// /sim/terrasync/scenery-dir a security hole
+/**
+ * Allowed paths here are absolute, and may contain _one_ *,
+ * which matches any string
+ * FG_SCENERY is deliberately not allowed, as it would make
+ * /sim/terrasync/scenery-dir a security hole
+ */
 void fgInitAllowedPaths()
 {
     if(SGPath("ygjmyfvhhnvdoesnotexist").realpath() == "ygjmyfvhhnvdoesnotexist"){
@@ -142,10 +144,13 @@ void fgInitAllowedPaths()
     }
 }
 
-// Check whether Nasal is allowed to access a path
-// Warning: because this always (not just on Windows) converts \ to /,
-// and accepts relative paths (check-to-use race if the current directory
-// changes), always use the returned path not the original one
+/**
+ * Check whether Nasal is allowed to access a path
+ * Warning: because this always (not just on Windows) treats both \ and /
+ * as path separators, and accepts relative paths (check-to-use race if
+ * the current directory changes),
+ * always use the returned path not the original one
+ */
 std::string fgValidatePath (const std::string& path, bool write)
 {
     // Normalize the path (prevents ../../.. or symlink trickery)
