@@ -378,6 +378,11 @@ protected:
         }
     }
 
+    virtual void availablePackagesChanged() Q_DECL_OVERRIDE
+    {
+        m_model->refreshPackages();
+    }
+
     virtual void dataForThumbnail(const std::string& aThumbnailUrl,
                                   size_t length, const uint8_t* bytes)
     {
