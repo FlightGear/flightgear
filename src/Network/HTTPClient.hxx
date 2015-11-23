@@ -41,6 +41,11 @@ public:
     virtual void shutdown();
     virtual void update(double);
 
+    bool isDefaultCatalogInstalled() const;
+    void addDefaultCatalog();
+
+    std::string getDefaultCatalogId() const;
+    std::string getDefaultCatalogUrl() const;
 private:
     class FGDelegate;
     

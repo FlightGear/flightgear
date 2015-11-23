@@ -52,6 +52,12 @@ CatalogRef AddCatalogDialog::addedCatalog()
     return m_result;
 }
 
+void AddCatalogDialog::setUrlAndDownload(QUrl url)
+{
+    m_catalogUrl = url;
+    startDownload();
+}
+
 void AddCatalogDialog::onUrlTextChanged()
 {
     m_catalogUrl = QUrl::fromUserInput(ui->urlEdit->text());

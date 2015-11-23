@@ -42,6 +42,7 @@ public:
 
     simgear::pkg::CatalogRef addedCatalog();
 
+    void setUrlAndDownload(QUrl url);
 private slots:
     virtual void reject();
     virtual void accept();

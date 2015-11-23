@@ -147,24 +147,53 @@ void FGHTTPClient::init()
     
     _packageDelegate.reset(new FGDelegate);
     packageRoot->addDelegate(_packageDelegate.get());
-
-    const char * defaultCatalogId = fgGetString("/sim/package-system/default-catalog/id", "org.flightgear.official" );
-    const char * defaultCatalogUrl = fgGetString("/sim/package-system/default-catalog/url",
-            "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/catalog.xml");
-    // setup default catalog if not present
-    pkg::Catalog* defaultCatalog = packageRoot->getCatalogById( defaultCatalogId );
-    if (!defaultCatalog) {
-      // always show this message
-      SG_LOG(SG_GENERAL, SG_ALERT, "default catalog not found, installing '"
-        << defaultCatalogId << "' from '" << defaultCatalogUrl << "'.");
-      pkg::Catalog::createFromUrl(packageRoot,defaultCatalogUrl);
-    }
     
     // start a refresh now
     packageRoot->refresh();
   }
 
     _inited = true;
+}
+
+namespace {
+
+std::string _getDefaultCatalogId()
+{
+    return fgGetString("/sim/package-system/default-catalog/id", "org.flightgear.official" );
+}
+
+pkg::CatalogRef getDefaultCatalog()
+{
+    if (!globals->packageRoot())
+        return pkg::CatalogRef();
+
+    return globals->packageRoot()->getCatalogById(_getDefaultCatalogId());
+}
+
+} // of anonymous namespace
+
+bool FGHTTPClient::isDefaultCatalogInstalled() const
+{
+    return getDefaultCatalog().valid();
+}
+
+void FGHTTPClient::addDefaultCatalog()
+{
+    pkg::CatalogRef defaultCatalog = getDefaultCatalog();
+    if (!defaultCatalog.valid()) {
+      pkg::Catalog::createFromUrl(globals->packageRoot(), getDefaultCatalogUrl());
+    }
+}
+
+std::string FGHTTPClient::getDefaultCatalogId() const
+{
+    return _getDefaultCatalogId();
+}
+
+std::string FGHTTPClient::getDefaultCatalogUrl() const
+{
+    return fgGetString("/sim/package-system/default-catalog/url",
+                       "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/catalog.xml");;
 }
 
 static naRef f_package_existingInstall( pkg::Package& pkg,

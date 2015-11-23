@@ -32,7 +32,8 @@ private slots:
 
     void onAddCatalog();
     void onRemoveCatalog();
-    
+    void onAddDefaultCatalog();
+
     void onChangeDownloadDir();
     void onClearDownloadDir();
 private:

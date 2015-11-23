@@ -9,6 +9,8 @@
 #include "AddCatalogDialog.hxx"
 
 #include <Main/options.hxx>
+#include <Main/globals.hxx>
+#include <Network/HTTPClient.hxx>
 
 PathsDialog::PathsDialog(QWidget *parent, simgear::pkg::RootRef root) :
     QDialog(parent),
@@ -22,6 +24,8 @@ PathsDialog::PathsDialog(QWidget *parent, simgear::pkg::RootRef root) :
 
     connect(m_ui->addCatalog, &QToolButton::clicked,
             this, &PathsDialog::onAddCatalog);
+    connect(m_ui->addDefaultCatalogButton, &QPushButton::clicked,
+            this, &PathsDialog::onAddDefaultCatalog);
     connect(m_ui->removeCatalog, &QToolButton::clicked,
             this, &PathsDialog::onRemoveCatalog);
             
@@ -120,26 +124,60 @@ void PathsDialog::onRemoveAircraftPath()
 
 void PathsDialog::onAddCatalog()
 {
-    AddCatalogDialog* dlg = new AddCatalogDialog(this, m_packageRoot);
+    QScopedPointer<AddCatalogDialog> dlg(new AddCatalogDialog(this, m_packageRoot));
     dlg->exec();
     if (dlg->result() == QDialog::Accepted) {
         m_catalogsModel->refresh();
     }
 }
 
+void PathsDialog::onAddDefaultCatalog()
+{
+    // check it's not a duplicate somehow
+    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    if (http->isDefaultCatalogInstalled())
+        return;
+
+     QScopedPointer<AddCatalogDialog> dlg(new AddCatalogDialog(this, m_packageRoot));
+     QUrl url(QString::fromStdString(http->getDefaultCatalogUrl()));
+     dlg->setUrlAndDownload(url);
+     dlg->exec();
+     if (dlg->result() == QDialog::Accepted) {
+         m_catalogsModel->refresh();
+         updateUi();
+     }
+}
+
 void PathsDialog::onRemoveCatalog()
 {
     QModelIndex mi = m_ui->catalogsList->currentIndex();
+    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+
     if (mi.isValid()) {
+        QString s = QStringLiteral("Remove aircraft hangar '%1'? All installed aircraft from this "
+                                   "hangar will be removed.");
+        QString pkgId = mi.data(CatalogIdRole).toString();
+
+        if (pkgId.toStdString() == http->getDefaultCatalogId()) {
+            s = QStringLiteral("Remove default aircraft hangar? "
+                               "This hangar contains all the default aircraft included with FlightGear. "
+                               "If you change your mind in the future, click the 'restore' button.");
+        } else {
+            s = s.arg(mi.data(Qt::DisplayRole).toString());
+        }
+
         QMessageBox mb;
-        mb.setText(QStringLiteral("Remove aircraft hangar '%1'?").arg(mi.data(Qt::DisplayRole).toString()));
+        mb.setText(s);
         mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         mb.setDefaultButton(QMessageBox::No);
         mb.exec();
         
-        QString pkgId = mi.data(CatalogIdRole).toString();
-        m_packageRoot->removeCatalogById(pkgId.toStdString());
+        if (mb.result() == QMessageBox::Yes) {
+            m_packageRoot->removeCatalogById(pkgId.toStdString());
+        }
     }
+
+    updateUi();
 }
 
 void PathsDialog::onChangeDownloadDir()
@@ -173,4 +211,7 @@ void PathsDialog::updateUi()
 
     QString m = tr("Download location: %1").arg(s);
     m_ui->downloadLocation->setText(m);
+
+    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    m_ui->addDefaultCatalogButton->setEnabled(!http->isDefaultCatalogInstalled());
 }
