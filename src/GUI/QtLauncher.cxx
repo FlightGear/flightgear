@@ -245,21 +245,6 @@ private:
 
 } // of anonymous namespace
 
-<<<<<<< 56d7d049bc0b7361d1799298c38e61084f5d5e3f
-class IdentSearchFilter : public FGPositioned::TypeFilter
-{
-public:
-    IdentSearchFilter()
-    {
-        addType(FGPositioned::AIRPORT);
-        addType(FGPositioned::SEAPORT);
-        addType(FGPositioned::HELIPAD);
-        addType(FGPositioned::VOR);
-        addType(FGPositioned::FIX);
-        addType(FGPositioned::NDB);
-    }
-};
-
 class AircraftProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
@@ -527,7 +512,7 @@ void QtLauncher::setInAppMode()
   connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onApply()));
 }
 
-bool QtLauncher::runLauncherDialog()
+void initApp(int& argc, char** argv)
 {
     sglog().setLogLevels( SG_ALL, SG_INFO );
     Q_INIT_RESOURCE(resources);
@@ -560,7 +545,10 @@ bool QtLauncher::runLauncherDialog()
             Options::sharedInstance()->addOption("restore-defaults", "");
         }
     }
+}
 
+bool runLauncherDialog()
+{
     // startup the nav-cache now. This preempts normal startup of
     // the cache, but no harm done. (Providing scenery paths are consistent)
 
@@ -574,6 +562,8 @@ bool QtLauncher::runLauncherDialog()
     if (dlg.result() != QDialog::Accepted) {
         return false;
     }
+
+    return true;
 }
 
 void QtLauncher::restoreSettings()
