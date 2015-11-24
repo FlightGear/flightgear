@@ -111,6 +111,7 @@ void AirportDiagram::setAirport(FGAirportRef apt)
     m_runways.clear();
     m_approachDistanceNm = -1.0;
     m_parking.clear();
+    m_helipads.clear();
 
     if (apt) {
         buildTaxiways();
@@ -137,6 +138,11 @@ void AirportDiagram::setSelectedRunway(FGRunwayRef r)
     
     m_selectedRunway = r;
     update();
+}
+
+void AirportDiagram::setSelectedHelipad(FGHelipadRef pad)
+{
+
 }
 
 void AirportDiagram::setApproachExtensionDistance(double distanceNm)
@@ -181,6 +187,10 @@ void AirportDiagram::doComputeBounds()
         extendBounds(p.pt);
     }
 
+    Q_FOREACH(const HelipadData& p, m_helipads) {
+        extendBounds(p.pt);
+    }
+
     if (m_selectedRunway && (m_approachDistanceNm > 0.0)) {
         double d = SG_NM_TO_METER * m_approachDistanceNm;
         QPointF pt = project(m_selectedRunway->pointOnCenterline(-d));
@@ -192,6 +202,14 @@ void AirportDiagram::addParking(FGParkingRef park)
 {
     ParkingData pd = { project(park->geod()), park };
     m_parking.push_back(pd);
+    recomputeBounds(false);
+    update();
+}
+
+void AirportDiagram::addHelipad(FGHelipadRef pad)
+{
+    HelipadData pd = { project(pad->geod()), pad };
+    m_helipads.push_back(pd);
     recomputeBounds(false);
     update();
 }
@@ -215,7 +233,7 @@ void AirportDiagram::paintContents(QPainter* p)
         p->drawLine(t.p1, t.p2);
     }
 
-
+    drawHelipads(p);
     drawParkings(p);
 
 // runways
@@ -303,6 +321,20 @@ void AirportDiagram::paintContents(QPainter* p)
     }
 }
 
+void AirportDiagram::drawHelipads(QPainter* painter)
+{
+    QTransform t = painter->transform();
+    QPixmap icon(":/heliport-icon");
+
+    QRect r = icon.rect();
+    r.moveCenter(QPoint(0, 0));
+
+    Q_FOREACH(const HelipadData& p, m_helipads) {
+        painter->setTransform(t);
+        painter->translate(p.pt);
+        painter->drawPixmap(r, icon);
+    }
+}
 
 void AirportDiagram::drawParkings(QPainter* painter)
 {

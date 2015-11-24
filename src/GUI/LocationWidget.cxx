@@ -527,24 +527,35 @@ void LocationWidget::setLocationOptions()
         opt->addOption("airport", apt->ident());
 
         if (m_ui->runwayRadio->isChecked()) {
-            int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
-            if (index >= 0) {
-                // explicit runway choice
-                FGRunwayRef runway = apt->getRunwayByIndex(index);
-                opt->addOption("runway", runway->ident());
+            if (apt->type() == FGPositioned::AIRPORT) {
+                int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
+                if (index >= 0) {
+                    // explicit runway choice
+                    FGRunwayRef runway = apt->getRunwayByIndex(index);
+                    opt->addOption("runway", runway->ident());
 
-                // set nav-radio 1 based on selected runway
-                if (runway->ILS()) {
-                    double mhz = runway->ILS()->get_freq() / 100.0;
-                    QString navOpt = QString("%1:%2").arg(runway->headingDeg()).arg(mhz);
-                    opt->addOption("nav1", navOpt.toStdString());
+                    // set nav-radio 1 based on selected runway
+                    if (runway->ILS()) {
+                        double mhz = runway->ILS()->get_freq() / 100.0;
+                        QString navOpt = QString("%1:%2").arg(runway->headingDeg()).arg(mhz);
+                        opt->addOption("nav1", navOpt.toStdString());
+                    }
                 }
-            }
 
-            if (m_ui->onFinalCheckbox->isChecked()) {
-                opt->addOption("glideslope", "3.0");
-                double offsetNm = m_ui->approachDistanceSpin->value();
-                opt->addOption("offset-distance", QString::number(offsetNm).toStdString());
+                if (m_ui->onFinalCheckbox->isChecked()) {
+                    opt->addOption("glideslope", "3.0");
+                    double offsetNm = m_ui->approachDistanceSpin->value();
+                    opt->addOption("offset-distance", QString::number(offsetNm).toStdString());
+                }
+            } else if (apt->type() == FGPositioned::HELIPORT) {
+                int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
+                if (index >= 0)  {
+                    // explicit pad choice
+                    FGHelipadRef pad = apt->getHelipadByIndex(index);
+                    opt->addOption("runway", pad->ident());
+                }
+            } else {
+                qWarning() << Q_FUNC_INFO << "implement me";
             }
 
         } else if (m_ui->parkingRadio->isChecked()) {
@@ -667,12 +678,23 @@ void LocationWidget::onLocationChanged()
 
         m_ui->runwayCombo->clear();
         m_ui->runwayCombo->addItem("Automatic", -1);
-        for (unsigned int r=0; r<apt->numRunways(); ++r) {
-            FGRunwayRef rwy = apt->getRunwayByIndex(r);
-            // add runway with index as data role
-            m_ui->runwayCombo->addItem(QString::fromStdString(rwy->ident()), r);
 
-            m_ui->airportDiagram->addRunway(rwy);
+        if (apt->type() == FGPositioned::HELIPORT) {
+            for (unsigned int r=0; r<apt->numHelipads(); ++r) {
+                FGHelipadRef pad = apt->getHelipadByIndex(r);
+                // add pad with index as data role
+                m_ui->runwayCombo->addItem(QString::fromStdString(pad->ident()), r);
+
+                m_ui->airportDiagram->addHelipad(pad);
+            }
+        } else {
+            for (unsigned int r=0; r<apt->numRunways(); ++r) {
+                FGRunwayRef rwy = apt->getRunwayByIndex(r);
+                // add runway with index as data role
+                m_ui->runwayCombo->addItem(QString::fromStdString(rwy->ident()), r);
+
+                m_ui->airportDiagram->addRunway(rwy);
+            }
         }
 
         m_ui->parkingCombo->clear();
@@ -817,10 +839,17 @@ void LocationWidget::updateDescription()
         if (m_ui->runwayRadio->isChecked()) {
             int comboIndex = m_ui->runwayCombo->currentIndex();
             int runwayIndex = m_ui->runwayCombo->itemData(comboIndex).toInt();
-            // we can't figure out the active runway in the launcher (yet)
-            FGRunwayRef rwy = (runwayIndex >= 0) ?
-                apt->getRunwayByIndex(runwayIndex) : FGRunwayRef();
-            m_ui->airportDiagram->setSelectedRunway(rwy);
+            if (apt->type() == FGPositioned::HELIPORT) {
+                m_ui->airportDiagram->setSelectedRunway(FGRunwayRef());
+                FGHelipadRef pad = (runwayIndex >= 0) ?
+                            apt->getHelipadByIndex(runwayIndex) : FGHelipadRef();
+                m_ui->airportDiagram->setSelectedHelipad(pad);
+            } else {
+                // we can't figure out the active runway in the launcher (yet)
+                FGRunwayRef rwy = (runwayIndex >= 0) ?
+                    apt->getRunwayByIndex(runwayIndex) : FGRunwayRef();
+                m_ui->airportDiagram->setSelectedRunway(rwy);
+            }
         }
 
         if (m_ui->onFinalCheckbox->isChecked()) {

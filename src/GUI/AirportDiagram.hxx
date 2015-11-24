@@ -38,9 +38,12 @@ public:
 
     void addRunway(FGRunwayRef rwy);
     void addParking(FGParkingRef park);
-    
+    void addHelipad(FGHelipadRef pad);
+
     FGRunwayRef selectedRunway() const;
     void setSelectedRunway(FGRunwayRef r);
+
+    void setSelectedHelipad(FGHelipadRef pad);
 
     void setApproachExtensionDistance(double distanceNm);
 Q_SIGNALS:
@@ -61,6 +64,7 @@ private:
 
     void drawILS(QPainter *painter, FGRunwayRef runway) const;
     void drawParkings(QPainter *p);
+    void drawHelipads(QPainter *painter);
 
     FGAirportRef m_airport;
 
@@ -92,6 +96,14 @@ private:
     };
 
     QVector<ParkingData> m_parking;
+
+    struct HelipadData
+    {
+        QPointF pt;
+        FGHelipadRef parking;
+    };
+
+    QVector<HelipadData> m_helipads;
 
     QPainterPath m_parkingIconPath, // arrow points right
         m_parkingIconLeftPath; // arrow points left
