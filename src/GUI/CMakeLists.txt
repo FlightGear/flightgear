@@ -105,6 +105,8 @@ if (HAVE_QT)
                             PathsDialog.hxx
                             LocationWidget.cxx
                             LocationWidget.hxx
+                            QtMessageBox.cxx
+                            QtMessageBox.hxx
                             ${uic_sources}
                             ${qrc_sources})
 

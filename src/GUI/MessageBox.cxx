@@ -31,6 +31,10 @@ cocoaMessageBox(const std::string& msg, const std::string& text);
 
 #endif
 
+#ifdef HAVE_QT
+    #include "QtMessageBox.hxx"
+#endif
+
 using namespace simgear::strutils;
 
 namespace {
@@ -122,6 +126,8 @@ MessageBoxResult modalMessageBox(const std::string& caption,
     return win32MessageBox(caption, msg, moreText);
 #elif defined(SG_MAC)
     return cocoaMessageBox(msg, moreText);
+#elif defined(HAVE_QT)
+    return QtMessageBox(caption, msg, moreText, false);
 #else
     SG_LOG(SG_GENERAL, SG_ALERT, caption << ":" << msg);
     if (!moreText.empty()) {
@@ -139,6 +145,8 @@ MessageBoxResult fatalMessageBox(const std::string& caption,
     return win32MessageBox(caption, msg, moreText);
 #elif defined(SG_MAC)
     return cocoaFatalMessage(msg, moreText);
+#elif defined(HAVE_QT)
+    return QtMessageBox(caption, msg, moreText, true);
 #else
     std::cerr << "FATAL:" << msg << "\n";
     if (!moreText.empty()) {
