@@ -56,14 +56,6 @@ public:
             const std::string& codes,
             PositionedID pushBackNode);
   virtual ~FGParking();
-#if 0
-  void setHeading  (double hdg)  { heading     = hdg;  };
-  void setRadius   (double rad)  { radius      = rad;  };
-
-  void setName     (const std::string& name) { parkingName = name; };
-  void setType     (const std::string& tpe)  { type        = tpe;  };
-  void setCodes    (const std::string& codes){ airlineCodes= codes;};
-#endif
   
   double getHeading  () const { return heading;     };
   double getRadius   () const { return radius;      };
