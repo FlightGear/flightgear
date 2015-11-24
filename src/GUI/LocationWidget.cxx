@@ -329,7 +329,7 @@ private slots:
             m_search.reset();
             emit searchComplete();
         } else {
-            QTimer::singleShot(100, this, &NavSearchModel::onSearchResultsPoll);
+            QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
         }
     }
 
