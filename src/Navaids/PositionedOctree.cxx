@@ -47,6 +47,27 @@ namespace Octree
   
 Node* global_spatialOctree = NULL;
 
+
+void Node::addPolyLine(const PolyLineRef& aLine)
+{
+    lines.push_back(aLine);
+}
+
+void Node::visitForLines(const SGVec3d& aPos, double aCutoff,
+                           PolyLineList& aLines,
+                           FindLinesDeque& aQ) const
+{
+    SG_UNUSED(aPos);
+    SG_UNUSED(aCutoff);
+
+    aLines.insert(aLines.end(), lines.begin(), lines.end());
+}
+
+Node *Node::findNodeForBox(const SGBoxd&) const
+{
+    return const_cast<Node*>(this);
+}
+
 Leaf::Leaf(const SGBoxd& aBox, int64_t aIdent) :
   Node(aBox, aIdent),
   childrenLoaded(false)
@@ -114,18 +135,6 @@ void Leaf::loadChildren()
   childrenLoaded = true;
 }
     
-void Leaf::addPolyLine(PolyLineRef aLine)
-{
-    lines.push_back(aLine);
-}
-
-void Leaf::visitForLines(const SGVec3d& aPos, double aCutoff,
-                           PolyLineList& aLines,
-                           FindLinesDeque& aQ) const
-{
-    aLines.insert(aLines.end(), lines.begin(), lines.end());
-}
-    
 ///////////////////////////////////////////////////////////////////////////////
     
 Branch::Branch(const SGBoxd& aBox, int64_t aIdent) :
@@ -158,6 +167,9 @@ void Branch::visitForLines(const SGVec3d& aPos, double aCutoff,
                            PolyLineList& aLines,
                            FindLinesDeque& aQ) const
 {
+    // add our own lines, easy
+    Node::visitForLines(aPos, aCutoff, aLines, aQ);
+
     for (unsigned int i=0; i<8; ++i) {
         if (!children[i]) {
             continue;
@@ -170,6 +182,35 @@ void Branch::visitForLines(const SGVec3d& aPos, double aCutoff,
         
         aQ.push_back(children[i]);
     } // of child iteration
+}
+
+static bool boxContainsBox(const SGBoxd& a, const SGBoxd& b)
+{
+    const SGVec3d aMin(a.getMin()),
+            aMax(a.getMax()),
+            bMin(b.getMin()),
+            bMax(b.getMax());
+    for (int i=0; i<3; ++i) {
+        if ((bMin[i] < aMin[i]) || (bMax[i] > aMax[i])) return false;
+    }
+
+    return true;
+}
+
+Node *Branch::findNodeForBox(const SGBoxd &box) const
+{
+    // do this so childAtIndex sees consistent state of
+    // children[] and loaded flag.
+    loadChildren();
+
+    for (unsigned int i=0; i<8; ++i) {
+        const SGBoxd childBox(boxForChild(i));
+        if (boxContainsBox(childBox, box)) {
+            return childAtIndex(i)->findNodeForBox(box);
+        }
+    }
+
+    return Node::findNodeForBox(box);
 }
 
 Node* Branch::childForPos(const SGVec3d& aCart) const

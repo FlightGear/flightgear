@@ -27,6 +27,8 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/math/SGMath.hxx>
+#include <simgear/math/SGBox.hxx>
+#include <simgear/math/SGGeometryFwd.hxx>
 
 namespace flightgear
 {
@@ -60,6 +62,8 @@ public:
         NATIONAL_BOUNDARY, /// aka a border
         REGIONAL_BOUNDARY, /// state / province / country / department
         RIVER,
+        LAKE,
+        URBAN,
         // airspace types in the future
         LAST_TYPE
     };
@@ -85,6 +89,8 @@ public:
      */
     static PolyLineList createChunked(Type aTy, const SGGeodVec& aRawPoints);
     
+    static PolyLineRef create(Type aTy, const SGGeodVec& aRawPoints);
+
     /**
      * retrieve all the lines within a range of a search point.
      * lines are returned if any point is near the search location.
@@ -98,14 +104,18 @@ public:
     };
     
     static PolyLineList linesNearPos(const SGGeod& aPos, double aRangeNm, const TypeFilter& aFilter);
-private:
+
+    SGBoxd cartesianBox() const;
+
     void addToSpatialIndex() const;
+
+private:
     
     PolyLine(Type aTy, const SGGeodVec& aPoints);
     
     Type m_type;
     SGGeodVec m_data;
-    // cache the bounding box?
+
 };
     
 

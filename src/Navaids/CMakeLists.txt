@@ -18,6 +18,7 @@ set(SOURCES
     NavDataCache.cxx
     PositionedOctree.cxx
     PolyLine.cxx
+    SHPParser.cxx
 	)
 
 set(HEADERS
@@ -38,6 +39,7 @@ set(HEADERS
     NavDataCache.hxx
     PositionedOctree.hxx
     PolyLine.hxx
+    SHPParser.hxx
     CacheSchema.h
     )
 

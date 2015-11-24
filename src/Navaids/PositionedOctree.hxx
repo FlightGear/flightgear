@@ -152,8 +152,13 @@ namespace Octree
       
     virtual void visitForLines(const SGVec3d& aPos, double aCutoff,
                          PolyLineList& aLines,
-                         FindLinesDeque& aQ) const = 0;
+                         FindLinesDeque& aQ) const;
+
+    virtual Node* findNodeForBox(const SGBoxd& box) const;
+
     virtual ~Node() {}
+
+    void addPolyLine(const PolyLineRef&);
   protected:
     Node(const SGBoxd &aBox, int64_t aIdent) :
     _ident(aIdent),
@@ -163,6 +168,8 @@ namespace Octree
     
     const int64_t _ident;
     const SGBoxd _box;
+
+    PolyLineList lines;
   };
   
   class Leaf : public Node
@@ -180,20 +187,13 @@ namespace Octree
     }
     
     void insertChild(FGPositioned::Type ty, PositionedID id);
-      
-    void addPolyLine(PolyLineRef);
-    
-    virtual void visitForLines(const SGVec3d& aPos, double aCutoff,
-                               PolyLineList& aLines,
-                               FindLinesDeque& aQ) const;
+
   private:
     bool childrenLoaded;
     
     typedef std::multimap<FGPositioned::Type, PositionedID> ChildMap;
     ChildMap children;
-      
-    PolyLineList lines;
-      
+            
     void loadChildren();
   };
   
@@ -217,6 +217,9 @@ namespace Octree
     virtual void visitForLines(const SGVec3d& aPos, double aCutoff,
                                PolyLineList& aLines,
                                FindLinesDeque& aQ) const;
+
+    virtual Node* findNodeForBox(const SGBoxd& box) const;
+
   private:
     Node* childForPos(const SGVec3d& aCart) const;
     Node* childAtIndex(int childIndex) const;

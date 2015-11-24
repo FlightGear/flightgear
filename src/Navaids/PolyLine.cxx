@@ -95,19 +95,27 @@ PolyLineList PolyLine::createChunked(Type aTy, const SGGeodVec& aRawPoints)
     return result;
 }
 
+PolyLineRef PolyLine::create(PolyLine::Type aTy, const SGGeodVec &aRawPoints)
+{
+    return new PolyLine(aTy, aRawPoints);
+}
+
 void PolyLine::addToSpatialIndex() const
 {
-    std::set<Octree::Leaf*> seen;
-    
-    BOOST_FOREACH(const SGGeod& g, m_data) {
-        SGVec3d cart(SGVec3d::fromGeod(g));
-        Octree::Leaf* lf = Octree::global_spatialOctree->findLeafForPos(cart);
-        if (seen.find(lf) != seen.end()) {
-            continue; // don't insert multiple times
-        }
-        
-        lf->addPolyLine(const_cast<PolyLine*>(this));
-    } // of data points iteration
+    Octree::Node* node = Octree::global_spatialOctree->findNodeForBox(cartesianBox());
+    node->addPolyLine(const_cast<PolyLine*>(this));
+}
+
+SGBoxd PolyLine::cartesianBox() const
+{
+    SGBoxd result;
+    SGGeodVec::const_iterator it;
+    for (it = m_data.begin(); it != m_data.end(); ++it) {
+        SGVec3d cart = SGVec3d::fromGeod(*it);
+        result.expandBy(cart);
+    }
+
+    return result;
 }
 
 class SingleTypeFilter : public PolyLine::TypeFilter
