@@ -84,6 +84,19 @@ AirportDiagram::AirportDiagram(QWidget* pr) :
     BaseDiagram(pr),
     m_approachDistanceNm(-1.0)
 {
+    m_parkingIconPath.moveTo(0,0);
+    m_parkingIconPath.lineTo(-16, -16);
+    m_parkingIconPath.lineTo(-64, -16);
+    m_parkingIconPath.lineTo(-64, 16);
+    m_parkingIconPath.lineTo(-16, 16);
+    m_parkingIconPath.lineTo(0, 0);
+
+    m_parkingIconLeftPath.moveTo(0,0);
+    m_parkingIconLeftPath.lineTo(16, -16);
+    m_parkingIconLeftPath.lineTo(64, -16);
+    m_parkingIconLeftPath.lineTo(64, 16);
+    m_parkingIconLeftPath.lineTo(16, 16);
+    m_parkingIconLeftPath.lineTo(0, 0);
 }
 
 AirportDiagram::~AirportDiagram()
@@ -97,6 +110,7 @@ void AirportDiagram::setAirport(FGAirportRef apt)
     m_projectionCenter = apt ? apt->geod() : SGGeod();
     m_runways.clear();
     m_approachDistanceNm = -1.0;
+    m_parking.clear();
 
     if (apt) {
         buildTaxiways();
@@ -201,6 +215,9 @@ void AirportDiagram::paintContents(QPainter* p)
         p->drawLine(t.p1, t.p2);
     }
 
+
+    drawParkings(p);
+
 // runways
     QFont f;
     f.setPixelSize(14);
@@ -284,6 +301,49 @@ void AirportDiagram::paintContents(QPainter* p)
         p->setTransform(t);
         paintAirplaneIcon(p, aircraftPos, headingDeg);
     }
+}
+
+
+void AirportDiagram::drawParkings(QPainter* painter)
+{
+    QTransform t = painter->transform();
+
+
+    QFont f = painter->font();
+    f.setPixelSize(16);
+    painter->setFont(f);
+
+    Q_FOREACH(const ParkingData& p, m_parking) {
+        painter->setTransform(t);
+        painter->translate(p.pt);
+
+        double hdg = p.parking->getHeading();
+        bool useLeftIcon = false;
+        QRect labelRect(-62, -14, 40, 28);
+
+        if (hdg > 180.0) {
+            hdg += 90;
+            useLeftIcon = true;
+            labelRect = QRect(22, -14, 40, 28);
+        } else {
+            hdg -= 90;
+        }
+
+        painter->rotate(hdg);
+
+        painter->setBrush(QColor(255, 196, 196)); // kind of pink
+        painter->drawPath(useLeftIcon ? m_parkingIconLeftPath : m_parkingIconPath);
+
+        painter->fillRect(labelRect, Qt::white);
+
+        // draw text
+        painter->setPen(Qt::black);
+        painter->drawText(labelRect,
+                          Qt::AlignVCenter | Qt::AlignHCenter,
+                          QString::fromStdString(p.parking->name()));
+    }
+
+    painter->setTransform(t);
 }
 
 void AirportDiagram::drawILS(QPainter* painter, FGRunwayRef runway) const

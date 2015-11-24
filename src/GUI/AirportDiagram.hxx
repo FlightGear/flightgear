@@ -59,6 +59,9 @@ private:
     void buildTaxiways();
     void buildPavements();
 
+    void drawILS(QPainter *painter, FGRunwayRef runway) const;
+    void drawParkings(QPainter *p);
+
     FGAirportRef m_airport;
 
     struct RunwayData {
@@ -90,10 +93,10 @@ private:
 
     QVector<ParkingData> m_parking;
 
+    QPainterPath m_parkingIconPath, // arrow points right
+        m_parkingIconLeftPath; // arrow points left
     double m_approachDistanceNm;
     FGRunwayRef m_selectedRunway;
-
-    void drawILS(QPainter *painter, FGRunwayRef runway) const;
 };
 
 #endif // of GUI_AIRPORT_DIAGRAM_HXX
