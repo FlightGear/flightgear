@@ -405,6 +405,12 @@ void AirportDiagram::drawILS(QPainter* painter, FGRunwayRef runway) const
     painter->drawLine(endR, endCentre);
 }
 
+static double pointDistance(const QPointF& p1, const QPointF& p2)
+{
+    QPointF d = p2 - p1;
+    return ::sqrt((d.x() * d.x()) + (d.y() * d.y()));
+}
+
 void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
 {
     if (m_didPan)
@@ -413,7 +419,9 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
     QTransform t(transform());
     double minDist = std::numeric_limits<double>::max();
     FGRunwayRef bestRunway;
-    
+    FGHelipadRef bestHelipad;
+    FGParkingRef bestParking;
+
     Q_FOREACH(const RunwayData& r, m_runways) {
         QPointF p1(t.map(r.p1)), p2(t.map(r.p2));
         double t;
@@ -429,9 +437,34 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
             minDist = d;
         }
     }
+
+    Q_FOREACH(const ParkingData& parking, m_parking) {
+        double d = pointDistance(me->pos(), t.map(parking.pt));
+        if (d < minDist) {
+            bestParking = parking.parking;
+            bestRunway.clear();
+            minDist = d;
+        }
+    }
+
+    Q_FOREACH(const HelipadData& pad, m_helipads) {
+        double d = pointDistance(me->pos(), t.map(pad.pt));
+        if (d < minDist) {
+            bestHelipad = pad.helipad;
+            bestRunway.clear();
+            bestParking.clear();
+            minDist = d;
+        }
+    }
+
     
     if (minDist < 16.0) {
-        emit clickedRunway(bestRunway);
+        if (bestRunway)
+            emit clickedRunway(bestRunway);
+        else if (bestParking)
+            emit clickedParking(bestParking);
+        else if (bestHelipad)
+            emit clickedHelipad(bestHelipad);
     }
 }
 

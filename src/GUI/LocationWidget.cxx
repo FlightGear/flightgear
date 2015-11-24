@@ -376,7 +376,9 @@ LocationWidget::LocationWidget(QWidget *parent) :
             this, SLOT(updateDescription()));
 
     connect(m_ui->airportDiagram, &AirportDiagram::clickedRunway,
-            this, &LocationWidget::onAirportDiagramClicked);
+            this, &LocationWidget::onAirportRunwayClicked);
+    connect(m_ui->airportDiagram, &AirportDiagram::clickedParking,
+            this, &LocationWidget::onAirportParkingClicked);
 
     connect(m_ui->locationSearchEdit, &QLineEdit::returnPressed,
             this, &LocationWidget::onSearch);
@@ -732,13 +734,25 @@ void LocationWidget::onOffsetEnabledToggled(bool on)
     updateDescription();
 }
 
-void LocationWidget::onAirportDiagramClicked(FGRunwayRef rwy)
+void LocationWidget::onAirportRunwayClicked(FGRunwayRef rwy)
 {
     if (rwy) {
         m_ui->runwayRadio->setChecked(true);
         int rwyIndex = m_ui->runwayCombo->findText(QString::fromStdString(rwy->ident()));
         m_ui->runwayCombo->setCurrentIndex(rwyIndex);
         m_ui->airportDiagram->setSelectedRunway(rwy);
+    }
+
+    updateDescription();
+}
+
+void LocationWidget::onAirportParkingClicked(FGParkingRef park)
+{
+    if (park) {
+        m_ui->parkingRadio->setChecked(true);
+        int parkingIndex = m_ui->parkingCombo->findText(QString::fromStdString(park->name()));
+        m_ui->parkingCombo->setCurrentIndex(parkingIndex);
+        m_ui->airportDiagram->setSelectedRunway(FGRunwayRef());
     }
 
     updateDescription();

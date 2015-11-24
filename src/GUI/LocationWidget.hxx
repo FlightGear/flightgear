@@ -70,7 +70,9 @@ private:
     void onSearchResultSelected(const QModelIndex& index);
     void onSearchComplete();
 
-    void onAirportDiagramClicked(FGRunwayRef rwy);
+    void onAirportRunwayClicked(FGRunwayRef rwy);
+    void onAirportParkingClicked(FGParkingRef park);
+
     void onOffsetBearingTrueChanged(bool on);
 
     void addToRecent(FGPositionedRef pos);

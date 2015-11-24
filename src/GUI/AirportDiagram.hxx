@@ -48,7 +48,7 @@ public:
     void setApproachExtensionDistance(double distanceNm);
 Q_SIGNALS:
     void clickedRunway(FGRunwayRef rwy);
-    
+    void clickedHelipad(FGHelipadRef pad);
     void clickedParking(FGParkingRef park);
 protected:
     
@@ -100,7 +100,7 @@ private:
     struct HelipadData
     {
         QPointF pt;
-        FGHelipadRef parking;
+        FGHelipadRef helipad;
     };
 
     QVector<HelipadData> m_helipads;
