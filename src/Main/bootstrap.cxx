@@ -67,6 +67,9 @@
 
 #include "fg_os.hxx"
 
+#ifdef HAVE_QT
+        #include <GUI/QtLauncher.hxx>
+#endif
 #if defined(HAVE_CRASHRPT)
 	#include <CrashRpt.h>
 
@@ -227,6 +230,9 @@ int main ( int argc, char **argv )
         // when fg_terminate runs, which causes crashes.
         osg::Texture::getTextureObjectManager(0);
         osg::GLBufferObjectManager::getGLBufferObjectManager(0);
+#endif
+#ifdef HAVE_QT
+        flightgear::initApp(argc, argv);
 #endif
         std::set_terminate(fg_terminate);
         atexit(fgExitCleanup);
