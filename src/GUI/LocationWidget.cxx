@@ -235,7 +235,7 @@ public:
         endResetModel();
 
         m_search.reset(new NavDataCache::ThreadedGUISearch(term));
-        QTimer::singleShot(100, this, &NavSearchModel::onSearchResultsPoll);
+        QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
         m_searchActive = true;
     }
 
@@ -311,7 +311,7 @@ public:
 Q_SIGNALS:
     void searchComplete();
 
-private:
+private slots:
 
     void onSearchResultsPoll()
     {
