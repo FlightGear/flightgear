@@ -154,14 +154,14 @@ void PathsDialog::onRemoveCatalog()
     FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
 
     if (mi.isValid()) {
-        QString s = QStringLiteral("Remove aircraft hangar '%1'? All installed aircraft from this "
-                                   "hangar will be removed.");
+        QString s = QString("Remove aircraft hangar '%1'? All installed aircraft from this "
+                            "hangar will be removed.");
         QString pkgId = mi.data(CatalogIdRole).toString();
 
         if (pkgId.toStdString() == http->getDefaultCatalogId()) {
-            s = QStringLiteral("Remove default aircraft hangar? "
-                               "This hangar contains all the default aircraft included with FlightGear. "
-                               "If you change your mind in the future, click the 'restore' button.");
+            s = QString("Remove default aircraft hangar? "
+                        "This hangar contains all the default aircraft included with FlightGear. "
+                        "If you change your mind in the future, click the 'restore' button.");
         } else {
             s = s.arg(mi.data(Qt::DisplayRole).toString());
         }
