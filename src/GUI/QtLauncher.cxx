@@ -686,8 +686,6 @@ void QtLauncher::onRun()
         m_recentAircraft.prepend(m_selectedAircraft);
         if (m_recentAircraft.size() > MAX_RECENT_AIRCRAFT)
           m_recentAircraft.pop_back();
-
-        qDebug() << "recent aircraft is now" << m_recentAircraft;
     }
 
     m_ui->location->setLocationOptions();
