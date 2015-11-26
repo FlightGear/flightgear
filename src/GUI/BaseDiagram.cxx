@@ -30,6 +30,7 @@
 #include <Navaids/navrecord.hxx>
 #include <Navaids/positioned.hxx>
 #include <Airports/airport.hxx>
+#include <Navaids/PolyLine.hxx>
 
 #include "QtLauncher_fwd.hxx"
 
@@ -112,6 +113,8 @@ void BaseDiagram::paintEvent(QPaintEvent* pe)
     QTransform t(transform());
     p.setTransform(t);
 
+    paintCoastlines(&p);
+
     paintNavaids(&p);
 
     paintContents(&p);
@@ -130,6 +133,81 @@ void BaseDiagram::paintAirplaneIcon(QPainter* painter, const SGGeod& geod, int h
     QRect airplaneIconRect = pix.rect();
     airplaneIconRect.moveCenter(QPoint(0,0));
     painter->drawPixmap(airplaneIconRect, pix);
+}
+
+void BaseDiagram::paintCoastlines(QPainter* painter)
+{
+    QTransform xf = painter->transform();
+    QTransform invT = xf.inverted();
+
+    SGGeod topLeft = unproject(invT.map(rect().topLeft()), m_projectionCenter);
+    SGGeod viewCenter = unproject(invT.map(rect().center()), m_projectionCenter);
+    SGGeod bottomRight = unproject(invT.map(rect().bottomRight()), m_projectionCenter);
+
+    double drawRangeNm = std::max(SGGeodesy::distanceNm(viewCenter, topLeft),
+                                  SGGeodesy::distanceNm(viewCenter, bottomRight));
+
+    flightgear::PolyLineList lines(flightgear::PolyLine::linesNearPos(viewCenter, drawRangeNm,
+                                                                      flightgear::PolyLine::COASTLINE));
+
+    QPen waterPen(QColor(64, 64, 255), 1);
+    waterPen.setCosmetic(true);
+    painter->setPen(waterPen);
+    flightgear::PolyLineList::const_iterator it;
+    for (it=lines.begin(); it != lines.end(); ++it) {
+        paintGeodVec(painter, (*it)->points());
+    }
+
+    lines = flightgear::PolyLine::linesNearPos(viewCenter, drawRangeNm,
+                                              flightgear::PolyLine::URBAN);
+    for (it=lines.begin(); it != lines.end(); ++it) {
+        fillClosedGeodVec(painter, QColor(192, 192, 96), (*it)->points());
+    }
+
+    lines = flightgear::PolyLine::linesNearPos(viewCenter, drawRangeNm,
+                                              flightgear::PolyLine::RIVER);
+
+    painter->setPen(waterPen);
+    for (it=lines.begin(); it != lines.end(); ++it) {
+        paintGeodVec(painter, (*it)->points());
+    }
+
+
+    lines = flightgear::PolyLine::linesNearPos(viewCenter, drawRangeNm,
+                                              flightgear::PolyLine::LAKE);
+
+    for (it=lines.begin(); it != lines.end(); ++it) {
+        fillClosedGeodVec(painter, QColor(128, 128, 255),
+                          (*it)->points());
+    }
+
+
+}
+
+void BaseDiagram::paintGeodVec(QPainter* painter, const flightgear::SGGeodVec& vec)
+{
+    QVector<QPointF> projected;
+    projected.reserve(vec.size());
+    flightgear::SGGeodVec::const_iterator it;
+    for (it=vec.begin(); it != vec.end(); ++it) {
+        projected.append(project(*it));
+    }
+
+    painter->drawPolyline(projected.data(), projected.size());
+}
+
+void BaseDiagram::fillClosedGeodVec(QPainter* painter, const QColor& color, const flightgear::SGGeodVec& vec)
+{
+    QVector<QPointF> projected;
+    projected.reserve(vec.size());
+    flightgear::SGGeodVec::const_iterator it;
+    for (it=vec.begin(); it != vec.end(); ++it) {
+        projected.append(project(*it));
+    }
+
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(color);
+    painter->drawPolygon(projected.data(), projected.size());
 }
 
 class MapFilter : public FGPositioned::TypeFilter

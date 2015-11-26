@@ -64,6 +64,7 @@
 #include <Main/globals.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
+#include <Navaids/SHPParser.hxx>
 
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
@@ -344,12 +345,41 @@ void initApp(int& argc, char** argv)
     }
 }
 
+void loadNaturalEarthFile(const std::string& aFileName,
+                          flightgear::PolyLine::Type aType,
+                          bool areClosed)
+{
+    SGPath path(globals->get_fg_root());
+    path.append( "Geodata" );
+    path.append(aFileName);
+    flightgear::PolyLineList lines;
+    flightgear::SHPParser::parsePolyLines(path, aType, lines, areClosed);
+    flightgear::PolyLineList::iterator it;
+    for (it=lines.begin(); it != lines.end(); ++it) {
+        (*it)->addToSpatialIndex();
+    }
+}
+
+void loadNaturalEarthData()
+{
+    SGTimeStamp st;
+    st.stamp();
+
+    loadNaturalEarthFile("ne_10m_coastline.shp", flightgear::PolyLine::COASTLINE, false);
+    loadNaturalEarthFile("ne_10m_rivers_lake_centerlines.shp", flightgear::PolyLine::RIVER, false);
+    loadNaturalEarthFile("ne_10m_lakes.shp", flightgear::PolyLine::LAKE, true);
+
+    qDebug() << "load basic data took" << st.elapsedMSec();
+
+
+    st.stamp();
+    loadNaturalEarthFile("ne_10m_urban_areas.shp", flightgear::PolyLine::URBAN, true);
+
+    qDebug() << "loading urban areas took:" << st.elapsedMSec();
+}
+
 bool runLauncherDialog()
 {
-    sglog().setLogLevels( SG_ALL, SG_INFO );
-
-    initQtResources(); // can't be called inside a namespaceb
-
     // startup the nav-cache now. This pre-empts normal startup of
     // the cache, but no harm done. (Providing scenery paths are consistent)
 
@@ -363,6 +393,8 @@ bool runLauncherDialog()
     // we guard against re-init in the global phase; bind and postinit
     // will happen as normal
     http->init();
+
+    loadNaturalEarthData();
 
     // setup scenery paths now, especially TerraSync path for airport
     // parking locations (after they're downloaded)

@@ -29,6 +29,7 @@
 
 #include <Navaids/positioned.hxx>
 #include <Airports/airport.hxx>
+#include <Navaids/PolyLine.hxx>
 
 #include "QtLauncher_fwd.hxx"
 
@@ -128,6 +129,9 @@ private:
     void paintNavaid(QPainter *painter,
                      const QTransform& t,
                      const FGPositionedRef &pos);
+    void paintCoastlines(QPainter *painter);
+    void paintGeodVec(QPainter *painter, const flightgear::SGGeodVec &vec);
+    void fillClosedGeodVec(QPainter *painter, const QColor &color, const flightgear::SGGeodVec &vec);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(BaseDiagram::IconOptions)
