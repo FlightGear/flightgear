@@ -47,10 +47,10 @@ macro(find_sg_library libName varName libs)
       PATHS
       ${ADDITIONAL_LIBRARY_PATHS}
     )
-    
+
    # message(STATUS "before: Simgear ${${libVarName}_RELEASE} ")
   #  message(STATUS "before: Simgear ${${libVarName}_DEBUG} ")
-    
+
     select_library_configurations( ${varName} )
 
   #  message(STATUS "after:Simgear ${${libVarName}_RELEASE} ")
@@ -60,7 +60,7 @@ macro(find_sg_library libName varName libs)
   #  message(STATUS "Simgear ${libVarName}_RELEASE ${componentLibRelease}")
     set(componentLibDebug ${${libVarName}_DEBUG})
    # message(STATUS "Simgear ${libVarName}_DEBUG ${componentLibDebug}")
-    
+
     if (NOT ${libVarName}_DEBUG)
         if (NOT ${libVarName}_RELEASE)
             #message(STATUS "found ${componentLib}")
@@ -124,11 +124,11 @@ if(SIMGEAR_SHARED)
 
     find_sg_library(SimGearCore SIMGEAR_CORE SIMGEAR_CORE_LIBRARIES)
     find_sg_library(SimGearScene SIMGEAR_SCENE SIMGEAR_LIBRARIES)
- 
+
     list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
     set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES "")
     set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES "")
-    
+
    # message(STATUS "core lib ${SIMGEAR_CORE_LIBRARIES}")
   #  message(STATUS "all libs ${SIMGEAR_LIBRARIES}")
 else(SIMGEAR_SHARED)
@@ -136,19 +136,19 @@ else(SIMGEAR_SHARED)
     set(SIMGEAR_LIBRARIES "") # clear value
     set(SIMGEAR_CORE_LIBRARIES "") # clear value
     message(STATUS "looking for static SimGear libraries")
-    
+
     find_sg_library(SimGearCore SIMGEAR_CORE SIMGEAR_CORE_LIBRARIES)
     find_sg_library(SimGearScene SIMGEAR_SCENE SIMGEAR_LIBRARIES)
 
     # again link order matters - scene libraries depend on core ones
     list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
-    
+
     set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES
         ${CMAKE_THREAD_LIBS_INIT}
         ${ZLIB_LIBRARY}
         ${WINMM_LIBRARY})
 
-    set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES 
+    set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES
         ${OPENAL_LIBRARY})
 
     if(APPLE)
@@ -179,6 +179,7 @@ endif()
 
 # now we've found SimGear, try test-compiling using its includes
 include(CheckCXXSourceRuns)
+include(CheckCXXSourceCompiles)
 
 set(SIMGEAR_INCLUDE_DIRS
   ${SIMGEAR_INCLUDE_DIR}
@@ -228,7 +229,22 @@ if(NOT SIMGEAR_COMPILE_TEST)
 endif()
 unset(CMAKE_REQUIRED_DEFINITIONS)
 
+unset(SIMGEAR_CURL_TEST CACHE)
+check_cxx_source_compiles("
+  #include \"simgear/simgear_config.h\"
+  #if !defined(ENABLE_CURL)
+    #error Curl not enabled
+  #endif
+  int main() {}
+"
+SIMGEAR_CURL_TEST)
+
+if (SIMGEAR_CURL_TEST)
+    message(STATUS "SimGear uses Curl")
+    find_package(CURL REQUIRED)
+    list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES ${CURL_LIBRARIES})
+endif()
+
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG
      SIMGEAR_LIBRARIES SIMGEAR_CORE_LIBRARIES SIMGEAR_INCLUDE_DIRS SIMGEAR_COMPILE_TEST)
-
