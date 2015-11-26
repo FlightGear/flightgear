@@ -309,11 +309,19 @@ namespace flightgear
 
 void initApp(int& argc, char** argv)
 {
+    sglog().setLogLevels( SG_ALL, SG_INFO );
+    initQtResources(); // can't be called from a namespace
+
     static bool qtInitDone = false;
+    static int s_argc;
+
     if (!qtInitDone) {
         qtInitDone = true;
+        s_argc = argc; // QApplication only stores a reference to argc,
+        // and may crash if it is freed
+        // http://doc.qt.io/qt-5/qguiapplication.html#QGuiApplication
 
-        QApplication* app = new QApplication(argc, argv);
+        QApplication* app = new QApplication(s_argc, argv);
         app->setOrganizationName("FlightGear");
         app->setApplicationName("FlightGear");
         app->setOrganizationDomain("flightgear.org");
@@ -510,60 +518,6 @@ void QtLauncher::setInAppMode()
 
   disconnect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
   connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onApply()));
-}
-
-void initApp(int& argc, char** argv)
-{
-    sglog().setLogLevels( SG_ALL, SG_INFO );
-    Q_INIT_RESOURCE(resources);
-
-    static bool qtInitDone = false;
-    static int s_argc;
-    if (!qtInitDone) {
-        qtInitDone = true;
-        s_argc = argc; // QApplication only stores a reference to argc,
-        // and may crash if it is freed
-        // http://doc.qt.io/qt-5/qguiapplication.html#QGuiApplication
-
-        QApplication* app = new QApplication(s_argc, argv);
-        app->setOrganizationName("FlightGear");
-        app->setApplicationName("FlightGear");
-        app->setOrganizationDomain("flightgear.org");
-
-        // avoid double Apple menu and other weirdness if both Qt and OSG
-        // try to initialise various Cocoa structures.
-        flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
-
-        Qt::KeyboardModifiers mods = app->queryKeyboardModifiers();
-        if (mods & Qt::AltModifier) {
-            qWarning() << "Alt pressed during launch";
-
-            // wipe out our settings
-            QSettings settings;
-            settings.clear();
-
-            Options::sharedInstance()->addOption("restore-defaults", "");
-        }
-    }
-}
-
-bool runLauncherDialog()
-{
-    // startup the nav-cache now. This preempts normal startup of
-    // the cache, but no harm done. (Providing scenery paths are consistent)
-
-    initNavCache();
-
-  // setup scenery paths now, especially TerraSync path for airport
-  // parking locations (after they're downloaded)
-
-    QtLauncher dlg;
-    dlg.exec();
-    if (dlg.result() != QDialog::Accepted) {
-        return false;
-    }
-
-    return true;
 }
 
 void QtLauncher::restoreSettings()
