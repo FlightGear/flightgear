@@ -113,7 +113,7 @@ void BaseDiagram::paintEvent(QPaintEvent* pe)
     QTransform t(transform());
     p.setTransform(t);
 
-    paintCoastlines(&p);
+    paintPolygonData(&p);
 
     paintNavaids(&p);
 
@@ -135,7 +135,7 @@ void BaseDiagram::paintAirplaneIcon(QPainter* painter, const SGGeod& geod, int h
     painter->drawPixmap(airplaneIconRect, pix);
 }
 
-void BaseDiagram::paintCoastlines(QPainter* painter)
+void BaseDiagram::paintPolygonData(QPainter* painter)
 {
     QTransform xf = painter->transform();
     QTransform invT = xf.inverted();

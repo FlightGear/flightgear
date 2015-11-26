@@ -129,7 +129,7 @@ private:
     void paintNavaid(QPainter *painter,
                      const QTransform& t,
                      const FGPositionedRef &pos);
-    void paintCoastlines(QPainter *painter);
+    void paintPolygonData(QPainter *painter);
     void paintGeodVec(QPainter *painter, const flightgear::SGGeodVec &vec);
     void fillClosedGeodVec(QPainter *painter, const QColor &color, const flightgear::SGGeodVec &vec);
 };

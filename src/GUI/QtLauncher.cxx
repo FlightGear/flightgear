@@ -352,6 +352,9 @@ void loadNaturalEarthFile(const std::string& aFileName,
     SGPath path(globals->get_fg_root());
     path.append( "Geodata" );
     path.append(aFileName);
+    if (!path.exists())
+        return; // silently fail for now
+
     flightgear::PolyLineList lines;
     flightgear::SHPParser::parsePolyLines(path, aType, lines, areClosed);
     flightgear::PolyLineList::iterator it;
