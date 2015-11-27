@@ -38,6 +38,8 @@
 const float rec  = 6378137;          // earth radius, equator (?)
 const float rpol = 6356752.314f;      // earth radius, polar   (?)
 
+const double MINIMUM_SCALE = 0.002;
+
 //Returns Earth radius at a given latitude (Ellipsoide equation with two equal axis)
 static float earth_radius_lat( float lat )
 {
@@ -547,12 +549,16 @@ void BaseDiagram::wheelEvent(QWheelEvent *we)
     m_wheelAngleDeltaAccumulator += delta;
     if (m_wheelAngleDeltaAccumulator > 120) {
         m_wheelAngleDeltaAccumulator = 0;
-        m_scale *= 2.0;
+
+        m_scale *= 1.5;
+
     } else if (m_wheelAngleDeltaAccumulator < -120) {
         m_wheelAngleDeltaAccumulator = 0;
-        m_scale *= 0.5;
+
+        m_scale *= 0.75;
     }
 
+    SG_CLAMP_RANGE(m_scale, MINIMUM_SCALE, 1.0);
     update();
 }
 
