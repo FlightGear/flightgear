@@ -609,7 +609,6 @@ void QtLauncher::saveSettings()
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
 
     m_ui->location->saveSettings();
-    qDebug() << "saving settings";
 }
 
 void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const
@@ -637,7 +636,6 @@ void QtLauncher::onRun()
     bool startPaused = m_ui->startPausedCheck->isChecked() ||
             m_ui->location->shouldStartPaused();
     if (startPaused) {
-        qDebug() << "will start paused";
         opt->addOption("enable-freeze", "");
     }
 
@@ -707,7 +705,6 @@ void QtLauncher::onRun()
             }
         }
 
-        qDebug() << "Download dir is:" << downloadDir;
         opt->addOption("download-dir", downloadDir.toStdString());
     }
 
