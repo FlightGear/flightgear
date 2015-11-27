@@ -1384,9 +1384,6 @@ do_profiler_stop(const SGPropertyNode *arg)
 static bool
 do_set_scenery_paths(const SGPropertyNode* arg)
 {
-  SGPropertyNode* sim = fgGetNode("/sim", true);
-  sim->removeChildren("fg-scenery");
-  
   globals->clear_fg_scenery();
   
   std::string terrasyncPath(fgGetString("/sim/terrasync/scenery-dir"));

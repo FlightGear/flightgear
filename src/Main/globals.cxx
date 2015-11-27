@@ -418,6 +418,8 @@ void FGGlobals::clear_fg_scenery()
 {
   fg_scenery.clear();
   secure_fg_scenery.clear();
+  fgGetNode("/sim", true)->removeChildren("fg-scenery");
+
 }
 
 void FGGlobals::set_catalog_aircraft_path(const SGPath& path)
