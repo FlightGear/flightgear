@@ -357,10 +357,7 @@ void loadNaturalEarthFile(const std::string& aFileName,
 
     flightgear::PolyLineList lines;
     flightgear::SHPParser::parsePolyLines(path, aType, lines, areClosed);
-    flightgear::PolyLineList::iterator it;
-    for (it=lines.begin(); it != lines.end(); ++it) {
-        (*it)->addToSpatialIndex();
-    }
+    flightgear::PolyLine::bulkAddToSpatialIndex(lines);
 }
 
 void loadNaturalEarthData()

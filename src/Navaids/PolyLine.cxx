@@ -29,6 +29,7 @@
 #include <boost/foreach.hpp>
 
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Navaids/PositionedOctree.hxx>
 
@@ -98,6 +99,16 @@ PolyLineList PolyLine::createChunked(Type aTy, const SGGeodVec& aRawPoints)
 PolyLineRef PolyLine::create(PolyLine::Type aTy, const SGGeodVec &aRawPoints)
 {
     return new PolyLine(aTy, aRawPoints);
+}
+
+void PolyLine::bulkAddToSpatialIndex(const PolyLineList &lines)
+{
+    NavDataCache::Transaction txn( NavDataCache::instance());
+    flightgear::PolyLineList::const_iterator it;
+    for (it=lines.begin(); it != lines.end(); ++it) {
+        (*it)->addToSpatialIndex();
+    }
+    txn.commit();
 }
 
 void PolyLine::addToSpatialIndex() const
