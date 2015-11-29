@@ -1165,8 +1165,8 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
     naRef locals;
     naRef modname = naNewString(ctx);
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
-	if (!((_globals).ref).ptr.obj)
-		return false;
+    if (naIsNil(_globals))
+        return false;
 	if (!naHash_get(_globals, modname, &locals))
         locals = naNewHash(ctx);
 
