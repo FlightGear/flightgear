@@ -83,7 +83,10 @@ private:
     // localization
     FGLocale* locale;
 
-    FGRenderer *renderer;
+#if !defined(FG_TEST_LIB)
+    std::auto_ptr<FGRenderer> renderer;
+#endif
+
     SGSubsystemMgr *subsystem_mgr;
     SGEventMgr *event_mgr;
 
@@ -94,10 +97,10 @@ private:
     std::string fg_root;
 
     /**
-     * locations to search for (non-scenery) data. 
+     * locations to search for (non-scenery) data.
      */
     PathList additional_data_paths;
-    
+
     // Users home directory for data
     std::string fg_home;
 
@@ -134,26 +137,26 @@ private:
     SGPropertyNode_ptr positionLon, positionLat, positionAlt;
     SGPropertyNode_ptr viewLon, viewLat, viewAlt;
     SGPropertyNode_ptr orientHeading, orientPitch, orientRoll;
-    
+
     /**
      * helper to initialise standard properties on a new property tree
      */
     void initProperties();
-        
+
     void cleanupListeners();
-    
+
     typedef std::vector<SGPropertyChangeListener*> SGPropertyChangeListenerVec;
     SGPropertyChangeListenerVec _listeners_to_cleanup;
-  
+
     SGSharedPtr<simgear::pkg::Root> _packageRoot;
 public:
 
     FGGlobals();
     virtual ~FGGlobals();
 
-    virtual FGRenderer *get_renderer () const;
+    FGRenderer *get_renderer () const;
     void set_renderer(FGRenderer* render);
-    
+
     SGSubsystemMgr *get_subsystem_mgr () const;
 
     SGSubsystem *get_subsystem (const char * name) const;
@@ -195,22 +198,22 @@ public:
      * result.
      */
     PathList get_data_paths() const;
-    
+
     /**
      * Get data locations which contain the file path suffix. Eg pass ing
      * 'AI/Traffic' to get all data paths which define <path>/AI/Traffic subdir
      */
     PathList get_data_paths(const std::string& suffix) const;
-    
+
     void append_data_path(const SGPath& path);
-    
+
     /**
      * Given a path suffix (eg 'Textures' or 'AI/Traffic'), find the
      * first data directory which defines it.
      */
     SGPath find_data_dir(const std::string& pathSuffix) const;
-    
-    inline const std::string &get_fg_home () const { return fg_home; }
+
+    const std::string &get_fg_home () const;
     void set_fg_home (const std::string &home);
 
     inline const string_list &get_fg_scenery () const { return fg_scenery; }
@@ -222,7 +225,7 @@ public:
      * can-read-any-file security holes, do NOT set this on directories
      * obtained from the property tree (e.g. /sim/terrasync/scenery-dir)
      * or other Nasal-writable places
-     */ 
+     */
     void append_fg_scenery (const std::string &scenery, bool secure = false);
 
     void clear_fg_scenery();
@@ -238,7 +241,7 @@ public:
 
     void append_aircraft_path(const std::string& path);
     void append_aircraft_paths(const std::string& path);
-    
+
     /**
      * Given a path to an aircraft-related resource file, resolve it
      * against the appropriate root. This means looking at the location
@@ -248,13 +251,13 @@ public:
      * if the path could not be resolved, an empty path is returned.
      */
     SGPath resolve_aircraft_path(const std::string& branch) const;
-    
+
     /**
      * Same as above, but test for non 'Aircraft/' branch paths, and
      * always resolve them against fg_root.
      */
     SGPath resolve_maybe_aircraft_path(const std::string& branch) const;
-    
+
     /**
      * Search in the following directories:
      *
@@ -286,7 +289,7 @@ public:
      * subsystems are shutdown and unbound before call this.
      */
     void resetPropertyRoot();
-    
+
     inline FGLocale* get_locale () { return locale; }
 
     inline SGCommandMgr *get_commands () { return commands; }
@@ -296,11 +299,11 @@ public:
     SGVec3d get_aircraft_position_cart() const;
 
     void get_aircraft_orientation(double& heading, double& pitch, double& roll);
-  
+
     SGGeod get_view_position() const;
-  
+
     SGVec3d get_view_position_cart() const;
-  
+
     inline string_list *get_channel_options_list () {
 	return channel_options_list;
     }
@@ -311,11 +314,12 @@ public:
     inline string_list *get_initial_waypoints () {
         return initial_waypoints;
     }
-  
+
     inline void set_initial_waypoints (string_list *list) {
         initial_waypoints = list;
     }
 
+#if !defined(FG_TEST_LIB)
     FGViewMgr *get_viewmgr() const;
     FGViewer *get_current_view() const;
 
@@ -324,7 +328,8 @@ public:
     FGScenery * get_scenery () const;
 
     FGTileMgr * get_tile_mgr () const;
-  
+#endif
+
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
 
@@ -337,9 +342,9 @@ public:
      * Save user settings in autosave.xml
      */
     void saveUserSettings();
-    
+
     void addListenerToCleanup(SGPropertyChangeListener* l);
-  
+
     simgear::pkg::Root* packageRoot();
     void setPackageRoot(const SGSharedPtr<simgear::pkg::Root>& p);
 };

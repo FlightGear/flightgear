@@ -148,7 +148,9 @@ FGGlobals *globals = NULL;
 
 // Constructor
 FGGlobals::FGGlobals() :
+#if !defined(FG_TEST_LIB)
     renderer( new FGRenderer ),
+#endif
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
     sim_time_sec( 0.0 ),
@@ -194,9 +196,9 @@ FGGlobals::~FGGlobals()
     // save user settings (unless already saved)
     saveUserSettings();
 
+#if !defined(FG_TEST_LIB)
     // stop OSG threading first, to avoid thread races while we tear down
     // scene-graph pieces
-
     osg::ref_ptr<osgViewer::Viewer> vw(renderer->getViewer());
     if (vw) {
         // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
@@ -205,10 +207,12 @@ FGGlobals::~FGGlobals()
         // GraphicsContext)
         vw->stopThreading();
     }
+  #endif
 
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
 
+#if !defined(FG_TEST_LIB)
     subsystem_mgr->remove(FGTileMgr::subsystemName());
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
@@ -222,11 +226,14 @@ FGGlobals::~FGGlobals()
 
     // renderer touches subsystems during its destruction
     set_renderer(NULL);
+#endif
 
     delete subsystem_mgr;
     subsystem_mgr = NULL; // important so ::get_subsystem returns NULL
-    vw = 0; // don't delete the viewer until now
 
+#if !defined(FG_TEST_LIB)
+    vw = 0; // don't delete the viewer until now
+#endif
     delete time_params;
     set_matlib(NULL);
 
@@ -234,8 +241,10 @@ FGGlobals::~FGGlobals()
     delete initial_waypoints;
     delete channellist;
 
+#if !defined(FG_TEST_LIB)
     simgear::PropertyObjectBase::setDefaultRoot(NULL);
     simgear::SGModelLib::resetPropertyRoot();
+#endif
 
     delete locale;
     locale = NULL;
@@ -276,9 +285,15 @@ void FGGlobals::set_fg_root (const std::string &root) {
 }
 
 // set the fg_home path
-void FGGlobals::set_fg_home (const std::string &home) {
+void FGGlobals::set_fg_home (const std::string &home)
+{
     SGPath tmp(home);
     fg_home = tmp.realpath();
+}
+
+const std::string& FGGlobals::get_fg_home () const
+{
+    return fg_home;
 }
 
 PathList FGGlobals::get_data_paths() const
@@ -464,17 +479,22 @@ SGPath FGGlobals::resolve_resource_path(const std::string& branch) const
 FGRenderer *
 FGGlobals::get_renderer () const
 {
-   return renderer;
+#if defined(FG_TEST_LIB)
+    return 0;
+#else
+   return renderer.get();
+#endif
 }
 
 void FGGlobals::set_renderer(FGRenderer *render)
 {
-    if (render == renderer) {
+#if !defined(FG_TEST_LIB)
+    if (render == renderer.get()) {
         return;
     }
 
-    delete renderer;
-    renderer = render;
+    renderer.reset(render);
+#endif
 }
 
 SGSubsystemMgr *
@@ -686,6 +706,7 @@ void FGGlobals::set_warp_delta( long int d )
   fgSetInt("/sim/time/warp-delta", d);
 }
 
+#if !defined(FG_TEST_LIB)
 FGScenery* FGGlobals::get_scenery () const
 {
     return get_subsystem<FGScenery>();
@@ -707,15 +728,19 @@ FGViewer* FGGlobals::get_current_view () const
     return vm ? vm->get_current_view() : 0;
 }
 
+#endif
+
 void FGGlobals::set_matlib( SGMaterialLib *m )
 {
     matlib = m;
 }
 
+#if !defined(FG_TEST_LIB)
 FGControls *FGGlobals::get_controls() const
 {
     return get_subsystem<FGControls>();
 }
+#endif
 
 void FGGlobals::addListenerToCleanup(SGPropertyChangeListener* l)
 {

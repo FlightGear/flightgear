@@ -36,6 +36,7 @@ void FGTaxiNode::setElevation(double val)
 double FGTaxiNode::getElevationFt()
 {
   const SGGeod& pos = geod();
+#if !defined(FG_TEST_LIB)
   if( pos.getElevationFt() == 0.0)
   {
     SGGeod center2 = pos;
@@ -50,7 +51,7 @@ double FGTaxiNode::getElevationFt()
       modifyPosition(newPos);
     }
   }
-  
+#endif
   return pos.getElevationFt();
 }
 

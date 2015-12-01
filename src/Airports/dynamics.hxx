@@ -23,11 +23,17 @@
 #define _AIRPORT_DYNAMICS_HXX_
 
 #include <set>
+#include <vector>
 
 #include <simgear/structure/SGReferenced.hxx>
 
+typedef std::vector<int> intVec;
+typedef std::vector<int>::iterator intVecIterator;
+
+#if !defined(FG_TEST_LIB)
 #include <ATC/trafficcontrol.hxx>
 #include <ATC/GroundController.hxx>
+#endif
 
 #include "airports_fwd.hxx"
 #include "parking.hxx"
@@ -70,10 +76,12 @@ private:
     std::auto_ptr<FGGroundNetwork> groundNetwork;
 
     FGRunwayPreference   rwyPrefs;
+#if !defined(FG_TEST_LIB)
     FGStartupController  startupController;
     FGTowerController    towerController;
     FGApproachController approachController;
     FGGroundController   groundController;
+#endif
 
     time_t lastUpdate;
     std::string prevTrafficType;
@@ -158,6 +166,7 @@ public:
      */
     ParkingAssignment getParkingByName(const std::string& name) const;
 
+#if !defined(FG_TEST_LIB)
     // ATC related functions.
     FGStartupController    *getStartupController()    {
         return &startupController;
@@ -171,6 +180,7 @@ public:
     FGApproachController   *getApproachController()   {
         return &approachController;
     };
+#endif
 
     FGGroundNetwork* getGroundNetwork() const
     {

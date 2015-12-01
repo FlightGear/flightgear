@@ -15,7 +15,7 @@ set(SOURCES
 	sidstar.cxx
 	airport.cxx
 	xmlloader.cxx
-        airportdynamicsmanager.cxx
+  airportdynamicsmanager.cxx
 	)
 
 set(HEADERS
@@ -34,7 +34,10 @@ set(HEADERS
 	sidstar.hxx
 	airport.hxx
 	xmlloader.hxx
-        airportdynamicsmanager.hxx
+   airportdynamicsmanager.hxx
 	)
-    		
+
 flightgear_component(Airports "${SOURCES}" "${HEADERS}")
+
+add_executable(test_groundnetwork test_groundnetwork.cxx)
+target_link_libraries(test_groundnetwork fgcorelib ${TEST_LIBS})

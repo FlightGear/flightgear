@@ -44,3 +44,6 @@ set(HEADERS
     )
 
 flightgear_component(Navaids "${SOURCES}" "${HEADERS}")
+
+add_executable(test_flightPlan test_flightPlan.cxx)
+target_link_libraries(test_flightPlan fgcorelib ${TEST_LIBS})

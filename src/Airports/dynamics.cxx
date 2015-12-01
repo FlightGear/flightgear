@@ -151,12 +151,14 @@ FGParking* ParkingAssignment::parking() const
 ////////////////////////////////////////////////////////////////////////////////
 
 FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
-    _ap(ap), rwyPrefs(ap),
-    startupController    (this),
+    _ap(ap), rwyPrefs(ap)
+#if !defined(FG_TEST_LIB)
+    ,startupController    (this),
     towerController      (this),
     approachController   (this),
     atisSequenceIndex(-1),
     atisSequenceTimeStamp(0.0)
+  #endif
 
 {
     lastUpdate = 0;
@@ -175,8 +177,10 @@ void FGAirportDynamics::init()
 {
 
     groundNetwork->init(this);
+#if !defined(FG_TEST_LIB)
     groundController.setTowerController(&towerController);
     groundController.init(this);
+#endif
 }
 
 FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const string & flType,

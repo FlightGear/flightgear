@@ -1095,10 +1095,12 @@ bool NavDataCache::isRebuildRequired()
         return false;
     }
 
+#if !defined(FG_TEST_LIB)
     if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
         SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: restore-defaults requested, will rebuild cache");
         return true;
     }
+#endif
 
   if (d->isCachedFileModified(d->aptDatPath, true) ||
       d->isCachedFileModified(d->metarDatPath, true) ||
