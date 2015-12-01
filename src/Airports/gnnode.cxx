@@ -14,10 +14,12 @@ using namespace flightgear;
  * FGTaxiNode
  *************************************************************************/
 
-FGTaxiNode::FGTaxiNode(PositionedID aGuid, const SGGeod& pos, bool aOnRunway, int aHoldType) :
-  FGPositioned(aGuid, FGPositioned::PARKING, "", pos),
+FGTaxiNode::FGTaxiNode(int index, const SGGeod& pos, bool aOnRunway, int aHoldType) :
+  FGPositioned(TRANSIENT_ID, FGPositioned::PARKING, "", pos),
+  m_index(index),
   isOnRunway(aOnRunway),
-  holdType(aHoldType)
+  holdType(aHoldType),
+  m_isPushback(false)
 {
   
 }
@@ -45,14 +47,21 @@ double FGTaxiNode::getElevationFt()
       SGGeod newPos = pos;
       newPos.setElevationM(elevationEnd);
       // this will call modifyPosition to update mPosition
-      NavDataCache* cache = NavDataCache::instance();
-      NavDataCache::Transaction txn(cache);
-      cache->updatePosition(guid(), newPos);
-      txn.commit();
+      modifyPosition(newPos);
     }
   }
   
   return pos.getElevationFt();
+}
+
+int FGTaxiNode::getIndex() const
+{
+    return m_index;
+}
+
+void FGTaxiNode::setIsPushback()
+{
+    m_isPushback = true;
 }
 
 double FGTaxiNode::getElevationM()

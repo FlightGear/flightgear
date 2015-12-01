@@ -699,6 +699,7 @@ void LocationWidget::onLocationChanged()
             }
         }
 
+#if 0
         m_ui->parkingCombo->clear();
         FGAirportDynamics* dynamics = apt->getDynamics();
         PositionedIDVec parkings = NavDataCache::instance()->airportItemsOfType(m_location->guid(),
@@ -717,6 +718,7 @@ void LocationWidget::onLocationChanged()
                 m_ui->airportDiagram->addParking(park);
             }
         }
+#endif
 
     } else if (m_locationIsLatLon) {
         m_ui->stack->setCurrentIndex(1);

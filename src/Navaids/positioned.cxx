@@ -64,6 +64,7 @@ static bool validateFilter(FGPositioned::Filter* filter)
     return true;
 }
 
+const PositionedID FGPositioned::TRANSIENT_ID = -2;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -82,7 +83,6 @@ FGPositioned::FGPositioned( PositionedID aGuid,
 
 FGPositioned::~FGPositioned()
 {
-//  std::cout << "destroying:" << mIdent << "/" << nameForType(mType) << std::endl;
 }
 
 FGPositioned*

@@ -261,7 +261,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
   // The parking will be released after this function returns. 
   // As a temporary measure, I'll try to reserve the parking via the atc_manager, which should work, because it uses the same 
   // mechanism as the AI traffic code. 
-  dcs->setParkingAvailable(pka.parking()->guid(), false);
+  dcs->setParkingAvailable(pka.parking(), false);
   fgApplyStartOffset(pka.parking()->geod(), pka.parking()->getHeading());
   return true;
 }

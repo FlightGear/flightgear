@@ -36,21 +36,26 @@
  * FGParking
  ********************************************************************************/
 
-FGParking::FGParking(PositionedID aGuid, const SGGeod& pos,
+FGParking::FGParking(int index,
+                     const SGGeod& pos,
                      double aHeading, double aRadius,
-                     const std::string& name, const std::string& aType,
-                     const std::string& codes,
-                     PositionedID pushBackNode) :
-  FGTaxiNode(aGuid, pos, false, 0),
+                     const std::string& name,
+                     const std::string& aType,
+                     const std::string& codes) :
+  FGTaxiNode(index, pos, false, 0),
   heading(aHeading),
   radius(aRadius),
   parkingName(name),
   type(aType),
-  airlineCodes(codes),
-  pushBackPoint(pushBackNode)
+  airlineCodes(codes)
 {
 }
 
 FGParking::~FGParking()
 {
+}
+
+void FGParking::setPushBackPoint(const FGTaxiNodeRef &node)
+{
+    pushBackPoint = node;
 }

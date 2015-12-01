@@ -58,9 +58,11 @@ class FGAirportDynamics {
 private:
     FGAirport* _ap;
 
-    typedef std::set<PositionedID> ParkingSet;
+    typedef std::set<FGParkingRef> ParkingSet;
     // if a parking item is in this set, it is occupied
     ParkingSet occupiedParkings;
+
+
 
     FGRunwayPreference   rwyPrefs;
     FGStartupController  startupController;
@@ -134,13 +136,14 @@ public:
     ParkingAssignment getAvailableParking(double radius, const std::string& fltype,
                           const std::string& acType, const std::string& airline);
 
-    void setParkingAvailable(PositionedID guid, bool available);
+    void setParkingAvailable(FGParking* park, bool available);
   
-    bool isParkingAvailable(PositionedID parking) const;
+    bool isParkingAvailable(FGParking* parking) const;
   
-    FGParkingRef getParking(PositionedID i) const;
-    void releaseParking(PositionedID id);
-    std::string getParkingName(PositionedID i) const;
+    FGParkingRef getParking(FGParking* i) const;
+    void releaseParking(FGParking* id);
+
+    FGParkingList getParkings(bool onlyAvailable, const std::string& type) const;
 
     /**
      * Find a parking gate index by name. Note names are often not unique

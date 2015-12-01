@@ -208,27 +208,8 @@ f_airport_parking(FGAirport& apt, nasal::CallContext ctx)
 {
   std::string type = ctx.getArg<std::string>(0);
   bool only_available = ctx.getArg<bool>(1);
-
   FGAirportDynamics* dynamics = apt.getDynamics();
-  PositionedIDVec parkings =
-    flightgear::NavDataCache::instance()
-      ->airportItemsOfType(apt.guid(), FGPositioned::PARKING);
-
-  FGParkingList ret;
-  BOOST_FOREACH(PositionedID parking, parkings)
-  {
-    // filter out based on availability and type
-    if( only_available && !dynamics->isParkingAvailable(parking) )
-      continue;
-
-    FGParking* park = dynamics->getParking(parking);
-    if( !type.empty() && (park->getType() != type) )
-      continue;
-
-    ret.push_back(park);
-  }
-
-  return ret;
+  return dynamics->getParkings(only_available, type);
 }
 
 /**

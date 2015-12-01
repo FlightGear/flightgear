@@ -187,7 +187,7 @@ private:
   time_t arrivalTime;       // For AI/ATC purposes.
   int leg;
   ParkingAssignment gate;
-  PositionedID lastNodeVisited;
+  FGTaxiNodeRef lastNodeVisited;
   std::string activeRunway;
   std::string name;
   bool isValid;

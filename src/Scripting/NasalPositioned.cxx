@@ -1352,20 +1352,10 @@ static naRef f_airport_parking(naContext c, naRef me, int argc, naRef* args)
   }
   
   FGAirportDynamics* dynamics = apt->getDynamics();
-  PositionedIDVec parkings = flightgear::NavDataCache::instance()->airportItemsOfType(apt->guid(),
-                                                                                      FGPositioned::PARKING);
-  
-  BOOST_FOREACH(PositionedID parking, parkings) {
-    // filter out based on availability and type
-    if (onlyAvailable && !dynamics->isParkingAvailable(parking)) {
-      continue;
-    }
-    
-    FGParking* park = dynamics->getParking(parking);
-    if (!type.empty() && (park->getType() != type)) {
-      continue;
-    }
-    
+  FGParkingList parkings = dynamics->getParkings(onlyAvailable, type);
+  FGParkingList::const_iterator it;
+  for (it = parkings.begin(); it != parkings.end(); ++it) {
+    FGParkingRef park = *it;
     const SGGeod& parkLoc = park->geod();
     naRef ph = naNewHash(c);
     hashset(c, ph, "name", stringToNasal(c, park->getName()));

@@ -68,13 +68,7 @@ public:
    * This can happen is the cache file is missing or damaged, or one of the
    ** global input files is changed.
    */
-  bool isRebuildRequired();
-
-    /**
-     * check if cached scenery paths have changed, and if so, drop scenery-
-     * dependant data such as ground-nets.
-     */
-  bool dropGroundnetsIfRequired();
+    bool isRebuildRequired();
 
     enum RebuildPhase
     {
@@ -91,8 +85,8 @@ public:
    */
   RebuildPhase rebuild();
 
-    unsigned int rebuildPhaseCompletionPercentage() const;
-    void setRebuildPhaseProgress(RebuildPhase ph, unsigned int percent = 0);
+  unsigned int rebuildPhaseCompletionPercentage() const;
+  void setRebuildPhaseProgress(RebuildPhase ph, unsigned int percent = 0);
 
   bool isCachedFileModified(const SGPath& path) const;
   void stampCacheFile(const SGPath& path);
@@ -140,27 +134,6 @@ public:
   PositionedID createPOI(FGPositioned::Type ty, const std::string& ident, const SGGeod& aPos);
   
   bool removePOI(FGPositioned::Type ty, const std::string& aIdent);
-    
-  void dropGroundnetFor(PositionedID aAirport);
-  
-  /**
-   * Remove all ground-nets globally from the cache.
-   * This includes parking and taxi-nodes and edges between them. It's useful
-   * when scenery paths change, since the ground-nets depend on the scenery.
-   * Using this we can avoid havind to rebuild the entire cache.
-   */
-  void dropAllGroundnets();
-  
-  PositionedID insertParking(const std::string& name, const SGGeod& aPos,
-                             PositionedID aAirport,
-                             double aHeading, int aRadius, const std::string& aAircraftType,
-                             const std::string& aAirlines);
-  
-  void setParkingPushBackRoute(PositionedID parking, PositionedID pushBackNode);
-  
-  PositionedID insertTaxiNode(const SGGeod& aPos, PositionedID aAirport, int aHoldType, bool aOnRunway);
-  
-  void insertGroundnetEdge(PositionedID aAirport, PositionedID from, PositionedID to);
   
   /// update the metar flag associated with an airport
   void setAirportMetar(const std::string& icao, bool hasMetar);
@@ -269,18 +242,6 @@ public:
    */
   AirwayEdgeVec airwayEdgesFrom(int network, PositionedID pos);
   
-// ground-network
-  PositionedIDVec groundNetNodes(PositionedID aAirport, bool onlyPushback);
-  void markGroundnetAsPushback(PositionedID nodeId);
-  
-  PositionedID findGroundNetNode(PositionedID airport, const SGGeod& aPos,
-                                 bool onRunway, FGRunway* aRunway = NULL);
-  PositionedIDVec groundNetEdgesFrom(PositionedID pos, bool onlyPushback);
-  
-  PositionedIDVec findAirportParking(PositionedID airport, const std::string& flightType,
-                                     int radius);
-
-
     class Transaction
     {
     public:

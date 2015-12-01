@@ -247,11 +247,11 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         return true;
     }
 
-    PositionedID runwayId = 0;
+    FGTaxiNodeRef runwayNode;
     if (gn->getVersion() > 0) {
-        runwayId = gn->findNearestNodeOnRunway(runwayTakeoff);
+        FGTaxiNodeRef runwayNode = gn->findNearestNodeOnRunway(runwayTakeoff);
     } else {
-        runwayId = gn->findNearestNode(runwayTakeoff);
+        FGTaxiNodeRef runwayNode = gn->findNearestNode(runwayTakeoff);
     }
 
     // A negative gateId indicates an overflow parking, use a
@@ -262,17 +262,15 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
   //  taxiRoute = new FGTaxiRoute;
 
     // Determine which node to start from.
-    PositionedID node = 0;
+    FGTaxiNodeRef node;
     // Find out which node to start from
     FGParking *park = gate.parking();
     if (park) {
         node = park->getPushBackPoint();
-        if (node == -1) {
-            node = park->guid();
-        } else if (node == 0) {
+        if (node == 0) {
             // Handle case where parking doesn't have a node
             if (firstFlight) {
-                node = park->guid();
+                node = park;
             } else {
                 node = lastNodeVisited;
             }
@@ -280,8 +278,8 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     }
     
 	FGTaxiRoute taxiRoute;
-	if ( runwayId != 0 )
-		taxiRoute = gn->findShortestRoute(node, runwayId);
+    if ( runwayNode )
+        taxiRoute = gn->findShortestRoute(node, runwayNode);
 
     if (taxiRoute.empty()) {
         createDefaultTakeoffTaxi(ac, apt, rwy);
@@ -289,6 +287,8 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     }
 
     taxiRoute.first();
+    FGTaxiNodeRef skipNode;
+
     //bool isPushBackPoint = false;
     if (firstFlight) {
         // If this is called during initialization, randomly
@@ -298,13 +298,13 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         // but make sure we always keep two active waypoints
         // to prevent a segmentation fault
         for (int i = 0; i < nrWaypointsToSkip - 3; i++) {
-            taxiRoute.next(&node, &route);
+            taxiRoute.next(skipNode, &route);
         }
         
         gate.release(); // free up our gate as required
     } else {
         if (taxiRoute.size() > 1) {
-            taxiRoute.next(&node, &route);     // chop off the first waypoint, because that is already the last of the pushback route
+            taxiRoute.next(skipNode, &route);     // chop off the first waypoint, because that is already the last of the pushback route
         }
     }
 
@@ -315,13 +315,11 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     // Note that the line wpt->setRouteIndex was commented out by revision [afcdbd] 2012-01-01,
     // which breaks the rendering functions. 
     // These can probably be generated on the fly however. 
-    while (taxiRoute.next(&node, &route)) {
+    while (taxiRoute.next(node, &route)) {
         char buffer[10];
-        snprintf(buffer, 10, "%lld", (long long int) node);
-        FGTaxiNode *tn =
-            apt->getDynamics()->getGroundNetwork()->findNode(node);
+        snprintf(buffer, 10, "%d", node->getIndex());
         FGAIWaypoint *wpt =
-            createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
+            createOnGround(ac, buffer, node->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
         wpt->setRouteIndex(route);
         //cerr << "Nodes left " << taxiRoute->nodesLeft() << " ";
@@ -388,11 +386,11 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
         return true;
     }
 
-    PositionedID runwayId = 0;
+    FGTaxiNodeRef runwayNode;
     if (gn->getVersion() == 1) {
-        runwayId = gn->findNearestNodeOnRunway(lastWptPos);
+        runwayNode = gn->findNearestNodeOnRunway(lastWptPos);
     } else {
-        runwayId = gn->findNearestNode(lastWptPos);
+        runwayNode = gn->findNearestNode(lastWptPos);
     }
     //cerr << "Using network node " << runwayId << endl;
     // A negative gateId indicates an overflow parking, use a
@@ -400,26 +398,25 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
     // Starting from gate 0 doesn't work, so don't try it
     FGTaxiRoute taxiRoute;
     if (gate.isValid())
-        taxiRoute = gn->findShortestRoute(runwayId, gate.parking()->guid());
+        taxiRoute = gn->findShortestRoute(runwayNode, gate.parking());
 
     if (taxiRoute.empty()) {
         createDefaultLandingTaxi(ac, apt);
         return true;
     }
 
-    PositionedID node;
+    FGTaxiNodeRef node;
     taxiRoute.first();
     int size = taxiRoute.size();
     // Omit the last two waypoints, as 
     // those are created by createParking()
    // int route;
     for (int i = 0; i < size - 2; i++) {
-        taxiRoute.next(&node, &route);
+        taxiRoute.next(node, &route);
         char buffer[10];
-        snprintf(buffer, 10, "%lld",  (long long int) node);
-        FGTaxiNode *tn = gn->findNode(node);
+        snprintf(buffer, 10, "%d",  node->getIndex());
         FGAIWaypoint *wpt =
-            createOnGround(ac, buffer, tn->geod(), apt->getElevation(),
+            createOnGround(ac, buffer, node->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
         
         wpt->setRouteIndex(route);
@@ -638,10 +635,9 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     }
 
     double dAlt = 0; //  = alt - (apt->getElevation() + 2000);
-    FGTaxiNode * tn = 0;
+    FGTaxiNodeRef tn;
     if (apt->getDynamics()->getGroundNetwork()) {
-        int node = apt->getDynamics()->getGroundNetwork()->findNearestNode(refPoint);
-        tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
+        tn = apt->getDynamics()->getGroundNetwork()->findNearestNode(refPoint);
     }
   
     if (tn) {
@@ -967,14 +963,13 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
     }
   
     coord = rwy->pointOnCenterline(mindist);
-    int nodeId = 0;
+    FGTaxiNodeRef tn;
     if (gn->getVersion() > 0) {
-        nodeId = gn->findNearestNodeOnRunway(coord, rwy);
+        tn = gn->findNearestNodeOnRunway(coord, rwy);
     } else {
-        nodeId = gn->findNearestNode(coord);
+        tn = gn->findNearestNode(coord);
     }
       
-    FGTaxiNode* tn = gn->findNode(nodeId);
     if (tn) {
         wpt = createOnGround(ac, buffer, tn->geod(), currElev, vTaxi);
         pushBackWaypoint(wpt);

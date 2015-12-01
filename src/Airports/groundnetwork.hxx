@@ -32,6 +32,8 @@
 #include "parking.hxx"
 #include <ATC/trafficcontrol.hxx>
 
+class FGAirportDynamicsXMLLoader;
+
 class Block
 {
 private:
@@ -54,18 +56,20 @@ public:
 class FGTaxiSegment
 {
 private:
-    const PositionedID startNode;
-    const PositionedID endNode;
+    // weak (non-owning) pointers deliberately here:
+    // the ground-network owns the nodes
+    const FGTaxiNode* startNode;
+    const FGTaxiNode* endNode;
     
     bool isActive;
     BlockList blockTimes;
 
     int index;
-    FGTaxiSegment *oppositeDirection;
+    FGTaxiSegment *oppositeDirection; // also deliberatley weak
 
     friend class FGGroundNetwork;
 public:
-    FGTaxiSegment(PositionedID start, PositionedID end);
+    FGTaxiSegment(FGTaxiNode* start, FGTaxiNode* end);
   
     void setIndex        (int val) {
         index     = val;
@@ -107,10 +111,10 @@ public:
 class FGTaxiRoute
 {
 private:
-    PositionedIDVec nodes;
+    FGTaxiNodeVector nodes;
     intVec routes;
     double distance;
-    PositionedIDVec::iterator currNode;
+    FGTaxiNodeVector::iterator currNode;
     intVec::iterator currRoute;
 
 public:
@@ -120,7 +124,7 @@ public:
         currRoute = routes.begin();
     };
   
-    FGTaxiRoute(const PositionedIDVec& nds, intVec rts,  double dist, int dpth) {
+    FGTaxiRoute(const FGTaxiNodeVector& nds, intVec rts,  double dist, int dpth) {
         nodes = nds;
         routes = rts;
         distance = dist;
@@ -151,7 +155,7 @@ public:
     bool empty () {
         return nodes.empty();
     };
-    bool next(PositionedID *nde, int *rte);
+    bool next(FGTaxiNodeRef& nde, int *rte);
   
     void first() {
         currNode = nodes.begin();
@@ -171,6 +175,8 @@ public:
 class FGGroundNetwork : public FGATCController
 {
 private:
+    friend class FGAirportDynamicsXMLLoader;
+
     bool hasNetwork;
     bool networkInitialized;
     time_t nextSave;
@@ -187,6 +193,10 @@ private:
     FGTowerController *towerController;
     FGAirport *parent;
 
+    FGParkingList m_parkings;
+    FGTaxiNodeVector m_nodes;
+
+    FGTaxiNodeRef findNodeByIndex(int index) const;
 
     //void printRoutingError(string);
 
@@ -196,9 +206,11 @@ private:
                            double heading, double speed, double alt);
 
 
-    void parseCache();
-  
-    void loadSegments();
+    void addSegment(const FGTaxiNodeRef& from, const FGTaxiNodeRef& to);
+    void addParking(const FGParkingRef& park);
+
+    FGTaxiNodeVector segmentsFrom(const FGTaxiNodeRef& from) const;
+
 public:
     FGGroundNetwork();
     ~FGGroundNetwork();
@@ -214,21 +226,22 @@ public:
         towerController = twrCtrlr;
     };
 
-    int findNearestNode(const SGGeod& aGeod) const;
-    int findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL) const;
+    FGTaxiNodeRef findNearestNode(const SGGeod& aGeod) const;
+    FGTaxiNodeRef findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL) const;
 
-    FGTaxiNodeRef findNode(PositionedID idx) const;
-    FGTaxiSegment *findSegment(unsigned idx) const;
-  
+    FGTaxiSegment *findSegment(unsigned int idx) const;
+
+    const FGParkingList& allParkings() const;
+
     /**
      * Find the taxiway segment joining two (ground-net) nodes. Returns
      * NULL if no such segment exists.
-     * It is permitted to pass 0 for the 'to' ID, indicating that any
+     * It is permitted to pass HULL for the 'to' indicating that any
      * segment originating at 'from' is acceptable.
      */
-    FGTaxiSegment* findSegment(PositionedID from, PositionedID to) const;
+    FGTaxiSegment *findSegment(const FGTaxiNode* from, const FGTaxiNode* to) const;
   
-    FGTaxiRoute findShortestRoute(PositionedID start, PositionedID end, bool fullSearch=true);
+    FGTaxiRoute findShortestRoute(FGTaxiNode* start, FGTaxiNode* end, bool fullSearch=true);
 
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon, double hdg, double spd, double alt,
@@ -245,7 +258,6 @@ public:
     virtual std::string getName();
     virtual void update(double dt);
 
-    void saveElevationCache();
     void addVersion(int v) {version = v; };
 };
 

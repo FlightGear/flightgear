@@ -24,11 +24,14 @@
 class FGTaxiNode : public FGPositioned
 {
 protected:
+    const int m_index;
+
   bool isOnRunway;
   int  holdType;
+  bool m_isPushback;
 
 public:    
-  FGTaxiNode(PositionedID aGuid, const SGGeod& pos, bool aOnRunway, int aHoldType);
+  FGTaxiNode(int index, const SGGeod& pos, bool aOnRunway, int aHoldType);
   virtual ~FGTaxiNode();
   
   void setElevation(double val);
@@ -36,9 +39,13 @@ public:
   double getElevationM ();
   double getElevationFt();
   
-  PositionedID getIndex() const { return guid(); };
+  int getIndex() const;
+
   int getHoldPointType() const { return holdType; };
   bool getIsOnRunway() const { return isOnRunway; };
+  bool isPushback() const { return m_isPushback; }
+
+  void setIsPushback();
 };
 
 #endif

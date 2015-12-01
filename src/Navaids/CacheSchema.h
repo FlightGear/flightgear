@@ -1,7 +1,7 @@
 #ifndef FG_NAVCACHE_SCHEMA_HXX
 #define FG_NAVCACHE_SCHEMA_HXX
 
-const int SCHEMA_VERSION = 14;
+const int SCHEMA_VERSION = 15;
 
 #define SCHEMA_SQL \
 "CREATE TABLE properties (key VARCHAR, value VARCHAR);" \
@@ -31,14 +31,7 @@ const int SCHEMA_VERSION = 14;
 "CREATE INDEX airway_ident ON airway(ident);" \
 \
 "CREATE TABLE airway_edge (network INT,airway INT64,a INT64,b INT64);" \
-"CREATE INDEX airway_edge_from ON airway_edge(a);" \
-\
-"CREATE TABLE taxi_node (hold_type INT,on_runway BOOL,pushback BOOL);" \
-"CREATE TABLE parking (heading FLOAT,radius INT,gate_type VARCHAR," \
-    "airlines VARCHAR,pushback INT64);" \
-"CREATE TABLE groundnet_edge (airport INT64,a INT64,b INT64);" \
-"CREATE INDEX groundnet_edge_airport ON groundnet_edge(airport);" \
-"CREATE INDEX groundnet_edge_from ON groundnet_edge(a);"
+"CREATE INDEX airway_edge_from ON airway_edge(a);"
 
 #endif
 

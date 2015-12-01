@@ -65,7 +65,7 @@ public:
   
   ~ParkingAssignmentPrivate()
   {
-    airport->getDynamics()->releaseParking(parking->guid());
+    airport->getDynamics()->releaseParking(parking);
   }
   
   void release()
@@ -81,8 +81,8 @@ public:
   }
   
   unsigned int refCount;
-  SGSharedPtr<FGParking> parking;
-  SGSharedPtr<FGAirport> airport;
+  FGParkingRef parking;
+  FGAirportRef airport;
 };
 
 ParkingAssignment::ParkingAssignment() :
@@ -179,28 +179,29 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
                                            const string & airline,
                                            bool skipEmptyAirlineCode)
 {
-  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
-  BOOST_FOREACH(PositionedID pk, cache->findAirportParking(_ap->guid(), flType, radius)) {
-    if (!isParkingAvailable(pk)) {
-      continue;
+    const FGParkingList& parkings(groundNetwork.allParkings());
+    FGParkingList::const_iterator it;
+    for (it = parkings.begin(); it != parkings.end(); ++it) {
+        FGParkingRef parking = *it;
+        if (!isParkingAvailable(parking)) {
+          continue;
+        }
+
+        if (skipEmptyAirlineCode && parking->getCodes().empty()) {
+          continue;
+        }
+
+        if (!airline.empty() && !parking->getCodes().empty()) {
+          if (parking->getCodes().find(airline, 0) == string::npos) {
+            continue;
+          }
+        }
+
+        setParkingAvailable(parking, false);
+        return parking;
     }
-    
-    FGParking* parking = getParking(pk);
-    if (skipEmptyAirlineCode && parking->getCodes().empty()) {
-      continue;
-    }
-    
-    if (!airline.empty() && !parking->getCodes().empty()) {
-      if (parking->getCodes().find(airline, 0) == string::npos) {
-        continue;
-      }
-    }
-    
-    setParkingAvailable(pk, false);
-    return parking;
-  }
-  
-  return NULL;
+
+    return NULL;
 }
 
 ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const string & flType,
@@ -226,46 +227,34 @@ ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const st
   return result ? ParkingAssignment(result, _ap) : ParkingAssignment();
 }
 
-FGParkingRef FGAirportDynamics::getParking(PositionedID id) const
-{
-  return FGPositioned::loadById<FGParking>(id);
-}
-
-string FGAirportDynamics::getParkingName(PositionedID id) const
-{
-  FGParking* p = getParking(id);
-  if (p) {
-    return p->getName();
-  }
-  
-  return string();
-}
-
 ParkingAssignment FGAirportDynamics::getParkingByName(const std::string& name) const
 {
-  PositionedID guid = flightgear::NavDataCache::instance()->airportItemWithIdent(parent()->guid(), FGPositioned::PARKING, name);
-  if (guid == 0) {
-    return ParkingAssignment();
-  }
-  
-  return ParkingAssignment(getParking(guid), _ap);
+    const FGParkingList& parkings(groundNetwork.allParkings());
+    FGParkingList::const_iterator it;
+    for (it = parkings.begin(); it != parkings.end(); ++it) {
+        if ((*it)->name() == name) {
+            return ParkingAssignment(*it, _ap);
+        }
+    }
+
+  return ParkingAssignment();
 }
 
-void FGAirportDynamics::setParkingAvailable(PositionedID guid, bool available)
+void FGAirportDynamics::setParkingAvailable(FGParking* park, bool available)
 {
   if (available) {
-    releaseParking(guid);
+    releaseParking(park);
   } else {
-    occupiedParkings.insert(guid);
+    occupiedParkings.insert(park);
   }
 }
 
-bool FGAirportDynamics::isParkingAvailable(PositionedID parking) const
+bool FGAirportDynamics::isParkingAvailable(FGParking* parking) const
 {
   return (occupiedParkings.find(parking) == occupiedParkings.end());
 }
 
-void FGAirportDynamics::releaseParking(PositionedID id)
+void FGAirportDynamics::releaseParking(FGParking* id)
 {
   ParkingSet::iterator it = occupiedParkings.find(id);
   if (it == occupiedParkings.end()) {
@@ -273,6 +262,41 @@ void FGAirportDynamics::releaseParking(PositionedID id)
   }
   
   occupiedParkings.erase(it);
+}
+
+class GetParkingsPredicate
+{
+    bool mustBeAvailable;
+    std::string type;
+    const FGAirportDynamics* dynamics;
+public:
+    GetParkingsPredicate(bool b, const std::string& ty, const FGAirportDynamics* dyn) :
+        mustBeAvailable(b),
+        type(ty),
+        dynamics(dyn)
+    {}
+
+    bool operator()(const FGParkingRef& park) const
+    {
+        if (!type.empty() && (park->getType() != type))
+            return true;
+
+        if (mustBeAvailable && !dynamics->isParkingAvailable(park)) {
+            return true;
+        }
+
+        return false;
+    }
+};
+
+FGParkingList FGAirportDynamics::getParkings(bool onlyAvailable, const std::string &type) const
+{
+    FGParkingList result(groundNetwork.allParkings());
+
+    GetParkingsPredicate pred(onlyAvailable, type, this);
+    FGParkingList::iterator it = std::remove_if(result.begin(), result.end(), pred);
+    result.erase(it, result.end());
+    return result;
 }
 
 void FGAirportDynamics::setRwyUse(const FGRunwayPreference & ref)

@@ -87,7 +87,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     FGGroundNetwork* groundNet = dep->getDynamics()->getGroundNetwork();
     FGParking *parking = gate.parking();
     if (parking && parking->getPushBackPoint() > 0) {
-        FGTaxiRoute route = groundNet->findShortestRoute(parking->guid(), parking->getPushBackPoint(), false);
+        FGTaxiRoute route = groundNet->findShortestRoute(parking, parking->getPushBackPoint(), false);
       
         int size = route.size();
         if (size < 2) {
@@ -96,15 +96,14 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         }
         
         route.first();
-        PositionedID node;
+        FGTaxiNodeRef node;
         int rte;
       
-        while (route.next(&node, &rte))
+        while (route.next(node, &rte))
         {
             char buffer[10];
-            snprintf (buffer, 10, "%lld",  (long long int) node);
-            FGTaxiNode *tn = groundNet->findNode(node);
-            FGAIWaypoint *wpt = createOnGround(ac, string(buffer), tn->geod(), dep->getElevation(), vTaxiBackward);
+            snprintf (buffer, 10, "%d",  node->getIndex());
+            FGAIWaypoint *wpt = createOnGround(ac, string(buffer), node->geod(), dep->getElevation(), vTaxiBackward);
             
             /*
             if (previous) {
@@ -128,14 +127,14 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         ac->setTaxiClearanceRequest(false);
         double az2 = 0.0;
 
-      FGTaxiSegment* pushForwardSegment = dep->getDynamics()->getGroundNetwork()->findSegment(parking->guid(), 0);
+      FGTaxiSegment* pushForwardSegment = dep->getDynamics()->getGroundNetwork()->findSegment(parking, 0);
       // there aren't any routes for this parking.
       if (!pushForwardSegment) {
           SG_LOG(SG_AI, SG_ALERT, "Gate " << parking->ident() << "doesn't seem to have routes associated with it.");
           return false;
       }
 
-      lastNodeVisited = pushForwardSegment->getEnd()->getIndex();
+      lastNodeVisited = pushForwardSegment->getEnd();
       double distance = pushForwardSegment->getLength();
 
       double parkingHeading = parking->getHeading();

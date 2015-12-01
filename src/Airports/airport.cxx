@@ -90,6 +90,7 @@ FGAirport::FGAirport( PositionedID aGuid,
 
 FGAirport::~FGAirport()
 {
+    SG_LOG(SG_NAVAID, SG_INFO, "deleting airport:" << ident());
     delete _dynamics;
 }
 

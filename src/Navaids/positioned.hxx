@@ -42,6 +42,7 @@ namespace flightgear { class NavDataCache; }
 class FGPositioned : public SGReferenced
 {
 public:
+    static const PositionedID TRANSIENT_ID;
 
   typedef enum {
     INVALID = 0,

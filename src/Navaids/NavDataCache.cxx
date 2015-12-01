@@ -600,47 +600,6 @@ public:
     isPosInAirway = prepare("SELECT rowid FROM airway_edge WHERE network=?1 AND a=?2");
     
     airwayEdgesFrom = prepare("SELECT airway, b FROM airway_edge WHERE network=?1 AND a=?2");
-    
-  // parking / taxi-node graph
-    insertTaxiNode = prepare("INSERT INTO taxi_node (rowid, hold_type, on_runway, pushback) VALUES(?1, ?2, ?3, 0)");
-    insertParkingPos = prepare("INSERT INTO parking (rowid, heading, radius, gate_type, airlines) "
-                               "VALUES (?1, ?2, ?3, ?4, ?5)");
-    setParkingPushBack = prepare("UPDATE parking SET pushback=?2 WHERE rowid=?1");
-    
-    loadTaxiNodeStmt = prepare("SELECT hold_type, on_runway FROM taxi_node WHERE rowid=?1");
-    loadParkingPos = prepare("SELECT heading, radius, gate_type, airlines, pushback FROM parking WHERE rowid=?1");
-    taxiEdgesFrom = prepare("SELECT b FROM groundnet_edge WHERE a=?1");
-    pushbackEdgesFrom = prepare("SELECT b FROM groundnet_edge, taxi_node WHERE "
-                                "a=?1 AND groundnet_edge.b = taxi_node.rowid AND pushback=1");
-    
-    insertTaxiEdge = prepare("INSERT INTO groundnet_edge (airport, a,b) VALUES(?1, ?2, ?3)");
-    
-    markTaxiNodeAsPushback = prepare("UPDATE taxi_node SET pushback=1 WHERE rowid=?1");
-    airportTaxiNodes = prepare("SELECT rowid FROM positioned WHERE (type=?2 OR type=?3) AND airport=?1");
-    sqlite3_bind_int(airportTaxiNodes, 2, FGPositioned::PARKING);
-    sqlite3_bind_int(airportTaxiNodes, 3, FGPositioned::TAXI_NODE);
-    
-    airportPushbackNodes = prepare("SELECT positioned.rowid FROM positioned, taxi_node WHERE "\
-                                   "airport=?1 AND positioned.rowid=taxi_node.rowid AND pushback=1 "
-                                   "AND (type=?2 OR type=?3)");
-    sqlite3_bind_int(airportPushbackNodes, 2, FGPositioned::PARKING);
-    sqlite3_bind_int(airportPushbackNodes, 3, FGPositioned::TAXI_NODE);
-    
-    findNearestTaxiNode = prepare("SELECT positioned.rowid FROM positioned, taxi_node WHERE "
-                                  "positioned.rowid = taxi_node.rowid AND airport=?1 "
-                                  "ORDER BY distanceCartSqr(cart_x, cart_y, cart_z, ?2, ?3, ?4) "
-                                  "LIMIT 1");
-    
-    findNearestRunwayTaxiNode = prepare("SELECT positioned.rowid FROM positioned, taxi_node WHERE "
-                                        "positioned.rowid = taxi_node.rowid AND airport=?1 "
-                                        "AND on_runway=1 " 
-                                        "ORDER BY distanceCartSqr(cart_x, cart_y, cart_z, ?2, ?3, ?4) ");
-    
-    findAirportParking = prepare("SELECT positioned.rowid FROM positioned, parking WHERE "
-                                 "airport=?1 AND type=?4 AND "
-                                 "radius >= ?2 AND gate_type = ?3 AND "
-                                 "parking.rowid=positioned.rowid");
-    sqlite3_bind_int(findAirportParking, 4, FGPositioned::PARKING);
   }
   
   void writeIntProperty(const string& key, int value)
@@ -756,36 +715,6 @@ public:
       n->setColocatedDME(colocated);
 
     return n;
-  }
-  
-  FGPositioned* loadParking(sqlite3_int64 rowId,
-                            const string& name, const SGGeod& pos,
-                            PositionedID airport)
-  {
-    sqlite3_bind_int64(loadParkingPos, 1, rowId);
-    execSelect1(loadParkingPos);
-    
-    double heading = sqlite3_column_double(loadParkingPos, 0);
-    int radius = sqlite3_column_int(loadParkingPos, 1);
-    string aircraftType((char*) sqlite3_column_text(loadParkingPos, 2));
-    string airlines((char*) sqlite3_column_text(loadParkingPos, 3));
-    PositionedID pushBack = sqlite3_column_int64(loadParkingPos, 4);
-    reset(loadParkingPos);
-    
-    return new FGParking(rowId, pos, heading, radius, name, aircraftType, airlines, pushBack);
-  }
-  
-  FGPositioned* loadTaxiNode(sqlite3_int64 rowId, const SGGeod& pos,
-                             PositionedID airport)
-  {
-    sqlite3_bind_int64(loadTaxiNodeStmt, 1, rowId);
-    execSelect1(loadTaxiNodeStmt);
-    
-    int hold_type = sqlite3_column_int(loadTaxiNodeStmt, 0);
-    bool onRunway = sqlite3_column_int(loadTaxiNodeStmt, 1);
-    reset(loadTaxiNodeStmt);
-    
-    return new FGTaxiNode(rowId, pos, onRunway, hold_type);
   }
   
   PositionedID insertPositioned(FGPositioned::Type ty, const string& ident,
@@ -949,12 +878,6 @@ public:
   sqlite3_stmt_ptr findAirway, insertAirwayEdge, isPosInAirway, airwayEdgesFrom,
   insertAirway;
   
-// groundnet (parking, taxi node graph)
-  sqlite3_stmt_ptr loadTaxiNodeStmt, loadParkingPos, insertTaxiNode, insertParkingPos;
-  sqlite3_stmt_ptr taxiEdgesFrom, pushbackEdgesFrom, insertTaxiEdge, markTaxiNodeAsPushback,
-    airportTaxiNodes, airportPushbackNodes, findNearestTaxiNode, findAirportParking,
-    setParkingPushBack, findNearestRunwayTaxiNode;
-  
 // since there's many permutations of ident/name queries, we create
 // them programtically, but cache the exact query by its raw SQL once
 // used.
@@ -1042,12 +965,6 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
     case FGPositioned::FREQ_CLEARANCE:
     case FGPositioned::FREQ_UNICOM:
       return loadComm(rowid, ty, ident, name, pos, aptId);
-      
-    case FGPositioned::TAXI_NODE:
-      return loadTaxiNode(rowid, pos, aptId);
-      
-    case FGPositioned::PARKING:
-      return loadParking(rowid, ident, pos, aptId);
       
     default:
       return NULL;
@@ -1200,19 +1117,6 @@ bool NavDataCache::isRebuildRequired()
   return false;
 }
 
-bool NavDataCache::dropGroundnetsIfRequired()
-{
-    string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");
-    if (readStringProperty("scenery_paths") != sceneryPaths) {
-        SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: scenery paths changed, dropping ground nets");
-        dropAllGroundnets();
-        writeStringProperty("scenery_paths", sceneryPaths);
-        return true;
-    }
-
-    return false;
-}
-  
 NavDataCache::RebuildPhase NavDataCache::rebuild()
 {
     if (!d->rebuilder.get()) {
@@ -2080,162 +1984,6 @@ PositionedID NavDataCache::findNavaidForRunway(PositionedID runway, FGPositioned
   
   d->reset(d->findNavaidForRunway);
   return result;
-}
-  
-PositionedID
-NavDataCache::insertParking(const std::string& name, const SGGeod& aPos,
-                            PositionedID aAirport,
-                           double aHeading, int aRadius, const std::string& aAircraftType,
-                           const std::string& aAirlines)
-{
-  sqlite3_int64 rowId = d->insertPositioned(FGPositioned::PARKING, name, "", aPos, aAirport, false);
-  
-// we need to insert a row into the taxi_node table, otherwise we can't maintain
-// the appropriate pushback flag.
-  sqlite3_bind_int64(d->insertTaxiNode, 1, rowId);
-  sqlite3_bind_int(d->insertTaxiNode, 2, 0);
-  sqlite3_bind_int(d->insertTaxiNode, 3, 0);
-  d->execInsert(d->insertTaxiNode);
-  
-  sqlite3_bind_int64(d->insertParkingPos, 1, rowId);
-  sqlite3_bind_double(d->insertParkingPos, 2, aHeading);
-  sqlite3_bind_int(d->insertParkingPos, 3, aRadius);
-  sqlite_bind_stdstring(d->insertParkingPos, 4, aAircraftType);
-  sqlite_bind_stdstring(d->insertParkingPos, 5, aAirlines);
-  return d->execInsert(d->insertParkingPos);
-}
-  
-void NavDataCache::setParkingPushBackRoute(PositionedID parking, PositionedID pushBackNode)
-{
-  sqlite3_bind_int64(d->setParkingPushBack, 1, parking);
-  sqlite3_bind_int64(d->setParkingPushBack, 2, pushBackNode);
-  d->execUpdate(d->setParkingPushBack);
-}
-
-PositionedID
-NavDataCache::insertTaxiNode(const SGGeod& aPos, PositionedID aAirport, int aHoldType, bool aOnRunway)
-{
-  sqlite3_int64 rowId = d->insertPositioned(FGPositioned::TAXI_NODE, string(), string(), aPos, aAirport, false);
-  sqlite3_bind_int64(d->insertTaxiNode, 1, rowId);
-  sqlite3_bind_int(d->insertTaxiNode, 2, aHoldType);
-  sqlite3_bind_int(d->insertTaxiNode, 3, aOnRunway);
-  return d->execInsert(d->insertTaxiNode);
-}
-  
-void NavDataCache::insertGroundnetEdge(PositionedID aAirport, PositionedID from, PositionedID to)
-{
-  sqlite3_bind_int64(d->insertTaxiEdge, 1, aAirport);
-  sqlite3_bind_int64(d->insertTaxiEdge, 2, from);
-  sqlite3_bind_int64(d->insertTaxiEdge, 3, to);
-  d->execInsert(d->insertTaxiEdge);
-}
-  
-PositionedIDVec NavDataCache::groundNetNodes(PositionedID aAirport, bool onlyPushback)
-{
-  sqlite3_stmt_ptr q = onlyPushback ? d->airportPushbackNodes : d->airportTaxiNodes;
-  sqlite3_bind_int64(q, 1, aAirport);
-  return d->selectIds(q);
-}
-  
-void NavDataCache::markGroundnetAsPushback(PositionedID nodeId)
-{
-  sqlite3_bind_int64(d->markTaxiNodeAsPushback, 1, nodeId);
-  d->execUpdate(d->markTaxiNodeAsPushback);
-}
-
-static double headingDifferenceDeg(double crs1, double crs2)
-{
-  double diff =  crs2 - crs1;
-  SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
-  return diff;
-}
-  
-PositionedID NavDataCache::findGroundNetNode(PositionedID airport, const SGGeod& aPos,
-                                             bool onRunway, FGRunway* aRunway)
-{
-  sqlite3_stmt_ptr q = onRunway ? d->findNearestRunwayTaxiNode : d->findNearestTaxiNode;
-  sqlite3_bind_int64(q, 1, airport);
-  
-  SGVec3d cartPos(SGVec3d::fromGeod(aPos));
-  sqlite3_bind_double(q, 2, cartPos.x());
-  sqlite3_bind_double(q, 3, cartPos.y());
-  sqlite3_bind_double(q, 4, cartPos.z());
-  
-  PositionedID result = 0;
-  while (d->execSelect(q)) {
-    PositionedID id = sqlite3_column_int64(q, 0);
-    if (!aRunway) {
-      result = id;
-      break;
-    }
-    
-  // ensure found node lies on the runway
-    FGPositionedRef node = loadById(id);
-    double course = SGGeodesy::courseDeg(node->geod(), aRunway->end());
-    if (fabs(headingDifferenceDeg(course, aRunway->headingDeg())) < 3.0 ) {
-      result = id;
-      break;
-    }
-  }
-  
-  d->reset(q);
-  return result;
-}
-  
-PositionedIDVec NavDataCache::groundNetEdgesFrom(PositionedID pos, bool onlyPushback)
-{
-  sqlite3_stmt_ptr q = onlyPushback ? d->pushbackEdgesFrom : d->taxiEdgesFrom;
-  sqlite3_bind_int64(q, 1, pos);
-  return d->selectIds(q);
-}
-
-PositionedIDVec NavDataCache::findAirportParking(PositionedID airport, const std::string& flightType,
-                                   int radius)
-{
-  sqlite3_bind_int64(d->findAirportParking, 1, airport);
-  sqlite3_bind_int(d->findAirportParking, 2, radius);
-  sqlite_bind_stdstring(d->findAirportParking, 3, flightType);
-  
-  return d->selectIds(d->findAirportParking);
-}
-
-void NavDataCache::dropGroundnetFor(PositionedID aAirport)
-{
-  sqlite3_stmt_ptr q = d->prepare("DELETE FROM parking WHERE rowid IN (SELECT rowid FROM positioned WHERE type=?1 AND airport=?2)");
-  sqlite3_bind_int(q, 1, FGPositioned::PARKING);
-  sqlite3_bind_int64(q, 2, aAirport);
-  d->execUpdate(q);
-  
-  q = d->prepare("DELETE FROM taxi_node WHERE rowid IN (SELECT rowid FROM positioned WHERE (type=?1 OR type=?2) AND airport=?3)");
-  sqlite3_bind_int(q, 1, FGPositioned::TAXI_NODE);
-  sqlite3_bind_int(q, 2, FGPositioned::PARKING);
-  sqlite3_bind_int64(q, 3, aAirport);
-  d->execUpdate(q);
-  
-  q = d->prepare("DELETE FROM positioned WHERE (type=?1 OR type=?2) AND airport=?3");
-  sqlite3_bind_int(q, 1, FGPositioned::TAXI_NODE);
-  sqlite3_bind_int(q, 2, FGPositioned::PARKING);
-  sqlite3_bind_int64(q, 3, aAirport);
-  d->execUpdate(q);
-  
-  q = d->prepare("DELETE FROM groundnet_edge WHERE airport=?1");
-  sqlite3_bind_int64(q, 1, aAirport);
-  d->execUpdate(q);
-}
-  
-void NavDataCache::dropAllGroundnets()
-{
-    SG_LOG(SG_NAVCACHE, SG_INFO, "dropping ground-net data");
-  beginTransaction();
-  d->runSQL("DELETE FROM groundnet_edge");
-  d->runSQL("DELETE FROM parking");
-  d->runSQL("DELETE FROM taxi_node");
-    
-  sqlite3_stmt_ptr q = d->prepare("DELETE FROM positioned WHERE (type=?1 OR type=?2)");
-  sqlite3_bind_int(q, 1, FGPositioned::TAXI_NODE);
-  sqlite3_bind_int(q, 2, FGPositioned::PARKING);
-  d->execUpdate(q);
-  commitTransaction();
 }
 
 bool NavDataCache::isReadOnly() const

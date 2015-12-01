@@ -616,11 +616,6 @@ fgInitNav ()
         }
     }
 
-    // depend on when the NavCache was initialised, scenery paths may not
-    // have been setup. This is a safe place to consistently check the value,
-    // and drop the ground-nets if something has changed
-    cache->dropGroundnetsIfRequired();
-
   FGTACANList *channellist = new FGTACANList;
   globals->set_channellist( channellist );
   

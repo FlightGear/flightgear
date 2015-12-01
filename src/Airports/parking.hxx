@@ -36,7 +36,7 @@
 #include <memory> // for std::auto_ptr
 
 #include "gnnode.hxx"
-
+#include <Airports/airports_fwd.hxx>
 
 class FGParking : public FGTaxiNode
 {
@@ -46,15 +46,15 @@ private:
   const std::string parkingName;
   const std::string type;
   const std::string airlineCodes;
-  const PositionedID pushBackPoint;
+  FGTaxiNodeRef pushBackPoint;
 
   SG_DISABLE_COPY(FGParking);
 public:
-  FGParking(PositionedID aGuid, const SGGeod& pos,
+  FGParking(int index,
+            const SGGeod& pos,
             double heading, double radius,
             const std::string& name, const std::string& type,
-            const std::string& codes,
-            PositionedID pushBackNode);
+            const std::string& codes);
   virtual ~FGParking();
   
   double getHeading  () const { return heading;     };
@@ -67,7 +67,8 @@ public:
   // TODO do parkings have different name and ident?
   virtual const std::string& name() const { return parkingName; }
 
-  int getPushBackPoint () { return pushBackPoint; };
+  void setPushBackPoint(const FGTaxiNodeRef& node);
+  FGTaxiNodeRef getPushBackPoint () { return pushBackPoint; };
 
   bool operator< (const FGParking &other) const {
     return radius < other.radius; };

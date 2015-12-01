@@ -49,25 +49,12 @@ void XMLLoader::load(FGAirportDynamics* d)
     return;
   }
 
-  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
-  //if (!cache->isCachedFileModified(path) || cache->isReadOnly()) {
-  //  return;
-  //}
-  
+
   SG_LOG(SG_NAVAID, SG_INFO, "reading groundnet data from " << path);
   SGTimeStamp t;
   try {
-    flightgear::NavDataCache::Transaction txn(cache);
-    t.stamp();
-    {
-      // drop all current data
-      cache->dropGroundnetFor(d->parent()->guid());
-      
       FGAirportDynamicsXMLLoader visitor(d);
       readXML(path.str(), visitor);
-    } // ensure visitor is destroyed so its destructor runs
-    cache->stampCacheFile(path);
-    txn.commit();
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_INFO, "parsing groundnet XML failed:" << e.getFormattedMessage());
   }

@@ -109,7 +109,7 @@ void FGATCManager::init() {
       
         // No valid parking location, so either at the runway or at a random location.
         if (pk.isValid()) {
-            dcs->setParkingAvailable(pk.parking()->guid(), false);
+            dcs->setParkingAvailable(pk.parking(), false);
             fp = new FGAIFlightPlan;
             controller = apt->getDynamics()->getStartupController();
             int stationFreq = apt->getDynamics()->getGroundFrequency(1);
