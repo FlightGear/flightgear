@@ -1328,6 +1328,7 @@ fgOptVersion( const char *arg )
     }
     cerr << endl;
     cerr << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
+    cerr << "OSG version: " << osgGetVersion() << endl;
     cerr << "PLIB version: " << PLIB_VERSION << endl;
     return FG_OPTIONS_EXIT;
 }
