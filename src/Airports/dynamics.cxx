@@ -53,19 +53,19 @@ using std::random_shuffle;
 class ParkingAssignment::ParkingAssignmentPrivate
 {
 public:
-  ParkingAssignmentPrivate(FGParking* pk, FGAirport* apt) :
+  ParkingAssignmentPrivate(FGParking* pk, FGAirportDynamics* dyn) :
     refCount(0),
     parking(pk),
-    airport(apt)
+    dynamics(dyn)
   {
     assert(pk);
-    assert(apt);
+    assert(dyn);
     retain(); // initial count of 1
   }
   
   ~ParkingAssignmentPrivate()
   {
-    airport->getDynamics()->releaseParking(parking);
+    dynamics->releaseParking(parking);
   }
   
   void release()
@@ -82,7 +82,7 @@ public:
   
   unsigned int refCount;
   FGParkingRef parking;
-  FGAirportRef airport;
+  FGAirportDynamicsRef dynamics;
 };
 
 ParkingAssignment::ParkingAssignment() :
@@ -97,11 +97,11 @@ ParkingAssignment::~ParkingAssignment()
   }
 }
   
-ParkingAssignment::ParkingAssignment(FGParking* pk, FGAirport* apt) :
+ParkingAssignment::ParkingAssignment(FGParking* pk, FGAirportDynamics* dyn) :
   _sharedData(NULL)
 {
   if (pk) {
-    _sharedData = new ParkingAssignmentPrivate(pk, apt);
+    _sharedData = new ParkingAssignmentPrivate(pk, dyn);
   }
 }
 
@@ -164,13 +164,14 @@ FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
 // Destructor
 FGAirportDynamics::~FGAirportDynamics()
 {
+    SG_LOG(SG_AI, SG_INFO, "destroyed dynamics for:" << _ap->ident());
 }
 
 
 // Initialization required after XMLRead
 void FGAirportDynamics::init()
 {
-    groundNetwork.init(_ap);
+    groundNetwork.init(this);
     groundNetwork.setTowerController(&towerController);
     
 }
@@ -213,18 +214,18 @@ ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const st
   // most exact seach - airline codes must be present and match
   FGParking* result = innerGetAvailableParking(radius, flType, airline, true);
   if (result) {
-    return ParkingAssignment(result, _ap);
+    return ParkingAssignment(result, this);
   }
   
   // more tolerant - gates with empty airline codes are permitted
   result = innerGetAvailableParking(radius, flType, airline, false);
   if (result) {
-    return ParkingAssignment(result, _ap);
+    return ParkingAssignment(result, this);
   }
 
   // fallback - ignore the airline code entirely
   result = innerGetAvailableParking(radius, flType, string(), false);
-  return result ? ParkingAssignment(result, _ap) : ParkingAssignment();
+  return result ? ParkingAssignment(result, this) : ParkingAssignment();
 }
 
 ParkingAssignment FGAirportDynamics::getParkingByName(const std::string& name) const
@@ -233,7 +234,7 @@ ParkingAssignment FGAirportDynamics::getParkingByName(const std::string& name) c
     FGParkingList::const_iterator it;
     for (it = parkings.begin(); it != parkings.end(); ++it) {
         if ((*it)->name() == name) {
-            return ParkingAssignment(*it, _ap);
+            return ParkingAssignment(*it, const_cast<FGAirportDynamics*>(this));
         }
     }
 

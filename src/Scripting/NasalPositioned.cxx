@@ -1351,7 +1351,7 @@ static naRef f_airport_parking(naContext c, naRef me, int argc, naRef* args)
     onlyAvailable = (args[1].num != 0.0);
   }
   
-  FGAirportDynamics* dynamics = apt->getDynamics();
+  FGAirportDynamicsRef dynamics = apt->getDynamics();
   FGParkingList parkings = dynamics->getParkings(onlyAvailable, type);
   FGParkingList::const_iterator it;
   for (it = parkings.begin(); it != parkings.end(); ++it) {

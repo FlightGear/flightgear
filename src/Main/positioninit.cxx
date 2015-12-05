@@ -196,7 +196,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport " << id );
     return false;
   }
-  FGAirportDynamics* dcs = apt->getDynamics();
+  FGAirportDynamicsRef dcs = apt->getDynamics();
   if (!dcs) {
     SG_LOG( SG_GENERAL, SG_ALERT,
            "Airport " << id << "does not appear to have parking information available");

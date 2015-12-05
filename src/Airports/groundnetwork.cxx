@@ -175,7 +175,8 @@ bool compare_trafficrecords(FGTrafficRecord a, FGTrafficRecord b)
 }
 
 FGGroundNetwork::FGGroundNetwork() :
-  parent(NULL)
+    dynamics(NULL),
+    parent(NULL)
 {
     hasNetwork = false;
     totalDistance = 0;
@@ -199,7 +200,7 @@ FGGroundNetwork::~FGGroundNetwork()
   // owning references to ground-net nodes will also drop
 }
 
-void FGGroundNetwork::init(FGAirport* pr)
+void FGGroundNetwork::init(FGAirportDynamics* dyn)
 {
     if (networkInitialized) {
         SG_LOG(SG_GENERAL, SG_WARN, "duplicate ground-network init");
@@ -207,7 +208,8 @@ void FGGroundNetwork::init(FGAirport* pr)
         return;
     }
     
-    parent = pr;
+    dynamics = dyn;
+    parent = dyn->parent();
     assert(parent);
     hasNetwork = true;
     nextSave = 0;
@@ -407,8 +409,8 @@ void FGGroundNetwork::announcePosition(int id,
                                        FGAIAircraft * aircraft)
 {
     
-    assert(parent);
-    init(parent);
+    assert(dynamics);
+    init(dynamics);
   
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id alread has an entry
@@ -495,11 +497,11 @@ bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, Traffic
                 FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 //cerr << "creating message for " << i->getAircraft()->getCallSign() << endl;
-                transmit(&(*i), &(*parent->getDynamics()), msgId, msgDir, false);
+                transmit(&(*i), dynamics, msgId, msgDir, false);
                 return false;
             }
         }
-        transmit(&(*i), &(*parent->getDynamics()), msgId, msgDir, true);
+        transmit(&(*i), dynamics, msgId, msgDir, true);
         i->updateState();
         lastTransmission = now;
         available = false;
@@ -846,11 +848,11 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         if ((origStatus != currStatus) && available) {
             //cerr << "Issueing hold short instrudtion " << currStatus << " " << available << endl;
             if (currStatus == true) { // No has a hold short instruction
-                transmit(&(*current), &(*parent->getDynamics()), MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
+                transmit(&(*current), dynamics, MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
                 //cerr << "Transmittin hold short instrudtion " << currStatus << " " << available << endl;
                 current->setState(1);
             } else {
-                transmit(&(*current), &(*parent->getDynamics()), MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
+                transmit(&(*current), dynamics, MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
                 //cerr << "Transmittig resume instrudtion " << currStatus << " " << available << endl;
                 current->setState(2);
             }
@@ -1305,8 +1307,8 @@ void FGGroundNetwork::update(double dt)
     //sort(activeTraffic.begin(), activeTraffic.end(), compare_trafficrecords);
     // Handle traffic that is under ground control first; this way we'll prevent clutter at the gate areas.
     // Don't allow an aircraft to pushback when a taxiing aircraft is currently using part of the intended route.
-    for   (TrafficVectorIterator i = parent->getDynamics()->getStartupController()->getActiveTraffic().begin();
-            i != parent->getDynamics()->getStartupController()->getActiveTraffic().end(); i++) {
+    for   (TrafficVectorIterator i = dynamics->getStartupController()->getActiveTraffic().begin();
+            i != dynamics->getStartupController()->getActiveTraffic().end(); i++) {
         i->allowPushBack();
         i->setPriority(priority++);
         // in meters per second;

@@ -46,8 +46,9 @@
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/pavement.hxx>
-#include <Airports/dynamics.hxx>
 #include <Airports/xmlloader.hxx>
+#include <Airports/dynamics.hxx>
+#include <Airports/airportdynamicsmanager.hxx>
 #include <Navaids/procedure.hxx>
 #include <Navaids/waypoint.hxx>
 #include <ATC/CommStation.hxx>
@@ -74,7 +75,6 @@ FGAirport::FGAirport( PositionedID aGuid,
     FGPositioned(aGuid, aType, id, location),
     _name(name),
     _has_metar(has_metar),
-    _dynamics(0),
     mTowerDataLoaded(false),
     mHasTower(false),
     mRunwaysLoaded(false),
@@ -90,8 +90,6 @@ FGAirport::FGAirport( PositionedID aGuid,
 
 FGAirport::~FGAirport()
 {
-    SG_LOG(SG_NAVAID, SG_INFO, "deleting airport:" << ident());
-    delete _dynamics;
 }
 
 bool FGAirport::isAirport() const
@@ -116,23 +114,6 @@ bool FGAirport::isAirportType(FGPositioned* pos)
     }
     
     return (pos->type() >= AIRPORT) && (pos->type() <= SEAPORT);
-}
-
-FGAirportDynamics * FGAirport::getDynamics()
-{
-    if (_dynamics) {
-        return _dynamics;
-    }
-    
-    _dynamics = new FGAirportDynamics(this);
-    XMLLoader::load(_dynamics);
-    _dynamics->init();
-  
-    FGRunwayPreference rwyPrefs(this);
-    XMLLoader::load(&rwyPrefs);
-    _dynamics->setRwyUse(rwyPrefs);
-    
-    return _dynamics;
 }
 
 //------------------------------------------------------------------------------
@@ -981,6 +962,11 @@ void FGAirport::sortBySize(FGPositionedList& airportList)
     for (unsigned int i=0; i<annotated.size(); ++i) {
         airportList[i] = annotated[i].pos();
     }
+}
+
+FGAirportDynamicsRef FGAirport::getDynamics() const
+{
+    return flightgear::AirportDynamicsManager::find(const_cast<FGAirport*>(this));
 }
 
 // get airport elevation

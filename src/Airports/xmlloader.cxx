@@ -49,9 +49,9 @@ void XMLLoader::load(FGAirportDynamics* d)
     return;
   }
 
-
   SG_LOG(SG_NAVAID, SG_INFO, "reading groundnet data from " << path);
   SGTimeStamp t;
+  t.stamp();
   try {
       FGAirportDynamicsXMLLoader visitor(d);
       readXML(path.str(), visitor);

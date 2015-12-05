@@ -208,7 +208,7 @@ f_airport_parking(FGAirport& apt, nasal::CallContext ctx)
 {
   std::string type = ctx.getArg<std::string>(0);
   bool only_available = ctx.getArg<bool>(1);
-  FGAirportDynamics* dynamics = apt.getDynamics();
+  FGAirportDynamicsRef dynamics = apt.getDynamics();
   return dynamics->getParkings(only_available, type);
 }
 

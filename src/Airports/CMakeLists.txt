@@ -15,6 +15,7 @@ set(SOURCES
 	sidstar.cxx
 	airport.cxx
 	xmlloader.cxx
+        airportdynamicsmanager.cxx
 	)
 
 set(HEADERS
@@ -33,6 +34,7 @@ set(HEADERS
 	sidstar.hxx
 	airport.hxx
 	xmlloader.hxx
+        airportdynamicsmanager.hxx
 	)
     		
 flightgear_component(Airports "${SOURCES}" "${HEADERS}")

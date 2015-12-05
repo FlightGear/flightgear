@@ -89,7 +89,7 @@ class FGAirport : public FGPositioned
 
     FGRunwayRef getActiveRunwayForUsage() const;
 
-    FGAirportDynamics *getDynamics();
+    FGAirportDynamicsRef getDynamics() const;
     
     unsigned int numRunways() const;
     unsigned int numHelipads() const;
@@ -323,7 +323,6 @@ private:
   
     std::string _name;
     bool _has_metar;
-    FGAirportDynamics *_dynamics;
 
     void loadRunways() const;
     void loadHelipads() const;

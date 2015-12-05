@@ -490,7 +490,8 @@ FGATCController::FGATCController()
 
 FGATCController::~FGATCController()
 {
-    //cerr << "running FGATController destructor" << endl;
+    FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
+    mgr->removeController(this);
 }
 
 string FGATCController::getGateName(FGAIAircraft * ref)

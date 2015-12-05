@@ -177,6 +177,7 @@ class FGGroundNetwork : public FGATCController
 private:
     friend class FGAirportDynamicsXMLLoader;
 
+    FGAirportDynamics* dynamics; // weak back-pointer to our owner
     bool hasNetwork;
     bool networkInitialized;
     time_t nextSave;
@@ -218,7 +219,7 @@ public:
     void setVersion (int v) { version = v;};
     int getVersion() { return version; };
 
-    void init(FGAirport* pr);
+    void init(FGAirportDynamics* pr);
     bool exists() {
         return hasNetwork;
     };

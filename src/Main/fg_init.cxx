@@ -80,6 +80,7 @@
 #include <Airports/runways.hxx>
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
+#include <Airports/airportdynamicsmanager.hxx>
 
 #include <AIModel/AIManager.hxx>
 
@@ -711,6 +712,11 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("properties", new FGProperties);
 
+
+    ////////////////////////////////////////////////////////////////////
+    // Add the FlightGear property utilities.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("airport-dynamics", new flightgear::AirportDynamicsManager);
 
     ////////////////////////////////////////////////////////////////////
     // Add the performance monitoring system.

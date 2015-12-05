@@ -24,6 +24,8 @@
 
 #include <set>
 
+#include <simgear/structure/SGReferenced.hxx>
+
 #include <ATC/trafficcontrol.hxx>
 #include "airports_fwd.hxx"
 #include "parking.hxx"
@@ -37,7 +39,7 @@ public:
   ~ParkingAssignment();
   
 // create a parking assignment (and mark it as unavailable)
-  ParkingAssignment(FGParking* pk, FGAirport* apt);
+  ParkingAssignment(FGParking* pk, FGAirportDynamics* apt);
   
   ParkingAssignment(const ParkingAssignment& aOther);
   void operator=(const ParkingAssignment& aOther);
@@ -53,7 +55,8 @@ private:
   ParkingAssignmentPrivate* _sharedData;
 };
 
-class FGAirportDynamics {
+class FGAirportDynamics : public SGReferenced
+{
 
 private:
     FGAirport* _ap;
@@ -140,7 +143,6 @@ public:
   
     bool isParkingAvailable(FGParking* parking) const;
   
-    FGParkingRef getParking(FGParking* i) const;
     void releaseParking(FGParking* id);
 
     FGParkingList getParkings(bool onlyAvailable, const std::string& type) const;

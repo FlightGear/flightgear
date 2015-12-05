@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include <Airports/dynamics.hxx>
+#include <Airports/airportdynamicsmanager.hxx>
 #include <Airports/airport.hxx>
 #include <Scenery/scenery.hxx>
 #include "atc_mgr.hxx"
@@ -102,17 +103,17 @@ void FGATCManager::init() {
     //time_t deptime = 0;        // just make sure how flightplan processing is affected by this...
 
 
-    FGAirport *apt = FGAirport::findByIdent(airport); 
-    if (apt && onGround) {// && !runway.empty()) {
-        FGAirportDynamics* dcs = apt->getDynamics();
+    FGAirportDynamicsRef dcs(flightgear::AirportDynamicsManager::find(airport));
+    if (dcs && onGround) {// && !runway.empty()) {
+
         ParkingAssignment pk(dcs->getParkingByName(parking));
       
         // No valid parking location, so either at the runway or at a random location.
         if (pk.isValid()) {
             dcs->setParkingAvailable(pk.parking(), false);
             fp = new FGAIFlightPlan;
-            controller = apt->getDynamics()->getStartupController();
-            int stationFreq = apt->getDynamics()->getGroundFrequency(1);
+            controller = dcs->getStartupController();
+            int stationFreq = dcs->getGroundFrequency(1);
             if (stationFreq > 0)
             {
                 //cerr << "Setting radio frequency to : " << stationFreq << endl;
@@ -128,7 +129,7 @@ void FGATCManager::init() {
             fp->setGate(pk);
             if (!(fp->createPushBack(&ai_ac,
                                      false,
-                                     apt,
+                                     dcs->parent(),
                                      aircraftRadius,
                                      fltType,
                                      aircraftType,
@@ -140,8 +141,8 @@ void FGATCManager::init() {
             
             
         } else if (!runway.empty()) {
-            controller = apt->getDynamics()->getTowerController();
-            int stationFreq = apt->getDynamics()->getTowerFrequency(2);
+            controller = dcs->getTowerController();
+            int stationFreq = dcs->getTowerFrequency(2);
             if (stationFreq > 0)
             {
                 //cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
@@ -151,7 +152,7 @@ void FGATCManager::init() {
             leg = 3;
             string fltType = "ga";
             fp->setRunway(runway);
-            fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
+            fp->createTakeOff(&ai_ac, false, dcs->parent(), 0, fltType);
             ai_ac.setTakeOffStatus(2);
         } else {
                 // We're on the ground somewhere. Handle this case later.
@@ -187,6 +188,15 @@ void FGATCManager::init() {
 
 void FGATCManager::addController(FGATCController *controller) {
     activeStations.push_back(controller);
+}
+
+void FGATCManager::removeController(FGATCController *controller)
+{
+    AtcVecIterator it;
+    it = std::find(activeStations.begin(), activeStations.end(), controller);
+    if (it != activeStations.end()) {
+        activeStations.erase(it);
+    }
 }
 
 void FGATCManager::update ( double time ) {

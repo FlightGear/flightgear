@@ -59,6 +59,7 @@ public:
   ~FGATCManager();
   void init();
   void addController(FGATCController *controller);
+  void removeController(FGATCController* controller);
   void update(double time);
 };
   

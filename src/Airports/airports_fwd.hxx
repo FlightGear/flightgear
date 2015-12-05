@@ -79,6 +79,7 @@ typedef SGSharedPtr<FGHelipad> FGHelipadRef;
 typedef SGSharedPtr<FGTaxiway> FGTaxiwayRef;
 typedef SGSharedPtr<FGPavement> FGPavementRef;
 typedef SGSharedPtr<FGParking> FGParkingRef;
+typedef SGSharedPtr<FGAirportDynamics> FGAirportDynamicsRef;
 
 typedef std::vector<FGRunwayRef> FGRunwayList;
 typedef std::map<std::string, FGRunwayRef> FGRunwayMap;
