@@ -221,6 +221,7 @@ private:
   FGTable* ITT_N1;             // ITT temperature depending on throttle command
   FGTable* EnginePowerRPM_N1;
   FGTable* EnginePowerVC;
+  FGFunction* EnginePowerVCFN;
   FGTable* CombustionEfficiency_N1;
   FGFDMExec* FDMExec;
 };
