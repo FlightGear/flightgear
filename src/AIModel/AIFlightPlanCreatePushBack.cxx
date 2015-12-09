@@ -30,6 +30,7 @@
 #include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
+#include <Airports/groundnetwork.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
@@ -56,7 +57,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     // must be reset.
     activeRunway.clear();
 
-    if (!(dep->getDynamics()->getGroundNetwork()->exists())) {
+    if (!(dep->getDynamics()->getGroundController()->exists())) {
         //cerr << "Push Back fallback" << endl;
         createPushBackFallBack(ac, firstFlight, dep,
                                radius, fltType, aircraftType, airline);

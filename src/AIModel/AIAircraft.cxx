@@ -581,8 +581,8 @@ void FGAIAircraft::announcePositionToController() {
             controller = trafficRef->getDepartureAirport()->getDynamics()->getStartupController();
         break;
     case 2:              // Taxiing to runway
-        if (trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork()->exists())
-            controller = trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork();
+        if (trafficRef->getDepartureAirport()->getDynamics()->getGroundController()->exists())
+            controller = trafficRef->getDepartureAirport()->getDynamics()->getGroundController();
         break;
     case 3:              //Take off tower controller
         if (trafficRef->getDepartureAirport()->getDynamics()) {
@@ -593,13 +593,13 @@ void FGAIAircraft::announcePositionToController() {
         }
         break;
     case 6:
-         if (trafficRef->getDepartureAirport()->getDynamics()) {
+         if (trafficRef->getArrivalAirport()->getDynamics()) {
              controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
           }
           break;
     case 8:              // Taxiing for parking
-        if (trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork()->exists())
-            controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork();
+        if (trafficRef->getArrivalAirport()->getDynamics()->getGroundController()->exists())
+            controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundController();
         break;
     default:
         controller = 0;

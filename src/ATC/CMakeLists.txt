@@ -8,6 +8,7 @@ set(SOURCES
         ATISEncoder.cxx
         MetarPropertiesATISInformationProvider.cxx
         CurrentWeatherATISInformationProvider.cxx
+        GroundController.cxx
 	)
 
 set(HEADERS
@@ -18,6 +19,7 @@ set(HEADERS
         ATISEncoder.hxx
         MetarPropertiesATISInformationProvider.hxx
         CurrentWeatherATISInformationProvider.hxx
+        GroundController.hxx
 	)
     	
 flightgear_component(ATC "${SOURCES}" "${HEADERS}")

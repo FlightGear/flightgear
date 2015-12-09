@@ -30,9 +30,11 @@
 
 #include "gnnode.hxx"
 #include "parking.hxx"
-#include <ATC/trafficcontrol.hxx>
 
 class FGAirportDynamicsXMLLoader;
+
+typedef std::vector<int> intVec;
+typedef std::vector<int>::iterator intVecIterator;
 
 class Block
 {
@@ -172,7 +174,7 @@ public:
 /**************************************************************************************
  * class FGGroundNetWork
  *************************************************************************************/
-class FGGroundNetwork : public FGATCController
+class FGGroundNetwork
 {
 private:
     friend class FGAirportDynamicsXMLLoader;
@@ -180,18 +182,11 @@ private:
     FGAirportDynamics* dynamics; // weak back-pointer to our owner
     bool hasNetwork;
     bool networkInitialized;
-    time_t nextSave;
-    //int maxDepth;
-    int count;
+
     int version;
   
     FGTaxiSegmentVector segments;
 
-    TrafficVector activeTraffic;
-    TrafficVectorIterator currTraffic;
-
-    double totalDistance, maxDistance;
-    FGTowerController *towerController;
     FGAirport *parent;
 
     FGParkingList m_parkings;
@@ -223,14 +218,13 @@ public:
     bool exists() {
         return hasNetwork;
     };
-    void setTowerController(FGTowerController *twrCtrlr) {
-        towerController = twrCtrlr;
-    };
 
     FGTaxiNodeRef findNearestNode(const SGGeod& aGeod) const;
     FGTaxiNodeRef findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL) const;
 
     FGTaxiSegment *findSegment(unsigned int idx) const;
+
+    FGTaxiSegment* findOppositeSegment(unsigned int index) const;
 
     const FGParkingList& allParkings() const;
 
@@ -244,22 +238,12 @@ public:
   
     FGTaxiRoute findShortestRoute(FGTaxiNode* start, FGTaxiNode* end, bool fullSearch=true);
 
-    virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
-                                  double lat, double lon, double hdg, double spd, double alt,
-                                  double radius, int leg, FGAIAircraft *aircraft);
-    virtual void signOff(int id);
-    virtual void updateAircraftInformation(int id, double lat, double lon, double heading, double speed, double alt, double dt);
-    virtual bool hasInstruction(int id);
-    virtual FGATCInstruction getInstruction(int id);
 
-    bool checkTransmissionState(int minState, int MaxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
-                                AtcMsgDir msgDir);
-    bool checkForCircularWaits(int id);
-    virtual void render(bool);
-    virtual std::string getName();
-    virtual void update(double dt);
+    void blockSegmentsEndingAt(FGTaxiSegment* seg, int blockId,
+                               time_t blockTime, time_t now);
 
     void addVersion(int v) {version = v; };
+    void unblockAllSegments(time_t now);
 };
 
 

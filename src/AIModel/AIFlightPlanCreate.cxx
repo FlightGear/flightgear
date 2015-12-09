@@ -33,6 +33,8 @@
 #include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
+#include <Airports/groundnetwork.hxx>
+
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"
 

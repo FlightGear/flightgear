@@ -40,6 +40,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/locale.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/groundnetwork.hxx>
 #include <Navaids/NavDataCache.hxx>
 
 #include "airport.hxx"
@@ -159,6 +160,7 @@ FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
 
 {
     lastUpdate = 0;
+    groundNetwork.reset(new FGGroundNetwork);
 }
 
 // Destructor
@@ -171,16 +173,17 @@ FGAirportDynamics::~FGAirportDynamics()
 // Initialization required after XMLRead
 void FGAirportDynamics::init()
 {
-    groundNetwork.init(this);
-    groundNetwork.setTowerController(&towerController);
-    
+
+    groundNetwork->init(this);
+    groundController.setTowerController(&towerController);
+    groundController.init(this);
 }
 
 FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const string & flType,
                                            const string & airline,
                                            bool skipEmptyAirlineCode)
 {
-    const FGParkingList& parkings(groundNetwork.allParkings());
+    const FGParkingList& parkings(groundNetwork->allParkings());
     FGParkingList::const_iterator it;
     for (it = parkings.begin(); it != parkings.end(); ++it) {
         FGParkingRef parking = *it;
@@ -230,7 +233,7 @@ ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const st
 
 ParkingAssignment FGAirportDynamics::getParkingByName(const std::string& name) const
 {
-    const FGParkingList& parkings(groundNetwork.allParkings());
+    const FGParkingList& parkings(groundNetwork->allParkings());
     FGParkingList::const_iterator it;
     for (it = parkings.begin(); it != parkings.end(); ++it) {
         if ((*it)->name() == name) {
@@ -292,7 +295,7 @@ public:
 
 FGParkingList FGAirportDynamics::getParkings(bool onlyAvailable, const std::string &type) const
 {
-    FGParkingList result(groundNetwork.allParkings());
+    FGParkingList result(groundNetwork->allParkings());
 
     GetParkingsPredicate pred(onlyAvailable, type, this);
     FGParkingList::iterator it = std::remove_if(result.begin(), result.end(), pred);

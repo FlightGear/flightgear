@@ -27,9 +27,10 @@
 #include <simgear/structure/SGReferenced.hxx>
 
 #include <ATC/trafficcontrol.hxx>
+#include <ATC/GroundController.hxx>
+
 #include "airports_fwd.hxx"
 #include "parking.hxx"
-#include "groundnetwork.hxx"
 #include "runwayprefs.hxx"
 
 class ParkingAssignment
@@ -66,12 +67,13 @@ private:
     ParkingSet occupiedParkings;
 
 
+    std::auto_ptr<FGGroundNetwork> groundNetwork;
 
     FGRunwayPreference   rwyPrefs;
     FGStartupController  startupController;
-    FGGroundNetwork      groundNetwork;
     FGTowerController    towerController;
     FGApproachController approachController;
+    FGGroundController   groundController;
 
     time_t lastUpdate;
     std::string prevTrafficType;
@@ -98,7 +100,7 @@ private:
                                bool skipEmptyAirlineCode);
 public:
     FGAirportDynamics(FGAirport* ap);
-    ~FGAirportDynamics();
+    virtual ~FGAirportDynamics();
 
     void addAwosFreq     (int val) {
         freqAwos.push_back(val);
@@ -158,8 +160,8 @@ public:
     FGStartupController    *getStartupController()    {
         return &startupController;
     };
-    FGGroundNetwork        *getGroundNetwork()        {
-        return &groundNetwork;
+    FGGroundController        *getGroundController()        {
+        return &groundController;
     };
     FGTowerController      *getTowerController()      {
         return &towerController;
@@ -167,6 +169,11 @@ public:
     FGApproachController   *getApproachController()   {
         return &approachController;
     };
+
+    FGGroundNetwork* getGroundNetwork() const
+    {
+        return groundNetwork.get();
+    }
 
     int getGroundFrequency(unsigned leg);
     int getTowerFrequency  (unsigned nr);
