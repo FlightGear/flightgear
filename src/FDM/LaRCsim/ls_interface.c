@@ -295,8 +295,8 @@ void ls_stamp( void ) {
     date = (nowtime->tm_year % 100)*10000
 	 + (nowtime->tm_mon + 1)*100
 	 + (nowtime->tm_mday);
-    sprintf(sim_control_.date_string, "%06ld\0", date);
-    sprintf(sim_control_.time_stamp, "%02d:%02d:%02d\0", 
+    sprintf(sim_control_.date_string, "%06ld", date);
+    sprintf(sim_control_.time_stamp, "%02d:%02d:%02d", 
 	nowtime->tm_hour, nowtime->tm_min, nowtime->tm_sec);
 #ifdef COMPILE_THIS_CODE_THIS_USELESS_CODE
     cuserid( sim_control_.userid );	/* set up user id */
