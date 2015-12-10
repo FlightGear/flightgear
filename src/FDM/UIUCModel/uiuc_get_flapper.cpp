@@ -21,7 +21,7 @@ void uiuc_get_flapper(double dt)
   //    if (cycle_incr < 1)
   //      flapper_cycle_pct += cycle_incr;
   //    else  //need because problem when flapper_freq*dt is same as int
-  //	flapper_cycle_pct += cycle_incr - 1;
+  //        flapper_cycle_pct += cycle_incr - 1;
   //  }
   //if (flapper_cycle_pct >= 1)
   //  flapper_cycle_pct -= 1;

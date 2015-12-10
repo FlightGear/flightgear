@@ -20,22 +20,22 @@
 
  HISTORY:      04/15/2000   initial release
                10/25/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model at zero flaps
-			    (CYfxxf0)
-	       11/12/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model with flaps
-			    (CYfxxf).  Zero flap vairables removed.
-	       02/13/2002   (RD) Added variables so linear aero model
-	                    values can be recorded
-	       02/18/2002   (RD) Added uiuc_3Dinterp_quick() function
-	                    for a quicker 3D interpolation.  Takes
-			    advantage of "nice" data.
+                            linear Twin Otter model at zero flaps
+                            (CYfxxf0)
+               11/12/2001   (RD) Added new variables needed for the non-
+                            linear Twin Otter model with flaps
+                            (CYfxxf).  Zero flap vairables removed.
+               02/13/2002   (RD) Added variables so linear aero model
+                            values can be recorded
+               02/18/2002   (RD) Added uiuc_3Dinterp_quick() function
+                            for a quicker 3D interpolation.  Takes
+                            advantage of "nice" data.
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
-	       Robert Deters      <rdeters@uiuc.edu>
+               Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -63,8 +63,8 @@
  CALLS TO:     uiuc_1Dinterpolation
                uiuc_2Dinterpolation
                uiuc_ice_filter
-	       uiuc_3Dinterpolation
-	       uiuc_3Dinterp_quick
+               uiuc_3Dinterpolation
+               uiuc_3Dinterp_quick
 
 ----------------------------------------------------------------------
 
@@ -112,7 +112,7 @@ void uiuc_coef_sideforce()
               {
                 CYo = uiuc_ice_filter(CYo_clean,kCYo);
               }
-	    CYo_save = CYo;
+            CYo_save = CYo;
             CY += CYo_save;
             break;
           }
@@ -122,15 +122,15 @@ void uiuc_coef_sideforce()
               {
                 CY_beta = uiuc_ice_filter(CY_beta_clean,kCY_beta);
               }
-	    CY_beta_save = CY_beta * Std_Beta;
-	    if (eta_q_CY_beta_fac)
-	      {
-		CY += CY_beta_save * eta_q_CY_beta_fac;
-	      }
-	    else
-	      {
-		CY += CY_beta_save;
-	      }
+            CY_beta_save = CY_beta * Std_Beta;
+            if (eta_q_CY_beta_fac)
+              {
+                CY += CY_beta_save * eta_q_CY_beta_fac;
+              }
+            else
+              {
+                CY += CY_beta_save;
+              }
             break;
           }
         case CY_p_flag:
@@ -141,15 +141,15 @@ void uiuc_coef_sideforce()
               }
             /* CY_p must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
-	    CY_p_save = CY_p * P_body * b_2U;
-	    if (eta_q_CY_p_fac)
-	      {
-		CY += CY_p_save * eta_q_CY_p_fac;
-	      }
-	    else
-	      {
-		CY += CY_p_save;
-	      }
+            CY_p_save = CY_p * P_body * b_2U;
+            if (eta_q_CY_p_fac)
+              {
+                CY += CY_p_save * eta_q_CY_p_fac;
+              }
+            else
+              {
+                CY += CY_p_save;
+              }
             break;
           }
         case CY_r_flag:
@@ -160,15 +160,15 @@ void uiuc_coef_sideforce()
               }
             /* CY_r must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
-	    CY_r_save = CY_r * R_body * b_2U;
-	    if (eta_q_CY_r_fac)
-	      {
-		CY += CY_r_save * eta_q_CY_r_fac;
-	      }
-	    else
-	      {
-		CY += CY_r_save;
-	      }
+            CY_r_save = CY_r * R_body * b_2U;
+            if (eta_q_CY_r_fac)
+              {
+                CY += CY_r_save * eta_q_CY_r_fac;
+              }
+            else
+              {
+                CY += CY_r_save;
+              }
             break;
           }
         case CY_da_flag:
@@ -177,7 +177,7 @@ void uiuc_coef_sideforce()
               {
                 CY_da = uiuc_ice_filter(CY_da_clean,kCY_da);
               }
-	    CY_da_save = CY_da * aileron;
+            CY_da_save = CY_da * aileron;
             CY += CY_da_save;
             break;
           }
@@ -187,15 +187,15 @@ void uiuc_coef_sideforce()
               {
                 CY_dr = uiuc_ice_filter(CY_dr_clean,kCY_dr);
               }
-	    CY_dr_save = CY_dr * rudder;
-	    if (eta_q_CY_dr_fac)
-	      {
-		CY += CY_dr_save * eta_q_CY_dr_fac;
-	      }
-	    else
-	      {
-		CY += CY_dr_save;
-	      }
+            CY_dr_save = CY_dr * rudder;
+            if (eta_q_CY_dr_fac)
+              {
+                CY += CY_dr_save * eta_q_CY_dr_fac;
+              }
+            else
+              {
+                CY += CY_dr_save;
+              }
             break;
           }
         case CY_dra_flag:
@@ -204,7 +204,7 @@ void uiuc_coef_sideforce()
               {
                 CY_dra = uiuc_ice_filter(CY_dra_clean,kCY_dra);
               }
-	    CY_dra_save = CY_dra * rudder * Std_Alpha;
+            CY_dra_save = CY_dra * rudder * Std_Alpha;
             CY += CY_dra_save;
             break;
           }
@@ -214,7 +214,7 @@ void uiuc_coef_sideforce()
               {
                 CY_bdot = uiuc_ice_filter(CY_bdot_clean,kCY_bdot);
               }
-	    CY_bdot_save = CY_bdot * Std_Beta_dot * b_2U;
+            CY_bdot_save = CY_bdot * Std_Beta_dot * b_2U;
             CY += CY_bdot_save;
             break;
           }
@@ -244,138 +244,138 @@ void uiuc_coef_sideforce()
           }
         case CYfabetaf_flag:
           {
-	    if (CYfabetaf_nice == 1)
-	      CYfabetafI = uiuc_3Dinterp_quick(CYfabetaf_fArray,
-					       CYfabetaf_aArray_nice,
-					       CYfabetaf_bArray_nice,
-					       CYfabetaf_CYArray,
-					       CYfabetaf_na_nice,
-					       CYfabetaf_nb_nice,
-					       CYfabetaf_nf,
-					       flap_pos,
-					       Std_Alpha,
-					       Std_Beta);
-	    else
-	      CYfabetafI = uiuc_3Dinterpolation(CYfabetaf_fArray,
-						CYfabetaf_aArray,
-						CYfabetaf_betaArray,
-						CYfabetaf_CYArray,
-						CYfabetaf_nAlphaArray,
-						CYfabetaf_nbeta,
-						CYfabetaf_nf,
-						flap_pos,
-						Std_Alpha,
-						Std_Beta);
+            if (CYfabetaf_nice == 1)
+              CYfabetafI = uiuc_3Dinterp_quick(CYfabetaf_fArray,
+                                               CYfabetaf_aArray_nice,
+                                               CYfabetaf_bArray_nice,
+                                               CYfabetaf_CYArray,
+                                               CYfabetaf_na_nice,
+                                               CYfabetaf_nb_nice,
+                                               CYfabetaf_nf,
+                                               flap_pos,
+                                               Std_Alpha,
+                                               Std_Beta);
+            else
+              CYfabetafI = uiuc_3Dinterpolation(CYfabetaf_fArray,
+                                                CYfabetaf_aArray,
+                                                CYfabetaf_betaArray,
+                                                CYfabetaf_CYArray,
+                                                CYfabetaf_nAlphaArray,
+                                                CYfabetaf_nbeta,
+                                                CYfabetaf_nf,
+                                                flap_pos,
+                                                Std_Alpha,
+                                                Std_Beta);
             CY += CYfabetafI;
             break;
           }
         case CYfadaf_flag:
           {
-	    if (CYfadaf_nice == 1)
-	      CYfadafI = uiuc_3Dinterp_quick(CYfadaf_fArray,
-					     CYfadaf_aArray_nice,
-					     CYfadaf_daArray_nice,
-					     CYfadaf_CYArray,
-					     CYfadaf_na_nice,
-					     CYfadaf_nda_nice,
-					     CYfadaf_nf,
-					     flap_pos,
-					     Std_Alpha,
-					     aileron);
-	    else
-	      CYfadafI = uiuc_3Dinterpolation(CYfadaf_fArray,
-					      CYfadaf_aArray,
-					      CYfadaf_daArray,
-					      CYfadaf_CYArray,
-					      CYfadaf_nAlphaArray,
-					      CYfadaf_nda,
-					      CYfadaf_nf,
-					      flap_pos,
-					      Std_Alpha,
-					      aileron);
+            if (CYfadaf_nice == 1)
+              CYfadafI = uiuc_3Dinterp_quick(CYfadaf_fArray,
+                                             CYfadaf_aArray_nice,
+                                             CYfadaf_daArray_nice,
+                                             CYfadaf_CYArray,
+                                             CYfadaf_na_nice,
+                                             CYfadaf_nda_nice,
+                                             CYfadaf_nf,
+                                             flap_pos,
+                                             Std_Alpha,
+                                             aileron);
+            else
+              CYfadafI = uiuc_3Dinterpolation(CYfadaf_fArray,
+                                              CYfadaf_aArray,
+                                              CYfadaf_daArray,
+                                              CYfadaf_CYArray,
+                                              CYfadaf_nAlphaArray,
+                                              CYfadaf_nda,
+                                              CYfadaf_nf,
+                                              flap_pos,
+                                              Std_Alpha,
+                                              aileron);
             CY += CYfadafI;
             break;
           }
         case CYfadrf_flag:
           {
-	    if (CYfadrf_nice == 1)
-	      CYfadrfI = uiuc_3Dinterp_quick(CYfadrf_fArray,
-					     CYfadrf_aArray_nice,
-					     CYfadrf_drArray_nice,
-					     CYfadrf_CYArray,
-					     CYfadrf_na_nice,
-					     CYfadrf_ndr_nice,
-					     CYfadrf_nf,
-					     flap_pos,
-					     Std_Alpha,
-					     rudder);
-	    else
-	      CYfadrfI = uiuc_3Dinterpolation(CYfadrf_fArray,
-					      CYfadrf_aArray,
-					      CYfadrf_drArray,
-					      CYfadrf_CYArray,
-					      CYfadrf_nAlphaArray,
-					      CYfadrf_ndr,
-					      CYfadrf_nf,
-					      flap_pos,
-					      Std_Alpha,
-					      rudder);
+            if (CYfadrf_nice == 1)
+              CYfadrfI = uiuc_3Dinterp_quick(CYfadrf_fArray,
+                                             CYfadrf_aArray_nice,
+                                             CYfadrf_drArray_nice,
+                                             CYfadrf_CYArray,
+                                             CYfadrf_na_nice,
+                                             CYfadrf_ndr_nice,
+                                             CYfadrf_nf,
+                                             flap_pos,
+                                             Std_Alpha,
+                                             rudder);
+            else
+              CYfadrfI = uiuc_3Dinterpolation(CYfadrf_fArray,
+                                              CYfadrf_aArray,
+                                              CYfadrf_drArray,
+                                              CYfadrf_CYArray,
+                                              CYfadrf_nAlphaArray,
+                                              CYfadrf_ndr,
+                                              CYfadrf_nf,
+                                              flap_pos,
+                                              Std_Alpha,
+                                              rudder);
             CY += CYfadrfI;
             break;
-	  }
+          }
         case CYfapf_flag:
-	  {
-	    p_nondim = P_body * b_2U;
-	    if (CYfapf_nice == 1)
-	      CYfapfI = uiuc_3Dinterp_quick(CYfapf_fArray,
-					    CYfapf_aArray_nice,
-					    CYfapf_pArray_nice,
-					    CYfapf_CYArray,
-					    CYfapf_na_nice,
-					    CYfapf_np_nice,
-					    CYfapf_nf,
-					    flap_pos,
-					    Std_Alpha,
-					    p_nondim);
-	    else
-	      CYfapfI = uiuc_3Dinterpolation(CYfapf_fArray,
-					     CYfapf_aArray,
-					     CYfapf_pArray,
-					     CYfapf_CYArray,
-					     CYfapf_nAlphaArray,
-					     CYfapf_np,
-					     CYfapf_nf,
-					     flap_pos,
-					     Std_Alpha,
-					     p_nondim);
+          {
+            p_nondim = P_body * b_2U;
+            if (CYfapf_nice == 1)
+              CYfapfI = uiuc_3Dinterp_quick(CYfapf_fArray,
+                                            CYfapf_aArray_nice,
+                                            CYfapf_pArray_nice,
+                                            CYfapf_CYArray,
+                                            CYfapf_na_nice,
+                                            CYfapf_np_nice,
+                                            CYfapf_nf,
+                                            flap_pos,
+                                            Std_Alpha,
+                                            p_nondim);
+            else
+              CYfapfI = uiuc_3Dinterpolation(CYfapf_fArray,
+                                             CYfapf_aArray,
+                                             CYfapf_pArray,
+                                             CYfapf_CYArray,
+                                             CYfapf_nAlphaArray,
+                                             CYfapf_np,
+                                             CYfapf_nf,
+                                             flap_pos,
+                                             Std_Alpha,
+                                             p_nondim);
             CY += CYfapfI;
             break;
           }
-	case CYfarf_flag:
+        case CYfarf_flag:
           {
-	    r_nondim = R_body * b_2U;
-	    if (CYfarf_nice == 1)
-	      CYfarfI = uiuc_3Dinterp_quick(CYfarf_fArray,
-					    CYfarf_aArray_nice,
-					    CYfarf_rArray_nice,
-					    CYfarf_CYArray,
-					    CYfarf_na_nice,
-					    CYfarf_nr_nice,
-					    CYfarf_nf,
-					    flap_pos,
-					    Std_Alpha,
-					    r_nondim);
-	    else
-	      CYfarfI = uiuc_3Dinterpolation(CYfarf_fArray,
-					     CYfarf_aArray,
-					     CYfarf_rArray,
-					     CYfarf_CYArray,
-					     CYfarf_nAlphaArray,
-					     CYfarf_nr,
-					     CYfarf_nf,
-					     flap_pos,
-					     Std_Alpha,
-					     r_nondim);
+            r_nondim = R_body * b_2U;
+            if (CYfarf_nice == 1)
+              CYfarfI = uiuc_3Dinterp_quick(CYfarf_fArray,
+                                            CYfarf_aArray_nice,
+                                            CYfarf_rArray_nice,
+                                            CYfarf_CYArray,
+                                            CYfarf_na_nice,
+                                            CYfarf_nr_nice,
+                                            CYfarf_nf,
+                                            flap_pos,
+                                            Std_Alpha,
+                                            r_nondim);
+            else
+              CYfarfI = uiuc_3Dinterpolation(CYfarf_fArray,
+                                             CYfarf_aArray,
+                                             CYfarf_rArray,
+                                             CYfarf_CYArray,
+                                             CYfarf_nAlphaArray,
+                                             CYfarf_nr,
+                                             CYfarf_nf,
+                                             flap_pos,
+                                             Std_Alpha,
+                                             r_nondim);
             CY += CYfarfI;
             break;
           }

@@ -49,10 +49,10 @@
 ----------------------------------------------------------------------
 
  CALLS TO:     check_float() if needed
-	       d_2_to_3() if needed
-	       d_1_to_2() if needed
-	       i_1_to_2() if needed
-	       d_1_to_1() if needed
+               d_2_to_3() if needed
+               d_1_to_2() if needed
+               i_1_to_2() if needed
+               d_1_to_1() if needed
 
  ----------------------------------------------------------------------
 
@@ -91,11 +91,11 @@ using std::exit;
 #endif
 
 void parse_record( const string& linetoken2, const string& linetoken3,
-		   const string& linetoken4, const string& linetoken5, 
-		   const string& linetoken6, const string& linetoken7, 
-		   const string& linetoken8, const string& linetoken9,
-		   const string& linetoken10, const string& aircraft_directory,
-		   LIST command_line ) {
+                   const string& linetoken4, const string& linetoken5, 
+                   const string& linetoken6, const string& linetoken7, 
+                   const string& linetoken8, const string& linetoken9,
+                   const string& linetoken10, const string& aircraft_directory,
+                   LIST command_line ) {
 
   istringstream token3(linetoken3.c_str());
   istringstream token4(linetoken4.c_str());

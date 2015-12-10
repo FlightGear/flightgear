@@ -17,8 +17,8 @@ int uiuc_1DdataFileReader( string file_name,
                             double y[], 
                             int &xmax );
 int uiuc_1DdataFileReader( string file_name, 
-			   double x[], 
-			   int y[], 
-			   int &xmax );
+                           double x[], 
+                           int y[], 
+                           int &xmax );
 
 #endif // _1D_DATA_FILE_READER_H_

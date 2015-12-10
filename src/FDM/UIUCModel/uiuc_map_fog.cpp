@@ -67,8 +67,8 @@
 
 void uiuc_map_fog()
 {
-  fog_map["fog_segments"]	=	fog_segments_flag	;
-  fog_map["fog_point"]		=	fog_point_flag		;
+  fog_map["fog_segments"]        =        fog_segments_flag        ;
+  fog_map["fog_point"]                =        fog_point_flag                ;
   
 }
 

@@ -18,15 +18,15 @@
  
  HISTORY:      04/08/2000   initial release
                06/18/2001   (RD) Added aileron_input, rudder_input,
-	                    pilot_elev_no, pilot_ail_no, and 
-			    pilot_rud_no
-	       11/12/2001   (RD) Added flap_max, flap_rate
+                            pilot_elev_no, pilot_ail_no, and 
+                            pilot_rud_no
+               11/12/2001   (RD) Added flap_max, flap_rate
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         http://www.jeffscott.net/
-	       Robert Deters      <rdeters@uiuc.edu>
+               Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  

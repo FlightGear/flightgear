@@ -25,17 +25,17 @@
                             and rudder inputs to record map
                04/24/2000   (JS) added rest of variables in 
                             ls_generic.h
-	       07/06/2001   (RD) changed Flap handle output
-	       07/20/2001   (RD) fixed Lat_control and Rudder_pedal
+               07/06/2001   (RD) changed Flap handle output
+               07/20/2001   (RD) fixed Lat_control and Rudder_pedal
                10/25/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model at zero flaps
-			    (Cxfxxf0I)
+                            linear Twin Otter model at zero flaps
+                            (Cxfxxf0I)
                11/12/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model at zero flaps
-			    (CxfxxfI).  Removed zero flap variables.
-			    Added flap_pos and flap_cmd_deg.
-	       02/13/2002   (RD) Added variables so linear aero model
-	                    values can be recorded
+                            linear Twin Otter model at zero flaps
+                            (CxfxxfI).  Removed zero flap variables.
+                            Added flap_pos and flap_cmd_deg.
+               02/13/2002   (RD) Added variables so linear aero model
+                            values can be recorded
                03/03/2003   (RD) Added flap_cmd_record
                03/16/2003   (RD) Added trigger record variables
                07/17/2003   (RD) Added error checking code (default
@@ -48,7 +48,7 @@
 
  AUTHOR(S):    Jeff Scott         http://www.jeffscott.net/
                Robert Deters      <rdeters@uiuc.edu>
-	       Michael Selig      <m-selig@uiuc.edu>
+               Michael Selig      <m-selig@uiuc.edu>
 ----------------------------------------------------------------------
 
  VARIABLES:
@@ -98,7 +98,7 @@
 
 #include "uiuc_recorder.h"
 
-using std::endl;		// -dw
+using std::endl;                // -dw
 
 void uiuc_recorder( double dt )
 {
@@ -397,11 +397,11 @@ void uiuc_recorder( double dt )
                 fout << V_down << " ";
                 break;
               }
-	    case V_down_fpm_record:
-	      {
-		fout << V_down * 60 << " ";
-		break;
-	      }
+            case V_down_fpm_record:
+              {
+                fout << V_down * 60 << " ";
+                break;
+              }
             case V_north_rel_ground_record:
               {
                 fout << V_north_rel_ground << " ";
@@ -847,11 +847,11 @@ void uiuc_recorder( double dt )
                 fout << elevator * RAD_TO_DEG << " ";
                 break;
               }
-	    case elevator_sas_deg_record:
-	      {
-		fout << elevator_sas * RAD_TO_DEG << " ";
-		break;
-	      }
+            case elevator_sas_deg_record:
+              {
+                fout << elevator_sas * RAD_TO_DEG << " ";
+                break;
+              }
             case Lat_control_record:
               {
                 fout << Lat_control << " ";
@@ -867,11 +867,11 @@ void uiuc_recorder( double dt )
                 fout << aileron * RAD_TO_DEG << " ";
                 break;
               }
-	    case aileron_sas_deg_record:
-	      {
-		fout << aileron_sas * RAD_TO_DEG << " ";
-		break;
-	      }
+            case aileron_sas_deg_record:
+              {
+                fout << aileron_sas * RAD_TO_DEG << " ";
+                break;
+              }
             case Rudder_pedal_record:
               {
                 fout << Rudder_pedal << " ";
@@ -887,11 +887,11 @@ void uiuc_recorder( double dt )
                 fout << rudder * RAD_TO_DEG << " ";
                 break;
               }
-	    case rudder_sas_deg_record:
-	      {
-		fout << rudder_sas * RAD_TO_DEG << " ";
-		break;
-	      }
+            case rudder_sas_deg_record:
+              {
+                fout << rudder_sas * RAD_TO_DEG << " ";
+                break;
+              }
             case Flap_handle_record:
               {
                 fout << Flap_handle << " ";
@@ -1182,7 +1182,7 @@ void uiuc_recorder( double dt )
                 break;
               }
             case CZfabetafI_record:
-	      {
+              {
                 fout << CZfabetafI << " ";
                 break;
               }
@@ -1406,71 +1406,71 @@ void uiuc_recorder( double dt )
                 fout << CYfbetadrI << " ";
                 break;
               }
-	    case CYfabetafI_record:
-	      {
-		fout << CYfabetafI << " ";
-		break;
-	      }
-	    case CYfadafI_record:
-	      {
-		fout << CYfadafI << " ";
-		break;
-	      }
-	    case CYfadrfI_record:
-	      {
-		fout << CYfadrfI << " ";
-		break;
-	      }
-	    case CYfapfI_record:
-	      {
-		fout << CYfapfI << " ";
-		break;
-	      }
-	    case CYfarfI_record:
-	      {
-		fout << CYfarfI << " ";
-		break;
-	      }
-	    case CYo_save_record:
-	      {
-		fout << CYo_save << " ";
-		break;
-	      }
-	    case CY_beta_save_record:
-	      {
-		fout << CY_beta_save << " ";
-		break;
-	      }
-	    case CY_p_save_record:
-	      {
-		fout << CY_p_save << " ";
-		break;
-	      }
-	    case CY_r_save_record:
-	      {
-		fout << CY_r_save << " ";
-		break;
-	      }
-	    case CY_da_save_record:
-	      {
-		fout << CY_da_save << " ";
-		break;
-	      }
-	    case CY_dr_save_record:
-	      {
-		fout << CY_dr_save << " ";
-		break;
-	      }
-	    case CY_dra_save_record:
-	      {
-		fout << CY_dra_save << " ";
-		break;
-	      }
-	    case CY_bdot_save_record:
-	      {
-		fout << CY_bdot_save << " ";
-		break;
-	      }
+            case CYfabetafI_record:
+              {
+                fout << CYfabetafI << " ";
+                break;
+              }
+            case CYfadafI_record:
+              {
+                fout << CYfadafI << " ";
+                break;
+              }
+            case CYfadrfI_record:
+              {
+                fout << CYfadrfI << " ";
+                break;
+              }
+            case CYfapfI_record:
+              {
+                fout << CYfapfI << " ";
+                break;
+              }
+            case CYfarfI_record:
+              {
+                fout << CYfarfI << " ";
+                break;
+              }
+            case CYo_save_record:
+              {
+                fout << CYo_save << " ";
+                break;
+              }
+            case CY_beta_save_record:
+              {
+                fout << CY_beta_save << " ";
+                break;
+              }
+            case CY_p_save_record:
+              {
+                fout << CY_p_save << " ";
+                break;
+              }
+            case CY_r_save_record:
+              {
+                fout << CY_r_save << " ";
+                break;
+              }
+            case CY_da_save_record:
+              {
+                fout << CY_da_save << " ";
+                break;
+              }
+            case CY_dr_save_record:
+              {
+                fout << CY_dr_save << " ";
+                break;
+              }
+            case CY_dra_save_record:
+              {
+                fout << CY_dra_save << " ";
+                break;
+              }
+            case CY_bdot_save_record:
+              {
+                fout << CY_bdot_save << " ";
+                break;
+              }
             case Cl_record:
               {
                 fout << Cl << " ";
@@ -1486,66 +1486,66 @@ void uiuc_recorder( double dt )
                 fout << ClfbetadrI << " ";
                 break;
               }
-	    case ClfabetafI_record:
-	      {
-		fout << ClfabetafI << " ";
-		break;
-	      }
-	    case ClfadafI_record:
-	      {
-		fout << ClfadafI << " ";
-		break;
-	      }
-	    case ClfadrfI_record:
-	      {
-		fout << ClfadrfI << " ";
-		break;
-	      }
-	    case ClfapfI_record:
-	      {
-		fout << ClfapfI << " ";
-		break;
-	      }
-	    case ClfarfI_record:
-	      {
-		fout << ClfarfI << " ";
-		break;
-	      }
-	    case Clo_save_record:
-	      {
-		fout << Clo_save << " ";
-		break;
-	      }
-	    case Cl_beta_save_record:
-	      {
-		fout << Cl_beta_save << " ";
-		break;
-	      }
-	    case Cl_p_save_record:
-	      {
-		fout << Cl_p_save << " ";
-		break;
-	      }
-	    case Cl_r_save_record:
-	      {
-		fout << Cl_r_save << " ";
-		break;
-	      }
-	    case Cl_da_save_record:
-	      {
-		fout << Cl_da_save << " ";
-		break;
-	      }
-	    case Cl_dr_save_record:
-	      {
-		fout << Cl_dr_save << " ";
-		break;
-	      }
-	    case Cl_daa_save_record:
-	      {
-		fout << Cl_daa_save << " ";
-		break;
-	      }
+            case ClfabetafI_record:
+              {
+                fout << ClfabetafI << " ";
+                break;
+              }
+            case ClfadafI_record:
+              {
+                fout << ClfadafI << " ";
+                break;
+              }
+            case ClfadrfI_record:
+              {
+                fout << ClfadrfI << " ";
+                break;
+              }
+            case ClfapfI_record:
+              {
+                fout << ClfapfI << " ";
+                break;
+              }
+            case ClfarfI_record:
+              {
+                fout << ClfarfI << " ";
+                break;
+              }
+            case Clo_save_record:
+              {
+                fout << Clo_save << " ";
+                break;
+              }
+            case Cl_beta_save_record:
+              {
+                fout << Cl_beta_save << " ";
+                break;
+              }
+            case Cl_p_save_record:
+              {
+                fout << Cl_p_save << " ";
+                break;
+              }
+            case Cl_r_save_record:
+              {
+                fout << Cl_r_save << " ";
+                break;
+              }
+            case Cl_da_save_record:
+              {
+                fout << Cl_da_save << " ";
+                break;
+              }
+            case Cl_dr_save_record:
+              {
+                fout << Cl_dr_save << " ";
+                break;
+              }
+            case Cl_daa_save_record:
+              {
+                fout << Cl_daa_save << " ";
+                break;
+              }
             case Cn_record:
               {
                 fout << Cn << " ";
@@ -1561,123 +1561,123 @@ void uiuc_recorder( double dt )
                 fout << CnfbetadrI << " ";
                 break;
               }
-	    case CnfabetafI_record:
-	      {
-		fout << CnfabetafI << " ";
-		break;
-	      }
-	    case CnfadafI_record:
-	      {
-		fout << CnfadafI << " ";
-		break;
-	      }
-	    case CnfadrfI_record:
-	      {
-		fout << CnfadrfI << " ";
-		break;
-	      }
-	    case CnfapfI_record:
-	      {
-		fout << CnfapfI << " ";
-		break;
-	      }
-	    case CnfarfI_record:
-	      {
-		fout << CnfarfI << " ";
-		break;
-	      }
-	    case Cno_save_record:
-	      {
-		fout << Cno_save << " ";
-		break;
-	      }
-	    case Cn_beta_save_record:
-	      {
-		fout << Cn_beta_save << " ";
-		break;
-	      }
-	    case Cn_p_save_record:
-	      {
-		fout << Cn_p_save << " ";
-		break;
-	      }
-	    case Cn_r_save_record:
-	      {
-		fout << Cn_r_save << " ";
-		break;
-	      }
-	    case Cn_da_save_record:
-	      {
-		fout << Cn_da_save << " ";
-		break;
-	      }
-	    case Cn_dr_save_record:
-	      {
-		fout << Cn_dr_save << " ";
-		break;
-	      }
-	    case Cn_q_save_record:
-	      {
-		fout << Cn_q_save << " ";
-		break;
-	      }
-	    case Cn_b3_save_record:
-	      {
-		fout << Cn_b3_save << " ";
-		break;
-	      }
+            case CnfabetafI_record:
+              {
+                fout << CnfabetafI << " ";
+                break;
+              }
+            case CnfadafI_record:
+              {
+                fout << CnfadafI << " ";
+                break;
+              }
+            case CnfadrfI_record:
+              {
+                fout << CnfadrfI << " ";
+                break;
+              }
+            case CnfapfI_record:
+              {
+                fout << CnfapfI << " ";
+                break;
+              }
+            case CnfarfI_record:
+              {
+                fout << CnfarfI << " ";
+                break;
+              }
+            case Cno_save_record:
+              {
+                fout << Cno_save << " ";
+                break;
+              }
+            case Cn_beta_save_record:
+              {
+                fout << Cn_beta_save << " ";
+                break;
+              }
+            case Cn_p_save_record:
+              {
+                fout << Cn_p_save << " ";
+                break;
+              }
+            case Cn_r_save_record:
+              {
+                fout << Cn_r_save << " ";
+                break;
+              }
+            case Cn_da_save_record:
+              {
+                fout << Cn_da_save << " ";
+                break;
+              }
+            case Cn_dr_save_record:
+              {
+                fout << Cn_dr_save << " ";
+                break;
+              }
+            case Cn_q_save_record:
+              {
+                fout << Cn_q_save << " ";
+                break;
+              }
+            case Cn_b3_save_record:
+              {
+                fout << Cn_b3_save << " ";
+                break;
+              }
 
               /******************** Ice Detection ********************/
-	    case CL_clean_record:
-	      {
-		fout << CL_clean << " ";
-		break;
-	      }
-	    case CL_iced_record:
-	      {
-		fout << CL_iced << " ";
-		break;
-	      }
-	    case CD_clean_record:
-	      {
-		fout << CD_clean << " ";
-		break;
-	      }
-	    case CD_iced_record:
-	      {
-		fout << CD_iced << " ";
-		break;
-	      }
-	    case Cm_clean_record:
-	      {
-		fout << Cm_clean << " ";
-		break;
-	      }
-	    case Cm_iced_record:
-	      {
-		fout << Cm_iced << " ";
-		break;
-	      }
-	    case Ch_clean_record:
-	      {
-		fout << Ch_clean << " ";
-		break;
-	      }
-	    case Ch_iced_record:
-	      {
-		fout << Ch_iced << " ";
-		break;
-	      }
-	    case Cl_clean_record:
-	      {
-		fout << Cl_clean << " ";
-		break;
-	      }
-	    case Cl_iced_record:
-	      {
-		fout << Cl_iced << " ";
-		break;
-	      }
+            case CL_clean_record:
+              {
+                fout << CL_clean << " ";
+                break;
+              }
+            case CL_iced_record:
+              {
+                fout << CL_iced << " ";
+                break;
+              }
+            case CD_clean_record:
+              {
+                fout << CD_clean << " ";
+                break;
+              }
+            case CD_iced_record:
+              {
+                fout << CD_iced << " ";
+                break;
+              }
+            case Cm_clean_record:
+              {
+                fout << Cm_clean << " ";
+                break;
+              }
+            case Cm_iced_record:
+              {
+                fout << Cm_iced << " ";
+                break;
+              }
+            case Ch_clean_record:
+              {
+                fout << Ch_clean << " ";
+                break;
+              }
+            case Ch_iced_record:
+              {
+                fout << Ch_iced << " ";
+                break;
+              }
+            case Cl_clean_record:
+              {
+                fout << Cl_clean << " ";
+                break;
+              }
+            case Cl_iced_record:
+              {
+                fout << Cl_iced << " ";
+                break;
+              }
             case CLclean_wing_record:
               {
                 fout << CLclean_wing << " ";
@@ -1848,183 +1848,183 @@ void uiuc_recorder( double dt )
                 fout << pct_beta_flow_tail << " ";
                 break;
               }
-	    case eta_ice_record:
-	      {
-	        fout << eta_ice << " ";
-		break;
-	      }
-	    case eta_wing_left_record:
-	      {
-		fout << eta_wing_left << " ";
-		break;
-	      }
-	    case eta_wing_right_record:
-	      {
-		fout << eta_wing_right << " ";
-		break;
-	      }
-	    case eta_tail_record:
-	      {
-		fout << eta_tail << " ";
-		break;
-	      }
-	    case delta_CL_record:
-	      {
-		fout << delta_CL << " ";
-		break;
-	      }
-	    case delta_CD_record:
-	      {
-		fout << delta_CD << " ";
-		break;
-	      }
-	    case delta_Cm_record:
-	      {
-		fout << delta_Cm << " ";
-		break;
-	      }
-	    case delta_Cl_record:
-	      {
-		fout << delta_Cl << " ";
-		break;
-	      }
-	    case delta_Cn_record:
-	      {
-		fout << delta_Cn << " ";
-		break;
-	      }
-	    case boot_cycle_tail_record:
-	      {
-		fout << boot_cycle_tail << " ";
-		break;
-	      }
-	    case boot_cycle_wing_left_record:
-	      {
-		fout << boot_cycle_wing_left << " ";
-		break;
-	      }
-	    case boot_cycle_wing_right_record:
-	      {
-		fout << boot_cycle_wing_right << " ";
-		break;
-	      }
-	    case autoIPS_tail_record:
-	      {
-		fout << autoIPS_tail << " ";
-		break;
-	      }
-	    case autoIPS_wing_left_record:
-	      {
-		fout << autoIPS_wing_left << " ";
-		break;
-	      }
-	    case autoIPS_wing_right_record:
-	      {
-		fout << autoIPS_wing_right << " ";
-		break;
-	      }
-	    case eps_pitch_input_record:
-	      {
-		fout << eps_pitch_input << " ";
-		break;
-	      }
-	    case eps_alpha_max_record:
-	      {
-		fout << eps_alpha_max << " ";
-		break;
-	      }
-	    case eps_pitch_max_record:
-	      {
-		fout << eps_pitch_max << " ";
-		break;
-	      }
-	    case eps_pitch_min_record:
-	      {
-		fout << eps_pitch_min << " ";
-		break;
-	      }
-	    case eps_roll_max_record:
-	      {
-		fout << eps_roll_max << " ";
-		break;
-	      }
-	    case eps_thrust_min_record:
-	      {
-		fout << eps_thrust_min << " ";
-		break;
-	      }
-	    case eps_flap_max_record:
-	      {
-		fout << eps_flap_max << " ";
-		break;
-	      }
-	    case eps_airspeed_max_record:
-	      {
-		fout << eps_airspeed_max << " ";
-		break;
-	      }
-	    case eps_airspeed_min_record:
-	      {
-		fout << eps_airspeed_min << " ";
-		break;
-	      }
+            case eta_ice_record:
+              {
+                fout << eta_ice << " ";
+                break;
+              }
+            case eta_wing_left_record:
+              {
+                fout << eta_wing_left << " ";
+                break;
+              }
+            case eta_wing_right_record:
+              {
+                fout << eta_wing_right << " ";
+                break;
+              }
+            case eta_tail_record:
+              {
+                fout << eta_tail << " ";
+                break;
+              }
+            case delta_CL_record:
+              {
+                fout << delta_CL << " ";
+                break;
+              }
+            case delta_CD_record:
+              {
+                fout << delta_CD << " ";
+                break;
+              }
+            case delta_Cm_record:
+              {
+                fout << delta_Cm << " ";
+                break;
+              }
+            case delta_Cl_record:
+              {
+                fout << delta_Cl << " ";
+                break;
+              }
+            case delta_Cn_record:
+              {
+                fout << delta_Cn << " ";
+                break;
+              }
+            case boot_cycle_tail_record:
+              {
+                fout << boot_cycle_tail << " ";
+                break;
+              }
+            case boot_cycle_wing_left_record:
+              {
+                fout << boot_cycle_wing_left << " ";
+                break;
+              }
+            case boot_cycle_wing_right_record:
+              {
+                fout << boot_cycle_wing_right << " ";
+                break;
+              }
+            case autoIPS_tail_record:
+              {
+                fout << autoIPS_tail << " ";
+                break;
+              }
+            case autoIPS_wing_left_record:
+              {
+                fout << autoIPS_wing_left << " ";
+                break;
+              }
+            case autoIPS_wing_right_record:
+              {
+                fout << autoIPS_wing_right << " ";
+                break;
+              }
+            case eps_pitch_input_record:
+              {
+                fout << eps_pitch_input << " ";
+                break;
+              }
+            case eps_alpha_max_record:
+              {
+                fout << eps_alpha_max << " ";
+                break;
+              }
+            case eps_pitch_max_record:
+              {
+                fout << eps_pitch_max << " ";
+                break;
+              }
+            case eps_pitch_min_record:
+              {
+                fout << eps_pitch_min << " ";
+                break;
+              }
+            case eps_roll_max_record:
+              {
+                fout << eps_roll_max << " ";
+                break;
+              }
+            case eps_thrust_min_record:
+              {
+                fout << eps_thrust_min << " ";
+                break;
+              }
+            case eps_flap_max_record:
+              {
+                fout << eps_flap_max << " ";
+                break;
+              }
+            case eps_airspeed_max_record:
+              {
+                fout << eps_airspeed_max << " ";
+                break;
+              }
+            case eps_airspeed_min_record:
+              {
+                fout << eps_airspeed_min << " ";
+                break;
+              }
 
-	      /****************** Autopilot **************************/
-	    case ap_pah_on_record:
-	      {
-		fout << ap_pah_on << " ";
-		break;
-	      }
-	    case ap_alh_on_record:
-	      {
-		fout << ap_alh_on << " ";
-		break;
-	      }
-	    case ap_rah_on_record:
-	      {
-		fout << ap_rah_on << " ";
-		break;
-	      }
-	    case ap_hh_on_record:
-	      {
-		fout << ap_hh_on << " ";
-		break;
-	      }
-	    case ap_Theta_ref_deg_record:
-	      {
-		fout << ap_Theta_ref_rad*RAD_TO_DEG << " ";
-		break;
-	      }
-	    case ap_Theta_ref_rad_record:
-	      {
-		fout << ap_Theta_ref_rad << " ";
-		break;
-	      }
-	    case ap_alt_ref_ft_record:
-	      {
-		fout << ap_alt_ref_ft << " ";
-		break;
-	      }
-	    case ap_Phi_ref_deg_record:
-	      {
-		fout << ap_Phi_ref_rad*RAD_TO_DEG << " ";
-		break;
-	      }
-	    case ap_Phi_ref_rad_record:
-	      {
-		fout << ap_Phi_ref_rad << " ";
-		break;
-	      }
-	    case ap_Psi_ref_deg_record:
-	      {
-		fout << ap_Psi_ref_rad*RAD_TO_DEG << " ";
-		break;
-	      }
-	    case ap_Psi_ref_rad_record:
-	      {
-		fout << ap_Psi_ref_rad << " ";
-		break;
-	      }
+              /****************** Autopilot **************************/
+            case ap_pah_on_record:
+              {
+                fout << ap_pah_on << " ";
+                break;
+              }
+            case ap_alh_on_record:
+              {
+                fout << ap_alh_on << " ";
+                break;
+              }
+            case ap_rah_on_record:
+              {
+                fout << ap_rah_on << " ";
+                break;
+              }
+            case ap_hh_on_record:
+              {
+                fout << ap_hh_on << " ";
+                break;
+              }
+            case ap_Theta_ref_deg_record:
+              {
+                fout << ap_Theta_ref_rad*RAD_TO_DEG << " ";
+                break;
+              }
+            case ap_Theta_ref_rad_record:
+              {
+                fout << ap_Theta_ref_rad << " ";
+                break;
+              }
+            case ap_alt_ref_ft_record:
+              {
+                fout << ap_alt_ref_ft << " ";
+                break;
+              }
+            case ap_Phi_ref_deg_record:
+              {
+                fout << ap_Phi_ref_rad*RAD_TO_DEG << " ";
+                break;
+              }
+            case ap_Phi_ref_rad_record:
+              {
+                fout << ap_Phi_ref_rad << " ";
+                break;
+              }
+            case ap_Psi_ref_deg_record:
+              {
+                fout << ap_Psi_ref_rad*RAD_TO_DEG << " ";
+                break;
+              }
+            case ap_Psi_ref_rad_record:
+              {
+                fout << ap_Psi_ref_rad << " ";
+                break;
+              }
 
               /************************ Forces ***********************/
             case F_X_wind_record:
@@ -2196,283 +2196,283 @@ void uiuc_recorder( double dt )
               }
 
               /********************* flapper *********************/
-	    case flapper_freq_record:
-	      {
-		fout << flapper_freq << " ";
-		break;
-	      }
-	    case flapper_phi_record:
-	      {
-		fout << flapper_phi << " ";
-		break;
-	      }
-	    case flapper_phi_deg_record:
-	      {
-		fout << flapper_phi*RAD_TO_DEG << " ";
-		break;
-	      }
-	    case flapper_Lift_record:
-	      {
-		fout << flapper_Lift << " ";
-		break;
-	      }
-	    case flapper_Thrust_record:
-	      {
-		fout << flapper_Thrust << " ";
-		break;
-	      }
-	    case flapper_Inertia_record:
-	      {
-		fout << flapper_Inertia << " ";
-		break;
-	      }
-	    case flapper_Moment_record:
-	      {
-		fout << flapper_Moment << " ";
-		break;
-	      }
-	      /****************Other Variables*******************/
-	    case gyroMomentQ_record:
-	      {
-		fout << polarInertia * engineOmega * Q_body << " ";
-		break;
-	      }
-	    case gyroMomentR_record:
-	      {
-		fout << -polarInertia * engineOmega * R_body << " ";
-		break;
-	      }
-	    case eta_q_record:
-	      {
-		fout << eta_q << " ";
-		break;
-	      }
-	    case rpm_record:
-	      {
-		fout << (engineOmega * 60 / (2 * LS_PI)) << " ";
-		break;
-	      }
-	    case w_induced_record:
-	      {
-		fout << w_induced << " ";
-		break;
-	      }
-	    case downwashAngle_deg_record:
-	      {
-		fout << downwashAngle * RAD_TO_DEG << " ";
-		break;
-	      }
-	    case alphaTail_deg_record:
-	      {
-		fout << alphaTail * RAD_TO_DEG << " ";
-		break;
-	      }
-	    case gammaWing_record:
-	      {
-		fout << gammaWing << " ";
-		break;
-	      }
-	    case LD_record:
-	      {
-		fout << V_ground_speed/V_down_rel_ground  << " ";
-		break;
-	      }
-	    case gload_record:
-	      {
-		fout << -A_Z_cg/32.174 << " ";
-		break;
-	      }
+            case flapper_freq_record:
+              {
+                fout << flapper_freq << " ";
+                break;
+              }
+            case flapper_phi_record:
+              {
+                fout << flapper_phi << " ";
+                break;
+              }
+            case flapper_phi_deg_record:
+              {
+                fout << flapper_phi*RAD_TO_DEG << " ";
+                break;
+              }
+            case flapper_Lift_record:
+              {
+                fout << flapper_Lift << " ";
+                break;
+              }
+            case flapper_Thrust_record:
+              {
+                fout << flapper_Thrust << " ";
+                break;
+              }
+            case flapper_Inertia_record:
+              {
+                fout << flapper_Inertia << " ";
+                break;
+              }
+            case flapper_Moment_record:
+              {
+                fout << flapper_Moment << " ";
+                break;
+              }
+              /****************Other Variables*******************/
+            case gyroMomentQ_record:
+              {
+                fout << polarInertia * engineOmega * Q_body << " ";
+                break;
+              }
+            case gyroMomentR_record:
+              {
+                fout << -polarInertia * engineOmega * R_body << " ";
+                break;
+              }
+            case eta_q_record:
+              {
+                fout << eta_q << " ";
+                break;
+              }
+            case rpm_record:
+              {
+                fout << (engineOmega * 60 / (2 * LS_PI)) << " ";
+                break;
+              }
+            case w_induced_record:
+              {
+                fout << w_induced << " ";
+                break;
+              }
+            case downwashAngle_deg_record:
+              {
+                fout << downwashAngle * RAD_TO_DEG << " ";
+                break;
+              }
+            case alphaTail_deg_record:
+              {
+                fout << alphaTail * RAD_TO_DEG << " ";
+                break;
+              }
+            case gammaWing_record:
+              {
+                fout << gammaWing << " ";
+                break;
+              }
+            case LD_record:
+              {
+                fout << V_ground_speed/V_down_rel_ground  << " ";
+                break;
+              }
+            case gload_record:
+              {
+                fout << -A_Z_cg/32.174 << " ";
+                break;
+              }
             case tactilefadefI_record:
               {
                 fout << tactilefadefI << " ";
                 break;
               }
-	      /****************Trigger Variables*******************/
-	    case trigger_on_record:
-	      {
-		fout << trigger_on << " ";
-		break;
-	      }
-	    case trigger_num_record:
-	      {
-		fout << trigger_num << " ";
-		break;
-	      }
-	    case trigger_toggle_record:
-	      {
-		fout << trigger_toggle << " ";
-		break;
-	      }
-	    case trigger_counter_record:
-	      {
-		fout << trigger_counter << " ";
-		break;
-	      }
- 	      /*********local to body transformation matrix********/
-	    case T_local_to_body_11_record:
-	      {
-		fout << T_local_to_body_11 << " ";
-		break;
-	      }
-	    case T_local_to_body_12_record:
-	      {
-		fout << T_local_to_body_12 << " ";
-		break;
-	      }
-	    case T_local_to_body_13_record:
-	      {
-		fout << T_local_to_body_13 << " ";
-		break;
-	      }
-	    case T_local_to_body_21_record:
-	      {
-		fout << T_local_to_body_21 << " ";
-		break;
-	      }
-	    case T_local_to_body_22_record:
-	      {
-		fout << T_local_to_body_22 << " ";
-		break;
-	      }
-	    case T_local_to_body_23_record:
-	      {
-		fout << T_local_to_body_23 << " ";
-		break;
-	      }
-	    case T_local_to_body_31_record:
-	      {
-		fout << T_local_to_body_31 << " ";
-		break;
-	      }
-	    case T_local_to_body_32_record:
-	      {
-		fout << T_local_to_body_32 << " ";
-		break;
-	      }
-	    case T_local_to_body_33_record:
-	      {
-		fout << T_local_to_body_33 << " ";
-		break;
-	      }
+              /****************Trigger Variables*******************/
+            case trigger_on_record:
+              {
+                fout << trigger_on << " ";
+                break;
+              }
+            case trigger_num_record:
+              {
+                fout << trigger_num << " ";
+                break;
+              }
+            case trigger_toggle_record:
+              {
+                fout << trigger_toggle << " ";
+                break;
+              }
+            case trigger_counter_record:
+              {
+                fout << trigger_counter << " ";
+                break;
+              }
+               /*********local to body transformation matrix********/
+            case T_local_to_body_11_record:
+              {
+                fout << T_local_to_body_11 << " ";
+                break;
+              }
+            case T_local_to_body_12_record:
+              {
+                fout << T_local_to_body_12 << " ";
+                break;
+              }
+            case T_local_to_body_13_record:
+              {
+                fout << T_local_to_body_13 << " ";
+                break;
+              }
+            case T_local_to_body_21_record:
+              {
+                fout << T_local_to_body_21 << " ";
+                break;
+              }
+            case T_local_to_body_22_record:
+              {
+                fout << T_local_to_body_22 << " ";
+                break;
+              }
+            case T_local_to_body_23_record:
+              {
+                fout << T_local_to_body_23 << " ";
+                break;
+              }
+            case T_local_to_body_31_record:
+              {
+                fout << T_local_to_body_31 << " ";
+                break;
+              }
+            case T_local_to_body_32_record:
+              {
+                fout << T_local_to_body_32 << " ";
+                break;
+              }
+            case T_local_to_body_33_record:
+              {
+                fout << T_local_to_body_33 << " ";
+                break;
+              }
     
              /********* MSS debug and other data *******************/
               /* debug variables for use in probing data            */
               /* comment out old lines, and add new                 */
               /* only remove code that you have written             */
-	    case debug1_record:
-	      {
-		// eta_q term check
-		// fout << eta_q_Cm_q_fac << " ";
-		// fout << eta_q_Cm_adot_fac << " ";
-		// fout << eta_q_Cmfade_fac << " ";
-		// fout << eta_q_Cl_dr_fac << " ";
-		// fout << eta_q_Cm_de_fac << " ";
-		// eta on tail
-		// fout << eta_q  << " ";
-		// engine RPM
-		// fout << engineOmega * 60 / (2 * LS_PI)<< " ";
-		// vertical climb rate in fpm
-		fout << V_down * 60 << " ";
-		// vertical climb rate in fps
-		// fout << V_down << " ";
-		// w_induced downwash at tail due to wing
-		// fout << gammaWing   << " ";
-		//fout << outside_control << " ";
-		break;
-	      }
-	    case debug2_record:
-	      {
-		// Lift to drag ratio 
-		// fout <<  V_ground_speed/V_down_rel_ground << " ";
- 		// g's through the c.g. of the aircraft
-		fout << (-A_Z_cg/32.174) << " ";
-		// L/D via forces (used in 201 class for L/D)
-		// fout << (F_Z_wind/F_X_wind) << " ";
-		// gyroscopic moment (see uiuc_wrapper.cpp)
-		// fout << (polarInertia * engineOmega * Q_body) << " ";
-		// downwashAngle at tail
-		// fout << downwashAngle * 57.29 << " ";
-		// w_induced from engine
-		// fout << w_induced << " ";
-		break;
-	      }
-	    case debug3_record:
-	      {
-		// die off function for eta_q
-		// fout << (Cos_alpha * Cos_alpha)       << " ";
-		// gyroscopic moment (see uiuc_wrapper.cpp)
-		// fout << (-polarInertia * engineOmega * R_body) << " ";
-		// eta on tail
-		// fout << eta_q << " ";
-		// flapper cycle percentage
-		fout << (sin(flapper_phi - 3 * LS_PI / 2)) << " ";
-		break;
-	      }
+            case debug1_record:
+              {
+                // eta_q term check
+                // fout << eta_q_Cm_q_fac << " ";
+                // fout << eta_q_Cm_adot_fac << " ";
+                // fout << eta_q_Cmfade_fac << " ";
+                // fout << eta_q_Cl_dr_fac << " ";
+                // fout << eta_q_Cm_de_fac << " ";
+                // eta on tail
+                // fout << eta_q  << " ";
+                // engine RPM
+                // fout << engineOmega * 60 / (2 * LS_PI)<< " ";
+                // vertical climb rate in fpm
+                fout << V_down * 60 << " ";
+                // vertical climb rate in fps
+                // fout << V_down << " ";
+                // w_induced downwash at tail due to wing
+                // fout << gammaWing   << " ";
+                //fout << outside_control << " ";
+                break;
+              }
+            case debug2_record:
+              {
+                // Lift to drag ratio 
+                // fout <<  V_ground_speed/V_down_rel_ground << " ";
+                 // g's through the c.g. of the aircraft
+                fout << (-A_Z_cg/32.174) << " ";
+                // L/D via forces (used in 201 class for L/D)
+                // fout << (F_Z_wind/F_X_wind) << " ";
+                // gyroscopic moment (see uiuc_wrapper.cpp)
+                // fout << (polarInertia * engineOmega * Q_body) << " ";
+                // downwashAngle at tail
+                // fout << downwashAngle * 57.29 << " ";
+                // w_induced from engine
+                // fout << w_induced << " ";
+                break;
+              }
+            case debug3_record:
+              {
+                // die off function for eta_q
+                // fout << (Cos_alpha * Cos_alpha)       << " ";
+                // gyroscopic moment (see uiuc_wrapper.cpp)
+                // fout << (-polarInertia * engineOmega * R_body) << " ";
+                // eta on tail
+                // fout << eta_q << " ";
+                // flapper cycle percentage
+                fout << (sin(flapper_phi - 3 * LS_PI / 2)) << " ";
+                break;
+              }
               /********* RD debug and other data *******************/
               /* debug variables for use in probing data            */
               /* comment out old lines, and add new                 */
               /* only remove code that you have written             */
-	    case debug4_record:
-	      {
-		// flapper F_X_aero_flapper
-		//fout << F_X_aero_flapper << " ";
-		//ap_pah_on
-		//fout << ap_pah_on << " ";
-		//D_cg_north1 = Radius_to_rwy*(Latitude - lat1);
-		//fout << D_cg_north1 << " ";
-		break;
-	      }
-	    case debug5_record:
-	      {
-		// flapper F_Z_aero_flapper
-		//fout << F_Z_aero_flapper << " ";
-		// gear_rate
-		//D_cg_east1 = Radius_to_rwy*cos(lat1)*(Longitude - long1);
-		//fout << D_cg_east1 << " ";
-		break;
-	      }
-	    case debug6_record:
-	      {
-		//gear_max
-		//fout << gear_max << " ";
-		//fout << sqrt(D_cg_north1*D_cg_north1+D_cg_east1*D_cg_east1) << " ";
-		break;
-	      }
-	    case debug7_record:
-	      {
-		//Debug7
-		fout << debug7 << " ";
-		break;
-	      }
-	    case debug8_record:
-	      {
-		//Debug8
-		fout << debug8 << " ";
-		break;
-	      }
-	    case debug9_record:
-	      {
-		//Debug9
-		fout << debug9 << " ";
-		break;
-	      }
-	    case debug10_record:
-	      {
-		//Debug10
-		fout << debug10 << " ";
-		break;
-	      }
-	    default:
-	      {
-		if (ignore_unknown_keywords) {
-		  // do nothing
-		} else {
-		  // print error message
-		  uiuc_warnings_errors(2, *command_line);
-		}
-		break;
-	      }
-	    };
+            case debug4_record:
+              {
+                // flapper F_X_aero_flapper
+                //fout << F_X_aero_flapper << " ";
+                //ap_pah_on
+                //fout << ap_pah_on << " ";
+                //D_cg_north1 = Radius_to_rwy*(Latitude - lat1);
+                //fout << D_cg_north1 << " ";
+                break;
+              }
+            case debug5_record:
+              {
+                // flapper F_Z_aero_flapper
+                //fout << F_Z_aero_flapper << " ";
+                // gear_rate
+                //D_cg_east1 = Radius_to_rwy*cos(lat1)*(Longitude - long1);
+                //fout << D_cg_east1 << " ";
+                break;
+              }
+            case debug6_record:
+              {
+                //gear_max
+                //fout << gear_max << " ";
+                //fout << sqrt(D_cg_north1*D_cg_north1+D_cg_east1*D_cg_east1) << " ";
+                break;
+              }
+            case debug7_record:
+              {
+                //Debug7
+                fout << debug7 << " ";
+                break;
+              }
+            case debug8_record:
+              {
+                //Debug8
+                fout << debug8 << " ";
+                break;
+              }
+            case debug9_record:
+              {
+                //Debug9
+                fout << debug9 << " ";
+                break;
+              }
+            case debug10_record:
+              {
+                //Debug10
+                fout << debug10 << " ";
+                break;
+              }
+            default:
+              {
+                if (ignore_unknown_keywords) {
+                  // do nothing
+                } else {
+                  // print error message
+                  uiuc_warnings_errors(2, *command_line);
+                }
+                break;
+              }
+            };
         } // end record map
     }
   recordStep++;

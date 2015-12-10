@@ -154,11 +154,11 @@ int uiuc_1Dinterpolation( double xData[], int yData[], int xmax, double x )
 
       xdiff = x2 - x1;
       if (y1 == y2)
-	yfx = y1;
+        yfx = y1;
       else if (x < x1+xdiff/2)
-	yfx = y1;
+        yfx = y1;
       else
-	yfx = y2;
+        yfx = y2;
     }
   return yfx;
 }

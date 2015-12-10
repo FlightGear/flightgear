@@ -96,10 +96,10 @@ FlapData::~FlapData(){
   for(i=0;i<alphaLength;i++){
     for(j=0;j<speedLength;j++){
       for(k=0;k<freqLength;k++){
-	delete[] liftTable[i][j][k];
-	delete[] thrustTable[i][j][k];
-	delete[] momentTable[i][j][k];
-	delete[] inertiaTable[i][j][k];
+        delete[] liftTable[i][j][k];
+        delete[] thrustTable[i][j][k];
+        delete[] momentTable[i][j][k];
+        delete[] inertiaTable[i][j][k];
       }
       delete[] liftTable[i][j];
       delete[] thrustTable[i][j];
@@ -268,11 +268,11 @@ int FlapData::readIn (ifstream* f){
         f->getline(numstr,200);
         sscanf(numstr,"%d,%d,%d,%d",&alphaLength,&speedLength,&freqLength,&phiLength);
 
-	//Check to see if the first line is 0 0 0 0
-	//If so, tell user to download data file
-	//Quits FlightGear
-	if (alphaLength==0 && speedLength==0 && freqLength==0 && phiLength==0)
-	  uiuc_warnings_errors(7,"");
+        //Check to see if the first line is 0 0 0 0
+        //If so, tell user to download data file
+        //Quits FlightGear
+        if (alphaLength==0 && speedLength==0 && freqLength==0 && phiLength==0)
+          uiuc_warnings_errors(7,"");
 
         alphaArray=new double[alphaLength];
         speedArray=new double[speedLength];

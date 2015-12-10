@@ -21,7 +21,7 @@
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Glen Dimock         <dimock@uiuc.edu>
-   	       Michael Selig 	   <m-selig@uiuc.edu>
+                  Michael Selig            <m-selig@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -64,13 +64,13 @@
 
 
 /* 
-	UIUC wind gradient test code v0.1
-	
-	Returns wind vector as a function of altitude for a simple
-	parabolic gradient profile
+        UIUC wind gradient test code v0.1
+        
+        Returns wind vector as a function of altitude for a simple
+        parabolic gradient profile
 
-	Glen Dimock
-	Last update: 020227
+        Glen Dimock
+        Last update: 020227
 */
 
 #include "uiuc_getwind.h"
@@ -78,42 +78,42 @@
 
 void uiuc_getwind()
 {
-	/* Wind parameters */
-	double zref = 300.; //Reference height (ft)
-	double uref = 0; //Horizontal wind velocity at ref. height (ft/sec)
-	//	double uref = 11; //Horizontal wind velocity at ref. height (ft/sec)
-	//	double uref = 13; //Horizontal wind velocity at ref. height (ft/sec)
-	//      double uref = 20; //Horizontal wind velocity at ref. height (ft/sec), 13.63 mph
-	//	double uref = 22.5; //Horizontal wind velocity at ref. height (ft/sec), 15 mph
-	//	double uref = 60.; //Horizontal wind velocity at ref. height (ft/sec), 40 mph
-	double ordref =-64.; //Horizontal wind ordinal from north (degrees)
-	double zoff = 300.; //Z offset (ft) - wind is zero at and below this point
-	double zcomp = 0.; //Vertical component (down is positive)
+        /* Wind parameters */
+        double zref = 300.; //Reference height (ft)
+        double uref = 0; //Horizontal wind velocity at ref. height (ft/sec)
+        //        double uref = 11; //Horizontal wind velocity at ref. height (ft/sec)
+        //        double uref = 13; //Horizontal wind velocity at ref. height (ft/sec)
+        //      double uref = 20; //Horizontal wind velocity at ref. height (ft/sec), 13.63 mph
+        //        double uref = 22.5; //Horizontal wind velocity at ref. height (ft/sec), 15 mph
+        //        double uref = 60.; //Horizontal wind velocity at ref. height (ft/sec), 40 mph
+        double ordref =-64.; //Horizontal wind ordinal from north (degrees)
+        double zoff = 300.; //Z offset (ft) - wind is zero at and below this point
+        double zcomp = 0.; //Vertical component (down is positive)
 
-/*  	double zref = 300.; //Reference height (ft) */
-/*  	double uref = 0.; //Horizontal wind velocity at ref. height (ft/sec) */
-/*  	double ordref = 0.; //Horizontal wind ordinal from north (degrees) */
-/*  	double zoff = 15.; //Z offset (ft) - wind is zero at and below this point */
-/*  	double zcomp = 0.; //Vertical component (down is positive) */
+/*          double zref = 300.; //Reference height (ft) */
+/*          double uref = 0.; //Horizontal wind velocity at ref. height (ft/sec) */
+/*          double ordref = 0.; //Horizontal wind ordinal from north (degrees) */
+/*          double zoff = 15.; //Z offset (ft) - wind is zero at and below this point */
+/*          double zcomp = 0.; //Vertical component (down is positive) */
 
 
-	/* Get wind vector */
-	double windmag = 0; //Wind magnitude
-	double a = 0; //Parabola: Altitude = a*windmag^2 + zoff
+        /* Get wind vector */
+        double windmag = 0; //Wind magnitude
+        double a = 0; //Parabola: Altitude = a*windmag^2 + zoff
         double x = pow(uref,2.);
-	
+        
         if (x) {
-	    a = zref/x;
+            a = zref/x;
         }
-	if ((Altitude >= zoff) && (a > 0))
-		windmag = sqrt(Altitude/a);
-	else
-		windmag = 0.;
+        if ((Altitude >= zoff) && (a > 0))
+                windmag = sqrt(Altitude/a);
+        else
+                windmag = 0.;
 
-	V_north_airmass = windmag * cos(ordref*3.14159/180.); //North component
-	V_east_airmass  = windmag * sin(ordref*3.14159/180.); //East component
-	V_down_airmass  = zcomp;
+        V_north_airmass = windmag * cos(ordref*3.14159/180.); //North component
+        V_east_airmass  = windmag * sin(ordref*3.14159/180.); //East component
+        V_down_airmass  = zcomp;
 
-	return;
+        return;
 }
 

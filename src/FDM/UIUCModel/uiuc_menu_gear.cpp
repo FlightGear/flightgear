@@ -46,10 +46,10 @@
 ----------------------------------------------------------------------
 
  CALLS TO:     check_float() if needed
-	       d_2_to_3() if needed
-	       d_1_to_2() if needed
-	       i_1_to_2() if needed
-	       d_1_to_1() if needed
+               d_2_to_3() if needed
+               d_1_to_2() if needed
+               i_1_to_2() if needed
+               d_1_to_1() if needed
 
  ----------------------------------------------------------------------
 
@@ -88,11 +88,11 @@ using std::exit;
 #endif
 
 void parse_gear( const string& linetoken2, const string& linetoken3,
-		 const string& linetoken4, const string& linetoken5, 
-		 const string& linetoken6, const string& linetoken7, 
-		 const string& linetoken8, const string& linetoken9,
-		 const string& linetoken10, const string& aircraft_directory, 
-		 LIST command_line ) {
+                 const string& linetoken4, const string& linetoken5, 
+                 const string& linetoken6, const string& linetoken7, 
+                 const string& linetoken8, const string& linetoken9,
+                 const string& linetoken10, const string& aircraft_directory, 
+                 LIST command_line ) {
     double token_value;
     istringstream token3(linetoken3.c_str());
     istringstream token4(linetoken4.c_str());
@@ -106,134 +106,134 @@ void parse_gear( const string& linetoken2, const string& linetoken3,
     switch(gear_map[linetoken2])
       {
       case Dx_gear_flag:
-	{
-	  int index;
-	  token3 >> index;
-	  if (index < 0 || index >= 16)
-	    uiuc_warnings_errors(1, *command_line);
-	  if (check_float(linetoken4))
-	    token4 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  D_gear_v[index][0] = token_value;
-	  gear_model[index] = true;
-	  break;
-	}
+        {
+          int index;
+          token3 >> index;
+          if (index < 0 || index >= 16)
+            uiuc_warnings_errors(1, *command_line);
+          if (check_float(linetoken4))
+            token4 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          D_gear_v[index][0] = token_value;
+          gear_model[index] = true;
+          break;
+        }
       case Dy_gear_flag:
-	{
-	  int index;
-	  token3 >> index;
-	  if (index < 0 || index >= 16)
-	    uiuc_warnings_errors(1, *command_line);
-	  if (check_float(linetoken4))
-	    token4 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  D_gear_v[index][1] = token_value;
-	  gear_model[index] = true;
-	  break;
-	}
+        {
+          int index;
+          token3 >> index;
+          if (index < 0 || index >= 16)
+            uiuc_warnings_errors(1, *command_line);
+          if (check_float(linetoken4))
+            token4 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          D_gear_v[index][1] = token_value;
+          gear_model[index] = true;
+          break;
+        }
       case Dz_gear_flag:
-	{
-	  int index;
-	  token3 >> index;
-	  if (index < 0 || index >= 16)
-	    uiuc_warnings_errors(1, *command_line);
-	  if (check_float(linetoken4))
-	    token4 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  D_gear_v[index][2] = token_value;
-	  gear_model[index] = true;
-	  break;
-	}
+        {
+          int index;
+          token3 >> index;
+          if (index < 0 || index >= 16)
+            uiuc_warnings_errors(1, *command_line);
+          if (check_float(linetoken4))
+            token4 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          D_gear_v[index][2] = token_value;
+          gear_model[index] = true;
+          break;
+        }
       case cgear_flag:
-	{
-	  int index;
-	  token3 >> index;
-	  if (index < 0 || index >= 16)
-	    uiuc_warnings_errors(1, *command_line);
-	  if (check_float(linetoken4))
-	    token4 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  cgear[index] = token_value;
-	  gear_model[index] = true;
-	  break;
-	}
+        {
+          int index;
+          token3 >> index;
+          if (index < 0 || index >= 16)
+            uiuc_warnings_errors(1, *command_line);
+          if (check_float(linetoken4))
+            token4 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          cgear[index] = token_value;
+          gear_model[index] = true;
+          break;
+        }
       case kgear_flag:
-	{
-	  int index;
-	  token3 >> index;
-	  if (index < 0 || index >= 16)
-	    uiuc_warnings_errors(1, *command_line);
-	  if (check_float(linetoken4))
-	    token4 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  kgear[index] = token_value;
-	  gear_model[index] = true;
-	  break;
-	}
+        {
+          int index;
+          token3 >> index;
+          if (index < 0 || index >= 16)
+            uiuc_warnings_errors(1, *command_line);
+          if (check_float(linetoken4))
+            token4 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          kgear[index] = token_value;
+          gear_model[index] = true;
+          break;
+        }
       case muGear_flag:
-	{
-	  int index;
-	  token3 >> index;
-	  if (index < 0 || index >= 16)
-	    uiuc_warnings_errors(1, *command_line);
-	  if (check_float(linetoken4))
-	    token4 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  muGear[index] = token_value;
-	  gear_model[index] = true;
-	  break;
-	}
+        {
+          int index;
+          token3 >> index;
+          if (index < 0 || index >= 16)
+            uiuc_warnings_errors(1, *command_line);
+          if (check_float(linetoken4))
+            token4 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          muGear[index] = token_value;
+          gear_model[index] = true;
+          break;
+        }
       case strutLength_flag:
-	{
-	  int index;
-	  token3 >> index;
-	  if (index < 0 || index >= 16)
-	    uiuc_warnings_errors(1, *command_line);
-	  if (check_float(linetoken4))
-	    token4 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  strutLength[index] = token_value;
-	  gear_model[index] = true;
-	  break;
-	}
+        {
+          int index;
+          token3 >> index;
+          if (index < 0 || index >= 16)
+            uiuc_warnings_errors(1, *command_line);
+          if (check_float(linetoken4))
+            token4 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          strutLength[index] = token_value;
+          gear_model[index] = true;
+          break;
+        }
       case gear_max_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  use_gear = true;
-	  gear_max = token_value;
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          use_gear = true;
+          gear_max = token_value;
+          break;
+        }
       case gear_rate_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  use_gear = true;
-	  gear_rate = token_value;
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          use_gear = true;
+          gear_rate = token_value;
+          break;
+        }
       default:
-	{
-	  if (ignore_unknown_keywords) {
-	    // do nothing
-	  } else {
-	    // print error message
-	    uiuc_warnings_errors(2, *command_line);
-	  }
-	  break;
-	}
+        {
+          if (ignore_unknown_keywords) {
+            // do nothing
+          } else {
+            // print error message
+            uiuc_warnings_errors(2, *command_line);
+          }
+          break;
+        }
       };
 }

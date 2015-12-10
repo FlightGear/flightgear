@@ -82,7 +82,7 @@ void uiuc_map_keyword()
   Keyword_map["ice"]              =      ice_flag                   ;
   Keyword_map["record"]           =      record_flag                ;
   Keyword_map["misc"]             =      misc_flag                  ;
-  Keyword_map["fog"]		  =	 fog_flag		    ;
+  Keyword_map["fog"]                  =         fog_flag                    ;
 }
 
 // end uiuc_map_keyword.cpp

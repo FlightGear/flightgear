@@ -46,10 +46,10 @@
 ----------------------------------------------------------------------
 
  CALLS TO:     check_float() if needed
-	       d_2_to_3() if needed
-	       d_1_to_2() if needed
-	       i_1_to_2() if needed
-	       d_1_to_1() if needed
+               d_2_to_3() if needed
+               d_1_to_2() if needed
+               i_1_to_2() if needed
+               d_1_to_1() if needed
 
  ----------------------------------------------------------------------
 
@@ -88,11 +88,11 @@ using std::exit;
 #endif
 
 void parse_misc( const string& linetoken2, const string& linetoken3,
-		 const string& linetoken4, const string& linetoken5, 
-		 const string& linetoken6, const string& linetoken7, 
-		 const string& linetoken8, const string& linetoken9,
-		 const string& linetoken10, const string& aircraft_directory, 
-		 LIST command_line ) {
+                 const string& linetoken4, const string& linetoken5, 
+                 const string& linetoken6, const string& linetoken7, 
+                 const string& linetoken8, const string& linetoken9,
+                 const string& linetoken10, const string& aircraft_directory, 
+                 LIST command_line ) {
   double token_value;
   istringstream token3(linetoken3.c_str());
   istringstream token4(linetoken4.c_str());
@@ -107,55 +107,55 @@ void parse_misc( const string& linetoken2, const string& linetoken3,
     {
     case simpleHingeMomentCoef_flag:
       {
-	if (check_float(linetoken3))
-	  token3 >> token_value;
-	else
-	  uiuc_warnings_errors(1, *command_line);
-	
-	simpleHingeMomentCoef = token_value;
-	break;
+        if (check_float(linetoken3))
+          token3 >> token_value;
+        else
+          uiuc_warnings_errors(1, *command_line);
+        
+        simpleHingeMomentCoef = token_value;
+        break;
       }
       //case dfTimefdf_flag:
       //{
       //dfTimefdf = linetoken3;
-	/* call 1D File Reader with file name (dfTimefdf);
-	   function returns array of dfs (dfArray) and 
-	   corresponding time values (TimeArray) and max 
-	   number of terms in arrays (ndf) */
-	//uiuc_1DdataFileReader(dfTimefdf,
-	//		      dfTimefdf_dfArray,
-	//		      dfTimefdf_TimeArray,
-	//		      dfTimefdf_ndf);
-	//break;
+        /* call 1D File Reader with file name (dfTimefdf);
+           function returns array of dfs (dfArray) and 
+           corresponding time values (TimeArray) and max 
+           number of terms in arrays (ndf) */
+        //uiuc_1DdataFileReader(dfTimefdf,
+        //                      dfTimefdf_dfArray,
+        //                      dfTimefdf_TimeArray,
+        //                      dfTimefdf_ndf);
+        //break;
       //}
     case flapper_flag:
       {
-	string flap_file;
-	
-	flap_file = aircraft_directory + "flap.dat";
-	flapper_model = true;
-	flapper_data = new FlapData(flap_file.c_str());
-	break;
+        string flap_file;
+        
+        flap_file = aircraft_directory + "flap.dat";
+        flapper_model = true;
+        flapper_data = new FlapData(flap_file.c_str());
+        break;
       }
     case flapper_phi_init_flag:
       {
-	if (check_float(linetoken3))
-	  token3 >> token_value;
-	else
-	  uiuc_warnings_errors(1, *command_line);
-	
-	flapper_phi_init = token_value*DEG_TO_RAD;
-	break;
+        if (check_float(linetoken3))
+          token3 >> token_value;
+        else
+          uiuc_warnings_errors(1, *command_line);
+        
+        flapper_phi_init = token_value*DEG_TO_RAD;
+        break;
       }
     default:
       {
-	if (ignore_unknown_keywords) {
-	  // do nothing
-	} else {
-	  // print error message
-	  uiuc_warnings_errors(2, *command_line);
-	}
-	break;
+        if (ignore_unknown_keywords) {
+          // do nothing
+        } else {
+          // print error message
+          uiuc_warnings_errors(2, *command_line);
+        }
+        break;
       }
     };
 }

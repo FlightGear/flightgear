@@ -25,7 +25,7 @@
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
-	       Robert Deters      <rdeters@uiuc.edu>
+               Robert Deters      <rdeters@uiuc.edu>
                Michael Selig      <m-selig@uiuc.edu>
 
 ----------------------------------------------------------------------
@@ -91,7 +91,7 @@ void uiuc_engine()
                          Throttle_pct_input_dTArray,
                          Throttle_pct_input_ntime,
                          time);
-	  pilot_throttle_no = true;
+          pilot_throttle_no = true;
         }
     }
   
@@ -119,50 +119,50 @@ void uiuc_engine()
         case simpleSingle_flag:
           {
             F_X_engine = Throttle[3] * simpleSingleMaxThrust;
-	    F_Y_engine = 0.0;
-	    F_Z_engine = 0.0;
-	    M_l_engine = 0.0;
-	    M_m_engine = 0.0;
-	    M_n_engine = 0.0;
+            F_Y_engine = 0.0;
+            F_Z_engine = 0.0;
+            M_l_engine = 0.0;
+            M_m_engine = 0.0;
+            M_n_engine = 0.0;
             break;
           }
         case simpleSingleModel_flag:
           {
-	    /* simple model based on Hepperle's equation
-	     * exponent dtdvvt was computed in uiuc_menu.cpp */
-	    F_X_engine = Throttle[3] * t_v0 * (1 - pow((V_rel_wind/v_t0),dtdvvt));
-	    F_Y_engine = 0.0;
-	    F_Z_engine = 0.0;
-	    M_l_engine = 0.0;
-	    M_m_engine = 0.0;
-	    M_n_engine = 0.0;
-	    if (b_slipstreamEffects) {
-	      tc = F_X_engine/(Dynamic_pressure * LS_PI * propDia * propDia / 4);
-	      w_induced = 0.5 *  V_rel_wind * (-1 + pow((1+tc),.5));
-	      eta_q = (2* w_induced + V_rel_wind)*(2* w_induced + V_rel_wind)/(V_rel_wind * V_rel_wind);
-	      /* add in a die-off function so that eta falls off w/ alfa and beta */
-	      eta_q = Cos_alpha * Cos_alpha * Cos_beta * Cos_beta * eta_q;
-	      /* determine the eta_q values for the respective coefficients */
-	      if (eta_q_Cm_q_fac)    {eta_q_Cm_q    *= eta_q * eta_q_Cm_q_fac;}
-	      if (eta_q_Cm_adot_fac) {eta_q_Cm_adot *= eta_q * eta_q_Cm_adot_fac;}
-	      if (eta_q_Cmfade_fac)  {eta_q_Cmfade  *= eta_q * eta_q_Cmfade_fac;}
-	      if (eta_q_Cm_de_fac)   {eta_q_Cm_de   *= eta_q * eta_q_Cm_de_fac;}
-	      if (eta_q_Cl_beta_fac) {eta_q_Cl_beta *= eta_q * eta_q_Cl_beta_fac;}
-	      if (eta_q_Cl_p_fac)    {eta_q_Cl_p    *= eta_q * eta_q_Cl_p_fac;}
-	      if (eta_q_Cl_r_fac)    {eta_q_Cl_r    *= eta_q * eta_q_Cl_r_fac;}
-	      if (eta_q_Cl_dr_fac)   {eta_q_Cl_dr   *= eta_q * eta_q_Cl_dr_fac;}
-	      if (eta_q_CY_beta_fac) {eta_q_CY_beta *= eta_q * eta_q_CY_beta_fac;}
-	      if (eta_q_CY_p_fac)    {eta_q_CY_p    *= eta_q * eta_q_CY_p_fac;}
-	      if (eta_q_CY_r_fac)    {eta_q_CY_r    *= eta_q * eta_q_CY_r_fac;}
-	      if (eta_q_CY_dr_fac)   {eta_q_CY_dr   *= eta_q * eta_q_CY_dr_fac;}
-	      if (eta_q_Cn_beta_fac) {eta_q_Cn_beta *= eta_q * eta_q_Cn_beta_fac;}
-	      if (eta_q_Cn_p_fac)    {eta_q_Cn_p    *= eta_q * eta_q_Cn_p_fac;}
-	      if (eta_q_Cn_r_fac)    {eta_q_Cn_r    *= eta_q * eta_q_Cn_r_fac;}
-	      if (eta_q_Cn_dr_fac)   {eta_q_Cn_dr   *= eta_q * eta_q_Cn_dr_fac;}
-	    }
-	    /* Need engineOmega for gyroscopic moments */
-	    engineOmega = minOmega + Throttle[3] * (maxOmega - minOmega);
-	    break;
+            /* simple model based on Hepperle's equation
+             * exponent dtdvvt was computed in uiuc_menu.cpp */
+            F_X_engine = Throttle[3] * t_v0 * (1 - pow((V_rel_wind/v_t0),dtdvvt));
+            F_Y_engine = 0.0;
+            F_Z_engine = 0.0;
+            M_l_engine = 0.0;
+            M_m_engine = 0.0;
+            M_n_engine = 0.0;
+            if (b_slipstreamEffects) {
+              tc = F_X_engine/(Dynamic_pressure * LS_PI * propDia * propDia / 4);
+              w_induced = 0.5 *  V_rel_wind * (-1 + pow((1+tc),.5));
+              eta_q = (2* w_induced + V_rel_wind)*(2* w_induced + V_rel_wind)/(V_rel_wind * V_rel_wind);
+              /* add in a die-off function so that eta falls off w/ alfa and beta */
+              eta_q = Cos_alpha * Cos_alpha * Cos_beta * Cos_beta * eta_q;
+              /* determine the eta_q values for the respective coefficients */
+              if (eta_q_Cm_q_fac)    {eta_q_Cm_q    *= eta_q * eta_q_Cm_q_fac;}
+              if (eta_q_Cm_adot_fac) {eta_q_Cm_adot *= eta_q * eta_q_Cm_adot_fac;}
+              if (eta_q_Cmfade_fac)  {eta_q_Cmfade  *= eta_q * eta_q_Cmfade_fac;}
+              if (eta_q_Cm_de_fac)   {eta_q_Cm_de   *= eta_q * eta_q_Cm_de_fac;}
+              if (eta_q_Cl_beta_fac) {eta_q_Cl_beta *= eta_q * eta_q_Cl_beta_fac;}
+              if (eta_q_Cl_p_fac)    {eta_q_Cl_p    *= eta_q * eta_q_Cl_p_fac;}
+              if (eta_q_Cl_r_fac)    {eta_q_Cl_r    *= eta_q * eta_q_Cl_r_fac;}
+              if (eta_q_Cl_dr_fac)   {eta_q_Cl_dr   *= eta_q * eta_q_Cl_dr_fac;}
+              if (eta_q_CY_beta_fac) {eta_q_CY_beta *= eta_q * eta_q_CY_beta_fac;}
+              if (eta_q_CY_p_fac)    {eta_q_CY_p    *= eta_q * eta_q_CY_p_fac;}
+              if (eta_q_CY_r_fac)    {eta_q_CY_r    *= eta_q * eta_q_CY_r_fac;}
+              if (eta_q_CY_dr_fac)   {eta_q_CY_dr   *= eta_q * eta_q_CY_dr_fac;}
+              if (eta_q_Cn_beta_fac) {eta_q_Cn_beta *= eta_q * eta_q_Cn_beta_fac;}
+              if (eta_q_Cn_p_fac)    {eta_q_Cn_p    *= eta_q * eta_q_Cn_p_fac;}
+              if (eta_q_Cn_r_fac)    {eta_q_Cn_r    *= eta_q * eta_q_Cn_r_fac;}
+              if (eta_q_Cn_dr_fac)   {eta_q_Cn_dr   *= eta_q * eta_q_Cn_dr_fac;}
+            }
+            /* Need engineOmega for gyroscopic moments */
+            engineOmega = minOmega + Throttle[3] * (maxOmega - minOmega);
+            break;
           }
         case c172_flag:
           {
@@ -213,39 +213,39 @@ void uiuc_engine()
             F_Z_engine = 0.0;
             break;
           }
-	case forcemom_flag:
-	  {
-	    double Xp_input_endTime = Xp_input_timeArray[Xp_input_ntime];
-	    if (Simtime >= Xp_input_startTime && 
-		Simtime <= (Xp_input_startTime + Xp_input_endTime))
-	      {
-		double time = Simtime - Xp_input_startTime;
-		F_X_engine = uiuc_1Dinterpolation(Xp_input_timeArray,
-						  Xp_input_XpArray,
-						  Xp_input_ntime,
-						  time);
-	      }
-	    double Zp_input_endTime = Zp_input_timeArray[Zp_input_ntime];
-	    if (Simtime >= Zp_input_startTime && 
-		Simtime <= (Zp_input_startTime + Zp_input_endTime))
-	      {
-		double time = Simtime - Zp_input_startTime;
-		F_Z_engine = uiuc_1Dinterpolation(Zp_input_timeArray,
-						  Zp_input_ZpArray,
-						  Zp_input_ntime,
-						  time);
-	      }
-	    double Mp_input_endTime = Mp_input_timeArray[Mp_input_ntime];
-	    if (Simtime >= Mp_input_startTime && 
-		Simtime <= (Mp_input_startTime + Mp_input_endTime))
-	      {
-		double time = Simtime - Mp_input_startTime;
-		M_m_engine = uiuc_1Dinterpolation(Mp_input_timeArray,
-						  Mp_input_MpArray,
-						  Mp_input_ntime,
-						  time);
-	      }
-	  }
+        case forcemom_flag:
+          {
+            double Xp_input_endTime = Xp_input_timeArray[Xp_input_ntime];
+            if (Simtime >= Xp_input_startTime && 
+                Simtime <= (Xp_input_startTime + Xp_input_endTime))
+              {
+                double time = Simtime - Xp_input_startTime;
+                F_X_engine = uiuc_1Dinterpolation(Xp_input_timeArray,
+                                                  Xp_input_XpArray,
+                                                  Xp_input_ntime,
+                                                  time);
+              }
+            double Zp_input_endTime = Zp_input_timeArray[Zp_input_ntime];
+            if (Simtime >= Zp_input_startTime && 
+                Simtime <= (Zp_input_startTime + Zp_input_endTime))
+              {
+                double time = Simtime - Zp_input_startTime;
+                F_Z_engine = uiuc_1Dinterpolation(Zp_input_timeArray,
+                                                  Zp_input_ZpArray,
+                                                  Zp_input_ntime,
+                                                  time);
+              }
+            double Mp_input_endTime = Mp_input_timeArray[Mp_input_ntime];
+            if (Simtime >= Mp_input_startTime && 
+                Simtime <= (Mp_input_startTime + Mp_input_endTime))
+              {
+                double time = Simtime - Mp_input_startTime;
+                M_m_engine = uiuc_1Dinterpolation(Mp_input_timeArray,
+                                                  Mp_input_MpArray,
+                                                  Mp_input_ntime,
+                                                  time);
+              }
+          }
         };
     }
   return;

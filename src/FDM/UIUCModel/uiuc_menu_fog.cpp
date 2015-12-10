@@ -46,10 +46,10 @@
 ----------------------------------------------------------------------
 
  CALLS TO:     check_float() if needed
-	       d_2_to_3() if needed
-	       d_1_to_2() if needed
-	       i_1_to_2() if needed
-	       d_1_to_1() if needed
+               d_2_to_3() if needed
+               d_1_to_2() if needed
+               i_1_to_2() if needed
+               d_1_to_1() if needed
 
  ----------------------------------------------------------------------
 
@@ -88,11 +88,11 @@ using std::exit;
 #endif
 
 void parse_fog( const string& linetoken2, const string& linetoken3,
-		const string& linetoken4, const string& linetoken5, 
-		const string& linetoken6, const string& linetoken7, 
-		const string& linetoken8, const string& linetoken9,
-		const string& linetoken10, const string& aircraft_directory,
-		LIST command_line ) {
+                const string& linetoken4, const string& linetoken5, 
+                const string& linetoken6, const string& linetoken7, 
+                const string& linetoken8, const string& linetoken9,
+                const string& linetoken10, const string& aircraft_directory,
+                LIST command_line ) {
   double token_value;
   int token_value_convert1;
   istringstream token3(linetoken3.c_str());
@@ -107,63 +107,63 @@ void parse_fog( const string& linetoken2, const string& linetoken3,
     switch(fog_map[linetoken2])
       {
       case fog_segments_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value_convert1;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  if (token_value_convert1 < 1 || token_value_convert1 > 100)
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  fog_field = true;
-	  fog_point_index = 0;
-	  delete[] fog_time;
-	  delete[] fog_value;
-	  fog_segments = token_value_convert1;
-	  fog_time = new double[fog_segments+1];
-	  fog_time[0] = 0.0;
-	  fog_value = new int[fog_segments+1];
-	  fog_value[0] = 0;
-	  
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value_convert1;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          if (token_value_convert1 < 1 || token_value_convert1 > 100)
+            uiuc_warnings_errors(1, *command_line);
+          
+          fog_field = true;
+          fog_point_index = 0;
+          delete[] fog_time;
+          delete[] fog_value;
+          fog_segments = token_value_convert1;
+          fog_time = new double[fog_segments+1];
+          fog_time[0] = 0.0;
+          fog_value = new int[fog_segments+1];
+          fog_value[0] = 0;
+          
+          break;
+        }
       case fog_point_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  if (token_value < 0.1)
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  if (check_float(linetoken4))
-	    token4 >> token_value_convert1;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  if (token_value_convert1 < -1000 || token_value_convert1 > 1000)
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  if (fog_point_index == fog_segments || fog_point_index == -1)
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  fog_point_index++;
-	  fog_time[fog_point_index] = token_value;
-	  fog_value[fog_point_index] = token_value_convert1;
-	  
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          if (token_value < 0.1)
+            uiuc_warnings_errors(1, *command_line);
+          
+          if (check_float(linetoken4))
+            token4 >> token_value_convert1;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          if (token_value_convert1 < -1000 || token_value_convert1 > 1000)
+            uiuc_warnings_errors(1, *command_line);
+          
+          if (fog_point_index == fog_segments || fog_point_index == -1)
+            uiuc_warnings_errors(1, *command_line);
+          
+          fog_point_index++;
+          fog_time[fog_point_index] = token_value;
+          fog_value[fog_point_index] = token_value_convert1;
+          
+          break;
+        }
       default:
-	{
-	  if (ignore_unknown_keywords) {
-	    // do nothing
-	  } else {
-	    // print error message
-	    uiuc_warnings_errors(2, *command_line);
-	  }
-	  break;
-	}
+        {
+          if (ignore_unknown_keywords) {
+            // do nothing
+          } else {
+            // print error message
+            uiuc_warnings_errors(2, *command_line);
+          }
+          break;
+        }
       };
 }

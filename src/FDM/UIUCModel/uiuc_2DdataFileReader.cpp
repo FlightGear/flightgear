@@ -19,7 +19,7 @@
 
  HISTORY:      02/29/2000   initial release
                10/25/2001   (RD) Modified so that it recognizes a
-	                    blank line
+                            blank line
                06/30/2003   (RD) replaced istrstream with istringstream
                             to get rid of the annoying warning about
                             using the strstream header

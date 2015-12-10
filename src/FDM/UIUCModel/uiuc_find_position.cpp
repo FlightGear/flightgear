@@ -66,7 +66,7 @@
 #include "uiuc_find_position.h"
 
 double uiuc_find_position(double command, double increment_per_timestep,
-			  double position)
+                          double position)
 {
   if (position < command) {
     position += increment_per_timestep;

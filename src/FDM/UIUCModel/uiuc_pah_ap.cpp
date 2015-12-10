@@ -45,7 +45,7 @@
 #include "uiuc_pah_ap.h"
 //#include <stdio.h>
 double pah_ap(double pitch, double pitchrate, double pitch_ref, double V,
-	      double sample_time, int init)
+              double sample_time, int init)
 {
   // changes by RD so function keeps previous values
   static double u2prev;
@@ -84,10 +84,10 @@ double pah_ap(double pitch, double pitchrate, double pitch_ref, double V,
   // the following is using the actuator dynamics given in Beaver.
   // the actuator dynamics for Twin Otter are still unavailable.
   x1 = x1prev +(-10.951*x1prev + 7.2721*x2prev + 20.7985*x3prev +
-		25.1568*totalU)*sample_time;
+                25.1568*totalU)*sample_time;
   x2 = x2prev + x3prev*sample_time;
   x3 = x3prev + (7.3446*x1prev - 668.6713*x2prev - 16.8697*x3prev +
-		 5.8694*totalU)*sample_time;
+                 5.8694*totalU)*sample_time;
   deltae = 57.2958*x2;
   //deltae = x2;
   //printf("x1prev=%f\n",x1prev);
@@ -102,7 +102,7 @@ double pah_ap(double pitch, double pitchrate, double pitch_ref, double V,
   //printf("deltae=%f\n",deltae);
   return deltae;
 } 
-			
+                        
 
-		
+                
 
