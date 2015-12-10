@@ -56,8 +56,8 @@
 // (RD) changed float to double
 
 void rah_ap(double phi, double phirate, double phi_ref, double V,
-	    double sample_time, double b, double yawrate, double ctr_defl[2],
-	    int init)
+            double sample_time, double b, double yawrate, double ctr_defl[2],
+            int init)
 {
 
   static double u2prev;
@@ -79,45 +79,45 @@ void rah_ap(double phi, double phirate, double phi_ref, double V,
       x6prev = 0;
     }
 
-	double Kphi;
-	double Kr;
-	double Ki;
-	double drr;
-	double dar;
-	double deltar;
-	double deltaa;
-	double x1, x2, x3, x4, x5, x6;
-	Kphi = 0.000975*V*V - 0.108*V + 2.335625;
-	Kr = -4;
-	Ki = 0.25;
-	dar = 0.165;
-	drr = -0.000075*V*V + 0.0095*V -0.4606;
-	double u1,u2,u3,u4,u5,u6,u7,ubar,udbar;
-	u1 = Kphi*(phi_ref-phi);
-	u2 = u2prev + Ki*Kphi*(phi_ref-phi)*sample_time;
-	u3 = dar*yawrate;
-	u4 = u1 + u2 + u3;
-	u2prev = u2;
-	double K1,K2;
-	K1 = Kr*9.8*sin(phi)/V;
-	K2 = drr - Kr;
-	u5 = K2*yawrate;
-	u6 = K1*phi;
-	u7 = u5 + u6; 
-	ubar = phirate*b/(2*V);
-	udbar = yawrate*b/(2*V);
+        double Kphi;
+        double Kr;
+        double Ki;
+        double drr;
+        double dar;
+        double deltar;
+        double deltaa;
+        double x1, x2, x3, x4, x5, x6;
+        Kphi = 0.000975*V*V - 0.108*V + 2.335625;
+        Kr = -4;
+        Ki = 0.25;
+        dar = 0.165;
+        drr = -0.000075*V*V + 0.0095*V -0.4606;
+        double u1,u2,u3,u4,u5,u6,u7,ubar,udbar;
+        u1 = Kphi*(phi_ref-phi);
+        u2 = u2prev + Ki*Kphi*(phi_ref-phi)*sample_time;
+        u3 = dar*yawrate;
+        u4 = u1 + u2 + u3;
+        u2prev = u2;
+        double K1,K2;
+        K1 = Kr*9.8*sin(phi)/V;
+        K2 = drr - Kr;
+        u5 = K2*yawrate;
+        u6 = K1*phi;
+        u7 = u5 + u6; 
+        ubar = phirate*b/(2*V);
+        udbar = yawrate*b/(2*V);
 // the following is using the actuator dynamics to get the aileron 
 // angle, given in Beaver.
 // the actuator dynamics for Twin Otter are still unavailable.
-	x1 = x1prev +(-10.6*x1prev - 2.64*x2prev -7.58*x3prev +
+        x1 = x1prev +(-10.6*x1prev - 2.64*x2prev -7.58*x3prev +
 27.46*u4 -0.0008*ubar)*sample_time;
-	x2 = x2prev + x3prev*sample_time;
-	x3 = x3prev + (1.09*x1prev - 558.86*x2prev - 23.35*x3prev +
+        x2 = x2prev + x3prev*sample_time;
+        x3 = x3prev + (1.09*x1prev - 558.86*x2prev - 23.35*x3prev +
 3.02*u4 - 0.164*ubar)*sample_time;
-	deltaa = 57.3*x2;
-	x1prev = x1;
-	x2prev = x2;
-	x3prev = x3;
+        deltaa = 57.3*x2;
+        x1prev = x1;
+        x2prev = x2;
+        x3prev = x3;
 
 // the following is using the actuator dynamics to get the rudder
 // angle, given in Beaver.
@@ -132,6 +132,6 @@ void rah_ap(double phi, double phirate, double phi_ref, double V,
         x5prev = x5;
         x6prev = x6;
         ctr_defl[0] = deltaa;
-	ctr_defl[1] = deltar;
+        ctr_defl[1] = deltar;
 return;
 } 

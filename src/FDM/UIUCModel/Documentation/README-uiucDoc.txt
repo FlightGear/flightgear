@@ -457,9 +457,9 @@ conventions in later versions.
 # Key  Variable  Data      Units      Description                       Where Defined
 #------------------------------------------------------------------------------------
 
-init recordRate <recordRate> # [/s]   record data n times per second	uiuc_aircraft.h
+init recordRate <recordRate> # [/s]   record data n times per second    uiuc_aircraft.h
 
-# [s]   time to start recording output data				uiuc_aircraft.h
+# [s]   time to start recording output data                             uiuc_aircraft.h
 init recordStartTime <recordStartTime>
 
 # []    use V_rel_wind to compute control rates (instead of U_body)     uiuc_aircraft.h
@@ -540,10 +540,10 @@ controlSurface elevator_doublet <elevator_doublet_angle> ->
         <elevator_doublet_startTime> <elevator_doublet_duration>
 
 # tabulated elevator input (as function of time) with conversion
-# factor codes and starting time [s]					uiuc_aircraft.h
+# factor codes and starting time [s]                                    uiuc_aircraft.h
 controlSurface elevator_input <elevator_input_file> ->
         <token_value_convert1> <token_value_convert2> ->
-	<elevator_input_startTime>
+        <elevator_input_startTime>
 
 
 |controlsMixer nomix <?> # []         no controls mixing                uiuc_aircraft.h
@@ -721,10 +721,10 @@ convert1/2/3  Action
 
 ice iceTime <iceTime>   # [s]         time when icing begins            uiuc_aircraft.h
 
-# [s]   period for eta_ice to reach eta_final				uiuc_aircraft.h
+# [s]   period for eta_ice to reach eta_final                           uiuc_aircraft.h
 ice transientTime <transientTime>
 
-# []    icing severity factor						uiuc_aircraft.h
+# []    icing severity factor                                           uiuc_aircraft.h
 ice eta_ice_final <eta_ice_final>
 
 ice kCDo <kCDo>         # []          icing constant for CDo            uiuc_aircraft.h

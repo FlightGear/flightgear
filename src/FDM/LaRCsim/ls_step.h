@@ -5,7 +5,7 @@
 #define _LS_STEP_H
 
 
-void ls_step( SCALAR dt, int Initialize );	
+void ls_step( SCALAR dt, int Initialize );        
 
 
 #endif /* _LS_STEP_H */

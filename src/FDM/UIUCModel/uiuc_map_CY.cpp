@@ -18,17 +18,17 @@
  
  HISTORY:      04/08/2000   initial release
                10/25/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model at zero flaps
-			    (CYfxxf0)
-	       11/12/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model with flaps
-			    (CYfxxf).  Zero flap vairables removed.
+                            linear Twin Otter model at zero flaps
+                            (CYfxxf0)
+               11/12/2001   (RD) Added new variables needed for the non-
+                            linear Twin Otter model with flaps
+                            (CYfxxf).  Zero flap vairables removed.
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
-	       Robert Deters      <rdeters@uiuc.edu>
+               Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  

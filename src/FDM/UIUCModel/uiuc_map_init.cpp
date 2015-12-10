@@ -18,14 +18,14 @@
  
  HISTORY:      04/08/2000   initial release
                06/18/2001   (RD) Added Alpha, Beta, U_body
-	                    V_body, and W_body.
+                            V_body, and W_body.
                08/20/2003   (RD) Removed old_flap_routine
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
-	       Robert Deters      <rdeters@uiuc.edu>
+               Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  

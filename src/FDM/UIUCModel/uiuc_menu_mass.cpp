@@ -46,10 +46,10 @@
 ----------------------------------------------------------------------
 
  CALLS TO:     check_float() if needed
-	       d_2_to_3() if needed
-	       d_1_to_2() if needed
-	       i_1_to_2() if needed
-	       d_1_to_1() if needed
+               d_2_to_3() if needed
+               d_1_to_2() if needed
+               i_1_to_2() if needed
+               d_1_to_1() if needed
 
  ----------------------------------------------------------------------
 
@@ -89,10 +89,10 @@ using std::exit;
 
 void parse_mass( const string& linetoken2, const string& linetoken3,
                  const string& linetoken4, const string& linetoken5, 
-		 const string& linetoken6, const string& linetoken7, 
-		 const string& linetoken8, const string& linetoken9,
-		 const string& linetoken10, const string& aircraft_directory,
-		 LIST command_line ) {
+                 const string& linetoken6, const string& linetoken7, 
+                 const string& linetoken8, const string& linetoken9,
+                 const string& linetoken10, const string& aircraft_directory,
+                 LIST command_line ) {
     double token_value;
     istringstream token3(linetoken3.c_str());
     istringstream token4(linetoken4.c_str());
@@ -106,169 +106,169 @@ void parse_mass( const string& linetoken2, const string& linetoken3,
     switch(mass_map[linetoken2])
       {
       case Weight_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  Weight = token_value;
-	  Mass = Weight * INVG;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          Weight = token_value;
+          Mass = Weight * INVG;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case Mass_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  Mass = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          Mass = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_xx_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_xx = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_xx = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_yy_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_yy = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_yy = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_zz_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_zz = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_zz = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_xz_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_xz = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_xz = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case Mass_appMass_ratio_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  Mass_appMass_ratio = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          Mass_appMass_ratio = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_xx_appMass_ratio_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_xx_appMass_ratio = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_xx_appMass_ratio = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_yy_appMass_ratio_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_yy_appMass_ratio = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_yy_appMass_ratio = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_zz_appMass_ratio_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_zz_appMass_ratio = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_zz_appMass_ratio = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case Mass_appMass_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  Mass_appMass = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          Mass_appMass = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_xx_appMass_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_xx_appMass = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_xx_appMass = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_yy_appMass_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_yy_appMass = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_yy_appMass = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       case I_zz_appMass_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  I_zz_appMass = token_value;
-	  massParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          I_zz_appMass = token_value;
+          massParts -> storeCommands (*command_line);
+          break;
+        }
       default:
-	{
-	  if (ignore_unknown_keywords) {
-	    // do nothing
-	  } else {
-	    // print error message
-	    uiuc_warnings_errors(2, *command_line);
-	  }
-	  break;
-	}
+        {
+          if (ignore_unknown_keywords) {
+            // do nothing
+          } else {
+            // print error message
+            uiuc_warnings_errors(2, *command_line);
+          }
+          break;
+        }
       };
 }

@@ -28,66 +28,66 @@
 
 /***************************************************************************
 
-	TITLE:		LaRCsim.c
-	
+        TITLE:                LaRCsim.c
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	Top level routine for LaRCSIM.  Includes
-	                global variable declarations.
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	Developmental
+        FUNCTION:        Top level routine for LaRCSIM.  Includes
+                        global variable declarations.
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Written 921230 by Bruce Jackson
+        MODULE STATUS:        Developmental
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	EBJ
-	
-	CODED BY:	EBJ
-	
-	MAINTAINED BY:	EBJ
+        GENEALOGY:        Written 921230 by Bruce Jackson
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
+        DESIGNED BY:        EBJ
+        
+        CODED BY:        EBJ
+        
+        MAINTAINED BY:        EBJ
 
-	930111  Added "progname" variable to keep name of invoking command.
-                                                                	EBJ
-	931012	Removed altitude < 0. test to support gear development. EBJ
-	931214	Added various pressures (Impact, Dynamic, Static, etc.) EBJ
-	931215	Adopted new generic variable structure.			EBJ
-	931218	Added command line options decoding.			EBJ
-	940110	Changed file type of matrix file to ".m"		EBJ
-	940513	Renamed this routine "LaRCsim.c" from "ls_main.c"	EBJ
-	940513  Added time_stamp routine,  t_stamp.			EBJ
-	950225	Added options flag, 'i', to set I/O output rate.	EBJ
-	950306	Added calls to ls_get_settings() and ls_put_settings()  EBJ
-	950314	Options flag 'i' now reads IC file; 'o' is output rate  EBJ
-	950406	Many changes: added definition of default value macros;
-		removed local variables term_update_hz, model_dt, endtime,
-		substituted sim_control_ globals for these; removed
-		initialization of sim_control_.tape_channels; moved optarg
-		to generic extern; added mod_end_time & mod_buf_size flags
-		and temporary buffer_time and data_rate locals to
-		ls_checkopts(); added additional command line switches '-s'
-		and '-b'; made psuedo-mandatory file names for data output
-		switches; considerable rewrite of logic for setting data
-		buffer length and interleave parameters; updated '-h' help
-		output message; added protection logic to calculations of
-		these parameters; added check of return value on first call
-		to ls_cockpit() so <esc> abort works from initial pause
-		state; added call to ls_unsync() immediately following
-		first ls_sync() call, if paused (to avoid alarm clock
-		timeout); moved call to ls_record() into non-paused
-		multiloop path (was filling buffer with identical data
-		during pause); put check of paused flag before calling sync
-		routine ls_pause(); and added call to exit() on termination.
+----------------------------------------------------------------------------
+
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+
+        930111  Added "progname" variable to keep name of invoking command.
+                                                                        EBJ
+        931012        Removed altitude < 0. test to support gear development. EBJ
+        931214        Added various pressures (Impact, Dynamic, Static, etc.) EBJ
+        931215        Adopted new generic variable structure.                        EBJ
+        931218        Added command line options decoding.                        EBJ
+        940110        Changed file type of matrix file to ".m"                EBJ
+        940513        Renamed this routine "LaRCsim.c" from "ls_main.c"        EBJ
+        940513  Added time_stamp routine,  t_stamp.                        EBJ
+        950225        Added options flag, 'i', to set I/O output rate.        EBJ
+        950306        Added calls to ls_get_settings() and ls_put_settings()  EBJ
+        950314        Options flag 'i' now reads IC file; 'o' is output rate  EBJ
+        950406        Many changes: added definition of default value macros;
+                removed local variables term_update_hz, model_dt, endtime,
+                substituted sim_control_ globals for these; removed
+                initialization of sim_control_.tape_channels; moved optarg
+                to generic extern; added mod_end_time & mod_buf_size flags
+                and temporary buffer_time and data_rate locals to
+                ls_checkopts(); added additional command line switches '-s'
+                and '-b'; made psuedo-mandatory file names for data output
+                switches; considerable rewrite of logic for setting data
+                buffer length and interleave parameters; updated '-h' help
+                output message; added protection logic to calculations of
+                these parameters; added check of return value on first call
+                to ls_cockpit() so <esc> abort works from initial pause
+                state; added call to ls_unsync() immediately following
+                first ls_sync() call, if paused (to avoid alarm clock
+                timeout); moved call to ls_record() into non-paused
+                multiloop path (was filling buffer with identical data
+                during pause); put check of paused flag before calling sync
+                routine ls_pause(); and added call to exit() on termination.
 
 
 $Header$
@@ -202,23 +202,23 @@ $Original log: LaRCsim.c,v $
 
 ----------------------------------------------------------------------------
 
-	REFERENCES:
+        REFERENCES:
 
 ----------------------------------------------------------------------------
 
-	CALLED BY:
+        CALLED BY:
 
 ----------------------------------------------------------------------------
 
-	CALLS TO:
+        CALLS TO:
 
 ----------------------------------------------------------------------------
 
-	INPUTS:
+        INPUTS:
 
 ----------------------------------------------------------------------------
 
-	OUTPUTS:
+        OUTPUTS:
 
 --------------------------------------------------------------------------*/
 
@@ -249,12 +249,12 @@ $Original log: LaRCsim.c,v $
 
 /* global variable declarations */
 
-/* TAPE		*Tape; */
-GENERIC 	generic_;
-SIM_CONTROL	sim_control_;
+/* TAPE                *Tape; */
+GENERIC         generic_;
+SIM_CONTROL        sim_control_;
 COCKPIT         cockpit_;
 
-SCALAR 		Simtime;
+SCALAR                 Simtime;
 
 #define DEFAULT_TERM_UPDATE_HZ 20
 #define DEFAULT_MODEL_HZ 120
@@ -266,21 +266,17 @@ SCALAR 		Simtime;
 /* global variables */
 
 char    *progname;
-char	*fullname;
+char        *fullname;
 
 /* file variables - default simulation settings */
 
 static double model_dt;
 static double speedup;
-static char  asc1name[MAX_FILE_NAME_LENGTH] = "run.asc1";
-static char  tabname[MAX_FILE_NAME_LENGTH]  = "run.dat";
-static char  fltname[MAX_FILE_NAME_LENGTH]  = "run.flt";
-static char  matname[MAX_FILE_NAME_LENGTH]  = "run.m";
 
 
 
 void ls_stamp( void ) {
-    char rcsid[] = "$Id$";
+    // char rcsid[] = "$Id$";
     char revid[] = "$Revision$";
     char dateid[] = "$Date$";
     struct tm *nowtime;
@@ -293,13 +289,13 @@ void ls_stamp( void ) {
     nowtime_t = time( 0 );
     nowtime = localtime( &nowtime_t ); /* set fields to correct time values */
     date = (nowtime->tm_year % 100)*10000
-	 + (nowtime->tm_mon + 1)*100
-	 + (nowtime->tm_mday);
-    sprintf(sim_control_.date_string, "%06ld\0", date);
-    sprintf(sim_control_.time_stamp, "%02d:%02d:%02d\0", 
-	nowtime->tm_hour, nowtime->tm_min, nowtime->tm_sec);
+         + (nowtime->tm_mon + 1)*100
+         + (nowtime->tm_mday);
+    sprintf(sim_control_.date_string, "%06ld", date);
+    sprintf(sim_control_.time_stamp, "%02d:%02d:%02d", 
+        nowtime->tm_hour, nowtime->tm_min, nowtime->tm_sec);
 #ifdef COMPILE_THIS_CODE_THIS_USELESS_CODE
-    cuserid( sim_control_.userid );	/* set up user id */
+    cuserid( sim_control_.userid );        /* set up user id */
 #endif /* COMPILE_THIS_CODE_THIS_USELESS_CODE */
     return;
 }
@@ -307,21 +303,21 @@ void ls_stamp( void ) {
 void ls_setdefopts( void ) {
     /* set default values for most options */
 
-    sim_control_.debug = 0;		/* change to non-zero if in dbx! */
+    sim_control_.debug = 0;                /* change to non-zero if in dbx! */
     sim_control_.vision = 0;
-    sim_control_.write_av = 0;		/* write Agile-Vu '.flt' file */
-    sim_control_.write_mat = 0;		/* write matrix-x/matlab script */
-    sim_control_.write_tab = 0;		/* write tab delim. history file */
-    sim_control_.write_asc1 = 0;	/* write GetData file */
-    sim_control_.save_spacing = DEFAULT_SAVE_SPACING;	
-					/* interpolation on recording */
-    sim_control_.write_spacing = DEFAULT_WRITE_SPACING;	
-					/* interpolation on output */
+    sim_control_.write_av = 0;                /* write Agile-Vu '.flt' file */
+    sim_control_.write_mat = 0;                /* write matrix-x/matlab script */
+    sim_control_.write_tab = 0;                /* write tab delim. history file */
+    sim_control_.write_asc1 = 0;        /* write GetData file */
+    sim_control_.save_spacing = DEFAULT_SAVE_SPACING;        
+                                        /* interpolation on recording */
+    sim_control_.write_spacing = DEFAULT_WRITE_SPACING;        
+                                        /* interpolation on output */
     sim_control_.end_time = DEFAULT_END_TIME;
     sim_control_.model_hz = DEFAULT_MODEL_HZ;
     sim_control_.term_update_hz = DEFAULT_TERM_UPDATE_HZ;
     sim_control_.time_slices = (long int)(DEFAULT_END_TIME * DEFAULT_MODEL_HZ / 
-	DEFAULT_SAVE_SPACING);
+        DEFAULT_SAVE_SPACING);
     sim_control_.paused = 0;
 
     speedup = 1.0;
@@ -338,7 +334,7 @@ void ls_setdefopts( void ) {
 extern char *optarg;
 extern int optind;
 
-int ls_checkopts(argc, argv)	/* check and set options flags */
+int ls_checkopts(argc, argv)        /* check and set options flags */
   int argc;
   char *argv[];
   {
@@ -347,130 +343,134 @@ int ls_checkopts(argc, argv)	/* check and set options flags */
     int mod_end_time = 0;
     int mod_buf_size = 0;
     float buffer_time, data_rate;
+    char asc1name[MAX_FILE_NAME_LENGTH] = "run.asc1";
+    char tabname[MAX_FILE_NAME_LENGTH]  = "run.dat";
+    char fltname[MAX_FILE_NAME_LENGTH]  = "run.flt";
+    char matname[MAX_FILE_NAME_LENGTH]  = "run.m";
 
     /* set default values */
 
     buffer_time = sim_control_.time_slices * sim_control_.save_spacing / 
-	sim_control_.model_hz;
+        sim_control_.model_hz;
     data_rate   = sim_control_.model_hz / sim_control_.save_spacing;
 
     while ((c = getopt(argc, argv, "Aa:b:de:f:hi:kmo:r:s:t:x:")) != EOF)
-	switch (c) {
-	    case 'A':
-		if (sim_control_.sim_type == GLmouse)
-		  {
-		    fprintf(stderr, "Cannot specify both keyboard (k) and ACES (A) cockpits option\n");
-		    fprintf(stderr, "Keyboard operation assumed.\n");
-		    break;
-		  }
-		sim_control_.sim_type = cockpit;
-		break;
-	    case 'a':
-		sim_control_.write_av = 1;
-		if (optarg != NULL)
-		if (*optarg != '-') 
-		    strncpy(fltname, optarg, MAX_FILE_NAME_LENGTH);
-		else
-		    optind--;
-		break;
-	    case 'b':	
-		buffer_time = atof(optarg);
-		if (buffer_time <= 0.) opt_err = -1;
-		mod_buf_size++;
-		break;
-	    case 'd':
-		sim_control_.debug = 1;
-		break;
-	    case 'e':
-		sim_control_.end_time = atof(optarg);
-		mod_end_time++;
-		break;
-	    case 'f':
-		sim_control_.model_hz = atof(optarg);
-		break;
-	    case 'h': 
-		opt_err = 1;
-		break;
-	    case 'i':
-		/* ls_get_settings( optarg ); */
-		break;
-	    case 'k':
-		sim_control_.sim_type = GLmouse;
-		break;
-	    case 'm':
-		sim_control_.vision = 1;
-		break;
-	    case 'o': 
-		sim_control_.term_update_hz = atof(optarg);
-		if (sim_control_.term_update_hz <= 0.) opt_err = 1;
-		break;
-	    case 'r':
-		sim_control_.write_mat = 1;
-		if (optarg != NULL)
-		if (*optarg != '-') 
-		    strncpy(matname, optarg, MAX_FILE_NAME_LENGTH);
-		else
-		    optind--;
-		break;
-	    case 's':
-		data_rate = atof(optarg);
-		if (data_rate <= 0.) opt_err = -1;
-		break;
-	    case 't':
-		sim_control_.write_tab = 1;
-		if (optarg != NULL)
-		if (*optarg != '-') 
-		    strncpy(tabname, optarg, MAX_FILE_NAME_LENGTH);
-		else
-		    optind--;
-		break;
-	    case 'x':
-		sim_control_.write_asc1 = 1;
-		if (optarg != NULL)
-		if (*optarg != '-') 
-		    strncpy(asc1name, optarg, MAX_FILE_NAME_LENGTH);
-		else
-		    optind--;
-		break;
-	    default:
-		opt_err = 1;
-	    
-	}
+        switch (c) {
+            case 'A':
+                if (sim_control_.sim_type == GLmouse)
+                  {
+                    fprintf(stderr, "Cannot specify both keyboard (k) and ACES (A) cockpits option\n");
+                    fprintf(stderr, "Keyboard operation assumed.\n");
+                    break;
+                  }
+                sim_control_.sim_type = cockpit;
+                break;
+            case 'a':
+                sim_control_.write_av = 1;
+                if (optarg != NULL)
+                if (*optarg != '-') 
+                    strncpy(fltname, optarg, MAX_FILE_NAME_LENGTH);
+                else
+                    optind--;
+                break;
+            case 'b':        
+                buffer_time = atof(optarg);
+                if (buffer_time <= 0.) opt_err = -1;
+                mod_buf_size++;
+                break;
+            case 'd':
+                sim_control_.debug = 1;
+                break;
+            case 'e':
+                sim_control_.end_time = atof(optarg);
+                mod_end_time++;
+                break;
+            case 'f':
+                sim_control_.model_hz = atof(optarg);
+                break;
+            case 'h': 
+                opt_err = 1;
+                break;
+            case 'i':
+                /* ls_get_settings( optarg ); */
+                break;
+            case 'k':
+                sim_control_.sim_type = GLmouse;
+                break;
+            case 'm':
+                sim_control_.vision = 1;
+                break;
+            case 'o': 
+                sim_control_.term_update_hz = atof(optarg);
+                if (sim_control_.term_update_hz <= 0.) opt_err = 1;
+                break;
+            case 'r':
+                sim_control_.write_mat = 1;
+                if (optarg != NULL)
+                if (*optarg != '-') 
+                    strncpy(matname, optarg, MAX_FILE_NAME_LENGTH);
+                else
+                    optind--;
+                break;
+            case 's':
+                data_rate = atof(optarg);
+                if (data_rate <= 0.) opt_err = -1;
+                break;
+            case 't':
+                sim_control_.write_tab = 1;
+                if (optarg != NULL)
+                if (*optarg != '-') 
+                    strncpy(tabname, optarg, MAX_FILE_NAME_LENGTH);
+                else
+                    optind--;
+                break;
+            case 'x':
+                sim_control_.write_asc1 = 1;
+                if (optarg != NULL)
+                if (*optarg != '-') 
+                    strncpy(asc1name, optarg, MAX_FILE_NAME_LENGTH);
+                else
+                    optind--;
+                break;
+            default:
+                opt_err = 1;
+            
+        }
 
     if (opt_err)
       {
-	fprintf(stderr, "Usage: %s [-options]\n", progname);
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  where [-options] is zero or more of the following:\n");
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  [A|k]           Run mode: [A]CES cockpit   [default]\n");
-	fprintf(stderr, "                         or [k]eyboard\n");
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  [i <filename>]  [i]nitial conditions filename\n");
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  [f <value>]     Iteration rate [f]requency, Hz (default is %5.2f Hz)\n", 
-						sim_control_.model_hz);
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  [o <value>]     Display [o]utput frequency, Hz (default is %5.2f Hz)\n", 
-						sim_control_.term_update_hz);
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  [s <value>]     Data storage frequency, Hz (default is %5.2f Hz)\n",
-						data_rate);
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  [e <value>]     [e]nd time in seconds (default %5.1f seconds)\n", 
-						sim_control_.end_time);
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  [b <value>]     circular time history storage [b]uffer size, in seconds \n");
-	fprintf(stderr, "                  (default %5.1f seconds) (normally same as end time)\n", 
-						sim_control_.time_slices*sim_control_.save_spacing/
-							sim_control_.model_hz);
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  [atxr [<filename>]] Output: [a]gile-vu  (default name: %s )\n", fltname);
-	fprintf(stderr, "                       and/or [t]ab delimited ( '' name: %s )\n", tabname);
-	fprintf(stderr, "                       and/or [x]plot     (default name: %s)\n", asc1name);
-	fprintf(stderr, "                       and/or mat[r]ix script ( '' name: %s   )\n", matname);
-	fprintf(stderr, "\n");
-	return OPT_ERR;
+        fprintf(stderr, "Usage: %s [-options]\n", progname);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  where [-options] is zero or more of the following:\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  [A|k]           Run mode: [A]CES cockpit   [default]\n");
+        fprintf(stderr, "                         or [k]eyboard\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  [i <filename>]  [i]nitial conditions filename\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  [f <value>]     Iteration rate [f]requency, Hz (default is %5.2f Hz)\n", 
+                                                sim_control_.model_hz);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  [o <value>]     Display [o]utput frequency, Hz (default is %5.2f Hz)\n", 
+                                                sim_control_.term_update_hz);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  [s <value>]     Data storage frequency, Hz (default is %5.2f Hz)\n",
+                                                data_rate);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  [e <value>]     [e]nd time in seconds (default %5.1f seconds)\n", 
+                                                sim_control_.end_time);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  [b <value>]     circular time history storage [b]uffer size, in seconds \n");
+        fprintf(stderr, "                  (default %5.1f seconds) (normally same as end time)\n", 
+                                                sim_control_.time_slices*sim_control_.save_spacing/
+                                                        sim_control_.model_hz);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  [atxr [<filename>]] Output: [a]gile-vu  (default name: %s )\n", fltname);
+        fprintf(stderr, "                       and/or [t]ab delimited ( '' name: %s )\n", tabname);
+        fprintf(stderr, "                       and/or [x]plot     (default name: %s)\n", asc1name);
+        fprintf(stderr, "                       and/or mat[r]ix script ( '' name: %s   )\n", matname);
+        fprintf(stderr, "\n");
+        return OPT_ERR;
       }
 
 /* calculate additional controls */
@@ -479,9 +479,9 @@ int ls_checkopts(argc, argv)	/* check and set options flags */
     if (sim_control_.save_spacing < 1) sim_control_.save_spacing = 1;
 
     sim_control_.time_slices = buffer_time * sim_control_.model_hz / 
-	sim_control_.save_spacing;
+        sim_control_.save_spacing;
     if (sim_control_.time_slices < 2) sim_control_.time_slices = 2;
-	 
+         
     return OPT_OK;
   }
 #endif /* COMPILE_THIS_CODE_THIS_USELESS_CODE */
@@ -527,13 +527,13 @@ int ls_cockpit( void ) {
 int ls_toplevel_init(double dt, char * aircraft) {
     model_dt = dt;
 
-    ls_setdefopts();		/* set default options */
-	
+    ls_setdefopts();                /* set default options */
+        
     ls_stamp();   /* ID stamp; record time and date of run */
 
     if (speedup == 0.0) {
-	fprintf(stderr, "%s: Cannot run with speedup of 0.\n", progname);
-	return 1;
+        fprintf(stderr, "%s: Cannot run with speedup of 0.\n", progname);
+        return 1;
     }
 
     /* printf("LS pre Init pos = %.2f\n", Latitude); */
@@ -543,8 +543,8 @@ int ls_toplevel_init(double dt, char * aircraft) {
     /* printf("LS post Init pos = %.2f\n", Latitude); */
 
     if (speedup > 0) {
-	/* Initialize (get) cockpit (controls) settings */
-	ls_cockpit();
+        /* Initialize (get) cockpit (controls) settings */
+        ls_cockpit();
     }
 
     return(1);
@@ -553,14 +553,14 @@ int ls_toplevel_init(double dt, char * aircraft) {
 
 /* Run an iteration of the EOM (equations of motion) */
 int ls_update(int multiloop) {
-    int	i;
+    int        i;
 
     if (speedup > 0) {
-	ls_cockpit();
+        ls_cockpit();
     }
 
     for ( i = 0; i < multiloop; i++ ) {
-	ls_loop( model_dt, 0);
+        ls_loop( model_dt, 0);
     }
 
     return 1;

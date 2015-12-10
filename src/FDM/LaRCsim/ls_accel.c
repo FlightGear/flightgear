@@ -1,41 +1,41 @@
 /***************************************************************************
   
-  TITLE:	ls_Accel
+  TITLE:        ls_Accel
   
   ----------------------------------------------------------------------------
   
-  FUNCTION:	Sums forces and moments and calculates accelerations
+  FUNCTION:        Sums forces and moments and calculates accelerations
   
   ----------------------------------------------------------------------------
   
-  MODULE STATUS:	developmental
+  MODULE STATUS:        developmental
   
   ----------------------------------------------------------------------------
   
-  GENEALOGY:	Written 920731 by Bruce Jackson.  Based upon equations
+  GENEALOGY:        Written 920731 by Bruce Jackson.  Based upon equations
   given in reference [1] and a Matrix-X/System Build block
   diagram model of equations of motion coded by David Raney
   at NASA-Langley in June of 1992.
   
   ----------------------------------------------------------------------------
   
-  DESIGNED BY:	Bruce Jackson
+  DESIGNED BY:        Bruce Jackson
   
-  CODED BY:		Bruce Jackson
+  CODED BY:                Bruce Jackson
   
-  MAINTAINED BY:	
+  MAINTAINED BY:        
   
   ----------------------------------------------------------------------------
   
   MODIFICATION HISTORY:
   
-  DATE		PURPOSE		
+  DATE                PURPOSE                
   
-  931007    Moved calculations of auxiliary accelerations here from ls_aux.c									BY
-	    and corrected minus sign in front of A_Y_Pilot 
-	    contribution from Q_body*P_body*D_X_pilot term.
+  931007    Moved calculations of auxiliary accelerations here from ls_aux.c                                                                        BY
+            and corrected minus sign in front of A_Y_Pilot 
+            contribution from Q_body*P_body*D_X_pilot term.
   940111    Changed DATA to SCALAR; updated header files
-	    
+            
 $Header$
 $Log$
 Revision 1.1  2002/09/10 01:14:01  curt
@@ -82,7 +82,7 @@ Initial Flight Gear revision.
   
   REFERENCES:
   
-  [  1]	McFarland, Richard E.: "A Standard Kinematic Model
+  [  1]        McFarland, Richard E.: "A Standard Kinematic Model
   for Flight Simulation at NASA-Ames", NASA CR-2497,
   January 1975 
   
@@ -100,7 +100,7 @@ Initial Flight Gear revision.
   
   ----------------------------------------------------------------------------
   
-  OUTPUTS:	State derivatives
+  OUTPUTS:        State derivatives
   
   -------------------------------------------------------------------------*/
 #include "ls_types.h"
@@ -111,10 +111,10 @@ Initial Flight Gear revision.
 
 void ls_accel( void ) {
   
-  SCALAR	inv_Mass, inv_Radius;
-  SCALAR	ixz2, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10;
-  SCALAR	dx_pilot_from_cg, dy_pilot_from_cg, dz_pilot_from_cg;
-  SCALAR	tan_Lat_geocentric;
+  SCALAR        inv_Mass, inv_Radius;
+  SCALAR        ixz2, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10;
+  SCALAR        dx_pilot_from_cg, dy_pilot_from_cg, dz_pilot_from_cg;
+  SCALAR        tan_Lat_geocentric;
   
   
   /* Sum forces and moments at reference point */
@@ -178,7 +178,7 @@ void ls_accel( void ) {
   Q_dot_body = c5*R_body*P_body + c6*(R_body*R_body - P_body*P_body) + c7*M_m_cg;
   R_dot_body = (c8*P_body + c9*R_body)*Q_body + c4*M_l_cg + c10*M_n_cg;
   
-  /* Calculate body axis accelerations (move to ls_accel?)	*/
+  /* Calculate body axis accelerations (move to ls_accel?)        */
 
     inv_Mass = 1/Mass;
     
@@ -190,16 +190,16 @@ void ls_accel( void ) {
     dy_pilot_from_cg = Dy_pilot - Dy_cg;
     dz_pilot_from_cg = Dz_pilot - Dz_cg;
     
-    A_X_pilot = A_X_cg 	+ (-R_body*R_body - Q_body*Q_body)*dx_pilot_from_cg
-					    + ( P_body*Q_body - R_dot_body   )*dy_pilot_from_cg
-					    + ( P_body*R_body + Q_dot_body   )*dz_pilot_from_cg;
-    A_Y_pilot = A_Y_cg 	+ ( P_body*Q_body + R_dot_body   )*dx_pilot_from_cg
-					    + (-P_body*P_body - R_body*R_body)*dy_pilot_from_cg
-					    + ( Q_body*R_body - P_dot_body   )*dz_pilot_from_cg;
-    A_Z_pilot = A_Z_cg 	+ ( P_body*R_body - Q_dot_body   )*dx_pilot_from_cg
-					    + ( Q_body*R_body + P_dot_body   )*dy_pilot_from_cg
-					    + (-Q_body*Q_body - P_body*P_body)*dz_pilot_from_cg;
-					    
+    A_X_pilot = A_X_cg         + (-R_body*R_body - Q_body*Q_body)*dx_pilot_from_cg
+                                            + ( P_body*Q_body - R_dot_body   )*dy_pilot_from_cg
+                                            + ( P_body*R_body + Q_dot_body   )*dz_pilot_from_cg;
+    A_Y_pilot = A_Y_cg         + ( P_body*Q_body + R_dot_body   )*dx_pilot_from_cg
+                                            + (-P_body*P_body - R_body*R_body)*dy_pilot_from_cg
+                                            + ( Q_body*R_body - P_dot_body   )*dz_pilot_from_cg;
+    A_Z_pilot = A_Z_cg         + ( P_body*R_body - Q_dot_body   )*dx_pilot_from_cg
+                                            + ( Q_body*R_body + P_dot_body   )*dy_pilot_from_cg
+                                            + (-Q_body*Q_body - P_body*P_body)*dz_pilot_from_cg;
+                                            
     N_X_cg = INVG*A_X_cg;
     N_Y_cg = INVG*A_Y_cg;
     N_Z_cg = INVG*A_Z_cg;
@@ -210,11 +210,11 @@ void ls_accel( void ) {
     
     
     U_dot_body = T_local_to_body_11*V_dot_north + T_local_to_body_12*V_dot_east
-				    + T_local_to_body_13*V_dot_down - Q_total*W_body + R_total*V_body;
+                                    + T_local_to_body_13*V_dot_down - Q_total*W_body + R_total*V_body;
     V_dot_body = T_local_to_body_21*V_dot_north + T_local_to_body_22*V_dot_east
-				    + T_local_to_body_23*V_dot_down - R_total*U_body + P_total*W_body;
+                                    + T_local_to_body_23*V_dot_down - R_total*U_body + P_total*W_body;
     W_dot_body = T_local_to_body_31*V_dot_north + T_local_to_body_32*V_dot_east
-				    + T_local_to_body_33*V_dot_down - P_total*V_body + Q_total*U_body;
+                                    + T_local_to_body_33*V_dot_down - P_total*V_body + Q_total*U_body;
     /* End of ls_accel */
   
 }

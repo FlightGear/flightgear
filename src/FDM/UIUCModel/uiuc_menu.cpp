@@ -42,43 +42,43 @@
                             maps; added zero_Long_trim to 
                             controlSurface map
                03/09/2001   (DPM) added support for gear.
-	       06/18/2001   (RD) Added Alpha, Beta, U_body,
-	                    V_body, and W_body to init map.  Added 
-			    aileron_input, rudder_input, pilot_elev_no,
-			    pilot_ail_no, and pilot_rud_no to
-			    controlSurface map.  Added Throttle_pct_input
-			    to engine map.  Added CZfa to CL map.
-	       07/05/2001   (RD) Changed pilot_elev_no = true to pilot_
-	                    elev_no_check=false.  This is to allow pilot
-			    to fly aircraft after input files have been
-			    used.
- 	       08/27/2001   (RD) Added xxx_init_true and xxx_init for
-	                    P_body, Q_body, R_body, Phi, Theta, Psi,
-			    U_body, V_body, and W_body to help in
-			    starting the A/C at an initial condition.
+               06/18/2001   (RD) Added Alpha, Beta, U_body,
+                            V_body, and W_body to init map.  Added 
+                            aileron_input, rudder_input, pilot_elev_no,
+                            pilot_ail_no, and pilot_rud_no to
+                            controlSurface map.  Added Throttle_pct_input
+                            to engine map.  Added CZfa to CL map.
+               07/05/2001   (RD) Changed pilot_elev_no = true to pilot_
+                            elev_no_check=false.  This is to allow pilot
+                            to fly aircraft after input files have been
+                            used.
+                08/27/2001   (RD) Added xxx_init_true and xxx_init for
+                            P_body, Q_body, R_body, Phi, Theta, Psi,
+                            U_body, V_body, and W_body to help in
+                            starting the A/C at an initial condition.
                10/25/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model at zero flaps
-			    (Cxfxxf0)
+                            linear Twin Otter model at zero flaps
+                            (Cxfxxf0)
                11/12/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model with flaps
-			    (Cxfxxf).  Removed zero flap variables.
-			    Added minmaxfind() which is needed for non-
-			    linear variables
-	       01/11/2002   (AP) Added keywords for bootTime
-	       02/13/2002   (RD) Added variables so linear aero model
-	                    values can be recorded
-	       02/18/2002   (RD) Added variables necessary to use the
-	                    uiuc_3Dinterp_quick() function.  Takes
-			    advantage of data in a "nice" form (data
-			    that are in a rectangular matrix).
-	       03/13/2002   (RD) Added aircraft_directory so full path
-	                    is no longer needed in the aircraft.dat file
-	       04/02/2002   (RD) Removed minmaxfind() since it was no
-	                    longer needed.  Added d_2_to_3(),
-			    d_1_to_2(), and i_1_to_2() so uiuc_menu()
-			    will compile with certain compilers.
-	       08/29/2002   (RD) Separated each primary keyword into its
-	                    own function to speed up compile time
+                            linear Twin Otter model with flaps
+                            (Cxfxxf).  Removed zero flap variables.
+                            Added minmaxfind() which is needed for non-
+                            linear variables
+               01/11/2002   (AP) Added keywords for bootTime
+               02/13/2002   (RD) Added variables so linear aero model
+                            values can be recorded
+               02/18/2002   (RD) Added variables necessary to use the
+                            uiuc_3Dinterp_quick() function.  Takes
+                            advantage of data in a "nice" form (data
+                            that are in a rectangular matrix).
+               03/13/2002   (RD) Added aircraft_directory so full path
+                            is no longer needed in the aircraft.dat file
+               04/02/2002   (RD) Removed minmaxfind() since it was no
+                            longer needed.  Added d_2_to_3(),
+                            d_1_to_2(), and i_1_to_2() so uiuc_menu()
+                            will compile with certain compilers.
+               08/29/2002   (RD) Separated each primary keyword into its
+                            own function to speed up compile time
                08/29/2002   (RD w/ help from CO) Made changes to shorten
                             compile time.  [] RD to add more comments here.
                08/29/2003   (MSS) Adding new keywords for new engine model
@@ -97,10 +97,10 @@
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         http://www.jeffscott.net/
-	       Robert Deters      <rdeters@uiuc.edu>
+               Robert Deters      <rdeters@uiuc.edu>
                Michael Selig      <m-selig@uiuc.edu>
                David Megginson    <david@megginson.com>
-	       Ann Peedikayil     <peedikay@uiuc.edu>
+               Ann Peedikayil     <peedikay@uiuc.edu>
 ----------------------------------------------------------------------
 
  VARIABLES:
@@ -236,31 +236,31 @@ void uiuc_menu( string aircraft_name )
       linetoken1 = airplane -> getToken (*command_line, 1); 
       linetoken2 = airplane -> getToken (*command_line, 2); 
       if (linetoken2=="")
-	linetoken2="0";
+        linetoken2="0";
       linetoken3 = airplane -> getToken (*command_line, 3); 
       if (linetoken3=="")
-	linetoken3="0";
+        linetoken3="0";
       linetoken4 = airplane -> getToken (*command_line, 4); 
       if (linetoken4=="")
-	linetoken4="0";
+        linetoken4="0";
       linetoken5 = airplane -> getToken (*command_line, 5); 
       if (linetoken5=="")
-	linetoken5="0";
+        linetoken5="0";
       linetoken6 = airplane -> getToken (*command_line, 6); 
       if (linetoken6=="")
-	linetoken6="0";
+        linetoken6="0";
       linetoken7 = airplane -> getToken (*command_line, 7);
       if (linetoken7=="")
-	linetoken7="0";
+        linetoken7="0";
       linetoken8 = airplane -> getToken (*command_line, 8);
       if (linetoken8=="")
-	linetoken8="0";
+        linetoken8="0";
       linetoken9 = airplane -> getToken (*command_line, 9);
       if (linetoken9=="")
-	linetoken9="0";
+        linetoken9="0";
       linetoken10 = airplane -> getToken (*command_line, 10);
       if (linetoken10=="")
-	linetoken10="0";
+        linetoken10="0";
  
       //cout << linetoken1 << endl;
       //cout << linetoken2 << endl;
@@ -286,20 +286,20 @@ void uiuc_menu( string aircraft_name )
         {
         case init_flag:
           {
-	    parse_init( linetoken2, linetoken3, linetoken4, 
-			linetoken5, linetoken6, linetoken7,
-			linetoken8, linetoken9, linetoken10,
-			aircraft_directory, command_line );
+            parse_init( linetoken2, linetoken3, linetoken4, 
+                        linetoken5, linetoken6, linetoken7,
+                        linetoken8, linetoken9, linetoken10,
+                        aircraft_directory, command_line );
             break;
           } // end init map
           
       
         case geometry_flag:
           {
-	    parse_geometry( linetoken2, linetoken3, linetoken4,
-			    linetoken5, linetoken6, linetoken7,
-			    linetoken8, linetoken9, linetoken10,
-			    aircraft_directory, command_line );
+            parse_geometry( linetoken2, linetoken3, linetoken4,
+                            linetoken5, linetoken6, linetoken7,
+                            linetoken8, linetoken9, linetoken10,
+                            aircraft_directory, command_line );
             break;
           } // end geometry map
 
@@ -308,18 +308,18 @@ void uiuc_menu( string aircraft_name )
           {
             parse_controlSurface( linetoken2, linetoken3, linetoken4,
                                   linetoken5, linetoken6, linetoken7,
-				  linetoken8, linetoken9, linetoken10,
-				  aircraft_directory, command_line );
+                                  linetoken8, linetoken9, linetoken10,
+                                  aircraft_directory, command_line );
             break;
           } // end controlSurface map
 
 
         case mass_flag:
           {
-	    parse_mass( linetoken2, linetoken3, linetoken4,
-			linetoken5, linetoken6, linetoken7,
-			linetoken8, linetoken9, linetoken10,
-			aircraft_directory, command_line );
+            parse_mass( linetoken2, linetoken3, linetoken4,
+                        linetoken5, linetoken6, linetoken7,
+                        linetoken8, linetoken9, linetoken10,
+                        aircraft_directory, command_line );
             break;
           } // end mass map
           
@@ -327,102 +327,102 @@ void uiuc_menu( string aircraft_name )
         case engine_flag:
           {
             parse_engine( linetoken2, linetoken3, linetoken4,
-			  linetoken5, linetoken6, linetoken7,
-			  linetoken8, linetoken9, linetoken10,
-			  aircraft_directory, command_line );
+                          linetoken5, linetoken6, linetoken7,
+                          linetoken8, linetoken9, linetoken10,
+                          aircraft_directory, command_line );
             break;
           } // end engine map
           
           
         case CD_flag:
           {
-	    parse_CD( linetoken2, linetoken3, linetoken4,
-		      linetoken5, linetoken6, linetoken7,
-		      linetoken8, linetoken9, linetoken10,
-		      aircraft_directory, command_line );
+            parse_CD( linetoken2, linetoken3, linetoken4,
+                      linetoken5, linetoken6, linetoken7,
+                      linetoken8, linetoken9, linetoken10,
+                      aircraft_directory, command_line );
             break;
           } // end CD map
 
           
         case CL_flag:
           {
-	    parse_CL( linetoken2, linetoken3, linetoken4,
-		      linetoken5, linetoken6, linetoken7,
-		      linetoken8, linetoken9, linetoken10,
-		      aircraft_directory, command_line );
+            parse_CL( linetoken2, linetoken3, linetoken4,
+                      linetoken5, linetoken6, linetoken7,
+                      linetoken8, linetoken9, linetoken10,
+                      aircraft_directory, command_line );
             break;
           } // end CL map
 
 
         case Cm_flag:
           {
-	    parse_Cm( linetoken2, linetoken3, linetoken4,
-		      linetoken5, linetoken6, linetoken7,
-		      linetoken8, linetoken9, linetoken10,
-		      aircraft_directory, command_line );
+            parse_Cm( linetoken2, linetoken3, linetoken4,
+                      linetoken5, linetoken6, linetoken7,
+                      linetoken8, linetoken9, linetoken10,
+                      aircraft_directory, command_line );
             break;
           } // end Cm map
 
 
         case CY_flag:
           {
-	    parse_CY( linetoken2, linetoken3, linetoken4,
-		      linetoken5, linetoken6, linetoken7,
-		      linetoken8, linetoken9, linetoken10,
-		      aircraft_directory, command_line );
+            parse_CY( linetoken2, linetoken3, linetoken4,
+                      linetoken5, linetoken6, linetoken7,
+                      linetoken8, linetoken9, linetoken10,
+                      aircraft_directory, command_line );
             break;
           } // end CY map
 
 
         case Cl_flag:
           {
-	    parse_Cl( linetoken2, linetoken3, linetoken4,
-		      linetoken5, linetoken6, linetoken7,
-		      linetoken8, linetoken9, linetoken10,
-		      aircraft_directory, command_line );
+            parse_Cl( linetoken2, linetoken3, linetoken4,
+                      linetoken5, linetoken6, linetoken7,
+                      linetoken8, linetoken9, linetoken10,
+                      aircraft_directory, command_line );
             break;
           } // end Cl map
 
 
         case Cn_flag:
           {
-	    parse_Cn( linetoken2, linetoken3, linetoken4,
-		      linetoken5, linetoken6, linetoken7,
-		      linetoken8, linetoken9, linetoken10,
-		      aircraft_directory, command_line );
+            parse_Cn( linetoken2, linetoken3, linetoken4,
+                      linetoken5, linetoken6, linetoken7,
+                      linetoken8, linetoken9, linetoken10,
+                      aircraft_directory, command_line );
             break;
           } // end Cn map
           
         
         case gear_flag:
           {
-	    parse_gear( linetoken2, linetoken3, linetoken4,
-			linetoken5, linetoken6, linetoken7,
-			linetoken8, linetoken9, linetoken10,
-			aircraft_directory, command_line );
-	    break;
+            parse_gear( linetoken2, linetoken3, linetoken4,
+                        linetoken5, linetoken6, linetoken7,
+                        linetoken8, linetoken9, linetoken10,
+                        aircraft_directory, command_line );
+            break;
           } // end gear map
       
 
         case ice_flag:
           {
-	    parse_ice( linetoken2, linetoken3, linetoken4,
-		       linetoken5, linetoken6, linetoken7,
-		       linetoken8, linetoken9, linetoken10,
-		       aircraft_directory, command_line );
+            parse_ice( linetoken2, linetoken3, linetoken4,
+                       linetoken5, linetoken6, linetoken7,
+                       linetoken8, linetoken9, linetoken10,
+                       aircraft_directory, command_line );
             break;
           } // end ice map
          
 
-	case fog_flag:
+        case fog_flag:
           {
-	    parse_fog( linetoken2, linetoken3, linetoken4,
-		       linetoken5, linetoken6, linetoken7,
-		       linetoken8, linetoken9, linetoken10,
-		       aircraft_directory, command_line );
-	    break;
-	  } // end fog map	  
-	  
+            parse_fog( linetoken2, linetoken3, linetoken4,
+                       linetoken5, linetoken6, linetoken7,
+                       linetoken8, linetoken9, linetoken10,
+                       aircraft_directory, command_line );
+            break;
+          } // end fog map          
+          
 
         case record_flag:
           {
@@ -432,20 +432,20 @@ void uiuc_menu( string aircraft_name )
               fout_flag=-1;
               fout.open("uiuc_record.dat");
             }
-	    parse_record( linetoken2, linetoken3, linetoken4, 
-			  linetoken5, linetoken6, linetoken7,
-			  linetoken8, linetoken9, linetoken10,
-			  aircraft_directory, command_line );
+            parse_record( linetoken2, linetoken3, linetoken4, 
+                          linetoken5, linetoken6, linetoken7,
+                          linetoken8, linetoken9, linetoken10,
+                          aircraft_directory, command_line );
             break;
           } // end record map               
 
 
         case misc_flag:
           {
-	    parse_misc( linetoken2, linetoken3, linetoken4, 
-			linetoken5, linetoken6, linetoken7,
-			linetoken8, linetoken9, linetoken10,
-			aircraft_directory, command_line );
+            parse_misc( linetoken2, linetoken3, linetoken4, 
+                        linetoken5, linetoken6, linetoken7,
+                        linetoken8, linetoken9, linetoken10,
+                        aircraft_directory, command_line );
             break;
           } // end misc map
 
@@ -454,12 +454,12 @@ void uiuc_menu( string aircraft_name )
           {
             if (linetoken1=="*")
                 return;
-	    if (ignore_unknown_keywords) {
-	      // do nothing
-	    } else {
-	      // print error message
-	      uiuc_warnings_errors(2, *command_line);
-	    }
+            if (ignore_unknown_keywords) {
+              // do nothing
+            } else {
+              // print error message
+              uiuc_warnings_errors(2, *command_line);
+            }
             break;
           }
         };

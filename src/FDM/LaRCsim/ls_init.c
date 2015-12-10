@@ -1,36 +1,36 @@
 /***************************************************************************
 
-	TITLE:	ls_init.c
-	
+        TITLE:        ls_init.c
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	Initializes simulation
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	incomplete
+        FUNCTION:        Initializes simulation
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Written 921230 by Bruce Jackson
+        MODULE STATUS:        incomplete
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	EBJ
-	
-	CODED BY:	EBJ
-	
-	MAINTAINED BY:	EBJ
+        GENEALOGY:        Written 921230 by Bruce Jackson
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
+        DESIGNED BY:        EBJ
+        
+        CODED BY:        EBJ
+        
+        MAINTAINED BY:        EBJ
 
-	950314	Added get_set, put_set, and init routines.	EBJ
-	
-	CURRENT RCS HEADER:
+----------------------------------------------------------------------------
+
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+
+        950314        Added get_set, put_set, and init routines.        EBJ
+        
+        CURRENT RCS HEADER:
 
 $Header$
 $Log$
@@ -109,26 +109,26 @@ Initial Flight Gear revision.
 
 ----------------------------------------------------------------------------
 
-	REFERENCES:
+        REFERENCES:
 
 ----------------------------------------------------------------------------
 
-	CALLED BY:
+        CALLED BY:
 
 ----------------------------------------------------------------------------
 
-	CALLS TO:
+        CALLS TO:
 
 ----------------------------------------------------------------------------
 
-	INPUTS:
+        INPUTS:
 
 ----------------------------------------------------------------------------
 
-	OUTPUTS:
+        OUTPUTS:
 
 --------------------------------------------------------------------------*/
-static char rcsid[] = "$Id$";
+// static char rcsid[] = "$Id$";
 
 #include <string.h>
 #include <stdio.h>
@@ -156,14 +156,14 @@ void basic_init( void );
 
 typedef struct
 {
-    symbol_rec	Symbol;
-    double	value;
+    symbol_rec        Symbol;
+    double        value;
 } cont_state_rec;
 
 typedef struct
 {
-    symbol_rec	Symbol;
-    long	value;
+    symbol_rec        Symbol;
+    long        value;
 } disc_state_rec;
 
 
@@ -172,8 +172,8 @@ extern SCALAR Simtime;
 /* static int Symbols_loaded = 0; */
 static int Number_of_Continuous_States = 0;
 static int Number_of_Discrete_States = 0;
-static cont_state_rec	Continuous_States[ MAX_NUMBER_OF_CONTINUOUS_STATES ];
-static disc_state_rec	Discrete_States[  MAX_NUMBER_OF_DISCRETE_STATES ];
+static cont_state_rec        Continuous_States[ MAX_NUMBER_OF_CONTINUOUS_STATES ];
+static disc_state_rec        Discrete_States[  MAX_NUMBER_OF_DISCRETE_STATES ];
 
 
 void ls_init_init( void ) {
@@ -181,52 +181,52 @@ void ls_init_init( void ) {
     /* int error; */
 
     if (Number_of_Continuous_States == 0)
-	{
-	    Number_of_Continuous_States = HARDWIRED;
+        {
+            Number_of_Continuous_States = HARDWIRED;
 
-	    for (i=0;i<HARDWIRED;i++)
-		strcpy( Continuous_States[i].Symbol.Mod_Name, "*" );
+            for (i=0;i<HARDWIRED;i++)
+                strcpy( Continuous_States[i].Symbol.Mod_Name, "*" );
 
-	    strcpy( Continuous_States[ 0].Symbol.Par_Name, 
-		    "generic_.geodetic_position_v[0]");
-	    strcpy( Continuous_States[ 1].Symbol.Par_Name, 
-		    "generic_.geodetic_position_v[1]");
-	    strcpy( Continuous_States[ 2].Symbol.Par_Name, 
-		    "generic_.geodetic_position_v[2]");
-	    strcpy( Continuous_States[ 3].Symbol.Par_Name, 
-		    "generic_.v_local_v[0]");
-	    strcpy( Continuous_States[ 4].Symbol.Par_Name, 
-		    "generic_.v_local_v[1]");
-	    strcpy( Continuous_States[ 5].Symbol.Par_Name, 
-		    "generic_.v_local_v[2]");
-	    strcpy( Continuous_States[ 6].Symbol.Par_Name, 
-		    "generic_.euler_angles_v[0]");
-	    strcpy( Continuous_States[ 7].Symbol.Par_Name, 
-		    "generic_.euler_angles_v[1]");
-	    strcpy( Continuous_States[ 8].Symbol.Par_Name, 
-		    "generic_.euler_angles_v[2]");
-	    strcpy( Continuous_States[ 9].Symbol.Par_Name, 
-		    "generic_.omega_body_v[0]");
-	    strcpy( Continuous_States[10].Symbol.Par_Name, 
-		    "generic_.omega_body_v[1]");
-	    strcpy( Continuous_States[11].Symbol.Par_Name, 
-		    "generic_.omega_body_v[2]");
-	    strcpy( Continuous_States[12].Symbol.Par_Name, 
-		    "generic_.earth_position_angle");
-	}
+            strcpy( Continuous_States[ 0].Symbol.Par_Name, 
+                    "generic_.geodetic_position_v[0]");
+            strcpy( Continuous_States[ 1].Symbol.Par_Name, 
+                    "generic_.geodetic_position_v[1]");
+            strcpy( Continuous_States[ 2].Symbol.Par_Name, 
+                    "generic_.geodetic_position_v[2]");
+            strcpy( Continuous_States[ 3].Symbol.Par_Name, 
+                    "generic_.v_local_v[0]");
+            strcpy( Continuous_States[ 4].Symbol.Par_Name, 
+                    "generic_.v_local_v[1]");
+            strcpy( Continuous_States[ 5].Symbol.Par_Name, 
+                    "generic_.v_local_v[2]");
+            strcpy( Continuous_States[ 6].Symbol.Par_Name, 
+                    "generic_.euler_angles_v[0]");
+            strcpy( Continuous_States[ 7].Symbol.Par_Name, 
+                    "generic_.euler_angles_v[1]");
+            strcpy( Continuous_States[ 8].Symbol.Par_Name, 
+                    "generic_.euler_angles_v[2]");
+            strcpy( Continuous_States[ 9].Symbol.Par_Name, 
+                    "generic_.omega_body_v[0]");
+            strcpy( Continuous_States[10].Symbol.Par_Name, 
+                    "generic_.omega_body_v[1]");
+            strcpy( Continuous_States[11].Symbol.Par_Name, 
+                    "generic_.omega_body_v[2]");
+            strcpy( Continuous_States[12].Symbol.Par_Name, 
+                    "generic_.earth_position_angle");
+        }
 
     /* commented out by CLO 
     for (i=0;i<Number_of_Continuous_States;i++)
-	{
-	    (void) ls_get_sym_val( &Continuous_States[i].Symbol, &error );
-	    if (error) Continuous_States[i].Symbol.Addr = NIL_POINTER;
-	}
+        {
+            (void) ls_get_sym_val( &Continuous_States[i].Symbol, &error );
+            if (error) Continuous_States[i].Symbol.Addr = NIL_POINTER;
+        }
 
     for (i=0;i<Number_of_Discrete_States;i++)
-	{
-	    (void) ls_get_sym_val( &Discrete_States[i].Symbol, &error );
-	    if (error) Discrete_States[i].Symbol.Addr = NIL_POINTER;
-	}
+        {
+            (void) ls_get_sym_val( &Discrete_States[i].Symbol, &error );
+            if (error) Discrete_States[i].Symbol.Addr = NIL_POINTER;
+        }
     */
 
 }
@@ -270,14 +270,14 @@ void ls_init( char * aircraft ) {
 
     /* commented out by CLO
     for(i=0;i<Number_of_Continuous_States;i++)
-	if (Continuous_States[i].Symbol.Addr)
-	    ls_set_sym_val( &Continuous_States[i].Symbol, 
-			    Continuous_States[i].value );
+        if (Continuous_States[i].Symbol.Addr)
+            ls_set_sym_val( &Continuous_States[i].Symbol, 
+                            Continuous_States[i].value );
 
     for(i=0;i<Number_of_Discrete_States;i++)
-	if (Discrete_States[i].Symbol.Addr)
-	    ls_set_sym_val( &Discrete_States[i].Symbol, 
-			    (double) Discrete_States[i].value );
+        if (Discrete_States[i].Symbol.Addr)
+            ls_set_sym_val( &Discrete_States[i].Symbol, 
+                            (double) Discrete_States[i].value );
     */
 
     switch (current_model) {
@@ -336,70 +336,70 @@ char *ls_init_get_set(char *buffer, char *eob)
 
     while( !abrt && (eob > bufptr))
       {
-	bufptr = strtok( 0L, "\n");
-	if (bufptr == 0) return 0L;
-	if (strncasecmp( bufptr, "end", 3) == 0) break;
+        bufptr = strtok( 0L, "\n");
+        if (bufptr == 0) return 0L;
+        if (strncasecmp( bufptr, "end", 3) == 0) break;
 
-	sscanf( bufptr, "%s", line );
-	if (line[0] != '#') /* ignore comments */
-	    {
-		switch (looking_for)
-		    {
-		    case cont_states_header:
-			{
-			    if (strncasecmp( line, "continuous_states", 17) == 0) 
-				{
-				    n = sscanf( bufptr, "%s%d", line, 
-						&Number_of_Continuous_States );
-				    if (n != 2) abrt = 1;
-				    looking_for = cont_states;
-				    i = 0;
-				}
-			    break;
-			}
-		    case cont_states:
-			{
-			    n = sscanf( bufptr, "%s%s%le", 
-					Continuous_States[i].Symbol.Mod_Name,
-					Continuous_States[i].Symbol.Par_Name,
-					&Continuous_States[i].value );
-			    if (n != 3) abrt = 1;
-			    Continuous_States[i].Symbol.Addr = NIL_POINTER;
-			    i++;
-			    if (i >= Number_of_Continuous_States) 
-				looking_for = disc_states_header;
-			    break;
-			}
-		    case disc_states_header:
-			{
-			    if (strncasecmp( line, "discrete_states", 15) == 0) 
-				{
-				    n = sscanf( bufptr, "%s%d", line, 
-						&Number_of_Discrete_States );
-				    if (n != 2) abrt = 1;
-				    looking_for = disc_states;
-				    i = 0;
-				}
-			    break;
-			}
-		    case disc_states:
-			{
-			    n = sscanf( bufptr, "%s%s%ld", 
-					Discrete_States[i].Symbol.Mod_Name,
-					Discrete_States[i].Symbol.Par_Name,
-					&Discrete_States[i].value );
-			    if (n != 3) abrt = 1;
-			    Discrete_States[i].Symbol.Addr = NIL_POINTER;
-			    i++;
-			    if (i >= Number_of_Discrete_States) looking_for = done;
-			}  
-		    case done:
-			{
-			    break;
-			}
-		    }
+        sscanf( bufptr, "%s", line );
+        if (line[0] != '#') /* ignore comments */
+            {
+                switch (looking_for)
+                    {
+                    case cont_states_header:
+                        {
+                            if (strncasecmp( line, "continuous_states", 17) == 0) 
+                                {
+                                    n = sscanf( bufptr, "%s%d", line, 
+                                                &Number_of_Continuous_States );
+                                    if (n != 2) abrt = 1;
+                                    looking_for = cont_states;
+                                    i = 0;
+                                }
+                            break;
+                        }
+                    case cont_states:
+                        {
+                            n = sscanf( bufptr, "%s%s%le", 
+                                        Continuous_States[i].Symbol.Mod_Name,
+                                        Continuous_States[i].Symbol.Par_Name,
+                                        &Continuous_States[i].value );
+                            if (n != 3) abrt = 1;
+                            Continuous_States[i].Symbol.Addr = NIL_POINTER;
+                            i++;
+                            if (i >= Number_of_Continuous_States) 
+                                looking_for = disc_states_header;
+                            break;
+                        }
+                    case disc_states_header:
+                        {
+                            if (strncasecmp( line, "discrete_states", 15) == 0) 
+                                {
+                                    n = sscanf( bufptr, "%s%d", line, 
+                                                &Number_of_Discrete_States );
+                                    if (n != 2) abrt = 1;
+                                    looking_for = disc_states;
+                                    i = 0;
+                                }
+                            break;
+                        }
+                    case disc_states:
+                        {
+                            n = sscanf( bufptr, "%s%s%ld", 
+                                        Discrete_States[i].Symbol.Mod_Name,
+                                        Discrete_States[i].Symbol.Par_Name,
+                                        &Discrete_States[i].value );
+                            if (n != 3) abrt = 1;
+                            Discrete_States[i].Symbol.Addr = NIL_POINTER;
+                            i++;
+                            if (i >= Number_of_Discrete_States) looking_for = done;
+                        }  
+                    case done:
+                        {
+                            break;
+                        }
+                    }
 
-	    }
+            }
       }
 
     Symbols_loaded = !abrt;
@@ -423,18 +423,18 @@ void ls_init_put_set( FILE *fp )
     fprintf(fp, "  continuous_states: %d\n", Number_of_Continuous_States);
     fprintf(fp, "#    module    parameter   value\n");
     for (i=0; i<Number_of_Continuous_States; i++)
-	fprintf(fp, "    %s\t%s\t%E\n", 
-		Continuous_States[i].Symbol.Mod_Name,
-		Continuous_States[i].Symbol.Par_Name,
-		Continuous_States[i].value );
+        fprintf(fp, "    %s\t%s\t%E\n", 
+                Continuous_States[i].Symbol.Mod_Name,
+                Continuous_States[i].Symbol.Par_Name,
+                Continuous_States[i].value );
 
     fprintf(fp, "  discrete_states: %d\n", Number_of_Discrete_States);
     fprintf(fp, "#    module    parameter   value\n");
     for (i=0;i<Number_of_Discrete_States;i++)
-	fprintf(fp, "    %s\t%s\t%ld\n",
-		Discrete_States[i].Symbol.Mod_Name,
-		Discrete_States[i].Symbol.Par_Name,
-		Discrete_States[i].value );
+        fprintf(fp, "    %s\t%s\t%ld\n",
+                Discrete_States[i].Symbol.Mod_Name,
+                Discrete_States[i].Symbol.Par_Name,
+                Discrete_States[i].value );
     fprintf(fp, "end\n");
     return;
 }
@@ -446,13 +446,13 @@ void ls_save_current_as_ic( void ) {
 
     /* commented out by CLO 
     for(i=0;i<Number_of_Continuous_States;i++)
-	if (Continuous_States[i].Symbol.Addr)
-	    Continuous_States[i].value = 
-		ls_get_sym_val( &Continuous_States[i].Symbol, &error );
+        if (Continuous_States[i].Symbol.Addr)
+            Continuous_States[i].value = 
+                ls_get_sym_val( &Continuous_States[i].Symbol, &error );
 
     for(i=0;i<Number_of_Discrete_States;i++)
-	if (Discrete_States[i].Symbol.Addr)
-	    Discrete_States[i].value = (long)
-		ls_get_sym_val( &Discrete_States[i].Symbol, &error );
+        if (Discrete_States[i].Symbol.Addr)
+            Discrete_States[i].value = (long)
+                ls_get_sym_val( &Discrete_States[i].Symbol, &error );
     */
 }

@@ -45,14 +45,14 @@ void FGNewEngine::init(double dt) {
     CONVERT_HP_TO_WATTS = 745.6999;
 
     // Properties of working fluids
-    Cp_air = 1005;	// J/KgK
-    Cp_fuel = 1700;	// J/KgK
+    Cp_air = 1005;        // J/KgK
+    Cp_fuel = 1700;        // J/KgK
     calorific_value_fuel = 47.3e6;  // W/Kg  Note that this is only an approximate value
-    rho_fuel = 800;	// kg/m^3 - an estimate for now
+    rho_fuel = 800;        // kg/m^3 - an estimate for now
     R_air = 287.3;
 
     // environment inputs
-    p_amb_sea_level = 101325;	// Pascals		
+    p_amb_sea_level = 101325;        // Pascals                
 
     // Control inputs  - ARE THESE NEEDED HERE???
     Throttle_Lever_Pos = 75;
@@ -67,7 +67,7 @@ void FGNewEngine::init(double dt) {
     MaxHP = 200;    //Lycoming IO360 -A-C-D series
 //  MaxHP = 180;    //Current Lycoming IO360 ?
 //  displacement = 520;  //Continental IO520-M
-    displacement = 360;	 //Lycoming IO360
+    displacement = 360;         //Lycoming IO360
     displacement_SI = displacement * CONVERT_CUBIC_INCHES_TO_METERS_CUBED;
     engine_inertia = 0.2;  //kgm^2 - value taken from a popular family saloon car engine - need to find an aeroengine value !!!!!
     prop_inertia = 0.05;  //kgm^2 - this value is a total guess - dcl
@@ -77,7 +77,7 @@ void FGNewEngine::init(double dt) {
     Max_Manifold_Pressure = 28.50;  //Inches Hg. An approximation - should be able to find it in the engine performance data
     Min_Manifold_Pressure = 6.5;    //Inches Hg. This is a guess corresponding to approx 0.24 bar MAP (7 in Hg) - need to find some proper data for this
     Max_RPM = 2700;
-    Min_RPM = 600;		    //Recommended idle from Continental data sheet
+    Min_RPM = 600;                    //Recommended idle from Continental data sheet
     Mag_Derate_Percent = 5;
     Gear_Ratio = 1;
     n_R = 2;         // Number of crank revolutions per power cycle - 2 for a 4 stroke engine.
@@ -90,20 +90,20 @@ void FGNewEngine::init(double dt) {
 
     // Initialise Engine Variables used by this instance
     if(running)
-	RPM = 600;
+        RPM = 600;
     else
-	RPM = 0;
+        RPM = 0;
     Percentage_Power = 0;
     Manifold_Pressure = 29.96; // Inches
     Fuel_Flow_gals_hr = 0;
 //    Torque = 0;
     Torque_SI = 0;
-    CHT = 298.0;			//deg Kelvin
-    CHT_degF = (CHT * 1.8) - 459.67;	//deg Fahrenheit
+    CHT = 298.0;                        //deg Kelvin
+    CHT_degF = (CHT * 1.8) - 459.67;        //deg Fahrenheit
     Mixture = 14;
-    Oil_Pressure = 0;	// PSI
-    Oil_Temp = 85;	// Deg C
-    current_oil_temp = 298.0;	//deg Kelvin
+    Oil_Pressure = 0;        // PSI
+    Oil_Temp = 85;        // Deg C
+    current_oil_temp = 298.0;        //deg Kelvin
     /**** one of these is superfluous !!!!***/
     HP = 0;
     RPS = 0;
@@ -124,24 +124,24 @@ void FGNewEngine::update() {
     // Hack for testing - should output every 5 seconds
     static int count1 = 0;
     if(count1 == 0) {
-//	cout << "P_atmos = " << p_amb << "  T_atmos = " << T_amb << '\n';
-//	cout << "Manifold pressure = " << Manifold_Pressure << "  True_Manifold_Pressure = " << True_Manifold_Pressure << '\n';
-//	cout << "p_amb_sea_level = " << p_amb_sea_level << '\n';
-//	cout << "equivalence_ratio = " << equivalence_ratio << '\n';
-//	cout << "combustion_efficiency = " << combustion_efficiency << '\n';
-//	cout << "AFR = " << 14.7 / equivalence_ratio << '\n';
-//	cout << "Mixture lever = " << Mixture_Lever_Pos << '\n';
-//	cout << "n = " << RPM << " rpm\n";
+//        cout << "P_atmos = " << p_amb << "  T_atmos = " << T_amb << '\n';
+//        cout << "Manifold pressure = " << Manifold_Pressure << "  True_Manifold_Pressure = " << True_Manifold_Pressure << '\n';
+//        cout << "p_amb_sea_level = " << p_amb_sea_level << '\n';
+//        cout << "equivalence_ratio = " << equivalence_ratio << '\n';
+//        cout << "combustion_efficiency = " << combustion_efficiency << '\n';
+//        cout << "AFR = " << 14.7 / equivalence_ratio << '\n';
+//        cout << "Mixture lever = " << Mixture_Lever_Pos << '\n';
+//        cout << "n = " << RPM << " rpm\n";
 //      cout << "T_amb = " << T_amb << '\n';
-//	cout << "running = " << running << '\n';
-//	cout << "fuel = " << fgGetFloat("/consumables/fuel/tank[0]/level-gal_us") << '\n';
-//	cout << "Percentage_Power = " << Percentage_Power << '\n';
-//	cout << "current_oil_temp = " << current_oil_temp << '\n';
-//	cout << "EGT = " << EGT << '\n';
+//        cout << "running = " << running << '\n';
+//        cout << "fuel = " << fgGetFloat("/consumables/fuel/tank[0]/level-gal_us") << '\n';
+//        cout << "Percentage_Power = " << Percentage_Power << '\n';
+//        cout << "current_oil_temp = " << current_oil_temp << '\n';
+//        cout << "EGT = " << EGT << '\n';
     }
     count1++;
     if(count1 == 100)
-	count1 = 0;
+        count1 = 0;
 */
 
     // Check parameters that may alter the operating state of the engine. 
@@ -156,59 +156,59 @@ void FGNewEngine::update() {
     // 2 -> right only
     // 3 -> both
     if(mag_pos != 0) {
-	spark = true;
+        spark = true;
     } else {
-	spark = false;
+        spark = false;
     }  // neglects battery voltage, master on switch, etc for now.
     if((mag_pos == 1) || (mag_pos > 2)) 
-	Magneto_Left = true;
+        Magneto_Left = true;
     if(mag_pos > 1)
-	Magneto_Right = true;
+        Magneto_Right = true;
  
     // crude check for fuel
     if((fgGetFloat("/consumables/fuel/tank[0]/level-gal_us") > 0) || (fgGetFloat("/consumables/fuel/tank[1]/level-gal_us") > 0)) {
-	fuel = true;
+        fuel = true;
     } else {
-	fuel = false;
+        fuel = false;
     }  // Need to make this better, eg position of fuel selector switch.
 
     // Check if we are turning the starter motor
     if(cranking != starter) {
-	// This check saves .../cranking from getting updated every loop - they only update when changed.
-	cranking = starter;
-	crank_counter = 0;
+        // This check saves .../cranking from getting updated every loop - they only update when changed.
+        cranking = starter;
+        crank_counter = 0;
     }
     // Note that although /engines/engine[0]/starter and /engines/engine[0]/cranking might appear to be duplication it is
     // not since the starter may be engaged with the battery voltage too low for cranking to occur (or perhaps the master 
     // switch just left off) and the sound manager will read .../cranking to determine wether to play a cranking sound.
     // For now though none of that is implemented so cranking can be set equal to .../starter without further checks.
 
-//    int Alternate_Air_Pos =0;	// Off = 0. Reduces power by 3 % for same throttle setting
+//    int Alternate_Air_Pos =0;        // Off = 0. Reduces power by 3 % for same throttle setting
     // DCL - don't know what this Alternate_Air_Pos is - this is a leftover from the Schubert code.
 
     //Check mode of engine operation
     if(cranking) {
-	crank_counter++;
-	if(RPM <= 480) {
-	    RPM += 100;
-	    if(RPM > 480)
-		RPM = 480;
-	} else {
-	    // consider making a horrible noise if the starter is engaged with the engine running
-	}
+        crank_counter++;
+        if(RPM <= 480) {
+            RPM += 100;
+            if(RPM > 480)
+                RPM = 480;
+        } else {
+            // consider making a horrible noise if the starter is engaged with the engine running
+        }
     }
     if((!running) && (spark) && (fuel) && (crank_counter > 120)) {
-	// start the engine if revs high enough
-	if(RPM > 450) {
-	    // For now just instantaneously start but later we should maybe crank for a bit
-	    running = true;
-//	    RPM = 600;
-	}
+        // start the engine if revs high enough
+        if(RPM > 450) {
+            // For now just instantaneously start but later we should maybe crank for a bit
+            running = true;
+//            RPM = 600;
+        }
     }
     if( (running) && ((!spark)||(!fuel)) ) {
-	// Cut the engine
-	// note that we only cut the power - the engine may continue to spin if the prop is in a moving airstream
-	running = false;
+        // Cut the engine
+        // note that we only cut the power - the engine may continue to spin if the prop is in a moving airstream
+        running = false;
     }
 
     // Now we've ascertained whether the engine is running or not we can start to do the engine calculations 'proper'
@@ -250,14 +250,14 @@ void FGNewEngine::update() {
     }
     else {
         Torque_SI = ((Power_SI * 60.0) / (2.0 * LS_PI * RPM)) - Torque_FMEP;  //Torque = power / angular velocity
-	// cout << Torque << " Nm\n";
+        // cout << Torque << " Nm\n";
     }
 
     //Calculate Exhaust gas temperature
     if(running)
-	Calc_EGT();
+        Calc_EGT();
     else
-	EGT = 298.0;
+        EGT = 298.0;
 
     // Calculate Cylinder Head Temperature
     Calc_CHT();
@@ -286,14 +286,14 @@ void FGNewEngine::update() {
 
     // And finally a last check on the engine state after doing the torque balance with the prop - have we stalled?
     if(running) { 
-	//Check if we have stalled the engine
-	if (RPM == 0) {
-	    running = false;
-	} else if((RPM <= 480) && (cranking)) {
-	    //Make sure the engine noise dosn't play if the engine won't start due to eg mixture lever pulled out.
-	    running = false;
-	    EGT = 298.0;
-	}
+        //Check if we have stalled the engine
+        if (RPM == 0) {
+            running = false;
+        } else if((RPM <= 480) && (cranking)) {
+            //Make sure the engine noise dosn't play if the engine won't start due to eg mixture lever pulled out.
+            running = false;
+            EGT = 298.0;
+        }
     }
 
     // And finally, do any unit conversions from internal units to output units
@@ -324,22 +324,22 @@ float FGNewEngine::Lookup_Combustion_Efficiency(float thi_actual)
 
     for(i=0;i<j;i++)
     {
-	if(i == (j-1)) {
-	    // Assume linear extrapolation of the slope between the last two points beyond the last point
-	    float dydx = (neta_comb[i] - neta_comb[i-1]) / (thi[i] - thi[i-1]);
-	    neta_comb_actual = neta_comb[i] + dydx * (thi_actual - thi[i]);
-	    return neta_comb_actual;
-	}
-	if(thi_actual == thi[i]) {
-	    neta_comb_actual = neta_comb[i];
-	    return neta_comb_actual;
-	}
-	if((thi_actual > thi[i]) && (thi_actual < thi[i + 1])) {
-	    //do linear interpolation between the two points
-	    factor = (thi_actual - thi[i]) / (thi[i+1] - thi[i]);
-	    neta_comb_actual = (factor * (neta_comb[i+1] - neta_comb[i])) + neta_comb[i];
-	    return neta_comb_actual;
-	}
+        if(i == (j-1)) {
+            // Assume linear extrapolation of the slope between the last two points beyond the last point
+            float dydx = (neta_comb[i] - neta_comb[i-1]) / (thi[i] - thi[i-1]);
+            neta_comb_actual = neta_comb[i] + dydx * (thi_actual - thi[i]);
+            return neta_comb_actual;
+        }
+        if(thi_actual == thi[i]) {
+            neta_comb_actual = neta_comb[i];
+            return neta_comb_actual;
+        }
+        if((thi_actual > thi[i]) && (thi_actual < thi[i + 1])) {
+            //do linear interpolation between the two points
+            factor = (thi_actual - thi[i]) / (thi[i+1] - thi[i]);
+            neta_comb_actual = (factor * (neta_comb[i+1] - neta_comb[i])) + neta_comb[i];
+            return neta_comb_actual;
+        }
     }
 
     //if we get here something has gone badly wrong
@@ -372,28 +372,28 @@ float FGNewEngine::Power_Mixture_Correlation(float thi_actual)
 
     for(i=0;i<j;i++)
     {
-	if(i == (j-1)) {
-	    // Assume linear extrapolation of the slope between the last two points beyond the last point
-	    dydx = (mixPerPow[i] - mixPerPow[i-1]) / (AFR[i] - AFR[i-1]);
-	    mixPerPow_actual = mixPerPow[i] + dydx * (AFR_actual - AFR[i]);
-	    return mixPerPow_actual;
-	}
-	if((i == 0) && (AFR_actual < AFR[i])) {
-	    // Assume linear extrapolation of the slope between the first two points for points before the first point
-	    dydx = (mixPerPow[1] - mixPerPow[0]) / (AFR[1] - AFR[0]);
-	    mixPerPow_actual = mixPerPow[0] + dydx * (AFR_actual - AFR[0]);
-	    return mixPerPow_actual;
-	}
-	if(AFR_actual == AFR[i]) {
-	    mixPerPow_actual = mixPerPow[i];
-	    return mixPerPow_actual;
-	}
-	if((AFR_actual > AFR[i]) && (AFR_actual < AFR[i + 1])) {
-	    //do linear interpolation between the two points
-	    factor = (AFR_actual - AFR[i]) / (AFR[i+1] - AFR[i]);
-	    mixPerPow_actual = (factor * (mixPerPow[i+1] - mixPerPow[i])) + mixPerPow[i];
-	    return mixPerPow_actual;
-	}
+        if(i == (j-1)) {
+            // Assume linear extrapolation of the slope between the last two points beyond the last point
+            dydx = (mixPerPow[i] - mixPerPow[i-1]) / (AFR[i] - AFR[i-1]);
+            mixPerPow_actual = mixPerPow[i] + dydx * (AFR_actual - AFR[i]);
+            return mixPerPow_actual;
+        }
+        if((i == 0) && (AFR_actual < AFR[i])) {
+            // Assume linear extrapolation of the slope between the first two points for points before the first point
+            dydx = (mixPerPow[1] - mixPerPow[0]) / (AFR[1] - AFR[0]);
+            mixPerPow_actual = mixPerPow[0] + dydx * (AFR_actual - AFR[0]);
+            return mixPerPow_actual;
+        }
+        if(AFR_actual == AFR[i]) {
+            mixPerPow_actual = mixPerPow[i];
+            return mixPerPow_actual;
+        }
+        if((AFR_actual > AFR[i]) && (AFR_actual < AFR[i + 1])) {
+            //do linear interpolation between the two points
+            factor = (AFR_actual - AFR[i]) / (AFR[i+1] - AFR[i]);
+            mixPerPow_actual = (factor * (mixPerPow[i+1] - mixPerPow[i])) + mixPerPow[i];
+            return mixPerPow_actual;
+        }
     }
 
     //if we get here something has gone badly wrong
@@ -408,16 +408,16 @@ void FGNewEngine::Calc_CHT()
 {
     float h1 = -95.0;   //co-efficient for free convection
     float h2 = -3.95;   //co-efficient for forced convection
-    float h3 = -0.05;	//co-efficient for forced convection due to prop backwash
-    float v_apparent;	//air velocity over cylinder head in m/s
+    float h3 = -0.05;        //co-efficient for forced convection due to prop backwash
+    float v_apparent;        //air velocity over cylinder head in m/s
     float v_dot_cooling_air;
     float m_dot_cooling_air;
     float temperature_difference;
     float arbitary_area = 1.0;
     float dqdt_from_combustion;
-    float dqdt_forced;	    //Rate of energy transfer to/from cylinder head due to forced convection (Joules) (sign convention: to cylinder head is +ve)
-    float dqdt_free;	    //Rate of energy transfer to/from cylinder head due to free convection (Joules) (sign convention: to cylinder head is +ve)
-    float dqdt_cylinder_head;	    //Overall energy change in cylinder head
+    float dqdt_forced;            //Rate of energy transfer to/from cylinder head due to forced convection (Joules) (sign convention: to cylinder head is +ve)
+    float dqdt_free;            //Rate of energy transfer to/from cylinder head due to free convection (Joules) (sign convention: to cylinder head is +ve)
+    float dqdt_cylinder_head;            //Overall energy change in cylinder head
     float CpCylinderHead = 800.0;   //FIXME - this is a guess - I need to look up the correct value
     float MassCylinderHead = 8.0;   //Kg - this is a guess - it dosn't have to be absolutely accurate but can be varied to alter the warm-up rate
     float HeatCapacityCylinderHead;
@@ -484,11 +484,11 @@ float FGNewEngine::Calc_Manifold_Pressure ( float LeverPosn, float MaxMan, float
 
     //allow for idle bypass valve or slightly open throttle stop
     if(Inches < MinMan)
-	Inches = MinMan;
+        Inches = MinMan;
 
     //Check for stopped engine (crudest way of compensating for engine speed)
     if(RPM == 0)
-	Inches = 29.92;
+        Inches = 29.92;
 
     return Inches;
 }
@@ -566,14 +566,14 @@ void FGNewEngine::Calc_Percentage_Power(bool mag_left, bool mag_right)
     // Now Derate engine for the effects of Bad/Switched off magnetos
     //if (Magneto_Left == 0 && Magneto_Right == 0) {
     if(!running) {
-	// cout << "Both OFF\n";
-	Percentage_Power = 0;
+        // cout << "Both OFF\n";
+        Percentage_Power = 0;
     } else if (mag_left && mag_right) {
-	// cout << "Both On    ";
+        // cout << "Both On    ";
     } else if (mag_left == 0 || mag_right== 0) {
-	// cout << "1 Magneto Failed   ";
-	Percentage_Power = Percentage_Power * ((100.0 - Mag_Derate_Percent)/100.0);
-	//  cout << FGEng1_Percentage_Power <<  "%" << "\t";
+        // cout << "1 Magneto Failed   ";
+        Percentage_Power = Percentage_Power * ((100.0 - Mag_Derate_Percent)/100.0);
+        //  cout << FGEng1_Percentage_Power <<  "%" << "\t";
     }
 /*
     //DCL - stall the engine if RPM drops below 450 - this is possible if mixture lever is pulled right out
@@ -582,24 +582,24 @@ void FGNewEngine::Calc_Percentage_Power(bool mag_left, bool mag_right)
         Percentage_Power = 0;
 */
     if(Percentage_Power < 0)
-	Percentage_Power = 0;
+        Percentage_Power = 0;
 }
 
 // Calculate Oil Temperature in degrees Kelvin
 float FGNewEngine::Calc_Oil_Temp (float oil_temp)
 {
-    float idle_percentage_power = 2.3;	// approximately
-    float target_oil_temp;	    // Steady state oil temp at the current engine conditions
-    float time_constant;	    // The time constant for the differential equation
+    float idle_percentage_power = 2.3;        // approximately
+    float target_oil_temp;            // Steady state oil temp at the current engine conditions
+    float time_constant;            // The time constant for the differential equation
     if(running) {
-	target_oil_temp = 363;
-	time_constant = 500;	    // Time constant for engine-on idling.
-	if(Percentage_Power > idle_percentage_power) {
-	    time_constant /= ((Percentage_Power / idle_percentage_power) / 10.0);	// adjust for power 
-	}
+        target_oil_temp = 363;
+        time_constant = 500;            // Time constant for engine-on idling.
+        if(Percentage_Power > idle_percentage_power) {
+            time_constant /= ((Percentage_Power / idle_percentage_power) / 10.0);        // adjust for power 
+        }
     } else {
-	target_oil_temp = 298;
-	time_constant = 1000;  // Time constant for engine-off; reflects the fact that oil is no longer getting circulated
+        target_oil_temp = 298;
+        time_constant = 1000;  // Time constant for engine-off; reflects the fact that oil is no longer getting circulated
     }
 
     float dOilTempdt = (target_oil_temp - oil_temp) / time_constant;
@@ -612,18 +612,18 @@ float FGNewEngine::Calc_Oil_Temp (float oil_temp)
 // Calculate Oil Pressure
 float FGNewEngine::Calc_Oil_Press (float Oil_Temp, float Engine_RPM)
 {
-    float Oil_Pressure = 0;			//PSI
-    float Oil_Press_Relief_Valve = 60;	//PSI
+    float Oil_Pressure = 0;                        //PSI
+    float Oil_Press_Relief_Valve = 60;        //PSI
     float Oil_Press_RPM_Max = 1800;
-    float Design_Oil_Temp = 85;		//Celsius
-    float Oil_Viscosity_Index = 0.25;	// PSI/Deg C
-//    float Temp_Deviation = 0;		// Deg C
+    float Design_Oil_Temp = 85;                //Celsius
+    float Oil_Viscosity_Index = 0.25;        // PSI/Deg C
+//    float Temp_Deviation = 0;                // Deg C
 
     Oil_Pressure = (Oil_Press_Relief_Valve / Oil_Press_RPM_Max) * Engine_RPM;
 
     // Pressure relief valve opens at Oil_Press_Relief_Valve PSI setting
     if (Oil_Pressure >= Oil_Press_Relief_Valve) {
-	Oil_Pressure = Oil_Press_Relief_Valve;
+        Oil_Pressure = Oil_Press_Relief_Valve;
     }
 
     // Now adjust pressure according to Temp which affects the viscosity
@@ -640,7 +640,7 @@ void FGNewEngine::Do_Prop_Calcs()
     float Gear_Ratio = 1.0;
     float forward_velocity;             // m/s
     float prop_power_consumed_SI;       // Watts
-    double J;      			// advance ratio - dimensionless
+    double J;                              // advance ratio - dimensionless
     double Cp_20;                   // coefficient of power for 20 degree blade angle
     double Cp_25;                   // coefficient of power for 25 degree blade angle
     double Cp;                      // Our actual coefficient of power
@@ -675,8 +675,8 @@ void FGNewEngine::Do_Prop_Calcs()
     //cout << "prop HP consumed = " << prop_power_consumed_SI / 745.699 << '\n';
     if(angular_velocity_SI == 0)
         prop_torque = 0;
-	// However this can give problems - if rpm == 0 but forward velocity increases the prop should be able to generate a torque to start the engine spinning
-	// Unlikely to happen in practice - but I suppose someone could move the lever of a stopped large piston engine from feathered to windmilling.
+        // However this can give problems - if rpm == 0 but forward velocity increases the prop should be able to generate a torque to start the engine spinning
+        // Unlikely to happen in practice - but I suppose someone could move the lever of a stopped large piston engine from feathered to windmilling.
         // This *does* give problems - if the plane is put into a steep climb whilst windmilling the engine friction will eventually stop it spinning.
         // When put back into a dive it never starts re-spinning again.  Although it is unlikely that anyone would do this in real life, they might well do it in a sim!!!
     else
@@ -690,11 +690,11 @@ void FGNewEngine::Do_Prop_Calcs()
     // Check for zero forward velocity to avoid divide by zero
     if(forward_velocity < 0.0001)
         prop_thrust = 0.0;
-	// I don't see how this works - how can the plane possibly start from rest ???
-	// Hmmmm - it works because the forward_velocity at present never drops below about 0.03 even at rest
-	// We can't really rely on this in the future - needs fixing !!!!
-	// The problem is that we're doing this calculation backwards - we're working out the thrust from the power consumed and the velocity, which becomes invalid as velocity goes to zero.
-	// It would be far more natural to work out the power consumed from the thrust - FIXME!!!!!.
+        // I don't see how this works - how can the plane possibly start from rest ???
+        // Hmmmm - it works because the forward_velocity at present never drops below about 0.03 even at rest
+        // We can't really rely on this in the future - needs fixing !!!!
+        // The problem is that we're doing this calculation backwards - we're working out the thrust from the power consumed and the velocity, which becomes invalid as velocity goes to zero.
+        // It would be far more natural to work out the power consumed from the thrust - FIXME!!!!!.
     else
         prop_thrust = neta_prop * prop_power_consumed_SI / forward_velocity;       //TODO - rename forward_velocity to IAS_SI
     //cout << "prop_thrust = " << prop_thrust << '\n';

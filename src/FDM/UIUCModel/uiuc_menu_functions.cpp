@@ -80,9 +80,9 @@ void d_2_to_3( double array2D[100][100], double array3D[][100][100], int index3D
   for (register int i=0; i<=99; i++)
     {
       for (register int j=1; j<=99; j++)
-	{
-	  array3D[index3D][i][j]=array2D[i][j];
-	}
+        {
+          array3D[index3D][i][j]=array2D[i][j];
+        }
     }
 }
 

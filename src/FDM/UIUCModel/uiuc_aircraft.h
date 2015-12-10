@@ -30,47 +30,47 @@
                             alpha and delta_e; of CY and Cn as function 
                             of alpha and delta_r; and of Cl and Cn as 
                             functions of alpha and delta_a
-	       03/02/2000   (JS) added record features for 1D and 2D 
-	                    interpolations
+               03/02/2000   (JS) added record features for 1D and 2D 
+                            interpolations
                03/29/2000   (JS) added Cmfa interpolation functions 
-	                    and Weight; added misc map
+                            and Weight; added misc map
                04/01/2000   (JS) added throttle, longitudinal, lateral, 
-	                    and rudder inputs to record map
+                            and rudder inputs to record map
                03/09/2001   (DPM) added support for gear
-	       06/18/2001   (RD) added variables needed for aileron,
-	                    rudder, and throttle_pct input files.  
-			    Added Alpha, Beta, U_body, V_body, and 
+               06/18/2001   (RD) added variables needed for aileron,
+                            rudder, and throttle_pct input files.  
+                            Added Alpha, Beta, U_body, V_body, and 
                             W_body to init map.  Added variables 
-			    needed to ignore elevator, aileron, and 
-			    rudder pilot inputs.  Added CZ as a function
-			    of alpha, CZfa.  Added twinotter to engine
-			    group.
-	       07/05/2001   (RD) added pilot_elev_no_check, pilot_ail_no
-	                    _check, and pilot_rud_no_check variables.
-			    This allows pilot to fly aircraft after the
-			    input files have been used.
-	       08/27/2001   (RD) Added xxx_init_true and xxx_init for
-	                    P_body, Q_body, R_body, Phi, Theta, Psi,
-			    U_body, V_body, and W_body to help in
-			    starting the A/C at an initial condition.
-	       10/25/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model at zero flaps
-			    (Cxfxxf0).
-	       11/12/2001   (RD) Added variables needed for Twin Otter
-	                    non-linear model with flaps (Cxfxxf). 
-			    Zero flap variables removed.
+                            needed to ignore elevator, aileron, and 
+                            rudder pilot inputs.  Added CZ as a function
+                            of alpha, CZfa.  Added twinotter to engine
+                            group.
+               07/05/2001   (RD) added pilot_elev_no_check, pilot_ail_no
+                            _check, and pilot_rud_no_check variables.
+                            This allows pilot to fly aircraft after the
+                            input files have been used.
+               08/27/2001   (RD) Added xxx_init_true and xxx_init for
+                            P_body, Q_body, R_body, Phi, Theta, Psi,
+                            U_body, V_body, and W_body to help in
+                            starting the A/C at an initial condition.
+               10/25/2001   (RD) Added new variables needed for the non-
+                            linear Twin Otter model at zero flaps
+                            (Cxfxxf0).
+               11/12/2001   (RD) Added variables needed for Twin Otter
+                            non-linear model with flaps (Cxfxxf). 
+                            Zero flap variables removed.
                01/11/2002   (AP) Added keywords for bootTime
-	       02/13/2002   (RD) Added variables so linear aero model
-	                    values can be recorded
-	       02/18/2002   (RD) Added variables necessary to use the
-	                    uiuc_3Dinterp_quick() function.  Takes
-			    advantage of data in a "nice" form (data
-			    that are in a rectangular matrix).
-	       04/21/2002   (MSS) Added new variables for apparent mass effects
+               02/13/2002   (RD) Added variables so linear aero model
+                            values can be recorded
+               02/18/2002   (RD) Added variables necessary to use the
+                            uiuc_3Dinterp_quick() function.  Takes
+                            advantage of data in a "nice" form (data
+                            that are in a rectangular matrix).
+               04/21/2002   (MSS) Added new variables for apparent mass effects
                             and options for computing *_2U coefficient
                             scale factors.
                08/29/2002   (MSS) Added simpleSingleModel
-	       09/18/2002   (MSS) Added downwash options
+               09/18/2002   (MSS) Added downwash options
                03/03/2003   (RD) Changed flap_cmd_deg to flap_cmd (rad)
                03/16/2003   (RD) Added trigger variables
                08/20/2003   (RD) Removed old_flap_routine.  Changed spoiler
@@ -85,9 +85,9 @@
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
-	       Robert Deters      <rdeters@uiuc.edu>
+               Robert Deters      <rdeters@uiuc.edu>
                David Megginson    <david@megginson.com>
-	       Ann Peedikayil	  <peedikay@uiuc.edu>
+               Ann Peedikayil          <peedikay@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -2789,7 +2789,7 @@ struct AIRCRAFT
   /* fog =========== Fog field quantities ======================== */
 
   std::map <string,int> fog_map;
-#define fog_map 	aircraft_->fog_map
+#define fog_map         aircraft_->fog_map
 
   bool fog_field;
   int fog_segments;
@@ -2801,13 +2801,13 @@ struct AIRCRAFT
  
   int Fog;
   
-#define fog_field	aircraft_->fog_field
-#define fog_segments	aircraft_->fog_segments
-#define fog_point_index	aircraft_->fog_point_index
-#define fog_time	aircraft_->fog_time
-#define fog_value	aircraft_->fog_value
-#define fog_next_time	aircraft_->fog_next_time
-#define fog_current_segment	aircraft_->fog_current_segment
+#define fog_field        aircraft_->fog_field
+#define fog_segments        aircraft_->fog_segments
+#define fog_point_index        aircraft_->fog_point_index
+#define fog_time        aircraft_->fog_time
+#define fog_value        aircraft_->fog_value
+#define fog_next_time        aircraft_->fog_next_time
+#define fog_current_segment        aircraft_->fog_current_segment
 
 #define Fog             aircraft_->Fog
 

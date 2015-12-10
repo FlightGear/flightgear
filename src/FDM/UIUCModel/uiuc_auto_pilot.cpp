@@ -19,7 +19,7 @@
  HISTORY:      09/04/2003   initial release (with PAH)
                10/31/2003   added ALH autopilot
                11/04/2003   added RAH and HH autopilots
-	       
+               
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Robert Deters      <rdeters@uiuc.edu>
@@ -33,7 +33,7 @@
  INPUTS:       -V_rel_wind (or U_body)
                -dyn_on_speed
                -ice on/off
-	       -phugoid on/off
+               -phugoid on/off
 
 ----------------------------------------------------------------------
 
@@ -98,11 +98,11 @@ void uiuc_auto_pilot(double dt)
       //ap_pah_on_prev = true;
       //}
       elevator = pah_ap(Theta, Theta_dot, ap_Theta_ref_rad, V_rel_wind_ms, dt, 
-			ap_pah_init);
+                        ap_pah_init);
       if (elevator*RAD_TO_DEG <= -1*demax)
-	elevator = -1*demax * DEG_TO_RAD;
+        elevator = -1*demax * DEG_TO_RAD;
       if (elevator*RAD_TO_DEG >= demin)
-	elevator = demin * DEG_TO_RAD;
+        elevator = demin * DEG_TO_RAD;
       pilot_elev_no=true;
       ap_pah_init=1;
       //printf("elv1=%f\n",elevator);
@@ -114,11 +114,11 @@ void uiuc_auto_pilot(double dt)
       //if (ap_alh_on_prev == false)
       //ap_alh_init = 0;
       elevator = alh_ap(Theta, Theta_dot, ap_alt_ref_m, Altitude_m, 
-			V_rel_wind_ms, dt, ap_alh_init);
+                        V_rel_wind_ms, dt, ap_alh_init);
       if (elevator*RAD_TO_DEG <= -1*demax)
-	elevator = -1*demax * DEG_TO_RAD;
+        elevator = -1*demax * DEG_TO_RAD;
       if (elevator*RAD_TO_DEG >= demin)
-	elevator = demin * DEG_TO_RAD;
+        elevator = demin * DEG_TO_RAD;
       pilot_elev_no=true;
       ap_alh_init = 1;
     }
@@ -127,17 +127,17 @@ void uiuc_auto_pilot(double dt)
     {
       bw_m = bw * 0.3048;
       rah_ap(Phi, Phi_dot, ap_Phi_ref_rad, V_rel_wind_ms, dt,
-	     bw_m, Psi_dot, ail_rud, ap_rah_init);
+             bw_m, Psi_dot, ail_rud, ap_rah_init);
       aileron = ail_rud[0];
       rudder = ail_rud[1];
       if (aileron*RAD_TO_DEG <= -1*damax)
-	aileron = -1*damax * DEG_TO_RAD;
+        aileron = -1*damax * DEG_TO_RAD;
       if (aileron*RAD_TO_DEG >= damin)
-	aileron = damin * DEG_TO_RAD;
+        aileron = damin * DEG_TO_RAD;
       if (rudder*RAD_TO_DEG <= -1*drmax)
-	rudder = -1*drmax * DEG_TO_RAD;
+        rudder = -1*drmax * DEG_TO_RAD;
       if (rudder*RAD_TO_DEG >= drmin)
-	rudder = drmin * DEG_TO_RAD;
+        rudder = drmin * DEG_TO_RAD;
       pilot_ail_no=true;
       pilot_rud_no=true;
       ap_rah_init = 1;
@@ -147,17 +147,17 @@ void uiuc_auto_pilot(double dt)
     {
       bw_m = bw * 0.3048;
       hh_ap(Phi, Psi, Phi_dot, ap_Psi_ref_rad, V_rel_wind_ms, dt,
-	    bw_m, Psi_dot, ail_rud, ap_hh_init);
+            bw_m, Psi_dot, ail_rud, ap_hh_init);
       aileron = ail_rud[0];
       rudder = ail_rud[1];
       if (aileron*RAD_TO_DEG <= -1*damax)
-	aileron = -1*damax * DEG_TO_RAD;
+        aileron = -1*damax * DEG_TO_RAD;
       if (aileron*RAD_TO_DEG >= damin)
-	aileron = damin * DEG_TO_RAD;
+        aileron = damin * DEG_TO_RAD;
       if (rudder*RAD_TO_DEG <= -1*drmax)
-	rudder = -1*drmax * DEG_TO_RAD;
+        rudder = -1*drmax * DEG_TO_RAD;
       if (rudder*RAD_TO_DEG >= drmin)
-	rudder = drmin * DEG_TO_RAD;
+        rudder = drmin * DEG_TO_RAD;
       pilot_ail_no=true;
       pilot_rud_no=true;
       ap_hh_init = 1;

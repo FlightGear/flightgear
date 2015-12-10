@@ -5,7 +5,7 @@
 ----------------------------------------------------------------------
 
  DESCRIPTION:  changes Fog variable to +/-1 or 0 using fog 
-	       parameters and Simtime
+               parameters and Simtime
 
 ----------------------------------------------------------------------
 
@@ -29,20 +29,20 @@
 
 ----------------------------------------------------------------------
 
- INPUTS:     	-Simtime
-		-Fog
-		-fog_field
-		-fog_next_time
-		-fog_current_segment
-		-fog_value
-		-fog_time
-	       
+ INPUTS:             -Simtime
+                -Fog
+                -fog_field
+                -fog_next_time
+                -fog_current_segment
+                -fog_value
+                -fog_time
+               
 ----------------------------------------------------------------------
 
- OUTPUTS:      	-Fog
-		-fog_field
-		-fog_next_time
-		-fog_current_segment
+ OUTPUTS:              -Fog
+                -fog_field
+                -fog_next_time
+                -fog_current_segment
  
 ----------------------------------------------------------------------
 
@@ -81,11 +81,11 @@ void uiuc_fog()
     if (fog_current_segment != 0)
     {
       if (fog_value[fog_current_segment] > fog_value[fog_current_segment-1])
-	Fog = 1;
+        Fog = 1;
       else if (fog_value[fog_current_segment] < fog_value[fog_current_segment-1])
-	Fog = -1;
+        Fog = -1;
       else
-	Fog = 0;
+        Fog = 0;
     }
     else
       Fog = 0;
@@ -93,12 +93,12 @@ void uiuc_fog()
     if (Simtime > fog_time[fog_current_segment]) {
       if (fog_current_segment == fog_segments)
       {
-	fog_field = false;
-	Fog = 0;
-	return;
+        fog_field = false;
+        Fog = 0;
+        return;
       }
       else
-	fog_current_segment++;			}
+        fog_current_segment++;                        }
 
     if (fog_value[fog_current_segment] == fog_value[fog_current_segment-1])
       fog_next_time = fog_time[fog_current_segment];

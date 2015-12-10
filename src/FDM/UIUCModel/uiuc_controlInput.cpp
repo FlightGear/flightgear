@@ -19,9 +19,9 @@
 
  HISTORY:      04/08/2000   initial release
                06/18/2001   (RD) Added aileron_input and rudder_input
-	       07/05/2001   (RD) Code added to allow the pilot to fly
-	                    aircraft after the control surface input
-			    files have been used.
+               07/05/2001   (RD) Code added to allow the pilot to fly
+                            aircraft after the control surface input
+                            files have been used.
 
 ----------------------------------------------------------------------
 
@@ -119,11 +119,11 @@ void uiuc_controlInput()
           Simtime <= (elevator_input_startTime + elevator_input_endTime))
         {
           double time = Simtime - elevator_input_startTime;
-	  if (pilot_elev_no_check)
-	    {
-	      elevator = 0 + elevator_tab;
-	      pilot_elev_no = true;
-	    }
+          if (pilot_elev_no_check)
+            {
+              elevator = 0 + elevator_tab;
+              pilot_elev_no = true;
+            }
           elevator = elevator + 
             uiuc_1Dinterpolation(elevator_input_timeArray,
                                  elevator_input_deArray,
@@ -140,14 +140,14 @@ void uiuc_controlInput()
           Simtime <= (aileron_input_startTime + aileron_input_endTime))
         {
           double time = Simtime - aileron_input_startTime;
-	  if (pilot_ail_no_check)
-	    {
-	      aileron = 0;
-	      if (Simtime==0)             //7-25-01 (RD) Added because
-		pilot_ail_no = false;     //segmentation fault is given
-	      else                        //with FG 0.7.8
-		pilot_ail_no = true;
-	    }
+          if (pilot_ail_no_check)
+            {
+              aileron = 0;
+              if (Simtime==0)             //7-25-01 (RD) Added because
+                pilot_ail_no = false;     //segmentation fault is given
+              else                        //with FG 0.7.8
+                pilot_ail_no = true;
+            }
           aileron = aileron + 
             uiuc_1Dinterpolation(aileron_input_timeArray,
                                  aileron_input_daArray,
@@ -164,11 +164,11 @@ void uiuc_controlInput()
           Simtime <= (rudder_input_startTime + rudder_input_endTime))
         {
           double time = Simtime - rudder_input_startTime;
-	  if (pilot_rud_no_check)
-	    {
-	      rudder = 0;
-	      pilot_rud_no = true;
-	    }
+          if (pilot_rud_no_check)
+            {
+              rudder = 0;
+              pilot_rud_no = true;
+            }
           rudder = rudder + 
             uiuc_1Dinterpolation(rudder_input_timeArray,
                                  rudder_input_drArray,
@@ -185,9 +185,9 @@ void uiuc_controlInput()
         {
           double time = Simtime - flap_pos_input_startTime;
           flap_pos = uiuc_1Dinterpolation(flap_pos_input_timeArray,
-					  flap_pos_input_dfArray,
-					  flap_pos_input_ntime,
-					  time);
+                                          flap_pos_input_dfArray,
+                                          flap_pos_input_ntime,
+                                          time);
         }
     }
 

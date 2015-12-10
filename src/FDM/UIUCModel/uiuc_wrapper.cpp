@@ -20,13 +20,13 @@
  HISTORY:      01/26/2000   initial release
                03/09/2001   (DPM) added support for gear
                06/18/2001   (RD) Made uiuc_recorder its own routine.
-	       07/19/2001   (RD) Added uiuc_vel_init() to initialize
-	                    the velocities.
-	       08/27/2001   (RD) Added uiuc_initial_init() to help
-	                    in starting an A/C at an initial condition
-	       02/24/2002   (GD) Added uiuc_network_routine()
-	       03/27/2002   (RD) Changed how forces are calculated when
-	                    body-axis is used
+               07/19/2001   (RD) Added uiuc_vel_init() to initialize
+                            the velocities.
+               08/27/2001   (RD) Added uiuc_initial_init() to help
+                            in starting an A/C at an initial condition
+               02/24/2002   (GD) Added uiuc_network_routine()
+               03/27/2002   (RD) Changed how forces are calculated when
+                            body-axis is used
                12/11/2002   (RD) Divided uiuc_network_routine into
                             uiuc_network_recv_routine and
                             uiuc_network_send_routine
@@ -36,7 +36,7 @@
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Robert Deters      <rdeters@uiuc.edu>
-	       Glen Dimock        <dimock@uiuc.edu>
+               Glen Dimock        <dimock@uiuc.edu>
                David Megginson    <david@megginson.com>
  
 ----------------------------------------------------------------------

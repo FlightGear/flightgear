@@ -19,19 +19,19 @@
  
  HISTORY:      06/03/2000   file creation
                10/25/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model at zero flaps
-			    (Cxfxxf0I)
+                            linear Twin Otter model at zero flaps
+                            (Cxfxxf0I)
                11/12/2001   (RD) Added new variables needed for the non-
-	                    linear Twin Otter model with flaps
-			    (CxfxxfI).  Removed zero flap vairables
-	       02/13/2002   (RD) Added variables so linear aero model
-	                    values can be recorded
+                            linear Twin Otter model with flaps
+                            (CxfxxfI).  Removed zero flap vairables
+               02/13/2002   (RD) Added variables so linear aero model
+                            values can be recorded
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
-	       Robert Deters      <rdeters@uiuc.edu>
+               Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
  

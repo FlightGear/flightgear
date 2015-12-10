@@ -1,46 +1,46 @@
 /***************************************************************************
 
-	TITLE:		ls_matrix.h
-	
+        TITLE:                ls_matrix.h
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	Header file for general real matrix routines.
-				
-	The routines in this module have come more or less from ref [1].
-	Note that, probably due to the heritage of ref [1] (which has a 
-	FORTRAN version that was probably written first), the use of 1 as
-	the first element of an array (or vector) is used. This is accomplished
-	in memory by allocating, but not using, the 0 elements in each dimension.
-	While this wastes some memory, it allows the routines to be ported more
-	easily from FORTRAN (I suspect) as well as adhering to conventional 
-	matrix notation.  As a result, however, traditional ANSI C convention
-	(0-base indexing) is not followed; as the authors of ref [1] point out,
-	there is some question of the portability of the resulting routines
-	which sometimes access negative indexes. See ref [1] for more details.
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	developmental
+        FUNCTION:        Header file for general real matrix routines.
+                                
+        The routines in this module have come more or less from ref [1].
+        Note that, probably due to the heritage of ref [1] (which has a 
+        FORTRAN version that was probably written first), the use of 1 as
+        the first element of an array (or vector) is used. This is accomplished
+        in memory by allocating, but not using, the 0 elements in each dimension.
+        While this wastes some memory, it allows the routines to be ported more
+        easily from FORTRAN (I suspect) as well as adhering to conventional 
+        matrix notation.  As a result, however, traditional ANSI C convention
+        (0-base indexing) is not followed; as the authors of ref [1] point out,
+        there is some question of the portability of the resulting routines
+        which sometimes access negative indexes. See ref [1] for more details.
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Created 950222 E. B. Jackson
+        MODULE STATUS:        developmental
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	from Numerical Recipes in C, by Press, et. al.
-	
-	CODED BY:	Bruce Jackson
-	
-	MAINTAINED BY:	
+        GENEALOGY:        Created 950222 E. B. Jackson
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
-	
-	CURRENT RCS HEADER:
+        DESIGNED BY:        from Numerical Recipes in C, by Press, et. al.
+        
+        CODED BY:        Bruce Jackson
+        
+        MAINTAINED BY:        
+
+----------------------------------------------------------------------------
+
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+        
+        CURRENT RCS HEADER:
 
 $Header$
 $Log$
@@ -62,24 +62,24 @@ Initial revision.
 
 ----------------------------------------------------------------------------
 
-	REFERENCES:	[1] Press, William H., et. al, Numerical Recipes in 
-			    C, 2nd edition, Cambridge University Press, 1992
+        REFERENCES:        [1] Press, William H., et. al, Numerical Recipes in 
+                            C, 2nd edition, Cambridge University Press, 1992
 
 ----------------------------------------------------------------------------
 
-	CALLED BY:
+        CALLED BY:
 
 ----------------------------------------------------------------------------
 
-	CALLS TO:
+        CALLS TO:
 
 ----------------------------------------------------------------------------
 
-	INPUTS:
+        INPUTS:
 
 ----------------------------------------------------------------------------
 
-	OUTPUTS:
+        OUTPUTS:
 
 --------------------------------------------------------------------------*/
 #include <stdlib.h>

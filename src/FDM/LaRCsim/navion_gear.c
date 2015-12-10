@@ -1,38 +1,38 @@
 /***************************************************************************
 
-	TITLE:	gear
-	
+        TITLE:        gear
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	Landing gear model for example simulation
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	developmental
+        FUNCTION:        Landing gear model for example simulation
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Created 931012 by E. B. Jackson
+        MODULE STATUS:        developmental
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	E. B. Jackson
-	
-	CODED BY:	E. B. Jackson
-	
-	MAINTAINED BY:	E. B. Jackson
+        GENEALOGY:        Created 931012 by E. B. Jackson
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
+        DESIGNED BY:        E. B. Jackson
+        
+        CODED BY:        E. B. Jackson
+        
+        MAINTAINED BY:        E. B. Jackson
 
-	931218	Added navion.h header to allow connection with
-		aileron displacement for nosewheel steering.	EBJ
-	940511	Connected nosewheel to rudder pedal; adjusted gain.
-	
-	CURRENT RCS HEADER:
+----------------------------------------------------------------------------
+
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+
+        931218        Added navion.h header to allow connection with
+                aileron displacement for nosewheel steering.        EBJ
+        940511        Connected nosewheel to rudder pedal; adjusted gain.
+        
+        CURRENT RCS HEADER:
 
 $Header$
 $Log$
@@ -92,23 +92,23 @@ Initial Flight Gear revision.
 
 ----------------------------------------------------------------------------
 
-	REFERENCES:
+        REFERENCES:
 
 ----------------------------------------------------------------------------
 
-	CALLED BY:
+        CALLED BY:
 
 ----------------------------------------------------------------------------
 
-	CALLS TO:
+        CALLS TO:
 
 ----------------------------------------------------------------------------
 
-	INPUTS:
+        INPUTS:
 
 ----------------------------------------------------------------------------
 
-	OUTPUTS:
+        OUTPUTS:
 
 --------------------------------------------------------------------------*/
 #include <math.h>
@@ -159,7 +159,7 @@ static void clear3( DATA v[] )
 }
 
 void navion_gear( SCALAR dt, int Initialize ) {
-char rcsid[] = "$Id$";
+// char rcsid[] = "$Id$";
 
   /*
    * Aircraft specific initializations and data goes here
@@ -167,21 +167,21 @@ char rcsid[] = "$Id$";
    
 #define NUM_WHEELS 3
 
-    static int num_wheels = NUM_WHEELS;		    /* number of wheels  */
+    static int num_wheels = NUM_WHEELS;                    /* number of wheels  */
     static DATA d_wheel_rp_body_v[NUM_WHEELS][3] =  /* X, Y, Z locations */
     {
-	{ 10.,  0., 4. },				/* in feet */
-	{ -1.,  3., 4. }, 
-	{ -1., -3., 4. }
+        { 10.,  0., 4. },                                /* in feet */
+        { -1.,  3., 4. }, 
+        { -1., -3., 4. }
     };
-    static DATA spring_constant[NUM_WHEELS] =	    /* springiness, lbs/ft */
-	{ 1500., 5000., 5000. };
-    static DATA spring_damping[NUM_WHEELS] =	    /* damping, lbs/ft/sec */
-	{ 100.,  150.,  150. };		
-    static DATA percent_brake[NUM_WHEELS] =	    /* percent applied braking */
-	{ 0.,  0.,  0. };			    /* 0 = none, 1 = full */
-    static DATA caster_angle_rad[NUM_WHEELS] =	    /* steerable tires - in */
-	{ 0., 0., 0.};				    /* radians, +CW */	
+    static DATA spring_constant[NUM_WHEELS] =            /* springiness, lbs/ft */
+        { 1500., 5000., 5000. };
+    static DATA spring_damping[NUM_WHEELS] =            /* damping, lbs/ft/sec */
+        { 100.,  150.,  150. };                
+    static DATA percent_brake[NUM_WHEELS] =            /* percent applied braking */
+        { 0.,  0.,  0. };                            /* 0 = none, 1 = full */
+    static DATA caster_angle_rad[NUM_WHEELS] =            /* steerable tires - in */
+        { 0., 0., 0.};                                    /* radians, +CW */        
   /*
    * End of aircraft specific code
    */
@@ -194,51 +194,51 @@ char rcsid[] = "$Id$";
      * 
      *           mu  ^
      *               |
-     *       max_mu  |       +		
-     *               |      /|		
-     *   sliding_mu  |     / +------	
-     *               |    /		
-     *               |   /		
+     *       max_mu  |       +                
+     *               |      /|                
+     *   sliding_mu  |     / +------        
+     *               |    /                
+     *               |   /                
      *               +--+------------------------> 
      *               |  |    |      sideward V
      *               0 bkout skid
-     *	               V     V
+     *                       V     V
      */
   
   
-    static DATA sliding_mu   = 0.5;	
-    static DATA rolling_mu   = 0.01;	
-    static DATA max_brake_mu = 0.6;	
-    static DATA max_mu	     = 0.8;	
-    static DATA bkout_v	     = 0.1;
+    static DATA sliding_mu   = 0.5;        
+    static DATA rolling_mu   = 0.01;        
+    static DATA max_brake_mu = 0.6;        
+    static DATA max_mu             = 0.8;        
+    static DATA bkout_v             = 0.1;
     static DATA skid_v       = 1.0;
   /*
    * Local data variables
    */
    
-    DATA d_wheel_cg_body_v[3];		/* wheel offset from cg,  X-Y-Z	*/
-    DATA d_wheel_cg_local_v[3];		/* wheel offset from cg,  N-E-D	*/
-    DATA d_wheel_rwy_local_v[3];	/* wheel offset from rwy, N-E-U */
-    // DATA v_wheel_body_v[3];		/* wheel velocity,	  X-Y-Z	*/
-    DATA v_wheel_local_v[3];		/* wheel velocity,	  N-E-D	*/
-    DATA f_wheel_local_v[3];		/* wheel reaction force,  N-E-D	*/
-    DATA temp3a[3], temp3b[3], tempF[3], tempM[3];	
-    DATA reaction_normal_force;		/* wheel normal (to rwy) force	*/
-    DATA cos_wheel_hdg_angle, sin_wheel_hdg_angle;	/* temp storage */
+    DATA d_wheel_cg_body_v[3];                /* wheel offset from cg,  X-Y-Z        */
+    DATA d_wheel_cg_local_v[3];                /* wheel offset from cg,  N-E-D        */
+    DATA d_wheel_rwy_local_v[3];        /* wheel offset from rwy, N-E-U */
+    // DATA v_wheel_body_v[3];                /* wheel velocity,          X-Y-Z        */
+    DATA v_wheel_local_v[3];                /* wheel velocity,          N-E-D        */
+    DATA f_wheel_local_v[3];                /* wheel reaction force,  N-E-D        */
+    DATA temp3a[3], temp3b[3], tempF[3], tempM[3];        
+    DATA reaction_normal_force;                /* wheel normal (to rwy) force        */
+    DATA cos_wheel_hdg_angle, sin_wheel_hdg_angle;        /* temp storage */
     DATA v_wheel_forward, v_wheel_sideward,  abs_v_wheel_sideward;
-    DATA forward_mu, sideward_mu;	/* friction coefficients	*/
-    DATA beta_mu;			/* breakout friction slope	*/
+    DATA forward_mu, sideward_mu;        /* friction coefficients        */
+    DATA beta_mu;                        /* breakout friction slope        */
     DATA forward_wheel_force, sideward_wheel_force;
 
-    int i;				/* per wheel loop counter */
+    int i;                                /* per wheel loop counter */
   
   /*
    * Execution starts here
    */
    
     beta_mu = max_mu/(skid_v-bkout_v);
-    clear3( F_gear_v );		/* Initialize sum of forces...	*/
-    clear3( M_gear_v );		/* ...and moments		*/
+    clear3( F_gear_v );                /* Initialize sum of forces...        */
+    clear3( M_gear_v );                /* ...and moments                */
     
   /*
    * Put aircraft specific executable code here
@@ -249,115 +249,115 @@ char rcsid[] = "$Id$";
     
     caster_angle_rad[0] = 0.03*Rudder_pedal;
     
-    for (i=0;i<num_wheels;i++)	    /* Loop for each wheel */
+    for (i=0;i<num_wheels;i++)            /* Loop for each wheel */
     {
-	/*========================================*/
-	/* Calculate wheel position w.r.t. runway */
-	/*========================================*/
-	
-	    /* First calculate wheel location w.r.t. cg in body (X-Y-Z) axes... */
-	
-	sub3( d_wheel_rp_body_v[i], D_cg_rp_body_v, d_wheel_cg_body_v );
-	
-	    /* then converting to local (North-East-Down) axes... */
-	
-	multtrans3x3by3( T_local_to_body_m,  d_wheel_cg_body_v, d_wheel_cg_local_v );
-	
-	    /* Runway axes correction - third element is Altitude, not (-)Z... */
-	
-	d_wheel_cg_local_v[2] = -d_wheel_cg_local_v[2]; /* since altitude = -Z */
-	
-	    /* Add wheel offset to cg location in local axes */
-	
-	add3( d_wheel_cg_local_v, D_cg_rwy_local_v, d_wheel_rwy_local_v );
-	
-	    /* remove Runway axes correction so right hand rule applies */
-	
-	d_wheel_cg_local_v[2] = -d_wheel_cg_local_v[2]; /* now Z positive down */
-	
-	/*============================*/
-	/* Calculate wheel velocities */
-	/*============================*/
-	
-	    /* contribution due to angular rates */
-	    
-	cross3( Omega_body_v, d_wheel_cg_body_v, temp3a );
-	
-	    /* transform into local axes */
-	  
-	multtrans3x3by3( T_local_to_body_m, temp3a, temp3b );
+        /*========================================*/
+        /* Calculate wheel position w.r.t. runway */
+        /*========================================*/
+        
+            /* First calculate wheel location w.r.t. cg in body (X-Y-Z) axes... */
+        
+        sub3( d_wheel_rp_body_v[i], D_cg_rp_body_v, d_wheel_cg_body_v );
+        
+            /* then converting to local (North-East-Down) axes... */
+        
+        multtrans3x3by3( T_local_to_body_m,  d_wheel_cg_body_v, d_wheel_cg_local_v );
+        
+            /* Runway axes correction - third element is Altitude, not (-)Z... */
+        
+        d_wheel_cg_local_v[2] = -d_wheel_cg_local_v[2]; /* since altitude = -Z */
+        
+            /* Add wheel offset to cg location in local axes */
+        
+        add3( d_wheel_cg_local_v, D_cg_rwy_local_v, d_wheel_rwy_local_v );
+        
+            /* remove Runway axes correction so right hand rule applies */
+        
+        d_wheel_cg_local_v[2] = -d_wheel_cg_local_v[2]; /* now Z positive down */
+        
+        /*============================*/
+        /* Calculate wheel velocities */
+        /*============================*/
+        
+            /* contribution due to angular rates */
+            
+        cross3( Omega_body_v, d_wheel_cg_body_v, temp3a );
+        
+            /* transform into local axes */
+          
+        multtrans3x3by3( T_local_to_body_m, temp3a, temp3b );
 
-	    /* plus contribution due to cg velocities */
+            /* plus contribution due to cg velocities */
 
-	add3( temp3b, V_local_rel_ground_v, v_wheel_local_v );
-	
-	
-	/*===========================================*/
-	/* Calculate forces & moments for this wheel */
-	/*===========================================*/
-	
-	    /* Add any anticipation, or frame lead/prediction, here... */
-	    
-		    /* no lead used at present */
-		
-	    /* Calculate sideward and forward velocities of the wheel 
-		    in the runway plane					*/
-	    
-	cos_wheel_hdg_angle = cos(caster_angle_rad[i] + Psi);
-	sin_wheel_hdg_angle = sin(caster_angle_rad[i] + Psi);
-	
-	v_wheel_forward  = v_wheel_local_v[0]*cos_wheel_hdg_angle
-			 + v_wheel_local_v[1]*sin_wheel_hdg_angle;
-	v_wheel_sideward = v_wheel_local_v[1]*cos_wheel_hdg_angle
-			 - v_wheel_local_v[0]*sin_wheel_hdg_angle;
+        add3( temp3b, V_local_rel_ground_v, v_wheel_local_v );
+        
+        
+        /*===========================================*/
+        /* Calculate forces & moments for this wheel */
+        /*===========================================*/
+        
+            /* Add any anticipation, or frame lead/prediction, here... */
+            
+                    /* no lead used at present */
+                
+            /* Calculate sideward and forward velocities of the wheel 
+                    in the runway plane                                        */
+            
+        cos_wheel_hdg_angle = cos(caster_angle_rad[i] + Psi);
+        sin_wheel_hdg_angle = sin(caster_angle_rad[i] + Psi);
+        
+        v_wheel_forward  = v_wheel_local_v[0]*cos_wheel_hdg_angle
+                         + v_wheel_local_v[1]*sin_wheel_hdg_angle;
+        v_wheel_sideward = v_wheel_local_v[1]*cos_wheel_hdg_angle
+                         - v_wheel_local_v[0]*sin_wheel_hdg_angle;
 
-	    /* Calculate normal load force (simple spring constant) */
-	
-	reaction_normal_force = 0.;
-	if( d_wheel_rwy_local_v[2] < 0. ) 
-	{
-	    reaction_normal_force = spring_constant[i]*d_wheel_rwy_local_v[2]
-				  - v_wheel_local_v[2]*spring_damping[i];
-	    if (reaction_normal_force > 0.) reaction_normal_force = 0.;
-		/* to prevent damping component from swamping spring component */
-	}
-	
-	    /* Calculate friction coefficients */
-	    
-	forward_mu = (max_brake_mu - rolling_mu)*percent_brake[i] + rolling_mu;
-	abs_v_wheel_sideward = sqrt(v_wheel_sideward*v_wheel_sideward);
-	sideward_mu = sliding_mu;
-	if (abs_v_wheel_sideward < skid_v) 
-	    sideward_mu = (abs_v_wheel_sideward - bkout_v)*beta_mu;
-	if (abs_v_wheel_sideward < bkout_v) sideward_mu = 0.;
+            /* Calculate normal load force (simple spring constant) */
+        
+        reaction_normal_force = 0.;
+        if( d_wheel_rwy_local_v[2] < 0. ) 
+        {
+            reaction_normal_force = spring_constant[i]*d_wheel_rwy_local_v[2]
+                                  - v_wheel_local_v[2]*spring_damping[i];
+            if (reaction_normal_force > 0.) reaction_normal_force = 0.;
+                /* to prevent damping component from swamping spring component */
+        }
+        
+            /* Calculate friction coefficients */
+            
+        forward_mu = (max_brake_mu - rolling_mu)*percent_brake[i] + rolling_mu;
+        abs_v_wheel_sideward = sqrt(v_wheel_sideward*v_wheel_sideward);
+        sideward_mu = sliding_mu;
+        if (abs_v_wheel_sideward < skid_v) 
+            sideward_mu = (abs_v_wheel_sideward - bkout_v)*beta_mu;
+        if (abs_v_wheel_sideward < bkout_v) sideward_mu = 0.;
 
-	    /* Calculate foreward and sideward reaction forces */
-	    
-	forward_wheel_force  =   forward_mu*reaction_normal_force;
-	sideward_wheel_force =  sideward_mu*reaction_normal_force;
-	if(v_wheel_forward < 0.) forward_wheel_force = -forward_wheel_force;
-	if(v_wheel_sideward < 0.) sideward_wheel_force = -sideward_wheel_force;
-	
-	    /* Rotate into local (N-E-D) axes */
-	
-	f_wheel_local_v[0] = forward_wheel_force*cos_wheel_hdg_angle
-			  - sideward_wheel_force*sin_wheel_hdg_angle;
-	f_wheel_local_v[1] = forward_wheel_force*sin_wheel_hdg_angle
-			  + sideward_wheel_force*cos_wheel_hdg_angle;
-	f_wheel_local_v[2] = reaction_normal_force;	  
-	   
-	    /* Convert reaction force from local (N-E-D) axes to body (X-Y-Z) */
-	
-	mult3x3by3( T_local_to_body_m, f_wheel_local_v, tempF );
-	
-	    /* Calculate moments from force and offsets in body axes */
+            /* Calculate foreward and sideward reaction forces */
+            
+        forward_wheel_force  =   forward_mu*reaction_normal_force;
+        sideward_wheel_force =  sideward_mu*reaction_normal_force;
+        if(v_wheel_forward < 0.) forward_wheel_force = -forward_wheel_force;
+        if(v_wheel_sideward < 0.) sideward_wheel_force = -sideward_wheel_force;
+        
+            /* Rotate into local (N-E-D) axes */
+        
+        f_wheel_local_v[0] = forward_wheel_force*cos_wheel_hdg_angle
+                          - sideward_wheel_force*sin_wheel_hdg_angle;
+        f_wheel_local_v[1] = forward_wheel_force*sin_wheel_hdg_angle
+                          + sideward_wheel_force*cos_wheel_hdg_angle;
+        f_wheel_local_v[2] = reaction_normal_force;          
+           
+            /* Convert reaction force from local (N-E-D) axes to body (X-Y-Z) */
+        
+        mult3x3by3( T_local_to_body_m, f_wheel_local_v, tempF );
+        
+            /* Calculate moments from force and offsets in body axes */
 
-	cross3( d_wheel_cg_body_v, tempF, tempM );
-	
-	/* Sum forces and moments across all wheels */
-	
-	add3( tempF, F_gear_v, F_gear_v );
-	add3( tempM, M_gear_v, M_gear_v );
-	
+        cross3( d_wheel_cg_body_v, tempF, tempM );
+        
+        /* Sum forces and moments across all wheels */
+        
+        add3( tempF, F_gear_v, F_gear_v );
+        add3( tempM, M_gear_v, M_gear_v );
+        
     }
 }

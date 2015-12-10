@@ -46,10 +46,10 @@
 ----------------------------------------------------------------------
 
  CALLS TO:     check_float() if needed
-	       d_2_to_3() if needed
-	       d_1_to_2() if needed
-	       i_1_to_2() if needed
-	       d_1_to_1() if needed
+               d_2_to_3() if needed
+               d_1_to_2() if needed
+               i_1_to_2() if needed
+               d_1_to_1() if needed
 
  ----------------------------------------------------------------------
 
@@ -88,11 +88,11 @@ using std::exit;
 #endif
 
 void parse_geometry( const string& linetoken2, const string& linetoken3,
-		     const string& linetoken4, const string& linetoken5, 
-		     const string& linetoken6, const string& linetoken7, 
-		     const string& linetoken8, const string& linetoken9,
-		     const string& linetoken10, 
-		     const string& aircraft_directory, LIST command_line ) {
+                     const string& linetoken4, const string& linetoken5, 
+                     const string& linetoken6, const string& linetoken7, 
+                     const string& linetoken8, const string& linetoken9,
+                     const string& linetoken10, 
+                     const string& aircraft_directory, LIST command_line ) {
     double token_value;
     istringstream token3(linetoken3.c_str());
     istringstream token4(linetoken4.c_str());
@@ -106,91 +106,91 @@ void parse_geometry( const string& linetoken2, const string& linetoken3,
     switch(geometry_map[linetoken2])
       {
       case bw_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  bw = token_value;
-	  geometryParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          bw = token_value;
+          geometryParts -> storeCommands (*command_line);
+          break;
+        }
       case cbar_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  cbar = token_value;
-	  geometryParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          cbar = token_value;
+          geometryParts -> storeCommands (*command_line);
+          break;
+        }
       case Sw_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  Sw = token_value;
-	  geometryParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          Sw = token_value;
+          geometryParts -> storeCommands (*command_line);
+          break;
+        }
       case ih_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  ih = token_value;
-	  geometryParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          ih = token_value;
+          geometryParts -> storeCommands (*command_line);
+          break;
+        }
       case bh_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  bh = token_value;
-	  geometryParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          bh = token_value;
+          geometryParts -> storeCommands (*command_line);
+          break;
+        }
       case ch_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  chord_h = token_value;
-	  geometryParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          chord_h = token_value;
+          geometryParts -> storeCommands (*command_line);
+          break;
+        }
       case Sh_flag:
-	{
-	  if (check_float(linetoken3))
-	    token3 >> token_value;
-	  else
-	    uiuc_warnings_errors(1, *command_line);
-	  
-	  Sh = token_value;
-	  geometryParts -> storeCommands (*command_line);
-	  break;
-	}
+        {
+          if (check_float(linetoken3))
+            token3 >> token_value;
+          else
+            uiuc_warnings_errors(1, *command_line);
+          
+          Sh = token_value;
+          geometryParts -> storeCommands (*command_line);
+          break;
+        }
       default:
-	{
-	  if (ignore_unknown_keywords) {
-	    // do nothing
-	  } else {
-	    // print error message
-	    uiuc_warnings_errors(2, *command_line);
-	  }
-	  break;
-	}
+        {
+          if (ignore_unknown_keywords) {
+            // do nothing
+          } else {
+            // print error message
+            uiuc_warnings_errors(2, *command_line);
+          }
+          break;
+        }
       };
 }

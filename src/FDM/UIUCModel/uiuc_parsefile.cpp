@@ -86,16 +86,16 @@ void ParseFile :: removeComments(string& inputLine)
   if (pos != inputLine.npos) // a "#" exists in the line 
   {
         if (inputLine.find_first_not_of(DELIMITERS) == pos)
-	  {
-	    inputLine = ""; // Complete line a comment
-	  }
+          {
+            inputLine = ""; // Complete line a comment
+          }
         else
           {
-	    inputLine = inputLine.substr(0,pos); //Truncate the comment from the line
-	    // append zeros to the input line after stripping off the comments
-	    // mss added from Bipin email of 9/3/02
-	    //	    inputLine += " 0 0 0 0 0 0";
-	  }
+            inputLine = inputLine.substr(0,pos); //Truncate the comment from the line
+            // append zeros to the input line after stripping off the comments
+            // mss added from Bipin email of 9/3/02
+            //            inputLine += " 0 0 0 0 0 0";
+          }
   }
 }
 
@@ -108,7 +108,7 @@ string ParseFile :: getToken(string inputLine, int tokenNo)
 
   while (tokencounter < tokenNo)
   {
-    if ((pos1 == inputLine.npos) || (pos1 == -1) || (pos == -1) )
+    if ( (pos1 == inputLine.npos) || (pos1 == string::npos) || (pos == string::npos) )
           return ""; //return an empty string if tokenNo exceeds the No of tokens in the line
         
         inputLine = inputLine.substr(pos1 , MAXLINE);
@@ -117,7 +117,7 @@ string ParseFile :: getToken(string inputLine, int tokenNo)
         tokencounter ++;
   }
 
-  if (pos1== -1 || pos == -1)
+  if (pos1== string::npos || pos == string::npos)
     return "";
   else
       return inputLine.substr(pos , pos1-pos); // return the desired token 
@@ -156,7 +156,7 @@ void ParseFile :: storeCommands(string inputLine)
 //     removeComments(line);
 //     if (line.find_first_not_of(DELIMITERS) != line.npos) // strip off blank lines
 //     {
-//     	line += "     0 0 0 0 0";
+//             line += "     0 0 0 0 0";
 //          storeCommands(line);
 //     }
 //    }
@@ -170,12 +170,12 @@ void ParseFile :: readFile()
     {
       removeComments(line);
       if (line.find_first_not_of(DELIMITERS) != line.npos) // strip off blank lines
-	{
-	  line += "     ";
-	  // append some zeros, but this is doing something strange!
-	  //	  	  line += "  0 0 0 0 0   ";
-	  storeCommands(line);
-	}
+        {
+          line += "     ";
+          // append some zeros, but this is doing something strange!
+          //                    line += "  0 0 0 0 0   ";
+          storeCommands(line);
+        }
     }
 }
 stack ParseFile :: getCommands()

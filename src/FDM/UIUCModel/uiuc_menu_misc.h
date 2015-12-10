@@ -13,10 +13,10 @@
 #include "uiuc_flapdata.h"
 
 void parse_misc( const string& linetoken2, const string& linetoken3,
-		 const string& linetoken4, const string& linetoken5, 
-		 const string& linetoken6, const string& linetoken7, 
-		 const string& linetoken8, const string& linetoken9,
-		 const string& linetoken10, const string& aircraft_directory, 
-		 LIST command_line );
+                 const string& linetoken4, const string& linetoken5, 
+                 const string& linetoken6, const string& linetoken7, 
+                 const string& linetoken8, const string& linetoken9,
+                 const string& linetoken10, const string& aircraft_directory, 
+                 LIST command_line );
 
 #endif //_MENU_MISC_H_

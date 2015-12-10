@@ -53,11 +53,11 @@
 
  CALLED BY:    uiuc_coefficients
                uiuc_coef_drag
-	       uiuc_coef_lift
-	       uiuc_coef_pitch
-	       uiuc_coef_sideforce
-	       uiuc_coef_roll
-	       uiuc_coef_yaw
+               uiuc_coef_lift
+               uiuc_coef_pitch
+               uiuc_coef_sideforce
+               uiuc_coef_roll
+               uiuc_coef_yaw
 
 ----------------------------------------------------------------------
 
@@ -96,14 +96,14 @@ void uiuc_ice_eta()
 
       // slowly increase icing severity over period of transientTime
       if (Simtime < (iceTime + transientTime))
-	{
-	  slope = eta_ice_final / transientTime;
-	  eta_ice = slope * (Simtime - iceTime);
-	}
+        {
+          slope = eta_ice_final / transientTime;
+          eta_ice = slope * (Simtime - iceTime);
+        }
       else
-	{
-	  eta_ice = eta_ice_final;
-	}
+        {
+          eta_ice = eta_ice_final;
+        }
     }
   return;
 }

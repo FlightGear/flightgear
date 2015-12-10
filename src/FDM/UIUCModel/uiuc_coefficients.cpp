@@ -26,23 +26,23 @@
                             function from CLfade, CDfade, Cmfade, 
                             CYfada, CYfbetadr, Clfada, Clfbetadr, 
                             Cnfada, and Cnfbetadr switches
-	       04/15/2000   (JS) broke up into multiple 
-	                    uiuc_coef_xxx functions
-	       06/18/2001   (RD) Added initialization of Std_Alpha and
-	                    Std_Beta.  Added aileron_input and rudder_input.
-			    Added pilot_elev_no, pilot_ail_no, and
-			    pilot_rud_no.
-	       07/05/2001   (RD) Added pilot_(elev,ail,rud)_no=false
-	       01/11/2002   (AP) Added call to uiuc_iceboot()
+               04/15/2000   (JS) broke up into multiple 
+                            uiuc_coef_xxx functions
+               06/18/2001   (RD) Added initialization of Std_Alpha and
+                            Std_Beta.  Added aileron_input and rudder_input.
+                            Added pilot_elev_no, pilot_ail_no, and
+                            pilot_rud_no.
+               07/05/2001   (RD) Added pilot_(elev,ail,rud)_no=false
+               01/11/2002   (AP) Added call to uiuc_iceboot()
                12/02/2002   (RD) Moved icing demo interpolations to its
                             own function
-	       
+               
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
-	       Robert Deters      <rdeters@uiuc.edu>
-	       Ann Peedikayil     <peedikay@uiuc.edu>
+               Robert Deters      <rdeters@uiuc.edu>
+               Ann Peedikayil     <peedikay@uiuc.edu>
 ----------------------------------------------------------------------
 
  VARIABLES:
@@ -52,7 +52,7 @@
  INPUTS:       -V_rel_wind (or U_body)
                -dyn_on_speed
                -ice on/off
-	       -phugoid on/off
+               -phugoid on/off
 
 ----------------------------------------------------------------------
 
@@ -75,7 +75,7 @@
                uiuc_coef_sideforce
                uiuc_coef_roll
                uiuc_coef_yaw
-	       uiuc_controlInput
+               uiuc_controlInput
 
 ----------------------------------------------------------------------
 
@@ -119,83 +119,83 @@ void uiuc_coefficients(double dt)
   if (nondim_rate_V_rel_wind || use_V_rel_wind_2U)         // c172_aero uses V_rel_wind
     {
       if (V_rel_wind > dyn_on_speed)
-	{
-	  cbar_2U = cbar / (2.0 * V_rel_wind);
-	  b_2U    = bw /   (2.0 * V_rel_wind);
-	  // chord_h is the horizontal tail chord
-	  ch_2U   = chord_h /   (2.0 * V_rel_wind);
-	}
+        {
+          cbar_2U = cbar / (2.0 * V_rel_wind);
+          b_2U    = bw /   (2.0 * V_rel_wind);
+          // chord_h is the horizontal tail chord
+          ch_2U   = chord_h /   (2.0 * V_rel_wind);
+        }
       else if (use_dyn_on_speed_curve1)
-  	{
-  	  V_rel_wind_dum = dyn_on_speed_zero + V_rel_wind * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
-  	  cbar_2U        = cbar / (2.0 * V_rel_wind_dum);
-  	  b_2U           = bw /   (2.0 * V_rel_wind_dum);
-  	  ch_2U          = chord_h /   (2.0 * V_rel_wind_dum);
-	  Std_Alpha_dot      = 0.0;
-  	}
+          {
+            V_rel_wind_dum = dyn_on_speed_zero + V_rel_wind * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
+            cbar_2U        = cbar / (2.0 * V_rel_wind_dum);
+            b_2U           = bw /   (2.0 * V_rel_wind_dum);
+            ch_2U          = chord_h /   (2.0 * V_rel_wind_dum);
+          Std_Alpha_dot      = 0.0;
+          }
       else
-	{
-	  cbar_2U   = 0.0;
-	  b_2U      = 0.0;
-	  ch_2U     = 0.0;
-	  Std_Alpha_dot = 0.0;
-	}
+        {
+          cbar_2U   = 0.0;
+          b_2U      = 0.0;
+          ch_2U     = 0.0;
+          Std_Alpha_dot = 0.0;
+        }
     }
   else if(use_abs_U_body_2U)      // use absolute(U_body)
     {
       if (fabs(U_body) > dyn_on_speed)
-	{
-	  cbar_2U = cbar / (2.0 * fabs(U_body));
-	  b_2U    = bw /   (2.0 * fabs(U_body));
-	  ch_2U   = chord_h /   (2.0 * fabs(U_body));
-	}
+        {
+          cbar_2U = cbar / (2.0 * fabs(U_body));
+          b_2U    = bw /   (2.0 * fabs(U_body));
+          ch_2U   = chord_h /   (2.0 * fabs(U_body));
+        }
       else if (use_dyn_on_speed_curve1)
-	{
-	  U_body_dum = dyn_on_speed_zero + fabs(U_body) * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
-	  cbar_2U    = cbar / (2.0 * U_body_dum);
-	  b_2U       = bw /   (2.0 * U_body_dum);
-	  ch_2U      = chord_h /   (2.0 * U_body_dum);
-	  Std_Alpha_dot  = 0.0;
-	}
+        {
+          U_body_dum = dyn_on_speed_zero + fabs(U_body) * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
+          cbar_2U    = cbar / (2.0 * U_body_dum);
+          b_2U       = bw /   (2.0 * U_body_dum);
+          ch_2U      = chord_h /   (2.0 * U_body_dum);
+          Std_Alpha_dot  = 0.0;
+        }
       else
-	{
-	  cbar_2U   = 0.0;
-	  b_2U      = 0.0;
-	  ch_2U     = 0.0;
-	  Std_Alpha_dot = 0.0;
-	}
+        {
+          cbar_2U   = 0.0;
+          b_2U      = 0.0;
+          ch_2U     = 0.0;
+          Std_Alpha_dot = 0.0;
+        }
     }
   else      // use U_body
     {
       if (U_body > dyn_on_speed)
-	{
-	  cbar_2U = cbar / (2.0 * U_body);
-	  b_2U    = bw /   (2.0 * U_body);
-	  ch_2U   = chord_h /   (2.0 * U_body);
-	}
+        {
+          cbar_2U = cbar / (2.0 * U_body);
+          b_2U    = bw /   (2.0 * U_body);
+          ch_2U   = chord_h /   (2.0 * U_body);
+        }
       else if (use_dyn_on_speed_curve1)
-	{
-	  U_body_dum = dyn_on_speed_zero + U_body * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
-	  cbar_2U    = cbar / (2.0 * U_body_dum);
-	  b_2U       = bw /   (2.0 * U_body_dum);
-	  ch_2U      = chord_h /   (2.0 * U_body_dum);
-	  Std_Alpha_dot  = 0.0;
-	  beta_flow_clean_tail = cbar_2U;
-	}
+        {
+          U_body_dum = dyn_on_speed_zero + U_body * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
+          cbar_2U    = cbar / (2.0 * U_body_dum);
+          b_2U       = bw /   (2.0 * U_body_dum);
+          ch_2U      = chord_h /   (2.0 * U_body_dum);
+          Std_Alpha_dot  = 0.0;
+          beta_flow_clean_tail = cbar_2U;
+        }
       else
-	{
-	  cbar_2U   = 0.0;
-	  b_2U      = 0.0;
-	  ch_2U     = 0.0;
-	  Std_Alpha_dot = 0.0;
-	}
+        {
+          cbar_2U   = 0.0;
+          b_2U      = 0.0;
+          ch_2U     = 0.0;
+          Std_Alpha_dot = 0.0;
+        }
     }
 
   // check if speed is sufficient to "trust" Std_Alpha_dot value
   if (use_Alpha_dot_on_speed)
     {
       if (V_rel_wind     < Alpha_dot_on_speed)
-	  Std_Alpha_dot = 0.0;
+          Std_Alpha_dot = 0.0;
     }
 
 
@@ -253,77 +253,77 @@ void uiuc_coefficients(double dt)
   if (nonlin_ice_case)
     {
       if (eta_from_file)
-	{
-	  if (eta_tail_input) {
-	    double time = Simtime - eta_tail_input_startTime;
-	    eta_tail = uiuc_1Dinterpolation(eta_tail_input_timeArray,
-					    eta_tail_input_daArray,
-					    eta_tail_input_ntime,
-					    time);
-	  }
-	  if (eta_wing_left_input) {
-	    double time = Simtime - eta_wing_left_input_startTime;
-	    eta_wing_left = uiuc_1Dinterpolation(eta_wing_left_input_timeArray,
-						 eta_wing_left_input_daArray,
-						 eta_wing_left_input_ntime,
-						 time);
-	  }
-	  if (eta_wing_right_input) {
-	    double time = Simtime - eta_wing_right_input_startTime;
-	    eta_wing_right = uiuc_1Dinterpolation(eta_wing_right_input_timeArray,
-						  eta_wing_right_input_daArray,
-						  eta_wing_right_input_ntime,
-						  time);
-	  }
-	}
+        {
+          if (eta_tail_input) {
+            double time = Simtime - eta_tail_input_startTime;
+            eta_tail = uiuc_1Dinterpolation(eta_tail_input_timeArray,
+                                            eta_tail_input_daArray,
+                                            eta_tail_input_ntime,
+                                            time);
+          }
+          if (eta_wing_left_input) {
+            double time = Simtime - eta_wing_left_input_startTime;
+            eta_wing_left = uiuc_1Dinterpolation(eta_wing_left_input_timeArray,
+                                                 eta_wing_left_input_daArray,
+                                                 eta_wing_left_input_ntime,
+                                                 time);
+          }
+          if (eta_wing_right_input) {
+            double time = Simtime - eta_wing_right_input_startTime;
+            eta_wing_right = uiuc_1Dinterpolation(eta_wing_right_input_timeArray,
+                                                  eta_wing_right_input_daArray,
+                                                  eta_wing_right_input_ntime,
+                                                  time);
+          }
+        }
 
       delta_CL = delta_CD = delta_Cm = delta_Cl = delta_Cn = 0.0;
       Calc_Iced_Forces();
       add_ice_effects();
       tactilefadefI = 0.0;
       if (eta_tail == 0.2 && tactile_pitch && tactilefadef)
-	{
-	  if (tactilefadef_nice == 1)
-	    tactilefadefI = uiuc_3Dinterp_quick(tactilefadef_fArray,
-					   tactilefadef_aArray_nice,
-					   tactilefadef_deArray_nice,
-					   tactilefadef_tactileArray,
-					   tactilefadef_na_nice,
-					   tactilefadef_nde_nice,
-					   tactilefadef_nf,
-					   flap_pos,
-					   Std_Alpha,
-					   elevator);
-	  else
-	    tactilefadefI = uiuc_3Dinterpolation(tactilefadef_fArray,
-					    tactilefadef_aArray,
-					    tactilefadef_deArray,
-					    tactilefadef_tactileArray,
-					    tactilefadef_nAlphaArray,
-					    tactilefadef_nde,
-					    tactilefadef_nf,
-					    flap_pos,
-					    Std_Alpha,
-					    elevator);
-	}
+        {
+          if (tactilefadef_nice == 1)
+            tactilefadefI = uiuc_3Dinterp_quick(tactilefadef_fArray,
+                                           tactilefadef_aArray_nice,
+                                           tactilefadef_deArray_nice,
+                                           tactilefadef_tactileArray,
+                                           tactilefadef_na_nice,
+                                           tactilefadef_nde_nice,
+                                           tactilefadef_nf,
+                                           flap_pos,
+                                           Std_Alpha,
+                                           elevator);
+          else
+            tactilefadefI = uiuc_3Dinterpolation(tactilefadef_fArray,
+                                            tactilefadef_aArray,
+                                            tactilefadef_deArray,
+                                            tactilefadef_tactileArray,
+                                            tactilefadef_nAlphaArray,
+                                            tactilefadef_nde,
+                                            tactilefadef_nf,
+                                            flap_pos,
+                                            Std_Alpha,
+                                            elevator);
+        }
       else if (demo_tactile)
-	{
-	  double time = Simtime - demo_tactile_startTime;
-	  tactilefadefI = uiuc_1Dinterpolation(demo_tactile_timeArray,
-					       demo_tactile_daArray,
-					       demo_tactile_ntime,
-					       time);
-	}
+        {
+          double time = Simtime - demo_tactile_startTime;
+          tactilefadefI = uiuc_1Dinterpolation(demo_tactile_timeArray,
+                                               demo_tactile_daArray,
+                                               demo_tactile_ntime,
+                                               time);
+        }
       if (icing_demo)
-	uiuc_icing_demo();
+        uiuc_icing_demo();
     }
 
   if (pilot_ail_no)
     {
       if (aileron <=0)
-	Lat_control = - aileron / damax * RAD_TO_DEG;
+        Lat_control = - aileron / damax * RAD_TO_DEG;
       else
-	Lat_control = - aileron / damin * RAD_TO_DEG;
+        Lat_control = - aileron / damin * RAD_TO_DEG;
     }
 
   // can go past real limits
@@ -331,26 +331,26 @@ void uiuc_coefficients(double dt)
   if (pilot_elev_no)
     {
       if (outside_control == false)
-	{
-	  l_trim = elevator_tab;
-	  l_defl = elevator - elevator_tab;
-	  if (l_trim <=0 )
-	    Long_trim = l_trim / demax * RAD_TO_DEG;
-	  else
-	    Long_trim = l_trim / demin * RAD_TO_DEG;
-	  if (l_defl <= 0)
-	    Long_control = l_defl / demax * RAD_TO_DEG;
-	  else
-	    Long_control = l_defl / demin * RAD_TO_DEG;
-	}
+        {
+          l_trim = elevator_tab;
+          l_defl = elevator - elevator_tab;
+          if (l_trim <=0 )
+            Long_trim = l_trim / demax * RAD_TO_DEG;
+          else
+            Long_trim = l_trim / demin * RAD_TO_DEG;
+          if (l_defl <= 0)
+            Long_control = l_defl / demax * RAD_TO_DEG;
+          else
+            Long_control = l_defl / demin * RAD_TO_DEG;
+        }
     }
 
   if (pilot_rud_no)
     {
       if (rudder <=0)
-	Rudder_pedal = - rudder / drmax * RAD_TO_DEG;
+        Rudder_pedal = - rudder / drmax * RAD_TO_DEG;
       else
-	Rudder_pedal = - rudder / drmin * RAD_TO_DEG;
+        Rudder_pedal = - rudder / drmin * RAD_TO_DEG;
     }
 
   return;

@@ -22,10 +22,10 @@
 
  HISTORY:      01/30/2000   initial release
                04/05/2000   (JS) added zero_Long_trim command
-	       07/05/2001   (RD) removed elevator_tab addition to
-	                    elevator calculation
-	       11/12/2001   (RD) added new flap routine.  Needed for
-	                    Twin Otter non-linear model
+               07/05/2001   (RD) removed elevator_tab addition to
+                            elevator calculation
+               11/12/2001   (RD) added new flap routine.  Needed for
+                            Twin Otter non-linear model
                12/28/2002   (MSS) added simple SAS capability
                03/03/2003   (RD) changed flap code to call
                             uiuc_find_position to determine
@@ -91,20 +91,20 @@ void uiuc_aerodeflections( double dt )
 
   if (use_uiuc_network) {
       if (pitch_trim_up)
-	elev_trim += 0.001;
+        elev_trim += 0.001;
       if (pitch_trim_down)
-	elev_trim -= 0.001;
+        elev_trim -= 0.001;
       if (elev_trim > 1.0)
-	elev_trim = 1;
+        elev_trim = 1;
       if (elev_trim < -1.0)
-	elev_trim = -1;
+        elev_trim = -1;
       Flap_handle = flap_percent * flap_max;
       if (outside_control) {
-	pilot_elev_no = true;
-	pilot_ail_no = true;
-	pilot_rud_no = true;
-	pilot_throttle_no = true;
-	Long_trim = elev_trim;
+        pilot_elev_no = true;
+        pilot_ail_no = true;
+        pilot_rud_no = true;
+        pilot_throttle_no = true;
+        Long_trim = elev_trim;
       }
   }
   
@@ -124,17 +124,17 @@ void uiuc_aerodeflections( double dt )
       demax_remain = demax + Long_trim * demax;
       demin_remain = -Long_trim * demax + demin;
       if (Long_control <= 0)
-	elevator += Long_control * demax_remain * DEG_TO_RAD;
+        elevator += Long_control * demax_remain * DEG_TO_RAD;
       else
-	elevator += Long_control * demin_remain * DEG_TO_RAD;
+        elevator += Long_control * demin_remain * DEG_TO_RAD;
     } else {
       elevator = Long_trim * demin * DEG_TO_RAD;
       demin_remain = demin - Long_trim * demin;
       demax_remain = Long_trim * demin + demax;
       if (Long_control >=0)
-	elevator += Long_control * demin_remain * DEG_TO_RAD;
+        elevator += Long_control * demin_remain * DEG_TO_RAD;
       else
-	elevator += Long_control * demax_remain * DEG_TO_RAD;
+        elevator += Long_control * demax_remain * DEG_TO_RAD;
     }
   } else {
     if ((Long_control+Long_trim) <= 0)
@@ -180,20 +180,21 @@ void uiuc_aerodeflections( double dt )
     aileron_sas = aileron_sas_KP * P_body;
     if (use_aileron_sas_max && (fabs(aileron_sas) > (aileron_sas_max * DEG_TO_RAD)))
       if (aileron_sas >= 0) {
-	aileron +=  aileron_sas_max * DEG_TO_RAD;
-	//aileron_sas = aileron_sas_max;
+        aileron +=  aileron_sas_max * DEG_TO_RAD;
+        //aileron_sas = aileron_sas_max;
       } else {
-	aileron += -aileron_sas_max * DEG_TO_RAD;
-	//aileron_sas = -aileron_sas;
+        aileron += -aileron_sas_max * DEG_TO_RAD;
+        //aileron_sas = -aileron_sas;
       }
     else
       aileron += aileron_sas;
     // don't exceed aileron deflection limits
-    if (fabs(aileron) > (damax * DEG_TO_RAD))
+    if (fabs(aileron) > (damax * DEG_TO_RAD)) {
       if (aileron > 0)
-	aileron =  damax * DEG_TO_RAD;
+        aileron =  damax * DEG_TO_RAD;
       else
-	aileron = -damax * DEG_TO_RAD;
+        aileron = -damax * DEG_TO_RAD;
+    }
   }
   
   // SAS for yaw, positive rudder deflection is TEL
@@ -203,21 +204,22 @@ void uiuc_aerodeflections( double dt )
     rudder_sas = rudder_sas_KR * R_body;
     if (use_rudder_sas_max && (fabs(rudder_sas) > (rudder_sas_max*DEG_TO_RAD)))
       if (rudder_sas >= 0) {
-	rudder +=  rudder_sas_max * DEG_TO_RAD;
-	//rudder_sas = rudder_sas_max;
+        rudder +=  rudder_sas_max * DEG_TO_RAD;
+        //rudder_sas = rudder_sas_max;
       } else {
-	rudder += -rudder_sas_max * DEG_TO_RAD;
-	//rudder_sas = rudder_sas_max;
+        rudder += -rudder_sas_max * DEG_TO_RAD;
+        //rudder_sas = rudder_sas_max;
       }
     else
       rudder += rudder_sas;
     // don't exceed rudder deflection limits, assumes drmax = drmin, 
     // i.e. equal rudder throws left and right
-    if (fabs(rudder) > drmax)
+    if (fabs(rudder) > drmax) {
       if (rudder > 0)
-	rudder =  drmax * DEG_TO_RAD;
+        rudder =  drmax * DEG_TO_RAD;
       else
-	rudder = -drmax * DEG_TO_RAD;
+        rudder = -drmax * DEG_TO_RAD;
+    }
   }
   
   /* This old code in the first part of the if-block needs to get removed from FGFS. 030222 MSS
@@ -241,28 +243,28 @@ void uiuc_aerodeflections( double dt )
     } else {
       // otherwise in between
       if(Flap_handle != prevFlapHandle) 
-	flaps_in_transit = true;
+        flaps_in_transit = true;
       if(flaps_in_transit) {
-	int iflap = 0;
-	while (dfArray[iflap] < Flap_handle)
-	  iflap++;
-	if (flap < Flap_handle) {
-	  if (TimeArray[iflap] > 0)
-	    flap_transit_rate = (dfArray[iflap] - dfArray[iflap-1]) / TimeArray[iflap+1];
-	  else
-	    flap_transit_rate = (dfArray[iflap] - dfArray[iflap-1]) / 5;
-	} else {
-	  if (TimeArray[iflap+1] > 0)
-	    flap_transit_rate = (dfArray[iflap] - dfArray[iflap+1]) / TimeArray[iflap+1];
-	  else
-	    flap_transit_rate = (dfArray[iflap] - dfArray[iflap+1]) / 5;
-	}
-	if(fabs (flap - Flap_handle) > dt * flap_transit_rate)
-	  flap += flap_transit_rate * dt;
-	else {
-	  flaps_in_transit = false;
-	  flap = Flap_handle;
-	}
+        int iflap = 0;
+        while (dfArray[iflap] < Flap_handle)
+          iflap++;
+        if (flap < Flap_handle) {
+          if (TimeArray[iflap] > 0)
+            flap_transit_rate = (dfArray[iflap] - dfArray[iflap-1]) / TimeArray[iflap+1];
+          else
+            flap_transit_rate = (dfArray[iflap] - dfArray[iflap-1]) / 5;
+        } else {
+          if (TimeArray[iflap+1] > 0)
+            flap_transit_rate = (dfArray[iflap] - dfArray[iflap+1]) / TimeArray[iflap+1];
+          else
+            flap_transit_rate = (dfArray[iflap] - dfArray[iflap+1]) / 5;
+        }
+        if(fabs (flap - Flap_handle) > dt * flap_transit_rate)
+          flap += flap_transit_rate * dt;
+        else {
+          flaps_in_transit = false;
+          flap = Flap_handle;
+        }
       }
     }
     prevFlapHandle = Flap_handle;
@@ -272,9 +274,9 @@ void uiuc_aerodeflections( double dt )
     if (!outside_control) {
       flap_percent     = Flap_handle / 30.0;    // percent of flaps desired
       if (flap_percent>=0.31 && flap_percent<=0.35)
-	flap_percent = 1.0 / 3.0;
+        flap_percent = 1.0 / 3.0;
       if (flap_percent>=0.65 && flap_percent<=0.69)
-	flap_percent = 2.0 / 3.0;
+        flap_percent = 2.0 / 3.0;
     }
     flap_cmd_deg        = flap_percent * flap_max;  // angle of flaps desired
     flap_moving_rate = flap_rate * dt;           // amount flaps move per time step
@@ -283,11 +285,11 @@ void uiuc_aerodeflections( double dt )
     if (flap_pos < flap_cmd_deg) {
       flap_pos += flap_moving_rate;
       if (flap_pos > flap_cmd_deg)
-	flap_pos = flap_cmd_deg;
+        flap_pos = flap_cmd_deg;
     } else if (flap_pos > flap_cmd_deg) {
       flap_pos -= flap_moving_rate;
       if (flap_pos < flap_cmd_deg)
-	flap_pos = flap_cmd_deg;
+        flap_pos = flap_cmd_deg;
     } 
   }
 

@@ -1,40 +1,40 @@
 /***************************************************************************
 
-	TITLE:		ls_model()	
-	
+        TITLE:                ls_model()        
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	Model loop executive
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	developmental
+        FUNCTION:        Model loop executive
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Created 15 October 1992 as part of LaRCSIM project
-			by Bruce Jackson.
+        MODULE STATUS:        developmental
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	Bruce Jackson
-	
-	CODED BY:	Bruce Jackson
-	
-	MAINTAINED BY:	maintainer
+        GENEALOGY:        Created 15 October 1992 as part of LaRCSIM project
+                        by Bruce Jackson.
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
+        DESIGNED BY:        Bruce Jackson
+        
+        CODED BY:        Bruce Jackson
+        
+        MAINTAINED BY:        maintainer
 
-	950306	Added parameters to call: dt, which is the step size
-		to be taken this loop (caution: may vary from call to call)
-		and Initialize, which if non-zero, implies an initialization
-		is requested.					EBJ
+----------------------------------------------------------------------------
 
-	CURRENT RCS HEADER INFO:
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+
+        950306        Added parameters to call: dt, which is the step size
+                to be taken this loop (caution: may vary from call to call)
+                and Initialize, which if non-zero, implies an initialization
+                is requested.                                        EBJ
+
+        CURRENT RCS HEADER INFO:
 $Header$
 $Log$
 Revision 1.5  2005/12/19 12:53:21  ehofman
@@ -140,23 +140,23 @@ Initial Flight Gear revision.
 
 ----------------------------------------------------------------------------
 
-	REFERENCES:
+        REFERENCES:
 
 ----------------------------------------------------------------------------
 
-	CALLED BY:	ls_step (in initialization), ls_loop (planned)
+        CALLED BY:        ls_step (in initialization), ls_loop (planned)
 
 ----------------------------------------------------------------------------
 
-	CALLS TO:	aero(), engine(), gear()
+        CALLS TO:        aero(), engine(), gear()
 
 ----------------------------------------------------------------------------
 
-	INPUTS:
+        INPUTS:
 
 ----------------------------------------------------------------------------
 
-	OUTPUTS:
+        OUTPUTS:
 
 --------------------------------------------------------------------------*/
 #include <stdio.h>

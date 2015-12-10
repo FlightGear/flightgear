@@ -1,42 +1,42 @@
 /***************************************************************************
 
-	TITLE:		ls_sym.h
-	
+        TITLE:                ls_sym.h
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	Header file for symbol table routines
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	production
+        FUNCTION:        Header file for symbol table routines
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Created 930629 by E. B. Jackson
+        MODULE STATUS:        production
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	Bruce Jackson
-	
-	CODED BY:	same
-	
-	MAINTAINED BY:	
+        GENEALOGY:        Created 930629 by E. B. Jackson
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
+        DESIGNED BY:        Bruce Jackson
+        
+        CODED BY:        same
+        
+        MAINTAINED BY:        
 
-	950227	Added header and declarations for ls_print_findsym_error(),
-		ls_get_double(), and ls_get_double() routines.	EBJ
+----------------------------------------------------------------------------
 
-	950302	Added structure for symbol description.		EBJ
-	
-	950306	Added ls_get_sym_val() and ls_set_sym_val() routines.
-		This is now the production version.		EBJ
-	
-	CURRENT RCS HEADER:
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+
+        950227        Added header and declarations for ls_print_findsym_error(),
+                ls_get_double(), and ls_get_double() routines.        EBJ
+
+        950302        Added structure for symbol description.                EBJ
+        
+        950306        Added ls_get_sym_val() and ls_set_sym_val() routines.
+                This is now the production version.                EBJ
+        
+        CURRENT RCS HEADER:
 
 $Header$
 $Log$
@@ -76,23 +76,23 @@ Initial Flight Gear revision.
 
 ----------------------------------------------------------------------------
 
-	REFERENCES:
+        REFERENCES:
 
 ----------------------------------------------------------------------------
 
-	CALLED BY:
+        CALLED BY:
 
 ----------------------------------------------------------------------------
 
-	CALLS TO:
+        CALLS TO:
 
 ----------------------------------------------------------------------------
 
-	INPUTS:
+        INPUTS:
 
 ----------------------------------------------------------------------------
 
-	OUTPUTS:
+        OUTPUTS:
 
 --------------------------------------------------------------------------*/
 
@@ -118,56 +118,56 @@ Initial Flight Gear revision.
 
 typedef enum {Unknown, Char, UChar, SHint, USHint, Sint, Uint, Slng, Ulng, flt, dbl} vartype;
 
-typedef char		SYMBOL_NAME[64];
-typedef	vartype		SYMBOL_TYPE;
+typedef char                SYMBOL_NAME[64];
+typedef        vartype                SYMBOL_TYPE;
 
 
 
 typedef struct
 {
-    SYMBOL_NAME	Mod_Name;
-    SYMBOL_NAME	Par_Name;
+    SYMBOL_NAME        Mod_Name;
+    SYMBOL_NAME        Par_Name;
     SYMBOL_TYPE Par_Type;
     SYMBOL_NAME Alias;
-    char	*Addr;
-}	symbol_rec;
+    char        *Addr;
+}        symbol_rec;
 
 
-extern int 	ls_findsym( const char *modname, const char *varname, 
-			    char **addr, vartype *vtype );
+extern int         ls_findsym( const char *modname, const char *varname, 
+                            char **addr, vartype *vtype );
   
-extern void 	ls_print_findsym_error(int result, 
-				       char *mod_name, 
-				       char *var_name);
+extern void         ls_print_findsym_error(int result, 
+                                       char *mod_name, 
+                                       char *var_name);
   
-extern double	ls_get_double(vartype sym_type, void *addr );
+extern double        ls_get_double(vartype sym_type, void *addr );
   
-extern void 	ls_set_double(vartype sym_type, void *addr, double value );
+extern void         ls_set_double(vartype sym_type, void *addr, double value );
 
-extern double	ls_get_sym_val( symbol_rec *symrec, int *error );
+extern double        ls_get_sym_val( symbol_rec *symrec, int *error );
 
-	/* This routine attempts to return the present value of the symbol
-	   described in symbol_rec. If Addr is non-zero, the value of that
-	   location, interpreted as type double, will be returned. If Addr
-	   is zero, and Mod_Name and Par_Name are both not null strings, 
-	   the ls_findsym() routine is used to try to obtain the address
-	   by looking at debugger symbol tables in the executable image, and
-	   the value of the double contained at that address is returned, 
-	   and the symbol record is updated to contain the address of that
-	   symbol. If an error is discovered, 'error' will be non-zero and
-	   and error message is printed on stderr.			*/
+        /* This routine attempts to return the present value of the symbol
+           described in symbol_rec. If Addr is non-zero, the value of that
+           location, interpreted as type double, will be returned. If Addr
+           is zero, and Mod_Name and Par_Name are both not null strings, 
+           the ls_findsym() routine is used to try to obtain the address
+           by looking at debugger symbol tables in the executable image, and
+           the value of the double contained at that address is returned, 
+           and the symbol record is updated to contain the address of that
+           symbol. If an error is discovered, 'error' will be non-zero and
+           and error message is printed on stderr.                        */
 
-extern void 	ls_set_sym_val( symbol_rec *symrec, double value );
+extern void         ls_set_sym_val( symbol_rec *symrec, double value );
 
-	/* This routine sets the value of a double at the location pointed
-	   to by the symbol_rec's Addr field, if Addr is non-zero. If Addr
-	   is zero, and Mod_Name and Par_Name are both not null strings, 
-	   the ls_findsym() routine is used to try to obtain the address
-	   by looking at debugger symbol tables in the executable image, and
-	   the value of the double contained at that address is returned, 
-	   and the symbol record is updated to contain the address of that
-	   symbol. If an error is discovered, 'error' will be non-zero and
-	   and error message is printed on stderr.			*/
+        /* This routine sets the value of a double at the location pointed
+           to by the symbol_rec's Addr field, if Addr is non-zero. If Addr
+           is zero, and Mod_Name and Par_Name are both not null strings, 
+           the ls_findsym() routine is used to try to obtain the address
+           by looking at debugger symbol tables in the executable image, and
+           the value of the double contained at that address is returned, 
+           and the symbol record is updated to contain the address of that
+           symbol. If an error is discovered, 'error' will be non-zero and
+           and error message is printed on stderr.                        */
 
 
 #endif /* _LS_SYM_H */

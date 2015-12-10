@@ -1,34 +1,34 @@
 /***************************************************************************
 
-	TITLE:		engine.c
-	
+        TITLE:                engine.c
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	dummy engine routine
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	incomplete
+        FUNCTION:        dummy engine routine
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Created 15 OCT 92 as dummy routine for checkout. EBJ
+        MODULE STATUS:        incomplete
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	designer
-	
-	CODED BY:	programmer
-	
-	MAINTAINED BY:	maintainer
+        GENEALOGY:        Created 15 OCT 92 as dummy routine for checkout. EBJ
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
+        DESIGNED BY:        designer
+        
+        CODED BY:        programmer
+        
+        MAINTAINED BY:        maintainer
 
-	CURRENT RCS HEADER INFO:
+----------------------------------------------------------------------------
+
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+
+        CURRENT RCS HEADER INFO:
 
 $Header$
 
@@ -38,23 +38,23 @@ $Header$
 
 ----------------------------------------------------------------------------
 
-	REFERENCES:
+        REFERENCES:
 
 ----------------------------------------------------------------------------
 
-	CALLED BY:	ls_model();
+        CALLED BY:        ls_model();
 
 ----------------------------------------------------------------------------
 
-	CALLS TO:	none
+        CALLS TO:        none
 
 ----------------------------------------------------------------------------
 
-	INPUTS:
+        INPUTS:
 
 ----------------------------------------------------------------------------
 
-	OUTPUTS:
+        OUTPUTS:
 
 --------------------------------------------------------------------------*/
 #include <math.h>
@@ -64,7 +64,7 @@ $Header$
 #include "ls_sim_control.h"
 #include "ls_cockpit.h"
 
-extern SIM_CONTROL	sim_control_;
+extern SIM_CONTROL        sim_control_;
 
 void navion_engine( SCALAR dt, int init ) {
     /* if (init) { */

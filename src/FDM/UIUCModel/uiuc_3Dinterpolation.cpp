@@ -6,8 +6,8 @@
 
  DESCRIPTION:  A 3D interpolator.  Does a linear interpolation between
                two values that were found from using the 2D
-	       interpolator (3Dinterpolation()), or uses 3Dinterp_quick()
-	       to perform a 3D linear interpolation on "nice" data
+               interpolator (3Dinterpolation()), or uses 3Dinterp_quick()
+               to perform a 3D linear interpolation on "nice" data
 
 ----------------------------------------------------------------------
 
@@ -21,11 +21,11 @@
 
  HISTORY:      11/07/2001   initial release
                02/18/2002   (RD) Created uiuc_3Dinterp_quick() to take
-	                    advantage of the "nice" format of the
-			    nonlinear Twin Otter data.  Performs a
-			    quicker 3D interpolation.  Modified
-			    uiuc_3Dinterpolation() to handle new input
-			    form of the data.
+                            advantage of the "nice" format of the
+                            nonlinear Twin Otter data.  Performs a
+                            quicker 3D interpolation.  Modified
+                            uiuc_3Dinterpolation() to handle new input
+                            form of the data.
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Robert Deters      <rdeters@uiuc.edu>
@@ -46,10 +46,10 @@
 
  CALLED BY:    uiuc_coef_drag
                uiuc_coef_lift
-	       uiuc_coef_pitch
-	       uiuc_coef_roll
-	       uiuc_coef_sideforce
-	       uiuc_coef_yaw
+               uiuc_coef_pitch
+               uiuc_coef_roll
+               uiuc_coef_sideforce
+               uiuc_coef_yaw
 
 ----------------------------------------------------------------------
 
@@ -78,15 +78,15 @@
 #include "uiuc_3Dinterpolation.h"
 
 void uiuc_1DtoSingle( int temp1Darray[30], 
-		      int filenumber,
-		      int &single_value)
+                      int filenumber,
+                      int &single_value)
 {
   single_value = temp1Darray[filenumber];
 }
 
 void uiuc_2Dto1D( double temp2Darray[30][100], 
-		  int filenumber,
-		  double array1D[100])
+                  int filenumber,
+                  double array1D[100])
 {
   int count1;
   
@@ -97,8 +97,8 @@ void uiuc_2Dto1D( double temp2Darray[30][100],
 }
 
 void uiuc_2Dto1D_int( int temp2Darray[30][100], 
-		      int filenumber,
-		      int array1D[100])
+                      int filenumber,
+                      int array1D[100])
 {
   int count1;
   
@@ -109,30 +109,30 @@ void uiuc_2Dto1D_int( int temp2Darray[30][100],
 }
 
 void uiuc_3Dto2D( double temp3Darray[30][100][100],
-		  int filenumber,
-		  double array2D[100][100])
+                  int filenumber,
+                  double array2D[100][100])
 {
   int count1, count2;
   
   for (count1=0; count1<=99; count1++)
     {
       for (count2=0; count2<=99; count2++)
-	{
-	  array2D[count1][count2] = temp3Darray[filenumber][count1][count2];
-	}
+        {
+          array2D[count1][count2] = temp3Darray[filenumber][count1][count2];
+        }
     }
 }
 
 double uiuc_3Dinterpolation( double third_Array[30],
-			     double full_xArray[30][100][100],
-			     double full_yArray[30][100],
-			     double full_zArray[30][100][100],
-			     int full_nxArray[30][100],
-			     int full_ny[30],
-			     int third_max,
-			     double third_bet,
-			     double x_value,
-			     double y_value)
+                             double full_xArray[30][100][100],
+                             double full_yArray[30][100],
+                             double full_zArray[30][100][100],
+                             int full_nxArray[30][100],
+                             int full_ny[30],
+                             int third_max,
+                             double third_bet,
+                             double x_value,
+                             double y_value)
 {
   double reduced_xArray[100][100], reduced_yArray[100];
   double reduced_zArray[100][100];
@@ -157,9 +157,9 @@ double uiuc_3Dinterpolation( double third_Array[30],
   else
     {
       while (third_Array[k] <= third_bet)
-	{
-	  k++;
-	}
+        {
+          k++;
+        }
       third_max = k;
       third_min = k-1;
     }
@@ -173,12 +173,12 @@ double uiuc_3Dinterpolation( double third_Array[30],
       uiuc_1DtoSingle(full_ny, third_min, reduced_ny);
 
       interpI = uiuc_2Dinterpolation(reduced_xArray,
-				     reduced_yArray,
-				     reduced_zArray,
-				     reduced_nxArray,
-				     reduced_ny,
-				     x_value,
-				     y_value);
+                                     reduced_yArray,
+                                     reduced_zArray,
+                                     reduced_nxArray,
+                                     reduced_ny,
+                                     x_value,
+                                     y_value);
     }
   else
     {
@@ -189,12 +189,12 @@ double uiuc_3Dinterpolation( double third_Array[30],
       uiuc_1DtoSingle(full_ny, third_min, reduced_ny);
 
       interpmin = uiuc_2Dinterpolation(reduced_xArray,
-				     reduced_yArray,
-				     reduced_zArray,
-				     reduced_nxArray,
-				     reduced_ny,
-				     x_value,
-				     y_value);
+                                     reduced_yArray,
+                                     reduced_zArray,
+                                     reduced_nxArray,
+                                     reduced_ny,
+                                     x_value,
+                                     y_value);
 
       uiuc_3Dto2D(full_xArray, third_max, reduced_xArray);
       uiuc_2Dto1D(full_yArray, third_max, reduced_yArray);
@@ -203,12 +203,12 @@ double uiuc_3Dinterpolation( double third_Array[30],
       uiuc_1DtoSingle(full_ny, third_max, reduced_ny);
 
       interpmax = uiuc_2Dinterpolation(reduced_xArray,
-				     reduced_yArray,
-				     reduced_zArray,
-				     reduced_nxArray,
-				     reduced_ny,
-				     x_value,
-				     y_value);
+                                     reduced_yArray,
+                                     reduced_zArray,
+                                     reduced_nxArray,
+                                     reduced_ny,
+                                     x_value,
+                                     y_value);
 
       third_u = third_Array[third_max];
       third_l = third_Array[third_min];
@@ -222,15 +222,15 @@ double uiuc_3Dinterpolation( double third_Array[30],
 
 
 double uiuc_3Dinterp_quick( double z[30],
-			    double x[100],
-			    double y[100],
-			    double fxyz[30][100][100],
-			    int xmax,
-			    int ymax,
-			    int zmax,
-			    double zp,
-			    double xp,
-			    double yp)
+                            double x[100],
+                            double y[100],
+                            double fxyz[30][100][100],
+                            int xmax,
+                            int ymax,
+                            int zmax,
+                            double zp,
+                            double xp,
+                            double yp)
 {
 
   int xnuml, xnumu, ynuml, ynumu, znuml, znumu;
@@ -264,7 +264,7 @@ double uiuc_3Dinterp_quick( double z[30],
   else
     {
       while (z[k] <= zp)
-	k++;
+        k++;
       zu=z[k];
       zl=z[k-1];
       znumu=k;
@@ -285,7 +285,7 @@ double uiuc_3Dinterp_quick( double z[30],
   else
     {
       while (y[j] <= yp)
-	j++;
+        j++;
       yu=y[j];
       yl=y[j-1];
       ynumu=j;
@@ -307,7 +307,7 @@ double uiuc_3Dinterp_quick( double z[30],
   else
     {
       while (x[i] <= xp)
-	i++;
+        i++;
       xu=x[i];
       xl=x[i-1];
       xnumu=i;
@@ -317,78 +317,78 @@ double uiuc_3Dinterp_quick( double z[30],
   if (zsame)
     {
       if (ysame && xsame)
-	{
-	  data_point = fxyz[znuml][ynuml][xnuml];
-	}
+        {
+          data_point = fxyz[znuml][ynuml][xnuml];
+        }
       else if (ysame)
-	{
-	  ptxl = fxyz[znuml][ynuml][xnuml];
-	  ptxu = fxyz[znuml][ynuml][xnumu];
-	  data_point = ptxu - (xu-xp)*(ptxu-ptxl)/(xu-xl);
-	}
+        {
+          ptxl = fxyz[znuml][ynuml][xnuml];
+          ptxu = fxyz[znuml][ynuml][xnumu];
+          data_point = ptxu - (xu-xp)*(ptxu-ptxl)/(xu-xl);
+        }
       else if (xsame)
-	{
-	  ptyl = fxyz[znuml][ynuml][xnuml];
-	  ptyu = fxyz[znuml][ynumu][xnuml];
-	  data_point = ptyu - (yu-yp)*(ptyu-ptyl)/(yu-yl);
-	}
+        {
+          ptyl = fxyz[znuml][ynuml][xnuml];
+          ptyu = fxyz[znuml][ynumu][xnuml];
+          data_point = ptyu - (yu-yp)*(ptyu-ptyl)/(yu-yl);
+        }
       else
-	{
-	  ptylxl = fxyz[znuml][ynuml][xnuml];
-	  ptylxu = fxyz[znuml][ynuml][xnumu];
-	  ptyuxl = fxyz[znuml][ynumu][xnuml];
-	  ptyuxu = fxyz[znuml][ynumu][xnumu];
-	  ptyl = ptylxu - (xu-xp)*(ptylxu-ptylxl)/(xu-xl);
-	  ptyu = ptyuxu - (xu-xp)*(ptyuxu-ptyuxl)/(xu-xl);
-	  data_point = ptyu - (yu-yp)*(ptyu-ptyl)/(yu-yl);
-	}
+        {
+          ptylxl = fxyz[znuml][ynuml][xnuml];
+          ptylxu = fxyz[znuml][ynuml][xnumu];
+          ptyuxl = fxyz[znuml][ynumu][xnuml];
+          ptyuxu = fxyz[znuml][ynumu][xnumu];
+          ptyl = ptylxu - (xu-xp)*(ptylxu-ptylxl)/(xu-xl);
+          ptyu = ptyuxu - (xu-xp)*(ptyuxu-ptyuxl)/(xu-xl);
+          data_point = ptyu - (yu-yp)*(ptyu-ptyl)/(yu-yl);
+        }
     }
   else
     {
       if (ysame && xsame)
-	{
-	  ptzl = fxyz[znuml][ynuml][xnuml];
-	  ptzu = fxyz[znumu][ynuml][xnuml];
-	  data_point = ptzu - (zu-zp)*(ptzu-ptzl)/(zu-zl);
-	}
+        {
+          ptzl = fxyz[znuml][ynuml][xnuml];
+          ptzu = fxyz[znumu][ynuml][xnuml];
+          data_point = ptzu - (zu-zp)*(ptzu-ptzl)/(zu-zl);
+        }
       else if (ysame)
-	{
-	  ptzlxl = fxyz[znuml][ynuml][xnuml];
-	  ptzlxu = fxyz[znuml][ynuml][xnumu];
-	  ptzuxl = fxyz[znumu][ynuml][xnuml];
-	  ptzuxu = fxyz[znumu][ynuml][xnumu];
-	  ptzl = ptzlxu - (xu-xp)*(ptzlxu-ptzlxl)/(xu-xl);
-	  ptzu = ptzuxu - (xu-xp)*(ptzuxu-ptzuxl)/(xu-xl);
-	  data_point = ptzu - (zu-zp)*(ptzu-ptzl)/(zu-zl);
-	}
+        {
+          ptzlxl = fxyz[znuml][ynuml][xnuml];
+          ptzlxu = fxyz[znuml][ynuml][xnumu];
+          ptzuxl = fxyz[znumu][ynuml][xnuml];
+          ptzuxu = fxyz[znumu][ynuml][xnumu];
+          ptzl = ptzlxu - (xu-xp)*(ptzlxu-ptzlxl)/(xu-xl);
+          ptzu = ptzuxu - (xu-xp)*(ptzuxu-ptzuxl)/(xu-xl);
+          data_point = ptzu - (zu-zp)*(ptzu-ptzl)/(zu-zl);
+        }
       else if (xsame)
-	{
-	  ptzlyl = fxyz[znuml][ynuml][xnuml];
-	  ptzlyu = fxyz[znuml][ynumu][xnuml];
-	  ptzuyl = fxyz[znumu][ynuml][xnuml];
-	  ptzuyu = fxyz[znumu][ynumu][xnuml];
-	  ptzl = ptzlyu - (yu-yp)*(ptzlyu-ptzlyl)/(yu-yl);
-	  ptzu = ptzuyu - (yu-yp)*(ptzuyu-ptzuyl)/(yu-yl);
-	  data_point = ptzu - (zu-zp)*(ptzu-ptzl)/(zu-zl);
-	}
+        {
+          ptzlyl = fxyz[znuml][ynuml][xnuml];
+          ptzlyu = fxyz[znuml][ynumu][xnuml];
+          ptzuyl = fxyz[znumu][ynuml][xnuml];
+          ptzuyu = fxyz[znumu][ynumu][xnuml];
+          ptzl = ptzlyu - (yu-yp)*(ptzlyu-ptzlyl)/(yu-yl);
+          ptzu = ptzuyu - (yu-yp)*(ptzuyu-ptzuyl)/(yu-yl);
+          data_point = ptzu - (zu-zp)*(ptzu-ptzl)/(zu-zl);
+        }
       else
-	{
-	  ptzlylxl = fxyz[znuml][ynuml][xnuml];
-	  ptzlylxu = fxyz[znuml][ynuml][xnumu];
-	  ptzlyuxl = fxyz[znuml][ynumu][xnuml];
-	  ptzlyuxu = fxyz[znuml][ynumu][xnumu];
-	  ptzuylxl = fxyz[znumu][ynuml][xnuml];
-	  ptzuylxu = fxyz[znumu][ynuml][xnumu];
-	  ptzuyuxl = fxyz[znumu][ynumu][xnuml];
-	  ptzuyuxu = fxyz[znumu][ynumu][xnumu];
-	  ptzlyl = ptzlylxu - (xu-xp)*(ptzlylxu-ptzlylxl)/(xu-xl);
-	  ptzlyu = ptzlyuxu - (xu-xp)*(ptzlyuxu-ptzlyuxl)/(xu-xl);
-	  ptzuyl = ptzuylxu - (xu-xp)*(ptzuylxu-ptzuylxl)/(xu-xl);
-	  ptzuyu = ptzuyuxu - (xu-xp)*(ptzuyuxu-ptzuyuxl)/(xu-xl);
-	  ptzl = ptzlyu - (yu-yp)*(ptzlyu-ptzlyl)/(yu-yl);
-	  ptzu = ptzuyu - (yu-yp)*(ptzuyu-ptzuyl)/(yu-yl);
-	  data_point = ptzu - (zu-zp)*(ptzu-ptzl)/(zu-zl);
-	}
+        {
+          ptzlylxl = fxyz[znuml][ynuml][xnuml];
+          ptzlylxu = fxyz[znuml][ynuml][xnumu];
+          ptzlyuxl = fxyz[znuml][ynumu][xnuml];
+          ptzlyuxu = fxyz[znuml][ynumu][xnumu];
+          ptzuylxl = fxyz[znumu][ynuml][xnuml];
+          ptzuylxu = fxyz[znumu][ynuml][xnumu];
+          ptzuyuxl = fxyz[znumu][ynumu][xnuml];
+          ptzuyuxu = fxyz[znumu][ynumu][xnumu];
+          ptzlyl = ptzlylxu - (xu-xp)*(ptzlylxu-ptzlylxl)/(xu-xl);
+          ptzlyu = ptzlyuxu - (xu-xp)*(ptzlyuxu-ptzlyuxl)/(xu-xl);
+          ptzuyl = ptzuylxu - (xu-xp)*(ptzuylxu-ptzuylxl)/(xu-xl);
+          ptzuyu = ptzuyuxu - (xu-xp)*(ptzuyuxu-ptzuyuxl)/(xu-xl);
+          ptzl = ptzlyu - (yu-yp)*(ptzlyu-ptzlyl)/(yu-yl);
+          ptzu = ptzuyu - (yu-yp)*(ptzuyu-ptzuyl)/(yu-yl);
+          data_point = ptzu - (zu-zp)*(ptzu-ptzl)/(zu-zl);
+        }
 
     }
 

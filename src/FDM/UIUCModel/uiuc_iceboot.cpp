@@ -22,7 +22,7 @@
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Robert Deters       <rdeters@uiuc.edu>
-   	       Ann Peedikayil	   <peedikay@uiuc.edu>
+                  Ann Peedikayil           <peedikay@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -33,7 +33,7 @@
  INPUTS:       -Simtime
                -icing times
                -dt
-	       -bootTime 
+               -bootTime 
               
 ----------------------------------------------------------------------
 
@@ -71,18 +71,18 @@
 
 void uiuc_iceboot(double dt)
 { 
-    	    
+                
   if (bootTrue[bootindex])
     {
       if (bootTime[bootindex]- dt <Simtime && bootTime[bootindex]+ dt >Simtime)
       // checks if the boot is on
        { 
-         eta_ice = 0;	      
-	 // drops the eta ice to zero
-	   
-	 if (bootTime [bootindex] > iceTime)
-	   iceTime = bootTime[bootindex];
-	 bootindex++;
+         eta_ice = 0;              
+         // drops the eta ice to zero
+           
+         if (bootTime [bootindex] > iceTime)
+           iceTime = bootTime[bootindex];
+         bootindex++;
        }
     }
 }

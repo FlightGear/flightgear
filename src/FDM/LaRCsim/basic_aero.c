@@ -79,7 +79,7 @@ void basic_aero(SCALAR dt, int Initialize)
 // zero, then re-initialize coefficients by reading in the coefficient file.
 {
  static int init = 0;
- static SCALAR elevator_drela, aileron_drela, rudder_drela;
+ //static SCALAR elevator_drela, aileron_drela, rudder_drela;
 
  SCALAR C_ref;
  SCALAR B_ref;
@@ -126,7 +126,7 @@ void basic_aero(SCALAR dt, int Initialize)
  SCALAR Cl_dr;
  SCALAR Cn_dr;
  
- SCALAR CY_da;
+ //SCALAR CY_da;
  SCALAR Cl_da;
  SCALAR Cn_da;
  
@@ -134,7 +134,7 @@ void basic_aero(SCALAR dt, int Initialize)
  SCALAR CG_arm;
  SCALAR CL_drop;
  SCALAR CD_stall = 0.05;
- int stalling;
+ //int stalling;
  
  SCALAR span_eff;
  SCALAR CL_CD0;
@@ -152,12 +152,14 @@ void basic_aero(SCALAR dt, int Initialize)
  SCALAR Cl_r_mod,Cn_p_mod;
  SCALAR CL_drela,CD_drela,Cx_drela,Cy_drela,Cz_drela,Cl_drela,Cm_drela,Cn_drela;
  SCALAR QS;
+ /*
  SCALAR G_11,G_12,G_13;
  SCALAR G_21,G_22,G_23;
  SCALAR G_31,G_32,G_33;
  SCALAR U_body_X,U_body_Y,U_body_Z;
  SCALAR V_body_X,V_body_Y,V_body_Z;
  SCALAR W_body_X,W_body_Y,W_body_Z;
+ */
  SCALAR P_atmo,Q_atmo,R_atmo;
 
  // set the parameters
@@ -191,7 +193,7 @@ void basic_aero(SCALAR dt, int Initialize)
  CY_dr = 0.000000E+00;
  Cl_dr = 0.000000E+00;
  Cn_dr = 0.000000E+00;
- CY_da = -0.135890;
+ //CY_da = -0.135890;
  Cl_da = -0.307921E-02;
  Cn_da = 0.527143E-01;
  span_eff = 0.95;
@@ -342,41 +344,41 @@ void basic_aero(SCALAR dt, int Initialize)
   dCL_cent  = 0.;
   dCL_right = 0.;
 
-  stalling=0;
+  //stalling=0;
   if (CL_left  > CL_max)
     {
       dCL_left  = CL_max-CL_left -CL_drop; 
-      stalling=1;
+      //stalling=1;
     }
 
   if (CL_cent  > CL_max)
     {
       dCL_cent  = CL_max-CL_cent -CL_drop;
-      stalling=1;
+      //stalling=1;
     }
 
   if (CL_right > CL_max)
     {
       dCL_right = CL_max-CL_right -CL_drop;
-      stalling=1;      
+      //stalling=1;      
     }
 
   if (CL_left  < CL_min)
     {
       dCL_left  = CL_min-CL_left -CL_drop;
-      stalling=1;
+      //stalling=1;
     }
 
   if (CL_cent  < CL_min)
     {
       dCL_cent  = CL_min-CL_cent -CL_drop; 
-      stalling=1;
+      //stalling=1;
     }
 
   if (CL_right < CL_min)
     {
       dCL_right = CL_min-CL_right -CL_drop;
-      stalling=1;
+      //stalling=1;
     }
 
   /* set average wing CL */

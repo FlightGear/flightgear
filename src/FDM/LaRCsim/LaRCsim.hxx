@@ -96,11 +96,11 @@ public:
 
     void _set_Inertias( double m, double xx, double yy, double zz, double xz)
     {
-	mass = m;
-	i_xx = xx;
-	i_yy = yy;
-	i_zz = zz;
-	i_xz = xz;
+        mass = m;
+        i_xx = xx;
+        i_yy = yy;
+        i_zz = zz;
+        i_xz = xz;
     }
 };
 
