@@ -189,11 +189,12 @@ void uiuc_aerodeflections( double dt )
     else
       aileron += aileron_sas;
     // don't exceed aileron deflection limits
-    if (fabs(aileron) > (damax * DEG_TO_RAD))
+    if (fabs(aileron) > (damax * DEG_TO_RAD)) {
       if (aileron > 0)
 	aileron =  damax * DEG_TO_RAD;
       else
 	aileron = -damax * DEG_TO_RAD;
+    }
   }
   
   // SAS for yaw, positive rudder deflection is TEL
@@ -213,11 +214,12 @@ void uiuc_aerodeflections( double dt )
       rudder += rudder_sas;
     // don't exceed rudder deflection limits, assumes drmax = drmin, 
     // i.e. equal rudder throws left and right
-    if (fabs(rudder) > drmax)
+    if (fabs(rudder) > drmax) {
       if (rudder > 0)
 	rudder =  drmax * DEG_TO_RAD;
       else
 	rudder = -drmax * DEG_TO_RAD;
+    }
   }
   
   /* This old code in the first part of the if-block needs to get removed from FGFS. 030222 MSS
