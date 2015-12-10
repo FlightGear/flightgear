@@ -1,41 +1,41 @@
 /***************************************************************************
 
-  TITLE:	Navion_aero
-		
+  TITLE:        Navion_aero
+                
 ----------------------------------------------------------------------------
 
-  FUNCTION:	Linear aerodynamics model
-
-----------------------------------------------------------------------------
-
-  MODULE STATUS:	developmental
+  FUNCTION:        Linear aerodynamics model
 
 ----------------------------------------------------------------------------
 
-  GENEALOGY:	Based upon class notes from AA271, Stanford University,
+  MODULE STATUS:        developmental
+
+----------------------------------------------------------------------------
+
+  GENEALOGY:        Based upon class notes from AA271, Stanford University,
                 Spring 1988.  Dr. Robert Cannon, instructor.  
 
 ----------------------------------------------------------------------------
 
-  DESIGNED BY:	Bruce Jackson
-		
-  CODED BY:		Bruce Jackson
-		
-  MAINTAINED BY:	Bruce Jackson
+  DESIGNED BY:        Bruce Jackson
+                
+  CODED BY:                Bruce Jackson
+                
+  MAINTAINED BY:        Bruce Jackson
 
 ----------------------------------------------------------------------------
 
   MODIFICATION HISTORY:
-		
-  DATE		PURPOSE												BY
+                
+  DATE                PURPOSE                                                                                                BY
   921229     Changed Alpha, Beta into radians; added Alpha bias.
-		                                 EBJ
+                                                 EBJ
   930105     Modified to support linear airframe simulation by
-		           adding shared memory initialization routine. EBJ
+                           adding shared memory initialization routine. EBJ
   931013     Added scaling by airspeed,  to allow for low-airspeed
-			    ground operations.				EBJ
+                            ground operations.                                EBJ
   940216    Scaled long, lat stick and rudder to more appropriate values 
-	    of elevator and aileron. EBJ
+            of elevator and aileron. EBJ
 
 ----------------------------------------------------------------------------
 
@@ -65,24 +65,24 @@ control surface deflections. For example, L_beta is an estimate of how
 much roll moment varies per degree of sideslip increase.  A decoding
 ring is given below:
 
-	X	Aerodynamic force, lbs, in X-axis (+ forward)
-	Y	Aerodynamic force, lbs, in Y-axis (+ right)
-	Z	Aerodynamic force, lbs, in Z-axis (+ down)
-	L	Aero. moment about X-axis (+ roll right), ft-lbs
-	M	Aero. moment about Y-axis (+ pitch up), ft-lbs
-	N	Aero. moment about Z-axis (+ nose right), ft-lbs
+        X        Aerodynamic force, lbs, in X-axis (+ forward)
+        Y        Aerodynamic force, lbs, in Y-axis (+ right)
+        Z        Aerodynamic force, lbs, in Z-axis (+ down)
+        L        Aero. moment about X-axis (+ roll right), ft-lbs
+        M        Aero. moment about Y-axis (+ pitch up), ft-lbs
+        N        Aero. moment about Z-axis (+ nose right), ft-lbs
 
-	0	Subscript implying initial, or nominal, value
-	u	X-axis component of airspeed (ft/sec) (+ forward)
-	v	Y-axis component of airspeed (ft/sec) (+ right)	
-	w	Z-axis component of airspeed (ft/sec) (+ down)
-	p	X-axis ang. rate (rad/sec) (+ roll right), rad/sec
-	q	Y-axis ang. rate (rad/sec) (+ pitch up), rad/sec
-	r	Z-axis ang. rate (rad/sec) (+ yaw right), rad/sec
-	beta	Angle of sideslip, degrees (+ wind in RIGHT ear)
-	da	Aileron deflection, degrees (+ left ail. TE down)
-	de	Elevator deflection, degrees (+ trailing edge down)
-	dr	Rudder deflection, degrees (+ trailing edge LEFT)
+        0        Subscript implying initial, or nominal, value
+        u        X-axis component of airspeed (ft/sec) (+ forward)
+        v        Y-axis component of airspeed (ft/sec) (+ right)        
+        w        Z-axis component of airspeed (ft/sec) (+ down)
+        p        X-axis ang. rate (rad/sec) (+ roll right), rad/sec
+        q        Y-axis ang. rate (rad/sec) (+ pitch up), rad/sec
+        r        Z-axis ang. rate (rad/sec) (+ yaw right), rad/sec
+        beta        Angle of sideslip, degrees (+ wind in RIGHT ear)
+        da        Aileron deflection, degrees (+ left ail. TE down)
+        de        Elevator deflection, degrees (+ trailing edge down)
+        dr        Rudder deflection, degrees (+ trailing edge LEFT)
 
 ----------------------------------------------------------------------------
 
@@ -203,10 +203,10 @@ void navion_aero( SCALAR dt, int Initialize ) {
   F_Z_aero = scale*(Z_0 + Mass*(Z_u*u + Z_w*w + Z_de*elevator));
   
   M_l_aero = scale*(I_xx*(L_beta*Std_Beta + L_p*P_body + L_r*R_body
-		   + L_da*aileron + L_dr*rudder));
+                   + L_da*aileron + L_dr*rudder));
   M_m_aero = scale*(M_0 + I_yy*(M_w*w + M_q*Q_body + M_de*(elevator + Long_trim)));
   M_n_aero = scale*(I_zz*(N_beta*Std_Beta + N_p*P_body + N_r*R_body
-		   + N_da*aileron + N_dr*rudder));
+                   + N_da*aileron + N_dr*rudder));
   
 }
 

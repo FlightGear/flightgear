@@ -1,36 +1,36 @@
 /***************************************************************************
 
-	TITLE:		engine.c
-	
+        TITLE:                engine.c
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	dummy engine routine
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	incomplete
+        FUNCTION:        dummy engine routine
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	This is a renamed navion_engine.c originall written by E. Bruce 
-				Jackson
-				
+        MODULE STATUS:        incomplete
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	designer
-	
-	CODED BY:	programmer
-	
-	MAINTAINED BY:	maintainer
+        GENEALOGY:        This is a renamed navion_engine.c originall written by E. Bruce 
+                                Jackson
+                                
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
+        DESIGNED BY:        designer
+        
+        CODED BY:        programmer
+        
+        MAINTAINED BY:        maintainer
 
-	CURRENT RCS HEADER INFO:
+----------------------------------------------------------------------------
+
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+
+        CURRENT RCS HEADER INFO:
 
 $Header$
 
@@ -40,23 +40,23 @@ $Header$
 
 ----------------------------------------------------------------------------
 
-	REFERENCES:
+        REFERENCES:
 
 ----------------------------------------------------------------------------
 
-	CALLED BY:	ls_model();
+        CALLED BY:        ls_model();
 
 ----------------------------------------------------------------------------
 
-	CALLS TO:	none
+        CALLS TO:        none
 
 ----------------------------------------------------------------------------
 
-	INPUTS:
+        INPUTS:
 
 ----------------------------------------------------------------------------
 
-	OUTPUTS:
+        OUTPUTS:
 
 --------------------------------------------------------------------------*/
 #include <math.h>
@@ -67,31 +67,31 @@ $Header$
 #include "ls_cockpit.h"
 #include "c172_aero.h"
 
-extern SIM_CONTROL	sim_control_;
+extern SIM_CONTROL        sim_control_;
 
 void c172_engine( SCALAR dt, int init ) {
     
     float v,h,pa;
     float bhp=160;
-	
+        
     Throttle[3] = Throttle_pct;
 
     
     if ( ! Use_External_Engine ) {
-	/* do a crude engine power calc based on throttle position */
-	v=V_rel_wind;
-	h=Altitude;
-	if(V_rel_wind < 10)
-	    v=10;
-	if(Altitude < 0)
-	    h=0;
-	pa=(0.00144*v + 0.546)*(1 - 1.6E-5*h)*bhp;
-	if(pa < 0)
-	    pa=0;
+        /* do a crude engine power calc based on throttle position */
+        v=V_rel_wind;
+        h=Altitude;
+        if(V_rel_wind < 10)
+            v=10;
+        if(Altitude < 0)
+            h=0;
+        pa=(0.00144*v + 0.546)*(1 - 1.6E-5*h)*bhp;
+        if(pa < 0)
+            pa=0;
 
-	F_X_engine = Throttle[3]*(pa*550)/v;
+        F_X_engine = Throttle[3]*(pa*550)/v;
     } else {
-	/* accept external settings */
+        /* accept external settings */
     }
 
     /* printf("F_X_engine = %.3f\n", F_X_engine); */

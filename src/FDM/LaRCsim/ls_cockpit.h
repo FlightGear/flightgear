@@ -1,37 +1,37 @@
 /***************************************************************************
 
-	TITLE:		ls_cockpit.h
-	
+        TITLE:                ls_cockpit.h
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	Header for cockpit IO
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	Developmental
+        FUNCTION:        Header for cockpit IO
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Created 20 DEC 93 by E. B. Jackson
+        MODULE STATUS:        Developmental
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	E. B. Jackson
-	
-	CODED BY:	E. B. Jackson
-	
-	MAINTAINED BY:	E. B. Jackson
+        GENEALOGY:        Created 20 DEC 93 by E. B. Jackson
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
+        DESIGNED BY:        E. B. Jackson
+        
+        CODED BY:        E. B. Jackson
+        
+        MAINTAINED BY:        E. B. Jackson
 
-	950314	Added "throttle_pct" field to cockpit header for both
-		display and trim purposes.			EBJ
-	
-	CURRENT RCS HEADER:
+----------------------------------------------------------------------------
+
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+
+        950314        Added "throttle_pct" field to cockpit header for both
+                display and trim purposes.                        EBJ
+        
+        CURRENT RCS HEADER:
 
 $Header$
 $Log$
@@ -103,24 +103,24 @@ typedef struct {
 
 extern COCKPIT cockpit_;
 
-#define Left_button	cockpit_.left_pb_on_stick
-#define Right_button	cockpit_.right_pb_on_stick
-#define Rudder_pedal	cockpit_.rudder_pedal
-#define Flap_handle	cockpit_.flap_handle
-#define Throttle	cockpit_.throttle
-#define Throttle_pct	cockpit_.throttle_pct
-#define First_trigger	cockpit_.trig_pos_1
-#define Second_trigger	cockpit_.trig_pos_2
-#define Long_control	cockpit_.long_stick
+#define Left_button        cockpit_.left_pb_on_stick
+#define Right_button        cockpit_.right_pb_on_stick
+#define Rudder_pedal        cockpit_.rudder_pedal
+#define Flap_handle        cockpit_.flap_handle
+#define Throttle        cockpit_.throttle
+#define Throttle_pct        cockpit_.throttle_pct
+#define First_trigger        cockpit_.trig_pos_1
+#define Second_trigger        cockpit_.trig_pos_2
+#define Long_control        cockpit_.long_stick
 #define Long_trim       cockpit_.long_trim
-#define Lat_control	cockpit_.lat_stick
-#define Fwd_trim	cockpit_.forward_trim
-#define Aft_trim	cockpit_.aft_trim
-#define Left_trim	cockpit_.left_trim
-#define Right_trim	cockpit_.right_trim
-#define SB_extend	cockpit_.sb_extend
-#define SB_retract	cockpit_.sb_retract
-#define Gear_sel_up	cockpit_.gear_sel_up
+#define Lat_control        cockpit_.lat_stick
+#define Fwd_trim        cockpit_.forward_trim
+#define Aft_trim        cockpit_.aft_trim
+#define Left_trim        cockpit_.left_trim
+#define Right_trim        cockpit_.right_trim
+#define SB_extend        cockpit_.sb_extend
+#define SB_retract        cockpit_.sb_retract
+#define Gear_sel_up        cockpit_.gear_sel_up
 #define Brake_pct       cockpit_.brake_pct
 
 

@@ -1,34 +1,34 @@
 /***************************************************************************
 
-	TITLE:	ls_types.h
-	
+        TITLE:        ls_types.h
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	LaRCSim type definitions header file
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	developmental
+        FUNCTION:        LaRCSim type definitions header file
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Created 15 DEC 1993 by Bruce Jackson from old
-			ls_eom.h header
+        MODULE STATUS:        developmental
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	B. Jackson
-	
-	CODED BY:	B. Jackson
-	
-	MAINTAINED BY:	guess who
+        GENEALOGY:        Created 15 DEC 1993 by Bruce Jackson from old
+                        ls_eom.h header
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
-	19 MAY 2001 Reduce MSVC6 warnings   Geoff R. McLane
+        DESIGNED BY:        B. Jackson
+        
+        CODED BY:        B. Jackson
+        
+        MAINTAINED BY:        guess who
+
+----------------------------------------------------------------------------
+
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+        19 MAY 2001 Reduce MSVC6 warnings   Geoff R. McLane
 --------------------------------------------------------------------------*/
 
 #ifndef _LS_TYPES_H

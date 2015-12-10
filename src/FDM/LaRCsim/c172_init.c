@@ -1,59 +1,59 @@
 /***************************************************************************
 
-	TITLE:	navion_init.c
-	
+        TITLE:        navion_init.c
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	Initializes navion math model
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	developmental
+        FUNCTION:        Initializes navion math model
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Renamed navion_init.c originally created on 930111 by Bruce Jackson
+        MODULE STATUS:        developmental
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	EBJ
-	
-	CODED BY:	EBJ
-	
-	MAINTAINED BY:	EBJ
+        GENEALOGY:        Renamed navion_init.c originally created on 930111 by Bruce Jackson
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
-
-	950314	Removed initialization of state variables, since this is
-		now done (version 1.4b1) in ls_init.		EBJ
-	950406	Removed #include of "shmdefs.h"; shmdefs.h is a duplicate
-		of "navion.h". EBJ
-	
-	CURRENT RCS HEADER:
+        DESIGNED BY:        EBJ
+        
+        CODED BY:        EBJ
+        
+        MAINTAINED BY:        EBJ
 
 ----------------------------------------------------------------------------
 
-	REFERENCES:
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+
+        950314        Removed initialization of state variables, since this is
+                now done (version 1.4b1) in ls_init.                EBJ
+        950406        Removed #include of "shmdefs.h"; shmdefs.h is a duplicate
+                of "navion.h". EBJ
+        
+        CURRENT RCS HEADER:
 
 ----------------------------------------------------------------------------
 
-	CALLED BY:
+        REFERENCES:
 
 ----------------------------------------------------------------------------
 
-	CALLS TO:
+        CALLED BY:
 
 ----------------------------------------------------------------------------
 
-	INPUTS:
+        CALLS TO:
 
 ----------------------------------------------------------------------------
 
-	OUTPUTS:
+        INPUTS:
+
+----------------------------------------------------------------------------
+
+        OUTPUTS:
 
 --------------------------------------------------------------------------*/
 #include "ls_types.h"

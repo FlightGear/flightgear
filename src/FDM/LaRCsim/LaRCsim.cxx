@@ -25,7 +25,7 @@
 #endif
 
 #include <math.h>
-#include <string.h>		// strcmp()
+#include <string.h>                // strcmp()
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -74,16 +74,16 @@ FGLaRCsim::FGLaRCsim( double dt ) {
         copy_to_LaRCsim(); // initialize all of LaRCsim's vars
 
         //this should go away someday -- formerly done in fg_init.cxx
-  	Mass = 2./32.174;
-  	I_xx   = 0.0454;
-  	I_yy   = 0.0191;
-  	I_zz   = 0.0721;
-  	I_xz   = 0;
-//  	Mass = 8.547270E+01;
-//  	I_xx = 1.048000E+03;
-//  	I_yy = 3.000000E+03;
-//  	I_zz = 3.530000E+03;
-//  	I_xz = 0.000000E+00;
+          Mass = 2./32.174;
+          I_xx   = 0.0454;
+          I_yy   = 0.0191;
+          I_zz   = 0.0721;
+          I_xz   = 0;
+//          Mass = 8.547270E+01;
+//          I_xx = 1.048000E+03;
+//          I_yy = 3.000000E+03;
+//          I_zz = 3.530000E+03;
+//          I_xz = 0.000000E+00;
     }
 
     ls_set_model_dt(dt);
@@ -121,142 +121,142 @@ void FGLaRCsim::update( double dt ) {
     if ( !strcmp(aero->getStringValue(), "c172") ) {
         // set control inputs
         // cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
-	eng.set_IAS( V_calibrated_kts );
-	eng.set_Throttle_Lever_Pos( globals->get_controls()->get_throttle( 0 )
-				    * 100.0 );
-	eng.set_Propeller_Lever_Pos( 100 );
+        eng.set_IAS( V_calibrated_kts );
+        eng.set_Throttle_Lever_Pos( globals->get_controls()->get_throttle( 0 )
+                                    * 100.0 );
+        eng.set_Propeller_Lever_Pos( 100 );
         eng.set_Mixture_Lever_Pos( globals->get_controls()->get_mixture( 0 )
-				   * 100.0 );
-	eng.set_Magneto_Switch_Pos( globals->get_controls()->get_magnetos(0) );
-    	eng.setStarterFlag( globals->get_controls()->get_starter(0) );
-	eng.set_p_amb( Static_pressure );
-	eng.set_T_amb( Static_temperature );
+                                   * 100.0 );
+        eng.set_Magneto_Switch_Pos( globals->get_controls()->get_magnetos(0) );
+            eng.setStarterFlag( globals->get_controls()->get_starter(0) );
+        eng.set_p_amb( Static_pressure );
+        eng.set_T_amb( Static_temperature );
 
-	// update engine model
-	eng.update();
+        // update engine model
+        eng.update();
 
-	// Fake control-surface positions
-	fgSetDouble("/surface-positions/flap-pos-norm",
-		    fgGetDouble("/controls/flight/flaps"));
-				// FIXME: ignoring trim
-	fgSetDouble("/surface-positions/elevator-pos-norm",
-		    fgGetDouble("/controls/flight/elevator"));
-				// FIXME: ignoring trim
-	fgSetDouble("/surface-positions/left-aileron-pos-norm",
-		    fgGetDouble("/controls/flight/aileron"));
-				// FIXME: ignoring trim
-	fgSetDouble("/surface-positions/right-aileron-pos-norm",
-		    -1 * fgGetDouble("/controls/flight/aileron"));
-				// FIXME: ignoring trim
-	fgSetDouble("/surface-positions/rudder-pos-norm",
-		    fgGetDouble("/controls/flight/rudder"));
+        // Fake control-surface positions
+        fgSetDouble("/surface-positions/flap-pos-norm",
+                    fgGetDouble("/controls/flight/flaps"));
+                                // FIXME: ignoring trim
+        fgSetDouble("/surface-positions/elevator-pos-norm",
+                    fgGetDouble("/controls/flight/elevator"));
+                                // FIXME: ignoring trim
+        fgSetDouble("/surface-positions/left-aileron-pos-norm",
+                    fgGetDouble("/controls/flight/aileron"));
+                                // FIXME: ignoring trim
+        fgSetDouble("/surface-positions/right-aileron-pos-norm",
+                    -1 * fgGetDouble("/controls/flight/aileron"));
+                                // FIXME: ignoring trim
+        fgSetDouble("/surface-positions/rudder-pos-norm",
+                    fgGetDouble("/controls/flight/rudder"));
 
-	// copy engine state values onto "bus"
-	fgSetDouble("/engines/engine/rpm", eng.get_RPM());
-	fgSetDouble("/engines/engine/mp-osi", eng.get_Manifold_Pressure());
-	fgSetDouble("/engines/engine/max-hp", eng.get_MaxHP());
-	fgSetDouble("/engines/engine/power-pct", eng.get_Percentage_Power());
-	fgSetDouble("/engines/engine/egt-degf", eng.get_EGT());
-	fgSetDouble("/engines/engine/cht-degf", eng.get_CHT());
-	fgSetDouble("/engines/engine/prop-thrust", eng.get_prop_thrust_SI());
-	fgSetDouble("/engines/engine/fuel-flow-gph",
-		    eng.get_fuel_flow_gals_hr());
-	fgSetDouble("/engines/engine/oil-temperature-degf",
-		    eng.get_oil_temp());
-	fgSetDouble("/engines/engine/running", eng.getRunningFlag());
-	fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
+        // copy engine state values onto "bus"
+        fgSetDouble("/engines/engine/rpm", eng.get_RPM());
+        fgSetDouble("/engines/engine/mp-osi", eng.get_Manifold_Pressure());
+        fgSetDouble("/engines/engine/max-hp", eng.get_MaxHP());
+        fgSetDouble("/engines/engine/power-pct", eng.get_Percentage_Power());
+        fgSetDouble("/engines/engine/egt-degf", eng.get_EGT());
+        fgSetDouble("/engines/engine/cht-degf", eng.get_CHT());
+        fgSetDouble("/engines/engine/prop-thrust", eng.get_prop_thrust_SI());
+        fgSetDouble("/engines/engine/fuel-flow-gph",
+                    eng.get_fuel_flow_gals_hr());
+        fgSetDouble("/engines/engine/oil-temperature-degf",
+                    eng.get_oil_temp());
+        fgSetDouble("/engines/engine/running", eng.getRunningFlag());
+        fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
 
-	const SGPropertyNode *fuel_freeze
-	    = fgGetNode("/sim/freeze/fuel");
+        const SGPropertyNode *fuel_freeze
+            = fgGetNode("/sim/freeze/fuel");
 
-	if ( ! fuel_freeze->getBoolValue() ) {
-	    //Assume we are using both tanks equally for now
-	    fgSetDouble("/consumables/fuel/tank[0]/level-gal_us",
-			fgGetDouble("/consumables/fuel/tank[0]/level-gal_us")
-			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
-			* dt);
-	    fgSetDouble("/consumables/fuel/tank[1]/level-gal_us",
-			fgGetDouble("/consumables/fuel/tank[1]/level-gal_us")
-			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
-			* dt);
-	}
+        if ( ! fuel_freeze->getBoolValue() ) {
+            //Assume we are using both tanks equally for now
+            fgSetDouble("/consumables/fuel/tank[0]/level-gal_us",
+                        fgGetDouble("/consumables/fuel/tank[0]/level-gal_us")
+                        - (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+                        * dt);
+            fgSetDouble("/consumables/fuel/tank[1]/level-gal_us",
+                        fgGetDouble("/consumables/fuel/tank[1]/level-gal_us")
+                        - (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+                        * dt);
+        }
 
-	// Apparently the IO360 thrust model is not working.  
-	// F_X_engine is zero here.
-	F_X_engine = eng.get_prop_thrust_lbs();
+        // Apparently the IO360 thrust model is not working.  
+        // F_X_engine is zero here.
+        F_X_engine = eng.get_prop_thrust_lbs();
 
-	Flap_handle = 30.0 * globals->get_controls()->get_flaps();
+        Flap_handle = 30.0 * globals->get_controls()->get_flaps();
     }
     // done with c172-larcsim if-block
 
     if ( !strcmp(aero->getStringValue(), "basic") ) {
         // set control inputs
         // cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
-	eng.set_IAS( V_calibrated_kts );
-	eng.set_Throttle_Lever_Pos( globals->get_controls()->get_throttle( 0 )
-				    * 100.0 );
-	eng.set_Propeller_Lever_Pos( 100 );
+        eng.set_IAS( V_calibrated_kts );
+        eng.set_Throttle_Lever_Pos( globals->get_controls()->get_throttle( 0 )
+                                    * 100.0 );
+        eng.set_Propeller_Lever_Pos( 100 );
         eng.set_Mixture_Lever_Pos( globals->get_controls()->get_mixture( 0 )
-				   * 100.0 );
-	eng.set_Magneto_Switch_Pos( globals->get_controls()->get_magnetos(0) );
-    	eng.setStarterFlag( globals->get_controls()->get_starter(0) );
-	eng.set_p_amb( Static_pressure );
-	eng.set_T_amb( Static_temperature );
+                                   * 100.0 );
+        eng.set_Magneto_Switch_Pos( globals->get_controls()->get_magnetos(0) );
+            eng.setStarterFlag( globals->get_controls()->get_starter(0) );
+        eng.set_p_amb( Static_pressure );
+        eng.set_T_amb( Static_temperature );
 
-	// update engine model
-	eng.update();
+        // update engine model
+        eng.update();
 
-	// Fake control-surface positions
-	fgSetDouble("/surface-positions/flap-pos-norm",
-		    fgGetDouble("/controls/flight/flaps"));
-				// FIXME: ignoring trim
-	fgSetDouble("/surface-positions/elevator-pos-norm",
-		    fgGetDouble("/controls/flight/elevator"));
-				// FIXME: ignoring trim
-	fgSetDouble("/surface-positions/left-aileron-pos-norm",
-		    fgGetDouble("/controls/flight/aileron"));
-				// FIXME: ignoring trim
-	fgSetDouble("/surface-positions/right-aileron-pos-norm",
-		    -1 * fgGetDouble("/controls/flight/aileron"));
-				// FIXME: ignoring trim
-	fgSetDouble("/surface-positions/rudder-pos-norm",
-		    fgGetDouble("/controls/flight/rudder"));
+        // Fake control-surface positions
+        fgSetDouble("/surface-positions/flap-pos-norm",
+                    fgGetDouble("/controls/flight/flaps"));
+                                // FIXME: ignoring trim
+        fgSetDouble("/surface-positions/elevator-pos-norm",
+                    fgGetDouble("/controls/flight/elevator"));
+                                // FIXME: ignoring trim
+        fgSetDouble("/surface-positions/left-aileron-pos-norm",
+                    fgGetDouble("/controls/flight/aileron"));
+                                // FIXME: ignoring trim
+        fgSetDouble("/surface-positions/right-aileron-pos-norm",
+                    -1 * fgGetDouble("/controls/flight/aileron"));
+                                // FIXME: ignoring trim
+        fgSetDouble("/surface-positions/rudder-pos-norm",
+                    fgGetDouble("/controls/flight/rudder"));
 
-	// copy engine state values onto "bus"
-	fgSetDouble("/engines/engine/rpm", eng.get_RPM());
-	fgSetDouble("/engines/engine/mp-osi", eng.get_Manifold_Pressure());
-	fgSetDouble("/engines/engine/max-hp", eng.get_MaxHP());
-	fgSetDouble("/engines/engine/power-pct", eng.get_Percentage_Power());
-	fgSetDouble("/engines/engine/egt-degf", eng.get_EGT());
-	fgSetDouble("/engines/engine/cht-degf", eng.get_CHT());
-	fgSetDouble("/engines/engine/prop-thrust", eng.get_prop_thrust_SI());
-	fgSetDouble("/engines/engine/fuel-flow-gph",
-		    eng.get_fuel_flow_gals_hr());
-	fgSetDouble("/engines/engine/oil-temperature-degf",
-		    eng.get_oil_temp());
-	fgSetDouble("/engines/engine/running", eng.getRunningFlag());
-	fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
+        // copy engine state values onto "bus"
+        fgSetDouble("/engines/engine/rpm", eng.get_RPM());
+        fgSetDouble("/engines/engine/mp-osi", eng.get_Manifold_Pressure());
+        fgSetDouble("/engines/engine/max-hp", eng.get_MaxHP());
+        fgSetDouble("/engines/engine/power-pct", eng.get_Percentage_Power());
+        fgSetDouble("/engines/engine/egt-degf", eng.get_EGT());
+        fgSetDouble("/engines/engine/cht-degf", eng.get_CHT());
+        fgSetDouble("/engines/engine/prop-thrust", eng.get_prop_thrust_SI());
+        fgSetDouble("/engines/engine/fuel-flow-gph",
+                    eng.get_fuel_flow_gals_hr());
+        fgSetDouble("/engines/engine/oil-temperature-degf",
+                    eng.get_oil_temp());
+        fgSetDouble("/engines/engine/running", eng.getRunningFlag());
+        fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
 
-	const SGPropertyNode *fuel_freeze
-	    = fgGetNode("/sim/freeze/fuel");
+        const SGPropertyNode *fuel_freeze
+            = fgGetNode("/sim/freeze/fuel");
 
-	if ( ! fuel_freeze->getBoolValue() ) {
-	    //Assume we are using both tanks equally for now
-	    fgSetDouble("/consumables/fuel/tank[0]/level-gal_us",
-			fgGetDouble("/consumables/fuel/tank[0]/level-gal_us")
-			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
-			* dt);
-	    fgSetDouble("/consumables/fuel/tank[1]/level-gal_us",
-			fgGetDouble("/consumables/fuel/tank[1]/level-gal_us")
-			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
-			* dt);
-	}
+        if ( ! fuel_freeze->getBoolValue() ) {
+            //Assume we are using both tanks equally for now
+            fgSetDouble("/consumables/fuel/tank[0]/level-gal_us",
+                        fgGetDouble("/consumables/fuel/tank[0]/level-gal_us")
+                        - (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+                        * dt);
+            fgSetDouble("/consumables/fuel/tank[1]/level-gal_us",
+                        fgGetDouble("/consumables/fuel/tank[1]/level-gal_us")
+                        - (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+                        * dt);
+        }
 
-	// Apparently the IO360 thrust model is not working.  
-	// F_X_engine is zero here.
-	F_X_engine = eng.get_prop_thrust_lbs();
+        // Apparently the IO360 thrust model is not working.  
+        // F_X_engine is zero here.
+        F_X_engine = eng.get_prop_thrust_lbs();
 
-	Flap_handle = 30.0 * globals->get_controls()->get_flaps();
+        Flap_handle = 30.0 * globals->get_controls()->get_flaps();
     }
     // done with basic-larcsim if-block
 
@@ -264,8 +264,8 @@ void FGLaRCsim::update( double dt ) {
 
     // lets try to avoid really screwing up the LaRCsim model
     if ( get_Altitude() < -9000.0 ) {
-	save_alt = get_Altitude();
-	set_Altitude( 0.0 );
+        save_alt = get_Altitude();
+        set_Altitude( 0.0 );
     }
 
     // copy control positions into the LaRCsim structure
@@ -336,34 +336,34 @@ void FGLaRCsim::update( double dt ) {
 
       // spoilers with transition occurring in uiuc_aerodeflections.cpp
       if(use_spoilers) {
-	Spoiler_handle = spoiler_max * fgGetDouble("/controls/flight/spoilers");
+        Spoiler_handle = spoiler_max * fgGetDouble("/controls/flight/spoilers");
       }
       // gear with transition occurring here in LaRCsim.cxx
       if (use_gear) {
-	if(fgGetBool("/controls/gear/gear-down")) {
-	  Gear_handle = 1.0;
-	}
-	else {
-	  Gear_handle = 0.;
-	}
-	// commanded gear is 0 or 1
-	gear_cmd_norm = Gear_handle;
-	// amount gear moves per time step [relative to 1]
-	gear_increment_per_timestep = gear_rate * dt; 
-	// determine gear position with respect to gear command
-	if (gear_pos_norm < gear_cmd_norm) {
-	  gear_pos_norm += gear_increment_per_timestep;
-	  if (gear_pos_norm > gear_cmd_norm) 
-	    gear_pos_norm = gear_cmd_norm;
-	} else if (gear_pos_norm > gear_cmd_norm) {
-	  gear_pos_norm -= gear_increment_per_timestep;
-	  if (gear_pos_norm < gear_cmd_norm)
-	    gear_pos_norm = gear_cmd_norm;
-	} 
-	// set the gear position
-	fgSetDouble("/gear/gear[0]/position-norm", gear_pos_norm);
-	fgSetDouble("/gear/gear[1]/position-norm", gear_pos_norm);
-	fgSetDouble("/gear/gear[2]/position-norm", gear_pos_norm);
+        if(fgGetBool("/controls/gear/gear-down")) {
+          Gear_handle = 1.0;
+        }
+        else {
+          Gear_handle = 0.;
+        }
+        // commanded gear is 0 or 1
+        gear_cmd_norm = Gear_handle;
+        // amount gear moves per time step [relative to 1]
+        gear_increment_per_timestep = gear_rate * dt; 
+        // determine gear position with respect to gear command
+        if (gear_pos_norm < gear_cmd_norm) {
+          gear_pos_norm += gear_increment_per_timestep;
+          if (gear_pos_norm > gear_cmd_norm) 
+            gear_pos_norm = gear_cmd_norm;
+        } else if (gear_pos_norm > gear_cmd_norm) {
+          gear_pos_norm -= gear_increment_per_timestep;
+          if (gear_pos_norm < gear_cmd_norm)
+            gear_pos_norm = gear_cmd_norm;
+        } 
+        // set the gear position
+        fgSetDouble("/gear/gear[0]/position-norm", gear_pos_norm);
+        fgSetDouble("/gear/gear[1]/position-norm", gear_pos_norm);
+        fgSetDouble("/gear/gear[2]/position-norm", gear_pos_norm);
       }
 
 
@@ -376,34 +376,34 @@ void FGLaRCsim::update( double dt ) {
       fgSetDouble("/engines/engine/cranking", 1);
       fgSetDouble("/engines/engine/running", 1);
       if ( !strcmp(uiuc_type->getStringValue(), "uiuc-prop")) {
-	// uiuc prop driven airplane, e.g. Wright Flyer
+        // uiuc prop driven airplane, e.g. Wright Flyer
       }
       else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-jet")) {
-	// uiuc jet aircraft, e.g. a4d
-	// used for setting the sound
-	fgSetDouble("/engines/engine/n1", (75 + (globals->get_controls()->get_throttle( 0 ) * 100.0 )/400));
-	fgSetDouble("/engines/engine/prop-thrust", (4000 + F_X_engine/2));
-	// used for setting the instruments
-	fgSetDouble("/engines/engine[0]/n1", (50 + (globals->get_controls()->get_throttle( 0 ) * 50)));
+        // uiuc jet aircraft, e.g. a4d
+        // used for setting the sound
+        fgSetDouble("/engines/engine/n1", (75 + (globals->get_controls()->get_throttle( 0 ) * 100.0 )/400));
+        fgSetDouble("/engines/engine/prop-thrust", (4000 + F_X_engine/2));
+        // used for setting the instruments
+        fgSetDouble("/engines/engine[0]/n1", (50 + (globals->get_controls()->get_throttle( 0 ) * 50)));
       }
       else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-sailplane")) {
-	// uiuc sailplane, e.g. asw20
-	fgSetDouble("/engines/engine/cranking", 0);
+        // uiuc sailplane, e.g. asw20
+        fgSetDouble("/engines/engine/cranking", 0);
       }
       else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-hangglider")) {
-	// uiuc hang glider, e.g. airwave
-	fgSetDouble("/engines/engine/cranking", 0);
+        // uiuc hang glider, e.g. airwave
+        fgSetDouble("/engines/engine/cranking", 0);
       }
       else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-ornithopter")) {
-	// flapping wings
-	fgSetDouble("/canopy/position-norm", 0);
-	fgSetDouble("/wing-phase/position-norm", sin(flapper_phi - 3 * LS_PI / 2));
-	fgSetDouble("/wing-phase/position-deg", flapper_phi*RAD_TO_DEG);
-	fgSetDouble("/wing-phase/position-one", 1);
-	fgSetDouble("/thorax/volume", 0);
-	fgSetDouble("/thorax/rpm",    0);
-	//	fgSetDouble("/thorax/volume", ((1+sin(2*(flapper_phi+LS_PI)))/2));
-	//	fgSetDouble("/thorax/rpm",    ((1+sin(2*(flapper_phi+LS_PI)))/2));
+        // flapping wings
+        fgSetDouble("/canopy/position-norm", 0);
+        fgSetDouble("/wing-phase/position-norm", sin(flapper_phi - 3 * LS_PI / 2));
+        fgSetDouble("/wing-phase/position-deg", flapper_phi*RAD_TO_DEG);
+        fgSetDouble("/wing-phase/position-one", 1);
+        fgSetDouble("/thorax/volume", 0);
+        fgSetDouble("/thorax/rpm",    0);
+        //        fgSetDouble("/thorax/volume", ((1+sin(2*(flapper_phi+LS_PI)))/2));
+        //        fgSetDouble("/thorax/rpm",    ((1+sin(2*(flapper_phi+LS_PI)))/2));
       }
     }
 
@@ -411,10 +411,10 @@ void FGLaRCsim::update( double dt ) {
     // add Gamma_horiz_deg to properties, mss 021213
     if (use_gamma_horiz_on_speed) {
       if (V_rel_wind > gamma_horiz_on_speed) {
-	fgSetDouble("/orientation/gamma-horiz-deg", (Gamma_horiz_rad * RAD_TO_DEG));
+        fgSetDouble("/orientation/gamma-horiz-deg", (Gamma_horiz_rad * RAD_TO_DEG));
       }
       else {
-	fgSetDouble("/orientation/gamma-horiz-deg",  fgGetDouble("/orientation/heading-deg"));
+        fgSetDouble("/orientation/gamma-horiz-deg",  fgGetDouble("/orientation/heading-deg"));
       }
     }
     else {
@@ -432,7 +432,7 @@ void FGLaRCsim::update( double dt ) {
 
     // but lets restore our original bogus altitude when we are done
     if ( save_alt < -9000.0 ) {
-	set_Altitude( save_alt );
+        set_Altitude( save_alt );
     }
 }
 
@@ -647,9 +647,9 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     // Velocities
     _set_Velocities_Local( V_north, V_east, V_down );
     // set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground, 
-    // 		     V_down_rel_ground );
+    //                      V_down_rel_ground );
     _set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
-				   V_down_airmass );
+                                   V_down_airmass );
     // set_Velocities_Local_Rel_Airmass( V_north_rel_airmass, 
     //                          V_east_rel_airmass, V_down_rel_airmass );
     // set_Velocities_Gust( U_gust, V_gust, W_gust );
@@ -675,9 +675,9 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Mach_number( Mach_number );
 
     SG_LOG( SG_FLIGHT, SG_DEBUG, "lon = " << Longitude 
-	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
-	    << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
-	    << " radius_to_vehicle = " << Radius_to_vehicle );
+            << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
+            << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
+            << " radius_to_vehicle = " << Radius_to_vehicle );
 
     double tmp_lon_geoc = Lon_geocentric;
     while ( tmp_lon_geoc < -SGD_PI ) { tmp_lon_geoc += SGD_2PI; }
@@ -689,7 +689,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
 
     // Positions
     _set_Geocentric_Position( Lat_geocentric, tmp_lon_geoc, 
-			      Radius_to_vehicle );
+                              Radius_to_vehicle );
     _set_Geodetic_Position( Latitude, tmp_lon, Altitude );
     _set_Euler_Angles( Phi, Theta, Psi );
 
@@ -757,23 +757,23 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     // cout << "climb rate = " << -V_down * 60 << endl;
 
     if ( !strcmp(aero->getStringValue(), "uiuc") ) {
-	if (pilot_elev_no) {
-	    globals->get_controls()->set_elevator(Long_control);
-	    globals->get_controls()->set_elevator_trim(Long_trim);
-	    //	    controls.set_elevator(Long_control);
-	    //	    controls.set_elevator_trim(Long_trim);
+        if (pilot_elev_no) {
+            globals->get_controls()->set_elevator(Long_control);
+            globals->get_controls()->set_elevator_trim(Long_trim);
+            //            controls.set_elevator(Long_control);
+            //            controls.set_elevator_trim(Long_trim);
         }
-	if (pilot_ail_no) {
+        if (pilot_ail_no) {
             globals->get_controls()->set_aileron(Lat_control);
-            //	  controls.set_aileron(Lat_control);
+            //          controls.set_aileron(Lat_control);
         }
-	if (pilot_rud_no) {
+        if (pilot_rud_no) {
             globals->get_controls()->set_rudder(Rudder_pedal);
-            //	  controls.set_rudder(Rudder_pedal);
+            //          controls.set_rudder(Rudder_pedal);
         }
-	if (pilot_throttle_no) {
+        if (pilot_throttle_no) {
             globals->get_controls()->set_throttle(0,Throttle_pct);
-            //	  controls.set_throttle(0,Throttle_pct);
+            //          controls.set_throttle(0,Throttle_pct);
         }
     }
 
@@ -810,9 +810,9 @@ void FGLaRCsim::snap_shot(void) {
     lsic->SetHeadingRadIC( get_Psi() );
     lsic->SetClimbRateFpsIC( get_Climb_Rate() );
     lsic->SetVNEDAirmassFpsIC( get_V_north_airmass(),
-			       get_V_east_airmass(),
-			       get_V_down_airmass() );
-}				
+                               get_V_east_airmass(),
+                               get_V_down_airmass() );
+}                                
 
 //Positions
 void FGLaRCsim::set_Latitude(double lat) {
@@ -841,7 +841,7 @@ void FGLaRCsim::set_Altitude(double alt) {
 
 void FGLaRCsim::set_V_calibrated_kts(double vc) {
     SG_LOG( SG_FLIGHT, SG_INFO, 
-	    "FGLaRCsim::set_V_calibrated_kts: " << vc  );
+            "FGLaRCsim::set_V_calibrated_kts: " << vc  );
     snap_shot();
     lsic->SetVcalibratedKtsIC(vc);
     set_ls();
@@ -858,7 +858,7 @@ void FGLaRCsim::set_Mach_number(double mach) {
 
 void FGLaRCsim::set_Velocities_Local( double north, double east, double down ){
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_local: " 
-	    << north << "  " << east << "  " << down   );
+            << north << "  " << east << "  " << down   );
     snap_shot();
     lsic->SetVNEDFpsIC(north, east, down);
     set_ls();
@@ -867,7 +867,7 @@ void FGLaRCsim::set_Velocities_Local( double north, double east, double down ){
 
 void FGLaRCsim::set_Velocities_Body( double u, double v, double w){
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_Body: " 
-	    << u << "  " << v << "  " << w   );
+            << u << "  " << v << "  " << w   );
     snap_shot();
     lsic->SetUVWFpsIC(u,v,w);
     set_ls();
@@ -877,7 +877,7 @@ void FGLaRCsim::set_Velocities_Body( double u, double v, double w){
 //Euler angles 
 void FGLaRCsim::set_Euler_Angles( double phi, double theta, double psi ) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Euler_angles: " 
-	    << phi << "  " << theta << "  " << psi   );
+            << phi << "  " << theta << "  " << psi   );
 
     snap_shot();
     lsic->SetPitchAngleRadIC(theta);
@@ -914,10 +914,10 @@ void FGLaRCsim::set_AltitudeAGL(double altagl) {
 
 /*  getting a namespace conflict...
 void FGLaRCsim::set_Velocities_Local_Airmass (double wnorth, 
-					      double weast, 
-					      double wdown ) {
+                                              double weast, 
+                                              double wdown ) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_Local_Airmass: " 
-	    << wnorth << "  " << weast << "  " << wdown );
+            << wnorth << "  " << weast << "  " << wdown );
     snap_shot();
     lsic->SetVNEDAirmassFpsIC( wnorth, weast, wdown );
     set_ls();
@@ -927,23 +927,23 @@ void FGLaRCsim::set_Velocities_Local_Airmass (double wnorth,
 
 void FGLaRCsim::set_Static_pressure(double p) { 
     SG_LOG( SG_FLIGHT, SG_INFO, 
-	    "FGLaRCsim::set_Static_pressure: " << p  );
+            "FGLaRCsim::set_Static_pressure: " << p  );
     SG_LOG( SG_FLIGHT, SG_INFO, 
-	    "LaRCsim does not support externally supplied atmospheric data" );
+            "LaRCsim does not support externally supplied atmospheric data" );
 }
 
 void FGLaRCsim::set_Static_temperature(double T) { 
     SG_LOG( SG_FLIGHT, SG_INFO, 
-	    "FGLaRCsim::set_Static_temperature: " << T  );
+            "FGLaRCsim::set_Static_temperature: " << T  );
     SG_LOG( SG_FLIGHT, SG_INFO, 
-	    "LaRCsim does not support externally supplied atmospheric data" );
+            "LaRCsim does not support externally supplied atmospheric data" );
 
 }
 
 void FGLaRCsim::set_Density(double rho) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Density: " << rho  );
     SG_LOG( SG_FLIGHT, SG_INFO, 
-	    "LaRCsim does not support externally supplied atmospheric data" );
+            "LaRCsim does not support externally supplied atmospheric data" );
 
 }
 

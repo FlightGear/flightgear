@@ -1,32 +1,32 @@
 /***************************************************************************
 
-  TITLE:	uiuc_aero	
-		
+  TITLE:        uiuc_aero        
+                
 ----------------------------------------------------------------------------
 
-  FUNCTION:	aerodynamics, engine and gear model
-
-----------------------------------------------------------------------------
-
-  MODULE STATUS:	developmental
+  FUNCTION:        aerodynamics, engine and gear model
 
 ----------------------------------------------------------------------------
 
-  GENEALOGY:		Equations based on Part 1 of Roskam's S&C text
+  MODULE STATUS:        developmental
 
 ----------------------------------------------------------------------------
 
-  DESIGNED BY:		Bipin Sehgal	
-		
-  CODED BY:		Bipin Sehgal
-		
-  MAINTAINED BY:	Rob Deters and Glen Dimock
+  GENEALOGY:                Equations based on Part 1 of Roskam's S&C text
+
+----------------------------------------------------------------------------
+
+  DESIGNED BY:                Bipin Sehgal        
+                
+  CODED BY:                Bipin Sehgal
+                
+  MAINTAINED BY:        Rob Deters and Glen Dimock
 
 ----------------------------------------------------------------------------
 
   MODIFICATION HISTORY:
-		
-  DATE		PURPOSE												BY
+                
+  DATE                PURPOSE                                                                                                BY
   3/17/00   Initial test release  
   3/09/01   Added callout to UIUC gear function.   (DPM)
   6/18/01   Added call out to UIUC record routine (RD)
@@ -45,7 +45,7 @@
 
 ----------------------------------------------------------------------------
 
-  INPUTS:	
+  INPUTS:        
 
 ----------------------------------------------------------------------------
 
@@ -69,7 +69,7 @@ void uiuc_init_2_wrapper()
     // On first time through initialize UIUC aircraft model
     if (init==0) {
         init=-1;
-	uiuc_defaults_inits();
+        uiuc_defaults_inits();
         uiuc_init_aeromodel();
     }
 

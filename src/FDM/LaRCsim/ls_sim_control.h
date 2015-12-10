@@ -1,42 +1,42 @@
 /***************************************************************************
 
-	TITLE:		ls_sim_control.h
-	
+        TITLE:                ls_sim_control.h
+        
 ----------------------------------------------------------------------------
 
-	FUNCTION:	LaRCSim simulation control parameters header file
-
-----------------------------------------------------------------------------
-
-	MODULE STATUS:	developmental
+        FUNCTION:        LaRCSim simulation control parameters header file
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:	Created 18 DEC 1993 by Bruce Jackson
+        MODULE STATUS:        developmental
 
 ----------------------------------------------------------------------------
 
-	DESIGNED BY:	B. Jackson
-	
-	CODED BY:	B. Jackson
-	
-	MAINTAINED BY:	guess who
+        GENEALOGY:        Created 18 DEC 1993 by Bruce Jackson
 
 ----------------------------------------------------------------------------
 
-	MODIFICATION HISTORY:
-	
-	DATE	PURPOSE						BY
-	
-	940204	Added "overrun" flag to indicate non-real-time frame.
-	940210	Added "vision" flag to indicate use of shared memory.
-	940513	Added "max_tape_channels" and "max_time_slices" EBJ
-	950308	Increased size of time_stamp and date_string to include
-		terminating null char. 				EBJ
-	950314	Addedf "paused" flag to make this global (was local to
-		ls_cockpit routine).				EBJ
-	950406	Removed tape_channels parameter, and added end_time, model_hz,
-		and term_update_hz parameters.			EBJ	
+        DESIGNED BY:        B. Jackson
+        
+        CODED BY:        B. Jackson
+        
+        MAINTAINED BY:        guess who
+
+----------------------------------------------------------------------------
+
+        MODIFICATION HISTORY:
+        
+        DATE        PURPOSE                                                BY
+        
+        940204        Added "overrun" flag to indicate non-real-time frame.
+        940210        Added "vision" flag to indicate use of shared memory.
+        940513        Added "max_tape_channels" and "max_time_slices" EBJ
+        950308        Increased size of time_stamp and date_string to include
+                terminating null char.                                 EBJ
+        950314        Addedf "paused" flag to make this global (was local to
+                ls_cockpit routine).                                EBJ
+        950406        Removed tape_channels parameter, and added end_time, model_hz,
+                and term_update_hz parameters.                        EBJ        
 
 $Header$
 $Log$
@@ -79,7 +79,7 @@ Initial Flight Gear revision.
  * Modified write_cmp2 flag to write_asc1 flag, since XPLOT 4.00 doesn't
  * support cmp2.  Also added RCS header and log entries in header.
  *
-		
+                
 
 --------------------------------------------------------------------------*/
 
@@ -95,37 +95,37 @@ Initial Flight Gear revision.
 typedef struct {
 
   enum { batch, terminal, GLmouse, cockpit } sim_type;
-  char simname[64];	/* name of simulation */
-  int run_number;	/* run number of this session			  */
-  char date_string[7]; 	/* like "931220" */
-  char time_stamp[9];  	/* like "13:00:00" */
+  char simname[64];        /* name of simulation */
+  int run_number;        /* run number of this session                          */
+  char date_string[7];         /* like "931220" */
+  char time_stamp[9];          /* like "13:00:00" */
 #ifdef COMPILE_THIS_CODE_THIS_USELESS_CODE
   char userid[L_cuserid]; /* who is running this sim */
 #endif /* COMPILE_THIS_CODE_THIS_USELESS_CODE */
-  long time_slices;	/* number of points that can be recorded (circ buff) */
-  int write_av;		/* will be writing out an Agile_VU file after run */
-  int write_mat;	/* will be writing out a matrix script of session */
-  int write_tab;	/* will be writing out a tab-delimited time history */
-  int write_asc1;	/* will be writing out a GetData ASCII 1 file */
-  int save_spacing;	/* spacing between data points when recording
-			   data to memory; 0 = every point, 1 = every 
-			   other point; 2 = every fourth point, etc. */
-  int write_spacing;	/* spacing between data points when writing
-			   output files; 0 = every point, 1 = every 
-			   other point; 2 = every fourth point, etc. */
-  int overrun;		/* indicates, if non-zero, a frame overrun
-			   occurred in the previous frame. Suitable for
-			   setting a display flag or writing an error
-			   message.					*/
-  int vision;		/* indicates, if non-zero, marriage to LaRC VISION
-			   software (developed A. Dare and J. Burley of the 
-			   former Cockpit Technologies Branch) */
-  int debug;		/* indicates, if non-zero, to operate in debug mode
-			   which implies disable double-buffering and synch.
-			   attempts to avoid errors */
-  int paused;		/* indicates simulation is paused */
-  float end_time;	/* end of simulation run value */
-  float model_hz;	/* current inner loop frame rate */
+  long time_slices;        /* number of points that can be recorded (circ buff) */
+  int write_av;                /* will be writing out an Agile_VU file after run */
+  int write_mat;        /* will be writing out a matrix script of session */
+  int write_tab;        /* will be writing out a tab-delimited time history */
+  int write_asc1;        /* will be writing out a GetData ASCII 1 file */
+  int save_spacing;        /* spacing between data points when recording
+                           data to memory; 0 = every point, 1 = every 
+                           other point; 2 = every fourth point, etc. */
+  int write_spacing;        /* spacing between data points when writing
+                           output files; 0 = every point, 1 = every 
+                           other point; 2 = every fourth point, etc. */
+  int overrun;                /* indicates, if non-zero, a frame overrun
+                           occurred in the previous frame. Suitable for
+                           setting a display flag or writing an error
+                           message.                                        */
+  int vision;                /* indicates, if non-zero, marriage to LaRC VISION
+                           software (developed A. Dare and J. Burley of the 
+                           former Cockpit Technologies Branch) */
+  int debug;                /* indicates, if non-zero, to operate in debug mode
+                           which implies disable double-buffering and synch.
+                           attempts to avoid errors */
+  int paused;                /* indicates simulation is paused */
+  float end_time;        /* end of simulation run value */
+  float model_hz;        /* current inner loop frame rate */
   float term_update_hz; /* current terminal refresh frequency */
 
 } SIM_CONTROL;

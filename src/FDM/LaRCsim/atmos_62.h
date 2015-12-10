@@ -18,7 +18,7 @@ extern "C" {
 
 
 void ls_atmos( SCALAR altitude, SCALAR * sigma, SCALAR * v_sound, 
-		SCALAR * t_amb, SCALAR * p_amb );
+                SCALAR * t_amb, SCALAR * p_amb );
 
 #ifdef __cplusplus
 }
