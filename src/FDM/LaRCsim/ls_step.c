@@ -297,7 +297,7 @@ Initial Flight Gear revision.
 
 --------------------------------------------------------------------------*/
 
-//#include <FDM/UIUCModel/uiuc_wrapper.h>
+#include "FDM/UIUCModel/uiuc_wrapper.h"
 
 #include "ls_types.h"
 #include "ls_constants.h"
@@ -308,6 +308,7 @@ Initial Flight Gear revision.
 #include "ls_step.h"
 #include "ls_geodesy.h"
 #include "ls_gravity.h"
+#include "default_model_routines.h"
 /* #include "ls_sim_control.h" */
 #include <math.h>
 
