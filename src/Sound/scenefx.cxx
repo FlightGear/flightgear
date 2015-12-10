@@ -29,15 +29,19 @@
 #endif
 
 #include <stdio.h>
+#include <string>
 
 #include "scenefx.hxx"
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
+#include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
+#include <simgear/sound/xmlsound.hxx>
+
 
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
@@ -50,6 +54,7 @@ typedef boost::shared_ptr<FGSceneFX> FGSceneFXRef;
 
 FGSceneFX::FGSceneFX()
 {
+    _props = _props = globals->get_props();
     _enabled = fgGetNode("/sim/sound/scene/enabled", true);
     _volume = fgGetNode("/sim/sound/scene/volume", true);
     _damping = fgGetNode("/sim/sound/model-damping", true);
@@ -61,15 +66,20 @@ FGSceneFX::FGSceneFX()
       .method("damping", &FGSceneFX::model_damping);
 }
 
-FGSceneFX::~FGSceneFX()
-{
-}
-
 void FGSceneFX::unbind()
 {
-    if (_smgr) {
+    if (_smgr)
+    {
         _smgr->remove(_refname);
     }
+}
+
+FGSceneFX::~FGSceneFX()
+{
+    for (unsigned int i = 0; i < _sound.size(); i++ ) {
+        delete _sound[i];
+    }
+    _sound.clear();
 }
 
 void FGSceneFX::init()
@@ -77,10 +87,41 @@ void FGSceneFX::init()
     if (!_smgr) {
         return;
     }
+
+    SGPath path(globals->get_fg_root());
+    path.append("Sounds/sounds.xml");
+
+    SGPropertyNode root;
+    try {
+        readProperties(path.str(), &root);
+    } catch (const sg_exception &) {
+        SG_LOG(SG_SOUND, SG_ALERT,
+               "Error reading file '" << path.str() << '\'');
+        return;
+    }
+
+    SGPropertyNode *node = root.getNode("fx");
+    if(node) {
+        for (int i = 0; i < node->nChildren(); ++i) {
+            SGXmlSound *soundfx = new SGXmlSound();
+
+            try {
+                soundfx->init( _props, node->getChild(i), this, 0, path.dir() );
+                _sound.push_back( soundfx );
+            } catch ( sg_exception &e ) {
+                SG_LOG(SG_SOUND, SG_ALERT, e.getFormattedMessage());
+                delete soundfx;
+            }
+        }
+    }
 }
 
 void FGSceneFX::reinit()
 {
+    for ( unsigned int i = 0; i < _sound.size(); i++ ) {
+        delete _sound[i];
+    }
+    _sound.clear();
     init();
 }
 
@@ -95,6 +136,11 @@ void FGSceneFX::update (double dt)
         float fact = 1.0f - _damping->getFloatValue();
         set_volume(_volume->getFloatValue() * fact);
         resume();
+
+        // update sound effects if not paused
+        for ( unsigned int i = 0; i < _sound.size(); i++ ) {
+            _sound[i]->update(dt);
+        }
 
         SGSampleGroup::update(dt);
     }

@@ -32,6 +32,8 @@
 
 #define _DEFAULT_MAX_DISTANCE		100000.0
 
+class SGXmlSound;
+
 /**
  * Container for FlightGear envirnonmetal sound effects.
  */
@@ -77,6 +79,9 @@ private:
     SGPropertyNode_ptr _enabled;
     SGPropertyNode_ptr _volume;
     SGPropertyNode_ptr _damping;	// model sound damping
+
+    std::vector<SGXmlSound *> _sound;
+    SGPropertyNode_ptr _props;
 
     const char* full_name(const std::string& refname, size_t num);
     SGSoundSample *find(const std::string& refname, size_t num);
