@@ -108,7 +108,7 @@ string ParseFile :: getToken(string inputLine, int tokenNo)
 
   while (tokencounter < tokenNo)
   {
-    if ((pos1 == inputLine.npos) || (pos1 == -1) || (pos == -1) )
+    if ( (pos1 == inputLine.npos) || (pos1 == string::npos) || (pos == string::npos) )
           return ""; //return an empty string if tokenNo exceeds the No of tokens in the line
         
         inputLine = inputLine.substr(pos1 , MAXLINE);
@@ -117,7 +117,7 @@ string ParseFile :: getToken(string inputLine, int tokenNo)
         tokencounter ++;
   }
 
-  if (pos1== -1 || pos == -1)
+  if (pos1== string::npos || pos == string::npos)
     return "";
   else
       return inputLine.substr(pos , pos1-pos); // return the desired token 
