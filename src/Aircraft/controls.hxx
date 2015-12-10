@@ -639,6 +639,7 @@ public:
     // controls/autoflight/autopilot[n]/
     void set_autopilot_engage( int ap, bool val );
 
+    static const char* subsystemName() { return "controls"; }
 private:
     inline void do_autocoordination() {
       // check for autocoordination

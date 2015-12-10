@@ -123,9 +123,6 @@ private:
     // Global autopilot "route"
     FGRouteMgr *route_mgr;
 
-    // control input state
-    FGControls *controls;
-
     // viewer manager
     FGViewMgr *viewmgr;
 
@@ -180,19 +177,36 @@ public:
     virtual FGRenderer *get_renderer () const;
     void set_renderer(FGRenderer* render);
     
-    virtual SGSubsystemMgr *get_subsystem_mgr () const;
+    SGSubsystemMgr *get_subsystem_mgr () const;
 
-    virtual SGSubsystem *get_subsystem (const char * name);
+    SGSubsystem *get_subsystem (const char * name) const;
 
-    virtual void add_subsystem (const char * name,
+    template<class T>
+    T* get_subsystem() const
+    {
+        return dynamic_cast<T*>(get_subsystem(T::subsystemName()));
+    }
+
+
+    void add_subsystem (const char * name,
                                 SGSubsystem * subsystem,
                                 SGSubsystemMgr::GroupType
                                 type = SGSubsystemMgr::GENERAL,
                                 double min_time_sec = 0);
 
-    virtual SGEventMgr *get_event_mgr () const;
+    template<class T>
+    T* add_new_subsystem (SGSubsystemMgr::GroupType
+                                type = SGSubsystemMgr::GENERAL,
+                                double min_time_sec = 0)
+    {
+        T* sub = new T;
+        add_subsystem(T::subsystemName(), sub, type, min_time_sec);
+        return sub;
+    }
 
-    virtual SGSoundMgr *get_soundmgr () const;
+    SGEventMgr *get_event_mgr () const;
+
+    SGSoundMgr *get_soundmgr () const;
 
     inline double get_sim_time_sec () const { return sim_time_sec; }
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
@@ -293,9 +307,6 @@ public:
     inline SGMaterialLib *get_matlib() const { return matlib; }
     void set_matlib( SGMaterialLib *m );
 
-    inline FGControls *get_controls() const { return controls; }
-    inline void set_controls( FGControls *c ) { controls = c; }
-
     inline FGViewMgr *get_viewmgr() const { return viewmgr; }
     inline void set_viewmgr( FGViewMgr *vm ) { viewmgr = vm; }
     FGViewer *get_current_view() const;
@@ -336,6 +347,8 @@ public:
     inline void set_initial_waypoints (string_list *list) {
         initial_waypoints = list;
     }
+
+    FGControls *get_controls() const;
 
     FGScenery * get_scenery () const;
     void set_scenery ( FGScenery *s );

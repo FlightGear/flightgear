@@ -78,7 +78,6 @@ FGControls::FGControls() :
     }
   
     reset_all();
-    globals->set_controls( this );
 }
 
 
@@ -162,9 +161,8 @@ void FGControls::reset_all()
 
 
 // Destructor
-FGControls::~FGControls() {
-    if (globals)
-        globals->set_controls( NULL );
+FGControls::~FGControls()
+{
 }
 
 

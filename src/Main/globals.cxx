@@ -160,7 +160,6 @@ FGGlobals::FGGlobals() :
     time_params( NULL ),
     ephem( NULL ),
     route_mgr( NULL ),
-    controls( NULL ),
     viewmgr( NULL ),
     commands( SGCommandMgr::instance() ),
     channel_options_list( NULL ),
@@ -509,7 +508,7 @@ FGGlobals::get_subsystem_mgr () const
 }
 
 SGSubsystem *
-FGGlobals::get_subsystem (const char * name)
+FGGlobals::get_subsystem (const char * name) const
 {
     if (!subsystem_mgr) {
         return NULL;
@@ -749,6 +748,11 @@ void FGGlobals::set_tile_mgr ( FGTileMgr *t )
 void FGGlobals::set_matlib( SGMaterialLib *m )
 {
     matlib = m;
+}
+
+FGControls *FGGlobals::get_controls() const
+{
+    return get_subsystem<FGControls>();
 }
 
 FGSampleQueue* FGGlobals::get_chatter_queue() const

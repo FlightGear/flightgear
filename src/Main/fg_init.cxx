@@ -849,7 +849,7 @@ void fgCreateSubsystems(bool duringReset) {
     // Initialize the controls subsystem.
     ////////////////////////////////////////////////////////////////////
     
-    globals->add_subsystem("controls", new FGControls, SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<FGControls>(SGSubsystemMgr::GENERAL);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the input subsystem.
