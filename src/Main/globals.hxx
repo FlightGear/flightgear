@@ -120,9 +120,6 @@ private:
     // Material properties library
     SGSharedPtr<SGMaterialLib> matlib;
 
-    // viewer manager
-    FGViewMgr *viewmgr;
-
     SGCommandMgr *commands;
 
     // list of serial port-like configurations
@@ -131,12 +128,6 @@ private:
     // A list of initial waypoints that are read from the command line
     // and or flight-plan file during initialization
     string_list *initial_waypoints;
-
-    // FlightGear scenery manager
-    SGSharedPtr<FGScenery> _scenery;
-
-    // Tile manager
-    SGSharedPtr<FGTileMgr> _tile_mgr;
 
     FGFontCache *fontcache;
 
@@ -304,10 +295,6 @@ public:
     inline SGMaterialLib *get_matlib() const { return matlib; }
     void set_matlib( SGMaterialLib *m );
 
-    inline FGViewMgr *get_viewmgr() const { return viewmgr; }
-    inline void set_viewmgr( FGViewMgr *vm ) { viewmgr = vm; }
-    FGViewer *get_current_view() const;
-
     inline SGPropertyNode *get_props () { return props; }
 
     /**
@@ -345,13 +332,14 @@ public:
         initial_waypoints = list;
     }
 
+    FGViewMgr *get_viewmgr() const;
+    FGViewer *get_current_view() const;
+
     FGControls *get_controls() const;
 
     FGScenery * get_scenery () const;
-    void set_scenery ( FGScenery *s );
 
     FGTileMgr * get_tile_mgr () const;
-    void set_tile_mgr ( FGTileMgr *t );
 
     inline FGFontCache *get_fontcache() const { return fontcache; }
   

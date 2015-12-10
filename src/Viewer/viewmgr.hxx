@@ -73,6 +73,7 @@ public:
 
     void add_view( FGViewer * v );
     
+    static const char* subsystemName() { return "view-mgr"; }
 private:
     void do_bind();
 

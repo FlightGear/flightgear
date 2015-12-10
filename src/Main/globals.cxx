@@ -158,7 +158,6 @@ FGGlobals::FGGlobals() :
     fg_home( "" ),
     time_params( NULL ),
     ephem( NULL ),
-    viewmgr( NULL ),
     commands( SGCommandMgr::instance() ),
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
@@ -217,9 +216,9 @@ FGGlobals::~FGGlobals()
     subsystem_mgr->unbind();
 
     subsystem_mgr->remove("aircraft-model");
-    subsystem_mgr->remove("tile-manager");
     subsystem_mgr->remove("model-manager");
-    _tile_mgr.clear();
+
+    subsystem_mgr->remove(FGTileMgr::subsystemName());
 
     osg::ref_ptr<osgViewer::Viewer> vw(renderer->getViewer());
     if (vw) {
@@ -238,10 +237,10 @@ FGGlobals::~FGGlobals()
     }
 
     osgDB::Registry::instance()->clearObjectCache();
+    subsystem_mgr->remove(FGScenery::subsystemName());
 
     // renderer touches subsystems during its destruction
     set_renderer(NULL);
-    _scenery.clear();
     _chatter_queue.clear();
 
     delete subsystem_mgr;
@@ -694,12 +693,6 @@ FGGlobals::saveUserSettings()
     }
 }
 
-FGViewer *
-FGGlobals::get_current_view () const
-{
-  return viewmgr->get_current_view();
-}
-
 long int FGGlobals::get_warp() const
 {
   return fgGetInt("/sim/time/warp");
@@ -722,22 +715,23 @@ void FGGlobals::set_warp_delta( long int d )
 
 FGScenery* FGGlobals::get_scenery () const
 {
-    return _scenery.get();
-}
-
-void FGGlobals::set_scenery ( FGScenery *s )
-{
-    _scenery = s;
+    return get_subsystem<FGScenery>();
 }
 
 FGTileMgr* FGGlobals::get_tile_mgr () const
 {
-    return _tile_mgr.get();
+    return get_subsystem<FGTileMgr>();
 }
 
-void FGGlobals::set_tile_mgr ( FGTileMgr *t )
+FGViewMgr *FGGlobals::get_viewmgr() const
 {
-    _tile_mgr = t;
+    return get_subsystem<FGViewMgr>();
+}
+
+FGViewer* FGGlobals::get_current_view () const
+{
+    FGViewMgr* vm = get_viewmgr();
+    return vm ? vm->get_current_view() : 0;
 }
 
 void FGGlobals::set_matlib( SGMaterialLib *m )

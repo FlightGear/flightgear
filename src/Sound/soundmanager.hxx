@@ -74,6 +74,8 @@ public:
     ~FGSoundManager() {}
 
     void update(double dt) {}
+
+    static const char* subsystemName() { return "sound"; }
 };
 
 #endif // ENABLE_AUDIO_SUPPORT

@@ -691,7 +691,7 @@ void fgCreateSubsystems(bool duringReset) {
     // to be updated in every loop.
     // Sound manager is updated last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
-    globals->add_subsystem("sound", new FGSoundManager, SGSubsystemMgr::SOUND);
+    globals->add_new_subsystem<FGSoundManager>(SGSubsystemMgr::SOUND);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the event manager subsystem.
@@ -716,7 +716,7 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
     // Add the FlightGear property utilities.
     ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("airport-dynamics", new flightgear::AirportDynamicsManager);
+    globals->add_new_subsystem<flightgear::AirportDynamicsManager>();
 
     ////////////////////////////////////////////////////////////////////
     // Add the performance monitoring system.
@@ -897,10 +897,7 @@ void fgCreateSubsystems(bool duringReset) {
     globals->add_subsystem("aircraft-model", new FGAircraftModel, SGSubsystemMgr::DISPLAY);
     globals->add_subsystem("model-manager", new FGModelMgr, SGSubsystemMgr::DISPLAY);
 
-    globals->add_subsystem("view-manager", new FGViewMgr, SGSubsystemMgr::DISPLAY);
-
-    globals->add_subsystem("tile-manager", globals->get_tile_mgr(), 
-      SGSubsystemMgr::DISPLAY);
+    globals->add_new_subsystem<FGViewMgr>(SGSubsystemMgr::DISPLAY);
 }
 
 void fgPostInitSubsystems()
@@ -1050,8 +1047,9 @@ void fgStartNewReset()
     
     // order is important here since tile-manager shutdown needs to
     // access the scenery object
-    globals->set_tile_mgr(NULL);
-    globals->set_scenery(NULL);
+    subsystemManger->remove(FGTileMgr::subsystemName());
+    subsystemManger->remove(FGScenery::subsystemName());
+
     FGScenery::getPagerSingleton()->clearRequests();
     flightgear::CameraGroup::setDefault(NULL);
     

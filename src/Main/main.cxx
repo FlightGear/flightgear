@@ -260,10 +260,10 @@ static void fgIdleFunction ( void ) {
         // Initialize the TG scenery subsystem.
         ////////////////////////////////////////////////////////////////////
         
-        globals->set_scenery( new FGScenery );
+        globals->add_new_subsystem<FGScenery>(SGSubsystemMgr::DISPLAY);
         globals->get_scenery()->init();
         globals->get_scenery()->bind();
-        globals->set_tile_mgr( new FGTileMgr );
+        globals->add_new_subsystem<FGTileMgr>(SGSubsystemMgr::DISPLAY);
         
         fgSplashProgress("creating-subsystems");
     } else if (( idle_state == 7 ) || (idle_state == 2007)) {
