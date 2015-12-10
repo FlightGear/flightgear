@@ -779,7 +779,7 @@ void fgCreateSubsystems(bool duringReset) {
 
     globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance("autopilot"), SGSubsystemMgr::FDM );
     globals->add_subsystem( "xml-proprules", FGXMLAutopilotGroup::createInstance("property-rule"), SGSubsystemMgr::GENERAL );
-    globals->add_subsystem( "route-manager", new FGRouteMgr );
+    globals->add_new_subsystem<FGRouteMgr>();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the Input-Output subsystem

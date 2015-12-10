@@ -126,6 +126,8 @@ public:
     static void resetPagerSingleton();
     
     flightgear::SceneryPager* getPager() { return _pager.get(); }
+
+    static const char* subsystemName() { return "scenery"; }
 };
 
 

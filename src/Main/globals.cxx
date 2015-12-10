@@ -50,7 +50,6 @@
 #include <Autopilot/route_mgr.hxx>
 #include <GUI/FGFontCache.hxx>
 #include <GUI/gui.h>
-#include <MultiPlayer/multiplaymgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Navaids/navlist.hxx>
@@ -159,7 +158,6 @@ FGGlobals::FGGlobals() :
     fg_home( "" ),
     time_params( NULL ),
     ephem( NULL ),
-    route_mgr( NULL ),
     viewmgr( NULL ),
     commands( SGCommandMgr::instance() ),
     channel_options_list( NULL ),
@@ -252,7 +250,7 @@ FGGlobals::~FGGlobals()
 
     delete time_params;
     set_matlib(NULL);
-    delete route_mgr;
+
     delete channel_options_list;
     delete initial_waypoints;
     delete fontcache;
@@ -529,10 +527,7 @@ FGGlobals::add_subsystem (const char * name,
 SGSoundMgr *
 FGGlobals::get_soundmgr () const
 {
-    if (subsystem_mgr)
-        return (SGSoundMgr*) subsystem_mgr->get_subsystem("sound");
-
-    return NULL;
+    return get_subsystem<SGSoundMgr>();
 }
 
 SGEventMgr *

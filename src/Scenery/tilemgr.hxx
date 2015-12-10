@@ -116,6 +116,8 @@ public:
     // notify the tile manahger the material library was reloaded,
     // so it can pass this through to its options object
     void materialLibChanged();
+
+    static const char* subsystemName() { return "tile-mgr"; }
 };
 
 

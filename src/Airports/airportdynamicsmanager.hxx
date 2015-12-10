@@ -48,6 +48,8 @@ public:
     static FGAirportDynamicsRef find(const FGAirportRef& apt);
 
     FGAirportDynamicsRef dynamicsForICAO(const std::string& icao);
+
+    static const char* subsystemName() { return "airport-dynamics"; }
 private:
     typedef std::map<std::string, FGAirportDynamicsRef> ICAODynamicsDict;
     ICAODynamicsDict m_dynamics;

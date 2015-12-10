@@ -100,6 +100,7 @@ public:
   
   flightgear::WayptRef waypointFromString(const std::string& target);
 
+  static const char* subsystemName() { return "route-manager"; }
 private:
     bool commandDefineUserWaypoint(const SGPropertyNode* arg);
     bool commandDeleteUserWaypoint(const SGPropertyNode* arg);

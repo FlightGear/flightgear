@@ -120,9 +120,6 @@ private:
     // Material properties library
     SGSharedPtr<SGMaterialLib> matlib;
 
-    // Global autopilot "route"
-    FGRouteMgr *route_mgr;
-
     // viewer manager
     FGViewMgr *viewmgr;
 
