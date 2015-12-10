@@ -38,9 +38,6 @@
 #include "globals.hxx"
 #include "fg_props.hxx"
 
-
-static bool winding_ccw = true; // FIXME: temporary
-
 static bool frozen = false;	// FIXME: temporary
 
 using std::string;
@@ -361,22 +358,6 @@ getTrackMag ()
   return SGMiscd::normalizePeriodic(0, 360, magtrack );
 }
 
-static bool
-getWindingCCW ()
-{
-  return winding_ccw;
-}
-
-static void
-setWindingCCW (bool state)
-{
-  winding_ccw = state;
-  if ( winding_ccw )
-    glFrontFace ( GL_CCW );
-  else
-    glFrontFace ( GL_CW );
-}
-
 ////////////////////////////////////////////////////////////////////////
 // Tie the properties.
 ////////////////////////////////////////////////////////////////////////
@@ -510,9 +491,6 @@ FGProperties::bind ()
   // Orientation
   _tiedProperties.Tie("/orientation/heading-magnetic-deg", getHeadingMag);
   _tiedProperties.Tie("/orientation/track-magnetic-deg", getTrackMag);
-
-  // Misc. Temporary junk.
-  _tiedProperties.Tie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
 }
 
 void
