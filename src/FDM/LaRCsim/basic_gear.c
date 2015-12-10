@@ -98,7 +98,7 @@ static void clear3( DATA v[] )
 
 void basic_gear()
 {
-char rcsid[] = "junk";
+//char rcsid[] = "junk";
 #define NUM_WHEELS 4
 
 // char gear_strings[NUM_WHEELS][12]={"nose","right main", "left main", "tail skid"};

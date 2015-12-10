@@ -106,7 +106,7 @@ Initial revision.
 
 #define SWAP(a,b) {temp=(a);(a)=(b);(b)=temp;}
 
-static char rcsid[] = "$Id$";
+// static char rcsid[] = "$Id$";
 
 
 int *nr_ivector(long nl, long nh)

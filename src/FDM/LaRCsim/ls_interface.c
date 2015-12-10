@@ -280,7 +280,7 @@ static char  matname[MAX_FILE_NAME_LENGTH]  = "run.m";
 
 
 void ls_stamp( void ) {
-    char rcsid[] = "$Id$";
+    // char rcsid[] = "$Id$";
     char revid[] = "$Revision$";
     char dateid[] = "$Date$";
     struct tm *nowtime;

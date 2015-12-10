@@ -135,7 +135,7 @@ static void clear3( DATA v[] )
 
 void cherokee_gear()
 {
-char rcsid[] = "$Id$";
+// char rcsid[] = "$Id$";
 
   /*
    * Aircraft specific initializations and data goes here

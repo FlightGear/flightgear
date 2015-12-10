@@ -262,7 +262,7 @@ double FlapData::interpolate(double x0, double y0, double x1, double y1, double 
 int FlapData::readIn (ifstream* f){
 
         int i,j,k,l;
-        int count=0;
+        //int count=0;
         char numstr[200];
 
         f->getline(numstr,200);

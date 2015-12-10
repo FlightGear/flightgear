@@ -149,7 +149,7 @@ static void clear3( DATA v[] )
 
 void c172_gear()
 {
-char rcsid[] = "$Id$";
+//char rcsid[] = "$Id$";
 #define NUM_WHEELS 4
 // char gear_strings[NUM_WHEELS][12]={"nose","right main", "left main", "tail skid"};
   /*

@@ -159,7 +159,7 @@ static void clear3( DATA v[] )
 }
 
 void navion_gear( SCALAR dt, int Initialize ) {
-char rcsid[] = "$Id$";
+// char rcsid[] = "$Id$";
 
   /*
    * Aircraft specific initializations and data goes here

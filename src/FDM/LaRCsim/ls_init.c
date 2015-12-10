@@ -128,7 +128,7 @@ Initial Flight Gear revision.
 	OUTPUTS:
 
 --------------------------------------------------------------------------*/
-static char rcsid[] = "$Id$";
+// static char rcsid[] = "$Id$";
 
 #include <string.h>
 #include <stdio.h>
