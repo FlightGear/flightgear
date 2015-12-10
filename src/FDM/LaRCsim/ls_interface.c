@@ -272,10 +272,6 @@ char	*fullname;
 
 static double model_dt;
 static double speedup;
-static char  asc1name[MAX_FILE_NAME_LENGTH] = "run.asc1";
-static char  tabname[MAX_FILE_NAME_LENGTH]  = "run.dat";
-static char  fltname[MAX_FILE_NAME_LENGTH]  = "run.flt";
-static char  matname[MAX_FILE_NAME_LENGTH]  = "run.m";
 
 
 
@@ -347,6 +343,10 @@ int ls_checkopts(argc, argv)	/* check and set options flags */
     int mod_end_time = 0;
     int mod_buf_size = 0;
     float buffer_time, data_rate;
+    char asc1name[MAX_FILE_NAME_LENGTH] = "run.asc1";
+    char tabname[MAX_FILE_NAME_LENGTH]  = "run.dat";
+    char fltname[MAX_FILE_NAME_LENGTH]  = "run.flt";
+    char matname[MAX_FILE_NAME_LENGTH]  = "run.m";
 
     /* set default values */
 
