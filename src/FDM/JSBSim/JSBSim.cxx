@@ -229,6 +229,8 @@ FGJSBsim::FGJSBsim( double dt )
     fgGetNode("/fdm/jsbsim/sim-time-sec", true)->alias( node );
 // end of sim-time-sec deprecation patch
 
+    terrain = fgGetNode("/sim/fdm/surface", true);
+
     fdmex->Setdt( dt );
 
     result = fdmex->LoadModel( aircraft_path.str(),
@@ -1351,8 +1353,6 @@ FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
   SGGeod geodPt = SGGeod::fromCart(SG_FEET_TO_METER*SGVec3d(pt));
   SGQuatd hlToEc = SGQuatd::fromLonLat(geodPt);
   *agl = dot(hlToEc.rotate(SGVec3d(0, 0, 1)), SGVec3d(contact) - SGVec3d(pt));
-
-  static SGPropertyNode_ptr terrain = fgGetNode("/sim/fdm/surface", true);
 
 #ifdef JSBSIM_USE_GROUNDREACTIONS
   bool terrain_active = (terrain->getIntValue("override-level", -1) > 0) ? false : true;

@@ -288,6 +288,8 @@ private:
 
     SGPropertyNode_ptr slaved;
 
+    SGPropertyNode_ptr terrain;
+
     static std::map<std::string,int> TURBULENCE_TYPE_NAMES;
 
     double last_hook_tip[3];

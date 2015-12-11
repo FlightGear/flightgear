@@ -235,7 +235,9 @@ FGAIBase::removeModel()
     }
     else
     {
-        SG_LOG(SG_AI, SG_ALERT, "AIBase: Could not unload model. Missing scenery manager!");
+        aip.clear();
+        _model = 0;
+        _modeldata = 0;
     }
 }
 
