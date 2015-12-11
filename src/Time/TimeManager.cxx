@@ -363,19 +363,19 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
   if ( offset_type == "real" ) {
       warp = 0;
   } else if ( offset_type == "dawn" ) {
-      warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 90.0, true );
+      warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 90.0, true, "sun" );
   } else if ( offset_type == "morning" ) {
-     warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 75.0, true ); 
+     warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 75.0, true, "sun" );
   } else if ( offset_type == "noon" ) {
-     warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 0.0, true ); 
+     warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 0.0, true, "sun" );
   } else if ( offset_type == "afternoon" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 75.0, false );  
+    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 75.0, false, "sun" );
   } else if ( offset_type == "dusk" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 90.0, false );
+    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 90.0, false, "sun" );
   } else if ( offset_type == "evening" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 100.0, false );
+    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 100.0, false, "sun" );
   } else if ( offset_type == "midnight" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, loc, 180.0, false );
+    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 180.0, false, "sun" );
   } else if ( offset_type == "system-offset" ) {
     warp = offset;
     orig_warp = 0;

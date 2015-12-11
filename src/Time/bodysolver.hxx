@@ -1,6 +1,7 @@
 /*
  * bodysolver.hxx - given a location on earth and a time of day/date,
- *                 find the number of seconds to various sun positions.
+ *                  find the number of seconds to various solar system body
+ *                  positions.
  *
  * Written by Curtis Olson, started September 2003.
  *
@@ -24,8 +25,8 @@
  */
 
 
-#ifndef _SUNSOLVER_HXX
-#define _SUNSOLVER_HXX
+#ifndef _BODYSOLVER_HXX
+#define _BODYSOLVER_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -40,23 +41,25 @@ class SGGeod;
 
 /**
  * Given the current unix time in seconds, calculate seconds to the
- * specified sun angle (relative to straight up.)  Also specify if we
- * want the angle while the sun is ascending or descending.  For
- * instance noon is when the sun angle is 0 (or the closest it can
+ * specified solar system body angle (relative to straight up.)  Also
+ * specify if we want the angle while the body is ascending or descending.
+ * For instance noon is when the sun angle is 0 (or the closest it can
  * get.)  Dusk is when the sun angle is 90 and descending.  Dawn is
  * when the sun angle is 90 and ascending.
  */
-time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
+time_t fgTimeSecondsUntilBodyAngle( time_t cur_time,
                                    const SGGeod& loc,
                                    double target_angle_deg,
-                                   bool ascending );
+                                   bool ascending,
+                                   const char *body );
 
 /**
  * given a particular time expressed in side real time at prime
  * meridian (GST), compute position on the earth (lat, lon) such that
- * sun is directly overhead.  (lat, lon are reported in radians
+ * solar system body is directly overhead.  (lat, lon are reported in
+ * radians)
  */
-void fgSunPositionGST(double gst, double *lon, double *lat);
+void fgBodyPositionGST(double gst, double *lon, double *lat, const char *body);
 
 
-#endif /* _SUNSOLVER_HXX */
+#endif /* _BODYSOLVER_HXX */

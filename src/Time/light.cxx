@@ -392,7 +392,7 @@ void FGLight::updateSunPos()
 {
     SGTime *t = globals->get_time_params();
 
-    fgSunPositionGST(t->getGst(), &_sun_lon, &_sun_lat);
+    fgBodyPositionGST(t->getGst(), &_sun_lon, &_sun_lat, "sun");
 
     // It might seem that sun_gc_lat needs to be converted to geodetic
     // latitude here, but it doesn't. The sun latitude is the latitude

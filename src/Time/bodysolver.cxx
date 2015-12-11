@@ -1,6 +1,7 @@
 /*
  * bodysolver.cxx - given a location on earth and a time of day/date,
- *                 find the number of seconds to various sun positions.
+ *                  find the number of seconds to various solar system body
+ *                  positions.
  *
  * Written by Curtis Olson, started September 2003.
  *
@@ -46,21 +47,22 @@ static const time_t step_secs = 60;
 
 /* given a particular time expressed in side real time at prime
  * meridian (GST), compute position on the earth (lat, lon) such that
- * sun is directly overhead.  (lat, lon are reported in radians */
+ * solar system body is directly overhead.  (lat, lon are reported in
+ * radians) */
 
-void fgSunPositionGST(double gst, double *lon, double *lat) {
+void fgBodyPositionGST(double gst, double *lon, double *lat, const char *body) {
     /* time_t  ssue;           seconds since unix epoch */
     /* double *lat;            (return) latitude        */
     /* double *lon;            (return) longitude       */
 
     double tmp;
 
-    SGPropertyNode* sun = fgGetNode("/ephemeris/sun");
-    assert(sun);
-    double xs = sun->getDoubleValue("xs");
-    //double ys = sun->getDoubleValue("ys");
-    double ye = sun->getDoubleValue("ye");
-    double ze = sun->getDoubleValue("ze");
+    SGPropertyNode* body_node = fgGetNode("/ephemeris/" + std::string(body));
+    assert(body_node);
+    double xs = body_node->getDoubleValue("xs");
+    //double ys = body_node->getDoubleValue("ys");
+    double ye = body_node->getDoubleValue("ye");
+    double ze = body_node->getDoubleValue("ze");
     double ra = atan2(ye, xs);
     double dec = atan2(ze, sqrt(xs * xs + ye * ye));
 
@@ -73,52 +75,53 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
     *lat = dec;
 }
 
-static double sun_angle( const SGTime &t, const SGVec3d& world_up) {
-    SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
+static double body_angle( const SGTime &t, const SGVec3d& world_up, const char* body) {
+    SG_LOG( SG_EVENT, SG_DEBUG, "  Updating " << body << " position" );
     SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t.getGst() );
 
-    double sun_lon, sun_gc_lat;
-    fgSunPositionGST( t.getGst(), &sun_lon, &sun_gc_lat );
-    SGVec3d sunpos = SGVec3d::fromGeoc(SGGeoc::fromRadM(sun_lon, sun_gc_lat,
+    double lon, gc_lat;
+    fgBodyPositionGST( t.getGst(), &lon, &gc_lat, body );
+    SGVec3d bodypos = SGVec3d::fromGeoc(SGGeoc::fromRadM(lon, gc_lat,
                                                         SGGeodesy::EQURAD));
 
     SG_LOG( SG_EVENT, SG_DEBUG, "    t.cur_time = " << t.get_cur_time() );
     SG_LOG( SG_EVENT, SG_DEBUG, 
-	    "    Sun Geocentric lat = " << sun_gc_lat );
+	    "    " << body << " geocentric lat = " << gc_lat );
 
-    // calculate the sun's relative angle to local up
+    // calculate the body's relative angle to local up
     SGVec3d nup = normalize(world_up);
-    SGVec3d nsun = normalize(sunpos);
+    SGVec3d nbody = normalize(bodypos);
     // cout << "nup = " << nup[0] << "," << nup[1] << "," 
     //      << nup[2] << endl;
-    // cout << "nsun = " << nsun[0] << "," << nsun[1] << "," 
-    //      << nsun[2] << endl;
+    // cout << "nbody = " << nbody[0] << "," << nbody[1] << ","
+    //      << nbody[2] << endl;
 
-    double sun_angle = acos( dot( nup, nsun ) );
+    double body_angle = acos( dot( nup, nbody ) );
 
-    double signedPI = (sun_angle < 0.0) ? -SGD_PI : SGD_PI;
-    sun_angle = fmod(sun_angle+signedPI, SGD_2PI) - signedPI;
+    double signedPI = (body_angle < 0.0) ? -SGD_PI : SGD_PI;
+    body_angle = fmod(body_angle+signedPI, SGD_2PI) - signedPI;
 
-    double sun_angle_deg = sun_angle * SG_RADIANS_TO_DEGREES;
-    SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
-	    << sun_angle_deg );
+    double body_angle_deg = body_angle * SG_RADIANS_TO_DEGREES;
+    SG_LOG( SG_EVENT, SG_DEBUG, body << " angle relative to current location = "
+	    << body_angle_deg );
 
-    return sun_angle_deg;
+    return body_angle_deg;
 }
 
 
 /**
  * Given the current unix time in seconds, calculate seconds to the
- * specified sun angle (relative to straight up.)  Also specify if we
- * want the angle while the sun is ascending or descending.  For
+ * specified body angle (relative to straight up.)  Also specify if we
+ * want the angle while the body is ascending or descending.  For
  * instance noon is when the sun angle is 0 (or the closest it can
  * get.)  Dusk is when the sun angle is 90 and descending.  Dawn is
  * when the sun angle is 90 and ascending.
  */
-time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
+time_t fgTimeSecondsUntilBodyAngle( time_t cur_time,
                                    const SGGeod& loc,
                                    double target_angle_deg,
-                                   bool ascending )
+                                   bool ascending,
+                                   const char *body )
 {
     SGVec3d world_up = SGVec3d::fromGeod(loc);
     SGTime t = SGTime( loc, SGPath(), 0 );
@@ -132,7 +135,7 @@ time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
           secs += step_secs )
     {
         t.update( loc, secs, 0 );
-        double angle_deg = sun_angle( t, world_up );
+        double angle_deg = body_angle( t, world_up, body );
         double diff = fabs( angle_deg - target_angle_deg );
         if ( diff < best_diff ) {
             if ( last_angle <= 180.0 && ascending
