@@ -33,7 +33,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Time/sunsolver.hxx>
+#include <Time/bodysolver.hxx>
 
 using std::string;
 

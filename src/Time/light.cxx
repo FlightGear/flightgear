@@ -46,7 +46,7 @@
 #include <Viewer/view.hxx>
 
 #include "light.hxx"
-#include "sunsolver.hxx"
+#include "bodysolver.hxx"
 
 // Constructor
 FGLight::FGLight ()

@@ -1,5 +1,5 @@
 /*
- * sunsolver.cxx - given a location on earth and a time of day/date,
+ * bodysolver.cxx - given a location on earth and a time of day/date,
  *                 find the number of seconds to various sun positions.
  *
  * Written by Curtis Olson, started September 2003.
@@ -37,7 +37,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
-#include "sunsolver.hxx"
+#include "bodysolver.hxx"
 
 
 static const time_t day_secs = 86400;

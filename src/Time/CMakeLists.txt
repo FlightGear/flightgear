@@ -3,13 +3,13 @@ include(FlightGearComponent)
 set(SOURCES
 	TimeManager.cxx
 	light.cxx
-	sunsolver.cxx
+	bodysolver.cxx
 	)
 	
 set(HEADERS
 	TimeManager.hxx
 	light.hxx
-	sunsolver.hxx
+	bodysolver.hxx
 	)
     	
 flightgear_component(Time "${SOURCES}" "${HEADERS}")

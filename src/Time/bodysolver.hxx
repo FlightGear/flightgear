@@ -1,5 +1,5 @@
 /*
- * sunsolver.hxx - given a location on earth and a time of day/date,
+ * bodysolver.hxx - given a location on earth and a time of day/date,
  *                 find the number of seconds to various sun positions.
  *
  * Written by Curtis Olson, started September 2003.
