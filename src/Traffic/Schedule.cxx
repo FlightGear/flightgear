@@ -49,8 +49,8 @@
 #include <AIModel/AIManager.hxx>
 #include <AIModel/AIAircraft.hxx>
 #include <Airports/airport.hxx>
-#include <Main/fg_init.hxx>   // That's pretty ugly, but I need fgFindAirportID
-
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "SchedFlight.hxx"
 #include "TrafficMgr.hxx"
@@ -403,10 +403,12 @@ void FGAISchedule::setHeading()
     courseToDest = SGGeodesy::courseDeg((*flights.begin())->getDepartureAirport()->geod(), (*flights.begin())->getArrivalAirport()->geod());
 }
 
+void FGAISchedule::assign(FGScheduledFlight *ref) { flights.push_back(ref); }
+
 bool FGAISchedule::scheduleFlights(time_t now)
 {
-  //string startingPort;
-  const string& userPort = fgGetString("/sim/presets/airport-id");
+    //string startingPort;
+    const string& userPort = fgGetString("/sim/presets/airport-id");
   SG_LOG(SG_AI, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
   FGScheduledFlight *flight = NULL;
   SGTimeStamp start;
@@ -502,6 +504,18 @@ bool FGAISchedule::next()
    flights.push_back(flight);
    return true;
 }
+
+time_t FGAISchedule::getDepartureTime() { return (*flights.begin())->getDepartureTime   (); }
+
+FGAirport *FGAISchedule::getDepartureAirport() { return (*flights.begin())->getDepartureAirport(); }
+
+FGAirport *FGAISchedule::getArrivalAirport() { return (*flights.begin())->getArrivalAirport  (); }
+
+int FGAISchedule::getCruiseAlt() { return (*flights.begin())->getCruiseAlt       (); }
+
+const std::string &FGAISchedule::getCallSign() { return (*flights.begin())->getCallSign (); }
+
+const std::string &FGAISchedule::getFlightRules() { return (*flights.begin())->getFlightRules (); }
 
 FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDestination,
                                                       const string &req,

@@ -27,6 +27,7 @@
 #include <Viewer/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Airports/dynamics.hxx>
+#include <Main/globals.hxx>
 
 #include "AIGroundVehicle.hxx"
 

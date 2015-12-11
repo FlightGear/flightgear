@@ -42,11 +42,13 @@
 #include <simgear/props/props.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Scripting/NasalModelData.hxx>
 #include <Sound/fg_fx.hxx>
 
+#include "AIFlightPlan.hxx"
 #include "AIBase.hxx"
 #include "AIManager.hxx"
 
@@ -219,7 +221,7 @@ FGAIBase::removeModel()
         return;
 
     FGScenery* pSceneryManager = globals->get_scenery();
-    if (pSceneryManager)
+    if (pSceneryManager && pSceneryManager->get_models_branch())
     {
         osg::ref_ptr<osg::Object> temp = _model.get();
         pSceneryManager->get_models_branch()->removeChild(aip.getSceneGraph());

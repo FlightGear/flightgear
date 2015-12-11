@@ -37,6 +37,7 @@
 
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <Scenery/scenery.hxx>
+#include <Main/globals.hxx>
 
 #include "AIShip.hxx"
 

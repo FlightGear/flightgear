@@ -29,6 +29,7 @@
 #include <Airports/dynamics.hxx>
 #include <Airports/airport.hxx>
 #include <Main/util.hxx>
+#include <Traffic/Schedule.hxx>
 
 #include <simgear/structure/exception.hxx>
 
@@ -39,7 +40,9 @@
 // defined in AIShip.cxx
 extern double fgIsFinite(double x);
 
+#include "AIManager.hxx"
 #include "AIAircraft.hxx"
+#include "AIFlightPlan.hxx"
 #include "performancedata.hxx"
 #include "performancedb.hxx"
 #include <signal.h>
@@ -131,6 +134,12 @@ void FGAIAircraft::update(double dt) {
     FGAIBase::update(dt);
     Run(dt);
     Transform();
+}
+
+void FGAIAircraft::unbind()
+{
+    FGAIBase::unbind();
+    clearATCController();
 }
 
 void FGAIAircraft::setPerformance(const std::string& acType, const std::string& acclass)
@@ -406,6 +415,13 @@ double FGAIAircraft::calcVerticalSpeed(double vert_ft, double dist_m, double spe
 //         //raise(SIGSEGV);
 //     }
     return vs;
+}
+
+void FGAIAircraft::clearATCController()
+{
+    controller = 0;
+    prevController = 0;
+    towerController = 0;
 }
 
 void FGAIAircraft::assertSpeed(double speed)

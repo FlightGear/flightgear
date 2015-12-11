@@ -29,16 +29,14 @@
 #ifndef _ATC_MGR_HXX_
 #define _ATC_MGR_HXX_
 
-//#include <simgear/structure/SGReferenced.hxx>
-//#include <simgear/structure/SGSharedPtr.hxx>
+
 #include <simgear/structure/subsystem_mgr.hxx>
 
 
 #include <ATC/trafficcontrol.hxx>
 #include <ATC/atcdialog.hxx>
 
-#include <AIModel/AIAircraft.hxx>
-//class FGATCController;
+class FGAIAircraft;
 
 
 typedef std::vector<FGATCController*> AtcVec;
@@ -48,7 +46,7 @@ class FGATCManager : public SGSubsystem
 {
 private:
   AtcVec activeStations;
-  FGAIAircraft ai_ac;
+  FGAIAircraft* ai_ac;
   FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft. 
   bool networkVisible;
   bool initSucceeded;
@@ -58,6 +56,8 @@ public:
   FGATCManager();
   ~FGATCManager();
   void init();
+  virtual void shutdown();
+
   void addController(FGATCController *controller);
   void removeController(FGATCController* controller);
   void update(double time);

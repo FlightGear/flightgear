@@ -20,8 +20,11 @@
 
 #ifndef REMOTEXMLREQUEST_HXXH
 #define REMOTEXMLREQUEST_HXXH
+
 #include <simgear/structure/exception.hxx>
 #include <simgear/io/HTTPMemoryRequest.hxx>
+#include <simgear/props/props_io.hxx>
+
 class RemoteXMLRequest:
   public simgear::HTTP::MemoryRequest
 {

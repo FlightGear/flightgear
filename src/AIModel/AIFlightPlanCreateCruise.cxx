@@ -33,6 +33,8 @@
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
 
+#include <Traffic/Schedule.hxx>
+
 #include "AIFlightPlan.hxx"
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"

@@ -33,8 +33,6 @@
 
 #include <simgear/math/sg_geodesy.hxx>
 
-#include <Main/fg_props.hxx>
-
 namespace osg { class PagedLOD; }
 
 namespace simgear {
@@ -324,6 +322,8 @@ public:
 
     std::string & getCallSign();
 };
+
+typedef SGSharedPtr<FGAIBase> FGAIBasePtr;
 
 inline void FGAIBase::setManager(FGAIManager* mgr, SGPropertyNode* p) {
     manager = mgr;

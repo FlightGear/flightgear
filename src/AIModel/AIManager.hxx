@@ -28,16 +28,8 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
-#include <simgear/props/props_io.hxx>
 
-#include <Main/fg_props.hxx>
-
-#include <AIModel/AIBase.hxx>
-#include <AIModel/AIFlightPlan.hxx>
-
-#include <Traffic/SchedFlight.hxx>
-#include <Traffic/Schedule.hxx>
-
+class FGAIBase;
 class FGAIThermal;
 
 typedef SGSharedPtr<FGAIBase> FGAIBasePtr;
@@ -84,6 +76,8 @@ public:
      * corresponding AIObject implementation, or NULL.
      */
     FGAIBasePtr getObjectFromProperty(const SGPropertyNode* aProp) const;
+
+    static const char* subsystemName() { return "ai-model"; }
 private:
     // FGSubmodelMgr is a friend for access to the AI_list
     friend class FGSubmodelMgr;

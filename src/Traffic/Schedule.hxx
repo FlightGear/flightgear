@@ -34,6 +34,9 @@
 
 // forward decls
 class FGAIAircraft;
+class FGScheduledFlight;
+
+typedef std::vector<FGScheduledFlight*> FGScheduledFlightVec;
 
 class FGAISchedule
 {
@@ -106,18 +109,18 @@ class FGAISchedule
   bool next();   // forces the schedule to move on to the next flight.
 
   // TODO: rework these four functions
-   time_t      getDepartureTime    () { return (*flights.begin())->getDepartureTime   (); };
-  FGAirport * getDepartureAirport () { return (*flights.begin())->getDepartureAirport(); };
-  FGAirport * getArrivalAirport   () { return (*flights.begin())->getArrivalAirport  (); };
-  int         getCruiseAlt        () { return (*flights.begin())->getCruiseAlt       (); };
+  time_t      getDepartureTime    ();
+  FGAirport * getDepartureAirport ();
+  FGAirport * getArrivalAirport   ();
+  int         getCruiseAlt        ();
   double      getRadius           () { return radius; };
   double      getGroundOffset     () { return groundOffset;};
   const std::string& getFlightType     () { return flightType;};
   const std::string& getAirline        () { return airline; };
   const std::string& getAircraft       () { return acType; };
-  const std::string& getCallSign       () { return (*flights.begin())->getCallSign (); };
+  const std::string& getCallSign       ();
   const std::string& getRegistration   () { return registration;};
-  const std::string& getFlightRules    () { return (*flights.begin())->getFlightRules (); };
+  const std::string& getFlightRules    ();
   bool getHeavy                   () { return heavy; };
   double getCourse                () { return courseToDest; };
   unsigned int getRunCount        () { return runCount; };
@@ -128,7 +131,7 @@ class FGAISchedule
   void         setScore   ();
   double       getScore   () { return score; };
   void         setHeading (); 
-  void         assign         (FGScheduledFlight *ref) { flights.push_back(ref); };
+  void         assign         (FGScheduledFlight *ref);
   void         setFlightType  (const std::string& val) { flightType = val; };
   FGScheduledFlight*findAvailableFlight (const std::string& currentDestination, const std::string &req, time_t min=0, time_t max=0);
   // used to sort in descending order of score: I've probably found a better way to

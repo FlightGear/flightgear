@@ -30,6 +30,8 @@
 
 #include <cmath>
 #include <Main/util.hxx>
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "AICarrier.hxx"
 

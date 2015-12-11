@@ -1024,7 +1024,7 @@ void fgStartNewReset()
         string_list::const_iterator it;
         for (it = names.begin(); it != names.end(); ++it) {
             if ((*it == "time") || (*it == "terrasync") || (*it == "events")
-                || (*it == "lighting"))
+                || (*it == "lighting") || (*it == FGTileMgr::subsystemName()) || (*it == FGScenery::subsystemName()))
             {
                 continue;
             }

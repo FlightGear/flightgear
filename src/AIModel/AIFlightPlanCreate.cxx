@@ -38,10 +38,12 @@
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"
 
+#include <Main/fg_props.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
 #include <FDM/LaRCsim/basic_aero.h>
 #include <Navaids/navrecord.hxx>
+#include <Traffic/Schedule.hxx>
 
 using std::string;
 

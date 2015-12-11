@@ -48,6 +48,8 @@
 #include <Airports/runways.hxx>
 #include <Airports/groundnetwork.hxx>
 
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/performancedata.hxx>
 #include <AIModel/AIFlightPlan.hxx>

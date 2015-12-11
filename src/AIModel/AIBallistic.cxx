@@ -33,6 +33,7 @@
 
 #include <Main/util.hxx>
 #include <Environment/gravity.hxx>
+#include <Main/fg_props.hxx>
 
 using namespace simgear;
 using std::string;

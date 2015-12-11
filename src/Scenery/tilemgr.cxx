@@ -126,20 +126,28 @@ FGTileMgr::FGTileMgr():
 
 FGTileMgr::~FGTileMgr()
 {
-    delete _listener;
-    
-    // remove all nodes we might have left behind
-    osg::Group* group = globals->get_scenery()->get_terrain_branch();
-    group->removeChildren(0, group->getNumChildren());
-    // clear OSG cache
-    osgDB::Registry::instance()->clearObjectCache();
-}
+   }
 
 
 // Initialize the Tile Manager subsystem
 void FGTileMgr::init()
 {
     reinit();
+}
+
+void FGTileMgr::shutdown()
+{
+    delete _listener;
+    _listener = NULL;
+
+    FGScenery* scenery = globals->get_scenery();
+    if (scenery && scenery->get_terrain_branch()) {
+        osg::Group* group = scenery->get_terrain_branch();
+        group->removeChildren(0, group->getNumChildren());
+    }
+    // clear OSG cache
+    osgDB::Registry::instance()->clearObjectCache();
+    state = Start; // need to init again
 }
 
 void FGTileMgr::reinit()

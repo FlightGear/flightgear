@@ -69,6 +69,8 @@
 #include <AIModel/AIBase.hxx>
 #include <Airports/airport.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "TrafficMgr.hxx"
 
@@ -391,7 +393,7 @@ private:
   mutable SGMutex _lock;
   bool _isFinished;
   bool _cancelThread;
-  PathList _trafficDirPaths;
+  simgear::PathList _trafficDirPaths;
    
 // parser state
     
@@ -524,7 +526,7 @@ void FGTrafficManager::init()
     
     doingInit = true;
     if (string(fgGetString("/sim/traffic-manager/datafile")).empty()) {
-        PathList dirs = globals->get_data_paths("AI/Traffic");
+        simgear::PathList dirs = globals->get_data_paths("AI/Traffic");
         
         // temporary flag to restrict loading while traffic data is found
         // through terrasync /and/ fgdata. Ultimatley we *do* want to be able to

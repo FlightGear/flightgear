@@ -23,6 +23,7 @@
 
 #include <simgear/sg_inlines.h>
 
+#include <Main/fg_props.hxx>
 
 #include "AIWingman.hxx"
 

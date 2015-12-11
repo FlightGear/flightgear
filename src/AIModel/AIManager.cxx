@@ -32,6 +32,7 @@
 #include <boost/foreach.hpp>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Airports/airport.hxx>
 #include <Scripting/NasalSys.hxx>
 

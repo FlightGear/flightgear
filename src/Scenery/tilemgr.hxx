@@ -101,6 +101,8 @@ public:
     // Initialize the Tile Manager
     virtual void init();
     virtual void reinit();
+    virtual void shutdown();
+
     virtual void update(double dt);
 
     const SGBucket& get_current_bucket () const { return current_bucket; }

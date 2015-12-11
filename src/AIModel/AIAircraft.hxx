@@ -21,16 +21,16 @@
 #ifndef _FG_AIAircraft_HXX
 #define _FG_AIAircraft_HXX
 
-#include "AIManager.hxx"
 #include "AIBase.hxx"
-
-#include <Traffic/SchedFlight.hxx>
-#include <Traffic/Schedule.hxx>
-#include <ATC/trafficcontrol.hxx>
 
 #include <string>
 
 class PerformanceData;
+class FGAISchedule;
+class FGAIFlightPlan;
+class FGATCController;
+class FGATCInstruction;
+class FGAIWaypoint;
 
 class FGAIAircraft : public FGAIBase {
 
@@ -43,6 +43,7 @@ public:
     // virtual bool init(bool search_in_AI_path=false);
     virtual void bind();
     virtual void update(double dt);
+    virtual void unbind();
 
     void setPerformance(const std::string& acType, const std::string& perfString);
   //  void setPerformance(PerformanceData *ps);
@@ -108,12 +109,13 @@ public:
 
     FGATCController * getATCController() { return controller; };
     
+    void clearATCController();
 protected:
     void Run(double dt);
 
 private:
     FGAISchedule *trafficRef;
-    FGATCController *controller, 
+    FGATCController *controller,
                     *prevController,
                     *towerController; // Only needed to make a pre-announcement
 

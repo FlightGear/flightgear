@@ -28,6 +28,9 @@
 #include <string>
 #include <stdio.h>
 
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
+
 #include "AIMultiplayer.hxx"
 
 using std::string;

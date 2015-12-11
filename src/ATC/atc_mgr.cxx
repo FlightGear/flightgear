@@ -30,6 +30,13 @@
 #include <Airports/airportdynamicsmanager.hxx>
 #include <Airports/airport.hxx>
 #include <Scenery/scenery.hxx>
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
+#include <AIModel/AIAircraft.hxx>
+#include <Traffic/Schedule.hxx>
+#include <Traffic/SchedFlight.hxx>
+#include <AIModel/AIFlightPlan.hxx>
+
 #include "atc_mgr.hxx"
 
 
@@ -74,12 +81,12 @@ void FGATCManager::init() {
     double speed     = fgGetDouble("/velocities/groundspeed-kt");
     double aircraftRadius = 40; // note that this is currently hardcoded to a one-size-fits all JumboJet value. Should change later;
 
-
-    ai_ac.setCallSign ( callsign  );
-    ai_ac.setLongitude( longitude );
-    ai_ac.setLatitude ( latitude  );
-    ai_ac.setAltitude ( altitude  );
-    ai_ac.setPerformance("", "jet_transport");
+    ai_ac = new FGAIAircraft;
+    ai_ac->setCallSign ( callsign  );
+    ai_ac->setLongitude( longitude );
+    ai_ac->setLatitude ( latitude  );
+    ai_ac->setAltitude ( altitude  );
+    ai_ac->setPerformance("", "jet_transport");
 
     // NEXT UP: Create a traffic Schedule and fill that with appropriate information. This we can use to flight planning.
     // Note that these are currently only defaults. 
@@ -95,7 +102,7 @@ void FGATCManager::init() {
     
     trafficRef->assign(flight);
     FGAIFlightPlan *fp = 0; 
-    ai_ac.setTrafficRef(trafficRef);
+    ai_ac->setTrafficRef(trafficRef);
     
     string flightPlanName = airport + "-" + airport + ".xml";
     //double cruiseAlt = 100; // Doesn't really matter right now.
@@ -127,7 +134,7 @@ void FGATCManager::init() {
             string aircraftType; // Unused.
             string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
             fp->setGate(pk);
-            if (!(fp->createPushBack(&ai_ac,
+            if (!(fp->createPushBack(ai_ac,
                                      false,
                                      dcs->parent(),
                                      aircraftRadius,
@@ -152,8 +159,8 @@ void FGATCManager::init() {
             leg = 3;
             string fltType = "ga";
             fp->setRunway(runway);
-            fp->createTakeOff(&ai_ac, false, dcs->parent(), 0, fltType);
-            ai_ac.setTakeOffStatus(2);
+            fp->createTakeOff(ai_ac, false, dcs->parent(), 0, fltType);
+            ai_ac->setTakeOffStatus(2);
         } else {
                 // We're on the ground somewhere. Handle this case later.
         }
@@ -170,12 +177,12 @@ void FGATCManager::init() {
     if (fp) {
         fp->restart();
         fp->setLeg(leg);
-        ai_ac.SetFlightPlan(fp);
+        ai_ac->SetFlightPlan(fp);
     }
     if (controller) {
-        controller->announcePosition(ai_ac.getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
-                                      ai_ac._getLatitude(), ai_ac._getLongitude(), heading, speed, altitude,
-                                      aircraftRadius, leg, &ai_ac);
+        controller->announcePosition(ai_ac->getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
+                                      ai_ac->_getLatitude(), ai_ac->_getLongitude(), heading, speed, altitude,
+                                      aircraftRadius, leg, ai_ac);
 
     //dialog.init();
 
@@ -183,7 +190,14 @@ void FGATCManager::init() {
    //cerr << "Adding groundnetWork to the scenegraph::init" << endl;
    //globals->get_scenery()->get_scene_graph()->addChild(node);
    }
-   initSucceeded = true;
+    initSucceeded = true;
+}
+
+void FGATCManager::shutdown()
+{
+    delete ai_ac;
+    ai_ac = NULL;
+    activeStations.clear();
 }
 
 void FGATCManager::addController(FGATCController *controller) {
@@ -205,7 +219,7 @@ void FGATCManager::update ( double time ) {
    
     
 
-    FGAIFlightPlan *fp = ai_ac.GetFlightPlan();
+    FGAIFlightPlan *fp = ai_ac->GetFlightPlan();
         
     /* test code : find out how the routing develops */
     if (fp) {
@@ -259,20 +273,20 @@ void FGATCManager::update ( double time ) {
     
     cerr << "Bearing to nearest waypoint : " << course1 << " " << dist1 << ". (course " << course2 << ")." <<  endl;
     */
-    ai_ac.setLatitude(latitude);
-    ai_ac.setLongitude(longitude);
-    ai_ac.setAltitude(altitude);
-    ai_ac.setHeading(heading);
-    ai_ac.setSpeed(speed);
-    ai_ac.update(time);
-    controller = ai_ac.getATCController();
+    ai_ac->setLatitude(latitude);
+    ai_ac->setLongitude(longitude);
+    ai_ac->setAltitude(altitude);
+    ai_ac->setHeading(heading);
+    ai_ac->setSpeed(speed);
+    ai_ac->update(time);
+    controller = ai_ac->getATCController();
     FGATCDialogNew::instance()->update(time);
     if (controller) {
        //cerr << "name of previous waypoint : " << fp->getPreviousWaypoint()->getName() << endl;
 
         //cerr << "Running FGATCManager::update()" << endl;
         //cerr << "Currently under control of " << controller->getName() << endl;
-        controller->updateAircraftInformation(ai_ac.getID(),
+        controller->updateAircraftInformation(ai_ac->getID(),
                                               latitude,
                                               longitude,
                                               heading,
