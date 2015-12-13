@@ -488,34 +488,74 @@ PropsChannel::foundTerminator()
 			   error("No matching callback found for command:"+command);
 	    }
       else if ( command == "seti" ) {
-          if (tokens.size() == 3) {
-            node->getNode( tokens[1].c_str(), true )
-               ->setIntValue(atoi(tokens[2].c_str()));
+        string value, tmp;
+        if (tokens.size() == 3) {
+              node->getNode( tokens[1].c_str(), true )
+                ->setIntValue(atoi(tokens[2].c_str()));
           }
-          const char* msg = "set init\r\n";
-          push( msg );
+          if ( mode == PROMPT ) {
+              tmp = tokens[1].c_str();
+              tmp += " " + tokens[2];
+              tmp += " (";
+              tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
+              tmp += ")";
+              push( tmp.c_str() );
+              push( getTerminator() );
+          }
       }
-      else if ( command == "setd" ) {
+      else if ( command == "setd" || command == "setf") {
+          string value, tmp;
           if (tokens.size() == 3) {
             node->getNode( tokens[1].c_str(), true )
                 ->setDoubleValue(atof(tokens[2].c_str()));
           }
+          if ( mode == PROMPT ) {
+              tmp = tokens[1].c_str();
+              tmp += " ";
+              tmp += tokens[2].c_str();
+              tmp += " (";
+              tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
+              tmp += ")";
+              push( tmp.c_str() );
+              push( getTerminator() );
+          }
       }
       else if ( command == "setb" ) {
+          string tmp, value;
           if (tokens.size() == 3) {
             if (tokens[2] == "false" || tokens[2] == "0") {
               node->getNode( tokens[1].c_str(), true )
                   ->setBoolValue(false);
+              value = " False ";
             }
             if (tokens[2] == "true" || tokens[2] == "1"){
               node->getNode( tokens[1].c_str(), true )
                   ->setBoolValue(true);
+              value = " True ";
             }
+            if ( mode == PROMPT ) {
+                tmp = tokens[1].c_str();
+                tmp += value;
+                tmp += " (";
+                tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
+                tmp += ")";
+                push( tmp.c_str() );
+                push( getTerminator() );
+            }
+
           }
      }
       else if ( command == "del" ) {
+          string tmp;
           if (tokens.size() == 3){
              node->getNode( tokens[1].c_str(), true )->removeChild(tokens[2].c_str(),0);
+          }
+          if ( mode == PROMPT ) {
+              tmp = "Delete ";
+              tmp += tokens[1].c_str();
+              tmp += tokens[2];
+              push( tmp.c_str() );
+              push( getTerminator() );
           }
       }
 	    else {
@@ -535,6 +575,7 @@ run <command>      run built in command\r\n\
 set <var> <val>    set String <var> to a new <val>\r\n\
 setb <var> <val>   set Bool <var> to a new <val> only work with the foling value 0, 1, true, false\r\n\
 setd <var> <val>   set Double <var> to a new <val>\r\n\
+setf <var> <val>   alias for setd\r\n\
 seti <var> <val>   set Int <var> to a new <val>\r\n\
 del <var> <nod>    delete <nod> in <var>\r\n\
 subscribe <var>	   subscribe to property changes \r\n\
