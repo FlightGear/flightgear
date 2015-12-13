@@ -120,8 +120,9 @@ void FGLight::init () {
     sky_path.append( "Lighting/sky" );
     _sky_tbl = new SGInterpTable( sky_path );
     
-    globals->get_event_mgr()->addTask("updateSunPos", this,
-                            &FGLight::updateSunPos, 0.5 );
+    // update all solar system body positions of interest
+    globals->get_event_mgr()->addTask("updateObjects", this,
+                            &FGLight::updateObjects, 0.5 );
 }
 
 
@@ -136,7 +137,7 @@ void FGLight::reinit () {
 
     init();
 
-    updateSunPos();
+    updateObjects();
     update_sky_color();
     update_adj_fog_color();
 }
@@ -151,6 +152,8 @@ void FGLight::bind () {
 
     _sunAngleRad = prop->getNode("/sim/time/sun-angle-rad", true);
     _sunAngleRad->setDoubleValue(_sun_angle);
+    _moonAngleRad = prop->getNode("/sim/time/moon-angle-rad", true);
+    _moonAngleRad->setDoubleValue(_moon_angle);
     _humidity = fgGetNode("/environment/relative-humidity", true);
 
     // Read Only
@@ -180,6 +183,11 @@ void FGLight::bind () {
     tie(prop,"/ephemeris/sun/local/x", SGRawValuePointer<float>(&_sun_vec[0]));
     tie(prop,"/ephemeris/sun/local/y", SGRawValuePointer<float>(&_sun_vec[1]));
     tie(prop,"/ephemeris/sun/local/z", SGRawValuePointer<float>(&_sun_vec[2]));
+
+    // Moon vector
+    tie(prop,"/ephemeris/moon/local/x", SGRawValuePointer<float>(&_moon_vec[0]));
+    tie(prop,"/ephemeris/moon/local/y", SGRawValuePointer<float>(&_moon_vec[1]));
+    tie(prop,"/ephemeris/moon/local/z", SGRawValuePointer<float>(&_moon_vec[2]));
 
     // Properties used directly by effects
     _chromeProps[0] = prop->getNode("/rendering/scene/chrome-light/red", true);
@@ -387,54 +395,68 @@ void FGLight::update_adj_fog_color () {
     gamma_correct_rgb( _sky_color.data(), gamma );
 }
 
-// update the cur_time_params structure with the current sun position
-void FGLight::updateSunPos()
+// update all solar system bodies of interest
+void FGLight::updateObjects()
+{
+    // update the sun position
+    updateBodyPos("sun", &_sun_lon, &_sun_lat, &_sun_vec, &_sun_vec_inv,
+                  &_sun_angle, _sunAngleRad, &_sun_rotation);
+
+    // update the moon position
+    updateBodyPos("moon", &_moon_lon, &_moon_gc_lat, &_moon_vec, &_moon_vec_inv,
+                  &_moon_angle, _moonAngleRad, &_moon_rotation);
+}
+
+// update the position of one solar system body
+void FGLight::updateBodyPos(const char *body, double *lon, double *lat,
+       SGVec4f *vec, SGVec4f *vec_inv, double *angle, SGPropertyNode_ptr AngleRad,
+       double *rotation)
 {
     SGTime *t = globals->get_time_params();
 
-    fgBodyPositionGST(t->getGst(), &_sun_lon, &_sun_lat, "sun");
+    fgBodyPositionGST(t->getGst(), lon, lat, body);
 
-    // It might seem that sun_gc_lat needs to be converted to geodetic
-    // latitude here, but it doesn't. The sun latitude is the latitude
+    // It might seem that gc_lat needs to be converted to geodetic
+    // latitude here, but it doesn't. The body latitude is the latitude
     // of the point on the earth where the up vector has the same
-    // angle from geocentric Z as the sun direction. But geodetic
+    // angle from geocentric Z as the body direction. But geodetic
     // latitude is defined as 90 - angle of up vector from Z!
-    SGVec3d sunpos = SGVec3d::fromGeoc(SGGeoc::fromRadM(_sun_lon, _sun_lat,
+    SGVec3d bodypos = SGVec3d::fromGeoc(SGGeoc::fromRadM(*lon, *lat,
                                                           SGGeodesy::EQURAD));
 
-    // update the sun light vector
-    _sun_vec = SGVec4f(toVec3f(normalize(sunpos)), 0);
-    _sun_vec_inv = - _sun_vec;
+    // update the body vector
+    *vec = SGVec4f(toVec3f(normalize(bodypos)), 0);
+    *vec_inv = - *vec;
 
-    // calculate the sun's relative angle to local up
+    // calculate the body's relative angle to local up
     SGQuatd hlOr =  SGQuatd::fromLonLat( globals->get_view_position() );
     SGVec3d world_up = hlOr.backTransform( -SGVec3d::e3() );
     // cout << "nup = " << nup[0] << "," << nup[1] << ","
     //      << nup[2] << endl;
-    // cout << "nsun = " << nsun[0] << "," << nsun[1] << ","
-    //      << nsun[2] << endl;
+    // cout << "nbody = " << nbody[0] << "," << nbody[1] << ","
+    //      << nbody[2] << endl;
 
-    SGVec3d nsun = normalize(sunpos);
+    SGVec3d nbody = normalize(bodypos);
     SGVec3d nup = normalize(world_up);
-    _sun_angle = acos( dot( nup, nsun ) );
+    *angle = acos( dot( nup, nbody ) );
 
-    double signedPI = (_sun_angle < 0.0) ? -SGD_PI : SGD_PI;
-    _sun_angle = fmod(_sun_angle+signedPI, SGD_2PI) - signedPI;
+    double signedPI = (*angle < 0.0) ? -SGD_PI : SGD_PI;
+    *angle = fmod(*angle+signedPI, SGD_2PI) - signedPI;
 
-    // Get direction to the sun in the local frame.
-    SGVec3d local_sun_vec = hlOr.transform(nsun);
+    // Get direction to the body in the local frame.
+    SGVec3d local_vec = hlOr.transform(nbody);
 
     // Angle from South. 
     // atan2(y,x) returns the angle between the positive X-axis
     // and the vector with the origin at 0, going through (x,y)
     // Since the local frame coordinates have x-positive pointing Nord and 
-    // y-positive pointing East we need to negate local_sun_vec.x()
-    // _sun_rotation is positive counterclockwise from South (sun in the East)
-    // and negative clockwise from South (sun in the West)
-    _sun_rotation = atan2(local_sun_vec.y(), -local_sun_vec.x());
+    // y-positive pointing East we need to negate local_vec.x()
+    // rotation is positive counterclockwise from South (body in the East)
+    // and negative clockwise from South (body in the West)
+    *rotation = atan2(local_vec.y(), -local_vec.x());
 
-    // cout << "  Sky needs to rotate = " << _sun_rotation << " rads = "
-    //      << _sun_rotation * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
+    // cout << "  Sky needs to rotate = " << rotation << " rads = "
+    //      << rotation * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
   
-    _sunAngleRad->setDoubleValue(_sun_angle);
+    AngleRad->setDoubleValue(*angle);
 }

@@ -109,13 +109,20 @@ private:
     void update_sky_color ();
     void update_adj_fog_color ();
 
-    void updateSunPos();
-    
+    // update all solar system bodies of interest
+    void updateObjects();
+
+    // update the position of one solar system body
+    void updateBodyPos(const char *body, double *lon, double *lat,
+       SGVec4f *vec, SGVec4f *vec_inv, double *angle, SGPropertyNode_ptr AngleRad,
+       double *rotation);
+
     // properties for chrome light; not a tie because I want to fire
     // property listeners when the values change.
     SGPropertyNode_ptr _chromeProps[4];
   
     SGPropertyNode_ptr _sunAngleRad;
+    SGPropertyNode_ptr _moonAngleRad;
 
     SGPropertyNode_ptr _humidity;
 
