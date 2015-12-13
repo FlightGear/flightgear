@@ -33,6 +33,11 @@ static void tieStar(const char* prop, Star* s, double (Star::*getter)() const)
   fgGetNode(prop, true)->tie(SGRawValueMethods<Star, double>(*s, getter, NULL));
 }
 
+static void tieMoonPos(const char* prop, MoonPos* s, double (MoonPos::*getter)() const)
+{
+  fgGetNode(prop, true)->tie(SGRawValueMethods<MoonPos, double>(*s, getter, NULL));
+}
+
 Ephemeris::Ephemeris() :
   _impl(NULL),
   _latProp(NULL)
@@ -59,6 +64,15 @@ void Ephemeris::init()
   tieStar("/ephemeris/sun/ze", _impl->get_sun(), &Star::getze);
   tieStar("/ephemeris/sun/ye", _impl->get_sun(), &Star::getye);
   tieStar("/ephemeris/sun/lat-deg", _impl->get_sun(), &Star::getLat);
+
+  tieMoonPos("/ephemeris/moon/xg", _impl->get_moon(), &MoonPos::getxg);
+  tieMoonPos("/ephemeris/moon/yg", _impl->get_moon(), &MoonPos::getyg);
+  tieMoonPos("/ephemeris/moon/ze", _impl->get_moon(), &MoonPos::getze);
+  tieMoonPos("/ephemeris/moon/ye", _impl->get_moon(), &MoonPos::getye);
+  tieMoonPos("/ephemeris/moon/lat-deg", _impl->get_moon(), &MoonPos::getLat);
+  tieMoonPos("/ephemeris/moon/age", _impl->get_moon(), &MoonPos::getAge);
+  tieMoonPos("/ephemeris/moon/phase", _impl->get_moon(), &MoonPos::getPhase);
+  tieMoonPos("/environment/moonlight", _impl->get_moon(), &MoonPos::getIlluminanceFactor);
 
     _latProp = fgGetNode("/position/latitude-deg", true);
 
