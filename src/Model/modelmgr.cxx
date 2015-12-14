@@ -42,14 +42,19 @@ FGModelMgr::FGModelMgr ()
   _models->addChangeListener(_listener);
 }
 
+#include <stdio.h>
 FGModelMgr::~FGModelMgr ()
 {
   _models->removeChangeListener(_listener);
   delete _listener;
 
+  osg::Group *scene_graph = globals->get_scenery()->get_scene_graph();
+  if (!scene_graph)
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "Warning: The scenegraph wass deleted before the models could be removed");
+
   for (unsigned int i = 0; i < _instances.size(); i++) {
-    globals->get_scenery()->get_scene_graph()
-      ->removeChild(_instances[i]->model->getSceneGraph());
+    if (scene_graph)
+      scene_graph->removeChild(_instances[i]->model->getSceneGraph());
     delete _instances[i];
   }
 }
