@@ -76,7 +76,8 @@ FGAirportDynamicsRef AirportDynamicsManager::dynamicsForICAO(const std::string &
 
     FGAirportRef apt(FGAirport::findByIdent(icao));
     if (!apt)
-        throw sg_exception("dynamicsForICAO: Invalid ICAO:" + icao);
+        return FGAirportDynamicsRef();
+
     FGAirportDynamicsRef d(new FGAirportDynamics(apt));
 
     XMLLoader::load(d.ptr());
@@ -92,6 +93,9 @@ FGAirportDynamicsRef AirportDynamicsManager::dynamicsForICAO(const std::string &
 
 FGAirportDynamicsRef AirportDynamicsManager::find(const std::string &icao)
 {
+    if (icao.empty())
+        return FGAirportDynamicsRef();
+
     AirportDynamicsManager* instance = static_cast<AirportDynamicsManager*>(globals->get_subsystem("airport-dynamics"));
     if (!instance)
         return FGAirportDynamicsRef();
