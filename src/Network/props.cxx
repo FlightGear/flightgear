@@ -3,6 +3,7 @@
 //
 // Written by Curtis Olson, started September 2000.
 // Modified by Bernie Bright, May 2002.
+// Modified by Jean-Paul Anceaux, Dec 2015.
 //
 // Copyright (C) 2000  Curtis L. Olson - http://www.flightgear.org/~curt
 //
@@ -147,7 +148,7 @@ PropsChannel::PropsChannel()
 
 PropsChannel::~PropsChannel() {
   // clean up all registered listeners
-  BOOST_FOREACH(SGPropertyNode_ptr l, _listeners) { 
+    BOOST_FOREACH(SGPropertyNode_ptr l, _listeners) {
     l->removeChangeListener( this  );
  }
 }
@@ -165,11 +166,11 @@ void PropsChannel::subscribe(const ParameterList &param) {
   push( getTerminator() );
 
   SGPropertyNode *n = globals->get_props()->getNode( p,true );
-	if ( n->isTied() ) { 
-		error("Error:Tied properties cannot register listeners"); 
+	if ( n->isTied() ) {
+		error("Error:Tied properties cannot register listeners");
 		return;
 	}
-  
+
  	if (n) {
     n->addChangeListener( this );
 	 _listeners.push_back( n ); // housekeeping, save for deletion in dtor later on
@@ -192,8 +193,8 @@ void PropsChannel::unsubscribe(const ParameterList &param) {
 
 
 //TODO: provide support for different types of subscriptions MODES ? (child added/removed, thesholds, min/max)
-void PropsChannel::valueChanged(SGPropertyNode* ptr) {
-  //SG_LOG(SG_GENERAL, SG_ALERT, __FILE__<< "@"<<__LINE__ << ":" << __FUNCTION__ << std::endl);  
+  void PropsChannel::valueChanged(SGPropertyNode* ptr) {
+  //SG_LOG(SG_GENERAL, SG_ALERT, __FILE__<< "@"<<__LINE__ << ":" << __FUNCTION__ << std::endl);
   std::stringstream response;
   response << ptr->getPath(true) << "=" <<  ptr->getStringValue() << getTerminator(); //TODO: use hashes, echo several properties at once
   push( response.str().c_str() );
@@ -480,12 +481,83 @@ PropsChannel::foundTerminator()
             } else if ( command == "prompt" ) {
                 mode = PROMPT;
             } else if (callback_map.find(command) != callback_map.end() ) {
-		   TelnetCallback t = callback_map[ command ]; 
-		   if (t) 
-		     	   (this->*t) (tokens); 
+		   TelnetCallback t = callback_map[ command ];
+		   if (t)
+		     	   (this->*t) (tokens);
 		   else
 			   error("No matching callback found for command:"+command);
 	    }
+      else if ( command == "seti" ) {
+        string value, tmp;
+        if (tokens.size() == 3) {
+              node->getNode( tokens[1].c_str(), true )
+                ->setIntValue(atoi(tokens[2].c_str()));
+          }
+          if ( mode == PROMPT ) {
+              tmp = tokens[1].c_str();
+              tmp += " " + tokens[2];
+              tmp += " (";
+              tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
+              tmp += ")";
+              push( tmp.c_str() );
+              push( getTerminator() );
+          }
+      }
+      else if ( command == "setd" || command == "setf") {
+          string value, tmp;
+          if (tokens.size() == 3) {
+            node->getNode( tokens[1].c_str(), true )
+                ->setDoubleValue(atof(tokens[2].c_str()));
+          }
+          if ( mode == PROMPT ) {
+              tmp = tokens[1].c_str();
+              tmp += " ";
+              tmp += tokens[2].c_str();
+              tmp += " (";
+              tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
+              tmp += ")";
+              push( tmp.c_str() );
+              push( getTerminator() );
+          }
+      }
+      else if ( command == "setb" ) {
+          string tmp, value;
+          if (tokens.size() == 3) {
+            if (tokens[2] == "false" || tokens[2] == "0") {
+              node->getNode( tokens[1].c_str(), true )
+                  ->setBoolValue(false);
+              value = " False ";
+            }
+            if (tokens[2] == "true" || tokens[2] == "1"){
+              node->getNode( tokens[1].c_str(), true )
+                  ->setBoolValue(true);
+              value = " True ";
+            }
+            if ( mode == PROMPT ) {
+                tmp = tokens[1].c_str();
+                tmp += value;
+                tmp += " (";
+                tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
+                tmp += ")";
+                push( tmp.c_str() );
+                push( getTerminator() );
+            }
+
+          }
+     }
+      else if ( command == "del" ) {
+          string tmp;
+          if (tokens.size() == 3){
+             node->getNode( tokens[1].c_str(), true )->removeChild(tokens[2].c_str(),0);
+          }
+          if ( mode == PROMPT ) {
+              tmp = "Delete ";
+              tmp += tokens[1].c_str();
+              tmp += tokens[2];
+              push( tmp.c_str() );
+              push( getTerminator() );
+          }
+      }
 	    else {
                 const char* msg = "\
 Valid commands are:\r\n\
@@ -500,7 +572,12 @@ prompt             switch to interactive mode (default)\r\n\
 pwd                display your current path\r\n\
 quit               terminate connection\r\n\
 run <command>      run built in command\r\n\
-set <var> <val>    set <var> to a new <val>\r\n\
+set <var> <val>    set String <var> to a new <val>\r\n\
+setb <var> <val>   set Bool <var> to a new <val> only work with the foling value 0, 1, true, false\r\n\
+setd <var> <val>   set Double <var> to a new <val>\r\n\
+setf <var> <val>   alias for setd\r\n\
+seti <var> <val>   set Int <var> to a new <val>\r\n\
+del <var> <nod>    delete <nod> in <var>\r\n\
 subscribe <var>	   subscribe to property changes \r\n\
 unscubscribe <var>  unscubscribe from property changes (var must be the property name/path used by subscribe)\r\n";
                 push( msg );
@@ -595,7 +672,7 @@ FGProps::open()
     }
 
     poller.addChannel(this);
-    
+
     SG_LOG( SG_IO, SG_INFO, "Props server started on port " << port );
 
     set_enabled( true );
