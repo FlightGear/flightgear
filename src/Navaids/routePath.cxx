@@ -1281,5 +1281,6 @@ SGGeod RoutePath::positionForDistanceFrom(int index, double distanceM) const
 
 SGGeod RoutePath::positionAlongVia(Via* via, int previousIndex, double distanceM) const
 {
-
+    SG_LOG(SG_NAVAID, SG_ALERT, "RoutePath::positionAlongVia not implemented");
+    return SGGeod();
 }
