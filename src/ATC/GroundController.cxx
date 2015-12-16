@@ -1024,9 +1024,13 @@ void FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
                                              int& priority,
                                              time_t now)
 {
+
+    assert(i->getAircraft());
+    assert(i->getAircraft()->getPerformance());
     double length = 0;
     double vTaxi = (i->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
     FGGroundNetwork* network = dynamics->getGroundNetwork();
+    assert(network);
 
     i->setPriority(priority++);
     int pos = i->getCurrentPosition();
