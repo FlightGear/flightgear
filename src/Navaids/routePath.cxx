@@ -238,6 +238,7 @@ public:
     turnEntryAngle(0.0),
     turnExitAngle(0.0),
     turnRadius(0.0),
+    legCourseTrue(0.0),
     pathDistanceM(0.0),
     turnPathDistanceM(0.0),
     overflightCompensationAngle(0.0),
@@ -384,13 +385,14 @@ public:
           }
       } else {
           // happens for first leg
-          legCourseValid = true;
           if (isRunway) {
+              legCourseValid = true;
               FGRunway* rwy = static_cast<RunwayWaypt*>(wpt.get())->runway();
               turnExitAngle = next.legCourseTrue - rwy->headingDeg();
               legCourseTrue = rwy->headingDeg();
               flyOver = true;
           } else {
+              // don't set legCourseValid
               turnExitAngle = 0.0;
           }
       }
@@ -988,6 +990,7 @@ void RoutePath::commonInit()
     } else {
       // final waypt, fix up some data
       d->waypoints[i].turnExitPos = d->waypoints[i].pos;
+      d->waypoints[i].turnEntryPos = d->waypoints[i].pos;
     }
     
     // now turn is computed, can resolve distances
@@ -1197,9 +1200,15 @@ double RoutePath::distanceForVia(Via* via, int index) const
 
 double RoutePath::trackForIndex(int index) const
 {
+
     if (d->waypoints[index].skipped)
         return trackForIndex(index - 1);
-  return d->waypoints[index].legCourseTrue;
+
+    const WayptData& wd(d->waypoints[index]);
+    if (!wd.legCourseValid)
+        return 0.0;
+
+    return wd.legCourseTrue;
 }
 
 double RoutePath::distanceForIndex(int index) const
