@@ -970,6 +970,16 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
                                               int& priority,
                                               time_t now)
 {
+    if (!i->getAircraft()) {
+        SG_LOG(SG_ATC, SG_ALERT, "updateStartupTraffic: missing aircraft");
+        return;
+    }
+
+    if (!i->getAircraft()->getPerformance()) {
+        SG_LOG(SG_ATC, SG_ALERT, "updateStartupTraffic: missing aircraft performance");
+        return;
+    }
+
     i->allowPushBack();
     i->setPriority(priority++);
     // in meters per second;
@@ -979,6 +989,11 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
     }
 
     FGGroundNetwork* network = dynamics->getGroundNetwork();
+
+    if (!network) {
+        SG_LOG(SG_ATC, SG_ALERT, "updateStartupTraffic: missing ground network");
+        return;
+    }
 
     // Check for all active aircraft whether it's current pos segment is
     // an opposite of one of the departing aircraft's intentions
@@ -1024,13 +1039,24 @@ void FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
                                              int& priority,
                                              time_t now)
 {
+    if (!i->getAircraft()) {
+        SG_LOG(SG_ATC, SG_ALERT, "updateActiveTraffic: missing aircraft");
+        return;
+    }
 
-    assert(i->getAircraft());
-    assert(i->getAircraft()->getPerformance());
+    if (!i->getAircraft()->getPerformance()) {
+        SG_LOG(SG_ATC, SG_ALERT, "updateActiveTraffic: missing aircraft performance");
+        return;
+    }
+
     double length = 0;
     double vTaxi = (i->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
     FGGroundNetwork* network = dynamics->getGroundNetwork();
-    assert(network);
+
+    if (!network) {
+        SG_LOG(SG_ATC, SG_ALERT, "updateActiveTraffic: missing ground network");
+        return;
+    }
 
     i->setPriority(priority++);
     int pos = i->getCurrentPosition();
