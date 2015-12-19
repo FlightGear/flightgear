@@ -34,6 +34,7 @@ public:
   virtual SGModelPlacement * get3DModel() { return _aircraft.get(); }
   virtual SGVec3d& getVelocity() { return _velocity; }
 
+    static const char* subsystemName() { return "aircraft-model"; }
 private:
   void deinit ();
   

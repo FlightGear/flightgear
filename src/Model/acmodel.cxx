@@ -139,17 +139,20 @@ FGAircraftModel::reinit()
 void
 FGAircraftModel::shutdown()
 {
-  if (!_aircraft.get()) {
-    return;
-  }
-  
-  osg::Node* node = _aircraft->getSceneGraph();
-  globals->get_scenery()->get_aircraft_branch()->removeChild(node);
+    FGScenery* scenery = globals->get_scenery();
+
+    if (_aircraft.get()) {
+        if (scenery && scenery->get_aircraft_branch()) {
+            scenery->get_aircraft_branch()->removeChild(_aircraft->getSceneGraph());
+        }
+    }
 
     if (_interior.get()) {
-        globals->get_scenery()->get_interior_branch()->removeChild(_interior->getSceneGraph());
+        if (scenery && scenery->get_interior_branch()) {
+            scenery->get_interior_branch()->removeChild(_interior->getSceneGraph());
+        }
     }
-    
+
     _aircraft.reset();
     _interior.reset();
 }

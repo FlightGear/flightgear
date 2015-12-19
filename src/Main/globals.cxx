@@ -215,8 +215,6 @@ FGGlobals::~FGGlobals()
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
 
-    subsystem_mgr->remove("aircraft-model");
-
     subsystem_mgr->remove(FGTileMgr::subsystemName());
 
     osg::ref_ptr<osgViewer::Viewer> vw(renderer->getViewer());
