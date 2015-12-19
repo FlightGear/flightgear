@@ -1011,7 +1011,7 @@ void fgStartNewReset()
     
     SGSubsystemMgr* subsystemManger = globals->get_subsystem_mgr();
     // Nasal is manually inited in fgPostInit, ensure it's already shutdown
-    // before other subsystems, so Nasal listeners don't fire during shutdonw
+    // before other subsystems, so Nasal listeners don't fire during shutdown
     SGSubsystem* nasal = subsystemManger->get_subsystem("nasal");
     nasal->shutdown();
     nasal->unbind();
