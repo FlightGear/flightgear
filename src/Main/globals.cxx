@@ -211,21 +211,6 @@ FGGlobals::~FGGlobals()
         vw->stopThreading();
     }
 
-#if 0
-    // The AIModels manager performs a number of actions upon
-    // Shutdown that implicitly assume that other subsystems
-    // are still operational (Due to the dynamic allocation and
-    // deallocation of AIModel objects. To ensure we can safely
-    // shut down all subsystems, make sure we take down the
-    // AIModels system first.
-    SGSubsystemRef ai = subsystem_mgr->get_subsystem("ai-model");
-    if (ai) {
-        subsystem_mgr->remove("ai-model");
-        ai->unbind();
-        ai.clear(); // ensure AI is deleted now, not at end of this method
-    }
-#endif
-
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
 
