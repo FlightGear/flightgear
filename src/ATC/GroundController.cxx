@@ -515,7 +515,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
             intVecIterator ivi = i->getIntentions().begin();
             while (ivi != i->getIntentions().end()) {
                 if ((*ivi) > 0) {
-                    FGTaxiSegment* seg = network->findSegment((*ivi)-1);
+                    FGTaxiSegment* seg = network->findSegment(*ivi);
                     distance += seg->getLength();
                     if ((seg->hasBlock(now)) && (distance < i->getRadius() * 4)) {
                         current->setHoldPosition(true);
@@ -785,8 +785,8 @@ void FGGroundController::render(bool visible)
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
             // Handle start point i.e. the segment that is connected to the aircraft itself on the starting end
             // and to the the first "real" taxi segment on the other end. 
-            const int pos = i->getCurrentPosition() - 1;
-            if (pos >= 0) {
+            const int pos = i->getCurrentPosition();
+            if (pos > 0) {
                 FGTaxiSegment* segment = network->findSegment(pos);
                 SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
                 SGGeod end  (segment->getEnd()->geod());
@@ -868,8 +868,8 @@ void FGGroundController::render(bool visible)
             // Next: Draw the other taxi segments. 
             for (intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
                 osg::Matrix obj_pos;
-                const int k = (*j)-1;
-                if (k >= 0) {
+                const int k = (*j);
+                if (k > 0) {
                     osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                     obj_trans->setDataVariance(osg::Object::STATIC);
                     FGTaxiSegment* segmentK = network->findSegment(k);
@@ -1011,7 +1011,7 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
                 for (intVecIterator k = i->getIntentions().begin(); k != i->getIntentions().end(); k++) {
                     if ((*k) == posReverse) {
                         i->denyPushBack();
-                        network->findSegment(posReverse-1)->block(i->getId(), now, now);
+                        network->findSegment(posReverse)->block(i->getId(), now, now);
                     }
                 }
             }
@@ -1025,14 +1025,14 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
     double length = 0;
     int pos = i->getCurrentPosition();
     if (pos > 0) {
-        FGTaxiSegment *seg = network->findSegment(pos-1);
+        FGTaxiSegment *seg = network->findSegment(pos);
         length = seg->getLength();
         network->blockSegmentsEndingAt(seg, i->getId(), now, now);
     }
     for (intVecIterator j = i->getIntentions().begin(); j != i->getIntentions().end(); j++) {
         int pos = (*j);
         if (pos > 0) {
-            FGTaxiSegment *seg = network->findSegment(pos-1);
+            FGTaxiSegment *seg = network->findSegment(pos);
             length += seg->getLength();
             time_t blockTime = now + (length / vTaxi);
             network->blockSegmentsEndingAt(seg, i->getId(), blockTime - 30, now);
@@ -1066,7 +1066,7 @@ void FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
     i->setPriority(priority++);
     int pos = i->getCurrentPosition();
     if (pos > 0) {
-        FGTaxiSegment* segment = network->findSegment(pos-1);
+        FGTaxiSegment* segment = network->findSegment(pos);
         length = segment->getLength();
         if (segment->hasBlock(now)) {
             //SG_LOG(SG_GENERAL, SG_ALERT, "Taxiway incursion for AI aircraft" << i->getAircraft()->getCallSign());
@@ -1077,7 +1077,7 @@ void FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
     for (ivi = i->getIntentions().begin(); ivi != i->getIntentions().end(); ivi++) {
         int segIndex = (*ivi);
         if (segIndex > 0) {
-            FGTaxiSegment* seg = network->findSegment(segIndex-1);
+            FGTaxiSegment* seg = network->findSegment(segIndex);
             if (seg->hasBlock(now)) {
                 break;
             }
@@ -1087,7 +1087,7 @@ void FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
     for (intVecIterator j = i->getIntentions().begin(); j != ivi; j++) {
         int pos = (*j);
         if (pos > 0) {
-            FGTaxiSegment *seg = network->findSegment(pos-1);
+            FGTaxiSegment *seg = network->findSegment(pos);
             length += seg->getLength();
             time_t blockTime = now + (length / vTaxi);
             network->blockSegmentsEndingAt(seg, i->getId(), blockTime - 30, now);
