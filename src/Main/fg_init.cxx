@@ -103,6 +103,7 @@
 #include <Model/modelmgr.hxx>
 #include <AIModel/submodel.hxx>
 #include <AIModel/AIManager.hxx>
+#include <AIModel/performancedb.hxx>
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
@@ -815,6 +816,8 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
    // Initialize the ATC subsystem
     ////////////////////////////////////////////////////////////////////
+
+    globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::POST_FDM);
     globals->add_subsystem("ATC", new FGATCManager, SGSubsystemMgr::POST_FDM);
 
     ////////////////////////////////////////////////////////////////////
@@ -826,7 +829,7 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////
-    SG_LOG(SG_GENERAL, SG_INFO, "  AI Model Manager");
+
     globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
     globals->add_subsystem("submodel-mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
 

@@ -43,7 +43,6 @@
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/performancedata.hxx>
-#include <AIModel/performancedb.hxx>
 #include <ATC/atc_mgr.hxx>
 #include <Traffic/TrafficMgr.hxx>
 #include <Airports/groundnetwork.hxx>

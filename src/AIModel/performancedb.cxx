@@ -6,10 +6,11 @@
 
 #include <boost/foreach.hpp>
 
+#include <simgear/sg_inlines.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/xml/easyxml.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
 #include <iostream>
@@ -22,17 +23,41 @@ using std::cerr;
 
 PerformanceDB::PerformanceDB()
 {
-    SGPath dbpath( globals->get_fg_root() );
-    
-
-    dbpath.append( "/AI/Aircraft/" );
-    dbpath.append( "performancedb.xml"); 
-    load(dbpath);
 }
 
 
 PerformanceDB::~PerformanceDB()
-{}
+{
+}
+
+void PerformanceDB::init()
+{
+    SGPath dbpath( globals->get_fg_root() );
+    dbpath.append( "/AI/Aircraft/" );
+    dbpath.append( "performancedb.xml");
+    load(dbpath);
+
+    if (getDefaultPerformance() == 0) {
+        SG_LOG(SG_AI, SG_WARN, "PerformanceDB: no default performance data found/loaded");
+    }
+}
+
+void PerformanceDB::shutdown()
+{
+    PerformanceDataDict::iterator it;
+    for (it = _db.begin(); it != _db.end(); ++it) {
+        delete it->second;
+    }
+
+    _db.clear();
+    _aliases.clear();
+}
+
+void PerformanceDB::update(double dt)
+{
+    SG_UNUSED(dt);
+    suspend();
+}
 
 void PerformanceDB::registerPerformanceData(const std::string& id, PerformanceData* data) {
     //TODO if key exists already replace data "inplace", i.e. copy to existing PerfData instance
@@ -40,25 +65,48 @@ void PerformanceDB::registerPerformanceData(const std::string& id, PerformanceDa
     _db[id] = data;
 }
 
-PerformanceData* PerformanceDB::getDataFor(const string& acType, const string& acClass)
+PerformanceData* PerformanceDB::getDataFor(const string& acType, const string& acClass) const
 {
   // first, try with the specific aircraft type, such as 738 or A322
-    if (_db.find(acType) != _db.end()) {
-        return _db[acType];
+    PerformanceDataDict::const_iterator it;
+    it = _db.find(acType);
+    if (it != _db.end()) {
+        return it->second;
     }
     
     const string& alias = findAlias(acType);
-    if (_db.find(alias) != _db.end()) {
-      return _db[alias];
+    it = _db.find(alias);
+    if (it != _db.end()) {
+        return it->second;
     }
   
     SG_LOG(SG_AI, SG_INFO, "no performance data for " << acType);
-  
-    if (_db.find(acClass) == _db.end()) {
-        return _db["jet_transport"];
+
+    it = _db.find(acClass);
+    if (it == _db.end()) {
+        return getDefaultPerformance();
     }
-  
-    return _db[acClass];
+
+    return it->second;
+}
+
+PerformanceData* PerformanceDB::getDefaultPerformance() const
+{
+    PerformanceDataDict::const_iterator it = _db.find("jet_transport");
+    if (it == _db.end())
+        return NULL;
+
+    return it->second;
+}
+
+bool PerformanceDB::havePerformanceDataForAircraftType(const std::string& acType) const
+{
+    PerformanceDataDict::const_iterator it = _db.find(acType);
+    if (it != _db.end())
+        return true;
+
+    const std::string alias(findAlias(acType));
+    return (_db.find(alias) != _db.end());
 }
 
 void PerformanceDB::load(const SGPath& filename)

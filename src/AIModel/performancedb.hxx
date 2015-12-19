@@ -8,6 +8,8 @@
 class PerformanceData;
 class SGPath;
 
+#include <simgear/structure/subsystem_mgr.hxx>
+
 /**
  * Registry for performance data.
  *
@@ -17,24 +19,36 @@ class SGPath;
  * @author Thomas F�rster <t.foerster@biologie.hu-berlin.de>
 */
 //TODO provide std::map interface?
-class PerformanceDB
+class PerformanceDB : public SGSubsystem
 {
 public:
     PerformanceDB();
-    ~PerformanceDB();
+    virtual ~PerformanceDB();
 
-    void registerPerformanceData(const std::string& id, PerformanceData* data);
-    void registerPerformanceData(const std::string& id, const std::string& filename);
+    virtual void init();
+    virtual void shutdown();
+
+    virtual void update(double dt);
+
+    bool havePerformanceDataForAircraftType(const std::string& acType) const;
 
     /**
      * get performance data for an aircraft type / class. Type is specific, eg
      * '738' or 'A319'. Class is more generic, such as 'jet_transport'.
      */
-    PerformanceData* getDataFor(const std::string& acType, const std::string& acClass);
+    PerformanceData* getDataFor(const std::string& acType, const std::string& acClass) const;
+
+    PerformanceData* getDefaultPerformance() const;
+
+    static const char* subsystemName() { return "aircraft-performance-db"; }
+private:
     void load(const SGPath& path);
 
-private:
-    std::map<std::string, PerformanceData*> _db;
+    void registerPerformanceData(const std::string& id, PerformanceData* data);
+
+
+    typedef std::map<std::string, PerformanceData*> PerformanceDataDict;
+    PerformanceDataDict _db;
     
     const std::string& findAlias(const std::string& acType) const;
   

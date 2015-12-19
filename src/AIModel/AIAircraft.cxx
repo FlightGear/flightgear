@@ -93,7 +93,11 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     needsTaxiClearance = false;
     _needsGroundElevation = true;
 
-    _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
+    PerformanceDB* perfDB = globals->get_subsystem<PerformanceDB>();
+    if (perfDB) {
+        _performance = perfDB->getDefaultPerformance();
+    }
+
     dt = 0;
     takeOffStatus = 0;
 
@@ -144,8 +148,10 @@ void FGAIAircraft::unbind()
 
 void FGAIAircraft::setPerformance(const std::string& acType, const std::string& acclass)
 {
-  static PerformanceDB perfdb; //TODO make it a global service
-  _performance = perfdb.getDataFor(acType, acclass);
+    PerformanceDB* perfDB = globals->get_subsystem<PerformanceDB>();
+    if (perfDB) {
+        _performance = perfDB->getDataFor(acType, acclass);
+    }
 }
 
 #if 0
