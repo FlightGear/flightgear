@@ -219,8 +219,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     // If this function is called during initialization,
     // make sure we obtain a valid gate ID first
     // and place the model at the location of the gate.
-    if (firstFlight)
-    {
+    if (firstFlight && apt->getDynamics()->hasParkings()) {
       gate =  apt->getDynamics()->getAvailableParking(radius, fltType,
                                                         acType, airline);
       if (!gate.isValid()) {

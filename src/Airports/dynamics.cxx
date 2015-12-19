@@ -208,6 +208,11 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
     return NULL;
 }
 
+bool FGAirportDynamics::hasParkings() const
+{
+    return !groundNetwork->allParkings().empty();
+}
+
 ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const string & flType,
                                             const string & acType,
                                             const string & airline)

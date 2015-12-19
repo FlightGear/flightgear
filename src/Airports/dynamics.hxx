@@ -133,7 +133,9 @@ public:
                           int action,
                           std::string& runway,
                           double heading );
-    
+
+    bool hasParkings() const;
+
     /**
      * retrieve an available parking by GateID, or -1 if no suitable
      * parking location could be found.

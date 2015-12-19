@@ -66,10 +66,16 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
   
   // establish the parking position / gate if required
     if (firstFlight) {
+        // if the airprot has no parking positions defined, don't log
+        // the warning below.
+        if (!dep->getDynamics()->hasParkings()) {
+            return false;
+        }
+
       gate = dep->getDynamics()->getAvailableParking(radius, fltType,
                                                        aircraftType, airline);
       if (!gate.isValid()) {
-        SG_LOG(SG_AI, SG_WARN, "Warning: Could not find parking for a " <<
+        SG_LOG(SG_AI, SG_WARN, "Could not find parking for a " <<
                aircraftType <<
                " of flight type " << fltType <<
                " of airline     " << airline <<

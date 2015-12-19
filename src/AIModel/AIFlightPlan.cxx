@@ -210,7 +210,12 @@ void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
    if (timeDiff >= 2000)
    leg = 5;
    */
-  SG_LOG(SG_AI, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
+
+    if( sglog().would_log(SG_AI,SG_BULK) ) {
+        SG_LOG(SG_AI, SG_BULK, "Route from " << dep->getId() << " to " << arr->getId() <<
+               ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
+    }
+    
   wpt_iterator = waypoints.begin();
   bool dist = 0;
   isValid = create(ac, dep, arr, leg, alt, speed, lat, lon,
