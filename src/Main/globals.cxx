@@ -199,6 +199,19 @@ FGGlobals::~FGGlobals()
     // save user settings (unless already saved)
     saveUserSettings();
 
+    // stop OSG threading first, to avoid thread races while we tear down
+    // scene-graph pieces
+
+    osg::ref_ptr<osgViewer::Viewer> vw(renderer->getViewer());
+    if (vw) {
+        // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
+        // explicitly stop trheading before we delete the renderer or
+        // viewMgr (which ultimately holds refs to the CameraGroup, and
+        // GraphicsContext)
+        vw->stopThreading();
+    }
+
+#if 0
     // The AIModels manager performs a number of actions upon
     // Shutdown that implicitly assume that other subsystems
     // are still operational (Due to the dynamic allocation and
@@ -211,21 +224,12 @@ FGGlobals::~FGGlobals()
         ai->unbind();
         ai.clear(); // ensure AI is deleted now, not at end of this method
     }
+#endif
 
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
 
     subsystem_mgr->remove(FGTileMgr::subsystemName());
-
-    osg::ref_ptr<osgViewer::Viewer> vw(renderer->getViewer());
-    if (vw) {
-        // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
-        // explicitly stop trheading before we delete the renderer or
-        // viewMgr (which ultimately holds refs to the CameraGroup, and
-        // GraphicsContext)
-        vw->stopThreading();
-    }
-
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
     if (vw && vw->getDatabasePager()) {
