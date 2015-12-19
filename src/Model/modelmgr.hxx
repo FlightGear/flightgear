@@ -6,16 +6,11 @@
 #ifndef __MODELMGR_HXX
 #define __MODELMGR_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
 #include <vector>
+#include <memory>
 
 #include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/structure/subsystem_mgr.hxx>
-
-using std::vector;
 
 // Don't pull in headers, since we don't need them here.
 class SGPropertyNode;
@@ -61,6 +56,8 @@ public:
   virtual ~FGModelMgr ();
 
   virtual void init ();
+  virtual void shutdown ();
+
   virtual void bind ();
   virtual void unbind ();
   virtual void update (double dt);
@@ -87,7 +84,7 @@ public:
    */
   virtual void remove_instance (Instance * instance);
 
-
+    static const char* subsystemName() { return "model-manager"; }
 private:
   /**
    * Listener class that adds models at runtime.
@@ -104,9 +101,9 @@ private:
   };
 
   SGPropertyNode_ptr _models;
-  Listener * _listener;
+  std::auto_ptr<Listener> _listener;
 
-  vector<Instance *> _instances;
+    std::vector<Instance *> _instances;
 
 };
 

@@ -216,7 +216,6 @@ FGGlobals::~FGGlobals()
     subsystem_mgr->unbind();
 
     subsystem_mgr->remove("aircraft-model");
-    subsystem_mgr->remove("model-manager");
 
     subsystem_mgr->remove(FGTileMgr::subsystemName());
 

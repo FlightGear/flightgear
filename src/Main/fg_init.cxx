@@ -895,7 +895,7 @@ void fgCreateSubsystems(bool duringReset) {
     }
 
     globals->add_subsystem("aircraft-model", new FGAircraftModel, SGSubsystemMgr::DISPLAY);
-    globals->add_subsystem("model-manager", new FGModelMgr, SGSubsystemMgr::DISPLAY);
+    globals->add_new_subsystem<FGModelMgr>(SGSubsystemMgr::DISPLAY);
 
     globals->add_new_subsystem<FGViewMgr>(SGSubsystemMgr::DISPLAY);
 }

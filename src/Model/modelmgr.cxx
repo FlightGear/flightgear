@@ -28,44 +28,43 @@
 
 #include "modelmgr.hxx"
 
-using std::vector;
-
 using namespace simgear;
 
 // OSGFIXME
 // extern SGShadowVolume *shadows;
 
 FGModelMgr::FGModelMgr ()
-  : _models(fgGetNode("/models", true)),
-    _listener(new Listener(this))
 {
-  _models->addChangeListener(_listener);
 }
 
-#include <stdio.h>
 FGModelMgr::~FGModelMgr ()
 {
-  _models->removeChangeListener(_listener);
-  delete _listener;
-
-  osg::Group *scene_graph = globals->get_scenery()->get_scene_graph();
-  if (!scene_graph)
-    SG_LOG(SG_AIRCRAFT, SG_ALERT, "Warning: The scenegraph wass deleted before the models could be removed");
-
-  for (unsigned int i = 0; i < _instances.size(); i++) {
-    if (scene_graph)
-      scene_graph->removeChild(_instances[i]->model->getSceneGraph());
-    delete _instances[i];
-  }
 }
 
 void
 FGModelMgr::init ()
 {
-  vector<SGPropertyNode_ptr> model_nodes = _models->getChildren("model");
+    std::vector<SGPropertyNode_ptr> model_nodes = _models->getChildren("model");
 
   for (unsigned int i = 0; i < model_nodes.size(); i++)
       add_model(model_nodes[i]);
+}
+
+void FGModelMgr::shutdown()
+{
+    osg::Group *scene_graph = NULL;
+    if (globals->get_scenery()) {
+        scene_graph = globals->get_scenery()->get_scene_graph();
+    }
+
+    // always delete instances, even if the scene-graph is gone
+    for (unsigned int i = 0; i < _instances.size(); i++) {
+        if (scene_graph) {
+            scene_graph->removeChild(_instances[i]->model->getSceneGraph());
+        }
+
+        delete _instances[i];
+    }
 }
 
 void
@@ -141,11 +140,18 @@ FGModelMgr::add_model (SGPropertyNode * node)
 void
 FGModelMgr::bind ()
 {
+    _models = fgGetNode("/models", true);
+
+    _listener.reset(new Listener(this));
+    _models->addChangeListener(_listener.get());
 }
 
 void
 FGModelMgr::unbind ()
 {
+    _models->removeChangeListener(_listener.get());
+    _listener.reset();
+    _models.clear();
 }
 
 namespace
@@ -219,7 +225,7 @@ FGModelMgr::add_instance (Instance * instance)
 void
 FGModelMgr::remove_instance (Instance * instance)
 {
-    vector<Instance *>::iterator it;
+    std::vector<Instance *>::iterator it;
     for (it = _instances.begin(); it != _instances.end(); it++) {
         if (*it == instance) {
             _instances.erase(it);
@@ -274,8 +280,8 @@ FGModelMgr::Listener::childRemoved(SGPropertyNode * parent, SGPropertyNode * chi
     return;
 
   // search instance by node and remove it from scenegraph
-  vector<Instance *>::iterator it = _mgr->_instances.begin();
-  vector<Instance *>::iterator end = _mgr->_instances.end();
+    std::vector<Instance *>::iterator it = _mgr->_instances.begin();
+    std::vector<Instance *>::iterator end = _mgr->_instances.end();
 
   for (; it != end; ++it) {
     Instance *instance = *it;
@@ -287,7 +293,10 @@ FGModelMgr::Listener::childRemoved(SGPropertyNode * parent, SGPropertyNode * chi
     // OSGFIXME
 //     if (shadows && instance->shadow)
 //         shadows->deleteOccluder(branch);
-    globals->get_scenery()->get_scene_graph()->removeChild(branch);
+
+      if (globals->get_scenery() && globals->get_scenery()->get_scene_graph()) {
+          globals->get_scenery()->get_scene_graph()->removeChild(branch);
+      }
 
     delete instance;
     break;
