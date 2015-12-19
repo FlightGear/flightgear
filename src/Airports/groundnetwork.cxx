@@ -57,7 +57,10 @@ FGTaxiSegment::FGTaxiSegment(FGTaxiNode* aStart, FGTaxiNode* aEnd) :
   index(0),
   oppositeDirection(0)
 {
-};
+    if (!aStart || !aEnd) {
+        throw sg_exception("Missing node arguments creating FGTaxiSegment");
+    }
+}
 
 SGGeod FGTaxiSegment::getCenter() const
 {

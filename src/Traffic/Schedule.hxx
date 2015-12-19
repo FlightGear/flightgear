@@ -118,9 +118,9 @@ class FGAISchedule
   const std::string& getFlightType     () { return flightType;};
   const std::string& getAirline        () { return airline; };
   const std::string& getAircraft       () { return acType; };
-  const std::string& getCallSign       ();
+  std::string getCallSign       ();
   const std::string& getRegistration   () { return registration;};
-  const std::string& getFlightRules    ();
+  std::string getFlightRules    ();
   bool getHeavy                   () { return heavy; };
   double getCourse                () { return courseToDest; };
   unsigned int getRunCount        () { return runCount; };

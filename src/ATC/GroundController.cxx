@@ -107,6 +107,11 @@ void FGGroundController::announcePosition(int id,
                                        double radius, int leg,
                                        FGAIAircraft * aircraft)
 {
+    if (!aircraft || !aircraft->getPerformance()) {
+        SG_LOG(SG_ATC, SG_ALERT, "announcePosition: missing aircraft performance");
+        return;
+    }
+
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route

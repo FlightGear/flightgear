@@ -505,17 +505,53 @@ bool FGAISchedule::next()
    return true;
 }
 
-time_t FGAISchedule::getDepartureTime() { return (*flights.begin())->getDepartureTime   (); }
+time_t FGAISchedule::getDepartureTime()
+{
+    if (flights.empty())
+        return 0;
 
-FGAirport *FGAISchedule::getDepartureAirport() { return (*flights.begin())->getDepartureAirport(); }
+    return (*flights.begin())->getDepartureTime   ();
+}
 
-FGAirport *FGAISchedule::getArrivalAirport() { return (*flights.begin())->getArrivalAirport  (); }
+FGAirport *FGAISchedule::getDepartureAirport()
+{
+    if (flights.empty())
+        return 0;
 
-int FGAISchedule::getCruiseAlt() { return (*flights.begin())->getCruiseAlt       (); }
+    return (*flights.begin())->getDepartureAirport();
+}
 
-const std::string &FGAISchedule::getCallSign() { return (*flights.begin())->getCallSign (); }
+FGAirport *FGAISchedule::getArrivalAirport()
+{
+    if (flights.empty())
+        return 0;
 
-const std::string &FGAISchedule::getFlightRules() { return (*flights.begin())->getFlightRules (); }
+    return (*flights.begin())->getArrivalAirport  ();
+}
+
+int FGAISchedule::getCruiseAlt()
+{
+    if (flights.empty())
+        return 0;
+
+    return (*flights.begin())->getCruiseAlt       ();
+}
+
+std::string FGAISchedule::getCallSign()
+{
+    if (flights.empty())
+        return std::string();
+
+    return (*flights.begin())->getCallSign ();
+}
+
+std::string FGAISchedule::getFlightRules()
+{
+    if (flights.empty())
+        return std::string();
+
+    return (*flights.begin())->getFlightRules ();
+}
 
 FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDestination,
                                                       const string &req,
