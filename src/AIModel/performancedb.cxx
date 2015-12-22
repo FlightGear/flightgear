@@ -79,8 +79,6 @@ PerformanceData* PerformanceDB::getDataFor(const string& acType, const string& a
     if (it != _db.end()) {
         return it->second;
     }
-  
-    SG_LOG(SG_AI, SG_INFO, "no performance data for " << acType);
 
     it = _db.find(acClass);
     if (it == _db.end()) {

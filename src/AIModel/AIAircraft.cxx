@@ -56,7 +56,8 @@ using std::endl;
 FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
      /* HOT must be disabled for AI Aircraft,
       * otherwise traffic detection isn't working as expected.*/
-     FGAIBase(otAircraft, false) 
+    FGAIBase(otAircraft, false),
+    _performance(0)
 {
     trafficRef = ref;
     if (trafficRef) {
@@ -96,6 +97,8 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     PerformanceDB* perfDB = globals->get_subsystem<PerformanceDB>();
     if (perfDB) {
         _performance = perfDB->getDefaultPerformance();
+    } else {
+        SG_LOG(SG_AI, SG_ALERT, "no performance DB found");
     }
 
     dt = 0;

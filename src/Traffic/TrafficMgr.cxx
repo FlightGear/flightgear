@@ -67,6 +67,8 @@
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIBase.hxx>
+#include <AIModel/performancedb.hxx>
+
 #include <Airports/airport.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/globals.hxx>
@@ -317,7 +319,9 @@ private:
         
         if (!FGAISchedule::validModelPath(mdl)) {
             missingModels.insert(mdl);
+#if defined(ENABLE_DEV_WARNINGS)
             SG_LOG(SG_AI, SG_WARN, "TrafficMgr: Missing model path:" << mdl);
+#endif
             requiredAircraft = homePort = "";
             return;
         }
@@ -578,10 +582,17 @@ void FGTrafficManager::finishInit()
     assert(doingInit);
     SG_LOG(SG_AI, SG_INFO, "finishing AI-Traffic init");
     loadHeuristics();
+
+    PerformanceDB* perfDB = globals->get_subsystem<PerformanceDB>();
     
     // Do sorting and scoring separately, to take advantage of the "homeport" variable
     BOOST_FOREACH(FGAISchedule* schedule, scheduledAircraft) {
         schedule->setScore();
+#if defined(ENABLE_DEV_WARNINGS)
+        if (!perfDB->havePerformanceDataForAircraftType(schedule->getAircraft())) {
+            SG_LOG(SG_AI, SG_WARN, "AI-Traffic: schedule aircraft missing performance data:" << schedule->getAircraft());
+        }
+#endif
     }
     
     sort(scheduledAircraft.begin(), scheduledAircraft.end(),
@@ -626,8 +637,10 @@ void FGTrafficManager::loadHeuristics()
               break;
             HeuristicMapIterator itr = heurMap.find(h.registration);
             if (itr != heurMap.end()) {
+#if defined(ENABLE_DEV_WARNINGS)
               SG_LOG(SG_AI, SG_WARN,"Traffic Manager Warning: found duplicate tailnumber " <<
                      h.registration << " for AI aircraft");
+#endif
             } else {
               heurMap[h.registration] = h;
             }
