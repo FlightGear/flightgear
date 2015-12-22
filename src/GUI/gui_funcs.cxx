@@ -221,7 +221,9 @@ bool openBrowser(const std::string& aAddress)
     ok = (system( command.c_str() ) == 0);
 #endif
 
-    mkDialog("The file is shown in your web browser window.");
+    if( fgGetBool("/sim/gui/show-browser-open-hint", true) )
+        mkDialog("The file is shown in your web browser window.");
+
     return ok;
 }
 
