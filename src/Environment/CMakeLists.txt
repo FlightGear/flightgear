@@ -8,7 +8,6 @@ set(SOURCES
 	ephemeris.cxx
 	fgclouds.cxx
 	fgmetar.cxx
-	fgwind.cxx
 	metarairportfilter.cxx
 	metarproperties.cxx
 	precipitation_mgr.cxx
@@ -28,7 +27,6 @@ set(HEADERS
 	ephemeris.hxx
 	fgclouds.hxx
 	fgmetar.hxx
-	fgwind.hxx
 	metarairportfilter.hxx
 	metarproperties.hxx
 	precipitation_mgr.hxx
