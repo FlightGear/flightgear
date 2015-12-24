@@ -119,7 +119,7 @@ public:
     // so it can pass this through to its options object
     void materialLibChanged();
 
-    static const char* subsystemName() { return "tile-mgr"; }
+    static const char* subsystemName() { return "tile-manager"; }
 };
 
 
