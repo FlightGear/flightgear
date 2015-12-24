@@ -226,7 +226,7 @@ void FGAirportDynamicsXMLLoader::startArc(const XMLAttributes &atts)
   _arcSet.insert(e);  
   _dynamics->getGroundNetwork()->addSegment(fromNode, toNode);
   if (isPushBackRoute) {
-      toNode->setIsPushback();
+//    toNode->setIsPushback();
   }
 }
 
