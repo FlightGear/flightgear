@@ -652,7 +652,10 @@ double FGAISchedule::getSpeed()
   double dist = SGGeodesy::distanceNm(dep->geod(), arr->geod());
   double remainingTimeEnroute = (*i)->getArrivalTime() - (*i)->getDepartureTime();
 
-  double speed = dist / (remainingTimeEnroute/3600.0);
+  double speed = 0.0;
+  if (remainingTimeEnroute > 0.01) 
+    speed = dist / (remainingTimeEnroute/3600.0);
+
   SG_CLAMP_RANGE(speed, 300.0, 500.0);
   return speed;
 }
