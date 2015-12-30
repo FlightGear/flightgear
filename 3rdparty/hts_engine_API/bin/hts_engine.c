@@ -4,7 +4,7 @@
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2013  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2015  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -87,6 +87,7 @@ void usage(void)
    fprintf(stderr, "    -u  f          : voiced/unvoiced threshold                               [  0.5][ 0.0-- 1.0]\n");
    fprintf(stderr, "    -jm f          : weight of GV for spectrum                               [  1.0][ 0.0--    ]\n");
    fprintf(stderr, "    -jf f          : weight of GV for log F0                                 [  1.0][ 0.0--    ]\n");
+   fprintf(stderr, "    -g  f          : volume (dB)                                             [  0.0][    --    ]\n");
    fprintf(stderr, "    -z  i          : audio buffer size (if i==0, turn off)                   [    0][   0--    ]\n");
    fprintf(stderr, "  infile:\n");
    fprintf(stderr, "    label file\n");
@@ -270,6 +271,14 @@ int main(int argc, char **argv)
                HTS_Engine_clear(&engine);
                exit(1);
             }
+            --argc;
+            break;
+         case 'g':
+            HTS_Engine_set_volume(&engine, atof(*++argv));
+            --argc;
+            break;
+         case 'z':
+            HTS_Engine_set_audio_buff_size(&engine, (size_t) atoi(*++argv));
             --argc;
             break;
          default:

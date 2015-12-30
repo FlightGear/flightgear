@@ -4,7 +4,7 @@
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2013  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2015  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -181,6 +181,9 @@ HTS_Boolean HTS_SStreamSet_create(HTS_SStreamSet * sss, HTS_ModelSet * ms, HTS_L
    size_t next_time;
    size_t next_state;
 
+   if (HTS_Label_get_size(label) == 0)
+      return FALSE;
+
    /* check interpolation weights */
    for (i = 0, temp = 0.0; i < HTS_ModelSet_get_nvoices(ms); i++)
       temp += duration_iw[i];
@@ -194,23 +197,23 @@ HTS_Boolean HTS_SStreamSet_create(HTS_SStreamSet * sss, HTS_ModelSet * ms, HTS_L
 
    for (i = 0; i < HTS_ModelSet_get_nstream(ms); i++) {
       for (j = 0, temp = 0.0; j < HTS_ModelSet_get_nvoices(ms); j++)
-         temp += parameter_iw[i][j];
+         temp += parameter_iw[j][i];
       if (temp == 0.0) {
          return FALSE;
       } else if (temp != 1.0) {
          for (j = 0; j < HTS_ModelSet_get_nvoices(ms); j++)
-            if (parameter_iw[i][j] != 0.0)
-               parameter_iw[i][j] /= temp;
+            if (parameter_iw[j][i] != 0.0)
+               parameter_iw[j][i] /= temp;
       }
       if (HTS_ModelSet_use_gv(ms, i)) {
          for (j = 0, temp = 0.0; j < HTS_ModelSet_get_nvoices(ms); j++)
-            temp += gv_iw[i][j];
+            temp += gv_iw[j][i];
          if (temp == 0.0)
             return FALSE;
          else if (temp != 1.0)
             for (j = 0; j < HTS_ModelSet_get_nvoices(ms); j++)
-               if (gv_iw[i][j] != 0.0)
-                  gv_iw[i][j] /= temp;
+               if (gv_iw[j][i] != 0.0)
+                  gv_iw[j][i] /= temp;
       }
    }
 
@@ -287,9 +290,9 @@ HTS_Boolean HTS_SStreamSet_create(HTS_SStreamSet * sss, HTS_ModelSet * ms, HTS_L
          for (k = 0; k < sss->nstream; k++) {
             sst = &sss->sstream[k];
             if (sst->msd)
-               HTS_ModelSet_get_parameter(ms, k, j, HTS_Label_get_string(label, i), parameter_iw[k], sst->mean[state], sst->vari[state], &sst->msd[state]);
+               HTS_ModelSet_get_parameter(ms, k, j, HTS_Label_get_string(label, i), (const double *const *) parameter_iw, sst->mean[state], sst->vari[state], &sst->msd[state]);
             else
-               HTS_ModelSet_get_parameter(ms, k, j, HTS_Label_get_string(label, i), parameter_iw[k], sst->mean[state], sst->vari[state], NULL);
+               HTS_ModelSet_get_parameter(ms, k, j, HTS_Label_get_string(label, i), (const double *const *) parameter_iw, sst->mean[state], sst->vari[state], NULL);
          }
          state++;
       }
@@ -322,7 +325,7 @@ HTS_Boolean HTS_SStreamSet_create(HTS_SStreamSet * sss, HTS_ModelSet * ms, HTS_L
       if (HTS_ModelSet_use_gv(ms, i)) {
          sst->gv_mean = (double *) HTS_calloc(sst->vector_length, sizeof(double));
          sst->gv_vari = (double *) HTS_calloc(sst->vector_length, sizeof(double));
-         HTS_ModelSet_get_gv(ms, i, HTS_Label_get_string(label, 0), gv_iw[i], sst->gv_mean, sst->gv_vari);
+         HTS_ModelSet_get_gv(ms, i, HTS_Label_get_string(label, 0), (const double *const *) gv_iw, sst->gv_mean, sst->gv_vari);
       } else {
          sst->gv_mean = NULL;
          sst->gv_vari = NULL;

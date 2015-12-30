@@ -4,7 +4,7 @@
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2013  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2015  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -71,7 +71,12 @@ HTS_AUDIO_C_START;
 #include <windows.h>
 #include <mmsystem.h>
 #define AUDIO_WAIT_BUFF_MS 10   /* wait time (0.01 sec) */
-#define AUDIO_CHANNEL 1         /* monoral */
+#define AUDIO_CHANNEL      1    /* monaural */
+#ifdef _M_X64
+#define AUDIO_POINTER_TYPE DWORD_PTR
+#else
+#define AUDIO_POINTER_TYPE DWORD
+#endif
 
 /* HTS_Audio: audio interface for Windows */
 typedef struct _HTS_AudioInterface {
@@ -85,7 +90,7 @@ typedef struct _HTS_AudioInterface {
 } HTS_AudioInterface;
 
 /* HTS_AudioInterface_callback_function: callback function from audio device */
-static void CALLBACK HTS_AudioInterface_callback_function(HWAVEOUT hwaveout, UINT msg, DWORD user_data, DWORD param1, DWORD param2)
+static void CALLBACK HTS_AudioInterface_callback_function(HWAVEOUT hwaveout, UINT msg, AUDIO_POINTER_TYPE user_data, AUDIO_POINTER_TYPE param1, AUDIO_POINTER_TYPE param2)
 {
    WAVEHDR *wavehdr = (WAVEHDR *) param1;
    HTS_AudioInterface *audio_interface = (HTS_AudioInterface *) user_data;
@@ -110,7 +115,7 @@ static HTS_Boolean HTS_AudioInterface_write(HTS_AudioInterface * audio_interface
       audio_interface->now_buff_1 = TRUE;
       audio_interface->which_buff = 2;
       memcpy(audio_interface->buff_1.lpData, buff, buff_size * sizeof(short));
-      audio_interface->buff_1.dwBufferLength = buff_size * sizeof(short);
+      audio_interface->buff_1.dwBufferLength = (DWORD) buff_size *sizeof(short);
       result = waveOutWrite(audio_interface->hwaveout, &(audio_interface->buff_1), sizeof(WAVEHDR));
    } else {
       while (audio_interface->now_buff_2 == TRUE)
@@ -118,7 +123,7 @@ static HTS_Boolean HTS_AudioInterface_write(HTS_AudioInterface * audio_interface
       audio_interface->now_buff_2 = TRUE;
       audio_interface->which_buff = 1;
       memcpy(audio_interface->buff_2.lpData, buff, buff_size * sizeof(short));
-      audio_interface->buff_2.dwBufferLength = buff_size * sizeof(short);
+      audio_interface->buff_2.dwBufferLength = (DWORD) buff_size *sizeof(short);
       result = waveOutWrite(audio_interface->hwaveout, &(audio_interface->buff_2), sizeof(WAVEHDR));
    }
 
@@ -172,12 +177,12 @@ static HTS_AudioInterface *HTS_AudioInterface_open(size_t sampling_frequency, si
    /* format */
    audio_interface->waveformatex.wFormatTag = WAVE_FORMAT_PCM;
    audio_interface->waveformatex.nChannels = AUDIO_CHANNEL;
-   audio_interface->waveformatex.nSamplesPerSec = sampling_frequency;
+   audio_interface->waveformatex.nSamplesPerSec = (DWORD) sampling_frequency;
    audio_interface->waveformatex.wBitsPerSample = sizeof(short) * 8;
    audio_interface->waveformatex.nBlockAlign = AUDIO_CHANNEL * audio_interface->waveformatex.wBitsPerSample / 8;
-   audio_interface->waveformatex.nAvgBytesPerSec = sampling_frequency * audio_interface->waveformatex.nBlockAlign;
+   audio_interface->waveformatex.nAvgBytesPerSec = (DWORD) sampling_frequency *audio_interface->waveformatex.nBlockAlign;
    /* open */
-   result = waveOutOpen(&audio_interface->hwaveout, WAVE_MAPPER, &audio_interface->waveformatex, (DWORD) HTS_AudioInterface_callback_function, (DWORD) audio_interface, CALLBACK_FUNCTION);
+   result = waveOutOpen(&audio_interface->hwaveout, WAVE_MAPPER, &audio_interface->waveformatex, (AUDIO_POINTER_TYPE) HTS_AudioInterface_callback_function, (AUDIO_POINTER_TYPE) audio_interface, CALLBACK_FUNCTION);
    if (result != MMSYSERR_NOERROR) {
       HTS_error(0, "hts_engine: Failed to open your output audio_interface device to play waveform.\n");
       HTS_free(audio_interface);
@@ -186,7 +191,7 @@ static HTS_AudioInterface *HTS_AudioInterface_open(size_t sampling_frequency, si
 
    /* prepare */
    audio_interface->buff_1.lpData = (LPSTR) HTS_calloc(max_buff_size, sizeof(short));
-   audio_interface->buff_1.dwBufferLength = max_buff_size * sizeof(short);
+   audio_interface->buff_1.dwBufferLength = (DWORD) max_buff_size *sizeof(short);
    audio_interface->buff_1.dwFlags = WHDR_BEGINLOOP | WHDR_ENDLOOP;
    audio_interface->buff_1.dwLoops = 1;
    audio_interface->buff_1.lpNext = 0;
@@ -199,7 +204,7 @@ static HTS_AudioInterface *HTS_AudioInterface_open(size_t sampling_frequency, si
       return NULL;
    }
    audio_interface->buff_2.lpData = (LPSTR) HTS_calloc(max_buff_size, sizeof(short));
-   audio_interface->buff_2.dwBufferLength = max_buff_size * sizeof(short);
+   audio_interface->buff_2.dwBufferLength = (DWORD) max_buff_size *sizeof(short);
    audio_interface->buff_2.dwFlags = WHDR_BEGINLOOP | WHDR_ENDLOOP;
    audio_interface->buff_2.dwLoops = 1;
    audio_interface->buff_2.lpNext = 0;

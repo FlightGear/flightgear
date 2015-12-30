@@ -4,7 +4,7 @@
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2013  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2015  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -61,6 +61,12 @@ HTS_MODEL_C_START;
 
 /* hts_engine libraries */
 #include "HTS_hidden.h"
+
+#ifdef WIN32
+typedef unsigned __int32 uint32_t;
+#else
+#include <stdint.h>
+#endif                          /* WIN32 */
 
 /* HTS_dp_match: recursive matching */
 static HTS_Boolean HTS_dp_match(const char *string, const char *pattern, size_t pos, size_t max)
@@ -136,7 +142,7 @@ static size_t HTS_name2num(const char *buff)
 {
    size_t i;
 
-   for (i = strlen(buff) - 1; '0' <= buff[i] && buff[i] <= '9' && i >= 0; i--);
+   for (i = strlen(buff) - 1; '0' <= buff[i] && buff[i] <= '9'; i--);
    i++;
 
    return (size_t) atoi(&buff[i]);
@@ -145,7 +151,7 @@ static size_t HTS_name2num(const char *buff)
 /* HTS_get_state_num: return the number of state */
 static size_t HTS_get_state_num(const char *string)
 {
-   char *left, *right;
+   const char *left, *right;
 
    left = strchr(string, '[');
    if (left == NULL)
@@ -658,7 +664,7 @@ static HTS_Boolean HTS_Model_load_tree(HTS_Model * model, HTS_File * fp)
 /* HTS_Model_load_pdf: load pdfs */
 static HTS_Boolean HTS_Model_load_pdf(HTS_Model * model, HTS_File * fp, size_t vector_length, size_t num_windows, HTS_Boolean is_msd)
 {
-   unsigned int i;
+   uint32_t i;
    size_t j, k;
    HTS_Boolean result = TRUE;
    size_t len;
@@ -677,7 +683,7 @@ static HTS_Boolean HTS_Model_load_pdf(HTS_Model * model, HTS_File * fp, size_t v
    model->npdf -= 2;
    /* read the number of pdfs */
    for (j = 2; j <= model->ntree + 1; j++) {
-      if (HTS_fread_little_endian(&i, sizeof(unsigned int), 1, fp) != 1) {
+      if (HTS_fread_little_endian(&i, sizeof(i), 1, fp) != 1) {
          result = FALSE;
          break;
       }
@@ -888,7 +894,7 @@ HTS_Boolean HTS_ModelSet_load(HTS_ModelSet * ms, char **voices, size_t num_voice
 {
    size_t i, j, k, s, e;
    HTS_Boolean error = FALSE;
-   HTS_File *fp;
+   HTS_File *fp = NULL;
    char buff1[HTS_MAXBUFLEN];
    char buff2[HTS_MAXBUFLEN];
    size_t matched_size;
@@ -1061,7 +1067,10 @@ HTS_Boolean HTS_ModelSet_load(HTS_ModelSet * ms, char **voices, size_t num_voice
          }
       }
       if (error != FALSE) {
-         HTS_fclose(fp);
+         if (fp != NULL) {
+            HTS_fclose(fp);
+            fp = NULL;
+         }
          break;
       }
       /* reset STREAM options */
@@ -1177,7 +1186,10 @@ HTS_Boolean HTS_ModelSet_load(HTS_ModelSet * ms, char **voices, size_t num_voice
          free(temp_option);
       }
       if (error != FALSE) {
-         HTS_fclose(fp);
+         if (fp != NULL) {
+            HTS_fclose(fp);
+            fp = NULL;
+         }
          break;
       }
       /* reset POSITION */
@@ -1359,6 +1371,7 @@ HTS_Boolean HTS_ModelSet_load(HTS_ModelSet * ms, char **voices, size_t num_voice
                HTS_fseek(fp, start_of_data, SEEK_SET);
             }
          }
+         HTS_Window_clear(&ms->window[j]);      /* if windows were loaded already, release them */
          if (HTS_Window_load(&ms->window[j], win_fp, num_windows[j]) != TRUE)
             error = TRUE;
          for (k = 0; k < num_windows[j]; k++)
@@ -1446,7 +1459,10 @@ HTS_Boolean HTS_ModelSet_load(HTS_ModelSet * ms, char **voices, size_t num_voice
             free(temp_gv_tree[j]);
       free(temp_gv_tree);
       /* fclose */
-      HTS_fclose(fp);
+      if (fp != NULL) {
+         HTS_fclose(fp);
+         fp = NULL;
+      }
       if (error != FALSE)
          break;
    }
@@ -1513,6 +1529,18 @@ HTS_Boolean HTS_ModelSet_get_gv_flag(HTS_ModelSet * ms, const char *string)
 size_t HTS_ModelSet_get_nstate(HTS_ModelSet * ms)
 {
    return ms->num_states;
+}
+
+/* HTS_Engine_get_fullcontext_label_format: get full-context label format */
+const char *HTS_ModelSet_get_fullcontext_label_format(HTS_ModelSet * ms)
+{
+   return ms->fullcontext_format;
+}
+
+/* HTS_Engine_get_fullcontext_label_version: get full-context label version */
+const char *HTS_ModelSet_get_fullcontext_label_version(HTS_ModelSet * ms)
+{
+   return ms->fullcontext_version;
 }
 
 /* HTS_ModelSet_get_nstream: get number of stream */
@@ -1622,7 +1650,7 @@ void HTS_ModelSet_get_parameter_index(HTS_ModelSet * ms, size_t voice_index, siz
 }
 
 /* HTS_ModelSet_get_parameter: get parameter using interpolation weight */
-void HTS_ModelSet_get_parameter(HTS_ModelSet * ms, size_t stream_index, size_t state_index, const char *string, const double *iw, double *mean, double *vari, double *msd)
+void HTS_ModelSet_get_parameter(HTS_ModelSet * ms, size_t stream_index, size_t state_index, const char *string, const double *const *iw, double *mean, double *vari, double *msd)
 {
    size_t i;
    size_t len = ms->stream[0][stream_index].vector_length * ms->stream[0][stream_index].num_windows;
@@ -1635,8 +1663,8 @@ void HTS_ModelSet_get_parameter(HTS_ModelSet * ms, size_t stream_index, size_t s
       *msd = 0.0;
 
    for (i = 0; i < ms->num_voices; i++)
-      if (iw[i] != 0.0)
-         HTS_Model_add_parameter(&ms->stream[i][stream_index], state_index, string, mean, vari, msd, iw[i]);
+      if (iw[i][stream_index] != 0.0)
+         HTS_Model_add_parameter(&ms->stream[i][stream_index], state_index, string, mean, vari, msd, iw[i][stream_index]);
 }
 
 /* HTS_ModelSet_get_gv_index: get gv PDF & tree index */
@@ -1646,7 +1674,7 @@ void HTS_ModelSet_get_gv_index(HTS_ModelSet * ms, size_t voice_index, size_t str
 }
 
 /* HTS_ModelSet_get_gv: get GV using interpolation weight */
-void HTS_ModelSet_get_gv(HTS_ModelSet * ms, size_t stream_index, const char *string, const double *iw, double *mean, double *vari)
+void HTS_ModelSet_get_gv(HTS_ModelSet * ms, size_t stream_index, const char *string, const double *const *iw, double *mean, double *vari)
 {
    size_t i;
    size_t len = ms->stream[0][stream_index].vector_length;
@@ -1656,8 +1684,8 @@ void HTS_ModelSet_get_gv(HTS_ModelSet * ms, size_t stream_index, const char *str
       vari[i] = 0.0;
    }
    for (i = 0; i < ms->num_voices; i++)
-      if (iw[i] != 0.0)
-         HTS_Model_add_parameter(&ms->gv[i][stream_index], 2, string, mean, vari, NULL, iw[i]);
+      if (iw[i][stream_index] != 0.0)
+         HTS_Model_add_parameter(&ms->gv[i][stream_index], 2, string, mean, vari, NULL, iw[i][stream_index]);
 }
 
 HTS_MODEL_C_END;

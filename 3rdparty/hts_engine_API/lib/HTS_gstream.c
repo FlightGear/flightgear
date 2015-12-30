@@ -4,7 +4,7 @@
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2013  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2015  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -100,7 +100,7 @@ HTS_Boolean HTS_GStreamSet_create(HTS_GStreamSet * gss, HTS_PStreamSet * pss, si
    for (i = 0; i < gss->nstream; i++) {
       if (HTS_PStreamSet_is_msd(pss, i)) {      /* for MSD */
          for (j = 0, msd_frame = 0; j < gss->total_frame; j++)
-            if (HTS_PStreamSet_get_msd_flag(pss, i, j)) {
+            if (HTS_PStreamSet_get_msd_flag(pss, i, j) == TRUE) {
                for (k = 0; k < gss->gstream[i].vector_length; k++)
                   gss->gstream[i].par[j][k] = HTS_PStreamSet_get_parameter(pss, i, msd_frame, k);
                msd_frame++;

@@ -1,6 +1,6 @@
 ===============================================================================
-      The HMM-Based Speech Synthesis Engine "hts_engine API" version 1.08
-                           release December 25, 2013
+      The HMM-Based Speech Synthesis Engine "hts_engine API" version 1.10
+                           release December 25, 2015
 
 
 The hts_engine API is an API version of hts_engine which has been released
@@ -25,7 +25,7 @@ the conditions in the following license:
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2013  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2015  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -115,7 +115,6 @@ Synthesis System. Current members are
  Keiichiro Oura      http://www.sp.nitech.ac.jp/~uratec/
  (Design and Development, Main Maintainer)
  Kei Hashimoto       http://www.sp.nitech.ac.jp/~bonanza/
- Sayaka Shiota       http://www.sp.nitech.ac.jp/~sayaka/
  Shinji Takaki       http://www.sp.nitech.ac.jp/~k-prr44/
  Heiga Zen
  Junichi Yamagishi   http://homepages.inf.ed.ac.uk/jyamagis/

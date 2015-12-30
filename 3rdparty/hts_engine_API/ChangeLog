@@ -1,3 +1,76 @@
+2015-12-23 17:18  uratec
+
+	* lib/HTS_sstream.c: add label file checker.
+
+2015-12-21 10:19  uratec
+
+	* COPYING, NEWS, README, configure.ac, bin/hts_engine.c,
+	  include/HTS_engine.h, lib/HTS_audio.c, lib/HTS_engine.c,
+	  lib/HTS_gstream.c, lib/HTS_hidden.h, lib/HTS_label.c,
+	  lib/HTS_misc.c, lib/HTS_model.c, lib/HTS_pstream.c,
+	  lib/HTS_sstream.c, lib/HTS_vocoder.c: update to version 1.10
+
+2015-08-26 11:22  uratec
+
+	* lib/: HTS_engine.c, HTS_hidden.h, HTS_model.c, HTS_sstream.c: fix
+	  a bug of interpolation weights: reported by Martin Sulir.
+
+2014-12-11 19:01  uratec
+
+	* configure.ac: update autoconf setting
+
+2014-12-02 12:42  uratec
+
+	* NEWS: update news.
+
+2014-12-02 11:54  uratec
+
+	* configure.ac, bin/Makefile.am, lib/Makefile.am: modify makefiles
+	  for latest automake
+
+2014-12-01 11:05  uratec
+
+	* COPYING, README, configure.ac, bin/hts_engine.c,
+	  include/HTS_engine.h, lib/HTS_audio.c, lib/HTS_engine.c,
+	  lib/HTS_gstream.c, lib/HTS_hidden.h, lib/HTS_label.c,
+	  lib/HTS_misc.c, lib/HTS_model.c, lib/HTS_pstream.c,
+	  lib/HTS_sstream.c, lib/HTS_vocoder.c: update documents to ver
+	  1.09
+
+2014-11-12 11:31  uratec
+
+	* include/HTS_engine.h, lib/HTS_engine.c, lib/HTS_hidden.h,
+	  lib/HTS_model.c: add label-check functions.
+
+2014-11-12 11:28  uratec
+
+	* lib/HTS_model.c: fix 64bit problem in model loader
+
+2014-11-12 11:26  uratec
+
+	* lib/HTS_misc.c: add null check for calloc func
+
+2014-11-12 11:24  uratec
+
+	* lib/HTS_hidden.h: fix typo
+
+2014-11-12 11:21  uratec
+
+	* lib/HTS_audio.c: support 64bit windows audio
+
+2014-11-12 11:20  uratec
+
+	* lib/HTS_pstream.c: remove waring message from compiler.
+
+2014-11-11 00:59  uratec
+
+	* bin/hts_engine.c: add -g option to change volume.
+
+2013-12-26 17:06  uratec
+
+	* bin/hts_engine.c: Add audio buffer size option suggested by
+	  Nicholas Volk.
+
 2013-12-24 12:34  uratec
 
 	* lib/: HTS_audio.c, HTS_misc.c: Remove gcc warning message.

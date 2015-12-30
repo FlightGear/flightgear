@@ -4,7 +4,7 @@
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2013  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2015  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -75,7 +75,7 @@ typedef char HTS_Boolean;
 
 /* copyright ------------------------------------------------------- */
 
-#define HTS_COPYRIGHT "The HMM-Based Speech Synthesis Engine \"hts_engine API\"\nVersion 1.08 (http://hts-engine.sourceforge.net/)\nCopyright (C) 2001-2013 Nagoya Institute of Technology\n              2001-2008 Tokyo Institute of Technology\nAll rights reserved.\n"
+#define HTS_COPYRIGHT "The HMM-Based Speech Synthesis Engine \"hts_engine API\"\nVersion 1.10 (http://hts-engine.sourceforge.net/)\nCopyright (C) 2001-2015 Nagoya Institute of Technology\n              2001-2008 Tokyo Institute of Technology\nAll rights reserved.\n"
 
 /* audio ----------------------------------------------------------- */
 
@@ -410,6 +410,12 @@ size_t HTS_Engine_get_nstream(HTS_Engine * engine);
 
 /* HTS_Engine_get_nstate: get number of state */
 size_t HTS_Engine_get_nstate(HTS_Engine * engine);
+
+/* HTS_Engine_get_fullcontext_label_format: get full context label format */
+const char *HTS_Engine_get_fullcontext_label_format(HTS_Engine * engine);
+
+/* HTS_Engine_get_fullcontext_label_version: get full context label version */
+const char *HTS_Engine_get_fullcontext_label_version(HTS_Engine * engine);
 
 /* HTS_Engine_get_total_frame: get total number of frame */
 size_t HTS_Engine_get_total_frame(HTS_Engine * engine);

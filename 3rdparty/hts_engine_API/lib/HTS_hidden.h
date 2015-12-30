@@ -4,7 +4,7 @@
 /*           http://hts-engine.sourceforge.net/                      */
 /* ----------------------------------------------------------------- */
 /*                                                                   */
-/*  Copyright (c) 2001-2013  Nagoya Institute of Technology          */
+/*  Copyright (c) 2001-2015  Nagoya Institute of Technology          */
 /*                           Department of Computer Science          */
 /*                                                                   */
 /*                2001-2008  Tokyo Institute of Technology           */
@@ -107,10 +107,10 @@ int HTS_fseek(HTS_File * fp, long offset, int origin);
 /* HTS_ftell: wrapper for ftell */
 size_t HTS_ftell(HTS_File * fp);
 
-/* HTS_fread_big_endiana: fread with byteswap */
+/* HTS_fread_big_endian: fread with byteswap */
 size_t HTS_fread_big_endian(void *buf, size_t size, size_t n, HTS_File * fp);
 
-/* HTS_fread_little_endiana: fread with byteswap */
+/* HTS_fread_little_endian: fread with byteswap */
 size_t HTS_fread_little_endian(void *buf, size_t size, size_t n, HTS_File * fp);
 
 /* HTS_fwrite_little_endian: fwrite with byteswap */
@@ -189,6 +189,12 @@ HTS_Boolean HTS_ModelSet_get_gv_flag(HTS_ModelSet * ms, const char *string);
 /* HTS_ModelSet_get_nstate: get number of state */
 size_t HTS_ModelSet_get_nstate(HTS_ModelSet * ms);
 
+/* HTS_Engine_get_fullcontext_label_format: get full-context label format */
+const char *HTS_ModelSet_get_fullcontext_label_format(HTS_ModelSet * ms);
+
+/* HTS_Engine_get_fullcontext_label_version: get full-context label version */
+const char *HTS_ModelSet_get_fullcontext_label_version(HTS_ModelSet * ms);
+
 /* HTS_ModelSet_get_nstream: get number of stream */
 size_t HTS_ModelSet_get_nstream(HTS_ModelSet * ms);
 
@@ -229,12 +235,12 @@ void HTS_ModelSet_get_duration(HTS_ModelSet * ms, const char *string, const doub
 void HTS_ModelSet_get_parameter_index(HTS_ModelSet * ms, size_t voice_index, size_t stream_index, size_t state_index, const char *string, size_t * tree_index, size_t * pdf_index);
 
 /* HTS_ModelSet_get_parameter: get parameter using interpolation weight */
-void HTS_ModelSet_get_parameter(HTS_ModelSet * ms, size_t stream_index, size_t state_index, const char *string, const double *iw, double *mean, double *vari, double *msd);
+void HTS_ModelSet_get_parameter(HTS_ModelSet * ms, size_t stream_index, size_t state_index, const char *string, const double *const *iw, double *mean, double *vari, double *msd);
 
 void HTS_ModelSet_get_gv_index(HTS_ModelSet * ms, size_t voice_index, size_t stream_index, const char *string, size_t * tree_index, size_t * pdf_index);
 
 /* HTS_ModelSet_get_gv: get GV using interpolation weight */
-void HTS_ModelSet_get_gv(HTS_ModelSet * ms, size_t stream_index, const char *string, const double *iw, double *mean, double *vari);
+void HTS_ModelSet_get_gv(HTS_ModelSet * ms, size_t stream_index, const char *string, const double *const *iw, double *mean, double *vari);
 
 /* HTS_ModelSet_clear: free model set */
 void HTS_ModelSet_clear(HTS_ModelSet * ms);

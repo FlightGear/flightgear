@@ -1,3 +1,12 @@
+Version 1.10:
+ * bug fixes.
+
+Version 1.09:
+ * add '-g' option to change volume.
+ * add some functions to get fullcontext label format and version defined in HTS voice.
+ * support 64-bit Windows audio.
+ * bug fixes.
+
 Version 1.08:
  * support 64-bit machine.
  * re-write excitation function.
