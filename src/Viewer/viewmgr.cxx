@@ -140,6 +140,14 @@ FGViewMgr::init ()
 }
 
 void
+FGViewMgr::postinit()
+{
+    // force update now so many properties of the current view are valid,
+    // eg view position and orientation (as exposed via globals)
+    update(0.0);
+}
+
+void
 FGViewMgr::shutdown()
 {
     if (!inited) {
@@ -732,6 +740,11 @@ FGViewMgr::setView (int newview)
   current = newview;
   // copy in view data
   copyToCurrent();
+
+    // force an update now, to avoid returning bogus data.
+    // real fix would to be make all the accessors use the dirty mechanism
+    // on FGViewer, so update() is a no-op.
+    update(0.0);
 }
 
 

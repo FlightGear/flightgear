@@ -49,6 +49,7 @@ public:
     ~FGViewMgr( void );
 
     virtual void init ();
+    virtual void postinit();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);
@@ -73,7 +74,7 @@ public:
 
     void add_view( FGViewer * v );
     
-    static const char* subsystemName() { return "view-mgr"; }
+    static const char* subsystemName() { return "view-manager"; }
 private:
     void do_bind();
 
