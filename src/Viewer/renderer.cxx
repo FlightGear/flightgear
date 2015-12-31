@@ -102,6 +102,7 @@
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Environment/precipitation_mgr.hxx>
 #include <Environment/environment_mgr.hxx>
+#include <Environment/ephemeris.hxx>
 
 //#include <Main/main.hxx>
 #include "viewer.hxx"
@@ -1448,7 +1449,10 @@ FGRenderer::setupView( void )
 
     setupRoot();
   
-// build the sky    
+// build the sky
+    Ephemeris* ephemerisSub = globals->get_subsystem<Ephemeris>();
+
+
     // The sun and moon diameters are scaled down numbers of the
     // actual diameters. This was needed to fit both the sun and the
     // moon within the distance to the far clip plane.
@@ -1459,7 +1463,7 @@ FGRenderer::setupView( void )
     opt->setPropertyNode(globals->get_props());
     _sky->build( 80000.0, 80000.0,
                   463.3, 361.8,
-                  *globals->get_ephem(),
+                  *ephemerisSub->data(),
                   fgGetNode("/environment", true),
                   opt.get());
     
@@ -1685,6 +1689,8 @@ FGRenderer::updateSky()
     } else {
         sun_horiz_eff = moon_horiz_eff = 1.0;
     }
+
+
     
     SGSkyState sstate;
     sstate.pos       = globals->get_current_view()->getViewPosition();
@@ -1703,10 +1709,11 @@ FGRenderer::updateSky()
     scolor.cloud_color = SGVec3f(l->cloud_color().data());
     scolor.sun_angle   = l->get_sun_angle();
     scolor.moon_angle  = l->get_moon_angle();
-    
+
+    Ephemeris* ephemerisSub = globals->get_subsystem<Ephemeris>();
     double delta_time_sec = _sim_delta_sec->getDoubleValue();
-    _sky->reposition( sstate, *globals->get_ephem(), delta_time_sec );
-    _sky->repaint( scolor, *globals->get_ephem() );
+    _sky->reposition( sstate, *ephemerisSub->data(), delta_time_sec );
+    _sky->repaint( scolor, *ephemerisSub->data() );
 }
                                     
 void

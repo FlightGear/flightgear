@@ -46,7 +46,6 @@ typedef std::vector<SGPath> PathList;
 // pointers, we don't need to know anything about the class details
 // anyway.
 
-class SGEphemeris;
 class SGCommandMgr;
 class SGMaterialLib;
 class SGPropertyNode;
@@ -113,9 +112,6 @@ private:
 
     // Time structure
     SGTime *time_params;
-
-    // Sky structures
-    SGEphemeris *ephem;
 
     // Material properties library
     SGSharedPtr<SGMaterialLib> matlib;
@@ -288,9 +284,6 @@ public:
 
     inline SGTime *get_time_params() const { return time_params; }
     inline void set_time_params( SGTime *t ) { time_params = t; }
-
-    inline SGEphemeris *get_ephem() const { return ephem; }
-    inline void set_ephem( SGEphemeris *e ) { ephem = e; }
 
     inline SGMaterialLib *get_matlib() const { return matlib; }
     void set_matlib( SGMaterialLib *m );

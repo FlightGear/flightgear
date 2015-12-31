@@ -762,7 +762,7 @@ void fgCreateSubsystems(bool duringReset) {
 
     // Initialize the weather modeling subsystem
     globals->add_subsystem("environment", new FGEnvironmentMgr);
-    globals->add_subsystem("ephemeris", new Ephemeris);
+    globals->add_new_subsystem<Ephemeris>();
     
     ////////////////////////////////////////////////////////////////////
     // Initialize the aircraft systems and instrumentation (before the

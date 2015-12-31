@@ -42,8 +42,12 @@ public:
 	virtual void unbind();
 	virtual void update(double dt);
 	virtual void init();
-  virtual void postinit();
-  
+    virtual void shutdown();
+    virtual void postinit();
+
+    static const char* subsystemName() { return "ephemeris"; }
+
+    SGEphemeris* data();
 private:
   SGEphemeris* _impl;
   SGPropertyNode* _latProp;

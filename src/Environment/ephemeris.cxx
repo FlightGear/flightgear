@@ -41,7 +41,11 @@ Ephemeris::Ephemeris() :
 
 Ephemeris::~Ephemeris()
 {
-  delete _impl;
+}
+
+SGEphemeris* Ephemeris::data()
+{
+    return _impl;
 }
 
 void Ephemeris::init()
@@ -49,21 +53,26 @@ void Ephemeris::init()
   SGPath ephem_data_path(globals->get_fg_root());
   ephem_data_path.append("Astro");
   _impl = new SGEphemeris(ephem_data_path.c_str());
-  globals->set_ephem(_impl);
 
   tieStar("/ephemeris/sun/xs", _impl->get_sun(), &Star::getxs);
   tieStar("/ephemeris/sun/ys", _impl->get_sun(), &Star::getys);
   tieStar("/ephemeris/sun/ze", _impl->get_sun(), &Star::getze);
   tieStar("/ephemeris/sun/ye", _impl->get_sun(), &Star::getye);
   tieStar("/ephemeris/sun/lat-deg", _impl->get_sun(), &Star::getLat);
-  
-  _latProp = fgGetNode("/position/latitude-deg", true);
-  update(0.0);
+
+    _latProp = fgGetNode("/position/latitude-deg", true);
+
+    update(0.0);
+}
+
+void Ephemeris::shutdown()
+{
+    delete _impl;
+    _impl = NULL;
 }
 
 void Ephemeris::postinit()
 {
-  
 }
 
 void Ephemeris::bind()
@@ -72,10 +81,11 @@ void Ephemeris::bind()
 
 void Ephemeris::unbind()
 {
+    _latProp = 0;
 }
 
 void Ephemeris::update(double)
 {
-  SGTime* st = globals->get_time_params();
-  _impl->update(st->getMjd(), st->getLst(), _latProp->getDoubleValue());
+    SGTime* st = globals->get_time_params();
+    _impl->update(st->getMjd(), st->getLst(), _latProp->getDoubleValue());
 }

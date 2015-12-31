@@ -157,7 +157,6 @@ FGGlobals::FGGlobals() :
     fg_root( "" ),
     fg_home( "" ),
     time_params( NULL ),
-    ephem( NULL ),
     commands( SGCommandMgr::instance() ),
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
