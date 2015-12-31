@@ -508,12 +508,6 @@ FGGlobals::add_subsystem (const char * name,
     subsystem_mgr->add(name, subsystem, type, min_time_sec);
 }
 
-SGSoundMgr *
-FGGlobals::get_soundmgr () const
-{
-    return get_subsystem<SGSoundMgr>();
-}
-
 SGEventMgr *
 FGGlobals::get_event_mgr () const
 {

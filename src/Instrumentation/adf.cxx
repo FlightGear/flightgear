@@ -113,7 +113,7 @@ ADF::init ()
       _power_btn_node->setBoolValue(true); // front end didn't implement a power button
 
     // sound support (audible ident code)
-    SGSoundMgr *smgr = globals->get_soundmgr();
+    SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
 

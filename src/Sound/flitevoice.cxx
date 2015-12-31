@@ -43,7 +43,7 @@ FGFLITEVoice::FGFLITEVoice(FGVoiceMgr * mgr, const SGPropertyNode_ptr node, cons
 
   _synthesizer = new FLITEVoiceSynthesizer(voice.c_str());
 
-  SGSoundMgr *smgr = globals->get_soundmgr();
+  SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
   _sgr = smgr->find(sampleGroupRefName, true);
   _sgr->tie_to_listener();
 

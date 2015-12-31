@@ -208,7 +208,7 @@ FGVoicePlayer::bind (SGPropertyNode *node, const char* default_dir_prefix)
 void
 FGVoicePlayer::init ()
 {
-    SGSoundMgr *smgr = globals->get_soundmgr();
+    SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
     speaker.update_configuration();

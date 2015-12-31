@@ -40,7 +40,7 @@ void AudioIdent::init()
     _timer = 0.0;
     _ident = "";
     _running = false;
-    _sgr = globals->get_soundmgr()->find("avionics", true);
+    _sgr = globals->get_subsystem<SGSoundMgr>()->find("avionics", true);
     _sgr->tie_to_listener();
 }
 

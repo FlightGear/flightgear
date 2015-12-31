@@ -1070,7 +1070,7 @@ do_add_model (const SGPropertyNode * arg)
 static bool
 do_play_audio_sample (const SGPropertyNode * arg)
 {
-    SGSoundMgr *smgr = globals->get_soundmgr();
+    SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
     if (!smgr) {
         SG_LOG(SG_GENERAL, SG_WARN, "play-audio-sample: sound-manager not running");
         return false;

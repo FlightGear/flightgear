@@ -126,7 +126,7 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
   }
 
 
-  FGSoundManager * smgr = dynamic_cast<FGSoundManager*>(globals->get_soundmgr());
+    FGSoundManager * smgr = globals->get_subsystem<FGSoundManager>();
   assert(smgr != NULL);
 
   SG_LOG(SG_INSTR,SG_INFO,"AtisSpeaker voice is " << voice );
@@ -571,7 +571,7 @@ void CommRadioImpl::unbind()
 #if defined(ENABLE_FLITE)
   _atis.node()->removeChangeListener(&_atisSpeaker);
   if (_sampleGroup.valid()) {
-    globals->get_soundmgr()->remove(getSampleGroupRefname());
+      globals->get_subsystem<SGSoundMgr>()->remove(getSampleGroupRefname());
   }
 #endif
   _metarBridge->unbind();
@@ -617,7 +617,9 @@ void CommRadioImpl::update(double dt)
       // the speaker has created a new atis sample
       if (!_sampleGroup.valid()) {
         // create a sample group for our instrument on the fly
-        _sampleGroup = globals->get_soundmgr()->find(getSampleGroupRefname(), true);
+          SGSoundMgr * smgr = globals->get_subsystem<SGSoundMgr>();
+
+        _sampleGroup = smgr->find(getSampleGroupRefname(), true);
         _sampleGroup->tie_to_listener();
         if (_addNoise) {
           SGSharedPtr<SGSoundSample> noise = new SGSoundSample("Sounds/radionoise.wav", globals->get_fg_root());

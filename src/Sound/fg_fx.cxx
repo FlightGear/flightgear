@@ -61,7 +61,7 @@ FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     _avionics_ext = _props->getNode("sim/sound/avionics/external-view", true);
     _internal = _props->getNode("sim/current-view/internal", true);
 
-    _smgr = globals->get_soundmgr();
+    _smgr = globals->get_subsystem<SGSoundMgr>();
     if (!_smgr) {
       return;
     }

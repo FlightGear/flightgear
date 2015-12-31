@@ -53,7 +53,6 @@ class SGTime;
 class SGEventMgr;
 class SGSubsystemMgr;
 class SGSubsystem;
-class SGSoundMgr;
 
 class FGControls;
 class FGTACANList;
@@ -189,8 +188,6 @@ public:
     }
 
     SGEventMgr *get_event_mgr () const;
-
-    SGSoundMgr *get_soundmgr () const;
 
     inline double get_sim_time_sec () const { return sim_time_sec; }
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
