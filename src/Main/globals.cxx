@@ -54,7 +54,6 @@
 #include <Navaids/navlist.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/viewmgr.hxx>
-#include <Sound/sample_queue.hxx>
 
 #include "globals.hxx"
 #include "locale.hxx"
@@ -160,8 +159,7 @@ FGGlobals::FGGlobals() :
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
     channellist( NULL ),
-    haveUserSettings(false),
-    _chatter_queue(NULL)
+    haveUserSettings(false)
 {
     SGPropertyNode* root = new SGPropertyNode;
     props = SGPropertyNode_ptr(root);
@@ -224,7 +222,6 @@ FGGlobals::~FGGlobals()
 
     // renderer touches subsystems during its destruction
     set_renderer(NULL);
-    _chatter_queue.clear();
 
     delete subsystem_mgr;
     subsystem_mgr = NULL; // important so ::get_subsystem returns NULL
@@ -718,16 +715,6 @@ void FGGlobals::set_matlib( SGMaterialLib *m )
 FGControls *FGGlobals::get_controls() const
 {
     return get_subsystem<FGControls>();
-}
-
-FGSampleQueue* FGGlobals::get_chatter_queue() const
-{
-    return _chatter_queue;
-}
-
-void FGGlobals::set_chatter_queue(FGSampleQueue* queue)
-{
-    _chatter_queue = queue;
 }
 
 void FGGlobals::addListenerToCleanup(SGPropertyChangeListener* l)

@@ -26,6 +26,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 
+class FGSampleQueue;
 class SGSoundMgr;
 class Listener;
 #if defined(ENABLE_FLITE)
@@ -51,7 +52,11 @@ public:
 #endif
 private:
     bool stationaryView() const;
-  
+
+    bool playAudioSampleCommand(const SGPropertyNode * arg);
+
+    SGSharedPtr<FGSampleQueue> _chatterQueue;
+
     bool _is_initialized, _enabled;
     SGPropertyNode_ptr _sound_working, _sound_enabled, _volume, _device_name;
     SGPropertyNode_ptr _currentView;

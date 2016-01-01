@@ -63,7 +63,6 @@ class FGTileMgr;
 class FGViewMgr;
 class FGViewer;
 class FGRenderer;
-class FGSampleQueue;
 
 namespace simgear { namespace pkg {
   class Root;
@@ -140,9 +139,7 @@ private:
      * helper to initialise standard properties on a new property tree
      */
     void initProperties();
-    
-    SGSharedPtr<FGSampleQueue> _chatter_queue;
-    
+        
     void cleanupListeners();
     
     typedef std::vector<SGPropertyChangeListener*> SGPropertyChangeListenerVec;
@@ -340,9 +337,6 @@ public:
      * Save user settings in autosave.xml
      */
     void saveUserSettings();
-    
-    FGSampleQueue* get_chatter_queue() const;
-    void set_chatter_queue(FGSampleQueue* queue);
     
     void addListenerToCleanup(SGPropertyChangeListener* l);
   

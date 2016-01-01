@@ -1069,7 +1069,6 @@ void fgStartNewReset()
     
     globals->set_renderer(NULL);
     globals->set_matlib(NULL);
-    globals->set_chatter_queue(NULL);
     
     simgear::clearEffectCache();
     simgear::SGModelLib::resetPropertyRoot();

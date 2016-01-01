@@ -22,10 +22,13 @@
 #endif
 
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/structure/commands.hxx>
 
 #if defined(ENABLE_FLITE)
 #include "VoiceSynthesizer.hxx"
 #endif
+
+#include "sample_queue.hxx"
 #include "soundmanager.hxx"
 #include "Main/globals.hxx"
 #include "Main/fg_props.hxx"
@@ -87,6 +90,9 @@ void FGSoundManager::init()
     SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
     scenery_loaded->addChangeListener(_listener.get());
 
+    globals->get_commands()->addCommand("play-audio-sample", this, &FGSoundManager::playAudioSampleCommand);
+
+
     reinit();
 }
 
@@ -96,7 +102,11 @@ void FGSoundManager::shutdown()
     scenery_loaded->removeChangeListener(_listener.get());
     
     stop();
-    
+
+    _chatterQueue.clear();
+    globals->get_commands()->removeCommand("play-audio-sample");
+
+
     SGSoundMgr::shutdown();
 }
 
@@ -199,6 +209,37 @@ void FGSoundManager::update(double dt)
             set_volume(_volume->getFloatValue());
             SGSoundMgr::update(dt);
         }
+    }
+}
+
+/**
+ * Built-in command: play an audio message (i.e. a wav file) This is
+ * fire and forget.  Call this once per message and it will get dumped
+ * into a queue.  Messages are played sequentially so they do not
+ * overlap.
+ */
+bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg)
+{
+    string path = arg->getStringValue("path");
+    string file = arg->getStringValue("file");
+    float volume = arg->getFloatValue("volume");
+    // cout << "playing " << path << " / " << file << endl;
+    try {
+        if ( !_chatterQueue ) {
+            _chatterQueue = new FGSampleQueue(this, "chatter");
+            _chatterQueue->tie_to_listener();
+        }
+
+        SGSoundSample *msg = new SGSoundSample(file.c_str(), path);
+        msg->set_volume( volume );
+        _chatterQueue->add( msg );
+
+        return true;
+
+    } catch (const sg_io_exception&) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "play-audio-sample: "
+               "failed to load" << path << '/' << file);
+        return false;
     }
 }
 

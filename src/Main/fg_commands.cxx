@@ -1062,46 +1062,6 @@ do_add_model (const SGPropertyNode * arg)
 }
 
 /**
- * Built-in command: play an audio message (i.e. a wav file) This is
- * fire and forget.  Call this once per message and it will get dumped
- * into a queue.  Messages are played sequentially so they do not
- * overlap.
- */
-static bool
-do_play_audio_sample (const SGPropertyNode * arg)
-{
-    SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
-    if (!smgr) {
-        SG_LOG(SG_GENERAL, SG_WARN, "play-audio-sample: sound-manager not running");
-        return false;
-    }
-  
-    string path = arg->getStringValue("path");
-    string file = arg->getStringValue("file");
-    float volume = arg->getFloatValue("volume");
-    // cout << "playing " << path << " / " << file << endl;
-    try {
-        FGSampleQueue *queue = globals->get_chatter_queue();
-        if ( !queue ) {
-            queue = new FGSampleQueue(smgr, "chatter");
-            queue->tie_to_listener();
-            globals->set_chatter_queue(queue);
-        }
-
-        SGSoundSample *msg = new SGSoundSample(file.c_str(), path);
-        msg->set_volume( volume );
-        queue->add( msg );
-
-        return true;
-
-    } catch (const sg_io_exception&) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "play-audio-sample: "
-                "failed to load" << path << '/' << file);
-        return false;
-    }
-}
-
-/**
  * Built-in command: commit presets (read from in /sim/presets/)
  */
 static bool
@@ -1470,7 +1430,6 @@ static struct {
     { "open-browser", do_open_browser },
     { "gui-redraw", do_gui_redraw },
     { "add-model", do_add_model },
-    { "play-audio-sample", do_play_audio_sample },
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
