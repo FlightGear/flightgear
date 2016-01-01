@@ -63,7 +63,6 @@ class FGTileMgr;
 class FGViewMgr;
 class FGViewer;
 class FGRenderer;
-class FGFontCache;
 class FGSampleQueue;
 
 namespace simgear { namespace pkg {
@@ -123,8 +122,6 @@ private:
     // A list of initial waypoints that are read from the command line
     // and or flight-plan file during initialization
     string_list *initial_waypoints;
-
-    FGFontCache *fontcache;
 
     // Navigational Aids
     FGTACANList *channellist;
@@ -330,8 +327,6 @@ public:
     FGScenery * get_scenery () const;
 
     FGTileMgr * get_tile_mgr () const;
-
-    inline FGFontCache *get_fontcache() const { return fontcache; }
   
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }

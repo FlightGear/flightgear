@@ -1072,8 +1072,7 @@ FGTextLayer::draw (osg::State& state)
     glColor4fv(_color);
     transform();
 
-    FGFontCache *fc = globals->get_fontcache();
-    fntFont* font = fc->getTexFont(_font_name.c_str());
+    fntFont* font = FGFontCache::instance()->getTexFont(_font_name);
     if (!font) {
         return; // don't crash on missing fonts
     }
@@ -1139,8 +1138,7 @@ void
 FGTextLayer::setFontName(const std::string &name)
 {
   _font_name = name + ".txf";
-  FGFontCache *fc = globals->get_fontcache();
-  fntFont* font = fc->getTexFont(_font_name.c_str());
+    fntFont* font = FGFontCache::instance()->getTexFont(_font_name);
   if (!font) {
       SG_LOG(SG_COCKPIT, SG_WARN, "unable to find font:" << name);
   }

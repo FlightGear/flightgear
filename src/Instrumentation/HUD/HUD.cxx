@@ -130,11 +130,10 @@ HUD::~HUD()
 
 void HUD::init()
 {
-    const char* fontName = 0;
-    _font_cache = globals->get_fontcache();
+    std::string fontName;
     if (!_font) {
         fontName = fgGetString("/sim/hud/font/name", "Helvetica.txf");
-        _font = _font_cache->getTexFont(fontName);
+        _font = FGFontCache::instance()->getTexFont(fontName);
     }
     if (!_font)
         throw sg_io_exception("/sim/hud/font/name is not a texture font",

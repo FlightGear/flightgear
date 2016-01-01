@@ -79,7 +79,7 @@ public:
         puSetDefaultStyle         ( PUSTYLE_SMALL_SHADED ); //PUSTYLE_DEFAULT
         puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
 
-        FGFontCache *fc = globals->get_fontcache();
+        FGFontCache *fc = FGFontCache::instance();
         fc->initializeFonts();
         puFont *GuiFont
             = fc->get(globals->get_locale()->getDefaultFont("typewriter.txf"),

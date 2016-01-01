@@ -31,6 +31,8 @@ class fntTexFont;
  */
 class FGFontCache {
 private:
+    FGFontCache(); // private constructor, use singleton instance() accessor
+
     // The parameters of a request to the cache.
     struct FntParams
     {
@@ -70,19 +72,21 @@ private:
     PuFontMap _puFonts;
 
     bool _initialized;
-    struct fnt *getfnt(const char *name, float size, float slant);
+    struct fnt *getfnt(const std::string& name, float size, float slant);
     void init();
 
 public:
-    FGFontCache();
+    // note this accesor is NOT thread-safe
+    static FGFontCache* instance();
+
     ~FGFontCache();
 
-    puFont *get(const char *name, float size=15.0, float slant=0.0);
+    puFont *get(const std::string& name, float size=15.0, float slant=0.0);
     puFont *get(SGPropertyNode *node);
 
-    fntTexFont *getTexFont(const char *name, float size=15.0, float slant=0.0);
+    fntTexFont *getTexFont(const std::string& name, float size=15.0, float slant=0.0);
 
-    SGPath getfntpath(const char *name);
+    SGPath getfntpath(const std::string& name);
     /**
      * Preload all the fonts in the FlightGear font directory. It is
      * important to load the font textures early, with the proper

@@ -48,7 +48,6 @@
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
 #include <Autopilot/route_mgr.hxx>
-#include <GUI/FGFontCache.hxx>
 #include <GUI/gui.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -160,7 +159,6 @@ FGGlobals::FGGlobals() :
     commands( SGCommandMgr::instance() ),
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
-    fontcache ( new FGFontCache ),
     channellist( NULL ),
     haveUserSettings(false),
     _chatter_queue(NULL)
@@ -237,7 +235,6 @@ FGGlobals::~FGGlobals()
 
     delete channel_options_list;
     delete initial_waypoints;
-    delete fontcache;
     delete channellist;
 
     simgear::PropertyObjectBase::setDefaultRoot(NULL);

@@ -415,7 +415,7 @@ NewGUI::setStyle (void)
 void
 NewGUI::setupFont (SGPropertyNode *node)
 {
-    _font = globals->get_fontcache()->get(node);
+    _font = FGFontCache::instance()->get(node);
     puSetDefaultFonts(*_font, *_font);
     return;
 }

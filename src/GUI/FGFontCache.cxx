@@ -34,6 +34,9 @@
 // FGFontCache class.
 ////////////////////////////////////////////////////////////////////////
 
+static std::auto_ptr<FGFontCache> global_fontCacheInstance;
+
+
 extern puFont FONT_HELVETICA_14;
 extern puFont FONT_SANS_12B;
 extern puFont FONT_HELVETICA_12;
@@ -42,17 +45,17 @@ namespace
 {
 struct GuiFont
 {
-    const char *name;
+    const char* name;
     puFont *font;
     struct Predicate
         : public std::unary_function<const GuiFont, bool>
     {
-        Predicate(const char* name_) : name(name_) {}
+        Predicate(const std::string& name_) : name(name_) {}
         bool operator() (const GuiFont& f1) const
         {
-            return ::strcmp(f1.name, name) == 0;
+            return (name == f1.name);
         }
-        const char* name;
+        const std::string name;
     };
 };
 
@@ -71,6 +74,15 @@ const GuiFont guifonts[] = {
 };
 
 const GuiFont* guifontsEnd = &guifonts[sizeof(guifonts)/ sizeof(guifonts[0])-1];
+}
+
+FGFontCache* FGFontCache::instance()
+{
+    if (!global_fontCacheInstance.get()) {
+        global_fontCacheInstance.reset(new FGFontCache);
+    }
+
+    return global_fontCacheInstance.get();
 }
 
 FGFontCache::FGFontCache() :
@@ -101,9 +113,8 @@ inline bool FGFontCache::FntParamsLess::operator()(const FntParams& f1,
 }
 
 struct FGFontCache::fnt *
-FGFontCache::getfnt(const char *name, float size, float slant)
+FGFontCache::getfnt(const std::string& fontName, float size, float slant)
 {
-    std::string fontName(name);
     FntParams fntParams(fontName, size, slant);
     PuFontMap::iterator i = _puFonts.find(fntParams);
     if (i != _puFonts.end())
@@ -116,7 +127,7 @@ FGFontCache::getfnt(const char *name, float size, float slant)
         texfont = texi->second;
     } else {
         const GuiFont* guifont = std::find_if(&guifonts[0], guifontsEnd,
-                                              GuiFont::Predicate(name));
+                                              GuiFont::Predicate(fontName));
         if (guifont != guifontsEnd) {
             pufont = guifont->font;
         }
@@ -136,13 +147,13 @@ FGFontCache::getfnt(const char *name, float size, float slant)
 }
 
 puFont *
-FGFontCache::get(const char *name, float size, float slant)
+FGFontCache::get(const std::string& name, float size, float slant)
 {
     return getfnt(name, size, slant)->pufont;
 }
 
 fntTexFont *
-FGFontCache::getTexFont(const char *name, float size, float slant)
+FGFontCache::getTexFont(const std::string& name, float size, float slant)
 {
     init();
     return getfnt(name, size, slant)->texfont;
@@ -176,11 +187,11 @@ void FGFontCache::init()
 }
 
 SGPath
-FGFontCache::getfntpath(const char *name)
+FGFontCache::getfntpath(const std::string& name)
 {
     init();
     SGPath path(_path);
-    if (name && std::string(name) != "") {
+    if (name != "") {
         path.append(name);
         if (path.exists())
             return path;

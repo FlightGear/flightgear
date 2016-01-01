@@ -796,8 +796,7 @@ FGPUIDialog::display (SGPropertyNode *props)
 
     SGPropertyNode *fontnode = props->getNode("font");
     if (fontnode) {
-        FGFontCache *fc = globals->get_fontcache();
-        _font = fc->get(fontnode);
+        _font = FGFontCache::instance()->get(fontnode);
     } else {
         _font = _gui->getDefaultFont();
     }
@@ -1092,8 +1091,7 @@ FGPUIDialog::setupObject (puObject *object, SGPropertyNode *props)
         object->setBorderThickness( props->getIntValue("border", 2) );
 
     if (SGPropertyNode *nft = props->getNode("font", false)) {
-       FGFontCache *fc = globals->get_fontcache();
-       puFont *lfnt = fc->get(nft);
+       puFont *lfnt = FGFontCache::instance()->get(nft);
        object->setLabelFont(*lfnt);
        object->setLegendFont(*lfnt);
     } else {
