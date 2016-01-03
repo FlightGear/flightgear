@@ -5,7 +5,6 @@ set(SOURCES
 	soundgenerator.cxx
 	beacon.cxx
 	fg_fx.cxx
-        scenefx.cxx
 	morse.cxx
 	sample_queue.cxx
 	voice.cxx
@@ -18,7 +17,6 @@ set(HEADERS
 	soundgenerator.hxx
 	beacon.hxx
 	fg_fx.hxx
-        scenefx.hxx
 	morse.hxx
 	sample_queue.hxx
 	voice.hxx
