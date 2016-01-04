@@ -195,8 +195,7 @@ void FGATCManager::init() {
 
 void FGATCManager::shutdown()
 {
-    delete ai_ac;
-    ai_ac = NULL;
+    ai_ac.clear();
     activeStations.clear();
 }
 

@@ -180,8 +180,11 @@ FGTrafficRecord::FGTrafficRecord():
         allowPushback(true),
         priority(0),
         timer(0),
-        latitude(0), longitude(0), heading(0), speed(0), altitude(0), radius(0),
-        aircraft(NULL)
+        latitude(0), longitude(0), heading(0), speed(0), altitude(0), radius(0)
+{
+}
+
+FGTrafficRecord::~FGTrafficRecord()
 {
 }
 
@@ -208,6 +211,17 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
         }
     }
 }
+
+void FGTrafficRecord::setAircraft(FGAIAircraft *ref)
+{
+    aircraft = ref;
+}
+
+FGAIAircraft* FGTrafficRecord::getAircraft() const
+{
+    return aircraft.ptr();
+}
+
 /**
  * Check if another aircraft is ahead of the current one, and on the same
  * return true / false is the is/isn't the case.

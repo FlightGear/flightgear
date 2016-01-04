@@ -46,7 +46,7 @@ class FGATCManager : public SGSubsystem
 {
 private:
   AtcVec activeStations;
-  FGAIAircraft* ai_ac;
+  SGSharedPtr<FGAIAircraft> ai_ac;
   FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft. 
   bool networkVisible;
   bool initSucceeded;

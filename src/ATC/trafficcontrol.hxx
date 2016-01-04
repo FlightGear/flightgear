@@ -161,12 +161,12 @@ private:
     FGATCInstruction instruction;
     double latitude, longitude, heading, speed, altitude, radius;
     std::string runway;
-    //FGAISchedule *trafficRef;
-    FGAIAircraft *aircraft;
+    SGSharedPtr<FGAIAircraft> aircraft;
 
 
 public:
     FGTrafficRecord();
+    virtual ~FGTrafficRecord();
 
     void setId(int val)  {
         id = val;
@@ -266,17 +266,15 @@ public:
         return runway;
     };
     //void setCallSign(string clsgn) { callsign = clsgn; };
-    void setAircraft(FGAIAircraft *ref) {
-        aircraft = ref;
-    };
+    void setAircraft(FGAIAircraft *ref);
+
     void updateState() {
         state++;
         allowTransmission=true;
     };
     //string getCallSign() { return callsign; };
-    FGAIAircraft *getAircraft() const {
-        return aircraft;
-    };
+    FGAIAircraft *getAircraft() const;
+
     int getTime() const {
         return timer;
     };
