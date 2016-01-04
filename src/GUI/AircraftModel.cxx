@@ -613,15 +613,20 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
         role = AircraftThumbnailRole; // use first thumbnail
     }
 
+    if ((role >= AircraftVariantDescriptionRole) && (role < AircraftThumbnailRole)) {
+        int variantIndex = role - AircraftVariantDescriptionRole;
+        return QString::fromStdString(item->nameForVariant(variantIndex));
+    }
+
     if (role == Qt::DisplayRole) {
-        return QString::fromStdString(item->name());
+        return QString::fromStdString(item->nameForVariant(variantIndex));
     } else if (role == AircraftPathRole) {
         InstallRef i = item->existingInstall();
         if (i.valid()) {
             return QString::fromStdString(i->primarySetPath().str());
         }
     } else if (role == AircraftPackageIdRole) {
-        return QString::fromStdString(item->id());
+        return QString::fromStdString(item->variants()[variantIndex]);
     } else if (role == AircraftPackageStatusRole) {
         InstallRef i = item->existingInstall();
         if (i.valid()) {
@@ -639,6 +644,10 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
         } else {
             return PackageNotInstalled;
         }
+    } else if (role == AircraftVariantCountRole) {
+        // this value wants the number of aditional variants, i.e not
+        // including the primary. Hence the -1 term.
+        return static_cast<quint32>(item->variants().size() - 1);
     } else if (role == AircraftThumbnailSizeRole) {
         QPixmap pm = packageThumbnail(item, 0, false).value<QPixmap>();
         if (pm.isNull())
@@ -656,7 +665,7 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
     } else if (role == AircraftPackageSizeRole) {
         return static_cast<int>(item->fileSizeBytes());
     } else if (role == AircraftURIRole) {
-        return QUrl("package:" + QString::fromStdString(item->qualifiedId()));
+        return QUrl("package:" + QString::fromStdString(item->qualifiedVariantId(variantIndex)));
     } else if (role == AircraftHasRatingsRole) {
         return item->properties()->hasChild("rating");
     } else if ((role >= AircraftRatingRole) && (role < AircraftVariantDescriptionRole)) {
@@ -714,8 +723,15 @@ QVariant AircraftItemModel::packageThumbnail(PackageRef p, int index, bool downl
 
 bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
   {
+      int row = index.row();
       if (role == AircraftVariantRole) {
-          m_activeVariant[index.row()] = value.toInt();
+          if (row >= m_activeVariant.size()) {
+              row -= m_activeVariant.size();
+              m_packageVariant[row] = value.toInt();
+          } else {
+              m_activeVariant[row] = value.toInt();
+          }
+
           emit dataChanged(index, index);
           return true;
       }

@@ -656,10 +656,10 @@ void QtLauncher::onRun()
             setFile.truncate(setFile.count() - 8); // drop the '-set.xml' portion
             opt->addOption("aircraft", setFile.toStdString());
         } else if (m_selectedAircraft.scheme() == "package") {
-            PackageRef pkg = packageForAircraftURI(m_selectedAircraft);
+            QString qualifiedId = m_selectedAircraft.path();
             // no need to set aircraft-dir, handled by the corresponding code
             // in fgInitAircraft
-            opt->addOption("aircraft", pkg->qualifiedId());
+            opt->addOption("aircraft", qualifiedId.toStdString());
         } else {
             qWarning() << "unsupported aircraft launch URL" << m_selectedAircraft;
         }
@@ -748,10 +748,9 @@ void QtLauncher::onApply()
             aircraftDir = setFileInfo.dir().absolutePath().toStdString();
             aircraftPropValue = setFile.toStdString();
         } else if (m_selectedAircraft.scheme() == "package") {
-            PackageRef pkg = packageForAircraftURI(m_selectedAircraft);
             // no need to set aircraft-dir, handled by the corresponding code
             // in fgInitAircraft
-            aircraftPropValue = pkg->qualifiedId();
+            aircraftPropValue = m_selectedAircraft.path().toStdString();
         } else {
             qWarning() << "unsupported aircraft launch URL" << m_selectedAircraft;
         }
