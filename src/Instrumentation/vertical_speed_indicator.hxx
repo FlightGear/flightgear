@@ -61,7 +61,6 @@ private:
     SGPropertyNode_ptr _speed_fpm_node;
     SGPropertyNode_ptr _speed_mps_node;
     SGPropertyNode_ptr _speed_kts_node;
-    SGPropertyNode_ptr _speed_up_node;
     
 };
 

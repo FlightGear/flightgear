@@ -41,7 +41,6 @@ class SGInterpTable;
  * /instrumentation/inst-vertical-speed-indicator/serviceable
  * /environment/pressure-inhg
  * /environment/pressure-sea-level-inhg
- * /sim/speed-up
  * /sim/freeze/master
  *
  * Output properties:

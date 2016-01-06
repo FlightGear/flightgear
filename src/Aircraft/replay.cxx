@@ -451,7 +451,7 @@ FGReplay::update( double dt )
             }
             else
             {
-                current_time += dt * speed_up->getDoubleValue();
+                current_time += dt;
                 was_finished_already = false;
             }
             replay_time->setDoubleValue(current_time);
@@ -478,7 +478,7 @@ FGReplay::update( double dt )
         return;
 
     {
-        double new_sim_time = sim_time + dt * speed_up->getDoubleValue();
+        double new_sim_time = sim_time + dt;
         // don't record multiple records with the same timestamp (or go backwards in time)
         if (new_sim_time <= sim_time)
         {

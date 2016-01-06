@@ -179,8 +179,6 @@ void InstVerticalSpeedIndicator::init ()
         fgGetNode("/environment/pressure-inhg", true);
     _sea_node =
         fgGetNode("/environment/pressure-sea-level-inhg", true);
-    _speed_up_node =
-        fgGetNode("/sim/speed-up", true);
     _speed_node =
         node->getNode("indicated-speed-fps", true);
     _speed_min_node =
@@ -205,14 +203,7 @@ void InstVerticalSpeedIndicator::update (double dt)
 	{
 	    double pressure_inhg = _pressure_node->getDoubleValue();
 	    double sea_inhg = _sea_node->getDoubleValue();
-	    double speed_up = _speed_up_node->getDoubleValue();
-	    
-	    // must work by speed up
-	    if( speed_up > 1 )
-	    {
-	        dt *= speed_up;
-	    }
-	      
+
 	    // limit effect of external environment
 	    double rate_sea_inhg_per_s = ( sea_inhg - _internal_sea_inhg ) / dt;
 	    

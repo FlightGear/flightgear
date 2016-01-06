@@ -50,7 +50,6 @@ VerticalSpeedIndicator::init ()
     _speed_fpm_node = node->getChild("indicated-speed-fpm", 0, true);
     _speed_mps_node = node->getChild("indicated-speed-mps", 0, true);
     _speed_kts_node = node->getChild("indicated-speed-kts", 0, true);
-    _speed_up_node = fgGetNode("/sim/speed-up", true);
 
     reinit();
 }
@@ -74,11 +73,8 @@ VerticalSpeedIndicator::update (double dt)
     if (_serviceable_node->getBoolValue()) {
         double pressure_inHg = _pressure_node->getDoubleValue() ;
         double pressure_Pa = pressure_inHg * SG_INHG_TO_PA;
-        double speed_up = _speed_up_node->getDoubleValue();
         double Fsign = 0.;
         double orifice_mach = 0.0;
-        if( speed_up > 1 )
-            dt *= speed_up;
 
 // This is a thermodynamically correct model of a mechanical vertical speed indicator:
 // It represents an aneroid in a closed (constant volume) casing with the aneroid internal pressure = static pressure

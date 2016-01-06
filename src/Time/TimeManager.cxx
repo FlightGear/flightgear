@@ -227,7 +227,8 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   if (_clockFreeze->getBoolValue() || wait_for_scenery) {
     simDt = 0;
   } else {
-    simDt = dt;
+      // sim time can be scaled
+      simDt = dt * fgGetDouble("/sim/speed-up");
   }
   
   _lastStamp = currentStamp;

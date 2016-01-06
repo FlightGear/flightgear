@@ -62,19 +62,13 @@ FGInterface::~FGInterface() {
 }
 
 int
-FGInterface::_calc_multiloop (double dt)
+FGInterface::_calc_multiloop (double)
 {
-  // Since some time the simulation time increments we get here are
-  // already a multiple of the basic update frequency.
-  // So, there is no need to do our own multiloop rounding with all bad
-  // roundoff problems when we already have nearly accurate values.
-  // Only the speedup thing must be still handled here
-  int hz = fgGetInt("/sim/model-hz");
-  double speedup = fgGetDouble("/sim/speed-up");
-  double loops = dt * hz * speedup + delta_loops;
-  int iloops = SGMiscd::roundToInt(loops);
-  delta_loops = loops-iloops; // delta_loops required for speed-ups < 1 (to do one iteration every n-th step)
-  return iloops;
+    // this method is now obsolete - multiloop is handled by
+    // SGSubsystemGroup; the FDM group operates with a fixed time interval
+    // (defined by /sim/model-hz), so at this level we always want to run
+    // exactly one FDM iteration
+    return 1;
 }
 
 
@@ -122,8 +116,6 @@ FGInterface::_setup ()
     _state.climb_rate=0;
     _state.altitude_agl=0;
     _state.track=0;
-    
-    delta_loops = 0.0;
 }
 
 void

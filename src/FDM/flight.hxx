@@ -136,8 +136,6 @@ private:
     // Have we bound to the property system
     bool bound;
 
-    double delta_loops;
-
     // periodic update management variable.  This is a scheme to run
     // the fdm with a fixed delta-t.  We control how many iteration of
     // the fdm to run with the fixed dt based on the elapsed time from
