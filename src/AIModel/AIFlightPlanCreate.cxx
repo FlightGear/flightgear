@@ -206,6 +206,13 @@ void FGAIFlightPlan::createDefaultTakeoffTaxi(FGAIAircraft * ac,
     wpt =
         createOnGround(ac, "Runway Takeoff", runwayTakeoff, airportElev,
                        ac->getPerformance()->vTaxi());
+
+    pushBackWaypoint(wpt);
+
+    // Acceleration point, 105 meters into the runway,
+    SGGeod accelPoint = aRunway->pointOnCenterline(105.0);
+    wpt = createOnGround(ac, "accel", accelPoint, airportElev,
+                         ac->getPerformance()->vRotate());
     pushBackWaypoint(wpt);
 }
 
