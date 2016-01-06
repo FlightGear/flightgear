@@ -129,7 +129,6 @@ private:
     double speedFraction;
     double groundTargetSpeed;
     double groundOffset;
-    double dt;
 
     bool use_perf_vs;
     SGPropertyNode_ptr refuel_node;
@@ -147,16 +146,16 @@ private:
     void controlSpeed(FGAIWaypoint* curr,
                       FGAIWaypoint* next);
     
-    void updatePrimaryTargetValues(bool& flightplanActive, bool& aiOutOfSight);
+    void updatePrimaryTargetValues(double dt, bool& flightplanActive, bool& aiOutOfSight);
     
-    void updateSecondaryTargetValues();
-    void updateHeading();
+    void updateSecondaryTargetValues(double dt);
+    void updateHeading(double dt);
     void updateBankAngleTarget();
-    void updateVerticalSpeedTarget();
+    void updateVerticalSpeedTarget(double dt);
     void updatePitchAngleTarget();
-    void updateActualState();
+    void updateActualState(double dt);
     void updateModelProperties(double dt);
-    void handleATCRequests();
+    void handleATCRequests(double dt);
     inline bool isStationary() { return ((fabs(speed)<=0.0001)&&(fabs(tgt_speed)<=0.0001));}
     inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
    

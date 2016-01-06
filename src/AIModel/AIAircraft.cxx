@@ -31,6 +31,7 @@
 #include <Main/util.hxx>
 #include <Traffic/Schedule.hxx>
 
+#include <simgear/timing/sg_time.hxx>
 #include <simgear/structure/exception.hxx>
 
 #include <string>
@@ -101,7 +102,6 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
         SG_LOG(SG_AI, SG_ALERT, "no performance DB found");
     }
 
-    dt = 0;
     takeOffStatus = 0;
 
     trackCache.remainingLength = 0;
@@ -163,12 +163,11 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
   }
 #endif
 
- void FGAIAircraft::Run(double dt) {
-      FGAIAircraft::dt = dt;
-    
-     bool outOfSight = false, 
+ void FGAIAircraft::Run(double dt)
+{
+        bool outOfSight = false,
         flightplanActive = true;
-     updatePrimaryTargetValues(flightplanActive, outOfSight); // target hdg, alt, speed
+     updatePrimaryTargetValues(dt, flightplanActive, outOfSight); // target hdg, alt, speed
      if (outOfSight) {
         return;
      }
@@ -177,9 +176,9 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
         groundTargetSpeed = 0;
      }
 
-     handleATCRequests(); // ATC also has a word to say
-     updateSecondaryTargetValues(); // target roll, vertical speed, pitch
-     updateActualState();
+     handleATCRequests(dt); // ATC also has a word to say
+     updateSecondaryTargetValues(dt); // target roll, vertical speed, pitch
+     updateActualState(dt);
 #if 0
    // 25/11/12 - added but disabled, since setting properties isn't
    // affecting the AI-model as expected.
@@ -999,11 +998,12 @@ void FGAIAircraft::controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next) {
 /**
  * Update target values (heading, alt, speed) depending on flight plan or control properties
  */
-void FGAIAircraft::updatePrimaryTargetValues(bool& flightplanActive, bool& aiOutOfSight) {
+void FGAIAircraft::updatePrimaryTargetValues(double dt, bool& flightplanActive, bool& aiOutOfSight) {
     if (fp)                      // AI object has a flightplan
     {
         //TODO make this a function of AIBase
-        time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+        time_t now = globals->get_time_params()->get_cur_time();
+
         //cerr << "UpateTArgetValues() " << endl;
         ProcessFlightPlan(dt, now);
 
@@ -1061,7 +1061,7 @@ void FGAIAircraft::updatePrimaryTargetValues(bool& flightplanActive, bool& aiOut
     }
 }
 
-void FGAIAircraft::updateHeading() {
+void FGAIAircraft::updateHeading(double dt) {
     // adjust heading based on current bank angle
     if (roll == 0.0)
         roll = 0.01;
@@ -1195,7 +1195,7 @@ void FGAIAircraft::updateBankAngleTarget() {
 }
 
 
-void FGAIAircraft::updateVerticalSpeedTarget() {
+void FGAIAircraft::updateVerticalSpeedTarget(double dt) {
     // adjust target Altitude, based on ground elevation when on ground
     if (onGround()) {
         getGroundElev(dt);
@@ -1258,7 +1258,8 @@ const string& FGAIAircraft::atGate()
      return empty;
 }
 
-void FGAIAircraft::handleATCRequests() {
+void FGAIAircraft::handleATCRequests(double dt)
+{
     //TODO implement NullController for having no ATC to save the conditionals
     if (controller) {
         controller->updateAircraftInformation(getID(),
@@ -1279,7 +1280,8 @@ void FGAIAircraft::handleATCRequests() {
     }
 }
 
-void FGAIAircraft::updateActualState() {
+void FGAIAircraft::updateActualState(double dt)
+{
     //update current state
     //TODO have a single tgt_speed and check speed limit on ground on setting tgt_speed
     double distance = speed * SG_KT_TO_MPS * dt;
@@ -1291,7 +1293,7 @@ void FGAIAircraft::updateActualState() {
     else
         speed = _performance->actualSpeed(this, (tgt_speed *speedFraction), dt, false);
     //assertSpeed(speed);
-    updateHeading();
+    updateHeading(dt);
     roll = _performance->actualBankAngle(this, tgt_roll, dt);
 
     // adjust altitude (meters) based on current vertical speed (fpm)
@@ -1302,10 +1304,10 @@ void FGAIAircraft::updateActualState() {
     pitch = _performance->actualPitch(this, tgt_pitch, dt);
 }
 
-void FGAIAircraft::updateSecondaryTargetValues() {
+void FGAIAircraft::updateSecondaryTargetValues(double dt) {
     // derived target state values
     updateBankAngleTarget();
-    updateVerticalSpeedTarget();
+    updateVerticalSpeedTarget(dt);
     updatePitchAngleTarget();
 
     //TODO calculate wind correction angle (tgt_yaw)
