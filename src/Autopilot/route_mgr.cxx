@@ -27,10 +27,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#include <time.h>
-#endif
-
 #include <cstdio>
 
 #include <simgear/compiler.h>
@@ -45,6 +41,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/timing/sg_time.hxx>
 #include <simgear/sg_inlines.h>
 
 #include "Main/fg_props.hxx"
@@ -454,12 +451,12 @@ void FGRouteMgr::update( double dt )
   
   double gs = groundSpeed->getDoubleValue();
   if (airborne->getBoolValue()) {
-    time_t now = time(NULL);
+      time_t now = globals->get_time_params()->get_cur_time();
     elapsedFlightTime->setDoubleValue(difftime(now, _takeoffTime));
     
     if (weightOnWheels->getBoolValue()) {
       // touch down
-      destination->setIntValue("touchdown-time", time(NULL));
+      destination->setIntValue("touchdown-time", now);
       airborne->setBoolValue(false);
     }
   } else { // not airborne
@@ -467,7 +464,7 @@ void FGRouteMgr::update( double dt )
       // either taking-off or rolling-out after touchdown
     } else {
       airborne->setBoolValue(true);
-      _takeoffTime = time(NULL); // start the clock
+      _takeoffTime = globals->get_time_params()->get_cur_time(); // start the clock
       departure->setIntValue("takeoff-time", _takeoffTime);
     }
   }
