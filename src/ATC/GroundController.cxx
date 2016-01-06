@@ -42,6 +42,7 @@
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
@@ -263,7 +264,8 @@ void FGGroundController::updateAircraftInformation(int id, double lat, double lo
     } else {
         current->setHoldPosition(true);
         int state = current->getState();
-        time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+        time_t now = globals->get_time_params()->get_cur_time();
+
         if ((now - lastTransmission) > 15) {
             available = true;
         }
@@ -467,7 +469,8 @@ void FGGroundController::checkHoldPosition(int id, double lat,
     } else {
         return;
     }
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+
+    time_t now = globals->get_time_params()->get_cur_time();
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
                "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkHoldPosition at " << SG_ORIGIN);
@@ -778,7 +781,8 @@ void FGGroundController::render(bool visible)
         FGScenery * local_scenery = globals->get_scenery();
         // double elevation_meters = 0.0;
 //        double elevation_feet = 0.0;
-        time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+        time_t now = globals->get_time_params()->get_cur_time();
+
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         //double dx = 0;
 
@@ -951,7 +955,7 @@ string FGGroundController::getName() {
 
 void FGGroundController::update(double dt)
 {
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+    time_t now = globals->get_time_params()->get_cur_time();
     FGGroundNetwork* network = dynamics->getGroundNetwork();
     network->unblockAllSegments(now);
     int priority = 1;

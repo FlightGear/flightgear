@@ -44,6 +44,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/xml/easyxml.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIManager.hxx>
@@ -557,7 +558,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
                                                       const string &req,
                                                      time_t min, time_t max)
 {
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+    time_t now = globals->get_time_params()->get_cur_time();
 
     FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("traffic-manager");
     FGScheduledFlightVecIterator fltBegin, fltEnd;

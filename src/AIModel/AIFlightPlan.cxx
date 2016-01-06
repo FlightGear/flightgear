@@ -29,6 +29,7 @@
 #include <simgear/constants.h>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -192,7 +193,7 @@ void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
                                      const string& acType,
                                      const string& airline)
 {
-  time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+  time_t now = globals->get_time_params()->get_cur_time();
   time_t timeDiff = now-start;
   leg = 1;
   

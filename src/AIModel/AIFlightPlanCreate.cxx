@@ -29,6 +29,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
@@ -694,7 +695,8 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     double turnDistance = (2 * M_PI * initialTurnRadius) * (side / 360.0);
     time_t remaining =
         (turnDistance + distance) / ((vDescent * SG_NM_TO_METER) / 3600.0);
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+    time_t now = globals->get_time_params()->get_cur_time();
+
     //if (ac->getTrafficRef()->getCallSign() == fgGetString("/ai/track-callsign")) {
     //     cerr << "   Arrival time estimation: turn angle " <<  side << ". Turn distance " << turnDistance << ". Linear distance " << distance << ". Time to go " << remaining << endl;
     //     //exit(1);

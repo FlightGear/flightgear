@@ -36,6 +36,8 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
+#include <simgear/timing/sg_time.hxx>
+
 #include <Scenery/scenery.hxx>
 
 #include "trafficcontrol.hxx"
@@ -132,7 +134,9 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
     estimatedArrivalTimes.push_back(newEta);
     sort(estimatedArrivalTimes.begin(), estimatedArrivalTimes.end());
     // do some housekeeping : remove any timestamps that are past
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+
+    time_t now = globals->get_time_params()->get_cur_time();
+
     TimeVectorIterator i = estimatedArrivalTimes.begin();
     while (i != estimatedArrivalTimes.end()) {
         if ((*i) < now) {
@@ -431,7 +435,7 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
 
 bool FGTrafficRecord::isActive(int margin) const
 {
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+    time_t now = globals->get_time_params()->get_cur_time();
     time_t deptime = aircraft->getTrafficRef()->getDepartureTime();
     return ((now + margin) > deptime);
 }
@@ -1269,7 +1273,8 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
     // The user controlled aircraft should have crased here, because it doesn't have a traffic reference.
     // NOTE: if we create a traffic schedule for the user aircraft, we can use this to plan a flight.
     time_t startTime = i->getAircraft()->getTrafficRef()->getDepartureTime();
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+    time_t now = globals->get_time_params()->get_cur_time();
+
     //cerr << i->getAircraft()->getTrafficRef()->getCallSign()
     //     << " is scheduled to depart in " << startTime-now << " seconds. Available = " << available
     //     << " at parking " << getGateName(i->getAircraft()) << endl;
@@ -1352,7 +1357,8 @@ void FGStartupController::render(bool visible)
 
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         double dx = 0;
-        time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+        time_t now = globals->get_time_params()->get_cur_time();
+
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
             if (i->isActive(300)) {
                 // Handle start point

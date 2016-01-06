@@ -58,6 +58,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/threads/SGThread.hxx>
@@ -719,16 +720,18 @@ void FGTrafficManager::update(double dt)
         finishInit();
     }
         
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+
     if (scheduledAircraft.empty()) {
         return;
     }
 
     SGVec3d userCart = globals->get_aircraft_position_cart();
-
+    
     if (currAircraft == scheduledAircraft.end()) {
         currAircraft = scheduledAircraft.begin();
     }
+
+    time_t now = globals->get_time_params()->get_cur_time();
 
     //cerr << "Processing << " << (*currAircraft)->getRegistration() << " with score " << (*currAircraft)->getScore() << endl;
     if ((*currAircraft)->update(now, userCart)) {

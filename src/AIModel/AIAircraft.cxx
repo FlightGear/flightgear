@@ -1397,7 +1397,7 @@ time_t FGAIAircraft::checkForArrivalTime(const string& wptName) {
      } else {
          return 0;
      }
-     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+     time_t now = globals->get_time_params()->get_cur_time();
      time_t arrivalTime = fp->getArrivalTime();
      
      time_t ete = tracklength / ((speed * SG_NM_TO_METER) / 3600.0); 
