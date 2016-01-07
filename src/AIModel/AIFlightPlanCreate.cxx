@@ -260,9 +260,9 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
 
     FGTaxiNodeRef runwayNode;
     if (gn->getVersion() > 0) {
-        FGTaxiNodeRef runwayNode = gn->findNearestNodeOnRunway(runwayTakeoff);
+        runwayNode = gn->findNearestNodeOnRunway(runwayTakeoff);
     } else {
-        FGTaxiNodeRef runwayNode = gn->findNearestNode(runwayTakeoff);
+        runwayNode = gn->findNearestNode(runwayTakeoff);
     }
 
     // A negative gateId indicates an overflow parking, use a
