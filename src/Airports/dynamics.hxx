@@ -25,6 +25,7 @@
 #include <set>
 
 #include <simgear/structure/SGReferenced.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <ATC/trafficcontrol.hxx>
 #include <ATC/GroundController.hxx>
@@ -98,6 +99,15 @@ private:
     FGParking* innerGetAvailableParking(double radius, const std::string & flType,
                                const std::string & airline,
                                bool skipEmptyAirlineCode);
+
+    std::string fallbackGetActiveRunway(int action, double heading);
+
+    // runway preference fallback data
+    SGTimeStamp _lastFallbackUpdate;
+    FGRunwayList _fallbackDepartureRunways,
+        _fallbackArrivalRunways;
+    unsigned int _fallbackRunwayCounter;
+
 public:
     FGAirportDynamics(FGAirport* ap);
     virtual ~FGAirportDynamics();

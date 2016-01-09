@@ -313,6 +313,255 @@ void FGAirportDynamics::setRwyUse(const FGRunwayPreference & ref)
     rwyPrefs = ref;
 }
 
+bool areRunwaysParallel(const FGRunwayRef& a, const FGRunwayRef& b)
+{
+    double hdgDiff = (b->headingDeg() - a->headingDeg());
+    SG_NORMALIZE_RANGE(hdgDiff, -180.0, 180.0);
+    return (fabs(hdgDiff) < 5.0);
+}
+
+double runwayScore(const FGRunwayRef& rwy)
+{
+    return rwy->lengthM() + rwy->widthM();
+}
+
+double runwayWindScore(const FGRunwayRef& runway, double windHeading,
+                       double windSpeedKts)
+{
+    double hdgDiff = fabs(windHeading - runway->headingDeg()) * SG_DEGREES_TO_RADIANS;
+    SGMiscd::normalizeAngle(hdgDiff);
+
+    double crossWind = windSpeedKts * sin(hdgDiff);
+    double tailWind = -windSpeedKts * cos(hdgDiff);
+
+    return -(crossWind + tailWind);
+}
+
+typedef std::vector<FGRunwayRef> RunwayVec;
+
+
+class FallbackRunwayGroup
+{
+public:
+    FallbackRunwayGroup(const FGRunwayRef& rwy) :
+        _groupScore(0.0)
+    {
+        runways.push_back(rwy);
+        _leadRunwayScore = runwayScore(rwy);
+        _groupScore += _leadRunwayScore;
+    }
+
+    bool canAccept(const FGRunwayRef& rwy) const
+    {
+        if (!areRunwaysParallel(runways.front(), rwy)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    void addRunway(const FGRunwayRef& rwy)
+    {
+        assert(areRunwaysParallel(runways.front(), rwy));
+        double score = runwayScore(rwy);
+        if (score < (0.5 * _leadRunwayScore)) {
+            // drop the runway completely. this is to drop short parallel
+            // runways from being active
+            return;
+        }
+
+        runways.push_back(rwy);
+        _groupScore += score;
+    }
+
+    void adjustScoreForWind(double windHeading, double windSpeedKts)
+    {
+        _basicScore = _groupScore;
+        RunwayVec::iterator it;
+        for (it = runways.begin(); it != runways.end(); ++it) {
+            _groupScore += runwayWindScore(*it, windHeading, windSpeedKts);
+        }
+    }
+
+    double groupScore() const
+    {
+        return _groupScore;
+    }
+
+    void getRunways(FGRunwayList& arrivals, FGRunwayList& departures)
+    {
+    // make the common cases very obvious
+        if (runways.size() == 1) {
+            arrivals.push_back(runways.front());
+            departures.push_back(runways.front());
+            return;
+        }
+
+
+    // becuase runways were sorted by score when building, they were added
+    // by score also, so we can use a simple algorithim to assign
+        for (int r=0; r < runways.size(); ++r) {
+            if ((r % 2) == 0) {
+                arrivals.push_back(runways[r]);
+            } else {
+                departures.push_back(runways[r]);
+            }
+        }
+    }
+
+    std::string dump()
+    {
+        ostringstream os;
+        os << runways.front()->ident();
+        for (int r=1; r <runways.size(); ++r) {
+            os << ", " << runways[r]->ident();
+        }
+
+        os << " (score=" << _basicScore << ", wind score=" << _groupScore << ")";
+        return os.str();
+    }
+
+private:
+    RunwayVec runways;
+    double _groupScore,
+        _leadRunwayScore;
+    double _basicScore;
+
+};
+
+class WindExclusionCheck
+{
+public:
+    WindExclusionCheck(double windHeading, double windSpeedKts) :
+        _windSpeedKts(windSpeedKts),
+        _windHeading(windHeading)
+    {}
+
+    bool operator()(const FGRunwayRef& rwy) const
+    {
+        return (runwayWindScore(rwy, _windHeading, _windSpeedKts) > 30);
+    }
+private:
+    double _windSpeedKts,
+        _windHeading;
+};
+
+class SortByScore
+{
+public:
+    bool operator()(const FGRunwayRef& a, const FGRunwayRef& b) const
+    {
+        return runwayScore(a) > runwayScore(b);
+    }
+};
+
+class GroupSortByScore
+{
+public:
+    bool operator()(const FallbackRunwayGroup& a, const FallbackRunwayGroup& b) const
+    {
+        return a.groupScore() > b.groupScore();
+    }
+};
+
+string FGAirportDynamics::fallbackGetActiveRunway(int action, double heading)
+{
+    bool updateNeeded = false;
+    if (_lastFallbackUpdate == SGTimeStamp()) {
+        updateNeeded = true;
+    } else {
+        updateNeeded = (_lastFallbackUpdate.elapsedMSec() > (1000 * 60 * 15));
+    }
+
+    if (updateNeeded) {
+        double windSpeed   = fgGetInt("/environment/metar/base-wind-speed-kt");
+        double windHeading = fgGetInt("/environment/metar/base-wind-dir-deg");
+
+        // discount runways based on cross / tail-wind
+        WindExclusionCheck windCheck(windHeading, windSpeed);
+        RunwayVec runways(parent()->getRunways());
+        RunwayVec::iterator it = std::remove_if(runways.begin(), runways.end(),
+                                                windCheck);
+        runways.erase(it, runways.end());
+
+        // sort highest scored to lowest scored
+        std::sort(runways.begin(), runways.end(), SortByScore());
+
+        std::vector<FallbackRunwayGroup> groups;
+        std::vector<FallbackRunwayGroup>::iterator git;
+
+        for (it = runways.begin(); it != runways.end(); ++it) {
+            bool existingGroupDidAccept = false;
+            for (git = groups.begin(); git != groups.end(); ++git) {
+                if (git->canAccept(*it)) {
+                    existingGroupDidAccept = true;
+                    git->addRunway(*it);
+                    break;
+                }
+            } // of existing groups iteration
+
+            if (!existingGroupDidAccept) {
+                // create a new group
+                groups.push_back(FallbackRunwayGroup(*it));
+            }
+        } // of group building phase
+
+
+        // select highest scored group based on cross/tail wind
+        for (git = groups.begin(); git != groups.end(); ++git) {
+            git->adjustScoreForWind(windHeading, windSpeed);
+        }
+
+        std::sort(groups.begin(), groups.end(), GroupSortByScore());
+
+        {
+            ostringstream os;
+            os << parent()->ident() << " groups:";
+
+            for (git = groups.begin(); git != groups.end(); ++git) {
+                os << "\n\t" << git->dump();
+            }
+
+            std::string s = os.str();
+            SG_LOG(SG_AI, SG_INFO, s);
+        }
+
+        // assign takeoff and landing runways
+        FallbackRunwayGroup bestGroup = groups.front();
+        
+        _lastFallbackUpdate.stamp();
+        _fallbackRunwayCounter = 0;
+        _fallbackDepartureRunways.clear();
+        _fallbackArrivalRunways.clear();
+        bestGroup.getRunways(_fallbackArrivalRunways, _fallbackDepartureRunways);
+
+        ostringstream os;
+        os << "\tArrival:" << _fallbackArrivalRunways.front()->ident();
+        for (int r=1; r <_fallbackArrivalRunways.size(); ++r) {
+            os << ", " << _fallbackArrivalRunways[r]->ident();
+        }
+        os << "\n\tDeparture:" << _fallbackDepartureRunways.front()->ident();
+        for (int r=1; r <_fallbackDepartureRunways.size(); ++r) {
+            os << ", " << _fallbackDepartureRunways[r]->ident();
+        }
+
+        std::string s = os.str();
+        SG_LOG(SG_AI, SG_INFO, parent()->ident() << " fallback runways assignments for "
+               << static_cast<int>(windHeading) << "@" << static_cast<int>(windSpeed) << "\n" << s);
+    }
+
+    _fallbackRunwayCounter++;
+    FGRunwayRef r;
+    // ensure we cycle through possible runways where they exist
+    if (action == 1) {
+        r = _fallbackDepartureRunways[_fallbackRunwayCounter % _fallbackDepartureRunways.size()];
+    } else {
+        r = _fallbackArrivalRunways[_fallbackRunwayCounter % _fallbackArrivalRunways.size()];
+    }
+
+    return r->ident();
+}
+
 bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
                                              int action, string & runway,
                                              double heading)
@@ -325,7 +574,8 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
     string type;
 
     if (!rwyPrefs.available()) {
-        return false;
+        runway = fallbackGetActiveRunway(action, heading);
+        return true;
     }
 
     RunwayGroup *currRunwayGroup = 0;
