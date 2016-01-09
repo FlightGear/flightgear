@@ -22,6 +22,15 @@ PathsDialog::PathsDialog(QWidget *parent, simgear::pkg::RootRef root) :
     m_catalogsModel = new CatalogListModel(this, m_packageRoot);
     m_ui->catalogsList->setModel(m_catalogsModel);
 
+ // enable drag-drop to re-order the paths
+    m_ui->sceneryPathsList->setDragEnabled(true);
+    m_ui->sceneryPathsList->setDragDropMode(QAbstractItemView::InternalMove);
+    m_ui->sceneryPathsList->setDropIndicatorShown(true);
+
+    m_ui->aircraftPathsList->setDragEnabled(true);
+    m_ui->aircraftPathsList->setDragDropMode(QAbstractItemView::InternalMove);
+    m_ui->aircraftPathsList->setDropIndicatorShown(true);
+
     connect(m_ui->addCatalog, &QToolButton::clicked,
             this, &PathsDialog::onAddCatalog);
     connect(m_ui->addDefaultCatalogButton, &QPushButton::clicked,
@@ -98,6 +107,11 @@ void PathsDialog::onAddSceneryPath()
     if (!path.isEmpty()) {
         m_ui->sceneryPathsList->addItem(path);
     }
+
+    // work around a Qt OS-X bug - this dialog is ending ordered
+    // behind the main settings dialog (consequence of modal-dialog
+    // showing a modla dialog showing a modial dialog)
+    window()->raise();
 }
 
 void PathsDialog::onRemoveSceneryPath()
@@ -113,6 +127,10 @@ void PathsDialog::onAddAircraftPath()
     if (!path.isEmpty()) {
         m_ui->aircraftPathsList->addItem(path);
     }
+    // work around a Qt OS-X bug - this dialog is ending ordered
+    // behind the main settings dialog (consequence of modal-dialog
+    // showing a modla dialog showing a modial dialog)
+    window()->raise();
 }
 
 void PathsDialog::onRemoveAircraftPath()
