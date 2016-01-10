@@ -31,7 +31,7 @@ class FGADA: public FGInterface {
 private:
 	
     SGSocket *fdmsock;
-
+#if 0
     // Auxilliary Flight Model parameters, basically for HUD
     double        aux1;           // auxilliary flag
     double        aux2;           // auxilliary flag
@@ -63,7 +63,7 @@ private:
     int         iaux10;           // auxilliary flag
     int         iaux11;           // auxilliary flag
     int         iaux12;           // auxilliary flag
-
+#endif
     // copy FDM state to FGADA structures
     bool copy_to_FGADA();
 
