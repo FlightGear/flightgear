@@ -38,13 +38,11 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <Airports/airport.hxx>
-#include <Airports/dynamics.hxx>
 #include <Airports/runways.hxx>
 
 #include <Scenery/scenery.hxx>
 
 using std::string;
-using flightgear::NavDataCache;
 
 /***************************************************************************
  * FGTaxiSegment
@@ -157,9 +155,8 @@ bool FGTaxiRoute::next(FGTaxiNodeRef& node, int *rte)
  * FGGroundNetwork()
  **************************************************************************/
 
-FGGroundNetwork::FGGroundNetwork() :
-    dynamics(NULL),
-    parent(NULL)
+FGGroundNetwork::FGGroundNetwork(FGAirport* airport) :
+    parent(airport)
 {
     hasNetwork = false;
     version = 0;
@@ -174,18 +171,17 @@ FGGroundNetwork::~FGGroundNetwork()
   }
 
   // owning references to ground-net nodes will also drop
+
+  SG_LOG(SG_NAVAID, SG_INFO, "destroying ground net for " << parent->ident());
 }
 
-void FGGroundNetwork::init(FGAirportDynamics* dyn)
+void FGGroundNetwork::init()
 {
     if (networkInitialized) {
         SG_LOG(SG_GENERAL, SG_WARN, "duplicate ground-network init");
         return;
     }
-    
-    dynamics = dyn;
-    parent = dyn->parent();
-    assert(parent);
+
     hasNetwork = true;
     int index = 1;  
   
@@ -452,5 +448,15 @@ FGTaxiNodeVector FGGroundNetwork::segmentsFrom(const FGTaxiNodeRef &from) const
     }
 
     return result;
+}
+
+const intVec& FGGroundNetwork::getTowerFrequencies() const
+{
+    return freqTower;
+}
+
+const intVec& FGGroundNetwork::getGroundFrequencies() const
+{
+    return freqGround;
 }
 

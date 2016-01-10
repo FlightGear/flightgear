@@ -50,6 +50,9 @@ public:
     virtual ~QtLauncher();
 
     void setInAppMode();
+
+    void setSceneryPaths();
+
 private slots:
     // run is used when the launcher is invoked before the main app is
     // started

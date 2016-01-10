@@ -42,10 +42,10 @@ using std::string;
 XMLLoader::XMLLoader() {}
 XMLLoader::~XMLLoader() {}
 
-void XMLLoader::load(FGAirportDynamics* d)
+void XMLLoader::load(FGGroundNetwork* net)
 {
   SGPath path;
-  if (!findAirportData(d->parent()->ident(), "groundnet", path)) {
+  if (!findAirportData(net->airport()->ident(), "groundnet", path)) {
     return;
   }
 
@@ -53,7 +53,7 @@ void XMLLoader::load(FGAirportDynamics* d)
   SGTimeStamp t;
   t.stamp();
   try {
-      FGAirportDynamicsXMLLoader visitor(d);
+      FGGroundNetXMLLoader visitor(net);
       readXML(path.str(), visitor);
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_INFO, "parsing groundnet XML failed:" << e.getFormattedMessage());

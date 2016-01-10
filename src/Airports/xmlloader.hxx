@@ -26,7 +26,7 @@ public:
   ~XMLLoader();
   
   static void load(FGRunwayPreference* p);
-  static void load(FGAirportDynamics*  d);
+  static void load(FGGroundNetwork*  net);
   static void load(FGSidStar*          s);
   
   /**

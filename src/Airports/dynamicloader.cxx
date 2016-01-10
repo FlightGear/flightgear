@@ -24,8 +24,8 @@
 #include "dynamicloader.hxx"
 
 #include <Navaids/NavDataCache.hxx>
-#include <Airports/dynamics.hxx>
 #include <Airports/airport.hxx>
+#include <Airports/dynamics.hxx>
 #include <Airports/groundnetwork.hxx>
 
 using std::string;
@@ -53,15 +53,16 @@ static double processPosition(const string &pos)
   return value;
 }
 
-FGAirportDynamicsXMLLoader::FGAirportDynamicsXMLLoader(FGAirportDynamics* dyn):
-    XMLVisitor(), _dynamics(dyn)
+FGGroundNetXMLLoader::FGGroundNetXMLLoader(FGGroundNetwork* net):
+    XMLVisitor(),
+    _groundNetwork(net)
 {}
 
-void  FGAirportDynamicsXMLLoader::startXML () {
+void  FGGroundNetXMLLoader::startXML () {
   //cout << "FGAirportDynamicsLoader::Start XML" << endl;
 }
 
-void  FGAirportDynamicsXMLLoader::endXML ()
+void  FGGroundNetXMLLoader::endXML ()
 {
   ParkingPushbackIndex::const_iterator it;
   
@@ -82,7 +83,7 @@ void  FGAirportDynamicsXMLLoader::endXML ()
   
 }
 
-void FGAirportDynamicsXMLLoader::startParking(const XMLAttributes &atts)
+void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
 {
   string type;
   int index = 0;
@@ -134,10 +135,10 @@ void FGAirportDynamicsXMLLoader::startParking(const XMLAttributes &atts)
   }
   
   _indexMap[index] = parking;
-  _dynamics->getGroundNetwork()->addParking(parking);
+  _groundNetwork->addParking(parking);
 }
 
-void FGAirportDynamicsXMLLoader::startNode(const XMLAttributes &atts)
+void FGGroundNetXMLLoader::startNode(const XMLAttributes &atts)
 {
   int index = 0;
   string lat, lon;
@@ -181,7 +182,7 @@ void FGAirportDynamicsXMLLoader::startNode(const XMLAttributes &atts)
   _unreferencedNodes.insert(node);
 }
 
-void FGAirportDynamicsXMLLoader::startArc(const XMLAttributes &atts)
+void FGGroundNetXMLLoader::startArc(const XMLAttributes &atts)
 {  
   int begin = 0, end = 0;
   bool isPushBackRoute = false;
@@ -199,7 +200,7 @@ void FGAirportDynamicsXMLLoader::startArc(const XMLAttributes &atts)
   
   IntPair e(begin, end);
   if (_arcSet.find(e) != _arcSet.end()) {
-    SG_LOG(SG_NAVAID, SG_WARN, _dynamics->parent()->ident() << " ground-net: skipping duplicate edge:" << begin << "->" << end);
+    SG_LOG(SG_NAVAID, SG_WARN, _groundNetwork->airport()->ident() << " ground-net: skipping duplicate edge:" << begin << "->" << end);
     return;
   }
   
@@ -224,13 +225,13 @@ void FGAirportDynamicsXMLLoader::startArc(const XMLAttributes &atts)
   }
 
   _arcSet.insert(e);  
-  _dynamics->getGroundNetwork()->addSegment(fromNode, toNode);
+  _groundNetwork->addSegment(fromNode, toNode);
   if (isPushBackRoute) {
 //    toNode->setIsPushback();
   }
 }
 
-void FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttributes &atts)
+void FGGroundNetXMLLoader::startElement (const char * name, const XMLAttributes &atts)
 {
   if (!strcmp("Parking", name)) {
     startParking(atts);
@@ -241,27 +242,27 @@ void FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttri
   }
 }
 
-void  FGAirportDynamicsXMLLoader::endElement (const char * name)
+void  FGGroundNetXMLLoader::endElement (const char * name)
 {
   int valueAsInt = atoi(value.c_str());
   if (!strcmp("version", name)) {
-    _dynamics->getGroundNetwork()->addVersion(valueAsInt);
+    _groundNetwork->addVersion(valueAsInt);
   } else if (!strcmp("AWOS", name)) {
-    _dynamics->addAwosFreq(valueAsInt);
+    _groundNetwork->addAwosFreq(valueAsInt);
   } else if (!strcmp("UNICOM", name)) {
-    _dynamics->addUnicomFreq(valueAsInt);
+    _groundNetwork->addUnicomFreq(valueAsInt);
   } else if (!strcmp("CLEARANCE", name)) {
-    _dynamics->addClearanceFreq(valueAsInt);
+    _groundNetwork->addClearanceFreq(valueAsInt);
   } else if (!strcmp("GROUND", name)) {
-    _dynamics->addGroundFreq(valueAsInt);
+    _groundNetwork->addGroundFreq(valueAsInt);
   } else if (!strcmp("TOWER", name)) {
-    _dynamics->addTowerFreq(valueAsInt);
+    _groundNetwork->addTowerFreq(valueAsInt);
   } else if (!strcmp("APPROACH", name)) {
-    _dynamics->addApproachFreq(valueAsInt);
+    _groundNetwork->addApproachFreq(valueAsInt);
   }
 }
 
-void  FGAirportDynamicsXMLLoader::data (const char * s, int len) {
+void  FGGroundNetXMLLoader::data (const char * s, int len) {
   string token = string(s,len);
   //cout << "Character data " << string(s,len) << endl;
   if ((token.find(" ") == string::npos && (token.find('\n')) == string::npos))
@@ -270,14 +271,14 @@ void  FGAirportDynamicsXMLLoader::data (const char * s, int len) {
     value = string("");
 }
 
-void  FGAirportDynamicsXMLLoader::pi (const char * target, const char * data) {
+void  FGGroundNetXMLLoader::pi (const char * target, const char * data) {
   //cout << "Processing instruction " << target << ' ' << data << endl;
 }
 
-void  FGAirportDynamicsXMLLoader::warning (const char * message, int line, int column) {
+void  FGGroundNetXMLLoader::warning (const char * message, int line, int column) {
   SG_LOG(SG_IO, SG_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
 }
 
-void  FGAirportDynamicsXMLLoader::error (const char * message, int line, int column) {
+void  FGGroundNetXMLLoader::error (const char * message, int line, int column) {
   SG_LOG(SG_IO, SG_ALERT, "Error: " << message << " (" << line << ',' << column << ')');
 }

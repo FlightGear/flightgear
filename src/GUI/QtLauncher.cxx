@@ -417,14 +417,15 @@ bool runLauncherDialog()
 
     loadNaturalEarthData();
 
-    // setup scenery paths now, especially TerraSync path for airport
-    // parking locations (after they're downloaded)
-
     QtLauncher dlg;
     dlg.exec();
+
     if (dlg.result() != QDialog::Accepted) {
         return false;
     }
+
+    // don't set scenery paths twice
+    globals->clear_fg_scenery();
 
     return true;
 }
@@ -576,6 +577,32 @@ QtLauncher::~QtLauncher()
 
 }
 
+void QtLauncher::setSceneryPaths()
+{
+    globals->clear_fg_scenery();
+
+// mimic what optionss.cxx does, so we can find airport data for parking
+// positions
+    QSettings settings;
+    // append explicit scenery paths
+    Q_FOREACH(QString path, settings.value("scenery-paths").toStringList()) {
+        globals->append_fg_scenery(path.toStdString());
+    }
+
+    // append the TerraSync path
+    QString downloadDir = settings.value("download-dir").toString();
+    if (downloadDir.isEmpty()) {
+        downloadDir = QString::fromStdString(flightgear::defaultDownloadDir());
+    }
+
+    SGPath terraSyncDir(downloadDir.toStdString());
+    terraSyncDir.append("TerraSync");
+    if (terraSyncDir.exists()) {
+        globals->append_fg_scenery(terraSyncDir.str());
+    }
+
+}
+
 void QtLauncher::setInAppMode()
 {
   m_inAppMode = true;
@@ -608,7 +635,10 @@ void QtLauncher::restoreSettings()
         // select the default C172p
     }
 
-    updateSelectedAircraft();
+    if (!m_inAppMode) {
+        setSceneryPaths();
+    }
+
     m_ui->location->restoreSettings();
 
     // rating filters
@@ -1090,6 +1120,9 @@ void QtLauncher::onEditPaths()
         QSettings settings;
         m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
         m_aircraftModel->scanDirs();
+
+        // re-set scenery dirs
+        setSceneryPaths();
     }
 }
 

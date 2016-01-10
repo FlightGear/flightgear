@@ -67,9 +67,6 @@ private:
     // if a parking item is in this set, it is occupied
     ParkingSet occupiedParkings;
 
-
-    std::auto_ptr<FGGroundNetwork> groundNetwork;
-
     FGRunwayPreference   rwyPrefs;
     FGStartupController  startupController;
     FGTowerController    towerController;
@@ -82,12 +79,6 @@ private:
     stringVec takeoff;
     stringVec milActive, comActive, genActive, ulActive;
     stringVec *currentlyActive;
-    intVec freqAwos;     // </AWOS>
-    intVec freqUnicom;   // </UNICOM>
-    intVec freqClearance;// </CLEARANCE>
-    intVec freqGround;   // </GROUND>
-    intVec freqTower;    // </TOWER>
-    intVec freqApproach; // </APPROACH>
 
     int atisSequenceIndex;
     double atisSequenceTimeStamp;
@@ -111,25 +102,6 @@ private:
 public:
     FGAirportDynamics(FGAirport* ap);
     virtual ~FGAirportDynamics();
-
-    void addAwosFreq     (int val) {
-        freqAwos.push_back(val);
-    };
-    void addUnicomFreq   (int val) {
-        freqUnicom.push_back(val);
-    };
-    void addClearanceFreq(int val) {
-        freqClearance.push_back(val);
-    };
-    void addGroundFreq   (int val) {
-        freqGround.push_back(val);
-    };
-    void addTowerFreq    (int val) {
-        freqTower.push_back(val);
-    };
-    void addApproachFreq (int val) {
-        freqApproach.push_back(val);
-    };
 
     void init();
   
@@ -182,10 +154,7 @@ public:
         return &approachController;
     };
 
-    FGGroundNetwork* getGroundNetwork() const
-    {
-        return groundNetwork.get();
-    }
+    FGGroundNetwork* getGroundNetwork() const;
 
     int getGroundFrequency(unsigned leg);
     int getTowerFrequency  (unsigned nr);

@@ -33,7 +33,8 @@
 #include "NavaidDiagram.hxx"
 
 #include <Airports/airport.hxx>
-#include <Airports/dynamics.hxx> // for parking
+#include <Airports/groundnetwork.hxx>
+
 #include <Main/globals.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
@@ -699,26 +700,26 @@ void LocationWidget::onLocationChanged()
             }
         }
 
-#if 0
         m_ui->parkingCombo->clear();
-        FGAirportDynamics* dynamics = apt->getDynamics();
-        PositionedIDVec parkings = NavDataCache::instance()->airportItemsOfType(m_location->guid(),
-                                                                                FGPositioned::PARKING);
-        if (parkings.empty()) {
-            m_ui->parkingCombo->setEnabled(false);
-            m_ui->parkingRadio->setEnabled(false);
-        } else {
-            m_ui->parkingCombo->setEnabled(true);
-            m_ui->parkingRadio->setEnabled(true);
-            Q_FOREACH(PositionedID parking, parkings) {
-                FGParking* park = dynamics->getParking(parking);
-                m_ui->parkingCombo->addItem(QString::fromStdString(park->getName()),
-                                            static_cast<qlonglong>(parking));
+        FGGroundNetwork* ground = apt->groundNetwork();
+        if (ground && ground->exists()) {
+            FGParkingList parkings = ground->allParkings();
+            if (parkings.empty()) {
+                m_ui->parkingCombo->setEnabled(false);
+                m_ui->parkingRadio->setEnabled(false);
+            } else {
+                m_ui->parkingCombo->setEnabled(true);
+                m_ui->parkingRadio->setEnabled(true);
 
-                m_ui->airportDiagram->addParking(park);
-            }
-        }
-#endif
+                FGParkingList::const_iterator it;
+                for (it = parkings.begin(); it != parkings.end(); ++it) {
+                    m_ui->parkingCombo->addItem(QString::fromStdString((*it)->getName()),
+                                                (*it)->getIndex());
+
+                    m_ui->airportDiagram->addParking(*it);
+                }
+            } // of have parkings
+        } // of was able to create dynamics
 
     } else if (m_locationIsLatLon) {
         m_ui->stack->setCurrentIndex(1);
@@ -752,7 +753,7 @@ void LocationWidget::onAirportParkingClicked(FGParkingRef park)
 {
     if (park) {
         m_ui->parkingRadio->setChecked(true);
-        int parkingIndex = m_ui->parkingCombo->findText(QString::fromStdString(park->name()));
+        int parkingIndex = m_ui->parkingCombo->findData(park->getIndex());
         m_ui->parkingCombo->setCurrentIndex(parkingIndex);
         m_ui->airportDiagram->setSelectedRunway(FGRunwayRef());
     }
@@ -873,22 +874,9 @@ void LocationWidget::updateDescription()
         } else {
             m_ui->airportDiagram->setApproachExtensionDistance(0.0);
         }
-    } else {
 
+        
     }
-
-#if 0
-
-    QString locationOnAirport;
-    if (m_ui->runwayRadio->isChecked()) {
-
-
-    } else if (m_ui->parkingRadio->isChecked()) {
-        locationOnAirport =  QString("at parking position %1").arg(m_ui->parkingCombo->currentText());
-    }
-
-    m_ui->airportDescription->setText();
-#endif
 
     emit descriptionChanged(locationDescription());
 }

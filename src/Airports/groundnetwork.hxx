@@ -177,9 +177,8 @@ public:
 class FGGroundNetwork
 {
 private:
-    friend class FGAirportDynamicsXMLLoader;
+    friend class FGGroundNetXMLLoader;
 
-    FGAirportDynamics* dynamics; // weak back-pointer to our owner
     bool hasNetwork;
     bool networkInitialized;
 
@@ -207,17 +206,45 @@ private:
 
     FGTaxiNodeVector segmentsFrom(const FGTaxiNodeRef& from) const;
 
+    void addAwosFreq     (int val) {
+        freqAwos.push_back(val);
+    };
+    void addUnicomFreq   (int val) {
+        freqUnicom.push_back(val);
+    };
+    void addClearanceFreq(int val) {
+        freqClearance.push_back(val);
+    };
+    void addGroundFreq   (int val) {
+        freqGround.push_back(val);
+    };
+    void addTowerFreq    (int val) {
+        freqTower.push_back(val);
+    };
+    void addApproachFreq (int val) {
+        freqApproach.push_back(val);
+    };
+
+    intVec freqAwos;     // </AWOS>
+    intVec freqUnicom;   // </UNICOM>
+    intVec freqClearance;// </CLEARANCE>
+    intVec freqGround;   // </GROUND>
+    intVec freqTower;    // </TOWER>
+    intVec freqApproach; // </APPROACH>
 public:
-    FGGroundNetwork();
+    FGGroundNetwork(FGAirport* pr);
     ~FGGroundNetwork();
     
     void setVersion (int v) { version = v;};
     int getVersion() { return version; };
 
-    void init(FGAirportDynamics* pr);
+    void init();
     bool exists() {
         return hasNetwork;
     };
+
+    FGAirport* airport() const
+    { return parent; }
 
     FGTaxiNodeRef findNearestNode(const SGGeod& aGeod) const;
     FGTaxiNodeRef findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL) const;
@@ -244,6 +271,10 @@ public:
 
     void addVersion(int v) {version = v; };
     void unblockAllSegments(time_t now);
+
+    const intVec& getTowerFrequencies() const;
+    const intVec& getGroundFrequencies() const;
+    
 };
 
 

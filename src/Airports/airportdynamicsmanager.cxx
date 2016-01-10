@@ -79,8 +79,6 @@ FGAirportDynamicsRef AirportDynamicsManager::dynamicsForICAO(const std::string &
         return FGAirportDynamicsRef();
 
     FGAirportDynamicsRef d(new FGAirportDynamics(apt));
-
-    XMLLoader::load(d.ptr());
     d->init();
 
     FGRunwayPreference rwyPrefs(apt);
@@ -96,7 +94,7 @@ FGAirportDynamicsRef AirportDynamicsManager::find(const std::string &icao)
     if (icao.empty())
         return FGAirportDynamicsRef();
 
-    AirportDynamicsManager* instance = static_cast<AirportDynamicsManager*>(globals->get_subsystem("airport-dynamics"));
+    AirportDynamicsManager* instance = globals->get_subsystem<AirportDynamicsManager>();
     if (!instance)
         return FGAirportDynamicsRef();
 

@@ -160,7 +160,6 @@ FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
 
 {
     lastUpdate = 0;
-    groundNetwork.reset(new FGGroundNetwork);
 }
 
 // Destructor
@@ -173,8 +172,6 @@ FGAirportDynamics::~FGAirportDynamics()
 // Initialization required after XMLRead
 void FGAirportDynamics::init()
 {
-
-    groundNetwork->init(this);
     groundController.setTowerController(&towerController);
     groundController.init(this);
 }
@@ -183,7 +180,7 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
                                            const string & airline,
                                            bool skipEmptyAirlineCode)
 {
-    const FGParkingList& parkings(groundNetwork->allParkings());
+    const FGParkingList& parkings(getGroundNetwork()->allParkings());
     FGParkingList::const_iterator it;
     for (it = parkings.begin(); it != parkings.end(); ++it) {
         FGParkingRef parking = *it;
@@ -210,7 +207,7 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
 
 bool FGAirportDynamics::hasParkings() const
 {
-    return !groundNetwork->allParkings().empty();
+    return !getGroundNetwork()->allParkings().empty();
 }
 
 ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const string & flType,
@@ -238,7 +235,7 @@ ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const st
 
 ParkingAssignment FGAirportDynamics::getParkingByName(const std::string& name) const
 {
-    const FGParkingList& parkings(groundNetwork->allParkings());
+    const FGParkingList& parkings(getGroundNetwork()->allParkings());
     FGParkingList::const_iterator it;
     for (it = parkings.begin(); it != parkings.end(); ++it) {
         if ((*it)->name() == name) {
@@ -246,7 +243,12 @@ ParkingAssignment FGAirportDynamics::getParkingByName(const std::string& name) c
         }
     }
 
-  return ParkingAssignment();
+    return ParkingAssignment();
+}
+
+FGGroundNetwork *FGAirportDynamics::getGroundNetwork() const
+{
+    return _ap->groundNetwork();
 }
 
 void FGAirportDynamics::setParkingAvailable(FGParking* park, bool available)
@@ -300,7 +302,7 @@ public:
 
 FGParkingList FGAirportDynamics::getParkings(bool onlyAvailable, const std::string &type) const
 {
-    FGParkingList result(groundNetwork->allParkings());
+    FGParkingList result(getGroundNetwork()->allParkings());
 
     GetParkingsPredicate pred(onlyAvailable, type, this);
     FGParkingList::iterator it = std::remove_if(result.begin(), result.end(), pred);
@@ -767,6 +769,9 @@ int FGAirportDynamics::getGroundFrequency(unsigned leg)
         SG_LOG(SG_ATC, SG_ALERT,
                "Leg value is smaller than one at " << SG_ORIGIN);
     }
+
+    const intVec& freqGround(getGroundNetwork()->getGroundFrequencies());
+
     if (freqGround.size() == 0) {
         return 0;
     }
@@ -790,6 +795,9 @@ int FGAirportDynamics::getTowerFrequency(unsigned nr)
         SG_LOG(SG_ATC, SG_ALERT,
                "Leg value is smaller than two at " << SG_ORIGIN);
     }
+
+    const intVec& freqTower(getGroundNetwork()->getTowerFrequencies());
+
     if (freqTower.size() == 0) {
         return 0;
     }

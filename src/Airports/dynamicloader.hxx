@@ -16,14 +16,16 @@
 #ifndef _DYNAMIC_LOADER_HXX_
 #define _DYNAMIC_LOADER_HXX_
 
+#include <set>
+
 #include <simgear/xml/easyxml.hxx>
 
-#include "dynamics.hxx"
+#include "groundnetwork.hxx"
 #include <Airports/parking.hxx>
 
-class FGAirportDynamicsXMLLoader : public XMLVisitor {
+class FGGroundNetXMLLoader : public XMLVisitor {
 public:
-    FGAirportDynamicsXMLLoader(FGAirportDynamics* dyn);
+    FGGroundNetXMLLoader(FGGroundNetwork* gn);
 
 protected:
     virtual void startXML (); 
@@ -40,7 +42,8 @@ private:
     void startNode(const XMLAttributes &atts);
     void startArc(const XMLAttributes &atts);
   
-    FGAirportDynamics* _dynamics;
+    FGGroundNetwork* _groundNetwork;
+    
     std::string value;
   
     // map from local (groundnet.xml) ids to parking instances

@@ -54,6 +54,8 @@
 #include <ATC/CommStation.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
+#include <Airports/groundnetwork.hxx>
+#include <Airports/xmlloader.hxx>
 
 using std::vector;
 using std::pair;
@@ -967,6 +969,19 @@ void FGAirport::sortBySize(FGPositionedList& airportList)
 FGAirportDynamicsRef FGAirport::getDynamics() const
 {
     return flightgear::AirportDynamicsManager::find(const_cast<FGAirport*>(this));
+}
+
+FGGroundNetwork *FGAirport::groundNetwork() const
+{
+    if (!_groundNetwork.get()) {
+        _groundNetwork.reset(new FGGroundNetwork(const_cast<FGAirport*>(this)));
+
+        XMLLoader::load(_groundNetwork.get());
+
+        _groundNetwork->init();
+    }
+
+    return _groundNetwork.get();
 }
 
 // get airport elevation

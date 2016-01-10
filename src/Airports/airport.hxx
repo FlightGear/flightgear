@@ -39,6 +39,8 @@
 #include "airports_fwd.hxx"
 #include "runways.hxx"
 
+class FGGroundNetwork;
+
 /***************************************************************************************
  *
  **************************************************************************************/
@@ -91,6 +93,8 @@ class FGAirport : public FGPositioned
 
     FGAirportDynamicsRef getDynamics() const;
     
+    FGGroundNetwork* groundNetwork() const;
+
     unsigned int numRunways() const;
     unsigned int numHelipads() const;
     FGRunwayRef getRunwayByIndex(unsigned int aIndex) const;
@@ -354,6 +358,8 @@ private:
     std::vector<SIDRef> mSIDs;
     std::vector<STARRef> mSTARs;
     std::vector<ApproachRef> mApproaches;
+
+    mutable std::auto_ptr<FGGroundNetwork> _groundNetwork;
   };
 
 // find basic airport location info from airport database
