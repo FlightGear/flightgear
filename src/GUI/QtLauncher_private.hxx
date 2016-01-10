@@ -104,6 +104,12 @@ private:
 
     simgear::pkg::PackageRef packageForAircraftURI(QUrl uri) const;
 
+    void maybeRestoreAircraftSelection();
+    // need to wait after a model reset before restoring selection and
+    // scrolling, to give the view time it seems.
+    void delayedAircraftModelReset();
+    void onRatingsFilterToggled();
+
     QScopedPointer<Ui::Launcher> m_ui;
     AircraftProxyModel* m_aircraftProxy;
     AircraftItemModel* m_aircraftModel;

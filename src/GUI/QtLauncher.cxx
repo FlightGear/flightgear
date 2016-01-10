@@ -303,7 +303,7 @@ protected:
             }
         }
 
-        if (m_ratingsFilter) {
+        if (!m_onlyShowInstalled && m_ratingsFilter) {
             QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
             for (int i=0; i<4; ++i) {
                 if (m_ratings[i] > index.data(AircraftRatingRole + i).toInt()) {
@@ -475,6 +475,9 @@ QtLauncher::QtLauncher() :
     m_aircraftProxy = new AircraftProxyModel(this);
     connect(m_ui->ratingsFilterCheck, &QAbstractButton::toggled,
             m_aircraftProxy, &AircraftProxyModel::setRatingFilterEnabled);
+    connect(m_ui->ratingsFilterCheck, &QAbstractButton::toggled,
+            this, &QtLauncher::maybeRestoreAircraftSelection);
+
     connect(m_ui->onlyShowInstalledCheck, &QAbstractButton::toggled,
             m_aircraftProxy, &AircraftProxyModel::setInstalledFilterEnabled);
     connect(m_ui->aircraftFilter, &QLineEdit::textChanged,
@@ -554,6 +557,13 @@ QtLauncher::QtLauncher() :
     connect(m_ui->pathsButton, &QPushButton::clicked,
             this, &QtLauncher::onEditPaths);
 
+    // after any kind of reset, try to restore selection and scroll
+    // to match the m_selectedAircraft. This needs to be delayed
+    // fractionally otherwise the scrollTo seems to be ignored,
+    // unfortunately.
+    connect(m_aircraftProxy, &AircraftProxyModel::modelReset,
+            this, &QtLauncher::delayedAircraftModelReset);
+
     restoreSettings();
 
     QSettings settings;
@@ -616,7 +626,28 @@ void QtLauncher::restoreSettings()
     m_aircraftProxy->setRatingFilterEnabled(m_ui->ratingsFilterCheck->isChecked());
     m_aircraftProxy->setRatings(m_ratingFilters);
 
+    updateSelectedAircraft();
+    maybeRestoreAircraftSelection();
+
     m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
+}
+
+void QtLauncher::delayedAircraftModelReset()
+{
+    QTimer::singleShot(1, this, &QtLauncher::maybeRestoreAircraftSelection);
+}
+
+void QtLauncher::maybeRestoreAircraftSelection()
+{
+    QModelIndex aircraftIndex = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
+    QModelIndex proxyIndex = m_aircraftProxy->mapFromSource(aircraftIndex);
+    if (proxyIndex.isValid()) {
+        m_ui->aircraftList->selectionModel()->setCurrentIndex(proxyIndex,
+                                                              QItemSelectionModel::ClearAndSelect);
+        m_ui->aircraftList->selectionModel()->select(proxyIndex,
+                                                     QItemSelectionModel::ClearAndSelect);
+        m_ui->aircraftList->scrollTo(proxyIndex);
+    }
 }
 
 void QtLauncher::saveSettings()
@@ -848,6 +879,15 @@ void QtLauncher::onAircraftInstalledCompleted(QModelIndex index)
     maybeUpdateSelectedAircraft(index);
 }
 
+void QtLauncher::onRatingsFilterToggled()
+{
+    QModelIndex aircraftIndex = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
+    QModelIndex proxyIndex = m_aircraftProxy->mapFromSource(aircraftIndex);
+    if (proxyIndex.isValid()) {
+        m_ui->aircraftList->scrollTo(proxyIndex);
+    }
+}
+
 void QtLauncher::onAircraftInstallFailed(QModelIndex index, QString errorMessage)
 {
     qWarning() << Q_FUNC_INFO << index.data(AircraftURIRole) << errorMessage;
@@ -870,6 +910,10 @@ void QtLauncher::onAircraftSelected(const QModelIndex& index)
 
 void QtLauncher::onRequestPackageInstall(const QModelIndex& index)
 {
+    // also select, otherwise UI is confusing
+    m_selectedAircraft = index.data(AircraftURIRole).toUrl();
+    updateSelectedAircraft();
+
     QString pkg = index.data(AircraftPackageIdRole).toString();
     simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
     if (pref->isInstalled()) {
@@ -1029,12 +1073,7 @@ void QtLauncher::onRembrandtToggled(bool b)
 void QtLauncher::onShowInstalledAircraftToggled(bool b)
 {
     m_ui->ratingsFilterCheck->setEnabled(!b);
-    if (b) {
-        // don't filter installed aircraft by rating
-        m_aircraftProxy->setRatingFilterEnabled(false);
-    } else {
-        m_aircraftProxy->setRatingFilterEnabled(m_ui->ratingsFilterCheck->isChecked());
-    }
+    maybeRestoreAircraftSelection();
 }
 
 void QtLauncher::onSubsytemIdleTimeout()
