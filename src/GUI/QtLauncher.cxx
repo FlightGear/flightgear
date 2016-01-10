@@ -252,7 +252,8 @@ class AircraftProxyModel : public QSortFilterProxyModel
 public:
     AircraftProxyModel(QObject* pr) :
         QSortFilterProxyModel(pr),
-        m_ratingsFilter(true)
+        m_ratingsFilter(true),
+        m_onlyShowInstalled(false)
     {
         for (int i=0; i<4; ++i) {
             m_ratings[i] = 3;
@@ -276,11 +277,30 @@ public slots:
         invalidate();
     }
 
+    void setInstalledFilterEnabled(bool e)
+    {
+        if (e == m_onlyShowInstalled) {
+            return;
+        }
+
+        m_onlyShowInstalled = e;
+        invalidate();
+    }
+
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
     {
         if (!QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent)) {
             return false;
+        }
+
+        if (m_onlyShowInstalled) {
+            QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
+            QVariant v = index.data(AircraftPackageStatusRole);
+            AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
+            if (status == PackageNotInstalled) {
+                return false;
+            }
         }
 
         if (m_ratingsFilter) {
@@ -297,6 +317,7 @@ protected:
 
 private:
     bool m_ratingsFilter;
+    bool m_onlyShowInstalled;
     int m_ratings[4];
 };
 
@@ -454,6 +475,8 @@ QtLauncher::QtLauncher() :
     m_aircraftProxy = new AircraftProxyModel(this);
     connect(m_ui->ratingsFilterCheck, &QAbstractButton::toggled,
             m_aircraftProxy, &AircraftProxyModel::setRatingFilterEnabled);
+    connect(m_ui->onlyShowInstalledCheck, &QAbstractButton::toggled,
+            m_aircraftProxy, &AircraftProxyModel::setInstalledFilterEnabled);
     connect(m_ui->aircraftFilter, &QLineEdit::textChanged,
             m_aircraftProxy, &QSortFilterProxyModel::setFilterFixedString);
 
@@ -473,6 +496,8 @@ QtLauncher::QtLauncher() :
 
     connect(m_ui->editRatingFilter, &QPushButton::clicked,
             this, &QtLauncher::onEditRatingsFilter);
+    connect(m_ui->onlyShowInstalledCheck, &QCheckBox::toggled,
+            this, &QtLauncher::onShowInstalledAircraftToggled);
 
     QIcon historyIcon(":/history-icon");
     m_ui->aircraftHistory->setIcon(historyIcon);
@@ -577,6 +602,11 @@ void QtLauncher::restoreSettings()
     m_ui->location->restoreSettings();
 
     // rating filters
+    m_ui->onlyShowInstalledCheck->setChecked(settings.value("only-show-installed", false).toBool());
+    if (m_ui->onlyShowInstalledCheck->isChecked()) {
+        m_ui->ratingsFilterCheck->setEnabled(false);
+    }
+
     m_ui->ratingsFilterCheck->setChecked(settings.value("ratings-filter", true).toBool());
     int index = 0;
     Q_FOREACH(QVariant v, settings.value("min-ratings").toList()) {
@@ -599,6 +629,7 @@ void QtLauncher::saveSettings()
     settings.setValue("enable-realwx", m_ui->fetchRealWxrCheckbox->isChecked());
     settings.setValue("start-paused", m_ui->startPausedCheck->isChecked());
     settings.setValue("ratings-filter", m_ui->ratingsFilterCheck->isChecked());
+    settings.setValue("only-show-installed", m_ui->onlyShowInstalledCheck->isChecked());
     settings.setValue("recent-aircraft", QUrl::toStringList(m_recentAircraft));
 
     settings.setValue("timeofday", m_ui->timeOfDayCombo->currentIndex());
@@ -993,6 +1024,17 @@ void QtLauncher::onRembrandtToggled(bool b)
 {
     // Rembrandt and multi-sample are exclusive
     m_ui->msaaCheckbox->setEnabled(!b);
+}
+
+void QtLauncher::onShowInstalledAircraftToggled(bool b)
+{
+    m_ui->ratingsFilterCheck->setEnabled(!b);
+    if (b) {
+        // don't filter installed aircraft by rating
+        m_aircraftProxy->setRatingFilterEnabled(false);
+    } else {
+        m_aircraftProxy->setRatingFilterEnabled(m_ui->ratingsFilterCheck->isChecked());
+    }
 }
 
 void QtLauncher::onSubsytemIdleTimeout()

@@ -83,6 +83,8 @@ private slots:
 
     void onAircraftInstalledCompleted(QModelIndex index);
     void onAircraftInstallFailed(QModelIndex index, QString errorMessage);
+
+    void onShowInstalledAircraftToggled(bool b);
 private:
 
     /**
