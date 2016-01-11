@@ -88,6 +88,9 @@ private slots:
     void onAircraftInstallFailed(QModelIndex index, QString errorMessage);
 
     void onShowInstalledAircraftToggled(bool b);
+
+    void maybeRestoreAircraftSelection();
+
 private:
 
     /**
@@ -107,7 +110,6 @@ private:
 
     simgear::pkg::PackageRef packageForAircraftURI(QUrl uri) const;
 
-    void maybeRestoreAircraftSelection();
     // need to wait after a model reset before restoring selection and
     // scrolling, to give the view time it seems.
     void delayedAircraftModelReset();
