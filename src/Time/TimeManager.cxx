@@ -90,7 +90,7 @@ void TimeManager::init()
   
   _impl = new SGTime(globals->get_aircraft_position(), zone, _timeOverride->getLongValue());
   
-  _warpDelta->setIntValue(0);
+  _warpDelta->setDoubleValue(0.0);
   
   globals->get_event_mgr()->addTask("updateLocalTime", this,
                             &TimeManager::updateLocalTime, 30*60 );
@@ -112,6 +112,12 @@ void TimeManager::init()
     _modelHz = fgGetNode("sim/model-hz", true);
     _timeDelta = fgGetNode("sim/time/delta-realtime-sec", true);
     _simTimeDelta = fgGetNode("sim/time/delta-sec", true);
+
+    _simTimeFactor = fgGetNode("/sim/speed-up", true);
+    // use pre-set value but ensure we get a sane default
+    if (!_simTimeDelta->hasValue()) {
+        _simTimeFactor->setDoubleValue(1.0);
+    }
 }
 
 void TimeManager::unbind()
@@ -129,6 +135,7 @@ void TimeManager::unbind()
     _modelHz.clear();
     _timeDelta.clear();
     _simTimeDelta.clear();
+    _simTimeFactor.clear();
 }
 
 void TimeManager::postinit()
@@ -228,7 +235,7 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
     simDt = 0;
   } else {
       // sim time can be scaled
-      simDt = dt * fgGetDouble("/sim/speed-up");
+      simDt = dt * _simTimeFactor->getDoubleValue();
   }
   
   _lastStamp = currentStamp;
@@ -243,7 +250,7 @@ void TimeManager::update(double dt)
 {
   bool freeze = _clockFreeze->getBoolValue();
   time_t now = time(NULL);
-  
+
   if (freeze) {
     // clock freeze requested
     if (_timeOverride->getLongValue() == 0) {
@@ -264,12 +271,29 @@ void TimeManager::update(double dt)
       }
       _timeOverride->setLongValue(0);
     }
-    
+
+      // account for speed-up in warp value. This implies when speed-up is not
+      // 1.0 we need to continually adjust warp, either forwards for speed-up,
+      // or backwards for a slow-down. Eg for a speed up of 4x, we want to
+      // incease warp by 3 additional seconds per elapsed real second.
+      // for a 1/2x factor, we want to decrease warp by half a second per
+      // elapsed real second.
+      double speedUp = _simTimeFactor->getDoubleValue() - 1.0;
+      if (speedUp != 0.0) {
+          double realDt = _timeDelta->getDoubleValue();
+          double speedUpOffset = speedUp * realDt;
+          _warp->setDoubleValue(_warp->getDoubleValue() + speedUpOffset);
+      }
+  } // of sim not frozen
+
+    // scale warp-delta by real-dt, so rate is constant with frame-rate,
+    // but warping works while paused
     int warpDelta = _warpDelta->getIntValue();
-    if (warpDelta != 0) {
-      _warp->setIntValue(_warp->getIntValue() + warpDelta);
+    if (warpDelta) {
+        _adjustWarpOnUnfreeze = false;
+        double warpOffset = warpDelta * _timeDelta->getDoubleValue();
+        _warp->setDoubleValue(_warp->getDoubleValue() + warpOffset);
     }
-  }
 
   _lastClockFreeze = freeze;
   _impl->update(globals->get_aircraft_position(),

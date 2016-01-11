@@ -76,7 +76,8 @@ private:
   SGPropertyNode_ptr _timeOverride;
   SGPropertyNode_ptr _warp;
   SGPropertyNode_ptr _warpDelta;
-  
+  SGPropertyNode_ptr _simTimeFactor;
+
   bool _lastClockFreeze;
   bool _adjustWarpOnUnfreeze;
   
