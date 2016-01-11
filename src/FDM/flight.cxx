@@ -62,8 +62,12 @@ FGInterface::~FGInterface() {
 }
 
 int
-FGInterface::_calc_multiloop (double)
+FGInterface::_calc_multiloop (double dt)
 {
+    if (dt == 0.0) {
+        return 0; // paused
+    }
+
     // this method is now obsolete - multiloop is handled by
     // SGSubsystemGroup; the FDM group operates with a fixed time interval
     // (defined by /sim/model-hz), so at this level we always want to run
