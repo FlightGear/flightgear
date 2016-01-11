@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 #include <Navaids/positioned.hxx>
 #include <Navaids/procedure.hxx>
