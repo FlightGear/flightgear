@@ -402,7 +402,7 @@ public:
 
     // becuase runways were sorted by score when building, they were added
     // by score also, so we can use a simple algorithim to assign
-        for (int r=0; r < runways.size(); ++r) {
+        for (unsigned int r=0; r < runways.size(); ++r) {
             if ((r % 2) == 0) {
                 arrivals.push_back(runways[r]);
             } else {
@@ -415,7 +415,7 @@ public:
     {
         ostringstream os;
         os << runways.front()->ident();
-        for (int r=1; r <runways.size(); ++r) {
+        for (unsigned int r=1; r <runways.size(); ++r) {
             os << ", " << runways[r]->ident();
         }
 
@@ -539,11 +539,11 @@ string FGAirportDynamics::fallbackGetActiveRunway(int action, double heading)
 
         ostringstream os;
         os << "\tArrival:" << _fallbackArrivalRunways.front()->ident();
-        for (int r=1; r <_fallbackArrivalRunways.size(); ++r) {
+        for (unsigned int r=1; r <_fallbackArrivalRunways.size(); ++r) {
             os << ", " << _fallbackArrivalRunways[r]->ident();
         }
         os << "\n\tDeparture:" << _fallbackDepartureRunways.front()->ident();
-        for (int r=1; r <_fallbackDepartureRunways.size(); ++r) {
+        for (unsigned int r=1; r <_fallbackDepartureRunways.size(); ++r) {
             os << ", " << _fallbackDepartureRunways[r]->ident();
         }
 
