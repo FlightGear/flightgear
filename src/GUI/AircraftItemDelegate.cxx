@@ -101,10 +101,11 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     }
 
     painter->drawText(descriptionRect, Qt::TextWordWrap, description, &actualBounds);
-
     QString authors = index.data(AircraftAuthorsRole).toString();
 
     f.setPointSize(12);
+    QFontMetrics smallMetrics(f);
+
     painter->setFont(f);
 
     if (!authors.isEmpty()) {
@@ -127,7 +128,7 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     r.setWidth(contentRect.width() / 3);
     r.moveTop(actualBounds.bottom() + MARGIN);
     r.moveLeft(r.right());
-    r.setHeight(24);
+    r.setHeight(qMax(24, smallMetrics.height() + MARGIN));
 
     if (index.data(AircraftHasRatingsRole).toBool()) {
         drawRating(painter, "Flight model:", r, index.data(AircraftRatingRole).toInt());
@@ -138,7 +139,7 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         r.moveLeft(r.right());
         drawRating(painter, "Cockpit:", r, index.data(AircraftRatingRole + 2).toInt());
         r.moveTop(r.bottom());
-        drawRating(painter, "Exterior model:", r, index.data(AircraftRatingRole + 3).toInt());
+        drawRating(painter, "Exterior:", r, index.data(AircraftRatingRole + 3).toInt());
     }
 
     QVariant v = index.data(AircraftPackageStatusRole);
@@ -212,7 +213,9 @@ QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const 
 
     QSize thumbnailSize = index.data(AircraftThumbnailSizeRole).toSize();
     contentRect.setLeft(contentRect.left() + MARGIN + thumbnailSize.width());
-    
+    contentRect.setBottom(9999); // large value to avoid clipping
+    contentRect.adjust(ARROW_SIZE, 0, -ARROW_SIZE, 0);
+
     QFont f;
     f.setPointSize(18);
     QFontMetrics metrics(f);
@@ -223,7 +226,8 @@ QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const 
     f.setPointSize(12);
     QFontMetrics smallMetrics(f);
 
-    QString authors = index.data(AircraftAuthorsRole).toString();
+    QString authors = QString("by: %1").arg(index.data(AircraftAuthorsRole).toString());
+
     if (!authors.isEmpty()) {
         textHeight += MARGIN;
         textHeight += smallMetrics.boundingRect(contentRect, Qt::TextWordWrap, authors).height();
@@ -237,14 +241,14 @@ QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const 
 
     if (index.data(AircraftHasRatingsRole).toBool()) {
         // ratings
-        textHeight += 48; // (24px per rating box)
+        int ratingHeight = qMax(24, smallMetrics.height() + MARGIN);
+        textHeight += ratingHeight * 2;
     } else {
         // just the button height
         textHeight += BUTTON_HEIGHT;
     }
 
     textHeight = qMax(textHeight, thumbnailSize.height());
-
     return QSize(option.rect.width(), textHeight + (MARGIN * 2));
 }
 

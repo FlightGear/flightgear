@@ -615,11 +615,19 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
 
     if ((role >= AircraftVariantDescriptionRole) && (role < AircraftThumbnailRole)) {
         int variantIndex = role - AircraftVariantDescriptionRole;
-        return QString::fromStdString(item->nameForVariant(variantIndex));
+        QString desc = QString::fromStdString(item->nameForVariant(variantIndex));
+        if (desc.isEmpty()) {
+            desc = tr("Missing description for: %1").arg(QString::fromStdString(item->id()));
+        }
+        return desc;
     }
 
     if (role == Qt::DisplayRole) {
-        return QString::fromStdString(item->nameForVariant(variantIndex));
+        QString desc = QString::fromStdString(item->nameForVariant(variantIndex));
+        if (desc.isEmpty()) {
+            desc = tr("Missing description for: %1").arg(QString::fromStdString(item->id()));
+        }
+        return desc;
     } else if (role == AircraftPathRole) {
         InstallRef i = item->existingInstall();
         if (i.valid()) {
