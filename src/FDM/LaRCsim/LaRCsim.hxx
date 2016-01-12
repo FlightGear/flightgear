@@ -40,7 +40,6 @@ private:
     LaRCsimIC* lsic;
     void set_ls(void);
     void snap_shot(void);
-    double time_step;
     SGPropertyNode_ptr speed_up;
     SGPropertyNode_ptr aero;
     SGPropertyNode_ptr uiuc_type;
