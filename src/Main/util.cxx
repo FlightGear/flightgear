@@ -106,24 +106,25 @@ void fgInitAllowedPaths()
     // not plain fg_scenery, to avoid making
     // /sim/terrasync/scenery-dir a security hole
 
-    for( string_list::const_iterator it = aircraft_paths.begin();;++it )
+    const string_list * path_lists_to_add[] = {
+      &aircraft_paths,
+      &scenery_paths
+    };
+
+    for( size_t i = 0; i < sizeof(path_lists_to_add)/sizeof(path_lists_to_add[0]); i++ )
     {
-      if (it == aircraft_paths.end()) {
-        it = scenery_paths.begin();
+      for( string_list::const_iterator it = path_lists_to_add[i]->begin(); it != path_lists_to_add[i]->end();++it )
+      {
+        // if we get the initialization order wrong, better to have an
+        // obvious error than a can-read-everything security hole...
+          if (it->empty() || fg_root.empty() || fg_home.empty()){
+              flightgear::fatalMessageBox("Nasal initialization error",
+                 "Empty string in FG_ROOT, FG_HOME, FG_AIRCRAFT or FG_SCENERY",
+                                   "or fgInitAllowedPaths() called too early");
+              exit(-1);
+          }
+          read_allowed_paths.push_back(SGPath(*it).realpath() + sep + "*");
       }
-      if (it == scenery_paths.end()) {
-        break; // here rather than in the loop condition because
-               // scenery_paths may be empty
-      }
-      // if we get the initialization order wrong, better to have an
-      // obvious error than a can-read-everything security hole...
-        if (it->empty() || fg_root.empty() || fg_home.empty()){
-            flightgear::fatalMessageBox("Nasal initialization error",
-               "Empty string in FG_ROOT, FG_HOME, FG_AIRCRAFT or FG_SCENERY",
-                                 "or fgInitAllowedPaths() called too early");
-            exit(-1);
-        }
-        read_allowed_paths.push_back(SGPath(*it).realpath() + sep + "*");
     }
 
     write_allowed_paths.push_back(fg_home + sep + "*.sav");
