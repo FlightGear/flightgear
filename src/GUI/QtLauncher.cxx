@@ -664,7 +664,7 @@ void QtLauncher::restoreSettings()
 
 void QtLauncher::delayedAircraftModelReset()
 {
-    QTimer::singleShot(1, this, SLOT(QtLauncher::maybeRestoreAircraftSelection()));
+    QTimer::singleShot(1, this, SLOT(maybeRestoreAircraftSelection()));
 }
 
 void QtLauncher::maybeRestoreAircraftSelection()
