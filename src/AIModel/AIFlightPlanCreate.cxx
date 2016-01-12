@@ -211,7 +211,7 @@ void FGAIFlightPlan::createDefaultTakeoffTaxi(FGAIAircraft * ac,
 
     // Acceleration point, 105 meters into the runway,
     SGGeod accelPoint = aRunway->pointOnCenterline(105.0);
-    wpt = createOnGround(ac, "accel", accelPoint, airportElev,
+    wpt = createOnGround(ac, "Accel", accelPoint, airportElev,
                          ac->getPerformance()->vRotate());
     pushBackWaypoint(wpt);
 }
@@ -346,7 +346,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     }
     // Acceleration point, 105 meters into the runway,
     SGGeod accelPoint = rwy->pointOnCenterline(105.0);
-    FGAIWaypoint *wpt = createOnGround(ac, "accel", accelPoint, apt->getElevation(), ac->getPerformance()->vRotate());
+    FGAIWaypoint *wpt = createOnGround(ac, "Accel", accelPoint, apt->getElevation(), ac->getPerformance()->vRotate());
     pushBackWaypoint(wpt);
 
     //cerr << "[done]" << endl;
