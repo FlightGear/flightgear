@@ -6,6 +6,6 @@
 #include <string>
 #include <cstdlib>
 
-void uiuc_warnings_errors(int errorCode, std::string line);
+SG_NO_RETURN void uiuc_warnings_errors(int errorCode, std::string line);
 
 #endif  //_WARNINGS_ERRORS_H_

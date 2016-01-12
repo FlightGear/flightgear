@@ -118,6 +118,9 @@ void uiuc_warnings_errors(int errorCode, std::string line)
       exit(-1);
       break;
     }
+
+    cerr << "UIUC UNKNOWN ERROR" << endl;
+    exit(-1);
 }
 
 // end uiuc_warnings_errors.cpp
