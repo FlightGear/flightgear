@@ -27,8 +27,10 @@ const double MAGNITUDE_EXP = 2.0;
 // 2^(MEANINGFUL_GENS-1).
 const int MEANINGFUL_GENS = 7;
 
+#if 0 // unused, supressing compiler warning
 static const float FT2M = 0.3048;
-
+#endif
+    
 // 8 x 32 s-box used by hashrand.  Read out of /dev/random on my Linux
 // box; not analyzed for linearity or coverage issues.
 static unsigned int SBOX[] = {

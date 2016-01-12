@@ -7,8 +7,11 @@
 namespace yasim {
 
   static const float YASIM_PI2 = 3.14159265358979323846f/2;
-  static const float YASIM_PI = 3.14159265358979323846f;
+
+#if 0 // unused, supressing compiler warning
   static const float RAD2DEG = 180/YASIM_PI;
+  static const float YASIM_PI = 3.14159265358979323846f;
+#endif
 
 Launchbar::Launchbar()
 {
