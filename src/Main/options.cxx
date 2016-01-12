@@ -2265,6 +2265,9 @@ OptionResult Options::processOptions()
           default:
               break;
       }
+        if (it->desc) {
+            SG_LOG(SG_GENERAL, SG_INFO, "\toption:" << it->desc->option << " = " << it->value);
+        }
     }
     
     groupEnd = groupBegin;
