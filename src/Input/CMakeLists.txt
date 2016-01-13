@@ -15,13 +15,11 @@ if (ENABLE_HID_INPUT)
 	list(APPEND EVENT_INPUT_HEADERS FGHIDEventInput.hxx)	
 endif()
 
-
 set(SOURCES
 	FGButton.cxx
 	FGCommonInput.cxx
 	FGDeviceConfigurationMap.cxx
 	FGEventInput.cxx
-	FGJoystickInput.cxx
 	FGKeyboardInput.cxx
 	FGMouseInput.cxx
 	input.cxx
@@ -32,19 +30,23 @@ set(HEADERS
 	FGCommonInput.hxx
 	FGDeviceConfigurationMap.hxx
 	FGEventInput.hxx
-	FGJoystickInput.hxx
 	FGKeyboardInput.hxx
 	FGMouseInput.hxx
 	input.hxx
 	)
 
+if (ENABLE_PLIB_JOYSTICK)
+	list(APPEND SOURCES FGJoystickInput.cxx)
+	list(APPEND HEADERS FGJoystickInput.hxx)
+endif()
+
 if(EVENT_INPUT)
 	list(APPEND SOURCES ${EVENT_INPUT_SOURCES})
-	list(APPEND SOURCES ${EVENT_INPUT_HEADERS})
+	list(APPEND HEADERS ${EVENT_INPUT_HEADERS})
 	include_directories(${UDEV_INCLUDE_DIR})
 endif()
 
-if(ENABLE_FGJS)
+if(ENABLE_FGJS AND ENABLE_PLIB_JOYSTICK)
     set(FGJS_SOURCES
         fgjs.cxx
         jsinput.cxx
@@ -53,18 +55,18 @@ if(ENABLE_FGJS)
 
     add_executable(fgjs ${FGJS_SOURCES})
     target_link_libraries(fgjs
-        SimGearCore
-        ${PLIB_LIBRARIES}
+		SimGearCore
+		PLIBJoystick
     )
 
     install(TARGETS fgjs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-if(ENABLE_JS_DEMO)
+if(ENABLE_JS_DEMO AND ENABLE_PLIB_JOYSTICK)
     add_executable(js_demo js_demo.cxx)
     target_link_libraries(js_demo
         SimGearCore
-        ${PLIB_LIBRARIES}
+        PLIBJoystick
     )
 
     install(TARGETS js_demo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

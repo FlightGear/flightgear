@@ -56,6 +56,9 @@ function(setup_fgfs_libraries target)
         ${SIMGEAR_LIBRARIES}
     )
 
+    if (ENABLE_PLIB_JOYSTICK)
+        target_link_libraries(${target} PLIBJoystick)
+    endif()
 
     if(ENABLE_FLITE)
         if(SYSTEM_HTS_ENGINE)

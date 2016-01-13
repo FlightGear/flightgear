@@ -30,6 +30,10 @@ if (ENABLE_HID_INPUT)
     add_subdirectory(hidapi)
 endif()
 
+if (ENABLE_PLIB_JOYSTICK)
+    add_subdirectory(joystick)
+endif()
+
 if (NOT SYSTEM_CPPUNIT)
     add_subdirectory(cppunit)
 endif()

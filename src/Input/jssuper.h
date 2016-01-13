@@ -25,8 +25,7 @@
 #  include <config.h>
 #endif
 
-#include <string.h>		// plib/js.h should really include this !!!!!!
-#include <plib/js.h>
+#include "js.h"
 
 #define MAX_JOYSTICKS 8
 
@@ -37,28 +36,28 @@ class jsSuper {
     int currentJoystick;
     int first, last;
     jsJoystick* js[MAX_JOYSTICKS];
-    
-  public:  
+
+  public:
     jsSuper(void);
     ~jsSuper(void);
-    
+
     inline int getNumJoysticks(void) { return activeJoysticks; }
-    
+
     inline int atFirst(void) { return currentJoystick == first; }
     inline int atLast(void) { return currentJoystick == last; }
-    
+
     inline void firstJoystick(void) { currentJoystick=first; }
     inline void lastJoystick(void) { currentJoystick=last; }
 
     int nextJoystick(void);
     int prevJoystick(void);
 
-    inline jsJoystick* getJoystick(int Joystick) 
+    inline jsJoystick* getJoystick(int Joystick)
             { currentJoystick=Joystick; return js[Joystick]; }
 
     inline jsJoystick* getJoystick(void) { return js[currentJoystick]; }
-    
+
     inline int getCurrentJoystickId(void) { return currentJoystick; }
 };
-    
-#endif    
+
+#endif

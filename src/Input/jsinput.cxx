@@ -28,6 +28,8 @@ using std::endl;
 
 #include "jsinput.h"
 
+#include <simgear/timing/timestamp.hxx>
+
 jsInput::jsInput(jsSuper *j) {
     jss=j;
     pretty_display=true;
@@ -109,7 +111,7 @@ int jsInput::getInput() {
             fflush ( stdout ) ;
         }
 
-        ulMilliSecondSleep(1);
+        SGTimeStamp::sleepForMSec(1);
     }
     if(button_bits != 0) {
         for(int i=0;i<=31;i++) {
@@ -138,12 +140,12 @@ void jsInput::findDeadBand() {
         }
     } while( jss->nextJoystick() );
 
-    ulClock clock;
+    SGTimeStamp clock = SGTimeStamp::now();
     cout << 10;
     cout.flush();
 
     for (int j = 9; j >= 0; j--) {
-        double start_time = clock.getAbsTime();
+        clock.stamp();
         do {
             jss->firstJoystick();
             do {
@@ -159,9 +161,8 @@ void jsInput::findDeadBand() {
 
             } while( jss->nextJoystick());
 
-            ulMilliSecondSleep(1);
-            clock.update();
-        } while (clock.getAbsTime() - start_time < 1.0);
+            SGTimeStamp::sleepForMSec(1);
+        } while (clock.elapsedMSec() < 1000);
 
         cout << " - " << j;
         cout.flush();

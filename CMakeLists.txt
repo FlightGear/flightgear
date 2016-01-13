@@ -222,7 +222,10 @@ option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
 option(ENABLE_TRAFFIC    "Set to ON to build the external traffic generator modules" ON)
 option(ENABLE_FGQCANVAS  "Set to ON to build the Qt-based remote canvas application" OFF)
 option(ENABLE_DEMCONVERT "Set to ON to build the dem conversion tool (default)" ON)
-option(ENABLE_HID_INPUT  "Set to ON to build HID-based input code (default)" OFF)
+option(ENABLE_HID_INPUT  "Set to ON to build HID-based input code" OFF)
+option(ENABLE_PLIB_JOYSTICK  "Set to ON to enable legacy joystick code (default)" ON)
+
+
 
 # Test-suite options.
 option(ENABLE_AUTOTESTING "Set to ON to execute the test suite after building the test_suite target (default)" ON)
@@ -281,12 +284,6 @@ if(EVENT_INPUT)
         message(STATUS "Enabling HID-API input")
         list(APPEND EVENT_INPUT_LIBRARIES hidapi)
     endif()
-
-    # Keep PLIB INPUT enabled as long as EventInput does not replace current joystick configurations.
-    set(ENABLE_PLIB_JOYSTICK 1)
-else(EVENT_INPUT)
-    message(STATUS "Event-based input disabled by config")
-    set(ENABLE_PLIB_JOYSTICK 1)
 endif(EVENT_INPUT)
 
 # check required dependencies
@@ -404,7 +401,7 @@ else()
 endif (ENABLE_QT)
 ##############################################################################
 
-find_package(PLIB REQUIRED puaux pu js fnt)
+find_package(PLIB REQUIRED puaux pu fnt)
 
 # FlightGear and SimGear versions need to match major + minor
 # split version string into components, note CMAKE_MATCH_0 is the entire regexp match

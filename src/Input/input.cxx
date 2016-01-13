@@ -31,7 +31,10 @@
 #include <Main/fg_props.hxx>
 #include "FGMouseInput.hxx"
 #include "FGKeyboardInput.hxx"
+
+#if defined(ENABLE_PLIB_JOYSTICK)
 #include "FGJoystickInput.hxx"
+#endif
 
 #ifdef WITH_EVENTINPUT
 #if defined( SG_WINDOWS )
@@ -71,11 +74,14 @@ FGInput::FGInput ()
     set_subsystem( "input-keyboard", new FGKeyboardInput() );
   }
 
+#if defined(ENABLE_PLIB_JOYSTICK)
   if( fgGetBool("/sim/input/no-joystick-input",false) ) {
     SG_LOG(SG_INPUT,SG_ALERT,"Joystick input disabled!");
   } else {
     set_subsystem( "input-joystick", new FGJoystickInput() );
   }
+#endif
+
 #ifdef INPUTEVENT_CLASS
   if( fgGetBool("/sim/input/no-event-input",false) ) {
     SG_LOG(SG_INPUT,SG_ALERT,"Event input disabled!");
