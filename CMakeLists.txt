@@ -233,11 +233,6 @@ if(EVENT_INPUT)
     else()
         message(WARNING "event-based input is not supported on this platform yet")
     endif()
-
-    # Keep PLIB INPUT enabled as long as EventInput does not replace current joystick configurations.
-    set(ENABLE_PLIB_JOYSTICK 1)
-else(EVENT_INPUT)
-    set(ENABLE_PLIB_JOYSTICK 1)
 endif(EVENT_INPUT)
 
 # check required dependencies
@@ -313,7 +308,7 @@ if (ENABLE_QT)
 endif (ENABLE_QT)
 ##############################################################################
 
-find_package(PLIB REQUIRED puaux pu js fnt)
+find_package(PLIB REQUIRED puaux pu fnt)
 
 # FlightGear and SimGear versions need to match
 find_package(SimGear ${FLIGHTGEAR_VERSION} REQUIRED)

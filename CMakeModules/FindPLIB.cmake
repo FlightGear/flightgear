@@ -1,7 +1,7 @@
 # Locate PLIB
 # This module defines
 # PLIB_LIBRARIES
-# PLIB_FOUND, if false, do not try to link to PLIB 
+# PLIB_FOUND, if false, do not try to link to PLIB
 # PLIB_INCLUDE_DIR, where to find the headers
 #
 # $PLIBDIR is an environment variable that would
@@ -28,14 +28,14 @@ include(SelectLibraryConfigurations)
 set(save_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
 set(CMAKE_FIND_FRAMEWORK ONLY)
 FIND_PATH(PLIB_INCLUDE_DIR ul.h
-  PATH_SUFFIXES include/plib include 
+  PATH_SUFFIXES include/plib include
   PATHS ${ADDITIONAL_LIBRARY_PATHS}
 )
 set(CMAKE_FIND_FRAMEWORK ${save_FIND_FRAMEWORK})
 
 if(NOT PLIB_INCLUDE_DIR)
     FIND_PATH(PLIB_INCLUDE_DIR plib/ul.h
-      PATH_SUFFIXES include 
+      PATH_SUFFIXES include
       HINTS $ENV{PLIBDIR}
       PATHS ${ADDITIONAL_LIBRARY_PATHS}
     )
@@ -51,7 +51,7 @@ FIND_LIBRARY(PLIB_LIBRARIES
   PATHS ${ADDITIONAL_LIBRARY_PATHS}
 )
 
-if (MSVC) 
+if (MSVC)
    set (PUNAME "pui")
 else (MSVC)
    set (PUNAME "pu")
@@ -65,7 +65,7 @@ macro(find_static_component comp libs)
     else(MSVC)
       set(compLib "plib${comp}")
     endif(MSVC)
-    
+
     string(TOUPPER "PLIB_${comp}" compLibBase)
     set( compLibName ${compLibBase}_LIBRARY )
 
@@ -97,13 +97,13 @@ macro(find_static_component comp libs)
     endif()
 endmacro()
 
-if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")    
+if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
     set(PLIB_LIBRARIES "") # clear value
-    
+
 # based on the contents of deps, add other required PLIB
 # static library dependencies. Eg PUI requires FNT
     set(outDeps ${PLIB_FIND_COMPONENTS})
-    
+
     foreach(c ${PLIB_FIND_COMPONENTS})
         if (${c} STREQUAL "pu")
             # handle MSVC confusion over pu/pui naming, by removing
@@ -116,7 +116,7 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
             list(APPEND outDeps "sg")
         endif()
     endforeach()
-        
+
     list(APPEND outDeps "ul") # everything needs ul
     list(REMOVE_DUPLICATES outDeps) # clean up
 
@@ -127,30 +127,5 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
     endforeach()
 endif()
 
-list(FIND outDeps "js" haveJs)
-if(${haveJs} GREATER -1)
-    message(STATUS "adding runtime JS dependencies")
-    if(APPLE)
-    # resolve frameworks to full paths
-        find_library(IOKIT_LIBRARY IOKit)
-        find_library(CF_LIBRARY CoreFoundation)
-        set(JS_LIBS ${IOKIT_LIBRARY} ${CF_LIBRARY})
-    elseif(WIN32)
-        set(WINMM_LIBRARY winmm)
-        set(JS_LIBS ${WINMM_LIBRARY})
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        # anything needed here?
-    elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-        find_library(USBHID_LIBRARY usbhid)
-        # check_function_exists(hidinit)
-        set(JS_LIBS ${USBHID_LIBRARY})
-    else()
-        message(WARNING "Unsupported platform for PLIB JS libs")
-    endif()
-    
-    list(APPEND PLIB_LIBRARIES ${JS_LIBS})
-endif()
-
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(PLIB DEFAULT_MSG PLIB_LIBRARIES PLIB_INCLUDE_DIR)
-

@@ -23,6 +23,8 @@
 #ifndef _JSINPUT_H
 #define _JSINPUT_H
 
+#include <cmath> // for fabs
+
 #include "jssuper.h"
 
 class jsInput {

@@ -82,7 +82,7 @@ if(APPLE)
         OUTPUT_VARIABLE CURRENT_YEAR
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-        
+
     # in our local CMakeModules dir
     set_target_properties(fgfs PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST FlightGearBundleInfo.plist.in
@@ -100,6 +100,8 @@ endif()
 #-----------------------------------------------------------------------------
 
 get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
+get_property(JS_LIBS GLOBAL PROPERTY JS_LIBS)
+
 #message(STATUS "fg libs ${FG_LIBS}")
 #message(STATUS "OSG libs ${OPENSCENEGRAPH_LIBRARIES}")
 #message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
@@ -113,7 +115,7 @@ endif()
 if(ENABLE_JSBSIM)
     # FIXME - remove once JSBSim doesn't expose private headers
     include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
-    
+
     target_link_libraries(fgfs JSBSim)
 endif()
 if(ENABLE_IAX)
@@ -139,8 +141,9 @@ target_link_libraries(fgfs
 	${OPENSCENEGRAPH_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${PLIB_LIBRARIES}
-        ${ZLIB_LIBRARY}
+  ${ZLIB_LIBRARY}
 	${HLA_LIBRARIES}
+	${JS_LIBS}
 	${EVENT_INPUT_LIBRARIES}
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 	${SIMGEAR_SCENE_LIBRARY_DEPENDENCIES}
@@ -159,7 +162,7 @@ if (Qt5Core_FOUND)
     target_link_libraries(fgfs Qt5::Widgets fglauncher)
 endif()
 
-if (APPLE)  
+if (APPLE)
     install(TARGETS fgfs BUNDLE DESTINATION .)
 else()
     install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
