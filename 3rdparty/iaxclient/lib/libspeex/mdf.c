@@ -91,6 +91,7 @@ static inline void spectral_mul_accum(float *X, float *Y, float *acc, int N)
    acc[i] += X[i]*Y[i];
 }
 
+#if 0 // unused so removing a warning
 /** Compute cross-power spectrum of a half-complex (packed) vector with conjugate */
 static inline void spectral_mul_conj(float *X, float *Y, float *prod, int N)
 {
@@ -103,7 +104,7 @@ static inline void spectral_mul_conj(float *X, float *Y, float *prod, int N)
    }
    prod[i] = X[i]*Y[i];
 }
-
+#endif
 
 /** Compute weighted cross-power spectrum of a half-complex (packed) vector with conjugate */
 static inline void weighted_spectral_mul_conj(float *w, float *X, float *Y, float *prod, int N)

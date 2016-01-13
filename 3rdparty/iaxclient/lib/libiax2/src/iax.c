@@ -623,7 +623,7 @@ static int calc_timestamp(struct iax_session *session, unsigned int ts, struct a
 #ifdef USE_VOICE_TS_PREDICTION
 		/* If we haven't most recently sent silence, and we're
 		 * close in time, use predicted time */
-		if(session->notsilenttx && abs(ms - session->nextpred) <= 240) {
+		if(session->notsilenttx && (ms - session->nextpred) <= 240) {
 			/* Adjust our txcore, keeping voice and non-voice
 			 * synchronized */
 			add_ms(&session->offset, (int)(ms - session->nextpred)/10);
@@ -665,7 +665,7 @@ static int calc_timestamp(struct iax_session *session, unsigned int ts, struct a
 		if (genuine) {
 			if ((unsigned int)ms <= session->lastsent)
 				ms = session->lastsent + 3;
-		} else if (abs(ms - session->lastsent) <= 240) {
+		} else if ((ms - session->lastsent) <= 240) {
 			ms = session->lastsent + 3;
 		}
 
