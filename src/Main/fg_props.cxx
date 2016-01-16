@@ -77,6 +77,7 @@ LogClassMapping log_class_mappings [] = {
   LogClassMapping(SG_SOUND, "sound"),
   LogClassMapping(SG_NAVAID, "navaid"),
   LogClassMapping(SG_GUI, "gui"),
+  LogClassMapping(SG_TERRASYNC, "terrasync"),
   LogClassMapping(SG_UNDEFD, "")
 };
 
