@@ -251,17 +251,12 @@ double FGAtmosphere::ConvertFromPSF(double p, ePressure unit) const
 
 void FGAtmosphere::bind(void)
 {
-  typedef double (FGAtmosphere::*PMFi)(int) const;
-//  typedef void (FGAtmosphere::*PMF)(int, double);
   PropertyManager->Tie("atmosphere/T-R", this, &FGAtmosphere::GetTemperature);
   PropertyManager->Tie("atmosphere/rho-slugs_ft3", this, &FGAtmosphere::GetDensity);
   PropertyManager->Tie("atmosphere/P-psf", this, &FGAtmosphere::GetPressure);
   PropertyManager->Tie("atmosphere/a-fps", this, &FGAtmosphere::GetSoundSpeed);
   PropertyManager->Tie("atmosphere/T-sl-R", this, &FGAtmosphere::GetTemperatureSL);
   PropertyManager->Tie("atmosphere/rho-sl-slugs_ft3", this, &FGAtmosphere::GetDensitySL);
-  PropertyManager->Tie("atmosphere/P-sl-psf", this, ePSF,
-                       (PMFi)&FGAtmosphere::GetPressureSL);
-//                                   (PMF)&FGAtmosphere::SetPressureSL);
   PropertyManager->Tie("atmosphere/a-sl-fps", this, &FGAtmosphere::GetSoundSpeedSL);
   PropertyManager->Tie("atmosphere/theta", this, &FGAtmosphere::GetTemperatureRatio);
   PropertyManager->Tie("atmosphere/sigma", this, &FGAtmosphere::GetDensityRatio);
