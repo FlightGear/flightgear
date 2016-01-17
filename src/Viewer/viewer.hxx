@@ -36,8 +36,11 @@
 #define FG_FOV_MIN 0.1
 #define FG_FOV_MAX 179.9
 
+namespace flightgear
+{
+
 // Define a structure containing view information
-class FGViewer : public SGSubsystem {
+class View : public SGSubsystem {
 
 public:
 
@@ -55,7 +58,7 @@ public:
 
 
     // Constructor
-    FGViewer( ViewType Type, bool from_model, int from_model_index,
+    View( ViewType Type, bool from_model, int from_model_index,
               bool at_model, int at_model_index,
               double damp_roll, double damp_pitch, double damp_heading,
               double x_offset_m, double y_offset_m, double z_offset_m,
@@ -66,7 +69,7 @@ public:
               double target_z_offset_m, double near_m, bool internal );
 
     // Destructor
-    virtual ~FGViewer( void );
+    virtual ~View();
 
     //////////////////////////////////////////////////////////////////////
     // Part 1: standard SGSubsystem implementation.
@@ -334,7 +337,9 @@ private:
 	_roll_offset_deg += amt;
     }
 
-};
+}; // of class View
+
+} // of namespace flightgear
 
 
 #endif // _VIEWER_HXX

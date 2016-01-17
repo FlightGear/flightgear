@@ -48,7 +48,7 @@ using namespace flightgear;
 ////////////////////////////////////////////////////////////////////////
 
 // Constructor...
-FGViewer::FGViewer( ViewType Type, bool from_model, int from_model_index,
+View::View( ViewType Type, bool from_model, int from_model_index,
                     bool at_model, int at_model_index,
                     double damp_roll, double damp_pitch, double damp_heading,
                     double x_offset_m, double y_offset_m, double z_offset_m,
@@ -111,26 +111,26 @@ FGViewer::FGViewer( ViewType Type, bool from_model, int from_model_index,
 
 
 // Destructor
-FGViewer::~FGViewer( void ) {
+View::~View( void ) {
 }
 
 void
-FGViewer::init ()
+View::init ()
 {
 }
 
 void
-FGViewer::bind ()
+View::bind ()
 {
 }
 
 void
-FGViewer::unbind ()
+View::unbind ()
 {
 }
 
 void
-FGViewer::setType ( int type )
+View::setType ( int type )
 {
   if (type == 0)
     _type = FG_LOOKFROM;
@@ -139,48 +139,48 @@ FGViewer::setType ( int type )
 }
 
 void
-FGViewer::setInternal ( bool internal )
+View::setInternal ( bool internal )
 {
   _internal = internal;
 }
 
 void
-FGViewer::setPosition (double lon_deg, double lat_deg, double alt_ft)
+View::setPosition (double lon_deg, double lat_deg, double alt_ft)
 {
   _dirty = true;
   _position = SGGeod::fromDegFt(lon_deg, lat_deg, alt_ft);
 }
 
 void
-FGViewer::setTargetPosition (double lon_deg, double lat_deg, double alt_ft)
+View::setTargetPosition (double lon_deg, double lat_deg, double alt_ft)
 {
   _dirty = true;
   _target = SGGeod::fromDegFt(lon_deg, lat_deg, alt_ft);
 }
 
 void
-FGViewer::setRoll_deg (double roll_deg)
+View::setRoll_deg (double roll_deg)
 {
   _dirty = true;
   _roll_deg = roll_deg;
 }
 
 void
-FGViewer::setPitch_deg (double pitch_deg)
+View::setPitch_deg (double pitch_deg)
 {
   _dirty = true;
   _pitch_deg = pitch_deg;
 }
 
 void
-FGViewer::setHeading_deg (double heading_deg)
+View::setHeading_deg (double heading_deg)
 {
   _dirty = true;
   _heading_deg = heading_deg;
 }
 
 void
-FGViewer::setOrientation (double roll_deg, double pitch_deg, double heading_deg)
+View::setOrientation (double roll_deg, double pitch_deg, double heading_deg)
 {
   _dirty = true;
   _roll_deg = roll_deg;
@@ -189,28 +189,28 @@ FGViewer::setOrientation (double roll_deg, double pitch_deg, double heading_deg)
 }
 
 void
-FGViewer::setTargetRoll_deg (double target_roll_deg)
+View::setTargetRoll_deg (double target_roll_deg)
 {
   _dirty = true;
   _target_roll_deg = target_roll_deg;
 }
 
 void
-FGViewer::setTargetPitch_deg (double target_pitch_deg)
+View::setTargetPitch_deg (double target_pitch_deg)
 {
   _dirty = true;
   _target_pitch_deg = target_pitch_deg;
 }
 
 void
-FGViewer::setTargetHeading_deg (double target_heading_deg)
+View::setTargetHeading_deg (double target_heading_deg)
 {
   _dirty = true;
   _target_heading_deg = target_heading_deg;
 }
 
 void
-FGViewer::setTargetOrientation (double target_roll_deg, double target_pitch_deg, double target_heading_deg)
+View::setTargetOrientation (double target_roll_deg, double target_pitch_deg, double target_heading_deg)
 {
   _dirty = true;
   _target_roll_deg = target_roll_deg;
@@ -219,49 +219,49 @@ FGViewer::setTargetOrientation (double target_roll_deg, double target_pitch_deg,
 }
 
 void
-FGViewer::setXOffset_m (double x_offset_m)
+View::setXOffset_m (double x_offset_m)
 {
   _dirty = true;
   _offset_m.x() = x_offset_m;
 }
 
 void
-FGViewer::setYOffset_m (double y_offset_m)
+View::setYOffset_m (double y_offset_m)
 {
   _dirty = true;
   _offset_m.y() = y_offset_m;
 }
 
 void
-FGViewer::setZOffset_m (double z_offset_m)
+View::setZOffset_m (double z_offset_m)
 {
   _dirty = true;
   _offset_m.z() = z_offset_m;
 }
 
 void
-FGViewer::setTargetXOffset_m (double target_x_offset_m)
+View::setTargetXOffset_m (double target_x_offset_m)
 {
   _dirty = true;
   _target_offset_m.x() = target_x_offset_m;
 }
 
 void
-FGViewer::setTargetYOffset_m (double target_y_offset_m)
+View::setTargetYOffset_m (double target_y_offset_m)
 {
   _dirty = true;
   _target_offset_m.y() = target_y_offset_m;
 }
 
 void
-FGViewer::setTargetZOffset_m (double target_z_offset_m)
+View::setTargetZOffset_m (double target_z_offset_m)
 {
   _dirty = true;
   _target_offset_m.z() = target_z_offset_m;
 }
 
 void
-FGViewer::setPositionOffsets (double x_offset_m, double y_offset_m, double z_offset_m)
+View::setPositionOffsets (double x_offset_m, double y_offset_m, double z_offset_m)
 {
   _dirty = true;
   _offset_m.x() = x_offset_m;
@@ -270,21 +270,21 @@ FGViewer::setPositionOffsets (double x_offset_m, double y_offset_m, double z_off
 }
 
 void
-FGViewer::setRollOffset_deg (double roll_offset_deg)
+View::setRollOffset_deg (double roll_offset_deg)
 {
   _dirty = true;
   _roll_offset_deg = roll_offset_deg;
 }
 
 void
-FGViewer::setPitchOffset_deg (double pitch_offset_deg)
+View::setPitchOffset_deg (double pitch_offset_deg)
 {
   _dirty = true;
   _pitch_offset_deg = pitch_offset_deg;
 }
 
 void
-FGViewer::setHeadingOffset_deg (double heading_offset_deg)
+View::setHeadingOffset_deg (double heading_offset_deg)
 {
   _dirty = true;
   if (_at_model && (_offset_m.x() == 0.0)&&(_offset_m.z() == 0.0))
@@ -298,14 +298,14 @@ FGViewer::setHeadingOffset_deg (double heading_offset_deg)
 }
 
 void
-FGViewer::setGoalRollOffset_deg (double goal_roll_offset_deg)
+View::setGoalRollOffset_deg (double goal_roll_offset_deg)
 {
   _dirty = true;
   _goal_roll_offset_deg = goal_roll_offset_deg;
 }
 
 void
-FGViewer::setGoalPitchOffset_deg (double goal_pitch_offset_deg)
+View::setGoalPitchOffset_deg (double goal_pitch_offset_deg)
 {
   _dirty = true;
   _goal_pitch_offset_deg = goal_pitch_offset_deg;
@@ -323,7 +323,7 @@ FGViewer::setGoalPitchOffset_deg (double goal_pitch_offset_deg)
 }
 
 void
-FGViewer::setGoalHeadingOffset_deg (double goal_heading_offset_deg)
+View::setGoalHeadingOffset_deg (double goal_heading_offset_deg)
 {
   _dirty = true;
   if (_at_model && (_offset_m.x() == 0.0)&&(_offset_m.z() == 0.0))
@@ -344,7 +344,7 @@ FGViewer::setGoalHeadingOffset_deg (double goal_heading_offset_deg)
 }
 
 void
-FGViewer::setOrientationOffsets (double roll_offset_deg, double pitch_offset_deg, double heading_offset_deg)
+View::setOrientationOffsets (double roll_offset_deg, double pitch_offset_deg, double heading_offset_deg)
 {
   _dirty = true;
   _roll_offset_deg = roll_offset_deg;
@@ -356,7 +356,7 @@ FGViewer::setOrientationOffsets (double roll_offset_deg, double pitch_offset_deg
 // cached data "dirty") on the next "get".  It calculates all the outputs 
 // for viewer.
 void
-FGViewer::recalc ()
+View::recalc ()
 {
   if (_type == FG_LOOKFROM) {
     recalcLookFrom();
@@ -369,7 +369,7 @@ FGViewer::recalc ()
 
 // recalculate for LookFrom view type...
 void
-FGViewer::recalcLookFrom ()
+View::recalcLookFrom ()
 {
   // Update location data ...
   if ( _from_model ) {
@@ -414,7 +414,7 @@ FGViewer::recalcLookFrom ()
 }
 
 void
-FGViewer::recalcLookAt ()
+View::recalcLookAt ()
 {
   // The geodetic position of our target to look at
   if ( _at_model ) {
@@ -481,13 +481,13 @@ FGViewer::recalcLookAt ()
 }
 
 void
-FGViewer::setDampTarget(double roll, double pitch, double heading)
+View::setDampTarget(double roll, double pitch, double heading)
 {
   _dampTarget = SGVec3d(roll, pitch, heading);
 }
 
 void
-FGViewer::getDampOutput(double& roll, double& pitch, double& heading)
+View::getDampOutput(double& roll, double& pitch, double& heading)
 {
   roll = _dampOutput[0];
   pitch = _dampOutput[1];
@@ -496,9 +496,9 @@ FGViewer::getDampOutput(double& roll, double& pitch, double& heading)
 
 
 void
-FGViewer::updateDampOutput(double dt)
+View::updateDampOutput(double dt)
 {
-  static FGViewer *last_view = 0;
+  static View *last_view = 0;
   if ((last_view != this) || (dt > 1.0)) {
     _dampOutput = _dampTarget;
     last_view = this;
@@ -531,7 +531,7 @@ FGViewer::updateDampOutput(double dt)
 }
 
 double
-FGViewer::get_h_fov()
+View::get_h_fov()
 {
     double aspectRatio = get_aspect_ratio();
     switch (_scaling_type) {
@@ -557,7 +557,7 @@ FGViewer::get_h_fov()
 
 
 double
-FGViewer::get_v_fov()
+View::get_v_fov()
 {
     double aspectRatio = get_aspect_ratio();
     switch (_scaling_type) {
@@ -584,7 +584,7 @@ FGViewer::get_v_fov()
 }
 
 void
-FGViewer::update (double dt)
+View::update (double dt)
 {
   updateDampOutput(dt);
   
@@ -664,7 +664,7 @@ FGViewer::update (double dt)
   recalc();
 }
 
-double FGViewer::get_aspect_ratio() const
+double View::get_aspect_ratio() const
 {
     return flightgear::CameraGroup::getDefault()->getMasterAspectRatio();
 }

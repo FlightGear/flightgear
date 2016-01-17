@@ -121,7 +121,7 @@ FGViewMgr::init ()
       double target_y_offset_m = config->getDoubleValue("target-y-offset-m");
       double target_z_offset_m = config->getDoubleValue("target-z-offset-m");
 
-        add_view(new FGViewer ( FGViewer::FG_LOOKAT, from_model, from_model_index,
+        add_view(new flightgear::View ( flightgear::View::FG_LOOKAT, from_model, from_model_index,
                               at_model, at_model_index,
                               damp_roll, damp_pitch, damp_heading,
                               x_offset_m, y_offset_m,z_offset_m,
@@ -130,7 +130,7 @@ FGViewMgr::init ()
                               target_x_offset_m, target_y_offset_m,
                               target_z_offset_m, near_m, internal ));
     } else {
-        add_view(new FGViewer ( FGViewer::FG_LOOKFROM, from_model, from_model_index,
+        add_view(new flightgear::View ( flightgear::View::FG_LOOKFROM, from_model, from_model_index,
                               false, 0, 0.0, 0.0, 0.0,
                               x_offset_m, y_offset_m, z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
@@ -317,7 +317,7 @@ FGViewMgr::unbind ()
 void
 FGViewMgr::update (double dt)
 {
-  FGViewer* currentView = (FGViewer *)get_current_view();
+    flightgear::View* currentView = get_current_view();
   if (!currentView) return;
 
   SGPropertyNode *n = config_list[current];
@@ -342,7 +342,7 @@ FGViewMgr::update (double dt)
   }
 
   // if lookat (type 1) then get target data...
-    if (currentView->getType() == FGViewer::FG_LOOKAT) {
+    if (currentView->getType() == flightgear::View::FG_LOOKAT) {
     if (!config->getBoolValue("from-model")) {
       lon_deg = fgGetDouble(config->getStringValue("target-lon-deg-path"));
       lat_deg = fgGetDouble(config->getStringValue("target-lat-deg-path"));
@@ -444,7 +444,7 @@ void FGViewMgr::clear()
     views.clear();
 }
 
-FGViewer*
+flightgear::View*
 FGViewMgr::get_current_view()
 {
     if ( current < (int)views.size() ) {
@@ -454,7 +454,7 @@ FGViewMgr::get_current_view()
     }
 }
 
-const FGViewer*
+const flightgear::View*
 FGViewMgr::get_current_view() const
 {
     if ( current < (int)views.size() ) {
@@ -465,7 +465,7 @@ FGViewMgr::get_current_view() const
 }
 
 
-FGViewer*
+flightgear::View*
 FGViewMgr::get_view( int i )
 {
     if ( i < 0 ) { i = 0; }
@@ -473,7 +473,7 @@ FGViewMgr::get_view( int i )
     return views[i];
 }
 
-const FGViewer*
+const flightgear::View*
 FGViewMgr::get_view( int i ) const
 {
     if ( i < 0 ) { i = 0; }
@@ -481,7 +481,7 @@ FGViewMgr::get_view( int i ) const
     return views[i];
 }
 
-FGViewer*
+flightgear::View*
 FGViewMgr::next_view()
 {
     setView((current+1 < (int)views.size()) ? (current + 1) : 0);
@@ -489,7 +489,7 @@ FGViewMgr::next_view()
     return views[current];
 }
 
-FGViewer*
+flightgear::View*
 FGViewMgr::prev_view()
 {
     setView((0 < current) ? (current - 1) : (views.size() - 1));
@@ -498,7 +498,7 @@ FGViewMgr::prev_view()
 }
 
 void
-FGViewMgr::add_view( FGViewer * v )
+FGViewMgr::add_view( flightgear::View * v )
 {
   views.push_back(v);
   v->init();
@@ -507,14 +507,14 @@ FGViewMgr::add_view( FGViewer * v )
 double
 FGViewMgr::getViewHeadingOffset_deg () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   return (view == 0 ? 0 : view->getHeadingOffset_deg());
 }
 
 void
 FGViewMgr::setViewHeadingOffset_deg (double offset)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0) {
     view->setGoalHeadingOffset_deg(offset);
     view->setHeadingOffset_deg(offset);
@@ -524,14 +524,14 @@ FGViewMgr::setViewHeadingOffset_deg (double offset)
 double
 FGViewMgr::getViewGoalHeadingOffset_deg () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   return (view == 0 ? 0 : view->getGoalHeadingOffset_deg());
 }
 
 void
 FGViewMgr::setViewGoalHeadingOffset_deg (double offset)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0)
     view->setGoalHeadingOffset_deg(offset);
 }
@@ -539,14 +539,14 @@ FGViewMgr::setViewGoalHeadingOffset_deg (double offset)
 double
 FGViewMgr::getViewPitchOffset_deg () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   return (view == 0 ? 0 : view->getPitchOffset_deg());
 }
 
 void
 FGViewMgr::setViewPitchOffset_deg (double tilt)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0) {
     view->setGoalPitchOffset_deg(tilt);
     view->setPitchOffset_deg(tilt);
@@ -556,14 +556,14 @@ FGViewMgr::setViewPitchOffset_deg (double tilt)
 double
 FGViewMgr::getGoalViewPitchOffset_deg () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   return (view == 0 ? 0 : view->getGoalPitchOffset_deg());
 }
 
 void
 FGViewMgr::setGoalViewPitchOffset_deg (double tilt)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0)
     view->setGoalPitchOffset_deg(tilt);
 }
@@ -571,14 +571,14 @@ FGViewMgr::setGoalViewPitchOffset_deg (double tilt)
 double
 FGViewMgr::getViewRollOffset_deg () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   return (view == 0 ? 0 : view->getRollOffset_deg());
 }
 
 void
 FGViewMgr::setViewRollOffset_deg (double tilt)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0) {
     view->setGoalRollOffset_deg(tilt);
     view->setRollOffset_deg(tilt);
@@ -588,14 +588,14 @@ FGViewMgr::setViewRollOffset_deg (double tilt)
 double
 FGViewMgr::getGoalViewRollOffset_deg () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   return (view == 0 ? 0 : view->getGoalRollOffset_deg());
 }
 
 void
 FGViewMgr::setGoalViewRollOffset_deg (double tilt)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0)
     view->setGoalRollOffset_deg(tilt);
 }
@@ -603,9 +603,9 @@ FGViewMgr::setGoalViewRollOffset_deg (double tilt)
 double
 FGViewMgr::getViewXOffset_m () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   if (view != 0) {
-    return ((FGViewer *)view)->getXOffset_m();
+    return ((flightgear::View *)view)->getXOffset_m();
   } else {
     return 0;
   }
@@ -614,7 +614,7 @@ FGViewMgr::getViewXOffset_m () const
 void
 FGViewMgr::setViewXOffset_m (double x)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0) {
     view->setXOffset_m(x);
   }
@@ -623,9 +623,9 @@ FGViewMgr::setViewXOffset_m (double x)
 double
 FGViewMgr::getViewYOffset_m () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   if (view != 0) {
-    return ((FGViewer *)view)->getYOffset_m();
+    return ((flightgear::View *)view)->getYOffset_m();
   } else {
     return 0;
   }
@@ -634,7 +634,7 @@ FGViewMgr::getViewYOffset_m () const
 void
 FGViewMgr::setViewYOffset_m (double y)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0) {
     view->setYOffset_m(y);
   }
@@ -643,9 +643,9 @@ FGViewMgr::setViewYOffset_m (double y)
 double
 FGViewMgr::getViewZOffset_m () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   if (view != 0) {
-    return ((FGViewer *)view)->getZOffset_m();
+    return ((flightgear::View *)view)->getZOffset_m();
   } else {
     return 0;
   }
@@ -654,7 +654,7 @@ FGViewMgr::getViewZOffset_m () const
 void
 FGViewMgr::setViewZOffset_m (double z)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0) {
     view->setZOffset_m(z);
   }
@@ -663,9 +663,9 @@ FGViewMgr::setViewZOffset_m (double z)
 double
 FGViewMgr::getViewTargetXOffset_m () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   if (view != 0) {
-    return ((FGViewer *)view)->getTargetXOffset_m();
+    return ((flightgear::View *)view)->getTargetXOffset_m();
   } else {
     return 0;
   }
@@ -674,7 +674,7 @@ FGViewMgr::getViewTargetXOffset_m () const
 void
 FGViewMgr::setViewTargetXOffset_m (double x)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0) {
     view->setTargetXOffset_m(x);
   }
@@ -683,9 +683,9 @@ FGViewMgr::setViewTargetXOffset_m (double x)
 double
 FGViewMgr::getViewTargetYOffset_m () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   if (view != 0) {
-    return ((FGViewer *)view)->getTargetYOffset_m();
+    return ((flightgear::View *)view)->getTargetYOffset_m();
   } else {
     return 0;
   }
@@ -694,7 +694,7 @@ FGViewMgr::getViewTargetYOffset_m () const
 void
 FGViewMgr::setViewTargetYOffset_m (double y)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0) {
     view->setTargetYOffset_m(y);
   }
@@ -703,9 +703,9 @@ FGViewMgr::setViewTargetYOffset_m (double y)
 double
 FGViewMgr::getViewTargetZOffset_m () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   if (view != 0) {
-    return ((FGViewer *)view)->getTargetZOffset_m();
+    return ((flightgear::View *)view)->getTargetZOffset_m();
   } else {
     return 0;
   }
@@ -714,7 +714,7 @@ FGViewMgr::getViewTargetZOffset_m () const
 void
 FGViewMgr::setViewTargetZOffset_m (double z)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0) {
     view->setTargetZOffset_m(z);
   }
@@ -763,14 +763,14 @@ FGViewMgr::setView (int newview)
 double
 FGViewMgr::getFOV_deg () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   return (view == 0 ? 0 : view->get_fov());
 }
 
 void
 FGViewMgr::setFOV_deg (double fov)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0)
     view->set_fov(fov);
 }
@@ -778,14 +778,14 @@ FGViewMgr::setFOV_deg (double fov)
 double
 FGViewMgr::getARM_deg () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   return (view == 0 ? 0 : view->get_aspect_ratio_multiplier());
 }
 
 void
 FGViewMgr::setARM_deg (double aspect_ratio_multiplier)
 {  
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0)
     view->set_aspect_ratio_multiplier(aspect_ratio_multiplier);
 }
@@ -793,14 +793,14 @@ FGViewMgr::setARM_deg (double aspect_ratio_multiplier)
 double
 FGViewMgr::getNear_m () const
 {
-  const FGViewer * view = get_current_view();
+  const flightgear::View * view = get_current_view();
   return (view == 0 ? 0.5f : view->getNear_m());
 }
 
 void
 FGViewMgr::setNear_m (double near_m)
 {
-  FGViewer * view = get_current_view();
+  flightgear::View * view = get_current_view();
   if (view != 0)
     view->setNear_m(near_m);
 }
@@ -820,21 +820,21 @@ FGViewMgr::setViewAxisLat (double axis)
 double
 FGViewMgr::getViewLon_deg() const
 {
-  const FGViewer* view = get_current_view();
+  const flightgear::View* view = get_current_view();
   return (view != NULL) ? view->getPosition().getLongitudeDeg() : 0.0;
 }
 
 double
 FGViewMgr::getViewLat_deg() const
 {
-  const FGViewer* view = get_current_view();
+  const flightgear::View* view = get_current_view();
   return (view != NULL) ? view->getPosition().getLatitudeDeg() : 0.0;
 }
 
 double
 FGViewMgr::getViewElev_ft() const
 {
-  const FGViewer* view = get_current_view();
+  const flightgear::View* view = get_current_view();
   return (view != NULL) ? view->getPosition().getElevationFt() : 0.0;
 }
 

@@ -61,12 +61,16 @@ class FGRouteMgr;
 class FGScenery;
 class FGTileMgr;
 class FGViewMgr;
-class FGViewer;
 class FGRenderer;
 
 namespace simgear { namespace pkg {
   class Root;
 }}
+
+namespace flightgear
+{
+    class View;
+}
 
 /**
  * Bucket for subsystem pointers representing the sim's state.
@@ -317,7 +321,7 @@ public:
     }
 
     FGViewMgr *get_viewmgr() const;
-    FGViewer *get_current_view() const;
+    flightgear::View *get_current_view() const;
 
     FGControls *get_controls() const;
 

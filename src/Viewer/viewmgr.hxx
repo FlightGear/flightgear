@@ -33,8 +33,11 @@
 #include <simgear/math/SGMath.hxx>
 
 // forward decls
-class FGViewer;
-typedef SGSharedPtr<FGViewer> FGViewerPtr;
+namespace flightgear
+{
+    class View;
+    typedef SGSharedPtr<flightgear::View> ViewPtr;
+}
 
 // Define a structure containing view information
 class FGViewMgr : public SGSubsystem
@@ -60,19 +63,19 @@ public:
     inline int size() const { return views.size(); }
     inline int get_current() const { return current; }
     
-    FGViewer *get_current_view();
-    const FGViewer *get_current_view() const;
+    flightgear::View* get_current_view();
+    const flightgear::View* get_current_view() const;
     
-    FGViewer *get_view( int i ); 
-    const FGViewer *get_view( int i ) const;
+    flightgear::View* get_view( int i );
+    const flightgear::View* get_view( int i ) const;
       
-    FGViewer *next_view();
-    FGViewer *prev_view();
+    flightgear::View* next_view();
+    flightgear::View* prev_view();
       
     // setters
     void clear();
 
-    void add_view( FGViewer * v );
+    void add_view( flightgear::View * v );
     
     static const char* subsystemName() { return "view-manager"; }
 private:
@@ -145,7 +148,7 @@ private:
     bool inited;
     SGPropertyNode_ptr view_number;
     std::vector<SGPropertyNode_ptr> config_list;
-    typedef std::vector<FGViewerPtr> viewer_list;
+    typedef std::vector<flightgear::ViewPtr> viewer_list;
     viewer_list views;
     SGVec3d abs_viewer_position;
 
