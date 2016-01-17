@@ -109,6 +109,70 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     // a reasonable guess for init, so that the math doesn't blow up
 }
 
+View* View::createFromProperties(SGPropertyNode_ptr config)
+{
+    double aspect_ratio_multiplier
+        = fgGetDouble("/sim/current-view/aspect-ratio-multiplier");
+
+    // find out if this is an internal view (e.g. in cockpit, low near plane)
+    // FIXME : should be a child of config
+    bool internal = config->getParent()->getBoolValue("internal", false);
+
+    // FIXME:
+    // this is assumed to be an aircraft model...we will need to read
+    // model-from-type as well.
+
+    // find out if this is a model we are looking from...
+    bool from_model = config->getBoolValue("from-model");
+    int from_model_index = config->getIntValue("from-model-idx");
+
+    double x_offset_m = config->getDoubleValue("x-offset-m");
+    double y_offset_m = config->getDoubleValue("y-offset-m");
+    double z_offset_m = config->getDoubleValue("z-offset-m");
+
+    double heading_offset_deg = config->getDoubleValue("heading-offset-deg");
+    config->setDoubleValue("heading-offset-deg", heading_offset_deg);
+    double pitch_offset_deg = config->getDoubleValue("pitch-offset-deg");
+    config->setDoubleValue("pitch-offset-deg", pitch_offset_deg);
+    double roll_offset_deg = config->getDoubleValue("roll-offset-deg");
+    config->setDoubleValue("roll-offset-deg", roll_offset_deg);
+
+    double fov_deg = config->getDoubleValue("default-field-of-view-deg");
+    double near_m = config->getDoubleValue("ground-level-nearplane-m");
+
+    // supporting two types "lookat" = 1 and "lookfrom" = 0
+    const char *type = config->getParent()->getStringValue("type");
+    if (!strcmp(type, "lookat")) {
+        bool at_model = config->getBoolValue("at-model");
+        int at_model_index = config->getIntValue("at-model-idx");
+
+        double damp_roll = config->getDoubleValue("at-model-roll-damping");
+        double damp_pitch = config->getDoubleValue("at-model-pitch-damping");
+        double damp_heading = config->getDoubleValue("at-model-heading-damping");
+
+        double target_x_offset_m = config->getDoubleValue("target-x-offset-m");
+        double target_y_offset_m = config->getDoubleValue("target-y-offset-m");
+        double target_z_offset_m = config->getDoubleValue("target-z-offset-m");
+
+        return new View ( FG_LOOKAT, from_model, from_model_index,
+                           at_model, at_model_index,
+                           damp_roll, damp_pitch, damp_heading,
+                           x_offset_m, y_offset_m,z_offset_m,
+                           heading_offset_deg, pitch_offset_deg,
+                           roll_offset_deg, fov_deg, aspect_ratio_multiplier,
+                           target_x_offset_m, target_y_offset_m,
+                         target_z_offset_m, near_m, internal );
+    } else {
+        return new View ( FG_LOOKFROM, from_model, from_model_index,
+                       false, 0, 0.0, 0.0, 0.0,
+                       x_offset_m, y_offset_m, z_offset_m,
+                       heading_offset_deg, pitch_offset_deg,
+                       roll_offset_deg, fov_deg, aspect_ratio_multiplier,
+                         0, 0, 0, near_m, internal );
+    }
+
+}
+
 
 // Destructor
 View::~View( void ) {

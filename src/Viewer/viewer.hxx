@@ -30,6 +30,8 @@
 
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
+
+#include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
 
@@ -56,17 +58,7 @@ public:
         FG_LOOKAT = 1
     };
 
-
-    // Constructor
-    View( ViewType Type, bool from_model, int from_model_index,
-              bool at_model, int at_model_index,
-              double damp_roll, double damp_pitch, double damp_heading,
-              double x_offset_m, double y_offset_m, double z_offset_m,
-              double heading_offset_deg, double pitch_offset_deg,
-              double roll_offset_deg,
-              double fov_deg, double aspect_ratio_multiplier,
-              double target_x_offset_m, double target_y_offset_m,
-              double target_z_offset_m, double near_m, bool internal );
+    static View* createFromProperties(SGPropertyNode_ptr props);
 
     // Destructor
     virtual ~View();
@@ -238,6 +230,18 @@ public:
     
 private:
 
+    // Constructor
+    View( ViewType Type, bool from_model, int from_model_index,
+         bool at_model, int at_model_index,
+         double damp_roll, double damp_pitch, double damp_heading,
+         double x_offset_m, double y_offset_m, double z_offset_m,
+         double heading_offset_deg, double pitch_offset_deg,
+         double roll_offset_deg,
+         double fov_deg, double aspect_ratio_multiplier,
+         double target_x_offset_m, double target_y_offset_m,
+         double target_z_offset_m, double near_m, bool internal );
+
+    
     //////////////////////////////////////////////////////////////////
     // private data                                                 //
     //////////////////////////////////////////////////////////////////

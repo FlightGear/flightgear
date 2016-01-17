@@ -74,69 +74,15 @@ FGViewMgr::init ()
   target_y_offs  = fgGetNode("/sim/current-view/target-y-offset-m", true);
   target_z_offs  = fgGetNode("/sim/current-view/target-z-offset-m", true);
 
-  double aspect_ratio_multiplier
-      = fgGetDouble("/sim/current-view/aspect-ratio-multiplier");
 
   for (unsigned int i = 0; i < config_list.size(); i++) {
     SGPropertyNode *n = config_list[i];
     SGPropertyNode *config = n->getChild("config", 0, true);
 
-    // find out if this is an internal view (e.g. in cockpit, low near plane)
-    bool internal = n->getBoolValue("internal", false);
-
-    // FIXME:
-    // this is assumed to be an aircraft model...we will need to read
-    // model-from-type as well.
-
-    // find out if this is a model we are looking from...
-    bool from_model = config->getBoolValue("from-model");
-    int from_model_index = config->getIntValue("from-model-idx");
-
-    double x_offset_m = config->getDoubleValue("x-offset-m");
-    double y_offset_m = config->getDoubleValue("y-offset-m");
-    double z_offset_m = config->getDoubleValue("z-offset-m");
-
-    double heading_offset_deg = config->getDoubleValue("heading-offset-deg");
-    config->setDoubleValue("heading-offset-deg", heading_offset_deg);
-    double pitch_offset_deg = config->getDoubleValue("pitch-offset-deg");
-    config->setDoubleValue("pitch-offset-deg", pitch_offset_deg);
-    double roll_offset_deg = config->getDoubleValue("roll-offset-deg");
-    config->setDoubleValue("roll-offset-deg", roll_offset_deg);
-
-    double fov_deg = config->getDoubleValue("default-field-of-view-deg");
-    double near_m = config->getDoubleValue("ground-level-nearplane-m");
-
-    // supporting two types "lookat" = 1 and "lookfrom" = 0
-    const char *type = n->getStringValue("type");
-    if (!strcmp(type, "lookat")) {
-
-      bool at_model = config->getBoolValue("at-model");
-      int at_model_index = config->getIntValue("at-model-idx");
-
-      double damp_roll = config->getDoubleValue("at-model-roll-damping");
-      double damp_pitch = config->getDoubleValue("at-model-pitch-damping");
-      double damp_heading = config->getDoubleValue("at-model-heading-damping");
-
-      double target_x_offset_m = config->getDoubleValue("target-x-offset-m");
-      double target_y_offset_m = config->getDoubleValue("target-y-offset-m");
-      double target_z_offset_m = config->getDoubleValue("target-z-offset-m");
-
-        add_view(new flightgear::View ( flightgear::View::FG_LOOKAT, from_model, from_model_index,
-                              at_model, at_model_index,
-                              damp_roll, damp_pitch, damp_heading,
-                              x_offset_m, y_offset_m,z_offset_m,
-                              heading_offset_deg, pitch_offset_deg,
-                              roll_offset_deg, fov_deg, aspect_ratio_multiplier,
-                              target_x_offset_m, target_y_offset_m,
-                              target_z_offset_m, near_m, internal ));
-    } else {
-        add_view(new flightgear::View ( flightgear::View::FG_LOOKFROM, from_model, from_model_index,
-                              false, 0, 0.0, 0.0, 0.0,
-                              x_offset_m, y_offset_m, z_offset_m,
-                              heading_offset_deg, pitch_offset_deg,
-                              roll_offset_deg, fov_deg, aspect_ratio_multiplier,
-                              0, 0, 0, near_m, internal ));
-    }
+      flightgear::View* v = flightgear::View::createFromProperties(config);
+      if (v) {
+          add_view(v);
+      }
   }
 
   copyToCurrent();
