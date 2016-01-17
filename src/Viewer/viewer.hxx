@@ -226,8 +226,7 @@ public:
     //////////////////////////////////////////////////////////////////////
 
     void set_dirty() { _dirty = true; }
-    void set_clean() { _dirty = false; }
-    
+
 private:
 
     // Constructor
@@ -241,7 +240,8 @@ private:
          double target_x_offset_m, double target_y_offset_m,
          double target_z_offset_m, double near_m, bool internal );
 
-    
+    void set_clean() { _dirty = false; }
+
     //////////////////////////////////////////////////////////////////
     // private data                                                 //
     //////////////////////////////////////////////////////////////////
