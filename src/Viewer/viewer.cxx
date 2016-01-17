@@ -78,7 +78,7 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _dampFactor = SGVec3d::zeros();
     _dampOutput = SGVec3d::zeros();
     _dampTarget = SGVec3d::zeros();
-    
+
     if (damp_roll > 0.0)
       _dampFactor[0] = 1.0 / pow(10.0, fabs(damp_roll));
     if (damp_pitch > 0.0)
@@ -95,11 +95,18 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _goal_heading_offset_deg = heading_offset_deg;
     _goal_pitch_offset_deg = pitch_offset_deg;
     _goal_roll_offset_deg = roll_offset_deg;
+
+    _configHeadingOffsetDeg = heading_offset_deg;
+    _configPitchOffsetDeg = pitch_offset_deg;
+    _configRollOffsetDeg = roll_offset_deg;
+
     if (fov_deg > 0) {
       _fov_deg = fov_deg;
     } else {
       _fov_deg = 55;
     }
+
+    _configFOV_deg = _fov_deg;
 
     _aspect_ratio_multiplier = aspect_ratio_multiplier;
     _target_offset_m.x() = target_x_offset_m;
@@ -118,6 +125,7 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
     // FIXME : should be a child of config
     bool internal = config->getParent()->getBoolValue("internal", false);
 
+
     // FIXME:
     // this is assumed to be an aircraft model...we will need to read
     // model-from-type as well.
@@ -131,15 +139,16 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
     double z_offset_m = config->getDoubleValue("z-offset-m");
 
     double heading_offset_deg = config->getDoubleValue("heading-offset-deg");
-    config->setDoubleValue("heading-offset-deg", heading_offset_deg);
+  //  config->setDoubleValue("heading-offset-deg", heading_offset_deg);
     double pitch_offset_deg = config->getDoubleValue("pitch-offset-deg");
-    config->setDoubleValue("pitch-offset-deg", pitch_offset_deg);
+  //  config->setDoubleValue("pitch-offset-deg", pitch_offset_deg);
     double roll_offset_deg = config->getDoubleValue("roll-offset-deg");
-    config->setDoubleValue("roll-offset-deg", roll_offset_deg);
+   // config->setDoubleValue("roll-offset-deg", roll_offset_deg);
 
     double fov_deg = config->getDoubleValue("default-field-of-view-deg");
     double near_m = config->getDoubleValue("ground-level-nearplane-m");
 
+    View* v = 0;
     // supporting two types "lookat" = 1 and "lookfrom" = 0
     const char *type = config->getParent()->getStringValue("type");
     if (!strcmp(type, "lookat")) {
@@ -154,7 +163,7 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
         double target_y_offset_m = config->getDoubleValue("target-y-offset-m");
         double target_z_offset_m = config->getDoubleValue("target-z-offset-m");
 
-        return new View ( FG_LOOKAT, from_model, from_model_index,
+        v = new View ( FG_LOOKAT, from_model, from_model_index,
                            at_model, at_model_index,
                            damp_roll, damp_pitch, damp_heading,
                            x_offset_m, y_offset_m,z_offset_m,
@@ -163,7 +172,7 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
                            target_x_offset_m, target_y_offset_m,
                          target_z_offset_m, near_m, internal );
     } else {
-        return new View ( FG_LOOKFROM, from_model, from_model_index,
+        v = new View ( FG_LOOKFROM, from_model, from_model_index,
                        false, 0, 0.0, 0.0, 0.0,
                        x_offset_m, y_offset_m, z_offset_m,
                        heading_offset_deg, pitch_offset_deg,
@@ -171,6 +180,11 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
                          0, 0, 0, near_m, internal );
     }
 
+    v->_name = config->getParent()->getStringValue("name");
+    v->_typeString = type;
+    v->_configHeadingOffsetDeg = config->getDoubleValue("default-heading-offset-deg");
+
+    return v;
 }
 
 
@@ -186,11 +200,52 @@ View::init ()
 void
 View::bind ()
 {
+    _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
+    _tiedProperties.Tie("heading-offset-deg", this,
+                         &View::getHeadingOffset_deg,
+                         &View::setHeadingOffset_deg_property);
+
+     fgSetArchivable("/sim/current-view/heading-offset-deg");
+
+    _tiedProperties.Tie("goal-heading-offset-deg", this,
+                        &View::getGoalHeadingOffset_deg,
+                        &View::setGoalHeadingOffset_deg);
+
+    fgSetArchivable("/sim/current-view/goal-heading-offset-deg");
+
+    _tiedProperties.Tie("pitch-offset-deg", this,
+                        &View::getPitchOffset_deg,
+                        &View::setPitchOffset_deg_property);
+    fgSetArchivable("/sim/current-view/pitch-offset-deg");
+    _tiedProperties.Tie("goal-pitch-offset-deg", this,
+                        &View::getGoalPitchOffset_deg,
+                        &View::setGoalPitchOffset_deg);
+    fgSetArchivable("/sim/current-view/goal-pitch-offset-deg");
+    _tiedProperties.Tie("roll-offset-deg", this,
+                        &View::getRollOffset_deg,
+                        &View::setRollOffset_deg_property);
+    fgSetArchivable("/sim/current-view/roll-offset-deg");
+    _tiedProperties.Tie("goal-roll-offset-deg", this,
+                        &View::getGoalRollOffset_deg,
+                        &View::setGoalRollOffset_deg);
+    fgSetArchivable("/sim/current-view/goal-roll-offset-deg");
+
+
+    _tiedProperties.getRoot()->setStringValue("name", _name);
+    _tiedProperties.getRoot()->setStringValue("type", _typeString);
+
+    SGPropertyNode_ptr config = _tiedProperties.getRoot()->getChild("config", 0, true);
+    config->setBoolValue("from-model", _from_model);
+    config->setDoubleValue("heading-offset-deg", _configHeadingOffsetDeg);
+    config->setDoubleValue("pitch-offset-deg", _configPitchOffsetDeg);
+    config->setDoubleValue("roll-offset-deg", _configRollOffsetDeg);
+    config->setDoubleValue("default-field-of-view-deg", _configFOV_deg);
 }
 
 void
 View::unbind ()
 {
+    _tiedProperties.Untie();
 }
 
 void
@@ -362,6 +417,27 @@ View::setHeadingOffset_deg (double heading_offset_deg)
 }
 
 void
+View::setHeadingOffset_deg_property (double heading_offset_deg)
+{
+    setHeadingOffset_deg(heading_offset_deg);
+    setGoalHeadingOffset_deg(heading_offset_deg);
+}
+
+void
+View::setPitchOffset_deg_property (double pitch_offset_deg)
+{
+    setPitchOffset_deg(pitch_offset_deg);
+    setGoalPitchOffset_deg(pitch_offset_deg);
+}
+
+void
+View::setRollOffset_deg_property (double roll_offset_deg)
+{
+    setRollOffset_deg(roll_offset_deg);
+    setGoalRollOffset_deg(roll_offset_deg);
+}
+
+void
 View::setGoalRollOffset_deg (double goal_roll_offset_deg)
 {
   _dirty = true;
@@ -397,7 +473,7 @@ View::setGoalHeadingOffset_deg (double goal_heading_offset_deg)
       _goal_heading_offset_deg = 0.0;
       return;
   }
-  
+
   _goal_heading_offset_deg = goal_heading_offset_deg;
   while ( _goal_heading_offset_deg < 0.0 ) {
     _goal_heading_offset_deg += 360;
@@ -416,8 +492,8 @@ View::setOrientationOffsets (double roll_offset_deg, double pitch_offset_deg, do
   _heading_offset_deg = heading_offset_deg;
 }
 
-// recalc() is done every time one of the setters is called (making the 
-// cached data "dirty") on the next "get".  It calculates all the outputs 
+// recalc() is done every time one of the setters is called (making the
+// cached data "dirty") on the next "get".  It calculates all the outputs
 // for viewer.
 void
 View::recalc ()
@@ -568,28 +644,28 @@ View::updateDampOutput(double dt)
     last_view = this;
     return;
   }
-  
+
   const double interval = 0.01;
   while (dt > interval) {
-    
+
     for (unsigned int i=0; i<3; ++i) {
       if (_dampFactor[i] <= 0.0) {
         // axis is un-damped, set output to target directly
         _dampOutput[i] = _dampTarget[i];
         continue;
       }
-      
+
       double d = _dampOutput[i] - _dampTarget[i];
       if (d > 180.0) {
         _dampOutput[i] -= 360.0;
       } else if (d < -180.0) {
         _dampOutput[i] += 360.0;
       }
-      
-      _dampOutput[i] = (_dampTarget[i] * _dampFactor[i]) + 
+
+      _dampOutput[i] = (_dampTarget[i] * _dampFactor[i]) +
         (_dampOutput[i] * (1.0 - _dampFactor[i]));
     } // of axis iteration
-    
+
     dt -= interval;
   } // of dt subdivision by interval
 }
@@ -626,7 +702,7 @@ View::get_v_fov()
     double aspectRatio = get_aspect_ratio();
     switch (_scaling_type) {
     case FG_SCALING_WIDTH:  // h_fov == fov
-	return 
+	return
             atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS)
                  * (aspectRatio*_aspect_ratio_multiplier))
             * SG_RADIANS_TO_DEGREES * 2;
@@ -651,7 +727,7 @@ void
 View::update (double dt)
 {
   updateDampOutput(dt);
-  
+
   int i;
   int dt_ms = int(dt * 1000);
   for ( i = 0; i < dt_ms; i++ ) {
@@ -732,4 +808,3 @@ double View::get_aspect_ratio() const
 {
     return flightgear::CameraGroup::getDefault()->getMasterAspectRatio();
 }
-

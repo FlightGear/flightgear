@@ -32,6 +32,7 @@
 #include <simgear/constants.h>
 
 #include <simgear/props/props.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
 
@@ -242,12 +243,20 @@ private:
 
     void set_clean() { _dirty = false; }
 
+    void setHeadingOffset_deg_property (double heading_offset_deg);
+    void setPitchOffset_deg_property(double pitch_offset_deg);
+    void setRollOffset_deg_property(double roll_offset_deg);
+    
     //////////////////////////////////////////////////////////////////
     // private data                                                 //
     //////////////////////////////////////////////////////////////////
 
+    std::string _name, _typeString;
+    
     // flag forcing a recalc of derived view parameters
     bool _dirty;
+
+    simgear::TiedPropertyList _tiedProperties;
 
     SGQuatd mViewOrientation;
     SGQuatd mViewOffsetOr;
@@ -262,6 +271,10 @@ private:
     double _target_roll_deg;
     double _target_pitch_deg;
     double _target_heading_deg;
+
+    double _configRollOffsetDeg,
+        _configHeadingOffsetDeg,
+        _configPitchOffsetDeg;
 
     SGVec3d _dampTarget; ///< current target value we are damping towards
     SGVec3d _dampOutput; ///< current output of damping filter
@@ -305,7 +318,7 @@ private:
 
     // the nominal field of view (angle, in degrees)
     double _fov_deg;
-
+    double _configFOV_deg;
     // default = 1.0, this value is user configurable and is
     // multiplied into the aspect_ratio to get the actual vertical fov
     double _aspect_ratio_multiplier;

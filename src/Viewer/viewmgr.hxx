@@ -89,18 +89,7 @@ private:
     void do_axes ();
 
     //  callbacks in manager to access viewer methods
-    double getViewHeadingOffset_deg () const;
-    void setViewHeadingOffset_deg (double offset);
-    double getViewGoalHeadingOffset_deg () const;
-    void setViewGoalHeadingOffset_deg (double offset);
-    double getViewPitchOffset_deg () const;
-    void setViewPitchOffset_deg (double tilt);
-    double getGoalViewPitchOffset_deg () const;
-    void setGoalViewRollOffset_deg (double tilt);
-    double getViewRollOffset_deg () const;
-    void setViewRollOffset_deg (double tilt);
-    double getGoalViewRollOffset_deg () const;
-    void setGoalViewPitchOffset_deg (double tilt);
+
     double getViewXOffset_m () const;
     void setViewXOffset_m (double x);
     double getViewYOffset_m () const;

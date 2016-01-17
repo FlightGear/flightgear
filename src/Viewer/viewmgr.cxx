@@ -160,14 +160,15 @@ FGViewMgr::do_bind()
 {  
   // these are bound to the current view properties
   _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
-  _tiedProperties.Tie("heading-offset-deg", this,
-                      &FGViewMgr::getViewHeadingOffset_deg,
-                      &FGViewMgr::setViewHeadingOffset_deg);
-  fgSetArchivable("/sim/current-view/heading-offset-deg");
-  _tiedProperties.Tie("goal-heading-offset-deg", this,
-                      &FGViewMgr::getViewGoalHeadingOffset_deg,
-                      &FGViewMgr::setViewGoalHeadingOffset_deg);
-  fgSetArchivable("/sim/current-view/goal-heading-offset-deg");
+ // _tiedProperties.Tie("heading-offset-deg", this,
+ //                     &FGViewMgr::getViewHeadingOffset_deg,
+ //                     &FGViewMgr::setViewHeadingOffset_deg);
+ // fgSetArchivable("/sim/current-view/heading-offset-deg");
+ // _tiedProperties.Tie("goal-heading-offset-deg", this,
+  //                    &FGViewMgr::getViewGoalHeadingOffset_deg,
+   //                   &FGViewMgr::setViewGoalHeadingOffset_deg);
+  //fgSetArchivable("/sim/current-view/goal-heading-offset-deg");
+#if 0
   _tiedProperties.Tie("pitch-offset-deg", this,
                       &FGViewMgr::getViewPitchOffset_deg,
                       &FGViewMgr::setViewPitchOffset_deg);
@@ -184,7 +185,8 @@ FGViewMgr::do_bind()
                       &FGViewMgr::getGoalViewRollOffset_deg,
                       &FGViewMgr::setGoalViewRollOffset_deg);
   fgSetArchivable("/sim/current-view/goal-roll-offset-deg");
-
+#endif
+    
   _tiedProperties.Tie("view-number", this,
                       &FGViewMgr::getView, &FGViewMgr::setView);
   SGPropertyNode* view_number =
@@ -341,8 +343,10 @@ FGViewMgr::copyToCurrent()
     if (!inited) {
         return;
     }
-  
+
+#if 0
     SGPropertyNode *n = config_list[current];
+
     fgSetString("/sim/current-view/name", n->getStringValue("name"));
     fgSetString("/sim/current-view/type", n->getStringValue("type"));
 
@@ -357,12 +361,13 @@ FGViewMgr::copyToCurrent()
                 n->getDoubleValue("config/default-field-of-view-deg"));
     fgSetBool("/sim/current-view/config/from-model",
                 n->getBoolValue("config/from-model"));
+#endif
 
     // copy view data
     fgSetDouble("/sim/current-view/x-offset-m", getViewXOffset_m());
     fgSetDouble("/sim/current-view/y-offset-m", getViewYOffset_m());
     fgSetDouble("/sim/current-view/z-offset-m", getViewZOffset_m());
-
+#if 0
     fgSetDouble("/sim/current-view/goal-heading-offset-deg",
                 get_current_view()->getGoalHeadingOffset_deg());
     fgSetDouble("/sim/current-view/goal-pitch-offset-deg",
@@ -375,6 +380,8 @@ FGViewMgr::copyToCurrent()
                 get_current_view()->getPitchOffset_deg());
     fgSetDouble("/sim/current-view/roll-offset-deg",
                 get_current_view()->getRollOffset_deg());
+#endif
+
     fgSetDouble("/sim/current-view/target-x-offset-m",
                 get_current_view()->getTargetXOffset_m());
     fgSetDouble("/sim/current-view/target-y-offset-m",
@@ -448,102 +455,6 @@ FGViewMgr::add_view( flightgear::View * v )
 {
   views.push_back(v);
   v->init();
-}
-    
-double
-FGViewMgr::getViewHeadingOffset_deg () const
-{
-  const flightgear::View * view = get_current_view();
-  return (view == 0 ? 0 : view->getHeadingOffset_deg());
-}
-
-void
-FGViewMgr::setViewHeadingOffset_deg (double offset)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0) {
-    view->setGoalHeadingOffset_deg(offset);
-    view->setHeadingOffset_deg(offset);
-  }
-}
-
-double
-FGViewMgr::getViewGoalHeadingOffset_deg () const
-{
-  const flightgear::View * view = get_current_view();
-  return (view == 0 ? 0 : view->getGoalHeadingOffset_deg());
-}
-
-void
-FGViewMgr::setViewGoalHeadingOffset_deg (double offset)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0)
-    view->setGoalHeadingOffset_deg(offset);
-}
-
-double
-FGViewMgr::getViewPitchOffset_deg () const
-{
-  const flightgear::View * view = get_current_view();
-  return (view == 0 ? 0 : view->getPitchOffset_deg());
-}
-
-void
-FGViewMgr::setViewPitchOffset_deg (double tilt)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0) {
-    view->setGoalPitchOffset_deg(tilt);
-    view->setPitchOffset_deg(tilt);
-  }
-}
-
-double
-FGViewMgr::getGoalViewPitchOffset_deg () const
-{
-  const flightgear::View * view = get_current_view();
-  return (view == 0 ? 0 : view->getGoalPitchOffset_deg());
-}
-
-void
-FGViewMgr::setGoalViewPitchOffset_deg (double tilt)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0)
-    view->setGoalPitchOffset_deg(tilt);
-}
-
-double
-FGViewMgr::getViewRollOffset_deg () const
-{
-  const flightgear::View * view = get_current_view();
-  return (view == 0 ? 0 : view->getRollOffset_deg());
-}
-
-void
-FGViewMgr::setViewRollOffset_deg (double tilt)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0) {
-    view->setGoalRollOffset_deg(tilt);
-    view->setRollOffset_deg(tilt);
-  }
-}
-
-double
-FGViewMgr::getGoalViewRollOffset_deg () const
-{
-  const flightgear::View * view = get_current_view();
-  return (view == 0 ? 0 : view->getGoalRollOffset_deg());
-}
-
-void
-FGViewMgr::setGoalViewRollOffset_deg (double tilt)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0)
-    view->setGoalRollOffset_deg(tilt);
 }
 
 double
@@ -694,10 +605,21 @@ FGViewMgr::setView (int newview)
   if (newview >= (int)views.size())
     newview = 0;
 
+    if (get_current_view()) {
+        get_current_view()->unbind();
+    }
+
   // set new view
   current = newview;
+
+    if (get_current_view()) {
+        get_current_view()->bind();
+    }
+
   // copy in view data
   copyToCurrent();
+
+
 
     // force an update now, to avoid returning bogus data.
     // real fix would to be make all the accessors use the dirty mechanism
