@@ -78,6 +78,8 @@ public:
     // Part 2: user settings.
     //////////////////////////////////////////////////////////////////////
 
+    void resetOffsetsAndFOV();
+
     ViewType getType() const { return _type; }
     void setType( int type );
 
@@ -284,12 +286,13 @@ private:
     // out the tail, Y is out the right wing, and Z is positive up.
     // distance in meters
     SGVec3d _offset_m;
+    SGVec3d _configOffset_m;
 
     // Target offsets from FDM origin (for "lookat" targets) The X
     // axis is positive out the tail, Y is out the right wing, and Z
     // is positive up.  distance in meters
     SGVec3d _target_offset_m;
-
+    SGVec3d _configTargetOffset_m;
 
     // orientation offsets from reference (_goal* are for smoothed transitions)
     double _roll_offset_deg;

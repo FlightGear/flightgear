@@ -89,6 +89,8 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _offset_m.x() = x_offset_m;
     _offset_m.y() = y_offset_m;
     _offset_m.z() = z_offset_m;
+    _configOffset_m = _offset_m;
+
     _heading_offset_deg = heading_offset_deg;
     _pitch_offset_deg = pitch_offset_deg;
     _roll_offset_deg = roll_offset_deg;
@@ -112,6 +114,8 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _target_offset_m.x() = target_x_offset_m;
     _target_offset_m.y() = target_y_offset_m;
     _target_offset_m.z() = target_z_offset_m;
+    _configTargetOffset_m = _target_offset_m;
+
     _ground_level_nearplane_m = near_m;
     // a reasonable guess for init, so that the math doesn't blow up
 }
@@ -189,7 +193,9 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
 
 
 // Destructor
-View::~View( void ) {
+View::~View( void )
+{
+    _tiedProperties.Untie();
 }
 
 void
@@ -203,36 +209,44 @@ View::bind ()
     _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
     _tiedProperties.Tie("heading-offset-deg", this,
                          &View::getHeadingOffset_deg,
-                         &View::setHeadingOffset_deg_property);
+                         &View::setHeadingOffset_deg_property,
+                        false /* do not set current property value */);
 
      fgSetArchivable("/sim/current-view/heading-offset-deg");
 
     _tiedProperties.Tie("goal-heading-offset-deg", this,
                         &View::getGoalHeadingOffset_deg,
-                        &View::setGoalHeadingOffset_deg);
+                        &View::setGoalHeadingOffset_deg,
+                        false /* do not set current property value */);
 
     fgSetArchivable("/sim/current-view/goal-heading-offset-deg");
 
     _tiedProperties.Tie("pitch-offset-deg", this,
                         &View::getPitchOffset_deg,
-                        &View::setPitchOffset_deg_property);
+                        &View::setPitchOffset_deg_property,
+                        false /* do not set current property value */);
     fgSetArchivable("/sim/current-view/pitch-offset-deg");
     _tiedProperties.Tie("goal-pitch-offset-deg", this,
                         &View::getGoalPitchOffset_deg,
-                        &View::setGoalPitchOffset_deg);
+                        &View::setGoalPitchOffset_deg,
+                        false /* do not set current property value */);
     fgSetArchivable("/sim/current-view/goal-pitch-offset-deg");
     _tiedProperties.Tie("roll-offset-deg", this,
                         &View::getRollOffset_deg,
-                        &View::setRollOffset_deg_property);
+                        &View::setRollOffset_deg_property,
+                        false /* do not set current property value */);
     fgSetArchivable("/sim/current-view/roll-offset-deg");
     _tiedProperties.Tie("goal-roll-offset-deg", this,
                         &View::getGoalRollOffset_deg,
-                        &View::setGoalRollOffset_deg);
+                        &View::setGoalRollOffset_deg,
+                        false /* do not set current property value */);
     fgSetArchivable("/sim/current-view/goal-roll-offset-deg");
 
-
+// following config properties are exposed on current-view but don't change,
+// so we can simply copy them here.
     _tiedProperties.getRoot()->setStringValue("name", _name);
     _tiedProperties.getRoot()->setStringValue("type", _typeString);
+    _tiedProperties.getRoot()->setBoolValue("internal", _internal);
 
     SGPropertyNode_ptr config = _tiedProperties.getRoot()->getChild("config", 0, true);
     config->setBoolValue("from-model", _from_model);
@@ -240,12 +254,33 @@ View::bind ()
     config->setDoubleValue("pitch-offset-deg", _configPitchOffsetDeg);
     config->setDoubleValue("roll-offset-deg", _configRollOffsetDeg);
     config->setDoubleValue("default-field-of-view-deg", _configFOV_deg);
+
+// following properties are not tied, but copied each frame (for now).
+// copying /in/ happens in FGViewMgr::update; this is where we copy our current
+// values /out/ when we are activated
+    _tiedProperties.getRoot()->setDoubleValue("x-offset-m", getXOffset_m());
+    _tiedProperties.getRoot()->setDoubleValue("y-offset-m", getYOffset_m());
+    _tiedProperties.getRoot()->setDoubleValue("z-offset-m", getZOffset_m());
+
+    _tiedProperties.getRoot()->setDoubleValue("target-x-offset-m", getTargetXOffset_m());
+    _tiedProperties.getRoot()->setDoubleValue("target-y-offset-m", getTargetYOffset_m());
+    _tiedProperties.getRoot()->setDoubleValue("target-z-offset-m", getTargetZOffset_m());
 }
 
 void
 View::unbind ()
 {
     _tiedProperties.Untie();
+}
+
+void View::resetOffsetsAndFOV()
+{
+    _target_offset_m = _configTargetOffset_m;
+    _offset_m = _configOffset_m;
+    _pitch_offset_deg = _configPitchOffsetDeg;
+    _heading_offset_deg = _configHeadingOffsetDeg;
+    _roll_offset_deg = _configRollOffsetDeg;
+    _fov_deg = _configFOV_deg;
 }
 
 void

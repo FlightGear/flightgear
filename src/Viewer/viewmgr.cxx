@@ -66,13 +66,7 @@ FGViewMgr::init ()
   
   inited = true;
   
-  // stash properties
-  current_x_offs = fgGetNode("/sim/current-view/x-offset-m", true);
-  current_y_offs = fgGetNode("/sim/current-view/y-offset-m", true);
-  current_z_offs = fgGetNode("/sim/current-view/z-offset-m", true);
-  target_x_offs  = fgGetNode("/sim/current-view/target-x-offset-m", true);
-  target_y_offs  = fgGetNode("/sim/current-view/target-y-offset-m", true);
-  target_z_offs  = fgGetNode("/sim/current-view/target-z-offset-m", true);
+
 
 
   for (unsigned int i = 0; i < config_list.size(); i++) {
@@ -87,6 +81,8 @@ FGViewMgr::init ()
 
   copyToCurrent();
   do_bind();
+
+    get_current_view()->bind();
 }
 
 void
@@ -105,45 +101,16 @@ FGViewMgr::shutdown()
     }
     
     inited = false;
+    views.clear();
 }
 
 void
 FGViewMgr::reinit ()
 {
-  int current_view_index = current;
-
-  // reset offsets and fov to configuration defaults
-  for (unsigned int i = 0; i < config_list.size(); i++) {
-    SGPropertyNode *n = config_list[i];
-    setView(i);
-
-    fgSetDouble("/sim/current-view/x-offset-m",
-        n->getDoubleValue("config/x-offset-m"));
-    fgSetDouble("/sim/current-view/y-offset-m",
-        n->getDoubleValue("config/y-offset-m"));
-    fgSetDouble("/sim/current-view/z-offset-m",
-        n->getDoubleValue("config/z-offset-m"));
-    fgSetDouble("/sim/current-view/pitch-offset-deg",
-        n->getDoubleValue("config/pitch-offset-deg"));
-    fgSetDouble("/sim/current-view/heading-offset-deg",
-        n->getDoubleValue("config/heading-offset-deg"));
-    fgSetDouble("/sim/current-view/roll-offset-deg",
-        n->getDoubleValue("config/roll-offset-deg"));
-
-    double fov_deg = n->getDoubleValue("config/default-field-of-view-deg");
-    if (fov_deg < 10.0)
-      fov_deg = 55.0;
-    fgSetDouble("/sim/current-view/field-of-view", fov_deg);
-
-    // target offsets for lookat mode only...
-    fgSetDouble("/sim/current-view/target-x-offset-m",
-        n->getDoubleValue("config/target-x-offset-m"));
-    fgSetDouble("/sim/current-view/target-y-offset-m",
-        n->getDoubleValue("config/target-y-offset-m"));
-    fgSetDouble("/sim/current-view/target-z-offset-m",
-        n->getDoubleValue("config/target-z-offset-m"));
-  }
-  setView(current_view_index);
+    viewer_list::iterator it;
+    for (it = views.begin(); it != views.end(); ++it) {
+        (*it)->resetOffsetsAndFOV();
+    }
 }
 
 typedef double (FGViewMgr::*double_getter)() const;
@@ -153,6 +120,13 @@ FGViewMgr::bind()
 {
   // view-manager code was designed to init before bind, so
   // this is a no-op; init() calls the real bind() impl below
+
+    current_x_offs = fgGetNode("/sim/current-view/x-offset-m", true);
+    current_y_offs = fgGetNode("/sim/current-view/y-offset-m", true);
+    current_z_offs = fgGetNode("/sim/current-view/z-offset-m", true);
+    target_x_offs  = fgGetNode("/sim/current-view/target-x-offset-m", true);
+    target_y_offs  = fgGetNode("/sim/current-view/target-y-offset-m", true);
+    target_z_offs  = fgGetNode("/sim/current-view/target-z-offset-m", true);
 }
 
 void
@@ -160,39 +134,12 @@ FGViewMgr::do_bind()
 {  
   // these are bound to the current view properties
   _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
- // _tiedProperties.Tie("heading-offset-deg", this,
- //                     &FGViewMgr::getViewHeadingOffset_deg,
- //                     &FGViewMgr::setViewHeadingOffset_deg);
- // fgSetArchivable("/sim/current-view/heading-offset-deg");
- // _tiedProperties.Tie("goal-heading-offset-deg", this,
-  //                    &FGViewMgr::getViewGoalHeadingOffset_deg,
-   //                   &FGViewMgr::setViewGoalHeadingOffset_deg);
-  //fgSetArchivable("/sim/current-view/goal-heading-offset-deg");
-#if 0
-  _tiedProperties.Tie("pitch-offset-deg", this,
-                      &FGViewMgr::getViewPitchOffset_deg,
-                      &FGViewMgr::setViewPitchOffset_deg);
-  fgSetArchivable("/sim/current-view/pitch-offset-deg");
-  _tiedProperties.Tie("goal-pitch-offset-deg", this,
-                      &FGViewMgr::getGoalViewPitchOffset_deg,
-                      &FGViewMgr::setGoalViewPitchOffset_deg);
-  fgSetArchivable("/sim/current-view/goal-pitch-offset-deg");
-  _tiedProperties.Tie("roll-offset-deg", this,
-                      &FGViewMgr::getViewRollOffset_deg,
-                      &FGViewMgr::setViewRollOffset_deg);
-  fgSetArchivable("/sim/current-view/roll-offset-deg");
-  _tiedProperties.Tie("goal-roll-offset-deg", this,
-                      &FGViewMgr::getGoalViewRollOffset_deg,
-                      &FGViewMgr::setGoalViewRollOffset_deg);
-  fgSetArchivable("/sim/current-view/goal-roll-offset-deg");
-#endif
-    
+
   _tiedProperties.Tie("view-number", this,
                       &FGViewMgr::getView, &FGViewMgr::setView);
   SGPropertyNode* view_number =
     _tiedProperties.getRoot()->getNode("view-number");
   view_number->setAttribute(SGPropertyNode::ARCHIVE, false);
-
   // Keep view on reset/reinit
   view_number->setAttribute(SGPropertyNode::PRESERVE, true);
 
@@ -257,9 +204,20 @@ FGViewMgr::do_bind()
 void
 FGViewMgr::unbind ()
 {
+    flightgear::View* v = get_current_view();
+    if (v) {
+        v->unbind();
+    }
+
   _tiedProperties.Untie();
     config_list.clear();
     view_number.clear();
+    target_x_offs.clear();
+    target_y_offs.clear();
+    target_z_offs.clear();
+    current_x_offs.clear();
+    current_y_offs.clear();
+    current_z_offs.clear();
 }
 
 void
@@ -306,6 +264,8 @@ FGViewMgr::update (double dt)
     }
   }
 
+    // these properties aren't tied - manually propogate them to the
+    // currently active view
   setViewXOffset_m(current_x_offs->getDoubleValue());
   setViewYOffset_m(current_y_offs->getDoubleValue());
   setViewZOffset_m(current_z_offs->getDoubleValue());
@@ -340,56 +300,6 @@ FGViewMgr::update (double dt)
 void
 FGViewMgr::copyToCurrent()
 {
-    if (!inited) {
-        return;
-    }
-
-#if 0
-    SGPropertyNode *n = config_list[current];
-
-    fgSetString("/sim/current-view/name", n->getStringValue("name"));
-    fgSetString("/sim/current-view/type", n->getStringValue("type"));
-
-    // copy certain view config data for default values
-    fgSetDouble("/sim/current-view/config/heading-offset-deg",
-                n->getDoubleValue("config/default-heading-offset-deg"));
-    fgSetDouble("/sim/current-view/config/pitch-offset-deg",
-                n->getDoubleValue("config/pitch-offset-deg"));
-    fgSetDouble("/sim/current-view/config/roll-offset-deg",
-                n->getDoubleValue("config/roll-offset-deg"));
-    fgSetDouble("/sim/current-view/config/default-field-of-view-deg",
-                n->getDoubleValue("config/default-field-of-view-deg"));
-    fgSetBool("/sim/current-view/config/from-model",
-                n->getBoolValue("config/from-model"));
-#endif
-
-    // copy view data
-    fgSetDouble("/sim/current-view/x-offset-m", getViewXOffset_m());
-    fgSetDouble("/sim/current-view/y-offset-m", getViewYOffset_m());
-    fgSetDouble("/sim/current-view/z-offset-m", getViewZOffset_m());
-#if 0
-    fgSetDouble("/sim/current-view/goal-heading-offset-deg",
-                get_current_view()->getGoalHeadingOffset_deg());
-    fgSetDouble("/sim/current-view/goal-pitch-offset-deg",
-                get_current_view()->getGoalPitchOffset_deg());
-    fgSetDouble("/sim/current-view/goal-roll-offset-deg",
-                get_current_view()->getRollOffset_deg());
-    fgSetDouble("/sim/current-view/heading-offset-deg",
-                get_current_view()->getHeadingOffset_deg());
-    fgSetDouble("/sim/current-view/pitch-offset-deg",
-                get_current_view()->getPitchOffset_deg());
-    fgSetDouble("/sim/current-view/roll-offset-deg",
-                get_current_view()->getRollOffset_deg());
-#endif
-
-    fgSetDouble("/sim/current-view/target-x-offset-m",
-                get_current_view()->getTargetXOffset_m());
-    fgSetDouble("/sim/current-view/target-y-offset-m",
-                get_current_view()->getTargetYOffset_m());
-    fgSetDouble("/sim/current-view/target-z-offset-m",
-                get_current_view()->getTargetZOffset_m());
-    fgSetBool("/sim/current-view/internal",
-                get_current_view()->getInternal());
 }
 
 void FGViewMgr::clear()
