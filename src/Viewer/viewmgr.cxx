@@ -30,8 +30,12 @@
 #include <string.h>        // strcmp
 
 #include <simgear/compiler.h>
+#include <simgear/scene/util/OsgMath.hxx>
+
 #include <Main/fg_props.hxx>
 #include "viewer.hxx"
+
+#include "CameraGroup.hxx"
 
 // Constructor
 FGViewMgr::FGViewMgr( void ) :
@@ -117,7 +121,7 @@ FGViewMgr::init ()
       double target_y_offset_m = config->getDoubleValue("target-y-offset-m");
       double target_z_offset_m = config->getDoubleValue("target-z-offset-m");
 
-      add_view(new FGViewer ( FG_LOOKAT, from_model, from_model_index,
+        add_view(new FGViewer ( FGViewer::FG_LOOKAT, from_model, from_model_index,
                               at_model, at_model_index,
                               damp_roll, damp_pitch, damp_heading,
                               x_offset_m, y_offset_m,z_offset_m,
@@ -126,7 +130,7 @@ FGViewMgr::init ()
                               target_x_offset_m, target_y_offset_m,
                               target_z_offset_m, near_m, internal ));
     } else {
-      add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index,
+        add_view(new FGViewer ( FGViewer::FG_LOOKFROM, from_model, from_model_index,
                               false, 0, 0.0, 0.0, 0.0,
                               x_offset_m, y_offset_m, z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
@@ -338,7 +342,7 @@ FGViewMgr::update (double dt)
   }
 
   // if lookat (type 1) then get target data...
-  if (currentView->getType() == FG_LOOKAT) {
+    if (currentView->getType() == FGViewer::FG_LOOKAT) {
     if (!config->getBoolValue("from-model")) {
       lon_deg = fgGetDouble(config->getStringValue("target-lon-deg-path"));
       lat_deg = fgGetDouble(config->getStringValue("target-lat-deg-path"));
@@ -369,7 +373,15 @@ FGViewMgr::update (double dt)
   do_axes();
   currentView->update(dt);
   abs_viewer_position = currentView->getViewPosition();
-  
+
+
+// update the camera now
+    osg::ref_ptr<flightgear::CameraGroup> cameraGroup = flightgear::CameraGroup::getDefault();
+    cameraGroup->update(toOsg(abs_viewer_position),
+                        toOsg(currentView->getViewOrientation()));
+    cameraGroup->setCameraParameters(currentView->get_v_fov(),
+                                     cameraGroup->getMasterAspectRatio());
+
   // expose the raw (OpenGL) orientation to the property tree,
   // for the sound-manager
   for (int i=0; i<4; ++i) {

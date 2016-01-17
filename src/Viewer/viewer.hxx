@@ -27,12 +27,6 @@
 #ifndef _VIEWER_HXX
 #define _VIEWER_HXX                                
 
-namespace flightgear
-{
-class CameraGroup;
-}
-
-#include <osg/ref_ptr>
 
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
@@ -42,25 +36,26 @@ class CameraGroup;
 #define FG_FOV_MIN 0.1
 #define FG_FOV_MAX 179.9
 
-enum fgViewType {
- FG_LOOKFROM = 0,
- FG_LOOKAT = 1
-};
-
 // Define a structure containing view information
 class FGViewer : public SGSubsystem {
 
 public:
 
-    enum fgScalingType {  // nominal Field Of View actually applies to ...
+    enum ScalingType {  // nominal Field Of View actually applies to ...
 	FG_SCALING_WIDTH,       // window width
 	FG_SCALING_MAX          // max(width, height)
 	// FG_SCALING_G_MEAN,      // geometric_mean(width, height)
 	// FG_SCALING_INDEPENDENT  // whole screen
     };
 
+    enum ViewType {
+        FG_LOOKFROM = 0,
+        FG_LOOKAT = 1
+    };
+
+
     // Constructor
-    FGViewer( fgViewType Type, bool from_model, int from_model_index,
+    FGViewer( ViewType Type, bool from_model, int from_model_index,
               bool at_model, int at_model_index,
               double damp_roll, double damp_pitch, double damp_heading,
               double x_offset_m, double y_offset_m, double z_offset_m,
@@ -80,29 +75,29 @@ public:
     virtual void init ();
     virtual void bind ();
     virtual void unbind ();
-    void update (double dt);
+    virtual void update (double dt);
 
 
     //////////////////////////////////////////////////////////////////////
     // Part 2: user settings.
     //////////////////////////////////////////////////////////////////////
 
-    virtual fgViewType getType() const { return _type; }
-    virtual void setType( int type );
+    ViewType getType() const { return _type; }
+    void setType( int type );
 
-    virtual bool getInternal() const { return _internal; }
-    virtual void setInternal( bool internal );
+    bool getInternal() const { return _internal; }
+    void setInternal( bool internal );
 
     // Reference geodetic position of view from position...
     //   These are the actual aircraft position (pilot in
     //   pilot view, model in model view).
     //   FIXME: the model view position (ie target positions) 
     //   should be in the model class.
-    virtual void setPosition (double lon_deg, double lat_deg, double alt_ft);
+    void setPosition (double lon_deg, double lat_deg, double alt_ft);
     const SGGeod& getPosition() const { return _position; }
 
     // Reference geodetic target position...
-    virtual void setTargetPosition (double lon_deg, double lat_deg, double alt_ft);
+    void setTargetPosition (double lon_deg, double lat_deg, double alt_ft);
     const SGGeod& getTargetPosition() const { return _target; }
 
 
@@ -119,20 +114,20 @@ public:
     //   orientation rotations listed below.  This has the effect of the 
     //   eye moving around and "looking at" the object (model) from 
     //   different angles.
-    virtual SGVec3d getOffset_m () const { return _offset_m; }
-    virtual double getXOffset_m () const { return _offset_m.x(); }
-    virtual double getYOffset_m () const { return _offset_m.y(); }
-    virtual double getZOffset_m () const { return _offset_m.z(); }
-    virtual double getTargetXOffset_m () const { return _target_offset_m.x(); }
-    virtual double getTargetYOffset_m () const { return _target_offset_m.y(); }
-    virtual double getTargetZOffset_m () const { return _target_offset_m.z(); }
-    virtual void setXOffset_m (double x_offset_m);
-    virtual void setYOffset_m (double y_offset_m);
-    virtual void setZOffset_m (double z_offset_m);
-    virtual void setTargetXOffset_m (double x_offset_m);
-    virtual void setTargetYOffset_m (double y_offset_m);
-    virtual void setTargetZOffset_m (double z_offset_m);
-    virtual void setPositionOffsets (double x_offset_m,
+    SGVec3d getOffset_m () const { return _offset_m; }
+    double getXOffset_m () const { return _offset_m.x(); }
+    double getYOffset_m () const { return _offset_m.y(); }
+    double getZOffset_m () const { return _offset_m.z(); }
+    double getTargetXOffset_m () const { return _target_offset_m.x(); }
+    double getTargetYOffset_m () const { return _target_offset_m.y(); }
+    double getTargetZOffset_m () const { return _target_offset_m.z(); }
+    void setXOffset_m (double x_offset_m);
+    void setYOffset_m (double y_offset_m);
+    void setZOffset_m (double z_offset_m);
+    void setTargetXOffset_m (double x_offset_m);
+    void setTargetYOffset_m (double y_offset_m);
+    void setTargetZOffset_m (double z_offset_m);
+    void setPositionOffsets (double x_offset_m,
 				     double y_offset_m,
 				     double z_offset_m);
 
@@ -147,20 +142,20 @@ public:
     //   the eye is looking at the ojbect (ie the model).
     //   FIXME: the FGModel class should have its own version of these so that
     //   it can generate it's own model rotations.
-    virtual double getRoll_deg () const { return _roll_deg; }
-    virtual double getPitch_deg () const {return _pitch_deg; }
-    virtual double getHeading_deg () const {return _heading_deg; }
-    virtual void setRoll_deg (double roll_deg);
-    virtual void setPitch_deg (double pitch_deg);
-    virtual void setHeading_deg (double heading_deg);
-    virtual void setOrientation (double roll_deg, double pitch_deg, double heading_deg);
-    virtual double getTargetRoll_deg () const { return _target_roll_deg; }
-    virtual double getTargetPitch_deg () const {return _target_pitch_deg; }
-    virtual double getTargetHeading_deg () const {return _target_heading_deg; }
-    virtual void setTargetRoll_deg (double roll_deg);
-    virtual void setTargetPitch_deg (double pitch_deg);
-    virtual void setTargetHeading_deg (double heading_deg);
-    virtual void setTargetOrientation (double roll_deg, double pitch_deg, double heading_deg);
+    double getRoll_deg () const { return _roll_deg; }
+    double getPitch_deg () const {return _pitch_deg; }
+    double getHeading_deg () const {return _heading_deg; }
+    void setRoll_deg (double roll_deg);
+    void setPitch_deg (double pitch_deg);
+    void setHeading_deg (double heading_deg);
+    void setOrientation (double roll_deg, double pitch_deg, double heading_deg);
+    double getTargetRoll_deg () const { return _target_roll_deg; }
+    double getTargetPitch_deg () const {return _target_pitch_deg; }
+    double getTargetHeading_deg () const {return _target_heading_deg; }
+    void setTargetRoll_deg (double roll_deg);
+    void setTargetPitch_deg (double pitch_deg);
+    void setTargetHeading_deg (double heading_deg);
+    void setTargetOrientation (double roll_deg, double pitch_deg, double heading_deg);
 
 
 
@@ -175,19 +170,19 @@ public:
     //   In lookat view they are applied before the position offsets so that
     //   the effect is the eye moving around looking at the object (ie the model)
     //   from different angles.
-    virtual double getRollOffset_deg () const { return _roll_offset_deg; }
-    virtual double getPitchOffset_deg () const { return _pitch_offset_deg; }
-    virtual double getHeadingOffset_deg () const { return _heading_offset_deg; }
-    virtual double getGoalRollOffset_deg () const { return _goal_roll_offset_deg; }
-    virtual double getGoalPitchOffset_deg () const { return _goal_pitch_offset_deg; }
-    virtual double getGoalHeadingOffset_deg () const {return _goal_heading_offset_deg; }
-    virtual void setRollOffset_deg (double roll_offset_deg);
-    virtual void setPitchOffset_deg (double pitch_offset_deg);
-    virtual void setHeadingOffset_deg (double heading_offset_deg);
-    virtual void setGoalRollOffset_deg (double goal_roll_offset_deg);
-    virtual void setGoalPitchOffset_deg (double goal_pitch_offset_deg);
-    virtual void setGoalHeadingOffset_deg (double goal_heading_offset_deg);
-    virtual void setOrientationOffsets (double roll_offset_deg,
+    double getRollOffset_deg () const { return _roll_offset_deg; }
+    double getPitchOffset_deg () const { return _pitch_offset_deg; }
+    double getHeadingOffset_deg () const { return _heading_offset_deg; }
+    double getGoalRollOffset_deg () const { return _goal_roll_offset_deg; }
+    double getGoalPitchOffset_deg () const { return _goal_pitch_offset_deg; }
+    double getGoalHeadingOffset_deg () const {return _goal_heading_offset_deg; }
+    void setRollOffset_deg (double roll_offset_deg);
+    void setPitchOffset_deg (double pitch_offset_deg);
+    void setHeadingOffset_deg (double heading_offset_deg);
+    void setGoalRollOffset_deg (double goal_roll_offset_deg);
+    void setGoalPitchOffset_deg (double goal_pitch_offset_deg);
+    void setGoalHeadingOffset_deg (double goal_heading_offset_deg);
+    void setOrientationOffsets (double roll_offset_deg,
 				     double heading_offset_deg,
 				     double pitch_offset_deg);
 
@@ -208,24 +203,26 @@ public:
     // Part 4: View and frustrum data setters and getters
     //////////////////////////////////////////////////////////////////////
 
-    virtual void set_fov( double fov_deg ) {
+    void set_fov( double fov_deg ) {
 	_fov_deg = fov_deg;
     }
-    virtual double get_fov() const { return _fov_deg; }
-    virtual double get_h_fov();    // Get horizontal fov, in degrees.
-    virtual double get_v_fov();    // Get vertical fov, in degrees.
 
-    virtual double get_aspect_ratio() const;
+    double get_fov() const { return _fov_deg; }
+    double get_h_fov();    // Get horizontal fov, in degrees.
+    double get_v_fov();    // Get vertical fov, in degrees.
 
-    virtual void set_aspect_ratio_multiplier( double m ) {
+    // this is currently just a wrapper for the default CameraGroups' aspect
+    double get_aspect_ratio() const;
+
+    void set_aspect_ratio_multiplier( double m ) {
 	_aspect_ratio_multiplier = m;
     }
-    virtual double get_aspect_ratio_multiplier() const {
+    double get_aspect_ratio_multiplier() const {
         return _aspect_ratio_multiplier;
     }
 
-    virtual double getNear_m () const { return _ground_level_nearplane_m; }
-    inline void setNear_m (double near_m) {
+    double getNear_m () const { return _ground_level_nearplane_m; }
+    void setNear_m (double near_m) {
         _ground_level_nearplane_m = near_m;
     }
 
@@ -233,8 +230,8 @@ public:
     // Part 5: misc setters and getters
     //////////////////////////////////////////////////////////////////////
 
-    inline void set_dirty() { _dirty = true; }
-    inline void set_clean() { _dirty = false; }
+    void set_dirty() { _dirty = true; }
+    void set_clean() { _dirty = false; }
     
 private:
 
@@ -285,8 +282,8 @@ private:
     // used to set nearplane when at ground level for this view
     double _ground_level_nearplane_m;
 
-    fgViewType _type;
-    fgScalingType _scaling_type;
+    ViewType _type;
+    ScalingType _scaling_type;
 
     // internal view (e.g. cockpit) flag
     bool _internal;
@@ -306,8 +303,6 @@ private:
     // multiplied into the aspect_ratio to get the actual vertical fov
     double _aspect_ratio_multiplier;
 
-    // camera group controled by this view
-    osg::ref_ptr<flightgear::CameraGroup> _cameraGroup;
     //////////////////////////////////////////////////////////////////
     // private functions                                            //
     //////////////////////////////////////////////////////////////////

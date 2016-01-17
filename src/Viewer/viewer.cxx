@@ -48,7 +48,7 @@ using namespace flightgear;
 ////////////////////////////////////////////////////////////////////////
 
 // Constructor...
-FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
+FGViewer::FGViewer( ViewType Type, bool from_model, int from_model_index,
                     bool at_model, int at_model_index,
                     double damp_roll, double damp_pitch, double damp_heading,
                     double x_offset_m, double y_offset_m, double z_offset_m,
@@ -64,8 +64,7 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _target_roll_deg(0),
     _target_pitch_deg(0),
     _target_heading_deg(0),
-    _scaling_type(FG_SCALING_MAX),
-    _cameraGroup(CameraGroup::getDefault())
+    _scaling_type(FG_SCALING_MAX)
 {
     _absolute_view_pos = SGVec3d(0, 0, 0);
     _type = Type;
@@ -534,7 +533,7 @@ FGViewer::updateDampOutput(double dt)
 double
 FGViewer::get_h_fov()
 {
-    double aspectRatio = _cameraGroup->getMasterAspectRatio();
+    double aspectRatio = get_aspect_ratio();
     switch (_scaling_type) {
     case FG_SCALING_WIDTH:  // h_fov == fov
 	return _fov_deg;
@@ -560,7 +559,7 @@ FGViewer::get_h_fov()
 double
 FGViewer::get_v_fov()
 {
-    double aspectRatio = _cameraGroup->getMasterAspectRatio();
+    double aspectRatio = get_aspect_ratio();
     switch (_scaling_type) {
     case FG_SCALING_WIDTH:  // h_fov == fov
 	return 
@@ -663,12 +662,10 @@ FGViewer::update (double dt)
     }
   }
   recalc();
-  
-  _cameraGroup->update(toOsg(_absolute_view_pos), toOsg(mViewOrientation));
-  _cameraGroup->setCameraParameters(get_v_fov(), get_aspect_ratio());
 }
 
 double FGViewer::get_aspect_ratio() const
 {
-    return _cameraGroup->getMasterAspectRatio();
+    return flightgear::CameraGroup::getDefault()->getMasterAspectRatio();
 }
+
