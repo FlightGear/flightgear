@@ -281,15 +281,13 @@ bool FGPropulsion::GetSteadyState(void)
   int steady_count = 0, j = 0;
   bool steady = false;
   bool TrimMode = FDMExec->GetTrimStatus();
-  bool suspended = FDMExec->IntegrationSuspended();
+  double TimeStep = FDMExec->GetDeltaT();
 
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
   if (!FGModel::Run(false)) {
     FDMExec->SetTrimStatus(true);
-    if (suspended)
-      FDMExec->ResumeIntegration();
     // This is a time marching algorithm so it needs a non-zero time step to
     // reach a steady state.
     in.TotalDeltaT = 0.5;
@@ -317,12 +315,7 @@ bool FGPropulsion::GetSteadyState(void)
     }
 
     FDMExec->SetTrimStatus(TrimMode);
-    if (suspended) {
-      FDMExec->SuspendIntegration();
-      in.TotalDeltaT = 0.0;
-    }
-    else
-      in.TotalDeltaT = FDMExec->GetDeltaT() * rate;
+    in.TotalDeltaT = TimeStep;
 
     return false;
   } else {
