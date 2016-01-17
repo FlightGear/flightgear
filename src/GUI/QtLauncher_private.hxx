@@ -82,7 +82,7 @@ private slots:
     void onSubsytemIdleTimeout();
 
     void onEditPaths();
-
+    void onChangeRoot();
 
     void onAircraftInstalledCompleted(QModelIndex index);
     void onAircraftInstallFailed(QModelIndex index, QString errorMessage);

@@ -134,6 +134,8 @@ public:
    * Used by early startup code before Options object is created
    */
   static bool checkForArg(int argc, char* argv[], const char* arg);
+
+      std::string platformDefaultRoot() const;
 private:
   void showUsage() const;
   
@@ -148,8 +150,7 @@ private:
      * to help the user our (finding a base package), and hence need to init Qt.
      */
   void setupRoot(int argc, char **argv);
-  
-  std::string platformDefaultRoot() const;
+
   
   class OptionsPrivate;
   std::auto_ptr<OptionsPrivate> p;

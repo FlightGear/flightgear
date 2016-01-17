@@ -44,6 +44,7 @@
 #include <QApplication>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
+#include <QProcess>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -353,13 +354,14 @@ void initApp(int& argc, char** argv)
         flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
 
         Qt::KeyboardModifiers mods = app->queryKeyboardModifiers();
-        if (mods & Qt::AltModifier) {
-            qWarning() << "Alt pressed during launch";
+        if (mods & (Qt::AltModifier | Qt::ShiftModifier)) {
+            qWarning() << "Alt/shift pressed during launch";
 
             // wipe out our settings
             QSettings settings;
             settings.clear();
 
+            settings.setValue("fg-root", "!ask");
 
             Options::sharedInstance()->addOption("restore-defaults", "");
         }
@@ -418,10 +420,12 @@ bool runLauncherDialog()
     loadNaturalEarthData();
 
     QtLauncher dlg;
-    dlg.exec();
+    dlg.show();
 
-    if (dlg.result() != QDialog::Accepted) {
-        return false;
+    int appResult = qApp->exec();
+    qDebug() << "App result:" << appResult;
+    if (appResult < 0) {
+        return false; // quit
     }
 
     // don't set scenery paths twice
@@ -486,6 +490,8 @@ QtLauncher::QtLauncher() :
 
     connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
     connect(m_ui->quitButton, SIGNAL(clicked()), this, SLOT(onQuit()));
+
+    connect(m_ui->changeRootButton, SIGNAL(clicked()), this, SLOT(onChangeRoot()));
 
     connect(m_ui->aircraftHistory, &QPushButton::clicked,
           this, &QtLauncher::onPopupAircraftHistory);
@@ -713,8 +719,6 @@ void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString nam
 
 void QtLauncher::onRun()
 {
-    accept();
-
     flightgear::Options* opt = flightgear::Options::sharedInstance();
     setEnableDisableOptionFromCheckbox(m_ui->terrasyncCheck, "terrasync");
     setEnableDisableOptionFromCheckbox(m_ui->fetchRealWxrCheckbox, "real-weather-fetch");
@@ -820,6 +824,8 @@ void QtLauncher::onRun()
     }
 
     saveSettings();
+
+    qApp->exit(0);
 }
 
 
@@ -864,7 +870,7 @@ void QtLauncher::onApply()
 
 void QtLauncher::onQuit()
 {
-    reject();
+    qApp->exit(-1);
 }
 
 void QtLauncher::onToggleTerrasync(bool enabled)
@@ -1124,6 +1130,54 @@ void QtLauncher::onEditPaths()
         // re-set scenery dirs
         setSceneryPaths();
     }
+}
+
+void QtLauncher::onChangeRoot()
+{
+    QMessageBox mbox(this);
+    mbox.setText(tr("Change the data files location used by FlightGear?"));
+    mbox.setInformativeText(tr("FlightGear cannot work without its data files. "
+                               "(Also called the base package) "
+                               "To change which files are used, quit FlightGear and open it again, "
+                               "while holding down the 'shift' key, and you will be able to choose a "
+                               "different data files location, or restore the default setting."));
+    QPushButton* quitButton = mbox.addButton(tr("Quit FlightGear now"), QMessageBox::YesRole);
+    mbox.addButton(QMessageBox::Cancel);
+    mbox.setDefaultButton(QMessageBox::Cancel);
+    mbox.setIconPixmap(QPixmap(":/app-icon-large"));
+
+    mbox.exec();
+    if (mbox.clickedButton() != quitButton) {
+        return;
+    }
+
+    // following code doesn't work reliably, so we take the simpler
+    // option of asking the user to re-launch us while holding down
+    // the hot-key (shift)
+#if 0
+    {
+        QSettings settings;
+        // set the option to the magic marker value
+        settings.setValue("fg-root", "!ask");
+    } // scope the ensure settings are written nicel
+
+    // Spawn a new instance of myApplication:
+    QProcess proc;
+#if defined(Q_OS_MAC)
+    QStringList args;
+
+    QDir dir(qApp->applicationDirPath()); // returns the 'MacOS' dir
+    dir.cdUp(); // up to 'contents' dir
+    dir.cdUp(); // up to .app dir
+    args << dir.absolutePath();
+    proc.startDetached("open", args);
+#else
+    proc.startDetached(qApp->applicationFilePath());
+#endif
+#endif
+
+    qDebug() << "doing app exit";
+    qApp->exit(-1);
 }
 
 simgear::pkg::PackageRef QtLauncher::packageForAircraftURI(QUrl uri) const

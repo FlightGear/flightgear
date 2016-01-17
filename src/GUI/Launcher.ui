@@ -151,9 +151,6 @@
         <number>4</number>
        </property>
        <item>
-        <widget class="QListView" name="aircraftList"/>
-       </item>
-       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <property name="spacing">
           <number>4</number>
@@ -233,6 +230,9 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QListView" name="aircraftList"/>
        </item>
       </layout>
      </widget>
@@ -486,10 +486,17 @@
        <item row="6" column="0">
         <widget class="QPushButton" name="pathsButton">
          <property name="text">
-          <string>Configure add-on aircraft and scenery</string>
+          <string>Configure add-on aircraft and scenery…</string>
          </property>
          <property name="startupOnly" stdset="0">
           <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QPushButton" name="changeRootButton">
+         <property name="text">
+          <string>Change data files location…</string>
          </property>
         </widget>
        </item>

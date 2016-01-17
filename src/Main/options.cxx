@@ -2493,19 +2493,26 @@ string Options::platformDefaultRoot() const
   
 void Options::setupRoot(int argc, char **argv)
 {
-  string root;
+    string root;
     bool usingDefaultRoot = false;
+
+#if defined(HAVE_QT)
+    flightgear::initApp(argc, argv);
+    root = SetupRootDialog::restoreUserSelectedRoot();
+#endif
 
   if (isOptionSet("fg-root")) {
     root = valueForOption("fg-root"); // easy!
   } else {
+
   // Next check if fg-root is set as an env variable
     char *envp = ::getenv( "FG_ROOT" );
     if ( envp != NULL ) {
       root = envp;
-    } else {
+// if we didn't restore a path from the Qt launcher, use the default here
+    } else if (root.empty()) {
         usingDefaultRoot = true;
-      root = platformDefaultRoot();
+        root = platformDefaultRoot();
     }
   } 
   
@@ -2515,18 +2522,12 @@ void Options::setupRoot(int argc, char **argv)
     string base_version = fgBasePackageVersion(root);
 
 #if defined(HAVE_QT)
+    // note we never end up here is resotring a user selected root via
+    // the Qt GUI, since that code pre-validates the path. But if we're using
+    // a command-line, env-var or default root this check can fail and
+    // we still want to use the GUI in that case
     if (base_version != required_version) {
-        flightgear::initApp(argc, argv);
-        if (SetupRootDialog::restoreUserSelectedRoot()) {
-            SG_LOG(SG_GENERAL, SG_INFO, "restored user selected fg_root = " << globals->get_fg_root() );
-            return;
-        }
-
-        SetupRootDialog dlg(usingDefaultRoot);
-        dlg.exec();
-        if (dlg.result() != QDialog::Accepted) {
-            exit(-1);
-        }
+        SetupRootDialog::runDialog(usingDefaultRoot);
     }
 #else
     // validate it

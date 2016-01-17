@@ -38,10 +38,12 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/options.hxx>
 #include <Include/version.h>
 
-SetupRootDialog::SetupRootDialog(bool usedDefaultPath) :
-    QDialog()
+SetupRootDialog::SetupRootDialog(PromptState prompt) :
+    QDialog(),
+    m_promptState(prompt)
 {
     m_ui.reset(new Ui::SetupRootDialog);
     m_ui->setupUi(this);
@@ -52,28 +54,63 @@ SetupRootDialog::SetupRootDialog(bool usedDefaultPath) :
             this, &SetupRootDialog::onDownload);
     connect(m_ui->buttonBox, &QDialogButtonBox::rejected,
             this, &QDialog::reject);
+    connect(m_ui->useDefaultsButton, &QPushButton::clicked,
+            this, &SetupRootDialog::onUseDefaults);
 
-    m_promptState = usedDefaultPath ? DefaultPathCheckFailed : ExplicitPathCheckFailed;
-    std::string ver = fgBasePackageVersion(globals->get_fg_root());
-    if (!ver.empty()) {
-        Q_ASSERT(ver != FLIGHTGEAR_VERSION); // otherwise what are we doing in here?!
-        m_promptState = VersionCheckFailed;
-    }
+    // decide if the 'use defaults' button should be enabled or not
+    bool ok = defaultRootAcceptable();
+    m_ui->useDefaultsButton->setEnabled(ok);
+    m_ui->useDefaultLabel->setEnabled(ok);
 
     m_ui->versionLabel->setText(tr("FlightGear version %1").arg(FLIGHTGEAR_VERSION));
     m_ui->bigIcon->setPixmap(QPixmap(":/app-icon-large"));
     updatePromptText();
 }
 
-bool SetupRootDialog::restoreUserSelectedRoot()
+bool SetupRootDialog::runDialog(bool usingDefaultRoot)
+{
+    SetupRootDialog::PromptState prompt =
+        usingDefaultRoot ? DefaultPathCheckFailed : ExplicitPathCheckFailed;
+    return runDialog(prompt);
+}
+
+bool SetupRootDialog::runDialog(PromptState prompt)
+{
+    SetupRootDialog dlg(prompt);
+    dlg.exec();
+    if (dlg.result() != QDialog::Accepted) {
+        exit(-1);
+    }
+
+    return true;
+}
+
+std::string SetupRootDialog::restoreUserSelectedRoot()
 {
     QSettings settings;
     QString path = settings.value("fg-root").toString();
+    if (path == "!ask") {
+        bool ok = runDialog(ManualChoiceRequested);
+        Q_ASSERT(ok);
+        // run dialog either exit()s or sets fg_root, so this
+        // behaviour is safe and correct.
+        return globals->get_fg_root();
+    }
+
+    if (path.isEmpty()) {
+        return std::string(); // use the default path
+    }
+
     if (validatePath(path) && validateVersion(path)) {
-        globals->set_fg_root(path.toStdString());
-        return true;
+        return path.toStdString();
     } else {
-        return false;
+        // we have an existing path but it's invalid. Let's ask the
+        // user what they want
+        bool ok = runDialog(VersionCheckFailed);
+        Q_ASSERT(ok);
+        // run dialog either exit()s or sets fg_root, so this
+        // behaviour is safe and correct.
+        return globals->get_fg_root();
     }
 }
 
@@ -107,6 +144,13 @@ bool SetupRootDialog::validateVersion(QString path)
 {
     std::string ver = fgBasePackageVersion(SGPath(path.toStdString()));
     return (ver == FLIGHTGEAR_VERSION);
+}
+
+bool SetupRootDialog::defaultRootAcceptable()
+{
+    std::string r = flightgear::Options::sharedInstance()->platformDefaultRoot();
+    QString defaultRoot = QString::fromStdString(r);
+    return validatePath(defaultRoot) && validateVersion(defaultRoot);
 }
 
 SetupRootDialog::~SetupRootDialog()
@@ -148,6 +192,16 @@ void SetupRootDialog::onDownload()
     QDesktopServices::openUrl(downloadUrl);
 }
 
+void SetupRootDialog::onUseDefaults()
+{
+    std::string r = flightgear::Options::sharedInstance()->platformDefaultRoot();
+    m_browsedPath = QString::fromStdString(r);
+    globals->set_fg_root(r);
+    QSettings settings;
+    settings.remove("fg-root"); // remove any setting
+    accept();
+}
+
 void SetupRootDialog::updatePromptText()
 {
     QString t;
@@ -170,6 +224,10 @@ void SetupRootDialog::updatePromptText()
                "Please install or select a matching set of data files.").arg(curVer).arg(QString::fromLatin1(FLIGHTGEAR_VERSION)).arg(curRoot);
         break;
     }
+
+    case ManualChoiceRequested:
+        t = tr("Please select or download a copy of the FlightGear data files.");
+        break;
 
     case ChoseInvalidLocation:
         t = tr("The choosen location (%1) does not appear to contain FlightGear data files. Please try another location.").arg(m_browsedPath);
