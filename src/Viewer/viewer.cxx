@@ -176,7 +176,7 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
                            target_x_offset_m, target_y_offset_m,
                          target_z_offset_m, near_m, internal );
         if (!from_model) {
-            v->_targetProperties = PositionAttitudeProperties(config, "target-");
+            v->_targetProperties.init(config, "target-");
         }
     } else {
         v = new View ( FG_LOOKFROM, from_model, from_model_index,
@@ -188,7 +188,7 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
     }
 
     if (!from_model) {
-        v->_eyeProperties = PositionAttitudeProperties(config, "eye-");
+        v->_eyeProperties.init(config, "eye-");
     }
 
     v->_name = config->getParent()->getStringValue("name");
@@ -306,17 +306,17 @@ View::setInternal ( bool internal )
 }
 
 void
-View::setPosition (double lon_deg, double lat_deg, double alt_ft)
+View::setPosition (const SGGeod& geod)
 {
   _dirty = true;
-  _position = SGGeod::fromDegFt(lon_deg, lat_deg, alt_ft);
+    _position = geod;
 }
 
 void
-View::setTargetPosition (double lon_deg, double lat_deg, double alt_ft)
+View::setTargetPosition (const SGGeod& geod)
 {
   _dirty = true;
-  _target = SGGeod::fromDegFt(lon_deg, lat_deg, alt_ft);
+    _target = geod;
 }
 
 void
@@ -769,10 +769,9 @@ void
 View::updateData()
 {
     if (!_from_model) {
-        SGVec3d pos = _eyeProperties.position();
+        SGGeod pos = _eyeProperties.position();
         SGVec3d att = _eyeProperties.attitude();
-
-        setPosition(pos.x(), pos.y(), pos.z());
+        setPosition(pos);
         setOrientation(att[2], att[1], att[0]);
     } else {
         set_dirty();
@@ -781,9 +780,9 @@ View::updateData()
     // if lookat (type 1) then get target data...
     if (getType() == FG_LOOKAT) {
         if (!_from_model) {
-            SGVec3d pos = _targetProperties.position();
+            SGGeod pos = _targetProperties.position();
             SGVec3d att = _targetProperties.attitude();
-            setTargetPosition(pos.x(), pos.y(), pos.z());
+            setTargetPosition(pos);
             setTargetOrientation(att[2], att[1], att[0]);
         } else {
             set_dirty();
@@ -881,26 +880,64 @@ View::PositionAttitudeProperties::PositionAttitudeProperties()
 {
 }
 
-View::PositionAttitudeProperties::PositionAttitudeProperties(SGPropertyNode_ptr parent, const std::string& prefix)
+View::PositionAttitudeProperties::~PositionAttitudeProperties()
 {
-    _lonProp = parent->getNode(prefix + "lon-deg-path", 0, true);
-    _latProp = parent->getNode(prefix + "lat-deg-path", 0, true);
-    _altProp = parent->getNode(prefix + "alt-ft-path", 0, true);
-    _headingProp = parent->getNode(prefix + "heading-deg-path", 0, true);
-    _pitchProp = parent->getNode(prefix + "pitch-deg-path", 0, true);
-    _rollProp = parent->getNode(prefix + "roll-deg-path", 0, true);
 }
 
-SGVec3d View::PositionAttitudeProperties::position() const
+void View::PositionAttitudeProperties::init(SGPropertyNode_ptr parent, const std::string& prefix)
 {
-    return SGVec3d(_lonProp->getDoubleValue(),
-                   _latProp->getDoubleValue(),
-                   _altProp->getDoubleValue());
+    _lonPathProp = parent->getNode(prefix + "lon-deg-path", true);
+    _latPathProp = parent->getNode(prefix + "lat-deg-path", true);
+    _altPathProp = parent->getNode(prefix + "alt-ft-path", true);
+    _headingPathProp = parent->getNode(prefix + "heading-deg-path", true);
+    _pitchPathProp = parent->getNode(prefix + "pitch-deg-path", true);
+    _rollPathProp = parent->getNode(prefix + "roll-deg-path", true);
+
+    // update the real properties now
+    valueChanged(NULL);
+
+    _lonPathProp->addChangeListener(this);
+    _latPathProp->addChangeListener(this);
+    _altPathProp->addChangeListener(this);
+    _headingPathProp->addChangeListener(this);
+    _pitchPathProp->addChangeListener(this);
+    _rollPathProp->addChangeListener(this);
+}
+
+void View::PositionAttitudeProperties::valueChanged(SGPropertyNode* node)
+{
+    _lonProp = resolvePathProperty(_lonPathProp);
+    _latProp = resolvePathProperty(_latPathProp);
+    _altProp = resolvePathProperty(_altPathProp);
+    _headingProp = resolvePathProperty(_headingPathProp);
+    _pitchProp = resolvePathProperty(_pitchPathProp);
+    _rollProp = resolvePathProperty(_rollPathProp);
+}
+
+SGPropertyNode_ptr View::PositionAttitudeProperties::resolvePathProperty(SGPropertyNode_ptr p)
+{
+    if (!p)
+        return SGPropertyNode_ptr();
+
+    std::string path = p->getStringValue();
+    if (path.empty())
+        return SGPropertyNode_ptr();
+
+    return fgGetNode(path, true);
+}
+
+SGGeod View::PositionAttitudeProperties::position() const
+{
+    double lon = _lonProp ? _lonProp->getDoubleValue() : 0.0;
+    double lat = _latProp ? _latProp->getDoubleValue() : 0.0;
+    double alt = _altProp ? _altProp->getDoubleValue() : 0.0;
+    return SGGeod::fromDegFt(lon, lat, alt);
 }
 
 SGVec3d View::PositionAttitudeProperties::attitude() const
 {
-    return SGVec3d(_headingProp->getDoubleValue(),
-                   _pitchProp->getDoubleValue(),
-                   _rollProp->getDoubleValue());
+    double heading = _headingProp ? _headingProp->getDoubleValue() : 0.0;
+    double pitch = _pitchProp ? _pitchProp->getDoubleValue() : 0.0;
+    double roll = _rollProp ? _rollProp->getDoubleValue() : 0.0;
+    return SGVec3d(heading, pitch, roll);
 }

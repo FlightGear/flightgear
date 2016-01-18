@@ -92,11 +92,11 @@ public:
     //   pilot view, model in model view).
     //   FIXME: the model view position (ie target positions) 
     //   should be in the model class.
-    void setPosition (double lon_deg, double lat_deg, double alt_ft);
+
+
     const SGGeod& getPosition() const { return _position; }
 
     // Reference geodetic target position...
-    void setTargetPosition (double lon_deg, double lat_deg, double alt_ft);
     const SGGeod& getTargetPosition() const { return _target; }
 
 
@@ -249,6 +249,9 @@ private:
     void setHeadingOffset_deg_property (double heading_offset_deg);
     void setPitchOffset_deg_property(double pitch_offset_deg);
     void setRollOffset_deg_property(double roll_offset_deg);
+
+    void setPosition (const SGGeod& geod);
+    void setTargetPosition (const SGGeod& geod);
     
     //////////////////////////////////////////////////////////////////
     // private data                                                 //
@@ -327,22 +330,39 @@ private:
     // multiplied into the aspect_ratio to get the actual vertical fov
     double _aspect_ratio_multiplier;
 
-    class PositionAttitudeProperties
+    class PositionAttitudeProperties : public SGPropertyChangeListener
     {
     public:
         PositionAttitudeProperties();
         
-        PositionAttitudeProperties(SGPropertyNode_ptr parent, const std::string& prefix);
+        void init(SGPropertyNode_ptr parent, const std::string& prefix);
 
-        SGVec3d position() const;
+        virtual ~PositionAttitudeProperties();
+
+        SGGeod position() const;
         SGVec3d attitude() const; // as heading pitch roll
+
+    protected:
+        virtual void valueChanged(SGPropertyNode* prop);
+
     private:
+// disable copy
+        PositionAttitudeProperties(const PositionAttitudeProperties&);
+
+        SGPropertyNode_ptr resolvePathProperty(SGPropertyNode_ptr p);
+
         SGPropertyNode_ptr _lonProp,
             _latProp,
-        _altProp,
-        _headingProp,
-        _pitchProp,
-        _rollProp;
+            _altProp,
+            _headingProp,
+            _pitchProp,
+            _rollProp;
+        SGPropertyNode_ptr _lonPathProp,
+            _latPathProp,
+            _altPathProp,
+            _headingPathProp,
+            _pitchPathProp,
+            _rollPathProp;
     };
 
     PositionAttitudeProperties _eyeProperties;
