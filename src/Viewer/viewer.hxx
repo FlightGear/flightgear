@@ -79,7 +79,8 @@ public:
     //////////////////////////////////////////////////////////////////////
 
     void resetOffsetsAndFOV();
-
+    void updateData();
+    
     ViewType getType() const { return _type; }
     void setType( int type );
 
@@ -325,6 +326,27 @@ private:
     // default = 1.0, this value is user configurable and is
     // multiplied into the aspect_ratio to get the actual vertical fov
     double _aspect_ratio_multiplier;
+
+    class PositionAttitudeProperties
+    {
+    public:
+        PositionAttitudeProperties();
+        
+        PositionAttitudeProperties(SGPropertyNode_ptr parent, const std::string& prefix);
+
+        SGVec3d position() const;
+        SGVec3d attitude() const; // as heading pitch roll
+    private:
+        SGPropertyNode_ptr _lonProp,
+            _latProp,
+        _altProp,
+        _headingProp,
+        _pitchProp,
+        _rollProp;
+    };
+
+    PositionAttitudeProperties _eyeProperties;
+    PositionAttitudeProperties _targetProperties;
 
     //////////////////////////////////////////////////////////////////
     // private functions                                            //

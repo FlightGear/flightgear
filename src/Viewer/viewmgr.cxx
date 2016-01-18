@@ -232,37 +232,7 @@ FGViewMgr::update (double dt)
 
   // Set up view location and orientation
 
-  if (!config->getBoolValue("from-model")) {
-    lon_deg = fgGetDouble(config->getStringValue("eye-lon-deg-path"));
-    lat_deg = fgGetDouble(config->getStringValue("eye-lat-deg-path"));
-    alt_ft = fgGetDouble(config->getStringValue("eye-alt-ft-path"));
-    roll_deg = fgGetDouble(config->getStringValue("eye-roll-deg-path"));
-    pitch_deg = fgGetDouble(config->getStringValue("eye-pitch-deg-path"));
-    heading_deg = fgGetDouble(config->getStringValue("eye-heading-deg-path"));
-
-    currentView->setPosition(lon_deg, lat_deg, alt_ft);
-    currentView->setOrientation(roll_deg, pitch_deg, heading_deg);
-  } else {
-    // force recalc in viewer
-    currentView->set_dirty();
-  }
-
-  // if lookat (type 1) then get target data...
-    if (currentView->getType() == flightgear::View::FG_LOOKAT) {
-    if (!config->getBoolValue("from-model")) {
-      lon_deg = fgGetDouble(config->getStringValue("target-lon-deg-path"));
-      lat_deg = fgGetDouble(config->getStringValue("target-lat-deg-path"));
-      alt_ft = fgGetDouble(config->getStringValue("target-alt-ft-path"));
-      roll_deg = fgGetDouble(config->getStringValue("target-roll-deg-path"));
-      pitch_deg = fgGetDouble(config->getStringValue("target-pitch-deg-path"));
-      heading_deg = fgGetDouble(config->getStringValue("target-heading-deg-path"));
-
-      currentView->setTargetPosition(lon_deg, lat_deg, alt_ft);
-      currentView->setTargetOrientation(roll_deg, pitch_deg, heading_deg);
-    } else {
-      currentView->set_dirty();
-    }
-  }
+    currentView->updateData();
 
     // these properties aren't tied - manually propogate them to the
     // currently active view
@@ -300,6 +270,7 @@ FGViewMgr::update (double dt)
 void
 FGViewMgr::copyToCurrent()
 {
+
 }
 
 void FGViewMgr::clear()
