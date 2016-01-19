@@ -2496,37 +2496,41 @@ void Options::setupRoot(int argc, char **argv)
     string root;
     bool usingDefaultRoot = false;
 
-#if defined(HAVE_QT)
-    flightgear::initApp(argc, argv);
-    root = SetupRootDialog::restoreUserSelectedRoot();
-#endif
-
   if (isOptionSet("fg-root")) {
     root = valueForOption("fg-root"); // easy!
+    SG_LOG(SG_GENERAL, SG_INFO, "set from command-line argument: fg_root = " << root );
   } else {
-
   // Next check if fg-root is set as an env variable
     char *envp = ::getenv( "FG_ROOT" );
     if ( envp != NULL ) {
       root = envp;
-// if we didn't restore a path from the Qt launcher, use the default here
-    } else if (root.empty()) {
-        usingDefaultRoot = true;
-        root = platformDefaultRoot();
+      SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
+    } else {
+#if defined(HAVE_QT)
+        flightgear::initApp(argc, argv);
+        root = SetupRootDialog::restoreUserSelectedRoot();
+#endif
+        if (root.empty()) {
+            usingDefaultRoot = true;
+            root = platformDefaultRoot();
+            SG_LOG(SG_GENERAL, SG_INFO, "platform default fg_root = " << root );
+        } else {
+            SG_LOG(SG_GENERAL, SG_INFO, "Qt launcher set fg_root = " << root );
+        }
     }
   } 
   
-  SG_LOG(SG_GENERAL, SG_INFO, "fg_root = " << root );
   globals->set_fg_root(root);
     static char required_version[] = FLIGHTGEAR_VERSION;
     string base_version = fgBasePackageVersion(root);
 
 #if defined(HAVE_QT)
-    // note we never end up here is resotring a user selected root via
+    // note we never end up here if restoring a user selected root via
     // the Qt GUI, since that code pre-validates the path. But if we're using
     // a command-line, env-var or default root this check can fail and
     // we still want to use the GUI in that case
     if (base_version != required_version) {
+        flightgear::initApp(argc, argv);
         SetupRootDialog::runDialog(usingDefaultRoot);
     }
 #else
