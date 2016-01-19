@@ -226,10 +226,6 @@ FGViewMgr::update (double dt)
     flightgear::View* currentView = get_current_view();
   if (!currentView) return;
 
-  SGPropertyNode *n = config_list[current];
-  SGPropertyNode *config = n->getChild("config", 0, true);
-  double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
-
   // Set up view location and orientation
 
     currentView->updateData();
