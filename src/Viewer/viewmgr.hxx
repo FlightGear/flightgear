@@ -117,8 +117,8 @@ private:
     double getViewElev_ft() const;
 
     bool inited;
-    SGPropertyNode_ptr view_number;
     std::vector<SGPropertyNode_ptr> config_list;
+    SGPropertyNode_ptr _viewNumberProp;
     typedef std::vector<flightgear::ViewPtr> viewer_list;
     viewer_list views;
     SGVec3d abs_viewer_position;

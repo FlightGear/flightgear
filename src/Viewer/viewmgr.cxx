@@ -42,7 +42,6 @@ FGViewMgr::FGViewMgr( void ) :
   axis_long(0),
   axis_lat(0),
   inited(false),
-  view_number(fgGetNode("/sim/current-view/view-number", true)),
   config_list(fgGetNode("/sim", true)->getChildren("view")),
   current(0)
 {
@@ -123,6 +122,8 @@ FGViewMgr::bind()
     target_x_offs  = fgGetNode("/sim/current-view/target-x-offset-m", true);
     target_y_offs  = fgGetNode("/sim/current-view/target-y-offset-m", true);
     target_z_offs  = fgGetNode("/sim/current-view/target-z-offset-m", true);
+
+
 }
 
 void
@@ -131,13 +132,13 @@ FGViewMgr::do_bind()
   // these are bound to the current view properties
   _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
 
-  _tiedProperties.Tie("view-number", this,
-                      &FGViewMgr::getView, &FGViewMgr::setView);
-  SGPropertyNode* view_number =
-    _tiedProperties.getRoot()->getNode("view-number");
-  view_number->setAttribute(SGPropertyNode::ARCHIVE, false);
-  // Keep view on reset/reinit
-  view_number->setAttribute(SGPropertyNode::PRESERVE, true);
+
+    _tiedProperties.Tie("view-number", this,
+                        &FGViewMgr::getView, &FGViewMgr::setView);
+    _viewNumberProp = _tiedProperties.getRoot()->getNode("view-number");
+    _viewNumberProp->setAttribute(SGPropertyNode::ARCHIVE, false);
+    _viewNumberProp->setAttribute(SGPropertyNode::PRESERVE, true);
+
 
   _tiedProperties.Tie("axes/long", this,
                       (double_getter)0, &FGViewMgr::setViewAxisLong);
@@ -169,8 +170,9 @@ FGViewMgr::unbind ()
     }
 
   _tiedProperties.Untie();
+    _viewNumberProp.clear();
+    
     config_list.clear();
-    view_number.clear();
     target_x_offs.clear();
     target_y_offs.clear();
     target_z_offs.clear();
@@ -258,7 +260,7 @@ flightgear::View*
 FGViewMgr::next_view()
 {
     setView((current+1 < (int)views.size()) ? (current + 1) : 0);
-    view_number->fireValueChanged();
+    _viewNumberProp->fireValueChanged();
     return views[current];
 }
 
@@ -266,7 +268,7 @@ flightgear::View*
 FGViewMgr::prev_view()
 {
     setView((0 < current) ? (current - 1) : (views.size() - 1));
-    view_number->fireValueChanged();
+    _viewNumberProp->fireValueChanged();
     return views[current];
 }
 
@@ -397,15 +399,18 @@ FGViewMgr::setViewTargetZOffset_m (double z)
   }
 }
 
-int
-FGViewMgr::getView () const
+int FGViewMgr::getView () const
 {
-  return ( current );
+  return current;
 }
 
 void
 FGViewMgr::setView (int newview)
 {
+    if (newview == current) {
+        return;
+    }
+
   // negative numbers -> set view with node index -newview
   if (newview < 0) {
     for (int i = 0; i < (int)config_list.size(); i++) {
