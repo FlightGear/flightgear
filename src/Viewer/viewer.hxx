@@ -252,7 +252,28 @@ private:
 
     void setPosition (const SGGeod& geod);
     void setTargetPosition (const SGGeod& geod);
-    
+
+    double getRawOrientation_w() const;
+    double getRawOrientation_x() const;
+    double getRawOrientation_y() const;
+    double getRawOrientation_z() const;
+
+    // quaternion accessors, for debugging:
+    double getFrame_w() const;
+    double getFrame_x() const;
+    double getFrame_y() const;
+    double getFrame_z() const;
+
+    double getOrientation_w() const;
+    double getOrientation_x() const;
+    double getOrientation_y() const;
+    double getOrientation_z() const;
+
+    double getOrOffset_w() const;
+    double getOrOffset_x() const;
+    double getOrOffset_y() const;
+    double getOrOffset_z() const;
+
     //////////////////////////////////////////////////////////////////
     // private data                                                 //
     //////////////////////////////////////////////////////////////////

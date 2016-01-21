@@ -249,6 +249,34 @@ View::bind ()
                         false /* do not set current property value */);
     fgSetArchivable("/sim/current-view/goal-roll-offset-deg");
 
+// expose various quaternions under the debug/ subtree
+    _tiedProperties.Tie("debug/orientation-w", this, &View::getOrientation_w);
+    _tiedProperties.Tie("debug/orientation-x", this, &View::getOrientation_x);
+    _tiedProperties.Tie("debug/orientation-y", this, &View::getOrientation_y);
+    _tiedProperties.Tie("debug/orientation-z", this, &View::getOrientation_z);
+
+    _tiedProperties.Tie("debug/orientation_offset-w", this,
+                        &View::getOrOffset_w);
+    _tiedProperties.Tie("debug/orientation_offset-x", this,
+                        &View::getOrOffset_x);
+    _tiedProperties.Tie("debug/orientation_offset-y", this,
+                        &View::getOrOffset_y);
+    _tiedProperties.Tie("debug/orientation_offset-z", this,
+                        &View::getOrOffset_z);
+
+    _tiedProperties.Tie("debug/frame-w", this, &View::getFrame_w);
+    _tiedProperties.Tie("debug/frame-x", this, &View::getFrame_x);
+    _tiedProperties.Tie("debug/frame-y", this, &View::getFrame_y);
+    _tiedProperties.Tie("debug/frame-z", this, &View::getFrame_z);
+
+
+// expose the raw (OpenGL) orientation to the property tree,
+// for the sound-manager
+    _tiedProperties.Tie("raw-orientation", 0, this, &View::getRawOrientation_w);
+    _tiedProperties.Tie("raw-orientation", 1, this, &View::getRawOrientation_x);
+    _tiedProperties.Tie("raw-orientation", 2, this, &View::getRawOrientation_y);
+    _tiedProperties.Tie("raw-orientation", 3, this, &View::getRawOrientation_z);
+
 // following config properties are exposed on current-view but don't change,
 // so we can simply copy them here.
     _tiedProperties.getRoot()->setStringValue("name", _name);
@@ -869,6 +897,138 @@ View::update (double dt)
     }
   }
   recalc();
+}
+
+double View::getRawOrientation_w() const
+{
+    return mViewOrientation.w();
+}
+
+double View::getRawOrientation_x() const
+{
+    return mViewOrientation.x();
+}
+
+double View::getRawOrientation_y() const
+{
+    return mViewOrientation.y();
+}
+
+double View::getRawOrientation_z() const
+{
+    return mViewOrientation.z();
+}
+
+// This takes the conventional aviation XYZ body system
+// i.e.  x=forward, y=starboard, z=bottom
+// which is widely used in FGFS
+// and rotates it into the OpenGL camera system
+// i.e. Xprime=starboard, Yprime=top, Zprime=aft.
+static const SGQuatd fsb2sta()
+{
+    return SGQuatd(-0.5, -0.5, 0.5, 0.5);
+}
+
+// reference frame orientation.
+// This is the view orientation you get when you have no
+// view offset, i.e. the offset operator is the identity.
+//
+// For example, in the familiar "cockpit lookfrom" view,
+// the reference frame is equal to the aircraft attitude,
+// i.e. it is the view looking towards 12:00 straight ahead.
+//
+// FIXME:  Somebody needs to figure out what is the reference
+// frame view for the other view modes.
+//
+// Conceptually, this quat represents a rotation relative
+// to the ECEF reference orientation, as described at
+//    http://www.av8n.com/physics/coords.htm#sec-orientation
+//
+// See the NOTE concerning reference orientations, below.
+//
+// The components of this quat are expressed in
+// the conventional aviation basis set,
+// i.e.  x=forward, y=starboard, z=bottom
+double View::getFrame_w() const
+{
+    return ((mViewOrientation*conj(fsb2sta())*conj(mViewOffsetOr))).w();
+}
+
+double View::getFrame_x() const
+{
+    return ((mViewOrientation*conj(fsb2sta())*conj(mViewOffsetOr))).x();
+}
+
+double View::getFrame_y() const
+{
+    return ((mViewOrientation*conj(fsb2sta())*conj(mViewOffsetOr))).y();
+}
+
+double View::getFrame_z() const
+{
+    return ((mViewOrientation*conj(fsb2sta())*conj(mViewOffsetOr))).z();
+}
+
+
+// view offset.
+// This rotation takes you from the aforementioned
+// reference frame view orientation to whatever
+// actual current view orientation is.
+//
+// The components of this quaternion are expressed in
+// the conventional aviation basis set,
+// i.e.  x=forward, y=starboard, z=bottom
+double View::getOrOffset_w() const{
+    return mViewOffsetOr.w();
+}
+double View::getOrOffset_x() const{
+    return mViewOffsetOr.x();
+}
+double View::getOrOffset_y() const{
+    return mViewOffsetOr.y();
+}
+double View::getOrOffset_z() const{
+    return mViewOffsetOr.z();
+}
+
+
+// current view orientation.
+// This is a rotation relative to the earth-centered (ec)
+// reference frame.
+//
+// NOTE: Here we remove a factor of fsb2sta so that
+// the components of this quat are displayed using the
+// conventional ECEF basis set.  This is *not* the way
+// the view orientation is stored in the views[] array,
+// but is easier for non-graphics hackers to understand.
+// If we did not remove this factor of fsb2sta here and
+// in getCurrentViewFrame, that would be equivalent to
+// the following peculiar reference orientation:
+// Suppose you are over the Gulf of Guinea, at (lat,lon) = (0,0).
+// Then the reference frame orientation can be achieved via:
+//    -- The aircraft X-axis (nose) headed south.
+//    -- The aircraft Y-axis (starboard wingtip) pointing up.
+//    -- The aircraft Z-axis (belly) pointing west.
+// To say the same thing in other words, and perhaps more to the
+// point:  If we use the OpenGL camera orientation conventions,
+// i.e. Xprime=starboard, Yprime=top, Zprime=aft, then the
+// aforementioned peculiar reference orientation at (lat,lon)
+//  = (0,0) can be described as:
+//    -- aircraft Xprime axis (starboard) pointed up
+//    -- aircraft Yprime axis (top) pointed east
+//    -- aircraft Zprime axis (aft) pointed north
+// meaning the OpenGL axes are aligned with the ECEF axes.
+double View::getOrientation_w() const{
+    return (mViewOrientation * conj(fsb2sta())).w();
+}
+double View::getOrientation_x() const{
+    return (mViewOrientation * conj(fsb2sta())).x();
+}
+double View::getOrientation_y() const{
+    return (mViewOrientation * conj(fsb2sta())).y();
+}
+double View::getOrientation_z() const{
+    return (mViewOrientation * conj(fsb2sta())).z();
 }
 
 double View::get_aspect_ratio() const
