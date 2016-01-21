@@ -131,9 +131,6 @@ private:
     double getCurrentViewFrame_y() const;
     double getCurrentViewFrame_z() const;
 
-    // copies current offset settings to current-view path...
-    void copyToCurrent ();
-    
     bool inited;
     SGPropertyNode_ptr view_number;
     std::vector<SGPropertyNode_ptr> config_list;

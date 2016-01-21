@@ -79,7 +79,6 @@ FGViewMgr::init ()
       }
   }
 
-  copyToCurrent();
   do_bind();
 
     get_current_view()->bind();
@@ -261,12 +260,6 @@ FGViewMgr::update (double dt)
   for (int i=0; i<4; ++i) {
     _tiedProperties.getRoot()->getChild("raw-orientation", i, true)->setDoubleValue(current_view_orientation[i]);
   }
-}
-
-void
-FGViewMgr::copyToCurrent()
-{
-
 }
 
 void FGViewMgr::clear()
@@ -492,11 +485,6 @@ FGViewMgr::setView (int newview)
     if (get_current_view()) {
         get_current_view()->bind();
     }
-
-  // copy in view data
-  copyToCurrent();
-
-
 
     // force an update now, to avoid returning bogus data.
     // real fix would to be make all the accessors use the dirty mechanism
