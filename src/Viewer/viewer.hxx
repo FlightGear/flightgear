@@ -253,6 +253,10 @@ private:
     void setPosition (const SGGeod& geod);
     void setTargetPosition (const SGGeod& geod);
 
+    double getAbsolutePosition_x() const;
+    double getAbsolutePosition_y() const;
+    double getAbsolutePosition_z() const;
+
     double getRawOrientation_w() const;
     double getRawOrientation_x() const;
     double getRawOrientation_y() const;

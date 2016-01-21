@@ -44,7 +44,6 @@ FGViewMgr::FGViewMgr( void ) :
   inited(false),
   view_number(fgGetNode("/sim/current-view/view-number", true)),
   config_list(fgGetNode("/sim", true)->getChildren("view")),
-  abs_viewer_position(SGVec3d::zeros()),
   current(0)
 {
 }
@@ -160,11 +159,6 @@ FGViewMgr::do_bind()
                       &FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
   fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
 
-  SGPropertyNode *n = fgGetNode("/sim/current-view", true);
-  _tiedProperties.Tie(n->getNode("viewer-x-m", true),SGRawValuePointer<double>(&abs_viewer_position[0]));
-  _tiedProperties.Tie(n->getNode("viewer-y-m", true),SGRawValuePointer<double>(&abs_viewer_position[1]));
-  _tiedProperties.Tie(n->getNode("viewer-z-m", true),SGRawValuePointer<double>(&abs_viewer_position[2]));
-
   _tiedProperties.Tie("viewer-lon-deg", this, &FGViewMgr::getViewLon_deg);
   _tiedProperties.Tie("viewer-lat-deg", this, &FGViewMgr::getViewLat_deg);
   _tiedProperties.Tie("viewer-elev-ft", this, &FGViewMgr::getViewElev_ft);
@@ -212,12 +206,11 @@ FGViewMgr::update (double dt)
   // Update the current view
   do_axes();
   currentView->update(dt);
-  abs_viewer_position = currentView->getViewPosition();
 
 
 // update the camera now
     osg::ref_ptr<flightgear::CameraGroup> cameraGroup = flightgear::CameraGroup::getDefault();
-    cameraGroup->update(toOsg(abs_viewer_position),
+    cameraGroup->update(toOsg(currentView->getViewPosition()),
                         toOsg(currentView->getViewOrientation()));
     cameraGroup->setCameraParameters(currentView->get_v_fov(),
                                      cameraGroup->getMasterAspectRatio());

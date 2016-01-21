@@ -277,6 +277,10 @@ View::bind ()
     _tiedProperties.Tie("raw-orientation", 2, this, &View::getRawOrientation_y);
     _tiedProperties.Tie("raw-orientation", 3, this, &View::getRawOrientation_z);
 
+    _tiedProperties.Tie("viewer-x-m", this, &View::getAbsolutePosition_x);
+    _tiedProperties.Tie("viewer-y-m", this, &View::getAbsolutePosition_y);
+    _tiedProperties.Tie("viewer-z-m", this, &View::getAbsolutePosition_z);
+
 // following config properties are exposed on current-view but don't change,
 // so we can simply copy them here.
     _tiedProperties.getRoot()->setStringValue("name", _name);
@@ -897,6 +901,21 @@ View::update (double dt)
     }
   }
   recalc();
+}
+
+double View::getAbsolutePosition_x() const
+{
+    return _absolute_view_pos.x();
+}
+
+double View::getAbsolutePosition_y() const
+{
+    return _absolute_view_pos.y();
+}
+
+double View::getAbsolutePosition_z() const
+{
+    return _absolute_view_pos.z();
 }
 
 double View::getRawOrientation_w() const
