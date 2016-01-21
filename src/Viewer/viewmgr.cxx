@@ -27,8 +27,6 @@
 
 #include "viewmgr.hxx"
 
-#include <string.h>        // strcmp
-
 #include <simgear/compiler.h>
 #include <simgear/scene/util/OsgMath.hxx>
 
@@ -160,10 +158,11 @@ void
 FGViewMgr::update (double dt)
 {
     flightgear::View* currentView = get_current_view();
-  if (!currentView) return;
+    if (!currentView) {
+        return;
+    }
 
   // Set up view location and orientation
-
     currentView->updateData();
 
     // these properties aren't tied - manually propogate them to the

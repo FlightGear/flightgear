@@ -130,9 +130,6 @@ public:
 				     double y_offset_m,
 				     double z_offset_m);
 
-
-
-
     // Reference orientation rotations...
     //   These are rotations that represent the plane attitude effect on
     //   the view (in Pilot view).  IE The view frustrum rotates as the plane
@@ -141,28 +138,13 @@ public:
     //   the eye is looking at the ojbect (ie the model).
     //   FIXME: the FGModel class should have its own version of these so that
     //   it can generate it's own model rotations.
-    double getRoll_deg () const { return _roll_deg; }
-    double getPitch_deg () const {return _pitch_deg; }
     double getHeading_deg () const {return _heading_deg; }
-    void setRoll_deg (double roll_deg);
-    void setPitch_deg (double pitch_deg);
-    void setHeading_deg (double heading_deg);
-    void setOrientation (double roll_deg, double pitch_deg, double heading_deg);
-    double getTargetRoll_deg () const { return _target_roll_deg; }
-    double getTargetPitch_deg () const {return _target_pitch_deg; }
-    double getTargetHeading_deg () const {return _target_heading_deg; }
-    void setTargetRoll_deg (double roll_deg);
-    void setTargetPitch_deg (double pitch_deg);
-    void setTargetHeading_deg (double heading_deg);
-    void setTargetOrientation (double roll_deg, double pitch_deg, double heading_deg);
-
-
 
 
     // Orientation offsets rotations from reference orientation.
-    // Goal settings are for smooth transition from prior 
+    // Goal settings are for smooth transition from prior
     // offset when changing view direction.
-    //   These offsets are in ADDITION to the orientation rotations listed 
+    //   These offsets are in ADDITION to the orientation rotations listed
     //   above.
     //   In pilot view they are applied after the position offsets in order to
     //   give the effect of the pilot looking around.
@@ -172,20 +154,9 @@ public:
     double getRollOffset_deg () const { return _roll_offset_deg; }
     double getPitchOffset_deg () const { return _pitch_offset_deg; }
     double getHeadingOffset_deg () const { return _heading_offset_deg; }
-    double getGoalRollOffset_deg () const { return _goal_roll_offset_deg; }
-    double getGoalPitchOffset_deg () const { return _goal_pitch_offset_deg; }
-    double getGoalHeadingOffset_deg () const {return _goal_heading_offset_deg; }
-    void setRollOffset_deg (double roll_offset_deg);
-    void setPitchOffset_deg (double pitch_offset_deg);
-    void setHeadingOffset_deg (double heading_offset_deg);
-    void setGoalRollOffset_deg (double goal_roll_offset_deg);
-    void setGoalPitchOffset_deg (double goal_pitch_offset_deg);
+
     void setGoalHeadingOffset_deg (double goal_heading_offset_deg);
-    void setOrientationOffsets (double roll_offset_deg,
-				     double heading_offset_deg,
-				     double pitch_offset_deg);
-
-
+    void setHeadingOffset_deg (double heading_offset_deg);
 
     //////////////////////////////////////////////////////////////////////
     // Part 3: output vectors and matrices in FlightGear coordinates.
@@ -202,28 +173,12 @@ public:
     // Part 4: View and frustrum data setters and getters
     //////////////////////////////////////////////////////////////////////
 
-    void set_fov( double fov_deg ) {
-	_fov_deg = fov_deg;
-    }
-
     double get_fov() const { return _fov_deg; }
     double get_h_fov();    // Get horizontal fov, in degrees.
     double get_v_fov();    // Get vertical fov, in degrees.
 
     // this is currently just a wrapper for the default CameraGroups' aspect
     double get_aspect_ratio() const;
-
-    void set_aspect_ratio_multiplier( double m ) {
-	_aspect_ratio_multiplier = m;
-    }
-    double get_aspect_ratio_multiplier() const {
-        return _aspect_ratio_multiplier;
-    }
-
-    double getNear_m () const { return _ground_level_nearplane_m; }
-    void setNear_m (double near_m) {
-        _ground_level_nearplane_m = near_m;
-    }
 
     //////////////////////////////////////////////////////////////////////
     // Part 5: misc setters and getters
@@ -281,6 +236,68 @@ private:
     double getLon_deg() const;
     double getLat_deg() const;
     double getElev_ft() const;
+
+    // Reference orientation rotations...
+    //   These are rotations that represent the plane attitude effect on
+    //   the view (in Pilot view).  IE The view frustrum rotates as the plane
+    //   turns, pitches, and rolls.
+    //   In model view (lookat/chaseview) these end up changing the angle that
+    //   the eye is looking at the ojbect (ie the model).
+    //   FIXME: the FGModel class should have its own version of these so that
+    //   it can generate it's own model rotations.
+    double getRoll_deg () const { return _roll_deg; }
+    double getPitch_deg () const {return _pitch_deg; }
+    void setRoll_deg (double roll_deg);
+    void setPitch_deg (double pitch_deg);
+    void setHeading_deg (double heading_deg);
+    void setOrientation (double roll_deg, double pitch_deg, double heading_deg);
+    double getTargetRoll_deg () const { return _target_roll_deg; }
+    double getTargetPitch_deg () const {return _target_pitch_deg; }
+    double getTargetHeading_deg () const {return _target_heading_deg; }
+    void setTargetRoll_deg (double roll_deg);
+    void setTargetPitch_deg (double pitch_deg);
+    void setTargetHeading_deg (double heading_deg);
+    void setTargetOrientation (double roll_deg, double pitch_deg, double heading_deg);
+
+
+
+
+    // Orientation offsets rotations from reference orientation.
+    // Goal settings are for smooth transition from prior
+    // offset when changing view direction.
+    //   These offsets are in ADDITION to the orientation rotations listed
+    //   above.
+    //   In pilot view they are applied after the position offsets in order to
+    //   give the effect of the pilot looking around.
+    //   In lookat view they are applied before the position offsets so that
+    //   the effect is the eye moving around looking at the object (ie the model)
+    //   from different angles.
+    double getGoalRollOffset_deg () const { return _goal_roll_offset_deg; }
+    double getGoalPitchOffset_deg () const { return _goal_pitch_offset_deg; }
+    double getGoalHeadingOffset_deg () const {return _goal_heading_offset_deg; }
+    void setRollOffset_deg (double roll_offset_deg);
+    void setPitchOffset_deg (double pitch_offset_deg);
+    void setGoalRollOffset_deg (double goal_roll_offset_deg);
+    void setGoalPitchOffset_deg (double goal_pitch_offset_deg);
+    void setOrientationOffsets (double roll_offset_deg,
+                                double heading_offset_deg,
+                                double pitch_offset_deg);
+    
+    void set_aspect_ratio_multiplier( double m ) {
+        _aspect_ratio_multiplier = m;
+    }
+    double get_aspect_ratio_multiplier() const {
+        return _aspect_ratio_multiplier;
+    }
+
+    double getNear_m () const { return _ground_level_nearplane_m; }
+    void setNear_m (double near_m) {
+        _ground_level_nearplane_m = near_m;
+    }
+
+    void set_fov( double fov_deg ) {
+        _fov_deg = fov_deg;
+    }
 
     //////////////////////////////////////////////////////////////////
     // private data                                                 //
