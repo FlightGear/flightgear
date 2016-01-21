@@ -249,6 +249,11 @@ View::bind ()
                         false /* do not set current property value */);
     fgSetArchivable("/sim/current-view/goal-roll-offset-deg");
 
+
+    _tiedProperties.Tie("field-of-view", this,
+                        &View::get_fov, &View::set_fov);
+    fgSetArchivable("/sim/current-view/field-of-view");
+
 // expose various quaternions under the debug/ subtree
     _tiedProperties.Tie("debug/orientation-w", this, &View::getOrientation_w);
     _tiedProperties.Tie("debug/orientation-x", this, &View::getOrientation_x);

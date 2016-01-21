@@ -102,8 +102,7 @@ private:
     void setViewTargetYOffset_m (double y);
     double getViewTargetZOffset_m () const;
     void setViewTargetZOffset_m (double z);
-    double getFOV_deg () const;
-    void setFOV_deg (double fov);
+
     double getARM_deg () const; // Aspect Ratio Multiplier
     void setARM_deg (double fov);
     double getNear_m () const;

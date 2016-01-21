@@ -147,10 +147,6 @@ FGViewMgr::do_bind()
                       (double_getter)0, &FGViewMgr::setViewAxisLat);
   fgSetArchivable("/sim/current-view/axes/lat");
 
-  _tiedProperties.Tie("field-of-view", this,
-                      &FGViewMgr::getFOV_deg, &FGViewMgr::setFOV_deg);
-  fgSetArchivable("/sim/current-view/field-of-view");
-
   _tiedProperties.Tie("aspect-ratio-multiplier", this,
                       &FGViewMgr::getARM_deg, &FGViewMgr::setARM_deg);
   fgSetArchivable("/sim/current-view/field-of-view");
@@ -444,22 +440,6 @@ FGViewMgr::setView (int newview)
     // real fix would to be make all the accessors use the dirty mechanism
     // on FGViewer, so update() is a no-op.
     update(0.0);
-}
-
-
-double
-FGViewMgr::getFOV_deg () const
-{
-  const flightgear::View * view = get_current_view();
-  return (view == 0 ? 0 : view->get_fov());
-}
-
-void
-FGViewMgr::setFOV_deg (double fov)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0)
-    view->set_fov(fov);
 }
 
 double
