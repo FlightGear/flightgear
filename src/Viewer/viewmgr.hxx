@@ -86,20 +86,6 @@ private:
 
     void do_axes ();
 
-    //  callbacks in manager to access viewer methods
-
-    double getViewXOffset_m () const;
-    void setViewXOffset_m (double x);
-    double getViewYOffset_m () const;
-    void setViewYOffset_m (double y);
-    double getViewZOffset_m () const;
-    void setViewZOffset_m (double z);
-    double getViewTargetXOffset_m () const;
-    void setViewTargetXOffset_m (double x);
-    double getViewTargetYOffset_m () const;
-    void setViewTargetYOffset_m (double y);
-    double getViewTargetZOffset_m () const;
-    void setViewTargetZOffset_m (double z);
 
     void setViewAxisLong (double axis);
     void setViewAxisLat (double axis);

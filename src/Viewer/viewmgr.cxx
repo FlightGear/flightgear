@@ -168,13 +168,13 @@ FGViewMgr::update (double dt)
 
     // these properties aren't tied - manually propogate them to the
     // currently active view
-  setViewXOffset_m(current_x_offs->getDoubleValue());
-  setViewYOffset_m(current_y_offs->getDoubleValue());
-  setViewZOffset_m(current_z_offs->getDoubleValue());
+    currentView->setXOffset_m(current_x_offs->getDoubleValue());
+    currentView->setYOffset_m(current_y_offs->getDoubleValue());
+    currentView->setZOffset_m(current_z_offs->getDoubleValue());
 
-  setViewTargetXOffset_m(target_x_offs->getDoubleValue());
-  setViewTargetYOffset_m(target_y_offs->getDoubleValue());
-  setViewTargetZOffset_m(target_z_offs->getDoubleValue());
+    currentView->setTargetXOffset_m(target_x_offs->getDoubleValue());
+    currentView->setTargetYOffset_m(target_y_offs->getDoubleValue());
+    currentView->setTargetZOffset_m(target_z_offs->getDoubleValue());
 
   // Update the current view
   do_axes();
@@ -252,126 +252,6 @@ FGViewMgr::add_view( flightgear::View * v )
 {
   views.push_back(v);
   v->init();
-}
-
-double
-FGViewMgr::getViewXOffset_m () const
-{
-  const flightgear::View * view = get_current_view();
-  if (view != 0) {
-    return ((flightgear::View *)view)->getXOffset_m();
-  } else {
-    return 0;
-  }
-}
-
-void
-FGViewMgr::setViewXOffset_m (double x)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0) {
-    view->setXOffset_m(x);
-  }
-}
-
-double
-FGViewMgr::getViewYOffset_m () const
-{
-  const flightgear::View * view = get_current_view();
-  if (view != 0) {
-    return ((flightgear::View *)view)->getYOffset_m();
-  } else {
-    return 0;
-  }
-}
-
-void
-FGViewMgr::setViewYOffset_m (double y)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0) {
-    view->setYOffset_m(y);
-  }
-}
-
-double
-FGViewMgr::getViewZOffset_m () const
-{
-  const flightgear::View * view = get_current_view();
-  if (view != 0) {
-    return ((flightgear::View *)view)->getZOffset_m();
-  } else {
-    return 0;
-  }
-}
-
-void
-FGViewMgr::setViewZOffset_m (double z)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0) {
-    view->setZOffset_m(z);
-  }
-}
-
-double
-FGViewMgr::getViewTargetXOffset_m () const
-{
-  const flightgear::View * view = get_current_view();
-  if (view != 0) {
-    return ((flightgear::View *)view)->getTargetXOffset_m();
-  } else {
-    return 0;
-  }
-}
-
-void
-FGViewMgr::setViewTargetXOffset_m (double x)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0) {
-    view->setTargetXOffset_m(x);
-  }
-}
-
-double
-FGViewMgr::getViewTargetYOffset_m () const
-{
-  const flightgear::View * view = get_current_view();
-  if (view != 0) {
-    return ((flightgear::View *)view)->getTargetYOffset_m();
-  } else {
-    return 0;
-  }
-}
-
-void
-FGViewMgr::setViewTargetYOffset_m (double y)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0) {
-    view->setTargetYOffset_m(y);
-  }
-}
-
-double
-FGViewMgr::getViewTargetZOffset_m () const
-{
-  const flightgear::View * view = get_current_view();
-  if (view != 0) {
-    return ((flightgear::View *)view)->getTargetZOffset_m();
-  } else {
-    return 0;
-  }
-}
-
-void
-FGViewMgr::setViewTargetZOffset_m (double z)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0) {
-    view->setTargetZOffset_m(z);
-  }
 }
 
 int FGViewMgr::getView () const
