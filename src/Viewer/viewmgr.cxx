@@ -61,9 +61,6 @@ FGViewMgr::init ()
   }
   
   inited = true;
-  
-
-
 
   for (unsigned int i = 0; i < config_list.size(); i++) {
     SGPropertyNode *n = config_list[i];
@@ -74,8 +71,6 @@ FGViewMgr::init ()
           add_view(v);
       }
   }
-
-  do_bind();
 
     get_current_view()->bind();
 }
@@ -113,8 +108,33 @@ typedef double (FGViewMgr::*double_getter)() const;
 void
 FGViewMgr::bind()
 {
-  // view-manager code was designed to init before bind, so
-  // this is a no-op; init() calls the real bind() impl below
+    // these are bound to the current view properties
+    _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
+
+
+    _tiedProperties.Tie("view-number", this,
+                        &FGViewMgr::getView, &FGViewMgr::setView, false);
+    _viewNumberProp = _tiedProperties.getRoot()->getNode("view-number");
+    _viewNumberProp->setAttribute(SGPropertyNode::ARCHIVE, false);
+    _viewNumberProp->setAttribute(SGPropertyNode::PRESERVE, true);
+
+
+    _tiedProperties.Tie("axes/long", this,
+                        (double_getter)0, &FGViewMgr::setViewAxisLong);
+    fgSetArchivable("/sim/current-view/axes/long");
+
+    _tiedProperties.Tie("axes/lat", this,
+                        (double_getter)0, &FGViewMgr::setViewAxisLat);
+    fgSetArchivable("/sim/current-view/axes/lat");
+
+    _tiedProperties.Tie("ground-level-nearplane-m", this,
+                        &FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
+    fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
+
+    _tiedProperties.Tie("viewer-lon-deg", this, &FGViewMgr::getViewLon_deg);
+    _tiedProperties.Tie("viewer-lat-deg", this, &FGViewMgr::getViewLat_deg);
+    _tiedProperties.Tie("viewer-elev-ft", this, &FGViewMgr::getViewElev_ft);
+
 
     current_x_offs = fgGetNode("/sim/current-view/x-offset-m", true);
     current_y_offs = fgGetNode("/sim/current-view/y-offset-m", true);
@@ -122,44 +142,8 @@ FGViewMgr::bind()
     target_x_offs  = fgGetNode("/sim/current-view/target-x-offset-m", true);
     target_y_offs  = fgGetNode("/sim/current-view/target-y-offset-m", true);
     target_z_offs  = fgGetNode("/sim/current-view/target-z-offset-m", true);
-
-
 }
 
-void
-FGViewMgr::do_bind()
-{  
-  // these are bound to the current view properties
-  _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
-
-
-    _tiedProperties.Tie("view-number", this,
-                        &FGViewMgr::getView, &FGViewMgr::setView);
-    _viewNumberProp = _tiedProperties.getRoot()->getNode("view-number");
-    _viewNumberProp->setAttribute(SGPropertyNode::ARCHIVE, false);
-    _viewNumberProp->setAttribute(SGPropertyNode::PRESERVE, true);
-
-
-  _tiedProperties.Tie("axes/long", this,
-                      (double_getter)0, &FGViewMgr::setViewAxisLong);
-  fgSetArchivable("/sim/current-view/axes/long");
-
-  _tiedProperties.Tie("axes/lat", this,
-                      (double_getter)0, &FGViewMgr::setViewAxisLat);
-  fgSetArchivable("/sim/current-view/axes/lat");
-
-  _tiedProperties.Tie("aspect-ratio-multiplier", this,
-                      &FGViewMgr::getARM_deg, &FGViewMgr::setARM_deg);
-  fgSetArchivable("/sim/current-view/field-of-view");
-
-  _tiedProperties.Tie("ground-level-nearplane-m", this,
-                      &FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
-  fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
-
-  _tiedProperties.Tie("viewer-lon-deg", this, &FGViewMgr::getViewLon_deg);
-  _tiedProperties.Tie("viewer-lat-deg", this, &FGViewMgr::getViewLat_deg);
-  _tiedProperties.Tie("viewer-elev-ft", this, &FGViewMgr::getViewElev_ft);
-}
 
 void
 FGViewMgr::unbind ()
@@ -445,21 +429,6 @@ FGViewMgr::setView (int newview)
     // real fix would to be make all the accessors use the dirty mechanism
     // on FGViewer, so update() is a no-op.
     update(0.0);
-}
-
-double
-FGViewMgr::getARM_deg () const
-{
-  const flightgear::View * view = get_current_view();
-  return (view == 0 ? 0 : view->get_aspect_ratio_multiplier());
-}
-
-void
-FGViewMgr::setARM_deg (double aspect_ratio_multiplier)
-{  
-  flightgear::View * view = get_current_view();
-  if (view != 0)
-    view->set_aspect_ratio_multiplier(aspect_ratio_multiplier);
 }
 
 double

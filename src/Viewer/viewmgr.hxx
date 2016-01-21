@@ -79,8 +79,6 @@ public:
     
     static const char* subsystemName() { return "view-manager"; }
 private:
-    void do_bind();
-
     simgear::TiedPropertyList _tiedProperties;
 
     double axis_long;
@@ -103,8 +101,6 @@ private:
     double getViewTargetZOffset_m () const;
     void setViewTargetZOffset_m (double z);
 
-    double getARM_deg () const; // Aspect Ratio Multiplier
-    void setARM_deg (double fov);
     double getNear_m () const;
     void setNear_m (double near_m);
     void setViewAxisLong (double axis);

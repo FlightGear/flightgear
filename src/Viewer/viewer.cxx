@@ -251,8 +251,15 @@ View::bind ()
 
 
     _tiedProperties.Tie("field-of-view", this,
-                        &View::get_fov, &View::set_fov);
+                        &View::get_fov, &View::set_fov,
+                        false);
     fgSetArchivable("/sim/current-view/field-of-view");
+
+
+    _tiedProperties.Tie("aspect-ratio-multiplier", this,
+                        &View::get_aspect_ratio_multiplier,
+                        &View::set_aspect_ratio_multiplier,
+                        false);
 
 // expose various quaternions under the debug/ subtree
     _tiedProperties.Tie("debug/orientation-w", this, &View::getOrientation_w);
