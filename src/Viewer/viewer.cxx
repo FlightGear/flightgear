@@ -261,6 +261,15 @@ View::bind ()
                         &View::set_aspect_ratio_multiplier,
                         false);
 
+    _tiedProperties.Tie("ground-level-nearplane-m", this,
+                        &View::getNear_m, &View::setNear_m, false);
+    fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
+
+
+    _tiedProperties.Tie("viewer-lon-deg", this, &View::getLon_deg);
+    _tiedProperties.Tie("viewer-lat-deg", this, &View::getLat_deg);
+    _tiedProperties.Tie("viewer-elev-ft", this, &View::getElev_ft);
+
 // expose various quaternions under the debug/ subtree
     _tiedProperties.Tie("debug/orientation-w", this, &View::getOrientation_w);
     _tiedProperties.Tie("debug/orientation-x", this, &View::getOrientation_x);
@@ -1065,6 +1074,21 @@ double View::getOrientation_z() const{
 double View::get_aspect_ratio() const
 {
     return flightgear::CameraGroup::getDefault()->getMasterAspectRatio();
+}
+
+double View::getLon_deg() const
+{
+    return _position.getLongitudeDeg();
+}
+
+double View::getLat_deg() const
+{
+    return _position.getLatitudeDeg();
+}
+
+double View::getElev_ft() const
+{
+    return _position.getElevationFt();
 }
 
 View::PositionAttitudeProperties::PositionAttitudeProperties()

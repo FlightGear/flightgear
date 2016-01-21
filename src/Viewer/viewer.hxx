@@ -278,6 +278,10 @@ private:
     double getOrOffset_y() const;
     double getOrOffset_z() const;
 
+    double getLon_deg() const;
+    double getLat_deg() const;
+    double getElev_ft() const;
+
     //////////////////////////////////////////////////////////////////
     // private data                                                 //
     //////////////////////////////////////////////////////////////////

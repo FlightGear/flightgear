@@ -127,15 +127,6 @@ FGViewMgr::bind()
                         (double_getter)0, &FGViewMgr::setViewAxisLat);
     fgSetArchivable("/sim/current-view/axes/lat");
 
-    _tiedProperties.Tie("ground-level-nearplane-m", this,
-                        &FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
-    fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
-
-    _tiedProperties.Tie("viewer-lon-deg", this, &FGViewMgr::getViewLon_deg);
-    _tiedProperties.Tie("viewer-lat-deg", this, &FGViewMgr::getViewLat_deg);
-    _tiedProperties.Tie("viewer-elev-ft", this, &FGViewMgr::getViewElev_ft);
-
-
     current_x_offs = fgGetNode("/sim/current-view/x-offset-m", true);
     current_y_offs = fgGetNode("/sim/current-view/y-offset-m", true);
     current_z_offs = fgGetNode("/sim/current-view/z-offset-m", true);
@@ -431,21 +422,6 @@ FGViewMgr::setView (int newview)
     update(0.0);
 }
 
-double
-FGViewMgr::getNear_m () const
-{
-  const flightgear::View * view = get_current_view();
-  return (view == 0 ? 0.5f : view->getNear_m());
-}
-
-void
-FGViewMgr::setNear_m (double near_m)
-{
-  flightgear::View * view = get_current_view();
-  if (view != 0)
-    view->setNear_m(near_m);
-}
-
 void
 FGViewMgr::setViewAxisLong (double axis)
 {
@@ -456,27 +432,6 @@ void
 FGViewMgr::setViewAxisLat (double axis)
 {
   axis_lat = axis;
-}
-
-double
-FGViewMgr::getViewLon_deg() const
-{
-  const flightgear::View* view = get_current_view();
-  return (view != NULL) ? view->getPosition().getLongitudeDeg() : 0.0;
-}
-
-double
-FGViewMgr::getViewLat_deg() const
-{
-  const flightgear::View* view = get_current_view();
-  return (view != NULL) ? view->getPosition().getLatitudeDeg() : 0.0;
-}
-
-double
-FGViewMgr::getViewElev_ft() const
-{
-  const flightgear::View* view = get_current_view();
-  return (view != NULL) ? view->getPosition().getElevationFt() : 0.0;
 }
 
 void

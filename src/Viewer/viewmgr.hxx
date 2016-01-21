@@ -101,23 +101,16 @@ private:
     double getViewTargetZOffset_m () const;
     void setViewTargetZOffset_m (double z);
 
-    double getNear_m () const;
-    void setNear_m (double near_m);
     void setViewAxisLong (double axis);
     void setViewAxisLat (double axis);
     int getView () const;
     void setView (int newview);
-
-    double getViewLon_deg() const;
-    double getViewLat_deg() const;
-    double getViewElev_ft() const;
 
     bool inited;
     std::vector<SGPropertyNode_ptr> config_list;
     SGPropertyNode_ptr _viewNumberProp;
     typedef std::vector<flightgear::ViewPtr> viewer_list;
     viewer_list views;
-    SGVec3d abs_viewer_position;
 
     int current;
 
