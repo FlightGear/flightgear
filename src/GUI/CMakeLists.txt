@@ -78,7 +78,6 @@ if (HAVE_QT)
                             LocationWidget.ui)
     qt5_add_resources(qrc_sources resources.qrc)
 
-    include_directories(${PROJECT_BINARY_DIR}/src/GUI)
 
     add_library(fglauncher QtLauncher.cxx
                             QtLauncher.hxx
@@ -112,6 +111,7 @@ if (HAVE_QT)
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
     target_link_libraries(fglauncher Qt5::Core Qt5::Widgets )
+    target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
 
 
 endif()

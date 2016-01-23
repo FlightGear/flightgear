@@ -192,7 +192,8 @@ set(SOURCES
     models/propulsion/FGTurbine.cpp
     models/propulsion/FGTurboProp.cpp
     )
-    
-include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
+
 
 add_library(JSBSim STATIC ${SOURCES} ${HEADERS})
+
+target_include_directories(JSBSim PRIVATE ${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
