@@ -111,13 +111,6 @@ FGViewMgr::bind()
     _viewNumberProp = _tiedProperties.getRoot()->getNode("view-number");
     _viewNumberProp->setAttribute(SGPropertyNode::ARCHIVE, false);
     _viewNumberProp->setAttribute(SGPropertyNode::PRESERVE, true);
-
-    current_x_offs = fgGetNode("/sim/current-view/x-offset-m", true);
-    current_y_offs = fgGetNode("/sim/current-view/y-offset-m", true);
-    current_z_offs = fgGetNode("/sim/current-view/z-offset-m", true);
-    target_x_offs  = fgGetNode("/sim/current-view/target-x-offset-m", true);
-    target_y_offs  = fgGetNode("/sim/current-view/target-y-offset-m", true);
-    target_z_offs  = fgGetNode("/sim/current-view/target-z-offset-m", true);
 }
 
 
@@ -131,14 +124,6 @@ FGViewMgr::unbind ()
 
   _tiedProperties.Untie();
     _viewNumberProp.clear();
-    
-    config_list.clear();
-    target_x_offs.clear();
-    target_y_offs.clear();
-    target_z_offs.clear();
-    current_x_offs.clear();
-    current_y_offs.clear();
-    current_z_offs.clear();
 }
 
 void
@@ -151,16 +136,6 @@ FGViewMgr::update (double dt)
 
   // Set up view location and orientation
     currentView->updateData();
-
-    // these properties aren't tied - manually propogate them to the
-    // currently active view
-    currentView->setXOffset_m(current_x_offs->getDoubleValue());
-    currentView->setYOffset_m(current_y_offs->getDoubleValue());
-    currentView->setZOffset_m(current_z_offs->getDoubleValue());
-
-    currentView->setTargetXOffset_m(target_x_offs->getDoubleValue());
-    currentView->setTargetYOffset_m(target_y_offs->getDoubleValue());
-    currentView->setTargetZOffset_m(target_z_offs->getDoubleValue());
 
   // Update the current view
   currentView->update(dt);

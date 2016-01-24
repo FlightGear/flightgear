@@ -91,9 +91,6 @@ private:
     viewer_list views;
 
     int current;
-
-    SGPropertyNode_ptr current_x_offs, current_y_offs, current_z_offs;
-    SGPropertyNode_ptr target_x_offs, target_y_offs, target_z_offs;
 };
 
 

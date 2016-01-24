@@ -270,6 +270,20 @@ View::bind ()
     _tiedProperties.Tie("viewer-lat-deg", this, &View::getLat_deg);
     _tiedProperties.Tie("viewer-elev-ft", this, &View::getElev_ft);
 
+    _tiedProperties.Tie("x-offset-m", this, &View::getXOffset_m,
+                        &View::setXOffset_m, false);
+    _tiedProperties.Tie("y-offset-m", this, &View::getYOffset_m,
+                        &View::setYOffset_m, false);
+    _tiedProperties.Tie("z-offset-m", this, &View::getZOffset_m,
+                        &View::setZOffset_m, false);
+
+    _tiedProperties.Tie("target-x-offset-m", this, &View::getTargetXOffset_m,
+                        &View::setTargetXOffset_m, false);
+    _tiedProperties.Tie("target-y-offset-m", this, &View::getTargetYOffset_m,
+                        &View::setTargetYOffset_m, false);
+    _tiedProperties.Tie("target-z-offset-m", this, &View::getTargetZOffset_m,
+                        &View::setTargetZOffset_m, false);
+
 // expose various quaternions under the debug/ subtree
     _tiedProperties.Tie("debug/orientation-w", this, &View::getOrientation_w);
     _tiedProperties.Tie("debug/orientation-x", this, &View::getOrientation_x);
@@ -314,17 +328,6 @@ View::bind ()
     config->setDoubleValue("pitch-offset-deg", _configPitchOffsetDeg);
     config->setDoubleValue("roll-offset-deg", _configRollOffsetDeg);
     config->setDoubleValue("default-field-of-view-deg", _configFOV_deg);
-
-// following properties are not tied, but copied each frame (for now).
-// copying /in/ happens in FGViewMgr::update; this is where we copy our current
-// values /out/ when we are activated
-    _tiedProperties.getRoot()->setDoubleValue("x-offset-m", getXOffset_m());
-    _tiedProperties.getRoot()->setDoubleValue("y-offset-m", getYOffset_m());
-    _tiedProperties.getRoot()->setDoubleValue("z-offset-m", getZOffset_m());
-
-    _tiedProperties.getRoot()->setDoubleValue("target-x-offset-m", getTargetXOffset_m());
-    _tiedProperties.getRoot()->setDoubleValue("target-y-offset-m", getTargetYOffset_m());
-    _tiedProperties.getRoot()->setDoubleValue("target-z-offset-m", getTargetZOffset_m());
 }
 
 void
