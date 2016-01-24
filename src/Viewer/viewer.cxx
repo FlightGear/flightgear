@@ -849,6 +849,7 @@ View::updateData()
 void
 View::update (double dt)
 {
+    updateData();
   updateDampOutput(dt);
 
   int i;

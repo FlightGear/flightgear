@@ -79,8 +79,7 @@ public:
     //////////////////////////////////////////////////////////////////////
 
     void resetOffsetsAndFOV();
-    void updateData();
-    
+
     ViewType getType() const { return _type; }
     void setType( int type );
 
@@ -200,6 +199,7 @@ private:
          double target_z_offset_m, double near_m, bool internal );
 
     void set_clean() { _dirty = false; }
+    void updateData();
 
     void setHeadingOffset_deg_property (double heading_offset_deg);
     void setPitchOffset_deg_property(double pitch_offset_deg);

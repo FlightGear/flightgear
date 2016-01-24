@@ -134,9 +134,6 @@ FGViewMgr::update (double dt)
         return;
     }
 
-  // Set up view location and orientation
-    currentView->updateData();
-
   // Update the current view
   currentView->update(dt);
 
