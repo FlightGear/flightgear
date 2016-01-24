@@ -37,8 +37,6 @@
 
 // Constructor
 FGViewMgr::FGViewMgr( void ) :
-  axis_long(0),
-  axis_lat(0),
   inited(false),
   config_list(fgGetNode("/sim", true)->getChildren("view")),
   current(0)
@@ -101,8 +99,6 @@ FGViewMgr::reinit ()
     }
 }
 
-typedef double (FGViewMgr::*double_getter)() const;
-
 void
 FGViewMgr::bind()
 {
@@ -115,15 +111,6 @@ FGViewMgr::bind()
     _viewNumberProp = _tiedProperties.getRoot()->getNode("view-number");
     _viewNumberProp->setAttribute(SGPropertyNode::ARCHIVE, false);
     _viewNumberProp->setAttribute(SGPropertyNode::PRESERVE, true);
-
-
-    _tiedProperties.Tie("axes/long", this,
-                        (double_getter)0, &FGViewMgr::setViewAxisLong);
-    fgSetArchivable("/sim/current-view/axes/long");
-
-    _tiedProperties.Tie("axes/lat", this,
-                        (double_getter)0, &FGViewMgr::setViewAxisLat);
-    fgSetArchivable("/sim/current-view/axes/lat");
 
     current_x_offs = fgGetNode("/sim/current-view/x-offset-m", true);
     current_y_offs = fgGetNode("/sim/current-view/y-offset-m", true);
@@ -176,7 +163,6 @@ FGViewMgr::update (double dt)
     currentView->setTargetZOffset_m(target_z_offs->getDoubleValue());
 
   // Update the current view
-  do_axes();
   currentView->update(dt);
 
 
@@ -299,60 +285,4 @@ FGViewMgr::setView (int newview)
     // real fix would to be make all the accessors use the dirty mechanism
     // on FGViewer, so update() is a no-op.
     update(0.0);
-}
-
-void
-FGViewMgr::setViewAxisLong (double axis)
-{
-  axis_long = axis;
-}
-
-void
-FGViewMgr::setViewAxisLat (double axis)
-{
-  axis_lat = axis;
-}
-
-void
-FGViewMgr::do_axes ()
-{
-                // Take no action when hat is centered
-  if ( ( axis_long <  0.01 ) &&
-       ( axis_long > -0.01 ) &&
-       ( axis_lat  <  0.01 ) &&
-       ( axis_lat  > -0.01 )
-     )
-    return;
-
-  double viewDir = 999;
-
-  /* Do all the quick and easy cases */
-  if (axis_long < 0) {        // Longitudinal axis forward
-    if (axis_lat == axis_long)
-      viewDir = fgGetDouble("/sim/view/config/front-left-direction-deg");
-    else if (axis_lat == - axis_long)
-      viewDir = fgGetDouble("/sim/view/config/front-right-direction-deg");
-    else if (axis_lat == 0)
-      viewDir = fgGetDouble("/sim/view/config/front-direction-deg");
-  } else if (axis_long > 0) {    // Longitudinal axis backward
-    if (axis_lat == - axis_long)
-      viewDir = fgGetDouble("/sim/view/config/back-left-direction-deg");
-    else if (axis_lat == axis_long)
-      viewDir = fgGetDouble("/sim/view/config/back-right-direction-deg");
-    else if (axis_lat == 0)
-      viewDir = fgGetDouble("/sim/view/config/back-direction-deg");
-  } else if (axis_long == 0) {    // Longitudinal axis neutral
-    if (axis_lat < 0)
-      viewDir = fgGetDouble("/sim/view/config/left-direction-deg");
-    else if (axis_lat > 0)
-      viewDir = fgGetDouble("/sim/view/config/right-direction-deg");
-    else return; /* And assertion failure maybe? */
-  }
-
-                // Do all the difficult cases
-  if ( viewDir > 900 )
-    viewDir = SGD_RADIANS_TO_DEGREES * atan2 ( -axis_lat, -axis_long );
-  if ( viewDir < -1 ) viewDir += 360;
-
-  get_current_view()->setGoalHeadingOffset_deg(viewDir);
 }

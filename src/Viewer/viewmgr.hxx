@@ -81,14 +81,6 @@ public:
 private:
     simgear::TiedPropertyList _tiedProperties;
 
-    double axis_long;
-    double axis_lat;
-
-    void do_axes ();
-
-
-    void setViewAxisLong (double axis);
-    void setViewAxisLat (double axis);
     int getView () const;
     void setView (int newview);
 
