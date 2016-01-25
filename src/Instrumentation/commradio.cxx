@@ -653,7 +653,7 @@ void CommRadioImpl::update(double dt)
   }
 #endif
 
-  if (false == (_power_btn)) {
+  if (false == (_power_btn) || false == (_serviceable)) {
     _metarBridge->clearMetar();
     _atis = "";
     _stationTTL = 0.0;
