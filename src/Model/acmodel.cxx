@@ -22,7 +22,7 @@
 #include <Main/fg_props.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/viewmgr.hxx>
-#include <Viewer/viewer.hxx>
+#include <Viewer/view.hxx>
 #include <Scenery/scenery.hxx>
 #include <Sound/fg_fx.hxx>
 

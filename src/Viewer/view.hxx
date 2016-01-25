@@ -1,4 +1,4 @@
-// viewer.hxx -- class for managing a viewer in the flightgear world.
+// view.hxx -- class for managing a view in the flightgear world.
 //
 // Written by Curtis Olson, started August 1997.
 //                          overhaul started October 2000.

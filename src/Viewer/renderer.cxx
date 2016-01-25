@@ -105,7 +105,7 @@
 #include <Environment/ephemeris.hxx>
 
 //#include <Main/main.hxx>
-#include "viewer.hxx"
+#include "view.hxx"
 #include "viewmgr.hxx"
 #include "splash.hxx"
 #include "renderer.hxx"

@@ -31,7 +31,7 @@
 #include <simgear/scene/util/OsgMath.hxx>
 
 #include <Main/fg_props.hxx>
-#include "viewer.hxx"
+#include "view.hxx"
 
 #include "CameraGroup.hxx"
 
@@ -55,7 +55,7 @@ FGViewMgr::init ()
     SG_LOG(SG_VIEW, SG_WARN, "duplicate init of view manager");
     return;
   }
-  
+
   inited = true;
 
   for (unsigned int i = 0; i < config_list.size(); i++) {
@@ -85,7 +85,7 @@ FGViewMgr::shutdown()
     if (!inited) {
         return;
     }
-    
+
     inited = false;
     views.clear();
 }

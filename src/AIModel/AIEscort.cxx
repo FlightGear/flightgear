@@ -33,7 +33,7 @@
 #include <cmath>
 #include <Main/util.hxx>
 #include <Main/globals.hxx>
-#include <Viewer/viewer.hxx>
+#include <Viewer/view.hxx>
 
 #include <Scenery/scenery.hxx>
 

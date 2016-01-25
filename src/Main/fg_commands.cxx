@@ -37,7 +37,7 @@
 #include <Airports/xmlloader.hxx>
 #include <Network/HTTPClient.hxx>
 #include <Viewer/viewmgr.hxx>
-#include <Viewer/viewer.hxx>
+#include <Viewer/view.hxx>
 #include <Environment/presets.hxx>
 #include <Navaids/NavDataCache.hxx>
 

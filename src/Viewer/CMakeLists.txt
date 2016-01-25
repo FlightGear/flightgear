@@ -10,7 +10,7 @@ set(SOURCES
 	renderer.cxx
 	renderingpipeline.cxx
 	splash.cxx
-	viewer.cxx
+	view.cxx
 	viewmgr.cxx
 	)
 
@@ -23,7 +23,7 @@ set(HEADERS
 	renderer.hxx
 	renderingpipeline.hxx
 	splash.hxx
-	viewer.hxx
+	view.hxx
 	viewmgr.hxx
 	)
 

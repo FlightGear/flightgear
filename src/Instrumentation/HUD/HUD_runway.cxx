@@ -34,7 +34,7 @@
 #include <FDM/flight.hxx>
 #include <Environment/environment.hxx>
 #include <Environment/environment_mgr.hxx>
-#include <Viewer/viewer.hxx>
+#include <Viewer/view.hxx>
 #include <Viewer/viewmgr.hxx>
 #include <Airports/airport.hxx>
 

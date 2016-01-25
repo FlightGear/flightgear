@@ -1,4 +1,4 @@
-// viewer.cxx -- class for managing a viewer in the flightgear world.
+// view.cxx -- class for managing a view in the flightgear world.
 //
 // Written by Curtis Olson, started August 1997.
 //                          overhaul started October 2000.
@@ -27,7 +27,7 @@
 #  include "config.h"
 #endif
 
-#include "viewer.hxx"
+#include "view.hxx"
 
 #include <simgear/compiler.h>
 #include <cassert>
