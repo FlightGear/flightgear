@@ -2564,11 +2564,20 @@ bool Options::checkForArg(int argc, char* argv[], const char* checkArg)
 {
     for (int i = 0; i < argc; ++i) {
         char* arg = argv[i];
-        if (!strncmp("--", arg, 2) && !strcmp(arg + 2, checkArg)) {
-            return true;
+        if (arg == 0) {
+            continue;
         }
-        
-        if ((arg[0] == '-') && !strcmp(arg + 1, checkArg)) {
+
+        if (*arg != '-') { // we only care about args with a leading hypen
+            continue;
+        }
+
+        arg++;
+        if (*arg == '-') { // skip double hypens
+            arg++;
+        }
+
+        if (strcmp(arg, checkArg) == 0) {
             return true;
         }
     }
