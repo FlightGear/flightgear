@@ -149,7 +149,10 @@ void FGHTTPClient::init()
     packageRoot->addDelegate(_packageDelegate.get());
     
     // start a refresh now
-    packageRoot->refresh();
+    // setting 'force' true to work around the problem where a slightly stale
+    // catalog exists, but aircraft are modified - this causes an MD5 sum
+    // mismatch
+    packageRoot->refresh(true);
   }
 
     _inited = true;
