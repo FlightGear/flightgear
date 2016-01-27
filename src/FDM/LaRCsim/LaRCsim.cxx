@@ -24,7 +24,8 @@
 #  include "config.h"
 #endif
 
-#include <math.h>
+#include <cmath>
+#include <cfloat>
 #include <string.h>                // strcmp()
 
 #include <simgear/constants.h>
