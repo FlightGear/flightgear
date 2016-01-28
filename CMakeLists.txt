@@ -594,3 +594,13 @@ CONFIGURE_FILE(
     IMMEDIATE @ONLY)
 ADD_CUSTOM_TARGET(uninstall
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+
+
+# The test suite.
+find_package(CppUnit)
+if (CPPUNIT_FOUND)
+    message(STATUS "CppUnit found.")
+    add_subdirectory(test_suite EXCLUDE_FROM_ALL)
+else()
+    message(STATUS "CppUnit not found.")
+endif()
