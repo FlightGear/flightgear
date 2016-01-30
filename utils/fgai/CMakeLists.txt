@@ -18,11 +18,10 @@ add_executable(fgai
 )
 
 target_link_libraries(fgai
-  ${SIMGEAR_LIBRARIES}
+  SimGearCore SimGearScene
   ${OPENSCENEGRAPH_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${RTI_LIBRARIES}
-  ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 )
 
 install(TARGETS fgai RUNTIME DESTINATION bin)

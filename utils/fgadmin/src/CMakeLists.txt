@@ -5,10 +5,9 @@ add_executable(fgadmin WIN32 fgadmin_funcs.cxx main.cxx untarka.c)
 add_dependencies(fgadmin FGAdminUI)
 
 target_link_libraries(fgadmin FGAdminUI
-	${SIMGEAR_CORE_LIBRARIES}
+	SimGearCore
 	${PLIB_LIBRARIES}
 	${FLTK_LIBRARIES}
-	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 	${ZLIB_LIBRARIES}
 )
 
