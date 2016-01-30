@@ -41,15 +41,9 @@ if(ENABLE_TESTS)
 add_executable(yasim yasim-test.cpp ${COMMON})
 add_executable(yasim-proptest proptest.cpp ${COMMON})
 
-target_link_libraries(yasim
-		${SIMGEAR_CORE_LIBRARIES}
-		${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
-
-target_link_libraries(yasim-proptest
-		${SIMGEAR_CORE_LIBRARIES}
-		${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
+target_link_libraries(yasim SimGearCore)
+target_link_libraries(yasim-proptest SimGearCore)
 
 install(TARGETS yasim yasim-proptest RUNTIME DESTINATION bin)
 
 endif(ENABLE_TESTS)
-

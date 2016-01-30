@@ -6,31 +6,30 @@ if(GLUT_FOUND)
 
 	add_executable(fgpanel main.cxx
 		ApplicationProperties.hxx
-		FGGLApplication.cxx 
+		FGGLApplication.cxx
 		FGGLApplication.hxx
-		FGPanelApplication.cxx 
+		FGPanelApplication.cxx
 		FGPanelApplication.hxx
-		FGPNGTextureLoader.cxx 
+		FGPNGTextureLoader.cxx
 		FGPNGTextureLoader.hxx
 		FGRGBTextureLoader.cxx
-		FGRGBTextureLoader.hxx 
+		FGRGBTextureLoader.hxx
 		FGPanelProtocol.cxx
 		FGPanelProtocol.hxx
 		FGFontCache.cxx
 		FGFontCache.hxx
-		panel.cxx 
+		panel.cxx
 		panel.hxx
 		panel_io.cxx
 		panel_io.hxx
 	)
 
-	target_link_libraries(fgpanel 
+	target_link_libraries(fgpanel
 		${PNG_LIBRARIES}
 		${GLUT_LIBRARIES}
-		${SIMGEAR_CORE_LIBRARIES}
+		SimGearCore
 		${OPENGL_LIBRARIES}
 		${PLIB_LIBRARIES}
-		${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 	)
 
 	include_directories(${PNG_INCLUDE_DIR})
