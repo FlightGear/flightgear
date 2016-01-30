@@ -148,7 +148,6 @@ else()
 endif()
 
 # FlightGear build options
-option(SIMGEAR_SHARED    "Set to ON when SimGear was built as a shared library" OFF)
 option(LOGGING           "Set to ON to build FlightGear with logging support (default)" ON)
 option(JSBSIM_TERRAIN    "Set to ON to build FlightGear with JSBSim terrain handling code" ON)
 option(SP_FDMS           "Set to ON to build FlightGear with special-purpose FDMs" ON)
@@ -234,9 +233,7 @@ endif(EVENT_INPUT)
 
 # check required dependencies
 find_package(Boost   REQUIRED)
-find_package(ZLIB    REQUIRED)
 find_package(OpenGL  REQUIRED)
-find_package(OpenAL  REQUIRED)
 find_package(OpenSceneGraph 3.2.0 REQUIRED
   osgText
   osgSim
@@ -262,7 +259,6 @@ endif()
 
 if (SYSTEM_SQLITE)
     find_package(SQLite3 REQUIRED)
-
     message(STATUS "Using system SQLite3 library")
 else()
     set(SQLITE3_INCLUDED_DIR "${CMAKE_SOURCE_DIR}/3rdparty/sqlite3")
@@ -308,7 +304,7 @@ endif (ENABLE_QT)
 find_package(PLIB REQUIRED puaux pu js fnt)
 
 # FlightGear and SimGear versions need to match
-find_package(SimGear ${FLIGHTGEAR_VERSION} REQUIRED)
+find_package(SimGear ${FLIGHTGEAR_VERSION} CONFIG REQUIRED)
 
 ##############################################################################
 
@@ -383,7 +379,6 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MSVC_LD_FLAGS}")
 
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
-    ${ZLIB_INCLUDE_DIR}
     ${OPENGL_INCLUDE_DIR}
     ${SIMGEAR_INCLUDE_DIRS}
     ${PLIB_INCLUDE_DIR}

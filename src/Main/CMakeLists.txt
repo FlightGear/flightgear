@@ -82,7 +82,7 @@ if(APPLE)
         OUTPUT_VARIABLE CURRENT_YEAR
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-        
+
     # in our local CMakeModules dir
     set_target_properties(fgfs PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST FlightGearBundleInfo.plist.in
@@ -113,7 +113,7 @@ endif()
 if(ENABLE_JSBSIM)
     # FIXME - remove once JSBSim doesn't expose private headers
     include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
-    
+
     target_link_libraries(fgfs JSBSim)
 endif()
 if(ENABLE_IAX)
@@ -134,16 +134,14 @@ if(X11_FOUND)
     target_link_libraries(fgfs ${X11_LIBRARIES})
 endif()
 target_link_libraries(fgfs
+	SimGearCore SimGearScene
 	${SQLITE3_LIBRARY}
 	${SIMGEAR_LIBRARIES}
 	${OPENSCENEGRAPH_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${PLIB_LIBRARIES}
-        ${ZLIB_LIBRARY}
 	${HLA_LIBRARIES}
 	${EVENT_INPUT_LIBRARIES}
-	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
-	${SIMGEAR_SCENE_LIBRARY_DEPENDENCIES}
 	${PLATFORM_LIBS}
 )
 
@@ -159,7 +157,7 @@ if (Qt5Core_FOUND)
     target_link_libraries(fgfs Qt5::Widgets fglauncher)
 endif()
 
-if (APPLE)  
+if (APPLE)
     install(TARGETS fgfs BUNDLE DESTINATION .)
 else()
     install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -168,9 +166,7 @@ endif()
 if(ENABLE_METAR)
     add_executable(metar metar_main.cxx)
     target_link_libraries(metar
-        ${SIMGEAR_LIBRARIES}
-        ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
-        ${SIMGEAR_SCENE_LIBRARY_DEPENDENCIES}
+        SimGearScene SimGearCore
         ${PLATFORM_LIBS}
     )
 

@@ -48,9 +48,8 @@ if(ENABLE_FGJS)
 
     add_executable(fgjs ${FGJS_SOURCES})
     target_link_libraries(fgjs
-        ${SIMGEAR_CORE_LIBRARIES}
+        SimGearCore
         ${PLIB_LIBRARIES}
-        ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
     )
 
     install(TARGETS fgjs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -59,9 +58,8 @@ endif()
 if(ENABLE_JS_DEMO)
     add_executable(js_demo js_demo.cxx)
     target_link_libraries(js_demo
-        ${SIMGEAR_CORE_LIBRARIES}
+        SimGearCore
         ${PLIB_LIBRARIES}
-        ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
     )
 
     install(TARGETS js_demo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

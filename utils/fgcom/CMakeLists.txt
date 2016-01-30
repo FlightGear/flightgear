@@ -1,5 +1,7 @@
 set(name fgcom)
 
+find_package(OpenAL REQUIRED)
+
 # Copy positions.txt content in const char* _positionsData[];
 file(READ utils/positions.txt POSITIONS_DATA)
 string(REGEX REPLACE "\n" "\"%
@@ -27,8 +29,7 @@ add_executable(${name}
 target_link_Libraries(${name}
                       iaxclient_lib
                       ${OPENAL_LIBRARY}
-                      ${SIMGEAR_CORE_LIBRARIES}
-                      ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+                      SimGearCore
 )
 
 install(TARGETS ${name} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
