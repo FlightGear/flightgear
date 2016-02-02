@@ -50,6 +50,7 @@
 #include <stdio.h>
 #include <cstring>
 #include <iostream>
+#include <locale.h>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
@@ -212,6 +213,13 @@ int main ( int argc, char **argv )
 #endif
 
     initFPE(flightgear::Options::checkForArg(argc, argv, "enable-fpe"));
+
+    // pick up all user locale settings, but force C locale for numerical/sorting
+    // conversions because we have lots of code which assumes standard
+    // formatting
+    setlocale(LC_ALL, "");
+    setlocale(LC_NUMERIC, "C");
+    setlocale(LC_COLLATE, "C");
 
     bool fgviewer = flightgear::Options::checkForArg(argc, argv, "fgviewer");
     try {
