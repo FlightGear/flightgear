@@ -581,7 +581,7 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
         naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
         " no longer follows symlinks; to authorize reading additional "
         "directories, add them to --fg-aircraft)");
-        naRuntimeError(c, "directory(): access denied (unauthorized directory)");
+        // to avoid breaking dialogs, pretend it doesn't exist rather than erroring out
         return naNil();
     }
 
