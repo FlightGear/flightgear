@@ -18,11 +18,14 @@
  */
 
 
-#include <cppunit/CompilerOutputter.h>
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/TextTestRunner.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
+
+#include "fgCompilerOutputter.hxx"
+#include "fgTestListener.hxx"
+#include "formatting.hxx"
 
 
 // Execute all test suites for the given test category.
@@ -31,14 +34,25 @@ int testRunner(const std::string& title)
     // Declarations.
     CppUnit::TextTestRunner runner;
 
+    // Print out a title.
+    printTitle(std::cerr, title);
+
     // Get all tests.
     runner.addTest(CppUnit::TestFactoryRegistry::getRegistry(title).makeTest());
 
+    // Set up the test listener.
+    fgTestListener *testListener;
+    testListener = new fgTestListener;
+    runner.eventManager().addListener(testListener);
+
     // Set the test suite output IO stream.
-    runner.setOutputter(CppUnit::CompilerOutputter::defaultOutputter(&runner.result(), std::cerr));
+    runner.setOutputter(new fgCompilerOutputter(&runner.result(), &testListener->io_capt, &testListener->sum_time, std::cerr));
 
     // Execute the tests.
     runner.run("", false, true, false);
+
+    // Clean up.
+    delete testListener;
 
     // Return the status of the tests.
     CppUnit::TestResultCollector &status = runner.result();

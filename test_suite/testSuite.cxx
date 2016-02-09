@@ -20,6 +20,46 @@
 #include <iostream>
 
 #include "fgTestRunner.hxx"
+#include "formatting.hxx"
+
+using namespace std;
+
+
+// Print out a summary of the relax test suite.
+void summary(CppUnit::OStream &stream, int system_result, int unit_result, int gui_result, int simgear_result)
+{
+    // Title.
+    string text = "Summary of the FlightGear test suite";
+    printTitle(stream, text);
+
+    // Subtitle.
+    text = "Synopsis";
+    printSection(stream, text);
+
+    // System/functional test summary.
+    text = "System/functional tests";
+    printSummaryLine(stream, text, system_result);
+
+    // Unit test summary.
+    text = "Unit tests";
+    printSummaryLine(stream, text, unit_result);
+
+    // GUI test summary.
+    text = "GUI tests";
+    printSummaryLine(stream, text, gui_result);
+
+    // Simgear unit test summary.
+    text = "Simgear unit tests";
+    printSummaryLine(stream, text, simgear_result);
+
+    // Synopsis.
+    text ="Synopsis";
+    int synopsis = system_result + unit_result + gui_result + simgear_result;
+    printSummaryLine(stream, text, synopsis);
+
+    // End.
+    stream << endl << endl;
+}
 
 
 int main(void)
@@ -32,6 +72,9 @@ int main(void)
     status_unit = testRunner("Unit tests");
     status_gui = testRunner("GUI tests");
     status_simgear = testRunner("Simgear unit tests");
+
+    // Summary printout.
+    summary(cerr, status_system, status_unit, status_gui, status_simgear);
 
     // Failure.
     if (status_system > 0)

@@ -12,12 +12,18 @@ endforeach(test_category)
 set(TESTSUITE_SOURCES
     ${TESTSUITE_SOURCES}
     bootstrap.cxx
+    fgCompilerOutputter.cxx
+    fgTestListener.cxx
     fgTestRunner.cxx
+    formatting.cxx
     testSuite.cxx
 )
 set(TESTSUITE_HEADERS
     ${TESTSUITE_HEADERS}
+    fgCompilerOutputter.hxx
+    fgTestListener.hxx
     fgTestRunner.hxx
+    formatting.hxx
 )
 
 # The test suite output directory.
