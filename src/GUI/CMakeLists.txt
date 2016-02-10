@@ -106,6 +106,8 @@ if (HAVE_QT)
                             LocationWidget.hxx
                             QtMessageBox.cxx
                             QtMessageBox.hxx
+                            QtFileDialog.cxx
+                            QtFileDialog.hxx
                             ${uic_sources}
                             ${qrc_sources})
 

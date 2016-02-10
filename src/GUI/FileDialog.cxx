@@ -41,6 +41,9 @@
 #if defined(SG_WINDOWS)
     #include "WindowsFileDialog.hxx"
 #endif
+#if defined(HAVE_QT)
+    #include "QtFileDialog.hxx"
+#endif
 
 FGFileDialog::FGFileDialog(Usage use) :
     _usage(use),
@@ -148,6 +151,8 @@ static naRef f_createFileDialog(const nasal::CallContext& ctx)
     FileDialogPtr fd(new CocoaFileDialog(usage));
 #elif defined(SG_WINDOWS)
 	FileDialogPtr fd(new WindowsFileDialog(usage));
+#elif defined(HAVE_QT)
+    FileDialogPtr fd(new QtFileDialog(usage));
 #else
     FileDialogPtr fd(new PUIFileDialog(usage));
 #endif
