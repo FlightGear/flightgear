@@ -149,8 +149,8 @@ void fgInitAllowedPaths()
         fgValidatePath(globals->get_fg_home() + "/aircraft-data/yes..xml",true).empty() ||
         fgValidatePath(globals->get_fg_root() + "/.\\yes.bmp",false).empty()) {
             flightgear::fatalMessageBox("Nasal initialization error",
-                                    "fgInitAllowedPaths() does not work",
-                                    "");
+                                    "The FG_HOME directory must not be inside any of the FG_ROOT, FG_AIRCRAFT or FG_SCENERY directories",
+                                    "(check that you have not accidentally included an extra :, as an empty part means the current directory)");
             exit(-1);
     }
 }
