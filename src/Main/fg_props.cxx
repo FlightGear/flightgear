@@ -488,9 +488,9 @@ formatLatLongString (double deg, int format, char *buf, char c) {
         deg += 1.0;
     }
     if (c == 'N' || c == 'S') {
-        snprintf(buf, 32, "%02d* %02d'.%03d%c", int(deg), int(min), int(round((min-int(min))*1000)), c);
+        snprintf(buf, 32, "%02d* %02d'.%03d%c", int(deg), int(min), int(SGMisc<double>::round((min-int(min))*1000)), c);
     } else {
-        snprintf(buf, 32, "%03d* %02d'.%03d%c", int(deg), int(min), int(round((min-int(min))*1000)), c);
+        snprintf(buf, 32, "%03d* %02d'.%03d%c", int(deg), int(min), int(SGMisc<double>::round((min-int(min))*1000)), c);
     }
 
   } else {
