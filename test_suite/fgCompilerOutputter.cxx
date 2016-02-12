@@ -26,6 +26,7 @@
 
 #include "fgCompilerOutputter.hxx"
 #include "formatting.hxx"
+#include "logging.hxx"
 
 using namespace std;
 
@@ -59,15 +60,16 @@ void fgCompilerOutputter::printFailureDetail(CppUnit::TestFailure *failure)
     if (test_iter != io_capt->end())
         test_io = *test_iter;
 
-    // Default IO streams.
-    fg_stream << string(WIDTH_DIVIDER, '-') << endl;
-    fg_stream << "STDOUT and STDERR:" << endl;
-    fg_stream << test_io.stdio << endl;
-
     // SG_LOG IO streams.
-    fg_stream << string(WIDTH_DIVIDER, '-') << endl;
-    fg_stream << "SG_LOG:" << endl;
-    fg_stream << test_io.sg_log << endl;
+    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_BULK priority", test_io.sg_bulk, true);
+    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_BULK only priority", test_io.sg_bulk_only);
+    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_DEBUG only priority", test_io.sg_debug_only);
+    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_INFO only priority", test_io.sg_info_only);
+    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_WARN only priority", test_io.sg_warn_only);
+    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_ALERT only priority", test_io.sg_alert_only);
+
+    // Default IO streams.
+    fgCompilerOutputter::printIOStreamMessages("STDOUT and STDERR", test_io.stdio);
 }
 
 
@@ -83,6 +85,28 @@ void fgCompilerOutputter::printFailureReport()
     // Final summary.
     fg_stream << endl << "[ FAILED ]" << endl << endl;
     fg_stream.flush();
+}
+
+
+void fgCompilerOutputter::printIOStreamMessages(const char *heading, string messages, bool empty)
+{
+    // Silence.
+    if (!empty && messages.size() == 0)
+        return;
+
+    // Divider.
+    fg_stream << string(WIDTH_DIVIDER, '-') << endl;
+
+    // Heading.
+    fg_stream << "# " << heading << endl << endl;
+
+    // Nothing to do
+    if (messages.size() == 0)
+        fg_stream << "(empty)" << endl << endl;
+
+    // The IO stream contents.
+    else
+        fg_stream << messages << endl;
 }
 
 

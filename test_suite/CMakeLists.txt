@@ -16,6 +16,7 @@ set(TESTSUITE_SOURCES
     fgTestListener.cxx
     fgTestRunner.cxx
     formatting.cxx
+    logging.cxx
     testSuite.cxx
 )
 set(TESTSUITE_HEADERS
@@ -24,6 +25,7 @@ set(TESTSUITE_HEADERS
     fgTestListener.hxx
     fgTestRunner.hxx
     formatting.hxx
+    logging.hxx
 )
 
 # The test suite output directory.

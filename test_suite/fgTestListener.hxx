@@ -30,7 +30,12 @@
 struct TestIOCapt {
     std::string name;
     std::string stdio;
-    std::string sg_log;
+    std::string sg_bulk;
+    std::string sg_bulk_only;
+    std::string sg_debug_only;
+    std::string sg_info_only;
+    std::string sg_warn_only;
+    std::string sg_alert_only;
 };
 
 

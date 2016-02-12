@@ -71,6 +71,10 @@ class fgCompilerOutputter : public CppUnit::CompilerOutputter
 
         // The test suite time, in clock ticks.
         const clock_t *suite_timer;
+
+        // Simgear logstream IO printout.
+        void printIOStreamMessages(const char *heading, std::string messages, bool empty);
+        void printIOStreamMessages(const char *heading, std::string messages) {printIOStreamMessages(heading, messages, false);}
 };
 
 

@@ -21,6 +21,7 @@
 
 #include "fgTestRunner.hxx"
 #include "formatting.hxx"
+#include "logging.hxx"
 
 using namespace std;
 
@@ -67,6 +68,10 @@ int main(void)
     // Declarations.
     int status_gui, status_simgear, status_system, status_unit;
 
+    // Set up logging.
+    sglog().setDeveloperMode(true);
+    setupLogging();
+
     // Execute each of the test suite categories.
     status_system = testRunner("System tests");
     status_unit = testRunner("Unit tests");
@@ -75,6 +80,9 @@ int main(void)
 
     // Summary printout.
     summary(cerr, status_system, status_unit, status_gui, status_simgear);
+
+    // Deactivate the logging.
+    stopLogging();
 
     // Failure.
     if (status_system > 0)

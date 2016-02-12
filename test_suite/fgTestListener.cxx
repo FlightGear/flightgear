@@ -23,6 +23,7 @@
 #include <cppunit/TestListener.h>
 
 #include "fgTestListener.hxx"
+#include "logging.hxx"
 
 using namespace std;
 
@@ -62,6 +63,15 @@ void fgTestListener::endTest(CppUnit::Test *test)
         // Standard IO.
         test_io.stdio = capt.str();
 
+        // The simgear logstreams.
+        capturedIO &obj = getIOstreams();
+        test_io.sg_bulk = obj.sg_bulk.str();
+        test_io.sg_bulk_only = obj.sg_bulk_only.str();
+        test_io.sg_debug_only = obj.sg_debug_only.str();
+        test_io.sg_info_only = obj.sg_info_only.str();
+        test_io.sg_warn_only = obj.sg_warn_only.str();
+        test_io.sg_alert_only = obj.sg_alert_only.str();
+
         // Add the test's IO to the list.
         io_capt.push_back(test_io);
     }
@@ -71,6 +81,15 @@ void fgTestListener::endTest(CppUnit::Test *test)
 // Override the base class function to capture IO streams.
 void fgTestListener::startTest(CppUnit::Test *test)
 {
+    // Clear the simgear logstream buffers.
+    capturedIO &obj = getIOstreams();
+    obj.sg_bulk.str("");
+    obj.sg_bulk_only.str("");
+    obj.sg_debug_only.str("");
+    obj.sg_info_only.str("");
+    obj.sg_warn_only.str("");
+    obj.sg_alert_only.str("");
+
     // Store the original STDOUT and STDERR for restoring later on.
     orig_cout = cout.rdbuf();
     orig_cerr = cerr.rdbuf();
