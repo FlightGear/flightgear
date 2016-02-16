@@ -327,6 +327,12 @@ void FGScenery::init() {
     interiorLOD->addChild(interior_branch.get(), 0.0, 50.0);
     aircraft_branch->addChild( interiorLOD );
     
+    // Set up the particle system as a directly accessible branch of the scene graph.
+    particles_branch = simgear::Particles::getCommonRoot();
+    particles_branch->setName("Particles");
+    scene_graph->addChild(particles_branch.get());
+    simgear::GlobalParticleCallback::setSwitch(fgGetNode("/sim/rendering/particles", true));
+
     // Initials values needed by the draw-time object loader
     sgUserDataInit( globals->get_props() );
   
@@ -341,6 +347,7 @@ void FGScenery::shutdown()
     terrain_branch = NULL;
     models_branch = NULL;
     aircraft_branch = NULL;
+    particles_branch = NULL;
 }
 
 
