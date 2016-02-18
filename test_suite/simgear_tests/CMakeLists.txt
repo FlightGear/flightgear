@@ -1,5 +1,6 @@
 # Add each simgear test category.
 foreach( simgear_test_category
+        math
         props
     )
 
