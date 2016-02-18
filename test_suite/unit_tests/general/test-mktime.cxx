@@ -1,8 +1,11 @@
 // test the systems mktime() function
 
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
 #endif
 
 #include <math.h>
@@ -19,6 +22,8 @@
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
+
+#include "test-mktime.hxx"
 
 #define LST_MAGIC_TIME_1998 890481600
 
@@ -40,6 +45,14 @@ long int fix_up_timezone( long int timezone_orig ) {
 #else
     return( timezone_orig );
 #endif
+}
+
+
+// A printout function suitable for the test suite to replace printf().
+int printout(const char *text, ...)
+{
+    std::cout << text;
+    return 0;
 }
 
 
@@ -87,14 +100,14 @@ time_t get_start_gmt(int year) {
 
     time_t start = mktime(&mt);
 
-    printf("start1 = %ld\n", start);
-    printf("start2 = %s", ctime(&start));
-    printf("(tm_isdst = %d)\n", mt.tm_isdst);
+    printout("start1 = %ld\n", start);
+    printout("start2 = %s", ctime(&start));
+    printout("(tm_isdst = %d)\n", mt.tm_isdst);
 
     TIMEZONE = fix_up_timezone( TIMEZONE );
 	
 #  if defined( TIMEZONE_OFFSET_WORKS )
-    printf("start = %ld, timezone = %ld\n", start, TIMEZONE);
+    printout("start = %ld, timezone = %ld\n", start, TIMEZONE);
     return( start - TIMEZONE );
 #  else // ! defined( TIMEZONE_OFFSET_WORKS )
 
@@ -102,18 +115,18 @@ time_t get_start_gmt(int year) {
     if ( daylight > 0 ) {
 	daylight = 1;
     } else if ( daylight < 0 ) {
-	printf("OOOPS, problem in fg_time.cxx, no daylight savings info.\n");
+	printout("OOOPS, problem in fg_time.cxx, no daylight savings info.\n");
     }
 
     long int offset = -(TIMEZONE / 3600 - daylight);
 
-    printf("  Raw time zone offset = %ld\n", TIMEZONE);
-    printf("  Daylight Savings = %d\n", daylight);
-    printf("  Local hours from GMT = %ld\n", offset);
+    printout("  Raw time zone offset = %ld\n", TIMEZONE);
+    printout("  Daylight Savings = %d\n", daylight);
+    printout("  Local hours from GMT = %ld\n", offset);
     
     long int start_gmt = start - TIMEZONE + (daylight * 3600);
     
-    printf("  March 21 noon (CST) = %ld\n", start);
+    printout("  March 21 noon (CST) = %ld\n", start);
 
     return ( start_gmt );
 #  endif // ! defined( TIMEZONE_OFFSET_WORKS )
@@ -121,31 +134,34 @@ time_t get_start_gmt(int year) {
 }
 
 
-int main() {
+// The original test-mktime test.
+void MktimeTests::testMktime()
+{
     time_t start_gmt;
 
     start_gmt = get_start_gmt(98);
 
 
     if ( start_gmt == LST_MAGIC_TIME_1998 ) {
-	printf("Time test = PASSED\n\n");
+	printout("Time test = PASSED\n\n");
 #ifdef HAVE_TIMEGM
-	printf("You have timegm() which is just like mktime() except that\n");
-	printf("it explicitely expects input in GMT ... lucky you!\n");
+	printout("You have timegm() which is just like mktime() except that\n");
+	printout("it explicitely expects input in GMT ... lucky you!\n");
 #elif MK_TIME_IS_GMT
-	printf("You don't seem to have timegm(), but mktime() seems to\n");
-	printf("assume input is GMT on your system ... I guess that works\n");
+	printout("You don't seem to have timegm(), but mktime() seems to\n");
+	printout("assume input is GMT on your system ... I guess that works\n");
 #else
-	printf("mktime() assumes local time zone on your system, but we can\n");
-	printf("compensate just fine.\n");
+	printout("mktime() assumes local time zone on your system, but we can\n");
+	printout("compensate just fine.\n");
 #endif
     } else {
-	printf("Time test = FAILED\n\n");
-	printf("There is likely a problem with mktime() on your system.\n");
-        printf("This will cause the sun/moon/stars/planets to be in the\n");
-	printf("wrong place in the sky and the rendered time of day will be\n");
-	printf("incorrect.\n\n");
-	printf("Please report this to http://www.flightgear.org/~curt so we can work to fix\n");
-	printf("the problem on your platform.\n");
+	printout("Time test = FAILED\n\n");
+	printout("There is likely a problem with mktime() on your system.\n");
+        printout("This will cause the sun/moon/stars/planets to be in the\n");
+	printout("wrong place in the sky and the rendered time of day will be\n");
+	printout("incorrect.\n\n");
+	printout("Please report this to flightgear-devel@lists.sourceforge.net so we can work to fix\n");
+	printout("the problem on your platform.\n");
     }
+    CPPUNIT_ASSERT_EQUAL(LST_MAGIC_TIME_1998, (int)start_gmt);
 }

@@ -54,6 +54,13 @@
 
 #cmakedefine HAVE_QT
 
+#cmakedefine HAVE_SYS_TIME_H
+#cmakedefine HAVE_SYS_TIMEB_H
+#cmakedefine HAVE_TIMEGM
+#cmakedefine HAVE_DAYLIGHT
+#cmakedefine HAVE_FTIME
+#cmakedefine HAVE_GETTIMEOFDAY
+
 #define FG_BUILD_TYPE "@FG_BUILD_TYPE@"
 
 #define HAVE_PUI

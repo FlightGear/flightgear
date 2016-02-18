@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.0)
 
 include (CheckFunctionExists)
+include (CheckVariableExists)
 include (CheckCSourceCompiles)
 include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
@@ -396,9 +397,14 @@ find_package(SimGear ${MIN_SIMGEAR_VERSION} CONFIG REQUIRED)
 
 ##############################################################################
 
-check_include_file(unistd.h   HAVE_UNISTD_H)
-check_include_file(sys/time.h HAVE_SYS_TIME_H)
-check_include_file(windows.h  HAVE_WINDOWS_H)
+check_include_file(unistd.h        HAVE_UNISTD_H)
+check_include_file(sys/time.h      HAVE_SYS_TIME_H)
+check_include_file(sys/timeb.h     HAVE_SYS_TIMEB_H)
+check_include_file(windows.h       HAVE_WINDOWS_H)
+check_function_exists(timegm       HAVE_TIMEGM)
+check_variable_exists(daylight     HAVE_DAYLIGHT)
+check_function_exists(ftime        HAVE_FTIME)
+check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
 
 if(ENABLE_PROFILE)
     find_package(GooglePerfTools REQUIRED)
