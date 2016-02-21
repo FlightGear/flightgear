@@ -43,7 +43,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Viewer/renderer.hxx>
-#include <Viewer/viewer.hxx>
+#include <Viewer/view.hxx>
 
 #include "light.hxx"
 #include "sunsolver.hxx"

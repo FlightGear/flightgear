@@ -68,7 +68,7 @@
 #include "util.hxx"
 #include "main.hxx"
 #include "locale.hxx"
-#include <Viewer/viewer.hxx>
+#include <Viewer/view.hxx>
 #include <Viewer/viewmgr.hxx>
 #include <Environment/presets.hxx>
 #include <Network/http/httpd.hxx>

@@ -34,6 +34,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/SGMath.hxx>
+#include <simgear/scene/model/particles.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
 #include "SceneryPager.hxx"
@@ -55,6 +56,7 @@ class FGScenery : public SGSubsystem
     osg::ref_ptr<osg::Group> models_branch;
     osg::ref_ptr<osg::Group> aircraft_branch;
     osg::ref_ptr<osg::Group> interior_branch;
+    osg::ref_ptr<osg::Group> particles_branch;
     
     osg::ref_ptr<flightgear::SceneryPager> _pager;
     ScenerySwitchListener* _listener;
@@ -114,6 +116,7 @@ public:
     osg::Group *get_models_branch () const { return models_branch.get(); }
     osg::Group *get_aircraft_branch () const { return aircraft_branch.get(); }
     osg::Group *get_interior_branch () const { return interior_branch.get(); }
+    osg::Group *get_particles_branch () const { return particles_branch.get(); }
     
     /// Returns true if scenery is available for the given lat, lon position
     /// within a range of range_m.

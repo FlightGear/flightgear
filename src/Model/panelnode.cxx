@@ -25,7 +25,7 @@
 #include <Main/fg_os.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#include "Viewer/viewer.hxx"
+#include "Viewer/view.hxx"
 #include "Viewer/viewmgr.hxx"
 
 using std::vector;

@@ -39,7 +39,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Viewer/viewmgr.hxx>
-#include <Viewer/viewer.hxx>
+#include <Viewer/view.hxx>
 #include <GUI/FGFontCache.hxx>
 #include <GUI/gui.h> // for guiErrorMessage
 
@@ -213,7 +213,7 @@ void HUD::draw(osg::State&)
 void HUD::draw3D()
 {
     using namespace osg;
-    FGViewer* view = globals->get_current_view();
+    flightgear::View* view = globals->get_current_view();
 
     // Standard fgfs projection, with essentially meaningless clip
     // planes (we'll map the whole HUD plane to z=-1)

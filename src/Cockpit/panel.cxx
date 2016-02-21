@@ -59,7 +59,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Viewer/viewmgr.hxx>
-#include <Viewer/viewer.hxx>
+#include <Viewer/view.hxx>
 #include <Time/light.hxx>
 #include <GUI/FGFontCache.hxx>	
 #include <Instrumentation/dclgps.hxx>

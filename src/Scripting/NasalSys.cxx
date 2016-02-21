@@ -574,8 +574,19 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
 {
     if(argc != 1 || !naIsString(args[0]))
         naRuntimeError(c, "bad arguments to directory()");
-    
-    simgear::Dir d(SGPath(naStr_data(args[0])));
+
+    std::string dirname = fgValidatePath(naStr_data(args[0]), false);
+    if(dirname.empty()) {
+        SG_LOG(SG_NASAL, SG_ALERT, "directory(): listing '" <<
+        naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
+        " no longer follows symlinks; to authorize reading additional "
+        "directories, add them to --fg-aircraft)");
+        // to avoid breaking dialogs, pretend it doesn't exist rather than erroring out
+        return naNil();
+    }
+
+    SGPath d0(dirname);
+    simgear::Dir d(d0);
     if(!d.exists()) return naNil();
     naRef result = naNewVector(c);
 

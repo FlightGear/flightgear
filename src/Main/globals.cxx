@@ -701,7 +701,7 @@ FGViewMgr *FGGlobals::get_viewmgr() const
     return get_subsystem<FGViewMgr>();
 }
 
-FGViewer* FGGlobals::get_current_view () const
+flightgear::View* FGGlobals::get_current_view () const
 {
     FGViewMgr* vm = get_viewmgr();
     return vm ? vm->get_current_view() : 0;

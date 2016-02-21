@@ -34,7 +34,7 @@
 #include <FDM/flight.hxx>
 #include <Environment/environment.hxx>
 #include <Environment/environment_mgr.hxx>
-#include <Viewer/viewer.hxx>
+#include <Viewer/view.hxx>
 #include <Viewer/viewmgr.hxx>
 #include <Airports/airport.hxx>
 
@@ -87,7 +87,7 @@ void HUD::Runway::draw()
 //    double po = curr_view->getPitchOffset_deg();
 //    double ho = curr_view->getHeadingOffset_deg();
 
-    FGViewer* cockpitView = globals->get_viewmgr()->get_view(0);
+    flightgear::View* cockpitView = globals->get_viewmgr()->get_view(0);
     
     double yaw = -(cockpitView->getHeadingOffset_deg() - _default_heading) * SG_DEGREES_TO_RADIANS;
     double pitch = (cockpitView->getPitchOffset_deg() - _default_pitch) * SG_DEGREES_TO_RADIANS;

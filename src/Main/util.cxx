@@ -101,6 +101,8 @@ void fgInitAllowedPaths()
 #endif
     read_allowed_paths.push_back(fg_root + sep + "*");
     read_allowed_paths.push_back(fg_home + sep + "*");
+    read_allowed_paths.push_back(fg_root);
+    read_allowed_paths.push_back(fg_home);
     string_list const aircraft_paths = globals->get_aircraft_paths();
     string_list const scenery_paths = globals->get_secure_fg_scenery();
     // not plain fg_scenery, to avoid making
@@ -124,6 +126,7 @@ void fgInitAllowedPaths()
               exit(-1);
           }
           read_allowed_paths.push_back(SGPath(*it).realpath() + sep + "*");
+          read_allowed_paths.push_back(SGPath(*it).realpath());
       }
     }
 
@@ -146,8 +149,8 @@ void fgInitAllowedPaths()
         fgValidatePath(globals->get_fg_home() + "/aircraft-data/yes..xml",true).empty() ||
         fgValidatePath(globals->get_fg_root() + "/.\\yes.bmp",false).empty()) {
             flightgear::fatalMessageBox("Nasal initialization error",
-                                    "fgInitAllowedPaths() does not work",
-                                    "");
+                                    "The FG_HOME directory must not be inside any of the FG_ROOT, FG_AIRCRAFT or FG_SCENERY directories",
+                                    "(check that you have not accidentally included an extra :, as an empty part means the current directory)");
             exit(-1);
     }
 }

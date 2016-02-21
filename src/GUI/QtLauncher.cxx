@@ -21,6 +21,8 @@
 #include "QtLauncher.hxx"
 #include "QtLauncher_private.hxx"
 
+#include <locale.h>
+
 // Qt
 #include <QProgressDialog>
 #include <QCoreApplication>
@@ -332,14 +334,15 @@ namespace flightgear
 
 void initApp(int& argc, char** argv)
 {
-    sglog().setLogLevels( SG_ALL, SG_INFO );
-    initQtResources(); // can't be called from a namespace
-
     static bool qtInitDone = false;
     static int s_argc;
 
     if (!qtInitDone) {
         qtInitDone = true;
+
+        sglog().setLogLevels( SG_ALL, SG_INFO );
+        initQtResources(); // can't be called from a namespace
+
         s_argc = argc; // QApplication only stores a reference to argc,
         // and may crash if it is freed
         // http://doc.qt.io/qt-5/qguiapplication.html#QGuiApplication
@@ -348,6 +351,11 @@ void initApp(int& argc, char** argv)
         app->setOrganizationName("FlightGear");
         app->setApplicationName("FlightGear");
         app->setOrganizationDomain("flightgear.org");
+
+        // reset numeric / collation locales as described at:
+        // http://doc.qt.io/qt-5/qcoreapplication.html#details
+        ::setlocale(LC_NUMERIC, "C");
+        ::setlocale(LC_COLLATE, "C");
 
         // avoid double Apple menu and other weirdness if both Qt and OSG
         // try to initialise various Cocoa structures.

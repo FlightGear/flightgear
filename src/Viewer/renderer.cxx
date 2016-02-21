@@ -105,7 +105,7 @@
 #include <Environment/ephemeris.hxx>
 
 //#include <Main/main.hxx>
-#include "viewer.hxx"
+#include "view.hxx"
 #include "viewmgr.hxx"
 #include "splash.hxx"
 #include "renderer.hxx"
@@ -1618,7 +1618,7 @@ FGRenderer::update( ) {
     // initializations and are running the main loop, so this will
     // now work without seg faulting the system.
 
-    FGViewer *current__view = globals->get_current_view();
+    flightgear::View *current__view = globals->get_current_view();
     // Force update of center dependent values ...
     current__view->set_dirty();
   
@@ -2072,7 +2072,7 @@ bool printVisibleSceneInfo(FGRenderer* renderer)
     VisibleSceneInfoVistor vsv;
     Viewport* vp = 0;
     if (!viewer->getCamera()->getViewport() && viewer->getNumSlaves() > 0) {
-        const View::Slave& slave = viewer->getSlave(0);
+        const osg::View::Slave& slave = viewer->getSlave(0);
         vp = slave._camera->getViewport();
     }
     vsv.doTraversal(viewer->getCamera(), viewer->getSceneData(), vp);

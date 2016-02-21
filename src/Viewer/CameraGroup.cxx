@@ -425,7 +425,7 @@ void CameraGroup::update(const osg::Vec3d& position,
 
         Camera* camera = info->getCamera(MAIN_CAMERA);
         if ( camera ) {
-            const View::Slave& slave = _viewer->getSlave(info->getMainSlaveIndex());
+            const osg::View::Slave& slave = _viewer->getSlave(info->getMainSlaveIndex());
 
             Matrix viewMatrix;
             if (info->flags & GUI) {
@@ -515,7 +515,7 @@ void CameraGroup::update(const osg::Vec3d& position,
 
                 Camera* camera = ii->second.camera.get();
                 int slaveIndex = ii->second.slaveIndex;
-                const View::Slave& slave = _viewer->getSlave(slaveIndex);
+                const osg::View::Slave& slave = _viewer->getSlave(slaveIndex);
 
                 if ( !viewDone ) {
                     if ((info->flags & VIEW_ABSOLUTE) != 0)
