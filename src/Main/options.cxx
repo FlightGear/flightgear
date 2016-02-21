@@ -856,6 +856,14 @@ fgOptFgScenery( const char *arg )
 }
 
 static int
+fgOptTerrasyncDir( const char *arg )
+{
+    globals->append_fg_scenery(arg, true);
+    fgSetString("/sim/terrasync/scenery-dir", arg);
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptFov( const char *arg )
 {
     parse_fov( arg );
@@ -1620,7 +1628,7 @@ struct OptionDesc {
     {"materials-file",               true,  OPTION_STRING, "/sim/rendering/materials-file", false, "", 0 },
     {"disable-terrasync",            false, OPTION_BOOL,   "/sim/terrasync/enabled", false, "", 0 },
     {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
-    {"terrasync-dir",                true,  OPTION_STRING, "/sim/terrasync/scenery-dir", false, "", 0 },
+    {"terrasync-dir",                true,  OPTION_FUNC,   "", false, "", fgOptTerrasyncDir },
     {"download-dir",                 true,  OPTION_STRING, "/sim/paths/download-dir", false, "", 0 },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
     {"bpp",                          true,  OPTION_FUNC,   "", false, "", fgOptBpp },
