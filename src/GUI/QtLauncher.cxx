@@ -725,6 +725,11 @@ void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString nam
     }
 }
 
+void QtLauncher::closeEvent(QCloseEvent *event)
+{
+    qApp->exit(-1);
+}
+
 void QtLauncher::onRun()
 {
     flightgear::Options* opt = flightgear::Options::sharedInstance();

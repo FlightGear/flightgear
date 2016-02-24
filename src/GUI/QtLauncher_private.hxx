@@ -53,6 +53,10 @@ public:
 
     void setSceneryPaths();
 
+protected:
+    virtual void closeEvent(QCloseEvent *event);
+
+
 private slots:
     // run is used when the launcher is invoked before the main app is
     // started
