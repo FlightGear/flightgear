@@ -1168,7 +1168,7 @@ FGMultiplayMgr::Send()
     for (it = mPropertyMap.begin(); it != mPropertyMap.end(); ++it) {
       FGPropertyData* pData = new FGPropertyData;
       pData->id = it->first;
-      pData->type = it->second->getType();
+      pData->type = findProperty(pData->id)->type;
       
       switch (pData->type) {
         case props::INT:
