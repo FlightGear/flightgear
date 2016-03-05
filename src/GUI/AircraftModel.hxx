@@ -127,7 +127,13 @@ public:
      * are not installed, or are downloading, are not runnable.
      */
     bool isIndexRunnable(const QModelIndex& index) const;
-    
+
+    /**
+     * @helper to determine if a particular path is likely to contain
+     * aircraft or not. Checks for -set.xml files one level down in the tree.
+     *
+     */
+    static bool isCandidateAircraftPath(QString path);
 signals:
     void aircraftInstallFailed(QModelIndex index, QString errorMessage);
     

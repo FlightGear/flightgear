@@ -851,4 +851,28 @@ bool AircraftItemModel::isIndexRunnable(const QModelIndex& index) const
     return !ex->isDownloading();
 }
 
+bool AircraftItemModel::isCandidateAircraftPath(QString path)
+{
+    QStringList filters;
+    filters << "*-set.xml";
+    int dirCount = 0,
+        setXmlCount = 0;
+
+    QDir d(path);
+    Q_FOREACH(QFileInfo child, d.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        QDir childDir(child.absoluteFilePath());
+        ++dirCount;
+        Q_FOREACH(QFileInfo xmlChild, childDir.entryInfoList(filters, QDir::Files)) {
+            ++setXmlCount;
+        }
+
+        if ((setXmlCount > 0) || (dirCount > 10)) {
+            break;
+        }
+    }
+
+    return (setXmlCount > 0);
+}
+
+
 #include "AircraftModel.moc"

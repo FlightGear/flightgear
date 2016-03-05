@@ -7,6 +7,7 @@
 
 #include "CatalogListModel.hxx"
 #include "AddCatalogDialog.hxx"
+#include "AircraftModel.hxx"
 
 #include <Main/options.hxx>
 #include <Main/globals.hxx>
@@ -125,7 +126,36 @@ void PathsDialog::onAddAircraftPath()
 {
     QString path = QFileDialog::getExistingDirectory(this, tr("Choose aircraft folder"));
     if (!path.isEmpty()) {
-        m_ui->aircraftPathsList->addItem(path);
+        // the user might add a directory containing an 'Aircraft' subdir. Let's attempt
+        // to check for that case and handle it gracefully.
+        bool pathOk = false;
+
+        if (AircraftItemModel::isCandidateAircraftPath(path)) {
+            m_ui->aircraftPathsList->addItem(path);
+            pathOk = true;
+        } else {
+            // no aircraft in speciied path, look for Aircraft/ subdir
+            QDir d(path);
+            if (d.exists("Aircraft")) {
+                QString p2 = d.filePath("Aircraft");
+                if (AircraftItemModel::isCandidateAircraftPath(p2)) {
+                    m_ui->aircraftPathsList->addItem(p2);
+                    pathOk = true;
+                }
+            }
+        }
+
+        if (!pathOk) {
+            QMessageBox mb;
+            mb.setText(QString("No aircraft found in the folder '%1' - add anyway?").arg(path));
+            mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+            mb.setDefaultButton(QMessageBox::No);
+            mb.exec();
+
+            if (mb.result() == QMessageBox::Yes) {
+                m_ui->aircraftPathsList->addItem(path);
+            }
+        }
     }
     // work around a Qt OS-X bug - this dialog is ending ordered
     // behind the main settings dialog (consequence of modal-dialog
