@@ -756,6 +756,13 @@ QModelIndex AircraftItemModel::indexOfAircraftURI(QUrl uri) const
             if (item->path == path) {
                 return index(row);
             }
+
+            // check variants too
+            for (int vr=0; vr < item->variants.size(); ++vr) {
+                if (item->variants.at(vr)->path == path) {
+                    return index(row);
+                }
+            }
         }
     } else if (uri.scheme() == "package") {
         QString ident = uri.path();
