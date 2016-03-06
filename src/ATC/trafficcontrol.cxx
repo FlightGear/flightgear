@@ -190,9 +190,9 @@ FGTrafficRecord::FGTrafficRecord():
 
 FGTrafficRecord::~FGTrafficRecord()
 {
-    if (aircraft) {
-        aircraft->clearATCController();
-    }
+    //if (aircraft) {
+    //    aircraft->clearATCController();
+    //}
 }
 
 void FGTrafficRecord::setPositionAndIntentions(int pos,
