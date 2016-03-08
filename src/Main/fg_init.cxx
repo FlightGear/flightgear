@@ -392,7 +392,7 @@ bool fgInitHome()
 // write our PID, and check writeability
     SGPath pidPath(dataPath, "fgfs.pid");
     if (pidPath.exists()) {
-        SG_LOG(SG_GENERAL, SG_INFO, "flightgear instance already running, switching to FG_HOME read-only.");
+        SG_LOG(SG_GENERAL, SG_ALERT, "flightgear instance already running, switching to FG_HOME read-only.");
         // set a marker property so terrasync/navcache don't try to write
         // from secondary instances
         fgSetBool("/sim/fghome-readonly", true);
