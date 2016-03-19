@@ -251,6 +251,12 @@ void FGInputDevice::Configure( SGPropertyNode_ptr aDeviceNode )
   debugEvents = deviceNode->getBoolValue("debug-events", debugEvents );
   grab = deviceNode->getBoolValue("grab", grab );
 
+    PropertyList reportNodes = deviceNode->getChildren("report");
+    for( PropertyList::iterator it = reportNodes.begin(); it != reportNodes.end(); ++it ) {
+        FGReportSetting_ptr r = new FGReportSetting(*it);
+        reportSettings.push_back(r);
+    }
+
   // TODO:
   // add nodes for the last event:
   // last-event/name [string]
@@ -273,6 +279,14 @@ void FGInputDevice::update( double dt )
 {
   for( map<string,FGInputEvent_ptr>::iterator it = handledEvents.begin(); it != handledEvents.end(); it++ )
     (*it).second->update( dt );
+
+    report_setting_list_t::const_iterator it;
+    for (it = reportSettings.begin(); it != reportSettings.end(); ++it) {
+        if ((*it)->Test()) {
+            std::string reportData = (*it)->reportBytes(nasalModule);
+            SendFeatureReport((*it)->getReportId(), reportData);
+        }
+    }
 }
 
 void FGInputDevice::HandleEvent( FGEventData & eventData )
@@ -291,6 +305,12 @@ void FGInputDevice::SetName( string name )
 {
   this->name = name; 
 }
+
+void FGInputDevice::SendFeatureReport(unsigned int reportId, const std::string& data)
+{
+    SG_LOG(SG_INPUT, SG_WARN, "SendFeatureReport not implemented");
+}
+
 
 const char * FGEventInput::PROPERTY_ROOT = "/input/event";
 
@@ -389,3 +409,52 @@ void FGEventInput::RemoveDevice( unsigned index )
   deviceNode = baseNode->removeChild("device", index);
 }
 
+FGReportSetting::FGReportSetting( SGPropertyNode_ptr base )
+{
+    reportId = base->getIntValue("report-id");
+    nasalFunction = base->getStringValue("nasal-function");
+
+    PropertyList watchNodes = base->getChildren( "watch" );
+    for (PropertyList::iterator it = watchNodes.begin(); it != watchNodes.end(); ++it ) {
+        std::string path = (*it)->getStringValue();
+        SGPropertyNode_ptr n = globals->get_props()->getNode(path, true);
+        n->addChangeListener(this);
+    }
+
+    dirty = true;
+}
+
+bool FGReportSetting::Test()
+{
+    bool d = dirty;
+    dirty = false;
+    return d;
+}
+
+std::string FGReportSetting::reportBytes(const std::string& moduleName) const
+{
+    FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+    if (!nas) {
+        return std::string();
+    }
+
+    naRef module = nas->getModule(moduleName.c_str());
+    naRef func = naHash_cget(module, (char*) nasalFunction.c_str());
+    if (!naIsFunc(func)) {
+        return std::string();
+    }
+
+    naRef result = nas->call(func, 0, 0, naNil());
+    if (!naIsString(result)) {
+        return std::string();
+    }
+
+    size_t len = naStr_len(result);
+    char* bytes = naStr_data(result);
+    return std::string(bytes, len);
+}
+
+void FGReportSetting::valueChanged(SGPropertyNode * node)
+{
+    dirty = true;
+}

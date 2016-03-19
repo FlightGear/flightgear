@@ -62,6 +62,37 @@ protected:
 typedef SGSharedPtr<FGEventSetting> FGEventSetting_ptr;
 typedef std::vector<FGEventSetting_ptr> setting_list_t;
 
+class FGReportSetting : public SGReferenced,
+    public SGPropertyChangeListener
+{
+public:
+    FGReportSetting( SGPropertyNode_ptr base );
+
+    unsigned int getReportId() const
+    {
+        return reportId;
+    }
+
+    std::string getNasalFunctionName() const
+    {
+        return nasalFunction;
+    }
+
+    bool Test();
+
+    std::string reportBytes(const std::string& moduleName) const;
+
+    virtual void valueChanged(SGPropertyNode * node);
+protected:
+    unsigned int reportId;
+    std::string nasalFunction;
+    bool dirty;
+
+};
+
+typedef SGSharedPtr<FGReportSetting> FGReportSetting_ptr;
+typedef std::vector<FGReportSetting_ptr> report_setting_list_t;
+
 /*
  * A wrapper class for a configured event. 
  * 
@@ -200,6 +231,8 @@ public:
     Send( eventName.c_str(), value );
   }
 
+    virtual void SendFeatureReport(unsigned int reportId, const std::string& data);
+
   virtual const char * TranslateEventName( FGEventData & eventData ) = 0;
 
 
@@ -208,7 +241,7 @@ public:
 
   void HandleEvent( FGEventData & eventData );
 
-  void AddHandledEvent( FGInputEvent_ptr handledEvent ) {
+  virtual void AddHandledEvent( FGInputEvent_ptr handledEvent ) {
     if( handledEvents.count( handledEvent->GetName() ) == 0 )
       handledEvents[handledEvent->GetName()] = handledEvent;
   }
@@ -240,6 +273,8 @@ private:
 
   SGPropertyNode_ptr deviceNode;
   std::string nasalModule;
+
+    report_setting_list_t reportSettings;
 };
 
 typedef SGSharedPtr<FGInputDevice> FGInputDevice_ptr;

@@ -89,6 +89,8 @@ public:
 
     void deleteModule(const char* moduleName);
 
+    naRef getModule(const char* moduleName);
+
     void addCommand(naRef func, const std::string& name);
     void removeCommand(const std::string& name);
     

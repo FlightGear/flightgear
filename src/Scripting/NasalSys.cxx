@@ -1223,6 +1223,12 @@ void FGNasalSys::deleteModule(const char* moduleName)
     naFreeContext(ctx);
 }
 
+naRef FGNasalSys::getModule(const char* moduleName)
+{
+    naRef mod = naHash_cget(_globals, (char*) moduleName);
+    return mod;
+}
+
 naRef FGNasalSys::parse(naContext ctx, const char* filename, const char* buf, int len)
 {
     int errLine = -1;
