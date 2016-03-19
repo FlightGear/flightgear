@@ -357,10 +357,6 @@ void initApp(int& argc, char** argv)
         ::setlocale(LC_NUMERIC, "C");
         ::setlocale(LC_COLLATE, "C");
 
-        // avoid double Apple menu and other weirdness if both Qt and OSG
-        // try to initialise various Cocoa structures.
-        flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
-
         Qt::KeyboardModifiers mods = app->queryKeyboardModifiers();
         if (mods & (Qt::AltModifier | Qt::ShiftModifier)) {
             qWarning() << "Alt/shift pressed during launch";
@@ -427,6 +423,10 @@ bool runLauncherDialog()
 
     loadNaturalEarthData();
 
+    // avoid double Apple menu and other weirdness if both Qt and OSG
+    // try to initialise various Cocoa structures.
+    flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
+    
     QtLauncher dlg;
     dlg.show();
 

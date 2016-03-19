@@ -40,6 +40,7 @@
 #include <Main/fg_init.hxx>
 #include <Main/options.hxx>
 #include <Include/version.h>
+#include <Viewer/WindowBuilder.hxx>
 
 SetupRootDialog::SetupRootDialog(PromptState prompt) :
     QDialog(),
@@ -76,6 +77,10 @@ bool SetupRootDialog::runDialog(bool usingDefaultRoot)
 
 bool SetupRootDialog::runDialog(PromptState prompt)
 {
+    // avoid double Apple menu and other weirdness if both Qt and OSG
+    // try to initialise various Cocoa structures.
+    flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
+
     SetupRootDialog dlg(prompt);
     dlg.exec();
     if (dlg.result() != QDialog::Accepted) {

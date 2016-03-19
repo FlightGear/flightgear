@@ -25,7 +25,7 @@
 
 #include <sstream>
 
-#if defined(HAVE_QT) && defined(SG_MAC)
+#if defined(SG_MAC)
     #include <osgViewer/api/Cocoa/GraphicsWindowCocoa>
 #endif
 
@@ -253,7 +253,7 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
         = new GraphicsContext::Traits(*defaultTraits);
     traits->windowName = "FlightGear";
 
-#if defined(HAVE_QT) && defined(SG_MAC)
+#if defined(SG_MAC)
     int flags = osgViewer::GraphicsWindowCocoa::WindowData::CheckForEvents;
 
     // avoid both QApplication and OSG::CocoaViewer doing single-application
