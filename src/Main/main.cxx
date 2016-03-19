@@ -26,6 +26,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/props/props_io.hxx>
 
 #include <iostream>
 
@@ -149,6 +150,36 @@ static void initTerrasync()
     terra_sync->init();
 }
 
+static void fgSetVideoOptions()
+{
+    std::string vendor = fgGetString("/sim/rendering/gl-vendor");
+    SGPath path(globals->get_fg_root());
+    path.append("Video");
+    path.append(vendor);
+    if (path.exists())
+    {
+        std::string renderer = fgGetString("/sim/rendering/gl-renderer");
+        size_t pos = renderer.find('/');
+        if (pos == std::string::npos) {
+            pos = renderer.find(" (");
+        }
+        if (pos != std::string::npos) {
+            renderer = renderer.substr(0, pos);
+        }
+        path.append(renderer+".xml");
+        if (path.exists()) {
+            SG_LOG(SG_INPUT, SG_INFO, "Reading video settings from " << path.str());
+            try {
+                SGPropertyNode *r_prop = fgGetNode("/sim/rendering");
+                readProperties(path.str(), r_prop);
+            } catch (sg_exception& e) {
+                SG_LOG(SG_INPUT, SG_WARN, "failed to read video settings:" << e.getMessage()
+                << "(from " << e.getOrigin() << ")");
+            }
+        }
+    }
+}
+
 static void checkOpenGLVersion()
 {
 #if defined(SG_MAC)
@@ -206,6 +237,7 @@ static void fgIdleFunction ( void ) {
         if (guiInit())
         {
             checkOpenGLVersion();
+            fgSetVideoOptions();
             idle_state+=2;
             fgSplashProgress("loading-aircraft-list");
         }
