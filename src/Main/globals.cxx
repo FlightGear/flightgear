@@ -353,6 +353,11 @@ void FGGlobals::append_fg_scenery (const std::string &paths, bool secure)
         continue;
       }
 
+      // tell the ResouceManager about the scenery path
+      // needed to load Models from this scenery path
+      simgear::ResourceManager::instance()->addBasePath(abspath.str(),
+        simgear::ResourceManager::PRIORITY_DEFAULT);
+
         simgear::Dir dir(abspath);
         SGPath terrainDir(dir.file("Terrain"));
         SGPath objectsDir(dir.file("Objects"));
