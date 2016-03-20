@@ -1097,6 +1097,18 @@ fgOptVisibilityMiles( const char *arg )
 }
 
 static int
+fgOptMetar( const char *arg )
+{
+    // The given METAR string cannot be effective without disabling
+    // real weather fetching.
+    fgSetBool("/environment/realwx/enabled", false);
+    // The user-supplied METAR string
+    fgSetString("/environment/metar/data", arg);
+
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptRandomWind( const char *arg )
 {
     double min_hdg = sg_random() * 360.0;
@@ -1531,7 +1543,7 @@ struct OptionDesc {
     {"enable-random-buildings",      false, OPTION_BOOL,   "/sim/rendering/random-buildings", true, "", 0 },
     {"disable-real-weather-fetch",   false, OPTION_BOOL,   "/environment/realwx/enabled", false, "", 0 },
     {"enable-real-weather-fetch",    false, OPTION_BOOL,   "/environment/realwx/enabled", true,  "", 0 },
-    {"metar",                        true,  OPTION_STRING, "/environment/metar/data", false, "", 0 },
+    {"metar",                        true,  OPTION_FUNC,   "", false, "", fgOptMetar },
     {"disable-ai-models",            false, OPTION_BOOL,   "/sim/ai/enabled", false, "", 0 },
     {"enable-ai-models",             false, OPTION_BOOL,   "/sim/ai/enabled", true, "", 0 },
     {"disable-ai-traffic",           false, OPTION_BOOL,   "/sim/traffic-manager/enabled", false, "", 0 },
