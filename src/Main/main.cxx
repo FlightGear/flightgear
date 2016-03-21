@@ -159,7 +159,10 @@ static void fgSetVideoOptions()
     if (path.exists())
     {
         std::string renderer = fgGetString("/sim/rendering/gl-renderer");
-        size_t pos = renderer.find('/');
+        size_t pos = renderer.find("x86/");
+        if (pos == std::string::npos) {
+            pos = renderer.find('/');
+        }
         if (pos == std::string::npos) {
             pos = renderer.find(" (");
         }
@@ -175,6 +178,13 @@ static void fgSetVideoOptions()
             } catch (sg_exception& e) {
                 SG_LOG(SG_INPUT, SG_WARN, "failed to read video settings:" << e.getMessage()
                 << "(from " << e.getOrigin() << ")");
+            }
+
+            flightgear::Options* options = flightgear::Options::sharedInstance();
+            if (!options->isOptionSet("ignore-autosave"))
+            {
+                SGPath dataPath = globals->get_fg_home();
+                globals->loadUserSettings(dataPath);
             }
         }
     }
