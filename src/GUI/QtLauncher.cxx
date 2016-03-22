@@ -790,8 +790,8 @@ void QtLauncher::onRun()
     }
 
     if (m_ui->seasonCombo->currentIndex() != 0) {
-        QString dayval = m_ui->timeOfDayCombo->currentText().toLower();
-        opt->addOption("season", dayval.toStdString());
+        QString seasonName = m_ui->seasonCombo->currentText().toLower();
+        opt->addOption("season", seasonName.toStdString());
     }
 
     QSettings settings;
