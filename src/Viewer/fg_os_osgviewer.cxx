@@ -341,11 +341,12 @@ int fgOSMainLoop()
 
 int fgGetKeyModifiers()
 {
-    if (!globals->get_renderer()) { // happens during shutdown
+    FGRenderer* r = globals->get_renderer();
+    if (!r || !r->getEventHandler()) { // happens during shutdown
       return 0;
     }
     
-    return globals->get_renderer()->getEventHandler()->getCurrentModifiers();
+    return r->getEventHandler()->getCurrentModifiers();
 }
 
 void fgWarpMouse(int x, int y)
