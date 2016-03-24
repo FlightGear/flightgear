@@ -850,6 +850,7 @@ void
 View::update (double dt)
 {
     updateData();
+    recalc();
   updateDampOutput(dt);
 
   int i;
