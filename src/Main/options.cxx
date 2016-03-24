@@ -1769,6 +1769,22 @@ public:
     
     return it; // not found
   }
+
+    OptionValueVec::iterator findValue(const string& key)
+    {
+        OptionValueVec::iterator it = values.begin();
+        for (; it != values.end(); ++it) {
+            if (!it->desc) {
+                continue; // ignore markers
+            }
+
+            if (it->desc->option == key) {
+                return it;
+            }
+        } // of set values iteration
+        
+        return it; // not found
+    }
   
   OptionDesc* findOption(const string& key) const
   {
@@ -2202,7 +2218,35 @@ int Options::addOption(const string &key, const string &value)
   p->values.push_back(OptionValue(desc, value));
   return FG_OPTIONS_OK;
 }
-  
+
+int Options::setOption(const string &key, const string &value)
+{
+    OptionDesc* desc = p->findOption(key);
+    if (!desc) {
+        flightgear::modalMessageBox("Unknown option", "Unknown command-line option: " + key);
+        return FG_OPTIONS_ERROR;
+    }
+
+    if (!(desc->type & OPTION_MULTI)) {
+        OptionValueVec::const_iterator it = p->findValue(key);
+        if (it != p->values.end()) {
+            // remove existing valye
+            p->values.erase(it);
+        }
+    }
+    
+    p->values.push_back(OptionValue(desc, value));
+    return FG_OPTIONS_OK;
+}
+
+void Options::clearOption(const std::string& key)
+{
+    OptionValueVec::iterator it = p->findValue(key);
+    for (; it != p->values.end(); it = p->findValue(key)) {
+        p->values.erase(it);
+    }
+}
+
 bool Options::isOptionSet(const string &key) const
 {
   OptionValueVec::const_iterator it = p->findValue(key);

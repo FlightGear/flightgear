@@ -101,7 +101,14 @@ public:
     * This can be used to inject option values, eg based upon environment variables
     */
   int addOption(const std::string& key, const std::string& value);
-  
+
+  /**
+   * set an option, overwriting any existing value which might be set
+   */
+  int setOption(const std::string& key, const std::string& value);
+
+  void clearOption(const std::string& key);
+
   /**
    * apply option values to the simulation state
    * (set properties, etc). 
