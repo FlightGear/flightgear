@@ -1126,9 +1126,16 @@ void fgInitPackageRoot()
     if (globals->packageRoot()) {
         return;
     }
-    
-    SGPath packageAircraftDir = flightgear::defaultDownloadDir();
+
+    SGPath packageAircraftDir = flightgear::Options::sharedInstance()->valueForOption("download-dir");
+    if (packageAircraftDir.isNull()) {
+        packageAircraftDir = flightgear::defaultDownloadDir();
+    }
+
     packageAircraftDir.append("Aircraft");
+
+    SG_LOG(SG_GENERAL, SG_INFO, "init package root at:" << packageAircraftDir.str());
+
 
     SGSharedPtr<Root> pkgRoot(new Root(packageAircraftDir, FLIGHTGEAR_VERSION));
     // set the http client later (too early in startup right now)

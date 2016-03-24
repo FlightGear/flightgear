@@ -412,6 +412,12 @@ bool runLauncherDialog()
 
     initNavCache();
 
+    QSettings settings;
+    QString downloadDir = settings.value("download-dir").toString();
+    if (!downloadDir.isEmpty()) {
+        flightgear::Options::sharedInstance()->setOption("download-dir", downloadDir.toStdString());
+    }
+
     fgInitPackageRoot();
 
     // startup the HTTP system now since packages needs it
@@ -431,7 +437,6 @@ bool runLauncherDialog()
     dlg.show();
 
     int appResult = qApp->exec();
-    qDebug() << "App result:" << appResult;
     if (appResult < 0) {
         return false; // quit
     }
@@ -541,7 +546,7 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onToggleTerrasync);
     updateSettingsSummary();
 
-    m_aircraftModel = new AircraftItemModel(this, RootRef(globals->packageRoot()));
+    m_aircraftModel = new AircraftItemModel(this);
     m_aircraftProxy->setSourceModel(m_aircraftModel);
 
     m_aircraftProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -579,11 +584,12 @@ QtLauncher::QtLauncher() :
     connect(m_aircraftProxy, &AircraftProxyModel::modelReset,
             this, &QtLauncher::delayedAircraftModelReset);
 
-    restoreSettings();
-
     QSettings settings;
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
+    m_aircraftModel->setPackageRoot(globals->packageRoot());
     m_aircraftModel->scanDirs();
+
+    restoreSettings();
 }
 
 QtLauncher::~QtLauncher()
@@ -1132,11 +1138,35 @@ void QtLauncher::onSubsytemIdleTimeout()
 
 void QtLauncher::onEditPaths()
 {
+    QSettings settings;
+    QString previousDownloadDir = settings.value("download-dir").toString();
+
     PathsDialog dlg(this, globals->packageRoot());
     dlg.exec();
     if (dlg.result() == QDialog::Accepted) {
+        QString dd = settings.value("download-dir").toString();
+        bool downloadDirChanged = (previousDownloadDir != dd);
+        if (downloadDirChanged) {
+            qDebug() << "download dir changed, resetting package root";
+
+            if (dd.isEmpty()) {
+                flightgear::Options::sharedInstance()->clearOption("download-dir");
+            } else {
+                flightgear::Options::sharedInstance()->setOption("download-dir", dd.toStdString());
+            }
+
+            // replace existing package root
+            globals->get_subsystem<FGHTTPClient>()->shutdown();
+            globals->setPackageRoot(simgear::pkg::RootRef());
+
+            // create new root with updated download-dir value
+            fgInitPackageRoot();
+
+            globals->get_subsystem<FGHTTPClient>()->init();
+        }
+
         // re-scan the aircraft list
-        QSettings settings;
+        m_aircraftModel->setPackageRoot(globals->packageRoot());
         m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
         m_aircraftModel->scanDirs();
 

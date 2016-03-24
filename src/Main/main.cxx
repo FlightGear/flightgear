@@ -481,9 +481,6 @@ int fgMainInit( int argc, char **argv )
         return EXIT_SUCCESS;
     }
 
-  // launcher needs to know the aircraft paths in use
-    fgInitAircraftPaths(false);
-
 #if defined(HAVE_QT)
     bool showLauncher = flightgear::Options::checkForArg(argc, argv, "launcher");
     // an Info.plist bundle can't define command line arguments, but it can set
@@ -497,6 +494,7 @@ int fgMainInit( int argc, char **argv )
         }
     }
 #endif
+    fgInitAircraftPaths(false);
 
     configResult = fgInitAircraft(false);
     if (configResult == flightgear::FG_OPTIONS_ERROR) {

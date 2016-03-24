@@ -432,20 +432,32 @@ private:
     AircraftItemModel* m_model;
 };
 
-AircraftItemModel::AircraftItemModel(QObject* pr, const simgear::pkg::RootRef& rootRef) :
+AircraftItemModel::AircraftItemModel(QObject* pr ) :
     QAbstractListModel(pr),
-    m_scanThread(NULL),
-    m_packageRoot(rootRef)
+    m_scanThread(NULL)
 {
-    m_delegate = new PackageDelegate(this);
-    // packages may already be refreshed, so pull now
-    refreshPackages();
 }
 
 AircraftItemModel::~AircraftItemModel()
 {
     abandonCurrentScan();
     delete m_delegate;
+}
+
+void AircraftItemModel::setPackageRoot(const simgear::pkg::RootRef& root)
+{
+    if (m_packageRoot) {
+        delete m_delegate;
+        m_delegate = NULL;
+    }
+
+    m_packageRoot = root;
+
+    if (m_packageRoot) {
+        m_delegate = new PackageDelegate(this);
+        // packages may already be refreshed, so pull now
+        refreshPackages();
+    }
 }
 
 void AircraftItemModel::setPaths(QStringList paths)

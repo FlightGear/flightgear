@@ -101,9 +101,11 @@ class AircraftItemModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    AircraftItemModel(QObject* pr, const simgear::pkg::RootRef& root);
+    AircraftItemModel(QObject* pr);
 
     ~AircraftItemModel();
+
+    void setPackageRoot(const simgear::pkg::RootRef& root);
 
     void setPaths(QStringList paths);
 
