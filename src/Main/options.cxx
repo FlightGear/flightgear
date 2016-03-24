@@ -2228,7 +2228,7 @@ int Options::setOption(const string &key, const string &value)
     }
 
     if (!(desc->type & OPTION_MULTI)) {
-        OptionValueVec::const_iterator it = p->findValue(key);
+        OptionValueVec::iterator it = p->findValue(key);
         if (it != p->values.end()) {
             // remove existing valye
             p->values.erase(it);
