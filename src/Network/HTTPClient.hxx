@@ -46,6 +46,8 @@ public:
 
     std::string getDefaultCatalogId() const;
     std::string getDefaultCatalogUrl() const;
+
+    static const char* subsystemName() { return "http"; } 
 private:
     class FGDelegate;
     

@@ -109,8 +109,7 @@ namespace canvas
   //----------------------------------------------------------------------------
   simgear::HTTP::Client* FGCanvasSystemAdapter::getHTTPClient() const
   {
-    FGHTTPClient* http =
-      static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
 
     if( http )
       return http->client();

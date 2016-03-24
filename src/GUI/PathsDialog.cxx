@@ -182,7 +182,7 @@ void PathsDialog::onAddCatalog()
 void PathsDialog::onAddDefaultCatalog()
 {
     // check it's not a duplicate somehow
-    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
     if (http->isDefaultCatalogInstalled())
         return;
 
@@ -199,7 +199,7 @@ void PathsDialog::onAddDefaultCatalog()
 void PathsDialog::onRemoveCatalog()
 {
     QModelIndex mi = m_ui->catalogsList->currentIndex();
-    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
 
     if (mi.isValid()) {
         QString s = QString("Remove aircraft hangar '%1'? All installed aircraft from this "
@@ -260,6 +260,6 @@ void PathsDialog::updateUi()
     QString m = tr("Download location: %1").arg(s);
     m_ui->downloadLocation->setText(m);
 
-    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
     m_ui->addDefaultCatalogButton->setEnabled(!http->isDefaultCatalogInstalled());
 }

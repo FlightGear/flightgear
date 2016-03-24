@@ -479,7 +479,7 @@ void NoaaMetarRealWxController::requestMetar
     "NoaaMetarRealWxController::update(): "
     "spawning load request for station-id '" << upperId << "'"
   );
-  FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+  FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
   if (http) {
       http->makeRequest(new NoaaMetarGetRequest(metarDataHandler, upperId));
   }

@@ -415,8 +415,8 @@ bool runLauncherDialog()
     fgInitPackageRoot();
 
     // startup the HTTP system now since packages needs it
-    FGHTTPClient* http = new FGHTTPClient;
-    globals->add_subsystem("http", http);
+    FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
+    
     // we guard against re-init in the global phase; bind and postinit
     // will happen as normal
     http->init();

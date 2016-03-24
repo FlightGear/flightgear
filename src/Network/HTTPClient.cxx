@@ -342,6 +342,8 @@ void FGHTTPClient::shutdown()
 
     _packageDelegate.reset();
     _http.reset();
+
+    _inited = false;
 }
 
 void FGHTTPClient::update(double)

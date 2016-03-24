@@ -435,7 +435,7 @@ static bool do_multiplayer_refreshserverlist(const SGPropertyNode * arg) {
 		return false;
 	}
 
-	FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
 	if (!http) {
 		SG_LOG(SG_IO, SG_ALERT,
 				"do_multiplayer.refreshserverlist: HTTP client not running");

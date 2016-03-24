@@ -39,8 +39,7 @@ typedef nasal::Ghost<simgear::HTTP::MemoryRequestRef> NasalMemoryRequest;
 
 FGHTTPClient& requireHTTPClient(naContext c)
 {
-  FGHTTPClient* http =
-    static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+  FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
   if( !http )
     naRuntimeError(c, "Failed to get HTTP subsystem");
 

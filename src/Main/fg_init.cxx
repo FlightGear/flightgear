@@ -738,8 +738,8 @@ void fgCreateSubsystems(bool duringReset) {
     }
 
     // may exist already due to GUI startup
-    if (!globals->get_subsystem("http")) {
-        globals->add_subsystem( "http", new FGHTTPClient );
+    if (!globals->get_subsystem<FGHTTPClient>()) {
+        globals->add_new_subsystem<FGHTTPClient>();
     }
 
     ////////////////////////////////////////////////////////////////////
