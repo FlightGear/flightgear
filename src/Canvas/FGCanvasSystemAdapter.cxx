@@ -77,7 +77,7 @@ namespace canvas
   }
 
   //----------------------------------------------------------------------------
-  osg::Image* FGCanvasSystemAdapter::getImage(const std::string& path) const
+  osg::ref_ptr<osg::Image> FGCanvasSystemAdapter::getImage(const std::string& path) const
   {
     if( SGPath(path).isAbsolute() )
     {
@@ -91,7 +91,7 @@ namespace canvas
     {
       SGPath tpath = globals->resolve_resource_path(path);
       if( !tpath.isNull() )
-        return osgDB::readImageFile(tpath.c_str());
+        return osgDB::readRefImageFile(tpath.c_str());
 
       SG_LOG(SG_IO, SG_ALERT, "canvas::Image: No such image: '" << path << "'");
     }

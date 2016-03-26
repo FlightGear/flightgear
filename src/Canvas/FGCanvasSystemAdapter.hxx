@@ -30,7 +30,7 @@ namespace canvas
       virtual simgear::canvas::FontPtr getFont(const std::string& name) const;
       virtual void addCamera(osg::Camera* camera) const;
       virtual void removeCamera(osg::Camera* camera) const;
-      virtual osg::Image* getImage(const std::string& path) const;
+      virtual osg::ref_ptr<osg::Image> getImage(const std::string& path) const;
       virtual SGSubsystem* getSubsystem(const std::string& name) const;
       virtual simgear::HTTP::Client* getHTTPClient() const;
   };
