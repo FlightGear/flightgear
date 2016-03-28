@@ -79,6 +79,10 @@ public:
         puSetDefaultStyle         ( PUSTYLE_SMALL_SHADED ); //PUSTYLE_DEFAULT
         puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
 
+        // OSG Texture2D sets this, which breaks PLIB fntLoadTXF
+        // force it back to zero so width passed to glTexImage2D is used
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+
         FGFontCache *fc = FGFontCache::instance();
         fc->initializeFonts();
         puFont *GuiFont
