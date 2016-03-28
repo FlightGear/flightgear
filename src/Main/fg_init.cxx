@@ -68,6 +68,7 @@
 #include <simgear/scene/material/Effect.hxx>
 #include <simgear/scene/model/particles.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
+#include <simgear/scene/tgdb/userdata.hxx>
 
 #include <simgear/package/Root.hxx>
 #include <simgear/package/Package.hxx>
@@ -658,6 +659,9 @@ bool fgInitGeneral() {
 
     fgSetBool("/sim/startup/stdout-to-terminal", isatty(1) != 0 );
     fgSetBool("/sim/startup/stderr-to-terminal", isatty(2) != 0 );
+
+    sgUserDataInit( globals->get_props() );
+
     return true;
 }
 
@@ -1054,7 +1058,9 @@ void fgStartNewReset()
     render->getViewer()->getDatabasePager()->clear();
     
     osgDB::Registry::instance()->clearObjectCache();
-    
+    // Pager requests depend on this, so don't clear it until now
+    sgUserDataInit( NULL );
+
     // preserve the event handler; re-creating it would entail fixing the
     // idle handler
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler = render->getEventHandler();
@@ -1094,6 +1100,8 @@ void fgStartNewReset()
     globals->set_renderer(render);
     render->init();
     render->setViewer(viewer.get());
+
+    sgUserDataInit( globals->get_props() );
 
     viewer->getDatabasePager()->setUpThreads(1, 1);
     

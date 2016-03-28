@@ -332,17 +332,12 @@ void FGScenery::init() {
     particles_branch->setName("Particles");
     scene_graph->addChild(particles_branch.get());
     simgear::GlobalParticleCallback::setSwitch(fgGetNode("/sim/rendering/particles", true));
-
-    // Initials values needed by the draw-time object loader
-    sgUserDataInit( globals->get_props() );
   
     _listener = new ScenerySwitchListener(this);
 }
 
 void FGScenery::shutdown()
 {
-    sgUserDataInit( NULL );
-    
     scene_graph = NULL;
     terrain_branch = NULL;
     models_branch = NULL;
