@@ -114,7 +114,7 @@ public:
 private:
   int sckt;
   int sckt_in;
-  //int udpsckt;
+  int udpsckt;
   DirectionType Direction;
   ProtocolType Protocol;
   struct sockaddr_in scktName;
