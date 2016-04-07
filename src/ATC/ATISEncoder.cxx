@@ -295,13 +295,24 @@ bool ATISEncoder::checkEqualsCondition( SGPropertyNode_ptr node, bool isEqual )
 {
   SGPropertyNode_ptr n1 = node->getNode( "token", 0, false );
   SGPropertyNode_ptr n2 = node->getNode( "token", 1, false );
-  if( false == n1.valid() || false == n2.valid()) {
-    SG_LOG(SG_ATC, SG_WARN, "missing <token> node for (not)-equals"  );
+
+  if( n1.valid() && n2.valid() ) {
+    bool comp = processToken( n1 ).compare( processToken( n2 ) ) == 0;
+    return comp == isEqual;
+  }
+
+  if( n1.valid() && !n2.valid() ) {
+    SGPropertyNode_ptr t = node->getNode( "text", 0, false );
+    if( t.valid() ) {
+      bool comp = processToken( n1 ).compare( processTextToken( t ) ) == 0;
+      return comp == isEqual;
+    }
+    SG_LOG(SG_ATC, SG_WARN, "missing <token> or <text> node for (not)-equals");
     return false;
   }
 
-  bool comp = processToken( n1 ).compare( processToken( n2 ) ) == 0;
-  return comp == isEqual;
+  SG_LOG(SG_ATC, SG_WARN, "missing <token> node for (not)-equals");
+  return false;
 }
 
 string ATISEncoder::getAtisId( SGPropertyNode_ptr )
