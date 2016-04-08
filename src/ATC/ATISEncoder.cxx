@@ -116,6 +116,7 @@ ATISEncoder::ATISEncoder()
   handlerMap.insert( std::make_pair( "text", &ATISEncoder::processTextToken ));
   handlerMap.insert( std::make_pair( "token", &ATISEncoder::processTokenToken ));
   handlerMap.insert( std::make_pair( "if", &ATISEncoder::processIfToken ));
+  handlerMap.insert( std::make_pair( "section", &ATISEncoder::processTokens ));
 
   handlerMap.insert( std::make_pair( "id", &ATISEncoder::getAtisId ));
   handlerMap.insert( std::make_pair( "airport-name", &ATISEncoder::getAirportName ));
@@ -130,13 +131,17 @@ ATISEncoder::ATISEncoder()
   handlerMap.insert( std::make_pair( "wind-speed-kn", &ATISEncoder::getWindspeedKnots ));
   handlerMap.insert( std::make_pair( "gusts", &ATISEncoder::getGustsKnots ));
   handlerMap.insert( std::make_pair( "visibility-metric", &ATISEncoder::getVisibilityMetric ));
+  handlerMap.insert( std::make_pair( "visibility-miles", &ATISEncoder::getVisibilityMiles ));
   handlerMap.insert( std::make_pair( "phenomena", &ATISEncoder::getPhenomena ));
   handlerMap.insert( std::make_pair( "clouds", &ATISEncoder::getClouds ));
+  handlerMap.insert( std::make_pair( "clouds-brief", &ATISEncoder::getCloudsBrief ));
   handlerMap.insert( std::make_pair( "cavok", &ATISEncoder::getCavok ));
   handlerMap.insert( std::make_pair( "temperature-deg", &ATISEncoder::getTemperatureDeg ));
   handlerMap.insert( std::make_pair( "dewpoint-deg", &ATISEncoder::getDewpointDeg ));
   handlerMap.insert( std::make_pair( "qnh", &ATISEncoder::getQnh ));
   handlerMap.insert( std::make_pair( "inhg", &ATISEncoder::getInhg ));
+  handlerMap.insert( std::make_pair( "inhg-integer", &ATISEncoder::getInhgInteger ));
+  handlerMap.insert( std::make_pair( "inhg-fraction", &ATISEncoder::getInhgFraction ));
   handlerMap.insert( std::make_pair( "trend", &ATISEncoder::getTrend ));
 }
 
@@ -250,6 +255,8 @@ string ATISEncoder::processTokenToken( SGPropertyNode_ptr token )
 
 string ATISEncoder::processIfToken( SGPropertyNode_ptr token )
 {
+  using namespace simgear::strutils;
+
   SGPropertyNode_ptr n;
 
   if( (n = token->getChild("empty", false )).valid() ) {
@@ -264,14 +271,50 @@ string ATISEncoder::processIfToken( SGPropertyNode_ptr token )
            processTokens(token->getChild("else",false));
   }
 
+  if( (n = token->getChild("contains", false )).valid() ) {
+    return checkCondition( n, true, &contains, "contains") ?
+           processTokens(token->getChild("then",false)) :
+           processTokens(token->getChild("else",false));
+  }
+
+  if( (n = token->getChild("not-contains", false )).valid() ) {
+    return checkCondition( n, false, &contains, "not-contains") ?
+           processTokens(token->getChild("then",false)) :
+           processTokens(token->getChild("else",false));
+  }
+
+  if( (n = token->getChild("ends-with", false )).valid() ) {
+    return checkCondition( n, true, &ends_with, "ends-with") ?
+           processTokens(token->getChild("then",false)) :
+           processTokens(token->getChild("else",false));
+  }
+
+  if( (n = token->getChild("not-ends-with", false )).valid() ) {
+    return checkCondition( n, false, &ends_with, "not-ends-with") ?
+           processTokens(token->getChild("then",false)) :
+           processTokens(token->getChild("else",false));
+  }
+
   if( (n = token->getChild("equals", false )).valid() ) {
-    return checkEqualsCondition( n, true) ? 
+    return checkCondition( n, true, &equals, "equals") ?
            processTokens(token->getChild("then",false)) : 
            processTokens(token->getChild("else",false));
   }
 
   if( (n = token->getChild("not-equals", false )).valid() ) {
-    return checkEqualsCondition( n, false) ? 
+    return checkCondition( n, false, &equals, "not-equals") ?
+           processTokens(token->getChild("then",false)) :
+           processTokens(token->getChild("else",false));
+  }
+
+  if( (n = token->getChild("starts-with", false )).valid() ) {
+    return checkCondition( n, true, &starts_with, "starts-with") ?
+           processTokens(token->getChild("then",false)) :
+           processTokens(token->getChild("else",false));
+  }
+
+  if( (n = token->getChild("not-starts-with", false )).valid() ) {
+    return checkCondition( n, false, &starts_with, "not-starts-with") ?
            processTokens(token->getChild("then",false)) : 
            processTokens(token->getChild("else",false));
   }
@@ -291,27 +334,31 @@ bool ATISEncoder::checkEmptyCondition( SGPropertyNode_ptr node, bool isEmpty )
   return processToken( n1 ).empty() == isEmpty;
 }
 
-bool ATISEncoder::checkEqualsCondition( SGPropertyNode_ptr node, bool isEqual ) 
+bool ATISEncoder::checkCondition( SGPropertyNode_ptr node, bool notInverted,
+    bool (*fp)(const string &, const string &), const string &name )
 {
+  using namespace simgear::strutils;
+
   SGPropertyNode_ptr n1 = node->getNode( "token", 0, false );
   SGPropertyNode_ptr n2 = node->getNode( "token", 1, false );
 
   if( n1.valid() && n2.valid() ) {
-    bool comp = processToken( n1 ).compare( processToken( n2 ) ) == 0;
-    return comp == isEqual;
+    bool comp = fp( processToken( n1 ), processToken( n2 ) );
+    return comp == notInverted;
   }
 
   if( n1.valid() && !n2.valid() ) {
-    SGPropertyNode_ptr t = node->getNode( "text", 0, false );
-    if( t.valid() ) {
-      bool comp = processToken( n1 ).compare( processTextToken( t ) ) == 0;
-      return comp == isEqual;
+    SGPropertyNode_ptr t1 = node->getNode( "text", 0, false );
+    if( t1.valid() ) {
+      string n1s = lowercase( strip( processToken( n1 ) ) );
+      string t1s = lowercase( strip( processTextToken( t1 ) ) );
+      return fp( n1s, t1s ) == notInverted;
     }
-    SG_LOG(SG_ATC, SG_WARN, "missing <token> or <text> node for (not)-equals");
+    SG_LOG(SG_ATC, SG_WARN, "missing <token> or <text> node for " << name);
     return false;
   }
 
-  SG_LOG(SG_ATC, SG_WARN, "missing <token> node for (not)-equals");
+  SG_LOG(SG_ATC, SG_WARN, "missing <token> node for " << name);
   return false;
 }
 
@@ -408,7 +455,10 @@ string ATISEncoder::getTransitionLevel( SGPropertyNode_ptr )
 
 string ATISEncoder::getWindDirection( SGPropertyNode_ptr )
 {
-  return getSpokenNumber( _atis->getWindDeg(), true, 3 );
+  string variable = globals->get_locale()->getLocalizedString("variable", "atc", "variable" );
+
+  bool vrb = _atis->getWindMinDeg() == 0 && _atis->getWindMaxDeg() == 359;
+  return vrb ? variable : getSpokenNumber( _atis->getWindDeg(), true, 3 );
 }
 
 string ATISEncoder::getWindMinDirection( SGPropertyNode_ptr )
@@ -452,6 +502,20 @@ string ATISEncoder::getVisibilityMetric( SGPropertyNode_ptr )
   return reply.append( getSpokenNumber( v/1000 ).SPACE.append( km ) );
 }
 
+string ATISEncoder::getVisibilityMiles( SGPropertyNode_ptr )
+{
+  string feet = globals->get_locale()->getLocalizedString("feet", "atc", "feet" );
+
+  int v = _atis->getVisibilityMeters();
+  int vft = round( v * SG_METER_TO_FEET / 100 ) * 100; // Rounded to 100 feet
+  int vsm = round( v * SG_METER_TO_SM );
+
+  string reply;
+  if( vsm < 1 ) return reply.append( getSpokenAltitude( vft ) ).SPACE.append( feet );
+  if( v >= 9999 ) return reply.append( getSpokenNumber(10) );
+  return reply.append( getSpokenNumber( vsm ) );
+}
+
 string ATISEncoder::getPhenomena( SGPropertyNode_ptr )
 {
   return _atis->getPhenomena();
@@ -471,6 +535,19 @@ string ATISEncoder::getClouds( SGPropertyNode_ptr )
   return reply;
 }
 
+string ATISEncoder::getCloudsBrief( SGPropertyNode_ptr )
+{
+  string reply;
+
+  ATISInformationProvider::CloudEntries cloudEntries = _atis->getClouds();
+
+  for( ATISInformationProvider::CloudEntries::iterator it = cloudEntries.begin(); it != cloudEntries.end(); it++ ) {
+    if( false == reply.empty() ) reply.append(",").SPACE;
+    reply.append( it->second ).SPACE.append( getSpokenAltitude(it->first) );
+  }
+  return reply;
+}
+
 string ATISEncoder::getTemperatureDeg( SGPropertyNode_ptr )
 {
   return getSpokenNumber( _atis->getTemperatureDeg() );
@@ -486,19 +563,25 @@ string ATISEncoder::getQnh( SGPropertyNode_ptr )
   return getSpokenNumber( _atis->getQnh() );
 }
 
-string ATISEncoder::getInhg( SGPropertyNode_ptr )
+string ATISEncoder::getInhgInteger( SGPropertyNode_ptr )
+{
+  double qnh = _atis->getQnh() * 100 / SG_INHG_TO_PA;
+  return getSpokenNumber( (int)qnh, true, 2 );
+}
+
+string ATISEncoder::getInhgFraction( SGPropertyNode_ptr )
+{
+  double qnh = _atis->getQnh() * 100 / SG_INHG_TO_PA;
+  int f = round(100 * (qnh - (int)qnh));
+  return getSpokenNumber( f, true, 2 );
+}
+
+string ATISEncoder::getInhg( SGPropertyNode_ptr node)
 {
   string DECIMAL = globals->get_locale()->getLocalizedString("dp", "atc", "decimal" );
-  double intpart = .0;
-  int fractpart = 1000 * ::modf( _atis->getQnh() * 100.0 / SG_INHG_TO_PA, &intpart );
-  fractpart += 5;
-  fractpart /= 10; 
-
-  string reply;
-  reply.append( getSpokenNumber( (int)intpart ) )
-       .SPACE.append( DECIMAL ).SPACE
-       .append( getSpokenNumber( fractpart ) );
-  return reply;
+  return getInhgInteger(node)
+    .SPACE.append(DECIMAL).SPACE
+    .append(getInhgFraction(node));
 }
 
 string ATISEncoder::getTrend( SGPropertyNode_ptr )

@@ -85,11 +85,15 @@ protected:
   virtual std::string getGustsKnots( SGPropertyNode_ptr );
   virtual std::string getCavok( SGPropertyNode_ptr );
   virtual std::string getVisibilityMetric( SGPropertyNode_ptr );
+  virtual std::string getVisibilityMiles( SGPropertyNode_ptr );
   virtual std::string getPhenomena( SGPropertyNode_ptr );
   virtual std::string getClouds( SGPropertyNode_ptr );
+  virtual std::string getCloudsBrief( SGPropertyNode_ptr );
   virtual std::string getTemperatureDeg( SGPropertyNode_ptr );
   virtual std::string getDewpointDeg( SGPropertyNode_ptr );
   virtual std::string getQnh( SGPropertyNode_ptr );
+  virtual std::string getInhgInteger( SGPropertyNode_ptr );
+  virtual std::string getInhgFraction( SGPropertyNode_ptr );
   virtual std::string getInhg( SGPropertyNode_ptr );
   virtual std::string getTrend( SGPropertyNode_ptr );
 
@@ -105,11 +109,24 @@ protected:
   std::string processTextToken( SGPropertyNode_ptr baseNode );
   std::string processTokenToken( SGPropertyNode_ptr baseNode );
   std::string processIfToken( SGPropertyNode_ptr baseNode );
+
   bool checkEmptyCondition( SGPropertyNode_ptr node, bool isEmpty );
-  bool checkEqualsCondition( SGPropertyNode_ptr node, bool isEmpty );
+
+  // Wrappers that can be passed as function pointers to checkCondition
+  // @see simgear::strutils::starts_with
+  // @see simgear::strutils::ends_with
+  static bool contains(const string &s, const string &substring)
+    { return s.find(substring) != std::string::npos; };
+  static bool equals(const string &s1, const string &s2)
+    { return s1 == s2; };
+
+  bool checkCondition( SGPropertyNode_ptr node, bool notInverted,
+      bool (*fp)(const std::string &, const std::string &),
+      const std::string &name );
 
   FGAirportRef airport;
   ATISInformationProvider * _atis;
+
 };
 
 #endif

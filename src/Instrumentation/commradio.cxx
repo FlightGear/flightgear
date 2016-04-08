@@ -93,6 +93,8 @@ AtisSpeaker::~AtisSpeaker()
 }
 void AtisSpeaker::valueChanged(SGPropertyNode * node)
 {
+  using namespace simgear::strutils;
+
   if (!fgGetBool("/sim/sound/working", false))
     return;
 
@@ -120,13 +122,19 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
     _synthesizeRequest.speed = (hash % 16) / 16.0;
     _synthesizeRequest.pitch = (hash % 16) / 16.0;
 
-    // pick a voice
-    voice = FLITEVoiceSynthesizer::getVoicePath(
-        static_cast<FLITEVoiceSynthesizer::voice_t>(hash % FLITEVoiceSynthesizer::VOICE_UNKNOWN) );
+    if( starts_with( _stationId, "K" ) || starts_with( _stationId, "C" ) ||
+            starts_with( _stationId, "P" ) ) {
+        voice = FLITEVoiceSynthesizer::getVoicePath("cmu_us_arctic_slt");
+    } else if ( starts_with( _stationId, "EG" ) ) {
+        voice = FLITEVoiceSynthesizer::getVoicePath("cstr_uk_female");
+    } else {
+        // Pick a random voice from the available voices
+        voice = FLITEVoiceSynthesizer::getVoicePath(
+            static_cast<FLITEVoiceSynthesizer::voice_t>(hash % FLITEVoiceSynthesizer::VOICE_UNKNOWN) );
+    }
   }
 
-
-    FGSoundManager * smgr = globals->get_subsystem<FGSoundManager>();
+  FGSoundManager * smgr = globals->get_subsystem<FGSoundManager>();
   assert(smgr != NULL);
 
   SG_LOG(SG_INSTR,SG_INFO,"AtisSpeaker voice is " << voice );
