@@ -28,6 +28,8 @@
 #include <algorithm>
 #include <functional>
 
+#include <boost/lexical_cast.hpp>
+
 #include <osgViewer/Viewer>
 #include <osgDB/Registry>
 
@@ -174,7 +176,8 @@ void FGTileMgr::reinit()
     
     if (!_disableNasalHooks->getBoolValue())
       _options->setModelData(new FGNasalModelDataProxy);
-  
+
+    _options->setPluginStringData("SimGear::ROUGH_LOD_RANGE", fgGetString("/sim/rendering/static-lod/rough", boost::lexical_cast<string>(SG_OBJECT_RANGE)));
   
     if (state != Start)
     {
@@ -480,7 +483,7 @@ void FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
             // We've moved to a new bucket, we need to schedule any
             // needed tiles for loading.
             SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr: at " << location << ", scheduling needed for:" << current_bucket
-                   << ", visbility=" << range_m);
+                   << ", visibility=" << range_m);
             scheduled_visibility = range_m;
             schedule_needed(current_bucket, range_m);
         }
