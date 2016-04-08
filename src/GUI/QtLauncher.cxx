@@ -347,6 +347,10 @@ void initApp(int& argc, char** argv)
         // and may crash if it is freed
         // http://doc.qt.io/qt-5/qguiapplication.html#QGuiApplication
 
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope,
+                           QString::fromStdString(globals->get_fg_home()));
+
         QApplication* app = new QApplication(s_argc, argv);
         app->setOrganizationName("FlightGear");
         app->setApplicationName("FlightGear");
