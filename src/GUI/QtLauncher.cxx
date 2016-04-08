@@ -360,14 +360,8 @@ void initApp(int& argc, char** argv)
         Qt::KeyboardModifiers mods = app->queryKeyboardModifiers();
         if (mods & (Qt::AltModifier | Qt::ShiftModifier)) {
             qWarning() << "Alt/shift pressed during launch";
-
-            // wipe out our settings
             QSettings settings;
-            settings.clear();
-
             settings.setValue("fg-root", "!ask");
-
-            Options::sharedInstance()->addOption("restore-defaults", "");
         }
     }
 }
@@ -504,8 +498,6 @@ QtLauncher::QtLauncher() :
     connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
     connect(m_ui->quitButton, SIGNAL(clicked()), this, SLOT(onQuit()));
 
-    connect(m_ui->changeRootButton, SIGNAL(clicked()), this, SLOT(onChangeRoot()));
-
     connect(m_ui->aircraftHistory, &QPushButton::clicked,
           this, &QtLauncher::onPopupAircraftHistory);
 
@@ -574,9 +566,17 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onAircraftInstallFailed);
     connect(m_aircraftModel, &AircraftItemModel::scanCompleted,
             this, &QtLauncher::updateSelectedAircraft);
-    connect(m_ui->pathsButton, &QPushButton::clicked,
-            this, &QtLauncher::onEditPaths);
+    connect(m_ui->restoreDefaultsButton, &QPushButton::clicked,
+            this, &QtLauncher::onRestoreDefaults);
 
+
+    AddOnsPage* addOnsPage = new AddOnsPage(NULL, globals->packageRoot());
+    connect(addOnsPage, &AddOnsPage::downloadDirChanged,
+            this, &QtLauncher::onDownloadDirChanged);
+    connect(addOnsPage, &AddOnsPage::sceneryPathsChanged,
+            this, &QtLauncher::setSceneryPaths);
+
+    m_ui->tabWidget->addTab(addOnsPage, tr("Add-ons"));
     // after any kind of reset, try to restore selection and scroll
     // to match the m_selectedAircraft. This needs to be delayed
     // fractionally otherwise the scrollTo seems to be ignored,
@@ -842,6 +842,11 @@ void QtLauncher::onRun()
         }
     }
 
+    if (settings.contains("restore-defaults-on-run")) {
+        settings.remove("restore-defaults-on-run");
+        opt->addOption("restore-defaults", "");
+    }
+
     saveSettings();
 
     qApp->exit(0);
@@ -905,21 +910,13 @@ void QtLauncher::onToggleTerrasync(bool enabled)
         if (!info.exists()) {
             QMessageBox msg;
             msg.setWindowTitle(tr("Create download folder?"));
-            msg.setText(tr("The download folder '%1' does not exist, create it now? "
-                           "Click 'change location' to choose another folder "
-                           "to store downloaded files").arg(downloadDir));
+            msg.setText(tr("The download folder '%1' does not exist, create it now?").arg(downloadDir));
             msg.addButton(QMessageBox::Yes);
             msg.addButton(QMessageBox::Cancel);
-            msg.addButton(tr("Change location"), QMessageBox::ActionRole);
             int result = msg.exec();
 
             if (result == QMessageBox::Cancel) {
                 m_ui->terrasyncCheck->setChecked(false);
-                return;
-            }
-
-            if (result == QMessageBox::ActionRole) {
-                onEditPaths();
                 return;
             }
 
@@ -987,6 +984,30 @@ void QtLauncher::onCancelDownload(const QModelIndex& index)
     simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
     simgear::pkg::InstallRef i = pref->existingInstall();
     i->cancelDownload();
+}
+
+void QtLauncher::onRestoreDefaults()
+{
+    QMessageBox mbox(this);
+    mbox.setText(tr("Restore all settings to defaults?"));
+    mbox.setInformativeText(tr("Restoring settings to their defaults may affect available add-ons such as scenery or aircraft."));
+    QPushButton* quitButton = mbox.addButton(tr("Restore and restart now"), QMessageBox::YesRole);
+    mbox.addButton(QMessageBox::Cancel);
+    mbox.setDefaultButton(QMessageBox::Cancel);
+    mbox.setIconPixmap(QPixmap(":/app-icon-large"));
+
+    mbox.exec();
+    if (mbox.clickedButton() != quitButton) {
+        return;
+    }
+
+    {
+        QSettings settings;
+        settings.clear();
+        settings.setValue("restore-defaults-on-run", true);
+    }
+
+    restartTheApp(QStringList());
 }
 
 void QtLauncher::maybeUpdateSelectedAircraft(QModelIndex index)
@@ -1136,91 +1157,25 @@ void QtLauncher::onSubsytemIdleTimeout()
     globals->get_subsystem_mgr()->update(0.0);
 }
 
-void QtLauncher::onEditPaths()
+void QtLauncher::onDownloadDirChanged()
 {
+    // replace existing package root
+    globals->get_subsystem<FGHTTPClient>()->shutdown();
+    globals->setPackageRoot(simgear::pkg::RootRef());
+
+    // create new root with updated download-dir value
+    fgInitPackageRoot();
+
+    globals->get_subsystem<FGHTTPClient>()->init();
+
+    // re-scan the aircraft list
     QSettings settings;
-    QString previousDownloadDir = settings.value("download-dir").toString();
+    m_aircraftModel->setPackageRoot(globals->packageRoot());
+    m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
+    m_aircraftModel->scanDirs();
 
-    PathsDialog dlg(this, globals->packageRoot());
-    dlg.exec();
-    if (dlg.result() == QDialog::Accepted) {
-        QString dd = settings.value("download-dir").toString();
-        bool downloadDirChanged = (previousDownloadDir != dd);
-        if (downloadDirChanged) {
-            qDebug() << "download dir changed, resetting package root";
-
-            if (dd.isEmpty()) {
-                flightgear::Options::sharedInstance()->clearOption("download-dir");
-            } else {
-                flightgear::Options::sharedInstance()->setOption("download-dir", dd.toStdString());
-            }
-
-            // replace existing package root
-            globals->get_subsystem<FGHTTPClient>()->shutdown();
-            globals->setPackageRoot(simgear::pkg::RootRef());
-
-            // create new root with updated download-dir value
-            fgInitPackageRoot();
-
-            globals->get_subsystem<FGHTTPClient>()->init();
-        }
-
-        // re-scan the aircraft list
-        m_aircraftModel->setPackageRoot(globals->packageRoot());
-        m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
-        m_aircraftModel->scanDirs();
-
-        // re-set scenery dirs
-        setSceneryPaths();
-    }
-}
-
-void QtLauncher::onChangeRoot()
-{
-    QMessageBox mbox(this);
-    mbox.setText(tr("Change the data files location used by FlightGear?"));
-    mbox.setInformativeText(tr("FlightGear cannot work without its data files. "
-                               "(Also called the base package) "
-                               "To change which files are used, quit FlightGear and open it again, "
-                               "while holding down the 'shift' key, and you will be able to choose a "
-                               "different data files location, or restore the default setting."));
-    QPushButton* quitButton = mbox.addButton(tr("Quit FlightGear now"), QMessageBox::YesRole);
-    mbox.addButton(QMessageBox::Cancel);
-    mbox.setDefaultButton(QMessageBox::Cancel);
-    mbox.setIconPixmap(QPixmap(":/app-icon-large"));
-
-    mbox.exec();
-    if (mbox.clickedButton() != quitButton) {
-        return;
-    }
-
-    // following code doesn't work reliably, so we take the simpler
-    // option of asking the user to re-launch us while holding down
-    // the hot-key (shift)
-#if 0
-    {
-        QSettings settings;
-        // set the option to the magic marker value
-        settings.setValue("fg-root", "!ask");
-    } // scope the ensure settings are written nicel
-
-    // Spawn a new instance of myApplication:
-    QProcess proc;
-#if defined(Q_OS_MAC)
-    QStringList args;
-
-    QDir dir(qApp->applicationDirPath()); // returns the 'MacOS' dir
-    dir.cdUp(); // up to 'contents' dir
-    dir.cdUp(); // up to .app dir
-    args << dir.absolutePath();
-    proc.startDetached("open", args);
-#else
-    proc.startDetached(qApp->applicationFilePath());
-#endif
-#endif
-
-    qDebug() << "doing app exit";
-    qApp->exit(-1);
+    // re-set scenery dirs
+    setSceneryPaths();
 }
 
 simgear::pkg::PackageRef QtLauncher::packageForAircraftURI(QUrl uri) const
@@ -1234,5 +1189,26 @@ simgear::pkg::PackageRef QtLauncher::packageForAircraftURI(QUrl uri) const
     return globals->packageRoot()->getPackageById(ident.toStdString());
 }
 
+void QtLauncher::restartTheApp(QStringList fgArgs)
+{
+    // Spawn a new instance of myApplication:
+    QProcess proc;
+    QStringList args;
+
+#if defined(Q_OS_MAC)
+    QDir dir(qApp->applicationDirPath()); // returns the 'MacOS' dir
+    dir.cdUp(); // up to 'contents' dir
+    dir.cdUp(); // up to .app dir
+    // see 'man open' for details, but '-n' ensures we launch a new instance,
+    // and we want to pass remaining arguments to us, not open.
+    args << "-n" << dir.absolutePath() << "--args" << "--launcher" << fgArgs;
+    qDebug() << "args" << args;
+    proc.startDetached("open", args);
+#else
+    args << "--launcher" << fgArgs;
+    proc.startDetached(qApp->applicationFilePath(), args);
+#endif
+    qApp->exit(-1);
+}
 
 #include "QtLauncher.moc"

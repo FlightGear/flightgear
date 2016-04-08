@@ -7,21 +7,22 @@
 
 
 namespace Ui {
-class PathsDialog;
+class AddOnsPage;
 }
 
 class CatalogListModel;
 
-class PathsDialog : public QDialog
+class AddOnsPage : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit PathsDialog(QWidget *parent, simgear::pkg::RootRef root);
-    ~PathsDialog();
+    explicit AddOnsPage(QWidget *parent, simgear::pkg::RootRef root);
+    ~AddOnsPage();
 
-protected:
-    virtual void accept();
+signals:
+    void downloadDirChanged();
+    void sceneryPathsChanged();
     
 private slots:
     void onAddSceneryPath();
@@ -36,10 +37,16 @@ private slots:
 
     void onChangeDownloadDir();
     void onClearDownloadDir();
+
+    void onChangeDataDir();
 private:
     void updateUi();
+    void setDownloadDir();
 
-    Ui::PathsDialog* m_ui;
+    void saveAircraftPaths();
+    void saveSceneryPaths();
+
+    Ui::AddOnsPage* m_ui;
     CatalogListModel* m_catalogsModel;
     simgear::pkg::RootRef m_packageRoot;
     QString m_downloadDir;

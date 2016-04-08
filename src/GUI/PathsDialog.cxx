@@ -4,18 +4,21 @@
 #include <QSettings>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QDebug>
+#include <QProcess>
 
 #include "CatalogListModel.hxx"
 #include "AddCatalogDialog.hxx"
 #include "AircraftModel.hxx"
+#include "QtLauncher_private.hxx"
 
 #include <Main/options.hxx>
 #include <Main/globals.hxx>
 #include <Network/HTTPClient.hxx>
 
-PathsDialog::PathsDialog(QWidget *parent, simgear::pkg::RootRef root) :
-    QDialog(parent),
-    m_ui(new Ui::PathsDialog),
+AddOnsPage::AddOnsPage(QWidget *parent, simgear::pkg::RootRef root) :
+    QWidget(parent),
+    m_ui(new Ui::AddOnsPage),
     m_packageRoot(root)
 {
     m_ui->setupUi(this);
@@ -33,27 +36,30 @@ PathsDialog::PathsDialog(QWidget *parent, simgear::pkg::RootRef root) :
     m_ui->aircraftPathsList->setDropIndicatorShown(true);
 
     connect(m_ui->addCatalog, &QToolButton::clicked,
-            this, &PathsDialog::onAddCatalog);
+            this, &AddOnsPage::onAddCatalog);
     connect(m_ui->addDefaultCatalogButton, &QPushButton::clicked,
-            this, &PathsDialog::onAddDefaultCatalog);
+            this, &AddOnsPage::onAddDefaultCatalog);
     connect(m_ui->removeCatalog, &QToolButton::clicked,
-            this, &PathsDialog::onRemoveCatalog);
+            this, &AddOnsPage::onRemoveCatalog);
             
     connect(m_ui->addSceneryPath, &QToolButton::clicked,
-            this, &PathsDialog::onAddSceneryPath);
+            this, &AddOnsPage::onAddSceneryPath);
     connect(m_ui->removeSceneryPath, &QToolButton::clicked,
-            this, &PathsDialog::onRemoveSceneryPath);
+            this, &AddOnsPage::onRemoveSceneryPath);
 
     connect(m_ui->addAircraftPath, &QToolButton::clicked,
-            this, &PathsDialog::onAddAircraftPath);
+            this, &AddOnsPage::onAddAircraftPath);
     connect(m_ui->removeAircraftPath, &QToolButton::clicked,
-            this, &PathsDialog::onRemoveAircraftPath);
+            this, &AddOnsPage::onRemoveAircraftPath);
 
     connect(m_ui->changeDownloadDir, &QPushButton::clicked,
-            this, &PathsDialog::onChangeDownloadDir);
+            this, &AddOnsPage::onChangeDownloadDir);
 
     connect(m_ui->clearDownloadDir, &QPushButton::clicked,
-            this, &PathsDialog::onClearDownloadDir);
+            this, &AddOnsPage::onClearDownloadDir);
+
+    connect(m_ui->changeDataDir, &QPushButton::clicked,
+            this, &AddOnsPage::onChangeDataDir);
 
     QSettings settings;
             
@@ -71,42 +77,17 @@ PathsDialog::PathsDialog(QWidget *parent, simgear::pkg::RootRef root) :
     updateUi();
 }
 
-PathsDialog::~PathsDialog()
+AddOnsPage::~AddOnsPage()
 {
     delete m_ui;
 }
 
-void PathsDialog::accept()
-{
-    QSettings settings;
-    QStringList paths;
-    for (int i=0; i<m_ui->sceneryPathsList->count(); ++i) {
-        paths.append(m_ui->sceneryPathsList->item(i)->text());
-    }
-
-    settings.setValue("scenery-paths", paths);
-    paths.clear();
-
-    for (int i=0; i<m_ui->aircraftPathsList->count(); ++i) {
-        paths.append(m_ui->aircraftPathsList->item(i)->text());
-    }
-
-    settings.setValue("aircraft-paths", paths);
-
-    if (m_downloadDir.isEmpty()) {
-        settings.remove("download-dir");
-    } else {
-        settings.setValue("download-dir", m_downloadDir);
-    }
-    
-    QDialog::accept();
-}
-
-void PathsDialog::onAddSceneryPath()
+void AddOnsPage::onAddSceneryPath()
 {
     QString path = QFileDialog::getExistingDirectory(this, tr("Choose scenery folder"));
     if (!path.isEmpty()) {
         m_ui->sceneryPathsList->addItem(path);
+        saveSceneryPaths();
     }
 
     // work around a Qt OS-X bug - this dialog is ending ordered
@@ -115,14 +96,15 @@ void PathsDialog::onAddSceneryPath()
     window()->raise();
 }
 
-void PathsDialog::onRemoveSceneryPath()
+void AddOnsPage::onRemoveSceneryPath()
 {
     if (m_ui->sceneryPathsList->currentItem()) {
         delete m_ui->sceneryPathsList->currentItem();
+        saveSceneryPaths();
     }
 }
 
-void PathsDialog::onAddAircraftPath()
+void AddOnsPage::onAddAircraftPath()
 {
     QString path = QFileDialog::getExistingDirectory(this, tr("Choose aircraft folder"));
     if (!path.isEmpty()) {
@@ -156,6 +138,8 @@ void PathsDialog::onAddAircraftPath()
                 m_ui->aircraftPathsList->addItem(path);
             }
         }
+
+        saveAircraftPaths();
     }
     // work around a Qt OS-X bug - this dialog is ending ordered
     // behind the main settings dialog (consequence of modal-dialog
@@ -163,14 +147,40 @@ void PathsDialog::onAddAircraftPath()
     window()->raise();
 }
 
-void PathsDialog::onRemoveAircraftPath()
+void AddOnsPage::onRemoveAircraftPath()
 {
     if (m_ui->aircraftPathsList->currentItem()) {
         delete m_ui->aircraftPathsList->currentItem();
+        saveAircraftPaths();
     }
 }
 
-void PathsDialog::onAddCatalog()
+void AddOnsPage::saveAircraftPaths()
+{
+    QSettings settings;
+    QStringList paths;
+
+    for (int i=0; i<m_ui->aircraftPathsList->count(); ++i) {
+        paths.append(m_ui->aircraftPathsList->item(i)->text());
+    }
+
+    settings.setValue("aircraft-paths", paths);
+}
+
+void AddOnsPage::saveSceneryPaths()
+{
+    QSettings settings;
+    QStringList paths;
+    for (int i=0; i<m_ui->sceneryPathsList->count(); ++i) {
+        paths.append(m_ui->sceneryPathsList->item(i)->text());
+    }
+
+    settings.setValue("scenery-paths", paths);
+
+    emit sceneryPathsChanged();
+}
+
+void AddOnsPage::onAddCatalog()
 {
     QScopedPointer<AddCatalogDialog> dlg(new AddCatalogDialog(this, m_packageRoot));
     dlg->exec();
@@ -179,7 +189,7 @@ void PathsDialog::onAddCatalog()
     }
 }
 
-void PathsDialog::onAddDefaultCatalog()
+void AddOnsPage::onAddDefaultCatalog()
 {
     // check it's not a duplicate somehow
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
@@ -196,7 +206,7 @@ void PathsDialog::onAddDefaultCatalog()
      }
 }
 
-void PathsDialog::onRemoveCatalog()
+void AddOnsPage::onRemoveCatalog()
 {
     QModelIndex mi = m_ui->catalogsList->currentIndex();
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
@@ -228,25 +238,74 @@ void PathsDialog::onRemoveCatalog()
     updateUi();
 }
 
-void PathsDialog::onChangeDownloadDir()
+void AddOnsPage::onChangeDownloadDir()
 {
     QString path = QFileDialog::getExistingDirectory(this,
                                                      tr("Choose downloads folder"),
                                                      m_downloadDir);
-    if (!path.isEmpty()) {
-        m_downloadDir = path;
-        updateUi();
+    if (path.isEmpty()) {
+        return; // user cancelled
     }
+
+    m_downloadDir = path;
+    setDownloadDir();
 }
 
-void PathsDialog::onClearDownloadDir()
+void AddOnsPage::onClearDownloadDir()
 {
     // does this need an 'are you sure'?
     m_downloadDir.clear();
+
+    setDownloadDir();
+}
+
+void AddOnsPage::setDownloadDir()
+{
+    QSettings settings;
+    if (m_downloadDir.isEmpty()) {
+        settings.remove("download-dir");
+    } else {
+        settings.setValue("download-dir", m_downloadDir);
+    }
+
+    if (m_downloadDir.isEmpty()) {
+        flightgear::Options::sharedInstance()->clearOption("download-dir");
+    } else {
+        flightgear::Options::sharedInstance()->setOption("download-dir", m_downloadDir.toStdString());
+    }
+
+    emit downloadDirChanged();
     updateUi();
 }
 
-void PathsDialog::updateUi()
+void AddOnsPage::onChangeDataDir()
+{
+    QMessageBox mbox(this);
+    mbox.setText(tr("Change the data files used by FlightGear?"));
+    mbox.setInformativeText(tr("FlightGear requires additional files to operate. "
+                               "(Also called the base package, or fg-data) "
+                               "You can restart FlightGear and choose a "
+                               "different data files location, or restore the default setting."));
+    QPushButton* quitButton = mbox.addButton(tr("Restart FlightGear now"), QMessageBox::YesRole);
+    mbox.addButton(QMessageBox::Cancel);
+    mbox.setDefaultButton(QMessageBox::Cancel);
+    mbox.setIconPixmap(QPixmap(":/app-icon-large"));
+
+    mbox.exec();
+    if (mbox.clickedButton() != quitButton) {
+        return;
+    }
+
+    {
+        QSettings settings;
+        // set the option to the magic marker value
+        settings.setValue("fg-root", "!ask");
+    } // scope the ensure settings are written nicely
+
+    QtLauncher::restartTheApp(QStringList());
+}
+
+void AddOnsPage::updateUi()
 {
     QString s = m_downloadDir;
     if (s.isEmpty()) {
@@ -259,6 +318,18 @@ void PathsDialog::updateUi()
 
     QString m = tr("Download location: %1").arg(s);
     m_ui->downloadLocation->setText(m);
+
+    QString dataLoc;
+    QSettings settings;
+    QString root = settings.value("fg-root").toString();
+    if (root.isNull()) {
+        dataLoc = tr("built-in");
+    } else {
+        dataLoc = root;
+    }
+
+    m_ui->dataLocation->setText(tr("Data location: %1").arg(dataLoc));
+
 
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
     m_ui->addDefaultCatalogButton->setEnabled(!http->isDefaultCatalogInstalled());

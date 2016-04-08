@@ -53,6 +53,7 @@ public:
 
     void setSceneryPaths();
 
+    static void restartTheApp(QStringList fgArgs);
 protected:
     virtual void closeEvent(QCloseEvent *event);
 
@@ -85,9 +86,6 @@ private slots:
 
     void onSubsytemIdleTimeout();
 
-    void onEditPaths();
-    void onChangeRoot();
-
     void onAircraftInstalledCompleted(QModelIndex index);
     void onAircraftInstallFailed(QModelIndex index, QString errorMessage);
 
@@ -95,6 +93,9 @@ private slots:
 
     void maybeRestoreAircraftSelection();
 
+    void onRestoreDefaults();
+
+    void onDownloadDirChanged();
 private:
 
     /**
