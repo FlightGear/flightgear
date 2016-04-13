@@ -61,7 +61,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Please waiting, downloading and checking the hangar information.</string>
+          <string>Please wait, downloading and checking the hangar information.</string>
          </property>
         </widget>
        </item>
