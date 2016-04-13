@@ -29,7 +29,12 @@
 using namespace simgear::pkg;
 
 AddCatalogDialog::AddCatalogDialog(QWidget *parent, RootRef root) :
-    QDialog(parent),
+    QDialog(parent, Qt::Dialog
+                    | Qt::CustomizeWindowHint
+                    | Qt::WindowTitleHint
+                    | Qt::WindowSystemMenuHint
+                    | Qt::WindowContextHelpButtonHint
+                    | Qt::MSWindowsFixedSizeDialogHint),
     m_state(STATE_START),
     ui(new Ui::AddCatalogDialog),
     m_packageRoot(root)
