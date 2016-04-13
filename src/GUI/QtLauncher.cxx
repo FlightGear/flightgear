@@ -90,7 +90,12 @@ void initNavCache()
     if (cache->isRebuildRequired()) {
         QProgressDialog rebuildProgress(baseLabel,
                                        QString() /* cancel text */,
-                                       0, 100);
+                                       0, 100, Q_NULLPTR,
+                                       Qt::Dialog
+                                           | Qt::CustomizeWindowHint
+                                           | Qt::WindowTitleHint
+                                           | Qt::WindowSystemMenuHint
+                                           | Qt::MSWindowsFixedSizeDialogHint);
         rebuildProgress.setWindowModality(Qt::WindowModal);
         rebuildProgress.show();
 
