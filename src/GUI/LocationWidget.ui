@@ -339,7 +339,7 @@
          <item>
           <widget class="QLineEdit" name="locationSearchEdit">
            <property name="placeholderText">
-            <string>Enter an ICAO code, navaid or search by name</string>
+            <string>Enter an ICAO code, navaid or name, then press Enter</string>
            </property>
            <property name="clearButtonEnabled">
             <bool>true</bool>
