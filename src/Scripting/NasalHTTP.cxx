@@ -77,6 +77,15 @@ static naRef f_http_load(const nasal::CallContext& ctx)
   return ctx.to_nasal( requireHTTPClient(ctx.c).client()->load(url) );
 }
 
+static naRef f_request_abort(simgear::HTTP::Request&, const nasal::CallContext& ctx)
+{
+    // we need a request_ptr for cancel, not a reference. So extract
+    // the me object from the context directly.
+    simgear::HTTP::Request_ptr req = ctx.from_nasal<simgear::HTTP::Request_ptr>(ctx.me);
+    requireHTTPClient(ctx.c).client()->cancelRequest(req);
+    return naNil();
+}
+
 //------------------------------------------------------------------------------
 naRef initNasalHTTP(naRef globals, naContext c)
 {
@@ -93,7 +102,7 @@ naRef initNasalHTTP(naRef globals, naContext c)
     .member("status", &Request::responseCode)
     .member("reason", &Request::responseReason)
     .member("readyState", &Request::readyState)
-    .method("abort", static_cast<void (Request::*)()>(&Request::abort))
+    .method("abort", f_request_abort)
     .method("done", static_cast<HTTPCallback>(&Request::done))
     .method("fail", static_cast<HTTPCallback>(&Request::fail))
     .method("always", static_cast<HTTPCallback>(&Request::always));
