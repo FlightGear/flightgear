@@ -462,7 +462,7 @@ bool runLauncherDialog()
     // avoid double Apple menu and other weirdness if both Qt and OSG
     // try to initialise various Cocoa structures.
     flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
-    
+
     QtLauncher dlg;
     dlg.show();
 
@@ -769,6 +769,11 @@ void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString nam
 }
 
 void QtLauncher::closeEvent(QCloseEvent *event)
+{
+    qApp->exit(-1);
+}
+
+void QtLauncher::reject()
 {
     qApp->exit(-1);
 }

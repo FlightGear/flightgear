@@ -56,7 +56,7 @@ public:
     static void restartTheApp(QStringList fgArgs);
 protected:
     virtual void closeEvent(QCloseEvent *event);
-
+    virtual void reject();
 
 private slots:
     // run is used when the launcher is invoked before the main app is
