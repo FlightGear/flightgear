@@ -862,6 +862,8 @@ QModelIndex AircraftItemModel::indexOfAircraftURI(QUrl uri) const
                 }
             } // of linear package scan
         }
+    } else if (uri.scheme() == "") {
+        // Empty URI scheme (no selection), nothing to do
     } else {
         qWarning() << "Unknown aircraft URI scheme" << uri << uri.scheme();
     }
