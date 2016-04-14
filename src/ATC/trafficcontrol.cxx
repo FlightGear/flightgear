@@ -58,6 +58,30 @@ using std::string;
 using std::cout;
 using std::endl;
 
+namespace {
+
+TrafficVectorIterator findTraffic(TrafficVector& vec, int id)
+{
+    TrafficVectorIterator it = vec.begin();
+    for (; it != vec.end(); ++it) {
+        if (it->getId() == id) {
+            return it;
+        }
+    }
+
+    return it; // vec.end, effectively
+}
+
+void clearTrafficControllers(TrafficVector& vec)
+{
+    TrafficVectorIterator it = vec.begin();
+    for (; it != vec.end(); ++it) {
+        it->getAircraft()->clearATCController();
+    }
+}
+
+} // of anonymous namespace
+
 /***************************************************************************
  * ActiveRunway
  **************************************************************************/
@@ -190,9 +214,6 @@ FGTrafficRecord::FGTrafficRecord():
 
 FGTrafficRecord::~FGTrafficRecord()
 {
-    //if (aircraft) {
-    //    aircraft->clearATCController();
-    //}
 }
 
 void FGTrafficRecord::setPositionAndIntentions(int pos,
@@ -828,6 +849,15 @@ FGTowerController::FGTowerController(FGAirportDynamics *par) :
     parent = par;
 }
 
+FGTowerController::~FGTowerController()
+{
+    // to avoid the exception described in:
+    // https://sourceforge.net/p/flightgear/codetickets/1864/
+    // we want to ensure AI aircraft signing-off is a no-op now
+
+    clearTrafficControllers(activeTraffic);
+}
+
 //
 void FGTowerController::announcePosition(int id,
         FGAIFlightPlan * intendedRoute,
@@ -1091,6 +1121,11 @@ FGStartupController::FGStartupController(FGAirportDynamics *par):
         FGATCController()
 {
     parent = par;
+}
+
+FGStartupController::~FGStartupController()
+{
+    clearTrafficControllers(activeTraffic);
 }
 
 void FGStartupController::announcePosition(int id,
@@ -1550,6 +1585,11 @@ FGApproachController::FGApproachController(FGAirportDynamics *par):
         FGATCController()
 {
     parent = par;
+}
+
+FGApproachController::~FGApproachController()
+{
+    clearTrafficControllers(activeTraffic);
 }
 
 //

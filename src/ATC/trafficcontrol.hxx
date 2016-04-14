@@ -462,7 +462,8 @@ private:
 
 public:
     FGTowerController(FGAirportDynamics *parent);
-    virtual ~FGTowerController() {};
+    virtual ~FGTowerController();
+
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon,
                                   double hdg, double spd, double alt, double radius, int leg,
@@ -498,7 +499,8 @@ private:
 
 public:
     FGStartupController(FGAirportDynamics *parent);
-    virtual ~FGStartupController() {};
+    virtual ~FGStartupController();
+
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon,
                                   double hdg, double spd, double alt, double radius, int leg,
@@ -538,7 +540,8 @@ private:
 
 public:
     FGApproachController(FGAirportDynamics * parent);
-    virtual ~FGApproachController() { };
+    virtual ~FGApproachController();
+    
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon,
                                   double hdg, double spd, double alt, double radius, int leg,
