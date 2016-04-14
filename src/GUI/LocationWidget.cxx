@@ -668,6 +668,11 @@ void LocationWidget::onSearchComplete()
 void LocationWidget::onLocationChanged()
 {
     bool locIsAirport = FGAirport::isAirportType(m_location.ptr());
+    if (!m_location) {
+        onBackToSearch();
+        return;
+    }
+
     m_backButton->show();
 
     if (locIsAirport) {
