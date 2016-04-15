@@ -271,7 +271,11 @@
        </widget>
       </item>
       <item row="0" column="0" colspan="4">
-       <widget class="QListView" name="catalogsList"/>
+       <widget class="QListView" name="catalogsList">
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

@@ -59,7 +59,9 @@ QVariant CatalogListModel::data(const QModelIndex& index, int role) const
     simgear::pkg::CatalogRef cat = m_packageRoot->catalogs().at(index.row());
 
     if (role == Qt::DisplayRole) {
-        return QString::fromStdString(cat->description()).trimmed();
+        QString name = QString::fromStdString(cat->name());
+        QString desc = QString::fromStdString(cat->description()).simplified();
+        return QString("%1 - %2").arg(name).arg(desc);
     } else if (role == Qt::ToolTipRole) {
         return QString::fromStdString(cat->url());
     } else if (role == CatalogUrlRole) {
