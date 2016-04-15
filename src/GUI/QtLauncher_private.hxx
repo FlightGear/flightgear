@@ -115,6 +115,9 @@ private:
 
     simgear::pkg::PackageRef packageForAircraftURI(QUrl uri) const;
 
+    void checkOfficialCatalogMessage();
+    void onOfficialCatalogMessageLink(QUrl link);
+
     // need to wait after a model reset before restoring selection and
     // scrolling, to give the view time it seems.
     void delayedAircraftModelReset();

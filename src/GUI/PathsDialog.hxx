@@ -20,6 +20,8 @@ public:
     explicit AddOnsPage(QWidget *parent, simgear::pkg::RootRef root);
     ~AddOnsPage();
 
+    static void addDefaultCatalog(QWidget* pr);
+    
 signals:
     void downloadDirChanged();
     void sceneryPathsChanged();

@@ -94,7 +94,8 @@ enum AircraftItemStatus {
     PackageInstalled,
     PackageUpdateAvailable,
     PackageQueued,
-    PackageDownloading
+    PackageDownloading,
+    NoOfficialCatalogMessage
 };
 
 class AircraftItemModel : public QAbstractListModel
@@ -131,6 +132,14 @@ public:
     bool isIndexRunnable(const QModelIndex& index) const;
 
     /**
+     * should we show the prompt about the official hangar not being installed
+     * or not?
+     */
+    void setOfficialHangarMessageVisible(bool vis);
+
+    QModelIndex officialHangarMessageIndex() const;
+
+    /**
      * @helper to determine if a particular path is likely to contain
      * aircraft or not. Checks for -set.xml files one level down in the tree.
      *
@@ -157,7 +166,7 @@ private:
                              quint32 variantIndex, int role) const;
 
     QVariant packageThumbnail(simgear::pkg::PackageRef p, int index, bool download = true) const;
-    
+
     void abandonCurrentScan();
     void refreshPackages();
     
@@ -168,7 +177,8 @@ private:
     AircraftScanThread* m_scanThread;
     QVector<AircraftItemPtr> m_items;
     PackageDelegate* m_delegate;
-    
+    bool m_showOfficialHangarMessage;
+
     QVector<quint32> m_activeVariant;
     QVector<quint32> m_packageVariant;
     

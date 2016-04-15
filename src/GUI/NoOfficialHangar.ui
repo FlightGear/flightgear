@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>NoOfficialHangarMessage</class>
+ <widget class="QWidget" name="NoOfficialHangarMessage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>607</width>
+    <height>134</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The official FlightGear aircraft hangar is not selected, so only the default aircraft will be available. You can add the official hangar by &lt;a href=&quot;action:add-official&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;clicking here&lt;/span&gt;&lt;/a&gt;, or go to the 'add-ons' page to add other hangars or aircraft folders.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;action:hide&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Click here&lt;/span&gt;&lt;/a&gt; to permanently hide this message.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

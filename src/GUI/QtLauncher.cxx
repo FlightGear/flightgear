@@ -59,6 +59,8 @@
 #include <simgear/package/Install.hxx>
 
 #include "ui_Launcher.h"
+#include "ui_NoOfficialHangar.h"
+
 #include "EditRatingsFilterDialog.hxx"
 #include "AircraftItemDelegate.hxx"
 #include "AircraftModel.hxx"
@@ -293,12 +295,18 @@ public slots:
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
     {
+        QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
+        QVariant v = index.data(AircraftPackageStatusRole);
+        AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
+        if (status == NoOfficialCatalogMessage) {
+            return true;
+        }
+        
         if (!QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent)) {
             return false;
         }
 
         if (m_onlyShowInstalled) {
-            QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
             QVariant v = index.data(AircraftPackageStatusRole);
             AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
             if (status == PackageNotInstalled) {
@@ -307,7 +315,6 @@ protected:
         }
 
         if (!m_onlyShowInstalled && m_ratingsFilter) {
-            QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
             for (int i=0; i<4; ++i) {
                 if (m_ratings[i] > index.data(AircraftRatingRole + i).toInt()) {
                     return false;
@@ -322,6 +329,26 @@ private:
     bool m_ratingsFilter;
     bool m_onlyShowInstalled;
     int m_ratings[4];
+};
+
+class NoOfficialHangarMessage : public QWidget
+{
+    Q_OBJECT
+public:
+    NoOfficialHangarMessage() :
+        m_ui(new Ui::NoOfficialHangarMessage)
+    {
+        m_ui->setupUi(this);
+        // proxy this signal upwards
+        connect(m_ui->label, &QLabel::linkActivated,
+                this, &NoOfficialHangarMessage::linkActivated);
+    }
+
+Q_SIGNALS:
+    void linkActivated(QUrl link);
+
+private:
+    Ui::NoOfficialHangarMessage* m_ui;
 };
 
 static void initQtResources()
@@ -593,6 +620,7 @@ QtLauncher::QtLauncher() :
     m_aircraftModel->setPackageRoot(globals->packageRoot());
     m_aircraftModel->scanDirs();
 
+    checkOfficialCatalogMessage();
     restoreSettings();
 }
 
@@ -1163,6 +1191,7 @@ void QtLauncher::onSubsytemIdleTimeout()
 
 void QtLauncher::onDownloadDirChanged()
 {
+
     // replace existing package root
     globals->get_subsystem<FGHTTPClient>()->shutdown();
     globals->setPackageRoot(simgear::pkg::RootRef());
@@ -1172,14 +1201,48 @@ void QtLauncher::onDownloadDirChanged()
 
     globals->get_subsystem<FGHTTPClient>()->init();
 
-    // re-scan the aircraft list
     QSettings settings;
+    // re-scan the aircraft list
     m_aircraftModel->setPackageRoot(globals->packageRoot());
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
     m_aircraftModel->scanDirs();
 
+    checkOfficialCatalogMessage();
+    
     // re-set scenery dirs
     setSceneryPaths();
+}
+
+void QtLauncher::checkOfficialCatalogMessage()
+{
+    QSettings settings;
+    bool showOfficialCatalogMesssage = !globals->get_subsystem<FGHTTPClient>()->isDefaultCatalogInstalled();
+    if (settings.value("hide-official-catalog-message").toBool()) {
+        showOfficialCatalogMesssage = false;
+    }
+
+    m_aircraftModel->setOfficialHangarMessageVisible(showOfficialCatalogMesssage);
+    if (showOfficialCatalogMesssage) {
+        NoOfficialHangarMessage* messageWidget = new NoOfficialHangarMessage;
+        connect(messageWidget, &NoOfficialHangarMessage::linkActivated,
+                this, &QtLauncher::onOfficialCatalogMessageLink);
+
+        QModelIndex index = m_aircraftProxy->mapFromSource(m_aircraftModel->officialHangarMessageIndex());
+        m_ui->aircraftList->setIndexWidget(index, messageWidget);
+    }
+}
+
+void QtLauncher::onOfficialCatalogMessageLink(QUrl link)
+{
+    QString s = link.toString();
+    if (s == "action:hide") {
+        QSettings settings;
+        settings.setValue("hide-official-catalog-message", true);
+    } else if (s == "action:add-official") {
+        AddOnsPage::addDefaultCatalog(this);
+    }
+
+    checkOfficialCatalogMessage();
 }
 
 simgear::pkg::PackageRef QtLauncher::packageForAircraftURI(QUrl uri) const

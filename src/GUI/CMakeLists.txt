@@ -75,7 +75,8 @@ if (HAVE_QT)
                             SetupRootDialog.ui
                             AddCatalogDialog.ui
                             PathsDialog.ui
-                            LocationWidget.ui)
+                            LocationWidget.ui
+                            NoOfficialHanagar.ui)
     qt5_add_resources(qrc_sources resources.qrc)
 
 

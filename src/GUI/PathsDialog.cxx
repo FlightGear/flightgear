@@ -191,19 +191,24 @@ void AddOnsPage::onAddCatalog()
 
 void AddOnsPage::onAddDefaultCatalog()
 {
+    addDefaultCatalog(this);
+
+    m_catalogsModel->refresh();
+    updateUi();
+}
+
+void AddOnsPage::addDefaultCatalog(QWidget* pr)
+{
     // check it's not a duplicate somehow
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
     if (http->isDefaultCatalogInstalled())
         return;
 
-     QScopedPointer<AddCatalogDialog> dlg(new AddCatalogDialog(this, m_packageRoot));
-     QUrl url(QString::fromStdString(http->getDefaultCatalogUrl()));
-     dlg->setUrlAndDownload(url);
-     dlg->exec();
-     if (dlg->result() == QDialog::Accepted) {
-         m_catalogsModel->refresh();
-         updateUi();
-     }
+    QScopedPointer<AddCatalogDialog> dlg(new AddCatalogDialog(pr, globals->packageRoot()));
+    QUrl url(QString::fromStdString(http->getDefaultCatalogUrl()));
+    dlg->setUrlAndDownload(url);
+    dlg->exec();
+
 }
 
 void AddOnsPage::onRemoveCatalog()

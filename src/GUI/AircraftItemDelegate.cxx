@@ -43,7 +43,21 @@ AircraftItemDelegate::AircraftItemDelegate(QListView* view) :
 void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem & option,
     const QModelIndex & index) const
 {
-    painter->setRenderHint(QPainter::Antialiasing);
+    QRect contentRect = option.rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
+
+    QVariant v = index.data(AircraftPackageStatusRole);
+    AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
+    if (status == NoOfficialCatalogMessage) {
+        painter->setPen(QColor(0x7f, 0x7f, 0x7f));
+        painter->setBrush(Qt::NoBrush);
+
+        // draw bottom dividing line
+        painter->drawLine(contentRect.left(), contentRect.bottom() + MARGIN,
+                          contentRect.right(), contentRect.bottom() + MARGIN);
+
+        return;
+    }
+
     // selection feedback rendering
     if (option.state & QStyle::State_Selected) {
         QLinearGradient grad(option.rect.topLeft(), option.rect.bottomLeft());
@@ -57,7 +71,6 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         painter->drawLine(option.rect.topLeft(), option.rect.topRight());
     }
 
-    QRect contentRect = option.rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
 
     QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
     quint32 yPos = contentRect.center().y() - (thumbnail.height() / 2);
@@ -130,6 +143,8 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     r.moveLeft(r.right());
     r.setHeight(qMax(24, smallMetrics.height() + MARGIN));
 
+    painter->setRenderHint(QPainter::Antialiasing, true);
+
     if (index.data(AircraftHasRatingsRole).toBool()) {
         drawRating(painter, "Flight model:", r, index.data(AircraftRatingRole).toInt());
         r.moveTop(r.bottom());
@@ -142,8 +157,6 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         drawRating(painter, "Exterior:", r, index.data(AircraftRatingRole + 3).toInt());
     }
 
-    QVariant v = index.data(AircraftPackageStatusRole);
-    AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
     double downloadFraction = 0.0;
     
     if (status != PackageInstalled) {
@@ -205,10 +218,22 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         painter->setPen(Qt::black);
         painter->drawText(infoTextRect, Qt::AlignLeft | Qt::AlignVCenter, infoText);
     } // of update / install / download status
+
+    painter->setRenderHint(QPainter::Antialiasing, false);
+
 }
 
 QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const
 {
+    QVariant v = index.data(AircraftPackageStatusRole);
+    AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
+
+    if (status == NoOfficialCatalogMessage) {
+        QSize r = option.rect.size();
+        r.setHeight(100);
+        return r;
+    }
+
     QRect contentRect = option.rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
 
     QSize thumbnailSize = index.data(AircraftThumbnailSizeRole).toSize();

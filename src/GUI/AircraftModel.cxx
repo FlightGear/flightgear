@@ -434,7 +434,8 @@ private:
 
 AircraftItemModel::AircraftItemModel(QObject* pr ) :
     QAbstractListModel(pr),
-    m_scanThread(NULL)
+    m_scanThread(NULL),
+    m_showOfficialHangarMessage(false)
 {
 }
 
@@ -465,14 +466,48 @@ void AircraftItemModel::setPaths(QStringList paths)
     m_paths = paths;
 }
 
+void AircraftItemModel::setOfficialHangarMessageVisible(bool vis)
+{
+    if (m_showOfficialHangarMessage == vis) {
+        return;
+    }
+
+    m_showOfficialHangarMessage = vis;
+
+    if (vis) {
+        beginInsertRows(QModelIndex(), 0, 0);
+        m_items.prepend(AircraftItemPtr(new AircraftItem));
+        m_activeVariant.prepend(0);
+        endInsertRows();
+    } else {
+        beginRemoveRows(QModelIndex(), 0, 0);
+        m_items.removeAt(0);
+        m_activeVariant.removeAt(0);
+        endRemoveRows();
+    }
+}
+
+QModelIndex AircraftItemModel::officialHangarMessageIndex() const
+{
+    if (!m_showOfficialHangarMessage) {
+        return QModelIndex();
+    }
+
+    return index(0);
+}
+
 void AircraftItemModel::scanDirs()
 {
     abandonCurrentScan();
 
-    beginResetModel();
-    m_items.clear();
-    m_activeVariant.clear();
-    endResetModel();
+    int firstRow = (m_showOfficialHangarMessage ? 1 : 0);
+    int numToRemove = m_items.size() - firstRow;
+    int lastRow = firstRow + numToRemove - 1;
+
+    beginRemoveRows(QModelIndex(), firstRow, lastRow);
+    m_items.remove(firstRow, numToRemove);
+    m_activeVariant.remove(firstRow, numToRemove);
+    endRemoveRows();
 
     QStringList dirs = m_paths;
 
@@ -504,10 +539,34 @@ void AircraftItemModel::abandonCurrentScan()
 
 void AircraftItemModel::refreshPackages()
 {
-    beginResetModel();
-    m_packages = m_packageRoot->allPackages();
-    m_packageVariant.resize(m_packages.size());
-    endResetModel();
+    simgear::pkg::PackageList newPkgs = m_packageRoot->allPackages();
+    int firstRow = m_items.size();
+    int newSize = newPkgs.size();
+
+    if (m_packages.size() != newPkgs.size()) {
+        int oldSize = m_packages.size();
+        if (newSize > oldSize) {
+            // growing
+            int firstNewRow = firstRow + oldSize;
+            int lastNewRow = firstRow + newSize - 1;
+            beginInsertRows(QModelIndex(), firstNewRow, lastNewRow);
+            m_packages = newPkgs;
+            m_packageVariant.resize(newSize);
+            endInsertRows();
+        } else {
+            // shrinking
+            int firstOldRow = firstRow + newSize;
+            int lastOldRow = firstRow + oldSize - 1;
+            beginRemoveRows(QModelIndex(), firstOldRow, lastOldRow);
+            m_packages = newPkgs;
+            m_packageVariant.resize(newSize);
+            endRemoveRows();
+        }
+    } else {
+        m_packages = newPkgs;
+    }
+
+    emit dataChanged(index(firstRow), index(firstRow + newSize - 1));
 }
 
 int AircraftItemModel::rowCount(const QModelIndex& parent) const
@@ -517,8 +576,19 @@ int AircraftItemModel::rowCount(const QModelIndex& parent) const
 
 QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
 {
-    if (index.row() >= m_items.size()) {
-        quint32 packageIndex = index.row() - m_items.size();
+    int row = index.row();
+    if (m_showOfficialHangarMessage) {
+        if (row == 0) {
+            if (role == AircraftPackageStatusRole) {
+                return NoOfficialCatalogMessage;
+            }
+
+            return QVariant();
+        }
+    }
+
+    if (row >= m_items.size()) {
+        quint32 packageIndex = row - m_items.size();
 
         if (role == AircraftVariantRole) {
             return m_packageVariant.at(packageIndex);
@@ -537,11 +607,11 @@ QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
         return dataFromPackage(pkg, variantIndex, role);
     } else {
         if (role == AircraftVariantRole) {
-            return m_activeVariant.at(index.row());
+            return m_activeVariant.at(row);
         }
 
-        quint32 variantIndex = m_activeVariant.at(index.row());
-        const AircraftItemPtr item(m_items.at(index.row()));
+        quint32 variantIndex = m_activeVariant.at(row);
+        const AircraftItemPtr item(m_items.at(row));
         return dataFromItem(item, variantIndex, role);
     }
 }
@@ -761,6 +831,10 @@ bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value,
 
 QModelIndex AircraftItemModel::indexOfAircraftURI(QUrl uri) const
 {
+    if (uri.isEmpty()) {
+        return QModelIndex();
+    }
+
     if (uri.isLocalFile()) {
         QString path = uri.toLocalFile();
         for (int row=0; row <m_items.size(); ++row) {
@@ -778,11 +852,13 @@ QModelIndex AircraftItemModel::indexOfAircraftURI(QUrl uri) const
         }
     } else if (uri.scheme() == "package") {
         QString ident = uri.path();
+        int rowOffset = m_items.size();
+
         PackageRef pkg = m_packageRoot->getPackageById(ident.toStdString());
         if (pkg) {
             for (size_t i=0; i < m_packages.size(); ++i) {
                 if (m_packages[i] == pkg) {
-                    return index(m_items.size() + i);
+                    return index(rowOffset + i);
                 }
             } // of linear package scan
         }
@@ -820,8 +896,6 @@ void AircraftItemModel::onScanFinished()
 
 void AircraftItemModel::installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason)
 {
-    Q_ASSERT(index.row() >= m_items.size());
-
     QString msg;
     switch (reason) {
         case Delegate::FAIL_CHECKSUM:
