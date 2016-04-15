@@ -77,6 +77,7 @@ struct AircraftItem
     bool excluded;
     QString path;
     QString description;
+    QString longDescription;
     QString authors;
     int ratings[4];
     QString variantOf;

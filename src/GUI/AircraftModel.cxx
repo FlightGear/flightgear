@@ -90,6 +90,11 @@ AircraftItem::AircraftItem(QDir dir, QString filePath) :
 
     }
 
+    if (sim->hasChild("long-description")) {
+        // clean up any XML whitspace in the text.
+        longDescription = QString(sim->getStringValue("long-description")).simplified();
+    }
+
     if (sim->hasChild("variant-of")) {
         variantOf = sim->getStringValue("variant-of");
     }
@@ -124,7 +129,7 @@ void AircraftItem::fromDataStream(QDataStream& ds)
         return;
     }
 
-    ds >> description >> authors >> variantOf;
+    ds >> description >> longDescription >> authors >> variantOf;
     for (int i=0; i<4; ++i) ds >> ratings[i];
 }
 
@@ -135,7 +140,7 @@ void AircraftItem::toDataStream(QDataStream& ds) const
         return;
     }
 
-    ds << description << authors << variantOf;
+    ds << description << longDescription << authors << variantOf;
     for (int i=0; i<4; ++i) ds << ratings[i];
 }
 
@@ -157,7 +162,7 @@ QPixmap AircraftItem::thumbnail() const
 }
 
 
-static quint32 CACHE_VERSION = 3;
+static quint32 CACHE_VERSION = 5;
 
 class AircraftScanThread : public QThread
 {
@@ -674,12 +679,7 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, quint32 variantIn
         }
         return have;
     } else if (role == AircraftLongDescriptionRole) {
-#if 0
-        return "Lorum Ipsum, etc. Is this the real life? Is this just fantasy? Caught in a land-slide, "
-            "no escape from reality. Open your eyes, like up to the skies and see. "
-            "I'm just a poor boy, I need no sympathy because I'm easy come, easy go."
-            "Litte high, little low. Anywhere the wind blows.";
-#endif
+        return item->longDescription;
     } else if (role == AircraftIsHelicopterRole) {
         return item->usesHeliports;
     } else if (role == AircraftIsSeaplaneRole) {
@@ -751,7 +751,7 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
             return QString::fromStdString(authors->getStringValue());
         }
     } else if (role == AircraftLongDescriptionRole) {
-        return QString::fromStdString(item->description());
+        return QString::fromStdString(item->description()).simplified();
     } else if (role == AircraftPackageSizeRole) {
         return static_cast<int>(item->fileSizeBytes());
     } else if (role == AircraftURIRole) {
