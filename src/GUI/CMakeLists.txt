@@ -76,7 +76,7 @@ if (HAVE_QT)
                             AddCatalogDialog.ui
                             PathsDialog.ui
                             LocationWidget.ui
-                            NoOfficialHanagar.ui)
+                            NoOfficialHangar.ui)
     qt5_add_resources(qrc_sources resources.qrc)
 
 
