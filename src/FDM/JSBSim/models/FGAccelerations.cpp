@@ -60,7 +60,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGAccelerations.cpp,v 1.26 2016/01/31 11:13:00 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGAccelerations.cpp,v 1.28 2016/04/16 12:24:39 bcoconni Exp $");
 IDENT(IdHdr,ID_ACCELERATIONS);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,14 +74,12 @@ FGAccelerations::FGAccelerations(FGFDMExec* fdmex)
   Name = "FGAccelerations";
   gravType = gtWGS84;
   gravTorque = false;
-  HoldDown = 0;
 
   vPQRidot.InitMatrix();
   vUVWidot.InitMatrix();
   vUVWdot.InitMatrix();
   vGravAccel.InitMatrix();
   vBodyAccel.InitMatrix();
-  vQtrndot = FGQuaternion(0,0,0);
 
   bind();
   Debug(0);
@@ -105,7 +103,6 @@ bool FGAccelerations::InitModel(void)
   vUVWdot.InitMatrix();
   vGravAccel.InitMatrix();
   vBodyAccel.InitMatrix();
-  vQtrndot = FGQuaternion(0,0,0);
 
   return true;
 }
@@ -122,9 +119,9 @@ bool FGAccelerations::Run(bool Holding)
 
   CalculatePQRdot();   // Angular rate derivative
   CalculateUVWdot();   // Translational rate derivative
-  CalculateQuatdot();  // Angular orientation derivative
 
-  ResolveFrictionForces(in.DeltaT * rate);  // Update rate derivatives with friction forces
+  if (!FDMExec->GetHoldDown())
+    ResolveFrictionForces(in.DeltaT * rate);  // Update rate derivatives with friction forces
 
   Debug(2);
   return false;
@@ -160,7 +157,7 @@ void FGAccelerations::CalculatePQRdot(void)
   // moments and the total inertial angular velocity expressed in the body
   // frame.
 //  if (HoldDown && !FDMExec->GetTrimStatus()) {
-  if (HoldDown) {
+  if (FDMExec->GetHoldDown()) {
     // The rotational acceleration in ECI is calculated so that the rotational
     // acceleration is zero in the body frame.
     vPQRdot.InitMatrix();
@@ -170,19 +167,6 @@ void FGAccelerations::CalculatePQRdot(void)
     vPQRidot = in.Jinv * (in.Moment - in.vPQRi * (in.J * in.vPQRi));
     vPQRdot = vPQRidot - in.vPQRi * (in.Ti2b * in.vOmegaPlanet);
   }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// Compute the quaternion orientation derivative
-//
-// vQtrndot is the quaternion derivative.
-// Reference: See Stevens and Lewis, "Aircraft Control and Simulation",
-//            Second edition (2004), eqn 1.5-16b (page 50)
-
-void FGAccelerations::CalculateQuatdot(void)
-{
-  // Compute quaternion orientation derivative on current body rates
-  vQtrndot = in.qAttitudeECI.GetQDot(in.vPQRi);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -204,7 +188,7 @@ void FGAccelerations::CalculateQuatdot(void)
 
 void FGAccelerations::CalculateUVWdot(void)
 {
-  if (HoldDown && !FDMExec->GetTrimStatus())
+  if (FDMExec->GetHoldDown() && !FDMExec->GetTrimStatus())
     vBodyAccel.InitMatrix();
   else
     vBodyAccel = in.Force / in.Mass;
@@ -216,26 +200,38 @@ void FGAccelerations::CalculateUVWdot(void)
 
   // Include Gravitation accel
   switch (gravType) {
-    case gtStandard:
-      {
-        double radius = in.vInertialPosition.Magnitude();
-        vGravAccel = -(in.GAccel / radius) * in.vInertialPosition;
-      }
-      break;
-    case gtWGS84:
-      vGravAccel = in.Tec2i * in.J2Grav;
-      break;
+  case gtStandard:
+    {
+      double radius = in.vInertialPosition.Magnitude();
+      vGravAccel = -(in.GAccel / radius) * in.vInertialPosition;
+    }
+    break;
+  case gtWGS84:
+    vGravAccel = in.Tec2i * in.J2Grav;
+    break;
   }
 
-  if (HoldDown) {
+  if (FDMExec->GetHoldDown()) {
     // The acceleration in ECI is calculated so that the acceleration is zero
     // in the body frame.
-    vUVWidot = -1.0 * (in.Tb2i * vUVWdot);
+    vUVWidot = in.vOmegaPlanet * (in.vOmegaPlanet * in.vInertialPosition);
     vUVWdot.InitMatrix();
   }
   else {
     vUVWdot += in.Ti2b * vGravAccel;
     vUVWidot = in.Tb2i * vBodyAccel + vGravAccel;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGAccelerations::SetHoldDown(bool hd)
+{
+  if (hd) {
+    vUVWidot = in.vOmegaPlanet * (in.vOmegaPlanet * in.vInertialPosition);
+    vUVWdot.InitMatrix();
+    vPQRidot = in.vPQRi * (in.Ti2b * in.vOmegaPlanet);
+    vPQRdot.InitMatrix();
   }
 }
 
@@ -351,7 +347,6 @@ void FGAccelerations::InitializeDerivatives(void)
   // Make an initial run and set past values
   CalculatePQRdot();           // Angular rate derivative
   CalculateUVWdot();           // Translational rate derivative
-  CalculateQuatdot();          // Angular orientation derivative
   ResolveFrictionForces(0.);   // Update rate derivatives with friction forces
 }
 
@@ -386,8 +381,6 @@ void FGAccelerations::bind(void)
   PropertyManager->Tie("forces/fbx-gear-lbs", this, eX, (PMF)&FGAccelerations::GetGroundForces);
   PropertyManager->Tie("forces/fby-gear-lbs", this, eY, (PMF)&FGAccelerations::GetGroundForces);
   PropertyManager->Tie("forces/fbz-gear-lbs", this, eZ, (PMF)&FGAccelerations::GetGroundForces);
-
-  PropertyManager->Tie("forces/hold-down", this, &FGAccelerations::GetHoldDown, &FGAccelerations::SetHoldDown);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

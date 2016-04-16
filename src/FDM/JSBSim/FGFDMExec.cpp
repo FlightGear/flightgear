@@ -72,7 +72,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.187 2016/01/31 11:12:59 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.189 2016/04/16 12:24:39 bcoconni Exp $");
 IDENT(IdHdr,ID_FDMEXEC);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -100,6 +100,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
   StandAlone = false;
   ResetMode = 0;
   RandomSeed = 0;
+  HoldDown = false;
 
   IncrementThenHolding = false;  // increment then hold is off by default
   TimeStepsUntilHold = -1;
@@ -173,6 +174,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
   instance->Tie("simulation/jsbsim-debug", this, &FGFDMExec::GetDebugLevel, &FGFDMExec::SetDebugLevel);
   instance->Tie("simulation/frame", (int *)&Frame, false);
   instance->Tie("simulation/trim-completed", (int *)&trim_completed, false);
+  instance->Tie("forces/hold-down", this, &FGFDMExec::GetHoldDown, &FGFDMExec::SetHoldDown);
 
   Constructing = false;
 }
@@ -345,7 +347,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
   switch(idx) {
   case ePropagate:
     Propagate->in.vPQRidot     = Accelerations->GetPQRidot();
-    Propagate->in.vQtrndot     = Accelerations->GetQuaterniondot();
     Propagate->in.vUVWidot     = Accelerations->GetUVWidot();
     Propagate->in.DeltaT       = dT;
     break;
@@ -497,7 +498,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Accelerations->in.Tb2i     = Propagate->GetTb2i();
     Accelerations->in.Tec2b    = Propagate->GetTec2b();
     Accelerations->in.Tec2i    = Propagate->GetTec2i();
-    Accelerations->in.qAttitudeECI = Propagate->GetQuaternionECI();
     Accelerations->in.Moment   = Aircraft->GetMoments();
     Accelerations->in.GroundMoment  = GroundReactions->GetMoments();
     Accelerations->in.Force    = Aircraft->GetForces();
@@ -618,6 +618,19 @@ void FGFDMExec::ResetToInitialConditions(int mode)
     Setsim_time(0.0);
 
   RunIC();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFDMExec::SetHoldDown(bool hd)
+{
+  HoldDown = hd;
+  Accelerations->SetHoldDown(hd);
+  if (hd) {
+    Propagate->in.vPQRidot = Accelerations->GetPQRidot();
+    Propagate->in.vUVWidot = Accelerations->GetUVWidot();
+  }
+  Propagate->SetHoldDown(hd);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
