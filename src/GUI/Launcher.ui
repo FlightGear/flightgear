@@ -168,7 +168,7 @@
          <item>
           <widget class="QLineEdit" name="aircraftFilter">
            <property name="placeholderText">
-            <string>Search aircraft</string>
+            <string>Search aircraft (press Enter to search)</string>
            </property>
           </widget>
          </item>
