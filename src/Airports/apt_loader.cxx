@@ -128,8 +128,9 @@ public:
       }
     } // end of the apt.dat header
 
-    while ( ! in.eof() ) {
-      in.getline(tmp, 2048);
+    throwExceptionIfStreamError(in, "apt.dat", apt_dat);
+
+    while ( in.getline(tmp, 2048) ) {
       line = tmp; // string copy, ack
       line_num++;
 
@@ -203,6 +204,7 @@ public:
       }
     }
 
+    throwExceptionIfStreamError(in, "apt.dat", apt_dat);
     finishAirport();
   }
   
@@ -225,7 +227,19 @@ private:
   
   NavDataCache* cache;
   PositionedID currentAirportID;
-  
+
+  void throwExceptionIfStreamError(const sg_gzifstream& input_stream,
+                                   const std::string& short_name,
+                                   const std::string& full_path)
+  {
+    if ( input_stream.bad() ) {
+      // strerror() isn't thread-safe, unfortunately...
+      SG_LOG( SG_GENERAL, SG_ALERT, "error while reading " << full_path );
+      throw sg_io_exception("error while reading " + short_name,
+                            full_path.c_str());
+    }
+  }
+
   void finishAirport()
   {
     if (currentAirportID == 0) {
