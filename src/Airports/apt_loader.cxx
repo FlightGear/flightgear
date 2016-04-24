@@ -98,9 +98,7 @@ public:
     }
 
     string line;
-    char tmp[2049];
-    tmp[2048] = 0;
-    
+
     unsigned int line_id = 0;
     unsigned int line_num = 0;
 
@@ -130,13 +128,11 @@ public:
 
     throwExceptionIfStreamError(in, "apt.dat", apt_dat);
 
-    while ( in.getline(tmp, 2048) ) {
-      line = tmp; // string copy, ack
+    while ( std::getline(in, line) ) {
       line_num++;
 
-      if ( line.empty() || isspace(tmp[0]) || tmp[0] == '#' ) {
+      if ( isBlankOrCommentLine(line) )
         continue;
-      }
 
         if ((line_num % 100) == 0) {
             // every 100 lines
@@ -144,7 +140,8 @@ public:
             cache->setRebuildPhaseProgress(NavDataCache::REBUILD_AIRPORTS, percent);
         }
 
-      line_id = atoi(tmp);
+      // Extract the first field into 'line_id'
+      line_id = atoi(line.c_str());
 
       if ( line_id == 1 /* Airport */ ||
                     line_id == 16 /* Seaplane base */ ||
@@ -227,6 +224,13 @@ private:
   
   NavDataCache* cache;
   PositionedID currentAirportID;
+
+  // Tell whether an apt.dat line is blank or a comment line
+  bool isBlankOrCommentLine(const std::string& line)
+  {
+    size_t pos = line.find_first_not_of(" \t");
+    return ( pos == std::string::npos || line.find("##", pos) == pos );
+  }
 
   void throwExceptionIfStreamError(const sg_gzifstream& input_stream,
                                    const std::string& short_name,
