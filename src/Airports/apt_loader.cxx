@@ -50,6 +50,7 @@
 #include <ATC/CommStation.hxx>
 
 #include <iostream>
+#include <sstream>              // std::istringstream
 
 using namespace std;
 
@@ -103,6 +104,30 @@ public:
     unsigned int line_id = 0;
     unsigned int line_num = 0;
 
+    // Read the apt.dat header (two lines)
+    while ( line_num < 2 && std::getline(in, line) ) {
+      // 'line' may end with an \r character (tested on Linux, only \n was
+      // stripped: std::getline() only discards the _native_ line terminator)
+      line_num++;
+
+      if ( line_num == 1 ) {
+        std::string stripped_line = simgear::strutils::strip(line);
+        // First line indicates IBM ("I") or Macintosh ("A") line endings.
+        if ( stripped_line != "I" && stripped_line != "A" ) {
+          std::string pb = "invalid first line (neither 'I' nor 'A')";
+          SG_LOG( SG_GENERAL, SG_ALERT, apt_dat << ": " << pb);
+          throw sg_format_exception("cannot parse apt.dat file: " + pb,
+                                    apt_dat);
+        }
+      } else {     // second line of the file
+        std::istringstream s(line);
+        int apt_dat_format_version;
+        s >> apt_dat_format_version;
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "apt.dat format version: " << apt_dat_format_version );
+      }
+    } // end of the apt.dat header
+
     while ( ! in.eof() ) {
       in.getline(tmp, 2048);
       line = tmp; // string copy, ack
@@ -119,21 +144,8 @@ public:
         }
 
       line_id = atoi(tmp);
-      if ( tmp[0] == 'I' || tmp[0] == 'A' ) {
-        // First line, indicates IBM ("I") or Macintosh ("A")
-        // line endings.
 
-        // move past this line and read and discard the next line
-        // which is the version and copyright information
-        in.getline(tmp, 2048);
-
-        if ( strlen(tmp) > 5 ) {
-           char *p = (char *)memchr(tmp, ' ', 5);
-           if ( p )
-              *p = 0;
-        }
-        SG_LOG( SG_GENERAL, SG_INFO, "Data file version = " << tmp );
-      } else if ( line_id == 1 /* Airport */ ||
+      if ( line_id == 1 /* Airport */ ||
                     line_id == 16 /* Seaplane base */ ||
                     line_id == 17 /* Heliport */ ) {
         parseAirportLine(simgear::strutils::split(line));
