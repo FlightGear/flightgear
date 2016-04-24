@@ -118,12 +118,6 @@ public:
             cache->setRebuildPhaseProgress(NavDataCache::REBUILD_AIRPORTS, percent);
         }
 
-      if (line.size() >= 3) {
-          char *p = (char *)memchr(tmp, ' ', 3);
-          if ( p )
-              *p = 0;
-      }
-
       line_id = atoi(tmp);
       if ( tmp[0] == 'I' || tmp[0] == 'A' ) {
         // First line, indicates IBM ("I") or Macintosh ("A")
