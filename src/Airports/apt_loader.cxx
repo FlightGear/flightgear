@@ -129,23 +129,24 @@ public:
     throwExceptionIfStreamError(in, "apt.dat", apt_dat);
 
     while ( std::getline(in, line) ) {
+      // 'line' may end with an \r character, see above
       line_num++;
 
       if ( isBlankOrCommentLine(line) )
         continue;
 
-        if ((line_num % 100) == 0) {
-            // every 100 lines
-            unsigned int percent = (line_num * 100) / LINES_IN_APT_DAT;
-            cache->setRebuildPhaseProgress(NavDataCache::REBUILD_AIRPORTS, percent);
-        }
+      if ((line_num % 100) == 0) {
+        // every 100 lines
+        unsigned int percent = (line_num * 100) / LINES_IN_APT_DAT;
+        cache->setRebuildPhaseProgress(NavDataCache::REBUILD_AIRPORTS, percent);
+      }
 
       // Extract the first field into 'line_id'
       line_id = atoi(line.c_str());
 
       if ( line_id == 1 /* Airport */ ||
-                    line_id == 16 /* Seaplane base */ ||
-                    line_id == 17 /* Heliport */ ) {
+           line_id == 16 /* Seaplane base */ ||
+           line_id == 17 /* Heliport */ ) {
         parseAirportLine(simgear::strutils::split(line));
       } else if ( line_id == 10 ) { // Runway v810
         parseRunwayLine810(simgear::strutils::split(line));
