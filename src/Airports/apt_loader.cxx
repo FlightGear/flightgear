@@ -88,11 +88,12 @@ public:
 
   void parseAPT(const SGPath &aptdb_file)
   {
-    sg_gzifstream in( aptdb_file.str() );
+    std::string apt_dat = aptdb_file.str();
+    sg_gzifstream in(apt_dat);
 
     if ( !in.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << aptdb_file );
-        throw sg_io_exception("cannot open APT file", aptdb_file);
+      SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << apt_dat );
+      throw sg_io_exception("cannot open apt.dat file", apt_dat.c_str());
     }
 
     string line;
