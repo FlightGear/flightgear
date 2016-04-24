@@ -599,10 +599,20 @@ bool initPosition()
   }
   
   if ( !set_pos ) {
-    // No lon/lat specified, no airport specified, default to
-    // middle of KSFO field.
-    fgSetDouble("/sim/presets/longitude-deg", -122.374843);
-    fgSetDouble("/sim/presets/latitude-deg", 37.619002);
+    // No lon/lat specified, no airport specified, use the default airport
+    // TODO: don't hardcode this
+    const FGAirport* airport = fgFindAirportID("LEBL");
+    if( airport ) {
+      const SGGeod & airportGeod = airport->geod();
+      fgSetDouble("/sim/presets/longitude-deg", airportGeod.getLongitudeDeg());
+      fgSetDouble("/sim/presets/latitude-deg", airportGeod.getLatitudeDeg());
+    } else {
+      // So, the default airport is unknown? We are in serious trouble. 
+      // Let's hope KSFO still exists somehow
+      fgSetDouble("/sim/presets/longitude-deg", -122.374843);
+      fgSetDouble("/sim/presets/latitude-deg", 37.619002);
+      SG_LOG(SG_GENERAL, SG_ALERT, "Sorry, the default airport seems to be unknown.");
+    }
   }
   
   fgSetDouble( "/position/longitude-deg",
