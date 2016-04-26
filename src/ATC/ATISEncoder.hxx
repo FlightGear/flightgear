@@ -53,6 +53,7 @@ public:
     virtual int getWindSpeedKt() = 0;
     virtual int getGustsKt() = 0;
     virtual int getQnh() = 0;
+    virtual double getQnhInHg() = 0;
     virtual bool isCavok() = 0;
     virtual int getVisibilityMeters() = 0;
     virtual std::string getPhenomena() = 0;

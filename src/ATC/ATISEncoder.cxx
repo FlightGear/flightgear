@@ -565,13 +565,13 @@ string ATISEncoder::getQnh( SGPropertyNode_ptr )
 
 string ATISEncoder::getInhgInteger( SGPropertyNode_ptr )
 {
-  double qnh = _atis->getQnh() * 100 / SG_INHG_TO_PA;
+  double qnh = _atis->getQnhInHg();
   return getSpokenNumber( (int)qnh, true, 2 );
 }
 
 string ATISEncoder::getInhgFraction( SGPropertyNode_ptr )
 {
-  double qnh = _atis->getQnh() * 100 / SG_INHG_TO_PA;
+  double qnh = _atis->getQnhInHg();
   int f = int(100 * (qnh - int(qnh)) + 0.5);
   return getSpokenNumber( f, true, 2 );
 }

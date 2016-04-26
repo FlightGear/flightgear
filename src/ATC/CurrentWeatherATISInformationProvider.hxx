@@ -41,6 +41,7 @@ protected:
     virtual int getWindSpeedKt();
     virtual int getGustsKt();
     virtual int getQnh();
+    virtual double getQnhInHg();
     virtual bool isCavok();
     virtual int getVisibilityMeters();
     virtual std::string getPhenomena();

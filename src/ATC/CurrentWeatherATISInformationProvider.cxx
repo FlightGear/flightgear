@@ -85,7 +85,14 @@ int CurrentWeatherATISInformationProvider::getGustsKt()
 
 int CurrentWeatherATISInformationProvider::getQnh()
 {
+  // TODO: Calculate QNH correctly from environment
   return roundToInt( _environment->getNode("pressure-sea-level-inhg",true)->getDoubleValue() * SG_INHG_TO_PA / 100 );
+}
+
+double CurrentWeatherATISInformationProvider::getQnhInHg()
+{
+  // TODO: Calculate QNH correctly from environment
+  return _environment->getNode("pressure-sea-level-inhg",true)->getDoubleValue();
 }
 
 bool CurrentWeatherATISInformationProvider::isCavok()

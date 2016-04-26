@@ -72,10 +72,14 @@ int MetarPropertiesATISInformationProvider::getGustsKt()
   return _metar->getIntValue( "gust-wind-speed-kt" );
 }
 
-
 int MetarPropertiesATISInformationProvider::getQnh()
 {
-  return _metar->getDoubleValue("pressure-sea-level-inhg") * SG_INHG_TO_PA / 100.0;
+  return _metar->getDoubleValue("pressure-inhg") * SG_INHG_TO_PA / 100.0;
+}
+
+double MetarPropertiesATISInformationProvider::getQnhInHg()
+{
+  return _metar->getDoubleValue("pressure-inhg");
 }
 
 bool MetarPropertiesATISInformationProvider::isCavok()
