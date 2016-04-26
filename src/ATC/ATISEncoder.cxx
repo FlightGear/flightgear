@@ -507,12 +507,12 @@ string ATISEncoder::getVisibilityMiles( SGPropertyNode_ptr )
   string feet = globals->get_locale()->getLocalizedString("feet", "atc", "feet" );
 
   int v = _atis->getVisibilityMeters();
-  int vft = round( v * SG_METER_TO_FEET / 100 ) * 100; // Rounded to 100 feet
-  int vsm = round( v * SG_METER_TO_SM );
+  int vft = int( v * SG_METER_TO_FEET / 100 + 0.5 ) * 100; // Rounded to 100 ft
+  int vsm = int( v * SG_METER_TO_SM + 0.5 );
 
   string reply;
   if( vsm < 1 ) return reply.append( getSpokenAltitude( vft ) ).SPACE.append( feet );
-  if( v >= 9999 ) return reply.append( getSpokenNumber(10) );
+  if( vsm >= 10 ) return reply.append( getSpokenNumber(10) );
   return reply.append( getSpokenNumber( vsm ) );
 }
 
@@ -572,7 +572,7 @@ string ATISEncoder::getInhgInteger( SGPropertyNode_ptr )
 string ATISEncoder::getInhgFraction( SGPropertyNode_ptr )
 {
   double qnh = _atis->getQnh() * 100 / SG_INHG_TO_PA;
-  int f = round(100 * (qnh - (int)qnh));
+  int f = int(100 * (qnh - int(qnh)) + 0.5);
   return getSpokenNumber( f, true, 2 );
 }
 
