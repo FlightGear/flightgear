@@ -28,6 +28,7 @@
 #include <simgear/compiler.h>
 
 class SGPath;
+class sg_gzifstream;
 
 namespace flightgear
 {
@@ -43,6 +44,9 @@ namespace flightgear
     void loadFixes(const SGPath& path);
 
   private:
+    void throwExceptionIfStreamError(const sg_gzifstream& input_stream,
+                                     const SGPath& path);
+
     NavDataCache* _cache;
   };
 }
