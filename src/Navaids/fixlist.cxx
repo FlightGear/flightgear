@@ -105,11 +105,11 @@ void FixesLoader::loadFixes(const SGPath& path)
 
     _cache->insertFix(fields[2], SGGeod::fromDeg(lon, lat));
 
-      if ((lineNumber % 100) == 0) {
-          // every 100 lines
-          unsigned int percent = (lineNumber * 100) / LINES_IN_FIX_DAT;
-          _cache->setRebuildPhaseProgress(NavDataCache::REBUILD_FIXES, percent);
-      }
+    if ((lineNumber % 100) == 0) {
+      // every 100 lines
+      unsigned int percent = (lineNumber * 100) / LINES_IN_FIX_DAT;
+      _cache->setRebuildPhaseProgress(NavDataCache::REBUILD_FIXES, percent);
+    }
   }
 
   throwExceptionIfStreamError(in, path);
