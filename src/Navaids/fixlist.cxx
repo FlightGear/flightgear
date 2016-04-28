@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <string>               // std::getline()
+#include <errno.h>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
@@ -69,9 +70,11 @@ void FixesLoader::loadFixes(const SGPath& path)
   }
   
   // toss the first two lines of the file
-  in >> skipeol;
-  in >> skipeol;
-  
+  for (int i = 0; i < 2; i++) {
+    in >> skipeol;
+    throwExceptionIfStreamError(in, path);
+  }
+
   unsigned int lineNumber = 3;
 
   // read in each remaining line of the file
@@ -109,6 +112,21 @@ void FixesLoader::loadFixes(const SGPath& path)
       }
   }
 
+  throwExceptionIfStreamError(in, path);
 }
+
+void FixesLoader::throwExceptionIfStreamError(
+  const sg_gzifstream& input_stream, const SGPath& path)
+{
+  if (input_stream.bad()) {
+    const std::string errMsg = simgear::strutils::error_string(errno);
+
+    SG_LOG(SG_NAVAID, SG_ALERT,
+           "Error while reading '" << path.utf8Str() << "': " << errMsg);
+    throw sg_io_exception("Error reading file (" + errMsg + ")",
+                          sg_location(path));
+  }
+}
+
 
 } // of namespace flightgear;
