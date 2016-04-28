@@ -1178,7 +1178,7 @@ void NavDataCache::doRebuild()
         stampCacheFile(d->metarDatPath);
 
         st.stamp();
-        loadFixes(d->fixDatPath);
+        FixesLoader().loadFixes(d->fixDatPath);
         stampCacheFile(d->fixDatPath);
         SG_LOG(SG_NAVCACHE, SG_INFO, "fix.dat load took:" << st.elapsedMSec());
 

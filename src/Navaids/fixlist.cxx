@@ -51,8 +51,15 @@ namespace flightgear
 {
 
 const unsigned int LINES_IN_FIX_DAT = 119724;
-  
-void loadFixes(const SGPath& path)
+
+FixesLoader::FixesLoader() : _cache(NavDataCache::instance())
+{ }
+
+FixesLoader::~FixesLoader()
+{ }
+
+// Load fixes from the specified fix.dat (or fix.dat.gz) file
+void FixesLoader::loadFixes(const SGPath& path)
 {
   sg_gzifstream in( path );
   const std::string utf8path = path.utf8Str();
@@ -65,7 +72,6 @@ void loadFixes(const SGPath& path)
   in >> skipeol;
   in >> skipeol;
   
-  NavDataCache* cache = NavDataCache::instance();
   unsigned int lineNumber = 3;
 
   // read in each remaining line of the file
@@ -94,12 +100,12 @@ void loadFixes(const SGPath& path)
     lat = atof(fields[0].c_str());
     lon = atof(fields[1].c_str());
 
-    cache->insertFix(fields[2], SGGeod::fromDeg(lon, lat));
+    _cache->insertFix(fields[2], SGGeod::fromDeg(lon, lat));
 
       if ((lineNumber % 100) == 0) {
           // every 100 lines
           unsigned int percent = (lineNumber * 100) / LINES_IN_FIX_DAT;
-          cache->setRebuildPhaseProgress(NavDataCache::REBUILD_FIXES, percent);
+          _cache->setRebuildPhaseProgress(NavDataCache::REBUILD_FIXES, percent);
       }
   }
 
