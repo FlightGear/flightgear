@@ -31,9 +31,20 @@ class SGPath;
 
 namespace flightgear
 {
-  
-  void loadFixes(const SGPath& path);
-  
+  class NavDataCache;           // forward declaration
+
+  class FixesLoader
+  {
+  public:
+    FixesLoader();
+    ~FixesLoader();
+
+    // Load fixes from the specified fix.dat (or fix.dat.gz) file
+    void loadFixes(const SGPath& path);
+
+  private:
+    NavDataCache* _cache;
+  };
 }
 
 #endif // _FG_FIXLIST_HXX
