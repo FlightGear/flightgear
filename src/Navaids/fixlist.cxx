@@ -25,11 +25,15 @@
 #  include <config.h>
 #endif
 
+#include <stdlib.h>             // atof()
+
 #include <algorithm>
+#include <string>               // std::getline()
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx> // simgear::strutils::split()
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
 
@@ -51,6 +55,8 @@ const unsigned int LINES_IN_FIX_DAT = 119724;
 void loadFixes(const SGPath& path)
 {
   sg_gzifstream in( path );
+  const std::string utf8path = path.utf8Str();
+
   if ( !in.is_open() ) {
       throw sg_io_exception("Cannot open file:", path);
   }
@@ -60,19 +66,36 @@ void loadFixes(const SGPath& path)
   in >> skipeol;
   
   NavDataCache* cache = NavDataCache::instance();
-  unsigned int lineNumber = 2;
+  unsigned int lineNumber = 3;
 
   // read in each remaining line of the file
-  while ( ! in.eof() ) {
+  for (std::string line; std::getline(in, line); lineNumber++) {
+    std::vector<std::string> fields = simgear::strutils::split(line);
+    std::vector<std::string>::size_type nb_fields = fields.size();
+    const std::string endOfData = "99"; // special code in the fix.dat spec
     double lat, lon;
-    std::string ident;
-    in >> lat >> lon >> ident;
-    if (lat > 95) break;
-    
-    cache->insertFix(ident, SGGeod::fromDeg(lon, lat));
-    in >> skipcomment;
 
-      ++lineNumber;
+    if (nb_fields == 0) {       // blank line
+      continue;
+    } else if (nb_fields == 1) {
+      if (fields[0] == endOfData)
+        break;
+      else {
+        SG_LOG(SG_NAVAID, SG_WARN, utf8path << ": malformed line #" <<
+               lineNumber << ": only one field, but it is not '99'");
+        continue;
+      }
+    } else if (nb_fields != 3) {
+      SG_LOG(SG_NAVAID, SG_WARN, utf8path << ": malformed line #" <<
+             lineNumber << ": expected 3 fields, but got " << fields.size());
+      continue;
+    }
+
+    lat = atof(fields[0].c_str());
+    lon = atof(fields[1].c_str());
+
+    cache->insertFix(fields[2], SGGeod::fromDeg(lon, lat));
+
       if ((lineNumber % 100) == 0) {
           // every 100 lines
           unsigned int percent = (lineNumber * 100) / LINES_IN_FIX_DAT;
