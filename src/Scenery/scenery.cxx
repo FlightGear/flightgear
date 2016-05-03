@@ -286,6 +286,9 @@ FGScenery::FGScenery() :
 {
     // keep reference to pager singleton, so it cannot be destroyed while FGScenery lives
     _pager = FGScenery::getPagerSingleton();
+
+    // Initialise the state of the scene graph.
+    _inited = false;
 }
 
 FGScenery::~FGScenery()
@@ -296,6 +299,10 @@ FGScenery::~FGScenery()
 
 // Initialize the Scenery Management system
 void FGScenery::init() {
+    // Already set up.
+    if (_inited)
+        return;
+
     // Scene graph root
     scene_graph = new osg::Switch;
     scene_graph->setName( "FGScenery" );
@@ -334,6 +341,9 @@ void FGScenery::init() {
     simgear::GlobalParticleCallback::setSwitch(fgGetNode("/sim/rendering/particles", true));
   
     _listener = new ScenerySwitchListener(this);
+
+    // Toggle the setup flag.
+    _inited = true;
 }
 
 void FGScenery::shutdown()
@@ -343,6 +353,9 @@ void FGScenery::shutdown()
     models_branch = NULL;
     aircraft_branch = NULL;
     particles_branch = NULL;
+
+    // Toggle the setup flag.
+    _inited = false;
 }
 
 

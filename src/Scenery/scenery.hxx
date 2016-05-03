@@ -131,6 +131,10 @@ public:
     flightgear::SceneryPager* getPager() { return _pager.get(); }
 
     static const char* subsystemName() { return "scenery"; }
+
+private:
+    // The state of the scene graph.
+    bool _inited;
 };
 
 
