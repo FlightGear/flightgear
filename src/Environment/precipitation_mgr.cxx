@@ -51,21 +51,9 @@
  */
 FGPrecipitationMgr::FGPrecipitationMgr()
 {	
-    group = new osg::Group();
-    transform = new osg::MatrixTransform();
-    precipitation = new SGPrecipitation();
-
-
-    // By default, no precipitation
-    precipitation->setRainIntensity(0);
-    precipitation->setSnowIntensity(0);
-
-    // set the clip distance from the config
-    precipitation->setClipDistance(fgGetFloat("/environment/precipitation-control/clip-distance",5.0));
-    transform->addChild(precipitation->build());
-    group->addChild(transform.get());
+    // Try to set up the scenegraph.
+    setupSceneGraph();
 }
-
 
 /** 
  * @brief FGPrecipitaiton Manager destructor
@@ -87,9 +75,6 @@ void FGPrecipitationMgr::init()
     osg::Matrix position(makeZUpFrame(geod));
     // Move the precipitation object to player position
     transform->setMatrix(position);
-    // Add to scene graph
-    osg::Group* scenery = globals->get_scenery()->get_scene_graph();
-    scenery->addChild(getObject());
     fgGetNode("environment/params/precipitation-level-ft", true);
 }
 
@@ -106,19 +91,29 @@ void FGPrecipitationMgr::unbind ()
   _tiedProperties.Untie();
 }
 
+// Set up the precipitation manager scenegraph.
+void FGPrecipitationMgr::setupSceneGraph(void)
+{
+    FGScenery* scenery = globals->get_scenery();
+    osg::Group* group = scenery->get_precipitation_branch();
+    transform = new osg::MatrixTransform();
+    precipitation = new SGPrecipitation();
+
+
+    // By default, no precipitation
+    precipitation->setRainIntensity(0);
+    precipitation->setSnowIntensity(0);
+
+    // set the clip distance from the config
+    precipitation->setClipDistance(fgGetFloat("/environment/precipitation-control/clip-distance",5.0));
+    transform->addChild(precipitation->build());
+    group->addChild(transform.get());
+}
+
+
 void FGPrecipitationMgr::setPrecipitationLevel(double a)
 {
     fgSetDouble("environment/params/precipitation-level-ft",a);
-}
-
-/** 
- * @brief Get OSG precipitation object
- * 
- * @returns A pointer on the OSG object (osg::Group *)
- */
-osg::Group * FGPrecipitationMgr::getObject(void)
-{
-    return this->group.get();
 }
 
 /** 

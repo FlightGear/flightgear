@@ -36,7 +36,6 @@
 class FGPrecipitationMgr : public SGSubsystem
 {
 private:
-    osg::ref_ptr<osg::Group> group;
     osg::ref_ptr<osg::MatrixTransform> transform;
     osg::ref_ptr<SGPrecipitation> precipitation;
     float getPrecipitationAtAltitudeMax(void);
@@ -52,10 +51,8 @@ public:
     virtual void init ();
     virtual void update (double dt);
     
+    void setupSceneGraph(void);
     void setPrecipitationLevel(double l);
-
-    osg::Group * getObject(void);
-
 };
 
 #endif

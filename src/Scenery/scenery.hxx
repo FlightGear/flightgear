@@ -57,6 +57,7 @@ class FGScenery : public SGSubsystem
     osg::ref_ptr<osg::Group> aircraft_branch;
     osg::ref_ptr<osg::Group> interior_branch;
     osg::ref_ptr<osg::Group> particles_branch;
+    osg::ref_ptr<osg::Group> precipitation_branch;
     
     osg::ref_ptr<flightgear::SceneryPager> _pager;
     ScenerySwitchListener* _listener;
@@ -117,6 +118,7 @@ public:
     osg::Group *get_aircraft_branch () const { return aircraft_branch.get(); }
     osg::Group *get_interior_branch () const { return interior_branch.get(); }
     osg::Group *get_particles_branch () const { return particles_branch.get(); }
+    osg::Group *get_precipitation_branch () const { return precipitation_branch.get(); }
     
     /// Returns true if scenery is available for the given lat, lon position
     /// within a range of range_m.
