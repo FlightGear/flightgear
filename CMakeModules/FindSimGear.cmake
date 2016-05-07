@@ -229,21 +229,8 @@ if(NOT SIMGEAR_COMPILE_TEST)
 endif()
 unset(CMAKE_REQUIRED_DEFINITIONS)
 
-unset(SIMGEAR_CURL_TEST CACHE)
-check_cxx_source_compiles("
-  #include \"simgear/simgear_config.h\"
-  #if !defined(ENABLE_CURL)
-    #error Curl not enabled
-  #endif
-  int main() {}
-"
-SIMGEAR_CURL_TEST)
-
-if (SIMGEAR_CURL_TEST)
-    message(STATUS "SimGear uses Curl")
-    find_package(CURL REQUIRED)
-    list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES ${CURL_LIBRARIES})
-endif()
+find_package(CURL REQUIRED)
+list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES ${CURL_LIBRARIES})
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG
