@@ -18,6 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 # terrasync.py - synchronize terrascenery data to your local disk
+# needs dnspython (pip install dnspython)
 #
 # this is a terrible stub, please improve
 
@@ -28,13 +29,8 @@ import urllib.request
 dirindex = ".dirindex"
 DIRINDEXVERSION = 1
 
-#TODO: use DNS to resolve list of mirrors
-# - lookup terrasync.flightgear.org, type=NAPTR, service="ws20", flags="U"
-# - sort by order,preference ascending
-# - pick entries with lowest order and preference
-# - randomly pick one of those
-# - use regexp fields URL
-URL="http://flightgear.sourceforge.net/scenery"
+URL="automatic"
+TARGET="."
 
 ########################################################################
 
@@ -66,39 +62,107 @@ def do_download_file( _url, _path, _localfile, _hash ):
 ########################################################################
 def do_terrasync( _url, _path, _localdir ):
   url = _url + _path
-  print("syncing ",url)
+  print("syncing ",url, " to ", _localdir )
 
   if not os.path.exists( _localdir ):
     os.makedirs( _localdir )
 
-  for line in urllib.request.urlopen(url + "/.dirindex").readlines():
-    tokens = line.decode("utf-8").rstrip().split(':')
-    if( len(tokens) == 0 ):
-      continue
+  try:
+    for line in urllib.request.urlopen(url + "/.dirindex").readlines():
+      tokens = line.decode("utf-8").rstrip().split(':')
+      if( len(tokens) == 0 ):
+        continue
 
-    # TODO: check version number, should be equal to DIRINDEXVERSION
-    #       otherwise complain and terminate
-    if( tokens[0] == "version" ):
-      continue
+      # TODO: check version number, should be equal to DIRINDEXVERSION
+      #       otherwise complain and terminate
+      if( tokens[0] == "version" ):
+        continue
 
-    if( tokens[0] == "path" ):
-      continue
+      if( tokens[0] == "path" ):
+        continue
 
-    if( tokens[0] == "d" ):
-      do_terrasync( url,  "/" + tokens[1], os.path.join(_localdir,tokens[1] ) )
+      if( tokens[0] == "d" ):
+        do_terrasync( url,  "/" + tokens[1], os.path.join(_localdir,tokens[1] ) )
 
-    if( tokens[0] == "f" ):
-      do_download_file( url, "/" + tokens[1], os.path.join(_localdir,tokens[1]), tokens[2] )
+      if( tokens[0] == "f" ):
+        do_download_file( url, "/" + tokens[1], os.path.join(_localdir,tokens[1]), tokens[2] )
+
+  except urllib.error.HTTPError as err:
+    if err.code == 404 and _path == "":
+      # HACK: only the master on SF provides .dirindex for root, fake it if it's missing
+      print("Using static root hack.")
+      if not _url.startswith("http://flightgear.sourceforge.net/scenery") and _path == "":
+        for _sub in ("Models", "Terrain", "Objects", "Airports" ):
+          do_terrasync( _url, "/" + _sub, os.path.join(_localdir,_sub) )
+        return
+
+    else:
+      raise
+  #TODO: cleanup orphan files
 
 ########################################################################
 
-# TODO: parse command line args
-# --url=automatic for automatic detection of server URL
-# --url=http://flightgear.sourceforge.net/scenery to use explicit server
-# --path=/Models sync only the /Models path from the server
-# --destination=/some/path write files to destination instead of pwd
-# TODO: sanitize user provided data
+import getopt, sys, random, re
 
-do_terrasync( URL, "", "." )
+try:
+  opts, args = getopt.getopt(sys.argv[1:], "u:t:", [ "url=", "target=" ])
+
+except getopt.GetoptError:
+  print("terrasync.py [--url=http://some.server.org/scenery] [--target=/some/path]")
+  sys.exit(2)
+
+for opt, arg in opts:
+  if opt in( "-u", "--url"):
+    URL = arg
+
+  elif opt in ( "-t", "--target"):
+    TARGET= arg
+
+# automatic URL lookup from DNS NAPTR
+# - lookup terrasync.flightgear.org, type=NAPTR, service="ws20", flags="U"
+# - sort by order,preference ascending
+# - pick entries with lowest order and preference
+# - randomly pick one of those
+# - use regexp fields URL
+if URL == "automatic":
+  import dns.resolver
+  dnsResolver = dns.resolver.Resolver()
+
+  order = -1
+  preference = -1
+
+  # find lowes preference/order for service 'ws20' and flags 'U'
+  dnsAnswer = dnsResolver.query("terrasync.flightgear.org", "NAPTR" )
+  for naptr in dnsAnswer:
+    if naptr.service != b'ws20' or naptr.flags != b'U':
+      continue
+
+    if order == -1 or naptr.order < order:
+      order = naptr.order
+      preference = naptr.preference
+
+    if order == naptr.order:
+      if naptr.preference < preference:
+        preference = naptr.preference
+
+
+  # grab candidats
+  candidates = []
+  for naptr in dnsAnswer:
+    if naptr.service != b'ws20' or naptr.flags != b'U' or naptr.preference != preference or naptr.order != order:
+      continue
+
+    candidates.append( naptr.regexp.decode('utf-8') )
+
+  if not candidates:
+    print("sorry, no terrascenery URLs found. You may specify one with --url=http://some.url.org/foo")
+    sys.exit(3)
+
+  _url  = random.choice(candidates)
+  _subst = _url.split(_url[0]) # split string, first character is separator <sep>regex<sep>replacement<sep>
+  URL = re.sub(_subst[1], _subst[2], "" ) # apply regex substitude on empty string
+
+print( "terrasyncing from ", URL, "to ", TARGET )
+do_terrasync( URL, "", TARGET )
 
 ########################################################################
