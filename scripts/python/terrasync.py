@@ -20,21 +20,29 @@
 # terrasync.py - synchronize terrascenery data to your local disk
 # needs dnspython (pip install dnspython)
 #
-# this is a terrible stub, please improve
 
 import os 
 import hashlib
 import urllib.request
+from os import listdir
+from os.path import isfile, join
 
 dirindex = ".dirindex"
 DIRINDEXVERSION = 1
 
-URL="automatic"
+URL="http://flightgear.sourceforge.net/scenery"
+# User master repository for now
+#URL="automatic"
 TARGET="."
+QUICK=False
+REMOVE_ORPHAN=False
 
 ########################################################################
 
 def fn_hash_of_file(fname):
+    if not os.path.exists( fname ):
+      return None
+
     hash = hashlib.sha1()
     try:
         with open(fname, "rb") as f:
@@ -46,30 +54,52 @@ def fn_hash_of_file(fname):
     return hash.hexdigest()
 
 ########################################################################
-def do_download_file( _url, _path, _localfile, _hash ):
-  if os.path.exists( _localfile ):
+def do_download_file( _url, _path, _localfile, _hash, _force ):
+  if os.path.exists( _localfile ) and not _force:
     h = fn_hash_of_file(_localfile)
     if h == _hash:
-      print("hash match for ", _localfile)
-      return
+      #print("hash match for ", _localfile)
+      return False
 
   r = urllib.request.urlopen( _url + _path )
-  f = open(_localfile, 'wb')
-  f.write( r.read() )
-  f.close()
-  print("downloaded ", _localfile, " from ", _url + _path )
+  with open(_localfile, 'wb') as f:
+    f.write( r.read() )
+  #print("downloaded ", _localfile, " from ", _url + _path )
+  return True
 
 ########################################################################
-def do_terrasync( _url, _path, _localdir ):
+def do_terrasync( _url, _path, _localdir, _dirIndexHash ):
   url = _url + _path
-  print("syncing ",url, " to ", _localdir )
+  print(url)
 
   if not os.path.exists( _localdir ):
     os.makedirs( _localdir )
 
+  # download and process .dirindex as temporary file
+  # rename to .dirindex after successful processing of directory
+  # in case of abort, .dirindex.tmp will be removed as orphan
+  myDirIndexFile = os.path.join(_localdir, ".dirindex.tmp")
+
   try:
-    for line in urllib.request.urlopen(url + "/.dirindex").readlines():
-      tokens = line.decode("utf-8").rstrip().split(':')
+    if not do_download_file( url, "/.dirindex", myDirIndexFile, _dirIndexHash, QUICK == False ):
+      # dirindex hash matches, file not downloaded, skip directory
+      return
+
+  except urllib.error.HTTPError as err:
+    if err.code == 404 and _path == "":
+      # HACK: only the master on SF provides .dirindex for root, fake it if it's missing
+      print("Using static root hack.")
+      for _sub in ("Models", "Terrain", "Objects", "Airports" ):
+        do_terrasync( _url, "/" + _sub, os.path.join(_localdir,_sub), None )
+      return
+
+    else:
+      raise
+
+  with open(myDirIndexFile, 'r') as myDirIndex:
+    serverFiles = []
+    for line in myDirIndex:
+      tokens = line.rstrip().split(':')
       if( len(tokens) == 0 ):
         continue
 
@@ -82,22 +112,20 @@ def do_terrasync( _url, _path, _localdir ):
         continue
 
       if( tokens[0] == "d" ):
-        do_terrasync( url,  "/" + tokens[1], os.path.join(_localdir,tokens[1] ) )
+        do_terrasync( url,  "/" + tokens[1], os.path.join(_localdir,tokens[1]), tokens[2] )
 
       if( tokens[0] == "f" ):
-        do_download_file( url, "/" + tokens[1], os.path.join(_localdir,tokens[1]), tokens[2] )
+        do_download_file( url, "/" + tokens[1], os.path.join(_localdir,tokens[1]), tokens[2], False )
+        serverFiles.append( tokens[1] )
 
-  except urllib.error.HTTPError as err:
-    if err.code == 404 and _path == "":
-      # HACK: only the master on SF provides .dirindex for root, fake it if it's missing
-      print("Using static root hack.")
-      if not _url.startswith("http://flightgear.sourceforge.net/scenery") and _path == "":
-        for _sub in ("Models", "Terrain", "Objects", "Airports" ):
-          do_terrasync( _url, "/" + _sub, os.path.join(_localdir,_sub) )
-        return
+  os.rename( myDirIndexFile, os.path.join(_localdir, ".dirindex" ) )
 
-    else:
-      raise
+  localFiles = [f for f in listdir(_localdir) if isfile(join(_localdir, f))]
+  for f in localFiles:
+    if f != ".dirindex" and not f in serverFiles:
+      if REMOVE_ORPHAN:
+        os.remove( os.path.join(_localdir,f) )
+
   #TODO: cleanup orphan files
 
 ########################################################################
@@ -105,10 +133,10 @@ def do_terrasync( _url, _path, _localdir ):
 import getopt, sys, random, re
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], "u:t:", [ "url=", "target=" ])
+  opts, args = getopt.getopt(sys.argv[1:], "u:t:qr", [ "url=", "target=", "quick", "remove-orphan" ])
 
 except getopt.GetoptError:
-  print("terrasync.py [--url=http://some.server.org/scenery] [--target=/some/path]")
+  print("terrasync.py [--url=http://some.server.org/scenery] [--target=/some/path] [-q|--quick] [-r|--remove-orphan]")
   sys.exit(2)
 
 for opt, arg in opts:
@@ -117,6 +145,12 @@ for opt, arg in opts:
 
   elif opt in ( "-t", "--target"):
     TARGET= arg
+
+  elif opt in ("-q", "--quick"):
+    QUICK = True
+
+  elif opt in ("-r", "--remove-orphan"):
+    REMOVE_ORPHAN = True
 
 # automatic URL lookup from DNS NAPTR
 # - lookup terrasync.flightgear.org, type=NAPTR, service="ws20", flags="U"
@@ -163,6 +197,6 @@ if URL == "automatic":
   URL = re.sub(_subst[1], _subst[2], "" ) # apply regex substitude on empty string
 
 print( "terrasyncing from ", URL, "to ", TARGET )
-do_terrasync( URL, "", TARGET )
+do_terrasync( URL, "", TARGET, None )
 
 ########################################################################
