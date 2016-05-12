@@ -816,7 +816,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 
         if (ptr + 2 >= msgEnd)
         {
-            SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated prop id: "+std::to_string((*it)->id));
+            SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated prop id: " << (*it)->id);
             break;
         }
 
@@ -855,7 +855,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                 if (len >= MAX_TEXT_SIZE)
                 {
                   len = MAX_TEXT_SIZE - 1;
-                  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string "+std::to_string((*it)->id));
+                  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string " << (*it)->id);
                 }
 
                 // XXX This should not be using 4 bytes per character!
@@ -863,7 +863,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                 // on the floor.
                 if (ptr + 2 + ((len + 3) & ~3) >= msgEnd)
                 {
-                    SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string "+std::to_string((*it)->id));
+                    SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string " << (*it)->id);
                     goto escape;
                 }
                 //cout << "String length unint32: " << len << "\n";
@@ -878,7 +878,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                   {
                     if (ptr + 2 >= msgEnd)
                     {
-                      SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string "+std::to_string((*it)->id)+" lcount "+std::to_string(lcount));
+                      SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
                       break;
                     }
                     *ptr++ = XDR_encode_int8(*lcharptr);
@@ -892,7 +892,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                   {
                     if (ptr + 2 >= msgEnd)
                     {
-                      SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string "+std::to_string((*it)->id)+" lcount "+std::to_string(lcount));
+                      SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
                       break;
                     }
                     *ptr++ = XDR_encode_int8(0);
