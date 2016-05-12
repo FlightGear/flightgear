@@ -812,8 +812,14 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
       it = motionInfo.properties.begin();
       //cout << "OUTPUT PROPERTIES\n";
       xdr_data_t* msgEnd = msgBuf.propsEnd();
-      while (it != motionInfo.properties.end() && ptr + 2 < msgEnd) {
-        
+      while (it != motionInfo.properties.end()) {
+
+        if (ptr + 2 >= msgEnd)
+        {
+            SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated prop id: "+std::to_string((*it)->id));
+            break;
+        }
+
         // First element is the ID. Write it out when we know we have room for
         // the whole property.
         xdr_data_t id =  XDR_encode_uint32((*it)->id);
@@ -846,13 +852,20 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                 // Add the length         
                 ////cout << "String length: " << strlen(lcharptr) << "\n";
                 uint32_t len = strlen(lcharptr);
-                if (len > MAX_TEXT_SIZE)
-                  len = MAX_TEXT_SIZE;
+                if (len >= MAX_TEXT_SIZE)
+                {
+                  len = MAX_TEXT_SIZE - 1;
+                  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string "+std::to_string((*it)->id));
+                }
+
                 // XXX This should not be using 4 bytes per character!
                 // If there's not enough room for this property, drop it
                 // on the floor.
-                if (ptr + 2 + ((len + 3) & ~3) > msgEnd)
+                if (ptr + 2 + ((len + 3) & ~3) >= msgEnd)
+                {
+                    SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string "+std::to_string((*it)->id));
                     goto escape;
+                }
                 //cout << "String length unint32: " << len << "\n";
                 *ptr++ = id;
                 *ptr++ = XDR_encode_uint32(len);
@@ -863,21 +876,30 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                   int lcount = 0;
                   while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE)) 
                   {
+                    if (ptr + 2 >= msgEnd)
+                    {
+                      SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string "+std::to_string((*it)->id)+" lcount "+std::to_string(lcount));
+                      break;
+                    }
                     *ptr++ = XDR_encode_int8(*lcharptr);
                     lcharptr++;
                     lcount++;          
                   }
-    
                   //cout << "Prop:" << (*it)->id << " " << (*it)->type << " " << len << " " << (*it)->string_value;
     
                   // Now pad if required
                   while ((lcount % 4) != 0)
                   {
+                    if (ptr + 2 >= msgEnd)
+                    {
+                      SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string "+std::to_string((*it)->id)+" lcount "+std::to_string(lcount));
+                      break;
+                    }
                     *ptr++ = XDR_encode_int8(0);
                     lcount++;          
                     //cout << "0";
                   }
-                  
+
                   //cout << "\n";
                 }
               }
