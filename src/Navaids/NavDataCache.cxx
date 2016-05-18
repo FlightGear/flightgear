@@ -29,6 +29,7 @@
 #include <map>
 #include <cassert>
 #include <stdint.h> // for int64_t
+#include <sstream>  // for std::ostringstream
 // boost
 #include <boost/foreach.hpp>
 
