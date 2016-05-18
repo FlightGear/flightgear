@@ -842,6 +842,7 @@ private:
   double _stationTTL;
   double _frequency;
   PropertyObject<bool> _cdiDisconnected;
+  PropertyObject<std::string> _navType;
 };
 
 NavRadioImpl::NavRadioImpl( SGPropertyNode_ptr node ) :
@@ -854,7 +855,8 @@ NavRadioImpl::NavRadioImpl( SGPropertyNode_ptr node ) :
   _navIndicator(_rootNode),
   _stationTTL(0.0),
   _frequency(-1.0),
-  _cdiDisconnected(_rootNode->getNode("cdi-disconnected",true))
+  _cdiDisconnected(_rootNode->getNode("cdi-disconnected",true)),
+  _navType(_rootNode->getNode("nav-type",true))
 {
 }
 
@@ -911,6 +913,14 @@ void NavRadioImpl::update( double dt )
 
   if( _stationTTL <= 0.0 )
       _stationTTL = 30.0;
+
+  if( _components[VOR_COMPONENT]->valid() ) {
+    _navType = "vor";
+  } else if( _components[LOC_COMPONENT]->valid() ) {
+    _navType = "loc";
+  } else {
+    _navType = "";
+  }
 
   _legacy.update( dt );
 }
