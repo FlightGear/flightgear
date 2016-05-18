@@ -41,7 +41,7 @@ class HTTPGetter:
         self.requests = []
         self.pendingRequests = []
         self.httpConnection = HTTPConnection(self.parsedBaseUrl.netloc,80, True)
-        self.httpRequestHeaders = headers = {'Host':self.parsedBaseUrl.netloc,'Content-Length':0,'Connection':'Keep-Alive'}
+        self.httpRequestHeaders = headers = {'Host':self.parsedBaseUrl.netloc,'Content-Length':0,'Connection':'Keep-Alive','User-Agent':'FlightGear terrasync.py'}
 
     def get(self, httpGetCallback):
 
