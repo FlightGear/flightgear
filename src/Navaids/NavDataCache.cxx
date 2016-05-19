@@ -981,7 +981,7 @@ bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path,
     throw sg_io_exception("isCachedFileModified: Missing file:", path);
   }
 
-  sqlite_bind_temp_stdstring(statCacheCheck, 1, path.utf8Str());
+  sqlite_bind_temp_stdstring(statCacheCheck, 1, path.realpath().utf8Str());
   bool isModified = true;
   sgDebugPriority logLevel = verbose ? SG_WARN : SG_DEBUG;
   if (execSelect(statCacheCheck)) {
@@ -1329,6 +1329,38 @@ void NavDataCache::writeStringListProperty(const string& key, const string_list&
   }
 }
 
+string_list NavDataCache::readOrderedStringListProperty(const string& key,
+                                                        const char* separator)
+{
+   string_list l = simgear::strutils::split(readStringProperty(key), separator);
+   assert(!l.empty());
+   // See comment in writeOrderedStringListProperty()
+   l.pop_back();
+
+   return l;
+}
+
+void NavDataCache::writeOrderedStringListProperty(const string& key,
+                                                  const string_list& values,
+                                                  const char* separator)
+{
+  string s;
+
+  // If values == {a, b, c}, we'll write this string to the property:
+  //
+  //   a + separator + b + separator + c + separator
+  //
+  // When this is split around 'separator' after reading back the property
+  // value, we'll obtain an extraneous empty element after 'c' that should be
+  // discarded. This last separator allows correct write-read round-trip when
+  // 'values' is empty.
+  if (!values.empty()) {
+    s = simgear::strutils::join(values, separator) + string(separator);
+  }
+
+  writeStringProperty(key, s);
+}
+
 bool NavDataCache::isCachedFileModified(const SGPath& path) const
 {
   return d->isCachedFileModified(path, false);
@@ -1336,7 +1368,7 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
 
 void NavDataCache::stampCacheFile(const SGPath& path)
 {
-  sqlite_bind_temp_stdstring(d->stampFileCache, 1, path.utf8Str());
+  sqlite_bind_temp_stdstring(d->stampFileCache, 1, path.realpath().utf8Str());
   sqlite3_bind_int64(d->stampFileCache, 2, path.modTime());
   d->execInsert(d->stampFileCache);
 }

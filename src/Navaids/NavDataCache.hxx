@@ -99,8 +99,16 @@ public:
   void writeStringProperty(const std::string& key, const std::string& value);
   void writeDoubleProperty(const std::string& key, const double& value);
 
+  // Warning: order is not necessarily preserved upon write-read cycles!
   string_list readStringListProperty(const std::string& key);
   void writeStringListProperty(const std::string& key, const string_list& values);
+
+  // These ones guarantee the same order after each write-read cycle.
+  string_list readOrderedStringListProperty(const std::string& key,
+                                            const char* separator);
+  void writeOrderedStringListProperty(const std::string& key,
+                                      const string_list& values,
+                                      const char* separator);
 
   /**
    * retrieve an FGPositioned from the cache.
