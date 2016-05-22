@@ -25,13 +25,69 @@
 #ifndef _FG_APT_LOADER_HXX
 #define _FG_APT_LOADER_HXX
 
-#include <simgear/compiler.h>
+#include <string>
+#include <vector>
 
+#include <simgear/compiler.h>
+#include <simgear/structure/SGSharedPtr.hxx>
+#include <simgear/math/SGGeod.hxx>
+#include <Navaids/positioned.hxx>
+
+// Forward declarations
 class SGPath;
+class NavDataCache;
+class sg_gzifstream;
+class FGPavement;
 
 namespace flightgear
 {
-  
+
+class APTLoader
+{
+public:
+  APTLoader();
+  ~APTLoader();
+
+  void parseAPT(const SGPath &aptdb_file);
+
+private:
+  typedef SGSharedPtr<FGPavement> FGPavementPtr;
+
+  APTLoader(const APTLoader&);            // disable copy constructor
+  APTLoader& operator=(const APTLoader&); // disable copy-assignment operator
+
+  // Tell whether an apt.dat line is blank or a comment line
+  bool isBlankOrCommentLine(const std::string& line);
+  void throwExceptionIfStreamError(const sg_gzifstream& input_stream,
+                                   const SGPath& path);
+  void parseAirportLine(const std::vector<std::string>& token);
+  void finishAirport();
+  void parseRunwayLine810(const std::vector<std::string>& token);
+  void parseRunwayLine850(const std::vector<std::string>& token);
+  void parseWaterRunwayLine850(const std::vector<std::string>& token);
+  void parseHelipadLine850(const std::vector<std::string>& token);
+  void parsePavementLine850(const std::vector<std::string>& token);
+  void parsePavementNodeLine850(int num, const std::vector<std::string>& token);
+
+  void parseCommLine(int lineId, const std::vector<std::string>& token);
+
+  double rwy_lat_accum;
+  double rwy_lon_accum;
+  double last_rwy_heading;
+  int rwy_count;
+  std::string last_apt_id;
+  double last_apt_elev;
+  SGGeod tower;
+
+  std::string pavement_ident;
+  bool pavement;
+  std::vector<FGPavementPtr> pavements;
+
+  NavDataCache* cache;
+  // Not an airport identifier in the sense of the apt.dat spec!
+  PositionedID currentAirportID;
+};
+
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
 // or not.
