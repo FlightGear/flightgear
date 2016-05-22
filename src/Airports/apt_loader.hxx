@@ -28,13 +28,18 @@
 #include <string>
 #include <vector>
 
+#if __cplusplus >= 201103L
+  #include <unordered_map>
+#else
+  #include <map>
+#endif
+
 #include <simgear/compiler.h>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/math/SGGeod.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <Navaids/positioned.hxx>
 
-// Forward declarations
-class SGPath;
 class NavDataCache;
 class sg_gzifstream;
 class FGPavement;
@@ -48,9 +53,47 @@ public:
   APTLoader();
   ~APTLoader();
 
-  void parseAPT(const SGPath &aptdb_file);
+  // Read the specified apt.dat file into 'airportInfoMap'
+  void readAptDatFile(const SGPath& aptdb_file);
+  // Read all airports gathered in 'airportInfoMap' and load them into the
+  // navdata cache (even in case of overlapping apt.dat files,
+  // 'airportInfoMap' has only one entry per airport).
+  void loadAirports();
 
 private:
+  struct Line
+  {
+    Line(unsigned int number_, unsigned int rowCode_, std::string str_)
+      : number(number_), rowCode(rowCode_), str(str_) { }
+
+    unsigned int number;
+    unsigned int rowCode;         // Terminology of the apt.dat spec
+    std::string str;
+  };
+
+  typedef std::vector<Line> LinesList;
+
+  struct RawAirportInfo
+  {
+    // apt.dat file where the airport was defined
+    SGPath file;
+    // Row code for the airport (1, 16 or 17)
+    unsigned int rowCode;
+    // Line number in the apt.dat file where the airport definition starts
+    unsigned int firstLineNum;
+    // The whitespace-separated strings comprising the first line of the airport
+    // definition
+    std::vector<std::string> firstLineTokens;
+    // Subsequent lines of the airport definition (one element per line)
+    LinesList otherLines;
+  };
+
+#if __cplusplus >= 201103L
+  typedef std::unordered_map<std::string, RawAirportInfo> AirportInfoMapType;
+#else
+  typedef           std::map<std::string, RawAirportInfo> AirportInfoMapType;
+#endif
+
   typedef SGSharedPtr<FGPavement> FGPavementPtr;
 
   APTLoader(const APTLoader&);            // disable copy constructor
@@ -60,7 +103,7 @@ private:
   bool isBlankOrCommentLine(const std::string& line);
   void throwExceptionIfStreamError(const sg_gzifstream& input_stream,
                                    const SGPath& path);
-  void parseAirportLine(const std::string& aptDat,
+  void parseAirportLine(unsigned int rowCode,
                         const std::vector<std::string>& token);
   void finishAirport(const std::string& aptDat);
   void parseRunwayLine810(const std::vector<std::string>& token);
@@ -73,6 +116,8 @@ private:
   void parseCommLine(const std::string& aptDat, int lineId,
                      const std::vector<std::string>& token);
 
+  std::vector<std::string> token;
+  AirportInfoMapType airportInfoMap;
   double rwy_lat_accum;
   double rwy_lon_accum;
   double last_rwy_heading;
@@ -89,12 +134,6 @@ private:
   // Not an airport identifier in the sense of the apt.dat spec!
   PositionedID currentAirportID;
 };
-
-// Load the airport data base from the specified aptdb file.  The
-// metar file is used to mark the airports as having metar available
-// or not.
-
-bool airportDBLoad(const SGPath& path);
 
 bool metarDataLoad(const SGPath& path);
 

@@ -1339,16 +1339,18 @@ void NavDataCache::doRebuild()
     SGTimeStamp st;
     {
         Transaction txn(this);
+        APTLoader aptLoader;
         string_list aptDatFiles;
 
         st.stamp();
         for (PathList::const_iterator it = d->aptDatPaths.begin();
              it != d->aptDatPaths.end(); it++) {
             aptDatFiles.push_back(it->realpath().utf8Str());
-            airportDBLoad(*it);
+            aptLoader.readAptDatFile(*it);
             stampCacheFile(*it); // this uses the realpath() of the file
         }
 
+        aptLoader.loadAirports(); // load airport data into the NavCache
         // Store the list of apt.dat files we have loaded
         writeOrderedStringListProperty(
           datTypeStr[DATFILETYPE_APT] + ".dat files", aptDatFiles,

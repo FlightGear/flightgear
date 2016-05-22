@@ -44,6 +44,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>              // std::pair, std::move()
 
 #include "airport.hxx"
 #include "runways.hxx"
@@ -85,7 +86,7 @@ APTLoader::APTLoader()
 
 APTLoader::~APTLoader() { }
 
-void APTLoader::parseAPT(const SGPath &aptdb_file)
+void APTLoader::readAptDatFile(const SGPath &aptdb_file)
 {
   string apt_dat = aptdb_file.utf8Str(); // full path to the file being parsed
   sg_gzifstream in(aptdb_file);
@@ -103,6 +104,15 @@ void APTLoader::parseAPT(const SGPath &aptdb_file)
 
   unsigned int line_id = 0;
   unsigned int line_num = 0;
+  // "airport identifier": terminology used in the apt.dat format spec. It is
+  // often an ICAO code, but not always.
+  string currentAirportId;
+  // Boolean used to make sure we don't try to load the same airport several
+  // times. Defaults to true only to ensure we don't add garbage to
+  // 'airportInfoMap' under the key "" (empty airport identifier) in case the
+  // apt.dat file doesn't have a start-of-airport row code (1, 16 or 17) after
+  // its header---which would be invalid, anyway.
+  bool skipAirport = true;
 
   // Read the apt.dat header (two lines)
   while ( line_num < 2 && std::getline(in, line) ) {
@@ -150,65 +160,136 @@ void APTLoader::parseAPT(const SGPath &aptdb_file)
     if ( line_id == 1  /* Airport */ ||
          line_id == 16 /* Seaplane base */ ||
          line_id == 17 /* Heliport */ ) {
-      parseAirportLine(apt_dat, simgear::strutils::split(line));
-    } else if ( line_id == 10 ) { // Runway v810
-      parseRunwayLine810(simgear::strutils::split(line));
-    } else if ( line_id == 100 ) { // Runway v850
-      parseRunwayLine850(simgear::strutils::split(line));
-    } else if ( line_id == 101 ) { // Water Runway v850
-      parseWaterRunwayLine850(simgear::strutils::split(line));
-    } else if ( line_id == 102 ) { // Helipad v850
-      parseHelipadLine850(simgear::strutils::split(line));
-    } else if ( line_id == 18 ) {
-      // beacon entry (ignore)
-    } else if ( line_id == 14 ) {
-      // control tower entry
-      vector<string> token(simgear::strutils::split(line));
+      vector<string> tokens(simgear::strutils::split(line));
+      if (tokens.size() < 6) {
+        SG_LOG( SG_GENERAL, SG_WARN,
+                apt_dat << ":"  << line_num << ": invalid airport header "
+                "(at least 6 fields are required)" );
+        skipAirport = true; // discard everything until the next airport header
+        continue;
+      }
 
-      double lat = atof( token[1].c_str() );
-      double lon = atof( token[2].c_str() );
-      double elev = atof( token[3].c_str() );
-      tower = SGGeod::fromDegFt(lon, lat, elev + last_apt_elev);
-      cache->insertTower(currentAirportID, tower);
-    } else if ( line_id == 19 ) {
-      // windsock entry (ignore)
-    } else if ( line_id == 20 ) {
-      // Taxiway sign (ignore)
-    } else if ( line_id == 21 ) {
-      // lighting objects (ignore)
-    } else if ( line_id == 15 ) {
-      // custom startup locations (ignore)
-    } else if ( line_id == 0 ) {
-      // ??
-    } else if ( line_id >= 50 && line_id <= 56) {
-      parseCommLine(apt_dat, line_id, simgear::strutils::split(line));
-    } else if ( line_id == 110 ) {
-      pavement = true;
-      parsePavementLine850(simgear::strutils::split(line, 0, 4));
-    } else if ( line_id >= 111 && line_id <= 114 ) {
-      if ( pavement )
-        parsePavementNodeLine850(line_id, simgear::strutils::split(line));
-    } else if ( line_id >= 115 && line_id <= 116 ) {
-      // other pavement nodes (ignore)
-    } else if ( line_id == 120 ) {
-      pavement = false;
-    } else if ( line_id == 130 ) {
-      pavement = false;
-    } else if ( line_id >= 1000 ) {
-      // airport traffic flow (ignore)
+      currentAirportId = tokens[4]; // often an ICAO, but not always
+      // Check if the airport is already in 'airportInfoMap'; get the
+      // existing entry, if any, otherwise insert a new one.
+      std::pair<AirportInfoMapType::iterator, bool>
+        insertRetval = airportInfoMap.insert(
+          AirportInfoMapType::value_type(currentAirportId, RawAirportInfo()));
+      skipAirport = !insertRetval.second;
+
+      if ( skipAirport ) {
+        SG_LOG( SG_GENERAL, SG_INFO,
+                apt_dat << ":"  << line_num << ": skipping airport " <<
+                currentAirportId << " (already defined earlier)" );
+      } else {
+        // We haven't seen this airport yet in any apt.dat file
+        RawAirportInfo& airportInfo = insertRetval.first->second;
+        airportInfo.file = aptdb_file;
+        airportInfo.rowCode = line_id;
+        airportInfo.firstLineNum = line_num;
+        airportInfo.firstLineTokens =
+#if __cplusplus >= 201103L
+          std::move(tokens);    // requires C++11, untested
+#else
+          tokens;
+#endif
+      }
     } else if ( line_id == 99 ) {
       SG_LOG( SG_GENERAL, SG_DEBUG,
-              apt_dat << ": code 99 found (normally at end of file)" );
-    } else {
-      std::ostringstream oss;
-      oss << apt_dat << ":"  << line_num << ": unknown row code " << line_id;
-      SG_LOG( SG_GENERAL, SG_ALERT, oss.str() << " (" << line << ")" );
-      throw sg_format_exception(oss.str(), line);
+              apt_dat << ":"  << line_num << ": code 99 found "
+              "(normally at end of file)" );
+    } else if ( !skipAirport ) {
+      // Line belonging to an already started, and not skipped airport entry;
+      // just append it.
+      airportInfoMap[currentAirportId].otherLines.
+#if __cplusplus >= 201103L
+        emplace_back(line_num, line_id, line); // requires C++11, untested
+#else
+        push_back(Line(line_num, line_id, line));
+#endif
     }
-  }
+  } // of file reading loop
 
   throwExceptionIfStreamError(in, aptdb_file);
-  finishAirport(apt_dat);
+}
+
+void APTLoader::loadAirports()
+{
+  // Loop over all airports found in all apt.dat files
+  for (AirportInfoMapType::const_iterator it = airportInfoMap.begin();
+       it != airportInfoMap.end(); it++) {
+    // Full path to the apt.dat file this airport info comes from
+    const string aptDat = it->second.file.utf8Str();
+    last_apt_id = it->first;    // this is just the current airport identifier
+    // The first line for this airport was already split over whitespace, but
+    // remains to be parsed for the most part.
+    parseAirportLine(it->second.rowCode, it->second.firstLineTokens);
+    const LinesList& lines = it->second.otherLines;
+
+    // Loop over the second and subsequent lines
+    for (LinesList::const_iterator linesIt = lines.begin();
+         linesIt != lines.end(); linesIt++) {
+      // Beware that linesIt->str may end with an '\r' character, see above!
+      unsigned int line_id = linesIt->rowCode;
+
+      if ( line_id == 10 ) { // Runway v810
+        parseRunwayLine810(simgear::strutils::split(linesIt->str));
+      } else if ( line_id == 100 ) { // Runway v850
+        parseRunwayLine850(simgear::strutils::split(linesIt->str));
+      } else if ( line_id == 101 ) { // Water Runway v850
+        parseWaterRunwayLine850(simgear::strutils::split(linesIt->str));
+      } else if ( line_id == 102 ) { // Helipad v850
+        parseHelipadLine850(simgear::strutils::split(linesIt->str));
+      } else if ( line_id == 18 ) {
+        // beacon entry (ignore)
+      } else if ( line_id == 14 ) {
+        // control tower entry
+        vector<string> token(simgear::strutils::split(linesIt->str));
+
+        double lat = atof( token[1].c_str() );
+        double lon = atof( token[2].c_str() );
+        double elev = atof( token[3].c_str() );
+        tower = SGGeod::fromDegFt(lon, lat, elev + last_apt_elev);
+        cache->insertTower(currentAirportID, tower);
+      } else if ( line_id == 19 ) {
+        // windsock entry (ignore)
+      } else if ( line_id == 20 ) {
+        // Taxiway sign (ignore)
+      } else if ( line_id == 21 ) {
+        // lighting objects (ignore)
+      } else if ( line_id == 15 ) {
+        // custom startup locations (ignore)
+      } else if ( line_id == 0 ) {
+        // ??
+      } else if ( line_id >= 50 && line_id <= 56) {
+        parseCommLine(aptDat, line_id, simgear::strutils::split(linesIt->str));
+      } else if ( line_id == 110 ) {
+        pavement = true;
+        parsePavementLine850(simgear::strutils::split(linesIt->str, 0, 4));
+      } else if ( line_id >= 111 && line_id <= 114 ) {
+        if ( pavement )
+          parsePavementNodeLine850(line_id,
+                                   simgear::strutils::split(linesIt->str));
+      } else if ( line_id >= 115 && line_id <= 116 ) {
+        // other pavement nodes (ignore)
+      } else if ( line_id == 120 ) {
+        pavement = false;
+      } else if ( line_id == 130 ) {
+        pavement = false;
+      } else if ( line_id >= 1000 ) {
+        // airport traffic flow (ignore)
+      } else {
+        std::ostringstream oss;
+        oss << aptDat << ":" << linesIt->number << ": unknown row code " <<
+          line_id;
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                oss.str() << " (" << linesIt->str << ")" );
+        throw sg_format_exception(oss.str(), linesIt->str);
+      }
+    } // of loop over the second and subsequent apt.dat lines for the airport
+
+    finishAirport(aptDat);
+  } // of loop over 'airportInfoMap'
 }
 
 // Tell whether an apt.dat line is blank or a comment line
@@ -253,15 +334,13 @@ void APTLoader::finishAirport(const string& aptDat)
   currentAirportID = 0;
 }
 
-void APTLoader::parseAirportLine(const string& aptDat,
+// 'rowCode' is passed to avoid decoding it twice, since that work was already
+// done in order to detect the start of the new airport.
+void APTLoader::parseAirportLine(unsigned int rowCode,
                                  const vector<string>& token)
 {
   const string& id(token[4]);
   double elev = atof( token[1].c_str() );
-
-  // finish the previous airport
-  finishAirport(aptDat);
-
   last_apt_elev = elev;
 
   string name;
@@ -276,8 +355,7 @@ void APTLoader::parseAirportLine(const string& aptDat,
   rwy_lat_accum = 0.0;
   rwy_count = 0;
 
-  int robinType = atoi(token[0].c_str());
-  currentAirportID = cache->insertAirport(fptypeFromRobinType(robinType),
+  currentAirportID = cache->insertAirport(fptypeFromRobinType(rowCode),
                                           id, name);
 }
 
@@ -553,16 +631,7 @@ void APTLoader::parseCommLine(const string& aptDat, int lineId,
                "), skipping" );
 }
 
-// Load the airport data base from the specified aptdb file.  The
-// metar file is used to mark the airports as having metar available
-// or not.
-bool airportDBLoad( const SGPath &aptdb_file )
-{
-  APTLoader ld;
-  ld.parseAPT(aptdb_file);
-  return true;
-}
-
+// The 'metar.dat' file lists the airports that have METAR available.
 bool metarDataLoad(const SGPath& metar_file)
 {
   sg_gzifstream metar_in( metar_file );
