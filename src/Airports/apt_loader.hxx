@@ -108,18 +108,23 @@ private:
   void parseAirportLine(unsigned int rowCode,
                         const std::vector<std::string>& token);
   void finishAirport(const std::string& aptDat);
-  void parseRunwayLine810(const std::vector<std::string>& token);
-  void parseRunwayLine850(const std::vector<std::string>& token);
-  void parseWaterRunwayLine850(const std::vector<std::string>& token);
-  void parseHelipadLine850(const std::vector<std::string>& token);
+  void parseRunwayLine810(const std::string& aptDat, unsigned int lineNum,
+                          const std::vector<std::string>& token);
+  void parseRunwayLine850(const std::string& aptDat, unsigned int lineNum,
+                          const std::vector<std::string>& token);
+  void parseWaterRunwayLine850(const std::string& aptDat, unsigned int lineNum,
+                               const std::vector<std::string>& token);
+  void parseHelipadLine850(const std::string& aptDat, unsigned int lineNum,
+                           const std::vector<std::string>& token);
   void parseViewpointLine(const std::string& aptDat, unsigned int lineNum,
                           const std::vector<std::string>& token);
   void parsePavementLine850(const std::vector<std::string>& token);
-  void parsePavementNodeLine850(int rowCode,
-                                const std::vector<std::string>& token);
-
-  void parseCommLine(const std::string& aptDat, int lineId,
-                     const std::vector<std::string>& token);
+  void parsePavementNodeLine850(
+    const std::string& aptDat, unsigned int lineNum, int rowCode,
+    const std::vector<std::string>& token);
+  void parseCommLine(
+    const std::string& aptDat, unsigned int lineNum, unsigned int rowCode,
+    const std::vector<std::string>& token);
 
   std::vector<std::string> token;
   AirportInfoMapType airportInfoMap;

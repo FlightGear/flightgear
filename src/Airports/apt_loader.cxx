@@ -233,13 +233,17 @@ void APTLoader::loadAirports()
       unsigned int rowCode = linesIt->rowCode;
 
       if ( rowCode == 10 ) { // Runway v810
-        parseRunwayLine810(simgear::strutils::split(linesIt->str));
+        parseRunwayLine810(aptDat, linesIt->number,
+                           simgear::strutils::split(linesIt->str));
       } else if ( rowCode == 100 ) { // Runway v850
-        parseRunwayLine850(simgear::strutils::split(linesIt->str));
+        parseRunwayLine850(aptDat, linesIt->number,
+                           simgear::strutils::split(linesIt->str));
       } else if ( rowCode == 101 ) { // Water Runway v850
-        parseWaterRunwayLine850(simgear::strutils::split(linesIt->str));
+        parseWaterRunwayLine850(aptDat, linesIt->number,
+                                simgear::strutils::split(linesIt->str));
       } else if ( rowCode == 102 ) { // Helipad v850
-        parseHelipadLine850(simgear::strutils::split(linesIt->str));
+        parseHelipadLine850(aptDat, linesIt->number,
+                            simgear::strutils::split(linesIt->str));
       } else if ( rowCode == 18 ) {
         // beacon entry (ignore)
       } else if ( rowCode == 14 ) {  // Viewpoint/control tower
@@ -256,13 +260,14 @@ void APTLoader::loadAirports()
       } else if ( rowCode == 0 ) {
         // ??
       } else if ( rowCode >= 50 && rowCode <= 56) {
-        parseCommLine(aptDat, rowCode, simgear::strutils::split(linesIt->str));
+        parseCommLine(aptDat, linesIt->number, rowCode,
+                      simgear::strutils::split(linesIt->str));
       } else if ( rowCode == 110 ) {
         pavement = true;
         parsePavementLine850(simgear::strutils::split(linesIt->str, 0, 4));
       } else if ( rowCode >= 111 && rowCode <= 114 ) {
         if ( pavement )
-          parsePavementNodeLine850(rowCode,
+          parsePavementNodeLine850(aptDat, linesIt->number, rowCode,
                                    simgear::strutils::split(linesIt->str));
       } else if ( rowCode >= 115 && rowCode <= 116 ) {
         // other pavement nodes (ignore)
@@ -350,16 +355,18 @@ void APTLoader::finishAirport(const string& aptDat)
 void APTLoader::parseAirportLine(unsigned int rowCode,
                                  const vector<string>& token)
 {
+  // The algorithm in APTLoader::readAptDatFile() ensures this is at least 5.
+  vector<string>::size_type lastIndex = token.size() - 1;
   const string& id(token[4]);
   double elev = atof( token[1].c_str() );
   last_apt_elev = elev;
 
   string name;
   // build the name
-  for ( unsigned int i = 5; i < token.size() - 1; ++i ) {
+  for ( vector<string>::size_type i = 5; i < lastIndex; ++i ) {
     name += token[i] + " ";
   }
-  name += token[token.size() - 1];
+  name += token[lastIndex];
 
   // clear runway list for start of next airport
   rwy_lon_accum = 0.0;
@@ -370,8 +377,16 @@ void APTLoader::parseAirportLine(unsigned int rowCode,
                                              id, name);
 }
 
-void APTLoader::parseRunwayLine810(const vector<string>& token)
+void APTLoader::parseRunwayLine810(const string& aptDat, unsigned int lineNum,
+                                   const vector<string>& token)
 {
+  if (token.size() < 11) {
+    SG_LOG( SG_GENERAL, SG_WARN,
+            aptDat << ":" << lineNum << ": invalid v810 runway line " <<
+            "(row code 10): at least 11 fields are required" );
+    return;
+  }
+
   double lat = atof( token[1].c_str() );
   double lon = atof( token[2].c_str() );
   rwy_lat_accum += lat;
@@ -439,8 +454,16 @@ void APTLoader::parseRunwayLine810(const vector<string>& token)
   }
 }
 
-void APTLoader::parseRunwayLine850(const vector<string>& token)
+void APTLoader::parseRunwayLine850(const string& aptDat, unsigned int lineNum,
+                                   const vector<string>& token)
 {
+  if (token.size() < 26) {
+    SG_LOG( SG_GENERAL, SG_WARN,
+            aptDat << ":" << lineNum << ": invalid v850 runway line " <<
+            "(row code 100): at least 26 fields are required" );
+    return;
+  }
+
   double width = atof( token[1].c_str() );
   int surface_code = atoi( token[2].c_str() );
 
@@ -465,7 +488,7 @@ void APTLoader::parseRunwayLine850(const vector<string>& token)
 
   const string& rwy_no_1(token[8]);
   const string& rwy_no_2(token[17]);
-  if ( rwy_no_1.empty() || rwy_no_2.empty() )
+  if ( rwy_no_1.empty() || rwy_no_2.empty() ) // these tests are weird...
     return;
 
   double displ_thresh1 = atof( token[11].c_str() );
@@ -489,8 +512,17 @@ void APTLoader::parseRunwayLine850(const vector<string>& token)
   cache->setRunwayReciprocal(rwy, reciprocal);
 }
 
-void APTLoader::parseWaterRunwayLine850(const vector<string>& token)
+void APTLoader::parseWaterRunwayLine850(const string& aptDat,
+                                        unsigned int lineNum,
+                                        const vector<string>& token)
 {
+  if (token.size() < 9) {
+    SG_LOG( SG_GENERAL, SG_WARN,
+            aptDat << ":" << lineNum << ": invalid v850 water runway line " <<
+            "(row code 101): at least 9 fields are required" );
+    return;
+  }
+
   double width = atof( token[1].c_str() );
 
   double lat_1 = atof( token[4].c_str() );
@@ -528,8 +560,16 @@ void APTLoader::parseWaterRunwayLine850(const vector<string>& token)
   cache->setRunwayReciprocal(rwy, reciprocal);
 }
 
-void APTLoader::parseHelipadLine850(const vector<string>& token)
+void APTLoader::parseHelipadLine850(const string& aptDat, unsigned int lineNum,
+                                    const vector<string>& token)
 {
+  if (token.size() < 12) {
+    SG_LOG( SG_GENERAL, SG_WARN,
+            aptDat << ":" << lineNum << ": invalid v850 helipad line " <<
+            "(row code 102): at least 12 fields are required" );
+    return;
+  }
+
   double length = atof( token[5].c_str() );
   double width = atof( token[6].c_str() );
 
@@ -580,9 +620,21 @@ void APTLoader::parsePavementLine850(const vector<string>& token)
   }
 }
 
-void APTLoader::parsePavementNodeLine850(int rowCode,
+void APTLoader::parsePavementNodeLine850(const string& aptDat,
+                                         unsigned int lineNum, int rowCode,
                                          const vector<string>& token)
 {
+  static const unsigned int minNbTokens[] = {3, 5, 3, 5};
+  assert(111 <= rowCode && rowCode <= 114);
+
+  if (token.size() < minNbTokens[rowCode-111]) {
+    SG_LOG( SG_GENERAL, SG_WARN,
+            aptDat << ":" << lineNum << ": invalid v850 node line " <<
+            "(row code " << rowCode << "): at least " <<
+            minNbTokens[rowCode-111] << " fields are required" );
+    return;
+  }
+
   double lat = atof( token[1].c_str() );
   double lon = atof( token[2].c_str() );
   SGGeod pos(SGGeod::fromDegFt(lon, lat, 0.0));
@@ -605,12 +657,22 @@ void APTLoader::parsePavementNodeLine850(int rowCode,
   }
 }
 
-void APTLoader::parseCommLine(const string& aptDat, int lineId,
+void APTLoader::parseCommLine(const string& aptDat,
+                              unsigned int lineNum, unsigned int rowCode,
                               const vector<string>& token)
 {
-  if ( rwy_count <= 0 ) {
+  if (token.size() < 3) {
+    SG_LOG( SG_GENERAL, SG_WARN,
+            aptDat << ":" << lineNum << ": invalid Comm Frequency line " <<
+            "(row code " << rowCode << "): at least 3 fields are required" );
+    return;
+  } else if (rwy_count <= 0) {
     SG_LOG( SG_GENERAL, SG_ALERT,
-            aptDat << ": no runways, skipping comm for " << last_apt_id );
+            aptDat << ":" << lineNum << ": no runways, skipping Comm " <<
+            "Frequency line for " << last_apt_id );
+    // There used to be no 'return' here. Not sure how useful this is, but
+    // clearly this code block doesn't make sense without it, so here it is.
+    return;
   }
 
   SGGeod pos = SGGeod::fromDegFt(rwy_lon_accum / (double)rwy_count,
@@ -621,44 +683,38 @@ void APTLoader::parseCommLine(const string& aptDat, int lineId,
   int freqKhz = atoi(token[1].c_str()) * 10;
   int rangeNm = 50;
   FGPositioned::Type ty;
-  // Make sure we only pass on stations with at least a name
-  if (token.size() >2){
 
-    switch (lineId) {
-    case 50:
-      ty = FGPositioned::FREQ_AWOS;
-      for( size_t i = 2; i < token.size(); ++i )
+  switch (rowCode) {
+  case 50:
+    ty = FGPositioned::FREQ_AWOS;
+    for (size_t i = 2; i < token.size(); ++i)
+    {
+      if (token[i] == "ATIS")
       {
-        if( token[i] == "ATIS" )
-        {
-          ty = FGPositioned::FREQ_ATIS;
-          break;
-        }
+        ty = FGPositioned::FREQ_ATIS;
+        break;
       }
-      break;
-
-    case 51:    ty = FGPositioned::FREQ_UNICOM; break;
-    case 52:    ty = FGPositioned::FREQ_CLEARANCE; break;
-    case 53:    ty = FGPositioned::FREQ_GROUND; break;
-    case 54:    ty = FGPositioned::FREQ_TOWER; break;
-    case 55:
-    case 56:    ty = FGPositioned::FREQ_APP_DEP; break;
-    default:
-      throw sg_range_exception("unsupported apt.dat comm station type");
     }
+    break;
 
-    // Name can contain white spaces. All tokens after the second token are
-    // part of the name.
-    std::string name = token[2];
-    for( size_t i = 3; i < token.size(); ++i )
-      name += ' ' + token[i];
-
-    cache->insertCommStation(ty, name, pos, freqKhz, rangeNm,
-                             currentAirportPosID);
+  case 51:    ty = FGPositioned::FREQ_UNICOM; break;
+  case 52:    ty = FGPositioned::FREQ_CLEARANCE; break;
+  case 53:    ty = FGPositioned::FREQ_GROUND; break;
+  case 54:    ty = FGPositioned::FREQ_TOWER; break;
+  case 55:
+  case 56:    ty = FGPositioned::FREQ_APP_DEP; break;
+  default:
+    throw sg_range_exception("unsupported apt.dat comm station type");
   }
-  else SG_LOG( SG_GENERAL, SG_DEBUG,
-               aptDat << ": found unnamed comm (row ID " << lineId <<
-               "), skipping" );
+
+  // Name can contain whitespace. All tokens after the second token are
+  // part of the name.
+  string name = token[2];
+  for (size_t i = 3; i < token.size(); ++i)
+    name += ' ' + token[i];
+
+  cache->insertCommStation(ty, name, pos, freqKhz, rangeNm,
+                           currentAirportPosID);
 }
 
 // The 'metar.dat' file lists the airports that have METAR available.
