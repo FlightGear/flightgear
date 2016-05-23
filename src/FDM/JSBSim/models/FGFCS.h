@@ -44,12 +44,13 @@ INCLUDES
 
 #include "models/FGModel.h"
 #include "models/FGLGear.h"
+#include "models/FGGroundReactions.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCS "$Id: FGFCS.h,v 1.50 2016/02/27 16:54:15 bcoconni Exp $"
+#define ID_FCS "$Id: FGFCS.h,v 1.53 2016/05/18 08:06:57 ehofman Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -167,7 +168,7 @@ CLASS DOCUMENTATION
     @property gear/tailhook-pos-norm
 
     @author Jon S. Berndt
-    @version $Revision: 1.50 $
+    @version $Revision: 1.53 $
     @see FGActuator
     @see FGDeadBand
     @see FGFCSFunction
@@ -225,8 +226,8 @@ public:
   double GetDrCmd(void) const { return DrCmd; }
 
   /** Gets the steering command.
-      @return steering command in range from -1.0 - 1.0 */
-  double GetDsCmd(void) const { return DsCmd; }
+       @return steering command in range from -1.0 - 1.0 */
+   double GetDsCmd(void) const { return fdmex->GetGroundReactions()->GetDsCmd(); }
 
   /** Gets the flaps command.
       @return flaps command in range from 0 to 1.0 */
@@ -333,12 +334,6 @@ public:
 
   const std::vector<double>& GetMixturePos() const {return MixturePos;}
 
-  /** Gets the steering position.
-      @return steering position in degrees */
-  double GetSteerPosDeg(int gear) const { return SteerPosDeg[gear]; }
-
-  const std::vector<double>& GetSteerPosDeg() const {return SteerPosDeg;}
-
   /** Gets the gear position (0 up, 1 down), defaults to down
       @return gear position (0 up, 1 down) */
   double GetGearPos(void) const { return GearPos; }
@@ -392,8 +387,8 @@ public:
   void SetDrCmd(double cmd) { DrCmd = cmd; }
 
   /** Sets the steering command
-      @param cmd steering command in percent*/
-  void SetDsCmd(double cmd) { DsCmd = cmd; }
+       @param cmd steering command in percent*/
+   void SetDsCmd(double cmd) { fdmex->GetGroundReactions()->SetDsCmd( cmd ); }
 
   /** Sets the flaps command
       @param cmd flaps command in percent*/
@@ -484,10 +479,6 @@ public:
       @param cmd normalized mixture setting (0.0 - 1.0)*/
   void SetMixturePos(int engine, double cmd);
 
-  /** Sets the steering position
-      @param cmd steering position in degrees*/
-  void SetSteerPosDeg(int gear, double pos) { SteerPosDeg[gear] = pos; }
-
   /** Set the gear extend/retract position, defaults to down
       @param gear position 0 up, 1 down       */
    void SetGearPos(double gearpos) { GearPos = gearpos; }
@@ -556,7 +547,6 @@ public:
   std::string FindFullPathName(const std::string& system_filename) const;
 
   void AddThrottle(void);
-  void AddGear(unsigned int NumGear);
   double GetDt(void) const;
 
   FGPropertyManager* GetPropertyManager(void) { return PropertyManager; }
@@ -565,7 +555,7 @@ public:
   double GetChannelDeltaT(void) const { return GetDt() * ChannelRate; }
 
 private:
-  double DaCmd, DeCmd, DrCmd, DsCmd, DfCmd, DsbCmd, DspCmd;
+  double DaCmd, DeCmd, DrCmd, DfCmd, DsbCmd, DspCmd;
   double DePos[NForms], DaLPos[NForms], DaRPos[NForms], DrPos[NForms];
   double DfPos[NForms], DsbPos[NForms], DspPos[NForms];
   double PTrimCmd, YTrimCmd, RTrimCmd;
@@ -577,18 +567,17 @@ private:
   std::vector <double> PropAdvance;
   std::vector <bool> PropFeatherCmd;
   std::vector <bool> PropFeather;
-  std::vector <double> SteerPosDeg;
   //double LeftBrake, RightBrake, CenterBrake; // Brake settings
   std::vector <double> BrakePos; // left, center, right - defined by FGLGear:: enum
   double GearCmd,GearPos;
   double TailhookPos, WingFoldPos;
   SystemType systype;
   int ChannelRate;
+  FGFDMExec* fdmex;
 
   typedef std::vector <FGFCSChannel*> Channels;
   Channels SystemChannels;
   void bind(void);
-  void bindModel(void);
   void bindThrottle(unsigned int);
   void Debug(int from);
 };

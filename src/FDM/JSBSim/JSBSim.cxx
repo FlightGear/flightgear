@@ -594,8 +594,8 @@ bool FGJSBsim::copy_to_JSBsim()
     FCS->SetDeCmd( globals->get_controls()->get_elevator());
     FCS->SetPitchTrimCmd( globals->get_controls()->get_elevator_trim() );
     FCS->SetDrCmd( -globals->get_controls()->get_rudder() );
-    FCS->SetYawTrimCmd( -globals->get_controls()->get_rudder_trim() );
     FCS->SetDsCmd( globals->get_controls()->get_rudder() );
+    FCS->SetYawTrimCmd( -globals->get_controls()->get_rudder_trim() );
     FCS->SetDfCmd( globals->get_controls()->get_flaps() );
     FCS->SetDsbCmd( globals->get_controls()->get_speedbrake() );
     FCS->SetDspCmd( globals->get_controls()->get_spoilers() );

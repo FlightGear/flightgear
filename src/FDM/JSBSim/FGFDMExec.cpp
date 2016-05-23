@@ -72,7 +72,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.189 2016/04/16 12:24:39 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.191 2016/05/16 18:19:57 bcoconni Exp $");
 IDENT(IdHdr,ID_FDMEXEC);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -446,7 +446,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     GroundReactions->in.VcalibratedKts  = Auxiliary->GetVcalibratedKTS();
     GroundReactions->in.Temperature     = Atmosphere->GetTemperature();
     GroundReactions->in.TakeoffThrottle = (FCS->GetThrottlePos().size() > 0) ? (FCS->GetThrottlePos(0) > 0.90) : false;
-    GroundReactions->in.SteerPosDeg     = FCS->GetSteerPosDeg();
     GroundReactions->in.BrakePos        = FCS->GetBrakePos();
     GroundReactions->in.FCSGearPos      = FCS->GetGearPos();
     GroundReactions->in.EmptyWeight     = MassBalance->GetEmptyWeight();
@@ -561,6 +560,7 @@ bool FGFDMExec::RunIC(void)
   Models[eOutput]->InitModel();
 
   Run();
+  Propagate->InitializeDerivatives();
   ResumeIntegration(); // Restores the integration rate to what it was.
 
   if (debug_lvl > 0) {
@@ -593,7 +593,6 @@ void FGFDMExec::Initialize(FGInitialCondition* FGIC)
   Propagate->SetInitialState(FGIC);
   Winds->SetWindNED(FGIC->GetWindNEDFpsIC());
   Run();
-  Propagate->InitializeDerivatives();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -751,10 +750,11 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     if (element) {
       result = ((FGGroundReactions*)Models[eGroundReactions])->Load(element);
       if (!result) {
-        cerr << endl << "Aircraft ground_reactions element has problems in file " << aircraftCfgFileName << endl;
+        cerr << endl << element->ReadFrom()
+             << "Aircraft ground_reactions element has problems in file "
+             << aircraftCfgFileName << endl;
         return result;
       }
-      ((FGFCS*)Models[eSystems])->AddGear(((FGGroundReactions*)Models[eGroundReactions])->GetNumGearUnits());
     } else {
       cerr << endl << "No ground_reactions element was found in the aircraft config file." << endl;
       return false;
