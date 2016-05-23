@@ -115,7 +115,8 @@ private:
   void parseViewpointLine(const std::string& aptDat, unsigned int lineNum,
                           const std::vector<std::string>& token);
   void parsePavementLine850(const std::vector<std::string>& token);
-  void parsePavementNodeLine850(int num, const std::vector<std::string>& token);
+  void parsePavementNodeLine850(int rowCode,
+                                const std::vector<std::string>& token);
 
   void parseCommLine(const std::string& aptDat, int lineId,
                      const std::vector<std::string>& token);
@@ -135,7 +136,7 @@ private:
   std::vector<FGPavementPtr> pavements;
 
   // Not an airport identifier in the sense of the apt.dat spec!
-  PositionedID currentAirportID;
+  PositionedID currentAirportPosID;
   NavDataCache* cache;
 };
 

@@ -80,7 +80,7 @@ namespace flightgear
 APTLoader::APTLoader()
   :  last_apt_id(""),
      last_apt_elev(0.0),
-     currentAirportID(0),
+     currentAirportPosID(0),
      cache(NavDataCache::instance())
 { }
 
@@ -102,7 +102,7 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file)
   SG_LOG( SG_GENERAL, SG_INFO, "Opened apt.dat file: '" << apt_dat << "'" );
   string line;
 
-  unsigned int line_id = 0;
+  unsigned int rowCode = 0;     // terminology used in the apt.dat format spec
   unsigned int line_num = 0;
   // "airport identifier": terminology used in the apt.dat format spec. It is
   // often an ICAO code, but not always.
@@ -154,12 +154,12 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file)
       cache->setRebuildPhaseProgress(NavDataCache::REBUILD_AIRPORTS, percent);
     }
 
-    // Extract the first field into 'line_id'
-    line_id = atoi(line.c_str());
+    // Extract the first field into 'rowCode'
+    rowCode = atoi(line.c_str());
 
-    if ( line_id == 1  /* Airport */ ||
-         line_id == 16 /* Seaplane base */ ||
-         line_id == 17 /* Heliport */ ) {
+    if ( rowCode == 1  /* Airport */ ||
+         rowCode == 16 /* Seaplane base */ ||
+         rowCode == 17 /* Heliport */ ) {
       vector<string> tokens(simgear::strutils::split(line));
       if (tokens.size() < 6) {
         SG_LOG( SG_GENERAL, SG_WARN,
@@ -185,7 +185,7 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file)
         // We haven't seen this airport yet in any apt.dat file
         RawAirportInfo& airportInfo = insertRetval.first->second;
         airportInfo.file = aptdb_file;
-        airportInfo.rowCode = line_id;
+        airportInfo.rowCode = rowCode;
         airportInfo.firstLineNum = line_num;
         airportInfo.firstLineTokens =
 #if __cplusplus >= 201103L
@@ -194,7 +194,7 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file)
           tokens;
 #endif
       }
-    } else if ( line_id == 99 ) {
+    } else if ( rowCode == 99 ) {
       SG_LOG( SG_GENERAL, SG_DEBUG,
               apt_dat << ":"  << line_num << ": code 99 found "
               "(normally at end of file)" );
@@ -203,9 +203,9 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file)
       // just append it.
       airportInfoMap[currentAirportId].otherLines.
 #if __cplusplus >= 201103L
-        emplace_back(line_num, line_id, line); // requires C++11, untested
+        emplace_back(line_num, rowCode, line); // requires C++11, untested
 #else
-        push_back(Line(line_num, line_id, line));
+        push_back(Line(line_num, rowCode, line));
 #endif
     }
   } // of file reading loop
@@ -230,53 +230,53 @@ void APTLoader::loadAirports()
     for (LinesList::const_iterator linesIt = lines.begin();
          linesIt != lines.end(); linesIt++) {
       // Beware that linesIt->str may end with an '\r' character, see above!
-      unsigned int line_id = linesIt->rowCode;
+      unsigned int rowCode = linesIt->rowCode;
 
-      if ( line_id == 10 ) { // Runway v810
+      if ( rowCode == 10 ) { // Runway v810
         parseRunwayLine810(simgear::strutils::split(linesIt->str));
-      } else if ( line_id == 100 ) { // Runway v850
+      } else if ( rowCode == 100 ) { // Runway v850
         parseRunwayLine850(simgear::strutils::split(linesIt->str));
-      } else if ( line_id == 101 ) { // Water Runway v850
+      } else if ( rowCode == 101 ) { // Water Runway v850
         parseWaterRunwayLine850(simgear::strutils::split(linesIt->str));
-      } else if ( line_id == 102 ) { // Helipad v850
+      } else if ( rowCode == 102 ) { // Helipad v850
         parseHelipadLine850(simgear::strutils::split(linesIt->str));
-      } else if ( line_id == 18 ) {
+      } else if ( rowCode == 18 ) {
         // beacon entry (ignore)
-      } else if ( line_id == 14 ) {  // Viewpoint/control tower
+      } else if ( rowCode == 14 ) {  // Viewpoint/control tower
         parseViewpointLine(aptDat, linesIt->number,
                            simgear::strutils::split(linesIt->str));
-      } else if ( line_id == 19 ) {
+      } else if ( rowCode == 19 ) {
         // windsock entry (ignore)
-      } else if ( line_id == 20 ) {
+      } else if ( rowCode == 20 ) {
         // Taxiway sign (ignore)
-      } else if ( line_id == 21 ) {
+      } else if ( rowCode == 21 ) {
         // lighting objects (ignore)
-      } else if ( line_id == 15 ) {
+      } else if ( rowCode == 15 ) {
         // custom startup locations (ignore)
-      } else if ( line_id == 0 ) {
+      } else if ( rowCode == 0 ) {
         // ??
-      } else if ( line_id >= 50 && line_id <= 56) {
-        parseCommLine(aptDat, line_id, simgear::strutils::split(linesIt->str));
-      } else if ( line_id == 110 ) {
+      } else if ( rowCode >= 50 && rowCode <= 56) {
+        parseCommLine(aptDat, rowCode, simgear::strutils::split(linesIt->str));
+      } else if ( rowCode == 110 ) {
         pavement = true;
         parsePavementLine850(simgear::strutils::split(linesIt->str, 0, 4));
-      } else if ( line_id >= 111 && line_id <= 114 ) {
+      } else if ( rowCode >= 111 && rowCode <= 114 ) {
         if ( pavement )
-          parsePavementNodeLine850(line_id,
+          parsePavementNodeLine850(rowCode,
                                    simgear::strutils::split(linesIt->str));
-      } else if ( line_id >= 115 && line_id <= 116 ) {
+      } else if ( rowCode >= 115 && rowCode <= 116 ) {
         // other pavement nodes (ignore)
-      } else if ( line_id == 120 ) {
+      } else if ( rowCode == 120 ) {
         pavement = false;
-      } else if ( line_id == 130 ) {
+      } else if ( rowCode == 130 ) {
         pavement = false;
-      } else if ( line_id >= 1000 ) {
+      } else if ( rowCode >= 1000 ) {
         // airport traffic flow (ignore)
       } else {
         std::ostringstream oss;
         string cleanedLine = cleanLine(linesIt->str);
         oss << aptDat << ":" << linesIt->number << ": unknown row code " <<
-          line_id;
+          rowCode;
         SG_LOG( SG_GENERAL, SG_ALERT, oss.str() << " (" << cleanedLine << ")" );
         throw sg_format_exception(oss.str(), cleanedLine);
       }
@@ -325,12 +325,12 @@ void APTLoader::throwExceptionIfStreamError(const sg_gzifstream& input_stream,
 
 void APTLoader::finishAirport(const string& aptDat)
 {
-  if (currentAirportID == 0) {
+  if (currentAirportPosID == 0) {
     return;
   }
 
   if (!rwy_count) {
-    currentAirportID = 0;
+    currentAirportPosID = 0;
     SG_LOG( SG_GENERAL, SG_ALERT, "Error in '" << aptDat <<
             "': no runways for " << last_apt_id << ", skipping." );
     return;
@@ -340,9 +340,9 @@ void APTLoader::finishAirport(const string& aptDat)
   double lon = rwy_lon_accum / (double)rwy_count;
 
   SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
-  cache->updatePosition(currentAirportID, pos);
+  cache->updatePosition(currentAirportPosID, pos);
 
-  currentAirportID = 0;
+  currentAirportPosID = 0;
 }
 
 // 'rowCode' is passed to avoid decoding it twice, since that work was already
@@ -366,8 +366,8 @@ void APTLoader::parseAirportLine(unsigned int rowCode,
   rwy_lat_accum = 0.0;
   rwy_count = 0;
 
-  currentAirportID = cache->insertAirport(fptypeFromRobinType(rowCode),
-                                          id, name);
+  currentAirportPosID = cache->insertAirport(fptypeFromRobinType(rowCode),
+                                             id, name);
 }
 
 void APTLoader::parseRunwayLine810(const vector<string>& token)
@@ -395,11 +395,12 @@ void APTLoader::parseRunwayLine810(const vector<string>& token)
   int surface_code = atoi( token[10].c_str() );
 
   if (rwy_no[0] == 'x') {  // Taxiway
-    cache->insertRunway(FGPositioned::TAXIWAY, rwy_no, pos_1, currentAirportID,
-                        heading, length, width, 0.0, 0.0, surface_code);
+    cache->insertRunway(
+      FGPositioned::TAXIWAY, rwy_no, pos_1, currentAirportPosID,
+      heading, length, width, 0.0, 0.0, surface_code);
   } else if (rwy_no[0] == 'H') {  // Helipad
     SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
-    cache->insertRunway(FGPositioned::HELIPAD, rwy_no, pos, currentAirportID,
+    cache->insertRunway(FGPositioned::HELIPAD, rwy_no, pos, currentAirportPosID,
                         heading, length, width, 0.0, 0.0, surface_code);
   } else {
     // (pair of) runways
@@ -422,14 +423,14 @@ void APTLoader::parseRunwayLine810(const vector<string>& token)
     SGGeod pos_2 = SGGeodesy::direct( pos_1, heading, length );
 
     PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no, pos_1,
-                                           currentAirportID, heading, length,
+                                           currentAirportPosID, heading, length,
                                            width, displ_thresh1, stopway1,
                                            surface_code);
 
     PositionedID reciprocal = cache->insertRunway(
       FGPositioned::RUNWAY,
       FGRunway::reverseIdent(rwy_no), pos_2,
-      currentAirportID,
+      currentAirportPosID,
       SGMiscd::normalizePeriodic(0, 360, heading + 180.0),
       length, width, displ_thresh2, stopway2,
       surface_code);
@@ -474,14 +475,14 @@ void APTLoader::parseRunwayLine850(const vector<string>& token)
   double stopway2 = atof( token[21].c_str() );
 
   PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos_1,
-                                         currentAirportID, heading_1, length,
+                                         currentAirportPosID, heading_1, length,
                                          width, displ_thresh1, stopway1,
                                          surface_code);
 
   PositionedID reciprocal = cache->insertRunway(
     FGPositioned::RUNWAY,
     rwy_no_2, pos_2,
-    currentAirportID, heading_2, length,
+    currentAirportPosID, heading_2, length,
     width, displ_thresh2, stopway2,
     surface_code);
 
@@ -515,13 +516,13 @@ void APTLoader::parseWaterRunwayLine850(const vector<string>& token)
   const string& rwy_no_2(token[6]);
 
   PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos_1,
-                                         currentAirportID, heading_1, length,
+                                         currentAirportPosID, heading_1, length,
                                          width, 0.0, 0.0, 13);
 
   PositionedID reciprocal = cache->insertRunway(
     FGPositioned::RUNWAY,
     rwy_no_2, pos_2,
-    currentAirportID, heading_2, length,
+    currentAirportPosID, heading_2, length,
     width, 0.0, 0.0, 13);
 
   cache->setRunwayReciprocal(rwy, reciprocal);
@@ -547,7 +548,7 @@ void APTLoader::parseHelipadLine850(const vector<string>& token)
   int surface_code = atoi( token[7].c_str() );
 
   cache->insertRunway(FGPositioned::HELIPAD, rwy_no, pos,
-                      currentAirportID, heading, length,
+                      currentAirportPosID, heading, length,
                       width, 0.0, 0.0, surface_code);
 }
 
@@ -563,7 +564,7 @@ void APTLoader::parseViewpointLine(const string& aptDat, unsigned int lineNum,
     double lon = atof(token[2].c_str());
     double elev = atof(token[3].c_str());
     tower = SGGeod::fromDegFt(lon, lat, elev + last_apt_elev);
-    cache->insertTower(currentAirportID, tower);
+    cache->insertTower(currentAirportPosID, tower);
   }
 }
 
@@ -579,7 +580,8 @@ void APTLoader::parsePavementLine850(const vector<string>& token)
   }
 }
 
-void APTLoader::parsePavementNodeLine850(int num, const vector<string>& token)
+void APTLoader::parsePavementNodeLine850(int rowCode,
+                                         const vector<string>& token)
 {
   double lat = atof( token[1].c_str() );
   double lon = atof( token[2].c_str() );
@@ -593,13 +595,13 @@ void APTLoader::parsePavementNodeLine850(int num, const vector<string>& token)
   } else {
     pvt = pavements.back();
   }
-  if ( num == 112 || num == 114 ) {
+  if ( rowCode == 112 || rowCode == 114 ) {
     double lat_b = atof( token[3].c_str() );
     double lon_b = atof( token[4].c_str() );
     SGGeod pos_b(SGGeod::fromDegFt(lon_b, lat_b, 0.0));
-    pvt->addBezierNode(pos, pos_b, num == 114);
+    pvt->addBezierNode(pos, pos_b, rowCode == 114);
   } else {
-    pvt->addNode(pos, num == 113);
+    pvt->addNode(pos, rowCode == 113);
   }
 }
 
@@ -651,7 +653,8 @@ void APTLoader::parseCommLine(const string& aptDat, int lineId,
     for( size_t i = 3; i < token.size(); ++i )
       name += ' ' + token[i];
 
-    cache->insertCommStation(ty, name, pos, freqKhz, rangeNm, currentAirportID);
+    cache->insertCommStation(ty, name, pos, freqKhz, rangeNm,
+                             currentAirportPosID);
   }
   else SG_LOG( SG_GENERAL, SG_DEBUG,
                aptDat << ": found unnamed comm (row ID " << lineId <<
