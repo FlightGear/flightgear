@@ -47,71 +47,34 @@ typedef nasal::Ghost<pkg::PackageRef> NasalPackage;
 typedef nasal::Ghost<pkg::CatalogRef> NasalCatalog;
 typedef nasal::Ghost<pkg::InstallRef> NasalInstall;
 
+const char* OFFICIAL_CATALOG_ID = "org.flightgear.official";
 
-class FGHTTPClient::FGDelegate : public pkg::Delegate
-{
-public:
-  virtual void refreshComplete()
-  {
-    SG_LOG(SG_IO, SG_INFO, "all Catalogs refreshed");
-    
-    // auto-update; make this controlled by a property
-    pkg::Root* r = globals->packageRoot();
-    
-    pkg::PackageList toBeUpdated(r->packagesNeedingUpdate());
-    pkg::PackageList::const_iterator it;
-    for (it = toBeUpdated.begin(); it != toBeUpdated.end(); ++it) {
-      assert((*it)->isInstalled());
-      SG_LOG(SG_IO, SG_INFO, "updating:" << (*it)->id());
-      r->scheduleToUpdate((*it)->install());
+// fallback URL is used when looking up a version-specific catalog fails
+const char* FALLBACK_CATALOG_URL = "http://fgfs.goneabitbursar.com/pkg/catalog.xml";
+
+namespace {
+
+    std::string _getDefaultCatalogId()
+    {
+        return fgGetString("/sim/package-system/default-catalog/id",
+                           OFFICIAL_CATALOG_ID);
     }
-  }
-    
-  virtual void catalogRefreshed(pkg::CatalogRef aCat, StatusCode aReason)
-  {
-      if (aCat.ptr() == NULL) {
-          SG_LOG(SG_IO, SG_INFO, "refresh of all catalogs done");
-          return;
-      }
-      
-    switch (aReason) {
-    case pkg::Delegate::STATUS_SUCCESS:
-    case pkg::Delegate::STATUS_REFRESHED:
-        SG_LOG(SG_IO, SG_INFO, "refresh of Catalog done:" << aCat->url());
-        break;
-            
-    case pkg::Delegate::STATUS_IN_PROGRESS:
-        SG_LOG(SG_IO, SG_INFO, "refresh of Catalog started:" << aCat->url());
-        break;
-            
-    default:
-        SG_LOG(SG_IO, SG_WARN, "refresh of Catalog " << aCat->url() << " failed:" << aReason);
+
+    pkg::CatalogRef getDefaultCatalog()
+    {
+        if (!globals->packageRoot())
+            return pkg::CatalogRef();
+
+        return globals->packageRoot()->getCatalogById(_getDefaultCatalogId());
     }
-  }
-  
-  virtual void startInstall(pkg::InstallRef aInstall)
-  {
-    SG_LOG(SG_IO, SG_INFO, "beginning install of:" << aInstall->package()->id()
-           << " to local path:" << aInstall->path());
 
-  }
-  
-  virtual void installProgress(pkg::InstallRef aInstall, unsigned int aBytes, unsigned int aTotal)
-  {
-  }
-  
-  virtual void finishInstall(pkg::InstallRef aInstall, StatusCode aReason)
-  {
-      if (aReason == STATUS_SUCCESS) {
-    SG_LOG(SG_IO, SG_INFO, "finished install of:" << aInstall->package()->id()
-           << " to local path:" << aInstall->path());
-      } else {
-          SG_LOG(SG_IO, SG_WARN, "install failed of:" << aInstall->package()->id()
-                 << " to local path:" << aInstall->path());
-      }
+    std::string _getDefaultCatalogUrl()
+    {
+        return fgGetString("/sim/package-system/default-catalog/url",
+                    "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/catalog.xml");
+    }
+} // of anonymous namespace
 
-  }
-}; // of FGHTTPClient::FGDelegate
 
 FGHTTPClient::FGHTTPClient() :
     _inited(false)
@@ -144,10 +107,7 @@ void FGHTTPClient::init()
   if (packageRoot) {
     // package system needs access to the HTTP engine too
     packageRoot->setHTTPClient(_http.get());
-    
-    _packageDelegate.reset(new FGDelegate);
-    packageRoot->addDelegate(_packageDelegate.get());
-    
+
     // start a refresh now
     // setting 'force' true to work around the problem where a slightly stale
     // catalog exists, but aircraft are modified - this causes an MD5 sum
@@ -157,23 +117,6 @@ void FGHTTPClient::init()
 
     _inited = true;
 }
-
-namespace {
-
-std::string _getDefaultCatalogId()
-{
-    return fgGetString("/sim/package-system/default-catalog/id", "org.flightgear.official" );
-}
-
-pkg::CatalogRef getDefaultCatalog()
-{
-    if (!globals->packageRoot())
-        return pkg::CatalogRef();
-
-    return globals->packageRoot()->getCatalogById(_getDefaultCatalogId());
-}
-
-} // of anonymous namespace
 
 bool FGHTTPClient::isDefaultCatalogInstalled() const
 {
@@ -195,8 +138,12 @@ std::string FGHTTPClient::getDefaultCatalogId() const
 
 std::string FGHTTPClient::getDefaultCatalogUrl() const
 {
-    return fgGetString("/sim/package-system/default-catalog/url",
-                       "http://fgfs.goneabitbursar.com/pkg/" FLIGHTGEAR_VERSION "/catalog.xml");;
+    return _getDefaultCatalogUrl();
+}
+
+std::string FGHTTPClient::getDefaultCatalogFallbackUrl() const
+{
+    return std::string(FALLBACK_CATALOG_URL);
 }
 
 static naRef f_package_existingInstall( pkg::Package& pkg,
@@ -335,12 +282,6 @@ void FGHTTPClient::postinit()
 
 void FGHTTPClient::shutdown()
 {
-    pkg::Root* packageRoot = globals->packageRoot();
-    if (packageRoot && _packageDelegate.get()) {
-        packageRoot->removeDelegate(_packageDelegate.get());
-    }
-
-    _packageDelegate.reset();
     _http.reset();
 
     _inited = false;

@@ -24,6 +24,8 @@
 #include <QPushButton>
 #include <QDebug>
 
+#include <Main/globals.hxx>
+#include <Network/HTTPClient.hxx>
 #include <Include/version.h>
 
 using namespace simgear::pkg;
@@ -94,18 +96,22 @@ void AddCatalogDialog::updateUi()
     }
 
     if (m_state == STATE_FINISHED) {
-        QString catDesc = QString::fromStdString(m_result->description());
+        QString catDesc = QString::fromStdString(m_result->name());
         QString s = tr("Successfully retrieved aircraft information from '%1'. "
                        "%2 aircraft are included in this hangar.").arg(catDesc).arg(m_result->packages().size());
         ui->resultsSummaryLabel->setText(s);
     } else if (m_state == STATE_DOWNLOAD_FAILED) {
         Delegate::StatusCode code = m_result->status();
-        qWarning() << Q_FUNC_INFO << "failed with code" << code;
         QString s;
         switch (code) {
         case Delegate::FAIL_DOWNLOAD:
-            s =  tr("Failed to download aircraft descriptions from '%1'. "
+            s = tr("Failed to download aircraft descriptions from '%1'. "
                     "Check the address (URL) and your network connection.").arg(m_catalogUrl.toString());
+            break;
+
+        case Delegate::FAIL_NOT_FOUND:
+            s = tr("Failed to download aircraft descriptions at '%1'. "
+                    "Check the URL is correct.").arg(m_catalogUrl.toString());
             break;
 
         case Delegate::FAIL_VERSION:
@@ -164,7 +170,6 @@ void AddCatalogDialog::reject()
 void AddCatalogDialog::onCatalogStatusChanged(Catalog* cat)
 {
     Delegate::StatusCode s = cat->status();
-    qDebug() << Q_FUNC_INFO << "cat status:" << s;
     switch (s) {
     case Delegate::STATUS_REFRESHED:
         m_state = STATE_FINISHED;
@@ -173,6 +178,19 @@ void AddCatalogDialog::onCatalogStatusChanged(Catalog* cat)
     case Delegate::STATUS_IN_PROGRESS:
         // don't jump to STATE_FINISHED
         return;
+
+    case Delegate::FAIL_NOT_FOUND:
+    {
+        FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
+        if (cat->url() == http->getDefaultCatalogUrl()) {
+            cat->setUrl(http->getDefaultCatalogFallbackUrl());
+            cat->refresh(); // and trigger another refresh
+            return;
+        }
+
+        m_state = STATE_DOWNLOAD_FAILED;
+        break;
+    }
 
     // all the actual failure codes
     default:
