@@ -358,8 +358,8 @@ void FGLight::update_adj_fog_color () {
     float avf = 0.87 - (45000 - av) / 83333.33;
     float sif = 0.5 - cos(_sun_angle*2)/2;
 
-    if (sif < 1e-4)
-       sif = 1e-4;
+    if (sif < 1e-3)
+       sif = 1e-3;
 
     // determine horizontal angle between current view direction and sun
     // since _sun_rotation is relative to South, and heading is in the local frame
