@@ -149,7 +149,7 @@ bool FGAerodynamics::Run(bool Holding)
 
   // Calculate lift coefficient squared
   // Make sure that aero/cl-squared is computed with the current qbar
-  if ( in.Qbar > 0) {
+  if ( in.Qbar > 1.0) {
     clsq = (vFw(eLift) + vFwAtCG(eLift))/ (in.Wingarea*in.Qbar);
     clsq *= clsq;
   }
