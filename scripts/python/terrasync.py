@@ -43,24 +43,24 @@ class HTTPGetter:
         self.httpConnection = HTTPConnection(self.parsedBaseUrl.netloc,80, True)
         self.httpRequestHeaders = headers = {'Host':self.parsedBaseUrl.netloc,'Content-Length':0,'Connection':'Keep-Alive','User-Agent':'FlightGear terrasync.py'}
 
-    def get(self, httpGetCallback):
-
-        #self.requests.append(httpGetCallback)
+    def doGet(self, httpGetCallback):
         conn = self.httpConnection
         request = httpGetCallback
-        conn.request("GET", self.parsedBaseUrl.path + request.src, None, self.httpRequestHeaders)
+        self.httpConnection.request("GET", self.parsedBaseUrl.path + request.src, None, self.httpRequestHeaders)
+        httpGetCallback.result = self.httpConnection.getresponse()
+        httpGetCallback.callback()
+
+    def get(self, httpGetCallback):
+
         try:
-            httpGetCallback.result = conn.getresponse()
+            self.doGet(httpGetCallback)
         except:
             # try to reconnect once
             #print("reconnect")
-            conn.close()
-            conn.connect()
-            conn.request("GET", self.parsedBaseUrl.path + request.src, None, self.httpRequestHeaders)
-            httpGetCallback.result = conn.getresponse()
+            self.httpConnection.close()
+            self.httpConnection.connect()
+            self.doGet(httpGetCallback)
 
-        httpGetCallback.callback()
-        #self.requests.remove(httpGetCallback)
 
 #################################################################################################################################
 class DirIndex:

@@ -46,14 +46,12 @@ public:
 
     std::string getDefaultCatalogId() const;
     std::string getDefaultCatalogUrl() const;
-
-    static const char* subsystemName() { return "http"; } 
-private:
-    class FGDelegate;
+    std::string getDefaultCatalogFallbackUrl() const;
     
+    static const char* subsystemName() { return "http"; }
+private:    
     bool _inited;
     std::auto_ptr<simgear::HTTP::Client> _http;
-    std::auto_ptr<FGDelegate> _packageDelegate;
 };
 
 #endif // FG_HTTP_CLIENT_HXX

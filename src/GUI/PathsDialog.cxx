@@ -222,7 +222,7 @@ void AddOnsPage::onRemoveCatalog()
         QString pkgId = mi.data(CatalogIdRole).toString();
 
         if (pkgId.toStdString() == http->getDefaultCatalogId()) {
-            s = QString("Remove default aircraft hangar? "
+            s = QString("Remove the default aircraft hangar? "
                         "This hangar contains all the default aircraft included with FlightGear. "
                         "If you change your mind in the future, click the 'restore' button.");
         } else {
