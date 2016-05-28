@@ -502,7 +502,6 @@ void FGJSBsim::unbind()
 /******************************************************************************/
 
 // Run an iteration of the EOM (equations of motion)
-#  include <fenv.h>
 void FGJSBsim::update( double dt )
 {
     if(crashed) {
