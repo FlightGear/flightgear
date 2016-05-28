@@ -25,7 +25,7 @@
 
 #include "voice.hxx"
 #include <simgear/sound/soundmgr_openal.hxx>
-#include <simgear/sound/sample_openal.hxx>
+#include <simgear/sound/sample.hxx>
 #include <simgear/threads/SGQueue.hxx>
 
 class VoiceSynthesizer;

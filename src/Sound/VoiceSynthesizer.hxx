@@ -19,7 +19,7 @@
 #ifndef VOICESYNTHESIZER_HXX_
 #define VOICESYNTHESIZER_HXX_
 
-#include <simgear/sound/sample_openal.hxx>
+#include <simgear/sound/sample.hxx>
 #include <simgear/threads/SGQueue.hxx>
 
 #include <string>

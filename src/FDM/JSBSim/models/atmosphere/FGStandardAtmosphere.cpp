@@ -153,6 +153,9 @@ double FGStandardAtmosphere::GetPressure(double altitude) const
   double Lmb, Exp, Tmb, deltaH, factor;
   double numRows = StdAtmosTemperatureTable->GetNumRows();
 
+  if (altitude > 328084) // Karman line
+    altitude = 328084;
+
   // Iterate through the altitudes to find the current Base Altitude
   // in the table. That is, if the current altitude (the argument passed in)
   // is 20000 ft, then the base altitude from the table is 0.0. If the
@@ -176,7 +179,7 @@ double FGStandardAtmosphere::GetPressure(double altitude) const
     factor = Tmb/(Tmb + Lmb*deltaH);
     pressure = PressureBreakpointVector[b]*pow(factor, Exp);
   } else {
-    pressure = PressureBreakpointVector[b]*exp(-Mair*deltaH/(Rstar*Tmb));
+    pressure = PressureBreakpointVector[b]*exp(Mair*deltaH/(Rstar*Tmb));
   }
 
   return pressure;

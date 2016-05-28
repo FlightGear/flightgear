@@ -24,7 +24,7 @@
 
 #include "morse.hxx"
 
-#include <simgear/sound/sample_openal.hxx>
+#include <simgear/sound/sample.hxx>
 
 #include <cstring>
 #include <stdlib.h>

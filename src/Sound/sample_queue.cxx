@@ -34,7 +34,7 @@
 #include <Main/fg_props.hxx>
 
 #include <simgear/sound/soundmgr_openal.hxx>
-#include <simgear/sound/sample_openal.hxx>
+#include <simgear/sound/sample.hxx>
 
 FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const std::string &refname ) :
     last_enabled( true ),

@@ -502,7 +502,7 @@ void FGJSBsim::unbind()
 /******************************************************************************/
 
 // Run an iteration of the EOM (equations of motion)
-
+#  include <fenv.h>
 void FGJSBsim::update( double dt )
 {
     if(crashed) {
@@ -1311,6 +1311,7 @@ bool FGJSBsim::update_ground_cache(const FGLocation& cart, double* cart_pos,
   // Compute the potential movement of this aircraft and query for the
   // ground in this area.
   double groundCacheRadius = acrad + 2*dt*Propagate->GetUVW().Magnitude();
+
   cart_pos[0] = cart(1);
   cart_pos[1] = cart(2);
   cart_pos[2] = cart(3);
