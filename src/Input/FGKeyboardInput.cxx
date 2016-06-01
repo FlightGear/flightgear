@@ -134,13 +134,13 @@ void FGKeyboardInput::postinit()
 void FGKeyboardInput::bind()
 {
   _tiedProperties.setRoot(fgGetNode("/devices/status", true));
-  _tiedProperties.Tie("keyboard",       getModifiers);
-  _tiedProperties.Tie("keyboard/shift", getModShift);
-  _tiedProperties.Tie("keyboard/ctrl",  getModCtrl);
-  _tiedProperties.Tie("keyboard/alt",   getModAlt);
-  _tiedProperties.Tie("keyboard/meta",  getModMeta);
-  _tiedProperties.Tie("keyboard/super", getModSuper);
-  _tiedProperties.Tie("keyboard/hyper", getModHyper);
+  _tiedProperties.Tie<int>("keyboard",       getModifiers);
+  _tiedProperties.Tie<bool>("keyboard/shift", getModShift);
+  _tiedProperties.Tie<bool>("keyboard/ctrl",  getModCtrl);
+  _tiedProperties.Tie<bool>("keyboard/alt",   getModAlt);
+  _tiedProperties.Tie<bool>("keyboard/meta",  getModMeta);
+  _tiedProperties.Tie<bool>("keyboard/super", getModSuper);
+  _tiedProperties.Tie<bool>("keyboard/hyper", getModHyper);
 
   _tiedProperties.Tie(_key_event->getNode("key", true),            SGRawValuePointer<int>(&_key_code));
   _tiedProperties.Tie(_key_event->getNode("pressed", true),        SGRawValuePointer<bool>(&_key_pressed));

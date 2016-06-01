@@ -575,18 +575,18 @@ FGProperties::bind ()
   _tiedProperties.Tie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
   _tiedProperties.Tie("/sim/freeze/master", getFreeze, setFreeze);
 
-  _tiedProperties.Tie("/sim/time/elapsed-sec", getElapsedTime_sec);
+  _tiedProperties.Tie<double>("/sim/time/elapsed-sec", getElapsedTime_sec);
   _tiedProperties.Tie("/sim/time/gmt", getDateString, setDateString);
   fgSetArchivable("/sim/time/gmt");
-  _tiedProperties.Tie("/sim/time/gmt-string", getGMTString);
+  _tiedProperties.Tie<const char*>("/sim/time/gmt-string", getGMTString);
 
   // Position
-  _tiedProperties.Tie("/position/latitude-string", getLatitudeString);
-  _tiedProperties.Tie("/position/longitude-string", getLongitudeString);
+  _tiedProperties.Tie<const char*>("/position/latitude-string", getLatitudeString);
+  _tiedProperties.Tie<const char*>("/position/longitude-string", getLongitudeString);
 
   // Orientation
-  _tiedProperties.Tie("/orientation/heading-magnetic-deg", getHeadingMag);
-  _tiedProperties.Tie("/orientation/track-magnetic-deg", getTrackMag);
+  _tiedProperties.Tie<double>("/orientation/heading-magnetic-deg", getHeadingMag);
+  _tiedProperties.Tie<double>("/orientation/track-magnetic-deg", getTrackMag);
 }
 
 void
