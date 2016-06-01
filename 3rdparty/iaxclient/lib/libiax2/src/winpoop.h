@@ -15,8 +15,12 @@
 #if defined(_MSC_VER)
 #define INLINE __inline
 #define inline __inline
+
+#if _MSC_VER < 1900
 #define snprintf _snprintf
-// should try without these
+#endif
+
+ // should try without these
 #pragma warning(disable: 4996 4244 4305 4018 4804)
 #if defined(_WIN64)
    typedef __int64      ssize_t;

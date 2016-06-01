@@ -25,8 +25,8 @@
 
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
-#define snprintf sprintf_s
 #endif
+
 #if defined (SG_MAC)
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>

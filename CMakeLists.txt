@@ -362,10 +362,15 @@ if(WIN32)
         #     SET(WARNING_FLAGS "${WARNING_FLAGS} /wd${warning}")
         # endforeach(warning)
 
-        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS -Dstrdup=_strdup")
+        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS")
         if (${MSVC_VERSION} GREATER 1599)
             set( MSVC_LD_FLAGS "/FORCE:MULTIPLE" )
         endif (${MSVC_VERSION} GREATER 1599)
+
+        if (${MSVC_VERSION} GREATER 1899)
+            # needed for debug builds with VS2015
+            set( MSVC_FLAGS "${MSVC_FLAGS} /bigobj" )
+        endif()
     endif(MSVC)
 
     set(NOMINMAX 1)
