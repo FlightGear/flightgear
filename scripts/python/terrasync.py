@@ -40,7 +40,7 @@ class HTTPGetter:
         self.maxPending = maxPending
         self.requests = []
         self.pendingRequests = []
-        self.httpConnection = HTTPConnection(self.parsedBaseUrl.netloc,80, True)
+        self.httpConnection = HTTPConnection(self.parsedBaseUrl.netloc)
         self.httpRequestHeaders = headers = {'Host':self.parsedBaseUrl.netloc,'Content-Length':0,'Connection':'Keep-Alive','User-Agent':'FlightGear terrasync.py'}
 
     def doGet(self, httpGetCallback):
