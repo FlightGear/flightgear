@@ -664,6 +664,8 @@ void QtLauncher::setInAppMode()
 {
   m_inAppMode = true;
   m_ui->tabWidget->removeTab(2);
+  m_ui->tabWidget->removeTab(2);
+
   m_ui->runButton->setText(tr("Apply"));
   m_ui->quitButton->setText(tr("Cancel"));
 
