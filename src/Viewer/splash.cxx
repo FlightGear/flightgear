@@ -424,9 +424,18 @@ void fgSplashProgress( const char *identifier, unsigned int percent ) {
     if (!strcmp(identifier,"downloading-scenery")) {
         std::ostringstream oss;
         unsigned int kbytesPerSec = fgGetInt("/sim/terrasync/transfer-rate-bytes-sec") / 1024;
+        unsigned int kbytesPending = fgGetInt("/sim/terrasync/pending-kbytes");
         oss << text;
+        if (kbytesPending > 0) {
+            if (kbytesPending > 1024) {
+                int mBytesPending = kbytesPending >> 10;
+                oss << " " << mBytesPending << "Mb";
+            } else {
+                oss << " " << kbytesPending << "Kb";
+            }
+        }
         if (kbytesPerSec > 0) {
-            oss << " - " << kbytesPerSec << " KBytes/sec";
+            oss << " - " << kbytesPerSec << " Kb/sec";
         }
         fgSetString("/sim/startup/splash-progress-text", oss.str());
         return;
