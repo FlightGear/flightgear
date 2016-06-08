@@ -316,6 +316,10 @@ private slots:
 
     void onSearchResultsPoll()
     {
+        if (m_search.isNull()) {
+            return;
+        }
+        
         PositionedIDVec newIds = m_search->results();
 
         beginInsertRows(QModelIndex(), m_ids.size(), newIds.size() - 1);
