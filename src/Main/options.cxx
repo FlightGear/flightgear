@@ -334,10 +334,6 @@ private:
         return 0;
     }
     
-#ifdef _MSC_VER
-	#define strcasecmp stricmp
-#endif
-
     // recommended in Meyers, Effective STL when internationalization and embedded
     // NULLs aren't an issue.  Much faster than the STL or Boost lex versions.
     struct ciLessLibC : public std::binary_function<string, string, bool>
