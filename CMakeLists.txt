@@ -359,12 +359,7 @@ endif()
 if(WIN32)
 
     if(MSVC)
-        # turn off various warnings
-        # foreach(warning 4244 4251 4267 4275 4290 4786 4305 4996)
-        #     SET(WARNING_FLAGS "${WARNING_FLAGS} /wd${warning}")
-        # endforeach(warning)
-
-        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS")
+        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS /MP")
         if (${MSVC_VERSION} GREATER 1599)
             set( MSVC_LD_FLAGS "/FORCE:MULTIPLE" )
         endif (${MSVC_VERSION} GREATER 1599)
