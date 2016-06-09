@@ -20,31 +20,36 @@ endif (MSVC)
 if (MSVC AND MSVC_3RDPARTY_ROOT)
     message(STATUS "3rdparty files located in ${MSVC_3RDPARTY_ROOT}")
     set( OSG_MSVC "msvc" )
-    if (${MSVC_VERSION} EQUAL 1700)
-        set( OSG_MSVC ${OSG_MSVC}110 )
-    elseif (${MSVC_VERSION} EQUAL 1600)
-        set( OSG_MSVC ${OSG_MSVC}100 )
-    else (${MSVC_VERSION} EQUAL 1700)
-        set( OSG_MSVC ${OSG_MSVC}90 )
-    endif (${MSVC_VERSION} EQUAL 1700)
+    if (${MSVC_VERSION} EQUAL 1900)
+      set( OSG_MSVC ${OSG_MSVC}140 )
+  elseif (${MSVC_VERSION} EQUAL 1800)
+      set( OSG_MSVC ${OSG_MSVC}120 )
+  elseif (${MSVC_VERSION} EQUAL 1700)
+      set( OSG_MSVC ${OSG_MSVC}110 )
+  elseif (${MSVC_VERSION} EQUAL 1600)
+      set( OSG_MSVC ${OSG_MSVC}100 )
+  endif ()
+
     if (CMAKE_CL_64)
         set( OSG_MSVC ${OSG_MSVC}-64 )
         set( MSVC_3RDPARTY_DIR 3rdParty.x64 )
-		set( BOOST_LIB lib64 )
+		    set( BOOST_LIB lib64 )
     else (CMAKE_CL_64)
         set( MSVC_3RDPARTY_DIR 3rdParty )
-		set( BOOST_LIB lib )
+	    	set( BOOST_LIB lib )
     endif (CMAKE_CL_64)
     find_path(FLTK_DIR include/FL/Fl.H
 			${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/fltk
 			${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/fltk-1.3
 			${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}
 			)
-	list (APPEND CMAKE_PROGRAM_PATH ${FLTK_DIR}/bin)
+	   list (APPEND CMAKE_PROGRAM_PATH ${FLTK_DIR}/bin)
 
+    GET_FILENAME_COMPONENT(MSVC_ROOT_PARENT_DIR ${MSVC_3RDPARTY_ROOT} PATH)
     set (CMAKE_LIBRARY_PATH ${FLTK_DIR}/lib ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/lib $(BOOST_ROOT)/$(BOOST_LIB) )
     set (CMAKE_INCLUDE_PATH ${FLTK_DIR}/include ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/include)
     find_path(BOOST_ROOT boost/version.hpp
+      ${MSVC_ROOT_PARENT_DIR}
 			${MSVC_3RDPARTY_ROOT}/boost
 			${MSVC_3RDPARTY_ROOT}/boost_1_52_0
 			${MSVC_3RDPARTY_ROOT}/boost_1_51_0
