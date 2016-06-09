@@ -282,5 +282,7 @@ void fgExitCleanup() {
     // on the common exit path globals is already deleted, and NULL,
     // so this only happens on error paths.
     delete globals;
+
+    simgear::shutdownLogging();
 }
 
