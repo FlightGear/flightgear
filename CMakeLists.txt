@@ -54,6 +54,8 @@ if (NOT versionFile)
     message(FATAL_ERROR "Unable to determine FlightGear version. Version file is missing.")
 endif()
 string(STRIP "${versionFile}" FLIGHTGEAR_VERSION)
+# add a dependency on the versino file
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS version)
 
 # FlightGear packaging (to build a source tarball)
 include( ConfigureCPack )
