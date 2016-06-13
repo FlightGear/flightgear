@@ -32,6 +32,7 @@
 #include "soundmanager.hxx"
 #include "Main/globals.hxx"
 #include "Main/fg_props.hxx"
+#include "Viewer/view.hxx"
 
 #include <vector>
 #include <string>
@@ -183,6 +184,7 @@ void FGSoundManager::update(double dt)
         }
         if (enabled)
         {
+#if 0
             SGVec3d cartPos(_viewX->getDoubleValue(),
                             _viewY->getDoubleValue(),
                             _viewZ->getDoubleValue());
@@ -196,6 +198,12 @@ void FGSoundManager::update(double dt)
             }
 
             set_orientation( viewOrientation );
+#else
+
+            set_position( globals->get_current_view()->getViewPosition(),
+                          globals->get_current_view()->getPosition() );
+            set_orientation( globals->get_current_view()->getViewOrientation() );
+#endif
 
             SGVec3d velocity(SGVec3d::zeros());
             if (!stationaryView()) {
