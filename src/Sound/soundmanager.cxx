@@ -30,9 +30,11 @@
 
 #include "sample_queue.hxx"
 #include "soundmanager.hxx"
-#include "Main/globals.hxx"
-#include "Main/fg_props.hxx"
-#include "Viewer/view.hxx"
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
+#include <Viewer/view.hxx>
+
+#include <stdio.h>
 
 #include <vector>
 #include <string>
@@ -74,20 +76,10 @@ void FGSoundManager::init()
     _volume        = fgGetNode("/sim/sound/volume");
     _device_name   = fgGetNode("/sim/sound/device-name");
 
-    _currentView   = fgGetNode("sim/current-view");
-
-    _viewX = _currentView->getNode("viewer-x-m", true);
-    _viewY = _currentView->getNode("viewer-y-m", true);
-    _viewZ = _currentView->getNode("viewer-z-m", true);
-  
     _velocityNorthFPS = fgGetNode("velocities/speed-north-fps", true);
     _velocityEastFPS  = fgGetNode("velocities/speed-east-fps", true);
     _velocityDownFPS  = fgGetNode("velocities/speed-down-fps", true);
   
-    _viewXoffset      = _currentView->getNode("x-offset-m", true);
-    _viewYoffset      = _currentView->getNode("y-offset-m", true);
-    _viewZoffset      = _currentView->getNode("z-offset-m", true);
-
     SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
     scenery_loaded->addChangeListener(_listener.get());
 
@@ -161,9 +153,9 @@ bool FGSoundManager::stationaryView() const
 {
   // this is an ugly hack to decide if the *viewer* is stationary,
   // since we don't model the viewer velocity directly.
-  return (_viewXoffset->getDoubleValue() == 0.0) &&
-         (_viewYoffset->getDoubleValue() == 0.0) &&
-         (_viewZoffset->getDoubleValue() == 0.0);
+  flightgear::View* _view = globals->get_current_view();
+  return (_view->getXOffset_m () == 0.0 && _view->getYOffset_m () == 0.0 &&
+          _view->getZOffset_m () == 0.0);
 }
 
 // Update sound manager and propagate property values,
@@ -184,26 +176,9 @@ void FGSoundManager::update(double dt)
         }
         if (enabled)
         {
-#if 0
-            SGVec3d cartPos(_viewX->getDoubleValue(),
-                            _viewY->getDoubleValue(),
-                            _viewZ->getDoubleValue());
-            SGGeod geodPos = SGGeod::fromCart(cartPos);
-
-            set_position(cartPos, geodPos);
-
-            SGQuatd viewOrientation;
-            for (int i=0; i<4; ++i) {
-              viewOrientation[i] = _currentView->getChild("raw-orientation", i, true)->getDoubleValue();
-            }
-
-            set_orientation( viewOrientation );
-#else
-
-            set_position( globals->get_current_view()->getViewPosition(),
-                          globals->get_current_view()->getPosition() );
-            set_orientation( globals->get_current_view()->getViewOrientation() );
-#endif
+            flightgear::View* _view = globals->get_current_view();
+            set_position( _view->getViewPosition(), _view->getPosition() );
+            set_orientation( _view->getViewOrientation() );
 
             SGVec3d velocity(SGVec3d::zeros());
             if (!stationaryView()) {
