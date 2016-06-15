@@ -41,12 +41,14 @@ private slots:
     void onClearDownloadDir();
 
     void onChangeDataDir();
+    void onInstallScenery();
 private:
     void updateUi();
     void setDownloadDir();
 
     void saveAircraftPaths();
     void saveSceneryPaths();
+    bool haveSceneryPath(QString path) const;
 
     Ui::AddOnsPage* m_ui;
     CatalogListModel* m_catalogsModel;

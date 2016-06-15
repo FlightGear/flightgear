@@ -11,6 +11,7 @@
 #include "AddCatalogDialog.hxx"
 #include "AircraftModel.hxx"
 #include "QtLauncher_private.hxx"
+#include "InstallSceneryDialog.hxx"
 
 #include <Main/options.hxx>
 #include <Main/globals.hxx>
@@ -60,6 +61,8 @@ AddOnsPage::AddOnsPage(QWidget *parent, simgear::pkg::RootRef root) :
 
     connect(m_ui->changeDataDir, &QPushButton::clicked,
             this, &AddOnsPage::onChangeDataDir);
+    connect(m_ui->installSceneryButton, &QPushButton::clicked,
+            this, &AddOnsPage::onInstallScenery);
 
     QSettings settings;
             
@@ -178,6 +181,17 @@ void AddOnsPage::saveSceneryPaths()
     settings.setValue("scenery-paths", paths);
 
     emit sceneryPathsChanged();
+}
+
+bool AddOnsPage::haveSceneryPath(QString path) const
+{
+    for (int i=0; i<m_ui->sceneryPathsList->count(); ++i) {
+        if (m_ui->sceneryPathsList->item(i)->text() == path) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void AddOnsPage::onAddCatalog()
@@ -308,6 +322,17 @@ void AddOnsPage::onChangeDataDir()
     } // scope the ensure settings are written nicely
 
     QtLauncher::restartTheApp(QStringList());
+}
+
+void AddOnsPage::onInstallScenery()
+{
+    InstallSceneryDialog dlg(this, m_downloadDir);
+    if (dlg.exec() == QDialog::Accepted) {
+        if (!haveSceneryPath(dlg.sceneryPath())) {
+            m_ui->sceneryPathsList->addItem(dlg.sceneryPath());
+            saveSceneryPaths();
+        }
+    }
 }
 
 void AddOnsPage::updateUi()

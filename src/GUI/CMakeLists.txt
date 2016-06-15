@@ -76,7 +76,9 @@ if (HAVE_QT)
                             AddCatalogDialog.ui
                             PathsDialog.ui
                             LocationWidget.ui
-                            NoOfficialHangar.ui)
+                            NoOfficialHangar.ui
+                            InstallSceneryDialog.ui
+                            )
     qt5_add_resources(qrc_sources resources.qrc)
 
 
@@ -109,6 +111,8 @@ if (HAVE_QT)
                             QtMessageBox.hxx
                             QtFileDialog.cxx
                             QtFileDialog.hxx
+                            InstallSceneryDialog.hxx
+                            InstallSceneryDialog.cxx
                             ${uic_sources}
                             ${qrc_sources})
 
