@@ -1,7 +1,3 @@
-if(ENABLE_FGADMIN)
-    add_subdirectory(fgadmin)
-endif()
-
 # win32 is just excluded because of not having argument parsing there ...
 if(RTI_FOUND AND NOT WIN32)
     add_subdirectory(fgai)

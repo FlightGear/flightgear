@@ -182,7 +182,6 @@ option(FG_NIGHTLY        "Set to ON to mark this as a nightly build" OFF)
 option(ENABLE_DEV_WARNINGS "Set to ON to include developer-warnings" OFF)
 
 # additional utilities
-option(ENABLE_FGADMIN    "Set to ON to build the FGADMIN application (default)" ON)
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
 option(WITH_FGPANEL      "Set to ON to build the fgpanel application (default)" ON)
 option(ENABLE_FGVIEWER   "Set to ON to build the fgviewer application (default)" ON)

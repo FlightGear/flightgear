@@ -1,2 +1,0 @@
-#cmakedefine HAVE_BZ2LIB
-#cmakedefine HAVE_ZLIB
