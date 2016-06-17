@@ -5,6 +5,7 @@ set(SOURCES
 	replay.cxx
 	flightrecorder.cxx
     FlightHistory.cxx
+		initialstate.cxx
 	)
 
 set(HEADERS
@@ -12,6 +13,7 @@ set(HEADERS
 	replay.hxx
 	flightrecorder.hxx
     FlightHistory.hxx
+		initialstate.hxx
 	)
 
 

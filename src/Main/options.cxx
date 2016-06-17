@@ -52,6 +52,7 @@
 #include <simgear/misc/strutils.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Aircraft/replay.hxx>
+#include <Aircraft/initialstate.hxx>
 
 #include <GUI/gui.h>
 #include <GUI/MessageBox.hxx>
@@ -1601,6 +1602,7 @@ struct OptionDesc {
     {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },
     {"aircraft-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
+    {"state",                        true,  OPTION_IGNORE,   "", false, "", 0 },
     {"model-hz",                     true,  OPTION_INT,    "/sim/model-hz", false, "", 0 },
     {"max-fps",                      true,  OPTION_DOUBLE, "/sim/frame-rate-throttle-hz", false, "", 0 },
     {"speed",                        true,  OPTION_DOUBLE, "/sim/speed-up", false, "", 0 },
@@ -2087,6 +2089,12 @@ void Options::initAircraft()
     // or a scenery dir).
     fgSetString("/sim/aircraft-dir", aircraftDirPath.realpath().c_str());
   }
+
+    if (isOptionSet("state")) {
+        std::string stateName = valueForOption("state");
+        // can't validate this until the -set.xml is parsed
+        fgSetString("/sim/aircraft-state", stateName);
+    }
 }
   
 void Options::processArgResult(int result)

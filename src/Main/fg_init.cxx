@@ -78,6 +78,8 @@
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
 #include <Aircraft/FlightHistory.hxx>
+#include <Aircraft/initialstate.hxx>
+
 #include <Airports/runways.hxx>
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
@@ -216,7 +218,8 @@ public:
                                         e.getFormattedMessage());
           return false;
         }
-        
+          // apply state after the -set.xml, but before any options are are set
+          flightgear::applyInitialState();
         return true;
       } else {
         SG_LOG(SG_GENERAL, SG_ALERT, "aircraft '" << _searchAircraft << 
@@ -265,7 +268,11 @@ public:
                                     e.getFormattedMessage());
       return false;
     }
-    
+
+      // apply state after the -set.xml, but before any options are are set
+      flightgear::applyInitialState();
+
+
     return true;
   }
   
