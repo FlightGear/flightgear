@@ -268,10 +268,9 @@ QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const 
         // ratings
         int ratingHeight = qMax(24, smallMetrics.height() + MARGIN);
         textHeight += ratingHeight * 2;
-    } else {
-        // just the button height
-        textHeight += BUTTON_HEIGHT;
     }
+
+    textHeight += BUTTON_HEIGHT;
 
     textHeight = qMax(textHeight, thumbnailSize.height());
     return QSize(option.rect.width(), textHeight + (MARGIN * 2));
