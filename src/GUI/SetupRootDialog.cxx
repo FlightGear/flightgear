@@ -193,7 +193,8 @@ void SetupRootDialog::onBrowse()
 
 void SetupRootDialog::onDownload()
 {
-    QUrl downloadUrl("http://download.flightgear.org/flightgear/Shared/");
+    QString templateUrl = "https://sourceforge.net/projects/flightgear/files/release-%1/FlightGear-%1-data.tar.bz2";
+    QUrl downloadUrl(templateUrl.arg(VERSION));
     QDesktopServices::openUrl(downloadUrl);
 }
 
