@@ -359,7 +359,7 @@ void FGRouteMgr::postinit()
   
   SGPath path(_pathNode->getStringValue());
   if (!path.isNull()) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from: " << path.str());
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from: " << path);
     loadRoute(path);
   }
   

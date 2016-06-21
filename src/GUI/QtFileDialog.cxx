@@ -52,7 +52,7 @@ void QtFileDialog::exec()
         }
         filter=filter+*it;
     }
-    QFileDialog dlg(0,QString::fromStdString(_title),QString::fromStdString(_initialPath.str()),QString::fromStdString(filter));
+    QFileDialog dlg(0,QString::fromStdString(_title),QString::fromStdString(_initialPath.utf8Str()),QString::fromStdString(filter));
     if (_usage==USE_SAVE_FILE) {
         dlg.setAcceptMode(QFileDialog::AcceptSave);
     }

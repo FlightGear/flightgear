@@ -136,7 +136,7 @@ int main( int argc, char *argv[] ) {
 
     SGPropertyNode *templatetree = new SGPropertyNode();
     try {
-        readProperties(templatefile.str().c_str(), templatetree);
+        readProperties(templatefile, templatetree);
     } catch (sg_io_exception & e) {
         cout << e.getFormattedMessage ();
     }

@@ -48,16 +48,16 @@ namespace canvas
     (
       SG_GL,
       SG_INFO,
-      "canvas::Text: using font file " << path.str()
+      "canvas::Text: using font file " << path
     );
 
-    simgear::canvas::FontPtr font = osgText::readFontFile(path.c_str());
+    simgear::canvas::FontPtr font = osgText::readFontFile(path.local8BitStr());
     if( !font )
       SG_LOG
       (
         SG_GL,
         SG_ALERT,
-        "canvas::Text: Failed to open font file " << path.c_str()
+        "canvas::Text: Failed to open font file " << path
       );
 
     return font;

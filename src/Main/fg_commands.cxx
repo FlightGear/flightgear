@@ -1162,7 +1162,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
         targetnode = const_cast<SGPropertyNode *>(arg)->getNode("data", true);
 
     try {
-        readProperties(validated_path.c_str(), targetnode, true);
+        readProperties(validated_path, targetnode, true);
     } catch (const sg_exception &e) {
         SG_LOG(SG_IO, SG_WARN, "loadxml: " << e.getFormattedMessage());
         return false;
@@ -1247,7 +1247,7 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
         return false;
 
     try {
-        writeProperties (validated_path.c_str(), sourcenode, true);
+        writeProperties (validated_path, sourcenode, true);
     } catch (const sg_exception &e) {
         SG_LOG(SG_IO, SG_WARN, "savexml: " << e.getFormattedMessage());
         return false;

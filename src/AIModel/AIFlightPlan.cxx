@@ -234,9 +234,9 @@ bool FGAIFlightPlan::parseProperties(const std::string& filename)
   
   SGPropertyNode root;
   try {
-    readProperties(path.str(), &root);
+    readProperties(path, &root);
   } catch (const sg_exception &e) {
-    SG_LOG(SG_AI, SG_ALERT, "Error reading AI flight plan: " << path.str()
+    SG_LOG(SG_AI, SG_ALERT, "Error reading AI flight plan: " << path
            << "message:" << e.getFormattedMessage());
     return false;
   }

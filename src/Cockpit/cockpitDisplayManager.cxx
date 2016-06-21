@@ -65,10 +65,10 @@ void CockpitDisplayManager::init()
   }
 
   SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
-  SG_LOG( SG_COCKPIT, SG_INFO, "Reading cockpit displays from " << config.str() );
+  SG_LOG( SG_COCKPIT, SG_INFO, "Reading cockpit displays from " << config );
 
   try {
-    readProperties( config.str(), config_props );
+    readProperties( config, config_props );
     if (!build(config_props)) {
       throw sg_exception(
                     "Detected an internal inconsistency in the instrumentation\n"
@@ -76,7 +76,7 @@ void CockpitDisplayManager::init()
     }
   } catch (const sg_exception& e) {
     SG_LOG(SG_COCKPIT, SG_ALERT, "Failed to load instrumentation system model: "
-                    << config.str() << ":" << e.getFormattedMessage() );
+                    << config << ":" << e.getFormattedMessage() );
   }
 
   // bind() created instruments before init.

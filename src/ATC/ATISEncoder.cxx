@@ -193,7 +193,7 @@ string ATISEncoder::encodeATIS( ATISInformationProvider * atisInformation )
     try
     {
       SGPath path = globals->resolve_maybe_aircraft_path("ATC/atis.xml");
-      readProperties( path.str(), atisSchemaNode );
+      readProperties( path, atisSchemaNode );
     }
     catch (const sg_exception& e)
     {

@@ -263,7 +263,7 @@ public:
         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
       // see http://code.google.com/p/flightgear-bugs/issues/detail?id=1055
       // for the UTF8 / path logic here
-	std::string pathUtf8 = simgear::strutils::convertWindowsLocal8BitToUtf8(path.str());
+      std::string pathUtf8 = path.utf8Str();
     sqlite3_open_v2(pathUtf8.c_str(), &db, openFlags, NULL);
 
     sqlite3_stmt_ptr checkTables =
@@ -978,10 +978,10 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
 bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path, bool verbose)
 {
   if (!path.exists()) {
-    throw sg_io_exception("isCachedFileModified: Missing file:" + path.str());
+    throw sg_io_exception("isCachedFileModified: Missing file:", path);
   }
 
-  sqlite_bind_temp_stdstring(statCacheCheck, 1, path.str());
+  sqlite_bind_temp_stdstring(statCacheCheck, 1, path.utf8Str());
   bool isModified = true;
   sgDebugPriority logLevel = verbose ? SG_WARN : SG_DEBUG;
   if (execSelect(statCacheCheck)) {
@@ -1336,7 +1336,7 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
 
 void NavDataCache::stampCacheFile(const SGPath& path)
 {
-  sqlite_bind_temp_stdstring(d->stampFileCache, 1, path.str());
+  sqlite_bind_temp_stdstring(d->stampFileCache, 1, path.utf8Str());
   sqlite3_bind_int64(d->stampFileCache, 2, path.modTime());
   d->execInsert(d->stampFileCache);
 }
@@ -2142,7 +2142,7 @@ NavDataCache::ThreadedGUISearch::ThreadedGUISearch(const std::string& term) :
 {
     SGPath p = NavDataCache::instance()->path();
     int openFlags = SQLITE_OPEN_READONLY;
-    std::string pathUtf8 = simgear::strutils::convertWindowsLocal8BitToUtf8(p.str());
+    std::string pathUtf8 = p.utf8Str();
     sqlite3_open_v2(pathUtf8.c_str(), &d->db, openFlags, NULL);
 
     std::string sql = "SELECT rowid FROM positioned WHERE name LIKE '%" + term

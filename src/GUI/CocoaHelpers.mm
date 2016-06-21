@@ -52,7 +52,7 @@ std::string stdStringFromCocoa(NSString* s)
 
 NSURL* pathToNSURL(const SGPath& aPath)
 {
-    return [NSURL fileURLWithPath:stdStringToCocoa(aPath.str())];
+    return [NSURL fileURLWithPath:stdStringToCocoa(aPath.utf8Str())];
 }
 
 SGPath URLToPath(NSURL* url)

@@ -180,7 +180,7 @@ FGFlightRecorder::getDefault(void)
         {
             try
             {
-                readProperties(path.str(), m_RecorderNode->getChild("config", 0 ,true), 0);
+                readProperties(path, m_RecorderNode->getChild("config", 0 ,true), 0);
                 ConfigNode = m_RecorderNode->getChild("config", 0 ,false);
             } catch (sg_io_exception &e)
             {

@@ -89,12 +89,11 @@ public:
 
   void parseAPT(const SGPath &aptdb_file)
   {
-    std::string apt_dat = aptdb_file.str();
-    sg_gzifstream in(apt_dat);
+    sg_gzifstream in(aptdb_file);
 
     if ( !in.is_open() ) {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << apt_dat );
-      throw sg_io_exception("cannot open apt.dat file", apt_dat.c_str());
+      SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << aptdb_file );
+      throw sg_io_exception("cannot open apt.dat file", aptdb_file);
     }
 
     string line;
@@ -113,9 +112,8 @@ public:
         // First line indicates IBM ("I") or Macintosh ("A") line endings.
         if ( stripped_line != "I" && stripped_line != "A" ) {
           std::string pb = "invalid first line (neither 'I' nor 'A')";
-          SG_LOG( SG_GENERAL, SG_ALERT, apt_dat << ": " << pb);
-          throw sg_format_exception("cannot parse apt.dat file: " + pb,
-                                    apt_dat);
+          SG_LOG( SG_GENERAL, SG_ALERT, aptdb_file << ": " << pb);
+          throw sg_format_exception("cannot parse apt.dat file: " + pb, aptdb_file.utf8Str());
         }
       } else {     // second line of the file
         std::istringstream s(line);
@@ -126,7 +124,7 @@ public:
       }
     } // end of the apt.dat header
 
-    throwExceptionIfStreamError(in, "apt.dat", apt_dat);
+    throwExceptionIfStreamError(in, "apt.dat", aptdb_file.utf8Str());
 
     while ( std::getline(in, line) ) {
       // 'line' may end with an \r character, see above
@@ -202,7 +200,7 @@ public:
       }
     }
 
-    throwExceptionIfStreamError(in, "apt.dat", apt_dat);
+    throwExceptionIfStreamError(in, "apt.dat", aptdb_file.utf8Str());
     finishAirport();
   }
   
@@ -569,7 +567,7 @@ bool airportDBLoad( const SGPath &aptdb_file )
   
 bool metarDataLoad(const SGPath& metar_file)
 {
-  sg_gzifstream metar_in( metar_file.str() );
+  sg_gzifstream metar_in( metar_file );
   if ( !metar_in.is_open() ) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << metar_file );
     return false;

@@ -111,10 +111,10 @@ void PerformanceDB::load(const SGPath& filename)
 {
     SGPropertyNode root;
     try {
-        readProperties(filename.str(), &root);
+        readProperties(filename, &root);
     } catch (const sg_exception &) {
         SG_LOG(SG_AI, SG_ALERT,
-            "Error reading AI aircraft performance database: " << filename.str());
+            "Error reading AI aircraft performance database: " << filename);
         return;
     }
 

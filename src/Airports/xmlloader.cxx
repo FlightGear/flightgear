@@ -54,7 +54,7 @@ void XMLLoader::load(FGGroundNetwork* net)
   t.stamp();
   try {
       FGGroundNetXMLLoader visitor(net);
-      readXML(path.str(), visitor);
+      readXML(path.local8BitStr(), visitor);
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_INFO, "parsing groundnet XML failed:" << e.getFormattedMessage());
   }
@@ -105,8 +105,8 @@ bool XMLLoader::loadAirportXMLDataIntoVisitor(const string& aICAO,
     return false;
   }
 
-  SG_LOG(SG_GENERAL, SG_DEBUG, "loadAirportXMLDataIntoVisitor: loading from " << path.str());
-  readXML(path.str(), aVisitor);
+  SG_LOG(SG_GENERAL, SG_DEBUG, "loadAirportXMLDataIntoVisitor: loading from " << path);
+  readXML(path.local8BitStr(), aVisitor);
   return true;
 }
 

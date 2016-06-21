@@ -507,11 +507,11 @@ FGAIManager::loadScenarioFile(const std::string& filename)
     path.append("AI/" + filename + ".xml");
     try {
         SGPropertyNode_ptr root = new SGPropertyNode;
-        readProperties(path.str(), root);
+        readProperties(path, root);
         return root;
     } catch (const sg_exception &t) {
         SG_LOG(SG_AI, SG_ALERT, "Failed to load scenario '"
-            << path.str() << "': " << t.getFormattedMessage());
+            << path << "': " << t.getFormattedMessage());
     }
     return 0;
 }

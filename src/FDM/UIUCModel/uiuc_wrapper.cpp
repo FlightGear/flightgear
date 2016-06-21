@@ -321,9 +321,9 @@ void uiuc_init_aeromodel ()
   // Called once from uiuc_init_2_wrapper
   SGPath path(fgGetString("/sim/aircraft-dir"));
   path.append("aircraft.dat");
-  std::cout << "We are using "<< path.str() << std::endl;
+  std::cout << "We are using "<< path << std::endl;
   uiuc_initializemaps(); // Initialize the <string,int> maps
-  uiuc_menu(path.str());   // Read the specified aircraft file 
+  uiuc_menu(path.local8BitStr());   // Read the specified aircraft file
 }
 
 void uiuc_force_moment(double dt)

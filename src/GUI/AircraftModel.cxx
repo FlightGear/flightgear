@@ -522,7 +522,7 @@ void AircraftItemModel::scanDirs()
 
     SGPath rootAircraft(globals->get_fg_root());
     rootAircraft.append("Aircraft");
-    dirs << QString::fromStdString(rootAircraft.str());
+    dirs << QString::fromStdString(rootAircraft.utf8Str());
 
     m_scanThread = new AircraftScanThread(dirs);
     connect(m_scanThread, &AircraftScanThread::finished, this,
@@ -713,7 +713,7 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, quint32 vari
     } else if (role == AircraftPathRole) {
         InstallRef i = item->existingInstall();
         if (i.valid()) {
-            return QString::fromStdString(i->primarySetPath().str());
+            return QString::fromStdString(i->primarySetPath().utf8Str());
         }
     } else if (role == AircraftPackageIdRole) {
         return QString::fromStdString(item->variants()[variantIndex]);
@@ -794,7 +794,7 @@ QVariant AircraftItemModel::packageThumbnail(PackageRef p, int index, bool downl
             path.append(p->thumbnails()[index]);
             if (path.exists()) {
                 QPixmap pix;
-                pix.load(QString::fromStdString(path.str()));
+                pix.load(QString::fromStdString(path.utf8Str()));
                 // resize to the standard size
                 if (pix.height() > STANDARD_THUMBNAIL_HEIGHT) {
                     pix = pix.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT);

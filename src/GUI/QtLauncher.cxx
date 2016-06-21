@@ -655,7 +655,7 @@ void QtLauncher::setSceneryPaths()
     SGPath terraSyncDir(downloadDir.toStdString());
     terraSyncDir.append("TerraSync");
     if (terraSyncDir.exists()) {
-        globals->append_fg_scenery(terraSyncDir.str());
+        globals->append_fg_scenery(terraSyncDir.utf8Str());
     }
 
 }

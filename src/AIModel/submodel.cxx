@@ -484,12 +484,12 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
     SGPath config = globals->resolve_aircraft_path(path);
     try {
         SG_LOG(SG_AI, SG_DEBUG,
-                "Submodels: Trying to read AI submodels file: " << config.str());
-        readProperties(config.str(), &root);
+                "Submodels: Trying to read AI submodels file: " << config);
+        readProperties(config, &root);
     }
     catch (const sg_exception &) {
         SG_LOG(SG_AI, SG_ALERT,
-                "Submodels: Unable to read AI submodels file: " << config.str());
+                "Submodels: Unable to read AI submodels file: " << config);
         return;
     }
 

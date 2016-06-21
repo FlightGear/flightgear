@@ -564,7 +564,7 @@ void FGAirport::loadProcedures() const
     return;
   }
   
-  SG_LOG(SG_GENERAL, SG_INFO, ident() << ": loading procedures from " << path.str());
+  SG_LOG(SG_GENERAL, SG_INFO, ident() << ": loading procedures from " << path);
   RouteBase::loadAirportProcedures(path, const_cast<FGAirport*>(this));
 }
 
@@ -583,7 +583,7 @@ void FGAirport::loadSceneryDefinitions() const
   
   try {
     SGPropertyNode_ptr rootNode = new SGPropertyNode;
-    readProperties(path.str(), rootNode);
+    readProperties(path, rootNode);
     const_cast<FGAirport*>(this)->readThresholdData(rootNode);
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading threshold XML failed:" << e.getFormattedMessage());
@@ -691,7 +691,7 @@ void FGAirport::validateTowerData() const
   
   try {
     SGPropertyNode_ptr rootNode = new SGPropertyNode;
-    readProperties(path.str(), rootNode);
+    readProperties(path, rootNode);
     const_cast<FGAirport*>(this)->readTowerData(rootNode);
     mHasTower = true;
   } catch (sg_exception& e){
@@ -729,7 +729,7 @@ void FGAirport::validateILSData()
   
   try {
       SGPropertyNode_ptr rootNode = new SGPropertyNode;
-      readProperties(path.str(), rootNode);
+      readProperties(path, rootNode);
       readILSData(rootNode);
   } catch (sg_exception& e){
       SG_LOG(SG_NAVAID, SG_WARN, ident() << "loading ils XML failed:" << e.getFormattedMessage());

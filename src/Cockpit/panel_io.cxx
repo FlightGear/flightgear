@@ -844,7 +844,7 @@ fgReadPanel (const string &relative_path)
   SGPropertyNode root;
   
   try {
-    readProperties(path.str(), &root);
+    readProperties(path, &root);
   } catch (const sg_exception &e) {
     guiErrorMessage("Error reading panel: ", e);
     return 0;

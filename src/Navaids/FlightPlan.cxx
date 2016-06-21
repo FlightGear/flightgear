@@ -922,7 +922,7 @@ WayptRef FlightPlan::parseVersion1XMLWaypt(SGPropertyNode* aWP)
 bool FlightPlan::loadPlainTextFormat(const SGPath& path)
 {
   try {
-    sg_gzifstream in(path.str().c_str());
+    sg_gzifstream in(path);
     if (!in.is_open()) {
       throw sg_io_exception("Cannot open file for reading.");
     }

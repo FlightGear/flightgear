@@ -197,13 +197,13 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
   (
     SG_AUTOPILOT,
     SG_INFO,
-    "Reading property-rule configuration from " << config.str()
+    "Reading property-rule configuration from " << config
   );
 
   try
   {
     SGPropertyNode_ptr configNode = new SGPropertyNode();
-    readProperties( config.str(), configNode );
+    readProperties( config, configNode );
 
     SG_LOG(SG_AUTOPILOT, SG_INFO, "adding  property-rule subsystem " << name);
     addAutopilot(name, apNode, configNode);
@@ -214,7 +214,7 @@ void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string& name,
     (
       SG_AUTOPILOT,
       SG_ALERT,
-      "Failed to load property-rule configuration: " << config.str()
+      "Failed to load property-rule configuration: " << config
                                              << ": " << e.getMessage()
     );
     return;

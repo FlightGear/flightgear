@@ -9,6 +9,7 @@
 #include <simgear/constants.h>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include "GPSsmooth.hxx"
 
@@ -27,7 +28,7 @@ int GPSTrack::load( const string &file ) {
     data.clear();
 
     // openg the file
-    sg_gzifstream in( file );
+    sg_gzifstream in( SGPath::fromLocal8Bit(file.c_str()) );
     if ( !in.is_open() ) {
         cout << "Cannot open file: " << file << endl;
         return 0;
