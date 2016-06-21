@@ -75,15 +75,15 @@ bool XMLLoader::findAirportData(const std::string& aICAO,
     fileName.append(".xml");
   }
   
-  string_list sc = globals->get_fg_scenery();
+  PathList sc = globals->get_fg_scenery();
   char buffer[128];
   ::snprintf(buffer, 128, "%c/%c/%c/%s.%s", 
     aICAO[0], aICAO[1], aICAO[2], 
     aICAO.c_str(), fileName.c_str());
 
-  for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
+    for (PathList::const_iterator it = sc.begin(); it != sc.end(); ++it) {
     // fg_senery contains empty strings as "markers" (see FGGlobals::set_fg_scenery)
-    if (!it->empty()) {
+    if (!it->isNull()) {
         SGPath path(*it);
         path.append("Airports");
         path.append(string(buffer));

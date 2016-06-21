@@ -43,11 +43,10 @@ protected:
     
     VisitResult visitAircraftPaths()
     {
-        const string_list& paths(globals->get_aircraft_paths());
-        string_list::const_iterator it = paths.begin();
+        const PathList& paths(globals->get_aircraft_paths());
+        PathList::const_iterator it = paths.begin();
         for (; it != paths.end(); ++it) {
-            SGPath p(*it);
-            VisitResult vr = visitDir(p, 0);
+            VisitResult vr = visitDir(*it, 0);
             if (vr != VISIT_CONTINUE) {
                 return vr;
             }

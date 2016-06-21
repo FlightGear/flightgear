@@ -439,7 +439,7 @@ namespace
 {
     using namespace flightgear;
 
-    SGPath nextScreenshotPath(const std::string& screenshotDir)
+    SGPath nextScreenshotPath(const SGPath& screenshotDir)
     {
         char filename[32];
         static int count = 1;
@@ -497,12 +497,11 @@ namespace
 
             fgSetMouseCursor(MOUSE_CURSOR_NONE);
 
-            string dir = fgGetString("/sim/paths/screenshot-dir");
-            if (dir.empty())
-                dir = SGPath::desktop().str();
+            SGPath dir = SGPath::fromUtf8(fgGetString("/sim/paths/screenshot-dir"));
+            if (dir.isNull())
+                dir = SGPath::desktop();
 
-            _path.set(dir + '/');
-            if (_path.create_dir( 0755 )) {
+            if (!dir.exists() && dir.create_dir( 0755 )) {
                 SG_LOG(SG_GENERAL, SG_ALERT, "Cannot create screenshot directory '"
                         << dir << "'. Trying home directory.");
                 dir = globals->get_fg_home();

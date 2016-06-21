@@ -172,7 +172,7 @@ string fgBasePackageVersion(const SGPath& base_path) {
         return string();
     }
     
-    sg_gzifstream in( p.str() );
+    sg_gzifstream in( p );
     if (!in.is_open()) {
         return string();
     }
@@ -277,27 +277,18 @@ public:
   }
   
 private:
-  SGPath getAircraftPaths() {
-    string_list pathList = globals->get_aircraft_paths();
-    SGPath aircraftPaths;
-    string_list::const_iterator it = pathList.begin();
-    if (it != pathList.end()) {
-        aircraftPaths.set(*it);
-        it++;
+    std::string getAircraftPaths()
+    {
+        return SGPath::join(globals->get_aircraft_paths(), ";");
     }
-    for (; it != pathList.end(); ++it) {
-        aircraftPaths.add(*it);
-    }
-    return aircraftPaths;
-  }
   
   bool checkCache()
   {
-    if (globals->get_fg_root() != _cache->getStringValue("fg-root", "")) {
+    if (globals->get_fg_root().utf8Str() != _cache->getStringValue("fg-root", "")) {
       return false; // cache mismatch
     }
 
-    if (getAircraftPaths().str() != _cache->getStringValue("fg-aircraft", "")) {
+    if (getAircraftPaths() != _cache->getStringValue("fg-aircraft", "")) {
       return false; // cache mismatch
     }
     
@@ -377,7 +368,7 @@ static SGPath platformDefaultDataPath()
 bool fgInitHome()
 {
   SGPath dataPath = SGPath::fromEnv("FG_HOME", platformDefaultDataPath());
-  globals->set_fg_home(dataPath.c_str());
+  globals->set_fg_home(dataPath);
     
     simgear::Dir fgHome(dataPath);
     if (!fgHome.exists()) {
@@ -387,7 +378,7 @@ bool fgInitHome()
     if (!fgHome.exists()) {
         flightgear::fatalMessageBox("Problem setting up user data",
                                     "Unable to create the user-data storage folder at: '"
-                                    + dataPath.str() + "'");
+                                    + dataPath.utf8Str() + "'");
         return false;
     }
     
@@ -503,13 +494,12 @@ static void initAircraftDirsNasalSecurity()
     sim->removeChildren("fg-aircraft");
 
     int index = 0;
-    string_list const aircraft_paths = globals->get_aircraft_paths();
-    for( string_list::const_iterator it = aircraft_paths.begin();
-                                     it != aircraft_paths.end();
-                                   ++it, ++index )
+    const PathList& aircraft_paths = globals->get_aircraft_paths();
+    for (PathList::const_iterator it = aircraft_paths.begin();
+         it != aircraft_paths.end(); ++it, ++index )
     {
         SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
-        n->setStringValue(*it);
+        n->setStringValue(it->utf8Str());
         n->setAttribute(SGPropertyNode::WRITE, false);
     }
 }
@@ -638,20 +628,18 @@ fgInitNav ()
 
 // General house keeping initializations
 bool fgInitGeneral() {
-    string root;
 
     SG_LOG( SG_GENERAL, SG_INFO, "General Initialization" );
     SG_LOG( SG_GENERAL, SG_INFO, "======= ==============" );
 
-    root = globals->get_fg_root();
-    if ( ! root.length() ) {
+    if ( globals->get_fg_root().isNull() ) {
         // No root path set? Then bail ...
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Cannot continue without a path to the base package "
                 << "being defined." );
         return false;
     }
-    SG_LOG( SG_GENERAL, SG_INFO, "FG_ROOT = " << '"' << root << '"' << endl );
+    SG_LOG( SG_GENERAL, SG_INFO, "FG_ROOT = " << '"' << globals->get_fg_root() << '"' << endl );
 
     // Note: browser command is hard-coded for Mac/Windows, so this only affects other platforms
     globals->set_browser(fgGetString("/sim/startup/browser-app", WEB_BROWSER));
@@ -683,8 +671,8 @@ void fgOutputSettings()
     SG_LOG( SG_GENERAL, SG_INFO, "download-dir = " << '"' << fgGetString("/sim/paths/download-dir") << '"' );
     SG_LOG( SG_GENERAL, SG_INFO, "terrasync-dir = " << '"' << fgGetString("/sim/terrasync/scenery-dir") << '"' );
 
-    SG_LOG( SG_GENERAL, SG_INFO, "aircraft-search-paths = \n\t" << simgear::strutils::join(globals->get_aircraft_paths(), "\n\t") );
-    SG_LOG( SG_GENERAL, SG_INFO, "scenery-search-paths = \n\t" << simgear::strutils::join(globals->get_fg_scenery(), "\n\t") );
+    SG_LOG( SG_GENERAL, SG_INFO, "aircraft-search-paths = \n\t" << SGPath::join(globals->get_aircraft_paths(), "\n\t") );
+    SG_LOG( SG_GENERAL, SG_INFO, "scenery-search-paths = \n\t" << SGPath::join(globals->get_fg_scenery(), "\n\t") );
 }
 
 // This is the top level init routine which calls all the other
@@ -743,7 +731,7 @@ void fgCreateSubsystems(bool duringReset) {
 
     SGPath mpath( globals->get_fg_root() );
     mpath.append( fgGetString("/sim/rendering/materials-file") );
-    if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
+    if ( ! globals->get_matlib()->load(globals->get_fg_root().local8BitStr(), mpath.str(),
             globals->get_props()) ) {
        throw sg_io_exception("Error loading materials file", mpath);
     }

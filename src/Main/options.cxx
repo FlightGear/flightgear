@@ -852,15 +852,16 @@ fgOptRoc( const char *arg )
 static int
 fgOptFgScenery( const char *arg )
 {
-    globals->append_fg_scenery(arg, true);
+    globals->append_fg_scenery(SGPath::pathsFromLocal8Bit(arg), true);
     return FG_OPTIONS_OK;
 }
 
 static int
 fgOptTerrasyncDir( const char *arg )
 {
-    globals->append_fg_scenery(arg, true);
-    fgSetString("/sim/terrasync/scenery-dir", arg);
+    SGPath p = SGPath::fromLocal8Bit(arg);
+    globals->append_fg_scenery(p, true);
+    fgSetString("/sim/terrasync/scenery-dir", p.utf8Str());
     return FG_OPTIONS_OK;
 }
 
@@ -1340,8 +1341,8 @@ fgOptVersion( const char *arg )
     cerr << "FG_SCENERY=";
 
     int didsome = 0;
-    string_list scn = globals->get_fg_scenery();
-    for (string_list::const_iterator it = scn.begin(); it != scn.end(); it++)
+    PathList scn = globals->get_fg_scenery();
+    for (PathList::const_iterator it = scn.begin(); it != scn.end(); it++)
     {
         if (didsome) cerr << ":";
         didsome++;
@@ -2007,7 +2008,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 // fg-root/fg-home/fg-aircraft and hence control what files Nasal can access
   std::string name_for_error = homedir.empty() ? appDataConfig.str() : config.str();
   if( ! hostname.empty() ) {
-    config.set(globals->get_fg_root());
+    config = globals->get_fg_root();
     config.append( "system.fgfsrc" );
     config.concat( "." );
     config.concat( hostname );
@@ -2018,7 +2019,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
     }
   }
 
-  config.set(globals->get_fg_root());
+  config = globals->get_fg_root();
   config.append( "system.fgfsrc" );
   if (config.exists()) {
     flightgear::fatalMessageBox("Unsupported configuration",
@@ -2029,13 +2030,14 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 
 void Options::initPaths()
 {
-    BOOST_FOREACH(const string& paths, valuesForOption("fg-aircraft")) {
+    BOOST_FOREACH(const string& pathOpt, valuesForOption("fg-aircraft")) {
+        PathList paths = SGPath::pathsFromLocal8Bit(pathOpt);
         globals->append_aircraft_paths(paths);
     }
 
     const char* envp = ::getenv("FG_AIRCRAFT");
     if (envp) {
-        globals->append_aircraft_paths(envp);
+        globals->append_aircraft_paths(SGPath::pathsFromEnv("FG_AIRCRAFT"));
     }
 
 }
@@ -2057,22 +2059,22 @@ void Options::initAircraft()
   }
     
   if (p->showAircraft) {
-	vector<SGPath> path_list;
+	PathList path_list;
 
     fgOptLogLevel( "alert" );
 
     // First place to check is the 'Aircraft' sub-directory in $FG_ROOT
 
-	path_list.push_back( SGPath( globals->get_fg_root() ) );
-	path_list.back().append("Aircraft");
+      SGPath rootAircraft = globals->get_fg_root();
+      rootAircraft.append("Aircraft");
+	path_list.push_back(rootAircraft);
 
     // Additionally, aircraft may also be found in user-defined places
 	// (via $FG_AIRCRAFT or with the '--fg-aircraft' option)
+      PathList aircraft_paths = globals->get_aircraft_paths();
 
-	string_list aircraft_paths = globals->get_aircraft_paths();
-	for (string_list::iterator it = aircraft_paths.begin();
-		 it != aircraft_paths.end(); ++it)
-	  path_list.push_back( SGPath(*it));
+      path_list.insert(path_list.end(), aircraft_paths.begin(),
+                       aircraft_paths.end());
 
     fgShowAircraft(path_list);
     exit(0);
@@ -2354,7 +2356,7 @@ OptionResult Options::processOptions()
 // now options are process, do supplemental fixup
   const char *envp = ::getenv( "FG_SCENERY" );
   if (envp) {
-    globals->append_fg_scenery(envp, true);
+      globals->append_fg_scenery(SGPath::pathsFromEnv("FG_SCENERY"), true);
   }
 
 // download dir fix-up
@@ -2394,10 +2396,10 @@ OptionResult Options::processOptions()
     // always add the terrasync location, regardless of whether terrasync
     // is enabled or not. This allows us to toggle terrasync on/off at
     // runtime and have things work as expected
-    const string_list& scenery_paths(globals->get_fg_scenery());
-    if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
+    const PathList& scenery_paths(globals->get_fg_scenery());
+    if (std::find(scenery_paths.begin(), scenery_paths.end(), SGPath(terrasyncDir)) == scenery_paths.end()) {
         // terrasync dir is not in the scenery paths, add it
-        globals->append_fg_scenery(terrasyncDir);
+        globals->append_fg_scenery(SGPath(terrasyncDir));
     }
 
     if (addFGDataScenery) {
@@ -2405,7 +2407,7 @@ OptionResult Options::processOptions()
         // ensure this path is added last
         SGPath root(globals->get_fg_root());
         root.append("Scenery");
-        globals->append_fg_scenery(root.str());
+        globals->append_fg_scenery(root);
     }
 
   return FG_OPTIONS_OK;
@@ -2544,20 +2546,20 @@ void Options::showUsage() const
 }
   
 #if defined(__CYGWIN__)
-string Options::platformDefaultRoot() const
+SGPath Options::platformDefaultRoot() const
 {
   return "../data";
 }
 
 #elif defined(SG_WINDOWS)
-string Options::platformDefaultRoot() const
+SGPath Options::platformDefaultRoot() const
 {
   return "..\\data";
 }
 #elif defined(SG_MAC)
 // platformDefaultRoot defined in CocoaHelpers.mm
 #else
-string Options::platformDefaultRoot() const
+SGPath Options::platformDefaultRoot() const
 {
   return PKGLIBDIR;
 }
@@ -2565,24 +2567,24 @@ string Options::platformDefaultRoot() const
   
 void Options::setupRoot(int argc, char **argv)
 {
-    string root;
+    SGPath root;
     bool usingDefaultRoot = false;
 
   if (isOptionSet("fg-root")) {
-    root = valueForOption("fg-root"); // easy!
-    SG_LOG(SG_GENERAL, SG_INFO, "set from command-line argument: fg_root = " << root );
+      root = SGPath::fromLocal8Bit(valueForOption("fg-root").c_str()); // easy!
+      SG_LOG(SG_GENERAL, SG_INFO, "set from command-line argument: fg_root = " << root );
   } else {
   // Next check if fg-root is set as an env variable
     char *envp = ::getenv( "FG_ROOT" );
     if ( envp != NULL ) {
-      root = envp;
-      SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
+        root = SGPath::fromLocal8Bit(envp);
+        SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
     } else {
 #if defined(HAVE_QT)
         flightgear::initApp(argc, argv);
         root = SetupRootDialog::restoreUserSelectedRoot();
 #endif
-        if (root.empty()) {
+        if (root.isNull()) {
             usingDefaultRoot = true;
             root = platformDefaultRoot();
             SG_LOG(SG_GENERAL, SG_INFO, "platform default fg_root = " << root );

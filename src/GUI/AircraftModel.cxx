@@ -516,8 +516,8 @@ void AircraftItemModel::scanDirs()
 
     QStringList dirs = m_paths;
 
-    Q_FOREACH(std::string ap, globals->get_aircraft_paths()) {
-        dirs << QString::fromStdString(ap);
+    Q_FOREACH(SGPath ap, globals->get_aircraft_paths()) {
+        dirs << QString::fromStdString(ap.utf8Str());
     }
 
     SGPath rootAircraft(globals->get_fg_root());

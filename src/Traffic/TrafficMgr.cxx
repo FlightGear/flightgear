@@ -534,12 +534,14 @@ void FGTrafficManager::init()
         simgear::PathList dirs = globals->get_data_paths("AI/Traffic");
         
         // temporary flag to restrict loading while traffic data is found
-        // through terrasync /and/ fgdata. Ultimatley we *do* want to be able to
+        // through terrasync /and/ fgdata. Ultimately we *do* want to be able to
         // overlay sources.
         
         if (dirs.size() > 1) {
             SGPath p = dirs.back();
-            if (simgear::strutils::starts_with(p.str(), globals->get_fg_root())) {
+            if (simgear::strutils::starts_with(p.utf8Str(),
+                                               globals->get_fg_root().utf8Str()))
+            {
                 dirs.pop_back();
             }
         }

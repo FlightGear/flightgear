@@ -108,10 +108,11 @@ public:
 
   // try each aircraft dir in turn
     std::string res(aResource, 9); // resource path with 'Aircraft/' removed
-    const string_list& dirs(globals->get_aircraft_paths());
-    string_list::const_iterator it = dirs.begin();
+    const PathList& dirs(globals->get_aircraft_paths());
+    PathList::const_iterator it = dirs.begin();
     for (; it != dirs.end(); ++it) {
-      SGPath p(*it, res);
+        SGPath p(*it);
+        p.append(res);
       if (p.exists()) {
         return p;
       }
@@ -131,8 +132,7 @@ public:
 
   virtual SGPath resolve(const std::string& aResource, SGPath&) const
   {
-    const char* aircraftDir = fgGetString("/sim/aircraft-dir");
-    SGPath p(aircraftDir);
+      SGPath p = SGPath::fromUtf8(fgGetString("/sim/aircraft-dir"));
     p.append(aResource);
     return p.exists() ? p : SGPath();
   }
@@ -248,7 +248,7 @@ FGGlobals::~FGGlobals()
 }
 
 // set the fg_root path
-void FGGlobals::set_fg_root (const std::string &root) {
+void FGGlobals::set_fg_root (const SGPath &root) {
     SGPath tmp(root);
     fg_root = tmp.realpath();
 
@@ -256,9 +256,9 @@ void FGGlobals::set_fg_root (const std::string &root) {
     tmp.append( "data" );
     tmp.append( "version" );
     if ( tmp.exists() ) {
-        fgGetNode("BAD_FG_ROOT", true)->setStringValue(fg_root);
-        fg_root += "/data";
-        fgGetNode("GOOD_FG_ROOT", true)->setStringValue(fg_root);
+        fgGetNode("BAD_FG_ROOT", true)->setStringValue(fg_root.utf8Str());
+        fg_root.append("data");
+        fgGetNode("GOOD_FG_ROOT", true)->setStringValue(fg_root.utf8Str());
         SG_LOG(SG_GENERAL, SG_ALERT, "***\n***\n*** Warning: changing bad FG_ROOT/--fg-root to '"
                 << fg_root << "'\n***\n***");
     }
@@ -268,7 +268,7 @@ void FGGlobals::set_fg_root (const std::string &root) {
     SGPropertyNode *n = fgGetNode("/sim", true);
     n->removeChild("fg-root", 0);
     n = n->getChild("fg-root", 0, true);
-    n->setStringValue(fg_root.c_str());
+    n->setStringValue(fg_root.utf8Str());
     n->setAttribute(SGPropertyNode::WRITE, false);
 
     simgear::ResourceManager::instance()->addBasePath(fg_root,
@@ -276,15 +276,15 @@ void FGGlobals::set_fg_root (const std::string &root) {
 }
 
 // set the fg_home path
-void FGGlobals::set_fg_home (const std::string &home) {
-    SGPath tmp(home);
-    fg_home = tmp.realpath();
+void FGGlobals::set_fg_home (const SGPath &home)
+{
+    fg_home = home.realpath();
 }
 
 PathList FGGlobals::get_data_paths() const
 {
     PathList r(additional_data_paths);
-    r.push_back(SGPath(fg_root));
+    r.push_back(fg_root);
     return r;
 }
 
@@ -329,69 +329,74 @@ SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
     return SGPath();
 }
 
-void FGGlobals::append_fg_scenery (const std::string &paths, bool secure)
+void FGGlobals::append_fg_scenery (const PathList &paths, bool secure)
+{
+    BOOST_FOREACH(const SGPath& path, paths) {
+        append_fg_scenery(path);
+    }
+}
+
+void FGGlobals::append_fg_scenery (const SGPath &path, bool secure)
 {
     SGPropertyNode* sim = fgGetNode("/sim", true);
 
-  // find first unused fg-scenery property in /sim
+    // find first unused fg-scenery property in /sim
     int propIndex = 0;
     while (sim->getChild("fg-scenery", propIndex) != NULL) {
-      ++propIndex;
+        ++propIndex;
     }
 
-    BOOST_FOREACH(const SGPath& path, sgPathSplit( paths )) {
-        SGPath abspath(path.realpath());
-        if (!abspath.exists()) {
-          SG_LOG(SG_GENERAL, SG_WARN, "scenery path not found:" << abspath.str());
-          continue;
-        }
+    SGPath abspath(path.realpath());
+    if (!abspath.exists()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "scenery path not found:" << abspath);
+        return;
+    }
 
-      // check for duplicates
-      string_list::const_iterator ex = std::find(fg_scenery.begin(), fg_scenery.end(), abspath.str());
-      if (ex != fg_scenery.end()) {
-        SG_LOG(SG_GENERAL, SG_INFO, "skipping duplicate add of scenery path:" << abspath.str());
-        continue;
-      }
+    // check for duplicates
+    PathList::const_iterator ex = std::find(fg_scenery.begin(), fg_scenery.end(), abspath);
+    if (ex != fg_scenery.end()) {
+        SG_LOG(SG_GENERAL, SG_INFO, "skipping duplicate add of scenery path:" << abspath);
+        return;
+    }
 
-      // tell the ResouceManager about the scenery path
-      // needed to load Models from this scenery path
-      simgear::ResourceManager::instance()->addBasePath(abspath.str(),
-        simgear::ResourceManager::PRIORITY_DEFAULT);
+    // tell the ResouceManager about the scenery path
+    // needed to load Models from this scenery path
+    simgear::ResourceManager::instance()->addBasePath(abspath.str(),
+                                                      simgear::ResourceManager::PRIORITY_DEFAULT);
 
-        simgear::Dir dir(abspath);
-        SGPath terrainDir(dir.file("Terrain"));
-        SGPath objectsDir(dir.file("Objects"));
+    simgear::Dir dir(abspath);
+    SGPath terrainDir(dir.file("Terrain"));
+    SGPath objectsDir(dir.file("Objects"));
 
-      // this code used to add *either* the base dir, OR add the
-      // Terrain and Objects subdirs, but the conditional logic was commented
-      // out, such that all three dirs are added. Unfortunately there's
-      // no information as to why the change was made.
-        fg_scenery.push_back(abspath.str());
-        if (secure) {
-          secure_fg_scenery.push_back(abspath.str());
-        }
+    // this code used to add *either* the base dir, OR add the
+    // Terrain and Objects subdirs, but the conditional logic was commented
+    // out, such that all three dirs are added. Unfortunately there's
+    // no information as to why the change was made.
+    fg_scenery.push_back(abspath);
+    if (secure) {
+        secure_fg_scenery.push_back(abspath);
+    }
 
-        if (terrainDir.exists()) {
-          fg_scenery.push_back(terrainDir.str());
-        }
+    if (terrainDir.exists()) {
+        fg_scenery.push_back(terrainDir);
+    }
 
-        if (objectsDir.exists()) {
-          fg_scenery.push_back(objectsDir.str());
-        }
+    if (objectsDir.exists()) {
+        fg_scenery.push_back(objectsDir);
+    }
 
-        // insert a marker for FGTileEntry::load(), so that
-        // FG_SCENERY=A:B becomes list ["A/Terrain", "A/Objects", "",
-        // "B/Terrain", "B/Objects", ""]
-        fg_scenery.push_back("");
+    // insert a marker for FGTileEntry::load(), so that
+    // FG_SCENERY=A:B becomes list ["A/Terrain", "A/Objects", "",
+    // "B/Terrain", "B/Objects", ""]
+    fg_scenery.push_back(SGPath());
 
-      // make scenery dirs available to Nasal
-        SGPropertyNode* n = sim->getChild("fg-scenery", propIndex++, true);
-        n->setStringValue(abspath.str());
-        n->setAttribute(SGPropertyNode::WRITE, false);
-
-        // temporary fix so these values survive reset
-        n->setAttribute(SGPropertyNode::PRESERVE, true);
-    } // of path list iteration
+    // make scenery dirs available to Nasal
+    SGPropertyNode* n = sim->getChild("fg-scenery", propIndex++, true);
+    n->setStringValue(abspath.utf8Str());
+    n->setAttribute(SGPropertyNode::WRITE, false);
+    
+    // temporary fix so these values survive reset
+    n->setAttribute(SGPropertyNode::PRESERVE, true);
 }
 
 void FGGlobals::clear_fg_scenery()
@@ -407,18 +412,18 @@ void FGGlobals::set_catalog_aircraft_path(const SGPath& path)
     catalog_aircraft_dir = path;
 }
 
-string_list FGGlobals::get_aircraft_paths() const
+PathList FGGlobals::get_aircraft_paths() const
 {
-    string_list r;
+    PathList r;
     if (!catalog_aircraft_dir.isNull()) {
-        r.push_back(catalog_aircraft_dir.str());
+        r.push_back(catalog_aircraft_dir);
     }
 
     r.insert(r.end(), fg_aircraft_dirs.begin(), fg_aircraft_dirs.end());
     return r;
 }
 
-void FGGlobals::append_aircraft_path(const std::string& path)
+void FGGlobals::append_aircraft_path(const SGPath& path)
 {
   SGPath dirPath(path);
   if (!dirPath.exists()) {
@@ -438,13 +443,11 @@ void FGGlobals::append_aircraft_path(const std::string& path)
       dirPath = acSubdir;
   }
 
-  std::string abspath = dirPath.realpath();
-  fg_aircraft_dirs.push_back(abspath);
+  fg_aircraft_dirs.push_back(dirPath.realpath());
 }
 
-void FGGlobals::append_aircraft_paths(const std::string& path)
+void FGGlobals::append_aircraft_paths(const PathList& paths)
 {
-  string_list paths = sgPathSplit(path);
   for (unsigned int p = 0; p<paths.size(); ++p) {
     append_aircraft_path(paths[p]);
   }

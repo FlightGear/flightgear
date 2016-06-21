@@ -38,10 +38,10 @@ FGFLITEVoice::FGFLITEVoice(FGVoiceMgr * mgr, const SGPropertyNode_ptr node, cons
 
   _sampleName = node->getStringValue("desc", node->getPath().c_str());
 
-  string voice = globals->get_fg_root() + "/ATC/" +
+    SGPath voice = globals->get_fg_root() / "ATC" /
       node->getStringValue("htsvoice", "cmu_us_arctic_slt.htsvoice");
 
-  _synthesizer = new FLITEVoiceSynthesizer(voice.c_str());
+  _synthesizer = new FLITEVoiceSynthesizer(voice.local8BitStr());
 
   SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
   _sgr = smgr->find(sampleGroupRefName, true);

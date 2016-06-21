@@ -24,6 +24,8 @@
 
 #include <string>
 
+#include <simgear/misc/sg_path.hxx>
+
 namespace Ui
 {
     class SetupRootDialog;
@@ -38,7 +40,7 @@ public:
 
     static bool runDialog(bool usingDefaultRoot);
 
-    static std::string restoreUserSelectedRoot();
+    static SGPath restoreUserSelectedRoot();
 private slots:
 
     void onBrowse();

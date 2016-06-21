@@ -538,7 +538,7 @@ do_materials_reload (const SGPropertyNode * arg)
     SGMaterialLib* new_matlib =  new SGMaterialLib;
     SGPath mpath( globals->get_fg_root() );
     mpath.append( fgGetString("/sim/rendering/materials-file") );
-    bool loaded = new_matlib->load(globals->get_fg_root(), 
+    bool loaded = new_matlib->load(globals->get_fg_root().local8BitStr(),
                                   mpath.str(), 
                                   globals->get_props());
 

@@ -180,21 +180,21 @@ fgviewerMain(int argc, char** argv)
 
     osgDB::FilePathList filePathList
         = osgDB::Registry::instance()->getDataFilePathList();
-    filePathList.push_back(globals->get_fg_root());
+    filePathList.push_back(globals->get_fg_root().local8BitStr());
 
-    string_list path_list = globals->get_fg_scenery();
+    const PathList& path_list = globals->get_fg_scenery();
     for (unsigned i = 0; i < path_list.size(); ++i) {
-        filePathList.push_back(path_list[i]);
+        filePathList.push_back(path_list[i].local8BitStr());
     }
 
     globals->set_matlib( new SGMaterialLib );
-    simgear::SGModelLib::init(globals->get_fg_root(), globals->get_props());
+    simgear::SGModelLib::init(globals->get_fg_root().local8BitStr(), globals->get_props());
 
     // Initialize the material property subsystem.
 
     SGPath mpath( globals->get_fg_root() );
     mpath.append( fgGetString("/sim/rendering/materials-file") );
-    if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
+    if ( ! globals->get_matlib()->load(globals->get_fg_root().local8BitStr(), mpath.str(),
             globals->get_props()) ) {
         throw sg_io_exception("Error loading materials file", mpath);
     }

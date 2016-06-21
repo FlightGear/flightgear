@@ -177,9 +177,9 @@ void FGFontCache::init()
     if (!_initialized) {
         char *envp = ::getenv("FG_FONTS");
         if (envp != NULL) {
-            _path.set(envp);
+            _path = SGPath::fromEnv("FG_FONTS");
         } else {
-            _path.set(globals->get_fg_root());
+            _path = globals->get_fg_root();
             _path.append("Fonts");
         }
         _initialized = true;

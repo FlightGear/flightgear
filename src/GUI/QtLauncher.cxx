@@ -386,7 +386,7 @@ void initApp(int& argc, char** argv)
 
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope,
-                           QString::fromStdString(globals->get_fg_home()));
+                           QString::fromStdString(globals->get_fg_home().utf8Str()));
 
         // reset numeric / collation locales as described at:
         // http://doc.qt.io/qt-5/qcoreapplication.html#details
@@ -655,7 +655,7 @@ void QtLauncher::setSceneryPaths()
     SGPath terraSyncDir(downloadDir.toStdString());
     terraSyncDir.append("TerraSync");
     if (terraSyncDir.exists()) {
-        globals->append_fg_scenery(terraSyncDir.utf8Str());
+        globals->append_fg_scenery(terraSyncDir);
     }
 
 }

@@ -71,18 +71,18 @@ inline static string ParseArgs( int argc, char ** argv, const char * token )
 
 // define default location of fgdata (use the same as for fgfs)
 #if defined(__CYGWIN__)
-inline static string platformDefaultRoot()
+inline static SGPath platformDefaultRoot()
 {
-  return "../data";
+  return SGPath("../data");
 }
 
 #elif defined(_WIN32)
-inline static string platformDefaultRoot()
+inline static SGPath platformDefaultRoot()
 {
-  return "..\\data";
+  return SGPath("..\\data");
 }
 #elif defined(__APPLE__)
-inline static string platformDefaultRoot()
+inline static SGPath platformDefaultRoot()
 {
   /*
    The following code looks for the base package inside the application
@@ -101,12 +101,12 @@ inline static string platformDefaultRoot()
   CFRelease(dataDir);
   CFRelease(path);
 
-  return root;
+  return SGPath(root);
 }
 #else
-inline static string platformDefaultRoot()
+inline static SGPath platformDefaultRoot()
 {
-  return PKGLIBDIR;
+  return SGPath(PKGLIBDIR);
 }
 #endif
 
@@ -122,7 +122,7 @@ FGPanelApplication::FGPanelApplication( int argc, char ** argv ) :
   FGCroppedTexture::registerTextureLoader( "png", &pngTextureLoader );
   FGCroppedTexture::registerTextureLoader( "rgb", &rgbTextureLoader );
 
-  ApplicationProperties::root = platformDefaultRoot();
+  ApplicationProperties::root = platformDefaultRoot().local8BitStr();
 
   string panelFilename;
   string fgRoot;

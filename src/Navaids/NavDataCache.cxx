@@ -1223,7 +1223,7 @@ void NavDataCache::doRebuild()
 
           d->flushDeferredOctreeUpdates();
 
-          string sceneryPaths = simgear::strutils::join(globals->get_fg_scenery(), ";");
+          string sceneryPaths = SGPath::join(globals->get_fg_scenery(), ";");
           writeStringProperty("scenery_paths", sceneryPaths);
 
           st.stamp();

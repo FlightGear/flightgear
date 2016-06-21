@@ -165,10 +165,13 @@ void FGTileMgr::reinit()
     _options->setPropertyNode(globals->get_props());
     
     osgDB::FilePathList &fp = _options->getDatabasePathList();
-    const string_list &sc = globals->get_fg_scenery();
+    const PathList &sc = globals->get_fg_scenery();
     fp.clear();
-    std::copy(sc.begin(), sc.end(), back_inserter(fp));
-    _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root());
+    PathList::const_iterator it;
+    for (it = sc.begin(); it != sc.end(); ++it) {
+        fp.push_back(it->local8BitStr());
+    }
+    _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().local8BitStr());
     
     if (_terra_sync) {
       _options->setPluginStringData("SimGear::TERRASYNC_ROOT", fgGetString("/sim/terrasync/scenery-dir"));

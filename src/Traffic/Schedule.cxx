@@ -343,9 +343,8 @@ SGPath FGAISchedule::resolveModelPath(const std::string& modelPath)
     }
     
     // check aircraft dirs
-    BOOST_FOREACH(std::string aircraftPath, globals->get_aircraft_paths()) {
-        SGPath mp(aircraftPath);
-        mp.append(modelPath);
+    BOOST_FOREACH(SGPath aircraftPath, globals->get_aircraft_paths()) {
+        SGPath mp = aircraftPath / modelPath;
         if (mp.exists()) {
             return mp;
         }

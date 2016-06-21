@@ -92,8 +92,8 @@ void fgInitAllowedPaths()
     }
     read_allowed_paths.clear();
     write_allowed_paths.clear();
-    std::string fg_root = SGPath(globals->get_fg_root()).realpath();
-    std::string fg_home = SGPath(globals->get_fg_home()).realpath();
+    std::string fg_root = globals->get_fg_root().realpath();
+    std::string fg_home = globals->get_fg_home().realpath();
 #if defined(_MSC_VER) /*for MS compilers */ || defined(_WIN32) /*needed for non MS windows compilers like MingW*/
      std::string sep = "\\";
 #else
@@ -103,32 +103,28 @@ void fgInitAllowedPaths()
     read_allowed_paths.push_back(fg_home + sep + "*");
     read_allowed_paths.push_back(fg_root);
     read_allowed_paths.push_back(fg_home);
-    string_list const aircraft_paths = globals->get_aircraft_paths();
-    string_list const scenery_paths = globals->get_secure_fg_scenery();
+
+    const PathList& aircraft_paths = globals->get_aircraft_paths();
+    const PathList& scenery_paths = globals->get_secure_fg_scenery();
     // not plain fg_scenery, to avoid making
     // /sim/terrasync/scenery-dir a security hole
+    PathList read_paths = aircraft_paths;
+    read_paths.insert(read_paths.end(), scenery_paths.begin(), scenery_paths.end());
 
-    const string_list * path_lists_to_add[] = {
-      &aircraft_paths,
-      &scenery_paths
-    };
 
-    for( size_t i = 0; i < sizeof(path_lists_to_add)/sizeof(path_lists_to_add[0]); i++ )
-    {
-      for( string_list::const_iterator it = path_lists_to_add[i]->begin(); it != path_lists_to_add[i]->end();++it )
+      for( PathList::const_iterator it = read_paths.begin(); it != read_paths.end(); ++it )
       {
         // if we get the initialization order wrong, better to have an
         // obvious error than a can-read-everything security hole...
-          if (it->empty() || fg_root.empty() || fg_home.empty()){
+          if (it->isNull() || fg_root.empty() || fg_home.empty()) {
               flightgear::fatalMessageBox("Nasal initialization error",
                  "Empty string in FG_ROOT, FG_HOME, FG_AIRCRAFT or FG_SCENERY",
                                    "or fgInitAllowedPaths() called too early");
               exit(-1);
           }
-          read_allowed_paths.push_back(SGPath(*it).realpath() + sep + "*");
-          read_allowed_paths.push_back(SGPath(*it).realpath());
+          read_allowed_paths.push_back(it->realpath() + sep + "*");
+          read_allowed_paths.push_back(it->realpath());
       }
-    }
 
     write_allowed_paths.push_back(fg_home + sep + "*.sav");
     write_allowed_paths.push_back(fg_home + sep + "*.log");
@@ -141,13 +137,14 @@ void fgInitAllowedPaths()
     write_allowed_paths.push_back(fg_home + sep + "Input" + sep + "Joysticks" + sep + "*.xml");
     
     // Check that it works
-    if(!fgValidatePath(globals->get_fg_home() + "/../no.log",true).empty() ||
-        !fgValidatePath(globals->get_fg_home() + "/no.logt",true).empty() ||
-        !fgValidatePath(globals->get_fg_home() + "/nolog",true).empty() ||
-        !fgValidatePath(globals->get_fg_home() + "no.log",true).empty() ||
-        !fgValidatePath(globals->get_fg_home() + "\\..\\no.log",false).empty() ||
-        fgValidatePath(globals->get_fg_home() + "/aircraft-data/yes..xml",true).empty() ||
-        fgValidatePath(globals->get_fg_root() + "/.\\yes.bmp",false).empty()) {
+    std::string homePath = globals->get_fg_home().utf8Str();
+    if(!fgValidatePath(homePath + "/../no.log",true).empty() ||
+        !fgValidatePath(homePath + "/no.logt",true).empty() ||
+        !fgValidatePath(homePath + "/nolog",true).empty() ||
+        !fgValidatePath(homePath + "no.log",true).empty() ||
+        !fgValidatePath(homePath + "\\..\\no.log",false).empty() ||
+        fgValidatePath(homePath + "/aircraft-data/yes..xml",true).empty() ||
+        fgValidatePath(homePath + "/.\\yes.bmp",false).empty()) {
             flightgear::fatalMessageBox("Nasal initialization error",
                                     "The FG_HOME directory must not be inside any of the FG_ROOT, FG_AIRCRAFT or FG_SCENERY directories",
                                     "(check that you have not accidentally included an extra :, as an empty part means the current directory)");

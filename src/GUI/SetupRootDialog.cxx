@@ -90,7 +90,7 @@ bool SetupRootDialog::runDialog(PromptState prompt)
     return true;
 }
 
-std::string SetupRootDialog::restoreUserSelectedRoot()
+SGPath SetupRootDialog::restoreUserSelectedRoot()
 {
     QSettings settings;
     QString path = settings.value("fg-root").toString();
@@ -153,8 +153,8 @@ bool SetupRootDialog::validateVersion(QString path)
 
 bool SetupRootDialog::defaultRootAcceptable()
 {
-    std::string r = flightgear::Options::sharedInstance()->platformDefaultRoot();
-    QString defaultRoot = QString::fromStdString(r);
+    SGPath r = flightgear::Options::sharedInstance()->platformDefaultRoot();
+    QString defaultRoot = QString::fromStdString(r.utf8Str());
     return validatePath(defaultRoot) && validateVersion(defaultRoot);
 }
 
@@ -200,8 +200,8 @@ void SetupRootDialog::onDownload()
 
 void SetupRootDialog::onUseDefaults()
 {
-    std::string r = flightgear::Options::sharedInstance()->platformDefaultRoot();
-    m_browsedPath = QString::fromStdString(r);
+    SGPath r = flightgear::Options::sharedInstance()->platformDefaultRoot();
+    m_browsedPath = QString::fromStdString(r.utf8Str());
     globals->set_fg_root(r);
     QSettings settings;
     settings.remove("fg-root"); // remove any setting
@@ -211,7 +211,7 @@ void SetupRootDialog::onUseDefaults()
 void SetupRootDialog::updatePromptText()
 {
     QString t;
-    QString curRoot = QString::fromStdString(globals->get_fg_root());
+    QString curRoot = QString::fromStdString(globals->get_fg_root().utf8Str());
     switch (m_promptState) {
     case DefaultPathCheckFailed:
         t = tr("This copy of FlightGear does not include the base data files. " \

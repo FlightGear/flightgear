@@ -142,7 +142,7 @@ public:
    */
   static bool checkForArg(int argc, char* argv[], const char* arg);
 
-      std::string platformDefaultRoot() const;
+      SGPath platformDefaultRoot() const;
 private:
   void showUsage() const;
   

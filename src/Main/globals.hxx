@@ -95,7 +95,7 @@ private:
     double sim_time_sec;
 
     // Root of FlightGear data tree
-    std::string fg_root;
+    SGPath fg_root;
 
     /**
      * locations to search for (non-scenery) data. 
@@ -103,11 +103,11 @@ private:
     PathList additional_data_paths;
     
     // Users home directory for data
-    std::string fg_home;
+    SGPath fg_home;
 
     // Roots of FlightGear scenery tree
-    string_list fg_scenery;
-    string_list secure_fg_scenery;
+    PathList fg_scenery;
+    PathList secure_fg_scenery;
 
     std::string browser;
 
@@ -130,7 +130,7 @@ private:
     FGTACANList *channellist;
 
     /// roots of Aircraft trees
-    string_list fg_aircraft_dirs;
+    PathList fg_aircraft_dirs;
     SGPath catalog_aircraft_dir;
 
     bool haveUserSettings;
@@ -191,8 +191,8 @@ public:
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
     inline void set_sim_time_sec (double t) { sim_time_sec = t; }
 
-    inline const std::string &get_fg_root () const { return fg_root; }
-    void set_fg_root (const std::string &root);
+    const SGPath &get_fg_root () const { return fg_root; }
+    void set_fg_root (const SGPath&root);
 
     /**
      * Get list of data locations. fg_root is always the final item in the
@@ -214,11 +214,11 @@ public:
      */
     SGPath find_data_dir(const std::string& pathSuffix) const;
     
-    inline const std::string &get_fg_home () const { return fg_home; }
-    void set_fg_home (const std::string &home);
+    const SGPath &get_fg_home () const { return fg_home; }
+    void set_fg_home (const SGPath &home);
 
-    inline const string_list &get_fg_scenery () const { return fg_scenery; }
-    inline const string_list &get_secure_fg_scenery () const { return secure_fg_scenery; }
+    const PathList &get_fg_scenery () const { return fg_scenery; }
+    const PathList &get_secure_fg_scenery () const { return secure_fg_scenery; }
     /**
      * Add a scenery directory
      *
@@ -227,8 +227,10 @@ public:
      * obtained from the property tree (e.g. /sim/terrasync/scenery-dir)
      * or other Nasal-writable places
      */ 
-    void append_fg_scenery (const std::string &scenery, bool secure = false);
+    void append_fg_scenery (const SGPath &scenery, bool secure = false);
 
+    void append_fg_scenery (const PathList &scenery, bool secure = false);
+    
     void clear_fg_scenery();
 
     /**
@@ -238,10 +240,10 @@ public:
      */
     void set_catalog_aircraft_path(const SGPath& path);
 
-    string_list get_aircraft_paths() const;
+    PathList get_aircraft_paths() const;
 
-    void append_aircraft_path(const std::string& path);
-    void append_aircraft_paths(const std::string& path);
+    void append_aircraft_path(const SGPath& path);
+    void append_aircraft_paths(const PathList& path);
     
     /**
      * Given a path to an aircraft-related resource file, resolve it
