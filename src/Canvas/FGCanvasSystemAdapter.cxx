@@ -91,7 +91,7 @@ namespace canvas
     {
       SGPath tpath = globals->resolve_resource_path(path);
       if( !tpath.isNull() )
-        return osgDB::readRefImageFile(tpath.c_str());
+        return osgDB::readRefImageFile(tpath.local8BitStr());
 
       SG_LOG(SG_IO, SG_ALERT, "canvas::Image: No such image: '" << path << "'");
     }

@@ -221,7 +221,7 @@ void fgSetDefaults ()
     fgSetString("/sim/multiplay/txhost", "");
     fgSetInt("/sim/multiplay/rxport", 0);
     fgSetInt("/sim/multiplay/txport", 0);
-    
+
     SGPropertyNode* v = globals->get_props()->getNode("/sim/version", true);
     v->setValueReadOnly("flightgear", FLIGHTGEAR_VERSION);
     v->setValueReadOnly("simgear", SG_STRINGIZE(SIMGEAR_VERSION));
@@ -237,7 +237,7 @@ void fgSetDefaults ()
 #else
     v->setValueReadOnly("nightly-build", false);
 #endif
-    
+
     char* envp = ::getenv( "http_proxy" );
     if( envp != NULL )
       fgSetupProxy( envp );
@@ -255,33 +255,33 @@ public:
     {
         _minStatus = getNumMaturity(fgGetString("/sim/aircraft-min-status", "all"));
     }
-    
-    
+
+
     void show(const vector<SGPath> & path_list)
     {
 		for (vector<SGPath>::const_iterator p = path_list.begin();
 			 p != path_list.end(); ++p)
 			visitDir(*p, 0);
-        
+
         simgear::requestConsole(); // ensure console is shown on Windows
-        
+
         std::sort(_aircraft.begin(), _aircraft.end(), ciLessLibC());
         cout << "Available aircraft:" << endl;
         for ( unsigned int i = 0; i < _aircraft.size(); i++ ) {
             cout << _aircraft[i] << endl;
         }
     }
-    
+
 private:
     virtual VisitResult visit(const SGPath& path)
     {
         SGPropertyNode root;
         try {
-            readProperties(path.str(), &root);
+            readProperties(path, &root);
         } catch (sg_exception& ) {
             return VISIT_CONTINUE;
         }
-        
+
         int maturity = 0;
         string descStr("   ");
         descStr += path.file();
@@ -290,7 +290,7 @@ private:
         if (nPos == (int)(descStr.size() - 8)) {
             descStr.resize(nPos);
         }
-        
+
         SGPropertyNode *node = root.getNode("sim");
         if (node) {
             SGPropertyNode* desc = node->getNode("description");
@@ -298,7 +298,7 @@ private:
             if (node->hasValue("status")) {
                 maturity = getNumMaturity(node->getStringValue("status"));
             }
-            
+
             if (desc) {
                 if (descStr.size() <= 27+3) {
                     descStr.append(29+3-descStr.size(), ' ');
@@ -309,32 +309,32 @@ private:
                 descStr += desc->getStringValue();
             }
         } // of have 'sim' node
-        
+
         if (maturity >= _minStatus) {
             _aircraft.push_back(descStr);
         }
-        
+
         return VISIT_CONTINUE;
     }
-    
-    
+
+
     int getNumMaturity(const char * str)
     {
         // changes should also be reflected in $FG_ROOT/data/options.xml &
         // $FG_ROOT/data/Translations/string-default.xml
         const char* levels[] = {"alpha","beta","early-production","production"};
-        
+
         if (!strcmp(str, "all")) {
             return 0;
         }
-        
+
         for (size_t i=0; i<(sizeof(levels)/sizeof(levels[0]));i++)
             if (strcmp(str,levels[i])==0)
                 return i;
-        
+
         return 0;
     }
-    
+
     // recommended in Meyers, Effective STL when internationalization and embedded
     // NULLs aren't an issue.  Much faster than the STL or Boost lex versions.
     struct ciLessLibC : public std::binary_function<string, string, bool>
@@ -344,7 +344,7 @@ private:
             return strcasecmp(lhs.c_str(), rhs.c_str()) < 0 ? 1 : 0;
         }
     };
-    
+
     int _minStatus;
     string_list _aircraft;
 };
@@ -360,7 +360,7 @@ void fgShowAircraft(const vector<SGPath> &path_list)
 {
     ShowAircraft s;
     s.show(path_list);
-    
+
 #ifdef _MSC_VER
     cout << "Hit a key to continue..." << endl;
     std::cin.get();
@@ -1411,22 +1411,22 @@ fgOptSetProperty(const char* raw)
   string::size_type pos = arg.find('=');
   if (pos == arg.npos || pos == 0 || pos + 1 == arg.size())
     return FG_OPTIONS_ERROR;
-  
+
   string name = arg.substr(0, pos);
   string value = arg.substr(pos + 1);
   string type;
   pos = name.find(':');
-  
+
   if (pos != name.npos && pos != 0 && pos + 1 != name.size()) {
     type = name.substr(0, pos);
     name = name.substr(pos + 1);
   }
   SGPropertyNode *n = fgGetNode(name.c_str(), true);
-  
+
   bool writable = n->getAttribute(SGPropertyNode::WRITE);
   if (!writable)
     n->setAttribute(SGPropertyNode::WRITE, true);
-  
+
   bool ret = false;
   if (type.empty())
     ret = n->setUnspecifiedValue(value.c_str());
@@ -1442,7 +1442,7 @@ fgOptSetProperty(const char* raw)
     ret =  n->setIntValue(atoi(value.c_str()));
   else if (type == "b" || type == "bool")
     ret =  n->setBoolValue(value == "true" || atoi(value.c_str()) != 0);
-  
+
   if (!writable)
     n->setAttribute(SGPropertyNode::WRITE, false);
   return ret ? FG_OPTIONS_OK : FG_OPTIONS_ERROR;
@@ -1455,7 +1455,7 @@ fgOptLoadTape(const char* arg)
   class DelayedTapeLoader : SGPropertyChangeListener {
   public:
     DelayedTapeLoader( const char * tape ) :
-      _tape(tape)
+      _tape(SGPath::fromLocal8Bit(tape))
     {
       SGPropertyNode_ptr n = fgGetNode("/sim/signals/fdm-initialized", true);
       n->addChangeListener( this );
@@ -1470,14 +1470,14 @@ fgOptLoadTape(const char* arg)
       // tell the replay subsystem to load the tape
       FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
       SGPropertyNode_ptr arg = new SGPropertyNode();
-      arg->setStringValue("tape", _tape );
+      arg->setStringValue("tape", _tape.utf8Str() );
       arg->setBoolValue( "same-aircraft", 0 );
       replay->loadTape(arg);
 
       delete this; // commence suicide
     }
   private:
-    std::string _tape;
+    SGPath _tape;
 
   };
 
@@ -1739,24 +1739,24 @@ namespace flightgear
 /**
  * internal storage of a value->option binding
  */
-class OptionValue 
+class OptionValue
 {
 public:
   OptionValue(OptionDesc* d, const string& v) :
     desc(d), value(v)
   {;}
-  
+
   OptionDesc* desc;
   string value;
 };
 
 typedef std::vector<OptionValue> OptionValueVec;
 typedef std::map<string, OptionDesc*> OptionDescDict;
-  
+
 class Options::OptionsPrivate
 {
 public:
-  
+
   OptionValueVec::const_iterator findValue(const string& key) const
   {
     OptionValueVec::const_iterator it = values.begin();
@@ -1764,12 +1764,12 @@ public:
       if (!it->desc) {
         continue; // ignore markers
       }
-      
+
       if (it->desc->option == key) {
         return it;
       }
     } // of set values iteration
-    
+
     return it; // not found
   }
 
@@ -1785,26 +1785,26 @@ public:
                 return it;
             }
         } // of set values iteration
-        
+
         return it; // not found
     }
-  
+
   OptionDesc* findOption(const string& key) const
   {
     OptionDescDict::const_iterator it = options.find(key);
     if (it == options.end()) {
       return NULL;
     }
-    
+
     return it->second;
   }
-  
+
   int processOption(OptionDesc* desc, const string& arg_value)
   {
     if (!desc) {
       return FG_OPTIONS_OK; // tolerate marker options
     }
-    
+
     switch ( desc->type & 0xffff ) {
       case OPTION_BOOL:
         fgSetBool( desc->property, desc->b_param );
@@ -1865,14 +1865,14 @@ public:
           return FG_OPTIONS_ERROR;
         }
         break;
-        
+
       case OPTION_IGNORE:
         break;
     }
-    
+
     return FG_OPTIONS_OK;
   }
-    
+
   /**
    * insert a marker value into the values vector. This is necessary
    * when processing options, to ensure the correct ordering, where we scan
@@ -1882,7 +1882,7 @@ public:
   {
     values.push_back(OptionValue(NULL, "-"));
   }
-  
+
   /**
    * given a current iterator into the values, find the preceding group marker,
    * or return the beginning of the value vector.
@@ -1894,29 +1894,29 @@ public:
         return pos; // found a marker, we're done
       }
     }
-    
+
     return pos;
   }
-  
+
   bool showHelp,
     verbose,
     showAircraft,
     shouldLoadDefaultConfig;
-    
+
   OptionDescDict options;
   OptionValueVec values;
   simgear::PathList propertyFiles;
 };
-  
+
 Options* Options::sharedInstance()
 {
   if (shared_instance == NULL) {
     shared_instance = new Options;
   }
-  
+
   return shared_instance;
 }
-  
+
 Options::Options() :
   p(new OptionsPrivate())
 {
@@ -1924,7 +1924,7 @@ Options::Options() :
   p->verbose = false;
   p->showAircraft = false;
   p->shouldLoadDefaultConfig = true;
-  
+
 // build option map
   OptionDesc *desc = &fgOptionArray[ 0 ];
   while ( desc->option != 0 ) {
@@ -1932,11 +1932,11 @@ Options::Options() :
     ++desc;
   }
 }
-  
+
 Options::~Options()
 {
 }
-  
+
 void Options::init(int argc, char **argv, const SGPath& appDataPath)
 {
 // first, process the command line
@@ -1947,21 +1947,21 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
         inOptions = true;
         continue;
       }
-      
+
       int result = parseOption(argv[i]);
       processArgResult(result);
     } else {
     // XML properties file
-      SGPath f(argv[i]);
+        SGPath f = SGPath::fromLocal8Bit(argv[i]);
       if (!f.exists()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f.str());
+        SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f);
       } else {
         p->propertyFiles.push_back(f);
       }
     }
   } // of arguments iteration
   p->insertGroupMarker(); // command line is one group
-  
+
   // establish log-level before anything else - otherwise it is not possible
   // to show extra (debug/info/warning) messages for the start-up phase.
   fgOptLogLevel(valueForOption("log-level", "alert").c_str());
@@ -1970,43 +1970,38 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
     setupRoot(argc, argv);
     return;
   }
-  
+
 // then config files
   SGPath config;
-  std::string homedir;
-  if (getenv("HOME")) {
-    homedir = getenv("HOME");
-  }
-    
-  if( !homedir.empty() && !hostname.empty() ) {
+
+
+  if( !hostname.empty() ) {
     // Check for ~/.fgfsrc.hostname
-    config.set(homedir);
+    config = SGPath::home();
     config.append(".fgfsrc");
     config.concat( "." );
     config.concat( hostname );
     readConfig(config);
   }
-  
+
 // Check for ~/.fgfsrc
-  if( !homedir.empty() ) {
-    config.set(homedir);
+    config = SGPath::home();
     config.append(".fgfsrc");
     readConfig(config);
-  }
-  
+
 // check for a config file in app data
   SGPath appDataConfig(appDataPath);
   appDataConfig.append("fgfsrc");
   if (appDataConfig.exists()) {
     readConfig(appDataConfig);
   }
-  
+
 // setup FG_ROOT
   setupRoot(argc, argv);
-  
+
 // system.fgfsrc is disabled, as we no longer allow anything in fgdata to set
 // fg-root/fg-home/fg-aircraft and hence control what files Nasal can access
-  std::string name_for_error = homedir.empty() ? appDataConfig.str() : config.str();
+  std::string name_for_error = config.utf8Str();
   if( ! hostname.empty() ) {
     config = globals->get_fg_root();
     config.append( "system.fgfsrc" );
@@ -2014,7 +2009,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
     config.concat( hostname );
     if (config.exists()) {
       flightgear::fatalMessageBox("Unsupported configuration",
-        "You have a " + config.str() + " file, which is no longer processed for security reasons",
+        "You have a " + config.utf8Str() + " file, which is no longer processed for security reasons",
         "If you created this file intentionally, please move it to " + name_for_error);
     }
   }
@@ -2023,7 +2018,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   config.append( "system.fgfsrc" );
   if (config.exists()) {
     flightgear::fatalMessageBox("Unsupported configuration",
-      "You have a " + config.str() + " file, which is no longer processed for security reasons",
+      "You have a " + config.utf8Str() + " file, which is no longer processed for security reasons",
       "If you created this file intentionally, please move it to " + name_for_error);
   }
 }
@@ -2050,14 +2045,14 @@ void Options::initAircraft()
   } else if (isOptionSet("vehicle")) {
     aircraft = valueForOption("vehicle");
   }
-    
+
   if (!aircraft.empty()) {
     SG_LOG(SG_INPUT, SG_INFO, "aircraft = " << aircraft );
     fgSetString("/sim/aircraft", aircraft.c_str() );
   } else {
     SG_LOG(SG_INPUT, SG_INFO, "No user specified aircraft, using default" );
   }
-    
+
   if (p->showAircraft) {
 	PathList path_list;
 
@@ -2079,7 +2074,7 @@ void Options::initAircraft()
     fgShowAircraft(path_list);
     exit(0);
   }
-  
+
   if (isOptionSet("aircraft-dir")) {
     SGPath aircraftDirPath(valueForOption("aircraft-dir"));
 
@@ -2098,7 +2093,7 @@ void Options::initAircraft()
         fgSetString("/sim/aircraft-state", stateName);
     }
 }
-  
+
 void Options::processArgResult(int result)
 {
   if ((result == FG_OPTIONS_HELP) || (result == FG_OPTIONS_ERROR))
@@ -2111,13 +2106,13 @@ void Options::processArgResult(int result)
     p->shouldLoadDefaultConfig = false;
   } else if (result == FG_OPTIONS_SHOW_SOUND_DEVICES) {
     SGSoundMgr smgr;
-    
+
     smgr.init();
     string vendor = smgr.get_vendor();
     string renderer = smgr.get_renderer();
     cout << renderer << " provided by " << vendor << endl;
     cout << endl << "No. Device" << endl;
-    
+
     vector <const char*>devices = smgr.get_available_devices();
     for (vector <const char*>::size_type i=0; i<devices.size(); i++) {
       cout << i << ".  \"" << devices[i] << "\"" << endl;
@@ -2129,30 +2124,30 @@ void Options::processArgResult(int result)
     exit(0);
   }
 }
-  
+
 void Options::readConfig(const SGPath& path)
 {
-  sg_gzifstream in( path.str() );
+  sg_gzifstream in( path );
   if ( !in.is_open() ) {
     return;
   }
-  
-  SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path.str() );
-  
+
+  SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path );
+
   in >> skipcomment;
   while ( ! in.eof() ) {
     string line;
     getline( in, line, '\n' );
-    
+
     // catch extraneous (DOS) line ending character
     int i;
     for (i = line.length(); i > 0; i--)
       if (line[i - 1] > 32)
         break;
     line = line.substr( 0, i );
-    
+
     if ( parseOption( line ) == FG_OPTIONS_ERROR ) {
-      cerr << endl << "Config file parse error: " << path.str() << " '"
+      cerr << endl << "Config file parse error: " << path << " '"
       << line << "'" << endl;
 	    p->showHelp = true;
     }
@@ -2161,7 +2156,7 @@ void Options::readConfig(const SGPath& path)
 
   p->insertGroupMarker(); // each config file is a group
 }
-  
+
 int Options::parseOption(const string& s)
 {
   if ((s == "--help") || (s=="-h")) {
@@ -2189,7 +2184,7 @@ int Options::parseOption(const string& s)
       SG_LOG(SG_GENERAL, SG_ALERT, "malformed property option:" << s);
       return FG_OPTIONS_ERROR;
     }
-    
+
     p->values.push_back(OptionValue(desc, s.substr(7)));
     return FG_OPTIONS_OK;
   } else if ( s.find( "--" ) == 0 ) {
@@ -2201,14 +2196,14 @@ int Options::parseOption(const string& s)
       key = s.substr( 2, eqPos - 2 );
       value = s.substr( eqPos + 1);
     }
-    
+
     return addOption(key, value);
   } else {
       flightgear::modalMessageBox("Unknown option", "Unknown command-line option: " + s);
     return FG_OPTIONS_ERROR;
   }
 }
-  
+
 int Options::addOption(const string &key, const string &value)
 {
   OptionDesc* desc = p->findOption(key);
@@ -2216,7 +2211,7 @@ int Options::addOption(const string &key, const string &value)
     flightgear::modalMessageBox("Unknown option", "Unknown command-line option: " + key);
     return FG_OPTIONS_ERROR;
   }
-  
+
   if (!(desc->type & OPTION_MULTI)) {
     OptionValueVec::const_iterator it = p->findValue(key);
     if (it != p->values.end()) {
@@ -2224,7 +2219,7 @@ int Options::addOption(const string &key, const string &value)
       return FG_OPTIONS_OK;
     }
   }
-  
+
   p->values.push_back(OptionValue(desc, value));
   return FG_OPTIONS_OK;
 }
@@ -2244,7 +2239,7 @@ int Options::setOption(const string &key, const string &value)
             p->values.erase(it);
         }
     }
-    
+
     p->values.push_back(OptionValue(desc, value));
     return FG_OPTIONS_OK;
 }
@@ -2262,14 +2257,14 @@ bool Options::isOptionSet(const string &key) const
   OptionValueVec::const_iterator it = p->findValue(key);
   return (it != p->values.end());
 }
-  
+
 string Options::valueForOption(const string& key, const string& defValue) const
 {
   OptionValueVec::const_iterator it = p->findValue(key);
   if (it == p->values.end()) {
     return defValue;
   }
-  
+
   return it->value;
 }
 
@@ -2281,16 +2276,16 @@ string_list Options::valuesForOption(const std::string& key) const
     if (!it->desc) {
       continue; // ignore marker values
     }
-    
+
     if (it->desc->option == key) {
       result.push_back(it->value);
     }
   }
-  
+
   return result;
 }
 
-string defaultDownloadDir()
+SGPath defaultDownloadDir()
 {
 #if defined(SG_WINDOWS)
     SGPath p(SGPath::documents());
@@ -2298,7 +2293,7 @@ string defaultDownloadDir()
 #else
     SGPath p(globals->get_fg_home());
 #endif
-    return p.str();
+    return p;
 }
 
 OptionResult Options::processOptions()
@@ -2313,7 +2308,7 @@ OptionResult Options::processOptions()
     showUsage();
       return FG_OPTIONS_EXIT;
   }
-  
+
   // processing order is complicated. We must process groups LIFO, but the
   // values *within* each group in FIFO order, to retain consistency with
   // older versions of FG, and existing user configs.
@@ -2325,17 +2320,17 @@ OptionResult Options::processOptions()
     OptionValueVec::const_iterator groupBegin = p->rfindGroup(groupEnd);
   // run over the group in FIFO order
     OptionValueVec::const_iterator it;
-    for (it = groupBegin; it != groupEnd; ++it) {      
+    for (it = groupBegin; it != groupEnd; ++it) {
       int result = p->processOption(it->desc, it->value);
       switch(result)
       {
           case FG_OPTIONS_ERROR:
               showUsage();
               return FG_OPTIONS_ERROR;
-              
+
           case FG_OPTIONS_EXIT:
               return FG_OPTIONS_EXIT;
-              
+
           default:
               break;
       }
@@ -2343,14 +2338,14 @@ OptionResult Options::processOptions()
             SG_LOG(SG_GENERAL, SG_INFO, "\toption:" << it->desc->option << " = " << it->value);
         }
     }
-    
+
     groupEnd = groupBegin;
   }
 
   BOOST_FOREACH(const SGPath& file, p->propertyFiles) {
     SG_LOG(SG_GENERAL, SG_INFO,
-           "Reading command-line property file " << file.str());
-	  readProperties(file.str(), globals->get_props());
+           "Reading command-line property file " << file);
+	  readProperties(file, globals->get_props());
   }
 
 // now options are process, do supplemental fixup
@@ -2360,8 +2355,8 @@ OptionResult Options::processOptions()
   }
 
 // download dir fix-up
-    string downloadDir = simgear::strutils::strip(fgGetString("/sim/paths/download-dir"));
-    if (downloadDir.empty()) {
+    SGPath downloadDir = SGPath::fromUtf8(fgGetString("/sim/paths/download-dir"));
+    if (downloadDir.isNull()) {
         downloadDir = defaultDownloadDir();
         SG_LOG(SG_GENERAL, SG_INFO, "Using default download dir: " << downloadDir);
     } else {
@@ -2373,11 +2368,11 @@ OptionResult Options::processOptions()
     }
 
 // terrasync directory fixup
-    string terrasyncDir = simgear::strutils::strip(fgGetString("/sim/terrasync/scenery-dir"));
-  if (terrasyncDir.empty()) {
+    SGPath terrasyncDir = SGPath::fromUtf8(fgGetString("/sim/terrasync/scenery-dir"));
+  if (terrasyncDir.isNull()) {
       SGPath p(downloadDir);
       p.append("TerraSync");
-      terrasyncDir = p.str();
+      terrasyncDir = p;
 
       simgear::Dir d(terrasyncDir);
       if (!d.exists()) {
@@ -2385,7 +2380,7 @@ OptionResult Options::processOptions()
       }
 
 	  SG_LOG(SG_GENERAL, SG_INFO, "Using default TerraSync: " << terrasyncDir);
-      fgSetString("/sim/terrasync/scenery-dir", p.str());
+      fgSetString("/sim/terrasync/scenery-dir", p.utf8Str());
   } else {
       SG_LOG(SG_GENERAL, SG_INFO, "Using explicit TerraSync dir: " << terrasyncDir);
   }
@@ -2397,9 +2392,9 @@ OptionResult Options::processOptions()
     // is enabled or not. This allows us to toggle terrasync on/off at
     // runtime and have things work as expected
     const PathList& scenery_paths(globals->get_fg_scenery());
-    if (std::find(scenery_paths.begin(), scenery_paths.end(), SGPath(terrasyncDir)) == scenery_paths.end()) {
+    if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
         // terrasync dir is not in the scenery paths, add it
-        globals->append_fg_scenery(SGPath(terrasyncDir));
+        globals->append_fg_scenery(terrasyncDir);
     }
 
     if (addFGDataScenery) {
@@ -2412,14 +2407,14 @@ OptionResult Options::processOptions()
 
   return FG_OPTIONS_OK;
 }
-  
+
 void Options::showUsage() const
 {
   fgOptLogLevel( "alert" );
-  
+
   FGLocale *locale = globals->get_locale();
   SGPropertyNode options_root;
-  
+
   simgear::requestConsole(); // ensure console is shown on Windows
   cout << endl;
 
@@ -2430,7 +2425,7 @@ void Options::showUsage() const
     cout << "Make sure the file options.xml is located in the FlightGear base directory," << endl;
     cout << "and the location of the base directory is specified by setting $FG_ROOT or" << endl;
     cout << "by adding --fg-root=path as a program argument." << endl;
-    
+
     exit(-1);
   }
 
@@ -2451,23 +2446,23 @@ void Options::showUsage() const
   if (usage) {
     cout << usage << endl;
   }
-  
+
   vector<SGPropertyNode_ptr>section = options->getChildren("section");
   for (unsigned int j = 0; j < section.size(); j++) {
     string msg = "";
-    
+
     vector<SGPropertyNode_ptr>option = section[j]->getChildren("option");
     for (unsigned int k = 0; k < option.size(); k++) {
-      
+
       SGPropertyNode *name = option[k]->getNode("name");
       SGPropertyNode *short_name = option[k]->getNode("short");
       SGPropertyNode *key = option[k]->getNode("key");
       SGPropertyNode *arg = option[k]->getNode("arg");
       bool brief = option[k]->getNode("brief") != 0;
-      
+
       if ((brief || p->verbose) && name) {
         string tmp = name->getStringValue();
-        
+
         if (key){
           tmp.append(":");
           tmp.append(key->getStringValue());
@@ -2480,7 +2475,7 @@ void Options::showUsage() const
           tmp.append(", -");
           tmp.append(short_name->getStringValue());
         }
-        
+
         if (tmp.size() <= 25) {
           msg+= "   --";
           msg += tmp;
@@ -2492,7 +2487,7 @@ void Options::showUsage() const
         }
         // There may be more than one <description> tag associated
         // with one option
-        
+
         vector<SGPropertyNode_ptr> desc;
         desc = option[k]->getChildren("description");
         if (! desc.empty()) {
@@ -2503,20 +2498,20 @@ void Options::showUsage() const
             vector<SGPropertyNode_ptr>trans_desc = locale->getLocalizedStrings(t.c_str(),"options");
             for ( unsigned int m = 0; m < trans_desc.size(); m++ ) {
               string t_str = trans_desc[m]->getStringValue();
-              
+
               if ((m > 0) || ((l > 0) && m == 0)) {
                 msg.append( 32, ' ');
               }
-              
+
               // If the string is too large to fit on the screen,
               // then split it up in several pieces.
-              
+
               while ( t_str.size() > 47 ) {
-                
+
                 string::size_type m = t_str.rfind(' ', 47);
                 msg += t_str.substr(0, m) + '\n';
                 msg.append( 32, ' ');
-                
+
                 t_str.erase(t_str.begin(), t_str.begin() + m + 1);
               }
               msg += t_str + '\n';
@@ -2525,7 +2520,7 @@ void Options::showUsage() const
         }
       }
     }
-    
+
     const char* name = locale->getLocalizedString(section[j]->getStringValue("name"),"options");
     if (!msg.empty() && name) {
       cout << endl << name << ":" << endl;
@@ -2533,7 +2528,7 @@ void Options::showUsage() const
       msg.erase();
     }
   }
-  
+
   if ( !p->verbose ) {
     const char* verbose_help = locale->getLocalizedString(options->getStringValue("verbose-help"),"options");
     if (verbose_help)
@@ -2544,27 +2539,27 @@ void Options::showUsage() const
   std::cin.get();
 #endif
 }
-  
+
 #if defined(__CYGWIN__)
 SGPath Options::platformDefaultRoot() const
 {
-  return "../data";
+  return SGPath::fromUtf8("../data");
 }
 
 #elif defined(SG_WINDOWS)
 SGPath Options::platformDefaultRoot() const
 {
-  return "..\\data";
+  return SGPath::fromUtf8("..\\data");
 }
 #elif defined(SG_MAC)
 // platformDefaultRoot defined in CocoaHelpers.mm
 #else
 SGPath Options::platformDefaultRoot() const
 {
-  return SGPath(PKGLIBDIR);
+  return SGPath::fromUtf8(PKGLIBDIR);
 }
 #endif
-  
+
 void Options::setupRoot(int argc, char **argv)
 {
     SGPath root;
@@ -2592,8 +2587,8 @@ void Options::setupRoot(int argc, char **argv)
             SG_LOG(SG_GENERAL, SG_INFO, "Qt launcher set fg_root = " << root );
         }
     }
-  } 
-  
+  }
+
   globals->set_fg_root(root);
     static char required_version[] = FLIGHTGEAR_VERSION;
     string base_version = fgBasePackageVersion(root);
@@ -2616,7 +2611,7 @@ void Options::setupRoot(int argc, char **argv)
 
         exit(-1);
     }
-    
+
     if (base_version != required_version) {
       flightgear::fatalMessageBox("Base package version mismatch",
                                   "Version check failed: please check your installation.",
@@ -2628,7 +2623,7 @@ void Options::setupRoot(int argc, char **argv)
   }
 #endif
 }
-  
+
 bool Options::shouldLoadDefaultConfig() const
 {
   return p->shouldLoadDefaultConfig;
@@ -2655,9 +2650,8 @@ bool Options::checkForArg(int argc, char* argv[], const char* checkArg)
             return true;
         }
     }
-    
+
     return false;
 }
-    
-} // of namespace flightgear
 
+} // of namespace flightgear

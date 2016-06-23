@@ -42,7 +42,7 @@ namespace flightgear
      * Documents (FlightGear), on Unixes we default to FG_HOME, which is
      * typically invisible.
      */
-    std::string defaultDownloadDir();
+    SGPath defaultDownloadDir();
 
 /// option processing can have various result values
 /// depending on what the user requested. Note processOptions only

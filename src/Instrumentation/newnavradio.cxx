@@ -307,12 +307,12 @@ void NavRadioComponent::update( double dt, const SGGeod & aircraftPosition )
 
 /* ---------------------------------------------------------------- */
 
-static std::string VORTablePath( const char * name )
+static SGPath VORTablePath( const char * name )
 {
     SGPath path( globals->get_fg_root() );
     path.append( "Navaids" );
     path.append(name);
-    return path.str();
+    return path;
 }
 
 class VOR : public NavRadioComponentWithIdent {

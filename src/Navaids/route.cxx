@@ -63,7 +63,7 @@ bool isMachRestrict(RouteRestriction rr)
 {
   return (rr == SPEED_RESTRICT_MACH) || (rr == SPEED_COMPUTED_MACH);
 }
-  
+
 Waypt::Waypt(RouteBase* aOwner) :
   _altitudeFt(0.0),
   _speed(0.0),
@@ -78,23 +78,23 @@ Waypt::Waypt(RouteBase* aOwner) :
 Waypt::~Waypt()
 {
 }
-  
+
 std::string Waypt::ident() const
 {
   return "";
 }
-  
+
 bool Waypt::flag(WayptFlag aFlag) const
 {
   return ((_flags & aFlag) != 0);
 }
-	
+
 void Waypt::setFlag(WayptFlag aFlag, bool aV)
 {
     if (aFlag == 0) {
         throw sg_range_exception("invalid waypoint flag set");
     }
-    
+
   _flags = (_flags & ~aFlag);
   if (aV) _flags |= aFlag;
 }
@@ -105,7 +105,7 @@ bool Waypt::matches(Waypt* aOther) const
   if (ident() != aOther->ident()) { // cheap check first
     return false;
   }
-  
+
   return matches(aOther->position());
 }
 
@@ -133,7 +133,7 @@ double Waypt::speedKts() const
   assert(_speedRestrict != SPEED_RESTRICT_MACH);
   return speed();
 }
-  
+
 double Waypt::speedMach() const
 {
   assert(_speedRestrict == SPEED_RESTRICT_MACH);
@@ -145,19 +145,19 @@ double Waypt::magvarDeg() const
   if (_magVarDeg == NO_MAG_VAR) {
     // derived classes with a default pos must override this method
     assert(!(position() == SGGeod()));
-    
+
     double jd = globals->get_time_params()->getJD();
     _magVarDeg = sgGetMagVar(position(), jd) * SG_RADIANS_TO_DEGREES;
   }
-  
+
   return _magVarDeg;
 }
-  
+
 double Waypt::headingRadialDeg() const
 {
   return 0.0;
 }
-  
+
 ///////////////////////////////////////////////////////////////////////////
 // persistence
 
@@ -170,9 +170,9 @@ static RouteRestriction restrictionFromString(const char* aStr)
   if (l == "below") return RESTRICT_BELOW;
   if (l == "none") return RESTRICT_NONE;
   if (l == "mach") return SPEED_RESTRICT_MACH;
-  
+
   if (l.empty()) return RESTRICT_NONE;
-  throw sg_io_exception("unknown restriction specification:" + l, 
+  throw sg_io_exception("unknown restriction specification:" + l,
     "Route restrictFromString");
 }
 
@@ -184,7 +184,7 @@ static const char* restrictionToString(RouteRestriction aRestrict)
   case RESTRICT_ABOVE: return "above";
   case RESTRICT_NONE: return "none";
   case SPEED_RESTRICT_MACH: return "mach";
-  
+
   default:
     throw sg_exception("invalid route restriction",
       "Route restrictToString");
@@ -222,17 +222,17 @@ Waypt* Waypt::createInstance(RouteBase* aOwner, const std::string& aTypeName)
     throw sg_exception("broken factory method for type:" + aTypeName,
       "Waypt::createInstance");
   }
-  
+
   return r;
 }
 
 WayptRef Waypt::createFromProperties(RouteBase* aOwner, SGPropertyNode_ptr aProp)
 {
   if (!aProp->hasChild("type")) {
-    throw sg_io_exception("bad props node, no type provided", 
+    throw sg_io_exception("bad props node, no type provided",
       "Waypt::createFromProperties");
   }
-  
+
   try {
     WayptRef nd(createInstance(aOwner, aProp->getStringValue("type")));
     nd->initFromProperties(aProp);
@@ -240,14 +240,14 @@ WayptRef Waypt::createFromProperties(RouteBase* aOwner, SGPropertyNode_ptr aProp
   } catch (sg_exception& e) {
     SG_LOG(SG_GENERAL, SG_WARN, "failed to create waypoint, trying basic:" << e.getMessage());
   }
-  
+
 // if we failed to make the waypoint, try again making a basic waypoint.
 // this handles the case where a navaid waypoint is missing, for example
   WayptRef nd(new BasicWaypt(aOwner));
   nd->initFromProperties(aProp);
   return nd;
 }
-  
+
 void Waypt::saveAsNode(SGPropertyNode* n) const
 {
   n->setStringValue("type", type());
@@ -257,40 +257,40 @@ void Waypt::saveAsNode(SGPropertyNode* n) const
 void Waypt::initFromProperties(SGPropertyNode_ptr aProp)
 {
   if (aProp->hasChild("generated")) {
-    setFlag(WPT_GENERATED, aProp->getBoolValue("generated")); 
+    setFlag(WPT_GENERATED, aProp->getBoolValue("generated"));
   }
-  
+
   if (aProp->hasChild("overflight")) {
-    setFlag(WPT_OVERFLIGHT, aProp->getBoolValue("overflight")); 
+    setFlag(WPT_OVERFLIGHT, aProp->getBoolValue("overflight"));
   }
-  
+
   if (aProp->hasChild("arrival")) {
-    setFlag(WPT_ARRIVAL, aProp->getBoolValue("arrival")); 
+    setFlag(WPT_ARRIVAL, aProp->getBoolValue("arrival"));
   }
-  
+
   if (aProp->hasChild("approach")) {
     setFlag(WPT_APPROACH, aProp->getBoolValue("approach"));
   }
-  
+
   if (aProp->hasChild("departure")) {
-    setFlag(WPT_DEPARTURE, aProp->getBoolValue("departure")); 
+    setFlag(WPT_DEPARTURE, aProp->getBoolValue("departure"));
   }
-  
+
   if (aProp->hasChild("miss")) {
-    setFlag(WPT_MISS, aProp->getBoolValue("miss")); 
+    setFlag(WPT_MISS, aProp->getBoolValue("miss"));
   }
-  
+
   if (aProp->hasChild("alt-restrict")) {
     _altRestrict = restrictionFromString(aProp->getStringValue("alt-restrict"));
     _altitudeFt = aProp->getDoubleValue("altitude-ft");
   }
-  
+
   if (aProp->hasChild("speed-restrict")) {
     _speedRestrict = restrictionFromString(aProp->getStringValue("speed-restrict"));
     _speed = aProp->getDoubleValue("speed");
   }
-  
-  
+
+
 }
 
 void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -302,28 +302,28 @@ void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const
   if (flag(WPT_DEPARTURE)) {
     aProp->setBoolValue("departure", true);
   }
-  
+
   if (flag(WPT_ARRIVAL)) {
     aProp->setBoolValue("arrival", true);
   }
-  
+
   if (flag(WPT_APPROACH)) {
     aProp->setBoolValue("approach", true);
   }
-  
+
   if (flag(WPT_MISS)) {
     aProp->setBoolValue("miss", true);
   }
-  
+
   if (flag(WPT_GENERATED)) {
     aProp->setBoolValue("generated", true);
   }
-  
+
   if (_altRestrict != RESTRICT_NONE) {
     aProp->setStringValue("alt-restrict", restrictionToString(_altRestrict));
     aProp->setDoubleValue("altitude-ft", _altitudeFt);
   }
-  
+
   if (_speedRestrict != RESTRICT_NONE) {
     aProp->setStringValue("speed-restrict", restrictionToString(_speedRestrict));
     aProp->setDoubleValue("speed", _speed);
@@ -333,22 +333,21 @@ void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const
 void RouteBase::dumpRouteToKML(const WayptVec& aRoute, const std::string& aName)
 {
   SGPath p = "/Users/jmt/Desktop/" + aName + ".kml";
-  std::fstream f;
-  f.open(p.str().c_str(), fstream::out | fstream::app);
+  sg_ofstream f(p);
   if (!f.is_open()) {
-    SG_LOG(SG_NAVAID, SG_WARN, "unable to open:" << p.str());
+    SG_LOG(SG_NAVAID, SG_WARN, "unable to open:" << p);
     return;
   }
-  
+
 // pre-amble
   f << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
       "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
     "<Document>\n";
 
   dumpRouteToKMLLineString(aName, aRoute, f);
-  
+
 // post-amble
-  f << "</Document>\n" 
+  f << "</Document>\n"
     "</kml>" << endl;
   f.close();
 }
@@ -362,13 +361,13 @@ void RouteBase::dumpRouteToKMLLineString(const std::string& aIdent,
   aStream << "<LineString>\n";
   aStream << "<tessellate>1</tessellate>\n";
   aStream << "<coordinates>\n";
-  
+
   // waypoints
   for (unsigned int i=0; i<aRoute.size(); ++i) {
     SGGeod pos = aRoute[i]->position();
     aStream << pos.getLongitudeDeg() << "," << pos.getLatitudeDeg() << " " << endl;
   }
-  
+
   // postable
   aStream << "</coordinates>\n"
     "</LineString>\n"
@@ -380,14 +379,14 @@ void RouteBase::loadAirportProcedures(const SGPath& aPath, FGAirport* aApt)
   assert(aApt);
   try {
     NavdataVisitor visitor(aApt, aPath);
-    readXML(aPath.str(), visitor);
+      readXML(aPath.local8BitStr(), visitor);
   } catch (sg_io_exception& ex) {
-    SG_LOG(SG_NAVAID, SG_WARN, "failure parsing procedures: " << aPath.str() <<
+    SG_LOG(SG_NAVAID, SG_WARN, "failure parsing procedures: " << aPath <<
       "\n\t" << ex.getMessage() << "\n\tat:" << ex.getLocation().asString());
   } catch (sg_exception& ex) {
-    SG_LOG(SG_NAVAID, SG_WARN, "failure parsing procedures: " << aPath.str() <<
+    SG_LOG(SG_NAVAID, SG_WARN, "failure parsing procedures: " << aPath <<
       "\n\t" << ex.getMessage());
   }
 }
-  
+
 } // of namespace flightgear

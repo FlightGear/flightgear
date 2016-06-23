@@ -261,8 +261,10 @@ bool UGTrack::load_flight( const string &path ) {
 
     // open the gps file
     file = path; file.append( "gps.dat.gz" );
-    if ( (fgps = gzopen( file.c_str(), "r" )) == NULL ) {
-        printf("Cannot open %s\n", file.c_str());
+    std::string fdata = file.local8BitStr();
+
+    if ( (fgps = gzopen( fdata.c_str(), "r" )) == NULL ) {
+        printf("Cannot open %s\n", fdata.c_str());
         return false;
     }
 
@@ -274,8 +276,9 @@ bool UGTrack::load_flight( const string &path ) {
 
     // open the imu file
     file = path; file.append( "imu.dat.gz" );
-    if ( (fimu = gzopen( file.c_str(), "r" )) == NULL ) {
-        printf("Cannot open %s\n", file.c_str());
+    fdata = file.local8BitStr();
+    if ( (fimu = gzopen( fdata.c_str(), "r" )) == NULL ) {
+        printf("Cannot open %s\n", fdata.c_str());
         return false;
     }
 
@@ -287,8 +290,10 @@ bool UGTrack::load_flight( const string &path ) {
 
     // open the nav file
     file = path; file.append( "nav.dat.gz" );
-    if ( (fnav = gzopen( file.c_str(), "r" )) == NULL ) {
-        printf("Cannot open %s\n", file.c_str());
+    fdata = file.local8BitStr();
+
+    if ( (fnav = gzopen( fdata.c_str(), "r" )) == NULL ) {
+        printf("Cannot open %s\n", fdata.c_str());
         return false;
     }
 
@@ -301,8 +306,10 @@ bool UGTrack::load_flight( const string &path ) {
 
     // open the servo file
     file = path; file.append( "servo.dat.gz" );
-    if ( (fservo = gzopen( file.c_str(), "r" )) == NULL ) {
-        printf("Cannot open %s\n", file.c_str());
+    fdata = file.local8BitStr();
+
+    if ( (fservo = gzopen( fdata.c_str(), "r" )) == NULL ) {
+        printf("Cannot open %s\n", fdata.c_str());
         return false;
     }
 
@@ -314,8 +321,10 @@ bool UGTrack::load_flight( const string &path ) {
 
     // open the health file
     file = path; file.append( "health.dat.gz" );
-    if ( (fhealth = gzopen( file.c_str(), "r" )) == NULL ) {
-        printf("Cannot open %s\n", file.c_str());
+    fdata = file.local8BitStr();
+
+    if ( (fhealth = gzopen( fdata.c_str(), "r" )) == NULL ) {
+        printf("Cannot open %s\n", fdata.c_str());
         return false;
     }
 

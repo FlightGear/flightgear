@@ -397,7 +397,7 @@ bool FGAIBase::init(bool search_in_AI_path)
         BOOST_FOREACH(SGPath p, globals->get_data_paths("AI")) {
             p.append(model_path);
             if (p.exists()) {
-                f = p.str();
+                f = p.local8BitStr();
                 break;
             }
         } // of AI data paths iteration

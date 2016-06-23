@@ -91,8 +91,8 @@ private:
     double get_end_time();
 
     bool listTapes(bool SameAircraftFilter, const SGPath& tapeDirectory);
-    bool saveTape(const char* Filename, SGPropertyNode* MetaData);
-    bool loadTape(const char* Filename, bool Preview, SGPropertyNode* UserData);
+    bool saveTape(const SGPath& Filename, SGPropertyNode* MetaData);
+    bool loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserData);
 
     double sim_time;
     double last_mt_time;

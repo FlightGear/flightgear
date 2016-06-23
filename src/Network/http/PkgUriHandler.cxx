@@ -96,7 +96,8 @@ static cJSON * CatalogToJson( simgear::pkg::Catalog * c )
   cJSON * json = cJSON_CreateObject();
   if( c ) {
     cJSON_AddItemToObject(json, "id", cJSON_CreateString( c->id().c_str() ));
-    cJSON_AddItemToObject(json, "installRoot", cJSON_CreateString( c->installRoot().str().c_str() ));
+    std::string s = c->installRoot().utf8Str();
+    cJSON_AddItemToObject(json, "installRoot", cJSON_CreateString( s.c_str() ));
     cJSON_AddItemToObject(json, "url", cJSON_CreateString( c->url().c_str() ));
     cJSON_AddItemToObject(json, "description", cJSON_CreateString( c->description().c_str() ));
     cJSON_AddItemToObject(json, "packages", PackageListToJson(c->packages()) );
@@ -112,8 +113,8 @@ static string PackageRootCommand( simgear::pkg::Root* packageRoot, const string 
   cJSON * json = cJSON_CreateObject();
 
   if( command == "path" ) {
-
-    cJSON_AddItemToObject(json, "path", cJSON_CreateString( packageRoot->path().str().c_str() ));
+    std::string p = packageRoot->path().utf8Str();
+    cJSON_AddItemToObject(json, "path", cJSON_CreateString( p.c_str() ));
 
   } else if( command == "version" ) {
 

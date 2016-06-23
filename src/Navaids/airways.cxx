@@ -129,10 +129,10 @@ void Airway::load(const SGPath& path)
   //int airwayIndex = 0;
   //FGNode *n;
 
-  sg_gzifstream in( path.str() );
+  sg_gzifstream in( path );
   if ( !in.is_open() ) {
-    SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
-    throw sg_io_exception("Could not open airways data", sg_location(path.str()));
+    SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path );
+    throw sg_io_exception("Could not open airways data", path);
   }
 // toss the first two lines of the file
   in >> skipeol;

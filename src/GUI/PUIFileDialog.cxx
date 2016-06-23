@@ -51,14 +51,14 @@ void PUIFileDialog::exec()
     
     SGPropertyNode_ptr dlg = _dialogRoot->getChild("dialog", 0, true);
     SGPath dlgXML = globals->resolve_resource_path("gui/dialogs/file-select.xml");
-    readProperties(dlgXML.str(), dlg);
+    readProperties(dlgXML, dlg);
     
     dlg->setStringValue("name", name);
     gui->newDialog(dlg);
     
     _dialogRoot->setStringValue("title", _title);
     _dialogRoot->setStringValue("button", _buttonText);
-    _dialogRoot->setStringValue("directory", _initialPath.str());
+    _dialogRoot->setStringValue("directory", _initialPath.utf8Str());
     _dialogRoot->setStringValue("selection", _placeholder);
     
 // convert patterns vector into pattern nodes

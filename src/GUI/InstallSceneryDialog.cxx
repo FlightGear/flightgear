@@ -141,7 +141,7 @@ InstallSceneryDialog::InstallSceneryDialog(QWidget *parent, QString downloadDir)
 {
     ui->setupUi(this);
     if (m_downloadDir.isEmpty()) {
-        m_downloadDir = QString::fromStdString(flightgear::defaultDownloadDir());
+        m_downloadDir = QString::fromStdString(flightgear::defaultDownloadDir().utf8Str());
     }
 
     QString baseIntroString = ui->introText->text();

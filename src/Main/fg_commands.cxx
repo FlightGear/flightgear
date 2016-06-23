@@ -539,12 +539,12 @@ do_materials_reload (const SGPropertyNode * arg)
     SGPath mpath( globals->get_fg_root() );
     mpath.append( fgGetString("/sim/rendering/materials-file") );
     bool loaded = new_matlib->load(globals->get_fg_root().local8BitStr(),
-                                  mpath.str(), 
+                                  mpath.local8BitStr(),
                                   globals->get_props());
 
     if ( ! loaded ) {
        SG_LOG( SG_GENERAL, SG_ALERT,
-               "Error loading materials file " << mpath.str() );
+               "Error loading materials file " << mpath );
        return false;
     }  
 
@@ -1121,7 +1121,7 @@ static bool
 do_load_xml_to_proptree(const SGPropertyNode * arg)
 {
     SGPath file(arg->getStringValue("filename"));
-    if (file.str().empty())
+    if (file.isNull())
         return false;
 
     if (file.extension() != "xml")
@@ -1130,27 +1130,27 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
     std::string icao = arg->getStringValue("icao");
     if (icao.empty()) {
         if (file.isRelative()) {
-          SGPath absPath = globals->resolve_maybe_aircraft_path(file.str());
+          SGPath absPath = globals->resolve_maybe_aircraft_path(file.utf8Str());
           if (!absPath.isNull())
               file = absPath;
           else
           {
               SG_LOG(SG_IO, SG_ALERT, "loadxml: Cannot find XML property file '"  
-                          << file.str() << "'.");
+                          << file << "'.");
               return false;
           }
         }
     } else {
-        if (!XMLLoader::findAirportData(icao, file.str(), file)) {
+        if (!XMLLoader::findAirportData(icao, file.utf8Str(), file)) {
           SG_LOG(SG_IO, SG_INFO, "loadxml: failed to find airport data for "
-            << file.str() << " at ICAO:" << icao);
+            << file << " at ICAO:" << icao);
           return false;
         }
     }
     
     std::string validated_path = fgValidatePath(file, false);
     if (validated_path.empty()) {
-        SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file.str() << "' denied "
+        SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file << "' denied "
                 "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, add them to --fg-aircraft)");
         return false;
     }
@@ -1225,7 +1225,7 @@ static bool
 do_save_xml_from_proptree(const SGPropertyNode * arg)
 {
     SGPath file(arg->getStringValue("filename"));
-    if (file.str().empty())
+    if (file.isNull())
         return false;
 
     if (file.extension() != "xml")
@@ -1233,7 +1233,7 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
 
     std::string validated_path = fgValidatePath(file, true);
     if (validated_path.empty()) {
-        SG_LOG(SG_IO, SG_ALERT, "savexml: writing to '" << file.str() << "' denied "
+        SG_LOG(SG_IO, SG_ALERT, "savexml: writing to '" << file << "' denied "
                 "(unauthorized directory - authorization no longer follows symlinks)");
         return false;
     }
@@ -1367,7 +1367,7 @@ do_set_scenery_paths(const SGPropertyNode* arg)
     // no scenery paths set *at all*, use the data in FG_ROOT
     SGPath root(globals->get_fg_root());
     root.append("Scenery");
-    globals->append_fg_scenery(root.str());
+    globals->append_fg_scenery(root);
   }
 
   return true;

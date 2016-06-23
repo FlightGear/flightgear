@@ -30,10 +30,10 @@
 
 
 static osg::Node *
-fgLoad3DModelPanel(const std::string &path, SGPropertyNode *prop_root)
+fgLoad3DModelPanel(const SGPath &path, SGPropertyNode *prop_root)
 {
     bool loadPanels = true;
-    osg::Node* node = simgear::SGModelLib::loadModel(path, prop_root, NULL, loadPanels);
+    osg::Node* node = simgear::SGModelLib::loadModel(path.local8BitStr(), prop_root, NULL, loadPanels);
     if (node)
         node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
     return node;
@@ -82,7 +82,7 @@ FGAircraftModel::init ()
         
         osg::Node* node = NULL;
         try {
-            node = fgLoad3DModelPanel( resolvedPath.str(), globals->get_props());
+            node = fgLoad3DModelPanel( resolvedPath, globals->get_props());
         } catch (const sg_exception &ex) {
             SG_LOG(SG_AIRCRAFT, SG_ALERT, "Failed to load aircraft from " << path << ':');
             SG_LOG(SG_AIRCRAFT, SG_ALERT, "  " << ex.getFormattedMessage());
@@ -110,7 +110,7 @@ FGAircraftModel::init ()
     // no models loaded, load the glider instead
     if (!_aircraft.get()) {
         SG_LOG(SG_AIRCRAFT, SG_ALERT, "(Falling back to glider.ac.)");
-        osg::Node* model = fgLoad3DModelPanel( "Models/Geometry/glider.ac",
+        osg::Node* model = fgLoad3DModelPanel( SGPath::fromLocal8Bit("Models/Geometry/glider.ac"),
                                    globals->get_props());
         _aircraft.reset(new SGModelPlacement);
         _aircraft->init(model);

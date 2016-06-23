@@ -216,15 +216,15 @@ FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
     path.append(path_str);
     SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings for '" <<
            localeNode->getStringValue("lang", "<none>")
-           <<"' from " << path.str());
+           <<"' from " << path);
 
     // load the actual file
     try
     {
-        readProperties(path.str(), stringNode->getNode(resource, 0, true));
+        readProperties(path, stringNode->getNode(resource, 0, true));
     } catch (const sg_exception &e)
     {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings from " << path.str() <<
+        SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings from " << path <<
                ". Error: " << e.getFormattedMessage());
         return false;
     }

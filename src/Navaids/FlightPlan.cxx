@@ -576,7 +576,7 @@ void FlightPlan::setApproach(flightgear::Approach *app)
   
 bool FlightPlan::save(const SGPath& path)
 {
-  SG_LOG(SG_NAVAID, SG_INFO, "Saving route to " << path.str());
+  SG_LOG(SG_NAVAID, SG_INFO, "Saving route to " << path);
   try {
     SGPropertyNode_ptr d(new SGPropertyNode);
     d->setIntValue("version", 2);
@@ -615,10 +615,10 @@ bool FlightPlan::save(const SGPath& path)
       Waypt* wpt = _legs[i]->waypoint();
       wpt->saveAsNode(routeNode->getChild("wp", i, true));
     } // of waypoint iteration
-    writeProperties(path.str(), d, true /* write-all */);
+    writeProperties(path, d, true /* write-all */);
     return true;
   } catch (sg_exception& e) {
-    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to save flight-plan '" << path.str() << "'. " << e.getMessage());
+    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to save flight-plan '" << path << "'. " << e.getMessage());
     return false;
   }
 }
@@ -627,12 +627,12 @@ bool FlightPlan::load(const SGPath& path)
 {
   if (!path.exists())
   {
-    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << path.str()
+    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << path
            << "'. The file does not exist.");
     return false;
   }
 
-  SG_LOG(SG_NAVAID, SG_INFO, "going to read flight-plan from:" << path.str());
+  SG_LOG(SG_NAVAID, SG_INFO, "going to read flight-plan from:" << path);
   
   bool Status = false;
   lockDelegate();
@@ -727,7 +727,7 @@ bool FlightPlan::loadGpxFormat(const SGPath& path)
     GpxXmlVisitor gpxVistor(this);
     try
     {
-        readXML(path.str(), gpxVistor);
+        readXML(path.local8BitStr(), gpxVistor);
     } catch (sg_exception& e)
     {
         // XML parsing fails => not a GPX XML file
@@ -750,7 +750,7 @@ bool FlightPlan::loadXmlFormat(const SGPath& path)
 {
   SGPropertyNode_ptr routeData(new SGPropertyNode);
   try {
-    readProperties(path.str(), routeData);
+    readProperties(path, routeData);
   } catch (sg_exception& e) {
      SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
              << "'. " << e.getMessage());
@@ -949,7 +949,7 @@ bool FlightPlan::loadPlainTextFormat(const SGPath& path)
       _legs.push_back(new Leg(this, w));
     } // of line iteration
   } catch (sg_exception& e) {
-    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load route from: '" << path.str() << "'. " << e.getMessage());
+    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load route from: '" << path << "'. " << e.getMessage());
     _legs.clear();
     return false;
   }

@@ -140,7 +140,7 @@ static void initTerrasync()
         }
     }
     
-    fgSetString("/sim/terrasync/cache-path", tsyncCache.c_str());
+    fgSetString("/sim/terrasync/cache-path", tsyncCache.utf8Str());
     
     simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync();
     terra_sync->setRoot(globals->get_props());
@@ -171,10 +171,10 @@ static void fgSetVideoOptions()
         }
         path.append(renderer+".xml");
         if (path.exists()) {
-            SG_LOG(SG_INPUT, SG_INFO, "Reading video settings from " << path.str());
+            SG_LOG(SG_INPUT, SG_INFO, "Reading video settings from " << path);
             try {
                 SGPropertyNode *r_prop = fgGetNode("/sim/rendering");
-                readProperties(path.str(), r_prop);
+                readProperties(path, r_prop);
             } catch (sg_exception& e) {
                 SG_LOG(SG_INPUT, SG_WARN, "failed to read video settings:" << e.getMessage()
                 << "(from " << e.getOrigin() << ")");

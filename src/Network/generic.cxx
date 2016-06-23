@@ -758,11 +758,11 @@ FGGeneric::reinit()
     path.append(file_name.c_str());
 
     SG_LOG(SG_NETWORK, SG_INFO, "Reading communication protocol from "
-                                << path.str());
+                                << path);
 
     SGPropertyNode root;
     try {
-        readProperties(path.str(), &root);
+        readProperties(path, &root);
     } catch (const sg_exception & ex) {
         SG_LOG(SG_NETWORK, SG_ALERT,
          "Unable to load the protocol configuration file: " << ex.getFormattedMessage() );

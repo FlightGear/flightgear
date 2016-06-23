@@ -361,7 +361,7 @@ void FGGlobals::append_fg_scenery (const SGPath &path, bool secure)
 
     // tell the ResouceManager about the scenery path
     // needed to load Models from this scenery path
-    simgear::ResourceManager::instance()->addBasePath(abspath.str(),
+    simgear::ResourceManager::instance()->addBasePath(abspath.local8BitStr(),
                                                       simgear::ResourceManager::PRIORITY_DEFAULT);
 
     simgear::Dir dir(abspath);
@@ -611,7 +611,7 @@ FGGlobals::resetPropertyRoot()
     SGPropertyNode *n = props->getNode("/sim", true);
     n->removeChild("fg-root", 0);
     n = n->getChild("fg-root", 0, true);
-    n->setStringValue(fg_root.c_str());
+    n->setStringValue(fg_root.utf8Str());
     n->setAttribute(SGPropertyNode::WRITE, false);
 }
 
@@ -637,9 +637,9 @@ FGGlobals::loadUserSettings(const SGPath& dataPath)
     SGPath autosaveFile = simgear::Dir(dataPath).file(autosaveName());
     SGPropertyNode autosave;
     if (autosaveFile.exists()) {
-      SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << autosaveFile.str());
+      SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << autosaveFile);
       try {
-          readProperties(autosaveFile.str(), &autosave, SGPropertyNode::USERARCHIVE);
+          readProperties(autosaveFile, &autosave, SGPropertyNode::USERARCHIVE);
       } catch (sg_exception& e) {
           SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
             << "(from " << e.getOrigin() << ")");
@@ -664,9 +664,9 @@ FGGlobals::saveUserSettings()
       SGPath autosaveFile(globals->get_fg_home());
       autosaveFile.append(autosaveName());
       autosaveFile.create_dir( 0700 );
-      SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile.str());
+      SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile);
       try {
-        writeProperties(autosaveFile.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+        writeProperties(autosaveFile, globals->get_props(), false, SGPropertyNode::USERARCHIVE);
       } catch (const sg_exception &e) {
         guiErrorMessage("Error writing autosave:", e);
       }

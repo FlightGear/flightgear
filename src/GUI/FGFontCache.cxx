@@ -207,7 +207,8 @@ bool FGFontCache::initializeFonts()
 {
     static std::string fontext("txf");
     init();
-    ulDir* fontdir = ulOpenDir(_path.c_str());
+    std::string fontPath = _path.local8BitStr();
+    ulDir* fontdir = ulOpenDir(fontPath.c_str());
     if (!fontdir)
         return false;
     const ulDirEnt *dirEntry;
@@ -216,7 +217,8 @@ bool FGFontCache::initializeFonts()
         path.append(dirEntry->d_name);
         if (path.extension() == fontext) {
             fntTexFont* f = new fntTexFont;
-            if (f->load((char *)path.c_str()))
+            std::string ps = path.local8BitStr();
+            if (f->load(ps.c_str()))
                 _texFonts[std::string(dirEntry->d_name)] = f;
             else
                 delete f;

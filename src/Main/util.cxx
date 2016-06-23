@@ -191,6 +191,6 @@ std::string fgValidatePath (const std::string& path, bool write)
     // no match found
     return "";
 }
-std::string fgValidatePath(const SGPath& path, bool write) { return fgValidatePath(path.str(),write); }
+std::string fgValidatePath(const SGPath& path, bool write) { return fgValidatePath(path.utf8Str(),write); }
 // end of util.cxx
 

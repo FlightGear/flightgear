@@ -231,7 +231,7 @@ static osg::Node* fgCreateSplashCamera()
   SGSharedPtr<SGPropertyNode> style = fgGetNode("/sim/gui/style[0]", true);
 
   osg::Texture2D* splashTexture = new osg::Texture2D;
-  splashTexture->setImage(osgDB::readImageFile(tpath.c_str()));
+  splashTexture->setImage(osgDB::readImageFile(tpath.local8BitStr()));
 
   osg::Camera* camera = new osg::Camera;
   camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
@@ -318,7 +318,7 @@ static osg::Node* fgCreateSplashCamera()
     FGFontCache* fontCache = FGFontCache::instance();
   osgText::Text* text = new osgText::Text;
   std::string fn = style->getStringValue("fonts/splash", "");
-  text->setFont(fontCache->getfntpath(fn).str());
+  text->setFont(fontCache->getfntpath(fn).local8BitStr());
   text->setCharacterSize(0.06);
   text->setColor(osg::Vec4(1, 1, 1, 1));
   text->setPosition(osg::Vec3(0, -0.92, 0));
@@ -329,7 +329,7 @@ static osg::Node* fgCreateSplashCamera()
   geode->addDrawable(text);
 
   osgText::Text* spinnertext = new osgText::Text;
-  spinnertext->setFont(fontCache->getfntpath(fn).str());
+  spinnertext->setFont(fontCache->getfntpath(fn).local8BitStr());
   spinnertext->setCharacterSize(0.06);
   spinnertext->setColor(osg::Vec4(1, 1, 1, 1));
   spinnertext->setPosition(osg::Vec3(0, -0.97, 0));
@@ -340,7 +340,7 @@ static osg::Node* fgCreateSplashCamera()
   geode->addDrawable(spinnertext);
 
   text = new osgText::Text;
-  text->setFont(fontCache->getfntpath(fn).str());
+  text->setFont(fontCache->getfntpath(fn).local8BitStr());
   text->setCharacterSize(0.08);
   text->setColor(osg::Vec4(1, 1, 1, 1));
   text->setPosition(osg::Vec3(0, 0.92, 0));
@@ -351,7 +351,7 @@ static osg::Node* fgCreateSplashCamera()
 
 
   text = new osgText::Text;
-  text->setFont(fontCache->getfntpath(fn).str());
+  text->setFont(fontCache->getfntpath(fn).local8BitStr());
   text->setCharacterSize(0.06);
   text->setColor(osg::Vec4(1, 1, 1, 1));
   text->setPosition(osg::Vec3(0, 0.82, 0));

@@ -181,7 +181,7 @@ bool openBrowser(const std::string& aAddress)
         SGPath path(address);
         path = globals->resolve_maybe_aircraft_path(address);
         if (!path.isNull())
-            address = path.str();
+            address = path.local8BitStr();
         else
         {
             mkDialog ("Sorry, file not found!");
@@ -521,7 +521,8 @@ namespace
         // to be executed in graphics context (maybe separate thread)
         void run(osg::GraphicsContext* gc)
         {
-            _result = sg_glDumpWindow(_path.c_str(),
+            std::string ps = _path.local8BitStr();
+            _result = sg_glDumpWindow(ps.c_str(),
                                      _xsize,
                                      _ysize);
         }
@@ -533,7 +534,7 @@ namespace
             {
                 globals->get_event_mgr()->removeTask("SnapShotTimer");
 
-                fgSetString("/sim/paths/screenshot-last", _path.c_str());
+                fgSetString("/sim/paths/screenshot-last", _path.utf8Str());
                 fgSetBool("/sim/signals/screenshot", _result);
 
                 fgSetMouseCursor(_mouse);

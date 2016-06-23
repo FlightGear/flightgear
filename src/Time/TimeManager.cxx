@@ -335,7 +335,7 @@ void TimeManager::updateLocalTime()
 {
   SGPath zone(globals->get_fg_root());
   zone.append("Timezone");
-  _impl->updateLocal(globals->get_aircraft_position(), zone.str());
+  _impl->updateLocal(globals->get_aircraft_position(), zone.local8BitStr());
 }
 
 void TimeManager::initTimeOffset()

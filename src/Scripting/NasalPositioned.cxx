@@ -1736,7 +1736,8 @@ static naRef f_route(naContext c, naRef me, int argc, naRef* args)
     flightgear::FlightPlan* fp = new flightgear::FlightPlan;
     SGPath path(naStr_data(args[0]));
     if (!path.exists()) {
-      naRuntimeError(c, "flightplan, no file at path %s", path.c_str());
+        std::string pdata = path.utf8Str();
+      naRuntimeError(c, "flightplan, no file at path %s", pdata.c_str());
     }
     
     if (!fp->load(path)) {

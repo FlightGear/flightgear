@@ -817,12 +817,12 @@ loadRawReplayData(gzContainerReader& input, FGFlightRecorder* pRecorder, replay_
 
 /** Write flight recorder tape with given filename and meta properties to disk */
 bool
-FGReplay::saveTape(const char* Filename, SGPropertyNode* MetaDataProps)
+FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps)
 {
     bool ok = true;
 
     /* open output stream *******************************************/
-    gzContainerWriter output(Filename, FlightRecorderFileMagic);
+    gzContainerWriter output(Filename.local8BitStr(), FlightRecorderFileMagic);
     if (!output.good())
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Cannot open file" << Filename);
@@ -921,7 +921,7 @@ FGReplay::saveTape(const SGPropertyNode* ConfigData)
     }
 
     if (ok)
-        ok &= saveTape(p.c_str(), myMetaData.get());
+        ok &= saveTape(p, myMetaData.get());
 
     if (ok)
         guiMessage("Flight recorder tape saved successfully!");
@@ -935,12 +935,12 @@ FGReplay::saveTape(const SGPropertyNode* ConfigData)
  * Actual data and signal configuration is not read when in "Preview" mode.
  */
 bool
-FGReplay::loadTape(const char* Filename, bool Preview, SGPropertyNode* UserData)
+FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserData)
 {
     bool ok = true;
 
     /* open input stream ********************************************/
-    gzContainerReader input(Filename, FlightRecorderFileMagic);
+    gzContainerReader input(Filename.local8BitStr(), FlightRecorderFileMagic);
     if (input.eof() || !input.good())
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Cannot open file " << Filename);
@@ -1142,6 +1142,6 @@ FGReplay::loadTape(const SGPropertyNode* ConfigData)
         tapeDirectory.append(tape);
         tapeDirectory.concat(".fgtape");
         SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Checking flight recorder file " << tapeDirectory << ", preview: " << Preview);
-        return loadTape(tapeDirectory.c_str(), Preview, UserData);
+        return loadTape(tapeDirectory, Preview, UserData);
     }
 }

@@ -151,19 +151,19 @@ bool FGATCMain::open() {
 	exit( -1 );
     }
 
-    if ( input0_path.str().length() ) {
+    if ( !input0_path.isNull() ) {
         input0 = new FGATCInput( 0, input0_path );
         input0->open();
     }
-    if ( input1_path.str().length() ) {
+    if ( !input1_path.isNull() ) {
         input1 = new FGATCInput( 1, input1_path );
         input1->open();
     }
-    if ( output0_path.str().length() ) {
+    if ( !output0_path.isNull() ) {
         output0 = new FGATCOutput( 0, output0_path );
         output0->open( lock0_fd );
     }
-    if ( output1_path.str().length() ) {
+    if ( !output1_path.isNull() ) {
         output1 = new FGATCOutput( 1, output1_path );
         output1->open( lock1_fd );
     }

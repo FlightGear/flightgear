@@ -596,11 +596,11 @@ FGRenderer::init( void )
     texture_path.append("Textures");
     texture_path.append("Sky");
     for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-        SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
+        SGCloudLayer * layer = new SGCloudLayer(texture_path.local8BitStr());
         _sky->add_cloud_layer(layer);
     }
     
-    _sky->texture_path( texture_path.str() );
+    _sky->texture_path( texture_path.local8BitStr() );
 
     if (!_classicalRenderer) {
         eventHandler->setChangeStatsCameraRenderOrder( true );

@@ -38,16 +38,16 @@ FGSystemMgr::FGSystemMgr ()
         SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
 
         SG_LOG( SG_SYSTEMS, SG_INFO, "Reading systems from "
-                << config.str() );
+                << config );
         try
         {
-          readProperties( config.str(), config_props );
+          readProperties( config, config_props );
           build(config_props);
         }
         catch( const sg_exception& )
         {
           SG_LOG( SG_SYSTEMS, SG_ALERT, "Failed to load systems system model: "
-                  << config.str() );
+                  << config );
         }
 
     } else {

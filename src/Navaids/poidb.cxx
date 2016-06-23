@@ -92,9 +92,9 @@ static PositionedID readPOIFromStream(std::istream& aStream, NavDataCache* cache
 // load and initialize the POI database
 bool poiDBInit(const SGPath& path)
 {
-    sg_gzifstream in( path.str() );
+    sg_gzifstream in( path );
     if ( !in.is_open() ) {
-        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
+        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path );
       return false;
     }
 

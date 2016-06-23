@@ -339,7 +339,7 @@ void AddOnsPage::updateUi()
 {
     QString s = m_downloadDir;
     if (s.isEmpty()) {
-        s = QString::fromStdString(flightgear::defaultDownloadDir());
+        s = QString::fromStdString(flightgear::defaultDownloadDir().utf8Str());
         s.append(tr(" (default)"));
         m_ui->clearDownloadDir->setEnabled(false);
     } else {

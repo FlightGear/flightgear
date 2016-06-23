@@ -31,6 +31,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sgstream.hxx>
 #include <simgear/props/props_io.hxx>
 #include <osg/GLU>
 
@@ -144,7 +145,7 @@ void HUD::init()
     _font_renderer->setPointSize(_font_size);
     _text_list.setFont(_font_renderer);
     _loaded = false;
-  
+
     currentColorChanged();
     _currentPath->fireValueChanged();
 }
@@ -157,13 +158,13 @@ void HUD::deinit()
     end = _ladders.end();
     for (it = _ladders.begin(); it != end; ++it)
         delete *it;
-        
+
   _items.clear();
   _ladders.clear();
-  
+
   delete _clip_box;
   _clip_box = NULL;
-  
+
   _loaded = false;
 }
 
@@ -374,9 +375,9 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
     }
 
     int ret = 0;
-    ifstream input(path.c_str());
+    sg_ifstream input(path);
     if (!input.good()) {
-        SG_LOG(SG_INPUT, SG_ALERT, "HUD: Cannot read configuration from '" << path.c_str() << "'");
+        SG_LOG(SG_INPUT, SG_ALERT, "HUD: Cannot read configuration from '" << path << "'");
         return 0x4;
     }
 
@@ -458,17 +459,17 @@ void HUD::valueChanged(SGPropertyNode *node)
     if (_listener_active)
         return;
     _listener_active = true;
-  
+
     bool loadNow = false;
     _visible = _visibility->getBoolValue();
     if (_visible && !_loaded) {
       loadNow = true;
     }
-  
+
     if (!strcmp(node->getName(), "current-path") && _visible) {
       loadNow = true;
     }
-  
+
     if (loadNow) {
       int pathIndex = _currentPath->getIntValue();
       SGPropertyNode* pathNode = fgGetNode("/sim/hud/path", pathIndex);
@@ -477,19 +478,19 @@ void HUD::valueChanged(SGPropertyNode *node)
         path = pathNode->getStringValue();
         SG_LOG(SG_INSTR, SG_INFO, "will load Hud from " << path);
       }
-      
+
       _loaded = true;
       load(path.c_str());
     }
-  
+
     if (!strcmp(node->getName(), "current-color")) {
         currentColorChanged();
     }
-    
+
     _scr_width = _scr_widthN->getIntValue();
     _scr_height = _scr_heightN->getIntValue();
 
-    
+
     _3Denabled = _3DenabledN->getBoolValue();
     _transparent = _transparency->getBoolValue();
     _antialiased = _antialiasing->getBoolValue();
@@ -511,12 +512,12 @@ void HUD::currentColorChanged()
   if (index < 0) {
     index = 0;
   }
-  
+
   n = n->getChild("color", index, false);
   if (!n) {
     return;
   }
-  
+
   if (n->hasValue("red"))
       _red->setFloatValue(n->getFloatValue("red", 1.0));
   if (n->hasValue("green"))
