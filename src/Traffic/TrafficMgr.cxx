@@ -166,7 +166,7 @@ public:
             SGPath path = globals->get_fg_root();
             path.append("/Traffic/");
             path.append(attval);
-            readXML(path.str(), *this);
+            readXML(path.local8BitStr(), *this);
         }
         elementValueStack.push_back("");
         //  cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl;
@@ -383,8 +383,8 @@ private:
             simgear::Dir d2(p);
             SG_LOG(SG_AI, SG_INFO, "parsing traffic in:" << p);
             simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
-            BOOST_FOREACH(SGPath xml, trafficFiles) {                
-                readXML(xml.str(), *this);
+            BOOST_FOREACH(SGPath xml, trafficFiles) {
+                readXML(xml.local8BitStr(), *this);
                 if (_cancelThread) {
                     return;
                 }
@@ -468,12 +468,12 @@ void FGTrafficManager::shutdown()
             // the trailing dir separator and then determines the directory part of the file path by searching
             // for the last dir separator. Effecively, this causes a full element of the directory tree to be
             // skipped. 
-            SG_LOG(SG_GENERAL, SG_DEBUG, "Trying to create dir for : " << cacheData.c_str());
+            SG_LOG(SG_GENERAL, SG_DEBUG, "Trying to create dir for : " << cacheData);
             if (!cacheData.exists()) {
                 cacheData.create_dir(0755);
             }
             saveData = true;
-            cachefile.open(cacheData.str().c_str());
+            cachefile.open(cacheData.local8BitStr());
             cachefile << "[TrafficManagerCachedata:ref:2011:09:04]" << endl;
             
         }
@@ -563,7 +563,7 @@ void FGTrafficManager::init()
                 // use a SchedulerParser to parse, but run it in this thread,
                 // i.e don't start it
                 ScheduleParseThread parser(this);
-                readXML(path.str(), parser);
+                readXML(path.local8BitStr(), parser);
             }
         } else if (path.extension() == "conf") {
             if (path.exists()) {
@@ -571,7 +571,7 @@ void FGTrafficManager::init()
             }
         } else {
              SG_LOG(SG_AI, SG_ALERT,
-                               "Unknown data format " << path.str()
+                               "Unknown data format " << path
                                 << " for traffic");
         }
         //exit(1);
@@ -627,11 +627,11 @@ void FGTrafficManager::loadHeuristics()
       cacheData.append(airport + "-cache.txt");
       string revisionStr;
       if (cacheData.exists()) {
-        std::ifstream data(cacheData.c_str());
+        std::ifstream data(cacheData.local8BitStr());
         data >> revisionStr;
         if (revisionStr != "[TrafficManagerCachedata:ref:2011:09:04]") {
           SG_LOG(SG_AI, SG_ALERT,"Traffic Manager Warning: discarding outdated cachefile " <<
-                 cacheData.c_str() << " for Airport " << airport);
+                 cacheData << " for Airport " << airport);
         } else {
           while (1) {
             Heuristic h; // = new Heuristic;
@@ -761,7 +761,8 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
     string buffString;
     vector <string> tokens, depTime,arrTime;
     vector <string>::iterator it;
-    std::ifstream infile(infileName.str().c_str());
+
+    std::ifstream infile(infileName.local8BitStr());
     while (1) {
          infile.getline(buffer, 256);
          if (infile.eof()) {
@@ -778,7 +779,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
          if (!tokens.empty()) {
              if (tokens[0] == string("AC")) {
                  if (tokens.size() != 13) {
-                     throw sg_io_exception("Error parsing traffic file @ " + buffString, sg_location(infileName.str()));
+                     throw sg_io_exception("Error parsing traffic file @ " + buffString, infileName);
                  }
                  
                  
@@ -801,7 +802,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
                  
                  if (!FGAISchedule::validModelPath(model)) {
                      SG_LOG(SG_AI, SG_WARN, "TrafficMgr: Missing model path:" <<
-                            model << " from " << infileName.str());
+                            model << " from " << infileName);
                  } else {
                  
                  SG_LOG(SG_AI, SG_INFO, "Adding Aircraft" << model << " " << livery << " " << homePort << " "
@@ -825,7 +826,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
              if (tokens[0] == string("FLIGHT")) {
                  //cerr << "Found flight " << buffString << " size is : " << tokens.size() << endl;
                  if (tokens.size() != 10) {
-                     SG_LOG(SG_AI, SG_ALERT, "Error parsing traffic file " << infileName.str() << " at " << buffString);
+                     SG_LOG(SG_AI, SG_ALERT, "Error parsing traffic file " << infileName << " at " << buffString);
                      exit(1);
                  }
                  string callsign = tokens[1];

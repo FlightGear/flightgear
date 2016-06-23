@@ -116,14 +116,14 @@ FGFX::init()
         return;
     }
     SG_LOG(SG_SOUND, SG_INFO, "Reading sound " << node->getName()
-           << " from " << path.str());
+           << " from " << path);
 
     SGPropertyNode root;
     try {
-        readProperties(path.str(), &root);
+        readProperties(path, &root);
     } catch (const sg_exception &) {
         SG_LOG(SG_SOUND, SG_ALERT,
-               "Error reading file '" << path.str() << '\'');
+               "Error reading file '" << path << '\'');
         return;
     }
 

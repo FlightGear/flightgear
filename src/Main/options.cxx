@@ -277,7 +277,7 @@ private:
     {
         SGPropertyNode root;
         try {
-            readProperties(path.str(), &root);
+            readProperties(path, &root);
         } catch (sg_exception& ) {
             return VISIT_CONTINUE;
         }
@@ -1455,7 +1455,7 @@ fgOptLoadTape(const char* arg)
   class DelayedTapeLoader : SGPropertyChangeListener {
   public:
     DelayedTapeLoader( const char * tape ) :
-      _tape(tape)
+      _tape(SGPath::fromLocal8Bit(tape))
     {
       SGPropertyNode_ptr n = fgGetNode("/sim/signals/fdm-initialized", true);
       n->addChangeListener( this );
@@ -1470,14 +1470,14 @@ fgOptLoadTape(const char* arg)
       // tell the replay subsystem to load the tape
       FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
       SGPropertyNode_ptr arg = new SGPropertyNode();
-      arg->setStringValue("tape", _tape );
+      arg->setStringValue("tape", _tape.utf8Str() );
       arg->setBoolValue( "same-aircraft", 0 );
       replay->loadTape(arg);
 
       delete this; // commence suicide
     }
   private:
-    std::string _tape;
+    SGPath _tape;
 
   };
 
@@ -1952,9 +1952,9 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
       processArgResult(result);
     } else {
     // XML properties file
-      SGPath f(argv[i]);
+        SGPath f = SGPath::fromLocal8Bit(argv[i]);
       if (!f.exists()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f.str());
+        SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f);
       } else {
         p->propertyFiles.push_back(f);
       }
@@ -1973,14 +1973,11 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   
 // then config files
   SGPath config;
-  std::string homedir;
-  if (getenv("HOME")) {
-    homedir = getenv("HOME");
-  }
+
     
-  if( !homedir.empty() && !hostname.empty() ) {
+  if( !hostname.empty() ) {
     // Check for ~/.fgfsrc.hostname
-    config.set(homedir);
+    config = SGPath::home();
     config.append(".fgfsrc");
     config.concat( "." );
     config.concat( hostname );
@@ -1988,11 +1985,9 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
   
 // Check for ~/.fgfsrc
-  if( !homedir.empty() ) {
-    config.set(homedir);
+    config = SGPath::home();
     config.append(".fgfsrc");
     readConfig(config);
-  }
   
 // check for a config file in app data
   SGPath appDataConfig(appDataPath);
@@ -2006,7 +2001,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   
 // system.fgfsrc is disabled, as we no longer allow anything in fgdata to set
 // fg-root/fg-home/fg-aircraft and hence control what files Nasal can access
-  std::string name_for_error = homedir.empty() ? appDataConfig.str() : config.str();
+  std::string name_for_error = config.utf8Str();
   if( ! hostname.empty() ) {
     config = globals->get_fg_root();
     config.append( "system.fgfsrc" );
@@ -2014,7 +2009,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
     config.concat( hostname );
     if (config.exists()) {
       flightgear::fatalMessageBox("Unsupported configuration",
-        "You have a " + config.str() + " file, which is no longer processed for security reasons",
+        "You have a " + config.utf8Str() + " file, which is no longer processed for security reasons",
         "If you created this file intentionally, please move it to " + name_for_error);
     }
   }
@@ -2023,7 +2018,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   config.append( "system.fgfsrc" );
   if (config.exists()) {
     flightgear::fatalMessageBox("Unsupported configuration",
-      "You have a " + config.str() + " file, which is no longer processed for security reasons",
+      "You have a " + config.utf8Str() + " file, which is no longer processed for security reasons",
       "If you created this file intentionally, please move it to " + name_for_error);
   }
 }
@@ -2132,12 +2127,12 @@ void Options::processArgResult(int result)
   
 void Options::readConfig(const SGPath& path)
 {
-  sg_gzifstream in( path.str() );
+  sg_gzifstream in( path );
   if ( !in.is_open() ) {
     return;
   }
   
-  SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path.str() );
+  SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path );
   
   in >> skipcomment;
   while ( ! in.eof() ) {
@@ -2152,7 +2147,7 @@ void Options::readConfig(const SGPath& path)
     line = line.substr( 0, i );
     
     if ( parseOption( line ) == FG_OPTIONS_ERROR ) {
-      cerr << endl << "Config file parse error: " << path.str() << " '"
+      cerr << endl << "Config file parse error: " << path << " '"
       << line << "'" << endl;
 	    p->showHelp = true;
     }
@@ -2290,7 +2285,7 @@ string_list Options::valuesForOption(const std::string& key) const
   return result;
 }
 
-string defaultDownloadDir()
+SGPath defaultDownloadDir()
 {
 #if defined(SG_WINDOWS)
     SGPath p(SGPath::documents());
@@ -2298,7 +2293,7 @@ string defaultDownloadDir()
 #else
     SGPath p(globals->get_fg_home());
 #endif
-    return p.str();
+    return p;
 }
 
 OptionResult Options::processOptions()
@@ -2349,8 +2344,8 @@ OptionResult Options::processOptions()
 
   BOOST_FOREACH(const SGPath& file, p->propertyFiles) {
     SG_LOG(SG_GENERAL, SG_INFO,
-           "Reading command-line property file " << file.str());
-	  readProperties(file.str(), globals->get_props());
+           "Reading command-line property file " << file);
+	  readProperties(file, globals->get_props());
   }
 
 // now options are process, do supplemental fixup
@@ -2360,8 +2355,8 @@ OptionResult Options::processOptions()
   }
 
 // download dir fix-up
-    string downloadDir = simgear::strutils::strip(fgGetString("/sim/paths/download-dir"));
-    if (downloadDir.empty()) {
+    SGPath downloadDir = SGPath::fromUtf8(fgGetString("/sim/paths/download-dir"));
+    if (downloadDir.isNull()) {
         downloadDir = defaultDownloadDir();
         SG_LOG(SG_GENERAL, SG_INFO, "Using default download dir: " << downloadDir);
     } else {
@@ -2373,11 +2368,11 @@ OptionResult Options::processOptions()
     }
 
 // terrasync directory fixup
-    string terrasyncDir = simgear::strutils::strip(fgGetString("/sim/terrasync/scenery-dir"));
-  if (terrasyncDir.empty()) {
+    SGPath terrasyncDir = SGPath::fromUtf8(fgGetString("/sim/terrasync/scenery-dir"));
+  if (terrasyncDir.isNull()) {
       SGPath p(downloadDir);
       p.append("TerraSync");
-      terrasyncDir = p.str();
+      terrasyncDir = p;
 
       simgear::Dir d(terrasyncDir);
       if (!d.exists()) {
@@ -2385,7 +2380,7 @@ OptionResult Options::processOptions()
       }
 
 	  SG_LOG(SG_GENERAL, SG_INFO, "Using default TerraSync: " << terrasyncDir);
-      fgSetString("/sim/terrasync/scenery-dir", p.str());
+      fgSetString("/sim/terrasync/scenery-dir", p.utf8Str());
   } else {
       SG_LOG(SG_GENERAL, SG_INFO, "Using explicit TerraSync dir: " << terrasyncDir);
   }
@@ -2397,9 +2392,9 @@ OptionResult Options::processOptions()
     // is enabled or not. This allows us to toggle terrasync on/off at
     // runtime and have things work as expected
     const PathList& scenery_paths(globals->get_fg_scenery());
-    if (std::find(scenery_paths.begin(), scenery_paths.end(), SGPath(terrasyncDir)) == scenery_paths.end()) {
+    if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
         // terrasync dir is not in the scenery paths, add it
-        globals->append_fg_scenery(SGPath(terrasyncDir));
+        globals->append_fg_scenery(terrasyncDir);
     }
 
     if (addFGDataScenery) {

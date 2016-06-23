@@ -105,20 +105,20 @@ void FGLight::init () {
     // initialize ambient, diffuse and specular tables
     SGPath ambient_path = path;
     ambient_path.append( "Lighting/ambient" );
-    _ambient_tbl = new SGInterpTable( ambient_path.str() );
+    _ambient_tbl = new SGInterpTable( ambient_path );
 
     SGPath diffuse_path = path;
     diffuse_path.append( "Lighting/diffuse" );
-    _diffuse_tbl = new SGInterpTable( diffuse_path.str() );
+    _diffuse_tbl = new SGInterpTable( diffuse_path );
 
     SGPath specular_path = path;
     specular_path.append( "Lighting/specular" );
-    _specular_tbl = new SGInterpTable( specular_path.str() );
+    _specular_tbl = new SGInterpTable( specular_path );
     
     // initialize sky table
     SGPath sky_path = path;
     sky_path.append( "Lighting/sky" );
-    _sky_tbl = new SGInterpTable( sky_path.str() );
+    _sky_tbl = new SGInterpTable( sky_path );
     
     globals->get_event_mgr()->addTask("updateSunPos", this,
                             &FGLight::updateSunPos, 0.5 );

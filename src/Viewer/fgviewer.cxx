@@ -194,7 +194,8 @@ fgviewerMain(int argc, char** argv)
 
     SGPath mpath( globals->get_fg_root() );
     mpath.append( fgGetString("/sim/rendering/materials-file") );
-    if ( ! globals->get_matlib()->load(globals->get_fg_root().local8BitStr(), mpath.str(),
+    if ( ! globals->get_matlib()->load(globals->get_fg_root().local8BitStr(),
+                                       mpath.local8BitStr(),
             globals->get_props()) ) {
         throw sg_io_exception("Error loading materials file", mpath);
     }

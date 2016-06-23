@@ -40,9 +40,9 @@ public:
 NSCursor* cocoaCursorForKey(FGMouseCursor::Cursor aKey)
 {
     NSImage* img = nil;
-    
-    NSString* path = [NSString stringWithCString:globals->get_fg_root().c_str()
-                                            encoding:NSUTF8StringEncoding];
+
+    std::string p = globals->get_fg_root().utf8Str();
+    NSString* path = [NSString stringWithCString:p.c_str() encoding:NSUTF8StringEncoding];
     path = [path stringByAppendingPathComponent:@"gui"];
     
     switch (aKey) {

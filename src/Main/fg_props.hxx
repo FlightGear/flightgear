@@ -79,7 +79,7 @@ extern bool fgLoadFlight (std::istream &input);
  * @return true if the properties loaded successfully, false
  *         otherwise.
  */
-extern bool fgLoadProps (const char * path, SGPropertyNode * props,
+extern bool fgLoadProps (const std::string& path, SGPropertyNode * props,
                          bool in_fg_root = true, int default_mode = 0);
 
 void setLoggingClasses (const char * c);

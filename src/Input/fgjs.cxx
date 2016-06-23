@@ -258,7 +258,7 @@ static string fgScanForOption( const string& option, int argc, char **argv ) {
 
 // Scan the user config files for the specified option and return
 // the value.
-static string fgScanForOption( const string& option, const string& path ) {
+static string fgScanForOption( const string& option, const SGPath& path ) {
     sg_gzifstream in( path );
     if ( !in.is_open() ) {
         return "";
@@ -311,7 +311,7 @@ static string fgScanForOption( const string& option ) {
         if ( homedir != NULL ) {
             SGPath config( homedir );
             config.append( ".fgfsrc" );
-            arg = fgScanForOption( option, config.str() );
+            arg = fgScanForOption( option, config );
         }
     }
 

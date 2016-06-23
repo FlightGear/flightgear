@@ -105,21 +105,23 @@ main(int argc, char** argv)
         fg_root = PKGLIBDIR;
     }
 
-    std::string fg_scenery;
-    if (arguments.read("--fg-scenery", fg_scenery)) {
-    } else if (const char *fg_scenery_env = std::getenv("FG_SCENERY")) {
-        fg_scenery = fg_scenery_env;
+    SGPath fg_scenery;
+    std::string s;
+    if (arguments.read("--fg-scenery", s)) {
+        fg_scenery = SGPath::fromLocal8Bit(s.c_str());
+    } else if (std::getenv("FG_SCENERY")) {
+        fg_scenery = SGPath::fromEnv("FG_SCENERY");
     } else {
         SGPath path(fg_root);
         path.append("Scenery");
-        fg_scenery = path.str();
+        fg_scenery = path;
     }
 
     SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
     try {
         SGPath preferencesFile = fg_root;
         preferencesFile.append("preferences.xml");
-        readProperties(preferencesFile.str(), props);
+        readProperties(preferencesFile, props);
     } catch (...) {
         // In case of an error, at least make summer :)
         props->getNode("sim/startup/season", true)->setStringValue("summer");
@@ -140,7 +142,7 @@ main(int argc, char** argv)
     SGPath mpath(fg_root);
     mpath.append("Materials/default/materials.xml");
     try {
-        ml->load(fg_root, mpath.str(), props);
+        ml->load(fg_root, mpath.local8BitStr(), props);
     } catch (...) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading FlightGear materials.\n"
                << "Probably FG_ROOT is not properly set.");
@@ -153,7 +155,7 @@ main(int argc, char** argv)
         options = new simgear::SGReaderWriterOptions(*ropt);
     else
         options = new simgear::SGReaderWriterOptions;
-    osgDB::convertStringPathIntoFilePathList(fg_scenery,
+    osgDB::convertStringPathIntoFilePathList(fg_scenery.local8BitStr(),
                                              options->getDatabasePathList());
     options->setMaterialLib(ml);
     options->setPropertyNode(props);

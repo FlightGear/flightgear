@@ -213,24 +213,24 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
       string acfile = fgGetString("/sim/aircraft") + string(".xml");
       acData.append(acfile);
       SGPropertyNode root;
-      readProperties(acData.str(), &root);
+      readProperties(acData, &root);
       SGPropertyNode * node = root.getNode("sim");
       fltType    = node->getStringValue("aircraft-class", "NONE"     );
       acOperator = node->getStringValue("aircraft-operator", "NONE"     );
     } catch (const sg_exception &) {
       SG_LOG(SG_GENERAL, SG_INFO,
-             "Could not load aircraft aircrat type and operator information from: " << acData.str() << ". Using defaults");
+             "Could not load aircraft aircrat type and operator information from: " << acData << ". Using defaults");
       
       // cout << path.str() << endl;
     }
     if (fltType.empty() || fltType == "NONE") {
       SG_LOG(SG_GENERAL, SG_INFO,
-             "Aircraft type information not found in: " << acData.str() << ". Using default value");
+             "Aircraft type information not found in: " << acData << ". Using default value");
       fltType = fgGetString("/sim/aircraft-class"   );
     }
     if (acOperator.empty() || fltType == "NONE") {
       SG_LOG(SG_GENERAL, SG_INFO,
-             "Aircraft operator information not found in: " << acData.str() << ". Using default value");
+             "Aircraft operator information not found in: " << acData << ". Using default value");
       acOperator = fgGetString("/sim/aircraft-operator"   );
     }
     

@@ -117,8 +117,8 @@ void FGCroppedTexture::bind( bool doGLBind )
         loader = textureLoader[extension];
       }
 
-      _texture = loader->loadTexture( tpath.c_str() );
-      SG_LOG( SG_COCKPIT, SG_DEBUG, "Texture " << tpath.c_str() << " loaded from file as #" << _texture );
+      _texture = loader->loadTexture( tpath.local8BitStr() );
+      SG_LOG( SG_COCKPIT, SG_DEBUG, "Texture " << tpath << " loaded from file as #" << _texture );
       
       cache[_path] = _texture;
     }

@@ -134,7 +134,7 @@ void CocoaFileDialog::exec()
         if (result == NSFileHandlingPanelOKButton) {
             completion_path = [[d->panel URL] path];
             //NSLog(@"the URL is: %@", d->panel URL]);
-            completion_sgpath = ([completion_path UTF8String]);
+            completion_sgpath = SGPath::fromUtf8([completion_path UTF8String]);
             _callback->onFileDialogDone(this, completion_sgpath);
         }
     }];

@@ -153,7 +153,7 @@ FGPanelApplication::FGPanelApplication( int argc, char ** argv ) :
 
   try {
     SGPath tpath = ApplicationProperties::GetRootPath( panelFilename.c_str() );
-    readProperties( tpath.str(), ApplicationProperties::Properties );
+    readProperties( tpath, ApplicationProperties::Properties );
   }
   catch( sg_io_exception & e ) {
     cerr << e.getFormattedMessage() << endl;
@@ -353,7 +353,7 @@ SGPath ApplicationProperties::GetCwd()
   buf[511] = '\0';
   if (cwd)
   {
-    path = cwd;
+      path = SGPath::fromLocal8Bit(cwd);
   }
   return path;
 }

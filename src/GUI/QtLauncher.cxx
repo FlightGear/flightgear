@@ -649,7 +649,7 @@ void QtLauncher::setSceneryPaths()
     // append the TerraSync path
     QString downloadDir = settings.value("download-dir").toString();
     if (downloadDir.isEmpty()) {
-        downloadDir = QString::fromStdString(flightgear::defaultDownloadDir());
+        downloadDir = QString::fromStdString(flightgear::defaultDownloadDir().utf8Str());
     }
 
     SGPath terraSyncDir(downloadDir.toStdString());
@@ -947,7 +947,7 @@ void QtLauncher::onToggleTerrasync(bool enabled)
         QSettings settings;
         QString downloadDir = settings.value("download-dir").toString();
         if (downloadDir.isEmpty()) {
-            downloadDir = QString::fromStdString(flightgear::defaultDownloadDir());
+            downloadDir = QString::fromStdString(flightgear::defaultDownloadDir().utf8Str());
         }
 
         QFileInfo info(downloadDir);

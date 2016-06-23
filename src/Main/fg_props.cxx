@@ -684,15 +684,15 @@ fgLoadFlight (std::istream &input)
 
 
 bool
-fgLoadProps (const char * path, SGPropertyNode * props, bool in_fg_root, int default_mode)
+fgLoadProps (const std::string& path, SGPropertyNode * props, bool in_fg_root, int default_mode)
 {
-    string fullpath;
+    SGPath fullpath;
     if (in_fg_root) {
         SGPath loadpath(globals->get_fg_root());
         loadpath.append(path);
-        fullpath = loadpath.str();
+        fullpath = loadpath;
     } else {
-        fullpath = path;
+        fullpath = SGPath::fromUtf8(path);
     }
 
     try {

@@ -382,7 +382,7 @@ void FGElectricalSystem::init () {
                 << config.str() );
 #endif
         try {
-            readProperties( config.str(), config_props );
+            readProperties( config, config_props );
 
             if ( build(config_props) ) {
                 enabled = true;
@@ -392,7 +392,7 @@ void FGElectricalSystem::init () {
         } catch (const sg_exception&) {
             SG_LOG( SG_SYSTEMS, SG_ALERT,
                     "Failed to load electrical system model: "
-                    << config.str() );
+                    << config );
         }
     } else {
         SG_LOG( SG_SYSTEMS, SG_INFO,

@@ -265,9 +265,9 @@ const unsigned int LINES_IN_NAV_DAT = 26775;
 // load and initialize the navigational databases
 bool navDBInit(const SGPath& path)
 {
-    sg_gzifstream in( path.str() );
+    sg_gzifstream in( path );
     if ( !in.is_open() ) {
-        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
+        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path );
       return false;
     }
 
@@ -299,11 +299,11 @@ bool navDBInit(const SGPath& path)
   
 bool loadCarrierNav(const SGPath& path)
 {    
-    SG_LOG( SG_NAVAID, SG_DEBUG, "opening file: " << path.str() );
-    sg_gzifstream incarrier( path.str() );
+    SG_LOG( SG_NAVAID, SG_DEBUG, "opening file: " << path );
+    sg_gzifstream incarrier( path );
     
     if ( !incarrier.is_open() ) {
-        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
+        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path );
       return false;
     }
     
@@ -318,11 +318,11 @@ bool loadCarrierNav(const SGPath& path)
   
 bool loadTacan(const SGPath& path, FGTACANList *channellist)
 {
-    SG_LOG( SG_NAVAID, SG_DEBUG, "opening file: " << path.str() );
-    sg_gzifstream inchannel( path.str() );
+    SG_LOG( SG_NAVAID, SG_DEBUG, "opening file: " << path );
+    sg_gzifstream inchannel( path );
     
     if ( !inchannel.is_open() ) {
-        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
+        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path );
       return false;
     }
     

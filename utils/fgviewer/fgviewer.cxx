@@ -60,29 +60,33 @@ main(int argc, char** argv)
     sglog().set_log_classes(SG_ALL);
     sglog().set_log_priority(SG_ALERT);
 
-    std::string fg_root;
-    if (arguments.read("--fg-root", fg_root)) {
-    } else if (const char *fg_root_env = std::getenv("FG_ROOT")) {
-        fg_root = fg_root_env;
+    SGPath fg_root;
+    std::string r;
+    if (arguments.read("--fg-root", r)) {
+        fg_root = SGPath::fromLocal8Bit(r.c_str());
+    } else if (std::getenv("FG_ROOT")) {
+        fg_root = SGPath::fromEnv("FG_ROOT");
     } else {
-        fg_root = PKGLIBDIR;
+        fg_root = SGPath(PKGLIBDIR);
     }
 
-    std::string fg_scenery;
-    if (arguments.read("--fg-scenery", fg_scenery)) {
-    } else if (const char *fg_scenery_env = std::getenv("FG_SCENERY")) {
-        fg_scenery = fg_scenery_env;
+    SGPath fg_scenery;
+    std::string s;
+    if (arguments.read("--fg-scenery", s)) {
+        fg_scenery = SGPath::fromLocal8Bit(s.c_str());
+    } else if (std::getenv("FG_SCENERY")) {
+        fg_scenery = SGPath::fromEnv("FG_SCENERY");
     } else {
         SGPath path(fg_root);
         path.append("Scenery");
-        fg_scenery = path.str();
+        fg_scenery = path;
     }
 
     SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
     try {
         SGPath preferencesFile = fg_root;
         preferencesFile.append("preferences.xml");
-        readProperties(preferencesFile.str(), props);
+        readProperties(preferencesFile, props);
     } catch (...) {
         // In case of an error, at least make summer :)
         props->getNode("sim/startup/season", true)->setStringValue("summer");
@@ -183,12 +187,12 @@ main(int argc, char** argv)
     SGPath mpath(fg_root);
     mpath.append("Materials/default/materials.xml");
     try {
-        ml->load(fg_root, mpath.str(), props);
+        ml->load(fg_root.local8BitStr(), mpath.local8BitStr(), props);
     } catch (...) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Problems loading FlightGear materials.\n"
                << "Probably FG_ROOT is not properly set.");
     }
-    simgear::SGModelLib::init(fg_root, props);
+    simgear::SGModelLib::init(fg_root.local8BitStr(), props);
 
     // Set up the reader/writer options
     osg::ref_ptr<simgear::SGReaderWriterOptions> options;
@@ -196,11 +200,11 @@ main(int argc, char** argv)
         options = new simgear::SGReaderWriterOptions(*ropt);
     else
         options = new simgear::SGReaderWriterOptions;
-    osgDB::convertStringPathIntoFilePathList(fg_scenery,
+    osgDB::convertStringPathIntoFilePathList(fg_scenery.local8BitStr(),
                                              options->getDatabasePathList());
     options->setMaterialLib(ml);
     options->setPropertyNode(props);
-    options->setPluginStringData("SimGear::FG_ROOT", fg_root);
+    options->setPluginStringData("SimGear::FG_ROOT", fg_root.local8BitStr());
     // Omit building bounding volume trees, as the viewer will not run a simulation
     options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
     viewer.setReaderWriterOptions(options.get());

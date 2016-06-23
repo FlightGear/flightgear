@@ -374,9 +374,9 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
     }
 
     int ret = 0;
-    ifstream input(path.c_str());
+    ifstream input(path.local8BitStr());
     if (!input.good()) {
-        SG_LOG(SG_INPUT, SG_ALERT, "HUD: Cannot read configuration from '" << path.c_str() << "'");
+        SG_LOG(SG_INPUT, SG_ALERT, "HUD: Cannot read configuration from '" << path << "'");
         return 0x4;
     }
 

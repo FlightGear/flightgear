@@ -50,7 +50,7 @@ const unsigned int LINES_IN_FIX_DAT = 119724;
   
 void loadFixes(const SGPath& path)
 {
-  sg_gzifstream in( path.str() );
+  sg_gzifstream in( path );
   if ( !in.is_open() ) {
       throw sg_io_exception("Cannot open file:", path);
   }

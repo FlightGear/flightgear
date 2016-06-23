@@ -655,7 +655,7 @@ void DCLGPS::LoadApproachData() {
 	std::ifstream fin;
 	SGPath path = globals->get_fg_root();
 	path.append("Navaids/rnav.dat");
-	fin.open(path.c_str(), ios::in);
+	fin.open(path.local8BitStr(), ios::in);
 	if(!fin) {
 		//cout << "Unable to open input file " << path.c_str() << '\n';
 		return;

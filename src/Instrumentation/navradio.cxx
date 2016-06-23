@@ -140,9 +140,9 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
       SGPath high = path;
       high.append( "Navaids/range.high" );
       
-      static_terminalRangeInterp.reset(new SGInterpTable(term.str()));
-      static_lowRangeInterp.reset(new SGInterpTable(low.str()));
-      static_highRangeInterp.reset(new SGInterpTable(high.str()));
+      static_terminalRangeInterp.reset(new SGInterpTable(term));
+      static_lowRangeInterp.reset(new SGInterpTable(low));
+      static_highRangeInterp.reset(new SGInterpTable(high));
     }
   
     string branch("/instrumentation/" + _name);

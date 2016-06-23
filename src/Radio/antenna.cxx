@@ -80,7 +80,7 @@ void FGRadioAntenna::load_NEC_antenna_pattern(string type) {
 	if (!pattern_file.exists()) {
 		return;
 	}
-	ifstream file_in(pattern_file.c_str());
+	ifstream file_in(pattern_file.local8BitStr());
 	int heading, elevation;
 	double gain;
 	while(!file_in.eof()) {

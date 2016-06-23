@@ -608,8 +608,8 @@ static naRef f_resolveDataPath(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "bad arguments to resolveDataPath()");
 
     SGPath p = globals->resolve_maybe_aircraft_path(naStr_data(args[0]));
-    const char* pdata = p.c_str();
-    return naStr_fromdata(naNewString(c), const_cast<char*>(pdata), strlen(pdata));
+    std::string pdata = p.utf8Str();
+    return naStr_fromdata(naNewString(c), const_cast<char*>(pdata.c_str()), pdata.length());
 }
 
 static naRef f_findDataDir(naContext c, naRef me, int argc, naRef* args)
@@ -618,8 +618,8 @@ static naRef f_findDataDir(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "bad arguments to findDataDir()");
     
     SGPath p = globals->find_data_dir(naStr_data(args[0]));
-    const char* pdata = p.c_str();
-    return naStr_fromdata(naNewString(c), const_cast<char*>(pdata), strlen(pdata));
+    std::string pdata = p.utf8Str();
+    return naStr_fromdata(naNewString(c), const_cast<char*>(pdata.c_str()), pdata.length());
 }
 
 class NasalCommand : public SGCommandMgr::Command
@@ -1032,7 +1032,7 @@ void FGNasalSys::addModule(string moduleName, simgear::PathList scripts)
         SGPropertyNode* module_node = nasal->getChild(moduleName,0,true);
         for (unsigned int i=0; i<scripts.size(); ++i) {
             SGPropertyNode* pFileNode = module_node->getChild("file",i,true);
-            pFileNode->setStringValue(scripts[i].c_str());
+            pFileNode->setStringValue(scripts[i].utf8Str());
         }
         if (!module_node->hasChild("enabled",0))
         {
@@ -1146,15 +1146,16 @@ void FGNasalSys::logError(naContext context)
 bool FGNasalSys::loadModule(SGPath file, const char* module)
 {
     int len = 0;
-    char* buf = readfile(file.c_str(), &len);
+    std::string pdata = file.local8BitStr();
+    char* buf = readfile(pdata.c_str(), &len);
     if(!buf) {
         SG_LOG(SG_NASAL, SG_ALERT,
-               "Nasal error: could not read script file " << file.c_str()
+               "Nasal error: could not read script file " << file
                << " into module " << module);
         return false;
     }
 
-    bool ok = createModule(module, file.c_str(), buf, len);
+    bool ok = createModule(module, pdata.c_str(), buf, len);
     delete[] buf;
     return ok;
 }

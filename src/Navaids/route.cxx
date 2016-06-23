@@ -334,9 +334,9 @@ void RouteBase::dumpRouteToKML(const WayptVec& aRoute, const std::string& aName)
 {
   SGPath p = "/Users/jmt/Desktop/" + aName + ".kml";
   std::fstream f;
-  f.open(p.str().c_str(), fstream::out | fstream::app);
+  f.open(p.local8BitStr(), fstream::out | fstream::app);
   if (!f.is_open()) {
-    SG_LOG(SG_NAVAID, SG_WARN, "unable to open:" << p.str());
+    SG_LOG(SG_NAVAID, SG_WARN, "unable to open:" << p);
     return;
   }
   
@@ -380,12 +380,12 @@ void RouteBase::loadAirportProcedures(const SGPath& aPath, FGAirport* aApt)
   assert(aApt);
   try {
     NavdataVisitor visitor(aApt, aPath);
-    readXML(aPath.str(), visitor);
+      readXML(aPath.local8BitStr(), visitor);
   } catch (sg_io_exception& ex) {
-    SG_LOG(SG_NAVAID, SG_WARN, "failure parsing procedures: " << aPath.str() <<
+    SG_LOG(SG_NAVAID, SG_WARN, "failure parsing procedures: " << aPath <<
       "\n\t" << ex.getMessage() << "\n\tat:" << ex.getLocation().asString());
   } catch (sg_exception& ex) {
-    SG_LOG(SG_NAVAID, SG_WARN, "failure parsing procedures: " << aPath.str() <<
+    SG_LOG(SG_NAVAID, SG_WARN, "failure parsing procedures: " << aPath <<
       "\n\t" << ex.getMessage());
   }
 }

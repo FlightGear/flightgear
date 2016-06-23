@@ -75,8 +75,8 @@ FGDeviceConfigurationMap::configurationForDeviceName(const std::string& name)
       
   SGPropertyNode_ptr result(new SGPropertyNode);
   try {
-    readProperties(it->second.str(), result);
-    result->setStringValue("source", it->second.c_str());
+    readProperties(it->second, result);
+    result->setStringValue("source", it->second.utf8Str());
   } catch (sg_exception&) {
     SG_LOG(SG_INPUT, SG_WARN, "parse failure reading:" << it->second);
     return NULL;
@@ -126,7 +126,7 @@ void FGDeviceConfigurationMap::readCachedData(const SGPath& path)
 {
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
   NamePathMap::iterator it;
-  BOOST_FOREACH(string s, cache->readStringListProperty(path.str())) {
+  BOOST_FOREACH(string s, cache->readStringListProperty(path.utf8Str())) {
     // important - only insert if not already present. This ensures
     // user configs can override those in the base package, since they are
     // searched first.
@@ -139,10 +139,10 @@ void FGDeviceConfigurationMap::readCachedData(const SGPath& path)
 
 void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
 {
-  SG_LOG(SG_INPUT, SG_DEBUG, "Reading device file " << path.str());
+  SG_LOG(SG_INPUT, SG_DEBUG, "Reading device file " << path);
   SGPropertyNode_ptr n(new SGPropertyNode);
   try {
-    readProperties(path.str(), n);
+    readProperties(path, n);
   } catch (sg_exception&) {
     SG_LOG(SG_INPUT, SG_ALERT, "parse failure reading:" << path);
     return;
@@ -161,5 +161,5 @@ void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
   
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
   cache->stampCacheFile(path);
-  cache->writeStringListProperty(path.str(), names);
+  cache->writeStringListProperty(path.utf8Str(), names);
 }

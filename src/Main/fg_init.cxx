@@ -210,7 +210,7 @@ public:
         SG_LOG(SG_GENERAL, SG_INFO, "found aircraft in dir: " << aircraftDir );
         
         try {
-          readProperties(setFile.str(), globals->get_props());
+          readProperties(setFile, globals->get_props());
         } catch ( const sg_exception &e ) {
           SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
             flightgear::fatalMessageBox("Error reading aircraft",
@@ -234,7 +234,7 @@ public:
     if (!checkCache()) {
       // prepare cache for re-scan
       SGPropertyNode *n = _cache->getNode("fg-root", true);
-      n->setStringValue(globals->get_fg_root().c_str());
+      n->setStringValue(globals->get_fg_root().utf8Str());
       n->setAttribute(SGPropertyNode::USERARCHIVE, true);
       n = _cache->getNode("fg-aircraft", true);
       n->setStringValue(getAircraftPaths().c_str());
@@ -244,7 +244,7 @@ public:
         visitAircraftPaths();
     }
     
-    if (_foundPath.str().empty()) {
+    if (_foundPath.isNull()) {
       SG_LOG(SG_GENERAL, SG_ALERT, "Cannot find specified aircraft: " << aircraft );
         flightgear::fatalMessageBox("Aircraft not found",
                                     "The requested aircraft '" + aircraft + "' could not be found in any of the search paths");
@@ -252,15 +252,15 @@ public:
       return false;
     }
     
-    SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft -set file from:" << _foundPath.str());
+    SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft -set file from:" << _foundPath);
     fgSetString( "/sim/aircraft-dir", _foundPath.dir().c_str());
     if (!_foundPath.exists()) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "Unable to find -set file:" << _foundPath.str());
+      SG_LOG(SG_GENERAL, SG_ALERT, "Unable to find -set file:" << _foundPath);
       return false;
     }
     
     try {
-      readProperties(_foundPath.str(), globals->get_props());
+      readProperties(_foundPath, globals->get_props());
     } catch ( const sg_exception &e ) {
       SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
         flightgear::fatalMessageBox("Error reading aircraft",
@@ -400,10 +400,11 @@ bool fgInitHome()
     
     char buf[16];
     bool result = false;
+    std::string ps = pidPath.local8BitStr();
 #if defined(SG_WINDOWS)
     size_t len = snprintf(buf, 16, "%d", _getpid());
 
-    HANDLE f = CreateFileA(pidPath.c_str(), GENERIC_READ | GENERIC_WRITE, 
+    HANDLE f = CreateFileA(ps.c_str(), GENERIC_READ | GENERIC_WRITE,
 						   FILE_SHARE_READ, /* sharing */
                            NULL, /* security attributes */
                            CREATE_NEW, /* error if already exists */
@@ -419,10 +420,10 @@ bool fgInitHome()
     // POSIX, do open+unlink trick to the file is deleted on exit, even if we
     // crash or exit(-1)
     ssize_t len = snprintf(buf, 16, "%d", getpid());
-    int fd = ::open(pidPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0644);
+    int fd = ::open(ps.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0644);
     if (fd >= 0) {
         result = ::write(fd, buf, len) == len;
-        if( ::unlink(pidPath.c_str()) != 0 ) // delete file when app quits
+        if( ::unlink(ps.c_str()) != 0 ) // delete file when app quits
           result = false;
     }
 #endif
@@ -432,7 +433,7 @@ bool fgInitHome()
     if (!result) {
         flightgear::fatalMessageBox("File permissions problem",
                                     "Can't write to user-data storage folder, check file permissions and FG_HOME.",
-                                    "User-data at:" + dataPath.str());
+                                    "User-data at:" + dataPath.utf8Str());
     }
     return result;
 }
@@ -453,7 +454,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     SGPropertyNode *home = fgGetNode("/sim", true);
     home->removeChild("fg-home", 0);
     home = home->getChild("fg-home", 0, true);
-    home->setStringValue(dataPath.c_str());
+    home->setStringValue(dataPath.utf8Str());
     home->setAttribute(SGPropertyNode::WRITE, false);
   
     fgSetDefaults();
@@ -540,7 +541,7 @@ int fgInitAircraft(bool reinit)
 
             // set aircraft-dir to short circuit the search process
             InstallRef acftInstall = acftPackage->install();
-            fgSetString("/sim/aircraft-dir", acftInstall->path().c_str());
+            fgSetString("/sim/aircraft-dir", acftInstall->path().utf8Str());
 
             // overwrite the fully qualified ID with the aircraft one, so the
             // code in FindAndCacheAircraft works as normal
@@ -649,7 +650,7 @@ bool fgInitGeneral() {
     SGPropertyNode *curr = fgGetNode("/sim", true);
     curr->removeChild("fg-current", 0);
     curr = curr->getChild("fg-current", 0, true);
-    curr->setStringValue(cwd.path().str());
+    curr->setStringValue(cwd.path().utf8Str());
     curr->setAttribute(SGPropertyNode::WRITE, false);
 
     fgSetBool("/sim/startup/stdout-to-terminal", isatty(1) != 0 );
@@ -731,7 +732,7 @@ void fgCreateSubsystems(bool duringReset) {
 
     SGPath mpath( globals->get_fg_root() );
     mpath.append( fgGetString("/sim/rendering/materials-file") );
-    if ( ! globals->get_matlib()->load(globals->get_fg_root().local8BitStr(), mpath.str(),
+    if ( ! globals->get_matlib()->load(globals->get_fg_root().local8BitStr(), mpath.local8BitStr(),
             globals->get_props()) ) {
        throw sg_io_exception("Error loading materials file", mpath);
     }
@@ -1137,7 +1138,7 @@ void fgInitPackageRoot()
 
     packageAircraftDir.append("Aircraft");
 
-    SG_LOG(SG_GENERAL, SG_INFO, "init package root at:" << packageAircraftDir.str());
+    SG_LOG(SG_GENERAL, SG_INFO, "init package root at:" << packageAircraftDir);
 
 
     SGSharedPtr<Root> pkgRoot(new Root(packageAircraftDir, FLIGHTGEAR_VERSION));

@@ -42,12 +42,12 @@ SGPath::Permissions checkIORules(const SGPath& path)
     // SGPath caches permissions, which breaks for relative paths
     // if the current directory changes
     SG_LOG(SG_NASAL, SG_ALERT, "os.path: file operation on '" <<
-        path.str() << "' access denied (relative paths not accepted; use "
+        path<< "' access denied (relative paths not accepted; use "
         "realpath() to make a path absolute)");
   }
 
-  perm.read  = path.isAbsolute() && !fgValidatePath(path.str(), false).empty();
-  perm.write = path.isAbsolute() && !fgValidatePath(path.str(), true ).empty();
+  perm.read  = path.isAbsolute() && !fgValidatePath(path, false).empty();
+  perm.write = path.isAbsolute() && !fgValidatePath(path, true ).empty();
 
   return perm;
 }
@@ -56,7 +56,7 @@ SGPath::Permissions checkIORules(const SGPath& path)
 static naRef validatedPathToNasal( const nasal::CallContext& ctx,
                                    const SGPath& p )
 {
-  return ctx.to_nasal( SGPathRef(new SGPath(p.str(), &checkIORules)) );
+  return ctx.to_nasal( SGPathRef(new SGPath(p.utf8Str(), &checkIORules)) );
 }
 
 /**
@@ -71,6 +71,11 @@ static int f_path_create_dir(SGPath& p, const nasal::CallContext& ctx)
 {
   // limit setable access rights for Nasal
   return p.create_dir(ctx.getArg<mode_t>(0, 0755) & 0775);
+}
+
+static void f_path_set(SGPath& p, const nasal::CallContext& ctx)
+{
+    p = SGPath::fromUtf8(ctx.getArg<std::string>(0), p.getPermissionChecker());
 }
 
 /**
@@ -113,9 +118,8 @@ naRef initNasalSGPath(naRef globals, naContext c)
   // See: http://docs.freeflightsim.org/simgear/classSGPath.html
 
   NasalSGPath::init("os.path")
-    .method("set", &SGPath::set)
+    .method("set", &f_path_set)
     .method("append", &SGPath::append)
-    .method("add", &SGPath::add)
     .method("concat", &SGPath::concat)
 
     .member("realpath", &SGPath::realpath)
@@ -126,8 +130,7 @@ naRef initNasalSGPath(naRef globals, naContext c)
     .member("extension", &SGPath::extension)
     .member("lower_extension", &SGPath::lower_extension)
     .member("complete_lower_extension", &SGPath::complete_lower_extension)
-    .member("str", &SGPath::str)
-    .member("str_native", &SGPath::str_native)
+    .member("str", &SGPath::utf8Str)
     .member("mtime", &SGPath::modTime)
 
     .method("exists", &SGPath::exists)

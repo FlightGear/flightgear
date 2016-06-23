@@ -250,7 +250,7 @@ NewGUI::getDialogProperties (const string &name)
       SGPath path = _dialog_names[name];
       SGPropertyNode_ptr props = new SGPropertyNode;
       try {
-        readProperties(path.str(), props);
+        readProperties(path, props);
       } catch (const sg_exception &) {
         SG_LOG(SG_INPUT, SG_ALERT, "Error parsing dialog " << path);
         return NULL;
@@ -328,7 +328,7 @@ NewGUI::readDir (const SGPath& path)
     simgear::Dir dir(path);
     if( !dir.exists() )
     {
-      SG_LOG(SG_INPUT, SG_INFO, "directory does not exist: " << path.str());
+      SG_LOG(SG_INPUT, SG_INFO, "directory does not exist: " << path);
       return;
     }
 
@@ -339,7 +339,7 @@ NewGUI::readDir (const SGPath& path)
     BOOST_FOREACH(SGPath xmlPath, xmls) {
       if (!cache->isCachedFileModified(xmlPath)) {
         // cached, easy
-        string name = cache->readStringProperty(xmlPath.str());
+        string name = cache->readStringProperty(xmlPath.utf8Str());
         _dialog_names[name] = xmlPath;
         continue;
       }
@@ -347,7 +347,7 @@ NewGUI::readDir (const SGPath& path)
     // we need to parse the actual XML
       SGPropertyNode_ptr props = new SGPropertyNode;
       try {
-        readProperties(xmlPath.str(), props);
+        readProperties(xmlPath, props);
       } catch (const sg_exception &) {
         SG_LOG(SG_INPUT, SG_ALERT, "Error parsing dialog " << xmlPath);
         continue;
@@ -364,7 +364,7 @@ NewGUI::readDir (const SGPath& path)
     // update cached values
         if (!cache->isReadOnly()) {
             cache->stampCacheFile(xmlPath);
-            cache->writeStringProperty(xmlPath.str(), name);
+            cache->writeStringProperty(xmlPath.utf8Str(), name);
         }
     } // of directory children iteration
   
