@@ -2561,7 +2561,7 @@ SGPath Options::platformDefaultRoot() const
 #else
 SGPath Options::platformDefaultRoot() const
 {
-  return PKGLIBDIR;
+  return SGPath(PKGLIBDIR);
 }
 #endif
   
