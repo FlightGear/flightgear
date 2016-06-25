@@ -2621,7 +2621,7 @@ void Options::setupRoot(int argc, char **argv)
       flightgear::fatalMessageBox("Base package version mismatch",
                                   "Version check failed: please check your installation.",
                                   "Found data files for version '" + base_version +
-                                  "' at '" + globals->get_fg_root() + "', version '"
+                                  "' at '" + globals->get_fg_root().str() + "', version '"
                                   + required_version + "' is required.");
 
     exit(-1);
