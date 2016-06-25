@@ -2612,7 +2612,7 @@ void Options::setupRoot(int argc, char **argv)
     if (base_version.empty()) {
         flightgear::fatalMessageBox("Base package not found",
                                     "Required data files not found, check your installation.",
-                                    "Looking for base-package files at: '" + root + "'");
+                                    "Looking for base-package files at: '" + root.str() + "'");
 
         exit(-1);
     }
