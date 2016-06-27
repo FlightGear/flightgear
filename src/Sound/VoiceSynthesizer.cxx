@@ -108,6 +108,6 @@ SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text, doub
   return new SGSoundSample(&data,
                            count * sizeof(short),
                            rate,
-                           AL_FORMAT_MONO16);
+                           SG_SAMPLE_MONO16);
 }
 
