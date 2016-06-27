@@ -27,6 +27,7 @@
 
 #include <simgear/sg_inlines.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sgstream.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/structure/exception.hxx>
@@ -74,19 +75,19 @@ GPSWpTypeFromFGPosType(FGPositioned::Type aType)
   case FGPositioned::SEAPORT:
   case FGPositioned::HELIPORT:
     return GPS_WP_APT;
-  
+
   case FGPositioned::VOR:
     return GPS_WP_VOR;
-  
+
   case FGPositioned::NDB:
     return GPS_WP_NDB;
-  
+
   case FGPositioned::WAYPOINT:
     return GPS_WP_USR;
-  
+
   case FGPositioned::FIX:
     return GPS_WP_INT;
-  
+
   default:
     return GPS_WP_USR;
   }
@@ -97,8 +98,8 @@ GPSWaypoint* GPSWaypoint::createFromPositioned(const FGPositioned* aPos)
   if (!aPos) {
     return NULL; // happens if find returns no match
   }
-  
-  return new GPSWaypoint(aPos->ident(), 
+
+  return new GPSWaypoint(aPos->ident(),
     aPos->latitude() * SG_DEGREES_TO_RADIANS,
     aPos->longitude() * SG_DEGREES_TO_RADIANS,
     GPSWpTypeFromFGPosType(aPos->type())
@@ -160,7 +161,7 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	_grnd_speed_node = fgGetNode("/instrumentation/gps/indicated-ground-speed-kt", true);
 	_true_track_node = fgGetNode("/instrumentation/gps/indicated-track-true-deg", true);
 	_mag_track_node = fgGetNode("/instrumentation/gps/indicated-track-magnetic-deg", true);
-	
+
 	// Use FG's position values at construction in case FG's gps has not run first update yet.
 	_lon = fgGetDouble("/position/longitude-deg") * SG_DEGREES_TO_RADIANS;
 	_lat = fgGetDouble("/position/latitude-deg") * SG_DEGREES_TO_RADIANS;
@@ -175,7 +176,7 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	_groundSpeed_kts = 0.0;
 	_track = 0.0;
 	_magTrackDeg = 0.0;
-	
+
 	// Sensible defaults.  These can be overriden by derived classes if desired.
 	_cdiScales.clear();
 	_cdiScales.push_back(5.0);
@@ -186,9 +187,9 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	_sourceCdiScaleIndex = 0;
 	_cdiScaleTransition = false;
 	_currentCdiScale = 5.0;
-	
+
 	_cleanUpPage = -1;
-	
+
 	_activeWaypoint.id.clear();
 	_dist2Act = 0.0;
 	_crosstrackDist = 0.0;
@@ -202,15 +203,15 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	_powerOnTime.set_min(0);
 	_powerOnTimerSet = false;
 	_alarmSet = false;
-	
+
 	// Configuration Initialisation
 	// Should this be in kln89.cxx ?
 	_turnAnticipationEnabled = false;
-        	
+
 	_messageStack.clear();
-	
+
 	_dto = false;
-	
+
 	_approachLoaded = false;
 	_approachArm = false;
 	_approachReallyArmed = false;
@@ -229,7 +230,7 @@ void DCLGPS::draw(osg::State& state) {
 }
 
 void DCLGPS::init() {
-		
+
 	// Not sure if this should be here, but OK for now.
 	CreateDefaultFlightPlans();
 
@@ -253,7 +254,7 @@ void DCLGPS::unbind() {
 
 void DCLGPS::update(double dt) {
 	//cout << "update called!\n";
-	
+
 	_lon = _lon_node->getDoubleValue() * SG_DEGREES_TO_RADIANS;
 	_lat = _lat_node->getDoubleValue() * SG_DEGREES_TO_RADIANS;
 	_alt = _alt_node->getDoubleValue();
@@ -271,12 +272,12 @@ void DCLGPS::update(double dt) {
 	}
 	_checkLon = _gpsLon;
 	_checkLat = _gpsLat;
-	
+
 	// TODO - check for unit power before running this.
 	if(!_powerOnTimerSet) {
 		SetPowerOnTimer();
-	} 
-	
+	}
+
 	// Check if an alarm timer has expired
 	if(_alarmSet) {
 		if(_alarmTime.hr() == atoi(fgGetString("/instrumentation/clock/indicated-hour"))
@@ -285,7 +286,7 @@ void DCLGPS::update(double dt) {
 			_alarmSet = false;
 		}
 	}
-	
+
 	if(!_departed) {
 		if(_groundSpeed_kts > 30.0) {
 			_departed = true;
@@ -315,7 +316,7 @@ void DCLGPS::update(double dt) {
 			//cout << "Error, in leg mode with flightplan of 2 or more waypoints, but either active or from wp is NULL!\n";
 			OrientateToActiveFlightPlan();
 		}
-		
+
 		// Approach stuff
 		if(_approachLoaded) {
 			if(!_approachReallyArmed && !_approachActive) {
@@ -366,7 +367,7 @@ void DCLGPS::update(double dt) {
 				}
 			}
 		}
-		
+
 		// CDI scale transition stuff
 		if(_cdiScaleTransition) {
 			if(fabs(_currentCdiScale - _cdiScales[_targetCdiScaleIndex]) < 0.001) {
@@ -374,7 +375,7 @@ void DCLGPS::update(double dt) {
 				_currentCdiScaleIndex = _targetCdiScaleIndex;
 				_cdiScaleTransition = false;
 			} else {
-				double scaleDiff = (_targetCdiScaleIndex > _sourceCdiScaleIndex 
+				double scaleDiff = (_targetCdiScaleIndex > _sourceCdiScaleIndex
 				                    ? _cdiScales[_sourceCdiScaleIndex] - _cdiScales[_targetCdiScaleIndex]
 									: _cdiScales[_targetCdiScaleIndex] - _cdiScales[_sourceCdiScaleIndex]);
 				//cout << "ScaleDiff = " << scaleDiff << '\n';
@@ -399,8 +400,8 @@ void DCLGPS::update(double dt) {
 		} else {
 			_currentCdiScale = _cdiScales[_currentCdiScaleIndex];
 		}
-		
-		
+
+
 		// Urgh - I've been setting the heading bug based on DTK,
 		// bug I think it should be based on heading re. active waypoint
 		// based on what the sim does after the final waypoint is passed.
@@ -413,7 +414,7 @@ void DCLGPS::update(double dt) {
 			_dtkMag = GetMagHeadingFromTo(_fromWaypoint->lat, _fromWaypoint->lon, _activeWaypoint->lat, _activeWaypoint->lon);
 			// Don't change the heading bug if speed is too low otherwise it flickers to/from at rest
 			if(_groundSpeed_ms > 5) {
-				//cout << "track = " << _track << ", dtk = " << _dtkTrue << '\n'; 
+				//cout << "track = " << _track << ", dtk = " << _dtkTrue << '\n';
 				double courseDev = _track - _dtkTrue;
 				//cout << "courseDev = " << courseDev << ", normalized = ";
 				SG_NORMALIZE_RANGE(courseDev, -180.0, 180.0);
@@ -429,7 +430,7 @@ void DCLGPS::update(double dt) {
 		if(!_activeWaypoint.id.empty()) {
 			double hdgTrue = GetGreatCircleCourse(_gpsLat, _gpsLon, _activeWaypoint.lat, _activeWaypoint.lon) * SG_RADIANS_TO_DEGREES;
 			if(_groundSpeed_ms > 5) {
-				//cout << "track = " << _track << ", hdgTrue = " << hdgTrue << '\n'; 
+				//cout << "track = " << _track << ", hdgTrue = " << hdgTrue << '\n';
 				double courseDev = _track - hdgTrue;
 				//cout << "courseDev = " << courseDev << ", normalized = ";
 				SG_NORMALIZE_RANGE(courseDev, -180.0, 180.0);
@@ -444,7 +445,7 @@ void DCLGPS::update(double dt) {
 				_dtkMag = 0.0;
 			}
 		}
-		
+
 		_dist2Act = GetGreatCircleDistance(_gpsLat, _gpsLon, _activeWaypoint.lat, _activeWaypoint.lon) * SG_NM_TO_METER;
 		if(_groundSpeed_ms > 10.0) {
 			_eta = _dist2Act / _groundSpeed_ms;
@@ -498,12 +499,12 @@ void DCLGPS::update(double dt) {
 		} else {
 			_eta = 0.0;
 		}
-		
+
 		/*
 		// First attempt at a sensible cross-track correction calculation
 		// Uh? - I think this is implemented further down the file!
 		if(_fromWaypoint != NULL) {
-				
+
 		} else {
 			_crosstrackDist = 0.0;
 		}
@@ -511,10 +512,10 @@ void DCLGPS::update(double dt) {
 	}
 }
 
-/* 
+/*
 	Expand a SIAP ident to the full procedure name (as shown on the approach chart).
 	NOTE: Some of this is inferred from data, some is from documentation.
-	
+
 	Example expansions from ARINC 424-18 [and the airport they're taken from]:
 	"R10LY" <--> "RNAV (GPS) Y RWY 10 L"	[KBOI]
 	"R10-Z" <--> "RNAV (GPS) Z RWY 10"		[KHTO]
@@ -526,7 +527,7 @@ void DCLGPS::update(double dt) {
 	"VDM-A"	<--> "VOR/DME or GPS-A"			[KEAG]
 	"VDMB"	<--> "VOR/DME or GPS-B"			[KDKX]
 	"VORA"	<--> "VOR or GPS-A"				[KEMT]
-	
+
 	It seems that there are 2 basic types of expansions; those that include
 	the runway and those that don't.  Of those that don't, it seems that 2
 	different positions within the string to encode the identifying letter
@@ -535,7 +536,7 @@ void DCLGPS::update(double dt) {
 string DCLGPS::ExpandSIAPIdent(const string& ident) {
 	string name;
 	bool has_rwy = false;
-	
+
 	switch(ident[0]) {
 	case 'N': name = "NDB or GPS"; has_rwy = false; break;
 	case 'P': name = "GPS"; has_rwy = true; break;
@@ -549,18 +550,18 @@ string DCLGPS::ExpandSIAPIdent(const string& ident) {
 	default: // TODO output a log message
 		break;
 	}
-	
+
 	if(has_rwy) {
 		// Add the identifying letter if present
 		if(ident.size() == 5) {
 			name += ' ';
 			name += ident[4];
 		}
-		
+
 		// Add the runway
 		name += " RWY ";
 		name += ident.substr(1, 2);
-		
+
 		// Add a left/right/centre indication if present.
 		if(ident.size() > 3) {
 			if((ident[3] != '-') && (ident[3] != ' ')) {	// Early versions of the spec allowed a blank instead of a dash so check for both
@@ -580,7 +581,7 @@ string DCLGPS::ExpandSIAPIdent(const string& ident) {
 			// No suffix letter
 		}
 	}
-	
+
 	return(name);
 }
 
@@ -602,15 +603,15 @@ string DCLGPS::ExpandSIAPIdent(const string& ident) {
 				"PG" => Runway record.
 				"PP" => Path point record.	???
 				"PS" => MSA record (minimum safe altitude).
-				
+
 	------ The following is for "PF", approach segment -------
-				
+
 	Col 14-19:	SIAP ident for this approach (left justified).  This is a standardised abbreviated approach name.
 				e.g. "R10LZ" expands to "RNAV (GPS) Z RWY 10 L".  See the comment block for ExpandSIAPIdent for full details.
 	Col 20:		Route type.  This is tricky - I don't have full documentation and am having to guess a bit.
 				'A'	=> Arrival route?  	This seems to be used to encode arrival routes from the IAF to the approach proper.
 										Note that the final fix of the arrival route is duplicated in the approach proper.
-				'D'	=> VOR/DME or GPS 
+				'D'	=> VOR/DME or GPS
 				'N' => NDB or GPS
 				'P'	=> GPS (ARINC 424-18), GPS and RNAV (GPS) (ARINC 424-15 and before).
 				'R' => RNAV (GPS) (ARINC 424-18).
@@ -651,11 +652,11 @@ void DCLGPS::LoadApproachData() {
 	GPSWaypoint* wp;
 	GPSFlightPlan* fp;
 	const GPSWaypoint* cwp;
-	
-	std::ifstream fin;
+
+	sg_ifstream fin;
 	SGPath path = globals->get_fg_root();
 	path.append("Navaids/rnav.dat");
-	fin.open(path.local8BitStr(), ios::in);
+	fin.open(path, ios::in);
 	if(!fin) {
 		//cout << "Unable to open input file " << path.c_str() << '\n';
 		return;
@@ -664,7 +665,7 @@ void DCLGPS::LoadApproachData() {
 	}
 	char tmp[256];
 	string s;
-	
+
 	string apt_ident;    // This gets set to the ICAO code of the current airport being processed.
 	string iap_ident;    // The abbreviated name of the current approach being processed.
 	string wp_ident;     // The ident of the waypoint of the current line
@@ -681,13 +682,13 @@ void DCLGPS::LoadApproachData() {
 	char last_route_type = 0;
 	char route_type;
 	char waypoint_fix_type;  // This is the waypoint type from col 43, i.e. the type of fix.  May be blank.
-	
+
 	int j;
-	
+
 	// Debugging info
 	unsigned int nLoaded = 0;
 	unsigned int nErrors = 0;
-	
+
 	//for(i=0; i<64; ++i) {
 	while(!fin.eof()) {
 		fin.getline(tmp, 256);
@@ -761,7 +762,7 @@ void DCLGPS::LoadApproachData() {
 								iap_in_progress = true;
 								iap_error = false;
 							}
-							
+
 							// Route type
 							route_type = s[19];
 							sequence_number = atoi(s.substr(26,3).c_str());
@@ -775,7 +776,7 @@ void DCLGPS::LoadApproachData() {
 									break;
 								}
 							}
-							
+
 							// Ignore lines with no waypoint ID for now - these are normally part of the
 							// missed approach procedure, and we don't use them in the KLN89.
 							if(!wp_ident.empty()) {
@@ -825,12 +826,12 @@ void DCLGPS::LoadApproachData() {
 								case ' ': w.appType = GPS_APP_NONE; break;
 								//default: cout << "Unknown waypoint_fix_type: \'" << waypoint_fix_type << "\' [" << apt_ident << ", " << iap_ident << "]\n";
 								}
-								
+
 								if(wp_error) {
 									//cout << "Unable to find waypoint " << w.id << " [" << apt_ident << ", " << iap_ident << "]\n";
 									iap_error = true;
 								}
-							
+
 								if(!wp_error) {
 									if(route_in_progress) {
 										if(sequence_number > last_sequence_number) {
@@ -928,7 +929,7 @@ void DCLGPS::LoadApproachData() {
 			}
 		}
 	}
-	
+
 	// If we get to the end of the file, load any approach that is still in progress
 	// TODO - sanity check that the approach has all the required elements
 	if(iap_in_progress) {
@@ -941,20 +942,20 @@ void DCLGPS::LoadApproachData() {
 			nLoaded++;
 		}
 	}
-	
+
 	//cout << "Done loading approach database\n";
 	//cout << "Loaded: " << nLoaded << '\n';
 	//cout << "Failed: " << nErrors << '\n';
-	
+
 	fin.close();
 }
 
-GPSWaypoint* DCLGPS::GetActiveWaypoint() { 
-	return &_activeWaypoint; 
+GPSWaypoint* DCLGPS::GetActiveWaypoint() {
+	return &_activeWaypoint;
 }
-	
+
 // Returns meters
-float DCLGPS::GetDistToActiveWaypoint() { 
+float DCLGPS::GetDistToActiveWaypoint() {
 	return _dist2Act;
 }
 
@@ -1023,7 +1024,7 @@ void DCLGPS::ToggleOBSMode() {
 		//
 		// If the KLN89 is not connected to an external indicator, then:
 		// 		If there is an active waypoint, the OBS heading is set such that the
-		//		deviation indicator remains at the same deviation (i.e. set to DTK, 
+		//		deviation indicator remains at the same deviation (i.e. set to DTK,
 		//		although there may be some small difference).
 		//
 		//		If there is not an active waypoint, I am not sure what value should be
@@ -1042,11 +1043,11 @@ void DCLGPS::ToggleOBSMode() {
 			// TODO - what should we really do here?
 			_obsHeading = 0;
 		}
-		
+
 		// Valid OBS heading values are 0 -> 359 degrees inclusive (from kln89 simulator).
 		if(_obsHeading > 359) _obsHeading -= 360;
 		if(_obsHeading < 0) _obsHeading += 360;
-		
+
 		// TODO - the _fromWaypoint location will change as the OBS heading changes.
 		// Might need to store the OBS initiation position somewhere in case it is needed again.
 		SetOBSFromWaypoint();
@@ -1057,7 +1058,7 @@ void DCLGPS::ToggleOBSMode() {
 void DCLGPS::SetOBSFromWaypoint() {
 	if(!_obsMode) return;
 	if(_activeWaypoint.id.empty()) return;
-	
+
 	// TODO - base the 180 deg correction on the to/from flag.
 	_fromWaypoint = GetPositionOnMagRadial(_activeWaypoint, 10, _obsHeading + 180.0);
 	_fromWaypoint.type = GPS_WP_VIRT;
@@ -1120,7 +1121,7 @@ double DCLGPS::GetTimeToWaypoint(const string& id) {
 	if(_groundSpeed_kts < 30.0) {
 		return(-1.0);
 	}
-	
+
 	double eta = 0.0;
 	int n1 = GetActiveWaypointIndex();
 	int n2 = GetWaypointIndex(id);
@@ -1201,7 +1202,7 @@ int DCLGPS::GetWaypointIndex(const string& id) {
 
 void DCLGPS::OrientateToFlightPlan(GPSFlightPlan* fp) {
 	//cout << "Orientating...\n";
-	//cout << "_lat = " << _lat << ", _lon = " << _lon << ", _gpsLat = " << _gpsLat << ", gpsLon = " << _gpsLon << '\n'; 
+	//cout << "_lat = " << _lat << ", _lon = " << _lon << ", _gpsLat = " << _gpsLat << ", gpsLon = " << _gpsLon << '\n';
 	if(fp->IsEmpty()) {
 		_activeWaypoint.id.clear();
 		_navFlagged = true;
@@ -1226,18 +1227,18 @@ void DCLGPS::OrientateToFlightPlan(GPSFlightPlan* fp) {
 				double d0 = fabs(CalcCrossTrackDeviation(*fp->waypoints[i-1], *fp->waypoints[i]));
 				// That is the shortest distance away we could be though - check for
 				// longer distances if we are 'off the end' of the leg.
-				double ht1 = GetGreatCircleCourse(fp->waypoints[i-1]->lat, fp->waypoints[i-1]->lon, 
-				                                  fp->waypoints[i]->lat, fp->waypoints[i]->lon) 
+				double ht1 = GetGreatCircleCourse(fp->waypoints[i-1]->lat, fp->waypoints[i-1]->lon,
+				                                  fp->waypoints[i]->lat, fp->waypoints[i]->lon)
 												  * SG_RADIANS_TO_DEGREES;
 				// not simply the reverse of the above due to great circle navigation.
-				double ht2 = GetGreatCircleCourse(fp->waypoints[i]->lat, fp->waypoints[i]->lon, 
-				                                  fp->waypoints[i-1]->lat, fp->waypoints[i-1]->lon) 
+				double ht2 = GetGreatCircleCourse(fp->waypoints[i]->lat, fp->waypoints[i]->lon,
+				                                  fp->waypoints[i-1]->lat, fp->waypoints[i-1]->lon)
 												  * SG_RADIANS_TO_DEGREES;
 				double hw1 = GetGreatCircleCourse(_gpsLat, _gpsLon,
-				                                  fp->waypoints[i]->lat, fp->waypoints[i]->lon) 
+				                                  fp->waypoints[i]->lat, fp->waypoints[i]->lon)
 												  * SG_RADIANS_TO_DEGREES;
-				double hw2 = GetGreatCircleCourse(_gpsLat, _gpsLon, 
-				                                  fp->waypoints[i-1]->lat, fp->waypoints[i-1]->lon) 
+				double hw2 = GetGreatCircleCourse(_gpsLat, _gpsLon,
+				                                  fp->waypoints[i-1]->lat, fp->waypoints[i-1]->lon)
 												  * SG_RADIANS_TO_DEGREES;
 				double h1 = ht1 - hw1;
 				double h2 = ht2 - hw2;
@@ -1270,7 +1271,7 @@ void DCLGPS::OrientateToFlightPlan(GPSFlightPlan* fp) {
 
 void DCLGPS::OrientateToActiveFlightPlan() {
 	OrientateToFlightPlan(_activeFP);
-}	
+}
 
 /***************************************/
 
@@ -1367,12 +1368,12 @@ public:
 
 GPSWaypoint* DCLGPS::FindFirstById(const string& id) const
 {
-  DCLGPSFilter filter;  
+  DCLGPSFilter filter;
   FGPositionedList matches = FGPositioned::findAllWithIdent(id, &filter, false);
   if (matches.empty()) {
     return NULL;
   }
-  
+
   FGPositioned::sortByRange(matches, SGGeod::fromRad(_lon, _lat));
   return GPSWaypoint::createFromPositioned(matches.front());
 }
@@ -1389,13 +1390,13 @@ FGPositioned* DCLGPS::FindTypedFirstById(const string& id, FGPositioned::Type ty
 {
   multi = false;
   FGPositioned::TypeFilter filter(ty);
-  
+
   FGPositionedList matches =
     FGPositioned::findAllWithIdent(id, &filter, exact);
   if (matches.empty()) {
     return NULL;
   }
-  
+
   FGPositioned::sortByRange(matches, SGGeod::fromRad(_lon, _lat));
   return matches.front();
 }
@@ -1420,14 +1421,14 @@ const FGAirport* DCLGPS::FindFirstAptById(const string& id, bool &multi, bool ex
   return dynamic_cast<FGAirport*>(FindTypedFirstById(id, FGPositioned::AIRPORT, multi, exact));
 }
 
-FGNavRecord* DCLGPS::FindClosestVor(double lat_rad, double lon_rad) {  
+FGNavRecord* DCLGPS::FindClosestVor(double lat_rad, double lon_rad) {
   FGPositioned::TypeFilter filter(FGPositioned::VOR);
   double cutoff = 1000; // nautical miles
   FGPositionedRef v = FGPositioned::findClosest(SGGeod::fromRad(lon_rad, lat_rad), cutoff, &filter);
   if (!v) {
     return NULL;
   }
-  
+
   return dynamic_cast<FGNavRecord*>(v.ptr());
 }
 
@@ -1465,9 +1466,9 @@ d=acos(sin(lat1)*sin(lat2)+cos(lat1)*cos(lat2)*cos(lon1-lon2))
 
 A mathematically equivalent formula, which is less subject to rounding error for short distances is:
 
-d=2*asin(sqrt((sin((lat1-lat2)/2))^2 + 
+d=2*asin(sqrt((sin((lat1-lat2)/2))^2 +
                  cos(lat1)*cos(lat2)*(sin((lon1-lon2)/2))^2))
-				 
+
 */
 
 // Returns distance in nm, takes lat & lon in RADIANS
@@ -1477,7 +1478,7 @@ double DCLGPS::GetGreatCircleDistance(double lat1, double lon1, double lat2, dou
 	return(Rad2Nm(d));
 }
 
-// fmod dosen't do what we want :-( 
+// fmod dosen't do what we want :-(
 static double mod(double d1, double d2) {
 	return(d1 - d2*floor(d1/d2));
 }
@@ -1513,7 +1514,7 @@ double DCLGPS::GetGreatCircleCourse (double lat1, double lon1, double lat2, doub
 	}
 	cout << h * SG_RADIANS_TO_DEGREES << '\n';
 	*/
-	
+
 	return( mod(atan2(sin(lon2-lon1)*cos(lat2),
             cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon2-lon1)),
             2.0*SG_PI) );
@@ -1532,10 +1533,10 @@ GPSWaypoint DCLGPS::GetPositionOnMagRadial(const GPSWaypoint& wp1, double d, dou
 GPSWaypoint DCLGPS::GetPositionOnRadial(const GPSWaypoint& wp1, double d, double h) {
 	while(h < 0.0) h += 360.0;
 	while(h > 360.0) h -= 360.0;
-	
+
 	h *= SG_DEGREES_TO_RADIANS;
 	d *= (SG_PI / (180.0 * 60.0));
-	
+
 	double lat=asin(sin(wp1.lat)*cos(d)+cos(wp1.lat)*sin(d)*cos(h));
 	double lon;
 	if(cos(lat)==0) {
@@ -1543,7 +1544,7 @@ GPSWaypoint DCLGPS::GetPositionOnRadial(const GPSWaypoint& wp1, double d, double
 	} else {
 		lon=mod(wp1.lon+asin(sin(h)*sin(d)/cos(lat))+SG_PI,2*SG_PI)-SG_PI;
 	}
-	
+
 	GPSWaypoint wp;
 	wp.lat = lat;
 	wp.lon = lon;
@@ -1560,18 +1561,18 @@ double DCLGPS::CalcCrossTrackDeviation() const {
 double DCLGPS::CalcCrossTrackDeviation(const GPSWaypoint& wp1, const GPSWaypoint& wp2) const {
 	//if(wp1 == NULL || wp2 == NULL) return(0.0);
 	if(wp1.id.empty() || wp2.id.empty()) return(0.0);
-	double xtd = asin(sin(Nm2Rad(GetGreatCircleDistance(wp1.lat, wp1.lon, _gpsLat, _gpsLon))) 
+	double xtd = asin(sin(Nm2Rad(GetGreatCircleDistance(wp1.lat, wp1.lon, _gpsLat, _gpsLon)))
 	                  * sin(GetGreatCircleCourse(wp1.lat, wp1.lon, _gpsLat, _gpsLon) - GetGreatCircleCourse(wp1.lat, wp1.lon, wp2.lat, wp2.lon)));
 	return(Rad2Nm(xtd));
 }
 
-AlignedProjection::AlignedProjection() 
+AlignedProjection::AlignedProjection()
 {
     SGGeod g; // ctor initializes to zero
     Init( g, 0.0 );
 }
 
-AlignedProjection::AlignedProjection(const SGGeod& centre, double heading) 
+AlignedProjection::AlignedProjection(const SGGeod& centre, double heading)
 {
     Init( centre, heading );
 }
@@ -1614,4 +1615,3 @@ SGGeod AlignedProjection::ConvertFromLocal(const SGVec3d& pt) {
 
     return SGGeod::fromRadM(_origin.getLongitudeRad()+delta_lon, _origin.getLatitudeRad()+delta_lat, pt.z());
 }
-
