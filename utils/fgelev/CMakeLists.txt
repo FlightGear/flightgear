@@ -1,6 +1,5 @@
 add_executable(fgelev fgelev.cxx)
 
-message("SIMGEAR_LIBRARIES: ${SIMGEAR_LIBRARIES}")
 target_link_libraries(fgelev
 	${SIMGEAR_LIBRARIES}
 	${OPENSCENEGRAPH_LIBRARIES}
