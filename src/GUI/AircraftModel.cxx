@@ -503,16 +503,18 @@ QModelIndex AircraftItemModel::officialHangarMessageIndex() const
 
 void AircraftItemModel::scanDirs()
 {
-    abandonCurrentScan();
+	abandonCurrentScan();
 
-    int firstRow = (m_showOfficialHangarMessage ? 1 : 0);
-    int numToRemove = m_items.size() - firstRow;
-    int lastRow = firstRow + numToRemove - 1;
+	int firstRow = (m_showOfficialHangarMessage ? 1 : 0);
+	int numToRemove = m_items.size() - firstRow;
+	if (numToRemove > 0) {
+		int lastRow = firstRow + numToRemove - 1;
 
-    beginRemoveRows(QModelIndex(), firstRow, lastRow);
-    m_items.remove(firstRow, numToRemove);
-    m_activeVariant.remove(firstRow, numToRemove);
-    endRemoveRows();
+		beginRemoveRows(QModelIndex(), firstRow, lastRow);
+		m_items.remove(firstRow, numToRemove);
+		m_activeVariant.remove(firstRow, numToRemove);
+		endRemoveRows();
+	}
 
     QStringList dirs = m_paths;
 
