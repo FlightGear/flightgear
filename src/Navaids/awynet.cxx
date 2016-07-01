@@ -205,7 +205,7 @@ void FGAirwayNetwork::load(const SGPath& path)
   int airwayIndex = 0;
   FGNode *n;
 
-  sg_gzifstream in( path.str() );
+  sg_gzifstream in( path );
   if ( !in.is_open() ) {
     SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path.str() );
     exit(-1);
@@ -319,7 +319,7 @@ int FGAirwayNetwork::findNearestNode(const SGGeod& aPos)
   double minDist = HUGE_VAL;
   int index = -1;
   SGVec3d cart = SGVec3d::fromGeod(aPos);
-  
+
   //cerr << "Lat " << lat << " lon " << lon << endl;
   for (FGNodeVectorIterator
 	 itr = nodes.begin();
@@ -465,4 +465,3 @@ void FGAirwayNetwork::trace(FGNode *currNode, int end, int depth, double distanc
   totalDistance -= distance;
   return;
 }
-

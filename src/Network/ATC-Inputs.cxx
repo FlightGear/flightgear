@@ -117,18 +117,13 @@ static void ATCReadSwitches( int fd, unsigned char *switch_bytes ) {
 
 void FGATCInput::init_config() {
 #if defined( unix ) || defined( __CYGWIN__ )
-    if ( config.str()[0] != '/' ) {
+    if ( !config.isAbsolute() ) {
         // not an absolute path, prepend the standard location
-        SGPath tmp;
-        char *envp = ::getenv( "HOME" );
-        if ( envp != NULL ) {
-            tmp = envp;
-            tmp.append( ".atcflightsim" );
-            tmp.append( config.str() );
-            config = tmp;
-        }
+        SGPath tmp = SGPath::home();
+        tmp.append( ".atcflightsim" );
+        tmp.append( config.utf8Str() );
     }
-    readProperties( config.str(), globals->get_props() );
+    readProperties( config, globals->get_props() );
 #endif
 }
 
@@ -239,7 +234,7 @@ static double scale( int center, int deadband, int min, int max, int value ) {
         result = (value - (center - deadband)) / range;
     } else if ( value >= (center + deadband) ) {
         range = max - (center + deadband);
-        result = (value - (center + deadband)) / range;            
+        result = (value - (center + deadband)) / range;
     } else {
         result = 0.0;
     }
@@ -279,7 +274,7 @@ static double clamp( double min, double max, double value ) {
 
     // cout << result << endl;
 
-    return result;   
+    return result;
 }
 
 
@@ -669,7 +664,7 @@ static void update_switch_matrix(
             switches = switches >> 1;
         }
     }
-}                     
+}
 
 bool FGATCInput::do_switches() {
     // Read the raw data
@@ -873,7 +868,7 @@ bool FGATCInput::do_switches() {
 
 
 /////////////////////////////////////////////////////////////////////
-// Read radio switches 
+// Read radio switches
 /////////////////////////////////////////////////////////////////////
 
 bool FGATCInput::do_radio_switches() {
@@ -976,7 +971,7 @@ bool FGATCInput::process() {
     do_analog_in();
     do_switches();
     do_radio_switches();
-	
+
     return true;
 }
 

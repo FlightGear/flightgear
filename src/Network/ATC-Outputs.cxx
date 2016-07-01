@@ -229,18 +229,14 @@ void ATCSetLamp( int fd, int channel, bool value ) {
 
 void FGATCOutput::init_config() {
 #if defined( unix ) || defined( __CYGWIN__ )
-    if ( config.str()[0] != '/' ) {
-        // not an absolute path, prepend the standard location
-        SGPath tmp;
-        char *envp = ::getenv( "HOME" );
-        if ( envp != NULL ) {
-            tmp = envp;
-            tmp.append( ".atcflightsim" );
-            tmp.append( config.str() );
-            config = tmp;
-        }
+    if (!config.isAbsolute()) {
+        SGPath tmp = SGPath::home();
+        tmp.append( ".atcflightsim" );
+        tmp.append( config.utf8Str() );
+        config = tmp;
     }
-    readProperties( config.str(), globals->get_props() );
+
+    readProperties( config, globals->get_props() );
 #endif
 }
 
@@ -547,7 +543,7 @@ bool FGATCOutput::do_lamps() {
 
 
 /////////////////////////////////////////////////////////////////////
-// Update the radio display 
+// Update the radio display
 /////////////////////////////////////////////////////////////////////
 
 
@@ -574,7 +570,7 @@ static bool navcom2_has_power() {
 static bool dme_has_power() {
     static SGPropertyNode *dme_bus_power
         = fgGetNode( "/systems/electrical/outputs/dme", true );
-    
+
     return (dme_bus_power->getDoubleValue() > 1.0);
 }
 
@@ -680,7 +676,7 @@ bool FGATCOutput::do_radio_display() {
             }
             radio_display_data[0] = digits[1] << 4 | digits[2];
             radio_display_data[1] = 0xf0 | digits[0];
-	
+
             // DME knots
             float knots = dme_kt->getFloatValue();
             if ( knots > 999 ) {
@@ -956,7 +952,7 @@ bool FGATCOutput::do_radio_display() {
         radio_display_data[34] = 0xff;
         radio_display_data[35] = 0xff;
     }
-    
+
     // Transponder code and flight level
     if ( xpdr_has_power() && xpdr_serviceable->getBoolValue() ) {
         if ( xpdr_func_knob->getIntValue() == 2 ) {
@@ -1062,7 +1058,7 @@ bool FGATCOutput::process() {
 #ifdef ATCFLIGHTSIM_HAVE_COMPASS
     do_steppers();
 #endif
-	
+
     return true;
 }
 

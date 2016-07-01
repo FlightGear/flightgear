@@ -301,7 +301,7 @@ static string fgScanForOption( const string& option ) {
             config.append( ".fgfsrc" );
             config.concat( "." );
             config.concat( hostname );
-            arg = fgScanForOption( option, config.str() );
+            arg = fgScanForOption( option, config );
         }
     }
 #endif
@@ -346,10 +346,10 @@ string getFGRoot ( int argc, char **argv ) {
         root = "../data";
 #elif defined( _WIN32 )
         root = "..\\data";
-#elif defined(__APPLE__) 
+#elif defined(__APPLE__)
         /*
-        The following code looks for the base package inside the application 
-        bundle, in the standard Contents/Resources location. 
+        The following code looks for the base package inside the application
+        bundle, in the standard Contents/Resources location.
         */
 
         CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());

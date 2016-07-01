@@ -390,14 +390,14 @@ public:
         { }
         virtual ~Physics()
         { }
-        
+
         virtual void update(AIObject& object, const SGTimeStamp& dt)
         {
             SGVec3d down = getHorizontalLocalOrientation().backTransform(SGVec3d(0, 0, 1));
             SGVec3d distToAimingPoint = getAimingPoint() - getPosition();
             if (norm(distToAimingPoint - down*dot(down, distToAimingPoint)) <= 10*dt.toSecs()*norm(getLinearVelocity()))
                 rotateAimingPoint();
-                
+
             SGVec3d aimingVector = normalize(getAimingPoint() - getPosition());
             SGVec3d bodyAimingVector = getLocation().getOrientation().transform(aimingVector);
 
@@ -424,12 +424,12 @@ public:
         { return _waypoints.front(); }
         void rotateAimingPoint()
         { _waypoints.splice(_waypoints.end(), _waypoints, _waypoints.begin()); }
-        
+
         std::list<SGVec3d> _waypoints;
         double _targetVelocity;
         double _gearOffset;
     };
-    
+
     AIOgelInTrafficCircuit()
     { }
     virtual ~AIOgelInTrafficCircuit()
@@ -594,7 +594,7 @@ main(int argc, char* argv[])
         SGPath path(fg_root);
         path.append("HLA");
         path.append("fg-local-fom.xml");
-        manager->setFederationObjectModel(path.str());
+        manager->setFederationObjectModel(path.local8BitStr());
     }
 
     /// EDDS

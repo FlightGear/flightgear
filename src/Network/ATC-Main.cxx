@@ -94,20 +94,17 @@ static int fgATCMainRelease( int fd ) {
 void FGATCMain::init_config() {
 #if defined( unix ) || defined( __CYGWIN__ )
     // Next check home directory for .fgfsrc.hostname file
-    char *envp = ::getenv( "HOME" );
-    if ( envp != NULL ) {
-        SGPath atcsim_config( envp );
-        atcsim_config.append( ".fgfs-atc610x.xml" );
-	try {
-	  SG_LOG(SG_NETWORK, SG_ALERT,
-		 "Warning: loading deprecated config file: " <<
-		 atcsim_config.str() );
-	  readProperties( atcsim_config.str(), globals->get_props() );
-	} catch (const sg_exception &e) {
-	  // fail silently, this is an old style config file I want to continue
-	  // to support if it exists.
-	}
-    }
+    SGPath atcsim_config = SGPath::home();
+    atcsim_config.append( ".fgfs-atc610x.xml" );
+  	try {
+  	  SG_LOG(SG_NETWORK, SG_ALERT,
+  		 "Warning: loading deprecated config file: " << atcsim_config);
+  	  readProperties( atcsim_config, globals->get_props() );
+  	} catch (const sg_exception &e) {
+  	  // fail silently, this is an old style config file I want to continue
+  	  // to support if it exists.
+  	}
+
 #endif
 }
 
@@ -115,7 +112,7 @@ void FGATCMain::init_config() {
 // Open and initialize ATC hardware
 bool FGATCMain::open() {
     if ( is_enabled() ) {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
+	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
 		<< "is already in use, ignoring" );
 	return false;
     }
