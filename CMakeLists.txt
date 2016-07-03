@@ -115,6 +115,8 @@ IF(APPLE)
     # but it's not working reliably, so forcing it for now
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.7")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.7")
+elseif(WIN32)
+    list(APPEND PLATFORM_LIBS "Shlwapi.lib")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
 	${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
     find_package(Threads REQUIRED)
