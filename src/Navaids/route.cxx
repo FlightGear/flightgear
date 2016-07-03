@@ -379,7 +379,7 @@ void RouteBase::loadAirportProcedures(const SGPath& aPath, FGAirport* aApt)
   assert(aApt);
   try {
     NavdataVisitor visitor(aApt, aPath);
-      readXML(aPath.local8BitStr(), visitor);
+      readXML(aPath, visitor);
   } catch (sg_io_exception& ex) {
     SG_LOG(SG_NAVAID, SG_WARN, "failure parsing procedures: " << aPath <<
       "\n\t" << ex.getMessage() << "\n\tat:" << ex.getLocation().asString());

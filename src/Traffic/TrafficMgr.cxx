@@ -167,7 +167,7 @@ public:
             SGPath path = globals->get_fg_root();
             path.append("/Traffic/");
             path.append(attval);
-            readXML(path.local8BitStr(), *this);
+            readXML(path, *this);
         }
         elementValueStack.push_back("");
         //  cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl;
@@ -385,7 +385,7 @@ private:
             SG_LOG(SG_AI, SG_INFO, "parsing traffic in:" << p);
             simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
             BOOST_FOREACH(SGPath xml, trafficFiles) {
-                readXML(xml.local8BitStr(), *this);
+                readXML(xml, *this);
                 if (_cancelThread) {
                     return;
                 }
@@ -564,7 +564,7 @@ void FGTrafficManager::init()
                 // use a SchedulerParser to parse, but run it in this thread,
                 // i.e don't start it
                 ScheduleParseThread parser(this);
-                readXML(path.local8BitStr(), parser);
+                readXML(path, parser);
             }
         } else if (path.extension() == "conf") {
             if (path.exists()) {

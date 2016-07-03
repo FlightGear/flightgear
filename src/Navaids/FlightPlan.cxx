@@ -727,7 +727,7 @@ bool FlightPlan::loadGpxFormat(const SGPath& path)
     GpxXmlVisitor gpxVistor(this);
     try
     {
-        readXML(path.local8BitStr(), gpxVistor);
+        readXML(path, gpxVistor);
     } catch (sg_exception& e)
     {
         // XML parsing fails => not a GPX XML file

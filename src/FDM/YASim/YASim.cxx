@@ -170,7 +170,7 @@ void YASim::init()
     f.append(fgGetString("/sim/aero"));
     f.concat(".xml");
     try {
-        readXML(f.local8BitStr(), *_fdm);
+        readXML(f, *_fdm);
     } catch (const sg_exception &e) {
         SG_LOG(SG_FLIGHT, SG_ALERT,
                "Error reading YASim FDM: '" << f << "'" << std::endl

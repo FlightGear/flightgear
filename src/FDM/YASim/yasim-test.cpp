@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     // Read
     try {
         string file = argv[1];
-        readXML(file, *fdm);
+        readXML(SGPath(file), *fdm);
     } catch (const sg_exception &e) {
         printf("XML parse error: %s (%s)\n",
                e.getFormattedMessage().c_str(), e.getOrigin());
