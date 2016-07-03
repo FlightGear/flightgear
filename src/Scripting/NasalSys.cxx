@@ -24,6 +24,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/SimpleMarkdown.hxx>
 #include <simgear/structure/commands.hxx>
@@ -726,7 +727,7 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "parsexml(): access denied (unauthorized directory)");
         return naNil();
     }
-    std::ifstream input(file.c_str());
+    sg_ifstream input(SGPath::fromUtf8(file));
     NasalXMLVisitor visitor(c, argc, args);
     try {
         readXML(input, visitor);

@@ -14,6 +14,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/misc/sgstream.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/structure/exception.hxx>
@@ -295,7 +296,7 @@ do_load (const SGPropertyNode * arg)
         return false;
     }
 
-    ifstream input(validated_path.c_str());
+    sg_ifstream input(SGPath::fromUtf8(validated_path));
     if (input.good() && fgLoadFlight(input)) {
         input.close();
         SG_LOG(SG_INPUT, SG_INFO, "Restored flight from " << file);
