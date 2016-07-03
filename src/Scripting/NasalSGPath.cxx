@@ -46,8 +46,8 @@ SGPath::Permissions checkIORules(const SGPath& path)
         "realpath() to make a path absolute)");
   }
 
-  perm.read  = path.isAbsolute() && !fgValidatePath(path, false).empty();
-  perm.write = path.isAbsolute() && !fgValidatePath(path, true ).empty();
+  perm.read  = path.isAbsolute() && !fgValidatePath(path, false).isNull();
+  perm.write = path.isAbsolute() && !fgValidatePath(path, true ).isNull();
 
   return perm;
 }

@@ -47,8 +47,7 @@ double fgGetLowPass (double current, double target, double timeratio);
  * the current directory changes),
  * always use the returned path not the original one
  */
-std::string fgValidatePath(const SGPath& path, bool write);
-std::string fgValidatePath(const std::string& path, bool write);
+SGPath fgValidatePath(const SGPath& path, bool write);
 
 /**
  * Set allowed paths for fgValidatePath

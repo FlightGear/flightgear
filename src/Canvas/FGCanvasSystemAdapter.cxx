@@ -79,11 +79,12 @@ namespace canvas
   //----------------------------------------------------------------------------
   osg::ref_ptr<osg::Image> FGCanvasSystemAdapter::getImage(const std::string& path) const
   {
-    if( SGPath(path).isAbsolute() )
+      SGPath p(SGPath::fromUtf8(path));
+    if( p.isAbsolute() )
     {
-      std::string valid_path = fgValidatePath(path, false);
-      if( !valid_path.empty() )
-        return osgDB::readImageFile(valid_path.c_str());
+      SGPath valid_path = fgValidatePath(p, false);
+      if( !valid_path.isNull() )
+        return osgDB::readImageFile(valid_path.local8BitStr());
 
       SG_LOG(SG_IO, SG_ALERT, "canvas::Image: reading '" << path << "' denied");
     }

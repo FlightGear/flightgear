@@ -138,13 +138,13 @@ void fgInitAllowedPaths()
     
     // Check that it works
     std::string homePath = globals->get_fg_home().utf8Str();
-    if(!fgValidatePath(homePath + "/../no.log",true).empty() ||
-        !fgValidatePath(homePath + "/no.logt",true).empty() ||
-        !fgValidatePath(homePath + "/nolog",true).empty() ||
-        !fgValidatePath(homePath + "no.log",true).empty() ||
-        !fgValidatePath(homePath + "\\..\\no.log",false).empty() ||
-        fgValidatePath(homePath + "/aircraft-data/yes..xml",true).empty() ||
-        fgValidatePath(homePath + "/.\\yes.bmp",false).empty()) {
+    if(!fgValidatePath(homePath + "/../no.log",true).isNull() ||
+        !fgValidatePath(homePath + "/no.logt",true).isNull() ||
+        !fgValidatePath(homePath + "/nolog",true).isNull() ||
+        !fgValidatePath(homePath + "no.log",true).isNull() ||
+        !fgValidatePath(homePath + "\\..\\no.log",false).isNull() ||
+        fgValidatePath(homePath + "/aircraft-data/yes..xml",true).isNull() ||
+        fgValidatePath(homePath + "/.\\yes.bmp",false).isNull()) {
             flightgear::fatalMessageBox("Nasal initialization error",
                                     "The FG_HOME directory must not be inside any of the FG_ROOT, FG_AIRCRAFT or FG_SCENERY directories",
                                     "(check that you have not accidentally included an extra :, as an empty part means the current directory)");
@@ -159,10 +159,10 @@ void fgInitAllowedPaths()
  * the current directory changes),
  * always use the returned path not the original one
  */
-std::string fgValidatePath (const std::string& path, bool write)
+SGPath fgValidatePath (const SGPath& path, bool write)
 {
     // Normalize the path (prevents ../../.. or symlink trickery)
-    std::string normed_path = SGPath(path).realpath();
+    std::string normed_path = path.realpath();
     
     const string_list& allowed_paths(write ? write_allowed_paths : read_allowed_paths);
     size_t star_pos;
@@ -175,7 +175,7 @@ std::string fgValidatePath (const std::string& path, bool write)
         star_pos = it->find('*');
         if (star_pos == std::string::npos) {
             if (!(it->compare(normed_path))) {
-                return normed_path;
+                return SGPath::fromUtf8(normed_path);
             }
         } else {
             if ((it->size()-1 <= normed_path.size()) /* long enough to be a potential match */
@@ -184,13 +184,13 @@ std::string fgValidatePath (const std::string& path, bool write)
                 && !(it->substr(star_pos+1,it->size()-star_pos-1)
                     .compare(normed_path.substr(star_pos+1+normed_path.size()-it->size(),
                       it->size()-star_pos-1))) /* after-star parts match */) {
-                return normed_path;
+                return SGPath::fromUtf8(normed_path);
             }
         }
     }
     // no match found
-    return "";
+    return SGPath();
 }
-std::string fgValidatePath(const SGPath& path, bool write) { return fgValidatePath(path.utf8Str(),write); }
+
 // end of util.cxx
 

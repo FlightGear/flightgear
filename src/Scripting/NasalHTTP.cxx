@@ -55,16 +55,16 @@ static naRef f_http_save(const nasal::CallContext& ctx)
 
   // Check for write access to target file
   const std::string filename = ctx.requireArg<std::string>(1);
-  const std::string validated_path = fgValidatePath(filename, true);
+  const SGPath validated_path = fgValidatePath(filename, true);
 
-  if( validated_path.empty() )
+  if( validated_path.isNull() )
     naRuntimeError( ctx.c,
                     "Access denied: can not write to %s",
                     filename.c_str() );
 
   return ctx.to_nasal
   (
-    requireHTTPClient(ctx.c).client()->save(url, validated_path)
+   requireHTTPClient(ctx.c).client()->save(url, validated_path.utf8Str())
   );
 }
 

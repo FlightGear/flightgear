@@ -289,14 +289,14 @@ do_load (const SGPropertyNode * arg)
     if (file.extension() != "sav")
         file.concat(".sav");
 
-    std::string validated_path = fgValidatePath(file, false);
-    if (validated_path.empty()) {
+    SGPath validated_path = fgValidatePath(file, false);
+    if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "load: reading '" << file << "' denied "
                 "(unauthorized access)");
         return false;
     }
 
-    sg_ifstream input(SGPath::fromUtf8(validated_path));
+    sg_ifstream input(validated_path);
     if (input.good() && fgLoadFlight(input)) {
         input.close();
         SG_LOG(SG_INPUT, SG_INFO, "Restored flight from " << file);
@@ -322,8 +322,8 @@ do_save (const SGPropertyNode * arg)
     if (file.extension() != "sav")
         file.concat(".sav");
 
-    std::string validated_path = fgValidatePath(file, true);
-    if (validated_path.empty()) {
+    SGPath validated_path = fgValidatePath(file, true);
+    if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "save: writing '" << file << "' denied "
                 "(unauthorized access)");
         return false;
@@ -1149,8 +1149,8 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
         }
     }
     
-    std::string validated_path = fgValidatePath(file, false);
-    if (validated_path.empty()) {
+    SGPath validated_path = fgValidatePath(file, false);
+    if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file << "' denied "
                 "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, add them to --fg-aircraft)");
         return false;
@@ -1232,8 +1232,8 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
     if (file.extension() != "xml")
         file.concat(".xml");
 
-    std::string validated_path = fgValidatePath(file, true);
-    if (validated_path.empty()) {
+    SGPath validated_path = fgValidatePath(file, true);
+    if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "savexml: writing to '" << file << "' denied "
                 "(unauthorized directory - authorization no longer follows symlinks)");
         return false;

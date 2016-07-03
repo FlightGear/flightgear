@@ -576,8 +576,8 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
     if(argc != 1 || !naIsString(args[0]))
         naRuntimeError(c, "bad arguments to directory()");
 
-    std::string dirname = fgValidatePath(naStr_data(args[0]), false);
-    if(dirname.empty()) {
+    SGPath dirname = fgValidatePath(SGPath::fromUtf8(naStr_data(args[0])), false);
+    if(dirname.isNull()) {
         SG_LOG(SG_NASAL, SG_ALERT, "directory(): listing '" <<
         naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
         " no longer follows symlinks; to authorize reading additional "
@@ -586,8 +586,7 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
         return naNil();
     }
 
-    SGPath d0(dirname);
-    simgear::Dir d(d0);
+    simgear::Dir d(dirname);
     if(!d.exists()) return naNil();
     naRef result = naNewVector(c);
 
@@ -683,9 +682,9 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
     naRef mode = argc > 1 ? naStringValue(c, args[1]) : naNil();
     if(!naStr_data(file)) naRuntimeError(c, "bad argument to open()");
     const char* modestr = naStr_data(mode) ? naStr_data(mode) : "rb";
-    std::string filename = fgValidatePath(naStr_data(file),
+    SGPath filename = fgValidatePath(SGPath::fromUtf8(naStr_data(file)),
         strcmp(modestr, "rb") && strcmp(modestr, "r"));
-    if(filename.empty()) {
+    if(filename.isNull()) {
         SG_LOG(SG_NASAL, SG_ALERT, "open(): reading/writing '" <<
         naStr_data(file) << "' denied (unauthorized directory - authorization"
         " no longer follows symlinks; to authorize reading additional "
@@ -693,7 +692,9 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "open(): access denied (unauthorized directory)");
         return naNil();
     }
+
     f = fopen(filename.c_str(), modestr);
+
     if(!f) naRuntimeError(c, strerror(errno));
     return naIOGhost(c, f);
 }
@@ -718,8 +719,8 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
         if(!(naIsNil(args[i]) || naIsFunc(args[i])))
             naRuntimeError(c, "parsexml(): callback argument not a function");
 
-    std::string file = fgValidatePath(naStr_data(args[0]), false);
-    if(file.empty()) {
+    SGPath file = fgValidatePath(SGPath::fromUtf8(naStr_data(args[0])), false);
+    if(file.isNull()) {
         SG_LOG(SG_NASAL, SG_ALERT, "parsexml(): reading '" <<
         naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
         " no longer follows symlinks; to authorize reading additional "
@@ -727,7 +728,7 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "parsexml(): access denied (unauthorized directory)");
         return naNil();
     }
-    sg_ifstream input(SGPath::fromUtf8(file));
+    sg_ifstream input(file);
     NasalXMLVisitor visitor(c, argc, args);
     try {
         readXML(input, visitor);
@@ -736,7 +737,9 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
                 file.c_str(), e.getFormattedMessage().c_str());
         return naNil();
     }
-    return naStr_fromdata(naNewString(c), file.c_str(), file.length());
+
+    std::string fs = file.utf8Str();
+    return naStr_fromdata(naNewString(c), fs.c_str(), fs.length());
 }
 
 /**
