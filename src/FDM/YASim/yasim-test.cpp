@@ -5,6 +5,7 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/xml/easyxml.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"

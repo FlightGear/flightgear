@@ -11,6 +11,8 @@
 #include "Propeller.hpp"
 #include "Atmosphere.hpp"
 
+#include <simgear/misc/sg_path.hxx>
+
 using namespace yasim;
 
 // Usage: proptest plane.xml [alt-ft] [spd-ktas]
