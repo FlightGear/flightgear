@@ -94,13 +94,9 @@ void fgInitAllowedPaths()
     write_allowed_paths.clear();
     std::string fg_root = globals->get_fg_root().realpath().utf8Str();
     std::string fg_home = globals->get_fg_home().realpath().utf8Str();
-#if defined(_MSC_VER) /*for MS compilers */ || defined(_WIN32) /*needed for non MS windows compilers like MingW*/
-     std::string sep = "\\";
-#else
-     std::string sep = "/";
-#endif
-    read_allowed_paths.push_back(fg_root + sep + "*");
-    read_allowed_paths.push_back(fg_home + sep + "*");
+
+	read_allowed_paths.push_back(fg_root + "/*");
+    read_allowed_paths.push_back(fg_home + "/*");
     read_allowed_paths.push_back(fg_root);
     read_allowed_paths.push_back(fg_home);
 
@@ -122,19 +118,19 @@ void fgInitAllowedPaths()
                                    "or fgInitAllowedPaths() called too early");
               exit(-1);
           }
-          read_allowed_paths.push_back(it->realpath().utf8Str() + sep + "*");
+          read_allowed_paths.push_back(it->realpath().utf8Str() + "/*");
           read_allowed_paths.push_back(it->realpath().utf8Str());
       }
 
-    write_allowed_paths.push_back(fg_home + sep + "*.sav");
-    write_allowed_paths.push_back(fg_home + sep + "*.log");
-    write_allowed_paths.push_back(fg_home + sep + "cache" + sep + "*");
-    write_allowed_paths.push_back(fg_home + sep + "Export" + sep + "*");
-    write_allowed_paths.push_back(fg_home + sep + "state" + sep + "*.xml");
-    write_allowed_paths.push_back(fg_home + sep + "aircraft-data" + sep + "*.xml");
-    write_allowed_paths.push_back(fg_home + sep + "Wildfire" + sep + "*.xml");
-    write_allowed_paths.push_back(fg_home + sep + "runtime-jetways" + sep + "*.xml");
-    write_allowed_paths.push_back(fg_home + sep + "Input" + sep + "Joysticks" + sep + "*.xml");
+    write_allowed_paths.push_back(fg_home + "/*.sav");
+    write_allowed_paths.push_back(fg_home + "/*.log");
+    write_allowed_paths.push_back(fg_home + "/cache/*");
+    write_allowed_paths.push_back(fg_home + "/Export/*");
+    write_allowed_paths.push_back(fg_home + "/state/*.xml");
+    write_allowed_paths.push_back(fg_home + "/aircraft-data/*.xml");
+    write_allowed_paths.push_back(fg_home + "/Wildfire/*.xml");
+    write_allowed_paths.push_back(fg_home + "/runtime-jetway/*.xml");
+    write_allowed_paths.push_back(fg_home + "/Input/Joysticks/*.xml");
     
     // Check that it works
     std::string homePath = globals->get_fg_home().utf8Str();
