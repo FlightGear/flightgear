@@ -2084,7 +2084,7 @@ void Options::initAircraft()
     // is a symlink (which is not a problem, since it was given as is by the
     // user---this is very different from a symlink *under* the aircraft dir
     // or a scenery dir).
-    fgSetString("/sim/aircraft-dir", aircraftDirPath.realpath().c_str());
+    fgSetString("/sim/aircraft-dir", aircraftDirPath.realpath().utf8Str());
   }
 
     if (isOptionSet("state")) {

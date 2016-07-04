@@ -81,7 +81,7 @@ static string_list write_allowed_paths;
  */
 void fgInitAllowedPaths()
 {
-    if(SGPath("ygjmyfvhhnvdoesnotexist").realpath() == "ygjmyfvhhnvdoesnotexist"){
+    if(SGPath("ygjmyfvhhnvdoesnotexist").realpath().utf8Str() == "ygjmyfvhhnvdoesnotexist"){
         // Forbid using this version of fgValidatePath() with older
         // (not normalizing non-existent files) versions of realpath(),
         // as that would be a security hole
@@ -92,8 +92,8 @@ void fgInitAllowedPaths()
     }
     read_allowed_paths.clear();
     write_allowed_paths.clear();
-    std::string fg_root = globals->get_fg_root().realpath();
-    std::string fg_home = globals->get_fg_home().realpath();
+    std::string fg_root = globals->get_fg_root().realpath().utf8Str();
+    std::string fg_home = globals->get_fg_home().realpath().utf8Str();
 #if defined(_MSC_VER) /*for MS compilers */ || defined(_WIN32) /*needed for non MS windows compilers like MingW*/
      std::string sep = "\\";
 #else
@@ -122,8 +122,8 @@ void fgInitAllowedPaths()
                                    "or fgInitAllowedPaths() called too early");
               exit(-1);
           }
-          read_allowed_paths.push_back(it->realpath() + sep + "*");
-          read_allowed_paths.push_back(it->realpath());
+          read_allowed_paths.push_back(it->realpath().utf8Str() + sep + "*");
+          read_allowed_paths.push_back(it->realpath().utf8Str());
       }
 
     write_allowed_paths.push_back(fg_home + sep + "*.sav");
@@ -162,7 +162,7 @@ void fgInitAllowedPaths()
 SGPath fgValidatePath (const SGPath& path, bool write)
 {
     // Normalize the path (prevents ../../.. or symlink trickery)
-    std::string normed_path = path.realpath();
+    std::string normed_path = path.realpath().utf8Str();
     
     const string_list& allowed_paths(write ? write_allowed_paths : read_allowed_paths);
     size_t star_pos;
