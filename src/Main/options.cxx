@@ -48,7 +48,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/mat.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Aircraft/replay.hxx>

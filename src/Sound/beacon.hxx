@@ -27,7 +27,7 @@
 #include "soundgenerator.hxx"
 
 #include <simgear/compiler.h>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 

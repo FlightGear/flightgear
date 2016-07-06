@@ -148,8 +148,13 @@ else(SIMGEAR_SHARED)
         ${ZLIB_LIBRARY}
         ${WINMM_LIBRARY})
 
-    set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES
-        ${OPENAL_LIBRARY})
+    if (USE_AEONWAVE)
+        set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES
+            ${AAX_LIBRARY})
+    else()
+        set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES
+            ${OPENAL_LIBRARY})
+    endif()
 
     if(APPLE)
         find_library(COCOA_LIBRARY Cocoa)

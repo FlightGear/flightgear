@@ -28,7 +28,7 @@
 #endif
 
 #include <string>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 
 class AudioIdent {
 public:

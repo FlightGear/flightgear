@@ -24,7 +24,7 @@
 #define _FLITEVOICE_HXX
 
 #include "voice.hxx"
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 #include <simgear/sound/sample.hxx>
 #include <simgear/threads/SGQueue.hxx>
 

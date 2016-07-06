@@ -25,7 +25,7 @@
 
 #include "soundgenerator.hxx"
 #include <simgear/compiler.h>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 
 
 // Quoting from http://www.kluft.com/~ikluft/ham/morse-intro.html by

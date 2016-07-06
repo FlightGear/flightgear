@@ -176,6 +176,7 @@ option(ENABLE_PROFILE    "Set to ON to build FlightGear with gperftools profilin
 option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
 option(ENABLE_IAX        "Set to ON to build FlightGear with IAXClient/fgcom built-in (default)" ON)
 option(USE_DBUS          "Set to ON to build FlightGear with DBus screensaver interaction (default on Linux)" ${USE_DBUS_DEFAULT})
+option(USE_AEONWAVE      "Set to ON to use AeonWave instead of OpenAL" ON)
 option(SYSTEM_SPEEX      "Set to ON to build IAXClient with the system's speex and speexdsp library" ${SYSTEM_SPEEX_DEFAULT})
 option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM library" ${SYSTEM_GSM_DEFAULT})
 option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
@@ -384,10 +385,20 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIR}
     ${OPENGL_INCLUDE_DIR}
-    ${OPENAL_INCLUDE_DIR}
     ${SIMGEAR_INCLUDE_DIRS}
     ${PLIB_INCLUDE_DIR}
     ${SQLITE3_INCLUDED_DIR} )
+
+if (USE_AEONWAVE)
+    find_package(AAX COMPONENTS aax REQUIRED)
+    include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
+        ${AAX_INCLUDE_DIR}
+    )
+else()
+    include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
+        ${OPENAL_INCLUDE_DIR}
+    )
+endif()
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
