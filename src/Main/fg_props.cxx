@@ -31,7 +31,7 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/particles.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 
 #include <GUI/gui.h>
 

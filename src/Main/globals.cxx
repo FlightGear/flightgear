@@ -38,7 +38,7 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/event_mgr.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/props/props_io.hxx>

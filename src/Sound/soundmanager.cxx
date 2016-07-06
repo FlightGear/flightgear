@@ -21,7 +21,7 @@
 #  include <config.h>
 #endif
 
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 #include <simgear/structure/commands.hxx>
 
 #if defined(ENABLE_FLITE)

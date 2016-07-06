@@ -74,7 +74,7 @@
 #include <simgear/math/SGLineSegment.hxx>
 #include <simgear/math/SGIntersect.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 #include <simgear/sound/sample_group.hxx>
 #include <simgear/structure/exception.hxx>
 

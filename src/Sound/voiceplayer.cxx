@@ -39,7 +39,7 @@
 #include <sstream>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 #include <simgear/sound/sample_group.hxx>
 #include <simgear/structure/exception.hxx>
 

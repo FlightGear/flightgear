@@ -24,7 +24,7 @@
 #include <map>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 
 class FGSampleQueue;
 class SGSoundMgr;

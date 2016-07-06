@@ -31,7 +31,7 @@
 #include <Main/fg_props.hxx>
 
 #include <simgear/constants.h>
-#include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/sound/soundmgr.hxx>
 #include <simgear/scene/sky/sky.hxx>
 //#include <simgear/environment/visual_enviro.hxx>
 #include <simgear/scene/sky/cloudfield.hxx>
