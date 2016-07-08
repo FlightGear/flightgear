@@ -65,6 +65,7 @@
 #include "AircraftItemDelegate.hxx"
 #include "AircraftModel.hxx"
 #include "PathsDialog.hxx"
+#include "EditCustomMPServerDialog.hxx"
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -308,7 +309,7 @@ protected:
         if (status == NoOfficialCatalogMessage) {
             return true;
         }
-        
+
         if (!QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent)) {
             return false;
         }
@@ -454,7 +455,7 @@ bool runLauncherDialog()
 
     // startup the HTTP system now since packages needs it
     FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
-    
+
     // we guard against re-init in the global phase; bind and postinit
     // will happen as normal
     http->init();
@@ -576,6 +577,9 @@ QtLauncher::QtLauncher() :
     connect(m_ui->terrasyncCheck, &QCheckBox::toggled,
             this, &QtLauncher::onToggleTerrasync);
     updateSettingsSummary();
+
+    connect(m_ui->mpServerCombo, SIGNAL(activated(int)),
+            this, SLOT(onMPServerActivated(int)));
 
     m_aircraftModel = new AircraftItemModel(this);
     m_aircraftProxy->setSourceModel(m_aircraftModel);
@@ -846,8 +850,15 @@ void QtLauncher::onRun()
     if (m_ui->mpBox->isChecked()) {
         opt->addOption("callsign", m_ui->mpCallsign->text().toStdString());
         QString host = m_ui->mpServerCombo->currentData().toString();
+        int port = 5000;
+        if (host == "custom") {
+            QSettings settings;
+            host = settings.value("mp-custom-host").toString();
+            port = settings.value("mp-custom-port").toInt();
+        } else {
+            port = findMPServerPort(host.toStdString());
+        }
         globals->get_props()->setStringValue("/sim/multiplay/txhost", host.toStdString());
-        int port = findMPServerPort(host.toStdString());
         globals->get_props()->setIntValue("/sim/multiplay/txport", port);
     }
 
@@ -1240,7 +1251,7 @@ void QtLauncher::onDownloadDirChanged()
     m_aircraftModel->scanDirs();
 
     checkOfficialCatalogMessage();
-    
+
     // re-set scenery dirs
     setSceneryPaths();
 }
@@ -1302,8 +1313,6 @@ void QtLauncher::onRefreshMPServersDone(simgear::HTTP::Request*)
 {
     // parse the properties
     SGPropertyNode *targetnode = fgGetNode("/sim/multiplay/server-list", true);
-
-
     m_ui->mpServerCombo->clear();
 
     for (int i=0; i<targetnode->nChildren(); ++i) {
@@ -1318,13 +1327,8 @@ void QtLauncher::onRefreshMPServersDone(simgear::HTTP::Request*)
         m_ui->mpServerCombo->addItem(tr("%1 - %2").arg(name,loc), host);
     }
 
-    if (m_doRestoreMPServer) {
-        QSettings settings;
-        int index = m_ui->mpServerCombo->findData(settings.value("mp-server"));
-        if (index >= 0) {
-            m_ui->mpServerCombo->setCurrentIndex(index);
-        }
-    }
+    EditCustomMPServerDialog::addCustomItem(m_ui->mpServerCombo);
+    restoreMPServerSelection();
 
     m_mpServerRequest.clear();
 }
@@ -1333,11 +1337,31 @@ void QtLauncher::onRefreshMPServersFailed(simgear::HTTP::Request*)
 {
     qWarning() << "refreshing MP servers failed:" << QString::fromStdString(m_mpServerRequest->responseReason());
     m_mpServerRequest.clear();
+    EditCustomMPServerDialog::addCustomItem(m_ui->mpServerCombo);
+    restoreMPServerSelection();
 }
 
-void QtLauncher::onMPServerEdited(QString text)
+void QtLauncher::restoreMPServerSelection()
 {
-    // parse as server hostname + optional URL
+    if (m_doRestoreMPServer) {
+        QSettings settings;
+        int index = m_ui->mpServerCombo->findData(settings.value("mp-server"));
+        if (index >= 0) {
+            m_ui->mpServerCombo->setCurrentIndex(index);
+        }
+        m_doRestoreMPServer = false;
+    }
+}
+
+void QtLauncher::onMPServerActivated(int index)
+{
+    if (m_ui->mpServerCombo->itemData(index) == "custom") {
+        EditCustomMPServerDialog dlg(this);
+        dlg.exec();
+        if (dlg.result() == QDialog::Accepted) {
+            m_ui->mpServerCombo->setItemText(index, tr("Custom - %1").arg(dlg.hostname()));
+        }
+    }
 }
 
 int QtLauncher::findMPServerPort(const std::string& host)

@@ -67,7 +67,7 @@ private slots:
     // apply is used in-app, where we must set properties and trigger
     // a reset; setting command line options won't help us.
     void onApply();
-    
+
     void onQuit();
 
 
@@ -99,7 +99,7 @@ private slots:
     void onDownloadDirChanged();
 
     void onRefreshMPServers();
-    void onMPServerEdited(QString text);
+    void onMPServerActivated(int index);
 
 
 private:
@@ -127,6 +127,7 @@ private:
     void onRefreshMPServersDone(simgear::HTTP::Request*);
     void onRefreshMPServersFailed(simgear::HTTP::Request*);
     int findMPServerPort(const std::string& host);
+    void restoreMPServerSelection();
 
     // need to wait after a model reset before restoring selection and
     // scrolling, to give the view time it seems.

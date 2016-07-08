@@ -78,6 +78,7 @@ if (HAVE_QT)
                             LocationWidget.ui
                             NoOfficialHangar.ui
                             InstallSceneryDialog.ui
+                            EditCustomMPServerDialog.ui
                             )
     qt5_add_resources(qrc_sources resources.qrc)
 
@@ -113,6 +114,8 @@ if (HAVE_QT)
                             QtFileDialog.hxx
                             InstallSceneryDialog.hxx
                             InstallSceneryDialog.cxx
+                            EditCustomMPServerDialog.cxx
+                            EditCustomMPServerDialog.hxx
                             ${uic_sources}
                             ${qrc_sources})
 
