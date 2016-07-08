@@ -41,6 +41,7 @@ class AircraftProxyModel;
 class AircraftItemModel;
 class QCheckBox;
 class CatalogListModel;
+class RemoteXMLRequest;
 
 class QtLauncher : public QDialog
 {
@@ -96,6 +97,11 @@ private slots:
     void onRestoreDefaults();
 
     void onDownloadDirChanged();
+
+    void onRefreshMPServers();
+    void onMPServerEdited(QString text);
+
+
 private:
 
     /**
@@ -118,6 +124,10 @@ private:
     void checkOfficialCatalogMessage();
     void onOfficialCatalogMessageLink(QUrl link);
 
+    void onRefreshMPServersDone(simgear::HTTP::Request*);
+    void onRefreshMPServersFailed(simgear::HTTP::Request*);
+    int findMPServerPort(const std::string& host);
+
     // need to wait after a model reset before restoring selection and
     // scrolling, to give the view time it seems.
     void delayedAircraftModelReset();
@@ -133,6 +143,9 @@ private:
     bool m_inAppMode;
 
     int m_ratingFilters[4];
+
+    SGSharedPtr<RemoteXMLRequest> m_mpServerRequest;
+    bool m_doRestoreMPServer;
 };
 
 #endif // of FG_QTLAUNCHER_PRIVATE_HXX

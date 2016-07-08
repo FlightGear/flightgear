@@ -67,6 +67,7 @@
 #include "PathsDialog.hxx"
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Navaids/SHPParser.hxx>
@@ -75,6 +76,7 @@
 #include <Main/fg_init.hxx>
 #include <Viewer/WindowBuilder.hxx>
 #include <Network/HTTPClient.hxx>
+#include <Network/RemoteXMLRequest.hxx>
 
 using namespace flightgear;
 using namespace simgear::pkg;
@@ -495,7 +497,8 @@ QtLauncher::QtLauncher() :
     QDialog(),
     m_ui(NULL),
     m_subsystemIdleTimer(NULL),
-    m_inAppMode(false)
+    m_inAppMode(false),
+    m_doRestoreMPServer(false)
 {
     m_ui.reset(new Ui::Launcher);
     m_ui->setupUi(this);
@@ -627,6 +630,8 @@ QtLauncher::QtLauncher() :
 
     checkOfficialCatalogMessage();
     restoreSettings();
+
+    onRefreshMPServers();
 }
 
 QtLauncher::~QtLauncher()
@@ -719,6 +724,10 @@ void QtLauncher::restoreSettings()
     maybeRestoreAircraftSelection();
 
     m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
+
+    m_ui->mpCallsign->setText(settings.value("mp-callsign").toString());
+    // don't restore MP server here, we do it after a refresh
+    m_doRestoreMPServer = true;
 }
 
 void QtLauncher::delayedAircraftModelReset()
@@ -757,6 +766,9 @@ void QtLauncher::saveSettings()
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
 
     m_ui->location->saveSettings();
+
+    settings.setValue("mp-callsign", m_ui->mpCallsign->text());
+    settings.setValue("mp-server", m_ui->mpServerCombo->currentData());
 }
 
 void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const
@@ -829,6 +841,14 @@ void QtLauncher::onRun()
         m_recentAircraft.prepend(m_selectedAircraft);
         if (m_recentAircraft.size() > MAX_RECENT_AIRCRAFT)
           m_recentAircraft.pop_back();
+    }
+
+    if (m_ui->mpBox->isChecked()) {
+        opt->addOption("callsign", m_ui->mpCallsign->text().toStdString());
+        QString host = m_ui->mpServerCombo->currentData().toString();
+        globals->get_props()->setStringValue("/sim/multiplay/txhost", host.toStdString());
+        int port = findMPServerPort(host.toStdString());
+        globals->get_props()->setIntValue("/sim/multiplay/txport", port);
     }
 
     m_ui->location->setLocationOptions();
@@ -1255,6 +1275,86 @@ void QtLauncher::onOfficialCatalogMessageLink(QUrl link)
     }
 
     checkOfficialCatalogMessage();
+}
+
+void QtLauncher::onRefreshMPServers()
+{
+    if (m_mpServerRequest.get()) {
+        return; // in-progress
+    }
+
+    string url(fgGetString("/sim/multiplay/serverlist-url",
+                           "http://liveries.flightgear.org/mpstatus/mpservers.xml"));
+
+    if (url.empty()) {
+        SG_LOG(SG_IO, SG_ALERT, "do_multiplayer.refreshserverlist: no URL given");
+        return;
+    }
+
+    SGPropertyNode *targetnode = fgGetNode("/sim/multiplay/server-list", true);
+    m_mpServerRequest.reset(new RemoteXMLRequest(url, targetnode));
+    m_mpServerRequest->done(this, &QtLauncher::onRefreshMPServersDone);
+    m_mpServerRequest->fail(this, &QtLauncher::onRefreshMPServersFailed);
+    globals->get_subsystem<FGHTTPClient>()->makeRequest(m_mpServerRequest);
+}
+
+void QtLauncher::onRefreshMPServersDone(simgear::HTTP::Request*)
+{
+    // parse the properties
+    SGPropertyNode *targetnode = fgGetNode("/sim/multiplay/server-list", true);
+
+
+    m_ui->mpServerCombo->clear();
+
+    for (int i=0; i<targetnode->nChildren(); ++i) {
+        SGPropertyNode* c = targetnode->getChild(i);
+        if (c->getName() != std::string("server")) {
+            continue;
+        }
+
+        QString name = QString::fromStdString(c->getStringValue("name"));
+        QString loc = QString::fromStdString(c->getStringValue("location"));
+        QString host = QString::fromStdString(c->getStringValue("hostname"));
+        m_ui->mpServerCombo->addItem(tr("%1 - %2").arg(name,loc), host);
+    }
+
+    if (m_doRestoreMPServer) {
+        QSettings settings;
+        int index = m_ui->mpServerCombo->findData(settings.value("mp-server"));
+        if (index >= 0) {
+            m_ui->mpServerCombo->setCurrentIndex(index);
+        }
+    }
+
+    m_mpServerRequest.clear();
+}
+
+void QtLauncher::onRefreshMPServersFailed(simgear::HTTP::Request*)
+{
+    qWarning() << "refreshing MP servers failed:" << QString::fromStdString(m_mpServerRequest->responseReason());
+    m_mpServerRequest.clear();
+}
+
+void QtLauncher::onMPServerEdited(QString text)
+{
+    // parse as server hostname + optional URL
+}
+
+int QtLauncher::findMPServerPort(const std::string& host)
+{
+    SGPropertyNode *targetnode = fgGetNode("/sim/multiplay/server-list", true);
+    for (int i=0; i<targetnode->nChildren(); ++i) {
+        SGPropertyNode* c = targetnode->getChild(i);
+        if (c->getName() != std::string("server")) {
+            continue;
+        }
+
+        if (c->getStringValue("hostname") == host) {
+            return c->getIntValue("port");
+        }
+    }
+
+    return 0;
 }
 
 simgear::pkg::PackageRef QtLauncher::packageForAircraftURI(QUrl uri) const
