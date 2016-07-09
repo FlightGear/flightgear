@@ -31,4 +31,4 @@ target_link_Libraries(${name}
                       ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 )
 
-install(TARGETS ${name} RUNTIME DESTINATION bin)
+install(TARGETS ${name} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

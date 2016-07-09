@@ -53,4 +53,4 @@ target_link_libraries(fgviewer
 	${FGVIEWER_RTI_LIBRARIES}
         ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 )
-install(TARGETS fgviewer RUNTIME DESTINATION bin)
+install(TARGETS fgviewer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

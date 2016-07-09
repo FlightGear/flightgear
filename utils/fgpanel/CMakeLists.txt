@@ -35,7 +35,7 @@ if(GLUT_FOUND)
 
 	include_directories(${PNG_INCLUDE_DIR})
 
-	install(TARGETS fgpanel RUNTIME DESTINATION bin)
+	install(TARGETS fgpanel RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 else()
 	message(STATUS "glut NOT found, can't build fgpanel")
 endif()

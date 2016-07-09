@@ -162,7 +162,7 @@ endif()
 if (APPLE)  
     install(TARGETS fgfs BUNDLE DESTINATION .)
 else()
-    install(TARGETS fgfs RUNTIME DESTINATION bin)
+    install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 if(ENABLE_METAR)
@@ -174,5 +174,5 @@ if(ENABLE_METAR)
         ${PLATFORM_LIBS}
     )
 
-    install(TARGETS metar RUNTIME DESTINATION bin)
+    install(TARGETS metar RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()

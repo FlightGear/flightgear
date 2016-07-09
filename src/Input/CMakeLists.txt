@@ -53,7 +53,7 @@ if(ENABLE_FGJS)
         ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
     )
 
-    install(TARGETS fgjs RUNTIME DESTINATION bin)
+    install(TARGETS fgjs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 if(ENABLE_JS_DEMO)
@@ -64,7 +64,7 @@ if(ENABLE_JS_DEMO)
         ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
     )
 
-    install(TARGETS js_demo RUNTIME DESTINATION bin)
+    install(TARGETS js_demo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 flightgear_component(Input "${SOURCES}" "${HEADERS}")

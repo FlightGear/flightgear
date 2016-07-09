@@ -148,7 +148,7 @@ Adding a new executable target
 
     add_executable(myexecutable ${SOURCES} ${HEADERS})
     target_link_libraries(myexecutable .... libraries ... )
-    install(TARGETS myexecutable RUNTIME DESTINATION bin)
+    install(TARGETS myexecutable RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 (If the executable should not be installed, omit the final line above)
 
