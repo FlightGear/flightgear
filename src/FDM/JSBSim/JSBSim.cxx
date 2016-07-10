@@ -653,7 +653,7 @@ bool FGJSBsim::copy_to_JSBsim()
         FGTurboProp* eng = (FGTurboProp*)Propulsion->GetEngine(i);
         eng->SetReverse( globals->get_controls()->get_reverser(i) );
         eng->SetCutoff( globals->get_controls()->get_cutoff(i) );
-        eng->SetIgnition( globals->get_controls()->get_ignition(i) );
+        // eng->SetIgnition( globals->get_controls()->get_ignition(i) );
 
         eng->SetGeneratorPower( globals->get_controls()->get_generator_breaker(i) );
         eng->SetCondition( globals->get_controls()->get_condition(i) );
@@ -881,9 +881,9 @@ bool FGJSBsim::copy_from_JSBsim()
         node->setDoubleValue("n1", eng->GetN1());
         //node->setDoubleValue("n2", eng->GetN2());
         node->setDoubleValue("itt_degf", 32 + eng->GetITT()*9/5);
-        node->setBoolValue("ignition", eng->GetIgnition() != 0);
-        node->setDoubleValue("nozzle-pos-norm", eng->GetNozzle());
-        node->setDoubleValue("inlet-pos-norm", eng->GetInlet());
+        // node->setBoolValue("ignition", eng->GetIgnition() != 0);
+        // node->setDoubleValue("nozzle-pos-norm", eng->GetNozzle());
+        // node->setDoubleValue("inlet-pos-norm", eng->GetInlet());
         node->setDoubleValue("oil-pressure-psi", eng->getOilPressure_psi());
         node->setBoolValue("reversed", eng->GetReversed());
         node->setBoolValue("cutoff", eng->GetCutoff());
