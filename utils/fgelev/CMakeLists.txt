@@ -8,4 +8,4 @@ target_link_libraries(fgelev
         ${ZLIB_LIBRARY}
 )
 
-install(TARGETS fgelev RUNTIME DESTINATION bin)
+install(TARGETS fgelev RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -7,4 +7,4 @@ target_link_libraries(stgmerge
         ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 )
 
-install(TARGETS stgmerge RUNTIME DESTINATION bin)
+install(TARGETS stgmerge RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

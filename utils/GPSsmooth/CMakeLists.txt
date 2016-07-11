@@ -38,4 +38,4 @@ target_link_libraries(UGsmooth
     ${ZLIB_LIBRARY}
 )
 
-install(TARGETS GPSsmooth MIDGsmooth UGsmooth RUNTIME DESTINATION bin)
+install(TARGETS GPSsmooth MIDGsmooth UGsmooth RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

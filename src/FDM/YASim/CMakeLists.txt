@@ -49,7 +49,7 @@ target_link_libraries(yasim-proptest
 		${SIMGEAR_CORE_LIBRARIES}
 		${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
 
-install(TARGETS yasim yasim-proptest RUNTIME DESTINATION bin)
+install(TARGETS yasim yasim-proptest RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 endif(ENABLE_TESTS)
 
