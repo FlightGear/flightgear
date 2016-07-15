@@ -107,7 +107,7 @@ SGPath SetupRootDialog::restoreUserSelectedRoot()
     }
 
     if (validatePath(path) && validateVersion(path)) {
-        return path.toStdString();
+        return SGPath::fromUtf8(path.toStdString());
     } else {
         // we have an existing path but it's invalid. Let's ask the
         // user what they want
@@ -147,7 +147,7 @@ bool SetupRootDialog::validatePath(QString path)
 
 bool SetupRootDialog::validateVersion(QString path)
 {
-    std::string ver = fgBasePackageVersion(SGPath(path.toStdString()));
+    std::string ver = fgBasePackageVersion(SGPath::fromUtf8(path.toStdString()));
     return (ver == FLIGHTGEAR_VERSION);
 }
 

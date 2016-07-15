@@ -87,12 +87,10 @@ win32MessageBox(const std::string& caption,
     }
     
     UINT mbType = MB_OK;
-	WCharVec wMsg(convertUtf8ToWString(fullMsg)),
+	std::wstring wMsg(convertUtf8ToWString(fullMsg)),
 		wCap(convertUtf8ToWString(caption));
-	wMsg.push_back(0);
-	wCap.push_back(0);
 
-	::MessageBoxExW(ownerWindow, wMsg.data(), wCap.data(),
+	::MessageBoxExW(ownerWindow, wMsg.c_str(), wCap.c_str(),
                     mbType, 0 /* system lang */);
 
 	return flightgear::MSG_BOX_OK;
