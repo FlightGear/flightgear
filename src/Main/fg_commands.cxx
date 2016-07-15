@@ -331,7 +331,7 @@ do_save (const SGPropertyNode * arg)
 
     bool write_all = arg->getBoolValue("write-all", false);
     SG_LOG(SG_INPUT, SG_INFO, "Saving flight");
-    ofstream output(validated_path.c_str());
+    sg_ofstream output(validated_path);
     if (output.good() && fgSaveFlight(output, write_all)) {
         output.close();
         SG_LOG(SG_INPUT, SG_INFO, "Saved flight to " << file);

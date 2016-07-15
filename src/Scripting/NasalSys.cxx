@@ -26,6 +26,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/misc/SimpleMarkdown.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -693,8 +694,14 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
         return naNil();
     }
 
-    f = fopen(filename.c_str(), modestr);
-
+#if defined(SG_WINDOWS)
+    std::wstring fp = filename.wstr();
+    std::wstring wmodestr = simgear::strutils::convertUtf8ToWString(modestr);
+    f = _wfopen(fp.c_str(), wmodestr.c_str());
+#else
+    std::string fp = filename.local8BitStr();
+    f = fopen(fp.c_str(), modestr);
+#endif
     if(!f) naRuntimeError(c, strerror(errno));
     return naIOGhost(c, f);
 }
@@ -728,13 +735,13 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "parsexml(): access denied (unauthorized directory)");
         return naNil();
     }
-    sg_ifstream input(file);
+
     NasalXMLVisitor visitor(c, argc, args);
     try {
-        readXML(input, visitor);
+        readXML(file, visitor);
     } catch (const sg_exception& e) {
-        naRuntimeError(c, "parsexml(): file '%s' %s",
-                file.c_str(), e.getFormattedMessage().c_str());
+        std::string fp = file.utf8Str();
+        naRuntimeError(c, "parsexml(): file '%s' %s", fp.c_str(), e.getFormattedMessage().c_str());
         return naNil();
     }
 
