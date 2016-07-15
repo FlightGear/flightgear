@@ -729,6 +729,7 @@ void QtLauncher::restoreSettings()
 
     m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
 
+    m_ui->mpBox->setChecked(settings.value("mp-enabled").toBool());
     m_ui->mpCallsign->setText(settings.value("mp-callsign").toString());
     // don't restore MP server here, we do it after a refresh
     m_doRestoreMPServer = true;
@@ -773,6 +774,7 @@ void QtLauncher::saveSettings()
 
     settings.setValue("mp-callsign", m_ui->mpCallsign->text());
     settings.setValue("mp-server", m_ui->mpServerCombo->currentData());
+    settings.setValue("mp-enabled", m_ui->mpBox->isChecked());
 }
 
 void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const
