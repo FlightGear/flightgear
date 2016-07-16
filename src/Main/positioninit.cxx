@@ -115,6 +115,19 @@ void initTowerLocationListener() {
   ->addChangeListener(ntcl, true );
 }
 
+static void setInitialPosition(const SGGeod& aPos, double aHeadingDeg)
+{
+    // presets
+    fgSetDouble("/sim/presets/longitude-deg", aPos.getLongitudeDeg() );
+    fgSetDouble("/sim/presets/latitude-deg", aPos.getLatitudeDeg() );
+    fgSetDouble("/sim/presets/heading-deg", aHeadingDeg );
+
+    // other code depends on the actual values being set ...
+    fgSetDouble("/position/longitude-deg",  aPos.getLongitudeDeg() );
+    fgSetDouble("/position/latitude-deg",  aPos.getLatitudeDeg() );
+    fgSetDouble("/orientation/heading-deg", aHeadingDeg );
+}
+
 static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double aTargetHeading = HUGE_VAL)
 {
   SGGeod startPos(aStartPos);
@@ -137,15 +150,7 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
     startPos = offset;
   }
   
-  // presets
-  fgSetDouble("/sim/presets/longitude-deg", startPos.getLongitudeDeg() );
-  fgSetDouble("/sim/presets/latitude-deg", startPos.getLatitudeDeg() );
-  fgSetDouble("/sim/presets/heading-deg", aHeading );
-  
-  // other code depends on the actual values being set ...
-  fgSetDouble("/position/longitude-deg",  startPos.getLongitudeDeg() );
-  fgSetDouble("/position/latitude-deg",  startPos.getLatitudeDeg() );
-  fgSetDouble("/orientation/heading-deg", aHeading );
+    setInitialPosition(startPos, aHeading);
 }
 
 // Set current_options lon/lat given an airport id and heading (degrees)
@@ -190,22 +195,25 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
   if ( id.empty() )
     return false;
   
-  // can't see an easy way around this const_cast at the moment
-  FGAirport* apt = const_cast<FGAirport*>(fgFindAirportID(id));
+  const FGAirport* apt = fgFindAirportID(id);
   if (!apt) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport " << id );
     return false;
   }
+
   FGAirportDynamicsRef dcs = apt->getDynamics();
   if (!dcs) {
-    SG_LOG( SG_GENERAL, SG_ALERT,
-           "Airport " << id << "does not appear to have parking information available");
-    return false;
+      // this happens during initPosition(), because the dynamics manager and
+      // ATC manager aren't running yet. We want to set an interim position
+      // so METAR and tile-loading can proceed, and then we're set the final
+      // position by call this this function again during finalizePosition
+      setInitialPosition(apt->geod(), 0.0);
+      return true;
   }
   
   ParkingAssignment pka;
   double radius = fgGetDouble("/sim/dimensions/radius-m");
-  if ((parkpos == string("AVAILABLE")) && (radius > 0)) {
+  if ((parkpos == "AVAILABLE") && (radius > 0)) {
     
     try {
       acData = globals->get_fg_home();
@@ -537,6 +545,9 @@ bool initPosition()
   
   if ( !set_pos && !apt.empty() && !parkpos.empty() ) {
     // An airport + parking position is requested
+    // since this depends on parking, which is part of dynamics, and hence
+    // also depends on ATC (the ground controller), we need to defer this
+    // until position finalisation
     if ( fgSetPosFromAirportIDandParkpos( apt, parkpos ) ) {
       // set tower position
       fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
@@ -696,7 +707,10 @@ void finalizePosition()
      * loaded. => When requested "initial preset position" relates to a
      * carrier, recalculate the 'initial' position here 
      */
-    std::string carrier = fgGetString("/sim/presets/carrier","");
+    std::string carrier = fgGetString("/sim/presets/carrier");
+    std::string parkpos = fgGetString("/sim/presets/parkpos");
+    std::string apt = fgGetString("/sim/presets/airport-id");
+
     if (!carrier.empty())
     {
         SG_LOG(SG_GENERAL, SG_INFO, "finalizePositioned: re-init-ing position on carrier");
@@ -704,6 +718,10 @@ void finalizePosition()
         fgSetDouble("/sim/presets/longitude-deg", 9999);
         fgSetDouble("/sim/presets/latitude-deg", 9999);
         initPosition();
+    } else if (!apt.empty() && !parkpos.empty()) {
+        // parking position depends on ATC / dynamics code to assign spaces,
+        // so we wait until this point to initialise
+        fgSetPosFromAirportIDandParkpos(apt, parkpos);
     } else {
         done = finalizeMetar();
     }
