@@ -99,7 +99,7 @@ private:
 
     void drawHelipads(QPainter *painter);
 
-    QPainterPath pathForRunway(const RunwayData &r, const QTransform &t) const;
+    QPainterPath pathForRunway(const RunwayData &r, const QTransform &t, const double minWidth) const;
     QPainterPath pathForHelipad(const HelipadData &h, const QTransform &t) const;
     QPainterPath pathForParking(const ParkingData &p, const QTransform &t) const;
 

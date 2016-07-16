@@ -80,6 +80,12 @@ static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
     return 0.0;
 }
 
+static double unitLengthAfterMapping(const QTransform& t)
+{
+    const QPointF tVec = t.map(QPointF(1.0, 0.0)) - t.map(QPointF(0.0, 0.0));
+    return QVector2D(tVec).length();
+}
+
 AirportDiagram::AirportDiagram(QWidget* pr) :
     BaseDiagram(pr),
     m_approachDistanceNm(-1.0),
@@ -335,6 +341,22 @@ void AirportDiagram::paintContents(QPainter* p)
         p->setTransform(t);
         paintAirplaneIcon(p, aircraftPos, headingDeg);
     }
+
+ #if 0
+    p->resetTransform();
+    QPen testPen(Qt::cyan);
+    testPen.setWidth(1);
+    testPen.setCosmetic(true);
+    p->setPen(testPen);
+    p->setBrush(Qt::NoBrush);
+
+    double minWidth = 8.0 * unitLengthAfterMapping(t.inverted());
+
+    Q_FOREACH(const RunwayData& r, m_runways) {
+        QPainterPath pp = pathForRunway(r, t, minWidth);
+        p->drawPath(pp);
+    } // of runways iteration
+#endif
 }
 
 void AirportDiagram::drawHelipads(QPainter* painter)
@@ -457,8 +479,10 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
     }
 
     QTransform t(transform());
+    double minWidth = 8.0 * unitLengthAfterMapping(t.inverted());
+
     Q_FOREACH(const RunwayData& r, m_runways) {
-        QPainterPath pp = pathForRunway(r, t);
+        QPainterPath pp = pathForRunway(r, t, minWidth);
         if (pp.contains(me->pos())) {
             // check which end was clicked
             QPointF p1(t.map(r.p1)), p2(t.map(r.p2));
@@ -491,10 +515,12 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
     }
 }
 
-QPainterPath AirportDiagram::pathForRunway(const RunwayData& r, const QTransform& t) const
+QPainterPath AirportDiagram::pathForRunway(const RunwayData& r, const QTransform& t,
+                                           const double minWidth) const
 {
     QPainterPath pp;
-    double halfWidth = r.widthM * 0.5;
+    double width = qMax(static_cast<double>(r.widthM), minWidth);
+    double halfWidth = width * 0.5;
     QVector2D v = QVector2D(r.p2 - r.p1);
     v.normalize();
     QVector2D halfVec = QVector2D(v.y(), -v.x()) * halfWidth;
