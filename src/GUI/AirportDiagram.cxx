@@ -82,7 +82,8 @@ static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
 
 AirportDiagram::AirportDiagram(QWidget* pr) :
     BaseDiagram(pr),
-    m_approachDistanceNm(-1.0)
+    m_approachDistanceNm(-1.0),
+    m_helipadIcon(":/heliport-icon")
 {
     m_parkingIconPath.moveTo(0,0);
     m_parkingIconPath.lineTo(-16, -16);
@@ -158,6 +159,10 @@ void AirportDiagram::setSelectedParking(FGParkingRef park)
 
 void AirportDiagram::setApproachExtensionDistance(double distanceNm)
 {
+    if (m_approachDistanceNm == distanceNm) {
+        return;
+    }
+
     m_approachDistanceNm = distanceNm;
     recomputeBounds(true);
     update();
@@ -335,15 +340,14 @@ void AirportDiagram::paintContents(QPainter* p)
 void AirportDiagram::drawHelipads(QPainter* painter)
 {
     QTransform t = painter->transform();
-    QPixmap icon(":/heliport-icon");
 
-    QRect r = icon.rect();
+    QRect r = m_helipadIcon.rect();
     r.moveCenter(QPoint(0, 0));
 
     Q_FOREACH(const HelipadData& p, m_helipads) {
         painter->setTransform(t);
         painter->translate(p.pt);
-        painter->drawPixmap(r, icon);
+        painter->drawPixmap(r, m_helipadIcon);
     }
 }
 
@@ -446,67 +450,89 @@ void AirportDiagram::drawILS(QPainter* painter, FGRunwayRef runway) const
     painter->drawLine(endR, endCentre);
 }
 
-static double pointDistance(const QPointF& p1, const QPointF& p2)
-{
-    QPointF d = p2 - p1;
-    return ::sqrt((d.x() * d.x()) + (d.y() * d.y()));
-}
-
 void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
 {
-    if (m_didPan)
-        return; // ignore panning drag+release ops here
+    if (me->button() != Qt::LeftButton) {
+        return;
+    }
 
     QTransform t(transform());
-    double minDist = std::numeric_limits<double>::max();
-    FGRunwayRef bestRunway;
-    FGHelipadRef bestHelipad;
-    FGParkingRef bestParking;
-
     Q_FOREACH(const RunwayData& r, m_runways) {
-        QPointF p1(t.map(r.p1)), p2(t.map(r.p2));
-        double t;
-        double d = distanceToLineSegment(QVector2D(me->pos()),
-                                         QVector2D(p1),
-                                         QVector2D(p2), &t);
-        if (d < minDist) {
-            if (t > 0.5) {
-                bestRunway = r.runway->reciprocalRunway();
+        QPainterPath pp = pathForRunway(r, t);
+        if (pp.contains(me->pos())) {
+            // check which end was clicked
+            QPointF p1(t.map(r.p1)), p2(t.map(r.p2));
+            double param;
+            distanceToLineSegment(QVector2D(me->pos()), QVector2D(p1), QVector2D(p2), &param);
+            if (param > 0.5) {
+                emit clickedRunway(r.runway->reciprocalRunway());
             } else {
-                bestRunway = r.runway;
+                emit clickedRunway(r.runway);
             }
-            minDist = d;
+            return;
         }
-    }
+    } // of runways iteration
 
     Q_FOREACH(const ParkingData& parking, m_parking) {
-        double d = pointDistance(me->pos(), t.map(parking.pt));
-        if (d < minDist) {
-            bestParking = parking.parking;
-            bestRunway.clear();
-            minDist = d;
+        QPainterPath pp = pathForParking(parking, t);
+        if (pp.contains(me->pos())) {
+            emit clickedParking(parking.parking);
+            return;
         }
     }
+
 
     Q_FOREACH(const HelipadData& pad, m_helipads) {
-        double d = pointDistance(me->pos(), t.map(pad.pt));
-        if (d < minDist) {
-            bestHelipad = pad.helipad;
-            bestRunway.clear();
-            bestParking.clear();
-            minDist = d;
+        QPainterPath pp = pathForHelipad(pad, t);
+        if (pp.contains(me->pos())) {
+            emit clickedHelipad(pad.helipad);
+            return;
         }
     }
+}
 
-    
-    if (minDist < 16.0) {
-        if (bestRunway)
-            emit clickedRunway(bestRunway);
-        else if (bestParking)
-            emit clickedParking(bestParking);
-        else if (bestHelipad)
-            emit clickedHelipad(bestHelipad);
+QPainterPath AirportDiagram::pathForRunway(const RunwayData& r, const QTransform& t) const
+{
+    QPainterPath pp;
+    double halfWidth = r.widthM * 0.5;
+    QVector2D v = QVector2D(r.p2 - r.p1);
+    v.normalize();
+    QVector2D halfVec = QVector2D(v.y(), -v.x()) * halfWidth;
+
+    pp.moveTo(r.p1 - halfVec.toPointF());
+    pp.lineTo(r.p1 + halfVec.toPointF());
+    pp.lineTo(r.p2 + halfVec.toPointF());
+    pp.lineTo(r.p2 - halfVec.toPointF());
+    pp.closeSubpath();
+
+    return t.map(pp);
+}
+
+QPainterPath AirportDiagram::pathForParking(const ParkingData& p, const QTransform& t) const
+{
+    bool useLeftIcon = false;
+    double hdg = p.parking->getHeading();
+
+    if (hdg > 180.0) {
+        hdg += 90;
+        useLeftIcon = true;
+    } else {
+        hdg -= 90;
     }
+
+    QTransform x = t;
+    x.translate(p.pt.x(), p.pt.y());
+    x.rotate(hdg);
+    return x.map(useLeftIcon ? m_parkingIconLeftPath : m_parkingIconPath);
+}
+
+QPainterPath AirportDiagram::pathForHelipad(const HelipadData& h, const QTransform& t) const
+{
+    QPainterPath pp;
+    QRect r = m_helipadIcon.rect();
+    r.moveCenter(QPoint(0, 0));
+    pp.addEllipse(r);
+    return t.map(pp);
 }
 
 void AirportDiagram::buildTaxiways()

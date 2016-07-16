@@ -59,18 +59,11 @@ protected:
 
     void doComputeBounds() Q_DECL_OVERRIDE;
 private:
-
-
-
-    FGAirportRef m_airport;
-
     struct RunwayData {
         QPointF p1, p2;
         int widthM;
         FGRunwayRef runway;
     };
-
-    QVector<RunwayData> m_runways;
 
     struct TaxiwayData {
         QPointF p1, p2;
@@ -82,24 +75,17 @@ private:
         }
     };
 
-    QVector<TaxiwayData> m_taxiways;
-    QVector<QPainterPath> m_pavements;
-
     struct ParkingData
     {
         QPointF pt;
         FGParkingRef parking;
     };
 
-    QVector<ParkingData> m_parking;
-
     struct HelipadData
     {
         QPointF pt;
         FGHelipadRef helipad;
     };
-
-    QVector<HelipadData> m_helipads;
 
     void buildTaxiways();
     void buildPavements();
@@ -113,11 +99,26 @@ private:
 
     void drawHelipads(QPainter *painter);
 
+    QPainterPath pathForRunway(const RunwayData &r, const QTransform &t) const;
+    QPainterPath pathForHelipad(const HelipadData &h, const QTransform &t) const;
+    QPainterPath pathForParking(const ParkingData &p, const QTransform &t) const;
+
+private:
+    FGAirportRef m_airport;
+
+    QVector<RunwayData> m_runways;
+    QVector<TaxiwayData> m_taxiways;
+    QVector<QPainterPath> m_pavements;
+    QVector<ParkingData> m_parking;
+    QVector<HelipadData> m_helipads;
+
     QPainterPath m_parkingIconPath, // arrow points right
         m_parkingIconLeftPath; // arrow points left
     double m_approachDistanceNm;
     FGRunwayRef m_selectedRunway;
     FGParkingRef m_selectedParking;
+
+    QPixmap m_helipadIcon;
 };
 
 #endif // of GUI_AIRPORT_DIAGRAM_HXX
