@@ -399,13 +399,27 @@ void AirportDiagram::drawParking(QPainter* painter, const ParkingData& p) const
 
     painter->drawPath(useLeftIcon ? m_parkingIconLeftPath : m_parkingIconPath);
 
-    painter->fillRect(labelRect, Qt::white);
+    // ensure the selection colour is quite visible, by not filling
+    // with white when selected
+    if (p.parking != m_selectedParking) {
+        painter->fillRect(labelRect, Qt::white);
+    }
+
+    QFont f = painter->font();
+    f.setPixelSize(20);
+    painter->setFont(f);
+
+    QString parkingName = QString::fromStdString(p.parking->name());
+    int textFlags = Qt::AlignVCenter | Qt::AlignHCenter | Qt::TextWordWrap;
+    QRectF bounds = painter->boundingRect(labelRect, textFlags, parkingName);
+    if (bounds.height() > labelRect.height()) {
+        f.setPixelSize(10);
+        painter->setFont(f);
+    }
 
     // draw text
     painter->setPen(Qt::black);
-    painter->drawText(labelRect,
-                      Qt::AlignVCenter | Qt::AlignHCenter,
-                      QString::fromStdString(p.parking->name()));
+    painter->drawText(labelRect, textFlags, parkingName);
 }
 
 AirportDiagram::ParkingData AirportDiagram::findParkingData(const FGParkingRef &pk) const
@@ -423,10 +437,6 @@ void AirportDiagram::drawParkings(QPainter* painter) const
 {
     painter->save();
     QTransform t = painter->transform();
-
-    QFont f = painter->font();
-    f.setPixelSize(16);
-    painter->setFont(f);
 
     Q_FOREACH(const ParkingData& p, m_parking) {
         if (p.parking == m_selectedParking) {
@@ -504,7 +514,6 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
             return;
         }
     }
-
 
     Q_FOREACH(const HelipadData& pad, m_helipads) {
         QPainterPath pp = pathForHelipad(pad, t);
