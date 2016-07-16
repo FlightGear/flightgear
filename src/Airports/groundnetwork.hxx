@@ -255,6 +255,8 @@ public:
 
     const FGParkingList& allParkings() const;
 
+    FGParkingRef getParkingByIndex(unsigned int index) const;
+
     /**
      * Find the taxiway segment joining two (ground-net) nodes. Returns
      * NULL if no such segment exists.

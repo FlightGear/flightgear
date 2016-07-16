@@ -410,6 +410,16 @@ FGTaxiNodeRef FGGroundNetwork::findNodeByIndex(int index) const
    return FGTaxiNodeRef();
 }
 
+FGParkingRef FGGroundNetwork::getParkingByIndex(unsigned int index) const
+{
+    FGTaxiNodeRef tn = findNodeByIndex(index);
+    if (!tn.valid() || (tn->type() != FGPositioned::PARKING)) {
+        return FGParkingRef();
+    }
+
+    return FGParkingRef(static_cast<FGParking*>(tn.ptr()));
+}
+
 void FGGroundNetwork::addSegment(const FGTaxiNodeRef &from, const FGTaxiNodeRef &to)
 {
     FGTaxiSegment* seg = new FGTaxiSegment(from, to);

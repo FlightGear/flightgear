@@ -447,6 +447,31 @@ void LocationWidget::restoreSettings()
     m_searchModel->setItems(m_recentLocations);
 
     onLocationChanged();
+
+    // now we've loaded airport location data (potentially), we can apply
+    // more settings
+    if (FGAirport::isAirportType(m_location.ptr())) {
+        if (settings.contains("location-apt-runway")) {
+            QString runway = settings.value("location-apt-runway").toString();
+            int index = m_ui->runwayCombo->findText(runway);
+            if (index < 0) {
+                index = 0; // revert to 'active' option
+            }
+            m_ui->runwayRadio->setChecked(true);
+            m_ui->runwayCombo->setCurrentIndex(index);
+        } else if (settings.contains("location-apt-parking")) {
+            QString parking = settings.value("location-apt-parking").toString();
+            int index = m_ui->parkingCombo->findText(parking);
+            if (index >= 0) {
+                m_ui->parkingRadio->setChecked(true);
+                m_ui->parkingCombo->setCurrentIndex(index);
+            }
+        }
+
+        m_ui->onFinalCheckbox->setChecked(settings.value("location-on-final").toBool());
+        m_ui->approachDistanceSpin->setValue(settings.value("location-apt-final-distance").toInt());
+    } // of location is an airport
+
     updateDescription();
 }
 
@@ -476,14 +501,30 @@ void LocationWidget::saveSettings()
     if (m_locationIsLatLon) {
         settings.setValue("location-lat", m_geodLocation.getLatitudeDeg());
         settings.setValue("location-lon", m_geodLocation.getLongitudeDeg());
-
     } else if (m_location) {
         settings.setValue("location-id", static_cast<qlonglong>(m_location->guid()));
-    }
+
+        if (FGAirport::isAirportType(m_location.ptr())) {
+            settings.remove("location-apt-runway");
+            settings.remove("location-apt-parking");
+
+            settings.setValue("location-on-final", m_ui->onFinalCheckbox->isChecked());
+            settings.setValue("location-apt-final-distance", m_ui->approachDistanceSpin->value());
+            if (m_ui->runwayRadio->isChecked()) {
+                if (m_ui->runwayCombo->currentIndex() > 0) {
+                    settings.setValue("location-apt-runway", m_ui->runwayCombo->currentText());
+                } else {
+                    settings.setValue("location-apt-runway", "active");
+                }
+            } else if (m_ui->parkingRadio->isChecked()) {
+                settings.setValue("location-apt-parking", m_ui->parkingCombo->currentText());
+            }
+        } // of location is an airport
+    } // of m_location is valid
+
 
     settings.setValue("altitude", m_ui->altitudeSpinbox->value());
     settings.setValue("speed", m_ui->airspeedSpinbox->value());
-
     settings.setValue("offset-enabled", m_ui->offsetGroup->isChecked());
     settings.setValue("offset-bearing", m_ui->offsetBearingSpinbox->value());
     settings.setValue("offset-distance", m_ui->offsetNmSpinbox->value());
@@ -866,7 +907,6 @@ void LocationWidget::updateDescription()
             int comboIndex = m_ui->runwayCombo->currentIndex();
             int runwayIndex = m_ui->runwayCombo->itemData(comboIndex).toInt();
             if (apt->type() == FGPositioned::HELIPORT) {
-                m_ui->airportDiagram->setSelectedRunway(FGRunwayRef());
                 FGHelipadRef pad = (runwayIndex >= 0) ?
                             apt->getHelipadByIndex(runwayIndex) : FGHelipadRef();
                 m_ui->airportDiagram->setSelectedHelipad(pad);
@@ -876,6 +916,10 @@ void LocationWidget::updateDescription()
                     apt->getRunwayByIndex(runwayIndex) : FGRunwayRef();
                 m_ui->airportDiagram->setSelectedRunway(rwy);
             }
+        } else if (m_ui->parkingRadio->isChecked()) {
+            int groundNetIndex = m_ui->parkingCombo->currentData().toInt();
+            FGParkingRef park = apt->groundNetwork()->getParkingByIndex(groundNetIndex);
+            m_ui->airportDiagram->setSelectedParking(park);
         }
 
         if (m_ui->onFinalCheckbox->isChecked()) {
