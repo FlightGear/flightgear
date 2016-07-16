@@ -44,6 +44,7 @@ public:
     void setSelectedRunway(FGRunwayRef r);
 
     void setSelectedHelipad(FGHelipadRef pad);
+    void setSelectedParking(FGParkingRef park);
 
     void setApproachExtensionDistance(double distanceNm);
 Q_SIGNALS:
@@ -59,12 +60,7 @@ protected:
     void doComputeBounds() Q_DECL_OVERRIDE;
 private:
 
-    void buildTaxiways();
-    void buildPavements();
 
-    void drawILS(QPainter *painter, FGRunwayRef runway) const;
-    void drawParkings(QPainter *p);
-    void drawHelipads(QPainter *painter);
 
     FGAirportRef m_airport;
 
@@ -105,10 +101,23 @@ private:
 
     QVector<HelipadData> m_helipads;
 
+    void buildTaxiways();
+    void buildPavements();
+
+    void drawILS(QPainter *painter, FGRunwayRef runway) const;
+
+    void drawParkings(QPainter *p) const;
+    void drawParking(QPainter *painter, const ParkingData &p) const;
+
+    ParkingData findParkingData(const FGParkingRef& pk) const;
+
+    void drawHelipads(QPainter *painter);
+
     QPainterPath m_parkingIconPath, // arrow points right
         m_parkingIconLeftPath; // arrow points left
     double m_approachDistanceNm;
     FGRunwayRef m_selectedRunway;
+    FGParkingRef m_selectedParking;
 };
 
 #endif // of GUI_AIRPORT_DIAGRAM_HXX

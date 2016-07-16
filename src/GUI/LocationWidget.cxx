@@ -764,7 +764,7 @@ void LocationWidget::onAirportParkingClicked(FGParkingRef park)
         m_ui->parkingRadio->setChecked(true);
         int parkingIndex = m_ui->parkingCombo->findData(park->getIndex());
         m_ui->parkingCombo->setCurrentIndex(parkingIndex);
-        m_ui->airportDiagram->setSelectedRunway(FGRunwayRef());
+        m_ui->airportDiagram->setSelectedParking(park);
     }
 
     updateDescription();

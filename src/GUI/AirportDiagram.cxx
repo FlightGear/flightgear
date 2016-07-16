@@ -109,8 +109,7 @@ void AirportDiagram::setAirport(FGAirportRef apt)
     m_airport = apt;
     m_projectionCenter = apt ? apt->geod() : SGGeod();
     m_runways.clear();
-    m_approachDistanceNm = -1.0;
-    m_parking.clear();
+    m_approachDistanceNm = -1.0;    m_parking.clear();
     m_helipads.clear();
 
     if (apt) {
@@ -135,14 +134,26 @@ void AirportDiagram::setSelectedRunway(FGRunwayRef r)
     if (r == m_selectedRunway) {
         return;
     }
-    
+
+    m_selectedParking.clear();
     m_selectedRunway = r;
     update();
 }
 
 void AirportDiagram::setSelectedHelipad(FGHelipadRef pad)
 {
+    qWarning() << Q_FUNC_INFO << "implement me";
+}
 
+void AirportDiagram::setSelectedParking(FGParkingRef park)
+{
+    if (m_selectedParking == park) {
+        return;
+    }
+
+    m_selectedRunway.clear();
+    m_selectedParking = park;
+    update();
 }
 
 void AirportDiagram::setApproachExtensionDistance(double distanceNm)
@@ -336,46 +347,76 @@ void AirportDiagram::drawHelipads(QPainter* painter)
     }
 }
 
-void AirportDiagram::drawParkings(QPainter* painter)
+void AirportDiagram::drawParking(QPainter* painter, const ParkingData& p) const
 {
-    QTransform t = painter->transform();
+    painter->translate(p.pt);
 
+    double hdg = p.parking->getHeading();
+    bool useLeftIcon = false;
+    QRect labelRect(-62, -14, 40, 28);
+
+    if (hdg > 180.0) {
+        hdg += 90;
+        useLeftIcon = true;
+        labelRect = QRect(22, -14, 40, 28);
+    } else {
+        hdg -= 90;
+    }
+
+    painter->rotate(hdg);
+
+    if (p.parking == m_selectedParking) {
+        painter->setBrush(Qt::yellow);
+    } else {
+        painter->setBrush(QColor(255, 196, 196)); // kind of pink
+    }
+
+    painter->drawPath(useLeftIcon ? m_parkingIconLeftPath : m_parkingIconPath);
+
+    painter->fillRect(labelRect, Qt::white);
+
+    // draw text
+    painter->setPen(Qt::black);
+    painter->drawText(labelRect,
+                      Qt::AlignVCenter | Qt::AlignHCenter,
+                      QString::fromStdString(p.parking->name()));
+}
+
+AirportDiagram::ParkingData AirportDiagram::findParkingData(const FGParkingRef &pk) const
+{
+    Q_FOREACH(const ParkingData& p, m_parking) {
+        if (p.parking == m_selectedParking) {
+            return p;
+        }
+    }
+
+    return ParkingData();
+}
+
+void AirportDiagram::drawParkings(QPainter* painter) const
+{
+    painter->save();
+    QTransform t = painter->transform();
 
     QFont f = painter->font();
     f.setPixelSize(16);
     painter->setFont(f);
 
     Q_FOREACH(const ParkingData& p, m_parking) {
-        painter->setTransform(t);
-        painter->translate(p.pt);
-
-        double hdg = p.parking->getHeading();
-        bool useLeftIcon = false;
-        QRect labelRect(-62, -14, 40, 28);
-
-        if (hdg > 180.0) {
-            hdg += 90;
-            useLeftIcon = true;
-            labelRect = QRect(22, -14, 40, 28);
-        } else {
-            hdg -= 90;
+        if (p.parking == m_selectedParking) {
+            continue; // skip and draw last
         }
 
-        painter->rotate(hdg);
-
-        painter->setBrush(QColor(255, 196, 196)); // kind of pink
-        painter->drawPath(useLeftIcon ? m_parkingIconLeftPath : m_parkingIconPath);
-
-        painter->fillRect(labelRect, Qt::white);
-
-        // draw text
-        painter->setPen(Qt::black);
-        painter->drawText(labelRect,
-                          Qt::AlignVCenter | Qt::AlignHCenter,
-                          QString::fromStdString(p.parking->name()));
+        painter->setTransform(t);
+        drawParking(painter, p);
     }
 
-    painter->setTransform(t);
+    if (m_selectedParking) {
+        painter->setTransform(t);
+        drawParking(painter, findParkingData(m_selectedParking));
+    }
+
+    painter->restore();
 }
 
 void AirportDiagram::drawILS(QPainter* painter, FGRunwayRef runway) const
