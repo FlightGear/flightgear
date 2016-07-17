@@ -6,6 +6,7 @@ namespace yasim {
 Jet::Jet()
 {
     _maxThrust = 0;
+    _abThrust = 0;
     _abFactor = 1;
     _reheat = 0;
     _rotControl = 0;
@@ -18,6 +19,8 @@ Jet::Jet()
     _vMax = 800;
     _epr0 = 3.0;
     _tsfc = 0.8f;
+    _atsfc = 0.0f;
+    _abFuelFactor = 3.5f; //previously was constant in code below
     _egt0 = 1050;
     _n1Min = 55;
     _n1Max = 102;
@@ -51,7 +54,9 @@ void Jet::setMaxThrust(float thrust, float afterburner)
 {
     _maxThrust = thrust;
     if(afterburner == 0) _abFactor = 1;
-    else                 _abFactor = afterburner/thrust;
+    else {                _abFactor = afterburner/thrust;
+                          _abThrust = afterburner - thrust;
+    }
 }
 
 void Jet::setVMax(float spd)
@@ -62,6 +67,11 @@ void Jet::setVMax(float spd)
 void Jet::setTSFC(float tsfc)
 {
     _tsfc = tsfc;
+}
+
+void Jet::setATSFC(float atsfc)
+{
+    _atsfc = atsfc;
 }
 
 void Jet::setRPMs(float idleN1, float maxN1, float idleN2, float maxN2)
@@ -190,9 +200,14 @@ void Jet::integrate(float dt)
     _epr = beta + 1;
     float ff0 = _maxThrust*_tsfc*(1/(3600.0f*9.8f)); // takeoff fuel flow, kg/s
     _fuelFlow = ff0 * beta*ibeta0;
-    _fuelFlow *= 1 + (3.5f * _reheat * _abFactor); // Afterburners take
+    //Calc afterburner only tsfc if atsfc is set
+    if(_atsfc > 0) _abFuelFactor = ((_maxThrust*_abFactor*_atsfc)-(_maxThrust*_tsfc))/_abThrust;
+    if(_atsfc == 0 ) _fuelFlow *= 1 + (_abFuelFactor * _reheat * _abFactor); // Afterburners take
 						  // 3.5 times as much
 						  // fuel per thrust unit
+    else _fuelFlow += _abThrust*_abFuelFactor*(1/(3600.0f*9.8f))*beta*ibeta0*_reheat; 
+    // add afterburning only component of fuel flow
+
     _egt = T0 + beta*ibeta0 * (_egt0 - T0);
 
     // Thrust reverse handling:

@@ -14,6 +14,7 @@ public:
     void setMaxThrust(float thrust, float afterburner=0);
     void setVMax(float spd);
     void setTSFC(float tsfc);
+    void setATSFC(float atsfc);
     void setRPMs(float idleN1, float maxN1, float idleN2, float maxN2);
     void setEGT(float takeoffEGT);
     void setEPR(float takeoffEPR);
@@ -57,6 +58,7 @@ private:
     bool _reverseThrust;
 
     float _maxThrust; // Max dry thrust at sea level
+    float _abThrust; // Max ab component of thrust at sea level
     float _abFactor;  // Afterburner thrust multiplier
 
     float _maxRot;
@@ -66,6 +68,8 @@ private:
     float _vMax;   // speed at which thrust is zero
     float _epr0;   // EPR at takeoff thrust
     float _tsfc;   // TSFC ((lb/hr)/lb) at takeoff thrust and zero airspeed
+    float _atsfc;   // Afterburning TSFC ((lb/hr)/lb) at takeoff thrust and zero airspeed (total TSFC)
+    float _abFuelFactor;   // Afterburner Only Fuel Factor at takeoff thrust and zero airspeed
     float _egt0;   // EGT at takeoff thrust
     float _n1Min;  // N1 at ground idle
     float _n1Max;  // N1 at takeoff thrust

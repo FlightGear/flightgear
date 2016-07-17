@@ -306,6 +306,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	j->setRPMs(n1min, n1max, n2min, n2max);
 
 	j->setTSFC(attrf(a, "tsfc", 0.8));
+	j->setATSFC(attrf(a, "atsfc", 0.0));
 	if(a->hasAttribute("egt"))  j->setEGT(attrf(a, "egt"));
 	if(a->hasAttribute("epr"))  j->setEPR(attrf(a, "epr"));
 	if(a->hasAttribute("exhaust-speed"))
