@@ -22,6 +22,8 @@
 #  include "config.h"
 #endif
 
+#include <boost/tuple/tuple.hpp>
+
 // simgear
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
@@ -128,6 +130,13 @@ static void setInitialPosition(const SGGeod& aPos, double aHeadingDeg)
     fgSetDouble("/orientation/heading-deg", aHeadingDeg );
 }
 
+static bool isMPEnabled()
+{
+    // crude test, but sufficient for what we need
+    std::string txAddress = fgGetString("/sim/multiplay/txhost");
+    return !txAddress.empty();
+}
+
 static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double aTargetHeading = HUGE_VAL)
 {
   SGGeod startPos(aStartPos);
@@ -153,6 +162,27 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
     setInitialPosition(startPos, aHeading);
 }
 
+boost::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
+{
+    fgSetString("/sim/atc/runway", runway->ident().c_str());
+
+    if (isMPEnabled()) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Requested to start on " << runway->airport()->ident() << "/" <<
+               runway->ident() << ", MP is enabled so computing hold short position to avoid runway incursion");
+
+        // set this so multiplayer.nas can inform the user
+        fgSetBool("/sim/presets/avoided-mp-runway", true);
+
+        double width = runway->widthM();
+        double offset = fgGetDouble("/sim/airport/runways/start-offset-m", 5.0) + width;
+        SGGeod pos = runway->pointOffCenterline(width * 0.5, -offset);
+        return boost::make_tuple(pos, runway->headingDeg() + 90.0);
+    }
+
+    SGGeod pos = runway->pointOnCenterline(fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
+    return boost::make_tuple(pos, runway->headingDeg());
+}
+
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
   if ( id.empty() )
@@ -165,7 +195,7 @@ static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
   
   const FGAirport* apt = fgFindAirportID(id);
   if (!apt) return false;
-  
+
   SGGeod startPos;
   double heading = tgt_hdg;
   if (apt->type() == FGPositioned::HELIPORT) {
@@ -176,12 +206,16 @@ static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     }
   } else {
     FGRunway* r = apt->findBestRunwayForHeading(tgt_hdg);
-    fgSetString("/sim/atc/runway", r->ident().c_str());
-    startPos = r->pointOnCenterline(fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
-    heading = r->headingDeg();
+      boost::tie(startPos, heading) = runwayStartPos(r);
   }
 
-  fgApplyStartOffset(startPos, heading, tgt_hdg);
+    if (isMPEnabled()) {
+        // don't permit offsetting when MP is enabled
+        setInitialPosition(startPos, heading);
+    } else {
+        fgApplyStartOffset(startPos, heading);
+    }
+
   return true;
 }
 
@@ -293,9 +327,16 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
 
   if (apt->hasRunwayWithIdent(rwy)) {
       FGRunway* r(apt->getRunwayByIdent(rwy));
-      fgSetString("/sim/atc/runway", r->ident().c_str());
-      SGGeod startPos = r->pointOnCenterline( fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
-      fgApplyStartOffset(startPos, r->headingDeg());
+      SGGeod startPos;
+      double heading;
+      boost::tie(startPos, heading) = runwayStartPos(r);
+
+      if (isMPEnabled()) {
+          // don't permit offsetting when MP is enabled
+          setInitialPosition(startPos, heading);
+      } else {
+          fgApplyStartOffset(startPos, heading);
+      }
       return true;
   } else if (apt->hasHelipadWithIdent(rwy)) {
       FGHelipad* h(apt->getHelipadByIdent(rwy));

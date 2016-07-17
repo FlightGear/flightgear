@@ -85,17 +85,8 @@ SGGeod FGRunwayBase::pointOnCenterline(double aOffset) const
 
 SGGeod FGRunwayBase::pointOffCenterline(double aOffset, double lateralOffset) const
 {
-  SGGeod result;
-  SGGeod temp;
-  double dummyAz2;
-
-  SGGeodesy::direct(geod(), _heading, aOffset, temp, dummyAz2);
-
-  SGGeodesy::direct(temp, SGMiscd::normalizePeriodic(0, 360,_heading+90.0),
-    lateralOffset,
-    result, dummyAz2);
-
-  return result;
+    SGGeod result = pointOnCenterline(aOffset);
+    return SGGeodesy::direct(result, SGMiscd::normalizePeriodic(0, 360,_heading+90.0), lateralOffset);
 }
 
 
