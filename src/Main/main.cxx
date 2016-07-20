@@ -64,6 +64,7 @@ extern bool global_crashRptEnabled;
 #include <Time/TimeManager.hxx>
 #include <GUI/gui.h>
 #include <GUI/MessageBox.hxx>
+#include <GUI/new_gui.hxx>
 #include <Viewer/splash.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
@@ -102,6 +103,15 @@ static TimeManager* timeMgr;
 // for the next move and update the display?
 static void fgMainLoop( void )
 {
+
+    if (sglog().has_popup()) {
+        NewGUI* _gui = (NewGUI *)globals->get_subsystem("gui");
+        SGPropertyNode_ptr dlg = _gui->getDialogProperties("popup");
+        std::string s = sglog().get_popup();
+        dlg->setStringValue("text/label", s );
+        _gui->showDialog("popup");
+    }
+
     frame_signal->fireValueChanged();
 
     // compute simulated time (allowing for pause, warp, etc) and

@@ -178,6 +178,7 @@ getLoggingPriority ()
   case SG_WARN:
     return "warn";
   case SG_ALERT:
+  case SG_POPUP:
     return "alert";
   default:
     SG_LOG(SG_GENERAL, SG_WARN, "Internal: Unknown logging priority number: "

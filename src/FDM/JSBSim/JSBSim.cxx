@@ -185,6 +185,7 @@ FGJSBsim::FGJSBsim( double dt )
         case SG_INFO:
         case SG_WARN:
         case SG_ALERT:
+        case SG_POPUP:
             FGJSBBase::debug_lvl = 0x00;
             break;
         }
