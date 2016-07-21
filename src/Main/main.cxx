@@ -256,6 +256,7 @@ static void fgIdleFunction ( void ) {
             fgSetVideoOptions();
             idle_state+=2;
             fgSplashProgress("loading-aircraft-list");
+            fgSetBool("/sim/rendering/initialized", true);
         }
 
     } else if ( idle_state == 2 ) {

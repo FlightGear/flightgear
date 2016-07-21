@@ -134,7 +134,7 @@ MessageBoxResult modalMessageBox(const std::string& caption,
         s += "\n( " +  moreText + ")";
     }
 
-    if (fgGetBool("/sim/initialized", false) == false) {
+    if (fgGetBool("/sim/rendering/initialized", false) == false) {
         SG_LOG(SG_GENERAL, SG_ALERT, s);
     } else {
         NewGUI* _gui = (NewGUI *)globals->get_subsystem("gui");
@@ -161,7 +161,7 @@ MessageBoxResult fatalMessageBox(const std::string& caption,
     if (!moreText.empty()) {
         s += "\n( " +  moreText + ")";
     }
-    if (fgGetBool("/sim/initialized", false) == false) {
+    if (fgGetBool("/sim/rendering/initialized", false) == false) {
         std::cerr << s << std::endl;
     } else {
         NewGUI* _gui = (NewGUI *)globals->get_subsystem("gui");
