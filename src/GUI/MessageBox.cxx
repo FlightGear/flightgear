@@ -6,6 +6,7 @@
 
 #include "MessageBox.hxx"
 
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Viewer/renderer.hxx>
 #include <GUI/new_gui.hxx>
@@ -132,12 +133,15 @@ MessageBoxResult modalMessageBox(const std::string& caption,
     if (!moreText.empty()) {
         s += "\n( " +  moreText + ")";
     }
-//  SG_LOG(SG_GENERAL, SG_ALERT, s);
 
-    NewGUI* _gui = (NewGUI *)globals->get_subsystem("gui");
-    SGPropertyNode_ptr dlg = _gui->getDialogProperties("popup");
-    dlg->setStringValue("text/label", s  );
-    _gui->showDialog("popup");
+    if (fgGetBool("/sim/initialized", false) == false) {
+        SG_LOG(SG_GENERAL, SG_ALERT, s);
+    } else {
+        NewGUI* _gui = (NewGUI *)globals->get_subsystem("gui");
+        SGPropertyNode_ptr dlg = _gui->getDialogProperties("popup");
+        dlg->setStringValue("text/label", s  );
+        _gui->showDialog("popup");
+    }
     return MSG_BOX_OK;
 #endif
 }
@@ -153,11 +157,18 @@ MessageBoxResult fatalMessageBox(const std::string& caption,
 #elif defined(HAVE_QT)
     return QtMessageBox(caption, msg, moreText, true);
 #else
-    std::cerr << "FATAL:" << msg << "\n";
+    std::string s = "FATAL: "+ msg;
     if (!moreText.empty()) {
-        std::cerr << "(" << moreText << ")";
+        s += "\n( " +  moreText + ")";
     }
-    std::cerr << std::endl;
+    if (fgGetBool("/sim/initialized", false) == false) {
+        std::cerr << s << std::endl;
+    } else {
+        NewGUI* _gui = (NewGUI *)globals->get_subsystem("gui");
+        SGPropertyNode_ptr dlg = _gui->getDialogProperties("popup");
+        dlg->setStringValue("text/label", s  );
+        _gui->showDialog("popup");
+    }
     return MSG_BOX_OK;
 #endif
 }
