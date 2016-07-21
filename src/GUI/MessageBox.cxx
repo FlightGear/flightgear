@@ -8,6 +8,7 @@
 
 #include <Main/globals.hxx>
 #include <Viewer/renderer.hxx>
+#include <GUI/new_gui.hxx>
 
 #include <osgViewer/Viewer>
 
@@ -127,10 +128,16 @@ MessageBoxResult modalMessageBox(const std::string& caption,
 #elif defined(HAVE_QT)
     return QtMessageBox(caption, msg, moreText, false);
 #else
-    SG_LOG(SG_GENERAL, SG_ALERT, caption << ":" << msg);
+    std::string s = caption + ": "+ msg;
     if (!moreText.empty()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "(" << moreText << ")");
+        s += "\n( " +  moreText + ")";
     }
+//  SG_LOG(SG_GENERAL, SG_ALERT, s);
+
+    NewGUI* _gui = (NewGUI *)globals->get_subsystem("gui");
+    SGPropertyNode_ptr dlg = _gui->getDialogProperties("popup");
+    dlg->setStringValue("text/label", s  );
+    _gui->showDialog("popup");
     return MSG_BOX_OK;
 #endif
 }
