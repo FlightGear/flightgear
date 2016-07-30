@@ -182,6 +182,9 @@ void fgSetDefaults ()
     fgSetInt("/sim/model-hz", NEW_DEFAULT_MODEL_HZ);
     fgSetDouble("/sim/speed-up", 1.0);
 
+    // Scenery
+    fgSetBool("/sim/scenery/use-gdal-dem", false);
+    
 				// Rendering options
     fgSetString("/sim/rendering/fog", "nicest");
     fgSetBool("/environment/clouds/status", true);
@@ -1599,6 +1602,7 @@ struct OptionDesc {
     {"roc",                          true,  OPTION_FUNC,   "", false, "", fgOptRoc },
     {"fg-root",                      true,  OPTION_IGNORE,   "", false, "", 0 },
     {"fg-scenery",                   true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFgScenery },
+    {"use-gdal-dem",                 false, OPTION_BOOL,   "/sim/scenery/use-gdal-dem", false, "", 0 },
     {"fg-aircraft",                  true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },

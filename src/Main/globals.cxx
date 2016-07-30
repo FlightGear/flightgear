@@ -209,7 +209,6 @@ FGGlobals::~FGGlobals()
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
 
-    subsystem_mgr->remove(FGTileMgr::subsystemName());
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
     if (vw && vw->getDatabasePager()) {
@@ -697,11 +696,6 @@ void FGGlobals::set_warp_delta( long int d )
 FGScenery* FGGlobals::get_scenery () const
 {
     return get_subsystem<FGScenery>();
-}
-
-FGTileMgr* FGGlobals::get_tile_mgr () const
-{
-    return get_subsystem<FGTileMgr>();
 }
 
 FGViewMgr *FGGlobals::get_viewmgr() const

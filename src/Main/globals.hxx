@@ -59,7 +59,6 @@ class FGTACANList;
 class FGLocale;
 class FGRouteMgr;
 class FGScenery;
-class FGTileMgr;
 class FGViewMgr;
 class FGRenderer;
 
@@ -328,8 +327,6 @@ public:
     FGControls *get_controls() const;
 
     FGScenery * get_scenery () const;
-
-    FGTileMgr * get_tile_mgr () const;
   
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }

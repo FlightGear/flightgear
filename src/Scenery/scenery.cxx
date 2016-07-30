@@ -282,7 +282,7 @@ private:
 
 // Scenery Management system
 FGScenery::FGScenery() :
-    _listener(NULL)
+    _listener(NULL), _tilemgr()
 {
     // keep reference to pager singleton, so it cannot be destroyed while FGScenery lives
     _pager = FGScenery::getPagerSingleton();
@@ -298,7 +298,7 @@ FGScenery::~FGScenery()
 
 
 // Initialize the Scenery Management system
-void FGScenery::init() {
+void FGScenery::init() {    
     // Already set up.
     if (_inited)
         return;
@@ -345,14 +345,24 @@ void FGScenery::init() {
     precipitation_branch->setName("Precipitation");
     scene_graph->addChild(precipitation_branch.get());
 
+    // initialize the tile manager
+    _tilemgr.init();
+    
     _listener = new ScenerySwitchListener(this);
 
     // Toggle the setup flag.
     _inited = true;
 }
 
+void FGScenery::reinit()
+{
+    _tilemgr.reinit();
+}
+
 void FGScenery::shutdown()
 {
+    _tilemgr.shutdown();
+    
     scene_graph = NULL;
     terrain_branch = NULL;
     models_branch = NULL;
@@ -366,16 +376,12 @@ void FGScenery::shutdown()
 
 
 void FGScenery::update(double dt)
-{
-    SG_UNUSED(dt);
-    // nothing here, don't call again
-    suspend();
+{    
+    _tilemgr.update(dt);
 }
-
 
 void FGScenery::bind() {
 }
-
 
 void FGScenery::unbind() {
 }
@@ -444,7 +450,7 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
 
 bool FGScenery::scenery_available(const SGGeod& position, double range_m)
 {
-  if(globals->get_tile_mgr()->schedule_scenery(position, range_m, 0.0))
+  if( schedule_scenery(position, range_m, 0.0) )
   {
     double elev;
     if (!get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0, 0))
@@ -466,6 +472,16 @@ bool FGScenery::scenery_available(const SGGeod& position, double range_m)
     SG_LOG(SG_TERRAIN, SG_DEBUG, "FGScenery::scenery_available: waiting on tile manager");
   }
   return false;
+}
+
+bool FGScenery::schedule_scenery(const SGGeod& position, double range_m, double duration)
+{
+    return _tilemgr.schedule_scenery( position, range_m, duration );
+}
+    
+void FGScenery::materialLibChanged()
+{
+    _tilemgr.materialLibChanged();
 }
 
 static osg::ref_ptr<SceneryPager> pager;

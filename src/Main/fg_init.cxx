@@ -111,7 +111,6 @@
 #include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/SceneryPager.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/voice.hxx>
 #include <Sound/soundmanager.hxx>
@@ -1019,7 +1018,7 @@ void fgStartNewReset()
         string_list::const_iterator it;
         for (it = names.begin(); it != names.end(); ++it) {
             if ((*it == "time") || (*it == "terrasync") || (*it == "events")
-                || (*it == "lighting") || (*it == FGTileMgr::subsystemName()) || (*it == FGScenery::subsystemName()))
+                || (*it == "lighting") || (*it == FGScenery::subsystemName()))
             {
                 continue;
             }
@@ -1042,7 +1041,6 @@ void fgStartNewReset()
     
     // order is important here since tile-manager shutdown needs to
     // access the scenery object
-    subsystemManger->remove(FGTileMgr::subsystemName());
     subsystemManger->remove(FGScenery::subsystemName());
 
     FGScenery::getPagerSingleton()->clearRequests();

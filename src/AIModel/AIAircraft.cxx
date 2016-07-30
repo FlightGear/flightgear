@@ -25,7 +25,6 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/airport.hxx>
 #include <Main/util.hxx>
@@ -551,7 +550,7 @@ void FGAIAircraft::getGroundElev(double dt) {
         }
 
         double range = 500.0;
-        if (globals->get_tile_mgr()->schedule_scenery(pos, range, 5.0))
+        if (globals->get_scenery()->schedule_scenery(pos, range, 5.0))
         {
             double alt;
             if (getGroundElevationM(SGGeod::fromGeodM(pos, 20000), alt, 0))

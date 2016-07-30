@@ -128,8 +128,7 @@ FGTileMgr::FGTileMgr():
 
 FGTileMgr::~FGTileMgr()
 {
-   }
-
+}
 
 // Initialize the Tile Manager subsystem
 void FGTileMgr::init()
@@ -154,14 +153,14 @@ void FGTileMgr::shutdown()
 
 void FGTileMgr::reinit()
 {
-    SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
-    _terra_sync = static_cast<simgear::SGTerraSync*> (globals->get_subsystem("terrasync"));
+    SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager" );
 
-  // drops the previous options reference
+    _terra_sync = static_cast<simgear::SGTerraSync*> (globals->get_subsystem("terrasync"));
+    
+    // drops the previous options reference
     _options = new simgear::SGReaderWriterOptions;
     _listener = new TileManagerListener(this);
     
-    materialLibChanged();
     _options->setPropertyNode(globals->get_props());
     
     osgDB::FilePathList &fp = _options->getDatabasePathList();
@@ -172,7 +171,7 @@ void FGTileMgr::reinit()
         fp.push_back(it->local8BitStr());
     }
     _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().local8BitStr());
-    
+
     if (_terra_sync) {
       _options->setPluginStringData("SimGear::TERRASYNC_ROOT", fgGetString("/sim/terrasync/scenery-dir"));
     }
@@ -194,9 +193,9 @@ void FGTileMgr::reinit()
   
     _scenery_loaded->setBoolValue(false);
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
-    
-    materialLibChanged();
 
+    materialLibChanged();
+    
     // remove all old scenery nodes from scenegraph and clear cache
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
@@ -584,4 +583,3 @@ bool FGTileMgr::isTileDirSyncing(const std::string& tileFileName) const
     
     return _terra_sync->isTileDirPending(bucket.gen_base_path());
 }
-

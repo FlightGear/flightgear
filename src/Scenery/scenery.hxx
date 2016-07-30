@@ -38,6 +38,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 #include "SceneryPager.hxx"
+#include "tilemgr.hxx"
 
 namespace simgear {
 class BVHMaterial;
@@ -68,6 +69,7 @@ public:
 
     // Implementation of SGSubsystem.
     void init ();
+    void reinit();
     void shutdown ();
     void bind ();
     void unbind ();
@@ -129,14 +131,21 @@ public:
     // the scenery is initialized.
     static flightgear::SceneryPager* getPagerSingleton();
     static void resetPagerSingleton();
-    
+
     flightgear::SceneryPager* getPager() { return _pager.get(); }
 
+    // tile mgr api
+    bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
+    void materialLibChanged();
+    
     static const char* subsystemName() { return "scenery"; }
 
 private:
     // The state of the scene graph.
     bool _inited;
+    
+    // tile manager
+    FGTileMgr _tilemgr;
 };
 
 
