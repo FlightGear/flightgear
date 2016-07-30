@@ -58,7 +58,6 @@ extern bool global_crashRptEnabled;
 
 #include <Model/panelnode.hxx>
 #include <Scenery/scenery.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <Sound/soundmanager.hxx>
 #include <Time/TimeManager.hxx>
 #include <GUI/gui.h>
@@ -313,8 +312,7 @@ static void fgIdleFunction ( void ) {
         globals->add_new_subsystem<FGScenery>(SGSubsystemMgr::DISPLAY);
         globals->get_scenery()->init();
         globals->get_scenery()->bind();
-        globals->add_new_subsystem<FGTileMgr>(SGSubsystemMgr::DISPLAY);
-        
+
         fgSplashProgress("creating-subsystems");
     } else if (( idle_state == 7 ) || (idle_state == 2007)) {
         bool isReset = (idle_state == 2007);

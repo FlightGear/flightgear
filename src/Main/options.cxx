@@ -120,17 +120,17 @@ static int fgSetupProxy( const char *arg );
 void fgSetDefaults ()
 {
 
-				// Position (deliberately out of range)
+    // Position (deliberately out of range)
     fgSetDouble("/position/longitude-deg", 9999.0);
     fgSetDouble("/position/latitude-deg", 9999.0);
     fgSetDouble("/position/altitude-ft", -9999.0);
 
-				// Orientation
+    // Orientation
     fgSetDouble("/orientation/heading-deg", 9999.0);
     fgSetDouble("/orientation/roll-deg", 0.0);
     fgSetDouble("/orientation/pitch-deg", 0.424);
 
-				// Velocities
+    // Velocities
     fgSetDouble("/velocities/uBody-fps", 0.0);
     fgSetDouble("/velocities/vBody-fps", 0.0);
     fgSetDouble("/velocities/wBody-fps", 0.0);
@@ -140,7 +140,7 @@ void fgSetDefaults ()
     fgSetDouble("/velocities/airspeed-kt", 0.0);
     fgSetDouble("/velocities/mach", 0.0);
 
-                                // Presets
+    // Presets
     fgSetDouble("/sim/presets/longitude-deg", 9999.0);
     fgSetDouble("/sim/presets/latitude-deg", 9999.0);
     fgSetDouble("/sim/presets/altitude-ft", -9999.0);
@@ -162,7 +162,7 @@ void fgSetDefaults ()
     fgSetBool("/sim/presets/onground", true);
     fgSetBool("/sim/presets/trim", false);
 
-				// Miscellaneous
+    // Miscellaneous
     fgSetBool("/sim/startup/splash-screen", true);
     // we want mouse-pointer to have an undefined value if nothing is
     // specified so we can do the right thing for voodoo-1/2 cards.
@@ -170,7 +170,7 @@ void fgSetDefaults ()
     fgSetBool("/controls/flight/auto-coordination", false);
     fgSetString("/sim/logging/priority", "alert");
 
-				// Features
+    // Features
     fgSetBool("/sim/hud/color/antialiased", false);
     fgSetBool("/sim/hud/enable3d[1]", true);
     fgSetBool("/sim/hud/visibility[1]", false);
@@ -179,13 +179,21 @@ void fgSetDefaults ()
     fgSetBool("/sim/sound/working", true);
     fgSetBool("/sim/fgcom/enabled", false);
 
-				// Flight Model options
+    // Flight Model options
     fgSetString("/sim/flight-model", "jsb");
     fgSetString("/sim/aero", "c172");
     fgSetInt("/sim/model-hz", NEW_DEFAULT_MODEL_HZ);
     fgSetDouble("/sim/speed-up", 1.0);
 
-				// Rendering options
+    // Scenery
+    fgSetString("/sim/scenery/engine", "tilecache");
+
+    // ( scenery = pagedLOD )
+    fgSetString("/sim/scenery/lod-levels", "1 3 5 7 9");
+    fgSetString("/sim/scenery/lod-res", "1");
+    fgSetString("/sim/scenery/lod-texturing", "bluemarble");
+
+    // Rendering options
     fgSetString("/sim/rendering/fog", "nicest");
     fgSetBool("/environment/clouds/status", true);
     fgSetBool("/sim/startup/fullscreen", false);
@@ -204,16 +212,16 @@ void fgSetDefaults ()
     fgSetString("/sim/view-mode", "pilot");
     fgSetDouble("/sim/current-view/heading-offset-deg", 0);
 
-				// HUD options
+    // HUD options
     fgSetString("/sim/startup/units", "feet");
     fgSetString("/sim/hud/frame-stat-type", "tris");
 
-				// Time options
+    // Time options
     fgSetInt("/sim/startup/time-offset", 0);
     fgSetString("/sim/startup/time-offset-type", "system-offset");
     fgSetLong("/sim/time/cur-time-override", 0);
 
-                                // Freeze options
+    // Freeze options
     fgSetBool("/sim/freeze/master", false);
     fgSetBool("/sim/freeze/position", false);
     fgSetBool("/sim/freeze/clock", false);
@@ -1609,6 +1617,11 @@ struct OptionDesc {
     {"roc",                          true,  OPTION_FUNC,   "", false, "", fgOptRoc },
     {"fg-root",                      true,  OPTION_IGNORE,   "", false, "", 0 },
     {"fg-scenery",                   true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFgScenery },
+    {"terrain-engine",               true,  OPTION_STRING, "/sim/scenery/engine", false, "tilecache", 0 },
+    {"lod-levels",                   true,  OPTION_STRING, "/sim/scenery/lod-levels", false, "1 3 5 7", 0 },
+    {"lod-res",                      true,  OPTION_STRING, "/sim/scenery/lod-res", false, "1", 0 },
+    {"lod-texturing",                true,  OPTION_STRING, "/sim/scenery/lod-texturing", false, "bluemarble", 0 },
+    {"lod-range-mult",               true,  OPTION_STRING, "/sim/scenery/lod-range-mult", false, "2", 0 },
     {"fg-aircraft",                  true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },

@@ -49,5 +49,6 @@ endif()
 target_link_libraries(fgviewer
 	SimGearScene SimGearCore
 	${FGVIEWER_RTI_LIBRARIES}
+    ${GDAL_LIBRARY}
 )
 install(TARGETS fgviewer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -32,7 +32,6 @@
 #include <GUI/dialog.hxx>
 #include <Aircraft/replay.hxx>
 #include <Scenery/scenery.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/sample_queue.hxx>
 #include <Airports/xmlloader.hxx>
@@ -547,8 +546,8 @@ do_materials_reload (const SGPropertyNode * arg)
     }  
 
     globals->set_matlib(new_matlib);    
-    FGTileMgr* tileManager = static_cast<FGTileMgr*>(globals->get_subsystem("tile-manager"));
-    tileManager->materialLibChanged();
+    FGScenery* scenery = static_cast<FGScenery*>(globals->get_scenery());
+    scenery->materialLibChanged();
     
     return true;
 }

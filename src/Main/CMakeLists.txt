@@ -110,6 +110,12 @@ else()
 	set(HLA_LIBRARIES "")
 endif()
 
+if(GDAL_FOUND)
+	set(GDAL_LIBRARIES ${GDAL_LIBRARY})
+else()
+	set(GDAL_LIBRARIES "")
+endif()
+
 if(ENABLE_JSBSIM)
     # FIXME - remove once JSBSim doesn't expose private headers
     include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
@@ -141,6 +147,7 @@ target_link_libraries(fgfs
 	${OPENGL_LIBRARIES}
 	${PLIB_LIBRARIES}
 	${HLA_LIBRARIES}
+	${GDAL_LIBRARIES}
 	${EVENT_INPUT_LIBRARIES}
 	${PLATFORM_LIBS}
 )
