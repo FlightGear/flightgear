@@ -57,7 +57,6 @@
 #include <Main/fg_props.hxx>
 #include <GUI/MouseCursor.hxx>
 
-#include "scenery.hxx"
 #include "terrain_stg.hxx"
 
 using namespace flightgear;
@@ -222,223 +221,159 @@ private:
     bool _haveHit;
 };
 
-class FGScenery::ScenerySwitchListener : public SGPropertyChangeListener
-{
-public:
-  ScenerySwitchListener(FGScenery* scenery) :
-    _scenery(scenery)
-  {
-    SGPropertyNode_ptr maskNode = fgGetNode("/sim/rendering/draw-mask", true);
-    maskNode->getChild("terrain", 0, true)->addChangeListener(this, true);
-    maskNode->getChild("models", 0, true)->addChangeListener(this, true);
-    maskNode->getChild("aircraft", 0, true)->addChangeListener(this, true);
-    maskNode->getChild("clouds", 0, true)->addChangeListener(this, true);
-    
-    // legacy compatability option
-    fgGetNode("/sim/rendering/draw-otw")->addChangeListener(this);
-    
-    // badly named property, this is what is set by --enable/disable-clouds
-    fgGetNode("/environment/clouds/status")->addChangeListener(this);
-  }
-  
-  ~ScenerySwitchListener()
-  {
-    SGPropertyNode_ptr maskNode = fgGetNode("/sim/rendering/draw-mask");
-    for (int i=0; i < maskNode->nChildren(); ++i) {
-      maskNode->getChild(i)->removeChangeListener(this);
-    }
-    
-    fgGetNode("/sim/rendering/draw-otw")->removeChangeListener(this);
-    fgGetNode("/environment/clouds/status")->removeChangeListener(this);
-  }
-  
-  virtual void valueChanged (SGPropertyNode * node)
-  {
-    bool b = node->getBoolValue();
-    std::string name(node->getNameString());
-  
-    if (name == "terrain") {
-      _scenery->scene_graph->setChildValue(_scenery->terrain_branch, b);
-    } else if (name == "models") {
-      _scenery->scene_graph->setChildValue(_scenery->models_branch, b);
-    } else if (name == "aircraft") {
-      _scenery->scene_graph->setChildValue(_scenery->aircraft_branch, b);
-    } else if (name == "clouds") {
-      // clouds live elsewhere in the scene, but we handle them here
-      globals->get_renderer()->getSky()->set_clouds_enabled(b);
-    } else if (name == "draw-otw") {
-      // legacy setting but let's keep it working
-      fgGetNode("/sim/rendering/draw-mask")->setBoolValue("terrain", b);
-      fgGetNode("/sim/rendering/draw-mask")->setBoolValue("models", b);
-    } else if (name == "status") {
-      fgGetNode("/sim/rendering/draw-mask")->setBoolValue("clouds", b);
-    }
-  }
-private:
-  FGScenery* _scenery;
-};
-
 ////////////////////////////////////////////////////////////////////////////
 
-// Scenery Management system
-FGScenery::FGScenery() :
-    _listener(NULL)
+// Terrain Management system
+FGStgTerrain::FGStgTerrain() :
+    _tilemgr()
 {
-    // keep reference to pager singleton, so it cannot be destroyed while FGScenery lives
-    _pager = FGScenery::getPagerSingleton();
-
-    // Initialise the state of the scene graph.
-    _inited = false;
+    _inited  = false;
 }
 
-FGScenery::~FGScenery()
+FGStgTerrain::~FGStgTerrain()
 {
-    delete _listener;
 }
 
 
 // Initialize the Scenery Management system
-void FGScenery::init() {    
+void FGStgTerrain::init( osg::Group* terrain ) {
     // Already set up.
     if (_inited)
         return;
 
-    // Scene graph root
-    scene_graph = new osg::Switch;
-    scene_graph->setName( "FGScenery" );
-
-    // Terrain branch
-    terrain_branch = new osg::Group;
-    terrain_branch->setName( "Terrain" );
-    scene_graph->addChild( terrain_branch.get() );
-    SGSceneUserData* userData;
-    userData = SGSceneUserData::getOrCreateSceneUserData(terrain_branch.get());
-    userData->setPickCallback(new FGGroundPickCallback);
-
-    models_branch = new osg::Group;
-    models_branch->setName( "Models" );
-    scene_graph->addChild( models_branch.get() );
-
-    aircraft_branch = new osg::Group;
-    aircraft_branch->setName( "Aircraft" );
-    scene_graph->addChild( aircraft_branch.get() );
-
-// choosing to make the interior branch a child of the main
-// aircraft group, for the moment. This simplifes places which
-// assume all aircraft elements are within this group - principally
-// FGODGuage::set_aircraft_texture.
-    interior_branch = new osg::Group;
-    interior_branch->setName( "Interior" );
+    // remember the scene terrain branch on scenegraph
+    terrain_branch = terrain;
     
-    osg::LOD* interiorLOD = new osg::LOD;
-    interiorLOD->addChild(interior_branch.get(), 0.0, 50.0);
-    aircraft_branch->addChild( interiorLOD );
+    // initialize the tile manager
+    _tilemgr.init();
     
-    // Set up the particle system as a directly accessible branch of the scene graph.
-    particles_branch = simgear::Particles::getCommonRoot();
-    particles_branch->setName("Particles");
-    scene_graph->addChild(particles_branch.get());
-    simgear::GlobalParticleCallback::setSwitch(fgGetNode("/sim/rendering/particles", true));
-  
-    // Set up the precipitation system.
-    precipitation_branch = new osg::Group;
-    precipitation_branch->setName("Precipitation");
-    scene_graph->addChild(precipitation_branch.get());
-
-    // initialize the terrian
-    _terrain = new FGStgTerrain();
-    _terrain->init( terrain_branch.get() );
-    
-    _listener = new ScenerySwitchListener(this);
-
     // Toggle the setup flag.
     _inited = true;
 }
 
-void FGScenery::reinit()
+void FGStgTerrain::reinit()
 {
-    _terrain->reinit();
+    _tilemgr.reinit();
 }
 
-void FGScenery::shutdown()
+void FGStgTerrain::shutdown()
 {
-    _terrain->shutdown();
-    
-    scene_graph = NULL;
-    terrain_branch = NULL;
-    models_branch = NULL;
-    aircraft_branch = NULL;
-    particles_branch = NULL;
-    precipitation_branch = NULL;
+    _tilemgr.shutdown();
 
+    terrain_branch = NULL;
+    
     // Toggle the setup flag.
     _inited = false;
 }
 
 
-void FGScenery::update(double dt)
+void FGStgTerrain::update(double dt)
 {    
-    _terrain->update(dt);
+    _tilemgr.update(dt);
 }
 
-void FGScenery::bind() {
+void FGStgTerrain::bind() {
 }
 
-void FGScenery::unbind() {
-}
-
-bool
-FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
-                                double& alt,
-                                const simgear::BVHMaterial** material,
-                                const osg::Node* butNotFrom)
-{
-    return _terrain->get_cart_elevation_m(pos, max_altoff, alt,
-                                          material, butNotFrom);
+void FGStgTerrain::unbind() {
 }
 
 bool
-FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
-                           const simgear::BVHMaterial** material,
-                           const osg::Node* butNotFrom)
+FGStgTerrain::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
+                                   double& alt,
+                                   const simgear::BVHMaterial** material,
+                                   const osg::Node* butNotFrom)
 {
-    return _terrain->get_elevation_m( geod, alt, material, 
-                                      butNotFrom );
+  SGGeod geod = SGGeod::fromCart(pos);
+  geod.setElevationM(geod.getElevationM() + max_altoff);
+  return get_elevation_m(geod, alt, material, butNotFrom);
 }
 
 bool
-FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
-                                        SGVec3d& nearestHit,
-                                        const osg::Node* butNotFrom)
+FGStgTerrain::get_elevation_m(const SGGeod& geod, double& alt,
+                              const simgear::BVHMaterial** material,
+                              const osg::Node* butNotFrom)
 {
-    return _terrain->get_cart_ground_intersection( pos, dir, nearestHit, butNotFrom );
+  SGVec3d start = SGVec3d::fromGeod(geod);
+
+  SGGeod geodEnd = geod;
+  geodEnd.setElevationM(SGMiscd::min(geod.getElevationM() - 10, -10000));
+  SGVec3d end = SGVec3d::fromGeod(geodEnd);
+
+  FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
+  intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
+  terrain_branch->accept(intersectVisitor);
+
+  if (!intersectVisitor.getHaveHit())
+      return false;
+
+  geodEnd = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
+  alt = geodEnd.getElevationM();
+  if (material)
+      *material = intersectVisitor.getMaterial();
+
+  return true;
 }
 
-bool FGScenery::scenery_available(const SGGeod& position, double range_m)
+bool
+FGStgTerrain::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
+                                           SGVec3d& nearestHit,
+                                           const osg::Node* butNotFrom)
 {
-    return _terrain->scenery_available( position, range_m );
+  // We assume that starting positions in the center of the earth are invalid
+  if ( norm1(pos) < 1 )
+    return false;
+
+  // Make really sure the direction is normalized, is really cheap compared to
+  // computation of ground intersection.
+  SGVec3d start = pos;
+  SGVec3d end = start + 1e5*normalize(dir); // FIXME visibility ???
+
+  FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
+  intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
+  terrain_branch->accept(intersectVisitor);
+
+  if (!intersectVisitor.getHaveHit())
+      return false;
+
+  nearestHit = intersectVisitor.getLineSegment().getEnd();
+  return true;
 }
 
-bool FGScenery::schedule_scenery(const SGGeod& position, double range_m, double duration)
+bool FGStgTerrain::scenery_available(const SGGeod& position, double range_m)
 {
-    return _terrain->schedule_scenery( position, range_m, duration );
+  if( schedule_scenery(position, range_m, 0.0) )
+  {
+    double elev;
+    if (!get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0, 0))
+      return false;
+    SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
+    osg::FrameStamp* framestamp
+            = globals->get_renderer()->getViewer()->getFrameStamp();
+
+    FGScenery* pSceneryManager = globals->get_scenery();
+    simgear::CheckSceneryVisitor csnv(pSceneryManager->getPager(), toOsg(p), range_m, framestamp);
+    // currently the PagedLODs will not be loaded by the DatabasePager
+    // while the splashscreen is there, so CheckSceneryVisitor force-loads
+    // missing objects in the main thread
+    terrain_branch->accept(csnv);
+    if(!csnv.isLoaded()) {
+        SG_LOG(SG_TERRAIN, SG_DEBUG, "FGScenery::scenery_available: waiting on CheckSceneryVisitor");
+        return false;
+    }
+    return true;
+  } else {
+    SG_LOG(SG_TERRAIN, SG_DEBUG, "FGScenery::scenery_available: waiting on tile manager");
+  }
+  return false;
+}
+
+bool FGStgTerrain::schedule_scenery(const SGGeod& position, double range_m, double duration)
+{
+    return _tilemgr.schedule_scenery( position, range_m, duration );
 }
     
-void FGScenery::materialLibChanged()
+void FGStgTerrain::materialLibChanged()
 {
-    _terrain->materialLibChanged();
-}
-
-static osg::ref_ptr<SceneryPager> pager;
-
-SceneryPager* FGScenery::getPagerSingleton()
-{
-    if (!pager)
-        pager = new SceneryPager;
-    return pager.get();
-}
-
-void FGScenery::resetPagerSingleton()
-{
-    pager = NULL;
+    _tilemgr.materialLibChanged();
 }

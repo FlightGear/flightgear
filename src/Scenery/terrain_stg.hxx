@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _SCENERY_HXX
-#define _SCENERY_HXX
+#ifndef _TERRAIN_STG_HXX
+#define _TERRAIN_STG_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -37,40 +37,24 @@
 #include <simgear/scene/model/particles.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-#include "SceneryPager.hxx"
 #include "terrain.hxx"
+#include "SceneryPager.hxx"
+#include "tilemgr.hxx"
 
 namespace simgear {
 class BVHMaterial;
 }
 
-class FGTerrain;
-
 // Define a structure containing global scenery parameters
-class FGScenery : public SGSubsystem
+class FGStgTerrain : public FGTerrain
 {
-    class ScenerySwitchListener;
-    friend class ScenerySwitchListener;
-
-    
-    // scene graph
-    osg::ref_ptr<osg::Switch> scene_graph;
-    osg::ref_ptr<osg::Group> terrain_branch;
-    osg::ref_ptr<osg::Group> models_branch;
-    osg::ref_ptr<osg::Group> aircraft_branch;
-    osg::ref_ptr<osg::Group> interior_branch;
-    osg::ref_ptr<osg::Group> particles_branch;
-    osg::ref_ptr<osg::Group> precipitation_branch;
-    
-    osg::ref_ptr<flightgear::SceneryPager> _pager;
-    ScenerySwitchListener* _listener;
-
 public:
-    FGScenery();
-    ~FGScenery();
+
+    FGStgTerrain();
+    ~FGStgTerrain();
 
     // Implementation of SGSubsystem.
-    void init ();
+    void init ( osg::Group* terrain );
     void reinit();
     void shutdown ();
     void bind ();
@@ -115,27 +99,12 @@ public:
     bool get_cart_ground_intersection(const SGVec3d& start, const SGVec3d& dir,
                                       SGVec3d& nearestHit,
                                       const osg::Node* butNotFrom = 0);
-
-    osg::Group *get_scene_graph () const { return scene_graph.get(); }
-    osg::Group *get_terrain_branch () const { return terrain_branch.get(); }
-    osg::Group *get_models_branch () const { return models_branch.get(); }
-    osg::Group *get_aircraft_branch () const { return aircraft_branch.get(); }
-    osg::Group *get_interior_branch () const { return interior_branch.get(); }
-    osg::Group *get_particles_branch () const { return particles_branch.get(); }
-    osg::Group *get_precipitation_branch () const { return precipitation_branch.get(); }
     
     /// Returns true if scenery is available for the given lat, lon position
     /// within a range of range_m.
     /// lat and lon are expected to be in degrees.
     bool scenery_available(const SGGeod& position, double range_m);
 
-    // Static because access to the pager is needed before the rest of
-    // the scenery is initialized.
-    static flightgear::SceneryPager* getPagerSingleton();
-    static void resetPagerSingleton();
-
-    flightgear::SceneryPager* getPager() { return _pager.get(); }
-    
     // tile mgr api
     bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
     void materialLibChanged();
@@ -143,11 +112,15 @@ public:
     static const char* subsystemName() { return "scenery"; }
 
 private:
-    // the terrain engine
-    FGTerrain* _terrain;
-
-    // The state of the scene graph.    
+    // tile manager
+    FGTileMgr _tilemgr;
+    
+    // terrain branch of scene graph
+    osg::ref_ptr<osg::Group> terrain_branch;
+    
     bool _inited;
 };
 
-#endif // _SCENERY_HXX
+#endif // _TERRAIN_STG_HXX
+
+
