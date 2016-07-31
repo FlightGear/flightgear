@@ -44,6 +44,8 @@ class CameraGroup;
 class SGSky;
 class SGUpdateVisitor;
 
+typedef std::vector<SGSceneryPick> PickList;
+
 class FGRenderer {
 
 public:
@@ -62,7 +64,7 @@ public:
   
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
-    bool pick( std::vector<SGSceneryPick>& pickList, const osg::Vec2& windowPos);
+    PickList pick(const osg::Vec2& windowPos);
 
     /** Get and set the OSG Viewer object, if any.
      */
