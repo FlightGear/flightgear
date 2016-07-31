@@ -147,18 +147,12 @@ void HUD::Gauge::draw(void)
         text_y = _y + ((cur_value - vmin) * factor() /*+.5f*/);
 
         if (option_right()) {
-            glBegin(GL_LINE_STRIP);
-            glVertex2f(_x, text_y + 5);
-            glVertex2f(marker_xe, text_y);
-            glVertex2f(_x, text_y - 5);
-            glEnd();
+            _hud->_line_list.add(LineSegment(_x, text_y + 5, marker_xe, text_y));
+            _hud->_line_list.add(LineSegment(marker_xe, text_y, _x, text_y - 5));
         }
         if (option_left()) {
-            glBegin(GL_LINE_STRIP);
-            glVertex2f(right, text_y + 5);
-            glVertex2f(marker_xs, text_y);
-            glVertex2f(right, text_y - 5);
-            glEnd();
+            _hud->_line_list.add(LineSegment(right, text_y + 5, marker_xs, text_y));
+            _hud->_line_list.add(LineSegment(marker_xs, text_y, right, text_y - 5));
         }
         // End if VERTICAL SCALE TYPE
 
@@ -179,11 +173,8 @@ void HUD::Gauge::draw(void)
 
             marker_ye = _y + _h / 2.0;   // Tick point adjust
             // Bottom arrow
-            glBegin(GL_LINE_STRIP);
-            glVertex2f(marker_xs - bottom_4, _y);
-            glVertex2f(marker_xs, marker_ye);
-            glVertex2f(marker_xs + bottom_4, _y);
-            glEnd();
+            _hud->_line_list.add(LineSegment(marker_xs - bottom_4, _y, marker_xs, marker_ye));
+            _hud->_line_list.add(LineSegment(marker_xs, marker_ye, marker_xs + bottom_4, _y));
         }
 
         if (option_bottom()) {
@@ -193,11 +184,8 @@ void HUD::Gauge::draw(void)
             marker_ys = top - _h / 2.0;
 
             // Top arrow
-            glBegin(GL_LINE_STRIP);
-            glVertex2f(marker_xs + bottom_4, top);
-            glVertex2f(marker_xs, marker_ys );
-            glVertex2f(marker_xs - bottom_4, top);
-            glEnd();
+            _hud->_line_list.add(LineSegment(marker_xs + bottom_4, top, marker_xs, marker_ys));
+            _hud->_line_list.add(LineSegment(marker_xs, marker_ys, marker_xs - bottom_4, top));
         }
 
 

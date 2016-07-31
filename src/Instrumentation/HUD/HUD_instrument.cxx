@@ -114,29 +114,35 @@ void HUD::Item::draw_text(float x, float y, const char *msg, int align, int digi
 
 void HUD::Item::draw_circle(float xoffs, float yoffs, float r) const
 {
-    glBegin(GL_LINE_LOOP);
     float step = SG_PI / r;
-    for (float alpha = 0; alpha < SG_PI * 2.0; alpha += step) {
+    double prevX = r;
+    double prevY = 0.0;
+    for (float alpha = step; alpha < SG_PI * 2.0; alpha += step) {
         float x = r * cos(alpha);
         float y = r * sin(alpha);
-        glVertex2f(x + xoffs, y + yoffs);
+        _hud->_line_list.add(LineSegment(prevX + xoffs, prevY + yoffs,
+                                        x + xoffs, y + yoffs));
+        prevX = x;
+        prevY = y;
     }
-    glEnd();
 }
 
 void HUD::Item::draw_arc(float xoffs, float yoffs, float t0, float t1, float r) const
 {
-    glBegin(GL_LINE_STRIP);
     float step = SG_PI / r;
     t0 = t0 * SG_DEGREES_TO_RADIANS;
     t1 = t1 * SG_DEGREES_TO_RADIANS;
 
-    for (float alpha = t0; alpha < t1; alpha += step) {
+    double prevX = r * cos(t0);
+    double prevY = r * sin(t0);
+    for (float alpha = t0 + step; alpha < t1; alpha += step) {
         float x = r * cos(alpha);
         float y = r * sin(alpha);
-        glVertex2f(x + xoffs, y + yoffs);
+        _hud->_line_list.add(LineSegment(prevX + xoffs, prevY + yoffs,
+                                         x + xoffs, y + yoffs));
+        prevX = x;
+        prevY = y;
     }
-    glEnd();
 }
 
 void HUD::Item::draw_bullet(float x, float y, float size)
