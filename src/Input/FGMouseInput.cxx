@@ -77,8 +77,8 @@ void ActivePickCallbacks::init( int button, const osgGA::GUIEventAdapter* ea )
   // That is they get sorted by distance and by scenegraph depth.
   // The nearest one is the first one and the deepest
   // (the most specialized one in the scenegraph) is the first.
-  SGSceneryPicks pickList;
-  if (!globals->get_renderer()->pick(pickList, windowPos)) {
+  SGSceneryPicks pickList = globals->get_renderer()->pick(windowPos);
+  if (pickList.empty()) {
     return;
   }
 
@@ -223,8 +223,7 @@ public:
         bool didPick = false;
 
         SGPickCallback::Priority priority = SGPickCallback::PriorityScenery;
-        SGSceneryPicks pickList;
-        globals->get_renderer()->pick(pickList, windowPos);
+        SGSceneryPicks pickList = globals->get_renderer()->pick(windowPos);
 
         SGSceneryPicks::const_iterator i;
         for( i = pickList.begin(); i != pickList.end(); ++i )
@@ -276,8 +275,8 @@ public:
         osg::Vec2d windowPos;
         flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
 
-        SGSceneryPicks pickList;
-        if( !globals->get_renderer()->pick(pickList, windowPos) )
+        SGSceneryPicks pickList = globals->get_renderer()->pick(windowPos);
+        if(pickList.empty())
           return;
 
         for( ActivePickCallbacks::iterator mi = activePickCallbacks.begin();
@@ -579,8 +578,7 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   osg::Vec2d windowPos;
   flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
 
-  SGSceneryPicks pickList;
-  globals->get_renderer()->pick(pickList, windowPos);
+  SGSceneryPicks pickList = globals->get_renderer()->pick(windowPos);
 
   if( updown != MOUSE_BUTTON_DOWN )
   {

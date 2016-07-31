@@ -1785,16 +1785,15 @@ SGVec2d uvFromIntersection(const Intersection& hit)
   return toSG( osg::Vec2d(tc1 * r1 + tc2 * r2 + tc3 * r3) );
 }
 
-bool
-FGRenderer::pick(std::vector<SGSceneryPick>& pickList, const osg::Vec2& windowPos)
+PickList FGRenderer::pick(const osg::Vec2& windowPos)
 {
-    // wipe out the return ...
-    pickList.clear();
+    PickList result;
+
     typedef osgUtil::LineSegmentIntersector::Intersections Intersections;
     Intersections intersections;
 
     if (!computeIntersections(CameraGroup::getDefault(), windowPos, intersections))
-        return false;
+        return result;
     for (Intersections::iterator hit = intersections.begin(),
              e = intersections.end();
          hit != e;
@@ -1819,12 +1818,12 @@ FGRenderer::pick(std::vector<SGSceneryPick>& pickList, const osg::Vec2& windowPo
                   sceneryPick.info.uv = uvFromIntersection(*hit);
 
                 sceneryPick.callback = pickCallback;
-                pickList.push_back(sceneryPick);
+                result.push_back(sceneryPick);
             } // of installed pick callbacks iteration
         } // of reverse node path walk
     }
     
-    return !pickList.empty();
+    return result;
 }
 
 void
