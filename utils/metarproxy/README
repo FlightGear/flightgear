@@ -114,7 +114,7 @@ There are three operation modes to do that:
 2a. --download mode
 -------------------
 You can download worldwide sets of METAR strings, each in a file of about
-1MB size from weather.noaa.gov[1]. This can be done with a separate ftp
+1MB size from tgftp.nws.noaa.gov[1]. This can be done with a separate ftp
 client or web browser, but it can also be done by metarproxy:
 
   $ metarproxy --download 3h      ... download last three hours (~ 3MB)
@@ -236,7 +236,7 @@ data:
          --start-date-lat=2005:01:12:12:00:00
 
 FlightGear will then fetch the metar data from the proxy as if it
-were weather.noaa.gov. If no appropriate data set is found at all,
+were tgftp.nws.noaa.gov. If no appropriate data set is found at all,
 the proxy sends a default string. If data are found but older than
 250 minutes, then the last successful data are sent again.
 
@@ -266,14 +266,14 @@ the (past) real weather at simulated GMT.
 =====================
 Download addresses for the last 24 hours:
 
-  http://weather.noaa.gov/pub/data/observations/metar/cycles/
-  ftp://weather.noaa.gov/data/observations/metar/cycles/
+  http://tgftp.nws.noaa.gov/data/observations/metar/cycles/
+  ftp://tgftp.nws.noaa.gov/data/observations/metar/cycles/
 
 Addresses for the most recent METAR data strings of particular
 stations:
 
-      http://weather.noaa.gov/pub/data/observations/metar/stations/
-      ftp://weather.noaa.gov/data/observations/metar/stations/
+      http://tgftp.nws.noaa.gov/pub/data/observations/metar/stations/
+      ftp://tgftp.nws.noaa.gov/data/observations/metar/stations/
 
 
 $Id$

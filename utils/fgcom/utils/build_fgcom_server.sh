@@ -6,7 +6,7 @@ APTNAV_DATA="http://dev.x-plane.com/update/data/AptNav201304XP1000.zip"
 DAHDI_SRC="http://downloads.asterisk.org/pub/telephony/dahdi-linux-complete/dahdi-linux-complete-current.tar.gz"
 LOGSEP="###########################################"
 GETMETAR_SCRIPT="#!/bin/bash
-#curl http://weather.noaa.gov/pub/data/observations/metar/stations/$1.TXT
+#curl http://tgftp.nws.noaa.gov/data/observations/metar/stations/$1.TXT
 echo \"Hello World !\""
 
 ROOT=$PWD
