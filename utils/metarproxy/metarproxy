@@ -19,7 +19,7 @@ use Time::Local;
 my $HOME = $ENV{'HOME'} || ".";
 my $FG_HOME = $ENV{'FG_HOME'} || $HOME . "/.fgfs";
 my $BASE = $FG_HOME . "/metar";
-my $SERVER = "weather.noaa.gov";
+my $SERVER = "tgftp.nws.noaa.gov";
 my $PORT = 5509;
 my $PROXY = $ENV{'http_proxy'};
 my $METAR_MAX_AGE = 250 * 60;
@@ -81,8 +81,8 @@ Examples:
        \$ http_proxy= metarproxy --record LOXL
 
 Sources:
-       http://weather.noaa.gov/pub/data/observations/metar/{stations,cycles}/
-       ftp://weather.noaa.gov/data/observations/metar/{stations,cycles}/
+       http://tgftp.nws.noaa.gov/data/observations/metar/{stations,cycles}/
+       ftp://tgftp.nws.noaa.gov/data/observations/metar/{stations,cycles}/
 EOF
 
 
@@ -399,7 +399,7 @@ sub serve()
 			s/\s+$//;
 			&log($DEBUG, $_);
 
-			if (m|^GET\s+http://weather.noaa.gov/.*/([A-Z][A-Z0-9]{3}).TXT\s+HTTP/|) {
+			if (m|^GET\s+http://tgftp.nws.noaa.gov/.*/([A-Z][A-Z0-9]{3}).TXT\s+HTTP/|) {
 				$icao = $1;
 			} elsif (/X-Time: (\d+)/) {
 				$epoch = $1;

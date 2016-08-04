@@ -154,7 +154,7 @@ FGMetar::FGMetar(const string& icao) :
 	if (_x_proxy)
 		SG_LOG(SG_ENVIRONMENT, SG_INFO, "METAR from proxy");
 	else
-		SG_LOG(SG_ENVIRONMENT, SG_INFO, "METAR from weather.noaa.gov");
+		SG_LOG(SG_ENVIRONMENT, SG_INFO, "METAR from tgftp.nws.noaa.gov");
 }
 
 

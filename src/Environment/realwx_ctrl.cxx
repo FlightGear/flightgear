@@ -426,7 +426,7 @@ void NoaaMetarRealWxController::requestMetar
 )
 {
   static const std::string NOAA_BASE_URL =
-    "http://weather.noaa.gov/pub/data/observations/metar/stations/";
+    "http://tgftp.nws.noaa.gov/data/observations/metar/stations/";
   class NoaaMetarGetRequest:
     public simgear::HTTP::MemoryRequest
   {

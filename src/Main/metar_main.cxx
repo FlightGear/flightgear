@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
 			try
 			{
               static const std::string NOAA_BASE_URL =
-                "http://weather.noaa.gov/pub/data/observations/metar/stations/";
+                "http://tgftp.nws.noaa.gov/data/observations/metar/stations/";
                 HTTP::MemoryRequest* mr = new HTTP::MemoryRequest
                 (
                     NOAA_BASE_URL
