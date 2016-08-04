@@ -10,7 +10,7 @@
 #
 # Created by Erik Hofman.
 
-FIND_PATH(AAX_INCLUDE_DIR aax.h
+FIND_PATH(AAX_INCLUDE_DIR aeonwave.hpp
   HINTS
   $ENV{AAXDIR}
   $ENV{ProgramFiles}/aax
