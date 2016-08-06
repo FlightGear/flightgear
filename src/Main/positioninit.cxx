@@ -652,8 +652,8 @@ bool initPosition()
   
   if ( !set_pos ) {
     // No lon/lat specified, no airport specified, use the default airport
-    // TODO: don't hardcode this
-    const FGAirport* airport = fgFindAirportID("LEBL");
+    // TODO: don't hardcode this. Really.
+    const FGAirport* airport = fgFindAirportID("SBRJ");
     if( airport ) {
       const SGGeod & airportGeod = airport->geod();
       fgSetDouble("/sim/presets/longitude-deg", airportGeod.getLongitudeDeg());
