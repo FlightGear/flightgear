@@ -1055,7 +1055,7 @@ void FGJSBsim::set_Altitude(double alt)
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Altitude: " << alt );
 
-  if (needTrim) {
+  if (0){  // needTrim) {
     FGLocation position = fgic->GetPosition();
 
     position.SetPositionGeodetic(0.0, position.GetGeodLatitudeRad(), alt);
