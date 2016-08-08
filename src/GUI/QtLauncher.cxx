@@ -47,6 +47,7 @@
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <QProcess>
+#include <QThread>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -257,6 +258,60 @@ private:
     };
 };
 
+class NaturalEarthDataLoaderThread : public QThread
+{
+    Q_OBJECT
+public:
+
+    NaturalEarthDataLoaderThread()
+    {
+        connect(this, &QThread::finished, this, &NaturalEarthDataLoaderThread::onFinished);
+    }
+
+protected:
+    virtual void run() Q_DECL_OVERRIDE
+    {
+        SGTimeStamp st;
+        st.stamp();
+
+        loadNaturalEarthFile("ne_10m_coastline.shp", flightgear::PolyLine::COASTLINE, false);
+        loadNaturalEarthFile("ne_10m_rivers_lake_centerlines.shp", flightgear::PolyLine::RIVER, false);
+        loadNaturalEarthFile("ne_10m_lakes.shp", flightgear::PolyLine::LAKE, true);
+
+        qDebug() << "load basic data took" << st.elapsedMSec();
+
+        st.stamp();
+        loadNaturalEarthFile("ne_10m_urban_areas.shp", flightgear::PolyLine::URBAN, true);
+
+        qDebug() << "loading urban areas took:" << st.elapsedMSec();
+
+    }
+
+private:
+    void onFinished()
+    {
+        flightgear::PolyLine::bulkAddToSpatialIndex(m_parsedLines);
+        qDebug() << "finished loading Natural Earth data";
+        deleteLater(); // commit suicide
+    }
+
+    void loadNaturalEarthFile(const std::string& aFileName,
+                              flightgear::PolyLine::Type aType,
+                              bool areClosed)
+    {
+        SGPath path(globals->get_fg_root());
+        path.append( "Geodata" );
+        path.append(aFileName);
+        if (!path.exists())
+            return; // silently fail for now
+
+        flightgear::PolyLineList lines;
+        flightgear::SHPParser::parsePolyLines(path, aType, m_parsedLines, areClosed);
+    }
+    
+    flightgear::PolyLineList m_parsedLines;
+};
+
 } // of anonymous namespace
 
 class AircraftProxyModel : public QSortFilterProxyModel
@@ -405,39 +460,6 @@ void initApp(int& argc, char** argv)
     }
 }
 
-void loadNaturalEarthFile(const std::string& aFileName,
-                          flightgear::PolyLine::Type aType,
-                          bool areClosed)
-{
-    SGPath path(globals->get_fg_root());
-    path.append( "Geodata" );
-    path.append(aFileName);
-    if (!path.exists())
-        return; // silently fail for now
-
-    flightgear::PolyLineList lines;
-    flightgear::SHPParser::parsePolyLines(path, aType, lines, areClosed);
-    flightgear::PolyLine::bulkAddToSpatialIndex(lines);
-}
-
-void loadNaturalEarthData()
-{
-    SGTimeStamp st;
-    st.stamp();
-
-    loadNaturalEarthFile("ne_10m_coastline.shp", flightgear::PolyLine::COASTLINE, false);
-    loadNaturalEarthFile("ne_10m_rivers_lake_centerlines.shp", flightgear::PolyLine::RIVER, false);
-    loadNaturalEarthFile("ne_10m_lakes.shp", flightgear::PolyLine::LAKE, true);
-
-    qDebug() << "load basic data took" << st.elapsedMSec();
-
-
-    st.stamp();
-    loadNaturalEarthFile("ne_10m_urban_areas.shp", flightgear::PolyLine::URBAN, true);
-
-    qDebug() << "loading urban areas took:" << st.elapsedMSec();
-}
-
 bool runLauncherDialog()
 {
     // startup the nav-cache now. This pre-empts normal startup of
@@ -460,7 +482,8 @@ bool runLauncherDialog()
     // will happen as normal
     http->init();
 
-    loadNaturalEarthData();
+    NaturalEarthDataLoaderThread* naturalEarthLoader = new NaturalEarthDataLoaderThread;
+    naturalEarthLoader->start();
 
     // avoid double Apple menu and other weirdness if both Qt and OSG
     // try to initialise various Cocoa structures.
