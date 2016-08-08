@@ -1055,12 +1055,12 @@ void FGJSBsim::set_Altitude(double alt)
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Altitude: " << alt );
 
-  if (0){  // needTrim) {
+  if (needTrim) {
     FGLocation position = fgic->GetPosition();
 
     position.SetPositionGeodetic(0.0, position.GetGeodLatitudeRad(), alt);
     fgic->SetAltitudeASLFtIC(position.GetAltitudeASL());
-    fgic->SetLatitudeRadIC(position.GetLatitude());
+//  fgic->SetLatitudeRadIC(position.GetLatitude());
   }
   else
     Propagate->SetAltitudeASL(alt);
@@ -1071,6 +1071,7 @@ void FGJSBsim::set_Altitude(double alt)
 void FGJSBsim::set_V_calibrated_kts(double vc)
 {
     SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_V_calibrated_kts: " <<  vc );
+printf("%s\n", __PRETTY_FUNCTION__);
 
   if (needTrim)
     fgic->SetVcalibratedKtsIC(vc);
@@ -1095,6 +1096,7 @@ void FGJSBsim::set_V_calibrated_kts(double vc)
 void FGJSBsim::set_Mach_number(double mach)
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Mach_number: " <<  mach );
+printf("%s\n", __PRETTY_FUNCTION__);
 
   if (needTrim)
     fgic->SetMachIC(mach);
@@ -1116,6 +1118,7 @@ void FGJSBsim::set_Velocities_Local( double north, double east, double down )
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Local: "
      << north << ", " <<  east << ", " << down );
+printf("%s\n", __PRETTY_FUNCTION__);
 
   if (needTrim) {
     fgic->SetVNorthFpsIC(north);
@@ -1137,6 +1140,7 @@ void FGJSBsim::set_Velocities_Body( double u, double v, double w)
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Body: "
      << u << ", " <<  v << ", " <<  w );
+printf("%s\n", __PRETTY_FUNCTION__);
 
   if (needTrim) {
     fgic->SetUBodyFpsIC(u);
