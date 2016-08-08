@@ -1071,7 +1071,6 @@ void FGJSBsim::set_Altitude(double alt)
 void FGJSBsim::set_V_calibrated_kts(double vc)
 {
     SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_V_calibrated_kts: " <<  vc );
-printf("%s\n", __PRETTY_FUNCTION__);
 
   if (needTrim)
     fgic->SetVcalibratedKtsIC(vc);
@@ -1096,7 +1095,6 @@ printf("%s\n", __PRETTY_FUNCTION__);
 void FGJSBsim::set_Mach_number(double mach)
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Mach_number: " <<  mach );
-printf("%s\n", __PRETTY_FUNCTION__);
 
   if (needTrim)
     fgic->SetMachIC(mach);
@@ -1118,7 +1116,6 @@ void FGJSBsim::set_Velocities_Local( double north, double east, double down )
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Local: "
      << north << ", " <<  east << ", " << down );
-printf("%s\n", __PRETTY_FUNCTION__);
 
   if (needTrim) {
     fgic->SetVNorthFpsIC(north);
@@ -1140,7 +1137,6 @@ void FGJSBsim::set_Velocities_Body( double u, double v, double w)
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Body: "
      << u << ", " <<  v << ", " <<  w );
-printf("%s\n", __PRETTY_FUNCTION__);
 
   if (needTrim) {
     fgic->SetUBodyFpsIC(u);
