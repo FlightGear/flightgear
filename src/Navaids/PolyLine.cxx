@@ -101,11 +101,12 @@ PolyLineRef PolyLine::create(PolyLine::Type aTy, const SGGeodVec &aRawPoints)
     return new PolyLine(aTy, aRawPoints);
 }
 
-void PolyLine::bulkAddToSpatialIndex(const PolyLineList &lines)
+void PolyLine::bulkAddToSpatialIndex(PolyLineList::const_iterator begin,
+                                     PolyLineList::const_iterator end)
 {
     NavDataCache::Transaction txn( NavDataCache::instance());
     flightgear::PolyLineList::const_iterator it;
-    for (it=lines.begin(); it != lines.end(); ++it) {
+    for (it=begin; it != end; ++it) {
         (*it)->addToSpatialIndex();
     }
     txn.commit();

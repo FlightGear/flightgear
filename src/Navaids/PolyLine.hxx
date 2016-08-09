@@ -91,7 +91,8 @@ public:
     
     static PolyLineRef create(Type aTy, const SGGeodVec& aRawPoints);
 
-    static void bulkAddToSpatialIndex(const PolyLineList& lines);
+    static void bulkAddToSpatialIndex(PolyLineList::const_iterator begin,
+                                      PolyLineList::const_iterator end);
 
     /**
      * retrieve all the lines within a range of a search point.

@@ -263,7 +263,8 @@ class NaturalEarthDataLoaderThread : public QThread
     Q_OBJECT
 public:
 
-    NaturalEarthDataLoaderThread()
+    NaturalEarthDataLoaderThread() :
+        m_lineInsertCount(0)
     {
         connect(this, &QThread::finished, this, &NaturalEarthDataLoaderThread::onFinished);
     }
@@ -284,15 +285,22 @@ protected:
         loadNaturalEarthFile("ne_10m_urban_areas.shp", flightgear::PolyLine::URBAN, true);
 
         qDebug() << "loading urban areas took:" << st.elapsedMSec();
-
     }
 
 private:
     void onFinished()
     {
-        flightgear::PolyLine::bulkAddToSpatialIndex(m_parsedLines);
-        qDebug() << "finished loading Natural Earth data";
-        deleteLater(); // commit suicide
+        flightgear::PolyLineList::const_iterator begin = m_parsedLines.begin() + m_lineInsertCount;
+        unsigned int numToAdd = std::min(1000UL, m_parsedLines.size() - m_lineInsertCount);
+        flightgear::PolyLineList::const_iterator end = begin + numToAdd;
+        flightgear::PolyLine::bulkAddToSpatialIndex(begin, end);
+
+        if (end == m_parsedLines.end()) {
+            deleteLater(); // commit suicide
+        } else {
+            m_lineInsertCount += 1000;
+            QTimer::singleShot(50, this, &NaturalEarthDataLoaderThread::onFinished);
+        }
     }
 
     void loadNaturalEarthFile(const std::string& aFileName,
@@ -310,6 +318,7 @@ private:
     }
     
     flightgear::PolyLineList m_parsedLines;
+    unsigned int m_lineInsertCount;
 };
 
 } // of anonymous namespace
