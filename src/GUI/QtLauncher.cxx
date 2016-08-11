@@ -299,7 +299,7 @@ private:
             deleteLater(); // commit suicide
         } else {
             m_lineInsertCount += 1000;
-            QTimer::singleShot(50, this, &NaturalEarthDataLoaderThread::onFinished);
+            QTimer::singleShot(50, this, SLOT(onFinished()));
         }
     }
 
