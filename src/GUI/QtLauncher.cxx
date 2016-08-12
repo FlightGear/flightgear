@@ -291,7 +291,7 @@ private:
     void onFinished()
     {
         flightgear::PolyLineList::const_iterator begin = m_parsedLines.begin() + m_lineInsertCount;
-        unsigned int numToAdd = std::min(1000UL, m_parsedLines.size() - m_lineInsertCount);
+        unsigned int numToAdd = std::min<unsigned long>(1000UL, m_parsedLines.size() - m_lineInsertCount);
         flightgear::PolyLineList::const_iterator end = begin + numToAdd;
         flightgear::PolyLine::bulkAddToSpatialIndex(begin, end);
 
