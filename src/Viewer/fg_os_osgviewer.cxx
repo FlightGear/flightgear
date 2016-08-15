@@ -362,6 +362,14 @@ void fgOSInit(int* argc, char** argv)
 
 void fgOSCloseWindow()
 {
+    if (viewer) {
+        // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
+        // https://sourceforge.net/p/flightgear/codetickets/1830/
+        // explicitly stop trheading before we delete the renderer or
+        // viewMgr (which ultimately holds refs to the CameraGroup, and
+        // GraphicsContext)
+        viewer->stopThreading();
+    }
     FGScenery::resetPagerSingleton();
     flightgear::CameraGroup::setDefault(NULL);
     WindowSystemAdapter::setWSA(NULL);
