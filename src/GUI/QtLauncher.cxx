@@ -288,7 +288,7 @@ protected:
     }
 
 private:
-    void onFinished()
+    Q_SLOT void onFinished()
     {
         flightgear::PolyLineList::const_iterator begin = m_parsedLines.begin() + m_lineInsertCount;
         unsigned int numToAdd = std::min<unsigned long>(1000UL, m_parsedLines.size() - m_lineInsertCount);
