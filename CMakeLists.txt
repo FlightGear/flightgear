@@ -198,6 +198,10 @@ option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON
 option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON)
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
 
+# when building an OSG with commit 15ec7e2ae7a8b983ecc44e1ce7363a9a9fa7da95
+# applied, we can use better link options
+option(OSG_FSTREAM_EXPORT_FIXED "Set to ON if the osgDB fstream export patch is applied" OFF)
+
 if(LOGGING)
     # nothing
 else()
@@ -362,9 +366,12 @@ if(WIN32)
 
     if(MSVC)
         set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS /MP")
-        if (${MSVC_VERSION} GREATER 1599)
-            set( MSVC_LD_FLAGS "/FORCE:MULTIPLE" )
-        endif (${MSVC_VERSION} GREATER 1599)
+        if (NOT OSG_FSTREAM_EXPORT_FIXED AND ${MSVC_VERSION} GREATER 1599)
+          message(STATUS "For better linking performance, use OSG with fixed fstream header")
+          # needed to avoid link errors on multiply-defined standard C++
+          # symbols. This issue was fixed in OSG commit 15ec7e2ae7a8b983ecc44e1ce7363a9a9fa7da95
+          set( MSVC_LD_FLAGS "/FORCE:MULTIPLE" )
+        endif ()
 
         if (${MSVC_VERSION} GREATER 1899)
             # needed for debug builds with VS2015
