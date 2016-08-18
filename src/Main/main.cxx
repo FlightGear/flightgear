@@ -147,7 +147,11 @@ static void initTerrasync()
     }
     
     fgSetString("/sim/terrasync/cache-path", tsyncCache.utf8Str());
-    
+
+    // make fg-root dir available so existing Scenery data can be copied, and
+    // hence not downloaded again.
+    fgSetString("/sim/terrasync/installation-dir", (globals->get_fg_root() / "Scenery").utf8Str());
+
     simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync();
     terra_sync->setRoot(globals->get_props());
     globals->add_subsystem("terrasync", terra_sync);
