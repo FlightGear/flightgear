@@ -699,6 +699,10 @@ void QtLauncher::setSceneryPaths()
         globals->append_fg_scenery(terraSyncDir);
     }
 
+    // add the installation path since it contains default airport data,
+    // if terrasync is disabled or on first-launch
+    globals->append_fg_scenery(globals->get_fg_root() / "Scenery");
+
 }
 
 void QtLauncher::setInAppMode()
