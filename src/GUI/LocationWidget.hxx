@@ -55,7 +55,7 @@ public:
 
     bool shouldStartPaused() const;
 
-    void setLocationOptions();
+    void setLocationProperties();
 Q_SIGNALS:
     void descriptionChanged(QString t);
 
@@ -81,6 +81,8 @@ private:
     void onBackToSearch();
     void setNavRadioOption();
     void onShowHistory();
+
+    void applyPositionOffset();
 
     Ui::LocationWidget *m_ui;
 
