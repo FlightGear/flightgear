@@ -532,39 +532,40 @@ void LocationWidget::saveSettings()
     // recent locations is saved on modification
 }
 
-void LocationWidget::setLocationOptions()
+void LocationWidget::setLocationProperties()
 {
-    flightgear::Options* opt = flightgear::Options::sharedInstance();
 
-    std::string altStr = QString::number(m_ui->altitudeSpinbox->value()).toStdString();
-    std::string vcStr = QString::number(m_ui->airspeedSpinbox->value()).toStdString();
-    std::string headingStr = QString::number(m_ui->headingSpinbox->value()).toStdString();
+    SGPropertyNode_ptr presets = fgGetNode("/sim/presets", true);
 
-    // flip direction of azimuth to balance the flip done in fgApplyStartOffset
-    // I don't know why that flip exists but changing it there will break
-    // command-line compatability so compensating here instead
-    int offsetAzimuth = m_ui->offsetBearingSpinbox->value() - 180;
-    std::string azimuthStr = QString::number(offsetAzimuth).toStdString();
-    std::string distanceStr = QString::number(m_ui->offsetNmSpinbox->value()).toStdString();
+    QStringList props = QStringList() << "vor-id" << "fix" << "ndb-id" <<
+        "runway-requested" << "navaid-id" << "offset-azimuth-deg" <<
+        "offset-distance-nm" << "glideslope-deg" <<
+        "speed-set" << "on-ground" << "airspeed-kt" << "heading-deg" <<
+        "airport-id" << "runway" << "parkpos";
+
+    Q_FOREACH(QString s, props) {
+        SGPropertyNode* c = presets->getChild(s.toStdString());
+        if (c) {
+            c->clearValue();
+        }
+    }
+
+
 
     if (m_locationIsLatLon) {
-        // bypass the options mechanism because converting to deg:min:sec notation
-        // just to parse back again is nasty.
         fgSetDouble("/sim/presets/latitude-deg", m_geodLocation.getLatitudeDeg());
         fgSetDouble("/position/latitude-deg", m_geodLocation.getLatitudeDeg());
         fgSetDouble("/sim/presets/longitude-deg", m_geodLocation.getLongitudeDeg());
         fgSetDouble("/position/longitude-deg", m_geodLocation.getLongitudeDeg());
 
-        opt->addOption("altitude", altStr);
-        opt->addOption("vc", vcStr);
-        opt->addOption("heading", headingStr);
-
-        if (m_ui->offsetGroup->isChecked()) {
-            opt->addOption("offset-azimuth", azimuthStr);
-            opt->addOption("offset-distance", distanceStr);
-        }
+        applyPositionOffset();
         return;
     }
+
+    fgSetDouble("/sim/presets/latitude-deg", -9999.0);
+    fgSetDouble("/sim/presets/longitude-deg", -9999.0);
+    fgSetDouble("/sim/presets/altitude-ft", -9999.0);
+
 
     if (!m_location) {
         return;
@@ -572,7 +573,8 @@ void LocationWidget::setLocationOptions()
 
     if (FGAirport::isAirportType(m_location.ptr())) {
         FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
-        opt->addOption("airport", apt->ident());
+        fgSetString("/sim/presets/airport-id", apt->ident());
+        fgSetBool("/sim/presets/on-ground", true);
 
         if (m_ui->runwayRadio->isChecked()) {
             if (apt->type() == FGPositioned::AIRPORT) {
@@ -580,27 +582,29 @@ void LocationWidget::setLocationOptions()
                 if (index >= 0) {
                     // explicit runway choice
                     FGRunwayRef runway = apt->getRunwayByIndex(index);
-                    opt->addOption("runway", runway->ident());
+                    fgSetString("/sim/presets/runway", runway->ident() );
+                    fgSetBool("/sim/presets/runway-requested", true );
 
                     // set nav-radio 1 based on selected runway
                     if (runway->ILS()) {
                         double mhz = runway->ILS()->get_freq() / 100.0;
-                        QString navOpt = QString("%1:%2").arg(runway->headingDeg()).arg(mhz);
-                        opt->addOption("nav1", navOpt.toStdString());
+                        fgSetDouble("/instrumentation/nav[0]/radials/selected-deg", runway->headingDeg());
+                        fgSetDouble("/instrumentation/nav[0]/frequencies/selected-mhz", mhz);
                     }
                 }
 
                 if (m_ui->onFinalCheckbox->isChecked()) {
-                    opt->addOption("glideslope", "3.0");
-                    double offsetNm = m_ui->approachDistanceSpin->value();
-                    opt->addOption("offset-distance", QString::number(offsetNm).toStdString());
+                    fgSetDouble("/sim/presets/glideslope-deg", 3.0);
+                    fgSetDouble("/sim/presets/offset-distance-nm", m_ui->approachDistanceSpin->value());
+                    fgSetBool("/sim/presets/on-ground", false);
                 }
             } else if (apt->type() == FGPositioned::HELIPORT) {
                 int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
                 if (index >= 0)  {
                     // explicit pad choice
                     FGHelipadRef pad = apt->getHelipadByIndex(index);
-                    opt->addOption("runway", pad->ident());
+                    fgSetString("/sim/presets/runway", pad->ident() );
+                    fgSetBool("/sim/presets/runway-requested", true );
                 }
             } else {
                 qWarning() << Q_FUNC_INFO << "implement me";
@@ -608,46 +612,62 @@ void LocationWidget::setLocationOptions()
 
         } else if (m_ui->parkingRadio->isChecked()) {
             // parking selection
-            opt->addOption("parkpos", m_ui->parkingCombo->currentText().toStdString());
+            fgSetString("/sim/presets/parkpos", m_ui->parkingCombo->currentText().toStdString());
         }
         // of location is an airport
     } else {
+        fgSetString("/sim/presets/airport-id", "");
+
         // location is a navaid
         // note setting the ident here is ambigious, we really only need and
         // want the 'navaid-id' property. However setting the 'real' option
         // gives a better UI experience (eg existing Position in Air dialog)
         FGPositioned::Type ty = m_location->type();
         switch (ty) {
-        case FGPositioned::VOR:
-            opt->addOption("vor", m_location->ident());
-            setNavRadioOption();
-            break;
+            case FGPositioned::VOR:
+                fgSetString("/sim/presets/vor-id", m_location->ident());
+                setNavRadioOption();
+                break;
 
-        case FGPositioned::NDB:
-            opt->addOption("ndb", m_location->ident());
-            setNavRadioOption();
-            break;
+            case FGPositioned::NDB:
+                fgSetString("/sim/presets/ndb-id", m_location->ident());
+                setNavRadioOption();
+                break;
 
-        case FGPositioned::FIX:
-            opt->addOption("fix", m_location->ident());
-            break;
-        default:
-            break;
-        }
-
-        opt->addOption("altitude", altStr);
-        opt->addOption("vc", vcStr);
-        opt->addOption("heading", headingStr);
-
+            case FGPositioned::FIX:
+                fgSetString("/sim/presets/fix", m_location->ident());
+                break;
+            default:
+                break;
+        };
+        
         // set disambiguation property
         globals->get_props()->setIntValue("/sim/presets/navaid-id",
                                           static_cast<int>(m_location->guid()));
-
-        if (m_ui->offsetGroup->isChecked()) {
-            opt->addOption("offset-azimuth", azimuthStr);
-            opt->addOption("offset-distance", distanceStr);
-        }
+        
+        applyPositionOffset();
     } // of navaid location
+}
+
+void LocationWidget::applyPositionOffset()
+{
+    fgSetDouble("/sim/presets/altitude-ft", m_ui->altitudeSpinbox->value());
+    fgSetBool("/sim/presets/on-ground", m_ui->altitudeSpinbox->value() > 0);
+
+    fgSetString("/sim/presets/speed-set", "knots");
+    fgSetDouble("/sim/presets/airspeed-kt", m_ui->airspeedSpinbox->value());
+
+    fgSetDouble("/sim/presets/heading-deg", m_ui->headingSpinbox->value());
+    
+    if (m_ui->offsetGroup->isChecked()) {
+        // flip direction of azimuth to balance the flip done in fgApplyStartOffset
+        // I don't know why that flip exists but changing it there will break
+        // command-line compatability so compensating here instead
+        int offsetAzimuth = m_ui->offsetBearingSpinbox->value() - 180;
+
+        fgSetDouble("/sim/presets/offset-azimuth-deg", offsetAzimuth);
+        fgSetDouble("/sim/presets/offset-distance-nm", m_ui->offsetNmSpinbox->value());
+    }
 }
 
 void LocationWidget::setNavRadioOption()

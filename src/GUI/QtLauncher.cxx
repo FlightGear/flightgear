@@ -708,8 +708,8 @@ void QtLauncher::setSceneryPaths()
 void QtLauncher::setInAppMode()
 {
   m_inAppMode = true;
-  m_ui->tabWidget->removeTab(2);
-  m_ui->tabWidget->removeTab(2);
+  m_ui->tabWidget->removeTab(3);
+  m_ui->tabWidget->removeTab(3);
 
   m_ui->runButton->setText(tr("Apply"));
   m_ui->quitButton->setText(tr("Cancel"));
@@ -900,7 +900,7 @@ void QtLauncher::onRun()
         globals->get_props()->setIntValue("/sim/multiplay/txport", port);
     }
 
-    m_ui->location->setLocationOptions();
+    m_ui->location->setLocationProperties();
 
     // time of day
     if (m_ui->timeOfDayCombo->currentIndex() != 0) {
@@ -1001,6 +1001,8 @@ void QtLauncher::onApply()
         globals->get_props()->setStringValue("/sim/aircraft-dir", aircraftDir);
     }
 
+    // location
+    m_ui->location->setLocationProperties();
 
     saveSettings();
 }
