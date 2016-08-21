@@ -995,8 +995,12 @@ void LocationWidget::onShowHistory()
 void LocationWidget::setBaseLocation(FGPositionedRef ref)
 {
     m_locationIsLatLon = false;
-    if (m_location == ref)
+// don't change location if we're on the same location. We must check
+// the current stack index, otherwise there's no way back into the same
+// location after using the back button.
+    if ((m_location == ref) && (m_ui->stack->currentIndex() != 2)) {
         return;
+    }
 
     m_location = ref;
     onLocationChanged();
