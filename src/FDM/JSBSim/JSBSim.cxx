@@ -1023,16 +1023,17 @@ void FGJSBsim::set_Latitude(double lat)
   SG_LOG(SG_FLIGHT,SG_INFO,"FGJSBsim::set_Latitude: " << lat );
   SG_LOG(SG_FLIGHT,SG_INFO," cur alt (ft) =  " << alt );
 
-  sgGeodToGeoc( lat, alt * SG_FEET_TO_METER,
-                    &sea_level_radius_meters, &lat_geoc );
-
-  double sea_level_radius_ft = sea_level_radius_meters * SG_METER_TO_FEET;
-  _set_Sea_level_radius( sea_level_radius_ft );
-
   if (needTrim)
-    fgic->SetLatitudeRadIC( lat_geoc );
-  else
+    fgic->SetGeodLatitudeRadIC( lat );
+  else {
+    sgGeodToGeoc( lat, alt * SG_FEET_TO_METER,
+                  &sea_level_radius_meters, &lat_geoc );
+
+    double sea_level_radius_ft = sea_level_radius_meters * SG_METER_TO_FEET;
+    _set_Sea_level_radius( sea_level_radius_ft );
+
     Propagate->SetLatitude(lat_geoc);
+  }
 
   FGInterface::set_Latitude(lat);
 }
@@ -1055,13 +1056,8 @@ void FGJSBsim::set_Altitude(double alt)
 {
   SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Altitude: " << alt );
 
-  if (needTrim) {
-    FGLocation position = fgic->GetPosition();
-
-    position.SetPositionGeodetic(0.0, position.GetGeodLatitudeRad(), alt);
-    fgic->SetAltitudeASLFtIC(position.GetAltitudeASL());
-//  fgic->SetLatitudeRadIC(position.GetLatitude());
-  }
+  if (needTrim)
+    fgic->SetAltitudeASLFtIC(alt);
   else
     Propagate->SetAltitudeASL(alt);
 
