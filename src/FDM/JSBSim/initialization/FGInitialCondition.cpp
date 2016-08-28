@@ -739,6 +739,17 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
 
 //******************************************************************************
 
+void FGInitialCondition::SetGeodLatitudeRadIC(double geodLatitude)
+{
+  double h = ComputeGeodAltitude(geodLatitude);
+  double lon = position.GetLongitude();
+
+  position.SetPositionGeodetic(lon, geodLatitude, h);
+  lastLatitudeSet = setgeod;
+}
+
+//******************************************************************************
+
 void FGInitialCondition::SetLatitudeRadIC(double lat)
 {
   double altitude;

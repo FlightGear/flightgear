@@ -592,6 +592,12 @@ public:
       @param lat Initial latitude in radians */
   void SetLatitudeRadIC(double lat);
 
+  /** Sets the initial geodetic latitude.
+      This method modifies the geodetic altitude in order to keep the altitude
+      above sea level unchanged.
+      @param glat Initial geodetic latitude in radians */
+  void SetGeodLatitudeRadIC(double glat);
+
   /** Sets the initial longitude.
       @param lon Initial longitude in radians */
   void SetLongitudeRadIC(double lon);
