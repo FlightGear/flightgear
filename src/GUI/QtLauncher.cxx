@@ -886,7 +886,11 @@ void QtLauncher::onRun()
     }
 
     if (m_ui->mpBox->isChecked()) {
-        opt->addOption("callsign", m_ui->mpCallsign->text().toStdString());
+        std::string callSign = m_ui->mpCallsign->text().toStdString();
+        if (!callSign.empty()) {
+            opt->addOption("callsign", callSign);
+        }
+
         QString host = m_ui->mpServerCombo->currentData().toString();
         int port = 5000;
         if (host == "custom") {
