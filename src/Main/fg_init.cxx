@@ -461,28 +461,21 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     if (!reinit) {
         options->init(argc, argv, dataPath);
     }
-    
-    bool loadDefaults = options->shouldLoadDefaultConfig();
-    if (loadDefaults) {
-      // Read global preferences from $FG_ROOT/preferences.xml
-      SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
-      fgLoadProps("preferences.xml", globals->get_props());
-      SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
-        
-      // do not load user settings when reset to default is requested, or if
-      // told to explicitly ignore
-      if (options->isOptionSet("restore-defaults") || options->isOptionSet("ignore-autosave"))
-      {
-          SG_LOG(SG_GENERAL, SG_ALERT, "Ignoring user settings. Restoring defaults.");
-      }
-      else
-      {
-          globals->loadUserSettings(dataPath);
-      }
+
+    // Read global preferences from $FG_ROOT/preferences.xml
+    SG_LOG(SG_GENERAL, SG_INFO, "Reading global preferences");
+    fgLoadProps("preferences.xml", globals->get_props());
+    SG_LOG(SG_GENERAL, SG_INFO, "Finished Reading global preferences");
+
+    // do not load user settings when reset to default is requested, or if
+    // told to explicitly ignore
+    if (options->isOptionSet("restore-defaults") || options->isOptionSet("ignore-autosave"))
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Ignoring user settings. Restoring defaults.");
     } else {
-      SG_LOG(SG_GENERAL, SG_INFO, "not reading default configuration files");
-    }// of no-default-config selected
-    
+        globals->loadUserSettings(dataPath);
+    }
+
     return flightgear::FG_OPTIONS_OK;
 }
 
