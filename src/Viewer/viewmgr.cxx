@@ -223,31 +223,31 @@ FGViewMgr::setView (int newview)
         return;
     }
 
-  // negative numbers -> set view with node index -newview
-  if (newview < 0) {
-    for (int i = 0; i < (int)config_list.size(); i++) {
-      int index = -config_list[i]->getIndex();
-      if (index == newview)
-        newview = i;
+    // negative numbers -> set view with node index -newview
+    if (newview < 0) {
+	for (int i = 0; i < (int)config_list.size(); i++) {
+	    int index = -config_list[i]->getIndex();
+	    if (index == newview)
+		newview = i;
+	}
+	if (newview < 0)
+	    return;
     }
+
+    // if newview number too low wrap to last view...
     if (newview < 0)
-      return;
-  }
+	newview = (int)views.size() - 1;
 
-  // if newview number too low wrap to last view...
-  if (newview < 0)
-    newview = (int)views.size() - 1;
-
-  // if newview number to high wrap to zero...
-  if (newview >= (int)views.size())
-    newview = 0;
+    // if newview number to high wrap to zero...
+    if (newview >= (int)views.size())
+	newview = 0;
 
     if (get_current_view()) {
-        get_current_view()->unbind();
+	get_current_view()->unbind();
     }
 
-  // set new view
-  current = newview;
+    // set new view
+    current = newview;
 
     if (get_current_view()) {
         get_current_view()->bind();
