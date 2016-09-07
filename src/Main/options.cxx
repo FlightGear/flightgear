@@ -1169,21 +1169,6 @@ fgOptWp( const char *arg )
     return FG_OPTIONS_OK;
 }
 
-static int
-fgOptConfig( const char *arg )
-{
-    string file = arg;
-    try {
-        readProperties(file, globals->get_props());
-    } catch (const sg_exception &e) {
-        string message = "Error loading config file: ";
-        message += e.getFormattedMessage() + e.getOrigin();
-        SG_LOG(SG_INPUT, SG_ALERT, message);
-        return FG_OPTIONS_ERROR;
-    }
-    return FG_OPTIONS_OK;
-}
-
 static bool
 parse_colon (const string &s, double * val1, double * val2)
 {
@@ -1703,7 +1688,7 @@ struct OptionDesc {
     {"ceiling",                      true,  OPTION_FUNC,   "", false, "", fgOptCeiling },
     {"wp",                           true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptWp },
     {"flight-plan",                  true,  OPTION_STRING,   "/autopilot/route-manager/file-path", false, "", NULL },
-    {"config",                       true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptConfig },
+    {"config",                       true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"vehicle",                      true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"failure",                      true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFailure },
@@ -1905,6 +1890,7 @@ public:
 
   OptionDescDict options;
   OptionValueVec values;
+  simgear::PathList configFiles;
   simgear::PathList propertyFiles;
 };
 
@@ -1966,6 +1952,11 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   // to show extra (debug/info/warning) messages for the start-up phase.
   fgOptLogLevel(valueForOption("log-level", "alert").c_str());
 
+  simgear::PathList::const_iterator i;
+  for (i = p->configFiles.begin(); i != p->configFiles.end(); ++i) {
+      readConfig(*i);
+  }
+
   if (!p->shouldLoadDefaultConfig) {
     setupRoot(argc, argv);
     return;
@@ -1973,7 +1964,6 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 
 // then config files
   SGPath config;
-
 
   if( !hostname.empty() ) {
     // Check for ~/.fgfsrc.hostname
@@ -2186,6 +2176,15 @@ int Options::parseOption(const string& s)
     }
 
     p->values.push_back(OptionValue(desc, s.substr(7)));
+    return FG_OPTIONS_OK;
+  } else if ( s.find("--config=") == 0) {
+    SGPath path = s.substr(9);
+    if (path.extension() == "xml") {
+        p->propertyFiles.push_back(path);
+    } else {
+        p->configFiles.push_back(path);
+    }
+
     return FG_OPTIONS_OK;
   } else if ( s.find( "--" ) == 0 ) {
     size_t eqPos = s.find( '=' );
