@@ -165,9 +165,10 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
 boost::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
 {
     fgSetString("/sim/atc/runway", runway->ident().c_str());
+    double offsetNm = fgGetDouble("/sim/presets/offset-distance-nm");
 
-    if (isMPEnabled()) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Requested to start on " << runway->airport()->ident() << "/" <<
+    if (isMPEnabled() && (fabs(offsetNm) <0.1)) {
+        SG_LOG( SG_GENERAL, SG_WARN, "Requested to start on " << runway->airport()->ident() << "/" <<
                runway->ident() << ", MP is enabled so computing hold short position to avoid runway incursion");
 
         // set this so multiplayer.nas can inform the user
@@ -209,14 +210,8 @@ static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
       boost::tie(startPos, heading) = runwayStartPos(r);
   }
 
-    if (isMPEnabled()) {
-        // don't permit offsetting when MP is enabled
-        setInitialPosition(startPos, heading);
-    } else {
-        fgApplyStartOffset(startPos, heading);
-    }
-
-  return true;
+    fgApplyStartOffset(startPos, heading);
+    return true;
 }
 
 // Set current_options lon/lat given an airport id and parkig position name
@@ -330,13 +325,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
       SGGeod startPos;
       double heading;
       boost::tie(startPos, heading) = runwayStartPos(r);
-
-      if (isMPEnabled()) {
-          // don't permit offsetting when MP is enabled
-          setInitialPosition(startPos, heading);
-      } else {
-          fgApplyStartOffset(startPos, heading);
-      }
+      fgApplyStartOffset(startPos, heading);
       return true;
   } else if (apt->hasHelipadWithIdent(rwy)) {
       FGHelipad* h(apt->getHelipadByIdent(rwy));
