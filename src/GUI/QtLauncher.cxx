@@ -502,7 +502,7 @@ bool runLauncherDialog()
     dlg.show();
 
     int appResult = qApp->exec();
-    if (appResult < 0) {
+    if (appResult <= 0) {
         return false; // quit
     }
 
@@ -966,7 +966,8 @@ void QtLauncher::onRun()
 
     saveSettings();
 
-    qApp->exit(0);
+    // set a positive value here so we can detect this case in runLauncherDialog
+    qApp->exit(1);
 }
 
 
