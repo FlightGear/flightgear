@@ -128,12 +128,18 @@ public:
   /**
    * should defualt configuration files be loaded and processed or not?
    * There's many configuration files we have historically read by default
-   * on startup - preferences.xml, fgfs.rc in various places and so on.
+   * on startup - fgfs.rc in various places and so on.
    * --no-default-config allows this behaviour to be changed, so only
-   * expicitly listed files are read - this is useful for testing. Expose
+   * expicitly listed files are read Expose
    * the value of the option here.
    */
   bool shouldLoadDefaultConfig() const;
+
+    /**
+     * when using the built-in launcher, we disable the default config files.
+     * explicitly loaded confg files are still permitted.
+     */
+    void setShouldLoadDefaultConfig(bool load);
 
   /**
    * check if the arguments array contains a particular string (with a '--' or
