@@ -482,6 +482,18 @@ int fgMainInit( int argc, char **argv )
     upper_case_property("/sim/tower/airport-id");
     upper_case_property("/autopilot/route-manager/input");
 
+// check if the launcher is reuested, since it affects config file parsing
+    bool showLauncher = flightgear::Options::checkForArg(argc, argv, "launcher");
+    // an Info.plist bundle can't define command line arguments, but it can set
+    // environment variables. This avoids needed a wrapper shell-script on OS-X.
+    showLauncher |= (::getenv("FG_LAUNCHER") != 0);
+    if (showLauncher) {
+        // to minimise strange interactions when launcher and config files
+        // set overlaping options, we disable the default files. Users can
+        // still explicitly request config files via --config options if they choose.
+        flightgear::Options::sharedInstance()->setShouldLoadDefaultConfig(false);
+    }
+
     // Load the configuration parameters.  (Command line options
     // override config file options.  Config file options override
     // defaults.)
@@ -493,11 +505,6 @@ int fgMainInit( int argc, char **argv )
     }
 
 #if defined(HAVE_QT)
-    bool showLauncher = flightgear::Options::checkForArg(argc, argv, "launcher");
-    // an Info.plist bundle can't define command line arguments, but it can set
-    // environment variables. This avoids needed a wrapper shell-script on OS-X.
-    showLauncher |= (::getenv("FG_LAUNCHER") != 0);
-
     if (showLauncher) {
         flightgear::initApp(argc, argv);
         if (!flightgear::runLauncherDialog()) {

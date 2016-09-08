@@ -2628,6 +2628,11 @@ bool Options::shouldLoadDefaultConfig() const
   return p->shouldLoadDefaultConfig;
 }
 
+void Options::setShouldLoadDefaultConfig(bool load)
+{
+    p->shouldLoadDefaultConfig = load;
+}
+
 bool Options::checkForArg(int argc, char* argv[], const char* checkArg)
 {
     for (int i = 0; i < argc; ++i) {
