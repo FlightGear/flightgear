@@ -672,7 +672,10 @@ QtLauncher::QtLauncher() :
 
 QtLauncher::~QtLauncher()
 {
-
+    // if we don't cancel this now, it may complete after we are gone,
+    // causing a crash when the SGCallback fires (SGCallbacks don't clean up
+    // when their subject is deleted)
+    globals->get_subsystem<FGHTTPClient>()->client()->cancelRequest(m_mpServerRequest);
 }
 
 void QtLauncher::setSceneryPaths()
