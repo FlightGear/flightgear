@@ -179,7 +179,10 @@ void FGTileMgr::reinit()
     if (!_disableNasalHooks->getBoolValue())
       _options->setModelData(new FGNasalModelDataProxy);
 
-    _options->setPluginStringData("SimGear::ROUGH_LOD_RANGE", fgGetString("/sim/rendering/static-lod/rough", boost::lexical_cast<string>(SG_OBJECT_RANGE)));
+    _options->setPluginStringData("SimGear::BARE_LOD_RANGE", fgGetString("/sim/rendering/static-lod/bare", boost::lexical_cast<string>(SG_OBJECT_RANGE_BARE)));
+    _options->setPluginStringData("SimGear::ROUGH_LOD_RANGE", fgGetString("/sim/rendering/static-lod/rough", boost::lexical_cast<string>(SG_OBJECT_RANGE_ROUGH)));
+    _options->setPluginStringData("SimGear::ROUGH_LOD_DETAILED", fgGetString("/sim/rendering/static-lod/detailed", boost::lexical_cast<string>(SG_OBJECT_RANGE_DETAILED)));
+    _options->setPluginStringData("SimGear::RENDER_BUILDING_MESH", fgGetBool("/sim/rendering/building-mesh", false) ? "true" : "false");
   
     if (state != Start)
     {
