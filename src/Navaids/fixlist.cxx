@@ -66,9 +66,11 @@ void FixesLoader::loadFixes(const SGPath& path)
   const std::string utf8path = path.utf8Str();
 
   if ( !in.is_open() ) {
-      throw sg_io_exception("Cannot open file:", path);
+    throw sg_io_exception(
+      "Cannot open file (" + simgear::strutils::error_string(errno) + ")",
+      sg_location(path));
   }
-  
+
   // toss the first two lines of the file
   for (int i = 0; i < 2; i++) {
     in >> skipeol;
