@@ -71,7 +71,7 @@ CanvasWidget::CanvasWidget( int x, int y,
   if( !nasal )
     return;
 
-  FGNasalSys *nas = dynamic_cast<FGNasalSys*>(globals->get_subsystem("nasal"));
+  FGNasalSys *nas = globals->get_subsystem<FGNasalSys>();
   if( !nas )
     SG_LOG( SG_GENERAL,
             SG_ALERT,

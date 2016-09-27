@@ -171,6 +171,7 @@ public:
 
     virtual puFont *getDefaultFont() { return _font; }
 
+    static const char* subsystemName() { return "gui"; }
 
 protected:
 
