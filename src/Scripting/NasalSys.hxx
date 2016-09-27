@@ -147,6 +147,8 @@ public:
     /// output somewhere (a UI, presumably)
     simgear::BufferedLogCallback* log() const
     { return _log; }
+
+    static const char* subsystemName() { return "nasal"; }
 private:
     //friend class FGNasalScript;
     friend class FGNasalListener;
