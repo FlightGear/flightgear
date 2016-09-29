@@ -210,6 +210,7 @@ include( ConfigureMsvc3rdParty )
 
 if(EVENT_INPUT)
     if(APPLE)
+      add_definitions(-DWITH_EVENTINPUT)
     elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
         if(NOT UDEV_FOUND)
             message(WARNING "UDev not found, event input is disabled!")
