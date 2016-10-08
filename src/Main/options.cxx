@@ -183,8 +183,11 @@ void fgSetDefaults ()
     fgSetDouble("/sim/speed-up", 1.0);
 
     // Scenery
-    fgSetBool("/sim/scenery/use-gdal-dem", false);
-    
+    fgSetString("/sim/scenery/engine", "tilecache");
+    fgSetString("/sim/scenery/lod-levels", "1 3 5 7 9");
+    fgSetString("/sim/scenery/lod-level-res", "3 5 9 17 33 49 65 93 129");
+    fgSetString("/sim/scenery/lod-res", "1");
+
 				// Rendering options
     fgSetString("/sim/rendering/fog", "nicest");
     fgSetBool("/environment/clouds/status", true);
@@ -1587,7 +1590,11 @@ struct OptionDesc {
     {"roc",                          true,  OPTION_FUNC,   "", false, "", fgOptRoc },
     {"fg-root",                      true,  OPTION_IGNORE,   "", false, "", 0 },
     {"fg-scenery",                   true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFgScenery },
-    {"use-gdal-dem",                 false, OPTION_BOOL,   "/sim/scenery/use-gdal-dem", false, "", 0 },
+    {"terrain-engine",               true,  OPTION_STRING, "/sim/scenery/engine", false, "tilecache", 0 },
+    {"lod-levels",                   true,  OPTION_STRING, "/sim/scenery/lod-levels", false, "1 3 5 7", 0 },
+    {"lod-level-res",                true,  OPTION_STRING, "/sim/scenery/lod-level-res", false, "3 5 9 17 33 49 65 93 129", 0 },
+    {"lod-res",                      true,  OPTION_STRING, "/sim/scenery/lod-res", false, "1", 0 },
+    {"lod-range-mult",               true,  OPTION_STRING, "/sim/scenery/lod-range-mult", false, "2", 0 },
     {"fg-aircraft",                  true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },

@@ -30,3 +30,11 @@ endif()
 if(ENABLE_STGMERGE)
     add_subdirectory(stgmerge)
 endif()
+
+if(ENABLE_DEMCONVERT)
+    add_subdirectory(demconvert)
+endif()
+
+if(ENABLE_DEMCONVERT)
+    add_subdirectory(gdalwarp)
+endif()

@@ -1089,7 +1089,7 @@ void fgStartNewReset()
 
     sgUserDataInit( globals->get_props() );
 
-    viewer->getDatabasePager()->setUpThreads(1, 1);
+    viewer->getDatabasePager()->setUpThreads(4, 1);
     
     // must do this before splashinit for Rembrandt
     flightgear::CameraGroup::buildDefaultGroup(viewer.get());

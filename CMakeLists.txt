@@ -157,6 +157,7 @@ option(ENABLE_JSBSIM     "Set to ON to build FlightGear with JSBSim FDM (default
 option(EVENT_INPUT       "Set to ON to build FlightGear with event-based Input support" ${EVENT_INPUT_DEFAULT})
 option(ENABLE_RTI        "Set to ON to build FlightGear with RTI support" OFF)
 option(ENABLE_PROFILE    "Set to ON to build FlightGear with gperftools profiling support" OFF)
+option(ENABLE_GDAL       "Set to ON to build FlightGear with GDAL support" ON)
 option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
 option(ENABLE_IAX        "Set to ON to build FlightGear with IAXClient/fgcom built-in (default)" ON)
 option(USE_DBUS          "Set to ON to build FlightGear with DBus screensaver interaction (default on Linux)" ${USE_DBUS_DEFAULT})
@@ -181,6 +182,7 @@ option(ENABLE_TESTS      "Set to ON to build test applications (default)" ON)
 option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON)
 option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON)
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
+option(ENABLE_DEMCONVERT "Set to ON to build the dem conversion tool (default)" ON)
 
 # when building an OSG with commit 15ec7e2ae7a8b983ecc44e1ce7363a9a9fa7da95
 # applied, we can use better link options
@@ -329,6 +331,14 @@ if(ENABLE_RTI)
 else()
     message(STATUS "RTI: DISABLED")
 endif(ENABLE_RTI)
+
+if(ENABLE_GDAL)
+    find_package(GDAL 2.0.0 REQUIRED)
+endif(ENABLE_GDAL)
+
+include_directories(${GDAL_INCLUDE_DIR})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS_CXX "-Wall")

@@ -103,6 +103,7 @@ void GraphDumpHandler::getUsage(osg::ApplicationUsage& usage) const
 int
 fgviewerMain(int argc, char** argv)
 {
+    std::cerr << "fgviewerMain\n";
 
     sgUserDataInit(0);
 
@@ -200,10 +201,6 @@ fgviewerMain(int argc, char** argv)
         throw sg_io_exception("Error loading materials file", mpath);
     }
 
-    FGScenery* scenery = globals->add_new_subsystem<FGScenery>();
-    scenery->init();
-    scenery->bind();
-
     // The file path list must be set in the registry.
     osgDB::Registry::instance()->getDataFilePathList() = filePathList;
 
@@ -212,7 +209,13 @@ fgviewerMain(int argc, char** argv)
     options->setMaterialLib(globals->get_matlib());
     options->setPropertyNode(globals->get_props());
     options->setPluginStringData("SimGear::PREVIEW", "ON");
-    
+
+    std::cerr << "number of database paths is " << filePathList.size() << "\n";
+
+    FGScenery* scenery = globals->add_new_subsystem<FGScenery>();
+    scenery->init();
+    scenery->bind();
+
     // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;
     loadedModel = osgDB::readNodeFiles(dataFiles, options);

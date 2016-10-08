@@ -241,6 +241,8 @@ void FGStgTerrain::init( osg::Group* terrain ) {
     if (_inited)
         return;
 
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::init - init tilemgr");
+
     // remember the scene terrain branch on scenegraph
     terrain_branch = terrain;
     
@@ -253,11 +255,15 @@ void FGStgTerrain::init( osg::Group* terrain ) {
 
 void FGStgTerrain::reinit()
 {
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::reinit - reinit tilemgr");
+
     _tilemgr.reinit();
 }
 
 void FGStgTerrain::shutdown()
 {
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::shutdown - shutdown tilemgr");
+    
     _tilemgr.shutdown();
 
     terrain_branch = NULL;
@@ -269,13 +275,19 @@ void FGStgTerrain::shutdown()
 
 void FGStgTerrain::update(double dt)
 {    
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::update - update tilemgr " << dt);
+    
     _tilemgr.update(dt);
 }
 
-void FGStgTerrain::bind() {
+void FGStgTerrain::bind() 
+{
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::bind - noop");
 }
 
-void FGStgTerrain::unbind() {
+void FGStgTerrain::unbind() 
+{
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::unbind - noop");
 }
 
 bool
@@ -284,9 +296,16 @@ FGStgTerrain::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
                                    const simgear::BVHMaterial** material,
                                    const osg::Node* butNotFrom)
 {
+  bool ok;
+    
   SGGeod geod = SGGeod::fromCart(pos);
   geod.setElevationM(geod.getElevationM() + max_altoff);
-  return get_elevation_m(geod, alt, material, butNotFrom);
+
+  ok = get_elevation_m(geod, alt, material, butNotFrom);
+  
+  SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::get_cart_elevation_m: alt " << alt << " material " << *material );
+  
+  return ok;
 }
 
 bool
@@ -294,6 +313,8 @@ FGStgTerrain::get_elevation_m(const SGGeod& geod, double& alt,
                               const simgear::BVHMaterial** material,
                               const osg::Node* butNotFrom)
 {
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::get_elevation_m");
+
   SGVec3d start = SGVec3d::fromGeod(geod);
 
   SGGeod geodEnd = geod;
@@ -309,9 +330,13 @@ FGStgTerrain::get_elevation_m(const SGGeod& geod, double& alt,
 
   geodEnd = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
   alt = geodEnd.getElevationM();
-  if (material)
+  if (material) {
       *material = intersectVisitor.getMaterial();
-
+      SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::get_elevation_m: alt " << alt << " material " << *material );
+  } else {
+      SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::get_elevation_m: alt " << alt << " no material " );
+  }
+  
   return true;
 }
 
@@ -320,6 +345,8 @@ FGStgTerrain::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& di
                                            SGVec3d& nearestHit,
                                            const osg::Node* butNotFrom)
 {
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::get_cart_ground_intersection");
+
   // We assume that starting positions in the center of the earth are invalid
   if ( norm1(pos) < 1 )
     return false;
@@ -346,7 +373,11 @@ bool FGStgTerrain::scenery_available(const SGGeod& position, double range_m)
   {
     double elev;
     if (!get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0, 0))
-      return false;
+    {
+        SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::scenery_available - false" );
+        return false;
+    }
+    
     SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
     osg::FrameStamp* framestamp
             = globals->get_renderer()->getViewer()->getFrameStamp();
@@ -361,15 +392,20 @@ bool FGStgTerrain::scenery_available(const SGGeod& position, double range_m)
         SG_LOG(SG_TERRAIN, SG_DEBUG, "FGScenery::scenery_available: waiting on CheckSceneryVisitor");
         return false;
     }
+
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::scenery_available - true" );
     return true;
   } else {
     SG_LOG(SG_TERRAIN, SG_DEBUG, "FGScenery::scenery_available: waiting on tile manager");
   }
+  SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::scenery_available - false" );
   return false;
 }
 
 bool FGStgTerrain::schedule_scenery(const SGGeod& position, double range_m, double duration)
 {
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::schedule_scenery");
+
     return _tilemgr.schedule_scenery( position, range_m, duration );
 }
     

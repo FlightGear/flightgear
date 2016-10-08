@@ -59,6 +59,7 @@
 
 #include "scenery.hxx"
 #include "terrain_stg.hxx"
+#include "terrain_spt.hxx"
 
 using namespace flightgear;
 using namespace simgear;
@@ -345,10 +346,17 @@ void FGScenery::init() {
     precipitation_branch->setName("Precipitation");
     scene_graph->addChild(precipitation_branch.get());
 
-    // initialize the terrian
-    _terrain = new FGStgTerrain();
-    _terrain->init( terrain_branch.get() );
+    // initialize the terrian based on selected engine
+    std::string engine = fgGetString("/sim/scenery/engine", "tilecache" );
+    SG_LOG( SG_TERRAIN, SG_INFO, "Selected scenery is " << engine );
     
+    if ( engine == "pagedLOD" ) {
+        _terrain = new FGSptTerrain();
+    } else {
+        _terrain = new FGStgTerrain();
+    }
+    _terrain->init( terrain_branch.get() );
+
     _listener = new ScenerySwitchListener(this);
 
     // Toggle the setup flag.
