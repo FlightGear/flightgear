@@ -92,36 +92,31 @@ void fgInitAllowedPaths()
     }
     read_allowed_paths.clear();
     write_allowed_paths.clear();
-    std::string fg_root = globals->get_fg_root().realpath().utf8Str();
-    std::string fg_home = globals->get_fg_home().realpath().utf8Str();
-
-	read_allowed_paths.push_back(fg_root + "/*");
-    read_allowed_paths.push_back(fg_home + "/*");
-    read_allowed_paths.push_back(fg_root);
-    read_allowed_paths.push_back(fg_home);
 
     const PathList& aircraft_paths = globals->get_aircraft_paths();
-    const PathList& scenery_paths = globals->get_secure_fg_scenery();
+    const PathList& other_read_paths = globals->get_extra_read_allowed_paths();
     // not plain fg_scenery, to avoid making
     // /sim/terrasync/scenery-dir a security hole
     PathList read_paths = aircraft_paths;
-    read_paths.insert(read_paths.end(), scenery_paths.begin(), scenery_paths.end());
+    read_paths.insert(read_paths.end(), other_read_paths.begin(), other_read_paths.end());
+    read_paths.push_back(globals->get_fg_root());
+    read_paths.push_back(globals->get_fg_home());
 
-
-      for( PathList::const_iterator it = read_paths.begin(); it != read_paths.end(); ++it )
+    for( PathList::const_iterator it = read_paths.begin(); it != read_paths.end(); ++it )
       {
         // if we get the initialization order wrong, better to have an
         // obvious error than a can-read-everything security hole...
-          if (it->isNull() || fg_root.empty() || fg_home.empty()) {
+          if (it->isNull()) {
               flightgear::fatalMessageBox("Nasal initialization error",
-                 "Empty string in FG_ROOT, FG_HOME, FG_AIRCRAFT or FG_SCENERY",
+                 "Empty string in FG_ROOT, FG_HOME, FG_AIRCRAFT, FG_SCENERY or --allow-nasal-read",
                                    "or fgInitAllowedPaths() called too early");
               exit(-1);
           }
           read_allowed_paths.push_back(it->realpath().utf8Str() + "/*");
           read_allowed_paths.push_back(it->realpath().utf8Str());
       }
-
+    
+    std::string fg_home = globals->get_fg_home().realpath().utf8Str();
     write_allowed_paths.push_back(fg_home + "/*.sav");
     write_allowed_paths.push_back(fg_home + "/*.log");
     write_allowed_paths.push_back(fg_home + "/cache/*");
@@ -142,9 +137,19 @@ void fgInitAllowedPaths()
         fgValidatePath(homePath + "/aircraft-data/yes..xml",true).isNull() ||
         fgValidatePath(homePath + "/.\\yes.bmp",false).isNull()) {
             flightgear::fatalMessageBox("Nasal initialization error",
-                                    "The FG_HOME directory must not be inside any of the FG_ROOT, FG_AIRCRAFT or FG_SCENERY directories",
+                                    "The FG_HOME directory must not be inside any of the FG_ROOT, FG_AIRCRAFT, FG_SCENERY or --allow-nasal-read directories",
                                     "(check that you have not accidentally included an extra :, as an empty part means the current directory)");
             exit(-1);
+    }
+    
+    // Warn the user if they have an unreadable Terrasync directory
+    // (can't securely make it readable because Nasal can change /sim/terrasync/scenery-dir)
+    if(fgValidatePath(SGPath::fromUtf8(fgGetString("/sim/terrasync/scenery-dir")),false).isNull()) {
+      SG_LOG(SG_GENERAL, SG_WARN, "You have a non-standard Terrasync directory "
+          << "set only by /sim/terrasync/scenery-dir.  For security reasons, "
+          << "Nasal scripts are not allowed to read such directories, which "
+          << "may break some features (e.g. animated jetways).  To fix this, "
+          << "use the launcher's settings, or --terrasync-dir in .fgfsrc");
     }
 }
 

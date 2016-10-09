@@ -373,8 +373,9 @@ void FGGlobals::append_fg_scenery (const SGPath &path, bool secure)
     // out, such that all three dirs are added. Unfortunately there's
     // no information as to why the change was made.
     fg_scenery.push_back(abspath);
+    unmangled_fg_scenery.push_back(abspath);
     if (secure) {
-        secure_fg_scenery.push_back(abspath);
+        extra_read_allowed_paths.push_back(abspath);
     }
 
     if (terrainDir.exists()) {
@@ -399,10 +400,20 @@ void FGGlobals::append_fg_scenery (const SGPath &path, bool secure)
     n->setAttribute(SGPropertyNode::PRESERVE, true);
 }
 
+void FGGlobals::append_read_allowed_paths(const SGPath &path)
+{
+    SGPath abspath(path.realpath());
+    if (!abspath.exists()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "read-allowed path not found:" << abspath);
+        return;
+    }
+    extra_read_allowed_paths.push_back(abspath);
+}
+
 void FGGlobals::clear_fg_scenery()
 {
   fg_scenery.clear();
-  secure_fg_scenery.clear();
+  unmangled_fg_scenery.clear();
   fgGetNode("/sim", true)->removeChildren("fg-scenery");
 
 }

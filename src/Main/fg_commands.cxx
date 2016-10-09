@@ -1152,7 +1152,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
     SGPath validated_path = fgValidatePath(file, false);
     if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file << "' denied "
-                "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, add them to --fg-aircraft)");
+                "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, pass them to --allow-nasal-read)");
         return false;
     }
 

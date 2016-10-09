@@ -107,7 +107,9 @@ private:
 
     // Roots of FlightGear scenery tree
     PathList fg_scenery;
-    PathList secure_fg_scenery;
+    PathList unmangled_fg_scenery;
+    // Paths Nasal is allowed to read
+    PathList extra_read_allowed_paths;
 
     std::string browser;
 
@@ -218,7 +220,8 @@ public:
     void set_fg_home (const SGPath &home);
 
     const PathList &get_fg_scenery () const { return fg_scenery; }
-    const PathList &get_secure_fg_scenery () const { return secure_fg_scenery; }
+    const PathList &get_unmangled_fg_scenery () const { return unmangled_fg_scenery; }
+    const PathList &get_extra_read_allowed_paths () const { return extra_read_allowed_paths; }
     /**
      * Add a scenery directory
      *
@@ -232,6 +235,16 @@ public:
     void append_fg_scenery (const PathList &scenery, bool secure = false);
     
     void clear_fg_scenery();
+    
+    /**
+     * Allow Nasal to read a path
+     *
+     * To avoid can-read-any-file security holes, do NOT call this on paths
+     * obtained from the property tree or other Nasal-writable places
+     *
+     * Only works during initial load (before fgInitAllowedPaths)
+     */
+    void append_read_allowed_paths (const SGPath &path);
 
     /**
      * specify a path we'll prepend to the aircraft paths list if non-empty.

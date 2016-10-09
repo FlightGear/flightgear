@@ -866,6 +866,28 @@ fgOptTerrasyncDir( const char *arg )
 }
 
 static int
+fgOptDownloadDir( const char *arg )
+{
+    SGPath p = SGPath::fromLocal8Bit(arg);
+    //globals->append_read_allowed_paths(p);
+    fgSetString("/sim/paths/download-dir", p.utf8Str());
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptAllowNasalRead( const char *arg )
+{
+    PathList paths = SGPath::pathsFromLocal8Bit(arg);
+    if(paths.size() == 0) {
+        SG_LOG(SG_GENERAL, SG_WARN, "--allow-nasal-read requires a list of directories to allow");
+    }
+    for( PathList::const_iterator it = paths.begin(); it != paths.end(); ++it ) {
+        globals->append_read_allowed_paths(*it);
+    }
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptFov( const char *arg )
 {
     parse_fov( arg );
@@ -1629,7 +1651,8 @@ struct OptionDesc {
     {"disable-terrasync",            false, OPTION_BOOL,   "/sim/terrasync/enabled", false, "", 0 },
     {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
     {"terrasync-dir",                true,  OPTION_FUNC,   "", false, "", fgOptTerrasyncDir },
-    {"download-dir",                 true,  OPTION_STRING, "/sim/paths/download-dir", false, "", 0 },
+    {"download-dir",                 true,  OPTION_FUNC,   "", false, "", fgOptDownloadDir },
+    {"allow-nasal-read",             true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptAllowNasalRead },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
     {"bpp",                          true,  OPTION_FUNC,   "", false, "", fgOptBpp },
     {"units-feet",                   false, OPTION_STRING, "/sim/startup/units", false, "feet", 0 },

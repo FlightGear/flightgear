@@ -582,7 +582,7 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
         SG_LOG(SG_NASAL, SG_ALERT, "directory(): listing '" <<
         naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
         " no longer follows symlinks; to authorize reading additional "
-        "directories, add them to --fg-aircraft)");
+        "directories, pass them to --allow-nasal-read)");
         // to avoid breaking dialogs, pretend it doesn't exist rather than erroring out
         return naNil();
     }
@@ -689,7 +689,7 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
         SG_LOG(SG_NASAL, SG_ALERT, "open(): reading/writing '" <<
         naStr_data(file) << "' denied (unauthorized directory - authorization"
         " no longer follows symlinks; to authorize reading additional "
-        "directories, add them to --fg-aircraft)");
+        "directories, pass them to --allow-nasal-read)");
         naRuntimeError(c, "open(): access denied (unauthorized directory)");
         return naNil();
     }
@@ -731,7 +731,7 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
         SG_LOG(SG_NASAL, SG_ALERT, "parsexml(): reading '" <<
         naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
         " no longer follows symlinks; to authorize reading additional "
-        "directories, add them to --fg-aircraft)");
+        "directories, pass them to --allow-nasal-read)");
         naRuntimeError(c, "parsexml(): access denied (unauthorized directory)");
         return naNil();
     }
