@@ -52,7 +52,7 @@ public:
 
     void setInAppMode();
 
-    void setSceneryPaths();
+    static void setSceneryPaths();
 
     static void restartTheApp(QStringList fgArgs);
 protected:

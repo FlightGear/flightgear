@@ -55,7 +55,8 @@
 #include <iostream>
 #include <sstream>              // std::istringstream
 
-using namespace std;
+using std::vector;
+using std::string;
 
 static FGPositioned::Type fptypeFromRobinType(int aType)
 {
@@ -86,13 +87,18 @@ APTLoader::~APTLoader() { }
 
 void APTLoader::parseAPT(const SGPath &aptdb_file)
 {
+  string apt_dat = aptdb_file.utf8Str(); // full path to the file being parsed
   sg_gzifstream in(aptdb_file);
 
   if ( !in.is_open() ) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << aptdb_file );
-    throw sg_io_exception("cannot open apt.dat file", aptdb_file);
+    const std::string errMsg = simgear::strutils::error_string(errno);
+    SG_LOG( SG_GENERAL, SG_ALERT,
+            "Cannot open file '" << apt_dat << "': " << errMsg );
+    throw sg_io_exception("Cannot open file (" + errMsg + ")",
+                          sg_location(aptdb_file));
   }
 
+  SG_LOG( SG_GENERAL, SG_INFO, "Opened apt.dat file: '" << apt_dat << "'" );
   string line;
 
   unsigned int line_id = 0;
@@ -110,15 +116,16 @@ void APTLoader::parseAPT(const SGPath &aptdb_file)
       if ( stripped_line != "I" && stripped_line != "A" ) {
         std::string pb = "invalid first line (neither 'I' nor 'A')";
         SG_LOG( SG_GENERAL, SG_ALERT, aptdb_file << ": " << pb);
-        throw sg_format_exception("cannot parse apt.dat file: " + pb,
-                                  aptdb_file.utf8Str());
+        throw sg_format_exception("cannot parse '" + apt_dat + "': " + pb,
+                                  stripped_line);
       }
     } else {     // second line of the file
       std::istringstream s(line);
       int apt_dat_format_version;
       s >> apt_dat_format_version;
       SG_LOG( SG_GENERAL, SG_INFO,
-              "apt.dat format version: " << apt_dat_format_version );
+              "apt.dat format version (" << apt_dat << "): " <<
+              apt_dat_format_version );
     }
   } // end of the apt.dat header
 
@@ -143,7 +150,7 @@ void APTLoader::parseAPT(const SGPath &aptdb_file)
     if ( line_id == 1  /* Airport */ ||
          line_id == 16 /* Seaplane base */ ||
          line_id == 17 /* Heliport */ ) {
-      parseAirportLine(simgear::strutils::split(line));
+      parseAirportLine(apt_dat, simgear::strutils::split(line));
     } else if ( line_id == 10 ) { // Runway v810
       parseRunwayLine810(simgear::strutils::split(line));
     } else if ( line_id == 100 ) { // Runway v850
@@ -174,7 +181,7 @@ void APTLoader::parseAPT(const SGPath &aptdb_file)
     } else if ( line_id == 0 ) {
       // ??
     } else if ( line_id >= 50 && line_id <= 56) {
-      parseCommLine(line_id, simgear::strutils::split(line));
+      parseCommLine(apt_dat, line_id, simgear::strutils::split(line));
     } else if ( line_id == 110 ) {
       pavement = true;
       parsePavementLine850(simgear::strutils::split(line, 0, 4));
@@ -190,16 +197,18 @@ void APTLoader::parseAPT(const SGPath &aptdb_file)
     } else if ( line_id >= 1000 ) {
       // airport traffic flow (ignore)
     } else if ( line_id == 99 ) {
-      SG_LOG( SG_GENERAL, SG_DEBUG, "End of file reached" );
+      SG_LOG( SG_GENERAL, SG_DEBUG,
+              apt_dat << ": code 99 found (normally at end of file)" );
     } else {
-      SG_LOG( SG_GENERAL, SG_ALERT,
-              "Unknown line(#" << line_num << ") in apt.dat file: " << line );
-      throw sg_format_exception("malformed line in apt.dat:", line);
+      std::ostringstream oss;
+      oss << apt_dat << ":"  << line_num << ": unknown row code " << line_id;
+      SG_LOG( SG_GENERAL, SG_ALERT, oss.str() << " (" << line << ")" );
+      throw sg_format_exception(oss.str(), line);
     }
   }
 
   throwExceptionIfStreamError(in, aptdb_file);
-  finishAirport();
+  finishAirport(apt_dat);
 }
 
 // Tell whether an apt.dat line is blank or a comment line
@@ -222,7 +231,7 @@ void APTLoader::throwExceptionIfStreamError(const sg_gzifstream& input_stream,
   }
 }
 
-void APTLoader::finishAirport()
+void APTLoader::finishAirport(const string& aptDat)
 {
   if (currentAirportID == 0) {
     return;
@@ -230,8 +239,8 @@ void APTLoader::finishAirport()
 
   if (!rwy_count) {
     currentAirportID = 0;
-    SG_LOG(SG_GENERAL, SG_ALERT, "ERROR: No runways for " << last_apt_id
-           << ", skipping." );
+    SG_LOG( SG_GENERAL, SG_ALERT, "Error in '" << aptDat <<
+            "': no runways for " << last_apt_id << ", skipping." );
     return;
   }
 
@@ -244,13 +253,14 @@ void APTLoader::finishAirport()
   currentAirportID = 0;
 }
 
-void APTLoader::parseAirportLine(const vector<string>& token)
+void APTLoader::parseAirportLine(const string& aptDat,
+                                 const vector<string>& token)
 {
   const string& id(token[4]);
   double elev = atof( token[1].c_str() );
 
   // finish the previous airport
-  finishAirport();
+  finishAirport(aptDat);
 
   last_apt_elev = elev;
 
@@ -488,11 +498,12 @@ void APTLoader::parsePavementNodeLine850(int num, const vector<string>& token)
   }
 }
 
-void APTLoader::parseCommLine(int lineId, const vector<string>& token)
+void APTLoader::parseCommLine(const string& aptDat, int lineId,
+                              const vector<string>& token)
 {
   if ( rwy_count <= 0 ) {
     SG_LOG( SG_GENERAL, SG_ALERT,
-            "No runways; skipping comm for " + last_apt_id);
+            aptDat << ": no runways, skipping comm for " << last_apt_id );
   }
 
   SGGeod pos = SGGeod::fromDegFt(rwy_lon_accum / (double)rwy_count,
@@ -538,7 +549,8 @@ void APTLoader::parseCommLine(int lineId, const vector<string>& token)
     cache->insertCommStation(ty, name, pos, freqKhz, rangeNm, currentAirportID);
   }
   else SG_LOG( SG_GENERAL, SG_DEBUG,
-               "Found unnamed comm. Skipping: " << lineId );
+               aptDat << ": found unnamed comm (row ID " << lineId <<
+               "), skipping" );
 }
 
 // Load the airport data base from the specified aptdb file.  The

@@ -471,6 +471,8 @@ void initApp(int& argc, char** argv)
 
 bool runLauncherDialog()
 {
+    // Used for NavDataCache initialization: needed to find the apt.dat files
+    QtLauncher::setSceneryPaths();
     // startup the nav-cache now. This pre-empts normal startup of
     // the cache, but no harm done. (Providing scenery paths are consistent)
 
@@ -678,7 +680,7 @@ QtLauncher::~QtLauncher()
     globals->get_subsystem<FGHTTPClient>()->client()->cancelRequest(m_mpServerRequest);
 }
 
-void QtLauncher::setSceneryPaths()
+void QtLauncher::setSceneryPaths() // static method
 {
     globals->clear_fg_scenery();
 

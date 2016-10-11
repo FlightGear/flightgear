@@ -54,6 +54,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/threads/SGThread.hxx>
 #include <simgear/threads/SGGuard.hxx>
@@ -332,6 +333,9 @@ public:
   }
 
   bool isCachedFileModified(const SGPath& path, bool verbose);
+  PathList getDatFilesPaths(NavDataCache::DatFileType datFileType) const;
+  bool areDatFilesModified(NavDataCache::DatFileType datFileType,
+                           const PathList& datFiles, bool verbose);
 
   void callSqlite(int result, const string& sql)
   {
@@ -848,7 +852,8 @@ public:
   bool transactionAborted;
   sqlite3_stmt_ptr beginTransactionStmt, commitTransactionStmt, rollbackTransactionStmt;
 
-  SGPath aptDatPath, metarDatPath, navDatPath, fixDatPath, poiDatPath,
+  PathList aptDatPaths;
+  SGPath metarDatPath, navDatPath, fixDatPath, poiDatPath,
   carrierDatPath, airwayDatPath;
 
   sqlite3_stmt_ptr readPropertyQuery, writePropertyQuery,
@@ -978,7 +983,9 @@ FGPositioned* NavDataCache::NavDataCachePrivate::loadById(sqlite3_int64 rowid,
 bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path, bool verbose)
 {
   if (!path.exists()) {
-    throw sg_io_exception("isCachedFileModified: Missing file:", path);
+    throw sg_exception(
+      "NavCache: missing file '" + path.utf8Str() + "'",
+      string("NavDataCache::NavDataCachePrivate::isCachedFileModified()"));
   }
 
   sqlite_bind_temp_stdstring(statCacheCheck, 1, path.realpath().utf8Str());
@@ -999,14 +1006,165 @@ bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path,
 
     isModified = (delta != 0);
   } else {
-    SG_LOG(SG_NAVCACHE, logLevel, "NavCache: initial build required for " << path);
+    SG_LOG(SG_NAVCACHE, logLevel, "NavCache: (re-)build required because '" <<
+           path.utf8Str() << "' is not in the cache");
   }
 
   reset(statCacheCheck);
   return isModified;
 }
 
+// Return the list of $scenery_path/NavData/<type>/*.dat[.gz] files found
+// inside scenery paths, plus the default file for the given type (e.g.,
+// $FG_ROOT/Airports/apt.dat.gz for the 'apt' type).
+PathList NavDataCache::NavDataCachePrivate::getDatFilesPaths(
+  NavDataCache::DatFileType datFileType) const
+{
+  PathList result;
+  SGPath visitedPath;           // to avoid duplicates and time wasting
+  const string datFilesSubDir = "NavData/" +
+                               NavDataCache::datTypeStr[datFileType];
+  const PathList& sceneryPaths = globals->get_unmangled_fg_scenery();
+
+  for (PathList::const_iterator dirsIt = sceneryPaths.begin();
+       dirsIt != sceneryPaths.end(); dirsIt++) {
+    if (dirsIt->isNull() || *dirsIt == visitedPath) {
+      continue;                 // duplicate or empty path
+    } else if (! dirsIt->isDir()) {
+      SG_LOG(SG_NAVCACHE, SG_WARN, *dirsIt <<
+             ": given as a scenery path, but is not a directory");
+      visitedPath = *dirsIt;    // to avoid duplicate log messages
+      continue;
+    }
+
+    visitedPath = *dirsIt;
+    SGPath datFilesDir = visitedPath;
+    datFilesDir.append(datFilesSubDir);
+
+    if (datFilesDir.isDir()) {
+      // Deterministic because the return value of simgear::Dir::children() is
+      // already sorted
+      const PathList files = simgear::Dir(datFilesDir).children(
+        simgear::Dir::TYPE_FILE | simgear::Dir::NO_DOT_OR_DOTDOT);
+
+      for (PathList::const_iterator filesIt = files.begin();
+           filesIt != files.end(); filesIt++) {
+        const std::string name = filesIt->file();
+        if (simgear::strutils::ends_with(name, ".dat") ||
+            simgear::strutils::ends_with(name, ".dat.gz"))
+          result.push_back(*filesIt);
+      }
+    }
+  } // of loop over 'sceneryPaths'
+
+  // Add the default file (e.g., $FG_ROOT/Airports/apt.dat.gz), at least for
+  // now
+  SGPath defaultDatFile(globals->get_fg_root());
+  defaultDatFile.append(NavDataCache::defaultDatFile[datFileType]);
+  if ((result.empty() || result.back() != defaultDatFile) &&
+      defaultDatFile.isFile()) {
+    result.push_back(defaultDatFile);
+  }
+
+  return result;
+}
+
+// Compare:
+//   - the list of dat files given by 'datFiles';
+//   - the list obtained from the record with key '<type>.dat files' of the
+//     NavDataCache 'properties' table, where <type> is one of 'apt', 'metar',
+//     'fix', 'poi', etc..
+//
+// This comparison is sensitive to the number and order of the files,
+// their respective SGPath::realpath() and SGPath::modTime().
+bool NavDataCache::NavDataCachePrivate::areDatFilesModified(
+  NavDataCache::DatFileType datFileType, const PathList& datFiles, bool verbose)
+{
+  // 'apt' or 'metar' or 'fix' or...
+  const string datTypeStr = NavDataCache::datTypeStr[datFileType];
+  const string_list cachedFiles = outer->readOrderedStringListProperty(
+    datTypeStr + ".dat files", &SGPath::pathListSep);
+  PathList::const_iterator datFilesIt = datFiles.begin();
+  string_list::const_iterator cachedFilesIt = cachedFiles.begin();
+  // Same logic as in NavDataCachePrivate::isCachedFileModified()
+  sgDebugPriority logLevel = verbose ? SG_WARN : SG_DEBUG;
+
+  if (cachedFilesIt == cachedFiles.end() && datFilesIt != datFiles.end()) {
+     SG_LOG(SG_NAVCACHE, logLevel,
+            "NavCache: rebuild required for " << datTypeStr << ".dat files "
+            "(no file in cache, but " << datFiles.size() << " such file" <<
+            (datFiles.size() > 1 ? "s" : "") << " found in scenery paths)");
+     return true;
+  }
+
+  while (datFilesIt != datFiles.end()) {
+    const SGPath& path = *(datFilesIt++);
+
+    if (!path.exists()) {
+      throw sg_exception(
+        "NavCache: non-existent file '" + path.utf8Str() + "'",
+        string("NavDataCache::NavDataCachePrivate::areDatFilesModified()"));
+    }
+
+    if (cachedFilesIt == cachedFiles.end()) {
+      SG_LOG(SG_NAVCACHE, logLevel,
+             "NavCache: rebuild required for " << datTypeStr << ".dat files "
+             "(less files in cache than in scenery paths)");
+      return true;
+    } else {
+      string cachedFile = *(cachedFilesIt++);
+      string fileOnDisk = path.realpath().utf8Str();
+
+      if (cachedFile != fileOnDisk || isCachedFileModified(path, verbose)) {
+        // isCachedFileModified() does all the logging, so we only have to
+        // tell what is happening in case that method was not called.
+        if (cachedFile != fileOnDisk) {
+          SG_LOG(SG_NAVCACHE, logLevel,
+                 "NavCache: rebuild required because '" << cachedFile <<
+                 "' (in cache) != '" << fileOnDisk << "' (on disk)");
+        }
+        return true;
+      }
+    }
+  } // of loop over the elements of 'datFiles'
+
+  if (cachedFilesIt != cachedFiles.end()) {
+      SG_LOG(SG_NAVCACHE, logLevel,
+             "NavCache: rebuild required for " << datTypeStr << ".dat files "
+             "(more files in cache than in scenery paths)");
+      return true;
+  }
+
+  SG_LOG(SG_NAVCACHE, SG_DEBUG,
+         "NavCache: no rebuild required for " << datTypeStr << ".dat files");
+  return false;
+}
+
+
+// NavDataCache's static member variables
 static NavDataCache* static_instance = NULL;
+
+const string_list NavDataCache::datTypeStr = {
+    string("apt"),
+    string("metar"),
+    string("awy"),
+    string("nav"),
+    string("fix"),
+    string("poi"),
+    string("carrier"),
+    string("TACAN_freq")
+};
+
+const string_list NavDataCache::defaultDatFile = {
+    string("Airports/apt.dat.gz"),
+    string("Airports/metar.dat.gz"),
+    string("Navaids/awy.dat.gz"),
+    string("Navaids/nav.dat.gz"),
+    string("Navaids/fix.dat.gz"),
+    string("Navaids/poi.dat.gz"),
+    string("Navaids/carrier.dat.gz"),
+    string("Navaids/TACAN_freq.dat.gz")
+};
 
 NavDataCache::NavDataCache()
 {
@@ -1050,26 +1208,8 @@ NavDataCache::NavDataCache()
   Octree::global_spatialOctree =
     new Octree::Branch(SGBox<double>(-earthExtent, earthExtent), 1);
 
-  d->aptDatPath = SGPath(globals->get_fg_root());
-  d->aptDatPath.append("Airports/apt.dat.gz");
-
-  d->metarDatPath = SGPath(globals->get_fg_root());
-  d->metarDatPath.append("Airports/metar.dat.gz");
-
-  d->navDatPath = SGPath(globals->get_fg_root());
-  d->navDatPath.append("Navaids/nav.dat.gz");
-
-  d->fixDatPath = SGPath(globals->get_fg_root());
-  d->fixDatPath.append("Navaids/fix.dat.gz");
-
-  d->poiDatPath = SGPath(globals->get_fg_root());
-  d->poiDatPath.append("Navaids/poi.dat.gz");
-
-  d->carrierDatPath = SGPath(globals->get_fg_root());
-  d->carrierDatPath.append("Navaids/carrier_nav.dat.gz");
-
-  d->airwayDatPath = SGPath(globals->get_fg_root());
-  d->airwayDatPath.append("Navaids/awy.dat.gz");
+  // Update d->aptDatPaths, d->metarDatPath, d->navDatPath, etc.
+  updateListsOfDatFiles();
 }
 
 NavDataCache::~NavDataCache()
@@ -1090,6 +1230,38 @@ NavDataCache* NavDataCache::instance()
   return static_instance;
 }
 
+// Update the lists of dat files used for NavCache freshness checking and
+// rebuilding.
+void NavDataCache::updateListsOfDatFiles() {
+  // All $scenery_path/NavData/apt/*.dat[.gz] files found inside scenery
+  // paths, plus $FG_ROOT/Airports/apt.dat.gz (order matters).
+  d->aptDatPaths = d->getDatFilesPaths(DATFILETYPE_APT);
+  // Trivial extension to the other types of dat files:
+  // d->navDatPaths = d->getDatFilesPaths(DATFILETYPE_NAV);
+  // d->fixDatPaths = d->getDatFilesPaths(DATFILETYPE_FIX);
+  // etc.
+  //
+  // These ones are still managed the "old" way (no search through scenery
+  // paths).
+  d->metarDatPath = SGPath(globals->get_fg_root());
+  d->metarDatPath.append("Airports/metar.dat.gz");
+
+  d->navDatPath = SGPath(globals->get_fg_root());
+  d->navDatPath.append("Navaids/nav.dat.gz");
+
+  d->fixDatPath = SGPath(globals->get_fg_root());
+  d->fixDatPath.append("Navaids/fix.dat.gz");
+
+  d->poiDatPath = SGPath(globals->get_fg_root());
+  d->poiDatPath.append("Navaids/poi.dat.gz");
+
+  d->carrierDatPath = SGPath(globals->get_fg_root());
+  d->carrierDatPath.append("Navaids/carrier_nav.dat.gz");
+
+  d->airwayDatPath = SGPath(globals->get_fg_root());
+  d->airwayDatPath.append("Navaids/awy.dat.gz");
+}
+
 bool NavDataCache::isRebuildRequired()
 {
     if (d->readOnly) {
@@ -1101,7 +1273,7 @@ bool NavDataCache::isRebuildRequired()
         return true;
     }
 
-  if (d->isCachedFileModified(d->aptDatPath, true) ||
+  if (d->areDatFilesModified(DATFILETYPE_APT, d->aptDatPaths, true) ||
       d->isCachedFileModified(d->metarDatPath, true) ||
       d->isCachedFileModified(d->navDatPath, true) ||
       d->isCachedFileModified(d->fixDatPath, true) ||
@@ -1167,14 +1339,26 @@ void NavDataCache::doRebuild()
     SGTimeStamp st;
     {
         Transaction txn(this);
+        string_list aptDatFiles;
 
         st.stamp();
-        airportDBLoad(d->aptDatPath);
-        SG_LOG(SG_NAVCACHE, SG_INFO, "apt.dat load took:" << st.elapsedMSec());
+        for (PathList::const_iterator it = d->aptDatPaths.begin();
+             it != d->aptDatPaths.end(); it++) {
+            aptDatFiles.push_back(it->realpath().utf8Str());
+            airportDBLoad(*it);
+            stampCacheFile(*it); // this uses the realpath() of the file
+        }
+
+        // Store the list of apt.dat files we have loaded
+        writeOrderedStringListProperty(
+          datTypeStr[DATFILETYPE_APT] + ".dat files", aptDatFiles,
+          &SGPath::pathListSep);
+        SG_LOG(SG_NAVCACHE, SG_INFO,
+               datTypeStr[DATFILETYPE_APT] + ".dat files load took:" <<
+               st.elapsedMSec());
 
         setRebuildPhaseProgress(REBUILD_UNKNOWN);
         metarDataLoad(d->metarDatPath);
-        stampCacheFile(d->aptDatPath);
         stampCacheFile(d->metarDatPath);
 
         st.stamp();
