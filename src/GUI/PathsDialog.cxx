@@ -64,6 +64,19 @@ AddOnsPage::AddOnsPage(QWidget *parent, simgear::pkg::RootRef root) :
     connect(m_ui->installSceneryButton, &QPushButton::clicked,
             this, &AddOnsPage::onInstallScenery);
 
+    m_ui->sceneryPathsList->setToolTip(
+      tr("After changing this list, please restart the launcher to avoid "
+         "possibly inconsistent behavior."));
+    m_ui->changeDownloadDir->setToolTip(
+      tr("After changing this location, you may have to restart the launcher "
+         "to avoid inconsistent behavior."));
+    m_ui->clearDownloadDir->setToolTip(
+      tr("If you use this button, you may have to restart the launcher "
+         "to avoid inconsistent behavior."));
+    m_ui->installSceneryButton->setToolTip(
+      tr("After installing scenery, you may have to restart the launcher "
+         "to avoid inconsistent behavior."));
+
     QSettings settings;
             
     QStringList sceneryPaths = settings.value("scenery-paths").toStringList();
