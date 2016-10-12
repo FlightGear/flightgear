@@ -101,6 +101,8 @@ private:
 
   // Tell whether an apt.dat line is blank or a comment line
   bool isBlankOrCommentLine(const std::string& line);
+  // Return a copy of 'line' with trailing '\r' char(s) removed
+  std::string cleanLine(const std::string& line);
   void throwExceptionIfStreamError(const sg_gzifstream& input_stream,
                                    const SGPath& path);
   void parseAirportLine(unsigned int rowCode,
@@ -110,6 +112,8 @@ private:
   void parseRunwayLine850(const std::vector<std::string>& token);
   void parseWaterRunwayLine850(const std::vector<std::string>& token);
   void parseHelipadLine850(const std::vector<std::string>& token);
+  void parseViewpointLine(const std::string& aptDat, unsigned int lineNum,
+                          const std::vector<std::string>& token);
   void parsePavementLine850(const std::vector<std::string>& token);
   void parsePavementNodeLine850(int num, const std::vector<std::string>& token);
 
@@ -130,9 +134,9 @@ private:
   bool pavement;
   std::vector<FGPavementPtr> pavements;
 
-  NavDataCache* cache;
   // Not an airport identifier in the sense of the apt.dat spec!
   PositionedID currentAirportID;
+  NavDataCache* cache;
 };
 
 bool metarDataLoad(const SGPath& path);

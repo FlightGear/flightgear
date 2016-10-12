@@ -59,7 +59,8 @@
 using std::vector;
 using std::string;
 
-static FGPositioned::Type fptypeFromRobinType(int aType)
+
+static FGPositioned::Type fptypeFromRobinType(unsigned int aType)
 {
   switch (aType) {
   case 1: return FGPositioned::AIRPORT;
@@ -78,11 +79,10 @@ namespace flightgear
 {
 APTLoader::APTLoader()
   :  last_apt_id(""),
-     last_apt_elev(0.0)
-{
-  currentAirportID = 0;
-  cache = NavDataCache::instance();
-}
+     last_apt_elev(0.0),
+     currentAirportID(0),
+     cache(NavDataCache::instance())
+{ }
 
 APTLoader::~APTLoader() { }
 
@@ -242,15 +242,9 @@ void APTLoader::loadAirports()
         parseHelipadLine850(simgear::strutils::split(linesIt->str));
       } else if ( line_id == 18 ) {
         // beacon entry (ignore)
-      } else if ( line_id == 14 ) {
-        // control tower entry
-        vector<string> token(simgear::strutils::split(linesIt->str));
-
-        double lat = atof( token[1].c_str() );
-        double lon = atof( token[2].c_str() );
-        double elev = atof( token[3].c_str() );
-        tower = SGGeod::fromDegFt(lon, lat, elev + last_apt_elev);
-        cache->insertTower(currentAirportID, tower);
+      } else if ( line_id == 14 ) {  // Viewpoint/control tower
+        parseViewpointLine(aptDat, linesIt->number,
+                           simgear::strutils::split(linesIt->str));
       } else if ( line_id == 19 ) {
         // windsock entry (ignore)
       } else if ( line_id == 20 ) {
@@ -280,11 +274,11 @@ void APTLoader::loadAirports()
         // airport traffic flow (ignore)
       } else {
         std::ostringstream oss;
+        string cleanedLine = cleanLine(linesIt->str);
         oss << aptDat << ":" << linesIt->number << ": unknown row code " <<
           line_id;
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                oss.str() << " (" << linesIt->str << ")" );
-        throw sg_format_exception(oss.str(), linesIt->str);
+        SG_LOG( SG_GENERAL, SG_ALERT, oss.str() << " (" << cleanedLine << ")" );
+        throw sg_format_exception(oss.str(), cleanedLine);
       }
     } // of loop over the second and subsequent apt.dat lines for the airport
 
@@ -296,7 +290,24 @@ void APTLoader::loadAirports()
 bool APTLoader::isBlankOrCommentLine(const std::string& line)
 {
   size_t pos = line.find_first_not_of(" \t");
-  return ( pos == std::string::npos || line.find("##", pos) == pos );
+  return ( pos == std::string::npos ||
+           line[pos] == '\r' ||
+           line.find("##", pos) == pos );
+}
+
+std::string APTLoader::cleanLine(const std::string& line)
+{
+  std::string res = line;
+
+  // Lines obtained from readAptDatFile() may end with \r, which can be quite
+  // confusing when printed to the terminal.
+  for (std::string::reverse_iterator it = res.rbegin();
+       it != res.rend() && *it == '\r'; /* empty */)
+  { // The beauty of C++ iterators...
+    it = std::string::reverse_iterator(res.erase( (it+1).base() ));
+  }
+
+  return res;
 }
 
 void APTLoader::throwExceptionIfStreamError(const sg_gzifstream& input_stream,
@@ -538,6 +549,22 @@ void APTLoader::parseHelipadLine850(const vector<string>& token)
   cache->insertRunway(FGPositioned::HELIPAD, rwy_no, pos,
                       currentAirportID, heading, length,
                       width, 0.0, 0.0, surface_code);
+}
+
+void APTLoader::parseViewpointLine(const string& aptDat, unsigned int lineNum,
+                                   const vector<string>& token)
+{
+  if (token.size() < 5) {
+    SG_LOG( SG_GENERAL, SG_WARN,
+            aptDat << ":" << lineNum << ": invalid viewpoint line "
+            "(row code 14): at least 5 fields are required" );
+  } else {
+    double lat = atof(token[1].c_str());
+    double lon = atof(token[2].c_str());
+    double elev = atof(token[3].c_str());
+    tower = SGGeod::fromDegFt(lon, lat, elev + last_apt_elev);
+    cache->insertTower(currentAirportID, tower);
+  }
 }
 
 void APTLoader::parsePavementLine850(const vector<string>& token)
