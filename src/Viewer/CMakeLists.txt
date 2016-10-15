@@ -27,4 +27,10 @@ set(HEADERS
 	viewmgr.hxx
 	)
 
+if (Qt5Core_FOUND)
+    list(APPEND HEADERS GraphicsWindowQt5.hxx)
+    list(APPEND SOURCES GraphicsWindowQt5.cpp)
+endif()
+
+
 flightgear_component(Viewer "${SOURCES}" "${HEADERS}")

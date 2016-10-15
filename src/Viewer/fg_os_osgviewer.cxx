@@ -18,9 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
 
 #include <algorithm>
 #include <iostream>
@@ -60,6 +58,11 @@
 #include "FGEventHandler.hxx"
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
+
+#if defined(HAVE_QT)
+#include "GraphicsWindowQt5.hxx"
+#include <QCoreApplication>
+#endif
 
 // Static linking of OSG needs special macros
 #ifdef OSG_LIBRARY_STATIC
@@ -332,6 +335,10 @@ int fgOSMainLoop()
         fgIdleHandler idleFunc = globals->get_renderer()->getEventHandler()->getIdleHandler();
         if (idleFunc)
             (*idleFunc)();
+
+#if defined(HAVE_QT)
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
+#endif
         globals->get_renderer()->update();
         viewer->frame( globals->get_sim_time_sec() );
     }
@@ -356,6 +363,14 @@ void fgWarpMouse(int x, int y)
 
 void fgOSInit(int* argc, char** argv)
 {
+#if defined(HAVE_QT)
+    if (fgGetBool("/sim/rendering/graphics-window-qt", false)) {
+        SG_LOG(SG_GL, SG_INFO, "Using Qt implementation of GraphicsWindow");
+        flightgear::initQtWindowingSystem();
+    } else {
+        SG_LOG(SG_GL, SG_INFO, "Using stock OSG implementation of GraphicsWindow");
+    }
+#endif
     globals->get_renderer()->init();
     WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
@@ -365,7 +380,7 @@ void fgOSCloseWindow()
     if (viewer) {
         // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
         // https://sourceforge.net/p/flightgear/codetickets/1830/
-        // explicitly stop trheading before we delete the renderer or
+        // explicitly stop threading before we delete the renderer or
         // viewMgr (which ultimately holds refs to the CameraGroup, and
         // GraphicsContext)
         viewer->stopThreading();
