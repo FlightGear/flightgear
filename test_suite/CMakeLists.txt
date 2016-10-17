@@ -142,9 +142,18 @@ set_target_properties(run_test_suite
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${TESTSUITE_OUTPUT_DIR}"
 )
-add_custom_target(test_suite "${TESTSUITE_OUTPUT_DIR}/run_test_suite"
-    DEPENDS run_test_suite
-    COMMENT "Running the full FlightGear test-suite.")
+if(WIN32)
+    add_custom_target(test_suite "run_test_suite.exe"
+        DEPENDS run_test_suite
+        WORKING_DIRECTORY "${TESTSUITE_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}"
+        COMMENT "Running the full FlightGear test-suite."
+    )
+else()
+    add_custom_target(test_suite "${TESTSUITE_OUTPUT_DIR}/run_test_suite"
+        DEPENDS run_test_suite
+        COMMENT "Running the full FlightGear test-suite."
+    )
+endif(WIN32)
 
 #-----------------------------------------------------------------------------
 
