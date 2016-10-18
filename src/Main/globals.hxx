@@ -230,14 +230,13 @@ public:
     /**
      * Add a scenery directory
      *
-     * secure = allow Nasal to read this directory; to avoid
-     * can-read-any-file security holes, do NOT set this on directories
-     * obtained from the property tree (e.g. /sim/terrasync/scenery-dir)
-     * or other Nasal-writable places
+     * This also makes the path Nasal-readable:
+     * to avoid can-read-any-file security holes, do NOT call this on paths
+     * obtained from the property tree or other Nasal-writable places
      */ 
-    void append_fg_scenery (const SGPath &scenery, bool secure = false);
+    void append_fg_scenery (const SGPath &scenery);
 
-    void append_fg_scenery (const PathList &scenery, bool secure = false);
+    void append_fg_scenery (const PathList &scenery);
     
     void clear_fg_scenery();
     

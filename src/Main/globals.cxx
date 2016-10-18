@@ -329,14 +329,14 @@ SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
     return SGPath();
 }
 
-void FGGlobals::append_fg_scenery (const PathList &paths, bool secure)
+void FGGlobals::append_fg_scenery (const PathList &paths)
 {
     BOOST_FOREACH(const SGPath& path, paths) {
         append_fg_scenery(path);
     }
 }
 
-void FGGlobals::append_fg_scenery (const SGPath &path, bool secure)
+void FGGlobals::append_fg_scenery (const SGPath &path)
 {
     SGPropertyNode* sim = fgGetNode("/sim", true);
 
@@ -374,9 +374,7 @@ void FGGlobals::append_fg_scenery (const SGPath &path, bool secure)
     // no information as to why the change was made.
     fg_scenery.push_back(abspath);
     unmangled_fg_scenery.push_back(abspath);
-    if (secure) {
-        extra_read_allowed_paths.push_back(abspath);
-    }
+    extra_read_allowed_paths.push_back(abspath);
 
     if (terrainDir.exists()) {
         fg_scenery.push_back(terrainDir);

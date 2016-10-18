@@ -852,7 +852,7 @@ fgOptRoc( const char *arg )
 static int
 fgOptFgScenery( const char *arg )
 {
-    globals->append_fg_scenery(SGPath::pathsFromLocal8Bit(arg), true);
+    globals->append_fg_scenery(SGPath::pathsFromLocal8Bit(arg));
     return FG_OPTIONS_OK;
 }
 
@@ -2372,7 +2372,7 @@ OptionResult Options::processOptions()
 // now options are process, do supplemental fixup
   const char *envp = ::getenv( "FG_SCENERY" );
   if (envp) {
-      globals->append_fg_scenery(SGPath::pathsFromEnv("FG_SCENERY"), true);
+      globals->append_fg_scenery(SGPath::pathsFromEnv("FG_SCENERY"));
   }
 
 // download dir fix-up

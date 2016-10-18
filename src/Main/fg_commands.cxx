@@ -1342,38 +1342,6 @@ do_profiler_stop(const SGPropertyNode *arg)
 }
 
 
-static bool
-do_set_scenery_paths(const SGPropertyNode* arg)
-{
-  globals->clear_fg_scenery();
-  
-  std::string terrasyncPath(globals->get_terrasync_dir().local8BitStr());
-  bool seenTerrasyncPath = false;
-  
-  simgear::PropertyList paths = arg->getChildren("path");
-  for (size_t i = 0; i < paths.size(); ++i) {
-    std::string s = paths[i]->getStringValue();
-    if (s == terrasyncPath) {
-      seenTerrasyncPath = true;
-    }
-    
-    globals->append_fg_scenery(s);
-  }
-  
-  if (fgGetBool("/sim/terrasync/enabled") && !seenTerrasyncPath) {
-    globals->append_fg_scenery(terrasyncPath);
-  }
-  
-  if (paths.empty()) {
-    // no scenery paths set *at all*, use the data in FG_ROOT
-    SGPath root(globals->get_fg_root());
-    root.append("Scenery");
-    globals->append_fg_scenery(root);
-  }
-
-  return true;
-}
-
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
 ////////////////////////////////////////////////////////////////////////
@@ -1449,7 +1417,6 @@ static struct {
     { "print-visible-scene", do_print_visible_scene_info },
     { "reload-shaders", do_reload_shaders },
     { "reload-materials", do_materials_reload },
-    { "set-scenery-paths", do_set_scenery_paths },
   
     { "profiler-start", do_profiler_start },
     { "profiler-stop",  do_profiler_stop },
