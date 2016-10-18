@@ -860,8 +860,7 @@ static int
 fgOptTerrasyncDir( const char *arg )
 {
     SGPath p = SGPath::fromLocal8Bit(arg);
-    globals->append_fg_scenery(p, true);
-    fgSetString("/sim/terrasync/scenery-dir", p.utf8Str());
+    globals->set_terrasync_dir(p);
     return FG_OPTIONS_OK;
 }
 
@@ -2377,7 +2376,7 @@ OptionResult Options::processOptions()
   }
 
 // download dir fix-up
-    SGPath downloadDir = SGPath::fromUtf8(fgGetString("/sim/paths/download-dir"));
+    SGPath downloadDir = SGPath::fromUtf8(valueForOption("download-dir"));
     if (downloadDir.isNull()) {
         downloadDir = defaultDownloadDir();
         SG_LOG(SG_GENERAL, SG_INFO, "Using default download dir: " << downloadDir);
@@ -2390,7 +2389,7 @@ OptionResult Options::processOptions()
     }
 
 // terrasync directory fixup
-    SGPath terrasyncDir = SGPath::fromUtf8(fgGetString("/sim/terrasync/scenery-dir"));
+    SGPath terrasyncDir = globals->get_terrasync_dir();
   if (terrasyncDir.isNull()) {
       SGPath p(downloadDir);
       p.append("TerraSync");
@@ -2402,7 +2401,7 @@ OptionResult Options::processOptions()
       }
 
 	  SG_LOG(SG_GENERAL, SG_INFO, "Using default TerraSync: " << terrasyncDir);
-      fgSetString("/sim/terrasync/scenery-dir", p.utf8Str());
+      globals->set_terrasync_dir(p);
   } else {
       SG_LOG(SG_GENERAL, SG_INFO, "Using explicit TerraSync dir: " << terrasyncDir);
   }

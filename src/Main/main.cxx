@@ -125,7 +125,7 @@ static void initTerrasync()
 {
     // add the terrasync root as a data path so data can be retrieved from it
     // (even if we are in read-only mode)
-    std::string terraSyncDir(fgGetString("/sim/terrasync/scenery-dir"));
+    SGPath terraSyncDir(globals->get_terrasync_dir());
     globals->append_data_path(terraSyncDir);
     
     if (fgGetBool("/sim/fghome-readonly", false)) {

@@ -104,6 +104,8 @@ private:
     
     // Users home directory for data
     SGPath fg_home;
+    //Terrasync directory
+    SGPath terrasync_dir;
 
     // Roots of FlightGear scenery tree
     PathList fg_scenery;
@@ -218,6 +220,9 @@ public:
     
     const SGPath &get_fg_home () const { return fg_home; }
     void set_fg_home (const SGPath &home);
+
+    const SGPath &get_terrasync_dir () const { return terrasync_dir; }
+    void set_terrasync_dir (const SGPath &path);
 
     const PathList &get_fg_scenery () const { return fg_scenery; }
     const PathList &get_unmangled_fg_scenery () const { return unmangled_fg_scenery; }

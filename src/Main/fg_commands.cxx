@@ -1347,7 +1347,7 @@ do_set_scenery_paths(const SGPropertyNode* arg)
 {
   globals->clear_fg_scenery();
   
-  std::string terrasyncPath(fgGetString("/sim/terrasync/scenery-dir"));
+  std::string terrasyncPath(globals->get_terrasync_dir().local8BitStr());
   bool seenTerrasyncPath = false;
   
   simgear::PropertyList paths = arg->getChildren("path");

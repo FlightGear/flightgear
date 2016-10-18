@@ -174,7 +174,7 @@ void FGTileMgr::reinit()
     _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().local8BitStr());
     
     if (_terra_sync) {
-      _options->setPluginStringData("SimGear::TERRASYNC_ROOT", fgGetString("/sim/terrasync/scenery-dir"));
+      _options->setPluginStringData("SimGear::TERRASYNC_ROOT", globals->get_terrasync_dir().local8BitStr());
     }
     
     if (!_disableNasalHooks->getBoolValue())
