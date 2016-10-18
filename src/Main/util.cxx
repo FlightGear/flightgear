@@ -141,16 +141,6 @@ void fgInitAllowedPaths()
                                     "(check that you have not accidentally included an extra :, as an empty part means the current directory)");
             exit(-1);
     }
-    
-    // Warn the user if they have an unreadable Terrasync directory
-    // (can't securely make it readable because Nasal can change /sim/terrasync/scenery-dir)
-    if(fgValidatePath(SGPath::fromUtf8(fgGetString("/sim/terrasync/scenery-dir")),false).isNull()) {
-      SG_LOG(SG_GENERAL, SG_WARN, "You have a non-standard Terrasync directory "
-          << "set only by /sim/terrasync/scenery-dir.  For security reasons, "
-          << "Nasal scripts are not allowed to read such directories, which "
-          << "may break some features (e.g. animated jetways).  To fix this, "
-          << "use the launcher's settings, or --terrasync-dir in .fgfsrc");
-    }
 }
 
 /**
