@@ -472,6 +472,7 @@ void FGGlobals::append_aircraft_path(const SGPath& path)
   }
 
   fg_aircraft_dirs.push_back(dirPath.realpath());
+  extra_read_allowed_paths.push_back(dirPath.realpath());
 }
 
 void FGGlobals::append_aircraft_paths(const PathList& paths)

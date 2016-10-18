@@ -258,7 +258,13 @@ public:
     void set_catalog_aircraft_path(const SGPath& path);
 
     PathList get_aircraft_paths() const;
-
+    /**
+     * Add an aircraft directory
+     *
+     * This also makes the path Nasal-readable:
+     * to avoid can-read-any-file security holes, do NOT call this on paths
+     * obtained from the property tree or other Nasal-writable places
+     */ 
     void append_aircraft_path(const SGPath& path);
     void append_aircraft_paths(const PathList& path);
     

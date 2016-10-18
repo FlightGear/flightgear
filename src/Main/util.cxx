@@ -93,12 +93,7 @@ void fgInitAllowedPaths()
     read_allowed_paths.clear();
     write_allowed_paths.clear();
 
-    const PathList& aircraft_paths = globals->get_aircraft_paths();
-    const PathList& other_read_paths = globals->get_extra_read_allowed_paths();
-    // not plain fg_scenery, to avoid making
-    // /sim/terrasync/scenery-dir a security hole
-    PathList read_paths = aircraft_paths;
-    read_paths.insert(read_paths.end(), other_read_paths.begin(), other_read_paths.end());
+    PathList read_paths = globals->get_extra_read_allowed_paths();
     read_paths.push_back(globals->get_fg_root());
     read_paths.push_back(globals->get_fg_home());
 
