@@ -309,13 +309,13 @@ private:
     DATFILETYPE_TACAN_FREQ
   };
 
-  // datTypeStr[DATFILETYPE_APT] = "apt", etc. This gives, among other things,
-  // the subdirectory of $scenery_path/NavData where each type of dat file is
-  // looked for.
-  static const string_list datTypeStr;
+  // datTypeStr[DATFILETYPE_APT] = std::string("apt"), etc. This gives, among
+  // other things, the subdirectory of $scenery_path/NavData where each type
+  // of dat file is looked for.
+  static const std::string datTypeStr[];
   // defaultDatFile[DATFILETYPE_APT] = std::string("Airports/apt.dat.gz"), etc.
   // This tells where to find the historical dat files: those under $FG_ROOT.
-  static const string_list defaultDatFile;
+  static const std::string defaultDatFile[];
 
   class NavDataCachePrivate;
   std::auto_ptr<NavDataCachePrivate> d;

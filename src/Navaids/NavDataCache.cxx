@@ -1144,7 +1144,7 @@ bool NavDataCache::NavDataCachePrivate::areDatFilesModified(
 // NavDataCache's static member variables
 static NavDataCache* static_instance = NULL;
 
-const string_list NavDataCache::datTypeStr = {
+const string NavDataCache::datTypeStr[] = {
     string("apt"),
     string("metar"),
     string("awy"),
@@ -1155,7 +1155,7 @@ const string_list NavDataCache::datTypeStr = {
     string("TACAN_freq")
 };
 
-const string_list NavDataCache::defaultDatFile = {
+const string NavDataCache::defaultDatFile[] = {
     string("Airports/apt.dat.gz"),
     string("Airports/metar.dat.gz"),
     string("Navaids/awy.dat.gz"),
