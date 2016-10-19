@@ -53,8 +53,11 @@ public:
   APTLoader();
   ~APTLoader();
 
-  // Read the specified apt.dat file into 'airportInfoMap'
-  void readAptDatFile(const SGPath& aptdb_file);
+  // Read the specified apt.dat file into 'airportInfoMap'.
+  // 'bytesReadSoFar' and 'totalSizeOfAllAptDatFiles' are used for progress
+  // information.
+  void readAptDatFile(const SGPath& aptdb_file, std::size_t bytesReadSoFar,
+                      std::size_t totalSizeOfAllAptDatFiles);
   // Read all airports gathered in 'airportInfoMap' and load them into the
   // navdata cache (even in case of overlapping apt.dat files,
   // 'airportInfoMap' has only one entry per airport).

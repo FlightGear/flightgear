@@ -589,7 +589,8 @@ fgInitNav ()
 
     static const char* splashIdentsByRebuildPhase[] = {
         "loading-nav-dat",
-        "navdata-airports",
+        "navdata-reading-apt-dat-files",
+        "navdata-loading-airports",
         "navdata-navaids",
         "navdata-fixes",
         "navdata-pois"

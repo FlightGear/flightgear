@@ -111,8 +111,12 @@ void initNavCache()
             phase = cache->rebuild();
 
             switch (phase) {
-            case NavDataCache::REBUILD_AIRPORTS:
-                rebuildProgress.setLabelText(QT_TR_NOOP("Loading airport data"));
+            case NavDataCache::REBUILD_READING_APT_DAT_FILES:
+                rebuildProgress.setLabelText(QT_TR_NOOP("Reading airport data"));
+                break;
+
+            case NavDataCache::REBUILD_LOADING_AIRPORTS:
+                rebuildProgress.setLabelText(QT_TR_NOOP("Loading airports"));
                 break;
 
             case NavDataCache::REBUILD_FIXES:

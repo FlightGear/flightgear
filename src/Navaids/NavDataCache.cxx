@@ -26,6 +26,7 @@
 #include "NavDataCache.hxx"
 
 // std
+#include <cstddef>  // for std::size_t
 #include <map>
 #include <cassert>
 #include <stdint.h> // for int64_t
@@ -234,6 +235,12 @@ public:
   }
 };
 
+struct DatFilesGroupInfo {
+  NavDataCache::DatFileType datFileType; // for instance, DATFILETYPE_APT
+  PathList paths;               // SGPath instances
+  std::size_t totalSize;        // total size of all these files, in bytes
+};
+
 class NavDataCache::NavDataCachePrivate
 {
 public:
@@ -333,9 +340,10 @@ public:
   }
 
   bool isCachedFileModified(const SGPath& path, bool verbose);
-  PathList getDatFilesPaths(NavDataCache::DatFileType datFileType) const;
-  bool areDatFilesModified(NavDataCache::DatFileType datFileType,
-                           const PathList& datFiles, bool verbose);
+  DatFilesGroupInfo findDatFiles(NavDataCache::DatFileType datFileType)
+    const;
+  bool areDatFilesModified(const DatFilesGroupInfo& datFilesGroupInfo,
+                           bool verbose);
 
   void callSqlite(int result, const string& sql)
   {
@@ -852,7 +860,7 @@ public:
   bool transactionAborted;
   sqlite3_stmt_ptr beginTransactionStmt, commitTransactionStmt, rollbackTransactionStmt;
 
-  PathList aptDatPaths;
+  DatFilesGroupInfo aptDatFilesInfo;
   SGPath metarDatPath, navDatPath, fixDatPath, poiDatPath,
   carrierDatPath, airwayDatPath;
 
@@ -1014,17 +1022,21 @@ bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path,
   return isModified;
 }
 
-// Return the list of $scenery_path/NavData/<type>/*.dat[.gz] files found
+// Find the list of $scenery_path/NavData/<type>/*.dat[.gz] files found
 // inside scenery paths, plus the default file for the given type (e.g.,
 // $FG_ROOT/Airports/apt.dat.gz for the 'apt' type).
-PathList NavDataCache::NavDataCachePrivate::getDatFilesPaths(
+// Also compute the total size of all these files (in bytes), which is useful
+// for progress information.
+DatFilesGroupInfo NavDataCache::NavDataCachePrivate::findDatFiles(
   NavDataCache::DatFileType datFileType) const
 {
-  PathList result;
+  DatFilesGroupInfo result;
   SGPath visitedPath;           // to avoid duplicates and time wasting
   const string datFilesSubDir = "NavData/" +
                                NavDataCache::datTypeStr[datFileType];
   const PathList& sceneryPaths = globals->get_unmangled_fg_scenery();
+  result.datFileType = datFileType;
+  result.totalSize = 0;
 
   for (PathList::const_iterator dirsIt = sceneryPaths.begin();
        dirsIt != sceneryPaths.end(); dirsIt++) {
@@ -1051,8 +1063,10 @@ PathList NavDataCache::NavDataCachePrivate::getDatFilesPaths(
            filesIt != files.end(); filesIt++) {
         const std::string name = filesIt->file();
         if (simgear::strutils::ends_with(name, ".dat") ||
-            simgear::strutils::ends_with(name, ".dat.gz"))
-          result.push_back(*filesIt);
+            simgear::strutils::ends_with(name, ".dat.gz")) {
+          result.paths.push_back(*filesIt);
+          result.totalSize += filesIt->sizeInBytes();
+        }
       }
     }
   } // of loop over 'sceneryPaths'
@@ -1061,16 +1075,17 @@ PathList NavDataCache::NavDataCachePrivate::getDatFilesPaths(
   // now
   SGPath defaultDatFile(globals->get_fg_root());
   defaultDatFile.append(NavDataCache::defaultDatFile[datFileType]);
-  if ((result.empty() || result.back() != defaultDatFile) &&
+  if ((result.paths.empty() || result.paths.back() != defaultDatFile) &&
       defaultDatFile.isFile()) {
-    result.push_back(defaultDatFile);
+    result.paths.push_back(defaultDatFile);
+    result.totalSize += defaultDatFile.sizeInBytes();
   }
 
   return result;
 }
 
 // Compare:
-//   - the list of dat files given by 'datFiles';
+//   - the list of dat files given by 'datFilesGroupInfo';
 //   - the list obtained from the record with key '<type>.dat files' of the
 //     NavDataCache 'properties' table, where <type> is one of 'apt', 'metar',
 //     'fix', 'poi', etc..
@@ -1078,12 +1093,15 @@ PathList NavDataCache::NavDataCachePrivate::getDatFilesPaths(
 // This comparison is sensitive to the number and order of the files,
 // their respective SGPath::realpath() and SGPath::modTime().
 bool NavDataCache::NavDataCachePrivate::areDatFilesModified(
-  NavDataCache::DatFileType datFileType, const PathList& datFiles, bool verbose)
+  const DatFilesGroupInfo& datFilesGroupInfo,
+  bool verbose)
 {
   // 'apt' or 'metar' or 'fix' or...
-  const string datTypeStr = NavDataCache::datTypeStr[datFileType];
+  const string datTypeStr =
+                       NavDataCache::datTypeStr[datFilesGroupInfo.datFileType];
   const string_list cachedFiles = outer->readOrderedStringListProperty(
     datTypeStr + ".dat files", &SGPath::pathListSep);
+  const PathList& datFiles = datFilesGroupInfo.paths;
   PathList::const_iterator datFilesIt = datFiles.begin();
   string_list::const_iterator cachedFilesIt = cachedFiles.begin();
   // Same logic as in NavDataCachePrivate::isCachedFileModified()
@@ -1208,7 +1226,7 @@ NavDataCache::NavDataCache()
   Octree::global_spatialOctree =
     new Octree::Branch(SGBox<double>(-earthExtent, earthExtent), 1);
 
-  // Update d->aptDatPaths, d->metarDatPath, d->navDatPath, etc.
+  // Update d->aptDatFilesInfo, d->metarDatPath, d->navDatPath, etc.
   updateListsOfDatFiles();
 }
 
@@ -1235,10 +1253,10 @@ NavDataCache* NavDataCache::instance()
 void NavDataCache::updateListsOfDatFiles() {
   // All $scenery_path/NavData/apt/*.dat[.gz] files found inside scenery
   // paths, plus $FG_ROOT/Airports/apt.dat.gz (order matters).
-  d->aptDatPaths = d->getDatFilesPaths(DATFILETYPE_APT);
+  d->aptDatFilesInfo = d->findDatFiles(DATFILETYPE_APT);
   // Trivial extension to the other types of dat files:
-  // d->navDatPaths = d->getDatFilesPaths(DATFILETYPE_NAV);
-  // d->fixDatPaths = d->getDatFilesPaths(DATFILETYPE_FIX);
+  // d->navDatFilesInfo = d->findDatFiles(DATFILETYPE_NAV);
+  // d->fixDatFilesInfo = d->findDatFiles(DATFILETYPE_FIX);
   // etc.
   //
   // These ones are still managed the "old" way (no search through scenery
@@ -1273,7 +1291,7 @@ bool NavDataCache::isRebuildRequired()
         return true;
     }
 
-  if (d->areDatFilesModified(DATFILETYPE_APT, d->aptDatPaths, true) ||
+  if (d->areDatFilesModified(d->aptDatFilesInfo, true) ||
       d->isCachedFileModified(d->metarDatPath, true) ||
       d->isCachedFileModified(d->navDatPath, true) ||
       d->isCachedFileModified(d->fixDatPath, true) ||
@@ -1341,14 +1359,21 @@ void NavDataCache::doRebuild()
         Transaction txn(this);
         APTLoader aptLoader;
         string_list aptDatFiles;
+        const PathList aptDatPaths = d->aptDatFilesInfo.paths;
+        std::size_t bytesReadSoFar = 0;
 
         st.stamp();
-        for (PathList::const_iterator it = d->aptDatPaths.begin();
-             it != d->aptDatPaths.end(); it++) {
+        for (PathList::const_iterator it = aptDatPaths.begin();
+             it != aptDatPaths.end(); it++) {
             aptDatFiles.push_back(it->realpath().utf8Str());
-            aptLoader.readAptDatFile(*it);
+            aptLoader.readAptDatFile(*it, bytesReadSoFar,
+                                     d->aptDatFilesInfo.totalSize);
+            bytesReadSoFar += it->sizeInBytes();
             stampCacheFile(*it); // this uses the realpath() of the file
         }
+
+        setRebuildPhaseProgress(REBUILD_UNKNOWN);
+        SG_LOG(SG_NAVCACHE, SG_DEBUG, "Loading airports");
 
         aptLoader.loadAirports(); // load airport data into the NavCache
         // Store the list of apt.dat files we have loaded

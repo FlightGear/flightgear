@@ -77,7 +77,8 @@ public:
     enum RebuildPhase
     {
         REBUILD_UNKNOWN = 0,
-        REBUILD_AIRPORTS,
+        REBUILD_READING_APT_DAT_FILES,
+        REBUILD_LOADING_AIRPORTS,
         REBUILD_NAVAIDS,
         REBUILD_FIXES,
         REBUILD_POIS,
@@ -297,6 +298,8 @@ private:
     void beginTransaction();
     void commitTransaction();
     void abortTransaction();
+
+  friend class DatFilesGroupInfo;
 
   enum DatFileType {
     DATFILETYPE_APT = 0,
