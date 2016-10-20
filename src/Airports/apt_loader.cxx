@@ -89,7 +89,7 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file,
                                std::size_t totalSizeOfAllAptDatFiles)
 {
   string apt_dat = aptdb_file.utf8Str(); // full path to the file being parsed
-  sg_gzifstream in(aptdb_file);
+  sg_gzifstream in(aptdb_file, std::ios_base::in | std::ios_base::binary, true);
 
   if ( !in.is_open() ) {
     const std::string errMsg = simgear::strutils::error_string(errno);
@@ -304,7 +304,7 @@ void APTLoader::loadAirports()
   } // of loop over 'airportInfoMap'
 
   SG_LOG( SG_GENERAL, SG_INFO,
-          "Loaded data for " << nbAirports << " airports" );
+          "Loaded data for " << nbLoadedAirports << " airports" );
 }
 
 // Tell whether an apt.dat line is blank or a comment line
