@@ -116,7 +116,7 @@ void FGGroundController::announcePosition(int id,
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    if (activeTraffic.size()) {
+    if (!activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
             if (i->getId() == id) {
@@ -126,7 +126,7 @@ void FGGroundController::announcePosition(int id,
         }
     }
     // Add a new TrafficRecord if no one exsists for this aircraft.
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+    if (i == activeTraffic.end() || (activeTraffic.empty())) {
         FGTrafficRecord rec;
         rec.setId(id);
         rec.setLeg(leg);
@@ -973,6 +973,9 @@ void FGGroundController::update(double dt)
     for (i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
         updateActiveTraffic(i, priority, now);
     }
+
+    eraseDeadTraffic(startupTraffic);
+    eraseDeadTraffic(activeTraffic);
 }
 
 void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
@@ -1044,18 +1047,23 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
     }
 }
 
-void FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
+bool FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
                                              int& priority,
                                              time_t now)
 {
     if (!i->getAircraft()) {
         SG_LOG(SG_ATC, SG_ALERT, "updateActiveTraffic: missing aircraft");
-        return;
+        return false;
+    }
+
+    if (i->getAircraft()->getDie()) {
+        // aircraft has died
+        return false;
     }
 
     if (!i->getAircraft()->getPerformance()) {
         SG_LOG(SG_ATC, SG_ALERT, "updateActiveTraffic: missing aircraft performance");
-        return;
+        return false;
     }
 
     double length = 0;
@@ -1064,7 +1072,7 @@ void FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
 
     if (!network) {
         SG_LOG(SG_ATC, SG_ALERT, "updateActiveTraffic: missing ground network");
-        return;
+        return false;
     }
 
     i->setPriority(priority++);
@@ -1097,4 +1105,6 @@ void FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
             network->blockSegmentsEndingAt(seg, i->getId(), blockTime - 30, now);
         }
     }
+
+    return true;
 }

@@ -387,6 +387,7 @@ protected:
     std::string genTransponderCode(const std::string& fltRules);
     bool isUserAircraft(FGAIAircraft*);
 
+    void eraseDeadTraffic(TrafficVector& vec);
 public:
     typedef enum {
         MSG_ANNOUNCE_ENGINE_START,

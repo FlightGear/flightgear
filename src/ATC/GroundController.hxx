@@ -59,7 +59,7 @@ private:
 
 
     void updateStartupTraffic(TrafficVectorIterator i, int& priority, time_t now);
-    void updateActiveTraffic(TrafficVectorIterator i, int& priority, time_t now);
+    bool updateActiveTraffic(TrafficVectorIterator i, int& priority, time_t now);
 public:
     FGGroundController();
     ~FGGroundController();

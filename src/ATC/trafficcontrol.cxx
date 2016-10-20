@@ -459,6 +459,10 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
 
 bool FGTrafficRecord::isActive(int margin) const
 {
+    if (aircraft->getDie()) {
+        return false;
+    }
+    
     time_t now = globals->get_time_params()->get_cur_time();
     time_t deptime = aircraft->getTrafficRef()->getDepartureTime();
     return ((now + margin) > deptime);
@@ -839,6 +843,26 @@ void FGATCController::init()
     }
 }
 
+class AircraftIsDead
+{
+public:
+    bool operator()(const FGTrafficRecord& traffic) const
+    {
+        if (!traffic.getAircraft()) {
+            return true;
+        }
+
+        return traffic.getAircraft()->getDie();
+    }
+};
+
+void FGATCController::eraseDeadTraffic(TrafficVector& vec)
+{
+    TrafficVector::iterator it = std::remove_if(vec.begin(), vec.end(), AircraftIsDead());
+    vec.erase(it, vec.end());
+}
+
+
 /***************************************************************************
  * class FGTowerController
  *
@@ -1108,7 +1132,7 @@ string FGTowerController::getName() {
 
 void FGTowerController::update(double dt)
 {
-
+    eraseDeadTraffic(activeTraffic);
 }
 
 
@@ -1572,7 +1596,7 @@ string FGStartupController::getName() {
 
 void FGStartupController::update(double dt)
 {
-
+    eraseDeadTraffic(activeTraffic);
 }
 
 
@@ -1706,10 +1730,8 @@ void FGApproachController::signOff(int id)
 
 void FGApproachController::update(double dt)
 {
-
+    eraseDeadTraffic(activeTraffic);
 }
-
-
 
 bool FGApproachController::hasInstruction(int id)
 {

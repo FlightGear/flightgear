@@ -182,6 +182,9 @@ FGAIManager::shutdown()
     unloadAllScenarios();
     
     BOOST_FOREACH(FGAIBase* ai, ai_list) {
+        // other subsystems, especially ATC, may have references. This
+        // lets them detect if the AI object should be skipped
+        ai->setDie(true);
         ai->unbind();
     }
     
