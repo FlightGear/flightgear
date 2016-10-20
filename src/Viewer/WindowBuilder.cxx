@@ -223,6 +223,18 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
     } else if (traitsSet) {
         traits->windowName = makeName("FlightGear", defaultCounter++);
     }
+
+#if defined(SG_MAC)
+    int flags = osgViewer::GraphicsWindowCocoa::WindowData::CheckForEvents;
+
+    // avoid both QApplication and OSG::CocoaViewer doing single-application
+    // init (Apple menu, making front process, etc)
+    if (poseAsStandaloneApp) {
+        flags |= osgViewer::GraphicsWindowCocoa::WindowData::PoseAsStandaloneApp;
+    }
+    traits->inheritedWindowData = new osgViewer::GraphicsWindowCocoa::WindowData(flags);
+#endif
+    
     bool drawGUI = false;
     traitsSet |= setFromProperty(drawGUI, winNode, "gui");
     if (traitsSet) {
