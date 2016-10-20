@@ -66,15 +66,15 @@ HWND getMainViewerHWND()
         if (strcmp((*it)->className(), "GraphicsWindowWin32")) {
             continue;
         }
-        
-        osgViewer::GraphicsWindowWin32* platformWin = 
+
+        osgViewer::GraphicsWindowWin32* platformWin =
             static_cast<osgViewer::GraphicsWindowWin32*>(*it);
         return platformWin->getHWND();
     }
-    
+
     return 0;
 }
-    
+
 flightgear::MessageBoxResult
 win32MessageBox(const std::string& caption,
                     const std::string& msg,
@@ -87,7 +87,7 @@ win32MessageBox(const std::string& caption,
     if (!moreText.empty()) {
         fullMsg += "\n\n" + moreText;
     }
-    
+
     UINT mbType = MB_OK;
 	std::wstring wMsg(convertUtf8ToWString(fullMsg)),
 		wCap(convertUtf8ToWString(caption));
@@ -97,14 +97,14 @@ win32MessageBox(const std::string& caption,
 
 	return flightgear::MSG_BOX_OK;
 }
-    
+
 #endif
-    
+
 } // anonymous namespace
 
 namespace flightgear
 {
-    
+
 MessageBoxResult modalMessageBox(const std::string& caption,
     const std::string& msg,
     const std::string& moreText)
@@ -116,9 +116,9 @@ MessageBoxResult modalMessageBox(const std::string& caption,
         args->setStringValue("message", msg);
         args->setStringValue("more", moreText);
         globals->get_commands()->execute("canvas-message-box", args);
-   
+
         // how to make it modal?
-        
+
         return MSG_BOX_OK;
     }
 
@@ -134,13 +134,13 @@ MessageBoxResult modalMessageBox(const std::string& caption,
         s += "\n( " +  moreText + ")";
     }
 
-    if (fgGetBool("/sim/rendering/initialized", false) == false) {
+    NewGUI* gui = globals->get_subsystem<NewGUI>();
+    if (!gui || (fgGetBool("/sim/rendering/initialized", false) == false)) {
         SG_LOG(SG_GENERAL, SG_ALERT, s);
     } else {
-        NewGUI* _gui = (NewGUI *)globals->get_subsystem("gui");
-        SGPropertyNode_ptr dlg = _gui->getDialogProperties("popup");
+        SGPropertyNode_ptr dlg = gui->getDialogProperties("popup");
         dlg->setStringValue("text/label", s  );
-        _gui->showDialog("popup");
+        gui->showDialog("popup");
     }
     return MSG_BOX_OK;
 #endif
