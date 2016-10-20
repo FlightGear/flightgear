@@ -602,7 +602,7 @@
        <item row="9" column="1">
         <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For information on additional options, please &lt;a href=&quot;http://mapserver.flightgear.org/getstart/getstart-enpa2.html#x5-450004.5&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;see here&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For information on additional options, please &lt;a href=&quot;http://flightgear.sourceforge.net/getstart-en/getstart-enpa2.html#x5-450004.5&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;see here&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="textFormat">
           <enum>Qt::RichText</enum>
