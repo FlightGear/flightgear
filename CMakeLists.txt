@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.0)
 
 include (CheckFunctionExists)
 include (CheckCSourceCompiles)
@@ -16,14 +16,16 @@ if(COMMAND cmake_policy)
 endif()
 
 if(APPLE)
-	# using 10.7 because boost requires libc++ and 10.6 doesn't include it
-	set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
-
 	set(CMAKE_INSTALL_RPATH "@loader_path/../Frameworks")
 	# when building, don't use the install RPATH already
 	# (but later on when installing)
 	SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()
+
+# let's use & require C++11 - note these are only functional with CMake 3.1
+# we do manual fallbacks for CMake 3.0 in the compilers section
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 project(FlightGear)
 
@@ -37,6 +39,11 @@ if(InSourceBuild)
     message(WARNING  "Create a separate build directory instead (i.e. 'fgbuild') and call CMake from there: ")
     message(WARNING  "  mkdir ../fgbuild && cd ../fgbuild && cmake ${CMAKE_SOURCE_DIR}")
 endif(InSourceBuild)
+
+# using 10.7 because boost requires libc++ and 10.6 doesn't include it
+# Cmake documentation says we must set this before calling project(), but
+# it only seems to be picked up setting it /after/ the call to project()
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7")
 
 include(GNUInstallDirs)
 # System detection/default settings
@@ -94,11 +101,6 @@ IF(APPLE)
     find_library(CORESERVICES_LIBRARY CoreServices)
     find_library(COCOA_LIBRARY Cocoa)
     list(APPEND PLATFORM_LIBS ${COCOA_LIBRARY} ${CORESERVICES_LIBRARY})
-
-    # this should be handled by setting CMAKE_OSX_DEPLOYMENT_TARGET
-    # but it's not working reliably, so forcing it for now
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=10.7")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.7")
 elseif(WIN32)
     list(APPEND PLATFORM_LIBS "Shlwapi.lib")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
@@ -333,17 +335,23 @@ endif(ENABLE_RTI)
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS_CXX "-Wall")
     set(WARNING_FLAGS_C   "-Wall")
+    if (CMAKE_VERSION VERSION_LESS 3.1)
+       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    endif()
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" )
    set(WARNING_FLAGS_CXX "-Wall -Wno-overloaded-virtual \
      -Wno-redeclared-class-member \
      -Wno-inconsistent-missing-override \
      -Wno-unused-local-typedef")
 
-   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
-   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+     if (CMAKE_VERSION VERSION_LESS 3.1)
+       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+     endif()
+
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
    set(WARNING_FLAGS_C "-Wall")
 endif()
 
