@@ -730,6 +730,9 @@ void QtLauncher::setInAppMode()
 void QtLauncher::restoreSettings()
 {
     QSettings settings;
+
+    restoreGeometry(settings.value("window-geometry").toByteArray());
+
     m_ui->rembrandtCheckbox->setChecked(settings.value("enable-rembrandt", false).toBool());
     m_ui->terrasyncCheck->setChecked(settings.value("enable-terrasync", true).toBool());
     m_ui->fullScreenCheckbox->setChecked(settings.value("start-fullscreen", false).toBool());
@@ -820,6 +823,8 @@ void QtLauncher::saveSettings()
     settings.setValue("mp-callsign", m_ui->mpCallsign->text());
     settings.setValue("mp-server", m_ui->mpServerCombo->currentData());
     settings.setValue("mp-enabled", m_ui->mpBox->isChecked());
+
+    settings.setValue("window-geometry", saveGeometry());
 }
 
 void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const
