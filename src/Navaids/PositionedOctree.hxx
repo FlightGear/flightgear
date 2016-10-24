@@ -2,7 +2,7 @@
  * PositionedOctree - define a spatial octree containing Positioned items
  * arranged by their global cartesian position.
  */
- 
+
 // Written by James Turner, started 2012.
 //
 // Copyright (C) 2012 James Turner
@@ -44,10 +44,10 @@ namespace flightgear
 
 namespace Octree
 {
-  
+
   const double LEAF_SIZE = SG_NM_TO_METER * 8.0;
   const double LEAF_SIZE_SQR = LEAF_SIZE * LEAF_SIZE;
-  
+
   /**
    * Decorate an object with a double value, and use that value to order
    * items, for the purpoises of the STL algorithms
@@ -60,47 +60,47 @@ namespace Octree
     _order(x),
     _inner(v)
     {
-      assert(!isnan(x));
+      assert(!SGMisc<double>::isNaN(x));
     }
-    
+
     Ordered(const Ordered<T>& a) :
     _order(a._order),
     _inner(a._inner)
     {
     }
-    
+
     Ordered<T>& operator=(const Ordered<T>& a)
     {
       _order = a._order;
       _inner = a._inner;
       return *this;
     }
-    
+
     bool operator<(const Ordered<T>& other) const
     {
       return _order < other._order;
     }
-    
+
     bool operator>(const Ordered<T>& other) const
     {
       return _order > other._order;
     }
-    
+
     const T& get() const
     { return _inner; }
-    
+
     double order() const
     { return _order; }
-    
+
   private:
     double _order;
     T _inner;
   };
-  
+
   class Node;
   typedef Ordered<Node*> OrderedNode;
   typedef std::greater<OrderedNode> FNPQCompare;
-  
+
   /**
    * the priority queue is fundamental to our search algorithm. When searching,
    * we know the front of the queue is the nearest unexpanded node (to the search
@@ -109,18 +109,18 @@ namespace Octree
    * with greater<>.
    */
   typedef std::priority_queue<OrderedNode, std::vector<OrderedNode>, FNPQCompare> FindNearestPQueue;
-  
+
   typedef Ordered<FGPositioned*> OrderedPositioned;
   typedef std::vector<OrderedPositioned> FindNearestResults;
-  
+
   // for extracting lines, we don't care about distance ordering, since
   // we're always grabbing all the lines in an area
   typedef std::deque<Node*> FindLinesDeque;
-  
+
   extern Node* global_spatialOctree;
-  
+
   class Leaf;
-  
+
   /**
    * Octree node base class, tracks its bounding box and provides various
    * queries relating to it
@@ -130,26 +130,26 @@ namespace Octree
   public:
     int64_t guid() const
     { return _ident; }
-    
+
     const SGBoxd& bbox() const
     { return _box; }
-    
+
     bool contains(const SGVec3d& aPos) const
     {
       return intersects(aPos, _box);
     }
-    
+
     double distToNearest(const SGVec3d& aPos) const
     {
       return dist(aPos, _box.getClosestPoint(aPos));
     }
-        
+
     virtual void visit(const SGVec3d& aPos, double aCutoff,
                        FGPositioned::Filter* aFilter,
                        FindNearestResults& aResults, FindNearestPQueue&) = 0;
-    
+
     virtual Leaf* findLeafForPos(const SGVec3d& aPos) const = 0;
-      
+
     virtual void visitForLines(const SGVec3d& aPos, double aCutoff,
                          PolyLineList& aLines,
                          FindLinesDeque& aQ) const;
@@ -165,55 +165,55 @@ namespace Octree
     _box(aBox)
     {
     }
-    
+
     const int64_t _ident;
     const SGBoxd _box;
 
     PolyLineList lines;
   };
-  
+
   class Leaf : public Node
   {
   public:
     Leaf(const SGBoxd& aBox, int64_t aIdent);
-            
+
     virtual void visit(const SGVec3d& aPos, double aCutoff,
                        FGPositioned::Filter* aFilter,
                        FindNearestResults& aResults, FindNearestPQueue&);
-    
+
     virtual Leaf* findLeafForPos(const SGVec3d&) const
     {
       return const_cast<Leaf*>(this);
     }
-    
+
     void insertChild(FGPositioned::Type ty, PositionedID id);
 
   private:
     bool childrenLoaded;
-    
+
     typedef std::multimap<FGPositioned::Type, PositionedID> ChildMap;
     ChildMap children;
-            
+
     void loadChildren();
   };
-  
+
   class Branch : public Node
   {
   public:
     Branch(const SGBoxd& aBox, int64_t aIdent);
-        
+
     virtual void visit(const SGVec3d& aPos, double aCutoff,
                        FGPositioned::Filter*,
                        FindNearestResults&, FindNearestPQueue& aQ);
-    
+
     virtual Leaf* findLeafForPos(const SGVec3d& aPos) const
     {
       loadChildren();
       return childForPos(aPos)->findLeafForPos(aPos);
     }
-    
+
     int childMask() const;
-    
+
     virtual void visitForLines(const SGVec3d& aPos, double aCutoff,
                                PolyLineList& aLines,
                                FindLinesDeque& aQ) const;
@@ -223,7 +223,7 @@ namespace Octree
   private:
     Node* childForPos(const SGVec3d& aCart) const;
     Node* childAtIndex(int childIndex) const;
-    
+
     /**
      * Return the box for a child touching the specified corner
      */
@@ -233,9 +233,9 @@ namespace Octree
       r.expandBy(_box.getCorner(aCorner));
       return r;
     }
-    
+
     void loadChildren() const;
-    
+
     mutable Node* children[8];
     mutable bool childrenLoaded;
   };
@@ -244,7 +244,7 @@ namespace Octree
   bool findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filter* aFilter, FGPositionedList& aResults, int aCutoffMsec);
 } // of namespace Octree
 
-  
+
 } // of namespace flightgear
 
 #endif // of FG_POSITIONED_OCTREE_HXX
