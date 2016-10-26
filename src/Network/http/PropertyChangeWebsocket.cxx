@@ -118,7 +118,10 @@ static void handleExecCommand(cJSON* json)
 }
   
 PropertyChangeWebsocket::PropertyChangeWebsocket(PropertyChangeObserver * propertyChangeObserver)
-    : id(++nextid), _propertyChangeObserver(propertyChangeObserver)
+    : id(++nextid),
+      _propertyChangeObserver(propertyChangeObserver),
+      _minTriggerInterval(fgGetDouble("/sim/http/property-websocket/update-interval-secs", 0.05)), // default 20Hz
+      _lastTrigger(-1000)
 {
 }
 
@@ -206,12 +209,21 @@ void PropertyChangeWebsocket::handleRequest(const HTTPRequest & request, Websock
 
 void PropertyChangeWebsocket::poll(WebsocketWriter & writer)
 {
+  double now = fgGetDouble("/sim/time/elapsed-sec");
+
+  if( _minTriggerInterval > .0 ) {
+    if( now - _lastTrigger <= _minTriggerInterval )
+      return;
+
+    _lastTrigger = now;
+  }
+
   for (WatchedNodesList::iterator it = _watchedNodes.begin(); it != _watchedNodes.end(); ++it) {
     SGPropertyNode_ptr node = *it;
 
     string newValue;
     if (_propertyChangeObserver->isChangedValue(node)) {
-      string out = JSON::toJsonString( false, node, 0, fgGetDouble("/sim/time/elapsed-sec") );
+      string out = JSON::toJsonString( false, node, 0, now );
       SG_LOG(SG_NETWORK, SG_DEBUG, "PropertyChangeWebsocket::poll() new Value for " << node->getPath(true) << " '" << node->getStringValue() << "' #" << id << ": " << out );
       writer.writeText( out );
     }

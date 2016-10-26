@@ -51,6 +51,8 @@ private:
   };
 
   WatchedNodesList _watchedNodes;
+  double _minTriggerInterval;
+  double _lastTrigger;
 };
 
 }
