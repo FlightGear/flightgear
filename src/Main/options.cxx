@@ -1955,7 +1955,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   for (int i=1; i<argc; ++i) {
     if (inOptions && (argv[i][0] == '-')) {
       if (strcmp(argv[i], "--") == 0) { // end of options delimiter
-        inOptions = true;
+        inOptions = false;
         continue;
       }
 
