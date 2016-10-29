@@ -2088,7 +2088,7 @@ void Options::initAircraft()
   }
 
   if (isOptionSet("aircraft-dir")) {
-    SGPath aircraftDirPath(valueForOption("aircraft-dir"));
+    SGPath aircraftDirPath = SGPath::fromLocal8Bit(valueForOption("aircraft-dir").c_str());
 
     // Set this now, so it's available in FindAndCacheAircraft. Use realpath()
     // as in FGGlobals::append_aircraft_path(), otherwise fgValidatePath()
@@ -2376,7 +2376,7 @@ OptionResult Options::processOptions()
   }
 
 // download dir fix-up
-    SGPath downloadDir = SGPath::fromUtf8(valueForOption("download-dir"));
+    SGPath downloadDir = SGPath::fromLocal8Bit(valueForOption("download-dir").c_str());
     if (downloadDir.isNull()) {
         downloadDir = defaultDownloadDir();
         SG_LOG(SG_GENERAL, SG_INFO, "Using default download dir: " << downloadDir);
