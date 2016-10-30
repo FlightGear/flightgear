@@ -868,7 +868,10 @@ static int
 fgOptDownloadDir( const char *arg )
 {
     SGPath p = SGPath::fromLocal8Bit(arg);
-    //globals->append_read_allowed_paths(p);
+    globals->append_read_allowed_paths(p / "Aircraft");
+    globals->append_read_allowed_paths(p / "AI");
+    globals->append_read_allowed_paths(p / "Liveries");
+    // p / TerraSync is allowed later if in use
     fgSetString("/sim/paths/download-dir", p.utf8Str());
     return FG_OPTIONS_OK;
 }
@@ -2089,6 +2092,7 @@ void Options::initAircraft()
 
   if (isOptionSet("aircraft-dir")) {
     SGPath aircraftDirPath = SGPath::fromLocal8Bit(valueForOption("aircraft-dir").c_str());
+    globals->append_read_allowed_paths(aircraftDirPath);
 
     // Set this now, so it's available in FindAndCacheAircraft. Use realpath()
     // as in FGGlobals::append_aircraft_path(), otherwise fgValidatePath()
