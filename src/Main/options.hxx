@@ -50,13 +50,13 @@ namespace flightgear
 enum OptionResult
 {
     FG_OPTIONS_OK = 0,
-    FG_OPTIONS_HELP = 1,
-    FG_OPTIONS_ERROR = 2,
-    FG_OPTIONS_EXIT = 3,
-    FG_OPTIONS_VERBOSE_HELP = 4,
-    FG_OPTIONS_SHOW_AIRCRAFT = 5,
-    FG_OPTIONS_SHOW_SOUND_DEVICES = 6,
-    FG_OPTIONS_NO_DEFAULT_CONFIG = 7
+    FG_OPTIONS_HELP,
+    FG_OPTIONS_ERROR,
+    FG_OPTIONS_EXIT,
+    FG_OPTIONS_VERBOSE_HELP,
+    FG_OPTIONS_SHOW_AIRCRAFT,
+    FG_OPTIONS_SHOW_SOUND_DEVICES,
+    FG_OPTIONS_NO_DEFAULT_CONFIG
 };
     
 class Options
@@ -151,7 +151,8 @@ public:
       SGPath platformDefaultRoot() const;
 private:
   void showUsage() const;
-  
+  void showVersion() const;
+
   int parseOption(const std::string& s);
   
   void processArgResult(int result);

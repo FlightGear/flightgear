@@ -1340,31 +1340,6 @@ fgOptParking( const char *arg )
 }
 
 static int
-fgOptVersion( const char *arg )
-{
-    cerr << "FlightGear version: " << FLIGHTGEAR_VERSION << endl;
-    cerr << "Revision: " << REVISION << endl;
-    cerr << "Build-Id: " << HUDSON_BUILD_ID << endl;
-    cerr << "FG_ROOT=" << globals->get_fg_root() << endl;
-    cerr << "FG_HOME=" << globals->get_fg_home() << endl;
-    cerr << "FG_SCENERY=";
-
-    int didsome = 0;
-    PathList scn = globals->get_fg_scenery();
-    for (PathList::const_iterator it = scn.begin(); it != scn.end(); it++)
-    {
-        if (didsome) cerr << ":";
-        didsome++;
-        cerr << *it;
-    }
-    cerr << endl;
-    cerr << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
-    cerr << "OSG version: " << osgGetVersion() << endl;
-    cerr << "PLIB version: " << PLIB_VERSION << endl;
-    return FG_OPTIONS_EXIT;
-}
-
-static int
 fgOptCallSign(const char * arg)
 {
     int i;
@@ -1733,7 +1708,7 @@ struct OptionDesc {
     {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },
     {"ai-scenario",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptScenario },
     {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
-    {"version",                      false, OPTION_FUNC,   "", false, "", fgOptVersion },
+    {"version",                      false, OPTION_IGNORE, "", false, "", 0 },
     {"enable-fpe",                   false, OPTION_IGNORE,   "", false, "", 0},
     {"fgviewer",                     false, OPTION_IGNORE,   "", false, "", 0},
     {"no-default-config",            false, OPTION_IGNORE, "", false, "", 0},
@@ -2331,7 +2306,7 @@ OptionResult Options::processOptions()
   // out quickly, but rely on aircraft / root settings
   if (p->showHelp) {
     showUsage();
-      return FG_OPTIONS_EXIT;
+    return FG_OPTIONS_EXIT;
   }
 
   // processing order is complicated. We must process groups LIFO, but the
@@ -2429,6 +2404,11 @@ OptionResult Options::processOptions()
         root.append("Scenery");
         globals->append_fg_scenery(root);
     }
+
+  if (isOptionSet("version")) {
+    showVersion();
+    return FG_OPTIONS_EXIT;
+  }
 
   return FG_OPTIONS_OK;
 }
@@ -2563,6 +2543,22 @@ void Options::showUsage() const
   std::cout << "Hit a key to continue..." << std::endl;
   std::cin.get();
 #endif
+}
+
+void Options::showVersion() const
+{
+    cout << "FlightGear version: " << FLIGHTGEAR_VERSION << endl;
+    cout << "Revision: " << REVISION << endl;
+    cout << "Build-Id: " << HUDSON_BUILD_ID << endl;
+    cout << "FG_ROOT=" << globals->get_fg_root().utf8Str() << endl;
+    cout << "FG_HOME=" << globals->get_fg_home().utf8Str() << endl;
+    cout << "FG_SCENERY=";
+
+    PathList scn = globals->get_unmangled_fg_scenery();
+    cout << SGPath::join(scn, &SGPath::pathListSep) << endl;
+    cout << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
+    cout << "OSG version: " << osgGetVersion() << endl;
+    cout << "PLIB version: " << PLIB_VERSION << endl;
 }
 
 #if defined(__CYGWIN__)
