@@ -152,6 +152,9 @@ public:
 private:
   void showUsage() const;
   void showVersion() const;
+  // Write info such as FG version, FG_ROOT, FG_HOME, scenery paths, aircraft
+  // paths, etc. to stdout in JSON format, using the UTF-8 encoding.
+  void printJSONReport() const;
 
   int parseOption(const std::string& s);
   

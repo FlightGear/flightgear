@@ -32,6 +32,7 @@
 #include <simgear/misc/sg_dir.hxx>
 
 #include <boost/foreach.hpp>
+#include <3rdparty/cjson/cJSON.h>
 
 #include <cmath>        // rint()
 #include <stdio.h>
@@ -62,6 +63,7 @@
 #endif
 
 #include <Main/locale.hxx>
+#include <Navaids/NavDataCache.hxx>
 #include "globals.hxx"
 #include "fg_init.hxx"
 #include "fg_props.hxx"
@@ -1689,8 +1691,9 @@ struct OptionDesc {
     {"ai-scenario",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptScenario },
     {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
     {"version",                      false, OPTION_IGNORE, "", false, "", 0 },
-    {"enable-fpe",                   false, OPTION_IGNORE,   "", false, "", 0},
-    {"fgviewer",                     false, OPTION_IGNORE,   "", false, "", 0},
+    {"json-report",                  false, OPTION_IGNORE, "", false, "", 0 },
+    {"enable-fpe",                   false, OPTION_IGNORE, "", false, "", 0},
+    {"fgviewer",                     false, OPTION_IGNORE, "", false, "", 0},
     {"no-default-config",            false, OPTION_IGNORE, "", false, "", 0},
     {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
     {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
@@ -1861,6 +1864,31 @@ public:
     }
 
     return pos;
+  }
+
+  // Return a pointer to a new JSON array node
+  // (["/foo/bar", "/other/path", ...]) created from the given PathList.
+  cJSON *createJSONArrayFromPathList(const PathList& pl) const
+  {
+    cJSON *resultNode = cJSON_CreateArray();
+    bool isFirst = true;
+
+    for (const SGPath& path : pl) {
+      cJSON *pathNode = cJSON_CreateString(path.utf8Str().c_str());
+      cJSON *prevNode;
+
+      if (isFirst) {
+        isFirst = false;
+        resultNode->child = pathNode;
+      } else {
+        prevNode->next = pathNode;
+        pathNode->prev = prevNode;
+      }
+
+      prevNode = pathNode;
+    }
+
+    return resultNode;
   }
 
   bool showHelp,
@@ -2403,7 +2431,10 @@ OptionResult Options::processOptions()
         globals->append_fg_scenery(root);
     }
 
-  if (isOptionSet("version")) {
+  if (isOptionSet("json-report")) {
+    printJSONReport();
+    return FG_OPTIONS_EXIT;
+  } else if (isOptionSet("version")) {
     showVersion();
     return FG_OPTIONS_EXIT;
   }
@@ -2557,6 +2588,68 @@ void Options::showVersion() const
     cout << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
     cout << "OSG version: " << osgGetVersion() << endl;
     cout << "PLIB version: " << PLIB_VERSION << endl;
+}
+
+void Options::printJSONReport() const
+{
+  cJSON *rootNode = cJSON_CreateObject();
+
+  cJSON *metaNode = cJSON_CreateObject();
+  cJSON_AddItemToObject(rootNode, "meta", metaNode);
+  cJSON_AddStringToObject(metaNode, "type", "FlightGear JSON report");
+  cJSON_AddNumberToObject(metaNode, "format version", 1);
+
+  cJSON *generalNode = cJSON_CreateObject();
+  cJSON_AddItemToObject(rootNode, "general", generalNode);
+  cJSON_AddStringToObject(generalNode, "name", "FlightGear");
+  cJSON_AddStringToObject(generalNode, "version", FLIGHTGEAR_VERSION);
+  cJSON_AddStringToObject(generalNode, "build ID", HUDSON_BUILD_ID);
+
+  cJSON *configNode = cJSON_CreateObject();
+  cJSON_AddItemToObject(rootNode, "config", configNode);
+  cJSON_AddStringToObject(configNode, "FG_ROOT",
+                          globals->get_fg_root().utf8Str().c_str());
+  cJSON_AddStringToObject(configNode, "FG_HOME",
+                          globals->get_fg_home().utf8Str().c_str());
+
+  cJSON *sceneryPathsNode = p->createJSONArrayFromPathList(
+    globals->get_unmangled_fg_scenery());
+  cJSON_AddItemToObject(configNode, "scenery paths", sceneryPathsNode);
+
+  cJSON *aircraftPathsNode = p->createJSONArrayFromPathList(
+    globals->get_aircraft_paths());
+  cJSON_AddItemToObject(configNode, "aircraft paths", aircraftPathsNode);
+
+  cJSON_AddStringToObject(configNode, "TerraSync directory",
+                          globals->get_terrasync_dir().utf8Str().c_str());
+
+  cJSON_AddStringToObject(configNode, "download directory",
+                          globals->get_download_dir().utf8Str().c_str());
+
+  cJSON_AddStringToObject(configNode, "autosave file",
+                          globals->autosaveFilePath().utf8Str().c_str());
+
+  // Get the ordered list of apt.dat files used by the NavCache
+  NavDataCache* cache = NavDataCache::instance();
+  if (!cache) {
+    cache = NavDataCache::createInstance();
+  }
+
+  // For this method, it doesn't matter if the cache is out-of-date
+  NavDataCache::DatFilesGroupInfo aptDatFilesInfo =
+    cache->getDatFilesInfo(NavDataCache::DATFILETYPE_APT);
+
+  // Write the list to the JSON tree
+  cJSON *navDataNode = cJSON_CreateObject();
+  cJSON_AddItemToObject(rootNode, "navigation data", navDataNode);
+  cJSON *aptDatPathsNode = p->createJSONArrayFromPathList(
+    aptDatFilesInfo.paths);
+  cJSON_AddItemToObject(navDataNode, "apt.dat files", aptDatPathsNode);
+
+  // Print the JSON tree to the standard output
+  char *report = cJSON_Print(rootNode);
+  cout << report << endl;
+  cJSON_Delete(rootNode);
 }
 
 #if defined(__CYGWIN__)
