@@ -416,6 +416,31 @@ void FGGlobals::clear_fg_scenery()
 
 }
 
+// The 'path' argument to this method must come from trustworthy code, because
+// the method grants read permissions to Nasal code for many files beneath
+// 'path'. In particular, don't call this method with a 'path' value taken
+// from the property tree or any other Nasal-writable place.
+void FGGlobals::set_download_dir(const SGPath& path)
+{
+  SGPath abspath(path.realpath());
+  download_dir = abspath;
+
+  append_read_allowed_paths(abspath / "Aircraft");
+  append_read_allowed_paths(abspath / "AI");
+  append_read_allowed_paths(abspath / "Liveries");
+  // If in use, abspath / TerraSync will be added to 'extra_read_allowed_paths'
+  // by FGGlobals::append_fg_scenery(), as any scenery path.
+
+  SGPropertyNode *n = fgGetNode("/sim/paths/download-dir", true);
+  n->setAttribute(SGPropertyNode::WRITE, true);
+  n->setStringValue(abspath.utf8Str());
+  n->setAttribute(SGPropertyNode::WRITE, false);
+}
+
+// The 'path' argument to this method must come from trustworthy code, because
+// the method grants read permissions to Nasal code for all files beneath
+// 'path'. In particular, don't call this method with a 'path' value taken
+// from the property tree or any other Nasal-writable place.
 void FGGlobals::set_terrasync_dir(const SGPath &path)
 {
   if (terrasync_dir.realpath() != SGPath(fgGetString("/sim/terrasync/scenery-dir")).realpath()) {

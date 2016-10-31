@@ -104,7 +104,9 @@ private:
     
     // Users home directory for data
     SGPath fg_home;
-    //Terrasync directory
+    // Download directory
+    SGPath download_dir;
+    // Terrasync directory
     SGPath terrasync_dir;
 
     // Roots of FlightGear scenery tree
@@ -221,7 +223,20 @@ public:
     const SGPath &get_fg_home () const { return fg_home; }
     void set_fg_home (const SGPath &home);
 
+    const SGPath &get_download_dir () const { return download_dir; }
+    // The 'path' argument to set_download_dir() must come from trustworthy
+    // code, because the method grants read permissions to Nasal code for many
+    // files beneath 'path'. In particular, don't call this method with a
+    // 'path' value taken from the property tree or any other Nasal-writable
+    // place.
+    void set_download_dir (const SGPath &path);
+
     const SGPath &get_terrasync_dir () const { return terrasync_dir; }
+    // The 'path' argument to set_terrasync_dir() must come from trustworthy
+    // code, because the method grants read permissions to Nasal code for all
+    // files beneath 'path'. In particular, don't call this method with a
+    // 'path' value taken from the property tree or any other Nasal-writable
+    // place.
     void set_terrasync_dir (const SGPath &path);
 
     const PathList &get_fg_scenery () const { return fg_scenery; }

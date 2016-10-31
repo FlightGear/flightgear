@@ -857,26 +857,6 @@ fgOptFgScenery( const char *arg )
 }
 
 static int
-fgOptTerrasyncDir( const char *arg )
-{
-    SGPath p = SGPath::fromLocal8Bit(arg);
-    globals->set_terrasync_dir(p);
-    return FG_OPTIONS_OK;
-}
-
-static int
-fgOptDownloadDir( const char *arg )
-{
-    SGPath p = SGPath::fromLocal8Bit(arg);
-    globals->append_read_allowed_paths(p / "Aircraft");
-    globals->append_read_allowed_paths(p / "AI");
-    globals->append_read_allowed_paths(p / "Liveries");
-    // p / TerraSync is allowed later if in use
-    fgSetString("/sim/paths/download-dir", p.utf8Str());
-    return FG_OPTIONS_OK;
-}
-
-static int
 fgOptAllowNasalRead( const char *arg )
 {
     PathList paths = SGPath::pathsFromLocal8Bit(arg);
@@ -1627,8 +1607,8 @@ struct OptionDesc {
     {"materials-file",               true,  OPTION_STRING, "/sim/rendering/materials-file", false, "", 0 },
     {"disable-terrasync",            false, OPTION_BOOL,   "/sim/terrasync/enabled", false, "", 0 },
     {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
-    {"terrasync-dir",                true,  OPTION_FUNC,   "", false, "", fgOptTerrasyncDir },
-    {"download-dir",                 true,  OPTION_FUNC,   "", false, "", fgOptDownloadDir },
+    {"terrasync-dir",                true,  OPTION_IGNORE,   "", false, "", 0 },
+    {"download-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
     {"allow-nasal-read",             true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptAllowNasalRead },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
     {"bpp",                          true,  OPTION_FUNC,   "", false, "", fgOptBpp },
@@ -2354,36 +2334,54 @@ OptionResult Options::processOptions()
       globals->append_fg_scenery(SGPath::pathsFromEnv("FG_SCENERY"));
   }
 
-// download dir fix-up
-    SGPath downloadDir = SGPath::fromLocal8Bit(valueForOption("download-dir").c_str());
+    // Download dir fix-up
+    SGPath downloadDir = SGPath::fromLocal8Bit(
+      valueForOption("download-dir").c_str());
     if (downloadDir.isNull()) {
         downloadDir = defaultDownloadDir();
-        SG_LOG(SG_GENERAL, SG_INFO, "Using default download dir: " << downloadDir);
+        SG_LOG(SG_GENERAL, SG_INFO,
+               "Using default download dir: " << downloadDir);
     } else {
-        simgear::Dir d(downloadDir);
-        if (!d.exists()) {
-            SG_LOG(SG_GENERAL, SG_INFO, "Creating requested download dir: " << downloadDir);
-            d.create(0755);
-        }
+      SG_LOG(SG_GENERAL, SG_INFO,
+             "Using explicit download dir: " << downloadDir);
     }
 
-// terrasync directory fixup
-    SGPath terrasyncDir = globals->get_terrasync_dir();
-  if (terrasyncDir.isNull()) {
-      SGPath p(downloadDir);
-      p.append("TerraSync");
-      terrasyncDir = p;
+    simgear::Dir d(downloadDir);
+    if (!d.exists()) {
+      SG_LOG(SG_GENERAL, SG_INFO,
+             "Creating download dir: " << downloadDir);
+      d.create(0755);
+    }
 
-      simgear::Dir d(terrasyncDir);
-      if (!d.exists()) {
-          d.create(0755);
-      }
+    // This is safe because the value of 'downloadDir' is trustworthy. In
+    // particular, it can't be influenced by Nasal code, not even indirectly
+    // via a Nasal-writable place such as the property tree.
+    globals->set_download_dir(downloadDir);
 
-	  SG_LOG(SG_GENERAL, SG_INFO, "Using default TerraSync: " << terrasyncDir);
-      globals->set_terrasync_dir(p);
-  } else {
-      SG_LOG(SG_GENERAL, SG_INFO, "Using explicit TerraSync dir: " << terrasyncDir);
-  }
+    // TerraSync directory fixup
+    SGPath terrasyncDir = SGPath::fromLocal8Bit(
+      valueForOption("terrasync-dir").c_str());
+    if (terrasyncDir.isNull()) {
+      terrasyncDir = downloadDir / "TerraSync";
+      // No “default” qualifier here, because 'downloadDir' may be non-default
+      SG_LOG(SG_GENERAL, SG_INFO,
+             "Using TerraSync dir: " << terrasyncDir);
+    } else {
+      SG_LOG(SG_GENERAL, SG_INFO,
+             "Using explicit TerraSync dir: " << terrasyncDir);
+    }
+
+    d = simgear::Dir(terrasyncDir);
+    if (!d.exists()) {
+      SG_LOG(SG_GENERAL, SG_INFO,
+             "Creating TerraSync dir: " << terrasyncDir);
+      d.create(0755);
+    }
+
+    // This is safe because the value of 'terrasyncDir' is trustworthy. In
+    // particular, it can't be influenced by Nasal code, not even indirectly
+    // via a Nasal-writable place such as the property tree.
+    globals->set_terrasync_dir(terrasyncDir);
 
     // check if we setup a scenery path so far
     bool addFGDataScenery = globals->get_fg_scenery().empty();
