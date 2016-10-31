@@ -22,6 +22,7 @@
 #  include "config.h"
 #endif
 
+#include <istream>              // std::ws
 #include "poidb.hxx"
 
 #include <simgear/compiler.h>
@@ -61,7 +62,7 @@ static PositionedID readPOIFromStream(std::istream& aStream, NavDataCache* cache
         return 0;
     }
 
-    aStream >> skipws;
+    aStream >> std::ws;
     if (aStream.peek() == '#') {
         aStream >> skipeol;
         return 0;
