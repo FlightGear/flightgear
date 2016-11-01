@@ -191,10 +191,8 @@ static void fgSetVideoOptions()
             }
 
             flightgear::Options* options = flightgear::Options::sharedInstance();
-            if (!options->isOptionSet("ignore-autosave"))
-            {
-                SGPath dataPath = globals->get_fg_home();
-                globals->loadUserSettings(dataPath);
+            if (!options->isOptionSet("ignore-autosave")) {
+                globals->loadUserSettings();
             }
         }
     }

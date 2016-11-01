@@ -681,17 +681,31 @@ static std::string autosaveName()
     return os.str();
 }
 
-// Load user settings from autosave.xml
-void
-FGGlobals::loadUserSettings(const SGPath& dataPath)
+SGPath FGGlobals::autosaveFilePath(SGPath userDataPath) const
 {
-    // remember that we have (tried) to load any existing autsave.xml
+    if (userDataPath.isNull()) {
+        userDataPath = get_fg_home();
+    }
+
+    return simgear::Dir(userDataPath).file(autosaveName());
+}
+
+// Load user settings from the autosave file (normally in $FG_HOME)
+void
+FGGlobals::loadUserSettings(SGPath userDataPath)
+{
+    if (userDataPath.isNull()) {
+        userDataPath = get_fg_home();
+    }
+
+    // Remember that we have (tried) to load any existing autosave file
     haveUserSettings = true;
 
-    SGPath autosaveFile = simgear::Dir(dataPath).file(autosaveName());
+    SGPath autosaveFile = autosaveFilePath(userDataPath);
     SGPropertyNode autosave;
     if (autosaveFile.exists()) {
-      SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << autosaveFile);
+      SG_LOG(SG_INPUT, SG_INFO,
+             "Reading user settings from " << autosaveFile);
       try {
           readProperties(autosaveFile, &autosave, SGPropertyNode::USERARCHIVE);
       } catch (sg_exception& e) {
@@ -702,10 +716,19 @@ FGGlobals::loadUserSettings(const SGPath& dataPath)
     copyProperties(&autosave, globals->get_props());
 }
 
-// Save user settings in autosave.xml
+// Save user settings to the autosave file.
+//
+// When calling this method, make sure the value of 'userDataPath' is
+// trustworthy. In particular, make sure it can't be influenced by Nasal code,
+// not even indirectly via a Nasal-writable place such as the property tree.
+//
+// Note: the default value, which causes the autosave file to be written to
+//       $FG_HOME, is safe---if not, it would be a bug.
 void
-FGGlobals::saveUserSettings()
+FGGlobals::saveUserSettings(SGPath userDataPath)
 {
+    if (userDataPath.isNull()) userDataPath = get_fg_home();
+
     // only save settings when we have (tried) to load the previous
     // settings (otherwise user data was lost)
     if (!haveUserSettings)
@@ -715,8 +738,7 @@ FGGlobals::saveUserSettings()
       // don't save settings more than once on shutdown
       haveUserSettings = false;
 
-      SGPath autosaveFile(globals->get_fg_home());
-      autosaveFile.append(autosaveName());
+      SGPath autosaveFile = autosaveFilePath(userDataPath);
       autosaveFile.create_dir( 0700 );
       SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile);
       try {

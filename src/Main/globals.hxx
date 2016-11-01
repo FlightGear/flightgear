@@ -373,15 +373,29 @@ public:
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
 
     /**
-     * Load user settings from autosave.xml
+     * Return an SGPath instance for the autosave file under 'userDataPath',
+     * which defaults to $FG_HOME.
      */
-    void loadUserSettings(const SGPath& datapath);
+    SGPath autosaveFilePath(SGPath userDataPath = SGPath()) const;
+    /**
+     * Load user settings from the autosave file under 'userDataPath',
+     * which defaults to $FG_HOME.
+     */
+    void loadUserSettings(SGPath userDatapath = SGPath());
 
     /**
-     * Save user settings in autosave.xml
+     * Save user settings to the autosave file under 'userDataPath', which
+     * defaults to $FG_HOME.
+     *
+     * When calling this method, make sure the value of 'userDataPath' is
+     * trustworthy. In particular, make sure it can't be influenced by Nasal
+     * code, not even indirectly via a Nasal-writable place such as the
+     * property tree.
+     *
+     * Note: the default value is safe---if not, it would be a bug.
      */
-    void saveUserSettings();
-    
+    void saveUserSettings(SGPath userDatapath = SGPath());
+
     void addListenerToCleanup(SGPropertyChangeListener* l);
   
     simgear::pkg::Root* packageRoot();
