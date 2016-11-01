@@ -235,12 +235,6 @@ public:
   }
 };
 
-struct DatFilesGroupInfo {
-  NavDataCache::DatFileType datFileType; // for instance, DATFILETYPE_APT
-  PathList paths;               // SGPath instances
-  std::size_t totalSize;        // total size of all these files, in bytes
-};
-
 class NavDataCache::NavDataCachePrivate
 {
 public:
@@ -340,10 +334,11 @@ public:
   }
 
   bool isCachedFileModified(const SGPath& path, bool verbose);
-  DatFilesGroupInfo findDatFiles(NavDataCache::DatFileType datFileType)
-    const;
-  bool areDatFilesModified(const DatFilesGroupInfo& datFilesGroupInfo,
-                           bool verbose);
+  NavDataCache::DatFilesGroupInfo findDatFiles(
+    NavDataCache::DatFileType datFileType) const;
+  bool areDatFilesModified(
+    const NavDataCache::DatFilesGroupInfo& datFilesGroupInfo,
+    bool verbose);
 
   void callSqlite(int result, const string& sql)
   {
@@ -860,7 +855,7 @@ public:
   bool transactionAborted;
   sqlite3_stmt_ptr beginTransactionStmt, commitTransactionStmt, rollbackTransactionStmt;
 
-  DatFilesGroupInfo aptDatFilesInfo;
+  NavDataCache::DatFilesGroupInfo aptDatFilesInfo;
   SGPath metarDatPath, navDatPath, fixDatPath, poiDatPath,
   carrierDatPath, airwayDatPath;
 
@@ -1027,10 +1022,10 @@ bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path,
 // $FG_ROOT/Airports/apt.dat.gz for the 'apt' type).
 // Also compute the total size of all these files (in bytes), which is useful
 // for progress information.
-DatFilesGroupInfo NavDataCache::NavDataCachePrivate::findDatFiles(
+NavDataCache::DatFilesGroupInfo NavDataCache::NavDataCachePrivate::findDatFiles(
   NavDataCache::DatFileType datFileType) const
 {
-  DatFilesGroupInfo result;
+  NavDataCache::DatFilesGroupInfo result;
   SGPath visitedPath;           // to avoid duplicates and time wasting
   const string datFilesSubDir = "NavData/" +
                                NavDataCache::datTypeStr[datFileType];
@@ -1093,7 +1088,7 @@ DatFilesGroupInfo NavDataCache::NavDataCachePrivate::findDatFiles(
 // This comparison is sensitive to the number and order of the files,
 // their respective SGPath::realpath() and SGPath::modTime().
 bool NavDataCache::NavDataCachePrivate::areDatFilesModified(
-  const DatFilesGroupInfo& datFilesGroupInfo,
+  const NavDataCache::DatFilesGroupInfo& datFilesGroupInfo,
   bool verbose)
 {
   // 'apt' or 'metar' or 'fix' or...
@@ -1278,6 +1273,22 @@ void NavDataCache::updateListsOfDatFiles() {
 
   d->airwayDatPath = SGPath(globals->get_fg_root());
   d->airwayDatPath.append("Navaids/awy.dat.gz");
+}
+
+NavDataCache::DatFilesGroupInfo
+NavDataCache::getDatFilesInfo(DatFileType datFileType) const
+{
+  switch (datFileType) {
+    case DATFILETYPE_APT:
+      return d->aptDatFilesInfo;
+    default:
+      SG_LOG(SG_NAVCACHE, SG_ALERT,
+             "NavCache: requesting info about the list of " <<
+             datTypeStr[datFileType] << " dat files, however this is not "
+             "implemented yet!");
+      assert(false);
+      return DatFilesGroupInfo();
+  }
 }
 
 bool NavDataCache::isRebuildRequired()

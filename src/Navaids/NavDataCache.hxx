@@ -25,9 +25,11 @@
 #define FG_NAVDATACACHE_HXX
 
 #include <memory>
+#include <cstddef>                   // for std::size_t
 
 #include <simgear/misc/strutils.hxx> // for string_list
 #include <Navaids/positioned.hxx>
+#include <Main/globals.hxx>          // for PathList
 
 class SGPath;
 class FGRunway;
@@ -63,10 +65,30 @@ public:
 
     SGPath path() const;
 
-    // Update d->aptDatPaths, d->metarDatPath, d->navDatPath, d->fixDatPath,
-    // d->poiDatPath, etc. by looking into $scenery_path/NavData for each
-    // scenery path.
+    enum DatFileType {
+      DATFILETYPE_APT = 0,
+      DATFILETYPE_METAR,
+      DATFILETYPE_AWY,
+      DATFILETYPE_NAV,
+      DATFILETYPE_FIX,
+      DATFILETYPE_POI,
+      DATFILETYPE_CARRIER,
+      DATFILETYPE_TACAN_FREQ
+    };
+
+    struct DatFilesGroupInfo {
+      DatFileType datFileType;      // for instance, DATFILETYPE_APT
+      PathList paths;               // SGPath instances
+      std::size_t totalSize;        // total size of all these files, in bytes
+    };
+
+    // Update d->aptDatFilesInfo, d->metarDatPath, d->navDatPath,
+    // d->fixDatPath, d->poiDatPath, etc. by looking into
+    // $scenery_path/NavData for each scenery path.
     void updateListsOfDatFiles();
+    // Return d->aptDatFilesInfo if datFileType == DATFILETYPE_APT, etc.
+    DatFilesGroupInfo getDatFilesInfo(DatFileType datFileType) const;
+
   /**
    * predicate - check if the cache needs to be rebuilt.
    * This can happen is the cache file is missing or damaged, or one of the
@@ -298,19 +320,6 @@ private:
     void beginTransaction();
     void commitTransaction();
     void abortTransaction();
-
-  friend class DatFilesGroupInfo;
-
-  enum DatFileType {
-    DATFILETYPE_APT = 0,
-    DATFILETYPE_METAR,
-    DATFILETYPE_AWY,
-    DATFILETYPE_NAV,
-    DATFILETYPE_FIX,
-    DATFILETYPE_POI,
-    DATFILETYPE_CARRIER,
-    DATFILETYPE_TACAN_FREQ
-  };
 
   // datTypeStr[DATFILETYPE_APT] = std::string("apt"), etc. This gives, among
   // other things, the subdirectory of $scenery_path/NavData where each type
