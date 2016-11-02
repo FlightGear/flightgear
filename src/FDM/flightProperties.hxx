@@ -23,11 +23,9 @@
 #ifndef FG_FLIGHT_PROPERTIES_HXX
 #define FG_FLIGHT_PROPERTIES_HXX
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <cstring>
+#include <cmath>
+
 #include <simgear/math/SGMathFwd.hxx> // for SGVec3d 
 #include <simgear/math/SGMisc.hxx>
 

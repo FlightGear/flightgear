@@ -20,7 +20,7 @@
 //
 // $Id$
 
-#include <cmath>
+#include "config.h"
 
 #include <FDM/flightProperties.hxx>
 
@@ -180,7 +180,7 @@ double FlightProperties::get_Psi_dot_degps() const
 {
   return _root->getDoubleValue("orientation/yaw-rate-degps");
 }
-  
+
 double FlightProperties::get_Total_temperature() const
 {
   return 0.0;
