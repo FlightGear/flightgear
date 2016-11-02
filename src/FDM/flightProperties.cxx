@@ -20,6 +20,8 @@
 //
 // $Id$
 
+#include <cmath>
+
 #include <FDM/flightProperties.hxx>
 
 #include <simgear/props/props.hxx>
