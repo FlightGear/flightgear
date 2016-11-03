@@ -196,4 +196,5 @@ set(SOURCES
 
 add_library(JSBSim STATIC ${SOURCES} ${HEADERS})
 
+target_link_libraries(JSBSim SimGearCore)
 target_include_directories(JSBSim PRIVATE ${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
