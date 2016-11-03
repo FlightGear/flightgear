@@ -120,7 +120,7 @@ if (HAVE_QT)
                             ${qrc_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
-    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets )
+    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets SimGearCore)
     target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
 
 
