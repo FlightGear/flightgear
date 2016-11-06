@@ -51,6 +51,8 @@ using std::vector;
 using std::sort;
 using std::random_shuffle;
 
+// #define RUNWAY_FALLBACK_DEBUG
+
 class ParkingAssignment::ParkingAssignmentPrivate
 {
 public:
@@ -516,6 +518,8 @@ string FGAirportDynamics::fallbackGetActiveRunway(int action, double heading)
 
         std::sort(groups.begin(), groups.end(), GroupSortByScore());
 
+        // debugging fallback runway assignments
+#if defined(RUNWAY_FALLBACK_DEBUG)
         {
             ostringstream os;
             os << parent()->ident() << " groups:";
@@ -527,6 +531,7 @@ string FGAirportDynamics::fallbackGetActiveRunway(int action, double heading)
             std::string s = os.str();
             SG_LOG(SG_AI, SG_INFO, s);
         }
+#endif
 
         // assign takeoff and landing runways
         FallbackRunwayGroup bestGroup = groups.front();
@@ -537,6 +542,7 @@ string FGAirportDynamics::fallbackGetActiveRunway(int action, double heading)
         _fallbackArrivalRunways.clear();
         bestGroup.getRunways(_fallbackArrivalRunways, _fallbackDepartureRunways);
 
+#if defined(RUNWAY_FALLBACK_DEBUG)
         ostringstream os;
         os << "\tArrival:" << _fallbackArrivalRunways.front()->ident();
         for (unsigned int r=1; r <_fallbackArrivalRunways.size(); ++r) {
@@ -550,6 +556,7 @@ string FGAirportDynamics::fallbackGetActiveRunway(int action, double heading)
         std::string s = os.str();
         SG_LOG(SG_AI, SG_INFO, parent()->ident() << " fallback runways assignments for "
                << static_cast<int>(windHeading) << "@" << static_cast<int>(windSpeed) << "\n" << s);
+#endif
     }
 
     _fallbackRunwayCounter++;
