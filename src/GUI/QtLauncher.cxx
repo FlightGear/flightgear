@@ -638,6 +638,8 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onAircraftSelected);
     connect(delegate, &AircraftItemDelegate::requestInstall,
             this, &QtLauncher::onRequestPackageInstall);
+    connect(delegate, &AircraftItemDelegate::requestUninstall,
+            this, &QtLauncher::onRequestPackageUninstall);
     connect(delegate, &AircraftItemDelegate::cancelDownload,
             this, &QtLauncher::onCancelDownload);
 
@@ -1109,6 +1111,24 @@ void QtLauncher::onRequestPackageInstall(const QModelIndex& index)
         }
     } else {
         pref->install();
+    }
+}
+
+void QtLauncher::onRequestPackageUninstall(const QModelIndex& index)
+{
+
+    m_selectedAircraft = index.data(AircraftURIRole).toUrl();
+    updateSelectedAircraft();
+
+    QString pkg = index.data(AircraftPackageIdRole).toString();
+    if (pkg.isEmpty()) {
+        return; // can't be uninstalled, not from a package
+    }
+
+    simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
+    if (pref && pref->isInstalled()) {
+        qDebug() << "uninstalling" << pkg;
+        pref->existingInstall()->uninstall();
     }
 }
 

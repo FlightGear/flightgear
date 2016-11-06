@@ -46,7 +46,7 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     QRect contentRect = option.rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
 
     QVariant v = index.data(AircraftPackageStatusRole);
-    AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
+    const AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
     if (status == NoOfficialCatalogMessage) {
         painter->setPen(QColor(0x7f, 0x7f, 0x7f));
         painter->setBrush(Qt::NoBrush);
@@ -122,6 +122,7 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     painter->setFont(f);
 
     if (!authors.isEmpty()) {
+        // ellide this beyond some maximum size, with a click to expand?
         QRect authorsRect = descriptionRect;
         authorsRect.moveTop(actualBounds.bottom() + MARGIN);
         painter->drawText(authorsRect, Qt::TextWordWrap,
@@ -158,75 +159,82 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     }
 
     double downloadFraction = 0.0;
+    QString buttonText, infoText;
+    QColor buttonColor(27, 122, 211);
     
-    if (status != PackageInstalled) {
-        QString buttonText, infoText;
-        QColor buttonColor(27, 122, 211);
-        
-        double sizeInMBytes = index.data(AircraftPackageSizeRole).toInt();
-        sizeInMBytes /= 0x100000;
-        
-        if (status == PackageDownloading) {
-            buttonText = tr("Cancel");
-            double downloadedMB = index.data(AircraftInstallDownloadedSizeRole).toInt();
-            downloadedMB /= 0x100000;
-            infoText = QStringLiteral("%1 MB of %2 MB").arg(downloadedMB, 0, 'f', 1).arg(sizeInMBytes, 0, 'f', 1);
-            buttonColor = QColor(0xcf, 0xcf, 0xcf);
-            downloadFraction = downloadedMB / sizeInMBytes;
-        } else if (status == PackageQueued) {
-            buttonText = tr("Cancel");
-            infoText = tr("Waiting to download %1 MB").arg(sizeInMBytes, 0, 'f', 1);
-            buttonColor = QColor(0xcf, 0xcf, 0xcf);
-        } else {
-            infoText = QStringLiteral("%1MB").arg(sizeInMBytes, 0, 'f', 1);
-            if (status == PackageNotInstalled) {
-                buttonText = "Install";
-            } else if (status == PackageUpdateAvailable) {
-                buttonText = "Update";
+    double sizeInMBytes = index.data(AircraftPackageSizeRole).toInt();
+    sizeInMBytes /= 0x100000;
+    
+    if (status == PackageDownloading) {
+        buttonText = tr("Cancel");
+        double downloadedMB = index.data(AircraftInstallDownloadedSizeRole).toInt();
+        downloadedMB /= 0x100000;
+        infoText = QStringLiteral("%1 MB of %2 MB").arg(downloadedMB, 0, 'f', 1).arg(sizeInMBytes, 0, 'f', 1);
+        buttonColor = QColor(0xcf, 0xcf, 0xcf);
+        downloadFraction = downloadedMB / sizeInMBytes;
+    } else if (status == PackageQueued) {
+        buttonText = tr("Cancel");
+        infoText = tr("Waiting to download %1 MB").arg(sizeInMBytes, 0, 'f', 1);
+        buttonColor = QColor(0xcf, 0xcf, 0xcf);
+    } else {
+        infoText = QStringLiteral("%1MB").arg(sizeInMBytes, 0, 'f', 1);
+        if (status == PackageNotInstalled) {
+            buttonText = tr("Install");
+        } else if (status == PackageUpdateAvailable) {
+            buttonText = tr("Update");
+        } else if (status == PackageInstalled) {
+            bool canUninstall = index.data(AircraftPackageIdRole).isValid(); // local aircraft have no package ID
+            if (canUninstall) {
+                buttonText = tr("Uninstall");
+            } else {
+                infoText.clear();
             }
         }
-        
+    }
+
+    QRect buttonRect = packageButtonRect(option.rect, index);
+    if (!buttonText.isEmpty()) {
         painter->setBrush(Qt::NoBrush);
-        QRect buttonRect = packageButtonRect(option.rect, index);
         painter->setPen(Qt::NoPen);
         painter->setBrush(buttonColor);
         painter->drawRoundedRect(buttonRect, 5, 5);
         painter->setPen(Qt::white);
         painter->drawText(buttonRect, Qt::AlignCenter, buttonText);
-        
-        QRect infoTextRect = buttonRect;
-        infoTextRect.setLeft(buttonRect.right() + MARGIN);
-        infoTextRect.setWidth(200);
-        
-        if (status == PackageDownloading) {
-            QRect progressRect = infoTextRect;
-            progressRect.setHeight(6);
-            painter->setPen(QPen(QColor(0xcf, 0xcf, 0xcf), 0));
-            painter->setBrush(Qt::NoBrush);
-            painter->drawRoundedRect(progressRect, 3, 3);
-            infoTextRect.setTop(progressRect.bottom() + 1);
+    }
 
-            QRect progressBarRect = progressRect.marginsRemoved(QMargins(2, 2, 2, 2));
-            
-            progressBarRect.setWidth(static_cast<int>(progressBarRect.width() * downloadFraction));
-            
-            painter->setBrush(QColor(27, 122, 211));
-            painter->setPen(Qt::NoPen);
-            painter->drawRoundedRect(progressBarRect, 2, 2);
-        }
+    QRect infoTextRect = buttonRect;
+    infoTextRect.setLeft(buttonRect.right() + MARGIN);
+    infoTextRect.setWidth(200);
+    
+    if (status == PackageDownloading) {
+        QRect progressRect = infoTextRect;
+        progressRect.setHeight(6);
+        painter->setPen(QPen(QColor(0xcf, 0xcf, 0xcf), 0));
+        painter->setBrush(Qt::NoBrush);
+        painter->drawRoundedRect(progressRect, 3, 3);
+        infoTextRect.setTop(progressRect.bottom() + 1);
+
+        QRect progressBarRect = progressRect.marginsRemoved(QMargins(2, 2, 2, 2));
         
+        progressBarRect.setWidth(static_cast<int>(progressBarRect.width() * downloadFraction));
+        
+        painter->setBrush(QColor(27, 122, 211));
+        painter->setPen(Qt::NoPen);
+        painter->drawRoundedRect(progressBarRect, 2, 2);
+    }
+
+    if (!infoText.isEmpty()) {
         painter->setPen(Qt::black);
         painter->drawText(infoTextRect, Qt::AlignLeft | Qt::AlignVCenter, infoText);
-    } // of update / install / download status
+    }
 
     painter->setRenderHint(QPainter::Antialiasing, false);
-
 }
 
 QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const
 {
     QVariant v = index.data(AircraftPackageStatusRole);
-    AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
+    const AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
 
     if (status == NoOfficialCatalogMessage) {
         QSize r = option.rect.size();
@@ -306,13 +314,15 @@ bool AircraftItemDelegate::eventFilter( QObject*, QEvent* event )
             packageButtonRect(vr, index).contains(me->pos()))
         {
             QVariant v = index.data(AircraftPackageStatusRole);
-            AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
+            const AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
             if (status == PackageNotInstalled) {
                 emit requestInstall(index);
             } else if ((status == PackageDownloading) || (status == PackageQueued)) {
                 emit cancelDownload(index);
             } else if (status == PackageUpdateAvailable) {
                 emit requestInstall(index);
+            } else if (status == PackageInstalled) {
+                emit requestUninstall(index);
             }
             
             return true;

@@ -36,17 +36,19 @@ public:
     
     AircraftItemDelegate(QListView* view);
     
-    virtual void paint(QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index) const;
+    virtual void paint(QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index) const Q_DECL_OVERRIDE;
 
-    virtual QSize sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const;
+    virtual QSize sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const Q_DECL_OVERRIDE;
 
-    virtual bool eventFilter( QObject*, QEvent* event );
+    virtual bool eventFilter( QObject*, QEvent* event ) Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void variantChanged(const QModelIndex& index);
 
     void requestInstall(const QModelIndex& index);
-    
+
+    void requestUninstall(const QModelIndex& index);
+
     void cancelDownload(const QModelIndex& index);
 private:
     QRect leftCycleArrowRect(const QRect& visualRect, const QModelIndex& index) const;
