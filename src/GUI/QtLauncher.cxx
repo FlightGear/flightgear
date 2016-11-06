@@ -84,6 +84,7 @@ using namespace flightgear;
 using namespace simgear::pkg;
 
 const int MAX_RECENT_AIRCRAFT = 20;
+const int DEFAULT_MP_PORT = 5000;
 
 namespace { // anonymous namespace
 
@@ -908,13 +909,16 @@ void QtLauncher::onRun()
         }
 
         QString host = m_ui->mpServerCombo->currentData().toString();
-        int port = 5000;
+        int port = DEFAULT_MP_PORT;
         if (host == "custom") {
             QSettings settings;
             host = settings.value("mp-custom-host").toString();
-            port = settings.value("mp-custom-port").toInt();
         } else {
             port = findMPServerPort(host.toStdString());
+        }
+
+        if (port == 0) {
+            port = DEFAULT_MP_PORT;
         }
         globals->get_props()->setStringValue("/sim/multiplay/txhost", host.toStdString());
         globals->get_props()->setIntValue("/sim/multiplay/txport", port);
