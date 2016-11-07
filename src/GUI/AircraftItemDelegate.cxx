@@ -47,7 +47,7 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
 
     QVariant v = index.data(AircraftPackageStatusRole);
     const AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
-    if (status == NoOfficialCatalogMessage) {
+    if (status == MessageWidget) {
         painter->setPen(QColor(0x7f, 0x7f, 0x7f));
         painter->setBrush(Qt::NoBrush);
 
@@ -236,7 +236,7 @@ QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const 
     QVariant v = index.data(AircraftPackageStatusRole);
     const AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
 
-    if (status == NoOfficialCatalogMessage) {
+    if (status == MessageWidget) {
         QSize r = option.rect.size();
         r.setHeight(100);
         return r;

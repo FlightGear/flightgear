@@ -61,6 +61,7 @@
 
 #include "ui_Launcher.h"
 #include "ui_NoOfficialHangar.h"
+#include "ui_UpdateAllAircraft.h"
 
 #include "EditRatingsFilterDialog.hxx"
 #include "AircraftItemDelegate.hxx"
@@ -375,7 +376,7 @@ protected:
         QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
         QVariant v = index.data(AircraftPackageStatusRole);
         AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
-        if (status == NoOfficialCatalogMessage) {
+        if (status == MessageWidget) {
             return true;
         }
 
@@ -427,6 +428,27 @@ Q_SIGNALS:
 private:
     Ui::NoOfficialHangarMessage* m_ui;
 };
+
+class UpdateAllAircraftMessage : public QWidget
+{
+    Q_OBJECT
+public:
+    UpdateAllAircraftMessage() :
+        m_ui(new Ui::UpdateAllAircraftMessage)
+    {
+        m_ui->setupUi(this);
+        // proxy this signal upwards
+        connect(m_ui->label, &QLabel::linkActivated, this, &UpdateAllAircraftMessage::linkActivated);
+        connect(m_ui->updateAllButton, &QPushButton::clicked, this, &UpdateAllAircraftMessage::updateAll);
+    }
+
+Q_SIGNALS:
+    void linkActivated(QUrl link);
+    void updateAll();
+private:
+    Ui::UpdateAllAircraftMessage* m_ui;
+};
+
 
 static void initQtResources()
 {
@@ -1238,6 +1260,20 @@ void QtLauncher::updateSelectedAircraft()
     }
 }
 
+void QtLauncher::onUpdateAllAircraft()
+{
+    const PackageList& toBeUpdated = globals->packageRoot()->packagesNeedingUpdate();
+    std::for_each(toBeUpdated.begin(), toBeUpdated.end(), [](PackageRef pkg) {
+        globals->packageRoot()->scheduleToUpdate(pkg->install());
+    });
+}
+
+void QtLauncher::onPackagesNeedUpdate(bool yes)
+{
+    Q_UNUSED(yes);
+    checkUpdateAircraft();
+}
+
 QModelIndex QtLauncher::proxyIndexForAircraftURI(QUrl uri) const
 {
   return m_aircraftProxy->mapFromSource(sourceIndexForAircraftURI(uri));
@@ -1397,21 +1433,25 @@ void QtLauncher::onDownloadDirChanged()
     setSceneryPaths();
 }
 
-void QtLauncher::checkOfficialCatalogMessage()
+bool QtLauncher::shouldShowOfficialCatalogMessage() const
 {
     QSettings settings;
     bool showOfficialCatalogMesssage = !globals->get_subsystem<FGHTTPClient>()->isDefaultCatalogInstalled();
     if (settings.value("hide-official-catalog-message").toBool()) {
         showOfficialCatalogMesssage = false;
     }
-
-    m_aircraftModel->setOfficialHangarMessageVisible(showOfficialCatalogMesssage);
-    if (showOfficialCatalogMesssage) {
+    return showOfficialCatalogMesssage;
+}
+void QtLauncher::checkOfficialCatalogMessage()
+{
+    const bool show = shouldShowOfficialCatalogMessage();
+    m_aircraftModel->setMessageWidgetVisible(show);
+    if (show) {
         NoOfficialHangarMessage* messageWidget = new NoOfficialHangarMessage;
         connect(messageWidget, &NoOfficialHangarMessage::linkActivated,
                 this, &QtLauncher::onOfficialCatalogMessageLink);
 
-        QModelIndex index = m_aircraftProxy->mapFromSource(m_aircraftModel->officialHangarMessageIndex());
+        QModelIndex index = m_aircraftProxy->mapFromSource(m_aircraftModel->messageWidgetIndex());
         m_ui->aircraftList->setIndexWidget(index, messageWidget);
     }
 }
@@ -1427,6 +1467,24 @@ void QtLauncher::onOfficialCatalogMessageLink(QUrl link)
     }
 
     checkOfficialCatalogMessage();
+}
+
+void QtLauncher::checkUpdateAircraft()
+{
+    if (shouldShowOfficialCatalogMessage()) {
+        return; // don't interfere
+    }
+
+    const bool showUpdateMessage = !globals->packageRoot()->packagesNeedingUpdate().empty();
+    m_aircraftModel->setMessageWidgetVisible(showUpdateMessage);
+    if (showUpdateMessage) {
+        UpdateAllAircraftMessage* messageWidget = new UpdateAllAircraftMessage;
+       // connect(messageWidget, &UpdateAllAircraftMessage::linkActivated,
+      //        this, &QtLauncher::onMessageLink);
+        connect(messageWidget, &UpdateAllAircraftMessage::updateAll, this, &QtLauncher::onUpdateAllAircraft);
+        QModelIndex index = m_aircraftProxy->mapFromSource(m_aircraftModel->messageWidgetIndex());
+        m_ui->aircraftList->setIndexWidget(index, messageWidget);
+    }
 }
 
 void QtLauncher::onRefreshMPServers()

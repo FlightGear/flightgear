@@ -104,6 +104,9 @@ private slots:
     void onRefreshMPServers();
     void onMPServerActivated(int index);
 
+    void onUpdateAllAircraft();
+
+    void onPackagesNeedUpdate(bool yes);
 
 private:
 
@@ -127,6 +130,8 @@ private:
     void checkOfficialCatalogMessage();
     void onOfficialCatalogMessageLink(QUrl link);
 
+    void checkUpdateAircraft();
+
     void onRefreshMPServersDone(simgear::HTTP::Request*);
     void onRefreshMPServersFailed(simgear::HTTP::Request*);
     int findMPServerPort(const std::string& host);
@@ -138,6 +143,7 @@ private:
     void onRatingsFilterToggled();
 
     void updateLocationHistory();
+    bool shouldShowOfficialCatalogMessage() const;
 
     QScopedPointer<Ui::Launcher> m_ui;
     AircraftProxyModel* m_aircraftProxy;

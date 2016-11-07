@@ -96,7 +96,7 @@ enum AircraftItemStatus {
     PackageUpdateAvailable,
     PackageQueued,
     PackageDownloading,
-    NoOfficialCatalogMessage
+    MessageWidget
 };
 
 class AircraftItemModel : public QAbstractListModel
@@ -133,12 +133,12 @@ public:
     bool isIndexRunnable(const QModelIndex& index) const;
 
     /**
-     * should we show the prompt about the official hangar not being installed
-     * or not?
+     * should we show reserve index 0 for a message widget? Which is set
+     * by the layer above via setIndexWidget
      */
-    void setOfficialHangarMessageVisible(bool vis);
+    void setMessageWidgetVisible(bool vis);
 
-    QModelIndex officialHangarMessageIndex() const;
+    QModelIndex messageWidgetIndex() const;
 
     /**
      * @helper to determine if a particular path is likely to contain
@@ -153,6 +153,7 @@ signals:
     
     void scanCompleted();
 
+    void packagesNeedUpdating(bool yes);
 private slots:
     void onScanResults();
     
@@ -175,10 +176,10 @@ private:
     void installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason);
     
     QStringList m_paths;
-    AircraftScanThread* m_scanThread;
+    AircraftScanThread* m_scanThread = nullptr;
     QVector<AircraftItemPtr> m_items;
-    PackageDelegate* m_delegate;
-    bool m_showOfficialHangarMessage;
+    PackageDelegate* m_delegate = nullptr;
+    bool m_showMessageWidget = false;
 
     QVector<quint32> m_activeVariant;
     QVector<quint32> m_packageVariant;

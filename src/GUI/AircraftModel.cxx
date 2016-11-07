@@ -438,9 +438,7 @@ private:
 };
 
 AircraftItemModel::AircraftItemModel(QObject* pr ) :
-    QAbstractListModel(pr),
-    m_scanThread(NULL),
-    m_showOfficialHangarMessage(false)
+    QAbstractListModel(pr)
 {
 }
 
@@ -471,13 +469,13 @@ void AircraftItemModel::setPaths(QStringList paths)
     m_paths = paths;
 }
 
-void AircraftItemModel::setOfficialHangarMessageVisible(bool vis)
+void AircraftItemModel::setMessageWidgetVisible(bool vis)
 {
-    if (m_showOfficialHangarMessage == vis) {
+    if (m_showMessageWidget == vis) {
         return;
     }
 
-    m_showOfficialHangarMessage = vis;
+    m_showMessageWidget = vis;
 
     if (vis) {
         beginInsertRows(QModelIndex(), 0, 0);
@@ -492,9 +490,9 @@ void AircraftItemModel::setOfficialHangarMessageVisible(bool vis)
     }
 }
 
-QModelIndex AircraftItemModel::officialHangarMessageIndex() const
+QModelIndex AircraftItemModel::messageWidgetIndex() const
 {
-    if (!m_showOfficialHangarMessage) {
+    if (!m_showMessageWidget) {
         return QModelIndex();
     }
 
@@ -505,7 +503,7 @@ void AircraftItemModel::scanDirs()
 {
 	abandonCurrentScan();
 
-	int firstRow = (m_showOfficialHangarMessage ? 1 : 0);
+    int firstRow = (m_showMessageWidget ? 1 : 0);
 	int numToRemove = m_items.size() - firstRow;
 	if (numToRemove > 0) {
 		int lastRow = firstRow + numToRemove - 1;
@@ -574,6 +572,7 @@ void AircraftItemModel::refreshPackages()
     }
 
     emit dataChanged(index(firstRow), index(firstRow + newSize - 1));
+    emit packagesNeedUpdating(!m_packageRoot->packagesNeedingUpdate().empty());
 }
 
 int AircraftItemModel::rowCount(const QModelIndex& parent) const
@@ -584,10 +583,10 @@ int AircraftItemModel::rowCount(const QModelIndex& parent) const
 QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
 {
     int row = index.row();
-    if (m_showOfficialHangarMessage) {
+    if (m_showMessageWidget) {
         if (row == 0) {
             if (role == AircraftPackageStatusRole) {
-                return NoOfficialCatalogMessage;
+                return MessageWidget;
             }
 
             return QVariant();

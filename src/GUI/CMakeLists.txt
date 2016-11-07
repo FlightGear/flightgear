@@ -79,6 +79,7 @@ if (HAVE_QT)
                             NoOfficialHangar.ui
                             InstallSceneryDialog.ui
                             EditCustomMPServerDialog.ui
+                            UpdateAllAircraft.ui
                             )
     qt5_add_resources(qrc_sources resources.qrc)
 
