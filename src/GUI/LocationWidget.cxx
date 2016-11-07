@@ -426,41 +426,43 @@ LocationWidget::~LocationWidget()
 void LocationWidget::restoreSettings()
 {
     QSettings settings;
+    m_recentLocations = loadPositionedList(settings.value("recent-locations"));
+    m_searchModel->setItems(m_recentLocations);
+}
 
-    if (settings.contains("location-lat")) {
+void LocationWidget::restoreLocation(QVariantMap l)
+{
+    if (l.contains("location-lat")) {
         m_locationIsLatLon = true;
-        m_geodLocation = SGGeod::fromDeg(settings.value("location-lon").toDouble(),
-                                         settings.value("location-lat").toDouble());
-    } else if (settings.contains("location-id")) {
-        m_location = NavDataCache::instance()->loadById(settings.value("location-id").toULongLong());
+        m_geodLocation = SGGeod::fromDeg(l.value("location-lon").toDouble(),
+                                         l.value("location-lat").toDouble());
+    } else if (l.contains("location-id")) {
+        m_location = NavDataCache::instance()->loadById(l.value("location-id").toULongLong());
         m_locationIsLatLon = false;
     }
 
-    m_ui->altitudeSpinbox->setValue(settings.value("altitude", 6000).toInt());
-    m_ui->airspeedSpinbox->setValue(settings.value("speed", 120).toInt());
-    m_ui->headingSpinbox->setValue(settings.value("heading").toInt());
-    m_ui->offsetGroup->setChecked(settings.value("offset-enabled").toBool());
-    m_ui->offsetBearingSpinbox->setValue(settings.value("offset-bearing").toInt());
-    m_ui->offsetNmSpinbox->setValue(settings.value("offset-distance", 10).toInt());
-
-    m_recentLocations = loadPositionedList(settings.value("recent-locations"));
-    m_searchModel->setItems(m_recentLocations);
+    m_ui->altitudeSpinbox->setValue(l.value("altitude", 6000).toInt());
+    m_ui->airspeedSpinbox->setValue(l.value("speed", 120).toInt());
+    m_ui->headingSpinbox->setValue(l.value("heading").toInt());
+    m_ui->offsetGroup->setChecked(l.value("offset-enabled").toBool());
+    m_ui->offsetBearingSpinbox->setValue(l.value("offset-bearing").toInt());
+    m_ui->offsetNmSpinbox->setValue(l.value("offset-distance", 10).toInt());
 
     onLocationChanged();
 
     // now we've loaded airport location data (potentially), we can apply
     // more settings
     if (FGAirport::isAirportType(m_location.ptr())) {
-        if (settings.contains("location-apt-runway")) {
-            QString runway = settings.value("location-apt-runway").toString();
+        if (l.contains("location-apt-runway")) {
+            QString runway = l.value("location-apt-runway").toString();
             int index = m_ui->runwayCombo->findText(runway);
             if (index < 0) {
                 index = 0; // revert to 'active' option
             }
             m_ui->runwayRadio->setChecked(true);
             m_ui->runwayCombo->setCurrentIndex(index);
-        } else if (settings.contains("location-apt-parking")) {
-            QString parking = settings.value("location-apt-parking").toString();
+        } else if (l.contains("location-apt-parking")) {
+            QString parking = l.value("location-apt-parking").toString();
             int index = m_ui->parkingCombo->findText(parking);
             if (index >= 0) {
                 m_ui->parkingRadio->setChecked(true);
@@ -468,8 +470,8 @@ void LocationWidget::restoreSettings()
             }
         }
 
-        m_ui->onFinalCheckbox->setChecked(settings.value("location-on-final").toBool());
-        m_ui->approachDistanceSpin->setValue(settings.value("location-apt-final-distance").toInt());
+        m_ui->onFinalCheckbox->setChecked(l.value("location-on-final").toBool());
+        m_ui->approachDistanceSpin->setValue(l.value("location-apt-final-distance").toInt());
     } // of location is an airport
 
     updateDescription();
@@ -491,50 +493,44 @@ bool LocationWidget::shouldStartPaused() const
     return false;
 }
 
-void LocationWidget::saveSettings()
+QVariantMap LocationWidget::saveLocation() const
 {
-    QSettings settings;
-
-    settings.remove("location-id");
-    settings.remove("location-lon");
-    settings.remove("location-lat");
+    QVariantMap locationSet;
     if (m_locationIsLatLon) {
-        settings.setValue("location-lat", m_geodLocation.getLatitudeDeg());
-        settings.setValue("location-lon", m_geodLocation.getLongitudeDeg());
+        locationSet.insert("location-lat", m_geodLocation.getLatitudeDeg());
+        locationSet.insert("location-lon", m_geodLocation.getLongitudeDeg());
     } else if (m_location) {
-        settings.setValue("location-id", static_cast<qlonglong>(m_location->guid()));
+        locationSet.insert("location-id", static_cast<qlonglong>(m_location->guid()));
 
         if (FGAirport::isAirportType(m_location.ptr())) {
-            settings.remove("location-apt-runway");
-            settings.remove("location-apt-parking");
-
-            settings.setValue("location-on-final", m_ui->onFinalCheckbox->isChecked());
-            settings.setValue("location-apt-final-distance", m_ui->approachDistanceSpin->value());
+            locationSet.insert("location-on-final", m_ui->onFinalCheckbox->isChecked());
+            locationSet.insert("location-apt-final-distance", m_ui->approachDistanceSpin->value());
             if (m_ui->runwayRadio->isChecked()) {
                 if (m_ui->runwayCombo->currentIndex() > 0) {
-                    settings.setValue("location-apt-runway", m_ui->runwayCombo->currentText());
+                    locationSet.insert("location-apt-runway", m_ui->runwayCombo->currentText());
                 } else {
-                    settings.setValue("location-apt-runway", "active");
+                    locationSet.insert("location-apt-runway", "active");
                 }
             } else if (m_ui->parkingRadio->isChecked()) {
-                settings.setValue("location-apt-parking", m_ui->parkingCombo->currentText());
+                locationSet.insert("location-apt-parking", m_ui->parkingCombo->currentText());
             }
         } // of location is an airport
     } // of m_location is valid
 
 
-    settings.setValue("altitude", m_ui->altitudeSpinbox->value());
-    settings.setValue("speed", m_ui->airspeedSpinbox->value());
-    settings.setValue("offset-enabled", m_ui->offsetGroup->isChecked());
-    settings.setValue("offset-bearing", m_ui->offsetBearingSpinbox->value());
-    settings.setValue("offset-distance", m_ui->offsetNmSpinbox->value());
+    locationSet.insert("altitude", m_ui->altitudeSpinbox->value());
+    locationSet.insert("speed", m_ui->airspeedSpinbox->value());
+    locationSet.insert("offset-enabled", m_ui->offsetGroup->isChecked());
+    locationSet.insert("offset-bearing", m_ui->offsetBearingSpinbox->value());
+    locationSet.insert("offset-distance", m_ui->offsetNmSpinbox->value());
 
-    // recent locations is saved on modification
+    locationSet.insert("text", locationDescription());
+
+    return locationSet;
 }
 
 void LocationWidget::setLocationProperties()
 {
-
     SGPropertyNode_ptr presets = fgGetNode("/sim/presets", true);
 
     QStringList props = QStringList() << "vor-id" << "fix" << "ndb-id" <<
@@ -549,8 +545,6 @@ void LocationWidget::setLocationProperties()
             c->clearValue();
         }
     }
-
-
 
     if (m_locationIsLatLon) {
         fgSetDouble("/sim/presets/latitude-deg", m_geodLocation.getLatitudeDeg());
@@ -947,8 +941,6 @@ void LocationWidget::updateDescription()
         } else {
             m_ui->airportDiagram->setApproachExtensionDistance(0.0);
         }
-
-        
     }
 
     emit descriptionChanged(locationDescription());

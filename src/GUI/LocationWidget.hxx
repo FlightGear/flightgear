@@ -44,9 +44,6 @@ public:
     explicit LocationWidget(QWidget *parent = 0);
     ~LocationWidget();
 
-    void saveSettings();
-    void restoreSettings();
-
     QString locationDescription() const;
 
     void setBaseLocation(FGPositionedRef ref);
@@ -56,6 +53,11 @@ public:
     bool shouldStartPaused() const;
 
     void setLocationProperties();
+
+    void restoreLocation(QVariantMap l);
+    QVariantMap saveLocation() const;
+
+    void restoreSettings();
 Q_SIGNALS:
     void descriptionChanged(QString t);
 

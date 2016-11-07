@@ -78,6 +78,7 @@ private slots:
     void onCancelDownload(const QModelIndex& index);
 
     void onPopupAircraftHistory();
+    void onPopupLocationHistory();
 
     void onEditRatingsFilter();
 
@@ -136,6 +137,8 @@ private:
     void delayedAircraftModelReset();
     void onRatingsFilterToggled();
 
+    void updateLocationHistory();
+
     QScopedPointer<Ui::Launcher> m_ui;
     AircraftProxyModel* m_aircraftProxy;
     AircraftItemModel* m_aircraftModel;
@@ -149,6 +152,8 @@ private:
 
     SGSharedPtr<RemoteXMLRequest> m_mpServerRequest;
     bool m_doRestoreMPServer;
+
+    QVariantList m_recentLocations;
 };
 
 #endif // of FG_QTLAUNCHER_PRIVATE_HXX

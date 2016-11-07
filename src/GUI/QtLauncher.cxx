@@ -579,6 +579,8 @@ QtLauncher::QtLauncher() :
 
     connect(m_ui->aircraftHistory, &QPushButton::clicked,
           this, &QtLauncher::onPopupAircraftHistory);
+    connect(m_ui->locationHistory, &QPushButton::clicked,
+          this, &QtLauncher::onPopupLocationHistory);
 
     connect(m_ui->location, &LocationWidget::descriptionChanged,
             m_ui->locationDescription, &QLabel::setText);
@@ -595,6 +597,7 @@ QtLauncher::QtLauncher() :
 
     QIcon historyIcon(":/history-icon");
     m_ui->aircraftHistory->setIcon(historyIcon);
+    m_ui->locationHistory->setIcon(historyIcon);
 
     connect(m_ui->timeOfDayCombo, SIGNAL(currentIndexChanged(int)),
             this, SLOT(updateSettingsSummary()));
@@ -759,6 +762,10 @@ void QtLauncher::restoreSettings()
     }
 
     m_ui->location->restoreSettings();
+    m_recentLocations = settings.value("recent-location-sets").toList();
+    if (!m_recentLocations.isEmpty()) {
+        m_ui->location->restoreLocation(m_recentLocations.front().toMap());
+    }
 
     // rating filters
     m_ui->onlyShowInstalledCheck->setChecked(settings.value("only-show-installed", false).toBool());
@@ -816,12 +823,11 @@ void QtLauncher::saveSettings()
     settings.setValue("ratings-filter", m_ui->ratingsFilterCheck->isChecked());
     settings.setValue("only-show-installed", m_ui->onlyShowInstalledCheck->isChecked());
     settings.setValue("recent-aircraft", QUrl::toStringList(m_recentAircraft));
+    settings.setValue("recent-location-sets", m_recentLocations);
 
     settings.setValue("timeofday", m_ui->timeOfDayCombo->currentIndex());
     settings.setValue("season", m_ui->seasonCombo->currentIndex());
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
-
-    m_ui->location->saveSettings();
 
     settings.setValue("mp-callsign", m_ui->mpCallsign->text());
     settings.setValue("mp-server", m_ui->mpServerCombo->currentData());
@@ -925,6 +931,7 @@ void QtLauncher::onRun()
     }
 
     m_ui->location->setLocationProperties();
+    updateLocationHistory();
 
     // time of day
     if (m_ui->timeOfDayCombo->currentIndex() != 0) {
@@ -1030,6 +1037,23 @@ void QtLauncher::onApply()
     m_ui->location->setLocationProperties();
 
     saveSettings();
+}
+
+void QtLauncher::updateLocationHistory()
+{
+    QVariant locSet = m_ui->location->saveLocation();
+
+    // check for existing; let's use description to imply uniqueness. This means
+    // 'A1111' parkings get merged but I prefer that to keep the menu usable
+    QVariant locDesc = locSet.toMap().value("text");
+    auto it = std::remove_if(m_recentLocations.begin(), m_recentLocations.end(),
+                   [locDesc](QVariant v) { return v.toMap().value("text") == locDesc; });
+    m_recentLocations.erase(it, m_recentLocations.end());
+
+    // now we can always prepend
+    m_recentLocations.prepend(locSet);
+    if (m_recentLocations.size() > MAX_RECENT_AIRCRAFT)
+        m_recentLocations.pop_back();
 }
 
 void QtLauncher::onQuit()
@@ -1242,6 +1266,26 @@ void QtLauncher::onPopupAircraftHistory()
                                                               QItemSelectionModel::ClearAndSelect);
         m_ui->aircraftFilter->clear();
         updateSelectedAircraft();
+    }
+}
+
+void QtLauncher::onPopupLocationHistory()
+{
+    if (m_recentLocations.isEmpty()) {
+        return;
+    }
+
+    QMenu m;
+    Q_FOREACH(QVariant loc, m_recentLocations) {
+        QString summary = loc.toMap().value("text").toString();
+        QAction* act = m.addAction(summary);
+        act->setData(loc);
+    }
+
+    QPoint popupPos = m_ui->locationHistory->mapToGlobal(m_ui->locationHistory->rect().bottomLeft());
+    QAction* triggered = m.exec(popupPos);
+    if (triggered) {
+        m_ui->location->restoreLocation(triggered->data().toMap());
     }
 }
 
