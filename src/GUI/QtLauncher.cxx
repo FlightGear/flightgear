@@ -614,6 +614,11 @@ QtLauncher::QtLauncher() :
     connect(m_ui->msaaCheckbox, SIGNAL(toggled(bool)),
             this, SLOT(updateSettingsSummary()));
 
+    connect(m_ui->mpBox, SIGNAL(toggled(bool)),
+            this, SLOT(updateSettingsSummary()));
+    connect(m_ui->mpCallsign, SIGNAL(textChanged(QString)),
+            this, SLOT(updateSettingsSummary()));
+
     connect(m_ui->rembrandtCheckbox, SIGNAL(toggled(bool)),
             this, SLOT(onRembrandtToggled(bool)));
     connect(m_ui->terrasyncCheck, &QCheckBox::toggled,
@@ -1335,6 +1340,10 @@ void QtLauncher::updateSettingsSummary()
 
     if (m_ui->startPausedCheck->isChecked()) {
         summary.append("paused");
+    }
+
+    if (m_ui->mpBox->isChecked()) {
+        summary.append(tr("multiplayer: %1").arg(m_ui->mpCallsign->text()));
     }
 
     QString s = summary.join(", ");
