@@ -435,7 +435,12 @@ void fgSplashProgress( const char *identifier, unsigned int percent ) {
             }
         }
         if (kbytesPerSec > 0) {
-            oss << " - " << kbytesPerSec << " Kb/sec";
+            if (kbytesPerSec > 100) {
+                double mbytesPerSec = kbytesPerSec / 1024.0;
+                oss << " - " << std::fixed << std::setprecision(1) << mbytesPerSec << "Mb/sec";
+            } else {
+                oss << " - " << kbytesPerSec << " Kb/sec";
+            }
         }
         fgSetString("/sim/startup/splash-progress-text", oss.str());
         return;
