@@ -35,8 +35,8 @@
       <attribute name="title">
        <string>Summary</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0,0,0,1" columnstretch="0,0,0,1,0">
-       <item row="3" column="2">
+      <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0,0,0,0,2,0,0" columnstretch="0,0,0,1,0">
+       <item row="6" column="2">
         <widget class="QLabel" name="label_5">
          <property name="font">
           <font>
@@ -51,7 +51,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="2">
+       <item row="5" column="2">
         <widget class="QLabel" name="label_3">
          <property name="font">
           <font>
@@ -66,7 +66,7 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="4">
+       <item row="3" column="4">
         <widget class="QPushButton" name="aircraftHistory">
          <property name="autoDefault">
           <bool>false</bool>
@@ -86,7 +86,7 @@
          </property>
         </spacer>
        </item>
-       <item row="1" column="2">
+       <item row="3" column="2">
         <widget class="QLabel" name="label_4">
          <property name="font">
           <font>
@@ -101,7 +101,7 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="3" colspan="2">
+       <item row="9" column="3" colspan="2">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -114,8 +114,8 @@
          </property>
         </spacer>
        </item>
-       <item row="1" column="3">
-        <widget class="QLabel" name="aircraftDescription">
+       <item row="3" column="3">
+        <widget class="QLabel" name="aircraftName">
          <property name="font">
           <font>
            <pointsize>16</pointsize>
@@ -129,14 +129,47 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="4">
+       <item row="4" column="3" colspan="2">
+        <widget class="QLabel" name="aircraftDescription">
+         <property name="font">
+          <font>
+           <pointsize>11</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="4">
         <widget class="QPushButton" name="locationHistory">
          <property name="autoDefault">
           <bool>false</bool>
          </property>
         </widget>
        </item>
-       <item row="2" column="3">
+       <item row="6" column="3" colspan="2">
+        <widget class="QLabel" name="settingsDescription">
+         <property name="font">
+          <font>
+           <pointsize>16</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>settings</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="3">
         <widget class="QLabel" name="locationDescription">
          <property name="font">
           <font>
@@ -151,7 +184,7 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1" rowspan="3">
+       <item row="2" column="3" colspan="2">
         <widget class="QLabel" name="thumbnail">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -167,24 +200,6 @@
          </property>
          <property name="text">
           <string>TextLabel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="3" colspan="2">
-        <widget class="QLabel" name="settingsDescription">
-         <property name="font">
-          <font>
-           <pointsize>16</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>settings</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
          </property>
         </widget>
        </item>

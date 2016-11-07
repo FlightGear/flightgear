@@ -1212,7 +1212,11 @@ void QtLauncher::updateSelectedAircraft()
     if (index.isValid()) {
         QPixmap pm = index.data(Qt::DecorationRole).value<QPixmap>();
         m_ui->thumbnail->setPixmap(pm);
-        m_ui->aircraftDescription->setText(index.data(Qt::DisplayRole).toString());
+        m_ui->aircraftName->setText(index.data(Qt::DisplayRole).toString());
+
+        QVariant longDesc = index.data(AircraftLongDescriptionRole);
+        m_ui->aircraftDescription->setVisible(!longDesc.isNull());
+        m_ui->aircraftDescription->setText(longDesc.toString());
 
         int status = index.data(AircraftPackageStatusRole).toInt();
         bool canRun = (status == PackageInstalled);
@@ -1228,7 +1232,8 @@ void QtLauncher::updateSelectedAircraft()
         m_ui->location->setAircraftType(aircraftType);
     } else {
         m_ui->thumbnail->setPixmap(QPixmap());
-        m_ui->aircraftDescription->setText("");
+        m_ui->aircraftName->setText("");
+        m_ui->aircraftDescription->hide();
         m_ui->runButton->setEnabled(false);
     }
 }
