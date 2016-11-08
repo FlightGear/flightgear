@@ -65,12 +65,12 @@ public:
         _pagedLODMaximumProp(fgGetNode("/sim/rendering/max-paged-lod", true))
     {
         _useVBOsProp->addChangeListener(this, true);
-      
+
         _enableCacheProp->addChangeListener(this, true);
         if (_enableCacheProp->getType() == simgear::props::NONE) {
             _enableCacheProp->setBoolValue(true);
         }
-      
+
         if (_pagedLODMaximumProp->getType() == simgear::props::NONE) {
             // not set, use OSG default / environment value variable
             osg::ref_ptr<osgViewer::Viewer> viewer(globals->get_renderer()->getViewer());
@@ -79,14 +79,14 @@ public:
         }
         _pagedLODMaximumProp->addChangeListener(this, true);
     }
-    
+
     ~TileManagerListener()
     {
         _useVBOsProp->removeChangeListener(this);
         _enableCacheProp->removeChangeListener(this);
         _pagedLODMaximumProp->removeChangeListener(this);
     }
-    
+
     virtual void valueChanged(SGPropertyNode* prop)
     {
         if (prop == _useVBOsProp) {
@@ -101,7 +101,7 @@ public:
           viewer->getDatabasePager()->setTargetMaximumNumberOfPageLOD(v);
         }
     }
-    
+
 private:
     FGTileMgr* _manager;
     SGPropertyNode_ptr _useVBOsProp,
@@ -160,10 +160,10 @@ void FGTileMgr::reinit()
   // drops the previous options reference
     _options = new simgear::SGReaderWriterOptions;
     _listener = new TileManagerListener(this);
-    
+
     materialLibChanged();
     _options->setPropertyNode(globals->get_props());
-    
+
     osgDB::FilePathList &fp = _options->getDatabasePathList();
     const PathList &sc = globals->get_fg_scenery();
     fp.clear();
@@ -172,19 +172,19 @@ void FGTileMgr::reinit()
         fp.push_back(it->local8BitStr());
     }
     _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().local8BitStr());
-    
+
     if (_terra_sync) {
       _options->setPluginStringData("SimGear::TERRASYNC_ROOT", globals->get_terrasync_dir().local8BitStr());
     }
-    
+
     if (!_disableNasalHooks->getBoolValue())
       _options->setModelData(new FGNasalModelDataProxy);
 
-    _options->setPluginStringData("SimGear::BARE_LOD_RANGE", fgGetString("/sim/rendering/static-lod/bare", boost::lexical_cast<string>(SG_OBJECT_RANGE_BARE)));
-    _options->setPluginStringData("SimGear::ROUGH_LOD_RANGE", fgGetString("/sim/rendering/static-lod/rough", boost::lexical_cast<string>(SG_OBJECT_RANGE_ROUGH)));
-    _options->setPluginStringData("SimGear::ROUGH_LOD_DETAILED", fgGetString("/sim/rendering/static-lod/detailed", boost::lexical_cast<string>(SG_OBJECT_RANGE_DETAILED)));
+    _options->setPluginStringData("SimGear::LOD_RANGE_BARE", fgGetString("/sim/rendering/static-lod/bare", boost::lexical_cast<string>(SG_OBJECT_RANGE_BARE)));
+    _options->setPluginStringData("SimGear::LOD_RANGE_ROUGH", fgGetString("/sim/rendering/static-lod/rough", boost::lexical_cast<string>(SG_OBJECT_RANGE_ROUGH)));
+    _options->setPluginStringData("SimGear::LOD_RANGE_DETAILED", fgGetString("/sim/rendering/static-lod/detailed", boost::lexical_cast<string>(SG_OBJECT_RANGE_DETAILED)));
     _options->setPluginStringData("SimGear::RENDER_BUILDING_MESH", fgGetBool("/sim/rendering/building-mesh", false) ? "true" : "false");
-  
+
     if (state != Start)
     {
       // protect against multiple scenery reloads and properly reset flags,
@@ -194,25 +194,25 @@ void FGTileMgr::reinit()
         return;
       }
     }
-  
+
     _scenery_loaded->setBoolValue(false);
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
-    
+
     materialLibChanged();
 
     // remove all old scenery nodes from scenegraph and clear cache
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
     tile_cache.init();
-    
+
     // clear OSG cache, except on initial start-up
     if (state != Start)
     {
         osgDB::Registry::instance()->clearObjectCache();
     }
-    
+
     state = Inited;
-    
+
     previous_bucket.make_bad();
     current_bucket.make_bad();
     scheduled_visibility = 100.0;
@@ -280,7 +280,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
             "scheduling needed tiles for " << curr_bucket
            << ", tile-width-m:" << tile_width << ", tile-height-m:" << tile_height);
 
-    
+
     // cout << "tile width = " << tile_width << "  tile_height = "
     //      << tile_height << endl;
 
@@ -297,7 +297,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     // cout << "max cache size = " << tile_cache.get_max_cache_size()
     //      << " current cache size = " << tile_cache.get_size() << endl;
 
-    // clear flags of all tiles belonging to the previous view set 
+    // clear flags of all tiles belonging to the previous view set
     tile_cache.clear_current_view();
 
     // update timestamps, so all tiles scheduled now are *newer* than any tile previously loaded
@@ -319,10 +319,10 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
             if (!b.isValid()) {
                 continue;
             }
-            
+
             float priority = (-1.0) * (x*x+y*y);
             sched_tile( b, priority, true, 0.0 );
-            
+
             if (_terra_sync) {
                 _terra_sync->scheduleTile(b);
             }
@@ -343,7 +343,7 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
     TileEntry *e;
     int loading=0;
     int sz=0;
-    
+
     tile_cache.set_current_time( current_time );
     tile_cache.reset_traversal();
 
@@ -356,7 +356,7 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
             // Set the ssg transform and update it's range selector
             // based on current visibilty
             e->prep_ssg_node(vis);
-            
+
             if (!e->is_loaded()) {
                 bool nonExpiredOrCurrent = !e->is_expired(current_time) || e->is_current_view();
                 bool downloading = isTileDirSyncing(e->tileFileName);
@@ -387,7 +387,7 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
       dropTiles = true;
       drop_count = sz; // no limit on tiles to drop
     }
-  
+
     if (dropTiles)
     {
         long drop_index = _enableCache ? tile_cache.get_drop_tile() :
@@ -399,14 +399,14 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
             SG_LOG(SG_TERRAIN, SG_DEBUG, "Dropping:" << old->get_tile_bucket());
 
             tile_cache.clear_entry(drop_index);
-            
+
             osg::ref_ptr<osg::Object> subgraph = old->getNode();
             old->removeFromSceneGraph();
             delete old;
             // zeros out subgraph ref_ptr, so subgraph is owned by
             // the pager and will be deleted in the pager thread.
             _pager->queueDeleteRequest(subgraph);
-          
+
             if (!_enableCache)
                 drop_index = tile_cache.get_first_expired_tile();
             // limit tiles dropped to drop_count
@@ -435,8 +435,8 @@ void FGTileMgr::update(double)
         bool fdmInited = fgGetBool("sim/fdm-initialized");
         bool positionFinalized = fgGetBool("sim/position-finalized");
         bool sceneryOverride = _scenery_override->getBoolValue();
-        
-        
+
+
     // we are done if final position is set and the scenery & FDM are done.
     // scenery-override can ignore the last two, but not position finalization.
         if (positionFinalized && (sceneryOverride || (isSceneryLoaded() && fdmInited)))
@@ -453,7 +453,7 @@ void FGTileMgr::update(double)
             } else {
                 fgSplashProgress("loading-scenery");
             }
-            
+
             // be nice to loader threads while waiting for initial scenery, reduce to 20fps
             SGTimeStamp::sleepForMSec(50);
         }
@@ -493,7 +493,7 @@ void FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
             scheduled_visibility = range_m;
             schedule_needed(current_bucket, range_m);
         }
-        
+
         // save bucket
         previous_bucket = current_bucket;
     } else if ( state == Start || state == Inited ) {
@@ -520,7 +520,7 @@ bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double 
 
     SGBucket bucket(position);
     available = sched_tile( bucket, priority, false, duration );
-  
+
     if ((!available)&&(duration==0.0)) {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "schedule_scenery: Scheduling tile at bucket:" << bucket << " return false" );
         return false;
@@ -534,7 +534,7 @@ bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double 
     double tile_r = 0.5*sqrt(tile_width*tile_width + tile_height*tile_height);
     double max_dist = tile_r + range_m;
     double max_dist2 = max_dist*max_dist;
-    
+
     int xrange = (int)fabs(range_m / tile_width) + 1;
     int yrange = (int)fabs(range_m / tile_height) + 1;
 
@@ -549,7 +549,7 @@ bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double 
                 if (!b.isValid()) {
                     continue;
                 }
-                
+
                 double distance2 = distSqr(cartPos, SGVec3d::fromGeod(b.get_center()));
                 // Do not ask if it is just the next tile but way out of range.
                 if (distance2 <= max_dist2)
@@ -580,11 +580,10 @@ bool FGTileMgr::isTileDirSyncing(const std::string& tileFileName) const
     if (!_terra_sync) {
         return false;
     }
-    
+
     std::string nameWithoutExtension = tileFileName.substr(0, tileFileName.size() - 4);
     long int bucketIndex = simgear::strutils::to_int(nameWithoutExtension);
     SGBucket bucket(bucketIndex);
-    
+
     return _terra_sync->isTileDirPending(bucket.gen_base_path());
 }
-
