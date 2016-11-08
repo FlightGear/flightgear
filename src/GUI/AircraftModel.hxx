@@ -29,6 +29,7 @@
 #include <QSharedPointer>
 #include <QUrl>
 
+#include <simgear/package/Delegate.hxx>
 #include <simgear/package/Root.hxx>
 
 const int AircraftPathRole = Qt::UserRole + 1;
