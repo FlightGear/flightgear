@@ -249,6 +249,8 @@ public:
     FGTaxiNodeRef findNearestNode(const SGGeod& aGeod) const;
     FGTaxiNodeRef findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL) const;
 
+    FGTaxiNodeRef findNearestNodeOffRunway(const SGGeod& aGeod) const;
+
     FGTaxiSegment *findSegment(unsigned int idx) const;
 
     FGTaxiSegment* findOppositeSegment(unsigned int index) const;

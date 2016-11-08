@@ -222,6 +222,24 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNode(const SGGeod & aGeod) const
     return result;
 }
 
+FGTaxiNodeRef FGGroundNetwork::findNearestNodeOffRunway(const SGGeod& aGeod) const
+{
+    SGVec3d cartPos = SGVec3d::fromGeod(aGeod);
+    auto node = std::min_element(m_nodes.begin(), m_nodes.end(),
+                                 [cartPos](const FGTaxiNodeRef& a, const FGTaxiNodeRef& b)
+                                 {
+                                     double aDist = a->getIsOnRunway() ? DBL_MAX : distSqr(cartPos, a->cart());
+                                     double bDist = b->getIsOnRunway() ? DBL_MAX : distSqr(cartPos, b->cart());
+                                     return  aDist < bDist;
+                                 });
+
+    if (node == m_nodes.end()) {
+        return FGTaxiNodeRef();
+    }
+
+    return *node;
+}
+
 FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGRunway* aRunway) const
 {
     SG_UNUSED(aRunway);
