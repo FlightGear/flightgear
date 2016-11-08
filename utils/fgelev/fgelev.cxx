@@ -35,6 +35,7 @@
 #include <simgear/bvh/BVHLineSegmentVisitor.hxx>
 #include <simgear/bvh/BVHPager.hxx>
 #include <simgear/bvh/BVHPageNode.hxx>
+#include <simgear/bvh/BVHMaterial.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/BVHPageNodeOSG.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
@@ -74,7 +75,7 @@ public:
 
 static bool
 intersect(sg::BVHNode& node, sg::BVHPager& pager,
-          const SGVec3d& start, SGVec3d& end, double offset)
+          const SGVec3d& start, SGVec3d& end, double offset, const simgear::BVHMaterial** material)
 {
     SGVec3d perp = offset*perpendicular(start - end);
     Visitor visitor(SGLineSegmentd(start + perp, end + perp), pager);
@@ -82,6 +83,7 @@ intersect(sg::BVHNode& node, sg::BVHPager& pager,
     if (visitor.empty())
         return false;
     end = visitor.getLineSegment().getEnd();
+    * material = visitor.getMaterial();
     return true;
 }
 
@@ -96,6 +98,8 @@ main(int argc, char** argv)
     unsigned expire;
     if (arguments.read("--expire", expire)) {
     } else expire = 10;
+
+    bool printSolidness = arguments.read("--print-solidness");
     
     std::string fg_root;
     if (arguments.read("--fg-root", fg_root)) {
@@ -203,11 +207,12 @@ main(int argc, char** argv)
         SGVec3d start = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, 10000));
         SGVec3d end = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, -1000));
 
+        const simgear::BVHMaterial* material = NULL;
         // Try to find an intersection
-        bool found = intersect(*node, pager, start, end, 0);
+        bool found = intersect(*node, pager, start, end, 0, &material);
         double scale = 1e-5;
         while (!found && scale <= 1) {
-            found = intersect(*node, pager, start, end, scale);
+            found = intersect(*node, pager, start, end, scale, &material);
             scale *= 2;
         }
         if (1e-5 < scale)
@@ -216,11 +221,15 @@ main(int argc, char** argv)
                       << "deg lat = " << lat << "deg" << std::endl;
 
         std::cout << id << ": ";
+        string solid = material && material->get_solid() ? "solid" : "-";
         if (!found) {
             std::cout << "-1000" << std::endl;
         } else {
             SGGeod geod = SGGeod::fromCart(end);
-            std::cout << std::fixed << std::setprecision(3) << geod.getElevationM() << std::endl;
+            std::cout << std::fixed << std::setprecision(3) << geod.getElevationM();
+            if( printSolidness )
+                std::cout <<  " " << (material && material->get_solid() ? "solid" : "-");
+            std::cout << std::endl;
         }
     }
 
