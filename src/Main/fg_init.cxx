@@ -131,6 +131,7 @@
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Cockpit/cockpitDisplayManager.hxx>
 #include <Network/HTTPClient.hxx>
+#include <Network/DNSClient.hxx>
 #include <Network/fgcom.hxx>
 #include <Network/http/httpd.hxx>
 #include <Include/version.h>
@@ -735,6 +736,7 @@ void fgCreateSubsystems(bool duringReset) {
     if (!globals->get_subsystem<FGHTTPClient>()) {
         globals->add_new_subsystem<FGHTTPClient>();
     }
+    globals->add_new_subsystem<FGDNSClient>();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the flight model subsystem.

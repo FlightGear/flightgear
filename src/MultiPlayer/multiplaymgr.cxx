@@ -41,14 +41,14 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include <AIModel/AIManager.hxx>
 #include <AIModel/AIMultiplayer.hxx>
 #include <Main/fg_props.hxx>
-#include <Network/RemoteXMLRequest.hxx>
-#include <Network/HTTPClient.hxx>
 #include "multiplaymgr.hxx"
 #include "mpmessages.hxx"
+#include "MPServerResolver.hxx"
 #include <FDM/flightProperties.hxx>
 
 using namespace std;
@@ -428,40 +428,60 @@ static bool do_multiplayer_disconnect(const SGPropertyNode * arg) {
 //  none
 //
 //////////////////////////////////////////////////////////////////////
-static bool do_multiplayer_refreshserverlist(const SGPropertyNode * arg) {
-	FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem("mp");
-	if (!self) {
-		SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
-		return false;
-	}
 
-    FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
-	if (!http) {
-		SG_LOG(SG_IO, SG_ALERT,
-				"do_multiplayer.refreshserverlist: HTTP client not running");
-		return false;
-	}
+static bool
+do_multiplayer_refreshserverlist (const SGPropertyNode * arg)
+{
+  using namespace simgear;
 
-	string url(
-			fgGetString("/sim/multiplay/serverlist-url",
-					"http://liveries.flightgear.org/mpstatus/mpservers.xml"));
+  FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem ("mp");
+  if (!self) {
+    SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
+    return false;
+  }
 
-	if (url.empty()) {
-		SG_LOG(SG_IO, SG_ALERT,
-				"do_multiplayer.refreshserverlist: no URL given");
-		return false;
-	}
+  // MPServerResolver implementation to fill the mp server list
+  // deletes itself when done
+  class MyMPServerResolver : public MPServerResolver {
+  public:
+    MyMPServerResolver () :
+        MPServerResolver ()
+    {
+      setTarget (fgGetNode ("/sim/multiplay/server-list", true));
+      setDnsName (fgGetString ("/sim/multiplay/dns/query-dn", "flightgear.org"));
+      setService (fgGetString ("/sim/multiplay/dns/query-srv-service", "fgms"));
+      setProtocol (fgGetString ("/sim/multiplay/dns/query-srv-protocol", "udp"));
+      _completeNode->setBoolValue (false);
+      _failureNode->setBoolValue (false);
+    }
 
-	SGPropertyNode *targetnode = fgGetNode("/sim/multiplay/server-list", true);
-	SGPropertyNode *completeNode = fgGetNode("/sim/multiplay/got-servers", true);
-	SGPropertyNode *failureNode = fgGetNode("/sim/multiplay/get-servers-failure", true);
-	RemoteXMLRequest* req = new RemoteXMLRequest(url, targetnode);
-	req->setCompletionProp(completeNode);
-	req->setFailedProp(failureNode);
-	completeNode->setBoolValue(false);
-	failureNode->setBoolValue(false);
-	http->makeRequest(req);
-	return true;
+    ~MyMPServerResolver ()
+    {
+    }
+
+    virtual void
+    onSuccess ()
+    {
+      SG_LOG(SG_NETWORK, SG_DEBUG, "MyMPServerResolver: trigger success");
+      _completeNode->setBoolValue (true);
+      delete this;
+    }
+    virtual void
+    onFailure ()
+    {
+      SG_LOG(SG_NETWORK, SG_DEBUG, "MyMPServerResolver: trigger failure");
+      _failureNode->setBoolValue (true);
+      delete this;
+    }
+
+  private:
+    SGPropertyNode *_completeNode = fgGetNode ("/sim/multiplay/got-servers", true);
+    SGPropertyNode *_failureNode = fgGetNode ("/sim/multiplay/get-servers-failure", true);
+  };
+
+  MyMPServerResolver * mpServerResolver = new MyMPServerResolver ();
+  mpServerResolver->run ();
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////
