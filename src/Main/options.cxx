@@ -2590,6 +2590,10 @@ void Options::showVersion() const
     cout << "PLIB version: " << PLIB_VERSION << endl;
 }
 
+// Print a report using JSON syntax on the standard output, encoded in UTF-8.
+//
+// The report format is versioned, don't forget to update it when making
+// changes (see below).
 void Options::printJSONReport() const
 {
   cJSON *rootNode = cJSON_CreateObject();
@@ -2597,7 +2601,14 @@ void Options::printJSONReport() const
   cJSON *metaNode = cJSON_CreateObject();
   cJSON_AddItemToObject(rootNode, "meta", metaNode);
   cJSON_AddStringToObject(metaNode, "type", "FlightGear JSON report");
-  cJSON_AddNumberToObject(metaNode, "format version", 1);
+  // When making compatible changes to the format (e.g., adding members to
+  // JSON objects), only the minor version number should be increased.
+  // Increase the major version number when a change is backward-incompatible
+  // (such as the removal, renaming or semantic change of a member). Of
+  // course, incompatible changes should only be considered as a last
+  // recourse.
+  cJSON_AddNumberToObject(metaNode, "format major version", 1);
+  cJSON_AddNumberToObject(metaNode, "format minor version", 0);
 
   cJSON *generalNode = cJSON_CreateObject();
   cJSON_AddItemToObject(rootNode, "general", generalNode);
