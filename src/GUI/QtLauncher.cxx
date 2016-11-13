@@ -349,6 +349,12 @@ public:
         invalidate();
     }
 
+    void setAircraftFilterString(QString s)
+    {
+        m_filterString = s;
+        invalidate();
+    }
+
 public slots:
     void setRatingFilterEnabled(bool e)
     {
@@ -380,7 +386,7 @@ protected:
             return true;
         }
 
-        if (!QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent)) {
+        if (!filterAircraft(index)) {
             return false;
         }
 
@@ -404,9 +410,37 @@ protected:
     }
 
 private:
+    bool filterAircraft(const QModelIndex& sourceIndex) const
+    {
+        if (m_filterString.isEmpty()) {
+            return true;
+        }
+
+        QString baseName = sourceIndex.data(Qt::DisplayRole).toString();
+        if (baseName.contains(m_filterString, Qt::CaseInsensitive)) {
+            return true;
+        }
+
+        QString longDesc = sourceIndex.data(AircraftLongDescriptionRole).toString();
+        if (longDesc.contains(m_filterString, Qt::CaseInsensitive)) {
+            return true;
+        }
+
+        const int variantCount = sourceIndex.data(AircraftVariantCountRole).toInt();
+        for (int variant = 0; variant < variantCount; ++variant) {
+            QString desc = sourceIndex.data(AircraftVariantDescriptionRole + variant).toString();
+            if (desc.contains(m_filterString, Qt::CaseInsensitive)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool m_ratingsFilter;
     bool m_onlyShowInstalled;
     int m_ratings[4];
+    QString m_filterString;
 };
 
 class NoOfficialHangarMessage : public QWidget
@@ -594,7 +628,7 @@ QtLauncher::QtLauncher() :
     connect(m_ui->onlyShowInstalledCheck, &QAbstractButton::toggled,
             m_aircraftProxy, &AircraftProxyModel::setInstalledFilterEnabled);
     connect(m_ui->aircraftFilter, &QLineEdit::textChanged,
-            m_aircraftProxy, &QSortFilterProxyModel::setFilterFixedString);
+            m_aircraftProxy, &AircraftProxyModel::setAircraftFilterString);
 
     connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
     connect(m_ui->quitButton, SIGNAL(clicked()), this, SLOT(onQuit()));
