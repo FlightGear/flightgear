@@ -36,6 +36,7 @@
 #include <Airports/runways.hxx>
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
+#include <Airports/groundnetwork.hxx>
 #include <AIModel/AIManager.hxx>
 #include <GUI/MessageBox.hxx>
 
@@ -166,21 +167,28 @@ boost::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
 {
     fgSetString("/sim/atc/runway", runway->ident().c_str());
     double offsetNm = fgGetDouble("/sim/presets/offset-distance-nm");
+    double startOffset = fgGetDouble("/sim/airport/runways/start-offset-m", 5.0);
+    SGGeod pos = runway->pointOnCenterline(startOffset);
 
     if (isMPEnabled() && (fabs(offsetNm) <0.1)) {
         SG_LOG( SG_GENERAL, SG_WARN, "Requested to start on " << runway->airport()->ident() << "/" <<
                runway->ident() << ", MP is enabled so computing hold short position to avoid runway incursion");
 
-        // set this so multiplayer.nas can inform the user
-        fgSetBool("/sim/presets/avoided-mp-runway", true);
+        FGGroundNetwork* groundNet = runway->airport()->groundNetwork();
+        // add a margin, try to keep the entire aeroplane comfortable off the
+        // runway. 
+        double margin = startOffset + (runway->widthM() * 1.5);
+        FGTaxiNodeRef taxiNode = groundNet ? groundNet->findNearestNodeOffRunway(pos, runway, margin) : 0;
+        if (taxiNode) {
+            // set this so multiplayer.nas can inform the user
+            fgSetBool("/sim/presets/avoided-mp-runway", true);
+            return boost::make_tuple(taxiNode->geod(), SGGeodesy::courseDeg(taxiNode->geod(), pos));
+        }
 
-        double width = runway->widthM();
-        double offset = fgGetDouble("/sim/airport/runways/start-offset-m", 5.0) + width;
-        SGGeod pos = runway->pointOffCenterline(width * 0.5, -offset);
-        return boost::make_tuple(pos, runway->headingDeg() + 90.0);
+        // if we couldn't find a suitable taxi-node, give up. Guessing a position
+        // causes too much pain (starting in the water or similar bad things)
     }
 
-    SGGeod pos = runway->pointOnCenterline(fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
     return boost::make_tuple(pos, runway->headingDeg());
 }
 

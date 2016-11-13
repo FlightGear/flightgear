@@ -36,6 +36,9 @@
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/math/SGLineSegment.hxx>
+#include <simgear/math/SGGeometryFwd.hxx>
+#include <simgear/math/SGIntersect.hxx>
 
 #include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
@@ -222,18 +225,28 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNode(const SGGeod & aGeod) const
     return result;
 }
 
-FGTaxiNodeRef FGGroundNetwork::findNearestNodeOffRunway(const SGGeod& aGeod) const
+FGTaxiNodeRef FGGroundNetwork::findNearestNodeOffRunway(const SGGeod& aGeod, FGRunway* rwy, double marginM) const
 {
-    SGVec3d cartPos = SGVec3d::fromGeod(aGeod);
-    auto node = std::min_element(m_nodes.begin(), m_nodes.end(),
-                                 [cartPos](const FGTaxiNodeRef& a, const FGTaxiNodeRef& b)
-                                 {
-                                     double aDist = a->getIsOnRunway() ? DBL_MAX : distSqr(cartPos, a->cart());
-                                     double bDist = b->getIsOnRunway() ? DBL_MAX : distSqr(cartPos, b->cart());
-                                     return  aDist < bDist;
-                                 });
+    FGTaxiNodeVector nodes;
+    const SGLineSegmentd runwayLine(rwy->cart(), SGVec3d::fromGeod(rwy->end()));
+    const double marginMSqr = marginM * marginM;
+    const SGVec3d cartPos = SGVec3d::fromGeod(aGeod);
 
-    if (node == m_nodes.end()) {
+    std::copy_if(m_nodes.begin(), m_nodes.end(), std::back_inserter(nodes),
+                 [runwayLine, cartPos, marginMSqr] (const FGTaxiNodeRef& a)
+    {
+        if (a->getIsOnRunway()) return false;
+        return (distSqr(runwayLine, a->cart()) >= marginMSqr);
+    });
+
+
+
+    // find closest of matching nodes
+    auto node = std::min_element(nodes.begin(), nodes.end(),
+                                 [cartPos](const FGTaxiNodeRef& a, const FGTaxiNodeRef& b)
+                                 { return distSqr(cartPos, a->cart()) < distSqr(cartPos, b->cart()); });
+
+    if (node == nodes.end()) {
         return FGTaxiNodeRef();
     }
 
