@@ -1416,6 +1416,7 @@ void FGStartupController::render(bool visible)
         //double elevation_meters = 0.0;
         //double elevation_feet = 0.0;
 
+        FGGroundNetwork* groundNet = parent->parent()->groundNetwork();
 
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         double dx = 0;
@@ -1427,7 +1428,7 @@ void FGStartupController::render(bool visible)
                 int pos = i->getCurrentPosition();
                 //cerr << "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos << endl;
                 if (pos > 0) {
-                    FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(pos);
+                    FGTaxiSegment *segment = groundNet->findSegment(pos);
                     SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
                     SGGeod end  (segment->getEnd()->geod());
 
@@ -1512,7 +1513,7 @@ void FGStartupController::render(bool visible)
                         //cerr << "rendering for " << i->getAircraft()->getCallSign() << "intention = " << k << endl;
                         osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                         obj_trans->setDataVariance(osg::Object::STATIC);
-                        FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(k);
+                        FGTaxiSegment *segment  = groundNet->findSegment(k);
 
                         double elevationStart = segment->getStart()->getElevationM();
                         double elevationEnd   = segment->getEnd  ()->getElevationM();

@@ -252,7 +252,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     assert( rwy != NULL );
     SGGeod runwayTakeoff = rwy->pointOnCenterline(5.0);
 
-    FGGroundNetwork *gn = apt->getDynamics()->getGroundNetwork();
+    FGGroundNetwork *gn = apt->groundNetwork();
     if (!gn->exists()) {
         createDefaultTakeoffTaxi(ac, apt, rwy);
         return true;
@@ -389,7 +389,7 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
                                             acType, airline);
 
     SGGeod lastWptPos = waypoints.back()->getPos();
-    FGGroundNetwork *gn = apt->getDynamics()->getGroundNetwork();
+    FGGroundNetwork *gn = apt->groundNetwork();
 
     // Find a route from runway end to parking/gate.
     if (!gn->exists()) {
@@ -647,8 +647,8 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
 
     double dAlt = 0; //  = alt - (apt->getElevation() + 2000);
     FGTaxiNodeRef tn;
-    if (apt->getDynamics()->getGroundNetwork()) {
-        tn = apt->getDynamics()->getGroundNetwork()->findNearestNode(refPoint);
+    if (apt->groundNetwork()) {
+        tn = apt->groundNetwork()->findNearestNode(refPoint);
     }
   
     if (tn) {
@@ -969,7 +969,7 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
     wpt->setSpeed(vTaxi);
     double mindist = (1.1 * rolloutDistance) + touchdownDistance;
 
-    FGGroundNetwork *gn = apt->getDynamics()->getGroundNetwork();
+    FGGroundNetwork *gn = apt->groundNetwork();
     if (!gn) {
       return true;
     }

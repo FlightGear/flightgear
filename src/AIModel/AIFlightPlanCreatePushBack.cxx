@@ -91,7 +91,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 
     }
   
-    FGGroundNetwork* groundNet = dep->getDynamics()->getGroundNetwork();
+    FGGroundNetwork* groundNet = dep->groundNetwork();
     FGParking *parking = gate.parking();
     if (parking && parking->getPushBackPoint() > 0) {
         FGTaxiRoute route = groundNet->findShortestRoute(parking, parking->getPushBackPoint(), false);
@@ -134,7 +134,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         ac->setTaxiClearanceRequest(false);
         double az2 = 0.0;
 
-      FGTaxiSegment* pushForwardSegment = dep->getDynamics()->getGroundNetwork()->findSegment(parking, 0);
+      FGTaxiSegment* pushForwardSegment = dep->groundNetwork()->findSegment(parking, 0);
       // there aren't any routes for this parking.
       if (!pushForwardSegment) {
           SG_LOG(SG_AI, SG_ALERT, "Gate " << parking->ident() << "doesn't seem to have routes associated with it.");

@@ -455,7 +455,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
                                         double lon, double heading,
                                         double speed, double alt)
 {
-    FGGroundNetwork* network = dynamics->getGroundNetwork();
+    FGGroundNetwork* network = dynamics->parent()->groundNetwork();
     TrafficVectorIterator current;
     TrafficVectorIterator i = activeTraffic.begin();
     if (activeTraffic.size()) {
@@ -762,7 +762,7 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
 void FGGroundController::render(bool visible)
 {
     SGMaterialLib *matlib = globals->get_matlib();
-    FGGroundNetwork* network = dynamics->getGroundNetwork();
+    FGGroundNetwork* network = dynamics->parent()->groundNetwork();
 
     if (group) {
         //int nr = ;
@@ -956,7 +956,7 @@ string FGGroundController::getName() {
 void FGGroundController::update(double dt)
 {
     time_t now = globals->get_time_params()->get_cur_time();
-    FGGroundNetwork* network = dynamics->getGroundNetwork();
+    FGGroundNetwork* network = dynamics->parent()->groundNetwork();
     network->unblockAllSegments(now);
     int priority = 1;
 
@@ -1000,7 +1000,7 @@ void FGGroundController::updateStartupTraffic(TrafficVectorIterator i,
         return;
     }
 
-    FGGroundNetwork* network = dynamics->getGroundNetwork();
+    FGGroundNetwork* network = dynamics->parent()->groundNetwork();
 
     if (!network) {
         SG_LOG(SG_ATC, SG_ALERT, "updateStartupTraffic: missing ground network");
@@ -1068,7 +1068,7 @@ bool FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
 
     double length = 0;
     double vTaxi = (i->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
-    FGGroundNetwork* network = dynamics->getGroundNetwork();
+    FGGroundNetwork* network = dynamics->parent()->groundNetwork();
 
     if (!network) {
         SG_LOG(SG_ATC, SG_ALERT, "updateActiveTraffic: missing ground network");

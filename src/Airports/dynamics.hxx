@@ -154,8 +154,6 @@ public:
         return &approachController;
     };
 
-    FGGroundNetwork* getGroundNetwork() const;
-
     int getGroundFrequency(unsigned leg);
     int getTowerFrequency  (unsigned nr);
 

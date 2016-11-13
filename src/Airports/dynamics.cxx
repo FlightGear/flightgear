@@ -182,7 +182,7 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
                                            const string & airline,
                                            bool skipEmptyAirlineCode)
 {
-    const FGParkingList& parkings(getGroundNetwork()->allParkings());
+    const FGParkingList& parkings(parent()->groundNetwork()->allParkings());
     FGParkingList::const_iterator it;
     for (it = parkings.begin(); it != parkings.end(); ++it) {
         FGParkingRef parking = *it;
@@ -209,7 +209,7 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
 
 bool FGAirportDynamics::hasParkings() const
 {
-    return !getGroundNetwork()->allParkings().empty();
+    return !parent()->groundNetwork()->allParkings().empty();
 }
 
 ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const string & flType,
@@ -237,7 +237,7 @@ ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const st
 
 ParkingAssignment FGAirportDynamics::getParkingByName(const std::string& name) const
 {
-    const FGParkingList& parkings(getGroundNetwork()->allParkings());
+    const FGParkingList& parkings(parent()->groundNetwork()->allParkings());
     FGParkingList::const_iterator it;
     for (it = parkings.begin(); it != parkings.end(); ++it) {
         if ((*it)->name() == name) {
@@ -246,11 +246,6 @@ ParkingAssignment FGAirportDynamics::getParkingByName(const std::string& name) c
     }
 
     return ParkingAssignment();
-}
-
-FGGroundNetwork *FGAirportDynamics::getGroundNetwork() const
-{
-    return _ap->groundNetwork();
 }
 
 void FGAirportDynamics::setParkingAvailable(FGParking* park, bool available)
@@ -304,7 +299,7 @@ public:
 
 FGParkingList FGAirportDynamics::getParkings(bool onlyAvailable, const std::string &type) const
 {
-    FGParkingList result(getGroundNetwork()->allParkings());
+    FGParkingList result(parent()->groundNetwork()->allParkings());
 
     GetParkingsPredicate pred(onlyAvailable, type, this);
     FGParkingList::iterator it = std::remove_if(result.begin(), result.end(), pred);
@@ -777,7 +772,7 @@ int FGAirportDynamics::getGroundFrequency(unsigned leg)
                "Leg value is smaller than one at " << SG_ORIGIN);
     }
 
-    const intVec& freqGround(getGroundNetwork()->getGroundFrequencies());
+    const intVec& freqGround(parent()->groundNetwork()->getGroundFrequencies());
 
     if (freqGround.size() == 0) {
         return 0;
@@ -803,7 +798,7 @@ int FGAirportDynamics::getTowerFrequency(unsigned nr)
                "Leg value is smaller than two at " << SG_ORIGIN);
     }
 
-    const intVec& freqTower(getGroundNetwork()->getTowerFrequencies());
+    const intVec& freqTower(parent()->groundNetwork()->getTowerFrequencies());
 
     if (freqTower.size() == 0) {
         return 0;
