@@ -44,7 +44,7 @@ public:
     static const char* subsystemName() { return "dns"; }
 private:    
     bool _inited;
-    std::auto_ptr<simgear::DNS::Client> _dns;
+    std::unique_ptr<simgear::DNS::Client> _dns;
 };
 
 #endif // FG_DNS_CLIENT_HXX

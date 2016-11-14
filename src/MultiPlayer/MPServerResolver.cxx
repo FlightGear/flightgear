@@ -22,6 +22,7 @@
 #include <Network/DNSClient.hxx>
 #include <Main/fg_props.hxx>
 #include <3rdparty/cjson/cJSON.h>
+#include <cstdlib>
 
 using namespace simgear;
 
@@ -79,7 +80,7 @@ MPServerResolver::run ()
     // First call - fire DNS lookup for SRV records
     case MPServerResolver_priv::INIT:
       if (!_priv->_dnsClient) {
-        SG_LOG(SG_NETWORK, SG_WARN, "DNS subsystem not available.");
+        SG_LOG(SG_NETWORK, SG_WARN, "MPServerResolver: DNS subsystem not available.");
         onFailure ();
         return;
       }
@@ -99,11 +100,15 @@ MPServerResolver::run ()
       }
       if (_priv->_dnsRequest->isComplete ()) {
         // Create a child node under _targetNode for each SRV entry of the response
-        SG_LOG(SG_NETWORK, SG_INFO, "multiplaymgr: got DNS response for " << _priv->_dnsRequest->getDn());
+        SG_LOG(SG_NETWORK, SG_INFO, "MPServerResolver: got DNS response for " << _priv->_dnsRequest->getDn());
         int idx = 0;
         for (DNS::SRVRequest::SRV_ptr entry : dynamic_cast<DNS::SRVRequest*> (_priv->_dnsRequest.get ())->entries) {
           SG_LOG(SG_NETWORK, SG_DEBUG,
-                 "multiplaymgr: SRV " << entry->priority << " " << entry->weight << " " << entry->port << " " << entry->target);
+                 "MPServerResolver: SRV " << entry->priority << " " << entry->weight << " " << entry->port << " " << entry->target);
+          if( 0 == entry->port ) {
+            SG_LOG(SG_NETWORK, SG_INFO, "MPServerResolver: Skipping offline host " << entry->target );
+            continue;
+          }
           SGPropertyNode * serverNode = _targetNode->getNode ("server", idx++, true);
           serverNode->getNode ("hostname", true)->setStringValue (entry->target);
           serverNode->getNode ("priority", true)->setIntValue (entry->priority);
@@ -116,7 +121,7 @@ MPServerResolver::run ()
         _priv->_serverNodes_it = _priv->_serverNodes.begin ();
         if (_priv->_serverNodes_it == _priv->_serverNodes.end ()) {
           // No SRV records found - flag failure
-          SG_LOG(SG_NETWORK, SG_WARN, "multiplaymgr: no multiplayer servers defined via DNS");
+          SG_LOG(SG_NETWORK, SG_WARN, "MPServerResolver: no multiplayer servers defined via DNS");
           onFailure ();
           return;
         }
@@ -135,7 +140,7 @@ MPServerResolver::run ()
 
       // send the DNS query for the hostnames TXT record
       _priv->_dnsRequest = new DNS::TXTRequest ((*_priv->_serverNodes_it)->getStringValue ("hostname"));
-      SG_LOG(SG_NETWORK, SG_INFO, "multiplaymgr: sending DNS request for " << _priv->_dnsRequest->getDn());
+      SG_LOG(SG_NETWORK, SG_INFO, "MPServerResolver: sending DNS request for " << _priv->_dnsRequest->getDn());
       _priv->_dnsClient->makeRequest (_priv->_dnsRequest);
       _priv->_state = MPServerResolver_priv::LOADING_TXT_RECORDS;
       break;
@@ -150,7 +155,7 @@ MPServerResolver::run ()
         break;
       }
       if (_priv->_dnsRequest->isComplete ()) {
-        SG_LOG(SG_NETWORK, SG_INFO, "multiplaymgr: got DNS response for " << _priv->_dnsRequest->getDn());
+        SG_LOG(SG_NETWORK, SG_INFO, "MPServerResolver: got DNS response for " << _priv->_dnsRequest->getDn());
         // DNS::TXTRequest automatically extracts name=value entries for us, lets retrieve them
         auto attributes = dynamic_cast<DNS::TXTRequest*> (_priv->_dnsRequest.get ())->attributes;
         auto mpserverAttribute = attributes["flightgear-mpserver"];
@@ -160,11 +165,15 @@ MPServerResolver::run ()
           MPServerProperties mpserverProperties (mpserverAttribute);
           for (auto prop : mpserverProperties) {
             // and store each as a node under our servers node.
-            SG_LOG(SG_NETWORK, SG_DEBUG, "multiplaymgr: TXT record attribute " << prop.first << "=" << prop.second);
-            (*_priv->_serverNodes_it)->setStringValue (prop.first, prop.second);
+            SG_LOG(SG_NETWORK, SG_DEBUG, "MPServerResolver: TXT record attribute " << prop.first << "=" << prop.second);
+            // sanitize property name, don't allow dots or forward slash
+            auto propertyName = prop.first;
+            std::replace( propertyName.begin(), propertyName.end(), '.', '_');
+            std::replace( propertyName.begin(), propertyName.end(), '/', '_');
+            (*_priv->_serverNodes_it)->setStringValue (propertyName, prop.second);
           }
         } else {
-          SG_LOG(SG_NETWORK, SG_INFO, "multiplaymgr: TXT record attributes empty");
+          SG_LOG(SG_NETWORK, SG_INFO, "MPServerResolver: TXT record attributes empty");
         }
 
         // procede with the net node
