@@ -51,7 +51,7 @@ public:
     static const char* subsystemName() { return "http"; }
 private:    
     bool _inited;
-    std::auto_ptr<simgear::HTTP::Client> _http;
+    std::unique_ptr<simgear::HTTP::Client> _http;
 };
 
 #endif // FG_HTTP_CLIENT_HXX

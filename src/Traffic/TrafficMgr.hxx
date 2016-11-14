@@ -101,7 +101,7 @@ private:
   void shutdown();
   
   friend class ScheduleParseThread;
-  std::auto_ptr<ScheduleParseThread> scheduleParser;
+  std::unique_ptr<ScheduleParseThread> scheduleParser;
   
   // helper to read and parse the schedule data.
   // this is run on a helper thread, so be careful about

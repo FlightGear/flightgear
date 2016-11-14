@@ -38,8 +38,8 @@ public:
 private:
   void deinit ();
   
-    std::auto_ptr<SGModelPlacement> _aircraft;
-    std::auto_ptr<SGModelPlacement> _interior;
+    std::unique_ptr<SGModelPlacement> _aircraft;
+    std::unique_ptr<SGModelPlacement> _interior;
     
   SGVec3d _velocity;
   SGSharedPtr<FGFX>  _fx;

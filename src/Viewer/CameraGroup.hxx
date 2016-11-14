@@ -292,7 +292,7 @@ protected:
     CameraList _cameras;
     osg::ref_ptr<osgViewer::Viewer> _viewer;
     static osg::ref_ptr<CameraGroup> _defaultGroup;
-    std::auto_ptr<CameraGroupListener> _listener;
+    std::unique_ptr<CameraGroupListener> _listener;
     
     // Near, far for the master camera if used.
     float _zNear;

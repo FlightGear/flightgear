@@ -90,7 +90,7 @@ private:
   typedef std::map<std::string, SGSharedPtr<FGAIMultiplayer> > MultiPlayerMap;
   MultiPlayerMap mMultiPlayerMap;
 
-  std::auto_ptr<simgear::Socket> mSocket;
+  std::unique_ptr<simgear::Socket> mSocket;
   simgear::IPAddress mServer;
   bool mHaveServer;
   bool mInitialised;

@@ -34,7 +34,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
 
-using std::auto_ptr;
+using std::unique_ptr;
 using std::string;
 using namespace flightgear;
 
@@ -347,7 +347,7 @@ GPS::update (double delta_time_sec)
     if (!routeMgr->isRouteActive()) {
       // initialise in OBS mode, with waypt set to the nearest airport.
       // keep in mind at this point, _dataValid is not set
-      auto_ptr<FGPositioned::Filter> f(new FGAirport::HardSurfaceFilter());
+      unique_ptr<FGPositioned::Filter> f(new FGAirport::HardSurfaceFilter());
       FGPositionedRef apt = FGPositioned::findClosest(_indicated_pos, 20.0, f.get());
       if (apt) {
         selectOBSMode(new flightgear::NavaidWaypoint(apt, NULL));
@@ -1307,7 +1307,7 @@ void GPS::loadNearest()
         return;
     }
     
-    auto_ptr<FGPositioned::Filter> f(createFilter(ty));
+    unique_ptr<FGPositioned::Filter> f(createFilter(ty));
     int limitCount = _scratchNode->getIntValue("max-results", 1);
     double cutoffDistance = _scratchNode->getDoubleValue("cutoff-nm", 400.0);
     
@@ -1386,7 +1386,7 @@ void GPS::search()
     _searchResultIndex = 0;
     _searchIsRoute = false;
     
-    auto_ptr<FGPositioned::Filter> f(createFilter(_searchType));
+    unique_ptr<FGPositioned::Filter> f(createFilter(_searchType));
     if (_searchNames) {
         _searchResults = FGPositioned::findAllWithName(_searchQuery, f.get(), _searchExact);
     } else {

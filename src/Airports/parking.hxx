@@ -33,7 +33,6 @@
 #include <simgear/sg_inlines.h>
 
 #include <string>
-#include <memory> // for std::auto_ptr
 
 #include "gnnode.hxx"
 #include <Airports/airports_fwd.hxx>

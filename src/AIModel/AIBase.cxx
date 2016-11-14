@@ -109,7 +109,7 @@ public:
     bool hasInteriorPath(void) { return _hasInteriorPath;}
     inline std::string& getInteriorPath() { return _interiorPath; }
 private:
-    std::auto_ptr<FGNasalModelDataProxy> _nasal;
+    std::unique_ptr<FGNasalModelDataProxy> _nasal;
     std::string _fxpath;
     bool _ready;
     bool _initialized;

@@ -101,7 +101,7 @@ private:
   };
 
   SGPropertyNode_ptr _models;
-  std::auto_ptr<Listener> _listener;
+  std::unique_ptr<Listener> _listener;
 
     std::vector<Instance *> _instances;
 

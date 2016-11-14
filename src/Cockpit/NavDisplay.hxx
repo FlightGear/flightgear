@@ -198,10 +198,10 @@ private:
     SGPropertyNode_ptr _customSymbols;
     
     class CacheListener;
-    std::auto_ptr<CacheListener> _cacheListener;
+    std::unique_ptr<CacheListener> _cacheListener;
     
     class ForceUpdateListener;
-    std::auto_ptr<ForceUpdateListener> _forceUpdateListener;
+    std::unique_ptr<ForceUpdateListener> _forceUpdateListener;
 };
 
 #endif // _INST_ND_HXX

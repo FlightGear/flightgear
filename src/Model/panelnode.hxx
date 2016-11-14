@@ -83,7 +83,7 @@ private:
     osg::Matrix _xform;  
   
     SGPropertyChangeListener* _listener;
-    std::auto_ptr<SGPropertyChangeListener> _pathListener;
+    std::unique_ptr<SGPropertyChangeListener> _pathListener;
     
     /// should the 2D panel auto-hide when the view orientation changes
     mutable SGPropertyNode_ptr _autoHide2d;

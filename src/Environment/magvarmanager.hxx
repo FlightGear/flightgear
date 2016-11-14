@@ -41,7 +41,7 @@ public:
     virtual void update(double dt);
     
 private:
-  std::auto_ptr<SGMagVar> _magVar;
+  std::unique_ptr<SGMagVar> _magVar;
   
   SGPropertyNode_ptr _magVarNode, _magDipNode;
 };

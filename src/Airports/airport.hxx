@@ -360,7 +360,7 @@ private:
     std::vector<STARRef> mSTARs;
     std::vector<ApproachRef> mApproaches;
 
-    mutable std::auto_ptr<FGGroundNetwork> _groundNetwork;
+    mutable std::unique_ptr<FGGroundNetwork> _groundNetwork;
   };
 
 // find basic airport location info from airport database

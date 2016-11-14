@@ -71,7 +71,7 @@ private:
   void interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, SGGeodVec& r) const;
   
   
-  std::auto_ptr<RoutePathPrivate> d;
+  std::unique_ptr<RoutePathPrivate> d;
 };
 
 #endif

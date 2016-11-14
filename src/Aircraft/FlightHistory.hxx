@@ -28,7 +28,6 @@
 #include <simgear/math/SGMath.hxx>
 
 #include <vector>
-#include <memory> // for std::auto_ptr
 
 typedef std::vector<SGGeod> SGGeodVec;
 

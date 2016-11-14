@@ -307,7 +307,7 @@ public:
         bool isComplete() const;
     private:
         class ThreadedGUISearchPrivate;
-        std::auto_ptr<ThreadedGUISearchPrivate> d;
+        std::unique_ptr<ThreadedGUISearchPrivate> d;
     };
 private:
   NavDataCache();
@@ -330,7 +330,7 @@ private:
   static const std::string defaultDatFile[];
 
   class NavDataCachePrivate;
-  std::auto_ptr<NavDataCachePrivate> d;
+  std::unique_ptr<NavDataCachePrivate> d;
 };
 
 } // of namespace flightgear

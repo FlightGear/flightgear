@@ -28,7 +28,7 @@
 #include "FGCommonInput.hxx"
 #include "FGButton.hxx"
 
-#include <memory> // for std::auto_ptr
+#include <memory> // for std::unique_ptr
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <plib/js.h>
 
@@ -79,7 +79,7 @@ private:
     joystick ();
     virtual ~joystick ();
     int jsnum;
-    std::auto_ptr<jsJoystick> plibJS;
+    std::unique_ptr<jsJoystick> plibJS;
     int naxes;
     int nbuttons;
     axis * axes;

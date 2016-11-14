@@ -98,7 +98,7 @@ SGPropertyNode_ptr createServiceableProp(SGPropertyNode* aParent,
   return n;  
 }
 
-static std::auto_ptr<SGInterpTable> static_terminalRangeInterp,
+static std::unique_ptr<SGInterpTable> static_terminalRangeInterp,
   static_lowRangeInterp, static_highRangeInterp;
 
 // Constructor

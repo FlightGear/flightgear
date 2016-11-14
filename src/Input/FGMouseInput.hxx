@@ -52,7 +52,7 @@ private:
   void processMotion(int x, int y, const osgGA::GUIEventAdapter* ea);
     
   class FGMouseInputPrivate;
-  std::auto_ptr<FGMouseInputPrivate> d;
+  std::unique_ptr<FGMouseInputPrivate> d;
   
 };
 

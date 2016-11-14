@@ -404,7 +404,7 @@ private:
     SGGeod _turnPt;
     SGGeod _turnCentre;
 
-    std::auto_ptr<flightgear::WayptController> _wayptController;
+    std::unique_ptr<flightgear::WayptController> _wayptController;
 
     flightgear::WayptRef _prevWaypt;
     flightgear::WayptRef _currentWaypt;

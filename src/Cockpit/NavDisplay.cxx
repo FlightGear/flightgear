@@ -261,7 +261,7 @@ public:
 private:
     SymbolDef* definition;
     
-    std::auto_ptr<SGCondition> enable;
+    std::unique_ptr<SGCondition> enable;
     string_set required_states;
     string_set excluded_states;
 };
@@ -350,7 +350,7 @@ public:
     bool rotateToHeading;
     bool roundPos; ///< should position be rounded to integer values
     bool hasText;
-    std::auto_ptr<SGCondition> textEnable;
+    std::unique_ptr<SGCondition> textEnable;
     bool textEnabled; ///< cache condition result
     osg::Vec4 textColor;
     osg::Vec2 textOffset;

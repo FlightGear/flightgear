@@ -170,7 +170,7 @@ private:
 
   
   class OptionsPrivate;
-  std::auto_ptr<OptionsPrivate> p;
+  std::unique_ptr<OptionsPrivate> p;
 };
   
 } // of namespace flightgear

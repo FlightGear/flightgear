@@ -54,7 +54,7 @@ public:
 private:
     friend class FGMacOSXEventInputPrivate;
     
-  std::auto_ptr<FGMacOSXEventInputPrivate> d;
+  std::unique_ptr<FGMacOSXEventInputPrivate> d;
 };
 
 #endif

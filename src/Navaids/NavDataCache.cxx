@@ -902,7 +902,7 @@ public:
 
   // if we're performing a rebuild, the thread that is doing the work.
   // otherwise, NULL
-  std::auto_ptr<RebuildThread> rebuilder;
+  std::unique_ptr<RebuildThread> rebuilder;
 };
 
 //////////////////////////////////////////////////////////////////////
