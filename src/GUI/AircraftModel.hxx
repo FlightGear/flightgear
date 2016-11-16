@@ -49,6 +49,7 @@ const int AircraftURIRole = Qt::UserRole + 14;
 const int AircraftThumbnailSizeRole = Qt::UserRole + 15;
 const int AircraftIsHelicopterRole = Qt::UserRole + 16;
 const int AircraftIsSeaplaneRole = Qt::UserRole + 17;
+const int AircraftCurrentThumbnailRole = Qt::UserRole + 18;
 
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
@@ -163,12 +164,23 @@ private slots:
 private:
     friend class PackageDelegate;
 
-    QVariant dataFromItem(AircraftItemPtr item, quint32 variantIndex, int role) const;
+    /**
+     * struct to record persistent state from the item-delegate, about the
+     * currently visible variant, thumbnail and similar.
+     */
+    struct DelegateState
+    {
+        quint32 variant = 0;
+        quint32 thumbnail = 0;
+    };
+
+    QVariant dataFromItem(AircraftItemPtr item, const DelegateState& state, int role) const;
 
     QVariant dataFromPackage(const simgear::pkg::PackageRef& item,
-                             quint32 variantIndex, int role) const;
+                             const DelegateState& state, int role) const;
 
-    QVariant packageThumbnail(simgear::pkg::PackageRef p, int index, bool download = true) const;
+    QVariant packageThumbnail(simgear::pkg::PackageRef p,
+                              const DelegateState& state, bool download = true) const;
 
     void abandonCurrentScan();
     void refreshPackages();
@@ -182,9 +194,9 @@ private:
     PackageDelegate* m_delegate = nullptr;
     bool m_showMessageWidget = false;
 
-    QVector<quint32> m_activeVariant;
-    QVector<quint32> m_packageVariant;
-    
+
+    QVector<DelegateState> m_delegateStates;
+
     simgear::pkg::RootRef m_packageRoot;
     simgear::pkg::PackageList m_packages;
         
