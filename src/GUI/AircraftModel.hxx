@@ -74,7 +74,7 @@ struct AircraftItem
 
     void toDataStream(QDataStream& ds) const;
 
-    QPixmap thumbnail() const;
+    QPixmap thumbnail(bool loadIfRequired = true) const;
 
     bool excluded;
     QString path;

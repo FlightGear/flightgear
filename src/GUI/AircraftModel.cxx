@@ -144,9 +144,9 @@ void AircraftItem::toDataStream(QDataStream& ds) const
     for (int i=0; i<4; ++i) ds << ratings[i];
 }
 
-QPixmap AircraftItem::thumbnail() const
+QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
 {
-    if (m_thumbnail.isNull()) {
+    if (m_thumbnail.isNull() && loadIfRequired) {
         QFileInfo info(path);
         QDir dir = info.dir();
         if (dir.exists("thumbnail.jpg")) {
@@ -406,12 +406,11 @@ protected:
 
         // notify any affected items. Linear scan here avoids another map/dict
         // structure.
-        for (auto it=m_model->m_packages.begin(); it != m_model->m_packages.end(); ++it) {
-            const string_list& urls((*it)->thumbnailUrls());
+        for (auto pkg : m_model->m_packages) {
+            const string_list& urls(pkg->thumbnailUrls());
             auto cit = std::find(urls.begin(), urls.end(), aThumbnailUrl);
             if (cit != urls.end()) {
-                size_t offset = it - m_model->m_packages.begin();
-                QModelIndex mi(m_model->index(offset + m_model->m_items.size()));
+                QModelIndex mi = indexForPackage(pkg);
                 m_model->dataChanged(mi, mi);
             }
         } // of packages iteration
@@ -628,7 +627,7 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
     }
 
     if (role == AircraftThumbnailSizeRole) {
-        return item->thumbnail().size();
+        return item->thumbnail(false).size();
     }
 
     if ((role >= AircraftVariantDescriptionRole) && (role < AircraftThumbnailRole)) {
