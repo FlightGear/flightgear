@@ -11,6 +11,7 @@ set(SOURCES
 	garmin.cxx
 	generic.cxx
 	HTTPClient.cxx
+	DNSClient.cxx
 	igc.cxx
 	joyclient.cxx
 	jsclient.cxx
@@ -39,6 +40,7 @@ set(HEADERS
 	garmin.hxx
 	generic.hxx
 	HTTPClient.hxx
+	DNSClient.hxx
 	igc.hxx
 	joyclient.hxx
 	jsclient.hxx
