@@ -534,9 +534,8 @@ int fgMainInit( int argc, char **argv )
     fgOSOpenWindow(true /* request stencil buffer */);
     fgOSResetProperties();
     
-    // Initialize the splash screen right away
     fntInit();
-    fgSplashInit();
+    globals->get_renderer()->preinit();
 
     fgOutputSettings();
     

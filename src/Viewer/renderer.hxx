@@ -43,6 +43,7 @@ class CameraGroup;
 
 class SGSky;
 class SGUpdateVisitor;
+class SplashScreen;
 
 typedef std::vector<SGSceneryPick> PickList;
 
@@ -53,7 +54,7 @@ public:
     FGRenderer();
     ~FGRenderer();
 
-    void splashinit();
+    void preinit();
     void init();
 
     void setupView();
@@ -188,6 +189,8 @@ protected:
     void updateSky();
   
     void setupRoot();
+
+    SplashScreen* _splash;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

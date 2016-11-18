@@ -25,21 +25,81 @@
 #ifndef _SPLASH_HXX
 #define _SPLASH_HXX
 
-#include <osg/Node>
+#include <osg/Group>
+#include <osgText/Text>
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
+#include <simgear/props/props.hxx>
+#include <simgear/timing/timestamp.hxx>
 
-/** Initialize the splash screen */
-void fgSplashInit ();
+#include <vector>
+
+namespace osg
+{
+    class Texture2D;
+    class Image;
+    class Camera;
+}
+
+class SplashScreen : public osg::Group
+{
+public:
+    SplashScreen();
+    ~SplashScreen();
+
+    void resize(int width, int height);
+    
+private:
+    friend class SplashScreenUpdateCallback;
+
+    void createNodes();
+    void setupLogoImage();
+
+    void doUpdate();
+    void updateSplashSpinner();
+
+    std::string selectSplashImage();
+
+    void addText(osg::Geode* geode, const osg::Vec2& pos, double size, const std::string& text,
+                 const osgText::Text::AlignmentType alignment,
+                 SGPropertyNode* dynamicValue = nullptr,
+                 double maxWidthFraction = -1.0);
+
+    bool _legacySplashScreenMode = false;
+    SGPropertyNode_ptr _splashAlphaNode;
+    osg::ref_ptr<osg::Camera> _splashFBOCamera;
+    double _splashImageAspectRatio; // stores width/height of the splash image we loaded
+    osg::Image* _splashImage = nullptr;
+    osg::Image* _logoImage = nullptr;
+    osg::Vec3Array* _splashImageVertexArray = nullptr;
+    osg::Vec3Array* _splashSpinnerVertexArray = nullptr;
+    osg::Vec3Array* _aircraftLogoVertexArray = nullptr;
+    
+    int _width, _height;
+
+    osg::Texture2D* _splashFBOTexture;
+    osg::Vec4Array* _splashFSQuadColor;
+    osg::ref_ptr<osg::Camera> _splashQuadCamera;
+
+    struct TextItem
+    {
+        osg::ref_ptr<osgText::Text> textNode;
+        SGPropertyNode_ptr dynamicContent;
+        osg::Vec2 fractionalPosition; // position in the 0.0 .. 1.0 range
+        double fractionalCharSize;
+        double maxWidthFraction = -1.0;
+        unsigned int maxLineCount = 0;
+
+        void recomputeSize(int height) const;
+        void reposition(int width, int height) const;
+    };
+
+    std::vector<TextItem> _items;
+    SGTimeStamp _splashStartTime;
+};
 
 /** Set progress information.
  * "identifier" references an element of the language resource. */
 void fgSplashProgress ( const char *identifier, unsigned int percent = 0 );
-
-/** Retrieve the splash screen node */
-osg::Node* fgCreateSplashNode();
 
 #endif // _SPLASH_HXX
 

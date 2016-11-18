@@ -433,10 +433,8 @@ FGRenderer::~FGRenderer()
 }
 
 // Initialize various GL/view parameters
-// XXX This should be called "preinit" or something, as it initializes
-// critical parts of the scene graph in addition to the splash screen.
 void
-FGRenderer::splashinit( void )
+FGRenderer::preinit( void )
 {
     // important that we reset the viewer sceneData here, to ensure the reference
     // time for everything is in sync; otherwise on reset the Viewer and
@@ -446,10 +444,10 @@ FGRenderer::splashinit( void )
     _viewerSceneRoot = new osg::Group;
     _viewerSceneRoot->setName("viewerSceneRoot");
     viewer->setSceneData(_viewerSceneRoot);
-    
-    ref_ptr<Node> splashNode = fgCreateSplashNode();
+
+    _splash = new SplashScreen;
     if (_classicalRenderer) {
-        _viewerSceneRoot->addChild(splashNode.get());
+        _viewerSceneRoot->addChild(_splash);
     } else {
         for (   CameraGroup::CameraIterator ii = CameraGroup::getDefault()->camerasBegin();
                 ii != CameraGroup::getDefault()->camerasEnd();
@@ -459,7 +457,7 @@ FGRenderer::splashinit( void )
             Camera* camera = info->getCamera(DISPLAY_CAMERA);
             if (camera == 0) continue;
 
-            camera->addChild(splashNode.get());
+            camera->addChild(_splash);
         }
     }
     
@@ -1727,6 +1725,9 @@ FGRenderer::resize( int width, int height )
         _xsize->setIntValue(width);
         _ysize->setIntValue(height);
     }
+
+    // update splash node if present ?
+    _splash->resize(width, height);
 }
 
 typedef osgUtil::LineSegmentIntersector::Intersection Intersection;
