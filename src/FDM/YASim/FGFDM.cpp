@@ -127,7 +127,9 @@ void FGFDM::init()
     _turb_magnitude_norm = fgGetNode("/environment/turbulence/magnitude-norm", true);
     _turb_rate_hz        = fgGetNode("/environment/turbulence/rate-hz", true);
     _gross_weight_lbs    = fgGetNode("/yasim/gross-weight-lbs", true);
-
+    _cg_x = fgGetNode("/yasim/cg-x-m", true);
+    _cg_y = fgGetNode("/yasim/cg-y-m", true);
+    _cg_z = fgGetNode("/yasim/cg-z-m", true);
     // Allows the user to start with something other than full fuel
     _airplane.setFuelFraction(fgGetFloat("/sim/fuel-fraction", 1));
 
@@ -609,6 +611,12 @@ void FGFDM::setOutputProperties(float dt)
 {
     float grossWgt = _airplane.getModel()->getBody()->getTotalMass() * KG2LBS;
     _gross_weight_lbs->setFloatValue(grossWgt);
+
+    float cg[3];
+    _airplane.getModel()->getBody()->getCG(cg);
+    _cg_x->setFloatValue(cg[0]);
+    _cg_y->setFloatValue(cg[1]);
+    _cg_z->setFloatValue(cg[2]);
 
     ControlMap* cm = _airplane.getControlMap();
     for(int i=0; i<_controlProps.size(); i++) {
