@@ -879,6 +879,60 @@ QModelIndex AircraftItemModel::indexOfAircraftURI(QUrl uri) const
     return QModelIndex();
 }
 
+void AircraftItemModel::selectVariantForAircraftURI(QUrl uri)
+{
+    if (uri.isEmpty()) {
+        return;
+    }
+
+    int variantIndex = 0;
+    QModelIndex modelIndex;
+
+    if (uri.isLocalFile()) {
+        QString path = uri.toLocalFile();
+        for (int row=0; row <m_items.size(); ++row) {
+            const AircraftItemPtr item(m_items.at(row));
+            if (item->path == path) {
+                modelIndex = index(row);
+                variantIndex = 0;
+                break;
+            }
+
+            // check variants too
+            for (int vr=0; vr < item->variants.size(); ++vr) {
+                if (item->variants.at(vr)->path == path) {
+                    modelIndex = index(row);
+                    variantIndex = vr + 1;
+                    break;
+                }
+            }
+        }
+    } else if (uri.scheme() == "package") {
+        QString ident = uri.path();
+        int rowOffset = m_items.size();
+
+        PackageRef pkg = m_packageRoot->getPackageById(ident.toStdString());
+        if (pkg) {
+            for (size_t i=0; i < m_packages.size(); ++i) {
+                if (m_packages[i] == pkg) {
+                    modelIndex =  index(rowOffset + i);
+                    variantIndex = pkg->indexOfVariant(ident.toStdString());
+                    break;
+                }
+            } // of linear package scan
+        }
+    } else {
+        qWarning() << "Unknown aircraft URI scheme" << uri << uri.scheme();
+        return;
+    }
+
+    if (modelIndex.isValid()) {
+        qDebug() << "selected variant index" << variantIndex << "at" << modelIndex
+        << "for variant" << uri;
+        setData(modelIndex, variantIndex, AircraftVariantRole);
+    }
+}
+
 void AircraftItemModel::onScanResults()
 {
     QVector<AircraftItemPtr> newItems = m_scanThread->items();

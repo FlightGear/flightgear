@@ -869,6 +869,9 @@ void QtLauncher::maybeRestoreAircraftSelection()
         m_ui->aircraftList->selectionModel()->select(proxyIndex,
                                                      QItemSelectionModel::ClearAndSelect);
         m_ui->aircraftList->scrollTo(proxyIndex);
+
+        // and also select the correct variant on the model
+        m_aircraftModel->selectVariantForAircraftURI(m_selectedAircraft);
     }
 }
 
@@ -1340,11 +1343,13 @@ void QtLauncher::onPopupAircraftHistory()
     QPoint popupPos = m_ui->aircraftHistory->mapToGlobal(m_ui->aircraftHistory->rect().bottomLeft());
     QAction* triggered = m.exec(popupPos);
     if (triggered) {
-        m_selectedAircraft = triggered->data().toUrl();
+        const QUrl uri = triggered->data().toUrl();
+        m_selectedAircraft = uri;
         QModelIndex index = proxyIndexForAircraftURI(m_selectedAircraft);
         m_ui->aircraftList->selectionModel()->setCurrentIndex(index,
                                                               QItemSelectionModel::ClearAndSelect);
         m_ui->aircraftFilter->clear();
+        m_aircraftModel->selectVariantForAircraftURI(uri);
         updateSelectedAircraft();
     }
 }

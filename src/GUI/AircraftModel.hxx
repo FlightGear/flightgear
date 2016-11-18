@@ -127,7 +127,13 @@ public:
      */
 
     QModelIndex indexOfAircraftURI(QUrl uri) const;
-    
+
+    /**
+     * ensure the appropriate variant index is active in the model, for the
+     * corresponding aircraft URI
+     */
+    void selectVariantForAircraftURI(QUrl uri);
+
     /**
      * return if a given aircraft is ready to be run, or not. Aircraft which
      * are not installed, or are downloading, are not runnable.
