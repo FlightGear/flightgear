@@ -41,6 +41,7 @@ FGDNSClient::~FGDNSClient()
 
 void FGDNSClient::init()
 {
+    SG_LOG(SG_NETWORK,SG_DEBUG,"FGDNSClient::init()");
     if (_inited) {
         return;
     }
@@ -48,6 +49,7 @@ void FGDNSClient::init()
     _dns.reset( new simgear::DNS::Client() );
 
     _inited = true;
+    SG_LOG(SG_NETWORK,SG_DEBUG,"FGDNSClient::init() finished");
 }
 
 void FGDNSClient::postinit()
@@ -62,10 +64,14 @@ void FGDNSClient::shutdown()
 
 void FGDNSClient::update(double)
 {
+  SG_LOG(SG_NETWORK,SG_DEBUG,"FGDNSClient::update()");
   _dns->update();
+  SG_LOG(SG_NETWORK,SG_DEBUG,"FGDNSClient::update() finished");
 }
 
 void FGDNSClient::makeRequest(const simgear::DNS::Request_ptr& req)
 {
+  SG_LOG(SG_NETWORK,SG_DEBUG,"FGDNSClient::makeRequest()");
   _dns->makeRequest(req);
+  SG_LOG(SG_NETWORK,SG_DEBUG,"FGDNSClient::makeRequest() finished");
 }
