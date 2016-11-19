@@ -331,7 +331,7 @@ SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
 
 void FGGlobals::append_fg_scenery (const PathList &paths)
 {
-    BOOST_FOREACH(const SGPath& path, paths) {
+    for (const SGPath& path : paths) {
         append_fg_scenery(path);
     }
 }
@@ -363,31 +363,10 @@ void FGGlobals::append_fg_scenery (const SGPath &path)
     // needed to load Models from this scenery path
     simgear::ResourceManager::instance()->addBasePath(abspath.local8BitStr(),
                                                       simgear::ResourceManager::PRIORITY_DEFAULT);
-
     simgear::Dir dir(abspath);
-    SGPath terrainDir(dir.file("Terrain"));
-    SGPath objectsDir(dir.file("Objects"));
 
-    // this code used to add *either* the base dir, OR add the
-    // Terrain and Objects subdirs, but the conditional logic was commented
-    // out, such that all three dirs are added. Unfortunately there's
-    // no information as to why the change was made.
     fg_scenery.push_back(abspath);
-    unmangled_fg_scenery.push_back(abspath);
     extra_read_allowed_paths.push_back(abspath);
-
-    if (terrainDir.exists()) {
-        fg_scenery.push_back(terrainDir);
-    }
-
-    if (objectsDir.exists()) {
-        fg_scenery.push_back(objectsDir);
-    }
-
-    // insert a marker for FGTileEntry::load(), so that
-    // FG_SCENERY=A:B becomes list ["A/Terrain", "A/Objects", "",
-    // "B/Terrain", "B/Objects", ""]
-    fg_scenery.push_back(SGPath());
 
     // make scenery dirs available to Nasal
     SGPropertyNode* n = sim->getChild("fg-scenery", propIndex++, true);
@@ -411,9 +390,7 @@ void FGGlobals::append_read_allowed_paths(const SGPath &path)
 void FGGlobals::clear_fg_scenery()
 {
   fg_scenery.clear();
-  unmangled_fg_scenery.clear();
   fgGetNode("/sim", true)->removeChildren("fg-scenery");
-
 }
 
 // The 'path' argument to this method must come from trustworthy code, because

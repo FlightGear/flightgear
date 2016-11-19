@@ -185,6 +185,20 @@ void FGTileMgr::reinit()
     _options->setPluginStringData("SimGear::LOD_RANGE_DETAILED", fgGetString("/sim/rendering/static-lod/detailed", boost::lexical_cast<string>(SG_OBJECT_RANGE_DETAILED)));
     _options->setPluginStringData("SimGear::RENDER_BUILDING_MESH", fgGetBool("/sim/rendering/building-mesh", false) ? "true" : "false");
 
+    string_list scenerySuffixes;
+    for (auto node : fgGetNode("/sim/rendering/", true)->getChildren("scenery-path-suffix")) {
+        if (node->getBoolValue("enabled", true)) {
+            scenerySuffixes.push_back(node->getStringValue("name"));
+        }
+    }
+
+    if (scenerySuffixes.empty()) {
+        // if preferences didn't load, use some default
+        scenerySuffixes = {"Objects", "Terrain"}; // defaut values
+    }
+
+    _options->setSceneryPathSuffixes(scenerySuffixes);
+
     if (state != Start)
     {
       // protect against multiple scenery reloads and properly reset flags,

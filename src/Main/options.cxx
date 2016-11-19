@@ -2583,7 +2583,7 @@ void Options::showVersion() const
     cout << "FG_HOME=" << globals->get_fg_home().utf8Str() << endl;
     cout << "FG_SCENERY=";
 
-    PathList scn = globals->get_unmangled_fg_scenery();
+    PathList scn = globals->get_fg_scenery();
     cout << SGPath::join(scn, &SGPath::pathListSep) << endl;
     cout << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
     cout << "OSG version: " << osgGetVersion() << endl;
@@ -2623,8 +2623,7 @@ void Options::printJSONReport() const
   cJSON_AddStringToObject(configNode, "FG_HOME",
                           globals->get_fg_home().utf8Str().c_str());
 
-  cJSON *sceneryPathsNode = p->createJSONArrayFromPathList(
-    globals->get_unmangled_fg_scenery());
+  cJSON *sceneryPathsNode = p->createJSONArrayFromPathList(globals->get_fg_scenery());
   cJSON_AddItemToObject(configNode, "scenery paths", sceneryPathsNode);
 
   cJSON *aircraftPathsNode = p->createJSONArrayFromPathList(

@@ -1029,7 +1029,7 @@ NavDataCache::DatFilesGroupInfo NavDataCache::NavDataCachePrivate::findDatFiles(
   SGPath visitedPath;           // to avoid duplicates and time wasting
   const string datFilesSubDir = "NavData/" +
                                NavDataCache::datTypeStr[datFileType];
-  const PathList& sceneryPaths = globals->get_unmangled_fg_scenery();
+  const PathList& sceneryPaths = globals->get_fg_scenery();
   result.datFileType = datFileType;
   result.totalSize = 0;
 

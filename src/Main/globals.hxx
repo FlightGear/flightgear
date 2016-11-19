@@ -111,7 +111,6 @@ private:
 
     // Roots of FlightGear scenery tree
     PathList fg_scenery;
-    PathList unmangled_fg_scenery;
     // Paths Nasal is allowed to read
     PathList extra_read_allowed_paths;
 
@@ -240,7 +239,6 @@ public:
     void set_terrasync_dir (const SGPath &path);
 
     const PathList &get_fg_scenery () const { return fg_scenery; }
-    const PathList &get_unmangled_fg_scenery () const { return unmangled_fg_scenery; }
     const PathList &get_extra_read_allowed_paths () const { return extra_read_allowed_paths; }
     /**
      * Add a scenery directory
