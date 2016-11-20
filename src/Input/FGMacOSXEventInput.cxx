@@ -265,7 +265,7 @@ void FGMacOSXEventInputPrivate::removedDevice(IOHIDDeviceRef device)
 std::string FGMacOSXEventInputPrivate::getDeviceStringProperty(IOHIDDeviceRef device, CFStringRef hidProp)
 {
     CFStringRef prop = (CFStringRef) IOHIDDeviceGetProperty(device, hidProp);
-    if (CFGetTypeID(prop) != CFStringGetTypeID()) {
+    if ((prop == nullptr)|| (CFGetTypeID(prop) != CFStringGetTypeID())) {
         return std::string();
     }
 
