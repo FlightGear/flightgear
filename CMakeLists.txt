@@ -182,6 +182,7 @@ option(ENABLE_TESTS      "Set to ON to build test applications (default)" ON)
 option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON)
 option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON)
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
+option(ENABLE_TRAFFIC    "Set to ON to build the external traffic generator modules" ON)
 
 # when building an OSG with commit 15ec7e2ae7a8b983ecc44e1ce7363a9a9fa7da95
 # applied, we can use better link options
