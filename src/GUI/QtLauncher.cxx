@@ -1559,6 +1559,11 @@ void QtLauncher::onRefreshMPServersDone(simgear::HTTP::Request*)
             continue;
         }
 
+        if (c->getBoolValue("online") != true) {
+            // only list online servers
+            continue;
+        }
+
         QString name = QString::fromStdString(c->getStringValue("name"));
         QString loc = QString::fromStdString(c->getStringValue("location"));
         QString host = QString::fromStdString(c->getStringValue("hostname"));
