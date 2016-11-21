@@ -1609,6 +1609,10 @@ void QtLauncher::onMPServerActivated(int index)
 
 int QtLauncher::findMPServerPort(const std::string& host)
 {
+    // disabling this code for 2016.4.1, so we always use the default port, 5000
+    // this matches what the MP GUI dialog does in-sim, and the port value
+    // returned in the XML list seems bogus.
+#if 0
     SGPropertyNode *targetnode = fgGetNode("/sim/multiplay/server-list", true);
     for (int i=0; i<targetnode->nChildren(); ++i) {
         SGPropertyNode* c = targetnode->getChild(i);
@@ -1620,7 +1624,7 @@ int QtLauncher::findMPServerPort(const std::string& host)
             return c->getIntValue("port");
         }
     }
-
+#endif
     return 0;
 }
 
