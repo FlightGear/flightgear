@@ -743,12 +743,13 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
         changedState.thumbnail = (role - AircraftThumbnailRole);
         return packageThumbnail(item, changedState);
     } else if (role == AircraftAuthorsRole) {
-        SGPropertyNode* authors = item->properties()->getChild("author");
-        if (authors) {
-            return QString::fromStdString(authors->getStringValue());
+        std::string authors = item->getLocalisedProp("author", state.variant);
+        if (!authors.empty()) {
+            return QString::fromStdString(authors);
         }
     } else if (role == AircraftLongDescriptionRole) {
-        return QString::fromStdString(item->description()).simplified();
+        std::string longDesc = item->getLocalisedProp("description", state.variant);
+        return QString::fromStdString(longDesc).simplified();
     } else if (role == AircraftPackageSizeRole) {
         return static_cast<int>(item->fileSizeBytes());
     } else if (role == AircraftURIRole) {
