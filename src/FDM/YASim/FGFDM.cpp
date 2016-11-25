@@ -126,10 +126,17 @@ void FGFDM::init()
 {
     _turb_magnitude_norm = fgGetNode("/environment/turbulence/magnitude-norm", true);
     _turb_rate_hz        = fgGetNode("/environment/turbulence/rate-hz", true);
-    _gross_weight_lbs    = fgGetNode("/yasim/gross-weight-lbs", true);
-    _cg_x = fgGetNode("/yasim/cg-x-m", true);
-    _cg_y = fgGetNode("/yasim/cg-y-m", true);
-    _cg_z = fgGetNode("/yasim/cg-z-m", true);
+
+    SGPropertyNode_ptr yasimNode = fgGetNode("/fdm/yasim", true);
+    _gross_weight_lbs = yasimNode->getNode("gross-weight-lbs", true);
+
+    // alias to older name
+    fgGetNode("/yasim/gross-weight-lbs", true)->alias(_gross_weight_lbs);
+
+    _cg_x = yasimNode->getNode("cg-x-m", true);
+    _cg_y = yasimNode->getNode("cg-y-m", true);
+    _cg_z = yasimNode->getNode("cg-z-m", true);
+
     // Allows the user to start with something other than full fuel
     _airplane.setFuelFraction(fgGetFloat("/sim/fuel-fraction", 1));
 
