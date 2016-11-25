@@ -627,7 +627,11 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
     }
 
     if (role == AircraftThumbnailSizeRole) {
-        return item->thumbnail(false).size();
+        QPixmap pm = item->thumbnail(false);
+        if (pm.isNull()) {
+            return QSize(STANDARD_THUMBNAIL_WIDTH, STANDARD_THUMBNAIL_HEIGHT);
+        }
+        return pm.size();
     }
 
     if ((role >= AircraftVariantDescriptionRole) && (role < AircraftThumbnailRole)) {
