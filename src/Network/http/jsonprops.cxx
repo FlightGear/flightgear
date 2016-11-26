@@ -26,7 +26,7 @@ namespace http {
 
 using std::string;
 
-static const char * getPropertyTypeString(simgear::props::Type type)
+const char * JSON::getPropertyTypeString(simgear::props::Type type)
 {
   switch (type) {
     case simgear::props::NONE:
@@ -70,6 +70,28 @@ static const char * getPropertyTypeString(simgear::props::Type type)
   }
 }
 
+cJSON * JSON::valueToJson(SGPropertyNode_ptr n)
+{
+    if( !n->hasValue() )
+        return cJSON_CreateNull();
+
+    switch( n->getType() ) {
+        case simgear::props::BOOL:
+            return cJSON_CreateBool(n->getBoolValue());
+        case simgear::props::INT:
+        case simgear::props::LONG:
+        case simgear::props::FLOAT:
+        case simgear::props::DOUBLE: {
+            double val = n->getDoubleValue();
+            return SGMiscd::isNaN(val) ? cJSON_CreateNull() : cJSON_CreateNumber(val);
+        }
+
+        default:
+            return cJSON_CreateString(n->getStringValue());
+    }
+}
+
+    
 cJSON * JSON::toJson(SGPropertyNode_ptr n, int depth, double timestamp )
 {
   cJSON * json = cJSON_CreateObject();

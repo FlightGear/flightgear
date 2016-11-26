@@ -27,11 +27,15 @@
 
 namespace flightgear {
 namespace http {
+
 class JSON {
 public:
   static cJSON * toJson(SGPropertyNode_ptr n, int depth, double timestamp = -1.0 );
   static std::string toJsonString(bool indent, SGPropertyNode_ptr n, int depth, double timestamp = -1.0 );
-  
+
+  static const char * getPropertyTypeString(simgear::props::Type type);
+  static cJSON * valueToJson(SGPropertyNode_ptr n);
+
   static void toProp(cJSON * json, SGPropertyNode_ptr base);
   static void addChildrenToProp(cJSON * json, SGPropertyNode_ptr base);
 };

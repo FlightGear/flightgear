@@ -21,6 +21,7 @@
 #include "httpd.hxx"
 #include "HTTPRequest.hxx"
 #include "PropertyChangeWebsocket.hxx"
+#include "MirrorPropertyTreeWebsocket.hxx"
 #include "ScreenshotUriHandler.hxx"
 #include "PropertyUriHandler.hxx"
 #include "JsonUriHandler.hxx"
@@ -587,6 +588,9 @@ Websocket * MongooseHttpd::newWebsocket(const string & uri)
   if (uri.find("/PropertyListener") == 0) {
     SG_LOG(SG_NETWORK, SG_INFO, "new PropertyChangeWebsocket for: " << uri);
     return new PropertyChangeWebsocket(&_propertyChangeObserver);
+  } else if (uri.find("/PropertyTreeMirror/") == 0) {
+      SG_LOG(SG_NETWORK, SG_INFO, "new MirrorPropertyTreeWebsocket for: " << uri);
+    return new MirrorPropertyTreeWebsocket(uri.substr(20));
   }
   return NULL;
 }

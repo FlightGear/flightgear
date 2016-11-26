@@ -8,6 +8,7 @@ set(SOURCES
     FlightHistoryUriHandler.cxx
 	PkgUriHandler.cxx
 	RunUriHandler.cxx
+	MirrorPropertyTreeWebsocket.cxx
 	NavdbUriHandler.cxx
 	PropertyChangeWebsocket.cxx
 	PropertyChangeObserver.cxx
@@ -29,6 +30,7 @@ set(HEADERS
 	Websocket.hxx
 	PropertyChangeWebsocket.hxx
 	PropertyChangeObserver.hxx
+	MirrorPropertyTreeWebsocket.hxx
 	jsonprops.hxx
     SimpleDOM.hxx
 	)
