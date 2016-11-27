@@ -82,6 +82,7 @@ HUD::Input::Input(const SGPropertyNode *n, float factor, float offset,
 }
 
 HUD::HUD() :
+    SGPropertyChangeListener(true /* recursive */),
     _currentPath(fgGetNode("/sim/hud/current-path", true)),
     _currentColor(fgGetNode("/sim/hud/current-color", true)),
     _visibility(fgGetNode("/sim/hud/visibility[1]", true)),
