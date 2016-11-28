@@ -139,9 +139,8 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     }
 
     QRect r = contentRect;
-    r.setWidth(contentRect.width() / 3);
+    r.setWidth(contentRect.width() / 2);
     r.moveTop(actualBounds.bottom() + MARGIN);
-    r.moveLeft(r.right());
     r.setHeight(qMax(24, smallMetrics.height() + MARGIN));
 
     painter->setRenderHint(QPainter::Antialiasing, true);
@@ -375,7 +374,7 @@ QRect AircraftItemDelegate::packageButtonRect(const QRect& visualRect, const QMo
     QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
     contentRect.setLeft(contentRect.left() + MARGIN + thumbnail.width());
 
-    return QRect(contentRect.left() + ARROW_SIZE, contentRect.bottom() - 24,
+    return QRect(contentRect.left() + ARROW_SIZE, contentRect.bottom() - BUTTON_HEIGHT,
                  BUTTON_WIDTH, BUTTON_HEIGHT);
 }
 
