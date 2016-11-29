@@ -30,6 +30,14 @@
 
 #include "AircraftModel.hxx"
 
+const int DOT_SIZE = 11;
+const int DOT_MARGIN = 2;
+
+int dotBoxWidth()
+{
+    return (DOT_MARGIN * 6 + DOT_SIZE * 5);
+}
+
 AircraftItemDelegate::AircraftItemDelegate(QListView* view) :
     m_view(view)
 {
@@ -138,14 +146,17 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
                           longDescription, &actualBounds);
     }
 
-    QRect r = contentRect;
-    r.setWidth(contentRect.width() / 2);
-    r.moveTop(actualBounds.bottom() + MARGIN);
-    r.setHeight(qMax(24, smallMetrics.height() + MARGIN));
-
     painter->setRenderHint(QPainter::Antialiasing, true);
 
     if (index.data(AircraftHasRatingsRole).toBool()) {
+        int ratingsWidth = smallMetrics.width("Flight model:") + dotBoxWidth();
+
+        QRect r = contentRect;
+        r.setWidth(ratingsWidth);
+        r.moveLeft(contentRect.right() - (ratingsWidth * 2));
+        r.moveTop(actualBounds.bottom() + MARGIN);
+        r.setHeight(qMax(24, smallMetrics.height() + MARGIN));
+
         drawRating(painter, "Flight model:", r, index.data(AircraftRatingRole).toInt());
         r.moveTop(r.bottom());
         drawRating(painter, "Systems:", r, index.data(AircraftRatingRole + 1).toInt());
@@ -380,20 +391,19 @@ QRect AircraftItemDelegate::packageButtonRect(const QRect& visualRect, const QMo
 
 void AircraftItemDelegate::drawRating(QPainter* painter, QString label, const QRect& box, int value) const
 {
-    const int DOT_SIZE = 10;
-    const int DOT_MARGIN = 2;
-
     QRect dotBox = box;
-    dotBox.setLeft(box.right() - (DOT_MARGIN * 6 + DOT_SIZE * 5));
+    dotBox.setLeft(box.right() - dotBoxWidth());
 
     painter->setPen(Qt::black);
     QRect textBox = box;
-    textBox.setRight(dotBox.left() - DOT_MARGIN);
+    textBox.setRight(dotBox.left());
     painter->drawText(textBox, Qt::AlignVCenter | Qt::AlignRight, label);
 
     painter->setPen(Qt::NoPen);
+    // magic +1 offset in to account for fonts having more empty ascent
+    // space than descent space
     QRect dot(dotBox.left() + DOT_MARGIN,
-              dotBox.center().y() - (DOT_SIZE / 2),
+              dotBox.center().y() - (DOT_SIZE / 2) + 1,
               DOT_SIZE,
               DOT_SIZE);
     for (int i=0; i<5; ++i) {
